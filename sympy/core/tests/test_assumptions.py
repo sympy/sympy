@@ -869,6 +869,15 @@ def test_Mul_is_prime_composite():
     assert ( (x+1)*(y+1) ).is_composite is None
 
 
+def test_Pow_is_finite():
+    x = Symbol('x', finite=False, extended_real=True)
+    assert x.is_finite is False
+    assert (x**2).is_finite is False
+    assert (x**2).is_extended_positive is True
+    assert (x**-2).is_finite is True
+    assert (x**-2).is_zero is True
+
+
 def test_Pow_is_pos_neg():
     z = Symbol('z', real=True)
     w = Symbol('w', nonpositive=True)

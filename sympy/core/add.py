@@ -204,6 +204,7 @@ class Add(Expr, AssocOp):
         from sympy.tensor.tensor import TensExpr
         rv = None
         if len(seq) == 2:
+            # this is only to handle the case of adding a Rational
             a, b = seq
             if b.is_Rational:
                 a, b = b, a
@@ -315,10 +316,17 @@ class Add(Expr, AssocOp):
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]
         newseq = []
+        imfinite = []
+        refinite = []
+        iminfinite = []
+        reinfinite = []
         noncommutative = False
         for s, c in terms.items():
             # 0*s
             if c.is_zero:
+                if s.is_infinite:
+                    # infinite terms do not cancel
+                    return [S.NaN], [], None
                 continue
             # 1*s
             elif c is S.One:
@@ -337,7 +345,24 @@ class Add(Expr, AssocOp):
                     # alternatively we have to call all Mul's machinery (slow)
                     newseq.append(Mul(c, s))
 
+            # drop finite terms if there are infinite (or
+            # infinite containing) terms
+            last = newseq[-1]
+            if last.is_extended_real is not None:
+                if any(_.is_infinite for _ in Mul.make_args(last)):
+                    if last.is_extended_real:
+                        reinfinite.append(newseq.pop())
+                    else:
+                        iminfinite.append(newseq.pop())
+                elif last.is_finite:
+                    if last.is_real:
+                        refinite.append(newseq.pop())
+                    else:
+                        imfinite.append(newseq.pop())
+
             noncommutative = noncommutative or not s.is_commutative
+        newseq.extend(reinfinite or refinite)
+        newseq.extend(iminfinite or imfinite)
 
         # oo, -oo
         if coeff is S.Infinity:
