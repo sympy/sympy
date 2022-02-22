@@ -1461,6 +1461,19 @@ class ControlledEvaluator(ast.NodeTransformer):
             L = R
         return True
 
+    ###########################################################################
+    # Support for Python 3.7
+
+    def visit_Str(self, node):
+        return node.s
+
+    def visit_Num(self, node):
+        return node.n
+
+    def visit_NameConstant(self, node):
+        return node.value
+
+    ###########################################################################
 
 EXPONENT_CAP = 100
 INT_DIGIT_CAP = 200
