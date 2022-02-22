@@ -918,8 +918,11 @@ class harmonic(Function):
         return self.rewrite(polygamma).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
+        from sympy.concrete.summations import Sum
         from sympy.functions.special.gamma_functions import polygamma
         if all(i.is_number for i in self.args):
+            if len(self.args) == 2 and self.args[0].is_Integer :
+                return self.rewrite(Sum).evalf(prec)
             return self.rewrite(polygamma)._eval_evalf(prec)
 
 

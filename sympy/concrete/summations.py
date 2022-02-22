@@ -10,7 +10,7 @@ from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand
 from sympy.core.mul import Mul
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
@@ -1165,15 +1165,46 @@ def eval_sum_symbolic(f, limits):
         if without_i != 0:
             s = eval_sum_symbolic(with_i, (i, a, b))
             if s:
-                r = without_i*(b - a + 1) + s
-                if r is not S.NaN:
-                    return r
+                if s in (S.NegativeInfinity, S.Infinity) and (b - a + 1) is S.Infinity:
+                    preferred_expr = O(f, (i, S.Infinity)).expr
+                    if isinstance(preferred_expr, Integer):
+                        exp = 0
+                    else:
+                        exp = preferred_expr.as_base_exp()[1]
+                    for arg in f.args:
+                        if isinstance(arg, Integer):
+                            arg_exp = 0
+                        else:
+                            arg_exp = abs(arg).as_base_exp()[1]
+                        if arg_exp == exp:
+                            term = arg
+                            break
+                    if term is not None:
+                        return Sum(term, (i, a, b)).doit()
+                else:
+                    r = without_i*(b - a + 1) + s
+                    if r is not S.NaN:
+                        return r
         else:
             # Try term by term
             lsum = eval_sum_symbolic(L, (i, a, b))
             rsum = eval_sum_symbolic(R, (i, a, b))
 
             if None not in (lsum, rsum):
+                if (lsum is S.Infinity and rsum is S.NegativeInfinity) or \
+                   (lsum is S.NegativeInfinity and rsum is S.Infinity):
+                    preferred_expr = O(f, (i, S.Infinity)).expr
+                    exp = preferred_expr.as_base_exp()[1]
+                    for arg in f.args:
+                        if isinstance(arg, Integer):
+                            arg_exp = 0
+                        else:
+                            arg_exp = abs(arg).as_base_exp()[1]
+                        if arg_exp == exp:
+                            term = arg
+                            break
+                    if term is not None:
+                        return Sum(term, (i, a, b)).doit()
                 r = lsum + rsum
                 if r is not S.NaN:
                     return r
@@ -1185,13 +1216,16 @@ def eval_sum_symbolic(f, limits):
 
     if result is not None:
         n = result[n]
+        if isinstance(n, Float):
+            n = nsimplify(n)
 
-        if n.is_Integer:
+        if n.is_number:
             if n >= 0:
                 if (b is S.Infinity and a is not S.NegativeInfinity) or \
                    (a is S.NegativeInfinity and b is not S.Infinity):
                     return S.Infinity
-                return ((bernoulli(n + 1, b + 1) - bernoulli(n + 1, a))/(n + 1)).expand()
+                if n.is_Integer:
+                    return ((bernoulli(n + 1, b + 1) - bernoulli(n + 1, a))/(n + 1)).expand()
             elif a.is_Integer and a >= 1:
                 if n == -1:
                     return harmonic(b) - harmonic(a - 1)
