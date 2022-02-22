@@ -100,14 +100,15 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
 
     if max_degree is not None:
         result = {}
-        f_expr = []
-        for exp in expr:
-            if list((decompose(exp)).keys())[0] == 0:
-                f_expr.append(exp)
-            elif sum(degree_list(exp)) <= max_degree:
-                f_expr.append(exp)
+        if expr is not None:
+            f_expr = []
+            for exp in expr:
+                if list((decompose(exp)).keys())[0] == 0:
+                    f_expr.append(exp)
+                elif sum(degree_list(exp)) <= max_degree:
+                    f_expr.append(exp)
+            expr = f_expr
 
-        expr = f_expr
         if not isinstance(expr, list) and expr is not None:
             raise TypeError('Input polynomials must be list of expressions')
 
