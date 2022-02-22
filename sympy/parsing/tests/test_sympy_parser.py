@@ -340,10 +340,19 @@ def test_issue_22822():
 
 def test_controlled_eval():
     raises(ControlledEvaluationException, lambda: parse_expr('exec("1 + 2")', controlled=True))
-    raises(ControlledEvaluationException, lambda: parse_expr("solve.__globals__['__builtins__']['exec']('1 + 2')", controlled=True))
     raises(ControlledEvaluationException, lambda: parse_expr('eval("1 + 2")', controlled=True))
-    raises(ControlledEvaluationException, lambda: parse_expr("solve.__globals__['__builtins__']['eval']('1 + 2')", controlled=True))
-    assert parse_expr("solve.__globals__['__builtins__']['abs'](-2)", controlled=True) == 2
+
+    # In PyPy, FUNC.__globals__['__builtins__'] is a module, not a dict.
+    if isinstance(Symbol.subs.__globals__['__builtins__'], dict):
+        # We're not in PyPy
+        raises(ControlledEvaluationException, lambda: parse_expr("solve.__globals__['__builtins__']['exec']('1 + 2')", controlled=True))
+        raises(ControlledEvaluationException, lambda: parse_expr("solve.__globals__['__builtins__']['eval']('1 + 2')", controlled=True))
+        assert parse_expr("solve.__globals__['__builtins__']['abs'](-2)", controlled=True) == 2
+    else:
+        # We're in PyPy
+        raises(ControlledEvaluationException, lambda: parse_expr("solve.__globals__['__builtins__'].__dict__['exec']('1 + 2')", controlled=True))
+        raises(ControlledEvaluationException, lambda: parse_expr("solve.__globals__['__builtins__'].__dict__['eval']('1 + 2')", controlled=True))
+        assert parse_expr("solve.__globals__['__builtins__'].__dict__['abs'](-2)", controlled=True) == 2
 
     raises(ControlledEvaluationException, lambda: parse_expr('sympify("foo", controlled=False)', controlled=True))
 
