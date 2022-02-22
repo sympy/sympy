@@ -16,12 +16,12 @@ PDF link : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
 """
 
 from functools import cmp_to_key
-from sympy import Poly
+
 from sympy.abc import x, y, z
 from sympy.core import S, diff, Expr, Symbol
 from sympy.core.sympify import _sympify
 from sympy.geometry import Segment2D, Polygon, Point, Point2D
-from sympy.polys.polytools import LC, gcd_list, degree_list
+from sympy.polys.polytools import LC, gcd_list, degree_list, Poly
 from sympy.simplify.simplify import nsimplify
 
 
@@ -303,7 +303,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
                                 (b / norm(a)) / (dim_length + degree)
         return result
     else:
-        if not isinstance(expr,list):
+        if not isinstance(expr, list):
             polynomials = decompose(expr)
             for deg in polynomials:
                 poly_contribute = S.Zero
