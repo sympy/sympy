@@ -347,26 +347,30 @@ class Piecewise(Function):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=1):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.sets.sets import Union
         if cdir == S.Zero:
             l = self._eval_as_leading_term(x, logx=None, cdir=-1)
             r = self._eval_as_leading_term(x, logx=None, cdir=1)
             if l != r:
-                raise ValueError
+                raise ValueError("Two sided limit of %s around 0"
+                                    "does not exist" % self)
             return r
 
-        upper_bound_list, lower_bound_list = [], []
+        zero_in_upper_bound, zero_in_lower_bound = None, None
         for a, b, e, i in self._intervals(x)[1]:
-            upper_bound_list.append(b)
-            lower_bound_list.append(a)
+            if b is S.Zero:
+                zero_in_upper_bound = True
+            if a is S.Zero:
+                zero_in_lower_bound = True
         expr_pairs = self.as_expr_set_pairs()
 
         # Check whether 0 is the upper boundary of a piece.
         # If yes, we consider that piece and the next one for evaluation.
-        if S.Zero in upper_bound_list:
+        if zero_in_upper_bound:
             for i, pair in enumerate(expr_pairs):
-                if pair[1].sup == S.Zero or any([arg.sup.is_zero for arg in pair[1].args if isinstance(pair[1], Union)]):
+                if pair[1].sup == S.Zero or any([arg.sup.is_zero for arg in pair[1].args \
+                                            if isinstance(pair[1], Union)]):
                     if cdir == -1:
                         return pair[0].as_leading_term(x)
                     else:
@@ -380,9 +384,10 @@ class Piecewise(Function):
 
         # Check whether 0 is the lower boundary of a piece.
         # If yes, we consider that piece and the previous one for evaluation.
-        if S.Zero in lower_bound_list:
+        if zero_in_lower_bound:
             for i, pair in enumerate(expr_pairs):
-                if pair[1].inf == S.Zero or any([arg.inf.is_zero for arg in pair[1].args if isinstance(pair[1], Union)]):
+                if pair[1].inf == S.Zero or any([arg.inf.is_zero for arg in pair[1].args \
+                                            if isinstance(pair[1], Union)]):
                     if cdir == -1:
                         while(expr_pairs[i - 1][1].sup != S.Zero):
                             if isinstance(expr_pairs[i - 1][1], Union):
