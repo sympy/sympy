@@ -16,7 +16,7 @@ PDF link : http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
 """
 
 from functools import cmp_to_key
-
+from sympy import Poly
 from sympy.abc import x, y, z
 from sympy.core import S, diff, Expr, Symbol
 from sympy.core.sympify import _sympify
@@ -105,7 +105,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
             for exp in expr:
                 if list((decompose(exp)).keys())[0] == 0:
                     f_expr.append(exp)
-                elif sum(degree_list(exp)) <= max_degree:
+                elif Poly(exp).total_degree() <= max_degree:
                     f_expr.append(exp)
             expr = f_expr
 

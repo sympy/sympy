@@ -152,6 +152,14 @@ def test_polytope_integrate():
     assert result_dict[expr2] == Rational(13062161, 27)
     assert result_dict[expr3] == Rational(1946257153, 924)
 
+    tri = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
+    expr1 = x**7*y**1 + 2*x**2*y**6
+    expr2 = x**6*y**4 + x**5*y**5 + 2*y**10
+    expr3 = x**10 + x**9*y + x**8*y**2 + x**5*y**5
+    polys.extend((expr1, expr2, expr3))
+    assert polytope_integrate(tri, polys, max_degree=9) == \
+        {x**7*y + 2*x**2*y**6: Rational(489262, 9)}
+
     #  Tests when all integral of all monomials up to a max_degree is to be
     #  calculated.
     assert polytope_integrate(Polygon(Point(0, 0), Point(0, 1),
