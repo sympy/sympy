@@ -351,7 +351,7 @@ class ComplexRootOf(RootOf):
         if roots is not None:
             return roots[index]
 
-        if all((i.is_algebraic and (not i.is_symbol)) for i in poly.all_coeffs()):
+        if all((i.is_algebraic and i.is_number) for i in poly.all_coeffs()):
             poly = cls ._roots_Algebraic(poly, dom)
         else:
             raise NotImplementedError("CRootOf is not supported over %s" % poly)
