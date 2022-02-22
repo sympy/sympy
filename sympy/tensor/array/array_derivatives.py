@@ -1,4 +1,5 @@
 from typing import Optional
+import numbers
 
 from sympy.core.expr import Expr
 from sympy.core.function import Derivative
@@ -85,7 +86,7 @@ class ArrayDerivative(Derivative):
         # object, the default in `Basic` will call a loop over
         # `_eval_derivative`:
 
-        if not isinstance(count, (int, Integer)) or ((count <= 0) == True):
+        if not isinstance(count, (int, Integer, numbers.Integral)) or ((count <= 0) == True):
             return None
 
         # TODO: this could be done with multiple-dispatching:
