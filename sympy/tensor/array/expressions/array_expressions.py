@@ -414,7 +414,7 @@ class PermuteDims(_CodegenArrayAbstract):
 
     >>> from sympy.tensor.array.expressions import ArraySymbol, PermuteDims
     >>> M = ArraySymbol("M", (1, 2, 3, 4, 5))
-    >>> expr = PermuteDims(M, index_order_old=["i", "j", "k", "l", "m"], index_order_new=["k", "i", "j", "m", "l"])
+    >>> expr = PermuteDims(M, index_order_old="ijklm", index_order_new="kijml")
     >>> expr
     PermuteDims(M, (0 2 1)(3 4))
     >>> expr.shape
