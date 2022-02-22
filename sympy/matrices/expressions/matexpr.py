@@ -1,5 +1,6 @@
 from typing import Tuple as tTuple
 from functools import wraps
+import numbers
 
 from sympy.core import S, Integer, Basic, Mul, Add
 from sympy.core.assumptions import check_assumptions
@@ -271,7 +272,7 @@ class MatrixExpr(Expr):
 
     def valid_index(self, i, j):
         def is_valid(idx):
-            return isinstance(idx, (int, Integer, Symbol, Expr))
+            return isinstance(idx, (int, Integer, numbers.Integral, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
                 (self.rows is None or
                 (0 <= i) != False and (i < self.rows) != False) and
@@ -291,7 +292,7 @@ class MatrixExpr(Expr):
                 return self._entry(i, j)
             else:
                 raise IndexError("Invalid indices (%s, %s)" % (i, j))
-        elif isinstance(key, (SYMPY_INTS, Integer)):
+        elif isinstance(key, (SYMPY_INTS, Integer, numbers.Integral)):
             # row-wise decomposition of matrix
             rows, cols = self.shape
             # allow single indexing if number of columns is known
@@ -313,8 +314,8 @@ class MatrixExpr(Expr):
         raise IndexError("Invalid index, wanted %s[i,j]" % self)
 
     def _is_shape_symbolic(self) -> bool:
-        return (not isinstance(self.rows, (SYMPY_INTS, Integer))
-            or not isinstance(self.cols, (SYMPY_INTS, Integer)))
+        return (not isinstance(self.rows, (SYMPY_INTS, Integer, numbers.Integral))
+            or not isinstance(self.cols, (SYMPY_INTS, Integer, numbers.Integral)))
 
     def as_explicit(self):
         """
