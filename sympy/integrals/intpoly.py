@@ -152,6 +152,26 @@ def strip(monom):
         coeff = LC(monom)
         return coeff, monom / coeff
 
+def _polynomial_integrate(polynomials, facets, hp_params):
+    dims = (x, y)
+    dim_length = len(dims)
+    integral_value = S.Zero
+    for deg in polynomials:
+        poly_contribute = S.Zero
+        facet_count = 0
+        for hp in hp_params:
+            value_over_boundary = integration_reduction(facets,
+                                                        facet_count,
+                                                        hp[0], hp[1],
+                                                        polynomials[deg],
+                                                        dims, deg)
+            poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
+            facet_count += 1
+        poly_contribute /= (dim_length + deg)
+        integral_value += poly_contribute
+
+    return integral_value
+
 
 def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
     """Function to translate the problem of integrating uni/bi/tri-variate
@@ -305,40 +325,14 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     else:
         if not isinstance(expr, list):
             polynomials = decompose(expr)
-            for deg in polynomials:
-                poly_contribute = S.Zero
-                facet_count = 0
-                for hp in hp_params:
-                    value_over_boundary = integration_reduction(facets,
-                                                                facet_count,
-                                                                hp[0], hp[1],
-                                                                polynomials[deg],
-                                                                dims, deg)
-                    poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
-                    facet_count += 1
-                poly_contribute /= (dim_length + deg)
-                integral_value += poly_contribute
-
-            return integral_value
+            answer = _polynomial_integrate(polynomials, facets, hp_params)
+            return answer
         else:
             result = {}
             for exp in expr:
                 polynomials = decompose(exp)
-                integral_value = 0
-                for deg in polynomials:
-                    poly_contribute = S.Zero
-                    facet_count = 0
-                    for hp in hp_params:
-                        value_over_boundary = integration_reduction(facets,
-                                                                    facet_count,
-                                                                    hp[0], hp[1],
-                                                                    polynomials[deg],
-                                                                    dims, deg)
-                        poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
-                        facet_count += 1
-                    poly_contribute /= (dim_length + deg)
-                    integral_value += poly_contribute
-                result.update({exp : integral_value})
+                answer = _polynomial_integrate(polynomials, facets, hp_params)
+                result.update({exp : answer})
 
             return result
 
