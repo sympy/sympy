@@ -290,7 +290,6 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     dims = (x, y)
     dim_length = len(dims)
     result = {}
-    integral_value = S.Zero
 
     if max_degree:
         grad_terms = [[0, 0, 0, 0]] + gradient_terms(max_degree)
