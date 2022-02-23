@@ -1778,7 +1778,7 @@ def _connected_exprs(exprs, symbols):
     ========
 
     >>> from sympy.solvers.solvers import _connected_exprs as ce
-    >>> from sympy.abc import w, x, y, z
+    >>> from sympy.abc import x, y, z
     >>> ce((x, y*x, y, z), (x,))
     [([x], [x, x*y]), ([], [y]), ([], [z])]
     >>> ce((x, y*x, y, z), (x, y))
@@ -2050,7 +2050,7 @@ def _solve_system(exprs, symbols, **flags):
                     if r:
                         newresult.append(r)
                     break  # skip as it's independent of desired symbols
-                for s in ok_syms:
+                for s in [i for i in ok_syms if i not in got_s]:
                     try:
                         soln = _solve(eq2, s, **flags)
                     except NotImplementedError:
@@ -2101,14 +2101,30 @@ def _solve_system(exprs, symbols, **flags):
 
     # check that no solution is a superset of a smaller
     # solution and that no solution is represented twice
-    # e.g. {a:0,b:1} == {b:1,a:0}
+    # e.g. {a:0,b:1} == {b:1,a:0} and that no solution
+    # assumes more than is necessary, e.g. for the equations
+    # (x*y, x*z, x*v, y-2*z) the solution {v: 0, x: 0, y: 2*z}
+    # contains a redundant v: 0 and should be {x: 0, y: 2*z}
+    # XXX there is probably a better way to process equations
+    # so this doesn't happen
     if failed:
         bysize = sift(result, lambda _: len(_))
         result = []
         ky = lambda x: set([tuple(i) for i in x.items()])
         for i, s in enumerate(sorted(bysize)):
             ss = list(uniq([ky(si) for si in bysize[s]]))
-            result.extend([dict(ordered(i)) for i in ss])
+            for si in ss:
+                d = dict(ordered(si))
+                for k in subsets(d):
+                    if not k:
+                        continue
+                    di = {_: d[_] for _ in k}
+                    if not any(e.xreplace(di) for e in failed):
+                        # assuming this can't happen again, just
+                        # take this solution
+                        d = di
+                        break
+                result.append(d)
             for t in sorted(bysize):
                 if t <= s:
                     continue
