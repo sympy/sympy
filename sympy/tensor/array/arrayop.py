@@ -363,11 +363,13 @@ def permutedims(expr, perm=None, index_order_old=None, index_order_new=None):
     >>> permutedims(b, (1, 2, 0))
     [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
 
-    An alternative way to specify the same permutations as in the previous lines:
+    An alternative way to specify the same permutations as in the previous
+    lines involves passing the *old* and *new* indices, either as a list or as
+    a string:
 
-    >>> permutedims(b, index_order_old=["c", "b", "a"], index_order_new=["a", "b", "c"])
+    >>> permutedims(b, index_order_old="cba", index_order_new="abc")
     [[[1, 5], [3, 7]], [[2, 6], [4, 8]]]
-    >>> permutedims(b, index_order_old=["c", "a", "b"], index_order_new=["a", "b", "c"])
+    >>> permutedims(b, index_order_old="cab", index_order_new="abc")
     [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
 
     ``Permutation`` objects are also allowed:

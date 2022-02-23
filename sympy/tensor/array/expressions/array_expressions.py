@@ -379,7 +379,9 @@ class ArrayAdd(_CodegenArrayAbstract):
         return new_args
 
     def as_explicit(self):
-        return reduce(operator.add, [arg.as_explicit() for arg in self.args])
+        return reduce(
+            operator.add,
+            [arg.as_explicit() if hasattr(arg, "as_explicit") else arg for arg in self.args])
 
 
 class PermuteDims(_CodegenArrayAbstract):
@@ -941,7 +943,10 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         return positions, shape
 
     def as_explicit(self):
-        return tensordiagonal(self.expr.as_explicit(), *self.diagonal_indices)
+        expr = self.expr
+        if hasattr(expr, "as_explicit"):
+            expr = expr.as_explicit()
+        return tensordiagonal(expr, *self.diagonal_indices)
 
 
 class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
@@ -977,6 +982,12 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
         else:
             fdiff = Lambda(d, fdiff)
         return fdiff
+
+    def as_explicit(self):
+        expr = self.expr
+        if hasattr(expr, "as_explicit"):
+            expr = expr.as_explicit()
+        return expr.applyfunc(self.function)
 
 
 class ArrayContraction(_CodegenArrayAbstract):
@@ -1519,7 +1530,10 @@ class ArrayContraction(_CodegenArrayAbstract):
         return dlinks
 
     def as_explicit(self):
-        return tensorcontraction(self.expr.as_explicit(), *self.contraction_indices)
+        expr = self.expr
+        if hasattr(expr, "as_explicit"):
+            expr = expr.as_explicit()
+        return tensorcontraction(expr, *self.contraction_indices)
 
 
 class Reshape(_CodegenArrayAbstract):
@@ -1574,7 +1588,9 @@ class Reshape(_CodegenArrayAbstract):
         return Reshape(expr, self.shape)
 
     def as_explicit(self):
-        ee = self.expr.as_explicit()
+        ee = self.expr
+        if hasattr(ee, "as_explicit"):
+            ee = ee.as_explicit()
         if isinstance(ee, MatrixCommon):
             from sympy import Array
             ee = Array(ee)
