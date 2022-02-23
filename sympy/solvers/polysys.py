@@ -54,7 +54,6 @@ def solve_poly_system(seq, *gens, **args):
 
     if len(polys) == len(opt.gens) == 2:
         f, g = polys
-
         if all(i <= 2 for i in f.degree_list() + g.degree_list()):
             try:
                 return solve_biquadratic(f, g, opt)

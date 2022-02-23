@@ -1770,45 +1770,121 @@ def _solve(f, *symbols, **flags):
     return result
 
 
+def _connected_exprs(exprs, symbols):
+    """return [(subsysm, subexprs), ...] where subexprs are expressions
+    that have subset of symbols, ``subsym``, in common.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.solvers import _connected_exprs as ce
+    >>> from sympy.abc import w, x, y, z
+    >>> ce((x, y*x, y, z), (x,))
+    [([x], [x, x*y]), ([], [y]), ([], [z])]
+    >>> ce((x, y*x, y, z), (x, y))
+    [([x, y], [x, x*y, y]), ([], [z])]
+    """
+    V = exprs
+    symsset = set(symbols)
+    exprsyms = {e: e.free_symbols & symsset for e in exprs}
+    E = []
+    sym_indices = {sym: i for i, sym in enumerate(symbols)}
+    for n, e1 in enumerate(exprs):
+        for e2 in exprs[:n]:
+            # Equations are connected if they share a symbol
+            if exprsyms[e1] & exprsyms[e2]:
+                E.append((e1, e2))
+    cc = connected_components((V, E))
+    if len(cc) == 1:
+        return [(symbols, exprs)]
+    rv = []
+    for subexpr in cc:
+        subsyms = set()
+        for e in subexpr:
+            subsyms |= exprsyms[e]
+        subsyms = list(sorted(subsyms, key = lambda x: sym_indices[x]))
+        rv.append((subsyms, subexpr))
+    return rv
+
+
 def _solve_system(exprs, symbols, **flags):
     if not exprs:
         return []
 
     if flags.pop('_split', True):
-        # Split the system into connected components
-        V = exprs
-        symsset = set(symbols)
-        exprsyms = {e: e.free_symbols & symsset for e in exprs}
-        E = []
-        sym_indices = {sym: i for i, sym in enumerate(symbols)}
-        for n, e1 in enumerate(exprs):
-            for e2 in exprs[:n]:
-                # Equations are connected if they share a symbol
-                if exprsyms[e1] & exprsyms[e2]:
-                    E.append((e1, e2))
-        G = V, E
-        subexprs = connected_components(G)
+        # Split out univariate expressions
+        _syms = set(symbols)
+        sifted = sift(exprs, lambda x: len(x.free_symbols & _syms))
+        if 1 in sifted:
+            subsols = []
+            u = sift(sifted.pop(1), lambda x: (x.free_symbols & _syms).pop())
+            for subsym1 in ordered(u):
+                subexpr = u.pop(subsym1)
+                if len(subexpr) == 1:
+                    subsol = _solve(subexpr[0], subsym1, dict=True)
+                else:
+                    sol = []
+                    for e in subexpr:
+                        for d in _solve(e, subsym1, **flags):
+                            if d in sol or any(i.subs(subsym1, d) for i in subexpr):
+                                continue
+                            sol.append(d)
+                    subsol = sol
+                assert type(subsol) is list
+                if not subsol:
+                    return []
+                subsols.append([{subsym1: v} for v in subsol])
+                _syms -= {subsym1}
+
+            # Full solution is cartesion product of subsystems updated with u solutions
+            exprs = [i for i in exprs if i not in u]
+            sols = []
+            from sympy.utilities.iterables import dict_merge
+            for soldicts in product(*subsols):
+                sols.append(dict_merge(*soldicts))
+                sol = sols.pop()
+                sube = [i.xreplace(sol) for i in exprs]
+                if not any(sube):
+                    sols.append(sol)
+                    continue
+                esol = _solve_system(sube, _syms, **flags)
+                if not esol:
+                    continue
+                if not type(esol) is list:
+                    esol = [esol]
+                for si in esol:
+                    newsol = sol.copy()
+                    newsol.update(si)
+                    sols.append(newsol)
+
+                # Return a list with one dict as just the dict
+                if len(sols) == 1:
+                    return sols[0]
+                return sols
+
+        subexprs = _connected_exprs(exprs, symbols)
         if len(subexprs) > 1:
             subsols = []
-            for subexpr in subexprs:
-                subsyms = set()
-                for e in subexpr:
-                    subsyms |= exprsyms[e]
-                subsyms = list(sorted(subsyms, key = lambda x: sym_indices[x]))
+            for subsyms, subexpr in subexprs:
                 flags['_split'] = False  # skip split step
                 subsol = _solve_system(subexpr, subsyms, **flags)
                 if not isinstance(subsol, list):
                     subsol = [subsol]
                 subsols.append(subsol)
+
             # Full solution is cartesion product of subsystems
             sols = []
             for soldicts in product(*subsols):
                 sols.append(dict(item for sd in soldicts
                     for item in sd.items()))
+
             # Return a list with one dict as just the dict
             if len(sols) == 1:
                 return sols[0]
             return sols
+
+    # solve system where all equations depend on one or more
+    # of the symbols and none is univariate
 
     polys = []
     dens = set()
@@ -1869,7 +1945,11 @@ def _solve_system(exprs, symbols, **flags):
                 free = list(ordered(free.intersection(symbols)))
                 got_s = set()
                 result = []
-                for syms in subsets(free, len(polys)):
+                for syms in subsets(free):
+                    if not syms:
+                        continue
+                    if len(syms) > len(polys):
+                        break
                     try:
                         # returns [] or list of tuples of solutions for syms
                         res = solve_poly_system(polys, *syms)
@@ -2022,22 +2102,22 @@ def _solve_system(exprs, symbols, **flags):
     # check that no solution is a superset of a smaller
     # solution and that no solution is represented twice
     # e.g. {a:0,b:1} == {b:1,a:0}
-
-    bysize = sift(result, lambda _: len(_))
-    result = []
-    ky = lambda x: set([tuple(i) for i in x.items()])
-    for i, s in enumerate(sorted(bysize)):
-        ss = list(uniq([ky(si) for si in bysize[s]]))
-        result.extend([dict(ordered(i)) for i in ss])
-        for t in sorted(bysize):
-            if t <= s:
-                continue
-            for tj in reversed(bysize[t]):
-                for si in ss:
-                    if not si - ky(tj):
-                         # ti is a superset of si
-                         bysize[t].remove(tj)
-                         break
+    if failed:
+        bysize = sift(result, lambda _: len(_))
+        result = []
+        ky = lambda x: set([tuple(i) for i in x.items()])
+        for i, s in enumerate(sorted(bysize)):
+            ss = list(uniq([ky(si) for si in bysize[s]]))
+            result.extend([dict(ordered(i)) for i in ss])
+            for t in sorted(bysize):
+                if t <= s:
+                    continue
+                for tj in reversed(bysize[t]):
+                    for si in ss:
+                        if not si - ky(tj):
+                             # ti is a superset of si
+                             bysize[t].remove(tj)
+                             break
 
     return result
 
