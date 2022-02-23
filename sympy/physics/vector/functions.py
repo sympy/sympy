@@ -700,8 +700,8 @@ def solve_vector(f1, f2, *symbols):
     Comp_list = []
     f1 = _check_vector(f1)
     f2 = _check_vector(f2)
-    c1 = f1.components()
-    c2 = f2.components()
+    c1 = f1._components()
+    c2 = f2._components()
 
     for i in c1:
         if c1[i].is_Number and c2[i].is_Number:
