@@ -39,11 +39,9 @@ from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
 from sympy.external import import_module
-from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
-import warnings
 
 
 x = Symbol('x')
@@ -841,11 +839,6 @@ def probability(condition, given_condition=None, numsamples=None,
     from sympy.stats.symbolic_probability import Probability
     if evaluate:
         return Probability(condition, given_condition).doit(**kwargs)
-    ### TODO: Remove the user warnings in the future releases
-    message = ("Since version 1.7, using `evaluate=False` returns `Probability` "
-              "object. If you want unevaluated Integral/Sum use "
-              "`P(condition, given_condition, evaluate=False).rewrite(Integral)`")
-    warnings.warn(filldedent(message))
     return Probability(condition, given_condition)
 
 

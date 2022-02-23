@@ -28,6 +28,7 @@ from sympy.logic.boolalg import And
 from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import PolynomialError, PolificationFailed
 from sympy.polys.polytools import parallel_poly_from_expr, Poly, factor
+from sympy.polys.polyutils import illegal
 from sympy.polys.rationaltools import together
 from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
@@ -1316,6 +1317,9 @@ def _eval_sum_hyper(f, i, a):
 def eval_sum_hyper(f, i_a_b):
     i, a, b = i_a_b
 
+    if f.is_hypergeometric(i) is False:
+        return
+
     if (b - a).is_Integer:
         # We are never going to do better than doing the sum in the obvious way
         return None
@@ -1328,10 +1332,15 @@ def eval_sum_hyper(f, i_a_b):
             if res is not None:
                 return Piecewise(res, (old_sum, True))
         else:
+            n_illegal = lambda x: sum(x.count(_) for _ in illegal)
+            had = n_illegal(f)
+            # check that no extra illegals are introduced
             res1 = _eval_sum_hyper(f, i, a)
+            if res1 is None or n_illegal(res1) > had:
+                return
             res2 = _eval_sum_hyper(f, i, b + 1)
-            if res1 is None or res2 is None:
-                return None
+            if res2 is None or n_illegal(res2) > had:
+                return
             (res1, cond1), (res2, cond2) = res1, res2
             cond = And(cond1, cond2)
             if cond == False:
