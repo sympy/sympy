@@ -2897,7 +2897,8 @@ def latex(expr, **settings):
         ``True`` for inline mode, ``False`` otherwise.
     inv_trig_style : string, optional
         How inverse trig functions should be displayed. Can be one of
-        ``abbreviated``, ``full``, or ``power``. Defaults to ``abbreviated``.
+        ``'abbreviated'``, ``'full'``, or ``'power'``. Defaults to
+        ``'abbreviated'``.
     itex : boolean, optional
         Specifies if itex-specific syntax is used, including emitting
         ``$$...$$``.
@@ -2908,43 +2909,47 @@ def latex(expr, **settings):
         denominator before the printer breaks off long fractions. If ``None``
         (the default value), long fractions are not broken up.
     mat_delim : string, optional
-        The delimiter to wrap around matrices. Can be one of ``[``, ``(``, or
-        the empty string. Defaults to ``[``.
+        The delimiter to wrap around matrices. Can be one of ``'['``, ``'('``,
+        or the empty string ``''``. Defaults to ``'['``.
     mat_str : string, optional
-        Which matrix environment string to emit. ``smallmatrix``, ``matrix``,
-        ``array``, etc. Defaults to ``smallmatrix`` for inline mode, ``matrix``
-        for matrices of no more than 10 columns, and ``array`` otherwise.
+        Which matrix environment string to emit. ``'smallmatrix'``,
+        ``'matrix'``, ``'array'``, etc. Defaults to ``'smallmatrix'`` for
+        inline mode, ``'matrix'`` for matrices of no more than 10 columns, and
+        ``'array'`` otherwise.
     mode: string, optional
         Specifies how the generated code will be delimited. ``mode`` can be one
-        of ``plain``, ``inline``, ``equation`` or ``equation*``.  If ``mode``
-        is set to ``plain``, then the resulting code will not be delimited at
-        all (this is the default). If ``mode`` is set to ``inline`` then inline
-        LaTeX ``$...$`` will be used. If ``mode`` is set to ``equation`` or
-        ``equation*``, the resulting code will be enclosed in the ``equation``
-        or ``equation*`` environment (remember to import ``amsmath`` for
-        ``equation*``), unless the ``itex`` option is set. In the latter case,
-        the ``$$...$$`` syntax is used.
+        of ``'plain'``, ``'inline'``, ``'equation'`` or ``'equation*'``.  If
+        ``mode`` is set to ``'plain'``, then the resulting code will not be
+        delimited at all (this is the default). If ``mode`` is set to
+        ``'inline'`` then inline LaTeX ``$...$`` will be used. If ``mode`` is
+        set to ``'equation'`` or ``'equation*'``, the resulting code will be
+        enclosed in the ``equation`` or ``equation*`` environment (remember to
+        import ``amsmath`` for ``equation*``), unless the ``itex`` option is
+        set. In the latter case, the ``$$...$$`` syntax is used.
     mul_symbol : string or None, optional
-        The symbol to use for multiplication. Can be one of ``None``, ``ldot``,
-        ``dot``, or ``times``.
+        The symbol to use for multiplication. Can be one of ``None``,
+        ``'ldot'``, ``'dot'``, or ``'times'``.
     order: string, optional
-        Any of the supported monomial orderings (currently ``lex``, ``grlex``,
-        or ``grevlex``), ``old``, and ``none``. This parameter does nothing for
-        Mul objects. Setting order to ``old`` uses the compatibility ordering
-        for Add defined in Printer. For very large expressions, set the
-        ``order`` keyword to ``none`` if speed is a concern.
+        Any of the supported monomial orderings (currently ``'lex'``,
+        ``'grlex'``, or ``'grevlex'``), ``'old'``, and ``'none'``. This
+        parameter does nothing for `~.Mul` objects. Setting order to ``'old'``
+        uses the compatibility ordering for ``~.Add`` defined in Printer. For
+        very large expressions, set the ``order`` keyword to ``'none'`` if
+        speed is a concern.
     symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.
     root_notation : boolean, optional
         If set to ``False``, exponents of the form 1/n are printed in fractonal
         form. Default is ``True``, to print exponent in root form.
     mat_symbol_style : string, optional
-        Can be either ``plain`` (default) or ``bold``. If set to ``bold``,
-        a MatrixSymbol A will be printed as ``\mathbf{A}``, otherwise as ``A``.
+        Can be either ``'plain'`` (default) or ``'bold'``. If set to
+        ``'bold'``, a `~.MatrixSymbol` A will be printed as ``\mathbf{A}``,
+        otherwise as ``A``.
     imaginary_unit : string, optional
-        String to use for the imaginary unit. Defined options are "i" (default)
-        and "j". Adding "r" or "t" in front gives ``\mathrm`` or ``\text``, so
-        "ri" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
+        String to use for the imaginary unit. Defined options are ``'i'``
+        (default) and ``'j'``. Adding ``r`` or ``t`` in front gives ``\mathrm``
+        or ``\text``, so ``'ri'`` leads to ``\mathrm{i}`` which gives
+        `\mathrm{i}`.
     gothic_re_im : boolean, optional
         If set to ``True``, `\Re` and `\Im` is used for ``re`` and ``im``, respectively.
         The default is ``False`` leading to `\operatorname{re}` and `\operatorname{im}`.
