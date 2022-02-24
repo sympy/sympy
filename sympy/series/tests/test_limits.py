@@ -228,6 +228,7 @@ def test_ceiling_requires_robust_assumptions():
 def test_frac():
     assert limit(frac(x), x, oo) == AccumBounds(0, 1)
     assert limit(frac(x)**(1/x), x, oo) == AccumBounds(0, 1)
+    assert limit(frac(x)**(1/x), x, -oo) == AccumBounds(1, oo)
     assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)  # wolfram gives (0, 1)
     assert limit(frac(x), x, 0, '+') == 0
     assert limit(frac(x), x, 0, '-') == 1
@@ -965,11 +966,15 @@ def test_issue_18473():
     assert limit(cos(x)**(1/x), x, oo) == Limit(cos(x)**(1/x), x, oo, dir='-')
     assert limit(tan(x)**(1/x), x, oo) == Limit(tan(x)**(1/x), x, oo, dir='-')
     assert limit((cos(x) + 2)**(1/x), x, oo) == 1
+    assert limit((cos(x) + 2)**(1/x), x, -oo) == 1
     assert limit((sin(x) + 10)**(1/x), x, oo) == 1
     assert limit((cos(x) - 2)**(1/x), x, oo) == Limit((cos(x) - 2)**(1/x), x, oo, dir='-')
     assert limit((cos(x) + 1)**(1/x), x, oo) == AccumBounds(0, 1)
+    assert limit((cos(x) + 1)**(1/x), x, -oo) == AccumBounds(1, oo)
     assert limit((tan(x)**2)**(2/x) , x, oo) == AccumBounds(0, oo)
+    assert limit((tan(x)**2)**(2/x) , x, -oo) == AccumBounds(0, oo)
     assert limit((sin(x)**2)**(1/x), x, oo) == AccumBounds(0, 1)
+    assert limit((sin(x)**2)**(1/x), x, -oo) == AccumBounds(1, oo)
 
 
 def test_issue_18482():
