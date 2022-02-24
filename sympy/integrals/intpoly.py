@@ -325,13 +325,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
             polynomials = decompose(expr)
             return _polynomial_integrate(polynomials, facets, hp_params)
         else:
-            result = {}
-            for exp in expr:
-                polynomials = decompose(exp)
-                answer = _polynomial_integrate(polynomials, facets, hp_params)
-                result.update({exp : answer})
-
-            return result
+            return {exp: _polynomial_integrate(decompose(exp), facets, hp_params) for exp in expr}
 
 
 def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
