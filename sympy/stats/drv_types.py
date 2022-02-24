@@ -22,7 +22,7 @@ from sympy.core.function import Lambda
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import (binomial, factorial)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -855,9 +855,9 @@ class DelaporteDistribution(SingleDiscreteDistribution):
         lamda = self.lamda
         alpha = self.alpha
         beta = self.beta
-        i = Symbol('i', integer=True)
+        i = Dummy('i', integer=True)
         return Sum((gamma(alpha + i)*beta**i*lamda**(k - i)*exp(-lamda)) /
-        (gamma(alpha)*factorial(i)*(1 + beta)**(alpha + i)*factorial(k - i)), (i, 0, k + 1))
+        (gamma(alpha)*factorial(i)*(1 + beta)**(alpha + i)*factorial(k - i)), (i, 0, k))
 
     def _moment_generating_function(self, t):
         return (exp(self.lamda*(exp(t) - 1))) / (1 - self.beta*(exp(t) - 1))**self.alpha
@@ -903,7 +903,7 @@ def Delaporte(name, lamda, alpha, beta):
     >>> X = Delaporte("x", lamda, alpha, beta)
 
     >>> density(X)(z)
-    Sum(5**i*5**(-i + z)*6**(-i - 5)*exp(-5)*gamma(i + 5)/(24*factorial(i)*factorial(-i + z)), (i, 0, z + 1))
+    Sum(5**_i*5**(-_i + z)*6**(-_i - 5)*exp(-5)*gamma(_i + 5)/(24*factorial(_i)*factorial(-_i + z)), (_i, 0, z))
 
     >>> E(X)
     30
