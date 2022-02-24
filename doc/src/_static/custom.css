@@ -1,0 +1,80 @@
+/* Reduce the vertical space between lines in code blocks. Required to */
+/* make Unicode pretty printing appear correctly. */
+pre {
+    line-height: 120%;
+}
+
+article pre {
+    line-height: 120%;
+}
+
+/* Completely disable blockquotes. The Furo defaults make block quotes very*/
+/* apparent. However, the parameter blocks from numpydoc render as block
+ * quotes, which looks bad. Furthermore, it is very easy for things to
+ * accidentally have block quotes due to the fact that RST makes indented
+ * blocks render as a block quote (unlike Markdown which makes indented blocks
+ * render as code). There aren't any places in the documentation that use a
+ * block quote on purpose. */
+blockquote {
+    border-left: inherit;
+    font-style: inherit;
+    margin-left: inherit;
+    margin-right: inherit;
+    padding: inherit;
+}
+
+/* Make top-level items in the sidebar bold */
+.sidebar-tree .toctree-l1>.reference, .sidebar-tree .toctree-l1>label .icon {
+    font-weight: bold;
+}
+.sidebar-brand-text {
+    font-weight: bold;
+}
+
+/* Make the "class", "property" and so on before function names in the API*/
+/* docs bold. */
+em.property:first-child {
+    font-weight: bold;
+}
+
+.admonition.warning>.admonition-title {
+    color: white;
+}
+
+/* Makes the text look better on Mac retina displays (the Furo CSS disables*/
+/* subpixel antialiasing). */
+body {
+    -webkit-font-smoothing: auto;
+    -moz-osx-font-smoothing: auto;
+}
+
+/* Disable upcasing of headers 4+ (they are still distinguishable by*/
+/* font-weight and size) */
+h4, h5, h6 {
+    text-transform: inherit;
+}
+
+
+/* Disable underlines on links except on hover, and give visited links a*/
+/* darker green color. */
+a {
+    text-decoration: none;
+}
+a:visited {
+    color: #307748;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+
+/* Remove the underline from module names in code blocks in dark mode */
+body[data-theme="dark"] .highlight .nn {
+    text-decoration: none;
+}
+
+/* /\* Adjustments to the pygments code theme so that it always has a contrast of */
+/*    at least 7.0 (see the Chrome dev tools) *\/ */
+/* .highlight .c1 { */
+/*     color: #2d5b66; */
+/* } */

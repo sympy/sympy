@@ -145,6 +145,49 @@ html_last_updated_fmt = '%b %d, %Y'
 # html_theme = "classic"
 html_theme = "furo"
 
+css_settings_common = {
+    "color-brand-primary": "#81B953",
+    "color-brand-content": "#29A329",
+    "color-sidebar-background": "#3B5526",
+    "color-sidebar-link-text": "#FFFFFF",
+    "color-sidebar-brand-text": "#DDDDDD",
+    "color-sidebar-link-text--top-level": "#FFFFFF",
+    "color-sidebar-search-icon": "#DDDDDD",
+    "color-sidebar-item-background--hover": "#8AB950",
+
+        "color-api-keyword": "#29A329",
+    "color-foreground-secondary": "#53555B",
+    "color-link-underline--hover": "#29A329",
+
+    # TODO: Add the other types of admonitions here if anyone uses them.
+    "color-admonition-title-background--seealso": "var(--color-brand-primary)",
+    "color-admonition-title--seealso": "black",
+    "color-admonition-title-background--note": "var(--color-brand-primary)",
+    "color-admonition-title--note": "black",
+    "color-admonition-title-background--warning": "var(--color-problematic)",
+    "color-admonition-title--warning": "white",
+
+    # Note: this doesn't work. If we want to change this, we have to set
+    # it as the .highlight background in custom.css.
+    "color-code-background": "hsl(80deg 100% 95%)",
+
+    "admonition-font-size": "var(--font-size--normal)",
+    "admonition-title-font-size": "var(--font-size--normal)",
+    "code-font-size": "var(--font-size--small)",
+    "font-stack--monospace": 'DejaVu Sans Mono,"SFMono-Regular",Menlo,Consolas,Monaco,Liberation Mono,Lucida Console,monospace;'
+}
+
+html_theme_options = {
+    "light_css_variables": css_settings_common,
+    "dark_css_variables": {**css_settings_common,
+                           "color-api-highlight-on-target": "#444444",
+                           },
+}
+
+# custom.css contains changes that aren't possible with the above because they
+# aren't specified in the Furo theme as CSS variables
+html_css_files = ['custom.css']
+
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
 # See http://www.sphinx-doc.org/en/master/theming.html#builtin-themes
