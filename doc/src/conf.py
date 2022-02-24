@@ -154,6 +154,7 @@ css_settings_common = {
     "color-sidebar-link-text--top-level": "#FFFFFF",
     "color-sidebar-search-icon": "#DDDDDD",
     "color-sidebar-item-background--hover": "#8AB950",
+    "color-sidebar-item-expander-background--hover": "#8AB950",
 
         "color-api-keyword": "#29A329",
     "color-foreground-secondary": "#53555B",

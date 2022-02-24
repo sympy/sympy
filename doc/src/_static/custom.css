@@ -31,6 +31,10 @@ blockquote {
     font-weight: bold;
 }
 
+a.sidebar-brand:hover {
+    text-decoration: none;
+}
+
 /* Make the "class", "property" and so on before function names in the API*/
 /* docs bold. */
 em.property:first-child {
@@ -72,9 +76,3 @@ a:hover {
 body[data-theme="dark"] .highlight .nn {
     text-decoration: none;
 }
-
-/* /\* Adjustments to the pygments code theme so that it always has a contrast of */
-/*    at least 7.0 (see the Chrome dev tools) *\/ */
-/* .highlight .c1 { */
-/*     color: #2d5b66; */
-/* } */
