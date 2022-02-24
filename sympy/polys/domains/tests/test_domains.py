@@ -820,7 +820,7 @@ def test_RealField_from_sympy():
 
 def test_not_in_any_domain():
     check = list(_illegal) + [x] + [
-        float(i) for i in _illegal if i != S.ComplexInfinity]
+        float(i) for i in _illegal[:3]]
     for dom in (ZZ, QQ, RR, CC, EX):
         for i in check:
             if i == x and dom == EX:

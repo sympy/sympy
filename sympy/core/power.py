@@ -1651,9 +1651,10 @@ class Pow(Expr):
             from sympy.simplify.powsimp import powsimp
             return powsimp(exp_series, deep=True, combine='exp')
         from sympy.simplify.powsimp import powdenest
+        from .numbers import _illegal
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
-        from .numbers import _illegal
+
         if e.has(*_illegal):
             raise PoleError()
 

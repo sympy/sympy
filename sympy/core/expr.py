@@ -231,7 +231,7 @@ class Expr(Basic, EvalfMixin):
             if other >= 0:
                 return pow(_self, other, mod)
             else:
-                from sympy.core.numbers import mod_inverse
+                from .numbers import mod_inverse
                 return mod_inverse(pow(_self, -other, mod), mod)
         except ValueError:
             power = self._pow(other)
@@ -379,7 +379,6 @@ class Expr(Basic, EvalfMixin):
 
     @staticmethod
     def _from_mpmath(x, prec):
-        from .numbers import Float
         if hasattr(x, "_mpf_"):
             return Float._new(x._mpf_, prec)
         elif hasattr(x, "_mpc_"):
@@ -3983,7 +3982,6 @@ def _mag(x):
     try:
         mag_first_dig = int(ceil(log10(xpos)))
     except (ValueError, OverflowError):
-        from .numbers import Float
         mag_first_dig = int(ceil(Float(mpf_log(xpos._mpf_, 53))/log(10)))
     # check that we aren't off by 1
     if (xpos/10**mag_first_dig) >= 1:
