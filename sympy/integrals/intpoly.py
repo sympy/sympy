@@ -323,8 +323,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     else:
         if not isinstance(expr, list):
             polynomials = decompose(expr)
-            answer = _polynomial_integrate(polynomials, facets, hp_params)
-            return answer
+            return _polynomial_integrate(polynomials, facets, hp_params)
         else:
             result = {}
             for exp in expr:
