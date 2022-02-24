@@ -847,9 +847,9 @@ class DelaporteDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(lamda, alpha, beta):
-        _value_check(lamda > 0, 'lambda should be positive')
-        _value_check(alpha > 0, 'alpha should be positive')
-        _value_check(beta > 0, 'beta should be positive')
+        _value_check(lamda.is_positive, 'lambda should be positive')
+        _value_check(alpha.is_positive, 'alpha should be positive')
+        _value_check(beta.is_positive, 'beta should be positive')
 
     def pdf(self, k):
         lamda = self.lamda
