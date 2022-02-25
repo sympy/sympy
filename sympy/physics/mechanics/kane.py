@@ -332,7 +332,7 @@ class KanesMethod(_Methods):
         return partial_velocity(vel_list, self.u, self._inertial)
 
     def _assert_no_qdot(self, vel_list):
-        q_dot_set = set(self._qdot).union([_qd.diff() for _qd in self._qdot]) 
+        q_dot_set = set(self._qdot).union([_qd.diff() for _qd in self._qdot])
         for vel in vel_list:
             dyn_symbols = find_dynamicsymbols(vel, reference_frame=self._inertial)
             dyn_intersect = dyn_symbols.intersection(q_dot_set)
@@ -622,7 +622,7 @@ class KanesMethod(_Methods):
                         u_auxiliary=self._uaux, u_dependent=self._udep,
                         velocity_constraints=(self._k_nh * self.u +
                         self._f_nh),
-                        acceleration_constraints=(self._k_dnh * self._udot + 
+                        acceleration_constraints=(self._k_dnh * self._udot +
                         self._f_dnh)
                         )
             km._qdot_u_map = self._qdot_u_map

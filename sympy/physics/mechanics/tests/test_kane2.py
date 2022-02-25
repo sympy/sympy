@@ -499,7 +499,7 @@ def test_sub_qdot2():
     u_expr += qd[3:]
     kde = [ui - e for ui, e in zip(u, u_expr)]
 
-    for explicit_kinematics in [True, False]:        
+    for explicit_kinematics in [True, False]:
         km1 = KanesMethod(A, q, u, kde, explicit_kinematics=explicit_kinematics)
 
         if explicit_kinematics:
@@ -517,7 +517,7 @@ def test_sub_qdot2():
                 _p.set_acc(A, msubs(_p.acc(A), kde_sol))
 
             fr1, _ = km1.kanes_equations([], forces)
-        
+
         fr1_expected = Matrix([
             -R*g*m*sin(q[1]),
             -R*(Px*cos(q[0]) + Py*sin(q[0]))*tan(q[1]),
@@ -536,21 +536,21 @@ def test_sub_qdot2():
                           explicit_kinematics=explicit_kinematics)
         if explicit_kinematics:
             km2 = KanesMethod(A, q, u_indep, kde, **km2_kwargs)
-            fr2, _ = km2.kanes_equations([], forces)        
+            fr2, _ = km2.kanes_equations([], forces)
         else:
             #We expect kanes_equations to complain about "qdot terms"
             #when using implicit kinematics for this problem because
-            #it cant properly compute the constraint matrix 
+            #it cant properly compute the constraint matrix
             with raises(ValueError):
                 km2 = KanesMethod(A, q, u_indep, kde, **km2_kwargs)
-            
+
             # Try again but 'manually' subing qdot in velocity constraints
             # And acceleration constraints
             km2_kwargs['velocity_constraints'] = [msubs(_v, kde_sol) for _v in vc]
             km2_kwargs['acceleration_constraints'] = [msubs(_v.diff(dynamicsymbols._t), kde_sol) for _v in vc]
 
             km2 = KanesMethod(A, q, u_indep, kde, **km2_kwargs)
-            fr2, _ = km2.kanes_equations([], forces) 
+            fr2, _ = km2.kanes_equations([], forces)
 
 
         fr2_expected = Matrix([

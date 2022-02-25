@@ -65,23 +65,23 @@ def test_replace_qdots_in_force():
         # returns also a dictionary to restore velocities/accels
         # to using qdots in the expression
         kde_sol = get_kde_sol(kdes)
-        
+
         original_qdots = {}
         for p in points:
             # before substituting, save original vel/acc as function of qdots
             original_qdots[p.set_vel] = (N, p.vel(N))
             original_qdots[p.set_acc] = (N, p.acc(N))
-            
+
             p.set_vel(N, msubs(p.vel(N), kde_sol))
             p.set_acc(N, msubs(p.acc(N), kde_sol))
-            
+
         for f in frames:
             original_qdots[f.set_ang_vel] = (N, f.ang_vel_in(N))
             original_qdots[f.set_ang_acc] = (N, f.ang_acc_in(N))
-            
+
             f.set_ang_vel(N, msubs(f.ang_vel_in(N), kde_sol))
             f.set_ang_acc(N, msubs(f.ang_acc_in(N), kde_sol))
-        
+
         forces_u = [(p, msubs(f, kde_sol)) for (p, f) in forces]
         return forces_u, original_qdots
 
@@ -89,7 +89,7 @@ def test_replace_qdots_in_force():
         # restore velocities/accels to qdots
         for set_func, args in original_qdots.items():
             set_func(*args)
-            
+
     for explicit_kinematics in [True, False]:
         original_qdots = {}
         for forces in [forces_linear, forces_cubic]:
@@ -111,7 +111,7 @@ def test_replace_qdots_in_force():
                     # Try again but this time replace qdot terms with u 'manually'
                     # We do this to still ensure this problem gets tested although
                     # technically the main purpose of this test is to ensure
-                    # that qdot terms in forces get replaced with u terms.        
+                    # that qdot terms in forces get replaced with u terms.
                     forces_u, original_qdots = sub_qdots(forces, [P, Q], [A, B], kd_eqs)
                     fr, fstar = KM.kanes_equations([Ap, Bp], forces_u)
 
@@ -122,7 +122,7 @@ def test_replace_qdots_in_force():
                     else:
                         fr_expected = Matrix([ 0, -(sig*q2 + delta * u2**3) ])
 
-                elif kdi == 1:            
+                elif kdi == 1:
                     if forces == forces_linear:
                         fr_expected = Matrix([sig * q2 + delta * (u2 - u1),
                                             - sig * q2 - delta * (u2 - u1)])
