@@ -47,7 +47,7 @@ from .operations import LatticeOp
 from .parameters import global_parameters
 from .rules import Transform
 from .singleton import S
-from .sympify import sympify
+from .sympify import sympify, _sympify
 
 from .sorting import default_sort_key, ordered
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
@@ -1276,12 +1276,36 @@ class Derivative(Expr):
         # derivative.
         variable_count = []
         array_likes = (tuple, list, Tuple)
-        integer_likes = (int, Integer)
 
         from sympy.tensor.array import Array, NDimArray
 
         for i, v in enumerate(variables):
-            if isinstance(v, integer_likes):
+            if isinstance(v, UndefinedFunction):
+                raise TypeError(
+                    "cannot differentiate wrt "
+                    "UndefinedFunction: %s" % v)
+
+            if isinstance(v, array_likes):
+                if len(v) == 0:
+                    # Ignore empty tuples: Derivative(expr, ... , (), ... )
+                    continue
+                if isinstance(v[0], array_likes):
+                    # Derive by array: Derivative(expr, ... , [[x, y, z]], ... )
+                    if len(v) == 1:
+                        v = Array(v[0])
+                        count = 1
+                    else:
+                        v, count = v
+                        v = Array(v)
+                else:
+                    v, count = v
+                if count == 0:
+                    continue
+                variable_count.append(Tuple(v, count))
+                continue
+
+            v = _sympify(v)
+            if isinstance(v, Integer):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
                 count = v
@@ -1293,28 +1317,7 @@ class Derivative(Expr):
                 else:
                     variable_count[-1] = Tuple(prev, count)
             else:
-                if isinstance(v, array_likes):
-                    if len(v) == 0:
-                        # Ignore empty tuples: Derivative(expr, ... , (), ... )
-                        continue
-                    if isinstance(v[0], array_likes):
-                        # Derive by array: Derivative(expr, ... , [[x, y, z]], ... )
-                        if len(v) == 1:
-                            v = Array(v[0])
-                            count = 1
-                        else:
-                            v, count = v
-                            v = Array(v)
-                    else:
-                        v, count = v
-                    if count == 0:
-                        continue
-                elif isinstance(v, UndefinedFunction):
-                    raise TypeError(
-                        "cannot differentiate wrt "
-                        "UndefinedFunction: %s" % v)
-                else:
-                    count = 1
+                count = 1
                 variable_count.append(Tuple(v, count))
 
         # light evaluation of contiguous, identical
