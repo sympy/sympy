@@ -212,6 +212,7 @@ class KanesMethod(_Methods):
             # object, and the qd_u_map will not be available.
             if self._qdot_u_map is not None:
                 vel = msubs(vel, self._qdot_u_map)
+            self._assert_no_qdot(vel)
 
             self._f_nh = msubs(vel, u_zero)
             self._k_nh = (vel - self._f_nh).jacobian(self.u)
@@ -221,11 +222,13 @@ class KanesMethod(_Methods):
                           self._f_nh.diff(dynamicsymbols._t))
                 if self._qdot_u_map is not None:
                     _f_dnh = msubs(_f_dnh, self._qdot_u_map)
+                self._assert_no_qdot(_f_dnh)
                 self._f_dnh = _f_dnh
                 self._k_dnh = self._k_nh
             else:
                 if self._qdot_u_map is not None:
                     acc = msubs(acc, self._qdot_u_map)
+                self._assert_no_qdot(acc)
                 self._f_dnh = msubs(acc, udot_zero)
                 self._k_dnh = (acc - self._f_dnh).jacobian(self._udot)
 
@@ -325,15 +328,19 @@ class KanesMethod(_Methods):
         Return the partial velocity w.r.t. generalized speeds
         Throws an error if qdot terms are left
         '''
-        q_dot_set = set(self._qdot)
+        self._assert_no_qdot(vel_list)
+        return partial_velocity(vel_list, self.u, self._inertial)
+
+    def _assert_no_qdot(self, vel_list):
+        q_dot_set = set(self._qdot).union([_qd.diff() for _qd in self._qdot]) 
         for vel in vel_list:
             dyn_symbols = find_dynamicsymbols(vel, reference_frame=self._inertial)
-            if (dyn_symbols & q_dot_set):
-                raise ValueError('Found qdot terms in velocities. '
+            dyn_intersect = dyn_symbols.intersection(q_dot_set)
+            if dyn_intersect:
+                raise ValueError(f'Found qdot or qdotdot terms {dyn_intersect} in velocities, accelerations, or constraints. '
                 'To properly compute velocity partials, either use `explicit_kinematics=True` to remove them automatically, '
                 'or manually express velocities independently from qdot terms'
                 )
-        return partial_velocity(vel_list, self.u, self._inertial)
 
     def _form_fr(self, fl):
         """Form the generalized active force."""
@@ -614,7 +621,10 @@ class KanesMethod(_Methods):
                 km = KanesMethod(self._inertial, self.q, self._uaux,
                         u_auxiliary=self._uaux, u_dependent=self._udep,
                         velocity_constraints=(self._k_nh * self.u +
-                        self._f_nh))
+                        self._f_nh),
+                        acceleration_constraints=(self._k_dnh * self._udot + 
+                        self._f_dnh)
+                        )
             km._qdot_u_map = self._qdot_u_map
             self._km = km
             fraux = km._form_fr(loads)
@@ -667,7 +677,7 @@ class KanesMethod(_Methods):
         if self._qdot_u_map is None:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
-        elif not self._qdot_u_map:
+        elif self._qdot_u_map == dict():
             warn('This KanesMethod instance was initalized to use implicit kinematics but '
                 'explicit mapping from u to q\' is being requested: computing on the fly')
             qdot_u_vec = self.mass_matrix_kin.LUsolve(self.forcing_kin)

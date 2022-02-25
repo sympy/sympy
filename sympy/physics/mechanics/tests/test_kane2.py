@@ -2,7 +2,7 @@ from sympy.core.backend import cos, Matrix, sin, zeros, tan, pi, symbols
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.solvers.solvers import solve
-from sympy.physics.mechanics import (cross, dot, dynamicsymbols,
+from sympy.physics.mechanics import (cross, dot, dynamicsymbols, msubs,
                                      find_dynamicsymbols, KanesMethod, inertia,
                                      inertia_of_point_mass, Point,
                                      ReferenceFrame, RigidBody)
@@ -173,12 +173,31 @@ def test_aux_dep():
 
     # KanesMethod.
     for explicit_kinematics in [True, False]:
-        kane = KanesMethod(
-            N, q_ind= q[:3], u_ind= u[:3], kd_eqs=kindiffs,
+        KM_kwargs = dict(
+            q_ind= q[:3], u_ind= u[:3], kd_eqs=kindiffs,
             q_dependent=q[3:], configuration_constraints = f_c,
             u_dependent=u[3:], velocity_constraints= f_v,
-            u_auxiliary=ua, explicit_kinematics = explicit_kinematics
-            )
+            u_auxiliary=ua, explicit_kinematics = explicit_kinematics)
+        if explicit_kinematics:
+            kane = KanesMethod(N, **KM_kwargs)
+        else:
+            # Implicit kinematics are expected to raise an error
+            # as velocities/accelerations have qdot terms in them
+            with raises(ValueError):
+                kane = KanesMethod(N, **KM_kwargs)
+            # For implicit kinematics the generalized speeds should be chosen
+            # in such a way that qdot's don't appear in speeds, accelerations, etc
+            # To keep things similar for comparisons sake in this unit test
+            # we 'manually' replace all qdot terms with udot terms
+            # by solving the kinematics beforehand
+            kdd = solve(kindiffs, [_q.diff() for _q in q])
+            O.set_acc(N, msubs(O.acc(N), kdd))
+            P.set_acc(N, msubs(P.acc(N), kdd))
+            C.set_ang_acc(N, msubs(C.ang_acc_in(N), kdd).simplify())
+            KM_kwargs['acceleration_constraints'] = trigsimp(msubs(f_v.diff(dynamicsymbols._t), kdd))
+
+            kane = KanesMethod(N, **KM_kwargs)
+
 
         # fr, frstar, frstar_steady and kdd(kinematic differential equations).
         (fr, frstar)= kane.kanes_equations(bodyList, forceList)
@@ -192,18 +211,16 @@ def test_aux_dep():
                 kdd = kane.kindiffdict()
 
         assert Matrix(Fr_c).expand() == fr.expand()
-        assert Matrix(Fr_star_c.subs(kdd)).expand() == frstar.subs(kdd).expand()
 
+        frstar_diff = Matrix(Fr_star_c.subs(kdd)) - frstar.subs(kdd)
+        assert trigsimp(frstar_diff) == zeros(*frstar_diff.shape)
 
-        assert (simplify(Matrix(Fr_star_steady).expand()) ==
-                simplify(frstar_steady.expand()))
+        frstar_steady_diff = Matrix(Fr_star_steady) - frstar_steady
+        assert trigsimp(frstar_steady_diff) == zeros(*frstar_steady_diff.shape)
 
-        #If kinematics are explicit then we expect that no qdot
-        #terms to appear in the forcing vector
-        if explicit_kinematics:
-            syms_in_forcing = find_dynamicsymbols(kane.forcing)
-            for qdi in qd:
-                assert qdi not in syms_in_forcing
+        syms_in_forcing = find_dynamicsymbols(kane.forcing)
+        for qdi in qd:
+            assert qdi not in syms_in_forcing
 
 
 def test_non_central_inertia():
@@ -309,6 +326,9 @@ def test_non_central_inertia():
 def test_sub_qdot():
     # This test solves exercises 8.12, 8.17 from Kane 1985 and defines
     # some velocities in terms of q, qdot.
+    # This functionality requires explicit_kinematics=True (default), otherwise
+    # KanesMethod will throw an error requesting either explicit_kinematics
+    # be set to true or that velocities and constraints are expressed in u terms
 
     ## --- Declare symbols ---
     q1, q2, q3 = dynamicsymbols('q1:4')
@@ -396,11 +416,23 @@ def test_sub_qdot():
             fr, fr_star = km.kanes_equations(bodies, forces)
         else:
             with raises(ValueError):
-                #We expect kanes_equations to complain about "qdot terms in velocities"
-                #when using implicit kinematics for this problem because
-                #it cant properly compute velocity partials
+                # We expect kanes_equations to complain about "qdot terms in velocities"
+                # when using implicit kinematics for this problem because
+                # it cant properly compute velocity partials
                 fr, fr_star = km.kanes_equations(bodies, forces)
-            continue
+
+            # Try again but this time replace qdot terms with u 'manually'
+            # We do this to keep things consistent for the purposes of this
+            # unit test, but in practice one should choose definitions of u
+            # to avoid the need to solve kinematics'
+            for p in [pS_star, pQ, pA_star, pB_star, pC_star]:
+                p.set_vel(F, msubs(p.vel(F), kde_map))
+                p.set_acc(F, msubs(p.acc(F), kde_map))
+            for frame in [A, B, C]:
+                frame.set_ang_vel(F, msubs(frame.ang_vel_in(F), kde_map))
+
+            fr, fr_star = km.kanes_equations(bodies, forces)
+
 
         assert (fr.expand() == fr_expected.expand())
 
@@ -417,6 +449,10 @@ def test_sub_qdot2():
     # KanesMethod constructor will fail during the constraint initialization as
     # the B matrix will be poorly formed and inversion of the dependent part
     # will fail.
+    #
+    # This functionality requires explicit_kinematics=True (default), otherwise
+    # KanesMethod will throw an error requesting either explicit_kinematics
+    # be set to true or that velocities and constraints are expressed in u terms
 
     g, m, Px, Py, Pz, R, t = symbols('g m Px Py Pz R t')
     q = dynamicsymbols('q:5')
@@ -463,42 +499,62 @@ def test_sub_qdot2():
     u_expr += qd[3:]
     kde = [ui - e for ui, e in zip(u, u_expr)]
 
-    for explicit_kinematics in [True, False]:
-        km1 = KanesMethod(A, q, u, kde,
-                explicit_kinematics=explicit_kinematics)
-
-        ## Calculate generalized active forces if we impose the condition that the
-        # disk C is rolling without slipping
-        u_indep = u[:3]
-        u_dep = list(set(u) - set(u_indep))
-        vc = [pC_hat.vel(A) & uv for uv in [A.x, A.y]]
-
-        km2 = KanesMethod(A, q, u_indep, kde,
-                          u_dependent=u_dep, velocity_constraints=vc,
-                          explicit_kinematics=explicit_kinematics)
+    for explicit_kinematics in [True, False]:        
+        km1 = KanesMethod(A, q, u, kde, explicit_kinematics=explicit_kinematics)
 
         if explicit_kinematics:
             fr1, _ = km1.kanes_equations([], forces)
-            fr2, _ = km2.kanes_equations([], forces)
         else:
-            #We expect kanes_equations to complain about "qdot terms in velocities"
-            #when using implicit kinematics for this problem because
-            #it cant properly compute velocity partials
             with raises(ValueError):
                 fr1, _ = km1.kanes_equations([], forces)
-            with raises(ValueError):
-                fr2, _ = km2.kanes_equations([], forces)
-            continue
+            # Try again but this time replace qdot terms with u 'manually'
+            # We do this to keep things consistent for the purposes of this
+            # unit test, but in practice one should choose definitions of u
+            # to avoid the need to solve kinematics
+            kde_sol = solve(kde, [_q.diff() for _q in q])
+            for _p in [pC_hat, pCs]:
+                _p.set_vel(A, msubs(_p.vel(A), kde_sol))
+                _p.set_acc(A, msubs(_p.acc(A), kde_sol))
 
+            fr1, _ = km1.kanes_equations([], forces)
+        
         fr1_expected = Matrix([
             -R*g*m*sin(q[1]),
             -R*(Px*cos(q[0]) + Py*sin(q[0]))*tan(q[1]),
             R*(Px*cos(q[0]) + Py*sin(q[0])),
             Px,
             Py])
+        assert (trigsimp(fr1.expand()) == trigsimp(fr1_expected.expand()))
+
+        # Calculate generalized active forces if we impose the condition that the
+        # disk C is rolling without slipping
+        u_indep = u[:3]
+        u_dep = list(set(u) - set(u_indep))
+        vc = [pC_hat.vel(A) & uv for uv in [A.x, A.y]]
+
+        km2_kwargs = dict(u_dependent=u_dep, velocity_constraints=vc,
+                          explicit_kinematics=explicit_kinematics)
+        if explicit_kinematics:
+            km2 = KanesMethod(A, q, u_indep, kde, **km2_kwargs)
+            fr2, _ = km2.kanes_equations([], forces)        
+        else:
+            #We expect kanes_equations to complain about "qdot terms"
+            #when using implicit kinematics for this problem because
+            #it cant properly compute the constraint matrix 
+            with raises(ValueError):
+                km2 = KanesMethod(A, q, u_indep, kde, **km2_kwargs)
+            
+            # Try again but 'manually' subing qdot in velocity constraints
+            # And acceleration constraints
+            km2_kwargs['velocity_constraints'] = [msubs(_v, kde_sol) for _v in vc]
+            km2_kwargs['acceleration_constraints'] = [msubs(_v.diff(dynamicsymbols._t), kde_sol) for _v in vc]
+
+            km2 = KanesMethod(A, q, u_indep, kde, **km2_kwargs)
+            fr2, _ = km2.kanes_equations([], forces) 
+
+
         fr2_expected = Matrix([
             -R*g*m*sin(q[1]),
             0,
             0])
-        assert (trigsimp(fr1.expand()) == trigsimp(fr1_expected.expand()))
         assert (trigsimp(fr2.expand()) == trigsimp(fr2_expected.expand()))
