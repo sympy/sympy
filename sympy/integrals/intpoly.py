@@ -103,7 +103,8 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
         if expr is not None:
             f_expr = []
             for exp in expr:
-                if list((decompose(exp)).keys())[0] == 0 and len(decompose(exp)) == 1:
+                _ = decompose(exp)
+                if len(_) == 1 and not _.popitem()[0]:
                     f_expr.append(exp)
                 elif Poly(exp).total_degree() <= max_degree:
                     f_expr.append(exp)
