@@ -93,11 +93,11 @@ dimsys_length_weight_time.set_quantity_scale_factor(dioptre, 1/meter)
 
 # Common volume and area units
 
-dimsys_length_weight_time.set_quantity_dimension(hectare, length ** 2)
-dimsys_length_weight_time.set_quantity_scale_factor(hectare, ( meter ** 2 )*( 10000 ))
+dimsys_length_weight_time.set_quantity_dimension(hectare, length**2)
+dimsys_length_weight_time.set_quantity_scale_factor(hectare, (meter**2)*(10000))
 
-dimsys_length_weight_time.set_quantity_dimension(liter, length ** 3)
-dimsys_length_weight_time.set_quantity_scale_factor(liter, meter**3 / 1000)
+dimsys_length_weight_time.set_quantity_dimension(liter, length**3)
+dimsys_length_weight_time.set_quantity_scale_factor(liter, meter**3/1000)
 
 
 # Newton constant
