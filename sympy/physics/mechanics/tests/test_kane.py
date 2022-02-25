@@ -1,6 +1,6 @@
 from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros)
-from sympy.simplify.simplify import simplify
+from sympy.simplify.simplify import simplify, trigsimp
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot)
@@ -174,7 +174,7 @@ def test_rolling_disc():
         if explicit_kinematics:
             kdd = KM.kindiffdict()
         else:
-            with warns(UserWarning):
+            with warns(UserWarning, match='.*implicit kinematics.*', test_stacklevel=False):
                 kdd = KM.kindiffdict()
         rhs = rhs.subs(kdd)
         rhs.simplify()
@@ -239,11 +239,8 @@ def test_aux():
         fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
         frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
-        frstar.simplify()
-        frstar2.simplify()
-
-        assert simplify((fr - fr2).expand()) == Matrix([0, 0, 0, 0, 0])
-        assert simplify((frstar - frstar2).expand()) == Matrix([0, 0, 0, 0, 0])
+        assert trigsimp((fr - fr2).expand()) == zeros(*fr.shape)
+        assert trigsimp((frstar - frstar2).expand()) == zeros(*frstar.shape)
 
 
 def test_parallel_axis():

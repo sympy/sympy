@@ -6,7 +6,7 @@ from sympy.solvers.solvers import solve
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
-from sympy.testing.pytest import slow
+from sympy.testing.pytest import slow, raises
 
 
 @slow
@@ -229,10 +229,21 @@ def test_linearize_pendulum_kane_nonminimal():
 
     # Derive the equations of motion using the KanesMethod class.
     for explicit_kinematics in [True, False]:
-        KM = KanesMethod(N, q_ind=[q2], u_ind=[u2], q_dependent=[q1],
+        KM_kwargs = dict(q_ind=[q2], u_ind=[u2], q_dependent=[q1],
                 u_dependent=[u1], configuration_constraints=f_c,
                 velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde,
                 explicit_kinematics = explicit_kinematics)
+        if explicit_kinematics:
+            KM = KanesMethod(N, **KM_kwargs)
+        else:
+            # Expect error as accelerations are a function of qdots which
+            # implicit kinematics will not handle
+            with raises(ValueError):
+                KM = KanesMethod(N, **KM_kwargs)
+            # Try again after replacing qdots with u's
+            KM_kwargs['acceleration_constraints'] = f_a.subs(dq_dict)
+            KM = KanesMethod(N, **KM_kwargs)
+
         (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
 
         # Set the operating point to be straight down, and non-moving

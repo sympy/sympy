@@ -207,7 +207,7 @@ def test_aux_dep():
         if explicit_kinematics:
             kdd = kane.kindiffdict()
         else:
-            with warns(UserWarning):
+            with warns(UserWarning, match='.*implicit kinematics.*', test_stacklevel=False):
                 kdd = kane.kindiffdict()
 
         assert Matrix(Fr_c).expand() == fr.expand()
@@ -320,8 +320,8 @@ def test_non_central_inertia():
                                      (I, pD)))
         fr2, fr_star2 = km.kanes_equations(bodies2, forces)
 
-        fr_star2_simp = trigsimp(fr_star2.subs(vc_map).subs({u3: 0})).doit()
-        assert (fr_star_expected - fr_star2_simp).expand() == zeros(3, 1)
+        fr_star2_simp = (fr_star2.subs(vc_map).subs({u3: 0})).doit()
+        assert trigsimp((fr_star_expected - fr_star2_simp).expand()) == zeros(*fr_star2.shape)
 
 def test_sub_qdot():
     # This test solves exercises 8.12, 8.17 from Kane 1985 and defines
@@ -435,9 +435,7 @@ def test_sub_qdot():
 
 
         assert (fr.expand() == fr_expected.expand())
-
-        fr_star_simp = trigsimp(fr_star)
-        assert ((fr_star_expected - fr_star_simp).expand() == zeros(3, 1))
+        assert trigsimp((fr_star_expected - fr_star).expand()) == zeros(*fr_star.shape)
 
 def test_sub_qdot2():
     # This test solves exercises 8.3 from Kane 1985 and defines

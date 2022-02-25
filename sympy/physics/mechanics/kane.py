@@ -331,14 +331,15 @@ class KanesMethod(_Methods):
         self._assert_no_qdot(vel_list)
         return partial_velocity(vel_list, self.u, self._inertial)
 
-    def _assert_no_qdot(self, vel_list):
+    def _assert_no_qdot(self, vel_or_acc_list):
         q_dot_set = set(self._qdot).union([_qd.diff() for _qd in self._qdot])
-        for vel in vel_list:
+        for vel in vel_or_acc_list:
             dyn_symbols = find_dynamicsymbols(vel, reference_frame=self._inertial)
             dyn_intersect = dyn_symbols.intersection(q_dot_set)
             if dyn_intersect:
                 raise ValueError(f'Found qdot or qdotdot terms {dyn_intersect} in velocities, accelerations, or constraints. '
-                'To properly compute velocity partials, either use `explicit_kinematics=True` to remove them automatically, '
+                'To properly compute velocity partials and jacobians, '
+                'either use `explicit_kinematics=True` to remove them automatically, '
                 'or manually express velocities independently from qdot terms'
                 )
 
