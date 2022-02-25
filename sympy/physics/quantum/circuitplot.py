@@ -204,7 +204,7 @@ class CircuitPlot:
         )
 
     def two_qubit_box(self, t, gate_idx, wire_idx):
-        """Draw a box for a two qubit gate. Doesn't work yet.
+        """Draw a box for a two qubit gate. Does not work yet.
         """
         # x = self._gate_grid[gate_idx]
         # y = self._wire_grid[wire_idx]+0.5

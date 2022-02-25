@@ -13,7 +13,7 @@ from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.testing.pytest import raises, warns
+from sympy.testing.pytest import raises, warns, warns_deprecated_sympy
 
 
 x = Symbol('x', real=True)
@@ -64,8 +64,13 @@ def test_angle_between():
     assert feq(Line.angle_between(Line(Point(0, 0), Point(1, 1)),
                                   Line(Point(0, 0), Point(5, 0))).evalf(), pi.evalf() / 4)
     assert Line(a, o).angle_between(Line(b, o)) == pi / 2
-    assert Line3D.angle_between(Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1)),
-                                Line3D(Point3D(0, 0, 0), Point3D(5, 0, 0))) == acos(sqrt(3) / 3)
+    z = Point3D(0, 0, 0)
+    assert Line3D.angle_between(Line3D(z, Point3D(1, 1, 1)),
+                                Line3D(z, Point3D(5, 0, 0))) == acos(sqrt(3) / 3)
+    # direction of points is used to determine angle
+    assert Line3D.angle_between(Line3D(z, Point3D(1, 1, 1)),
+                                Line3D(Point3D(5, 0, 0), z)) == acos(-sqrt(3) / 3)
+
 
 
 def test_closing_angle():
@@ -325,10 +330,10 @@ def test_contains():
     assert r3.contains(Point3D(0, 0, 0)) is True
     assert Ray3D(Point3D(1, 1, 1), Point3D(1, 0, 0)).contains([]) is False
     assert Line3D((0, 0, 0), (x, y, z)).contains((2 * x, 2 * y, 2 * z))
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert Line3D(p1, Point3D(0, 1, 0)).contains(Point(1.0, 1.0)) is False
 
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert r3.contains(Point(1.0, 1.0)) is False
 
 
@@ -369,7 +374,7 @@ def test_distance_2d():
 
 
 def test_dimension_normalization():
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert Ray((1, 1), (2, 1, 2)) == Ray((1, 1, 0), (2, 1, 2))
 
 
@@ -470,6 +475,10 @@ def test_equation():
         ).equation() == (x - 1, z - 3)
     assert Line3D(Point(1, 2, 3), Point(2, 2, 3)
         ).equation() == (y - 2, z - 3)
+
+    with warns_deprecated_sympy():
+        assert Line3D(Point(1, 2, 3), Point(2, 2, 3)
+        ).equation(k='k') == (y - 2, z - 3)
 
 
 def test_intersection_2d():
@@ -722,6 +731,21 @@ def test_projection():
     assert l2.projection(Line3D(Point3D(0, 1, 0), Point3D(1, 1, 0))).equals(l2)
 
 
+def test_perpendicular_line():
+    # 3d - requires a particular orthogonal to be selected
+    p1, p2, p3 = Point(0, 0, 0), Point(2, 3, 4), Point(-2, 2, 0)
+    l = Line(p1, p2)
+    p = l.perpendicular_line(p3)
+    assert p.p1 == p3
+    assert p.p2 in l
+    # 2d - does not require special selection
+    p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
+    l = Line(p1, p2)
+    p = l.perpendicular_line(p3)
+    assert p.p1 == p3
+    # p is directed from l to p3
+    assert p.direction.unit == (p3 - l.projection(p3)).unit
+
 
 def test_perpendicular_bisector():
     s1 = Segment(Point(0, 0), Point(1, 1))
@@ -820,3 +844,14 @@ def test_issue_8615():
     a = Line3D(Point3D(6, 5, 0), Point3D(6, -6, 0))
     b = Line3D(Point3D(6, -1, 19/10), Point3D(6, -1, 0))
     assert a.intersection(b) == [Point3D(6, -1, 0)]
+
+
+def test_issue_12598():
+    r1 = Ray(Point(0, 1), Point(0.98, 0.79).n(2))
+    r2 = Ray(Point(0, 0), Point(0.71, 0.71).n(2))
+    assert str(r1.intersection(r2)[0]) == 'Point2D(0.82, 0.82)'
+    l1 = Line((0, 0), (1, 1))
+    l2 = Segment((-1, 1), (0, -1)).n(2)
+    assert str(l1.intersection(l2)[0]) == 'Point2D(-0.33, -0.33)'
+    l2 = Segment((-1, 1), (-1/2, 1/2)).n(2)
+    assert not l1.intersection(l2)

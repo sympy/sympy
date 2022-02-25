@@ -9,6 +9,9 @@ from sympy.combinatorics.coset_table import (CosetTable,
                                              coset_enumeration_r,
                                              coset_enumeration_c)
 from sympy.combinatorics import PermutationGroup
+from sympy.matrices.normalforms import invariant_factors
+from sympy.matrices import Matrix
+from sympy.polys.polytools import gcd
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
@@ -100,7 +103,7 @@ class FpGroup(DefaultPrinting):
         Compare `word1` and `word2` for equality in the group
         using the group's rewriting system. If the system is
         confluent, the returned answer is necessarily correct.
-        (If it isn't, `False` could be returned in some cases
+        (If it is not, `False` could be returned in some cases
         where in fact `word1 == word2`)
 
         '''
@@ -128,7 +131,7 @@ class FpGroup(DefaultPrinting):
         ========
 
         >>> from sympy.combinatorics.fp_groups import FpGroup
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
         >>> H = [x*y, x**-1*y**-1*x*y*x]
@@ -222,7 +225,7 @@ class FpGroup(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x, y**2])
@@ -230,7 +233,6 @@ class FpGroup(DefaultPrinting):
         2
 
         """
-        from sympy.polys.polytools import gcd
         if self._order is not None:
             return self._order
         if self._coset_table is not None:
@@ -263,8 +265,6 @@ class FpGroup(DefaultPrinting):
             return True
         # Abelianisation test: check is the abelianisation is infinite
         abelian_rels = []
-        from sympy.matrices.normalforms import invariant_factors
-        from sympy.matrices import Matrix
         for rel in self.relators:
             abelian_rels.append([rel.exponent_sum(g) for g in self.generators])
         m = Matrix(Matrix(abelian_rels))
@@ -342,7 +342,7 @@ class FpGroup(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**5, y**4, y*x*y**3*x**3])
@@ -735,7 +735,7 @@ def low_index_subgroups(G, N, Y=()):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, low_index_subgroups
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
@@ -848,7 +848,7 @@ def first_in_class(C, Y=()):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, first_in_class
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
@@ -1064,7 +1064,7 @@ def _simplification_technique_1(rels):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics import free_group
     >>> from sympy.combinatorics.fp_groups import _simplification_technique_1
     >>> F, x, y = free_group("x, y")
     >>> w1 = [x**2*y**4, x**3]
@@ -1080,8 +1080,6 @@ def _simplification_technique_1(rels):
     [x**2*y**4, x**4]
 
     """
-    from sympy.polys.polytools import gcd
-
     rels = rels[:]
     # dictionary with "gen: n" where gen^n is one of the relators
     exps = {}
@@ -1225,7 +1223,7 @@ def rewrite(C, alpha, w):
     ========
 
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, define_schreier_generators, rewrite
-    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics import free_group
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**6])
     >>> C = CosetTable(f, [])
@@ -1250,7 +1248,7 @@ def elimination_technique_2(C):
     seems superior in that we may select for elimination the generator with
     shortest equivalent string at each stage.
 
-    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r, \
             reidemeister_relators, define_schreier_generators, elimination_technique_2
     >>> F, x, y = free_group("x, y")
@@ -1298,7 +1296,7 @@ def reidemeister_presentation(fp_grp, H, C=None, homomorphism=False):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, reidemeister_presentation
     >>> F, x, y = free_group("x, y")
 

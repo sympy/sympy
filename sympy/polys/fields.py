@@ -253,6 +253,8 @@ class FracField(DefaultPrinting):
                         return mapping.get(gen)**int(e/eg)
                 if e.is_Integer and e is not S.One:
                     return _rebuild(b)**int(e)
+            elif mapping.get(1/expr) is not None:
+                return 1/mapping.get(1/expr)
 
             try:
                 return domain.convert(expr)

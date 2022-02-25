@@ -74,12 +74,13 @@ from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 MutableDenseNDimArray,
                                 tensorproduct)
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
-from sympy.tensor.indexed import (Indexed, IndexedBase)
+from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
 from sympy.tensor.toperators import PartialDerivative
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 
 
-from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
+from sympy.testing.pytest import (XFAIL, raises, _both_exp_pow,
+                                  warns_deprecated_sympy)
 from sympy.printing.latex import (latex, translate, greek_letters_set,
                                   tex_greek_dictionary, multiline_latex,
                                   latex_escape, LatexPrinter)
@@ -304,6 +305,12 @@ def test_latex_permutation():
     assert latex(Permutation(), perm_cyclic=False) == \
         r"\left( \right)"
 
+    with warns_deprecated_sympy():
+        old_print_cyclic = Permutation.print_cyclic
+        Permutation.print_cyclic = False
+        assert latex(Permutation(0, 1)(2, 3)) == \
+            r"\begin{pmatrix} 0 & 1 & 2 & 3 \\ 1 & 0 & 3 & 2 \end{pmatrix}"
+        Permutation.print_cyclic = old_print_cyclic
 
 def test_latex_Float():
     assert latex(Float(1.0e100)) == r"1.0 \cdot 10^{100}"
@@ -733,7 +740,12 @@ def test_latex_indexed():
     assert indexed_latex == r'\overline{{\Psi}_{0}} {\Psi}_{0}'
 
     # Symbol('gamma') gives r'\gamma'
+    interval = '\\mathrel{..}\\nobreak'
     assert latex(Indexed('x1', Symbol('i'))) == r'{x_{1}}_{i}'
+    assert latex(Indexed('x2', Idx('i'))) == r'{x_{2}}_{i}'
+    assert latex(Indexed('x3', Idx('i', Symbol('N')))) == r'{x_{3}}_{{i}_{0'+interval+'N - 1}}'
+    assert latex(Indexed('x3', Idx('i', Symbol('N')+1))) == r'{x_{3}}_{{i}_{0'+interval+'N}}'
+    assert latex(Indexed('x4', Idx('i', (Symbol('a'),Symbol('b'))))) == r'{x_{4}}_{{i}_{a'+interval+'b}}'
     assert latex(IndexedBase('gamma')) == r'\gamma'
     assert latex(IndexedBase('a b')) == r'a b'
     assert latex(IndexedBase('a_b')) == r'a_{b}'

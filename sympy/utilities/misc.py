@@ -1,4 +1,4 @@
-"""Miscellaneous stuff that doesn't really fit anywhere else."""
+"""Miscellaneous stuff that does not really fit anywhere else."""
 
 from typing import List
 
@@ -169,7 +169,7 @@ def rawlines(s):
 ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
 
-# XXX: PyPy doesn't support hash randomization
+# XXX: PyPy does not support hash randomization
 HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 
 _debug_tmp = []  # type: List[str]
@@ -252,10 +252,15 @@ def find_executable(executable, path=None):
     os.environ['PATH']).  Returns the complete filename or None if not
     found
     """
-    from .exceptions import SymPyDeprecationWarning
-    SymPyDeprecationWarning(useinstead="the builtin ``shutil.which`` function",
-                            issue=19634,
-                            deprecated_since_version="1.7").warn()
+    from .exceptions import sympy_deprecation_warning
+    sympy_deprecation_warning(
+        """
+        sympy.utilities.misc.find_executable() is deprecated. Use the standard
+        library shutil.which() function instead.
+        """,
+        deprecated_since_version="1.7",
+        active_deprecations_target="deprecated-find-executable",
+    )
     if path is None:
         path = os.environ['PATH']
     paths = path.split(os.pathsep)

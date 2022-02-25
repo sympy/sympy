@@ -700,7 +700,7 @@ class CodeBlock(CodegenAST):
             raise NotImplementedError("CodeBlock.topological_sort only supports Assignments")
 
         if any(isinstance(i, AugmentedAssignment) for i in assignments):
-            raise NotImplementedError("CodeBlock.topological_sort doesn't yet work with AugmentedAssignments")
+            raise NotImplementedError("CodeBlock.topological_sort does not yet work with AugmentedAssignments")
 
         # Create a graph where the nodes are assignments and there is a directed edge
         # between nodes that use a variable and nodes that assign that
@@ -783,7 +783,7 @@ class CodeBlock(CodegenAST):
             raise NotImplementedError("CodeBlock.cse only supports Assignments")
 
         if any(isinstance(i, AugmentedAssignment) for i in self.args):
-            raise NotImplementedError("CodeBlock.cse doesn't yet work with AugmentedAssignments")
+            raise NotImplementedError("CodeBlock.cse does not yet work with AugmentedAssignments")
 
         for i, lhs in enumerate(self.left_hand_sides):
             if lhs in self.left_hand_sides[:i]:
@@ -1692,8 +1692,7 @@ class Stream(Token):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import pycode, Symbol
     >>> from sympy.codegen.ast import Print, stderr, QuotedString
     >>> print(pycode(Print(['x'], file=stderr)))
     print(x, file=sys.stderr)
@@ -1752,9 +1751,8 @@ class FunctionPrototype(Node):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import ccode, symbols
     >>> from sympy.codegen.ast import real, FunctionPrototype
-    >>> from sympy import ccode
     >>> x, y = symbols('x y', real=True)
     >>> fp = FunctionPrototype(real, 'foo', [x, y])
     >>> ccode(fp)

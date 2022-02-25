@@ -260,7 +260,7 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        from sympy.utilities import runtests
+        from sympy.testing import runtests
         runtests.run_all_tests()
 
 
@@ -446,6 +446,7 @@ if __name__ == '__main__':
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.integrals.rubi.parsetools': ['header.py.txt'],
               'sympy.plotting.tests': ['test_region_*.png'],
+              'sympy': ['py.typed']
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,

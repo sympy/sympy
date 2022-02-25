@@ -33,8 +33,6 @@ from mpmath.libmp.libmpf import (
 from sympy.utilities.misc import as_int, debug, filldedent
 from .parameters import global_parameters
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 _LOG2 = math.log(2)
 
 
@@ -490,9 +488,9 @@ def igcdex(a, b):
 
 
 def mod_inverse(a, m):
-    """
-    Return the number c such that, (a * c) = 1 (mod m)
-    where c has the same sign as m. If no such value exists,
+    r"""
+    Return the number $c$ such that, $a \times c = 1 \pmod{m}$
+    where $c$ has the same sign as $m$. If no such value exists,
     a ValueError is raised.
 
     Examples
@@ -500,11 +498,11 @@ def mod_inverse(a, m):
 
     >>> from sympy import mod_inverse, S
 
-    Suppose we wish to find multiplicative inverse x of
-    3 modulo 11. This is the same as finding x such
-    that 3 * x = 1 (mod 11). One value of x that satisfies
-    this congruence is 4. Because 3 * 4 = 12 and 12 = 1 (mod 11).
-    This is the value returned by mod_inverse:
+    Suppose we wish to find multiplicative inverse $x$ of
+    3 modulo 11. This is the same as finding $x$ such
+    that $3x = 1 \pmod{11}$. One value of x that satisfies
+    this congruence is 4. Because $3 \times 4 = 12$ and $12 = 1 \pmod{11}$.
+    This is the value returned by ``mod_inverse``:
 
     >>> mod_inverse(3, 11)
     4
@@ -512,7 +510,7 @@ def mod_inverse(a, m):
     7
 
     When there is a common factor between the numerators of
-    ``a`` and ``m`` the inverse does not exist:
+    `a` and `m` the inverse does not exist:
 
     >>> mod_inverse(2, 4)
     Traceback (most recent call last):
@@ -1035,17 +1033,7 @@ class Float(Number):
 
     is_Float = True
 
-    def __new__(cls, num, dps=None, prec=None, precision=None):
-        if prec is not None:
-            SymPyDeprecationWarning(
-                            feature="Using 'prec=XX' to denote decimal precision",
-                            useinstead="'dps=XX' for decimal precision and 'precision=XX' "\
-                                              "for binary precision",
-                            issue=12820,
-                            deprecated_since_version="1.1").warn()
-            dps = prec
-        del prec  # avoid using this deprecated kwarg
-
+    def __new__(cls, num, dps=None, precision=None):
         if dps is not None and precision is not None:
             raise ValueError('Both decimal and binary precision supplied. '
                              'Supply only one. ')
@@ -3028,39 +3016,10 @@ class AlgebraicNumber(Expr):
         roots = m.all_roots(radicals=radicals)
         if len(roots) == 1:
             return roots[0]
-        root = None
-        if all(hasattr(r, "_get_interval") for r in roots):
-            root = self._to_root_by_intervals(roots)
-        if root is not None:
-            return root
-        return self._to_root_by_distance(roots)
-
-    def _to_root_by_intervals(self, roots):
-        intervals = [r._get_interval() for r in roots]
-        D0 = int(max(i.max_denom for i in intervals))
-        # Make n more than the number of decimal places in D0. This is to
-        # eliminate false positives, i.e. cases where we appear to belong to
-        # an interval but only due to rounding errors.
-        n = math.ceil(D0.bit_length()/3.3) + 2
-        c = self.evalf(n).as_real_imag()
-        for j, i in enumerate(intervals):
-            if c in i:
-                return roots[j]
-        return None
-
-    def _to_root_by_distance(self, roots, max_prec=160):
-        # Compare sympy.polys.numberfields.minpoly._choose_factor()
-        prec1 = 10
-        while prec1 <= max_prec:
-            r0 = self.evalf(prec1)
-            candidates = [(abs(r0 - r.evalf(prec1)), j)
-                          for j, r in enumerate(roots)]
-            can = sorted(candidates)
-            (a, ix), (b, _) = can[:2]
-            if b > a * 10 ** 6:
-                return roots[ix]
-            prec1 *= 2
-        raise NotImplementedError("Could not locate root.")
+        ex = self.as_expr()
+        for b in roots:
+            if m.same_root(b, ex):
+                return b
 
 
 class RationalConstant(Rational):
@@ -4140,7 +4099,7 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
     Explanation
     ===========
 
-    `\phi = \frac{1 + \sqrt{5}}{2}` is algebraic number.  Two quantities
+    `\phi = \frac{1 + \sqrt{5}}{2}` is an algebraic number.  Two quantities
     are in the golden ratio if their ratio is the same as the ratio of
     their sum to the larger of the two quantities, i.e. their maximum.
 
@@ -4529,3 +4488,5 @@ def _register_classes():
     numbers.Integral.register(Integer)
 
 _register_classes()
+
+_illegal = (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity)

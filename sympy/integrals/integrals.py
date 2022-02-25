@@ -25,11 +25,8 @@ from sympy.polys import Poly, PolynomialError
 from sympy.series.formal import FormalPowerSeries
 from sympy.series.limits import limit
 from sympy.series.order import Order
-from sympy.simplify.fu import sincos_to_sum
-from sympy.simplify.simplify import simplify
-from sympy.solvers.solvers import solve, posify
 from sympy.tensor.functions import shape
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
 
@@ -87,11 +84,14 @@ class Integral(AddWithLimits):
             return function._eval_Integral(*symbols, **assumptions)
 
         if isinstance(function, Poly):
-            SymPyDeprecationWarning(
-                feature="Using integrate/Integral with Poly",
-                issue=18613,
+            sympy_deprecation_warning(
+                """
+                integrate(Poly) and Integral(Poly) are deprecated. Instead,
+                use the Poly.integrate() method, or convert the Poly to an
+                Expr first with the Poly.as_expr() method.
+                """,
                 deprecated_since_version="1.6",
-                useinstead="the as_expr or integrate methods of Poly").warn()
+                active_deprecations_target="deprecated-integrate-poly")
 
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
@@ -311,6 +311,7 @@ class Integral(AddWithLimits):
             u must contain the same variable as in x
             or a variable that is not already an integration variable'''))
 
+        from sympy.solvers.solvers import solve
         if not x.is_Symbol:
             F = [x.subs(xvar, d)]
             soln = solve(u - x, xvar, check=False)
@@ -319,6 +320,7 @@ class Integral(AddWithLimits):
             f = [fi.subs(uvar, d) for fi in soln]
         else:
             f = [u.subs(uvar, d)]
+            from sympy.simplify.simplify import posify
             pdiff, reps = posify(u - x)
             puvar = uvar.subs([(v, k) for k, v in reps.items()])
             soln = [s.subs(reps) for s in solve(pdiff, puvar)]
@@ -930,11 +932,8 @@ class Integral(AddWithLimits):
         #
         # see Polynomial for details.
         if isinstance(f, Poly) and not (manual or meijerg or risch):
-            SymPyDeprecationWarning(
-                feature="Using integrate/Integral with Poly",
-                issue=18613,
-                deprecated_since_version="1.6",
-                useinstead="the as_expr or integrate methods of Poly").warn()
+            # Note: this is deprecated, but the deprecation warning is already
+            # issued in the Integral constructor.
             return f.integrate(x)
 
         # Piecewise antiderivatives need to call special integrate.
@@ -983,6 +982,7 @@ class Integral(AddWithLimits):
         # because maybe the integral is a sum of an elementary part and a
         # nonelementary part (like erf(x) + exp(x)).  risch_integrate() is
         # quite fast, so this is acceptable.
+        from sympy.simplify.fu import sincos_to_sum
         parts = []
         args = Add.make_args(f)
         for g in args:
@@ -1188,6 +1188,7 @@ class Integral(AddWithLimits):
     def _eval_simplify(self, **kwargs):
         expr = factor_terms(self)
         if isinstance(expr, Integral):
+            from sympy.simplify.simplify import simplify
             return expr.func(*[simplify(i, **kwargs) for i in expr.args])
         return expr.simplify(**kwargs)
 
@@ -1214,9 +1215,8 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import sin, sqrt
+        >>> from sympy import Integral, sin, sqrt
         >>> from sympy.abc import x, n
-        >>> from sympy.integrals import Integral
         >>> e = Integral(sin(x), (x, 3, 7))
         >>> e
         Integral(sin(x), (x, 3, 7))
@@ -1346,8 +1346,7 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import oo
-        >>> from sympy.integrals.integrals import Integral
+        >>> from sympy import Integral, oo
         >>> from sympy.abc import x
         >>> Integral(x+1, (x, -oo, oo)).principal_value()
         oo
@@ -1400,6 +1399,11 @@ class Integral(AddWithLimits):
 def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
 
+    .. deprecated:: 1.6
+
+       Using ``integrate()`` with :class:`~.Poly` is deprecated. Use
+       :meth:`.Poly.integrate` instead. See :ref:`deprecated-integrate-poly`.
+
     Explanation
     ===========
 
@@ -1413,7 +1417,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
 
     - a symbol                   -- indefinite integration
     - a tuple (symbol, a)        -- indefinite integration with result
-                                    given with `a` replacing `symbol`
+                                    given with ``a`` replacing ``symbol``
     - a tuple (symbol, a, b)     -- definite integration
 
     Several variables can be specified, in which case the result is

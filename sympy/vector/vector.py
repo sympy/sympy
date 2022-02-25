@@ -22,6 +22,7 @@ class Vector(BasisDependent):
     instantiated by the user.
     """
 
+    is_scalar = False
     is_Vector = True
     _op_priority = 12.0
 
@@ -267,10 +268,10 @@ class Vector(BasisDependent):
         (0, 0, 0)
         """
 
-        from sympy.vector.operators import _get_coord_sys_from_expr
+        from sympy.vector.operators import _get_coord_systems
         if isinstance(self, VectorZero):
             return (S.Zero, S.Zero, S.Zero)
-        base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
+        base_vec = next(iter(_get_coord_systems(self))).base_vectors()
         return tuple([self.dot(i) for i in base_vec])
 
     def __or__(self, other):

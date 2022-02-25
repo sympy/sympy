@@ -5,7 +5,7 @@ Goals:
 
 * it should be compatible with py.test and operate very similarly
   (or identically)
-* doesn't require any external dependencies
+* does not require any external dependencies
 * preferably all the functionality should be in this file only
 * no magic, just import the test file and execute the test functions, that's it
 * portable
@@ -239,7 +239,7 @@ def run_in_subprocess_with_hash_randomization(
     # sometimes return None.
 
     # First check if the Python version supports hash randomization
-    # If it doesn't have this support, it won't recognize the -R flag
+    # If it does not have this support, it won't recognize the -R flag
     p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, cwd=cwd)
     p.communicate()
@@ -405,7 +405,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
 
     >>> sympy.test(verbose=True)    # doctest: +SKIP
 
-    Don't sort the test output:
+    Do not sort the test output:
 
     >>> sympy.test(sort=False)    # doctest: +SKIP
 
@@ -649,23 +649,23 @@ def _get_doctest_blacklist():
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
+        "sympy/codegen/array_utils.py", # raises deprecation warning
+        "sympy/core/compatibility.py", # backwards compatibility shim, importing it triggers a deprecation warning
+        "sympy/core/trace.py", # backwards compatibility shim, importing it triggers a deprecation warning
         "sympy/galgebra.py", # no longer part of SymPy
-        "sympy/this.py", # prints text
-        "sympy/matrices/densearith.py", # raises deprecation warning
-        "sympy/matrices/densesolve.py", # raises deprecation warning
-        "sympy/matrices/densetools.py", # raises deprecation warning
-        "sympy/printing/ccode.py", # backwards compatibility shim, importing it breaks the codegen doctests
-        "sympy/printing/fcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
-        "sympy/printing/cxxcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/integrals/rubi/rubi.py",
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
-        "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
         "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
         "sympy/parsing/latex/_antlr/latexparser.py", # generated code
-        "sympy/integrals/rubi/rubi.py",
         "sympy/plotting/pygletplot/__init__.py", # crashes on some systems
         "sympy/plotting/pygletplot/plot.py", # crashes on some systems
-        "sympy/codegen/array_utils.py", # raises deprecation warning
+        "sympy/printing/ccode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/printing/cxxcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/printing/fcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/testing/randtest.py", # backwards compatibility shim, importing it triggers a deprecation warning
+        "sympy/this.py", # prints text
     ])
     # autolev parser tests
     num = 12
@@ -809,6 +809,8 @@ def _doctest(*paths, **kwargs):
                     matched.append(f)
                     break
 
+    matched.sort()
+
     if split:
         matched = split_list(matched, split)
 
@@ -822,13 +824,15 @@ def _doctest(*paths, **kwargs):
 
     # N.B.
     # --------------------------------------------------------------------
-    # Here we test *.rst files at or below doc/src. Code from these must
-    # be self supporting in terms of imports since there is no importing
-    # of necessary modules by doctest.testfile. If you try to pass *.py
-    # files through this they might fail because they will lack the needed
-    # imports and smarter parsing that can be done with source code.
+    # Here we test *.rst and *.md files at or below doc/src. Code from these
+    # must be self supporting in terms of imports since there is no importing
+    # of necessary modules by doctest.testfile. If you try to pass *.py files
+    # through this they might fail because they will lack the needed imports
+    # and smarter parsing that can be done with source code.
     #
-    test_files = t.get_test_files('doc/src', '*.rst', init_only=False)
+    test_files_rst = t.get_test_files('doc/src', '*.rst', init_only=False)
+    test_files_md = t.get_test_files('doc/src', '*.md', init_only=False)
+    test_files = test_files_rst + test_files_md
     test_files.sort()
 
     not_blacklisted = [f for f in test_files
@@ -878,7 +882,7 @@ def _doctest(*paths, **kwargs):
             failed = rstfailed or failed
             if first_report:
                 first_report = False
-                msg = 'rst doctests start'
+                msg = 'rst/md doctests start'
                 if not t._testfiles:
                     r.start(msg=msg)
                 else:
@@ -1187,7 +1191,7 @@ class SymPyTests:
                     if self._kw:
                         for l in source.splitlines():
                             if l.lstrip().startswith('def '):
-                                if any(l.find(k) != -1 for k in self._kw):
+                                if any(l.lower().find(k.lower()) != -1 for k in self._kw):
                                     break
                         else:
                             return
@@ -1328,7 +1332,7 @@ class SymPyTests:
         if not self._kw:
             return True
         for kw in self._kw:
-            if x.__name__.find(kw) != -1:
+            if x.__name__.lower().find(kw.lower()) != -1:
                 return True
         return False
 
@@ -1689,7 +1693,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         lineno = None
 
-        # Extract the object's docstring.  If it doesn't have one,
+        # Extract the object's docstring.  If it does not have one,
         # then return None (no test for this object).
         if isinstance(obj, str):
             # obj is a string in the case for objects in the polys package.
@@ -1792,6 +1796,13 @@ class SymPyDocTestRunner(DocTestRunner):
         formatted by the ``SymPyDocTestRunner.report_*`` methods.
         """
         self.test = test
+
+        # Remove ``` from the end of example, which may appear in Markdown
+        # files
+        for example in test.examples:
+            example.want = example.want.replace('```\n', '')
+            example.exc_msg = example.exc_msg and example.exc_msg.replace('```\n', '')
+
 
         if compileflags is None:
             compileflags = pdoctest._extract_future_flags(test.globs)

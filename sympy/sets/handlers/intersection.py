@@ -5,6 +5,8 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.core.sorting import ordered
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.sets.fancysets import ComplexRegion
 from sympy.sets.sets import (FiniteSet, Intersection, Interval, Set, Union)
 from sympy.multipledispatch import Dispatcher
@@ -99,7 +101,6 @@ def _(a, b):
     if a.size == 0:
         return S.EmptySet
 
-    from sympy.functions.elementary.integers import floor, ceiling
     # trim down to self's size, and represent
     # as a Range with step 1.
     start = ceiling(max(b.inf, a.inf))
@@ -146,7 +147,6 @@ def _(a, b):
         return a
 
     from sympy.solvers.diophantine.diophantine import diop_linear
-    from sympy.functions.elementary.complexes import sign
 
     # this equation represents the values of the Range;
     # it's a linear equation
@@ -493,7 +493,6 @@ def _(a, b):
 
 def _intlike_interval(a, b):
     try:
-        from sympy.functions.elementary.integers import floor, ceiling
         if b._inf is S.NegativeInfinity and b._sup is S.Infinity:
             return a
         s = Range(max(a.inf, ceiling(b.left)), floor(b.right) + 1)

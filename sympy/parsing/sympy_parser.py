@@ -594,7 +594,7 @@ def auto_symbol(tokens, local_dict, global_dict):
 
 def lambda_notation(tokens, local_dict, global_dict):
     """Substitutes "lambda" with its SymPy equivalent Lambda().
-    However, the conversion doesn't take place if only "lambda"
+    However, the conversion does not take place if only "lambda"
     is passed because that is a syntax error.
 
     """
@@ -1054,6 +1054,14 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     if global_dict is None:
         global_dict = {}
         exec('from sympy import *', global_dict)
+
+        builtins_dict = vars(builtins)
+        for name, obj in builtins_dict.items():
+            if isinstance(obj, types.BuiltinFunctionType):
+                global_dict[name] = obj
+        global_dict['max'] = Max
+        global_dict['min'] = Min
+
     elif not isinstance(global_dict, dict):
         raise TypeError('expecting global_dict to be a dict')
 
@@ -1078,13 +1086,6 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
                 raise TypeError(filldedent('''
                     a transformation should be function that
                     takes 3 arguments'''))
-
-    builtins_dict = vars(builtins)
-    for name, obj in builtins_dict.items():
-        if isinstance(obj, types.BuiltinFunctionType):
-            global_dict[name] = obj
-    global_dict['max'] = Max
-    global_dict['min'] = Min
 
     code = stringify_expr(s, local_dict, global_dict, transformations)
 

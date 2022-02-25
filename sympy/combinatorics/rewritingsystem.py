@@ -1,3 +1,4 @@
+from collections import deque
 from sympy.combinatorics.rewritingsystem_fsm import StateMachine
 
 class RewritingSystem:
@@ -15,7 +16,6 @@ class RewritingSystem:
 
     '''
     def __init__(self, group):
-        from collections import deque
         self.group = group
         self.alphabet = group.generators
         self._is_confluent = None
