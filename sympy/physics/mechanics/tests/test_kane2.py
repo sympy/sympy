@@ -1,5 +1,4 @@
 from sympy.core.backend import cos, Matrix, sin, zeros, tan, pi, symbols
-from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.solvers.solvers import solve
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, msubs,
@@ -191,9 +190,9 @@ def test_aux_dep():
             # we 'manually' replace all qdot terms with udot terms
             # by solving the kinematics beforehand
             kdd = solve(kindiffs, [_q.diff() for _q in q])
-            O.set_acc(N, msubs(O.acc(N), kdd))
-            P.set_acc(N, msubs(P.acc(N), kdd))
-            C.set_ang_acc(N, msubs(C.ang_acc_in(N), kdd).simplify())
+            for p in [O, P]:
+                p.set_acc(N, p.acc(N).subs(kdd))
+            C.set_ang_acc(N, C.ang_acc_in(N).subs(kdd).simplify())
             KM_kwargs['acceleration_constraints'] = trigsimp(msubs(f_v.diff(dynamicsymbols._t), kdd))
 
             kane = KanesMethod(N, **KM_kwargs)
@@ -320,8 +319,8 @@ def test_non_central_inertia():
                                      (I, pD)))
         fr2, fr_star2 = km.kanes_equations(bodies2, forces)
 
-        fr_star2_simp = (fr_star2.subs(vc_map).subs({u3: 0})).doit()
-        assert trigsimp((fr_star_expected - fr_star2_simp).expand()) == zeros(*fr_star2.shape)
+        fr_star2_simp = trigsimp(fr_star2.subs(vc_map).subs({u3: 0})).doit()
+        assert ((fr_star_expected - fr_star2_simp).expand()) == zeros(*fr_star2.shape)
 
 def test_sub_qdot():
     # This test solves exercises 8.12, 8.17 from Kane 1985 and defines
@@ -426,10 +425,10 @@ def test_sub_qdot():
             # unit test, but in practice one should choose definitions of u
             # to avoid the need to solve kinematics'
             for p in [pS_star, pQ, pA_star, pB_star, pC_star]:
-                p.set_vel(F, msubs(p.vel(F), kde_map))
-                p.set_acc(F, msubs(p.acc(F), kde_map))
+                p.set_vel(F, p.vel(F).subs(kde_map))
+                p.set_acc(F, p.acc(F).subs(kde_map))
             for frame in [A, B, C]:
-                frame.set_ang_vel(F, msubs(frame.ang_vel_in(F), kde_map))
+                frame.set_ang_vel(F, frame.ang_vel_in(F).subs(kde_map))
 
             fr, fr_star = km.kanes_equations(bodies, forces)
 
@@ -511,8 +510,8 @@ def test_sub_qdot2():
             # to avoid the need to solve kinematics
             kde_sol = solve(kde, [_q.diff() for _q in q])
             for _p in [pC_hat, pCs]:
-                _p.set_vel(A, msubs(_p.vel(A), kde_sol))
-                _p.set_acc(A, msubs(_p.acc(A), kde_sol))
+                _p.set_vel(A, _p.vel(A).subs(kde_sol))
+                _p.set_acc(A, _p.acc(A).subs(kde_sol))
 
             fr1, _ = km1.kanes_equations([], forces)
 

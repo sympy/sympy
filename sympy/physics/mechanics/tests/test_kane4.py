@@ -56,8 +56,10 @@ def test_replace_qdots_in_force():
     # Defining some helper functions
     def get_kde_sol(kdes):
         kde_sol = solve(kdes, [qd1, qd2])
-        for _qd in [qd1, qd2]:
-            kde_sol[_qd.diff()] = kde_sol[_qd].diff()
+        qdotdot = {}
+        for _qd, _qdval in kde_sol.items():
+            qdotdot[_qd.diff()] = _qdval.diff()
+        kde_sol.update(qdotdot)
         return kde_sol
 
     def sub_qdots(forces, points, frames, kdes):
@@ -72,17 +74,17 @@ def test_replace_qdots_in_force():
             original_qdots[p.set_vel] = (N, p.vel(N))
             original_qdots[p.set_acc] = (N, p.acc(N))
 
-            p.set_vel(N, msubs(p.vel(N), kde_sol))
-            p.set_acc(N, msubs(p.acc(N), kde_sol))
+            p.set_vel(N, p.vel(N).subs(kde_sol))
+            p.set_acc(N, p.acc(N).subs(kde_sol))
 
         for f in frames:
             original_qdots[f.set_ang_vel] = (N, f.ang_vel_in(N))
             original_qdots[f.set_ang_acc] = (N, f.ang_acc_in(N))
 
-            f.set_ang_vel(N, msubs(f.ang_vel_in(N), kde_sol))
-            f.set_ang_acc(N, msubs(f.ang_acc_in(N), kde_sol))
+            f.set_ang_vel(N, f.ang_vel_in(N).subs(kde_sol))
+            f.set_ang_acc(N, f.ang_acc_in(N).subs(kde_sol))
 
-        forces_u = [(p, msubs(f, kde_sol)) for (p, f) in forces]
+        forces_u = [(p, f.subs(kde_sol)) for (p, f) in forces]
         return forces_u, original_qdots
 
     def restore_to_qdots(original_qdots):
