@@ -892,6 +892,13 @@ class ReferenceFrame:
             u2 = expand(td[u2])
             u3 = expand(td[u3])
             wvec = u1 * self.x + u2 * self.y + u3 * self.z
+            # NOTE : SymPy 1.7 removed the call to simplify() that occured
+            # inside the solve() function, so this restores the pre-1.7
+            # behavior. See:
+            # https://github.com/sympy/sympy/issues/23140
+            # and
+            # https://github.com/sympy/sympy/issues/23130
+            wvec = wvec.simplify()
         except (CoercionFailed, AssertionError):
             wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})
