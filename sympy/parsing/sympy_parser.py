@@ -910,7 +910,7 @@ def eval_expr(code, local_dict: DICT, global_dict: DICT):
 
 
 def parse_expr(s: str, local_dict: Optional[DICT] = None,
-               transformations: tUnion[tTuple[TRANS, ...], str, None] \
+               transformations: tUnion[tTuple[TRANS, ...], str] \
                    = standard_transformations,
                global_dict: Optional[DICT] = None, evaluate=True):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
@@ -929,7 +929,7 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
         with ``from sympy import *``; provide this parameter to override
         this behavior (for instance, to parse ``"Q & S"``).
 
-    transformations : tuple or str, optional
+    transformations : tuple or str
         A tuple of transformation functions used to modify the tokens of the
         parsed expression before evaluation. The default transformations
         convert numeric literals into their SymPy equivalents, convert
@@ -1062,16 +1062,18 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
     transformations = transformations or ()
     if isinstance(transformations, str):
         if transformations == 'all':
-            transformations = T[:]
+            _transformations = T[:]
         elif transformations == 'implicit':
-            transformations = T[:6]
+            _transformations = T[:6]
         else:
             raise ValueError('unknown transformation group name')
-    if transformations:
-        if not iterable(transformations):
+    else:
+        _transformations = transformations
+    if _transformations:
+        if not iterable(_transformations):
             raise TypeError(
                 '`transformations` should be a list of functions.')
-        for _ in transformations:
+        for _ in _transformations:
             if not callable(_):
                 raise TypeError(filldedent('''
                     expected a function in `transformations`,
@@ -1081,7 +1083,7 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
                     a transformation should be function that
                     takes 3 arguments'''))
 
-    code = stringify_expr(s, local_dict, global_dict, transformations)  # type: ignore
+    code = stringify_expr(s, local_dict, global_dict, _transformations)
 
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval')
