@@ -1877,6 +1877,7 @@ def gf_edf_zassenhaus(f, n, p, K):
 
     .. [1] [Gathen99]_
     .. [2] [Geddes92]_
+    .. [3] [Cohen93]_
 
     """
     factors = [f]
@@ -1888,18 +1889,19 @@ def gf_edf_zassenhaus(f, n, p, K):
     if p != 2:
         b = gf_frobenius_monomial_base(f, p, K)
 
+    t = [K.one, K.zero]
     while len(factors) < N:
-        r = gf_random(2*n - 1, p, K)
-
         if p == 2:
-            h = r
+            h = r = t
 
-            for i in range(0, 2**(n*N - 1)):
+            for i in range(n - 1):
                 r = gf_pow_mod(r, 2, f, p, K)
                 h = gf_add(h, r, p, K)
 
             g = gf_gcd(f, h, p, K)
+            t += [K.zero, K.zero]
         else:
+            r = gf_random(2 * n - 1, p, K)
             h = _gf_pow_pnm1d2(r, n, f, b, p, K)
             g = gf_gcd(f, gf_sub_ground(h, K.one, p, K), p, K)
 
