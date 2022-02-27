@@ -1,6 +1,7 @@
 __all__ = ['Linearizer']
 
 from sympy.core.backend import Matrix, eye, zeros
+from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
 from sympy.physics.mechanics.functions import msubs
@@ -82,14 +83,10 @@ class Linearizer:
         # qd and u vectors have any intersecting variables, this can cause
         # problems. We'll fix this with some hackery, and Dummy variables
         dup_vars = set(self._qd).intersection(self.u)
-        mat_list = []
-        for var in self._qd:
-            if var not in dup_vars:
-                mat_list.append(var)
-            else:
-                print('dummy')
-                mat_list.append(var.as_dummy())
-        self._qd_dup = Matrix(mat_list)
+        # TODO : Dummy() does not have the same assumptions as the variable it
+        # replaces.
+        self._qd_dup = Matrix([var if var not in dup_vars else Dummy()
+            for var in self._qd])
 
         # Derive dimesion terms
         l = len(self.f_c)

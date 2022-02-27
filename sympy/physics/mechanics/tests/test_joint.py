@@ -181,7 +181,7 @@ def test_pinjoint_arbitrary_axis():
                                [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).express(A) == omega * A.y
-    assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
+    assert A.ang_vel_in(N).magnitude() == Abs(omega)
     angle = A.ang_vel_in(N).angle_between(A.y)
     assert angle.xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N) == omega*A.z
