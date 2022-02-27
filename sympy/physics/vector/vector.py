@@ -1,5 +1,6 @@
-from sympy.core.backend import (S, sympify, expand, Add, zeros, acos,
+from sympy.core.backend import (S, sympify, expand, Add, zeros, acos, sqrt,
                                 ImmutableMatrix as Matrix, _simplify_matrix)
+from sympy.functions.elementary.complexes import Abs
 from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
@@ -696,7 +697,11 @@ class Vector(Printable, EvalfMixin):
 
         """
         if self.args:
-            return self.to_matrix(self.args[0][1]).norm()
+            col_vec = self.to_matrix(self.args[0][1])
+            summ = S(0)
+            for component in col_vec[:]:
+                summ += Abs(component)**2
+            return sqrt(summ)
         else:  # self is a vector of zero length
             return S(0)
 
