@@ -201,10 +201,8 @@ _uniquely_named_symbol = uniquely_named_symbol
 
 class Symbol(AtomicExpr, Boolean):
     """
-    Symbols are variables, and like all other variables, they need to
-    be assigned before you can use them.
-    SymPy :func:`Symbol` function returns just a single symbol taken from argument ``name`` whereas :func:`symbols` function can be used
-    to return a sequence of symbols.
+    Symbols are variables, and like all other variables, they need to be assigned before you can use them.
+    SymPy :func:`Symbol` function returns just a single symbol taken from the argument ``name`` whereas :func:`symbols` function can be used to return a sequence of symbols.
     Symbols can be used to build SymPy expressions which are immutable.
 
     Parameters:
