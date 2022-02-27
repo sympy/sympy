@@ -83,8 +83,14 @@ class Linearizer:
         # qd and u vectors have any intersecting variables, this can cause
         # problems. We'll fix this with some hackery, and Dummy variables
         dup_vars = set(self._qd).intersection(self.u)
-        self._qd_dup = Matrix([var if var not in dup_vars else Dummy()
-            for var in self._qd])
+        mat_list = []
+        for var in self._qd:
+            if var not in dup_vars:
+                mat_list.append(var)
+            else:
+                print('dummy')
+                mat_list.append(var.as_dummy())
+        self._qd_dup = Matrix(mat_list)
 
         # Derive dimesion terms
         l = len(self.f_c)
