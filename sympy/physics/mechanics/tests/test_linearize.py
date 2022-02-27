@@ -176,7 +176,8 @@ def test_linearize_pendulum_kane_nonminimal():
     q1d, q2d = dynamicsymbols('q1:3', level=1, real=True)
     u1, u2 = dynamicsymbols('u1:3', real=True)
     u1d, u2d = dynamicsymbols('u1:3', level=1, real=True)
-    L, m, t = symbols('L, m, t', real=True)
+    L, m = symbols('L, m', real=True)
+    t = dynamicsymbols._t
     g = 9.8
 
     # Compose world frame
