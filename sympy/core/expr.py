@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from typing import Tuple as tTuple, TYPE_CHECKING
 from collections.abc import Iterable
 from functools import reduce
 
@@ -10,12 +10,14 @@ from .decorators import call_highest_priority, sympify_method_args, sympify_retu
 from .cache import cacheit
 from .sorting import default_sort_key
 from .kind import NumberKind
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
 from sympy.utilities.iterables import has_variety, sift
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
+if TYPE_CHECKING:
+    from .numbers import Number
 
 from collections import defaultdict
 
@@ -229,7 +231,7 @@ class Expr(Basic, EvalfMixin):
             if other >= 0:
                 return pow(_self, other, mod)
             else:
-                from sympy.core.numbers import mod_inverse
+                from .numbers import mod_inverse
                 return mod_inverse(pow(_self, -other, mod), mod)
         except ValueError:
             power = self._pow(other)
@@ -377,7 +379,6 @@ class Expr(Basic, EvalfMixin):
 
     @staticmethod
     def _from_mpmath(x, prec):
-        from .numbers import Float
         if hasattr(x, "_mpf_"):
             return Float._new(x._mpf_, prec)
         elif hasattr(x, "_mpc_"):
@@ -691,7 +692,7 @@ class Expr(Basic, EvalfMixin):
         return True
 
     def equals(self, other, failing_expression=False):
-        """Return True if self == other, False if it doesn't, or None. If
+        """Return True if self == other, False if it does not, or None. If
         failing_expression is True then the expression which did not simplify
         to a 0 will be returned instead of None.
 
@@ -1989,7 +1990,7 @@ class Expr(Basic, EvalfMixin):
         d.update({m: c})
         return d
 
-    def as_base_exp(self):
+    def as_base_exp(self) -> tTuple['Expr', 'Expr']:
         # a -> b ** e
         return self, S.One
 
@@ -2419,11 +2420,8 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
-        >>> import warnings
-        >>> warnings.simplefilter("ignore", SymPyDeprecationWarning)
         >>> from sympy.abc import x, y
-        >>> (x + y).expr_free_symbols
+        >>> (x + y).expr_free_symbols # doctest: +SKIP
         {x, y}
 
         If the expression is contained in a non-expression object, do not return
@@ -2431,14 +2429,17 @@ class Expr(Basic, EvalfMixin):
 
         >>> from sympy import Tuple
         >>> t = Tuple(x + y)
-        >>> t.expr_free_symbols
+        >>> t.expr_free_symbols # doctest: +SKIP
         set()
         >>> t.free_symbols
         {x, y}
         """
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning("""
+        The expr_free_symbols property is deprecated. Use free_symbols to get
+        the free symbols of an expression.
+        """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-expr-free-symbols")
         return {j for i in self.args for j in i.expr_free_symbols}
 
     def could_extract_minus_sign(self):
@@ -3492,7 +3493,7 @@ class Expr(Basic, EvalfMixin):
         c = c.subs(d, log(x))
         return c, e
 
-    def as_coeff_Mul(self, rational=False):
+    def as_coeff_Mul(self, rational: bool = False) -> tTuple['Number', 'Expr']:
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
@@ -3950,9 +3951,12 @@ class AtomicExpr(Atom, Expr):
 
     @property
     def expr_free_symbols(self):
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning("""
+        The expr_free_symbols property is deprecated. Use free_symbols to get
+        the free symbols of an expression.
+        """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-expr-free-symbols")
         return {self}
 
 
@@ -3978,7 +3982,6 @@ def _mag(x):
     try:
         mag_first_dig = int(ceil(log10(xpos)))
     except (ValueError, OverflowError):
-        from .numbers import Float
         mag_first_dig = int(ceil(Float(mpf_log(xpos._mpf_, 53))/log(10)))
     # check that we aren't off by 1
     if (xpos/10**mag_first_dig) >= 1:

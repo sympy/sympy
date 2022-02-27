@@ -3,6 +3,7 @@
 
 from functools import wraps, reduce
 from operator import mul
+from typing import Optional
 
 from sympy.core import (
     S, Expr, Add, Tuple
@@ -51,7 +52,7 @@ from sympy.polys.polyutils import (
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, public, filldedent
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
 
 
@@ -78,11 +79,16 @@ def _polifyit(func):
                 expr_method = getattr(f.as_expr(), func.__name__)
                 result = expr_method(g)
                 if result is not NotImplemented:
-                    SymPyDeprecationWarning(
-                        feature="Mixing Poly with non-polynomial expressions in binary operations",
-                        issue=18613,
+                    sympy_deprecation_warning(
+                        """
+                        Mixing Poly with non-polynomial expressions in binary
+                        operations is deprecated. Either explicitly convert
+                        the non-Poly operand to a Poly with as_poly() or
+                        convert the Poly to an Expr with as_expr().
+                        """,
                         deprecated_since_version="1.6",
-                        useinstead="the as_expr or as_poly method to convert types").warn()
+                        active_deprecations_target="deprecated-poly-nonpoly-binary-operations",
+                    )
                 return result
             else:
                 return func(f, g)
@@ -101,6 +107,12 @@ class Poly(Basic):
 
     Poly is a subclass of Basic rather than Expr but instances can be
     converted to Expr with the :py:meth:`~.Poly.as_expr` method.
+
+    .. deprecated:: 1.6
+
+       Combining Poly with non-Poly objects in binary operations is
+       deprecated. Explicitly convert both objects to either Poly or Expr
+       first. See :ref:`deprecated-poly-nonpoly-binary-operations`.
 
     Examples
     ========
@@ -3652,7 +3664,6 @@ class Poly(Basic):
         [-1.73205080756887729352744634151, 1.73205080756887729352744634151]
 
         """
-        from sympy.functions.elementary.complexes import sign
         if f.is_multivariate:
             raise MultivariatePolynomialError(
                 "Cannot compute numerical roots of %s" % f)
@@ -3681,6 +3692,7 @@ class Poly(Basic):
         dps = mpmath.mp.dps
         mpmath.mp.dps = n
 
+        from sympy.functions.elementary.complexes import sign
         try:
             # We need to add extra precision to guard against losing accuracy.
             # 10 times the degree of the polynomial seems to work well.
@@ -4405,8 +4417,6 @@ def parallel_poly_from_expr(exprs, *gens, **args):
 
 def _parallel_poly_from_expr(exprs, opt):
     """Construct polynomials from expressions. """
-    from sympy.functions.elementary.piecewise import Piecewise
-
     if len(exprs) == 2:
         f, g = exprs
 
@@ -4457,6 +4467,7 @@ def _parallel_poly_from_expr(exprs, opt):
     if not opt.gens:
         raise PolificationFailed(opt, origs, exprs, True)
 
+    from sympy.functions.elementary.piecewise import Piecewise
     for k in opt.gens:
         if isinstance(k, Piecewise):
             raise PolynomialError("Piecewise generators do not make sense")
@@ -5408,12 +5419,12 @@ def lcm_list(seq, *gens, **args):
     """
     seq = sympify(seq)
 
-    def try_non_polynomial_lcm(seq):
+    def try_non_polynomial_lcm(seq) -> Optional[Expr]:
         if not gens and not args:
             domain, numbers = construct_domain(seq)
 
             if not numbers:
-                return domain.one
+                return domain.to_sympy(domain.one)
             elif domain.is_Numerical:
                 result, numbers = numbers[0], numbers[1:]
 
@@ -6724,7 +6735,6 @@ def cancel(f, *gens, _signsimp=True, **args):
     (x + 2)/2
     """
     from sympy.simplify.simplify import signsimp
-    from sympy.functions.elementary.piecewise import Piecewise
     from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])
 
@@ -6753,6 +6763,7 @@ def cancel(f, *gens, _signsimp=True, **args):
     else:
         raise ValueError('unexpected argument: %s' % f)
 
+    from sympy.functions.elementary.piecewise import Piecewise
     try:
         if f.has(Piecewise):
             raise PolynomialError()

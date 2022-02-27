@@ -28,6 +28,13 @@ def _arange(a, b):
     return _array('l', range(a, b))
 
 
+def _as_int_ceiling(a):
+    """ Wrapping ceiling in as_int will raise an error if there was a problem
+        determining whether the expression was exactly an integer or not."""
+    from sympy.functions.elementary.integers import ceiling
+    return as_int(ceiling(a))
+
+
 class Sieve:
     """An infinite list of prime numbers, implemented as a dynamically
     growing sieve of Eratosthenes. When a lookup is requested involving
@@ -167,16 +174,13 @@ class Sieve:
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 
         """
-        from sympy.functions.elementary.integers import ceiling
 
-        # wrapping ceiling in as_int will raise an error if there was a problem
-        # determining whether the expression was exactly an integer or not
         if b is None:
-            b = as_int(ceiling(a))
+            b = _as_int_ceiling(a)
             a = 2
         else:
-            a = max(2, as_int(ceiling(a)))
-            b = as_int(ceiling(b))
+            a = max(2, _as_int_ceiling(a))
+            b = _as_int_ceiling(b)
         if a >= b:
             return
         self.extend(b)
@@ -200,12 +204,8 @@ class Sieve:
         >>> print([i for i in sieve.totientrange(7, 18)])
         [6, 4, 6, 4, 10, 4, 12, 6, 8, 8, 16]
         """
-        from sympy.functions.elementary.integers import ceiling
-
-        # wrapping ceiling in as_int will raise an error if there was a problem
-        # determining whether the expression was exactly an integer or not
-        a = max(1, as_int(ceiling(a)))
-        b = as_int(ceiling(b))
+        a = max(1, _as_int_ceiling(a))
+        b = _as_int_ceiling(b)
         n = len(self._tlist)
         if a >= b:
             return
@@ -248,12 +248,8 @@ class Sieve:
         >>> print([i for i in sieve.mobiusrange(7, 18)])
         [-1, 0, 0, 1, -1, 0, -1, 1, 1, 0, -1]
         """
-        from sympy.functions.elementary.integers import ceiling
-
-        # wrapping ceiling in as_int will raise an error if there was a problem
-        # determining whether the expression was exactly an integer or not
-        a = max(1, as_int(ceiling(a)))
-        b = as_int(ceiling(b))
+        a = max(1, _as_int_ceiling(a))
+        b = _as_int_ceiling(b)
         n = len(self._mlist)
         if a >= b:
             return
@@ -294,11 +290,7 @@ class Sieve:
         >>> sieve.search(23)
         (9, 9)
         """
-        from sympy.functions.elementary.integers import ceiling
-
-        # wrapping ceiling in as_int will raise an error if there was a problem
-        # determining whether the expression was exactly an integer or not
-        test = as_int(ceiling(n))
+        test = _as_int_ceiling(n)
         n = as_int(n)
         if n < 2:
             raise ValueError("n should be >= 2 but got: %s" % n)
@@ -405,9 +397,8 @@ def prime(nth):
     if n <= len(sieve._list):
         return sieve[n]
 
-    from sympy.functions.special.error_functions import li
     from sympy.functions.elementary.exponential import log
-
+    from sympy.functions.special.error_functions import li
     a = 2 # Lower bound for binary search
     b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
 
@@ -456,7 +447,7 @@ class primepi(Function):
         Now, if a is a prime less than equal to j - 1,
         $x= j \times a$ has smallest prime factor = a, and
         has already been removed(by sieving from a).
-        So, we don't need to remove it again.
+        So, we do not need to remove it again.
         (Note: there will be pi(j - 1) such x)
 
         Thus, number of x, that will be removed are:
@@ -490,7 +481,7 @@ class primepi(Function):
         >>> isprime(25)
         False
 
-        It isn't. So the first prime less than 25 must be the
+        It is not. So the first prime less than 25 must be the
         9th prime:
 
         >>> prevprime(25) == prime(9)
@@ -637,11 +628,7 @@ def prevprime(n):
         nextprime : Return the ith prime greater than n
         primerange : Generates all primes in a given range
     """
-    from sympy.functions.elementary.integers import ceiling
-
-    # wrapping ceiling in as_int will raise an error if there was a problem
-    # determining whether the expression was exactly an integer or not
-    n = as_int(ceiling(n))
+    n = _as_int_ceiling(n)
     if n < 3:
         raise ValueError("no preceding primes")
     if n < 8:
@@ -744,8 +731,6 @@ def primerange(a, b=None):
         .. [1] https://en.wikipedia.org/wiki/Prime_number
         .. [2] http://primes.utm.edu/notes/gaps.html
     """
-    from sympy.functions.elementary.integers import ceiling
-
     if b is None:
         a, b = 2, a
     if a >= b:
@@ -756,10 +741,8 @@ def primerange(a, b=None):
         return
     # otherwise compute, without storing, the desired range.
 
-    # wrapping ceiling in as_int will raise an error if there was a problem
-    # determining whether the expression was exactly an integer or not
-    a = as_int(ceiling(a)) - 1
-    b = as_int(ceiling(b))
+    a = _as_int_ceiling(a) - 1
+    b = _as_int_ceiling(b)
     while 1:
         a = nextprime(a)
         if a < b:
@@ -1004,9 +987,8 @@ def composite(nth):
             a -= 1
         return a
 
-    from sympy.functions.special.error_functions import li
     from sympy.functions.elementary.exponential import log
-
+    from sympy.functions.special.error_functions import li
     a = 4 # Lower bound for binary search
     b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
 

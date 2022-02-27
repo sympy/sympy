@@ -26,7 +26,7 @@ from sympy.series.formal import FormalPowerSeries
 from sympy.series.limits import limit
 from sympy.series.order import Order
 from sympy.tensor.functions import shape
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
 
@@ -84,11 +84,14 @@ class Integral(AddWithLimits):
             return function._eval_Integral(*symbols, **assumptions)
 
         if isinstance(function, Poly):
-            SymPyDeprecationWarning(
-                feature="Using integrate/Integral with Poly",
-                issue=18613,
+            sympy_deprecation_warning(
+                """
+                integrate(Poly) and Integral(Poly) are deprecated. Instead,
+                use the Poly.integrate() method, or convert the Poly to an
+                Expr first with the Poly.as_expr() method.
+                """,
                 deprecated_since_version="1.6",
-                useinstead="the as_expr or integrate methods of Poly").warn()
+                active_deprecations_target="deprecated-integrate-poly")
 
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
@@ -929,11 +932,8 @@ class Integral(AddWithLimits):
         #
         # see Polynomial for details.
         if isinstance(f, Poly) and not (manual or meijerg or risch):
-            SymPyDeprecationWarning(
-                feature="Using integrate/Integral with Poly",
-                issue=18613,
-                deprecated_since_version="1.6",
-                useinstead="the as_expr or integrate methods of Poly").warn()
+            # Note: this is deprecated, but the deprecation warning is already
+            # issued in the Integral constructor.
             return f.integrate(x)
 
         # Piecewise antiderivatives need to call special integrate.
@@ -1399,6 +1399,11 @@ class Integral(AddWithLimits):
 def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
 
+    .. deprecated:: 1.6
+
+       Using ``integrate()`` with :class:`~.Poly` is deprecated. Use
+       :meth:`.Poly.integrate` instead. See :ref:`deprecated-integrate-poly`.
+
     Explanation
     ===========
 
@@ -1412,7 +1417,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
 
     - a symbol                   -- indefinite integration
     - a tuple (symbol, a)        -- indefinite integration with result
-                                    given with `a` replacing `symbol`
+                                    given with ``a`` replacing ``symbol``
     - a tuple (symbol, a, b)     -- definite integration
 
     Several variables can be specified, in which case the result is

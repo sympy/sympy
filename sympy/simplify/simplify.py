@@ -384,7 +384,7 @@ def signsimp(expr, evaluate=None):
     >>> n**i
     (-1 + 1/x)**i
 
-    By default, signsimp doesn't leave behind any hollow simplification:
+    By default, signsimp does not leave behind any hollow simplification:
     if making an Add canonical wrt sign didn't change the expression, the
     original Add is restored. If this is not desired then the keyword
     ``evaluate`` can be set to False:
@@ -2117,10 +2117,28 @@ def dotprodsimp(expr, withsimp=False):
 
 
 bottom_up = deprecated(
-    useinstead="sympy.core.traversal.bottom_up",
-    deprecated_since_version="1.10", issue=22288)(_bottom_up)
+    """
+    Using bottom_up from the sympy.simplify.simplify submodule is
+    deprecated.
+
+    Instead, use bottom_up from the top-level sympy namespace, like
+
+        sympy.bottom_up
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved",
+)(_bottom_up)
 
 
+# XXX: This function really should either be private API or exported in the
+# top-level sympy/__init__.py
 walk = deprecated(
-    useinstead="sympy.core.traversal.walk",
-    deprecated_since_version="1.10", issue=22288)(_walk)
+    """
+    Using walk from the sympy.simplify.simplify submodule is
+    deprecated.
+
+    Instead, use walk from sympy.core.traversal.walk
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved",
+)(_walk)

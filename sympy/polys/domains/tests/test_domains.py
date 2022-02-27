@@ -489,6 +489,14 @@ def test_Domain__contains__():
     assert (Rational(3, 2)*x/(y + 1) - z in QQ[x, y, z]) is False
 
 
+def test_issue_14433():
+    assert (Rational(2, 3)*x in QQ.frac_field(1/x)) is True
+    assert (1/x in QQ.frac_field(x)) is True
+    assert ((x**2 + y**2) in QQ.frac_field(1/x, 1/y)) is True
+    assert ((x + y) in QQ.frac_field(1/x, y)) is True
+    assert ((x - y) in QQ.frac_field(x, 1/y)) is True
+
+
 def test_Domain_get_ring():
     assert ZZ.has_assoc_Ring is True
     assert QQ.has_assoc_Ring is True
@@ -812,7 +820,7 @@ def test_RealField_from_sympy():
 
 def test_not_in_any_domain():
     check = list(_illegal) + [x] + [
-        float(i) for i in _illegal if i != S.ComplexInfinity]
+        float(i) for i in _illegal[:3]]
     for dom in (ZZ, QQ, RR, CC, EX):
         for i in check:
             if i == x and dom == EX:

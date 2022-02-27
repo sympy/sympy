@@ -13,3 +13,6 @@ class List(Tuple):
             return self == List(*other)
         else:
             return self.args == other
+
+    def __hash__(self):
+        return super().__hash__()

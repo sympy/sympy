@@ -299,7 +299,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     case.  Finally, for boolean flags, it's better to just use ``if x``
     instead of ``if x is True``. To quote PEP 8:
 
-    Don't compare boolean values to ``True`` or ``False``
+    Do not compare boolean values to ``True`` or ``False``
     using ``==``.
 
     * Yes:   ``if greeting:``
@@ -1458,7 +1458,7 @@ class ITE(BooleanFunction):
         return self.to_nnf().as_set()
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        from sympy.functions import Piecewise
+        from sympy.functions.elementary.piecewise import Piecewise
         return Piecewise((args[1], args[0]), (args[2], True))
 
 

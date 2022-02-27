@@ -777,6 +777,14 @@ def test_diff_wrt_not_allowed():
     assert diff(exp(x*y), x*y, 0) == exp(x*y)
 
 
+def test_diff_wrt_intlike():
+    class Two:
+        def __int__(self):
+            return 2
+
+    assert cos(x).diff(x, Two()) == -cos(x)
+
+
 def test_klein_gordon_lagrangian():
     m = Symbol('m')
     phi = f(x, t)

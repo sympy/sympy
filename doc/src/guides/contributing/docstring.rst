@@ -166,10 +166,15 @@ This section consists of a one-line sentence ending in a period that describes
 the function, class, or method's effect.
 
 Deprecation warnings should go directly after the Single-Sentence Summary, so
-as to notify users right away. Deprecation warnings should be written as a note
+as to notify users right away. Deprecation warnings should be written as a ``deprecated``
 in the Sphinx directive::
 
-    .. note:: Deprecated in SymPy 0.7.1.
+    .. deprecated:: 1.1
+
+       The ``simplify_this`` function is deprecated. Use :func:`simplify`
+       instead. See its documentation for more information.
+
+See :ref:`deprecation-documentation` for more details.
 
 2. Explanation Section
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -668,16 +673,15 @@ of objects that have conventions here:
 1. Objects that are included in ``from sympy import *``, for example,
 ``sympy.acos``.
 
-For these, use ``:obj:`~.acos()```. The ``~`` makes it so that
-the text in the rendered HTML only shows ``acos``. Without it, it would use the
-fully qualified name ``sympy.functions.elementary.trigonometric.acos``. However,
-for names that are part of the global ``sympy`` namespace, we do not want to
-encourage accessing them from their specific submodule, as this is an
-implementation detail that could change. The ``.`` makes it so that the function
-name is found automatically. Sometimes, Sphinx will give a warning that there
-are multiple names found. If that happens, replace the ``.`` with the full name.
-For example, ``:obj:`~sympy.solvers.solvers.solve()```. For functions, methods,
-and classes, it is a convention to add () after the name to indicate such.
+For these, use ``:obj:`~.acos()```. The ``~`` makes it so that the text in the
+rendered HTML only shows ``acos`` instead of the fully qualified name
+``sympy.functions.elementary.trigonometric.acos``. (This will encourage importing
+names from the global ``sympy`` namespace instead of a specific submodule.)
+The ``.`` makes it so that the function name is found automatically. (If Sphinx gives
+a warning that there are multiple names found, replace the ``.`` with
+the full name.  For example, ``:obj:`~sympy.solvers.solvers.solve()```.) Adding a trailing
+pair of parentheses is a convention for indicating the name is a function, method, or
+class.
 
 You may also use a more specific type indicator instead of ``obj`` (see
 https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#cross-referencing-python-objects).

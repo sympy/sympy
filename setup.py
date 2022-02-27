@@ -260,7 +260,7 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        from sympy.utilities import runtests
+        from sympy.testing import runtests
         runtests.run_all_tests()
 
 
