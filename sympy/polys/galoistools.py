@@ -1876,8 +1876,8 @@ def gf_edf_zassenhaus(f, n, p, K):
     ==========
 
     .. [1] [Gathen99]_
-    .. [2] [Geddes92]_
-    .. [3] [Cohen93]_
+    .. [2] [Geddes92]_ Algorithm 8.9
+    .. [3] [Cohen93]_ Algorithm 3.4.8
 
     """
     factors = [f]
