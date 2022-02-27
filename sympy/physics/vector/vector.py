@@ -287,8 +287,8 @@ class Vector(Printable, EvalfMixin):
                                 tmp = pform.parens()
                                 pform = prettyForm(tmp[0], tmp[1])
 
-                            pform = prettyForm(*pform.right(" ",
-                                                ar[i][1].pretty_vecs[j]))
+                            pform = prettyForm(*pform.right(
+                                " ", ar[i][1].pretty_vecs[j]))
                         else:
                             continue
                         pforms.append(pform)
@@ -444,9 +444,10 @@ class Vector(Printable, EvalfMixin):
             tempx = v[1].x
             tempy = v[1].y
             tempz = v[1].z
-            tempm = ([[tempx, tempy, tempz], [self & tempx, self & tempy,
-                self & tempz], [Vector([ar[i]]) & tempx,
-                Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz]])
+            tempm = ([[tempx, tempy, tempz],
+                      [self & tempx, self & tempy, self & tempz],
+                      [Vector([ar[i]]) & tempx, Vector([ar[i]]) & tempy,
+                       Vector([ar[i]]) & tempz]])
             outlist += _det(tempm).args
         return Vector(outlist)
 
@@ -551,8 +552,7 @@ class Vector(Printable, EvalfMixin):
                 # with the derivative frame does not contain the variable.
                 if not var_in_dcm or (frame.dcm(component_frame).diff(var) ==
                                       zeros(3, 3)):
-                    inlist += [(measure_number.diff(var),
-                                        component_frame)]
+                    inlist += [(measure_number.diff(var), component_frame)]
                 else:  # else express in the frame
                     reexp_vec_comp = Vector([vector_component]).express(frame)
                     deriv = reexp_vec_comp.args[0][0].diff(var)
@@ -738,10 +738,9 @@ class Vector(Printable, EvalfMixin):
         Warnings
         ========
 
-        Python ignores the leading negative sign so that might
-        give wrong results.
-        ``-A.x.angle_between()`` would be treated as ``-(A.x.angle_between())``,
-        instead of ``(-A.x).angle_between()``.
+        Python ignores the leading negative sign so that might give wrong
+        results. ``-A.x.angle_between()`` would be treated as
+        ``-(A.x.angle_between())``, instead of ``(-A.x).angle_between()``.
 
         """
 
@@ -803,8 +802,8 @@ class Vector(Printable, EvalfMixin):
         return Vector(new_args)
 
     def xreplace(self, rule):
-        """
-        Replace occurrences of objects within the measure numbers of the vector.
+        """Replace occurrences of objects within the measure numbers of the
+        vector.
 
         Parameters
         ==========
@@ -845,6 +844,7 @@ class Vector(Printable, EvalfMixin):
             mat = mat.xreplace(rule)
             new_args.append([mat, frame])
         return Vector(new_args)
+
 
 class VectorTypeError(TypeError):
 
