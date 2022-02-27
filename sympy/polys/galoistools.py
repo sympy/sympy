@@ -1872,6 +1872,12 @@ def gf_edf_zassenhaus(f, n, p, K):
        >>> gf_edf_zassenhaus([1,1,1,1], 1, 5, ZZ)
        [[1, 1], [1, 2], [1, 3]]
 
+    Notes
+    =====
+
+    The case p == 2 is handled by Cohen's Algorithm 3.4.8. The case p odd is
+    as in Geddes Algorithm 8.9 (or Cohen's Algorithm 3.4.6).
+
     References
     ==========
 
