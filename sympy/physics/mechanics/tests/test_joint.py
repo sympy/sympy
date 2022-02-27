@@ -1,7 +1,8 @@
 from sympy.core.function import expand_mul
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions.elementary.miscellaneous import sqrt, Abs
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.dense import Matrix
 from sympy.core.backend import _simplify_matrix
