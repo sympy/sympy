@@ -1,4 +1,4 @@
-from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros, acos,
+from sympy.core.backend import (S, sympify, expand, Add, zeros, acos,
                                 ImmutableMatrix as Matrix, _simplify_matrix)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
