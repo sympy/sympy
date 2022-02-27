@@ -1,7 +1,7 @@
 from sympy.core.function import expand_mul
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Abs
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.dense import Matrix
 from sympy.core.backend import _simplify_matrix
@@ -163,7 +163,7 @@ def test_pinjoint_arbitrary_axis():
                             [0, -cos(theta), -sin(theta)],
                             [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
-    assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
+    assert A.ang_vel_in(N).magnitude() == Abs(omega)
     assert C.masscenter.pos_from(P.masscenter) == 0
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == 0
     assert C.masscenter.vel(N) == 0

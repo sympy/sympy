@@ -172,11 +172,11 @@ def test_linearize_pendulum_kane_nonminimal():
     # Create generalized coordinates and speeds for this non-minimal realization
     # q1, q2 = N.x and N.y coordinates of pendulum
     # u1, u2 = N.x and N.y velocities of pendulum
-    q1, q2 = dynamicsymbols('q1:3')
-    q1d, q2d = dynamicsymbols('q1:3', level=1)
-    u1, u2 = dynamicsymbols('u1:3')
-    u1d, u2d = dynamicsymbols('u1:3', level=1)
-    L, m, t = symbols('L, m, t')
+    q1, q2 = dynamicsymbols('q1:3', real=True)
+    q1d, q2d = dynamicsymbols('q1:3', level=1, real=True)
+    u1, u2 = dynamicsymbols('u1:3', real=True)
+    u1d, u2d = dynamicsymbols('u1:3', level=1, real=True)
+    L, m, t = symbols('L, m, t', real=True)
     g = 9.8
 
     # Compose world frame
@@ -229,7 +229,8 @@ def test_linearize_pendulum_kane_nonminimal():
     A, B, inp_vec = KM.linearize(op_point=[q_op, u_op, ud_op], A_and_B=True,
                                  simplify=True)
 
-    assert A.expand() == Matrix([[0, 1], [-9.8/L, 0]])
+    assert A.expand() == Matrix([[0, 1],
+                                 [-9.8/L, 0]])
     assert B == Matrix([])
 
 def test_linearize_pendulum_lagrange_minimal():

@@ -695,7 +695,10 @@ class Vector(Printable, EvalfMixin):
         instead of ``(-A.x).magnitude()``.
 
         """
-        return sqrt(self & self)
+        if self.args:
+            return self.to_matrix(self.args[0][1]).norm()
+        else:  # self is a vector of zero length
+            return S(0)
 
     def normalize(self):
         """Returns a Vector of magnitude 1, codirectional with self."""
