@@ -689,7 +689,7 @@ class Vector(Printable, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import symbols
+        >>> from sympy import symbols, sqrt
         >>> from sympy.physics.vector import ReferenceFrame
         >>> A = ReferenceFrame('A')
         >>> (1*A.x + 2*A.y + 3*A.z).magnitude()
