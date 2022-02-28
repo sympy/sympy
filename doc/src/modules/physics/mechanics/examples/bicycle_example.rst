@@ -13,7 +13,6 @@ construction of the equations of motion in :mod:`sympy.physics.mechanics`. ::
   ...       'with States: Roll, Steer, Roll Rate, Steer Rate')
   Calculation of Linearized Bicycle "A" Matrix, with States: Roll, Steer, Roll Rate, Steer Rate
 
-
 Note that this code has been crudely ported from Autolev, which is the reason
 for some of the unusual naming conventions. It was purposefully as similar as
 possible in order to aid initial porting & debugging. We set Vector.simp to
@@ -30,22 +29,22 @@ motion), frame ang. rate (pitching motion), steering frame ang. rate, and front
 wheel ang. rate (spinning motion).  Wheel positions are ignorable coordinates,
 so they are not introduced. ::
 
-  >>> q1, q2, q3, q4, q5 = dynamicsymbols('q1 q2 q3 q4 q5')
-  >>> q1d, q2d, q4d, q5d = dynamicsymbols('q1 q2 q4 q5', 1)
-  >>> u1, u2, u3, u4, u5, u6 = dynamicsymbols('u1 u2 u3 u4 u5 u6')
-  >>> u1d, u2d, u3d, u4d, u5d, u6d = dynamicsymbols('u1 u2 u3 u4 u5 u6', 1)
+  >>> q1, q2, q3, q4, q5 = dynamicsymbols('q1 q2 q3 q4 q5', real=True)
+  >>> q1d, q2d, q4d, q5d = dynamicsymbols('q1 q2 q4 q5', 1, real=True)
+  >>> u1, u2, u3, u4, u5, u6 = dynamicsymbols('u1 u2 u3 u4 u5 u6', real=True)
+  >>> u1d, u2d, u3d, u4d, u5d, u6d = dynamicsymbols('u1 u2 u3 u4 u5 u6', 1, real=True)
 
 Declaration of System's Parameters:
 The below symbols should be fairly self-explanatory. ::
 
-  >>> WFrad, WRrad, htangle, forkoffset = symbols('WFrad WRrad htangle forkoffset')
-  >>> forklength, framelength, forkcg1 = symbols('forklength framelength forkcg1')
-  >>> forkcg3, framecg1, framecg3, Iwr11 = symbols('forkcg3 framecg1 framecg3 Iwr11')
-  >>> Iwr22, Iwf11, Iwf22, Iframe11 = symbols('Iwr22 Iwf11 Iwf22 Iframe11')
+  >>> WFrad, WRrad, htangle, forkoffset = symbols('WFrad WRrad htangle forkoffset', real=True)
+  >>> forklength, framelength, forkcg1 = symbols('forklength framelength forkcg1', real=True)
+  >>> forkcg3, framecg1, framecg3, Iwr11 = symbols('forkcg3 framecg1 framecg3 Iwr11', real=True)
+  >>> Iwr22, Iwf11, Iwf22, Iframe11 = symbols('Iwr22 Iwf11 Iwf22 Iframe11', real=True)
   >>> Iframe22, Iframe33, Iframe31, Ifork11 = \
-  ...     symbols('Iframe22 Iframe33 Iframe31 Ifork11')
-  >>> Ifork22, Ifork33, Ifork31, g = symbols('Ifork22 Ifork33 Ifork31 g')
-  >>> mframe, mfork, mwf, mwr = symbols('mframe mfork mwf mwr')
+  ...     symbols('Iframe22 Iframe33 Iframe31 Ifork11', real=True)
+  >>> Ifork22, Ifork33, Ifork31, g = symbols('Ifork22 Ifork33 Ifork31 g', real=True)
+  >>> mframe, mfork, mwf, mwr = symbols('mframe mfork mwf mwr', real=True)
 
 Set up reference frames for the system:
 N - inertial
@@ -80,8 +79,15 @@ contact -> rear wheel's center of mass -> frame's center of mass + frame/fork co
   >>> Frame_mc = WR_mc.locatenew('Frame_mc', -framecg1 * Frame.x + framecg3 * Frame.z)
   >>> Fork_mc = Steer.locatenew('Fork_mc', -forkcg1 * Fork.x + forkcg3 * Fork.z)
   >>> WF_mc = Steer.locatenew('WF_mc', forklength * Fork.x + forkoffset * Fork.z)
-  >>> WF_cont = WF_mc.locatenew('WF_cont', WFrad*(dot(Fork.y, Y.z)*Fork.y - \
-  ...                                             Y.z).normalize())
+
+.. warning::
+
+   The ``normalize()`` method introduces ``Abs()`` into the following
+   expression, but if the symbols have ``real=True`` as an assumption this
+   expression simplifies to one without ``Abs()``.
+
+  >>> WF_cont_vec = WFrad*(dot(Fork.y, Y.z)*Fork.y - Y.z).normalize().simplify()
+  >>> WF_cont = WF_mc.locatenew('WF_cont', WF_cont_vec)
 
 Set the angular velocity of each frame:
 Angular accelerations end up being calculated automatically by differentiating
@@ -115,8 +121,7 @@ again are calculated automatically when first needed. ::
   >>> WF_mc.v2pt_theory(Steer, N, Fork)
   WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.x + (forklength*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.z
   >>> WF_cont.v2pt_theory(WF_mc, N, WF)
-  - WFrad*((-sin(q2)*sin(q5)*cos(htangle + q4) + cos(q2)*cos(q5))*u6 + u4*cos(q2) + u5*sin(htangle + q4)*sin(q2))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.x + WFrad*(u2 + u5*cos(htangle + q4) + u6*sin(htangle + q4)*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1)*Y.y + WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + (-WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5))/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.x + (forklength*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + (WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5)/sqrt((-sin(q2)*cos(q5) - sin(q5)*cos(htangle + q4)*cos(q2))*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2)) + 1) - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.z
-
+  - WFrad*((-sin(q2)*sin(q5)*cos(htangle + q4) + cos(q2)*cos(q5))*u6 + u4*cos(q2) + u5*sin(htangle + q4)*sin(q2))/sqrt((sin(q2)*sin(q5) - cos(htangle + q4)*cos(q2)*cos(q5))**2 + sin(htangle + q4)**2*cos(q2)**2)*Y.x + WFrad*(u2 + u5*cos(htangle + q4) + u6*sin(htangle + q4)*sin(q5))/sqrt((sin(q2)*sin(q5) - cos(htangle + q4)*cos(q2)*cos(q5))**2 + sin(htangle + q4)**2*cos(q2)**2)*Y.y + WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4))*Frame.y + (-WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5))/sqrt((sin(q2)*sin(q5) - cos(htangle + q4)*cos(q2)*cos(q5))**2 + sin(htangle + q4)**2*cos(q2)**2) + forkoffset*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.x + (forklength*((-sin(q2)*sin(q5) + cos(htangle + q4)*cos(q2)*cos(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkoffset*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + (WFrad*(sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5)/sqrt((sin(q2)*sin(q5) - cos(htangle + q4)*cos(q2)*cos(q5))**2 + sin(htangle + q4)**2*cos(q2)**2) - forklength*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5)))*Fork.z
 
 Sets the inertias of each body. Uses the inertia frame to construct the inertia
 dyadics. Wheel inertias are only defined by principal moments of inertia, and
