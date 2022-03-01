@@ -750,7 +750,7 @@ class LatexPrinter(Printer):
                 elif v == -1:
                     o1.append(' - ' + k._latex_form)
                 else:
-                    arg_str = '(' + self._print(v) + ')'
+                    arg_str = r'\left(' + self._print(v) + r'\right)'
                     o1.append(' + ' + arg_str + k._latex_form)
 
         outstr = (''.join(o1))
