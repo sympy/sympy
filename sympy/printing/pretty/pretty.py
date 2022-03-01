@@ -1147,7 +1147,9 @@ class PrettyPrinter(Printer):
                 if '\N{right parenthesis extension}' in tempstr:   # If scalar is a fraction
                     for paren in range(len(tempstr)):
                         flag[i] = 1
-                        if tempstr[paren] == '\N{right parenthesis extension}':
+                        if tempstr[paren] == '\N{right parenthesis extension}' and tempstr[paren + 1] == '\n':
+                            # We want to place the vector string after all the right parentheses, because
+                            # otherwise, the vector will be in the middle of the string
                             tempstr = tempstr[:paren] + '\N{right parenthesis extension}'\
                                          + ' '  + vectstrs[i] + tempstr[paren + 1:]
                             break
