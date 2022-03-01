@@ -5,52 +5,6 @@ os:
 jobs:
   fast_finish: true
   include:
-    - python: 3.8
-      dist: xenial
-      script: bin/test quality
-      env:
-        - TEST_QUALITY="true"
-    - python: 3.8
-      dist: xenial
-      env:
-        - TEST_FLAKE8="true"
-
-    - python: 3.8
-      dist: xenial
-      env:
-        - TEST_DOCTESTS="true" TEST_SETUP="true" TEST_EXAMPLES="true"
-    - python: 3.8
-      dist: xenial
-      env:
-        - TEST_SYMPY="true" SPLIT="1/2"
-    - python: 3.8
-      dist: xenial
-      env:
-        - TEST_SYMPY="true" SPLIT="2/2"
-    - python: 3.7
-      dist: xenial
-      # At the time of writing this is Python 3.7 but it will become 3.8 when
-      # all of the dependencies are supported on 3.8.
-      env:
-        - TEST_ASCII="true"
-        - TEST_OPT_DEPENDENCY="matchpy numpy scipy gmpy2 matplotlib aesara llvmlite autowrap cython wurlitzer python-symengine tensorflow numexpr ipython antlr-python-runtime>=4.7,<4.8 antlr>=4.7,<4.8 cloudpickle pyglet pycosat lfortran python-clang lxml"
-        - TEST_SAGE="true"
-        - SYMPY_STRICT_COMPILER_CHECKS=1
-      addons:
-        apt:
-          packages:
-            # for aesara
-            - libatlas-dev
-            - libatlas-base-dev
-            - liblapack-dev
-            - gfortran
-            - python-scipy
-
-    # Tensorflow 1 support
-    - python: 3.9
-      env:
-        - TEST_OPT_DEPENDENCY="tensorflow<2 python=3"
-        - TEST_TENSORFLOW_1=true
 
     - python: 3.8
       dist: xenial
@@ -72,29 +26,6 @@ jobs:
             - imagemagick
             - docbook2x
             - dbus
-
-    - python: 3.8
-      dist: xenial
-      env:
-        - TEST_SLOW="true"
-        - SPLIT="1/2"
-    - python: 3.8
-      dist: xenial
-      env:
-        - TEST_SLOW="true"
-        - SPLIT="2/2"
-
-    - python: 2.7
-      dist: xenial
-      env:
-        - TEST_PY2_IMPORT="true"
-
-    # Note: This never actually fails. The benchmark script doesn't report any
-    # failure exit code.
-    - python: 3.9
-      dist: xenial
-      env:
-        - BENCHMARK="true"
 
 before_install:
   - set -e
