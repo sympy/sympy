@@ -319,6 +319,8 @@ class lowergamma(Function):
 
         # Special values.
         if a.is_Number:
+            if a is S.Zero and not x is S.Zero:
+                return oo
             if a is S.One:
                 return S.One - exp(-x)
             elif a is S.Half:
