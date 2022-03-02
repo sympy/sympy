@@ -41,6 +41,7 @@ from sympy.core.numbers import ilcm, Rational, pi
 from sympy.core.relational import Eq, Ne, _canonical_coeff
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (re, im, arg, Abs, sign,
         unpolarify, polarify, polar_lift, principal_branch, unbranched_argument,
@@ -1671,6 +1672,7 @@ def meijerint_indefinite(f, x):
     >>> meijerint_indefinite(sin(x), x)
     -cos(x)
     """
+    f = sympify(f)
     results = []
     for a in sorted(_find_splitting_points(f, x) | {S.Zero}, key=default_sort_key):
         res = _meijerint_indefinite_1(f.subs(x, x + a), x)
@@ -1815,7 +1817,7 @@ def meijerint_definite(f, x, a, b):
     # There are usually several ways of doing this, and we want to try all.
     # This function does (1), calls _meijerint_definite_2 for step (2).
     _debug('Integrating', f, 'wrt %s from %s to %s.' % (x, a, b))
-
+    f = sympify(f)
     if f.has(DiracDelta):
         _debug('Integrand has DiracDelta terms - giving up.')
         return None

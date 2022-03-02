@@ -7,7 +7,7 @@ from sympy.functions.elementary.trigonometric import (acos, cos, sin, atan2)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not, fuzzy_or
 
@@ -51,10 +51,7 @@ class Quaternion(Expr):
     is_commutative = False
 
     def __new__(cls, a=0, b=0, c=0, d=0, real_field=True):
-        a = sympify(a)
-        b = sympify(b)
-        c = sympify(c)
-        d = sympify(d)
+        a, b, c, d = sympify(a), sympify(b), sympify(c), sympify(d)
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
@@ -184,10 +181,10 @@ class Quaternion(Expr):
         return self.add(other*-1)
 
     def __mul__(self, other):
-        return self._generic_mul(self, other)
+        return self._generic_mul(self, _sympify(other))
 
     def __rmul__(self, other):
-        return self._generic_mul(other, self)
+        return self._generic_mul(_sympify(other), self)
 
     def __pow__(self, p):
         return self.pow(p)
@@ -301,7 +298,7 @@ class Quaternion(Expr):
         (2 + 3*I)*(3 + 4*I) + (2 + 3*I)*(2 + 5*I)*i + 0*j + (2 + 3*I)*(7 + 8*I)*k
 
         """
-        return self._generic_mul(self, other)
+        return self._generic_mul(self, _sympify(other))
 
     @staticmethod
     def _generic_mul(q1, q2):
@@ -313,7 +310,7 @@ class Quaternion(Expr):
         q1 : Quaternion or symbol
         q2 : Quaternion or symbol
 
-        It's important to note that if neither q1 nor q2 is a Quaternion,
+        It is important to note that if neither q1 nor q2 is a Quaternion,
         this function simply returns q1 * q2.
 
         Returns
@@ -326,12 +323,12 @@ class Quaternion(Expr):
         ========
 
         >>> from sympy import Quaternion
-        >>> from sympy import Symbol
+        >>> from sympy import Symbol, S
         >>> q1 = Quaternion(1, 2, 3, 4)
         >>> q2 = Quaternion(5, 6, 7, 8)
         >>> Quaternion._generic_mul(q1, q2)
         (-60) + 12*i + 30*j + 24*k
-        >>> Quaternion._generic_mul(q1, 2)
+        >>> Quaternion._generic_mul(q1, S(2))
         2 + 4*i + 6*j + 8*k
         >>> x = Symbol('x', real = True)
         >>> Quaternion._generic_mul(q1, x)
@@ -339,16 +336,12 @@ class Quaternion(Expr):
 
         Quaternions over complex fields :
 
-        >>> from sympy import Quaternion
         >>> from sympy import I
         >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
         >>> Quaternion._generic_mul(q3, 2 + 3*I)
         (2 + 3*I)*(3 + 4*I) + (2 + 3*I)*(2 + 5*I)*i + 0*j + (2 + 3*I)*(7 + 8*I)*k
 
         """
-        q1 = sympify(q1)
-        q2 = sympify(q2)
-
         # None is a Quaternion:
         if not isinstance(q1, Quaternion) and not isinstance(q2, Quaternion):
             return q1 * q2
