@@ -14,6 +14,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.numbers import Float, Integer
+from sympy.core.symbol import Str
 from sympy.core.sympify import sympify
 from sympy.logic import true, false
 from sympy.utilities.iterables import iterable
@@ -120,7 +121,12 @@ class Module(Token):
     __slots__ = ('name', 'declarations', 'definitions')
     defaults = {'declarations': Tuple()}
     _construct_name = String
-    _construct_declarations = staticmethod(lambda arg: CodeBlock(*arg))
+
+    @classmethod
+    def _construct_declarations(cls, args):
+        args = [Str(arg) if isinstance(arg, str) else arg for arg in args]
+        return CodeBlock(*args)
+
     _construct_definitions = staticmethod(lambda arg: CodeBlock(*arg))
 
 
