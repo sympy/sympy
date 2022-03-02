@@ -58,6 +58,12 @@ h4, h5, h6 {
     text-transform: inherit;
 }
 
+/* Make "Examples" and "Parameters" headers easier to see */
+p.rubric, dl.c .field-list dt, dl.cpp .field-list dt, dl.js .field-list dt, dl.py .field-list dt {
+    text-transform: none;
+    font-weight: bold;
+    font-size: 120%;
+}
 
 /* Disable underlines on links except on hover, and give visited links a*/
 /* darker green color. */
