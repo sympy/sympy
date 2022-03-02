@@ -148,8 +148,11 @@ html_theme = "furo"
 
 html_theme_options = {
     "light_css_variables": {
+        # Main "SymPy green" colors. Many things uses these colors.
         "color-brand-primary": "#81B953",
         "color-brand-content": "#29A329",
+
+        # The left sidebar.
         "color-sidebar-background": "#3B5526",
         "color-sidebar-link-text": "#FFFFFF",
         "color-sidebar-brand-text": "#DDDDDD",
@@ -158,24 +161,25 @@ html_theme_options = {
         "color-sidebar-item-background--hover": "#8AB950",
         "color-sidebar-item-expander-background--hover": "#8AB950",
 
-    "color-api-keyword": "#29A329",
+        "color-api-keyword": "#000000bd",
+        "api-font-size": "var(--font-size--normal)",
         "color-foreground-secondary": "#53555B",
         "color-link-underline--hover": "#29A329",
 
-    # TODO: Add the other types of admonitions here if anyone uses them.
-    "color-admonition-title-background--seealso": "var(--color-brand-primary)",
+        # TODO: Add the other types of admonitions here if anyone uses them.
+        "color-admonition-title-background--seealso": "#CCCCCC",
         "color-admonition-title--seealso": "black",
-        "color-admonition-title-background--note": "var(--color-brand-primary)",
+        "color-admonition-title-background--note": "#CCCCCC",
         "color-admonition-title--note": "black",
         "color-admonition-title-background--warning": "var(--color-problematic)",
         "color-admonition-title--warning": "white",
-
-    # Note: this doesn't work. If we want to change this, we have to set
-        # it as the .highlight background in custom.css.
-    "color-code-background": "hsl(80deg 100% 95%)",
-
-    "admonition-font-size": "var(--font-size--normal)",
+        "admonition-font-size": "var(--font-size--normal)",
         "admonition-title-font-size": "var(--font-size--normal)",
+
+        # Note: this doesn't work. If we want to change this, we have to set
+        # it as the .highlight background in custom.css.
+        "color-code-background": "hsl(80deg 100% 95%)",
+
         "code-font-size": "var(--font-size--small)",
         "font-stack--monospace": 'DejaVu Sans Mono,"SFMono-Regular",Menlo,Consolas,Monaco,Liberation Mono,Lucida Console,monospace;'
     },
