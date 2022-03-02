@@ -76,3 +76,9 @@ a:hover {
 body[data-theme="dark"] .highlight .nn {
     text-decoration: none;
 }
+
+/* Disable the fancy scrolling behavior when jumping to headers (this is too
+   slow for long pages) */
+html {
+    scroll-behavior: auto;
+}
