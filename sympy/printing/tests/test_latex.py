@@ -370,11 +370,11 @@ def test_latex_vector_expressions():
     assert latex(x*Gradient(A.x)) == r"x \left(\nabla \mathbf{{x}_{A}}\right)"
     assert latex(Gradient(x*A.x)) == r"\nabla \left(\mathbf{{x}_{A}} x\right)"
 
-    assert latex(Laplacian(A.x)) == r"\triangle \mathbf{{x}_{A}}"
+    assert latex(Laplacian(A.x)) == r"\Delta \mathbf{{x}_{A}}"
     assert latex(Laplacian(A.x + 3*A.y)) == \
-        r"\triangle \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
-    assert latex(x*Laplacian(A.x)) == r"x \left(\triangle \mathbf{{x}_{A}}\right)"
-    assert latex(Laplacian(x*A.x)) == r"\triangle \left(\mathbf{{x}_{A}} x\right)"
+        r"\Delta \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
+    assert latex(x*Laplacian(A.x)) == r"x \left(\Delta \mathbf{{x}_{A}}\right)"
+    assert latex(Laplacian(x*A.x)) == r"\Delta \left(\mathbf{{x}_{A}} x\right)"
 
 def test_latex_symbols():
     Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
