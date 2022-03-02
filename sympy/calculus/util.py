@@ -666,6 +666,8 @@ def is_convex(f, *syms, domain=S.Reals):
     True
     >>> is_convex(x**3, x, domain = Interval(-1, oo))
     False
+    >>> is_convex(1/x**2, x, domain=Interval.open(0, oo))
+    True
 
     References
     ==========
@@ -686,6 +688,11 @@ def is_convex(f, *syms, domain=S.Reals):
 
     f = _sympify(f)
     var = syms[0]
+    s = singularities(f, var)
+    for ele in s:
+        if ele in domain:
+            return False
+
     condition = f.diff(var, 2) < 0
     if solve_univariate_inequality(condition, var, False, domain):
         return False
