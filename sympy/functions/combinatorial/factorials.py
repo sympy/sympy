@@ -98,7 +98,7 @@ class factorial(CombinatorialFunction):
     _small_factorials = []  # type: List[int]
 
     @classmethod
-    def _swing(cls, n):
+    def _swing(cls, n) -> int:
         if n < 33:
             return cls._small_swing[n]
         else:
@@ -134,7 +134,7 @@ class factorial(CombinatorialFunction):
             return L_product*R_product
 
     @classmethod
-    def _recursive(cls, n):
+    def _recursive(cls, n) -> int:
         if n < 2:
             return 1
         else:
@@ -173,7 +173,7 @@ class factorial(CombinatorialFunction):
 
                     return Integer(result)
 
-    def _facmod(self, n, q):
+    def _facmod(self, n, q) -> int:
         res, N = 1, int(_sqrt(n))
 
         # Exponent of prime p in n! is e_p(n) = [n/p] + [n/p**2] + ...

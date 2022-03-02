@@ -504,7 +504,7 @@ Bd = CreateBoson
 class FermionicOperator(SqOperator):
 
     @property
-    def is_restricted(self):
+    def is_restricted(self) -> int:
         """
         Is this FermionicOperator restricted with respect to fermi level?
 
@@ -705,7 +705,7 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
             return Mul(self, state)
 
     @property
-    def is_q_creator(self):
+    def is_q_creator(self) -> int:
         """
         Can we create a quasi-particle?  (create hole or create particle)
         If so, would that be above or below the fermi surface?

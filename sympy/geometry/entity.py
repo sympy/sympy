@@ -247,7 +247,7 @@ class GeometryEntity(Basic, EvalfMixin):
         return self
 
     @property
-    def ambient_dimension(self):
+    def ambient_dimension(self) -> int:
         """What is the dimension of the space that the object is contained in?"""
         raise NotImplementedError()
 

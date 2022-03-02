@@ -28,7 +28,7 @@ symmetries of the tensors.
 If there is a (anti)symmetric metric, the indices can be raised and
 lowered when the tensor is put in canonical form.
 """
-
+from __future__ import annotations
 from typing import Any, Dict as tDict, List, Set as tSet, Tuple as tTuple
 from functools import reduce
 
@@ -348,7 +348,7 @@ class _IndexStructure(CantSympify):
 
         # Converts the symmetry of the metric into msym from .canonicalize()
         # method in the combinatorics module
-        def metric_symmetry_to_msym(metric):
+        def metric_symmetry_to_msym(metric) -> int | None:
             if metric is None:
                 return None
             sym = metric.symmetry

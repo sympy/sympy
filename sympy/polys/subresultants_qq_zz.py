@@ -549,7 +549,7 @@ def res(f, g, x):
     else:
         return sylvester(f, g, x, 1).det()
 
-def res_q(f, g, x):
+def res_q(f, g, x) -> int:
     """
     The input polynomials f, g are in Z[x] or in Q[x].
 
@@ -577,7 +577,7 @@ def res_q(f, g, x):
             l = LC(g, x)
             return (-1)**(m*n) * l**(m-s)*res_q(g, r, x)
 
-def res_z(f, g, x):
+def res_z(f, g, x) -> int:
     """
     The input polynomials f, g are in Z[x] or in Q[x].
 
@@ -1755,7 +1755,7 @@ def subresultants_amv_q(p, q, x):
 
     return  subres_l
 
-def compute_sign(base, expo):
+def compute_sign(base, expo) -> int:
     '''
     base != 0 and expo >= 0 are integers;
 

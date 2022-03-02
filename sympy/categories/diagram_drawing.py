@@ -422,7 +422,7 @@ class DiagramGrid:
                 if len([e for e in tri if skeleton[e]]) >= 2]
 
     @staticmethod
-    def _morphism_length(morphism):
+    def _morphism_length(morphism) -> int:
         """
         Returns the length of a morphism.  The length of a morphism is
         the number of components it consists of.  A non-composite

@@ -37,7 +37,7 @@ class FiniteDensity(dict):
     """
     A domain with Finite Density.
     """
-    def __call__(self, item):
+    def __call__(self, item) -> int:
         """
         Make instance of a class callable.
 

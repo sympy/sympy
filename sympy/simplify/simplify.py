@@ -1720,7 +1720,7 @@ def nc_simplify(expr, deep=True):
             inv_tot -= len(inverses) - 1
         return inv_tot, tuple(args)
 
-    def get_score(s):
+    def get_score(s) -> int:
         # compute the number of arguments of s
         # (including in nested expressions) overall
         # but ignore exponents

@@ -1157,6 +1157,14 @@ class _SizedIntType(IntBaseType):
         if value > self.max:
             raise ValueError("Value is too big: %d > %d" % (value, self.max))
 
+    @property
+    def max(self) -> int:
+        raise NotImplementedError()
+
+    @property
+    def min(self) -> int:
+        raise NotImplementedError()
+
 
 class SignedIntType(_SizedIntType):
     """ Represents a signed integer type. """

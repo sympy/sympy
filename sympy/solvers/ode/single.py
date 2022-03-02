@@ -1374,7 +1374,7 @@ class SeparableReduced(Separable):
     has_integral = True
     order = [1]
 
-    def _degree(self, expr, x):
+    def _degree(self, expr, x) -> int:
         # Made this function to calculate the degree of
         # x in an expression. If expr will be of form
         # x**p*y, (wheare p can be variables/rationals) then it

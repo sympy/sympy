@@ -377,7 +377,7 @@ def _compute_test_factor(p, gens, ZK):
 
 
 @public
-def prime_valuation(I, P):
+def prime_valuation(I, P) -> int:
     r"""
     Compute the *P*-adic valuation for an integral ideal *I*.
 

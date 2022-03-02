@@ -196,7 +196,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     return '\n'.join(lines)
 
 
-def trailing(n):
+def trailing(n) -> int:
     """Count the number of trailing zero digits in the binary
     representation of n, i.e. determine the largest power of 2
     that divides n.
@@ -245,7 +245,7 @@ def trailing(n):
     return t
 
 
-def multiplicity(p, n):
+def multiplicity(p, n) -> int:
     """
     Find the greatest integer m such that p**m divides n.
 
@@ -1633,7 +1633,7 @@ def divisors(n, generator=False, proper=False):
     return rv
 
 
-def divisor_count(n, modulus=1, proper=False):
+def divisor_count(n, modulus=1, proper=False) -> int:
     """
     Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
     those that are divisible by ``modulus`` are counted. If ``proper`` is True

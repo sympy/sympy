@@ -6,11 +6,11 @@ sequences of rational numbers such as Bernoulli and Fibonacci numbers.
 Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
-
+from __future__ import annotations
 from collections import defaultdict
 from typing import Callable, Dict as tDict, Tuple as tTuple
 
-from sympy.core import S, Symbol, Add, Dummy
+from sympy.core import S, Symbol, Add, Dummy, Basic
 from sympy.core.cache import cacheit
 from sympy.core.evalf import pure_complex
 from sympy.core.expr import Expr
@@ -1454,7 +1454,7 @@ def _multiset_histogram(n):
         return _multiset_histogram(d)
 
 
-def nP(n, k=None, replacement=False):
+def nP(n, k=None, replacement=False) -> Integer:
     """Return the number of permutations of ``n`` items taken ``k`` at a time.
 
     Possible values for ``n``:
@@ -1521,7 +1521,7 @@ def nP(n, k=None, replacement=False):
 
 
 @cacheit
-def _nP(n, k=None, replacement=False):
+def _nP(n, k=None, replacement=False) -> int | Basic | None:
 
     if k == 0:
         return 1
@@ -1571,6 +1571,7 @@ def _nP(n, k=None, replacement=False):
                     n[i] += 1
                 n[_N] += 1
             return tot
+    return None
 
 
 @cacheit
@@ -1719,7 +1720,7 @@ def nC(n, k=None, replacement=False):
         return nC(_multiset_histogram(n), k, replacement)
 
 
-def _eval_stirling1(n, k):
+def _eval_stirling1(n, k) -> Basic:
     if n == k == 0:
         return S.One
     if 0 in (n, k):
@@ -1739,7 +1740,7 @@ def _eval_stirling1(n, k):
 
 
 @cacheit
-def _stirling1(n, k):
+def _stirling1(n, k) -> Integer:
     row = [0, 1]+[0]*(k-1) # for n = 1
     for i in range(2, n+1):
         for j in range(min(k,i), 0, -1):
@@ -1747,7 +1748,7 @@ def _stirling1(n, k):
     return Integer(row[k])
 
 
-def _eval_stirling2(n, k):
+def _eval_stirling2(n, k) -> Basic:
     if n == k == 0:
         return S.One
     if 0 in (n, k):
@@ -1767,7 +1768,7 @@ def _eval_stirling2(n, k):
 
 
 @cacheit
-def _stirling2(n, k):
+def _stirling2(n, k) -> Integer:
     row = [0, 1]+[0]*(k-1) # for n = 1
     for i in range(2, n+1):
         for j in range(min(k,i), 0, -1):
@@ -1775,7 +1776,7 @@ def _stirling2(n, k):
     return Integer(row[k])
 
 
-def stirling(n, k, d=None, kind=2, signed=False):
+def stirling(n, k, d=None, kind=2, signed=False) -> Integer:
     r"""Return Stirling number $S(n, k)$ of the first or second (default) kind.
 
     The sum of all Stirling numbers of the second kind for $k = 1$
@@ -1884,7 +1885,7 @@ def stirling(n, k, d=None, kind=2, signed=False):
 
 
 @cacheit
-def _nT(n, k):
+def _nT(n, k) -> int:
     """Return the partitions of ``n`` items into ``k`` parts. This
     is used by ``nT`` for the case when ``n`` is an integer."""
     # really quick exits
@@ -1927,7 +1928,7 @@ def _nT(n, k):
     return (1 + sum(p[1 - k:]))
 
 
-def nT(n, k=None):
+def nT(n, k=None) -> int:
     """Return the number of ``k``-sized partitions of ``n`` items.
 
     Possible values for ``n``:
@@ -2094,7 +2095,7 @@ class motzkin(Function):
     """
 
     @staticmethod
-    def is_motzkin(n):
+    def is_motzkin(n) -> bool:
         try:
             n = as_int(n)
         except ValueError:
@@ -2121,7 +2122,7 @@ class motzkin(Function):
             return False
 
     @staticmethod
-    def find_motzkin_numbers_in_range(x, y):
+    def find_motzkin_numbers_in_range(x, y) -> list[int]:
         if 0 <= x <= y:
             motzkins = list()
             if x <= 1 <= y:
@@ -2143,7 +2144,7 @@ class motzkin(Function):
             raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
 
     @staticmethod
-    def find_first_n_motzkins(n):
+    def find_first_n_motzkins(n) -> list[int]:
         try:
             n = as_int(n)
         except ValueError:
@@ -2181,7 +2182,7 @@ class motzkin(Function):
         return Integer(cls._motzkin(n - 1))
 
 
-def nD(i=None, brute=None, *, n=None, m=None):
+def nD(i=None, brute=None, *, n=None, m=None) -> Basic:
     """return the number of derangements for: ``n`` unique items, ``i``
     items (as a sequence or multiset), or multiplicities, ``m`` given
     as a sequence or multiset.
@@ -2228,7 +2229,7 @@ def nD(i=None, brute=None, *, n=None, m=None):
     from sympy.integrals.integrals import integrate
     from sympy.functions.special.polynomials import laguerre
     from sympy.abc import x
-    def ok(x):
+    def ok(x) -> bool:
         if not isinstance(x, SYMPY_INTS):
             raise TypeError('expecting integer values')
         if x < 0:
