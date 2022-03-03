@@ -190,9 +190,6 @@ class ExtensionElement(DomainElement, DefaultPrinting):
         else:
             return NotImplemented
 
-    def __ne__(f, g):
-        return not f == g
-
     def __hash__(f):
         return hash((f.rep, f.ext))
 

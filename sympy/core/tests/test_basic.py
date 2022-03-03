@@ -80,9 +80,6 @@ def test_equality():
                 return True
             return NotImplemented
 
-        def __ne__(self, other):
-            return not self == other
-
     bar = Bar()
 
     assert b == bar

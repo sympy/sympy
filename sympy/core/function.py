@@ -932,9 +932,6 @@ class UndefinedFunction(FunctionClass):
             self.class_key() == other.class_key() and
             self._kwargs == other._kwargs)
 
-    def __ne__(self, other):
-        return not self == other
-
     @property
     def _diff_wrt(self):
         return False
@@ -2340,9 +2337,6 @@ class Subs(Expr):
         if not isinstance(other, Subs):
             return False
         return self._hashable_content() == other._hashable_content()
-
-    def __ne__(self, other):
-        return not(self == other)
 
     def __hash__(self):
         return super().__hash__()

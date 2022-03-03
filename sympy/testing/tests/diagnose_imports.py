@@ -101,8 +101,6 @@ if __name__ == "__main__":
             return hash(self.name)
         def __eq__(self, other):
             return self.name == other.name and self.value == other.value
-        def __ne__(self, other):
-            return not (self == other)
         def __repr__(self):
             return 'Definition(%s, ..., %s)' % (
                 repr(self.name), repr(self.definer))

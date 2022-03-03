@@ -124,9 +124,6 @@ class Module:
     def __eq__(self, other):
         return self.is_submodule(other) and other.is_submodule(self)
 
-    def __ne__(self, other):
-        return not (self == other)
-
     def is_zero(self):
         """Returns True if ``self`` is a zero module."""
         raise NotImplementedError
@@ -247,9 +244,6 @@ class ModuleElement:
             except CoercionFailed:
                 return False
         return self.eq(self.data, om.data)
-
-    def __ne__(self, om):
-        return not self == om
 
 ##########################################################################
 ## Free Modules ##########################################################
