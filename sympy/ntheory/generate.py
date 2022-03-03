@@ -447,7 +447,7 @@ class primepi(Function):
         Now, if a is a prime less than equal to j - 1,
         $x= j \times a$ has smallest prime factor = a, and
         has already been removed(by sieving from a).
-        So, we don't need to remove it again.
+        So, we do not need to remove it again.
         (Note: there will be pi(j - 1) such x)
 
         Thus, number of x, that will be removed are:
@@ -481,7 +481,7 @@ class primepi(Function):
         >>> isprime(25)
         False
 
-        It isn't. So the first prime less than 25 must be the
+        It is not. So the first prime less than 25 must be the
         9th prime:
 
         >>> prevprime(25) == prime(9)

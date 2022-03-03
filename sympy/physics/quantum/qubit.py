@@ -209,7 +209,7 @@ class Qubit(QubitState, Ket):
             return Matrix(result)
         elif _format == 'numpy':
             import numpy as np
-            return np.matrix(result, dtype='complex').transpose()
+            return np.array(result, dtype='complex').transpose()
         elif _format == 'scipy.sparse':
             from scipy import sparse
             return sparse.csr_matrix(result, dtype='complex').transpose()

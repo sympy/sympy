@@ -1570,7 +1570,7 @@ def gf_sqf_list(f, p, K, all=False):
     of ``f`` and a square-free decomposition ``f_1**e_1 f_2**e_2 ... f_k**e_k``
     such that all ``f_i`` are monic polynomials and ``(f_i, f_j)`` for ``i != j``
     are co-prime and ``e_1 ... e_k`` are given in increasing order. All trivial
-    terms (i.e. ``f_i = 1``) aren't included in the output.
+    terms (i.e. ``f_i = 1``) are not included in the output.
 
     Consider polynomial ``f = x**11 + 1`` over ``GF(11)[x]``::
 
@@ -1588,7 +1588,7 @@ def gf_sqf_list(f, p, K, all=False):
        >>> gf_diff(f, 11, ZZ)
        []
 
-    This phenomenon doesn't happen in characteristic zero. However we can
+    This phenomenon does not happen in characteristic zero. However we can
     still compute square-free decomposition of ``f`` using ``gf_sqf()``::
 
        >>> gf_sqf_list(f, 11, ZZ)
@@ -2154,7 +2154,7 @@ def gf_factor(f, p, K):
        >>> gf_factor(ZZ.map([5, 2, 7, 2]), 11, ZZ)
        (5, [([1, 2], 1), ([1, 8], 2)])
 
-    We arrived with factorization ``f = 5 (x + 2) (x + 8)**2``. We didn't
+    We arrived with factorization ``f = 5 (x + 2) (x + 8)**2``. We did not
     recover the exact form of the input polynomial because we requested to
     get monic factors of ``f`` and its leading coefficient separately.
 

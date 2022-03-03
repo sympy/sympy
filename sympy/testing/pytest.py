@@ -282,7 +282,7 @@ calls the deprecated code (the current stacklevel is showing code from
         targets = []
         for w in warnrec:
             targets.append(w.message.active_deprecations_target)
-        with open(active_deprecations_file) as f:
+        with open(active_deprecations_file, encoding="utf-8") as f:
             text = f.read()
         for target in targets:
             if f'({target})=' not in text:

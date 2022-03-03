@@ -1275,12 +1275,18 @@ class tan(TrigonometricFunction):
         return y
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
+        from sympy.functions.elementary.complexes import re
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = 2*x0/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi/2).as_leading_term(x)
             return lt if n.is_even else -1/lt
+        if x0 is S.ComplexInfinity:
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+        if x0 in (S.Infinity, S.NegativeInfinity):
+            return AccumBounds(S.NegativeInfinity, S.Infinity)
         return self.func(x0) if x0.is_finite else self
 
     def _eval_is_extended_real(self):
@@ -1374,6 +1380,8 @@ class cot(TrigonometricFunction):
                 return S.NaN
             if arg.is_zero:
                 return S.ComplexInfinity
+            elif arg in (S.Infinity, S.NegativeInfinity):
+                return AccumBounds(S.NegativeInfinity, S.Infinity)
 
         if arg is S.ComplexInfinity:
             return S.NaN
@@ -1559,12 +1567,18 @@ class cot(TrigonometricFunction):
         return y
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
+        from sympy.functions.elementary.complexes import re
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = 2*x0/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi/2).as_leading_term(x)
             return 1/lt if n.is_even else -lt
+        if x0 is S.ComplexInfinity:
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+        if x0 in (S.Infinity, S.NegativeInfinity):
+            return AccumBounds(S.NegativeInfinity, S.Infinity)
         return self.func(x0) if x0.is_finite else self
 
     def _eval_is_extended_real(self):
@@ -1832,13 +1846,19 @@ class sec(ReciprocalTrigonometricFunction):
             return S.NegativeOne**k*euler(2*k)/factorial(2*k)*x**(2*k)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
+        from sympy.functions.elementary.complexes import re
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = (x0 + S.Pi/2)/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi + S.Pi/2).as_leading_term(x)
             return (S.NegativeOne**n)/lt
-        return self.func(x0)
+        if x0 is S.ComplexInfinity:
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+        if x0 in (S.Infinity, S.NegativeInfinity):
+            return AccumBounds(S.NegativeInfinity, S.Infinity)
+        return self.func(x0) if x0.is_finite else self
 
 
 class csc(ReciprocalTrigonometricFunction):
@@ -1925,6 +1945,21 @@ class csc(ReciprocalTrigonometricFunction):
             k = n//2 + 1
             return (S.NegativeOne**(k - 1)*2*(2**(2*k - 1) - 1)*
                     bernoulli(2*k)*x**(2*k - 1)/factorial(2*k))
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
+        from sympy.functions.elementary.complexes import re
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        n = x0/S.Pi
+        if n.is_integer:
+            lt = (arg - n*S.Pi).as_leading_term(x)
+            return (S.NegativeOne**n)/lt
+        if x0 is S.ComplexInfinity:
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+        if x0 in (S.Infinity, S.NegativeInfinity):
+            return AccumBounds(S.NegativeInfinity, S.Infinity)
+        return self.func(x0) if x0.is_finite else self
 
 
 class sinc(Function):

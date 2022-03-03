@@ -8,8 +8,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
-from sympy.abc import a, b, j, k, m, n, r, x
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
+from sympy.abc import a, b, j, k, m, n, r, x
 
 
 def test_gosper_normal():

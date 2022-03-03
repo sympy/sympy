@@ -1485,7 +1485,7 @@ class MatrixProperties(MatrixRequired):
         ...                   -y, -x*y, 0])
 
         Simplification of matrix elements is done by default so even
-        though two elements which should be equal and opposite wouldn't
+        though two elements which should be equal and opposite would not
         pass an equality test, the matrix is still reported as
         anti-symmetric:
 
@@ -1494,7 +1494,7 @@ class MatrixProperties(MatrixRequired):
         >>> m.is_anti_symmetric()
         True
 
-        If 'simplify=False' is used for the case when a Matrix is already
+        If ``simplify=False`` is used for the case when a Matrix is already
         simplified, this will speed things up. Here, we see that without
         simplification the matrix does not appear anti-symmetric:
 
