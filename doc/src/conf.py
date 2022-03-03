@@ -145,9 +145,7 @@ html_last_updated_fmt = '%b %d, %Y'
 # html_theme = "classic"
 html_theme = "furo"
 
-
-html_theme_options = {
-    "light_css_variables": {
+common_theme_variables = {
         # Main "SymPy green" colors. Many things uses these colors.
         "color-brand-primary": "#81B953",
         "color-brand-content": "#29A329",
@@ -182,9 +180,13 @@ html_theme_options = {
 
         "code-font-size": "var(--font-size--small)",
         "font-stack--monospace": 'DejaVu Sans Mono,"SFMono-Regular",Menlo,Consolas,Monaco,Liberation Mono,Lucida Console,monospace;'
-    },
+    }
+
+html_theme_options = {
+    "light_css_variables": common_theme_variables,
     # The dark variables automatically inherit values from the light variables
     "dark_css_variables": {
+        **common_theme_variables,
         "color-api-highlight-on-target": "#444444",
     },
     # See https://pradyunsg.me/furo/customisation/footer/
