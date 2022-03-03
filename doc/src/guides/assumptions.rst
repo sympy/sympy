@@ -1428,17 +1428,18 @@ The new assumptions have the theoretical capability that relational
 assumptions can be specified. However the algorithms to make use of that
 information are not yet implemented and the exact API for specifying
 relational assumptions has not been decided upon.
+..
+  Dynamic changing assumptions
+  ----------------------------
 
-Dynamic changing assumptions
-----------------------------
+  Selectively controlling evaluation
+  ----------------------------------
 
-Selectively controlling evaluation
-----------------------------------
+  Extensibility
+  -------------
 
-Extensibility
--------------
+  New assumptions
+  ===============
 
-New assumptions
-===============
-
-ZZZ: Talk about the new assumptions here...
+  ZZZ: Talk about the new assumptions here...
+..
