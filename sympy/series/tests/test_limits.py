@@ -16,7 +16,7 @@ from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, as
                                                       atan, cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.bessel import (besselj, besselk)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, erfi, fresnelc, fresnels)
-from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma)
+from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma, lowergamma)
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.series.limits import (Limit, limit)
 from sympy.simplify.simplify import simplify
@@ -319,6 +319,14 @@ def test_series_AccumBounds():
     # https://github.com/sympy/sympy/issues/12312
     e = 2**(-x)*(sin(x) + 1)**x
     assert limit(e, x, oo) == AccumBounds(0, oo)
+
+
+def test_lowergamma_at_origin():
+    a, x = symbols('a x')
+    assert limit(lowergamma(a, x), a, 0) == oo
+    assert limit(lowergamma(a, x), a, 0, '-') == -oo
+    assert limit(lowergamma(I*a, x), a, 0) == -oo*I
+    assert limit(lowergamma(I*a, x), a, 0, '-') == oo*I
 
 
 @XFAIL
