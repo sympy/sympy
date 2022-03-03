@@ -160,6 +160,8 @@ common_theme_variables = {
         "color-sidebar-item-expander-background--hover": "#8AB950",
 
         "color-api-keyword": "#000000bd",
+        "color-api-name": "var(--color-brand-content)",
+        "color-api-pre-name": "var(--color-brand-primary)",
         "api-font-size": "var(--font-size--normal)",
         "color-foreground-secondary": "#53555B",
         "color-link-underline--hover": "#29A329",
