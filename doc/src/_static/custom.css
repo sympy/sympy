@@ -81,6 +81,12 @@ a:hover {
     text-decoration: underline;
 }
 
+/* Change the background color of the code blocks (light mode). This should be*/
+/* --color-code-background but setting it in conf.py doesn't work.*/
+.highlight {
+    background-color: hsl(80deg 100% 95%);
+}
+
 /* Remove the underline from module names in code blocks in dark mode */
 body[data-theme="dark"] .highlight .nn {
     text-decoration: none;
