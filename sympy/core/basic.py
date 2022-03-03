@@ -390,6 +390,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                 return False
         return True
 
+    #__ne__ method for pypy
     def __ne__(self, other):
         """``a != b``  -> Compare two symbolic trees and see whether they are different
 

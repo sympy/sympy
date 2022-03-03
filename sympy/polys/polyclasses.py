@@ -1045,9 +1045,6 @@ class DMP(PicklableWithSlots, CantSympify):
 
         return False
 
-    def __ne__(f, g):
-        return not f == g
-
     def eq(f, g, strict=False):
         if not strict:
             return f == g
@@ -1490,6 +1487,7 @@ class DMF(PicklableWithSlots, CantSympify):
 
         return False
 
+    #__ne__ method for pypy
     def __ne__(f, g):
         try:
             if isinstance(g, DMP):
@@ -1772,6 +1770,7 @@ class ANP(PicklableWithSlots, CantSympify):
         except UnificationFailed:
             return False
 
+    #__ne__ method for pypy
     def __ne__(f, g):
         try:
             _, _, F, G, _ = f.unify(g)

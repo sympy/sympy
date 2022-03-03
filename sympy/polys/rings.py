@@ -293,6 +293,7 @@ class PolyRing(DefaultPrinting, IPolys):
             (self.symbols, self.domain, self.ngens, self.order) == \
             (other.symbols, other.domain, other.ngens, other.order)
 
+    #__ne__ method for pypy
     def __ne__(self, other):
         return not self == other
 
@@ -676,6 +677,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             return p1.get(p1.ring.zero_monom) == p2
 
+    #__ne__ method for pypy
     def __ne__(p1, p2):
         return not p1 == p2
 

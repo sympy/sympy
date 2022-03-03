@@ -142,6 +142,7 @@ class interval:
         else:
             return NotImplemented
 
+    #__ne__ method for pypy
     def __ne__(self, other):
         if isinstance(other, (int, float)):
             if self.start == other and self.end == other:

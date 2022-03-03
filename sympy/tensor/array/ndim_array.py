@@ -521,9 +521,6 @@ class NDimArray(Printable):
 
         return list(self) == list(other)
 
-    def __ne__(self, other):
-        return not self == other
-
     def _eval_transpose(self):
         if self.rank() != 2:
             raise ValueError("array rank not 2")

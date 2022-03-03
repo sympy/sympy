@@ -124,11 +124,6 @@ class PartComponent:
                 self.u == other.u and
                 self.v == other.v)
 
-    def __ne__(self, other):
-        """Defined for consistency with __eq__"""
-        return not self == other
-
-
 # This function tries to be a faithful implementation of algorithm
 # 7.1.2.5M in Volume 4A, Combinatoral Algorithms, Part 1, of The Art
 # of Computer Programming, by Donald Knuth.  This includes using

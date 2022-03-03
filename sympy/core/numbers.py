@@ -771,6 +771,7 @@ class Number(AtomicExpr):
         raise NotImplementedError('%s needs .__eq__() method' %
             (self.__class__.__name__))
 
+    #__ne__ method for pypy
     def __ne__(self, other):
         raise NotImplementedError('%s needs .__ne__() method' %
             (self.__class__.__name__))
@@ -1399,6 +1400,7 @@ class Float(Number):
             return not other
         return False    # Float != non-Number
 
+    #__ne__ method for pypy
     def __ne__(self, other):
         return not self == other
 
@@ -1914,6 +1916,7 @@ class Rational(Number):
             return m == self.p and integer_log(self.q, 2) == (-t, True)
         return False
 
+    #__ne__ method for pypy
     def __ne__(self, other):
         return not self == other
 
@@ -2245,6 +2248,7 @@ class Integer(Rational):
             return (self.p == other.p)
         return Rational.__eq__(self, other)
 
+    #__ne__ method for pypy
     def __ne__(self, other):
         return not self == other
 
@@ -3423,6 +3427,7 @@ class Infinity(Number, metaclass=Singleton):
     def __eq__(self, other):
         return other is S.Infinity or other == float('inf')
 
+    #__ne__ method for pypy
     def __ne__(self, other):
         return other is not S.Infinity and other != float('inf')
 
@@ -3589,6 +3594,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
     def __eq__(self, other):
         return other is S.NegativeInfinity or other == float('-inf')
 
+    #__ne__ method for pypy
     def __ne__(self, other):
         return other is not S.NegativeInfinity and other != float('-inf')
 
@@ -3721,6 +3727,7 @@ class NaN(Number, metaclass=Singleton):
         # NaN is structurally equal to another NaN
         return other is S.NaN
 
+    #__ne__ method for pypy
     def __ne__(self, other):
         return other is not S.NaN
 
@@ -3853,6 +3860,7 @@ class NumberSymbol(AtomicExpr):
 
         return False    # NumberSymbol != non-(Number|self)
 
+    #__ne__ method for pypy
     def __ne__(self, other):
         return not self == other
 
