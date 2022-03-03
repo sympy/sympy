@@ -21,6 +21,7 @@ blockquote {
     margin-left: inherit;
     margin-right: inherit;
     padding: inherit;
+    background-color: inherit;
     margin-block-start: -0.5rem;
     margin-block-end: -0.5rem;
 }
