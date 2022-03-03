@@ -189,7 +189,13 @@ html_theme_options = {
     # The dark variables automatically inherit values from the light variables
     "dark_css_variables": {
         **common_theme_variables,
+        "color-api-keyword": "#FFFFFFbd",
+        "color-api-overall": "#FFFFFF90",
+        "color-api-paren": "#FFFFFF90",
         "color-api-highlight-on-target": "#444444",
+        "color-admonition-title-background--seealso": "#555555",
+        "color-admonition-title-background--note": "#555555",
+        "color-foreground-secondary": "#9DA1AC",
     },
     # See https://pradyunsg.me/furo/customisation/footer/
     "footer_icons": [
