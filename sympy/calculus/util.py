@@ -688,10 +688,8 @@ def is_convex(f, *syms, domain=S.Reals):
 
     f = _sympify(f)
     var = syms[0]
-    s = singularities(f, var)
-    for ele in s:
-        if ele in domain:
-            return False
+    if any(s in domain for s in singularities(f, var)):
+        return False
 
     condition = f.diff(var, 2) < 0
     if solve_univariate_inequality(condition, var, False, domain):
