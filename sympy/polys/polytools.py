@@ -4249,9 +4249,6 @@ class Poly(Basic):
 
     @_sympifyit('g', NotImplemented)
 
-    def __bool__(f):
-        return not f.is_zero
-
     def eq(f, g, strict=False):
         if not strict:
             return f == g
