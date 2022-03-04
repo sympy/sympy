@@ -41,7 +41,7 @@ from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, symbols
 from sympy.functions import exp
-from sympy.integrals.integrals import Integral
+from sympy.integrals.integrals import Integral, integrate
 from sympy.utilities.iterables import has_dups, is_sequence
 from sympy.utilities.misc import filldedent
 
@@ -79,7 +79,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         ``f(x,y)`` is a function of two variables whose derivatives in that
             variable make up the partial differential equation. In many
             cases it is not necessary to provide this; it will be autodetected
-            (and an error raised if it couldn't be detected).
+            (and an error raised if it could not be detected).
 
         ``hint`` is the solving method that you want pdsolve to use.  Use
             classify_pde(eq, f(x,y)) to get all of the possible hints for
@@ -404,8 +404,8 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     solution satisfies the PDE:
 
         1. Directly substitute the solution in the PDE and check. If the
-           solution hasn't been solved for f, then it will solve for f
-           provided solve_for_func hasn't been set to False.
+           solution has not been solved for f, then it will solve for f
+           provided solve_for_func has not been set to False.
 
     If the solution satisfies the PDE, then a tuple (True, 0) is returned.
     Otherwise a tuple (False, expr) where expr is the value obtained
@@ -727,7 +727,6 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
       Math 124A - Fall 2010, pp.7
 
     """
-    from sympy.integrals.integrals import integrate
     from sympy.solvers.ode import dsolve
 
     xi, eta = symbols("xi eta")

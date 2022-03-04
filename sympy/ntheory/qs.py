@@ -211,7 +211,7 @@ def _initialize_ith_poly(N, factor_base, i, g, B):
 
 def _gen_sieve_array(M, factor_base):
     """Sieve Stage of the Quadratic Sieve. For every prime in the factor_base
-    that doesn't divide the coefficient `a` we add log_p over the sieve_array
+    that does not divide the coefficient `a` we add log_p over the sieve_array
     such that ``-M <= soln1 + i*p <=  M`` and ``-M <= soln2 + i*p <=  M`` where `i`
     is an integer. When p = 2 then log_p is only added using
     ``-M <= soln1 + i*p <=  M``.

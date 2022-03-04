@@ -31,7 +31,9 @@ sys.path = ['ext'] + sys.path
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
               'sphinx.ext.mathjax', 'numpydoc', 'sympylive', 'sphinx_reredirects',
-              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
+              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
+              'myst_parser'
+              ]
 
 redirects = {
     "install.rst": "guides/getting_started/install.html",
@@ -66,6 +68,12 @@ mathjax3_config = {
     "displayMath": [["\\[", "\\]"]],
   }
 }
+
+# Myst configuration (for .md files). See
+# https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
+myst_enable_extensions = ["dollarmath", "linkify"]
+myst_heading_anchors = 2
+# myst_update_mathjax = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -165,6 +173,7 @@ html_domain_indices = ['py-modindex']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'SymPydoc'
 
+language = 'en'
 
 # Options for LaTeX output
 # ------------------------

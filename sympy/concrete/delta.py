@@ -242,7 +242,7 @@ def deltasummation(f, limit, no_piecewise=False):
       We already know we can sum a simplified expression, because only
       simple KroneckerDelta expressions are involved.
 
-      If we couldn't simplify it, there are two cases:
+      If we could not simplify it, there are two cases:
 
       1) The expression is a simple expression: we return the summation,
          taking care if we are dealing with a Derivative or with a proper
@@ -262,7 +262,7 @@ def deltasummation(f, limit, no_piecewise=False):
 
       1) We have a simple KroneckerDelta term, so we return the summation.
 
-      2) We didn't have a simple term, but we do have an expression with
+      2) We did not have a simple term, but we do have an expression with
          simplified KroneckerDelta terms, so we sum this expression.
 
     Examples

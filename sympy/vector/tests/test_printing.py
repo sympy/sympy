@@ -139,24 +139,26 @@ def test_latex_printing():
     assert latex(v[0]) == '\\mathbf{\\hat{0}}'
     assert latex(v[1]) == '\\mathbf{\\hat{i}_{N}}'
     assert latex(v[2]) == '- \\mathbf{\\hat{i}_{N}}'
-    assert latex(v[5]) == ('(a)\\mathbf{\\hat{i}_{N}} + ' +
-                           '(- b)\\mathbf{\\hat{j}_{N}}')
-    assert latex(v[6]) == ('(\\mathbf{{x}_{N}} + a^{2})\\mathbf{\\hat{i}_' +
+    assert latex(v[5]) == ('\\left(a\\right)\\mathbf{\\hat{i}_{N}} + ' +
+                           '\\left(- b\\right)\\mathbf{\\hat{j}_{N}}')
+    assert latex(v[6]) == ('\\left(\\mathbf{{x}_{N}} + a^{2}\\right)\\mathbf{\\hat{i}_' +
                           '{N}} + \\mathbf{\\hat{k}_{N}}')
-    assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + (\\mathbf{{x}_' +
+    assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + \\left(\\mathbf{{x}_' +
                            '{C}}^{2} - \\int f{\\left(b \\right)}\\,' +
-                           ' db)\\mathbf{\\hat{k}_{N}}')
+                           ' db\\right)\\mathbf{\\hat{k}_{N}}')
     assert latex(s) == '3 \\mathbf{{y}_{C}} \\mathbf{{x}_{N}}^{2}'
     assert latex(d[0]) == '(\\mathbf{\\hat{0}}|\\mathbf{\\hat{0}})'
-    assert latex(d[4]) == ('(a)(\\mathbf{\\hat{i}_{N}}{|}\\mathbf' +
-                           '{\\hat{k}_{N}})')
-    assert latex(d[9]) == ('(\\mathbf{\\hat{k}_{C}}{|}\\mathbf{\\' +
-                           'hat{k}_{N}}) + (\\mathbf{\\hat{i}_{N}}{|' +
-                           '}\\mathbf{\\hat{k}_{N}})')
-    assert latex(d[11]) == ('(a^{2} + b)(\\mathbf{\\hat{i}_{N}}{|}\\' +
-                            'mathbf{\\hat{k}_{N}}) + (\\int f{\\left(' +
-                            'b \\right)}\\, db)(\\mathbf{\\hat{k}_{N}' +
-                            '}{|}\\mathbf{\\hat{k}_{N}})')
+    assert latex(d[4]) == ('\\left(a\\right)\\left(\\mathbf{\\hat{i}_{N}}{\\middle|}' +
+                           '\\mathbf{\\hat{k}_{N}}\\right)')
+    assert latex(d[9]) == ('\\left(\\mathbf{\\hat{k}_{C}}{\\middle|}' +
+                           '\\mathbf{\\hat{k}_{N}}\\right) + \\left(' +
+                           '\\mathbf{\\hat{i}_{N}}{\\middle|}\\mathbf{' +
+                           '\\hat{k}_{N}}\\right)')
+    assert latex(d[11]) == ('\\left(a^{2} + b\\right)\\left(\\mathbf{\\hat{i}_{N}}' +
+                            '{\\middle|}\\mathbf{\\hat{k}_{N}}\\right) + ' +
+                            '\\left(\\int f{\\left(b \\right)}\\, db\\right)\\left(' +
+                            '\\mathbf{\\hat{k}_{N}}{\\middle|}\\mathbf{' +
+                            '\\hat{k}_{N}}\\right)')
 
 
 def test_custom_names():

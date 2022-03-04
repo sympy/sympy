@@ -114,8 +114,8 @@ def solve_poly_inequalities(polys):
     Examples
     ========
 
+    >>> from sympy import Poly
     >>> from sympy.solvers.inequalities import solve_poly_inequalities
-    >>> from sympy.polys import Poly
     >>> from sympy.abc import x
     >>> solve_poly_inequalities(((
     ... Poly(x**2 - 3), ">"), (
@@ -403,7 +403,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
         The domain over which the equation is solved
     continuous: bool
         True if expr is known to be continuous over the given domain
-        (and so continuous_domain() doesn't need to be called on it)
+        (and so continuous_domain() does not need to be called on it)
 
     Raises
     ======

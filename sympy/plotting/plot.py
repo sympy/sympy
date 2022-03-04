@@ -17,7 +17,7 @@ directly to it. In the case of matplotlib (the common way to graph data in
 python) just copy ``_backend.fig`` which is the figure and ``_backend.ax``
 which is the axis and work on them as you would on any other matplotlib object.
 
-Simplicity of code takes much greater importance than performance. Don't use it
+Simplicity of code takes much greater importance than performance. Do not use it
 if you care at all about performance. A new backend instance is initialized
 every time you call ``show()`` and the old one is left to the garbage collector.
 """
@@ -25,15 +25,18 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 
 from collections.abc import Callable
 
+
+from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
+from sympy.core.function import arity, Function
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.core.sympify import sympify
 from sympy.external import import_module
-from sympy.core.function import arity
+from sympy.printing.latex import latex
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
@@ -53,6 +56,11 @@ def unset_show():
     """
     global _show
     _show = False
+
+def _str_or_latex(label):
+    if isinstance(label, Basic):
+        return latex(label, mode='inline')
+    return str(label)
 
 ##############################################################################
 # The public interface
@@ -110,9 +118,9 @@ class Plot:
     The global options for a figure are:
 
     - title : str
-    - xlabel : str
-    - ylabel : str
-    - zlabel : str
+    - xlabel : str or Symbol
+    - ylabel : str or Symbol
+    - zlabel : str or Symbol
     - legend : bool
     - xscale : {'linear', 'log'}
     - yscale : {'linear', 'log'}
@@ -605,11 +613,15 @@ class Line2DBaseSeries(BaseSeries):
         return points
 
     def get_segments(self):
-        SymPyDeprecationWarning(
-                feature="get_segments",
-                issue=21329,
-                deprecated_since_version="1.9",
-                useinstead="MatplotlibBackend.get_segments").warn()
+        sympy_deprecation_warning(
+            """
+            The Line2DBaseSeries.get_segments() method is deprecated.
+
+            Instead, use the MatplotlibBackend.get_segments() method, or use
+            The get_points() or get_data() methods.
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-get-segments")
 
         np = import_module('numpy')
         points = type(self).get_data(self)
@@ -660,7 +672,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
     def __init__(self, expr, var_start_end, **kwargs):
         super().__init__()
         self.expr = sympify(expr)
-        self.label = kwargs.get('label', None) or str(self.expr)
+        self.label = kwargs.get('label', None) or self.expr
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -788,6 +800,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         list_y = f(list_x)
         return (list_x, list_y)
 
+
 class Parametric2DLineSeries(Line2DBaseSeries):
     """Representation for a line consisting of two parametric SymPy expressions
     over a range."""
@@ -799,7 +812,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         self.expr_x = sympify(expr_x)
         self.expr_y = sympify(expr_y)
         self.label = kwargs.get('label', None) or \
-                            "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
+                            Tuple(self.expr_x, self.expr_y)
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -954,7 +967,7 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self.expr_y = sympify(expr_y)
         self.expr_z = sympify(expr_z)
         self.label = kwargs.get('label', None) or \
-                        "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
+                        Tuple(self.expr_x, self.expr_y)
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
@@ -1239,7 +1252,7 @@ class BaseBackend:
     * save(self, path): used to save the current plot to the specified file
         path.
     * close(self): used to close the current plot backend (note: some plotting
-        library doesn't support this functionality. In that case, just raise a
+        library does not support this functionality. In that case, just raise a
         warning).
 
     See also
@@ -1356,7 +1369,8 @@ class MatplotlibBackend(BaseBackend):
                     collection.set_array(s.get_color_array())
                     ax.add_collection(collection)
                 else:
-                    line, = ax.plot(x, y, label=s.label, color=s.line_color)
+                    lbl = _str_or_latex(s.label)
+                    line, = ax.plot(x, y, label=lbl, color=s.line_color)
             elif s.is_contour:
                 ax.contour(*s.get_meshes())
             elif s.is_3Dline:
@@ -1369,8 +1383,8 @@ class MatplotlibBackend(BaseBackend):
                     collection.set_array(s.get_color_array())
                     ax.add_collection(collection)
                 else:
-                    ax.plot(x, y, z, label=s.label,
-                        color=s.line_color)
+                    lbl = _str_or_latex(s.label)
+                    ax.plot(x, y, z, label=lbl, color=s.line_color)
 
                 xlims.append(s._xlim)
                 ylims.append(s._ylim)
@@ -1404,9 +1418,11 @@ class MatplotlibBackend(BaseBackend):
                     colormap = ListedColormap(["white", s.line_color])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
-                        ax.contour(xarray, yarray, zarray, cmap=colormap)
+                        ax.contour(xarray, yarray, zarray, cmap=colormap,
+                                   label=_str_or_latex(s.label))
                     else:
-                        ax.contourf(xarray, yarray, zarray, cmap=colormap)
+                        ax.contourf(xarray, yarray, zarray, cmap=colormap,
+                                    label=_str_or_latex(s.label))
             else:
                 raise NotImplementedError(
                     '{} is not supported in the SymPy plotting module '
@@ -1479,11 +1495,14 @@ class MatplotlibBackend(BaseBackend):
         if parent.title:
             ax.set_title(parent.title)
         if parent.xlabel:
-            ax.set_xlabel(parent.xlabel, position=(1, 0))
+            xlbl = _str_or_latex(parent.xlabel)
+            ax.set_xlabel(xlbl, position=(1, 0))
         if parent.ylabel:
-            ax.set_ylabel(parent.ylabel, position=(0, 1))
+            ylbl = _str_or_latex(parent.ylabel)
+            ax.set_ylabel(ylbl, position=(0, 1))
         if isinstance(ax, Axes3D) and parent.zlabel:
-            ax.set_zlabel(parent.zlabel, position=(0, 1))
+            zlbl = _str_or_latex(parent.zlabel)
+            ax.set_zlabel(zlbl, position=(0, 1))
         if parent.annotations:
             for a in parent.annotations:
                 ax.annotate(**a)
@@ -1691,10 +1710,10 @@ def plot(*args, show=True, **kwargs):
         called with ``legend``. Default is the name of the expression.
         e.g. ``sin(x)``
 
-    xlabel : str, optional
+    xlabel : str or expression, optional
         Label for the x-axis.
 
-    ylabel : str, optional
+    ylabel : str or expression, optional
         Label for the y-axis.
 
     xscale : 'linear' or 'log', optional
@@ -1839,8 +1858,8 @@ def plot(*args, show=True, **kwargs):
                     'The same variable should be used in all '
                     'univariate expressions being plotted.')
     x = free.pop() if free else Symbol('x')
-    kwargs.setdefault('xlabel', x.name)
-    kwargs.setdefault('ylabel', 'f(%s)' % x.name)
+    kwargs.setdefault('xlabel', x)
+    kwargs.setdefault('ylabel', Function('f')(x))
     series = []
     plot_expr = check_arguments(args, 1, 1)
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
@@ -1949,8 +1968,7 @@ def plot_parametric(*args, show=True, **kwargs):
        :format: doctest
        :include-source: True
 
-       >>> from sympy import symbols, cos, sin
-       >>> from sympy.plotting import plot_parametric
+       >>> from sympy import plot_parametric, symbols, cos, sin
        >>> u = symbols('u')
 
     A parametric plot with a single expression:
@@ -2296,11 +2314,9 @@ def plot3d(*args, show=True, **kwargs):
     series = []
     plot_expr = check_arguments(args, 1, 2)
     series = [SurfaceOver2DRangeSeries(*arg, **kwargs) for arg in plot_expr]
-    xlabel = series[0].var_x.name
-    ylabel = series[0].var_y.name
-    kwargs.setdefault("xlabel", xlabel)
-    kwargs.setdefault("ylabel", ylabel)
-    kwargs.setdefault("zlabel", "f(%s, %s)" % (xlabel, ylabel))
+    kwargs.setdefault("xlabel", series[0].var_x)
+    kwargs.setdefault("ylabel", series[0].var_y)
+    kwargs.setdefault("zlabel", Function('f')(series[0].var_x, series[0].var_y))
     plots = Plot(*series, **kwargs)
     if show:
         plots.show()

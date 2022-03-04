@@ -48,6 +48,7 @@ For the sake of completeness, `f(n)` can be:
 """
 from collections import defaultdict
 
+from sympy.concrete import product
 from sympy.core.singleton import S
 from sympy.core.numbers import Rational, I
 from sympy.core.symbol import Symbol, Wild, Dummy
@@ -509,8 +510,6 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     .. [2] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.
     """
-    from sympy.concrete import product
-
     coeffs = list(map(sympify, coeffs))
 
     f = sympify(f)

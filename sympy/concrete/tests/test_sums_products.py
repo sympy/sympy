@@ -29,7 +29,6 @@ from sympy.sets.sets import Interval
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.simplify import simplify
 from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
-from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import (
     telescopic, _dummy_with_inherited_properties_concrete, eval_sum_residue)
 from sympy.concrete.expr_with_intlimits import ReorderError
@@ -38,6 +37,7 @@ from sympy.testing.pytest import XFAIL, raises, slow
 from sympy.matrices import (Matrix, SparseMatrix,
     ImmutableDenseMatrix, ImmutableSparseMatrix)
 from sympy.core.mod import Mod
+from sympy.abc import a, b, c, d, k, m, x, y, z
 
 n = Symbol('n', integer=True)
 f, g = symbols('f g', cls=Function)
@@ -542,7 +542,16 @@ def test_telescopic_sums():
     assert telescopic(1/m, -m/(1 + m), (m, n - 1, n)) == \
         telescopic(1/k, -k/(1 + k), (k, n - 1, n))
 
-    assert Sum(1/x/(x - 1), (x, a, b)).doit() == -((a - b - 1)/(b*(a - 1)))
+    assert Sum(1/x/(x - 1), (x, a, b)).doit() == 1/(a - 1) - 1/b
+    eq = 1/((5*n + 2)*(5*(n + 1) + 2))
+    assert Sum(eq, (n, 0, oo)).doit() == S(1)/10
+    nz = symbols('nz', nonzero=True)
+    v = Sum(eq.subs(5, nz), (n, 0, oo)).doit()
+    assert v.subs(nz, 5).simplify() == S(1)/10
+    # check that apart is being used in non-symbolic case
+    s = Sum(eq, (n, 0, k)).doit()
+    v = Sum(eq, (n, 0, 10**100)).doit()
+    assert v == s.subs(k, 10**100)
 
 
 def test_sum_reconstruct():
@@ -961,15 +970,14 @@ def test_issue_2787():
     binomial_dist = binomial(n, k)*p**k*(1 - p)**(n - k)
     s = Sum(binomial_dist*k, (k, 0, n))
     res = s.doit().simplify()
-    assert res == Piecewise(
-        (n*p, p/Abs(p - 1) <= 1),
-        ((-p + 1)**n*Sum(k*p**k*binomial(n, k)/(-p + 1)**(k), (k, 0, n)),
+    ans = Piecewise(
+        (n*p, x),
+        ((1 - p)**n*Sum(k*p**k*binomial(n, k)/(1 - p)**k, (k, 0, n)),
         True))
+    assert res == ans.subs(x, p/Abs(p - 1) <= 1)
     # Issue #17165: make sure that another simplify does not complicate
     # the result (but why didn't first simplify handle this?)
-    assert res.simplify() == Piecewise((n*p, p <= S.Half),
-        ((1 - p)**n*Sum(k*p**k*binomial(n, k)/(1 - p)**k,
-        (k, 0, n)), True))
+    assert res.simplify() == ans.subs(x, p <= S.Half)
 
 
 def test_issue_4668():
@@ -1304,6 +1312,17 @@ def test_expand_with_assumptions():
     assert log(Product(x**i*y**j, (i, 1, n), (j, 1, m))).expand() \
         == Sum(i*log(x) + j*log(y), (i, 1, n), (j, 1, m))
 
+    m = Symbol('m', nonnegative=True, integer=True)
+    s = Sum(x**m, (m, 0, M))
+    s_as_product = s.rewrite(Product)
+    assert s_as_product.has(Product)
+    assert s_as_product == log(Product(exp(x**m), (m, 0, M)))
+    assert s_as_product.expand() == s
+    s5 = s.subs(M, 5)
+    s5_as_product = s5.rewrite(Product)
+    assert s5_as_product.has(Product)
+    assert s5_as_product.doit().expand() == s5.doit()
+
 
 def test_has_finite_limits():
     x = Symbol('x')
@@ -1586,3 +1605,10 @@ def test_process_limits():
         raises(TypeError, lambda: D(x, x > 0))
         raises(ValueError, lambda: D(x, Interval(1, 3)))
         raises(NotImplementedError, lambda: D(x, (x, union)))
+
+
+def test_pr_22677():
+    b = Symbol('b', integer=True, positive=True)
+    assert Sum(1/x**2,(x, 0, b)).doit() == Sum(x**(-2), (x, 0, b))
+    assert Sum(1/(x - b)**2,(x, 0, b-1)).doit() == Sum(
+        (-b + x)**(-2), (x, 0, b - 1))

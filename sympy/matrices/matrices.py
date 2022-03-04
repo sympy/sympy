@@ -11,19 +11,18 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
-from sympy.core.sympify import sympify
-from sympy.core.sympify import _sympify
-from sympy.functions import factorial
+from sympy.core.sympify import sympify, _sympify
+from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
-from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta, LeviCivita
 from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
-from sympy.simplify import simplify as _simplify
+from sympy.printing.str import StrPrinter
 from sympy.utilities.decorator import deprecated
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
 from sympy.utilities.misc import as_int, filldedent
 
@@ -31,7 +30,7 @@ from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
     ShapeError, MatrixKind)
 
-from .utilities import _iszero, _is_zero_after_expand_mul
+from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
@@ -197,10 +196,10 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("For a {0} operation 'n->kn' you must provide the "
                                  "kwargs `{0}` and `k`".format(error_str))
             if not 0 <= col < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col))
 
         elif op == "n<->m":
-            # we need two cols to swap. It doesn't matter
+            # we need two cols to swap. It does not matter
             # how they were specified, so gather them together and
             # remove `None`
             cols = {col, k, col1, col2}.difference([None])
@@ -212,9 +211,9 @@ class MatrixReductions(MatrixDeterminant):
                                  "kwargs `{0}1` and `{0}2`".format(error_str))
             col1, col2 = cols
             if not 0 <= col1 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col1))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col1))
             if not 0 <= col2 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col2))
 
         elif op == "n->n+km":
             col = col1 if col is None else col
@@ -226,9 +225,9 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("For a {0} operation 'n->n+km' `{0}` and `{0}2` must "
                                  "be different.".format(error_str))
             if not 0 <= col < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col))
             if not 0 <= col2 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col2))
 
         else:
             raise ValueError('invalid operation %s' % repr(op))
@@ -450,7 +449,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.diff(x)
@@ -483,7 +482,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.integrate((x, ))
@@ -567,7 +566,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.limit(x, 2)
@@ -759,7 +758,7 @@ def num_mat_mul(k1, k2):
     # Deal with Mul._kind_dispatcher's commutativity
     # XXX: this function is called with either k1 or k2 as MatrixKind because
     # the Mul kind dispatcher is commutative. Maybe it shouldn't be. Need to
-    # swap the args here because NumberKind doesn't have an element_kind
+    # swap the args here because NumberKind does not have an element_kind
     # attribute.
     if not isinstance(k2, MatrixKind):
         k1, k2 = k2, k1
@@ -816,7 +815,6 @@ class MatrixBase(MatrixDeprecated,
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
-        from sympy.functions.combinatorial.factorials import binomial
 
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
@@ -855,7 +853,6 @@ class MatrixBase(MatrixDeprecated,
 
     def _format_str(self, printer=None):
         if not printer:
-            from sympy.printing.str import StrPrinter
             printer = StrPrinter()
         # Handle zero dimensions:
         if S.Zero in self.shape:
@@ -1285,7 +1282,7 @@ class MatrixBase(MatrixDeprecated,
         """
         from sympy.matrices.expressions.matexpr import MatrixExpr
 
-        if not isinstance(b, MatrixBase) and not isinstance(b, MatrixExpr):
+        if not isinstance(b, (MatrixBase, MatrixExpr)):
             raise TypeError(
                 "{} must be a Matrix, not {}.".format(b, type(b)))
 
@@ -1409,11 +1406,13 @@ class MatrixBase(MatrixDeprecated,
 
         mat = self
         if (1 not in mat.shape) or (1 not in b.shape) :
-            SymPyDeprecationWarning(
-                feature="Dot product of non row/column vectors",
-                issue=13815,
+            sympy_deprecation_warning(
+                """
+                Using the dot method to multiply non-row/column vectors is
+                deprecated. Use * or @ to perform matrix multiplication.
+                """,
                 deprecated_since_version="1.2",
-                useinstead="* to take matrix products").warn()
+                active_deprecations_target="deprecated-matrix-dot-non-vector")
             return mat._legacy_array_dot(b)
         if len(mat) != len(b):
             raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
@@ -1458,7 +1457,6 @@ class MatrixBase(MatrixDeprecated,
         so that the dual is a covariant second rank tensor.
 
         """
-        from sympy.functions.special.tensor_functions import LeviCivita
         from sympy.matrices import zeros
 
         M, n = self[:, :], self.rows
@@ -2004,7 +2002,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> m = Matrix(2, 3, lambda i, j: i*3+j)
         >>> m
         Matrix([
@@ -2073,8 +2071,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy import Matrix
-        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy import Matrix, StrPrinter
         >>> M = Matrix([[1, 2], [-33, 4]])
         >>> printer = StrPrinter()
         >>> M.table(printer)
@@ -2279,17 +2276,25 @@ class MatrixBase(MatrixDeprecated,
 
 
 @deprecated(
-    issue=15109,
-    useinstead="from sympy.matrices.common import classof",
-    deprecated_since_version="1.3")
+    """
+    sympy.matrices.matrices.classof is deprecated. Use
+    sympy.matrices.common.classof instead.
+    """,
+    deprecated_since_version="1.3",
+    active_deprecations_target="deprecated-sympy-matrices-classof-a2idx",
+)
 def classof(A, B):
     from sympy.matrices.common import classof as classof_
     return classof_(A, B)
 
 @deprecated(
-    issue=15109,
+    """
+    sympy.matrices.matrices.a2idx is deprecated. Use
+    sympy.matrices.common.a2idx instead.
+    """,
     deprecated_since_version="1.3",
-    useinstead="from sympy.matrices.common import a2idx")
+    active_deprecations_target="deprecated-sympy-matrices-classof-a2idx",
+)
 def a2idx(j, n=None):
     from sympy.matrices.common import a2idx as a2idx_
     return a2idx_(j, n)
