@@ -88,9 +88,25 @@ a:hover {
     background-color: hsl(80deg 100% 95%);
 }
 
-/* Remove the underline from module names in code blocks in dark mode */
-body[data-theme="dark"] .highlight .nn {
+/* Improve the color contrast of various syntax highlighted elements in dark*/
+/* mode  */
+
+/* Module names and function and class definitions */
+body:not([data-theme="light"]) .highlight .nn, body:not([data-theme="light"]) .highlight .nf, body:not([data-theme="light"]) .highlight .nc, body:not([data-theme="light"]) .highlight .fm {
     text-decoration: none;
+    color: #71ADFF;
+}
+/* Numbers */
+body:not([data-theme="light"]) .highlight .mi, body:not([data-theme="light"]) .highlight .mf {
+    color: #51b2fd;
+}
+/* Builtins and self/cls*/
+body[data-theme="dark"] .highlight .nb, body[data-theme="dark"] .highlight .bp {
+    color: #2fbccd;
+}
+/* Tracebacks */
+body[data-theme="dark"] .highlight .gt, body[data-theme="dark"] .highlight .gr {
+    color: #ff8888;
 }
 
 /* Disable the fancy scrolling behavior when jumping to headers (this is too
