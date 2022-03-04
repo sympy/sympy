@@ -327,6 +327,11 @@ def test_lowergamma_at_origin():
     assert limit(lowergamma(a, x), a, 0, '-') == -oo
     assert limit(lowergamma(I*a, x), a, 0) == -oo*I
     assert limit(lowergamma(I*a, x), a, 0, '-') == oo*I
+    assert limit(lowergamma(a, 1), a, 0) == oo
+    assert limit(x*lowergamma(x, 1)/gamma(x + 1), x, 0) == 1
+    # issue 23156
+    expr = Sum(1/gamma(x), (x, 0, a)).doit()
+    assert limit(expr, a, 0) == 0
 
 
 @XFAIL
