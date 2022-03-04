@@ -16,7 +16,7 @@ on:
       - '1.10'
 env:
   release_branch: '1.10'
-  release_version: '1.10rc3'
+  release_version: '1.10'
   previous_version: '1.9'
 
 jobs:
