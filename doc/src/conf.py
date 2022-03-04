@@ -219,11 +219,6 @@ html_theme_options = {
 # aren't specified in the Furo theme as CSS variables
 html_css_files = ['custom.css']
 
-html_logo = '_static/sympylogo.png'
-html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
-# See http://www.sphinx-doc.org/en/master/theming.html#builtin-themes
-
-
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
 #html_use_smartypants = True
@@ -295,6 +290,7 @@ latex_elements = {
 # SymPy logo on title page
 html_logo = '_static/sympylogo.png'
 latex_logo = '_static/sympylogo_big.png'
+html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
