@@ -105,11 +105,11 @@ body:not([data-theme="light"]) .highlight .mi, body:not([data-theme="light"]) .h
     color: #51b2fd;
 }
 /* Builtins and self/cls*/
-body[data-theme="dark"] .highlight .nb, body[data-theme="dark"] .highlight .bp {
+body:not([data-theme="light"]) .highlight .nb, body:not([data-theme="light"]) .highlight .bp {
     color: #2fbccd;
 }
 /* Tracebacks */
-body[data-theme="dark"] .highlight .gt, body[data-theme="dark"] .highlight .gr {
+body:not([data-theme="light"]) .highlight .gt, body:not([data-theme="light"]) .highlight .gr {
     color: #ff8888;
 }
 
