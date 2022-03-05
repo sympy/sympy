@@ -161,7 +161,7 @@ def test_latex_printing():
                             '\\hat{k}_{N}}\\right)')
 
 def test_issue_23058():
-    from sympy import symbols, sin, cos, pi
+    from sympy import symbols, sin, cos, pi, UnevaluatedExpr
 
     delop = Del()
     CC_   = CoordSys3D("C")
@@ -184,17 +184,31 @@ def test_issue_23058():
 ⎜     ⎝10 ⎠           ⎟    \n\
 ⎜─────────────────────⎟    \n\
 ⎜           4         ⎟    \n\
-⎝         10          ⎠    """
+⎝         10          ⎠    \
+"""
     vecE_str = """\
 ⎛   4    ⎛  5  ⎞    ⎛y_C⎞ ⎞    \n\
 ⎜-10 ⋅sin⎝10 ⋅t⎠⋅cos⎜───⎟ ⎟ k_C\n\
 ⎜                   ⎜  3⎟ ⎟    \n\
 ⎜                   ⎝10 ⎠ ⎟    \n\
 ⎜─────────────────────────⎟    \n\
-⎝           2⋅π           ⎠    """
+⎝           2⋅π           ⎠    \
+"""
 
     assert upretty(vecB) == vecB_str
     assert upretty(vecE) == vecE_str
+
+    ten = UnevaluatedExpr(10)
+    eps, mu = 4*pi*ten**(-11), ten**(-5)
+
+    Bx = 2 * ten**(-4) * cos(ten**5 * t) * sin(ten**(-3) * y)
+    vecB = Bx * xhat
+
+    vecB_str = """\
+⎛    -4    ⎛    5⎞    ⎛      -3⎞⎞     \n\
+⎝2⋅10  ⋅cos⎝t⋅10 ⎠⋅sin⎝y_C⋅10  ⎠⎠ i_C \
+"""
+    assert upretty(vecB) == vecB_str
 
 def test_custom_names():
     A = CoordSys3D('A', vector_names=['x', 'y', 'z'],
