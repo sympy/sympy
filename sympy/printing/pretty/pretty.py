@@ -1162,12 +1162,6 @@ class PrettyPrinter(Printer):
                         flag[i] = 1
                         tempstr = tempstr[:index] + '\N{RIGHT PARENTHESIS LOWER HOOK}'\
                                      + ' '  + vectstrs[i] + tempstr[index + 1:]
-                else:
-                    index = tempstr.rfind('\N{RIGHT PARENTHESIS UPPER HOOK}')
-                    if index != -1: # then this character was found in this string
-                        flag[i] = 1
-                        tempstr = tempstr[:index] + '\N{RIGHT PARENTHESIS UPPER HOOK}'\
-                                     + ' '  + vectstrs[i] + tempstr[index + 1:]
                 o1[i] = tempstr
 
         o1 = [x.split('\n') for x in o1]
