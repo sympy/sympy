@@ -155,7 +155,6 @@ common_theme_variables = {
         "color-sidebar-link-text": "#FFFFFF",
         "color-sidebar-brand-text": "#DDDDDD",
         "color-sidebar-link-text--top-level": "#FFFFFF",
-        "color-sidebar-search-icon": "#DDDDDD",
         "color-sidebar-item-background--hover": "#8AB950",
         "color-sidebar-item-expander-background--hover": "#8AB950",
 
