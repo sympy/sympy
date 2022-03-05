@@ -145,43 +145,53 @@ html_last_updated_fmt = '%b %d, %Y'
 # html_theme = "classic"
 html_theme = "furo"
 
+# # Adjust the sidebar so that the entire sidebar is scrollable
+# html_sidebars = [
+#     "sidebar/scroll-start.html",
+#     "sidebar/brand.html",
+#     "sidebar/search.html",
+#     "sidebar/versions.html",
+#     "sidebar/navigation.html",
+#     "sidebar/scroll-end.html",
+# ]
+
 common_theme_variables = {
-        # Main "SymPy green" colors. Many things uses these colors.
-        "color-brand-primary": "#81B953",
-        "color-brand-content": "#29A329",
+    # Main "SymPy green" colors. Many things uses these colors.
+    "color-brand-primary": "#81B953",
+    "color-brand-content": "#29A329",
 
-        # The left sidebar.
-        "color-sidebar-background": "#3B5526",
-        "color-sidebar-link-text": "#FFFFFF",
-        "color-sidebar-brand-text": "#DDDDDD",
-        "color-sidebar-link-text--top-level": "#FFFFFF",
-        "color-sidebar-item-background--hover": "#8AB950",
-        "color-sidebar-item-expander-background--hover": "#8AB950",
+    # The left sidebar.
+    "color-sidebar-background": "#3B5526",
+    "color-sidebar-link-text": "#FFFFFF",
+    "color-sidebar-brand-text": "#DDDDDD",
+    "color-sidebar-link-text--top-level": "#FFFFFF",
+    "color-sidebar-item-background--hover": "#8AB950",
+    "color-sidebar-item-expander-background--hover": "#8AB950",
 
-        "color-api-keyword": "#000000bd",
-        "color-api-name": "var(--color-brand-content)",
-        "color-api-pre-name": "var(--color-brand-primary)",
-        "api-font-size": "var(--font-size--normal)",
-        "color-foreground-secondary": "#53555B",
-        "color-link-hover": "var(--color-link)",
-        "color-link-underline--hover": "#29A329",
+    "color-api-keyword": "#000000bd",
+    "color-api-name": "var(--color-brand-content)",
+    "color-api-pre-name": "var(--color-brand-primary)",
+    "api-font-size": "var(--font-size--normal)",
+    "color-foreground-secondary": "#53555B",
+    "color-link-hover": "var(--color-link)",
+    "color-link-underline--hover": "#29A329",
 
-        # TODO: Add the other types of admonitions here if anyone uses them.
-        "color-admonition-title-background--seealso": "#CCCCCC",
-        "color-admonition-title--seealso": "black",
-        "color-admonition-title-background--note": "#CCCCCC",
-        "color-admonition-title--note": "black",
-        "color-admonition-title-background--warning": "var(--color-problematic)",
-        "color-admonition-title--warning": "white",
-        "admonition-font-size": "var(--font-size--normal)",
-        "admonition-title-font-size": "var(--font-size--normal)",
+    # TODO: Add the other types of admonitions here if anyone uses them.
+    "color-admonition-title-background--seealso": "#CCCCCC",
+    "color-admonition-title--seealso": "black",
+    "color-admonition-title-background--note": "#CCCCCC",
+    "color-admonition-title--note": "black",
+    "color-admonition-title-background--warning": "var(--color-problematic)",
+    "color-admonition-title--warning": "white",
+    "admonition-font-size": "var(--font-size--normal)",
+    "admonition-title-font-size": "var(--font-size--normal)",
 
-        # Note: this doesn't work. If we want to change this, we have to set
-        # it as the .highlight background in custom.css.
-        "color-code-background": "hsl(80deg 100% 95%)",
+    # Note: this doesn't work. If we want to change this, we have to set
+    # it as the .highlight background in custom.css.
+    "color-code-background": "hsl(80deg 100% 95%)",
 
-        "code-font-size": "var(--font-size--small)",
-        "font-stack--monospace": 'DejaVu Sans Mono,"SFMono-Regular",Menlo,Consolas,Monaco,Liberation Mono,Lucida Console,monospace;'
+    "code-font-size": "var(--font-size--small)",
+    "font-stack--monospace": 'DejaVu Sans Mono,"SFMono-Regular",Menlo,Consolas,Monaco,Liberation Mono,Lucida Console,monospace;'
     }
 
 html_theme_options = {
