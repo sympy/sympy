@@ -145,15 +145,16 @@ html_last_updated_fmt = '%b %d, %Y'
 # html_theme = "classic"
 html_theme = "furo"
 
-# # Adjust the sidebar so that the entire sidebar is scrollable
-# html_sidebars = [
-#     "sidebar/scroll-start.html",
-#     "sidebar/brand.html",
-#     "sidebar/search.html",
-#     "sidebar/versions.html",
-#     "sidebar/navigation.html",
-#     "sidebar/scroll-end.html",
-# ]
+# Adjust the sidebar so that the entire sidebar is scrollable
+html_sidebars = {
+    "**": [
+        "sidebar/scroll-start.html",
+        "sidebar/brand.html",
+        "sidebar/search.html",
+        "sidebar/navigation.html",
+        "sidebar/scroll-end.html",
+    ],
+}
 
 common_theme_variables = {
     # Main "SymPy green" colors. Many things uses these colors.
