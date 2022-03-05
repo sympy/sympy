@@ -102,12 +102,12 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
         result = {}
         if expr is not None:
             f_expr = []
-            for exp in expr:
-                _ = decompose(exp)
+            for e in expr:
+                _ = decompose(e)
                 if len(_) == 1 and not _.popitem()[0]:
-                    f_expr.append(exp)
-                elif Poly(exp).total_degree() <= max_degree:
-                    f_expr.append(exp)
+                    f_expr.append(e)
+                elif Poly(e).total_degree() <= max_degree:
+                    f_expr.append(e)
             expr = f_expr
 
         if not isinstance(expr, list) and expr is not None:
@@ -326,7 +326,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
             polynomials = decompose(expr)
             return _polynomial_integrate(polynomials, facets, hp_params)
         else:
-            return {exp: _polynomial_integrate(decompose(exp), facets, hp_params) for exp in expr}
+            return {e: _polynomial_integrate(decompose(e), facets, hp_params) for e in expr}
 
 
 def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
