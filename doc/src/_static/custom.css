@@ -81,6 +81,10 @@ a:visited {
 a:hover {
     text-decoration: underline;
 }
+a:visited:hover {
+    color: #307748;
+    text-decoration: underline;
+}
 
 /* Change the background color of the code blocks (light mode). This should be*/
 /* --color-code-background but setting it in conf.py doesn't work.*/

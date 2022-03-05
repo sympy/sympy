@@ -163,6 +163,7 @@ common_theme_variables = {
         "color-api-pre-name": "var(--color-brand-primary)",
         "api-font-size": "var(--font-size--normal)",
         "color-foreground-secondary": "#53555B",
+        "color-link-hover": "var(--color-link)",
         "color-link-underline--hover": "#29A329",
 
         # TODO: Add the other types of admonitions here if anyone uses them.
