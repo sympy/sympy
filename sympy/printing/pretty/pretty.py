@@ -1144,7 +1144,7 @@ class PrettyPrinter(Printer):
             if '\n' in partstr:
                 tempstr = partstr
                 tempstr = tempstr.replace(vectstrs[i], '')
-                if '\N{right parenthesis extension}' in tempstr:   # If scalar is a fraction
+                if '\N{RIGHT PARENTHESIS EXTENSION}' in tempstr:   # If scalar is a fraction
                     for paren in range(len(tempstr)):
                         flag[i] = 1
                         if tempstr[paren] == '\N{right parenthesis extension}' and tempstr[paren + 1] == '\n':
@@ -1154,14 +1154,20 @@ class PrettyPrinter(Printer):
                                          + ' '  + vectstrs[i] + tempstr[paren + 1:]
                             break
                 elif '\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
-                    flag[i] = 1
-                    tempstr = tempstr.replace('\N{RIGHT PARENTHESIS LOWER HOOK}',
-                                        '\N{RIGHT PARENTHESIS LOWER HOOK}'
-                                        + ' ' + vectstrs[i])
+                    # We want to place the vector string after all the right parentheses, because
+                    # otherwise, the vector will be in the middle of the string. For this reason,
+                    # we insert the vector string at the rightmost index.
+                    index = tempstr.rfind('\N{RIGHT PARENTHESIS LOWER HOOK}')
+                    if index != -1: # then this character was found in this string
+                        flag[i] = 1
+                        tempstr = tempstr[:index] + '\N{RIGHT PARENTHESIS LOWER HOOK}'\
+                                     + ' '  + vectstrs[i] + tempstr[index + 1:]
                 else:
-                    tempstr = tempstr.replace('\N{RIGHT PARENTHESIS UPPER HOOK}',
-                                        '\N{RIGHT PARENTHESIS UPPER HOOK}'
-                                        + ' ' + vectstrs[i])
+                    index = tempstr.rfind('\N{RIGHT PARENTHESIS UPPER HOOK}')
+                    if index != -1: # then this character was found in this string
+                        flag[i] = 1
+                        tempstr = tempstr[:index] + '\N{RIGHT PARENTHESIS UPPER HOOK}'\
+                                     + ' '  + vectstrs[i] + tempstr[index + 1:]
                 o1[i] = tempstr
 
         o1 = [x.split('\n') for x in o1]
