@@ -263,10 +263,11 @@ division of two Integers gives a Rational:
 
 But in Python ``/`` represents either integer division or floating point
 division, depending on whether you are in Python 2 or Python 3, and depending
-on whether or not you have run ``from __future__ import division``:
+on whether or not you have run ``from __future__ import division`` in Python 2
+which is no longer supported from versions above SymPy 1.5.1:
 
     >>> from __future__ import division
-    >>> 1/2 #doctest: +SKIP
+    >>> 1/2
     0.5
 
 .. note::
@@ -282,7 +283,7 @@ To avoid this, we can construct the rational object explicitly
 This problem also comes up whenever we have a larger symbolic expression with
 ``int/int`` in it.  For example:
 
-    >>> x + 1/2 #doctest: +SKIP
+    >>> x + 1/2
     x + 0.5
 
 .. note::
