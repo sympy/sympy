@@ -538,7 +538,7 @@ class MultisetPartitionTraverser():
         decision is made to fail, it must be accurate, otherwise the
         enumeration will miss some partitions.  But, it is OK not to
         capture all the possible failures -- if a part is passed that
-        shouldn't be, the resulting too-large partitions are filtered
+        should not be, the resulting too-large partitions are filtered
         by the enumeration one level up.  However, as is usual in
         constrained enumerations, failing early is advantageous.
 

@@ -21,7 +21,7 @@ jobs:
           # Clone full git history (needed for AUTHORS/mailmap)
           fetch-depth: '0'
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
@@ -62,7 +62,7 @@ jobs:
           # Clone full git history (needed for AUTHORS/mailmap)
           fetch-depth: '0'
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
@@ -80,7 +80,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
@@ -111,7 +111,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
@@ -126,7 +126,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
@@ -141,7 +141,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev
@@ -165,7 +165,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
@@ -181,7 +181,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
@@ -199,7 +199,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
@@ -214,7 +214,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
@@ -232,7 +232,7 @@ jobs:
         python-version: ['3.7', '3.8', '3.10', 'pypy-3.8']
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
@@ -250,7 +250,7 @@ jobs:
         python-version: ['3.7', '3.8', '3.10', 'pypy-3.8']
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
@@ -268,7 +268,7 @@ jobs:
         python-version: ['3.7', '3.8', '3.10', 'pypy-3.8']
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
@@ -284,7 +284,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: release/aptinstall.sh
@@ -300,7 +300,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '2.7'
       - run: bin/test_py2_import.py
@@ -316,7 +316,7 @@ jobs:
         with:
           # Checkout repo with full history
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: pip install asv virtualenv

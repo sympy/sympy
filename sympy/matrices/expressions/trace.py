@@ -2,7 +2,7 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr, ExprBuilder
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.common import NonSquareMatrixError
@@ -144,8 +144,9 @@ class Trace(Expr):
 
     def _eval_rewrite_as_Sum(self, expr, **kwargs):
         from sympy.concrete.summations import Sum
-        i = Dummy('i')
-        return Sum(self.arg[i, i], (i, 0, self.arg.rows-1)).doit()
+        i = uniquely_named_symbol('i', expr)
+        s = Sum(self.arg[i, i], (i, 0, self.arg.rows - 1))
+        return s.doit()
 
 
 def trace(expr):

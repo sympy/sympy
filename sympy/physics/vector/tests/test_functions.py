@@ -506,19 +506,3 @@ def test_dynamicsymbols():
     assert f3.is_positive
     assert f4*f5 != f5*f4
     assert f6.is_integer
-
-
-def test_solve_vector():
-    from sympy.physics.vector import ReferenceFrame
-    from sympy.physics.vector.functions import solve_vector
-    R = ReferenceFrame('R')
-    a, b, c = symbols("a b c", real = True)
-    assert solve_vector(a*R.x + 4*R.y, 6*R.x + b*R.y) == {a: 6, b: 4}
-    assert solve_vector(a*R.x + 4*R.y, 6*R.x + b*R.y,a) == {a: 6}
-    assert solve_vector((a +b +c)*R.x + 2*b*R.y + (a+2*b)*R.z, 6*R.x + 4*R.y +6*R.z) == {a: 2, b: 2, c: 2}
-    assert solve_vector((a**2 + b)*R.x + b*R.y, 6*R.x + 5*R.y) == [{a: -1, b: 5}, {a: 1, b: 5}]
-    assert solve_vector((a**2 + b)*R.x + b*R.y, 5*R.x + 6*R.y) == []
-
-    raises(TypeError, lambda: solve_vector(a*R.x + 4*R.y, 0))
-    raises(ValueError, lambda: solve_vector(a*R.x + 4*R.y, 6*R.x + 5*R.y, a))
-    raises(AttributeError, lambda : solve_vector(a*R.i + 4*R.j, 6*R.i + b*R.j))

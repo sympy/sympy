@@ -720,7 +720,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         >>> pollard_pm1(n, B=16, a=3)
         1009
 
-    If we attempt to increase B to 256 we find that it doesn't work:
+    If we attempt to increase B to 256 we find that it does not work:
 
         >>> pollard_pm1(n, B=256)
         >>>
@@ -731,7 +731,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         >>> pollard_pm1(n, B=256, a=257)
         1009
 
-    Checking different ``a`` values shows that all the ones that didn't
+    Checking different ``a`` values shows that all the ones that did not
     work had a gcd value not equal to ``n`` but equal to one of the
     factors:
 
@@ -922,7 +922,7 @@ def _factorint_small(factors, n, limit, fail_max):
     """
 
     def done(n, d):
-        """return n, d if the sqrt(n) wasn't reached yet, else
+        """return n, d if the sqrt(n) was not reached yet, else
            n, 0 indicating that factoring is done.
         """
         if d*d <= n:

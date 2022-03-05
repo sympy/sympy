@@ -700,7 +700,7 @@ class CodeBlock(CodegenAST):
             raise NotImplementedError("CodeBlock.topological_sort only supports Assignments")
 
         if any(isinstance(i, AugmentedAssignment) for i in assignments):
-            raise NotImplementedError("CodeBlock.topological_sort doesn't yet work with AugmentedAssignments")
+            raise NotImplementedError("CodeBlock.topological_sort does not yet work with AugmentedAssignments")
 
         # Create a graph where the nodes are assignments and there is a directed edge
         # between nodes that use a variable and nodes that assign that
@@ -783,7 +783,7 @@ class CodeBlock(CodegenAST):
             raise NotImplementedError("CodeBlock.cse only supports Assignments")
 
         if any(isinstance(i, AugmentedAssignment) for i in self.args):
-            raise NotImplementedError("CodeBlock.cse doesn't yet work with AugmentedAssignments")
+            raise NotImplementedError("CodeBlock.cse does not yet work with AugmentedAssignments")
 
         for i, lhs in enumerate(self.left_hand_sides):
             if lhs in self.left_hand_sides[:i]:

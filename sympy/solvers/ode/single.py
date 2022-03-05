@@ -2237,7 +2237,7 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
     ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
     simplifying the integrals manually.  Also, prefer using
     ``nth_linear_constant_coeff_undetermined_coefficients`` when it
-    applies, because it doesn't use integration, making it faster and more
+    applies, because it does not use integration, making it faster and more
     reliable.
 
     Warning, using simplify=False with
@@ -2525,7 +2525,7 @@ class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
     ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
     simplifying the integrals manually.  Also, prefer using
     ``nth_linear_constant_coeff_undetermined_coefficients`` when it
-    applies, because it doesn't use integration, making it faster and more
+    applies, because it does not use integration, making it faster and more
     reliable.
 
     Warning, using simplify=False with

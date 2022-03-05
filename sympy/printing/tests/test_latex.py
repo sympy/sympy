@@ -331,36 +331,36 @@ def test_latex_vector_expressions():
     A = CoordSys3D('A')
 
     assert latex(Cross(A.i, A.j*A.x*3+A.k)) == \
-        r"\mathbf{\hat{i}_{A}} \times \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
+        r"\mathbf{\hat{i}_{A}} \times \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
     assert latex(Cross(A.i, A.j)) == \
         r"\mathbf{\hat{i}_{A}} \times \mathbf{\hat{j}_{A}}"
     assert latex(x*Cross(A.i, A.j)) == \
         r"x \left(\mathbf{\hat{i}_{A}} \times \mathbf{\hat{j}_{A}}\right)"
     assert latex(Cross(x*A.i, A.j)) == \
-        r'- \mathbf{\hat{j}_{A}} \times \left((x)\mathbf{\hat{i}_{A}}\right)'
+        r'- \mathbf{\hat{j}_{A}} \times \left(\left(x\right)\mathbf{\hat{i}_{A}}\right)'
 
     assert latex(Curl(3*A.x*A.j)) == \
-        r"\nabla\times \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+        r"\nabla\times \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)"
     assert latex(Curl(3*A.x*A.j+A.i)) == \
-        r"\nabla\times \left(\mathbf{\hat{i}_{A}} + (3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+        r"\nabla\times \left(\mathbf{\hat{i}_{A}} + \left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)"
     assert latex(Curl(3*x*A.x*A.j)) == \
-        r"\nabla\times \left((3 \mathbf{{x}_{A}} x)\mathbf{\hat{j}_{A}}\right)"
+        r"\nabla\times \left(\left(3 \mathbf{{x}_{A}} x\right)\mathbf{\hat{j}_{A}}\right)"
     assert latex(x*Curl(3*A.x*A.j)) == \
-        r"x \left(\nabla\times \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)\right)"
+        r"x \left(\nabla\times \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)\right)"
 
     assert latex(Divergence(3*A.x*A.j+A.i)) == \
-        r"\nabla\cdot \left(\mathbf{\hat{i}_{A}} + (3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+        r"\nabla\cdot \left(\mathbf{\hat{i}_{A}} + \left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)"
     assert latex(Divergence(3*A.x*A.j)) == \
-        r"\nabla\cdot \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+        r"\nabla\cdot \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)"
     assert latex(x*Divergence(3*A.x*A.j)) == \
-        r"x \left(\nabla\cdot \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)\right)"
+        r"x \left(\nabla\cdot \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)\right)"
 
     assert latex(Dot(A.i, A.j*A.x*3+A.k)) == \
-        r"\mathbf{\hat{i}_{A}} \cdot \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
+        r"\mathbf{\hat{i}_{A}} \cdot \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
     assert latex(Dot(A.i, A.j)) == \
         r"\mathbf{\hat{i}_{A}} \cdot \mathbf{\hat{j}_{A}}"
     assert latex(Dot(x*A.i, A.j)) == \
-        r"\mathbf{\hat{j}_{A}} \cdot \left((x)\mathbf{\hat{i}_{A}}\right)"
+        r"\mathbf{\hat{j}_{A}} \cdot \left(\left(x\right)\mathbf{\hat{i}_{A}}\right)"
     assert latex(x*Dot(A.i, A.j)) == \
         r"x \left(\mathbf{\hat{i}_{A}} \cdot \mathbf{\hat{j}_{A}}\right)"
 
