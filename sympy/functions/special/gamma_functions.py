@@ -319,7 +319,7 @@ class lowergamma(Function):
 
         # Special values.
         if a.is_Number:
-            if a is S.Zero and x.is_number:
+            if a is S.Zero and x.is_zero is False:
                 return S.Infinity
             if a is S.One:
                 return S.One - exp(-x)
