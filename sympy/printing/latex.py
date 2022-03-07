@@ -502,7 +502,7 @@ class LatexPrinter(Printer):
 
     def _print_Laplacian(self, expr):
         func = expr._expr
-        return r"\triangle %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+        return r"\Delta %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
         from sympy.physics.units import Quantity
