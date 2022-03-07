@@ -2,7 +2,7 @@ from sympy.core import Add, S, sympify, Dummy, expand_func
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
-from sympy.core.numbers import Rational, pi, oo, I
+from sympy.core.numbers import Rational, pi, oo, I, zoo
 from sympy.core.power import Pow
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.error_functions import erf, erfc, Ei
@@ -320,7 +320,7 @@ class lowergamma(Function):
         # Special values.
         if a.is_Number:
             if a is S.Zero and x.is_zero is False:
-                return S.Infinity
+                return zoo
             if a is S.One:
                 return S.One - exp(-x)
             elif a is S.Half:
