@@ -120,6 +120,27 @@ def test_quantity_simplify():
     assert quantity_simplify(2**(foot/inch*kilo/1000)*inch) == 4096*foot/12
     assert quantity_simplify(foot**2*inch + inch**2*foot) == 13*foot**3/144
 
+def test_quantity_simplify_across_dimensions():
+    from sympy.physics.units.util import quantity_simplify
+    from sympy.physics.units import ampere, ohm, volt, joule, pascal, farad, second, watt, siemens, henry, tesla, weber
+
+    assert quantity_simplify(ampere*ohm, across_dimensions=True) == volt
+    assert quantity_simplify(6*ampere*ohm, across_dimensions=True) == 6*volt
+    assert quantity_simplify(volt/ampere, across_dimensions=True) == ohm
+    assert quantity_simplify(volt/ohm, across_dimensions=True) == ampere
+    assert quantity_simplify(joule/meter**3, across_dimensions=True) == pascal
+    assert quantity_simplify(farad*ohm, across_dimensions=True) == second
+    assert quantity_simplify(joule/second, across_dimensions=True) == watt
+    assert quantity_simplify(meter**3/second, across_dimensions=True) == meter**3/second
+    assert quantity_simplify(joule/second, across_dimensions=True) == watt
+
+    assert quantity_simplify(joule/coulomb, across_dimensions=True) == volt
+    assert quantity_simplify(volt/ampere, across_dimensions=True) == ohm
+    assert quantity_simplify(ampere/volt, across_dimensions=True) == siemens
+    assert quantity_simplify(coulomb/volt, across_dimensions=True) == farad
+    assert quantity_simplify(volt*second/ampere, across_dimensions=True) == henry
+    assert quantity_simplify(volt*second/meter**2, across_dimensions=True) == tesla
+    assert quantity_simplify(joule/ampere, across_dimensions=True) == weber
 
 def test_check_dimensions():
     x = symbols('x')
