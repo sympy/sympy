@@ -507,9 +507,9 @@ class BeamParameter(Expr):
     >>> from sympy.physics.optics import FreeSpace
     >>> fs = FreeSpace(10)
     >>> p1 = fs*p
-    >>> p.w_z.n()
+    >>> p.w.n()
     0.00101413072159615
-    >>> p1.w_z.n()
+    >>> p1.w.n()
     0.00210803120913829
 
     See Also
@@ -588,7 +588,7 @@ class BeamParameter(Expr):
         return self.z*(1 + (self.z_r/self.z)**2)
 
     @property
-    def w_z(self):
+    def w(self):
         """
         The radius of the beam w(z), at any position z along the beam.
         The beam radius at `1/e^2` intensity (axial value).
@@ -604,7 +604,7 @@ class BeamParameter(Expr):
 
         >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
-        >>> p.w_z
+        >>> p.w
         0.001*sqrt(0.2809/pi**2 + 1)
         """
         return self.w_0*sqrt(1 + (self.z/self.z_r)**2)
@@ -617,7 +617,7 @@ class BeamParameter(Expr):
         See Also
         ========
 
-        w_z : the beam radius at `1/e^2` intensity (axial value).
+        w : the beam radius at `1/e^2` intensity (axial value).
 
         Examples
         ========
