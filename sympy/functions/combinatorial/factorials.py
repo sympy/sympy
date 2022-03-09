@@ -294,7 +294,7 @@ class subfactorial(CombinatorialFunction):
     .. math:: !x = \Gamma(x + 1, -1)/e
 
     which is valid for non-negative integers `x`. The above formula
-    is not very useful incase of non-integers. `\Gamma(x + 1, -1)` is
+    is not very useful in case of non-integers. `\Gamma(x + 1, -1)` is
     single-valued only for integral arguments `x`, elsewhere on the positive
     real axis it has an infinite number of branches none of which are real.
 
