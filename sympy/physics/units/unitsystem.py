@@ -2,7 +2,7 @@
 Unit system for physical quantities; include definition of constants.
 """
 
-from typing import Dict as tDict
+from typing import Dict as tDict, Set as tSet
 
 from sympy.core.add import Add
 from sympy.core.function import (Derivative, Function)
@@ -10,6 +10,8 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.physics.units.dimensions import _QuantityMapper
+from sympy.physics.units.prefixes import PREFIXES
+from sympy.physics.units.quantities import Quantity
 
 from .dimensions import Dimension
 
@@ -192,3 +194,12 @@ class UnitSystem(_QuantityMapper):
             return S.One, expr
         else:
             return expr, Dimension(1)
+
+    def get_units_non_prefixed(self) -> tSet[Quantity]:
+        """
+        Return the units of the system that do not have a prefix.
+        """
+        prefix_names = list(map(lambda p: p.name.name, PREFIXES.values()))
+        def has_prefix(unit) -> bool:
+            return any(unit.name.name.startswith(p) for p in prefix_names)
+        return set(filter(lambda u: not has_prefix(u), self._units))

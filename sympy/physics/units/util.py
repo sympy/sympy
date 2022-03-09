@@ -3,7 +3,6 @@ Several methods to simplify expressions involving unit objects.
 """
 from functools import reduce
 from collections.abc import Iterable
-import typing
 
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
@@ -16,7 +15,6 @@ from sympy.physics.units.dimensions import Dimension, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.unitsystem import UnitSystem
-from sympy.physics.units.systems.si import SI
 from sympy.utilities.iterables import sift
 
 
@@ -175,26 +173,25 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system="SI"):
                 target_dimension = result_dim
                 break
 
-        from . import volt, ohm, ampere, pascal, farad, second, watt, henry, meter, newton, weber, siemens, coulomb, tesla, candela, steradian
-        from . import voltage, impedance, current, pressure, capacitance, time, power, inductance, volume, force, luminous_intensity, magnetic_flux, conductance, charge, magnetic_density
+        from . import volt, ohm, farad, second, henry, meter, weber, siemens, tesla
+        from . import voltage, impedance, capacitance, inductance, magnetic_flux, conductance, magnetic_density, velocity
 
-        preferred_dimension_to_unit = {
-            pressure.name: pascal,
-            voltage.name: volt,
-            current.name: ampere,
-            impedance.name: ohm,
-            capacitance.name: farad,
-            time.name: second,
-            power.name: watt,
-            inductance.name: henry,
-            volume.name: meter**3,
-            force.name: newton,
-            luminous_intensity.name: candela*steradian,
-            magnetic_flux.name: weber,
-            conductance.name: siemens,
-            charge.name: coulomb,
-            magnetic_density.name: tesla,
-        }
+        non_prefixed = unit_system.get_units_non_prefixed()
+        preferred_dimension_to_unit = { unit.dimension.name: unit for unit in non_prefixed if unit.dimension.name.is_symbol }
+
+        # HACK: add missing/wrong units to the map.
+        if unit_system.name == "SI":
+            preferred_dimension_to_unit.update({
+                velocity.name: meter/second,
+                voltage.name: volt,
+                impedance.name: ohm,
+                conductance.name: siemens,
+                capacitance.name: farad,
+                inductance.name: henry,
+                magnetic_density.name: tesla,
+                magnetic_flux.name: weber,
+            })
+
 
         target_unit = preferred_dimension_to_unit.get(target_dimension)
         if target_unit:

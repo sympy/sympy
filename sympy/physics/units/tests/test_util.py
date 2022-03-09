@@ -122,7 +122,7 @@ def test_quantity_simplify():
 
 def test_quantity_simplify_across_dimensions():
     from sympy.physics.units.util import quantity_simplify
-    from sympy.physics.units import ampere, ohm, volt, joule, pascal, farad, second, watt, siemens, henry, tesla, weber
+    from sympy.physics.units import ampere, ohm, volt, joule, pascal, farad, second, watt, siemens, henry, tesla, weber, hour, newton
 
     assert quantity_simplify(ampere*ohm, across_dimensions=True) == volt
     assert quantity_simplify(6*ampere*ohm, across_dimensions=True) == 6*volt
@@ -141,6 +141,9 @@ def test_quantity_simplify_across_dimensions():
     assert quantity_simplify(volt*second/ampere, across_dimensions=True) == henry
     assert quantity_simplify(volt*second/meter**2, across_dimensions=True) == tesla
     assert quantity_simplify(joule/ampere, across_dimensions=True) == weber
+
+    assert quantity_simplify(5*kilometer/hour, across_dimensions=True) == 25*meter/(18*second)
+    assert quantity_simplify(5*kilogram*meter/second**2, across_dimensions=True) == 5*newton
 
 def test_check_dimensions():
     x = symbols('x')

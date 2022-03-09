@@ -63,3 +63,11 @@ def test_is_consistent():
     dimension_system = DimensionSystem([length, time])
     us = UnitSystem([m, s], dimension_system=dimension_system)
     assert us.is_consistent == True
+
+
+def test_get_units_non_prefixed():
+    unit_system = UnitSystem.get_unit_system("SI")
+    units = unit_system.get_units_non_prefixed()
+    for prefix in ["giga", "tera", "peta", "exa", "zetta", "yotta", "kilo", "hecto", "deca", "deci", "centi", "milli", "micro", "nano", "pico", "femto", "atto", "zepto", "yocto"]:
+        for unit in units:
+            assert not unit.name.name.startswith(prefix), f"Unit {unit.name} has prefix {prefix}"
