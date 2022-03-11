@@ -524,3 +524,14 @@ def test_issue_22819():
     assert tonne.convert_to(gram) == 1000000*gram
     assert dimsys_SI.get_dimensional_dependencies(area) == {'length': 2}
     assert Da.scale_factor == 1.66053906660000e-24
+
+
+def test_prefixed_property():
+    assert not meter.is_prefixed
+    assert not joule.is_prefixed
+    assert not day.is_prefixed
+    assert not second.is_prefixed
+    assert centimeter.is_prefixed
+    assert kilometer.is_prefixed
+    assert kilogram.is_prefixed
+    assert pebibyte.is_prefixed

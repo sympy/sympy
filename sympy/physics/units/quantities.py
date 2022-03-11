@@ -80,6 +80,8 @@ class Quantity(AtomicExpr):
             # TODO: remove after deprecation:
             with ignore_warnings(SymPyDeprecationWarning):
                 obj.set_scale_factor(scale_factor)
+
+        cls._is_prefixed = False
         return obj
 
     def set_dimension(self, dimension, unit_system="SI"):
@@ -119,6 +121,8 @@ class Quantity(AtomicExpr):
         """
         from sympy.physics.units import UnitSystem
         scale_factor = sympify(scale_factor)
+        if isinstance(scale_factor, Prefix):
+            self._is_prefixed = True
         # replace all prefixes by their ratio to canonical units:
         scale_factor = scale_factor.replace(
             lambda x: isinstance(x, Prefix),
@@ -232,3 +236,8 @@ class Quantity(AtomicExpr):
     def free_symbols(self):
         """Return free symbols from quantity."""
         return set()
+
+    @property
+    def is_prefixed(self):
+        """Whether or not the quantity is prefixed. Eg. `kilogram` is prefixed, but `gram` is not."""
+        return self._is_prefixed
