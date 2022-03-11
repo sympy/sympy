@@ -117,7 +117,7 @@ ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\m
 ug.set_global_relative_scale_factor(micro, gram)
 
 # Atomic mass constant
-Da = dalton = amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
+Da = dalton = amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant", is_physics_constant=True)
 
 t = metric_ton = tonne = Quantity("tonne", abbrev="t")
 tonne.set_global_relative_scale_factor(mega, gram)
@@ -232,16 +232,16 @@ year = years = tropical_year
 #### CONSTANTS ####
 
 # Newton constant
-G = gravitational_constant = Quantity("gravitational_constant", abbrev="G")
+G = gravitational_constant = Quantity("gravitational_constant", abbrev="G", is_physics_constant=True)
 
 # speed of light
-c = speed_of_light = Quantity("speed_of_light", abbrev="c")
+c = speed_of_light = Quantity("speed_of_light", abbrev="c", is_physics_constant=True)
 
 # elementary charge
-elementary_charge = Quantity("elementary_charge", abbrev="e")
+elementary_charge = Quantity("elementary_charge", abbrev="e", is_physics_constant=True)
 
 # Planck constant
-planck = Quantity("planck", abbrev="h")
+planck = Quantity("planck", abbrev="h", is_physics_constant=True)
 
 # Reduced Planck constant
 hbar = Quantity("hbar", abbrev="hbar")
@@ -250,44 +250,44 @@ hbar = Quantity("hbar", abbrev="hbar")
 eV = electronvolt = electronvolts = Quantity("electronvolt", abbrev="eV")
 
 # Avogadro number
-avogadro_number = Quantity("avogadro_number")
+avogadro_number = Quantity("avogadro_number", is_physics_constant=True)
 
 # Avogadro constant
-avogadro = avogadro_constant = Quantity("avogadro_constant")
+avogadro = avogadro_constant = Quantity("avogadro_constant", is_physics_constant=True)
 
 # Boltzmann constant
-boltzmann = boltzmann_constant = Quantity("boltzmann_constant")
+boltzmann = boltzmann_constant = Quantity("boltzmann_constant", is_physics_constant=True)
 
 # Stefan-Boltzmann constant
-stefan = stefan_boltzmann_constant = Quantity("stefan_boltzmann_constant")
+stefan = stefan_boltzmann_constant = Quantity("stefan_boltzmann_constant", is_physics_constant=True)
 
 # Molar gas constant
-R = molar_gas_constant = Quantity("molar_gas_constant", abbrev="R")
+R = molar_gas_constant = Quantity("molar_gas_constant", abbrev="R", is_physics_constant=True)
 
 # Faraday constant
-faraday_constant = Quantity("faraday_constant")
+faraday_constant = Quantity("faraday_constant", is_physics_constant=True)
 
 # Josephson constant
-josephson_constant = Quantity("josephson_constant", abbrev="K_j")
+josephson_constant = Quantity("josephson_constant", abbrev="K_j", is_physics_constant=True)
 
 # Von Klitzing constant
-von_klitzing_constant = Quantity("von_klitzing_constant", abbrev="R_k")
+von_klitzing_constant = Quantity("von_klitzing_constant", abbrev="R_k", is_physics_constant=True)
 
 # Acceleration due to gravity (on the Earth surface)
 gee = gees = acceleration_due_to_gravity = Quantity("acceleration_due_to_gravity", abbrev="g")
 
 # magnetic constant:
-u0 = magnetic_constant = vacuum_permeability = Quantity("magnetic_constant")
+u0 = magnetic_constant = vacuum_permeability = Quantity("magnetic_constant", is_physics_constant=True)
 
 # electric constat:
-e0 = electric_constant = vacuum_permittivity = Quantity("vacuum_permittivity")
+e0 = electric_constant = vacuum_permittivity = Quantity("vacuum_permittivity", is_physics_constant=True)
 
 # vacuum impedance:
-Z0 = vacuum_impedance = Quantity("vacuum_impedance", abbrev='Z_0', latex_repr=r'Z_{0}')
+Z0 = vacuum_impedance = Quantity("vacuum_impedance", abbrev='Z_0', latex_repr=r'Z_{0}', is_physics_constant=True)
 
 # Coulomb's constant:
 coulomb_constant = coulombs_constant = electric_force_constant = \
-    Quantity("coulomb_constant", abbrev="k_e")
+    Quantity("coulomb_constant", abbrev="k_e", is_physics_constant=True)
 
 
 atmosphere = atmospheres = atm = Quantity("atmosphere", abbrev="atm")

@@ -11,7 +11,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 from sympy.integrals.integrals import integrate
 from sympy.physics.units import (amount_of_substance, area, convert_to, find_unit,
-                                 volume, kilometer, joule)
+                                 volume, kilometer, joule, molar_gas_constant,
+                                 vacuum_permittivity, elementary_charge)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
     minute, quart, s, second, speed_of_light, bit,
@@ -535,3 +536,20 @@ def test_prefixed_property():
     assert kilometer.is_prefixed
     assert kilogram.is_prefixed
     assert pebibyte.is_prefixed
+
+def test_physics_constant_flag():
+    from sympy.physics.units import definitions
+
+    for name in dir(definitions):
+        quantity = getattr(definitions, name)
+        if not isinstance(quantity, Quantity):
+            continue
+        if name.endswith('_constant'):
+            assert quantity.is_physics_constant, f"{name} is not marked as physics constant when it should be"
+    assert gravitational_constant.is_physics_constant
+    assert molar_gas_constant.is_physics_constant
+    assert vacuum_permittivity.is_physics_constant
+    assert speed_of_light.is_physics_constant
+    assert elementary_charge.is_physics_constant
+    assert not meter.is_physics_constant
+    assert not joule.is_physics_constant

@@ -26,6 +26,7 @@ class Quantity(AtomicExpr):
     def __new__(cls, name, abbrev=None, dimension=None, scale_factor=None,
                 latex_repr=None, pretty_unicode_repr=None,
                 pretty_ascii_repr=None, mathml_presentation_repr=None,
+                is_physics_constant=False,
                 **assumptions):
 
         if not isinstance(name, Symbol):
@@ -63,6 +64,10 @@ class Quantity(AtomicExpr):
         elif isinstance(abbrev, str):
             abbrev = Symbol(abbrev)
 
+        # HACK: These are here purely for type checking. They actually get assigned below.
+        cls._is_prefixed = False
+        cls._is_physics_constant = is_physics_constant
+
         obj = AtomicExpr.__new__(cls, name, abbrev)
         obj._name = name
         obj._abbrev = abbrev
@@ -70,6 +75,8 @@ class Quantity(AtomicExpr):
         obj._unicode_repr = pretty_unicode_repr
         obj._ascii_repr = pretty_ascii_repr
         obj._mathml_repr = mathml_presentation_repr
+        obj._is_prefixed = False
+        obj._is_physics_constant = is_physics_constant
 
         if dimension is not None:
             # TODO: remove after deprecation:
@@ -81,7 +88,6 @@ class Quantity(AtomicExpr):
             with ignore_warnings(SymPyDeprecationWarning):
                 obj.set_scale_factor(scale_factor)
 
-        cls._is_prefixed = False
         return obj
 
     def set_dimension(self, dimension, unit_system="SI"):
@@ -241,3 +247,8 @@ class Quantity(AtomicExpr):
     def is_prefixed(self):
         """Whether or not the quantity is prefixed. Eg. `kilogram` is prefixed, but `gram` is not."""
         return self._is_prefixed
+
+    @property
+    def is_physics_constant(self) -> bool:
+        """Whether or not the quantity is a physical constant. Eg. the speed of light."""
+        return self._is_physics_constant
