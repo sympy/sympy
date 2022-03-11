@@ -94,8 +94,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
 
         if max_degree is None:
             if expr is None:
-                raise TypeError('Input expression be must'
-                                'be a valid SymPy expression')
+                raise TypeError('Input expression must be a valid SymPy expression')
             return main_integrate3d(expr, facets, vertices, hp_params)
 
     if max_degree is not None:
