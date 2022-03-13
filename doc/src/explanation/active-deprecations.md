@@ -76,6 +76,14 @@ SymPy deprecation warnings.
 
 ## Version 1.11
 
+(non_basic_arguments_to_basic)=
+### non-``Basic`` arguments for ``Basic`` is no longer allowed.
+
+All arguments stored in ``Basic._args`` should be instances of ``Basic``.
+Many algorithms in SymPy assume this is the case and any violation should
+be considered a bug. This deprecation explicitly disallows any `Basic` to
+be instantiated with non-Basic arguments.
+
 (mathematica-parser-additional-translations)=
 ### Mathematica parser: removed ``additional_translations`` parameter
 
