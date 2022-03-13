@@ -6,23 +6,23 @@
 [![Zenodo Badge](https://zenodo.org/badge/18918/sympy/sympy.svg)](https://zenodo.org/badge/latestdoi/18918/sympy/sympy)
 [![codecov Badge](https://codecov.io/gh/sympy/sympy/branch/master/graph/badge.svg)](https://codecov.io/gh/sympy/sympy)
 
-[![SymPy Banner](banner.svg)](https://sympy.org/)
+[![SymPy Banner](https://github.com/sympy/sympy/raw/master/banner.svg)](https://sympy.org/)
 
 
-See the AUTHORS file for the list of authors.
+See the [AUTHORS](AUTHORS) file for the list of authors.
 
 And many more people helped on the SymPy mailing list, reported bugs,
 helped organize SymPy's participation in the Google Summer of Code, the
 Google Highly Open Participation Contest, Google Code-In, wrote and
 blogged about SymPy...
 
-License: New BSD License (see the LICENSE file for details) covers all
+License: New BSD License (see the [LICENSE](LICENSE) file for details) covers all
 files in the sympy repository unless stated otherwise.
 
 Our mailing list is at
 <https://groups.google.com/forum/?fromgroups#!forum/sympy>.
 
-We have community chat at [Gitter](https://gitter.im/sympy/sympy). Feel
+We have a community chat at [Gitter](https://gitter.im/sympy/sympy). Feel
 free to ask us anything there. We have a very welcoming and helpful
 community.
 
@@ -36,7 +36,7 @@ You can also get the latest version of SymPy from
 
 To get the git version do
 
-    $ git clone git://github.com/sympy/sympy.git
+    $ git clone https://github.com/sympy/sympy.git
 
 For other options (tarballs, debs, etc.), see
 <https://docs.sympy.org/dev/install.html>.
@@ -138,7 +138,7 @@ To test pull requests, use
 
 ## Regenerate Experimental <span class="title-ref">LaTeX</span> Parser/Lexer
 
-The parser and lexer generated with the [ANTLR4](http://antlr4.org)
+The parser and lexer were generated with the [ANTLR4](http://antlr4.org)
 toolchain in `sympy/parsing/latex/_antlr` and checked into the repo.
 Presently, most users should not need to regenerate these files, but
 if you plan to work on this feature, you will need the `antlr4`
@@ -181,7 +181,7 @@ git with:
 
 WARNING: The above commands will all clear changes you may have made,
 and you will lose them forever. Be sure to check things with `git
-status`, `git diff`, `git clean -Xn` and `git clean -n` before doing any
+status`, `git diff`, `git clean -Xn`, and `git clean -n` before doing any
 of those.
 
 ## Bugs
@@ -197,13 +197,13 @@ on Stack Overflow using the [sympy](https://stackoverflow.com/questions/tagged/s
 
 SymPy was started by Ondřej Čertík in 2005, he wrote some code during
 the summer, then he wrote some more code during summer 2006. In February
-2007, Fabian Pedregosa joined the project and helped fixed many things,
-contributed documentation and made it alive again. 5 students (Mateusz
+2007, Fabian Pedregosa joined the project and helped fix many things,
+contributed documentation, and made it alive again. 5 students (Mateusz
 Paprocki, Brian Jorgensen, Jason Gedge, Robert Schwarz, and Chris Wu)
 improved SymPy incredibly during summer 2007 as part of the Google
 Summer of Code. Pearu Peterson joined the development during the summer
 2007 and he has made SymPy much more competitive by rewriting the core
-from scratch, that has made it from 10x to 100x faster. Jurjen N.E. Bos
+from scratch, which has made it from 10x to 100x faster. Jurjen N.E. Bos
 has contributed pretty-printing and other patches. Fredrik Johansson has
 written mpmath and contributed a lot of patches.
 

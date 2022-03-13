@@ -1,10 +1,29 @@
-from sympy import E as e
-from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
-                   EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
-                   gamma, beta, Piecewise, Integral, sin, cos, tan, atan, sinh, cosh,
-                   besseli, floor, expand_func, Rational, I, re, Lambda, asin,
-                   im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, erfi, besselj, besselk)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Lambda, diff, expand_func)
+from sympy.core.mul import Mul
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E as e, I, Rational, pi)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.complexes import (Abs, im, re, sign)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (asin, atan, cos, sin, tan)
+from sympy.functions.special.bessel import (besseli, besselj, besselk)
+from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.error_functions import (erf, erfc, erfi, expint)
+from sympy.functions.special.gamma_functions import (gamma, lowergamma, uppergamma)
+from sympy.functions.special.hyper import hyper
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Or)
+from sympy.sets.sets import Interval
+from sympy.simplify.simplify import simplify
+from sympy.utilities.lambdify import lambdify
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
 from sympy.sets.sets import FiniteSet, Complement, Intersection
@@ -26,7 +45,7 @@ from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
 from sympy.stats.compound_rv import CompoundPSpace
 from sympy.stats.symbolic_probability import Probability
 from sympy.testing.pytest import raises, XFAIL, slow, ignore_warnings
-from sympy.testing.randtest import verify_numerically as tn
+from sympy.core.random import verify_numerically as tn
 
 oo = S.Infinity
 
@@ -74,7 +93,7 @@ def test_ContinuousDomain():
     X = Normal('x', 0, 1)
     assert where(X**2 <= 1).set == Interval(-1, 1)
     assert where(X**2 <= 1).symbol == X.symbol
-    where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
+    assert where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
     raises(ValueError, lambda: where(sin(X) > 1))
 
     Y = given(X, X >= 0)
@@ -82,7 +101,6 @@ def test_ContinuousDomain():
     assert Y.pspace.domain.set == Interval(0, oo)
 
 
-@slow
 def test_multiple_normal():
     X, Y = Normal('x', 0, 1), Normal('y', 0, 1)
     p = Symbol("p", positive=True)
@@ -108,6 +126,7 @@ def test_multiple_normal():
     assert E(X, Eq(X + Y, 0)) == 0
     assert variance(X, Eq(X + Y, 0)) == S.Half
     assert quantile(X)(p) == sqrt(2)*erfinv(2*p - S.One)
+
 
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True)
@@ -166,7 +185,7 @@ def test_characteristic_function():
     Z = Exponential('z', 5)
     cf = characteristic_function(Z)
     assert cf(0) == 1
-    assert cf(1).expand() == Rational(25, 26) + I*Rational(5, 26)
+    assert cf(1).expand() == Rational(25, 26) + I*5/26
 
     X = GaussianInverse('x', 1, 1)
     cf = characteristic_function(X)
@@ -492,7 +511,7 @@ def test_cauchy():
     assert median(X) == FiniteSet(x0)
 
 def test_chi():
-    from sympy import I
+    from sympy.core.numbers import I
     k = Symbol("k", integer=True)
 
     X = Chi('x', k)
@@ -574,7 +593,7 @@ def test_dagum():
     b = Symbol("b", positive=True)
     a = Symbol("a", nonpositive=True)
     raises(ValueError, lambda: Dagum('x', p, a, b))
-    X = Dagum('x', 1 , 1, 1)
+    X = Dagum('x', 1, 1, 1)
     assert median(X) == FiniteSet(1)
 
 def test_erlang():
@@ -612,10 +631,11 @@ def test_exgaussian():
                                       sqrt(s**2 + l**(-2)))
 
 
+@slow
 def test_exponential():
     rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
-    p = Symbol("p", positive=True, real=True, finite=True)
+    p = Symbol("p", positive=True, real=True)
 
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
@@ -824,8 +844,8 @@ def test_levy():
     raises(ValueError, lambda: Levy('x',mu,c))
 
 def test_logcauchy():
-    mu = Symbol("mu" , positive=True)
-    sigma = Symbol("sigma" , positive=True)
+    mu = Symbol("mu", positive=True)
+    sigma = Symbol("sigma", positive=True)
 
     X = LogCauchy("x", mu, sigma)
 
@@ -911,9 +931,9 @@ def test_lognormal():
 
 def test_Lomax():
     a, l = symbols('a, l', negative=True)
-    raises(ValueError, lambda: Lomax('X', a , l))
+    raises(ValueError, lambda: Lomax('X', a, l))
     a, l = symbols('a, l', real=False)
-    raises(ValueError, lambda: Lomax('X', a , l))
+    raises(ValueError, lambda: Lomax('X', a, l))
 
     a, l = symbols('a, l', positive=True)
     X = Lomax('X', a, l)
@@ -939,16 +959,18 @@ def test_maxwell():
     assert cdf(X)(x) == erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
     assert diff(cdf(X)(x), x) == density(X)(x)
 
+
+@slow
 def test_Moyal():
     mu = Symbol('mu',real=False)
-    sigma = Symbol('sigma', real=True, positive=True)
+    sigma = Symbol('sigma', positive=True)
     raises(ValueError, lambda: Moyal('M',mu, sigma))
 
     mu = Symbol('mu', real=True)
-    sigma = Symbol('sigma', real=True, negative=True)
+    sigma = Symbol('sigma', negative=True)
     raises(ValueError, lambda: Moyal('M',mu, sigma))
 
-    sigma = Symbol('sigma', real=True, positive=True)
+    sigma = Symbol('sigma', positive=True)
     M = Moyal('M', mu, sigma)
     assert density(M)(z) == sqrt(2)*exp(-exp((mu - z)/sigma)/2
                         - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
@@ -974,7 +996,7 @@ def test_nakagami():
     assert cdf(X)(x) == Piecewise(
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
-    X = Nakagami('x',1 ,1)
+    X = Nakagami('x', 1, 1)
     assert median(X) == FiniteSet(sqrt(log(2)))
 
 def test_gaussian_inverse():
@@ -1206,7 +1228,9 @@ def test_uniform():
     assert c(Rational(7, 2)) == Rational(1, 4)
     assert c(5) == 1 and c(6) == 1
 
+
 @XFAIL
+@slow
 def test_uniform_P():
     """ This stopped working because SingleContinuousPSpace.compute_density no
     longer calls integrate on a DiracDelta but rather just solves directly.
@@ -1395,7 +1419,6 @@ def test_issue_10003():
     assert P(G < -1) is S.Zero
 
 
-@slow
 def test_precomputed_cdf():
     x = symbols("x", real=True)
     mu = symbols("mu", real=True)
@@ -1531,8 +1554,8 @@ def test_ContinuousDistributionHandmade():
         (S.Half, (x>=2)&(x<3)), (0, True)))
     dens = ContinuousDistributionHandmade(dens, set=Interval(0, 3))
     space = SingleContinuousPSpace(z, dens)
-    assert dens.pdf == Lambda(x, Piecewise((1/2, (x >= 0) & (x < 1)),
-        (0, (x >= 1) & (x < 2)), (1/2, (x >= 2) & (x < 3)), (0, True)))
+    assert dens.pdf == Lambda(x, Piecewise((S(1)/2, (x >= 0) & (x < 1)),
+        (0, (x >= 1) & (x < 2)), (S(1)/2, (x >= 2) & (x < 3)), (0, True)))
     assert median(space.value) == Interval(1, 2)
     assert E(space.value) == Rational(3, 2)
     assert variance(space.value) == Rational(13, 12)

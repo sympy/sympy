@@ -1,4 +1,9 @@
-from sympy import factorial, sqrt, exp, S, assoc_laguerre, Float
+from sympy.core.numbers import Float
+from sympy.core.singleton import S
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.polynomials import assoc_laguerre
 from sympy.functions.special.spherical_harmonics import Ynm
 
 
@@ -120,7 +125,7 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
 
     >>> from sympy.physics.hydrogen import Psi_nlm
     >>> from sympy import Symbol
-    >>> r=Symbol("r", real=True, positive=True)
+    >>> r=Symbol("r", positive=True)
     >>> phi=Symbol("phi", real=True)
     >>> theta=Symbol("theta", real=True)
     >>> Z=Symbol("Z", positive=True, integer=True, nonzero=True)
@@ -159,7 +164,7 @@ def E_nl(n, Z=1):
     """
     Returns the energy of the state (n, l) in Hartree atomic units.
 
-    The energy doesn't depend on "l".
+    The energy does not depend on "l".
 
     Parameters
     ==========

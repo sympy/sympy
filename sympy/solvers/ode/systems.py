@@ -1,9 +1,9 @@
 from sympy.core import Add, Mul, S
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.function import (expand_mul, expand, Derivative,
                                  AppliedUndef, Function, Subs)
@@ -12,15 +12,15 @@ from sympy.functions import (exp, im, cos, sin, re, Piecewise,
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase, eye
 from sympy.polys import Poly, together
-from sympy.simplify import collect, radsimp, signsimp
+from sympy.simplify import collect, radsimp, signsimp # type: ignore
 from sympy.simplify.powsimp import powdenest, powsimp
 from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.simplify import simplify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError, solveset
-from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import ordered
+from sympy.utilities.iterables import (connected_components, iterable,
+                                       strongly_connected_components)
 from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
 
@@ -52,7 +52,7 @@ def _simpsol(soleq):
     terms = []
     for coeff, monom in zip(p.coeffs(), p.monoms()):
         coeff = piecewise_fold(coeff)
-        if type(coeff) is Piecewise:
+        if isinstance(coeff, Piecewise):
             coeff = Piecewise(*((ratsimp(coef).collect(syms), cond) for coef, cond in coeff.args))
         else:
             coeff = ratsimp(coeff).collect(syms)
@@ -95,7 +95,7 @@ def simpsol(sol, wrt1, wrt2, doit=True):
     # We split each term into two multiplicative factors dep and coeff where
     # all factors that involve wrt1 are in dep and any constant factors are in
     # coeff e.g.
-    #         sqrt(2)*C1*exp(t) -> ( exp(t) , sqrt(2)*C1 )
+    #         sqrt(2)*C1*exp(t) -> ( exp(t), sqrt(2)*C1 )
     #
     # The dep factors are simplified using powsimp to combine expanded
     # exponential factors e.g.
@@ -270,7 +270,7 @@ def linodesolve_type(A, t, b=None):
     Traceback (most recent call last):
     ...
     NotImplementedError:
-    The system doesn't have a commutative antiderivative, it can't be
+    The system does not have a commutative antiderivative, it cannot be
     solved by linodesolve.
 
     Returns
@@ -282,7 +282,7 @@ def linodesolve_type(A, t, b=None):
     ======
 
     NotImplementedError
-        When the coefficient matrix doesn't have a commutative antiderivative
+        When the coefficient matrix does not have a commutative antiderivative
 
     See Also
     ========
@@ -303,7 +303,7 @@ def linodesolve_type(A, t, b=None):
         B, is_commuting = _is_commutative_anti_derivative(A, t)
         if not is_commuting:
             raise NotImplementedError(filldedent('''
-                The system doesn't have a commutative antiderivative, it can't be solved
+                The system does not have a commutative antiderivative, it cannot be solved
                 by linodesolve.
             '''))
 
@@ -351,7 +351,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     matrix differential equation [1]. For example the system $x' = x + y + 1$
     and $y' = x - y$ can be represented as
 
-    .. math:: A_1 X' = A0 X + b
+    .. math:: A_1 X' = A_0 X + b
 
     where $A_1$ and $A_0$ are $2 \times 2$ matrices and $b$, $X$ and $X'$ are
     $2 \times 1$ matrices with $X = [x, y]^T$.
@@ -364,7 +364,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Examples
     ========
 
-    >>> from sympy import (Function, Symbol, Matrix, Eq)
+    >>> from sympy import Function, Symbol, Matrix, Eq
     >>> from sympy.solvers.ode.systems import linear_ode_to_matrix
     >>> t = Symbol('t')
     >>> x = Function('x')
@@ -424,7 +424,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Parameters
     ==========
 
-    eqs : list of sympy expressions or equalities
+    eqs : list of SymPy expressions or equalities
         The equations as expressions (assumed equal to zero).
     funcs : list of applied functions
         The dependent variables of the system of ODEs.
@@ -849,7 +849,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
 
     >>> eqs = [Eq(f(x).diff(x), f(x) + x*g(x)), Eq(g(x).diff(x), -x*f(x) + g(x))]
 
-    The system defined above is already in the desired form, so we don't have to convert it.
+    The system defined above is already in the desired form, so we do not have to convert it.
 
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
     >>> A = A0
@@ -882,13 +882,13 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
 
     ValueError
         This error is raised when the coefficient matrix, non-homogeneous term
-        or the antiderivative, if passed, aren't a matrix or
-        don't have correct dimensions
+        or the antiderivative, if passed, are not a matrix or
+        do not have correct dimensions
     NonSquareMatrixError
-        When the coefficient matrix or its antiderivative, if passed isn't a square
-        matrix
+        When the coefficient matrix or its antiderivative, if passed is not a
+        square matrix
     NotImplementedError
-        If the coefficient matrix doesn't have a commutative antiderivative
+        If the coefficient matrix does not have a commutative antiderivative
 
     See Also
     ========
@@ -958,7 +958,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         type = system_info["type_of_equation"]
         B = system_info["antiderivative"]
 
-    if type == "type5" or type == "type6":
+    if type in ("type5", "type6"):
         is_transformed = True
         if passed_type != "auto":
             if tau is None:
@@ -973,14 +973,15 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
                 A = system_info['A']
                 b = system_info['b']
 
-    if type in ["type1", "type2", "type5", "type6"]:
+    if type in ("type1", "type2", "type5", "type6"):
         P, J = matrix_exp_jordan_form(A, t)
         P = simplify(P)
 
-        if type == "type1" or type == "type5":
+        if type in ("type1", "type5"):
             sol_vector = P * (J * Cvect)
         else:
-            sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+            Jinv = J.subs(t, -t)
+            sol_vector = P * J * ((Jinv * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
 
     else:
         if B is None:
@@ -1163,7 +1164,7 @@ def _is_second_order_type2(A, t):
         poly = Poly(term.expand(), t)
         monoms = poly.monoms()
 
-        if monoms[0][0] == 4 or monoms[0][0] == 2:
+        if monoms[0][0] in (2, 4):
             cs = _get_poly_coeffs(poly, 4)
             a, b, c, d, e = cs
 
@@ -1356,7 +1357,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
     t: Symbol
         Independent variable of the equations in eqs
     is_canon: Boolean
-        If True, then this function won't try to get the
+        If True, then this function will not try to get the
         system in canonical form. Default value is False
 
     Returns
@@ -1489,9 +1490,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
             match['commutative_antiderivative'] = antiderivative
 
         return match
-
-    if is_higher_order:
-
+    else:
         match['type_of_equation'] = "type0"
 
         if is_second_order:
@@ -1525,9 +1524,6 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
         match['is_higher_order'] = is_higher_order
 
         return match
-
-    return None
-
 
 def _preprocess_eqs(eqs):
     processed_eqs = []
@@ -1583,7 +1579,6 @@ def _combine_type1_subsystems(subsystem, funcs, t):
 
 
 def _component_division(eqs, funcs, t):
-    from sympy.utilities.iterables import connected_components, strongly_connected_components
 
     # Assuming that each eq in eqs is in canonical form,
     # that is, [f(x).diff(x) = .., g(x).diff(x) = .., etc]
@@ -1820,7 +1815,7 @@ def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
     Here, $A2$ is the coefficient matrix for the vector $X''$ and $b$ is the non-homogeneous
     term.
 
-    Default value for `b` is None but if `A1` and `A0` are passed and `b` isn't passed, then the
+    Default value for `b` is None but if `A1` and `A0` are passed and `b` is not passed, then the
     system will be assumed homogeneous.
 
     """
@@ -1997,7 +1992,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     5. Any implicit system which can be divided into system of ODEs which is of the above 4 forms
     6. Any higher order linear system of ODEs that can be reduced to one of the 5 forms of systems described above.
 
-    The types of systems described above aren't limited by the number of equations, i.e. this
+    The types of systems described above are not limited by the number of equations, i.e. this
     function can solve the above types irrespective of the number of equations in the system passed.
     But, the bigger the system, the more time it will take to solve the system.
 
@@ -2022,11 +2017,11 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     doit : Boolean
         Evaluate the solutions if True. Default value is True. Can be
         set to false if the integral evaluation takes too much time and/or
-        isn't required.
+        is not required.
     simplify: Boolean
         Simplify the solutions for the systems. Default value is True.
         Can be set to false if simplification takes too much time and/or
-        isn't required.
+        is not required.
 
     Examples
     ========
@@ -2069,7 +2064,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     NotImplementedError
         When the system of ODEs is not solvable by this function.
     ValueError
-        When the parameters passed aren't in the required form.
+        When the parameters passed are not in the required form.
 
     """
     from sympy.solvers.ode.ode import solve_ics, _extract_funcs, constant_renumber
@@ -2097,7 +2092,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
 
     if len(eqs) != len(funcs):
         raise ValueError(filldedent('''
-            Number of equations and number of functions don't match
+            Number of equations and number of functions do not match
         '''))
 
     if t is not None and not isinstance(t, Symbol):

@@ -3,17 +3,16 @@ from types import FunctionType
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
+from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
-from sympy.simplify.simplify import (simplify as _simplify,
-    dotprodsimp as _dotprodsimp)
-from sympy import sympify
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 
-from .common import MatrixError, NonSquareMatrixError
+from .common import NonSquareMatrixError
 from .utilities import (
     _get_intermediate_simp, _get_intermediate_simp_bool,
-    _iszero, _is_zero_after_expand_mul)
+    _iszero, _is_zero_after_expand_mul, _dotprodsimp, _simplify)
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
@@ -21,7 +20,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     suitable for a pivot.  If ``col`` consists only of
     Floats, the pivot with the largest norm is returned.
     Otherwise, the first element where ``iszerofunc`` returns
-    False is used.  If ``iszerofunc`` doesn't return false,
+    False is used.  If ``iszerofunc`` does not return false,
     items are simplified and retested until a suitable
     pivot is found.
 
@@ -81,7 +80,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
             continue
         simped = simpfunc(x)
         is_zero = iszerofunc(simped)
-        if is_zero == True or is_zero == False:
+        if is_zero in (True, False):
             newly_determined.append((i, simped))
         if is_zero == False:
             return (i, simped, False, newly_determined)
@@ -445,7 +444,7 @@ def _cofactor(M, i, j, method="berkowitz"):
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
 
-    return (-1)**((i + j) % 2) * M.minor(i, j, method)
+    return S.NegativeOne**((i + j) % 2) * M.minor(i, j, method)
 
 
 def _cofactor_matrix(M, method="berkowitz"):
@@ -534,8 +533,8 @@ def _per(M):
         sub_len = len(subset)
         for i in range(m):
              prod *= sum([M[i, j] for j in subset])
-        perm += prod * (-1)**sub_len * nC(n - sub_len, m - sub_len)
-    perm *= (-1)**m
+        perm += prod * S.NegativeOne**sub_len * nC(n - sub_len, m - sub_len)
+    perm *= S.NegativeOne**m
     perm = sympify(perm)
     return perm.simplify()
 
@@ -625,15 +624,12 @@ def _det(M, method="bareiss", iszerofunc=None):
     # sanitize `method`
     method = method.lower()
 
-    if method == "domain-ge": # uses DomainMatrix to evalute determinant
-        return _det_DOM(M)
-
     if method == "bareis":
         method = "bareiss"
     elif method == "det_lu":
         method = "lu"
 
-    if method not in ("bareiss", "berkowitz", "lu"):
+    if method not in ("bareiss", "berkowitz", "lu", "domain-ge"):
         raise ValueError("Determinant method '%s' unrecognized" % method)
 
     if iszerofunc is None:
@@ -648,15 +644,10 @@ def _det(M, method="bareiss", iszerofunc=None):
     n = M.rows
 
     if n == M.cols: # square check is done in individual method functions
-        if M.is_upper or M.is_lower:
-            m = 1
-            for i in range(n):
-                m = m * M[i, i]
-            return _get_intermediate_simp(_dotprodsimp)(m)
-        elif n == 0:
+        if n == 0:
             return M.one
         elif n == 1:
-            return M[0,0]
+            return M[0, 0]
         elif n == 2:
             m = M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
             return _get_intermediate_simp(_dotprodsimp)(m)
@@ -669,14 +660,18 @@ def _det(M, method="bareiss", iszerofunc=None):
                 - M[0, 1] * M[1, 0] * M[2, 2])
             return _get_intermediate_simp(_dotprodsimp)(m)
 
-    if method == "bareiss":
-        return M._eval_det_bareiss(iszerofunc=iszerofunc)
-    elif method == "berkowitz":
-        return M._eval_det_berkowitz()
-    elif method == "lu":
-        return M._eval_det_lu(iszerofunc=iszerofunc)
-    else:
-        raise MatrixError('unknown method for calculating determinant')
+    dets = []
+    for b in M.strongly_connected_components():
+        if method == "domain-ge": # uses DomainMatrix to evalute determinant
+            det = _det_DOM(M[b, b])
+        elif method == "bareiss":
+            det = M[b, b]._eval_det_bareiss(iszerofunc=iszerofunc)
+        elif method == "berkowitz":
+            det = M[b, b]._eval_det_berkowitz()
+        elif method == "lu":
+            det = M[b, b]._eval_det_lu(iszerofunc=iszerofunc)
+        dets.append(det)
+    return Mul(*dets)
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.

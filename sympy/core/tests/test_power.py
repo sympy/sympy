@@ -8,13 +8,14 @@ from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
-    sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
+    sin, cos, tan, sec, csc, atan)
+from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh
 from sympy.polys import Poly
 from sympy.series.order import O
 from sympy.sets import FiniteSet
-from sympy.core.expr import unchanged
 from sympy.core.power import power
-from sympy.testing.pytest import warns_deprecated_sympy, _both_exp_pow
+from sympy.testing.pytest import warns, _both_exp_pow
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def test_rational():
@@ -199,7 +200,8 @@ def test_Pow_Expr_args():
     x = Symbol('x')
     bases = [Basic(), Poly(x, x), FiniteSet(x)]
     for base in bases:
-        with warns_deprecated_sympy():
+        # The cache can mess with the stacklevel test
+        with warns(SymPyDeprecationWarning, test_stacklevel=False):
             Pow(base, S.One)
 
 
@@ -270,10 +272,15 @@ def test_zero():
     assert 0**(x - 2) != S.Infinity**(2 - x)
     assert 0**(2*x*y) == 0**(x*y)
     assert 0**(-2*x*y) == S.ComplexInfinity**(x*y)
+    assert Float(0)**2 is not S.Zero
+    assert Float(0)**2 == 0.0
+    assert Float(0)**-2 is zoo
+    assert Float(0)**oo is S.Zero
 
     #Test issue 19572
     assert 0 ** -oo is zoo
     assert power(0, -oo) is zoo
+    assert Float(0)**-oo is zoo
 
 def test_pow_as_base_exp():
     x = Symbol('x')
@@ -294,7 +301,7 @@ def test_nseries():
     assert cbrt(I*x - 1)._eval_nseries(x, 4, None, -1) == (-1)**(S(1)/3)*exp(-2*I*pi/3) - \
     (-1)**(S(5)/6)*x*exp(-2*I*pi/3)/3 + (-1)**(S(1)/3)*x**2*exp(-2*I*pi/3)/9 + \
     5*(-1)**(S(5)/6)*x**3*exp(-2*I*pi/3)/81 + O(x**4)
-    assert (1 / (exp(-1/x) + 1/x))._eval_nseries(x, 2, None) == -x**2*exp(-1/x) + x
+    assert (1 / (exp(-1/x) + 1/x))._eval_nseries(x, 2, None) == x + O(x**2)
 
 
 def test_issue_6100_12942_4473():
@@ -318,13 +325,13 @@ def test_issue_6100_12942_4473():
 
 
 def test_issue_6208():
-    from sympy import root
-    assert sqrt(33**(I*Rational(9, 10))) == -33**(I*Rational(9, 20))
+    from sympy.functions.elementary.miscellaneous import root
+    assert sqrt(33**(I*9/10)) == -33**(I*9/20)
     assert root((6*I)**(2*I), 3).as_base_exp()[1] == Rational(1, 3)  # != 2*I/3
     assert root((6*I)**(I/3), 3).as_base_exp()[1] == I/9
-    assert sqrt(exp(3*I)) == exp(I*Rational(3, 2))
+    assert sqrt(exp(3*I)) == exp(3*I/2)
     assert sqrt(-sqrt(3)*(1 + 2*I)) == sqrt(sqrt(3))*sqrt(-1 - 2*I)
-    assert sqrt(exp(5*I)) == -exp(I*Rational(5, 2))
+    assert sqrt(exp(5*I)) == -exp(5*I/2)
     assert root(exp(5*I), 3).exp == Rational(1, 3)
 
 
@@ -397,6 +404,7 @@ def test_issue_7638():
     assert sqrt(r**Rational(4, 3)) != r**Rational(2, 3)
     assert sqrt((p + I)**Rational(4, 3)) == (p + I)**Rational(2, 3)
     assert sqrt((p - p**2*I)**2) == p - p**2*I
+    assert sqrt((p**2*I - p)**2) == p**2*I - p  # XXX ok?
     assert sqrt((p + r*I)**2) != p + r*I
     e = (1 + I/5)
     assert sqrt(e**5) == e**(5*S.Half)
@@ -554,14 +562,58 @@ def test_issue_14815():
 
 
 def test_issue_18509():
-    assert unchanged(Mul, oo, 1/pi**oo)
-    assert (1/pi**oo).is_extended_positive == False
+    x = Symbol('x', prime=True)
+    assert x**oo is oo
+    assert (1/x)**oo is S.Zero
+    assert (-1/x)**oo is S.Zero
+    assert (-x)**oo is zoo
+    assert (-oo)**(-1 + I) is S.Zero
+    assert (-oo)**(1 + I) is zoo
+    assert (oo)**(-1 + I) is S.Zero
+    assert (oo)**(1 + I) is zoo
 
 
 def test_issue_18762():
     e, p = symbols('e p')
     g0 = sqrt(1 + e**2 - 2*e*cos(p))
     assert len(g0.series(e, 1, 3).args) == 4
+
+
+def test_issue_21860():
+    x = Symbol('x')
+    e = 3*2**Rational(66666666667,200000000000)*3**Rational(16666666667,50000000000)*x**Rational(66666666667, 200000000000)
+    ans = Mul(Rational(3, 2),
+              Pow(Integer(2), Rational(33333333333, 100000000000)),
+              Pow(Integer(3), Rational(26666666667, 40000000000)))
+    assert e.xreplace({x: Rational(3,8)}) == ans
+
+
+def test_issue_21647():
+    x = Symbol('x')
+    e = log((Integer(567)/500)**(811*(Integer(567)/500)**x/100))
+    ans = log(Mul(Rational(64701150190720499096094005280169087619821081527,
+                           76293945312500000000000000000000000000000000000),
+                  Pow(Integer(2), Rational(396204892125479941, 781250000000000000)),
+                  Pow(Integer(3), Rational(385045107874520059, 390625000000000000)),
+                  Pow(Integer(5), Rational(407364676376439823, 1562500000000000000)),
+                  Pow(Integer(7), Rational(385045107874520059, 1562500000000000000))))
+    assert e.xreplace({x: 6}) == ans
+
+
+def test_issue_21762():
+    x = Symbol('x')
+    e = (x**2 + 6)**(Integer(33333333333333333)/50000000000000000)
+    ans = Mul(Rational(5, 4),
+              Pow(Integer(2), Rational(16666666666666667, 25000000000000000)),
+              Pow(Integer(5), Rational(8333333333333333, 25000000000000000)))
+    assert e.xreplace({x: S.Half}) == ans
+
+
+def test_rational_powers_larger_than_one():
+    assert Rational(2, 3)**Rational(3, 2) == 2*sqrt(6)/9
+    assert Rational(1, 6)**Rational(9, 4) == 6**Rational(3, 4)/216
+    assert Rational(3, 7)**Rational(7, 3) == 9*3**Rational(1, 3)*7**Rational(2, 3)/343
+
 
 def test_power_dispatcher():
 

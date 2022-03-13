@@ -131,6 +131,7 @@ when available.
 .. autoclass:: PythonIntegerRing
 .. autoclass:: GMPYIntegerRing
    :members:
+   :exclude-members: dtype, tp
 
 .. _QQ:
 
@@ -186,6 +187,7 @@ preferred because it is significantly faster.
 .. autoclass:: PythonRationalField
 .. autoclass:: GMPYRationalField
    :members:
+   :exclude-members: dtype, tp
 
 .. autoclass:: sympy.external.pythonmpq.PythonMPQ
 

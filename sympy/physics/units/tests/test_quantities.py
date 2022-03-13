@@ -1,5 +1,15 @@
-from sympy import (Abs, Add, Function, Number, Rational, S, Symbol,
-                   diff, exp, integrate, log, sin, sqrt, symbols)
+import warnings
+
+from sympy.core.add import Add
+from sympy.core.function import (Function, diff)
+from sympy.core.numbers import (Number, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import integrate
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
                                  volume, kilometer, joule)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
@@ -287,7 +297,7 @@ def test_find_unit():
     assert find_unit(inch**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(length**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(inch ** 3) == [
-        'l', 'cl', 'dl', 'ml', 'liter', 'quart', 'liters', 'quarts',
+        'L', 'l', 'cL', 'cl', 'dL', 'dl', 'mL', 'ml', 'liter', 'quart', 'liters', 'quarts',
         'deciliter', 'centiliter', 'deciliters', 'milliliter',
         'centiliters', 'milliliters', 'planck_volume']
     assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'planck_voltage']
@@ -365,7 +375,8 @@ def test_factor_and_dimension_with_Abs():
         v_w1 = Quantity('v_w1', length/time, Rational(3, 2)*meter/second)
     v_w1.set_global_relative_scale_factor(Rational(3, 2), meter/second)
     expr = v_w1 - Abs(v_w1)
-    assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
+    with warns_deprecated_sympy():
+        assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
 
 
 def test_dimensional_expr_of_derivative():
@@ -457,10 +468,10 @@ def test_issue_14932():
 
 def test_issue_14547():
     # the root issue is that an argument with dimensions should
-    # not raise an error when the the `arg - 1` calculation is
+    # not raise an error when the `arg - 1` calculation is
     # performed in the assumptions system
     from sympy.physics.units import foot, inch
-    from sympy import Eq
+    from sympy.core.relational import Eq
     assert log(foot).is_zero is None
     assert log(foot).is_positive is None
     assert log(foot).is_nonnegative is None
@@ -484,3 +495,18 @@ def test_deprecated_quantity_methods():
         step.set_scale_factor(2*meter)
         assert convert_to(step, centimeter) == 200*centimeter
         assert convert_to(1000*step/second, kilometer/second) == 2*kilometer/second
+
+def test_issue_22164():
+    warnings.simplefilter("error")
+    dm = Quantity("dm")
+    SI.set_quantity_dimension(dm, length)
+    SI.set_quantity_scale_factor(dm, 1)
+
+    bad_exp = Quantity("bad_exp")
+    SI.set_quantity_dimension(bad_exp, length)
+    SI.set_quantity_scale_factor(bad_exp, 1)
+
+    expr = dm ** bad_exp
+
+    # deprecation warning is not expected here
+    SI._collect_factor_and_dimension(expr)

@@ -17,16 +17,31 @@ sympy.stats.rv_interface
 from functools import singledispatch
 from typing import Tuple as tTuple
 
-from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
-                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function)
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import (Function, Lambda)
+from sympy.core.logic import fuzzy_and
+from sympy.core.mul import (Mul, prod)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.logic.boolalg import (And, Or)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.tensor.indexed import Indexed
+from sympy.utilities.lambdify import lambdify
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
 from sympy.external import import_module
-from sympy.utilities.misc import filldedent
-import warnings
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.utilities.iterables import iterable
 
 
 x = Symbol('x')
@@ -38,7 +53,7 @@ def is_random(x):
 @is_random.register(Basic)
 def _(x):
     atoms = x.free_symbols
-    return any([is_random(i) for i in atoms])
+    return any(is_random(i) for i in atoms)
 
 class RandomDomain(Basic):
     """
@@ -202,7 +217,7 @@ class PSpace(Basic):
     def compute_density(self, expr):
         raise NotImplementedError()
 
-    def sample(self):
+    def sample(self, size=(), library='scipy', seed=None):
         raise NotImplementedError()
 
     def probability(self, condition):
@@ -263,7 +278,7 @@ class RandomSymbol(Expr):
 
     An object of the RandomSymbol type should almost never be created by the
     user. They tend to be created instead by the PSpace class's value method.
-    Traditionally a user doesn't even do this but instead calls one of the
+    Traditionally a user does not even do this but instead calls one of the
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
@@ -455,7 +470,7 @@ class IndependentProductPSpace(ProductPSpace):
         expr = condition.lhs - condition.rhs
         rvs = random_symbols(expr)
         dens = self.compute_density(expr)
-        if any([pspace(rv).is_Continuous for rv in rvs]):
+        if any(pspace(rv).is_Continuous for rv in rvs):
             from sympy.stats.crv import SingleContinuousPSpace
             from sympy.stats.crv_types import ContinuousDistributionHandmade
             if expr in self.values:
@@ -495,17 +510,18 @@ class IndependentProductPSpace(ProductPSpace):
     def conditional_space(self, condition, normalize=True, **kwargs):
         rvs = random_symbols(condition)
         condition = condition.xreplace({rv: rv.symbol for rv in self.values})
-        if any([pspace(rv).is_Continuous for rv in rvs]):
+        pspaces = [pspace(rv) for rv in rvs]
+        if any(ps.is_Continuous for ps in pspaces):
             from sympy.stats.crv import (ConditionalContinuousDomain,
                 ContinuousPSpace)
             space = ContinuousPSpace
             domain = ConditionalContinuousDomain(self.domain, condition)
-        elif any([pspace(rv).is_Discrete for rv in rvs]):
+        elif any(ps.is_Discrete for ps in pspaces):
             from sympy.stats.drv import (ConditionalDiscreteDomain,
                 DiscretePSpace)
             space = DiscretePSpace
             domain = ConditionalDiscreteDomain(self.domain, condition)
-        elif all([pspace(rv).is_Finite for rv in rvs]):
+        elif all(ps.is_Finite for ps in pspaces):
             from sympy.stats.frv import FinitePSpace
             return FinitePSpace.conditional_space(self, condition)
         if normalize:
@@ -707,7 +723,7 @@ def given(expr, condition=None, **kwargs):
         condition = Eq(condition, condition.symbol)
 
     condsymbols = random_symbols(condition)
-    if (isinstance(condition, Equality) and len(condsymbols) == 1 and
+    if (isinstance(condition, Eq) and len(condsymbols) == 1 and
         not isinstance(pspace(expr).domain, ConditionalDomain)):
         rv = tuple(condsymbols)[0]
 
@@ -823,16 +839,20 @@ def probability(condition, given_condition=None, numsamples=None,
     from sympy.stats.symbolic_probability import Probability
     if evaluate:
         return Probability(condition, given_condition).doit(**kwargs)
-    ### TODO: Remove the user warnings in the future releases
-    message = ("Since version 1.7, using `evaluate=False` returns `Probability` "
-              "object. If you want unevaluated Integral/Sum use "
-              "`P(condition, given_condition, evaluate=False).rewrite(Integral)`")
-    warnings.warn(filldedent(message))
     return Probability(condition, given_condition)
 
 
 class Density(Basic):
     expr = property(lambda self: self.args[0])
+
+    def __new__(cls, expr, condition = None):
+        expr = _sympify(expr)
+        if condition is None:
+            obj = Basic.__new__(cls, expr)
+        else:
+            condition = _sympify(condition)
+            obj = Basic.__new__(cls, expr, condition)
+        return obj
 
     @property
     def condition(self):
@@ -1029,7 +1049,7 @@ def where(condition, given_condition=None, **kwargs):
     >>> where(X**2<1).set
     Interval.open(-1, 1)
 
-    >>> where(And(D1<=D2 , D2<3))
+    >>> where(And(D1<=D2, D2<3))
     Domain: (Eq(a, 1) & Eq(b, 1)) | (Eq(a, 1) & Eq(b, 2)) | (Eq(a, 2) & Eq(b, 2))
     """
     if given_condition is not None:  # If there is a condition
@@ -1040,6 +1060,7 @@ def where(condition, given_condition=None, **kwargs):
     return pspace(condition).where(condition, **kwargs)
 
 
+@doctest_depends_on(modules=('scipy',))
 def sample(expr, condition=None, size=(), library='scipy',
            numsamples=1, seed=None, **kwargs):
     """
@@ -1062,7 +1083,15 @@ def sample(expr, condition=None, size=(), library='scipy',
         Choose any of the available options to sample from as string,
         by default is 'scipy'
     numsamples : int
-        Number of samples, each with size as ``size``
+        Number of samples, each with size as ``size``.
+
+        .. deprecated:: 1.9
+
+        The ``numsamples`` parameter is deprecated and is only provided for
+        compatibility with v1.8. Use a list comprehension or an additional
+        dimension in ``size`` instead. See
+        :ref:`deprecated-sympy-stats-numsamples` for details.
+
     seed :
         An object to be used as seed by the given external library for sampling `expr`.
         Following is the list of possible types of object for the supported libraries,
@@ -1076,56 +1105,81 @@ def sample(expr, condition=None, size=(), library='scipy',
         No modifications to environment's global seed settings
         are done by this argument.
 
+    Returns
+    =======
+
+    sample: float/list/numpy.ndarray
+        one sample or a collection of samples of the random expression.
+
+        - sample(X) returns float/numpy.float64/numpy.int64 object.
+        - sample(X, size=int/tuple) returns numpy.ndarray object.
+
     Examples
     ========
 
     >>> from sympy.stats import Die, sample, Normal, Geometric
     >>> X, Y, Z = Die('X', 6), Die('Y', 6), Die('Z', 6) # Finite Random Variable
-
-    >>> die_roll = sample(X + Y + Z) # doctest: +SKIP
-    >>> next(die_roll) # doctest: +SKIP
-    6
+    >>> die_roll = sample(X + Y + Z)
+    >>> die_roll # doctest: +SKIP
+    3
     >>> N = Normal('N', 3, 4) # Continuous Random Variable
-    >>> samp = next(sample(N)) # doctest: +SKIP
-    >>> samp in N.pspace.domain.set # doctest: +SKIP
+    >>> samp = sample(N)
+    >>> samp in N.pspace.domain.set
     True
-    >>> samp = next(sample(N, N>0)) # doctest: +SKIP
-    >>> samp > 0 # doctest: +SKIP
+    >>> samp = sample(N, N>0)
+    >>> samp > 0
     True
-    >>> samp_list = next(sample(N, size=4)) # doctest: +SKIP
-    >>> [sam in N.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    >>> samp_list = sample(N, size=4)
+    >>> [sam in N.pspace.domain.set for sam in samp_list]
     [True, True, True, True]
+    >>> sample(N, size = (2,3)) # doctest: +SKIP
+    array([[5.42519758, 6.40207856, 4.94991743],
+       [1.85819627, 6.83403519, 1.9412172 ]])
     >>> G = Geometric('G', 0.5) # Discrete Random Variable
-    >>> samp_list = next(sample(G, size=3)) # doctest: +SKIP
+    >>> samp_list = sample(G, size=3)
     >>> samp_list # doctest: +SKIP
-    array([10,  4,  1])
-    >>> [sam in G.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    [1, 3, 2]
+    >>> [sam in G.pspace.domain.set for sam in samp_list]
     [True, True, True]
     >>> MN = Normal("MN", [3, 4], [[2, 1], [1, 2]]) # Joint Random Variable
-    >>> samp_list = next(sample(MN, size=4)) # doctest: +SKIP
+    >>> samp_list = sample(MN, size=4)
     >>> samp_list # doctest: +SKIP
-    array([[4.22564264, 3.23364418],
-           [3.41002011, 4.60090908],
-           [3.76151866, 4.77617143],
-           [4.71440865, 2.65714157]])
-    >>> [tuple(sam) in MN.pspace.domain.set for sam in samp_list] # doctest: +SKIP
+    [array([2.85768055, 3.38954165]),
+     array([4.11163337, 4.3176591 ]),
+     array([0.79115232, 1.63232916]),
+     array([4.01747268, 3.96716083])]
+    >>> [tuple(sam) in MN.pspace.domain.set for sam in samp_list]
     [True, True, True, True]
 
+    .. versionchanged:: 1.7.0
+        sample used to return an iterator containing the samples instead of value.
 
-    Returns
-    =======
-
-    sample: iterator object
-        iterator object containing the sample/samples of given expr
+    .. versionchanged:: 1.9.0
+        sample returns values or array of values instead of an iterator and numsamples is deprecated.
 
     """
-    ### TODO: Remove the user warnings in the future releases
-    message = ("The return type of sample has been changed to return an "
-                  "iterator object since version 1.7. For more information see "
-                  "https://github.com/sympy/sympy/issues/19061")
-    warnings.warn(filldedent(message))
-    return sample_iter(expr, condition, size=size, library=library,
+
+    iterator = sample_iter(expr, condition, size=size, library=library,
                                                         numsamples=numsamples, seed=seed)
+
+    if numsamples != 1:
+        sympy_deprecation_warning(
+            f"""
+            The numsamples parameter to sympy.stats.sample() is deprecated.
+            Either use a list comprehension, like
+
+            [sample(...) for i in range({numsamples})]
+
+            or add a dimension to size, like
+
+            sample(..., size={(numsamples,) + size})
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-sympy-stats-numsamples",
+        )
+        return [next(iterator) for i in range(numsamples)]
+
+    return next(iterator)
 
 
 def quantile(expr, evaluate=True, **kwargs):
@@ -1265,19 +1319,16 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
     else:
         fn = lambdify(rvs, expr, modules=library, **kwargs)
 
+
     if condition is not None:
         given_fn = lambdify(rvs, condition, **kwargs)
 
     def return_generator_infinite():
         count = 0
-        np = import_module('numpy')
-        if np:
-            rand_state = np.random.default_rng(seed=seed)
-        else:
-            rand_state = None
+        _size = (1,)+((size,) if isinstance(size, int) else size)
         while count < numsamples:
-            d = ps.sample(size=size, library=library, seed=rand_state)  # a dictionary that maps RVs to values
-            args = [d[rv] for rv in rvs]
+            d = ps.sample(size=_size, library=library, seed=seed)  # a dictionary that maps RVs to values
+            args = [d[rv][0] for rv in rvs]
 
             if condition is not None:  # Check that these values satisfy the condition
                 # TODO: Replace the try-except block with only given_fn(*args)
@@ -1300,11 +1351,11 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         while faulty:
             d = ps.sample(size=(numsamples,) + ((size,) if isinstance(size, int) else size),
                           library=library, seed=seed) # a dictionary that maps RVs to values
+
             faulty = False
             count = 0
             while count < numsamples and not faulty:
                 args = [d[rv][count] for rv in rvs]
-
                 if condition is not None:  # Check that these values satisfy the condition
                     # TODO: Replace the try-except block with only given_fn(*args)
                     # once lambdify works with unevaluated SymPy objects.
@@ -1556,7 +1607,13 @@ class Distribution(Basic):
             # I will remove all these comments if everything is ok.
 
             from sympy.stats.sampling.sample_scipy import do_sample_scipy
-            samps = do_sample_scipy(self, size, seed)
+            import numpy
+            if seed is None or isinstance(seed, int):
+                rand_state = numpy.random.default_rng(seed=seed)
+            else:
+                rand_state = seed
+            samps = do_sample_scipy(self, size, rand_state)
+
         elif library == 'numpy':
             from sympy.stats.sampling.sample_numpy import do_sample_numpy
             import numpy
@@ -1564,15 +1621,21 @@ class Distribution(Basic):
                 rand_state = numpy.random.default_rng(seed=seed)
             else:
                 rand_state = seed
-            samps = do_sample_numpy(self, size, rand_state)
+            _size = None if size == () else size
+            samps = do_sample_numpy(self, _size, rand_state)
         elif library == 'pymc3':
             from sympy.stats.sampling.sample_pymc3 import do_sample_pymc3
+            import logging
+            logging.getLogger("pymc3").setLevel(logging.ERROR)
             import pymc3
             with pymc3.Model():
                 if do_sample_pymc3(self):
-                    samps = pymc3.sample(size, chains=1, progressbar=False, random_seed=seed)[:]['X']
+                    samps = pymc3.sample(draws=prod(size), chains=1, compute_convergence_checks=False,
+                            progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X']
+                    samps = samps.reshape(size)
                 else:
                     samps = None
+
         else:
             raise NotImplementedError("Sampling from %s is not supported yet."
                                       % str(library))
@@ -1599,7 +1662,7 @@ def _value_check(condition, message):
     >>> _value_check(2 < 3, '')
     True
 
-    Here, the condition is not False, but it doesn't evaluate to True
+    Here, the condition is not False, but it does not evaluate to True
     so False is returned (but no error is raised). So checking if the
     return value is True or False will tell you if all conditions were
     evaluated.
@@ -1634,8 +1697,6 @@ def _value_check(condition, message):
     >>> _value_check(And(a < 0, b < 0, c < 0), '')
     False
     """
-    from sympy.core.compatibility import iterable
-    from sympy.core.logic import fuzzy_and
     if not iterable(condition):
         condition = [condition]
     truth = fuzzy_and(condition)

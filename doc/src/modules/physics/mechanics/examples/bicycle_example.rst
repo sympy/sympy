@@ -158,9 +158,9 @@ constraint forces the front wheel contact point to not move away from the
 ground frame, essentially replicating the holonomic constraint which does not
 allow the frame pitch to change in an invalid fashion. ::
 
-  >>> conlist_speed = [WF_cont.vel(N) & Y.x,
-  ...                  WF_cont.vel(N) & Y.y,
-  ...                  WF_cont.vel(N) & Y.z]
+  >>> conlist_speed = [dot(WF_cont.vel(N), Y.x),
+  ...                  dot(WF_cont.vel(N), Y.y),
+  ...                  dot(WF_cont.vel(N), Y.z)]
 
 The holonomic constraint is that the position from the rear wheel contact point
 to the front wheel contact point when dotted into the normal-to-ground plane
@@ -168,7 +168,7 @@ direction must be zero; effectively that the front and rear wheel contact
 points are always touching the ground plane. This is actually not part of the
 dynamic equations, but instead is necessary for the linearization process. ::
 
-  >>> conlist_coord = [WF_cont.pos_from(WR_cont) & Y.z]
+  >>> conlist_coord = [dot(WF_cont.pos_from(WR_cont), Y.z)]
 
 The force list; each body has the appropriate gravitational force applied at
 its center of mass. ::

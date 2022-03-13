@@ -4,7 +4,8 @@ Module defining unit prefixe class and some constants.
 Constant dict for SI and binary prefixes are defined as PREFIXES and
 BIN_PREFIXES.
 """
-from sympy import Expr, sympify
+from sympy.core.expr import Expr
+from sympy.core.sympify import sympify
 
 
 class Prefix(Expr):
@@ -118,7 +119,7 @@ def prefix_unit(unit, prefixes):
     Return a list of all units formed by unit and the given prefixes.
 
     You can use the predefined PREFIXES or BIN_PREFIXES, but you can also
-    pass as argument a subdict of them if you don't want all prefixed units.
+    pass as argument a subdict of them if you do not want all prefixed units.
 
         >>> from sympy.physics.units.prefixes import (PREFIXES,
         ...                                                 prefix_unit)

@@ -142,6 +142,10 @@ In the ``solveset`` module, the non linear system of equations is solved using
    ``solve`` can be used for such cases:
 
    >>> solve([x**2 - y**2/exp(x)], [x, y], dict=True)
+   ⎡⎧         ____⎫  ⎧        ____⎫⎤
+   ⎢⎨        ╱  x ⎬  ⎨       ╱  x ⎬⎥
+   ⎣⎩y: -x⋅╲╱  ℯ  ⎭, ⎩y: x⋅╲╱  ℯ  ⎭⎦
+   >>> solve(x**2 - y**2/exp(x), x, dict=True)
    ⎡⎧      ⎛-y ⎞⎫  ⎧      ⎛y⎞⎫⎤
    ⎢⎨x: 2⋅W⎜───⎟⎬, ⎨x: 2⋅W⎜─⎟⎬⎥
    ⎣⎩      ⎝ 2 ⎠⎭  ⎩      ⎝2⎠⎭⎦

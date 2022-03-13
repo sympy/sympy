@@ -1,7 +1,15 @@
-from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
-    sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
-    PoleError, floor, ceiling, asin, symbols, limit, sign, cbrt,
-    Derivative, S)
+from sympy.core.function import (Derivative, PoleError)
+from sympy.core.numbers import (E, I, Integer, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, asinh, atanh, cosh, coth, sinh, tanh)
+from sympy.functions.elementary.integers import (ceiling, floor)
+from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
+from sympy.functions.elementary.trigonometric import (asin, cos, cot, sin, tan)
+from sympy.series.limits import limit
+from sympy.series.order import O
 from sympy.abc import x, y, z
 
 from sympy.testing.pytest import raises, XFAIL
@@ -16,13 +24,13 @@ def test_simple_1():
 
 
 def test_mul_0():
-    assert (x*ln(x)).nseries(x, n=5) == x*ln(x)
+    assert (x*log(x)).nseries(x, n=5) == x*log(x)
 
 
 def test_mul_1():
-    assert (x*ln(2 + x)).nseries(x, n=5) == x*log(2) + x**2/2 - x**3/8 + \
+    assert (x*log(2 + x)).nseries(x, n=5) == x*log(2) + x**2/2 - x**3/8 + \
         x**4/24 + O(x**5)
-    assert (x*ln(1 + x)).nseries(
+    assert (x*log(1 + x)).nseries(
         x, n=5) == x**2 - x**3/2 + x**4/3 + O(x**5)
 
 
@@ -72,7 +80,7 @@ def test_exp_sqrt_1():
 
 
 def test_power_x_x1():
-    assert (exp(x*ln(x))).nseries(x, n=4) == \
+    assert (exp(x*log(x))).nseries(x, n=4) == \
         1 + x*log(x) + x**2*log(x)**2/2 + x**3*log(x)**3/6 + O(x**4*log(x)**4)
 
 
@@ -277,7 +285,6 @@ def test_issue_3224():
 
 
 def test_issue_3463():
-    from sympy import symbols
     w, i = symbols('w,i')
     r = log(5)/log(3)
     p = w**(-1 + r)
@@ -310,10 +317,10 @@ def test_issue_3501():
     a = Symbol("a")
     e = x**(-2)*(x*sin(a + x) - x*sin(a))
     assert e.nseries(x, n=6) == cos(a) - sin(a)*x/2 - cos(a)*x**2/6 + \
-        sin(a)*x**3/24 + O(x**4)
+        x**3*sin(a)/24 + x**4*cos(a)/120 - x**5*sin(a)/720 + O(x**6)
     e = x**(-2)*(x*cos(a + x) - x*cos(a))
     assert e.nseries(x, n=6) == -sin(a) - cos(a)*x/2 + sin(a)*x**2/6 + \
-        cos(a)*x**3/24 + O(x**4)
+        cos(a)*x**3/24 - x**4*sin(a)/120 - x**5*cos(a)/720 + O(x**6)
 
 
 def test_issue_3502():
@@ -382,7 +389,7 @@ def test_series3():
 def test_bug4():
     w = Symbol("w")
     e = x/(w**4 + x**2*w**4 + 2*x*w**4)*w**4
-    assert e.nseries(w, n=2).removeO() in [x/(1 + 2*x + x**2),
+    assert e.nseries(w, n=2).removeO().expand() in [x/(1 + 2*x + x**2),
         1/(1 + x/2 + 1/x/2)/2, 1/x/(1 + 2/x + x**(-2))]
 
 
@@ -392,8 +399,8 @@ def test_bug5():
     e = (-log(w) + log(1 + w*log(x)))**(-2)*w**(-2)*((-log(w) +
         log(1 + x*w))*(-log(w) + log(1 + w*log(x)))*w - x*(-log(w) +
         log(1 + w*log(x)))*w)
-    assert e.nseries(w, n=2, logx=l) == x/w/l + 1/w + O(1, w)
-    assert e.nseries(w, n=3, logx=l) == x/w/l + 1/w - x/l + 1/l*log(x) \
+    assert e.nseries(w, n=0, logx=l) == x/w/l + 1/w + O(1, w)
+    assert e.nseries(w, n=1, logx=l) == x/w/l + 1/w - x/l + 1/l*log(x) \
         + x*log(x)/l**2 + O(w)
 
 
@@ -481,8 +488,8 @@ def test_issue_4441():
     assert f.series(x, 0, 5) == 1 - a*x + a**2*x**2 - a**3*x**3 + \
         a**4*x**4 + O(x**5)
     f = 1/(1 + (a + b)*x)
-    assert f.series(x, 0, 3) == 1 + x*(-a - b) + \
-        x**2*(a + b)**2 + O(x**3)
+    assert f.series(x, 0, 3) == 1 + x*(-a - b)\
+        + x**2*(a + b)**2 + O(x**3)
 
 
 def test_issue_4329():

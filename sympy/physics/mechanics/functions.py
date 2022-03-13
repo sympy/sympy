@@ -6,7 +6,7 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import simplify
+from sympy.simplify.simplify import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
                                 tan, AppliedUndef, S)
 
@@ -51,7 +51,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     Explanation
     ===========
 
-    If you don't know what a Dyadic is, just treat this like the inertia
+    If you do not know what a Dyadic is, just treat this like the inertia
     tensor. Then, do the easy thing and define it in a body-fixed frame.
 
     Parameters
@@ -519,7 +519,7 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     Parameters
     ==========
 
-    expression : sympy expression
+    expression : SymPy expression
 
     exclude : iterable of dynamicsymbols, optional
 

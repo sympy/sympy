@@ -1,12 +1,12 @@
 """Implementation of RootOf class and related tools. """
 
 
-from sympy import Basic
+from sympy.core.basic import Basic
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered
 from sympy.core.relational import is_le
+from sympy.core.sorting import ordered
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -167,7 +167,12 @@ class ComplexRootOf(RootOf):
     """Represents an indexed complex root of a polynomial.
 
     Roots of a univariate polynomial separated into disjoint
-    real or complex intervals and indexed in a fixed order.
+    real or complex intervals and indexed in a fixed order:
+
+    * real roots come first and are sorted in increasing order;
+    * complex roots come next and are sorted primarily by increasing
+      real part, secondarily by increasing imaginary part.
+
     Currently only rational coefficients are allowed.
     Can be imported as ``CRootOf``. To avoid confusion, the
     generator must be a Symbol.
@@ -327,7 +332,7 @@ class ComplexRootOf(RootOf):
         degree = poly.degree()
 
         if degree <= 0:
-            raise PolynomialError("can't construct CRootOf object for %s" % f)
+            raise PolynomialError("Cannot construct CRootOf object for %s" % f)
 
         if index < -degree or index >= degree:
             raise IndexError("root index out of [%d, %d] range, got %d" %

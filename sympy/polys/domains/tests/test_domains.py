@@ -1,18 +1,25 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import I, S, sqrt, sin, oo, Poly, Float, Integer, Rational, pi
+from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi, _illegal)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.polys.polytools import Poly
 from sympy.abc import x, y, z
 
-from sympy.core.compatibility import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY
 
-from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, ZZ_gmpy,
+from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
 from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.realfield import RealField
 
+from sympy.polys.numberfields.subfield import field_isomorphism
 from sympy.polys.rings import ring
+from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.fields import field
 
 from sympy.polys.agca.extensions import FiniteExtension
@@ -23,9 +30,10 @@ from sympy.polys.polyerrors import (
     CoercionFailed,
     NotInvertible,
     DomainError)
-from sympy.polys.polyutils import illegal
 
 from sympy.testing.pytest import raises
+
+from itertools import product
 
 ALG = QQ.algebraic_field(sqrt(2), sqrt(3))
 
@@ -481,6 +489,14 @@ def test_Domain__contains__():
     assert (Rational(3, 2)*x/(y + 1) - z in QQ[x, y, z]) is False
 
 
+def test_issue_14433():
+    assert (Rational(2, 3)*x in QQ.frac_field(1/x)) is True
+    assert (1/x in QQ.frac_field(x)) is True
+    assert ((x**2 + y**2) in QQ.frac_field(1/x, 1/y)) is True
+    assert ((x + y) in QQ.frac_field(1/x, y)) is True
+    assert ((x - y) in QQ.frac_field(x, 1/y)) is True
+
+
 def test_Domain_get_ring():
     assert ZZ.has_assoc_Ring is True
     assert QQ.has_assoc_Ring is True
@@ -576,14 +592,20 @@ def test_Domain_convert():
 
     def check_domains(K1, K2):
         K3 = K1.unify(K2)
-        check_element(K3.convert_from(K1.one,  K1), K3.one , K1, K2, K3)
-        check_element(K3.convert_from(K2.one,  K2), K3.one , K1, K2, K3)
+        check_element(K3.convert_from( K1.one, K1),  K3.one, K1, K2, K3)
+        check_element(K3.convert_from( K2.one, K2),  K3.one, K1, K2, K3)
         check_element(K3.convert_from(K1.zero, K1), K3.zero, K1, K2, K3)
         check_element(K3.convert_from(K2.zero, K2), K3.zero, K1, K2, K3)
 
     def composite_domains(K):
-        return [K, K[y], K[z], K[y, z],
-                   K.frac_field(y), K.frac_field(z), K.frac_field(y, z)]
+        domains = [
+            K,
+            K[y], K[z], K[y, z],
+            K.frac_field(y), K.frac_field(z), K.frac_field(y, z),
+            # XXX: These should be tested and made to work...
+            # K.old_poly_ring(y), K.old_frac_field(y),
+        ]
+        return domains
 
     QQ2 = QQ.algebraic_field(sqrt(2))
     QQ3 = QQ.algebraic_field(sqrt(3))
@@ -597,12 +619,22 @@ def test_Domain_convert():
 
     assert QQ.convert(10e-52) == QQ(1684996666696915, 1684996666696914987166688442938726917102321526408785780068975640576)
 
-    R, x = ring("x", ZZ)
-    assert ZZ.convert(x - x) == 0
-    assert ZZ.convert(x - x, R.to_domain()) == 0
+    R, xr = ring("x", ZZ)
+    assert ZZ.convert(xr - xr) == 0
+    assert ZZ.convert(xr - xr, R.to_domain()) == 0
 
     assert CC.convert(ZZ_I(1, 2)) == CC(1, 2)
     assert CC.convert(QQ_I(1, 2)) == CC(1, 2)
+
+    K1 = QQ.frac_field(x)
+    K2 = ZZ.frac_field(x)
+    K3 = QQ[x]
+    K4 = ZZ[x]
+    Ks = [K1, K2, K3, K4]
+    for Ka, Kb in product(Ks, Ks):
+        assert Ka.convert_from(Kb.from_sympy(x), Kb) == Ka.from_sympy(x)
+
+    assert K2.convert_from(QQ(1, 2), QQ) == K2(QQ(1, 2))
 
 
 def test_GlobalPolynomialRing_convert():
@@ -702,6 +734,38 @@ def test_Domain__algebraic_field():
     assert alg.dom == QQ
 
 
+def test_Domain_alg_field_from_poly():
+    f = Poly(x**2 - 2)
+    g = Poly(x**2 - 3)
+    h = Poly(x**4 - 10*x**2 + 1)
+
+    alg = ZZ.alg_field_from_poly(f)
+    assert alg.ext.minpoly == f
+    assert alg.dom == QQ
+
+    alg = QQ.alg_field_from_poly(f)
+    assert alg.ext.minpoly == f
+    assert alg.dom == QQ
+
+    alg = alg.alg_field_from_poly(g)
+    assert alg.ext.minpoly == h
+    assert alg.dom == QQ
+
+
+def test_Domain_cyclotomic_field():
+    K = ZZ.cyclotomic_field(12)
+    assert K.ext.minpoly == Poly(cyclotomic_poly(12))
+    assert K.dom == QQ
+
+    F = QQ.cyclotomic_field(3)
+    assert F.ext.minpoly == Poly(cyclotomic_poly(3))
+    assert F.dom == QQ
+
+    E = F.cyclotomic_field(4)
+    assert field_isomorphism(E.ext, K.ext) is not None
+    assert E.dom == QQ
+
+
 def test_PolynomialRing_from_FractionField():
     F, x,y = field("x,y", ZZ)
     R, X,Y = ring("x,y", ZZ)
@@ -755,8 +819,8 @@ def test_RealField_from_sympy():
 
 
 def test_not_in_any_domain():
-    check = illegal + [x] + [
-        float(i) for i in illegal if i != S.ComplexInfinity]
+    check = list(_illegal) + [x] + [
+        float(i) for i in _illegal[:3]]
     for dom in (ZZ, QQ, RR, CC, EX):
         for i in check:
             if i == x and dom == EX:
@@ -959,11 +1023,11 @@ def test_CC_double():
 
 def test_gaussian_domains():
     I = S.ImaginaryUnit
-    a, b, c, d = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I, 5 - 5)]
-    ZZ_I.gcd(a, b) == b
-    ZZ_I.gcd(a, c) == b
-    ZZ_I.lcm(a, b) == a
-    ZZ_I.lcm(a, c) == d
+    a, b, c, d = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I, 5 - 5*I)]
+    assert ZZ_I.gcd(a, b) == b
+    assert ZZ_I.gcd(a, c) == b
+    assert ZZ_I.lcm(a, b) == a
+    assert ZZ_I.lcm(a, c) == d
     assert ZZ_I(3, 4) != QQ_I(3, 4)  # XXX is this right or should QQ->ZZ if possible?
     assert ZZ_I(3, 0) != 3           # and should this go to Integer?
     assert QQ_I(S(3)/4, 0) != S(3)/4 # and this to Rational?
@@ -1081,6 +1145,31 @@ def test_gaussian_domains():
             assert G.denom(q2) == ZZ_I(6)
 
 
+def test_EX_EXRAW():
+    assert EXRAW.zero is S.Zero
+    assert EXRAW.one is S.One
+
+    assert EX(1) == EX.Expression(1)
+    assert EX(1).ex is S.One
+    assert EXRAW(1) is S.One
+
+    # EX has cancelling but EXRAW does not
+    assert 2*EX((x + y*x)/x) == EX(2 + 2*y) != 2*((x + y*x)/x)
+    assert 2*EXRAW((x + y*x)/x) == 2*((x + y*x)/x) != (1 + y)
+
+    assert EXRAW.convert_from(EX(1), EX) is EXRAW.one
+    assert EX.convert_from(EXRAW(1), EXRAW) == EX.one
+
+    assert EXRAW.from_sympy(S.One) is S.One
+    assert EXRAW.to_sympy(EXRAW.one) is S.One
+    raises(CoercionFailed, lambda: EXRAW.from_sympy([]))
+
+    assert EXRAW.get_field() == EXRAW
+
+    assert EXRAW.unify(EX) == EXRAW
+    assert EX.unify(EXRAW) == EXRAW
+
+
 def test_canonical_unit():
 
     for K in [ZZ, QQ, RR]: # CC?
@@ -1138,3 +1227,10 @@ def test_Domain_is_nonpositive():
     a, b = [CC.convert(x) for x in (2 + I, 5)]
     assert CC.is_nonpositive(a) == False
     assert CC.is_nonpositive(b) == False
+
+
+def test_exponential_domain():
+    K = ZZ[E]
+    eK = K.from_sympy(E)
+    assert K.from_sympy(exp(3)) == eK ** 3
+    assert K.convert(exp(3)) == eK ** 3

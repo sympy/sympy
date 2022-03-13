@@ -59,18 +59,18 @@ except ImportError:
     extra_kwargs['scripts'] = ['bin/isympy']
 
     # handle mpmath deps in the hard way:
-    from distutils.version import LooseVersion
+    from sympy.external.importtools import version_tuple
     try:
         import mpmath
-        if mpmath.__version__ < LooseVersion(min_mpmath_version):
+        if version_tuple(mpmath.__version__) < version_tuple(min_mpmath_version):
             raise ImportError
     except ImportError:
         print("Please install the mpmath package with a version >= %s"
               % min_mpmath_version)
         sys.exit(-1)
 
-if sys.version_info < (3, 6):
-    print("SymPy requires Python 3.6 or newer. Python %d.%d detected"
+if sys.version_info < (3, 7):
+    print("SymPy requires Python 3.7 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
 
@@ -144,6 +144,7 @@ modules = [
     'sympy.polys.benchmarks',
     'sympy.polys.domains',
     'sympy.polys.matrices',
+    'sympy.polys.numberfields',
     'sympy.printing',
     'sympy.printing.pretty',
     'sympy.sandbox',
@@ -187,7 +188,6 @@ class audit(Command):
         pass
 
     def run(self):
-        import os
         try:
             import pyflakes.scripts.pyflakes as flakes
         except ImportError:
@@ -260,7 +260,7 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        from sympy.utilities import runtests
+        from sympy.testing import runtests
         runtests.run_all_tests()
 
 
@@ -391,6 +391,7 @@ tests = [
     'sympy.polys.agca.tests',
     'sympy.polys.domains.tests',
     'sympy.polys.matrices.tests',
+    'sympy.polys.numberfields.tests',
     'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
@@ -430,6 +431,9 @@ if __name__ == '__main__':
           license='BSD',
           keywords="Math CAS",
           url='https://sympy.org',
+          project_urls={
+              'Source': 'https://github.com/sympy/sympy',
+          },
           py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],
@@ -445,6 +449,7 @@ if __name__ == '__main__':
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.integrals.rubi.parsetools': ['header.py.txt'],
               'sympy.plotting.tests': ['test_region_*.png'],
+              'sympy': ['py.typed']
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
@@ -454,7 +459,7 @@ if __name__ == '__main__':
                     'antlr': antlr,
                     'sdist': sdist_sympy,
                     },
-          python_requires='>=3.6',
+          python_requires='>=3.7',
           classifiers=[
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',
@@ -463,9 +468,10 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Mathematics',
             'Topic :: Scientific/Engineering :: Physics',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
+            'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3 :: Only',
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',

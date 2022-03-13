@@ -1,14 +1,24 @@
 from itertools import product
 
-from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
-                   bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
-                   expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
-                   I, O, oo, conjugate, uppergamma, exp, Integral, Sum,
-                   Rational, log, polar_lift, exp_polar)
-from sympy.functions.special.bessel import fn
+from sympy.concrete.summations import Sum
+from sympy.core.function import (diff, expand_func)
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (conjugate, polar_lift)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely, hankel1, hankel2, hn1, hn2, jn, jn_zeros, yn)
+from sympy.functions.special.gamma_functions import (gamma, uppergamma)
+from sympy.functions.special.hyper import hyper
+from sympy.integrals.integrals import Integral
+from sympy.series.order import O
+from sympy.series.series import series
 from sympy.functions.special.bessel import (airyai, airybi,
                                             airyaiprime, airybiprime, marcumq)
-from sympy.testing.randtest import (random_complex_number as randcplx,
+from sympy.core.random import (random_complex_number as randcplx,
                                       verify_numerically as tn,
                                       test_derivative_numerically as td,
                                       _randint)
@@ -32,6 +42,21 @@ def test_bessel_twoinputs():
     for f in [besselj, bessely, besseli, besselk, hankel1, hankel2, jn, yn]:
         raises(TypeError, lambda: f(1))
         raises(TypeError, lambda: f(1, 2, 3))
+
+
+def test_besselj_leading_term():
+    assert besselj(0, x).as_leading_term(x) == 1
+    assert besselj(1, sin(x)).as_leading_term(x) == x/2
+    assert besselj(1, 2*sqrt(x)).as_leading_term(x) == sqrt(x)
+
+    # https://github.com/sympy/sympy/issues/21701
+    assert (besselj(z, x)/x**z).as_leading_term(x) == 1/(2**z*gamma(z + 1))
+
+
+def test_bessely_leading_term():
+    assert bessely(0, x).as_leading_term(x) == (2*log(x) - 2*log(2))/pi
+    assert bessely(1, sin(x)).as_leading_term(x) == (x*log(x) - x*log(2))/pi
+    assert bessely(1, 2*sqrt(x)).as_leading_term(x) == sqrt(x)*log(x)/pi
 
 
 def test_besselj_series():
@@ -218,7 +243,12 @@ def test_expand():
     for besselx in [bessely, besselk]:
         assert besselx(i, r).is_extended_real is None
 
+    for besselx in [besselj, bessely, besseli, besselk]:
+        assert expand_func(besselx(oo, x)) == besselx(oo, x, evaluate=False)
+        assert expand_func(besselx(-oo, x)) == besselx(-oo, x, evaluate=False)
 
+
+# Quite varying time, but often really slow
 @slow
 def test_slow_expand():
     def check(eq, ans):
@@ -249,14 +279,6 @@ def test_slow_expand():
                  -bessely(rn - 2, x) + 2*(rn - 1)*bessely(rn - 1, x)/x)
     assert check(expand_func(bessely(-rn, x)),
                  -bessely(-rn + 2, x) + 2*(-rn + 1)*bessely(-rn + 1, x)/x)
-
-
-def test_fn():
-    x, z = symbols("x z")
-    assert fn(1, z) == 1/z**2
-    assert fn(2, z) == -1/z + 3/z**3
-    assert fn(3, z) == -6/z**2 + 15/z**4
-    assert fn(4, z) == 1/z - 45/z**3 + 105/z**5
 
 
 def mjn(n, z):
@@ -419,7 +441,7 @@ def test_conjugate():
     n = Symbol('n')
     z = Symbol('z', extended_real=False)
     x = Symbol('x', extended_real=True)
-    y = Symbol('y', real=True, positive=True)
+    y = Symbol('y', positive=True)
     t = Symbol('t', negative=True)
 
     for f in [besseli, besselj, besselk, bessely, hankel1, hankel2]:
@@ -463,7 +485,7 @@ def test_branching():
     assert besseli(n, polar_lift(x)) == besseli(n, x)
 
     def tn(func, s):
-        from random import uniform
+        from sympy.core.random import uniform
         c = uniform(1, 5)
         expr = func(s, c*exp_polar(I*pi)) - func(s, c*exp_polar(-I*pi))
         eps = 1e-15

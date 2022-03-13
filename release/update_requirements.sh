@@ -31,8 +31,8 @@ pip install -U pip wheel
 
 pip install\
   mpmath\
-  'matplotlib>=2.2'\
-  'numpy==1.18.5'\
+  matplotlib\
+  numpy\
   scipy\
   aesara\
   ipython\
@@ -41,11 +41,13 @@ pip install\
   cython\
   llvmlite\
   wurlitzer\
-  autowrap\
   numexpr\
   'antlr4-python3-runtime==4.7.*'\
   sphinx\
   sphinx-math-dollar\
+  sphinx-reredirects\
+  myst-parser\
+  linkify-it-py\
   #
 
 pip freeze > requirements.txt

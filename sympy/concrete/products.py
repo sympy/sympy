@@ -1,12 +1,17 @@
+from typing import Tuple as tTuple
+
+from .expr_with_intlimits import ExprWithIntLimits
+from .summations import Sum, summation, _dummy_with_inherited_properties_concrete
+from sympy.core.expr import Expr
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import Derivative
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
-from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.core.exprtools import factor_terms
-from sympy.functions.elementary.exponential import exp, log
-from sympy.polys import quo, roots
-from sympy.simplify import powsimp
-from sympy.core.function import Derivative
 from sympy.core.symbol import Dummy, Symbol
+from sympy.functions.combinatorial.factorials import RisingFactorial
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.polys import quo, roots
 
 
 class Product(ExprWithIntLimits):
@@ -186,12 +191,13 @@ class Product(ExprWithIntLimits):
 
     __slots__ = ('is_commutative',)
 
+    limits: tTuple[tTuple[Symbol, Expr, Expr]]
+
     def __new__(cls, function, *symbols, **assumptions):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
 
     def _eval_rewrite_as_Sum(self, *args, **kwargs):
-        from sympy.concrete.summations import Sum
         return exp(Sum(log(self.function), *self.limits))
 
     @property
@@ -247,20 +253,19 @@ class Product(ExprWithIntLimits):
         # variables with matching assumptions
         reps = {}
         for xab in self.limits:
-            # Must be imported here to avoid circular imports
-            from .summations import _dummy_with_inherited_properties_concrete
             d = _dummy_with_inherited_properties_concrete(xab)
             if d:
                 reps[xab[0]] = d
         if reps:
             undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
-            if type(did) is tuple:  # when separate=True
+            if isinstance(did, tuple):  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
             else:
                 did = did.xreplace(undo)
             return did
 
+        from sympy.simplify.powsimp import powsimp
         f = self.function
         for index, limit in enumerate(self.limits):
             i, a, b = limit
@@ -289,9 +294,6 @@ class Product(ExprWithIntLimits):
         return self.func(self.function.conjugate(), *self.limits)
 
     def _eval_product(self, term, limits):
-        from sympy.concrete.delta import deltaproduct, _has_simple_delta
-        from sympy.concrete.summations import summation
-        from sympy.functions import KroneckerDelta, RisingFactorial
 
         (k, a, n) = limits
 
@@ -303,6 +305,7 @@ class Product(ExprWithIntLimits):
         if a == n:
             return term.subs(k, a)
 
+        from .delta import deltaproduct, _has_simple_delta
         if term.has(KroneckerDelta) and _has_simple_delta(term, limits[0]):
             return deltaproduct(term, limits)
 
@@ -402,7 +405,6 @@ class Product(ExprWithIntLimits):
         return Mul(*[term.subs(k, a + i) for i in range(n - a + 1)])
 
     def _eval_derivative(self, x):
-        from sympy.concrete.summations import Sum
         if isinstance(x, Symbol) and x not in self.free_symbols:
             return S.Zero
         f, limits = self.function, list(self.limits)
@@ -464,8 +466,6 @@ class Product(ExprWithIntLimits):
 
         .. [1] https://en.wikipedia.org/wiki/Infinite_product
         """
-        from sympy.concrete.summations import Sum
-
         sequence_term = self.function
         log_sum = log(sequence_term)
         lim = self.limits

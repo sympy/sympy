@@ -2,10 +2,14 @@
 Physical quantities.
 """
 
-from sympy import AtomicExpr, Symbol, sympify
+from sympy.core.expr import AtomicExpr
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.physics.units.dimensions import _QuantityMapper
 from sympy.physics.units.prefixes import Prefix
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import (sympy_deprecation_warning,
+                                        SymPyDeprecationWarning,
+                                        ignore_warnings)
 
 
 class Quantity(AtomicExpr):
@@ -28,26 +32,31 @@ class Quantity(AtomicExpr):
             name = Symbol(name)
 
         # For Quantity(name, dim, scale, abbrev) to work like in the
-        # old version of Sympy:
+        # old version of SymPy:
         if not isinstance(abbrev, str) and not \
                    isinstance(abbrev, Symbol):
             dimension, scale_factor, abbrev = abbrev, dimension, scale_factor
 
         if dimension is not None:
-            SymPyDeprecationWarning(
+            sympy_deprecation_warning(
+                """
+                The 'dimension' argument to to Quantity() is deprecated.
+                Instead use the unit_system.set_quantity_dimension() method.
+                """,
                 deprecated_since_version="1.3",
-                issue=14319,
-                feature="Quantity arguments",
-                useinstead="unit_system.set_quantity_dimension_map",
-            ).warn()
+                active_deprecations_target="deprecated-quantity-dimension-scale-factor"
+            )
 
         if scale_factor is not None:
-            SymPyDeprecationWarning(
+            sympy_deprecation_warning(
+                """
+                The 'scale_factor' argument to to Quantity() is deprecated.
+                Instead use the unit_system.set_quantity_scale_factors()
+                method.
+                """,
                 deprecated_since_version="1.3",
-                issue=14319,
-                feature="Quantity arguments",
-                useinstead="SI_quantity_scale_factors",
-            ).warn()
+                active_deprecations_target="deprecated-quantity-dimension-scale-factor"
+            )
 
         if abbrev is None:
             abbrev = name
@@ -64,31 +73,39 @@ class Quantity(AtomicExpr):
 
         if dimension is not None:
             # TODO: remove after deprecation:
-            obj.set_dimension(dimension)
+            with ignore_warnings(SymPyDeprecationWarning):
+                obj.set_dimension(dimension)
 
         if scale_factor is not None:
             # TODO: remove after deprecation:
-            obj.set_scale_factor(scale_factor)
+            with ignore_warnings(SymPyDeprecationWarning):
+                obj.set_scale_factor(scale_factor)
         return obj
 
     def set_dimension(self, dimension, unit_system="SI"):
-        SymPyDeprecationWarning(
+        sympy_deprecation_warning(
+            f"""
+            Quantity.set_dimension() is deprecated. Use either
+            unit_system.set_quantity_dimension() or
+            {self}.set_global_dimension() instead.
+            """,
             deprecated_since_version="1.5",
-            issue=17765,
-            feature="Moving method to UnitSystem class",
-            useinstead="unit_system.set_quantity_dimension or {}.set_global_relative_scale_factor".format(self),
-        ).warn()
+            active_deprecations_target="deprecated-quantity-methods",
+        )
         from sympy.physics.units import UnitSystem
         unit_system = UnitSystem.get_unit_system(unit_system)
         unit_system.set_quantity_dimension(self, dimension)
 
     def set_scale_factor(self, scale_factor, unit_system="SI"):
-        SymPyDeprecationWarning(
+        sympy_deprecation_warning(
+            f"""
+            Quantity.set_scale_factor() is deprecated. Use either
+            unit_system.set_quantity_scale_factors() or
+            {self}.set_global_relative_scale_factor() instead.
+            """,
             deprecated_since_version="1.5",
-            issue=17765,
-            feature="Moving method to UnitSystem class",
-            useinstead="unit_system.set_quantity_scale_factor or {}.set_global_relative_scale_factor".format(self),
-        ).warn()
+            active_deprecations_target="deprecated-quantity-methods",
+        )
         from sympy.physics.units import UnitSystem
         unit_system = UnitSystem.get_unit_system(unit_system)
         unit_system.set_quantity_scale_factor(self, scale_factor)
@@ -154,13 +171,16 @@ class Quantity(AtomicExpr):
 
     @staticmethod
     def get_dimensional_expr(expr, unit_system="SI"):
-        SymPyDeprecationWarning(
+        sympy_deprecation_warning(
+            """
+            Quantity.get_dimensional_expr() is deprecated. It is now
+            associated with UnitSystem objects. The dimensional relations
+            depend on the unit system used. Use
+            unit_system.get_dimensional_expr() instead.
+            """,
             deprecated_since_version="1.5",
-            issue=17765,
-            feature="get_dimensional_expr() is now associated with UnitSystem objects. " \
-                "The dimensional relations depend on the unit system used.",
-            useinstead="unit_system.get_dimensional_expr"
-        ).warn()
+            active_deprecations_target="deprecated-quantity-methods",
+        )
         from sympy.physics.units import UnitSystem
         unit_system = UnitSystem.get_unit_system(unit_system)
         return unit_system.get_dimensional_expr(expr)
@@ -168,12 +188,15 @@ class Quantity(AtomicExpr):
     @staticmethod
     def _collect_factor_and_dimension(expr, unit_system="SI"):
         """Return tuple with scale factor expression and dimension expression."""
-        SymPyDeprecationWarning(
+        sympy_deprecation_warning(
+            """
+            Quantity._collect_factor_and_dimension() is deprecated. This
+            method has been moved to the UnitSystem class. Use
+            unit_system._collect_factor_and_dimension(expr) instead.
+            """,
             deprecated_since_version="1.5",
-            issue=17765,
-            feature="This method has been moved to the UnitSystem class.",
-            useinstead="unit_system._collect_factor_and_dimension",
-        ).warn()
+            active_deprecations_target="deprecated-quantity-methods",
+        )
         from sympy.physics.units import UnitSystem
         unit_system = UnitSystem.get_unit_system(unit_system)
         return unit_system._collect_factor_and_dimension(expr)

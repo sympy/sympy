@@ -1,10 +1,11 @@
 """Low-level linear systems solver. """
 
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import connected_components
 
 from sympy.core.sympify import sympify
+from sympy.core.numbers import Integer, Rational
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys.domains import ZZ, QQ
 
@@ -21,21 +22,26 @@ class PolyNonlinearError(Exception):
 
 class RawMatrix(MutableDenseMatrix):
     """
-    XXX: This class is broken by design. Use DomainMatrix if you want a matrix
-    over the polys domains or Matrix for a matrix with Expr elements. The
-    RawMatrix class will be removed/broken in future in order to reestablish
-    the invariant that the elements of a Matrix should be of type Expr.
+    .. deprecated:: 1.9
+
+       This class fundamentally is broken by design. Use ``DomainMatrix`` if
+       you want a matrix over the polys domains or ``Matrix`` for a matrix
+       with ``Expr`` elements. The ``RawMatrix`` class will be removed/broken
+       in future in order to reestablish the invariant that the elements of a
+       Matrix should be of type ``Expr``.
+
     """
     _sympify = staticmethod(lambda x: x)
 
     def __init__(self, *args, **kwargs):
-
-        SymPyDeprecationWarning(
-            feature="RawMatrix class",
-            useinstead="DomainMatrix or Matrix",
-            issue=21405,
-            deprecated_since_version="1.9"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            The RawMatrix class is deprecated. Use either DomainMatrix or
+            Matrix instead.
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-rawmatrix",
+        )
 
         domain = ZZ
         for i in range(self.rows):
@@ -47,9 +53,12 @@ class RawMatrix(MutableDenseMatrix):
                 elif hasattr(val, 'parent'):
                     K = val.parent()
                     val_sympy = K.to_sympy(val)
-                elif isinstance(val, int):
+                elif isinstance(val, (int, Integer)):
                     K = ZZ
                     val_sympy = sympify(val)
+                elif isinstance(val, Rational):
+                    K = QQ
+                    val_sympy = val
                 else:
                     for K in ZZ, QQ:
                         if K.of_type(val):

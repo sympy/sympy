@@ -1,19 +1,26 @@
 from functools import wraps
 
-from sympy import Add, S, pi, I, Rational, Wild, cacheit, sympify
+from sympy.core import S
+from sympy.core.add import Add
+from sympy.core.cache import cacheit
+from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
+from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
+from sympy.core.symbol import Dummy, Wild
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.miscellaneous import sqrt, root
-from sympy.functions.elementary.complexes import re, im
-from sympy.functions.special.gamma_functions import gamma, digamma
+from sympy.functions.elementary.miscellaneous import cbrt, sqrt, root
+from sympy.functions.elementary.complexes import (Abs, re, im, polar_lift, unpolarify)
+from sympy.functions.special.gamma_functions import gamma, digamma, uppergamma
 from sympy.functions.special.hyper import hyper
-from sympy.polys.orthopolys import spherical_bessel_fn as fn
+from sympy.polys.orthopolys import spherical_bessel_fn
+
+from mpmath import mp, workprec
 
 # TODO
 # o Scorer functions G1 and G2
@@ -82,11 +89,11 @@ class BesselBase(Function):
 
     def _eval_expand_func(self, **hints):
         nu, z, f = self.order, self.argument, self.__class__
-        if nu.is_extended_real:
-            if (nu - 1).is_extended_positive:
+        if nu.is_real:
+            if (nu - 1).is_positive:
                 return (-self._a*self._b*f(nu - 2, z)._eval_expand_func() +
                         2*self._a*(nu - 1)*f(nu - 1, z)._eval_expand_func()/z)
-            elif (nu + 1).is_extended_negative:
+            elif (nu + 1).is_negative:
                 return (2*self._b*(nu + 1)*f(nu + 1, z)._eval_expand_func()/z -
                         self._a*self._b*f(nu + 2, z)._eval_expand_func())
         return self
@@ -179,7 +186,7 @@ class besselj(BesselBase):
                 return S.ComplexInfinity
             elif nu.is_imaginary:
                 return S.NaN
-        if z is S.Infinity or (z is S.NegativeInfinity):
+        if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if z.could_extract_minus_sign():
@@ -192,7 +199,6 @@ class besselj(BesselBase):
                 return I**(nu)*besseli(nu, newz)
 
         # branch handling:
-        from sympy import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -206,7 +212,6 @@ class besselj(BesselBase):
             return besselj(nnu, z)
 
     def _eval_rewrite_as_besseli(self, nu, z, **kwargs):
-        from sympy import polar_lift
         return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -216,13 +221,13 @@ class besselj(BesselBase):
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
         return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         nu, z = self.args
         arg = z.as_leading_term(x)
         if x in arg.free_symbols:
-            return z**nu
+            return arg**nu/(2**nu*gamma(nu + 1))
         else:
-            return self.func(*self.args)
+            return self.func(nu, z.subs(x, 0))
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -257,10 +262,6 @@ class besselj(BesselBase):
             return Add(*s) + o
 
         return super(besselj, self)._eval_nseries(x, n, logx, cdir)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.bessel_J(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 class bessely(BesselBase):
@@ -316,7 +317,7 @@ class bessely(BesselBase):
                 return S.ComplexInfinity
             elif re(nu).is_zero:
                 return S.NaN
-        if z is S.Infinity or z is S.NegativeInfinity:
+        if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if nu.is_integer:
@@ -335,13 +336,16 @@ class bessely(BesselBase):
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
         return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         nu, z = self.args
-        arg = z.as_leading_term(x)
+        term_one = ((2/pi)*log(z/2)*besselj(nu, z))
+        term_two = (z/2)**(-nu)*factorial(nu - 1)/pi if (nu - 1).is_positive else S.Zero
+        term_three = (z/2)**nu/(pi*factorial(nu))*(digamma(nu + 1) - S.EulerGamma)
+        arg = Add(*[term_one, term_two, term_three]).as_leading_term(x)
         if x in arg.free_symbols:
-            return z**nu
+            return arg
         else:
-            return self.func(*self.args)
+            return self.func(nu, z.subs(x, 0).cancel())
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -390,10 +394,6 @@ class bessely(BesselBase):
             return a - Add(*b) - Add(*c) # Order term comes from a
 
         return super(bessely, self)._eval_nseries(x, n, logx, cdir)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.bessel_Y(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 class besseli(BesselBase):
@@ -450,7 +450,7 @@ class besseli(BesselBase):
                 return S.ComplexInfinity
             elif nu.is_imaginary:
                 return S.NaN
-        if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+        if im(z) in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if z.could_extract_minus_sign():
@@ -463,7 +463,6 @@ class besseli(BesselBase):
                 return I**(-nu)*besselj(nu, -newz)
 
         # branch handling:
-        from sympy import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -477,7 +476,6 @@ class besseli(BesselBase):
             return besseli(nnu, z)
 
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        from sympy import polar_lift
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -492,10 +490,6 @@ class besseli(BesselBase):
         nu, z = self.args
         if nu.is_integer and z.is_extended_real:
             return True
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.bessel_I(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 class besselk(BesselBase):
@@ -578,10 +572,6 @@ class besselk(BesselBase):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.bessel_K(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 class hankel1(BesselBase):
@@ -693,7 +683,7 @@ class SphericalBesselBase(BesselBase):
     since spherical Bessel functions differ from the ordinary
     ones just by a slight change in order.
 
-    To use this class, define the ``_rewrite()`` and ``_expand()`` methods.
+    To use this class, define the ``_eval_evalf()`` and ``_expand()`` methods.
 
     """
 
@@ -701,18 +691,10 @@ class SphericalBesselBase(BesselBase):
         """ Expand self into a polynomial. Nu is guaranteed to be Integer. """
         raise NotImplementedError('expansion')
 
-    def _rewrite(self):
-        """ Rewrite self in terms of ordinary Bessel functions. """
-        raise NotImplementedError('rewriting')
-
     def _eval_expand_func(self, **hints):
         if self.order.is_Integer:
             return self._expand(**hints)
         return self
-
-    def _eval_evalf(self, prec):
-        if self.order.is_Integer:
-            return self._rewrite()._eval_evalf(prec)
 
     def fdiff(self, argindex=2):
         if argindex != 2:
@@ -722,12 +704,14 @@ class SphericalBesselBase(BesselBase):
 
 
 def _jn(n, z):
-    return fn(n, z)*sin(z) + (-1)**(n + 1)*fn(-n - 1, z)*cos(z)
+    return (spherical_bessel_fn(n, z)*sin(z) +
+            S.NegativeOne**(n + 1)*spherical_bessel_fn(-n - 1, z)*cos(z))
 
 
 def _yn(n, z):
     # (-1)**(n + 1) * _jn(-n - 1, z)
-    return (-1)**(n + 1) * fn(-n - 1, z)*sin(z) - fn(n, z)*cos(z)
+    return (S.NegativeOne**(n + 1) * spherical_bessel_fn(-n - 1, z)*sin(z) -
+            spherical_bessel_fn(n, z)*cos(z))
 
 
 class jn(SphericalBesselBase):
@@ -801,20 +785,21 @@ class jn(SphericalBesselBase):
         if z in (S.NegativeInfinity, S.Infinity):
             return S.Zero
 
-    def _rewrite(self):
-        return self._eval_rewrite_as_besselj(self.order, self.argument)
-
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
         return sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
-        return (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
+        return S.NegativeOne**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
 
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
-        return (-1)**(nu) * yn(-nu - 1, z)
+        return S.NegativeOne**(nu) * yn(-nu - 1, z)
 
     def _expand(self, **hints):
         return _jn(self.order, self.argument)
+
+    def _eval_evalf(self, prec):
+        if self.order.is_Integer:
+            return self.rewrite(besselj)._eval_evalf(prec)
 
 
 class yn(SphericalBesselBase):
@@ -864,29 +849,26 @@ class yn(SphericalBesselBase):
     .. [1] http://dlmf.nist.gov/10.47
 
     """
-
-    def _rewrite(self):
-        return self._eval_rewrite_as_bessely(self.order, self.argument)
-
     @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        return (-1)**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
+        return S.NegativeOne**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
 
     @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
         return sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
 
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
-        return (-1)**(nu + 1) * jn(-nu - 1, z)
+        return S.NegativeOne**(nu + 1) * jn(-nu - 1, z)
 
     def _expand(self, **hints):
         return _yn(self.order, self.argument)
 
+    def _eval_evalf(self, prec):
+        if self.order.is_Integer:
+            return self.rewrite(bessely)._eval_evalf(prec)
+
 
 class SphericalHankelBase(SphericalBesselBase):
-
-    def _rewrite(self):
-        return self._eval_rewrite_as_besselj(self.order, self.argument)
 
     @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
@@ -895,7 +877,7 @@ class SphericalHankelBase(SphericalBesselBase):
         # yn as besselj: (-1)**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
         hks = self._hankel_kind_sign
         return sqrt(pi/(2*z))*(besselj(nu + S.Half, z) +
-                               hks*I*(-1)**(nu+1)*besselj(-nu - S.Half, z))
+                               hks*I*S.NegativeOne**(nu+1)*besselj(-nu - S.Half, z))
 
     @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -903,7 +885,7 @@ class SphericalHankelBase(SphericalBesselBase):
         # jn as bessely: (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
         # yn as bessely: sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
         hks = self._hankel_kind_sign
-        return sqrt(pi/(2*z))*((-1)**nu*bessely(-nu - S.Half, z) +
+        return sqrt(pi/(2*z))*(S.NegativeOne**nu*bessely(-nu - S.Half, z) +
                                hks*I*bessely(nu + S.Half, z))
 
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
@@ -937,6 +919,10 @@ class SphericalHankelBase(SphericalBesselBase):
         #         )
 
         return (_jn(n, z) + hks*I*_yn(n, z)).expand()
+
+    def _eval_evalf(self, prec):
+        if self.order.is_Integer:
+            return self.rewrite(besselj)._eval_evalf(prec)
 
 
 class hn1(SphericalHankelBase):
@@ -1096,12 +1082,11 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
 
     """
-    from math import pi
+    from math import pi as math_pi
 
     if method == "sympy":
         from mpmath import besseljzero
         from mpmath.libmp.libmpf import dps_to_prec
-        from sympy import Expr
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
                                               int(l)), prec)
@@ -1125,13 +1110,13 @@ def jn_zeros(n, k, method="sympy", dps=15):
         return root
 
     # we need to approximate the position of the first root:
-    root = n + pi
+    root = n + math_pi
     # determine the first root exactly:
     root = solver(f, root)
     roots = [root]
     for i in range(k - 1):
         # estimate the position of the next root using the last root + pi:
-        root = solver(f, root + pi)
+        root = solver(f, root + math_pi)
         roots.append(root)
     return roots
 
@@ -1284,11 +1269,11 @@ class airyai(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return ((3**Rational(1, 3)*x)**(-n)*(3**Rational(1, 3)*x)**(n + 1)*sin(pi*(n*Rational(2, 3) + Rational(4, 3)))*factorial(n) *
+                return ((cbrt(3)*x)**(-n)*(cbrt(3)*x)**(n + 1)*sin(pi*(n*Rational(2, 3) + Rational(4, 3)))*factorial(n) *
                         gamma(n/3 + Rational(2, 3))/(sin(pi*(n*Rational(2, 3) + Rational(2, 3)))*factorial(n + 1)*gamma(n/3 + Rational(1, 3))) * p)
             else:
-                return (S.One/(3**Rational(2, 3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3)) /
-                        factorial(n) * (root(3, 3)*x)**n)
+                return (S.One/(3**Rational(2, 3)*pi) * gamma((n+S.One)/S(3)) * sin(Rational(2, 3)*pi*(n+S.One)) /
+                        factorial(n) * (cbrt(3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
         ot = Rational(1, 3)
@@ -1459,11 +1444,11 @@ class airybi(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return (3**Rational(1, 3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * factorial((n - S.One)/S(3)) /
-                        ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * factorial((n - 2)/S(3))) * p)
+                return (cbrt(3)*x * Abs(sin(Rational(2, 3)*pi*(n + S.One))) * factorial((n - S.One)/S(3)) /
+                        ((n + S.One) * Abs(cos(Rational(2, 3)*pi*(n + S.Half))) * factorial((n - 2)/S(3))) * p)
             else:
-                return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(2*pi*(n + S.One)/S(3))) /
-                        factorial(n) * (root(3, 3)*x)**n)
+                return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(Rational(2, 3)*pi*(n + S.One))) /
+                        factorial(n) * (cbrt(3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
         ot = Rational(1, 3)
@@ -1615,8 +1600,6 @@ class airyaiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):
             res = mp.airyai(z, derivative=1)
@@ -1781,8 +1764,6 @@ class airybiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):
             res = mp.airybi(z, derivative=1)
@@ -1888,7 +1869,6 @@ class marcumq(Function):
 
     @classmethod
     def eval(cls, m, a, b):
-        from sympy import exp, uppergamma
         if a is S.Zero:
             if m is S.Zero and b is S.Zero:
                 return S.Zero
@@ -1912,7 +1892,6 @@ class marcumq(Function):
             return 1 - 1 / exp(a**2*S.Half)
 
     def fdiff(self, argindex=2):
-        from sympy import exp
         m, a, b = self.args
         if argindex == 2:
             return a * (-marcumq(m, a, b) + marcumq(1+m, a, b))
@@ -1922,19 +1901,18 @@ class marcumq(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Integral(self, m, a, b, **kwargs):
-        from sympy import Integral, exp, Dummy, oo
+        from sympy.integrals.integrals import Integral
         x = kwargs.get('x', Dummy('x'))
         return a ** (1 - m) * \
-               Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, oo])
+               Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, S.Infinity])
 
     def _eval_rewrite_as_Sum(self, m, a, b, **kwargs):
-        from sympy import Sum, exp, Dummy, oo
+        from sympy.concrete.summations import Sum
         k = kwargs.get('k', Dummy('k'))
-        return exp(-(a**2 + b**2) / 2) * Sum((a/b)**k * besseli(k, a*b), [k, 1-m, oo])
+        return exp(-(a**2 + b**2) / 2) * Sum((a/b)**k * besseli(k, a*b), [k, 1-m, S.Infinity])
 
     def _eval_rewrite_as_besseli(self, m, a, b, **kwargs):
         if a == b:
-            from sympy import exp
             if m == 1:
                 return (1 + exp(-a**2) * besseli(0, a**2)) / 2
             if m.is_Integer and m >= 2:

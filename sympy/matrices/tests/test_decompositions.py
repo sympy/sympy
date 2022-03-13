@@ -1,8 +1,12 @@
-from sympy import Rational, I, expand_mul, S, simplify, sqrt
+from sympy.core.function import expand_mul
+from sympy.core.numbers import (I, Rational)
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.simplify.simplify import simplify
 from sympy.matrices.matrices import NonSquareMatrixError
 from sympy.matrices import Matrix, zeros, eye, SparseMatrix
 from sympy.abc import x, y, z
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 from sympy.testing.matrices import allclose
 
 
@@ -394,6 +398,7 @@ def test_rank_decomposition():
     assert c * f == a
 
 
+@slow
 def test_upper_hessenberg_decomposition():
     A = Matrix([
         [1, 0, sqrt(3)],

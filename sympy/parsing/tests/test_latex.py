@@ -1,13 +1,24 @@
 from sympy.testing.pytest import raises, XFAIL
 from sympy.external import import_module
 
-from sympy import (
-    Symbol, Mul, Add, Abs, sin, asin, cos, Pow, csc, sec,
-    Limit, oo, Derivative, Integral, factorial, sqrt, root,
-    conjugate, StrictLessThan, LessThan, StrictGreaterThan,
-    GreaterThan, Sum, Product, E, log, tan, Function, binomial,
-    exp, floor, ceiling, Unequality
-)
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import (Derivative, Function)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (E, oo)
+from sympy.core.power import Pow
+from sympy.core.relational import (GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality)
+from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.complexes import (Abs, conjugate)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import (ceiling, floor)
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import (asin, cos, csc, sec, sin, tan)
+from sympy.integrals.integrals import Integral
+from sympy.series.limits import Limit
+
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
@@ -76,8 +87,8 @@ def test_import():
 GOOD_PAIRS = [
     (r"0", 0),
     (r"1", 1),
-    (r"-3.14", _Mul(-1, 3.14)),
-    (r"(-7.13)(1.5)", _Mul(_Mul(-1, 7.13), 1.5)),
+    (r"-3.14", -3.14),
+    (r"(-7.13)(1.5)", _Mul(-7.13, 1.5)),
     (r"x", x),
     (r"2x", 2*x),
     (r"x^2", x**2),
@@ -242,12 +253,14 @@ GOOD_PAIRS = [
     (r"\int x \, dx", Integral(x, x)),
     (r"\log_2 x", _log(x, 2)),
     (r"\log_a x", _log(x, a)),
+    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
 ]
+
 
 def test_parseable():
     from sympy.parsing.latex import parse_latex
     for latex_str, sympy_expr in GOOD_PAIRS:
-        assert parse_latex(latex_str) == sympy_expr
+        assert parse_latex(latex_str) == sympy_expr, latex_str
 
 # These bad LaTeX strings should raise a LaTeXParsingError when parsed
 BAD_STRINGS = [

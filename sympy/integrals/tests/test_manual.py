@@ -1,11 +1,21 @@
-from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
-                   Symbol, Integral, integrate, pi, Dummy, Derivative,
-                   diff, I, sqrt, erf, Piecewise, Ne, symbols, Rational,
-                   And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
-                   Function, jacobi, gegenbauer, chebyshevt, chebyshevu,
-                   legendre, hermite, laguerre, assoc_laguerre, uppergamma, li,
-                   Ei, Ci, Si, Chi, Shi, fresnels, fresnelc, polylog, erfi,
-                   sinh, cosh, elliptic_f, elliptic_e ,asec, acsc, acot )
+from sympy.core.function import (Derivative, Function, diff, expand)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import Ne
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, asinh, atanh, cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
+from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfi, fresnelc, fresnels, li)
+from sympy.functions.special.gamma_functions import uppergamma
+from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
+from sympy.functions.special.zeta_functions import polylog
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, contains_dont_know, manual_subs)
 from sympy.testing.pytest import raises, slow
@@ -83,7 +93,7 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(sin(3*x)*sec(x), x) == \
         -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
 
-
+@slow
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
     assert manualintegrate(sin(x)**2 * cos(x) **2, x) == \
@@ -101,6 +111,7 @@ def test_manualintegrate_trigpowers():
         -cot(x)**7/7 - 2*cot(x)**5/5 - cot(x)**3/3
 
 
+@slow
 def test_manualintegrate_inversetrig():
     # atan
     assert manualintegrate(exp(x) / (1 + exp(2*x)), x) == atan(exp(x))
@@ -313,6 +324,8 @@ def test_manualintegrate_orthogonal_poly():
             new_args[i] = t
             assert isinstance(manualintegrate(p.func(*new_args), t), Integral)
 
+
+@slow
 def test_issue_6799():
     r, x, phi = map(Symbol, 'r x phi'.split())
     n = Symbol('n', integer=True, positive=True)
@@ -417,6 +430,7 @@ def test_issue_10847_slow():
                            2*x/(x**2 + 1) + 3*atan(x) - 1/(x**2 + 1) - 3/(x + 1)
 
 
+@slow
 def test_issue_10847():
 
     assert manualintegrate(x**2 / (x**2 - c), x) == c*atan(x/sqrt(-c))/sqrt(-c) + x
@@ -482,6 +496,7 @@ def test_issue_12641():
         -2*log(cos(x) + 1) - cos(x)**2 + 2*cos(x)
 
 
+@slow
 def test_issue_13297():
     assert manualintegrate(sin(x) * cos(x)**5, x) == -cos(x)**6 / 6
 
@@ -525,13 +540,18 @@ def test_manual_subs():
     raises(ValueError, lambda: manual_subs(expr, exp(x), x, y))
 
 
+@slow
 def test_issue_15471():
     f = log(x)*cos(log(x))/x**Rational(3, 4)
     F = -128*x**Rational(1, 4)*sin(log(x))/289 + 240*x**Rational(1, 4)*cos(log(x))/289 + (16*x**Rational(1, 4)*sin(log(x))/17 + 4*x**Rational(1, 4)*cos(log(x))/17)*log(x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+
 
 def test_quadratic_denom():
     f = (5*x + 2)/(3*x**2 - 2*x + 8)
     assert manualintegrate(f, x) == 5*log(3*x**2 - 2*x + 8)/6 + 11*sqrt(23)*atan(3*sqrt(23)*(x - Rational(1, 3))/23)/69
     g = 3/(2*x**2 + 3*x + 1)
     assert manualintegrate(g, x) == 3*log(4*x + 2) - 3*log(4*x + 4)
+
+def test_issue_22757():
+    assert manualintegrate(sin(x), y) == y * sin(x)

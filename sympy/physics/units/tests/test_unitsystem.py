@@ -1,11 +1,12 @@
 from sympy.physics.units import DimensionSystem, joule, second, ampere
-from sympy.testing.pytest import warns_deprecated_sympy
 
-from sympy import Rational, S
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
 from sympy.physics.units.definitions import c, kg, m, s
 from sympy.physics.units.definitions.dimension_definitions import length, time
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.unitsystem import UnitSystem
+from sympy.physics.units.util import convert_to
 
 
 def test_definition():
@@ -31,7 +32,7 @@ def test_str_repr():
     assert repr(UnitSystem((m, s))) == "<UnitSystem: (%s, %s)>" % (m, s)
 
 
-def test_print_unit_base():
+def test_convert_to():
     A = Quantity("A")
     A.set_global_relative_scale_factor(S.One, ampere)
 
@@ -39,8 +40,7 @@ def test_print_unit_base():
     Js.set_global_relative_scale_factor(S.One, joule*second)
 
     mksa = UnitSystem((m, kg, s, A), (Js,))
-    with warns_deprecated_sympy():
-        assert mksa.print_unit_base(Js) == m**2*kg*s**-1/1000
+    assert convert_to(Js, mksa._base_units) == m**2*kg*s**-1/1000
 
 
 def test_extend():

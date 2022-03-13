@@ -1,5 +1,7 @@
 from sympy.core.backend import cos, Matrix, sin, zeros, tan, pi, symbols
-from sympy import trigsimp, simplify, solve
+from sympy.simplify.simplify import simplify
+from sympy.simplify.trigsimp import trigsimp
+from sympy.solvers.solvers import solve
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols,
                                      find_dynamicsymbols, KanesMethod, inertia,
                                      inertia_of_point_mass, Point,

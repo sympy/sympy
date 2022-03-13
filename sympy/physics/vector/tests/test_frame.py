@@ -1,11 +1,16 @@
-from sympy import (symbols, sin, cos, pi, zeros, eye, simplify, ImmutableMatrix
-                   as Matrix)
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.dense import (eye, zeros)
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+from sympy.simplify.simplify import simplify
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dynamicsymbols, time_derivative, express,
                                   dot)
 from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import VectorTypeError
 from sympy.testing.pytest import raises
+import warnings
 
 Vector.simp = True
 
@@ -452,13 +457,42 @@ def test_orient_explicit():
 def test_orient_axis():
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
-    assert A.orient_axis(B,-B.x, 1) == A.orient_axis(B, B.x, -1)
+    A.orient_axis(B,-B.x, 1)
+    A1 = A.dcm(B)
+    A.orient_axis(B, B.x, -1)
+    A2 = A.dcm(B)
+    A.orient_axis(B, 1, -B.x)
+    A3 = A.dcm(B)
+    assert A1 == A2
+    assert A2 == A3
+    raises(TypeError, lambda: A.orient_axis(B, 1, 1))
 
 def test_orient_body():
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
     B.orient_body_fixed(A, (1,1,0), 'XYX')
     assert B.dcm(A) == Matrix([[cos(1), sin(1)**2, -sin(1)*cos(1)], [0, cos(1), sin(1)], [sin(1), -sin(1)*cos(1), cos(1)**2]])
+
+
+def test_orient_body_simple_ang_vel():
+    """orient_body_fixed() uses kinematic_equations() internally and solves
+    those equations for the measure numbers of the angular velocity. This test
+    ensures that the simplest form of that linear system solution is returned,
+    thus the == for the expression comparison."""
+
+    psi, theta, phi = dynamicsymbols('psi, theta, varphi')
+    t = dynamicsymbols._t
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_body_fixed(A, (psi, theta, phi), 'ZXZ')
+    A_w_B = B.ang_vel_in(A)
+    assert A_w_B.args[0][1] == B
+    assert A_w_B.args[0][0][0] == (sin(theta)*sin(phi)*psi.diff(t) +
+                                   cos(phi)*theta.diff(t))
+    assert A_w_B.args[0][0][1] == (sin(theta)*cos(phi)*psi.diff(t) -
+                                   sin(phi)*theta.diff(t))
+    assert A_w_B.args[0][0][2] == cos(theta)*psi.diff(t) + phi.diff(t)
+
 
 def test_orient_space():
     A = ReferenceFrame('A')
@@ -471,6 +505,22 @@ def test_orient_quaternion():
     B = ReferenceFrame('B')
     B.orient_quaternion(A, (0,0,0,0))
     assert B.dcm(A) == Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+
+def test_looped_frame_warning():
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    C = ReferenceFrame('C')
+
+    a, b, c = symbols('a b c')
+    B.orient_axis(A, A.x, a)
+    C.orient_axis(B, B.x, b)
+
+    with warnings.catch_warnings(record = True) as w:
+        warnings.simplefilter("always")
+        A.orient_axis(C, C.x, c)
+        assert issubclass(w[-1].category, UserWarning)
+        assert 'Loops are defined among the orientation of frames. ' + \
+            'This is likely not desired and may cause errors in your calculations.' in str(w[-1].message)
 
 def test_frame_dict():
     A = ReferenceFrame('A')
