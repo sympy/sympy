@@ -73,10 +73,10 @@ class Plot:
     Explanation
     ===========
 
-    For interactive work the function ``plot`` is better suited.
+    For interactive work the function :func:`plot()` is better suited.
 
     This class permits the plotting of SymPy expressions using numerous
-    backends (matplotlib, textplot, the old pyglet module for sympy, Google
+    backends (:mod:`matplotlib`, textplot, the old pyglet module for SymPy, Google
     charts api, etc).
 
     The figure can contain an arbitrary number of plots of SymPy expressions,
@@ -86,19 +86,20 @@ class Plot:
     instances of classes not imported by ``from sympy import *``.
 
     The customization of the figure is on two levels. Global options that
-    concern the figure as a whole (eg title, xlabel, scale, etc) and
-    per-data series options (eg name) and aesthetics (eg. color, point shape,
+    concern the figure as a whole (e.g. title, xlabel, scale, etc) and
+    per-data series options (e.g. name) and aesthetics (e.g. color, point shape,
     line type, etc.).
 
     The difference between options and aesthetics is that an aesthetic can be
     a function of the coordinates (or parameters in a parametric plot). The
     supported values for an aesthetic are:
+
     - None (the backend uses default values)
     - a constant
     - a function of one variable (the first coordinate or parameter)
-    - a function of two variables (the first and second coordinate or
-    parameters)
+    - a function of two variables (the first and second coordinate or parameters)
     - a function of three variables (only in nonparametric 3D plots)
+
     Their implementation depends on the backend so they may not work in some
     backends.
 
@@ -139,8 +140,8 @@ class Plot:
 
     Some data series support additional aesthetics or options:
 
-    ListSeries, LineOver1DRangeSeries, Parametric2DLineSeries,
-    Parametric3DLineSeries support the following:
+    :class:`~.LineOver1DRangeSeries`, :class:`~.Parametric2DLineSeries`, and
+    :class:`~.Parametric3DLineSeries` support the following:
 
     Aesthetics:
 
@@ -149,25 +150,27 @@ class Plot:
         used.
 
         For example, if ``MatplotlibBackend`` is being used, then
-        Matplotlib string colors are acceptable ("red", "r", "cyan", "c", ...).
-        Alternatively, we can use a float number `0 < color < 1` wrapped in a
-        string (for example, `line_color="0.5"`) to specify grayscale colors.
+        Matplotlib string colors are acceptable (``"red"``, ``"r"``,
+        ``"cyan"``, ``"c"``, ...).
+        Alternatively, we can use a float number, 0 < color < 1, wrapped in a
+        string (for example, ``line_color="0.5"``) to specify grayscale colors.
         Alternatively, We can specify a function returning a single
         float value: this will be used to apply a color-loop (for example,
-        `line_color=lambda x: math.cos(x)`).
+        ``line_color=lambda x: math.cos(x)``).
 
         Note that by setting line_color, it would be applied simultaneously
         to all the series.
 
-    options:
+    Options:
 
     - label : str
     - steps : bool
     - integers_only : bool
 
-    SurfaceOver2DRangeSeries, ParametricSurfaceSeries support the following:
+    :class:`~.SurfaceOver2DRangeSeries` and :class:`~.ParametricSurfaceSeries`
+    support the following:
 
-    aesthetics:
+    Aesthetics:
 
     - surface_color : function which returns a float.
     """
@@ -493,14 +496,14 @@ class BaseSeries:
     Explanation
     ===========
 
-    The backend should check if it supports the data series that it's given.
-    (eg TextBackend supports only LineOver1DRange).
-    It's the backend responsibility to know how to use the class of
-    data series that it's given.
+    The backend should check if it supports the data series that is given.
+    (e.g. TextBackend supports only LineOver1DRangeSeries).
+    It is the backend responsibility to know how to use the class of
+    data series that is given.
 
     Some data series classes are grouped (using a class attribute like is_2Dline)
     according to the api they present (based only on convention). The backend is
-    not obliged to use that api (eg. The LineOver1DRange belongs to the
+    not obliged to use that api (e.g. LineOver1DRangeSeries belongs to the
     is_2Dline group and presents the get_points method, but the
     TextBackend does not use the get_points method).
     """
@@ -589,13 +592,13 @@ class Line2DBaseSeries(BaseSeries):
 
         Returns
         =======
-            x: list
+            x : list
                 List of x-coordinates
 
-            y: list
+            y : list
                 List of y-coordinates
 
-            y: list
+            z : list
                 List of z-coordinates in case of Parametric3DLineSeries
         """
         np = import_module('numpy')
@@ -688,15 +691,15 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
     def get_points(self):
         """ Return lists of coordinates for plotting. Depending on the
-        `adaptive` option, this function will either use an adaptive algorithm
+        ``adaptive`` option, this function will either use an adaptive algorithm
         or it will uniformly sample the expression over the provided range.
 
         Returns
         =======
-            x: list
+            x : list
                 List of x-coordinates
 
-            y: list
+            y : list
                 List of y-coordinates
 
 
@@ -840,15 +843,15 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
     def get_points(self):
         """ Return lists of coordinates for plotting. Depending on the
-        `adaptive` option, this function will either use an adaptive algorithm
+        ``adaptive`` option, this function will either use an adaptive algorithm
         or it will uniformly sample the expression over the provided range.
 
         Returns
         =======
-            x: list
+            x : list
                 List of x-coordinates
 
-            y: list
+            y : list
                 List of y-coordinates
 
 
@@ -1213,32 +1216,32 @@ class BaseBackend:
     How the plotting module works:
 
     1. Whenever a plotting function is called, the provided expressions are
-        processed and a list of instances of the `BaseSeries` class is created,
-        containing the necessary information to plot the expressions (eg the
-        expression, ranges, series name, ...). Eventually, these objects will
-        generate the numerical data to be plotted.
-    2. A Plot object is instantiated, which stores the list of series and the
-        main attributes of the plot (eg axis labels, title, ...).
-    3. When the "show" command is executed, a new backend is instantiated,
+        processed and a list of instances of the :class:`BaseSeries` class is
+        created, containing the necessary information to plot the expressions
+        (e.g. the expression, ranges, series name, ...). Eventually, these
+        objects will generate the numerical data to be plotted.
+    2. A :class:`~.Plot` object is instantiated, which stores the list of
+        series and the main attributes of the plot (e.g. axis labels, title, ...).
+    3. When the ``show`` command is executed, a new backend is instantiated,
         which loops through each series object to generate and plot the
         numerical data. The backend is also going to set the axis labels, title,
         ..., according to the values stored in the Plot instance.
 
-    The backend should check if it supports the data series that it's given
-    (eg TextBackend supports only LineOver1DRange).
+    The backend should check if it supports the data series that it is given
+    (e.g. :class:`TextBackend` supports only :class:`LineOver1DRangeSeries`).
 
-    It's the backend responsibility to know how to use the class of data series
-    that it's given. Note that the current implementation of the `*Series`
+    It is the backend responsibility to know how to use the class of data series
+    that it's given. Note that the current implementation of the ``*Series``
     classes is "matplotlib-centric": the numerical data returned by the
-    `get_points` and `get_meshes` methods is meant to be used directly by
+    ``get_points`` and ``get_meshes`` methods is meant to be used directly by
     Matplotlib. Therefore, the new backend will have to pre-process the
     numerical data to make it compatible with the chosen plotting library.
-    Keep in mind that future SymPy versions may improve the `*Series` classes in
-    order to return numerical data "non-matplotlib-centric", hence if you code
+    Keep in mind that future SymPy versions may improve the ``*Series`` classes
+    in order to return numerical data "non-matplotlib-centric", hence if you code
     a new backend you have the responsibility to check if its working on each
     SymPy release.
 
-    Please, explore the `MatplotlibBackend` source code to understand how a
+    Please explore the :class:`MatplotlibBackend` source code to understand how a
     backend should be coded.
 
     Methods
@@ -1247,7 +1250,7 @@ class BaseBackend:
     In order to be used by SymPy plotting functions, a backend must implement
     the following methods:
 
-    * `show(self)`: used to loop over the data series, generate the numerical
+    * show(self): used to loop over the data series, generate the numerical
         data, plot it and set the axis labels, title, ...
     * save(self, path): used to save the current plot to the specified file
         path.
@@ -1326,17 +1329,17 @@ class MatplotlibBackend(BaseBackend):
     @staticmethod
     def get_segments(x, y, z=None):
         """ Convert two list of coordinates to a list of segments to be used
-        with Matplotlib's LineCollection.
+        with Matplotlib's :class:`~matplotlib.collections.LineCollection`.
 
         Parameters
         ==========
-            x: list
+            x : list
                 List of x-coordinates
 
-            y: list
+            y : list
                 List of y-coordinates
 
-            z: list
+            z : list
                 List of z-coordinates for a 3D line.
         """
         np = import_module('numpy')
@@ -1633,6 +1636,7 @@ def flat(x, y, z, eps=1e-3):
     cos_theta = dot_product / (vector_a_norm * vector_b_norm)
     return abs(cos_theta + 1) < eps
 
+
 def _matplotlib_list(interval_list):
     """
     Returns lists for matplotlib ``fill`` command from a list of bounding
@@ -1735,24 +1739,26 @@ def plot(*args, show=True, **kwargs):
     annotations : list, optional
         A list of dictionaries specifying the type of annotation
         required. The keys in the dictionary should be equivalent
-        to the arguments of the matplotlib's annotate() function.
+        to the arguments of the :mod:`matplotlib`'s
+        :meth:`~matplotlib.axes.Axes.annotate` method.
 
     markers : list, optional
         A list of dictionaries specifying the type the markers required.
         The keys in the dictionary should be equivalent to the arguments
-        of the matplotlib's plot() function along with the marker
-        related keyworded arguments.
+        of the :mod:`matplotlib`'s :func:`~matplotlib.pyplot.plot()` function
+        along with the marker related keyworded arguments.
 
     rectangles : list, optional
         A list of dictionaries specifying the dimensions of the
         rectangles to be plotted. The keys in the dictionary should be
-        equivalent to the arguments of the matplotlib's
-        patches.Rectangle class.
+        equivalent to the arguments of the :mod:`matplotlib`'s
+        :class:`~matplotlib.patches.Rectangle` class.
 
     fill : dict, optional
         A dictionary specifying the type of color filling required in
         the plot. The keys in the dictionary should be equivalent to the
-        arguments of the matplotlib's fill_between() function.
+        arguments of the :mod:`matplotlib`'s
+        :meth:`~matplotlib.axes.Axes.fill_between` method.
 
     adaptive : bool, optional
         The default value is set to ``True``. Set adaptive to ``False``
@@ -1766,7 +1772,7 @@ def plot(*args, show=True, **kwargs):
 
     depth : int, optional
         Recursion depth of the adaptive algorithm. A depth of value
-        ``n`` samples a maximum of `2^{n}` points.
+        `n` samples a maximum of `2^{n}` points.
 
         If the ``adaptive`` flag is set to ``False``, this will be
         ignored.
@@ -2086,32 +2092,32 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
     Arguments
     =========
 
-    ``expr_x`` : Expression representing the function along x.
+    expr_x : Expression representing the function along x.
 
-    ``expr_y`` : Expression representing the function along y.
+    expr_y : Expression representing the function along y.
 
-    ``expr_z`` : Expression representing the function along z.
+    expr_z : Expression representing the function along z.
 
-    ``range``: ``(u, 0, 5)``, A 3-tuple denoting the range of the parameter
-    variable.
+    range : (:class:`~.Symbol`, float, float)
+        A 3-tuple denoting the range of the parameter variable, e.g., (u, 0, 5).
 
     Keyword Arguments
     =================
 
     Arguments for ``Parametric3DLineSeries`` class.
 
-    ``nb_of_points``: The range is uniformly sampled at ``nb_of_points``
+    nb_of_points : The range is uniformly sampled at ``nb_of_points``
     number of points.
 
     Aesthetics:
 
-    ``line_color``: string, or float, or function, optional
+    line_color : string, or float, or function, optional
         Specifies the color for the plot.
         See ``Plot`` to see how to set color for the plots.
         Note that by setting ``line_color``, it would be applied simultaneously
         to all the series.
 
-    ``label``: str
+    label : str
         The label to the plot. It will be used when called with ``legend=True``
         to denote the function with the given label in the plot.
 
@@ -2121,9 +2127,10 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
 
     Arguments for ``Plot`` class.
 
-    ``title`` : str. Title of the plot.
+    title : str
+        Title of the plot.
 
-    ``size`` : (float, float), optional
+    size : (float, float), optional
         A tuple in the form (width, height) in inches to specify the size of
         the overall figure. The default value is set to ``None``, meaning
         the size will be set by the default backend.
@@ -2216,29 +2223,30 @@ def plot3d(*args, show=True, **kwargs):
     Arguments
     =========
 
-    ``expr`` : Expression representing the function along x.
+    expr : Expression representing the function along x.
 
-    ``range_x``: (x, 0, 5), A 3-tuple denoting the range of the x
-    variable.
+    range_x : (:class:`~.Symbol`, float, float)
+        A 3-tuple denoting the range of the x variable, e.g. (x, 0, 5).
 
-    ``range_y``: (y, 0, 5), A 3-tuple denoting the range of the y
-     variable.
+    range_y : (:class:`~.Symbol`, float, float)
+        A 3-tuple denoting the range of the y variable, e.g. (y, 0, 5).
 
     Keyword Arguments
     =================
 
     Arguments for ``SurfaceOver2DRangeSeries`` class:
 
-    ``nb_of_points_x``: int. The x range is sampled uniformly at
-    ``nb_of_points_x`` of points.
+    nb_of_points_x : int
+        The x range is sampled uniformly at ``nb_of_points_x`` of points.
 
-    ``nb_of_points_y``: int. The y range is sampled uniformly at
-    ``nb_of_points_y`` of points.
+    nb_of_points_y : int
+        The y range is sampled uniformly at ``nb_of_points_y`` of points.
 
     Aesthetics:
 
-    ``surface_color``: Function which returns a float. Specifies the color for
-    the surface of the plot. See ``sympy.plotting.Plot`` for more details.
+    surface_color : Function which returns a float
+        Specifies the color for the surface of the plot.
+        See :class:`~.Plot` for more details.
 
     If there are multiple plots, then the same series arguments are applied to
     all the plots. If you want to set these options separately, you can index
@@ -2246,11 +2254,13 @@ def plot3d(*args, show=True, **kwargs):
 
     Arguments for ``Plot`` class:
 
-    ``title`` : str. Title of the plot.
-    ``size`` : (float, float), optional
-    A tuple in the form (width, height) in inches to specify the size of the
-    overall figure. The default value is set to ``None``, meaning the size will
-    be set by the default backend.
+    title : str
+        Title of the plot.
+
+    size : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of the
+        overall figure. The default value is set to ``None``, meaning the size will
+        be set by the default backend.
 
     Examples
     ========
@@ -2348,33 +2358,34 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
     Arguments
     =========
 
-    ``expr_x``: Expression representing the function along ``x``.
+    expr_x : Expression representing the function along ``x``.
 
-    ``expr_y``: Expression representing the function along ``y``.
+    expr_y : Expression representing the function along ``y``.
 
-    ``expr_z``: Expression representing the function along ``z``.
+    expr_z : Expression representing the function along ``z``.
 
-    ``range_u``: ``(u, 0, 5)``,  A 3-tuple denoting the range of the ``u``
-    variable.
+    range_u : (:class:`~.Symbol`, float, float)
+        A 3-tuple denoting the range of the u variable, e.g. (u, 0, 5).
 
-    ``range_v``: ``(v, 0, 5)``,  A 3-tuple denoting the range of the v
-    variable.
+    range_v : (:class:`~.Symbol`, float, float)
+        A 3-tuple denoting the range of the v variable, e.g. (v, 0, 5).
 
     Keyword Arguments
     =================
 
     Arguments for ``ParametricSurfaceSeries`` class:
 
-    ``nb_of_points_u``: int. The ``u`` range is sampled uniformly at
-    ``nb_of_points_v`` of points
+    nb_of_points_u : int
+        The ``u`` range is sampled uniformly at ``nb_of_points_v`` of points
 
-    ``nb_of_points_y``: int. The ``v`` range is sampled uniformly at
-    ``nb_of_points_y`` of points
+    nb_of_points_y : int
+        The ``v`` range is sampled uniformly at ``nb_of_points_y`` of points
 
     Aesthetics:
 
-    ``surface_color``: Function which returns a float. Specifies the color for
-    the surface of the plot. See ``sympy.plotting.Plot`` for more details.
+    surface_color : Function which returns a float
+        Specifies the color for the surface of the plot. See
+        :class:`~Plot` for more details.
 
     If there are multiple plots, then the same series arguments are applied for
     all the plots. If you want to set these options separately, you can index
@@ -2383,11 +2394,13 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
 
     Arguments for ``Plot`` class:
 
-    ``title`` : str. Title of the plot.
-    ``size`` : (float, float), optional
-    A tuple in the form (width, height) in inches to specify the size of the
-    overall figure. The default value is set to ``None``, meaning the size will
-    be set by the default backend.
+    title : str
+        Title of the plot.
+
+    size : (float, float), optional
+        A tuple in the form (width, height) in inches to specify the size of the
+        overall figure. The default value is set to ``None``, meaning the size will
+        be set by the default backend.
 
     Examples
     ========
@@ -2464,29 +2477,30 @@ def plot_contour(*args, show=True, **kwargs):
     Arguments
     =========
 
-    ``expr`` : Expression representing the function along x.
+    expr : Expression representing the function along x.
 
-    ``range_x``: (x, 0, 5), A 3-tuple denoting the range of the x
-    variable.
+    range_x : (:class:`Symbol`, float, float)
+        A 3-tuple denoting the range of the x variable, e.g. (x, 0, 5).
 
-    ``range_y``: (y, 0, 5), A 3-tuple denoting the range of the y
-     variable.
+    range_y : (:class:`Symbol`, float, float)
+        A 3-tuple denoting the range of the y variable, e.g. (y, 0, 5).
 
     Keyword Arguments
     =================
 
     Arguments for ``ContourSeries`` class:
 
-    ``nb_of_points_x``: int. The x range is sampled uniformly at
-    ``nb_of_points_x`` of points.
+    nb_of_points_x : int
+        The x range is sampled uniformly at ``nb_of_points_x`` of points.
 
-    ``nb_of_points_y``: int. The y range is sampled uniformly at
-    ``nb_of_points_y`` of points.
+    nb_of_points_y : int
+        The y range is sampled uniformly at ``nb_of_points_y`` of points.
 
     Aesthetics:
 
-    ``surface_color``: Function which returns a float. Specifies the color for
-    the surface of the plot. See ``sympy.plotting.Plot`` for more details.
+    surface_color : Function which returns a float
+        Specifies the color for the surface of the plot. See
+        :class:`sympy.plotting.Plot` for more details.
 
     If there are multiple plots, then the same series arguments are applied to
     all the plots. If you want to set these options separately, you can index
@@ -2494,8 +2508,10 @@ def plot_contour(*args, show=True, **kwargs):
 
     Arguments for ``Plot`` class:
 
-    ``title`` : str. Title of the plot.
-    ``size`` : (float, float), optional
+    title : str
+        Title of the plot.
+
+    size : (float, float), optional
         A tuple in the form (width, height) in inches to specify the size of
         the overall figure. The default value is set to ``None``, meaning
         the size will be set by the default backend.
