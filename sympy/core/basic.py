@@ -123,7 +123,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         obj._assumptions = cls.default_assumptions
         obj._mhash = None  # will be set by __hash__ method.
         types = set(map(type,args))
-        if not all(issubclass(typ, Basic, ManagedProperties) for typ in types ):
+        if not all(issubclass(typ, (Basic, ManagedProperties)) for typ in types ):
             # XXX: ManagedProperties should be remove eventually,
             # but this is currently (SymPy 1.9) not possible due to
             # how Functions work.
