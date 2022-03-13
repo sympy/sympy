@@ -47,7 +47,7 @@ from .operations import LatticeOp
 from .parameters import global_parameters
 from .rules import Transform
 from .singleton import S
-from .sympify import sympify, _sympify
+from .sympify import sympify
 
 from .sorting import default_sort_key, ordered
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
@@ -1304,7 +1304,7 @@ class Derivative(Expr):
                 variable_count.append(Tuple(v, count))
                 continue
 
-            v = _sympify(v)
+            v = sympify(v)
             if isinstance(v, Integer):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
