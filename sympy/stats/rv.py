@@ -1192,7 +1192,7 @@ def quantile(expr, evaluate=True, **kwargs):
     Quantile is defined as the value at which the probability of the random
     variable is less than or equal to the given probability.
 
-    ..math::
+    .. math::
         Q(p) = inf{x \in (-\infty, \infty) such that p <= F(x)}
 
     Examples

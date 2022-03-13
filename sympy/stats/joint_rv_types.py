@@ -54,8 +54,8 @@ def marginal_distribution(rv, *indices):
     Parameters
     ==========
 
-    rv: A random variable with a joint probability distribution.
-    indices: component indices or the indexed random symbol
+    rv : A random variable with a joint probability distribution.
+    indices : Component indices or the indexed random symbol
         for which the joint distribution is to be calculated
 
     Returns
@@ -100,11 +100,18 @@ def JointRV(symbol, pdf, _set=None):
     Create a Joint Random Variable where each of its component is continuous,
     given the following:
 
-    -- a symbol
-    -- a PDF in terms of indexed symbols of the symbol given
-    as the first argument
+    Parameters
+    ==========
 
-    NOTE: As of now, the set for each component for a ``JointRV`` is
+    symbol : Symbol
+        Represents name of the random variable.
+    pdf : a PDF in terms of indexed symbols of the symbol given
+        as the first argument
+
+    NOTE
+    ====
+
+    As of now, the set for each component for a ``JointRV`` is
     equal to the set of all integers, which cannot be changed.
 
     Examples
@@ -198,7 +205,7 @@ def MultivariateNormal(name, mu, sigma):
 
     mu : List representing the mean or the mean vector
     sigma : Positive semidefinite square matrix
-        Represents covariance Matrix
+        Represents covariance Matrix.
         If `\sigma` is noninvertible then only sampling is supported currently
 
     Returns
@@ -358,11 +365,11 @@ def MultivariateT(syms, mu, sigma, v):
     Parameters
     ==========
 
-    syms: A symbol/str
+    syms : A symbol/str
         For identifying the random variable.
-    mu: A list/matrix
+    mu : A list/matrix
         Representing the location vector
-    sigma: The shape matrix for the distribution
+    sigma : The shape matrix for the distribution
 
     Examples
     ========
@@ -435,15 +442,15 @@ def NormalGamma(sym, mu, lamda, alpha, beta):
     Parameters
     ==========
 
-    sym: A symbol/str
+    sym : A symbol/str
         For identifying the random variable.
-    mu: A real number
+    mu : A real number
         The mean of the normal distribution
-    lamda: A positive integer
+    lamda : A positive integer
         Parameter of joint distribution
-    alpha: A positive integer
+    alpha : A positive integer
         Parameter of joint distribution
-    beta: A positive integer
+    beta : A positive integer
         Parameter of joint distribution
 
     Returns
@@ -506,7 +513,7 @@ def MultivariateBeta(syms, *alpha):
     Parameters
     ==========
 
-    alpha: Positive real numbers
+    alpha : Positive real numbers
         Signifies concentration numbers.
 
     Returns
@@ -599,9 +606,9 @@ def MultivariateEwens(syms, n, theta):
     Parameters
     ==========
 
-    n: Positive integer
+    n : Positive integer
         Size of the sample or the integer whose partitions are considered
-    theta: Positive real number
+    theta : Positive real number
         Denotes Mutation rate
 
     Returns
@@ -676,11 +683,11 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     Parameters
     ==========
 
-    syms: list/tuple/set of symbols for identifying each component
-    delta: A constant in range $[0, 1]$
-    v: Positive real number
-    lamda: List of positive real numbers
-    mu: List of positive real numbers
+    syms : list/tuple/set of symbols for identifying each component
+    delta : A constant in range $[0, 1]$
+    v : Positive real number
+    lamda : List of positive real numbers
+    mu : List of positive real numbers
 
     Returns
     =======
@@ -712,8 +719,10 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     ====
 
     If the GeneralizedMultivariateLogGamma is too long to type use,
-    ``from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG``
-    If you want to pass the matrix omega instead of the constant delta, then use,
+
+    >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG
+
+    If you want to pass the matrix omega instead of the constant delta, then use
     ``GeneralizedMultivariateLogGammaOmega``.
 
     """
@@ -727,14 +736,14 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     Parameters
     ==========
 
-    syms: list/tuple/set of symbols
+    syms : list/tuple/set of symbols
         For identifying each component
-    omega: A square matrix
+    omega : A square matrix
            Every element of square matrix must be absolute value of
            square root of correlation coefficient
-    v: Positive real number
-    lamda: List of positive real numbers
-    mu: List of positive real numbers
+    v : Positive real number
+    lamda : List of positive real numbers
+    mu : List of positive real numbers
 
     Returns
     =======
@@ -766,7 +775,8 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     =====
 
     If the GeneralizedMultivariateLogGammaOmega is too long to type use,
-    ``from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO``
+
+    >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO
 
     """
     _value_check((omega.is_square, isinstance(omega, Matrix)), "omega must be a"
@@ -823,9 +833,9 @@ def Multinomial(syms, n, *p):
     Parameters
     ==========
 
-    n: Positive integer
+    n : Positive integer
         Represents number of trials
-    p: List of event probabilites
+    p : List of event probabilites
         Must be in the range of [0, 1]
 
     Returns
@@ -896,9 +906,9 @@ def NegativeMultinomial(syms, k0, *p):
     Parameters
     ==========
 
-    k0: positive integer
+    k0 : positive integer
         Represents number of failures before the experiment is stopped
-    p: List of event probabilites
+    p : List of event probabilites
         Must be in the range of $[0, 1]$
 
     Returns

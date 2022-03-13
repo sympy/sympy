@@ -1125,7 +1125,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     def absorbing_probabilities(self):
         """
-        Computes the absorbing probabilities, i.e.,
+        Computes the absorbing probabilities, i.e.
         the ij-th entry of the matrix denotes the
         probability of Markov chain being absorbed
         in state j starting from state i.
@@ -1503,10 +1503,10 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     Parameters
     ==========
 
-    sym: Symbol/str
-    state_space: Set
+    sym : Symbol/str
+    state_space : Set
         Optional, by default, S.Reals
-    gen_mat: Matrix/ImmutableMatrix/MatrixSymbol
+    gen_mat : Matrix/ImmutableMatrix/MatrixSymbol
         Optional, by default, None
 
     Examples
@@ -1627,12 +1627,12 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     Parameters
     ==========
 
-    sym: Symbol/str
-    success: Integer/str
+    sym : Symbol/str
+    success : Integer/str
             The event which is considered to be success, by default is 1.
     failure: Integer/str
             The event which is considered to be failure, by default is 0.
-    p: Real Number between 0 and 1
+    p : Real Number between 0 and 1
             Represents the probability of getting success.
 
     Examples
@@ -1724,10 +1724,10 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         Parameters
         ==========
 
-        expr: RandomIndexedSymbol, Relational, Logic
+        expr : RandomIndexedSymbol, Relational, Logic
             Condition for which expectation has to be computed. Must
             contain a RandomIndexedSymbol of the process.
-        condition: Relational, Logic
+        condition : Relational, Logic
             The given conditions under which computations should be done.
 
         Returns
@@ -1746,10 +1746,10 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         Parameters
         ==========
 
-        condition: Relational
+        condition : Relational
                 Condition for which probability has to be computed. Must
                 contain a RandomIndexedSymbol of the process.
-        given_condition: Relational/And
+        given_condition : Relational/And
                 The given conditions under which computations should be done.
 
         Returns
@@ -2156,8 +2156,8 @@ class PoissonProcess(CountingProcess):
     Parameters
     ==========
 
-    sym: Symbol/str
-    lamda: Positive number
+    sym : Symbol/str
+    lamda : Positive number
         Rate of the process, ``lamda > 0``
 
     Examples
@@ -2258,7 +2258,7 @@ class WienerProcess(CountingProcess):
     Parameters
     ==========
 
-    sym: Symbol/str
+    sym : Symbol/str
 
     Examples
     ========
@@ -2315,11 +2315,11 @@ class GammaProcess(CountingProcess):
     Parameters
     ==========
 
-    sym: Symbol/str
-    lamda: Positive number
+    sym : Symbol/str
+    lamda : Positive number
         Jump size of the process, ``lamda > 0``
-    gamma: Positive number
-        Rate of jump arrivals, ``gamma > 0``
+    gamma : Positive number
+        Rate of jump arrivals, `\gamma > 0`
 
     Examples
     ========

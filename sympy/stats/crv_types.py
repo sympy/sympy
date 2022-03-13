@@ -516,7 +516,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
 
     alpha : Real number, `\alpha > 0`, a shape
     beta : Real number, `\beta > 0`, a shape
-    lamda: Real number, `\lambda \ge 0`, noncentrality parameter
+    lamda : Real number, `\lambda \geq 0`, noncentrality parameter
 
     Returns
     =======
@@ -671,7 +671,7 @@ def BoundedPareto(name, alpha, left, right):
     Parameters
     ==========
 
-    alpha : Real Number, `alpha > 0`
+    alpha : Real Number, `\alpha > 0`
         Shape parameter
     left : Real Number, `left > 0`
         Location parameter
@@ -1244,9 +1244,9 @@ def ExGaussian(name, mean, std, rate):
     ==========
 
     mu : A Real number, the mean of Gaussian component
-    std: A positive Real number,
+    std : A positive Real number,
         :math: `\sigma^2 > 0` the variance of Gaussian component
-    lambda: A positive Real number,
+    lambda : A positive Real number,
         :math: `\lambda > 0` the rate of Exponential component
 
     Returns
@@ -2006,8 +2006,8 @@ def Gumbel(name, beta, mu, minimum=False):
     Parameters
     ==========
 
-    mu : Real number, '\mu', a location
-    beta : Real number, '\beta > 0', a scale
+    mu : Real number, `\mu`, a location
+    beta : Real number, `\beta > 0`, a scale
     minimum : Boolean, by default ``False``, set to ``True`` for enabling minimum distribution
 
     Returns
@@ -2077,13 +2077,13 @@ def Gompertz(name, b, eta):
     .. math::
         f(x) := b \eta e^{b x} e^{\eta} \exp \left(-\eta e^{bx} \right)
 
-    with :math: 'x \in [0, \inf)'.
+    with :math:`x \in [0, \infty)`.
 
     Parameters
     ==========
 
-    b: Real number, 'b > 0', a scale
-    eta: Real number, '\eta > 0', a shape
+    b : Real number, `b > 0`, a scale
+    eta : Real number, `\eta > 0`, a shape
 
     Returns
     =======
@@ -3485,7 +3485,7 @@ def PowerFunction(name, alpha, a, b):
     Parameters
     ==========
 
-    alpha: Positive number, `0 < alpha`, the shape paramater
+    alpha : Positive number, `0 < \alpha`, the shape paramater
     a : Real number, :math:`-\infty < a`, the left boundary
     b : Real number, :math:`a < b < \infty`, the right boundary
 
@@ -3883,13 +3883,13 @@ def ShiftedGompertz(name, b, eta):
     .. math::
         f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^(-bx)) \right]
 
-    with :math: 'x \in [0, \inf)'.
+    with :math:`x \in [0, \infty)`.
 
     Parameters
     ==========
 
-    b: Real number, 'b > 0', a scale
-    eta: Real number, '\eta > 0', a shape
+    b : Real number, `b > 0`, a scale
+    eta : Real number, `\eta > 0`, a shape
 
     Returns
     =======
@@ -4625,7 +4625,7 @@ def WignerSemicircle(name, R):
     Returns
     =======
 
-    A `RandomSymbol`.
+    A RandomSymbol.
 
     Examples
     ========
