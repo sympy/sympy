@@ -2158,7 +2158,7 @@ class PoissonProcess(CountingProcess):
 
     sym : Symbol/str
     lamda : Positive number
-        Rate of the process, ``lamda > 0``
+        Rate of the process, ``lambda > 0``
 
     Examples
     ========
@@ -2308,9 +2308,9 @@ class WienerProcess(CountingProcess):
 
 
 class GammaProcess(CountingProcess):
-    """
+    r"""
     A Gamma process is a random process with independent gamma distributed
-    increments.  It is a pure-jump increasing Levy process.
+    increments. It is a pure-jump increasing Levy process.
 
     Parameters
     ==========
