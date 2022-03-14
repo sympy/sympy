@@ -56,6 +56,7 @@ all_units = []  # type: List[Quantity]
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 
+all_units.extend(units)
 all_units.extend([mol, cd, K, lux])
 
 
