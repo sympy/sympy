@@ -1193,7 +1193,7 @@ def quantile(expr, evaluate=True, **kwargs):
     variable is less than or equal to the given probability.
 
     .. math::
-        Q(p) = inf{x \in (-\infty, \infty) such that p <= F(x)}
+        Q(p) = \inf\{x \in (-\infty, \infty) : p \le F(x)\}
 
     Examples
     ========
