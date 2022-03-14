@@ -93,7 +93,7 @@ def _integer_nthroot_python(y, n):
     if n == 2:
         x, rem = mpmath_sqrtrem(y)
         return int(x), not rem
-    if n > y:
+    if n >= y.bit_length():
         return 1, False
     # Get initial estimate for Newton's method. Care must be taken to
     # avoid overflow
