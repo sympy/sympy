@@ -124,6 +124,8 @@ def convert_to(expr, target_units, unit_system="SI"):
 
 
 def _build_preferred_dimension_to_unit(unit_system="SI") -> tDict[Symbol, Quantity]:
+    from sympy.physics.units import  velocity, length, time
+
     unit_system = UnitSystem.get_unit_system(unit_system)
 
     preferred_dimension_to_unit = {}
@@ -134,6 +136,9 @@ def _build_preferred_dimension_to_unit(unit_system="SI") -> tDict[Symbol, Quanti
         dim = unit_system.get_quantity_dimension(quantity)
         if dim.name.is_Symbol:
             preferred_dimension_to_unit[dim.name] = quantity
+    # derive velocity preferred units
+    if length.name in preferred_dimension_to_unit and time.name in preferred_dimension_to_unit:
+        preferred_dimension_to_unit[velocity.name] = preferred_dimension_to_unit[length.name] / preferred_dimension_to_unit[time.name]
     return preferred_dimension_to_unit
 
 
