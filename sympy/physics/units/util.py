@@ -3,12 +3,14 @@ Several methods to simplify expressions involving unit objects.
 """
 from functools import reduce
 from collections.abc import Iterable
+from typing import Dict as tDict
 
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sorting import ordered
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension, DimensionSystem
@@ -121,6 +123,20 @@ def convert_to(expr, target_units, unit_system="SI"):
     return expr_scale_factor * Mul.fromiter((1/get_total_scale_factor(u) * u) ** p for u, p in zip(target_units, depmat))
 
 
+def _build_preferred_dimension_to_unit(unit_system="SI") -> tDict[Symbol, Quantity]:
+    unit_system = UnitSystem.get_unit_system(unit_system)
+
+    preferred_dimension_to_unit = {}
+
+    for quantity in unit_system.get_units_non_prefixed():
+        if quantity.is_prefixed or quantity.is_physics_constant:
+            continue
+        dim = unit_system.get_quantity_dimension(quantity)
+        if dim.name.is_Symbol:
+            preferred_dimension_to_unit[dim.name] = quantity
+    return preferred_dimension_to_unit
+
+
 def quantity_simplify(expr, across_dimensions: bool=False, unit_system="SI"):
     """Return an equivalent expression in which prefixes are replaced
     with numerical values and all units of a given dimension are the
@@ -173,25 +189,11 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system="SI"):
                 target_dimension = result_dim
                 break
 
-        from . import volt, ohm, farad, second, henry, meter, weber, siemens, tesla
-        from . import voltage, impedance, capacitance, inductance, magnetic_flux, conductance, magnetic_density, velocity
+        if target_dimension is None:
+            # if we can't find a target dimension, we can't do anything. unsure how to handle this case.
+            return expr
 
-        non_prefixed = unit_system.get_units_non_prefixed()
-        preferred_dimension_to_unit = { unit.dimension.name: unit for unit in non_prefixed if unit.dimension.name.is_symbol }
-
-        # HACK: add missing/wrong units to the map.
-        if unit_system.name == "SI":
-            preferred_dimension_to_unit.update({
-                velocity.name: meter/second,
-                voltage.name: volt,
-                impedance.name: ohm,
-                conductance.name: siemens,
-                capacitance.name: farad,
-                inductance.name: henry,
-                magnetic_density.name: tesla,
-                magnetic_flux.name: weber,
-            })
-
+        preferred_dimension_to_unit = _build_preferred_dimension_to_unit(unit_system)
 
         target_unit = preferred_dimension_to_unit.get(target_dimension)
         if target_unit:
