@@ -10,7 +10,6 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.physics.units.dimensions import _QuantityMapper
-from sympy.physics.units.prefixes import PREFIXES
 from sympy.physics.units.quantities import Quantity
 
 from .dimensions import Dimension
@@ -199,7 +198,4 @@ class UnitSystem(_QuantityMapper):
         """
         Return the units of the system that do not have a prefix.
         """
-        prefix_names = list(map(lambda p: p.name.name, PREFIXES.values()))
-        def has_prefix(unit) -> bool:
-            return any(unit.name.name.startswith(p) for p in prefix_names)
-        return set(filter(lambda u: not has_prefix(u), self._units))
+        return set(filter(lambda u: not u.is_prefixed and not u.is_physics_constant, self._units))
