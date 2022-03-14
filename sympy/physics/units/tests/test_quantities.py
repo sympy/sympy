@@ -12,7 +12,8 @@ from sympy.functions.elementary.trigonometric import sin
 from sympy.integrals.integrals import integrate
 from sympy.physics.units import (amount_of_substance, area, convert_to, find_unit,
                                  volume, kilometer, joule, molar_gas_constant,
-                                 vacuum_permittivity, elementary_charge)
+                                 vacuum_permittivity, elementary_charge, volt,
+                                 ohm)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
     minute, quart, s, second, speed_of_light, bit,
@@ -532,6 +533,8 @@ def test_prefixed_property():
     assert not joule.is_prefixed
     assert not day.is_prefixed
     assert not second.is_prefixed
+    assert not volt.is_prefixed
+    assert not ohm.is_prefixed
     assert centimeter.is_prefixed
     assert kilometer.is_prefixed
     assert kilogram.is_prefixed

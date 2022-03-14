@@ -26,7 +26,7 @@ class Quantity(AtomicExpr):
     def __new__(cls, name, abbrev=None, dimension=None, scale_factor=None,
                 latex_repr=None, pretty_unicode_repr=None,
                 pretty_ascii_repr=None, mathml_presentation_repr=None,
-                is_physics_constant=False,
+                is_prefixed=False, is_physics_constant=False,
                 **assumptions):
 
         if not isinstance(name, Symbol):
@@ -65,7 +65,7 @@ class Quantity(AtomicExpr):
             abbrev = Symbol(abbrev)
 
         # HACK: These are here purely for type checking. They actually get assigned below.
-        cls._is_prefixed = False
+        cls._is_prefixed = is_prefixed
         cls._is_physics_constant = is_physics_constant
 
         obj = AtomicExpr.__new__(cls, name, abbrev)
@@ -75,7 +75,7 @@ class Quantity(AtomicExpr):
         obj._unicode_repr = pretty_unicode_repr
         obj._ascii_repr = pretty_ascii_repr
         obj._mathml_repr = mathml_presentation_repr
-        obj._is_prefixed = False
+        obj._is_prefixed = is_prefixed
         obj._is_physics_constant = is_physics_constant
 
         if dimension is not None:
