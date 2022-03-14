@@ -105,7 +105,7 @@ def JointRV(symbol, pdf, _set=None):
 
     symbol : Symbol
         Represents name of the random variable.
-    pdf : a PDF in terms of indexed symbols of the symbol given
+    pdf : A PDF in terms of indexed symbols of the symbol given
         as the first argument
 
     NOTE
@@ -721,6 +721,7 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     If the GeneralizedMultivariateLogGamma is too long to type use,
 
     >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG
+    >>> Gd = GMVLG('G', d, v, l, mu)
 
     If you want to pass the matrix omega instead of the constant delta, then use
     ``GeneralizedMultivariateLogGammaOmega``.
@@ -777,6 +778,7 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     If the GeneralizedMultivariateLogGammaOmega is too long to type use,
 
     >>> from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO
+    >>> G = GMVLGO('G', omega, v, l, mu)
 
     """
     _value_check((omega.is_square, isinstance(omega, Matrix)), "omega must be a"
@@ -836,7 +838,7 @@ def Multinomial(syms, n, *p):
     n : Positive integer
         Represents number of trials
     p : List of event probabilites
-        Must be in the range of [0, 1]
+        Must be in the range of $[0, 1]$.
 
     Returns
     =======

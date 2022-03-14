@@ -1629,9 +1629,9 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
 
     sym : Symbol/str
     success : Integer/str
-            The event which is considered to be success, by default is 1.
+            The event which is considered to be success. Default: 1.
     failure: Integer/str
-            The event which is considered to be failure, by default is 0.
+            The event which is considered to be failure. Default: 0.
     p : Real Number between 0 and 1
             Represents the probability of getting success.
 
@@ -1749,7 +1749,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         condition : Relational
                 Condition for which probability has to be computed. Must
                 contain a RandomIndexedSymbol of the process.
-        given_condition : Relational/And
+        given_condition : Relational, Logic
                 The given conditions under which computations should be done.
 
         Returns

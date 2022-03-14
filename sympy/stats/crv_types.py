@@ -551,7 +551,8 @@ def BetaNoncentral(name, alpha, beta, lamda):
     /____,
     k = 0
 
-    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
+    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows:
+
     >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
     2*exp(1/2)
 
@@ -1243,10 +1244,11 @@ def ExGaussian(name, mean, std, rate):
     Parameters
     ==========
 
-    mu : A Real number, the mean of Gaussian component
+    name : A string giving a name for this distribution
+    mean : A Real number, the mean of Gaussian component
     std : A positive Real number,
         :math: `\sigma^2 > 0` the variance of Gaussian component
-    lambda : A positive Real number,
+    rate : A positive Real number,
         :math: `\lambda > 0` the rate of Exponential component
 
     Returns
