@@ -21,12 +21,13 @@ class Quantity(AtomicExpr):
     is_real = True
     is_number = False
     is_nonzero = True
+    is_physics_constant = False
     _diff_wrt = True
 
     def __new__(cls, name, abbrev=None, dimension=None, scale_factor=None,
                 latex_repr=None, pretty_unicode_repr=None,
                 pretty_ascii_repr=None, mathml_presentation_repr=None,
-                is_prefixed=False, is_physics_constant=False,
+                is_prefixed=False,
                 **assumptions):
 
         if not isinstance(name, Symbol):
@@ -66,7 +67,6 @@ class Quantity(AtomicExpr):
 
         # HACK: These are here purely for type checking. They actually get assigned below.
         cls._is_prefixed = is_prefixed
-        cls._is_physics_constant = is_physics_constant
 
         obj = AtomicExpr.__new__(cls, name, abbrev)
         obj._name = name
@@ -76,7 +76,6 @@ class Quantity(AtomicExpr):
         obj._ascii_repr = pretty_ascii_repr
         obj._mathml_repr = mathml_presentation_repr
         obj._is_prefixed = is_prefixed
-        obj._is_physics_constant = is_physics_constant
 
         if dimension is not None:
             # TODO: remove after deprecation:
@@ -248,7 +247,7 @@ class Quantity(AtomicExpr):
         """Whether or not the quantity is prefixed. Eg. `kilogram` is prefixed, but `gram` is not."""
         return self._is_prefixed
 
-    @property
-    def is_physics_constant(self) -> bool:
-        """Whether or not the quantity is a physical constant. Eg. the speed of light."""
-        return self._is_physics_constant
+class PhysicalConstant(Quantity):
+    """Represents a physical constant, eg. `speed_of_light` or `avogadro_constant`."""
+
+    is_physics_constant = True

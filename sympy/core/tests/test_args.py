@@ -4251,6 +4251,11 @@ def test_sympy__physics__units__quantities__Quantity():
     assert _test_args(Quantity("dam"))
 
 
+def test_sympy__physics__units__quantities__PhysicalConstant():
+    from sympy.physics.units.quantities import PhysicalConstant
+    assert _test_args(PhysicalConstant("foo"))
+
+
 def test_sympy__physics__units__prefixes__Prefix():
     from sympy.physics.units.prefixes import Prefix
     assert _test_args(Prefix('kilo', 'k', 3))

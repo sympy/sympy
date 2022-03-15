@@ -25,7 +25,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
     energy
 )
 from sympy.physics.units.prefixes import PREFIXES, kilo
-from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.quantities import PhysicalConstant, Quantity
 from sympy.physics.units.systems import SI
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 
@@ -540,7 +540,7 @@ def test_prefixed_property():
     assert kilogram.is_prefixed
     assert pebibyte.is_prefixed
 
-def test_physics_constant_flag():
+def test_physics_constant():
     from sympy.physics.units import definitions
 
     for name in dir(definitions):
@@ -548,11 +548,12 @@ def test_physics_constant_flag():
         if not isinstance(quantity, Quantity):
             continue
         if name.endswith('_constant'):
+            assert isinstance(quantity, PhysicalConstant), f"{quantity} must be PhysicalConstant, but is {type(quantity)}"
             assert quantity.is_physics_constant, f"{name} is not marked as physics constant when it should be"
-    assert gravitational_constant.is_physics_constant
-    assert molar_gas_constant.is_physics_constant
-    assert vacuum_permittivity.is_physics_constant
-    assert speed_of_light.is_physics_constant
-    assert elementary_charge.is_physics_constant
+
+    for const in [gravitational_constant, molar_gas_constant, vacuum_permittivity, speed_of_light, elementary_charge]:
+        assert isinstance(const, PhysicalConstant), f"{const} must be PhysicalConstant, but is {type(const)}"
+        assert const.is_physics_constant, f"{const} is not marked as physics constant when it should be"
+
     assert not meter.is_physics_constant
     assert not joule.is_physics_constant
