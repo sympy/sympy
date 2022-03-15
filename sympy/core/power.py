@@ -1793,11 +1793,7 @@ class Pow(Expr):
             raise PoleError("Cannot expand %s around 0" % (self))
         elif e.has(x):
             lt = exp(e * log(b))
-            try:
-                lt = lt.as_leading_term(x, logx=logx, cdir=cdir)
-            except PoleError:
-                pass
-            return lt
+            return lt.as_leading_term(x, logx=logx, cdir=cdir)
         else:
             from sympy.functions.elementary.complexes import im
             f = b.as_leading_term(x, logx=logx, cdir=cdir)
