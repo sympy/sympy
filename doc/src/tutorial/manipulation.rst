@@ -334,11 +334,23 @@ x)``, i.e., ``2*x``, which is a ``Mul``.   SymPy classes make heavy use of the
 ``__new__`` class constructor, which, unlike ``__init__``, allows a different
 class to be returned from the constructor.
 
-Second, some classes are special-cased, usually for efficiency reasons
+Second, (subclasses of) ``Atom`` return a ``FuncHead`` object instead of the
+class of the object. ``FuncHead`` objects behave the same as class objects
+for the purposes of ``hash``, equality ``==`` and ``isinstance`` checks.
+``FuncHead`` allows to store additional information when needed, but its use
+is otherwise identical as objects that return a class as their head.
+
+    >>> type(Integer(2))
+    <class 'sympy.core.numbers.Integer'>
+    >>> Integer(2).func
+    <FuncHead(2)>
+    >>> assert hash(Integer(2).func) == hash(Integer)
+    >>> assert Integer(2).func == Integer
+    >>> assert isinstance(Integer(2), Integer(2).func)
+
+Third, some classes are special-cased, usually for efficiency reasons
 [#singleton-fn]_.
 
-    >>> Integer(2).func
-    <class 'sympy.core.numbers.Integer'>
     >>> Integer(0).func
     <class 'sympy.core.numbers.Zero'>
     >>> Integer(-1).func
@@ -407,14 +419,12 @@ hit a leaf of the expression tree.
 
 So there are two possibilities for a SymPy expression. Either it has empty
 ``args``, in which case it is a leaf node in any expression tree, or it has
-``args``, in which case, it is a branch node of any expression tree.  When it
-has ``args``, it can be completely rebuilt from its ``func`` and its ``args``.
-This is expressed in the key invariant.
+``args``, in which case, it is a branch node of any expression tree. 
 
 .. topic:: Key Invariant
 
-   Every well-formed SymPy expression must either have empty ``args`` or
-   satisfy ``expr == expr.func(*expr.args)``.
+   Every well-formed SymPy expression must satisfy 
+   ``expr == expr.func(*expr.args)``.
 
 (Recall that in Python if ``a`` is a tuple, then ``f(*a)`` means to call ``f``
 with arguments from the elements of ``a``, e.g., ``f(*(1, 2, 3))`` is the same
@@ -422,6 +432,10 @@ as ``f(1, 2, 3)``.)
 
 This key invariant allows us to write simple algorithms that walk expression
 trees, change them, and rebuild them into new expressions.
+
+Note that a leaf node still satisfies the above invariance because ``func``
+returns a ``FuncHead`` object, which returns the original SymPy object when
+no ``args`` are given.
 
 Walking the Tree
 ----------------

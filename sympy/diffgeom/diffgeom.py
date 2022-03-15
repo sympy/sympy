@@ -225,7 +225,7 @@ class CoordSystem(Basic):
     2
     >>> Car2D.symbols
     (x, y)
-    >>> _[0].func
+    >>> type(_[0])
     <class 'sympy.diffgeom.diffgeom.CoordinateSymbol'>
 
     ``transformation()`` method returns the transformation function from

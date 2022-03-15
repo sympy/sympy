@@ -225,6 +225,15 @@ class BaseDyadic(Dyadic, AtomicExpr):
         return "({}|{})".format(
             printer._print(self.args[0]), printer._print(self.args[1]))
 
+# XXX: This method is only needed because BaseDyadic is a subclass
+# of AtomicExpr even though it is not really an AtomicExpr. If BaseDyadic
+# was fixed to not subclass AtomicExpr then this func method could be
+# deleted.
+    @property
+    def func(self):
+        return self.__class__
+
+
     def _sympyrepr(self, printer):
         return "BaseDyadic({}, {})".format(
             printer._print(self.args[0]), printer._print(self.args[1]))

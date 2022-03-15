@@ -174,6 +174,7 @@ class Singleton(ManagedProperties):
         cls.__new__ = lambda cls: obj
         cls.__getnewargs__ = lambda obj: ()
         cls.__getstate__ = lambda obj: None
+        cls.func = property(lambda obj: cls)
         S.register(cls)
 
 

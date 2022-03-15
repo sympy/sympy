@@ -67,3 +67,11 @@ class BaseScalar(AtomicExpr):
 
     def _sympystr(self, printer):
         return self._name
+
+# XXX: This method is only needed because BaseScalar is a subclass
+# of AtomicExpr even though it is not really an AtomicExpr. If BaseScalar
+# was fixed to not subclass AtomicExpr then this func method could be
+# deleted.
+    @property
+    def func(self):
+        return self.__class__
