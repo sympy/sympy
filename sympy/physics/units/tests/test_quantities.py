@@ -305,8 +305,8 @@ def test_find_unit():
     assert find_unit(grams) == ['g', 't', 'Da', 'kg', 'mg', 'ug', 'amu', 'mmu', 'amus',
                                 'gram', 'mmus', 'grams', 'pound', 'tonne', 'dalton',
                                 'pounds', 'kilogram', 'kilograms', 'microgram', 'milligram',
-                                'micrograms', 'milligrams', 'planck_mass', 'milli_mass_unit',
-                                'atomic_mass_unit', 'atomic_mass_constant']
+                                'metric_ton', 'micrograms', 'milligrams', 'planck_mass',
+                                'milli_mass_unit', 'atomic_mass_unit', 'atomic_mass_constant']
 
 
 def test_Quantity_derivative():

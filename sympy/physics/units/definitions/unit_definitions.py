@@ -4,7 +4,7 @@ from sympy.physics.units.definitions.dimension_definitions import current, tempe
 
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S as S_singleton
-from sympy.physics.units.prefixes import kilo, milli, micro, deci, centi, nano, pico, kibi, mebi, gibi, tebi, pebi, exbi
+from sympy.physics.units.prefixes import kilo, mega, milli, micro, deci, centi, nano, pico, kibi, mebi, gibi, tebi, pebi, exbi
 from sympy.physics.units.quantities import Quantity
 
 One = S_singleton.One
@@ -119,8 +119,8 @@ ug.set_global_relative_scale_factor(micro, gram)
 # Atomic mass constant
 Da = dalton = amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
 
-t = tonne = Quantity("tonne", abbrev="t")
-t.set_global_relative_scale_factor(kilo, kg)
+t = metric_ton = tonne = Quantity("tonne", abbrev="t")
+tonne.set_global_relative_scale_factor(mega, gram)
 
 
 # Common length units
