@@ -402,6 +402,12 @@ class BaseVector(Vector, AtomicExpr):
     def free_symbols(self):
         return {self}
 
+# XXX: This method is only needed because Vector is a subclass of
+# AtomicExpr even though it is not really an AtomicExpr. If Vector was
+# fixed to not subclass AtomicExpr then this func method could be deleted.
+    @property
+    def func(self):
+        return self.__class__
 
 class VectorAdd(BasisDependentAdd, Vector):
     """

@@ -232,3 +232,11 @@ class Quantity(AtomicExpr):
     def free_symbols(self):
         """Return free symbols from quantity."""
         return set()
+
+# XXX: This method is only needed because Quantity is a subclass of
+# AtomicExpr even though it is not really an AtomicExpr. If Quantity
+# was fixed to not subclass AtomicExpr then this func method could be
+# deleted.
+    @property
+    def func(self):
+        return self.__class__

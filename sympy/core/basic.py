@@ -1957,6 +1957,44 @@ class Basic(Printable, metaclass=ManagedProperties):
         return False  # see Expr.could_extract_minus_sign
 
 
+class FuncHead():
+    """Acts as the head of the object when its type would not be
+    suitable for the arg invariance obj.func(*obj.args)==obj. An
+    example of this would be Atoms"""
+
+    __slots__ = ('obj')
+
+    def __new__(cls, obj):
+        o = object.__new__(cls)
+        o.obj = obj
+        return o
+
+    def __instancecheck__(self, other):
+        if isinstance(other, type(self.obj)):
+            return True
+        return super().__instancecheck__(other)
+
+    def __call__(self, *args):
+        if args:
+            return type(self.obj)(*args)
+        else:
+            return self.obj
+
+    def __eq__(self, other):
+        if self.obj.__class__ == other:
+            return True
+        return super().__eq__(other)
+
+    def __hash__(self):
+        return hash(self.obj.__class__)
+
+    def __repr__(self):
+        return "<FuncHead({obj})>".format(obj=repr(self.obj))
+
+    def __str__(self):
+        return "<FuncHead({obj})>".format(obj=str(self.obj))
+
+
 class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.
@@ -2004,6 +2042,13 @@ class Atom(Basic):
         raise AttributeError('Atoms have no args. It might be necessary'
         ' to make a check for Atoms in the calling code.')
 
+    @property
+    def func(self):
+        return self._func_hook()
+
+    @cacheit
+    def _func_hook(self):
+        return FuncHead(self)
 
 def _aresame(a, b):
     """Return True if a and b are structurally the same, else False.
