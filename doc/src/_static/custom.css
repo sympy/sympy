@@ -40,6 +40,10 @@ blockquote {
     font-weight: normal;
     background-color: #2f431e;
 }
+/* Make sure the 'a' colors below don't affect the sidebar*/
+.sidebar-tree .icon, .sidebar-tree .reference {
+    color: var(--color-sidebar-link-text) !important;
+}
 
 /* Make the "class", "property" and so on before function names in the API*/
 /* docs bold. */
