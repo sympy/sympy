@@ -18,7 +18,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 
-from sympy.testing.pytest import XFAIL, SKIP
+from sympy.testing.pytest import SKIP
 
 a, b, c, x, y, z = symbols('a,b,c,x,y,z')
 
@@ -2884,10 +2884,6 @@ def test_sympy__integrals__transforms__HankelTransform():
     from sympy.integrals.transforms import HankelTransform
     assert _test_args(HankelTransform(2, x, y, 0))
 
-@XFAIL
-def test_sympy__liealgebras__cartan_type__CartanType_generator():
-    from sympy.liealgebras.cartan_type import CartanType_generator
-    assert _test_args(CartanType_generator("A2"))
 
 def test_sympy__liealgebras__cartan_type__Standard_Cartan():
     from sympy.liealgebras.cartan_type import Standard_Cartan
