@@ -3,8 +3,6 @@ This module provides convenient functions to transform SymPy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from typing import TYPE_CHECKING
-
 import builtins
 import inspect
 import keyword
@@ -15,13 +13,9 @@ import linecache
 from sympy.external import import_module # noqa:F401
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.iterables import (is_sequence, iterable,
-    NotIterable, flatten)
+from sympy.utilities.iterables import (is_sequence, iterable, NotIterable,
+                                       flatten)
 from sympy.utilities.misc import filldedent
-
-
-if TYPE_CHECKING:
-    import sympy.core.expr
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
