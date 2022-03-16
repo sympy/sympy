@@ -840,7 +840,7 @@ or tuple for the function arguments.
                 )
 
     # Get the names of the args, for creating a docstring
-    iterable_args: Iterable = (args,) if isinstance(args, Expr) else args
+    iterable_args = (args,) if isinstance(args, Expr) else args
     names = []
 
     # Grab the callers frame, for getting the names by inspection (if needed)
