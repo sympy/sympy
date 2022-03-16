@@ -27,14 +27,14 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
-MATH_DEFAULT = {}  # type: tDict[str, Any]
-MPMATH_DEFAULT = {}  # type: tDict[str, Any]
-NUMPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-SCIPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-CUPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-TENSORFLOW_DEFAULT = {}  # type: tDict[str, Any]
-SYMPY_DEFAULT = {}  # type: tDict[str, Any]
-NUMEXPR_DEFAULT = {}  # type: tDict[str, Any]
+MATH_DEFAULT = {}
+MPMATH_DEFAULT = {}
+NUMPY_DEFAULT = {"I": 1j}
+SCIPY_DEFAULT = {"I": 1j}
+CUPY_DEFAULT = {"I": 1j}
+TENSORFLOW_DEFAULT = {}
+SYMPY_DEFAULT = {}
+NUMEXPR_DEFAULT = {}
 
 # These are the namespaces the lambda functions will use.
 # These are separate from the names above because they are modified
@@ -91,13 +91,13 @@ MPMATH_TRANSLATIONS = {
 
 NUMPY_TRANSLATIONS = {
     "Heaviside": "heaviside",
-    }  # type: tDict[str, str]
-SCIPY_TRANSLATIONS = {}  # type: tDict[str, str]
-CUPY_TRANSLATIONS = {}  # type: tDict[str, str]
+    }
+SCIPY_TRANSLATIONS = {}
+CUPY_TRANSLATIONS = {}
 
-TENSORFLOW_TRANSLATIONS = {}  # type: tDict[str, str]
+TENSORFLOW_TRANSLATIONS = {}
 
-NUMEXPR_TRANSLATIONS = {}  # type: tDict[str, str]
+NUMEXPR_TRANSLATIONS = {}
 
 # Available modules:
 MODULES = {
@@ -790,7 +790,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
-    namespace = {} # type: tDict[str, Any]
+    namespace = {}
     for m in namespaces[::-1]:
         buf = _get_namespace(m)
         namespace.update(buf)
@@ -804,21 +804,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
     if printer is None:
         if _module_present('mpmath', namespaces):
-            from sympy.printing.pycode import MpmathPrinter as Printer # type: ignore
+            from sympy.printing.pycode import MpmathPrinter as Printer
         elif _module_present('scipy', namespaces):
-            from sympy.printing.numpy import SciPyPrinter as Printer # type: ignore
+            from sympy.printing.numpy import SciPyPrinter as Printer
         elif _module_present('numpy', namespaces):
-            from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
+            from sympy.printing.numpy import NumPyPrinter as Printer
         elif _module_present('cupy', namespaces):
-            from sympy.printing.numpy import CuPyPrinter as Printer # type: ignore
+            from sympy.printing.numpy import CuPyPrinter as Printer
         elif _module_present('numexpr', namespaces):
-            from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
+            from sympy.printing.lambdarepr import NumExprPrinter as Printer
         elif _module_present('tensorflow', namespaces):
-            from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
+            from sympy.printing.tensorflow import TensorflowPrinter as Printer
         elif _module_present('sympy', namespaces):
-            from sympy.printing.pycode import SymPyPrinter as Printer # type: ignore
+            from sympy.printing.pycode import SymPyPrinter as Printer
         else:
-            from sympy.printing.pycode import PythonCodePrinter as Printer # type: ignore
+            from sympy.printing.pycode import PythonCodePrinter as Printer
         user_functions = {}
         for m in namespaces[::-1]:
             if isinstance(m, dict):
@@ -844,7 +844,7 @@ or tuple for the function arguments.
     names = []
 
     # Grab the callers frame, for getting the names by inspection (if needed)
-    callers_local_vars = inspect.currentframe().f_back.f_locals.items() # type: ignore
+    callers_local_vars = inspect.currentframe().f_back.f_locals.items()
     for n, var in enumerate(iterable_args):
         if hasattr(var, 'name'):
             names.append(var.name)
@@ -861,7 +861,7 @@ or tuple for the function arguments.
     # Create the function definition code and execute it
     funcname = '_lambdifygenerated'
     if _module_present('tensorflow', namespaces):
-        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
+        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
@@ -893,14 +893,14 @@ or tuple for the function arguments.
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
 
-    funclocals = {} # type: tDict[str, Any]
+    funclocals = {}
     global _lambdify_generated_counter
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1
     c = compile(funcstr, filename, 'exec')
     exec(c, namespace, funclocals)
     # mtime has to be None or else linecache.checkcache will remove it
-    linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename) # type: ignore
+    linecache.cache[filename] = (len(funcstr), None, funcstr.splitlines(True), filename)
 
     func = funclocals[funcname]
 
