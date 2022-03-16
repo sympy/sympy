@@ -210,12 +210,6 @@ def test_exp_leading_term():
     # raises(NotImplementedError, lambda: exp(x + 1/x).as_leading_term(x))
 
 
-def test_issue_23231():
-    assert (x**(1/x)).as_leading_term(x) == exp(log(x)/x)
-    assert (2**(1/x)).as_leading_term(x) == exp(log(2)/x)
-    assert ((1/x)**(1/x)).as_leading_term(x) == exp(log(1/x)/x)
-
-
 @_both_exp_pow
 def test_exp_taylor_term():
     x = symbols('x')

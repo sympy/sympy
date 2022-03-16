@@ -541,8 +541,6 @@ class exp(ExpBase, metaclass=ExpMeta):
             # Check out function: test_issue_18473() in test_exponential.py and
             # test_limits.py for more information.
             return exp(arg0)
-        if isinstance(arg.as_numer_denom()[0], log):
-            return self
         if arg0 is S.NaN:
             arg0 = arg.limit(x, 0)
         if arg0.is_infinite is False:

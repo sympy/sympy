@@ -254,8 +254,6 @@ class Order(Expr):
                                 expr = new_expr.expr
                             elif expr.is_Mul:
                                 expr = Mul(*[a.expr for a in orders])
-                            elif expr.is_Pow:
-                                expr = orders[0].expr**orders[1].expr
                     expr = expr.as_independent(*args, as_Add=False)[1]
 
                     expr = expand_power_base(expr)
