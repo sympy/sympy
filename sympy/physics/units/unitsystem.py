@@ -198,4 +198,4 @@ class UnitSystem(_QuantityMapper):
         """
         Return the units of the system that do not have a prefix.
         """
-        return set(filter(lambda u: not u.is_prefixed and not u.is_physics_constant, self._units))
+        return set(filter(lambda u: not u.is_prefixed and not u.is_physical_constant, self._units))

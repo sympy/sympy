@@ -21,7 +21,7 @@ class Quantity(AtomicExpr):
     is_real = True
     is_number = False
     is_nonzero = True
-    is_physics_constant = False
+    is_physical_constant = False
     _diff_wrt = True
 
     def __new__(cls, name, abbrev=None, dimension=None, scale_factor=None,
@@ -250,4 +250,4 @@ class Quantity(AtomicExpr):
 class PhysicalConstant(Quantity):
     """Represents a physical constant, eg. `speed_of_light` or `avogadro_constant`."""
 
-    is_physics_constant = True
+    is_physical_constant = True

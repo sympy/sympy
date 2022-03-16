@@ -73,7 +73,7 @@ def test_get_units_non_prefixed():
         for unit in units:
             assert isinstance(unit, Quantity), f"{unit} must be a Quantity, not {type(unit)}"
             assert not unit.is_prefixed, f"{unit} is marked as prefixed"
-            assert not unit.is_physics_constant, f"{unit} is marked as physics constant"
+            assert not unit.is_physical_constant, f"{unit} is marked as physics constant"
             assert not unit.name.name.startswith(prefix), f"Unit {unit.name} has prefix {prefix}"
     assert volt in units
     assert ohm in units

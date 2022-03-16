@@ -549,11 +549,11 @@ def test_physics_constant():
             continue
         if name.endswith('_constant'):
             assert isinstance(quantity, PhysicalConstant), f"{quantity} must be PhysicalConstant, but is {type(quantity)}"
-            assert quantity.is_physics_constant, f"{name} is not marked as physics constant when it should be"
+            assert quantity.is_physical_constant, f"{name} is not marked as physics constant when it should be"
 
     for const in [gravitational_constant, molar_gas_constant, vacuum_permittivity, speed_of_light, elementary_charge]:
         assert isinstance(const, PhysicalConstant), f"{const} must be PhysicalConstant, but is {type(const)}"
-        assert const.is_physics_constant, f"{const} is not marked as physics constant when it should be"
+        assert const.is_physical_constant, f"{const} is not marked as physics constant when it should be"
 
-    assert not meter.is_physics_constant
-    assert not joule.is_physics_constant
+    assert not meter.is_physical_constant
+    assert not joule.is_physical_constant

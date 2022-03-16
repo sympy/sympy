@@ -131,7 +131,7 @@ def _build_preferred_dimension_to_unit(unit_system="SI") -> tDict[Symbol, Quanti
     preferred_dimension_to_unit = {}
 
     for quantity in unit_system.get_units_non_prefixed():
-        if quantity.is_prefixed or quantity.is_physics_constant:
+        if quantity.is_prefixed or quantity.is_physical_constant:
             continue
         dim = unit_system.get_quantity_dimension(quantity)
         if dim.name.is_Symbol:
