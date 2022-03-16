@@ -3,7 +3,7 @@ This module provides convenient functions to transform SymPy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from typing import Any, Dict as tDict, TYPE_CHECKING
+from typing import Any, Dict as tDict
 
 import builtins
 import inspect
