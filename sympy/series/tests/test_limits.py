@@ -1102,3 +1102,8 @@ def test_issue_21785():
 
 def test_issue_22181():
     assert limit((-1)**x * 2**(-x), x, oo) == 0
+
+
+def test_issue_23231():
+    f = (2**x - 2**(-x))/(2**x + 2**(-x))
+    assert limit(f, x, -oo) == -1

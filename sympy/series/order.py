@@ -3,6 +3,7 @@ from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.function import Function, PoleError, expand_power_base, expand_log
 from sympy.core.sorting import default_sort_key
+from sympy.functions.elementary.exponential import exp, log
 from sympy.sets.sets import Complement
 from sympy.utilities.iterables import uniq, is_sequence
 
@@ -255,7 +256,9 @@ class Order(Expr):
                             elif expr.is_Mul:
                                 expr = Mul(*[a.expr for a in orders])
                             elif expr.is_Pow:
-                                expr = orders[0].expr**orders[1].expr
+                                e = expr.exp
+                                b = expr.base
+                                expr = exp(e * log(b))
                     expr = expr.as_independent(*args, as_Add=False)[1]
 
                     expr = expand_power_base(expr)
