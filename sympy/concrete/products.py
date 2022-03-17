@@ -189,7 +189,7 @@ class Product(ExprWithIntLimits):
     .. [3] https://en.wikipedia.org/wiki/Empty_product
     """
 
-    __slots__ = ()
+    __slots__ = ('is_commutative',)
 
     limits: tTuple[tTuple[Symbol, Expr, Expr]]
 

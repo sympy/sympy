@@ -12,8 +12,6 @@ class DomainElement:
     elements of a domain. Method ``parent()`` gives that domain.
     """
 
-    __slots__ = ()
-
     def parent(self):
         """Get the domain associated with ``self``
 

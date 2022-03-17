@@ -46,7 +46,7 @@ class Program(Token):
     end program
 
     """
-    __slots__ = _fields = ('name', 'body')
+    __slots__ = ('name', 'body')
     _construct_name = String
     _construct_body = staticmethod(lambda body: CodeBlock(*body))
 
@@ -67,7 +67,7 @@ class use_rename(Token):
     use signallib, only: snr, thingy => convolution2d
 
     """
-    __slots__ = _fields = ('local', 'original')
+    __slots__ = ('local', 'original')
     _construct_local = String
     _construct_original = String
 
@@ -93,7 +93,7 @@ class use(Token):
     'use signallib, only: snr, convolution2d'
 
     """
-    __slots__ = _fields = ('namespace', 'rename', 'only')
+    __slots__ = ('namespace', 'rename', 'only')
     defaults = {'rename': none, 'only': none}
     _construct_namespace = staticmethod(_name)
     _construct_rename = staticmethod(lambda args: Tuple(*[arg if isinstance(arg, use_rename) else use_rename(*arg) for arg in args]))
@@ -118,7 +118,7 @@ class Module(Token):
     end module
 
     """
-    __slots__ = _fields = ('name', 'declarations', 'definitions')
+    __slots__ = ('name', 'declarations', 'definitions')
     defaults = {'declarations': Tuple()}
     _construct_name = String
 
@@ -149,8 +149,7 @@ class Subroutine(Node):
     end subroutine
 
     """
-    __slots__ = ('name', 'parameters', 'body')
-    _fields = __slots__ + Node._fields
+    __slots__ = ('name', 'parameters', 'body', 'attrs')
     _construct_name = String
     _construct_parameters = staticmethod(lambda params: Tuple(*map(Variable.deduced, params)))
 
@@ -173,7 +172,7 @@ class SubroutineCall(Token):
     '       call mysub(x, y)'
 
     """
-    __slots__ = _fields = ('name', 'subroutine_args')
+    __slots__ = ('name', 'subroutine_args')
     _construct_name = staticmethod(_name)
     _construct_subroutine_args = staticmethod(_mk_Tuple)
 
@@ -205,7 +204,7 @@ class Do(Token):
 
     """
 
-    __slots__ = _fields = ('body', 'counter', 'first', 'last', 'step', 'concurrent')
+    __slots__ = ('body', 'counter', 'first', 'last', 'step', 'concurrent')
     defaults = {'step': Integer(1), 'concurrent': false}
     _construct_body = staticmethod(lambda body: CodeBlock(*body))
     _construct_counter = staticmethod(sympify)
@@ -230,7 +229,7 @@ class ArrayConstructor(Token):
     '[1, 2, 3]'
 
     """
-    __slots__ = _fields = ('elements',)
+    __slots__ = ('elements',)
     _construct_elements = staticmethod(_mk_Tuple)
 
 
@@ -249,7 +248,7 @@ class ImpliedDoLoop(Token):
     '[-28, (i**3, i = -3, 3, 2), 28]'
 
     """
-    __slots__ = _fields = ('expr', 'counter', 'first', 'last', 'step')
+    __slots__ = ('expr', 'counter', 'first', 'last', 'step')
     defaults = {'step': Integer(1)}
     _construct_expr = staticmethod(sympify)
     _construct_counter = staticmethod(sympify)
@@ -547,7 +546,7 @@ class GoTo(Token):
     'go to (10, 20, 30), i'
 
     """
-    __slots__ = _fields = ('labels', 'expr')
+    __slots__ = ('labels', 'expr')
     defaults = {'expr': none}
     _construct_labels = staticmethod(_mk_Tuple)
     _construct_expr = staticmethod(sympify)
@@ -574,7 +573,7 @@ class FortranReturn(Token):
     '       return x'
 
     """
-    __slots__ = _fields = ('return_value',)
+    __slots__ = ('return_value',)
     defaults = {'return_value': none}
     _construct_return_value = staticmethod(sympify)
 
@@ -644,14 +643,14 @@ class literal_dp(_literal):
 
 
 class sum_(Token, Expr):
-    __slots__ = _fields = ('array', 'dim', 'mask')
+    __slots__ = ('array', 'dim', 'mask')
     defaults = {'dim': none, 'mask': none}
     _construct_array = staticmethod(sympify)
     _construct_dim = staticmethod(sympify)
 
 
 class product_(Token, Expr):
-    __slots__ = _fields = ('array', 'dim', 'mask')
+    __slots__ = ('array', 'dim', 'mask')
     defaults = {'dim': none, 'mask': none}
     _construct_array = staticmethod(sympify)
     _construct_dim = staticmethod(sympify)

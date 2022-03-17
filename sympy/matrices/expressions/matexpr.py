@@ -52,7 +52,6 @@ class MatrixExpr(Expr):
 
     MatrixSymbol, MatAdd, MatMul, Transpose, Inverse
     """
-    __slots__ = ()  # type: tTuple[str, ...]
 
     # Should not be considered iterable by the
     # sympy.utilities.iterables.iterable function. Subclass that actually are

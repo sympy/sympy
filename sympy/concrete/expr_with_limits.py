@@ -540,8 +540,6 @@ class AddWithLimits(ExprWithLimits):
         Parent class for Integral and Sum.
     """
 
-    __slots__ = ()
-
     def __new__(cls, function, *symbols, **assumptions):
         from sympy.concrete.summations import Sum
         pre = _common_new(cls, function, *symbols,

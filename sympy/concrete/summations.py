@@ -170,7 +170,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     .. [3] https://en.wikipedia.org/wiki/Empty_sum
     """
 
-    __slots__ = ()
+    __slots__ = ('is_commutative',)
 
     limits: tTuple[tTuple[Symbol, Expr, Expr]]
 
