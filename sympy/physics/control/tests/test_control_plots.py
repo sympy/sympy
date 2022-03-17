@@ -94,6 +94,8 @@ def test_errors():
 
 
 def test_pole_zero():
+    if not numpy:
+        skip("NumPy is required for this test")
 
     def pz_tester(sys, expected_value):
         z, p = pole_zero_numerical_data(sys)
@@ -122,6 +124,8 @@ def test_pole_zero():
 
 
 def test_bode():
+    if not numpy:
+        skip("NumPy is required for this test")
 
     def bode_phase_evalf(system, point):
         expr = system.to_expr()
@@ -152,6 +156,8 @@ def check_point_accuracy(a, b):
 
 
 def test_impulse_response():
+    if not numpy:
+        skip("NumPy is required for this test")
 
     def impulse_res_tester(sys, expected_value):
         x, y = _to_tuple(*impulse_response_numerical_data(sys,
@@ -201,6 +207,8 @@ def test_impulse_response():
 
 
 def test_step_response():
+    if not numpy:
+        skip("NumPy is required for this test")
 
     def step_res_tester(sys, expected_value):
         x, y = _to_tuple(*step_response_numerical_data(sys,
@@ -247,6 +255,8 @@ def test_step_response():
 
 
 def test_ramp_response():
+    if not numpy:
+        skip("NumPy is required for this test")
 
     def ramp_res_tester(sys, num_points, expected_value, slope=1):
         x, y = _to_tuple(*ramp_response_numerical_data(sys,
