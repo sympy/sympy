@@ -1169,6 +1169,7 @@ def laplace_transform_ode(eqs, t, s, funcs, solve_it=False):
     Function that can solve some ordinary differential equation systems by
     Laplace transform.
     """
+    from sympy.solvers.solvers import solve
     eqs_laplace = []
     for eq in eqs:
         if eq.func.is_Equality:
