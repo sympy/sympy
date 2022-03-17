@@ -2718,6 +2718,22 @@ def _tsolve(eq, sym, **flags):
         # lambert forms may need some help being recognized, e.g. changing
         # 2**(3*x) + x**3*log(2)**3 + 3*x**2*log(2)**2 + 3*x*log(2) + 1
         # to 2**(3*x) + (x*log(2) + 1)**3
+        logs = eq.atoms(log)
+        spow = {i.exp for j in logs for i in j.atoms(Pow) if i.base == sym}
+        spow = min(spow) if spow else 1
+        if spow > 1 and eq.subs(sym**spow, Dummy()).has_free(sym):
+            spow = 1  # there was a free-symbol or non-pow generator with sym
+        if spow != 1:
+            u = Dummy('bivariate-cov')
+            p = sym**spow
+            ueq = eq.subs(p, u)
+            sol = solve(ueq, u, **flags)
+            inv = solve(p - u, sym)
+            rv = []
+            for i in inv:
+                rv.extend([i.subs(u, s) for s in sol])
+            return rv
+
         g = _filtered_gens(eq.as_poly(), sym)
         up_or_log = set()
         for gi in g:
