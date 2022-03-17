@@ -1044,4 +1044,4 @@ def test_issue_22210():
 def test_issue_8439():
     x = Symbol('x')
     assert x + float('inf') == x + oo
-    assert S(float'inf') == oo
+    assert S(float('inf')) == oo
