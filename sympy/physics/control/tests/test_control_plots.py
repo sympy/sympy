@@ -1,3 +1,4 @@
+from math import isclose
 from sympy.core.numbers import I
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.complexes import (Abs, arg)
@@ -12,7 +13,7 @@ from sympy.physics.control.control_plots import \
     bode_phase_numerical_data, bode_plot)
 from sympy.physics.control.lti import (TransferFunction,
     Series, Parallel, TransferFunctionMatrix)
-from sympy.testing.pytest import raises, skip, XFAIL
+from sympy.testing.pytest import raises, skip
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -92,10 +93,7 @@ def test_errors():
     raises(ValueError, lambda: ramp_response_plot(tf1, slope=-0.1))
 
 
-@XFAIL
 def test_pole_zero():
-    if not matplotlib:
-        skip("Matplotlib not the default backend")
 
     def pz_tester(sys, expected_value):
         z, p = pole_zero_numerical_data(sys)
@@ -124,8 +122,6 @@ def test_pole_zero():
 
 
 def test_bode():
-    if not matplotlib:
-        skip("Matplotlib not the default backend")
 
     def bode_phase_evalf(system, point):
         expr = system.to_expr()
@@ -151,13 +147,11 @@ def test_bode():
 
 
 def check_point_accuracy(a, b):
-    return all(((Abs(a_i - b_i) < 1e-12) or (Abs((a_i / b_i) - 1) < 1e-8)) for \
+    return all(isclose(a_i, b_i, rel_tol=10e-12) for \
         a_i, b_i in zip(a, b))
 
 
 def test_impulse_response():
-    if not matplotlib:
-        skip("Matplotlib not the default backend")
 
     def impulse_res_tester(sys, expected_value):
         x, y = _to_tuple(*impulse_response_numerical_data(sys,
@@ -207,8 +201,6 @@ def test_impulse_response():
 
 
 def test_step_response():
-    if not matplotlib:
-        skip("Matplotlib not the default backend")
 
     def step_res_tester(sys, expected_value):
         x, y = _to_tuple(*step_response_numerical_data(sys,
@@ -255,8 +247,6 @@ def test_step_response():
 
 
 def test_ramp_response():
-    if not matplotlib:
-        skip("Matplotlib not the default backend")
 
     def ramp_res_tester(sys, num_points, expected_value, slope=1):
         x, y = _to_tuple(*ramp_response_numerical_data(sys,
