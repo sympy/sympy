@@ -10,7 +10,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 from sympy.integrals.integrals import integrate
-from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
+from sympy.physics.units import (amount_of_substance, area, convert_to, find_unit,
                                  volume, kilometer, joule)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
@@ -296,11 +296,17 @@ def test_find_unit():
         'astronomical_units']
     assert find_unit(inch**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(length**-1) == ['D', 'dioptre', 'optical_power']
+    assert find_unit(inch ** 2) == ['ha', 'hectare', 'planck_area']
     assert find_unit(inch ** 3) == [
         'L', 'l', 'cL', 'cl', 'dL', 'dl', 'mL', 'ml', 'liter', 'quart', 'liters', 'quarts',
         'deciliter', 'centiliter', 'deciliters', 'milliliter',
         'centiliters', 'milliliters', 'planck_volume']
     assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'planck_voltage']
+    assert find_unit(grams) == ['g', 't', 'Da', 'kg', 'mg', 'ug', 'amu', 'mmu', 'amus',
+                                'gram', 'mmus', 'grams', 'pound', 'tonne', 'dalton',
+                                'pounds', 'kilogram', 'kilograms', 'microgram', 'milligram',
+                                'metric_ton', 'micrograms', 'milligrams', 'planck_mass',
+                                'milli_mass_unit', 'atomic_mass_unit', 'atomic_mass_constant']
 
 
 def test_Quantity_derivative():
@@ -510,3 +516,11 @@ def test_issue_22164():
 
     # deprecation warning is not expected here
     SI._collect_factor_and_dimension(expr)
+
+
+def test_issue_22819():
+    from sympy.physics.units import tonne, gram, Da
+    from sympy.physics.units.systems.si import dimsys_SI
+    assert tonne.convert_to(gram) == 1000000*gram
+    assert dimsys_SI.get_dimensional_dependencies(area) == {'length': 2}
+    assert Da.scale_factor == 1.66053906660000e-24
