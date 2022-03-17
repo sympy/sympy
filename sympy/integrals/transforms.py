@@ -35,7 +35,6 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import factor, Poly
 from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import CRootOf, RootSum
-from sympy.solvers.solvers import solve
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         SymPyDeprecationWarning,
                                         ignore_warnings)
