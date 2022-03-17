@@ -1164,31 +1164,6 @@ def _laplace_transform(f, t, s_, simplify=True):
         aux = _simplifyconds(aux, s, a)
     return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
 
-def laplace_transform_ode(eqs, t, s, funcs, solve_it=False):
-    r"""
-    Function that can solve some ordinary differential equation systems by
-    Laplace transform.
-    """
-    from sympy.solvers.solvers import solve
-    eqs_laplace = []
-    for eq in eqs:
-        if eq.func.is_Equality:
-            xl = Eq(laplace_transform(eq.args[0], t, s),
-                          laplace_transform(eq.args[1], t, s))
-        else:
-            xl = laplace_transform(eq, t, s)
-        for _f, _F, _ic in funcs:
-            xl = laplace_transform_replace_ic(xl, _f, _F, t, s, _ic)
-        eqs_laplace.append(xl)
-    if solve_it==True:
-        Funcs = []
-        for _f, _F, _ic in funcs:
-            Funcs.append(_F(s))
-        sols_laplace = solve(eqs_laplace, Funcs)
-        return sols_laplace
-    else:
-        return eqs_laplace
-
 def laplace_transform_replace_ic(expr, f, F, t, s, ic):
     r"""
     Public helper function for solving differential equations using the
@@ -1927,7 +1902,7 @@ class LaplaceTransform(IntegralTransform):
         return fn, LT
 
 
-def laplace_transform(f, t, s, legacy_matrix=True, **hints):
+def laplace_transform(f, t, s, diff_subs=tuple(), legacy_matrix=True, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
@@ -2022,7 +1997,14 @@ behavior.
             else:
                 return type(f)(*f.shape, elements_trans)
 
-    return LaplaceTransform(f, t, s).doit(**hints)
+    if isinstance(f, list):
+        return [laplace_transform(x, t, s, diff_subs=diff_subs, **hints)
+                for x in f]
+
+    LT = LaplaceTransform(f, t, s).doit(**hints)
+    for _f, _F, _ic in diff_subs:
+        LT = laplace_transform_replace_ic(LT, _f, _F, t, s, _ic)
+    return LT
 
 
 @_noconds_(True)

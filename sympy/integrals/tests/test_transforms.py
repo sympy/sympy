@@ -475,6 +475,9 @@ def test_laplace_transform():
     g = Function("g")
     y = Function("Y")
     Y = Function("Y")
+    z = Function("z")
+    Z = Function("Z")
+    y0, z0, z1 = symbols('y0, z0, z1')
 
     # Test rule-base evaluation according to
     # http://eqworld.ipmnet.ru/en/auxiliary/inttrans/
@@ -715,6 +718,11 @@ def test_laplace_transform():
     G = laplace_transform_replace_ic(F, y, Y, t, s, [1, 0])
     assert (G == s**2*Y(s) - s + Y(s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
 
+    # laplace_transform covers lists and replacements
+    assert laplace_transform([diff(z(t), t, 2)-a*z(t)-b*y(t),
+                              diff(y(t), t)-c*z(t)-d*y(t)], t, s,
+                             ((z, Z, [z0, z1, 0]), (y, Y, [y0, 0, 0])) ) == \
+        [-a*Z(s)-b*Y(s)+s**2*Z(s)-s*z0-z1, -c*Z(s)-d*Y(s)+s*Y(s)-y0]
     # additional basic tests from wikipedia
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
         ((s + c)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True)
