@@ -8,4 +8,4 @@ class List(AbstractList):
 
 class NumExprEvaluate(Token):
     """represents a call to :class:`numexpr`s :func:`evaluate`"""
-    __slots__ = ('expr',)
+    __slots__ = _fields = ('expr',)
