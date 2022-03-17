@@ -32,7 +32,18 @@ class Transform(NodeTransformer):
         self.local_dict = local_dict
         self.global_dict = global_dict
 
+    def visit_Constant(self, node):
+        if isinstance(node.value, int):
+            return fix_missing_locations(Call(func=Name('Integer', Load()),
+                    args=[node], keywords=[]))
+        elif isinstance(node.value, float):
+            return fix_missing_locations(Call(func=Name('Float', Load()),
+                    args=[node], keywords=[]))
+        return node
+
     def visit_Num(self, node):
+        """This function exists for backwards compatibility with Python 3.7.
+           It should be removed when SymPy removes support for Python 3.7."""
         if isinstance(node.n, int):
             return fix_missing_locations(Call(func=Name('Integer', Load()),
                     args=[node], keywords=[]))

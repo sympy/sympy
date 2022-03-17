@@ -21,7 +21,7 @@ from sympy.core.function import Derivative
 from sympy.core.singleton import S
 from sympy.core.function import Subs
 from sympy.core.traversal import preorder_traversal
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 
 
@@ -455,9 +455,16 @@ def differentiate_finite(expr, *symbols,
 
     Dexpr = expr.diff(*symbols, evaluate=evaluate)
     if evaluate:
-        SymPyDeprecationWarning(feature="``evaluate`` flag",
-                                issue=17881,
-                                deprecated_since_version="1.5").warn()
+        sympy_deprecation_warning("""
+        The evaluate flag to differentiate_finite() is deprecated.
+
+        evaluate=True expands the intermediate derivatives before computing
+        differences, but this usually not what you want, as it does not
+        satisfy the product rule.
+        """,
+            deprecated_since_version="1.5",
+             active_deprecations_target="deprecated-differentiate_finite-evaluate",
+        )
         return Dexpr.replace(
             lambda arg: arg.is_Derivative,
             lambda arg: arg.as_finite_difference(points=points, x0=x0, wrt=wrt))

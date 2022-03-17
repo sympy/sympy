@@ -13,6 +13,7 @@ from sympy.core.symbol import _symbol
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point
 from sympy.integrals import integrate
+from sympy.matrices import Matrix, rot_axis3
 from sympy.utilities.iterables import is_sequence
 
 from mpmath.libmp.libmpf import prec_to_dps
@@ -365,7 +366,6 @@ class Curve(GeometrySet):
         Curve((-x, x), (x, 0, 1))
 
         """
-        from sympy.matrices import Matrix, rot_axis3
         if pt:
             pt = -Point(pt, dim=2)
         else:

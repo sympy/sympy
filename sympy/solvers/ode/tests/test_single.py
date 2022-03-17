@@ -442,6 +442,7 @@ def test_2nd_nonlinear_autonomous_conserved_integral():
     assert checkodesol(eq, [s.doit() for s in solved]) == [(True, 0), (True, 0)]
 
 
+@slow
 def test_2nd_linear_bessel_equation():
     _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel)
 
@@ -511,6 +512,7 @@ def test_slow_examples_separable():
     _ode_solver_test(_get_examples_ode_sol_separable, run_slow_test=True)
 
 
+@slow
 def test_nth_linear_constant_coeff_undetermined_coefficients():
     #issue-https://github.com/sympy/sympy/issues/5787
     # This test case is to show the classification of imaginary constants under
@@ -570,6 +572,7 @@ def test_almost_linear():
    _ode_solver_test(_get_examples_ode_sol_almost_linear)
 
 
+@slow
 def test_Liouville_ODE():
     hint = 'Liouville'
     not_Liouville1 = classify_ode(diff(f(x), x)/x + f(x)*diff(f(x), x, x)/2 -
@@ -612,6 +615,7 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     _ode_solver_test(_get_examples_ode_sol_euler_undetermined_coeff)
 
 
+@slow
 def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     x, t = symbols('x, t')
     a, b, c, d = symbols('a, b, c, d', integer=True)

@@ -403,7 +403,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
         The domain over which the equation is solved
     continuous: bool
         True if expr is known to be continuous over the given domain
-        (and so continuous_domain() doesn't need to be called on it)
+        (and so continuous_domain() does not need to be called on it)
 
     Raises
     ======

@@ -115,6 +115,8 @@ class Polygon(GeometrySet):
 
     """
 
+    __slots__ = ()
+
     def __new__(cls, *args, n = 0, **kwargs):
         if n:
             args = list(args)
@@ -1134,7 +1136,8 @@ class Polygon(GeometrySet):
                 e2_max_radius = r
         center_dist = Point.distance(e1_center, e2_center)
         if center_dist <= e1_max_radius + e2_max_radius:
-            warnings.warn("Polygons may intersect producing erroneous output")
+            warnings.warn("Polygons may intersect producing erroneous output",
+                          stacklevel=3)
 
         '''
         Find the upper rightmost vertex of e1 and the lowest leftmost vertex of e2

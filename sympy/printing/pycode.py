@@ -6,6 +6,7 @@ This module contains Python code printers for plain Python as well as NumPy & Sc
 from collections import defaultdict
 from itertools import chain
 from sympy.core import S
+from sympy.core.mod import Mod
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
@@ -550,7 +551,6 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._print_Rational(expr)
 
     def _print_frac(self, expr):
-        from sympy.core.mod import Mod
         return self._print_Mod(Mod(expr.args[0], 1))
 
     def _print_Symbol(self, expr):

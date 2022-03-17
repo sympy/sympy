@@ -11,7 +11,7 @@ from sympy.functions.elementary.complexes import (adjoint, conjugate, re, sign, 
 from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys.polytools import gcd
 from sympy.series.order import O
@@ -536,6 +536,11 @@ def test_log_simplify():
 
 def test_log_AccumBounds():
     assert log(AccumBounds(1, E)) == AccumBounds(0, 1)
+    assert log(AccumBounds(0, E)) == AccumBounds(-oo, 1)
+    assert log(AccumBounds(-1, E)) == S.NaN
+    assert log(AccumBounds(0, oo)) == AccumBounds(-oo, oo)
+    assert log(AccumBounds(-oo, 0)) == S.NaN
+    assert log(AccumBounds(-oo, oo)) == S.NaN
 
 
 @_both_exp_pow
@@ -729,3 +734,20 @@ def test_log_expand_factor():
 def test_issue_9116():
     n = Symbol('n', positive=True, integer=True)
     assert log(n).is_nonnegative is True
+
+
+def test_issue_18473():
+    assert exp(x*log(cos(1/x))).as_leading_term(x) == S.NaN
+    assert exp(x*log(tan(1/x))).as_leading_term(x) == S.NaN
+    assert log(cos(1/x)).as_leading_term(x) == S.NaN
+    assert log(tan(1/x)).as_leading_term(x) == S.NaN
+    assert log(cos(1/x) + 2).as_leading_term(x) == AccumBounds(0, log(3))
+    assert exp(x*log(cos(1/x) + 2)).as_leading_term(x) == 1
+    assert log(cos(1/x) - 2).as_leading_term(x) == S.NaN
+    assert exp(x*log(cos(1/x) - 2)).as_leading_term(x) == S.NaN
+    assert log(cos(1/x) + 1).as_leading_term(x) == AccumBounds(-oo, log(2))
+    assert exp(x*log(cos(1/x) + 1)).as_leading_term(x) == AccumBounds(0, 1)
+    assert log(sin(1/x)**2).as_leading_term(x) == AccumBounds(-oo, 0)
+    assert exp(x*log(sin(1/x)**2)).as_leading_term(x) == AccumBounds(0, 1)
+    assert log(tan(1/x)**2).as_leading_term(x) == AccumBounds(-oo, oo)
+    assert exp(2*x*(log(tan(1/x)**2))).as_leading_term(x) == AccumBounds(0, oo)

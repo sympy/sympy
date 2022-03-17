@@ -1,6 +1,6 @@
 from typing import Any, Dict as tDict
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.assumptions.ask import Q
 from sympy.core.function import (Function, WildFunction)
 from sympy.core.numbers import (AlgebraicNumber, Float, Integer, Rational)
@@ -31,7 +31,7 @@ ENV = {"Str": Str}  # type: tDict[str, Any]
 exec("from sympy import *", ENV)
 
 
-def sT(expr, string, import_stmt=None):
+def sT(expr, string, import_stmt=None, **kwargs):
     """
     sT := sreprTest
 
@@ -44,7 +44,7 @@ def sT(expr, string, import_stmt=None):
         ENV2 = ENV.copy()
         exec(import_stmt, ENV2)
 
-    assert srepr(expr) == string
+    assert srepr(expr, **kwargs) == string
     assert eval(string, ENV2) == expr
 
 
@@ -336,7 +336,14 @@ def test_Cycle():
 
 def test_Permutation():
     import_stmt = "from sympy.combinatorics import Permutation"
-    sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
+    sT(Permutation(1, 2)(3, 4), "Permutation([0, 2, 1, 4, 3])", import_stmt, perm_cyclic=False)
+    sT(Permutation(1, 2)(3, 4), "Permutation(1, 2)(3, 4)", import_stmt, perm_cyclic=True)
+
+    with warns_deprecated_sympy():
+        old_print_cyclic = Permutation.print_cyclic
+        Permutation.print_cyclic = False
+        sT(Permutation(1, 2)(3, 4), "Permutation([0, 2, 1, 4, 3])", import_stmt)
+        Permutation.print_cyclic = old_print_cyclic
 
 def test_dict():
     from sympy.abc import x, y, z

@@ -260,7 +260,7 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        from sympy.utilities import runtests
+        from sympy.testing import runtests
         runtests.run_all_tests()
 
 
@@ -431,6 +431,9 @@ if __name__ == '__main__':
           license='BSD',
           keywords="Math CAS",
           url='https://sympy.org',
+          project_urls={
+              'Source': 'https://github.com/sympy/sympy',
+          },
           py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],

@@ -6,7 +6,7 @@ and supports functions to generate the contents in
 ``sympy.assumptions.ask_generated`` file.
 """
 
-from sympy.assumptions import Q
+from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Symbol

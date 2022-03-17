@@ -6,7 +6,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
     rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
     rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, atan, atanh,
     tanh, log, sqrt)
@@ -554,6 +554,8 @@ def test_puiseux2():
         y)*x**QQ(11,5) + (y**9/9 + y**4)*x**QQ(9,5) - (y**7/7 +
         y**2)*x**QQ(7,5) + (y**5/5 + 1)*x - y**3*x**QQ(3,5)/3 + y*x**QQ(1,5)
 
+
+@slow
 def test_rs_series():
     x, a, b, c = symbols('x, a, b, c')
 

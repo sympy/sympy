@@ -274,7 +274,7 @@ def dup_eval(f, a, K):
 
     """
     if not a:
-        return dup_TC(f, K)
+        return K.convert(dup_TC(f, K))
 
     result = K.zero
 

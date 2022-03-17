@@ -18,16 +18,9 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sec
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
-
-from sympy.polys.orthopolys import (
-    jacobi_poly,
-    gegenbauer_poly,
-    chebyshevt_poly,
-    chebyshevu_poly,
-    laguerre_poly,
-    hermite_poly,
-    legendre_poly
-)
+from sympy.polys.orthopolys import (chebyshevt_poly, chebyshevu_poly,
+                                    gegenbauer_poly, hermite_poly, jacobi_poly,
+                                    laguerre_poly, legendre_poly)
 
 _x = Dummy('x')
 
@@ -56,8 +49,8 @@ class jacobi(OrthogonalPolynomial):
     Explanation
     ===========
 
-    ``jacobi(n, alpha, beta, x)`` gives the nth Jacobi polynomial
-    in x, $P_n^{\left(\alpha, \beta\right)}(x)$.
+    ``jacobi(n, alpha, beta, x)`` gives the $n$th Jacobi polynomial
+    in $x$, $P_n^{\left(\alpha, \beta\right)}(x)$.
 
     The Jacobi polynomials are orthogonal on $[-1, 1]$ with respect
     to the weight $\left(1-x\right)^\alpha \left(1+x\right)^\beta$.
@@ -218,8 +211,8 @@ def jacobi_normalized(n, a, b, x):
     Explanation
     ===========
 
-    ``jacobi_normalized(n, alpha, beta, x)`` gives the nth
-    Jacobi polynomial in *x*, $P_n^{\left(\alpha, \beta\right)}(x)$.
+    ``jacobi_normalized(n, alpha, beta, x)`` gives the $n$th
+    Jacobi polynomial in $x$, $P_n^{\left(\alpha, \beta\right)}(x)$.
 
     The Jacobi polynomials are orthogonal on $[-1, 1]$ with respect
     to the weight $\left(1-x\right)^\alpha \left(1+x\right)^\beta$.
@@ -296,8 +289,8 @@ class gegenbauer(OrthogonalPolynomial):
     Explanation
     ===========
 
-    ``gegenbauer(n, alpha, x)`` gives the nth Gegenbauer polynomial
-    in x, $C_n^{\left(\alpha\right)}(x)$.
+    ``gegenbauer(n, alpha, x)`` gives the $n$th Gegenbauer polynomial
+    in $x$, $C_n^{\left(\alpha\right)}(x)$.
 
     The Gegenbauer polynomials are orthogonal on $[-1, 1]$ with
     respect to the weight $\left(1-x^2\right)^{\alpha-\frac{1}{2}}$.
@@ -443,8 +436,8 @@ class chebyshevt(OrthogonalPolynomial):
     Explanation
     ===========
 
-    ``chebyshevt(n, x)`` gives the nth Chebyshev polynomial (of the first
-    kind) in x, $T_n(x)$.
+    ``chebyshevt(n, x)`` gives the $n$th Chebyshev polynomial (of the first
+    kind) in $x$, $T_n(x)$.
 
     The Chebyshev polynomials of the first kind are orthogonal on
     $[-1, 1]$ with respect to the weight $\frac{1}{\sqrt{1-x^2}}$.
@@ -555,7 +548,7 @@ class chebyshevu(OrthogonalPolynomial):
     Explanation
     ===========
 
-    ``chebyshevu(n, x)`` gives the nth Chebyshev polynomial of the second
+    ``chebyshevu(n, x)`` gives the $n$th Chebyshev polynomial of the second
     kind in x, $U_n(x)$.
 
     The Chebyshev polynomials of the second kind are orthogonal on
@@ -670,9 +663,9 @@ class chebyshevu(OrthogonalPolynomial):
 
 class chebyshevt_root(Function):
     r"""
-    ``chebyshev_root(n, k)`` returns the kth root (indexed from zero) of
-    the nth Chebyshev polynomial of the first kind; that is, if
-    0 <= k < n, ``chebyshevt(n, chebyshevt_root(n, k)) == 0``.
+    ``chebyshev_root(n, k)`` returns the $k$th root (indexed from zero) of
+    the $n$th Chebyshev polynomial of the first kind; that is, if
+    $0 \le k < n$, ``chebyshevt(n, chebyshevt_root(n, k)) == 0``.
 
     Examples
     ========
@@ -710,8 +703,8 @@ class chebyshevt_root(Function):
 
 class chebyshevu_root(Function):
     r"""
-    ``chebyshevu_root(n, k)`` returns the kth root (indexed from zero) of the
-    nth Chebyshev polynomial of the second kind; that is, if 0 <= k < n,
+    ``chebyshevu_root(n, k)`` returns the $k$th root (indexed from zero) of the
+    $n$th Chebyshev polynomial of the second kind; that is, if $0 \le k < n$,
     ``chebyshevu(n, chebyshevu_root(n, k)) == 0``.
 
     Examples
@@ -754,14 +747,14 @@ class chebyshevu_root(Function):
 
 class legendre(OrthogonalPolynomial):
     r"""
-    ``legendre(n, x)`` gives the nth Legendre polynomial of x, $P_n(x)$
+    ``legendre(n, x)`` gives the $n$th Legendre polynomial of $x$, $P_n(x)$
 
     Explanation
     ===========
 
-    The Legendre polynomials are orthogonal on [-1, 1] with respect to
-    the constant weight 1. They satisfy $P_n(1) = 1$ for all n; further,
-    $P_n$ is odd for odd n and even for even n.
+    The Legendre polynomials are orthogonal on $[-1, 1]$ with respect to
+    the constant weight 1. They satisfy $P_n(1) = 1$ for all $n$; further,
+    $P_n$ is odd for odd $n$ and even for even $n$.
 
     Examples
     ========
@@ -864,7 +857,7 @@ class legendre(OrthogonalPolynomial):
 
 class assoc_legendre(Function):
     r"""
-    ``assoc_legendre(n, m, x)`` gives $P_n^m(x)$, where n and m are
+    ``assoc_legendre(n, m, x)`` gives $P_n^m(x)$, where $n$ and $m$ are
     the degree and order or an expression which is related to the nth
     order Legendre polynomial, $P_n(x)$ in the following manner:
 
@@ -875,10 +868,10 @@ class assoc_legendre(Function):
     Explanation
     ===========
 
-    Associated Legendre polynomials are orthogonal on [-1, 1] with:
+    Associated Legendre polynomials are orthogonal on $[-1, 1]$ with:
 
-    - weight = 1            for the same m, and different n.
-    - weight = 1/(1-x**2)   for the same n, and different m.
+    - weight $= 1$            for the same $m$ and different $n$.
+    - weight $= \frac{1}{1-x^2}$   for the same $n$ and different $m$.
 
     Examples
     ========
@@ -975,7 +968,7 @@ class assoc_legendre(Function):
 
 class hermite(OrthogonalPolynomial):
     r"""
-    ``hermite(n, x)`` gives the nth Hermite polynomial in x, $H_n(x)$
+    ``hermite(n, x)`` gives the $n$th Hermite polynomial in $x$, $H_n(x)$
 
     Explanation
     ===========
@@ -1071,7 +1064,7 @@ class hermite(OrthogonalPolynomial):
 
 class laguerre(OrthogonalPolynomial):
     r"""
-    Returns the nth Laguerre polynomial in x, $L_n(x)$.
+    Returns the $n$th Laguerre polynomial in $x$, $L_n(x)$.
 
     Examples
     ========
@@ -1097,7 +1090,7 @@ class laguerre(OrthogonalPolynomial):
     ==========
 
     n : int
-        Degree of Laguerre polynomial. Must be ``n >= 0``.
+        Degree of Laguerre polynomial. Must be `n \ge 0`.
 
     See Also
     ========
@@ -1175,7 +1168,7 @@ class laguerre(OrthogonalPolynomial):
 
 class assoc_laguerre(OrthogonalPolynomial):
     r"""
-    Returns the nth generalized Laguerre polynomial in x, $L_n(x)$.
+    Returns the $n$th generalized Laguerre polynomial in $x$, $L_n(x)$.
 
     Examples
     ========
@@ -1211,7 +1204,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     ==========
 
     n : int
-        Degree of Laguerre polynomial. Must be ``n >= 0``.
+        Degree of Laguerre polynomial. Must be `n \ge 0`.
 
     alpha : Expr
         Arbitrary expression. For ``alpha=0`` regular Laguerre

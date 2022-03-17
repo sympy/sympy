@@ -75,7 +75,7 @@ from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import asin
 from sympy.functions.special.error_functions import (erf, erfc, erfi, erfinv, expint)
@@ -516,7 +516,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
 
     alpha : Real number, `\alpha > 0`, a shape
     beta : Real number, `\beta > 0`, a shape
-    lamda: Real number, `\lambda \ge 0`, noncentrality parameter
+    lamda : Real number, `\lambda \geq 0`, noncentrality parameter
 
     Returns
     =======
@@ -551,7 +551,8 @@ def BetaNoncentral(name, alpha, beta, lamda):
     /____,
     k = 0
 
-    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
+    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows:
+
     >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
     2*exp(1/2)
 
@@ -671,7 +672,7 @@ def BoundedPareto(name, alpha, left, right):
     Parameters
     ==========
 
-    alpha : Real Number, `alpha > 0`
+    alpha : Real Number, `\alpha > 0`
         Shape parameter
     left : Real Number, `left > 0`
         Location parameter
@@ -1243,10 +1244,11 @@ def ExGaussian(name, mean, std, rate):
     Parameters
     ==========
 
-    mu : A Real number, the mean of Gaussian component
-    std: A positive Real number,
+    name : A string giving a name for this distribution
+    mean : A Real number, the mean of Gaussian component
+    std : A positive Real number,
         :math: `\sigma^2 > 0` the variance of Gaussian component
-    lambda: A positive Real number,
+    rate : A positive Real number,
         :math: `\lambda > 0` the rate of Exponential component
 
     Returns
@@ -2006,8 +2008,8 @@ def Gumbel(name, beta, mu, minimum=False):
     Parameters
     ==========
 
-    mu : Real number, '\mu', a location
-    beta : Real number, '\beta > 0', a scale
+    mu : Real number, `\mu`, a location
+    beta : Real number, `\beta > 0`, a scale
     minimum : Boolean, by default ``False``, set to ``True`` for enabling minimum distribution
 
     Returns
@@ -2077,13 +2079,13 @@ def Gompertz(name, b, eta):
     .. math::
         f(x) := b \eta e^{b x} e^{\eta} \exp \left(-\eta e^{bx} \right)
 
-    with :math: 'x \in [0, \inf)'.
+    with :math:`x \in [0, \infty)`.
 
     Parameters
     ==========
 
-    b: Real number, 'b > 0', a scale
-    eta: Real number, '\eta > 0', a shape
+    b : Real number, `b > 0`, a scale
+    eta : Real number, `\eta > 0`, a shape
 
     Returns
     =======
@@ -3485,7 +3487,7 @@ def PowerFunction(name, alpha, a, b):
     Parameters
     ==========
 
-    alpha: Positive number, `0 < alpha`, the shape paramater
+    alpha : Positive number, `0 < \alpha`, the shape paramater
     a : Real number, :math:`-\infty < a`, the left boundary
     b : Real number, :math:`a < b < \infty`, the right boundary
 
@@ -3883,13 +3885,13 @@ def ShiftedGompertz(name, b, eta):
     .. math::
         f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^(-bx)) \right]
 
-    with :math: 'x \in [0, \inf)'.
+    with :math:`x \in [0, \infty)`.
 
     Parameters
     ==========
 
-    b: Real number, 'b > 0', a scale
-    eta: Real number, '\eta > 0', a shape
+    b : Real number, `b > 0`, a scale
+    eta : Real number, `\eta > 0`, a shape
 
     Returns
     =======
@@ -4248,7 +4250,6 @@ class UniformDistribution(SingleContinuousDistribution):
                          (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
-        from sympy.functions.elementary.miscellaneous import (Max, Min)
         kwargs['evaluate'] = True
         result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
         result = result.subs({Max(self.left, self.right): self.right,
@@ -4626,7 +4627,7 @@ def WignerSemicircle(name, R):
     Returns
     =======
 
-    A `RandomSymbol`.
+    A RandomSymbol.
 
     Examples
     ========

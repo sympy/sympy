@@ -16,7 +16,6 @@ from sympy.polys.polytools import degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement)
 from sympy.sets.fancysets import ImageSet
-from sympy.simplify.simplify import simplify
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import iterable
 
@@ -424,7 +423,7 @@ def periodicity(f, symbol, check=False):
     if isinstance(f, Relational):
         f = f.lhs - f.rhs
 
-    f = simplify(f)
+    f = f.simplify()
 
     if symbol not in f.free_symbols:
         return S.Zero
@@ -667,6 +666,8 @@ def is_convex(f, *syms, domain=S.Reals):
     True
     >>> is_convex(x**3, x, domain = Interval(-1, oo))
     False
+    >>> is_convex(1/x**2, x, domain=Interval.open(0, oo))
+    True
 
     References
     ==========
@@ -687,6 +688,9 @@ def is_convex(f, *syms, domain=S.Reals):
 
     f = _sympify(f)
     var = syms[0]
+    if any(s in domain for s in singularities(f, var)):
+        return False
+
     condition = f.diff(var, 2) < 0
     if solve_univariate_inequality(condition, var, False, domain):
         return False

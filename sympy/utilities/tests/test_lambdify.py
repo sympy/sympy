@@ -3,7 +3,7 @@ import math
 import inspect
 
 import mpmath
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, Lambda, diff)
 from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
@@ -56,6 +56,7 @@ scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 cupy = import_module('cupy')
+numba = import_module('numba')
 
 if tensorflow:
     # Hide Tensorflow warnings
@@ -1349,6 +1350,13 @@ def test_issue_19764():
 
     assert f(1).__class__ == numpy.ndarray
 
+def test_issue_20070():
+    if not numba:
+        skip("numba not installed")
+
+    f = lambdify(x, sin(x), 'numpy')
+    assert numba.jit(f)(1)==0.8414709848078965
+
 
 def test_fresnel_integrals_scipy():
     if not scipy:
@@ -1558,3 +1566,7 @@ def test_lambdify_cse():
             f = case.lambdify(cse=cse)
             result = f(*case.num_args)
             case.assertAllClose(result)
+
+def test_deprecated_set():
+    with warns_deprecated_sympy():
+        lambdify({x, y}, x + y)

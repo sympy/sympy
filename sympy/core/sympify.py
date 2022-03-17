@@ -10,7 +10,7 @@ from sympy.core.random import choice
 
 from .parameters import global_parameters
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 
 
@@ -61,7 +61,8 @@ class CantSympify:
     SympifyError: SympifyError: {}
 
     """
-    pass
+
+    __slots__ = ()
 
 
 def _is_numpy_instance(a):
@@ -207,6 +208,13 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Traceback (most recent call last):
     ...
     SympifyError: SympifyError: None
+
+    .. deprecated:: 1.6
+
+       ``sympify(obj)`` automatically falls back to ``str(obj)`` when all
+       other conversion methods fail, but this is deprecated. ``strict=True``
+       will disable this deprecated behavior. See
+       :ref:`deprecated-sympify-string-fallback`.
 
     Evaluation
     ----------
@@ -454,14 +462,22 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             a = str(a)
         except Exception as exc:
             raise SympifyError(a, exc)
-        SymPyDeprecationWarning(
-            feature="String fallback in sympify",
-            useinstead= \
-                'sympify(str(obj)) or ' + \
-                'sympy.core.sympify.converter or obj._sympy_',
-            issue=18066,
-            deprecated_since_version='1.6'
-        ).warn()
+        sympy_deprecation_warning(
+            f"""
+The string fallback in sympify() is deprecated.
+
+To explicitly convert the string form of an object, use
+sympify(str(obj)). To add define sympify behavior on custom
+objects, use sympy.core.sympify.converter or define obj._sympy_
+(see the sympify() docstring).
+
+sympify() performed the string fallback resulting in the following string:
+
+{a!r}
+            """,
+            deprecated_since_version='1.6',
+            active_deprecations_target="deprecated-sympify-string-fallback",
+        )
 
     from sympy.parsing.sympy_parser import (parse_expr, TokenError,
                                             standard_transformations)
@@ -515,7 +531,7 @@ def _sympify(a):
 
 def kernS(s):
     """Use a hack to try keep autosimplification from distributing a
-    a number into an Add; this modification doesn't
+    a number into an Add; this modification does not
     prevent the 2-arg Mul from becoming an Add, however.
 
     Examples

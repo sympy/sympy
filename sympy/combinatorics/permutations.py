@@ -10,6 +10,7 @@ from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
+from sympy.printing.repr import srepr
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs, is_sequence)
 from sympy.utilities.misc import as_int
@@ -676,6 +677,12 @@ class Permutation(Atom):
 
     There are a few things to note about how Permutations are printed.
 
+    .. deprecated:: 1.6
+
+       Configuring Permutation printing by setting
+       ``Permutation.print_cyclic`` is deprecated. Users should use the
+       ``perm_cyclic`` flag to the printers, as described below.
+
     1) If you prefer one form (array or cycle) over another, you can set
     ``init_printing`` with the ``perm_cyclic`` flag.
 
@@ -841,7 +848,7 @@ class Permutation(Atom):
     argument ``size=6``.
 
     There is another way to do this, which is to tell the ``contains``
-    method that the number of symbols the group is on doesn't need to
+    method that the number of symbols the group is on does not need to
     match perfectly the number of symbols for the permutation:
 
     >>> G.contains(p2,strict=False)
@@ -1610,7 +1617,6 @@ class Permutation(Atom):
         yield from self.array_form
 
     def __repr__(self):
-        from sympy.printing.repr import srepr
         return srepr(self)
 
     def __call__(self, *i):

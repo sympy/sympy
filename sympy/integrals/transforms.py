@@ -225,6 +225,8 @@ class IntegralTransform(Function):
 
 def _simplify(expr, doit):
     if doit:
+        from sympy.simplify import simplify
+        from sympy.simplify.powsimp import powdenest
         return simplify(powdenest(piecewise_fold(expr), polar=True))
     return expr
 
@@ -290,6 +292,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
         """
         Turn ``cond`` into a strip (a, b), and auxiliary conditions.
         """
+        from sympy.solvers.inequalities import _solve_inequality
         a = S.NegativeInfinity
         b = S.Infinity
         aux = S.true
@@ -796,6 +799,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
             h = G
         else:
             try:
+                from sympy.simplify import hyperexpand
                 h = hyperexpand(G)
             except NotImplementedError:
                 raise IntegralTransformError(
@@ -1076,6 +1080,7 @@ def _laplace_transform(f, t, s_, simplify=True):
 
     def process_conds(conds):
         """ Turn ``conds`` into a strip and auxiliary conditions. """
+        from sympy.solvers.inequalities import _solve_inequality
         a = S.NegativeInfinity
         aux = S.true
         conds = conjuncts(to_cnf(conds))
@@ -1941,7 +1946,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     The implementation is rule-based, and if you are interested in which
     rules are applied, and whether integration is attemped, you can switch
-    debug information on by setting `sympy.SYMPY_DEBUG=True`.
+    debug information on by setting ``sympy.SYMPY_DEBUG=True``.
 
     The lower bound is `0-`, meaning that this bound should be approached
     from the lower side. This is only necessary if distributions are involved.
@@ -1994,13 +1999,19 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
         conds = not hints.get('noconds', False)
 
         if conds and legacy_matrix:
-            SymPyDeprecationWarning(
-                feature="laplace_transform of a Matrix with noconds=False (default)",
-                useinstead="the option legacy_matrix=False to get the new behaviour",
-                issue=21504,
-                deprecated_since_version="1.9"
-            ).warn()
-            return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
+            sympy_deprecation_warning(
+                """
+Calling laplace_transform() on a Matrix with noconds=False (the default) is
+deprecated. Either noconds=True or use legacy_matrix=False to get the new
+behavior.
+                """,
+                deprecated_since_version="1.9",
+                active_deprecations_target="deprecated-laplace-transform-matrix",
+            )
+            # Temporarily disable the deprecation warning for non-Expr objects
+            # in Matrix
+            with ignore_warnings(SymPyDeprecationWarning):
+                return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
         else:
             elements_trans = [laplace_transform(fij, t, s, **hints) for fij in f]
             if conds:
@@ -2072,6 +2083,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         a = arg.subs(exp(-t), u)
         if a.has(t):
             return Heaviside(arg, H0)
+        from sympy.solvers.inequalities import _solve_inequality
         rel = _solve_inequality(a > 0, u)
         if rel.lts == u:
             k = log(rel.gts)

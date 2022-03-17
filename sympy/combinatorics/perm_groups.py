@@ -1,8 +1,6 @@
-from sympy.core.random import randrange, choice
 from math import log
-from sympy.ntheory import primefactors
-from sympy.core.symbol import Symbol
-from sympy.ntheory.factor_ import (factorint, multiplicity)
+from itertools import chain, islice, product
+
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
@@ -12,12 +10,15 @@ from sympy.combinatorics.util import (_check_cycles_alt_sym,
     _handle_precomputed_bsgs, _base_ordering, _strong_gens_from_distr,
     _strip, _strip_af)
 from sympy.core import Basic
-from sympy.functions.combinatorial.factorials import factorial
-from sympy.ntheory import sieve
-from sympy.utilities.iterables import has_variety, is_sequence, uniq
-from sympy.core.random import _randrange
-from itertools import islice
+from sympy.core.random import _randrange, randrange, choice
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.ntheory import primefactors, sieve
+from sympy.ntheory.factor_ import (factorint, multiplicity)
+from sympy.ntheory.primetest import isprime
+from sympy.utilities.iterables import has_variety, is_sequence, uniq
+
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
 
@@ -890,7 +891,6 @@ class PermutationGroup(Basic):
         # from fp_groups.py but the class would need to be changed first
         # to be compatible with PermutationGroups
 
-        from itertools import chain, product
         if not H.is_subgroup(self):
             raise ValueError("The argument must be a subgroup")
         T = self.coset_transversal(H)
@@ -3799,7 +3799,7 @@ class PermutationGroup(Basic):
         in the orbit. Notice that the Schreier vector depends on the order
         in which the group generators are listed. For a definition, see [3].
         Since list indices start from zero, we adopt the convention to use
-        "None" instead of 0 to signify that an element doesn't belong
+        "None" instead of 0 to signify that an element does not belong
         to the orbit.
         For the algorithm and its correctness, see [2], pp.78-80.
 
@@ -3906,7 +3906,7 @@ class PermutationGroup(Basic):
         """
 
         if not all(g in self for g in gens):
-            raise ValueError("The group doesn't contain the supplied generators")
+            raise ValueError("The group does not contain the supplied generators")
 
         G = PermutationGroup(gens)
         return G
@@ -4400,7 +4400,6 @@ class PermutationGroup(Basic):
         '''
         from sympy.combinatorics.homomorphisms import (
                 orbit_homomorphism, block_homomorphism)
-        from sympy.ntheory.primetest import isprime
 
         if not isprime(p):
             raise ValueError("p must be a prime")
@@ -4808,7 +4807,6 @@ class PermutationGroup(Basic):
         from sympy.combinatorics.coset_table import CosetTable
         from sympy.combinatorics.free_groups import free_group
         from sympy.combinatorics.homomorphisms import homomorphism
-        from itertools import product
 
         if self._fp_presentation:
             return self._fp_presentation

@@ -15,7 +15,7 @@ from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditi
 from sympy.printing.printer import Printer, print_function
 from sympy.printing.str import sstr
 from sympy.utilities.iterables import has_variety
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import hobj, vobj, xobj, \
@@ -394,12 +394,15 @@ class PrettyPrinter(Printer):
 
         perm_cyclic = Permutation.print_cyclic
         if perm_cyclic is not None:
-            SymPyDeprecationWarning(
-                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
-                useinstead="init_printing(perm_cyclic={})"
-                .format(perm_cyclic),
-                issue=15201,
-                deprecated_since_version="1.6").warn()
+            sympy_deprecation_warning(
+                f"""
+                Setting Permutation.print_cyclic is deprecated. Instead use
+                init_printing(perm_cyclic={perm_cyclic}).
+                """,
+                deprecated_since_version="1.6",
+                active_deprecations_target="deprecated-permutation-print_cyclic",
+                stacklevel=7,
+            )
         else:
             perm_cyclic = self._settings.get("perm_cyclic", True)
 
@@ -1141,22 +1144,24 @@ class PrettyPrinter(Printer):
             if '\n' in partstr:
                 tempstr = partstr
                 tempstr = tempstr.replace(vectstrs[i], '')
-                if '\N{right parenthesis extension}' in tempstr:   # If scalar is a fraction
+                if '\N{RIGHT PARENTHESIS EXTENSION}' in tempstr:   # If scalar is a fraction
                     for paren in range(len(tempstr)):
                         flag[i] = 1
-                        if tempstr[paren] == '\N{right parenthesis extension}':
-                            tempstr = tempstr[:paren] + '\N{right parenthesis extension}'\
+                        if tempstr[paren] == '\N{RIGHT PARENTHESIS EXTENSION}' and tempstr[paren + 1] == '\n':
+                            # We want to place the vector string after all the right parentheses, because
+                            # otherwise, the vector will be in the middle of the string
+                            tempstr = tempstr[:paren] + '\N{RIGHT PARENTHESIS EXTENSION}'\
                                          + ' '  + vectstrs[i] + tempstr[paren + 1:]
                             break
                 elif '\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
-                    flag[i] = 1
-                    tempstr = tempstr.replace('\N{RIGHT PARENTHESIS LOWER HOOK}',
-                                        '\N{RIGHT PARENTHESIS LOWER HOOK}'
-                                        + ' ' + vectstrs[i])
-                else:
-                    tempstr = tempstr.replace('\N{RIGHT PARENTHESIS UPPER HOOK}',
-                                        '\N{RIGHT PARENTHESIS UPPER HOOK}'
-                                        + ' ' + vectstrs[i])
+                    # We want to place the vector string after all the right parentheses, because
+                    # otherwise, the vector will be in the middle of the string. For this reason,
+                    # we insert the vector string at the rightmost index.
+                    index = tempstr.rfind('\N{RIGHT PARENTHESIS LOWER HOOK}')
+                    if index != -1: # then this character was found in this string
+                        flag[i] = 1
+                        tempstr = tempstr[:index] + '\N{RIGHT PARENTHESIS LOWER HOOK}'\
+                                     + ' '  + vectstrs[i] + tempstr[index + 1:]
                 o1[i] = tempstr
 
         o1 = [x.split('\n') for x in o1]

@@ -15,6 +15,7 @@ Contents:
    codegen.rst
    decorator.rst
    enumerative.rst
+   exceptions.rst
    iterables.rst
    lambdify.rst
    memoization.rst

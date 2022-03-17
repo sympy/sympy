@@ -113,7 +113,7 @@ def test_competing_ambiguous():
     def f(x, y): # noqa:F811
         return 2
 
-    with warns(AmbiguityWarning):
+    with warns(AmbiguityWarning, test_stacklevel=False):
         @dispatch(C, A) # noqa:F811
         def f(x, y): # noqa:F811
             return 2

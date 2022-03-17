@@ -32,7 +32,7 @@ sys.path = ['ext'] + sys.path
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
               'sphinx.ext.mathjax', 'numpydoc', 'sympylive', 'sphinx_reredirects',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
-              'myst_parser'
+              'myst_parser', 'sphinx.ext.intersphinx'
               ]
 
 redirects = {
@@ -248,7 +248,10 @@ texinfo_documents = [
 # Use svg for graphviz
 graphviz_output_format = 'svg'
 
-
+# Enable links to other packages
+intersphinx_mapping = {
+    'matplotlib': ('https://matplotlib.org/stable/', None)
+}
 # Requried for linkcode extension.
 # Get commit hash from the external file.
 commit_hash_filepath = '../commit_hash.txt'
