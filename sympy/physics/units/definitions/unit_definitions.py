@@ -4,7 +4,7 @@ from sympy.physics.units.definitions.dimension_definitions import current, tempe
 
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S as S_singleton
-from sympy.physics.units.prefixes import kilo, milli, micro, deci, centi, nano, pico, kibi, mebi, gibi, tebi, pebi, exbi
+from sympy.physics.units.prefixes import kilo, mega, milli, micro, deci, centi, nano, pico, kibi, mebi, gibi, tebi, pebi, exbi
 from sympy.physics.units.quantities import Quantity
 
 One = S_singleton.One
@@ -53,12 +53,6 @@ mol = mole = moles = Quantity("mole", abbrev="mol")
 mole.set_global_dimension(amount_of_substance)
 cd = candela = candelas = Quantity("candela", abbrev="cd")
 candela.set_global_dimension(luminous_intensity)
-
-mg = milligram = milligrams = Quantity("milligram", abbrev="mg")
-mg.set_global_relative_scale_factor(milli, gram)
-
-ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\mu\text{g}")
-ug.set_global_relative_scale_factor(micro, gram)
 
 # derived units
 newton = newtons = N = Quantity("newton", abbrev="N")
@@ -114,6 +108,21 @@ gray = Gy = Quantity("gray")
 becquerel = Bq = Quantity("becquerel", abbrev="Bq")
 
 
+# Common mass units
+
+mg = milligram = milligrams = Quantity("milligram", abbrev="mg")
+mg.set_global_relative_scale_factor(milli, gram)
+
+ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\mu\text{g}")
+ug.set_global_relative_scale_factor(micro, gram)
+
+# Atomic mass constant
+Da = dalton = amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
+
+t = metric_ton = tonne = Quantity("tonne", abbrev="t")
+tonne.set_global_relative_scale_factor(mega, gram)
+
+
 # Common length units
 
 km = kilometer = kilometers = Quantity("kilometer", abbrev="km")
@@ -155,6 +164,8 @@ nmi.set_global_relative_scale_factor(6076, feet)
 
 
 # Common volume and area units
+
+ha = hectare = Quantity("hectare", abbrev="ha")
 
 l = L = liter = liters = Quantity("liter")
 
@@ -249,9 +260,6 @@ boltzmann = boltzmann_constant = Quantity("boltzmann_constant")
 
 # Stefan-Boltzmann constant
 stefan = stefan_boltzmann_constant = Quantity("stefan_boltzmann_constant")
-
-# Atomic mass
-amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
 
 # Molar gas constant
 R = molar_gas_constant = Quantity("molar_gas_constant", abbrev="R")
