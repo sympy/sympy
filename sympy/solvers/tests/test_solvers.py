@@ -1899,6 +1899,8 @@ def test_lambert_bivariate():
     # issue 23253
     assert solve((1/log(sqrt(x) + 2)**2 - 1/x)) == [
         (LambertW(-exp(-2), -1) + 2)**2]
+    assert solve((1/log(1/sqrt(x) + 2)**2 - x)) == [
+        (LambertW(-exp(-2), -1) + 2)**-2]
     assert solve((1/log(x**2 + 2)**2 - x**-4)) == [
         -I*sqrt(2 - LambertW(exp(2))),
         -I*sqrt(LambertW(-exp(-2)) + 2),
