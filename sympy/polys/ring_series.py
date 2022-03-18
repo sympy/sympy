@@ -1574,6 +1574,9 @@ def rs_sec(p, x, prec):
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_sec, p, x, prec)
+    if _has_constant_term(p, x):
+        raise NotImplementedError("Polynomial must not have constant term in "
+                                  "series variables")
     i, m = _check_series_var(p, x, 'sec')
     prec1 = prec + 2*int(m)
     t = rs_cos(p, x, prec1)
@@ -1608,6 +1611,9 @@ def rs_csc(p, x, prec):
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_csc, p, x, prec)
+    if _has_constant_term(p, x):
+        raise NotImplementedError("Polynomial must not have constant term in "
+                                  "series variables")
     i, m = _check_series_var(p, x, 'csc')
     prec1 = prec + 2*int(m)
     t = rs_sin(p, x, prec1)
