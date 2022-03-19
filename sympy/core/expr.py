@@ -832,33 +832,10 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
-    def _eval_is_positive(self):
-        finite = self.is_finite
-        if finite is False:
-            return False
-        extended_positive = self.is_extended_positive
-        if finite is True:
-            return extended_positive
-        if extended_positive is False:
-            return False
-
-    def _eval_is_negative(self):
-        finite = self.is_finite
-        if finite is False:
-            return False
-        extended_negative = self.is_extended_negative
-        if finite is True:
-            return extended_negative
-        if extended_negative is False:
-            return False
-
     def _eval_is_extended_positive_negative(self, positive):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
-            if self.is_extended_real is False:
-                return False
-
             # check to see that we can get a value
             try:
                 n2 = self._eval_evalf(2)
@@ -887,7 +864,7 @@ class Expr(Basic, EvalfMixin):
             if r._prec != 1 and i._prec != 1:
                 return bool(not i and ((r > 0) if positive else (r < 0)))
             elif r._prec == 1 and (not i or i._prec == 1) and \
-                    self.is_algebraic and not self.has(Function):
+                    self._eval_is_algebraic() and not self.has(Function):
                 try:
                     if minimal_polynomial(self).is_Symbol:
                         return False
@@ -1862,8 +1839,8 @@ class Expr(Basic, EvalfMixin):
         from .add import _unevaluated_Add
         from .mul import _unevaluated_Mul
 
-        if self.is_zero:
-            return S.Zero, S.Zero
+        if self is S.Zero:
+            return (self, self)
 
         func = self.func
         if hint.get('as_Add', isinstance(self, Add) ):
