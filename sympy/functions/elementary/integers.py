@@ -144,23 +144,23 @@ class floor(RoundFunction):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
-        if arg0 is S.NaN:
-            limit = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
-            ndir = arg.dir(x, cdir=cdir)
-            return limit - 1 if ndir.is_negative else limit
-        if arg0.is_finite:
-            if arg0 == r:
-                if cdir == 0:
-                    ndirl = arg.dir(x, cdir=-1)
-                    ndir = arg.dir(x, cdir=1)
-                    if ndir != ndirl:
-                        raise ValueError("Two sided limit of %s around 0"
-                                    "does not exist" % self)
-                else:
-                    ndir = arg.dir(x, cdir=cdir)
-                return r - 1 if ndir.is_negative else r
+        if arg0.is_finite or arg0 is S.NaN:
+            if cdir == 0:
+                ndirl = arg.dir(x, cdir=-1)
+                ndir = arg.dir(x, cdir=1)
+                if ndir != ndirl:
+                    raise ValueError("Two sided limit of %s around 0"
+                                     "does not exist" % self)
             else:
-                return r
+                ndir = arg.dir(x, cdir=cdir)
+            if arg0.is_finite:
+                if arg0 == r:
+                    return r - 1 if ndir.is_negative else r
+                else:
+                    return r
+            if arg0 is S.NaN:
+                limit = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+                return limit - 1 if ndir.is_negative else limit
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
@@ -306,23 +306,23 @@ class ceiling(RoundFunction):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
-        if arg0 is S.NaN:
-            limit = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
-            ndir = arg.dir(x, cdir=cdir)
-            return limit if ndir.is_negative else limit + 1
-        if arg0.is_finite:
-            if arg0 == r:
-                if cdir == 0:
-                    ndirl = arg.dir(x, cdir=-1)
-                    ndir = arg.dir(x, cdir=1)
-                    if ndir != ndirl:
-                        raise ValueError("Two sided limit of %s around 0"
-                                    "does not exist" % self)
-                else:
-                    ndir = arg.dir(x, cdir=cdir)
-                return r if ndir.is_negative else r + 1
+        if arg0.is_finite or arg0 is S.NaN:
+            if cdir == 0:
+                ndirl = arg.dir(x, cdir=-1)
+                ndir = arg.dir(x, cdir=1)
+                if ndir != ndirl:
+                    raise ValueError("Two sided limit of %s around 0"
+                                     "does not exist" % self)
             else:
-                return r
+                ndir = arg.dir(x, cdir=cdir)
+            if arg0.is_finite:
+                if arg0 == r:
+                    return r if ndir.is_negative else r + 1
+                else:
+                    return r
+            if arg0 is S.NaN:
+                limit = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+                return limit if ndir.is_negative else limit + 1
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
