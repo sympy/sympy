@@ -225,25 +225,12 @@ def test_ceiling_requires_robust_assumptions():
     assert limit(ceiling(5 + cos(x)), x, 0, "-") == 6
 
 
-def test_floor_ceiling_for_arg0_evaluating_to_nan():
-    assert limit(floor((x**3 + x)/(x**2 - x)), x, 0, '+') == -2
-    assert limit(floor((x**3 + x)/(x**2 - x)), x, 0, '-') == -1
-    assert limit(floor((cos(x) - 1)/x), x, 0, '+') == -1
-    assert limit(floor((cos(x) - 1)/x), x, 0, '-') == 0
-    # issue 14355
+def test_issue_14355():
     assert limit(floor(sin(x)/x), x, 0, '+') == 0
     assert limit(floor(sin(x)/x), x, 0, '-') == 0
     # test comment https://github.com/sympy/sympy/issues/14355#issuecomment-372121314
     assert limit(floor(-tan(x)/x), x, 0, '+') == -2
     assert limit(floor(-tan(x)/x), x, 0, '-') == -2
-    assert limit(ceiling((x**3 + x)/(x**2 - x)), x, 0, '+') == -1
-    assert limit(ceiling((x**3 + x)/(x**2 - x)), x, 0, '-') == 0
-    assert limit(ceiling((cos(x) - 1)/x), x, 0, '+') == 0
-    assert limit(ceiling((cos(x) - 1)/x), x, 0, '-') == 1
-    assert limit(ceiling(sin(x)/x), x, 0, '+') == 1
-    assert limit(ceiling(sin(x)/x), x, 0, '-') == 1
-    assert limit(ceiling(-tan(x)/x), x, 0, '+') == -1
-    assert limit(ceiling(-tan(x)/x), x, 0, '+') == -1
 
 
 def test_atan():
