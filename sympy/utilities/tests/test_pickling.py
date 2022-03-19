@@ -701,3 +701,14 @@ def test_deprecation_warning():
 
 def test_issue_18438():
     assert pickle.loads(pickle.dumps(S.Half)) == 1/2
+
+
+#================= old pickles =================
+def test_unpickle_from_older_versions():
+    data = (
+        b'\x80\x04\x95^\x00\x00\x00\x00\x00\x00\x00\x8c\x10sympy.core.power'
+        b'\x94\x8c\x03Pow\x94\x93\x94\x8c\x12sympy.core.numbers\x94\x8c'
+        b'\x07Integer\x94\x93\x94K\x02\x85\x94R\x94}\x94bh\x03\x8c\x04Half'
+        b'\x94\x93\x94)R\x94}\x94b\x86\x94R\x94}\x94b.'
+    )
+    assert pickle.loads(data) == sqrt(2)
