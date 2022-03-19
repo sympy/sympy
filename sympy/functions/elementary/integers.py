@@ -11,7 +11,7 @@ from sympy.core.numbers import Integer
 from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
-from sympy.functions.elementary.complexes import im
+from sympy.functions.elementary.complexes import im, re
 from sympy.multipledispatch import dispatch
 
 ###############################################################################
@@ -144,10 +144,12 @@ class floor(RoundFunction):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
-        if arg0.is_finite or arg0 is S.NaN:
+        if arg0 is S.NaN:
+            limit = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            ndir = arg.dir(x, cdir=cdir)
+            return limit - 1 if ndir.is_negative else limit
+        if arg0.is_finite:
             if arg0 == r:
-                leading_term = arg.as_leading_term(x, logx=logx, cdir=cdir)
-                leading_term = leading_term.subs(x, 0)
                 if cdir == 0:
                     ndirl = arg.dir(x, cdir=-1)
                     ndir = arg.dir(x, cdir=1)
@@ -156,12 +158,8 @@ class floor(RoundFunction):
                                     "does not exist" % self)
                 else:
                     ndir = arg.dir(x, cdir=cdir)
-                if arg0 is S.NaN:
-                    return leading_term - 1 if ndir.is_negative else leading_term
                 return r - 1 if ndir.is_negative else r
             else:
-                if arg0 is S.NaN:
-                    return leading_term
                 return r
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
 
@@ -308,10 +306,12 @@ class ceiling(RoundFunction):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
-        if arg0.is_finite or arg0 is S.NaN:
+        if arg0 is S.NaN:
+            limit = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            ndir = arg.dir(x, cdir=cdir)
+            return limit if ndir.is_negative else limit + 1
+        if arg0.is_finite:
             if arg0 == r:
-                leading_term = arg.as_leading_term(x, logx=logx, cdir=cdir)
-                leading_term = leading_term.subs(x, 0)
                 if cdir == 0:
                     ndirl = arg.dir(x, cdir=-1)
                     ndir = arg.dir(x, cdir=1)
@@ -320,12 +320,8 @@ class ceiling(RoundFunction):
                                     "does not exist" % self)
                 else:
                     ndir = arg.dir(x, cdir=cdir)
-                    if arg0 is S.NaN:
-                        return leading_term if ndir.is_negative else leading_term + 1
                 return r if ndir.is_negative else r + 1
             else:
-                if arg0 is S.NaN:
-                    return leading_term
                 return r
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
 
