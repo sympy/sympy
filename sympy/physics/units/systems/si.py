@@ -72,7 +72,29 @@ dimsys_default = dimsys_SI.extend(
     [information],
 )
 
-SI = MKSA.extend(base=(mol, cd, K), units=all_units, name='SI', dimension_system=dimsys_SI)
+SI = MKSA.extend(base=(mol, cd, K), units=all_units, name='SI', dimension_system=dimsys_SI, derived_units={
+    power.name: watt,
+    magnetic_flux.name: weber,
+    time.name: second,
+    impedance.name: ohm,
+    pressure.name: pascal,
+    current.name: ampere,
+    voltage.name: volt,
+    length.name: meter,
+    frequency.name: hertz,
+    inductance.name: henry,
+    temperature.name: kelvin,
+    amount_of_substance.name: mole,
+    luminous_intensity.name: candela,
+    conductance.name: siemens,
+    mass.name: kilogram,
+    magnetic_density.name: tesla,
+    charge.name: coulomb,
+    force.name: newton,
+    capacitance.name: farad,
+    energy.name: joule,
+    velocity.name: meter/second,
+})
 
 One = S.One
 

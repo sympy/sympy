@@ -3,14 +3,12 @@ Several methods to simplify expressions involving unit objects.
 """
 from functools import reduce
 from collections.abc import Iterable
-from typing import Dict as tDict
 
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sorting import ordered
-from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension, DimensionSystem
@@ -123,25 +121,6 @@ def convert_to(expr, target_units, unit_system="SI"):
     return expr_scale_factor * Mul.fromiter((1/get_total_scale_factor(u) * u) ** p for u, p in zip(target_units, depmat))
 
 
-def _build_preferred_dimension_to_unit(unit_system="SI") -> tDict[Symbol, Quantity]:
-    from sympy.physics.units import  velocity, length, time
-
-    unit_system = UnitSystem.get_unit_system(unit_system)
-
-    preferred_dimension_to_unit = {}
-
-    for quantity in unit_system.get_units_non_prefixed():
-        if quantity.is_prefixed or quantity.is_physical_constant:
-            continue
-        dim = unit_system.get_quantity_dimension(quantity)
-        if dim.name.is_Symbol:
-            preferred_dimension_to_unit[dim.name] = quantity
-    # derive velocity preferred units
-    if length.name in preferred_dimension_to_unit and time.name in preferred_dimension_to_unit:
-        preferred_dimension_to_unit[velocity.name] = preferred_dimension_to_unit[length.name] / preferred_dimension_to_unit[time.name]
-    return preferred_dimension_to_unit
-
-
 def quantity_simplify(expr, across_dimensions: bool=False, unit_system="SI"):
     """Return an equivalent expression in which prefixes are replaced
     with numerical values and all units of a given dimension are the
@@ -198,9 +177,7 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system="SI"):
             # if we can't find a target dimension, we can't do anything. unsure how to handle this case.
             return expr
 
-        preferred_dimension_to_unit = _build_preferred_dimension_to_unit(unit_system)
-
-        target_unit = preferred_dimension_to_unit.get(target_dimension)
+        target_unit = unit_system.derived_units.get(target_dimension)
         if target_unit:
             expr = convert_to(expr, target_unit, unit_system)
 

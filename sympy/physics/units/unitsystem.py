@@ -9,6 +9,7 @@ from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.physics.units.dimensions import _QuantityMapper
 from sympy.physics.units.quantities import Quantity
 
@@ -27,7 +28,7 @@ class UnitSystem(_QuantityMapper):
 
     _unit_systems = {}  # type: tDict[str, UnitSystem]
 
-    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None):
+    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None, derived_units: tDict[Symbol, Quantity]={}):
 
         UnitSystem._unit_systems[name] = self
 
@@ -38,6 +39,7 @@ class UnitSystem(_QuantityMapper):
         self._dimension_system = dimension_system
         self._units = tuple(set(base_units) | set(units))
         self._base_units = tuple(base_units)
+        self._derived_units = derived_units
 
         super().__init__()
 
@@ -58,7 +60,7 @@ class UnitSystem(_QuantityMapper):
     def __repr__(self):
         return '<UnitSystem: %s>' % repr(self._base_units)
 
-    def extend(self, base, units=(), name="", description="", dimension_system=None):
+    def extend(self, base, units=(), name="", description="", dimension_system=None, derived_units: tDict[Symbol, Quantity]={}):
         """Extend the current system into a new one.
 
         Take the base and normal units of the current system to merge
@@ -69,7 +71,7 @@ class UnitSystem(_QuantityMapper):
         base = self._base_units + tuple(base)
         units = self._units + tuple(units)
 
-        return UnitSystem(base, units, name, description, dimension_system)
+        return UnitSystem(base, units, name, description, dimension_system, {**self._derived_units, **derived_units})
 
     def get_dimension_system(self):
         return self._dimension_system
@@ -121,6 +123,10 @@ class UnitSystem(_QuantityMapper):
         """
         # test is performed in DimensionSystem
         return self.get_dimension_system().is_consistent
+
+    @property
+    def derived_units(self) -> tDict[Symbol, Quantity]:
+        return self._derived_units
 
     def get_dimensional_expr(self, expr):
         from sympy.physics.units import Quantity
