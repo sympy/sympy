@@ -1040,3 +1040,8 @@ def test_issue_22210():
     d = Symbol('d', integer=True)
     expr = 2*Derivative(sin(x), (x, d))
     assert expr.simplify() == expr
+
+def test_issue_8439():
+    x = Symbol('x')
+    assert x + float('inf') == x + oo
+    assert S(float('inf')) == oo
