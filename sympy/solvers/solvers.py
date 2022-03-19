@@ -2719,9 +2719,9 @@ def _tsolve(eq, sym, **flags):
         # 2**(3*x) + x**3*log(2)**3 + 3*x**2*log(2)**2 + 3*x*log(2) + 1
         # to 2**(3*x) + (x*log(2) + 1)**3
         logs = eq.atoms(log)
-        spow = {i.exp.as_coeff_Mul()[0] for j in logs for i in j.atoms(Pow) if i.base == sym}
+        spow = {i.exp for j in logs for i in j.atoms(Pow) if i.base == sym}
         spow = min(spow) if spow else 1
-        if spow > 1 and eq.subs(sym**spow, Dummy()).has_free(sym):
+        if eq.subs(sym**spow, Dummy()).has_free(sym):
             spow = 1  # there was a free-symbol or non-pow generator with sym
         if spow != 1:
             u = Dummy('bivariate-cov')
