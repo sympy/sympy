@@ -166,6 +166,10 @@ class floor(RoundFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
+        if arg0 is S.NaN:
+            ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+            series = arg._eval_nseries(x, n, logx, cdir).subs(x, 0)
+            return series - 1 if ndir.is_negative else series
         if arg0.is_infinite:
             from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
@@ -328,6 +332,10 @@ class ceiling(RoundFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
+        if arg0 is S.NaN:
+            ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+            series = arg._eval_nseries(x, n, logx, cdir).subs(x, 0)
+            return series if ndir.is_negative else series + 1
         if arg0.is_infinite:
             from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
