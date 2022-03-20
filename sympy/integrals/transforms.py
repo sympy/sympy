@@ -5,7 +5,7 @@ from sympy.core import S, pi, I
 from sympy.core.add import Add
 from sympy.core.function import (AppliedUndef, count_ops, Derivative, expand,
                                  expand_complex, expand_mul, Function, Lambda,
-                                 WildFunction)
+                                 WildFunction, Subs)
 from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
@@ -2003,7 +2003,14 @@ behavior.
 
     LT = LaplaceTransform(f, t, s).doit(**hints)
     for _f, _r in diff_subs.items():
-        LT = laplace_transform_replace_ic(LT, _f, _r[0], t, s, _r[1])
+        LT = LT.subs(LaplaceTransform(_f, t, s), _r[0])
+        if _r[1]==0:
+            n = Wild('n')
+            LT = LT.replace(Subs(Derivative(_f, (t, n)), t, 0), 0)
+            LT = LT.subs(_f.subs(t, 0), 0)
+        else:
+            for k, c in enumerate(_r[1]):
+                LT = LT.subs(_f.diff(t, k).subs(t, 0), c)
     return LT
 
 
