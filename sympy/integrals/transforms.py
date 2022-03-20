@@ -1902,7 +1902,7 @@ class LaplaceTransform(IntegralTransform):
         return fn, LT
 
 
-def laplace_transform(f, t, s, diff_subs=tuple(), legacy_matrix=True, **hints):
+def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
@@ -2002,8 +2002,8 @@ behavior.
                 for x in f]
 
     LT = LaplaceTransform(f, t, s).doit(**hints)
-    for _f, _F, _ic in diff_subs:
-        LT = laplace_transform_replace_ic(LT, _f, _F, t, s, _ic)
+    for _f, _r in diff_subs.items():
+        LT = laplace_transform_replace_ic(LT, _f, _r[0], t, s, _r[1])
     return LT
 
 
