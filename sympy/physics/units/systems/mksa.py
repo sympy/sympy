@@ -42,13 +42,13 @@ dimsys_MKSA = dimsys_length_weight_time.extend([
 ))
 
 MKSA = MKS.extend(base=(ampere,), units=all_units, name='MKSA', dimension_system=dimsys_MKSA, derived_units={
-    magnetic_flux.name: weber,
-    impedance.name: ohm,
-    current.name: ampere,
-    voltage.name: volt,
-    inductance.name: henry,
-    conductance.name: siemens,
-    magnetic_density.name: tesla,
-    charge.name: coulomb,
-    capacitance.name: farad,
+    magnetic_flux: weber,
+    impedance: ohm,
+    current: ampere,
+    voltage: volt,
+    inductance: henry,
+    conductance: siemens,
+    magnetic_density: tesla,
+    charge: coulomb,
+    capacitance: farad,
 })

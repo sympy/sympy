@@ -28,16 +28,16 @@ all_units.extend([gravitational_constant, speed_of_light])
 
 # unit system
 MKS = UnitSystem(base_units=(meter, kilogram, second), units=all_units, name="MKS", dimension_system=dimsys_length_weight_time, derived_units={
-    power.name: watt,
-    time.name: second,
-    pressure.name: pascal,
-    length.name: meter,
-    frequency.name: hertz,
-    mass.name: kilogram,
-    force.name: newton,
-    energy.name: joule,
-    velocity.name: meter/second,
-    acceleration.name: meter/(second**2),
+    power: watt,
+    time: second,
+    pressure: pascal,
+    length: meter,
+    frequency: hertz,
+    mass: kilogram,
+    force: newton,
+    energy: joule,
+    velocity: meter/second,
+    acceleration: meter/(second**2),
 })
 
 
