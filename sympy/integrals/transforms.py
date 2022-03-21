@@ -1911,8 +1911,7 @@ def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
     Explanation
     ===========
 
-    For all sensible functions, this converges absolutely in a
-    half-plane
+    For all sensible functions, this converges absolutely in a half-plane
 
     .. math :: a < \operatorname{Re}(s)
 
@@ -1920,9 +1919,12 @@ def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
     transform of ``f``, `a` is the half-plane of convergence, and `cond` are
     auxiliary convergence conditions.
 
-    The implementation is rule-based, and if you are interested in which
-    rules are applied, and whether integration is attemped, you can switch
-    debug information on by setting ``sympy.SYMPY_DEBUG=True``.
+    If ``f`` is a list of functions, the result is a list of the Laplace
+    transforms applied to each list element.
+
+    The implementation is rule-based, and if you are interested in which rules
+    are applied, and whether integration is attemped, you can switch debug
+    information on by setting ``sympy.SYMPY_DEBUG=True``.
 
     The lower bound is `0-`, meaning that this bound should be approached
     from the lower side. This is only necessary if distributions are involved.
@@ -1935,6 +1937,19 @@ def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
 
     If the integral cannot be fully computed in closed form, this function
     returns an unevaluated :class:`LaplaceTransform` object.
+
+    This function can also transform differentials; in that case the result
+    will contain unevaluated expressions like ``LaplaceTransform(x(t), t, s)``
+    and initial conditions like ``x(0)`` or ``Subs(Derivative(x(t), t), t, 0)``.
+    The named argument ``diff_subs`` takes a dictionary that contains the name
+    of the Laplace transform of every function as well as a list of the inital
+    conditions. For example, ``diff_subs={x(t): (X(s), [1, 2, 3, 4])}`` would
+    tell ``laplace_transform`` that the Laplace transform of the function
+    ``x(t)`` is ``X(s)`` and that the initial value, first derivative at
+    ``t=0``, second derivative, etc., are 1, 2, 3, etc., respectively. Giving
+    a single value ``0`` as an initial condition, like
+    ``diff_subs={x(t): (X(s), 0)}``, results in all initial conditions being
+    set to zero.
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`. If ``noconds=True``,
@@ -1951,14 +1966,25 @@ def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
     Examples
     ========
 
-    >>> from sympy import DiracDelta, exp, laplace_transform
-    >>> from sympy.abc import t, s, a
+    >>> from sympy import DiracDelta, exp, laplace_transform, diff, Function, symbols
+    >>> y = Function('y')
+    >>> Y = Function('Y')
+    >>> z = Function("z")
+    >>> Z = Function("Z")
+    >>> s, t, a, b, c, d, z0, z1, y0 = symbols('s, t, a, b, c, d, z0, z1, y0')
     >>> laplace_transform(t**4, t, s)
     (24/s**5, 0, True)
     >>> laplace_transform(t**a, t, s)
     (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t),t,s)
     (s/(a + s), Max(0, -a), True)
+    >>> laplace_transform(diff(z(t), t, 2), t, s)
+    s**2*LaplaceTransform(z(t), t, s) - s*z(0) - Subs(Derivative(z(t), t), t, 0)
+    >>> laplace_transform([diff(z(t), t, 2)-a*z(t)-b*y(t), diff(y(t), t)-c*z(t)-d*y(t)], t, s, {z(t): (Z(s), [z0, z1, 0]), y(t): (Y(s), [y0, 0, 0])})
+    [-a*Z(s) - b*Y(s) + s**2*Z(s) - s*z0 - z1, -c*Z(s) - d*Y(s) + s*Y(s) - y0]
+    >>> laplace_transform([diff(z(t), t, 2)-a*z(t)-b*y(t), diff(y(t), t)-c*z(t)-d*y(t)], t, s, {z(t): (Z(s), 0), y(t): (Y(s), 0)})
+    [-a*Z(s) - b*Y(s) + s**2*Z(s), -c*Z(s) - d*Y(s) + s*Y(s)]
+
 
     See Also
     ========
