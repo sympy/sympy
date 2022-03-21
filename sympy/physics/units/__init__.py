@@ -31,7 +31,8 @@ Useful functions:
 from .dimensions import Dimension, DimensionSystem
 from .unitsystem import UnitSystem
 from .util import convert_to
-from .quantities import Quantity
+from .util import convert_temperature
+from .quantities import Quantity, Offset
 
 from .definitions.dimension_definitions import (
     amount_of_substance, acceleration, action, area,
@@ -149,6 +150,9 @@ from .definitions import (
     gaussian_year, gaussian_years,
     full_moon_cycle, full_moon_cycles,
     year, years,
+    deg_C, degree_celsius, degrees_celsius,
+    deg_R, degree_rankine, degrees_rankine,
+    deg_F, degree_fahrenheit, degrees_fahrenheit,
     G, gravitational_constant,
     c, speed_of_light,
     elementary_charge,
@@ -271,7 +275,9 @@ __all__ = [
     'Dimension', 'DimensionSystem',
     'UnitSystem',
     'convert_to',
+    'convert_temperature',
     'Quantity',
+    'Offset',
 
     'amount_of_substance', 'acceleration', 'action', 'area',
     'capacitance', 'charge', 'conductance', 'current', 'energy',
@@ -383,6 +389,9 @@ __all__ = [
     'gaussian_year', 'gaussian_years',
     'full_moon_cycle', 'full_moon_cycles',
     'year', 'years',
+    'deg_C', 'degree_celsius', 'degrees_celsius',
+    'deg_R', 'degree_rankine', 'degrees_rankine',
+    'deg_F', 'degree_fahrenheit', 'degrees_fahrenheit',
     'G', 'gravitational_constant',
     'c', 'speed_of_light',
     'elementary_charge',

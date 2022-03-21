@@ -128,6 +128,15 @@ class Quantity(AtomicExpr):
         UnitSystem._quantity_scale_factors_global[self] = (scale_factor, reference_quantity)
         UnitSystem._quantity_dimensional_equivalence_map_global[self] = reference_quantity
 
+    def set_global_relative_scale_offset(self, scale_offset, reference_quantity):
+        """
+        Setting a scale offset that is valid across all unit system.
+        """
+        from sympy.physics.units import UnitSystem
+        scale_offset = sympify(scale_offset)
+        UnitSystem._quantity_scale_offsets_global[self] = (scale_offset, reference_quantity)
+        UnitSystem._quantity_dimensional_equivalence_map_global[self] = reference_quantity
+
     @property
     def name(self):
         return self._name
@@ -155,6 +164,22 @@ class Quantity(AtomicExpr):
         from sympy.physics.units import UnitSystem
         unit_system = UnitSystem.get_default_unit_system()
         return unit_system.get_quantity_scale_factor(self)
+
+    @property
+    def scale_offset(self):
+        """
+        Overall shift of the quantity as compared to the canonical units.
+        """
+        from sympy.physics.units import UnitSystem
+        unit_system = UnitSystem.get_default_unit_system()
+        return unit_system.get_quantity_scale_offset(self)
+
+    @property
+    def is_multiplicative(self):
+        from sympy.physics.units import UnitSystem
+        if self in UnitSystem._quantity_scale_offsets_global.keys():
+            return False
+        return True
 
     def _eval_is_positive(self):
         return True
@@ -232,3 +257,62 @@ class Quantity(AtomicExpr):
     def free_symbols(self):
         """Return free symbols from quantity."""
         return set()
+
+class Offset(AtomicExpr):
+    """
+    Class to represent a temperature offset quantity as
+    the product of a numerical value and a temperature unit
+
+    Examples
+    ========
+
+    >>> from sympy.physics.units import deg_C, deg_F
+    >>> from sympy.physics.units import Offset
+    >>> Offset(0, deg_C)
+    Offset(0, degree_celsius)
+    >>> Offset(0, deg_C)(deg_F)
+    Offset(32, degree_fahrenheit)
+    >>> Offset(0, deg_C).doit().n()
+    273.15*kelvin
+    """
+
+    def __new__(cls, magnitude, units):
+
+        magnitude = sympify(magnitude)
+
+        if not isinstance(units, Quantity):
+            raise TypeError("Offset units must be a Quantity")
+
+        from sympy.physics.units import temperature
+        if units.dimension is not temperature:
+            raise ValueError("Offset units must be a temperature")
+
+        obj = AtomicExpr.__new__(cls, magnitude, units)
+        obj._magnitude = magnitude
+        obj._units = units
+        return obj
+
+    @property
+    def magnitude(self):
+        return self._magnitude
+
+    @property
+    def units(self):
+        return self._units
+
+    def _latex(self, printer):
+        return "%s %s" %(printer._print(self.magnitude), printer._print(self.units))
+
+    def __call__(self, other):
+        """Converts temperatures between different temperature scales"""
+        from .util import convert_temperature
+        return convert_temperature(self, other, unit_system="SI")
+
+    def doit(self):
+        """Converts temperatures to an absolute temperature"""
+        from sympy.physics.units import UnitSystem
+        unit = self.units
+        while unit in UnitSystem._quantity_scale_offsets_global:
+            offset, unit = UnitSystem._quantity_scale_offsets_global[unit]
+        absolute_temperature = self.__call__(unit)
+        return absolute_temperature.magnitude * absolute_temperature.units

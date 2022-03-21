@@ -4251,6 +4251,12 @@ def test_sympy__physics__units__quantities__Quantity():
     assert _test_args(Quantity("dam"))
 
 
+def test_sympy__physics__units__quantities__Offset():
+    from sympy.physics.units.quantities import Offset
+    from sympy.physics.units import degrees_celsius
+    assert _test_args(Offset(0, degrees_celsius))
+
+
 def test_sympy__physics__units__prefixes__Prefix():
     from sympy.physics.units.prefixes import Prefix
     assert _test_args(Prefix('kilo', 'k', 3))
