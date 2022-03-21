@@ -1573,7 +1573,7 @@ class Circle(Ellipse):
 
             center_x = -c/a/2
             center_y = -d/b/2
-            r2 = (center_x**2) + (center_y**2) - e
+            r2 = (center_x**2) + (center_y**2) - e/a
 
             return Circle((center_x, center_y), sqrt(r2), evaluate=evaluate)
 
