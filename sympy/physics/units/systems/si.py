@@ -56,6 +56,7 @@ all_units = []  # type: List[Quantity]
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 
+all_units.extend(units)
 all_units.extend([mol, cd, K, lux])
 
 
@@ -71,7 +72,29 @@ dimsys_default = dimsys_SI.extend(
     [information],
 )
 
-SI = MKSA.extend(base=(mol, cd, K), units=all_units, name='SI', dimension_system=dimsys_SI)
+SI = MKSA.extend(base=(mol, cd, K), units=all_units, name='SI', dimension_system=dimsys_SI, derived_units={
+    power: watt,
+    magnetic_flux: weber,
+    time: second,
+    impedance: ohm,
+    pressure: pascal,
+    current: ampere,
+    voltage: volt,
+    length: meter,
+    frequency: hertz,
+    inductance: henry,
+    temperature: kelvin,
+    amount_of_substance: mole,
+    luminous_intensity: candela,
+    conductance: siemens,
+    mass: kilogram,
+    magnetic_density: tesla,
+    charge: coulomb,
+    force: newton,
+    capacitance: farad,
+    energy: joule,
+    velocity: meter/second,
+})
 
 One = S.One
 
