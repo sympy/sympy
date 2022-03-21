@@ -121,11 +121,13 @@ def convert_to(expr, target_units, unit_system="SI"):
     return expr_scale_factor * Mul.fromiter((1/get_total_scale_factor(u) * u) ** p for u, p in zip(target_units, depmat))
 
 
-def quantity_simplify(expr, across_dimensions: bool=False, unit_system="SI"):
+def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):
     """Return an equivalent expression in which prefixes are replaced
     with numerical values and all units of a given dimension are the
     unified in a canonical manner by default. `across_dimensions` allows
     for units of different dimensions to be simplified together.
+
+    `unit_system` must be specified if `across_dimensions` is True.
 
     Examples
     ========
@@ -137,7 +139,7 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system="SI"):
     250*foot**2/3
     >>> quantity_simplify(foot - 6*inch)
     foot/2
-    >>> quantity_simplify(5*joule/coulomb, across_dimensions=True)
+    >>> quantity_simplify(5*joule/coulomb, across_dimensions=True, unit_system="SI")
     5*volt
     """
 
@@ -161,6 +163,9 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system="SI"):
     if across_dimensions:
         # combine quantities of different dimensions into a single
         # quantity that is equivalent to the original expression
+
+        if unit_system is None:
+            raise ValueError("unit_system must be specified if across_dimensions is True")
 
         unit_system = UnitSystem.get_unit_system(unit_system)
         dimension_system: DimensionSystem = unit_system.get_dimension_system()
