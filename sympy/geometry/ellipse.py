@@ -1557,7 +1557,7 @@ class Circle(Ellipse):
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
-            equation = args[0]
+            equation = args[0].expand()
             if isinstance(equation, Eq):
                 equation = equation.lhs - equation.rhs
             x = find(x, equation)

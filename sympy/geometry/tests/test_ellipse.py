@@ -40,6 +40,7 @@ def test_object_from_equation():
     assert Circle(a**2 + b**2, x='a', y='b') == Circle(Point2D(0, 0), 0)
     assert Circle(x**2 + y**2 + 6*x + 8) == Circle(Point2D(-3, 0), 1)
     assert Circle(x**2 + y**2 + 6*y + 8) == Circle(Point2D(0, -3), 1)
+    assert Circle((x - 1)**2 + y**2 - 9) == Circle(Point2D(1, 0), 3)
     assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(Rational(-1, 2), Rational(-2, 3)), 5*sqrt(7)/6)
     assert Circle(Eq(a**2 + b**2, 25), x='a', y=b) == Circle(Point2D(0, 0), 5)
     raises(GeometryError, lambda: Circle(x**2 + y**2 + 3*x + 4*y + 26))
