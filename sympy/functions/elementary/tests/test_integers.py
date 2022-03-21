@@ -559,6 +559,8 @@ def test_issue_14355():
     assert floor(sin(x)/x).as_leading_term(x, cdir = -1) == 0
     assert floor(-tan(x)/x).as_leading_term(x, cdir = 1) == -2
     assert floor(-tan(x)/x).as_leading_term(x, cdir = -1) == -2
+    assert floor(sin(x)/x/3).as_leading_term(x, cdir = 1) == 0
+    assert floor(sin(x)/x/3).as_leading_term(x, cdir = -1) == 0
     assert ceiling((x**3 + x)/(x**2 - x)).as_leading_term(x, cdir = 1) == -1
     assert ceiling((x**3 + x)/(x**2 - x)).as_leading_term(x, cdir = -1) == 0
     assert ceiling((cos(x) - 1)/x).as_leading_term(x, cdir = 1) == 0
@@ -567,6 +569,8 @@ def test_issue_14355():
     assert ceiling(sin(x)/x).as_leading_term(x, cdir = -1) == 1
     assert ceiling(-tan(x)/x).as_leading_term(x, cdir = 1) == -1
     assert ceiling(-tan(x)/x).as_leading_term(x, cdir = 1) == -1
+    assert ceiling(sin(x)/x/3).as_leading_term(x, cdir = 1) == 1
+    assert ceiling(sin(x)/x/3).as_leading_term(x, cdir = -1) == 1
     # test for series
     assert floor(sin(x)/x).series(x, 0, 100, cdir = 1) == 0
     assert floor(sin(x)/x).series(x, 0, 100, cdir = 1) == 0
