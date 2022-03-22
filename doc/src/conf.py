@@ -152,6 +152,7 @@ html_sidebars = {
         "sidebar/brand.html",
         "sidebar/search.html",
         "sidebar/navigation.html",
+        "sidebar/versions.html",
         "sidebar/scroll-end.html",
     ],
 }
@@ -230,6 +231,8 @@ html_theme_options = {
 # aren't specified in the Furo theme as CSS variables
 html_css_files = ['custom.css']
 
+# html_js_files = []
+
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
 #html_use_smartypants = True
@@ -249,7 +252,7 @@ html_css_files = ['custom.css']
 html_domain_indices = ['py-modindex']
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
-#html_copy_source = True
+# html_copy_source = True
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'SymPydoc'

@@ -26,6 +26,22 @@ blockquote {
     margin-block-end: -0.5rem;
 }
 
+/* Version selector. See _templates/sidebar/versions.html */
+.versions-header {
+    color: white;
+    padding: var(--sidebar-item-spacing-vertical) var
+             (--sidebar-item-spacing-horizontal);
+    margin: 1rem 0rem;
+}
+.current-version {
+    background-color: #2f431e;
+}
+.versions-not-found {
+    color: white;
+    font-style: italic;
+    padding: var(--sidebar-item-spacing-vertical) var(--sidebar-item-spacing-horizontal);
+}
+
 /* Make the "SymPy documentation" text bold */
 .sidebar-brand-text {
     font-weight: bold;
