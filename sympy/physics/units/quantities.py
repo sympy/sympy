@@ -21,11 +21,13 @@ class Quantity(AtomicExpr):
     is_real = True
     is_number = False
     is_nonzero = True
+    is_physical_constant = False
     _diff_wrt = True
 
     def __new__(cls, name, abbrev=None, dimension=None, scale_factor=None,
                 latex_repr=None, pretty_unicode_repr=None,
                 pretty_ascii_repr=None, mathml_presentation_repr=None,
+                is_prefixed=False,
                 **assumptions):
 
         if not isinstance(name, Symbol):
@@ -63,6 +65,9 @@ class Quantity(AtomicExpr):
         elif isinstance(abbrev, str):
             abbrev = Symbol(abbrev)
 
+        # HACK: These are here purely for type checking. They actually get assigned below.
+        cls._is_prefixed = is_prefixed
+
         obj = AtomicExpr.__new__(cls, name, abbrev)
         obj._name = name
         obj._abbrev = abbrev
@@ -70,6 +75,7 @@ class Quantity(AtomicExpr):
         obj._unicode_repr = pretty_unicode_repr
         obj._ascii_repr = pretty_ascii_repr
         obj._mathml_repr = mathml_presentation_repr
+        obj._is_prefixed = is_prefixed
 
         if dimension is not None:
             # TODO: remove after deprecation:
@@ -80,6 +86,7 @@ class Quantity(AtomicExpr):
             # TODO: remove after deprecation:
             with ignore_warnings(SymPyDeprecationWarning):
                 obj.set_scale_factor(scale_factor)
+
         return obj
 
     def set_dimension(self, dimension, unit_system="SI"):
@@ -119,6 +126,8 @@ class Quantity(AtomicExpr):
         """
         from sympy.physics.units import UnitSystem
         scale_factor = sympify(scale_factor)
+        if isinstance(scale_factor, Prefix):
+            self._is_prefixed = True
         # replace all prefixes by their ratio to canonical units:
         scale_factor = scale_factor.replace(
             lambda x: isinstance(x, Prefix),
@@ -232,3 +241,13 @@ class Quantity(AtomicExpr):
     def free_symbols(self):
         """Return free symbols from quantity."""
         return set()
+
+    @property
+    def is_prefixed(self):
+        """Whether or not the quantity is prefixed. Eg. `kilogram` is prefixed, but `gram` is not."""
+        return self._is_prefixed
+
+class PhysicalConstant(Quantity):
+    """Represents a physical constant, eg. `speed_of_light` or `avogadro_constant`."""
+
+    is_physical_constant = True
