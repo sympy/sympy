@@ -125,14 +125,14 @@ class Dimension(Expr):
 
         >>> from sympy.physics.units.systems.si import dimsys_SI
         >>> dimsys_SI.get_dimensional_dependencies(velocity)
-        {'length': 1, 'time': -1}
+        {Dimension(length, L): 1, Dimension(time, T): -1}
         >>> length + length
         Dimension(length)
         >>> l2 = length**2
         >>> l2
         Dimension(length**2)
         >>> dimsys_SI.get_dimensional_dependencies(l2)
-        {'length': 2}
+        {Dimension(length, L): 2}
 
     """
 
