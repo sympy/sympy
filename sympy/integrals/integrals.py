@@ -122,7 +122,7 @@ class Integral(AddWithLimits):
         sympy.concrete.expr_with_limits.ExprWithLimits.limits
         sympy.concrete.expr_with_limits.ExprWithLimits.variables
         """
-        return AddWithLimits.free_symbols.fget(self)
+        return super().free_symbols
 
     def _eval_is_zero(self):
         # This is a very naive and quick test, not intended to do the integral to
