@@ -22,7 +22,7 @@ from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
 
 from sympy.physics.units.definitions.dimension_definitions import (
     Dimension, charge, length, time, temperature, pressure,
-    energy
+    energy, mass
 )
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import PhysicalConstant, Quantity
@@ -170,8 +170,8 @@ def test_quantity_abs():
         assert Dq == Dq1
 
     assert SI.get_dimension_system().get_dimensional_dependencies(Dq) == {
-        'length': 1,
-        'time': -1,
+        length: 1,
+        time: -1,
     }
     assert meter == sqrt(meter**2)
 
@@ -330,10 +330,10 @@ def test_quantity_postprocessing():
     q = q1 + q2
     Dq = Dimension(SI.get_dimensional_expr(q))
     assert SI.get_dimension_system().get_dimensional_dependencies(Dq) == {
-        'length': -1,
-        'mass': 2,
-        'temperature': 1,
-        'time': -5,
+        length: -1,
+        mass: 2,
+        temperature: 1,
+        time: -5,
     }
 
 
@@ -524,7 +524,7 @@ def test_issue_22819():
     from sympy.physics.units import tonne, gram, Da
     from sympy.physics.units.systems.si import dimsys_SI
     assert tonne.convert_to(gram) == 1000000*gram
-    assert dimsys_SI.get_dimensional_dependencies(area) == {'length': 2}
+    assert dimsys_SI.get_dimensional_dependencies(area) == {length: 2}
     assert Da.scale_factor == 1.66053906660000e-24
 
 
