@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import subprocess
 import sys
 from os.path import join, splitext, basename
@@ -10,7 +11,7 @@ from shutil import copytree
 
 
 
-def main(sympy_doc_git, doc_html_zip, version, push=None):
+def main(sympy_doc_git, doc_html_zip, version, dev_version, push=None):
     """Run this as ./update_docs.py SYMPY_DOC_GIT DOC_HTML_ZIP VERSION [--push]
 
     !!!!!!!!!!!!!!!!!
@@ -38,10 +39,10 @@ def main(sympy_doc_git, doc_html_zip, version, push=None):
     else:
         raise ValueError("Invalid arguments")
 
-    update_docs(sympy_doc_git, doc_html_zip, version, push)
+    update_docs(sympy_doc_git, doc_html_zip, version, dev_version, push)
 
 
-def update_docs(sympy_doc_git, doc_html_zip, version, push):
+def update_docs(sympy_doc_git, doc_html_zip, version, dev_version, push):
 
     # We started with a clean tree so restore it on error
     with git_rollback_on_error(sympy_doc_git, branch='gh-pages') as run:
@@ -56,10 +57,12 @@ def update_docs(sympy_doc_git, doc_html_zip, version, push):
         run('git', 'add', 'latest')
         run('git', 'commit', '-m', 'Add sympy %s docs' % version)
 
-        # Update indexes
-        run('./generate_indexes.py')
+        # Update versions.json
+        with open('versions.json', 'w') as f:
+            json.dump({'dev': dev_version, 'latest': version}, f)
         run('git', 'diff')
-        run('git', 'commit', '-a', '-m', 'Update indexes')
+        run('git', 'add', 'versions.json')
+        run('git', 'commit', '-m', 'Update versions.json')
 
         if push:
             run('git', 'push')
