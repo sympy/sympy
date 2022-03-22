@@ -1,6 +1,7 @@
 '''Functions returning normal forms of matrices'''
 
 from collections import defaultdict
+from enum import Enum
 
 from .domainmatrix import DomainMatrix
 from .exceptions import DMDomainError, DMShapeError
@@ -174,14 +175,17 @@ def _gcdex(a, b):
     return x, y, g
 
 
-def _hermite_normal_form(A):
+def _hermite_normal_form(A, truncate=True):
     r"""
-    Compute the Hermite Normal Form of DomainMatrix *A* over :ref:`ZZ`.
+    Compute the Hermite Normal Form of DomainMatrix *A* over :ref:`ZZ`,
+    in :py:class:`~HNFMode` ``RIGHT``.
 
     Parameters
     ==========
 
     A : :py:class:`~.DomainMatrix` over domain :ref:`ZZ`.
+    truncate : boolean, optional (default=True)
+        If true, chop off columns of zeros on the left.
 
     Returns
     =======
@@ -243,15 +247,14 @@ def _hermite_normal_form(A):
             for j in range(k + 1, n):
                 q = A[i][j] // b
                 add_columns(A, j, k, 1, -q, 0, 1)
-    # Finally, the HNF consists of those columns of A in which we succeeded in making
-    # a nonzero pivot.
-    return DomainMatrix.from_rep(A)[:, k:]
+    j0 = k if truncate else 0
+    return DomainMatrix.from_rep(A)[:, j0:]
 
 
 def _hermite_normal_form_modulo_D(A, D):
     r"""
     Perform the mod *D* Hermite Normal Form reduction algorithm on
-    :py:class:`~.DomainMatrix` *A*.
+    :py:class:`~.DomainMatrix` *A*, in :py:class:`~HNFMode` ``RIGHT``.
 
     Explanation
     ===========
@@ -336,7 +339,97 @@ def _hermite_normal_form_modulo_D(A, D):
     return DomainMatrix(W, (m, m), ZZ).to_dense()
 
 
-def hermite_normal_form(A, *, D=None, check_rank=False):
+class HNFMode(Enum):
+    r"""
+    There is no universally accepted definition of Hermite Normal Form. In
+    every definition, a matrix $H$ in Hermite Normal Form contains "pivots"
+    and "reduced entries." The reduced entries $r$ are those that must satisfy
+    $0 \leq r < p$ for a particular pivot entry $p$.
+
+    What differs from one definition of HNF to another is the *side* of the
+    pivots on which their reduced entries should be found. Four sides are
+    possible: right, left, above, and below, and these are represented by the
+    four values of the ``HNFMode`` enum.
+
+    Each definition of HNF also describes a unimodular matrix $U$ that converts
+    a given matrix $A$ to its HNF $H$, via matrix multiplication. Whether the
+    multiplication is on the left or the right again depends on which of the
+    four modes we are in.
+
+    In summary, the four modes are as follows:
+
+    * ``RIGHT``:
+        - Reduced entries are to the *right* of their pivot.
+        - $H = AU$
+        - $H$ is *upper* triangular, with *colunns* of zeros pushed to the *left*.
+
+    * ``LEFT``:
+        - Reduced entries are to the *left* of their pivot.
+        - $H = AU$
+        - $H$ is *lower* triangular, with *colunns* of zeros pushed to the *right*.
+
+    * ``ABOVE``:
+        - Reduced entries are *above* their pivot.
+        - $H = UA$
+        - $H$ is *upper* triangular, with *rows* of zeros pushed to the *bottom*.
+
+    * ``BELOW``:
+        - Reduced entries are *below* their pivot.
+        - $H = UA$
+        - $H$ is *lower* triangular, with *rows* of zeros pushed to the *top*.
+
+    If you want to replicate the behavior of another computer algebra system,
+    or a definition found in a textbook, here are a few known examples:
+
+    * Sage: ABOVE
+    * Pari/GP: RIGHT
+    * "Hermite normal form" in [Cohen93]: RIGHT
+    * "Hermite-column-reduced" in [Pohst89]: LEFT
+    * "Hermite-row-reduced" in [Pohst89]: ABOVE
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.matrices.normalforms import hermite_normal_form, HNFMode
+    >>> A = Matrix([[41, 189, 135, 22, 1], [3, 35, 19, 18, 13], [0, 7, 2, 6, 5]])
+    >>> H = hermite_normal_form(A, HNFMode.RIGHT, truncate=False)
+    >>> print(A)  # doctest:+SKIP
+    Matrix([
+    [41, 189, 135, 22, 1],
+    [3, 35, 19, 18, 13],
+    [0, 7, 2, 6, 5]])
+    >>> print(H)  # doctest:+SKIP
+    Matrix([
+    [0, 0, 6, 5, 4],
+    [0, 0, 0, 3, 2],
+    [0, 0, 0, 0, 1]])
+
+    >>> A = Matrix([[5, 13, 1], [6, 18, 22], [2, 19, 135], [7, 35, 189], [0, 3, 41]])
+    >>> H = hermite_normal_form(A, HNFMode.ABOVE, truncate=False)
+    >>> print(A)  # doctest:+SKIP
+    Matrix([
+    [5, 13, 1],
+    [6, 18, 22],
+    [2, 19, 135],
+    [7, 35, 189],
+    [0, 3, 41]])
+    >>> print(H)  # doctest:+SKIP
+    Matrix([
+    [1, 2, 4],
+    [0, 3, 5],
+    [0, 0, 6],
+    [0, 0, 0],
+    [0, 0, 0]])
+
+    """
+    RIGHT = 0
+    LEFT = 1
+    ABOVE = 2
+    BELOW = 3
+
+
+def hermite_normal_form(A, mode, *, D=None, check_rank=False, truncate=True):
     r"""
     Compute the Hermite Normal Form of :py:class:`~.DomainMatrix` *A* over
     :ref:`ZZ`.
@@ -346,17 +439,20 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
 
     >>> from sympy import ZZ
     >>> from sympy.polys.matrices import DomainMatrix
-    >>> from sympy.polys.matrices.normalforms import hermite_normal_form
+    >>> from sympy.polys.matrices.normalforms import hermite_normal_form, HNFMode
     >>> m = DomainMatrix([[ZZ(12), ZZ(6), ZZ(4)],
     ...                   [ZZ(3), ZZ(9), ZZ(6)],
     ...                   [ZZ(2), ZZ(16), ZZ(14)]], (3, 3), ZZ)
-    >>> print(hermite_normal_form(m).to_Matrix())
+    >>> print(hermite_normal_form(m, HNFMode.RIGHT).to_Matrix())
     Matrix([[10, 0, 2], [0, 15, 3], [0, 0, 2]])
 
     Parameters
     ==========
 
     A : $m \times n$ ``DomainMatrix`` over :ref:`ZZ`.
+
+    mode : :py:class:`~HNFMode`
+        Say on which side of the pivots the reduced entries should go.
 
     D : :ref:`ZZ`, optional
         Let $W$ be the HNF of *A*. If known in advance, a positive integer *D*
@@ -370,6 +466,10 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
         checking it for you. If you do want this to be checked (and the
         ordinary, non-modulo *D* algorithm to be used if the check fails), then
         set *check_rank* to ``True``.
+
+    truncate : boolean, optional (default=True)
+        If ``True``, chop off rows or columns of zeros, according to the
+        *mode*. Setting ``False`` is not available when working mod *D*.
 
     Returns
     =======
@@ -397,7 +497,26 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
     """
     if not A.domain.is_ZZ:
         raise DMDomainError('Matrix must be over domain ZZ.')
+
+    if mode == HNFMode.LEFT:
+        A = A.rotate_180()
+    elif mode == HNFMode.ABOVE:
+        A = A.anti_transpose()
+    elif mode == HNFMode.BELOW:
+        A = A.transpose()
+
     if D is not None and (not check_rank or A.convert_to(QQ).rank() == A.shape[0]):
-        return _hermite_normal_form_modulo_D(A, D)
+        if not truncate:
+            raise ValueError("truncate False is not available when working mod D")
+        H = _hermite_normal_form_modulo_D(A, D)
     else:
-        return _hermite_normal_form(A)
+        H = _hermite_normal_form(A, truncate=truncate)
+
+    if mode == HNFMode.LEFT:
+        H = H.rotate_180()
+    elif mode == HNFMode.ABOVE:
+        H = H.anti_transpose()
+    elif mode == HNFMode.BELOW:
+        H = H.transpose()
+
+    return H

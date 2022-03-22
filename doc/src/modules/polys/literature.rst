@@ -145,3 +145,6 @@ a theoretical foundation for implementing polynomials manipulation module.
 
 .. [Cohen93] Henri Cohen. "A Course in Computational Algebraic Number Theory",
    Springer, 1993.
+
+.. [Pohst89] M Pohst and H Zassenhaus. "Algorithmic Algebraic Number Theory",
+   Cambridge University Press, 1989.

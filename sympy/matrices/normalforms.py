@@ -7,8 +7,12 @@ from sympy.polys.matrices.normalforms import (
         smith_normal_form as _snf,
         invariant_factors as _invf,
         hermite_normal_form as _hnf,
+        HNFMode as _HNFMode,
     )
 
+# Redefine here so that users intending only to work with Matrices do not
+# have to import from under polys.
+HNFMode = _HNFMode
 
 def _to_domain(m, domain=None):
     """Convert Matrix to DomainMatrix"""
@@ -67,7 +71,7 @@ def invariant_factors(m, domain=None):
     return factors
 
 
-def hermite_normal_form(A, *, D=None, check_rank=False):
+def hermite_normal_form(A, mode, *, D=None, check_rank=False, truncate=True):
     r"""
     Compute the Hermite Normal Form of a Matrix *A* of integers.
 
@@ -75,15 +79,18 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.matrices.normalforms import hermite_normal_form
+    >>> from sympy.matrices.normalforms import hermite_normal_form, HNFMode
     >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
-    >>> print(hermite_normal_form(m))
+    >>> print(hermite_normal_form(m, HNFMode.RIGHT))
     Matrix([[10, 0, 2], [0, 15, 3], [0, 0, 2]])
 
     Parameters
     ==========
 
     A : $m \times n$ ``Matrix`` of integers.
+
+    mode : :py:class:`~HNFMode`
+        Say on which side of the pivots the reduced entries should go.
 
     D : int, optional
         Let $W$ be the HNF of *A*. If known in advance, a positive integer *D*
@@ -97,6 +104,10 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
         checking it for you. If you do want this to be checked (and the
         ordinary, non-modulo *D* algorithm to be used if the check fails), then
         set *check_rank* to ``True``.
+
+    truncate : boolean, optional (default=True)
+        If ``True``, chop off rows or columns of zeros, according to the
+        *mode*. Setting ``False`` is not available when working mod *D*.
 
     Returns
     =======
@@ -124,4 +135,5 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
     # Accept any of Python int, SymPy Integer, and ZZ itself:
     if D is not None and not ZZ.of_type(D):
         D = ZZ(int(D))
-    return _hnf(A._rep, D=D, check_rank=check_rank).to_Matrix()
+    return _hnf(A._rep, mode,
+                D=D, check_rank=check_rank, truncate=truncate).to_Matrix()

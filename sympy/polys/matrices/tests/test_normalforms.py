@@ -2,7 +2,7 @@ from sympy.testing.pytest import raises
 
 from sympy.core.symbol import Symbol
 from sympy.polys.matrices.normalforms import (
-    invariant_factors, smith_normal_form,
+    invariant_factors, smith_normal_form, HNFMode,
     hermite_normal_form, _hermite_normal_form, _hermite_normal_form_modulo_D)
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.matrices import DomainMatrix, DM
@@ -39,37 +39,56 @@ def test_smith_normal():
 
 
 def test_hermite_normal():
+    hnf = lambda m, D=None, check_rank=False, truncate=True: hermite_normal_form(
+        m, HNFMode.RIGHT, D=D, check_rank=check_rank, truncate=truncate)
     m = DM([[2, 7, 17, 29, 41], [3, 11, 19, 31, 43], [5, 13, 23, 37, 47]], ZZ)
-    hnf = DM([[1, 0, 0], [0, 2, 1], [0, 0, 1]], ZZ)
-    assert hermite_normal_form(m) == hnf
-    assert hermite_normal_form(m, D=ZZ(2)) == hnf
-    assert hermite_normal_form(m, D=ZZ(2), check_rank=True) == hnf
+    H = DM([[1, 0, 0], [0, 2, 1], [0, 0, 1]], ZZ)
+    assert hnf(m) == H
+    assert hnf(m, D=ZZ(2)) == H
+    assert hnf(m, D=ZZ(2), check_rank=True) == H
 
     m = m.transpose()
-    hnf = DM([[37, 0, 19], [222, -6, 113], [48, 0, 25], [0, 2, 1], [0, 0, 1]], ZZ)
-    assert hermite_normal_form(m) == hnf
+    H = DM([[37, 0, 19], [222, -6, 113], [48, 0, 25], [0, 2, 1], [0, 0, 1]], ZZ)
+    assert hnf(m) == H
     raises(DMShapeError, lambda: _hermite_normal_form_modulo_D(m, ZZ(96)))
     raises(DMDomainError, lambda: _hermite_normal_form_modulo_D(m, QQ(96)))
 
     m = DM([[8, 28, 68, 116, 164], [3, 11, 19, 31, 43], [5, 13, 23, 37, 47]], ZZ)
-    hnf = DM([[4, 0, 0], [0, 2, 1], [0, 0, 1]], ZZ)
-    assert hermite_normal_form(m) == hnf
-    assert hermite_normal_form(m, D=ZZ(8)) == hnf
-    assert hermite_normal_form(m, D=ZZ(8), check_rank=True) == hnf
+    H = DM([[4, 0, 0], [0, 2, 1], [0, 0, 1]], ZZ)
+    assert hnf(m) == H
+    assert hnf(m, D=ZZ(8)) == H
+    assert hnf(m, D=ZZ(8), check_rank=True) == H
+    raises(ValueError, lambda: hnf(m, D=ZZ(8), truncate=False))
 
     m = DM([[10, 8, 6, 30, 2], [45, 36, 27, 18, 9], [5, 4, 3, 2, 1]], ZZ)
-    hnf = DM([[26, 2], [0, 9], [0, 1]], ZZ)
-    assert hermite_normal_form(m) == hnf
+    H = DM([[26, 2], [0, 9], [0, 1]], ZZ)
+    assert hnf(m) == H
 
     m = DM([[2, 7], [0, 0], [0, 0]], ZZ)
-    hnf = DM([[], [], []], ZZ)
-    assert hermite_normal_form(m) == hnf
+    H = DM([[], [], []], ZZ)
+    assert hnf(m) == H
 
     m = DM([[-2, 1], [0, 1]], ZZ)
-    hnf = DM([[2, 1], [0, 1]], ZZ)
-    assert hermite_normal_form(m) == hnf
+    H = DM([[2, 1], [0, 1]], ZZ)
+    assert hnf(m) == H
 
     m = DomainMatrix([[QQ(1)]], (1, 1), QQ)
-    raises(DMDomainError, lambda: hermite_normal_form(m))
+    raises(DMDomainError, lambda: hnf(m))
     raises(DMDomainError, lambda: _hermite_normal_form(m))
     raises(DMDomainError, lambda: _hermite_normal_form_modulo_D(m, ZZ(1)))
+
+
+def test_hermite_modes():
+    Ar = DM([[41, 189, 135, 22, 1], [3, 35, 19, 18, 13], [0, 7, 2, 6, 5]], ZZ)
+    Al = Ar.rotate_180()
+    Aa = Ar.anti_transpose()
+    Ab = Ar.transpose()
+
+    Hr = DM([[0, 0, 6, 5, 4], [0, 0, 0, 3, 2], [0, 0, 0, 0, 1]], ZZ)
+    Hl = Hr.rotate_180()
+    Ha = Hr.anti_transpose()
+    Hb = Hr.transpose()
+
+    for mode, A, H_expected in zip(HNFMode, [Ar, Al, Aa, Ab], [Hr, Hl, Ha, Hb]):
+        H = hermite_normal_form(A, mode, truncate=False)
+        assert H == H_expected
