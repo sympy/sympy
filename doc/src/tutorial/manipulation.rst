@@ -10,11 +10,6 @@ manipulation of expressions.
 Understanding Expression Trees
 ==============================
 
-.. sidebar :: Quick Tip
-
-   To play with the ``srepr`` form of expressions in the SymPy Live shell,
-   change the output format to ``Repr`` in the settings.
-
 Before we can do this, we need to understand how expressions are represented
 in SymPy.  A mathematical expression is represented as a tree.  Let us take
 the expression `x^2 + xy`, i.e., ``x**2 + x*y``.  We can see what this

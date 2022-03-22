@@ -111,11 +111,9 @@ This is the main place where users go to learn how to use SymPy. It contains a
 tutorial for SymPy as well as technical documentation for all of the modules.
 The source files are hosted in the main SymPy repository in the `doc directory
 <https://github.com/sympy/sympy/tree/master/doc>`_ at and are built using the
-`Sphinx site generator <http://www.sphinx-doc.org/en/master/>`_ and uploaded to
-the docs.sympy.org site automatically. The docs website also contains a built-
-in shell (SymPy Live) that allows users to interactively execute examples.
-There are two primary types of pages that are generated from different source
-files in the docs directory:
+`Sphinx site generator <http://www.sphinx-doc.org/en/master/>`_ and uploaded
+to the docs.sympy.org site automatically. There are two primary types of pages
+that are generated from different source files in the docs directory:
 
 * Narrative Pages: reStructuredText files that correspond to manually written
   documentation pages not present in the Python source code. Examples are the
