@@ -5,6 +5,7 @@ from functools import reduce
 from collections.abc import Iterable
 from typing import Optional
 
+from sympy import default_sort_key
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
@@ -13,11 +14,11 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension, DimensionSystem
-from sympy.physics.units.definitions import dimension_definitions
 from sympy.physics.units.prefixes import Prefix
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.unitsystem import UnitSystem
 from sympy.utilities.iterables import sift
+
 
 def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
     from sympy.matrices.dense import Matrix
@@ -174,11 +175,9 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):
         dim_deps = dimension_system.get_dimensional_dependencies(dim_expr, mark_dimensionless=True)
 
         target_dimension: Optional[Dimension] = None
-        for result_dim, result_deps in dimension_system.dimensional_dependencies.items():
-            if result_deps == dim_deps:
-                # Because dimensional_dependencies contains Symbols, we need to look up the
-                # corresponding `Dimension`.
-                target_dimension = getattr(dimension_definitions, result_dim.name)
+        for ds_dim, ds_dim_deps in dimension_system.dimensional_dependencies.items():
+            if ds_dim_deps == dim_deps:
+                target_dimension = ds_dim
                 break
 
         if target_dimension is None:
@@ -235,7 +234,7 @@ def check_dimensions(expr, unit_system="SI"):
                     break
             dims.extend(dimdict.items())
             if not skip:
-                deset.add(tuple(sorted(dims)))
+                deset.add(tuple(sorted(dims, key=default_sort_key)))
                 if len(deset) > 1:
                     raise ValueError(
                         "addends have incompatible dimensions: {}".format(deset))
