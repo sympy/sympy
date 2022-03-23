@@ -1930,7 +1930,7 @@ def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
     See Also
     ========
 
-    inverse_laplace_trasform, mellin_transform, fourier_transform
+    inverse_laplace_transform, mellin_transform, fourier_transform
     hankel_transform, inverse_hankel_transform
 
     """
