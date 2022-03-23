@@ -92,7 +92,7 @@ from sympy.concrete.products import Product
 from sympy.integrals import integrate
 from sympy.integrals.transforms import laplace_transform,\
     inverse_laplace_transform, LaplaceTransform, fourier_transform,\
-    mellin_transform, laplace_transform_replace_ic
+    mellin_transform
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.solveset import solveset, solveset_real, linsolve
 from sympy.solvers.ode import dsolve
@@ -2948,9 +2948,9 @@ def test_Y5_Y6():
     F, _, _ = laplace_transform(diff(y(t), t, 2)
                                 + y(t)
                                 - 4*(Heaviside(t - 1)
-                                - Heaviside(t - 2)), t, s)
-    G = laplace_transform_replace_ic(F, y, Y, t, s, [1, 0])
-    assert (G == s**2*Y(s) - s + Y(s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
+                                - Heaviside(t - 2)), t, s,
+                                {y(t): (Y(s), [1, 0])})
+    assert (F == s**2*Y(s) - s + Y(s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
     # TODO implement second part of test case
     # Now, solve for Y(s) and then take the inverse Laplace transform
     #   => Y(s) = s/(s^2 + 1) + 4 [1/s - s/(s^2 + 1)] [e^(-s) - e^(-2 s)]
