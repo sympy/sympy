@@ -5,7 +5,7 @@ from sympy.physics.units.definitions.dimension_definitions import current, tempe
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S as S_singleton
 from sympy.physics.units.prefixes import kilo, mega, milli, micro, deci, centi, nano, pico, kibi, mebi, gibi, tebi, pebi, exbi
-from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.quantities import PhysicalConstant, Quantity
 
 One = S_singleton.One
 
@@ -117,7 +117,7 @@ ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\m
 ug.set_global_relative_scale_factor(micro, gram)
 
 # Atomic mass constant
-Da = dalton = amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
+Da = dalton = amu = amus = atomic_mass_unit = atomic_mass_constant = PhysicalConstant("atomic_mass_constant")
 
 t = metric_ton = tonne = Quantity("tonne", abbrev="t")
 tonne.set_global_relative_scale_factor(mega, gram)
@@ -232,62 +232,62 @@ year = years = tropical_year
 #### CONSTANTS ####
 
 # Newton constant
-G = gravitational_constant = Quantity("gravitational_constant", abbrev="G")
+G = gravitational_constant = PhysicalConstant("gravitational_constant", abbrev="G")
 
 # speed of light
-c = speed_of_light = Quantity("speed_of_light", abbrev="c")
+c = speed_of_light = PhysicalConstant("speed_of_light", abbrev="c")
 
 # elementary charge
-elementary_charge = Quantity("elementary_charge", abbrev="e")
+elementary_charge = PhysicalConstant("elementary_charge", abbrev="e")
 
 # Planck constant
-planck = Quantity("planck", abbrev="h")
+planck = PhysicalConstant("planck", abbrev="h")
 
 # Reduced Planck constant
-hbar = Quantity("hbar", abbrev="hbar")
+hbar = PhysicalConstant("hbar", abbrev="hbar")
 
 # Electronvolt
-eV = electronvolt = electronvolts = Quantity("electronvolt", abbrev="eV")
+eV = electronvolt = electronvolts = PhysicalConstant("electronvolt", abbrev="eV")
 
 # Avogadro number
-avogadro_number = Quantity("avogadro_number")
+avogadro_number = PhysicalConstant("avogadro_number")
 
 # Avogadro constant
-avogadro = avogadro_constant = Quantity("avogadro_constant")
+avogadro = avogadro_constant = PhysicalConstant("avogadro_constant")
 
 # Boltzmann constant
-boltzmann = boltzmann_constant = Quantity("boltzmann_constant")
+boltzmann = boltzmann_constant = PhysicalConstant("boltzmann_constant")
 
 # Stefan-Boltzmann constant
-stefan = stefan_boltzmann_constant = Quantity("stefan_boltzmann_constant")
+stefan = stefan_boltzmann_constant = PhysicalConstant("stefan_boltzmann_constant")
 
 # Molar gas constant
-R = molar_gas_constant = Quantity("molar_gas_constant", abbrev="R")
+R = molar_gas_constant = PhysicalConstant("molar_gas_constant", abbrev="R")
 
 # Faraday constant
-faraday_constant = Quantity("faraday_constant")
+faraday_constant = PhysicalConstant("faraday_constant")
 
 # Josephson constant
-josephson_constant = Quantity("josephson_constant", abbrev="K_j")
+josephson_constant = PhysicalConstant("josephson_constant", abbrev="K_j")
 
 # Von Klitzing constant
-von_klitzing_constant = Quantity("von_klitzing_constant", abbrev="R_k")
+von_klitzing_constant = PhysicalConstant("von_klitzing_constant", abbrev="R_k")
 
 # Acceleration due to gravity (on the Earth surface)
-gee = gees = acceleration_due_to_gravity = Quantity("acceleration_due_to_gravity", abbrev="g")
+gee = gees = acceleration_due_to_gravity = PhysicalConstant("acceleration_due_to_gravity", abbrev="g")
 
 # magnetic constant:
-u0 = magnetic_constant = vacuum_permeability = Quantity("magnetic_constant")
+u0 = magnetic_constant = vacuum_permeability = PhysicalConstant("magnetic_constant")
 
 # electric constat:
-e0 = electric_constant = vacuum_permittivity = Quantity("vacuum_permittivity")
+e0 = electric_constant = vacuum_permittivity = PhysicalConstant("vacuum_permittivity")
 
 # vacuum impedance:
-Z0 = vacuum_impedance = Quantity("vacuum_impedance", abbrev='Z_0', latex_repr=r'Z_{0}')
+Z0 = vacuum_impedance = PhysicalConstant("vacuum_impedance", abbrev='Z_0', latex_repr=r'Z_{0}')
 
 # Coulomb's constant:
 coulomb_constant = coulombs_constant = electric_force_constant = \
-    Quantity("coulomb_constant", abbrev="k_e")
+    PhysicalConstant("coulomb_constant", abbrev="k_e")
 
 
 atmosphere = atmospheres = atm = Quantity("atmosphere", abbrev="atm")
