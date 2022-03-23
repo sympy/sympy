@@ -16,6 +16,19 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 def mathematica(s, additional_translations=None):
+    sympy_deprecation_warning(
+        """The ``mathematica`` function for the Mathematica parser is now
+deprecated. Use ``parse_mathematica`` instead.
+The parameter ``additional_translation`` can be replaced by SymPy's
+.replace( ) or .subs( ) methods on the output expression instead.""",
+        deprecated_since_version="1.11",
+        active_deprecations_target="mathematica-parser-new",
+    )
+    parser = MathematicaParser(additional_translations)
+    return sympify(parser._parse_old(s))
+
+
+def parse_mathematica(s):
     """
     Translate a string containing a Wolfram Mathematica expression to a SymPy
     expression.
@@ -27,10 +40,10 @@ def mathematica(s, additional_translations=None):
     Examples
     ========
 
-    >>> from sympy.parsing.mathematica import mathematica
-    >>> mathematica("Sin[x]^2 Tan[y]")
+    >>> from sympy.parsing.mathematica import parse_mathematica
+    >>> parse_mathematica("Sin[x]^2 Tan[y]")
     sin(x)**2*tan(y)
-    >>> e = mathematica("F[7,5,3]")
+    >>> e = parse_mathematica("F[7,5,3]")
     >>> e
     F(7, 5, 3)
     >>> from sympy import Function, Max, Min
@@ -39,14 +52,14 @@ def mathematica(s, additional_translations=None):
 
     Both standard input form and Mathematica full form are supported:
 
-    >>> mathematica("x*(a + b)")
+    >>> parse_mathematica("x*(a + b)")
     x*(a + b)
-    >>> mathematica("Times[x, Plus[a, b]]")
+    >>> parse_mathematica("Times[x, Plus[a, b]]")
     x*(a + b)
 
     To get a matrix from Wolfram's code:
 
-    >>> m = mathematica("{{a, b}, {c, d}}")
+    >>> m = parse_mathematica("{{a, b}, {c, d}}")
     >>> m
     ((a, b), (c, d))
     >>> from sympy import Matrix
@@ -58,24 +71,14 @@ def mathematica(s, additional_translations=None):
     If the translation into equivalent SymPy expressions fails, an SymPy
     expression equivalent to Wolfram Mathematica's "FullForm" will be created:
 
-    >>> mathematica("x_.")
+    >>> parse_mathematica("x_.")
     Optional(Pattern(x, Blank()))
-    >>> mathematica("Plus @@ {x, y, z}")
+    >>> parse_mathematica("Plus @@ {x, y, z}")
     Apply(Plus, (x, y, z))
-    >>> mathematica("f[x_, 3] := x^3 /; x > 0")
+    >>> parse_mathematica("f[x_, 3] := x^3 /; x > 0")
     SetDelayed(f(Pattern(x, Blank()), 3), Condition(x**3, x > 0))
     """
-    parser = MathematicaParser(additional_translations)
-
-    if additional_translations is not None:
-        sympy_deprecation_warning(
-            """The ``additional_translations`` parameter for the Mathematica parser is now deprecated.
-Use SymPy's .replace( ) or .subs( ) methods on the output expression instead.""",
-            deprecated_since_version="1.11",
-            active_deprecations_target="mathematica-parser-additional-translations",
-        )
-        return sympify(parser._parse_old(s))
-
+    parser = MathematicaParser()
     return parser.parse(s)
 
 
