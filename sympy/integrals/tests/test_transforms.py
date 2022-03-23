@@ -1,5 +1,5 @@
 from sympy.integrals.transforms import (mellin_transform,
-    inverse_mellin_transform, laplace_transform, laplace_transform_replace_ic,
+    inverse_mellin_transform, laplace_transform,
     inverse_laplace_transform, fourier_transform, inverse_fourier_transform,
     sine_transform, inverse_sine_transform,
     cosine_transform, inverse_cosine_transform,
@@ -714,9 +714,9 @@ def test_laplace_transform():
     F, _, _ = laplace_transform(diff(y(t), t, 2)
                                 + y(t)
                                 - 4*(Heaviside(t - 1)
-                                - Heaviside(t - 2)), t, s)
-    G = laplace_transform_replace_ic(F, y, Y, t, s, [1, 0])
-    assert (G == s**2*Y(s) - s + Y(s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
+                                - Heaviside(t - 2)), t, s,
+                                {y(t): (Y(s), [1, 0])})
+    assert (F == s**2*Y(s) - s + Y(s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
 
     # laplace_transform covers lists and replacements
     assert laplace_transform([diff(z(t), t, 2)-a*z(t)-b*y(t),

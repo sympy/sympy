@@ -1164,72 +1164,6 @@ def _laplace_transform(f, t, s_, simplify=True):
         aux = _simplifyconds(aux, s, a)
     return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
 
-def laplace_transform_replace_ic(expr, f, F, t, s, ic):
-    r"""
-    Public helper function for solving differential equations using the
-    Laplace transform.
-
-    Explanation
-    ===========
-
-    When a differential equation is transformed, it contains unevaluated
-    expressions of forms like ``LaplaceTransform(f(t), t, s)``, ``f(0)``, and
-    ``Subs(Derivative(f(t), (t, k)), t, 0)``.
-
-    This function takes `t` and `s` as the time and frequency variables and
-    `f` and `F` as the time and frequency function names.  The list `ic`
-    contains the initial conditions of $f(t)$ in ascending derivative order,
-    i.e., the initial value of ``f(t)``, of ``Derivative(f(t), (t, 1))``, of
-    ``Derivative(f(t), (t, 2))``, etc.
-
-    This function then makes all necessary substitutions in the expression
-    `expr`.
-
-    Example
-    =======
-
-    Assume we have a spring with spring constant $k$, a mass $m_1$ hanging on it,
-    and a damping constant $D$.  A second mass $m_2$ is connected to the main
-    mass, and at $t=0$ it is dropped. We need to solve the following
-    differential equation for the function $x(t)$:
-
-    .. math::
-        m_1\frac{\mathrm{d}^2}{\mathrm{d}t^2}x(t)
-        + D\frac{\mathrm{d}}{\mathrm{d}t}x(t) + kx(t) = 0
-
-    for the initial conditions $x(0)=km_2$ and $x'(0)=0$. This can be
-    done as follows:
-
-    >>> from sympy.integrals.transforms import laplace_transform, laplace_transform_replace_ic
-    >>> from sympy.core import diff
-    >>> from sympy.core.function import Function
-    >>> from sympy.core.symbol import symbols
-    >>> from sympy.solvers.solvers import solve
-    >>> x = Function('x')
-    >>> X = Function('X')
-    >>> s, t = symbols('s, t')
-    >>> m1, m2, D, k = symbols('m1, m2, D, k', positive=True)
-    >>> diffeq = m1*diff(x(t), t, 2) + D*diff(x(t), t) + k*x(t)
-    >>> print(diffeq)
-    D*Derivative(x(t), t) + k*x(t) + m1*Derivative(x(t), (t, 2))
-    >>> Diffeq = laplace_transform(diffeq, t, s)
-    >>> print(Diffeq)
-    k*LaplaceTransform(x(t), t, s) + s**2*LaplaceTransform(x(t), t, s) + s*LaplaceTransform(x(t), t, s) - s*x(0) - x(0) - Subs(Derivative(x(t), t), t, 0)
-    >>> ic = [m2*k, 0]
-    >>> Diffeq_ic = laplace_transform_replace_ic(Diffeq, x, X, t, s, ic)
-    >>> print(Diffeq_ic)
-    -k*m2*s - k*m2 + k*X(s) + s**2*X(s) + s*X(s)
-    >>> X_sol = solve(Diffeq_ic, X(s))
-    >>> print(X_sol)
-    [k*m2*(s + 1)/(k + s**2 + s)]
-    """
-
-    res = expr.subs(LaplaceTransform(f(t), t, s), F(s))
-    for k, c in enumerate(ic):
-        res = res.subs(f(t).diff(t, k).subs(t, 0), c)
-    return res
-
-
 def _laplace_deep_collect(f, t):
     """
     This is an internal helper function that traverses through the epression
@@ -1938,18 +1872,17 @@ def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
     If the integral cannot be fully computed in closed form, this function
     returns an unevaluated :class:`LaplaceTransform` object.
 
-    This function can also transform differentials; in that case the result
-    will contain unevaluated expressions like ``LaplaceTransform(x(t), t, s)``
-    and initial conditions like ``x(0)`` or ``Subs(Derivative(x(t), t), t, 0)``.
-    The named argument ``diff_subs`` takes a dictionary that contains the name
-    of the Laplace transform of every function as well as a list of the inital
-    conditions. For example, ``diff_subs={x(t): (X(s), [1, 2, 3, 4])}`` would
-    tell ``laplace_transform`` that the Laplace transform of the function
-    ``x(t)`` is ``X(s)`` and that the initial value, first derivative at
-    ``t=0``, second derivative, etc., are 1, 2, 3, etc., respectively. Giving
-    a single value ``0`` as an initial condition, like
-    ``diff_subs={x(t): (X(s), 0)}``, results in all initial conditions being
-    set to zero.
+    This function can also transform differentials of undefined functions;
+    in that case the result will contain Laplace transforms of undefined
+    functions and initial conditions. The named argument ``diff_subs`` takes
+    a dictionary that contains the name of the Laplace transform of every
+    undefined function as well as a list of the inital conditions. For example,
+    ``diff_subs={x(t): (X(s), [1, 2, 3, 4])}`` would tell ``laplace_transform``
+    that the Laplace transform of the function ``x(t)`` is ``X(s)`` and that
+    the initial value, first derivative at ``t=0``, second derivative, etc.,
+    are 1, 2, 3, etc., respectively. Giving a single value ``0`` as an initial
+    condition, like ``diff_subs={x(t): (X(s), 0)}``, results in all initial
+    conditions being set to zero.
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`. If ``noconds=True``,
@@ -1978,18 +1911,26 @@ def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
     (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t),t,s)
     (s/(a + s), Max(0, -a), True)
+
+    The following examples show how the Laplace transforms of functions that
+    involve undefined functions and their derivatives can be handled to solve
+    diferential equation systems:
+
     >>> laplace_transform(diff(z(t), t, 2), t, s)
     s**2*LaplaceTransform(z(t), t, s) - s*z(0) - Subs(Derivative(z(t), t), t, 0)
-    >>> laplace_transform([diff(z(t), t, 2)-a*z(t)-b*y(t), diff(y(t), t)-c*z(t)-d*y(t)], t, s, {z(t): (Z(s), [z0, z1, 0]), y(t): (Y(s), [y0, 0, 0])})
+    >>> eqs = [diff(z(t), t, 2)-a*z(t)-b*y(t), diff(y(t), t)-c*z(t)-d*y(t)]
+    >>> diff_subs = {z(t): (Z(s), [z0, z1, 0]), y(t): (Y(s), [y0, 0, 0])}
+    >>> laplace_transform(eqs, t, s, diff_subs)
     [-a*Z(s) - b*Y(s) + s**2*Z(s) - s*z0 - z1, -c*Z(s) - d*Y(s) + s*Y(s) - y0]
-    >>> laplace_transform([diff(z(t), t, 2)-a*z(t)-b*y(t), diff(y(t), t)-c*z(t)-d*y(t)], t, s, {z(t): (Z(s), 0), y(t): (Y(s), 0)})
+    >>> diff_subs = {z(t): (Z(s), 0), y(t): (Y(s), 0)}
+    >>> laplace_transform(eqs, t, s, diff_subs)
     [-a*Z(s) - b*Y(s) + s**2*Z(s), -c*Z(s) - d*Y(s) + s*Y(s)]
 
 
     See Also
     ========
 
-    inverse_laplace_transform, mellin_transform, fourier_transform
+    inverse_laplace_trasform, mellin_transform, fourier_transform
     hankel_transform, inverse_hankel_transform
 
     """
@@ -2028,16 +1969,23 @@ behavior.
                 for x in f]
 
     LT = LaplaceTransform(f, t, s).doit(**hints)
+    if type(LT) is tuple:
+        x, a, c = LT
+    else:
+        x = LT
     for _f, _r in diff_subs.items():
-        LT = LT.subs(LaplaceTransform(_f, t, s), _r[0])
+        x = x.subs(LaplaceTransform(_f, t, s), _r[0])
         if _r[1]==0:
             n = Wild('n')
-            LT = LT.replace(Subs(Derivative(_f, (t, n)), t, 0), 0)
-            LT = LT.subs(_f.subs(t, 0), 0)
+            x = x.replace(Subs(Derivative(_f, (t, n)), t, 0), 0)
+            x = x.subs(_f.subs(t, 0), 0)
         else:
             for k, c in enumerate(_r[1]):
-                LT = LT.subs(_f.diff(t, k).subs(t, 0), c)
-    return LT
+                x = x.subs(_f.diff(t, k).subs(t, 0), c)
+    if type(LT) is tuple:
+        return x, a, c
+    else:
+        return x
 
 
 @_noconds_(True)
