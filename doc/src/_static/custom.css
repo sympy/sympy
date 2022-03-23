@@ -61,6 +61,12 @@ blockquote {
     color: var(--color-sidebar-link-text) !important;
 }
 
+/* The "hide search matches" text after doing a search. Defaults to the same
+   color as the icon which is illegible on the green background. */
+.highlight-link a {
+    color: white !important;
+}
+
 /* Make the "class", "property" and so on before function names in the API*/
 /* docs bold. */
 em.property:first-child {
