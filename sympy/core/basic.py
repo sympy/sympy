@@ -122,6 +122,23 @@ class Basic(Printable, metaclass=ManagedProperties):
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
         obj._mhash = None  # will be set by __hash__ method.
+        types = set(map(type,args))
+        if not all(issubclass(typ, (Basic, ManagedProperties)) for typ in types ):
+            # XXX: ManagedProperties should be remove eventually,
+            # but this is currently (SymPy 1.9) not possible due to
+            # how Functions work.
+            offending_args = [type(arg) for arg in args if not isinstance(arg,
+                    (Basic, ManagedProperties))]
+            msgargs = "non-Basic arguments of types {offending_args} found for\n"
+            msgargs = msgargs.format(offending_args = offending_args)
+            msgtype = "Basic of type {objtype}".format(objtype = cls)
+            msg = msgargs+msgtype
+            sympy_deprecation_warning(
+                message = msg,
+                deprecated_since_version = "1.11",
+                active_deprecations_target = "non_basic_arguments_to_basic"
+
+            )
 
         obj._args = args  # all items in args must be Basic objects
         return obj

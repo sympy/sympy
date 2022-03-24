@@ -14,7 +14,8 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensor_heads, \
     TensorManager, TensExpr, TensorHead, canon_bp, \
     tensorhead, tensorsymmetry, TensorType, substitute_indices
-from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy, warns, \
+        SymPyDeprecationWarning
 from sympy.matrices import diag
 
 def _is_equal(arg1, arg2):
@@ -1962,7 +1963,8 @@ def test_rewrite_tensor_to_Indexed():
 
 
 def test_tensorsymmetry():
-    with warns_deprecated_sympy():
+    #XXX: this deprecated class makes use of another deprecation, so stack level can't be tested
+    with warns(SymPyDeprecationWarning, test_stacklevel = False):
         tensorsymmetry([1]*2)
 
 def test_tensorhead():
