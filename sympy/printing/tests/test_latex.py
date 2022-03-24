@@ -397,7 +397,7 @@ def test_latex_symbols():
     assert latex(Symbol('C^orig')) == r"C^{orig}"
     assert latex(Symbol('x^alpha')) == r"x^{\alpha}"
     assert latex(Symbol('beta^alpha')) == r"\beta^{\alpha}"
-    assert latex(Symbol('e^Alpha')) == r"e^{A}"
+    assert latex(Symbol('e^Alpha')) == r"e^{\mathrm{A}}"
     assert latex(Symbol('omega_alpha^beta')) == r"\omega^{\beta}_{\alpha}"
     assert latex(Symbol('omega') ** Symbol('beta')) == r"\omega^{\beta}"
 
