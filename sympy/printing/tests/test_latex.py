@@ -380,7 +380,7 @@ def test_latex_symbols():
     Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
     tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
     assert latex(tau) == r"\tau"
-    assert latex(Tau) == r"T"
+    assert latex(Tau) == r"\mathrm{T}"
     assert latex(TAU) == r"\tau"
     assert latex(taU) == r"\tau"
     # Check that all capitalized greek letters are handled explicitly
@@ -2091,13 +2091,13 @@ def test_latex_greek_functions():
     # bug because capital greeks that have roman equivalents should not use
     # \Alpha, \Beta, \Eta, etc.
     s = Function('Alpha')
-    assert latex(s) == r'A'
-    assert latex(s(x)) == r'A{\left(x \right)}'
+    assert latex(s) == r'\mathrm{A}'
+    assert latex(s(x)) == r'\mathrm{A}{\left(x \right)}'
     s = Function('Beta')
-    assert latex(s) == r'B'
+    assert latex(s) == r'\mathrm{B}'
     s = Function('Eta')
-    assert latex(s) == r'H'
-    assert latex(s(x)) == r'H{\left(x \right)}'
+    assert latex(s) == r'\mathrm{H}'
+    assert latex(s(x)) == r'\mathrm{H}{\left(x \right)}'
 
     # bug because sympy.core.numbers.Pi is special
     p = Function('Pi')
@@ -2112,11 +2112,11 @@ def test_latex_greek_functions():
 
 def test_translate():
     s = 'Alpha'
-    assert translate(s) == r'A'
+    assert translate(s) == r'\mathrm{A}'
     s = 'Beta'
-    assert translate(s) == r'B'
+    assert translate(s) == r'\mathrm{B}'
     s = 'Eta'
-    assert translate(s) == r'H'
+    assert translate(s) == r'\mathrm{H}'
     s = 'omicron'
     assert translate(s) == r'o'
     s = 'Pi'
@@ -2215,28 +2215,28 @@ def test_greek_symbols():
     assert latex(Symbol('psi'))     == r'\psi'
     assert latex(Symbol('omega'))   == r'\omega'
 
-    assert latex(Symbol('Alpha'))   == r'A'
-    assert latex(Symbol('Beta'))    == r'B'
+    assert latex(Symbol('Alpha'))   == r'\mathrm{A}'
+    assert latex(Symbol('Beta'))    == r'\mathrm{B}'
     assert latex(Symbol('Gamma'))   == r'\Gamma'
     assert latex(Symbol('Delta'))   == r'\Delta'
-    assert latex(Symbol('Epsilon')) == r'E'
-    assert latex(Symbol('Zeta'))    == r'Z'
-    assert latex(Symbol('Eta'))     == r'H'
+    assert latex(Symbol('Epsilon')) == r'\mathrm{E}'
+    assert latex(Symbol('Zeta'))    == r'\mathrm{Z}'
+    assert latex(Symbol('Eta'))     == r'\mathrm{H}'
     assert latex(Symbol('Theta'))   == r'\Theta'
-    assert latex(Symbol('Iota'))    == r'I'
-    assert latex(Symbol('Kappa'))   == r'K'
+    assert latex(Symbol('Iota'))    == r'\mathrm{I}'
+    assert latex(Symbol('Kappa'))   == r'\mathrm{K}'
     assert latex(Symbol('Lambda'))  == r'\Lambda'
-    assert latex(Symbol('Mu'))      == r'M'
-    assert latex(Symbol('Nu'))      == r'N'
+    assert latex(Symbol('Mu'))      == r'\mathrm{M}'
+    assert latex(Symbol('Nu'))      == r'\mathrm{N}'
     assert latex(Symbol('Xi'))      == r'\Xi'
-    assert latex(Symbol('Omicron')) == r'O'
+    assert latex(Symbol('Omicron')) == r'\mathrm{O}'
     assert latex(Symbol('Pi'))      == r'\Pi'
-    assert latex(Symbol('Rho'))     == r'P'
+    assert latex(Symbol('Rho'))     == r'\mathrm{P}'
     assert latex(Symbol('Sigma'))   == r'\Sigma'
-    assert latex(Symbol('Tau'))     == r'T'
+    assert latex(Symbol('Tau'))     == r'\mathrm{T}'
     assert latex(Symbol('Upsilon')) == r'\Upsilon'
     assert latex(Symbol('Phi'))     == r'\Phi'
-    assert latex(Symbol('Chi'))     == r'X'
+    assert latex(Symbol('Chi'))     == r'\mathrm{X}'
     assert latex(Symbol('Psi'))     == r'\Psi'
     assert latex(Symbol('Omega'))   == r'\Omega'
 
