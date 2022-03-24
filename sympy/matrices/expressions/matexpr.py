@@ -14,7 +14,6 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.common import NonSquareMatrixError
 from sympy.matrices.matrices import MatrixKind, MatrixBase
 from sympy.multipledispatch import dispatch
-from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 
 
@@ -53,6 +52,7 @@ class MatrixExpr(Expr):
 
     MatrixSymbol, MatAdd, MatMul, Transpose, Inverse
     """
+    __slots__ = ()  # type: tTuple[str, ...]
 
     # Should not be considered iterable by the
     # sympy.utilities.iterables.iterable function. Subclass that actually are
@@ -203,6 +203,7 @@ class MatrixExpr(Expr):
         if self.is_Atom:
             return self
         else:
+            from sympy.simplify import simplify
             return self.func(*[simplify(x, **kwargs) for x in self.args])
 
     def _eval_adjoint(self):
@@ -274,8 +275,8 @@ class MatrixExpr(Expr):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
                 (self.rows is None or
-                (0 <= i) != False and (i < self.rows) != False) and
-                (0 <= j) != False and (j < self.cols) != False)
+                (i >= -self.rows) != False and (i < self.rows) != False) and
+                (j >= -self.cols) != False and (j < self.cols) != False)
 
     def __getitem__(self, key):
         if not isinstance(key, tuple) and isinstance(key, slice):
@@ -589,17 +590,25 @@ class MatrixElement(Expr):
     def __new__(cls, name, n, m):
         n, m = map(_sympify, (n, m))
         from sympy.matrices.matrices import MatrixBase
-        if isinstance(name, (MatrixBase,)):
-            if n.is_Integer and m.is_Integer:
-                return name[n, m]
         if isinstance(name, str):
             name = Symbol(name)
         else:
-            name = _sympify(name)
-            if not isinstance(name.kind, MatrixKind):
-                raise TypeError("First argument of MatrixElement should be a matrix")
+            if isinstance(name, MatrixBase):
+                if n.is_Integer and m.is_Integer:
+                    return name[n, m]
+                name = _sympify(name)  # change mutable into immutable
+            else:
+                name = _sympify(name)
+                if not isinstance(name.kind, MatrixKind):
+                    raise TypeError("First argument of MatrixElement should be a matrix")
+            if not getattr(name, 'valid_index', lambda n, m: True)(n, m):
+                raise IndexError('indices out of range')
         obj = Expr.__new__(cls, name, n, m)
         return obj
+
+    @property
+    def symbol(self):
+        return self.args[0]
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)

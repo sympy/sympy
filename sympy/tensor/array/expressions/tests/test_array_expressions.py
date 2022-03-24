@@ -62,6 +62,23 @@ def test_array_symbol_and_element():
     p = _permute_dims(A, Permutation(0, 2, 1))
     assert isinstance(p, PermuteDims)
 
+    A = ArraySymbol("A", (2,))
+    raises(IndexError, lambda: A[()])
+    raises(IndexError, lambda: A[0, 1])
+    raises(ValueError, lambda: A[-1])
+    raises(ValueError, lambda: A[2])
+
+    O = OneArray(3, 4)
+    Z = ZeroArray(m, n)
+
+    raises(IndexError, lambda: O[()])
+    raises(IndexError, lambda: O[1, 2, 3])
+    raises(ValueError, lambda: O[3, 0])
+    raises(ValueError, lambda: O[0, 4])
+
+    assert O[1, 2] == 1
+    assert Z[1, 2] == 0
+
 
 def test_zero_array():
     assert ZeroArray() == 0
@@ -719,6 +736,14 @@ def test_array_expr_construction_with_functions():
     expr = permutedims(PermuteDims(tp, [1, 0, 2, 3]), [0, 1, 3, 2])
     assert expr == PermuteDims(tp, [1, 0, 3, 2])
 
+    expr = PermuteDims(tp, index_order_new=["a", "b", "c", "d"], index_order_old=["d", "c", "b", "a"])
+    assert expr == PermuteDims(tp, [3, 2, 1, 0])
+
+    arr = Array(range(32)).reshape(2, 2, 2, 2, 2)
+    expr = PermuteDims(arr, index_order_new=["a", "b", "c", "d", "e"], index_order_old=['b', 'e', 'a', 'd', 'c'])
+    assert expr == PermuteDims(arr, [2, 0, 4, 3, 1])
+    assert expr.as_explicit() == permutedims(arr, index_order_new=["a", "b", "c", "d", "e"], index_order_old=['b', 'e', 'a', 'd', 'c'])
+
 
 def test_array_element_expressions():
     # Check commutative property:
@@ -767,3 +792,17 @@ def test_array_expr_reshape():
     assert expr.expr == C
     assert expr.shape == (2, 2)
     assert expr.doit() == Array([[1, 2], [3, 4]])
+
+
+def test_array_expr_as_explicit_with_explicit_component_arrays():
+    # Test if .as_explicit() works with explicit-component arrays
+    # nested in array expressions:
+    from sympy.abc import x, y, z, t
+    A = Array([[x, y], [z, t]])
+    assert ArrayTensorProduct(A, A).as_explicit() == tensorproduct(A, A)
+    assert ArrayDiagonal(A, (0, 1)).as_explicit() == tensordiagonal(A, (0, 1))
+    assert ArrayContraction(A, (0, 1)).as_explicit() == tensorcontraction(A, (0, 1))
+    assert ArrayAdd(A, A).as_explicit() == A + A
+    assert ArrayElementwiseApplyFunc(sin, A).as_explicit() == A.applyfunc(sin)
+    assert PermuteDims(A, [1, 0]).as_explicit() == permutedims(A, [1, 0])
+    assert Reshape(A, [4]).as_explicit() == A.reshape(4)

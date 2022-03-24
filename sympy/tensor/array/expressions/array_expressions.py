@@ -37,7 +37,16 @@ from sympy.core.sympify import _sympify
 
 
 class _ArrayExpr(Expr):
-    shape : tTuple[Expr, ...]
+    shape: tTuple[Expr, ...]
+
+    def __getitem__(self, item):
+        if not isinstance(item, collections.abc.Iterable):
+            item = (item,)
+        ArrayElement._check_shape(self, item)
+        return self._get(item)
+
+    def _get(self, item):
+        return _get_array_element_or_slice(self, item)
 
 
 class ArraySymbol(_ArrayExpr):
@@ -61,9 +70,6 @@ class ArraySymbol(_ArrayExpr):
     def shape(self):
         return self._args[1]
 
-    def __getitem__(self, item):
-        return ArrayElement(self, item)
-
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("cannot express explicit array with symbolic shape")
@@ -71,7 +77,7 @@ class ArraySymbol(_ArrayExpr):
         return ImmutableDenseNDimArray(data).reshape(*self.shape)
 
 
-class ArrayElement(_ArrayExpr):
+class ArrayElement(Expr):
     """
     An element of an array.
     """
@@ -87,13 +93,21 @@ class ArrayElement(_ArrayExpr):
         if not isinstance(indices, collections.abc.Iterable):
             indices = (indices,)
         indices = _sympify(tuple(indices))
+        cls._check_shape(name, indices)
+        obj = Expr.__new__(cls, name, indices)
+        return obj
+
+    @classmethod
+    def _check_shape(cls, name, indices):
+        indices = tuple(indices)
         if hasattr(name, "shape"):
+            index_error = IndexError("number of indices does not match shape of the array")
+            if len(indices) != len(name.shape):
+                raise index_error
             if any((i >= s) == True for i, s in zip(indices, name.shape)):
                 raise ValueError("shape is out of bounds")
         if any((i < 0) == True for i in indices):
             raise ValueError("shape contains negative values")
-        obj = Expr.__new__(cls, name, indices)
-        return obj
 
     @property
     def name(self):
@@ -137,6 +151,9 @@ class ZeroArray(_ArrayExpr):
             raise ValueError("Cannot return explicit form for symbolic shape.")
         return ImmutableDenseNDimArray.zeros(*self.shape)
 
+    def _get(self, item):
+        return S.Zero
+
 
 class OneArray(_ArrayExpr):
     """
@@ -158,6 +175,9 @@ class OneArray(_ArrayExpr):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("Cannot return explicit form for symbolic shape.")
         return ImmutableDenseNDimArray([S.One for i in range(reduce(operator.mul, self.shape))]).reshape(*self.shape)
+
+    def _get(self, item):
+        return S.One
 
 
 class _CodegenArrayAbstract(Basic):
@@ -359,7 +379,9 @@ class ArrayAdd(_CodegenArrayAbstract):
         return new_args
 
     def as_explicit(self):
-        return reduce(operator.add, [arg.as_explicit() for arg in self.args])
+        return reduce(
+            operator.add,
+            [arg.as_explicit() if hasattr(arg, "as_explicit") else arg for arg in self.args])
 
 
 class PermuteDims(_CodegenArrayAbstract):
@@ -389,6 +411,16 @@ class PermuteDims(_CodegenArrayAbstract):
     >>> cg = permutedims(N, [1, 0])
     >>> cg.shape
     (2, 3)
+
+    There are optional parameters that can be used as alternative to the permutation:
+
+    >>> from sympy.tensor.array.expressions import ArraySymbol, PermuteDims
+    >>> M = ArraySymbol("M", (1, 2, 3, 4, 5))
+    >>> expr = PermuteDims(M, index_order_old="ijklm", index_order_new="kijml")
+    >>> expr
+    PermuteDims(M, (0 2 1)(3 4))
+    >>> expr.shape
+    (3, 1, 2, 5, 4)
 
     Permutations of tensor products are simplified in order to achieve a
     standard form:
@@ -426,12 +458,13 @@ class PermuteDims(_CodegenArrayAbstract):
     [1, 0, 3, 2]
     """
 
-    def __new__(cls, expr, permutation, **kwargs):
+    def __new__(cls, expr, permutation=None, index_order_old=None, index_order_new=None, **kwargs):
         from sympy.combinatorics import Permutation
         expr = _sympify(expr)
+        expr_rank = get_rank(expr)
+        permutation = cls._get_permutation_from_arguments(permutation, index_order_old, index_order_new, expr_rank)
         permutation = Permutation(permutation)
         permutation_size = permutation.size
-        expr_rank = get_rank(expr)
         if permutation_size != expr_rank:
             raise ValueError("Permutation size must be the length of the shape of expr")
 
@@ -671,7 +704,34 @@ class PermuteDims(_CodegenArrayAbstract):
         return None
 
     def as_explicit(self):
-        return permutedims(self.expr.as_explicit(), self.permutation)
+        expr = self.expr
+        if hasattr(expr, "as_explicit"):
+            expr = expr.as_explicit()
+        return permutedims(expr, self.permutation)
+
+    @classmethod
+    def _get_permutation_from_arguments(cls, permutation, index_order_old, index_order_new, dim):
+        if permutation is None:
+            if index_order_new is None or index_order_old is None:
+                raise ValueError("Permutation not defined")
+            return PermuteDims._get_permutation_from_index_orders(index_order_old, index_order_new, dim)
+        else:
+            if index_order_new is not None:
+                raise ValueError("index_order_new cannot be defined with permutation")
+            if index_order_old is not None:
+                raise ValueError("index_order_old cannot be defined with permutation")
+            return permutation
+
+    @classmethod
+    def _get_permutation_from_index_orders(cls, index_order_old, index_order_new, dim):
+        if len(set(index_order_new)) != dim:
+            raise ValueError("wrong number of indices in index_order_new")
+        if len(set(index_order_old)) != dim:
+            raise ValueError("wrong number of indices in index_order_old")
+        if len(set.symmetric_difference(set(index_order_new), set(index_order_old))) > 0:
+            raise ValueError("index_order_new and index_order_old must have the same indices")
+        permutation = [index_order_old.index(i) for i in index_order_new]
+        return permutation
 
 
 class ArrayDiagonal(_CodegenArrayAbstract):
@@ -883,7 +943,10 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         return positions, shape
 
     def as_explicit(self):
-        return tensordiagonal(self.expr.as_explicit(), *self.diagonal_indices)
+        expr = self.expr
+        if hasattr(expr, "as_explicit"):
+            expr = expr.as_explicit()
+        return tensordiagonal(expr, *self.diagonal_indices)
 
 
 class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
@@ -919,6 +982,12 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
         else:
             fdiff = Lambda(d, fdiff)
         return fdiff
+
+    def as_explicit(self):
+        expr = self.expr
+        if hasattr(expr, "as_explicit"):
+            expr = expr.as_explicit()
+        return expr.applyfunc(self.function)
 
 
 class ArrayContraction(_CodegenArrayAbstract):
@@ -1461,7 +1530,10 @@ class ArrayContraction(_CodegenArrayAbstract):
         return dlinks
 
     def as_explicit(self):
-        return tensorcontraction(self.expr.as_explicit(), *self.contraction_indices)
+        expr = self.expr
+        if hasattr(expr, "as_explicit"):
+            expr = expr.as_explicit()
+        return tensorcontraction(expr, *self.contraction_indices)
 
 
 class Reshape(_CodegenArrayAbstract):
@@ -1516,7 +1588,9 @@ class Reshape(_CodegenArrayAbstract):
         return Reshape(expr, self.shape)
 
     def as_explicit(self):
-        ee = self.expr.as_explicit()
+        ee = self.expr
+        if hasattr(ee, "as_explicit"):
+            ee = ee.as_explicit()
         if isinstance(ee, MatrixCommon):
             from sympy import Array
             ee = Array(ee)
@@ -1916,3 +1990,7 @@ def _permute_dims(expr, permutation, **kwargs):
 
 def _array_add(*args, **kwargs):
     return ArrayAdd(*args, canonicalize=True, **kwargs)
+
+
+def _get_array_element_or_slice(expr, indices):
+    return ArrayElement(expr, indices)

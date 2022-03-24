@@ -5,7 +5,7 @@ from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys.polyerrors import PolynomialError
-from sympy.utilities.decorator import deprecated
+from sympy.polys.polyroots import roots
 from sympy.utilities.misc import filldedent
 
 
@@ -231,10 +231,6 @@ class DiracDelta(Function):
             elif k.is_even:
                 return cls(-arg, k) if k else cls(-arg)
 
-    @deprecated(useinstead="expand(diracdelta=True, wrt=x)", issue=12859, deprecated_since_version="1.1")
-    def simplify(self, x, **kwargs):
-        return self.expand(diracdelta=True, wrt=x)
-
     def _eval_expand_diracdelta(self, **hints):
         """
         Compute a simplified representation of the function using
@@ -269,8 +265,6 @@ class DiracDelta(Function):
         is_simple, Diracdelta
 
         """
-        from sympy.polys.polyroots import roots
-
         wrt = hints.get('wrt', None)
         if wrt is None:
             free = self.free_symbols
@@ -375,7 +369,7 @@ class DiracDelta(Function):
 
         """
         from sympy.solvers import solve
-        from sympy.functions import SingularityFunction
+        from sympy.functions.special.singularity_functions import SingularityFunction
         if self == DiracDelta(0):
             return SingularityFunction(0, 0, -1)
         if self == DiracDelta(0, 1):
@@ -390,8 +384,8 @@ class DiracDelta(Function):
             # I don't know how to handle the case for DiracDelta expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
-                rewrite(SingularityFunction) doesn't support
-                arguments with more that 1 variable.'''))
+                rewrite(SingularityFunction) does not support
+                arguments with more that one variable.'''))
 
 
 ###############################################################################
@@ -660,7 +654,7 @@ class Heaviside(Function):
 
         """
         from sympy.solvers import solve
-        from sympy.functions import SingularityFunction
+        from sympy.functions.special.singularity_functions import SingularityFunction
         if self == Heaviside(0):
             return SingularityFunction(0, 0, 0)
         free = self.free_symbols
@@ -674,5 +668,5 @@ class Heaviside(Function):
             # I don't know how to handle the case for Heaviside expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
-                rewrite(SingularityFunction) doesn't
-                support arguments with more that 1 variable.'''))
+                rewrite(SingularityFunction) does not
+                support arguments with more that one variable.'''))

@@ -1,4 +1,4 @@
-from sympy.core.numbers import I
+from sympy.core.numbers import I, pi
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.polys.partfrac import apart
 from sympy.core.symbol import Dummy
@@ -669,7 +669,7 @@ def ramp_response_plot(system, slope=1, color='b', prec=8, lower_limit=0,
     return plt
 
 
-def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs):
+def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='rad/sec', **kwargs):
     """
     Returns the numerical data of the Bode magnitude plot of the system.
     It is internally used by ``bode_magnitude_plot`` to get the data
@@ -686,6 +686,8 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs)
         The initial exponent of 10 of the semilog plot. Defaults to -5.
     final_exp : Number, optional
         The final exponent of 10 of the semilog plot. Defaults to 5.
+    freq_unit : string, optional
+        User can choose between ``'rad/sec'`` (radians/second) and ``'Hz'`` (Hertz) as frequency units.
 
     Returns
     =======
@@ -707,6 +709,8 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs)
         The only variable in the transfer function should be
         the variable of the Laplace transform.
 
+        When incorrect frequency units are given as input.
+
     Examples
     ========
 
@@ -726,28 +730,39 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs)
     """
     _check_system(system)
     expr = system.to_expr()
+    freq_units = ('rad/sec', 'Hz')
+    if freq_unit not in freq_units:
+        raise ValueError('Only "rad/sec" and "Hz" are accepted frequency units.')
+
     _w = Dummy("w", real=True)
-    w_expr = expr.subs({system.var: I*_w})
+    if freq_unit == 'Hz':
+        repl = I*_w*2*pi
+    else:
+        repl = I*_w
+    w_expr = expr.subs({system.var: repl})
 
     mag = 20*log(Abs(w_expr), 10)
 
-    return LineOver1DRangeSeries(mag,
+    x, y = LineOver1DRangeSeries(mag,
         (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()
+
+    return x, y
 
 
 def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
-    color='b', show_axes=False, grid=True, show=True, **kwargs):
+    color='b', show_axes=False, grid=True, show=True, freq_unit='rad/sec', **kwargs):
     r"""
     Returns the Bode magnitude plot of a continuous-time system.
 
     See ``bode_plot`` for all the parameters.
     """
     x, y = bode_magnitude_numerical_data(system, initial_exp=initial_exp,
-        final_exp=final_exp)
+        final_exp=final_exp, freq_unit=freq_unit)
     plt.plot(x, y, color=color, **kwargs)
     plt.xscale('log')
 
-    plt.xlabel('Frequency (Hz) [Log Scale]')
+
+    plt.xlabel('Frequency (%s) [Log Scale]' % freq_unit)
     plt.ylabel('Magnitude (dB)')
     plt.title(f'Bode Plot (Magnitude) of ${latex(system)}$', pad=20)
 
@@ -763,7 +778,7 @@ def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
     return plt
 
 
-def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs):
+def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='rad/sec', phase_unit='rad', **kwargs):
     """
     Returns the numerical data of the Bode phase plot of the system.
     It is internally used by ``bode_phase_plot`` to get the data
@@ -780,6 +795,10 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs):
         The initial exponent of 10 of the semilog plot. Defaults to -5.
     final_exp : Number, optional
         The final exponent of 10 of the semilog plot. Defaults to 5.
+    freq_unit : string, optional
+        User can choose between ``'rad/sec'`` (radians/second) and '``'Hz'`` (Hertz) as frequency units.
+    phase_unit : string, optional
+        User can choose between ``'rad'`` (radians) and ``'deg'`` (degree) as phase units.
 
     Returns
     =======
@@ -801,6 +820,8 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs):
         The only variable in the transfer function should be
         the variable of the Laplace transform.
 
+        When incorrect frequency or phase units are given as input.
+
     Examples
     ========
 
@@ -820,29 +841,45 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs):
     """
     _check_system(system)
     expr = system.to_expr()
+    freq_units = ('rad/sec', 'Hz')
+    phase_units = ('rad', 'deg')
+    if freq_unit not in freq_units:
+        raise ValueError('Only "rad/sec" and "Hz" are accepted frequency units.')
+    if phase_unit not in phase_units:
+        raise ValueError('Only "rad" and "deg" are accepted phase units.')
+
     _w = Dummy("w", real=True)
-    w_expr = expr.subs({system.var: I*_w})
+    if freq_unit == 'Hz':
+        repl = I*_w*2*pi
+    else:
+        repl = I*_w
+    w_expr = expr.subs({system.var: repl})
 
-    phase = arg(w_expr)
+    if phase_unit == 'deg':
+        phase = arg(w_expr)*180/pi
+    else:
+        phase = arg(w_expr)
 
-    return LineOver1DRangeSeries(phase,
+    x, y = LineOver1DRangeSeries(phase,
         (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()
+
+    return x, y
 
 
 def bode_phase_plot(system, initial_exp=-5, final_exp=5,
-    color='b', show_axes=False, grid=True, show=True, **kwargs):
+    color='b', show_axes=False, grid=True, show=True, freq_unit='rad/sec', phase_unit='rad', **kwargs):
     r"""
     Returns the Bode phase plot of a continuous-time system.
 
     See ``bode_plot`` for all the parameters.
     """
     x, y = bode_phase_numerical_data(system, initial_exp=initial_exp,
-        final_exp=final_exp)
+        final_exp=final_exp, freq_unit=freq_unit, phase_unit=phase_unit)
     plt.plot(x, y, color=color, **kwargs)
     plt.xscale('log')
 
-    plt.xlabel('Frequency (Hz) [Log Scale]')
-    plt.ylabel('Phase (rad)')
+    plt.xlabel('Frequency (%s) [Log Scale]' % freq_unit)
+    plt.ylabel('Phase (%s)' % phase_unit)
     plt.title(f'Bode Plot (Phase) of ${latex(system)}$', pad=20)
 
     if grid:
@@ -858,7 +895,7 @@ def bode_phase_plot(system, initial_exp=-5, final_exp=5,
 
 
 def bode_plot(system, initial_exp=-5, final_exp=5,
-    grid=True, show_axes=False, show=True, **kwargs):
+    grid=True, show_axes=False, show=True, freq_unit='rad/sec', phase_unit='rad', **kwargs):
     r"""
     Returns the Bode phase and magnitude plots of a continuous-time system.
 
@@ -882,6 +919,10 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         If ``True``, the plot will have a grid. Defaults to True.
     show_axes : boolean, optional
         If ``True``, the coordinate axes will be shown. Defaults to False.
+    freq_unit : string, optional
+        User can choose between ``'rad/sec'`` (radians/second) and ``'Hz'`` (Hertz) as frequency units.
+    phase_unit : string, optional
+        User can choose between ``'rad'`` (radians) and ``'deg'`` (degree) as phase units.
 
     Examples
     ========
@@ -904,12 +945,14 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
 
     """
     plt.subplot(211)
-    bode_magnitude_plot(system, initial_exp=initial_exp, final_exp=final_exp,
+    mag = bode_magnitude_plot(system, initial_exp=initial_exp, final_exp=final_exp,
         show=False, grid=grid, show_axes=show_axes,
-        **kwargs).title(f'Bode Plot of ${latex(system)}$', pad=20)
+        freq_unit=freq_unit, **kwargs)
+    mag.title(f'Bode Plot of ${latex(system)}$', pad=20)
+    mag.xlabel(None)
     plt.subplot(212)
     bode_phase_plot(system, initial_exp=initial_exp, final_exp=final_exp,
-        show=False, grid=grid, show_axes=show_axes, **kwargs).title(None)
+        show=False, grid=grid, show_axes=show_axes, freq_unit=freq_unit, phase_unit=phase_unit, **kwargs).title(None)
 
     if show:
         plt.show()

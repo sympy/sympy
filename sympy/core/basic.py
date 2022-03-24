@@ -13,7 +13,7 @@ from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
 
 from sympy.utilities.decorator import deprecated
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
 
@@ -134,6 +134,10 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def __getstate__(self):
         return None
+
+    def __setstate__(self, state):
+        for name, value in state.items():
+            setattr(self, name, value)
 
     def __reduce_ex__(self, protocol):
         if protocol < 2:
@@ -534,9 +538,12 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @property
     def expr_free_symbols(self):
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning("""
+        The expr_free_symbols property is deprecated. Use free_symbols to get
+        the free symbols of an expression.
+        """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-expr-free-symbols")
         return set()
 
     def as_dummy(self):
@@ -760,7 +767,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         Never use self._args, always use self.args.
         Only use _args in __new__ when creating a new function.
-        Don't override .args() from Basic (so that it's easy to
+        Do not override .args() from Basic (so that it is easy to
         change the interface in the future if needed).
         """
         return self._args
@@ -900,7 +907,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         from .containers import Dict
         from .symbol import Dummy, Symbol
-        from sympy.polys.polyutils import illegal
+        from .numbers import _illegal
 
         unordered = False
         if len(args) == 1:
@@ -956,7 +963,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             if not simultaneous:
                 redo = []
                 for i in range(len(sequence)):
-                    if sequence[i][1] in illegal:  # nan, zoo and +/-oo
+                    if sequence[i][1] in _illegal:  # nan, zoo and +/-oo
                         redo.append(i)
                 for i in reversed(redo):
                     sequence.insert(0, sequence.pop(i))
@@ -993,7 +1000,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         """Substitutes an expression old -> new.
 
         If self is not equal to old then _eval_subs is called.
-        If _eval_subs doesn't want to make any special replacement
+        If _eval_subs does not want to make any special replacement
         then a None is received which indicates that the fallback
         should be applied wherein a search for replacements is made
         amongst the arguments of self.
@@ -1010,7 +1017,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> (x + y + z).subs(x + y, 1)
         z + 1
 
-        Add's _eval_subs doesn't need to know how to find x + y in
+        Add's _eval_subs does not need to know how to find x + y in
         the following:
 
         >>> Add._eval_subs(z*(x + y) + 3, x + y, 1) is None
@@ -1152,7 +1159,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> (x + 2 + exp(x + 2)).xreplace({x + 2: y})
         x + exp(y) + 2
 
-        xreplace doesn't differentiate between free and bound symbols. In the
+        xreplace does not differentiate between free and bound symbols. In the
         following, subs(x, y) would not change x since it is a bound symbol,
         but xreplace does:
 
@@ -1318,7 +1325,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         If ``map = True`` then also return the mapping {old: new} where ``old``
         was a sub-expression found with query and ``new`` is the replacement
-        value for it. If the expression itself doesn't match the query, then
+        value for it. If the expression itself does not match the query, then
         the returned value will be ``self.xreplace(map)`` otherwise it should
         be ``self.subs(ordered(map.items()))``.
 
@@ -2054,7 +2061,7 @@ def _ne(a, b):
 
 def _atomic(e, recursive=False):
     """Return atom-like quantities as far as substitution is
-    concerned: Derivatives, Functions and Symbols. Don't
+    concerned: Derivatives, Functions and Symbols. Do not
     return any 'atoms' that are inside such quantities unless
     they also appear outside, too, unless `recursive` is True.
 
@@ -2116,5 +2123,14 @@ from .traversal import (preorder_traversal as _preorder_traversal,
    iterargs, iterfreeargs)
 
 preorder_traversal = deprecated(
-    useinstead="sympy.core.traversal.preorder_traversal",
-    deprecated_since_version="1.10", issue=22288)(_preorder_traversal)
+    """
+    Using preorder_traversal from the sympy.core.basic submodule is
+    deprecated.
+
+    Instead, use preorder_traversal from the top-level sympy namespace, like
+
+        sympy.preorder_traversal
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved",
+)(_preorder_traversal)

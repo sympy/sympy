@@ -3,6 +3,7 @@ Integer factorization
 """
 
 from collections import defaultdict
+from functools import reduce
 import random
 import math
 
@@ -272,11 +273,10 @@ def multiplicity(p, n):
     True
 
     """
-    from sympy.functions.combinatorial.factorials import factorial
-
     try:
         p, n = as_int(p), as_int(n)
     except ValueError:
+        from sympy.functions.combinatorial.factorials import factorial
         if all(isinstance(i, (SYMPY_INTS, Rational)) for i in (p, n)):
             p = Rational(p)
             n = Rational(n)
@@ -720,7 +720,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         >>> pollard_pm1(n, B=16, a=3)
         1009
 
-    If we attempt to increase B to 256 we find that it doesn't work:
+    If we attempt to increase B to 256 we find that it does not work:
 
         >>> pollard_pm1(n, B=256)
         >>>
@@ -731,7 +731,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         >>> pollard_pm1(n, B=256, a=257)
         1009
 
-    Checking different ``a`` values shows that all the ones that didn't
+    Checking different ``a`` values shows that all the ones that did not
     work had a gcd value not equal to ``n`` but equal to one of the
     factors:
 
@@ -922,7 +922,7 @@ def _factorint_small(factors, n, limit, fail_max):
     """
 
     def done(n, d):
-        """return n, d if the sqrt(n) wasn't reached yet, else
+        """return n, d if the sqrt(n) was not reached yet, else
            n, 0 indicating that factoring is done.
         """
         if d*d <= n:
@@ -1963,7 +1963,6 @@ class totient(Function):
         >>> totient._from_distinct_primes(5, 7)
         24
         """
-        from functools import reduce
         return reduce(lambda i, j: i * (j-1), args, 1)
 
     @classmethod

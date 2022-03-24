@@ -12,7 +12,8 @@ from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (acoth, atanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
-from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, sec, sin, tan)
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin,
+                                                      atan, cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.bessel import (besselj, besselk)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, erfi, fresnelc, fresnels)
 from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma)
@@ -65,6 +66,10 @@ def test_basic1():
     assert limit(1/tan(x**3), x, (2*pi)**Rational(1, 3), dir="-") is -oo
     assert limit(1/cot(x)**3, x, (pi*Rational(3, 2)), dir="+") is -oo
     assert limit(1/cot(x)**3, x, (pi*Rational(3, 2)), dir="-") is oo
+    assert limit(tan(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(cot(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(sec(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(csc(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
 
     # test bi-directional limits
     assert limit(sin(x)/x, x, 0, dir="+-") == 1
@@ -758,6 +763,16 @@ def test_issue_14514():
     assert limit((1/(log(x)**log(x)))**(1/x), x, oo) == 1
 
 
+def test_issues_14525():
+    assert limit(sin(x)**2 - cos(x) + tan(x)*csc(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(sin(x)**2 - cos(x) + sin(x)*cot(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(cot(x) - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(cos(x) - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.One)
+    assert limit(sin(x) - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.One)
+    assert limit(cos(x)**2 - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.One)
+    assert limit(tan(x)**2 + sin(x)**2 - cos(x), x, oo) == AccumBounds(-S.One, S.Infinity)
+
+
 def test_issue_14574():
     assert limit(sqrt(x)*cos(x - x**2) / (x + 1), x, oo) == 0
 
@@ -912,6 +927,18 @@ def test_issue_18442():
 def test_issue_18452():
     assert limit(abs(log(x))**x, x, 0) == 1
     assert limit(abs(log(x))**x, x, 0, "-") == 1
+
+
+def test_issue_18473():
+    assert limit(sin(x)**(1/x), x, oo) == Limit(sin(x)**(1/x), x, oo, dir='-')
+    assert limit(cos(x)**(1/x), x, oo) == Limit(cos(x)**(1/x), x, oo, dir='-')
+    assert limit(tan(x)**(1/x), x, oo) == Limit(tan(x)**(1/x), x, oo, dir='-')
+    assert limit((cos(x) + 2)**(1/x), x, oo) == 1
+    assert limit((sin(x) + 10)**(1/x), x, oo) == 1
+    assert limit((cos(x) - 2)**(1/x), x, oo) == Limit((cos(x) - 2)**(1/x), x, oo, dir='-')
+    assert limit((cos(x) + 1)**(1/x), x, oo) == AccumBounds(0, 1)
+    assert limit((tan(x)**2)**(2/x) , x, oo) == AccumBounds(0, oo)
+    assert limit((sin(x)**2)**(1/x), x, oo) == AccumBounds(0, 1)
 
 
 def test_issue_18482():
@@ -1075,3 +1102,8 @@ def test_issue_21785():
 
 def test_issue_22181():
     assert limit((-1)**x * 2**(-x), x, oo) == 0
+
+
+def test_issue_23231():
+    f = (2**x - 2**(-x))/(2**x + 2**(-x))
+    assert limit(f, x, -oo) == -1

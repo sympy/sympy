@@ -15,7 +15,7 @@ Parsing Functions Reference
 
 .. autofunction:: sympy.parsing.maxima.parse_maxima
 
-.. autofunction:: sympy.parsing.mathematica.mathematica
+.. autofunction:: sympy.parsing.mathematica.parse_mathematica
 
 Parsing Transformations Reference
 ---------------------------------

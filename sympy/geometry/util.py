@@ -11,7 +11,13 @@ are_similar
 
 """
 
-from .point import Point, Point2D
+from collections import deque
+from math import sqrt as _sqrt
+
+
+from .entity import GeometryEntity
+from .exceptions import GeometryError
+from .point import Point, Point2D, Point3D
 from sympy.core.containers import OrderedSet
 from sympy.core.function import Function
 from sympy.core.sorting import ordered
@@ -89,10 +95,8 @@ def are_coplanar(*e):
     False
 
     """
-    from sympy.geometry.line import LinearEntity3D
-    from sympy.geometry.entity import GeometryEntity
-    from sympy.geometry.point import Point3D
-    from sympy.geometry.plane import Plane
+    from .line import LinearEntity3D
+    from .plane import Plane
     # XXX update tests for coverage
 
     e = set(e)
@@ -182,8 +186,6 @@ def are_similar(e1, e2):
     False
 
     """
-    from .exceptions import GeometryError
-
     if e1 == e2:
         return True
     is_similar1 = getattr(e1, 'is_similar', None)
@@ -246,8 +248,8 @@ def centroid(*args):
     Point2D(11/10, 1/2)
 
     """
-
-    from sympy.geometry import Polygon, Segment, Point
+    from .line import Segment
+    from .polygon import Polygon
     if args:
         if all(isinstance(g, Point) for g in args):
             c = Point(0, 0)
@@ -308,9 +310,6 @@ def closest_points(*args):
         https://en.wikipedia.org/wiki/Sweep_line_algorithm
 
     """
-    from collections import deque
-    from math import sqrt as _sqrt
-
     p = [Point2D(i) for i in set(args)]
     if len(p) < 2:
         raise ValueError('At least 2 distinct points must be given.')
@@ -407,11 +406,8 @@ def convex_hull(*args, polygon=True):
       http://geomalgorithms.com/a10-_hull-1.html
 
     """
-    from .entity import GeometryEntity
-    from .point import Point
     from .line import Segment
     from .polygon import Polygon
-
     p = OrderedSet()
     for e in args:
         if not isinstance(e, GeometryEntity):
@@ -505,7 +501,6 @@ def farthest_points(*args):
         https://en.wikipedia.org/wiki/Rotating_calipers
 
     """
-    from math import sqrt as _sqrt
 
     def rotatingCalipers(Points):
         U, L = convex_hull(*Points, **dict(polygon=False))
@@ -688,10 +683,6 @@ def intersection(*entities, pairwise=False, **kwargs):
     [Segment2D(Point2D(0, 0), Point2D(1, 0))]
 
     """
-
-    from .entity import GeometryEntity
-    from .point import Point
-
     if len(entities) <= 1:
         return []
 

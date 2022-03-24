@@ -2,7 +2,6 @@ from contextlib import contextmanager
 from threading import local
 
 from sympy.core.function import expand_mul
-from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 
 
 class DotProdSimpState(local):
@@ -20,6 +19,13 @@ def dotprodsimp(x):
         yield
     finally:
         _dotprodsimp_state.state = old
+
+
+def _dotprodsimp(expr, withsimp=False):
+    """Wrapper for simplify.dotprodsimp to avoid circular imports."""
+    from sympy.simplify.simplify import dotprodsimp as dps
+    return dps(expr, withsimp=withsimp)
+
 
 def _get_intermediate_simp(deffunc=lambda x: x, offfunc=lambda x: x,
         onfunc=_dotprodsimp, dotprodsimp=None):
@@ -41,6 +47,7 @@ def _get_intermediate_simp(deffunc=lambda x: x, offfunc=lambda x: x,
 
     return deffunc # None, None
 
+
 def _get_intermediate_simp_bool(default=False, dotprodsimp=None):
     """Same as ``_get_intermediate_simp`` but returns bools instead of functions
     by default."""
@@ -57,3 +64,9 @@ def _is_zero_after_expand_mul(x):
     """Tests by expand_mul only, suitable for polynomials and rational
     functions."""
     return expand_mul(x) == 0
+
+
+def _simplify(expr):
+    """ Wrapper to avoid circular imports. """
+    from sympy.simplify.simplify import simplify
+    return simplify(expr)

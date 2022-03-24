@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
 from sympy.core.containers import Dict
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int
 
@@ -236,11 +236,14 @@ class SparseRepMatrix(RepMatrix):
     @property
     def _smat(self):
 
-        SymPyDeprecationWarning(
-            feature="The private _smat attribute of SparseMatrix",
-            useinstead="the .todok() method",
-            issue=21715,
-            deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning(
+            """
+            The private _smat attribute of SparseMatrix is deprecated. Use the
+            .todok() method instead.
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-private-matrix-attributes"
+        )
 
         return self.todok()
 

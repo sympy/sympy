@@ -139,6 +139,8 @@ def represent(expr, **options):
     """
 
     format = options.get('format', 'sympy')
+    if format == 'numpy':
+        import numpy as np
     if isinstance(expr, QExpr) and not isinstance(expr, OuterProduct):
         options['replace_none'] = False
         temp_basis = get_basis(expr, **options)
@@ -181,6 +183,8 @@ def represent(expr, **options):
             from scipy.sparse.linalg import inv
             exp = - exp
             base = inv(base.tocsc()).tocsr()
+        if format == 'numpy':
+            return np.linalg.matrix_power(base, exp)
         return base ** exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
@@ -188,13 +192,13 @@ def represent(expr, **options):
     elif isinstance(expr, Dagger):
         return Dagger(represent(expr.args[0], **options))
     elif isinstance(expr, Commutator):
-        A = represent(expr.args[0], **options)
-        B = represent(expr.args[1], **options)
-        return A*B - B*A
+        A = expr.args[0]
+        B = expr.args[1]
+        return represent(Mul(A, B) - Mul(B, A), **options)
     elif isinstance(expr, AntiCommutator):
-        A = represent(expr.args[0], **options)
-        B = represent(expr.args[1], **options)
-        return A*B + B*A
+        A = expr.args[0]
+        B = expr.args[1]
+        return represent(Mul(A, B) + Mul(B, A), **options)
     elif isinstance(expr, InnerProduct):
         return represent(Mul(expr.bra, expr.ket), **options)
     elif not isinstance(expr, (Mul, OuterProduct)):
@@ -228,7 +232,12 @@ def represent(expr, **options):
         elif isinstance(last_arg, KetBase) and isinstance(arg, BraBase):
             options["unities"].append(options["index"])
 
-        result = represent(arg, **options)*result
+        next_arg = represent(arg, **options)
+        if format == 'numpy' and isinstance(next_arg, np.ndarray):
+            # Must use np.matmult to "matrix multiply" two np.ndarray
+            result = np.matmul(next_arg, result)
+        else:
+            result = next_arg*result
         last_arg = arg
 
     # All three matrix formats create 1 by 1 matrices when inner products of

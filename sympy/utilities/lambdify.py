@@ -3,7 +3,7 @@ This module provides convenient functions to transform SymPy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from typing import Any, Dict as tDict, Iterable, Union as tUnion, TYPE_CHECKING
+from typing import Any, Dict as tDict
 
 import builtins
 import inspect
@@ -13,15 +13,11 @@ import linecache
 
 # Required despite static analysis claiming it is not used
 from sympy.external import import_module # noqa:F401
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable, flatten)
 from sympy.utilities.misc import filldedent
-
-
-if TYPE_CHECKING:
-    import sympy.core.expr
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
@@ -179,16 +175,16 @@ _lambdify_generated_counter = 1
 
 
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
-def lambdify(args: tUnion[Iterable, 'sympy.core.expr.Expr'], expr: 'sympy.core.expr.Expr', modules=None, printer=None, use_imps=True,
+def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=False, cse=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
     .. warning::
-       This function uses ``exec``, and thus shouldn't be used on
+       This function uses ``exec``, and thus should not be used on
        unsanitized input.
 
-    .. versionchanged:: 1.7.0
+    .. deprecated:: 1.7
        Passing a set for the *args* parameter is deprecated as sets are
        unordered. Use an ordered iterable such as a list or tuple.
 
@@ -737,7 +733,7 @@ def lambdify(args: tUnion[Iterable, 'sympy.core.expr.Expr'], expr: 'sympy.core.e
     functions do not know how to operate on NumPy arrays. This is why lambdify
     exists: to provide a bridge between SymPy and NumPy.**
 
-    However, why is it that ``f`` did work? That's because ``f`` doesn't call
+    However, why is it that ``f`` did work? That's because ``f`` does not call
     any functions, it only adds 1. So the resulting function that is created,
     ``def _lambdifygenerated(x): return x + 1`` does not depend on the globals
     namespace it is defined in. Thus it works, but only by accident. A future
@@ -829,15 +825,18 @@ def lambdify(args: tUnion[Iterable, 'sympy.core.expr.Expr'], expr: 'sympy.core.e
                            'user_functions': user_functions})
 
     if isinstance(args, set):
-        SymPyDeprecationWarning(
-                    feature="The list of arguments is a `set`. This leads to unpredictable results",
-                    useinstead=": Convert set into list or tuple",
-                    issue=20013,
-                    deprecated_since_version="1.6.3"
-                ).warn()
+        sympy_deprecation_warning(
+            """
+Passing the function arguments to lambdify() as a set is deprecated. This
+leads to unpredictable results since sets are unordered. Instead, use a list
+or tuple for the function arguments.
+            """,
+            deprecated_since_version="1.6.3",
+            active_deprecations_target="deprecated-lambdify-arguments-set",
+                )
 
     # Get the names of the args, for creating a docstring
-    iterable_args: Iterable = (args,) if isinstance(args, Expr) else args
+    iterable_args = (args,) if isinstance(args, Expr) else args
     names = []
 
     # Grab the callers frame, for getting the names by inspection (if needed)
@@ -953,9 +952,9 @@ def _recursive_to_string(doprint, arg):
         return doprint(arg)
     elif iterable(arg):
         if isinstance(arg, list):
-            left, right = "[]"
+            left, right = "[", "]"
         elif isinstance(arg, tuple):
-            left, right = "()"
+            left, right = "(", ",)"
         else:
             raise NotImplementedError("unhandled type: %s, %s" % (type(arg), arg))
         return left +', '.join(_recursive_to_string(doprint, e) for e in arg) + right
@@ -1373,7 +1372,8 @@ def implemented_function(symfunc, implementation):
     ========
 
     >>> from sympy.abc import x
-    >>> from sympy.utilities.lambdify import lambdify, implemented_function
+    >>> from sympy.utilities.lambdify import implemented_function
+    >>> from sympy import lambdify
     >>> f = implemented_function('f', lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)

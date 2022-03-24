@@ -1,3 +1,4 @@
+from itertools import product
 from typing import Tuple as tTuple
 
 from sympy.core.expr import Expr
@@ -8,15 +9,17 @@ from sympy.core.function import (Function, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Rational, pi, I
+from sympy.core.numbers import Integer, Rational, pi, I, ImaginaryUnit
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import arg, unpolarify, im, re, Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
-from sympy.sets.setexpr import SetExpr
+from sympy.ntheory.factor_ import factorint
+from sympy.polys.polytools import cancel
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -149,7 +152,7 @@ class exp_polar(ExpBase):
 
     >>> from sympy import exp_polar, pi, I, exp
 
-    The main difference is that polar numbers don't "wrap around" at `2 \pi`:
+    The main difference is that polar numbers do not "wrap around" at `2 \pi`:
 
     >>> exp(2*pi*I)
     1
@@ -174,12 +177,10 @@ class exp_polar(ExpBase):
     is_comparable = False  # cannot be evalf'd
 
     def _eval_Abs(self):   # Abs is never a polar number
-        from sympy.functions.elementary.complexes import re
         return exp(re(self.args[0]))
 
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
-        from sympy.functions.elementary.complexes import (im, re)
         i = im(self.args[0])
         try:
             bad = (i <= -pi or i > pi)
@@ -274,7 +275,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     def eval(cls, arg):
         from sympy.calculus import AccumBounds
         from sympy.matrices.matrices import MatrixBase
-        from sympy.functions.elementary.complexes import (im, re)
+        from sympy.sets.setexpr import SetExpr
         from sympy.simplify.simplify import logcombine
         if isinstance(arg, MatrixBase):
             return arg.exp()
@@ -479,6 +480,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
+        from sympy.functions.elementary.complexes import sign
         from sympy.functions.elementary.integers import ceiling
         from sympy.series.limits import limit
         from sympy.series.order import Order
@@ -491,6 +493,9 @@ class exp(ExpBase, metaclass=ExpMeta):
         if arg0 is S.NegativeInfinity:
             return Order(x**n, x)
         if arg0 is S.Infinity:
+            return self
+        # checking for indecisiveness/ sign terms in arg0
+        if any(isinstance(arg, (sign, ImaginaryUnit)) for arg in arg0.args):
             return self
         t = Dummy("t")
         nterms = n
@@ -524,8 +529,18 @@ class exp(ExpBase, metaclass=ExpMeta):
         return Add(*l)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.util import AccumBounds
         arg = self.args[0].cancel().as_leading_term(x, logx=logx)
         arg0 = arg.subs(x, 0)
+        if arg is S.NaN:
+            return S.NaN
+        if isinstance(arg0, AccumBounds):
+            # This check addresses a corner case involving AccumBounds.
+            # if isinstance(arg, AccumBounds) is True, then arg0 can either be 0,
+            # AccumBounds(-oo, 0) or AccumBounds(-oo, oo).
+            # Check out function: test_issue_18473() in test_exponential.py and
+            # test_limits.py for more information.
+            return exp(arg0)
         if arg0 is S.NaN:
             arg0 = arg.limit(x, 0)
         if arg0.is_infinite is False:
@@ -638,9 +653,8 @@ class log(Function):
 
     @classmethod
     def eval(cls, arg, base=None):
-        from sympy.functions.elementary.complexes import unpolarify
         from sympy.calculus import AccumBounds
-        from sympy.functions.elementary.complexes import Abs
+        from sympy.sets.setexpr import SetExpr
 
         arg = sympify(arg)
 
@@ -697,8 +711,10 @@ class log(Function):
         elif isinstance(arg, AccumBounds):
             if arg.min.is_positive:
                 return AccumBounds(log(arg.min), log(arg.max))
+            elif arg.min.is_zero:
+                return AccumBounds(S.NegativeInfinity, log(arg.max))
             else:
-                return
+                return S.NaN
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
 
@@ -808,8 +824,6 @@ class log(Function):
         return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
 
     def _eval_expand_log(self, deep=True, **hints):
-        from sympy.functions.elementary.complexes import unpolarify
-        from sympy.ntheory.factor_ import factorint
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
         factor = hints.get('factor', False)
@@ -896,19 +910,18 @@ class log(Function):
         (log(Abs(x)), arg(I*x))
 
         """
-        from sympy.functions.elementary.complexes import (Abs, arg)
         sarg = self.args[0]
         if deep:
             sarg = self.args[0].expand(deep, **hints)
-        abs = Abs(sarg)
-        if abs == sarg:
+        sarg_abs = Abs(sarg)
+        if sarg_abs == sarg:
             return self, S.Zero
-        arg = arg(sarg)
+        sarg_arg = arg(sarg)
         if hints.get('log', False):  # Expand the log
             hints['complex'] = False
-            return (log(abs).expand(deep, **hints), arg)
+            return (log(sarg_abs).expand(deep, **hints), sarg_arg)
         else:
-            return log(abs), arg
+            return log(sarg_abs), sarg_arg
 
     def _eval_is_rational(self):
         s = self.func(*self.args)
@@ -956,11 +969,8 @@ class log(Function):
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy.functions.elementary.complexes import im
-        from sympy.polys.polytools import cancel
         from sympy.series.order import Order
         from sympy.simplify.simplify import logcombine
-        from itertools import product
         if not logx:
             logx = log(x)
         if self.args[0] == x:
@@ -1043,7 +1053,7 @@ class log(Function):
         return res + Order(x**n, x)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.functions.elementary.complexes import (im, re)
+        from sympy.calculus.util import AccumBounds
         arg0 = self.args[0].together()
 
         arg = arg0.as_leading_term(x, cdir=cdir)
@@ -1058,6 +1068,8 @@ class log(Function):
             cdir = arg0.dir(x, cdir)
         if x0.is_real and x0.is_negative and im(cdir).is_negative:
             return self.func(x0) - 2*I*S.Pi
+        if isinstance(arg, AccumBounds):
+            return log(arg)
         return self.func(arg)
 
 

@@ -1,15 +1,16 @@
-"""When you need to use random, import it from here so there is only
-one generator working for SymPy. Imports from here should behave the
-same as if they were being imported from Python's random module. But
-only the routines currently used in SymPy are included here. To use
-others import `rng` and access the method directly. For example, to
-capture the current state of the generator use `rng.getstate()`.
+"""
+When you need to use random numbers in SymPy library code, import from here
+so there is only one generator working for SymPy. Imports from here should
+behave the same as if they were being imported from Python's random module.
+But only the routines currently used in SymPy are included here. To use others
+import ``rng`` and access the method directly. For example, to capture the
+current state of the generator use ``rng.getstate()``.
 
 There is intentionally no Random to import from here. If you want
-to control the state of the generator, import `seed` and call it
+to control the state of the generator, import ``seed`` and call it
 with or without an argument to set the state.
 
-EXAMPLES
+Examples
 ========
 
 >>> from sympy.core.random import random, seed
@@ -19,6 +20,7 @@ EXAMPLES
 >>> seed(1); c = random()
 >>> assert a == c
 >>> assert a != b  # remote possibility this will fail
+
 """
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int
@@ -112,11 +114,14 @@ def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
 
 
 def _randrange(seed=None):
-    """Return a randrange generator. ``seed`` can be
-        o None - return randomly seeded generator
-        o int - return a generator seeded with the int
-        o list - the values to be returned will be taken from the list
-          in the order given; the provided list is not modified.
+    """Return a randrange generator.
+
+    ``seed`` can be
+
+    * None - return randomly seeded generator
+    * int - return a generator seeded with the int
+    * list - the values to be returned will be taken from the list
+      in the order given; the provided list is not modified.
 
     Examples
     ========
@@ -162,11 +167,14 @@ def _randrange(seed=None):
 
 
 def _randint(seed=None):
-    """Return a randint generator. ``seed`` can be
-        o None - return randomly seeded generator
-        o int - return a generator seeded with the int
-        o list - the values to be returned will be taken from the list
-          in the order given; the provided list is not modified.
+    """Return a randint generator.
+
+    ``seed`` can be
+
+    * None - return randomly seeded generator
+    * int - return a generator seeded with the int
+    * list - the values to be returned will be taken from the list
+      in the order given; the provided list is not modified.
 
     Examples
     ========

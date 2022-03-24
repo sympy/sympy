@@ -28,7 +28,7 @@ from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
                 Multinomial, NegativeMultinomial, MultivariateNormal,
                 MultivariateLaplace)
-from sympy.testing.pytest import raises, XFAIL, skip
+from sympy.testing.pytest import raises, XFAIL, skip, slow
 from sympy.external import import_module
 
 from sympy.abc import x, y
@@ -272,6 +272,7 @@ def test_NegativeMultinomial():
                     Range(0, oo, 1), Range(0, oo, 1), Range(0, oo, 1))
 
 
+@slow
 def test_JointPSpace_marginal_distribution():
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     got = marginal_distribution(T, T[1])(x)
