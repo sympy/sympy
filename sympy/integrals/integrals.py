@@ -455,7 +455,7 @@ class Integral(AddWithLimits):
         # hacks to handle special cases
         if isinstance(function, MatrixBase):
             return function.applyfunc(
-                lambda f: self.func(f, self.limits).doit(**hints))
+                lambda f: self.func(f, *self.limits).doit(**hints))
 
         if isinstance(function, FormalPowerSeries):
             if len(self.limits) > 1:
