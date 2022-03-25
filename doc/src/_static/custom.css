@@ -98,22 +98,22 @@ dl.py .field-list dt, dl[class]:not(.option-list):not(.field-list):not(.footnote
     font-size: 120%;
 }
 
-/* Disable underlines on links except on hover, and give visited links a*/
-/* darker green color. */
+/* Disable underlines on links except on hover */
 a {
-    text-decoration: none;
-}
-a:visited {
-    color: #307748;
     text-decoration: none;
 }
 a:hover {
     text-decoration: underline;
 }
-a:visited:hover {
-    color: #307748;
-    text-decoration: underline;
-}
+/* TODO: Some styling for visited? */
+/* a:visited { */
+/*     color: #307748; */
+/*     text-decoration: none; */
+/* } */
+/* a:visited:hover { */
+/*     color: #307748; */
+/*     text-decoration: underline; */
+/* } */
 
 /* Change the background color of the code blocks (light mode). This should be*/
 /* --color-code-background but setting it in conf.py doesn't work.*/

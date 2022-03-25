@@ -160,7 +160,7 @@ html_sidebars = {
 common_theme_variables = {
     # Main "SymPy green" colors. Many things uses these colors.
     "color-brand-primary": "#81B953",
-    "color-brand-content": "#29A329",
+    "color-brand-content": "#307748",
 
     # The left sidebar.
     "color-sidebar-background": "#3B5526",
@@ -170,13 +170,12 @@ common_theme_variables = {
     "color-sidebar-item-background--hover": "#8AB950",
     "color-sidebar-item-expander-background--hover": "#8AB950",
 
+    "color-link-underline--hover": "var(--color-link)",
     "color-api-keyword": "#000000bd",
-    "color-api-name": "var(--color-brand-content)",
+    "color-api-name": "#29A329",
     "color-api-pre-name": "var(--color-brand-primary)",
     "api-font-size": "var(--font-size--normal)",
     "color-foreground-secondary": "#53555B",
-    "color-link-hover": "var(--color-link)",
-    "color-link-underline--hover": "#29A329",
 
     # TODO: Add the other types of admonitions here if anyone uses them.
     "color-admonition-title-background--seealso": "#CCCCCC",
@@ -201,6 +200,8 @@ html_theme_options = {
     # The dark variables automatically inherit values from the light variables
     "dark_css_variables": {
         **common_theme_variables,
+        "color-brand-content": "#29A329",
+        "color-link": "var(--color-brand-content)",
         "color-api-keyword": "#FFFFFFbd",
         "color-api-overall": "#FFFFFF90",
         "color-api-paren": "#FFFFFF90",
