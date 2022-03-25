@@ -871,4 +871,3 @@ def min_period(f):
                     break
         p1 += 1
     return old_period / num_of_periods
-       
