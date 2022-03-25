@@ -1076,6 +1076,8 @@ def test_Pow_is_integer():
     assert (1/(x + 1)).is_integer is False
     assert (1/(-x - 1)).is_integer is False
     assert (-1/(x + 1)).is_integer is False
+    # issue 23287
+    assert (x**2/2).is_integer is None
 
     # issue 8648-like
     k = Symbol('k', even=True)
