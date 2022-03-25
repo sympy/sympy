@@ -201,7 +201,6 @@ html_theme_options = {
     "dark_css_variables": {
         **common_theme_variables,
         "color-brand-content": "#29A329",
-        "color-link": "var(--color-brand-content)",
         "color-api-keyword": "#FFFFFFbd",
         "color-api-overall": "#FFFFFF90",
         "color-api-paren": "#FFFFFF90",
