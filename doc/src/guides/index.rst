@@ -21,7 +21,7 @@ a module break down.
    assumptions.rst
    booleans.rst
 
-The SymPy project
+The SymPy Project
 =================
 
 .. toctree::
