@@ -46,6 +46,10 @@ blockquote {
 .sidebar-brand-text {
     font-weight: bold;
 }
+/* Remove the green underline from the "SymPy documentation" on hover */
+.sidebar-brand:hover {
+    text-decoration: none !important;
+}
 
 /* Make top-level items in the sidebar bold */
 .sidebar-tree .toctree-l1>.reference, .sidebar-tree .toctree-l1>label .icon {
