@@ -1397,8 +1397,8 @@ class Mul(Expr, AssocOp):
         anyeven = lambda x: any(i.is_even for i in x)
 
         from .relational import is_gt
-        if not numerators and denominators and all(is_gt(_, S.One)
-                for _ in denominators):
+        if not unknown and not numerators and denominators and all(
+                is_gt(_, S.One) for _ in denominators):
             return False
         elif unknown:
             return

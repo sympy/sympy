@@ -1292,3 +1292,8 @@ def test_common_assumptions():
     assert common_assumptions([0, 1, 2], []) == {}
     assert common_assumptions([], ['integer']) == {}
     assert common_assumptions([0], ['integer']) == {'integer': True}
+
+
+def test_issue_23287():
+    x = Symbol('x')
+    assert (x**2/2).is_integer is None
