@@ -20,3 +20,14 @@ a module break down.
    contributing/index.rst
    assumptions.rst
    booleans.rst
+
+The SymPy project
+=================
+
+.. toctree::
+   :maxdepth: 2
+
+   ../aboutus.rst
+   ../citing.rst
+   ../wiki.rst
+   ../outreach.rst
