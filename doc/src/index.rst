@@ -20,7 +20,7 @@ This is the central page for all of SymPy's documentation.
 
 ..  rst-class:: column
 
-:ref:`SymPy Tutorials <tutorial>`
+:ref:`Tutorials <tutorial>`
 -------------------------------------------------------
 
 Tutorials introduce Sympy features to people who are new to the project. It includes
@@ -50,7 +50,7 @@ symbolic expressions are detailed but it does not completely exhaust all SymPy o
 
 ..  rst-class:: column
 
-:ref:`SymPy API Reference <reference>`
+:ref:`API Reference <reference>`
 -------------------------------------------------------
 
 This category has a detailed description of the SymPy API, it discusses

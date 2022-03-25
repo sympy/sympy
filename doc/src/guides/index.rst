@@ -1,7 +1,7 @@
 .. _guides:
 
 ==============
- SymPy Guides
+ How-to Guides
 ==============
 
 The SymPy Guide discusses common developer process required to get started,

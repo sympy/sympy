@@ -1,8 +1,8 @@
 .. _reference:
 
-=======================
-Reference Documentation
-=======================
+=============
+API Reference
+=============
 
 This section contains a summary of SymPy modules, that is to say
 functions and methods. All functions and objects implemented in the ``sympy``
