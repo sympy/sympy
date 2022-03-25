@@ -841,3 +841,34 @@ def minimum(f, symbol, domain=S.Reals):
         return function_range(f, symbol, domain).inf
     else:
         raise ValueError("%s is not a valid symbol." % symbol)
+
+        
+def min_period(f):
+    old_period = periodicity(f, x)
+    if old_period is None:
+        return None
+    equal_spaces = old_period / 20
+    equal_spaces_list = []
+    y = 0
+    for i in range(20):
+        equal_spaces_list.append(y)
+        y += equal_spaces
+    period_values_list = []
+    for i in equal_spaces_list:
+        period_values_list.append((f.subs(x, i).evalf()))
+    num_of_periods = 1
+    startidx = 0
+    p1 = 1
+    p2 = startidx
+    while p1 < 20:
+        if period_values_list[p1] == period_values_list[p2]:
+            final = p1
+            while period_values_list[p1] == period_values_list[p2] and (p2 < final) and (p1 < 20) and (p2 < 20):
+                p1 += 1
+                p2 += 1
+                if final - p2 == 1:
+                    num_of_periods += 1
+                    break
+        p1 += 1
+    return old_period / num_of_periods
+       
