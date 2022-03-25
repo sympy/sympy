@@ -58,6 +58,10 @@ class Prefix(Expr):
         return self._scale_factor
 
     @property
+    def exponent(self):
+        return self._exponent
+
+    @property
     def base(self):
         return self._base
 
@@ -65,10 +69,10 @@ class Prefix(Expr):
         # TODO: add proper printers and tests:
         if self.base == 10:
             return "Prefix(%r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent)
+                str(self.name), str(self.abbrev), self.exponent)
         else:
             return "Prefix(%r, %r, %r, %r)" % (
-                str(self.name), str(self.abbrev), self._exponent, self.base)
+                str(self.name), str(self.abbrev), self.exponent, self.base)
 
     __repr__ = __str__
 
