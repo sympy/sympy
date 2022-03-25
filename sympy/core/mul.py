@@ -1386,6 +1386,9 @@ class Mul(Expr, AssocOp):
                     # for rational self and e equal to zero: a = b**e is 1
                     assert not e.is_zero
                     return # sign of e unknown -> self.is_integer unknown
+                else:
+                    # x**2, 2**x, or x**y with x and y int-unknown -> unknonwn
+                    return
             else:
                 return
 
@@ -1397,7 +1400,7 @@ class Mul(Expr, AssocOp):
         anyeven = lambda x: any(i.is_even for i in x)
 
         from .relational import is_gt
-        if not unknown and not numerators and denominators and all(
+        if not numerators and denominators and all(
                 is_gt(_, S.One) for _ in denominators):
             return False
         elif unknown:
