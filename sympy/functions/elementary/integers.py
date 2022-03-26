@@ -145,11 +145,8 @@ class floor(RoundFunction):
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
         if arg0 is S.NaN:
-            limit = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
-            ndir = arg.dir(x, cdir=cdir)
-            if not limit.is_integer:
-                return floor(limit)
-            return limit - 1 if ndir.is_negative else limit
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            r = floor(arg0)
         if arg0.is_finite:
             if arg0 == r:
                 if cdir == 0:
@@ -168,19 +165,16 @@ class floor(RoundFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
         if arg0 is S.NaN:
-            ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
-            series = arg._eval_nseries(x, n, logx, cdir).subs(x, 0)
-            if not series.is_integer:
-                return floor(series)
-            return series - 1 if ndir.is_negative else series
+            arg0 = arg._eval_nseries(x, n, logx, cdir).subs(x, 0)
+            r = floor(arg0)
         if arg0.is_infinite:
             from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
             s = arg._eval_nseries(x, n, logx, cdir)
             o = Order(1, (x, 0)) if n <= 0 else AccumBounds(-1, 0)
             return s + o
-        r = self.subs(x, 0)
         if arg0 == r:
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
             return r - 1 if ndir.is_negative else r
@@ -315,11 +309,8 @@ class ceiling(RoundFunction):
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
         if arg0 is S.NaN:
-            limit = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
-            ndir = arg.dir(x, cdir=cdir)
-            if not limit.is_integer:
-                return ceiling(limit)
-            return limit if ndir.is_negative else limit + 1
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            r = ceiling(arg0)
         if arg0.is_finite:
             if arg0 == r:
                 if cdir == 0:
@@ -338,19 +329,16 @@ class ceiling(RoundFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
         if arg0 is S.NaN:
-            ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
-            series = arg._eval_nseries(x, n, logx, cdir).subs(x, 0)
-            if not series.is_integer:
-                return ceiling(series)
-            return series if ndir.is_negative else series + 1
+            arg0 = arg._eval_nseries(x, n, logx, cdir).subs(x, 0)
+            r = ceiling(arg0)
         if arg0.is_infinite:
             from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
             s = arg._eval_nseries(x, n, logx, cdir)
             o = Order(1, (x, 0)) if n <= 0 else AccumBounds(0, 1)
             return s + o
-        r = self.subs(x, 0)
         if arg0 == r:
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
             return r if ndir.is_negative else r + 1
