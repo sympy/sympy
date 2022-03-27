@@ -167,7 +167,7 @@ class floor(RoundFunction):
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
         if arg0 is S.NaN:
-            arg0 = arg._eval_nseries(x, n, logx, cdir).subs(x, 0)
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
             r = floor(arg0)
         if arg0.is_infinite:
             from sympy.calculus.accumulationbounds import AccumBounds
@@ -331,7 +331,7 @@ class ceiling(RoundFunction):
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
         if arg0 is S.NaN:
-            arg0 = arg._eval_nseries(x, n, logx, cdir).subs(x, 0)
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
             r = ceiling(arg0)
         if arg0.is_infinite:
             from sympy.calculus.accumulationbounds import AccumBounds
