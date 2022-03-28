@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy.core.function import Function
 from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
@@ -871,7 +873,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     return res
 
 
-def quadratic_residues(p):
+def quadratic_residues(p) -> list[int]:
     """
     Returns the list of quadratic residues.
 
@@ -883,10 +885,8 @@ def quadratic_residues(p):
     [0, 1, 2, 4]
     """
     p = as_int(p)
-    r = set()
-    for i in range(p // 2 + 1):
-        r.add(pow(i, 2, p))
-    return sorted(list(r))
+    r = {pow(i, 2, p) for i in range(p // 2 + 1)}
+    return sorted(r)
 
 
 def legendre_symbol(a, p):
