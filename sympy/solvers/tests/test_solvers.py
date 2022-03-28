@@ -2477,6 +2477,12 @@ def test_solver_flags():
     assert root != rad
 
 
+def test_issue_22768():
+    assert solve(2*x**3 - 16*(y - 1)**6*z**3, x, simplify=False
+        ) == [2*z*(y - 1)**2, z*(-1 + sqrt(3)*I)*(y - 1)**2,
+        -z*(1 + sqrt(3)*I)*(y - 1)**2]
+
+
 def test_issue_22717():
     assert solve((-y**2 + log(y**2/x) + 2, -2*x*y + 2*x/y)) == [
         {y: -1, x: E}, {y: 1, x: E}]
