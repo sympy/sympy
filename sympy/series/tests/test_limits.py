@@ -225,6 +225,14 @@ def test_ceiling_requires_robust_assumptions():
     assert limit(ceiling(5 + cos(x)), x, 0, "-") == 6
 
 
+def test_issue_14355():
+    assert limit(floor(sin(x)/x), x, 0, '+') == 0
+    assert limit(floor(sin(x)/x), x, 0, '-') == 0
+    # test comment https://github.com/sympy/sympy/issues/14355#issuecomment-372121314
+    assert limit(floor(-tan(x)/x), x, 0, '+') == -2
+    assert limit(floor(-tan(x)/x), x, 0, '-') == -2
+
+
 def test_atan():
     x = Symbol("x", real=True)
     assert limit(atan(x)*sin(1/x), x, 0) == 0
