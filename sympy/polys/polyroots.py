@@ -888,43 +888,41 @@ def roots(f, *gens,
             F = Poly(f, *gens, **flags)
             if not isinstance(f, Poly) and not F.gen.is_Symbol:
                 raise PolynomialError("generator must be a Symbol")
-            else:
-                n = F.degree()
-                if n > 2:
-                    # check for foo**n in constant if dep is c*gen**m
-                    con, dep = f.as_expr().as_independent(*F.gens)
-                    dep = dep.factor()
-                    if all(i.is_Pow and i.exp.is_Integer for i in
-                            Mul.make_args(dep.as_independent(*F.gens,
-                            as_Add=False)[1])):
-                        fcon = -(-con).factor()
-                        if fcon != con:
-                            con = fcon
-                            bases = []
-                            for i in Mul.make_args(con):
-                                if (i.is_Pow and i.exp.is_Integer and not
-                                        i.exp % n and i.base.is_Add):
-                                    bases.append((i.base, Dummy(positive=True)))
-                            if bases:
-                                rv = roots(Poly((dep + con).xreplace(dict(bases)),*F.gens),  *F.gens,
-                                    auto=auto,
-                                    cubics=cubics,
-                                    trig=trig,
-                                    quartics=quartics,
-                                    quintics=quintics,
-                                    multiple=multiple,
-                                    filter=filter,
-                                    predicate=predicate,
-                                    **flags)
-                                return {factor_terms(k.xreplace(
-                                    {v: k for k, v in bases})
-                                ): v for k,v in rv.items()}
-                f = F
+            f = F
         except GeneratorsNeeded:
             if multiple:
                 return []
             else:
                 return {}
+        else:
+            n = f.degree()
+            if f.length() == 2 and n > 2:
+                # check for foo**n in constant if dep is c*gen**m
+                con, dep = f.as_expr().as_independent(*f.gens)
+                fcon = -(-con).factor()
+                if fcon != con:
+                    con = fcon
+                    bases = []
+                    for i in Mul.make_args(con):
+                        if i.is_Pow:
+                            b, e = i.as_base_exp()
+                            if e.is_Integer and b.is_Add:
+                                bases.append((b, Dummy(positive=True)))
+                    if bases:
+                        rv = roots(Poly((dep + con).xreplace(dict(bases)),
+                            *f.gens), *F.gens,
+                            auto=auto,
+                            cubics=cubics,
+                            trig=trig,
+                            quartics=quartics,
+                            quintics=quintics,
+                            multiple=multiple,
+                            filter=filter,
+                            predicate=predicate,
+                            **flags)
+                        return {factor_terms(k.xreplace(
+                            {v: k for k, v in bases})
+                        ): v for k, v in rv.items()}
 
         if f.is_multivariate:
             raise PolynomialError('multivariate polynomials are not supported')

@@ -2478,7 +2478,8 @@ def test_solver_flags():
 
 
 def test_issue_22768():
-    assert solve(2*x**3 - 16*(y - 1)**6*z**3, x, simplify=False
+    eq = 2*x**3 - 16*(y - 1)**6*z**3
+    assert solve(eq.expand(), x, simplify=False
         ) == [2*z*(y - 1)**2, z*(-1 + sqrt(3)*I)*(y - 1)**2,
         -z*(1 + sqrt(3)*I)*(y - 1)**2]
 
