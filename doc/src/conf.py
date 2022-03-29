@@ -47,6 +47,8 @@ redirects = {
     "modules/physics/index.rst": "reference/physics/index.html",
 }
 
+html_baseurl = "https://docs.sympy.org/latest/"
+
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
 
