@@ -19,7 +19,8 @@ from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_binomial, preprocess_roots, roots)
 
 from sympy.polys.orthopolys import legendre_poly
-from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.polyerrors import PolynomialError, \
+    UnsolvableFactorError
 from sympy.polys.polyutils import _nsort
 
 from sympy.testing.pytest import raises, slow
@@ -630,6 +631,14 @@ def test_roots_preprocessed():
     for r1, r2 in zip(R1, R2):
         match = r1.match(p)
         assert match is not None and abs(match[w] - r2) < 1e-10
+
+
+def test_roots_strict():
+    assert roots(x**2 - 2*x + 1, strict=False) == {1: 2}
+    assert roots(x**2 - 2*x + 1, strict=True) == {1: 2}
+
+    assert roots(x**6 - 2*x**5 - x**2 + 3*x - 2, strict=False) == {2: 1}
+    raises(UnsolvableFactorError, lambda: roots(x**6 - 2*x**5 - x**2 + 3*x - 2, strict=True))
 
 
 def test_roots_mixed():
