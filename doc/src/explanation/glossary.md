@@ -28,6 +28,9 @@ documentation for the specific SymPy functions.
 
 ```{glossary}
 
+Antiderivative
+    TODO
+
 `args`
     TODO
 
