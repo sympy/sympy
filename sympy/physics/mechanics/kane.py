@@ -1,7 +1,7 @@
 from sympy.core.backend import zeros, Matrix, diff, eye
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
-                                  partial_velocity)
+                                  partial_velocity, Vector)
 from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
@@ -163,6 +163,9 @@ class KanesMethod(_Methods):
         self._qdep = q_dep
         self._q = Matrix([q_ind, q_dep])
         self._qdot = self.q.diff(dynamicsymbols._t)
+        self._qddot = self._qdot.diff(dynamicsymbols._t)
+        self._qd_qdd = Matrix.vstack(self._qdot, self._qddot)
+
 
         # Initialize generalized speeds
         u_dep = none_handler(u_dep)
@@ -331,13 +334,25 @@ class KanesMethod(_Methods):
         self._assert_no_qdot(vel_list)
         return partial_velocity(vel_list, self.u, self._inertial)
 
-    def _assert_no_qdot(self, vel_or_acc_list):
-        q_dot_set = set(self._qdot).union([_qd.diff() for _qd in self._qdot])
-        for vel in vel_or_acc_list:
-            dyn_symbols = find_dynamicsymbols(vel, reference_frame=self._inertial)
-            dyn_intersect = dyn_symbols.intersection(q_dot_set)
-            if dyn_intersect:
-                raise ValueError(f'Found qdot or qdotdot terms {dyn_intersect} in velocities, accelerations, or constraints. '
+    def _assert_no_qdot(self, vel_or_acc):
+
+        if isinstance(vel_or_acc, list):
+            # For lists, check each elements separately
+            for v in vel_or_acc:
+                self._assert_no_qdot(v)
+            return
+
+        if isinstance(vel_or_acc, Vector):
+            # For vectors, check the components associated with each frame separately
+            # We could use to_matrix(self._inertial) and check that, but that require
+            # expanding dcm between frames which could be too big
+            for v_comps, frame_basis in vel_or_acc.args:
+                self._assert_no_qdot(v_comps)
+            return
+
+        jac = vel_or_acc.jacobian(self._qd_qdd)
+        if jac != zeros(*jac.shape):
+            raise ValueError('Found qdot or qdotdot terms in velocities, accelerations, or constraints. '
                 'To properly compute velocity partials and jacobians, '
                 'either use `explicit_kinematics=True` to remove them automatically, '
                 'or manually express velocities independently from qdot terms'
