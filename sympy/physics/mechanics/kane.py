@@ -164,7 +164,7 @@ class KanesMethod(_Methods):
         self._q = Matrix([q_ind, q_dep])
         self._qdot = self.q.diff(dynamicsymbols._t)
         self._qddot = self._qdot.diff(dynamicsymbols._t)
-        self._qd_qdd = Matrix.vstack(self._qdot, self._qddot)
+        self._qd_qdd = Matrix(list(self._qdot) + list(self._qddot))
 
 
         # Initialize generalized speeds
