@@ -76,24 +76,29 @@ def test_linearize_rolling_disc_kane():
     FL = [(CO, F_CO)]
 
     for explicit_kinematics in [True, False]:
-        KM = KanesMethod(N, [q1, q2, q3, q4, q5], [u1, u2, u3], kd_eqs=kindiffs,
+        KM_kwargs = dict(q_ind = [q1, q2, q3, q4, q5], u_ind = [u1, u2, u3], kd_eqs=kindiffs,
                 q_dependent=[q6], configuration_constraints=f_c,
                 u_dependent=[u4, u5, u6], velocity_constraints=f_v,
                 explicit_kinematics = explicit_kinematics)
+        if explicit_kinematics:
+            KM = KanesMethod(N, **KM_kwargs)
+        else:
+            # Expect error as only velocity constraints are given
+            # and KanesMethod will differentiate them introducing qdot terms
+            # which implicit kinematics will not handle
+            with raises(ValueError):
+                KM = KanesMethod(N, **KM_kwargs)
+            # Try again after specificying acceleration constraints with qdots replacedy u's
+            KM_kwargs['acceleration_constraints'] = msubs(sp.diff(f_v, dynamicsymbols._t), qdots)
+            KM = KanesMethod(N, **KM_kwargs)
+
         (fr, fr_star) = KM.kanes_equations(BL, FL)
 
         # Test generalized form equations
         linearizer = KM.to_linearizer()
         assert linearizer.f_c == f_c
         assert linearizer.f_v == f_v
-
-        if explicit_kinematics:
-            kdd = KM.kindiffdict()
-            assert linearizer.f_a == f_v.diff(t).subs(kdd)
-        else:
-            #for implicit kinematics, no need to subs kdd in f_v.diff
-            #since linearizer won't have done that either
-            assert linearizer.f_a == f_v.diff(t)
+        assert linearizer.f_a == f_v.diff(t).subs(qdots)
 
         sol = solve(linearizer.f_0 + linearizer.f_1, qd)
         for qi in qdots.keys():
