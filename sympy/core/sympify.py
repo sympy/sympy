@@ -61,7 +61,8 @@ class CantSympify:
     SympifyError: SympifyError: {}
 
     """
-    pass
+
+    __slots__ = ()
 
 
 def _is_numpy_instance(a):

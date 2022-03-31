@@ -192,6 +192,8 @@ def test_solve_args():
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
     assert solve([x - 1, False], [x], set=True) == ([], set())
+    assert solve([-y*(x + y - 1)/2, (y - 1)/x/y + 1/y],
+        set=True, check=False) == ([x, y], {(1 - y, y), (x, 0)})
 
 
 def test_solve_polynomial1():
@@ -2473,6 +2475,13 @@ def test_solver_flags():
     root = solve(x**5 + x**2 - x - 1, cubics=False)
     rad = solve(x**5 + x**2 - x - 1, cubics=True)
     assert root != rad
+
+
+def test_issue_22768():
+    eq = 2*x**3 - 16*(y - 1)**6*z**3
+    assert solve(eq.expand(), x, simplify=False
+        ) == [2*z*(y - 1)**2, z*(-1 + sqrt(3)*I)*(y - 1)**2,
+        -z*(1 + sqrt(3)*I)*(y - 1)**2]
 
 
 def test_issue_22717():

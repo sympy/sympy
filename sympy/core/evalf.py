@@ -710,9 +710,10 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
         man *= m
         exp += e
         bc += b
-        if bc > 3*working_prec:
+        while bc > 3*working_prec:
             man >>= working_prec
             exp += working_prec
+            bc -= working_prec
         acc = min(acc, w_acc)
     sign = (direction & 2) >> 1
     if not complex_factors:

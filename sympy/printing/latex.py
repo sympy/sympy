@@ -161,6 +161,7 @@ class LatexPrinter(Printer):
         "parenthesize_super": True,
         "min": None,
         "max": None,
+        "diff_operator": "d",
     }  # type: tDict[str, Any]
 
     def __init__(self, settings=None):
@@ -212,12 +213,17 @@ class LatexPrinter(Printer):
             "rj": r"\mathrm{j}",
             "tj": r"\text{j}",
         }
-        try:
-            self._settings['imaginary_unit_latex'] = \
-                imaginary_unit_table[self._settings['imaginary_unit']]
-        except KeyError:
-            self._settings['imaginary_unit_latex'] = \
-                self._settings['imaginary_unit']
+        imag_unit = self._settings['imaginary_unit']
+        self._settings['imaginary_unit_latex'] = imaginary_unit_table.get(imag_unit, imag_unit)
+
+        diff_operator_table = {
+            None: r"d",
+            "d": r"d",
+            "rd": r"\mathrm{d}",
+            "td": r"\text{d}",
+        }
+        diff_operator = self._settings['diff_operator']
+        self._settings["diff_operator_latex"] = diff_operator_table.get(diff_operator, diff_operator)
 
     def _add_parens(self, s):
         return r"\left({}\right)".format(s)
@@ -502,7 +508,7 @@ class LatexPrinter(Printer):
 
     def _print_Laplacian(self, expr):
         func = expr._expr
-        return r"\triangle %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+        return r"\Delta %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
         from sympy.physics.units import Quantity
@@ -750,7 +756,7 @@ class LatexPrinter(Printer):
                 elif v == -1:
                     o1.append(' - ' + k._latex_form)
                 else:
-                    arg_str = '(' + self._print(v) + ')'
+                    arg_str = r'\left(' + self._print(v) + r'\right)'
                     o1.append(' + ' + arg_str + k._latex_form)
 
         outstr = (''.join(o1))
@@ -788,7 +794,7 @@ class LatexPrinter(Printer):
         if requires_partial(expr.expr):
             diff_symbol = r'\partial'
         else:
-            diff_symbol = r'd'
+            diff_symbol = self._settings["diff_operator_latex"]
 
         tex = ""
         dim = 0
@@ -829,13 +835,14 @@ class LatexPrinter(Printer):
 
     def _print_Integral(self, expr):
         tex, symbols = "", []
+        diff_symbol = self._settings["diff_operator_latex"]
 
         # Only up to \iiiint exists
         if len(expr.limits) <= 4 and all(len(lim) == 1 for lim in expr.limits):
             # Use len(expr.limits)-1 so that syntax highlighters don't think
             # \" is an escaped quote
             tex = r"\i" + "i"*(len(expr.limits) - 1) + "nt"
-            symbols = [r"\, d%s" % self._print(symbol[0])
+            symbols = [r"\, %s%s" % (diff_symbol, self._print(symbol[0]))
                        for symbol in expr.limits]
 
         else:
@@ -854,7 +861,7 @@ class LatexPrinter(Printer):
                     if len(lim) == 2:
                         tex += "^{%s}" % (self._print(lim[1]))
 
-                symbols.insert(0, r"\, d%s" % self._print(symbol))
+                symbols.insert(0, r"\, %s%s" % (diff_symbol, self._print(symbol)))
 
         return r"%s %s%s" % (tex, self.parenthesize(expr.function,
                                                     PRECEDENCE["Mul"],
@@ -2968,6 +2975,9 @@ def latex(expr, **settings):
     max: Integer or None, optional
         Sets the upper bound for the exponent to print floating point numbers in
         fixed-point format.
+    diff_operator: string, optional
+        String to use for differential operator. Default is ``'d'``, to print in italic
+        form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
 
     Notes
     =====

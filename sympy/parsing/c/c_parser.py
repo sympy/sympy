@@ -19,7 +19,7 @@ Features Supported
 
 - Variable Declarations (integers and reals)
 - Assignment (using integer & floating literal and function calls)
-- Function Definitions nad Declaration
+- Function Definitions and Declaration
 - Function Calls
 - Compound statements, Return statements
 
@@ -433,7 +433,7 @@ if cin:
             =======
 
             param : Codegen AST Node
-                Variable node with the value nad type of the variable
+                Variable node with the value and type of the variable
 
             Raises
             ======

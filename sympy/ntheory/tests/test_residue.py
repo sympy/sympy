@@ -62,10 +62,8 @@ def test_residue():
     raises(ValueError, lambda: is_quad_residue(1.1, 2))
     raises(ValueError, lambda: is_quad_residue(2, 0))
 
-
     assert quadratic_residues(S.One) == [0]
     assert quadratic_residues(1) == [0]
-    assert quadratic_residues(12) == [0, 1, 4, 9]
     assert quadratic_residues(12) == [0, 1, 4, 9]
     assert quadratic_residues(13) == [0, 1, 3, 4, 9, 10, 12]
     assert [len(quadratic_residues(i)) for i in range(1, 20)] == \
