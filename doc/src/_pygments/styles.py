@@ -1,5 +1,5 @@
 """
-Sphinx styles used for theme.
+Pygments styles used for syntax highlighting.
 
 These are based on the Sphinx style (see
 https://github.com/sphinx-doc/sphinx/blob/master/sphinx/pygments_styles.py)
