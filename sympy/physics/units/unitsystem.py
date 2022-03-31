@@ -193,7 +193,7 @@ class UnitSystem(_QuantityMapper):
             fds = [self._collect_factor_and_dimension(
                 arg) for arg in expr.args]
             return (expr.func(*(f[0] for f in fds)),
-                    expr.func(*(d[1] for d in fds)))
+                    *(d[1] for d in fds))
         elif isinstance(expr, Dimension):
             return S.One, expr
         else:
