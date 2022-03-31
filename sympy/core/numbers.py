@@ -1398,8 +1398,8 @@ class Float(Number):
             return not other
         return False    # Float != non-Number
 
-    # def __ne__(self, other):
-    #     return not self == other
+    def __ne__(self, other):
+        return not self == other
 
     def _Frel(self, other, op):
         try:
@@ -1913,8 +1913,8 @@ class Rational(Number):
             return m == self.p and integer_log(self.q, 2) == (-t, True)
         return False
 
-    # def __ne__(self, other):
-    #     return not self == other
+    def __ne__(self, other):
+        return not self == other
 
     def _Rrel(self, other, attr):
         # if you want self < other, pass self, other, __gt__
@@ -2244,8 +2244,8 @@ class Integer(Rational):
             return (self.p == other.p)
         return Rational.__eq__(self, other)
 
-    # def __ne__(self, other):
-    #     return not self == other
+    def __ne__(self, other):
+        return not self == other
 
     def __gt__(self, other):
         try:
@@ -3849,8 +3849,8 @@ class NumberSymbol(AtomicExpr):
 
         return False    # NumberSymbol != non-(Number|self)
 
-    # def __ne__(self, other):
-    #     return not self == other
+    def __ne__(self, other):
+        return not self == other
 
     def __le__(self, other):
         if self is other:
