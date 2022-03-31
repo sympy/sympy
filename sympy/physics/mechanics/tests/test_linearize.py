@@ -5,7 +5,7 @@ from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
-    LagrangesMethod
+    LagrangesMethod, msubs
 from sympy.testing.pytest import slow, raises
 
 
@@ -89,7 +89,7 @@ def test_linearize_rolling_disc_kane():
             with raises(ValueError):
                 KM = KanesMethod(N, **KM_kwargs)
             # Try again after specificying acceleration constraints with qdots replacedy u's
-            KM_kwargs['acceleration_constraints'] = msubs(sp.diff(f_v, dynamicsymbols._t), qdots)
+            KM_kwargs['acceleration_constraints'] = msubs(f_v.diff(dynamicsymbols._t), qdots)
             KM = KanesMethod(N, **KM_kwargs)
 
         (fr, fr_star) = KM.kanes_equations(BL, FL)
