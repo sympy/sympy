@@ -117,7 +117,7 @@ show it with a viewer.
 Several functions in the {mod}`sympy.parsing` submodule require external
 dependencies to function. Note that not all parsers require external modules
 at this time. The Python ({func}`~.parse_expr`), Mathematca
-({func}`~.mathematica`), and Maxima ({func}`~.parse_maxima`) parsers do not
+({func}`~.parse_mathematica`), and Maxima ({func}`~.parse_maxima`) parsers do not
 require any external dependencies.
 
 - **antlr-python-runtime**: [Antlr](https://www.antlr.org/) is used for the
