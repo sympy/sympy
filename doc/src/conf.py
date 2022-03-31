@@ -121,7 +121,9 @@ today_fmt = '%B %d, %Y'
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+sys.path.append(os.path.abspath("./_pygments"))
+pygments_style = 'styles.SphinxHighContrastStyle'
+pygments_dark_style = 'styles.NativeHighContrastStyle'
 
 # Don't show the source code hyperlinks when using matplotlib plot directive.
 plot_html_show_source_link = False
