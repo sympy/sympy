@@ -2077,6 +2077,9 @@ def test_comparisons_with_unknown_type():
                 return True
             return NotImplemented
 
+        # def __ne__(self, other):
+        #     return not self == other
+
     bar = Bar()
 
     for n in ni, nf, nr:

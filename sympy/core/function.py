@@ -47,7 +47,7 @@ from .operations import LatticeOp
 from .parameters import global_parameters
 from .rules import Transform
 from .singleton import S
-from .sympify import sympify, _sympify
+from .sympify import sympify
 
 from .sorting import default_sort_key, ordered
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
@@ -932,6 +932,9 @@ class UndefinedFunction(FunctionClass):
             self.class_key() == other.class_key() and
             self._kwargs == other._kwargs)
 
+    # def __ne__(self, other):
+    #     return not self == other
+
     @property
     def _diff_wrt(self):
         return False
@@ -1301,7 +1304,7 @@ class Derivative(Expr):
                 variable_count.append(Tuple(v, count))
                 continue
 
-            v = _sympify(v)
+            v = sympify(v)
             if isinstance(v, Integer):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
@@ -2337,6 +2340,9 @@ class Subs(Expr):
         if not isinstance(other, Subs):
             return False
         return self._hashable_content() == other._hashable_content()
+
+    # def __ne__(self, other):
+    #     return not(self == other)
 
     def __hash__(self):
         return super().__hash__()

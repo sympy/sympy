@@ -437,6 +437,9 @@ class ModuleHomomorphism:
         except TypeError:
             return False
 
+    # def __ne__(self, oth):
+    #     return not (self == oth)
+
 
 class MatrixHomomorphism(ModuleHomomorphism):
     r"""

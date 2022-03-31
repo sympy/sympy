@@ -85,6 +85,9 @@ class QuotientRingElement:
             return False
         return self.ring.is_zero(self - om)
 
+    # def __ne__(self, om):
+    #     return not self == om
+
 
 class QuotientRing(Ring):
     """

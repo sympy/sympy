@@ -15,7 +15,7 @@ from sympy.physics.units.prefixes import (
 )
 from sympy.physics.units.definitions import (
     cd, K, coulomb, volt, ohm, siemens, farad, henry, tesla, weber, dioptre,
-    lux, katal, gray, becquerel, inch, liter, julian_year,
+    lux, katal, gray, becquerel, inch, hectare, liter, julian_year,
     gravitational_constant, speed_of_light, elementary_charge, planck, hbar,
     electronvolt, avogadro_number, avogadro_constant, boltzmann_constant,
     stefan_boltzmann_constant, atomic_mass_constant, molar_gas_constant,
@@ -50,6 +50,7 @@ dimsys_length_weight_time = DimensionSystem([
     pressure=dict(mass=1, length=-1, time=-2),
     frequency=dict(time=-1),
     action=dict(length=2, mass=1, time=-1),
+    area=dict(length=2),
     volume=dict(length=3),
 ))
 
@@ -92,8 +93,11 @@ dimsys_length_weight_time.set_quantity_scale_factor(dioptre, 1/meter)
 
 # Common volume and area units
 
-dimsys_length_weight_time.set_quantity_dimension(liter, length ** 3)
-dimsys_length_weight_time.set_quantity_scale_factor(liter, meter**3 / 1000)
+dimsys_length_weight_time.set_quantity_dimension(hectare, length**2)
+dimsys_length_weight_time.set_quantity_scale_factor(hectare, (meter**2)*(10000))
+
+dimsys_length_weight_time.set_quantity_dimension(liter, length**3)
+dimsys_length_weight_time.set_quantity_scale_factor(liter, meter**3/1000)
 
 
 # Newton constant

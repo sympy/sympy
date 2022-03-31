@@ -275,6 +275,9 @@ class Ideal(IntegerPowerable):
             return False
         return self._equals(e)
 
+    # def __ne__(self, e):
+    #     return not (self == e)
+
 
 class ModuleImplementedIdeal(Ideal):
     """

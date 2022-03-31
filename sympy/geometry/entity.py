@@ -19,6 +19,7 @@ Rn is a GeometrySet representing n-dimensional Euclidean space. R2 and
 R3 are currently the only ambient spaces implemented.
 
 """
+from typing import Tuple as tTuple
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -71,6 +72,8 @@ class GeometryEntity(Basic, EvalfMixin):
 
     """
 
+    __slots__ = ()  # type: tTuple[str, ...]
+
     def __cmp__(self, other):
         """Comparison of two GeometryEntities."""
         n1 = self.__class__.__name__
@@ -110,6 +113,10 @@ class GeometryEntity(Basic, EvalfMixin):
     def __getnewargs__(self):
         """Returns a tuple that will be passed to __new__ on unpickling."""
         return tuple(self.args)
+
+    # def __ne__(self, o):
+    #     """Test inequality of two geometrical entities."""
+    #     return not self == o
 
     def __new__(cls, *args, **kwargs):
         # Points are sequences, but they should not
@@ -532,6 +539,8 @@ class GeometrySet(GeometryEntity, Set):
     """Parent class of all GeometryEntity that are also Sets
     (compatible with sympy.sets)
     """
+    __slots__ = ()
+
     def _contains(self, other):
         """sympy.sets uses the _contains method, so include it for compatibility."""
 

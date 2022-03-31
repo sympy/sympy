@@ -80,7 +80,7 @@ def test_PythonMPQ():
         assert bool(Q(1, 2)) is True
         assert bool(Q(0)) is False
 
-        # _eq_/_ne_
+        # __eq__/__ne__
         assert (Q(2, 3) == Q(2, 3)) is True
         assert (Q(2, 3) == Q(2, 5)) is False
         assert (Q(2, 3) != Q(2, 3)) is False

@@ -131,6 +131,8 @@ def test_diff_symbols():
     raises(TypeError, lambda: cos(x).diff((x, y)).variables)
     assert cos(x).diff((x, y))._wrt_variables == [x]
 
+    # issue 23222
+    assert sympify("a*x+b").diff("x") == sympify("a")
 
 def test_Function():
     class myfunc(Function):

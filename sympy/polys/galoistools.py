@@ -1872,11 +1872,18 @@ def gf_edf_zassenhaus(f, n, p, K):
        >>> gf_edf_zassenhaus([1,1,1,1], 1, 5, ZZ)
        [[1, 1], [1, 2], [1, 3]]
 
+    Notes
+    =====
+
+    The case p == 2 is handled by Cohen's Algorithm 3.4.8. The case p odd is
+    as in Geddes Algorithm 8.9 (or Cohen's Algorithm 3.4.6).
+
     References
     ==========
 
     .. [1] [Gathen99]_
-    .. [2] [Geddes92]_
+    .. [2] [Geddes92]_ Algorithm 8.9
+    .. [3] [Cohen93]_ Algorithm 3.4.8
 
     """
     factors = [f]
@@ -1888,18 +1895,19 @@ def gf_edf_zassenhaus(f, n, p, K):
     if p != 2:
         b = gf_frobenius_monomial_base(f, p, K)
 
+    t = [K.one, K.zero]
     while len(factors) < N:
-        r = gf_random(2*n - 1, p, K)
-
         if p == 2:
-            h = r
+            h = r = t
 
-            for i in range(0, 2**(n*N - 1)):
+            for i in range(n - 1):
                 r = gf_pow_mod(r, 2, f, p, K)
                 h = gf_add(h, r, p, K)
 
             g = gf_gcd(f, h, p, K)
+            t += [K.zero, K.zero]
         else:
+            r = gf_random(2 * n - 1, p, K)
             h = _gf_pow_pnm1d2(r, n, f, b, p, K)
             g = gf_gcd(f, gf_sub_ground(h, K.one, p, K), p, K)
 

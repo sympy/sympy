@@ -87,6 +87,9 @@ class GenericZeroMatrix(ZeroMatrix):
     def __eq__(self, other):
         return isinstance(other, GenericZeroMatrix)
 
+    # def __ne__(self, other):
+    #     return not (self == other)
+
     def __hash__(self):
         return super().__hash__()
 
@@ -183,6 +186,9 @@ class GenericIdentity(Identity):
     # Avoid Matrix.__eq__ which might call .shape
     def __eq__(self, other):
         return isinstance(other, GenericIdentity)
+
+    # def __ne__(self, other):
+    #     return not (self == other)
 
     def __hash__(self):
         return super().__hash__()

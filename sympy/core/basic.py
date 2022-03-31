@@ -135,6 +135,10 @@ class Basic(Printable, metaclass=ManagedProperties):
     def __getstate__(self):
         return None
 
+    def __setstate__(self, state):
+        for name, value in state.items():
+            setattr(self, name, value)
+
     def __reduce_ex__(self, protocol):
         if protocol < 2:
             msg = "Only pickle protocol 2 or higher is supported by SymPy"
@@ -379,6 +383,17 @@ class Basic(Printable, metaclass=ManagedProperties):
             if a.is_Number and type(a) != type(b):
                 return False
         return True
+
+    # def __ne__(self, other):
+    #     """``a != b``  -> Compare two symbolic trees and see whether they are different
+
+    #     this is the same as:
+
+    #     ``a.compare(b) != 0``
+
+    #     but faster
+    #     """
+    #     return not self == other
 
     def dummy_eq(self, other, symbol=None):
         """

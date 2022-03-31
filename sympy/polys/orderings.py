@@ -30,6 +30,9 @@ class MonomialOrder:
     def __hash__(self):
         return hash(self.__class__)
 
+    # def __ne__(self, other):
+    #     return not (self == other)
+
 class LexOrder(MonomialOrder):
     """Lexicographic order of monomials. """
 

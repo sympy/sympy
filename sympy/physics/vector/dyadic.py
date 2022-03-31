@@ -153,6 +153,9 @@ class Dyadic(Printable, EvalfMixin):
                           newlist[i][2])
         return Dyadic(newlist)
 
+    # def __ne__(self, other):
+    #     return not self == other
+
     def __neg__(self):
         return self * -1
 

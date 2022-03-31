@@ -115,6 +115,8 @@ class Polygon(GeometrySet):
 
     """
 
+    __slots__ = ()
+
     def __new__(cls, *args, n = 0, **kwargs):
         if n:
             args = list(args)

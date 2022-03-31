@@ -26,6 +26,7 @@ power = Dimension(name="power")
 pressure = Dimension(name="pressure")
 frequency = Dimension(name="frequency", symbol="f")
 action = Dimension(name="action", symbol="A")
+area = Dimension("area")
 volume = Dimension("volume")
 
 # derived dimensions (MKSA not in MKS)
