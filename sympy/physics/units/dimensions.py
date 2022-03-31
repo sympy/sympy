@@ -125,14 +125,14 @@ class Dimension(Expr):
 
         >>> from sympy.physics.units.systems.si import dimsys_SI
         >>> dimsys_SI.get_dimensional_dependencies(velocity)
-        {'length': 1, 'time': -1}
+        {Dimension(length, L): 1, Dimension(time, T): -1}
         >>> length + length
         Dimension(length)
         >>> l2 = length**2
         >>> l2
         Dimension(length**2)
         >>> dimsys_SI.get_dimensional_dependencies(l2)
-        {'length': 2}
+        {Dimension(length, L): 2}
 
     """
 
@@ -162,10 +162,7 @@ class Dimension(Expr):
         elif symbol is not None:
             assert isinstance(symbol, Symbol)
 
-        if symbol is not None:
-            obj = Expr.__new__(cls, name, symbol)
-        else:
-            obj = Expr.__new__(cls, name)
+        obj = Expr.__new__(cls, name)
 
         obj._name = name
         obj._symbol = symbol
@@ -178,14 +175,6 @@ class Dimension(Expr):
     @property
     def symbol(self):
         return self._symbol
-
-    def __hash__(self):
-        return Expr.__hash__(self)
-
-    def __eq__(self, other):
-        if isinstance(other, Dimension):
-            return self.name == other.name
-        return False
 
     def __str__(self):
         """
@@ -257,7 +246,7 @@ class Dimension(Expr):
     @classmethod
     def _from_dimensional_dependencies(cls, dependencies):
         return reduce(lambda x, y: x * y, (
-            Dimension(d)**e for d, e in dependencies.items()
+            d**e for d, e in dependencies.items()
         ), 1)
 
     def has_integer_powers(self, dim_sys):
@@ -311,7 +300,6 @@ class DimensionSystem(Basic, _QuantityMapper):
         derived_dims = [parse_dim(i) for i in derived_dims]
 
         for dim in base_dims:
-            dim = dim.name
             if (dim in dimensional_dependencies
                 and (len(dimensional_dependencies[dim]) != 1 or
                 dimensional_dependencies[dim].get(dim, None) != 1)):
@@ -320,11 +308,11 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         def parse_dim_name(dim):
             if isinstance(dim, Dimension):
-                return dim.name
-            elif isinstance(dim, str):
-                return Symbol(dim)
-            elif isinstance(dim, Symbol):
                 return dim
+            elif isinstance(dim, str):
+                return Dimension(Symbol(dim))
+            elif isinstance(dim, Symbol):
+                return Dimension(dim)
             else:
                 raise TypeError("unrecognized type %s for %s" % (type(dim), dim))
 
@@ -343,9 +331,9 @@ class DimensionSystem(Basic, _QuantityMapper):
         for dim in derived_dims:
             if dim in base_dims:
                 raise ValueError("Dimension %s both in base and derived" % dim)
-            if dim.name not in dimensional_dependencies:
+            if dim not in dimensional_dependencies:
                 # TODO: should this raise a warning?
-                dimensional_dependencies[dim.name] = Dict({dim.name: 1})
+                dimensional_dependencies[dim] = Dict({dim: 1})
 
         base_dims.sort(key=default_sort_key)
         derived_dims.sort(key=default_sort_key)
@@ -368,75 +356,74 @@ class DimensionSystem(Basic, _QuantityMapper):
     def dimensional_dependencies(self):
         return self.args[2]
 
-    def _get_dimensional_dependencies_for_name(self, name):
-        if isinstance(name, Dimension):
-            name = name.name
+    def _get_dimensional_dependencies_for_name(self, dimension):
+        if isinstance(dimension, str):
+            dimension = Dimension(Symbol(dimension))
+        elif not isinstance(dimension, Dimension):
+            dimension = Dimension(dimension)
 
-        if isinstance(name, str):
-            name = Symbol(name)
-
-        if name.is_Symbol:
+        if dimension.name.is_Symbol:
             # Dimensions not included in the dependencies are considered
             # as base dimensions:
-            return dict(self.dimensional_dependencies.get(name, {name: 1}))
+            return dict(self.dimensional_dependencies.get(dimension, {dimension: 1}))
 
-        if name.is_number or name.is_NumberSymbol:
+        if dimension.name.is_number or dimension.name.is_NumberSymbol:
             return {}
 
         get_for_name = self._get_dimensional_dependencies_for_name
 
-        if name.is_Mul:
+        if dimension.name.is_Mul:
             ret = collections.defaultdict(int)
-            dicts = [get_for_name(i) for i in name.args]
+            dicts = [get_for_name(i) for i in dimension.name.args]
             for d in dicts:
                 for k, v in d.items():
                     ret[k] += v
             return {k: v for (k, v) in ret.items() if v != 0}
 
-        if name.is_Add:
-            dicts = [get_for_name(i) for i in name.args]
+        if dimension.name.is_Add:
+            dicts = [get_for_name(i) for i in dimension.name.args]
             if all(d == dicts[0] for d in dicts[1:]):
                 return dicts[0]
             raise TypeError("Only equivalent dimensions can be added or subtracted.")
 
-        if name.is_Pow:
-            dim_base = get_for_name(name.base)
-            dim_exp = get_for_name(name.exp)
-            if dim_exp == {} or name.exp.is_Symbol:
-                return {k: v*name.exp for (k, v) in dim_base.items()}
+        if dimension.name.is_Pow:
+            dim_base = get_for_name(dimension.name.base)
+            dim_exp = get_for_name(dimension.name.exp)
+            if dim_exp == {} or dimension.name.exp.is_Symbol:
+                return {k: v * dimension.name.exp for (k, v) in dim_base.items()}
             else:
                 raise TypeError("The exponent for the power operator must be a Symbol or dimensionless.")
 
-        if name.is_Function:
+        if dimension.name.is_Function:
             args = (Dimension._from_dimensional_dependencies(
-                get_for_name(arg)) for arg in name.args)
-            result = name.func(*args)
+                get_for_name(arg)) for arg in dimension.name.args)
+            result = dimension.name.func(*args)
 
-            dicts = [get_for_name(i) for i in name.args]
+            dicts = [get_for_name(i) for i in dimension.name.args]
 
             if isinstance(result, Dimension):
                 return self.get_dimensional_dependencies(result)
-            elif result.func == name.func:
-                if isinstance(name, TrigonometricFunction):
-                    if dicts[0] in ({}, {Symbol('angle'): 1}):
+            elif result.func == dimension.name.func:
+                if isinstance(dimension.name, TrigonometricFunction):
+                    if dicts[0] in ({}, {Dimension('angle'): 1}):
                         return {}
                     else:
-                        raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle.".format(name.func))
+                        raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle.".format(dimension.func))
                 else:
-                    if all( (item == {} for item in dicts) ):
+                    if all(item == {} for item in dicts):
                         return {}
                     else:
-                        raise TypeError("The input arguments for the function {} must be dimensionless.".format(name.func))
+                        raise TypeError("The input arguments for the function {} must be dimensionless.".format(dimension.func))
             else:
                 return get_for_name(result)
 
-        raise TypeError("Type {} not implemented for get_dimensional_dependencies".format(type(name)))
+        raise TypeError("Type {} not implemented for get_dimensional_dependencies".format(type(dimension.name)))
 
     def get_dimensional_dependencies(self, name, mark_dimensionless=False):
         dimdep = self._get_dimensional_dependencies_for_name(name)
         if mark_dimensionless and dimdep == {}:
-            return {'dimensionless': 1}
-        return {str(i): j for i, j in dimdep.items()}
+            return {Dimension(1): 1}
+        return {k: v for k, v in dimdep.items()}
 
     def equivalent_dims(self, dim1, dim2):
         deps1 = self.get_dimensional_dependencies(dim1)

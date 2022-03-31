@@ -135,6 +135,10 @@ class Basic(Printable, metaclass=ManagedProperties):
     def __getstate__(self):
         return None
 
+    def __setstate__(self, state):
+        for name, value in state.items():
+            setattr(self, name, value)
+
     def __reduce_ex__(self, protocol):
         if protocol < 2:
             msg = "Only pickle protocol 2 or higher is supported by SymPy"

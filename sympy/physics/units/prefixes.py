@@ -137,7 +137,8 @@ def prefix_unit(unit, prefixes):
     for prefix_abbr, prefix in prefixes.items():
         quantity = Quantity(
                 "%s%s" % (prefix.name, unit.name),
-                abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
+                abbrev=("%s%s" % (prefix.abbrev, unit.abbrev)),
+                is_prefixed=True,
            )
         UnitSystem._quantity_dimensional_equivalence_map_global[quantity] = unit
         UnitSystem._quantity_scale_factors_global[quantity] = (prefix.scale_factor, unit)

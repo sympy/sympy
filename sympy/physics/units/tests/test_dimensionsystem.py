@@ -19,7 +19,7 @@ def test_extend():
 def test_list_dims():
     dimsys = DimensionSystem((length, time, mass))
 
-    assert dimsys.list_can_dims == ("length", "mass", "time")
+    assert dimsys.list_can_dims == (length, mass, time)
 
 
 def test_dim_can_vector():

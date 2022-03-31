@@ -2065,7 +2065,7 @@ class Integer(Rational):
 
     is_Integer = True
 
-    __slots__ = ('p',)
+    __slots__ = ()
 
     def _as_mpf_val(self, prec):
         return mlib.from_int(self.p, prec, rnd)

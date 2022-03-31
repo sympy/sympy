@@ -370,11 +370,11 @@ def test_latex_vector_expressions():
     assert latex(x*Gradient(A.x)) == r"x \left(\nabla \mathbf{{x}_{A}}\right)"
     assert latex(Gradient(x*A.x)) == r"\nabla \left(\mathbf{{x}_{A}} x\right)"
 
-    assert latex(Laplacian(A.x)) == r"\triangle \mathbf{{x}_{A}}"
+    assert latex(Laplacian(A.x)) == r"\Delta \mathbf{{x}_{A}}"
     assert latex(Laplacian(A.x + 3*A.y)) == \
-        r"\triangle \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
-    assert latex(x*Laplacian(A.x)) == r"x \left(\triangle \mathbf{{x}_{A}}\right)"
-    assert latex(Laplacian(x*A.x)) == r"\triangle \left(\mathbf{{x}_{A}} x\right)"
+        r"\Delta \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
+    assert latex(x*Laplacian(A.x)) == r"x \left(\Delta \mathbf{{x}_{A}}\right)"
+    assert latex(Laplacian(x*A.x)) == r"\Delta \left(\mathbf{{x}_{A}} x\right)"
 
 def test_latex_symbols():
     Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
@@ -811,6 +811,9 @@ def test_latex_derivatives():
     assert latex(diff(f(x), (x, Max(n1, n2)))) == \
         r'\frac{d^{\max\left(n_{1}, n_{2}\right)}}{d x^{\max\left(n_{1}, n_{2}\right)}} f{\left(x \right)}'
 
+    # set diff operator
+    assert latex(diff(f(x), x), diff_operator="rd") == r'\frac{\mathrm{d}}{\mathrm{d} x} f{\left(x \right)}'
+
 
 def test_latex_subs():
     assert latex(Subs(x*y, (x, y), (1, 2))) == r'\left. x y \right|_{\substack{ x=1\\ y=2 }}'
@@ -850,6 +853,10 @@ def test_latex_integrals():
     assert latex(Integral(x+z/2, z)) == \
         r"\int \left(x + \frac{z}{2}\right)\, dz"
     assert latex(Integral(x**y, z)) == r"\int x^{y}\, dz"
+
+    # set diff operator
+    assert latex(Integral(x, x), diff_operator="rd") == r'\int x\, \mathrm{d}x'
+    assert latex(Integral(x, (x, 0, 1)), diff_operator="rd") == r'\int\limits_{0}^{1} x\, \mathrm{d}x'
 
 
 def test_latex_sets():

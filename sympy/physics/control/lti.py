@@ -105,7 +105,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     denominator polynomials of the ``TransferFunction`` respectively, and the third argument is
     a complex variable of the Laplace transform used by these polynomials of the transfer function.
     ``num`` and ``den`` can be either polynomials or numbers, whereas ``var``
-    has to be a Symbol.
+    has to be a :py:class:`~.Symbol`.
 
     Explanation
     ===========
