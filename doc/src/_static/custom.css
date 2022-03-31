@@ -1,13 +1,3 @@
-/* Reduce the vertical space between lines in code blocks. Required to */
-/* make Unicode pretty printing appear correctly. */
-pre {
-    line-height: 120% !important;
-}
-
-article pre {
-    line-height: 120% !important;
-}
-
 /* Completely disable blockquotes. The Furo defaults make block quotes very*/
 /* apparent. However, the parameter blocks from numpydoc render as block
  * quotes, which looks bad. Furthermore, it is very easy for things to
