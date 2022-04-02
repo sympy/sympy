@@ -299,7 +299,7 @@ def test__sympify():
     # with sympify but not with _sympify.
     # https://github.com/sympy/sympy/issues/20124
     assert sympify(f) is f
-    raises(SympifyError, lambda: _sympify(f))
+    assert _sympify(f) is f
 
     class A:
         def _sympy_(self):

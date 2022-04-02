@@ -3,7 +3,7 @@ from .basic import Basic, Atom
 from .cache import cacheit
 from .containers import Tuple
 from .expr import Expr, AtomicExpr
-from .function import AppliedUndef, FunctionClass
+#from .function import AppliedUndef, FunctionClass
 from .kind import NumberKind, UndefinedKind
 from .logic import fuzzy_bool
 from .singleton import S
@@ -189,6 +189,7 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
         return _symbol(x, default, **assumptions)
     if not is_sequence(exprs):
         exprs = [exprs]
+    from .function import AppliedUndef
     names = set().union(
         [i.name for e in exprs for i in e.atoms(Symbol)] +
         [i.func.name for e in exprs for i in e.atoms(AppliedUndef)])
@@ -824,6 +825,7 @@ def var(names, **args):
     arguments can be passed to :func:`var`.
 
     """
+    from .function import FunctionClass
     def traverse(symbols, frame):
         """Recursively inject symbols to the global namespace. """
         for symbol in symbols:
@@ -839,7 +841,6 @@ def var(names, **args):
 
     try:
         syms = symbols(names, **args)
-
         if syms is not None:
             if isinstance(syms, Basic):
                 frame.f_globals[syms.name] = syms
