@@ -699,6 +699,9 @@ def test_laplace_transform():
     assert LT(diff(f(t), (t, 3)), t, s) == s**3*LaplaceTransform(f(t), t, s)\
         - s**2*f(0) - s*Subs(Derivative(f(t), t), t, 0)\
             - Subs(Derivative(f(t), (t, 2)), t, 0)
+    # Issue #23307
+    assert LT(10*diff(f(t), (t, 1)), t, s) == 10*s*LaplaceTransform(f(t), t, s)\
+        - 10*f(0)
     assert LT(a*f(b*t)+g(c*t), t, s) == a*LaplaceTransform(f(t), t, s/b)/b +\
         LaplaceTransform(g(t), t, s/c)/c
     assert inverse_laplace_transform(
