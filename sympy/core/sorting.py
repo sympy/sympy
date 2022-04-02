@@ -53,7 +53,7 @@ def default_sort_key(item, order=None):
     While sort_key is a method only defined for SymPy objects,
     default_sort_key will accept anything as an argument so it is
     more robust as a sorting key. For the following, using key=
-    lambda i: i.sort_key() would fail because 2 doesn't have a sort_key
+    lambda i: i.sort_key() would fail because 2 does not have a sort_key
     method; that's why default_sort_key is used. Note, that it also
     handles sympification of non-string items likes ints:
 
@@ -172,6 +172,8 @@ def _node_count(e):
     # some object has a non-Basic arg, it needs to be
     # fixed since it is intended that all Basic args
     # are of Basic type (though this is not easy to enforce).
+    if e.is_Float:
+        return 0.5
     return 1 + sum(map(_node_count, e.args))
 
 

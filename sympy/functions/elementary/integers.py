@@ -1,3 +1,5 @@
+from typing import Tuple as tTuple
+
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 
@@ -9,6 +11,7 @@ from sympy.core.numbers import Integer
 from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
+from sympy.functions.elementary.complexes import im, re
 from sympy.multipledispatch import dispatch
 
 ###############################################################################
@@ -17,11 +20,12 @@ from sympy.multipledispatch import dispatch
 
 
 class RoundFunction(Function):
-    """The base class for rounding functions."""
+    """Abstract base class for rounding functions."""
+
+    args: tTuple[Expr]
 
     @classmethod
     def eval(cls, arg):
-        from sympy.functions.elementary.complexes import im
         v = cls._eval_number(arg)
         if v is not None:
             return v
@@ -73,6 +77,10 @@ class RoundFunction(Function):
             return ipart + spart
         else:
             return ipart + cls(spart, evaluate=False)
+
+    @classmethod
+    def _eval_number(cls, arg):
+        raise NotImplementedError()
 
     def _eval_is_finite(self):
         return self.args[0].is_finite
@@ -136,6 +144,9 @@ class floor(RoundFunction):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            r = floor(arg0)
         if arg0.is_finite:
             if arg0 == r:
                 if cdir == 0:
@@ -154,13 +165,16 @@ class floor(RoundFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            r = floor(arg0)
         if arg0.is_infinite:
-            from sympy.calculus.util import AccumBounds
+            from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
             s = arg._eval_nseries(x, n, logx, cdir)
             o = Order(1, (x, 0)) if n <= 0 else AccumBounds(-1, 0)
             return s + o
-        r = self.subs(x, 0)
         if arg0 == r:
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
             return r - 1 if ndir.is_negative else r
@@ -294,6 +308,9 @@ class ceiling(RoundFunction):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            r = ceiling(arg0)
         if arg0.is_finite:
             if arg0 == r:
                 if cdir == 0:
@@ -312,13 +329,16 @@ class ceiling(RoundFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            r = ceiling(arg0)
         if arg0.is_infinite:
-            from sympy.calculus.util import AccumBounds
+            from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
             s = arg._eval_nseries(x, n, logx, cdir)
             o = Order(1, (x, 0)) if n <= 0 else AccumBounds(0, 1)
             return s + o
-        r = self.subs(x, 0)
         if arg0 == r:
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
             return r if ndir.is_negative else r + 1
@@ -450,8 +470,7 @@ class frac(Function):
     """
     @classmethod
     def eval(cls, arg):
-        from sympy.calculus.util import AccumBounds
-        from sympy.functions.elementary.complexes import im
+        from sympy.calculus.accumulationbounds import AccumBounds
 
         def _eval(arg):
             if arg in (S.Infinity, S.NegativeInfinity):

@@ -659,8 +659,8 @@ def test_coset_enumeration():
              [460, 489, 498, 498],
              [472, 472, 471, 491]]
 
-    C_r.table == table3
-    C_c.table == table3
+    assert C_r.table == table3
+    assert C_c.table == table3
 
     # Group denoted by B2,4 from [2] Pg. 474
     F, a, b = free_group("a, b")

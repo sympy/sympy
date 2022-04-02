@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 from sympy.core.function import Function
 from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
 from sympy.core.singleton import S
+from sympy.polys import Poly
 from sympy.polys.domains import ZZ
+from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
 from sympy.utilities.misc import as_int
-from random import randint, Random
+from sympy.core.random import _randint, randint
 
 from itertools import cycle, product
 
@@ -316,7 +320,6 @@ def sqrt_mod_iter(a, p, domain=int):
     >>> list(sqrt_mod_iter(11, 43))
     [21, 22]
     """
-    from sympy.polys.galoistools import gf_crt1, gf_crt2
     a, p = as_int(a), abs(as_int(p))
     if isprime(p):
         a = a % p
@@ -641,7 +644,7 @@ def is_nthpow_residue(a, n, m):
 
 
 def _is_nthpow_residue_bign(a, n, m):
-    """Returns True if ``x**n == a (mod m)`` has solutions for n > 2."""
+    r"""Returns True if `x^n = a \pmod{n}` has solutions for `n > 2`."""
     # assert n > 2
     # assert a > 0 and m > 0
     if primitive_root(m) is None or igcd(a, m) != 1:
@@ -656,8 +659,8 @@ def _is_nthpow_residue_bign(a, n, m):
 
 
 def _is_nthpow_residue_bign_prime_power(a, n, p, k):
-    """Returns True/False if a solution for ``x**n == a (mod(p**k))``
-    does/doesn't exist."""
+    r"""Returns True/False if a solution for `x^n = a \pmod{p^k}`
+    does/does not exist."""
     # assert a > 0
     # assert n > 2
     # assert p is prime
@@ -870,7 +873,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     return res
 
 
-def quadratic_residues(p):
+def quadratic_residues(p) -> list[int]:
     """
     Returns the list of quadratic residues.
 
@@ -882,10 +885,8 @@ def quadratic_residues(p):
     [0, 1, 2, 4]
     """
     p = as_int(p)
-    r = set()
-    for i in range(p // 2 + 1):
-        r.add(pow(i, 2, p))
-    return sorted(list(r))
+    r = {pow(i, 2, p) for i in range(p // 2 + 1)}
+    return sorted(r)
 
 
 def legendre_symbol(a, p):
@@ -1196,13 +1197,11 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
     if order is None:
         order = n_order(b, n)
-    prng = Random()
-    if rseed is not None:
-        prng.seed(rseed)
+    randint = _randint(rseed)
 
     for i in range(retries):
-        aa = prng.randint(1, order - 1)
-        ba = prng.randint(1, order - 1)
+        aa = randint(1, order - 1)
+        ba = randint(1, order - 1)
         xa = pow(b, aa, n) * pow(a, ba, n) % n
 
         c = xa % 3
@@ -1374,7 +1373,6 @@ def quadratic_congruence(a, b, c, p):
     c : integer
     p : positive integer
     """
-    from sympy.polys.galoistools import linear_congruence
     a = as_int(a)
     b = as_int(b)
     c = as_int(c)
@@ -1488,7 +1486,6 @@ def _valid_expr(expr):
 
     if not expr.is_polynomial():
         raise ValueError("The expression should be a polynomial")
-    from sympy.polys import Poly
     polynomial = Poly(expr)
     if not polynomial.is_univariate:
         raise ValueError("The expression should be univariate")

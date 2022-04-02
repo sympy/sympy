@@ -126,9 +126,6 @@ from sympy.core.traversal import bottom_up
 
 from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
-from sympy.simplify import logcombine
-from sympy.simplify.powsimp import powsimp, powdenest
-
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 
@@ -207,7 +204,7 @@ class SubsSet(dict):
         return super().__repr__() + ', ' + self.rewrites.__repr__()
 
     def __getitem__(self, key):
-        if not key in self:
+        if key not in self:
             self[key] = Dummy()
         return dict.__getitem__(self, key)
 
@@ -249,6 +246,7 @@ class SubsSet(dict):
 def mrv(e, x):
     """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
        and e rewritten in terms of these"""
+    from sympy.simplify.powsimp import powsimp
     e = powsimp(e, deep=True, combine='exp')
     if not isinstance(e, Basic):
         raise TypeError("e should be an instance of Basic")
@@ -393,6 +391,7 @@ def sign(e, x):
         return 0
 
     elif not e.has(x):
+        from sympy.simplify import logcombine
         e = logcombine(e)
         return _sign(e)
     elif e == x:
@@ -438,6 +437,7 @@ def limitinf(e, x, leadsimp=False):
 
     if not e.has(x):
         return e  # e is a constant
+    from sympy.simplify.powsimp import powdenest
     if e.has(Order):
         e = e.expand().removeO()
     if not x.is_positive or x.is_integer:
@@ -489,14 +489,22 @@ def calculate_series(e, x, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-    from sympy.polys import cancel
+    from sympy.simplify.powsimp import powdenest
 
     for t in e.lseries(x, logx=logx):
         # bottom_up function is required for a specific case - when e is
-        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
-        # methods reduce this to 0 while not expanding polynomials.
-        t = bottom_up(t, lambda w: getattr(w, 'normal', lambda: w)())
-        t = cancel(t, expand=False).factor()
+        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p)
+        t = bottom_up(t, lambda w:
+            getattr(w, 'normal', lambda: w)())
+        # And the expression
+        # `(-sin(1/x) + sin((x + exp(x))*exp(-x)/x))*exp(x)`
+        # from the first test of test_gruntz_eval_special needs to
+        # be expanded. But other forms need to be have at least
+        # factor_terms applied. `factor` accomplishes both and is
+        # faster than using `factor_terms` for the gruntz suite. It
+        # does not appear that use of `cancel` is necessary.
+        # t = cancel(t, expand=False)
+        t = t.factor()
 
         if t.has(exp) and t.has(log):
             t = powdenest(t)
@@ -534,7 +542,7 @@ def mrv_leadterm(e, x):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = Dummy("w", real=True, positive=True)
+    w = Dummy("w", positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
     try:
@@ -643,6 +651,7 @@ def rewrite(e, Omega, x, wsym):
     # the following powsimp is necessary to automatically combine exponentials,
     # so that the .xreplace() below succeeds:
     # TODO this should not be necessary
+    from sympy.simplify.powsimp import powsimp
     f = powsimp(e, deep=True, combine='exp')
     for a, b in O2:
         f = f.xreplace({a: b})
@@ -675,7 +684,7 @@ def gruntz(e, z, z0, dir="+"):
 
     For ``dir="+"`` (default) it calculates the limit from the right
     (z->z0+) and for ``dir="-"`` the limit from the left (z->z0-). For infinite z0
-    (oo or -oo), the dir argument doesn't matter.
+    (oo or -oo), the dir argument does not matter.
 
     This algorithm is fully described in the module docstring in the gruntz.py
     file. It relies heavily on the series expansion. Most frequently, gruntz()

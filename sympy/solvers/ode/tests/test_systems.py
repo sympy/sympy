@@ -8,7 +8,7 @@ from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import Matrix
 from sympy.core.containers import Tuple
-from sympy.functions import exp, cos, sin, log, tan, Ci, Si, erf, erfi
+from sympy.functions import exp, cos, sin, log, Ci, Si, erf, erfi
 from sympy.matrices import dotprodsimp, NonSquareMatrixError
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.ode import constant_renumber
@@ -1090,10 +1090,9 @@ def test_sysode_linear_neq_order1_type2():
     # https://github.com/sympy/sympy/issues/8567
     eqs8 = [Eq(Derivative(f(t), t), f(t) + 2*g(t)),
             Eq(Derivative(g(t), t), -2*f(t) + g(t) + 2*exp(t))]
-    sol8 = [Eq(f(t), C1*exp(t)*sin(2*t) + C2*exp(t)*cos(2*t) + exp(t)*cos(2*t)**2 +
-             2*exp(t)*sin(2*t)*tan(t)/(tan(t)**2 + 1)),
-            Eq(g(t), C1*exp(t)*cos(2*t) - C2*exp(t)*sin(2*t) - exp(t)*sin(2*t)*cos(2*t) +
-             2*exp(t)*cos(2*t)*tan(t)/(tan(t)**2 + 1))]
+    sol8 = [Eq(f(t), C1*exp(t)*sin(2*t) + C2*exp(t)*cos(2*t)
+                + exp(t)*sin(2*t)**2 + exp(t)*cos(2*t)**2),
+            Eq(g(t), C1*exp(t)*cos(2*t) - C2*exp(t)*sin(2*t))]
     assert dsolve(eqs8) == sol8
     assert checksysodesol(eqs8, sol8) == (True, [0, 0])
 
@@ -1174,14 +1173,11 @@ def test_sysode_linear_neq_order1_type2():
 
     eq14 = [Eq(Derivative(f(t), t), f(t) + g(t) + 81),
             Eq(Derivative(g(t), t), -2*f(t) + g(t) + 23)]
-    sol14 = [Eq(f(t), sqrt(2)*C1*exp(t)*sin(sqrt(2)*t)/2 + sqrt(2)*C2*exp(t)*cos(sqrt(2)*t)/2 +
-              sqrt(2)*exp(t)*sin(sqrt(2)*t)*Integral(-23*exp(-t)*sin(sqrt(2)*t)**2/cos(sqrt(2)*t) +
-              81*sqrt(2)*exp(-t)*sin(sqrt(2)*t) + 23*exp(-t)/cos(sqrt(2)*t), t)/2 +
-              185*sqrt(2)*sin(sqrt(2)*t)*cos(sqrt(2)*t)/6 - 58*cos(sqrt(2)*t)**2/3),
-             Eq(g(t), C1*exp(t)*cos(sqrt(2)*t) - C2*exp(t)*sin(sqrt(2)*t) +
-              exp(t)*cos(sqrt(2)*t)*Integral(-23*exp(-t)*sin(sqrt(2)*t)**2/cos(sqrt(2)*t) +
-              81*sqrt(2)*exp(-t)*sin(sqrt(2)*t) + 23*exp(-t)/cos(sqrt(2)*t), t) -
-              185*sin(sqrt(2)*t)**2/3 + 58*sqrt(2)*sin(sqrt(2)*t)*cos(sqrt(2)*t)/3)]
+    sol14 = [Eq(f(t), sqrt(2)*C1*exp(t)*sin(sqrt(2)*t)/2
+                    + sqrt(2)*C2*exp(t)*cos(sqrt(2)*t)/2
+                    - 58*sin(sqrt(2)*t)**2/3 - 58*cos(sqrt(2)*t)**2/3),
+             Eq(g(t), C1*exp(t)*cos(sqrt(2)*t) - C2*exp(t)*sin(sqrt(2)*t)
+                    - 185*sin(sqrt(2)*t)**2/3 - 185*cos(sqrt(2)*t)**2/3)]
     assert dsolve(eq14) == sol14
     assert checksysodesol(eq14, sol14) == (True, [0,0])
 
@@ -1273,6 +1269,17 @@ def test_sysode_linear_neq_order1_type2():
     assert dsolve(eq26) == sol26
     assert checksysodesol(eq26 , sol26) == (True , [0,0])
 
+    # Test Case added for issue #22715
+    # https://github.com/sympy/sympy/issues/22715
+
+    eq27 = [Eq(diff(x(t),t),-1*y(t)+10), Eq(diff(y(t),t),5*x(t)-2*y(t)+3)]
+    sol27 = [Eq(x(t), (C1/5 - 2*C2/5)*exp(-t)*cos(2*t)
+                    - (2*C1/5 + C2/5)*exp(-t)*sin(2*t)
+                    + 17*sin(2*t)**2/5 + 17*cos(2*t)**2/5),
+            Eq(y(t), C1*exp(-t)*cos(2*t) - C2*exp(-t)*sin(2*t)
+                    + 10*sin(2*t)**2 + 10*cos(2*t)**2)]
+    assert dsolve(eq27) == sol27
+    assert checksysodesol(eq27 , sol27) == (True , [0,0])
 
 
 def test_sysode_linear_neq_order1_type3():
@@ -1640,18 +1647,12 @@ def test_higher_order_to_first_order_9():
 
     eqs9 = [f(x) + g(x) - 2*exp(I*x) + 2*Derivative(f(x), x) + Derivative(f(x), (x, 2)),
             f(x) + g(x) - 2*exp(I*x) + 2*Derivative(g(x), x) + Derivative(g(x), (x, 2))]
-    sol9 = [Eq(f(x), -C1 + C2*exp(-2*x)/2 + (C3/2 + C4/2)*exp(-x)*sin(x) + (2 +
-             I)*exp(I*x)*sin(x)**2*Rational(-1, 5) + (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) + (4 -
-             3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) +
-             exp(x)*exp(I*x)*sin(x) + exp(x)*exp(I*x)/cos(x), x) -
-             exp(-x)*cos(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-             exp(x)*exp(I*x)/cos(x), x) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2))),
-            Eq(g(x), C1 + C2*exp(-2*x)*Rational(-1, 2) + (C3/2 + C4/2)*exp(-x)*sin(x) + (2 +
-             I)*exp(I*x)*sin(x)**2*Rational(-1, 5) + (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) + (4 -
-             3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) +
-             exp(x)*exp(I*x)*sin(x) + exp(x)*exp(I*x)/cos(x), x) -
-             exp(-x)*cos(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-             exp(x)*exp(I*x)/cos(x), x) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2)))]
+    sol9 =  [Eq(f(x), -C1 + C2*exp(-2*x)/2 - (C3/2 - C4/2)*exp(-x)*cos(x)
+                    + (C3/2 + C4/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
+                    + 2*((1 - 2*I)*exp(I*x)*cos(x)**2/5)),
+            Eq(g(x), C1 - C2*exp(-2*x)/2 - (C3/2 - C4/2)*exp(-x)*cos(x)
+                    + (C3/2 + C4/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
+                    + 2*((1 - 2*I)*exp(I*x)*cos(x)**2/5))]
     assert dsolve(eqs9) == sol9
     assert checksysodesol(eqs9, sol9) == (True, [0, 0])
 

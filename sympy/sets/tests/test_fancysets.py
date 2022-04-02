@@ -1,14 +1,16 @@
 
 from sympy.core.expr import unchanged
+from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, Union, imageset,
-                             Intersection, ProductSet, Contains)
+                             Intersection, ProductSet, SetKind)
 from sympy.sets.conditionset import ConditionSet
 from sympy.simplify.simplify import simplify
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
+from sympy.core.containers import Tuple, TupleKind
 from sympy.core.function import Lambda
+from sympy.core.kind import NumberKind
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -880,8 +882,8 @@ def test_ComplexRegion_contains():
     r1 = Interval(0, 1)
     theta1 = Interval(0, 2*S.Pi)
     c3 = ComplexRegion(r1*theta1, polar=True)
-    assert (0.5 + I*Rational(6, 10)) in c3
-    assert (S.Half + I*Rational(6, 10)) in c3
+    assert (0.5 + I*6/10) in c3
+    assert (S.Half + I*6/10) in c3
     assert (S.Half + .6*I) in c3
     assert (0.5 + .6*I) in c3
     assert I in c3
@@ -1122,6 +1124,20 @@ def test_ComplexRegion_FiniteSet():
 def test_union_RealSubSet():
     assert (S.Complexes).union(Interval(1, 2)) == S.Complexes
     assert (S.Complexes).union(S.Integers) == S.Complexes
+
+
+def test_SetKind_fancySet():
+    G = lambda *args: ImageSet(Lambda(x, x ** 2), *args)
+    assert G(Interval(1, 4)).kind is SetKind(NumberKind)
+    assert G(FiniteSet(1, 4)).kind is SetKind(NumberKind)
+    assert S.Rationals.kind is SetKind(NumberKind)
+    assert S.Naturals.kind is SetKind(NumberKind)
+    assert S.Integers.kind is SetKind(NumberKind)
+    assert Range(3).kind is SetKind(NumberKind)
+    a = Interval(2, 3)
+    b = Interval(4, 6)
+    c1 = ComplexRegion(a*b)
+    assert c1.kind is SetKind(TupleKind(NumberKind, NumberKind))
 
 
 def test_issue_9980():

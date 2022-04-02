@@ -1,3 +1,5 @@
+import pickle
+
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -128,3 +130,24 @@ def test_replacer():
     assert replacer.replace(Eq(x**2 + 1, 0)) == Eq(x**2 + 1, 0)
     assert replacer.replace(Eq(x**2, 4)) == (Eq(x, 2) | Eq(x, -2))
     assert replacer.replace(Eq(x**2 + 4*y*x + 4*y**2, 0)) == Eq(x, -2*y)
+
+
+def test_matchpy_object_pickle():
+    if matchpy is None:
+        return
+
+    a1 = WildDot("a")
+    a2 = pickle.loads(pickle.dumps(a1))
+    assert a1 == a2
+
+    a1 = WildDot("a", S(1))
+    a2 = pickle.loads(pickle.dumps(a1))
+    assert a1 == a2
+
+    a1 = WildPlus("a", S(1))
+    a2 = pickle.loads(pickle.dumps(a1))
+    assert a1 == a2
+
+    a1 = WildStar("a", S(1))
+    a2 = pickle.loads(pickle.dumps(a1))
+    assert a1 == a2

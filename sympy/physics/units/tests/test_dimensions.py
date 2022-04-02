@@ -16,12 +16,12 @@ from sympy.testing.pytest import raises
 
 
 def test_Dimension_definition():
-    assert dimsys_SI.get_dimensional_dependencies(length) == {"length": 1}
+    assert dimsys_SI.get_dimensional_dependencies(length) == {length: 1}
     assert length.name == Symbol("length")
     assert length.symbol == Symbol("L")
 
     halflength = sqrt(length)
-    assert dimsys_SI.get_dimensional_dependencies(halflength) == {"length": S.Half}
+    assert dimsys_SI.get_dimensional_dependencies(halflength) == {length: S.Half}
 
 
 def test_Dimension_error_definition():
@@ -72,11 +72,11 @@ def test_Dimension_add_sub():
     e = length + 1
     assert e == 1 + length == 1 - length and e.is_Add and set(e.args) == {length, 1}
 
-    assert  dimsys_SI.get_dimensional_dependencies(mass * length / time**2 + force) == \
-            {'length': 1, 'mass': 1, 'time': -2}
-    assert  dimsys_SI.get_dimensional_dependencies(mass * length / time**2 + force -
+    assert dimsys_SI.get_dimensional_dependencies(mass * length / time**2 + force) == \
+            {length: 1, mass: 1, time: -2}
+    assert dimsys_SI.get_dimensional_dependencies(mass * length / time**2 + force -
                                                    pressure * length**2) == \
-            {'length': 1, 'mass': 1, 'time': -2}
+            {length: 1, mass: 1, time: -2}
 
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(mass * length / time**2 + pressure))
 
@@ -95,22 +95,22 @@ def test_Dimension_mul_div_exp():
 
     assert (length * length) == length ** 2
 
-    assert dimsys_SI.get_dimensional_dependencies(length * length) == {"length": 2}
-    assert dimsys_SI.get_dimensional_dependencies(length ** 2) == {"length": 2}
-    assert dimsys_SI.get_dimensional_dependencies(length * time) == { "length": 1, "time": 1}
-    assert dimsys_SI.get_dimensional_dependencies(velo) == { "length": 1, "time": -1}
-    assert dimsys_SI.get_dimensional_dependencies(velo ** 2) == {"length": 2, "time": -2}
+    assert dimsys_SI.get_dimensional_dependencies(length * length) == {length: 2}
+    assert dimsys_SI.get_dimensional_dependencies(length ** 2) == {length: 2}
+    assert dimsys_SI.get_dimensional_dependencies(length * time) == {length: 1, time: 1}
+    assert dimsys_SI.get_dimensional_dependencies(velo) == {length: 1, time: -1}
+    assert dimsys_SI.get_dimensional_dependencies(velo ** 2) == {length: 2, time: -2}
 
     assert dimsys_SI.get_dimensional_dependencies(length / length) == {}
     assert dimsys_SI.get_dimensional_dependencies(velo / length * time) == {}
-    assert dimsys_SI.get_dimensional_dependencies(length ** -1) == {"length": -1}
-    assert dimsys_SI.get_dimensional_dependencies(velo ** -1.5) == {"length": -1.5, "time": 1.5}
+    assert dimsys_SI.get_dimensional_dependencies(length ** -1) == {length: -1}
+    assert dimsys_SI.get_dimensional_dependencies(velo ** -1.5) == {length: -1.5, time: 1.5}
 
     length_a = length**"a"
-    assert dimsys_SI.get_dimensional_dependencies(length_a) == {"length": Symbol("a")}
+    assert dimsys_SI.get_dimensional_dependencies(length_a) == {length: Symbol("a")}
 
-    assert dimsys_SI.get_dimensional_dependencies(length**pi) == {"length": pi}
-    assert dimsys_SI.get_dimensional_dependencies(length**(length/length)) == {"length": Dimension(1)}
+    assert dimsys_SI.get_dimensional_dependencies(length**pi) == {length: pi}
+    assert dimsys_SI.get_dimensional_dependencies(length**(length/length)) == {length: Dimension(1)}
 
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(length**length))
 
@@ -144,7 +144,7 @@ def test_Dimension_functions():
 
     assert dimsys_SI.get_dimensional_dependencies(log(length / length, length / length)) == {}
 
-    assert dimsys_SI.get_dimensional_dependencies(Abs(length)) == {"length": 1}
+    assert dimsys_SI.get_dimensional_dependencies(Abs(length)) == {length: 1}
     assert dimsys_SI.get_dimensional_dependencies(Abs(length / length)) == {}
 
     assert dimsys_SI.get_dimensional_dependencies(sqrt(-1)) == {}

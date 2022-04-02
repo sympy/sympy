@@ -1,6 +1,6 @@
 from sympy.algebras.quaternion import Quaternion
 from sympy.assumptions.ask import Q
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.combinatorics.partitions import Partition
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add
@@ -42,7 +42,7 @@ from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 from sympy.tensor import NDimArray
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.physics.quantum.trace import Tr
@@ -378,6 +378,12 @@ def test_Permutation_Cycle():
     ]:
         assert sstr(p) == s
 
+
+    with warns_deprecated_sympy():
+        old_print_cyclic = Permutation.print_cyclic
+        Permutation.print_cyclic = False
+        assert sstr(Permutation([1, 0, 2])) == 'Permutation([1, 0, 2])'
+        Permutation.print_cyclic = old_print_cyclic
 
 def test_Pi():
     assert str(pi) == "pi"
@@ -1101,6 +1107,10 @@ def test_issue_14567():
 def test_issue_21823():
     assert str(Partition([1, 2])) == 'Partition({1, 2})'
     assert str(Partition({1, 2})) == 'Partition({1, 2})'
+
+
+def test_issue_22689():
+    assert str(Mul(Pow(x,-2, evaluate=False), Pow(3,-1,evaluate=False), evaluate=False)) == "1/(x**2*3)"
 
 
 def test_issue_21119_21460():

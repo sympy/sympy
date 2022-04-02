@@ -15,8 +15,8 @@ from sympy.core.relational import Eq
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core.sympify import sympify
-from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
-from sympy.functions.elementary.miscellaneous import root
+from sympy.functions import exp, im, cos, acos, Piecewise
+from sympy.functions.elementary.miscellaneous import root, sqrt
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.polys.domains import EX
 from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
@@ -25,7 +25,6 @@ from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.rationaltools import together
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.simplify.simplify import simplify, powsimp
 from sympy.utilities import public
 
 
@@ -38,6 +37,7 @@ def roots_linear(f):
         if dom.is_Composite:
             r = factor(r)
         else:
+            from sympy.simplify.simplify import simplify
             r = simplify(r)
 
     return [r]
@@ -75,6 +75,7 @@ def roots_quadratic(f):
         if dom.is_Composite:
             return factor(expr)
         else:
+            from sympy.simplify.simplify import simplify
             return simplify(expr)
 
     if c is S.Zero:
@@ -653,6 +654,7 @@ def roots_quintic(f):
 
 
 def _quintic_simplify(expr):
+    from sympy.simplify.simplify import powsimp
     expr = powsimp(expr)
     expr = cancel(expr)
     return together(expr)
@@ -886,35 +888,41 @@ def roots(f, *gens,
             F = Poly(f, *gens, **flags)
             if not isinstance(f, Poly) and not F.gen.is_Symbol:
                 raise PolynomialError("generator must be a Symbol")
-            else:
-                f = F
-            if f.length == 2 and f.degree() != 1:
-                # check for foo**n factors in the constant
-                n = f.degree()
-                npow_bases = []
-                others = []
-                expr = f.as_expr()
-                con = expr.as_independent(*gens)[0]
-                for p in Mul.make_args(con):
-                    if p.is_Pow and not p.exp % n:
-                        npow_bases.append(p.base**(p.exp/n))
-                    else:
-                        others.append(p)
-                    if npow_bases:
-                        b = Mul(*npow_bases)
-                        B = Dummy()
-                        d = roots(Poly(expr - con + B**n*Mul(*others), *gens,
-                            **flags), *gens, **flags)
-                        rv = {}
-                        for k, v in d.items():
-                            rv[k.subs(B, b)] = v
-                        return rv
-
+            f = F
         except GeneratorsNeeded:
             if multiple:
                 return []
             else:
                 return {}
+        else:
+            n = f.degree()
+            if f.length() == 2 and n > 2:
+                # check for foo**n in constant if dep is c*gen**m
+                con, dep = f.as_expr().as_independent(*f.gens)
+                fcon = -(-con).factor()
+                if fcon != con:
+                    con = fcon
+                    bases = []
+                    for i in Mul.make_args(con):
+                        if i.is_Pow:
+                            b, e = i.as_base_exp()
+                            if e.is_Integer and b.is_Add:
+                                bases.append((b, Dummy(positive=True)))
+                    if bases:
+                        rv = roots(Poly((dep + con).xreplace(dict(bases)),
+                            *f.gens), *F.gens,
+                            auto=auto,
+                            cubics=cubics,
+                            trig=trig,
+                            quartics=quartics,
+                            quintics=quintics,
+                            multiple=multiple,
+                            filter=filter,
+                            predicate=predicate,
+                            **flags)
+                        return {factor_terms(k.xreplace(
+                            {v: k for k, v in bases})
+                        ): v for k, v in rv.items()}
 
         if f.is_multivariate:
             raise PolynomialError('multivariate polynomials are not supported')

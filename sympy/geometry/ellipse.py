@@ -1524,8 +1524,7 @@ class Circle(Ellipse):
     Examples
     ========
 
-    >>> from sympy import Eq
-    >>> from sympy.geometry import Point, Circle
+    >>> from sympy import Point, Circle, Eq
     >>> from sympy.abc import x, y, a, b
 
     A circle constructed from a center and radius:
@@ -1558,7 +1557,7 @@ class Circle(Ellipse):
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
-            equation = args[0]
+            equation = args[0].expand()
             if isinstance(equation, Eq):
                 equation = equation.lhs - equation.rhs
             x = find(x, equation)
@@ -1574,7 +1573,7 @@ class Circle(Ellipse):
 
             center_x = -c/a/2
             center_y = -d/b/2
-            r2 = (center_x**2) + (center_y**2) - e
+            r2 = (center_x**2) + (center_y**2) - e/a
 
             return Circle((center_x, center_y), sqrt(r2), evaluate=evaluate)
 

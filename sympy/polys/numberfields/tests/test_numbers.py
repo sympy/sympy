@@ -6,31 +6,11 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys.polytools import Poly
-from sympy.testing.pytest import raises
-from sympy.polys.numberfields.numbers import (
-    to_number_field,
-    isolate,
-)
-from sympy.polys.polyerrors import IsomorphismFailed
+from sympy.polys.numberfields.subfield import to_number_field
 from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
-from sympy.printing.lambdarepr import IntervalPrinter
+from sympy.polys.rootoftools import CRootOf
 from sympy.abc import x, y
-
-Q = Rational
-
-
-def test_to_number_field():
-    assert to_number_field(sqrt(2)) == AlgebraicNumber(sqrt(2))
-    assert to_number_field(
-        [sqrt(2), sqrt(3)]) == AlgebraicNumber(sqrt(2) + sqrt(3))
-
-    a = AlgebraicNumber(sqrt(2) + sqrt(3), [S.Half, S.Zero, Rational(-9, 2), S.Zero])
-
-    assert to_number_field(sqrt(2), sqrt(2) + sqrt(3)) == a
-    assert to_number_field(sqrt(2), AlgebraicNumber(sqrt(2) + sqrt(3))) == a
-
-    raises(IsomorphismFailed, lambda: to_number_field(sqrt(2), sqrt(3)))
 
 
 def test_AlgebraicNumber():
@@ -170,6 +150,21 @@ def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2), [1, 2, 3])
     assert a.args == (sqrt(2), Tuple(1, 2, 3))
 
+    a = AlgebraicNumber(sqrt(2), [1, 2], "alpha")
+    b = AlgebraicNumber(a)
+    c = AlgebraicNumber(a, alias="gamma")
+    assert a == b
+    assert c.alias.name == "gamma"
+
+    a = AlgebraicNumber(sqrt(2) + sqrt(3), [S(1)/2, 0, S(-9)/2, 0])
+    b = AlgebraicNumber(a, [1, 0, 0])
+    assert b.root == a.root
+    assert a.to_root() == sqrt(2)
+    assert b.to_root() == 2
+
+    a = AlgebraicNumber(2)
+    assert a.is_primitive_element is True
+
 
 def test_to_algebraic_integer():
     a = AlgebraicNumber(sqrt(3), gen=x).to_algebraic_integer()
@@ -196,20 +191,12 @@ def test_to_algebraic_integer():
     assert a.rep == DMP([QQ(7, 19), QQ(3)], QQ)
 
 
-def test_IntervalPrinter():
-    ip = IntervalPrinter()
-    assert ip.doprint(x**Q(1, 3)) == "x**(mpi('1/3'))"
-    assert ip.doprint(sqrt(x)) == "x**(mpi('1/2'))"
+def test_AlgebraicNumber_to_root():
+    assert AlgebraicNumber(sqrt(2)).to_root() == sqrt(2)
 
+    zeta5_squared = AlgebraicNumber(CRootOf(x**5 - 1, 4), coeffs=[1, 0, 0])
+    assert zeta5_squared.to_root() == CRootOf(x**4 + x**3 + x**2 + x + 1, 1)
 
-def test_isolate():
-    assert isolate(1) == (1, 1)
-    assert isolate(S.Half) == (S.Half, S.Half)
-
-    assert isolate(sqrt(2)) == (1, 2)
-    assert isolate(-sqrt(2)) == (-2, -1)
-
-    assert isolate(sqrt(2), eps=Rational(1, 100)) == (Rational(24, 17), Rational(17, 12))
-    assert isolate(-sqrt(2), eps=Rational(1, 100)) == (Rational(-17, 12), Rational(-24, 17))
-
-    raises(NotImplementedError, lambda: isolate(I))
+    zeta3_squared = AlgebraicNumber(CRootOf(x**3 - 1, 2), coeffs=[1, 0, 0])
+    assert zeta3_squared.to_root() == -S(1)/2 - sqrt(3)*I/2
+    assert zeta3_squared.to_root(radicals=False) == CRootOf(x**2 + x + 1, 0)

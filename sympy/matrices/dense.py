@@ -5,9 +5,8 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 
 from .common import ShapeError
@@ -38,12 +37,14 @@ class DenseMatrix(RepMatrix):
 
     @property
     def _mat(self):
-
-        SymPyDeprecationWarning(
-            feature="The private _mat attribute of Matrix",
-            useinstead="the .flat() method",
-            issue=21715,
-            deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning(
+            """
+            The private _mat attribute of Matrix is deprecated. Use the
+            .flat() method instead.
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-private-matrix-attributes"
+        )
 
         return self.flat()
 
@@ -119,6 +120,7 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
 
         sympy.simplify.simplify.simplify
         """
+        from sympy.simplify.simplify import simplify as _simplify
         for (i, j), element in self.todok().items():
             self[i, j] = _simplify(element, **kwargs)
 
@@ -169,8 +171,7 @@ def rot_axis3(theta):
     Examples
     ========
 
-    >>> from sympy import pi
-    >>> from sympy.matrices import rot_axis3
+    >>> from sympy import pi, rot_axis3
 
     A rotation of pi/3 (60 degrees):
 
@@ -212,8 +213,7 @@ def rot_axis2(theta):
     Examples
     ========
 
-    >>> from sympy import pi
-    >>> from sympy.matrices import rot_axis2
+    >>> from sympy import pi, rot_axis2
 
     A rotation of pi/3 (60 degrees):
 
@@ -255,8 +255,7 @@ def rot_axis1(theta):
     Examples
     ========
 
-    >>> from sympy import pi
-    >>> from sympy.matrices import rot_axis1
+    >>> from sympy import pi, rot_axis1
 
     A rotation of pi/3 (60 degrees):
 
@@ -587,7 +586,7 @@ def jordan_cell(eigenval, n):
     Examples
     ========
 
-    >>> from sympy.matrices import jordan_cell
+    >>> from sympy import jordan_cell
     >>> from sympy.abc import x
     >>> jordan_cell(x, 4)
     Matrix([
@@ -603,8 +602,7 @@ def jordan_cell(eigenval, n):
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
 
-    >>> from sympy.matrices import matrix_multiply_elementwise
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix, matrix_multiply_elementwise
     >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
     >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
     >>> matrix_multiply_elementwise(A, B)
@@ -658,7 +656,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     Examples
     ========
 
-    >>> from sympy.matrices import randMatrix
+    >>> from sympy import randMatrix
     >>> randMatrix(3) # doctest:+SKIP
     [25, 45, 27]
     [44, 54,  9]

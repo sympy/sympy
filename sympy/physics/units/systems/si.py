@@ -26,7 +26,7 @@ from sympy.physics.units.definitions import (
     katal, gray, becquerel, inch, liter, julian_year, gravitational_constant,
     speed_of_light, elementary_charge, planck, hbar, electronvolt,
     avogadro_number, avogadro_constant, boltzmann_constant,
-    stefan_boltzmann_constant, atomic_mass_constant, molar_gas_constant,
+    stefan_boltzmann_constant, Da, atomic_mass_constant, molar_gas_constant,
     faraday_constant, josephson_constant, von_klitzing_constant,
     acceleration_due_to_gravity, magnetic_constant, vacuum_permittivity,
     vacuum_impedance, coulomb_constant, atmosphere, bar, pound, psi, mmHg,
@@ -56,6 +56,7 @@ all_units = []  # type: List[Quantity]
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 
+all_units.extend(units)
 all_units.extend([mol, cd, K, lux])
 
 
@@ -71,7 +72,29 @@ dimsys_default = dimsys_SI.extend(
     [information],
 )
 
-SI = MKSA.extend(base=(mol, cd, K), units=all_units, name='SI', dimension_system=dimsys_SI)
+SI = MKSA.extend(base=(mol, cd, K), units=all_units, name='SI', dimension_system=dimsys_SI, derived_units={
+    power: watt,
+    magnetic_flux: weber,
+    time: second,
+    impedance: ohm,
+    pressure: pascal,
+    current: ampere,
+    voltage: volt,
+    length: meter,
+    frequency: hertz,
+    inductance: henry,
+    temperature: kelvin,
+    amount_of_substance: mole,
+    luminous_intensity: candela,
+    conductance: siemens,
+    mass: kilogram,
+    magnetic_density: tesla,
+    charge: coulomb,
+    force: newton,
+    capacitance: farad,
+    energy: joule,
+    velocity: meter/second,
+})
 
 One = S.One
 
@@ -336,7 +359,7 @@ __all__ = [
     'capacitance', 'tesla', 'steradian', 'planck_mass', 'josephson_constant',
     'planck_area', 'stefan_boltzmann_constant', 'base_dims',
     'astronomical_unit', 'radian', 'planck_voltage', 'impedance',
-    'planck_energy', 'atomic_mass_constant', 'rutherford', 'second', 'inch',
+    'planck_energy', 'Da', 'atomic_mass_constant', 'rutherford', 'second', 'inch',
     'elementary_charge', 'SI', 'electronvolt', 'dimsys_SI', 'henry',
     'planck_angular_frequency', 'ohm', 'pound', 'planck_pressure', 'G', 'psi',
     'dHg0', 'von_klitzing_constant', 'planck_length', 'avogadro_number',

@@ -772,7 +772,7 @@ def allowed_flags(args, flags):
 
     for arg in args.keys():
         try:
-            if Options.__options__[arg].is_Flag and not arg in flags:
+            if Options.__options__[arg].is_Flag and arg not in flags:
                 raise FlagError(
                     "'%s' flag is not allowed in this context" % arg)
         except KeyError:

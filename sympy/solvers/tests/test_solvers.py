@@ -37,7 +37,7 @@ from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
 from sympy.testing.pytest import slow, XFAIL, SKIP, raises
-from sympy.testing.randtest import verify_numerically as tn
+from sympy.core.random import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, e, k, h, p, x, y, z, t, q, m, R
 
@@ -128,6 +128,7 @@ def test_solve_args():
     # no symbol to solve for
     assert solve(42) == solve(42, x) == []
     assert solve([1, 2]) == []
+    assert solve([sqrt(2)],[x]) == []
     # duplicate symbols removed
     assert solve((x - 3, y + 2), x, y, x) == {x: 3, y: -2}
     # unordered symbols
@@ -172,7 +173,7 @@ def test_solve_args():
     assert solve(
         (exp(x) - x, exp(y) - y)) == {x: -LambertW(-1), y: -LambertW(-1)}
     # --  when symbols given
-    solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
+    assert solve([y, exp(x) + x], x, y) == {y: 0, x: -LambertW(1)}
     # symbol is a number
     assert solve(x**2 - pi, pi) == [x**2]
     # no equations
@@ -191,6 +192,8 @@ def test_solve_args():
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
     assert solve([x - 1, False], [x], set=True) == ([], set())
+    assert solve([-y*(x + y - 1)/2, (y - 1)/x/y + 1/y],
+        set=True, check=False) == ([x, y], {(1 - y, y), (x, 0)})
 
 
 def test_solve_polynomial1():
@@ -1309,6 +1312,12 @@ def test_checksol():
     assert checksol([x - 1, x**2 - 1], x, 1) is True
     assert checksol([x - 1, x**2 - 2], x, 1) is False
     assert checksol(Poly(x**2 - 1), x, 1) is True
+    assert checksol(0, {}) is True
+    assert checksol([1e-10, x - 2], x, 2) is False
+    assert checksol([0.5, 0, x], x, 0) is False
+    assert checksol(y, x, 2) is False
+    assert checksol(x+1e-10, x, 0, numerical=True) is True
+    assert checksol(x+1e-10, x, 0, numerical=False) is False
     raises(ValueError, lambda: checksol(x, 1))
     raises(ValueError, lambda: checksol([], x, 1))
 
@@ -1604,14 +1613,48 @@ def test_high_order_roots():
 
 
 def test_minsolve_linear_system():
+    pqt = dict(quick=True, particular=True)
+    pqf = dict(quick=False, particular=True)
+    assert solve([x + y - 5, 2*x - y - 1], **pqt) == {x: 2, y: 3}
+    assert solve([x + y - 5, 2*x - y - 1], **pqf) == {x: 2, y: 3}
     def count(dic):
         return len([x for x in dic.values() if x == 0])
-    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=True)) \
-        == 3
-    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=False)) \
-        == 3
-    assert count(solve([x + y + z, y + z + a], particular=True, quick=True)) == 1
-    assert count(solve([x + y + z, y + z + a], particular=True, quick=False)) == 2
+    assert count(solve([x + y + z, y + z + a + t], **pqt)) == 3
+    assert count(solve([x + y + z, y + z + a + t], **pqf)) == 3
+    assert count(solve([x + y + z, y + z + a], **pqt)) == 1
+    assert count(solve([x + y + z, y + z + a], **pqf)) == 2
+    # issue 22718
+    A = Matrix([
+        [ 1,  1,  1,  0,  1,  1,  0,  1,  0,  0,  1,  1,  1,  0],
+        [ 1,  1,  0,  1,  1,  0,  1,  0,  1,  0, -1, -1,  0,  0],
+        [-1, -1,  0,  0, -1,  0,  0,  0,  0,  0,  1,  1,  0,  1],
+        [ 1,  0,  1,  1,  0,  1,  1,  0,  0,  1, -1,  0, -1,  0],
+        [-1,  0, -1,  0,  0, -1,  0,  0,  0,  0,  1,  0,  1,  1],
+        [-1,  0,  0, -1,  0,  0, -1,  0,  0,  0, -1,  0,  0, -1],
+        [ 0,  1,  1,  1,  0,  0,  0,  1,  1,  1,  0, -1, -1,  0],
+        [ 0, -1, -1,  0,  0,  0,  0, -1,  0,  0,  0,  1,  1,  1],
+        [ 0, -1,  0, -1,  0,  0,  0,  0, -1,  0,  0, -1,  0, -1],
+        [ 0,  0, -1, -1,  0,  0,  0,  0,  0, -1,  0,  0, -1, -1],
+        [ 0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0],
+        [ 0,  0,  0,  0, -1, -1,  0, -1,  0,  0,  0,  0,  0,  0]])
+    v = Matrix(symbols("v:14", integer=True))
+    B = Matrix([[2], [-2], [0], [0], [0], [0], [0], [0], [0],
+        [0], [0], [0]])
+    eqs = A@v-B
+    assert solve(eqs) == []
+    assert solve(eqs, particular=True) == []  # assumption violated
+    assert all(v for v in solve([x + y + z, y + z + a]).values())
+    for _q in (True, False):
+        assert not all(v for v in solve(
+            [x + y + z, y + z + a], quick=_q,
+            particular=True).values())
+        # raise error if quick used w/o particular=True
+        raises(ValueError, lambda: solve([x + 1], quick=_q))
+        raises(ValueError, lambda: solve([x + 1], quick=_q, particular=False))
+    # and give a good error message if someone tries to use
+    # particular with a single equation
+    raises(ValueError, lambda: solve(x + 1, particular=True))
+
 
 
 def test_real_roots():
@@ -1854,6 +1897,19 @@ def test_lambert_bivariate():
     # this is slow but not exceedingly slow
     assert solve((x**3)**(x/2) + pi/2, x) == [
         exp(LambertW(-2*log(2)/3 + 2*log(pi)/3 + I*pi*Rational(2, 3)))]
+
+    # issue 23253
+    assert solve((1/log(sqrt(x) + 2)**2 - 1/x)) == [
+        (LambertW(-exp(-2), -1) + 2)**2]
+    assert solve((1/log(1/sqrt(x) + 2)**2 - x)) == [
+        (LambertW(-exp(-2), -1) + 2)**-2]
+    assert solve((1/log(x**2 + 2)**2 - x**-4)) == [
+        -I*sqrt(2 - LambertW(exp(2))),
+        -I*sqrt(LambertW(-exp(-2)) + 2),
+        sqrt(-2 - LambertW(-exp(-2))),
+        sqrt(-2 + LambertW(exp(2))),
+        -sqrt(-2 - LambertW(-exp(-2), -1)),
+        sqrt(-2 - LambertW(-exp(-2), -1))]
 
 
 def test_rewrite_trig():
@@ -2426,3 +2482,21 @@ def test_issue_21942():
     eq = -d + (a*c**(1 - e) + b**(1 - e)*(1 - a))**(1/(1 - e))
     sol = solve(eq, c, simplify=False, check=False)
     assert sol == [(b/b**e - b/(a*b**e) + d**(1 - e)/a)**(1/(1 - e))]
+
+
+def test_solver_flags():
+    root = solve(x**5 + x**2 - x - 1, cubics=False)
+    rad = solve(x**5 + x**2 - x - 1, cubics=True)
+    assert root != rad
+
+
+def test_issue_22768():
+    eq = 2*x**3 - 16*(y - 1)**6*z**3
+    assert solve(eq.expand(), x, simplify=False
+        ) == [2*z*(y - 1)**2, z*(-1 + sqrt(3)*I)*(y - 1)**2,
+        -z*(1 + sqrt(3)*I)*(y - 1)**2]
+
+
+def test_issue_22717():
+    assert solve((-y**2 + log(y**2/x) + 2, -2*x*y + 2*x/y)) == [
+        {y: -1, x: E}, {y: 1, x: E}]

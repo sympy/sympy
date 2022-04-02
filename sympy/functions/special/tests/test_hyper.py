@@ -12,7 +12,7 @@ from sympy.series.order import O
 from sympy.abc import x, z, k
 from sympy.series.limits import limit
 from sympy.testing.pytest import raises, slow
-from sympy.testing.randtest import (
+from sympy.core.random import (
     random_complex_number as randcplx,
     verify_numerically as tn,
     test_derivative_numerically as td)

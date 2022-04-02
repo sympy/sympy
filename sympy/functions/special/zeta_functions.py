@@ -7,8 +7,9 @@ from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
 from sympy.functions.elementary.complexes import re, unpolarify, Abs, polar_lift
 from sympy.functions.elementary.exponential import log, exp_polar, exp
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys.polytools import Poly
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -122,7 +123,6 @@ class lerchphi(Function):
     """
 
     def _eval_expand_func(self, **hints):
-        from sympy.polys.polytools import Poly
         z, s, a = self.args
         if z == 1:
             return zeta(s, a)
@@ -354,7 +354,6 @@ class polylog(Function):
             return True
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy.functions.elementary.integers import ceiling
         from sympy.series.order import Order
         nu, z = self.args
 
@@ -528,10 +527,10 @@ class zeta(Function):
         if z.is_integer:
             if a.is_Integer:
                 if z.is_negative:
-                    zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
+                    zeta = S.NegativeOne**z * bernoulli(-z + 1)/(-z + 1)
                 elif z.is_even and z.is_positive:
                     B, F = bernoulli(z), factorial(z)
-                    zeta = ((-1)**(z/2+1) * 2**(z - 1) * B * pi**z) / F
+                    zeta = (S.NegativeOne**(z/2+1) * 2**(z - 1) * B * pi**z) / F
                 else:
                     return
 

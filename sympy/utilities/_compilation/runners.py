@@ -1,13 +1,12 @@
 from typing import Callable, Dict as tDict, Optional, Tuple as tTuple, Union as tUnion
 
 from collections import OrderedDict
-from distutils.errors import CompileError
 import os
 import re
 import subprocess
 
 from .util import (
-    find_binary_of_command, unique_list
+    find_binary_of_command, unique_list, CompileError
 )
 
 

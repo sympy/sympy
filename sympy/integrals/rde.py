@@ -202,7 +202,6 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
 
     This constitutes step 2 of the outline given in the rde.py docstring.
     """
-    from sympy.integrals.prde import parametric_log_deriv
     # TODO: finish writing this and write tests
 
     if case == 'auto':
@@ -226,7 +225,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     n = min(0, nc - min(0, nb))
     if not nb:
         # Possible cancellation.
-
+        from .prde import parametric_log_deriv
         if case == 'exp':
             dcoeff = DE.d.quo(Poly(DE.t, DE.t))
             with DecrementLevel(DE):  # We are guaranteed to not have problems,
@@ -284,8 +283,6 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
 
     This constitutes step 3 of the outline given in the rde.py docstring.
     """
-    from sympy.integrals.prde import (parametric_log_deriv, limited_integrate,
-        is_log_deriv_k_t_radical_in_field)
     # TODO: finish writing this and write tests
 
     if case == 'auto':
@@ -320,6 +317,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
         with DecrementLevel(DE):
             alphaa, alphad = frac_in(alpha, DE.t)
             if db == da - 1:
+                from .prde import limited_integrate
                 # if alpha == m*Dt + Dz for z in k and m in ZZ:
                 try:
                     (za, zd), m = limited_integrate(alphaa, alphad, [(etaa, etad)],
@@ -336,6 +334,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                     # beta = -lc(a*Dz + b*z)/(z*lc(a))
                     # if beta == m*Dt + Dw for w in k and m in ZZ:
                         # n = max(n, m)
+                from .prde import is_log_deriv_k_t_radical_in_field
                 A = is_log_deriv_k_t_radical_in_field(alphaa, alphad, DE)
                 if A is not None:
                     aa, z = A
@@ -343,6 +342,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                         beta = -(a*derivation(z, DE).as_poly(t1) +
                             b*z.as_poly(t1)).LC()/(z.as_expr()*a.LC())
                         betaa, betad = frac_in(beta, DE.t)
+                        from .prde import limited_integrate
                         try:
                             (za, zd), m = limited_integrate(betaa, betad,
                                 [(etaa, etad)], DE)
@@ -354,6 +354,8 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                             n = max(n, m[0].as_expr())
 
     elif case == 'exp':
+        from .prde import parametric_log_deriv
+
         n = max(0, dc - max(db, da))
         if da == db:
             etaa, etad = frac_in(DE.d.quo(Poly(DE.t, DE.t)), DE.T[DE.level - 1])
@@ -566,8 +568,8 @@ def cancel_primitive(b, c, n, DE):
     has no solution of degree at most n in k[t], or a solution q in k[t] of
     this equation with deg(q) <= n.
     """
-    from sympy.integrals.prde import is_log_deriv_k_t_radical_in_field
-
+    # Delayed imports
+    from .prde import is_log_deriv_k_t_radical_in_field
     with DecrementLevel(DE):
         ba, bd = frac_in(b, DE.t)
         A = is_log_deriv_k_t_radical_in_field(ba, bd, DE)
@@ -616,8 +618,7 @@ def cancel_exp(b, c, n, DE):
     has no solution of degree at most n in k[t], or a solution q in k[t] of
     this equation with deg(q) <= n.
     """
-    from sympy.integrals.prde import parametric_log_deriv
-
+    from .prde import parametric_log_deriv
     eta = DE.d.quo(Poly(DE.t, DE.t)).as_expr()
 
     with DecrementLevel(DE):
@@ -673,14 +674,13 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
     For parametric=False, cQ is c, a Poly; for parametric=True, cQ is Q ==
     [q1, ..., qm], a list of Polys.
     """
-    from sympy.integrals.prde import (prde_no_cancel_b_large,
-        prde_no_cancel_b_small)
-
     # No cancellation
     if not b.is_zero and (DE.case == 'base' or
             b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
 
         if parametric:
+            # Delayed imports
+            from .prde import prde_no_cancel_b_large
             return prde_no_cancel_b_large(b, cQ, n, DE)
         return no_cancel_b_large(b, cQ, n, DE)
 
@@ -688,6 +688,7 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
             (DE.case == 'base' or DE.d.degree(DE.t) >= 2):
 
         if parametric:
+            from .prde import prde_no_cancel_b_small
             return prde_no_cancel_b_small(b, cQ, n, DE)
 
         R = no_cancel_b_small(b, cQ, n, DE)

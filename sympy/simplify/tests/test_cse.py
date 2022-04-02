@@ -347,6 +347,10 @@ def test_cse_MatrixSymbol():
     B = MatrixSymbol("B", n, n)
     assert cse(B) == ([], [B])
 
+    assert cse(A[0] * A[0]) == ([], [A[0]*A[0]])
+
+    assert cse(A[0,0]*A[0,1] + A[0,0]*A[0,1]*A[0,2]) == ([(x0, A[0, 0]*A[0, 1])], [x0*A[0, 2] + x0])
+
 def test_cse_MatrixExpr():
     A = MatrixSymbol('A', 3, 3)
     y = MatrixSymbol('y', 3, 1)
@@ -454,7 +458,7 @@ def test_issue_11230():
     assert not any(i.is_Mul for a in C for i in a.args)
 
     # random tests for the issue
-    from random import choice
+    from sympy.core.random import choice
     from sympy.core.function import expand_mul
     s = symbols('a:m')
     # 35 Mul tests, none of which should ever fail
@@ -584,8 +588,10 @@ def test_cse_list():
     assert _cse(x) == ([], x)
     assert _cse('x') == ([], 'x')
     it = [x]
-    for c in (list, tuple, set, Tuple):
+    for c in (list, tuple, set):
         assert _cse(c(it)) == ([], c(it))
+    #Tuple works different from tuple:
+    assert _cse(Tuple(*it)) == ([], Tuple(*it))
     d = {x: 1}
     assert _cse(d) == ([], d)
 

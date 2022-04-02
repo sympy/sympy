@@ -15,7 +15,7 @@ from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditi
 from sympy.printing.printer import Printer, print_function
 from sympy.printing.str import sstr
 from sympy.utilities.iterables import has_variety
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import hobj, vobj, xobj, \
@@ -224,7 +224,7 @@ class PrettyPrinter(Printer):
 
         l = self._print(e.lhs)
         r = self._print(e.rhs)
-        pform = prettyForm(*stringPict.next(l, op, r))
+        pform = prettyForm(*stringPict.next(l, op, r), binding=prettyForm.OPEN)
         return pform
 
     def _print_Not(self, e):
@@ -394,12 +394,15 @@ class PrettyPrinter(Printer):
 
         perm_cyclic = Permutation.print_cyclic
         if perm_cyclic is not None:
-            SymPyDeprecationWarning(
-                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
-                useinstead="init_printing(perm_cyclic={})"
-                .format(perm_cyclic),
-                issue=15201,
-                deprecated_since_version="1.6").warn()
+            sympy_deprecation_warning(
+                f"""
+                Setting Permutation.print_cyclic is deprecated. Instead use
+                init_printing(perm_cyclic={perm_cyclic}).
+                """,
+                deprecated_since_version="1.6",
+                active_deprecations_target="deprecated-permutation-print_cyclic",
+                stacklevel=7,
+            )
         else:
             perm_cyclic = self._settings.get("perm_cyclic", True)
 
@@ -766,13 +769,19 @@ class PrettyPrinter(Printer):
 
     def _print_TensorProduct(self, expr):
         # This should somehow share the code with _print_WedgeProduct:
-        circled_times = "\u2297"
+        if self._use_unicode:
+            circled_times = "\u2297"
+        else:
+            circled_times = ".*"
         return self._print_seq(expr.args, None, None, circled_times,
             parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
 
     def _print_WedgeProduct(self, expr):
         # This should somehow share the code with _print_TensorProduct:
-        wedge_symbol = "\u2227"
+        if self._use_unicode:
+            wedge_symbol = "\u2227"
+        else:
+            wedge_symbol = '/\\'
         return self._print_seq(expr.args, None, None, wedge_symbol,
             parenthesize=lambda x: precedence_traditional(x) <= PRECEDENCE["Mul"])
 
@@ -835,7 +844,7 @@ class PrettyPrinter(Printer):
     def _print_Transpose(self, expr):
         pform = self._print(expr.arg)
         from sympy.matrices import MatrixSymbol
-        if not isinstance(expr.arg, MatrixSymbol):
+        if not isinstance(expr.arg, MatrixSymbol) and expr.arg.is_MatrixExpr:
             pform = prettyForm(*pform.parens())
         pform = pform**(prettyForm('T'))
         return pform
@@ -847,7 +856,7 @@ class PrettyPrinter(Printer):
         else:
             dag = prettyForm('+')
         from sympy.matrices import MatrixSymbol
-        if not isinstance(expr.arg, MatrixSymbol):
+        if not isinstance(expr.arg, MatrixSymbol) and expr.arg.is_MatrixExpr:
             pform = prettyForm(*pform.parens())
         pform = pform**dag
         return pform
@@ -1135,22 +1144,24 @@ class PrettyPrinter(Printer):
             if '\n' in partstr:
                 tempstr = partstr
                 tempstr = tempstr.replace(vectstrs[i], '')
-                if '\N{right parenthesis extension}' in tempstr:   # If scalar is a fraction
+                if '\N{RIGHT PARENTHESIS EXTENSION}' in tempstr:   # If scalar is a fraction
                     for paren in range(len(tempstr)):
                         flag[i] = 1
-                        if tempstr[paren] == '\N{right parenthesis extension}':
-                            tempstr = tempstr[:paren] + '\N{right parenthesis extension}'\
+                        if tempstr[paren] == '\N{RIGHT PARENTHESIS EXTENSION}' and tempstr[paren + 1] == '\n':
+                            # We want to place the vector string after all the right parentheses, because
+                            # otherwise, the vector will be in the middle of the string
+                            tempstr = tempstr[:paren] + '\N{RIGHT PARENTHESIS EXTENSION}'\
                                          + ' '  + vectstrs[i] + tempstr[paren + 1:]
                             break
                 elif '\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
-                    flag[i] = 1
-                    tempstr = tempstr.replace('\N{RIGHT PARENTHESIS LOWER HOOK}',
-                                        '\N{RIGHT PARENTHESIS LOWER HOOK}'
-                                        + ' ' + vectstrs[i])
-                else:
-                    tempstr = tempstr.replace('\N{RIGHT PARENTHESIS UPPER HOOK}',
-                                        '\N{RIGHT PARENTHESIS UPPER HOOK}'
-                                        + ' ' + vectstrs[i])
+                    # We want to place the vector string after all the right parentheses, because
+                    # otherwise, the vector will be in the middle of the string. For this reason,
+                    # we insert the vector string at the rightmost index.
+                    index = tempstr.rfind('\N{RIGHT PARENTHESIS LOWER HOOK}')
+                    if index != -1: # then this character was found in this string
+                        flag[i] = 1
+                        tempstr = tempstr[:index] + '\N{RIGHT PARENTHESIS LOWER HOOK}'\
+                                     + ' '  + vectstrs[i] + tempstr[index + 1:]
                 o1[i] = tempstr
 
         o1 = [x.split('\n') for x in o1]
@@ -1546,10 +1557,11 @@ class PrettyPrinter(Printer):
     def _print_Exp1(self, e):
         return prettyForm(pretty_atom('Exp1', 'e'))
 
-    def _print_Function(self, e, sort=False, func_name=None):
+    def _print_Function(self, e, sort=False, func_name=None, left='(',
+                        right=')'):
         # optional argument func_name for supplying custom names
         # XXX works only for applied functions
-        return self._helper_print_function(e.func, e.args, sort=sort, func_name=func_name)
+        return self._helper_print_function(e.func, e.args, sort=sort, func_name=func_name, left=left, right=right)
 
     def _print_mathieuc(self, e):
         return self._print_Function(e, func_name='C')
@@ -1563,7 +1575,9 @@ class PrettyPrinter(Printer):
     def _print_mathieusprime(self, e):
         return self._print_Function(e, func_name="S'")
 
-    def _helper_print_function(self, func, args, sort=False, func_name=None, delimiter=', ', elementwise=False):
+    def _helper_print_function(self, func, args, sort=False, func_name=None,
+                               delimiter=', ', elementwise=False, left='(',
+                               right=')'):
         if sort:
             args = sorted(args, key=default_sort_key)
 
@@ -1586,7 +1600,8 @@ class PrettyPrinter(Printer):
                 *stringPict.next(prettyFunc, circ)
             )
 
-        prettyArgs = prettyForm(*self._print_seq(args, delimiter=delimiter).parens())
+        prettyArgs = prettyForm(*self._print_seq(args, delimiter=delimiter).parens(
+                                                 left=left, right=right))
 
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
@@ -1670,6 +1685,18 @@ class PrettyPrinter(Printer):
 
     def _print_LambertW(self, e):
         return self._print_Function(e, func_name="W")
+
+    def _print_Covariance(self, e):
+        return self._print_Function(e, func_name="Cov")
+
+    def _print_Variance(self, e):
+        return self._print_Function(e, func_name="Var")
+
+    def _print_Probability(self, e):
+        return self._print_Function(e, func_name="P")
+
+    def _print_Expectation(self, e):
+        return self._print_Function(e, func_name="E", left='[', right=']')
 
     def _print_Lambda(self, e):
         expr = e.expr
@@ -1833,6 +1860,9 @@ class PrettyPrinter(Printer):
             return prettyForm(pretty_symbol('gamma'))
         return self._print(Symbol("EulerGamma"))
 
+    def _print_Catalan(self, expr):
+        return self._print(Symbol("G"))
+
     def _print_Mod(self, expr):
         pform = self._print(expr.args[0])
         if pform.binding > prettyForm.MUL:
@@ -1962,28 +1992,9 @@ class PrettyPrinter(Printer):
             else:
                 a.append(item)
 
-        from sympy.concrete.products import Product
-        from sympy.concrete.summations import Sum
-        from sympy.functions.elementary.piecewise import Piecewise
-        from sympy.integrals.integrals import Integral
-
-        # Convert to pretty forms. Add parens to Add instances if there
-        # is more than one term in the numer/denom
-        for i in range(0, len(a)):
-            if (a[i].is_Add and len(a) > 1) or (i != len(a) - 1 and
-                    isinstance(a[i], (Integral, Piecewise, Product, Sum))):
-                a[i] = prettyForm(*self._print(a[i]).parens())
-            elif a[i].is_Relational:
-                a[i] = prettyForm(*self._print(a[i]).parens())
-            else:
-                a[i] = self._print(a[i])
-
-        for i in range(0, len(b)):
-            if (b[i].is_Add and len(b) > 1) or (i != len(b) - 1 and
-                    isinstance(b[i], (Integral, Piecewise, Product, Sum))):
-                b[i] = prettyForm(*self._print(b[i]).parens())
-            else:
-                b[i] = self._print(b[i])
+        # Convert to pretty forms. Parentheses are added by `__mul__`.
+        a = [self._print(ai) for ai in a]
+        b = [self._print(bi) for bi in b]
 
         # Construct a pretty form
         if len(b) == 0:
@@ -2270,6 +2281,8 @@ class PrettyPrinter(Printer):
             return prettyForm(sstr(e))
 
     def _print_FourierSeries(self, s):
+        if s.an.formula is S.Zero and s.bn.formula is S.Zero:
+            return self._print(s.a0)
         if self._use_unicode:
             dots = "\N{HORIZONTAL ELLIPSIS}"
         else:
@@ -2768,14 +2781,18 @@ class PrettyPrinter(Printer):
         return self._print(pretty_symbol(s))
 
     def _print_Differential(self, diff):
+        if self._use_unicode:
+            d = '\N{DOUBLE-STRUCK ITALIC SMALL D}'
+        else:
+            d = 'd'
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
             string = field._coord_sys.symbols[field._index].name
-            return self._print('\N{DOUBLE-STRUCK ITALIC SMALL D} ' + pretty_symbol(string))
+            return self._print(d + ' ' + pretty_symbol(string))
         else:
             pform = self._print(field)
             pform = prettyForm(*pform.parens())
-            return prettyForm(*pform.left("\N{DOUBLE-STRUCK ITALIC SMALL D}"))
+            return prettyForm(*pform.left(d))
 
     def _print_Tr(self, p):
         #TODO: Handle indices

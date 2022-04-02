@@ -10,7 +10,7 @@ from sympy.external import import_module
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
-                                                      Max, real_root)
+                                                      Max, real_root, Rem)
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.delta_functions import Heaviside
 
@@ -396,7 +396,7 @@ def test_issue_11099():
     assert Max(x, y).evalf(subs=fixed_test_data) == \
         Max(x, y).subs(fixed_test_data).evalf()
     # randomly generate some test data
-    from random import randint
+    from sympy.core.random import randint
     for i in range(20):
         random_test_data = {x: randint(-100, 100), y: randint(-100, 100)}
         assert Min(x, y).evalf(subs=random_test_data) == \
@@ -466,3 +466,12 @@ def test_issue_6899():
     x = Symbol('x')
     eqn = Lambda(x, x)
     assert eqn.func(*eqn.args) == eqn
+
+def test_Rem():
+    from sympy.abc import x, y
+    assert Rem(5, 3) == 2
+    assert Rem(-5, 3) == -2
+    assert Rem(5, -3) == 2
+    assert Rem(-5, -3) == -2
+    assert Rem(x**3, y) == Rem(x**3, y)
+    assert Rem(Rem(-5, 3) + 3, 3) == 1

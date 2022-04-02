@@ -31,6 +31,9 @@ def _filtered_gens(poly, symbol):
     {x, exp(x)}
 
     """
+    # TODO it would be good to pick the smallest divisible power
+    # instead of the base for something like x**4 + x**2 -->
+    # return x**2 not x
     gens = {g for g in poly.gens if symbol in g.free_symbols}
     for g in list(gens):
         ag = 1/g
@@ -55,7 +58,7 @@ def _mostfunc(lhs, func, X=None):
     ========
 
     >>> from sympy.solvers.bivariate import _mostfunc
-    >>> from sympy.functions.elementary.exponential import exp
+    >>> from sympy import exp
     >>> from sympy.abc import x, y
     >>> _mostfunc(exp(x) + exp(exp(x) + 2), exp)
     exp(exp(x) + 2)
@@ -86,10 +89,9 @@ def _linab(arg, symbol):
     Examples
     ========
 
-    >>> from sympy.functions.elementary.exponential import exp
     >>> from sympy.solvers.bivariate import _linab
     >>> from sympy.abc import x, y
-    >>> from sympy import S
+    >>> from sympy import exp, S
     >>> _linab(S(2), x)
     (2, 0, 1)
     >>> _linab(2*x, x)
@@ -135,7 +137,7 @@ def _lambert(eq, x):
             return []  # violated assumptions
         other = -(-other).args[0]
         eq += other
-    if not x in other.free_symbols:
+    if x not in other.free_symbols:
         return [] # violated assumptions
     d, f, X2 = _linab(other, x)
     logterm = collect(eq - other, mainlog)
@@ -436,7 +438,7 @@ def bivariate_type(f, x, y, *, first=True):
     Examples
     ========
 
-    >>> from sympy.solvers.solvers import solve
+    >>> from sympy import solve
     >>> from sympy.solvers.bivariate import bivariate_type
     >>> from sympy.abc import x, y
     >>> eq = (x**2 - 3).subs(x, x + y)

@@ -245,3 +245,22 @@ def test_vector_diff_integrate():
 def test_vector_args():
     raises(ValueError, lambda: BaseVector(3, C))
     raises(TypeError, lambda: BaseVector(0, Vector.zero))
+
+
+def test_srepr():
+    from sympy.printing.repr import srepr
+    res = "CoordSys3D(Str('C'), Tuple(ImmutableDenseMatrix([[Integer(1), "\
+            "Integer(0), Integer(0)], [Integer(0), Integer(1), Integer(0)], "\
+            "[Integer(0), Integer(0), Integer(1)]]), VectorZero())).i"
+    assert srepr(C.i) == res
+
+
+def test_scalar():
+    from sympy.vector import CoordSys3D
+    C = CoordSys3D('C')
+    v1 = 3*C.i + 4*C.j + 5*C.k
+    v2 = 3*C.i - 4*C.j + 5*C.k
+    assert v1.is_Vector is True
+    assert v1.is_scalar is False
+    assert (v1.dot(v2)).is_scalar is True
+    assert (v1.cross(v2)).is_scalar is False

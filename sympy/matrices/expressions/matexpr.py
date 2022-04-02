@@ -12,9 +12,8 @@ from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.common import NonSquareMatrixError
-from sympy.matrices.matrices import MatrixKind
+from sympy.matrices.matrices import MatrixKind, MatrixBase
 from sympy.multipledispatch import dispatch
-from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 
 
@@ -53,6 +52,7 @@ class MatrixExpr(Expr):
 
     MatrixSymbol, MatAdd, MatMul, Transpose, Inverse
     """
+    __slots__ = ()  # type: tTuple[str, ...]
 
     # Should not be considered iterable by the
     # sympy.utilities.iterables.iterable function. Subclass that actually are
@@ -203,6 +203,7 @@ class MatrixExpr(Expr):
         if self.is_Atom:
             return self
         else:
+            from sympy.simplify import simplify
             return self.func(*[simplify(x, **kwargs) for x in self.args])
 
     def _eval_adjoint(self):
@@ -274,8 +275,8 @@ class MatrixExpr(Expr):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
                 (self.rows is None or
-                (0 <= i) != False and (i < self.rows) != False) and
-                (0 <= j) != False and (j < self.cols) != False)
+                (i >= -self.rows) != False and (i < self.rows) != False) and
+                (j >= -self.cols) != False and (j < self.cols) != False)
 
     def __getitem__(self, key):
         if not isinstance(key, tuple) and isinstance(key, slice):
@@ -512,7 +513,26 @@ Basic._constructor_postprocessor_mapping[MatrixExpr] = {
 }
 
 
-def _matrix_derivative(expr, x):
+def _matrix_derivative(expr, x, old_algorithm=False):
+
+    if isinstance(expr, MatrixBase) or isinstance(x, MatrixBase):
+        # Do not use array expressions for explicit matrices:
+        old_algorithm = True
+
+    if old_algorithm:
+        return _matrix_derivative_old_algorithm(expr, x)
+
+    from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+    from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
+    from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+
+    array_expr = convert_matrix_to_array(expr)
+    diff_array_expr = array_derive(array_expr, x)
+    diff_matrix_expr = convert_array_to_matrix(diff_array_expr)
+    return diff_matrix_expr
+
+
+def _matrix_derivative_old_algorithm(expr, x):
     from sympy.tensor.array.array_derivatives import ArrayDerivative
     lines = expr._eval_derivative_matrix_lines(x)
 
@@ -570,17 +590,25 @@ class MatrixElement(Expr):
     def __new__(cls, name, n, m):
         n, m = map(_sympify, (n, m))
         from sympy.matrices.matrices import MatrixBase
-        if isinstance(name, (MatrixBase,)):
-            if n.is_Integer and m.is_Integer:
-                return name[n, m]
         if isinstance(name, str):
             name = Symbol(name)
         else:
-            name = _sympify(name)
-            if not isinstance(name.kind, MatrixKind):
-                raise TypeError("First argument of MatrixElement should be a matrix")
+            if isinstance(name, MatrixBase):
+                if n.is_Integer and m.is_Integer:
+                    return name[n, m]
+                name = _sympify(name)  # change mutable into immutable
+            else:
+                name = _sympify(name)
+                if not isinstance(name.kind, MatrixKind):
+                    raise TypeError("First argument of MatrixElement should be a matrix")
+            if not getattr(name, 'valid_index', lambda n, m: True)(n, m):
+                raise IndexError('indices out of range')
         obj = Expr.__new__(cls, name, n, m)
         return obj
+
+    @property
+    def symbol(self):
+        return self.args[0]
 
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)

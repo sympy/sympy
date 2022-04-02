@@ -1,3 +1,5 @@
+from typing import Tuple as tTuple
+
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -17,21 +19,14 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.integrals.manualintegrate import manualintegrate
-from sympy.integrals.trigonometry import trigintegrate
-from sympy.integrals.meijerint import (meijerint_definite, meijerint_indefinite,
-                                       _debug)
-from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.integrals.rationaltools import ratint
+from .rationaltools import ratint
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
 from sympy.series.formal import FormalPowerSeries
 from sympy.series.limits import limit
 from sympy.series.order import Order
-from sympy.simplify.fu import sincos_to_sum
-from sympy.simplify.simplify import simplify
 from sympy.tensor.functions import shape
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
 
@@ -39,7 +34,9 @@ from sympy.utilities.misc import filldedent
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ()
+
+    args: tTuple[Expr, Tuple]
 
     def __new__(cls, function, *symbols, **assumptions):
         """Create an unevaluated integral.
@@ -87,11 +84,14 @@ class Integral(AddWithLimits):
             return function._eval_Integral(*symbols, **assumptions)
 
         if isinstance(function, Poly):
-            SymPyDeprecationWarning(
-                feature="Using integrate/Integral with Poly",
-                issue=18613,
+            sympy_deprecation_warning(
+                """
+                integrate(Poly) and Integral(Poly) are deprecated. Instead,
+                use the Poly.integrate() method, or convert the Poly to an
+                Expr first with the Poly.as_expr() method.
+                """,
                 deprecated_since_version="1.6",
-                useinstead="the as_expr or integrate methods of Poly").warn()
+                active_deprecations_target="deprecated-integrate-poly")
 
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
@@ -122,7 +122,7 @@ class Integral(AddWithLimits):
         sympy.concrete.expr_with_limits.ExprWithLimits.limits
         sympy.concrete.expr_with_limits.ExprWithLimits.variables
         """
-        return AddWithLimits.free_symbols.fget(self)
+        return super().free_symbols
 
     def _eval_is_zero(self):
         # This is a very naive and quick test, not intended to do the integral to
@@ -262,7 +262,6 @@ class Integral(AddWithLimits):
         sympy.concrete.expr_with_limits.ExprWithLimits.variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
-        from sympy.solvers.solvers import solve, posify
         d = Dummy('d')
 
         xfree = x.free_symbols.intersection(self.variables)
@@ -312,6 +311,7 @@ class Integral(AddWithLimits):
             u must contain the same variable as in x
             or a variable that is not already an integration variable'''))
 
+        from sympy.solvers.solvers import solve
         if not x.is_Symbol:
             F = [x.subs(xvar, d)]
             soln = solve(u - x, xvar, check=False)
@@ -320,6 +320,7 @@ class Integral(AddWithLimits):
             f = [fi.subs(uvar, d) for fi in soln]
         else:
             f = [u.subs(uvar, d)]
+            from sympy.simplify.simplify import posify
             pdiff, reps = posify(u - x)
             puvar = uvar.subs([(v, k) for k, v in reps.items()])
             soln = [s.subs(reps) for s in solve(pdiff, puvar)]
@@ -399,7 +400,6 @@ class Integral(AddWithLimits):
         sympy.integrals.rationaltools.ratint
         as_sum : Approximate the integral using a sum
         """
-        from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
 
@@ -435,6 +435,7 @@ class Integral(AddWithLimits):
 
         # hacks to handle integrals of
         # nested summations
+        from sympy.concrete.summations import Sum
         if isinstance(self.function, Sum):
             if any(v in self.function.limits[0] for v in self.variables):
                 raise ValueError('Limit of the sum cannot be an integration variable.')
@@ -454,7 +455,7 @@ class Integral(AddWithLimits):
         # hacks to handle special cases
         if isinstance(function, MatrixBase):
             return function.applyfunc(
-                lambda f: self.func(f, self.limits).doit(**hints))
+                lambda f: self.func(f, *self.limits).doit(**hints))
 
         if isinstance(function, FormalPowerSeries):
             if len(self.limits) > 1:
@@ -809,7 +810,7 @@ class Integral(AddWithLimits):
             u = Dummy('u')
             arg = f.subs(x, u).diff(sym).subs(u, x)
             if arg:
-                rv += self.func(arg, Tuple(x, a, b))
+                rv += self.func(arg, (x, a, b))
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
@@ -905,6 +906,7 @@ class Integral(AddWithLimits):
         """
 
         from sympy.integrals.risch import risch_integrate, NonElementaryIntegral
+        from sympy.integrals.manualintegrate import manualintegrate
 
         if risch:
             try:
@@ -930,11 +932,8 @@ class Integral(AddWithLimits):
         #
         # see Polynomial for details.
         if isinstance(f, Poly) and not (manual or meijerg or risch):
-            SymPyDeprecationWarning(
-                feature="Using integrate/Integral with Poly",
-                issue=18613,
-                deprecated_since_version="1.6",
-                useinstead="the as_expr or integrate methods of Poly").warn()
+            # Note: this is deprecated, but the deprecation warning is already
+            # issued in the Integral constructor.
             return f.integrate(x)
 
         # Piecewise antiderivatives need to call special integrate.
@@ -983,6 +982,7 @@ class Integral(AddWithLimits):
         # because maybe the integral is a sum of an elementary part and a
         # nonelementary part (like erf(x) + exp(x)).  risch_integrate() is
         # quite fast, so this is acceptable.
+        from sympy.simplify.fu import sincos_to_sum
         parts = []
         args = Add.make_args(f)
         for g in args:
@@ -1054,8 +1054,8 @@ class Integral(AddWithLimits):
                     parts.append(coeff * h)
                     continue
 
+                from .singularityfunctions import singularityintegrate
                 # g(x) has at least a Singularity Function term
-                from sympy.integrals.singularityfunctions import singularityintegrate
                 h = singularityintegrate(g, x)
                 if h is not None:
                     parts.append(coeff * h)
@@ -1188,6 +1188,7 @@ class Integral(AddWithLimits):
     def _eval_simplify(self, **kwargs):
         expr = factor_terms(self)
         if isinstance(expr, Integral):
+            from sympy.simplify.simplify import simplify
             return expr.func(*[simplify(i, **kwargs) for i in expr.args])
         return expr.simplify(**kwargs)
 
@@ -1214,9 +1215,8 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import sin, sqrt
+        >>> from sympy import Integral, sin, sqrt
         >>> from sympy.abc import x, n
-        >>> from sympy.integrals import Integral
         >>> e = Integral(sin(x), (x, 3, 7))
         >>> e
         Integral(sin(x), (x, 3, 7))
@@ -1346,8 +1346,7 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import oo
-        >>> from sympy.integrals.integrals import Integral
+        >>> from sympy import Integral, oo
         >>> from sympy.abc import x
         >>> Integral(x+1, (x, -oo, oo)).principal_value()
         oo
@@ -1374,7 +1373,9 @@ class Integral(AddWithLimits):
                              "cauchy's principal value. Also, a and b need to be comparable.")
         if a == b:
             return S.Zero
-        from sympy.calculus import singularities
+
+        from sympy.calculus.singularities import singularities
+
         r = Dummy('r')
         f = self.function
         singularities_list = [s for s in singularities(f, x) if s.is_comparable and a <= s <= b]
@@ -1398,6 +1399,11 @@ class Integral(AddWithLimits):
 def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
 
+    .. deprecated:: 1.6
+
+       Using ``integrate()`` with :class:`~.Poly` is deprecated. Use
+       :meth:`.Poly.integrate` instead. See :ref:`deprecated-integrate-poly`.
+
     Explanation
     ===========
 
@@ -1411,7 +1417,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
 
     - a symbol                   -- indefinite integration
     - a tuple (symbol, a)        -- indefinite integration with result
-                                    given with `a` replacing `symbol`
+                                    given with ``a`` replacing ``symbol``
     - a tuple (symbol, a, b)     -- definite integration
 
     Several variables can be specified, in which case the result is
@@ -1620,3 +1626,8 @@ def line_integrate(field, curve, vars):
 @shape.register(Integral)
 def _(expr):
     return shape(expr.function)
+
+# Delayed imports
+from .deltafunctions import deltaintegrate
+from .meijerint import meijerint_definite, meijerint_indefinite, _debug
+from .trigonometry import trigintegrate

@@ -1,3 +1,4 @@
+from typing import Tuple as tTuple
 from collections import defaultdict
 from functools import cmp_to_key, reduce
 from operator import attrgetter
@@ -89,6 +90,12 @@ class Add(Expr, AssocOp):
     """
     Expression representing addition operation for algebraic group.
 
+    .. deprecated:: 1.7
+
+       Using arguments that aren't subclasses of :class:`~.Expr` in core
+       operators (:class:`~.Mul`, :class:`~.Add`, and :class:`~.Pow`) is
+       deprecated. See :ref:`non-expr-args-deprecated` for details.
+
     Every argument of ``Add()`` must be ``Expr``. Infix operator ``+``
     on most scalar objects in SymPy calls this class.
 
@@ -168,6 +175,8 @@ class Add(Expr, AssocOp):
 
     __slots__ = ()
 
+    args: tTuple[Expr, ...]
+
     is_Add = True
 
     _args_type = Expr
@@ -190,7 +199,7 @@ class Add(Expr, AssocOp):
         sympy.core.mul.Mul.flatten
 
         """
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         from sympy.tensor.tensor import TensExpr
         rv = None
@@ -453,7 +462,7 @@ class Add(Expr, AssocOp):
         (0, (7*x,))
         """
         if deps:
-            l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
+            l1, l2 = sift(self.args, lambda x: x.has_free(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
         coeff, notrat = self.args[0].as_coeff_add()
         if coeff is not S.Zero:
@@ -475,8 +484,22 @@ class Add(Expr, AssocOp):
     # issue 5524.
 
     def _eval_power(self, e):
+        from .evalf import pure_complex
+        from .relational import is_eq
+        if len(self.args) == 2 and any(_.is_infinite for _ in self.args):
+            if e.is_zero is False and is_eq(e, S.One) is False:
+                # looking for literal a + I*b
+                a, b = self.args
+                if a.coeff(S.ImaginaryUnit):
+                    a, b = b, a
+                ico = b.coeff(S.ImaginaryUnit)
+                if ico and ico.is_extended_real and a.is_extended_real:
+                    if e.is_extended_negative:
+                        return S.Zero
+                    if e.is_extended_positive:
+                        return S.ComplexInfinity
+            return
         if e.is_Rational and self.is_number:
-            from .evalf import pure_complex
             ri = pure_complex(self)
             if ri:
                 r, i = ri
@@ -596,6 +619,8 @@ class Add(Expr, AssocOp):
         """
         # clear rational denominator
         content, expr = self.primitive()
+        if not isinstance(expr, Add):
+            return Mul(content, expr, evaluate=False).as_numer_denom()
         ncon, dcon = content.as_numer_denom()
 
         # collect numerators and denominators of the terms

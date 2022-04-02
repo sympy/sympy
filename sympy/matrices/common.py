@@ -19,11 +19,10 @@ from sympy.core.mod import Mod
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.functions import Abs
+from sympy.functions.elementary.complexes import Abs, re, im
+from .utilities import _dotprodsimp, _simplify
 from sympy.polys.polytools import Poly
-from sympy.simplify import simplify as _simplify
-from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
 from sympy.tensor.array import NDimArray
@@ -311,9 +310,9 @@ class MatrixShaping(MatrixRequired):
         return self[:, j]
 
     def extract(self, rowsList, colsList):
-        """Return a submatrix by specifying a list of rows and columns.
+        r"""Return a submatrix by specifying a list of rows and columns.
         Negative indices can be given. All indices must be in the range
-        -n <= i < n where n is the number of rows or columns.
+        $-n \le i < n$ where $n$ is the number of rows or columns.
 
         Examples
         ========
@@ -406,7 +405,7 @@ class MatrixShaping(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> Matrix.hstack(eye(2), 2*eye(2))
         Matrix([
         [1, 0, 2, 0],
@@ -599,7 +598,7 @@ class MatrixShaping(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import zeros
+        >>> from sympy import zeros
         >>> M = zeros(2, 3)
         >>> M.shape
         (2, 3)
@@ -763,7 +762,7 @@ class MatrixShaping(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> Matrix.vstack(eye(2), 2*eye(2))
         Matrix([
         [1, 0],
@@ -861,7 +860,7 @@ class MatrixSpecial(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> Matrix.diag(1, 2, 3)
         Matrix([
         [1, 0, 0],
@@ -904,7 +903,7 @@ class MatrixSpecial(MatrixRequired):
         The type of the returned matrix can be set with the ``cls``
         keyword.
 
-        >>> from sympy.matrices import ImmutableMatrix
+        >>> from sympy import ImmutableMatrix
         >>> from sympy.utilities.misc import func_name
         >>> func_name(Matrix.diag(1, cls=ImmutableMatrix))
         'ImmutableDenseMatrix'
@@ -1033,8 +1032,9 @@ class MatrixSpecial(MatrixRequired):
             Specifies the shape of the Jordan block matrix. See Notes
             section for the details of how these key works.
 
-            .. note::
-                This feature will be deprecated in the future.
+            .. deprecated:: 1.4
+                The rows and cols parameters are deprecated and will be
+                removed in a future version.
 
 
         Returns
@@ -1086,8 +1086,9 @@ class MatrixSpecial(MatrixRequired):
         Notes
         =====
 
-        .. note::
-            This feature will be deprecated in the future.
+        .. deprecated:: 1.4
+            This feature is deprecated and will be removed in a future
+            version.
 
         The keyword arguments ``size``, ``rows``, ``cols`` relates to
         the Jordan block size specifications.
@@ -1120,12 +1121,26 @@ class MatrixSpecial(MatrixRequired):
         .. [1] https://en.wikipedia.org/wiki/Jordan_matrix
         """
         if 'rows' in kwargs or 'cols' in kwargs:
-            SymPyDeprecationWarning(
-                feature="Keyword arguments 'rows' or 'cols'",
-                issue=16102,
-                useinstead="a more generic banded matrix constructor",
-                deprecated_since_version="1.4"
-            ).warn()
+            msg = """
+                The 'rows' and 'cols' keywords to Matrix.jordan_block() are
+                deprecated. Use the 'size' parameter instead.
+                """
+            if 'rows' in kwargs and 'cols' in kwargs:
+                msg += f"""\
+                To get a non-square Jordan block matrix use a more generic
+                banded matrix constructor, like
+
+                def entry(i, j):
+                    if i == j:
+                        return eigenvalue
+                    elif {"i + 1 == j" if band == 'upper' else "j + 1 == i"}:
+                        return 1
+                    return 0
+
+                Matrix({kwargs['rows']}, {kwargs['cols']}, entry)
+                """
+            sympy_deprecation_warning(msg, deprecated_since_version="1.4",
+                active_deprecations_target="deprecated-matrix-jordan_block-rows-cols")
 
         klass = kwargs.pop('cls', kls)
         rows = kwargs.pop('rows', None)
@@ -1252,7 +1267,7 @@ class MatrixSpecial(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> wminus, wplus = Matrix.wilkinson(3)
         >>> wminus
         Matrix([
@@ -1375,7 +1390,7 @@ class MatrixProperties(MatrixRequired):
         ========
 
         >>> from sympy.abc import x, y
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> Matrix([[x]])
         Matrix([[x]])
         >>> _.atoms()
@@ -1401,7 +1416,7 @@ class MatrixProperties(MatrixRequired):
         ========
 
         >>> from sympy.abc import x
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> Matrix([[x], [1]]).free_symbols
         {x}
         """
@@ -1470,7 +1485,7 @@ class MatrixProperties(MatrixRequired):
         ...                   -y, -x*y, 0])
 
         Simplification of matrix elements is done by default so even
-        though two elements which should be equal and opposite wouldn't
+        though two elements which should be equal and opposite would not
         pass an equality test, the matrix is still reported as
         anti-symmetric:
 
@@ -1479,7 +1494,7 @@ class MatrixProperties(MatrixRequired):
         >>> m.is_anti_symmetric()
         True
 
-        If 'simplify=False' is used for the case when a Matrix is already
+        If ``simplify=False`` is used for the case when a Matrix is already
         simplified, this will speed things up. Here, we see that without
         simplification the matrix does not appear anti-symmetric:
 
@@ -1563,7 +1578,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> A = Matrix([[3, -2, 1], [1, -3, 2], [-1, 2, 4]])
         >>> A.is_weakly_diagonally_dominant
         True
@@ -1613,7 +1628,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> A = Matrix([[3, -2, 1], [1, -3, 2], [-1, 2, 4]])
         >>> A.is_strongly_diagonally_dominant
         False
@@ -1656,7 +1671,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy import I
         >>> from sympy.abc import x
         >>> a = Matrix([[1, I], [-I, 1]])
@@ -1696,7 +1711,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> a = Matrix([[1, 2, 0, 0], [5, 2, 3, 0], [3, 4, 3, 7], [5, 6, 1, 1]])
         >>> a
         Matrix([
@@ -1790,7 +1805,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.is_symbolic()
@@ -1873,7 +1888,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> a = Matrix([[1, 4, 2, 3], [3, 4, 1, 7], [0, 2, 3, 4], [0, 0, 1, 3]])
         >>> a
         Matrix([
@@ -1986,8 +2001,6 @@ class MatrixOperations(MatrixRequired):
         return out
 
     def _eval_as_real_imag(self):  # type: ignore
-        from sympy.functions.elementary.complexes import re, im
-
         return (self.applyfunc(re), self.applyfunc(im))
 
     def _eval_conjugate(self):
@@ -2055,8 +2068,7 @@ class MatrixOperations(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
-        >>> from sympy import I
+        >>> from sympy import SparseMatrix, I
         >>> a = SparseMatrix(((1, 2 + I), (3, 4), (I, -I)))
         >>> a
         Matrix([
@@ -2095,7 +2107,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         >>> from sympy.abc import x
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> Matrix(1, 1, [x*(x+1)])
         Matrix([[x*(x + 1)]])
         >>> _.expand()
@@ -2178,7 +2190,7 @@ class MatrixOperations(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.permute([[0, 1], [0, 2]], orientation='rows', direction='forward')
         Matrix([
@@ -2186,7 +2198,7 @@ class MatrixOperations(MatrixRequired):
         [1, 0, 0],
         [0, 1, 0]])
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.permute([[0, 1], [0, 2]], orientation='rows', direction='backward')
         Matrix([
@@ -2384,8 +2396,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         >>> from sympy.abc import x, y
-        >>> from sympy import sin, cos
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix, sin, cos
         >>> SparseMatrix(1, 1, [x*sin(y)**2 + x*cos(y)**2])
         Matrix([[x*sin(y)**2 + x*cos(y)**2]])
         >>> _.simplify()
@@ -2400,7 +2411,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         >>> from sympy.abc import x, y
-        >>> from sympy.matrices import SparseMatrix, Matrix
+        >>> from sympy import SparseMatrix, Matrix
         >>> SparseMatrix(1, 1, [x])
         Matrix([[x]])
         >>> _.subs(x, y)
@@ -2488,7 +2499,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         >>> from sympy.abc import x, y
-        >>> from sympy.matrices import SparseMatrix, Matrix
+        >>> from sympy import SparseMatrix, Matrix
         >>> SparseMatrix(1, 1, [x])
         Matrix([[x]])
         >>> _.xreplace({x: y})
@@ -2504,7 +2515,7 @@ class MatrixOperations(MatrixRequired):
         return MatrixOperations.simplify(self, **kwargs)
 
     def _eval_trigsimp(self, **opts):
-        from sympy.simplify import trigsimp
+        from sympy.simplify.trigsimp import trigsimp
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
     def upper_triangular(self, k=0):
@@ -2736,7 +2747,7 @@ class MatrixArithmetic(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
         >>> 2*A == A*2 == Matrix([[2, 4, 6], [8, 10, 12]])
         True
@@ -2808,7 +2819,7 @@ class MatrixArithmetic(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
         >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
         >>> A.multiply_elementwise(B)
@@ -3152,13 +3163,14 @@ class MatrixKind(Kind):
     ==========
 
     element_kind : Kind
-        Kind of the element. Default is :obj:NumberKind `<sympy.core.kind.NumberKind>`,
+        Kind of the element. Default is
+        :class:`sympy.core.kind.NumberKind`,
         which means that the matrix contains only numbers.
 
     Examples
     ========
 
-    Any instance of matrix class has ``MatrixKind``.
+    Any instance of matrix class has ``MatrixKind``:
 
     >>> from sympy import MatrixSymbol
     >>> A = MatrixSymbol('A', 2,2)
@@ -3166,10 +3178,9 @@ class MatrixKind(Kind):
     MatrixKind(NumberKind)
 
     Although expression representing a matrix may be not instance of
-    matrix class, it will have ``MatrixKind`` as well.
+    matrix class, it will have ``MatrixKind`` as well:
 
-    >>> from sympy import Integral
-    >>> from sympy.matrices.expressions import MatrixExpr
+    >>> from sympy import MatrixExpr, Integral
     >>> from sympy.abc import x
     >>> intM = Integral(A, x)
     >>> isinstance(intM, MatrixExpr)
@@ -3177,8 +3188,8 @@ class MatrixKind(Kind):
     >>> intM.kind
     MatrixKind(NumberKind)
 
-    Use ``isinstance()`` to check for ``MatrixKind` without specifying
-    the element kind. Use ``is`` with specifying the element kind.
+    Use ``isinstance()`` to check for ``MatrixKind`` without specifying
+    the element kind. Use ``is`` with specifying the element kind:
 
     >>> from sympy import Matrix
     >>> from sympy.core import NumberKind
@@ -3192,7 +3203,10 @@ class MatrixKind(Kind):
     See Also
     ========
 
-    shape : Function to return the shape of objects with ``MatrixKind``.
+    sympy.core.kind.NumberKind
+    sympy.core.kind.UndefinedKind
+    sympy.core.containers.TupleKind
+    sympy.sets.sets.SetKind
 
     """
     def __new__(cls, element_kind=NumberKind):

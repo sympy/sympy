@@ -1,3 +1,4 @@
+from collections import deque
 from sympy.combinatorics.rewritingsystem_fsm import StateMachine
 
 class RewritingSystem:
@@ -15,7 +16,6 @@ class RewritingSystem:
 
     '''
     def __init__(self, group):
-        from collections import deque
         self.group = group
         self.alphabet = group.generators
         self._is_confluent = None
@@ -367,7 +367,7 @@ class RewritingSystem:
                 letter_word_array[i] = letter_word_array[i-1]*letter_word_array[i]
                 # Add accept states.
                 elem = letter_word_array[i-1]
-                if not elem in self.reduction_automaton.states:
+                if elem not in self.reduction_automaton.states:
                     self.reduction_automaton.add_state(elem, state_type='a')
                     accept_states.append(elem)
             proper_prefixes[rule] = letter_word_array
@@ -377,7 +377,7 @@ class RewritingSystem:
                 self.reduction_automaton.states[rule].rh_rule = all_rules[rule]
                 accept_states.remove(rule)
             # Add dead states
-            if not rule in self.reduction_automaton.states:
+            if rule not in self.reduction_automaton.states:
                 self.reduction_automaton.add_state(rule, state_type='d', rh_rule=all_rules[rule])
 
         automaton_alphabet = set(automaton_alphabet)

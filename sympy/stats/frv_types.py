@@ -35,6 +35,8 @@ from sympy.functions.special.beta_functions import beta as beta_fn
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
 from sympy.stats.rv import _value_check, Density, is_random
+from sympy.utilities.iterables import multiset
+from sympy.utilities.misc import filldedent
 
 
 __all__ = ['FiniteRV',
@@ -93,8 +95,8 @@ def FiniteRV(name, density, **kwargs):
 
     name : Symbol
         Represents name of the random variable.
-    density: A dict
-        Dictionary conatining the pdf of finite distribution
+    density : dict
+        Dictionary containing the pdf of finite distribution
     check : bool
         If True, it will check whether the given density
         integrates to 1 over the given set. If False, it
@@ -130,8 +132,6 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
         # not using _value_check since there is a
         # suggestion for the user
         if len(set(args)) != len(args):
-            from sympy.utilities.iterables import multiset
-            from sympy.utilities.misc import filldedent
             weights = multiset(args)
             n = Integer(len(args))
             for k in weights:
@@ -170,7 +170,7 @@ def DiscreteUniform(name, items):
     Parameters
     ==========
 
-    items: list/tuple
+    items : list/tuple
         Items over which Uniform distribution is to be made
 
     Examples
@@ -243,7 +243,7 @@ def Die(name, sides=6):
     Parameters
     ==========
 
-    sides: Integer
+    sides : Integer
         Represents the number of sides of the Die, by default is 6
 
     Examples

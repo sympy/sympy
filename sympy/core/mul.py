@@ -1,3 +1,4 @@
+from typing import Tuple as tTuple
 from collections import defaultdict
 from functools import cmp_to_key, reduce
 from itertools import product
@@ -92,6 +93,12 @@ class Mul(Expr, AssocOp):
     """
     Expression representing multiplication operation for algebraic field.
 
+    .. deprecated:: 1.7
+
+       Using arguments that aren't subclasses of :class:`~.Expr` in core
+       operators (:class:`~.Mul`, :class:`~.Add`, and :class:`~.Pow`) is
+       deprecated. See :ref:`non-expr-args-deprecated` for details.
+
     Every argument of ``Mul()`` must be ``Expr``. Infix operator ``*``
     on most scalar objects in SymPy calls this class.
 
@@ -153,6 +160,8 @@ class Mul(Expr, AssocOp):
 
     """
     __slots__ = ()
+
+    args: tTuple[Expr]
 
     is_Mul = True
 
@@ -264,7 +273,7 @@ class Mul(Expr, AssocOp):
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
 
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
@@ -272,7 +281,7 @@ class Mul(Expr, AssocOp):
             if b.is_Rational:
                 a, b = b, a
                 seq = [a, b]
-            assert not a is S.One
+            assert a is not S.One
             if not a.is_zero and a.is_Rational:
                 r, b = b.as_coeff_Mul()
                 if b.is_Add:
@@ -989,7 +998,7 @@ class Mul(Expr, AssocOp):
     def _eval_derivative_n_times(self, s, n):
         from .function import AppliedUndef
         from .symbol import Symbol, symbols, Dummy
-        if not isinstance(s, AppliedUndef) and not isinstance(s, Symbol):
+        if not isinstance(s, (AppliedUndef, Symbol)):
             # other types of s may not be well behaved, e.g.
             # (cos(x)*sin(y)).diff([[x, y, z]])
             return super()._eval_derivative_n_times(s, n)
@@ -1377,6 +1386,9 @@ class Mul(Expr, AssocOp):
                     # for rational self and e equal to zero: a = b**e is 1
                     assert not e.is_zero
                     return # sign of e unknown -> self.is_integer unknown
+                else:
+                    # x**2, 2**x, or x**y with x and y int-unknown -> unknonwn
+                    return
             else:
                 return
 
@@ -1388,8 +1400,8 @@ class Mul(Expr, AssocOp):
         anyeven = lambda x: any(i.is_even for i in x)
 
         from .relational import is_gt
-        if not numerators and denominators and all(is_gt(_, S.One)
-                for _ in denominators):
+        if not numerators and denominators and all(
+                is_gt(_, S.One) for _ in denominators):
             return False
         elif unknown:
             return

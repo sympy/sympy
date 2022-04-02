@@ -1,4 +1,4 @@
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -1249,12 +1249,12 @@ def test_print_AssocOp():
         identity = 0
 
     expr = TestAssocOp(1, 2)
-    mpp.doprint(expr) == \
-        '<mrow><mi>testassocop</mi><mn>2</mn><mn>1</mn></mrow>'
+    assert mpp.doprint(expr) == \
+        '<mrow><mi>testassocop</mi><mn>1</mn><mn>2</mn></mrow>'
 
 
 def test_print_basic():
-    expr = Basic(1, 2)
+    expr = Basic(S(1), S(2))
     assert mpp.doprint(expr) == \
         '<mrow><mi>basic</mi><mfenced><mn>1</mn><mn>2</mn></mfenced></mrow>'
     assert mp.doprint(expr) == '<basic><cn>1</cn><cn>2</cn></basic>'

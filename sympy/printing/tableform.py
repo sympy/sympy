@@ -79,7 +79,7 @@ class TableForm:
                             returns None then the _print method will be used.)
 
             wipe_zeros ...
-                            Don't show zeros in the table.
+                            Do not show zeros in the table.
 
                             [default: True]
 
@@ -144,7 +144,7 @@ class TableForm:
                         lj = Symbol(str(lj))
                 line[j] = lj
             data[i] = line
-        _lines = Tuple(*data)
+        _lines = Tuple(*[Tuple(*d) for d in data])
 
         headings = kwarg.get("headings", [None, None])
         if headings == "automatic":

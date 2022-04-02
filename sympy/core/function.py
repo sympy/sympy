@@ -50,7 +50,8 @@ from .singleton import S
 from .sympify import sympify
 
 from .sorting import default_sort_key, ordered
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import (sympy_deprecation_warning,
+                                        SymPyDeprecationWarning, ignore_warnings)
 from sympy.utilities.iterables import (has_dups, sift, iterable,
     is_sequence, uniq, topological_sort)
 from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
@@ -116,7 +117,7 @@ class BadArgumentsError(TypeError):
     pass
 
 
-# Python 2/3 version that does not raise a Deprecation warning
+# Python 3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
 
@@ -493,7 +494,7 @@ class Function(Application, Expr):
         ARG is a floating point number.
         This function is used by __new__.
 
-        Returns the precision to evalf to, or -1 if it shouldn't evalf.
+        Returns the precision to evalf to, or -1 if it should not evalf.
         """
         if arg.is_Float:
             return arg._prec
@@ -1269,9 +1270,6 @@ class Derivative(Expr):
                         expression, the variable(s) of differentiation
                         must be supplied to differentiate %s''' % expr))
 
-        # Standardize the variables by sympifying them:
-        variables = list(sympify(variables))
-
         # Split the list of variables into a list of the variables we are diff
         # wrt, where each element of the list has the form (s, count) where
         # s is the entity to diff wrt and count is the order of the
@@ -1282,6 +1280,31 @@ class Derivative(Expr):
         from sympy.tensor.array import Array, NDimArray
 
         for i, v in enumerate(variables):
+            if isinstance(v, UndefinedFunction):
+                raise TypeError(
+                    "cannot differentiate wrt "
+                    "UndefinedFunction: %s" % v)
+
+            if isinstance(v, array_likes):
+                if len(v) == 0:
+                    # Ignore empty tuples: Derivative(expr, ... , (), ... )
+                    continue
+                if isinstance(v[0], array_likes):
+                    # Derive by array: Derivative(expr, ... , [[x, y, z]], ... )
+                    if len(v) == 1:
+                        v = Array(v[0])
+                        count = 1
+                    else:
+                        v, count = v
+                        v = Array(v)
+                else:
+                    v, count = v
+                if count == 0:
+                    continue
+                variable_count.append(Tuple(v, count))
+                continue
+
+            v = sympify(v)
             if isinstance(v, Integer):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
@@ -1294,28 +1317,7 @@ class Derivative(Expr):
                 else:
                     variable_count[-1] = Tuple(prev, count)
             else:
-                if isinstance(v, array_likes):
-                    if len(v) == 0:
-                        # Ignore empty tuples: Derivative(expr, ... , (), ... )
-                        continue
-                    if isinstance(v[0], array_likes):
-                        # Derive by array: Derivative(expr, ... , [[x, y, z]], ... )
-                        if len(v) == 1:
-                            v = Array(v[0])
-                            count = 1
-                        else:
-                            v, count = v
-                            v = Array(v)
-                    else:
-                        v, count = v
-                    if count == 0:
-                        continue
-                elif isinstance(v, UndefinedFunction):
-                    raise TypeError(
-                        "cannot differentiate wrt "
-                        "UndefinedFunction: %s" % v)
-                else:
-                    count = 1
+                count = 1
                 variable_count.append(Tuple(v, count))
 
         # light evaluation of contiguous, identical
@@ -1437,7 +1439,7 @@ class Derivative(Expr):
                 # of all others
                 clashing = not (isinstance(old_v, Derivative) or \
                     isinstance(old_v, AppliedUndef))
-                if not v in expr.free_symbols and not clashing:
+                if v not in expr.free_symbols and not clashing:
                     return expr.diff(v)  # expr's version of 0
                 if not old_v.is_scalar and not hasattr(
                         old_v, '_eval_derivative'):
@@ -1501,7 +1503,7 @@ class Derivative(Expr):
 
         * symbols and functions commute with each other
         * derivatives commute with each other
-        * a derivative doesn't commute with anything it contains
+        * a derivative does not commute with anything it contains
         * any other object is not allowed to commute if it has
           free symbols in common with another object
 
@@ -1963,11 +1965,14 @@ class Lambda(Expr):
 
     def __new__(cls, signature, expr):
         if iterable(signature) and not isinstance(signature, (tuple, Tuple)):
-            SymPyDeprecationWarning(
-                feature="non tuple iterable of argument symbols to Lambda",
-                useinstead="tuple of argument symbols",
-                issue=17474,
-                deprecated_since_version="1.5").warn()
+            sympy_deprecation_warning(
+                """
+                Using a non-tuple iterable as the first argument to Lambda
+                is deprecated. Use Lambda(tuple(args), expr) instead.
+                """,
+                deprecated_since_version="1.5",
+                active_deprecations_target="deprecated-non-tuple-lambda",
+            )
             signature = tuple(signature)
         sig = signature if iterable(signature) else (signature,)
         sig = sympify(sig)
@@ -2320,11 +2325,16 @@ class Subs(Expr):
 
     @property
     def expr_free_symbols(self):
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
-        return (self.expr.expr_free_symbols - set(self.variables) |
-            set(self.point.expr_free_symbols))
+        sympy_deprecation_warning("""
+        The expr_free_symbols property is deprecated. Use free_symbols to get
+        the free symbols of an expression.
+        """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-expr-free-symbols")
+        # Don't show the warning twice from the recursive call
+        with ignore_warnings(SymPyDeprecationWarning):
+            return (self.expr.expr_free_symbols - set(self.variables) |
+                    set(self.point.expr_free_symbols))
 
     def __eq__(self, other):
         if not isinstance(other, Subs):
@@ -3079,7 +3089,7 @@ def count_ops(expr, visual=False):
     >>> from sympy.abc import a, b, x, y
     >>> from sympy import sin, count_ops
 
-    Although there isn't a SUB object, minus signs are interpreted as
+    Although there is not a SUB object, minus signs are interpreted as
     either negations or subtractions:
 
     >>> (x - y).count_ops(visual=True)
@@ -3277,8 +3287,9 @@ def count_ops(expr, visual=False):
 
 def nfloat(expr, n=15, exponent=False, dkeys=False):
     """Make all Rationals in expr Floats except those in exponents
-    (unless the exponents flag is set to True). When processing
-    dictionaries, do not modify the keys unless ``dkeys=True``.
+    (unless the exponents flag is set to True) and those in undefined
+    functions. When processing dictionaries, do not modify the keys
+    unless ``dkeys=True``.
 
     Examples
     ========
@@ -3359,7 +3370,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
 
     return rv.xreplace(Transform(
         lambda x: x.func(*nfloat(x.args, n, exponent)),
-        lambda x: isinstance(x, Function)))
+        lambda x: isinstance(x, Function) and not isinstance(x, AppliedUndef)))
 
 
 from .symbol import Dummy, Symbol

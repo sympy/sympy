@@ -1,16 +1,18 @@
 """Tools for solving inequalities and systems of inequalities. """
 
+from sympy.calculus.util import (continuous_domain, periodicity,
+    function_range)
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
-
-from sympy.functions import Abs
+from sympy.functions.elementary.complexes import im, Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
+from sympy.solvers.solveset import solvify, solveset
 from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
 
@@ -21,9 +23,8 @@ def solve_poly_inequality(poly, rel):
     Examples
     ========
 
-    >>> from sympy import Poly
+    >>> from sympy import solve_poly_inequality, Poly
     >>> from sympy.abc import x
-    >>> from sympy.solvers.inequalities import solve_poly_inequality
 
     >>> solve_poly_inequality(Poly(x, x, domain='ZZ'), '==')
     [{0}]
@@ -113,8 +114,8 @@ def solve_poly_inequalities(polys):
     Examples
     ========
 
+    >>> from sympy import Poly
     >>> from sympy.solvers.inequalities import solve_poly_inequalities
-    >>> from sympy.polys import Poly
     >>> from sympy.abc import x
     >>> solve_poly_inequalities(((
     ... Poly(x**2 - 3), ">"), (
@@ -131,8 +132,7 @@ def solve_rational_inequalities(eqs):
     ========
 
     >>> from sympy.abc import x
-    >>> from sympy import Poly
-    >>> from sympy.solvers.inequalities import solve_rational_inequalities
+    >>> from sympy import solve_rational_inequalities, Poly
 
     >>> solve_rational_inequalities([[
     ... ((Poly(-x + 1), Poly(1, x)), '>='),
@@ -287,8 +287,7 @@ def reduce_abs_inequality(expr, rel, gen):
     Examples
     ========
 
-    >>> from sympy import Abs, Symbol
-    >>> from sympy.solvers.inequalities import reduce_abs_inequality
+    >>> from sympy import reduce_abs_inequality, Abs, Symbol
     >>> x = Symbol('x', real=True)
 
     >>> reduce_abs_inequality(Abs(x - 5) - 3, '<', x)
@@ -369,8 +368,7 @@ def reduce_abs_inequalities(exprs, gen):
     Examples
     ========
 
-    >>> from sympy import Abs, Symbol
-    >>> from sympy.solvers.inequalities import reduce_abs_inequalities
+    >>> from sympy import reduce_abs_inequalities, Abs, Symbol
     >>> x = Symbol('x', extended_real=True)
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
@@ -405,7 +403,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
         The domain over which the equation is solved
     continuous: bool
         True if expr is known to be continuous over the given domain
-        (and so continuous_domain() doesn't need to be called on it)
+        (and so continuous_domain() does not need to be called on it)
 
     Raises
     ======
@@ -429,8 +427,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Examples
     ========
 
-    >>> from sympy.solvers.inequalities import solve_univariate_inequality
-    >>> from sympy import Symbol, sin, Interval, S
+    >>> from sympy import solve_univariate_inequality, Symbol, sin, Interval, S
     >>> x = Symbol('x')
 
     >>> solve_univariate_inequality(x**2 >= 4, x)
@@ -447,11 +444,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Interval.open(0, pi)
 
     """
-    from sympy.functions.elementary.complexes import im
-    from sympy.calculus.util import (continuous_domain, periodicity,
-        function_range)
     from sympy.solvers.solvers import denoms
-    from sympy.solvers.solveset import solvify, solveset
 
     if domain.is_subset(S.Reals) is False:
         raise NotImplementedError(filldedent('''
@@ -953,7 +946,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.solvers.inequalities import reduce_inequalities
+    >>> from sympy import reduce_inequalities
 
     >>> reduce_inequalities(0 <= x + 3, [])
     (-3 <= x) & (x < oo)

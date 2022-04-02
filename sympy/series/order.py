@@ -3,6 +3,7 @@ from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.function import expand_power_base, expand_log
 from sympy.core.sorting import default_sort_key
+from sympy.functions.elementary.exponential import exp, log
 from sympy.sets.sets import Complement
 from sympy.utilities.iterables import uniq, is_sequence
 
@@ -365,7 +366,6 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy.simplify.powsimp import powsimp
         expr = sympify(expr)
         if expr.is_zero:
             return True
@@ -406,6 +406,7 @@ class Order(Expr):
                             if rv is not None:
                                 return rv
 
+            from sympy.simplify.powsimp import powsimp
             r = None
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')

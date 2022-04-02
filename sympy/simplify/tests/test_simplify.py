@@ -33,6 +33,7 @@ from sympy.solvers.solvers import solve
 from sympy.testing.pytest import XFAIL, slow, _both_exp_pow
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, n
 
+
 def test_issue_7263():
     assert abs((simplify(30.8**2 - 82.5**2 * sin(rad(11.6))**2)).evalf() - \
             673.447451402970) < 1e-12
@@ -674,7 +675,7 @@ def test_polymorphism():
         def _eval_simplify(x, **kwargs):
             return S.One
 
-    a = A(5, 2)
+    a = A(S(5), S(2))
     assert simplify(a) == 1
 
 
@@ -912,10 +913,13 @@ def test_issue_21869():
     assert expr.simplify() == S.false
 
 
-def test_issue_7971():
+def test_issue_7971_21740():
     z = Integral(x, (x, 1, 1))
     assert z != 0
     assert simplify(z) is S.Zero
+    assert simplify(S.Zero) is S.Zero
+    z = simplify(Float(0))
+    assert z is not S.Zero and z == 0
 
 
 @slow

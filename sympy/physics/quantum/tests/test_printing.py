@@ -302,7 +302,7 @@ CNOT   \n\
 """
     assert pretty(g3) == ascii_str
     assert upretty(g3) == ucode_str
-    assert latex(g3) == r'CNOT_{1,0}'
+    assert latex(g3) == r'\text{CNOT}_{1,0}'
     sT(g3, "CNotGate(Integer(1),Integer(0))")
     ascii_str = \
 """\
@@ -323,7 +323,7 @@ U((0,),Matrix([\n\
     assert pretty(g4) == ascii_str
     assert upretty(g4) == ucode_str
     assert latex(g4) == r'U_{0}'
-    sT(g4, "UGate(Tuple(Integer(0)),MutableDenseMatrix([[Symbol('a'), Symbol('b')], [Symbol('c'), Symbol('d')]]))")
+    sT(g4, "UGate(Tuple(Integer(0)),ImmutableDenseMatrix([[Symbol('a'), Symbol('b')], [Symbol('c'), Symbol('d')]]))")
 
 
 def test_hilbert():

@@ -379,7 +379,7 @@ def test_new_relational():
     assert (x < 0) != StrictLessThan(x, 1)
 
     # finally, some fuzz testing
-    from random import randint
+    from sympy.core.random import randint
     for i in range(100):
         while 1:
             strtype, length = (chr, 65535) if randint(0, 1) else (chr, 255)
@@ -854,6 +854,7 @@ def test_canonical():
     assert [i.canonical for i in c] == c
     assert [i.reversed.canonical for i in c] == c
     assert not any(i.lhs.is_Number and not i.rhs.is_Number for i in c)
+    assert Eq(y < x, x > y).canonical is S.true
 
 
 @XFAIL
@@ -1033,6 +1034,9 @@ def test_Equality_rewrite_as_Add():
     assert eq.rewrite(Add) == 2*x
     assert eq.rewrite(Add, evaluate=None).args == (x, x, y, -y)
     assert eq.rewrite(Add, evaluate=False).args == (x, y, x, -y)
+    for e in (True, False, None):
+        assert Eq(x, 0, evaluate=e).rewrite(Add) == x
+        assert Eq(0, x, evaluate=e).rewrite(Add) == x
 
 
 def test_issue_15847():

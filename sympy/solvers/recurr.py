@@ -48,6 +48,7 @@ For the sake of completeness, `f(n)` can be:
 """
 from collections import defaultdict
 
+from sympy.concrete import product
 from sympy.core.singleton import S
 from sympy.core.numbers import Rational, I
 from sympy.core.symbol import Symbol, Wild, Dummy
@@ -62,7 +63,6 @@ from sympy.solvers import solve, solve_undetermined_coeffs
 from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
-from sympy.concrete import product
 from sympy.utilities.iterables import numbered_symbols
 
 
