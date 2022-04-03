@@ -153,7 +153,7 @@ class FunctionSymbol(Atom):
     """
     Object representing a function symbolically.
     """
-    attribute_list = ['args', '__sympy__', 'func']
+    attribute_list = ['args', '__sympy__', 'func', 'sort_key']
 
     def __new__(cls, function):
         obj = Basic.__new__(cls)

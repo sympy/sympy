@@ -45,7 +45,7 @@ def check(a, exclude=[], check_attr=True):
     """ Check that pickling and copying round-trips.
     """
     # Pickling with protocols 0 and 1 is disabled for Basic instances:
-    if isinstance(a, Basic):
+    if isinstance(a, Basic) and not isinstance(a, type):
         for protocol in [0, 1]:
             raises(NotImplementedError, lambda: pickle.dumps(a, protocol))
 
