@@ -1738,7 +1738,7 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
             d.append(s**(ma1[n]-k-1)*y)
         r = s**ma1[n]*_laplace_apply_rules(ma1[g].func(t), t, s, doit=doit,
                                            **hints)
-        return r - Add(*d)
+        return ma1[a]*(r - Add(*d))
     return None
 
 
