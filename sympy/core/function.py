@@ -173,6 +173,11 @@ class FunctionSymbol(Atom):
     def func(self):
         return lambda: self.function
 
+    def sort_key(self, order):
+        func = ( 0, 0, self.function.__class__.__name__)
+        args = (1, (str(self.function),))
+        return func, args, S.One.sort_key(), S.One
+
 
 class FunctionClass(ManagedProperties):
     """
