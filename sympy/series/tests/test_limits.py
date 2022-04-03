@@ -767,6 +767,12 @@ def test_issue_13750():
     assert limit(erf(sqrt(x) - x), x, oo) == -1
 
 
+def test_issue_14276():
+    assert Limit(sin(n)**cos(n), n, oo, dir='-').doit() == Limit(sin(n)**cos(n), n, oo, dir='-')
+    assert Limit(sin(log(cos(n))), n, oo, dir='-').doit() == Limit(sin(log(cos(n))), n, oo, dir='-')
+    assert Limit(sin(n)**log(n), n, oo, dir='-').doit() == Limit(sin(n)**log(n), n, oo, dir='-')
+
+
 def test_issue_14514():
     assert limit((1/(log(x)**log(x)))**(1/x), x, oo) == 1
 
