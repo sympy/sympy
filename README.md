@@ -227,7 +227,7 @@ The git history goes back to 2007 when development moved from svn to hg.
 To see the history before that point, look at
 <https://github.com/sympy/sympy-old>.
 
-You can use git to see the biggest developers. The command:
+You can use git to see the largest contributors. The command:
 
     $ git shortlog -ns
 
