@@ -1,5 +1,5 @@
 from sympy import sin, Function, symbols, Dummy, Lambda, cos
-from sympy.parsing.mathematica import mathematica, MathematicaParser
+from sympy.parsing.mathematica import parse_mathematica, MathematicaParser
 from sympy.core.sympify import sympify
 from sympy.abc import n, w, x, y, z
 from sympy.testing.pytest import raises
@@ -70,16 +70,16 @@ def test_mathematica():
         }
 
     for e in d:
-        assert mathematica(e) == sympify(d[e])
+        assert parse_mathematica(e) == sympify(d[e])
 
     # The parsed form of this expression should not evaluate the Lambda object:
-    assert mathematica("Sin[#]^2 + Cos[#]^2 &[x]") == sin(x)**2 + cos(x)**2
+    assert parse_mathematica("Sin[#]^2 + Cos[#]^2 &[x]") == sin(x)**2 + cos(x)**2
 
     d1, d2, d3 = symbols("d1:4", cls=Dummy)
-    assert mathematica("Sin[#] + Cos[#3] &").dummy_eq(Lambda((d1, d2, d3), sin(d1) + cos(d3)))
-    assert mathematica("Sin[#^2] &").dummy_eq(Lambda(d1, sin(d1**2)))
-    assert mathematica("Function[x, x^3]") == Lambda(x, x**3)
-    assert mathematica("Function[{x, y}, x^2 + y^2]") == Lambda((x, y), x**2+y**2)
+    assert parse_mathematica("Sin[#] + Cos[#3] &").dummy_eq(Lambda((d1, d2, d3), sin(d1) + cos(d3)))
+    assert parse_mathematica("Sin[#^2] &").dummy_eq(Lambda(d1, sin(d1**2)))
+    assert parse_mathematica("Function[x, x^3]") == Lambda(x, x**3)
+    assert parse_mathematica("Function[{x, y}, x^2 + y^2]") == Lambda((x, y), x**2 + y**2)
 
 
 def test_parser_mathematica_tokenizer():

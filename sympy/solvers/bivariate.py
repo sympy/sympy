@@ -31,6 +31,9 @@ def _filtered_gens(poly, symbol):
     {x, exp(x)}
 
     """
+    # TODO it would be good to pick the smallest divisible power
+    # instead of the base for something like x**4 + x**2 -->
+    # return x**2 not x
     gens = {g for g in poly.gens if symbol in g.free_symbols}
     for g in list(gens):
         ag = 1/g
