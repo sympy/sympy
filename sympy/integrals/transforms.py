@@ -1836,7 +1836,7 @@ class LaplaceTransform(IntegralTransform):
         return fn, LT
 
 
-def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
+def laplace_transform(f, t, s, *, func_map=dict(), legacy_matrix=True, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
@@ -1874,14 +1874,14 @@ def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
 
     This function can also transform differentials of undefined functions;
     in that case the result will contain Laplace transforms of undefined
-    functions and initial conditions. The named argument ``diff_subs`` takes
+    functions and initial conditions. The named argument ``func_map`` takes
     a dictionary that contains the name of the Laplace transform of every
     undefined function as well as a list of the inital conditions. For example,
-    ``diff_subs={x(t): (X(s), [1, 2, 3, 4])}`` would tell ``laplace_transform``
+    ``func_map={x(t): (X(s), [1, 2, 3, 4])}`` would tell ``laplace_transform``
     that the Laplace transform of the function ``x(t)`` is ``X(s)`` and that
     the initial value, first derivative at ``t=0``, second derivative, etc.,
     are 1, 2, 3, etc., respectively. Giving a single value ``0`` as an initial
-    condition, like ``diff_subs={x(t): (X(s), 0)}``, results in all initial
+    condition, like ``func_map={x(t): (X(s), 0)}``, results in all initial
     conditions being set to zero.
 
     For a description of possible hints, refer to the docstring of
@@ -1899,12 +1899,8 @@ def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
     Examples
     ========
 
-    >>> from sympy import DiracDelta, exp, laplace_transform, diff, Function, symbols
-    >>> y = Function('y')
-    >>> Y = Function('Y')
-    >>> z = Function("z")
-    >>> Z = Function("Z")
-    >>> s, t, a, b, c, d, z0, z1, y0 = symbols('s, t, a, b, c, d, z0, z1, y0')
+    >>> from sympy import DiracDelta, exp, laplace_transform, symbols
+    >>> s, t, a = symbols('s, t, a')
     >>> laplace_transform(t**4, t, s)
     (24/s**5, 0, True)
     >>> laplace_transform(t**a, t, s)
@@ -1916,14 +1912,17 @@ def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
     involve undefined functions and their derivatives can be handled to solve
     diferential equation systems:
 
+    >>> from sympy import diff, Function
+    >>> b, c, d, z0, z1, y0 = symbols('b, c, d, z0, z1, y0')
+    >>> y, Y, z, Z = symbols('y, Y, z, Z', cls=Function)
     >>> laplace_transform(diff(z(t), t, 2), t, s)
     s**2*LaplaceTransform(z(t), t, s) - s*z(0) - Subs(Derivative(z(t), t), t, 0)
     >>> eqs = [diff(z(t), t, 2)-a*z(t)-b*y(t), diff(y(t), t)-c*z(t)-d*y(t)]
-    >>> diff_subs = {z(t): (Z(s), [z0, z1, 0]), y(t): (Y(s), [y0, 0, 0])}
-    >>> laplace_transform(eqs, t, s, diff_subs)
+    >>> func_map = {z(t): (Z(s), [z0, z1, 0]), y(t): (Y(s), [y0, 0, 0])}
+    >>> laplace_transform(eqs, t, s, func_map=func_map)
     [-a*Z(s) - b*Y(s) + s**2*Z(s) - s*z0 - z1, -c*Z(s) - d*Y(s) + s*Y(s) - y0]
-    >>> diff_subs = {z(t): (Z(s), 0), y(t): (Y(s), 0)}
-    >>> laplace_transform(eqs, t, s, diff_subs)
+    >>> func_map = {z(t): (Z(s), 0), y(t): (Y(s), 0)}
+    >>> laplace_transform(eqs, t, s, func_map=func_map)
     [-a*Z(s) - b*Y(s) + s**2*Z(s), -c*Z(s) - d*Y(s) + s*Y(s)]
 
 
@@ -1936,6 +1935,19 @@ def laplace_transform(f, t, s, diff_subs=dict(), legacy_matrix=True, **hints):
     """
 
     debug('\n***** laplace_transform(%s, %s, %s)'%(f, t, s))
+
+    def do_substitutions(x):
+        p = Wild('p')
+        for _f, _r in func_map.items():
+            x = x.replace(LaplaceTransform(_f, t, p), _r[0].subs(s,p))
+            if _r[1]==0:
+                n = Wild('n')
+                x = x.replace(Subs(Derivative(_f, (t, n)), t, 0), 0)
+                x = x.subs(_f.subs(t, 0), 0)
+            else:
+                for k, c in enumerate(_r[1]):
+                    x = x.subs(_f.diff(t, k).subs(t, 0), c)
+        return x
 
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
 
@@ -1965,27 +1977,16 @@ behavior.
                 return type(f)(*f.shape, elements_trans)
 
     if isinstance(f, list):
-        return [laplace_transform(x, t, s, diff_subs=diff_subs, **hints)
+        return [laplace_transform(x, t, s, func_map=func_map, **hints)
                 for x in f]
 
     LT = LaplaceTransform(f, t, s).doit(**hints)
-    if type(LT) is tuple:
+
+    if isinstance(LT, tuple):
         x, a, c = LT
+        return do_substitutions(x), a, c
     else:
-        x = LT
-    for _f, _r in diff_subs.items():
-        x = x.subs(LaplaceTransform(_f, t, s), _r[0])
-        if _r[1]==0:
-            n = Wild('n')
-            x = x.replace(Subs(Derivative(_f, (t, n)), t, 0), 0)
-            x = x.subs(_f.subs(t, 0), 0)
-        else:
-            for k, c in enumerate(_r[1]):
-                x = x.subs(_f.diff(t, k).subs(t, 0), c)
-    if type(LT) is tuple:
-        return x, a, c
-    else:
-        return x
+        return do_substitutions(LT)
 
 
 @_noconds_(True)

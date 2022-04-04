@@ -718,17 +718,17 @@ def test_laplace_transform():
                                 + y(t)
                                 - 4*(Heaviside(t - 1)
                                 - Heaviside(t - 2)), t, s,
-                                {y(t): (Y(s), [1, 0])})
+                                func_map={y(t): (Y(s), [1, 0])})
     assert (F == s**2*Y(s) - s + Y(s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
 
     # laplace_transform covers lists and replacements
     assert laplace_transform([diff(z(t), t, 2)-a*z(t)-b*y(t),
                               diff(y(t), t)-c*z(t)-d*y(t)], t, s,
-                {z(t): (Z(s), [z0, z1, 0]), y(t): (Y(s), [y0, 0, 0])}) == \
+        func_map={z(t): (Z(s), [z0, z1, 0]), y(t): (Y(s), [y0, 0, 0])}) == \
         [-a*Z(s)-b*Y(s)+s**2*Z(s)-s*z0-z1, -c*Z(s)-d*Y(s)+s*Y(s)-y0]
     assert laplace_transform([diff(z(t), t, 2)-a*z(t)-b*y(t),
                               diff(y(t), t)-c*z(t)-d*y(t)], t, s,
-                {z(t): (Z(s), 0), y(t): (Y(s), 0)}) == \
+                func_map={z(t): (Z(s), 0), y(t): (Y(s), 0)}) == \
         [-a*Z(s)-b*Y(s)+s**2*Z(s), -c*Z(s)-d*Y(s)+s*Y(s)]
     # additional basic tests from wikipedia
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \

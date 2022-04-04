@@ -2949,7 +2949,7 @@ def test_Y5_Y6():
                                 + y(t)
                                 - 4*(Heaviside(t - 1)
                                 - Heaviside(t - 2)), t, s,
-                                {y(t): (Y(s), [1, 0])})
+                                func_map={y(t): (Y(s), [1, 0])})
     assert (F == s**2*Y(s) - s + Y(s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
     # TODO implement second part of test case
     # Now, solve for Y(s) and then take the inverse Laplace transform
