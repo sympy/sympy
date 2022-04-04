@@ -1363,7 +1363,7 @@ def _QRdecomposition_optional(M, normalize=True):
             Q[:, j] -= Q[:, i] * R[i, j]
 
         Q[:, j] = dps(Q[:, j])
-        if Q[:, j].is_zero_matrix is False:
+        if Q[:, j].is_zero_matrix is not True:
             ranked.append(j)
             R[j, j] = M.one
 
