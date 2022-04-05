@@ -415,15 +415,21 @@ class Add(Expr, AssocOp):
     def could_extract_minus_sign(self):
         return _could_extract_minus_sign(self)
 
-    def as_coefficients_dict(a):
+    def as_coefficients_dict(self, *syms):
         """Return a dictionary mapping terms to their Rational coefficient.
         Since the dictionary is a defaultdict, inquiries about terms which
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
 
+        If symbols `syms` are provided, any multiplicative terms
+        independent of them will be considered a coefficient and a
+        regular dictionary of syms-dependent generators as keys and
+        their corresponding coefficients as values will be returned.
+
         Examples
         ========
 
+        >>> from sympy import exp
         >>> from sympy.abc import a, x
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
@@ -431,20 +437,33 @@ class Add(Expr, AssocOp):
         0
         >>> (3*a*x).as_coefficients_dict()
         {a*x: 3}
-        """
 
-        d = defaultdict(list)
-        for ai in a.args:
-            c, m = ai.as_coeff_Mul()
-            d[m].append(c)
-        for k, v in d.items():
-            if len(v) == 1:
-                d[k] = v[0]
-            else:
-                d[k] = Add(*v)
-        di = defaultdict(int)
-        di.update(d)
-        return di
+        >>> (3*exp(x)*x + a/x + 2).as_coefficients_dict(x)
+        {1: 2, 1/x: a, x*exp(x): 3}
+        """
+        if not syms:
+            d = defaultdict(list)
+            for ai in self.args:
+                c, m = ai.as_coeff_Mul()
+                d[m].append(c)
+            for k, v in d.items():
+                if len(v) == 1:
+                    d[k] = v[0]
+                else:
+                    d[k] = Add(*v)
+            di = defaultdict(int)
+            di.update(d)
+            return di
+        else:
+            d = defaultdict(list)
+            ind, dep = self.as_independent(*syms, as_Add=True)
+            for i in Add.make_args(dep):
+                c, x = i.as_independent(*syms, as_Add=False)
+                d[x].append(c)
+            d = {k: Add(*d[k]) for k in d}
+            d.update({S.One: ind})
+            return d
+
 
     @cacheit
     def as_coeff_add(self, *deps):

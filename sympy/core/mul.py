@@ -812,11 +812,16 @@ class Mul(Expr, AssocOp):
             return args[0], self._new_rawargs(*args[1:])
 
     @cacheit
-    def as_coefficients_dict(self):
+    def as_coefficients_dict(self, *syms):
         """Return a dictionary mapping terms to their coefficient.
         Since the dictionary is a defaultdict, inquiries about terms which
         were not present will return a coefficient of 0. The dictionary
         is considered to have a single term.
+
+        If symbols `syms` are provided, any multiplicative terms
+        independent of them will be considered a coefficient and a
+        regular dictionary of syms-dependent generators as keys and
+        their corresponding coefficients as values will be returned.
 
         Examples
         ========
@@ -826,17 +831,20 @@ class Mul(Expr, AssocOp):
         {a*x: 3}
         >>> _[a]
         0
+        >>> (3*a*x*(a + 1)).as_coefficients_dict(a)
+        {a*(a + 1): 3*x}
         """
-
-        d = defaultdict(int)
-        args = self.args
-
-        if len(args) == 1 or not args[0].is_Number:
-            d[self] = S.One
+        if not syms:
+            d = defaultdict(int)
+            args = self.args
+            if len(args) == 1 or not args[0].is_Number:
+                d[self] = S.One
+            else:
+                d[self._new_rawargs(*args[1:])] = args[0]
+            return d
         else:
-            d[self._new_rawargs(*args[1:])] = args[0]
-
-        return d
+            i, d = self.as_independent(*syms)
+            return {d: i}
 
     @cacheit
     def as_coeff_mul(self, *deps, rational=True, **kwargs):

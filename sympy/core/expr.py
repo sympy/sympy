@@ -1957,11 +1957,16 @@ class Expr(Basic, EvalfMixin):
         d.update(dict([self.as_base_exp()]))
         return d
 
-    def as_coefficients_dict(self):
+    def as_coefficients_dict(self, *syms):
         """Return a dictionary mapping terms to their Rational coefficient.
         Since the dictionary is a defaultdict, inquiries about terms which
         were not present will return a coefficient of 0. If an expression is
         not an Add it is considered to have a single term.
+
+        If symbols ``syms`` are provided, any multiplicative terms
+        independent of them will be considered a coefficient and a
+        regular dictionary of syms-dependent generators as keys and
+        their corresponding coefficients as values will be returned.
 
         Examples
         ========
@@ -1973,15 +1978,19 @@ class Expr(Basic, EvalfMixin):
         0
         >>> (3*a*x).as_coefficients_dict()
         {a*x: 3}
+        >>> (3*a*x).as_coefficients_dict(x)
+        {x: 3*a}
 
         """
-        c, m = self.as_coeff_Mul()
+        d = defaultdict(int)
+        c, m = self.as_coeff_mul(*syms)
         if not c.is_Rational:
             c = S.One
             m = self
-        d = defaultdict(int)
+        else:
+            m = Mul(*m, evaluate=False)
         d.update({m: c})
-        return d
+        return dict(d) if syms else d
 
     def as_base_exp(self) -> tuple[Expr, Expr]:
         # a -> b ** e
