@@ -177,8 +177,8 @@ common_theme_variables = {
 
     "color-link-underline--hover": "var(--color-link)",
     "color-api-keyword": "#000000bd",
-    "color-api-name": "#29A329",
-    "color-api-pre-name": "var(--color-brand-primary)",
+    "color-api-name": "var(--color-brand-content)",
+    "color-api-pre-name": "var(--color-brand-content)",
     "api-font-size": "var(--font-size--normal)",
     "color-foreground-secondary": "#53555B",
 
