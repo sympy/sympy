@@ -168,6 +168,7 @@ common_theme_variables = {
 
     # The left sidebar.
     "color-sidebar-background": "#3B5526",
+    "color-sidebar-background-border": "var(--color-background-primary)",
     "color-sidebar-link-text": "#FFFFFF",
     "color-sidebar-brand-text": "var(--color-sidebar-link-text--top-level)",
     "color-sidebar-link-text--top-level": "#FFFFFF",
