@@ -61,12 +61,6 @@ blockquote {
     color: white !important;
 }
 
-/* Make the "class", "property" and so on before function names in the API*/
-/* docs bold. */
-em.property:first-child {
-    font-weight: bold;
-}
-
 .admonition.warning>.admonition-title {
     color: white;
 }
