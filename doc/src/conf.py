@@ -163,7 +163,7 @@ html_sidebars = {
 
 common_theme_variables = {
     # Main "SymPy green" colors. Many things uses these colors.
-    "color-brand-primary": "#81B953",
+    "color-brand-primary": "#52833A",
     "color-brand-content": "#307748",
 
     # The left sidebar.
@@ -172,8 +172,8 @@ common_theme_variables = {
     "color-sidebar-link-text": "#FFFFFF",
     "color-sidebar-brand-text": "var(--color-sidebar-link-text--top-level)",
     "color-sidebar-link-text--top-level": "#FFFFFF",
-    "color-sidebar-item-background--hover": "#8AB950",
-    "color-sidebar-item-expander-background--hover": "#8AB950",
+    "color-sidebar-item-background--hover": "var(--color-brand-primary)",
+    "color-sidebar-item-expander-background--hover": "var(--color-brand-primary)",
 
     "color-link-underline--hover": "var(--color-link)",
     "color-api-keyword": "#000000bd",
@@ -216,6 +216,7 @@ html_theme_options = {
         "color-admonition-title-background--note": "#555555",
         "color-problematic": "#B30000",
         "color-foreground-secondary": "#9DA1AC",
+        "color-toc-item-text--active": "#81B953",
     },
     # See https://pradyunsg.me/furo/customisation/footer/
     "footer_icons": [
