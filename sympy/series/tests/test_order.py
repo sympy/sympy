@@ -387,6 +387,10 @@ def test_order_at_infinity():
     # issue 19545
     assert Order(1/x - 3/(3*x + 2), (x, oo)).expr == x**(-2)
 
+    # issue 21434, 21315, 12544
+    assert Order(1 - cos(1/x), (x, oo)) == O(x**(-2), (x, oo))
+
+
 def test_mixing_order_at_zero_and_infinity():
     assert (Order(x, (x, 0)) + Order(x, (x, oo))).is_Add
     assert Order(x, (x, 0)) + Order(x, (x, oo)) == Order(x, (x, oo)) + Order(x, (x, 0))
