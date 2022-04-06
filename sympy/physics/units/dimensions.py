@@ -580,7 +580,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         ):
         """
         This function is designed to take in a set of physical variables (all 
-    	essentially dimensionful) and returns one set of all possible dimensionless
+    	essentially dimensionful) and returns one set of all possible dimensionless 
 	    quantities, as guided by the Buckingham's pi theorem (a generalization of 
 	    Rayleigh's method of dimensional analysis .....)
 	    
@@ -603,7 +603,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         """
         for quantity in list_of_derived_quantities:
             element_for_quantity = [0 for k in range(7)]
-            dimensions = dimsys_SI.get_dimensional_dependencies(
+            dimensions = self.get_dimensional_dependencies(
                     list_of_derived_quantities[quantity]
                     )
             for base_dims in dimensions:
