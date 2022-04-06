@@ -212,10 +212,14 @@ html_theme_options = {
         "color-api-overall": "#FFFFFF90",
         "color-api-paren": "#FFFFFF90",
 
+        "color-sidebar-item-background--hover": "#52833A",
+        "color-sidebar-item-expander-background--hover": "#52833A",
+        # This is the color of the text in the right sidebar
+        "color-foreground-secondary": "#9DA1AC",
+
         "color-admonition-title-background--seealso": "#555555",
         "color-admonition-title-background--note": "#555555",
         "color-problematic": "#B30000",
-        "color-foreground-secondary": "#9DA1AC",
     },
     # See https://pradyunsg.me/furo/customisation/footer/
     "footer_icons": [
