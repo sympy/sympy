@@ -215,6 +215,7 @@ html_theme_options = {
         "color-admonition-title-background--seealso": "#555555",
         "color-admonition-title-background--note": "#555555",
         "color-problematic": "#B30000",
+        "color-foreground-secondary": "#9DA1AC",
     },
     # See https://pradyunsg.me/furo/customisation/footer/
     "footer_icons": [
