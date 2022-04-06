@@ -19,8 +19,7 @@ blockquote {
 /* Version selector. See _templates/sidebar/versions.html */
 .versions-header {
     color: white;
-    padding: var(--sidebar-item-spacing-vertical) var
-             (--sidebar-item-spacing-horizontal);
+    padding: var(--sidebar-item-spacing-vertical) var(--sidebar-item-spacing-horizontal);
     margin: 1rem 0rem;
 }
 .current-version {
@@ -79,8 +78,7 @@ h4, h5, h6 {
 }
 
 /* Make "Examples" and "Parameters" headers easier to see */
-p.rubric, dl.c .field-list dt, dl.cpp .field-list dt, dl.js .field-list dt,
-dl.py .field-list dt, dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple) .field-list>dt {
+p.rubric, dl.c .field-list dt, dl.cpp .field-list dt, dl.js .field-list dt, dl.py .field-list dt, dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple) .field-list>dt {
     text-transform: none;
     font-weight: 600;
     font-size: 120%;
