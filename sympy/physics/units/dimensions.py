@@ -572,24 +572,24 @@ class DimensionSystem(Basic, _QuantityMapper):
         # dimensions
         # in vector language: the set of vectors do not form a basis
         return self.inv_can_transf_matrix.is_square
-    def getDimensionlessNumbers(self, list_of_derived_Quantities 
+    def get_dimensionless_numbers(self, list_of_derived_quantities 
         # input list of derived quantities in the
         # form of a python dictionary of tuples (key, item) where 'key' is
         # the name of the physical quantity and 'item' is an instance of
         # Dimension class which possesses the dimensions of the quantity.
         ):
-        """ This function is designed to take in a set of physical variables (all 
+        """
+        This function is designed to take in a set of physical variables (all 
     	essentially dimensionful) and returns one set of all possible dimensionless
 	    quantities, as guided by the Buckingham's pi theorem (a generalization of 
 	    Rayleigh's method of dimensional analysis .....)
 	    
         Please refer and run to the unit testing file '/units/test/test_dimensionLess.py' for
-            the format of the input .... As a heads up, we first need to define
-            a global set of base dimensions and with those we can define the 
-            derived quantities .....
+        the format of the input .... As a heads up, we first need to define a global set of 
+        base dimensions and with those we can define the derived quantities .....
         """
-        ExponentMatrix = []
-        IndexDict = { # Dimension names borrowed from print(dimsys_SI)
+        exponent_matrix = []
+        index_dict = { # Dimension names borrowed from print(dimsys_SI)
             'length' : 0,
             'time' : 1,
             'mass' : 2,
@@ -599,47 +599,45 @@ class DimensionSystem(Basic, _QuantityMapper):
             'luminous_intensity': 6
             }
         """
-            We extract the exponent matrix from the dimensional dependencies of the
-            quantities
+        We extract the exponent matrix from the dimensional dependencies of the quantities
         """
-        for quantity in list_of_derived_Quantities:
-            ElementForQuantity = [0 for k in range(7)]
+        for quantity in list_of_derived_quantities:
+            element_for_quantity = [0 for k in range(7)]
             dimensions = dimsys_SI.get_dimensional_dependencies(
-                    list_of_derived_Quantities[quantity]
+                    list_of_derived_quantities[quantity]
                     )
-            for baseDims in dimensions:
-                ElementForQuantity[IndexDict[baseDims]] = dimensions[baseDims]
-            ExponentMatrix.append(ElementForQuantity)
+            for base_dims in dimensions:
+                element_for_quantity[index_dict[base_dims]] = dimensions[base_dims]
+            exponent_matrix.append(element_for_quantity)
         """
-            Next we obtain the null space of the exponent matrix
+        Next we obtain the null space of the exponent matrix
         """
-        ExponentMatrix = Matrix(ExponentMatrix)
-        Exponents = ExponentMatrix.T.nullspace()
+        exponent_matrix = Matrix(exponent_matrix)
+        exponents = exponent_matrix.T.nullspace()
         # We need to make sure that we obtain integer nullspaces because
         # Dimension() is not able to simplify non-diophantine exponents
-        nullSpaceDims = len(Exponents)
+        null_space_dims = len(exponents)
         m = 1
         while True:
             flag = True
-            for k in range(nullSpaceDims):
-                for l in range(len(Exponents[k])):
-                    Exponents[k][l] = Exponents[k][l] * m
-                    flag = flag and (Exponents[k][l]-int(Exponents[k][l])) == 0.0
+            for k in range(null_space_dims):
+                for l in range(len(exponents[k])):
+                    exponents[k][l] = exponents[k][l] * m
+                    flag = flag and (exponents[k][l]-int(exponents[k][l])) == 0.0
             if flag: break
             m = m + 1
-        setOfDimLessNums = [Dimension('length')**0 for k in range(nullSpaceDims)]
-        setOfDimLessQuant = ['' for k in range(nullSpaceDims)]
-        """ Here as a final step we take the dot product of the nullspace 
-        with the derived quantities """
-        for k in range(nullSpaceDims):
+        set_of_dimless_nums = [Dimension('length')**0 for k in range(null_space_dims)]
+        set_of_dimless_quant = ['' for k in range(null_space_dims)]
+        """ Here as a final step we take the dot product of the nullspace with the derived quantities """
+        for k in range(null_space_dims):
             m = 0
-            for quantity in list_of_derived_Quantities:
-                setOfDimLessNums[k] = setOfDimLessNums[k]*(
-                list_of_derived_Quantities[quantity]**Exponents[k][m]
+            for quantity in list_of_derived_quantities:
+                set_of_dimless_nums[k] = set_of_dimless_nums[k]*(
+                list_of_derived_quantities[quantity]**exponents[k][m]
                 )
-                setOfDimLessQuant[k] = setOfDimLessQuant[k] + '[' + quantity + ']' + \
-                 '**(' + str(Exponents[k][m]) + ')*'
+                set_of_dimless_quant[k] = set_of_dimless_quant[k] + '[' + quantity + ']' + \
+                 '**(' + str(exponents[k][m]) + ')*'
                 m = m + 1
-            setOfDimLessQuant[k] = setOfDimLessQuant[k][:-1] # To remove the last star
-        return setOfDimLessQuant, setOfDimLessNums
+            set_of_dimless_quant[k] = set_of_dimless_quant[k][:-1] # To remove the last star
+        return set_of_dimless_quant, set_of_dimless_nums
 
