@@ -93,7 +93,7 @@ def _integer_nthroot_python(y, n):
     if n == 2:
         x, rem = mpmath_sqrtrem(y)
         return int(x), not rem
-    if n > y:
+    if n >= y.bit_length():
         return 1, False
     # Get initial estimate for Newton's method. Care must be taken to
     # avoid overflow
@@ -562,12 +562,6 @@ class Pow(Expr):
             return self.is_finite
         return ext_neg
 
-    def _eval_is_positive(self):
-        ext_pos = Pow._eval_is_extended_positive(self)
-        if ext_pos is True:
-            return self.is_finite
-        return ext_pos
-
     def _eval_is_extended_positive(self):
         if self.base == self.exp:
             if self.base.is_extended_nonnegative:
@@ -668,7 +662,6 @@ class Pow(Expr):
             return False
 
     def _eval_is_extended_real(self):
-
         if self.base is S.Exp1:
             if self.exp.is_extended_real:
                 return True
@@ -730,7 +723,7 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
-        if real_b is False:  # we already know it's not imag
+        if real_b is False and real_e: # we already know it's not imag
             from sympy.functions.elementary.complexes import arg
             i = arg(self.base)*self.exp/S.Pi
             if i.is_complex: # finite
@@ -745,6 +738,9 @@ class Pow(Expr):
             return True
 
     def _eval_is_imaginary(self):
+        if self.base.is_commutative is False:
+            return False
+
         if self.base.is_imaginary:
             if self.exp.is_integer:
                 odd = self.exp.is_odd
@@ -1651,9 +1647,10 @@ class Pow(Expr):
             from sympy.simplify.powsimp import powsimp
             return powsimp(exp_series, deep=True, combine='exp')
         from sympy.simplify.powsimp import powdenest
+        from .numbers import _illegal
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
-        from .numbers import _illegal
+
         if e.has(*_illegal):
             raise PoleError()
 
@@ -1792,11 +1789,7 @@ class Pow(Expr):
             raise PoleError("Cannot expand %s around 0" % (self))
         elif e.has(x):
             lt = exp(e * log(b))
-            try:
-                lt = lt.as_leading_term(x, logx=logx, cdir=cdir)
-            except PoleError:
-                pass
-            return lt
+            return lt.as_leading_term(x, logx=logx, cdir=cdir)
         else:
             from sympy.functions.elementary.complexes import im
             f = b.as_leading_term(x, logx=logx, cdir=cdir)

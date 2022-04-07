@@ -104,6 +104,8 @@ class NumExprPrinter(LambdaPrinter):
         'contains' : 'contains',
     }
 
+    module = 'numexpr'
+
     def _print_ImaginaryUnit(self, expr):
         return '1j'
 
@@ -179,9 +181,36 @@ class NumExprPrinter(LambdaPrinter):
     _print_Dict = \
     blacklisted
 
+    def _print_NumExprEvaluate(self, expr):
+        evaluate = self._module_format(self.module +".evaluate")
+        return "%s('%s', truediv=True)" % (evaluate, self._print(expr.expr))
+
     def doprint(self, expr):
-        lstr = super().doprint(expr)
-        return "evaluate('%s', truediv=True)" % lstr
+        from sympy.codegen.ast import CodegenAST
+        from sympy.codegen.pynodes import NumExprEvaluate
+        if not isinstance(expr, CodegenAST):
+            expr = NumExprEvaluate(expr)
+        return super().doprint(expr)
+
+    def _print_Return(self, expr):
+        from sympy.codegen.pynodes import NumExprEvaluate
+        r, = expr.args
+        if not isinstance(r, NumExprEvaluate):
+            expr = expr.func(NumExprEvaluate(r))
+        return super()._print_Return(expr)
+
+    def _print_Assignment(self, expr):
+        from sympy.codegen.pynodes import NumExprEvaluate
+        lhs, rhs, *args = expr.args
+        if not isinstance(rhs, NumExprEvaluate):
+            expr = expr.func(lhs, NumExprEvaluate(rhs), *args)
+        return super()._print_Assignment(expr)
+
+    def _print_CodeBlock(self, expr):
+        from sympy.codegen.ast import CodegenAST
+        from sympy.codegen.pynodes import NumExprEvaluate
+        args = [ arg if isinstance(arg, CodegenAST) else NumExprEvaluate(arg) for arg in expr.args ]
+        return super()._print_CodeBlock(self, expr.func(*args))
 
 
 class IntervalPrinter(MpmathPrinter, LambdaPrinter):

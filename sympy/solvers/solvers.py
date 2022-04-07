@@ -49,7 +49,7 @@ from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debug
 from sympy.utilities.iterables import (connected_components,
-    generate_bell, uniq, iterable, is_sequence, subsets)
+    generate_bell, uniq, iterable, is_sequence, subsets, flatten)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
@@ -1294,10 +1294,9 @@ def solve(f, *symbols, **flags):
     if as_dict:
         return solution
     assert as_set
-    if not solution:
-        return [], set()
-    k = list(ordered(solution[0].keys()))
-    return k, {tuple([s[ki] for ki in k]) for s in solution}
+    # each dict does not necessarily have the same keys so unify them
+    k = list(ordered(set(flatten(tuple(i.keys()) for i in solution))))
+    return k, {tuple([s.get(ki, ki) for ki in k]) for s in solution}
 
 
 def _solve(f, *symbols, **flags):
@@ -2718,6 +2717,24 @@ def _tsolve(eq, sym, **flags):
         # lambert forms may need some help being recognized, e.g. changing
         # 2**(3*x) + x**3*log(2)**3 + 3*x**2*log(2)**2 + 3*x*log(2) + 1
         # to 2**(3*x) + (x*log(2) + 1)**3
+
+        # make generator in log have exponent of 1
+        logs = eq.atoms(log)
+        spow = min(
+            {i.exp for j in logs for i in j.atoms(Pow)
+             if i.base == sym} or {1})
+        if spow != 1:
+            p = sym**spow
+            u = Dummy('bivariate-cov')
+            ueq = eq.subs(p, u)
+            if not ueq.has_free(sym):
+                sol = solve(ueq, u, **flags)
+                inv = solve(p - u, sym)
+                rv = []
+                for i in inv:
+                    rv.extend([i.subs(u, s) for s in sol])
+                return rv
+
         g = _filtered_gens(eq.as_poly(), sym)
         up_or_log = set()
         for gi in g:

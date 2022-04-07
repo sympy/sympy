@@ -10,7 +10,7 @@ from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand
 from sympy.core.mul import Mul
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, _illegal
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
@@ -170,7 +170,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     .. [3] https://en.wikipedia.org/wiki/Empty_sum
     """
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ()
 
     limits: tTuple[tTuple[Symbol, Expr, Expr]]
 
@@ -1316,6 +1316,9 @@ def _eval_sum_hyper(f, i, a):
 def eval_sum_hyper(f, i_a_b):
     i, a, b = i_a_b
 
+    if f.is_hypergeometric(i) is False:
+        return
+
     if (b - a).is_Integer:
         # We are never going to do better than doing the sum in the obvious way
         return None
@@ -1328,10 +1331,15 @@ def eval_sum_hyper(f, i_a_b):
             if res is not None:
                 return Piecewise(res, (old_sum, True))
         else:
+            n_illegal = lambda x: sum(x.count(_) for _ in _illegal)
+            had = n_illegal(f)
+            # check that no extra illegals are introduced
             res1 = _eval_sum_hyper(f, i, a)
+            if res1 is None or n_illegal(res1) > had:
+                return
             res2 = _eval_sum_hyper(f, i, b + 1)
-            if res1 is None or res2 is None:
-                return None
+            if res2 is None or n_illegal(res2) > had:
+                return
             (res1, cond1), (res2, cond2) = res1, res2
             cond = And(cond1, cond2)
             if cond == False:

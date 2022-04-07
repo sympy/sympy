@@ -192,6 +192,8 @@ def test_solve_args():
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
     assert solve([x - 1, False], [x], set=True) == ([], set())
+    assert solve([-y*(x + y - 1)/2, (y - 1)/x/y + 1/y],
+        set=True, check=False) == ([x, y], {(1 - y, y), (x, 0)})
 
 
 def test_solve_polynomial1():
@@ -1896,6 +1898,19 @@ def test_lambert_bivariate():
     assert solve((x**3)**(x/2) + pi/2, x) == [
         exp(LambertW(-2*log(2)/3 + 2*log(pi)/3 + I*pi*Rational(2, 3)))]
 
+    # issue 23253
+    assert solve((1/log(sqrt(x) + 2)**2 - 1/x)) == [
+        (LambertW(-exp(-2), -1) + 2)**2]
+    assert solve((1/log(1/sqrt(x) + 2)**2 - x)) == [
+        (LambertW(-exp(-2), -1) + 2)**-2]
+    assert solve((1/log(x**2 + 2)**2 - x**-4)) == [
+        -I*sqrt(2 - LambertW(exp(2))),
+        -I*sqrt(LambertW(-exp(-2)) + 2),
+        sqrt(-2 - LambertW(-exp(-2))),
+        sqrt(-2 + LambertW(exp(2))),
+        -sqrt(-2 - LambertW(-exp(-2), -1)),
+        sqrt(-2 - LambertW(-exp(-2), -1))]
+
 
 def test_rewrite_trig():
     assert solve(sin(x) + tan(x)) == [0, -pi, pi, 2*pi]
@@ -2473,6 +2488,13 @@ def test_solver_flags():
     root = solve(x**5 + x**2 - x - 1, cubics=False)
     rad = solve(x**5 + x**2 - x - 1, cubics=True)
     assert root != rad
+
+
+def test_issue_22768():
+    eq = 2*x**3 - 16*(y - 1)**6*z**3
+    assert solve(eq.expand(), x, simplify=False
+        ) == [2*z*(y - 1)**2, z*(-1 + sqrt(3)*I)*(y - 1)**2,
+        -z*(1 + sqrt(3)*I)*(y - 1)**2]
 
 
 def test_issue_22717():
