@@ -1,4 +1,4 @@
-from sympy.combinatorics.group_numbers import (is_nilpotent_number, 
+from sympy.combinatorics.group_numbers import (is_nilpotent_number,
     is_abelian_number, is_cyclic_number)
 from sympy.testing.pytest import raises
 from sympy import randprime

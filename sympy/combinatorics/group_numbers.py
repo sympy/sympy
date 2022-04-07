@@ -4,8 +4,8 @@ from sympy import factorint
 
 def is_nilpotent_number(n):
     """
-    Check whether `n` is a nilpotent number. A number `n` is said to be 
-    nilpotent if and only if every finite group of order `n` is nilpotent. 
+    Check whether `n` is a nilpotent number. A number `n` is said to be
+    nilpotent if and only if every finite group of order `n` is nilpotent.
     For more information see [1]_.
 
     Examples
@@ -21,10 +21,10 @@ def is_nilpotent_number(n):
     References
     ==========
 
-    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers, 
+    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers,
            The American Mathematical Monthly
 
-           
+
     """
     if n <= 0 or int(n) != n:
         raise ValueError("n must be a positive integer, not %i" % n)
@@ -64,10 +64,10 @@ def is_abelian_number(n):
     References
     ==========
 
-    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers, 
+    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers,
            The American Mathematical Monthly
 
-           
+
     """
     if n <= 0 or int(n) != n:
         raise ValueError("n must be a positive integer, not %i" % n)
@@ -86,7 +86,7 @@ def is_cyclic_number(n):
     Check whether `n` is a cyclic number. A number `n` is said to be cyclic
     if and only if every finite group of order `n` is cyclic. For more
     information see [1]_.
-    
+
     Examples
     ========
 
@@ -102,10 +102,10 @@ def is_cyclic_number(n):
     References
     ==========
 
-    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers, 
+    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers,
            The American Mathematical Monthly
 
-           
+
     """
     if n <= 0 or int(n) != n:
         raise ValueError("n must be a positive integer, not %i" % n)
