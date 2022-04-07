@@ -72,7 +72,7 @@ def test_mhd_case():
 	except Exception as exception: print(exception)
 	""" You should be able to see the Reynolds number and the other two numbers
 		contain information of the Hartmann number, Chandrasekhar number """
-def test_qed_case(self):
+def test_qed_case():
 	""" In this case my function will be able to generate one set
 	of dimensionless quantities in circuit quantum electrodynamics ......"""
 	hbar = M*L**2/T # Dimensions of the reduced Planck's constant
