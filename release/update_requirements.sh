@@ -45,6 +45,8 @@ pip install\
   'antlr4-python3-runtime==4.7.*'\
   sphinx\
   sphinx-math-dollar\
+  furo\
+  sphinx-copybutton\
   sphinx-reredirects\
   myst-parser\
   linkify-it-py\
