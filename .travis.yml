@@ -118,7 +118,7 @@ script:
   - set -e
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-    doctr deploy dev --deploy-repo sympy/sympy_doc
+    doctr deploy dev --deploy-repo sympy/sympy_doc;
     fi
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
     bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports";
