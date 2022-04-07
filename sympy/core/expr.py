@@ -1982,15 +1982,35 @@ class Expr(Basic, EvalfMixin):
         {x: 3*a}
 
         """
-        d = defaultdict(int)
-        c, m = self.as_coeff_mul(*syms)
-        if not c.is_Rational:
-            c = S.One
-            m = self
+        if not syms:
+            d = defaultdict(list)
+            for ai in Add.make_args(self):
+                c, m = ai.as_coeff_Mul()
+                d[m].append(c)
+            for k, v in d.items():
+                if len(v) == 1:
+                    d[k] = v[0]
+                else:
+                    d[k] = Add(*v)
+            di = defaultdict(int)
+            di.update(d)
+            return di
         else:
-            m = Mul(*m, evaluate=False)
-        d.update({m: c})
-        return dict(d) if syms else d
+            d = defaultdict(list)
+            ind, dep = self.as_independent(*syms, as_Add=True)
+            for i in Add.make_args(dep):
+                if i.is_Mul:
+                    c, x = i.as_coeff_mul(*syms)
+                    if c is S.One:
+                        d[i].append(c)
+                    else:
+                        d[i._new_rawargs(*x)].append(c)
+                else:
+                    d[i].append(S.One)
+            d = {k: Add(*d[k]) for k in d}
+            if ind is not S.Zero:
+                d.update({S.One: ind})
+            return d
 
     def as_base_exp(self) -> tuple[Expr, Expr]:
         # a -> b ** e

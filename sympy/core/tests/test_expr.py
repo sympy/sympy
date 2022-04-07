@@ -1552,9 +1552,8 @@ def test_as_coefficients_dict():
     assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 0
     eq = x*(x + 1)*a + x*b + c/x
     assert eq.as_coefficients_dict(x) == {x: b, 1/x: c,
-        x*(x + 1): a, 1: 0}
-    assert eq.expand().as_coefficients_dict(x) == {x: a + b, x**2: a,
-        1/x: c, 1: 0}
+        x*(x + 1): a}
+    assert eq.expand().as_coefficients_dict(x) == {x**2: a, x: a + b, 1/x: c}
 
 def test_args_cnc():
     A = symbols('A', commutative=False)
