@@ -1,3 +1,4 @@
+furo
 linkify-it-py
 matplotlib
 matplotlib-inline
