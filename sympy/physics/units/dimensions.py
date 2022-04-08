@@ -572,24 +572,22 @@ class DimensionSystem(Basic, _QuantityMapper):
         # dimensions
         # in vector language: the set of vectors do not form a basis
         return self.inv_can_transf_matrix.is_square
-    def get_dimensionless_numbers(self, list_of_derived_quantities 
-        # input list of derived quantities in the
+    def get_dimensionless_numbers(self, list_of_derived_quantities):
+        # list_of_derived_quantities is the input list of derived quantities in the
         # form of a python dictionary of tuples (key, item) where 'key' is
         # the name of the physical quantity and 'item' is an instance of
         # Dimension class which possesses the dimensions of the quantity.
-        ):
         """
         This function is designed to take in a set of physical variables (all 
     	essentially dimensionful) and returns one set of all possible dimensionless 
 	    quantities, as guided by the Buckingham's pi theorem (a generalization of 
 	    Rayleigh's method of dimensional analysis .....)
-	    
         Please refer and run to the unit testing file '/units/test/test_dimensionLess.py' for
         the format of the input .... As a heads up, we first need to define a global set of 
         base dimensions and with those we can define the derived quantities .....
         """
         exponent_matrix = []
-        index_dict = { # Dimension names borrowed from print(dimsys_SI)
+        index_dict = {
             'length' : 0,
             'time' : 1,
             'mass' : 2,
@@ -603,9 +601,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         """
         for quantity in list_of_derived_quantities:
             element_for_quantity = [0 for k in range(7)]
-            dimensions = self.get_dimensional_dependencies(
-                    list_of_derived_quantities[quantity]
-                    )
+            dimensions = self.get_dimensional_dependencies(list_of_derived_quantities[quantity])
             for base_dims in dimensions:
                 element_for_quantity[index_dict[base_dims]] = dimensions[base_dims]
             exponent_matrix.append(element_for_quantity)
@@ -632,12 +628,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         for k in range(null_space_dims):
             m = 0
             for quantity in list_of_derived_quantities:
-                set_of_dimless_nums[k] = set_of_dimless_nums[k]*(
-                list_of_derived_quantities[quantity]**exponents[k][m]
-                )
-                set_of_dimless_quant[k] = set_of_dimless_quant[k] + '[' + quantity + ']' + \
-                 '**(' + str(exponents[k][m]) + ')*'
+                set_of_dimless_nums[k] = set_of_dimless_nums[k]*(list_of_derived_quantities[quantity]**exponents[k][m])
+                set_of_dimless_quant[k] = set_of_dimless_quant[k] + '[' + quantity + ']' + '**(' + str(exponents[k][m]) + ')*'
                 m = m + 1
             set_of_dimless_quant[k] = set_of_dimless_quant[k][:-1] # To remove the last star
         return set_of_dimless_quant, set_of_dimless_nums
-
