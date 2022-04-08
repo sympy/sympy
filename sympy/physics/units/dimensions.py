@@ -577,28 +577,23 @@ class DimensionSystem(Basic, _QuantityMapper):
         # form of a python dictionary of tuples (key, item) where 'key' is
         # the name of the physical quantity and 'item' is an instance of
         # Dimension class which possesses the dimensions of the quantity.
-        """
-        This function is designed to take in a set of physical variables (all 
+        """ This function is designed to take in a set of physical variables (all 
         essentially dimensionful) and returns one set of all possible dimensionless 
         quantities, as guided by the Buckingham's pi theorem (a generalization of 
         Rayleigh's method of dimensional analysis .....)
+        
         Please refer and run to the unit testing file '/units/test/test_dimensionless.py' for
         the format of the input .... As a heads up, we first need to define a global set of 
-        base dimensions and with those we can define the derived quantities .....
-        """
+        base dimensions and with those we can define the derived quantities ..... """
         exponent_matrix = []
-        """
-        We extract the exponent matrix from the dimensional dependencies of the quantities
-        """
+        """ We extract the exponent matrix from the dimensional dependencies of the quantities """
         for quantity in list_of_derived_quantities:
             element_for_quantity = [0 for k in range(7)]
             dimensions = self.get_dimensional_dependencies(list_of_derived_quantities[quantity])
             for base_dims in dimensions:
                 element_for_quantity[self.base_dims.index(Dimension(baseDims))] = dimensions[base_dims]
             exponent_matrix.append(element_for_quantity)
-        """
-        Next we obtain the null space of the exponent matrix
-        """
+        """ Next we obtain the null space of the exponent matrix """
         exponent_matrix = Matrix(exponent_matrix)
         exponents = exponent_matrix.T.nullspace()
         # We need to make sure that we obtain integer nullspaces because
