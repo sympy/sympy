@@ -15,7 +15,7 @@ from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
                         Add)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log, _mexpand, expand_trig)
+                                expand_log, _mexpand, expand_trig, nfloat)
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd, I, Number, Rational, oo, ilcm
 from sympy.core.power import integer_log
@@ -25,7 +25,7 @@ from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import iterfreeargs
 from sympy.polys.polyroots import UnsolvableFactorError
-from sympy.simplify.simplify import simplify, fraction, trigsimp
+from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec,
@@ -45,7 +45,7 @@ from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor, lcm, gcd)
 from sympy.polys.polyerrors import CoercionFailed
-from sympy.polys.polytools import invert, groebner
+from sympy.polys.polytools import invert, groebner, poly
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
 from sympy.polys.matrices.linsolve import _linsolve
@@ -3507,6 +3507,13 @@ def _handle_poly(polys, symbols):
     # we return no equations:
     no_equations = []
 
+    inexact = any(not p.domain.is_Exact for p in polys)
+    if inexact:
+        # The use of Groebner over RR is likely to result incorrectly in an
+        # inconsistent Groebner basis. So, convert any float coefficients to
+        # Rational before computing the Groebner basis.
+        polys = [poly(nsimplify(p, rational=True)) for p in polys]
+
     # Compute a Groebner basis in grevlex order wrt the ordering given. We will
     # try to convert this to lex order later. Usually it seems to be more
     # efficient to compute a lex order basis by computing a grevlex basis and
@@ -3518,15 +3525,7 @@ def _handle_poly(polys, symbols):
     #
     if 1 in basis:
 
-        # The use of Groebner over RR is likely to result incorrectly in an
-        # inconsistent Groebner basis. Here we catch this case and warn the user
-        # to avoid using floats in their equations. Other possible approaches
-        # could be to use nsimplify or to use groebner's f5b method.
-        if not basis.domain.is_Exact:
-            raise NotImplementedError(
-                "Equation not in exact domain. Try converting floats to rational")
-
-        # Definitely no solutions:
+        # No solutions:
         poly_sol = no_solutions
         poly_eqs = no_equations
 
@@ -3537,6 +3536,11 @@ def _handle_poly(polys, symbols):
 
         # Convert Groebner basis to lex ordering
         basis = basis.fglm('lex')
+
+        # Convert polynomial coefficients back to float before calling
+        # solve_poly_system
+        if inexact:
+            basis = [nfloat(p) for p in basis]
 
         # Solve the zero-dimensional case using solve_poly_system if possible.
         # If some polynomials have factors that cannot be solved in radicals
@@ -3569,6 +3573,9 @@ def _handle_poly(polys, symbols):
         # substitution to solve the new system.
         poly_sol = no_information
         poly_eqs = list(groebner(polys, symbols, order='lex', polys=False))
+
+        if inexact:
+            poly_eqs = [nfloat(p) for p in poly_eqs]
 
     return poly_sol, poly_eqs
 
