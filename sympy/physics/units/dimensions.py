@@ -572,7 +572,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         # dimensions
         # in vector language: the set of vectors do not form a basis
         return self.inv_can_transf_matrix.is_square
-def get_dimensionless_numbers(self, list_of_derived_quantities):
+    def get_dimensionless_numbers(self, list_of_derived_quantities):
         # list_of_derived_quantities is the input list of derived quantities in the
         # form of a python dictionary of tuples (key, item) where 'key' is
         # the name of the physical quantity and 'item' is an instance of
