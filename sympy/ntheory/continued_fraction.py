@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Integer, Rational
 from sympy.core.singleton import S
@@ -6,7 +7,7 @@ from sympy.core.sympify import _sympify
 from sympy.utilities.misc import as_int
 
 
-def continued_fraction(a):
+def continued_fraction(a) -> list:
     """Return the continued fraction representation of a Rational or
     quadratic irrational.
 
@@ -71,7 +72,7 @@ def continued_fraction(a):
         'expecting a rational or quadratic irrational, not %s' % e)
 
 
-def continued_fraction_periodic(p, q, d=0, s=1):
+def continued_fraction_periodic(p, q, d=0, s=1) -> list:
     r"""
     Find the periodic continued fraction expansion of a quadratic irrational.
 
@@ -167,7 +168,7 @@ def continued_fraction_periodic(p, q, d=0, s=1):
         p *= q
         q *= q
 
-    terms = []
+    terms: list[int] = []
     pq = {}
 
     while (p, q) not in pq:
@@ -177,7 +178,7 @@ def continued_fraction_periodic(p, q, d=0, s=1):
         q = (d - p**2)//q
 
     i = pq[(p, q)]
-    return terms[:i] + [terms[i:]]
+    return terms[:i] + [terms[i:]]  # type: ignore
 
 
 def continued_fraction_reduce(cf):

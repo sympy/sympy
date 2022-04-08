@@ -75,7 +75,7 @@ before_install:
         fi
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-    pip install sphinx "docutils" doctr matplotlib sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py;
+    pip install sphinx "docutils" doctr matplotlib sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py furo sphinx-copybutton;
     fi
   - if [[ "${BENCHMARK}" == "true" ]]; then
     pip install asv;
@@ -118,7 +118,7 @@ script:
   - set -e
   - bin/test_travis.sh
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-    doctr deploy dev --deploy-repo sympy/sympy_doc --command './generate_indexes.py';
+    doctr deploy dev --deploy-repo sympy/sympy_doc;
     fi
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
     bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports";

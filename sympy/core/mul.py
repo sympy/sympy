@@ -1324,14 +1324,18 @@ class Mul(Expr, AssocOp):
         if r:
             return r
         elif r is False:
-            return self.is_zero
+            # All args except one are rational
+            if all(a.is_zero is False for a in self.args):
+                return False
 
     def _eval_is_algebraic(self):
         r = _fuzzy_group((a.is_algebraic for a in self.args), quick_exit=True)
         if r:
             return r
         elif r is False:
-            return self.is_zero
+            # All args except one are algebraic
+            if all(a.is_zero is False for a in self.args):
+                return False
 
     def _eval_is_zero(self):
         zero = infinite = False
@@ -1483,56 +1487,34 @@ class Mul(Expr, AssocOp):
             return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
-        z = self.is_zero
-        if z:
-            return False
-        if self.is_finite is False:
-            return False
-        elif z is False and self.is_finite is True:
+        if all(a.is_zero is False and a.is_finite for a in self.args):
             return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):
         return self._eval_herm_antiherm(True)
 
-    def _eval_herm_antiherm(self, real):
-        one_nc = zero = one_neither = False
+    def _eval_is_antihermitian(self):
+        return self._eval_herm_antiherm(False)
 
+    def _eval_herm_antiherm(self, herm):
         for t in self.args:
-            if not t.is_commutative:
-                if one_nc:
-                    return
-                one_nc = True
-
-            if t.is_antihermitian:
-                real = not real
-            elif t.is_hermitian:
-                if not zero:
-                    z = t.is_zero
-                    if not z and zero is False:
-                        zero = z
-                    elif z:
-                        if all(a.is_finite for a in self.args):
-                            return True
-                        return
-            elif t.is_hermitian is False:
-                if one_neither:
-                    return
-                one_neither = True
+            if t.is_hermitian is None or t.is_antihermitian is None:
+                return
+            if t.is_hermitian:
+                continue
+            elif t.is_antihermitian:
+                herm = not herm
             else:
                 return
 
-        if one_neither:
-            if real:
-                return zero
-        elif zero is False or real:
-            return real
+        if herm is not False:
+            return herm
 
-    def _eval_is_antihermitian(self):
-        z = self.is_zero
-        if z:
-            return False
-        elif z is False:
-            return self._eval_herm_antiherm(False)
+        is_zero = self._eval_is_zero()
+        if is_zero:
+            return True
+        elif is_zero is False:
+            return herm
 
     def _eval_is_irrational(self):
         for t in self.args:
@@ -1605,44 +1587,37 @@ class Mul(Expr, AssocOp):
         return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):
-        is_integer = self.is_integer
-        if is_integer:
-            if self.is_zero:
+        is_integer = self._eval_is_integer()
+        if is_integer is not True:
+            return is_integer
+
+        from sympy.simplify.radsimp import fraction
+        n, d = fraction(self)
+        if d.is_Integer and d.is_even:
+            from sympy.ntheory.factor_ import trailing
+            # if minimal power of 2 in num vs den is
+            # positive then we have an even number
+            if (Add(*[i.as_base_exp()[1] for i in
+                    Mul.make_args(n) if i.is_even]) - trailing(d.p)
+                    ).is_positive:
                 return False
-            from sympy.simplify.radsimp import fraction
-            n, d = fraction(self)
-            if d.is_Integer and d.is_even:
-                from sympy.ntheory.factor_ import trailing
-                # if minimal power of 2 in num vs den is
-                # positive then we have an even number
-                if (Add(*[i.as_base_exp()[1] for i in
-                        Mul.make_args(n) if i.is_even]) - trailing(d.p)
-                        ).is_positive:
-                    return False
-                return
-            r, acc = True, 1
-            for t in self.args:
-                if abs(t) is S.One:
-                    continue
-                assert t.is_integer
-                if t.is_even:
-                    return False
-                if r is False:
-                    pass
-                elif acc != 1 and (acc + t).is_odd:
-                    r = False
-                elif t.is_even is None:
-                    r = None
-                acc = t
-            return r
-        return is_integer # !integer -> !odd
+            return
+        r, acc = True, 1
+        for t in self.args:
+            if abs(t) is S.One:
+                continue
+            if t.is_even:
+                return False
+            if r is False:
+                pass
+            elif acc != 1 and (acc + t).is_odd:
+                r = False
+            elif t.is_even is None:
+                r = None
+            acc = t
+        return r
 
     def _eval_is_even(self):
-        is_integer = self.is_integer
-
-        if is_integer:
-            return fuzzy_not(self.is_odd)
-
         from sympy.simplify.radsimp import fraction
         n, d = fraction(self)
         if n.is_Integer and n.is_even:
@@ -1654,7 +1629,6 @@ class Mul(Expr, AssocOp):
                     Mul.make_args(d) if i.is_even]) - trailing(n.p)
                     ).is_nonnegative:
                 return False
-        return is_integer
 
     def _eval_is_composite(self):
         """
