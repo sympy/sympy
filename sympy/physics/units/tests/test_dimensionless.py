@@ -17,14 +17,7 @@ def test_navier_stokes_case():
 	mu = M/L/T # Dynamic viscosity
 	p_c = M/L/T**2 # Characteristic pressure scale
 	F_bc = M*L/T**2 # Characteristic body forces scale
-	list_of_quantities = {
-		'Lc': Lc,
-		'Uc' : Uc,
-		'rho' : rho_c,
-		'mu' : mu,
-		'pc' : p_c,
-		'Fbc' : F_bc
-	}
+	list_of_quantities = {'Lc': Lc, 'Uc' : Uc, 'rho' : rho_c, 'mu' : mu, 'pc' : p_c, 'Fbc' : F_bc}
 	set_of_dimless_quant, set_of_dimless_nums = DimensionSystem.get_dimensionless_numbers(list_of_quantities)
 	flag = True
 	for dimension in set_of_dimless_nums:
@@ -45,15 +38,7 @@ def test_mhd_case():
 	j0 = I/L**2 # Characteristic range value of current density
 	sigma_0 = M*L**3*T**(-3)*I**(-2) # Characteristic conductivity scale
 	B0 = M*T**(-2)*I**(-1) # Magnetic field characteristic scale
-	list_of_quantities = {
-		'Lc': Lc,
-		'Uc' : Uc,
-		'rho' : rho_c,
-		'mu' : mu,
-		'j0' : j0,
-		'sigma_0' : sigma_0,
-		'B0' : B0
-	}
+	list_of_quantities = {'Lc': Lc, 'Uc' : Uc, 'rho' : rho_c, 'mu' : mu, 'j0' : j0, 'sigma_0' : sigma_0, 'B0' : B0}
 	set_of_dimless_quant, set_of_dimless_nums = DimensionSystem.get_dimensionless_numbers(list_of_quantities)
 	flag = True
 	for dimension in set_of_dimless_nums:
@@ -73,14 +58,7 @@ def test_qed_case():
 	Vm = L**3 # Volume of the resonator
 	Qe = I*T # Dimensions of the electronic charge
 	Uc = L/T # Velocity dimensions
-	list_of_quantities = {
-		'hbar': hbar,
-		'Uc' : Uc,
-		'omega' : omega,
-		'epsilon' : epsilon,
-		'Vm' : Vm,
-		'Qe' : Qe
-	}
+	list_of_quantities = {'hbar': hbar, 'Uc' : Uc, 'omega' : omega, 'epsilon' : epsilon, 'Vm' : Vm, 'Qe' : Qe}
 	set_of_dimless_quant, set_of_dimless_nums = DimensionSystem.get_dimensionless_numbers(list_of_quantities)
 	flag = True
 	for dimension in set_of_dimless_nums:
