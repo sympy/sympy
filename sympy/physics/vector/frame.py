@@ -66,8 +66,8 @@ class CoordinateSym(Symbol):
         return self._id[0]
 
     def __eq__(self, other):
-        #Check if the other object is a CoordinateSym of the same frame
-        #and same index
+        # Check if the other object is a CoordinateSym of the same frame and
+        # same index
         if isinstance(other, CoordinateSym):
             if other._id == self._id:
                 return True
@@ -130,7 +130,8 @@ class ReferenceFrame:
         >>> vlatex(P.x)
         'A1'
 
-        symbols() can be used to create multiple Reference Frames in one step, for example:
+        ``symbols()`` can be used to create multiple Reference Frames in one
+        step, for example:
 
         >>> from sympy.physics.vector import ReferenceFrame
         >>> from sympy import symbols
@@ -167,10 +168,11 @@ class ReferenceFrame:
                                 (name.lower() + "_" + indices[1]),
                                 (name.lower() + "_" + indices[2])]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
-                               indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
-                               (name.lower(), indices[1])),
+                                                             indices[0])),
                                (r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
-                               indices[2]))]
+                                                             indices[1])),
+                               (r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+                                                             indices[2]))]
             self.indices = indices
         # Second case, when no custom indices are supplied
         else:
@@ -194,9 +196,10 @@ class ReferenceFrame:
             self.latex_vecs = latexs
         self.name = name
         self._var_dict = {}
-        #The _dcm_dict dictionary will only store the dcms of adjacent parent-child
-        #relationships. The _dcm_cache dictionary will store calculated dcm along with
-        #all content of _dcm_dict for faster retrieval of dcms.
+        # The _dcm_dict dictionary will only store the dcms of adjacent
+        # parent-child relationships. The _dcm_cache dictionary will store
+        # calculated dcm along with all content of _dcm_dict for faster
+        # retrieval of dcms.
         self._dcm_dict = {}
         self._dcm_cache = {}
         self._ang_vel_dict = {}
@@ -206,7 +209,7 @@ class ReferenceFrame:
         self._x = Vector([(Matrix([1, 0, 0]), self)])
         self._y = Vector([(Matrix([0, 1, 0]), self)])
         self._z = Vector([(Matrix([0, 0, 1]), self)])
-        #Associate coordinate symbols wrt this frame
+        # Associate coordinate symbols wrt this frame
         if variables is not None:
             if not isinstance(variables, (tuple, list)):
                 raise TypeError('Supply the variable names as a list/tuple')
@@ -217,8 +220,8 @@ class ReferenceFrame:
                     raise TypeError('Variable names must be strings')
         else:
             variables = [name + '_x', name + '_y', name + '_z']
-        self.varlist = (CoordinateSym(variables[0], self, 0), \
-                        CoordinateSym(variables[1], self, 1), \
+        self.varlist = (CoordinateSym(variables[0], self, 0),
+                        CoordinateSym(variables[1], self, 1),
                         CoordinateSym(variables[2], self, 2))
         ReferenceFrame._count += 1
         self.index = ReferenceFrame._count
@@ -372,7 +375,8 @@ class ReferenceFrame:
             mapping = {}
             for i, x in enumerate(self):
                 if Vector.simp:
-                    mapping[self.varlist[i]] = trigsimp(vars_matrix[i], method='fu')
+                    mapping[self.varlist[i]] = trigsimp(vars_matrix[i],
+                                                        method='fu')
                 else:
                     mapping[self.varlist[i]] = vars_matrix[i]
             self._var_dict[(otherframe, Vector.simp)] = mapping
@@ -382,9 +386,11 @@ class ReferenceFrame:
         """Returns the angular acceleration Vector of the ReferenceFrame.
 
         Effectively returns the Vector:
-        ^N alpha ^B
-        which represent the angular acceleration of B in N, where B is self, and
-        N is otherframe.
+
+        ``N_alpha_B``
+
+        which represent the angular acceleration of B in N, where B is self,
+        and N is otherframe.
 
         Parameters
         ==========
@@ -448,8 +454,8 @@ class ReferenceFrame:
         return outvec
 
     def dcm(self, otherframe):
-        r"""Returns the direction cosine matrix relative to the provided
-        reference frame.
+        r"""Returns the direction cosine matrix of this reference frame
+        relative to the provided reference frame.
 
         The returned matrix can be used to express the orthogonal unit vectors
         of this frame in terms of the orthogonal unit vectors of
@@ -473,7 +479,8 @@ class ReferenceFrame:
         >>> from sympy.physics.vector import ReferenceFrame
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Axis', (q1, N.x))
+        >>> A = ReferenceFrame('A')
+        >>> A.orient_axis(N, q1, N.x)
         >>> N.dcm(A)
         Matrix([
         [1,       0,        0],
@@ -493,10 +500,10 @@ class ReferenceFrame:
         Notes
         =====
 
-        It is import to know what form of the direction cosine matrix is
+        It is important to know what form of the direction cosine matrix is
         returned. If ``B.dcm(A)`` is called, it means the "direction cosine
-        matrix of B relative to A". This is the matrix :math:`^{\mathbf{A}} \mathbf{R} ^{\mathbf{B}}`
-        shown in the following relationship:
+        matrix of B rotated relative to A". This is the matrix
+        :math:`{}^B\mathbf{C}^A` shown in the following relationship:
 
         .. math::
 
@@ -506,14 +513,14 @@ class ReferenceFrame:
              \hat{\mathbf{b}}_3
            \end{bmatrix}
            =
-           {}^A\mathbf{R}^B
+           {}^B\mathbf{C}^A
            \begin{bmatrix}
              \hat{\mathbf{a}}_1 \\
              \hat{\mathbf{a}}_2 \\
              \hat{\mathbf{a}}_3
            \end{bmatrix}.
 
-        :math:`{}^A\mathbf{R}^B` is the matrix that expresses the B unit
+        :math:`{}^B\mathbf{C}^A` is the matrix that expresses the B unit
         vectors in terms of the A unit vectors.
 
         """
@@ -548,8 +555,8 @@ class ReferenceFrame:
                     dcm_dict_del += [frame]
                 dcm_cache_del += [frame]
             # Reset the _dcm_cache of this frame, and remove it from the
-            # _dcm_caches of the frames it is linked to. Also remove it from the
-            # _dcm_dict of its parent
+            # _dcm_caches of the frames it is linked to. Also remove it from
+            # the _dcm_dict of its parent
             for frame in dcm_dict_del:
                 del frame._dcm_dict[self]
             for frame in dcm_cache_del:
@@ -560,10 +567,10 @@ class ReferenceFrame:
             self._dcm_cache = {}
 
         else:
-        #Check for loops and raise warning accordingly.
+            # Check for loops and raise warning accordingly.
             visited = []
             queue = list(frames)
-            cont = True #Flag to control queue loop.
+            cont = True  # Flag to control queue loop.
             while queue and cont:
                 node = queue.pop(0)
                 if node not in visited:
@@ -571,8 +578,9 @@ class ReferenceFrame:
                     neighbors = node._dcm_dict.keys()
                     for neighbor in neighbors:
                         if neighbor == parent:
-                            warn('Loops are defined among the orientation of frames.' + \
-                                ' This is likely not desired and may cause errors in your calculations.')
+                            warn('Loops are defined among the orientation of '
+                                 'frames. This is likely not desired and may '
+                                 'cause errors in your calculations.')
                             cont = False
                             break
                         queue.append(neighbor)
@@ -891,6 +899,13 @@ class ReferenceFrame:
             u2 = expand(td[u2])
             u3 = expand(td[u3])
             wvec = u1 * self.x + u2 * self.y + u3 * self.z
+            # NOTE : SymPy 1.7 removed the call to simplify() that occured
+            # inside the solve() function, so this restores the pre-1.7
+            # behavior. See:
+            # https://github.com/sympy/sympy/issues/23140
+            # and
+            # https://github.com/sympy/sympy/issues/23130
+            wvec = wvec.simplify()
         except (CoercionFailed, AssertionError):
             wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})

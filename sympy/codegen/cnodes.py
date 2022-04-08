@@ -58,7 +58,7 @@ class Label(Node):
     ++(a);
 
     """
-    __slots__ = ('name', 'body')
+    __slots__ = _fields = ('name', 'body')
     defaults = {'body': none}
     _construct_name = String
 
@@ -72,7 +72,7 @@ class Label(Node):
 
 class goto(Token):
     """ Represents goto in C """
-    __slots__ = ('label',)
+    __slots__ = _fields = ('label',)
     _construct_label = Label
 
 
@@ -109,7 +109,7 @@ class PostIncrement(Basic):
 
 class struct(Node):
     """ Represents a struct in C """
-    __slots__ = ('name', 'declarations')
+    __slots__ = _fields = ('name', 'declarations')
     defaults = {'name': none}
     _construct_name = String
 
@@ -120,3 +120,4 @@ class struct(Node):
 
 class union(struct):
     """ Represents a union in C """
+    __slots__ = ()

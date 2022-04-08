@@ -20,7 +20,7 @@ Segment3D
 from sympy.core.containers import Tuple
 from sympy.core.evalf import N
 from sympy.core.expr import Expr
-from sympy.core.numbers import Rational, oo
+from sympy.core.numbers import Rational, oo, Float
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
@@ -530,13 +530,38 @@ class LinearEntity(GeometrySet):
                 coeff = m_rref[0, 2]
                 line_intersection = l1.direction*coeff + self.p1
 
-                # if we're both lines, we can skip a containment check
+                # if both are lines, skip a containment check
                 if isinstance(self, Line) and isinstance(other, Line):
                     return [line_intersection]
 
                 if ((isinstance(self, Line) or
                      self.contains(line_intersection)) and
                         other.contains(line_intersection)):
+                    return [line_intersection]
+                if not self.atoms(Float) and not other.atoms(Float):
+                    # if it can fail when there are no Floats then
+                    # maybe the following parametric check should be
+                    # done
+                    return []
+                # floats may fail exact containment so check that the
+                # arbitrary points, when  equal, both give a
+                # non-negative parameter when the arbitrary point
+                # coordinates are equated
+                t, u = [Dummy(i) for i in 'tu']
+                tu = solve(self.arbitrary_point(t) - other.arbitrary_point(u),
+                    t, u, dict=True)[0]
+                def ok(p, l):
+                    if isinstance(l, Line):
+                        # p > -oo
+                        return True
+                    if isinstance(l, Ray):
+                        # p >= 0
+                        return p.is_nonnegative
+                    if isinstance(l, Segment):
+                        # 0 <= p <= 1
+                        return p.is_nonnegative and (1 - p).is_nonnegative
+                    raise ValueError("unexpected line type")
+                if ok(tu[t], self) and ok(tu[u], other):
                     return [line_intersection]
                 return []
             else:
@@ -783,23 +808,20 @@ class LinearEntity(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Line
-        >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
-        >>> l1 = Line(p1, p2)
-        >>> l2 = l1.perpendicular_line(p3)
-        >>> p3 in l2
-        True
-        >>> l1.is_perpendicular(l2)
-        True
         >>> from sympy import Point3D, Line3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(2, 3, 4), Point3D(-2, 2, 0)
-        >>> l1 = Line3D(p1, p2)
-        >>> l2 = l1.perpendicular_line(p3)
-        >>> p3 in l2
-        True
-        >>> l1.is_perpendicular(l2)
+        >>> L = Line3D(p1, p2)
+        >>> P = L.perpendicular_line(p3); P
+        Line3D(Point3D(-2, 2, 0), Point3D(4/29, 6/29, 8/29))
+        >>> L.is_perpendicular(P)
         True
 
+        In 3D the, the first point used to define the line is the point
+        through which the perpendicular was required to pass; the
+        second point is (arbitrarily) contained in the given line:
+
+        >>> P.p2 in L
+        True
         """
         p = Point(p, dim=self.ambient_dimension)
         if p in self:
@@ -1889,6 +1911,18 @@ class LinearEntity2D(LinearEntity):
         """Create a new Line perpendicular to this linear entity which passes
         through the point `p`.
 
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
+        >>> l1 = Line(p1, p2)
+        >>> l2 = l1.perpendicular_line(p3)
+        >>> p3 in l2
+        True
+        >>> l1.is_perpendicular(l2)
+        True
+
         Parameters
         ==========
 
@@ -1909,17 +1943,25 @@ class LinearEntity2D(LinearEntity):
 
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
-        >>> l1 = Line(p1, p2)
-        >>> l2 = l1.perpendicular_line(p3)
-        >>> p3 in l2
-        True
-        >>> l1.is_perpendicular(l2)
+        >>> L = Line(p1, p2)
+        >>> P = L.perpendicular_line(p3); P
+        Line2D(Point2D(-2, 2), Point2D(-5, 4))
+        >>> L.is_perpendicular(P)
         True
 
+        In 2D, the first point of the perpendicular line is the
+        point through which was required to pass; the second
+        point is arbitrarily chosen. To get a line that explicitly
+        uses a point in the line, create a line from the perpendicular
+        segment from the line to the point:
+
+        >>> Line(L.perpendicular_segment(p3))
+        Line2D(Point2D(-2, 2), Point2D(4/13, 6/13))
         """
         p = Point(p, dim=self.ambient_dimension)
         # any two lines in R^2 intersect, so blindly making
         # a line through p in an orthogonal direction will work
+        # and is faster than finding the projection point as in 3D
         return Line(p, p + self.direction.orthogonal_direction)
 
     @property

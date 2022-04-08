@@ -1,7 +1,7 @@
 from sympy.core import Atom, Basic
 
 
-class CartanType_generator(Basic):
+class CartanType_generator():
     """
     Constructor for actually creating things
     """

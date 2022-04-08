@@ -10,7 +10,7 @@ from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand
 from sympy.core.mul import Mul
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, _illegal
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
@@ -170,7 +170,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     .. [3] https://en.wikipedia.org/wiki/Empty_sum
     """
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ()
 
     limits: tTuple[tTuple[Symbol, Expr, Expr]]
 
@@ -969,15 +969,16 @@ def telescopic(L, R, limits):
 
     # We want to solve(L.subs(i, i + m) + R, m)
     # First we try a simple match since this does things that
-    # solve doesn't do, e.g. solve(f(k+m)-f(k), m) fails
+    # solve doesn't do, e.g. solve(cos(k+m)-cos(k), m) gives
+    # a more complicated solution than m == 0.
 
     k = Wild("k")
     sol = (-R).match(L.subs(i, i + k))
     s = None
     if sol and k in sol:
         s = sol[k]
-        if not (s.is_Integer and L.subs(i, i + s) == -R):
-            # sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
+        if not (s.is_Integer and L.subs(i, i + s) + R == 0):
+            # invalid match or match didn't work
             s = None
 
     # But there are things that match doesn't do that solve
@@ -1039,9 +1040,8 @@ def eval_sum(f, limits):
         return eval_sum_direct(f, (i, a, b))
     if isinstance(f, Piecewise):
         return None
-    # Try to do it symbolically. Even when the number of terms is known,
-    # this can save time when b-a is big.
-    # We should try to transform to partial fractions
+    # Try to do it symbolically. Even when the number of terms is
+    # known, this can save time when b-a is big.
     value = eval_sum_symbolic(f.expand(), (i, a, b))
     if value is not None:
         return value
@@ -1081,10 +1081,15 @@ def eval_sum_direct(expr, limits):
                 sL = eval_sum_direct(L, (i, a, b))
                 if sL:
                     return sL*R
-        try:
-            expr = apart(expr, i)  # see if it becomes an Add
-        except PolynomialError:
-            pass
+
+    # do this whether its an Add or Mul
+    # e.g. apart(1/(25*i**2 + 45*i + 14)) and
+    # apart(1/((5*i + 2)*(5*i + 7))) ->
+    # -1/(5*(5*i + 7)) + 1/(5*(5*i + 2))
+    try:
+        expr = apart(expr, i)  # see if it becomes an Add
+    except PolynomialError:
+        pass
 
     if expr.is_Add:
         # Try factor out everything not including i
@@ -1138,10 +1143,15 @@ def eval_sum_symbolic(f, limits):
                 sL = eval_sum_symbolic(L, (i, a, b))
                 if sL:
                     return sL*R
-        try:
-            f = apart(f, i)  # see if it becomes an Add
-        except PolynomialError:
-            pass
+
+    # do this whether its an Add or Mul
+    # e.g. apart(1/(25*i**2 + 45*i + 14)) and
+    # apart(1/((5*i + 2)*(5*i + 7))) ->
+    # -1/(5*(5*i + 7)) + 1/(5*(5*i + 2))
+    try:
+        f = apart(f, i)
+    except PolynomialError:
+        pass
 
     if f.is_Add:
         L, R = f.as_two_terms()
@@ -1306,6 +1316,9 @@ def _eval_sum_hyper(f, i, a):
 def eval_sum_hyper(f, i_a_b):
     i, a, b = i_a_b
 
+    if f.is_hypergeometric(i) is False:
+        return
+
     if (b - a).is_Integer:
         # We are never going to do better than doing the sum in the obvious way
         return None
@@ -1318,10 +1331,15 @@ def eval_sum_hyper(f, i_a_b):
             if res is not None:
                 return Piecewise(res, (old_sum, True))
         else:
+            n_illegal = lambda x: sum(x.count(_) for _ in _illegal)
+            had = n_illegal(f)
+            # check that no extra illegals are introduced
             res1 = _eval_sum_hyper(f, i, a)
+            if res1 is None or n_illegal(res1) > had:
+                return
             res2 = _eval_sum_hyper(f, i, b + 1)
-            if res1 is None or res2 is None:
-                return None
+            if res2 is None or n_illegal(res2) > had:
+                return
             (res1, cond1), (res2, cond2) = res1, res2
             cond = And(cond1, cond2)
             if cond == False:

@@ -508,7 +508,7 @@ class Wild(Symbol):
     This is technically correct, because
     (2/x)*x + 3*y == 2 + 3*y, but you probably
     wanted it to not match at all. The issue is that
-    you really didn't want a and b to include x and y,
+    you really did not want a and b to include x and y,
     and the exclude parameter lets you specify exactly
     this.  With the exclude parameter, the pattern will
     not match.

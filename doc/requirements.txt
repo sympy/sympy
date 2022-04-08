@@ -1,3 +1,4 @@
+furo
 linkify-it-py
 matplotlib
 matplotlib-inline
@@ -5,6 +6,7 @@ mpmath
 myst-parser
 Sphinx
 sphinx-autobuild
+sphinx-copybutton
 sphinx-math-dollar
 sphinx-reredirects
 sphinxcontrib-applehelp

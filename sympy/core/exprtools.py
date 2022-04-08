@@ -18,6 +18,7 @@ from sympy.utilities.iterables import (common_prefix, common_suffix,
         variations, iterable, is_sequence)
 
 from collections import defaultdict
+from typing import Tuple as tTuple
 
 
 _eps = Dummy(positive=True)
@@ -212,7 +213,7 @@ def _monotonic_sign(self):
             return rv.subs(_eps, 0)
 
 
-def decompose_power(expr):
+def decompose_power(expr: Expr) -> tTuple[Expr, int]:
     """
     Decompose power into symbolic base and integer exponent.
 
@@ -245,26 +246,27 @@ def decompose_power(expr):
     if exp.is_Number:
         if exp.is_Rational:
             if not exp.is_Integer:
-                base = Pow(base, Rational(1, exp.q))
-
-            exp = exp.p
+                base = Pow(base, Rational(1, exp.q))  # type: ignore
+            e = exp.p  # type: ignore
         else:
-            base, exp = expr, 1
+            base, e = expr, 1
     else:
         exp, tail = exp.as_coeff_Mul(rational=True)
 
         if exp is S.NegativeOne:
-            base, exp = Pow(base, tail), -1
+            base, e = Pow(base, tail), -1
         elif exp is not S.One:
-            tail = _keep_coeff(Rational(1, exp.q), tail)
-            base, exp = Pow(base, tail), exp.p
+            # todo: after dropping python 3.7 support, use overload and Literal
+            #  in as_coeff_Mul to make exp Rational, and remove these 2 ignores
+            tail = _keep_coeff(Rational(1, exp.q), tail)  # type: ignore
+            base, e = Pow(base, tail), exp.p  # type: ignore
         else:
-            base, exp = expr, 1
+            base, e = expr, 1
 
-    return base, exp
+    return base, e
 
 
-def decompose_power_rat(expr):
+def decompose_power_rat(expr: Expr) -> tTuple[Expr, Rational]:
     """
     Decompose power into symbolic base and rational exponent.
 
@@ -272,20 +274,22 @@ def decompose_power_rat(expr):
     base, exp = expr.as_base_exp()
 
     if exp.is_Number:
-        if not exp.is_Rational:
-            base, exp = expr, 1
+        if exp.is_Rational:
+            e: Rational = exp  # type: ignore
+        else:
+            base, e = expr, S.One
     else:
         exp, tail = exp.as_coeff_Mul(rational=True)
 
         if exp is S.NegativeOne:
-            base, exp = Pow(base, tail), -1
+            base, e = Pow(base, tail), S.NegativeOne
         elif exp is not S.One:
-            tail = _keep_coeff(Rational(1, exp.q), tail)
-            base, exp = Pow(base, tail), exp.p
+            tail = _keep_coeff(Rational(1, exp.q), tail)  # type: ignore
+            base, e = Pow(base, tail), Integer(exp.p)  # type: ignore
         else:
-            base, exp = expr, 1
+            base, e = expr, S.One
 
-    return base, exp
+    return base, e
 
 
 class Factors:

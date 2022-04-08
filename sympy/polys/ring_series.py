@@ -15,7 +15,7 @@ There are a few things to be kept in mind when adding a new function here::
 
       Strictly speaking, a generator of a ring should not be considered a
       constant. However, for series expansion both the cases need similar
-      treatment (as the user doesn't care about inner details), i.e, use an
+      treatment (as the user does not care about inner details), i.e, use an
       addition formula to separate the constant part and the variable part (see
       rs_sin for reference).
 

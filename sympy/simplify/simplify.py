@@ -384,7 +384,7 @@ def signsimp(expr, evaluate=None):
     >>> n**i
     (-1 + 1/x)**i
 
-    By default, signsimp doesn't leave behind any hollow simplification:
+    By default, signsimp does not leave behind any hollow simplification:
     if making an Add canonical wrt sign didn't change the expression, the
     original Add is restored. If this is not desired then the keyword
     ``evaluate`` can be set to False:

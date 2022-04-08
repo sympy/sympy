@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from typing import Tuple as tTuple, TYPE_CHECKING
 from collections.abc import Iterable
 from functools import reduce
 
@@ -16,6 +16,8 @@ from sympy.utilities.iterables import has_variety, sift
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
+if TYPE_CHECKING:
+    from .numbers import Number
 
 from collections import defaultdict
 
@@ -229,7 +231,7 @@ class Expr(Basic, EvalfMixin):
             if other >= 0:
                 return pow(_self, other, mod)
             else:
-                from sympy.core.numbers import mod_inverse
+                from .numbers import mod_inverse
                 return mod_inverse(pow(_self, -other, mod), mod)
         except ValueError:
             power = self._pow(other)
@@ -377,7 +379,6 @@ class Expr(Basic, EvalfMixin):
 
     @staticmethod
     def _from_mpmath(x, prec):
-        from .numbers import Float
         if hasattr(x, "_mpf_"):
             return Float._new(x._mpf_, prec)
         elif hasattr(x, "_mpc_"):
@@ -691,7 +692,7 @@ class Expr(Basic, EvalfMixin):
         return True
 
     def equals(self, other, failing_expression=False):
-        """Return True if self == other, False if it doesn't, or None. If
+        """Return True if self == other, False if it does not, or None. If
         failing_expression is True then the expression which did not simplify
         to a 0 will be returned instead of None.
 
@@ -831,33 +832,10 @@ class Expr(Basic, EvalfMixin):
             return diff
         return None
 
-    def _eval_is_positive(self):
-        finite = self.is_finite
-        if finite is False:
-            return False
-        extended_positive = self.is_extended_positive
-        if finite is True:
-            return extended_positive
-        if extended_positive is False:
-            return False
-
-    def _eval_is_negative(self):
-        finite = self.is_finite
-        if finite is False:
-            return False
-        extended_negative = self.is_extended_negative
-        if finite is True:
-            return extended_negative
-        if extended_negative is False:
-            return False
-
     def _eval_is_extended_positive_negative(self, positive):
         from sympy.polys.numberfields import minimal_polynomial
         from sympy.polys.polyerrors import NotAlgebraic
         if self.is_number:
-            if self.is_extended_real is False:
-                return False
-
             # check to see that we can get a value
             try:
                 n2 = self._eval_evalf(2)
@@ -886,7 +864,7 @@ class Expr(Basic, EvalfMixin):
             if r._prec != 1 and i._prec != 1:
                 return bool(not i and ((r > 0) if positive else (r < 0)))
             elif r._prec == 1 and (not i or i._prec == 1) and \
-                    self.is_algebraic and not self.has(Function):
+                    self._eval_is_algebraic() and not self.has(Function):
                 try:
                     if minimal_polynomial(self).is_Symbol:
                         return False
@@ -1861,8 +1839,8 @@ class Expr(Basic, EvalfMixin):
         from .add import _unevaluated_Add
         from .mul import _unevaluated_Mul
 
-        if self.is_zero:
-            return S.Zero, S.Zero
+        if self is S.Zero:
+            return (self, self)
 
         func = self.func
         if hint.get('as_Add', isinstance(self, Add) ):
@@ -1989,7 +1967,7 @@ class Expr(Basic, EvalfMixin):
         d.update({m: c})
         return d
 
-    def as_base_exp(self):
+    def as_base_exp(self) -> tTuple['Expr', 'Expr']:
         # a -> b ** e
         return self, S.One
 
@@ -3492,7 +3470,7 @@ class Expr(Basic, EvalfMixin):
         c = c.subs(d, log(x))
         return c, e
 
-    def as_coeff_Mul(self, rational=False):
+    def as_coeff_Mul(self, rational: bool = False) -> tTuple['Number', 'Expr']:
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
@@ -3981,7 +3959,6 @@ def _mag(x):
     try:
         mag_first_dig = int(ceil(log10(xpos)))
     except (ValueError, OverflowError):
-        from .numbers import Float
         mag_first_dig = int(ceil(Float(mpf_log(xpos._mpf_, 53))/log(10)))
     # check that we aren't off by 1
     if (xpos/10**mag_first_dig) >= 1:

@@ -715,10 +715,11 @@ class Add(Expr, AssocOp):
             else:
                 return
         b = self.func(*nz)
-        if b.is_zero:
-            return fuzzy_not(self.func(*im_I).is_zero)
-        elif b.is_zero is False:
-            return False
+        if b != self:
+            if b.is_zero:
+                return fuzzy_not(self.func(*im_I).is_zero)
+            elif b.is_zero is False:
+                return False
 
     def _eval_is_zero(self):
         if self.is_commutative is False:

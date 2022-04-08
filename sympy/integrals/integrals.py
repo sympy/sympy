@@ -34,7 +34,7 @@ from sympy.utilities.misc import filldedent
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ()
 
     args: tTuple[Expr, Tuple]
 
@@ -122,7 +122,7 @@ class Integral(AddWithLimits):
         sympy.concrete.expr_with_limits.ExprWithLimits.limits
         sympy.concrete.expr_with_limits.ExprWithLimits.variables
         """
-        return AddWithLimits.free_symbols.fget(self)
+        return super().free_symbols
 
     def _eval_is_zero(self):
         # This is a very naive and quick test, not intended to do the integral to
@@ -455,7 +455,7 @@ class Integral(AddWithLimits):
         # hacks to handle special cases
         if isinstance(function, MatrixBase):
             return function.applyfunc(
-                lambda f: self.func(f, self.limits).doit(**hints))
+                lambda f: self.func(f, *self.limits).doit(**hints))
 
         if isinstance(function, FormalPowerSeries):
             if len(self.limits) > 1:

@@ -153,7 +153,7 @@ class AccumulationBounds(Expr):
     AccumBounds(0, 1)
 
     Some symbol in an expression can be substituted for a AccumulationBounds
-    object. But it doesn't necessarily evaluate the AccumulationBounds for
+    object. But it does not necessarily evaluate the AccumulationBounds for
     that expression.
 
     The same expression can be evaluated to different values depending upon

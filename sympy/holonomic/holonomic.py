@@ -2339,7 +2339,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
         point at which initial condition must be computed.
     y0:
         One can optionally provide initial condition if the method
-        isn't able to do it automatically.
+        is not able to do it automatically.
     lenics:
         Number of terms in the initial condition. By default it is
         equal to the order of the annihilator.
