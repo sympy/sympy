@@ -23,8 +23,8 @@ This is the central page for all of SymPy's documentation.
 :ref:`Tutorials <tutorial>`
 -------------------------------------------------------
 
-Tutorials introduce Sympy features to people who are new to the project. It includes
-installation instructons, a basic introduction to Sympy operations and common gotchas.
+Tutorials introduce SymPy features to people who are new to the project. It includes
+installation instructions, a basic introduction to SymPy operations and common gotchas.
 
 
 ..  rst-class:: column
@@ -32,7 +32,7 @@ installation instructons, a basic introduction to Sympy operations and common go
 :ref:`How-to Guides <guides>`
 -------------------------------------------------------
 
-These are step-by-step intructions on how to do different key developer tasks. It details
+These are step-by-step instructions on how to do different key developer tasks. It details
 instructions on installing SymPy from source for development. The development setup and workflow
 is also discussed with elaborate details on debugging, building the docs, and general guidelines
 on writing documentation and docstrings.
