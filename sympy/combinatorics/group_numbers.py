@@ -21,8 +21,8 @@ def is_nilpotent_number(n):
     References
     ==========
 
-    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers,
-           The American Mathematical Monthly
+    .. [1] Pakianathan, J., Shankar, K., *Nilpotent Numbers*,
+            The American Mathematical Monthly, 107(7), 631-634.
 
 
     """
@@ -64,8 +64,8 @@ def is_abelian_number(n):
     References
     ==========
 
-    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers,
-           The American Mathematical Monthly
+    .. [1] Pakianathan, J., Shankar, K., *Nilpotent Numbers*,
+            The American Mathematical Monthly, 107(7), 631-634.
 
 
     """
@@ -102,9 +102,8 @@ def is_cyclic_number(n):
     References
     ==========
 
-    .. [1] Pakianathan, J., Shankar, K., Nilpotent Numbers,
-           The American Mathematical Monthly
-
+    .. [1] Pakianathan, J., Shankar, K., *Nilpotent Numbers*,
+            The American Mathematical Monthly, 107(7), 631-634.
 
     """
     if n <= 0 or int(n) != n:
