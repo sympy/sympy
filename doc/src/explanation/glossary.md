@@ -23,8 +23,9 @@ documentation for the specific SymPy functions.
 -->
 
 <!-- To cross reference a glossary item elsewhere in the documentation use
-{term}`termname` in Markdown or :term:`termname` in RST. -->
-
+{term}`termname` in Markdown or :term:`termname` in RST. Use
+{term}`Text <termname>` or :term:`text <termname>` to make a link with
+different text. -->
 
 ```{glossary}
 
@@ -45,7 +46,7 @@ Antiderivative
 
 `args`
 
-    The *`args`* of a SymPy {func}`expression` `expr` is a tuple of the
+    The *`args`* of a SymPy {term}`expression` `expr` is a tuple of the
     top-level subexpressions used to create `expr`. They are the arguments to
     the class used to create the expression. The args of any expression can be
     obtained by the `.args` attribute. For example, `(1 + x*y).args` is `(1,
@@ -86,7 +87,7 @@ Assumptions
     because it is older, defines assumptions on {term}`Symbol` objects, is
     queried by {term}`is_*` attributes. The second, which is sometimes called
     the "new assumptions", defines assumptions using separate predicate
-    objects like `Q.positive` and does queries using the {func}`ask` function.
+    objects like `Q.positive` and does queries using the {func}`~.ask` function.
     The newer assumptions system is able to support more complex queries, but
     is also not as built out as the older one. Most users of SymPy should
     prefer the older assumptions system at this time.
@@ -107,15 +108,21 @@ Atom
 
     *`Basic`* is the superclass of all SymPy expressions. It defines the basic
     methods required for an expression, such as {term}`args`, {term}`func`,
-    equality, {term}`immutability`, and some useful expression manipulation
-    functions such as {term}`substitution`. Most SymPy classes will subclass a
-    more specific `Basic` subclass such as {term}`Boolean`, {term}`Expr`,
-    {term}`Function <Function (class)>`, or {term}`Matrix`. An object that is
-    not an instance `Basic` typically cannot be used in SymPy functions,
-    unless it can be turned into a `Basic` class via {term}`sympify`.
+    equality, {term}`immutability <immutable>`, and some useful expression
+    manipulation functions such as {term}`substitution <substitute>`. Most SymPy classes
+    will subclass a more specific `Basic` subclass such as {term}`Boolean`,
+    {term}`Expr`, {term}`Function <Function (class)>`, or {term}`Matrix`. An
+    object that is not an instance `Basic` typically cannot be used in SymPy
+    functions, unless it can be turned into a `Basic` class via
+    {term}`sympify()`.
 
 {class}`~.Boolean`
-    TODO
+
+    *`Boolean`* is the base class for the classes in the {mod}`~.logic`
+    module. An object that is an instance `Boolean` is a logical predicate
+    that is an element of a boolean algebra and can be thought of as having a
+    "true" or "false" value (note that `Boolean` objects do not use the
+    {term}`three-valued logic` used by the {term}`assumptions`).
 
 Canonical
     TODO
