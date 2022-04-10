@@ -469,7 +469,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
              active_deprecations_target="List of dimensions",
             message="use base and derive dims instead"
-        ).warn()
+        )
         dimset = set()
         for i in self.base_dims:
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
@@ -497,7 +497,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             active_deprecations_target="Inverse Transformation Matrix",
             message="use base and derive dims instead"
-        ).warn()
+        )
         matrix = reduce(lambda x, y: x.row_join(y),
                         [self.dim_can_vector(d) for d in self.base_dims])
         return matrix
@@ -521,7 +521,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             active_deprecations_target="Canonical Transformation Matrix",
             useinstead="use base and derive dims instead"
-        ).warn()
+        )
         return reduce(lambda x, y: x.row_join(y),
                       [self.dim_can_vector(d) for d in sorted(self.base_dims, key=str)]
                       ).inv()
@@ -538,7 +538,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             active_deprecations_target="Dimensional Representation in terms of base dimensions",
             message="use base and derive dims instead"
-        ).warn()
+        )
         with warns_deprecated_sympy():
             vec = []
             for d in self.list_can_dims:
@@ -558,7 +558,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             active_deprecations_target="Vector representation of base dimensions",
             message="use base and derive dims instead"
-        ).warn()
+        )
         return self.can_transf_matrix * Matrix(self.dim_can_vector(dim))
 
     def print_dim_base(self, dim):
@@ -588,7 +588,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             active_deprecations_target="Dimension of the system",
             message="use base dims instead"
-        ).warn()
+        )
         return len(self.base_dims)
 
     @property
@@ -604,7 +604,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             active_deprecations_target="Consistent DImensions",
             message="use Direct comparison instead",
-        ).warn()
+        )
 
         # not enough or too many base dimensions compared to independent
         # dimensions
