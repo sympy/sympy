@@ -26,6 +26,7 @@ from sympy.matrices.dense import Matrix
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 class _QuantityMapper:
