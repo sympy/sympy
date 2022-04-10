@@ -7,7 +7,7 @@ from sympy.physics.units.definitions.dimension_definitions import length, time
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.unitsystem import UnitSystem
 from sympy.physics.units.util import convert_to
-
+from sympy.testing.pytest import warns_deprecated_sympy
 
 def test_definition():
     # want to test if the system can have several units of the same dimension
