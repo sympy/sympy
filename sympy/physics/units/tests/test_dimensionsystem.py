@@ -4,6 +4,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
     action, current, length, mass, time,
     velocity)
 from sympy.physics.units.dimensions import DimensionSystem
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 def test_extend():
