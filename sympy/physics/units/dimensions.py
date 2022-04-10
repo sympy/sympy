@@ -520,7 +520,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         SymPyDeprecationWarning(
             deprecated_since_version="1.10",
             active_deprecations_target="Canonical Transformation Matrix",
-            useinstead="use base and derive dims instead"
+            message="use base and derive dims instead"
         )
         return reduce(lambda x, y: x.row_join(y),
                       [self.dim_can_vector(d) for d in sorted(self.base_dims, key=str)]
@@ -539,11 +539,10 @@ class DimensionSystem(Basic, _QuantityMapper):
             active_deprecations_target="Dimensional Representation in terms of base dimensions",
             message="use base and derive dims instead"
         )
-        with warns_deprecated_sympy():
-            vec = []
-            for d in self.list_can_dims:
-                vec.append(self.get_dimensional_dependencies(dim).get(d, 0))
-            return Matrix(vec)
+        vec = []
+        for d in self.list_can_dims:
+            vec.append(self.get_dimensional_dependencies(dim).get(d, 0))
+        return Matrix(vec)
 
     def dim_vector(self, dim):
         """
