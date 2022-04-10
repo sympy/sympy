@@ -467,9 +467,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         """
         SymPyDeprecationWarning(
             deprecated_since_version="1.10",
-            issue=22953,
-            feature="List of dimensions",
-            useinstead="base and derive dims",
+             active_deprecations_target="List of dimensions",
+            message="use base and derive dims instead"
         ).warn()
         dimset = set()
         for i in self.base_dims:
@@ -496,9 +495,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         """
         SymPyDeprecationWarning(
             deprecated_since_version="1.10",
-            issue=22953,
-            feature="Inverse Transformation Matrix",
-            useinstead="base and derive dims",
+            active_deprecations_target="Inverse Transformation Matrix",
+            message="use base and derive dims instead"
         ).warn()
         matrix = reduce(lambda x, y: x.row_join(y),
                         [self.dim_can_vector(d) for d in self.base_dims])
@@ -521,9 +519,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         #      example if the matrix is not a square
         SymPyDeprecationWarning(
             deprecated_since_version="1.10",
-            issue=22953,
-            feature="Canonical Transformation Matrix",
-            useinstead="base and derive dims",
+            active_deprecations_target="Canonical Transformation Matrix",
+            useinstead="use base and derive dims instead"
         ).warn()
         return reduce(lambda x, y: x.row_join(y),
                       [self.dim_can_vector(d) for d in sorted(self.base_dims, key=str)]
@@ -539,9 +536,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         """
         SymPyDeprecationWarning(
             deprecated_since_version="1.10",
-            issue=22953,
-            feature="Dimensional Representation in terms of base dimensions",
-            useinstead="base and derive dims",
+            active_deprecations_target="Dimensional Representation in terms of base dimensions",
+            message="use base and derive dims instead"
         ).warn()
         with warns_deprecated_sympy():
             vec = []
@@ -560,9 +556,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         """
         SymPyDeprecationWarning(
             deprecated_since_version="1.10",
-            issue=22953,
-            feature="Vector representation of base dimensions",
-            useinstead="base and derive dims",
+            active_deprecations_target="Vector representation of base dimensions",
+            message="use base and derive dims instead"
         ).warn()
         return self.can_transf_matrix * Matrix(self.dim_can_vector(dim))
 
@@ -591,9 +586,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         """
         SymPyDeprecationWarning(
             deprecated_since_version="1.10",
-            issue=22953,
-            feature="Dimension of the system",
-            useinstead="base dims",
+            active_deprecations_target="Dimension of the system",
+            message="use base dims instead"
         ).warn()
         return len(self.base_dims)
 
@@ -608,9 +602,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         """
         SymPyDeprecationWarning(
             deprecated_since_version="1.10",
-            issue=22953,
-            feature="Consistent DImensions",
-            useinstead="Direct comparison",
+            active_deprecations_target="Consistent DImensions",
+            message="use Direct comparison instead",
         ).warn()
 
         # not enough or too many base dimensions compared to independent
