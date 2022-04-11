@@ -13,6 +13,7 @@ from typing import Dict as tDict
 import collections
 from functools import reduce
 
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
@@ -24,7 +25,6 @@ from sympy.matrices.dense import Matrix
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
-from sympy.utilities.decorator import deprecated
 
 
 class _QuantityMapper:
