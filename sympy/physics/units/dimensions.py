@@ -480,7 +480,7 @@ class DimensionSystem(Basic, _QuantityMapper):
                         [self.dim_can_vector(d) for d in self.base_dims])
         return matrix
 
-    @property 
+    @property
     def can_transf_matrix(self):
         """
         Useless method, kept for compatibility with previous versions.
@@ -492,7 +492,7 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         #TODO: the inversion will fail if the system is inconsistent, for
         #      example if the matrix is not a square
-        
+ 
         with warns_deprecated_sympy():
             sympy_deprecation_warning("use base and derive dims instead",
                  deprecated_since_version="1.10",
@@ -516,7 +516,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         for d in self.list_can_dims:
             vec.append(self.get_dimensional_dependencies(dim).get(d, 0))
         return Matrix(vec)
-   
+
     def dim_vector(self, dim):
         """
         Useless method, kept for compatibility with previous versions.
@@ -562,7 +562,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         # not enough or too many base dimensions compared to independent
         # dimensions
         # in vector language: the set of vectors do not form a basis
-        
+ 
         with warns_deprecated_sympy():
             sympy_deprecation_warning("use base dims instead",
                  deprecated_since_version="1.10",
