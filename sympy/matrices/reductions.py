@@ -298,7 +298,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     [1, 0, 0, 0],
     [0, 1, 0, 0],
     [0, 0, 1, 0]]), (0, 1, 2))
-    >>> m.rref(iszerofunc=lambda x:comp(x,0,1e-9))
+    >>> m.rref(iszerofunc=lambda x:abs(x)<1e-9))
     (Matrix([
     [1, 0, -0.301369863013699, 0],
     [0, 1, -0.712328767123288, 0],
