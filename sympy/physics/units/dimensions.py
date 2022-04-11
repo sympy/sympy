@@ -1,8 +1,6 @@
 """
 Definition of physical dimensions.
-
 Unit systems will be constructed on top of these dimensions.
-
 Most of the examples in the doc use MKS system and are presented from the
 computer point of view: from a human point, adding length to time is not legal
 in MKS but it is in natural system; for a computer in natural system there is
@@ -97,14 +95,11 @@ class _QuantityMapper:
 class Dimension(Expr):
     """
     This class represent the dimension of a physical quantities.
-
     The ``Dimension`` constructor takes as parameters a name and an optional
     symbol.
-
     For example, in classical mechanics we know that time is different from
     temperature and dimensions make this difference (but they do not provide
     any measure of these quantites.
-
         >>> from sympy.physics.units import Dimension
         >>> length = Dimension('length')
         >>> length
@@ -112,19 +107,15 @@ class Dimension(Expr):
         >>> time = Dimension('time')
         >>> time
         Dimension(time)
-
     Dimensions can be composed using multiplication, division and
     exponentiation (by a number) to give new dimensions. Addition and
     subtraction is defined only when the two objects are the same dimension.
-
         >>> velocity = length / time
         >>> velocity
         Dimension(length/time)
-
     It is possible to use a dimension system object to get the dimensionsal
     dependencies of a dimension, for example the dimension system used by the
     SI units convention can be used:
-
         >>> from sympy.physics.units.systems.si import dimsys_SI
         >>> dimsys_SI.get_dimensional_dependencies(velocity)
         {Dimension(length, L): 1, Dimension(time, T): -1}
@@ -135,7 +126,6 @@ class Dimension(Expr):
         Dimension(length**2)
         >>> dimsys_SI.get_dimensional_dependencies(l2)
         {Dimension(length, L): 2}
-
     """
 
     _op_priority = 13.0
@@ -254,7 +244,6 @@ class Dimension(Expr):
     def has_integer_powers(self, dim_sys):
         """
         Check if the dimension object has only integer powers.
-
         All the dimension powers should be integers, but rational powers may
         appear in intermediate steps. This method may be used to check that the
         final result is well-defined.
@@ -271,15 +260,12 @@ class Dimension(Expr):
 class DimensionSystem(Basic, _QuantityMapper):
     r"""
     DimensionSystem represents a coherent set of dimensions.
-
     The constructor takes three parameters:
-
     - base dimensions;
     - derived dimensions: these are defined in terms of the base dimensions
       (for example velocity is defined from the division of length by time);
     - dependency of dimensions: how the derived dimensions depend
       on the base dimensions.
-
     Optionally either the ``derived_dims`` or the ``dimensional_dependencies``
     may be omitted.
     """
@@ -449,7 +435,6 @@ class DimensionSystem(Basic, _QuantityMapper):
     def is_dimensionless(self, dimension):
         """
         Check if the dimension object really has a dimension.
-
         A dimension should have at least one component with non-zero power.
         """
         if dimension.name == 1:
@@ -460,9 +445,7 @@ class DimensionSystem(Basic, _QuantityMapper):
     def list_can_dims(self):
         """
         Useless method, kept for compatibility with previous versions.
-
         DO NOT USE.
-
         List all canonical dimension names.
         """
         with warns_deprecated_sympy():
@@ -473,19 +456,16 @@ class DimensionSystem(Basic, _QuantityMapper):
         for i in self.base_dims:
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
         return tuple(sorted(dimset, key=str))
+
     @property 
     def inv_can_transf_matrix(self):
         """
         Useless method, kept for compatibility with previous versions.
-
         DO NOT USE.
-
         Compute the inverse transformation matrix from the base to the
         canonical dimension basis.
-
         It corresponds to the matrix where columns are the vector of base
         dimensions in canonical basis.
-
         This matrix will almost never be used because dimensions are always
         defined with respect to the canonical basis, so no work has to be done
         to get them in this basis. Nonetheless if this matrix is not square
@@ -504,12 +484,9 @@ class DimensionSystem(Basic, _QuantityMapper):
     def can_transf_matrix(self):
         """
         Useless method, kept for compatibility with previous versions.
-
         DO NOT USE.
-
         Return the canonical transformation matrix from the canonical to the
         base dimension basis.
-
         It is the inverse of the matrix computed with inv_can_transf_matrix().
         """
 
@@ -527,9 +504,7 @@ class DimensionSystem(Basic, _QuantityMapper):
     def dim_can_vector(self, dim):
         """
         Useless method, kept for compatibility with previous versions.
-
         DO NOT USE.
-
         Dimensional representation in terms of the canonical base dimensions.
         """
         
@@ -545,10 +520,7 @@ class DimensionSystem(Basic, _QuantityMapper):
     def dim_vector(self, dim):
         """
         Useless method, kept for compatibility with previous versions.
-
         DO NOT USE.
-
-
         Vector representation in terms of the base dimensions.
         """
         return self.can_transf_matrix * Matrix(self.dim_can_vector(dim))
@@ -569,11 +541,8 @@ class DimensionSystem(Basic, _QuantityMapper):
     def dim(self):
         """
         Useless method, kept for compatibility with previous versions.
-
         DO NOT USE.
-
         Give the dimension of the system.
-
         That is return the number of dimensions forming the basis.
         """
         
@@ -586,9 +555,7 @@ class DimensionSystem(Basic, _QuantityMapper):
     def is_consistent(self):
         """
         Useless method, kept for compatibility with previous versions.
-
         DO NOT USE.
-
         Check if the system is well defined.
         """
 
