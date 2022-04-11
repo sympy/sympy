@@ -562,7 +562,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         # not enough or too many base dimensions compared to independent
         # dimensions
         # in vector language: the set of vectors do not form a basis
- 
+
         with warns_deprecated_sympy():
             sympy_deprecation_warning("use base dims instead",
                  deprecated_since_version="1.10",
