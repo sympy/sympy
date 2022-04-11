@@ -471,7 +471,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         to get them in this basis. Nonetheless if this matrix is not square
         (or not invertible) it means that we have chosen a bad basis.
         """
-        
+
         with warns_deprecated_sympy():
             sympy_deprecation_warning("use base and derive dims instead",
                  deprecated_since_version="1.10",
