@@ -537,7 +537,7 @@ class DimensionSystem(Basic, _QuantityMapper):
                 res *= s**p
             return res
 
-    @property 
+    @property
     def dim(self):
         """
         Useless method, kept for compatibility with previous versions.
