@@ -527,7 +527,6 @@ class DimensionSystem(Basic, _QuantityMapper):
         for d in self.list_can_dims:
             vec.append(self.get_dimensional_dependencies(dim).get(d, 0))
         return Matrix(vec)
-    
     @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="dim_vector deprecation")
     def dim_vector(self, dim):
         """
