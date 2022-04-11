@@ -14,7 +14,6 @@ from typing import Dict as tDict
 
 import collections
 from functools import reduce
-import warnings
 
 from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.core.basic import Basic
