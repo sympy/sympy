@@ -14,8 +14,9 @@ from typing import Dict as tDict
 
 import collections
 from functools import reduce
-from sympy.testing.pytest import warns_deprecated_sympy
+import warnings
 
+from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.singleton import S
@@ -26,7 +27,7 @@ from sympy.matrices.dense import Matrix
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.decorator import deprecated
 
 
 class _QuantityMapper:
@@ -457,6 +458,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         return self.get_dimensional_dependencies(dimension) == {}
 
     @property
+    @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="list_can_dims deprecation")
     def list_can_dims(self):
         """
         Useless method, kept for compatibility with previous versions.
@@ -465,17 +467,13 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         List all canonical dimension names.
         """
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.10",
-             active_deprecations_target="List of dimensions",
-            message="use base and derive dims instead"
-        )
         dimset = set()
         for i in self.base_dims:
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
         return tuple(sorted(dimset, key=str))
 
     @property
+    @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="inv_can_transf_matrix deprecation")
     def inv_can_transf_matrix(self):
         """
         Useless method, kept for compatibility with previous versions.
@@ -493,16 +491,12 @@ class DimensionSystem(Basic, _QuantityMapper):
         to get them in this basis. Nonetheless if this matrix is not square
         (or not invertible) it means that we have chosen a bad basis.
         """
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.10",
-            active_deprecations_target="Inverse Transformation Matrix",
-            message="use base and derive dims instead"
-        )
         matrix = reduce(lambda x, y: x.row_join(y),
                         [self.dim_can_vector(d) for d in self.base_dims])
         return matrix
 
     @property
+    @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="can_transf_matrix deprecation")
     def can_transf_matrix(self):
         """
         Useless method, kept for compatibility with previous versions.
@@ -517,15 +511,11 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         #TODO: the inversion will fail if the system is inconsistent, for
         #      example if the matrix is not a square
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.10",
-            active_deprecations_target="Canonical Transformation Matrix",
-            message="use base and derive dims instead"
-        )
         return reduce(lambda x, y: x.row_join(y),
                       [self.dim_can_vector(d) for d in sorted(self.base_dims, key=str)]
                       ).inv()
-
+ 
+    @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="dim_can_vector deprecation")
     def dim_can_vector(self, dim):
         """
         Useless method, kept for compatibility with previous versions.
@@ -534,16 +524,12 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         Dimensional representation in terms of the canonical base dimensions.
         """
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.10",
-            active_deprecations_target="Dimensional Representation in terms of base dimensions",
-            message="use base and derive dims instead"
-        )
         vec = []
         for d in self.list_can_dims:
             vec.append(self.get_dimensional_dependencies(dim).get(d, 0))
         return Matrix(vec)
 
+    @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="dim_vector deprecation")
     def dim_vector(self, dim):
         """
         Useless method, kept for compatibility with previous versions.
@@ -553,11 +539,6 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         Vector representation in terms of the base dimensions.
         """
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.10",
-            active_deprecations_target="Vector representation of base dimensions",
-            message="use base and derive dims instead"
-        )
         return self.can_transf_matrix * Matrix(self.dim_can_vector(dim))
 
     def print_dim_base(self, dim):
@@ -573,6 +554,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             return res
 
     @property
+    @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="dim deprecation")
     def dim(self):
         """
         Useless method, kept for compatibility with previous versions.
@@ -583,14 +565,10 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         That is return the number of dimensions forming the basis.
         """
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.10",
-            active_deprecations_target="Dimension of the system",
-            message="use base dims instead"
-        )
         return len(self.base_dims)
 
     @property
+    @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="is_consistent deprecation")
     def is_consistent(self):
         """
         Useless method, kept for compatibility with previous versions.
@@ -599,11 +577,6 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         Check if the system is well defined.
         """
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.10",
-            active_deprecations_target="Consistent DImensions",
-            message="use Direct comparison instead",
-        )
 
         # not enough or too many base dimensions compared to independent
         # dimensions
