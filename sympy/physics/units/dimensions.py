@@ -492,7 +492,7 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         #TODO: the inversion will fail if the system is inconsistent, for
         #      example if the matrix is not a square
- 
+
         with warns_deprecated_sympy():
             sympy_deprecation_warning("use base and derive dims instead",
                  deprecated_since_version="1.10",
@@ -507,7 +507,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         DO NOT USE.
         Dimensional representation in terms of the canonical base dimensions.
         """
-        
+
         with warns_deprecated_sympy():
             sympy_deprecation_warning("use base and derive dims instead",
                  deprecated_since_version="1.10",
@@ -545,7 +545,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         Give the dimension of the system.
         That is return the number of dimensions forming the basis.
         """
-        
+ 
         with warns_deprecated_sympy():
             sympy_deprecation_warning("use base and derive dims instead",
                  deprecated_since_version="1.10",
