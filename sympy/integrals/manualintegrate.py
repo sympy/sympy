@@ -1129,7 +1129,7 @@ def substitution_rule(integral):
             if simplify(c - 1) != 0:
                 _, denom = c.as_numer_denom()
                 if subrule:
-                    subrule = ConstantTimesRule(c, substituted, subrule, substituted, u_var)
+                    subrule = ConstantTimesRule(c, substituted, subrule, c * substituted, u_var)
 
                 if denom.free_symbols:
                     piecewise = []
