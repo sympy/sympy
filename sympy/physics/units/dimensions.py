@@ -456,7 +456,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             return True
         return self.get_dimensional_dependencies(dimension) == {}
 
-    @property
+    @property #type : ignore
     @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="list_can_dims deprecation")
     def list_can_dims(self):
         """
@@ -471,7 +471,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
         return tuple(sorted(dimset, key=str))
 
-    @property
+    @property #type : ignore
     @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="inv_can_transf_matrix deprecation")
     def inv_can_transf_matrix(self):
         """
@@ -494,7 +494,7 @@ class DimensionSystem(Basic, _QuantityMapper):
                         [self.dim_can_vector(d) for d in self.base_dims])
         return matrix
 
-    @property
+    @property #type : ignore
     @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="can_transf_matrix deprecation")
     def can_transf_matrix(self):
         """
@@ -550,7 +550,7 @@ class DimensionSystem(Basic, _QuantityMapper):
                 res *= s**p
             return res
 
-    @property
+    @property #type : ignore
     @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="dim deprecation")
     def dim(self):
         """
@@ -564,7 +564,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         """
         return len(self.base_dims)
 
-    @property
+    @property #type : ignore
     @deprecated("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="is_consistent deprecation")
     def is_consistent(self):
         """
