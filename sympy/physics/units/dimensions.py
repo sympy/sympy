@@ -573,18 +573,12 @@ class DimensionSystem(Basic, _QuantityMapper):
         # in vector language: the set of vectors do not form a basis
         return self.inv_can_transf_matrix.is_square
     def get_dimensionless_numbers(self, list_of_derived_quantities):
-        # list_of_derived_quantities is the input list of derived quantities in the
-        # form of a python dictionary of tuples (key, item) where 'key' is
-        # the name of the physical quantity and 'item' is an instance of
-        # Dimension class which possesses the dimensions of the quantity.
-        """ This function is designed to take in a set of physical variables (all 
-        essentially dimensionful) and returns one set of all possible dimensionless 
-        quantities, as guided by the Buckingham's pi theorem (a generalization of 
-        Rayleigh's method of dimensional analysis .....)
-        
-        Please refer and run to the unit testing file '/units/test/test_dimensionless.py' for
-        the format of the input .... As a heads up, we first need to define a global set of 
-        base dimensions and with those we can define the derived quantities ..... """
+        """ list_of_derived_quantities is the input list of derived quantities in the form of a python dictionary of tuples (key, item) where key is the name of
+        the physical quantity and item is an instance of Dimension class which possesses the dimensions of the quantity. This function is designed to take in
+        a set of physical variables (all essentially dimensionful) and returns one set of all possible dimensionless quantities, as guided by the
+        Buckingham's pi theorem (a generalization of Rayleigh's method of dimensional analysis .....) Please refer and run to the unit testing file
+        /units/test/test_dimensionless.py for the format of the input .... As a heads up, we first need to define a global set of base dimensions and with
+        those we can define the derived quantities ..... """
         exponent_matrix = []
         """ We extract the exponent matrix from the dimensional dependencies of the quantities """
         for quantity in list_of_derived_quantities:
