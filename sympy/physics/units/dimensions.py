@@ -473,6 +473,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         for i in self.base_dims:
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
         return tuple(sorted(dimset, key=str))
+    
     @property 
     def inv_can_transf_matrix(self):
         """
