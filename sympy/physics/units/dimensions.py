@@ -545,7 +545,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         Give the dimension of the system.
         That is return the number of dimensions forming the basis.
         """
- 
+
         with warns_deprecated_sympy():
             sympy_deprecation_warning("use base and derive dims instead",
                  deprecated_since_version="1.10",
