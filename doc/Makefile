@@ -118,7 +118,8 @@ linkcheck:
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in $(BUILDDIR)/linkcheck/output.txt."
 
-livehtml: html
+livehtml: $(BUILDDIR)/html/pics/*.png
+livehtml: $(BUILDDIR)/logo/sympy-notailtext-favicon.ico
 	sphinx-autobuild --open-browser --watch .. --host $(LIVEHOST) --port $(LIVEPORT) -b html $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
 
 cheatsheet: $(BUILDDIR)/cheatsheet/cheatsheet.pdf $(BUILDDIR)/cheatsheet/combinatoric_cheatsheet.pdf
