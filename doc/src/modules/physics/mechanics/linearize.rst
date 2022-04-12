@@ -211,7 +211,7 @@ wrapper that calls ``to_linearizer`` internally, performs the linearization,
 and returns the result. Note that all the kwargs available in the
 ``linearize`` method described above are also available here: ::
 
-  >>> A, B, inp_vec = KM.linearize(A_and_B=True, op_point=op_point, new_method=True)
+  >>> A, B, inp_vec = KM.linearize(A_and_B=True, op_point=op_point)
   >>> A
   Matrix([
   [     0, 1],
@@ -225,14 +225,6 @@ the vector is empty: ::
 
   >>> inp_vec
   Matrix(0, 0, [])
-
-.. topic:: What's with the ``new_method`` kwarg?
-
-  Previous releases of SymPy contained a linearization method for
-  `KanesMethod`` objects. This method is deprecated, and will be removed
-  from future releases. Until then, you must set ``new_method=True`` in all
-  calls to ``KanesMethod.linearize``. After the old method is removed, this
-  kwarg will no longer be needed.
 
 Linearizing Lagrange's Equations
 ================================
