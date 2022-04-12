@@ -585,7 +585,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             element_for_quantity = [0 for k in range(7)]
             dimensions = self.get_dimensional_dependencies(list_of_derived_quantities[quantity])
             for base_dims in dimensions:
-                element_for_quantity[self.base_dims.index(Dimension(base_dims))] = dimensions[base_dims]
+                element_for_quantity[self.base_dims.index(base_dims)] = dimensions[base_dims]
             exponent_matrix.append(element_for_quantity)
         """ Next we obtain the null space of the exponent matrix """
         exponent_matrix = Matrix(exponent_matrix)
