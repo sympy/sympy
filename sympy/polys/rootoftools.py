@@ -12,7 +12,8 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     GeneratorsNeeded,
     PolynomialError,
-    DomainError)
+    DomainError,
+    NotInvertible)
 from sympy.polys.polyfuncs import symmetrize, viete
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
@@ -350,11 +351,13 @@ class ComplexRootOf(RootOf):
         if roots is not None:
             return roots[index]
 
+        if all((i.is_algebraic and i.is_number) for i in poly.all_coeffs()):
+            poly = cls ._roots_Algebraic(poly, dom)
+        else:
+            raise NotImplementedError("CRootOf is not supported over %s" % poly)
+
         coeff, poly = preprocess_roots(poly)
         dom = poly.get_domain()
-
-        if not dom.is_ZZ:
-            raise NotImplementedError("CRootOf is not supported over %s" % dom)
 
         root = cls._indexed_root(poly, index)
         return coeff * cls._postprocess_root(root, radicals)
@@ -758,6 +761,26 @@ class ComplexRootOf(RootOf):
         for root in getattr(cls, method)(poly):
             roots.append(coeff*cls._postprocess_root(root, radicals))
         return roots
+
+    @classmethod
+    def _roots_Algebraic(cls, poly, dom):
+        r"""Converts a Polynomial 'B(x)' with algebriac coefficients
+        to a Polynomial 'C(x)' with rational coefficients such that
+        every root of 'B(x)' is a root of 'C(x)'.
+        """
+        from sympy.polys.numberfields import primitive_element
+        from sympy.polys.polytools import resultant
+        gen = poly.gen
+        coeffs = Poly(poly, gen).all_coeffs()
+        m = symbols('m')
+        try:
+            A, r_A, B_s = primitive_element(coeffs, m, ex=True)
+        except NotInvertible:
+            raise NotImplementedError("Cannot convert %s to an algebraic extension" % poly)
+
+        B = sum(Poly(Bi, m).as_expr() * gen ** i for i, Bi in enumerate(B_s[::-1]))
+        poly = PurePoly(resultant(A, B, m), gen, domain=dom)
+        return poly
 
     @classmethod
     def clear_cache(cls):
