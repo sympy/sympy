@@ -15,6 +15,7 @@ documentation for the specific SymPy functions.
 - Capitalize the names, unless they refer to code.
 - Each definition should be short (no more than a paragraph).
 - Keep the terms in alphabetical order.
+- Vitalize the first occurrence of the term in the definition.
 - Use cross-references to refer to full documentation for functions, etc.
 - Classes/functions should only be listed here if they are core concepts for
   understanding how to use SymPy. Classes and functions themselves can be
@@ -104,17 +105,32 @@ Atom
     subclass this class. The only requirement for an expression to be atomic
     is for its {term}`args` to be empty.
 
+Automatic Simplification
+
+    *Automatic Simplification* refers to any simplification that happens
+    automatically inside of a class constructor. For example, `x + x` is
+    automatically simplified to `2*x` in the {class}`~.Add` constructor.
+    Unlike manual {term}`simplification`, the automatic simplification can
+    only be disabled by setting `evaluate=False` (see {term}`Unevaluated`).
+    Automatic simplification is often done so that expressions become
+    {term}`canonicalized <canonicalize>`. Excessive automatic simplification
+    is discouraged as makes it impossible to represent the non-simplified form
+    of the expression without using tricks like `evaluate=False`, and it can
+    often be an expensive thing to do in a class constructor. Instead, manual
+    {term}`simplification` and {term}`canonicalization <canonicalize>` is
+    generally preferred.
+
 {class}`~.Basic`
 
     *`Basic`* is the superclass of all SymPy expressions. It defines the basic
     methods required for an expression, such as {term}`args`, {term}`func`,
     equality, {term}`immutability <immutable>`, and some useful expression
-    manipulation functions such as {term}`substitution <substitute>`. Most SymPy classes
-    will subclass a more specific `Basic` subclass such as {term}`Boolean`,
-    {term}`Expr`, {term}`Function <Function (class)>`, or {term}`Matrix`. An
-    object that is not an instance `Basic` typically cannot be used in SymPy
-    functions, unless it can be turned into a `Basic` class via
-    {term}`sympify()`.
+    manipulation functions such as {term}`substitution <substitute>`. Most
+    SymPy classes will subclass a more specific `Basic` subclass such as
+    {term}`Boolean`, {term}`Expr`, {term}`Function <Function (class)>`, or
+    {term}`Matrix`. An object that is not an instance `Basic` typically cannot
+    be used in SymPy functions, unless it can be turned into a `Basic` class
+    via {term}`sympify()`.
 
 {class}`~.Boolean`
 
@@ -163,10 +179,23 @@ Core
     TODO
 
 `evalf`
-    TODO
+
+    [*`evalf`*](sympy.core.evalf.EvalfMixin.evalf) is the method present on
+    all {term}`Expr` objects that evaluates it to a floating-point numerical
+    value, or converts the constant parts of the expression to a numerical
+    value if it contains {term}`symbols <symbol>`. "evalf" stands for
+    "evaluate floating-point". `evalf` uses {term}`mpmath` under the hood to
+    evaluate expressions to arbitrary precision.
 
 Evaluated
-    See {term}`Unevaluated`.
+
+    *Evaluate* can refer to:
+
+    - The process of converting an expression into a
+      numerical value (see {term}`evalf`).
+
+    - The process of {term}`automatic simplification` that occurs when
+      creating an expression (see {term}`Unevaluated`).
 
 Expression
     TODO
@@ -207,7 +236,11 @@ Matrix
     TODO
 
 mpmath
-    TODO
+
+    [*mpmath*](https://mpmath.org/) is a pure Python library for arbitrary
+    precision numerics. It is a [hard dependency](dependencies-mpmath) of
+    SymPy. mpmath is used under the hood whenever SymPy evaluates an
+    expression numerically, such as when using {term}`evalf`.
 
 Number
     TODO
@@ -239,10 +272,32 @@ Substitute
     TODO
 
 {class}`~.Symbol`
-    TODO
+
+    A *`Symbol`* is an object that represents a single mathematical variable
+    in an expression. {class}`~.Symbol` is a subclass of {term}`Expr`, is
+    {term}`atomic <atom>`. A `Symbol` contains a name, which is any string,
+    and {term}`assumptions`. Symbols are typically defined with the `Symbol`
+    constructor of the {func}`~.symbols` function. Two Symbols with the same
+    name and assumptions are considered equal.
 
 {func}`~.sympify`
-    TODO
+
+    *`sympify()`* (not to be confused with *{term}`simplify()
+    <simplification>`*) is a function that converts non-SymPy objects into
+    SymPy objects. The result of `sympify()` will be an instance of
+    {term}`Basic`. Objects that can be *sympified* include native Python
+    numeric types such as `int` and `float`, strings that are parsable as
+    SymPy {term}`expressions <expression>`, and iterables containing
+    *sympifiable* objects (see the documentation for {func}`~.sympify` for
+    more information).
+
+    Since all SymPy {term}`expressions <expression>` must be instances of
+    {term}`Basic`, all SymPy functions and operations will implicitly call
+    `sympify()` on their inputs. For example, `x + 1` implicitly calls
+    `sympify(1)` to convert the `1` that is a Python `int` into a SymPy
+    {class}`~.Integer`. Functions that accept SymPy expressions should
+    typically call `sympify()` on their arguments so that they work even when
+    the input is not a SymPy type.
 
 Three-valued logic
 
@@ -269,7 +324,13 @@ Three-valued logic
     standard two-valued logic, not three-valued.
 
 Unevaluated
-    TODO
+
+    An expression is *unevaluated* if the {term}`automatic simplification`
+    that typically occurs when the expression is created is disabled. This is
+    typically done by setting `evaluate=False`, using `with evaluate(False)`,
+    or using {class}`~.UnevaluatedExpr`. While unevaluated expressions are
+    supported, they can sometimes lead to surprising behavior because the
+    expressions are not properly {term}`canonicalized <canonicalize>`.
 
 {class}`zoo <sympy.core.numbers.ComplexInfinity>`
 
