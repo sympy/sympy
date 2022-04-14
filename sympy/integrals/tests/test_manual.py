@@ -555,9 +555,3 @@ def test_quadratic_denom():
 
 def test_issue_22757():
     assert manualintegrate(sin(x), y) == y * sin(x)
-
-
-def test_issue_23348():
-    steps = integral_steps(tan(x), x)
-    constant_times_step = steps.substep.substep
-    assert constant_times_step.context == constant_times_step.constant * constant_times_step.other

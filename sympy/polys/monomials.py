@@ -565,7 +565,6 @@ class Monomial(PicklableWithSlots):
 
         return self.exponents == exponents
 
-
     def __mul__(self, other):
         if isinstance(other, Monomial):
             exponents = other.exponents

@@ -85,7 +85,6 @@ class QuotientRingElement:
             return False
         return self.ring.is_zero(self - om)
 
-
 class QuotientRing(Ring):
     """
     Class representing (commutative) quotient rings.

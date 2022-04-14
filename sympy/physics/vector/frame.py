@@ -73,7 +73,6 @@ class CoordinateSym(Symbol):
                 return True
         return False
 
-
     def __hash__(self):
         return tuple((self._id[0].__hash__(), self._id[1])).__hash__()
 

@@ -27,7 +27,8 @@ from sympy.tensor.array.array_derivatives import ArrayDerivative
 from sympy.matrices.expressions import hadamard_power
 from sympy.tensor.array.expressions.array_expressions import ArrayAdd, ArrayTensorProduct, PermuteDims
 
-i, j, k = symbols("i j k")
+i, j = symbols("i j")
+k = symbols("k")
 m, n = symbols("m n")
 
 X = MatrixSymbol("X", k, k)

@@ -184,7 +184,6 @@ class GenericIdentity(Identity):
     def __eq__(self, other):
         return isinstance(other, GenericIdentity)
 
-
     def __hash__(self):
         return super().__hash__()
 

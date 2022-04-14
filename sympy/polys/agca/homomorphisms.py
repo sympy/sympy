@@ -438,7 +438,6 @@ class ModuleHomomorphism:
             return False
 
 
-
 class MatrixHomomorphism(ModuleHomomorphism):
     r"""
     Helper class for all homomoprhisms which are expressed via a matrix.

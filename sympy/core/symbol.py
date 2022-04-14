@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from .assumptions import StdFactKB, _assume_defined
 from .basic import Basic, Atom
 from .cache import cacheit
@@ -19,8 +17,6 @@ import string
 import re as _re
 import random
 from itertools import product
-from typing import Any
-
 
 class Str(Atom):
     """
@@ -581,8 +577,7 @@ class Wild(Symbol):
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
-
-def symbols(names, *, cls=Symbol, **args) -> Any:
+def symbols(names, *, cls=Symbol, **args):
     r"""
     Transform strings into instances of :class:`Symbol` class.
 
@@ -702,16 +697,16 @@ def symbols(names, *, cls=Symbol, **args) -> Any:
 
     if isinstance(names, str):
         marker = 0
-        splitters = r'\,', r'\:', r'\ '
-        literals: list[tuple[str, str]] = []
-        for splitter in splitters:
-            if splitter in names:
+        literals = [r'\,', r'\:', r'\ ']
+        for i in range(len(literals)):
+            lit = literals.pop(0)
+            if lit in names:
                 while chr(marker) in names:
                     marker += 1
                 lit_char = chr(marker)
                 marker += 1
-                names = names.replace(splitter, lit_char)
-                literals.append((lit_char, splitter[1:]))
+                names = names.replace(lit, lit_char)
+                literals.append((lit_char, lit[1:]))
         def literal(s):
             if literals:
                 for c, l in literals:
@@ -744,8 +739,7 @@ def symbols(names, *, cls=Symbol, **args) -> Any:
                 result.append(symbol)
                 continue
 
-            split: list[str] = _range.split(name)
-            split_list: list[list[str]] = []
+            split = _range.split(name)
             # remove 1 layer of bounding parentheses around ranges
             for i in range(len(split) - 1):
                 if i and ':' in split[i] and split[i] != ':' and \
@@ -753,30 +747,30 @@ def symbols(names, *, cls=Symbol, **args) -> Any:
                         split[i + 1].startswith(')'):
                     split[i - 1] = split[i - 1][:-1]
                     split[i + 1] = split[i + 1][1:]
-            for s in split:
+            for i, s in enumerate(split):
                 if ':' in s:
-                    if s.endswith(':'):
+                    if s[-1].endswith(':'):
                         raise ValueError('missing end range')
                     a, b = s.split(':')
                     if b[-1] in string.digits:
-                        a_i = 0 if not a else int(a)
-                        b_i = int(b)
-                        split_list.append([str(c) for c in range(a_i, b_i)])
+                        a = 0 if not a else int(a)
+                        b = int(b)
+                        split[i] = [str(c) for c in range(a, b)]
                     else:
                         a = a or 'a'
-                        split_list.append([string.ascii_letters[c] for c in range(
+                        split[i] = [string.ascii_letters[c] for c in range(
                             string.ascii_letters.index(a),
-                            string.ascii_letters.index(b) + 1)])  # inclusive
-                    if not split_list[-1]:
+                            string.ascii_letters.index(b) + 1)]  # inclusive
+                    if not split[i]:
                         break
                 else:
-                    split_list.append([s])
+                    split[i] = [s]
             else:
                 seq = True
-                if len(split_list) == 1:
-                    names = split_list[0]
+                if len(split) == 1:
+                    names = split[0]
                 else:
-                    names = [''.join(s) for s in product(*split_list)]
+                    names = [''.join(s) for s in product(*split)]
                 if literals:
                     result.extend([cls(literal(s), **args) for s in names])
                 else:

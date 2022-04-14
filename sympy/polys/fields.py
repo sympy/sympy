@@ -163,7 +163,6 @@ class FracField(DefaultPrinting):
             (self.symbols, self.ngens, self.domain, self.order) == \
             (other.symbols, other.ngens, other.domain, other.order)
 
-
     def raw_new(self, numer, denom=None):
         return self.dtype(numer, denom)
     def new(self, numer, denom=None):

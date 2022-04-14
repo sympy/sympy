@@ -1487,6 +1487,23 @@ class DMF(PicklableWithSlots, CantSympify):
 
         return False
 
+    def __ne__(f, g):
+        try:
+            if isinstance(g, DMP):
+                _, _, _, (F_num, F_den), G = f.poly_unify(g)
+
+                if f.lev == g.lev:
+                    return not (dmp_one_p(F_den, f.lev, f.dom) and F_num == G)
+            else:
+                _, _, _, F, G = f.frac_unify(g)
+
+                if f.lev == g.lev:
+                    return F != G
+        except UnificationFailed:
+            pass
+
+        return True
+
     def __lt__(f, g):
         _, _, _, F, G = f.frac_unify(g)
         return F < G
@@ -1751,6 +1768,14 @@ class ANP(PicklableWithSlots, CantSympify):
             return F == G
         except UnificationFailed:
             return False
+
+    def __ne__(f, g):
+        try:
+            _, _, F, G, _ = f.unify(g)
+
+            return F != G
+        except UnificationFailed:
+            return True
 
     def __lt__(f, g):
         _, _, F, G, _ = f.unify(g)

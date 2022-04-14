@@ -175,7 +175,6 @@ class Vector(Printable, EvalfMixin):
             newlist[i] = (sympify(other) * newlist[i][0], newlist[i][1])
         return Vector(newlist)
 
-
     def __neg__(self):
         return self * -1
 

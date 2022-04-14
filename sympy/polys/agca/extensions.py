@@ -190,7 +190,6 @@ class ExtensionElement(DomainElement, DefaultPrinting):
         else:
             return NotImplemented
 
-
     def __hash__(f):
         return hash((f.rep, f.ext))
 

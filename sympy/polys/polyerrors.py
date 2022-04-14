@@ -120,12 +120,6 @@ class UnificationFailed(BasePolynomialError):
     pass
 
 @public
-class UnsolvableFactorError(BasePolynomialError):
-    """Raised if ``roots`` is called with strict=True and a polynomial
-     having a factor whose solutions are not expressible in radicals
-     is encountered."""
-
-@public
 class GeneratorsError(BasePolynomialError):
     pass
 

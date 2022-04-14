@@ -42,7 +42,7 @@ class ImplicitRegion(Basic):
     >>> r.variables
     (x, y, z)
     >>> r.singular_points()
-    EmptySet
+    {(0, 0, 0)}
     >>> r.regular_point()
     (-10, -10, 200)
 
