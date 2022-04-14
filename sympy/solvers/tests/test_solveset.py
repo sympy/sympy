@@ -403,7 +403,9 @@ def test_solveset_sqrt_1():
     assert solveset_real(sqrt(x) - 2 - 5, x) == FiniteSet(49)
     assert solveset_real(sqrt(x**3), x) == FiniteSet(0)
     assert solveset_real(sqrt(x - 1), x) == FiniteSet(1)
-
+    assert solveset_real(sqrt((x-3)/x), x) == FiniteSet(3)
+    assert solveset_real(sqrt((x-3)/x)-Rational(1, 2), x) == \
+        FiniteSet(4)
 
 def test_solveset_sqrt_2():
     x = Symbol('x', real=True)

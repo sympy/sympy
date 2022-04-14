@@ -251,12 +251,22 @@ def _invert_real(f, g_ys, symbol):
                 num, den = expo.as_numer_denom()
 
                 if den % 2 == 0 and num % 2 == 1 and den.is_zero is False:
+                    # Here we have f(x)**(num/den) = y
+                    # where den is nonzero and even and y is an element
+                    # of the set g_ys.
+                    # den is even, so we are only interested in the cases
+                    # where both f(x) and y are positive.
+                    # Restricting y to be positive (using the set g_ys_pos)
+                    # means that y**(den/num) is always positive.
+                    # Therefore it isn't necessary to also constrain f(x)
+                    # to be positive because we are only going to
+                    # find solutions of f(x) = y**(d/n)
+                    # where the rhs is already required to be positive.
                     root = Lambda(n, real_root(n, expo))
                     g_ys_pos = g_ys & Interval(0, oo)
                     res = imageset(root, g_ys_pos)
-                    base_positive = solveset(base >= 0, symbol, S.Reals)
                     _inv, _set = _invert_real(base, res, symbol)
-                    return (_inv, _set.intersect(base_positive))
+                    return (_inv, _set)
 
                 if den % 2 == 1:
                     root = Lambda(n, real_root(n, expo))
