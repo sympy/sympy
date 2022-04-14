@@ -142,15 +142,6 @@ class interval:
         else:
             return NotImplemented
 
-    def __ne__(self, other):
-        if isinstance(other, (int, float)):
-            if self.start == other and self.end == other:
-                return intervalMembership(False, self.is_valid)
-            if other in self:
-                return intervalMembership(None, self.is_valid)
-            else:
-                return intervalMembership(True, self.is_valid)
-
         if isinstance(other, interval):
             valid = fuzzy_and([self.is_valid, other.is_valid])
             if self.start == other.start and self.end == other.end:

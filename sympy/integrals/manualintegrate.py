@@ -70,7 +70,6 @@ def Rule(name, props=""):
     __neq__ = lambda self, other: not __eq__(self, other)
     cls = namedtuple(name, props + " context symbol")
     cls.__eq__ = __eq__
-    cls.__ne__ = __neq__
     return cls
 
 ConstantRule = Rule("ConstantRule", "constant")
