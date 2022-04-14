@@ -109,7 +109,7 @@ images rendered with LaTeX. `preview()` can either save the image to a file or
 show it with a viewer.
 
 (dependencies-latex)=
-- **LaTeX**: A $\LaTeX$ distributions such as [TeXLive](https://tug.org/texlive/) or
+- **LaTeX**: A $\textrm{\LaTeX}$ distributions such as [TeXLive](https://tug.org/texlive/) or
 [MiKTeX](https://miktex.org/) is required for {func}`~.preview` to function.
 
 ### Parsing
