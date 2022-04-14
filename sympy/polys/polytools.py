@@ -4248,7 +4248,7 @@ class Poly(Basic):
         return f.rep == g.rep
 
     @_sympifyit('g', NotImplemented)
-    def __ne__(f, g): 
+    def __ne__(f, g):
         return not f == g
 
     def __bool__(f):
@@ -7028,6 +7028,7 @@ class GroebnerBasis(Basic):
             return self.polys == list(other) or self.exprs == list(other)
         else:
             return False
+
     def __ne__(self, other):
         return not self == other
 
