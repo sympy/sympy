@@ -87,9 +87,6 @@ class GenericZeroMatrix(ZeroMatrix):
     def __eq__(self, other):
         return isinstance(other, GenericZeroMatrix)
 
-    def __ne__(self, other):
-        return not (self == other)
-
     def __hash__(self):
         return super().__hash__()
 
@@ -187,8 +184,6 @@ class GenericIdentity(Identity):
     def __eq__(self, other):
         return isinstance(other, GenericIdentity)
 
-    def __ne__(self, other):
-        return not (self == other)
 
     def __hash__(self):
         return super().__hash__()

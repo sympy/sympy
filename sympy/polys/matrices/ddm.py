@@ -166,9 +166,6 @@ class DDM(list):
             return False
         return (super().__eq__(other) and self.domain == other.domain)
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     @classmethod
     def zeros(cls, shape, domain):
         z = domain.zero
