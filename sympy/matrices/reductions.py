@@ -290,7 +290,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
 
     ``iszerofunc`` can correct rounding errors in matrices with float values.
     In the following example, calling ``rref()`` leads to floating point errors,
-    incorrectly row reducing the matrix. ``iszerofunc= lambda x: abs(x)<1e-9`` 
+    incorrectly row reducing the matrix. ``iszerofunc= lambda x: abs(x)<1e-9``
     sets sufficiently small numbers to zero, avoiding this error.
 
     >>> m = Matrix([[0.9, -0.1, -0.2, 0], [-0.8, 0.9, -0.4, 0], [-0.1, -0.8, 0.6, 0]])
