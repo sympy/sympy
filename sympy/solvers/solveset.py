@@ -25,7 +25,6 @@ from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import iterfreeargs
 from sympy.simplify.simplify import simplify, fraction, trigsimp
-from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec,
