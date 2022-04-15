@@ -7028,7 +7028,6 @@ class GroebnerBasis(Basic):
             return self.polys == list(other) or self.exprs == list(other)
         else:
             return False
-
     def __ne__(self, other):
         return not self == other
 

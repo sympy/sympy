@@ -383,8 +383,6 @@ class Basic(Printable, metaclass=ManagedProperties):
             if a.is_Number and type(a) != type(b):
                 return False
         return True
-
-
     def __ne__(self, other):
         """``a != b``  -> Compare two symbolic trees and see whether they are different
 
