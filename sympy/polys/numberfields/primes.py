@@ -70,7 +70,12 @@ class PrimeIdeal(IntegerPowerable):
         self._test_factor = None
         self.e = e if e is not None else self.valuation(p * ZK)
 
-    def pretty(self, field_gen=None, just_gens=False):
+    def __str__(self):
+        if self.alpha.is_rational:
+            return f'({self.p})'
+        return f'({self.p}, {self.alpha.as_expr()})'
+
+    def repr(self, field_gen=None, just_gens=False):
         """
         Print a representation of this prime ideal.
 
@@ -82,11 +87,11 @@ class PrimeIdeal(IntegerPowerable):
         >>> T = cyclotomic_poly(7, x)
         >>> K = QQ.algebraic_field((T, zeta))
         >>> P = K.primes_above(11)
-        >>> print(P[0].pretty())
+        >>> print(P[0].repr())
         [ (11, x**3 + 5*x**2 + 4*x - 1) e=1, f=3 ]
-        >>> print(P[0].pretty(field_gen=zeta))
+        >>> print(P[0].repr(field_gen=zeta))
         [ (11, zeta**3 + 5*zeta**2 + 4*zeta - 1) e=1, f=3 ]
-        >>> print(P[0].pretty(field_gen=zeta, just_gens=True))
+        >>> print(P[0].repr(field_gen=zeta, just_gens=True))
         (11, zeta**3 + 5*zeta**2 + 4*zeta - 1)
 
         Parameters
@@ -114,7 +119,7 @@ class PrimeIdeal(IntegerPowerable):
         return f'[ {gens} e={e}, f={f} ]'
 
     def __repr__(self):
-        return self.pretty()
+        return self.repr()
 
     def as_submodule(self):
         r"""

@@ -1581,6 +1581,28 @@ class PowerBasisElement(ModuleElement):
         """Obtain the number as a polynomial over :ref:`QQ`."""
         return self.numerator(x=x) // self.denom
 
+    @property
+    def is_rational(self):
+        """Say whether this element represents a rational number."""
+        return self.col[1:, :].is_zero_matrix
+
+    @property
+    def generator(self):
+        """
+        Return a :py:class:`~.Symbol` to be used when expressing this element
+        as a polynomial.
+
+        If we have an associated :py:class:`~.AlgebraicField` whose primitive
+        element has an alias symbol, we use that. Otherwise we use the variable
+        of the minimal polynomial defining the power basis to which we belong.
+        """
+        K = self.module.number_field
+        return K.ext.alias if K and K.ext.is_aliased else self.T.gen
+
+    def as_expr(self, x=None):
+        """Create a Basic expression from ``self``. """
+        return self.poly(x or self.generator).as_expr()
+
     def norm(self, T=None):
         """Compute the norm of this number."""
         T = T or self.T

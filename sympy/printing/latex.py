@@ -630,6 +630,13 @@ class LatexPrinter(Printer):
         else:
             return self._print(expr.as_expr())
 
+    def _print_PrimeIdeal(self, expr):
+        p = self._print(expr.p)
+        if expr.alpha.is_rational:
+            return rf'\left({p}\right)'
+        alpha = self._print(expr.alpha.as_expr())
+        return rf'\left({p}, {alpha}\right)'
+
     def _print_Pow(self, expr):
         # Treat x**Rational(1,n) as special case
         if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1 \
