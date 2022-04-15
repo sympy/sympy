@@ -550,7 +550,7 @@ class BinaryQuadratic(DiophantineEquationType):
                 sqc = isqrt(c)
                 _c = e*sqc*D - sqa*E
                 if not _c:
-                    z = symbols("z", real=True)
+                    z = Symbol("z", real=True)
                     eq = sqa*g*z**2 + D*z + sqa*F
                     roots = solveset_real(eq, z).intersect(S.Integers)
                     for root in roots:
