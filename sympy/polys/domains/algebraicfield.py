@@ -433,7 +433,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     def _do_round_two(self):
         from sympy.polys.numberfields.basis import round_two
-        ZK, dK = round_two(self.ext.minpoly, radicals=self._nilradicals_mod_p)
+        ZK, dK = round_two(self, radicals=self._nilradicals_mod_p)
         self._maximal_order = ZK
         self._discriminant = dK
 
@@ -511,7 +511,6 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         elif fmt == 'alg':
             return [self.to_alg_num(b) for b in B]
         return B
-
 
     def discriminant(self):
         """Get the discriminant of the field."""
