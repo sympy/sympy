@@ -231,8 +231,10 @@ def get_authors_from_git(skip_last=False):
 
     if skip_last:
         # Skip the most recent commit. Used to ignore the merge commit created
-        # when this script runs in CI.
-        git_command.append("HEAD^")
+        # when this script runs in CI. We use HEAD^2 rather than HEAD^1 to
+        # select the parent commit that is part of the PR rather than the
+        # parent commit that was the previous tip of master.
+        git_command.append("HEAD^2")
 
     git_people = run(git_command, stdout=PIPE, encoding='utf-8').stdout.strip().split("\n")
 
