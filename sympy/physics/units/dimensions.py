@@ -580,14 +580,14 @@ class DimensionSystem(Basic, _QuantityMapper):
         /units/test/test_dimensionless.py for the format of the input .... As a heads up, we first need to define a global set of base dimensions and with
         those we can define the derived quantities ..... """
         exponent_matrix = []
-        """ We extract the exponent matrix from the dimensional dependencies of the quantities """
+        # We extract the exponent matrix from the dimensional dependencies of the quantities
         for quantity in list_of_derived_quantities:
-            element_for_quantity = [0 for k in range(7)]
+            element_for_quantity = [0 for k in range(len(self.base_dims))]
             dimensions = self.get_dimensional_dependencies(list_of_derived_quantities[quantity])
             for base_dims in dimensions:
                 element_for_quantity[self.base_dims.index(base_dims)] = dimensions[base_dims]
             exponent_matrix.append(element_for_quantity)
-        """ Next we obtain the null space of the exponent matrix """
+        # Next we obtain the null space of the exponent matrix
         exponent_matrix = Matrix(exponent_matrix)
         exponents = exponent_matrix.T.nullspace()
         # We need to make sure that we obtain integer nullspaces because
@@ -600,11 +600,16 @@ class DimensionSystem(Basic, _QuantityMapper):
                 for l in range(len(exponents[k])):
                     exponents[k][l] = exponents[k][l] * m
                     flag = flag and (exponents[k][l]-int(exponents[k][l])) == 0.0
-            if flag: break
+            if flag:
+                # Just to make sure that the exponents are all integers
+                for k in range(null_space_dims):
+                    for l in range(len(exponents[k])):
+                        exponents[k][l] = int(exponents[k][l])
+                break
             m = m + 1
         set_of_dimless_nums = [Dimension(1) for k in range(null_space_dims)]
         set_of_dimless_quant = ['' for k in range(null_space_dims)]
-        """ Here as a final step we take the dot product of the nullspace with the derived quantities """
+        # Here as a final step we take the dot product of the nullspace with the derived quantities
         for k in range(null_space_dims):
             m = 0
             for quantity in list_of_derived_quantities:
