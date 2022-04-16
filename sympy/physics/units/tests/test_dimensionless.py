@@ -58,3 +58,39 @@ def test_qed_case():
         flag = flag and dimension == Dimension(1)
     assert flag
     """ One of the values in the output shows the fine-structure interaction """
+
+M = Dimension('mass')
+L = Dimension('length')
+T = Dimension('time')
+dummy_gauss_system = DimensionSystem((L, M, T))
+
+def test_qed_case_gauss():
+    hbar = M*L**2/T # Dimensions of the reduced Planck's constant
+    omega = 1/T # Characteristic angular resonant frequency
+    epsilon = 1 # Vaccuum permittivity is unitless in Gaussian (not in SI)
+    Vm = L**3 # Volume of the resonator
+    Qe = L**(3/2)*M**(1/2)/T # Dimensions of the electronic charge (in Gaussian)
+    Uc = L/T # Velocity dimensions
+    list_of_quantities = {'hbar': hbar, 'Uc' : Uc, 'omega' : omega, 'epsilon' : epsilon, 'Vm' : Vm, 'Qe' : Qe}
+    set_of_dimless_quant, set_of_dimless_nums = dummy_gauss_system.get_dimensionless_numbers(list_of_quantities)
+    flag = True
+    for dimension in set_of_dimless_nums:
+        flag = flag and dimension == Dimension(1)
+    assert flag
+
+def test_mhd_case_gauss():
+    """ The Gaussian system of units are different but dimensionally I am
+    not expecting different results .... """
+    Lc = L # Characteristic length scale
+    Uc = L/T # Characteristic velocity scale
+    rho_c = M/L**3 # Characteristic density scale
+    mu = M/L/T # Dynamic viscosity
+    j0 = M**(1/2)/L**(1/2)/T**2 # Characteristic range value of current density (in Gaussian)
+    sigma_0 = T**(-1) # Characteristic conductivity scale (in Gaussian)
+    B0 = L**(-1/2)*M**(1/2)/T # Magnetic field characteristic scale (in Gaussian)
+    list_of_quantities = {'Lc': Lc, 'Uc' : Uc, 'rho': rho_c, 'mu': mu, 'j0': j0, 'sigma_0': sigma_0, 'B0': B0}
+    set_of_dimless_quant, set_of_dimless_nums = dummy_gauss_system.get_dimensionless_numbers(list_of_quantities)
+    flag = True
+    for dimension in set_of_dimless_nums:
+        flag = flag and dimension == Dimension(1)
+    assert flag
