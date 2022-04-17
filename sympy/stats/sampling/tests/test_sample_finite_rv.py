@@ -15,7 +15,7 @@ def test_given_sample():
 def test_sample_numpy():
     distribs_numpy = [
         Binomial("B", 5, 0.4),
-        Hypergeometric("H", 100, 2, 10),
+        Hypergeometric("H", 2, 1, 1)
     ]
     size = 3
     numpy = import_module('numpy')
