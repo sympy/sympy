@@ -2216,3 +2216,14 @@ def test_21494():
 
 def test_Expr__eq__iterable_handling():
     assert x != range(3)
+
+
+def test_issue_23120():
+    r = symbols('r', real=True)
+    nz = symbols('nz', nonzero=True)
+    assert len((x*oo + nz + 1/nz).args) == 3
+    assert r*oo + I*nz + 1/nz == r*oo + I*nz
+    assert len((r*oo + I*nz).args) == 2
+    assert r*oo + nz + 1/nz == r*oo
+    assert (x*oo + oo).args == (oo, x*oo)
+    assert oo + I*pi - I*pi == oo

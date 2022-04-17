@@ -810,6 +810,11 @@ class Pow(Expr):
         if c1 and c2:
             if self.exp.is_nonnegative or fuzzy_not(self.base.is_zero):
                 return True
+        if c1 is False and self.base.is_extended_real and c2:
+            if self.exp.is_extended_positive:
+                return False
+            if self.exp.is_extended_nonpositive:
+                return True
 
     def _eval_is_prime(self):
         '''

@@ -663,6 +663,7 @@ class Mul(Expr, AssocOp):
                     if t.is_extended_negative:
                         coeff_sign *= -1
                         continue
+                    # if the sign is unknown, keep the factor
                     new_c_part.append(t)
                 return new_c_part, coeff_sign
             c_part, coeff_sign = _handle_for_oo(c_part, 1)
