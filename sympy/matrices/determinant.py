@@ -20,7 +20,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     suitable for a pivot.  If ``col`` consists only of
     Floats, the pivot with the largest norm is returned.
     Otherwise, the first element where ``iszerofunc`` returns
-    False is used.  If ``iszerofunc`` doesn't return false,
+    False is used.  If ``iszerofunc`` does not return false,
     items are simplified and retested until a suitable
     pivot is found.
 

@@ -645,7 +645,7 @@ def fourier_series(f, limits=None, finite=True):
     not throughout the whole real line.
 
     This also brings a lot of ease for the computation because
-    you don't have to make $f(x)$ artificially periodic by
+    you do not have to make $f(x)$ artificially periodic by
     wrapping it with piecewise, modulo operations,
     but you can shape the function to look like the desired periodic
     function only in the interval $(a, b)$, and the computed series will

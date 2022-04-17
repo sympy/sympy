@@ -384,8 +384,8 @@ class DiracDelta(Function):
             # I don't know how to handle the case for DiracDelta expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
-                rewrite(SingularityFunction) doesn't support
-                arguments with more that 1 variable.'''))
+                rewrite(SingularityFunction) does not support
+                arguments with more that one variable.'''))
 
 
 ###############################################################################
@@ -668,5 +668,5 @@ class Heaviside(Function):
             # I don't know how to handle the case for Heaviside expressions
             # having arguments with more than one variable.
             raise TypeError(filldedent('''
-                rewrite(SingularityFunction) doesn't
-                support arguments with more that 1 variable.'''))
+                rewrite(SingularityFunction) does not
+                support arguments with more that one variable.'''))

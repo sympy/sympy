@@ -631,9 +631,7 @@ class Abs(Function):
         return self._args[0].is_zero
 
     def _eval_is_extended_positive(self):
-        is_z = self.is_zero
-        if is_z is not None:
-            return not is_z
+        return fuzzy_not(self._args[0].is_zero)
 
     def _eval_is_rational(self):
         if self.args[0].is_extended_real:

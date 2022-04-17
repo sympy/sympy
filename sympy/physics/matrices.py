@@ -6,7 +6,7 @@ from sympy.utilities.decorator import deprecated
 
 
 def msigma(i):
-    r"""Returns a Pauli matrix `\sigma_i` with ``i=1,2,3``.
+    r"""Returns a Pauli matrix `\sigma_i` with `i=1,2,3`.
 
     References
     ==========

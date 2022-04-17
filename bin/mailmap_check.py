@@ -136,7 +136,8 @@ def main(*args):
     if problems:
         print(red(filldedent("""
         For instructions on updating the .mailmap file see:
-        https://github.com/sympy/sympy/wiki/Development-workflow#update-mailmap""")))
+        https://github.com/sympy/sympy/wiki/Development-workflow#add-your-name-and-email-address-to-the-mailmap-file""",
+                             break_on_hyphens=False, break_long_words=False)))
     else:
         print(green("No changes needed in .mailmap"))
 

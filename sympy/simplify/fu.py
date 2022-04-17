@@ -497,7 +497,7 @@ def TR9(rv):
     If no change is made by TR9, no re-arrangement of the
     expression will be made. For example, though factoring
     of common term is attempted, if the factored expression
-    wasn't changed, the original expression will be returned:
+    was not changed, the original expression will be returned:
 
     >>> TR9(cos(3) + cos(3)*cos(2))
     cos(3) + cos(2)*cos(3)

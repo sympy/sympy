@@ -280,7 +280,7 @@ class MultiFactorial(CombinatorialFunction):
 
 
 class subfactorial(CombinatorialFunction):
-    r"""The subfactorial counts the derangements of n items and is
+    r"""The subfactorial counts the derangements of $n$ items and is
     defined for non-negative integers as:
 
     .. math:: !n = \begin{cases} 1 & n = 0 \\ 0 & n = 1 \\
@@ -294,7 +294,7 @@ class subfactorial(CombinatorialFunction):
     .. math:: !x = \Gamma(x + 1, -1)/e
 
     which is valid for non-negative integers `x`. The above formula
-    is not very useful incase of non-integers. :math:`\Gamma(x + 1, -1)` is
+    is not very useful in case of non-integers. `\Gamma(x + 1, -1)` is
     single-valued only for integral arguments `x`, elsewhere on the positive
     real axis it has an infinite number of branches none of which are real.
 
@@ -317,9 +317,8 @@ class subfactorial(CombinatorialFunction):
     See Also
     ========
 
-    sympy.functions.combinatorial.factorials.factorial,
-    sympy.utilities.iterables.generate_derangements,
-    sympy.functions.special.gamma_functions.uppergamma
+    factorial, uppergamma,
+    sympy.utilities.iterables.generate_derangements
     """
 
     @classmethod
@@ -504,14 +503,14 @@ class RisingFactorial(CombinatorialFunction):
     function arising in concrete mathematics, hypergeometric functions
     and series expansions. It is defined by:
 
-    .. math:: rf(x,k) = x \cdot (x+1) \cdots (x+k-1)
+    .. math:: \texttt{rf(y, k)} = (x)^k = x \cdot (x+1) \cdots (x+k-1)
 
     where `x` can be arbitrary expression and `k` is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit http://mathworld.wolfram.com/RisingFactorial.html page.
 
-    When `x` is a Poly instance of degree $\ge 1$ with a single variable,
-    `rf(x,k) = x(y) \cdot x(y+1) \cdots x(y+k-1)`, where `y` is the
+    When `x` is a `~.Poly` instance of degree $\ge 1$ with a single variable,
+    `(x)^k = x(y) \cdot x(y+1) \cdots x(y+k-1)`, where `y` is the
     variable of `x`. This is as described in [2]_.
 
     Examples
@@ -665,17 +664,15 @@ class FallingFactorial(CombinatorialFunction):
     function arising in concrete mathematics, hypergeometric functions
     and series expansions. It is defined by
 
-    .. math:: ff(x,k) = x \cdot (x-1) \cdots (x-k+1)
+    .. math:: \texttt{ff(x, k)} = (x)_k = x \cdot (x-1) \cdots (x-k+1)
 
     where `x` can be arbitrary expression and `k` is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
-    or visit http://mathworld.wolfram.com/FallingFactorial.html page.
+    or [1]_.
 
-    When `x` is a Poly instance of degree >= 1 with single variable,
-    `ff(x,k) = x(y) \cdot x(y-1) \cdots x(y-k+1)`, where `y` is the
-    variable of `x`. This is as described in Peter Paule, "Greatest
-    Factorial Factorization and Symbolic Summation", Journal of
-    Symbolic Computation, vol. 20, pp. 235-268, 1995.
+    When `x` is a `~.Poly` instance of degree $\ge 1$ with single variable,
+    `(x)_k = x(y) \cdot x(y-1) \cdots x(y-k+1)`, where `y` is the
+    variable of `x`. This is as described in
 
     >>> from sympy import ff, Poly, Symbol
     >>> from sympy.abc import x
@@ -718,6 +715,9 @@ class FallingFactorial(CombinatorialFunction):
     ==========
 
     .. [1] http://mathworld.wolfram.com/FallingFactorial.html
+    .. [2] Peter Paule, "Greatest Factorial Factorization and Symbolic
+           Summation", Journal of Symbolic Computation, vol. 20, pp. 235-268,
+           1995.
 
     """
 
@@ -827,7 +827,7 @@ class binomial(CombinatorialFunction):
     in two ways depending on its desired interpretation:
 
     .. math:: \binom{n}{k} = \frac{n!}{k!(n-k)!}\ \text{or}\
-                \binom{n}{k} = \frac{ff(n, k)}{k!}
+                \binom{n}{k} = \frac{(n)_k}{k!}
 
     First, in a strict combinatorial sense it defines the
     number of ways we can choose `k` elements from a set of
@@ -839,8 +839,8 @@ class binomial(CombinatorialFunction):
     however `k` must also be nonnegative. This case is very
     useful when evaluating summations.
 
-    For the sake of convenience for negative integer `k` this function
-    will return zero no matter what valued is the other argument.
+    For the sake of convenience, for negative integer `k` this function
+    will return zero no matter the other argument.
 
     To expand the binomial when `n` is a symbol, use either
     ``expand_func()`` or ``expand(func=True)``. The former will keep

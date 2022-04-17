@@ -131,6 +131,8 @@ def test_diff_symbols():
     raises(TypeError, lambda: cos(x).diff((x, y)).variables)
     assert cos(x).diff((x, y))._wrt_variables == [x]
 
+    # issue 23222
+    assert sympify("a*x+b").diff("x") == sympify("a")
 
 def test_Function():
     class myfunc(Function):
@@ -775,6 +777,14 @@ def test_diff_wrt_not_allowed():
         raises(ValueError, lambda: diff(f(x), wrt))
     # if we don't differentiate wrt then don't raise error
     assert diff(exp(x*y), x*y, 0) == exp(x*y)
+
+
+def test_diff_wrt_intlike():
+    class Two:
+        def __int__(self):
+            return 2
+
+    assert cos(x).diff(x, Two()) == -cos(x)
 
 
 def test_klein_gordon_lagrangian():

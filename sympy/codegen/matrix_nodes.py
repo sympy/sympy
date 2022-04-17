@@ -57,7 +57,7 @@ class MatrixSolve(Token, MatrixExpr):
     'A \\\\ x'
 
     """
-    __slots__ = ('matrix', 'vector')
+    __slots__ = _fields = ('matrix', 'vector')
 
     _construct_matrix = staticmethod(sympify)
 

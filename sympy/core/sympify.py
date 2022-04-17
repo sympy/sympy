@@ -61,7 +61,8 @@ class CantSympify:
     SympifyError: SympifyError: {}
 
     """
-    pass
+
+    __slots__ = ()
 
 
 def _is_numpy_instance(a):
@@ -530,7 +531,7 @@ def _sympify(a):
 
 def kernS(s):
     """Use a hack to try keep autosimplification from distributing a
-    a number into an Add; this modification doesn't
+    a number into an Add; this modification does not
     prevent the 2-arg Mul from becoming an Add, however.
 
     Examples
