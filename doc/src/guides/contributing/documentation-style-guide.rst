@@ -422,3 +422,16 @@ Avoid unwelcoming or judgement-based phrases like “That is wrong.” Instead u
 friendly and inclusive language like “A common mistake is...”
 
 Avoid extraneous phrases like, “we just have to do one more thing.”
+
+SymPy Logos
+^^^^^^^^^^^
+
+SymPy has a collection of official logos, which can be generated from sympy.svg in your local copy of SymPy by:
+
+.. code-block:: none
+
+    $ cd doc
+    $ make logo # will be stored in the _build/logo subdirectory
+
+The license of all the logos is the same as SymPy: BSD. See the 
+:ref:`LICENSE file <LICENSE>` in the trunk for more information.

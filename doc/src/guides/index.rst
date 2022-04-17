@@ -17,17 +17,7 @@ a module break down.
    :maxdepth: 2
 
    getting_started/index.rst
-   contributing/index.rst
    assumptions.rst
    booleans.rst
-
-The SymPy Project
-=================
-
-.. toctree::
-   :maxdepth: 2
-
-   ../aboutus.rst
-   ../citing.rst
-   ../wiki.rst
-   ../outreach.rst
+   contributing/index.rst
+   ../citing.md
