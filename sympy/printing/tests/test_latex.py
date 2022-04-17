@@ -199,7 +199,13 @@ def test_latex_basic():
     assert latex(AlgebraicNumber(sqrt(2), [3, -7], alias='alpha')) == \
         r"3 \alpha - 7"
     assert latex(AlgebraicNumber(2**(S(1)/3), [1, 3, -7], alias='beta')) == \
-           r"\beta^{2} + 3 \beta - 7"
+        r"\beta^{2} + 3 \beta - 7"
+
+    k = ZZ.cyclotomic_field(5)
+    assert latex(k.ext.field_element([1, 2, 3, 4])) == \
+        r"\zeta^{3} + 2 \zeta^{2} + 3 \zeta + 4"
+    assert latex(k.ext.field_element([1, 2, 3, 4]), order='old') == \
+        r"4 + 3 \zeta + 2 \zeta^{2} + \zeta^{3}"
 
     assert latex(1.5e20*x) == r"1.5 \cdot 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"

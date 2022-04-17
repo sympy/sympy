@@ -254,6 +254,8 @@ from .interactive import init_session, init_printing, interactive_traversal
 evalf._create_evalf_table()
 
 __all__ = [
+    '__version__',
+
     # sympy.core
     'sympify', 'SympifyError', 'cacheit', 'Basic', 'Atom',
     'preorder_traversal', 'S', 'Expr', 'AtomicExpr', 'UnevaluatedExpr',
