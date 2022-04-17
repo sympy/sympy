@@ -295,7 +295,8 @@ class Symbol(AtomicExpr, Boolean):
         cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
-    def __new_stage2__(cls, name, **assumptions):
+    @staticmethod
+    def __xnew__(cls, name, **assumptions):  # never cached (e.g. dummy)
         if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
 
@@ -319,10 +320,10 @@ class Symbol(AtomicExpr, Boolean):
         obj._assumptions._generator = tmp_asm_copy  # Issue #8873
         return obj
 
-    __xnew__ = staticmethod(
-        __new_stage2__)            # never cached (e.g. dummy)
-    __xnew_cached_ = staticmethod(
-        cacheit(__new_stage2__))   # symbols are always cached
+    @staticmethod
+    @cacheit
+    def __xnew_cached_(cls, name, **assumptions):  # symbols are always cached
+        return Symbol.__xnew__(cls, name, **assumptions)
 
     def __getnewargs_ex__(self):
         return ((self.name,), self.assumptions0)
