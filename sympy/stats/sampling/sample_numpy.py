@@ -34,35 +34,35 @@ def _(dist: ExponentialDistribution, size, rand_state):
 
 @do_sample_numpy.register(FDistributionDistribution)
 def _(dist: FDistributionDistribution, size, rand_state):
-    return rand_state.f(dfn=float(dist.dfn), dfd=float(dist.dfd), size=size)
+    return rand_state.f(dfnum = float(dist.d1), dfden = float(dist.d2), size=size)
 
 @do_sample_numpy.register(GammaDistribution)
 def _(dist: GammaDistribution, size, rand_state):
-    return rand_state.gamma(float(dist.k), float(dist.theta), size=size)
+    return rand_state.gamma(shape = float(dist.k), scale = float(dist.theta), size=size)
 
 @do_sample_numpy.register(GumbelDistribution)
 def _(dist: GumbelDistribution, size, rand_state):
-    return rand_state.gumbel(float(dist.mu), float(dist.beta), size=size)
+    return rand_state.gumbel(loc = float(dist.mu), scale = float(dist.beta), size=size)
 
 @do_sample_numpy.register(LaplaceDistribution)
 def _(dist: LaplaceDistribution, size, rand_state):
-    return rand_state.laplace(float(dist.mu), float(dist.beta), size=size)
+    return rand_state.laplace(loc = float(dist.mu), scale = float(dist.b), size=size)
 
 @do_sample_numpy.register(LogisticDistribution)
 def _(dist: LogisticDistribution, size, rand_state):
-    return rand_state.logistic(float(dist.mu), float(dist.sigma), size=size)
+    return rand_state.logistic(loc = float(dist.mu), scale = float(dist.s), size=size)
 
 @do_sample_numpy.register(LogNormalDistribution)
 def _(dist: LogNormalDistribution, size, rand_state):
-    return rand_state.lognormal(float(dist.mean), float(dist.std), size=size)
+    return rand_state.lognormal(mean = float(dist.mean), sigma = float(dist.std), size=size)
 
 @do_sample_numpy.register(NormalDistribution)
 def _(dist: NormalDistribution, size, rand_state):
-    return rand_state.normal(float(dist.mean), float(dist.std), size=size)
+    return rand_state.normal(loc = float(dist.mean), scale = float(dist.std), size=size)
 
 @do_sample_numpy.register(RayleighDistribution)
 def _(dist: RayleighDistribution, size, rand_state):
-    return rand_state.rayleigh(float(dist.scale), size=size)
+    return rand_state.rayleigh(scale = float(dist.sigma), size=size)
 
 @do_sample_numpy.register(ParetoDistribution)
 def _(dist: ParetoDistribution, size, rand_state):
@@ -70,7 +70,7 @@ def _(dist: ParetoDistribution, size, rand_state):
 
 @do_sample_numpy.register(TriangularDistribution)
 def _(dist: TriangularDistribution, size, rand_state):
-    return rand_state.triangular(float(dist.left), float(dist.mode), float(dist.right), size=size)
+    return rand_state.triangular(left = float(dist.a), mode = float(dist.b), right = float(dist.c), size=size)
 
 @do_sample_numpy.register(UniformDistribution)
 def _(dist: UniformDistribution, size, rand_state):
@@ -102,4 +102,4 @@ def _(dist: BinomialDistribution, size, rand_state):
 
 @do_sample_numpy.register(HypergeometricDistribution)
 def _(dist: HypergeometricDistribution, size, rand_state):
-    return rand_state.hypergeometric(ngood = int(dist.ngood), nbad = int(dist.nbad), n = int(dist.n), size=size)
+    return rand_state.hypergeometric(ngood = int(dist.N), nbad = int(dist.m), nsample = int(dist.n), size=size)
