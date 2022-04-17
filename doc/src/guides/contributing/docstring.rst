@@ -133,12 +133,13 @@ Sections
 In SymPy’s docstrings, it is preferred that function, class, and method
 docstrings consist of the following sections in this order:
 
-1. Single-Sentence Summary
-2. Explanation
-3. Examples
-4. Parameters
-5. See Also
-6. References
+1. Function Signature
+2. Single-Sentence Summary
+3. Explanation
+4. Examples
+5. Parameters
+6. See Also
+7. References
 
 The Single-Sentence Summary and Examples sections are **required** for every
 docstring. Docstrings will not pass review if these sections are not included.
@@ -156,7 +157,27 @@ is unnecessary, do not use it. Unnecessary sections and cluttered docstrings
 can make a function harder to understand. Aim for the minimal amount of
 information required to understand the function.
 
-1. Single-Sentence Summary
+1. Function Signature
+^^^^^^^^^^^^^^^^^^^^^
+
+The function signature is part of the Python source code but is almost always
+displayed along with the doc string. Function signatures should have
+informative argument names that follow Python variable name best practices,
+e.g. use ``coef_matrix`` instead of ``m``. It is also best to avoid the use of
+the generic ``*args`` and ``**kwargs`` in function signatures. Instead, make
+explcitly named arguments and keyword arguments as this is more informative for
+the user.
+
+Python supports `type hints`_ but these may decrease the human readability of
+the function signatures. Type hints should not be added to the function
+signatures in Python modules (``.py`` files). Instead, they should only be
+added in `stub files`_. These stub files have the extension ``.pyi`` and mirror
+the modules which are being typed.
+
+.. _type hints: https://docs.python.org/3/library/typing.html
+.. _stub files: https://mypy.readthedocs.io/en/stable/stubs.html
+
+2. Single-Sentence Summary
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This section is **required** for every docstring. A docstring will not pass
@@ -176,7 +197,7 @@ in the Sphinx directive::
 
 See :ref:`deprecation-documentation` for more details.
 
-2. Explanation Section
+3. Explanation Section
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 This section is encouraged. If you choose to include an Explanation section in
@@ -193,7 +214,7 @@ class, or method does when the concise Single-Sentence Summary will not
 suffice. This section should be used to clarify functionality in several
 sentences or paragraphs.
 
-3. Examples Section
+4. Examples Section
 ^^^^^^^^^^^^^^^^^^^^
 
 This section is **required** for every docstring. A docstring will not pass
@@ -275,7 +296,7 @@ assumptions), in which case use ``symbols`` like ``x, y = symbols('x y')``.
 In general, you should run ``./bin/doctest`` to make sure your examples run
 correctly, and fix them if they do not.
 
-4. Parameters Section
+5. Parameters Section
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This section is encouraged. If you choose to include a Parameters section in
@@ -333,7 +354,7 @@ Here is an example of a correctly formatted Parameters section::
 
 .. _style_guide_see_also:
 
-5. See Also Section
+6. See Also Section
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This section is encouraged. If you choose to include a See Also section in your
@@ -390,7 +411,7 @@ Here is a correctly formatted See Also section with just a list of names::
 
         """
 
-6. References Section
+7. References Section
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This section is encouraged. If you choose to include a References section in
