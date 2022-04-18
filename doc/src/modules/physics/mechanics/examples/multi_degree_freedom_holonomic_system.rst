@@ -22,7 +22,7 @@ mass of the pendulum, as well as gravity and others. ::
 
     >>> from sympy import zeros, symbols
     >>> from sympy.physics.mechanics import Body, PinJoint, PrismaticJoint, JointsMethod, inertia
-    >>> from sympy.physics.mechanics import dynamicsymbols 
+    >>> from sympy.physics.mechanics import dynamicsymbols
     >>> q1, q2, q3, u1, u2, u3 = dynamicsymbols('q1, q2, q3, u1, u2, u3')
     >>> l, k, c, g, kT = symbols('l, k, c, g, kT')
     >>> ma, mb, mc, IBzz= symbols('ma, mb, mc, IBzz')
@@ -57,7 +57,7 @@ specified torque T acts on compound_pend and block, specified force F acts on bl
     >>> block.apply_force(-k*q1*block.x, reaction_body=wall)
     >>> block.apply_force(-c*u1*block.x, reaction_body=wall)
     >>> compound_pend.apply_torque(T*compound_pend.z, reaction_body=block)
-    >>> simple_pend.apply_torque(kT*q3*simple_pend.z, reaction_body=compound_pend)
+    >>> simple_pend.apply_torque(-kT*q3*simple_pend.z, reaction_body=compound_pend)
     >>> block.apply_force(-wall.y*block.mass*g)
     >>> compound_pend.apply_force(-wall.y*compound_pend.mass*g)
     >>> simple_pend.apply_force(-wall.y*simple_pend.mass*g)
@@ -68,24 +68,24 @@ With the problem setup, the equations of motion can be generated using the
     >>> method = JointsMethod(wall, slider, rev1, rev2)
     >>> method.form_eoms()
     Matrix([
-    [               -c*u1(t) - k*q1(t) + 2*l*mb*u2(t)**2*sin(q2(t))/3 - l*mc*(-sin(q2(t))*cos(q3(t)) - sin(q3(t))*cos(q2(t)))*(u2(t) + u3(t))*u3(t) - mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))/3)*Derivative(u3(t), t) + mc*(2*l*u2(t)/3 + l*u3(t)/3)*u2(t)*sin(q2(t)) - (2*l*mb*cos(q2(t))/3 + 2*l*mc*cos(q2(t))/3)*Derivative(u2(t), t) - (ma + mb + mc)*Derivative(u1(t), t) + F(t)],
-    [                                                                                                                  -2*g*l*mb*sin(q2(t))/3 - 2*g*l*mc*sin(q2(t))/3 + 2*l**2*mc*(u2(t) + u3(t))*u3(t)*sin(q3(t))/3 - mc*(2*l**2*cos(q3(t))/3 + 2*l**2/9)*Derivative(u3(t), t) - (2*l*mb*cos(q2(t))/3 + 2*l*mc*cos(q2(t))/3)*Derivative(u1(t), t) - (IBzz + 4*l**2*mb/9 + 4*l**2*mc/9)*Derivative(u2(t), t) + T(t)],
-    [-g*l*mc*(sin(q2(t))*cos(q3(t)) + sin(q3(t))*cos(q2(t))) - g*l*mc*sin(q2(t))/3 + kT*q3(t) + l**2*mc*(u2(t) + u3(t))*u3(t)*sin(q3(t))/3 - l*mc*(2*l*u2(t)/3 + l*u3(t)/3)*u2(t)*sin(q3(t)) - mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))/3)*Derivative(u1(t), t) - mc*(2*l**2*cos(q3(t))/3 + 2*l**2/9)*Derivative(u2(t), t) - mc*(2*l**2*cos(q3(t))/3 + 10*l**2/9)*Derivative(u3(t), t)]])
+    [                                -c*u1(t) - k*q1(t) + 2*l*mb*u2(t)**2*sin(q2(t))/3 - l*mc*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t)))*Derivative(u3(t), t) - l*mc*(-sin(q2(t))*cos(q3(t)) - sin(q3(t))*cos(q2(t)))*(u2(t) + u3(t))**2 + l*mc*u2(t)**2*sin(q2(t)) - (2*l*mb*cos(q2(t))/3 + mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))))*Derivative(u2(t), t) - (ma + mb + mc)*Derivative(u1(t), t) + F(t)],
+    [-2*g*l*mb*sin(q2(t))/3 - g*l*mc*(sin(q2(t))*cos(q3(t)) + sin(q3(t))*cos(q2(t))) - g*l*mc*sin(q2(t)) + l**2*mc*(u2(t) + u3(t))**2*sin(q3(t)) - l**2*mc*u2(t)**2*sin(q3(t)) - mc*(l**2*cos(q3(t)) + l**2)*Derivative(u3(t), t) - (2*l*mb*cos(q2(t))/3 + mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))))*Derivative(u1(t), t) - (IBzz + 4*l**2*mb/9 + mc*(2*l**2*cos(q3(t)) + 2*l**2))*Derivative(u2(t), t) + T(t)],
+    [                                                                                                                                                                        -g*l*mc*(sin(q2(t))*cos(q3(t)) + sin(q3(t))*cos(q2(t))) - kT*q3(t) - l**2*mc*u2(t)**2*sin(q3(t)) - l**2*mc*Derivative(u3(t), t) - l*mc*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t)))*Derivative(u1(t), t) - mc*(l**2*cos(q3(t)) + l**2)*Derivative(u2(t), t)]])
 
     >>> method.mass_matrix_full
     Matrix([
-    [1, 0, 0,                                                                        0,                                         0,                                                                        0],
-    [0, 1, 0,                                                                        0,                                         0,                                                                        0],
-    [0, 0, 1,                                                                        0,                                         0,                                                                        0],
-    [0, 0, 0,                                                             ma + mb + mc, 2*l*mb*cos(q2(t))/3 + 2*l*mc*cos(q2(t))/3, mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))/3)],
-    [0, 0, 0,                                2*l*mb*cos(q2(t))/3 + 2*l*mc*cos(q2(t))/3,          IBzz + 4*l**2*mb/9 + 4*l**2*mc/9,                                      mc*(2*l**2*cos(q3(t))/3 + 2*l**2/9)],
-    [0, 0, 0, mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))/3),       mc*(2*l**2*cos(q3(t))/3 + 2*l**2/9),                                     mc*(2*l**2*cos(q3(t))/3 + 10*l**2/9)]])
+    [1, 0, 0,                                                                                            0,                                                                                            0,                                                     0],
+    [0, 1, 0,                                                                                            0,                                                                                            0,                                                     0],
+    [0, 0, 1,                                                                                            0,                                                                                            0,                                                     0],
+    [0, 0, 0,                                                                                 ma + mb + mc, 2*l*mb*cos(q2(t))/3 + mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))), l*mc*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t)))],
+    [0, 0, 0, 2*l*mb*cos(q2(t))/3 + mc*(l*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))) + l*cos(q2(t))),                                         IBzz + 4*l**2*mb/9 + mc*(2*l**2*cos(q3(t)) + 2*l**2),                           mc*(l**2*cos(q3(t)) + l**2)],
+    [0, 0, 0,                                        l*mc*(-sin(q2(t))*sin(q3(t)) + cos(q2(t))*cos(q3(t))),                                                                  mc*(l**2*cos(q3(t)) + l**2),                                               l**2*mc]])
 
     >>> method.forcing_full
     Matrix([
-    [                                                                                                                                                                                  u1(t)],
-    [                                                                                                                                                                                  u2(t)],
-    [                                                                                                                                                                                  u3(t)],
-    [ -c*u1(t) - k*q1(t) + 2*l*mb*u2(t)**2*sin(q2(t))/3 - l*mc*(-sin(q2(t))*cos(q3(t)) - sin(q3(t))*cos(q2(t)))*(u2(t) + u3(t))*u3(t) + mc*(2*l*u2(t)/3 + l*u3(t)/3)*u2(t)*sin(q2(t)) + F(t)],
-    [                                                                                   -2*g*l*mb*sin(q2(t))/3 - 2*g*l*mc*sin(q2(t))/3 + 2*l**2*mc*(u2(t) + u3(t))*u3(t)*sin(q3(t))/3 + T(t)],
-    [-g*l*mc*(sin(q2(t))*cos(q3(t)) + sin(q3(t))*cos(q2(t))) - g*l*mc*sin(q2(t))/3 + kT*q3(t) + l**2*mc*(u2(t) + u3(t))*u3(t)*sin(q3(t))/3 - l*mc*(2*l*u2(t)/3 + l*u3(t)/3)*u2(t)*sin(q3(t))]])
+    [                                                                                                                                                                           u1(t)],
+    [                                                                                                                                                                           u2(t)],
+    [                                                                                                                                                                           u3(t)],
+    [                  -c*u1(t) - k*q1(t) + 2*l*mb*u2(t)**2*sin(q2(t))/3 - l*mc*(-sin(q2(t))*cos(q3(t)) - sin(q3(t))*cos(q2(t)))*(u2(t) + u3(t))**2 + l*mc*u2(t)**2*sin(q2(t)) + F(t)],
+    [-2*g*l*mb*sin(q2(t))/3 - g*l*mc*(sin(q2(t))*cos(q3(t)) + sin(q3(t))*cos(q2(t))) - g*l*mc*sin(q2(t)) + l**2*mc*(u2(t) + u3(t))**2*sin(q3(t)) - l**2*mc*u2(t)**2*sin(q3(t)) + T(t)],
+    [                                                                                -g*l*mc*(sin(q2(t))*cos(q3(t)) + sin(q3(t))*cos(q2(t))) - kT*q3(t) - l**2*mc*u2(t)**2*sin(q3(t))]])
