@@ -62,7 +62,7 @@ from functools import reduce
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
-    EulerGamma, oo, zoo, expand_func, Add, nan, Expr, Rational)
+    EulerGamma, oo, zoo, expand_func, Add, nan, Expr, Rational, Integer)
 from sympy.core.mod import Mod
 from sympy.core.sorting import default_sort_key
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
@@ -80,8 +80,43 @@ from sympy.series import residue
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
 
+
 # function to define "buckets"
 def _mod1(x):
+    """returns additive constant, mod 1
+
+    Examples
+    ========
+
+    >>> from sympy import S, Symbol
+    >>> from sympy.simplify.hyperexpand import _mod1 as m1
+    >>> from sympy.abc import x
+
+    When the input is equal to an integer, the return value
+    will be S.Zero:
+
+    >>> m1(S(3)) is m1(S(3.0)) is S.Zero
+    True
+    >>> m1(3*S.Half)
+    1/2
+    >>> m1(S(1.5))
+    0.500000000000000
+
+    Currently, integer expressions are not reduced to 0.
+
+    >>> i = Symbol('i', integer=True)
+    >>> m1(2*i)
+    2*i
+
+    For expressions with free symbols, only the additive
+    constant is modified:
+
+    >>> m1(2*x) == m1(2*x + 3) == 2*x
+    True
+    >>> m1(2*x + S(3)/2)
+    2*x + 1/2
+    """
+
     # TODO see if this can work as Mod(x, 1); this will require
     # different handling of the "buckets" since these need to
     # be sorted and that fails when there is a mixture of
@@ -90,7 +125,7 @@ def _mod1(x):
     # Although the sorting can be done with Basic.compare, this may
     # still require different handling of the sorted buckets.
     if x.is_Number:
-        return Mod(x, 1)
+        return Mod(x, 1) or S.Zero  # make 0. canonical S.Zero
     c, x = x.as_coeff_Add()
     return Mod(c, 1) + x
 
@@ -543,12 +578,9 @@ class Hyper_Function(Expr):
         abuckets, bbuckets = sift(self.ap, _mod1), sift(self.bq, _mod1)
 
         def tr(bucket):
-            bucket = list(bucket.items())
-            if not any(isinstance(x[0], Mod) for x in bucket):
-                bucket.sort(key=lambda x: default_sort_key(x[0]))
-            bucket = tuple([(mod, len(values)) for mod, values in bucket if
+            bucket = sorted(list(bucket.items()), key=lambda x: default_sort_key(x[0]))
+            return tuple([(mod, len(values)) for mod, values in bucket if
                     values])
-            return bucket
 
         return (self.gamma, tr(abuckets), tr(bbuckets))
 
@@ -1666,9 +1698,7 @@ def try_shifted_sum(func, z):
         return None
     if S.Zero not in bbuckets:
         return None
-    l = list(bbuckets[S.Zero])
-    l.sort()
-    k = l[0]
+    k = min(bbuckets[S.Zero])
     if k <= 0:
         return None
 
@@ -1676,12 +1706,13 @@ def try_shifted_sum(func, z):
     nap.remove(r)
     nbq = list(func.bq)
     nbq.remove(k)
+
     k -= 1
     nap = [x - k for x in nap]
     nbq = [x - k for x in nbq]
 
     ops = []
-    for n in range(r - 1):
+    for n in range(int(r) - 1):
         ops.append(ShiftA(n + 1))
     ops.reverse()
 
@@ -1694,7 +1725,7 @@ def try_shifted_sum(func, z):
     ops += [MultOperator(fac)]
 
     p = 0
-    for n in range(k):
+    for n in range(int(k)):
         m = z**n/factorial(n)
         for a in nap:
             m *= rf(a, n)
@@ -1724,7 +1755,8 @@ def try_polynomial(func, z):
     a = al0[-1]
     fac = 1
     res = S.One
-    for n in Tuple(*list(range(-a))):
+    for n in range(-int(a)):
+        n = Integer(n)
         fac *= z
         fac /= n + 1
         for a in func.ap:
@@ -2332,8 +2364,10 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
                 s = Dummy('s')
                 integrand = z**s
                 for b in bm:
-                    if not Mod(b, 1) and b.is_Number:
-                        b = int(round(b))
+                    if b.is_Number:  # XXX is it necessary to convert to int?
+                        ib = int(b)
+                        if ib == b:
+                            b = ib
                     integrand *= gamma(b - s)
                 for a in an:
                     integrand *= gamma(1 - a + s)
