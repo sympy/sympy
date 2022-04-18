@@ -1,3 +1,4 @@
+from sphinx.application import Sphinx
 from typing import Tuple as tTuple, TYPE_CHECKING
 from collections.abc import Iterable
 from functools import reduce
