@@ -429,4 +429,4 @@ SymPy has a collection of official logos, which can be generated from sympy.svg 
     $ make logo # will be stored in the _build/logo subdirectory
 
 The license of all the logos is the same as SymPy: BSD. See the 
-:ref:`LICENSE file <LICENSE>` in the trunk for more information.
+`LICENSE file <https://github.com/sympy/sympy/blob/master/LICENSE>`_ for more information.
