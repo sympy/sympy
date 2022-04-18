@@ -877,7 +877,7 @@ class Domain:
         from sympy.polys.domains.old_fractionfield import FractionField
         return FractionField(self, *symbols, **kwargs)
 
-    def algebraic_field(self, *extension):
+    def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `K(\alpha, \ldots)`. """
         raise DomainError("Cannot create algebraic field over %s" % self)
 
@@ -921,7 +921,7 @@ class Domain:
         from sympy.polys.rootoftools import CRootOf
         root = CRootOf(poly, root_index)
         alpha = AlgebraicNumber(root, alias=alias)
-        return self.algebraic_field(alpha)
+        return self.algebraic_field(alpha, alias=alias)
 
     def cyclotomic_field(self, n, ss=False, alias="zeta", gen=None, root_index=-1):
         r"""
