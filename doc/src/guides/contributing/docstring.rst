@@ -165,7 +165,7 @@ displayed along with the doc string. Function signatures should have
 informative argument names that follow Python variable name best practices,
 e.g. use ``coef_matrix`` instead of ``m``. It is also best to avoid the use of
 the generic ``*args`` and ``**kwargs`` in function signatures. Instead, make
-explcitly named arguments and keyword arguments as this is more informative for
+explicitly named arguments and keyword arguments as this is more informative for
 the user.
 
 Python supports `type hints`_ but these may decrease the human readability of
