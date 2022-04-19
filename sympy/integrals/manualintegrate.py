@@ -869,15 +869,27 @@ def hyperbolic_rule(integral: tuple[Expr, Symbol]):
             return HyperbolicRule('sinh', symbol, integrand, symbol)
         if integrand.func == cosh:
             return HyperbolicRule('cosh', symbol, integrand, symbol)
+        u = Dummy('u')
         if integrand.func == tanh:
             rewritten = sinh(symbol)/cosh(symbol)
-        elif integrand.func == coth:
+            return RewriteRule(rewritten,
+                   URule(u, cosh(symbol), None,
+                   ReciprocalRule(u, 1/u, u), rewritten, symbol), integrand, symbol)
+        if integrand.func == coth:
             rewritten = cosh(symbol)/sinh(symbol)
-        elif integrand.func in (sech, csch):
-            rewritten = integrand.rewrite(tanh)
+            return RewriteRule(rewritten,
+                   URule(u, sinh(symbol), None,
+                   ReciprocalRule(u, 1/u, u), rewritten, symbol), integrand, symbol)
         else:
-            assert False
-        return RewriteRule(rewritten, integral_steps(rewritten, symbol), integrand, symbol)
+            rewritten = integrand.rewrite(tanh)
+            if integrand.func == sech:
+                return RewriteRule(rewritten,
+                       URule(u, tanh(symbol/2), None,
+                       ArctanRule(S(2), S.One, S.One, 2/(u**2 + 1), u), rewritten, symbol), integrand, symbol)
+            if integrand.func == csch:
+                return RewriteRule(rewritten,
+                       URule(u, tanh(symbol/2), None,
+                       ReciprocalRule(u, 1/u, u), rewritten, symbol), integrand, symbol)
 
 @cacheit
 def make_wilds(symbol):
