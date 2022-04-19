@@ -115,8 +115,10 @@ def msolve(f, x):
         x0 = x0 - dx
     x_max = x0 - dx
     x_min = x0
-    assert f(x_max) > 0
-    assert f(x_min) < 0
+    if f(x_max) <= 0:
+        raise ValueError ('x-max is less than 0')
+    if f(x_min) >= 0:
+        raise ValueError ('x-min is greater than 0')
     for n in range(100):
         x0 = (x_max + x_min)/2
         if f(x0) > 0:

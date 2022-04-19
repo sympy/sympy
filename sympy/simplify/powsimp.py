@@ -361,7 +361,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             c_powers.append((b, e))
         check = len(c_powers)
         c_powers = dict(c_powers)
-        assert len(c_powers) == check  # there should have been no duplicates
+        if len(c_powers) != check :
+            raise ValueError ('There should have been no duplicates.')
         # ==============================================================
 
         # rebuild the expression
