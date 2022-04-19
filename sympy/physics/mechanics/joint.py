@@ -526,9 +526,9 @@ class PinJoint(Joint):
 
     def _set_linear_velocity(self):
         self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.parent.frame, 0)
+        self.child_point.set_vel(self.child.frame, 0)
         self.child_point.set_pos(self.parent_point, 0)
-        self.child.masscenter.v2pt_theory(self.parent.masscenter,
+        self.child.masscenter.v2pt_theory(self.parent_point,
                                           self.parent.frame, self.child.frame)
 
 
