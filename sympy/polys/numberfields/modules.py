@@ -180,6 +180,7 @@ to support this.
 
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.symbol import Dummy
+from sympy.polys.polyclasses import ANP
 from sympy.polys.polytools import Poly
 from sympy.polys.densetools import dup_clear_denoms
 from sympy.polys.domains.algebraicfield import AlgebraicField
@@ -191,7 +192,7 @@ from sympy.polys.matrices.exceptions import DMBadInputError
 from sympy.polys.matrices.normalforms import hermite_normal_form
 from sympy.polys.polyerrors import CoercionFailed, UnificationFailed
 from sympy.polys.polyutils import IntegerPowerable
-from .exceptions import ClosureFailure, MissingUnityError
+from .exceptions import ClosureFailure, MissingUnityError, StructureError
 from .utilities import AlgIntPowers, is_int, is_rat, get_num_denom
 
 
@@ -802,6 +803,39 @@ class PowerBasis(Module):
         col = to_col(c + z)
         return self(col, denom=d)
 
+    def _element_from_rep_and_mod(self, rep, mod):
+        """
+        Produce a PowerBasisElement representing a given algebraic number.
+
+        Parameters
+        ==========
+
+        rep : list of coeffs
+            Represents the number as polynomial in the primitive element of the
+            field.
+
+        mod : list of coeffs
+            Represents the minimal polynomial of the primitive element of the
+            field.
+
+        Returns
+        =======
+
+        :py:class:`~.PowerBasisElement`
+
+        """
+        if mod != self.T.rep.rep:
+            raise UnificationFailed('Element does not appear to be in the same field.')
+        return self.element_from_poly(Poly(rep, self.T.gen))
+
+    def element_from_ANP(self, a):
+        """Convert an ANP into a PowerBasisElement. """
+        return self._element_from_rep_and_mod(a.rep, a.mod)
+
+    def element_from_alg_num(self, a):
+        """Convert an AlgebraicNumber into a PowerBasisElement. """
+        return self._element_from_rep_and_mod(a.rep.rep, a.minpoly.rep.rep)
+
 
 class Submodule(Module, IntegerPowerable):
     """A submodule of another module."""
@@ -1126,6 +1160,76 @@ class Submodule(Module, IntegerPowerable):
 
     def _first_power(self):
         return self
+
+    def reduce_element(self, elt):
+        r"""
+        If this submodule $B$ has defining matrix $W$ in square, maximal-rank
+        Hermite normal form, then, given an element $x$ of the parent module
+        $A$, we produce an element $y \in A$ such that $x - y \in B$, and the
+        $i$th coordinate of $y$ satisfies $0 \leq y_i < w_{i,i}$.
+
+        Explanation
+        ===========
+
+        In the special case where $A$ is a power basis for a number field $K$,
+        and $B$ is a submodule representing an ideal $I$, this operation
+        represents one of a few important ways of reducing an element of $K$
+        modulo $I$ to obtain a "small" representative. See [Cohen00] Section
+        1.4.3.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, Poly, symbols
+        >>> t = symbols('t')
+        >>> k = QQ.alg_field_from_poly(Poly(t**3 + t**2 - 2*t + 8))
+        >>> Zk = k.maximal_order()
+        >>> A = Zk.parent
+        >>> B = (A(2) - 3*A(0))*Zk
+        >>> B.reduce_element(A(2))
+        [3, 0, 0]
+
+        Parameters
+        ==========
+
+        elt : :py:class:`~.ModuleElement`
+            An element of this submodule's parent module.
+
+        Returns
+        =======
+
+        elt : :py:class:`~.ModuleElement`
+            An element of this submodule's parent module.
+
+        Raises
+        ======
+
+        NotImplementedError
+            If the given :py:class:`~.ModuleElement` does not belong to this
+            submodule's parent module.
+        StructureError
+            If this submodule's defining matrix is not in square, maximal-rank
+            Hermite normal form.
+
+        References
+        ==========
+
+        .. [Cohen00] Cohen, H. *Advanced Topics in Computational Number
+           Theory.*
+
+        """
+        if not elt.module == self.parent:
+            raise NotImplementedError
+        if not self.is_sq_maxrank_HNF():
+            msg = "Reduction not implemented unless matrix square max-rank HNF"
+            raise StructureError(msg)
+        B = self.basis_element_pullbacks()
+        a = elt
+        for i in range(self.n - 1, -1, -1):
+            b = B[i]
+            q = a.coeffs[i]*b.denom // (b.coeffs[i]*a.denom)
+            a -= q*b
+        return a
 
 
 def is_sq_maxrank_HNF(dm):
@@ -1618,6 +1722,44 @@ class PowerBasisElement(ModuleElement):
 
     def _negative_power(self, e, modulo=None):
         return self.inverse() ** abs(e)
+
+    def to_ANP(self):
+        """Convert to an equivalent :py:class:`~.ANP`. """
+        return ANP(list(reversed(self.QQ_col.flat())), QQ.map(self.T.rep.rep), QQ)
+
+    def to_alg_num(self):
+        """
+        Try to convert to an equivalent :py:class:`~.AlgebraicNumber`.
+
+        Explanation
+        ===========
+
+        In general, the conversion from an :py:class:`~.AlgebraicNumber` to a
+        :py:class:`~.PowerBasisElement` throws away information, because an
+        :py:class:`~.AlgebraicNumber` specifies a complex embedding, while a
+        :py:class:`~.PowerBasisElement` does not. However, in some cases it is
+        possible to convert a :py:class:`~.PowerBasisElement` back into an
+        :py:class:`~.AlgebraicNumber`, namely when the associated
+        :py:class:`~.PowerBasis` has a reference to an
+        :py:class:`~.AlgebraicField`.
+
+        Returns
+        =======
+
+        :py:class:`~.AlgebraicNumber`
+
+        Raises
+        ======
+
+        StructureError
+            If the :py:class:`~.PowerBasis` to which this element belongs does
+            not have an associated :py:class:`~.AlgebraicField`.
+
+        """
+        K = self.module.number_field
+        if K:
+            return K.to_alg_num(self.to_ANP())
+        raise StructureError("No associated AlgebraicField")
 
 
 class ModuleHomomorphism:
