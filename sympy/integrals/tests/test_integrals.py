@@ -11,7 +11,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import (Abs, im, polar_lift, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
-from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, coth, csch, sinh, tanh, sech)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
@@ -1914,3 +1914,9 @@ def test_issue_18527():
     expr = (cos(x)/(4+(sin(x))**2))
     res_real = integrate(expr.subs(x, xr), xr, manual=True).subs(xr, x)
     assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
+
+
+def test_hyperbolic():
+    assert integrate(coth(x)) == x - log(tanh(x) + 1) + log(tanh(x))
+    assert integrate(sech(x)) == 2*atan(tanh(x/2))
+    assert integrate(csch(x)) == log(tanh(x/2))

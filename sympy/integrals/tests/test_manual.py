@@ -100,6 +100,18 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(sin(3*x)*sec(x), x) == \
         -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
 
+    assert_is_integral_of(sinh(2*x), cosh(2*x)/2)
+    assert_is_integral_of(x*cosh(x**2), sinh(x**2)/2)
+    assert_is_integral_of(tanh(x), log(cosh(x)))
+    assert_is_integral_of(coth(x), log(sinh(x)))
+    f, F = sech(x), 2*atan(tanh(x/2))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).simplify() == 0  # todo: equals returns None
+    f, F = csch(x), log(tanh(x/2))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).simplify() == 0
+
+
 @slow
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
@@ -568,16 +580,3 @@ def test_issue_23348():
     steps = integral_steps(tan(x), x)
     constant_times_step = steps.substep.substep
     assert constant_times_step.context == constant_times_step.constant * constant_times_step.other
-
-
-def test_hyperbolic():
-    assert_is_integral_of(sinh(2*x), cosh(2*x)/2)
-    assert_is_integral_of(x*cosh(x**2), sinh(x**2)/2)
-    assert_is_integral_of(tanh(x), log(cosh(x)))
-    assert_is_integral_of(coth(x), log(sinh(x)))
-    f, F = sech(x), 2*atan(tanh(x/2))
-    assert manualintegrate(f, x) == F
-    assert (F.diff(x) - f).rewrite(exp).simplify() == 0  # todo: equals returns None
-    f, F = csch(x), log(tanh(x/2))
-    assert manualintegrate(f, x) == F
-    assert (F.diff(x) - f).rewrite(exp).simplify() == 0
