@@ -563,7 +563,7 @@ class FirstExact(SinglePatternODESolver):
             factor = exp(Integral(factor, integration_variable))
             m *= factor
             n *= factor
-            self._wilds_match[P] = m.subs(y, fx)
+            self._wilds_match[P] = m.subs(y, 0)
             self._wilds_match[Q] = n.subs(y, fx)
             return True
 
@@ -577,8 +577,8 @@ class FirstExact(SinglePatternODESolver):
         m = m.subs(fx, y)
         n = n.subs(fx, y)
 
-        gen_sol = Eq(Subs(Integral(m.subs(y,0), x)
-                + Integral(n - Integral(m.subs(y,0), x).diff(y), y), y, fx), C1)
+        gen_sol = Eq(Subs(Integral(m, x)
+                + Integral(n - Integral(m, x).diff(y), y), y, fx), C1)
         return [gen_sol]
 
 
