@@ -944,7 +944,7 @@ class ReferenceFrame:
 
         >>> from sympy import symbols
         >>> from sympy.physics.vector import ReferenceFrame
-        >>> q1, q2, q3 = symbols('q1, q2, q3')
+        >>> q1, q2, q3 = symbols('q1, q2, q3', real=True)
         >>> N = ReferenceFrame('N')
         >>> B = ReferenceFrame('B')
         >>> B1 = ReferenceFrame('B1')

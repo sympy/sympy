@@ -32,11 +32,12 @@ mass of the pendulum, as well as gravity and time. ::
   >>> # Create generalized coordinates and speeds for this non-minimal realization
   >>> # q1, q2 = N.x and N.y coordinates of pendulum
   >>> # u1, u2 = N.x and N.y velocities of pendulum
-  >>> q1, q2 = dynamicsymbols('q1:3')
-  >>> q1d, q2d = dynamicsymbols('q1:3', level=1)
-  >>> u1, u2 = dynamicsymbols('u1:3')
-  >>> u1d, u2d = dynamicsymbols('u1:3', level=1)
-  >>> L, m, g, t = symbols('L, m, g, t')
+  >>> q1, q2 = dynamicsymbols('q1:3', real=True)
+  >>> q1d, q2d = dynamicsymbols('q1:3', level=1, real=True)
+  >>> u1, u2 = dynamicsymbols('u1:3', real=True)
+  >>> u1d, u2d = dynamicsymbols('u1:3', level=1, real=True)
+  >>> L, m, g = symbols('L, m, g', real=True)
+  >>> t = dynamicsymbols('t')
 
 Next, we create a world coordinate frame `N`, and its origin point `N^*`. The
 velocity of the origin is set to 0. A second coordinate frame `A` is oriented

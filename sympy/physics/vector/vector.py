@@ -1,4 +1,4 @@
-from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros, acos,
+from sympy.core.backend import (S, sympify, expand, Add, zeros, acos, sqrt,
                                 ImmutableMatrix as Matrix, _simplify_matrix)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
@@ -684,18 +684,52 @@ class Vector(Printable, EvalfMixin):
         return Vector(d)
 
     def magnitude(self):
-        """Returns the magnitude (Euclidean norm) of self.
+        """Returns the magnitude (Euclidean 2-norm) of the vector.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, sqrt
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> A = ReferenceFrame('A')
+        >>> (1*A.x + 2*A.y + 3*A.z).magnitude()
+        sqrt(14)
+        >>> a, b, c = symbols('a, b, c')
+        >>> (a*A.x + b*A.y + c*A.z).magnitude()
+        sqrt(Abs(a)**2 + Abs(b)**2 + Abs(c)**2)
+
+        SymPy assumes all symbols are complex valued, so you'll need to apply
+        the ``real`` assumption to get the expected result when using
+        magnitude:
+
+        >>> a, b, c = symbols('a, b, c', real=True)
+        >>> (a*A.x + b*A.y + c*A.z).magnitude()
+        sqrt(a**2 + b**2 + c**2)
+
+        This is a vector of length ``a`` but ``a`` can be any real number,
+        positive, negative, or zero. So the magnitude retains the absolute
+        value:
+
+        >>> v = a*sqrt(2)/2*A.x + a*sqrt(2)/2*A.y
+        >>> v.magnitude()
+        Abs(a)
 
         Warnings
         ========
 
-        Python ignores the leading negative sign so that might
-        give wrong results.
-        ``-A.x.magnitude()`` would be treated as ``-(A.x.magnitude())``,
-        instead of ``(-A.x).magnitude()``.
+        Python ignores the leading negative sign so that might give wrong
+        results. ``-A.x.magnitude()`` would be treated as
+        ``-(A.x.magnitude())``, instead of ``(-A.x).magnitude()``.
 
         """
-        return sqrt(self & self)
+        if self.args:
+            col_vec = self.to_matrix(self.args[0][1])
+            summ = S(0)
+            for component in col_vec[:]:
+                summ += abs(component)**2
+            return sqrt(summ)
+        else:  # self is a vector of zero length
+            return S(0)
 
     def normalize(self):
         """Returns a Vector of magnitude 1, codirectional with self."""

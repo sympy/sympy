@@ -2,6 +2,7 @@ from sympy.core.function import expand_mul
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.dense import Matrix
 from sympy.core.backend import _simplify_matrix
@@ -163,7 +164,7 @@ def test_pinjoint_arbitrary_axis():
                             [0, -cos(theta), -sin(theta)],
                             [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
-    assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
+    assert A.ang_vel_in(N).magnitude() == Abs(omega)
     assert C.masscenter.pos_from(P.masscenter) == 0
     assert C.masscenter.pos_from(P.masscenter).express(N).simplify() == 0
     assert C.masscenter.vel(N) == 0
@@ -180,7 +181,7 @@ def test_pinjoint_arbitrary_axis():
                                [0, -sin(theta), cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).express(A) == omega * A.y
-    assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
+    assert A.ang_vel_in(N).magnitude() == Abs(omega)
     angle = A.ang_vel_in(N).angle_between(A.y)
     assert angle.xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N) == omega*A.z
@@ -200,7 +201,7 @@ def test_pinjoint_arbitrary_axis():
                                [sin(theta), 0, cos(theta)]])
     assert A.ang_vel_in(N) == omega*N.y
     assert A.ang_vel_in(N).express(A) == omega*A.x
-    assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
+    assert A.ang_vel_in(N).magnitude() == Abs(omega)
     angle = A.ang_vel_in(N).angle_between(A.x)
     assert angle.xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N).simplify() == - omega*N.z
@@ -219,7 +220,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N) == omega*N.x
     assert (A.ang_vel_in(N).express(A).simplify() ==
             (omega*A.x + omega*A.y)/sqrt(2))
-    assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
+    assert A.ang_vel_in(N).magnitude() == Abs(omega)
     angle = A.ang_vel_in(N).angle_between(A.x + A.y)
     assert angle.xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N).simplify() == (omega * A.z)/sqrt(2)
@@ -246,7 +247,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y -
                                                      omega*A.z)/sqrt(3)
-    assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
+    assert A.ang_vel_in(N).magnitude() == Abs(omega)
     angle = A.ang_vel_in(N).angle_between(A.x + A.y-A.z)
     assert angle.xreplace({omega: 1}) == 0
     assert C.masscenter.vel(N).simplify() == (omega*A.y + omega*A.z)/sqrt(3)
@@ -278,7 +279,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N) == (omega*N.x - omega*N.y + omega*N.z)/sqrt(3)
     assert A.ang_vel_in(N).express(A).simplify() == (omega*A.x + omega*A.y -
                                                      omega*A.z)/sqrt(3)
-    assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
+    assert A.ang_vel_in(N).magnitude() == Abs(omega)
     angle = A.ang_vel_in(N).angle_between(A.x+A.y-A.z)
     assert angle.xreplace({omega: 1}) == 0
     assert (C.masscenter.vel(N).simplify() ==
