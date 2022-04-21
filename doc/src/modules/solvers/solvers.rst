@@ -1,4 +1,4 @@
-.. _solvers:
+.. _solvers-docs:
 
 Solvers
 =======
