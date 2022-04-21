@@ -712,11 +712,9 @@ class PowerBasis(Module):
         K = None
         if isinstance(T, AlgebraicField):
             K, T = T, T.ext.minpoly_of_element()
-        if T.domain == QQ:
-            try:
-                T = Poly(T, domain=ZZ)
-            except CoercionFailed:
-                raise ValueError('A polynomial over ZZ is required')
+        # Sometimes incoming Polys are formally over QQ, although all their
+        # coeffs are integral. We want them to be formally over ZZ.
+        T = T.set_domain(ZZ)
         self.K = K
         self.T = T
         self._n = T.degree()
