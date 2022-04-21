@@ -165,18 +165,25 @@ Core
     and {term}`Expr` base classes, classes like {class}`~.Add`,
     {class}`~.Mul`, and {class}`~.Pow`, and the {term}`assumptions`.
 
-{class}`~.Expr`
+Equation
 
-    *`Expr`* is the superclass of all algebraic SymPy expressions. It is
-    itself a subclass of {term}`Basic`. SymPy expressions that can be in an
-    {class}`~.Add`, {class}`~.Mul`, or {class}`~.Pow` should be `Expr`
-    subclasses. Not all SymPy classes are subclasses of `Expr`, for example,
-    {term}`Boolean` objects are {term}`Basic` but not `Expr`, because boolean
-    expressions do not make mathematical sense in classes like {class}`~.Add`
-    or {class}`~.Mul`.
+    An *equation* is an {term}`expression` that has an equality. Equations in
+    SymPy are represented using the {class}`Eq
+    <sympy.core.relational.Equality>` class. Equations are **not** created
+    using the `==` operator. The `==` operator does a direct {term}`structural
+    equality` check against two expressions, and always returns `True` or
+    `False`. To contrast, a symbolic equation may be unevaluated. Equations
+    are considered {term}`booleans <boolean>` since they mathematically
+    represent a predicate value that is either true or false.
 
 `_eval_*`
-    TODO
+
+    Various methods on {term}`Basic` and {term}`Expr` can be defined on
+    subclasses using special *`_eval_*`* methods. For example, an object can
+    define how it will be processed by the {func}`~.simplify` function by
+    defining a `_eval_simplify` method. `_eval_*` methods are instead of
+    overriding the method itself so that the method defined on the base class
+    can do pre-processing before dispatching to the `_eval_*` method.
 
 `evalf`
 
@@ -187,7 +194,7 @@ Core
     "evaluate floating-point". `evalf` uses {term}`mpmath` under the hood to
     evaluate expressions to arbitrary precision.
 
-Evaluated
+Evaluate
 
     *Evaluate* can refer to:
 
@@ -197,8 +204,23 @@ Evaluated
     - The process of {term}`automatic simplification` that occurs when
       creating an expression (see {term}`Unevaluated`).
 
+{class}`~.Expr`
+
+    *`Expr`* is the superclass of all algebraic SymPy expressions. It is
+    itself a subclass of {term}`Basic`. SymPy expressions that can be in an
+    {class}`~.Add`, {class}`~.Mul`, or {class}`~.Pow` should be `Expr`
+    subclasses. Not all SymPy classes are subclasses of `Expr`, for example,
+    {term}`Boolean` objects are {term}`Basic` but not `Expr`, because boolean
+    expressions do not make mathematical sense in classes like {class}`~.Add`
+    or {class}`~.Mul`.
+
 Expression
-    TODO
+
+    Any SymPy object, that is, any instance of {term}`Basic`, may be called an
+    *expression*. Sometimes, the term "expression" is reserved for
+    {term}`Expr` objects, which are algebraic expressions. Expressions are not
+    to be confused with {term}`equations <equation>`, which are a specific
+    type of expression with that represents a mathematical equality.
 
 `func`
 
@@ -210,30 +232,72 @@ Expression
     will always be true of any SymPy expression `expr`.
 
 Function
-    TODO
+
+    *Function* may refer to:
+
+    - A mathematical function, that is, something which maps values from a
+      domain to a range. Sometimes an {term}`expression` containing a
+      {term}`symbol` is colloquially called a "function" because the symbol be
+      replaced with a value using {term}`substitution <substitute>`,
+      evaluating the expression. This usage is colloquial because one must use
+      the {meth}`subs <sympy.core.basic.Basic.subs>` method to do this rather
+      than the typical Python function calling syntax, and because it is not
+      specific about what variable(s) the expression is a function of. An
+      expression can be converted into a function object that can be called
+      using Python `f(x)` syntax using {class}`~.Lambda`.
+
+    - An instance of the SymPy {term}`Function <Function (class)>` class.
+
+    - A Python function, i.e., a function defined using the `def` keyword.
+      Python functions are not {term}`symbolic`, since they must always return
+      a value and cannot be {term}`unevaluated`.
 
 {class}`~.Function` (class)
-    TODO
+
+    *`Function`* is the base class of algebraic functions in SymPy. This
+    includes common functions like {class}`~.sin` and {class}`~.exp`, special
+    functions like {class}`~.zeta` and {class}`~.hyper`, and integral
+    functions like {func}`~.primepi` and {class}`~.divisor_sigma`. Function
+    classes are always {term}`symbolic`, meaning that they typically remain
+    {term}`unevaluated` when passed a {term}`symbol`, like `f(x)`.
+
+    `Function` may also be used to create an {term}`undefined function` by
+    passing it a string name for the function, like `Function('f')`.
+
+    Not every function in SymPy is a symbolic `Function` class; some are just
+    Python functions which always return a value. For example, most
+    simplification functions like {term}`simplify <simplification>` cannot be
+    represented symbolically.
+
 
 Immutable
+
     TODO
 
 Interactive
+
     TODO
 
 `is_*`
+
     TODO
 
 Kind
+
     TODO
 
 lamda
+
     "*Lamda*" is just an alternate spelling of "lambda". It is used sometimes
     in SymPy because `lambda` is a reserved keyword in Python, so a symbol
     named λ must be named something else.
 
 Matrix
-    TODO
+
+    *Matrix* refers to the set of classes used by SymPy to represent matrices.
+    SymPy actually has several internal classes to represent matrices,
+    depending on whether the matrix is symbolic ({class}`~.MatrixExpr`) or
+    explicit, mutable or immutable, and what the underlying elements are.
 
 mpmath
 
@@ -241,6 +305,32 @@ mpmath
     precision numerics. It is a [hard dependency](dependencies-mpmath) of
     SymPy. mpmath is used under the hood whenever SymPy evaluates an
     expression numerically, such as when using {term}`evalf`.
+
+Numeric
+
+    A *numeric* representation or algorithm is one that operates directly on
+    numeric inputs. It is in contrast with a {term}`symbolic` representation
+    or algorithm, which can work with objects in an unevaluated form. Often a
+    numerical algorithm is quite different from a symbolic one. For example,
+    numerically solving an ODE typically means evaluating the ODE using an
+    algorithm like
+    [Runge–Kutta](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods)
+    to find a set of numeric points given an initial condition, whereas
+    symbolically solving an ODE (such as with SymPy's {func}`~.dsolve`) means
+    mathematically manipulating the ODE to produce a {term}`symbolic`
+    {term}`equation` that represents the solution. A symbolic ODE solution may
+    including symbolic constants which can represent any numerical value.
+    Numeric algorithms also need to be concerned with things issues caused by
+    floating-point numbers such as loss of precision and numerical stability,
+    whereas symbolic algorithms are not concerned with these things because
+    they compute things exactly.
+
+    Most scientific libraries other than SymPy, including NumPy or SciPy, are
+    strictly numerical, meaning the functions in those libraries can only
+    operate on specific numeric inputs. They will not work with SymPy
+    expressions, because their algorithms are not designed to work with
+    symbolic inputs. SymPy focuses on symbolic functions, leaving purely
+    numerical code to other tools like NumPy.
 
 Number
     TODO
@@ -251,25 +341,64 @@ Number
     $\infty$ and is easy to type.
 
 Polys
+
     TODO
 
 Printing
+
     TODO
 
 Relational
+
     TODO
 
 {class}`S <sympy.core.singleton.Singleton>`
+
     TODO
 
 Simplification
+
     TODO
 
 Solve
+
     TODO
 
+Structural Equality
+
+    Two {term}`expressions <expression>` are *structurally equal* if they are
+    the same SymPy object. Two structurally equal expressions are considered
+    to be identical by SymPy, since all SymPy expressions are
+    {term}`immutable`. Structural equality can be checked with the `==`
+    operator, which always returns True or False.Symbolic {term}`equality
+    <equation>` can be represented using {class}`Eq
+    <sympy.core.relational.Equality>`.
+
+    Typically, two expressions are structurally equal if they are the same
+    class and (recursively) have the same {term}`args`. Two expressions may be
+    mathematically identical but not structurally equal. For example, `(x +
+    1)**2` and `x**2 + 2*x + 1` are mathematically equal, but they are not
+    structurally equal, because the first is a {class}`~.Pow` of an
+    {class}`~.Add` and `Integer(2)`, and the second is an {class}`~.Add` with
+    three arguments.
+
 Substitute
+
     TODO
+
+Symbolic
+
+    A *symbolic* representation of a mathematical object is a representation
+    that is partially or completely unevaluated at runtime. It may include
+    named {term}`symbols <symbol>` in place of explicit numeric values.
+    A symbolic representation is often contrasted with a {term}`numeric` one.
+    Symbolic representations are mathematically exact, to contrast with
+    numeric representations which are typically rounded so they can fit within
+    a floating-point value.
+    Symbolic {term}`expression <expression>` representing mathematical objects
+    may be aware of mathematical properties of these objects and be able to
+    simplify. The goal of SymPy is to represent and manipulate symbolic
+    expressions representing mathematical objects.
 
 {class}`~.Symbol`
 
@@ -322,6 +451,21 @@ Three-valued logic
     `None` if `x` could be positive or negative under its given assumptions.
     Note that the predicate logic defined by the {term}`Boolean` class is a
     standard two-valued logic, not three-valued.
+
+Undefined Function
+
+    An *undefined function* is a {term}`Function <Function (class)>` that has
+    no mathematical properties defined on it. It always remains
+    {term}`unevaluated`. An undefined function can be created by passing a
+    string name of the function to `Function`, like `f = Function('f')`.
+    Undefined functions are commonly used when working with [ODEs](ode-docs).
+    Undefined functions are also the best way to make {term}`symbols <symbol>`
+    that depend on other symbols. For example, if `f = Function('f')` and `x =
+    Symbol('x')`, then SymPy will know that `f(x)` depends on `x`, meaning,
+    for instance, that the derivative `diff(f(x), x)` will not be evaluated to
+    0. Otherwise, by default, SymPy assumes that all symbols do not depend on
+    other symbols, that is, that they are mathematically "constant" or
+    "independent variables" .
 
 Unevaluated
 
