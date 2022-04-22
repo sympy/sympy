@@ -213,8 +213,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     >>> K
     QQ<exp(2*I*pi/7)>
     >>> K.primes_above(11)
-    [[ (11, _x**3 + 5*_x**2 + 4*_x - 1) e=1, f=3 ],
-     [ (11, _x**3 - 4*_x**2 - 5*_x - 1) e=1, f=3 ]]
+    [(11, _x**3 + 5*_x**2 + 4*_x - 1), (11, _x**3 - 4*_x**2 - 5*_x - 1)]
 
     Notes
     =====
@@ -433,7 +432,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     def _do_round_two(self):
         from sympy.polys.numberfields.basis import round_two
-        ZK, dK = round_two(self.ext.minpoly, radicals=self._nilradicals_mod_p)
+        ZK, dK = round_two(self, radicals=self._nilradicals_mod_p)
         self._maximal_order = ZK
         self._discriminant = dK
 
@@ -511,7 +510,6 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         elif fmt == 'alg':
             return [self.to_alg_num(b) for b in B]
         return B
-
 
     def discriminant(self):
         """Get the discriminant of the field."""

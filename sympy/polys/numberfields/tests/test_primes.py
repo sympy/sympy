@@ -193,17 +193,16 @@ def test_decomp_8():
         x ** 3 + 9 * x ** 2 + 6 * x - 8,
         x ** 3 + 15 * x ** 2 - 9 * x + 13,
     )
-    '''
     def display(T, p, radical, P, I, J):
         """Useful for inspection, when running test manually."""
         print('=' * 20)
         print(T, p, radical)
         for Pi in P:
-            print(f'  ({Pi.pretty()})')
+            print(f'  ({Pi!r})')
         print("I: ", I)
         print("J: ", J)
         print(f'Equal: {I == J}')
-    '''
+    inspect = False
     for g in cases:
         T = Poly(g)
         rad = {}
@@ -216,7 +215,8 @@ def test_decomp_8():
             P = prime_decomp(p, T, dK=dK, ZK=ZK, radical=radical)
             I = prod(Pi**Pi.e for Pi in P)
             J = p * ZK
-            #display(T, p, radical, P, I, J)
+            if inspect:
+                display(T, p, radical, P, I, J)
             assert I == J
 
 
@@ -238,16 +238,31 @@ def test_PrimeIdeal_add():
     assert P0 + 7 * P0.ZK == P0.as_submodule()
 
 
-def test_pretty_printing():
-    d = -7
-    T = Poly(x ** 2 - d)
-    rad = {}
-    ZK, dK = round_two(T, radicals=rad)
-    p = 2
-    P = prime_decomp(p, T, dK=dK, ZK=ZK, radical=rad.get(p))
+def test_str():
+    # Without alias:
+    k = QQ.alg_field_from_poly(Poly(x**2 + 7))
+    frp = k.primes_above(2)[0]
+    assert str(frp) == '(2, 3*_x/2 + 1/2)'
+
+    frp = k.primes_above(3)[0]
+    assert str(frp) == '(3)'
+
+    # With alias:
+    k = QQ.alg_field_from_poly(Poly(x ** 2 + 7), alias='alpha')
+    frp = k.primes_above(2)[0]
+    assert str(frp) == '(2, 3*alpha/2 + 1/2)'
+
+    frp = k.primes_above(3)[0]
+    assert str(frp) == '(3)'
+
+
+def test_repr():
+    T = Poly(x**2 + 7)
+    ZK, dK = round_two(T)
+    P = prime_decomp(2, T, dK=dK, ZK=ZK)
     assert repr(P[0]) == '[ (2, (3*x + 1)/2) e=1, f=1 ]'
-    assert P[0].pretty(field_gen=theta) == '[ (2, (3*theta + 1)/2) e=1, f=1 ]'
-    assert P[0].pretty(field_gen=theta, just_gens=True) == '(2, (3*theta + 1)/2)'
+    assert P[0].repr(field_gen=theta) == '[ (2, (3*theta + 1)/2) e=1, f=1 ]'
+    assert P[0].repr(field_gen=theta, just_gens=True) == '(2, (3*theta + 1)/2)'
 
 
 def test_PrimeIdeal_reduce_poly():

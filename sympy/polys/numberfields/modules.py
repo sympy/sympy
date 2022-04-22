@@ -10,8 +10,9 @@ Every module is defined by its basis, or set of generators:
 
 * For a :py:class:`~.PowerBasis`, the generators are the first $n$ powers
   (starting with the zeroth) of an algebraic integer $\theta$ of degree $n$.
-  The :py:class:`~.PowerBasis` is constructed by passing the minimal
-  polynomial of $\theta$.
+  The :py:class:`~.PowerBasis` is constructed by passing either the minimal
+  polynomial of $\theta$, or an :py:class:`~.AlgebraicField` having $\theta$
+  as its primitive element.
 
 * For a :py:class:`~.Submodule`, the generators are a set of
   $\mathbb{Q}$-linear combinations of the generators of another module. That
@@ -181,6 +182,7 @@ from sympy.core.numbers import igcd, ilcm
 from sympy.core.symbol import Dummy
 from sympy.polys.polytools import Poly
 from sympy.polys.densetools import dup_clear_denoms
+from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.finitefield import FF
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.domains.integerring import ZZ
@@ -436,6 +438,28 @@ class Module:
                 break
         return nca
 
+    @property
+    def number_field(self):
+        r"""
+        Return the associated :py:class:`~.AlgebraicField`, if any.
+
+        Explanation
+        ===========
+
+        A :py:class:`~.PowerBasis` can be constructed on a :py:class:`~.Poly`
+        $f$ or on an :py:class:`~.AlgebraicField` $K$. In the latter case, the
+        :py:class:`~.PowerBasis` and all its descendant modules will return $K$
+        as their ``.number_field`` property, while in the former case they will
+        all return ``None``.
+
+        Returns
+        =======
+
+        :py:class:`~.AlgebraicField`, ``None``
+
+        """
+        return self.power_basis_ancestor().number_field
+
     def is_compat_col(self, col):
         """Say whether *col* is a suitable column vector for this module."""
         return isinstance(col, DomainMatrix) and col.shape == (self.n, 1) and col.domain.is_ZZ
@@ -678,14 +702,27 @@ class PowerBasis(Module):
         Parameters
         ==========
 
-        T : :py:class:`~.Poly`
-            The monic, irreducible, univariate polynomial over :ref:`ZZ`, a
-            root of which is the generator of the power basis.
+        T : :py:class:`~.Poly`, :py:class:`~.AlgebraicField`
+            Either (1) the monic, irreducible, univariate polynomial over
+            :ref:`ZZ`, a root of which is the generator of the power basis,
+            or (2) an :py:class:`~.AlgebraicField` whose primitive element
+            is the generator of the power basis.
 
         """
+        K = None
+        if isinstance(T, AlgebraicField):
+            K, T = T, T.ext.minpoly_of_element()
+        # Sometimes incoming Polys are formally over QQ, although all their
+        # coeffs are integral. We want them to be formally over ZZ.
+        T = T.set_domain(ZZ)
+        self.K = K
         self.T = T
         self._n = T.degree()
         self._mult_tab = None
+
+    @property
+    def number_field(self):
+        return self.K
 
     def __repr__(self):
         return f'PowerBasis({self.T.as_expr()})'
@@ -1541,6 +1578,28 @@ class PowerBasisElement(ModuleElement):
     def poly(self, x=None):
         """Obtain the number as a polynomial over :ref:`QQ`."""
         return self.numerator(x=x) // self.denom
+
+    @property
+    def is_rational(self):
+        """Say whether this element represents a rational number."""
+        return self.col[1:, :].is_zero_matrix
+
+    @property
+    def generator(self):
+        """
+        Return a :py:class:`~.Symbol` to be used when expressing this element
+        as a polynomial.
+
+        If we have an associated :py:class:`~.AlgebraicField` whose primitive
+        element has an alias symbol, we use that. Otherwise we use the variable
+        of the minimal polynomial defining the power basis to which we belong.
+        """
+        K = self.module.number_field
+        return K.ext.alias if K and K.ext.is_aliased else self.T.gen
+
+    def as_expr(self, x=None):
+        """Create a Basic expression from ``self``. """
+        return self.poly(x or self.generator).as_expr()
 
     def norm(self, T=None):
         """Compute the norm of this number."""
