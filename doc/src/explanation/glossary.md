@@ -242,9 +242,11 @@ Function
       evaluating the expression. This usage is colloquial because one must use
       the {meth}`subs <sympy.core.basic.Basic.subs>` method to do this rather
       than the typical Python function calling syntax, and because it is not
-      specific about what variable(s) the expression is a function of. An
-      expression can be converted into a function object that can be called
-      using Python `f(x)` syntax using {class}`~.Lambda`.
+      specific about what variable(s) the expression is a function of, so
+      generally the term "expression" should be preferred unless something is
+      an actual function. An expression can be converted into a function
+      object that can be called using the Python `f(x)` syntax using
+      {class}`~.Lambda`.
 
     - An instance of the SymPy {term}`Function <Function (class)>` class.
 
@@ -272,7 +274,17 @@ Function
 
 Immutable
 
-    TODO
+    In Python, objects are *immutable* if they can not be modified in-place.
+    In order to change the object, a new object must be created. In SymPy, all
+    objects are immutable. This means that all functions that operate on
+    {term}`expressions <expression>` will return a new expression and leave
+    the original unchanged. This also means that any two objects that are
+    {term}`equal <structural equality>` are completely interchangeable and may
+    be thought of as being the same object, even if they happen to be two
+    different objects in memory. Immutability makes it easier to maintain a
+    mental model of code because there is no hidden state. SymPy objects being
+    immutable also means that they are hashable, which allows them to be used
+    as dictionary keys.
 
 Interactive
 
@@ -346,23 +358,103 @@ Polys
 
 Printing
 
-    TODO
+    *Printing* refers to the act of taking an {term}`expression` and
+    converting it into a form that can be viewed on screen. SymPy has several
+    printers which represent expressions using different formats. Some of the
+    more common printers are
+
+    - The string printer, via `str()`. This converts an
+      expression into a readable string which can be copy-pasted.
+    - The Unicode pretty printer, via {func}`pprint
+      <sympy.printing.pretty.pretty.pretty_print>`. This prints an expression
+      using a 2-D text representation using a wide range of Unicode
+      characters.
+    - The ASCII pretty printer, via {func}`pprint(use_unicode=False)
+      <sympy.printing.pretty.pretty.pretty_print>`. This prints an expression
+      using a 2-D text representation using only ASCII characters.
+    - The LaTeX printer, via {func}`~.latex`. This converts an expression into
+      a form that can be understood by the $\mathrm{\LaTeX}$ typesetting
+      system. This printer is used under the hood when using SymPy in the
+      [Jupyter notebook](https://jupyter.org/) along with
+      [MathJax](https://www.mathjax.org/) to automatically print expressions
+      as rendered LaTeX in the browser.
+    - The srepr printer, via {func}`~.srepr`. This converts an expression into
+      a longer text representation that can be copied and pasted to recreate
+      the expression. Unlike `str()`, `srepr()` produces a much less
+      human-readable form, but one that can be copied and pasted even when the
+      symbol names are not valid Python.
+    - Code printers. The code generation system uses the same underlying
+      functionality as the printers to convert expressions into code for
+      various languages. See {term}`code generation`.
 
 Relational
 
-    TODO
+    A *relational* is a {term}`symbolic` {term}`equality <equation>` or a
+    symbolic inequality like less than (`<`). Equality ($=$) and non-equality
+    ($\neq$) relationals are created with the {class}`Eq
+    <sympy.core.relational.Equality>` and {class}`Ne
+    <sympy.core.relational.Unequality>`, e.g., `Eq(x, 0)` to represent $x=0$.
+    Do not use `==` or `!=`, as these do {term}`structural <structural
+    equality>` rather than symbolic equality. Inequality relationals can be
+    created directly using `<`, `<=`, `>` and `>=`, like `x < 0`.
 
 {class}`S <sympy.core.singleton.Singleton>`
 
-    TODO
+    The *`S`* object in SymPy has two purposes:
+
+    - It is the placeholder object for all singleton classes. Some special
+      classes in SymPy are singletonized, meaning that there is always exactly
+      one instance of them. This is an optimization that allows saving memory
+      because there is only ever one instance of `Integer(0)`, for instance,
+      which is available as `S.Zero`.
+
+    - It serves as a shorthand for {term}`sympify()`, that is `S(a)` is the
+      same as `sympify(a)`. This is useful for converting integers to SymPy
+      Integers in expressions to avoid dividing Python ints (see [the gotchas
+      section of the tutorial](tutorial-gotchas-final-notes)).
 
 Simplification
 
-    TODO
+    *Simplification* refers to the process of taking an {term}`expression` and
+    transforming it into another expression which is mathematically equivalent
+    but which is somehow "simpler". The adjective "simple" is not well-defined
+    in this case. What counts as simpler depends on the specific use-case and
+    personal aesthetics. For example, consider the mathematically equivalent
+    expression $x(x + 2)$ and $x^2 + 2x$. One might consider the former to be
+    "simpler" because it is in a factored form, and has fewer total
+    operations, or one might consider the latter to be more simple because it
+    is fully expanded and in a {term}`canonical <canonicalize>` form for
+    polynomials. If "simpler" means "fewer operations", then should
+    $x(x(x(x(x + 3) - 2) + 1) - 1) - 3$ be considered simpler than
+    $x^5 + 3x^4 - 2x^3 + x^2 - x - 3$ (see {func}`~.horner`)? Or if "simpler"
+    means "in an expanded canonical form", then should $(x + 1)^{10000}$ be
+    considered less simple than the equivalent expanded form with 10000 terms?
+
+    The SymPy function {func}`~.simplify` heuristically tries various
+    simplification algorithms to try to find a "simpler" form of an
+    expression. If you aren't particular about what you want from "simplify",
+    it may be a good fit. But if you have an idea about what sort of
+    simplification you want to apply, it is generally better to use one or
+    more of targeted [simplification functions](simplify-docs) which apply
+    very specific mathematical manipulations to an expression.
 
 Solve
 
-    TODO
+    To *solve* an {term}`equation` or system of equations means to find a set
+    of {term}`expressions <expression>` that make the equation true when
+    plugged in. In the context of solvers, an {term}`expression` is often
+    implicitly thought of as equivalent to an equation equaling 0, i.e.,
+    `some_solve_function(expression)` is typically equivalent to
+    `some_solve_function(Eq(expression, 0))`. Different types of equations can
+    be solved by SymPy using different [solvers](solvers-docs) functions. For
+    instance, algebraic equations can be solved with {func}`~.solve`,
+    differential equations can be solved with {func}`~.dsolve`, and so on.
+
+    SymPy generally uses the word "solve" to mean equation solving in this
+    sense. It is not used in the sense of "solving a problem". For instance,
+    one would generally prefer to use a word like "compute" or "evaluate" to
+    refer to the computation of an integral using a function like
+    {func}`~.integrate`.
 
 Structural Equality
 
