@@ -16,9 +16,9 @@ You can run the following code snippet to test it:
     >>> from sympy import *
     >>> integral = integrate(cos(x),(x,0,1))
     >>> integral
-    sin(1) # This represents symbolic integration
+    sin(1) 
     >>> integral.evalf()
-    0.841470984807897 # This represents numerical integration.
+    0.841470984807897 
 
 Principal method in this module is :func:`~.integrate`
 
