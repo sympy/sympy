@@ -8,3 +8,4 @@ Matrix Normal Forms
 
 .. autofunction:: smith_normal_form
 .. autofunction:: hermite_normal_form
+.. autoclass:: HNFMode

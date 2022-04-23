@@ -679,6 +679,22 @@ class DomainMatrix:
         """Matrix transpose of ``self``"""
         return self.from_rep(self.rep.transpose())
 
+    def flip_top_to_bottom(self):
+        return DomainMatrix(list(reversed(self.to_list())), self.shape, self.domain)
+
+    def rotate_clockwise(self):
+        return self.flip_top_to_bottom().transpose()
+
+    def rotate_counterclockwise(self):
+        return self.transpose().flip_top_to_bottom()
+
+    def rotate_180(self):
+        return self.rotate_clockwise().rotate_clockwise()
+
+    def anti_transpose(self):
+        """Flip across the *other* diagonal. """
+        return self.flip_top_to_bottom().rotate_counterclockwise()
+
     def flat(self):
         rows, cols = self.shape
         return [self[i,j].element for i in range(rows) for j in range(cols)]

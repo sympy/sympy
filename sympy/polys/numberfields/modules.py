@@ -188,11 +188,13 @@ from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.matrices.exceptions import DMBadInputError
-from sympy.polys.matrices.normalforms import hermite_normal_form
+from sympy.polys.matrices.normalforms import HNFMode, hermite_normal_form as hnf_
 from sympy.polys.polyerrors import CoercionFailed, UnificationFailed
 from sympy.polys.polyutils import IntegerPowerable
 from .exceptions import ClosureFailure, MissingUnityError
 from .utilities import AlgIntPowers, is_int, is_rat, get_num_denom
+
+hermite_normal_form = lambda A, D=None: hnf_(A, HNFMode.RIGHT, D=D)
 
 
 def to_col(coeffs):
