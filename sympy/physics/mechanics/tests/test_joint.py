@@ -181,8 +181,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N) == omega*N.x
     assert A.ang_vel_in(N).express(A) == omega * A.y
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
-    angle = A.ang_vel_in(N).angle_between(A.y)
-    assert angle.xreplace({omega: 1}) == 0
+    assert A.ang_vel_in(N).cross(A.y) == 0
     assert C.masscenter.vel(N) == omega*A.z
     assert C.masscenter.pos_from(P.masscenter) == -A.x
     assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
@@ -203,7 +202,7 @@ def test_pinjoint_arbitrary_axis():
     assert A.ang_vel_in(N).magnitude() == sqrt(omega**2)
     angle = A.ang_vel_in(N).angle_between(A.x)
     assert angle.xreplace({omega: 1}) == 0
-    assert C.masscenter.vel(N).simplify() == - omega*N.z
+    assert C.masscenter.vel(N) == 0
     assert C.masscenter.pos_from(P.masscenter) == N.x
 
     # Both joint pos id defined but different axes
@@ -282,16 +281,15 @@ def test_pinjoint_arbitrary_axis():
     angle = A.ang_vel_in(N).angle_between(A.x+A.y-A.z)
     assert angle.xreplace({omega: 1}) == 0
     assert (C.masscenter.vel(N).simplify() ==
-            (m*omega*N.y + m*omega*N.z + n*omega*A.y + n*omega*A.z)/sqrt(3))
+            sqrt(3)*n*omega/3*A.y + sqrt(3)*n*omega/3*A.z)
     assert C.masscenter.pos_from(P.masscenter) == m*N.x - n*A.x
     assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
             (m + n*(2*cos(theta) - 1)/3)*N.x + n*(2*sin(theta + pi/6) +
             1)/3*N.y - n*(2*cos(theta + pi/3) + 1)/3*N.z)
     assert (C.masscenter.vel(N).express(N).simplify() ==
-            -2*n*omega*sin(theta)/3*N.x + (sqrt(3)*m +
-                                           2*n*cos(theta + pi/6))*omega/3*N.y
-            + (sqrt(3)*m + 2*n*sin(theta + pi/3))*omega/3*N.z)
-    assert expand_mul(C.masscenter.vel(N).angle_between(m*N.x - n*A.x)) == pi/2
+            - 2*n*omega*sin(theta)/3*N.x + 2*n*omega*cos(theta + pi/6)/3*N.y +
+            2*n*omega*sin(theta + pi/3)/3*N.z)
+    assert C.masscenter.vel(N).dot(N.x - N.y + N.z).simplify() == 0
 
 
 def test_pinjoint_pi():
