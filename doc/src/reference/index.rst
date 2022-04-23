@@ -13,8 +13,8 @@ core subpackage are documented below.
 :ref:`Basics <basic_modules>`
 -------------------------------------------------------
 
-   Contains a description of operations for the basic modules. Subcategories include: *absolute basics*, 
-   *manipulation*, *assumptions*, *functions*, *simplification*, *calculus*, *solvers*, and some 
+   Contains a description of operations for the basic modules. Subcategories include: *absolute basics*,
+   *manipulation*, *assumptions*, *functions*, *simplification*, *calculus*, *solvers*, and some
    other subcategories.
 
 
@@ -68,8 +68,8 @@ core subpackage are documented below.
 :ref:`Topics <topics>`
 -------------------------------------------------------
 
-   Contains method docstrings for several modules. Subcategories include : *Plotting*, 
-   *Polynomials*, *Geometry*, *Category Theory*, *Cryptography*, *Differential*, *Holonomic*, 
+   Contains method docstrings for several modules. Subcategories include : *Plotting*,
+   *Polynomials*, *Geometry*, *Category Theory*, *Cryptography*, *Differential*, *Holonomic*,
    *Lie Algebra*, and *Stats*.
 
 

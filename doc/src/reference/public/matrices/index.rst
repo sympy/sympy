@@ -12,4 +12,3 @@ Matrices
     ../../../modules/matrices/index.rst
     ../../../modules/tensor/index.rst
     ../../../modules/vector/index.rst
-    

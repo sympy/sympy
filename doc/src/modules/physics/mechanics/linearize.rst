@@ -229,7 +229,7 @@ the vector is empty: ::
 .. topic:: What's with the ``new_method`` kwarg?
 
   Previous releases of SymPy contained a linearization method for
-  `KanesMethod`` objects. This method is deprecated, and will be removed
+  ``KanesMethod`` objects. This method is deprecated, and will be removed
   from future releases. Until then, you must set ``new_method=True`` in all
   calls to ``KanesMethod.linearize``. After the old method is removed, this
   kwarg will no longer be needed.

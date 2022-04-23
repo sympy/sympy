@@ -46,11 +46,11 @@ Exponential-polynomial functions. These multiplicative combinations of polynomia
 
 even a few nonelementary integrals (in particular, some integrals involving the error function) can be evaluated::
 
-	>>> integrate(exp(-x**2)*erf(x), x)
-	  ____    2
-	\/ pi *erf (x)
-	--------------
-	      4
+    >>> integrate(exp(-x**2)*erf(x), x)
+      ____    2
+    \/ pi *erf (x)
+    --------------
+          4
 
 
 Integral Transforms
