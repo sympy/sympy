@@ -1174,7 +1174,7 @@ class Submodule(Module, IntegerPowerable):
         In the special case where $A$ is a power basis for a number field $K$,
         and $B$ is a submodule representing an ideal $I$, this operation
         represents one of a few important ways of reducing an element of $K$
-        modulo $I$ to obtain a "small" representative. See [Cohen00] Section
+        modulo $I$ to obtain a "small" representative. See [Cohen00]_ Section
         1.4.3.
 
         Examples
