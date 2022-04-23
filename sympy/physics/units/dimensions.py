@@ -572,13 +572,14 @@ class DimensionSystem(Basic, _QuantityMapper):
         # dimensions
         # in vector language: the set of vectors do not form a basis
         return self.inv_can_transf_matrix.is_square
-    def get_dimensionless_numbers(self, list_of_derived_quantities):
-        """ list_of_derived_quantities is the input list of derived quantities in the form of a python dictionary of tuples (key, item) where key is the name of
-        the physical quantity and item is an instance of Dimension class which possesses the dimensions of the quantity. This function is designed to take in
-        a set of physical variables (all essentially dimensionful) and returns one set of all possible dimensionless quantities, as guided by the
-        Buckingham's pi theorem (a generalization of Rayleigh's method of dimensional analysis .....) Please refer and run to the unit testing file
-        /units/test/test_dimensionless.py for the format of the input .... As a heads up, we first need to define a global set of base dimensions and with
-        those we can define the derived quantities ..... """
+    def buckingham_pi_theorem(self, list_of_derived_quantities):
+        """ list_of_derived_quantities is the input list of derived quantities in the form of a python dictionary of tuples (key, item) where key
+        is the name of the physical quantity and item is an instance of Dimension class which possesses the dimensions of the quantity. This function
+        is designed to take in a set of physical variables (all essentially dimensionful) and returns one set of all possible exponents,
+        as guided by the Buckingham's pi theorem (raise the list of quantities to the list of exponents to get the dimensionless numbers)"""
+
+        # Please refer and run to the unit testing file
+        # /units/test/test_dimensionless.py for the format of the input ....
         exponent_matrix = []
         # We extract the exponent matrix from the dimensional dependencies of the quantities
         for quantity in list_of_derived_quantities:
@@ -589,32 +590,33 @@ class DimensionSystem(Basic, _QuantityMapper):
             exponent_matrix.append(element_for_quantity)
         # Next we obtain the null space of the exponent matrix
         exponent_matrix = Matrix(exponent_matrix)
-        exponents = exponent_matrix.T.nullspace()
-        # We need to make sure that we obtain integer nullspaces because
-        # Dimension() is not able to simplify non-diophantine exponents
+        return exponent_matrix.T.nullspace(simplify=True)
+
+    def get_dimensionless_numbers(self, list_of_derived_quantities):
+        """ Give the objects of class Dimension that represent the dimensionless quantities.
+            To be preferably used only for test purposes, please refer to /units/test/test_dimensionless.py
+        """
+        exponents = self.buckingham_pi_theorem(list_of_derived_quantities)
         null_space_dims = len(exponents)
-        m = 1
-        while True:
-            flag = True
-            for k in range(null_space_dims):
-                for l in range(len(exponents[k])):
-                    exponents[k][l] = exponents[k][l] * m
-                    flag = flag and (exponents[k][l]-int(exponents[k][l])) == 0.0
-            if flag:
-                # Just to make sure that the exponents are all integers
-                for k in range(null_space_dims):
-                    for l in range(len(exponents[k])):
-                        exponents[k][l] = int(exponents[k][l])
-                break
-            m = m + 1
         set_of_dimless_nums = [Dimension(1) for k in range(null_space_dims)]
-        set_of_dimless_quant = ['' for k in range(null_space_dims)]
-        # Here as a final step we take the dot product of the nullspace with the derived quantities
+        # Here we take the dot product of the nullspace with the derived quantities
         for k in range(null_space_dims):
             m = 0
             for quantity in list_of_derived_quantities:
                 set_of_dimless_nums[k] = set_of_dimless_nums[k]*(list_of_derived_quantities[quantity]**exponents[k][m])
+                m = m + 1
+        return set_of_dimless_nums
+
+    def print_dimensionless_numbers(self, list_of_derived_quantities):
+        """ Give the set of strings that represent the dimensionless quantities. """
+        exponents = self.buckingham_pi_theorem(list_of_derived_quantities)
+        null_space_dims = len(exponents)
+        set_of_dimless_quant = ['' for k in range(null_space_dims)]
+        # Here we take the dot product of the nullspace with the derived quantities
+        for k in range(null_space_dims):
+            m = 0
+            for quantity in list_of_derived_quantities:
                 set_of_dimless_quant[k] = set_of_dimless_quant[k] + '[' + quantity + ']' + '**(' + str(exponents[k][m]) + ')*'
                 m = m + 1
             set_of_dimless_quant[k] = set_of_dimless_quant[k][:-1] # To remove the last star
-        return set_of_dimless_quant, set_of_dimless_nums
+        return set_of_dimless_quant
