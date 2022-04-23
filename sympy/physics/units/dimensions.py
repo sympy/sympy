@@ -573,11 +573,11 @@ class DimensionSystem(Basic, _QuantityMapper):
         # in vector language: the set of vectors do not form a basis
         return self.inv_can_transf_matrix.is_square
     def buckingham_pi_theorem(self, list_of_derived_quantities):
-        """ list_of_derived_quantities is the input list of derived quantities in the form of a python dictionary of tuples (key, item) where key
-        is the name of the physical quantity and item is an instance of Dimension class which possesses the dimensions of the quantity. This function
-        is designed to take in a set of physical variables (all essentially dimensionful) and returns one set of all possible exponents,
-        as guided by the Buckingham's pi theorem (raise the list of quantities to the list of exponents to get the dimensionless numbers)"""
-
+        """
+        This function is designed to take in a set of physical variables (all essentially dimensionful) and returns one set of all possible exponents,
+        as guided by the Buckingham's pi theorem"""
+        # list_of_derived_quantities is the input list of derived quantities in the form of a python dictionary of tuples (key, item)
+        # where key is the name of the physical quantity and item is an instance of Dimension class which possesses the dimensions of the quantity.
         # Please refer and run to the unit testing file
         # /units/test/test_dimensionless.py for the format of the input ....
         exponent_matrix = []
@@ -612,7 +612,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         exponents = self.buckingham_pi_theorem(list_of_derived_quantities)
         null_space_dims = len(exponents)
         set_of_dimless_quant = ['' for k in range(null_space_dims)]
-        # Here we take the dot product of the nullspace with the derived quantities
+        # Here we take the dot product of the nullspace with the derived quantities in the form of a symbolic string
         for k in range(null_space_dims):
             m = 0
             for quantity in list_of_derived_quantities:
