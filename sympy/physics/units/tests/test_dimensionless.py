@@ -1,5 +1,6 @@
 from sympy.physics.units import Dimension
 from sympy.physics.units import DimensionSystem
+from sympy import Rational
 """
 We need to define the base quantities globally to work with and
 define the derived quantities from there on
@@ -75,7 +76,7 @@ def test_qed_case_gauss():
     omega = 1/T # Characteristic angular resonant frequency
     epsilon = 1 # Vaccuum permittivity is unitless in Gaussian (not in SI)
     Vm = L**3 # Volume of the resonator
-    Qe = L**(3/2)*M**(1/2)/T # Dimensions of the electronic charge (in Gaussian)
+    Qe = L**(Rational('3/2'))*M**(Rational('1/2'))/T # Dimensions of the electronic charge (in Gaussian)
     Uc = L/T # Velocity dimensions
     list_of_quantities = {'hbar': hbar, 'Uc' : Uc, 'omega' : omega, 'epsilon' : epsilon, 'Vm' : Vm, 'Qe' : Qe}
     set_of_dimless_nums = dummy_gauss_system.get_dimensionless_numbers(list_of_quantities)
@@ -92,9 +93,9 @@ def test_mhd_case_gauss():
     Uc = L/T # Characteristic velocity scale
     rho_c = M/L**3 # Characteristic density scale
     mu = M/L/T # Dynamic viscosity
-    j0 = M**(1/2)/L**(1/2)/T**2 # Characteristic range value of current density
+    j0 = M**(Rational('1/2'))/L**(Rational('1/2'))/T**2 # Characteristic range value of current density
     sigma_0 = T**(-1) # Characteristic conductivity scale
-    B0 = L**(-1/2)*M**(1/2)/T # Magnetic field characteristic scale
+    B0 = L**(Rational('-1/2'))*M**(Rational('1/2'))/T # Magnetic field characteristic scale
     list_of_quantities = {'Lc': Lc, 'Uc' : Uc, 'rho': rho_c, 'mu': mu, 'j0': j0, 'sigma_0': sigma_0, 'B0': B0}
     set_of_dimless_nums = dummy_gauss_system.get_dimensionless_numbers(list_of_quantities)
     flag = True
