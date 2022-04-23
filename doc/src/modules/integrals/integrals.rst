@@ -14,6 +14,7 @@ example. its symbolic result is sin(1) while the numerical result is 0.841470984
 You can run the following code snippet to test it:
 
     >>> from sympy import *
+    >>> x=Symbol('x')
     >>> integral = integrate(cos(x),(x,0,1))
     >>> integral
     sin(1) 
