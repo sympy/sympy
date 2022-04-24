@@ -49,7 +49,7 @@ If we let `x_{0} = x_{i}`, evaluate the series at `x_{i+1}=x_{i}+ h` and truncat
 
 .. math::
 
-    \big(\frac{dF}{dx}\big)_{x_{0}} \approx \frac{F_{i+1} - F_{i}}{h} + O(h)
+   \big(\frac{dF}{dx}\big)_{x_{0}} \approx \frac{F_{i+1} - F_{i}}{h} + O(h)
 
 where the `O(h)` refers to the lowest order term in the series in `h`.  This establishes that the derivative
 approximation is of first order accuracy.  Put another way, if we decide that we can only use the two pairs
@@ -59,9 +59,9 @@ In addition to `(x_{i},F_{i})` we next use the two points `(x_{i+1},F_{i+1})` an
 Then we have two equations:
 
 .. math::
-    F_{i+1} = F_{i} + c_{1}* h + \frac{1}{2}*c_{2}*h^2 + \frac{1}{3!}*c_{3}*h^3 + ...
+   F_{i+1} = F_{i} + c_{1}* h + \frac{1}{2}*c_{2}*h^2 + \frac{1}{3!}*c_{3}*h^3 + ...
 .. math::
-    F_{i+2} = F_{i} + c_{1}* (2h) + \frac{1}{2}*c_{2}*(2h)^2 + \frac{1}{3!}*c_{3}*(2h)^3 + ...
+   F_{i+2} = F_{i} + c_{1}* (2h) + \frac{1}{2}*c_{2}*(2h)^2 + \frac{1}{3!}*c_{3}*(2h)^3 + ...
 
 If we again want to find the first derivative (`c_{1}`), we can do that by eliminating the term involving `c_{2}` from
 the two equations.  We show how to do it using SymPy.
