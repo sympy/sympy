@@ -919,7 +919,7 @@ class Domain:
 
         """
         from sympy.polys.rootoftools import CRootOf
-        root = CRootOf(poly, root_index)
+        root = CRootOf(poly, root_index, lazy=True)
         alpha = AlgebraicNumber(root, alias=alias)
         return self.algebraic_field(alpha, alias=alias)
 

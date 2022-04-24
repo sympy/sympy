@@ -126,7 +126,7 @@ def _imag_count_of_factor(f):
 
 
 @public
-def rootof(f, x, index=None, radicals=True, expand=True):
+def rootof(f, x, index=None, radicals=True, expand=True, lazy=False):
     """An indexed root of a univariate polynomial.
 
     Returns either a :obj:`ComplexRootOf` object or an explicit
@@ -145,7 +145,7 @@ def rootof(f, x, index=None, radicals=True, expand=True):
     expand : bool
              Expand ``f``.
     """
-    return CRootOf(f, x, index=index, radicals=radicals, expand=expand)
+    return CRootOf(f, x, index=index, radicals=radicals, expand=expand, lazy=lazy)
 
 
 @public
@@ -299,7 +299,7 @@ class ComplexRootOf(RootOf):
     is_number = True
     is_finite = True
 
-    def __new__(cls, f, x, index=None, radicals=False, expand=True):
+    def __new__(cls, f, x, index=None, radicals=False, expand=True, lazy=False):
         """ Construct an indexed complex root of a polynomial.
 
         See ``rootof`` for the parameters.
@@ -356,6 +356,9 @@ class ComplexRootOf(RootOf):
         if not dom.is_ZZ:
             raise NotImplementedError("CRootOf is not supported over %s" % dom)
 
+        if lazy:
+            return coeff * cls._new(poly, index)
+
         root = cls._indexed_root(poly, index)
         return coeff * cls._postprocess_root(root, radicals)
 
@@ -395,10 +398,12 @@ class ComplexRootOf(RootOf):
 
     def _eval_is_real(self):
         """Return ``True`` if the root is real. """
+        self._ensure_init()
         return self.index < len(_reals_cache[self.poly])
 
     def _eval_is_imaginary(self):
         """Return ``True`` if the root is imaginary. """
+        self._ensure_init()
         if self.index >= len(_reals_cache[self.poly]):
             ivl = self._get_interval()
             return ivl.ax*ivl.bx <= 0  # all others are on one side or the other
@@ -664,6 +669,11 @@ class ComplexRootOf(RootOf):
 
         return roots
 
+    def _ensure_init(self):
+        """Ensure that our poly has cache entries. """
+        if not self.poly in _reals_cache or not self.poly in _complexes_cache:
+            self._reset()
+
     def _reset(self):
         """
         Reset all intervals
@@ -779,6 +789,7 @@ class ComplexRootOf(RootOf):
 
     def _get_interval(self):
         """Internal function for retrieving isolation interval from cache. """
+        self._ensure_init()
         if self.is_real:
             return _reals_cache[self.poly][self.index]
         else:
@@ -787,6 +798,7 @@ class ComplexRootOf(RootOf):
 
     def _set_interval(self, interval):
         """Internal function for updating isolation interval in cache. """
+        self._ensure_init()
         if self.is_real:
             _reals_cache[self.poly][self.index] = interval
         else:
