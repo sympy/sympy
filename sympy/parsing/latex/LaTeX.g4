@@ -13,7 +13,7 @@
 grammar LaTeX;
 
 options {
-	language = Python2;
+	language = Python3;
 }
 
 WS: [ \t\r\n]+ -> skip;
