@@ -632,7 +632,25 @@ class MathematicaParser:
                 raise SyntaxError("mismatch in comment (*  *) code")
             code = code[:pos_comment_start] + code[pos_comment_end+2:]
 
-        tokens = tokenizer.findall(code)
+        # Find strings:
+        code_splits: List[typing.Union[str, list]] = []
+        while True:
+            string_start = code.find("\"")
+            if string_start == -1:
+                if len(code) > 0:
+                    code_splits.append(code)
+                break
+            match_end = re.search(r'(?<!\\)"', code[string_start+1:])
+            if match_end is None:
+                raise SyntaxError('mismatch in string "  " expression')
+            string_end = string_start + match_end.start() + 1
+            if string_start > 0:
+                code_splits.append(code[:string_start])
+            code_splits.append(["_Str", code[string_start+1:string_end].replace('\\"', '"')])
+            code = code[string_end+1:]
+
+        token_lists = [tokenizer.findall(i) if isinstance(i, str) else [i] for i in code_splits]
+        tokens = [j for i in token_lists for j in i]
 
         # Remove newlines at the beginning
         while tokens and tokens[0] == "\n":
