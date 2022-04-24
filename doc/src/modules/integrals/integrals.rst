@@ -62,9 +62,9 @@ SymPy's numeric integration (from mpmath) is very accurate and useful and would 
 by many users over using lambdify/scipy. Here is how it is used:
     >>> from sympy import *
     >>> x=Symbol('x')
-    >>> integral = integrate(cos(x),(x,0,1))
+    >>> integral = Integral(cos(x),(x,0,1))
     >>> integral
-    sin(1) 
+    Integral(cos(x), (x, 0, 1))
     >>> integral.evalf()
     0.841470984807897 
    
@@ -75,7 +75,7 @@ of an integration routine. Integration can be over infinite intervals
 and can include infinite integrands:
     >>> from sympy import *
     >>> x=Symbol('x')
-    >>> integrate(1 / sqrt(x), (x, 0, 1)).evalf()
+    >>> Integral(1 / sqrt(x), (x, 0, 1)).evalf()
     2.00000000000000
 
 Note: Currently only 1D integrals are supported. In mpmath there are functions that can do 

@@ -116,9 +116,9 @@ You can run the following code snippet to test it:
 
     >>> from sympy import *
     >>> x=Symbol('x')
-    >>> integral = integrate(cos(x),(x,0,1))
+    >>> integral = Integral(cos(x),(x,0,1))
     >>> integral
-    sin(1) 
+    Integral(cos(x), (x, 0, 1))
     >>> integral.evalf()
     0.841470984807897 
       
