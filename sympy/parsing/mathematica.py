@@ -633,7 +633,7 @@ class MathematicaParser:
             code = code[:pos_comment_start] + code[pos_comment_end+2:]
 
         # Find strings:
-        code_splits = []
+        code_splits: List[typing.Union[str, list]] = []
         while True:
             string_start = code.find("\"")
             if string_start == -1:
