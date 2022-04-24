@@ -61,40 +61,13 @@ even a few nonelementary integrals (in particular, some integrals involving the 
 SymPy's numeric integration (from mpmath) is very accurate and useful and would be preferred
 by many users over using lambdify/scipy. Here is how it is used:
    >>> from sympy import *
-   >>> x=Symbol('x')
-   >>> integral = integrate(sqrt(2)*x, (x, 0, 1))
-   >>> integral
-
-   1        
-   ⌠        
-   ⎮ √2⋅x dx
-   ⌡        
-   0        
-
-   >>> integral.evalf()
-   0.707106781186548
-
-   >>> integral.evalf(50)
-   0.70710678118654752440084436210484903928483593768847
-
-   >>> integrate(exp(-(x ** 2)), (x, -oo, oo))
-
-   ∞         
-   ⌠         
-   ⎮     2   
-   ⎮   -x    
-   ⎮  ℯ    dx
-   ⌡         
-   -∞        
-
-   >>> integrate(exp(-(x ** 2)), (x, -oo, oo)).evalf()
-   1.77245385090552
-
-   >>> integrate(exp(-(x ** 2)), (x, -oo, oo)).n()
-   1.77245385090552
-
-   >>> integrate(exp(-(x ** 2)), (x, -oo, oo)).doit()  # symbolic integration
-   √π
+    >>> x=Symbol('x')
+    >>> integral = integrate(cos(x),(x,0,1))
+    >>> integral
+    sin(1) 
+    >>> integral.evalf()
+    0.841470984807897 
+   
 
 In many cases where symbolic integration is not possible it is still possible to 
 compute the integral numerically. It is also useful as a way of checking the result
