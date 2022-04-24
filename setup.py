@@ -308,8 +308,12 @@ class antlr(Command):
         pass
 
     def run(self):
-        from sympy.parsing.latex._build_latex_antlr import build_parser
-        if not build_parser():
+        from sympy.parsing.latex._build_latex_antlr import build_parser as build_latex_parser
+        if not build_latex_parser():
+            sys.exit(-1)
+
+        from sympy.parsing.autolev._build_autolev_antlr import build_parser as build_autolev_parser
+        if not build_autolev_parser():
             sys.exit(-1)
 
 
