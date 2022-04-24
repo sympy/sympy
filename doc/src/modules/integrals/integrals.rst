@@ -11,15 +11,6 @@ integrals give the exact value of the result.
 
 Consider a definite integral of cos(x) with respect to x ranging from 0 to 1, as an
 example. its symbolic result is sin(1) while the numerical result is 0.841470984807897
-You can run the following code snippet to test it:
-
-    >>> from sympy import *
-    >>> x=Symbol('x')
-    >>> integral = integrate(cos(x),(x,0,1))
-    >>> integral
-    sin(1) 
-    >>> integral.evalf()
-    0.841470984807897 
 
 Principal method in this module is :func:`~.integrate`
 
@@ -70,7 +61,7 @@ even a few nonelementary integrals (in particular, some integrals involving the 
 SymPy's numeric integration (from mpmath) is very accurate and useful and would be preferred
 by many users over using lambdify/scipy. Here is how it is used:
 
-   >>> integral = Integral(sqrt(2)*x, (x, 0, 1))
+   >>> integral = integrate(sqrt(2)*x, (x, 0, 1))
    >>> integral
 
    1        
@@ -85,7 +76,7 @@ by many users over using lambdify/scipy. Here is how it is used:
    >>> integral.evalf(50)
    0.70710678118654752440084436210484903928483593768847
 
-   >>> Integral(exp(-(x ** 2)), (x, -oo, oo))
+   >>> integrate(exp(-(x ** 2)), (x, -oo, oo))
 
    ∞         
    ⌠         
@@ -95,27 +86,24 @@ by many users over using lambdify/scipy. Here is how it is used:
    ⌡         
    -∞        
 
-   >>> Integral(exp(-(x ** 2)), (x, -oo, oo)).evalf()
+   >>> integrate(exp(-(x ** 2)), (x, -oo, oo)).evalf()
    1.77245385090552
 
-   >>> Integral(exp(-(x ** 2)), (x, -oo, oo)).n()
+   >>> integrate(exp(-(x ** 2)), (x, -oo, oo)).n()
    1.77245385090552
 
-   >>> Integral(exp(-(x ** 2)), (x, -oo, oo)).doit()  # symbolic integration
+   >>> integrate(exp(-(x ** 2)), (x, -oo, oo)).doit()  # symbolic integration
    √π
-
-   >>> _.n()
-   1.77245385090552
 
 In many cases where symbolic integration is not possible it is still possible to 
 compute the integral numerically. It is also useful as a way of checking the result
 of an integration routine. Integration can be over infinite intervals 
 and can include infinite integrands:
 
-   >>> Integral(1 / sqrt(x), (x, 0, 1)).evalf()
+   >>> integrate(1 / sqrt(x), (x, 0, 1)).evalf()
    2.00000000000000
 
-Currently only 1D integrals are supported. In mpmath there are functions that can do 
+Note: Currently only 1D integrals are supported. In mpmath there are functions that can do 
 2D and 3D integrals but sympy's evalf does not have the code to make use of them.
 
 Integral Transforms
