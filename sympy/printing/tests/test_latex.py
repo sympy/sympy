@@ -1951,6 +1951,21 @@ def test_Tr():
     assert latex(t) == r'\operatorname{tr}\left(A B\right)'
 
 
+def test_Determinant():
+    from sympy.matrices import Determinant, Inverse, BlockMatrix, OneMatrix, ZeroMatrix
+    m = Matrix(((1, 2), (3, 4)))
+    assert latex(Determinant(m)) == '\\left|{\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}}\\right|'
+    assert latex(Determinant(Inverse(m))) == \
+        '\\left|{\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{-1}}\\right|'
+    X = MatrixSymbol('X', 2, 2)
+    assert latex(Determinant(X)) == '\\left|{X}\\right|'
+    assert latex(Determinant(X + m)) == \
+        '\\left|{\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X}\\right|'
+    assert latex(Determinant(BlockMatrix(((OneMatrix(2, 2), X),
+                                          (m, ZeroMatrix(2, 2)))))) == \
+        '\\left|{\\begin{matrix}1 & X\\\\\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] & 0\\end{matrix}}\\right|'
+
+
 def test_Adjoint():
     from sympy.matrices import Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
@@ -1971,6 +1986,10 @@ def test_Adjoint():
     assert latex(Adjoint(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{\\dagger}'
     assert latex(Adjoint(m+X)) == \
         '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{\\dagger}'
+    from sympy.matrices import BlockMatrix, OneMatrix, ZeroMatrix
+    assert latex(Adjoint(BlockMatrix(((OneMatrix(2, 2), X),
+                                      (m, ZeroMatrix(2, 2)))))) == \
+        '\\left[\\begin{matrix}1 & X\\\\\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] & 0\\end{matrix}\\right]^{\\dagger}'
     # Issue 20959
     Mx = MatrixSymbol('M^x', 2, 2)
     assert latex(Adjoint(Mx)) == r'\left(M^{x}\right)^{\dagger}'
@@ -1991,6 +2010,10 @@ def test_Transpose():
     assert latex(Transpose(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{T}'
     assert latex(Transpose(m+X)) == \
         '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{T}'
+    from sympy.matrices import BlockMatrix, OneMatrix, ZeroMatrix
+    assert latex(Transpose(BlockMatrix(((OneMatrix(2, 2), X),
+                                        (m, ZeroMatrix(2, 2)))))) == \
+        '\\left[\\begin{matrix}1 & X\\\\\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] & 0\\end{matrix}\\right]^{T}'
     # Issue 20959
     Mx = MatrixSymbol('M^x', 2, 2)
     assert latex(Transpose(Mx)) == r'\left(M^{x}\right)^{T}'
