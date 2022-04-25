@@ -35,7 +35,7 @@ def test_find_substitutions():
         [(cot(x), 1, -u**6 - 2*u**4 - u**2)]
     assert find_substitutions((sec(x)**2 + tan(x) * sec(x)) / (sec(x) + tan(x)),
                               x, u) == [(sec(x) + tan(x), 1, 1/u)]
-    assert find_substitutions(x * exp(-x**2), x, u) == [(-x**2, Rational(-1, 2), exp(u))]
+    assert (-x**2, Rational(-1, 2), exp(u)) in find_substitutions(x * exp(-x**2), x, u)
 
 
 def test_manualintegrate_polynomials():
@@ -58,6 +58,8 @@ def test_manualintegrate_exponentials():
     assert manualintegrate(1 / x, x) == log(x)
     assert manualintegrate(1 / (2*x + 3), x) == log(2*x + 3) / 2
     assert manualintegrate(log(x)**2 / x, x) == log(x)**3 / 3
+
+    assert_is_integral_of(x**x*(log(x)+1), x**x)
 
 
 def test_manualintegrate_parts():

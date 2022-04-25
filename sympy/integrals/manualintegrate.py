@@ -211,9 +211,6 @@ def find_substitutions(integrand, symbol, u_var):
         if u_diff == 0:
             return False
         substituted = integrand / u_diff
-        if symbol not in substituted.free_symbols:
-            # replaced everything already
-            return False
         debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
