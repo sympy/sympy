@@ -31,6 +31,7 @@ def do_sample_scipy(dist, size, seed):
 @do_sample_scipy.register(SingleContinuousDistribution)
 def _(dist: SingleContinuousDistribution, size, seed):
     # if we don't need to make a handmade pdf, we won't
+    import scipy.stats
 
     z = Dummy('z')
     handmade_pdf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
