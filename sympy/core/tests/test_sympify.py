@@ -822,8 +822,10 @@ def test_issue_14706():
     assert sympify(numpy.array([[[1]]])) == ImmutableDenseNDimArray([1], (1, 1, 1))
     assert sympify(z1) == ImmutableDenseNDimArray([0], (1, 1))
     assert sympify(z2) == ImmutableDenseNDimArray([0, 0, 0, 0], (2, 2))
-    assert sympify(z3) == ImmutableDenseNDimArray([0], ())
-    assert sympify(z3, strict=True) == 0.0
+    for strict in [False, True]:  # see gh-23421
+        z3_s = sympify(z3, strict=strict)
+        assert type(z3_s) == Float
+        assert z3_s == 0.0
 
     raises(SympifyError, lambda: sympify(numpy.array([1]), strict=True))
     raises(SympifyError, lambda: sympify(z1, strict=True))

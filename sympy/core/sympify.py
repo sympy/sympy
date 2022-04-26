@@ -416,7 +416,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         flat = getattr(a, "flat", None)
         if flat is not None:
             shape = getattr(a, "shape", None)
-            if shape is not None:
+            if shape is not None and shape != ():
                 from sympy.tensor.array import Array
                 return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
