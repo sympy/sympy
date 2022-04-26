@@ -53,7 +53,7 @@ Exponential-polynomial functions. These multiplicative combinations of polynomia
 even a few nonelementary integrals (in particular, some integrals involving the error function) can be evaluated::
 
 	 >>> integrate(exp(-x**2)*erf(x), x)
-    sqrt(pi)*erf(x)**2/4
+   sqrt(pi)*erf(x)**2/4
 
 SymPy's numeric integration (from mpmath) is very accurate and useful and would be preferred
 by many users over using lambdify/scipy. Here is how it is used:
