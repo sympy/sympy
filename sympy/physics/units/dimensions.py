@@ -572,7 +572,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         # dimensions
         # in vector language: the set of vectors do not form a basis
         return self.inv_can_transf_matrix.is_square
-    def buckingham_pi_theorem(self, dict_of_derived_quantities):
+
+     def buckingham_pi_theorem(self, dict_of_derived_quantities):
         """
         dict_of_derived_quantities is the input of derived quantities in the form of a python dictionary of tuples (key, item) where key
         is the name of the physical quantity and item is an instance of Dimension class which possesses the dimensions of the quantity. This function
@@ -599,10 +600,6 @@ class DimensionSystem(Basic, _QuantityMapper):
             >>> p_c = M/L/T**2 # Characteristic pressure scale
             >>> F_bc = M*L/T**2 # Characteristic body forces scale
             >>> dict_of_quantities = {'Lc': Lc, 'Uc': Uc, 'rho': rho_c, 'mu': mu, 'pc': p_c, 'Fbc': F_bc}
-            >>> dimsys_SI.buckingham_pi_theorem(dict_of_quantities)
-            [Matrix([[-1],[-1],[-1],[ 1],[ 0],[ 0]]),
-             Matrix([[ 0],[-2],[-1],[ 0],[ 1],[ 0]]),
-             Matrix([[-2],[-2],[-1],[ 0],[ 0],[ 1]])]
             >>> dimsys_SI.get_dimensionless_numbers(dict_of_quantities)
             [Dimension(1), Dimension(1), Dimension(1)]
             >>> set_of_dimless_nums = dimsys_SI.get_dimensionless_numbers(dict_of_quantities)
@@ -612,9 +609,10 @@ class DimensionSystem(Basic, _QuantityMapper):
             >>> flag
             True
             >>> dimsys_SI.print_dimensionless_numbers(dict_of_quantities)
-            ['[Lc]**(-1)*[Uc]**(-1)*[rho]**(-1)*[mu]**(1)*[pc]**(0)*[Fbc]**(0)', # This is the Reynolds number Re = mu/(Uc*Lc*rho)
-             '[Lc]**(0)*[Uc]**(-2)*[rho]**(-1)*[mu]**(0)*[pc]**(1)*[Fbc]**(0)', # This is the Euler number Eu = pc/(rho*Uc**2)
-             '[Lc]**(-2)*[Uc]**(-2)*[rho]**(-1)*[mu]**(0)*[pc]**(0)*[Fbc]**(1)'] # This is the Froude number Fr, such that Fr**2 = Fbc/(rho*Uc**2*Lc**2)
+            ['[Lc]**(-1)*[Uc]**(-1)*[rho]**(-1)*[mu]**(1)*[pc]**(0)*[Fbc]**(0)', '[Lc]**(0)*[Uc]**(-2)*[rho]**(-1)*[mu]**(0)*[pc]**(1)*[Fbc]**(0)', '[Lc]**(-2)*[Uc]**(-2)*[rho]**(-1)*[mu]**(0)*[pc]**(0)*[Fbc]**(1)']
+            >>> # The first line of the output is the Reynolds number Re = mu/(Uc*Lc*rho)
+            >>> # The second line of the output is the Euler number Eu = pc/(rho*Uc**2)
+            >>> # The third line of the output is the Froude number Fr, such that Fr**2 = Fbc/(rho*Uc**2*Lc**2)
 
         As an another example, consider the scenario in the case of a magnetodynamics problem governed by
         Navier-Stokes equations coupled to Maxwell's equations for an incompressible
