@@ -608,7 +608,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             >>> set_of_dimless_nums = dimsys_SI.get_dimensionless_numbers(dict_of_quantities)
             >>> flag = True
             >>> for dimension in set_of_dimless_nums:
-            >>>     flag = flag and dimsys_SI.get_dimensional_dependencies(dimension) == {}
+            ...     flag = flag and dimsys_SI.get_dimensional_dependencies(dimension) == {}
             >>> flag
             True
             >>> dimsys_SI.print_dimensionless_numbers(dict_of_quantities)
@@ -644,7 +644,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             >>> set_of_dimless_nums = dimsys_cgs.get_dimensionless_numbers(dict_of_quantities)
             >>> flag = True
             >>> for dimension in set_of_dimless_nums:
-            >>>     flag = flag and dimsys_cgs.get_dimensional_dependencies(dimension) == {}
+            ...     flag = flag and dimsys_cgs.get_dimensional_dependencies(dimension) == {}
             >>> flag
             True
             >>> dimsys_cgs.print_dimensionless_numbers(dict_of_quantities)
