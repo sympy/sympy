@@ -573,7 +573,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         # in vector language: the set of vectors do not form a basis
         return self.inv_can_transf_matrix.is_square
 
-     def buckingham_pi_theorem(self, dict_of_derived_quantities):
+    def buckingham_pi_theorem(self, dict_of_derived_quantities):
         """
         dict_of_derived_quantities is the input of derived quantities in the form of a python dictionary of tuples (key, item) where key
         is the name of the physical quantity and item is an instance of Dimension class which possesses the dimensions of the quantity. This function
