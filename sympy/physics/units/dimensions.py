@@ -572,19 +572,94 @@ class DimensionSystem(Basic, _QuantityMapper):
         # dimensions
         # in vector language: the set of vectors do not form a basis
         return self.inv_can_transf_matrix.is_square
-    def buckingham_pi_theorem(self, list_of_derived_quantities):
+    def buckingham_pi_theorem(self, dict_of_derived_quantities):
         """
-        This function is designed to take in a set of physical variables (all essentially dimensionful) and returns one set of all possible exponents,
-        as guided by the Buckingham's pi theorem"""
-        # list_of_derived_quantities is the input list of derived quantities in the form of a python dictionary of tuples (key, item)
-        # where key is the name of the physical quantity and item is an instance of Dimension class which possesses the dimensions of the quantity.
-        # Please refer and run to the unit testing file
-        # /units/test/test_dimensionless.py for the format of the input ....
+        dict_of_derived_quantities is the input of derived quantities in the form of a python dictionary of tuples (key, item) where key
+        is the name of the physical quantity and item is an instance of Dimension class which possesses the dimensions of the quantity. This function
+        is designed to take in a set of physical variables (all essentially dimensionful) and returns one set of all possible exponents,
+        as guided by the Buckingham's pi theorem (raise the list of quantities to the list of exponents to get the dimensionless numbers).
+
+        The next function get_dimensionless_numbers() is used to check whether the dimensions computed after their product with the
+        exponent matrix (as guided by the Buckingham's pi theorem). Finally the function print_dimensionless_numbers() is used to
+        produce the requisite result in the form of a string.
+
+        For example, consider the scenario in the case of a fluid dynamics problem governed by Navier-Stokes equations for
+        an incompressible Newtonian fluid in an SI system ....
+
+            >>> from sympy.physics.units import Dimension, length, mass, time, current
+            >>> from sympy.physics.units.systems.si import dimsys_SI
+            >>> M = mass
+            >>> L = length
+            >>> T = time
+            >>> I = current
+            >>> Lc = L # Characteristic length scale
+            >>> Uc = L/T # Characteristic velocity scale
+            >>> rho_c = M/L**3 # Characteristic density scale
+            >>> mu = M/L/T # Dynamic viscosity
+            >>> p_c = M/L/T**2 # Characteristic pressure scale
+            >>> F_bc = M*L/T**2 # Characteristic body forces scale
+            >>> dict_of_quantities = {'Lc': Lc, 'Uc': Uc, 'rho': rho_c, 'mu': mu, 'pc': p_c, 'Fbc': F_bc}
+            >>> dimsys_SI.buckingham_pi_theorem(dict_of_quantities)
+            [Matrix([[-1],[-1],[-1],[ 1],[ 0],[ 0]]),
+             Matrix([[ 0],[-2],[-1],[ 0],[ 1],[ 0]]),
+             Matrix([[-2],[-2],[-1],[ 0],[ 0],[ 1]])]
+            >>> dimsys_SI.get_dimensionless_numbers(dict_of_quantities)
+            [Dimension(1), Dimension(1), Dimension(1)]
+            >>> set_of_dimless_nums = dimsys_SI.get_dimensionless_numbers(dict_of_quantities)
+            >>> flag = True
+            >>> for dimension in set_of_dimless_nums:
+            >>>     flag = flag and dimsys_SI.get_dimensional_dependencies(dimension) == {}
+            >>> flag
+            True
+            >>> dimsys_SI.print_dimensionless_numbers(dict_of_quantities)
+            ['[Lc]**(-1)*[Uc]**(-1)*[rho]**(-1)*[mu]**(1)*[pc]**(0)*[Fbc]**(0)', # This is the Reynolds number Re = mu/(Uc*Lc*rho)
+             '[Lc]**(0)*[Uc]**(-2)*[rho]**(-1)*[mu]**(0)*[pc]**(1)*[Fbc]**(0)', # This is the Euler number Eu = pc/(rho*Uc**2)
+             '[Lc]**(-2)*[Uc]**(-2)*[rho]**(-1)*[mu]**(0)*[pc]**(0)*[Fbc]**(1)'] # This is the Froude number Fr, such that Fr**2 = Fbc/(rho*Uc**2*Lc**2)
+
+        As an another example, consider the scenario in the case of a magnetodynamics problem governed by
+        Navier-Stokes equations coupled to Maxwell's equations for an incompressible
+        Newtonian fluid in an CGS (Gaussian) system ....
+
+            >>> from sympy.physics.units import Dimension, length, mass, time, current
+            >>> from sympy.physics.units.systems.cgs import dimsys_cgs
+            >>> from sympy import S
+            >>> M = mass
+            >>> L = length
+            >>> T = time
+            >>> Lc = L # Characteristic length scale
+            >>> Uc = L/T # Characteristic velocity scale
+            >>> rho_c = M/L**3 # Characteristic density scale
+            >>> mu = M/L/T # Dynamic viscosity
+            >>> j0 = M**(S.One/2)/L**(S.One/2)/T**2 # Characteristic range value of current density
+            >>> sigma_0 = T**(-1) # Characteristic conductivity scale
+            >>> B0 = L**(-S.One/2)*M**(S.One/2)/T # Magnetic field characteristic scale
+            >>> dict_of_quantities = {'Lc': Lc, 'Uc' : Uc, 'rho': rho_c, 'mu': mu, 'j0': j0, 'sigma_0': sigma_0, 'B0': B0}
+            >>> dimsys_cgs.get_dimensionless_numbers(dict_of_quantities)
+            [Dimension(1),
+             Dimension(sqrt(mass)/(length**(3/2)*sqrt(mass/length**3))),
+             Dimension(1),
+             Dimension(sqrt(mass)/(length**(3/2)*sqrt(mass/length**3)))]
+            >>> # The above output shows a set of exactly dimensionless quantities but upon more
+            >>> # simplification only, hence the following verification works better
+            >>> set_of_dimless_nums = dimsys_cgs.get_dimensionless_numbers(dict_of_quantities)
+            >>> flag = True
+            >>> for dimension in set_of_dimless_nums:
+            >>>     flag = flag and dimsys_cgs.get_dimensional_dependencies(dimension) == {}
+            >>> flag
+            True
+            >>> dimsys_cgs.print_dimensionless_numbers(dict_of_quantities)
+            ['[Lc]**(-1)*[Uc]**(-1)*[rho]**(-1)*[mu]**(1)*[j0]**(0)*[sigma_0]**(0)*[B0]**(0)',
+             '[Lc]**(1)*[Uc]**(-2)*[rho]**(-1/2)*[mu]**(0)*[j0]**(1)*[sigma_0]**(0)*[B0]**(0)',
+             '[Lc]**(1)*[Uc]**(-1)*[rho]**(0)*[mu]**(0)*[j0]**(0)*[sigma_0]**(1)*[B0]**(0)',
+             '[Lc]**(0)*[Uc]**(-1)*[rho]**(-1/2)*[mu]**(0)*[j0]**(0)*[sigma_0]**(0)*[B0]**(1)']
+
+        """
+
         exponent_matrix = []
         # We extract the exponent matrix from the dimensional dependencies of the quantities
-        for quantity in list_of_derived_quantities:
+        for quantity in dict_of_derived_quantities:
             element_for_quantity = [0 for k in range(len(self.base_dims))]
-            dimensions = self.get_dimensional_dependencies(list_of_derived_quantities[quantity])
+            dimensions = self.get_dimensional_dependencies(dict_of_derived_quantities[quantity])
             for base_dims in dimensions:
                 element_for_quantity[self.base_dims.index(base_dims)] = dimensions[base_dims]
             exponent_matrix.append(element_for_quantity)
@@ -592,30 +667,33 @@ class DimensionSystem(Basic, _QuantityMapper):
         exponent_matrix = Matrix(exponent_matrix)
         return exponent_matrix.T.nullspace(simplify=True)
 
-    def get_dimensionless_numbers(self, list_of_derived_quantities):
-        """ Give the objects of class Dimension that represent the dimensionless quantities.
-            To be preferably used only for test purposes, please refer to /units/test/test_dimensionless.py
+    def get_dimensionless_numbers(self, dict_of_derived_quantities):
         """
-        exponents = self.buckingham_pi_theorem(list_of_derived_quantities)
+
+        Give the objects of class Dimension that represent the dimensionless quantities.
+        To be preferably used only for test purposes, please refer to /units/test/test_dimensionless.py
+
+        """
+        exponents = self.buckingham_pi_theorem(dict_of_derived_quantities)
         null_space_dims = len(exponents)
         set_of_dimless_nums = [Dimension(1) for k in range(null_space_dims)]
         # Here we take the dot product of the nullspace with the derived quantities
         for k in range(null_space_dims):
             m = 0
-            for quantity in list_of_derived_quantities:
-                set_of_dimless_nums[k] = set_of_dimless_nums[k]*(list_of_derived_quantities[quantity]**exponents[k][m])
+            for quantity in dict_of_derived_quantities:
+                set_of_dimless_nums[k] = set_of_dimless_nums[k]*(dict_of_derived_quantities[quantity]**exponents[k][m])
                 m = m + 1
         return set_of_dimless_nums
 
-    def print_dimensionless_numbers(self, list_of_derived_quantities):
+    def print_dimensionless_numbers(self, dict_of_derived_quantities):
         """ Give the set of strings that represent the dimensionless quantities. """
-        exponents = self.buckingham_pi_theorem(list_of_derived_quantities)
+        exponents = self.buckingham_pi_theorem(dict_of_derived_quantities)
         null_space_dims = len(exponents)
         set_of_dimless_quant = ['' for k in range(null_space_dims)]
-        # Here we take the dot product of the nullspace with the derived quantities in the form of a symbolic string
+        # Here we take the dot product of the nullspace with the derived quantities
         for k in range(null_space_dims):
             m = 0
-            for quantity in list_of_derived_quantities:
+            for quantity in dict_of_derived_quantities:
                 set_of_dimless_quant[k] = set_of_dimless_quant[k] + '[' + quantity + ']' + '**(' + str(exponents[k][m]) + ')*'
                 m = m + 1
             set_of_dimless_quant[k] = set_of_dimless_quant[k][:-1] # To remove the last star
