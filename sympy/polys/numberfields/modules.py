@@ -1166,7 +1166,9 @@ class Submodule(Module, IntegerPowerable):
         If this submodule $B$ has defining matrix $W$ in square, maximal-rank
         Hermite normal form, then, given an element $x$ of the parent module
         $A$, we produce an element $y \in A$ such that $x - y \in B$, and the
-        $i$th coordinate of $y$ satisfies $0 \leq y_i < w_{i,i}$.
+        $i$th coordinate of $y$ satisfies $0 \leq y_i < w_{i,i}$. This
+        representative $y$ is unique, in the sense that every element of
+        the coset $x + B$ reduces to it under this procedure.
 
         Explanation
         ===========
