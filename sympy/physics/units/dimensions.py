@@ -652,6 +652,7 @@ class DimensionSystem(Basic, _QuantityMapper):
              '[Lc]**(0)*[Uc]**(-1)*[rho]**(-1/2)*[mu]**(0)*[j0]**(0)*[sigma_0]**(0)*[B0]**(1)']
 
         """
+
         exponent_matrix = []
         # We extract the exponent matrix from the dimensional dependencies of the quantities
         for quantity in dict_of_derived_quantities:
@@ -666,8 +667,10 @@ class DimensionSystem(Basic, _QuantityMapper):
 
     def get_dimensionless_numbers(self, dict_of_derived_quantities):
         """
+
         Give the objects of class Dimension that represent the dimensionless quantities.
         To be preferably used only for test purposes, please refer to /units/test/test_dimensionless.py
+
         """
         exponents = self.buckingham_pi_theorem(dict_of_derived_quantities)
         null_space_dims = len(exponents)
