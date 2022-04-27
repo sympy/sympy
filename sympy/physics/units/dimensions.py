@@ -618,7 +618,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         Navier-Stokes equations coupled to Maxwell's equations for an incompressible
         Newtonian fluid in an CGS (Gaussian) system ....
 
-            >>> from sympy.physics.units import Dimension, length, mass, time, current
+            >>> from sympy.physics.units import length, mass, time, current
             >>> from sympy.physics.units.systems.cgs import dimsys_cgs
             >>> from sympy import S
             >>> M = mass
