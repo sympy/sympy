@@ -586,7 +586,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         For example, consider the scenario in the case of a fluid dynamics problem governed by Navier-Stokes equations for
         an incompressible Newtonian fluid in an SI system ....
 
-            >>> from sympy.physics.units import Dimension, length, mass, time, current
+            >>> from sympy.physics.units import length, mass, time, current
             >>> from sympy.physics.units.systems.si import dimsys_SI
             >>> M = mass
             >>> L = length
@@ -620,7 +620,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         Navier-Stokes equations coupled to Maxwell's equations for an incompressible
         Newtonian fluid in an CGS (Gaussian) system ....
 
-            >>> from sympy.physics.units import Dimension, length, mass, time, current
+            >>> from sympy.physics.units import length, mass, time, current
             >>> from sympy.physics.units.systems.cgs import dimsys_cgs
             >>> from sympy import S
             >>> M = mass
