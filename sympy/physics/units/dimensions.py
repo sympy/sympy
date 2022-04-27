@@ -667,10 +667,8 @@ class DimensionSystem(Basic, _QuantityMapper):
 
     def get_dimensionless_numbers(self, dict_of_derived_quantities):
         """
-
         Give the objects of class Dimension that represent the dimensionless quantities.
         To be preferably used only for test purposes, please refer to /units/test/test_dimensionless.py
-
         """
         exponents = self.buckingham_pi_theorem(dict_of_derived_quantities)
         null_space_dims = len(exponents)
