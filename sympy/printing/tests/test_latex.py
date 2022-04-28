@@ -751,7 +751,7 @@ def test_latex_indexed():
     assert indexed_latex == r'\overline{{\Psi}_{0}} {\Psi}_{0}'
 
     # Symbol('gamma') gives r'\gamma'
-    interval = '\\mathrel{..}\\nobreak'
+    interval = '\\mathrel{..}\\nobreak '
     assert latex(Indexed('x1', Symbol('i'))) == r'{x_{1}}_{i}'
     assert latex(Indexed('x2', Idx('i'))) == r'{x_{2}}_{i}'
     assert latex(Indexed('x3', Idx('i', Symbol('N')))) == r'{x_{3}}_{{i}_{0'+interval+'N - 1}}'
