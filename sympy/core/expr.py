@@ -1,4 +1,6 @@
-from typing import Tuple as tTuple, TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from collections.abc import Iterable
 from functools import reduce
 
@@ -59,7 +61,7 @@ class Expr(Basic, EvalfMixin):
     sympy.core.basic.Basic
     """
 
-    __slots__ = ()  # type: tTuple[str, ...]
+    __slots__: tuple[str, ...] = ()
 
     is_scalar = True  # self derivative is 1
 
@@ -184,7 +186,7 @@ class Expr(Basic, EvalfMixin):
         c = self.is_commutative
         return Mul._from_args((S.NegativeOne, self), c)
 
-    def __abs__(self):
+    def __abs__(self) -> Expr:
         from sympy.functions.elementary.complexes import Abs
         return Abs(self)
 
@@ -1705,7 +1707,7 @@ class Expr(Basic, EvalfMixin):
         if r and not r.has(expr):
             return r
 
-    def as_independent(self, *deps, **hint):
+    def as_independent(self, *deps, **hint) -> tuple[Expr, Expr]:
         """
         A mostly naive separation of a Mul or Add into arguments that are not
         are dependent on deps. To obtain as complete a separation of variables
@@ -1967,11 +1969,11 @@ class Expr(Basic, EvalfMixin):
         d.update({m: c})
         return d
 
-    def as_base_exp(self) -> tTuple['Expr', 'Expr']:
+    def as_base_exp(self) -> tuple[Expr, Expr]:
         # a -> b ** e
         return self, S.One
 
-    def as_coeff_mul(self, *deps, **kwargs):
+    def as_coeff_mul(self, *deps, **kwargs) -> tuple[Expr, tuple[Expr, ...]]:
         """Return the tuple (c, args) where self is written as a Mul, ``m``.
 
         c should be a Rational multiplied by any factors of the Mul that are
@@ -2006,7 +2008,7 @@ class Expr(Basic, EvalfMixin):
                 return self, tuple()
         return S.One, (self,)
 
-    def as_coeff_add(self, *deps):
+    def as_coeff_add(self, *deps) -> tuple[Expr, tuple[Expr, ...]]:
         """Return the tuple (c, args) where self is written as an Add, ``a``.
 
         c should be a Rational added to any terms of the Add that are
@@ -3430,7 +3432,7 @@ class Expr(Basic, EvalfMixin):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         return self
 
-    def as_coeff_exponent(self, x):
+    def as_coeff_exponent(self, x) -> tuple[Expr, Expr]:
         """ ``c*x**e -> c,e`` where x can be any symbolic expression.
         """
         from sympy.simplify.radsimp import collect
@@ -3470,7 +3472,7 @@ class Expr(Basic, EvalfMixin):
         c = c.subs(d, log(x))
         return c, e
 
-    def as_coeff_Mul(self, rational: bool = False) -> tTuple['Number', 'Expr']:
+    def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]:
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
