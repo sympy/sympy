@@ -193,7 +193,7 @@ from sympy.polys.matrices.normalforms import hermite_normal_form
 from sympy.polys.polyerrors import CoercionFailed, UnificationFailed
 from sympy.polys.polyutils import IntegerPowerable
 from .exceptions import ClosureFailure, MissingUnityError, StructureError
-from .utilities import AlgIntPowers, is_int, is_rat, get_num_denom
+from .utilities import AlgIntPowers, is_rat, get_num_denom
 
 
 def to_col(coeffs):
@@ -1618,50 +1618,26 @@ class ModuleElement(IntegerPowerable):
 
     def __mod__(self, m):
         r"""
-        Reducing a :py:class:`~.ModuleElement` mod an integer *m* reduces all
-        numerator coeffs mod $d m$, where $d$ is the denominator of the
-        :py:class:`~.ModuleElement`.
+        Reduce this :py:class:`~.ModuleElement` mod a :py:class:`~.Submodule`.
 
-        Explanation
-        ===========
+        Parameters
+        ==========
 
-        Recall that a :py:class:`~.ModuleElement` $b$ represents a
-        $\mathbb{Q}$-linear combination over the basis elements
-        $\{\beta_0, \beta_1, \ldots, \beta_{n-1}\}$ of a module $B$. It uses a
-        common denominator $d$, so that the representation is in the form
-        $b=\frac{c_0 \beta_0 + c_1 \beta_1 + \cdots + c_{n-1} \beta_{n-1}}{d}$,
-        with $d$ and all $c_i$ in $\mathbb{Z}$, and $d > 0$.
+        m : int, :ref:`ZZ`, :ref:`QQ`, :py:class:`~.Submodule`
+            If a :py:class:`~.Submodule`, reduce ``self`` relative to this.
+            If an integer or rational, reduce relative to the
+            :py:class:`~.Submodule` that is our own module times this constant.
 
-        If we want to work modulo $m B$, this means we want to reduce the
-        coefficients of $b$ mod $m$. We can think of reducing an arbitrary
-        rational number $r/s$ mod $m$ as adding or subtracting an integer
-        multiple of $m$ so that the result is positive and less than $m$.
-        But this is equivalent to reducing $r$ mod $m \cdot s$.
-
-        Examples
+        See Also
         ========
 
-        >>> from sympy import Poly, cyclotomic_poly
-        >>> from sympy.polys.numberfields.modules import PowerBasis
-        >>> T = Poly(cyclotomic_poly(5))
-        >>> A = PowerBasis(T)
-        >>> a = (A(0) + 15*A(1))//2
-        >>> print(a)
-        [1, 15, 0, 0]/2
+        .Submodule.reduce_element
 
-        Here, ``a`` represents the number $\frac{1 + 15\zeta}{2}$. If we reduce
-        mod 7,
-
-        >>> print(a % 7)
-        [1, 1, 0, 0]/2
-
-        we get $\frac{1 + \zeta}{2}$. Effectively, we subtracted $7 \zeta$.
-        But it was achieved by reducing the numerator coefficients mod $14$.
         """
-        if is_int(m):
-            M = m * self.denom
-            col = to_col([c % M for c in self.coeffs])
-            return type(self)(self.module, col, denom=self.denom)
+        if is_rat(m):
+            m = m * self.module.whole_submodule()
+        if isinstance(m, Submodule) and m.parent == self.module:
+            return m.reduce_element(self)
         return NotImplemented
 
 
