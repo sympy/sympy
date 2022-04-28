@@ -125,7 +125,7 @@ Automatic Simplification
     *`Basic`* is the superclass of all SymPy expressions. It defines the basic
     methods required for an expression, such as {term}`args`, {term}`func`,
     equality, {term}`immutability <immutable>`, and some useful expression
-    manipulation functions such as {term}`substitution <substitute>`. Most
+    manipulation functions such as {term}`substitution`. Most
     SymPy classes will subclass a more specific `Basic` subclass such as
     {term}`Boolean`, {term}`Expr`, {term}`Function <Function (class)>`, or
     {term}`Matrix`. An object that is not an instance `Basic` typically cannot
@@ -222,6 +222,15 @@ Expression
     to be confused with {term}`equations <equation>`, which are a specific
     type of expression with that represents a mathematical equality.
 
+Expression Tree
+
+    A *expression tree* is a tree of {term}`expressions <expression>` that
+    constitute an expressions. The nodes of the expression tree are
+    expressions and the children of each node are the direct
+    {term}`subexpressions <subexpression>` that constitute that expression.
+    The expression tree of any SymPy expression can be obtained by recursively
+    the {term}`args` property.
+
 `func`
 
     *`func` is the function of an {term}`expression`, which can be obtained by
@@ -238,7 +247,7 @@ Function
     - A mathematical function, that is, something which maps values from a
       domain to a range. Sometimes an {term}`expression` containing a
       {term}`symbol` is colloquially called a "function" because the symbol be
-      replaced with a value using {term}`substitution <substitute>`,
+      replaced with a value using {term}`substitution`,
       evaluating the expression. This usage is colloquial because one must use
       the {meth}`subs <sympy.core.basic.Basic.subs>` method to do this rather
       than the typical Python function calling syntax, and because it is not
@@ -288,15 +297,44 @@ Immutable
 
 Interactive
 
-    TODO
+    *Interactive* usage refers to using SymPy in an interactive REPL
+    environment such as the Python prompt, `isympy`,
+    [IPython](https://ipython.org/), or the [Jupyter
+    notebook](https://jupyter.org/). When using SymPy interactively, all
+    commands are typed in real time by the user and all intermediate results
+    are shown. This is in contrast with programmatic use, which is where the
+    code is written in a file which is either executed as a script or is part
+    of a larger Python library. Certain SymPy idioms are only recommended for
+    interactive use and are considered anti-patterns when used
+    programmatically, for example, running `from sympy import *` is convenient
+    when using SymPy interactively, but is generally frowned upon otherwise.
 
 `is_*`
 
-    TODO
+    Attributes in SymPy that start with *`is_*`* and use a *lowercase* name
+    look up the given {term}`assumption <assumptions>` on that object (there
+    are a few properties that are an exception to this because they do not use
+    the assumptions system). For example, `x.is_positive` will lookup the
+    `positive` assumption on `x`. `is_*` attributes that use a *Capitalized*
+    name test if an object is an instance of the given class. Sometimes the
+    same name will exist for both the lowercase and Capitalized property, but
+    they are different things. In general, `is_Uppercase` properties are not
+    recommended. They exist for historical purposes, but they are unneeded
+    because the same can be achieved with `isinstance()`. See also
+    {term}`Number`.
 
 Kind
 
-    TODO
+    The *kind* of a SymPy object represents what sort of mathematical object
+    it represents. The kind of an object can be accessed with the `kind`
+    attribute. Example kinds are {any}`NumberKind`, which represents complex
+    numbers, {any}`MatrixKind`, which represents matrices of some other kind,
+    and {any}`BooleanKind`, which represents boolean predicates. The kind of a
+    SymPy object is distinct from its Python type, since sometimes a single
+    Python type may represent many different kinds of objects. For example,
+    {class}`~.Matrix` could be a matrix of complex numbers or a matrix of
+    objects from some other ring of values. See [the classification of SymPy
+    objects](kind_classification) page for more details.
 
 lamda
 
@@ -345,7 +383,25 @@ Numeric
     numerical code to other tools like NumPy.
 
 Number
-    TODO
+
+    *Number* can refer to two things in SymPy:
+
+    - The class {class}`~.Number`, which is the base class for explicit
+      numbers ({class}`~.Integer`, {class}`~.Rational`, and {class}`~.Float`).
+      `Number` instances are always explicit numeric values. Symbolic numeric
+      constants like {class}`pi <sympy.core.numbers.Pi>` are not instances of
+      `Number`.
+    - Lowercase "*number*", as in the `is_number` property (see {term}`is_*`),
+      refers to any {term}`expression` that can be {term}`evalfed <evalf>`
+      into an explicit `Number`. This includes symbolic constants like
+      {class}`pi <sympy.core.numbers.Pi>`.
+
+
+    This distinction is important for the `is_Number` and `is_number`
+    properties. `x.is_Number` will check if `x` is an instance of the class
+    {class}`~.Number`. Note that `Number` instances are explicit numbers like
+    `Integer(1)`, where as `x.is_number` is true for symbolic numbers like
+    `pi`. In general, it is not recommended
 
 {class}`oo <sympy.core.numbers.Infinity>`
     *`oo`* is the SymPy object representing positive infinity. It is spelled
@@ -354,7 +410,15 @@ Number
 
 Polys
 
-    TODO
+    The *polys* refers to the {mod}`sympy.polys` submodule, which implements
+    the basic data structures and algorithms for polynomial manipulation. The
+    polys are a key part of SymPy (though not typically considered part of the
+    {term}`core`), because many basic symbolic manipulations can be
+    represented as manipulations on polynomials. Many algorithms in SymPy make
+    use of the polys under the hood. For example, {func}`~.factor` is a
+    wrapper around the polynomial factorization algorithms. The classes in the
+    polys are implemented using efficient data structures, and are not
+    implemented using {term}`Basic` like the other classes in SymPy.
 
 Printing
 
@@ -474,9 +538,27 @@ Structural Equality
     {class}`~.Add` and `Integer(2)`, and the second is an {class}`~.Add` with
     three arguments.
 
-Substitute
+Subexpression
 
-    TODO
+    A *subexpression* is an {term}`expression` that is contained within a
+    larger expression. A subexpression appears somewhere in the
+    {term}`expression tree`. Sometimes a sub-tree of the expression tree is
+    also considered a subexpression. For instance, in `x + y + z`, `x + y` may
+    sometimes be considered a subexpression even though the expression tree
+    for `Add(x, y)` is not directly in the expression tree of `Add(x, y, z)`,
+    but is a sub-tree of it.
+
+Substitution
+
+    *Substitution* refers to replacing a {term}`symbol` or
+    {term}`subexpression` inside of an {term}`expression` with another
+    expression. There are different methods in SymPy for performing
+    substitution, including {meth}`subs <sympy.core.basic.Basic.subs>`,
+    {meth}`replace <sympy.core.basic.Basic.replace>`, and {meth}`xreplace
+    <sympy.core.basic.Basic.xreplace>`. The methods may differ depending on
+    whether they perform substitution using only strict {term}`structural
+    equality` or by making more use of mathematical knowledge when determining
+    where a subexpression appears in an expression.
 
 Symbolic
 
