@@ -622,16 +622,6 @@ class MathematicaParser:
     def _from_mathematica_to_tokens(self, code: str):
         tokenizer = self._get_tokenizer()
 
-        # Remove comments:
-        while True:
-            pos_comment_start = code.find("(*")
-            if pos_comment_start == -1:
-                break
-            pos_comment_end = code.find("*)")
-            if pos_comment_end == -1 or pos_comment_end < pos_comment_start:
-                raise SyntaxError("mismatch in comment (*  *) code")
-            code = code[:pos_comment_start] + code[pos_comment_end+2:]
-
         # Find strings:
         code_splits: List[typing.Union[str, list]] = []
         while True:
@@ -649,6 +639,21 @@ class MathematicaParser:
             code_splits.append(["_Str", code[string_start+1:string_end].replace('\\"', '"')])
             code = code[string_end+1:]
 
+        # Remove comments:
+        for i, code_split in enumerate(code_splits):
+            if isinstance(code_split, list):
+                continue
+            while True:
+                pos_comment_start = code_split.find("(*")
+                if pos_comment_start == -1:
+                    break
+                pos_comment_end = code_split.find("*)")
+                if pos_comment_end == -1 or pos_comment_end < pos_comment_start:
+                    raise SyntaxError("mismatch in comment (*  *) code")
+                code_split = code_split[:pos_comment_start] + code_split[pos_comment_end+2:]
+            code_splits[i] = code_split
+
+        # Tokenize the input strings with a regular expression:
         token_lists = [tokenizer.findall(i) if isinstance(i, str) else [i] for i in code_splits]
         tokens = [j for i in token_lists for j in i]
 
