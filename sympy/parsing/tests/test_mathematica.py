@@ -236,6 +236,9 @@ def test_parser_mathematica_tokenizer():
     assert chain('"a\\"b"') == ["_Str", 'a"b']
     # This expression does not make sense mathematically, it's just testing the parser:
     assert chain('x + "abc" ^ 3') == ["Plus", "x", ["Power", ["_Str", "abc"], "3"]]
+    assert chain('"a (* b *) c"') == ["_Str", "a (* b *) c"]
+    assert chain('"a" (* b *) ') == ["_Str", "a"]
+    assert chain('"a [ b] "') == ["_Str", "a [ b] "]
     raises(SyntaxError, lambda: chain('"'))
     raises(SyntaxError, lambda: chain('"\\"'))
     raises(SyntaxError, lambda: chain('"abc'))
