@@ -70,9 +70,17 @@ class PrimeIdeal(IntegerPowerable):
         self.e = e if e is not None else self.valuation(p * ZK)
 
     def __str__(self):
-        if self.alpha.is_rational:
+        if self.is_inert:
             return f'({self.p})'
         return f'({self.p}, {self.alpha.as_expr()})'
+
+    @property
+    def is_inert(self):
+        """
+        Say whether the rational prime we divide is inert, i.e. stays prime in
+        our ring of integers.
+        """
+        return self.f == self.ZK.n
 
     def repr(self, field_gen=None, just_gens=False):
         """

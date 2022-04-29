@@ -632,7 +632,7 @@ class LatexPrinter(Printer):
 
     def _print_PrimeIdeal(self, expr):
         p = self._print(expr.p)
-        if expr.alpha.is_rational:
+        if expr.is_inert:
             return rf'\left({p}\right)'
         alpha = self._print(expr.alpha.as_expr())
         return rf'\left({p}, {alpha}\right)'
