@@ -1,7 +1,7 @@
 """For more tests on satisfiability, see test_dimacs"""
 
-from sympy import symbols, Q
-from sympy.core.compatibility import range
+from sympy.assumptions.ask import Q
+from sympy.core.symbol import symbols
 from sympy.logic.boolalg import And, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
@@ -10,7 +10,7 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_literal():
@@ -33,17 +33,17 @@ def test_find_pure_symbol():
 
 
 def test_find_pure_symbol_int_repr():
-    assert find_pure_symbol_int_repr([1], [set([1])]) == (1, True)
+    assert find_pure_symbol_int_repr([1], [{1}]) == (1, True)
     assert find_pure_symbol_int_repr([1, 2],
-                [set([-1, 2]), set([-2, 1])]) == (None, None)
+                [{-1, 2}, {-2, 1}]) == (None, None)
     assert find_pure_symbol_int_repr([1, 2, 3],
-                [set([1, -2]), set([-2, -3]), set([3, 1])]) == (1, True)
+                [{1, -2}, {-2, -3}, {3, 1}]) == (1, True)
     assert find_pure_symbol_int_repr([1, 2, 3],
-                [set([-1, 2]), set([2, -3]), set([3, 1])]) == (2, True)
+                [{-1, 2}, {2, -3}, {3, 1}]) == (2, True)
     assert find_pure_symbol_int_repr([1, 2, 3],
-                [set([-1, -2]), set([-2, -3]), set([3, 1])]) == (2, False)
+                [{-1, -2}, {-2, -3}, {3, 1}]) == (2, False)
     assert find_pure_symbol_int_repr([1, 2, 3],
-                [set([-1, 2]), set([-2, -3]), set([3, 1])]) == (None, None)
+                [{-1, 2}, {-2, -3}, {3, 1}]) == (None, None)
 
 
 def test_unit_clause():
@@ -61,8 +61,8 @@ def test_unit_clause():
 def test_unit_clause_int_repr():
     assert find_unit_clause_int_repr(map(set, [[1]]), {}) == (1, True)
     assert find_unit_clause_int_repr(map(set, [[1], [-1]]), {}) == (1, True)
-    assert find_unit_clause_int_repr([set([1, 2])], {1: True}) == (2, True)
-    assert find_unit_clause_int_repr([set([1, 2])], {2: True}) == (1, True)
+    assert find_unit_clause_int_repr([{1, 2}], {1: True}) == (2, True)
+    assert find_unit_clause_int_repr([{1, 2}], {2: True}) == (1, True)
     assert find_unit_clause_int_repr(map(set,
         [[1, 2, 3], [2, -3], [1, -2]]), {1: True}) == (2, False)
     assert find_unit_clause_int_repr(map(set,
@@ -79,9 +79,9 @@ def test_unit_propagate():
 
 
 def test_unit_propagate_int_repr():
-    assert unit_propagate_int_repr([set([1, 2])], 1) == []
+    assert unit_propagate_int_repr([{1, 2}], 1) == []
     assert unit_propagate_int_repr(map(set,
-        [[1, 2], [-1, 3], [-3, 2], [1]]), 1) == [set([3]), set([-3, 2])]
+        [[1, 2], [-1, 3], [-3, 2], [1]]), 1) == [{3}, {-3, 2}]
 
 
 def test_dpll():
@@ -122,6 +122,50 @@ def test_dpll2_satisfiable():
     assert dpll2_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
     assert dpll2_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
 
+
+def test_minisat22_satisfiable():
+    A, B, C = symbols('A,B,C')
+    minisat22_satisfiable = lambda expr: satisfiable(expr, algorithm="minisat22")
+    assert minisat22_satisfiable( A & ~A ) is False
+    assert minisat22_satisfiable( A & ~B ) == {A: True, B: False}
+    assert minisat22_satisfiable(
+        A | B ) in ({A: True}, {B: False}, {A: False, B: True}, {A: True, B: True}, {A: True, B: False})
+    assert minisat22_satisfiable(
+        (~A | B) & (~B | A) ) in ({A: True, B: True}, {A: False, B: False})
+    assert minisat22_satisfiable( (A | B) & (~B | C) ) in ({A: True, B: False, C: True},
+        {A: True, B: True, C: True}, {A: False, B: True, C: True}, {A: True, B: False, C: False})
+    assert minisat22_satisfiable( A & B & C  ) == {A: True, B: True, C: True}
+    assert minisat22_satisfiable( (A | B) & (A >> B) ) in ({B: True, A: False},
+        {B: True, A: True})
+    assert minisat22_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
+    assert minisat22_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
+
+def test_minisat22_minimal_satisfiable():
+    A, B, C = symbols('A,B,C')
+    minisat22_satisfiable = lambda expr, minimal=True: satisfiable(expr, algorithm="minisat22", minimal=True)
+    assert minisat22_satisfiable( A & ~A ) is False
+    assert minisat22_satisfiable( A & ~B ) == {A: True, B: False}
+    assert minisat22_satisfiable(
+        A | B ) in ({A: True}, {B: False}, {A: False, B: True}, {A: True, B: True}, {A: True, B: False})
+    assert minisat22_satisfiable(
+        (~A | B) & (~B | A) ) in ({A: True, B: True}, {A: False, B: False})
+    assert minisat22_satisfiable( (A | B) & (~B | C) ) in ({A: True, B: False, C: True},
+        {A: True, B: True, C: True}, {A: False, B: True, C: True}, {A: True, B: False, C: False})
+    assert minisat22_satisfiable( A & B & C  ) == {A: True, B: True, C: True}
+    assert minisat22_satisfiable( (A | B) & (A >> B) ) in ({B: True, A: False},
+        {B: True, A: True})
+    assert minisat22_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
+    assert minisat22_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
+    g = satisfiable((A | B | C),algorithm="minisat22",minimal=True,all_models=True)
+    sol = next(g)
+    first_solution = {key for key, value in sol.items() if value}
+    sol=next(g)
+    second_solution = {key for key, value in sol.items() if value}
+    sol=next(g)
+    third_solution = {key for key, value in sol.items() if value}
+    assert not first_solution <= second_solution
+    assert not second_solution <= third_solution
+    assert not first_solution <= third_solution
 
 def test_satisfiable():
     A, B, C = symbols('A,B,C')
@@ -171,7 +215,7 @@ def test_pl_true():
 
 
 def test_pl_true_wrong_input():
-    from sympy import pi
+    from sympy.core.numbers import pi
     raises(ValueError, lambda: pl_true('John Cleese'))
     raises(ValueError, lambda: pl_true(42 + pi + pi ** 2))
     raises(ValueError, lambda: pl_true(42))
@@ -241,7 +285,7 @@ def test_satisfiable_bool():
 def test_satisfiable_all_models():
     from sympy.abc import A, B
     assert next(satisfiable(False, all_models=True)) is False
-    assert list(satisfiable((A >> ~A) & A , all_models=True)) == [False]
+    assert list(satisfiable((A >> ~A) & A, all_models=True)) == [False]
     assert list(satisfiable(True, all_models=True)) == [{true: true}]
 
     models = [{A: True, B: False}, {A: False, B: True}]
@@ -262,7 +306,7 @@ def test_satisfiable_all_models():
     # This is a santiy test to check that only the required number
     # of solutions are generated. The expr below has 2**100 - 1 models
     # which would time out the test if all are generated at once.
-    from sympy import numbered_symbols
+    from sympy.utilities.iterables import numbered_symbols
     from sympy.logic.boolalg import Or
     sym = numbered_symbols()
     X = [next(sym) for i in range(100)]

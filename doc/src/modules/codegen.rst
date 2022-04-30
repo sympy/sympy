@@ -1,9 +1,5 @@
 .. _codegen_prose:
 
-================================================
-Structural Details of Code Generation with SymPy
-================================================
-
 Several submodules in SymPy allow one to generate directly compilable and
 executable code in a variety of different programming languages from SymPy
 expressions. In addition, there are functions that generate Python importable
@@ -59,8 +55,8 @@ This is where the meat of code generation is; the translation of SymPy
 actually more like a lightweight version of codegen for Python, and
 Python (:py:func:`sympy.printing.pycode.pycode`), and
 :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
-(like NumPy), and theano
-(:py:func:`sympy.printing.theanocode.theano_function`). The code printers are
+(like NumPy), and Aesara
+(:py:func:`sympy.printing.aesaracode.aesara_function`). The code printers are
 special cases of the other prints in SymPy (str printer, pretty printer, etc.).
 
 An important distinction is that the code printer has to deal with assignments
@@ -164,8 +160,8 @@ An example of Mathematica code printer::
 
     >>> expr = summation(expr, (n, -1, 1))
     >>> mathematica_code(expr)
-    T*x[-T]*Sin[(T + t)/T]/(T + t) + T*x[T]*Sin[(-T + t)/T]/(-T + t) + T*x[0]*Sin[
-    t/T]/t
+    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(-T + t)/T]/(-T + t) + x[0]*Sin[t/T
+    ]/t)
 
 We can go through a common expression in different languages we support and see
 how it works::
@@ -428,7 +424,7 @@ supply an argument sequence to helper routines.
 Another method available at the ``autowrap`` level is ``binary_function``. It
 returns a sympy function. The advantage is that we can have very fast functions
 as compared to SymPy speeds. This is because we will be using compiled
-functions with Sympy attributes and methods. An illustration::
+functions with SymPy attributes and methods. An illustration::
 
     >>> from sympy.utilities.autowrap import binary_function
     >>> from sympy.physics.hydrogen import R_nl
@@ -548,6 +544,9 @@ Classes and functions for rewriting expressions (sympy.codegen.rewriting)
 .. automodule:: sympy.codegen.rewriting
    :members:
 
+.. automodule:: sympy.codegen.matrix_nodes
+   :members:
+
 Tools for simplifying expressions using approximations (sympy.codegen.approximations)
 -------------------------------------------------------------------------------------
 
@@ -611,11 +610,4 @@ Fortran utilities (sympy.codegen.futils)
 ----------------------------------------
 
 .. automodule:: sympy.codegen.futils
-   :members:
-
-
-Array utilities (sympy.codegen.array_utils)
--------------------------------------------
-
-.. automodule:: sympy.codegen.array_utils
    :members:

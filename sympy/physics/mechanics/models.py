@@ -36,7 +36,8 @@ def multi_mass_spring_damper(n=1, apply_gravity=False,
            V
 
     Parameters
-    ----------
+    ==========
+
     n : integer
         The number of masses in the serial chain.
     apply_gravity : boolean
@@ -45,7 +46,8 @@ def multi_mass_spring_damper(n=1, apply_gravity=False,
         If true, a time varying external force will be applied to each mass.
 
     Returns
-    -------
+    =======
+
     kane : sympy.physics.mechanics.kane.KanesMethod
         A KanesMethod object.
 
@@ -126,7 +128,8 @@ def n_link_pendulum_on_cart(n=1, cart_force=True, joint_torques=False):
            o     o
 
     Parameters
-    ----------
+    ==========
+
     n : integer
         The number of links in the pendulum.
     cart_force : boolean, default=True
@@ -136,12 +139,14 @@ def n_link_pendulum_on_cart(n=1, cart_force=True, joint_torques=False):
         joint.
 
     Returns
-    -------
+    =======
+
     kane : sympy.physics.mechanics.kane.KanesMethod
         A KanesMethod object.
 
     Notes
-    -----
+    =====
+
     The degrees of freedom of the system are n + 1, i.e. one for each
     pendulum link and one for the lateral motion of the cart.
 

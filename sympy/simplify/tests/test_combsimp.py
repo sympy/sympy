@@ -1,6 +1,8 @@
-from sympy import (
-    combsimp, factorial, gamma, binomial, S, FallingFactorial, RisingFactorial,
-    symbols)
+from sympy.core.numbers import Rational
+from sympy.core.symbol import symbols
+from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.simplify.combsimp import combsimp
 from sympy.abc import x
 
 
@@ -14,7 +16,7 @@ def test_combsimp():
     assert combsimp(binomial(n + 1, k + 1)/binomial(n, k)) == (1 + n)/(1 + k)
 
     assert combsimp(binomial(3*n + 4, n + 1)/binomial(3*n + 1, n)) == \
-        S(3)/2*((3*n + 2)*(3*n + 4)/((n + 1)*(2*n + 3)))
+        Rational(3, 2)*((3*n + 2)*(3*n + 4)/((n + 1)*(2*n + 3)))
 
     assert combsimp(factorial(n)**2/factorial(n - 3)) == \
         factorial(n)*n*(-1 + n)*(-2 + n)
@@ -60,6 +62,12 @@ def test_combsimp():
         n*(n - 1)*(n - 2)
     assert combsimp(6*RisingFactorial(4, -n - 1)/factorial(-n - 1)) == \
         -n*(n - 1)*(n - 2)
+
+
+def test_issue_6878():
+    n = symbols('n', integer=True)
+    assert combsimp(RisingFactorial(-10, n)) == 3628800*(-1)**n/factorial(10 - n)
+
 
 def test_issue_14528():
     p = symbols("p", integer=True, positive=True)

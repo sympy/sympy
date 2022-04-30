@@ -3,10 +3,8 @@ Provides functionality for multidimensional usage of scalar-functions.
 
 Read the vectorize docstring for more details.
 """
-from __future__ import print_function, division
 
-from sympy.core.decorators import wraps
-from sympy.core.compatibility import range, string_types
+from functools import wraps
 
 
 def apply_on_element(f, args, kwargs, n):
@@ -19,7 +17,7 @@ def apply_on_element(f, args, kwargs, n):
     if isinstance(n, int):
         structure = args[n]
         is_arg = True
-    elif isinstance(n, string_types):
+    elif isinstance(n, str):
         structure = kwargs[n]
         is_arg = False
 
@@ -65,10 +63,10 @@ class vectorize:
     """
     Generalizes a function taking scalars to accept multidimensional arguments.
 
-    For example
+    Examples
+    ========
 
-    >>> from sympy import diff, sin, symbols, Function
-    >>> from sympy.core.multidimensional import vectorize
+    >>> from sympy import vectorize, diff, sin, symbols, Function
     >>> x, y, z = symbols('x y z')
     >>> f, g, h = list(map(Function, 'fgh'))
 
@@ -94,7 +92,7 @@ class vectorize:
         If no argument is given, everything is treated multidimensional.
         """
         for a in mdargs:
-            if not isinstance(a, (int, string_types)):
+            if not isinstance(a, (int, str)):
                 raise TypeError("a is of invalid type")
         self.mdargs = mdargs
 
@@ -119,7 +117,7 @@ class vectorize:
                         continue
                     entry = args[n]
                     is_arg = True
-                elif isinstance(n, string_types):
+                elif isinstance(n, str):
                     try:
                         entry = kwargs[n]
                     except KeyError:

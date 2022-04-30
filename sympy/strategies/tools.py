@@ -1,19 +1,17 @@
-from __future__ import print_function, division
-
 from . import rl
 from .core import do_one, exhaust, switch
 from .traverse import top_down
 
 def subs(d, **kwargs):
-    """ Full simultaneous exact substitution
+    """ Full simultaneous exact substitution.
 
     Examples
     ========
 
     >>> from sympy.strategies.tools import subs
-    >>> from sympy import Basic
-    >>> mapping = {1: 4, 4: 1, Basic(5): Basic(6, 7)}
-    >>> expr = Basic(1, Basic(2, 3), Basic(4, Basic(5)))
+    >>> from sympy import Basic, S
+    >>> mapping = {S(1): S(4), S(4): S(1), Basic(S(5)): Basic(S(6), S(7))}
+    >>> expr = Basic(S(1), Basic(S(2), S(3)), Basic(S(4), Basic(S(5))))
     >>> subs(mapping)(expr)
     Basic(4, Basic(2, 3), Basic(1, Basic(6, 7)))
     """
@@ -23,7 +21,10 @@ def subs(d, **kwargs):
         return lambda x: x
 
 def canon(*rules, **kwargs):
-    """ Strategy for canonicalization
+    """ Strategy for canonicalization.
+
+    Explanation
+    ===========
 
     Apply each rule in a bottom_up fashion through the tree.
     Do each one in turn.
@@ -36,6 +37,9 @@ def typed(ruletypes):
 
     inputs:
         ruletypes -- a dict mapping {Type: rule}
+
+    Examples
+    ========
 
     >>> from sympy.strategies import rm_id, typed
     >>> from sympy import Add, Mul

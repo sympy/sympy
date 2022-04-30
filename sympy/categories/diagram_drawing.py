@@ -79,18 +79,15 @@ therefore attempt to lay the objects out along a line.
 References
 ==========
 
-[Xypic] http://xy-pic.sourceforge.net/
+.. [Xypic] http://xy-pic.sourceforge.net/
 
 """
-from __future__ import print_function, division
-
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
-from sympy.core import Dict, Symbol
-from sympy.core.compatibility import iterable, range
-from sympy.printing import latex
+from sympy.core import Dict, Symbol, default_sort_key
+from sympy.printing.latex import latex
 from sympy.sets import FiniteSet
-from sympy.utilities import default_sort_key
+from sympy.utilities.iterables import iterable
 from sympy.utilities.decorator import doctest_depends_on
 
 from itertools import chain
@@ -99,9 +96,12 @@ from itertools import chain
 __doctest_requires__ = {('preview_diagram',): 'pyglet'}
 
 
-class _GrowableGrid(object):
+class _GrowableGrid:
     """
     Holds a growable grid of objects.
+
+    Explanation
+    ===========
 
     It is possible to append or prepend a row or a column to the grid
     using the corresponding methods.  Prepending rows or columns has
@@ -172,9 +172,12 @@ class _GrowableGrid(object):
             self._array[i].insert(0, None)
 
 
-class DiagramGrid(object):
+class DiagramGrid:
     r"""
     Constructs and holds the fitting of the diagram into a grid.
+
+    Explanation
+    ===========
 
     The mission of this class is to analyse the structure of the
     supplied diagram and to place its objects on a grid such that,
@@ -298,7 +301,7 @@ class DiagramGrid(object):
     References
     ==========
 
-    [FiveLemma] https://en.wikipedia.org/wiki/Five_lemma
+    .. [FiveLemma] https://en.wikipedia.org/wiki/Five_lemma
     """
     @staticmethod
     def _simplify_morphisms(morphisms):
@@ -337,7 +340,7 @@ class DiagramGrid(object):
         returns an edge which would form a triangle with ``edge1`` and
         ``edge2``.
 
-        If ``edge1`` and ``edge2`` don't have a common endpoint,
+        If ``edge1`` and ``edge2`` do not have a common endpoint,
         returns ``None``.
 
         If ``edge1`` and ``edge`` are the same edge, returns ``None``.
@@ -560,10 +563,10 @@ class DiagramGrid(object):
     @staticmethod
     def _find_triangle_to_weld(triangles, fringe, grid):
         """
-        Finds, if possible, a triangle and an edge in the fringe to
+        Finds, if possible, a triangle and an edge in the ``fringe`` to
         which the triangle could be attached.  Returns the tuple
         containing the triangle and the index of the corresponding
-        edge in the fringe.
+        edge in the ``fringe``.
 
         This function relies on the fact that objects are unique in
         the diagram.
@@ -706,7 +709,7 @@ class DiagramGrid(object):
     @staticmethod
     def _grow_pseudopod(triangles, fringe, grid, skeleton, placed_objects):
         """
-        Starting from an object in the existing structure on the grid,
+        Starting from an object in the existing structure on the ``grid``,
         adds an edge to which a triangle from ``triangles`` could be
         welded.  If this method has found a way to do so, it returns
         the object it has just added.
@@ -838,7 +841,7 @@ class DiagramGrid(object):
         # should be converted to a FiniteSet, because that is what the
         # following code expects.
 
-        if isinstance(groups, dict) or isinstance(groups, Dict):
+        if isinstance(groups, (dict, Dict)):
             finiteset_groups = {}
             for group, local_hints in groups.items():
                 finiteset_group = group_to_finiteset(group)
@@ -1324,8 +1327,8 @@ class DiagramGrid(object):
         >>> diagram = Diagram([f, g])
         >>> grid = DiagramGrid(diagram)
         >>> grid.morphisms
-        {NamedMorphism(Object("A"), Object("B"), "f"): EmptySet(),
-        NamedMorphism(Object("B"), Object("C"), "g"): EmptySet()}
+        {NamedMorphism(Object("A"), Object("B"), "f"): EmptySet,
+        NamedMorphism(Object("B"), Object("C"), "g"): EmptySet}
 
         """
         return self._morphisms
@@ -1357,7 +1360,7 @@ class DiagramGrid(object):
         return repr(self._grid._array)
 
 
-class ArrowStringDescription(object):
+class ArrowStringDescription:
     r"""
     Stores the information necessary for producing an Xy-pic
     description of an arrow.
@@ -1453,7 +1456,7 @@ class ArrowStringDescription(object):
     References
     ==========
 
-    [Xypic] http://xy-pic.sourceforge.net/
+    .. [Xypic] http://xy-pic.sourceforge.net/
     """
     def __init__(self, unit, curving, curving_amount, looping_start,
                  looping_end, horizontal_direction, vertical_direction,
@@ -1500,9 +1503,9 @@ class ArrowStringDescription(object):
                 self.label_displacement, self.label)
 
 
-class XypicDiagramDrawer(object):
+class XypicDiagramDrawer:
     r"""
-    Given a :class:`Diagram` and the corresponding
+    Given a :class:`~.Diagram` and the corresponding
     :class:`DiagramGrid`, produces the Xy-pic representation of the
     diagram.
 
@@ -2026,7 +2029,7 @@ class XypicDiagramDrawer(object):
             two supplied objects.
             """
             return len([m for m in morphisms_str_info
-                        if set([m.domain, m.codomain]) == set([A, B])])
+                        if {m.domain, m.codomain} == {A, B}])
 
         def count_morphisms_filtered(dom, cod, curving):
             """
@@ -2121,15 +2124,15 @@ class XypicDiagramDrawer(object):
         if dom_i == 0:
             free_up = True
         else:
-            free_up = all([grid[dom_i - 1, j] for j in
-                           range(start, end + 1)])
+            free_up = all(grid[dom_i - 1, j] for j in
+                          range(start, end + 1))
 
         # Check for free space below.
         if dom_i == grid.height - 1:
             free_down = True
         else:
-            free_down = all([not grid[dom_i + 1, j] for j in
-                             range(start, end + 1)])
+            free_down = not any(grid[dom_i + 1, j] for j in
+                                range(start, end + 1))
 
         return (free_up, free_down, backwards)
 
@@ -2151,14 +2154,14 @@ class XypicDiagramDrawer(object):
         if dom_j == 0:
             free_left = True
         else:
-            free_left = all([not grid[i, dom_j - 1] for i in
-                             range(start, end + 1)])
+            free_left = not any(grid[i, dom_j - 1] for i in
+                                range(start, end + 1))
 
         if dom_j == grid.width - 1:
             free_right = True
         else:
-            free_right = all([not grid[i, dom_j + 1] for i in
-                              range(start, end + 1)])
+            free_right = not any(grid[i, dom_j + 1] for i in
+                                 range(start, end + 1))
 
         return (free_left, free_right, backwards)
 
@@ -2580,7 +2583,7 @@ def preview_diagram(diagram, masked=None, diagram_format="", groups=None,
     See Also
     ========
 
-    xypic_diagram_drawer
+    XypicDiagramDrawer
     """
     from sympy.printing import preview
     latex_output = xypic_draw_diagram(diagram, masked, diagram_format,

@@ -8,10 +8,9 @@ Suggested Usage:    python -i pyglet_plotting.py
 
 
 from sympy import symbols, sin, cos, pi, sqrt
-from sympy.core.compatibility import range
 from sympy.plotting.pygletplot import PygletPlot
 
-from time import sleep, clock
+from time import sleep, perf_counter
 
 
 def main():
@@ -127,17 +126,17 @@ def main():
 
     @example_wrapper
     def lambda_vs_sympy_evaluation():
-        start = clock()
+        start = perf_counter()
         p[4] = x**2 + y**2, [100], [100], 'style=solid'
         p.wait_for_calculations()
-        print("lambda-based calculation took %s seconds." % (clock() - start))
+        print("lambda-based calculation took %s seconds." % (perf_counter() - start))
 
-        start = clock()
+        start = perf_counter()
         p[4] = x**2 + y**2, [100], [100], 'style=solid; use_sympy_eval'
         p.wait_for_calculations()
         print(
             "sympy substitution-based calculation took %s seconds." %
-            (clock() - start))
+            (perf_counter() - start))
 
     @example_wrapper
     def gradient_vectors():
@@ -195,7 +194,7 @@ def main():
 
     def help_str():
         s = ("\nPlot p has been created. Useful commands: \n"
-             "    help(p), p[1] = x**2, print p, p.clear() \n\n"
+             "    help(p), p[1] = x**2, print(p), p.clear() \n\n"
              "Available examples (see source in plotting.py):\n\n")
         for i in range(len(examples)):
             s += "(%i) %s\n" % (i, examples[i].__name__)

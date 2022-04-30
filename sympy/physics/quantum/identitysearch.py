@@ -1,11 +1,12 @@
-from __future__ import print_function, division
-
 from collections import deque
-from random import randint
+from sympy.core.random import randint
 
-from sympy.core.compatibility import range
 from sympy.external import import_module
-from sympy import Mul, Basic, Number, Pow, Integer
+from sympy.core.basic import Basic
+from sympy.core.mul import Mul
+from sympy.core.numbers import Number
+from sympy.core.power import Pow
+from sympy.core.singleton import S
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 
@@ -25,7 +26,7 @@ __all__ = [
 ]
 
 np = import_module('numpy')
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 
 
 def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
@@ -82,7 +83,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         corrected_real = np.where(bool_real, 0.0, dense_matrix.real)
         corrected_imag = np.where(bool_imag, 0.0, dense_matrix.imag)
         # Convert the matrix with real values into imaginary values
-        corrected_imag = corrected_imag * np.complex(1j)
+        corrected_imag = corrected_imag * complex(1j)
         # Recombine the real and imaginary components
         corrected_dense = corrected_real + corrected_imag
 
@@ -116,7 +117,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         return bool(is_diagonal and has_correct_trace and is_identity)
 
 
-def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
+def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only, eps=None):
     """Checks if a given circuit, in matrix form, is equivalent to
     a scalar value.
 
@@ -129,6 +130,9 @@ def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
         Number of qubits in the circuit
     identity_only : bool
         Check for only identity matrices
+    eps : number
+        This argument is ignored. It is just for signature compatibility with
+        is_scalar_sparse_matrix.
 
     Note: Used in situations when is_scalar_sparse_matrix has bugs
     """
@@ -461,7 +465,7 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
 
     if isinstance(gate_seq, Number):
         if return_as_muls:
-            return {(Integer(1), Integer(1))}
+            return {(S.One, S.One)}
         else:
             return {((), ())}
 
@@ -576,7 +580,7 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
     """
 
     if isinstance(gate_seq, Number):
-        return {Integer(1)}
+        return {S.One}
     elif isinstance(gate_seq, Mul):
         gate_seq = gate_seq.args
 
@@ -723,8 +727,7 @@ def is_reducible(circuit, nqubits, begin, end):
 
     Check if the circuit can be reduced:
 
-    >>> from sympy.physics.quantum.identitysearch import (
-    ...     GateIdentity, is_reducible)
+    >>> from sympy.physics.quantum.identitysearch import is_reducible
     >>> from sympy.physics.quantum.gate import X, Y, Z
     >>> x = X(0); y = Y(0); z = Z(0)
     >>> is_reducible((x, y, z), 1, 0, 3)
@@ -778,7 +781,7 @@ def bfs_identity_search(gate_list, nqubits, max_depth=None,
     Find a list of gate identities:
 
     >>> from sympy.physics.quantum.identitysearch import bfs_identity_search
-    >>> from sympy.physics.quantum.gate import X, Y, Z, H
+    >>> from sympy.physics.quantum.gate import X, Y, Z
     >>> x = X(0); y = Y(0); z = Z(0)
     >>> bfs_identity_search([x], 1, max_depth=2)
     {GateIdentity(X(0), X(0))}

@@ -1,4 +1,7 @@
-"""Implicit plotting module for SymPy
+"""Implicit plotting module for SymPy.
+
+Explanation
+===========
 
 The module implements a data series called ImplicitSeries which is used by
 ``Plot`` class to plot implicit plots for different backends. The module,
@@ -11,26 +14,30 @@ algorithm.
 
 See Also
 ========
+
 sympy.plotting.plot
 
 References
 ==========
-- Jeffrey Allen Tupper. Reliable Two-Dimensional Graphing Methods for
+
+.. [1] Jeffrey Allen Tupper. Reliable Two-Dimensional Graphing Methods for
 Mathematical Formulae with Two Free Variables.
 
-- Jeffrey Allen Tupper. Graphing Equations with Generalized Interval
+.. [2] Jeffrey Allen Tupper. Graphing Equations with Generalized Interval
 Arithmetic. Master's thesis. University of Toronto, 1996
 
 """
 
-from __future__ import print_function, division
 
 from .plot import BaseSeries, Plot
 from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
-from sympy import Eq, Tuple, sympify, Symbol, Dummy
+from sympy.core.containers import Tuple
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
 from sympy.external import import_module
 from sympy.logic.boolalg import BooleanFunction
 from sympy.polys.polyutils import _sort_gens
@@ -46,8 +53,9 @@ class ImplicitSeries(BaseSeries):
     def __init__(self, expr, var_start_end_x, var_start_end_y,
             has_equality, use_interval_math, depth, nb_of_points,
             line_color):
-        super(ImplicitSeries, self).__init__()
+        super().__init__()
         self.expr = sympify(expr)
+        self.label = self.expr
         self.var_x = sympify(var_start_end_x[0])
         self.start_x = float(var_start_end_x[1])
         self.end_x = float(var_start_end_x[2])
@@ -77,14 +85,14 @@ class ImplicitSeries(BaseSeries):
         xinterval = interval(self.start_x, self.end_x)
         yinterval = interval(self.start_y, self.end_y)
         try:
-            temp = func(xinterval, yinterval)
+            func(xinterval, yinterval)
         except AttributeError:
             # XXX: AttributeError("'list' object has no attribute 'is_real'")
             # That needs fixing somehow - we shouldn't be catching
             # AttributeError here.
             if self.use_interval_math:
                 warnings.warn("Adaptive meshing could not be applied to the"
-                            " expression. Using uniform meshing.")
+                            " expression. Using uniform meshing.", stacklevel=7)
             self.use_interval_math = False
 
         if self.use_interval_math:
@@ -257,48 +265,94 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
 
     Plot expressions:
 
-    >>> from sympy import plot_implicit, cos, sin, symbols, Eq, And
-    >>> x, y = symbols('x y')
+    .. plot::
+        :context: reset
+        :format: doctest
+        :include-source: True
 
-    Without any ranges for the symbols in the expression
+        >>> from sympy import plot_implicit, symbols, Eq, And
+        >>> x, y = symbols('x y')
 
-    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))
+    Without any ranges for the symbols in the expression:
 
-    With the range for the symbols
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
 
-    >>> p2 = plot_implicit(Eq(x**2 + y**2, 3),
-    ...         (x, -3, 3), (y, -3, 3))
+        >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))
 
-    With depth of recursion as argument.
+    With the range for the symbols:
 
-    >>> p3 = plot_implicit(Eq(x**2 + y**2, 5),
-    ...         (x, -4, 4), (y, -4, 4), depth = 2)
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
 
-    Using mesh grid and not using adaptive meshing.
+        >>> p2 = plot_implicit(
+        ...     Eq(x**2 + y**2, 3), (x, -3, 3), (y, -3, 3))
 
-    >>> p4 = plot_implicit(Eq(x**2 + y**2, 5),
-    ...         (x, -5, 5), (y, -2, 2), adaptive=False)
+    With depth of recursion as argument:
 
-    Using mesh grid with number of points as input.
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
 
-    >>> p5 = plot_implicit(Eq(x**2 + y**2, 5),
-    ...         (x, -5, 5), (y, -2, 2),
-    ...         adaptive=False, points=400)
+        >>> p3 = plot_implicit(
+        ...     Eq(x**2 + y**2, 5), (x, -4, 4), (y, -4, 4), depth = 2)
 
-    Plotting regions.
+    Using mesh grid and not using adaptive meshing:
 
-    >>> p6 = plot_implicit(y > x**2)
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
 
-    Plotting Using boolean conjunctions.
+        >>> p4 = plot_implicit(
+        ...     Eq(x**2 + y**2, 5), (x, -5, 5), (y, -2, 2),
+        ...     adaptive=False)
 
-    >>> p7 = plot_implicit(And(y > x, y > -x))
+    Using mesh grid without using adaptive meshing with number of points
+    specified:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> p5 = plot_implicit(
+        ...     Eq(x**2 + y**2, 5), (x, -5, 5), (y, -2, 2),
+        ...     adaptive=False, points=400)
+
+    Plotting regions:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> p6 = plot_implicit(y > x**2)
+
+    Plotting Using boolean conjunctions:
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> p7 = plot_implicit(And(y > x, y > -x))
 
     When plotting an expression with a single variable (y - 1, for example),
     specify the x or the y variable explicitly:
 
-    >>> p8 = plot_implicit(y - 1, y_var=y)
-    >>> p9 = plot_implicit(x - 1, x_var=x)
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
 
+        >>> p8 = plot_implicit(y - 1, y_var=y)
+        >>> p9 = plot_implicit(x - 1, x_var=x)
     """
     has_equality = False  # Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
@@ -370,8 +424,8 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
     kwargs['xlim'] = tuple(float(x) for x in var_start_end_x[1:])
     kwargs['ylim'] = tuple(float(y) for y in var_start_end_y[1:])
     # set the x and y labels
-    kwargs.setdefault('xlabel', var_start_end_x[0].name)
-    kwargs.setdefault('ylabel', var_start_end_y[0].name)
+    kwargs.setdefault('xlabel', var_start_end_x[0])
+    kwargs.setdefault('ylabel', var_start_end_y[0])
     p = Plot(series_argument, **kwargs)
     if show:
         p.show()

@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.combinatorics.free_groups import free_group
 from sympy.printing.defaults import DefaultPrinting
 
@@ -543,9 +541,9 @@ class CosetTable(DefaultPrinting):
 
         The unfortunate situation when the scan completes but not correctly,
         then ``coincidence`` routine is run. i.e when for some `i` with
-        `1 \le i \le r+1`, we have `w=st` with `s=x_1*x_2 ... x_{i-1}`,
-        `t=x_i*x_{i+1} ... x_r`, and `\beta = \alpha^s` and
-        `\gamma = \alph^{t-1}` are defined but unequal. This means that
+        `1 \le i \le r+1`, we have `w=st` with `s = x_1 x_2 \dots x_{i-1}`,
+        `t = x_i x_{i+1} \dots x_r`, and `\beta = \alpha^s` and
+        `\gamma = \alpha^{t-1}` are defined but unequal. This means that
         `\beta` and `\gamma` represent the same coset of `H` in `G`. Described
         on Pg. 156 [1]. ``rep``
 
@@ -757,7 +755,7 @@ class CosetTable(DefaultPrinting):
         A coset table is standardized if when running through the cosets and
         within each coset through the generator images (ignoring generator
         inverses), the cosets appear in order of the integers
-        `0, 1, , \ldots, n`. "Standardize" reorders the elements of `\Omega`
+        `0, 1, \dots, n`. "Standardize" reorders the elements of `\Omega`
         such that, if we scan the coset table first by elements of `\Omega`
         and then by elements of A, then the cosets occur in ascending order.
         ``standardize()`` is used at the end of an enumeration to permute the
@@ -772,7 +770,7 @@ class CosetTable(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
         >>> F, x, y = free_group("x, y")
 
@@ -836,7 +834,7 @@ class CosetTable(DefaultPrinting):
             R_set = R_set.union(conjugate)
         R_c_list = []
         for x in self.A:
-            r = set([word for word in R_set if word[0] == x])
+            r = {word for word in R_set if word[0] == x}
             R_c_list.append(r)
             R_set.difference_update(r)
         return R_c_list
@@ -848,7 +846,7 @@ class CosetTable(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
@@ -1166,14 +1164,14 @@ def modified_coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
     r"""
     Introduce a new set of symbols y \in Y that correspond to the
     generators of the subgroup. Store the elements of Y as a
-    word P[\alpha, x] and compute the coset table simlar to that of
+    word P[\alpha, x] and compute the coset table similar to that of
     the regular coset enumeration methods.
 
     Examples
     ========
 
     >>> from sympy.combinatorics.free_groups import free_group
-    >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
+    >>> from sympy.combinatorics.fp_groups import FpGroup
     >>> from sympy.combinatorics.coset_table import modified_coset_enumeration_r
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])
@@ -1219,7 +1217,7 @@ def coset_enumeration_c(fp_grp, Y, max_cosets=None, draft=None,
         C.p = draft.p[:]
         C.deduction_stack = draft.deduction_stack
         for alpha, x in product(range(len(C.table)), X):
-            if not C.table[alpha][C.A_dict[x]] is None:
+            if C.table[alpha][C.A_dict[x]] is not None:
                 C.deduction_stack.append((alpha, x))
     A = C.A
     # replace all the elements by cyclic reductions
@@ -1232,7 +1230,7 @@ def coset_enumeration_c(fp_grp, Y, max_cosets=None, draft=None,
     # a list of subsets of R_c whose words start with "x".
     R_c_list = []
     for x in C.A:
-        r = set([word for word in R_set if word[0] == x])
+        r = {word for word in R_set if word[0] == x}
         R_c_list.append(r)
         R_set.difference_update(r)
     for w in Y:

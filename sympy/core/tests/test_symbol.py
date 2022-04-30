@@ -1,11 +1,18 @@
-from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Tuple,
-)
-from sympy.core.symbol import _uniquely_named_symbol, _symbol
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import (GreaterThan, LessThan, StrictGreaterThan, StrictLessThan)
+from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
+from sympy.core.sympify import sympify  # can't import as S yet
+from sympy.core.symbol import uniquely_named_symbol, _symbol, Str
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core.symbol import disambiguate
 
+def test_Str():
+    a1 = Str('a')
+    a2 = Str('a')
+    b = Str('b')
+    assert a1 == a2 != b
+    raises(TypeError, lambda: Str())
 
 def test_Symbol():
     a = Symbol("a")
@@ -48,7 +55,7 @@ def test_Dummy_force_dummy_index():
 
 
 def test_lt_gt():
-    from sympy import sympify as S
+    S = sympify
     x, y = Symbol('x'), Symbol('y')
 
     assert (x >= y) == GreaterThan(x, y)
@@ -96,7 +103,6 @@ def test_no_len():
 
 def test_ineq_unequal():
     S = sympify
-
     x, y, z = symbols('x,y,z')
 
     e = (
@@ -156,6 +162,7 @@ def test_ineq_unequal():
 
 
 def test_Wild_properties():
+    S = sympify
     # these tests only include Atoms
     x = Symbol("x")
     y = Symbol("y")
@@ -163,7 +170,7 @@ def test_Wild_properties():
     k = Symbol("k", integer=True)
     n = Symbol("n", integer=True, positive=True)
 
-    given_patterns = [ x, y, p, k, -k, n, -n, sympify(-3), sympify(3),
+    given_patterns = [ x, y, p, k, -k, n, -n, S(-3), S(3),
                        pi, Rational(3, 2), I ]
 
     integerp = lambda k: k.is_integer
@@ -233,7 +240,7 @@ def test_symbols():
 
     assert symbols(('x', 'y', 'z')) == (x, y, z)
     assert symbols(['x', 'y', 'z']) == [x, y, z]
-    assert symbols(set(['x', 'y', 'z'])) == set([x, y, z])
+    assert symbols({'x', 'y', 'z'}) == {x, y, z}
 
     raises(ValueError, lambda: symbols(''))
     raises(ValueError, lambda: symbols(','))
@@ -294,8 +301,8 @@ def test_symbols():
     assert sym('a0:4') == '(a0, a1, a2, a3)'
     assert sym('a2:4,b1:3') == '(a2, a3, b1, b2)'
     assert sym('a1(2:4)') == '(a12, a13)'
-    assert sym(('a0:2.0:2')) == '(a0.0, a0.1, a1.0, a1.1)'
-    assert sym(('aa:cz')) == '(aaz, abz, acz)'
+    assert sym('a0:2.0:2') == '(a0.0, a0.1, a1.0, a1.1)'
+    assert sym('aa:cz') == '(aaz, abz, acz)'
     assert sym('aa:c0:2') == '(aa0, aa1, ab0, ab1, ac0, ac1)'
     assert sym('aa:ba:b') == '(aaa, aab, aba, abb)'
     assert sym('a:3b') == '(a0b, a1b, a2b)'
@@ -330,20 +337,20 @@ def test_symbols_become_functions_issue_3539():
 
 
 def test_unicode():
-    xu = Symbol(u'x')
+    xu = Symbol('x')
     x = Symbol('x')
     assert x == xu
 
     raises(TypeError, lambda: Symbol(1))
 
 
-def test__uniquely_named_symbol_and__symbol():
-    F = _uniquely_named_symbol
+def test_uniquely_named_symbol_and_Symbol():
+    F = uniquely_named_symbol
     x = Symbol('x')
     assert F(x) == x
     assert F('x') == x
-    assert str(F('x', x)) == '_x'
-    assert str(F('x', (x + 1, 1/x))) == '_x'
+    assert str(F('x', x)) == 'x0'
+    assert str(F('x', (x + 1, 1/x))) == 'x0'
     _x = Symbol('x', real=True)
     assert F(('x', _x)) == _x
     assert F((x, _x)) == _x
@@ -354,7 +361,7 @@ def test__uniquely_named_symbol_and__symbol():
     assert F(('x', r)).is_real
     assert F(('x', r), real=False).is_real
     assert F('x1', Symbol('x1'),
-        compare=lambda i: str(i).rstrip('1')).name == 'x1'
+        compare=lambda i: str(i).rstrip('1')).name == 'x0'
     assert F('x1', Symbol('x1'),
         modify=lambda i: i + '_').name == 'x1_'
     assert _symbol(x, _x) == x

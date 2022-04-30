@@ -1,5 +1,7 @@
 import sys
 from sympy.external import import_module
+from sympy.integrals.rubi.rubimain import LoadRubiReplacer
+
 matchpy = import_module("matchpy")
 
 if not matchpy:
@@ -11,20 +13,27 @@ if sys.version_info[:2] < (3, 6):
 
 from sympy.core.symbol import symbols, Symbol
 from sympy.functions import log
-from sympy import (sqrt, simplify, S, atanh, hyper, I, atan, pi, Sum, cos, sin,
-    log, atan)
+from sympy.concrete.summations import Sum
+from sympy.core.numbers import (I, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.hyperbolic import atanh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (atan, cos, sin)
+from sympy.functions.special.hyper import hyper
+from sympy.simplify.simplify import simplify
 from sympy.integrals.rubi.utility_function import rubi_test
-from sympy.utilities.pytest import SKIP
+from sympy.testing.pytest import SKIP
 
 a, b, c, d, e, f, x, m, n, p, k = symbols('a b c d e f x m n p k', real=True, imaginary=False)
 
 @SKIP
 def test_rubi_integrate():
-    from sympy.integrals.rubi.rubi import rubi_integrate
+    from sympy.integrals.rubi.rubimain import rubi_integrate
 
     assert rubi_integrate(x, x) == x**2/2
-    assert rubi_integrate(x**2,x) == x**3/3
-    assert rubi_integrate(x**3,x) == x**4/4
+    assert rubi_integrate(x**2, x) == x**3/3
+    assert rubi_integrate(x**3, x) == x**4/4
     assert rubi_integrate(x**a, x) == x**(a + S(1))/(a + S(1))
     assert rubi_integrate(S(1)/x, x) == log(x)
     assert rubi_integrate(a*x, x) == a*(S(1)/S(2))*x**S(2)

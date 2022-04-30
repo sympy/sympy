@@ -1,4 +1,3 @@
-
 import sys
 from sympy.external import import_module
 matchpy = import_module("matchpy")
@@ -10,7 +9,7 @@ if not matchpy:
 if sys.version_info[:2] < (3, 6):
     disabled = True
 
-from sympy.integrals.rubi.rubi import rubi_integrate
+from sympy.integrals.rubi.rubimain import rubi_integrate
 from sympy.functions import log, sqrt, exp, cos, sin, tan, sec, csc, cot
 from sympy.functions.elementary.hyperbolic import atanh, asinh, acosh
 from sympy.functions.elementary.hyperbolic import atanh as arctanh
@@ -22,9 +21,16 @@ from sympy.functions.elementary.trigonometric import asin as arcsin
 from sympy.functions.elementary.trigonometric import acos as arccos
 from sympy.integrals.rubi.utility_function import (EllipticE, EllipticF,
     hypergeom, rubi_test, AppellF1, EllipticPi, Log, Sqrt, ArcTan, ArcTanh, ArcSin, Hypergeometric2F1)
-from sympy import pi as Pi, elliptic_e, elliptic_f, elliptic_pi, Mod
-from sympy import S, hyper, I, simplify, exp_polar, symbols, sqrt
-from sympy.utilities.pytest import SKIP
+from sympy.core.mod import Mod
+from sympy.core.numbers import (I, pi as Pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp_polar
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f, elliptic_pi as Pi)
+from sympy.functions.special.hyper import hyper
+from sympy.simplify.simplify import simplify
+from sympy.testing.pytest import SKIP
 
 a, b, c, d, e, f, m, n, x, u , k, p, j, l , i= symbols('a b c d e f m n x u k p j l i1')
 A, B, C, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B C a b c d e f g h y z m n p q u v w F', real=True, imaginary=False)

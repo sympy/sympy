@@ -1,11 +1,11 @@
-from sympy.core.compatibility import range, zip_longest
+from itertools import zip_longest
+
 from sympy.utilities.enumerative import (
     list_visitor,
     MultisetPartitionTraverser,
     multiset_partitions_taocp
     )
 from sympy.utilities.iterables import _set_partitions
-from sympy.utilities.pytest import slow
 
 # first some functions only useful as test scaffolding - these provide
 # straightforward, but slow reference implementations against which to
@@ -19,7 +19,7 @@ def part_range_filter(partition_iterator, lb, ub):
     Arguments
     =========
 
-    lb, and ub are a range (in the python slice sense) on the lpart
+    lb, and ub are a range (in the Python slice sense) on the lpart
     variable returned from a multiset partition enumeration.  Recall
     that lpart is 0-based (it points to the topmost part on the part
     stack), so if you want to return parts of sizes 2,3,4,5 you would

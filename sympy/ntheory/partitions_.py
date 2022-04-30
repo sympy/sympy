@@ -1,9 +1,7 @@
-from __future__ import print_function, division
 from mpmath.libmp import (fzero, from_int, from_rational,
     fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)
 from sympy.core.numbers import igcd
-from sympy.core.compatibility import range
 from .residue_ntheory import (_sqrt_mod_prime_power,
     legendre_symbol, jacobi_symbol, is_quad_residue)
 
@@ -145,7 +143,7 @@ def npartitions(n, verbose=False):
     P(n) is computed using the Hardy-Ramanujan-Rademacher formula [1]_.
 
 
-    The correctness of this implementation has been tested through 10**10.
+    The correctness of this implementation has been tested through $10^10$.
 
     Examples
     ========

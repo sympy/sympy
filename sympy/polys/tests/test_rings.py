@@ -1,18 +1,21 @@
 """Test sparse polynomials. """
 
+from functools import reduce
 from operator import add, mul
 
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
-from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded, \
+from sympy.polys.polyerrors import GeneratorsError, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.core import Symbol, symbols
-from sympy.core.compatibility import reduce, range
-from sympy import sqrt, pi, oo
+
+from sympy.core.numbers import (oo, pi)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 
 def test_PolyRing___init__():
     x, y, z, t = map(Symbol, "xyzt")
@@ -171,7 +174,7 @@ def test_sring():
 
     r = sqrt(2) - sqrt(3)
     R, a = sring(r, extension=True)
-    assert R.domain == QQ.algebraic_field(r)
+    assert R.domain == QQ.algebraic_field(sqrt(2) + sqrt(3))
     assert R.gens == ()
     assert a == R.domain.from_sympy(r)
 
@@ -206,6 +209,9 @@ def test_PolyElement___eq__():
 
     assert ((x*y - x*y) != 1) == True
     assert (1 != (x*y - x*y)) == True
+
+    assert R.one == QQ(1, 1) == R.one
+    assert R.one == 1 == R.one
 
     Rt, t = ring("t", ZZ)
     R, x, y = ring("x,y", Rt)
@@ -251,7 +257,7 @@ def test_PolyElement_as_expr():
     raises(ValueError, lambda: f.as_expr(X))
 
     R, = ring("", ZZ)
-    R(3).as_expr() == 3
+    assert R(3).as_expr() == 3
 
 def test_PolyElement_from_expr():
     x, y, z = symbols("x,y,z")
@@ -272,6 +278,10 @@ def test_PolyElement_from_expr():
     f = R.from_expr(x**3*y*z + x**2*y**7 + 1)
     assert f == X**3*Y*Z + X**2*Y**7 + 1 and isinstance(f, R.dtype)
 
+    r, F = sring([exp(2)])
+    f = r.from_expr(exp(2))
+    assert f == F[0] and isinstance(f, r.dtype)
+
     raises(ValueError, lambda: R.from_expr(1/x))
     raises(ValueError, lambda: R.from_expr(2**x))
     raises(ValueError, lambda: R.from_expr(7*x + sqrt(2)))
@@ -283,28 +293,28 @@ def test_PolyElement_from_expr():
 def test_PolyElement_degree():
     R, x,y,z = ring("x,y,z", ZZ)
 
-    assert R(0).degree() == -oo
+    assert R(0).degree() is -oo
     assert R(1).degree() == 0
     assert (x + 1).degree() == 1
     assert (2*y**3 + z).degree() == 0
     assert (x*y**3 + z).degree() == 1
     assert (x**5*y**3 + z).degree() == 5
 
-    assert R(0).degree(x) == -oo
+    assert R(0).degree(x) is -oo
     assert R(1).degree(x) == 0
     assert (x + 1).degree(x) == 1
     assert (2*y**3 + z).degree(x) == 0
     assert (x*y**3 + z).degree(x) == 1
     assert (7*x**5*y**3 + z).degree(x) == 5
 
-    assert R(0).degree(y) == -oo
+    assert R(0).degree(y) is -oo
     assert R(1).degree(y) == 0
     assert (x + 1).degree(y) == 0
     assert (2*y**3 + z).degree(y) == 3
     assert (x*y**3 + z).degree(y) == 3
     assert (7*x**5*y**3 + z).degree(y) == 3
 
-    assert R(0).degree(z) == -oo
+    assert R(0).degree(z) is -oo
     assert R(1).degree(z) == 0
     assert (x + 1).degree(z) == 0
     assert (2*y**3 + z).degree(z) == 1
@@ -312,34 +322,34 @@ def test_PolyElement_degree():
     assert (7*x**5*y**3 + z).degree(z) == 1
 
     R, = ring("", ZZ)
-    assert R(0).degree() == -oo
+    assert R(0).degree() is -oo
     assert R(1).degree() == 0
 
 def test_PolyElement_tail_degree():
     R, x,y,z = ring("x,y,z", ZZ)
 
-    assert R(0).tail_degree() == -oo
+    assert R(0).tail_degree() is -oo
     assert R(1).tail_degree() == 0
     assert (x + 1).tail_degree() == 0
     assert (2*y**3 + x**3*z).tail_degree() == 0
     assert (x*y**3 + x**3*z).tail_degree() == 1
     assert (x**5*y**3 + x**3*z).tail_degree() == 3
 
-    assert R(0).tail_degree(x) == -oo
+    assert R(0).tail_degree(x) is -oo
     assert R(1).tail_degree(x) == 0
     assert (x + 1).tail_degree(x) == 0
     assert (2*y**3 + x**3*z).tail_degree(x) == 0
     assert (x*y**3 + x**3*z).tail_degree(x) == 1
     assert (7*x**5*y**3 + x**3*z).tail_degree(x) == 3
 
-    assert R(0).tail_degree(y) == -oo
+    assert R(0).tail_degree(y) is -oo
     assert R(1).tail_degree(y) == 0
     assert (x + 1).tail_degree(y) == 0
     assert (2*y**3 + x**3*z).tail_degree(y) == 0
     assert (x*y**3 + x**3*z).tail_degree(y) == 0
     assert (7*x**5*y**3 + x**3*z).tail_degree(y) == 0
 
-    assert R(0).tail_degree(z) == -oo
+    assert R(0).tail_degree(z) is -oo
     assert R(1).tail_degree(z) == 0
     assert (x + 1).tail_degree(z) == 0
     assert (2*y**3 + x**3*z).tail_degree(z) == 0
@@ -347,7 +357,7 @@ def test_PolyElement_tail_degree():
     assert (7*x**5*y**3 + x**3*z).tail_degree(z) == 0
 
     R, = ring("", ZZ)
-    assert R(0).tail_degree() == -oo
+    assert R(0).tail_degree() is -oo
     assert R(1).tail_degree() == 0
 
 def test_PolyElement_degrees():
@@ -384,7 +394,7 @@ def test_PolyElement_coeff():
     raises(ValueError, lambda: f.coeff(7*z**3))
 
     R, = ring("", ZZ)
-    R(3).coeff(1) == 3
+    assert R(3).coeff(1) == 3
 
 def test_PolyElement_LC():
     R, x, y = ring("x,y", QQ, lex)
@@ -570,7 +580,7 @@ def test_PolyElement___mul__():
 
     assert dict(EX(pi)*x*y*z) == dict(x*y*z*EX(pi)) == {(1, 1, 1): EX(pi)}
 
-def test_PolyElement___div__():
+def test_PolyElement___truediv__():
     R, x,y,z = ring("x,y,z", ZZ)
 
     assert (2*x**2 - 4)/2 == x**2 - 2
@@ -1393,3 +1403,9 @@ def test_PolyElement_factor_list():
     w = x**2 + x + 1
 
     assert f.factor_list() == (1, [(u, 1), (v, 2), (w, 1)])
+
+
+def test_issue_21410():
+    R, x = ring('x', FF(2))
+    p = x**6 + x**5 + x**4 + x**3 + 1
+    assert p._pow_multinomial(4) == x**24 + x**20 + x**16 + x**12 + 1

@@ -1,12 +1,13 @@
-=============
-Vector Module
-=============
+======
+Vector
+======
 
 The vector module provides tools for basic vector math
 and differential calculus with respect to 3D Cartesian coordinate
 systems. This documentation provides an overview of all the
 features offered, and relevant API.
 
+.. module:: sympy.vector
 
 Guide to Vector
 ===============
@@ -19,6 +20,7 @@ Guide to Vector
     coordsys.rst
     fields.rst
     examples.rst
+    vector_integration.rst
 
 Vector API
 ==========

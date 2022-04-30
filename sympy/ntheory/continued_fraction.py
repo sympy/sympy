@@ -1,10 +1,13 @@
+from __future__ import annotations
+from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Integer, Rational
-from sympy.core.compatibility import as_int
-from sympy.utilities.misc import filldedent
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import _sympify
+from sympy.utilities.misc import as_int
 
 
-
-def continued_fraction(a):
+def continued_fraction(a) -> list:
     """Return the continued fraction representation of a Rational or
     quadratic irrational.
 
@@ -20,13 +23,6 @@ def continued_fraction(a):
     ========
     continued_fraction_periodic, continued_fraction_reduce, continued_fraction_convergents
     """
-    from sympy.core.singleton import S
-    from sympy.core.symbol import Dummy
-    from sympy.core.sympify import _sympify
-    from sympy.core.power import Pow
-    from sympy.polys.polytools import primitive
-    from sympy.polys.polyerrors import ComputationFailed
-
     e = _sympify(a)
     if all(i.is_Rational for i in e.atoms()):
         if e.is_Integer:
@@ -76,7 +72,7 @@ def continued_fraction(a):
         'expecting a rational or quadratic irrational, not %s' % e)
 
 
-def continued_fraction_periodic(p, q, d=0, s=1):
+def continued_fraction_periodic(p, q, d=0, s=1) -> list:
     r"""
     Find the periodic continued fraction expansion of a quadratic irrational.
 
@@ -133,9 +129,7 @@ def continued_fraction_periodic(p, q, d=0, s=1):
            Addison-Wesley, 3 Sub edition, pages 379-381, January 1992.
 
     """
-    from sympy.core.compatibility import as_int
     from sympy.functions import sqrt, floor
-    from sympy.ntheory.primetest import is_square
 
     p, q, d, s = list(map(as_int, [p, q, d, s]))
 
@@ -171,10 +165,10 @@ def continued_fraction_periodic(p, q, d=0, s=1):
     if (d - p**2)%q:
         d *= q**2
         sd *= q
-        p *= abs(q)
-        q *= abs(q)
+        p *= q
+        q *= q
 
-    terms = []
+    terms: list[int] = []
     pq = {}
 
     while (p, q) not in pq:
@@ -184,7 +178,7 @@ def continued_fraction_periodic(p, q, d=0, s=1):
         q = (d - p**2)//q
 
     i = pq[(p, q)]
-    return terms[:i] + [terms[i:]]
+    return terms[:i] + [terms[i:]]  # type: ignore
 
 
 def continued_fraction_reduce(cf):
@@ -230,8 +224,6 @@ def continued_fraction_reduce(cf):
     continued_fraction_periodic
 
     """
-    from sympy.core.exprtools import factor_terms
-    from sympy.core.symbol import Dummy
     from sympy.solvers import solve
 
     period = []
@@ -245,7 +237,7 @@ def continued_fraction_reduce(cf):
                 break
             yield nxt
 
-    a = Integer(0)
+    a = S.Zero
     for a in continued_fraction_convergents(untillist(cf)):
         pass
 
@@ -271,7 +263,7 @@ def continued_fraction_iterator(x):
     Examples
     ========
 
-    >>> from sympy.core import Rational, pi
+    >>> from sympy import Rational, pi
     >>> from sympy.ntheory.continued_fraction import continued_fraction_iterator
 
     >>> list(continued_fraction_iterator(Rational(3, 8)))
@@ -299,7 +291,6 @@ def continued_fraction_iterator(x):
 
     """
     from sympy.functions import floor
-
     while True:
         i = floor(x)
         yield i
@@ -323,7 +314,7 @@ def continued_fraction_convergents(cf):
     Examples
     ========
 
-    >>> from sympy.core import Rational, pi
+    >>> from sympy.core import pi
     >>> from sympy import S
     >>> from sympy.ntheory.continued_fraction import \
             continued_fraction_convergents, continued_fraction_iterator
@@ -351,8 +342,8 @@ def continued_fraction_convergents(cf):
     continued_fraction_iterator
 
     """
-    p_2, q_2 = Integer(0), Integer(1)
-    p_1, q_1 = Integer(1), Integer(0)
+    p_2, q_2 = S.Zero, S.One
+    p_1, q_1 = S.One, S.Zero
     for a in cf:
         p, q = a*p_1 + p_2, a*q_1 + q_2
         p_2, q_2 = p_1, q_1

@@ -1,7 +1,22 @@
-from sympy import Abs, S, Symbol, I, Rational, PurePoly, Float
-from sympy.matrices import (Matrix, SparseMatrix, eye, ones, zeros,
-    ShapeError)
-from sympy.utilities.pytest import raises
+from sympy.core.numbers import (Float, I, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.polys.polytools import PurePoly
+from sympy.matrices import \
+    Matrix, MutableSparseMatrix, ImmutableSparseMatrix, SparseMatrix, eye, \
+    ones, zeros, ShapeError, NonSquareMatrixError
+from sympy.testing.pytest import raises
+
+
+def test_sparse_creation():
+    a = SparseMatrix(2, 2, {(0, 0): [[1, 2], [3, 4]]})
+    assert a == SparseMatrix([[1, 2], [3, 4]])
+    a = SparseMatrix(2, 2, {(0, 0): [[1, 2]]})
+    assert a == SparseMatrix([[1, 2], [0, 0]])
+    a = SparseMatrix(2, 2, {(0, 0): [1, 2]})
+    assert a == SparseMatrix([[1, 0], [2, 0]])
+
 
 def test_sparse_matrix():
     def sparse_eye(n):
@@ -19,7 +34,7 @@ def test_sparse_matrix():
     ))
     assert SparseMatrix(a) == a
 
-    from sympy.matrices import MutableSparseMatrix, MutableDenseMatrix
+    from sympy.matrices import MutableDenseMatrix
     a = MutableSparseMatrix([])
     b = MutableDenseMatrix([1, 2])
     assert a.row_join(b) == b
@@ -58,7 +73,7 @@ def test_sparse_matrix():
         (2, 0),
         (5, 0)
     ))
-    assert a._smat == {(0, 0): 2, (1, 0): 5}
+    assert a.todok() == {(0, 0): 2, (1, 0): 5}
 
     # test_multiplication
     a = SparseMatrix((
@@ -146,6 +161,11 @@ def test_sparse_matrix():
         [0, 1, 0],
         [1, 0, 0],
         [2, 0, 1]])
+    S.row_swap(0, 1)
+    assert S == SparseMatrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [2, 0, 1]])
 
     a = SparseMatrix(1, 2, [1, 2])
     b = a.copy()
@@ -222,6 +242,22 @@ def test_sparse_matrix():
                           ( 1,  2,  3, -2,  5),
                           ( 1,  2,  3,  4, -1) )).det() == 11664
 
+    assert SparseMatrix(( ( 3,  0,  0, 0),
+                          (-2,  1,  0, 0),
+                          ( 0, -2,  5, 0),
+                          ( 5,  0,  3, 4) )).det() == 60
+
+    assert SparseMatrix(( ( 1,  0,  0,  0),
+                          ( 5,  0,  0,  0),
+                          ( 9, 10, 11, 0),
+                          (13, 14, 15, 16) )).det() == 0
+
+    assert SparseMatrix(( (3, 2, 0, 0, 0),
+                          (0, 3, 2, 0, 0),
+                          (0, 0, 3, 2, 0),
+                          (0, 0, 0, 3, 2),
+                          (0, 0, 0, 0, 3) )).det() == 243
+
     assert SparseMatrix(( ( 2,  7, -1, 3, 2),
                           ( 0,  0,  1, 0, 1),
                           (-2,  0,  7, 0, 2),
@@ -251,7 +287,7 @@ def test_sparse_matrix():
                               (0, 0, 0, 0),
                               (0, 0, 1, 0),
                               (0, 0, 0, 1)])
-    assert len(m._smat) == 2
+    assert len(m.todok()) == 2
     m[:2, :2] = sparse_eye(2)
     assert m == sparse_eye(4)
     m[:, 0] = SparseMatrix(4, 1, (1, 2, 3, 4))
@@ -381,8 +417,41 @@ def test_sparse_matrix():
         [0,     1]
     ])
 
+    # row insert
+    assert a.row_insert(2, sparse_eye(2)) == SparseMatrix([
+        [1, 2 + I],
+        [3,     4],
+        [1,     0],
+        [0,     1]
+    ])
+
+    # col insert
+    assert a.col_insert(2, SparseMatrix.zeros(2, 1)) == SparseMatrix([
+        [1, 2 + I, 0],
+        [3,     4, 0],
+    ])
+
     # symmetric
     assert not a.is_symmetric(simplify=False)
+
+    # col op
+    M = SparseMatrix.eye(3)*2
+    M[1, 0] = -1
+    M.col_op(1, lambda v, i: v + 2*M[i, 0])
+    assert M == SparseMatrix([
+        [ 2, 4, 0],
+        [-1, 0, 0],
+        [ 0, 0, 2]
+    ])
+
+    # fill
+    M = SparseMatrix.eye(3)
+    M.fill(2)
+    assert M == SparseMatrix([
+        [2, 2, 2],
+        [2, 2, 2],
+        [2, 2, 2],
+    ])
 
     # test_cofactor
     assert sparse_eye(3) == sparse_eye(3).cofactor_matrix()
@@ -447,8 +516,8 @@ def test_sparse_matrix():
     x = Symbol('x')
     y = Symbol('y')
     sparse_eye3 = sparse_eye(3)
-    assert sparse_eye3.charpoly(x) == PurePoly(((x - 1)**3))
-    assert sparse_eye3.charpoly(y) == PurePoly(((y - 1)**3))
+    assert sparse_eye3.charpoly(x) == PurePoly((x - 1)**3)
+    assert sparse_eye3.charpoly(y) == PurePoly((y - 1)**3)
 
     # test values
     M = Matrix([( 0, 1, -1),
@@ -479,6 +548,10 @@ def test_sparse_matrix():
     assert SparseMatrix.eye(2).nnz() == 2
 
 
+def test_scalar_multiply():
+    assert SparseMatrix([[1, 2]]).scalar_multiply(3) == SparseMatrix([[3, 6]])
+
+
 def test_transpose():
     assert SparseMatrix(((1, 2), (3, 4))).transpose() == \
         SparseMatrix(((1, 3), (2, 4)))
@@ -501,7 +574,7 @@ def test_add():
         SparseMatrix(((1, 1), (1, 1)))
     a = SparseMatrix(100, 100, lambda i, j: int(j != 0 and i % j == 0))
     b = SparseMatrix(100, 100, lambda i, j: int(i != 0 and j % i == 0))
-    assert (len(a._smat) + len(b._smat) - len((a + b)._smat) > 0)
+    assert (len(a.todok()) + len(b.todok()) - len((a + b).todok()) > 0)
 
 
 def test_errors():
@@ -511,7 +584,7 @@ def test_errors():
     raises(IndexError, lambda: SparseMatrix([[1, 2], [3, 4]])[5])
     raises(ValueError, lambda: SparseMatrix([[1, 2], [3, 4]])[1, 2, 3])
     raises(TypeError,
-        lambda: SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set([])))
+        lambda: SparseMatrix([[1, 2], [3, 4]]).copyin_list([0, 1], set()))
     raises(
         IndexError, lambda: SparseMatrix([[1, 2], [3, 4]])[1, 2])
     raises(TypeError, lambda: SparseMatrix([1, 2, 3]).cross(1))
@@ -528,9 +601,9 @@ def test_len():
 
 def test_sparse_zeros_sparse_eye():
     assert SparseMatrix.eye(3) == eye(3, cls=SparseMatrix)
-    assert len(SparseMatrix.eye(3)._smat) == 3
+    assert len(SparseMatrix.eye(3).todok()) == 3
     assert SparseMatrix.zeros(3) == zeros(3, cls=SparseMatrix)
-    assert len(SparseMatrix.zeros(3)._smat) == 0
+    assert len(SparseMatrix.zeros(3).todok()) == 0
 
 
 def test_copyin():
@@ -557,7 +630,6 @@ def test_copyin():
 
 
 def test_sparse_solve():
-    from sympy.matrices import SparseMatrix
     A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     assert A.cholesky() == Matrix([
         [ 5, 0, 0],
@@ -588,9 +660,9 @@ def test_sparse_solve():
         [-1, 2, -1],
         [ 0, 0, 2]])
     ans = SparseMatrix([
-        [S(2)/3, S(1)/3, S(1)/6],
-        [S(1)/3, S(2)/3, S(1)/3],
-        [     0,      0, S(1)/2]])
+        [Rational(2, 3), Rational(1, 3), Rational(1, 6)],
+        [Rational(1, 3), Rational(2, 3), Rational(1, 3)],
+        [             0,              0,        S.Half]])
     assert A.inv(method='CH') == ans
     assert A.inv(method='LDL') == ans
     assert A * ans == SparseMatrix(eye(3))
@@ -604,6 +676,60 @@ def test_sparse_solve():
     assert A*s == A[:, 0]
     s = A.solve_least_squares(A[:, 0], 'LDL')
     assert A*s == A[:, 0]
+
+
+def test_lower_triangular_solve():
+    raises(NonSquareMatrixError, lambda:
+        SparseMatrix([[1, 2]]).lower_triangular_solve(Matrix([[1, 2]])))
+    raises(ShapeError, lambda:
+        SparseMatrix([[1, 2], [0, 4]]).lower_triangular_solve(Matrix([1])))
+    raises(ValueError, lambda:
+        SparseMatrix([[1, 2], [3, 4]]).lower_triangular_solve(Matrix([[1, 2], [3, 4]])))
+
+    a, b, c, d = symbols('a:d')
+    u, v, w, x = symbols('u:x')
+
+    A = SparseMatrix([[a, 0], [c, d]])
+    B = MutableSparseMatrix([[u, v], [w, x]])
+    C = ImmutableSparseMatrix([[u, v], [w, x]])
+
+    sol = Matrix([[u/a, v/a], [(w - c*u/a)/d, (x - c*v/a)/d]])
+    assert A.lower_triangular_solve(B) == sol
+    assert A.lower_triangular_solve(C) == sol
+
+
+def test_upper_triangular_solve():
+    raises(NonSquareMatrixError, lambda:
+        SparseMatrix([[1, 2]]).upper_triangular_solve(Matrix([[1, 2]])))
+    raises(ShapeError, lambda:
+        SparseMatrix([[1, 2], [0, 4]]).upper_triangular_solve(Matrix([1])))
+    raises(TypeError, lambda:
+        SparseMatrix([[1, 2], [3, 4]]).upper_triangular_solve(Matrix([[1, 2], [3, 4]])))
+
+    a, b, c, d = symbols('a:d')
+    u, v, w, x = symbols('u:x')
+
+    A = SparseMatrix([[a, b], [0, d]])
+    B = MutableSparseMatrix([[u, v], [w, x]])
+    C = ImmutableSparseMatrix([[u, v], [w, x]])
+
+    sol = Matrix([[(u - b*w/d)/a, (v - b*x/d)/a], [w/d, x/d]])
+    assert A.upper_triangular_solve(B) == sol
+    assert A.upper_triangular_solve(C) == sol
+
+
+def test_diagonal_solve():
+    a, d = symbols('a d')
+    u, v, w, x = symbols('u:x')
+
+    A = SparseMatrix([[a, 0], [0, d]])
+    B = MutableSparseMatrix([[u, v], [w, x]])
+    C = ImmutableSparseMatrix([[u, v], [w, x]])
+
+    sol = Matrix([[u/a, v/a], [w/d, x/d]])
+    assert A.diagonal_solve(B) == sol
+    assert A.diagonal_solve(C) == sol
+
 
 def test_hermitian():
     x = Symbol('x')

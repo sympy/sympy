@@ -1,9 +1,9 @@
-from __future__ import print_function, division
+from functools import reduce
 
 from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
                                 Function, S, Symbol)
-from sympy import integrate, trigsimp
-from sympy.core.compatibility import reduce
+from sympy.integrals.integrals import integrate
+from sympy.simplify.trigsimp import trigsimp
 from .vector import Vector, _check_vector
 from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
@@ -22,7 +22,9 @@ def cross(vec1, vec2):
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Cross product is between two vectors')
     return vec1 ^ vec2
-cross.__doc__ += Vector.cross.__doc__
+
+
+cross.__doc__ += Vector.cross.__doc__  # type: ignore
 
 
 def dot(vec1, vec2):
@@ -30,7 +32,9 @@ def dot(vec1, vec2):
     if not isinstance(vec1, (Vector, Dyadic)):
         raise TypeError('Dot product is between two vectors')
     return vec1 & vec2
-dot.__doc__ += Vector.dot.__doc__
+
+
+dot.__doc__ += Vector.dot.__doc__  # type: ignore
 
 
 def express(expr, frame, frame2=None, variables=False):
@@ -65,6 +69,8 @@ def express(expr, frame, frame2=None, variables=False):
     ========
 
     >>> from sympy.physics.vector import ReferenceFrame, outer, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
     >>> B = N.orientnew('B', 'Axis', [q, N.z])
@@ -75,7 +81,7 @@ def express(expr, frame, frame2=None, variables=False):
     >>> express(B.x, N)
     cos(q)*N.x + sin(q)*N.y
     >>> express(N[0], B, variables=True)
-    B_x*cos(q(t)) - B_y*sin(q(t))
+    B_x*cos(q) - B_y*sin(q)
 
     """
 
@@ -85,16 +91,16 @@ def express(expr, frame, frame2=None, variables=False):
         return expr
 
     if isinstance(expr, Vector):
-        #Given expr is a Vector
+        # Given expr is a Vector
         if variables:
-            #If variables attribute is True, substitute
-            #the coordinate variables in the Vector
+            # If variables attribute is True, substitute the coordinate
+            # variables in the Vector
             frame_list = [x[-1] for x in expr.args]
             subs_dict = {}
             for f in frame_list:
                 subs_dict.update(f.variable_map(frame))
             expr = expr.subs(subs_dict)
-        #Re-express in this frame
+        # Re-express in this frame
         outvec = Vector([])
         for i, v in enumerate(expr.args):
             if v[1] != frame:
@@ -120,12 +126,12 @@ def express(expr, frame, frame2=None, variables=False):
 
     else:
         if variables:
-            #Given expr is a scalar field
-            frame_set = set([])
+            # Given expr is a scalar field
+            frame_set = set()
             expr = sympify(expr)
-            #Subsitute all the coordinate variables
+            # Substitute all the coordinate variables
             for x in expr.free_symbols:
-                if isinstance(x, CoordinateSym)and x.frame != frame:
+                if isinstance(x, CoordinateSym) and x.frame != frame:
                     frame_set.add(x.frame)
             subs_dict = {}
             for f in frame_set:
@@ -160,6 +166,8 @@ def time_derivative(expr, frame, order=1):
     ========
 
     >>> from sympy.physics.vector import ReferenceFrame, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> from sympy import Symbol
     >>> q1 = Symbol('q1')
     >>> u1 = dynamicsymbols('u1')
@@ -171,7 +179,7 @@ def time_derivative(expr, frame, order=1):
     >>> time_derivative(v, N)
     u1'*N.x
     >>> time_derivative(u1*A[0], N)
-    N_x*Derivative(u1(t), t)
+    N_x*u1'
     >>> B = N.orientnew('B', 'Axis', [u1, N.z])
     >>> from sympy.physics.vector import outer
     >>> d = outer(N.x, N.x)
@@ -192,11 +200,11 @@ def time_derivative(expr, frame, order=1):
         outlist = []
         for i, v in enumerate(expr.args):
             if v[1] == frame:
-                outlist += [(express(v[0], frame,
-                                           variables=True).diff(t), frame)]
+                outlist += [(express(v[0], frame, variables=True).diff(t),
+                             frame)]
             else:
-                outlist += (time_derivative(Vector([v]), v[1]) + \
-                    (v[1].ang_vel_in(frame) ^ Vector([v]))).args
+                outlist += (time_derivative(Vector([v]), v[1]) +
+                            (v[1].ang_vel_in(frame) ^ Vector([v]))).args
         outvec = Vector(outlist)
         return time_derivative(outvec, frame, order - 1)
 
@@ -217,7 +225,9 @@ def outer(vec1, vec2):
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
-outer.__doc__ += Vector.outer.__doc__
+
+
+outer.__doc__ += Vector.outer.__doc__  # type: ignore
 
 
 def kinematic_equations(speeds, coords, rot_type, rot_order=''):
@@ -362,8 +372,10 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         # Actual hard-coded kinematic differential equations
         e0, e1, e2, e3 = coords
         w = Matrix(speeds + [0])
-        E = Matrix([[e0, -e3, e2, e1], [e3, e0, -e1, e2], [-e2, e1, e0, e3],
-            [-e1, -e2, -e3, e0]])
+        E = Matrix([[e0, -e3, e2, e1],
+                    [e3, e0, -e1, e2],
+                    [-e2, e1, e0, e3],
+                    [-e1, -e2, -e3, e0]])
         edots = Matrix([diff(i, dynamicsymbols._t) for i in [e1, e2, e3, e0]])
         return list(edots.T - 0.5 * w.T * E.T)
     else:
@@ -420,6 +432,8 @@ def get_motion_params(frame, **kwargs):
     ========
 
     >>> from sympy.physics.vector import ReferenceFrame, get_motion_params, dynamicsymbols
+    >>> from sympy.physics.vector import init_vprinting
+    >>> init_vprinting(pretty_print=False)
     >>> from sympy import symbols
     >>> R = ReferenceFrame('R')
     >>> v1, v2, v3 = dynamicsymbols('v1 v2 v3')
@@ -438,54 +452,50 @@ def get_motion_params(frame, **kwargs):
 
     """
 
-    ##Helper functions
-
-    def _process_vector_differential(vectdiff, condition, \
-                                     variable, ordinate, frame):
+    def _process_vector_differential(vectdiff, condition, variable, ordinate,
+                                     frame):
         """
-        Helper function for get_motion methods. Finds derivative of vectdiff wrt
-        variable, and its integral using the specified boundary condition at
-        value of variable = ordinate.
+        Helper function for get_motion methods. Finds derivative of vectdiff
+        wrt variable, and its integral using the specified boundary condition
+        at value of variable = ordinate.
         Returns a tuple of - (derivative, function and integral) wrt vectdiff
 
         """
 
-        #Make sure boundary condition is independent of 'variable'
+        # Make sure boundary condition is independent of 'variable'
         if condition != 0:
             condition = express(condition, frame, variables=True)
-        #Special case of vectdiff == 0
+        # Special case of vectdiff == 0
         if vectdiff == Vector(0):
             return (0, 0, condition)
-        #Express vectdiff completely in condition's frame to give vectdiff1
+        # Express vectdiff completely in condition's frame to give vectdiff1
         vectdiff1 = express(vectdiff, frame)
-        #Find derivative of vectdiff
+        # Find derivative of vectdiff
         vectdiff2 = time_derivative(vectdiff, frame)
-        #Integrate and use boundary condition
+        # Integrate and use boundary condition
         vectdiff0 = Vector(0)
         lims = (variable, ordinate, variable)
         for dim in frame:
             function1 = vectdiff1.dot(dim)
-            abscissa = dim.dot(condition).subs({variable : ordinate})
+            abscissa = dim.dot(condition).subs({variable: ordinate})
             # Indefinite integral of 'function1' wrt 'variable', using
             # the given initial condition (ordinate, abscissa).
             vectdiff0 += (integrate(function1, lims) + abscissa) * dim
-        #Return tuple
+        # Return tuple
         return (vectdiff2, vectdiff, vectdiff0)
 
-    ##Function body
-
     _check_frame(frame)
-    #Decide mode of operation based on user's input
+    # Decide mode of operation based on user's input
     if 'acceleration' in kwargs:
         mode = 2
     elif 'velocity' in kwargs:
         mode = 1
     else:
         mode = 0
-    #All the possible parameters in kwargs
-    #Not all are required for every case
-    #If not specified, set to default values(may or may not be used in
-    #calculations)
+    # All the possible parameters in kwargs
+    # Not all are required for every case
+    # If not specified, set to default values(may or may not be used in
+    # calculations)
     conditions = ['acceleration', 'velocity', 'position',
                   'timevalue', 'timevalue1', 'timevalue2']
     for i, x in enumerate(conditions):
@@ -493,7 +503,7 @@ def get_motion_params(frame, **kwargs):
             if i < 3:
                 kwargs[x] = Vector(0)
             else:
-                kwargs[x] = S(0)
+                kwargs[x] = S.Zero
         elif i < 3:
             _check_vector(kwargs[x])
         else:
@@ -572,7 +582,7 @@ def partial_velocity(vel_vecs, gen_speeds, frame):
     return vec_partials
 
 
-def dynamicsymbols(names, level=0):
+def dynamicsymbols(names, level=0, **assumptions):
     """Uses symbols and Function for functions of time.
 
     Creates a SymPy UndefinedFunction, which is then initialized as a function
@@ -587,6 +597,15 @@ def dynamicsymbols(names, level=0):
     level : int
         Level of differentiation of the returned function; d/dt once of t,
         twice of t, etc.
+    assumptions :
+        - real(bool) : This is used to set the dynamicsymbol as real,
+                    by default is False.
+        - positive(bool) : This is used to set the dynamicsymbol as positive,
+                    by default is False.
+        - commutative(bool) : This is used to set the commutative property of
+                    a dynamicsymbol, by default is True.
+        - integer(bool) : This is used to set the dynamicsymbol as integer,
+                    by default is False.
 
     Examples
     ========
@@ -596,11 +615,23 @@ def dynamicsymbols(names, level=0):
     >>> q1 = dynamicsymbols('q1')
     >>> q1
     q1(t)
+    >>> q2 = dynamicsymbols('q2', real=True)
+    >>> q2.is_real
+    True
+    >>> q3 = dynamicsymbols('q3', positive=True)
+    >>> q3.is_positive
+    True
+    >>> q4, q5 = dynamicsymbols('q4,q5', commutative=False)
+    >>> bool(q4*q5 != q5*q4)
+    True
+    >>> q6 = dynamicsymbols('q6', integer=True)
+    >>> q6.is_integer
+    True
     >>> diff(q1, Symbol('t'))
     Derivative(q1(t), t)
 
     """
-    esses = symbols(names, cls=Function)
+    esses = symbols(names, cls=Function, **assumptions)
     t = dynamicsymbols._t
     if iterable(esses):
         esses = [reduce(diff, [t] * level, e(t)) for e in esses]
@@ -609,5 +640,5 @@ def dynamicsymbols(names, level=0):
         return reduce(diff, [t] * level, esses(t))
 
 
-dynamicsymbols._t = Symbol('t')
-dynamicsymbols._str = '\''
+dynamicsymbols._t = Symbol('t')  # type: ignore
+dynamicsymbols._str = '\''  # type: ignore

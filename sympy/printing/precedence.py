@@ -1,8 +1,5 @@
 """A module providing information about the necessity of brackets"""
 
-from __future__ import print_function, division
-
-from sympy.core.function import _coeff_isneg
 
 # Default precedence values for some basic types
 PRECEDENCE = {
@@ -18,6 +15,7 @@ PRECEDENCE = {
     "Not": 100,
     "Atom": 1000,
     "BitwiseOr": 36,
+    "BitwiseXor": 37,
     "BitwiseAnd": 38
 }
 
@@ -40,6 +38,8 @@ PRECEDENCE_VALUES = {
     "NegativeInfinity": PRECEDENCE["Add"],
     "MatAdd": PRECEDENCE["Add"],
     "MatPow": PRECEDENCE["Pow"],
+    "MatrixSolve": PRECEDENCE["Mul"],
+    "Mod": PRECEDENCE["Mul"],
     "TensAdd": PRECEDENCE["Add"],
     # As soon as `TensMul` is a subclass of `Mul`, remove this:
     "TensMul": PRECEDENCE["Mul"],
@@ -59,7 +59,7 @@ PRECEDENCE_VALUES = {
 
 
 def precedence_Mul(item):
-    if _coeff_isneg(item):
+    if item.could_extract_minus_sign():
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 
@@ -101,7 +101,7 @@ def precedence_FracElement(item):
 
 
 def precedence_UnevaluatedExpr(item):
-    return precedence(item.args[0])
+    return precedence(item.args[0]) - 0.5
 
 
 PRECEDENCE_FUNCTIONS = {
@@ -135,6 +135,28 @@ def precedence(item):
     return PRECEDENCE["Atom"]
 
 
+PRECEDENCE_TRADITIONAL = PRECEDENCE.copy()
+PRECEDENCE_TRADITIONAL['Integral'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['Sum'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['Product'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['Limit'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['Derivative'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['TensorProduct'] = PRECEDENCE["Mul"]
+PRECEDENCE_TRADITIONAL['Transpose'] = PRECEDENCE["Pow"]
+PRECEDENCE_TRADITIONAL['Adjoint'] = PRECEDENCE["Pow"]
+PRECEDENCE_TRADITIONAL['Dot'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Cross'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Gradient'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Divergence'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Curl'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Laplacian'] = PRECEDENCE["Mul"] - 1
+PRECEDENCE_TRADITIONAL['Union'] = PRECEDENCE['Xor']
+PRECEDENCE_TRADITIONAL['Intersection'] = PRECEDENCE['Xor']
+PRECEDENCE_TRADITIONAL['Complement'] = PRECEDENCE['Xor']
+PRECEDENCE_TRADITIONAL['SymmetricDifference'] = PRECEDENCE['Xor']
+PRECEDENCE_TRADITIONAL['ProductSet'] = PRECEDENCE['Xor']
+
+
 def precedence_traditional(item):
     """Returns the precedence of a given object according to the
     traditional rules of mathematics.
@@ -143,18 +165,13 @@ def precedence_traditional(item):
     """
     # Integral, Sum, Product, Limit have the precedence of Mul in LaTeX,
     # the precedence of Atom for other printers:
-    from sympy import Integral, Sum, Product, Limit, Derivative, Transpose, Adjoint
     from sympy.core.expr import UnevaluatedExpr
-    from sympy.tensor.functions import TensorProduct
 
-    if isinstance(item, (Integral, Sum, Product, Limit, Derivative, TensorProduct)):
-        return PRECEDENCE["Mul"]
-    elif isinstance(item, (Transpose, Adjoint)):
-        return PRECEDENCE["Pow"]
-    elif (item.__class__.__name__ in ("Dot", "Cross", "Gradient", "Divergence",
-                                    "Curl", "Laplacian")):
-        return PRECEDENCE["Mul"]-1
-    elif isinstance(item, UnevaluatedExpr):
+    if isinstance(item, UnevaluatedExpr):
         return precedence_traditional(item.args[0])
-    else:
-        return precedence(item)
+
+    n = item.__class__.__name__
+    if n in PRECEDENCE_TRADITIONAL:
+        return PRECEDENCE_TRADITIONAL[n]
+
+    return precedence(item)

@@ -1,7 +1,6 @@
-from __future__ import (absolute_import, print_function)
-
 import math
-from sympy import symbols, exp, S, Poly
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
 from sympy.codegen.rewriting import optimize
 from sympy.codegen.approximations import SumApprox, SeriesApprox
 

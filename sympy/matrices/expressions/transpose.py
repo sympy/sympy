@@ -1,6 +1,4 @@
-from __future__ import print_function, division
-
-from sympy import Basic
+from sympy.core.basic import Basic
 from sympy.functions import adjoint, conjugate
 
 from sympy.matrices.expressions.matexpr import MatrixExpr
@@ -17,8 +15,7 @@ class Transpose(MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.matrices import MatrixSymbol, Transpose
-    >>> from sympy.functions import transpose
+    >>> from sympy import MatrixSymbol, Transpose, transpose
     >>> A = MatrixSymbol('A', 3, 5)
     >>> B = MatrixSymbol('B', 5, 3)
     >>> Transpose(A)
@@ -71,6 +68,10 @@ class Transpose(MatrixExpr):
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import det
         return det(self.arg)
+
+    def _eval_derivative(self, x):
+        # x is a scalar:
+        return self.arg._eval_derivative(x)
 
     def _eval_derivative_matrix_lines(self, x):
         lines = self.args[0]._eval_derivative_matrix_lines(x)

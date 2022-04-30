@@ -7,3 +7,5 @@ Permutation Groups
 
 .. autoclass:: PermutationGroup
    :members:
+   :private-members:
+   :special-members:

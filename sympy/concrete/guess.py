@@ -1,14 +1,19 @@
 """Various algorithms for helping identifying numbers and sequences."""
-from __future__ import print_function, division
 
+
+from sympy.concrete.products import (Product, product)
+from sympy.core import Function, S
+from sympy.core.numbers import (Zero, Integer, Rational)
+from sympy.core.symbol import Symbol, symbols
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.integers import floor
+from sympy.integrals.integrals import integrate
+from sympy.polys.polyfuncs import rational_interpolate as rinterp
+from sympy.polys.polytools import lcm
+from sympy.simplify.radsimp import denom
 from sympy.utilities import public
 
-from sympy.core import Function, Symbol
-from sympy.core.compatibility import range
-from sympy.core.numbers import Zero
-from sympy import (sympify, floor, lcm, denom, Integer, Rational,
-                   exp, integrate, symbols, Product, product)
-from sympy.polys.polyfuncs import rational_interpolate as rinterp
 
 @public
 def find_simple_recurrence_vector(l):
@@ -18,6 +23,9 @@ def find_simple_recurrence_vector(l):
     function find_simple_recurrence when looking for recurrence relations
     among rational numbers, the current function may still be useful when
     some post-processing has to be done.
+
+    Explanation
+    ===========
 
     The function returns a vector of length n when a recurrence relation of
     order n is detected in the sequence of rational numbers v.
@@ -134,6 +142,7 @@ def rationalize(x, maxcoeff=10000):
 
     See Also
     ========
+
     Several other methods can approximate a real number as a rational, like:
 
       * fractions.Fraction.from_decimal
@@ -206,6 +215,9 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     Tries to "guess" a generating function for a sequence of rational numbers v.
     Only a few patterns are implemented yet.
 
+    Explanation
+    ===========
+
     The function returns a dictionary where keys are the name of a given type of
     generating function. Six types are currently implemented:
 
@@ -250,7 +262,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     >>> ggf([fibonacci(k) for k in range(5, 15)], types=['ogf'])
     {'ogf': (3*x + 5)/(-x**2 - x + 1)}
 
-    >>> from sympy import simplify, factorial
+    >>> from sympy import factorial
     >>> ggf([factorial(k) for k in range(12)], types=['ogf', 'egf', 'lgf'])
     {'egf': 1/(1 - x)}
 
@@ -291,7 +303,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     # Exponential Generating Function (egf)
     if 'egf' in types:
         # Transform sequence (division by factorial)
-        w, f = [], Integer(1)
+        w, f = [], S.One
         for i, k in enumerate(v):
             f *= i if i else 1
             w.append(k/f)
@@ -307,7 +319,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     # Logarithmic Generating Function (lgf)
     if 'lgf' in types:
         # Transform sequence (multiplication by (-1)^(n+1) / n)
-        w, f = [], Integer(-1)
+        w, f = [], S.NegativeOne
         for i, k in enumerate(v):
             f = -f
             w.append(f*k/Integer(i+1))
@@ -389,6 +401,9 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
     This function is adapted from the Rate.m package for Mathematica
     written by Christian Krattenthaler.
     It tries to guess a formula from a given sequence of rational numbers.
+
+    Explanation
+    ===========
 
     In order to speed up the process, the 'all' variable is set to False by
     default, stopping the computation as some results are returned during an

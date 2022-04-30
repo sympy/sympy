@@ -3,7 +3,11 @@ from sympy.physics.quantum.hilbert import (
     DirectSumHilbertSpace, TensorPowerHilbertSpace
 )
 
-from sympy import Interval, oo, Symbol, sstr, srepr
+from sympy.core.numbers import oo
+from sympy.core.symbol import Symbol
+from sympy.printing.repr import srepr
+from sympy.printing.str import sstr
+from sympy.sets.sets import Interval
 
 
 def test_hilbert_space():
@@ -32,13 +36,13 @@ def test_complex_space():
 def test_L2():
     b1 = L2(Interval(-oo, 1))
     assert isinstance(b1, L2)
-    assert b1.dimension == oo
+    assert b1.dimension is oo
     assert b1.interval == Interval(-oo, 1)
 
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
     b2 = L2(Interval(x, y))
-    assert b2.dimension == oo
+    assert b2.dimension is oo
     assert b2.interval == Interval(x, y)
     assert b2.subs(x, -1) == L2(Interval(-1, y))
 
@@ -47,7 +51,7 @@ def test_fock_space():
     f1 = FockSpace()
     f2 = FockSpace()
     assert isinstance(f1, FockSpace)
-    assert f1.dimension == oo
+    assert f1.dimension is oo
     assert f1 == f2
 
 
@@ -69,7 +73,7 @@ def test_tensor_product():
 
     f = FockSpace()
     h = hs1*hs2*f
-    assert h.dimension == oo
+    assert h.dimension is oo
 
 
 def test_tensor_power():
@@ -102,5 +106,5 @@ def test_direct_sum():
 
     f = FockSpace()
     h = hs1 + f + hs2
-    assert h.dimension == oo
+    assert h.dimension is oo
     assert h.spaces == (hs1, f, hs2)

@@ -9,6 +9,8 @@ Inequality Solvers
 
 .. autofunction:: solve_poly_inequality
 
+.. autofunction:: solve_poly_inequalities
+
 .. autofunction:: reduce_rational_inequalities
 
 .. autofunction:: reduce_abs_inequality

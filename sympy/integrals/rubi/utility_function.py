@@ -1,39 +1,57 @@
-'''
+"""
 Utility functions for Rubi integration.
 
 See: http://www.apmaths.uwo.ca/~arich/IntegrationRules/PortableDocumentFiles/Integration%20utility%20functions.pdf
-'''
+"""
 from sympy.external import import_module
 matchpy = import_module("matchpy")
-from sympy.utilities.decorator import doctest_depends_on
-from sympy.functions.elementary.integers import floor, frac
-from sympy.functions import (log as sym_log , sin, cos, tan, cot, csc, sec, sqrt, erf, gamma, uppergamma, polygamma, digamma,
-    loggamma, factorial, zeta, LambertW)
-from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
-from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec, atan2
-from sympy.polys.polytools import Poly, quo, rem, total_degree, degree
-from sympy.simplify.simplify import fraction, simplify, cancel, powsimp
-from sympy.core.sympify import sympify
-from sympy.utilities.iterables import postorder_traversal
-from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei, expint, li, Si, Ci, Shi, Chi
-from sympy.functions.elementary.complexes import im, re, Abs
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import Dict
+from sympy.core.evalf import N
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.exprtools import factor_terms
-from sympy import (Basic, E, polylog, N, Wild, WildFunction, factor, gcd, Sum, S, I, Mul, Integer, Float, Dict, Symbol, Rational,
-    Add, hyper, symbols, sqf_list, sqf, Max, factorint, factorrat, Min, sign, E, Function, collect, FiniteSet, nsimplify,
-    expand_trig, expand, poly, apart, lcm, And, Pow, pi, zoo, oo, Integral, UnevaluatedExpr, PolynomialError, Dummy, exp as sym_exp,
-    powdenest, PolynomialDivisionFailed, discriminant, UnificationFailed, appellf1)
-from sympy.functions.special.hyper import TupleArg
+from sympy.core.function import (Function, WildFunction, expand, expand_trig)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
+from sympy.core.sympify import sympify
+from sympy.core.traversal import postorder_traversal
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import im, re, Abs, sign
+from sympy.functions.elementary.exponential import exp as sym_exp, log as sym_log, LambertW
+from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
+from sympy.functions.elementary.integers import floor, frac
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec, atan2, sin, cos, tan, cot, csc, sec
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
+from sympy.functions.special.error_functions import erf, fresnelc, fresnels, erfc, erfi, Ei, expint, li, Si, Ci, Shi, Chi
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, polygamma, uppergamma)
+from sympy.functions.special.hyper import (appellf1, hyper, TupleArg)
+from sympy.functions.special.zeta_functions import polylog, zeta
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import And, Or
+from sympy.ntheory.factor_ import (factorint, factorrat)
+from sympy.polys.partfrac import apart
+from sympy.polys.polyerrors import (PolynomialDivisionFailed, PolynomialError, UnificationFailed)
+from sympy.polys.polytools import (discriminant, factor, gcd, lcm, poly, sqf, sqf_list, Poly, degree, quo, rem, total_degree)
+from sympy.sets.sets import FiniteSet
+from sympy.simplify.powsimp import powdenest
+from sympy.simplify.radsimp import collect
+from sympy.simplify.simplify import fraction, simplify, cancel, powsimp, nsimplify
+from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import flatten
-from random import randint
-from sympy.logic.boolalg import Or
+from sympy.core.random import randint
 
 
 class rubi_unevaluated_expr(UnevaluatedExpr):
-    '''
+    """
     This is needed to convert `exp` as `Pow`.
-    sympy's UnevaluatedExpr has an issue with `is_commutative`.
-    '''
+    SymPy's UnevaluatedExpr has an issue with `is_commutative`.
+    """
     @property
     def is_commutative(self):
         from sympy.core.logic import fuzzy_and
@@ -43,8 +61,8 @@ _E = rubi_unevaluated_expr(E)
 
 
 class rubi_exp(Function):
-    '''
-    sympy's exp is not identified as `Pow`. So it is not matched with `Pow`.
+    """
+    SymPy's exp is not identified as `Pow`. So it is not matched with `Pow`.
     Like `a = exp(2)` is not identified as `Pow(E, 2)`. Rubi rules need it.
     So, another exp has been created only for rubi module.
 
@@ -58,13 +76,13 @@ class rubi_exp(Function):
     >>> isinstance(rubi_exp(2), Pow)
     True
 
-    '''
+    """
     @classmethod
     def eval(cls, *args):
         return Pow(_E, args[0])
 
 class rubi_log(Function):
-    '''
+    """
     For rule matching different `exp` has been used. So for proper results,
     `log` is modified little only for case when it encounters rubi's `exp`.
     For other cases it is same.
@@ -77,7 +95,7 @@ class rubi_log(Function):
     >>> rubi_log(a)
     2
 
-    '''
+    """
     @classmethod
     def eval(cls, *args):
         if args[0].has(_E):
@@ -86,40 +104,30 @@ class rubi_log(Function):
             return sym_log(args[0])
 
 if matchpy:
-    from matchpy import Arity, Operation, CommutativeOperation, AssociativeOperation, OneIdentityOperation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer
-    from matchpy.expressions.functions import op_iter, create_operation_expression, op_len
+    from matchpy import Arity, Operation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer
     from sympy.integrals.rubi.symbol import WC
     from matchpy import is_match, replace_all
-    from sympy.utilities.matchpy_connector import Operation
 
     class UtilityOperator(Operation):
         name = 'UtilityOperator'
         arity = Arity.variadic
-        commutative=False
-        associative=True
+        commutative = False
+        associative = True
 
     Operation.register(rubi_log)
     Operation.register(rubi_exp)
 
-    A_, B_, C_, F_, G_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, z_ = [WC(i) for i in 'ABCFGabcdefghijklmnpqrtuvswxz']
+    A_, B_, C_, F_, G_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, \
+    n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, z_ = [WC(i) for i in 'ABCFGabcdefghijklmnpqrtuvswxz']
     a, b, c, d, e = symbols('a b c d e')
 
 
-class Int(Function):
-    '''
-    Integrates given `expr` by matching rubi rules.
-    '''
-    @classmethod
-    def eval(cls, expr, var):
-        if isinstance(expr, (int, Integer, float, Float)):
-            return S(expr)*var
-        from sympy.integrals.rubi.rubi import util_rubi_integrate
-        return util_rubi_integrate(expr, var)
+Int = Integral
 
 
 def replace_pow_exp(z):
-    '''
-    This function converts back rubi's `exp` to general sympy's `exp`.
+    """
+    This function converts back rubi's `exp` to general SymPy's `exp`.
 
     Examples
     ========
@@ -131,7 +139,7 @@ def replace_pow_exp(z):
     >>> replace_pow_exp(expr)
     exp(5)
 
-    '''
+    """
     z = S(z)
     if z.has(_E):
         z = z.replace(_E, E)
@@ -209,9 +217,8 @@ def NegativeQ(u):
 def NonzeroQ(expr):
     return Simplify(expr) != 0
 
+
 def FreeQ(nodes, var):
-    if var == Int:
-        return FreeQ(nodes, Integral)
     if isinstance(nodes, list):
         return not any(S(expr).has(var) for expr in nodes)
     else:
@@ -219,9 +226,9 @@ def FreeQ(nodes, var):
         return not nodes.has(var)
 
 def NFreeQ(nodes, var):
-    ''' Note that in rubi 4.10.8 this function was not defined in `Integration Utility Functions.m`,
+    """ Note that in rubi 4.10.8 this function was not defined in `Integration Utility Functions.m`,
     but was used in rules. So explicitly its returning `False`
-    '''
+    """
     return False
     # return not FreeQ(nodes, var)
 
@@ -366,7 +373,7 @@ def First(expr, d=None):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import First
-    >>> from sympy.abc import  a, b, c
+    >>> from sympy.abc import a, b, c
     >>> First(a + b + c)
     a
     >>> First(a*b*c)
@@ -392,7 +399,7 @@ def Rest(expr):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import Rest
-    >>> from sympy.abc import  a, b, c
+    >>> from sympy.abc import a, b, c
     >>> Rest(a + b + c)
     b + c
     >>> Rest(a*b*c)
@@ -430,7 +437,7 @@ def LinearQ(expr, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import LinearQ
-    >>> from sympy.abc import  x, y, a
+    >>> from sympy.abc import x, y, a
     >>> LinearQ(a, x)
     False
     >>> LinearQ(3*x + y**2, x)
@@ -477,7 +484,7 @@ def Coefficient(expr, var, n=1):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import Coefficient
-    >>> from sympy.abc import  x, a, b, c
+    >>> from sympy.abc import x, a, b, c
     >>> Coefficient(7 + 2*x + 4*x**3, x, 1)
     2
     >>> Coefficient(a + b*x + c*x**3, x, 0)
@@ -599,7 +606,7 @@ def LessEqual(*args):
         try:
             if args[i] > args[i + 1]:
                 return False
-        except:
+        except (IndexError, NotImplementedError):
             return False
     return True
 
@@ -608,7 +615,7 @@ def Less(*args):
         try:
             if args[i] >= args[i + 1]:
                 return False
-        except:
+        except (IndexError, NotImplementedError):
             return False
     return True
 
@@ -617,7 +624,7 @@ def Greater(*args):
         try:
             if args[i] <= args[i + 1]:
                 return False
-        except:
+        except (IndexError, NotImplementedError):
             return False
     return True
 
@@ -626,7 +633,7 @@ def GreaterEqual(*args):
         try:
             if args[i] < args[i + 1]:
                 return False
-        except:
+        except (IndexError, NotImplementedError):
             return False
     return True
 
@@ -645,7 +652,7 @@ def FractionQ(*args):
     True
 
     """
-    return all(i.is_Rational for i in args) and all(Denominator(i)!= S(1) for i in args)
+    return all(i.is_Rational for i in args) and all(Denominator(i) != S(1) for i in args)
 
 def IntLinearcQ(a, b, c, d, m, n, x):
     # returns True iff (a+b*x)^m*(c+d*x)^n is integrable wrt x in terms of non-hypergeometric functions.
@@ -664,7 +671,7 @@ def IndependentQ(u, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import IndependentQ
-    >>> from sympy.abc import  x, a, b
+    >>> from sympy.abc import x, a, b
     >>> IndependentQ(a + b*x, x)
     False
     >>> IndependentQ(a + b, x)
@@ -824,13 +831,13 @@ def NumericQ(u):
 
 def Length(expr):
     """
-    Returns number of elements in the experssion just as sympy's len.
+    Returns number of elements in the expression just as SymPy's len.
 
     Examples
     ========
 
     >>> from sympy.integrals.rubi.utility_function import Length
-    >>> from sympy.abc import  x, a, b
+    >>> from sympy.abc import x, a, b
     >>> from sympy import cos, sin
     >>> Length(a + b)
     2
@@ -880,7 +887,7 @@ def InverseFunctionFreeQ(u, x):
     if AtomQ(u):
         return True
     else:
-        if InverseFunctionQ(u) or CalculusQ(u) or u.func == hyper or u.func == appellf1:
+        if InverseFunctionQ(u) or CalculusQ(u) or u.func in (hyper, appellf1):
             return FreeQ(u, x)
         else:
             for i in u.args:
@@ -908,7 +915,7 @@ def RealQ(u):
             return RealQ(u)
         else:
             if f in [asin, acos]:
-                return LE(-1, u, 1)
+                return LessEqual(-1, u, 1)
             else:
                 if f == sym_log:
                     return PositiveOrZeroQ(u)
@@ -959,7 +966,6 @@ def PolynomialQ(u, x = None):
                 else:
                     return False
 
-                return u.is_polynomial(x)
             else:
                 return False
 
@@ -994,42 +1000,42 @@ def PowerOfLinearQ(expr, x):
     else:
         return False
 
-def Exponent(expr, x, h = None):
+def Exponent(expr, x):
     expr = Expand(S(expr))
-    if h is None:
-        if S(expr).is_number or (not expr.has(x)):
-            return 0
-        if PolynomialQ(expr, x):
-            if isinstance(x, Rational):
-                return degree(Poly(expr, x), x)
-            return degree(expr, gen = x)
-        else:
-            return 0
+    if S(expr).is_number or (not expr.has(x)):
+        return 0
+    if PolynomialQ(expr, x):
+        if isinstance(x, Rational):
+            return degree(Poly(expr, x), x)
+        return degree(expr, gen = x)
     else:
-        if S(expr).is_number or (not expr.has(x)):
-            res = [0]
-        if expr.is_Add:
-            expr = collect(expr, x)
-            lst = []
-            k = 1
-            for t in expr.args:
-                if t.has(x):
-                    if isinstance(x, Rational):
-                        lst += [degree(Poly(t, x), x)]
-                    else:
-                        lst += [degree(t, gen = x)]
+        return 0
+
+def ExponentList(expr, x):
+    expr = Expand(S(expr))
+    if S(expr).is_number or (not expr.has(x)):
+        return [0]
+    if expr.is_Add:
+        expr = collect(expr, x)
+        lst = []
+        k = 1
+        for t in expr.args:
+            if t.has(x):
+                if isinstance(x, Rational):
+                    lst += [degree(Poly(t, x), x)]
                 else:
-                    if k == 1:
-                        lst += [0]
-                        k += 1
-            lst.sort()
-            res = lst
-        else:
-            if isinstance(x, Rational):
-                res = [degree(Poly(expr, x), x)]
+                    lst += [degree(t, gen = x)]
             else:
-                res = [degree(expr, gen = x)]
-        return h(*res)
+                if k == 1:
+                    lst += [0]
+                    k += 1
+        lst.sort()
+        return lst
+    else:
+        if isinstance(x, Rational):
+            return [degree(Poly(expr, x), x)]
+        else:
+            return [degree(expr, gen = x)]
 
 def QuadraticQ(u, x):
     # QuadraticQ(u, x) returns True iff u is a polynomial of degree 2 and not a monomial of the form a x^2
@@ -1048,9 +1054,9 @@ def LinearPairQ(u, v, x):
 def BinomialParts(u, x):
     if PolynomialQ(u, x):
         if Exponent(u, x) > 0:
-            lst = Exponent(u, x, List)
+            lst = ExponentList(u, x)
             if len(lst)==1:
-                return [0, Coefficient(u, x, Exponent(u, x)), Exponent(u,x)]
+                return [0, Coefficient(u, x, Exponent(u, x)), Exponent(u, x)]
             elif len(lst) == 2 and lst[0] == 0:
                 return [Coefficient(u, x, 0), Coefficient(u, x, Exponent(u, x)), Exponent(u, x)]
             else:
@@ -1235,7 +1241,7 @@ def PolyQ(u, x, n=None):
     if ListQ(u):
         return all(PolyQ(i, x) for i in u)
 
-    if n==None:
+    if n is None:
         if u == x:
             return False
         elif isinstance(x, Pow):
@@ -1594,7 +1600,7 @@ def NonfreeFactors(u, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import NonfreeFactors
-    >>> from sympy.abc import  x, a, b
+    >>> from sympy.abc import x, a, b
     >>> NonfreeFactors(a, x)
     1
     >>> NonfreeFactors(x + a, x)
@@ -1635,7 +1641,7 @@ def FreeTerms(u, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import FreeTerms
-    >>> from sympy.abc import  x, a, b
+    >>> from sympy.abc import x, a, b
     >>> FreeTerms(a, x)
     a
     >>> FreeTerms(x*a, x)
@@ -1813,7 +1819,7 @@ def LeadBase(u):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import LeadBase
-    >>> from sympy.abc import  a, b, c
+    >>> from sympy.abc import a, b, c
     >>> LeadBase(a**b)
     a
     >>> LeadBase(a**b*c)
@@ -1852,11 +1858,8 @@ def Denom(u):
 def hypergeom(n, d, z):
     return hyper(n, d, z)
 
-def Expon(expr, form, h=None):
-    if h:
-        return Exponent(Together(expr), form, h)
-    else:
-        return Exponent(Together(expr), form)
+def Expon(expr, form):
+    return Exponent(Together(expr), form)
 
 def MergeMonomials(expr, x):
     u_ = Wild('u')
@@ -1876,7 +1879,7 @@ def MergeMonomials(expr, x):
         if len(keys) == len(match):
             u, a, b, m, c, n, p = tuple([match[i] for i in keys])
             if IntegerQ(m/n):
-                if u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n) == S.NaN:
+                if u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n) is S.NaN:
                     return expr
                 else:
                     return u*(c*(a + b*x)**n)**(m/n + p)/c**(m/n)
@@ -1890,7 +1893,7 @@ def MergeMonomials(expr, x):
         if len(keys) == len(match):
             u, a, b, m, c, d, n = tuple([match[i] for i in keys])
             if IntegerQ(m) and ZeroQ(b*c - a*d):
-                if u*b**m/d**m*(c + d*x)**(m + n) == S.NaN:
+                if u*b**m/d**m*(c + d*x)**(m + n) is S.NaN:
                     return expr
                 else:
                     return u*b**m/d**m*(c + d*x)**(m + n)
@@ -1902,17 +1905,17 @@ def PolynomialDivide(u, v, x):
     quo = PolynomialQuotient(u, v, x)
     rem = PolynomialRemainder(u, v, x)
     s = 0
-    for i in Exponent(quo, x, List):
+    for i in ExponentList(quo, x):
         s += Simp(Together(Coefficient(quo, x, i)*x**i), x)
     quo = s
     rem = Together(rem)
     free = FreeFactors(rem, x)
     rem = NonfreeFactors(rem, x)
-    monomial = x**Exponent(rem, x, Min)
+    monomial = x**Min(*ExponentList(rem, x))
     if NegQ(Coefficient(rem, x, 0)):
         monomial = -monomial
     s = 0
-    for i in Exponent(rem, x, List):
+    for i in ExponentList(rem, x):
         s += Simp(Together(Coefficient(rem, x, i)*x**i/monomial), x)
     rem = s
     if BinomialQ(v, x):
@@ -1930,7 +1933,7 @@ def BinomialQ(u, x, n=None):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import BinomialQ
-    >>> from sympy.abc import  x
+    >>> from sympy.abc import x
     >>> BinomialQ(x**9, x)
     True
     >>> BinomialQ((1 + x)**3, x)
@@ -2101,7 +2104,7 @@ def RationalFunctionExponents(u, x):
     Examples
     ========
     >>> from sympy.integrals.rubi.utility_function import RationalFunctionExponents
-    >>> from sympy.abc import  x, a
+    >>> from sympy.abc import x, a
     >>> RationalFunctionExponents(x, x)
     [1, 0]
     >>> RationalFunctionExponents(x**(-1), x)
@@ -2174,7 +2177,7 @@ def RationalFunctionExpand(expr, x):
 
 def ExpandIntegrand(expr, x, extra=None):
     expr = replace_pow_exp(expr)
-    if not extra is None:
+    if extra is not None:
         extra, x = x, extra
         w = ExpandIntegrand(extra, x)
         r = NonfreeTerms(w, x)
@@ -2469,7 +2472,7 @@ def MinimumMonomialExponent(u, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import MinimumMonomialExponent
-    >>> from sympy.abc import  x
+    >>> from sympy.abc import x
     >>> MinimumMonomialExponent(x**2 + 5*x**2 + 3*x**5, x)
     2
     >>> MinimumMonomialExponent(x**2 + 5*x**2 + 1, x)
@@ -2688,7 +2691,7 @@ def NonalgebraicFunctionFactors(u, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import NonalgebraicFunctionFactors
-    >>> from sympy.abc import  x
+    >>> from sympy.abc import x
     >>> from sympy import sin
     >>> NonalgebraicFunctionFactors(sin(x), x)
     sin(x)
@@ -2861,7 +2864,7 @@ def SubstForInverseFunction(*args):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import SubstForInverseFunction
-    >>> from sympy.abc import  x, a, b
+    >>> from sympy.abc import x, a, b
     >>> SubstForInverseFunction(a, a, b, x)
     a
     >>> SubstForInverseFunction(x**a, x**a, b, x)
@@ -3157,7 +3160,7 @@ def PolynomialInQ(u, v, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import PolynomialInQ
-    >>> from sympy.abc import  x
+    >>> from sympy.abc import x
     >>> from sympy import log, S
     >>> PolynomialInQ(S(1), log(x), x)
     True
@@ -3227,7 +3230,7 @@ def FunctionOfPower(*args):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import FunctionOfPower
-    >>> from sympy.abc import  x
+    >>> from sympy.abc import x
     >>> FunctionOfPower(x, x)
     1
     >>> FunctionOfPower(x**3, x)
@@ -3320,6 +3323,7 @@ def FunctionOfLinearSubst(u, a, b, x):
             return  -FunctionOfLinearSubst(DivideDegreesOfFactors(-lst[1], lst[0])*x, a, b, x)**lst[0]
         return FunctionOfLinearSubst(DivideDegreesOfFactors(lst[1], lst[0])*x, a, b, x)**lst[0]
     return u.func(*[FunctionOfLinearSubst(i, a, b, x) for i in u.args])
+
 
 def FunctionOfLinear(*args):
     # (* If u (x) is equivalent to an expression of the form f (a+b*x) and not the case that a==0 and
@@ -3438,13 +3442,13 @@ def NormalizeIntegrandFactorBase(expr, x):
         for i in expr.args:
             l *= NormalizeIntegrandFactor(i, x)
         return l
-    elif PolynomialQ(expr, x) and Exponent(expr, x)<=4:
+    elif PolynomialQ(expr, x) and Exponent(expr, x) <= 4:
         return ExpandToSum(expr, x)
     elif SumQ(expr):
         w = Wild('w')
         m = Wild('m', exclude=[x])
         v = TogetherSimplify(expr)
-        if SumQ(v) or v.match(x**m*w) and SumQ(w) or LeafCount(v)>LeafCount(expr)+2:
+        if SumQ(v) or v.match(x**m*w) and SumQ(w) or LeafCount(v) > LeafCount(expr) + 2:
             return UnifySum(expr, x)
         else:
             return NormalizeIntegrandFactorBase(v, x)
@@ -3570,7 +3574,7 @@ def ExpandToSum(u, *x):
         x = x[0]
         expr = 0
         if PolyQ(S(u), x):
-            for t in Exponent(u, x, List):
+            for t in ExponentList(u, x):
                 expr += Coeff(u, x, t)*x**t
             return expr
         if BinomialQ(u, x):
@@ -4373,7 +4377,7 @@ def NormalizeTrig(v, x):
     F = Wild('F')
     expr = a*F**n
     M = v.match(expr)
-    if M and len(M[F].args) == 1 and PolynomialQ(M[F].args[0], x) and Exponent(M[F].args[0], x)>0:
+    if M and len(M[F].args) == 1 and PolynomialQ(M[F].args[0], x) and Exponent(M[F].args[0], x) > 0:
         u = M[F].args[0]
         return M[a]*M[F].xreplace({u: ExpandToSum(u, x)})**M[n]
     else:
@@ -4558,7 +4562,7 @@ def FunctionOfHyperbolic(u, *x):
     if len(x) == 1:
         x = x[0]
         v = FunctionOfHyperbolic(u, None, x)
-        if v==None:
+        if v is None:
             return False
         else:
             return v
@@ -4876,7 +4880,7 @@ def FunctionOfDensePolynomialsQ(u, x):
     if FreeQ(u, x):
         return True
     if PolynomialQ(u, x):
-        return Length(Exponent(u,x,List))>1
+        return Length(ExponentList(u, x)) > 1
     return all(FunctionOfDensePolynomialsQ(i, x) for i in u.args)
 
 def FunctionOfLog(u, *args):
@@ -5032,7 +5036,7 @@ def FunctionOfSquareRootOfQuadratic(u, *args):
             return [v]
         if PowerQ(u):
             if FreeQ(u.exp, x):
-                if FractionQ(u.exp) and Denominator(u.exp)==2 and PolynomialQ(u.base, x) and Exponent(u.base, x)==2:
+                if FractionQ(u.exp) and Denominator(u.exp) == 2 and PolynomialQ(u.base, x) and Exponent(u.base, x) == 2:
                     if FalseQ(v) or u.base == v:
                         return [u.base]
                     else:
@@ -5080,15 +5084,15 @@ def Divides(y, u, x):
         return False
 
 def DerivativeDivides(y, u, x):
-    '''
+    """
     If y not equal to x, y is easy to differentiate wrt x, and u divided by the derivative of y
     is free of x, DerivativeDivides[y,u,x] returns the quotient; else it returns False.
-    '''
+    """
     from matchpy import is_match
     pattern0 = Pattern(Mul(a , b_), CustomConstraint(lambda a, b : FreeQ(a, b)))
     def f1(y, u, x):
         if PolynomialQ(y, x):
-            return PolynomialQ(u, x) and Exponent(u, x)==Exponent(y, x)-1
+            return PolynomialQ(u, x) and Exponent(u, x) == Exponent(y, x) - 1
         else:
             return EasyDQ(y, x)
 
@@ -5276,7 +5280,6 @@ def IntSum(u, x):
     # If u is free of x or of the form c*(a+b*x)^m, IntSum[u,x] returns the antiderivative of u wrt x;
     # else it returns d*Int[v,x] where d*v=u and d is free of x.
     return Add(*[Integral(i, x) for i in u.args])
-    return Simp(FreeTerms(u, x)*x, x) + IntTerm(NonfreeTerms(u, x), x)
 
 def IntTerm(expr, x):
     # If u is of the form c*(a+b*x)**m, IntTerm(u,x) returns the antiderivative of u wrt x;
@@ -5374,7 +5377,7 @@ def CommonFactors(lst):
             lst1 = [RemainingFactors(i) for i in lst1]
         elif (Length(lst1) == 2 and ZeroQ(LeadBase(lst1[0]) + LeadBase(lst1[1])) and
             NonzeroQ(lst1[0] - 1) and IntegerQ(lst4[0]) and FractionQ(lst4[1])):
-            num = Min(lst4)
+            num = Min(*lst4)
             base = LeadBase(lst1[1])
             if num != 0:
                 common = common*base**num
@@ -5383,7 +5386,7 @@ def CommonFactors(lst):
             lst1 = [RemainingFactors(i) for i in lst1]
         elif (Length(lst1) == 2 and ZeroQ(lst1[0] + LeadBase(lst1[1])) and
             NonzeroQ(lst1[1] - 1) and IntegerQ(lst1[1]) and FractionQ(lst4[0])):
-            num = Min(lst4)
+            num = Min(*lst4)
             base = LeadBase(lst1[0])
             if num != 0:
                 common = common*base**num
@@ -5493,24 +5496,17 @@ def FunctionOfExponentialTestAux(base, expon, x):
     if Not(RationalQ(tmp)):
         return False
     elif ZeroQ(Coefficient(SexponS, x, 0)) or NonzeroQ(tmp - FullSimplify(Log(base)*Coefficient(expon, x, 0)/(Log(SbaseS)*Coefficient(SexponS, x, 0)))):
-        if PositiveIntegerQ(base, SbaseS) and base<SbaseS:
+        if PositiveIntegerQ(base, SbaseS) and base < SbaseS:
             SbaseS = base
             SexponS = expon
             tmp = 1/tmp
         SexponS = Coefficient(SexponS, x, 1)*x/Denominator(tmp)
         if tmp < 0 and NegQ(Coefficient(SexponS, x, 1)):
             SexponS = -SexponS
-            return True
-        else:
-            return True
-        if PositiveIntegerQ(base, SbaseS) and base < SbaseS:
-            SbaseS = base
-            SexponS = expon
-            tmp = 1/tmp
+        return True
     SexponS = SexponS/Denominator(tmp)
     if tmp < 0 and NegQ(Coefficient(SexponS, x, 1)):
         SexponS = -SexponS
-        return True
     return True
 
 def stdev(lst):
@@ -5533,7 +5529,7 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
     #_hyper_check=True evaluates numerically
     #_diff=True differentiates the expressions before equating
     #_numerical=True equates the expressions at random `x`. Normally used for large expressions.
-    from sympy import nsimplify
+    from sympy.simplify.simplify import nsimplify
     if not expr.has(csc, sec, cot, csch, sech, coth):
         optimal_output = process_trig(optimal_output)
     if expr == optimal_output:
@@ -5555,7 +5551,7 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         try:
             for i in range(0, 5): # check at 5 random points
                 rand_x = randint(1, 40)
-                substitutions = dict((s, rand_x) for s in args)
+                substitutions = {s: rand_x for s in args}
                 rand_val.append(float(abs(res.subs(substitutions).n())))
 
             if stdev(rand_val) < Pow(10, -3):
@@ -5571,7 +5567,7 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
         try:
             for i in range(0, 5): # check at 5 random points
                 rand_x = randint(1, 40)
-                substitutions = dict((s, rand_x) for s in args)
+                substitutions = {s: rand_x for s in args}
                 rand_val.append(float(abs(dres.subs(substitutions).n())))
             if stdev(rand_val) < Pow(10, -3):
                 return True
@@ -5791,7 +5787,7 @@ def SimpHelp(u, x):
                 m = True
         if m:
             return u
-        elif PolynomialQ(u, x) and Exponent(u, x)<=0:
+        elif PolynomialQ(u, x) and Exponent(u, x) <= 0:
             return SimpHelp(Coefficient(u, x, 0), x)
         elif PolynomialQ(u, x) and Exponent(u, x) == 1 and Coefficient(u, x, 0) == 0:
             return SimpHelp(Coefficient(u, x, 1), x)*x
@@ -6632,7 +6628,7 @@ def IntegralFreeQ(u):
 
 def Dist(u, v, x):
     #Dist(u,v) returns the sum of u times each term of v, provided v is free of Int
-    u = replace_pow_exp(u) # to replace back to sympy's exp
+    u = replace_pow_exp(u) # to replace back to SymPy's exp
     v = replace_pow_exp(v)
     w = Simp(u*x**2, x)/x**2
     if u == 1:
@@ -6708,8 +6704,8 @@ def HypergeometricPFQ(a, b, c):
     return hyper(a, b, c)
 
 def Sum_doit(exp, args):
-    '''
-    This function perform summation using sympy's `Sum`.
+    """
+    This function perform summation using SymPy's `Sum`.
 
     Examples
     ========
@@ -6719,7 +6715,7 @@ def Sum_doit(exp, args):
     >>> Sum_doit(2*x + 2, [x, 0, 1.7])
     6
 
-    '''
+    """
     exp = replace_pow_exp(exp)
     if not isinstance(args[2], (int, Integer)):
         new_args = [args[0], args[1], Floor(args[2])]
@@ -6797,7 +6793,7 @@ def Quotient(m, n):
     return Floor(m/n)
 
 def process_trig(expr):
-    '''
+    """
     This function processes trigonometric expressions such that all `cot` is
     rewritten in terms of `tan`, `sec` in terms of `cos`, `csc` in terms of `sin` and
     similarly for `coth`, `sech` and `csch`.
@@ -6813,7 +6809,7 @@ def process_trig(expr):
     >>> process_trig(coth(x)*csc(x))
     1/(sin(x)*tanh(x))
 
-    '''
+    """
     expr = expr.replace(lambda x: isinstance(x, cot), lambda x: 1/tan(x.args[0]))
     expr = expr.replace(lambda x: isinstance(x, sec), lambda x: 1/cos(x.args[0]))
     expr = expr.replace(lambda x: isinstance(x, csc), lambda x: 1/sin(x.args[0]))
@@ -7140,8 +7136,6 @@ def _ExpandIntegrand():
     rule14 = ReplacementRule(pattern14, replacement14)
 
     def With15(b, a, x, u, m):
-        tmp1 = Symbol('tmp1')
-        tmp2 = Symbol('tmp2')
         tmp1 = ExpandLinearProduct((a + b*x)**m, u, a, b, x)
         if not IntegerQ(m):
             return tmp1

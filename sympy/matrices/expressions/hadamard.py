@@ -1,11 +1,15 @@
-from __future__ import print_function, division
+from collections import Counter
 
 from sympy.core import Mul, sympify
-from sympy.matrices.expressions.matexpr import (
-    MatrixExpr, ShapeError, Identity, OneMatrix, ZeroMatrix
-)
+from sympy.core.add import Add
+from sympy.core.expr import ExprBuilder
+from sympy.core.sorting import default_sort_key
+from sympy.functions.elementary.exponential import log
+from sympy.matrices.common import ShapeError
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
-    unpack, flatten, condition, exhaust, do_one, rm_id, sort
+    unpack, flatten, condition, exhaust, rm_id, sort
 )
 
 
@@ -16,13 +20,13 @@ def hadamard_product(*matrices):
     Examples
     ========
 
-    >>> from sympy.matrices import hadamard_product, MatrixSymbol
+    >>> from sympy import hadamard_product, MatrixSymbol
     >>> A = MatrixSymbol('A', 2, 3)
     >>> B = MatrixSymbol('B', 2, 3)
     >>> hadamard_product(A)
     A
     >>> hadamard_product(A, B)
-    A.*B
+    HadamardProduct(A, B)
     >>> hadamard_product(A, B)[0, 1]
     A[0, 1]*B[0, 1]
     """
@@ -45,7 +49,7 @@ class HadamardProduct(MatrixExpr):
 
     Hadamard product for matrix symbols:
 
-    >>> from sympy.matrices import hadamard_product, HadamardProduct, MatrixSymbol
+    >>> from sympy import hadamard_product, HadamardProduct, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
     >>> isinstance(hadamard_product(A, B), HadamardProduct)
@@ -60,13 +64,15 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, evaluate=False, check=True):
         args = list(map(sympify, args))
-        check = kwargs.get('check', True)
         if check:
             validate(*args)
 
-        return super(HadamardProduct, cls).__new__(cls, *args)
+        obj = super().__new__(cls, *args)
+        if evaluate:
+            obj = obj.doit(deep=False)
+        return obj
 
     @property
     def shape(self):
@@ -80,11 +86,31 @@ class HadamardProduct(MatrixExpr):
         return HadamardProduct(*list(map(transpose, self.args)))
 
     def doit(self, **ignored):
-        return canonicalize(self)
+        expr = self.func(*[i.doit(**ignored) for i in self.args])
+        # Check for explicit matrices:
+        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.immutable import ImmutableMatrix
+        explicit = [i for i in expr.args if isinstance(i, MatrixBase)]
+        if explicit:
+            remainder = [i for i in expr.args if i not in explicit]
+            expl_mat = ImmutableMatrix([
+                Mul.fromiter(i) for i in zip(*explicit)
+            ]).reshape(*self.shape)
+            expr = HadamardProduct(*([expl_mat] + remainder))
+
+        return canonicalize(expr)
+
+    def _eval_derivative(self, x):
+        terms = []
+        args = list(self.args)
+        for i in range(len(args)):
+            factors = args[:i] + [args[i].diff(x)] + args[i+1:]
+            terms.append(hadamard_product(*factors))
+        return Add.fromiter(terms)
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.core.expr import ExprBuilder
-        from sympy.codegen.array_utils import CodegenArrayDiagonal, CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
         from sympy.matrices.expressions.matexpr import _make_matrix
 
         with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
@@ -101,17 +127,17 @@ class HadamardProduct(MatrixExpr):
                 l1 = i._lines[i._first_line_index]
                 l2 = i._lines[i._second_line_index]
                 subexpr = ExprBuilder(
-                    CodegenArrayDiagonal,
+                    ArrayDiagonal,
                     [
                         ExprBuilder(
-                            CodegenArrayTensorProduct,
+                            ArrayTensorProduct,
                             [
                                 ExprBuilder(_make_matrix, [l1]),
                                 hadam,
                                 ExprBuilder(_make_matrix, [l2]),
                             ]
                         ),
-                    ] + diagonal,  # turn into *diagonal after dropping Python 2.7
+                    *diagonal],
 
                 )
                 i._first_pointer_parent = subexpr.args[0].args[0].args
@@ -141,9 +167,11 @@ def canonicalize(x):
     Examples
     ========
 
-    >>> from sympy.matrices.expressions import MatrixSymbol, HadamardProduct
-    >>> from sympy.matrices.expressions import OneMatrix, ZeroMatrix
+    >>> from sympy import MatrixSymbol, HadamardProduct
+    >>> from sympy import OneMatrix, ZeroMatrix
     >>> from sympy.matrices.expressions.hadamard import canonicalize
+    >>> from sympy import init_printing
+    >>> init_printing(use_unicode=False)
 
     >>> A = MatrixSymbol('A', 2, 2)
     >>> B = MatrixSymbol('B', 2, 2)
@@ -192,7 +220,8 @@ def canonicalize(x):
     >>> X
     A.*A.*A
     >>> canonicalize(X)
-    A.**3
+     .3
+    A
 
     Notes
     =====
@@ -214,8 +243,6 @@ def canonicalize(x):
 
     .. [1] https://en.wikipedia.org/wiki/Hadamard_product_(matrices)
     """
-    from sympy.core.compatibility import default_sort_key
-
     # Associativity
     rule = condition(
             lambda x: isinstance(x, HadamardProduct),
@@ -245,7 +272,6 @@ def canonicalize(x):
 
     # Rewriting with HadamardPower
     if isinstance(x, HadamardProduct):
-        from collections import Counter
         tally = Counter(x.args)
 
         new_arg = []
@@ -282,14 +308,76 @@ def hadamard_power(base, exp):
 
 
 class HadamardPower(MatrixExpr):
-    """
+    r"""
     Elementwise power of matrix expressions
+
+    Parameters
+    ==========
+
+    base : scalar or matrix
+
+    exp : scalar or matrix
+
+    Notes
+    =====
+
+    There are four definitions for the hadamard power which can be used.
+    Let's consider `A, B` as `(m, n)` matrices, and `a, b` as scalars.
+
+    Matrix raised to a scalar exponent:
+
+    .. math::
+        A^{\circ b} = \begin{bmatrix}
+        A_{0, 0}^b   & A_{0, 1}^b   & \cdots & A_{0, n-1}^b   \\
+        A_{1, 0}^b   & A_{1, 1}^b   & \cdots & A_{1, n-1}^b   \\
+        \vdots       & \vdots       & \ddots & \vdots         \\
+        A_{m-1, 0}^b & A_{m-1, 1}^b & \cdots & A_{m-1, n-1}^b
+        \end{bmatrix}
+
+    Scalar raised to a matrix exponent:
+
+    .. math::
+        a^{\circ B} = \begin{bmatrix}
+        a^{B_{0, 0}}   & a^{B_{0, 1}}   & \cdots & a^{B_{0, n-1}}   \\
+        a^{B_{1, 0}}   & a^{B_{1, 1}}   & \cdots & a^{B_{1, n-1}}   \\
+        \vdots         & \vdots         & \ddots & \vdots           \\
+        a^{B_{m-1, 0}} & a^{B_{m-1, 1}} & \cdots & a^{B_{m-1, n-1}}
+        \end{bmatrix}
+
+    Matrix raised to a matrix exponent:
+
+    .. math::
+        A^{\circ B} = \begin{bmatrix}
+        A_{0, 0}^{B_{0, 0}}     & A_{0, 1}^{B_{0, 1}}     &
+        \cdots & A_{0, n-1}^{B_{0, n-1}}     \\
+        A_{1, 0}^{B_{1, 0}}     & A_{1, 1}^{B_{1, 1}}     &
+        \cdots & A_{1, n-1}^{B_{1, n-1}}     \\
+        \vdots                  & \vdots                  &
+        \ddots & \vdots                      \\
+        A_{m-1, 0}^{B_{m-1, 0}} & A_{m-1, 1}^{B_{m-1, 1}} &
+        \cdots & A_{m-1, n-1}^{B_{m-1, n-1}}
+        \end{bmatrix}
+
+    Scalar raised to a scalar exponent:
+
+    .. math::
+        a^{\circ b} = a^b
     """
 
     def __new__(cls, base, exp):
         base = sympify(base)
         exp = sympify(exp)
-        obj = super(HadamardPower, cls).__new__(cls, base, exp)
+        if base.is_scalar and exp.is_scalar:
+            return base ** exp
+
+        if base.is_Matrix and exp.is_Matrix and base.shape != exp.shape:
+            raise ValueError(
+                'The shape of the base {} and '
+                'the shape of the exponent {} do not match.'
+                .format(base.shape, exp.shape)
+                )
+
+        obj = super().__new__(cls, base, exp)
         return obj
 
     @property
@@ -302,19 +390,48 @@ class HadamardPower(MatrixExpr):
 
     @property
     def shape(self):
-        return self.base.shape
+        if self.base.is_Matrix:
+            return self.base.shape
+        return self.exp.shape
 
     def _entry(self, i, j, **kwargs):
-        return self.base._entry(i, j, **kwargs)**self.exp
+        base = self.base
+        exp = self.exp
+
+        if base.is_Matrix:
+            a = base._entry(i, j, **kwargs)
+        elif base.is_scalar:
+            a = base
+        else:
+            raise ValueError(
+                'The base {} must be a scalar or a matrix.'.format(base))
+
+        if exp.is_Matrix:
+            b = exp._entry(i, j, **kwargs)
+        elif exp.is_scalar:
+            b = exp
+        else:
+            raise ValueError(
+                'The exponent {} must be a scalar or a matrix.'.format(exp))
+
+        return a ** b
 
     def _eval_transpose(self):
         from sympy.matrices.expressions.transpose import transpose
         return HadamardPower(transpose(self.base), self.exp)
 
+    def _eval_derivative(self, x):
+        dexp = self.exp.diff(x)
+        logbase = self.base.applyfunc(log)
+        dlbase = logbase.diff(x)
+        return hadamard_product(
+            dexp*logbase + self.exp*dlbase,
+            self
+        )
+
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.codegen.array_utils import CodegenArrayTensorProduct
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayDiagonal
-        from sympy.core.expr import ExprBuilder
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
         from sympy.matrices.expressions.matexpr import _make_matrix
 
         lr = self.base._eval_derivative_matrix_lines(x)
@@ -324,18 +441,18 @@ class HadamardPower(MatrixExpr):
             l1 = i._lines[i._first_line_index]
             l2 = i._lines[i._second_line_index]
             subexpr = ExprBuilder(
-                CodegenArrayDiagonal,
+                ArrayDiagonal,
                 [
                     ExprBuilder(
-                        CodegenArrayTensorProduct,
+                        ArrayTensorProduct,
                         [
                             ExprBuilder(_make_matrix, [l1]),
                             self.exp*hadamard_power(self.base, self.exp-1),
                             ExprBuilder(_make_matrix, [l2]),
                         ]
                     ),
-                ] + diagonal,  # turn into *diagonal after dropping Python 2.7
-                validator=CodegenArrayDiagonal._validate
+                *diagonal],
+                validator=ArrayDiagonal._validate
             )
             i._first_pointer_parent = subexpr.args[0].args[0].args
             i._first_pointer_index = 0

@@ -1,11 +1,17 @@
-from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
-    cos, sin, Mul, Pow, O)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational as R, pi)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.series.order import O
 from sympy.simplify.radsimp import expand_numer
 from sympy.core.function import expand, expand_multinomial, expand_power_base
-from sympy.core.compatibility import range
 
-from sympy.utilities.pytest import raises
-from sympy.utilities.randtest import verify_numerically
+from sympy.testing.pytest import raises
+from sympy.core.random import verify_numerically
 
 from sympy.abc import x, y, z
 
@@ -133,6 +139,8 @@ def test_expand_frac():
 def test_issue_6121():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
     assert eq.expand(complex=True)  # does not give oo recursion
+    eq = -I*exp(-3*I*pi/4)/(4*pi**(R(3, 2))*sqrt(x))
+    assert eq.expand(complex=True)  # does not give oo recursion
 
 
 def test_expand_power_base():
@@ -187,7 +195,7 @@ def test_expand_arit():
     assert e.expand() == 5*a + 5*b + 5*c + 2*a*c + b*c + a*b + a**2 + c**2
     x = Symbol("x")
     s = exp(x*x) - 1
-    e = s.nseries(x, 0, 3)/x**2
+    e = s.nseries(x, 0, 6)/x**2
     assert e.expand() == 1 + x**2/2 + O(x**4)
 
     e = (x*(y + z))**(x*(y + z))*(x + y)
@@ -229,6 +237,15 @@ def test_expand_arit():
     W = W.expand()
     assert W.has(-1672280820*x**15)
 
+def test_expand_mul():
+    # part of issue 20597
+    e = Mul(2, 3, evaluate=False)
+    assert e.expand() == 6
+
+    e = Mul(2, 3, 1/x, evaluate = False)
+    assert e.expand() == 6/x
+    e = Mul(2, R(1, 3), evaluate=False)
+    assert e.expand() == R(2, 3)
 
 def test_power_expand():
     """Test for Pow.expand()"""
@@ -289,7 +306,7 @@ def test_issues_5919_6830():
         return verify_numerically(e, expand_multinomial(e))
 
     for a in [2, S.Half]:
-        for b in [3, S(1)/3]:
+        for b in [3, R(1, 3)]:
             for n in range(2, 6):
                 assert ok(a, b, n)
 

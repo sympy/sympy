@@ -1,6 +1,5 @@
 from .cartan_type import Standard_Cartan
 from sympy.core.backend import eye
-from sympy.core.compatibility import range
 
 class TypeD(Standard_Cartan):
 

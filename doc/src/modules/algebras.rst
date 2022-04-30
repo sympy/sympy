@@ -1,6 +1,6 @@
-===============
-Algebras Module
-===============
+========
+Algebras
+========
 
 Introduction
 ------------

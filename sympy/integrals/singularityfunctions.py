@@ -1,6 +1,4 @@
-from __future__ import print_function, division
-
-from sympy.functions import SingularityFunction, DiracDelta, Heaviside
+from sympy.functions import SingularityFunction, DiracDelta
 from sympy.core import sympify
 from sympy.integrals import integrate
 
@@ -10,6 +8,9 @@ def singularityintegrate(f, x):
     This function handles the indefinite integrations of Singularity functions.
     The ``integrate`` function calls this function internally whenever an
     instance of SingularityFunction is passed as argument.
+
+    Explanation
+    ===========
 
     The idea for integration is the following:
 
@@ -27,6 +28,7 @@ def singularityintegrate(f, x):
 
     Examples
     ========
+
     >>> from sympy.integrals.singularityfunctions import singularityintegrate
     >>> from sympy import SingularityFunction, symbols, Function
     >>> x, a, n, y = symbols('x a n y')
@@ -53,7 +55,7 @@ def singularityintegrate(f, x):
         n = sympify(f.args[2])
         if n.is_positive or n.is_zero:
             return SingularityFunction(x, a, n + 1)/(n + 1)
-        elif n == -1 or n == -2:
+        elif n in (-1, -2):
             return SingularityFunction(x, a, n + 1)
 
     if f.is_Mul or f.is_Pow:

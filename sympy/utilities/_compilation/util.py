@@ -1,13 +1,11 @@
-from __future__ import (absolute_import, division, print_function)
-
 from collections import namedtuple
 from hashlib import sha256
 import os
 import shutil
 import sys
-import tempfile
+import fnmatch
 
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 
 def may_xfail(func):
@@ -20,24 +18,12 @@ def may_xfail(func):
         return func
 
 
-if sys.version_info[0] == 2:
-    class FileNotFoundError(IOError):
-        pass
-
-    class TemporaryDirectory(object):
-        def __init__(self):
-            self.path = tempfile.mkdtemp()
-        def __enter__(self):
-            return self.path
-        def __exit__(self, exc, value, tb):
-            shutil.rmtree(self.path)
-else:
-    FileNotFoundError = FileNotFoundError
-    TemporaryDirectory = tempfile.TemporaryDirectory
-
-
 class CompilerNotFoundError(FileNotFoundError):
     pass
+
+
+class CompileError (Exception):
+    """Failure to compile one or more C/C++ source files."""
 
 
 def get_abspath(path, cwd='.'):
@@ -117,7 +103,7 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         raise FileNotFoundError("Source: `{}` does not exist".format(src))
 
     # We accept both (re)naming destination file _or_
-    # passing a (possible non-existant) destination directory
+    # passing a (possible non-existent) destination directory
     if dest_is_dir:
         if not dst[-1] == '/':
             dst = dst+'/'
@@ -131,7 +117,6 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         dst = os.path.join(dest_dir, dest_fname)
     else:
         dest_dir = os.path.dirname(dst)
-        dest_fname = os.path.basename(dst)
 
     if not os.path.exists(dest_dir):
         if create_dest_dirs:
@@ -140,11 +125,12 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
             raise FileNotFoundError("You must create directory first.")
 
     if only_update:
-        if not missing_or_other_newer(dst, src):
+        # This function is not defined:
+        # XXX: This branch is clearly not tested!
+        if not missing_or_other_newer(dst, src): # noqa
             return
 
     if os.path.islink(dst):
-        _cwd = os.path.dirname(dst)
         dst = os.path.abspath(os.path.realpath(dst), cwd=cwd)
 
     shutil.copy(src, dst)
@@ -162,6 +148,7 @@ def glob_at_depth(filename_glob, cwd=None):
     globbed = []
     for root, dirs, filenames in os.walk(cwd):
         for fn in filenames:
+            # This is not tested:
             if fnmatch.fnmatch(fn, filename_glob):
                 globbed.append(os.path.join(root, fn))
     return globbed
@@ -205,7 +192,7 @@ def pyx_is_cplus(path):
 
     Returns True if such a file is present in the file, else False.
     """
-    for line in open(path, 'rt'):
+    for line in open(path):
         if line.startswith('#') and '=' in line:
             splitted = line.split('=')
             if len(splitted) != 2:
@@ -217,7 +204,7 @@ def pyx_is_cplus(path):
     return False
 
 def import_module_from_file(filename, only_if_newer_than=None):
-    """ Imports python extension (from shared object file)
+    """ Imports Python extension (from shared object file)
 
     Provide a list of paths in `only_if_newer_than` to check
     timestamps of dependencies. import_ raises an ImportError
@@ -267,7 +254,7 @@ def import_module_from_file(filename, only_if_newer_than=None):
 def find_binary_of_command(candidates):
     """ Finds binary first matching name among candidates.
 
-    Calls `find_executable` from distuils for provided candidates and returns
+    Calls ``which`` from shutils for provided candidates and returns
     first hit.
 
     Parameters
@@ -281,11 +268,12 @@ def find_binary_of_command(candidates):
 
     CompilerNotFoundError if no candidates match.
     """
-    from distutils.spawn import find_executable
+    from shutil import which
     for c in candidates:
-        binary_path = find_executable(c)
+        binary_path = which(c)
         if c and binary_path:
             return c, binary_path
+
     raise CompilerNotFoundError('No binary located for candidates: {}'.format(candidates))
 
 

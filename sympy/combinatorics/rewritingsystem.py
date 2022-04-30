@@ -1,8 +1,7 @@
-from __future__ import print_function, division
-
+from collections import deque
 from sympy.combinatorics.rewritingsystem_fsm import StateMachine
 
-class RewritingSystem(object):
+class RewritingSystem:
     '''
     A class implementing rewriting systems for `FpGroup`s.
 
@@ -17,7 +16,6 @@ class RewritingSystem(object):
 
     '''
     def __init__(self, group):
-        from collections import deque
         self.group = group
         self.alphabet = group.generators
         self._is_confluent = None
@@ -369,7 +367,7 @@ class RewritingSystem(object):
                 letter_word_array[i] = letter_word_array[i-1]*letter_word_array[i]
                 # Add accept states.
                 elem = letter_word_array[i-1]
-                if not elem in self.reduction_automaton.states:
+                if elem not in self.reduction_automaton.states:
                     self.reduction_automaton.add_state(elem, state_type='a')
                     accept_states.append(elem)
             proper_prefixes[rule] = letter_word_array
@@ -379,7 +377,7 @@ class RewritingSystem(object):
                 self.reduction_automaton.states[rule].rh_rule = all_rules[rule]
                 accept_states.remove(rule)
             # Add dead states
-            if not rule in self.reduction_automaton.states:
+            if rule not in self.reduction_automaton.states:
                 self.reduction_automaton.add_state(rule, state_type='d', rh_rule=all_rules[rule])
 
         automaton_alphabet = set(automaton_alphabet)
@@ -398,7 +396,7 @@ class RewritingSystem(object):
                     else:
                         self.reduction_automaton.states[state].add_transition(letter, current_state_name)
             elif current_state_type == 'a':
-                # Check if the transition to any new state in posible.
+                # Check if the transition to any new state in possible.
                 for letter in automaton_alphabet:
                     _next = current_state_name*letter
                     while len(_next) and _next not in self.reduction_automaton.states:

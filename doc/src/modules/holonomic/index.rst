@@ -1,8 +1,8 @@
 .. _holonomic-docs:
 
-===================
-Holonomic Functions
-===================
+=========
+Holonomic
+=========
 
 .. automodule:: sympy.holonomic
 
@@ -17,3 +17,4 @@ Contents
    operations.rst
    convert.rst
    uses.rst
+   internal.rst

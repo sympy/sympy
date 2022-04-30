@@ -5,6 +5,7 @@
 import sympy
 from sympy.external import import_module
 from sympy.printing.str import StrPrinter
+from sympy.physics.quantum.state import Bra, Ket
 
 from .errors import LaTeXParsingError
 
@@ -13,21 +14,21 @@ LaTeXParser = LaTeXLexer = MathErrorListener = None
 
 try:
     LaTeXParser = import_module('sympy.parsing.latex._antlr.latexparser',
-                                __import__kwargs={'fromlist': ['LaTeXParser']}).LaTeXParser
+                                import_kwargs={'fromlist': ['LaTeXParser']}).LaTeXParser
     LaTeXLexer = import_module('sympy.parsing.latex._antlr.latexlexer',
-                               __import__kwargs={'fromlist': ['LaTeXLexer']}).LaTeXLexer
+                               import_kwargs={'fromlist': ['LaTeXLexer']}).LaTeXLexer
 except Exception:
     pass
 
 ErrorListener = import_module('antlr4.error.ErrorListener',
                               warn_not_installed=True,
-                              __import__kwargs={'fromlist': ['ErrorListener']}
+                              import_kwargs={'fromlist': ['ErrorListener']}
                               )
 
 
 
 if ErrorListener:
-    class MathErrorListener(ErrorListener.ErrorListener):
+    class MathErrorListener(ErrorListener.ErrorListener):  # type: ignore
         def __init__(self, src):
             super(ErrorListener.ErrorListener, self).__init__()
             self.src = src
@@ -61,7 +62,7 @@ def parse_latex(sympy):
     antlr4 = import_module('antlr4', warn_not_installed=True)
 
     if None in [antlr4, MathErrorListener]:
-        raise ImportError("LaTeX parsing requires the antlr4 python package,"
+        raise ImportError("LaTeX parsing requires the antlr4 Python package,"
                           " provided by pip (antlr4-python2-runtime or"
                           " antlr4-python3-runtime) or"
                           " conda (antlr-python-runtime)")
@@ -102,6 +103,8 @@ def convert_relation(rel):
         return sympy.GreaterThan(lh, rh)
     elif rel.EQUAL():
         return sympy.Eq(lh, rh)
+    elif rel.NEQ():
+        return sympy.Ne(lh, rh)
 
 
 def convert_expr(expr):
@@ -116,7 +119,8 @@ def convert_add(add):
     elif add.SUB():
         lh = convert_add(add.additive(0))
         rh = convert_add(add.additive(1))
-        return sympy.Add(lh, -1 * rh, evaluate=False)
+        return sympy.Add(lh, sympy.Mul(-1, rh, evaluate=False),
+                         evaluate=False)
     else:
         return convert_mp(add.mp())
 
@@ -159,7 +163,9 @@ def convert_unary(unary):
     if unary.ADD():
         return convert_unary(nested_unary)
     elif unary.SUB():
-        return sympy.Mul(-1, convert_unary(nested_unary), evaluate=False)
+        numabs = convert_unary(nested_unary)
+        # Use Integer(-n) instead of Mul(-1, n)
+        return -numabs
     elif postfix:
         return convert_postfix_list(postfix)
 
@@ -183,8 +189,7 @@ def convert_postfix_list(arr, i=0):
                         sympy.Symbol)
                     # if the left and right sides contain no variables and the
                     # symbol in between is 'x', treat as multiplication.
-                    if len(left_syms) == 0 and len(right_syms) == 0 and str(
-                            res) == "x":
+                    if not (left_syms or right_syms) and str(res) == 'x':
                         return convert_postfix_list(arr, i + 1)
             # multiply by next
             return sympy.Mul(
@@ -274,6 +279,12 @@ def convert_comp(comp):
         return convert_atom(comp.atom())
     elif comp.frac():
         return convert_frac(comp.frac())
+    elif comp.binom():
+        return convert_binom(comp.binom())
+    elif comp.floor():
+        return convert_floor(comp.floor())
+    elif comp.ceil():
+        return convert_ceil(comp.ceil())
     elif comp.func():
         return convert_func(comp.func())
 
@@ -312,6 +323,12 @@ def convert_atom(atom):
     elif atom.mathit():
         text = rule2text(atom.mathit().mathit_text())
         return sympy.Symbol(text)
+    elif atom.bra():
+        val = convert_expr(atom.bra().expr())
+        return Bra(val)
+    elif atom.ket():
+        val = convert_expr(atom.ket().expr())
+        return Ket(val)
 
 
 def rule2text(ctx):
@@ -364,9 +381,24 @@ def convert_frac(frac):
 
     expr_top = convert_expr(frac.upper)
     expr_bot = convert_expr(frac.lower)
-    return sympy.Mul(
-        expr_top, sympy.Pow(expr_bot, -1, evaluate=False), evaluate=False)
+    inverse_denom = sympy.Pow(expr_bot, -1, evaluate=False)
+    if expr_top == 1:
+        return inverse_denom
+    else:
+        return sympy.Mul(expr_top, inverse_denom, evaluate=False)
 
+def convert_binom(binom):
+    expr_n = convert_expr(binom.n)
+    expr_k = convert_expr(binom.k)
+    return sympy.binomial(expr_n, expr_k, evaluate=False)
+
+def convert_floor(floor):
+    val = convert_expr(floor.val)
+    return sympy.floor(val, evaluate=False)
+
+def convert_ceil(ceil):
+    val = convert_expr(ceil.val)
+    return sympy.ceiling(val, evaluate=False)
 
 def convert_func(func):
     if func.func_normal():
@@ -387,9 +419,15 @@ def convert_func(func):
             name = "a" + name[2:]
             expr = getattr(sympy.functions, name)(arg, evaluate=False)
 
+        if name == "exp":
+            expr = sympy.exp(arg, evaluate=False)
+
         if (name == "log" or name == "ln"):
             if func.subexpr():
-                base = convert_expr(func.subexpr().expr())
+                if func.subexpr().expr():
+                    base = convert_expr(func.subexpr().expr())
+                else:
+                    base = convert_atom(func.subexpr().atom())
             elif name == "log":
                 base = 10
             elif name == "ln":
@@ -444,9 +482,12 @@ def convert_func(func):
         expr = convert_expr(func.base)
         if func.root:
             r = convert_expr(func.root)
-            return sympy.root(expr, r)
+            return sympy.root(expr, r, evaluate=False)
         else:
-            return sympy.sqrt(expr)
+            return sympy.sqrt(expr, evaluate=False)
+    elif func.FUNC_OVERLINE():
+        expr = convert_expr(func.base)
+        return sympy.conjugate(expr, evaluate=False)
     elif func.FUNC_SUM():
         return handle_sum_or_prod(func, "summation")
     elif func.FUNC_PROD():

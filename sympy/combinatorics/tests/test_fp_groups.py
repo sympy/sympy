@@ -1,10 +1,10 @@
-from sympy import S
+from sympy.core.singleton import S
 from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
                                    reidemeister_presentation, FpSubgroup,
                                            simplify_presentation)
 from sympy.combinatorics.free_groups import (free_group, FreeGroup)
 
-from sympy.utilities.pytest import slow
+from sympy.testing.pytest import slow
 
 """
 References
@@ -155,7 +155,7 @@ def test_order():
     assert f.order() == 8
 
     f = FpGroup(F, [x*y*x**-1*y**-1, y**2])
-    assert f.order() == S.Infinity
+    assert f.order() is S.Infinity
 
     F, a, b, c = free_group("a, b, c")
     f = FpGroup(F, [a**250, b**2, c*b*c**-1*b, c**4, c**-1*a**-1*c*a, a**-1*b**-1*a*b])
@@ -163,7 +163,7 @@ def test_order():
 
     F, x = free_group("x")
     f = FpGroup(F, [])
-    assert f.order() == S.Infinity
+    assert f.order() is S.Infinity
 
     f = FpGroup(free_group('')[0], [])
     assert f.order() == 1
@@ -196,7 +196,6 @@ def test_fp_subgroup():
     _test_subgroup(K, T, S)
 
 def test_permutation_methods():
-    from sympy.combinatorics.fp_groups import FpSubgroup
     F, x, y = free_group("x, y")
     # DihedralGroup(8)
     G = FpGroup(F, [x**2, y**8, x*y*x**-1*y])

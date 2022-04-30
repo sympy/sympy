@@ -1,16 +1,23 @@
-from sympy import (KroneckerDelta, diff, Piecewise, Sum, Dummy, factor,
-                   expand, zeros, gcd_terms, Eq)
+from sympy.concrete.summations import Sum
+from sympy.core.exprtools import gcd_terms
+from sympy.core.function import (diff, expand)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Dummy, Symbol, Str)
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.dense import zeros
+from sympy.polys.polytools import factor
 
-from sympy.core import S, symbols, Add, Mul, SympifyError
-from sympy.core.compatibility import long
-from sympy.functions import transpose, sin, cos, sqrt, cbrt, exp
+from sympy.core import (S, symbols, Add, Mul, SympifyError, Rational,
+                    Function)
+from sympy.functions import sin, cos, tan, sqrt, cbrt, exp
 from sympy.simplify import simplify
-from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
-        MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
-        SparseMatrix, Transpose, Adjoint)
-from sympy.matrices.expressions.matexpr import (MatrixElement,
-                                                GenericZeroMatrix, GenericIdentity, OneMatrix)
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.matrices import (ImmutableMatrix, Inverse, MatAdd, MatMul,
+        MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError,
+        SparseMatrix, Transpose, Adjoint, NonSquareMatrixError, MatrixSet)
+from sympy.matrices.expressions.determinant import Determinant, det
+from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.matrices.expressions.special import ZeroMatrix, Identity
+from sympy.testing.pytest import raises, XFAIL
 
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
@@ -23,10 +30,31 @@ E = MatrixSymbol('E', m, n)
 w = MatrixSymbol('w', n, 1)
 
 
-def test_shape():
+def test_matrix_symbol_creation():
+    assert MatrixSymbol('A', 2, 2)
+    assert MatrixSymbol('A', 0, 0)
+    raises(ValueError, lambda: MatrixSymbol('A', -1, 2))
+    raises(ValueError, lambda: MatrixSymbol('A', 2.0, 2))
+    raises(ValueError, lambda: MatrixSymbol('A', 2j, 2))
+    raises(ValueError, lambda: MatrixSymbol('A', 2, -1))
+    raises(ValueError, lambda: MatrixSymbol('A', 2, 2.0))
+    raises(ValueError, lambda: MatrixSymbol('A', 2, 2j))
+
+    n = symbols('n')
+    assert MatrixSymbol('A', n, n)
+    n = symbols('n', integer=False)
+    raises(ValueError, lambda: MatrixSymbol('A', n, n))
+    n = symbols('n', negative=True)
+    raises(ValueError, lambda: MatrixSymbol('A', n, n))
+
+
+def test_matexpr_properties():
     assert A.shape == (n, m)
     assert (A*B).shape == (n, l)
     raises(ShapeError, lambda: B*A)
+    assert A[0, 1].indices == (0, 1)
+    assert A[0, 0].symbol == A
+    assert A[0, 0].symbol.name == 'A'
 
 
 def test_matexpr():
@@ -36,100 +64,46 @@ def test_matexpr():
     assert (A*B).shape == (n, l)
 
 
-def test_subs():
+def test_matexpr_subs():
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
     C = MatrixSymbol('C', m, l)
 
     assert A.subs(n, m).shape == (m, m)
-
     assert (A*B).subs(B, C) == A*C
-
     assert (A*B).subs(l, n).is_square
 
+    W = MatrixSymbol("W", 3, 3)
+    X = MatrixSymbol("X", 2, 2)
+    Y = MatrixSymbol("Y", 1, 2)
+    Z = MatrixSymbol("Z", n, 2)
+    # no restrictions on Symbol replacement
+    assert X.subs(X, Y) == Y
+    # it might be better to just change the name
+    y = Str('y')
+    assert X.subs(Str("X"), y).args == (y, 2, 2)
+    # it's ok to introduce a wider matrix
+    assert X[1, 1].subs(X, W) == W[1, 1]
+    # but for a given MatrixExpression, only change
+    # name if indexing on the new shape is valid.
+    # Here, X is 2,2; Y is 1,2 and Y[1, 1] is out
+    # of range so an error is raised
+    raises(IndexError, lambda: X[1, 1].subs(X, Y))
+    # here, [0, 1] is in range so the subs succeeds
+    assert X[0, 1].subs(X, Y) == Y[0, 1]
+    # and here the size of n will accept any index
+    # in the first position
+    assert W[2, 1].subs(W, Z) == Z[2, 1]
+    # but not in the second position
+    raises(IndexError, lambda: W[2, 2].subs(W, Z))
+    # any matrix should raise if invalid
+    raises(IndexError, lambda: W[2, 2].subs(W, zeros(2)))
 
-def test_ZeroMatrix():
-    A = MatrixSymbol('A', n, m)
-    Z = ZeroMatrix(n, m)
+    A = SparseMatrix([[1, 2], [3, 4]])
+    B = Matrix([[1, 2], [3, 4]])
+    C, D = MatrixSymbol('C', 2, 2), MatrixSymbol('D', 2, 2)
 
-    assert A + Z == A
-    assert A*Z.T == ZeroMatrix(n, n)
-    assert Z*A.T == ZeroMatrix(n, n)
-    assert A - A == ZeroMatrix(*A.shape)
-
-    assert not Z
-
-    assert transpose(Z) == ZeroMatrix(m, n)
-    assert Z.conjugate() == Z
-
-    assert ZeroMatrix(n, n)**0 == Identity(n)
-    with raises(ShapeError):
-        Z**0
-    with raises(ShapeError):
-        Z**2
-
-
-def test_ZeroMatrix_doit():
-    Znn = ZeroMatrix(Add(n, n, evaluate=False), n)
-    assert isinstance(Znn.rows, Add)
-    assert Znn.doit() == ZeroMatrix(2*n, n)
-    assert isinstance(Znn.doit().rows, Mul)
-
-
-def test_OneMatrix():
-    A = MatrixSymbol('A', n, m)
-    a = MatrixSymbol('a', n, 1)
-    U = OneMatrix(n, m)
-
-    assert U.shape == (n, m)
-    assert isinstance(A + U, Add)
-    assert transpose(U) == OneMatrix(m, n)
-    assert U.conjugate() == U
-
-    assert OneMatrix(n, n) ** 0 == Identity(n)
-    with raises(ShapeError):
-        U ** 0
-    with raises(ShapeError):
-        U ** 2
-
-    U = OneMatrix(n, n)
-    assert U[1, 2] == 1
-
-    U = OneMatrix(2, 3)
-    assert U.as_explicit() == ImmutableMatrix.ones(2, 3)
-
-
-def test_OneMatrix_doit():
-    Unn = OneMatrix(Add(n, n, evaluate=False), n)
-    assert isinstance(Unn.rows, Add)
-    assert Unn.doit() == OneMatrix(2 * n, n)
-    assert isinstance(Unn.doit().rows, Mul)
-
-
-def test_Identity():
-    A = MatrixSymbol('A', n, m)
-    i, j = symbols('i j')
-
-    In = Identity(n)
-    Im = Identity(m)
-
-    assert A*Im == A
-    assert In*A == A
-
-    assert transpose(In) == In
-    assert In.inverse() == In
-    assert In.conjugate() == In
-
-    assert In[i, j] != 0
-    assert Sum(In[i, j], (i, 0, n-1), (j, 0, n-1)).subs(n,3).doit() == 3
-    assert Sum(Sum(In[i, j], (i, 0, n-1)), (j, 0, n-1)).subs(n,3).doit() == 3
-
-
-def test_Identity_doit():
-    Inn = Identity(Add(n, n, evaluate=False))
-    assert isinstance(Inn.rows, Add)
-    assert Inn.doit() == Identity(2*n)
-    assert isinstance(Inn.doit().rows, Mul)
+    assert (C*D).subs({C: A, D: B}) == MatMul(A, B)
 
 
 def test_addition():
@@ -147,7 +121,7 @@ def test_addition():
 
     assert A + ZeroMatrix(n, m) - A == ZeroMatrix(n, m)
     with raises(TypeError):
-        ZeroMatrix(n,m) + S(0)
+        ZeroMatrix(n,m) + S.Zero
 
 
 def test_multiplication():
@@ -193,8 +167,8 @@ def test_MatPow():
     assert (A**-1)**-1 == A
     assert (A**2)**3 == A**6
     assert A**S.Half == sqrt(A)
-    assert A**(S(1)/3) == cbrt(A)
-    raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
+    assert A**Rational(1, 3) == cbrt(A)
+    raises(NonSquareMatrixError, lambda: MatrixSymbol('B', 3, 2)**2)
 
 
 def test_MatrixSymbol():
@@ -212,7 +186,7 @@ def test_dense_conversion():
 
 
 def test_free_symbols():
-    assert (C*D).free_symbols == set((C, D))
+    assert (C*D).free_symbols == {C, D}
 
 
 def test_zero_matmul():
@@ -222,13 +196,13 @@ def test_zero_matmul():
 def test_matadd_simplify():
     A = MatrixSymbol('A', 1, 1)
     assert simplify(MatAdd(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) == \
-        MatAdd(A, ImmutableMatrix([[1]]))
+        MatAdd(A, Matrix([[1]]))
 
 
 def test_matmul_simplify():
     A = MatrixSymbol('A', 1, 1)
     assert simplify(MatMul(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) == \
-        MatMul(A, ImmutableMatrix([[1]]))
+        MatMul(A, Matrix([[1]]))
 
 
 def test_invariants():
@@ -241,17 +215,22 @@ def test_invariants():
     for obj in objs:
         assert obj == obj.__class__(*obj.args)
 
-def test_indexing():
+
+def test_matexpr_indexing():
     A = MatrixSymbol('A', n, m)
     A[1, 2]
     A[l, k]
-    A[l+1, k+1]
+    A[l + 1, k + 1]
+    A = MatrixSymbol('A', 2, 1)
+    for i in range(-2, 2):
+        for j in range(-1, 1):
+            A[i, j]
 
 
 def test_single_indexing():
     A = MatrixSymbol('A', 2, 3)
     assert A[1] == A[0, 1]
-    assert A[long(1)] == A[0, 1]
+    assert A[int(1)] == A[0, 1]
     assert A[3] == A[1, 0]
     assert list(A[:2, :2]) == [A[0, 0], A[0, 1], A[1, 0], A[1, 1]]
     raises(IndexError, lambda: A[6])
@@ -281,6 +260,9 @@ def test_MatrixSymbol_determinant():
         A[0, 3]*A[1, 0]*A[2, 2]*A[3, 1] + A[0, 3]*A[1, 1]*A[2, 0]*A[3, 2] - \
         A[0, 3]*A[1, 1]*A[2, 2]*A[3, 0] - A[0, 3]*A[1, 2]*A[2, 0]*A[3, 1] + \
         A[0, 3]*A[1, 2]*A[2, 1]*A[3, 0]
+
+    B = MatrixSymbol('B', 4, 4)
+    assert Determinant(A + B).doit() == det(A + B) == (A + B).det()
 
 
 def test_MatrixElement_diff():
@@ -326,14 +308,10 @@ def test_matrixelement_diff():
     dexpr = diff((D*w)[k,0], w[p,0])
 
     assert w[k, p].diff(w[k, p]) == 1
-    assert w[k, p].diff(w[0, 0]) == KroneckerDelta(0, k)*KroneckerDelta(0, p)
-    assert str(dexpr) == "Sum(KroneckerDelta(_i_1, p)*D[k, _i_1], (_i_1, 0, n - 1))"
-    assert str(dexpr.doit()) == 'Piecewise((D[k, p], (p >= 0) & (p <= n - 1)), (0, True))'
-    # TODO: bug with .dummy_eq( ), the previous 2 lines should be replaced by:
-    return  # stop eval
+    assert w[k, p].diff(w[0, 0]) == KroneckerDelta(0, k, (0, n-1))*KroneckerDelta(0, p, (0, 0))
     _i_1 = Dummy("_i_1")
-    assert dexpr.dummy_eq(Sum(KroneckerDelta(_i_1, p)*D[k, _i_1], (_i_1, 0, n - 1)))
-    assert dexpr.doit().dummy_eq(Piecewise((D[k, p], (p >= 0) & (p <= n - 1)), (0, True)))
+    assert dexpr.dummy_eq(Sum(KroneckerDelta(_i_1, p, (0, n-1))*D[k, _i_1], (_i_1, 0, n - 1)))
+    assert dexpr.doit() == D[k, p]
 
 
 def test_MatrixElement_with_values():
@@ -371,6 +349,17 @@ def test_inv():
     B = MatrixSymbol('B', 3, 3)
     assert B.inv() == B**-1
 
+    # https://github.com/sympy/sympy/issues/19162
+    X = MatrixSymbol('X', 1, 1).as_explicit()
+    assert X.inv() == Matrix([[1/X[0, 0]]])
+
+    X = MatrixSymbol('X', 2, 2).as_explicit()
+    detX = X[0, 0]*X[1, 1] - X[0, 1]*X[1, 0]
+    invX = Matrix([[ X[1, 1], -X[0, 1]],
+                   [-X[1, 0],  X[0, 0]]]) / detX
+    assert X.inv() == invX
+
+
 @XFAIL
 def test_factor_expand():
     A = MatrixSymbol("A", n, n)
@@ -385,6 +374,7 @@ def test_factor_expand():
     I = Identity(n)
     # Ideally we get the first, but we at least don't want a wrong answer
     assert factor(expr) in [I - C, B**-1*(A**-1*(I - C)*B**-1)**-1*A**-1]
+
 
 def test_issue_2749():
     A = MatrixSymbol("A", 5, 2)
@@ -407,45 +397,17 @@ def test_issue_7842():
     assert Eq(A, B) == True
 
 
-def test_generic_zero_matrix():
-    z = GenericZeroMatrix()
-    A = MatrixSymbol("A", n, n)
+def test_issue_21195():
+    t = symbols('t')
+    x = Function('x')(t)
+    dx = x.diff(t)
+    exp1 = cos(x) + cos(x)*dx
+    exp2 = sin(x) + tan(x)*(dx.diff(t))
+    exp3 = sin(x)*sin(t)*(dx.diff(t)).diff(t)
+    A = Matrix([[exp1], [exp2], [exp3]])
+    B = Matrix([[exp1.diff(x)], [exp2.diff(x)], [exp3.diff(x)]])
+    assert A.diff(x) == B
 
-    assert z == z
-    assert z != A
-    assert A != z
-
-    assert z.is_ZeroMatrix
-
-    raises(TypeError, lambda: z.shape)
-    raises(TypeError, lambda: z.rows)
-    raises(TypeError, lambda: z.cols)
-
-    assert MatAdd() == z
-    assert MatAdd(z, A) == MatAdd(A)
-    # Make sure it is hashable
-    hash(z)
-
-
-def test_generic_identity():
-    I = GenericIdentity()
-    A = MatrixSymbol("A", n, n)
-
-    assert I == I
-    assert I != A
-    assert A != I
-
-    assert I.is_Identity
-    assert I**-1 == I
-
-    raises(TypeError, lambda: I.shape)
-    raises(TypeError, lambda: I.rows)
-    raises(TypeError, lambda: I.cols)
-
-    assert MatMul() == I
-    assert MatMul(I, A) == MatMul(A)
-    # Make sure it is hashable
-    hash(I)
 
 def test_MatMul_postprocessor():
     z = zeros(2)
@@ -475,12 +437,14 @@ def test_MatMul_postprocessor():
 
     assert Mul(A, x, M, M, x) == MatMul(A, Mx**2)
 
+
 @XFAIL
 def test_MatAdd_postprocessor_xfail():
     # This is difficult to get working because of the way that Add processes
     # its args.
     z = zeros(2)
     assert Add(z, S.NaN) == Add(S.NaN, z)
+
 
 def test_MatAdd_postprocessor():
     # Some of these are nonsensical, but we do not raise errors for Add
@@ -528,12 +492,14 @@ def test_MatAdd_postprocessor():
     assert isinstance(a, Add)
     assert a.args == (2*x, A + 2*M)
 
+
 def test_simplify_matrix_expressions():
     # Various simplification functions
     assert type(gcd_terms(C*D + D*C)) == MatAdd
     a = gcd_terms(2*C*D + 4*D*C)
-    assert type(a) == MatMul
-    assert a.args == (2, (C*D + 2*D*C))
+    assert type(a) == MatAdd
+    assert a.args == (2*C*D, 4*D*C)
+
 
 def test_exp():
     A = MatrixSymbol('A', 2, 2)
@@ -545,5 +511,61 @@ def test_exp():
     assert not isinstance(expr1, exp)
     assert not isinstance(expr2, exp)
 
+
 def test_invalid_args():
     raises(SympifyError, lambda: MatrixSymbol(1, 2, 'A'))
+
+
+def test_matrixsymbol_from_symbol():
+    # The label should be preserved during doit and subs
+    A_label = Symbol('A', complex=True)
+    A = MatrixSymbol(A_label, 2, 2)
+
+    A_1 = A.doit()
+    A_2 = A.subs(2, 3)
+    assert A_1.args == A.args
+    assert A_2.args[0] == A.args[0]
+
+
+def test_as_explicit():
+    Z = MatrixSymbol('Z', 2, 3)
+    assert Z.as_explicit() == ImmutableMatrix([
+        [Z[0, 0], Z[0, 1], Z[0, 2]],
+        [Z[1, 0], Z[1, 1], Z[1, 2]],
+    ])
+    raises(ValueError, lambda: A.as_explicit())
+
+
+def test_MatrixSet():
+    M = MatrixSet(2, 2, set=S.Reals)
+    assert M.shape == (2, 2)
+    assert M.set == S.Reals
+    X = Matrix([[1, 2], [3, 4]])
+    assert X in M
+    X = ZeroMatrix(2, 2)
+    assert X in M
+    raises(TypeError, lambda: A in M)
+    raises(TypeError, lambda: 1 in M)
+    M = MatrixSet(n, m, set=S.Reals)
+    assert A in M
+    raises(TypeError, lambda: C in M)
+    raises(TypeError, lambda: X in M)
+    M = MatrixSet(2, 2, set={1, 2, 3})
+    X = Matrix([[1, 2], [3, 4]])
+    Y = Matrix([[1, 2]])
+    assert (X in M) == S.false
+    assert (Y in M) == S.false
+    raises(ValueError, lambda: MatrixSet(2, -2, S.Reals))
+    raises(ValueError, lambda: MatrixSet(2.4, -1, S.Reals))
+    raises(TypeError, lambda: MatrixSet(2, 2, (1, 2, 3)))
+
+
+def test_matrixsymbol_solving():
+    A = MatrixSymbol('A', 2, 2)
+    B = MatrixSymbol('B', 2, 2)
+    Z = ZeroMatrix(2, 2)
+    assert -(-A + B) - A + B == Z
+    assert (-(-A + B) - A + B).simplify() == Z
+    assert (-(-A + B) - A + B).expand() == Z
+    assert (-(-A + B) - A + B - Z).simplify() == Z
+    assert (-(-A + B) - A + B - Z).expand() == Z

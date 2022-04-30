@@ -15,13 +15,16 @@ the following function types in the given ``Interval``:
 
 """
 
-from sympy import S, Symbol
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.simplify import simplify
-from sympy.solvers.solveset import solveset
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
+from sympy.utilities.misc import filldedent
 
 
-def singularities(expression, symbol):
+def singularities(expression, symbol, domain=None):
     """
     Find singularities of a given function.
 
@@ -46,8 +49,8 @@ def singularities(expression, symbol):
     ======
 
     NotImplementedError
-        The algorithm to find singularities for irrational functions
-        has not been implemented yet.
+        Methods for determining the singularities of this function have
+        not been developed.
 
     Notes
     =====
@@ -56,7 +59,7 @@ def singularities(expression, symbol):
     nor does it find branch points of the expression.
 
     Currently supported functions are:
-        - univariate rational (real or complex) functions
+        - univariate continuous (real or complex) functions
 
     References
     ==========
@@ -66,28 +69,39 @@ def singularities(expression, symbol):
     Examples
     ========
 
-    >>> from sympy.calculus.singularities import singularities
-    >>> from sympy import Symbol
+    >>> from sympy import singularities, Symbol, log
     >>> x = Symbol('x', real=True)
     >>> y = Symbol('y', real=False)
     >>> singularities(x**2 + x + 1, x)
-    EmptySet()
+    EmptySet
     >>> singularities(1/(x + 1), x)
     {-1}
     >>> singularities(1/(y**2 + 1), y)
     {-I, I}
     >>> singularities(1/(y**3 + 1), y)
     {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
+    >>> singularities(log(x), x)
+    {0}
 
     """
-    if not expression.is_rational_function(symbol):
-        raise NotImplementedError(
-            "Algorithms finding singularities for non-rational"
-            " functions are not yet implemented."
-        )
-    else:
+    from sympy.solvers.solveset import solveset
+
+    if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
-        return solveset(simplify(1 / expression), symbol, domain)
+    try:
+        sings = S.EmptySet
+        for i in expression.rewrite([sec, csc, cot, tan], cos).atoms(Pow):
+            if i.exp.is_infinite:
+                raise NotImplementedError
+            if i.exp.is_negative:
+                sings += solveset(i.base, symbol, domain)
+        for i in expression.atoms(log):
+            sings += solveset(i.args[0], symbol, domain)
+        return sings
+    except NotImplementedError:
+        raise NotImplementedError(filldedent('''
+            Methods for determining the singularities
+            of this function have not been developed.'''))
 
 
 ###########################################################################
@@ -126,6 +140,8 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
         is varied in ``range``, False otherwise.
 
     """
+    from sympy.solvers.solveset import solveset
+
     expression = sympify(expression)
     free = expression.free_symbols
 
@@ -256,11 +272,15 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     >>> from sympy import is_decreasing
     >>> from sympy.abc import x, y
     >>> from sympy import S, Interval, oo
+    >>> is_decreasing(1/(x**2 - 3*x), Interval.open(S(3)/2, 3))
+    True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
     True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
+    False
+    >>> is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, 1.5))
     False
     >>> is_decreasing(-x**2, Interval(-oo, 0))
     False
@@ -302,6 +322,8 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     True
     >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
+    False
+    >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, 1.5))
     False
     >>> is_strictly_decreasing(-x**2, Interval(-oo, 0))
     False
@@ -346,6 +368,8 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     >>> from sympy import is_monotonic
     >>> from sympy.abc import x, y
     >>> from sympy import S, Interval, oo
+    >>> is_monotonic(1/(x**2 - 3*x), Interval.open(S(3)/2, 3))
+    True
     >>> is_monotonic(1/(x**2 - 3*x), Interval.open(1.5, 3))
     True
     >>> is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo))
@@ -358,6 +382,8 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     True
 
     """
+    from sympy.solvers.solveset import solveset
+
     expression = sympify(expression)
 
     free = expression.free_symbols

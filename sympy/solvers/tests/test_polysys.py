@@ -1,13 +1,22 @@
 """Tests for solvers of systems of polynomial equations. """
-
-from sympy import (flatten, I, Integer, Poly, QQ, Rational, S, sqrt,
-    solve, symbols)
+from sympy.core.numbers import (I, Integer, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys.domains.rationalfield import QQ
+from sympy.polys.polyerrors import UnsolvableFactorError
+from sympy.polys.polyoptions import Options
+from sympy.polys.polytools import Poly
+from sympy.solvers.solvers import solve
+from sympy.utilities.iterables import flatten
 from sympy.abc import x, y, z
 from sympy.polys import PolynomialError
 from sympy.solvers.polysys import (solve_poly_system,
-    solve_triangulated, solve_biquadratic, SolveFailed)
+                                   solve_triangulated,
+                                   solve_biquadratic, SolveFailed,
+                                   solve_generic)
 from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_solve_poly_system():
@@ -17,14 +26,14 @@ def test_solve_poly_system():
 
     assert solve_poly_system([y - x**2, y + x**2], x, y) == [(S.Zero, S.Zero)]
 
-    assert solve_poly_system([2*x - 3, 3*y/2 - 2*x, z - 5*y], x, y, z) == \
+    assert solve_poly_system([2*x - 3, y*Rational(3, 2) - 2*x, z - 5*y], x, y, z) == \
         [(Rational(3, 2), Integer(2), Integer(10))]
 
     assert solve_poly_system([x*y - 2*y, 2*y**2 - x**2], x, y) == \
         [(0, 0), (2, -sqrt(2)), (2, sqrt(2))]
 
     assert solve_poly_system([y - x**2, y + x**2 + 1], x, y) == \
-        [(-I*sqrt(S.Half), -S.Half), (I*sqrt(S.Half), -S.Half)]
+        [(-I*sqrt(S.Half), Rational(-1, 2)), (I*sqrt(S.Half), Rational(-1, 2))]
 
     f_1 = x**2 + y + z - 1
     f_2 = x + y**2 + z - 1
@@ -49,6 +58,40 @@ def test_solve_poly_system():
         [z, -2*x*y**2 + x + y**2*z, y**2*(-z - 4) + 2]))
     raises(PolynomialError, lambda: solve_poly_system([1/x], x))
 
+    raises(NotImplementedError, lambda: solve_poly_system(
+          [x-1,], (x, y)))
+    raises(NotImplementedError, lambda: solve_poly_system(
+          [y-1,], (x, y)))
+
+    # solve_poly_system should ideally construct solutions using
+    # CRootOf for the following four tests
+    assert solve_poly_system([x**5 - x + 1], [x], strict=False) == []
+    raises(UnsolvableFactorError, lambda: solve_poly_system(
+        [x**5 - x + 1], [x], strict=True))
+
+    assert solve_poly_system([(x - 1)*(x**5 - x + 1), y**2 - 1], [x, y],
+                             strict=False) == [(1, -1), (1, 1)]
+    raises(UnsolvableFactorError,
+           lambda: solve_poly_system([(x - 1)*(x**5 - x + 1), y**2-1],
+                                     [x, y], strict=True))
+
+
+def test_solve_generic():
+    NewOption = Options((x, y), {'domain': 'ZZ'})
+    assert solve_generic([x**2 - 2*y**2, y**2 - y + 1], NewOption) == \
+           [(-sqrt(-1 - sqrt(3)*I), Rational(1, 2) - sqrt(3)*I/2),
+            (sqrt(-1 - sqrt(3)*I), Rational(1, 2) - sqrt(3)*I/2),
+            (-sqrt(-1 + sqrt(3)*I), Rational(1, 2) + sqrt(3)*I/2),
+            (sqrt(-1 + sqrt(3)*I), Rational(1, 2) + sqrt(3)*I/2)]
+
+    # solve_generic should ideally construct solutions using
+    # CRootOf for the following two tests
+    assert solve_generic(
+        [2*x - y, (y - 1)*(y**5 - y + 1)], NewOption, strict=False) == \
+        [(Rational(1, 2), 1)]
+    raises(UnsolvableFactorError, lambda: solve_generic(
+        [2*x - y, (y - 1)*(y**5 - y + 1)], NewOption, strict=True))
+
 
 def test_solve_biquadratic():
     x0, y0, x1, y1, r = symbols('x0 y0 x1 y1 r')
@@ -64,8 +107,8 @@ def test_solve_biquadratic():
     f_2 = (x - 1)**2 + (y - 1)**2 - r**2
 
     assert solve_poly_system([f_1, f_2], x, y) == \
-        [(1 - sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2),
-         (1 + sqrt(((2*r - 1)*(2*r + 1)))/2, S(3)/2)]
+        [(1 - sqrt((2*r - 1)*(2*r + 1))/2, Rational(3, 2)),
+         (1 + sqrt((2*r - 1)*(2*r + 1))/2, Rational(3, 2))]
 
     query = lambda expr: expr.is_Pow and expr.exp is S.Half
 
@@ -123,8 +166,8 @@ def test_solve_triangulated():
 
 
 def test_solve_issue_3686():
-    roots = solve_poly_system([((x - 5)**2/250000 + (y - S(5)/10)**2/250000) - 1, x], x, y)
-    assert roots == [(0, S(1)/2 - 15*sqrt(1111)), (0, S(1)/2 + 15*sqrt(1111))]
+    roots = solve_poly_system([((x - 5)**2/250000 + (y - Rational(5, 10))**2/250000) - 1, x], x, y)
+    assert roots == [(0, S.Half - 15*sqrt(1111)), (0, S.Half + 15*sqrt(1111))]
 
     roots = solve_poly_system([((x - 5)**2/250000 + (y - 5.0/10)**2/250000) - 1, x], x, y)
     # TODO: does this really have to be so complicated?!

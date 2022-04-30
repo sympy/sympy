@@ -1,14 +1,15 @@
 from sympy.core import (pi, oo, symbols, Rational, Integer, GoldenRatio,
-                        EulerGamma, Catalan, Lambda, Dummy, S)
+                        EulerGamma, Catalan, Lambda, Dummy, S, Eq, Ne, Le,
+                        Lt, Gt, Ge, Mod)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              sinh, cosh, tanh, asin, acos, acosh, Max, Min)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.printing.jscode import JavascriptCodePrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
-from sympy import jscode
+from sympy.printing.jscode import jscode
 
 x, y, z = symbols('x,y,z')
 
@@ -20,7 +21,7 @@ def test_printmethod():
 def test_jscode_sqrt():
     assert jscode(sqrt(x)) == "Math.sqrt(x)"
     assert jscode(x**0.5) == "Math.sqrt(x)"
-    assert jscode(x**(S(1)/3)) == "Math.cbrt(x)"
+    assert jscode(x**(S.One/3)) == "Math.cbrt(x)"
 
 
 def test_jscode_Pow():
@@ -52,6 +53,26 @@ def test_jscode_Rational():
     assert jscode(Rational(18, 9)) == "2"
     assert jscode(Rational(3, -7)) == "-3/7"
     assert jscode(Rational(-3, -7)) == "3/7"
+
+
+def test_Relational():
+    assert jscode(Eq(x, y)) == "x == y"
+    assert jscode(Ne(x, y)) == "x != y"
+    assert jscode(Le(x, y)) == "x <= y"
+    assert jscode(Lt(x, y)) == "x < y"
+    assert jscode(Gt(x, y)) == "x > y"
+    assert jscode(Ge(x, y)) == "x >= y"
+
+
+def test_Mod():
+    assert jscode(Mod(x, y)) == '((x % y) + y) % y'
+    assert jscode(Mod(x, x + y)) == '((x % (x + y)) + (x + y)) % (x + y)'
+    p1, p2 = symbols('p1 p2', positive=True)
+    assert jscode(Mod(p1, p2)) == 'p1 % p2'
+    assert jscode(Mod(p1, p2 + 3)) == 'p1 % (p2 + 3)'
+    assert jscode(Mod(-3, -7, evaluate=False)) == '(-3) % (-7)'
+    assert jscode(-Mod(p1, p2)) == '-(p1 % p2)'
+    assert jscode(x*Mod(p1, p2)) == 'x*(p1 % p2)'
 
 
 def test_jscode_Integer():
@@ -142,8 +163,6 @@ def test_jscode_settings():
 
 
 def test_jscode_Indexed():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o = symbols('n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
     p = JavascriptCodePrinter()
@@ -197,8 +216,6 @@ def test_dummy_loops():
 
 
 def test_jscode_loops_add():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -222,8 +239,6 @@ def test_jscode_loops_add():
 
 
 def test_jscode_loops_multiple_contractions():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -252,8 +267,6 @@ def test_jscode_loops_multiple_contractions():
 
 
 def test_jscode_loops_addfactor():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -283,8 +296,6 @@ def test_jscode_loops_addfactor():
 
 
 def test_jscode_loops_multiple_terms():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')

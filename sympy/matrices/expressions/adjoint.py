@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import Basic
 from sympy.functions import adjoint, conjugate
 from sympy.matrices.expressions.transpose import transpose
@@ -17,8 +15,7 @@ class Adjoint(MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.matrices import MatrixSymbol, Adjoint
-    >>> from sympy.functions import adjoint
+    >>> from sympy import MatrixSymbol, Adjoint, adjoint
     >>> A = MatrixSymbol('A', 3, 5)
     >>> B = MatrixSymbol('B', 5, 3)
     >>> Adjoint(A*B)

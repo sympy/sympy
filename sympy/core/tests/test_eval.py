@@ -1,5 +1,11 @@
-from sympy import Symbol, Function, exp, sqrt, Rational, I, cos, tan
-from sympy.utilities.pytest import XFAIL
+from sympy.core.function import Function
+from sympy.core.numbers import (I, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, tan)
+from sympy.testing.pytest import XFAIL
 
 
 def test_add_eval():
@@ -53,7 +59,7 @@ def test_pow_eval():
 
 @XFAIL
 def test_pow_eval_X1():
-    assert (-1)**Rational(1, 3) == Rational(1, 2) + Rational(1, 2)*I*sqrt(3)
+    assert (-1)**Rational(1, 3) == S.Half + S.Half*I*sqrt(3)
 
 
 def test_mulpow_eval():

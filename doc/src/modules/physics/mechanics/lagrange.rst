@@ -2,7 +2,7 @@
 Lagrange's Method in Physics/Mechanics
 ======================================
 
-:mod:`mechanics` provides functionality for deriving equations of motion
+:mod:`sympy.physics.mechanics` provides functionality for deriving equations of motion
 using `Lagrange's method <https://en.wikipedia.org/wiki/Lagrangian_mechanics>`_.
 This document will describe Lagrange's method as used in this module, but not
 how the equations are actually derived.
@@ -10,7 +10,7 @@ how the equations are actually derived.
 Structure of Equations
 ======================
 
-In :mod:`mechanics` we are assuming there are 3 basic sets of equations needed
+In :mod:`sympy.physics.mechanics` we are assuming there are 3 basic sets of equations needed
 to describe a system; the constraint equations, the time differentiated
 constraint equations and the dynamic equations.
 
@@ -44,7 +44,7 @@ in the following fashion:
 Lagrange's Method in Physics/Mechanics
 ======================================
 
-The formulation of the equations of motion in :mod:`mechanics` using
+The formulation of the equations of motion in :mod:`sympy.physics.mechanics` using
 Lagrange's Method starts with the creation of generalized coordinates and a
 Lagrangian. The Lagrangian can either be created with the ``Lagrangian``
 function or can be a user supplied function. In this case we will supply the

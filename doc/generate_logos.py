@@ -222,7 +222,7 @@ def convert_to_ico(fn_source, output_dir, sizes):
         fn_out = "%s-favicon.ico" % name
         fn_out = os.path.join(output_dir, fn_out)
 
-        cmd = "convert %s %s" % (" ".join(pngs), fn_out)
+        cmd = "convert {} {}".format(" ".join(pngs), fn_out)
 
         p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
@@ -250,7 +250,7 @@ def get_svg_filename_from_versionkey(fn_source, ver):
         return basename
     name, ext = os.path.splitext(basename)
     prefix = svg_sizes[ver]["prefix"]
-    fn_out = "%s-%s.svg" % (name, prefix)
+    fn_out = "{}-{}.svg".format(name, prefix)
     return fn_out
 
 def searchElementById(node, Id, tagname):

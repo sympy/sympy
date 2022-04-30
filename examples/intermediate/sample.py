@@ -1,4 +1,4 @@
-"""
+r"""
 Utility functions for plotting sympy functions.
 
 See examples\mplot2d.py and examples\mplot3d.py for usable 2d and 3d
@@ -10,7 +10,7 @@ from sympy.external import import_module
 np = import_module('numpy')
 
 def sample2d(f, x_args):
-    """
+    r"""
     Samples a 2d function f over specified intervals and returns two
     arrays (X, Y) suitable for plotting with matlab (matplotlib)
     syntax. See examples\mplot2d.py.
@@ -21,7 +21,7 @@ def sample2d(f, x_args):
     try:
         f = sympify(f)
     except SympifyError:
-        raise ValueError("f could not be interpretted as a SymPy function")
+        raise ValueError("f could not be interpreted as a SymPy function")
     try:
         x, x_min, x_max, x_n = x_args
     except (TypeError, IndexError):
@@ -41,7 +41,7 @@ def sample2d(f, x_args):
 
 
 def sample3d(f, x_args, y_args):
-    """
+    r"""
     Samples a 3d function f over specified intervals and returns three
     2d arrays (X, Y, Z) suitable for plotting with matlab (matplotlib)
     syntax. See examples\mplot3d.py.

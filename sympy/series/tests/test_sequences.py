@@ -1,15 +1,26 @@
-from sympy import (S, Tuple, symbols, Interval, EmptySequence, oo, SeqPer,
-                   SeqFormula, sequence, SeqAdd, SeqMul, Indexed, Idx, sqrt,
-                   fibonacci, tribonacci, sin, cos, exp)
-from sympy.series.sequences import SeqExpr, SeqExprOp
-from sympy.utilities.pytest import raises, slow
+from sympy.core.containers import Tuple
+from sympy.core.function import Function
+from sympy.core.numbers import oo, Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols, Symbol
+from sympy.functions.combinatorial.numbers import tribonacci, fibonacci
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.series import EmptySequence
+from sympy.series.sequences import (SeqMul, SeqAdd, SeqPer, SeqFormula,
+    sequence)
+from sympy.sets.sets import Interval
+from sympy.tensor.indexed import Indexed, Idx
+from sympy.series.sequences import SeqExpr, SeqExprOp, RecursiveSeq
+from sympy.testing.pytest import raises, slow
 
 x, y, z = symbols('x y z')
 n, m = symbols('n m')
 
 
 def test_EmptySequence():
-    assert isinstance(S.EmptySequence, EmptySequence)
+    assert S.EmptySequence is EmptySequence
 
     assert S.EmptySequence.interval is S.EmptySet
     assert S.EmptySequence.length is S.Zero
@@ -18,7 +29,10 @@ def test_EmptySequence():
 
 
 def test_SeqExpr():
-    s = SeqExpr((1, n, y), (x, 0, 10))
+    #SeqExpr is a baseclass and does not take care of
+    #ensuring all arguments are Basics hence the use of
+    #Tuple(...) here.
+    s = SeqExpr(Tuple(1, n, y), Tuple(x, 0, 10))
 
     assert isinstance(s, SeqExpr)
     assert s.gen == (1, n, y)
@@ -28,7 +42,7 @@ def test_SeqExpr():
     assert s.length == 11
     assert s.variables == (x,)
 
-    assert SeqExpr((1, 2, 3), (x, 0, oo)).length is oo
+    assert SeqExpr(Tuple(1, 2, 3), Tuple(x, 0, oo)).length is oo
 
 
 def test_SeqPer():
@@ -285,8 +299,14 @@ def test_find_linear_recurrence():
     assert sequence((2,3,4,5,6,79),(n, 0, 5)).find_linear_recurrence(6,gfvar=x) \
     == ([], None)
     assert sequence((2,3,4,5,8,30),(n, 0, 5)).find_linear_recurrence(6,gfvar=x) \
-    == ([S(19)/2, -20, S(27)/2], (-31*x**2 + 32*x - 4)/(27*x**3 - 40*x**2 + 19*x -2))
+    == ([Rational(19, 2), -20, Rational(27, 2)], (-31*x**2 + 32*x - 4)/(27*x**3 - 40*x**2 + 19*x -2))
     assert sequence(fibonacci(n)).find_linear_recurrence(30,gfvar=x) \
     == ([1, 1], -x/(x**2 + x - 1))
     assert sequence(tribonacci(n)).find_linear_recurrence(30,gfvar=x) \
     ==  ([1, 1, 1], -x/(x**3 + x**2 + x - 1))
+
+def test_RecursiveSeq():
+    y = Function('y')
+    n = Symbol('n')
+    fib = RecursiveSeq(y(n - 1) + y(n - 2), y(n), n, [0, 1])
+    assert fib.coeff(3) == 2

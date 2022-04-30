@@ -1,9 +1,12 @@
-from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, S
-from sympy import solve, simplify
+from sympy.core.backend import (symbols, Matrix, cos, sin, atan, sqrt,
+    Rational, _simplify_matrix)
+from sympy.core.sympify import sympify
+from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
-from sympy.utilities.pytest import slow, warns_deprecated_sympy
+from sympy.testing.pytest import slow
 
 
 @slow
@@ -74,16 +77,15 @@ def test_linearize_rolling_disc_kane():
     KM = KanesMethod(N, [q1, q2, q3, q4, q5], [u1, u2, u3], kd_eqs=kindiffs,
             q_dependent=[q6], configuration_constraints=f_c,
             u_dependent=[u4, u5, u6], velocity_constraints=f_v)
-    with warns_deprecated_sympy():
-        (fr, fr_star) = KM.kanes_equations(FL, BL)
+    (fr, fr_star) = KM.kanes_equations(BL, FL)
 
     # Test generalized form equations
     linearizer = KM.to_linearizer()
     assert linearizer.f_c == f_c
     assert linearizer.f_v == f_v
-    assert linearizer.f_a == f_v.diff(t)
+    assert linearizer.f_a == f_v.diff(t).subs(KM.kindiffdict())
     sol = solve(linearizer.f_0 + linearizer.f_1, qd)
-    for qi in qd:
+    for qi in qdots.keys():
         assert sol[qi] == qdots[qi]
     assert simplify(linearizer.f_2 + linearizer.f_3 - fr - fr_star) == Matrix([0, 0, 0])
 
@@ -117,7 +119,7 @@ def test_linearize_rolling_disc_kane():
                     [0, 0, 0, 0, 0, 0, 1, 0],
                     [sin(q1)*q3d, 0, 0, 0, 0, -sin(q1), -cos(q1), 0],
                     [-cos(q1)*q3d, 0, 0, 0, 0, cos(q1), -sin(q1), 0],
-                    [0, S(4)/5, 0, 0, 0, 0, 0, 6*q3d/5],
+                    [0, Rational(4, 5), 0, 0, 0, 0, 0, 6*q3d/5],
                     [0, 0, 0, 0, 0, 0, 0, 0],
                     [0, 0, 0, 0, 0, -2*q3d, 0, 0]])
     B_sol = Matrix([])
@@ -127,7 +129,7 @@ def test_linearize_rolling_disc_kane():
     assert B.subs(upright_nominal) == B_sol
 
     # Check eigenvalues at critical speed are all zero:
-    assert A.subs(upright_nominal).subs(q3d, 1/sqrt(3)).eigenvals() == {0: 8}
+    assert sympify(A.subs(upright_nominal).subs(q3d, 1/sqrt(3))).eigenvals() == {0: 8}
 
 def test_linearize_pendulum_kane_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
@@ -158,8 +160,7 @@ def test_linearize_pendulum_kane_minimal():
 
     # Solve for eom with kanes method
     KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], kd_eqs=kde)
-    with warns_deprecated_sympy():
-        (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
+    (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
 
     # Linearize
     A, B, inp_vec = KM.linearize(A_and_B=True, simplify=True)
@@ -218,8 +219,7 @@ def test_linearize_pendulum_kane_nonminimal():
     KM = KanesMethod(N, q_ind=[q2], u_ind=[u2], q_dependent=[q1],
             u_dependent=[u1], configuration_constraints=f_c,
             velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde)
-    with warns_deprecated_sympy():
-        (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
+    (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
 
     # Set the operating point to be straight down, and non-moving
     q_op = {q1: L, q2: 0}
@@ -260,7 +260,7 @@ def test_linearize_pendulum_lagrange_minimal():
     # Linearize
     A, B, inp_vec = LM.linearize([q1], [q1d], A_and_B=True)
 
-    assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
+    assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
 
 def test_linearize_pendulum_lagrange_nonminimal():
@@ -293,7 +293,7 @@ def test_linearize_pendulum_lagrange_nonminimal():
     # Perform the Linearization
     A, B, inp_vec = LM.linearize([q2], [q2d], [q1], [q1d],
             op_point=op_point, A_and_B=True)
-    assert A == Matrix([[0, 1], [-9.8/L, 0]])
+    assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
 
 def test_linearize_rolling_disc_lagrange():

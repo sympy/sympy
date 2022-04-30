@@ -1,4 +1,3 @@
-
 from sympy.polys.galoistools import (
     gf_crt, gf_crt1, gf_crt2, gf_int,
     gf_degree, gf_strip, gf_trunc, gf_normal,
@@ -34,8 +33,9 @@ from sympy.polys.polyerrors import (
 from sympy.polys import polyconfig as config
 
 from sympy.polys.domains import ZZ
-from sympy import pi, nextprime
-from sympy.utilities.pytest import raises
+from sympy.core.numbers import pi
+from sympy.ntheory.generate import nextprime
+from sympy.testing.pytest import raises
 
 
 def test_gf_crt():
@@ -521,7 +521,6 @@ def test_gf_frobenius_map():
     f = ZZ.map([2, 0, 1, 0, 2, 2, 0, 2, 2, 2])
     g = ZZ.map([1,1,0,2,0,1,0,2,0,1])
     p = 3
-    n = 4
     b = gf_frobenius_monomial_base(g, p, ZZ)
     h = gf_frobenius_map(f, g, b, p, ZZ)
     h1 = gf_pow_mod(f, p, g, p, ZZ)
@@ -619,6 +618,13 @@ def test_gf_edf():
 
     assert gf_edf_zassenhaus(f, 2, 3, ZZ) == g
     assert gf_edf_shoup(f, 2, 3, ZZ) == g
+
+
+def test_issue_23174():
+    f = ZZ.map([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    g = ZZ.map([[1, 0, 0, 1, 1, 1, 0, 0, 1], [1, 1, 1, 0, 1, 0, 1, 1, 1]])
+
+    assert gf_edf_zassenhaus(f, 8, 2, ZZ) == g
 
 
 def test_gf_factor():

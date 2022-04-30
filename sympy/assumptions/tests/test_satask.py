@@ -1,8 +1,17 @@
-from sympy.assumptions.satask import satask
+from sympy.assumptions.ask import Q
+from sympy.assumptions.assume import assuming
+from sympy.core.numbers import (I, pi)
+from sympy.core.relational import (Eq, Gt)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import Abs
+from sympy.logic.boolalg import Implies
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.assumptions.cnf import CNF, Literal
+from sympy.assumptions.satask import (satask, extract_predargs,
+    get_relevant_clsfacts)
 
-from sympy import symbols, Q, assuming, Implies, MatrixSymbol, I, pi, Rational
-
-from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.testing.pytest import raises, XFAIL
 
 
 x, y, z = symbols('x y z')
@@ -200,7 +209,7 @@ def test_odd_satask():
 
 def test_integer():
     assert satask(Q.integer(1)) is True
-    assert satask(Q.integer(Rational(1, 2))) is False
+    assert satask(Q.integer(S.Half)) is False
 
     assert satask(Q.integer(x + y), Q.integer(x) & Q.integer(y)) is True
     assert satask(Q.integer(x + y), Q.integer(x)) is None
@@ -264,7 +273,6 @@ def test_pos_neg():
     assert satask(Q.negative(x + y), Q.positive(x) & Q.positive(y)) is False
 
 
-@slow
 def test_pow_pos_neg():
     assert satask(Q.nonnegative(x**2), Q.positive(x)) is True
     assert satask(Q.nonpositive(x**2), Q.positive(x)) is False
@@ -323,3 +331,48 @@ def test_pow_pos_neg():
 
     # We could deduce things for negative powers if x is nonzero, but it
     # isn't implemented yet.
+
+
+def test_prime_composite():
+    assert satask(Q.prime(x), Q.composite(x)) is False
+    assert satask(Q.composite(x), Q.prime(x)) is False
+    assert satask(Q.composite(x), ~Q.prime(x)) is None
+    assert satask(Q.prime(x), ~Q.composite(x)) is None
+    # since 1 is neither prime nor composite the following should hold
+    assert satask(Q.prime(x), Q.integer(x) & Q.positive(x) & ~Q.composite(x)) is None
+    assert satask(Q.prime(2)) is True
+    assert satask(Q.prime(4)) is False
+    assert satask(Q.prime(1)) is False
+    assert satask(Q.composite(1)) is False
+
+
+def test_extract_predargs():
+    props = CNF.from_prop(Q.zero(Abs(x*y)) & Q.zero(x*y))
+    assump = CNF.from_prop(Q.zero(x))
+    context = CNF.from_prop(Q.zero(y))
+    assert extract_predargs(props) == {Abs(x*y), x*y}
+    assert extract_predargs(props, assump) == {Abs(x*y), x*y, x}
+    assert extract_predargs(props, assump, context) == {Abs(x*y), x*y, x, y}
+
+    props = CNF.from_prop(Eq(x, y))
+    assump = CNF.from_prop(Gt(y, z))
+    assert extract_predargs(props, assump) == {x, y, z}
+
+
+def test_get_relevant_clsfacts():
+    exprs = {Abs(x*y)}
+    exprs, facts = get_relevant_clsfacts(exprs)
+    assert exprs == {x*y}
+    assert facts.clauses == \
+        {frozenset({Literal(Q.odd(Abs(x*y)), False), Literal(Q.odd(x*y), True)}),
+        frozenset({Literal(Q.zero(Abs(x*y)), False), Literal(Q.zero(x*y), True)}),
+        frozenset({Literal(Q.even(Abs(x*y)), False), Literal(Q.even(x*y), True)}),
+        frozenset({Literal(Q.zero(Abs(x*y)), True), Literal(Q.zero(x*y), False)}),
+        frozenset({Literal(Q.even(Abs(x*y)), False),
+                    Literal(Q.odd(Abs(x*y)), False),
+                    Literal(Q.odd(x*y), True)}),
+        frozenset({Literal(Q.even(Abs(x*y)), False),
+                    Literal(Q.even(x*y), True),
+                    Literal(Q.odd(Abs(x*y)), False)}),
+        frozenset({Literal(Q.positive(Abs(x*y)), False),
+                    Literal(Q.zero(Abs(x*y)), False)})}

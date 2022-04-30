@@ -1,25 +1,25 @@
-from sympy.core.compatibility import PY3
 from sympy.core.logic import (fuzzy_not, Logic, And, Or, Not, fuzzy_and,
-                              fuzzy_or, _fuzzy_group, _torf)
-from sympy.utilities.pytest import raises
+    fuzzy_or, _fuzzy_group, _torf, fuzzy_nand, fuzzy_xor)
+from sympy.testing.pytest import raises
+
+from itertools import product
 
 T = True
 F = False
 U = None
 
 
+
 def test_torf():
-    from sympy.utilities.iterables import cartes
     v = [T, F, U]
-    for i in cartes(*[v]*3):
+    for i in product(*[v]*3):
         assert _torf(i) is (True if all(j for j in i) else
                             (False if all(j is False for j in i) else None))
 
 
 def test_fuzzy_group():
-    from sympy.utilities.iterables import cartes
     v = [T, F, U]
-    for i in cartes(*[v]*3):
+    for i in product(*[v]*3):
         assert _fuzzy_group(i) is (None if None in i else
                                    (True if all(j for j in i) else False))
         assert _fuzzy_group(i, quick_exit=True) is \
@@ -77,8 +77,7 @@ def test_logic_cmp():
 
     assert Not('a') < Not('b')
     assert (Not('b') < Not('a')) is False
-    if PY3:
-        assert (Not('a') < 2) is False
+    assert (Not('a') < 2) is False
 
 
 def test_logic_onearg():
@@ -175,7 +174,6 @@ def test_logic_not():
     assert Not(And('a', 'b')) == Or(Not('a'), Not('b'))
     assert Not(Or('a', 'b')) == And(Not('a'), Not('b'))
 
-    S = Logic.fromstring
     raises(ValueError, lambda: Not(1))
 
 
@@ -184,3 +182,17 @@ def test_formatting():
     raises(ValueError, lambda: S('a&b'))
     raises(ValueError, lambda: S('a|b'))
     raises(ValueError, lambda: S('! a'))
+
+
+def test_fuzzy_xor():
+    assert fuzzy_xor((None,)) is None
+    assert fuzzy_xor((None, True)) is None
+    assert fuzzy_xor((None, False)) is None
+    assert fuzzy_xor((True, False)) is True
+    assert fuzzy_xor((True, True)) is False
+    assert fuzzy_xor((True, True, False)) is False
+    assert fuzzy_xor((True, True, False, True)) is True
+
+def test_fuzzy_nand():
+    for args in [(1, 0), (1, 1), (0, 0)]:
+        assert fuzzy_nand(args) == fuzzy_not(fuzzy_and(args))

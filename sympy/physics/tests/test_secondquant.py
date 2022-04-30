@@ -6,15 +6,20 @@ from sympy.physics.secondquant import (
     evaluate_deltas, AntiSymmetricTensor, contraction, NO, wicks,
     PermutationOperator, simplify_index_permutations,
     _sort_anticommuting_fermions, _get_ordered_dummies,
-    substitute_dummies, FockState, FockStateBosonKet,
+    substitute_dummies, FockStateBosonKet,
     ContractionAppliesOnlyToFermions
 )
 
-from sympy import (Dummy, expand, Function, I, Rational, simplify, sqrt, Sum,
-                   Symbol, symbols, srepr)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Function, expand)
+from sympy.core.numbers import (I, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.printing.repr import srepr
+from sympy.simplify.simplify import simplify
 
-from sympy.core.compatibility import range
-from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.testing.pytest import slow, raises
 from sympy.printing.latex import latex
 
 
@@ -68,7 +73,7 @@ def test_dagger():
     assert Dagger(1) == 1
     assert Dagger(1.0) == 1.0
     assert Dagger(2*I) == -2*I
-    assert Dagger(Rational(1, 2)*I/3.0) == -Rational(1, 2)*I/3.0
+    assert Dagger(S.Half*I/3.0) == I*Rational(-1, 2)/3.0
     assert Dagger(BKet([n])) == BBra([n])
     assert Dagger(B(0)) == Bd(0)
     assert Dagger(Bd(0)) == B(0)
@@ -95,7 +100,7 @@ def test_operator():
 def test_create():
     i, j, n, m = symbols('i,j,n,m')
     o = Bd(i)
-    assert latex(o) == "b^\\dagger_{i}"
+    assert latex(o) == "{b^\\dagger_{i}}"
     assert isinstance(o, CreateBoson)
     o = o.subs(i, j)
     assert o.atoms(Symbol) == {j}
@@ -133,24 +138,6 @@ def test_basic_state():
     s = BosonState([n, m])
     assert s.down(0) == BosonState([n - 1, m])
     assert s.up(0) == BosonState([n + 1, m])
-
-
-@XFAIL
-def test_move1():
-    i, j = symbols('i,j')
-    A, C = symbols('A,C', cls=Function)
-    o = A(i)*C(j)
-    # This almost works, but has a minus sign wrong
-    assert move(o, 0, 1) == KroneckerDelta(i, j) + C(j)*A(i)
-
-
-@XFAIL
-def test_move2():
-    i, j = symbols('i,j')
-    A, C = symbols('A,C', cls=Function)
-    o = C(j)*A(i)
-    # This almost works, but has a minus sign wrong
-    assert move(o, 0, 1) == -KroneckerDelta(i, j) + A(i)*C(j)
 
 
 def test_basic_apply():
@@ -225,7 +212,7 @@ def test_fixed_bosonic_basis():
 @slow
 def test_sho():
     n, m = symbols('n,m')
-    h_n = Bd(n)*B(n)*(n + Rational(1, 2))
+    h_n = Bd(n)*B(n)*(n + S.Half)
     H = Sum(h_n, (n, 0, 5))
     o = H.doit(deep=False)
     b = FixedBosonicBasis(2, 6)
@@ -277,7 +264,7 @@ def test_commutation():
     c1 = Commutator(F(a), Fd(a))
     assert Commutator.eval(c1, c1) == 0
     c = Commutator(Fd(a)*F(i),Fd(b)*F(j))
-    assert latex(c) == r'\left[a^\dagger_{a} a_{i},a^\dagger_{b} a_{j}\right]'
+    assert latex(c) == r'\left[{a^\dagger_{a}} a_{i},{a^\dagger_{b}} a_{j}\right]'
     assert repr(c) == 'Commutator(CreateFermion(a)*AnnihilateFermion(i),CreateFermion(b)*AnnihilateFermion(j))'
     assert str(c) == '[CreateFermion(a)*AnnihilateFermion(i),CreateFermion(b)*AnnihilateFermion(j)]'
 
@@ -307,7 +294,7 @@ def test_create_f():
     assert Dagger(B(p)).apply_operator(q) == q*CreateBoson(p)
     assert repr(Fd(p)) == 'CreateFermion(p)'
     assert srepr(Fd(p)) == "CreateFermion(Symbol('p'))"
-    assert latex(Fd(p)) == r'a^\dagger_{p}'
+    assert latex(Fd(p)) == r'{a^\dagger_{p}}'
 
 
 def test_annihilate_f():
@@ -445,7 +432,7 @@ def test_NO():
     assert no.has_q_annihilators == -1
     assert str(no) == ':CreateFermion(a)*CreateFermion(i):'
     assert repr(no) == 'NO(CreateFermion(a)*CreateFermion(i))'
-    assert latex(no) == r'\left\{a^\dagger_{a} a^\dagger_{i}\right\}'
+    assert latex(no) == r'\left\{{a^\dagger_{a}} {a^\dagger_{i}}\right\}'
     raises(NotImplementedError, lambda:  NO(Bd(p)*F(q)))
 
 
@@ -550,7 +537,7 @@ def test_Tensors():
     assert tabij.subs(b, c) == AT('t', (a, c), (i, j))
     assert (2*tabij).subs(i, c) == 2*AT('t', (a, b), (c, j))
     assert tabij.symbol == Symbol('t')
-    assert latex(tabij) == 't^{ab}_{ij}'
+    assert latex(tabij) == '{t^{ab}_{ij}}'
     assert str(tabij) == 't((_a, _b),(_i, _j))'
 
     assert AT('t', (a, a), (i, j)).subs(a, b) == AT('t', (b, b), (i, j))
@@ -666,7 +653,7 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1():
         # dummy order.  That is because the proximity to external indices
         # has higher influence on the canonical dummy ordering than the
         # position of a dummy on the factors.  In fact, the terms here are
-        # similar in structure as the result of the dummy substitions above.
+        # similar in structure as the result of the dummy substitutions above.
         v(k, l, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
         v(l, k, c, d)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
         v(k, l, d, c)*t(c, ii)*t(d, jj)*t(aa, k)*t(bb, l),
@@ -687,6 +674,13 @@ def test_dummy_order_inner_outer_lines_VT1T1T1T1():
     for permut in exprs[1:]:
         assert dums(exprs[0]) != dums(permut)
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
+
+
+def test_get_subNO():
+    p, q, r = symbols('p,q,r')
+    assert NO(F(p)*F(q)*F(r)).get_subNO(1) == NO(F(p)*F(r))
+    assert NO(F(p)*F(q)*F(r)).get_subNO(0) == NO(F(q)*F(r))
+    assert NO(F(p)*F(q)*F(r)).get_subNO(2) == NO(F(p)*F(q))
 
 
 def test_equivalent_internal_lines_VT1T1():
@@ -828,7 +822,7 @@ def test_equivalent_internal_lines_VT2():
         #
         # This test show that the dummy order may not be sensitive to all
         # index permutations.  The following expressions have identical
-        # structure as the resulting terms from of the dummy subsitutions
+        # structure as the resulting terms from of the dummy substitutions
         # in the test above.  Here, all expressions have the same dummy
         # order, so they cannot be simplified by means of dummy
         # substitution.  In order to simplify further, it is necessary to
@@ -1267,10 +1261,14 @@ def test_internal_external_pqrs_AT():
         assert substitute_dummies(exprs[0]) == substitute_dummies(permut)
 
 
+def test_issue_19661():
+    a = Symbol('0')
+    assert latex(Commutator(Bd(a)**2, B(a))
+                 ) == '- \\left[b_{0},{b^\\dagger_{0}}^{2}\\right]'
+
+
 def test_canonical_ordering_AntiSymmetricTensor():
     v = symbols("v")
-    virtual_indices = ('c', 'd')
-    occupied_indices = ('k', 'l')
 
     c, d = symbols(('c','d'), above_fermi=True,
                                    cls=Dummy)

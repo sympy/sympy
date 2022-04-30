@@ -1,8 +1,8 @@
 .. _tensor_module:
 
-=============
-Tensor Module
-=============
+======
+Tensor
+======
 
 .. automodule:: sympy.tensor
 
@@ -13,6 +13,8 @@ Contents
     :maxdepth: 3
 
     array.rst
+    array_expressions.rst
     indexed.rst
     index_methods.rst
     tensor.rst
+    toperators.rst

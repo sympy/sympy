@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 try:
     from ctypes import c_float, c_int, c_double
 except ImportError:
@@ -7,7 +5,6 @@ except ImportError:
 
 import pyglet.gl as pgl
 from sympy.core import S
-from sympy.core.compatibility import range, string_types
 
 
 def get_model_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv):
@@ -103,9 +100,9 @@ def billboard_matrix():
 
 
 def create_bounds():
-    return [[S.Infinity, -S.Infinity, 0],
-            [S.Infinity, -S.Infinity, 0],
-            [S.Infinity, -S.Infinity, 0]]
+    return [[S.Infinity, S.NegativeInfinity, 0],
+            [S.Infinity, S.NegativeInfinity, 0],
+            [S.Infinity, S.NegativeInfinity, 0]]
 
 
 def update_bounds(b, v):
@@ -150,7 +147,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
     except (TypeError, OverflowError):
         return []
     if r_min > r_max:
-        raise ValueError("r_min can not be greater than r_max")
+        raise ValueError("r_min cannot be greater than r_max")
     r_min_s = (r_min % stride)
     r_max_s = stride - (r_max % stride)
     if abs(r_max_s - stride) < 0.001:
@@ -164,7 +161,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
 
 
 def parse_option_string(s):
-    if not isinstance(s, string_types):
+    if not isinstance(s, str):
         return None
     options = {}
     for token in s.split(';'):

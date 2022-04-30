@@ -1,7 +1,7 @@
 from sympy.combinatorics.named_groups import (SymmetricGroup, CyclicGroup,
                                               DihedralGroup, AlternatingGroup,
                                               AbelianGroup, RubikGroup)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_SymmetricGroup():

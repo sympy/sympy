@@ -11,7 +11,7 @@
 # heuristics to know where a multi-line expression is
 # broken. As a result you can't use more than one space
 # in a sequence. However you can and must indent your
-# expression using standard Pyhon rules.
+# expression using standard Python rules.
 #
 # You can retrieve the last output using '_' built-in
 # symbol. If the previous command did not generate

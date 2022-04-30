@@ -1,5 +1,5 @@
 from sympy.combinatorics.prufer import Prufer
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_prufer():

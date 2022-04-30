@@ -1,5 +1,5 @@
 '''
-Rule Based Integration(RUBI) module in sympy uses set of transformation
+Rule Based Integration(RUBI) module in SymPy uses set of transformation
 rules to integrate an expression. All the transformation rules are compiled as a
 discrimination-net which helps in matching expression with the rule efficiently.
 
@@ -38,7 +38,7 @@ As seen in the above example, a rule has 3 parts
 1. Pattern with constraints. Expression is matched against this pattern.
 2. Replacement function, which gives the resulting expression with which the original expression has to be replaced with.
    There is also `rubi.append(1)`. This (rubi) is a list which keeps track of rules applied to an expression.
-   This can be accesed by `rules_applied` in `rubi.py`
+   This can be accessed by `rules_applied` in `rubi.py`
 3. Rule, which combines pattern and replacement function.
 (For more details refer to matchpy documents)
 
@@ -77,7 +77,7 @@ They have been properly explained with steps in `sympy/integrals/rubi/parsetools
 Running Tests
 =============
 The tests for rubi in `rubi_tests` have been blacklisted as it takes a very long time to run all the tests.
-To run a test run the following in a python terminal:
+To run a test run the following in a Python terminal:
 ```
 >>> import sympy
 >>> sympy.test("rubi_tests", blacklist = []) # doctest: +SKIP

@@ -1,7 +1,6 @@
 from sympy.core import symbols, Rational, Function, diff
-from sympy.core.compatibility import range
 from sympy.physics.sho import R_nl, E_nl
-from sympy import simplify
+from sympy.simplify.simplify import simplify
 
 
 def test_sho_R_nl():

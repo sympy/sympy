@@ -8,9 +8,9 @@ Limits
 
 The main purpose of this module is the computation of limits.
 
-.. autofunction:: sympy.series.limits.limit
+.. autofunction:: sympy.series.limits::limit
 
-.. autoclass:: sympy.series.limits.Limit
+.. autoclass:: sympy.series.limits::Limit
    :members:
 
 As is explained above, the workhorse for limit computations is the
@@ -95,29 +95,29 @@ If you are interested, be sure to take a look at
 Reference
 """""""""
 
-.. autofunction:: sympy.series.gruntz.gruntz
+.. autofunction:: sympy.series.gruntz::gruntz
 
-.. autofunction:: sympy.series.gruntz.compare
+.. autofunction:: sympy.series.gruntz::compare
 
-.. autofunction:: sympy.series.gruntz.rewrite
+.. autofunction:: sympy.series.gruntz::rewrite
 
-.. autofunction:: sympy.series.gruntz.build_expression_tree
+.. autofunction:: sympy.series.gruntz::build_expression_tree
 
-.. autofunction:: sympy.series.gruntz.mrv_leadterm
+.. autofunction:: sympy.series.gruntz::mrv_leadterm
 
-.. autofunction:: sympy.series.gruntz.calculate_series
+.. autofunction:: sympy.series.gruntz::calculate_series
 
-.. autofunction:: sympy.series.gruntz.limitinf
+.. autofunction:: sympy.series.gruntz::limitinf
 
-.. autofunction:: sympy.series.gruntz.sign
+.. autofunction:: sympy.series.gruntz::sign
 
-.. autofunction:: sympy.series.gruntz.mrv
+.. autofunction:: sympy.series.gruntz::mrv
 
-.. autofunction:: sympy.series.gruntz.mrv_max1
+.. autofunction:: sympy.series.gruntz::mrv_max1
 
-.. autofunction:: sympy.series.gruntz.mrv_max3
+.. autofunction:: sympy.series.gruntz::mrv_max3
 
-.. autoclass:: sympy.series.gruntz.SubsSet
+.. autoclass:: sympy.series.gruntz::SubsSet
    :members:
 
 More Intuitive Series Expansion
@@ -137,7 +137,7 @@ Examples
 Reference
 ^^^^^^^^^
 
-.. autofunction:: sympy.series.series.series
+.. autofunction:: sympy.series.series::series
 
 Order Terms
 -----------
@@ -157,7 +157,7 @@ Examples
 Reference
 ^^^^^^^^^
 
-.. autoclass:: sympy.series.order.Order
+.. autoclass:: sympy.series.order::Order
    :members:
 
 Series Acceleration
@@ -168,9 +168,9 @@ TODO
 Reference
 ^^^^^^^^^
 
-.. autofunction:: sympy.series.acceleration.richardson
+.. autofunction:: sympy.series.acceleration::richardson
 
-.. autofunction:: sympy.series.acceleration.shanks
+.. autofunction:: sympy.series.acceleration::shanks
 
 Residues
 --------
@@ -180,4 +180,4 @@ TODO
 Reference
 ^^^^^^^^^
 
-.. autofunction:: sympy.series.residues.residue
+.. autofunction:: sympy.series.residues::residue

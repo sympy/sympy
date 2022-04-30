@@ -1,7 +1,7 @@
-from sympy import symbols
-from sympy.physics.mechanics import Point, Particle, ReferenceFrame
+from sympy.core.symbol import symbols
+from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
 
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_particle():
@@ -42,3 +42,22 @@ def test_particle():
     assert p.kinetic_energy(
         N) in [m2*(v1**2 + v2**2 + v3**2)/2,
         m2 * v1**2 / 2 + m2 * v2**2 / 2 + m2 * v3**2 / 2]
+
+
+def test_parallel_axis():
+    N = ReferenceFrame('N')
+    m, a, b = symbols('m, a, b')
+    o = Point('o')
+    p = o.locatenew('p', a * N.x + b * N.y)
+    P = Particle('P', o, m)
+    Ip = P.parallel_axis(p, N)
+    Ip_expected = inertia(N, m * b**2, m * a**2, m * (a**2 + b**2),
+                          ixy=-m * a * b)
+    assert Ip == Ip_expected
+
+def test_deprecated_set_potential_energy():
+    m, g, h = symbols('m g h')
+    P = Point('P')
+    p = Particle('pa', P, m)
+    with warns_deprecated_sympy():
+        p.set_potential_energy(m*g*h)

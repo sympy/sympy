@@ -13,7 +13,7 @@ stat:   varDecl
 
 assignment:   vec equals expr #vecAssign
           |   ID '[' index ']' equals expr #indexAssign
-          |   ID diff? equals expr #regularAssign; 
+          |   ID diff? equals expr #regularAssign;
 
 equals:   ('='|'+='|'-='|':='|'*='|'/='|'^=');
 
@@ -22,7 +22,7 @@ index:   expr (',' expr)* ;
 diff:   ('\'')+;
 
 functionCall:   ID '(' (expr (',' expr)*)? ')'
-            |   (Mass|Inertia) '(' (ID (',' ID)*)? ')'; 
+            |   (Mass|Inertia) '(' (ID (',' ID)*)? ')';
 
 varDecl:   varType varDecl2 (',' varDecl2)*;
 
@@ -76,7 +76,7 @@ expr:   expr '^'<assoc=right> expr  # Exponent
     |   vec                         # VectorOrDyadic
     |   ID '['expr (',' expr)* ']'  # Indexing
     |   functionCall                # function
-    |   matrix                      # matrices  
+    |   matrix                      # matrices
     |   '(' expr ')'                # parens
     |   expr '=' expr               # idEqualsExpr
     |   expr ':' expr               # colon
@@ -110,5 +110,5 @@ FLOAT:  DIGIT+ '.' DIGIT*
 EXP:   FLOAT 'E' INT
 |      FLOAT 'E' '-' INT;
 LINE_COMMENT : '%' .*? '\r'? '\n' -> skip ;
-ID:   [a-zA-Z][a-zA-Z0-9_]*;     
+ID:   [a-zA-Z][a-zA-Z0-9_]*;
 WS:   [ \t\r\n&]+ -> skip ; // toss out whitespace

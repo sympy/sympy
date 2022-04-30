@@ -10,22 +10,17 @@ manipulation of expressions.
 Understanding Expression Trees
 ==============================
 
-.. sidebar :: Quick Tip
-
-   To play with the ``srepr`` form of expressions in the SymPy Live shell,
-   change the output format to ``Repr`` in the settings.
-
 Before we can do this, we need to understand how expressions are represented
 in SymPy.  A mathematical expression is represented as a tree.  Let us take
-the expression `2^x + xy`, i.e., ``2**x + x*y``.  We can see what this
+the expression `x^2 + xy`, i.e., ``x**2 + x*y``.  We can see what this
 expression looks like internally by using ``srepr``
 
     >>> from sympy import *
     >>> x, y, z = symbols('x y z')
 
-    >>> expr = 2**x + x*y
+    >>> expr = x**2 + x*y
     >>> srepr(expr)
-    "Add(Pow(Integer(2), Symbol('x')), Mul(Symbol('x'), Symbol('y')))"
+    "Add(Pow(Symbol('x'), Integer(2)), Mul(Symbol('x'), Symbol('y')))"
 
 The easiest way to tear this apart is to look at a diagram of the expression
 tree:
@@ -470,7 +465,7 @@ traversals easy.  We could have also written our algorithm as
 Prevent expression evaluation
 =============================
 
-There are generally two ways to prevent the evaluation, either pass an 
+There are generally two ways to prevent the evaluation, either pass an
 ``evaluate=False`` parameter while constructing the expression, or create
 an evaluation stopper by wrapping the expression with ``UnevaluatedExpr``.
 
@@ -546,7 +541,7 @@ expression. Combine both of the methods to prevent both inside and outside
 evaluations:
 
     >>> UnevaluatedExpr(sympify("x + x", evaluate=False)) + y
-    y + x + x
+    y + (x + x)
 
 ``UnevalutedExpr`` is supported by SymPy printers and can be used to print the
 result in different output forms. For example
@@ -554,7 +549,7 @@ result in different output forms. For example
     >>> from sympy import latex
     >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
     >>> print(latex(uexpr))
-    \frac{5}{7} \frac{3}{4}
+    \frac{5}{7} \cdot \frac{3}{4}
 
 In order to release the expression and get the evaluated LaTeX form,
 just use ``.doit()``:

@@ -1,8 +1,15 @@
-from sympy.utilities.pytest import raises, warns_deprecated_sympy
-from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
+from sympy.testing.pytest import raises
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.scalar import BaseScalar
-from sympy import sin, sinh, cos, cosh, sqrt, pi, ImmutableMatrix as Matrix, \
-     symbols, simplify, zeros, expand, acos, atan2
+from sympy.core.function import expand
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, atan2, cos, sin)
+from sympy.matrices.dense import zeros
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+from sympy.simplify.simplify import simplify
 from sympy.vector.functions import express
 from sympy.vector.point import Point
 from sympy.vector.vector import Vector
@@ -26,7 +33,7 @@ def test_func_args():
     assert A.origin.func(*A.origin.args) == A.origin
 
 
-def test_coordsyscartesian_equivalence():
+def test_coordsys3d_equivalence():
     A = CoordSys3D('A')
     A1 = CoordSys3D('A')
     assert A1 == A
@@ -266,7 +273,7 @@ def test_orient_new_methods():
 
 def test_locatenew_point():
     """
-    Tests Point class, and locate_new method in CoordSysCartesian.
+    Tests Point class, and locate_new method in CoordSys3D.
     """
     A = CoordSys3D('A')
     assert isinstance(A.origin, Point)
@@ -436,19 +443,14 @@ def test_check_orthogonality():
     a = CoordSys3D('a', transformation=((u, v, z), (cosh(u) * cos(v), sinh(u) * sin(v), z)))
     assert a._check_orthogonality(a._transformation) is True
 
-    raises(ValueError, lambda: CoordSys3D('a', transformation=((x, x, z), (x, y, z))))
+    raises(ValueError, lambda: CoordSys3D('a', transformation=((x, y, z), (x, x, z))))
     raises(ValueError, lambda: CoordSys3D('a', transformation=(
         (x, y, z), (x*sin(y/2)*cos(z), x*sin(y)*sin(z), x*cos(y)))))
 
 
-def test_coordsys3d():
-    with warns_deprecated_sympy():
-        assert CoordSysCartesian("C") == CoordSys3D("C")
-
-
 def test_rotation_trans_equations():
     a = CoordSys3D('a')
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     q0 = symbols('q0')
     assert a._rotation_trans_equations(a._parent_rotation_matrix, a.base_scalars()) == (a.x, a.y, a.z)
     assert a._rotation_trans_equations(a._inverse_rotation_matrix(), a.base_scalars()) == (a.x, a.y, a.z)
