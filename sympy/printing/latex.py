@@ -790,7 +790,7 @@ class LatexPrinter(Printer):
                 lower = self._print(expr.lower)
             else:
                 lower = self._print(S.Zero)
-            interval = '{lower}\\mathrel{{..}}\\nobreak{upper}'.format(
+            interval = '{lower}\\mathrel{{..}}\\nobreak {upper}'.format(
                     lower = lower, upper = upper)
             return '{{{label}}}_{{{interval}}}'.format(
                 label = label, interval = interval)
