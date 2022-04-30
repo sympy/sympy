@@ -18,6 +18,7 @@ from sympy.utilities.iterables import has_variety, sift
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
+
 if TYPE_CHECKING:
     from .numbers import Number
 
@@ -225,16 +226,16 @@ class Expr(Basic, EvalfMixin):
     def _pow(self, other):
         return Pow(self, other)
 
-    def __pow__(self, other, mod=None):
+    def __pow__(self, other, mod=None) -> Expr:
         if mod is None:
             return self._pow(other)
         try:
             _self, other, mod = as_int(self), as_int(other), as_int(mod)
             if other >= 0:
-                return pow(_self, other, mod)
+                return _sympify(pow(_self, other, mod))
             else:
                 from .numbers import mod_inverse
-                return mod_inverse(pow(_self, -other, mod), mod)
+                return _sympify(mod_inverse(pow(_self, -other, mod), mod))
         except ValueError:
             power = self._pow(other)
             try:
