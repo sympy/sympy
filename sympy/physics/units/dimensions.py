@@ -575,7 +575,6 @@ class DimensionSystem(Basic, _QuantityMapper):
 
     def buckingham_pi_theorem(self, list_of_derived_quantities):
         """
-
         list_of_derived_quantities is the input of derived quantities in the form of a list of tuples (quantity_name, dims) where quantity_name
         is the name of the physical quantity and dims is an instance of Dimension class which possesses the dimensions of the quantity. This function
         is designed to take in a set of physical variables (all essentially dimensionful) and returns one set of all possible exponents,
@@ -588,12 +587,12 @@ class DimensionSystem(Basic, _QuantityMapper):
         voltage source ```$V_{amp}$```, where current ```$I(t)$``` is given by the equation (https://en.wikipedia.org/wiki/RLC_circuit).
 
         ```
-        \begin{equation*}
-        \frac{d^2 I}{d t^2} + \frac{R}{L} \frac{d I(t)}{d t} + \frac{1}{LC}I(t) = 0
-        \end{equation*}
+        \\begin{equation*}
+        \\frac{d^2 I}{d t^2} + \\frac{R}{L} \\frac{d I(t)}{d t} + \\frac{1}{LC}I(t) = 0
+        \\end{equation*}
         ```
 
-        In the above equation, the solution could admit a current of amplitude ```$I_{amp}$``` and a scale of angular frequency ```$\omega$```.
+        In the above equation, the solution could admit a current of amplitude ```$I_{amp}$``` and a scale of angular frequency ```$\\omega$```.
 
         >>> from sympy.physics.units import length, mass, time, current
         >>> from sympy.physics.units.systems.si import dimsys_SI
@@ -607,11 +606,11 @@ class DimensionSystem(Basic, _QuantityMapper):
         >>> dimsys_SI.get_dimensionless_numbers(list_of_quantities)
         [Dimension(C*R**2/L), Dimension(I_amp*R/V_amp), Dimension(L*omega/R)]
 
-        The first dimensionless quantity ```$\zeta^2 = \frac{C R^2}{L}$``` shows the quantity ```$\zeta$``` is known as the damping factor of the
-        RLC circuit, and the last dimensionless quantity ```$\frac{L*omega}{R}$``` is reminiscent of the definition of the attenuation.
+        The first dimensionless quantity ```$\\zeta^2 = \\frac{C R^2}{L}$``` shows the quantity ```$\\zeta$``` is known as the damping factor of the
+        RLC circuit, and the last dimensionless quantity ```$\\frac{L*omega}{R}$``` is reminiscent of the definition of the attenuation.
         The second dimensionless quantity is something that simply comes from Ohm's law.
-
         """
+
         number_of_quantities = len(list_of_derived_quantities)
         exponent_matrix = []
         # We extract the exponent matrix from the dimensional dependencies of the quantities
@@ -627,11 +626,10 @@ class DimensionSystem(Basic, _QuantityMapper):
 
     def verify_dimensionless_numbers(self, list_of_derived_quantities):
         """
-
         Give the objects of class Dimension that represent the dimensionless quantities.
         To be preferably used only for test purposes, please refer to /units/test/test_dimensionless.py
-
         """
+
         exponents = self.buckingham_pi_theorem(list_of_derived_quantities)
         null_space_dims = len(exponents)
         number_of_quantities = len(list_of_derived_quantities)
@@ -645,11 +643,10 @@ class DimensionSystem(Basic, _QuantityMapper):
 
     def get_dimensionless_numbers(self, list_of_derived_quantities):
         """
-
         Give the resultant list the quantities (as an instance of class Dimension), which are actually the dimensionless numbers
         in the original unit system.
-
         """
+
         exponents = self.buckingham_pi_theorem(list_of_derived_quantities)
         null_space_dims = len(exponents)
         number_of_quantities = len(list_of_derived_quantities)
