@@ -622,17 +622,40 @@ class MathematicaParser:
     def _from_mathematica_to_tokens(self, code: str):
         tokenizer = self._get_tokenizer()
 
-        # Remove comments:
+        # Find strings:
+        code_splits: List[typing.Union[str, list]] = []
         while True:
-            pos_comment_start = code.find("(*")
-            if pos_comment_start == -1:
+            string_start = code.find("\"")
+            if string_start == -1:
+                if len(code) > 0:
+                    code_splits.append(code)
                 break
-            pos_comment_end = code.find("*)")
-            if pos_comment_end == -1 or pos_comment_end < pos_comment_start:
-                raise SyntaxError("mismatch in comment (*  *) code")
-            code = code[:pos_comment_start] + code[pos_comment_end+2:]
+            match_end = re.search(r'(?<!\\)"', code[string_start+1:])
+            if match_end is None:
+                raise SyntaxError('mismatch in string "  " expression')
+            string_end = string_start + match_end.start() + 1
+            if string_start > 0:
+                code_splits.append(code[:string_start])
+            code_splits.append(["_Str", code[string_start+1:string_end].replace('\\"', '"')])
+            code = code[string_end+1:]
 
-        tokens = tokenizer.findall(code)
+        # Remove comments:
+        for i, code_split in enumerate(code_splits):
+            if isinstance(code_split, list):
+                continue
+            while True:
+                pos_comment_start = code_split.find("(*")
+                if pos_comment_start == -1:
+                    break
+                pos_comment_end = code_split.find("*)")
+                if pos_comment_end == -1 or pos_comment_end < pos_comment_start:
+                    raise SyntaxError("mismatch in comment (*  *) code")
+                code_split = code_split[:pos_comment_start] + code_split[pos_comment_end+2:]
+            code_splits[i] = code_split
+
+        # Tokenize the input strings with a regular expression:
+        token_lists = [tokenizer.findall(i) if isinstance(i, str) else [i] for i in code_splits]
+        tokens = [j for i in token_lists for j in i]
 
         # Remove newlines at the beginning
         while tokens and tokens[0] == "\n":

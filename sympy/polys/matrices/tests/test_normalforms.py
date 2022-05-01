@@ -62,7 +62,7 @@ def test_hermite_normal():
     assert hermite_normal_form(m) == hnf
 
     m = DM([[2, 7], [0, 0], [0, 0]], ZZ)
-    hnf = DM([[], [], []], ZZ)
+    hnf = DM([[1], [0], [0]], ZZ)
     assert hermite_normal_form(m) == hnf
 
     m = DM([[-2, 1], [0, 1]], ZZ)

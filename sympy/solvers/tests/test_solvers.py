@@ -1898,6 +1898,19 @@ def test_lambert_bivariate():
     assert solve((x**3)**(x/2) + pi/2, x) == [
         exp(LambertW(-2*log(2)/3 + 2*log(pi)/3 + I*pi*Rational(2, 3)))]
 
+    # issue 23253
+    assert solve((1/log(sqrt(x) + 2)**2 - 1/x)) == [
+        (LambertW(-exp(-2), -1) + 2)**2]
+    assert solve((1/log(1/sqrt(x) + 2)**2 - x)) == [
+        (LambertW(-exp(-2), -1) + 2)**-2]
+    assert solve((1/log(x**2 + 2)**2 - x**-4)) == [
+        -I*sqrt(2 - LambertW(exp(2))),
+        -I*sqrt(LambertW(-exp(-2)) + 2),
+        sqrt(-2 - LambertW(-exp(-2))),
+        sqrt(-2 + LambertW(exp(2))),
+        -sqrt(-2 - LambertW(-exp(-2), -1)),
+        sqrt(-2 - LambertW(-exp(-2), -1))]
+
 
 def test_rewrite_trig():
     assert solve(sin(x) + tan(x)) == [0, -pi, pi, 2*pi]
@@ -2487,3 +2500,20 @@ def test_issue_22768():
 def test_issue_22717():
     assert solve((-y**2 + log(y**2/x) + 2, -2*x*y + 2*x/y)) == [
         {y: -1, x: E}, {y: 1, x: E}]
+
+
+def test_issue_10169():
+    eq = S(-8*a - x**5*(a + b + c + e) - x**4*(4*a - 2**Rational(3,4)*c + 4*c +
+        d + 2**Rational(3,4)*e + 4*e + k) - x**3*(-4*2**Rational(3,4)*c + sqrt(2)*c -
+        2**Rational(3,4)*d + 4*d + sqrt(2)*e + 4*2**Rational(3,4)*e + 2**Rational(3,4)*k + 4*k) -
+        x**2*(4*sqrt(2)*c - 4*2**Rational(3,4)*d + sqrt(2)*d + 4*sqrt(2)*e +
+        sqrt(2)*k + 4*2**Rational(3,4)*k) - x*(2*a + 2*b + 4*sqrt(2)*d +
+        4*sqrt(2)*k) + 5)
+    assert solve_undetermined_coeffs(eq, [a, b, c, d, e, k], x) == {
+        a: Rational(5,8),
+        b: Rational(-5,1032),
+        c: Rational(-40,129) - 5*2**Rational(3,4)/129 + 5*2**Rational(1,4)/1032,
+        d: -20*2**Rational(3,4)/129 - 10*sqrt(2)/129 - 5*2**Rational(1,4)/258,
+        e: Rational(-40,129) - 5*2**Rational(1,4)/1032 + 5*2**Rational(3,4)/129,
+        k: -10*sqrt(2)/129 + 5*2**Rational(1,4)/258 + 20*2**Rational(3,4)/129
+    }

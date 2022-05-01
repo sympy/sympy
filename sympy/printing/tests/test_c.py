@@ -814,7 +814,10 @@ def test_ccode_Type():
 
 
 def test_ccode_codegen_ast():
-    assert ccode(Comment("this is a comment")) == "// this is a comment"
+    # Note that C only allows comments of the form /* ... */, double forward
+    # slash is not standard C, and some C compilers will grind to a halt upon
+    # encountering them.
+    assert ccode(Comment("this is a comment")) == "/* this is a comment */"  # not //
     assert ccode(While(abs(x) > 1, [aug_assign(x, '-', 1)])) == (
         'while (fabs(x) > 1) {\n'
         '   x -= 1;\n'

@@ -259,7 +259,14 @@ class Order(Expr):
                                 e = expr.exp
                                 b = expr.base
                                 expr = exp(e * log(b))
-                    expr = expr.as_independent(*args, as_Add=False)[1]
+
+                    # It would probably be better to handle this somewhere
+                    # else. This is needed for a testcase in which there is a
+                    # symbol with the assumptions zero=True.
+                    if expr.is_zero:
+                        expr = S.Zero
+                    else:
+                        expr = expr.as_independent(*args, as_Add=False)[1]
 
                     expr = expand_power_base(expr)
                     expr = expand_log(expr)

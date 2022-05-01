@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numbers
 import decimal
 import fractions
@@ -5,7 +7,6 @@ import math
 import re as regex
 import sys
 from functools import lru_cache
-from typing import Set as tSet, Tuple as tTuple
 
 from .containers import Tuple
 from .sympify import (SympifyError, _sympy_converter, sympify, _convert_numpy_types,
@@ -704,9 +705,6 @@ class Number(AtomicExpr):
             return -new
         return self  # there is no other possibility
 
-    def _eval_is_finite(self):
-        return True
-
     @classmethod
     def class_key(cls):
         return 1, 0, 'Number'
@@ -1020,7 +1018,7 @@ class Float(Number):
     """
     __slots__ = ('_mpf_', '_prec')
 
-    _mpf_: tTuple[int, int, int, int]
+    _mpf_: tuple[int, int, int, int]
 
     # A Float represents many real numbers,
     # both rational and irrational.
@@ -2531,7 +2529,7 @@ class AlgebraicNumber(Expr):
     # Optional alias symbol is not free.
     # Actually, alias should be a Str, but some methods
     # expect that it be an instance of Expr.
-    free_symbols: tSet[Basic] = set()
+    free_symbols: set[Basic] = set()
 
     def __new__(cls, expr, coeffs=None, alias=None, **args):
         r"""
