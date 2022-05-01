@@ -574,7 +574,9 @@ class DimensionSystem(Basic, _QuantityMapper):
         return self.inv_can_transf_matrix.is_square
 
     def buckingham_pi_theorem(self, list_of_derived_quantities):
-        """ list_of_derived_quantities is the input of derived quantities in the form of a list of tuples (quantity_name, dims) where quantity_name
+        """
+
+        list_of_derived_quantities is the input of derived quantities in the form of a list of tuples (quantity_name, dims) where quantity_name
         is the name of the physical quantity and dims is an instance of Dimension class which possesses the dimensions of the quantity. This function
         is designed to take in a set of physical variables (all essentially dimensionful) and returns one set of all possible exponents,
         as guided by the Buckingham's pi theorem (raise the list of quantities to the list of exponents to get the dimensionless numbers).
@@ -608,6 +610,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         The first dimensionless quantity ```$\zeta^2 = \frac{C R^2}{L}$``` shows the quantity ```$\zeta$``` is known as the damping factor of the
         RLC circuit, and the last dimensionless quantity ```$\frac{L*omega}{R}$``` is reminiscent of the definition of the attenuation.
         The second dimensionless quantity is something that simply comes from Ohm's law.
+
         """
         number_of_quantities = len(list_of_derived_quantities)
         exponent_matrix = []
@@ -623,8 +626,11 @@ class DimensionSystem(Basic, _QuantityMapper):
         return exponent_matrix.T.nullspace(simplify=True)
 
     def verify_dimensionless_numbers(self, list_of_derived_quantities):
-        """ Give the objects of class Dimension that represent the dimensionless quantities.
+        """
+
+        Give the objects of class Dimension that represent the dimensionless quantities.
         To be preferably used only for test purposes, please refer to /units/test/test_dimensionless.py
+
         """
         exponents = self.buckingham_pi_theorem(list_of_derived_quantities)
         null_space_dims = len(exponents)
@@ -638,8 +644,11 @@ class DimensionSystem(Basic, _QuantityMapper):
         return set_of_dimless_nums
 
     def get_dimensionless_numbers(self, list_of_derived_quantities):
-        """ Give the resultant list the quantities (as an instance of class Dimension), which are actually the dimensionless numbers
+        """
+
+        Give the resultant list the quantities (as an instance of class Dimension), which are actually the dimensionless numbers
         in the original unit system.
+
         """
         exponents = self.buckingham_pi_theorem(list_of_derived_quantities)
         null_space_dims = len(exponents)
