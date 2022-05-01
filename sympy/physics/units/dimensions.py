@@ -580,75 +580,35 @@ class DimensionSystem(Basic, _QuantityMapper):
         is designed to take in a set of physical variables (all essentially dimensionful) and returns one set of all possible exponents,
         as guided by the Buckingham's pi theorem (raise the list of quantities to the list of exponents to get the dimensionless numbers).
 
-        The next function verify_dimensionless_numbers() is used to check whether the dimensions computed after their product with the
-        exponent matrix (as guided by the Buckingham's pi theorem). Finally the function get_dimensionless_numbers() is used to
-        produce the requisite result in the form of a list of instances of Dimension class signifying the actual dimensionless quantities.
+        One of the next functions get_dimensionless_numbers() is used to produce the requisite result in the form of a list of instances of Dimension
+        class signifying the actual dimensionless quantities.
 
-        For example, consider the scenario in the case of a fluid dynamics problem governed by Navier-Stokes equations for
-        an incompressible Newtonian fluid in an SI system ....
+        For example, consider an RLC circuit with resistance ```$R$```, inductance ```$L$``` and capacitance ```$C$``` connected to a constant
+        voltage source ```$V_{amp}$```, where current ```$I(t)$``` is given by the equation (https://en.wikipedia.org/wiki/RLC_circuit).
 
-            >>> from sympy.physics.units import length, mass, time
-            >>> from sympy.physics.units.systems.si import dimsys_SI
-            >>> M = mass
-            >>> L = length
-            >>> T = time
-            >>> Lc = L # Characteristic length scale
-            >>> Uc = L/T # Characteristic velocity scale
-            >>> rho_c = M/L**3 # Characteristic density scale
-            >>> mu = M/L/T # Dynamic viscosity
-            >>> p_c = M/L/T**2 # Characteristic pressure scale
-            >>> F_bc = M*L/T**2 # Characteristic body forces scale
-            >>> list_of_quantities = [('Lc',Lc), ('Uc',Uc), ('rho',rho_c), ('mu',mu), ('p_c',p_c), ('Fbc',F_bc)]
-            >>> dimsys_SI.verify_dimensionless_numbers(list_of_quantities)
-            [Dimension(1), Dimension(1), Dimension(1)]
-            >>> set_of_dimless_nums = dimsys_SI.verify_dimensionless_numbers(list_of_quantities)
-            >>> flag = True
-            >>> for dimension in set_of_dimless_nums:
-            ...     flag = flag and dimsys_SI.get_dimensional_dependencies(dimension) == {}
-            >>> flag
-            True
-            >>> dimsys_SI.get_dimensionless_numbers(list_of_quantities)
-            [Dimension(mu/(Lc*Uc*rho)),
-             Dimension(p_c/(Uc**2*rho)),
-             Dimension(Fbc/(Lc**2*Uc**2*rho))]
-            >>> # The first line of the output is the Reynolds number Re = mu/(Uc*Lc*rho)
-            >>> # The second line of the output is the Euler number Eu = pc/(rho*Uc**2)
-            >>> # The third line of the output is the Froude number Fr, such that Fr**2 = Fbc/(rho*Uc**2*Lc**2)
+        ```
+        \begin{equation*}
+        \frac{d^2 I}{d t^2} + \frac{R}{L} \frac{d I(t)}{d t} + \frac{1}{LC}I(t) = 0
+        \end{equation*}
+        ```
 
-        As an another example, consider the scenario in the case of a magnetodynamics problem governed by
-        Navier-Stokes equations coupled to Maxwell's equations for an incompressible
-        Newtonian fluid in an CGS (Gaussian) system ....
+        In the above equation, the solution could admit a current of amplitude ```$I_{amp}$``` and a scale of angular frequency ```$\omega$```.
 
-            >>> from sympy.physics.units import length, mass, time
-            >>> from sympy.physics.units.systems.cgs import dimsys_cgs
-            >>> from sympy import S
-            >>> M = mass
-            >>> L = length
-            >>> T = time
-            >>> Lc = L # Characteristic length scale
-            >>> Uc = L/T # Characteristic velocity scale
-            >>> rho_c = M/L**3 # Characteristic density scale
-            >>> mu = M/L/T # Dynamic viscosity
-            >>> j0 = M**(S.One/2)/L**(S.One/2)/T**2 # Characteristic range value of current density
-            >>> sigma_0 = T**(-1) # Characteristic conductivity scale
-            >>> B0 = L**(-S.One/2)*M**(S.One/2)/T # Magnetic field characteristic scale
-            >>> list_of_quantities = [('Lc',Lc), ('Uc',Uc), ('rho',rho_c), ('mu',mu), ('j0',j0), ('sigma_0',sigma_0), ('B0', B0)]
-            >>> dimsys_cgs.verify_dimensionless_numbers(list_of_quantities)
-            [Dimension(1),
-             Dimension(sqrt(mass)/(length**(3/2)*sqrt(mass/length**3))),
-             Dimension(1),
-             Dimension(sqrt(mass)/(length**(3/2)*sqrt(mass/length**3)))]
-            >>> set_of_dimless_nums = dimsys_cgs.verify_dimensionless_numbers(list_of_quantities)
-            >>> flag = True
-            >>> for dimension in set_of_dimless_nums:
-            ...     flag = flag and dimsys_cgs.get_dimensional_dependencies(dimension) == {}
-            >>> flag
-            True
-            >>> dimsys_cgs.get_dimensionless_numbers(list_of_quantities)
-            [Dimension(mu/(Lc*Uc*rho)),
-             Dimension(Lc*j0/(Uc**2*sqrt(rho))),
-             Dimension(Lc*sigma_0/Uc),
-             Dimension(B0/(Uc*sqrt(rho)))]
+        >>> from sympy.physics.units import length, mass, time, current
+        >>> from sympy.physics.units.systems.si import dimsys_SI
+        >>> resistance = mass*length**2*time**(-3)*current**(-2)
+        >>> inductance = mass*length**2*time**(-2)*current**(-2)
+        >>> capacitance = mass**(-1)*length**(-2)*time**4*current**2
+        >>> voltage_amp = mass*length**2*time**(-3)*current**(-1)
+        >>> current_amp = current
+        >>> omega = time**(-1)
+        >>> list_of_quantities = [('R', resistance),('L',inductance),('C',capacitance),('V_amp',voltage_amp),('I_amp',current_amp),('omega',omega)]
+        >>> dimsys_SI.get_dimensionless_numbers(list_of_quantities)
+        [Dimension(C*R**2/L), Dimension(I_amp*R/V_amp), Dimension(L*omega/R)]
+
+        The first dimensionless quantity ```$\zeta^2 = \frac{C R^2}{L}$``` shows the quantity ```$\zeta$``` is known as the damping factor of the
+        RLC circuit, and the last dimensionless quantity ```$\frac{L*omega}{R}$``` is reminiscent of the definition of the attenuation.
+        The second dimensionless quantity is something that simply comes from Ohm's law.
         """
 
         number_of_quantities = len(list_of_derived_quantities)
