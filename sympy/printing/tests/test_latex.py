@@ -562,6 +562,12 @@ def test_latex_functions():
     assert latex(Function('a_1')(Symbol('x'))**ab) == r"a_{1}^{ab}{\left(x \right)}"
     assert latex(Function('a_12')(Symbol('x'))**ab) == r"a_{12}^{ab}{\left(x \right)}"
 
+    assert latex(Function('a^12')(x)) == R"a^{12}{\left(x \right)}"
+    assert latex(Function('a^12')(x) ** ab) == R"\left(a^{12}\right)^{ab}{\left(x \right)}"
+    assert latex(Function('a__12')(x)) == R"a^{12}{\left(x \right)}"
+    assert latex(Function('a__12')(x) ** ab) == R"\left(a^{12}\right)^{ab}{\left(x \right)}"
+    assert latex(Function('a_1__1_2')(x)) == R"a^{1}_{1 2}{\left(x \right)}"
+
     # issue 5868
     omega1 = Function('omega1')
     assert latex(omega1) == r"\omega_{1}"
