@@ -1,4 +1,5 @@
-from typing import Callable, Tuple as tTuple
+from __future__ import annotations
+from typing import Callable
 from math import log as _log, sqrt as _sqrt
 from itertools import product
 
@@ -275,7 +276,8 @@ class Pow(Expr):
 
     __slots__ = ('is_commutative',)
 
-    args: tTuple[Expr, Expr]
+    args: tuple[Expr, Expr]
+    _args: tuple[Expr, Expr]
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):
@@ -383,11 +385,11 @@ class Pow(Expr):
         return None
 
     @property
-    def base(self):
+    def base(self) -> Expr:
         return self._args[0]
 
     @property
-    def exp(self):
+    def exp(self) -> Expr:
         return self._args[1]
 
     @property
