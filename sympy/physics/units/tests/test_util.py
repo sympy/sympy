@@ -1,5 +1,6 @@
 from sympy.core.containers import Tuple
-from sympy.core.numbers import pi
+from sympy.core.mul import Mul
+from sympy.core.numbers import Float, Integer, pi
 from sympy.core.power import Pow
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
@@ -146,6 +147,14 @@ def test_quantity_simplify_across_dimensions():
 
     assert quantity_simplify(5*kilometer/hour, across_dimensions=True, unit_system="SI") == 25*meter/(18*second)
     assert quantity_simplify(5*kilogram*meter/second**2, across_dimensions=True, unit_system="SI") == 5*newton
+
+    assert quantity_simplify(3*volt + 2*ampere*ohm, across_dimensions=True, unit_system="SI") == 5*volt
+    assert quantity_simplify(3*meter * 2*meter, across_dimensions=True, unit_system="SI") == 6*meter**2
+    assert quantity_simplify(ampere*meter*ohm, across_dimensions=True, unit_system="SI") == volt*meter
+    assert quantity_simplify(ampere*meter**3*ohm, across_dimensions=True, unit_system="SI") == volt*meter**3
+    assert quantity_simplify((2*volt + 2*ohm*ampere) / meter, across_dimensions=True, unit_system="SI") == 4*volt/meter
+    assert quantity_simplify(13140019104.1279*(-7209794853.0*ampere*ohm + 9125000000.0*volt)/(ampere*meter**3*ohm), across_dimensions=True, unit_system="SI") == Mul(Float('2.5165832219904086e+19', precision=53), Pow(meter, Integer(-3)))
+
 
 def test_check_dimensions():
     x = symbols('x')
