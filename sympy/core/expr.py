@@ -2837,7 +2837,8 @@ class Expr(Basic, EvalfMixin):
              from ``-oo`` to ``oo``.
 
         n : Value
-            The number of terms upto which the series is to be expanded.
+            The value used to represent the order in terms of ``x**n``,
+            up to which the series is to be expanded.
 
         dir : String, optional
               The series-expansion can be bi-directional. If ``dir="+"``,
@@ -2895,6 +2896,10 @@ class Expr(Basic, EvalfMixin):
         >>> f.series(x, 2, 3, "-")
         tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2))
         + O((x - 2)**3, (x, 2))
+
+        For rational expressions this method may return original expression without the Order term.
+        >>> (1/x).series(x, n=8)
+        1/x
 
         Returns
         =======
@@ -3072,7 +3077,8 @@ class Expr(Basic, EvalfMixin):
             It is the variable of the expression to be calculated.
 
         n : Value
-            The number of terms upto which the series is to be expanded.
+            The value used to represent the order in terms of ``x**n``,
+            up to which the series is to be expanded.
 
         hir : Boolean
               Set this parameter to be True to produce hierarchical series.
@@ -3104,6 +3110,10 @@ class Expr(Basic, EvalfMixin):
 
         >>> e.aseries(x, bound=3) # doctest: +SKIP
         exp(exp(x)/x**2)*exp(exp(x)/x)*exp(-exp(x) + exp(x)/(1 - 1/x) - exp(x)/x - exp(x)/x**2)*exp(exp(x))
+
+        For rational expressions this method may return original expression without the Order term.
+        >>> (1/x).aseries(x, n=8)
+        1/x
 
         Returns
         =======
