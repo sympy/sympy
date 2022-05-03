@@ -152,19 +152,43 @@ class FourierSeries(SeriesBase):
 
     @property
     def period(self):
-        return (self.args[1][1], self.args[1][2])
+        return -self.args[1][1] + self.args[1][2]
 
     @property
     def a0(self):
         return self.args[2][0]
 
     @property
-    def an(self):
+    def cos_sequence(self):
         return self.args[2][1]
 
     @property
-    def bn(self):
+    def sin_sequence(self):
         return self.args[2][2]
+
+    @property
+    def an(self):
+        p = Wild("p")
+        q = Wild("q")
+        try:
+            gen_term = self.cos_sequence.formula.match(p*cos(q))[p]
+        except TypeError:
+            return self.cos_sequence
+        else:
+            seq = self.cos_sequence
+            return SeqFormula(gen_term, (*seq.variables, seq.start, seq.stop))
+
+    @property
+    def bn(self):
+        p = Wild("p")
+        q = Wild("q")
+        try:
+            gen_term = self.sin_sequence.formula.match(p*sin(q))[p]
+        except TypeError:
+            return self.sin_sequence
+        else:
+            seq = self.sin_sequence
+            return SeqFormula(gen_term, (*seq.variables, seq.start, seq.stop))
 
     @property
     def interval(self):
@@ -184,7 +208,7 @@ class FourierSeries(SeriesBase):
 
     @property
     def L(self):
-        return abs(self.period[1] - self.period[0]) / 2
+        return abs(self.period) / 2
 
     def _eval_subs(self, old, new):
         x = self.x
@@ -334,7 +358,7 @@ class FourierSeries(SeriesBase):
         a0 = self.a0 + s
         sfunc = self.function + s
 
-        return self.func(sfunc, self.args[1], (a0, self.an, self.bn))
+        return self.func(sfunc, self.args[1], (a0, self.cos_sequence, self.sin_sequence))
 
     def shiftx(self, s):
         """
@@ -362,11 +386,11 @@ class FourierSeries(SeriesBase):
         if x in s.free_symbols:
             raise ValueError("'%s' should be independent of %s" % (s, x))
 
-        an = self.an.subs(x, x + s)
-        bn = self.bn.subs(x, x + s)
+        cos_sequence = self.cos_sequence.subs(x, x + s)
+        sin_sequence = self.sin_sequence.subs(x, x + s)
         sfunc = self.function.subs(x, x + s)
 
-        return self.func(sfunc, self.args[1], (self.a0, an, bn))
+        return self.func(sfunc, self.args[1], (self.a0, cos_sequence, sin_sequence))
 
     def scale(self, s):
         """
@@ -394,12 +418,12 @@ class FourierSeries(SeriesBase):
         if x in s.free_symbols:
             raise ValueError("'%s' should be independent of %s" % (s, x))
 
-        an = self.an.coeff_mul(s)
-        bn = self.bn.coeff_mul(s)
+        cos_sequence = self.cos_sequence.coeff_mul(s)
+        sin_sequence = self.sin_sequence.coeff_mul(s)
         a0 = self.a0 * s
         sfunc = self.args[0] * s
 
-        return self.func(sfunc, self.args[1], (a0, an, bn))
+        return self.func(sfunc, self.args[1], (a0, cos_sequence, sin_sequence))
 
     def scalex(self, s):
         """
@@ -427,11 +451,11 @@ class FourierSeries(SeriesBase):
         if x in s.free_symbols:
             raise ValueError("'%s' should be independent of %s" % (s, x))
 
-        an = self.an.subs(x, x * s)
-        bn = self.bn.subs(x, x * s)
+        cos_sequence = self.cos_sequence.subs(x, x * s)
+        sin_sequence = self.sin_sequence.subs(x, x * s)
         sfunc = self.function.subs(x, x * s)
 
-        return self.func(sfunc, self.args[1], (self.a0, an, bn))
+        return self.func(sfunc, self.args[1], (self.a0, cos_sequence, sin_sequence))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         for t in self:
@@ -441,7 +465,7 @@ class FourierSeries(SeriesBase):
     def _eval_term(self, pt):
         if pt == 0:
             return self.a0
-        return self.an.coeff(pt) + self.bn.coeff(pt)
+        return self.cos_sequence.coeff(pt) + self.sin_sequence.coeff(pt)
 
     def __neg__(self):
         return self.scale(-1)
@@ -457,11 +481,11 @@ class FourierSeries(SeriesBase):
             if self.x not in function.free_symbols:
                 return function
 
-            an = self.an + other.an
-            bn = self.bn + other.bn
+            cos_sequence = self.cos_sequence + other.cos_sequence
+            sin_sequence = self.sin_sequence + other.sin_sequence
             a0 = self.a0 + other.a0
 
-            return self.func(function, self.args[1], (a0, an, bn))
+            return self.func(function, self.args[1], (a0, cos_sequence, sin_sequence))
 
         return Add(self, other)
 
@@ -539,7 +563,6 @@ class FiniteFourierSeries(FourierSeries):
                     bn[q[a]] = q[b] + bn.get(q[a], S.Zero)
                 else:
                     a0 += p
-
             exprs = Tuple(a0, an, bn)
 
         return Expr.__new__(cls, f, limits, exprs)
@@ -547,7 +570,7 @@ class FiniteFourierSeries(FourierSeries):
     @property
     def interval(self):
         _length = 1 if self.a0 else 0
-        _length += max(set(self.an.keys()).union(set(self.bn.keys()))) + 1
+        _length += max(set(self.cos_sequence.keys()).union(set(self.sin_sequence.keys()))) + 1
         return Interval(0, _length)
 
     @property
@@ -591,8 +614,8 @@ class FiniteFourierSeries(FourierSeries):
         if pt == 0:
             return self.a0
 
-        _term = self.an.get(pt, S.Zero) * cos(pt * (pi / self.L) * self.x) \
-                + self.bn.get(pt, S.Zero) * sin(pt * (pi / self.L) * self.x)
+        _term = self.cos_sequence.get(pt, S.Zero) * cos(pt * (pi / self.L) * self.x) \
+                + self.sin_sequence.get(pt, S.Zero) * sin(pt * (pi / self.L) * self.x)
         return _term
 
     def __add__(self, other):
@@ -795,14 +818,14 @@ def fourier_series(f, limits=None, finite=True):
     if center.is_zero:
         neg_f = f.subs(x, -x)
         if f == neg_f:
-            a0, an = fourier_cos_seq(f, limits, n)
-            bn = SeqFormula(0, (1, oo))
-            return FourierSeries(f, limits, (a0, an, bn))
+            a0, cos_sequence = fourier_cos_seq(f, limits, n)
+            sin_sequence = SeqFormula(0, (n, 1, oo))
+            return FourierSeries(f, limits, (a0, cos_sequence, sin_sequence))
         elif f == -neg_f:
             a0 = S.Zero
-            an = SeqFormula(0, (1, oo))
-            bn = fourier_sin_seq(f, limits, n)
-            return FourierSeries(f, limits, (a0, an, bn))
-    a0, an = fourier_cos_seq(f, limits, n)
-    bn = fourier_sin_seq(f, limits, n)
-    return FourierSeries(f, limits, (a0, an, bn))
+            cos_sequence = SeqFormula(0, (n, 1, oo))
+            sin_sequence = fourier_sin_seq(f, limits, n)
+            return FourierSeries(f, limits, (a0, cos_sequence, sin_sequence))
+    a0, cos_sequence = fourier_cos_seq(f, limits, n)
+    sin_sequence = fourier_sin_seq(f, limits, n)
+    return FourierSeries(f, limits, (a0, cos_sequence, sin_sequence))

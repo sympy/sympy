@@ -2864,8 +2864,8 @@ def test_X21():
     assert s.an.formula == 0
 
     # Check for sine coefficients
-    assert s.bn.formula.subs(s.bn.variables[0], 0) == 0
-    assert s.bn.formula.subs(s.bn.variables[0], n) == \
+    assert s.sin_sequence.formula.subs(s.sin_sequence.variables[0], 0) == 0
+    assert s.sin_sequence.formula.subs(s.sin_sequence.variables[0], n) == \
         -2*p/pi * (-1)**n / n * sin(n*pi*x/p)
 
 
