@@ -5,6 +5,7 @@ from sympy.core.numbers import Float, _illegal
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
@@ -297,7 +298,10 @@ class Limit(Expr):
         if abs(z0) is S.Infinity:
             if e.is_Mul:
                 e = factor_terms(e)
-            newe = e.subs(z, 1/z)
+            if isinstance(e, Piecewise):
+                newe = e._at_infinity(z)
+            else:
+                newe = e.subs(z, 1/z)
             # cdir changes sign as oo- should become 0+
             cdir = -cdir
         else:
@@ -349,8 +353,12 @@ class Limit(Expr):
 
         try:
             if str(dir) == '+-':
-                r = gruntz(e, z, z0, '+')
-                l = gruntz(e, z, z0, '-')
+                if isinstance(e, Piecewise):
+                    r = limit(e, z, z0, '+')
+                    l = limit(e, z, z0, '-')
+                else:
+                    r = gruntz(e, z, z0, '+')
+                    l = gruntz(e, z, z0, '-')
                 if l != r:
                     raise ValueError("The limit does not exist since "
                             "left hand limit = %s and right hand limit = %s"

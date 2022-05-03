@@ -5,6 +5,7 @@ from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
     _canonical, _canonical_coeff)
 from sympy.core.sorting import ordered
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
@@ -305,13 +306,120 @@ class Piecewise(Function):
             newargs.append((e, c))
         return self.func(*newargs)
 
+    def is_meromorphic(self, x, a):
+        """
+        This method tests whether a Piecewise expression is meromorphic
+        as a function of the given symbol ``x`` at the point ``a``.
+
+        This method is intended as a quick test that will return
+        None if no decision can be made without simplification or
+        more detailed analysis.
+
+        Examples
+        ========
+        >>> from sympy import csc, log, Piecewise
+        >>> from sympy.abc import x
+        >>> f = Piecewise((csc(1/x), x < 1), (2*x**2 + 1, x < 5), (log(x), True))
+        >>> f.is_meromorphic(x, 0)
+        False
+        >>> f.is_meromorphic(x, 2)
+        True
+        >>> f.is_meromorphic(x, 10)
+        True
+
+        """
+        if not x.is_symbol:
+            raise TypeError("{} should be of symbol type".format(x))
+        a = sympify(a)
+        upper_bound_list, lower_bound_list = [], []
+        for l, u, e, i in self._intervals(x)[1]:
+            upper_bound_list.append(u)
+            lower_bound_list.append(l)
+
+        if a not in lower_bound_list and a not in upper_bound_list:
+            for bound in self.as_expr_set_pairs():
+                if a in bound[1]:
+                    return bound[0]._eval_is_meromorphic(x, a)
+        else:
+            return None
+
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        for e, c in self.args:
-            if c == True or c.subs(x, 0) == True:
-                return e.as_leading_term(x)
+        from sympy.sets.sets import Union
+        if cdir == S.Zero:
+            l = self._eval_as_leading_term(x, logx=None, cdir=-1)
+            r = self._eval_as_leading_term(x, logx=None, cdir=1)
+            if l != r:
+                raise ValueError("Two sided limit of %s around 0"
+                                    "does not exist" % self)
+            return r
+
+        zero_in_upper_bound, zero_in_lower_bound = None, None
+        for a, b, e, i in self._intervals(x)[1]:
+            if b is S.Zero:
+                zero_in_upper_bound = True
+            if a is S.Zero:
+                zero_in_lower_bound = True
+        expr_pairs = self.as_expr_set_pairs()
+
+        # Check whether 0 is the upper boundary of a piece.
+        # If yes, we consider that piece and the next one for evaluation.
+        if zero_in_upper_bound:
+            for i, pair in enumerate(expr_pairs):
+                if pair[1].sup == S.Zero or any([arg.sup.is_zero for arg in pair[1].args \
+                                            if isinstance(pair[1], Union)]):
+                    if cdir == -1:
+                        return pair[0].as_leading_term(x)
+                    else:
+                        while(expr_pairs[i + 1][1].inf != S.Zero):
+                            if isinstance(expr_pairs[i + 1][1], Union):
+                                if any([arg.inf.is_zero for arg in expr_pairs[i + 1][1].args
+                                        if isinstance(expr_pairs[i + 1][1], Union)]):
+                                    break
+                            i = i + 1
+                        return expr_pairs[i + 1][0].as_leading_term(x)
+
+        # Check whether 0 is the lower boundary of a piece.
+        # If yes, we consider that piece and the previous one for evaluation.
+        if zero_in_lower_bound:
+            for i, pair in enumerate(expr_pairs):
+                if pair[1].inf == S.Zero or any([arg.inf.is_zero for arg in pair[1].args \
+                                            if isinstance(pair[1], Union)]):
+                    if cdir == -1:
+                        while(expr_pairs[i - 1][1].sup != S.Zero):
+                            if isinstance(expr_pairs[i - 1][1], Union):
+                                if any([arg.sup.is_zero for arg in expr_pairs[i - 1][1].args
+                                        if isinstance(expr_pairs[i - 1][1], Union)]):
+                                    break
+                            i = i - 1
+                        return expr_pairs[i - 1][0].as_leading_term(x)
+                    else:
+                        return pair[0].as_leading_term(x)
+
+        # Check whether 0 lies in the Interval of any piece.
+        # If yes, we consider that piece for evaluation.
+        for bound in self.as_expr_set_pairs():
+            if S.Zero in bound[1] and not S.Zero in bound[1].boundary:
+                return bound[0].as_leading_term(x)
+
+    def _at_infinity(self, x):
+        at_infinity = []
+
+        for i, pair in enumerate(self.as_expr_set_pairs()):
+            if pair[1].inf is S.NegativeInfinity:
+                at_infinity.append((self.args[i][0].subs(x, 1/x), 1/x < 0))
+                break
+        for i, pair in enumerate(self.as_expr_set_pairs()):
+            if pair[1].sup is S.Infinity:
+                at_infinity.append((self.args[i][0].subs(x, 1/x), 1/x > 0))
+                break
+
+        if at_infinity[0][0] == at_infinity[1][0]:
+            at_infinity = [(at_infinity[0][0], True)]
+
+        return Piecewise(*tuple(at_infinity))
 
     def _eval_adjoint(self):
         return self.func(*[(e.adjoint(), c) for e, c in self.args])
