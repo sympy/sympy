@@ -16,7 +16,7 @@ from sympy.functions.elementary.hyperbolic import (sinh, tanh)
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (cos, sin, sec)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
@@ -646,6 +646,13 @@ def test_Sum_doit():
     assert summation(1/n**2, (n, 1, oo)) == zeta(2)
     assert summation(1/n**s, (n, 0, oo)) == Sum(n**(-s), (n, 0, oo))
 
+    # issue 14103
+    assert Sum(sin(x)**2 + cos(x)**2, (x, 1, 10)).doit() == 10
+    assert Sum(sin(x)**2 + cos(x)**2, (x, 1, 1000)).doit() == 1000
+    assert Sum(cos(pi*x), (x, 1, 50)).doit() == 0
+    assert Sum(cos(pi*x), (x, 1, 49)).doit() == -1
+    assert Sum(sec(x)*cos(x), (x, 1, 50)).doit() == 50
+
 
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
@@ -1040,6 +1047,7 @@ def test_is_convergent():
     assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() is S.false
     assert Sum((-1)**n, (n, 1, oo)).is_convergent() is S.false
     assert Sum(log(1/n), (n, 2, oo)).is_convergent() is S.false
+    assert Sum(sin(n), (n, 1, oo)).is_convergent() is S.false
 
     # Raabe's test --
     assert Sum(Product((3*m),(m,1,n))/Product((3*m+4),(m,1,n)),(n,1,oo)).is_convergent() is S.true
@@ -1138,6 +1146,13 @@ def test_issue_10156():
 
 def test_issue_10973():
     assert Sum((-n + (n**3 + 1)**(S(1)/3))/log(n), (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_14103():
+    assert Sum(sin(n)**2 + cos(n)**2 - 1, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(sin(pi*n), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(sec(n) * cos(n) -1, (n, 1, oo)).is_convergent() is S.true
+    assert Sum((-1)**x + (-1)**(x+1) , (x, 1, oo)).is_convergent() is S.true
 
 
 def test_issue_14129():

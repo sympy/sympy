@@ -529,7 +529,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ratio = combsimp(powsimp(next_sequence_term/sequence_term))
         try:
             lim_ratio = limit_seq(ratio, sym)
-            if lim_ratio is not None and lim_ratio.is_number:
+            if lim_ratio is not None and lim_ratio.is_number and lim_ratio is not S.NaN:
                 if abs(lim_ratio) > 1:
                     return S.false
                 if abs(lim_ratio) < 1:
@@ -1005,10 +1005,13 @@ def telescopic(L, R, limits):
 
 def eval_sum(f, limits):
     (i, a, b) = limits
+    dif = b - a
     if f.is_zero:
         return S.Zero
     if i not in f.free_symbols:
         return f*(b - a + 1)
+    if dif.is_Number and i not in f.trigsimp().free_symbols:
+        return f.trigsimp()*(b - a + 1)
     if a == b:
         return f.subs(i, a)
     if isinstance(f, Piecewise):
@@ -1033,7 +1036,6 @@ def eval_sum(f, limits):
         if _has_simple_delta(f, limits[0]):
             return deltasummation(f, limits)
 
-    dif = b - a
     definite = dif.is_Integer
     # Doing it directly may be faster if there are very few terms.
     if definite and (dif < 100):
