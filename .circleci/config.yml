@@ -24,6 +24,7 @@ jobs:
           name: build docs
           no_output_timeout: 25m
           command: |
+            sudo apt update
             sudo apt install imagemagick graphviz
             cd doc
             pip install -r requirements.txt
