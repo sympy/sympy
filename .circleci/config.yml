@@ -1,0 +1,32 @@
+version: 2
+
+# Aliases to reuse
+_defaults: &defaults
+  docker:
+    # CircleCI maintains a library of pre-built images
+    # documented at https://circleci.com/docs/2.0/circleci-images/
+    - image: cimg/python:3.10.2
+  working_directory: ~/repo
+
+jobs:
+  build_page:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: build docs
+          no_output_timeout: 25m
+          command: |
+            cd doc
+            pip install -r requirements.txt
+            make html
+      - store_artifacts:
+          path: _build/html
+
+workflows:
+  version: 2
+  default:
+    jobs:
+      - build_page

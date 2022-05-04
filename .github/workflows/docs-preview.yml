@@ -1,0 +1,19 @@
+on: [status]
+jobs:
+  circleci_artifacts_redirector_job:
+    # Don't run Action on forks, and allow skipping CI
+    if: "github.repository == 'sympy/sympy'"
+    runs-on: ubuntu-latest
+    name: Run CircleCI artifacts redirector
+    steps:
+      - name: GitHub Action step
+        id: step1
+        uses: larsoner/circleci-artifacts-redirector-action@master
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          artifact-path: 0/_build/html/index.html
+          circleci-jobs: build_page
+          job-title: Click here to see a preview of the documentation.
+      - name: Array API preview
+        run: |
+          curl --fail ${{ steps.step1.outputs.url }} | grep $GITHUB_SHA
