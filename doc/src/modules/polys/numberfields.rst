@@ -9,13 +9,14 @@ Number Fields
 Introduction
 ============
 
-  Like many other computations in algebraic number theory, the splitting of
-  rational primes can be treated by *rational* methods only. This fact is very
-  important if computation by automatic computing machinery is considered. Only
-  the knowledge of the irreducible polynomial $f(x)$, a zero of which generates
-  the field in question, is needed.
+.. epigraph::
+   Like many other computations in algebraic number theory, the splitting of
+   rational primes can be treated by *rational* methods only. This fact is very
+   important if computation by automatic computing machinery is considered. Only
+   the knowledge of the irreducible polynomial $f(x)$, a zero of which generates
+   the field in question, is needed.
 
-    Olga Taussky, 1953
+   -- Olga Taussky, 1953
 
 
 Concepts like number fields and algebraic numbers are essential to our
