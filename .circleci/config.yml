@@ -14,7 +14,7 @@ _defaults: &defaults
   working_directory: ~/repo
 
 jobs:
-  build_page:
+  Build Docs Preview:
     <<: *defaults
     steps:
       - checkout
