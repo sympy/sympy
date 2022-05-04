@@ -36,4 +36,4 @@ workflows:
   version: 2
   default:
     jobs:
-      - build_page
+      - Build Docs Preview
