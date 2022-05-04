@@ -19,6 +19,7 @@ jobs:
           name: build docs
           no_output_timeout: 25m
           command: |
+            release/aptinstall.sh
             cd doc
             pip install -r requirements.txt
             make html
