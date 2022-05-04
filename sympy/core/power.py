@@ -1735,9 +1735,14 @@ class Pow(Expr):
                 raise NotImplementedError()
         if not d.is_positive:
             g = g.simplify()
+            if g.is_zero:
+                return f**e
             _, d = g.leadterm(x)
             if not d.is_positive:
-                raise NotImplementedError()
+                g = ((b - f)/f).expand()
+                _, d = g.leadterm(x)
+                if not d.is_positive:
+                    raise NotImplementedError()
 
         from sympy.functions.elementary.integers import ceiling
         gpoly = g._eval_nseries(x, n=ceiling(maxpow), logx=logx, cdir=cdir).removeO()
