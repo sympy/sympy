@@ -15,11 +15,13 @@ documentation for the specific SymPy functions.
 - Capitalize the names, unless they refer to code.
 - Each definition should be short (no more than a paragraph).
 - Keep the terms in alphabetical order.
-- Vitalize the first occurrence of the term in the definition.
+- Italicize the first occurrence of the term in the definition.
 - Use cross-references to refer to full documentation for functions, etc.
-- Classes/functions should only be listed here if they are core concepts for
-  understanding how to use SymPy. Classes and functions themselves can be
-  documented in their respective docstrings in the modules reference.
+- Cross-reference the first instance of other terms in definitions (see
+  below).
+- Classes and functions should only be listed here if they are core concepts
+  for understanding how to use SymPy. Classes and functions themselves should
+  be documented in their respective docstrings in the modules reference.
 
 -->
 
@@ -34,31 +36,31 @@ Antiderivative
 
     An *antiderivative* of a function $f(x)$ with respect to $x$ is an
     function $F(x)$ such that $\frac{d}{dx}F(x) = f(x).$ It is also sometimes
-    called the "indefinite integral" of $f(x)$, and written as $\int
+    called an "indefinite integral" of $f(x)$, and written as $\int
     f(x)\,dx.$ Antiderivatives in SymPy can be computed with
     {func}`~.integrate`. Any given function has an infinite family of
     antiderivatives, typically obtained by adding an arbitrary constant, but
     {func}`~.integrate` only returns one
-    such antiderivative, which is sometimes informally refereed to as "the
+    such antiderivative, which is sometimes informally referred to as "the
     antiderivative" of $f(x)$. Note some sources call this the "primitive" of
-    $f(x)$, but that terminology is not used in SymPy because it is not as
+    $f(x)$, but this terminology is not used in SymPy because it is not as
     universally used as "antiderivative", and because "primitive" has other
-    meanings.
+    meanings in mathematics.
 
 `args`
 
-    The *`args`* of a SymPy {term}`expression` `expr` is a tuple of the
-    top-level subexpressions used to create `expr`. They are the arguments to
-    the class used to create the expression. The args of any expression can be
-    obtained by the `.args` attribute. For example, `(1 + x*y).args` is `(1,
-    x*y)`, because it equals `Add(1, x*y)`. The `args` together with
-    {term}`func` completely define an expression. It is always possible to
-    walk the expression tree and extract any subexpression of a SymPy
-    expression by repeated use of `.args`. Every SymPy expression can be
-    rebuilt exactly with `func` and `args`, that is, `expr.func(*expr.args) ==
-    expr` will always be true of any SymPy expression `expr`. The args of an
-    expression may be the empty tuple, for instance when an expression is an
-    {term}`atom`.
+    The *`args`* property of a SymPy {term}`expression` `expr` is a tuple of
+    the top-level {term}`subexpressions <subexpression>` used to create
+    `expr`. They are the arguments to the class used to create the expression.
+    The args of any expression can be obtained by the `.args` attribute. For
+    example, `(1 + x*y).args` is `(1, x*y)`, because it equals `Add(1, x*y)`.
+    The `args` together with {term}`func` completely define an expression. It
+    is always possible to walk the {term}`expression tree` and extract any
+    subexpression of a SymPy expression by repeated use of `.args`. Every
+    SymPy expression can be rebuilt exactly with `func` and `args`, that is,
+    `expr.func(*expr.args) == expr` will always be true of any SymPy
+    expression `expr`. The args of an expression may be the empty tuple `()`,
+    meaning the expression is an {term}`atom`.
 
 Assumptions
 
@@ -71,9 +73,10 @@ Assumptions
     either `True`, `False`, or `None`.
 
     Assumptions are either *assumed* or *queried*. For example, a symbol `x`
-    might be assumed to be positive by defining it as `x = symbols('x',
-    positive=True)`. Then an assumption might be queried on an expression
-    containing this symbol, like `(x + 1).is_real`.
+    might be *assumed* to be positive by defining it as `x = symbols('x',
+    positive=True)`. Then an assumption might be *queried* on the expression
+    containing this symbol, like `(x + 1).is_real`, which in this case would
+    return `True`.
 
     If no assumptions are assumed on a symbol, then by default symbols are
     assumed to be general complex numbers. Setting assumptions is important
@@ -85,20 +88,21 @@ Assumptions
 
     SymPy has two separate assumptions systems, which are closely related to
     one another. The first, which is sometimes called the "old assumptions"
-    because it is older, defines assumptions on {term}`Symbol` objects, is
-    queried by {term}`is_*` attributes. The second, which is sometimes called
-    the "new assumptions", defines assumptions using separate predicate
-    objects like `Q.positive` and does queries using the {func}`~.ask` function.
-    The newer assumptions system is able to support more complex queries, but
-    is also not as built out as the older one. Most users of SymPy should
-    prefer the older assumptions system at this time.
+    because it is older, allows assumptions to be assumed on {term}`Symbol`
+    objects and queried with {term}`is_*` attributes. The second, which is
+    sometimes called the "new assumptions", allows assumptions to be assumed
+    using separate predicate objects like `Q.positive` and does queries using
+    the {func}`~.ask` function. The newer assumptions system is able to
+    support more complex queries, but is also not as well developed as the
+    older one. Most users of SymPy should prefer the older assumptions system
+    at this time.
 
 Atom
 
     An *atom* is an expression whose {term}`args` is the empty tuple `()`.
-    Atoms are the leaves of the expression tree. For example, if a function
-    uses recursion to walk an expression tree using `args`, the atomic
-    expressions will be the base case of the recursion.
+    Atoms are the leaves of the {term}`expression tree`. For example, if a
+    function uses recursion to walk an expression tree using `args`, the
+    atomic expressions will be the base case of the recursion.
 
     Note that the class {class}`~.Atom` is sometimes used as the base class of
     atomic expressions, but it is not a requirement for atomic expressions to
@@ -110,36 +114,37 @@ Automatic Simplification
     *Automatic Simplification* refers to any simplification that happens
     automatically inside of a class constructor. For example, `x + x` is
     automatically simplified to `2*x` in the {class}`~.Add` constructor.
-    Unlike manual {term}`simplification`, the automatic simplification can
-    only be disabled by setting `evaluate=False` (see {term}`Unevaluated`).
-    Automatic simplification is often done so that expressions become
+    Unlike manual {term}`simplification`, automatic simplification can only be
+    disabled by setting `evaluate=False` (see {term}`Unevaluated`). Automatic
+    simplification is often done so that expressions become
     {term}`canonicalized <canonicalize>`. Excessive automatic simplification
-    is discouraged as makes it impossible to represent the non-simplified form
-    of the expression without using tricks like `evaluate=False`, and it can
-    often be an expensive thing to do in a class constructor. Instead, manual
-    {term}`simplification` and {term}`canonicalization <canonicalize>` is
-    generally preferred.
+    is discouraged, as it makes it impossible to represent the non-simplified
+    form of the expression without using tricks like `evaluate=False`, and it
+    can often be an expensive thing to do in a class constructor. Instead,
+    manual {term}`simplification`/{term}`canonicalization <canonicalize>`
+    is generally preferred.
 
 {class}`~.Basic`
 
-    *`Basic`* is the superclass of all SymPy expressions. It defines the basic
-    methods required for an expression, such as {term}`args`, {term}`func`,
-    equality, {term}`immutability <immutable>`, and some useful expression
-    manipulation functions such as {term}`substitution`. Most
-    SymPy classes will subclass a more specific `Basic` subclass such as
-    {term}`Boolean`, {term}`Expr`, {term}`Function <Function (class)>`, or
-    {term}`Matrix`. An object that is not an instance `Basic` typically cannot
-    be used in SymPy functions, unless it can be turned into a `Basic` class
-    via {term}`sympify()`.
+    *{class}`~.Basic`* is the superclass of all SymPy expressions. It defines
+    the basic methods required for an expression, such as {term}`args`,
+    {term}`func`, {term}`equality <structural equality>`, {term}`immutability
+    <immutable>`, and some useful expression manipulation functions such as
+    {term}`substitution`. Most SymPy classes will subclass a more specific
+    `Basic` subclass such as {term}`Boolean`, {term}`Expr`, {term}`Function
+    <Function (class)>`, or {term}`Matrix`. An object that is not an instance
+    of `Basic` typically cannot be used in SymPy functions, unless it can be
+    turned into a `Basic` class via {term}`sympify()`.
 
 {class}`~.Boolean`
 
-    *`Boolean`* is the base class for the classes in the {mod}`~.logic`
-    module. An object that is an instance `Boolean` is a logical predicate
-    that is an element of a boolean algebra and can be thought of as having a
+    *{class}`~.Boolean`* is the base class for the classes in the
+    {mod}`~.logic` module. `Boolean` instances represent logical predicates
+    that are elements of a boolean algebra and can be thought of as having a
     "true" or "false" value (note that `Boolean` objects do not use the
     {term}`three-valued logic` used by the {term}`assumptions`).
 
+Canonical Form
 Canonicalize
 
     Often expressions can be written in multiple, mathematically equivalent
@@ -147,16 +152,17 @@ Canonicalize
     all equivalent expressions can be transformed to. An expression that is
     put into a canonical form is said to be *canonicalized*. Typically
     canonical forms are unique and have properties that make them easier to
-    work with. For example, a common canonical form used for rational function
-    is $p/q$, where $p$ and $q$ are expanded polynomials with no common
-    factors.
+    work with. For example, a common canonical form used for rational
+    functions is $\frac{p}{q}$, where $p$ and $q$ are expanded polynomials with no
+    common factors.
 
 Code Generation
 
     *Code generation* refers to the process of taking a SymPy expression and
     converting it into code for a language or library so that it can be
-    evaluated numerically. SymPy supports [code generation](codegen_module)
-    for dozens of languages and libraries including C, C++, Fortran, and NumPy.
+    evaluated numerically. SymPy supports code generation for [dozens of
+    languages](codegen_module) and libraries including C, C++, Fortran, and
+    NumPy.
 
 Core
 
@@ -167,21 +173,21 @@ Core
 
 Equation
 
-    An *equation* is an {term}`expression` that has an equality. Equations in
-    SymPy are represented using the {class}`Eq
+    An *equation* is an {term}`expression` that has an equals sign $=$.
+    Equations in SymPy are represented using the {class}`Eq
     <sympy.core.relational.Equality>` class. Equations are **not** created
-    using the `==` operator. The `==` operator does a direct {term}`structural
-    equality` check against two expressions, and always returns `True` or
-    `False`. To contrast, a symbolic equation may be unevaluated. Equations
-    are considered {term}`booleans <boolean>` since they mathematically
-    represent a predicate value that is either true or false.
+    using the `==` operator. The `==` operator does a {term}`structural
+    equality` check between two expressions, and always returns `True` or
+    `False`. To contrast, a symbolic equation may be {term}`unevaluated`.
+    Equations are considered {term}`booleans <boolean>` since they
+    mathematically represent a predicate value that is either true or false.
 
 `_eval_*`
 
     Various methods on {term}`Basic` and {term}`Expr` can be defined on
     subclasses using special *`_eval_*`* methods. For example, an object can
     define how it will be processed by the {func}`~.simplify` function by
-    defining a `_eval_simplify` method. `_eval_*` methods are instead of
+    defining a `_eval_simplify` method. `_eval_*` methods used are instead of
     overriding the method itself so that the method defined on the base class
     can do pre-processing before dispatching to the `_eval_*` method.
 
@@ -198,16 +204,20 @@ Evaluate
 
     *Evaluate* can refer to:
 
-    - The process of converting an expression into a
+    - The process of converting an {term}`expression` into a
       numerical value (see {term}`evalf`).
 
     - The process of {term}`automatic simplification` that occurs when
       creating an expression (see {term}`Unevaluated`).
 
+    - The process of replacing one or more {term}`symbols <symbol>` in an
+      expression with numeric values or with other expressions using
+      {term}`substitution`.
+
 {class}`~.Expr`
 
-    *`Expr`* is the superclass of all algebraic SymPy expressions. It is
-    itself a subclass of {term}`Basic`. SymPy expressions that can be in an
+    *{class}`~.Expr`* is the superclass of all algebraic SymPy expressions. It
+    is itself a subclass of {term}`Basic`. SymPy expressions that can be in an
     {class}`~.Add`, {class}`~.Mul`, or {class}`~.Pow` should be `Expr`
     subclasses. Not all SymPy classes are subclasses of `Expr`, for example,
     {term}`Boolean` objects are {term}`Basic` but not `Expr`, because boolean
@@ -224,21 +234,31 @@ Expression
 
 Expression Tree
 
-    A *expression tree* is a tree of {term}`expressions <expression>` that
-    constitute an expressions. The nodes of the expression tree are
+    A *expression tree* is a
+    [tree](https://en.wikipedia.org/wiki/Tree_(data_structure)) of
+    {term}`expressions <expression>`. Every expression is built up from
+    smaller expressions as a tree. The nodes of an expression tree are
     expressions and the children of each node are the direct
     {term}`subexpressions <subexpression>` that constitute that expression.
-    The expression tree of any SymPy expression can be obtained by recursively
-    the {term}`args` property.
+    Alternatively, one can view an expression tree as a tree where the
+    non-leaf nodes are {term}`funcs <func>` and the leaf nodes are
+    {term}`atoms <atom>`. An example expression tree is shown in the
+    [tutorial](tutorial-expression-trees). The expression tree of any SymPy
+    expression can be obtained by recursing through {term}`args`. Note that
+    because SymPy expressions are {term}`immutable` and are treated equal
+    strictly by {term}`structural equality`, one may also think of an
+    expression tree as being a
+    [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph) where
+    identical subexpressions are only represented in the graph once.
 
 `func`
 
-    *`func` is the function of an {term}`expression`, which can be obtained by
-    `expr.func`. This is usually the same as `type(expr)`, but may differ in
-    some cases, so it should be preferred to `type(expr)` when rebuilding
-    expressions with {term}`args`. Every SymPy expression can be rebuilt
-    exactly with `func` and `args`, that is, `expr.func(*expr.args) == expr`
-    will always be true of any SymPy expression `expr`.
+    The *`func`* property is the function of an {term}`expression`, which can
+    be obtained by `expr.func`. This is usually the same as `type(expr)`, but
+    may differ in some cases, so it should be preferred to `type(expr)` when
+    rebuilding expressions with {term}`args`. Every SymPy expression can be
+    rebuilt exactly with `func` and `args`, that is, `expr.func(*expr.args) ==
+    expr` will always be true of any SymPy expression `expr`.
 
 Function
 
@@ -246,31 +266,31 @@ Function
 
     - A mathematical function, that is, something which maps values from a
       domain to a range. Sometimes an {term}`expression` containing a
-      {term}`symbol` is colloquially called a "function" because the symbol be
-      replaced with a value using {term}`substitution`,
-      evaluating the expression. This usage is colloquial because one must use
-      the {meth}`subs <sympy.core.basic.Basic.subs>` method to do this rather
-      than the typical Python function calling syntax, and because it is not
-      specific about what variable(s) the expression is a function of, so
-      generally the term "expression" should be preferred unless something is
-      an actual function. An expression can be converted into a function
-      object that can be called using the Python `f(x)` syntax using
-      {class}`~.Lambda`.
+      {term}`symbol` is colloquially called a "function" because the symbol
+      can be replaced with a value using {term}`substitution`,
+      {term}`evaluating <evaluate>` the expression. This usage is colloquial
+      because one must use the {meth}`subs <sympy.core.basic.Basic.subs>`
+      method to do this rather than the typical Python function calling
+      syntax, and because it is not specific about what variable(s) the
+      expression is a function of, so generally the term "expression" should
+      be preferred unless something is an actual function. An expression can
+      be converted into a function object that can be called using the Python
+      `f(x)` syntax using {class}`~.Lambda`.
 
     - An instance of the SymPy {term}`Function <Function (class)>` class.
 
     - A Python function, i.e., a function defined using the `def` keyword.
       Python functions are not {term}`symbolic`, since they must always return
-      a value and cannot be {term}`unevaluated`.
+      a value and thus cannot be {term}`unevaluated`.
 
 {class}`~.Function` (class)
 
-    *`Function`* is the base class of algebraic functions in SymPy. This
-    includes common functions like {class}`~.sin` and {class}`~.exp`, special
-    functions like {class}`~.zeta` and {class}`~.hyper`, and integral
-    functions like {func}`~.primepi` and {class}`~.divisor_sigma`. Function
-    classes are always {term}`symbolic`, meaning that they typically remain
-    {term}`unevaluated` when passed a {term}`symbol`, like `f(x)`.
+    *{class}`~.Function`* is the base class of algebraic functions in SymPy.
+    This includes common functions like {class}`~.sin()` and {class}`~.exp()`,
+    special functions like {class}`~.zeta()` and {class}`~.hyper()`, and
+    integral functions like {func}`~.primepi` and {class}`~.divisor_sigma()`.
+    Function classes are always {term}`symbolic`, meaning that they typically
+    remain {term}`unevaluated` when passed a {term}`symbol`, like `f(x)`.
 
     `Function` may also be used to create an {term}`undefined function` by
     passing it a string name for the function, like `Function('f')`.
@@ -284,44 +304,58 @@ Function
 Immutable
 
     In Python, objects are *immutable* if they can not be modified in-place.
-    In order to change the object, a new object must be created. In SymPy, all
-    objects are immutable. This means that all functions that operate on
-    {term}`expressions <expression>` will return a new expression and leave
-    the original unchanged. This also means that any two objects that are
-    {term}`equal <structural equality>` are completely interchangeable and may
-    be thought of as being the same object, even if they happen to be two
-    different objects in memory. Immutability makes it easier to maintain a
-    mental model of code because there is no hidden state. SymPy objects being
-    immutable also means that they are hashable, which allows them to be used
-    as dictionary keys.
+    In order to change an immutable object, a new object must be created. In
+    SymPy, all objects are immutable. This means that all functions that
+    operate on {term}`expressions <expression>` will return a new expression
+    and leave the original unchanged. Performing an operation on an expression
+    will never change other objects or expressions that reference that
+    expression. This also means that any two objects that are {term}`equal
+    <structural equality>` are completely interchangeable and may be thought
+    of as being the same object, even if they happen to be two different
+    objects in memory. Immutability makes it easier to maintain a mental model
+    of code, because there is no hidden state. SymPy objects being immutable
+    also means that they are hashable, which allows them to be used as
+    dictionary keys.
 
 Interactive
 
     *Interactive* usage refers to using SymPy in an interactive REPL
-    environment such as the Python prompt, `isympy`,
+    environment such as the Python prompt, {term}`isympy`,
     [IPython](https://ipython.org/), or the [Jupyter
     notebook](https://jupyter.org/). When using SymPy interactively, all
     commands are typed in real time by the user and all intermediate results
-    are shown. This is in contrast with programmatic use, which is where the
-    code is written in a file which is either executed as a script or is part
-    of a larger Python library. Certain SymPy idioms are only recommended for
-    interactive use and are considered anti-patterns when used
-    programmatically, for example, running `from sympy import *` is convenient
-    when using SymPy interactively, but is generally frowned upon otherwise.
+    are shown. *Interactive* use is in contrast with *programmatic* use, which
+    is where the code is written in a file which is either executed as a
+    script or is part of a larger Python library. Some SymPy idioms are only
+    recommended for interactive use and are considered anti-patterns when used
+    programmatically. For example, running `from sympy import *` is convenient
+    when using SymPy interactively, but is generally frowned upon for
+    programmatic usage, where importing names explicitly just using `import
+    sympy` is preferred.
 
 `is_*`
 
-    Attributes in SymPy that start with *`is_*`* and use a *lowercase* name
-    look up the given {term}`assumption <assumptions>` on that object (there
-    are a few properties that are an exception to this because they do not use
-    the assumptions system). For example, `x.is_positive` will lookup the
-    `positive` assumption on `x`. `is_*` attributes that use a *Capitalized*
-    name test if an object is an instance of the given class. Sometimes the
-    same name will exist for both the lowercase and Capitalized property, but
-    they are different things. In general, `is_Uppercase` properties are not
-    recommended. They exist for historical purposes, but they are unneeded
-    because the same can be achieved with `isinstance()`. See also
-    {term}`Number`.
+    Attributes in SymPy that start with *`is_`* and use a *lowercase* name
+    query the given {term}`assumption <assumptions>` on that object (note:
+    there are a few properties that are an exception to this because they do
+    not use the assumptions system). For example, `x.is_integer` will query
+    the `integer` assumption on `x`. `is_*` attributes that use a
+    *Capitalized* name test if an object is an instance of the given class.
+    Sometimes the same name will exist for both the lowercase and Capitalized
+    property, but they are different things. For example, `x.is_Integer` is
+    only `True` if `x` is an instance of {class}`~.Integer`, whereas
+    `x.is_integer` is `True` if `x` is `integer` in the assumptions system,
+    such as `x = symbols('x', integer=True)`. In general, it is recommended to
+    not use `is_Capitalized` properties. They exist for historical purposes, but
+    they are unneeded because the same thing can be achieved with
+    `isinstance()`. See also {term}`Number`.
+
+`isympy`
+
+    *`isympy`* is a command that ships with SymPy that starts an
+    {term}`interactive` session on the command line with all SymPy names
+    imported and {term}`printing` enabled. It uses
+    [IPython](https://ipython.org/) by default when it is installed.
 
 Kind
 
@@ -332,34 +366,37 @@ Kind
     and {any}`BooleanKind`, which represents boolean predicates. The kind of a
     SymPy object is distinct from its Python type, since sometimes a single
     Python type may represent many different kinds of objects. For example,
-    {class}`~.Matrix` could be a matrix of complex numbers or a matrix of
-    objects from some other ring of values. See [the classification of SymPy
-    objects](kind_classification) page for more details.
+    `Matrix` could be a matrix of complex numbers or a matrix of objects from
+    some other ring of values. See [the classification of SymPy
+    objects](kind_classification) page for more details about kinds in SymPy.
 
 lamda
 
-    "*Lamda*" is just an alternate spelling of "lambda". It is used sometimes
-    in SymPy because `lambda` is a reserved keyword in Python, so a symbol
-    named λ must be named something else.
+    "*Lamda*" is just an alternate spelling of the Greek letter "lambda". It
+    is used sometimes in SymPy because `lambda` is a reserved keyword in
+    Python, so a symbol representing λ must be named something else.
 
 Matrix
 
     *Matrix* refers to the set of classes used by SymPy to represent matrices.
-    SymPy actually has several internal classes to represent matrices,
-    depending on whether the matrix is symbolic ({class}`~.MatrixExpr`) or
-    explicit, mutable or immutable, and what the underlying elements are.
+    SymPy has several internal classes to represent matrices, depending on
+    whether the matrix is symbolic ({class}`~.MatrixExpr`) or explicit,
+    mutable or immutable, dense or sparse, and what type the underlying
+    elements are, but these are often all just called "Matrix".
 
 mpmath
 
     [*mpmath*](https://mpmath.org/) is a pure Python library for arbitrary
     precision numerics. It is a [hard dependency](dependencies-mpmath) of
-    SymPy. mpmath is used under the hood whenever SymPy evaluates an
-    expression numerically, such as when using {term}`evalf`.
+    SymPy. mpmath is capable of computing {term}`numerical <numeric>`
+    functions to any given number of digits. mpmath is used under the hood
+    whenever SymPy evaluates an expression numerically, such as when using
+    {term}`evalf`.
 
 Numeric
 
     A *numeric* representation or algorithm is one that operates directly on
-    numeric inputs. It is in contrast with a {term}`symbolic` representation
+    numeric inputs. It is in contrast with a *{term}`symbolic`* representation
     or algorithm, which can work with objects in an unevaluated form. Often a
     numerical algorithm is quite different from a symbolic one. For example,
     numerically solving an ODE typically means evaluating the ODE using an
@@ -370,17 +407,19 @@ Numeric
     mathematically manipulating the ODE to produce a {term}`symbolic`
     {term}`equation` that represents the solution. A symbolic ODE solution may
     including symbolic constants which can represent any numerical value.
-    Numeric algorithms also need to be concerned with things issues caused by
+    Numeric algorithms are typically designed around issues caused by
     floating-point numbers such as loss of precision and numerical stability,
     whereas symbolic algorithms are not concerned with these things because
     they compute things exactly.
 
-    Most scientific libraries other than SymPy, including NumPy or SciPy, are
+    Most scientific libraries other than SymPy, such as NumPy or SciPy, are
     strictly numerical, meaning the functions in those libraries can only
     operate on specific numeric inputs. They will not work with SymPy
     expressions, because their algorithms are not designed to work with
     symbolic inputs. SymPy focuses on symbolic functions, leaving purely
-    numerical code to other tools like NumPy.
+    numerical code to other tools like NumPy. However, SymPy does interface
+    with numerical libraries via tools like {term}`code generation` and
+    {func}`~.lambdify`.
 
 Number
 
@@ -401,12 +440,14 @@ Number
     properties. `x.is_Number` will check if `x` is an instance of the class
     {class}`~.Number`. Note that `Number` instances are explicit numbers like
     `Integer(1)`, where as `x.is_number` is true for symbolic numbers like
-    `pi`. In general, it is not recommended
+    `pi`.
 
 {class}`oo <sympy.core.numbers.Infinity>`
-    *`oo`* is the SymPy object representing positive infinity. It is spelled
-    this way, as two lower case letter Os because it resembles the symbol
-    $\infty$ and is easy to type.
+
+    *{class}`oo <sympy.core.numbers.Infinity>`* is the SymPy object
+    representing positive infinity. It is spelled this way, as two lower case
+    letter Os, because it resembles the symbol $\infty$ and is easy to type.
+    See also {term}`zoo`.
 
 Polys
 
@@ -416,9 +457,10 @@ Polys
     {term}`core`), because many basic symbolic manipulations can be
     represented as manipulations on polynomials. Many algorithms in SymPy make
     use of the polys under the hood. For example, {func}`~.factor` is a
-    wrapper around the polynomial factorization algorithms. The classes in the
-    polys are implemented using efficient data structures, and are not
-    implemented using {term}`Basic` like the other classes in SymPy.
+    wrapper around the polynomial factorization algorithms that are
+    implemented in the polys. The classes in the polys are implemented using
+    efficient data structures, and are not subclasses of {term}`Basic` like
+    the other classes in SymPy.
 
 Printing
 
@@ -429,48 +471,56 @@ Printing
 
     - The string printer, via `str()`. This converts an
       expression into a readable string which can be copy-pasted.
-    - The Unicode pretty printer, via {func}`pprint
+
+    - The Unicode pretty printer, via {func}`pprint()
       <sympy.printing.pretty.pretty.pretty_print>`. This prints an expression
       using a 2-D text representation using a wide range of Unicode
       characters.
+
     - The ASCII pretty printer, via {func}`pprint(use_unicode=False)
       <sympy.printing.pretty.pretty.pretty_print>`. This prints an expression
       using a 2-D text representation using only ASCII characters.
+
     - The LaTeX printer, via {func}`~.latex`. This converts an expression into
-      a form that can be understood by the $\mathrm{\LaTeX}$ typesetting
-      system. This printer is used under the hood when using SymPy in the
-      [Jupyter notebook](https://jupyter.org/) along with
+      a form that can be understood by the [$\mathrm{\LaTeX}$ typesetting
+      system](https://en.wikipedia.org/wiki/LaTeX). This printer is used under
+      the hood when using SymPy in the [Jupyter
+      notebook](https://jupyter.org/) along with
       [MathJax](https://www.mathjax.org/) to automatically print expressions
       as rendered LaTeX in the browser.
+
     - The srepr printer, via {func}`~.srepr`. This converts an expression into
       a longer text representation that can be copied and pasted to recreate
       the expression. Unlike `str()`, `srepr()` produces a much less
       human-readable form, but one that can be copied and pasted even when the
       symbol names are not valid Python.
-    - Code printers. The code generation system uses the same underlying
+
+    - Code printers. The {term}`code generation` system uses the same underlying
       functionality as the printers to convert expressions into code for
-      various languages. See {term}`code generation`.
+      various languages.
 
 Relational
 
-    A *relational* is a {term}`symbolic` {term}`equality <equation>` or a
-    symbolic inequality like less than (`<`). Equality ($=$) and non-equality
-    ($\neq$) relationals are created with the {class}`Eq
-    <sympy.core.relational.Equality>` and {class}`Ne
-    <sympy.core.relational.Unequality>`, e.g., `Eq(x, 0)` to represent $x=0$.
-    Do not use `==` or `!=`, as these do {term}`structural <structural
-    equality>` rather than symbolic equality. Inequality relationals can be
-    created directly using `<`, `<=`, `>` and `>=`, like `x < 0`.
+    A *relational* is an {term}`expression` that is a {term}`symbolic`
+    {term}`equality <equation>` (like $a=b$), or a symbolic inequality like
+    less than ($a<b$). Equality ($=$) and non-equality ($\neq$) relationals
+    are created with {class}`Eq <sympy.core.relational.Equality>` and
+    {class}`Ne <sympy.core.relational.Unequality>`, respectively. For example,
+    `Eq(x, 0)` represents $x=0$. These should be used instead of `==` or `!=`,
+    as these are used for {term}`structural <structural equality>` rather than
+    symbolic equality. Inequality relationals can be created directly using
+    `<`, `<=`, `>`, and `>=`, like `x < 0`.
 
 {class}`S <sympy.core.singleton.Singleton>`
 
-    The *`S`* object in SymPy has two purposes:
+    The *{class}`S <sympy.core.singleton.Singleton>`* object in SymPy has two
+    purposes:
 
-    - It is the placeholder object for all singleton classes. Some special
-      classes in SymPy are singletonized, meaning that there is always exactly
-      one instance of them. This is an optimization that allows saving memory
-      because there is only ever one instance of `Integer(0)`, for instance,
-      which is available as `S.Zero`.
+    - It holds all singleton classes as attributes. Some special classes in
+      SymPy are singletonized, meaning that there is always exactly one
+      instance of them. This is an optimization that allows saving memory. For
+      instance, there is only ever one instance of `Integer(0)`, which is
+      available as `S.Zero`.
 
     - It serves as a shorthand for {term}`sympify()`, that is `S(a)` is the
       same as `sympify(a)`. This is useful for converting integers to SymPy
@@ -479,20 +529,23 @@ Relational
 
 Simplification
 
-    *Simplification* refers to the process of taking an {term}`expression` and
-    transforming it into another expression which is mathematically equivalent
-    but which is somehow "simpler". The adjective "simple" is not well-defined
-    in this case. What counts as simpler depends on the specific use-case and
+    *Simplification* (not to be confused with {term}`sympify <sympify()>`)
+    refers to the process of taking an {term}`expression` and transforming it
+    into another expression that is mathematically equivalent but which is
+    somehow "simpler". The adjective "simple" is actually not very
+    well-defined. What counts as simpler depends on the specific use-case and
     personal aesthetics. For example, consider the mathematically equivalent
-    expression $x(x + 2)$ and $x^2 + 2x$. One might consider the former to be
+    expressions $x(x + 2)$ and $x^2 + 2x$. One might consider the former to be
     "simpler" because it is in a factored form, and has fewer total
     operations, or one might consider the latter to be more simple because it
-    is fully expanded and in a {term}`canonical <canonicalize>` form for
-    polynomials. If "simpler" means "fewer operations", then should
-    $x(x(x(x(x + 3) - 2) + 1) - 1) - 3$ be considered simpler than
-    $x^5 + 3x^4 - 2x^3 + x^2 - x - 3$ (see {func}`~.horner`)? Or if "simpler"
-    means "in an expanded canonical form", then should $(x + 1)^{10000}$ be
+    is fully expanded and in a {term}`canonical form` for polynomials. If
+    "simpler" means "fewer operations", then should $x(x(x(x(x+3)-2)+1)-1)-3$,
+    which has 9 operations, be considered simpler than $x^5 + 3x^4 - 2x^3 +
+    x^2 - x - 3$, which has 11 (see {func}`~.horner`)? Or if "simpler" means
+    "in an expanded canonical form", then should $(x + 1)^{10000}$ be
     considered less simple than the equivalent expanded form with 10000 terms?
+    As you can see, there is no single definition of "simple" that can apply
+    uniformly to all expressions for all use-cases.
 
     The SymPy function {func}`~.simplify` heuristically tries various
     simplification algorithms to try to find a "simpler" form of an
@@ -505,14 +558,17 @@ Simplification
 Solve
 
     To *solve* an {term}`equation` or system of equations means to find a set
-    of {term}`expressions <expression>` that make the equation true when
-    plugged in. In the context of solvers, an {term}`expression` is often
-    implicitly thought of as equivalent to an equation equaling 0, i.e.,
-    `some_solve_function(expression)` is typically equivalent to
-    `some_solve_function(Eq(expression, 0))`. Different types of equations can
-    be solved by SymPy using different [solvers](solvers-docs) functions. For
-    instance, algebraic equations can be solved with {func}`~.solve`,
-    differential equations can be solved with {func}`~.dsolve`, and so on.
+    of {term}`expressions <expression>` that make the equation(s) true when
+    the given {term}`symbol(s) <symbol>` are {term}`substituted <substitute>`
+    with them. For example, the the solution to equation $x^2 = 1$ with
+    respect to $x$ would be the set $\{-1, 1\}$. In the context of solvers, an
+    {term}`expression` is often implicitly thought of as equivalent to an
+    {term}`equation` equaling 0, i.e., `some_solve_function(expression)` is
+    typically equivalent to `some_solve_function(Eq(expression, 0))`.
+    Different types of equations can be solved by SymPy using different
+    [solvers](solvers-docs) functions. For instance, algebraic equations can
+    be solved with {func}`~.solve`, differential equations can be solved with
+    {func}`~.dsolve`, and so on.
 
     SymPy generally uses the word "solve" to mean equation solving in this
     sense. It is not used in the sense of "solving a problem". For instance,
@@ -526,7 +582,7 @@ Structural Equality
     the same SymPy object. Two structurally equal expressions are considered
     to be identical by SymPy, since all SymPy expressions are
     {term}`immutable`. Structural equality can be checked with the `==`
-    operator, which always returns True or False.Symbolic {term}`equality
+    operator, which always returns `True` or `False`. Symbolic {term}`equality
     <equation>` can be represented using {class}`Eq
     <sympy.core.relational.Equality>`.
 
@@ -534,23 +590,30 @@ Structural Equality
     class and (recursively) have the same {term}`args`. Two expressions may be
     mathematically identical but not structurally equal. For example, `(x +
     1)**2` and `x**2 + 2*x + 1` are mathematically equal, but they are not
-    structurally equal, because the first is a {class}`~.Pow` of an
-    {class}`~.Add` and `Integer(2)`, and the second is an {class}`~.Add` with
-    three arguments.
+    structurally equal, because the first is a {class}`~.Pow` whose
+    {term}`args` consist of an {class}`~.Add` and an {class}`~.Integer`, and
+    the second is an {class}`~.Add` whose {term}`args` consist of a
+    {class}`~.Pow`, a {class}`~.Mul`, and an {class}`~.Integer`.
+
+    Two apparently different expressions may be structurally equal if they are
+    {term}`canonicalized <canonicalize>` to the same thing by {term}`automatic
+    simplification`. For example, `x + y` and `y + x` are structurally equal
+    because the {class}`~.Add` constructor automatically sorts its arguments,
+    making them both the same object.
 
 Subexpression
 
     A *subexpression* is an {term}`expression` that is contained within a
     larger expression. A subexpression appears somewhere in the
-    {term}`expression tree`. Sometimes a sub-tree of the expression tree is
-    also considered a subexpression. For instance, in `x + y + z`, `x + y` may
-    sometimes be considered a subexpression even though the expression tree
-    for `Add(x, y)` is not directly in the expression tree of `Add(x, y, z)`,
-    but is a sub-tree of it.
+    {term}`expression tree`. In some contexts, a subtree of the expression
+    tree is also considered a subexpression. For instance, `x + y` may
+    sometimes be considered a subexpression of `x + y + z`, even though the
+    expression tree for `Add(x, y)` is not a direct child of the expression
+    tree for `Add(x, y, z)`, but rather is a subtree of it.
 
 Substitution
 
-    *Substitution* refers to replacing a {term}`symbol` or
+    *Substitution* refers to the act of replacing a {term}`symbol` or
     {term}`subexpression` inside of an {term}`expression` with another
     expression. There are different methods in SymPy for performing
     substitution, including {meth}`subs <sympy.core.basic.Basic.subs>`,
@@ -558,34 +621,49 @@ Substitution
     <sympy.core.basic.Basic.xreplace>`. The methods may differ depending on
     whether they perform substitution using only strict {term}`structural
     equality` or by making more use of mathematical knowledge when determining
-    where a subexpression appears in an expression.
+    where a subexpression appears in an expression. Substitution is the
+    standard way to treat an expression as a mathematical {term}`function` and
+    evaluate it at a point.
 
 Symbolic
 
     A *symbolic* representation of a mathematical object is a representation
     that is partially or completely unevaluated at runtime. It may include
-    named {term}`symbols <symbol>` in place of explicit numeric values.
-    A symbolic representation is often contrasted with a {term}`numeric` one.
+    named {term}`symbols <symbol>` in place of explicit numeric values. A
+    symbolic representation is often contrasted with a {term}`numeric` one.
     Symbolic representations are mathematically exact, to contrast with
     numeric representations which are typically rounded so they can fit within
-    a floating-point value.
-    Symbolic {term}`expression <expression>` representing mathematical objects
-    may be aware of mathematical properties of these objects and be able to
-    simplify. The goal of SymPy is to represent and manipulate symbolic
-    expressions representing mathematical objects.
+    a floating-point value. Symbolic {term}`expression <expression>`
+    representing mathematical objects may be aware of mathematical properties
+    of these objects and be able to {term}`simplify <simplification>` to
+    equivalent symbolic expressions using those properties. The goal of SymPy
+    is to represent and manipulate symbolic expressions representing
+    mathematical objects.
+
+    Some sources use the phrases "analytic solution" or "closed-form" to refer
+    to the concept of "symbolic", but this terminology is not used in SymPy.
+    If used in SymPy, "analytic" would refer to the property of being [an
+    analytic function](https://en.wikipedia.org/wiki/Analytic_function), and
+    in SymPy {term}`solve` refers only to a certain type of symbolic
+    operation. "Closed-form" in SymPy would typically refer the mathematical
+    sense of the term, whereas "symbolic" would generally refer to the
+    implementation detail of how a mathematical concept is implemented, and be
+    in contrast with a {term}`numeric` implementation of the same mathematical
+    concept.
 
 {class}`~.Symbol`
 
-    A *`Symbol`* is an object that represents a single mathematical variable
-    in an expression. {class}`~.Symbol` is a subclass of {term}`Expr`, is
-    {term}`atomic <atom>`. A `Symbol` contains a name, which is any string,
-    and {term}`assumptions`. Symbols are typically defined with the `Symbol`
-    constructor of the {func}`~.symbols` function. Two Symbols with the same
-    name and assumptions are considered equal.
+    A *{class}`~.Symbol`* is an object that represents a single mathematical
+    variable in an expression. The {class}`~.Symbol` class is a subclass of
+    {term}`Expr` and is {term}`atomic <atom>`. A `Symbol` contains a name,
+    which is any string, and {term}`assumptions`. Symbols are typically
+    defined with the `Symbol` constructor or the {func}`~.symbols` function.
+    Two Symbols with the same name and assumptions are considered {term}`equal
+    <structural equality>`.
 
 {func}`~.sympify`
 
-    *`sympify()`* (not to be confused with *{term}`simplify()
+    *{func}`~.sympify()`* (not to be confused with *{term}`simplify()
     <simplification>`*) is a function that converts non-SymPy objects into
     SymPy objects. The result of `sympify()` will be an instance of
     {term}`Basic`. Objects that can be *sympified* include native Python
@@ -614,32 +692,32 @@ Three-valued logic
     function identically). The semantics of `None` are that it absorbs other
     terms in logical operations whenever the result would differ if it were
     replaced with `True` or `False`. For example, `None OR False` is `None`.
-    However, `None OR True` would be `True` because the expression is `True`
-    whether the `None` "really" represents a value of `True` or `False`. One
-    must be careful to not use the usual Python logical operators like `and`,
-    `or` and `not` on three-valued logic, since `None` is falsy. See
-    [](booleans) for more details on how to code with three-valued logic.
+    However, `None OR True` is `True` because the expression is `True` whether
+    the `None` "really" represents a value of `True` or `False`. One must be
+    careful to not use the usual Python logical operators like `and`, `or` and
+    `not` on three-valued logic, since `None` is falsy. See [](booleans) for
+    more details on how to code with three-valued logic.
 
     Three-valued logic is used by the {term}`assumptions` system to represent
     assumptions that are not known. For instance, `x.is_positive` might be
     `None` if `x` could be positive or negative under its given assumptions.
-    Note that the predicate logic defined by the {term}`Boolean` class is a
-    standard two-valued logic, not three-valued.
+    Note that the predicate logic defined by {term}`Boolean` subclasses
+    represents a standard two-valued logic, not three-valued logic.
 
 Undefined Function
 
     An *undefined function* is a {term}`Function <Function (class)>` that has
     no mathematical properties defined on it. It always remains
-    {term}`unevaluated`. An undefined function can be created by passing a
-    string name of the function to `Function`, like `f = Function('f')`.
-    Undefined functions are commonly used when working with [ODEs](ode-docs).
-    Undefined functions are also the best way to make {term}`symbols <symbol>`
-    that depend on other symbols. For example, if `f = Function('f')` and `x =
-    Symbol('x')`, then SymPy will know that `f(x)` depends on `x`, meaning,
-    for instance, that the derivative `diff(f(x), x)` will not be evaluated to
-    0. Otherwise, by default, SymPy assumes that all symbols do not depend on
-    other symbols, that is, that they are mathematically "constant" or
-    "independent variables" .
+    {term}`unevaluated`, like `f(x)`. An undefined function can be created by
+    passing a string name of the function to `Function`, like `f =
+    Function('f')`. Undefined functions are commonly used when working with
+    [ODEs](ode-docs). Undefined functions are also the easiest way to make
+    {term}`symbols <symbol>` that depend on other symbols. For example, if `f
+    = Function('f')` and `x = Symbol('x')`, then SymPy will know that `f(x)`
+    depends on `x`, meaning, for instance, that the derivative `diff(f(x), x)`
+    will not be evaluated to 0. Otherwise, by default, SymPy assumes that all
+    symbols do not depend on other symbols, that is, that they are
+    mathematically "constant" or "independent variables" .
 
 Unevaluated
 
@@ -650,11 +728,16 @@ Unevaluated
     supported, they can sometimes lead to surprising behavior because the
     expressions are not properly {term}`canonicalized <canonicalize>`.
 
+    The term *unevaluated* is also sometimes used to denote the fact that an
+    expression does not {term}`evaluate` to a specific value when its
+    arguments are {term}`symbolic`.
+
 {class}`zoo <sympy.core.numbers.ComplexInfinity>`
 
-    *`zoo`* represents complex infinity, i.e., the north pole of the Riemann
-    sphere. The reason it is spelled this way is that it is "z-oo", where "z"
-    is the symbol commonly used for complex variables, and {term}`oo` is the
-    symbol SymPy uses for real positive infinity.
+    *{class}`zoo <sympy.core.numbers.ComplexInfinity>`* represents complex
+    infinity, i.e., the north pole of the Riemann sphere. The reason it is
+    spelled this way is that it is "z-oo", where "z" is the symbol commonly
+    used for complex variables, and {term}`oo` is the symbol SymPy uses for
+    real positive infinity.
 
 ```
