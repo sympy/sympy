@@ -559,16 +559,16 @@ Solve
 
     To *solve* an {term}`equation` or system of equations means to find a set
     of {term}`expressions <expression>` that make the equation(s) true when
-    the given {term}`symbol(s) <symbol>` are {term}`substituted <substitute>`
-    with them. For example, the the solution to equation $x^2 = 1$ with
-    respect to $x$ would be the set $\{-1, 1\}$. In the context of solvers, an
-    {term}`expression` is often implicitly thought of as equivalent to an
-    {term}`equation` equaling 0, i.e., `some_solve_function(expression)` is
-    typically equivalent to `some_solve_function(Eq(expression, 0))`.
-    Different types of equations can be solved by SymPy using different
-    [solvers](solvers-docs) functions. For instance, algebraic equations can
-    be solved with {func}`~.solve`, differential equations can be solved with
-    {func}`~.dsolve`, and so on.
+    the given {term}`symbol(s) <symbol>` are {term}`substituted
+    <substitution>` with them. For example, the the solution to equation $x^2
+    = 1$ with respect to $x$ would be the set $\{-1, 1\}$. In the context of
+    solvers, an {term}`expression` is often implicitly thought of as
+    equivalent to an {term}`equation` equaling 0, i.e.,
+    `some_solve_function(expression)` is typically equivalent to
+    `some_solve_function(Eq(expression, 0))`. Different types of equations can
+    be solved by SymPy using different [solvers](solvers-docs) functions. For
+    instance, algebraic equations can be solved with {func}`~.solve`,
+    differential equations can be solved with {func}`~.dsolve`, and so on.
 
     SymPy generally uses the word "solve" to mean equation solving in this
     sense. It is not used in the sense of "solving a problem". For instance,
