@@ -659,8 +659,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         args_storer = []
         for elems in traceback.extract_stack(): args_storer.append(elems.line)
         args_storer1 = args_storer[-2]
-        args_storer1 = re.split('\(',args_storer1)
-        args_storer1 = re.split('\)',args_storer1[-1])
+        args_storer1 = re.split(r'\(',args_storer1)
+        args_storer1 = re.split(r'\)',args_storer1[-1])
         args_storer1 = re.split(',',args_storer1[0])
         args_storer1 = [args_storer1[k].strip() for k in range(len(list_of_derived_quantities))]
         null_space_dims = len(exponents)
