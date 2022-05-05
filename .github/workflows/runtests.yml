@@ -79,7 +79,7 @@ jobs:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
-      - run: bin/mailmap_check.py --skip-last-commit
+      - run: bin/mailmap_check.py
 
   # -------------------- Doctests latest Python -------------------- #
 
@@ -142,7 +142,7 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath gmpy2 matplotlib numpy scipy aesara ipython \
                          symengine cython llvmlite wurlitzer \
-                         autowrap numexpr 'antlr4-python3-runtime==4.7.*' \ 
+                         autowrap numexpr 'antlr4-python3-runtime==4.7.*' \
                          numba
       # Test external imports
       - run: bin/test_external_imports.py
