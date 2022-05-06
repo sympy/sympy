@@ -9,7 +9,7 @@ jobs:
         uses: larsoner/circleci-artifacts-redirector-action@master
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          artifact-path: 0/_build/html/index.html
+          artifact-path: 0/doc/_build/html/index.html
           circleci-jobs: Build Docs Preview
           job-title: Click here to see a preview of the documentation.
       - name: Check the URL
