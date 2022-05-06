@@ -592,7 +592,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         For example, consider an RLC circuit with resistance `R`, inductance `L` and capacitance `C` connected to a constant
         voltage source `V_{amp}`, where current `I(t)` is given by the equation (https://en.wikipedia.org/wiki/RLC_circuit).
 
-        .. math:: \begin{equation*} \frac{d^2 I}{d t^2} + \frac{R}{L} \frac{d I(t)}{d t} + \frac{1}{LC}I(t) = 0 \end{equation*}
+        `\begin{equation*} \frac{d^2 I}{d t^2} + \frac{R}{L} \frac{d I(t)}{d t} + \frac{1}{LC}I(t) = 0 \end{equation*}`
 
         In the above equation, the solution could admit a current of amplitude `I_{amp}` and a scale of angular frequency `\omega`.
 
