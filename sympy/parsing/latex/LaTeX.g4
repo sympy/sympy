@@ -73,7 +73,9 @@ LIM_APPROACH_SYM:
 	| '\\Rightarrow'
 	| '\\longrightarrow'
 	| '\\Longrightarrow';
-FUNC_INT: '\\int';
+FUNC_INT:
+    '\\int'
+    | '\\int\\limits';
 FUNC_SUM: '\\sum';
 FUNC_PROD: '\\prod';
 

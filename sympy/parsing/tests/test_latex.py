@@ -160,6 +160,7 @@ GOOD_PAIRS = [
     (r"\int x + a dx", Integral(_Add(x, a), x)),
     (r"\int da", Integral(1, a)),
     (r"\int_0^7 dx", Integral(1, (x, 0, 7))),
+    (r"\int\limits_{0}^{1} x dx", Integral(x, (x, 0, 1))),
     (r"\int_a^b x dx", Integral(x, (x, a, b))),
     (r"\int^b_a x dx", Integral(x, (x, a, b))),
     (r"\int_{a}^b x dx", Integral(x, (x, a, b))),
