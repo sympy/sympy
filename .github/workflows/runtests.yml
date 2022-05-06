@@ -17,9 +17,6 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-        with:
-          # Clone full git history (needed for AUTHORS/mailmap)
-          fetch-depth: '0'
 
       - uses: actions/setup-python@v3
         with:
@@ -58,10 +55,6 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-        with:
-          # Clone full git history (needed for AUTHORS/mailmap)
-          fetch-depth: '0'
-
       - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
@@ -79,13 +72,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          # Clone full git history (needed for detecting authors)
           fetch-depth: 0
       - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
-      - run: bin/mailmap_check.py
+      - run: bin/mailmap_check.py --skip-last-commit
 
   # -------------------- Doctests latest Python -------------------- #
 
@@ -230,7 +224,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.10', 'pypy-3.8']
+        python-version: ['3.8', '3.10', 'pypy-3.8']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
@@ -248,7 +242,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.10', 'pypy-3.8']
+        python-version: ['3.8', '3.10', 'pypy-3.8']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
@@ -266,7 +260,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.10', 'pypy-3.8']
+        python-version: ['3.8', '3.10', 'pypy-3.8']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3

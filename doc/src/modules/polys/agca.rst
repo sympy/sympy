@@ -7,19 +7,19 @@ AGCA - Algebraic Geometry and Commutative Algebra Module
 Introduction
 ============
 
-  Algebraic geometry is a mixture of the ideas of two Mediterranean
-  cultures. It is the superposition of the Arab science of the lightening
-  calculation of the solutions of equations over the Greek art of position
-  and shape.
-  This tapestry was originally woven on European soil and is still being refined
-  under the influence of international fashion. Algebraic geometry studies the
-  delicate balance between the geometrically plausible and the algebraically
-  possible.  Whenever one side of this mathematical teeter-totter outweighs the
-  other, one immediately loses interest and runs off in search of a more exciting
-  amusement.
+.. epigraph::
+   Algebraic geometry is a mixture of the ideas of two Mediterranean
+   cultures. It is the superposition of the Arab science of the lightening
+   calculation of the solutions of equations over the Greek art of position
+   and shape.
+   This tapestry was originally woven on European soil and is still being refined
+   under the influence of international fashion. Algebraic geometry studies the
+   delicate balance between the geometrically plausible and the algebraically
+   possible.  Whenever one side of this mathematical teeter-totter outweighs the
+   other, one immediately loses interest and runs off in search of a more exciting
+   amusement.
 
-    George R. Kempf
-    1944 -- 2002
+   -- George R. Kempf (1944 -- 2002)
 
 
 Algebraic Geometry refers to the study of geometric problems via algebraic

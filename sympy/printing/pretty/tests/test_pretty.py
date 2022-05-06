@@ -53,7 +53,8 @@ from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
     mathieusprime, mathieucprime)
 
-from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose, KroneckerProduct
+from sympy.matrices import (Adjoint, Inverse, MatrixSymbol, Transpose,
+                            KroneckerProduct, BlockMatrix, OneMatrix, ZeroMatrix)
 from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
@@ -3672,6 +3673,60 @@ def test_Adjoint():
         '⎛⎡1  2⎤    ⎞ \n'\
         '⎜⎢    ⎥ + X⎟ \n'\
         '⎝⎣3  4⎦    ⎠ '
+    assert upretty(Adjoint(BlockMatrix(((OneMatrix(2, 2), X),
+                                        (m, ZeroMatrix(2, 2)))))) == \
+        '           †\n'\
+        '⎡  𝟙     X⎤ \n'\
+        '⎢         ⎥ \n'\
+        '⎢⎡1  2⎤   ⎥ \n'\
+        '⎢⎢    ⎥  𝟘⎥ \n'\
+        '⎣⎣3  4⎦   ⎦ '
+
+
+def test_Transpose():
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    assert pretty(Transpose(X)) == " T\nX "
+    assert pretty(Transpose(X + Y)) == "       T\n(X + Y) "
+    assert pretty(Transpose(X) + Transpose(Y)) == " T    T\nX  + Y "
+    assert pretty(Transpose(X*Y)) == "     T\n(X*Y) "
+    assert pretty(Transpose(Y)*Transpose(X)) == " T  T\nY *X "
+    assert pretty(Transpose(X**2)) == "    T\n/ 2\\ \n\\X / "
+    assert pretty(Transpose(X)**2) == "    2\n/ T\\ \n\\X / "
+    assert pretty(Transpose(Inverse(X))) == "     T\n/ -1\\ \n\\X  / "
+    assert pretty(Inverse(Transpose(X))) == "    -1\n/ T\\  \n\\X /  "
+    assert upretty(Transpose(X)) == " T\nX "
+    assert upretty(Transpose(X + Y)) == "       T\n(X + Y) "
+    assert upretty(Transpose(X) + Transpose(Y)) == " T    T\nX  + Y "
+    assert upretty(Transpose(X*Y)) == "     T\n(X⋅Y) "
+    assert upretty(Transpose(Y)*Transpose(X)) == " T  T\nY ⋅X "
+    assert upretty(Transpose(X**2)) == \
+        "    T\n⎛ 2⎞ \n⎝X ⎠ "
+    assert upretty(Transpose(X)**2) == \
+        "    2\n⎛ T⎞ \n⎝X ⎠ "
+    assert upretty(Transpose(Inverse(X))) == \
+        "     T\n⎛ -1⎞ \n⎝X  ⎠ "
+    assert upretty(Inverse(Transpose(X))) == \
+        "    -1\n⎛ T⎞  \n⎝X ⎠  "
+    m = Matrix(((1, 2), (3, 4)))
+    assert upretty(Transpose(m)) == \
+        '      T\n'\
+        '⎡1  2⎤ \n'\
+        '⎢    ⎥ \n'\
+        '⎣3  4⎦ '
+    assert upretty(Transpose(m+X)) == \
+        '            T\n'\
+        '⎛⎡1  2⎤    ⎞ \n'\
+        '⎜⎢    ⎥ + X⎟ \n'\
+        '⎝⎣3  4⎦    ⎠ '
+    assert upretty(Transpose(BlockMatrix(((OneMatrix(2, 2), X),
+                                          (m, ZeroMatrix(2, 2)))))) == \
+        '           T\n'\
+        '⎡  𝟙     X⎤ \n'\
+        '⎢         ⎥ \n'\
+        '⎢⎡1  2⎤   ⎥ \n'\
+        '⎢⎢    ⎥  𝟘⎥ \n'\
+        '⎣⎣3  4⎦   ⎦ '
 
 
 def test_pretty_Trace_issue_9044():
@@ -3814,6 +3869,30 @@ def test_pretty_dotproduct():
     assert pretty(DotProduct(C, D)) == "[1  2  3]*[1  3  4]"
     assert upretty(DotProduct(A, B)) == "A⋅B"
     assert upretty(DotProduct(C, D)) == "[1  2  3]⋅[1  3  4]"
+
+
+def test_pretty_Determinant():
+    from sympy.matrices import Determinant, Inverse, BlockMatrix, OneMatrix, ZeroMatrix
+    m = Matrix(((1, 2), (3, 4)))
+    assert upretty(Determinant(m)) == '│1  2│\n│    │\n│3  4│'
+    assert upretty(Determinant(Inverse(m))) == \
+        '│      -1│\n'\
+        '│⎡1  2⎤  │\n'\
+        '│⎢    ⎥  │\n'\
+        '│⎣3  4⎦  │'
+    X = MatrixSymbol('X', 2, 2)
+    assert upretty(Determinant(X)) == '│X│'
+    assert upretty(Determinant(X + m)) == \
+        '│⎡1  2⎤    │\n'\
+        '│⎢    ⎥ + X│\n'\
+        '│⎣3  4⎦    │'
+    assert upretty(Determinant(BlockMatrix(((OneMatrix(2, 2), X),
+                                            (m, ZeroMatrix(2, 2)))))) == \
+        '│  𝟙     X│\n'\
+        '│         │\n'\
+        '│⎡1  2⎤   │\n'\
+        '│⎢    ⎥  𝟘│\n'\
+        '│⎣3  4⎦   │'
 
 
 def test_pretty_piecewise():

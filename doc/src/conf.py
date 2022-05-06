@@ -29,11 +29,11 @@ sys.path = ['ext'] + sys.path
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
-              'sphinx.ext.mathjax', 'numpydoc', 'sphinx_reredirects',
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
+              'sphinx_math_dollar', 'sphinx.ext.mathjax', 'numpydoc',
+              'sphinx_reredirects', 'sphinx_copybutton',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
-              'myst_parser', 'sphinx.ext.intersphinx'
-              ]
+              'myst_parser', 'sphinx.ext.intersphinx']
 
 redirects = {
     "install.rst": "guides/getting_started/install.html",
@@ -48,6 +48,10 @@ redirects = {
 }
 
 html_baseurl = "https://docs.sympy.org/latest/"
+
+# Configure Sphinx copybutton (see https://sphinx-copybutton.readthedocs.io/en/latest/use.html)
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
+copybutton_prompt_is_regexp = True
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]

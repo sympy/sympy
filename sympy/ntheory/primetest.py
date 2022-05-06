@@ -586,8 +586,8 @@ def isprime(n):
         return False
     if n < 2809:
         return True
-    if n <= 23001:
-        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951]
+    if n < 31417:
+        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951, 23377]
 
     # bisection search on the sieve if the sieve is large enough
     from sympy.ntheory.generate import sieve as s

@@ -17,6 +17,7 @@ To enable simple substitutions, add the match to find_substitutions.
 
 """
 
+from __future__ import annotations
 from typing import Dict as tDict, Optional
 from collections import namedtuple, defaultdict
 from collections.abc import Mapping
@@ -36,8 +37,8 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import (cosh, sinh, acosh, asinh,
-                                                   acoth, atanh)
+from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
+    cosh, coth, sech, sinh, tanh, acosh, asinh, acoth, atanh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
@@ -81,6 +82,7 @@ URule = Rule("URule", "u_var u_func constant substep")
 PartsRule = Rule("PartsRule", "u dv v_step second_step")
 CyclicPartsRule = Rule("CyclicPartsRule", "parts_rules coefficient")
 TrigRule = Rule("TrigRule", "func arg")
+HyperbolicRule = Rule("HyperbolicRule", "func arg")
 ExpRule = Rule("ExpRule", "base exp")
 ReciprocalRule = Rule("ReciprocalRule", "func")
 ArcsinRule = Rule("ArcsinRule")
@@ -209,9 +211,6 @@ def find_substitutions(integrand, symbol, u_var):
         if u_diff == 0:
             return False
         substituted = integrand / u_diff
-        if symbol not in substituted.free_symbols:
-            # replaced everything already
-            return False
         debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
@@ -240,7 +239,7 @@ def find_substitutions(integrand, symbol, u_var):
         return False
 
     def possible_subterms(term):
-        if isinstance(term, (TrigonometricFunction,
+        if isinstance(term, (TrigonometricFunction, HyperbolicFunction,
                              *inverse_trig_functions,
                              exp, log, Heaviside)):
             return [term.args[0]]
@@ -859,6 +858,36 @@ def root_mul_rule(integral):
     if next_step:
         return URule(u, u_func, None, next_step, integrand, symbol)
 
+
+def hyperbolic_rule(integral: tuple[Expr, Symbol]):
+    integrand, symbol = integral
+    if isinstance(integrand, HyperbolicFunction) and integrand.args[0] == symbol:
+        if integrand.func == sinh:
+            return HyperbolicRule('sinh', symbol, integrand, symbol)
+        if integrand.func == cosh:
+            return HyperbolicRule('cosh', symbol, integrand, symbol)
+        u = Dummy('u')
+        if integrand.func == tanh:
+            rewritten = sinh(symbol)/cosh(symbol)
+            return RewriteRule(rewritten,
+                   URule(u, cosh(symbol), None,
+                   ReciprocalRule(u, 1/u, u), rewritten, symbol), integrand, symbol)
+        if integrand.func == coth:
+            rewritten = cosh(symbol)/sinh(symbol)
+            return RewriteRule(rewritten,
+                   URule(u, sinh(symbol), None,
+                   ReciprocalRule(u, 1/u, u), rewritten, symbol), integrand, symbol)
+        else:
+            rewritten = integrand.rewrite(tanh)
+            if integrand.func == sech:
+                return RewriteRule(rewritten,
+                       URule(u, tanh(symbol/2), None,
+                       ArctanRule(S(2), S.One, S.One, 2/(u**2 + 1), u), rewritten, symbol), integrand, symbol)
+            if integrand.func == csch:
+                return RewriteRule(rewritten,
+                       URule(u, tanh(symbol/2), None,
+                       ReciprocalRule(u, 1/u, u), rewritten, symbol), integrand, symbol)
+
 @cacheit
 def make_wilds(symbol):
     a = Wild('a', exclude=[symbol])
@@ -1129,7 +1158,7 @@ def substitution_rule(integral):
             if simplify(c - 1) != 0:
                 _, denom = c.as_numer_denom()
                 if subrule:
-                    subrule = ConstantTimesRule(c, substituted, subrule, substituted, u_var)
+                    subrule = ConstantTimesRule(c, substituted, subrule, c * substituted, u_var)
 
                 if denom.free_symbols:
                     piecewise = []
@@ -1333,6 +1362,7 @@ def integral_steps(integrand, symbol, **options):
         })),
         do_one(
             null_safe(trig_rule),
+            null_safe(hyperbolic_rule),
             null_safe(alternatives(
                 rewrites_rule,
                 substitution_rule,
@@ -1421,6 +1451,15 @@ def eval_trig(func, arg, integrand, symbol):
         return tan(arg)
     elif func == 'csc**2':
         return -cot(arg)
+
+
+@evaluates(HyperbolicRule)
+def eval_hyperbolic(func: str, arg: Expr, integrand, symbol):
+    if func == 'sinh':
+        return cosh(arg)
+    if func == 'cosh':
+        return sinh(arg)
+
 
 @evaluates(ArctanRule)
 def eval_arctan(a, b, c, integrand, symbol):

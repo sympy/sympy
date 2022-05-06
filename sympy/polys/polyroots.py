@@ -20,12 +20,13 @@ from sympy.functions.elementary.miscellaneous import root, sqrt
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.polys.domains import EX
 from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
-    DomainError)
+    DomainError, UnsolvableFactorError)
 from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.rationaltools import together
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.utilities import public
+from sympy.utilities.misc import filldedent
 
 
 def roots_linear(f):
@@ -808,6 +809,7 @@ def roots(f, *gens,
         multiple=False,
         filter=None,
         predicate=None,
+        strict=False,
         **flags):
     """
     Computes symbolic roots of a univariate polynomial.
@@ -837,10 +839,14 @@ def roots(f, *gens,
     (For a given Poly, the all_roots method will give the roots in
     sorted numerical order.)
 
+    If the ``strict`` flag is True, ``UnsolvableFactorError`` will be
+    raised if the roots found are known to be incomplete (because
+    some roots are not expressible in radicals).
+
     Examples
     ========
 
-    >>> from sympy import Poly, roots
+    >>> from sympy import Poly, roots, degree
     >>> from sympy.abc import x, y
 
     >>> roots(x**2 - 1, x)
@@ -860,6 +866,43 @@ def roots(f, *gens,
 
     >>> roots([1, 0, -1])
     {-1: 1, 1: 1}
+
+    ``roots`` will only return roots expressible in radicals. If
+    the given polynomial has some or all of its roots inexpressible in
+    radicals, the result of ``roots`` will be incomplete or empty
+    respectively.
+
+    Example where result is incomplete:
+
+    >>> roots((x-1)*(x**5-x+1), x)
+    {1: 1}
+
+    In this case, the polynomial has an unsolvable quintic factor
+    whose roots cannot be expressed by radicals. The polynomial has a
+    rational root (due to the factor `(x-1)`), which is returned since
+    ``roots`` always finds all rational roots.
+
+    Example where result is empty:
+
+    >>> roots(x**7-3*x**2+1, x)
+    {}
+
+    Here, the polynomial has no roots expressible in radicals, so
+    ``roots`` returns an empty dictionary.
+
+    The result produced by ``roots`` is complete if and only if the
+    sum of the multiplicity of each root is equal to the degree of
+    the polynomial. If strict=True, UnsolvableFactorError will be
+    raised if the result is incomplete.
+
+    The result can be be checked for completeness as follows:
+
+    >>> f = x**3-2*x**2+1
+    >>> sum(roots(f, x).values()) == degree(f, x)
+    True
+    >>> f = (x-1)*(x**5-x+1)
+    >>> sum(roots(f, x).values()) == degree(f, x)
+    False
 
 
     References
@@ -1099,6 +1142,14 @@ def roots(f, *gens,
 
     # adding zero roots after non-trivial roots have been translated
     result.update(zeros)
+
+    if strict and sum(result.values()) < f.degree():
+        raise UnsolvableFactorError(filldedent('''
+            Strict mode: some factors cannot be solved in radicals, so
+            a complete list of solutions cannot be returned. Call
+            roots with strict=False to get solutions expressible in
+            radicals (if there are any).
+            '''))
 
     if not multiple:
         return result

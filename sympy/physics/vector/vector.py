@@ -537,8 +537,8 @@ class Vector(Printable, EvalfMixin):
 
         from sympy.physics.vector.frame import _check_frame
 
-        var = sympify(var)
         _check_frame(frame)
+        var = sympify(var)
 
         inlist = []
 

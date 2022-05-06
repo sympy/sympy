@@ -231,6 +231,19 @@ def test_parser_mathematica_tokenizer():
     assert chain("#1 + #2 & [x, y]") == [["Function", ["Plus", ["Slot", "1"], ["Slot", "2"]]], "x", "y"]
     assert chain("#1^2#2^3&") == ["Function", ["Times", ["Power", ["Slot", "1"], "2"], ["Power", ["Slot", "2"], "3"]]]
 
+    # Strings inside Mathematica expressions:
+    assert chain('"abc"') == ["_Str", "abc"]
+    assert chain('"a\\"b"') == ["_Str", 'a"b']
+    # This expression does not make sense mathematically, it's just testing the parser:
+    assert chain('x + "abc" ^ 3') == ["Plus", "x", ["Power", ["_Str", "abc"], "3"]]
+    assert chain('"a (* b *) c"') == ["_Str", "a (* b *) c"]
+    assert chain('"a" (* b *) ') == ["_Str", "a"]
+    assert chain('"a [ b] "') == ["_Str", "a [ b] "]
+    raises(SyntaxError, lambda: chain('"'))
+    raises(SyntaxError, lambda: chain('"\\"'))
+    raises(SyntaxError, lambda: chain('"abc'))
+    raises(SyntaxError, lambda: chain('"abc\\"def'))
+
     # Invalid expressions:
     raises(SyntaxError, lambda: chain("(,"))
     raises(SyntaxError, lambda: chain("()"))

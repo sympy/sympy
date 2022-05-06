@@ -199,7 +199,18 @@ def test_latex_basic():
     assert latex(AlgebraicNumber(sqrt(2), [3, -7], alias='alpha')) == \
         r"3 \alpha - 7"
     assert latex(AlgebraicNumber(2**(S(1)/3), [1, 3, -7], alias='beta')) == \
-           r"\beta^{2} + 3 \beta - 7"
+        r"\beta^{2} + 3 \beta - 7"
+
+    k = ZZ.cyclotomic_field(5)
+    assert latex(k.ext.field_element([1, 2, 3, 4])) == \
+        r"\zeta^{3} + 2 \zeta^{2} + 3 \zeta + 4"
+    assert latex(k.ext.field_element([1, 2, 3, 4]), order='old') == \
+        r"4 + 3 \zeta + 2 \zeta^{2} + \zeta^{3}"
+    assert latex(k.primes_above(19)[0]) == \
+        r"\left(19, \zeta^{2} + 5 \zeta + 1\right)"
+    assert latex(k.primes_above(19)[0], order='old') == \
+           r"\left(19, 1 + 5 \zeta + \zeta^{2}\right)"
+    assert latex(k.primes_above(7)[0]) == r"\left(7\right)"
 
     assert latex(1.5e20*x) == r"1.5 \cdot 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
@@ -740,7 +751,7 @@ def test_latex_indexed():
     assert indexed_latex == r'\overline{{\Psi}_{0}} {\Psi}_{0}'
 
     # Symbol('gamma') gives r'\gamma'
-    interval = '\\mathrel{..}\\nobreak'
+    interval = '\\mathrel{..}\\nobreak '
     assert latex(Indexed('x1', Symbol('i'))) == r'{x_{1}}_{i}'
     assert latex(Indexed('x2', Idx('i'))) == r'{x_{2}}_{i}'
     assert latex(Indexed('x3', Idx('i', Symbol('N')))) == r'{x_{3}}_{{i}_{0'+interval+'N - 1}}'
@@ -1940,6 +1951,21 @@ def test_Tr():
     assert latex(t) == r'\operatorname{tr}\left(A B\right)'
 
 
+def test_Determinant():
+    from sympy.matrices import Determinant, Inverse, BlockMatrix, OneMatrix, ZeroMatrix
+    m = Matrix(((1, 2), (3, 4)))
+    assert latex(Determinant(m)) == '\\left|{\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}}\\right|'
+    assert latex(Determinant(Inverse(m))) == \
+        '\\left|{\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{-1}}\\right|'
+    X = MatrixSymbol('X', 2, 2)
+    assert latex(Determinant(X)) == '\\left|{X}\\right|'
+    assert latex(Determinant(X + m)) == \
+        '\\left|{\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X}\\right|'
+    assert latex(Determinant(BlockMatrix(((OneMatrix(2, 2), X),
+                                          (m, ZeroMatrix(2, 2)))))) == \
+        '\\left|{\\begin{matrix}1 & X\\\\\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] & 0\\end{matrix}}\\right|'
+
+
 def test_Adjoint():
     from sympy.matrices import Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
@@ -1960,6 +1986,10 @@ def test_Adjoint():
     assert latex(Adjoint(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{\\dagger}'
     assert latex(Adjoint(m+X)) == \
         '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{\\dagger}'
+    from sympy.matrices import BlockMatrix, OneMatrix, ZeroMatrix
+    assert latex(Adjoint(BlockMatrix(((OneMatrix(2, 2), X),
+                                      (m, ZeroMatrix(2, 2)))))) == \
+        '\\left[\\begin{matrix}1 & X\\\\\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] & 0\\end{matrix}\\right]^{\\dagger}'
     # Issue 20959
     Mx = MatrixSymbol('M^x', 2, 2)
     assert latex(Adjoint(Mx)) == r'\left(M^{x}\right)^{\dagger}'
@@ -1980,6 +2010,10 @@ def test_Transpose():
     assert latex(Transpose(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{T}'
     assert latex(Transpose(m+X)) == \
         '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{T}'
+    from sympy.matrices import BlockMatrix, OneMatrix, ZeroMatrix
+    assert latex(Transpose(BlockMatrix(((OneMatrix(2, 2), X),
+                                        (m, ZeroMatrix(2, 2)))))) == \
+        '\\left[\\begin{matrix}1 & X\\\\\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] & 0\\end{matrix}\\right]^{T}'
     # Issue 20959
     Mx = MatrixSymbol('M^x', 2, 2)
     assert latex(Transpose(Mx)) == r'\left(M^{x}\right)^{T}'
