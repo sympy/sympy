@@ -2,7 +2,7 @@
 
 The Python package SymPy can symbolically solve equations, differential equations, 
 linear equations, nonlinear equations, matrix problems, inequalities, 
-diophantine equations, and integrals. SymPy can also solve numerically.
+diophantine equations, and evaluate integrals. SymPy can also solve numerically.
 
 Learn how to use SymPy computer algebra system to:
 
@@ -16,7 +16,7 @@ Learn how to use SymPy computer algebra system to:
 - [Solve an inequality algebraically]() or [solve a system of inequalities algebraically]()
 - [Solve a polynomial algebraically]()
 - [Solve a diophantine equation algebraically]()
-- [Compute an integral symbolically]()
+- [Evaluate an integral symbolically]()
 
 Note: SymPy has a function called 
 [`solve`](https://docs.sympy.org/dev/modules/solvers/solvers.html?highlight=solve#sympy.solvers.solvers.solve) 
