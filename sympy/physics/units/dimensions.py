@@ -632,10 +632,8 @@ class DimensionSystem(Basic, _QuantityMapper):
 
     def verify_dimensionless_numbers(self, *list_of_derived_quantities):
         """
-
         Give the objects of class Dimension that represent the dimensionless quantities.
         To be preferably used only for test purposes, please refer to /units/test/test_dimensionless.py
-
         """
         exponents = self.buckingham_pi_theorem(*list_of_derived_quantities)
         null_space_dims = len(exponents)
@@ -649,10 +647,8 @@ class DimensionSystem(Basic, _QuantityMapper):
 
     def get_dimensionless_numbers(self, *list_of_derived_quantities):
         """
-
         Give the resultant list the quantities (as an instance of class Dimension), which are actually the dimensionless numbers
         in the original unit system.
-
         """
         exponents = self.buckingham_pi_theorem(*list_of_derived_quantities)
         import traceback, re
