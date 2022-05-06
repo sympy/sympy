@@ -630,6 +630,13 @@ class LatexPrinter(Printer):
         else:
             return self._print(expr.as_expr())
 
+    def _print_PrimeIdeal(self, expr):
+        p = self._print(expr.p)
+        if expr.is_inert:
+            return rf'\left({p}\right)'
+        alpha = self._print(expr.alpha.as_expr())
+        return rf'\left({p}, {alpha}\right)'
+
     def _print_Pow(self, expr):
         # Treat x**Rational(1,n) as special case
         if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1 \
@@ -783,7 +790,7 @@ class LatexPrinter(Printer):
                 lower = self._print(expr.lower)
             else:
                 lower = self._print(S.Zero)
-            interval = '{lower}\\mathrel{{..}}\\nobreak{upper}'.format(
+            interval = '{lower}\\mathrel{{..}}\\nobreak {upper}'.format(
                     lower = lower, upper = upper)
             return '{{{label}}}_{{{interval}}}'.format(
                 label = label, interval = interval)
@@ -1066,7 +1073,6 @@ class LatexPrinter(Printer):
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
-    _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
         if self._settings['gothic_re_im']:
@@ -1657,7 +1663,7 @@ class LatexPrinter(Printer):
         tex = r"\begin{cases} %s \end{cases}"
         return tex % r" \\".join(ecpairs)
 
-    def _print_MatrixBase(self, expr):
+    def _print_matrix_contents(self, expr):
         lines = []
 
         for line in range(expr.rows):  # horrible, should be 'rows'
@@ -1677,12 +1683,16 @@ class LatexPrinter(Printer):
         out_str = out_str.replace('%MATSTR%', mat_str)
         if mat_str == 'array':
             out_str = out_str.replace('%s', '{' + 'c'*expr.cols + '}%s')
+        return out_str % r"\\".join(lines)
+
+    def _print_MatrixBase(self, expr):
+        out_str = self._print_matrix_contents(expr)
         if self._settings['mat_delim']:
             left_delim = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
-        return out_str % r"\\".join(lines)
+        return out_str
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
@@ -1707,8 +1717,9 @@ class LatexPrinter(Printer):
 
     def _print_Transpose(self, expr):
         mat = expr.arg
-        from sympy.matrices import MatrixSymbol
-        if not isinstance(mat, MatrixSymbol) and mat.is_MatrixExpr:
+        from sympy.matrices import MatrixSymbol, BlockMatrix
+        if (not isinstance(mat, MatrixSymbol) and
+            not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
             return r"\left(%s\right)^{T}" % self._print(mat)
         else:
             s = self.parenthesize(mat, precedence_traditional(expr), True)
@@ -1723,8 +1734,9 @@ class LatexPrinter(Printer):
 
     def _print_Adjoint(self, expr):
         mat = expr.arg
-        from sympy.matrices import MatrixSymbol
-        if not isinstance(mat, MatrixSymbol) and mat.is_MatrixExpr:
+        from sympy.matrices import MatrixSymbol, BlockMatrix
+        if (not isinstance(mat, MatrixSymbol) and
+            not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
             return r"\left(%s\right)^{\dagger}" % self._print(mat)
         else:
             s = self.parenthesize(mat, precedence_traditional(expr), True)
@@ -1753,6 +1765,16 @@ class LatexPrinter(Printer):
             return '- ' + ' '.join(map(parens, args))
         else:
             return ' '.join(map(parens, args))
+
+    def _print_Determinant(self, expr):
+        mat = expr.arg
+        if mat.is_MatrixExpr:
+            from sympy.matrices.expressions.blockmatrix import BlockMatrix
+            if isinstance(mat, BlockMatrix):
+                return r"\left|{%s}\right|" % self._print_matrix_contents(mat.blocks)
+            return r"\left|{%s}\right|" % self._print(mat)
+        return r"\left|{%s}\right|" % self._print_matrix_contents(mat)
+
 
     def _print_Mod(self, expr, exp=None):
         if exp is not None:
@@ -1795,7 +1817,7 @@ class LatexPrinter(Printer):
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
         from sympy.matrices import MatrixSymbol
-        if not isinstance(base, MatrixSymbol):
+        if not isinstance(base, MatrixSymbol) and base.is_MatrixExpr:
             return "\\left(%s\\right)^{%s}" % (self._print(base),
                                               self._print(exp))
         else:

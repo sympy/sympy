@@ -1,10 +1,11 @@
+from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function, diff, expand)
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (acosh, acoth, asinh, atanh, cosh, sinh)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, asinh, atanh, csch, cosh, coth, sech, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
@@ -23,12 +24,18 @@ from sympy.testing.pytest import raises, slow
 x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
 f = Function('f')
 
+
+def assert_is_integral_of(f: Expr, F: Expr):
+    assert manualintegrate(f, x) == F
+    assert F.diff(x).equals(f)
+
+
 def test_find_substitutions():
     assert find_substitutions((cot(x)**2 + 1)**2*csc(x)**2*cot(x)**2, x, u) == \
         [(cot(x), 1, -u**6 - 2*u**4 - u**2)]
     assert find_substitutions((sec(x)**2 + tan(x) * sec(x)) / (sec(x) + tan(x)),
                               x, u) == [(sec(x) + tan(x), 1, 1/u)]
-    assert find_substitutions(x * exp(-x**2), x, u) == [(-x**2, Rational(-1, 2), exp(u))]
+    assert (-x**2, Rational(-1, 2), exp(u)) in find_substitutions(x * exp(-x**2), x, u)
 
 
 def test_manualintegrate_polynomials():
@@ -51,6 +58,8 @@ def test_manualintegrate_exponentials():
     assert manualintegrate(1 / x, x) == log(x)
     assert manualintegrate(1 / (2*x + 3), x) == log(2*x + 3) / 2
     assert manualintegrate(log(x)**2 / x, x) == log(x)**3 / 3
+
+    assert_is_integral_of(x**x*(log(x)+1), x**x)
 
 
 def test_manualintegrate_parts():
@@ -92,6 +101,18 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(cos(3*x)*sec(x), x) == -x + sin(2*x)
     assert manualintegrate(sin(3*x)*sec(x), x) == \
         -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
+
+    assert_is_integral_of(sinh(2*x), cosh(2*x)/2)
+    assert_is_integral_of(x*cosh(x**2), sinh(x**2)/2)
+    assert_is_integral_of(tanh(x), log(cosh(x)))
+    assert_is_integral_of(coth(x), log(sinh(x)))
+    f, F = sech(x), 2*atan(tanh(x/2))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).simplify() == 0  # todo: equals returns None
+    f, F = csch(x), log(tanh(x/2))
+    assert manualintegrate(f, x) == F
+    assert (F.diff(x) - f).rewrite(exp).simplify() == 0
+
 
 @slow
 def test_manualintegrate_trigpowers():
@@ -232,39 +253,39 @@ def test_manualintegrate_rational():
 
 def test_manualintegrate_special():
     f, F = 4*exp(-x**2/3), 2*sqrt(3)*sqrt(pi)*erf(sqrt(3)*x/3)
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = 3*exp(4*x**2), 3*sqrt(pi)*erfi(2*x)/4
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = x**Rational(1, 3)*exp(-x/8), -16*uppergamma(Rational(4, 3), x/8)
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = exp(2*x)/x, Ei(2*x)
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = exp(1 + 2*x - x**2), sqrt(pi)*exp(2)*erf(x - 1)/2
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f = sin(x**2 + 4*x + 1)
     F = (sqrt(2)*sqrt(pi)*(-sin(3)*fresnelc(sqrt(2)*(2*x + 4)/(2*sqrt(pi))) +
         cos(3)*fresnels(sqrt(2)*(2*x + 4)/(2*sqrt(pi))))/2)
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = cos(4*x**2), sqrt(2)*sqrt(pi)*fresnelc(2*sqrt(2)*x/sqrt(pi))/4
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = sin(3*x + 2)/x, sin(2)*Ci(3*x) + cos(2)*Si(3*x)
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = sinh(3*x - 2)/x, -sinh(2)*Chi(3*x) + cosh(2)*Shi(3*x)
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = 5*cos(2*x - 3)/x, 5*cos(3)*Ci(2*x) + 5*sin(3)*Si(2*x)
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = cosh(x/2)/x, Chi(x/2)
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = cos(x**2)/x, Ci(x**2)/2
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = 1/log(2*x + 1), li(2*x + 1)/2
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = polylog(2, 5*x)/x, polylog(3, 5*x)
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = 5/sqrt(3 - 2*sin(x)**2), 5*sqrt(3)*elliptic_f(x, Rational(2, 3))/3
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
     f, F = sqrt(4 + 9*sin(x)**2), 2*elliptic_e(x, Rational(-9, 4))
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
 
 
 def test_manualintegrate_derivative():
@@ -544,7 +565,7 @@ def test_manual_subs():
 def test_issue_15471():
     f = log(x)*cos(log(x))/x**Rational(3, 4)
     F = -128*x**Rational(1, 4)*sin(log(x))/289 + 240*x**Rational(1, 4)*cos(log(x))/289 + (16*x**Rational(1, 4)*sin(log(x))/17 + 4*x**Rational(1, 4)*cos(log(x))/17)*log(x)
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    assert_is_integral_of(f, F)
 
 
 def test_quadratic_denom():
@@ -555,3 +576,9 @@ def test_quadratic_denom():
 
 def test_issue_22757():
     assert manualintegrate(sin(x), y) == y * sin(x)
+
+
+def test_issue_23348():
+    steps = integral_steps(tan(x), x)
+    constant_times_step = steps.substep.substep
+    assert constant_times_step.context == constant_times_step.constant * constant_times_step.other

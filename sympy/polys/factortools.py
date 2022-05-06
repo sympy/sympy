@@ -450,6 +450,13 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     >>> R.dup_cyclotomic_p(g)
     True
 
+    References
+    ==========
+
+    Bradford, Russell J., and James H. Davenport. "Effective tests for
+    cyclotomic polynomials." In International Symposium on Symbolic and
+    Algebraic Computation, pp. 244-251. Springer, Berlin, Heidelberg, 1988.
+
     """
     if K.is_QQ:
         try:

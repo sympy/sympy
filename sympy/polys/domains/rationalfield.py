@@ -64,15 +64,19 @@ class RationalField(Field, CharacteristicZero, SimpleDomain):
         else:
             raise CoercionFailed("expected `Rational` object, got %s" % a)
 
-    def algebraic_field(self, *extension):
+    def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`.
 
         Parameters
         ==========
 
-        *extension: One or more Expr
+        *extension : One or more :py:class:`~.Expr`
             Generators of the extension. These should be expressions that are
             algebraic over `\mathbb{Q}`.
+
+        alias : str, :py:class:`~.Symbol`, None, optional (default=None)
+            If provided, this will be used as the alias symbol for the
+            primitive element of the returned :py:class:`~.AlgebraicField`.
 
         Returns
         =======
@@ -88,7 +92,7 @@ class RationalField(Field, CharacteristicZero, SimpleDomain):
         QQ<sqrt(2)>
         """
         from sympy.polys.domains import AlgebraicField
-        return AlgebraicField(self, *extension)
+        return AlgebraicField(self, *extension, alias=alias)
 
     def from_AlgebraicField(K1, a, K0):
         """Convert a :py:class:`~.ANP` object to :ref:`QQ`.

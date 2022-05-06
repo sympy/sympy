@@ -109,7 +109,7 @@ to do all sorts of computations symbolically.  SymPy can simplify expressions,
 compute derivatives, integrals, and limits, solve equations, work with
 matrices, and much, much more, and do it all symbolically.  It includes
 modules for plotting, printing (like 2D pretty printed output of math
-formulas, or `\mathrm{\LaTeX}`), code generation, physics, statistics, combinatorics,
+formulas, or `\textrm{\LaTeX}`), code generation, physics, statistics, combinatorics,
 number theory, geometry, logic, and more. Here is a small sampling of the sort
 of symbolic power SymPy is capable of, to whet your appetite.
 
@@ -173,7 +173,7 @@ spherical Bessel function `j_\nu(z)`.
   ────────────────────
            √π
 
-Print `\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx` using `\mathrm{\LaTeX}`.
+Print `\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx` using `\textrm{\LaTeX}`.
 
   >>> latex(Integral(cos(x)**2, (x, 0, pi)))
   \int\limits_{0}^{\pi} \cos^{2}{\left(x \right)}\, dx

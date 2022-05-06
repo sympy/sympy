@@ -213,8 +213,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     >>> K
     QQ<exp(2*I*pi/7)>
     >>> K.primes_above(11)
-    [[ (11, _x**3 + 5*_x**2 + 4*_x - 1) e=1, f=3 ],
-     [ (11, _x**3 - 4*_x**2 - 5*_x - 1) e=1, f=3 ]]
+    [(11, _x**3 + 5*_x**2 + 4*_x - 1), (11, _x**3 - 4*_x**2 - 5*_x - 1)]
 
     Notes
     =====
@@ -244,7 +243,25 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     has_assoc_Ring = False
     has_assoc_Field = True
 
-    def __init__(self, dom, *ext):
+    def __init__(self, dom, *ext, alias=None):
+        r"""
+        Parameters
+        ==========
+
+        dom : :py:class:`~.Domain`
+            The base field over which this is an extension field.
+            Currently only :ref:`QQ` is accepted.
+
+        *ext : One or more :py:class:`~.Expr`
+            Generators of the extension. These should be expressions that are
+            algebraic over `\mathbb{Q}`.
+
+        alias : str, :py:class:`~.Symbol`, None, optional (default=None)
+            If provided, this will be used as the alias symbol for the
+            primitive element of the :py:class:`~.AlgebraicField`.
+            If ``None``, while ``ext`` consists of exactly one
+            :py:class:`~.AlgebraicNumber`, its alias (if any) will be used.
+        """
         if not dom.is_QQ:
             raise DomainError("ground domain must be a rational field")
 
@@ -253,6 +270,9 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
             orig_ext = ext[0][1:]
         else:
             orig_ext = ext
+
+        if alias is None and len(ext) == 1:
+            alias = getattr(ext[0], 'alias', None)
 
         self.orig_ext = orig_ext
         """
@@ -264,7 +284,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         (sqrt(2), sqrt(3))
         """
 
-        self.ext = to_number_field(ext)
+        self.ext = to_number_field(ext, alias=alias)
         """
         Primitive element used for the extension.
 
@@ -311,18 +331,13 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         return isinstance(other, AlgebraicField) and \
             self.dtype == other.dtype and self.ext == other.ext
 
-    def algebraic_field(self, *extension):
+    def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
-        return AlgebraicField(self.dom, *((self.ext,) + extension))
+        return AlgebraicField(self.dom, *((self.ext,) + extension), alias=alias)
 
     def to_alg_num(self, a):
         """Convert ``a`` of ``dtype`` to an :py:class:`~.AlgebraicNumber`. """
-        theta = self.ext
-        # `self.ext.root` may be an `AlgebraicNumber`, in which case we should
-        # use it instead of `self.ext`, in case it has an `alias`.
-        if hasattr(theta.root, "field_element"):
-            theta = theta.root
-        return theta.field_element(a)
+        return self.ext.field_element(a)
 
     def to_sympy(self, a):
         """Convert ``a`` of ``dtype`` to a SymPy object. """
@@ -417,7 +432,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     def _do_round_two(self):
         from sympy.polys.numberfields.basis import round_two
-        ZK, dK = round_two(self.ext.minpoly, radicals=self._nilradicals_mod_p)
+        ZK, dK = round_two(self, radicals=self._nilradicals_mod_p)
         self._maximal_order = ZK
         self._discriminant = dK
 
@@ -495,7 +510,6 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         elif fmt == 'alg':
             return [self.to_alg_num(b) for b in B]
         return B
-
 
     def discriminant(self):
         """Get the discriminant of the field."""
