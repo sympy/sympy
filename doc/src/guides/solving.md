@@ -11,8 +11,8 @@ Learn how to use SymPy computer algebra system to:
 | [ Solve an equation algebraically ]()                        | [  $x^2 - 1 = 0$  ]()                                                                                                       |
 | [ Solve a system of equations algebraically ]()              | [  $x + y = 1, x - y = 0$  ]()                                                                                              |
 | [ Solve an equation numerically ]()                          | [ $x^2 + x = 0.274$ ]()                                                                                                     |
-| [ Solve a partial differential equation algebraically ]()    | [${\frac {\partial ^{2}v}{\partial x\partial y}}=0.$]()                                                                     |
-| [ Solve an ordinary differential equation algebraically  ]() | [ $a_{0}(x)y+a_{1}(x)y'+a_{2}(x)y''+\cdots +a_{n}(x)y^{(n)}+b(x)=0,$ ]()                                                    |
+| [ Solve a partial differential equation algebraically ]()    | [${\frac {\partial ^{2}v}{\partial x\partial y}}=0$]()                                                                     |
+| [ Solve an ordinary differential equation algebraically  ]() | [ $a_{0}(x)y+a_{1}(x)y'+a_{2}(x)y''+\cdots +a_{n}(x)y^{(n)}+b(x)=0$ ]()                                                    |
 | [ Solve a system of linear equations algebraically ]()       | [  $2x + y = 1, 7x - 3y = 0$  ]()                                                                                           |
 | [ Solve a system of nonlinear equations algebraically ]()    | [  $x^2 + y^3 = 1, x^3 - y^2 = 0$  ]()                                                                                      |
 | [ Solve a matrix problem algebraically ]()                   | [ $ \ begin {bmatrix}  x &  6 \\ 2  & -x \ end {bmatrix} \ begin {bmatrix}  x &  6 \\ 2  & -x \ end {bmatrix}  =  0 $ ]() |
