@@ -36,6 +36,11 @@ from sympy.external.importtools import version_tuple
 def main(*args):
 
     parser = ArgumentParser(description='Update the .mailmap file')
+    parser.add_argument('--skip-last-commit', action='store_true',
+            help=filldedent("""
+            Do not check metadata from the most recent commit. This is used
+            when the script runs in CI to ignore the merge commit that is
+            implicitly created by github."""))
     parser.add_argument('--update-authors', action='store_true',
             help=filldedent("""
             Also updates the AUTHORS file. DO NOT use this option as part of a
@@ -48,7 +53,7 @@ def main(*args):
 
     # find who git knows ahout
     try:
-        git_people = get_authors_from_git()
+        git_people = get_authors_from_git(skip_last=args.skip_last_commit)
     except AssertionError as msg:
         print(red(msg))
         return 1
@@ -221,8 +226,15 @@ def author_name(line):
     return line.split("<", 1)[0].strip()
 
 
-def get_authors_from_git():
+def get_authors_from_git(skip_last=False):
     git_command = ["git", "log", "--topo-order", "--reverse", "--format=%aN <%aE>"]
+
+    if skip_last:
+        # Skip the most recent commit. Used to ignore the merge commit created
+        # when this script runs in CI. We use HEAD^2 rather than HEAD^1 to
+        # select the parent commit that is part of the PR rather than the
+        # parent commit that was the previous tip of master.
+        git_command.append("HEAD^2")
 
     git_people = run(git_command, stdout=PIPE, encoding='utf-8').stdout.strip().split("\n")
 
