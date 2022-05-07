@@ -115,7 +115,7 @@ example. its symbolic result is sin(1) while the numerical result is 0.841470984
 You can run the following code snippet to test it:
 
     >>> from sympy import Symbol, Integral
-    >>> x=Symbol('x')
+    >>> x = Symbol('x')
     >>> integral = Integral(cos(x),(x,0,1))
     >>> integral
     Integral(cos(x), (x, 0, 1))

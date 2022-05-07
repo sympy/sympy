@@ -57,8 +57,7 @@ even a few nonelementary integrals (in particular, some integrals involving the 
 
 SymPy's numeric integration (from mpmath) is very accurate and useful and would be preferred
 by many users over using lambdify/scipy. Here is how it is used:
-    >>> from sympy import Symbol, Integral
-    >>> x=Symbol('x')
+    
     >>> integral = Integral(cos(x),(x,0,1))
     >>> integral
     Integral(cos(x), (x, 0, 1))
@@ -70,8 +69,7 @@ In many cases where symbolic integration is not possible it is still possible to
 compute the integral numerically. It is also useful as a way of checking the result
 of an integration routine. Integration can be over infinite intervals 
 and can include infinite integrands:
-    >>> from sympy import Symbol, Integral
-    >>> x=Symbol('x')
+    
     >>> Integral(1 / sqrt(x), (x, 0, 1)).evalf()
     2.00000000000000
 
