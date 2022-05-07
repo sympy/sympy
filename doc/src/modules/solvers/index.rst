@@ -19,4 +19,3 @@ Contents
     pde.rst
     solvers.rst
     solveset.rst
-    

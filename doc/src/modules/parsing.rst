@@ -44,7 +44,7 @@ applied in the order given.
 .. autofunction:: sympy.parsing.sympy_parser.convert_xor
 
 These are included in
-:data:``sympy.parsing.sympy_parser.standard_transformations`` and generally
+:data:`sympy.parsing.sympy_parser.standard_transformations` and generally
 don't need to be manually added by the user.
 
 .. autofunction:: sympy.parsing.sympy_parser.lambda_notation

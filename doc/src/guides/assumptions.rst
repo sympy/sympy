@@ -1429,7 +1429,7 @@ assumptions can be specified. However the algorithms to make use of that
 information are not yet implemented and the exact API for specifying
 relational assumptions has not been decided upon.
 
-.. 
+..
   Titles That can be added:
   1. Dynamic changing assumptions
   2. Selectively controlling evaluation
