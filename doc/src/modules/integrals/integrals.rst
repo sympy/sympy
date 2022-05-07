@@ -70,7 +70,7 @@ compute the integral numerically. It is also useful as a way of checking the res
 of an integration routine. Integration can be over infinite intervals 
 and can include infinite integrands:
     
-    >>> Integral(1 / sqrt(x), (x, 0, 1)).evalf()
+    >>> Integral(1/sqrt(x), (x, 0, 1)).evalf()
     2.00000000000000
 
 Note: Currently only 1D integrals are supported. In mpmath there are functions that can do 
