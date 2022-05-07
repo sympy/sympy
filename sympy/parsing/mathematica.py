@@ -962,7 +962,7 @@ class MathematicaParser:
                     args = [converter(arg) for arg in expr[1:]]
                     return Function(head)(*args)
                 else:
-                    raise ValueError("error")
+                    raise ValueError("Empty list of expressions")
             elif isinstance(expr, str):
                 return Symbol(expr)
             else:
