@@ -2216,3 +2216,10 @@ def test_21494():
 
 def test_Expr__eq__iterable_handling():
     assert x != range(3)
+
+
+def test_format():
+    assert '{:1.2f}'.format(S.Zero) == '0.00'
+    assert '{:+3.0f}'.format(S(3)) == ' +3'
+    assert '{:23.20f}'.format(pi) == ' 3.14159265358979323846'
+    assert '{:50.48f}'.format(exp(sin(1))) == '2.319776824715853173956590377503266813254904772376'
