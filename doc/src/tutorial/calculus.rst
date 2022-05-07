@@ -114,7 +114,7 @@ Consider a definite integral of cos(x) with respect to x ranging from 0 to 1, as
 example. its symbolic result is sin(1) while the numerical result is 0.841470984807897
 You can run the following code snippet to test it:
 
-    >>> from sympy import *
+    >>> from sympy import Symbol, Integral
     >>> x=Symbol('x')
     >>> integral = Integral(cos(x),(x,0,1))
     >>> integral
