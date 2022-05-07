@@ -92,7 +92,7 @@ class TensorflowPrinter(ArrayPrinter, AbstractPythonCodePrinter):
             return super()._print_Basic(expr)
         children = [self._print(arg) for arg in expr.args]
         if len(children) == 1:
-            return "%s(%s)" % (
+            return "{}({})".format(
                 self._module_format(op),
                 children[0]
             )
@@ -130,7 +130,7 @@ class TensorflowPrinter(ArrayPrinter, AbstractPythonCodePrinter):
         def unfold(expr, args):
             if not args:
                 return self._print(expr)
-            return "%s(%s, %s)[0]" % (
+            return "{}({}, {})[0]".format(
                     self._module_format("tensorflow.gradients"),
                     unfold(expr, args[:-1]),
                     self._print(args[-1]),
@@ -173,7 +173,7 @@ class TensorflowPrinter(ArrayPrinter, AbstractPythonCodePrinter):
     def _print_MatrixBase(self, expr):
         tensorflow_f = "tensorflow.Variable" if expr.free_symbols else "tensorflow.constant"
         data = "["+", ".join(["["+", ".join([self._print(j) for j in i])+"]" for i in expr.tolist()])+"]"
-        return "%s(%s)" % (
+        return "{}({})".format(
             self._module_format(tensorflow_f),
             data,
         )
@@ -183,7 +183,7 @@ class TensorflowPrinter(ArrayPrinter, AbstractPythonCodePrinter):
         mat_args = [arg for arg in expr.args if isinstance(arg, MatrixExpr)]
         args = [arg for arg in expr.args if arg not in mat_args]
         if args:
-            return "%s*%s" % (
+            return "{}*{}".format(
                 self.parenthesize(Mul.fromiter(args), PRECEDENCE["Mul"]),
                 self._expand_fold_binary_op(
                     "tensorflow.linalg.matmul", mat_args)

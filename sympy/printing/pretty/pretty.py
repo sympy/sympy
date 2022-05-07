@@ -592,11 +592,11 @@ class PrettyPrinter(Printer):
                 lines.append("_"*(w) + ' ')
                 lines.append(r"\%s`" % (' '*(w - 1)))
                 for i in range(1, d):
-                    lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
+                    lines.append('{}\\{}'.format(' '*i, ' '*(w - i)))
                 if more:
-                    lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
+                    lines.append('{}){}'.format(' '*(d), ' '*(w - d)))
                 for i in reversed(range(1, d)):
-                    lines.append('%s/%s' % (' '*i, ' '*(w - i)))
+                    lines.append('{}/{}'.format(' '*i, ' '*(w - i)))
                 lines.append("/" + "_"*(w - 1) + ',')
                 return d, h + more, lines, more
             else:
@@ -605,9 +605,9 @@ class PrettyPrinter(Printer):
                 vsum = vobj('sum', 4)
                 lines.append("_"*(w))
                 for i in range(0, d):
-                    lines.append('%s%s%s' % (' '*i, vsum[2], ' '*(w - i - 1)))
+                    lines.append('{}{}{}'.format(' '*i, vsum[2], ' '*(w - i - 1)))
                 for i in reversed(range(0, d)):
-                    lines.append('%s%s%s' % (' '*i, vsum[4], ' '*(w - i - 1)))
+                    lines.append('{}{}{}'.format(' '*i, vsum[4], ' '*(w - i - 1)))
                 lines.append(vsum[8]*(w))
                 return d, h + 2*more, lines, more
 
@@ -1180,7 +1180,7 @@ class PrettyPrinter(Printer):
                 o1[i] = tempstr
 
         o1 = [x.split('\n') for x in o1]
-        n_newlines = max([len(x) for x in o1])  # Width of part in its pretty form
+        n_newlines = max(len(x) for x in o1)  # Width of part in its pretty form
 
         if 1 in flag:                           # If there was a fractional scalar
             for i, parts in enumerate(o1):
@@ -1362,7 +1362,7 @@ class PrettyPrinter(Printer):
         len_args = len(pexpr.args)
 
         # max widths
-        maxw = [max([P[i, j].width() for i in range(len_args)])
+        maxw = [max(P[i, j].width() for i in range(len_args))
                 for j in range(2)]
 
         # FIXME: Refactor this code and matrix into some tabular environment.

@@ -104,7 +104,7 @@ class JavascriptCodePrinter(CodePrinter):
         elif expr.exp == S.One/3:
             return 'Math.cbrt(%s)' % self._print(expr.base)
         else:
-            return 'Math.pow(%s, %s)' % (self._print(expr.base),
+            return 'Math.pow({}, {})'.format(self._print(expr.base),
                                  self._print(expr.exp))
 
     def _print_Rational(self, expr):
@@ -137,7 +137,7 @@ class JavascriptCodePrinter(CodePrinter):
         for i in reversed(range(expr.rank)):
             elem += expr.indices[i]*offset
             offset *= dims[i]
-        return "%s[%s]" % (self._print(expr.base.label), self._print(elem))
+        return "{}[{}]".format(self._print(expr.base.label), self._print(elem))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
@@ -182,7 +182,7 @@ class JavascriptCodePrinter(CodePrinter):
             # operators. This has the downside that inline operators will
             # not work for statements that span multiple lines (Matrix or
             # Indexed expressions).
-            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
+            ecpairs = ["(({}) ? (\n{}\n)\n".format(self._print(c), self._print(e))
                     for e, c in expr.args[:-1]]
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
@@ -216,7 +216,7 @@ class JavascriptCodePrinter(CodePrinter):
                 pretty.append(line)
                 continue
             level -= decrease[n]
-            pretty.append("%s%s" % (tab*level, line))
+            pretty.append("{}{}".format(tab*level, line))
             level += increase[n]
         return pretty
 

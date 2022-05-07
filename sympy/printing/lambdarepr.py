@@ -128,7 +128,7 @@ class NumExprPrinter(LambdaPrinter):
             else:
                 raise TypeError("numexpr does not support function '%s'" %
                                 func_name)
-        return "%s(%s)" % (nstr, self._print_seq(e.args))
+        return "{}({})".format(nstr, self._print_seq(e.args))
 
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
@@ -147,7 +147,7 @@ class NumExprPrinter(LambdaPrinter):
                 is_last_cond_True = True
                 break
             else:
-                ans.append('where(%s, %s, ' % (cond, expr))
+                ans.append('where({}, {}, '.format(cond, expr))
                 parenthesis_count += 1
         if not is_last_cond_True:
             # simplest way to put a nan but raises
@@ -183,7 +183,7 @@ class NumExprPrinter(LambdaPrinter):
 
     def _print_NumExprEvaluate(self, expr):
         evaluate = self._module_format(self.module +".evaluate")
-        return "%s('%s', truediv=True)" % (evaluate, self._print(expr.expr))
+        return "{}('{}', truediv=True)".format(evaluate, self._print(expr.expr))
 
     def doprint(self, expr):
         from sympy.codegen.ast import CodegenAST

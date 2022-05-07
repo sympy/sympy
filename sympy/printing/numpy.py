@@ -88,12 +88,12 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         if arg2.shape[1] != 1:
             arg2 = arg2.T
 
-        return "%s(%s, %s)" % (self._module_format(self._module + '.dot'),
+        return "{}({}, {})".format(self._module_format(self._module + '.dot'),
                                self._print(arg1),
                                self._print(arg2))
 
     def _print_MatrixSolve(self, expr):
-        return "%s(%s, %s)" % (self._module_format(self._module + '.linalg.solve'),
+        return "{}({}, {})".format(self._module_format(self._module + '.linalg.solve'),
                                self._print(expr.matrix),
                                self._print(expr.vector))
 
@@ -218,31 +218,31 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         return '{}(({}), axis=0)'.format(self._module_format(self._module + '.amax'), ','.join(self._print(i) for i in expr.args))
 
     def _print_arg(self, expr):
-        return "%s(%s)" % (self._module_format(self._module + '.angle'), self._print(expr.args[0]))
+        return "{}({})".format(self._module_format(self._module + '.angle'), self._print(expr.args[0]))
 
     def _print_im(self, expr):
-        return "%s(%s)" % (self._module_format(self._module + '.imag'), self._print(expr.args[0]))
+        return "{}({})".format(self._module_format(self._module + '.imag'), self._print(expr.args[0]))
 
     def _print_Mod(self, expr):
-        return "%s(%s)" % (self._module_format(self._module + '.mod'), ', '.join(
+        return "{}({})".format(self._module_format(self._module + '.mod'), ', '.join(
             map(lambda arg: self._print(arg), expr.args)))
 
     def _print_re(self, expr):
-        return "%s(%s)" % (self._module_format(self._module + '.real'), self._print(expr.args[0]))
+        return "{}({})".format(self._module_format(self._module + '.real'), self._print(expr.args[0]))
 
     def _print_sinc(self, expr):
-        return "%s(%s)" % (self._module_format(self._module + '.sinc'), self._print(expr.args[0]/S.Pi))
+        return "{}({})".format(self._module_format(self._module + '.sinc'), self._print(expr.args[0]/S.Pi))
 
     def _print_MatrixBase(self, expr):
         func = self.known_functions.get(expr.__class__.__name__, None)
         if func is None:
             func = self._module_format(self._module + '.array')
-        return "%s(%s)" % (func, self._print(expr.tolist()))
+        return "{}({})".format(func, self._print(expr.tolist()))
 
     def _print_Identity(self, expr):
         shape = expr.shape
         if all(dim.is_Integer for dim in shape):
-            return "%s(%s)" % (self._module_format(self._module + '.eye'), self._print(expr.shape[0]))
+            return "{}({})".format(self._module_format(self._module + '.eye'), self._print(expr.shape[0]))
         else:
             raise NotImplementedError("Symbolic matrix dimensions are not yet supported for identity matrices")
 

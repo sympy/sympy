@@ -135,7 +135,7 @@ def _as_macro_if_defined(meth):
     @wraps(meth)
     def _meth_wrapper(self, expr, **kwargs):
         if expr in self.math_macros:
-            return '%s%s' % (self.math_macros[expr], self._get_math_macro_suffix(real))
+            return '{}{}'.format(self.math_macros[expr], self._get_math_macro_suffix(real))
         else:
             return meth(self, expr, **kwargs)
 
@@ -282,13 +282,13 @@ class C89CodePrinter(CodePrinter):
         suffix = self._get_func_suffix(real)
         if expr.exp == -1:
             literal_suffix = self._get_literal_suffix(real)
-            return '1.0%s/%s' % (literal_suffix, self.parenthesize(expr.base, PREC))
+            return '1.0{}/{}'.format(literal_suffix, self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
-            return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
+            return '{}sqrt{}({})'.format(self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':
-            return '%scbrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
+            return '{}cbrt{}({})'.format(self._ns, suffix, self._print(expr.base))
         else:
-            return '%spow%s(%s, %s)' % (self._ns, suffix, self._print(expr.base),
+            return '{}pow{}({}, {})'.format(self._ns, suffix, self._print(expr.base),
                                    self._print(expr.exp))
 
     def _print_Mod(self, expr):
@@ -331,8 +331,8 @@ class C89CodePrinter(CodePrinter):
                 temp += (shift,)
                 shift *= dims[i]
             strides = temp
-        flat_index = sum([x[0]*x[1] for x in zip(indices, strides)]) + offset
-        return "%s[%s]" % (self._print(expr.base.label),
+        flat_index = sum(x[0]*x[1] for x in zip(indices, strides)) + offset
+        return "{}[{}]".format(self._print(expr.base.label),
                            self._print(flat_index))
 
     def _print_Idx(self, expr):
@@ -375,7 +375,7 @@ class C89CodePrinter(CodePrinter):
             # operators. This has the downside that inline operators will
             # not work for statements that span multiple lines (Matrix or
             # Indexed expressions).
-            ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c),
+            ecpairs = ["(({}) ? (\n{}\n)\n".format(self._print(c),
                                                self._print(e))
                     for e, c in expr.args[:-1]]
             last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
@@ -423,10 +423,10 @@ class C89CodePrinter(CodePrinter):
             if len(args) == 1:     # and printing smaller Max objects is slow
                 return self._print(args[0]) # when there are many arguments.
             half = len(args) // 2
-            return "((%(a)s > %(b)s) ? %(a)s : %(b)s)" % {
-                'a': inner_print_max(args[:half]),
-                'b': inner_print_max(args[half:])
-            }
+            return "(({a} > {b}) ? {a} : {b})".format(
+                a=inner_print_max(args[:half]),
+                b=inner_print_max(args[half:])
+            )
         return inner_print_max(expr.args)
 
     def _print_Min(self, expr):
@@ -436,10 +436,10 @@ class C89CodePrinter(CodePrinter):
             if len(args) == 1:     # and printing smaller Min objects is slow
                 return self._print(args[0]) # when there are many arguments.
             half = len(args) // 2
-            return "((%(a)s < %(b)s) ? %(a)s : %(b)s)" % {
-                'a': inner_print_min(args[:half]),
-                'b': inner_print_min(args[half:])
-            }
+            return "(({a} < {b}) ? {a} : {b})".format(
+                a=inner_print_min(args[:half]),
+                b=inner_print_min(args[half:])
+            )
         return inner_print_min(expr.args)
 
     def indent_code(self, code):
@@ -465,7 +465,7 @@ class C89CodePrinter(CodePrinter):
                 pretty.append(line)
                 continue
             level -= decrease[n]
-            pretty.append("%s%s" % (tab*level, line))
+            pretty.append("{}{}".format(tab*level, line))
             level += increase[n]
         return pretty
 
@@ -545,7 +545,7 @@ class C89CodePrinter(CodePrinter):
             idxs = ']['.join(map(lambda arg: self._print(arg),
                                  elem.indices))
         else:
-            global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
+            global_idx = sum(i*s for i, s in zip(elem.indices, elem.strides))
             if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 global_idx += elem.offset
             idxs = self._print(global_idx)
@@ -582,7 +582,7 @@ class C89CodePrinter(CodePrinter):
         )
 
     def _print_FunctionDefinition(self, expr):
-        return "%s%s" % (self._print_FunctionPrototype(expr),
+        return "{}{}".format(self._print_FunctionPrototype(expr),
                          self._print_Scope(expr))
 
     def _print_Return(self, expr):
@@ -596,8 +596,8 @@ class C89CodePrinter(CodePrinter):
         if expr.body == none:
             return '%s:' % str(expr.name)
         if len(expr.body.args) == 1:
-            return '%s:\n%s' % (str(expr.name), self._print_CodeBlock(expr.body))
-        return '%s:\n{\n%s\n}' % (str(expr.name), self._print_CodeBlock(expr.body))
+            return '{}:\n{}'.format(str(expr.name), self._print_CodeBlock(expr.body))
+        return '{}:\n{{\n{}\n}}'.format(str(expr.name), self._print_CodeBlock(expr.body))
 
     def _print_goto(self, expr):
         return 'goto %s' % expr.label.name
@@ -694,7 +694,7 @@ class C99CodePrinter(C89CodePrinter):
                         suffix=suffix,
                         next = self._print(curr_arg)
                     )
-                args += ', %s%s' % (
+                args += ', {}{}'.format(
                     self._print(expr.func(expr.args[-1])),
                     paren_pile
                 )

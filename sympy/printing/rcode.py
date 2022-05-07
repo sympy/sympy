@@ -149,7 +149,7 @@ class RCodePrinter(CodePrinter):
         elif expr.exp == 0.5:
             return 'sqrt(%s)' % self._print(expr.base)
         else:
-            return '%s^%s' % (self.parenthesize(expr.base, PREC),
+            return '{}^{}'.format(self.parenthesize(expr.base, PREC),
                                  self.parenthesize(expr.exp, PREC))
 
 
@@ -159,7 +159,7 @@ class RCodePrinter(CodePrinter):
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
-        return "%s[%s]" % (self._print(expr.base.label), ", ".join(inds))
+        return "{}[{}]".format(self._print(expr.base.label), ", ".join(inds))
 
     def _print_Idx(self, expr):
         return self._print(expr.label)
@@ -213,7 +213,7 @@ class RCodePrinter(CodePrinter):
         else:
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
-            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+            return self._get_statement("{} = {}".format(lhs_code, rhs_code))
 
     def _print_Piecewise(self, expr):
         # This method is called only for inline if constructs
@@ -221,10 +221,10 @@ class RCodePrinter(CodePrinter):
         if expr.args[-1].cond == True:
             last_line = "%s" % self._print(expr.args[-1].expr)
         else:
-            last_line = "ifelse(%s,%s,NA)" % (self._print(expr.args[-1].cond), self._print(expr.args[-1].expr))
+            last_line = "ifelse({},{},NA)".format(self._print(expr.args[-1].cond), self._print(expr.args[-1].expr))
         code=last_line
         for e, c in reversed(expr.args[:-1]):
-            code= "ifelse(%s,%s," % (self._print(c), self._print(e))+code+")"
+            code= "ifelse({},{},".format(self._print(c), self._print(e))+code+")"
         return(code)
 
     def _print_ITE(self, expr):
@@ -290,7 +290,7 @@ class RCodePrinter(CodePrinter):
                 pretty.append(line)
                 continue
             level -= decrease[n]
-            pretty.append("%s%s" % (tab*level, line))
+            pretty.append("{}{}".format(tab*level, line))
             level += increase[n]
         return pretty
 

@@ -153,7 +153,7 @@ class MCodePrinter(CodePrinter):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        return '%s^%s' % (self.parenthesize(expr.base, PREC),
+        return '{}^{}'.format(self.parenthesize(expr.base, PREC),
                           self.parenthesize(expr.exp, PREC))
 
     def _print_Mul(self, expr):
@@ -303,7 +303,7 @@ class MCodePrinter(CodePrinter):
             cond_mfunc = self.known_functions[expr.func.__name__]
             for cond, mfunc in cond_mfunc:
                 if cond(*expr.args):
-                    return "%s[%s]" % (mfunc, self.stringify(expr.args, ", "))
+                    return "{}[{}]".format(mfunc, self.stringify(expr.args, ", "))
         elif expr.func.__name__ in self._rewriteable_functions:
             # Simple rewrite to supported function possible
             target_f, required_fs = self._rewriteable_functions[expr.func.__name__]

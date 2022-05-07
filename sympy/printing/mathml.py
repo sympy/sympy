@@ -107,14 +107,14 @@ class MathMLPrinterBase(Printer):
                         node.writexml(
                             writer, indent + addindent, addindent, newl)
                     writer.write(indent)
-                writer.write("</%s>%s" % (self.tagName, newl))
+                writer.write("</{}>{}".format(self.tagName, newl))
             else:
                 writer.write("/>%s" % (newl))
         self._Element_writexml_old = Element.writexml
         Element.writexml = writexml
 
         def writexml(self, writer, indent="", addindent="", newl=""):
-            _write_data(writer, "%s%s%s" % (indent, self.data, newl))
+            _write_data(writer, "{}{}{}".format(indent, self.data, newl))
         self._Text_writexml_old = Text.writexml
         Text.writexml = writexml
 

@@ -93,7 +93,7 @@ class StrPrinter(Printer):
         return self.stringify(expr.args, " ^ ", PRECEDENCE["BitwiseXor"])
 
     def _print_AppliedPredicate(self, expr):
-        return '%s(%s)' % (
+        return '{}({})'.format(
             self._print(expr.function), self.stringify(expr.arguments, ", "))
 
     def _print_Basic(self, expr):
@@ -112,7 +112,7 @@ class StrPrinter(Printer):
         return 'zoo'
 
     def _print_ConditionSet(self, s):
-        args = tuple([self._print(i) for i in (s.sym, s.condition)])
+        args = tuple(self._print(i) for i in (s.sym, s.condition))
         if s.base_set is S.UniversalSet:
             return 'ConditionSet(%s, %s)' % args
         args += (self._print(s.base_set),)
@@ -128,7 +128,7 @@ class StrPrinter(Printer):
         items = []
 
         for key in keys:
-            item = "%s: %s" % (self._print(key), self._print(d[key]))
+            item = "{}: {}".format(self._print(key), self._print(d[key]))
             items.append(item)
 
         return "{%s}" % ", ".join(items)
@@ -155,7 +155,7 @@ class StrPrinter(Printer):
         return 'E'
 
     def _print_ExprCondPair(self, expr):
-        return '(%s, %s)' % (self._print(expr.expr), self._print(expr.cond))
+        return '({}, {})'.format(self._print(expr.expr), self._print(expr.cond))
 
     def _print_Function(self, expr):
         return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
@@ -184,7 +184,7 @@ class StrPrinter(Printer):
             else:
                 return self._print((xab[0],) + tuple(xab[1:]))
         L = ', '.join([_xab_tostr(l) for l in expr.limits])
-        return 'Integral(%s, %s)' % (self._print(expr.function), L)
+        return 'Integral({}, {})'.format(self._print(expr.function), L)
 
     def _print_Interval(self, i):
         fin =  'Interval{m}({a}, {b})'
@@ -206,7 +206,7 @@ class StrPrinter(Printer):
         return fin.format(**{'a': a, 'b': b, 'm': m})
 
     def _print_AccumulationBounds(self, i):
-        return "AccumBounds(%s, %s)" % (self._print(i.min),
+        return "AccumBounds({}, {})".format(self._print(i.min),
                                         self._print(i.max))
 
     def _print_Inverse(self, I):
@@ -217,7 +217,7 @@ class StrPrinter(Printer):
         sig = obj.signature
         if len(sig) == 1 and sig[0].is_symbol:
             sig = sig[0]
-        return "Lambda(%s, %s)" % (self._print(sig), self._print(expr))
+        return "Lambda({}, {})".format(self._print(sig), self._print(expr))
 
     def _print_LatticeOp(self, expr):
         args = sorted(expr.args, key=default_sort_key)
@@ -242,7 +242,7 @@ class StrPrinter(Printer):
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) \
-            + '[%s, %s]' % (self._print(expr.i), self._print(expr.j))
+            + '[{}, {}]'.format(self._print(expr.i), self._print(expr.j))
 
     def _print_MatrixSlice(self, expr):
         def strslice(x, dim):
@@ -307,9 +307,9 @@ class StrPrinter(Printer):
             n = '*'.join(nfactors)
             d = '*'.join(dfactors)
             if len(dfactors) > 1:
-                return '%s/(%s)' % (n, d)
+                return '{}/({})'.format(n, d)
             elif dfactors:
-                return '%s/%s' % (n, d)
+                return '{}/{}'.format(n, d)
             return n
 
         c, e = expr.as_coeff_Mul()
@@ -469,7 +469,7 @@ class StrPrinter(Printer):
         if len(obj.point) == 1:
             old = old[0]
             new = new[0]
-        return "Subs(%s, %s, %s)" % (
+        return "Subs({}, {}, {})".format(
             self._print(expr), self._print(old), self._print(new))
 
     def _print_TensorIndex(self, expr):
@@ -495,7 +495,7 @@ class StrPrinter(Printer):
         return self._print(expr.name)
 
     def _print_ArrayElement(self, expr):
-        return "%s[%s]" % (
+        return "{}[{}]".format(
             self.parenthesize(expr.name, PRECEDENCE["Func"], True), ", ".join([self._print(i) for i in expr.indices]))
 
     def _print_PermutationGroup(self, expr):
@@ -519,7 +519,7 @@ class StrPrinter(Printer):
         return elm.__str__()
 
     def _print_GaussianElement(self, poly):
-        return "(%s + %s*I)" % (poly.x, poly.y)
+        return "({} + {}*I)".format(poly.x, poly.y)
 
     def _print_PolyElement(self, poly):
         return poly.str(self, PRECEDENCE, "%s**%s", "*")
@@ -657,7 +657,7 @@ class StrPrinter(Printer):
                 return "%s/sqrt(%s)" % tuple(map(lambda arg: self._print(arg), (S.One, expr.base)))
             if expr.exp is -S.One:
                 # Similarly to the S.Half case, don't test with "==" here.
-                return '%s/%s' % (self._print(S.One),
+                return '{}/{}'.format(self._print(S.One),
                                   self.parenthesize(expr.base, PREC, strict=False))
 
         e = self.parenthesize(expr.exp, PREC, strict=False)
@@ -665,15 +665,15 @@ class StrPrinter(Printer):
             # the parenthesized exp should be '(Rational(a, b))' so strip parens,
             # but just check to be sure.
             if e.startswith('(Rational'):
-                return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e[1:-1])
-        return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False), e)
+                return '{}**{}'.format(self.parenthesize(expr.base, PREC, strict=False), e[1:-1])
+        return '{}**{}'.format(self.parenthesize(expr.base, PREC, strict=False), e)
 
     def _print_UnevaluatedExpr(self, expr):
         return self._print(expr.args[0])
 
     def _print_MatPow(self, expr):
         PREC = precedence(expr)
-        return '%s**%s' % (self.parenthesize(expr.base, PREC, strict=False),
+        return '{}**{}'.format(self.parenthesize(expr.base, PREC, strict=False),
                          self.parenthesize(expr.exp, PREC, strict=False))
 
     def _print_Integer(self, expr):
@@ -716,8 +716,8 @@ class StrPrinter(Printer):
             return str(expr.p)
         else:
             if self._settings.get("sympy_integers", False):
-                return "S(%s)/%s" % (expr.p, expr.q)
-            return "%s/%s" % (expr.p, expr.q)
+                return "S({})/{}".format(expr.p, expr.q)
+            return "{}/{}".format(expr.p, expr.q)
 
     def _print_PythonRational(self, expr):
         if expr.q == 1:
@@ -729,13 +729,13 @@ class StrPrinter(Printer):
         if expr.denominator == 1:
             return str(expr.numerator)
         else:
-            return "%s/%s" % (expr.numerator, expr.denominator)
+            return "{}/{}".format(expr.numerator, expr.denominator)
 
     def _print_mpq(self, expr):
         if expr.denominator == 1:
             return str(expr.numerator)
         else:
-            return "%s/%s" % (expr.numerator, expr.denominator)
+            return "{}/{}".format(expr.numerator, expr.denominator)
 
     def _print_Float(self, expr):
         prec = expr._prec
@@ -775,10 +775,10 @@ class StrPrinter(Printer):
         }
 
         if expr.rel_op in charmap:
-            return '%s(%s, %s)' % (charmap[expr.rel_op], self._print(expr.lhs),
+            return '{}({}, {})'.format(charmap[expr.rel_op], self._print(expr.lhs),
                                    self._print(expr.rhs))
 
-        return '%s %s %s' % (self.parenthesize(expr.lhs, precedence(expr)),
+        return '{} {} {}'.format(self.parenthesize(expr.lhs, precedence(expr)),
                            self._relationals.get(expr.rel_op) or expr.rel_op,
                            self.parenthesize(expr.rhs, precedence(expr)))
 
@@ -806,7 +806,7 @@ class StrPrinter(Printer):
 
         args = [exprs] + gens + [domain, order]
 
-        return "%s(%s)" % (cls, ", ".join(args))
+        return "{}({})".format(cls, ", ".join(args))
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
@@ -843,7 +843,7 @@ class StrPrinter(Printer):
             else:
                 return self._print((xab[0],) + tuple(xab[1:]))
         L = ', '.join([_xab_tostr(l) for l in expr.limits])
-        return 'Sum(%s, %s)' % (self._print(expr.function), L)
+        return 'Sum({}, {})'.format(self._print(expr.function), L)
 
     def _print_Symbol(self, expr):
         return expr.name
@@ -878,7 +878,7 @@ class StrPrinter(Printer):
         return "%s.T" % self.parenthesize(T.arg, PRECEDENCE["Pow"])
 
     def _print_Uniform(self, expr):
-        return "Uniform(%s, %s)" % (self._print(expr.a), self._print(expr.b))
+        return "Uniform({}, {})".format(self._print(expr.a), self._print(expr.b))
 
     def _print_Quantity(self, expr):
         if self._settings.get("abbrev", False):
@@ -926,7 +926,7 @@ class StrPrinter(Printer):
         dom = self._print(p.dom)
         ring = self._print(p.ring)
 
-        return "%s(%s, %s, %s)" % (cls, rep, dom, ring)
+        return "{}({}, {}, {})".format(cls, rep, dom, ring)
 
     def _print_DMF(self, expr):
         return self._print_DMP(expr)
@@ -968,14 +968,14 @@ class StrPrinter(Printer):
 
     def _print_Tr(self, expr):
         #TODO : Handle indices
-        return "%s(%s)" % ("Tr", self._print(expr.args[0]))
+        return "{}({})".format("Tr", self._print(expr.args[0]))
 
     def _print_Str(self, s):
         return self._print(s.name)
 
     def _print_AppliedBinaryRelation(self, expr):
         rel = expr.function
-        return '%s(%s, %s)' % (self._print(rel),
+        return '{}({}, {})'.format(self._print(rel),
                                self._print(expr.lhs),
                                self._print(expr.rhs))
 
@@ -1011,7 +1011,7 @@ class StrReprPrinter(StrPrinter):
 
     def _print_Str(self, s):
         # Str does not to be printed same as str here
-        return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
+        return "{}({})".format(s.__class__.__name__, self._print(s.name))
 
 
 @print_function(StrReprPrinter)

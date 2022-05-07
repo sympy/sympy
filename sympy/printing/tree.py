@@ -45,7 +45,7 @@ def print_node(node, assumptions=True):
     assumptions : bool, optional
         See the ``assumptions`` keyword in ``tree``
     """
-    s = "%s: %s\n" % (node.__class__.__name__, str(node))
+    s = "{}: {}\n".format(node.__class__.__name__, str(node))
 
     if assumptions:
         d = node._assumptions
@@ -57,7 +57,7 @@ def print_node(node, assumptions=True):
             v = d[a]
             if v is None:
                 continue
-            s += "%s: %s\n" % (a, v)
+            s += "{}: {}\n".format(a, v)
 
     return s
 

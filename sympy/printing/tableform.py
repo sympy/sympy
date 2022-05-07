@@ -269,7 +269,7 @@ class TableForm:
         # Check heading:
         if self._headings[0]:
             self._headings[0] = [str(x) for x in self._headings[0]]
-            _head_width = max([len(x) for x in self._headings[0]])
+            _head_width = max(len(x) for x in self._headings[0])
 
         if self._headings[1]:
             new_line = []
@@ -285,7 +285,7 @@ class TableForm:
         format_str = []
 
         def _align(align, w):
-            return '%%%s%ss' % (
+            return '%{}{}s'.format(
                 ("-" if align == "l" else ""),
                 str(w))
         format_str = [_align(align, w) for align, w in
