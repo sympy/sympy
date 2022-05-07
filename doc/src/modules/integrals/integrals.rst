@@ -5,6 +5,12 @@ Integrals
 .. module:: sympy.integrals
 
 The ``integrals`` module in SymPy implements methods to calculate definite and indefinite integrals of expressions.
+You can use sympy for symbolic as well as for numerical integration. Symbolic integrals 
+are the ones which gives the result in symbolic mathematical notations while numberical
+integrals give the exact value of the result.
+
+Consider a definite integral of cos(x) with respect to x ranging from 0 to 1, as an
+example. its symbolic result is sin(1) while the numerical result is 0.841470984807897
 
 Principal method in this module is :func:`~.integrate`
 
@@ -46,12 +52,29 @@ Exponential-polynomial functions. These multiplicative combinations of polynomia
 
 even a few nonelementary integrals (in particular, some integrals involving the error function) can be evaluated::
 
-	>>> integrate(exp(-x**2)*erf(x), x)
-	  ____    2
-	\/ pi *erf (x)
-	--------------
-	      4
+	 >>> integrate(exp(-x**2)*erf(x), x)
+   sqrt(pi)*erf(x)**2/4
 
+SymPy's numeric integration (from mpmath) is very accurate and useful and would be preferred
+by many users over using lambdify/scipy. Here is how it is used:
+    
+    >>> integral = Integral(cos(x),(x,0,1))
+    >>> integral
+    Integral(cos(x), (x, 0, 1))
+    >>> integral.evalf()
+    0.841470984807897 
+   
+
+In many cases where symbolic integration is not possible it is still possible to 
+compute the integral numerically. It is also useful as a way of checking the result
+of an integration routine. Integration can be over infinite intervals 
+and can include infinite integrands:
+    
+    >>> Integral(1/sqrt(x), (x, 0, 1)).evalf()
+    2.00000000000000
+
+Note: Currently only 1D integrals are supported. In mpmath there are functions that can do 
+2D and 3D integrals but sympy's evalf does not have the code to make use of them.
 
 Integral Transforms
 -------------------

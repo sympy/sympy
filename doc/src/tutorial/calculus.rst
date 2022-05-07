@@ -106,6 +106,23 @@ expression.
     >>> integrate(cos(x), x)
     sin(x)
 
+You can use sympy for symbolic as well as for numerical integration. Symbolic integrals 
+are the ones which gives the result in symbolic mathematical notations while numberical
+integrals give the exact value of the result.
+
+Consider a definite integral of cos(x) with respect to x ranging from 0 to 1, as an
+example. its symbolic result is sin(1) while the numerical result is 0.841470984807897
+You can run the following code snippet to test it:
+
+    >>> from sympy import Symbol, Integral
+    >>> x = Symbol('x')
+    >>> integral = Integral(cos(x),(x,0,1))
+    >>> integral
+    Integral(cos(x), (x, 0, 1))
+    >>> integral.evalf()
+    0.841470984807897 
+      
+
 Note that SymPy does not include the constant of integration.  If you want it,
 you can add one yourself, or rephrase your problem as a differential equation
 and use ``dsolve`` to solve it, which does add the constant (see :ref:`tutorial-dsolve`).
