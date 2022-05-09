@@ -277,10 +277,6 @@ def convert_comp(comp):
         return sympy.Abs(convert_expr(comp.abs_group().expr()), evaluate=False)
     elif comp.atom():
         return convert_atom(comp.atom())
-    elif comp.frac():
-        return convert_frac(comp.frac())
-    elif comp.binom():
-        return convert_binom(comp.binom())
     elif comp.floor():
         return convert_floor(comp.floor())
     elif comp.ceil():
@@ -323,6 +319,10 @@ def convert_atom(atom):
     elif atom.mathit():
         text = rule2text(atom.mathit().mathit_text())
         return sympy.Symbol(text)
+    elif atom.frac():
+        return convert_frac(atom.frac())
+    elif atom.binom():
+        return convert_binom(atom.binom())
     elif atom.bra():
         val = convert_expr(atom.bra().expr())
         return Bra(val)

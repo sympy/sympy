@@ -114,7 +114,10 @@ FUNC_OVERLINE: '\\overline';
 CMD_TIMES: '\\times';
 CMD_CDOT: '\\cdot';
 CMD_DIV: '\\div';
-CMD_FRAC: '\\frac';
+CMD_FRAC:
+    '\\frac'
+    | '\\dfrac'
+    | '\\tfrac';
 CMD_BINOM: '\\binom';
 CMD_DBINOM: '\\dbinom';
 CMD_TBINOM: '\\tbinom';
@@ -207,8 +210,6 @@ comp:
 	| abs_group
 	| func
 	| atom
-	| frac
-	| binom
 	| floor
 	| ceil;
 
@@ -216,8 +217,6 @@ comp_nofunc:
 	group
 	| abs_group
 	| atom
-	| frac
-	| binom
 	| floor
 	| ceil;
 
@@ -233,6 +232,8 @@ atom: (LETTER | SYMBOL) subexpr?
 	| NUMBER
 	| DIFFERENTIAL
 	| mathit
+	| frac
+	| binom
 	| bra
 	| ket;
 
