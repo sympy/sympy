@@ -110,6 +110,7 @@ GOOD_PAIRS = [
     (r"0+1", _Add(0, 1)),
     (r"1*2", _Mul(1, 2)),
     (r"0*1", _Mul(0, 1)),
+    (r"1 \times 2 ", _Mul(1, 2)),
     (r"x = y", Eq(x, y)),
     (r"x \neq y", Ne(x, y)),
     (r"x < y", Lt(x, y)),
