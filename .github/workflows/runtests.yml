@@ -64,6 +64,23 @@ jobs:
       - name: Run mypy on the sympy package
         run: mypy sympy
 
+  # ------------------------- sphinx-lint -------------------------- #
+
+  sphinx-lint:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+      - run: python -m pip install --upgrade pip
+      - run: pip install sphinx-lint
+
+      - name: Run sphinx-lint on the sympy documentation
+        run: sphinx-lint doc/
+
   # --------------------------- check authors ---------------------- #
 
   authors:
@@ -224,7 +241,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.10', 'pypy-3.8']
+        python-version: ['3.8', '3.10', 'pypy-3.8']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
@@ -242,7 +259,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.10', 'pypy-3.8']
+        python-version: ['3.8', '3.10', 'pypy-3.8']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
@@ -260,7 +277,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.10', 'pypy-3.8']
+        python-version: ['3.8', '3.10', 'pypy-3.8']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3

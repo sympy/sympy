@@ -73,8 +73,8 @@ If you have array-based data this can confer a considerable speedup, on the
 order of 10 nano-seconds per element. Unfortunately numpy incurs some start-up
 time and introduces an overhead of a few microseconds.
 
-CuPy is a NumPy-compatible array library that mainly runs on CUDA, but has 
-increasing support for other GPU manufacturers. It can in many cases be used as 
+CuPy is a NumPy-compatible array library that mainly runs on CUDA, but has
+increasing support for other GPU manufacturers. It can in many cases be used as
 a drop-in replacement for numpy.
 
     >>> f = lambdify(x, expr, "cupy")
@@ -133,8 +133,8 @@ So Which Should I Use?
 The options here were listed in order from slowest and least dependencies to
 fastest and most dependencies.  For example, if you have Aesara installed then
 that will often be the best choice.  If you don't have Aesara but do have
-``f2py`` then you should use ``ufuncify``. If you have been comfortable using 
-lambdify with the numpy module, but have a GPU, CuPy can provide substantial 
+``f2py`` then you should use ``ufuncify``. If you have been comfortable using
+lambdify with the numpy module, but have a GPU, CuPy can provide substantial
 speedups with little effort.
 
 +-----------------+-------+-----------------------------+---------------+

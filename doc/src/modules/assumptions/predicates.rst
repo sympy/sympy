@@ -174,7 +174,7 @@ Order
 Positive
 --------
 
-... autoclass:: sympy.assumptions.predicates.order.PositivePredicate
+.. autoclass:: sympy.assumptions.predicates.order.PositivePredicate
    :members:
 
 Negative

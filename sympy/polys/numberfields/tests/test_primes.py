@@ -1,4 +1,4 @@
-from sympy import QQ, ZZ, S
+from sympy import QQ, ZZ
 from sympy.abc import x, theta
 from sympy.core.mul import prod
 from sympy.ntheory import factorint
@@ -7,12 +7,11 @@ from sympy.polys import Poly, cyclotomic_poly
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.numberfields.basis import round_two
 from sympy.polys.numberfields.exceptions import StructureError
-from sympy.polys.numberfields.modules import PowerBasis
+from sympy.polys.numberfields.modules import PowerBasis, to_col
 from sympy.polys.numberfields.primes import (
     prime_decomp, _two_elt_rep,
     _check_formal_conditions_for_maximal_order,
 )
-from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.testing.pytest import raises
 
 
@@ -265,20 +264,32 @@ def test_repr():
     assert P[0].repr(field_gen=theta, just_gens=True) == '(2, (3*theta + 1)/2)'
 
 
-def test_PrimeIdeal_reduce_poly():
-    T = Poly(cyclotomic_poly(7, x))
-    k = QQ.algebraic_field((T, x))
-    P = k.primes_above(11)
-    frp = P[0]
-    B = k.integral_basis(fmt='sympy')
-    assert [frp.reduce_poly(b, x) for b in B] == [
-        1, x, x ** 2, -5 * x ** 2 - 4 * x + 1, -x ** 2 - x - 5,
-        4 * x ** 2 - x - 1]
+def test_PrimeIdeal_reduce():
+    k = QQ.alg_field_from_poly(Poly(x ** 3 + x ** 2 - 2 * x + 8))
+    Zk = k.maximal_order()
+    P = k.primes_above(2)
+    frp = P[2]
 
-    Q = k.primes_above(19)
-    frq = Q[0]
-    assert frq.alpha.equiv(0)
-    assert frq.reduce_poly(20*x**2 + 10) == x**2 - 9
+    # reduce_element
+    a = Zk.parent(to_col([23, 20, 11]), denom=6)
+    a_bar_expected = Zk.parent(to_col([11, 5, 2]), denom=6)
+    a_bar = frp.reduce_element(a)
+    assert a_bar == a_bar_expected
 
-    raises(GeneratorsNeeded, lambda: frp.reduce_poly(S(1)))
-    raises(NotImplementedError, lambda: frp.reduce_poly(1))
+    # reduce_ANP
+    a = k([QQ(11, 6), QQ(20, 6), QQ(23, 6)])
+    a_bar_expected = k([QQ(2, 6), QQ(5, 6), QQ(11, 6)])
+    a_bar = frp.reduce_ANP(a)
+    assert a_bar == a_bar_expected
+
+    # reduce_alg_num
+    a = k.to_alg_num(a)
+    a_bar_expected = k.to_alg_num(a_bar_expected)
+    a_bar = frp.reduce_alg_num(a)
+    assert a_bar == a_bar_expected
+
+
+def test_issue_23402():
+    k = QQ.alg_field_from_poly(Poly(x ** 3 + x ** 2 - 2 * x + 8))
+    P = k.primes_above(3)
+    assert P[0].alpha.equiv(0)
