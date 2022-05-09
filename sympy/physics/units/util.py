@@ -3,11 +3,12 @@ Several methods to simplify expressions involving unit objects.
 """
 from functools import reduce
 from collections.abc import Iterable
-from typing import Optional
+from typing import Any, Dict, Optional, Union
 
 from sympy import default_sort_key
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sorting import ordered
@@ -248,3 +249,23 @@ def check_dimensions(expr, unit_system="SI"):
                 i for i in m.args if not i.is_number])
 
     return expr.xreplace(reps)
+
+
+def is_dimensionally_equivalent(A: Union[Expr, Dimension, Dict[Expr, int]], B: Union[Expr, Dimension, Dict[Expr, int]], unit_system):
+    """Return True if A and B are dimensionally equivalent."""
+
+    unit_system = UnitSystem.get_unit_system(unit_system)
+    dimension_system: DimensionSystem = unit_system.get_dimension_system()
+
+    def _get_dim_deps(expr: Union[Expr, Dimension, Dict[Expr, int]]) -> Dict[Expr, int]:
+        if isinstance(expr, dict):
+            return expr
+        if isinstance(expr, Dimension):
+            return dimension_system.get_dimensional_dependencies(expr)
+        dim_expr = unit_system.get_dimensional_expr(expr)
+        return dimension_system.get_dimensional_dependencies(dim_expr)
+
+    dim_depsA = _get_dim_deps(A)
+    dim_depsB = _get_dim_deps(B)
+
+    return dim_depsA == dim_depsB

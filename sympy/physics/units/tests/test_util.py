@@ -3,6 +3,8 @@ from sympy.core.numbers import pi
 from sympy.core.power import Pow
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
+from sympy.physics.units.dimensions import Dimension
+from sympy.physics.units.unitsystem import UnitSystem
 from sympy.printing.str import sstr
 from sympy.physics.units import (
     G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
@@ -160,3 +162,32 @@ def test_check_dimensions():
     raises(ValueError, lambda: check_dimensions(2 * meter + 3 * second))
     raises(ValueError, lambda: check_dimensions(1 / second + 1 / meter))
     raises(ValueError, lambda: check_dimensions(2 * meter*(mile + centimeter) + km))
+
+
+def test_is_dimensionally_equivalent():
+    from sympy.physics.units.util import is_dimensionally_equivalent
+    from sympy.physics.units import ampere, ohm, volt, joule, farad, second, weber, newton
+    from sympy.physics.units import length, time, mass, current
+
+    unit_system = UnitSystem.get_unit_system("SI")
+
+    assert is_dimensionally_equivalent(meter, meter, unit_system)
+    assert is_dimensionally_equivalent(meter, centimeter, unit_system)
+    assert is_dimensionally_equivalent(meter, kilometer, unit_system)
+    assert not is_dimensionally_equivalent(meter, second, unit_system)
+    assert not is_dimensionally_equivalent(meter, newton, unit_system)
+    assert not is_dimensionally_equivalent(newton, ampere, unit_system)
+    assert not is_dimensionally_equivalent(meter, meter**2, unit_system)
+    assert is_dimensionally_equivalent(volt, ohm*ampere, unit_system)
+    assert is_dimensionally_equivalent(ohm, volt/ampere, unit_system)
+    assert is_dimensionally_equivalent(joule/ampere, weber, unit_system)
+    assert is_dimensionally_equivalent(farad, coulomb/volt, unit_system)
+
+    assert is_dimensionally_equivalent(length, meter, unit_system)
+    assert is_dimensionally_equivalent(length**2, meter**2, unit_system)
+    assert is_dimensionally_equivalent(time, second, unit_system)
+    assert is_dimensionally_equivalent(mass, kilogram, unit_system)
+    assert is_dimensionally_equivalent(kilogram, mass, unit_system)
+
+    assert is_dimensionally_equivalent(current, { current: 1 }, unit_system)
+    assert is_dimensionally_equivalent({ length: 1, time: -2 }, meter/second**2, unit_system)
