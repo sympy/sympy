@@ -3,7 +3,7 @@
 ===============
 Number Theory
 ===============
-   
+
 **Contents**
 
 .. toctree::
