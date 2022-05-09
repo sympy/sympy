@@ -50,6 +50,8 @@ def match_2nd_hypergeometric(eq, func):
             n, d = eq.as_numer_denom()
             eq = expand(n)
             r = collect(eq, [func.diff(x, 2), func.diff(x), func]).match(deq)
+            if not all(val.is_polynomial() for val in r.values()):
+                return []
 
     if r and r[a3]!=0:
         A = cancel(r[b3]/r[a3])
