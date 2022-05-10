@@ -129,6 +129,19 @@ required dependencies locally, the documentation can be built by running the
    make html
 
 
+SymPy Logos
+~~~~~~~~~~~
+
+SymPy has a collection of official logos, which can be generated from sympy.svg in your local copy of SymPy by:
+
+.. code-block:: none
+
+    $ cd doc
+    $ make logo # will be stored in the _build/logo subdirectory
+
+The license of all the logos is the same as SymPy: BSD. See the
+`LICENSE file <https://github.com/sympy/sympy/blob/master/LICENSE>`_ for more information.
+
 View the Docs
 ^^^^^^^^^^^^^
 
