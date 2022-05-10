@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from collections.abc import Iterable
 from functools import reduce
+import re
 
 from .sympify import sympify, _sympify
 from .basic import Basic, Atom
@@ -379,6 +380,18 @@ class Expr(Basic, EvalfMixin):
             raise TypeError("Cannot truncate symbols and expressions")
         else:
             return Integer(self)
+
+    def __format__(self, format_spec: str):
+        if self.is_number:
+            mt = re.match(r'\+?\d*\.(\d+)f', format_spec)
+            if mt:
+                prec = int(mt.group(1))
+                rounded = self.round(prec)
+                if rounded.is_Integer:
+                    return format(int(rounded), format_spec)
+                if rounded.is_Float:
+                    return format(rounded, format_spec)
+        return super().__format__(format_spec)
 
     @staticmethod
     def _from_mpmath(x, prec):
