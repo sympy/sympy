@@ -91,9 +91,9 @@ jobs:
       fail-fast: false
       max-parallel: 32
       matrix:
-        # debian-buster uses system python 3.7
+        # ubuntu-focal uses system python 3.8
         # archlinux-latest is at the cutting edge
-        tox_system_factor: [debian-buster, archlinux-latest]
+        tox_system_factor: [ubuntu-focal, archlinux-latest]
         # "standard" installs lots of system packages, reducing the full build and test of the
         # Sage distribution to 3-4 hours
         tox_packages_factor: [standard]

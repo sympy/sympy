@@ -4,7 +4,8 @@ from sympy.functions.elementary.exponential import exp
 from sympy.sets.sets import Interval
 from sympy.external import import_module
 from sympy.stats import Beta, Chi, Normal, Gamma, Exponential, LogNormal, Pareto, ChiSquared, Uniform, sample, \
-    BetaPrime, Cauchy, GammaInverse, GaussianInverse, StudentT, Weibull, density, ContinuousRV
+    BetaPrime, Cauchy, GammaInverse, GaussianInverse, StudentT, Weibull, density, ContinuousRV, FDistribution, \
+    Gumbel, Laplace, Logistic, Rayleigh, Triangular
 from sympy.testing.pytest import skip, raises
 
 
@@ -17,7 +18,13 @@ def test_sample_numpy():
         LogNormal("LN", 0, 1),
         Pareto("P", 1, 1),
         ChiSquared("CS", 2),
-        Uniform("U", 0, 1)
+        Uniform("U", 0, 1),
+        FDistribution("FD", 1, 2),
+        Gumbel("GB", 1, 2),
+        Laplace("L", 1, 2),
+        Logistic("LO", 1, 2),
+        Rayleigh("R", 1),
+        Triangular("T", 1, 2, 2),
     ]
     size = 3
     numpy = import_module('numpy')

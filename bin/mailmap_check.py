@@ -20,8 +20,8 @@ from subprocess import run, PIPE
 from collections import OrderedDict, defaultdict
 from argparse import ArgumentParser
 
-if sys.version_info < (3, 7):
-    sys.exit("This script requires Python 3.7 or newer")
+if sys.version_info < (3, 8):
+    sys.exit("This script requires Python 3.8 or newer")
 
 def sympy_dir():
     return Path(__file__).resolve().parent.parent

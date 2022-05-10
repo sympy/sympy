@@ -3694,7 +3694,7 @@ class PermutationGroup(Basic):
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> S = SymmetricGroup(5)
         >>> base, strong_gens = S.schreier_sims_random(consec_succ=5)
-        >>> _verify_bsgs(S, base, strong_gens) #doctest: +SKIP
+        >>> _verify_bsgs(S, base, strong_gens)
         True
 
         Notes

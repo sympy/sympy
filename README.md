@@ -4,7 +4,11 @@
 [![Build status](https://secure.travis-ci.org/sympy/sympy.svg?branch=master)](https://travis-ci.org/sympy/sympy)
 [![Join the chat at https://gitter.im/sympy/sympy](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Zenodo Badge](https://zenodo.org/badge/18918/sympy/sympy.svg)](https://zenodo.org/badge/latestdoi/18918/sympy/sympy)
-[![codecov Badge](https://codecov.io/gh/sympy/sympy/branch/master/graph/badge.svg)](https://codecov.io/gh/sympy/sympy)
+[![Downloads](https://pepy.tech/badge/sympy/month)](https://pepy.tech/project/sympy)
+[![GitHub Issues](https://img.shields.io/badge/issue_tracking-github-blue.svg)](https://github.com/sympy/sympy/issues)
+[![Git Tutorial](https://img.shields.io/badge/PR-Welcome-%23FF8300.svg?)](https://git-scm.com/book/en/v2/GitHub-Contributing-to-a-Project)
+[![Powered by NumFocus](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
+[![Commits since last release](https://img.shields.io/github/commits-since/sympy/sympy/latest.svg?longCache=true&style=flat-square&logo=git&logoColor=fff)](https://github.com/sympy/sympy/releases)
 
 [![SymPy Banner](https://github.com/sympy/sympy/raw/master/banner.svg)](https://sympy.org/)
 

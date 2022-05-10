@@ -1005,10 +1005,6 @@ def jacobi_symbol(m, n):
         return 0
 
     j = 1
-    if m < 0:
-        m = -m
-        if n % 4 == 3:
-            j = -j
     while m != 0:
         while m % 2 == 0 and m > 0:
             m >>= 1
@@ -1018,8 +1014,6 @@ def jacobi_symbol(m, n):
         if m % 4 == n % 4 == 3:
             j = -j
         m %= n
-    if n != 1:
-        j = 0
     return j
 
 

@@ -8,7 +8,7 @@ recommended method of installation is through Anaconda, which includes
 mpmath, as well as several other useful libraries.  Alternatively, some Linux
 distributions have SymPy packages available.
 
-SymPy officially supports Python 3.7, 3.8, 3.9, and PyPy.
+SymPy officially supports Python 3.8, 3.9, 3.10, and PyPy.
 
 ## Anaconda
 

@@ -15,4 +15,3 @@ Contents
 
     g-functions.rst
     integrals.rst
-    
