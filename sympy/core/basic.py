@@ -237,7 +237,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             r = Basic(*r) if isinstance(r, frozenset) else r
             if isinstance(l, Basic):
                 c = l.compare(r)
-            else:
+            elif not (isinstance(l, Tuple) and isinstance(l, Tuple)):
                 c = (l > r) - (l < r)
             if c:
                 return c
