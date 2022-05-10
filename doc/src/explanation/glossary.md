@@ -34,18 +34,14 @@ different text. -->
 
 Antiderivative
 
-    An *antiderivative* of a function $f(x)$ with respect to $x$ is an
-    function $F(x)$ such that $\frac{d}{dx}F(x) = f(x).$ It is also sometimes
-    called an "indefinite integral" of $f(x)$, and written as $\int
-    f(x)\,dx.$ Antiderivatives in SymPy can be computed with
-    {func}`~.integrate`. Any given function has an infinite family of
-    antiderivatives, typically obtained by adding an arbitrary constant, but
-    {func}`~.integrate` only returns one
-    such antiderivative, which is sometimes informally referred to as "the
-    antiderivative" of $f(x)$. Note some sources call this the "primitive" of
-    $f(x)$, but this terminology is not used in SymPy because it is not as
-    universally used as "antiderivative", and because "primitive" has other
-    meanings in mathematics.
+    An *antiderivative* of a function $f(x)$ with respect to $x$ is a function
+    $F(x)$ such that $\frac{d}{dx}F(x) = f(x).$ It is also sometimes called an
+    "indefinite integral" of $f(x)$, and written as $\int f(x)\,dx.$
+    Antiderivatives in SymPy can be computed with {func}`~.integrate`. Note
+    some sources call this the "primitive" of $f(x)$, but this terminology is
+    not used in SymPy because it is not as universally used as
+    "antiderivative", and because "primitive" has other meanings in
+    mathematics and in {func}`SymPy <sympy.polys.polytools.primitive>`.
 
 `args`
 
@@ -467,37 +463,9 @@ Printing
     *Printing* refers to the act of taking an {term}`expression` and
     converting it into a form that can be viewed on screen. SymPy has several
     printers which represent expressions using different formats. Some of the
-    more common printers are
-
-    - The string printer, via `str()`. This converts an
-      expression into a readable string which can be copy-pasted.
-
-    - The Unicode pretty printer, via {func}`pprint()
-      <sympy.printing.pretty.pretty.pretty_print>`. This prints an expression
-      using a 2-D text representation using a wide range of Unicode
-      characters.
-
-    - The ASCII pretty printer, via {func}`pprint(use_unicode=False)
-      <sympy.printing.pretty.pretty.pretty_print>`. This prints an expression
-      using a 2-D text representation using only ASCII characters.
-
-    - The LaTeX printer, via {func}`~.latex`. This converts an expression into
-      a form that can be understood by the [$\mathrm{\LaTeX}$ typesetting
-      system](https://en.wikipedia.org/wiki/LaTeX). This printer is used under
-      the hood when using SymPy in the [Jupyter
-      notebook](https://jupyter.org/) along with
-      [MathJax](https://www.mathjax.org/) to automatically print expressions
-      as rendered LaTeX in the browser.
-
-    - The srepr printer, via {func}`~.srepr`. This converts an expression into
-      a longer text representation that can be copied and pasted to recreate
-      the expression. Unlike `str()`, `srepr()` produces a much less
-      human-readable form, but one that can be copied and pasted even when the
-      symbol names are not valid Python.
-
-    - Code printers. The {term}`code generation` system uses the same underlying
-      functionality as the printers to convert expressions into code for
-      various languages.
+    more common printers are the string printer (`str()`), the pretty printer
+    ({func}`pprint() <sympy.printing.pretty.pretty.pretty_print>`) the LaTeX
+    printer (`~.latex`), and code printers (see {term}`code generation`).
 
 Relational
 
