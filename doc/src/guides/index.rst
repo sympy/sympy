@@ -19,5 +19,6 @@ a module break down.
    getting_started/index.rst
    assumptions.rst
    booleans.rst
+   custom-functions.md
    contributing/index.rst
    ../citing.md

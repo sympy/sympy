@@ -1,3 +1,5 @@
+.. _combinatorial-functions:
+
 Combinatorial
 =============
 
