@@ -10,6 +10,13 @@ theory functions <ntheory-module>` like {class}`~.factorial()` or
 {func}`~.primepi()`. Thus custom user functions are able to do the same things
 as functions defined by SymPy.
 
+This guide describes how to define functions that map a subset of
+$\mathbb{C}^n$ to $\mathbb{C}$. Functions that accept or return other kinds of
+objects should subclass another class, such as {class}`~.Boolean`,
+{class}`~.MatrixExpr`, {class}`~.Expr`, or {class}`~.Basic`. Much of what is
+written here only applies to {class}`~.Function` subclasses and will not work
+for general {class}`~.Basic` or {class}`~.Expr` subclasses.
+
 ## Easy Cases: Fully Symbolic or Fully Evaluated
 
 Before digging into the more advanced functionality for custom functions, we
@@ -203,7 +210,7 @@ of `pi`.
 >>> versin(2*pi)
 0
 >>> versin(x*pi)
-versin(x*pi)
+versin(pi*x)
 ```
 
 Note that in this example, we make use of the fact that if a Python function
@@ -211,9 +218,28 @@ does not explicitly return a value, it automatically returns `None`, so in the
 cases where the `if` statement is not triggered, `eval` returns `None` and
 `versin` remains unevaluated.
 
-Two things are worth noting about evaluation:
+`eval` can take any number of arguments, including an arbitrary number with
+`*args` and optional keyword arguments. The `.args` of the function will
+always be the arguments that were passed in by the user. For example
 
-- First, we might have been tempted to write
+```py
+>>> class f(Function):
+...     @classmethod
+...     def eval(cls, x, y=1, *args):
+...         return None
+>>> f(1).args
+(1,)
+>>> f(1, 2).args
+(1, 2)
+>>> f(1, 2, 3).args
+(1, 2, 3)
+```
+
+#### Best Practices for `eval`
+
+- **Don't just return an expression.**
+
+  We might have been tempted to write
 
   ```py
   >>> from sympy import cos
@@ -225,18 +251,22 @@ Two things are worth noting about evaluation:
 
   However, this would make it so that `versin(x)` would *always* return `1 -
   cos(x)`, regardless of what `x` is. If all you want is a quick shorthand to
-  `1 - cos(x)`, that is fine, it is much simpler and more explicit to just use
-  a Python function, as [described above](custom-functions-fully-evaluated).
-  If we defined `versin` like this, it would never actually return as
-  `versin(x)`, and none of the other behavior we define below would matter,
-  because the other behaviors we are going to define on the `versin` class
-  only apply when the returned object is actually a `versin` instance. So for
-  example, `versin(x).diff(x)` would actually just be `(1 - cos(x)).diff(x)`,
-  instead of calling our derivative we defined below. Of course, for a
-  function as simple as `versin`, this might not seem that bad, but remember
-  that we just chose it as an example.
+  `1 - cos(x)`, that is fine. But would be much simpler and more explicit to
+  just use a Python function, as [described
+  above](custom-functions-fully-evaluated). If we defined `versin` like this,
+  it would never actually return as `versin(x)`, and none of the other
+  behavior we define below would matter, because the other behaviors we are
+  going to define on the `versin` class only apply when the returned object is
+  actually a `versin` instance. So for example, `versin(x).diff(x)` would
+  actually just be `(1 - cos(x)).diff(x)`, instead of calling our derivative
+  we defined below. Of course, for a function as simple as `versin`, this
+  might seem reasonable, but remember that we just chose it as an example.
+  Again, you should think about what you actually want to achieve and whether
+  you just want a shorthand function for an expression or a symbolic function.
 
-- Secondly, it is recommended to minimize what is evaluated automatically by
+- **Avoid too much automatic evaluation.**
+
+  It is recommended to minimize what is evaluated automatically by
   `eval`. It is typically better to put more advanced simplifications in other
   methods like `doit` or `simplify` (see below). Remember that whatever we
   define for automatic evaluation will always evaluate. It is possible to skip
@@ -262,3 +292,123 @@ Two things are worth noting about evaluation:
   automatic evaluation in `eval` based on assumptions. Instead, `eval` should
   typically only evaluate explicit numerical special values and return `None`
   for everything else.
+
+- **Allow `None` input assumptions.**
+
+  Our example function $\operatorname{versin}$ is a function from $\mathbb{C}$
+  to $\mathbb{C}$, so it can accept any input. But suppose we had a function
+  that only made sense with certain inputs. As a second example, let's define
+  a function `divides` as
+
+  $$\operatorname{divides}(m, n) = \begin{cases} 1 & \text{for}\: m \mid n \\
+  0 & \text{for}\: m\not\mid n  \end{cases}.$$
+
+  That is, `divides(m, n)` will be `1` if `m` divides `n` and `0` otherwise.
+  `divides` clearly only makes sense if `m` and `n` are integers.
+
+  We might want to define the `eval` method for `divides` like this.
+
+  ```py
+  >>> class divides(Function):
+  ...     @classmethod
+  ...     def eval(cls, m, n):
+  ...         # Evaluate for explicit integer m and n. This part is fine.
+  ...         if isinstance(m, Integer) and isinstance(n, Integer):
+  ...             return int(n % m != 0)
+  ...         # For symbolic arguments, require m and n to be integer.
+  ...         # If we write the logic this way, we will run into trouble.
+  ...         if not m.is_integer or not n.is_integer:
+  ...             raise TypeError("m and n should be integers")
+  ```
+
+  The problem here is that by using `if not m.is_integer`, we are requiring
+  `m.is_integer` to be `True`. If it is `None`, it will fail (see also the
+  [guide on booleans and three-valued logic](booleans)). This is problematic
+  for two reasons. Firstly, it forces the user to define assumptions on any
+  input variable. If a user omits them, it will fail:
+
+  ```
+  >>> n, m = symbols('n m')
+  >>> divides(m, n)
+  Traceback (most recent call last):
+  ...
+  TypeError: m and n should be integers
+  ```
+
+  Instead they have to write
+
+  ```
+  >>> n, m = symbols('n m', integer=True)
+  >>> divides(m, n)
+  divides(m, n)
+  ```
+
+  This may seem like an acceptable restriction, but there is a bigger problem.
+  Sometimes, SymPy's assumptions system cannot deduce an assumption, even
+  though it is mathematically true. In this case, it will give `None` (`None`
+  is used to mean both "unknown" and "cannot compute" in SymPy's assumptions).
+  For example
+
+  ```
+  >>> # n and m are still defined as integer=True as above
+  >>> divides(2, (m**2 + m)/2)
+  Traceback (most recent call last):
+  ...
+  TypeError: m and n should be integers
+  ```
+
+  Here the expression `(m**2 + m)/2` is always an integer, but SymPy's
+  assumptions system is not able to deduce this
+
+  ```
+  >>> print(((m**2 + m)/2).is_integer)
+  None
+  ```
+
+  Consequently, one should always test *negated* assumptions for input variables, that is,
+  fail if the assumption is `False` but allow the assumption to be `None`.
+
+
+  ```py
+  >>> class divides(Function):
+  ...     @classmethod
+  ...     def eval(cls, m, n):
+  ...         # Evaluate for explicit integer m and n. This part is fine.
+  ...         if isinstance(m, Integer) and isinstance(n, Integer):
+  ...             return int(n % m != 0)
+  ...         # For symbolic arguments, require m and n to be integer.
+  ...         # This is the better way to write this logic.
+  ...         if m.is_integer is False or n.is_integer is False:
+  ...             raise TypeError("m and n should be integers")
+  ```
+
+  This still disallows non-integer inputs as desired:
+
+  ```
+  >>> divides(1.5, 1)
+  Traceback (most recent call last):
+  ...
+  TypeError: m and n should be integers
+  ```
+
+  But it does not fail in cases where the assumption is `None`:
+
+  ```
+  >>> divides(2, (m**2 + m)/2)
+  divides(2, m**2/2 + m/2)
+  >>> _.subs(m, 2)
+  1
+  >>> x, y = symbols('x y')
+  >>> divides(y, x)
+  divides(y, x)
+  ```
+
+### Assumptions
+
+### Numerical Evaluation with `evalf`
+
+### Differentiation
+
+### Series Expansions
+
+### Printing
