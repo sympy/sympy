@@ -323,9 +323,9 @@ always be the arguments that were passed in by the user. For example
 
   The problem here is that by using `if not m.is_integer`, we are requiring
   `m.is_integer` to be `True`. If it is `None`, it will fail (see also the
-  [guide on booleans and three-valued logic](booleans)). This is problematic
-  for two reasons. Firstly, it forces the user to define assumptions on any
-  input variable. If a user omits them, it will fail:
+  [guide on booleans and three-valued logic](booleans-guide)). This is
+  problematic for two reasons. Firstly, it forces the user to define
+  assumptions on any input variable. If a user omits them, it will fail:
 
   ```
   >>> n, m = symbols('n m')
