@@ -1,6 +1,6 @@
 """
 This module contains the machinery handling assumptions.
-Do also consider the guide :ref:`assumptions`.
+Do also consider the guide :ref:`assumptions-guide`.
 
 All symbolic objects have assumption attributes that can be accessed via
 ``.is_<assumption name>`` attribute.

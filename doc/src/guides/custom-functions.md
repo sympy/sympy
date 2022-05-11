@@ -178,7 +178,6 @@ True
 
 ### Defining Automatic Evaluation with `eval`
 
-
 ```{sidebar} Reminder
 Remember that `eval` should be defined with the `@classmethod` decorator.
 ```
@@ -239,7 +238,7 @@ always be the arguments that were passed in by the user. For example
 
 - **Don't just return an expression.**
 
-  We might have been tempted to write
+  In the above example, we might have been tempted to write
 
   ```py
   >>> from sympy import cos
@@ -299,6 +298,8 @@ always be the arguments that were passed in by the user. For example
   to $\mathbb{C}$, so it can accept any input. But suppose we had a function
   that only made sense with certain inputs. As a second example, let's define
   a function `divides` as
+
+  (custom-functions-divides-example)=
 
   $$\operatorname{divides}(m, n) = \begin{cases} 1 & \text{for}\: m \mid n \\
   0 & \text{for}\: m\not\mid n  \end{cases}.$$
@@ -405,10 +406,101 @@ always be the arguments that were passed in by the user. For example
 
 ### Assumptions
 
+The next thing we might want to define are the assumptions on our function.
+The [guide on the assumptions system](assumptions-guide) goes into the
+assumptions system in great detail. Here we will show the basic ways we can
+define the assumptions of a custom function.
+
+The simplest case is if a function always has a given assumption regardless of
+its input. For example, the `divides` example we [showed
+above](custom-functions-divides-example) is always an integer, because its value is always
+either 0 or 1. In this case, you can define <span
+class="pre">is_*assumption*</span> directly on the class.
+
+```py
+>>> class divides(Function):
+...     is_integer = True
+>>> divides(m, n).is_integer
+True
+```
+
+```{note}
+From here on out in this guide, in the interest of space, we will omit the
+previous method definitions in the examples unless they are needed for the
+given example to work. A [complete example](custom-functions-complete-example)
+with all methods is given below.
+```
+
+In general, however, the assumptions of a function depend on the assumptions
+of its inputs. In this case, you should define an <span class="pre">_eval_*assumption*</span>
+method.
+
+For our $\operatorname{versin}$ function, the function is always between 0 and
+2 for real valued inputs, and it is 0 whenever the input is an even multiple
+of π. So we `versin(x)` should be *nonnegative* whenever `x` is *real*
+(remember that unless you restricted the assumptions of your function, a
+Function is assumed to be complex valued with complex valued inputs) and
+*positive* whenever `x` is not an even multiple of π.
+
+In the method, as in all methods, we can access the arguments of the function
+using `.args`.
+
+```py
+>>> from sympy.core.logic import fuzzy_and, fuzzy_not
+>>> class versin(Function):
+...     def _eval_is_nonnegative(self):
+...         x = self.args[0]
+...         return x.is_real
+...
+...     def _eval_is_positive(self):
+...         x = self.args[0]
+...         return fuzzy_and([x.is_real, fuzzy_not((x/pi).is_even)])
+>>> versin(1).is_nonnegative
+True
+```
+
+Note the use of `fuzzy_` functions in the more complicated `_eval_is_positive`
+handler. It is important when working with assumptions to always be careful
+about handling [three-valued logic](booleans-guide) correctly.
+
+Note that it is not necessary to define `is_real` because those are deduced
+automatically from the other assumptions, since `nonnegative -> real`. In
+general, you should avoid defining assumptions that the assumptions system can
+deduce automatically given its [known facts](assumptions-guide-predicates).
+
+```py
+>>> versin(1).is_real
+True
+```
+
+The assumptions system is sometimes able to deduce more than you might think.
+For example, from the above, it can deduce that `versin(2*n*pi)` is zero when
+`n` is an integer.
+
+```py
+>>> n = symbols('n', integer=True)
+>>> versin(2*n*pi).is_zero
+True
+```
+
+It's worth checking if the assumptions system can deduce something
+automatically before manually coding it.
+
+Finally, a word of warning to be careful about correctness when coding
+assumptions. Be careful to use the exact
+[definitions](assumptions-guide-predicates) of the various assumptions, and be
+careful to handle `None` cases correctly. Incorrect or inconsistent
+assumptions can lead to subtle bugs.
+
 ### Numerical Evaluation with `evalf`
+
+### Rewriting and Simplification
 
 ### Differentiation
 
 ### Series Expansions
 
 ### Printing
+
+(custom-functions-complete-example)=
+## Complete Example
