@@ -457,13 +457,11 @@ def inverse_trig_rule(integral):
     base, exp = integrand.as_base_exp()
     a = Wild('a', exclude=[symbol])
     b = Wild('b', exclude=[symbol])
-    match = base.match(a + b*symbol**2)
+    c = Wild('c', exclude=[symbol, 0])
+    match = base.match(a + b*symbol + c*symbol**2)
 
     if not match:
         return
-
-    def negative(x):
-        return x.is_negative or x.could_extract_minus_sign()
 
     def ArcsinhRule(integrand, symbol):
         return InverseHyperbolicRule(asinh, integrand, symbol)
@@ -471,44 +469,35 @@ def inverse_trig_rule(integral):
     def ArccoshRule(integrand, symbol):
         return InverseHyperbolicRule(acosh, integrand, symbol)
 
-    def make_inverse_trig(RuleClass, base_exp, a, sign_a, b, sign_b):
+    def make_inverse_trig(RuleClass, a, sign_a, c, sign_c, h):
+        # base equals sign_a*a + sign_c*c*(symbol-h)**2, a>0, c>0
         u_var = Dummy("u")
-        current_base = base
-        current_symbol = symbol
-        constant = u_func = u_constant = substep = None
-        factored = integrand
-        if a != 1:
-            constant = a**base_exp
-            current_base = sign_a + sign_b * (b/a) * current_symbol**2
-            factored = current_base ** base_exp
-        if (b/a) != 1:
-            u_func = sqrt(b/a) * symbol
-            u_constant = sqrt(a/b)
-            current_symbol = u_var
-            current_base = sign_a + sign_b * current_symbol**2
-
-        substep = RuleClass(current_base ** base_exp, current_symbol)
+        quadratic_base = sqrt(c/a)*(symbol-h)
+        constant = 1/sqrt(c)
+        u_func = None
+        if quadratic_base is not symbol:
+            u_func = quadratic_base
+            quadratic_base = u_var
+        standard_form = 1/sqrt(sign_a + sign_c*quadratic_base**2)
+        substep = RuleClass(standard_form, quadratic_base)
+        if constant != 1:
+            substep = ConstantTimesRule(constant, standard_form, substep, constant*standard_form, symbol)
         if u_func is not None:
-            if u_constant != 1 and substep is not None:
-                substep = ConstantTimesRule(
-                    u_constant, current_base ** base_exp, substep,
-                    u_constant * current_base ** base_exp, symbol)
-            substep = URule(u_var, u_func, u_constant, substep, factored, symbol)
-        if constant is not None and substep is not None:
-            substep = ConstantTimesRule(constant, factored, substep, integrand, symbol)
+            substep = URule(u_var, u_func, None, substep, integrand, symbol)
         return substep
 
-    a, b = [match.get(i, S.Zero) for i in (a, b)]
+    a, b, c = [match.get(i, S.Zero) for i in (a, b, c)]
     # list of (rule, base_exp, a, sign_a, b, sign_b, condition)
     possibilities = []
 
     if simplify(2*exp + 1) == 0:
-        possibilities.append((ArcsinRule, exp, a, 1, -b, -1, And(a > 0, b < 0)))
-        possibilities.append((ArcsinhRule, exp, a, 1, b, 1, And(a > 0, b > 0)))
-        possibilities.append((ArccoshRule, exp, -a, -1, b, 1, And(a < 0, b > 0)))
+        h, k = -b/(2*c), a - b**2/(4*c)  # rewrite base to k + c*(symbol-h)**2
+        possibilities.append((ArcsinRule, k, 1, -c, -1, h, And(k > 0, c < 0)))  # 1-x**2
+        possibilities.append((ArcsinhRule, k, 1, c, 1, h, And(k > 0, c > 0)))  # 1+x**2
+        possibilities.append((ArccoshRule, -k, -1, c, 1, h, And(k < 0, c > 0)))  # -1+x**2
 
     possibilities = [p for p in possibilities if p[-1] is not S.false]
-    if a.is_number and b.is_number:
+    if a.is_number and c.is_number:
         possibility = [p for p in possibilities if p[-1] is S.true]
         if len(possibility) == 1:
             return make_inverse_trig(*possibility[0][:-1])

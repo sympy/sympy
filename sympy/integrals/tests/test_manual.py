@@ -174,7 +174,7 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1/sqrt(4*x**2 + 1), x) == \
         asinh(2*x)/2
     assert manualintegrate(1/sqrt(a*x**2 + 1), x) == \
-        Piecewise((sqrt(-1/a)*asin(x*sqrt(-a)), a < 0), (sqrt(1/a)*asinh(sqrt(a)*x), a > 0))
+        Piecewise((asin(x*sqrt(-a))/sqrt(-a), a < 0), (asinh(sqrt(a)*x)/sqrt(a), a > 0))
     assert manualintegrate(1/sqrt(a + x**2), x) == \
         Piecewise((asinh(x*sqrt(1/a)), a > 0), (acosh(x*sqrt(-1/a)), a < 0))
 
@@ -188,7 +188,7 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1/sqrt(9*x**2 - 1), x) == \
         acosh(3*x)/3
     assert manualintegrate(1/sqrt(a*x**2 - 4), x) == \
-        Piecewise((sqrt(1/a)*acosh(sqrt(a)*x/2), a > 0))
+        Piecewise((acosh(sqrt(a)*x/2)/sqrt(a), a > 0))
     assert manualintegrate(1/sqrt(-a + 4*x**2), x) == \
         Piecewise((asinh(2*x*sqrt(-1/a))/2, -a > 0), (acosh(2*x*sqrt(1/a))/2, -a < 0))
 
@@ -220,13 +220,13 @@ def test_manualintegrate_inversetrig():
 
     # piecewise
     assert manualintegrate(1/sqrt(a-b*x**2), x) == \
-        Piecewise((sqrt(a/b)*asin(x*sqrt(b/a))/sqrt(a), And(-b < 0, a > 0)),
-                  (sqrt(-a/b)*asinh(x*sqrt(-b/a))/sqrt(a), And(-b > 0, a > 0)),
-                  (sqrt(a/b)*acosh(x*sqrt(b/a))/sqrt(-a), And(-b > 0, a < 0)))
+        Piecewise((asin(x*sqrt(b/a))/sqrt(b), And(-b < 0, a > 0)),
+                  (asinh(x*sqrt(-b/a))/sqrt(-b), And(-b > 0, a > 0)),
+                  (acosh(x*sqrt(b/a))/sqrt(-b), And(-b > 0, a < 0)))
     assert manualintegrate(1/sqrt(a + b*x**2), x) == \
-        Piecewise((sqrt(-a/b)*asin(x*sqrt(-b/a))/sqrt(a), And(a > 0, b < 0)),
-                  (sqrt(a/b)*asinh(x*sqrt(b/a))/sqrt(a), And(a > 0, b > 0)),
-                  (sqrt(-a/b)*acosh(x*sqrt(-b/a))/sqrt(-a), And(a < 0, b > 0)))
+        Piecewise((asin(x*sqrt(-b/a))/sqrt(-b), And(a > 0, b < 0)),
+                  (asinh(x*sqrt(b/a))/sqrt(b), And(a > 0, b > 0)),
+                  (acosh(x*sqrt(-b/a))/sqrt(b), And(a < 0, b > 0)))
 
 
 def test_manualintegrate_trig_substitution():
@@ -582,3 +582,9 @@ def test_issue_23348():
     steps = integral_steps(tan(x), x)
     constant_times_step = steps.substep.substep
     assert constant_times_step.context == constant_times_step.constant * constant_times_step.other
+
+
+def test_manualintegrate_sqrt_quadratic():
+    assert_is_integral_of(1/sqrt(3*x**2+4*x+5), sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3)
+    assert_is_integral_of(1/sqrt(-3*x**2+4*x+5), sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3)
+    assert_is_integral_of(1/sqrt(3*x**2+4*x-5), sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/3)
