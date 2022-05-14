@@ -92,6 +92,7 @@ AlternativeRule = Rule("AlternativeRule", "alternatives")
 DontKnowRule = Rule("DontKnowRule")
 DerivativeRule = Rule("DerivativeRule")
 RewriteRule = Rule("RewriteRule", "rewritten substep")
+CompleteSquareRule = Rule("CompleteSquareRule", "rewritten substep")
 PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
 HeavisideRule = Rule("HeavisideRule", "harg ibnd substep")
 TrigSubstitutionRule = Rule("TrigSubstitutionRule",
@@ -471,8 +472,8 @@ def inverse_trig_rule(integral):
         return InverseHyperbolicRule(acosh, integrand, symbol)
 
     def make_inverse_trig(RuleClass, a, sign_a, c, sign_c, h):
-        # base equals sign_a*a + sign_c*c*(symbol-h)**2, a>0, c>0
         u_var = Dummy("u")
+        rewritten = 1/sqrt(sign_a*a + sign_c*c*(symbol-h)**2)  # a>0, c>0
         quadratic_base = sqrt(c/a)*(symbol-h)
         constant = 1/sqrt(c)
         u_func = None
@@ -484,7 +485,9 @@ def inverse_trig_rule(integral):
         if constant != 1:
             substep = ConstantTimesRule(constant, standard_form, substep, constant*standard_form, symbol)
         if u_func is not None:
-            substep = URule(u_var, u_func, None, substep, integrand, symbol)
+            substep = URule(u_var, u_func, None, substep, rewritten, symbol)
+        if h != 0:
+            substep = CompleteSquareRule(rewritten, substep, integrand, symbol)
         return substep
 
     a, b, c = [match.get(i, S.Zero) for i in (a, b, c)]
@@ -1487,9 +1490,12 @@ def eval_reciprocal_sqrt_quadratic(a, b, c, integrand, x):
 def eval_alternative(alternatives, integrand, symbol):
     return _manualintegrate(alternatives[0])
 
+
+@evaluates(CompleteSquareRule)
 @evaluates(RewriteRule)
 def eval_rewrite(rewritten, substep, integrand, symbol):
     return _manualintegrate(substep)
+
 
 @evaluates(PiecewiseRule)
 def eval_piecewise(substeps, integrand, symbol):
