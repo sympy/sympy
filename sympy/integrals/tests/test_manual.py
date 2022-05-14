@@ -173,10 +173,10 @@ def test_manualintegrate_inversetrig():
         asinh(x)/2
     assert manualintegrate(1/sqrt(4*x**2 + 1), x) == \
         asinh(2*x)/2
-    assert manualintegrate(1/sqrt(a*x**2 + 1), x) == \
-        Piecewise((asin(x*sqrt(-a))/sqrt(-a), a < 0), (asinh(sqrt(a)*x)/sqrt(a), a > 0))
-    assert manualintegrate(1/sqrt(a + x**2), x) == \
-        Piecewise((asinh(x*sqrt(1/a)), a > 0), (acosh(x*sqrt(-1/a)), a < 0))
+    assert manualintegrate(1/sqrt(ra*x**2 + 1), x) == \
+        Piecewise((asin(x*sqrt(-ra))/sqrt(-ra), ra < 0), (asinh(sqrt(ra)*x)/sqrt(ra), ra > 0))
+    assert manualintegrate(1/sqrt(ra + x**2), x) == \
+        Piecewise((asinh(x*sqrt(1/ra)), ra > 0), (acosh(x*sqrt(-1/ra)), ra < 0))
 
     # acosh
     assert manualintegrate(1/sqrt(x**2 - 1), x) == \
@@ -187,10 +187,10 @@ def test_manualintegrate_inversetrig():
         acosh(x)/2
     assert manualintegrate(1/sqrt(9*x**2 - 1), x) == \
         acosh(3*x)/3
-    assert manualintegrate(1/sqrt(a*x**2 - 4), x) == \
-        Piecewise((acosh(sqrt(a)*x/2)/sqrt(a), a > 0))
-    assert manualintegrate(1/sqrt(-a + 4*x**2), x) == \
-        Piecewise((asinh(2*x*sqrt(-1/a))/2, -a > 0), (acosh(2*x*sqrt(1/a))/2, -a < 0))
+    assert manualintegrate(1/sqrt(ra*x**2 - 4), x) == \
+        Piecewise((acosh(sqrt(ra)*x/2)/sqrt(ra), ra > 0))
+    assert manualintegrate(1/sqrt(-ra + 4*x**2), x) == \
+        Piecewise((asinh(2*x*sqrt(-1/ra))/2, -ra > 0), (acosh(2*x*sqrt(1/ra))/2, -ra < 0))
 
     # From https://www.wikiwand.com/en/List_of_integrals_of_inverse_trigonometric_functions
     # asin
@@ -219,14 +219,14 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(x*acot(a*x), x) == a*(x/a**2 - atan(x/sqrt(a**(-2)))/(a**4*sqrt(a**(-2))))/2 + x**2*acot(a*x)/2
 
     # piecewise
-    assert manualintegrate(1/sqrt(a-b*x**2), x) == \
-        Piecewise((asin(x*sqrt(b/a))/sqrt(b), And(-b < 0, a > 0)),
-                  (asinh(x*sqrt(-b/a))/sqrt(-b), And(-b > 0, a > 0)),
-                  (acosh(x*sqrt(b/a))/sqrt(-b), And(-b > 0, a < 0)))
-    assert manualintegrate(1/sqrt(a + b*x**2), x) == \
-        Piecewise((asin(x*sqrt(-b/a))/sqrt(-b), And(a > 0, b < 0)),
-                  (asinh(x*sqrt(b/a))/sqrt(b), And(a > 0, b > 0)),
-                  (acosh(x*sqrt(-b/a))/sqrt(b), And(a < 0, b > 0)))
+    assert manualintegrate(1/sqrt(ra-rb*x**2), x) == \
+        Piecewise((asin(x*sqrt(rb/ra))/sqrt(rb), And(-rb < 0, ra > 0)),
+                  (asinh(x*sqrt(-rb/ra))/sqrt(-rb), And(-rb > 0, ra > 0)),
+                  (acosh(x*sqrt(rb/ra))/sqrt(-rb), And(-rb > 0, ra < 0)))
+    assert manualintegrate(1/sqrt(ra + rb*x**2), x) == \
+        Piecewise((asin(x*sqrt(-rb/ra))/sqrt(-rb), And(ra > 0, rb < 0)),
+                  (asinh(x*sqrt(rb/ra))/sqrt(rb), And(ra > 0, rb > 0)),
+                  (acosh(x*sqrt(-rb/ra))/sqrt(rb), And(ra < 0, rb > 0)))
 
 
 def test_manualintegrate_trig_substitution():
@@ -588,3 +588,4 @@ def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of(1/sqrt(3*x**2+4*x+5), sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3)
     assert_is_integral_of(1/sqrt(-3*x**2+4*x+5), sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3)
     assert_is_integral_of(1/sqrt(3*x**2+4*x-5), sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/3)
+    assert manualintegrate(1/sqrt(a+b*x+c*x**2), x) == log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)

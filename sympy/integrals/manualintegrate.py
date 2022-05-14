@@ -87,6 +87,7 @@ ExpRule = Rule("ExpRule", "base exp")
 ReciprocalRule = Rule("ReciprocalRule", "func")
 ArcsinRule = Rule("ArcsinRule")
 InverseHyperbolicRule = Rule("InverseHyperbolicRule", "func")
+ReciprocalSqrtQuadraticRule = Rule("ReciprocalSqrtQuadraticRule", "a b c")
 AlternativeRule = Rule("AlternativeRule", "alternatives")
 DontKnowRule = Rule("DontKnowRule")
 DerivativeRule = Rule("DerivativeRule")
@@ -487,24 +488,26 @@ def inverse_trig_rule(integral):
         return substep
 
     a, b, c = [match.get(i, S.Zero) for i in (a, b, c)]
-    # list of (rule, base_exp, a, sign_a, b, sign_b, condition)
-    possibilities = []
 
     if simplify(2*exp + 1) == 0:
         h, k = -b/(2*c), a - b**2/(4*c)  # rewrite base to k + c*(symbol-h)**2
-        possibilities.append((ArcsinRule, k, 1, -c, -1, h, And(k > 0, c < 0)))  # 1-x**2
-        possibilities.append((ArcsinhRule, k, 1, c, 1, h, And(k > 0, c > 0)))  # 1+x**2
-        possibilities.append((ArccoshRule, -k, -1, c, 1, h, And(k < 0, c > 0)))  # -1+x**2
+        if k.is_real and c.is_real:
+            # list of ((rule, base_exp, a, sign_a, b, sign_b), condition)
+            possibilities = []
+            for args, cond in (
+                ((ArcsinRule, k, 1, -c, -1, h), And(k > 0, c < 0)),  # 1-x**2
+                ((ArcsinhRule, k, 1, c, 1, h), And(k > 0, c > 0)),  # 1+x**2
+                ((ArccoshRule, -k, -1, c, 1, h), And(k < 0, c > 0)),  # -1+x**2
+            ):
+                if cond is S.true:
+                    return make_inverse_trig(*args)
+                if cond is not S.false:
+                    possibilities.append((args, cond))
+            if possibilities:
+                return PiecewiseRule([(make_inverse_trig(*args), cond)
+                                      for args, cond in possibilities], integrand, symbol)
+        return ReciprocalSqrtQuadraticRule(a, b, c, integrand, symbol)
 
-    possibilities = [p for p in possibilities if p[-1] is not S.false]
-    if a.is_number and c.is_number:
-        possibility = [p for p in possibilities if p[-1] is S.true]
-        if len(possibility) == 1:
-            return make_inverse_trig(*possibility[0][:-1])
-    elif possibilities:
-        return PiecewiseRule(
-            [(make_inverse_trig(*p[:-1]), p[-1]) for p in possibilities],
-            integrand, symbol)
 
 def add_rule(integral):
     integrand, symbol = integral
@@ -1473,6 +1476,12 @@ def eval_arcsin(integrand, symbol):
 @evaluates(InverseHyperbolicRule)
 def eval_inversehyperbolic(func, integrand, symbol):
     return func(symbol)
+
+
+@evaluates(ReciprocalSqrtQuadraticRule)
+def eval_reciprocal_sqrt_quadratic(a, b, c, integrand, x):
+    return log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
+
 
 @evaluates(AlternativeRule)
 def eval_alternative(alternatives, integrand, symbol):
