@@ -955,6 +955,8 @@ class binomial(CombinatorialFunction):
         if (k - 1).is_zero or ((n_nonneg or n_isint is False)
                 and (d - 1).is_zero):
             return n
+        if k == -1 and n == -1:
+            return S.One
         if k.is_integer:
             if k.is_negative or (n_nonneg and n_isint and d.is_negative):
                 return S.Zero

@@ -425,7 +425,7 @@ def test_binomial():
     assert binomial(-1, 2) == 1
     assert binomial(1, -1) == 0
     assert binomial(-1, 1) == -1
-    assert binomial(-1, -1) == 0
+    assert binomial(-1, -1) == 1
     assert binomial(S.Half, S.Half) == 1
     assert binomial(-10, 1) == -10
     assert binomial(-10, 7) == -11440
