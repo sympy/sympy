@@ -1,5 +1,8 @@
 # Writing Custom Functions
 
+<!-- Note to contributors: if you update one of the examples in this guide, be
+     sure to also update the complete example at the end. -->
+
 This guide will describe how to create custom function classes in SymPy.
 Custom functions use the same mechanisms as the {ref}`functions <functions>`
 that are included with SymPy such as the common {ref}`elementary functions
@@ -258,24 +261,30 @@ always be the arguments that were passed in by the user. For example
   going to define on the `versin` class only apply when the returned object is
   actually a `versin` instance. So for example, `versin(x).diff(x)` would
   actually just be `(1 - cos(x)).diff(x)`, instead of calling our derivative
-  we defined below. Of course, for a function as simple as `versin`, this
-  might seem reasonable, but remember that we just chose it as an example.
-  Again, you should think about what you actually want to achieve and whether
-  you just want a shorthand function for an expression or a symbolic function.
+  we [defined below](custom-functions-differentiation).
+
+  If you find yourself doing this, you should think about what you actually
+  want to achieve. If you just want a shorthand function for an expression, it
+  will be simpler to just [define a Python
+  function](custom-functions-fully-evaluated). If you really do want a
+  symbolic function, think about when you want it to evaluate to something
+  else and when you want it to stay unevaluated.
 
 - **Avoid too much automatic evaluation.**
 
-  It is recommended to minimize what is evaluated automatically by
-  `eval`. It is typically better to put more advanced simplifications in other
-  methods like `doit` or `simplify` (see below). Remember that whatever we
-  define for automatic evaluation will always evaluate. It is possible to skip
-  automatic evaluation by using `evaluate=False`, but this is fragile, and it
-  tends to be bug prone because other code may be written expecting the
-  automatic evaluation to occur. As in the previous point, if we evaluate
-  every value, there is little point to even having a symbolic function in the
-  first place. For example, we might be tempted to evaluate some trig
-  identities on `versin` in `eval`, but then these identities would always
-  evaluate, and it wouldn't be possible to represent one half of the identity.
+  It is recommended to minimize what is evaluated automatically by `eval`. It
+  is typically better to put more advanced simplifications in other methods
+  like `doit` or `simplify` ([see
+  below](custom-functions-rewriting-and-simplification)). Remember that
+  whatever you define for automatic evaluation will *always* evaluate. It is
+  possible to skip automatic evaluation by using `evaluate=False`, but this is
+  fragile and tends to be bug prone because other code may be written
+  expecting the automatic evaluation to occur. As in the previous point, if we
+  evaluate every value, there is little point to even having a symbolic
+  function in the first place. For example, we might be tempted to evaluate
+  some trig identities on `versin` in `eval`, but then these identities would
+  always evaluate, and it wouldn't be possible to represent one half of the
+  identity.
 
   One should also avoid doing anything in `eval` that is slow to compute.
   SymPy functions generally assume that it is cheap to create expressions, and
@@ -286,11 +295,10 @@ always be the arguments that were passed in by the user. For example
   that instead, which would make `versin(n*pi)` evaluate even if `n =
   Symbol('n', integer=True)`. But this is a case where we might not always
   want evaluation to happen, and if `n` is a more complicated expression,
-  `n.is_integer` might take more time to compute. Although SymPy itself
-  doesn't always follow this rule, it is recommended to avoid performing
-  automatic evaluation in `eval` based on assumptions. Instead, `eval` should
-  typically only evaluate explicit numerical special values and return `None`
-  for everything else.
+  `n.is_integer` might take more time to compute. It is recommended to avoid
+  performing automatic evaluation in `eval` based on assumptions. Instead,
+  `eval` should typically only evaluate explicit numerical special values and
+  return `None` for everything else.
 
 - **Allow `None` input assumptions.**
 
@@ -323,10 +331,11 @@ always be the arguments that were passed in by the user. For example
   ```
 
   The problem here is that by using `if not m.is_integer`, we are requiring
-  `m.is_integer` to be `True`. If it is `None`, it will fail (see also the
-  [guide on booleans and three-valued logic](booleans-guide)). This is
-  problematic for two reasons. Firstly, it forces the user to define
-  assumptions on any input variable. If a user omits them, it will fail:
+  `m.is_integer` to be `True`. If it is `None`, it will fail (see the [guide
+  on booleans and three-valued logic](booleans-guide) for information on what
+  it means for an assumption to be `None`). This is problematic for two
+  reasons. Firstly, it forces the user to define assumptions on any input
+  variable. If the user omits them, it will fail:
 
   ```
   >>> n, m = symbols('n m')
@@ -347,8 +356,8 @@ always be the arguments that were passed in by the user. For example
   This may seem like an acceptable restriction, but there is a bigger problem.
   Sometimes, SymPy's assumptions system cannot deduce an assumption, even
   though it is mathematically true. In this case, it will give `None` (`None`
-  is used to mean both "unknown" and "cannot compute" in SymPy's assumptions).
-  For example
+  means both "unknown" and "cannot compute" in SymPy's assumptions). For
+  example
 
   ```
   >>> # n and m are still defined as integer=True as above
@@ -366,8 +375,9 @@ always be the arguments that were passed in by the user. For example
   None
   ```
 
-  Consequently, one should always test *negated* assumptions for input variables, that is,
-  fail if the assumption is `False` but allow the assumption to be `None`.
+  Consequently, one should always test *negated* assumptions for input
+  variables, that is, fail if the assumption is `False` but allow the
+  assumption to be `None`.
 
 
   ```py
@@ -495,6 +505,7 @@ inconsistent assumptions can lead to subtle bugs.
 
 ### Numerical Evaluation with `evalf`
 
+(custom-functions-rewriting-and-simplification)=
 ### Rewriting and Simplification
 
 #### Rewrite
@@ -503,6 +514,7 @@ inconsistent assumptions can lead to subtle bugs.
 
 #### doit
 
+(custom-functions-differentiation)=
 ### Differentiation
 
 To define differentiation via {func}`~.diff`, define a method `fdiff` on the
