@@ -175,6 +175,7 @@ versin(x)
 True
 ```
 
+(custom-functions-eval)=
 ### Defining Automatic Evaluation with `eval`
 
 ```{sidebar} Reminder
@@ -503,6 +504,108 @@ inconsistent assumptions can lead to subtle bugs.
 #### doit
 
 ### Differentiation
+
+To define differentiation via {func}`~.diff`, define a method `fdiff` on the
+class with an argument `argindex`. `fdiff` should return the derivative of the
+function without considering the chain rule, with respect to the `argindex`-th
+variable. `argindex` is indexed starting at `1`.
+
+That is, `f(x1, ..., xi, ..., xn).fdiff(i)` should return $\frac{d}{d x_i}
+f(x_1, \ldots, x_i, \ldots, x_n)$, where $x_k$ are independent of one another.
+`diff` will automatically apply the chain rule using the result of `fdiff`.
+User code should use `diff` and not call `fdiff` directly.
+
+```{note}
+
+`Function` subclasses should define differentiation using `fdiff`. Subclasses
+of {class}`~.Expr` that aren't `Function` subclasess will need to define
+`_eval_derivative` instead. It is not recommended to redefine
+`_eval_derivative` on a `Function` subclass.
+
+```
+
+For our example function $\operatorname{versin}(x) = 1 - \cos(x)$, the
+derivative is $\sin(x)$.
+
+```
+>>> from sympy import sin
+>>> class versin(Function):
+...     def fdiff(self, argindex=1):
+...         return sin(self.args[0])
+>>> versin(x).diff(x)
+sin(x)
+>>> versin(x**2).diff(x)
+2*x*sin(x**2)
+```
+
+As an example of a function that has multiple arguments, let's define a
+function for [fused
+multiply-add](https://en.wikipedia.org/w/index.php?title=Fused_multiply_add):
+$\operatorname{FMA}(x, y, z) = xy + z$.
+
+We have
+
+$$\frac{d}{dx} \operatorname{FMA}(x, y, z) = y,$$
+$$\frac{d}{dy} \operatorname{FMA}(x, y, z) = x,$$
+$$\frac{d}{dz} \operatorname{FMA}(x, y, z) = 1.$$
+
+So the function, along with a simple [eval](custom-functions-eval), would look
+like this
+
+```py
+>>> from sympy import Number, symbols
+>>> x, y, z = symbols('x y z')
+>>> class FMA(Function):
+...     """
+...     FMA(x, y, z) = x*y + z
+...     """
+...     @classmethod
+...     def eval(cls, x, y, z):
+...         # Number is the base class of Integer, Rational, and Float
+...         if all(isinstance(i, Number) for i in [x, y, z]):
+...            return x*y + z
+...
+...     def fdiff(self, argindex):
+...         x, y, z = self.args
+...         if argindex == 1:
+...             return y
+...         elif argindex == 2:
+...             return x
+...         elif argindex == 3:
+...             return 1
+>>> FMA(x, y, z).diff(x)
+y
+>>> FMA(x, y, z).diff(y)
+x
+>>> FMA(x, y, z).diff(z)
+1
+>>> FMA(x**2, x + 1, y).diff(x)
+x**2 + 2*x*(x + 1)
+```
+
+To leave a derivative unevaluated, raise
+`sympy.core.function.ArgumentIndexError(self, argindex)`. This is the default behavior if
+`fdiff` is not defined.
+
+Here is an example function $f(x, y)$ that is linear in the first argument and
+has an unevaluated derivative on the second argument.
+
+```py
+>>> from sympy.core.function import ArgumentIndexError
+>>> class f(Function):
+...    @classmethod
+...    def eval(cls, x, y):
+...        pass
+...
+...    def fdiff(self, argindex):
+...        if argindex == 1:
+...           return 1
+...        raise ArgumentIndexError(self, argindex)
+>>> f(x, y).diff(x)
+1
+>>> f(x, y).diff(y)
+Derivative(f(x, y), y)
+```
 
 ### Series Expansions
 
