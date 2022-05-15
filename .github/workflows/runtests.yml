@@ -168,8 +168,9 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath matplotlib numpy scipy aesara ipython cython \
                          wurlitzer autowrap numexpr 'antlr4-python3-runtime==4.7.*'
-      - if: ${{ matrix.python-version == '3.9' }}
-        run: pip install gmpy2 symengine llvmlite numba  # not available for pypy
+      # These dependencies are not available for pypy
+      - if: ${{ matrix.python-version != 'pypy-3.8' }}
+        run: pip install gmpy2 symengine llvmlite numba
       # Test external imports
       - run: bin/test_external_imports.py
       - run: bin/test_submodule_imports.py
@@ -248,9 +249,15 @@ jobs:
     needs: [doctests-latest, tests1-latest, tests2-latest]
 
     runs-on: ubuntu-20.04
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
+        python-version: ['3.8', '3.9', 'pypy-3.8']
+        experimental: [false]
+        include:
+          - python-version: '3.11.0-alpha - 3.11'
+            experimental: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
@@ -266,9 +273,16 @@ jobs:
     needs: [doctests-latest, tests1-latest, tests2-latest]
 
     runs-on: ubuntu-20.04
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
+        experimental: [false]
+        # Maybe use this to add 3.12 when the time comes:
+        #include:
+        #  - python-version: '3.11.0-alpha - 3.11'
+        #    experimental: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
@@ -284,9 +298,15 @@ jobs:
     needs: [doctests-latest, tests1-latest, tests2-latest]
 
     runs-on: ubuntu-20.04
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
+        python-version: ['3.8', '3.9', 'pypy-3.8']
+        experimental: [false]
+        include:
+          - python-version: '3.11.0-alpha - 3.11'
+            experimental: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
