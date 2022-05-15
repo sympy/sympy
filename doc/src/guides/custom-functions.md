@@ -237,6 +237,10 @@ always be the arguments that were passed in by the user. For example
 (1, 2, 3)
 ```
 
+Finally, note that automatic evaluation on floating-point inputs happens
+automatically once `evalf` is defined. See the section on [defining numerical
+evaluation with `evalf`](custom-functions-evalf) below.
+
 #### Best Practices for `eval`
 
 - **Don't just return an expression.**
@@ -503,7 +507,64 @@ assumptions. Make sure to use the exact
 always check that you're handling `None` cases correctly. Incorrect or
 inconsistent assumptions can lead to subtle bugs.
 
+(custom-functions-evalf)=
 ### Numerical Evaluation with `evalf`
+
+<!-- TODO: this goes over the basics, but it might be useful to have a
+     separate guide dedicated to numerical evaluation. -->
+
+If your function has the same name as a function in
+[mpmath](https://mpmath.org/doc/), as is the case for most functions in SymPy,
+numerical evaluation will happen automatically.
+
+If this is not the case, numerical evaluation can be specified by defining the
+method `_eval_evalf(self, prec)`, where `prec` binary precision of the input.
+The method should return the expression evaluated to the given precision, or
+`None` if this is not possible.
+
+```{note}
+
+The `prec` argument to `_eval_evalf` is the *binary* precision, that is, the
+number of bits to output. This differs from the default argument to the
+`evalf` method, which is the *decimal* precision, or `dps`. For example, the
+default binary precision is 53, corresponding to a decimal precision of 15.
+Therefore, if your `_eval_evalf` method recursively calls evalf on another
+expression, it should call `expr._eval_evalf(prec)` rather than
+`expr.evalf(prec)`.
+
+```
+
+We can define numerical evaluation for our example $\operatorname{versin}(x)$
+function by recursively evaluating $1 - \cos(x)$.
+
+```
+>>> class versin(Function):
+...     def _eval_evalf(self, prec):
+...         return (1 - cos(self.args[0]))._eval_evalf(prec)
+>>> versin(1).evalf()
+0.459697694131860
+```
+
+Once `_eval_evalf` is defined, this enables the automatic evaluation of
+floating-point inputs. It is not required to implement this manually in
+[`eval`](custom-functions-eval).
+
+```
+>>> versin(1.)
+0.459697694131860
+```
+
+<!-- TODO: Mention _should_evalf() here? Seems like something most people
+     shouldn't mess with. -->
+
+Note that `evalf` may be passed any expression, not just one that can be
+evaluated numerically. In this case, it is expected that the numerical parts
+of an expression will be evaluated. Functions should generally recursively
+call `_eval_evalf` on their arguments so that they evaluate.
+
+Most implementations of `_eval_evalf` will want to recursively make use of
+the evalf functionality defined in existing SymPy functions, but in some
+cases, it will be necessary to call out to `mpmath` directly.
 
 (custom-functions-rewriting-and-simplification)=
 ### Rewriting and Simplification
