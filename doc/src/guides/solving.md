@@ -8,7 +8,19 @@ Learn how to use SymPy computer algebra system to:
 
 | Description                                                  | Example                                                                                                                     |
 |--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| [Test d](http://www.apple.com)                                                       | [$\left[\begin{array}{cc} x & 1\\-1 & x^2\end{array}\right]\left[\begin{array}{cc} x & 0\\ 0 & 2x^3\end{array}\right] = 0$](http://www.apple.com)                                                                                                                      |
+| [ Solve an equation algebraically ](http://docs.sympy.org)                        | [  $x^2 - 1 = 0$  ](http://docs.sympy.org)                                                                                                       |
+| [ Solve a system of equations algebraically ](http://docs.sympy.org)              | [  $x + y = 1, x - y = 0$  ](http://docs.sympy.org)                                                                                              |
+| [ Solve an equation numerically ](http://docs.sympy.org)                          | [ $x^2 + x = 0.274$ ](http://docs.sympy.org)                                                                                                     |
+| [ Solve a partial differential equation algebraically ](http://docs.sympy.org)    | [${\frac {\partial ^{2}v}{\partial x\partial y}}=0$](http://docs.sympy.org)                                                                     |
+| [ Solve an ordinary differential equation algebraically  ](http://docs.sympy.org) | [ $a_{0}(x)y+a_{1}(x)y'+a_{2}(x)y''+\cdots +a_{n}(x)y^{(n)}+b(x)=0$ ](http://docs.sympy.org)                                                    |
+| [ Solve a system of linear equations algebraically ](http://docs.sympy.org)       | [  $2x + y = 1, 7x - 3y = 0$  ](http://docs.sympy.org)                                                                                           |
+| [ Solve a system of nonlinear equations algebraically ](http://docs.sympy.org)    | [  $x^2 + y^3 = 1, x^3 - y^2 = 0$  ](http://docs.sympy.org)                                                                                      |
+| [ Solve a matrix problem algebraically ](http://docs.sympy.org)                   | [ $\left[\begin{array}{cc} x & 1\\-1 & x^2\end{array}\right]\left[\begin{array}{cc} x & 0\\ 0 & 2x^3\end{array}\right] = 0$ ](http://docs.sympy.org) |
+| [ Solve an inequality algebraically ](http://docs.sympy.org)                      | [ $ x^2 + x > 0$ ](http://docs.sympy.org)                                                                                                        |
+| [ Solve a system of inequalities algebraically ](http://docs.sympy.org)           | [ $ x^2 + x > 0, x < 1$ ](http://docs.sympy.org)                                                                                                 |
+| [ Solve a polynomial algebraically ](http://docs.sympy.org)                       | [ $ 4x^3 - 3x^2 + x = 0$ ](http://docs.sympy.org)                                                                                                |
+| [ Solve a diophantine equation algebraically ](http://docs.sympy.org)             | [ $ax^2 + bxy + cy^2 + dx + ey + f = 0$ ](http://docs.sympy.org)                                                                                 |
+| [ Evaluate an integral symbolically ](http://docs.sympy.org)                      | [ $\int f\,dx$ ](http://docs.sympy.org)                                                                                                          |                                                                |
 
 
 Note: SymPy has a function called 
