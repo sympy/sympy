@@ -220,6 +220,14 @@ does not explicitly return a value, it automatically returns `None`, so in the
 cases where the `if` statement is not triggered, `eval` returns `None` and
 `versin` remains unevaluated.
 
+```{note}
+
+`Function` subclasses should not redefine `__new__` or `__init__`. If you want
+to implement behavior that isn't possible with `eval`, it might make more
+sense to subclass {class}`~.Expr` rather than `Function`.
+
+```
+
 `eval` can take any number of arguments, including an arbitrary number with
 `*args` and optional keyword arguments. The `.args` of the function will
 always be the arguments that were passed in by the user. For example
@@ -266,6 +274,13 @@ evaluation with `evalf`](custom-functions-evalf) below.
   actually a `versin` instance. So for example, `versin(x).diff(x)` would
   actually just be `(1 - cos(x)).diff(x)`, instead of calling our derivative
   we [defined below](custom-functions-differentiation).
+
+  The point of `eval` isn't to define what the function *is*, mathematically,
+  but rather to specify on what inputs it should automatically evaluate. The
+  mathematical definition of a function is determined through specifying
+  various mathematical properties with the methods outlined below, like
+  [numerical evaluation](custom-functions-evalf),
+  [differentiation](custom-functions-differentiation), and so on.
 
   If you find yourself doing this, you should think about what you actually
   want to achieve. If you just want a shorthand function for an expression, it
