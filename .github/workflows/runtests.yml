@@ -320,7 +320,7 @@ jobs:
   # -------------------- Build the html/latex docs ----------------- #
 
   sphinx:
-    #needs: [doctests-latest, tests1-latest, tests2-latest]
+    needs: [doctests-latest, tests1-latest, tests2-latest]
 
     runs-on: ubuntu-20.04
     steps:
