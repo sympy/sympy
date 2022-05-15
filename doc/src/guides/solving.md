@@ -20,7 +20,7 @@ Learn how to use SymPy computer algebra system to:
 | [ Solve a system of inequalities algebraically ](http://docs.sympy.org)           | [ $ x^2 + x > 0, x < 1$ ](http://docs.sympy.org)                                                                                                 |
 | [ Solve a polynomial algebraically ](http://docs.sympy.org)                       | [ $ 4x^3 - 3x^2 + x = 0$ ](http://docs.sympy.org)                                                                                                |
 | [ Solve a diophantine equation algebraically ](http://docs.sympy.org)             | [ $ax^2 + bxy + cy^2 + dx + ey + f = 0$ ](http://docs.sympy.org)                                                                                 |
-| [ Evaluate an integral symbolically ](http://docs.sympy.org)                      | [ $\int f\,dx$ ](http://docs.sympy.org)                                                                                                          |                                                                |
+| [ Evaluate an integral symbolically ](http://docs.sympy.org)                      | [ $\int f(x)\,dx$ ](http://docs.sympy.org)                                                                                                          |                                                                |
 
 
 Note: SymPy has a function called 
