@@ -8,8 +8,7 @@ Learn how to use SymPy computer algebra system to:
 
 | Description                                                  | Example                                                                                                                     |
 |--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
-| Test d                                                       | $$\left[\begin{array}{cc} x & 1\\-1 & x^2\end{array}\right]\left[\begin{array}{cc} x & 0\\ 0 & 2x^3\end{array}\right] = 0$$                                                                                                                      |
-
+| [Test d](http://www.apple.com)                                                       | [$\left[\begin{array}{cc} x & 1\\-1 & x^2\end{array}\right]\left[\begin{array}{cc} x & 0\\ 0 & 2x^3\end{array}\right] = 0$](http://www.apple.com)                                                                                                                      |
 
 
 Note: SymPy has a function called 
