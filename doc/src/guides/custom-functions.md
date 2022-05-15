@@ -151,10 +151,8 @@ rarely used today. Versine can be defined by the identity
 
 $$\operatorname{versin}(x) = 1 - \cos(x).$$
 
-Because versine is used so rarely in modern mathematics and because it is so
-easily defined in terms of the more familiar cosine, it does not already have
-a definition in SymPy, but this simple definition will make it easy for us to
-define the various behaviors.
+SymPy does not already include versine because it is used so rarely in modern
+mathematics and it is so easily defined in terms of the more familiar cosine.
 
 Let us start by subclassing `Function`.
 
@@ -164,8 +162,9 @@ Let us start by subclassing `Function`.
 ```
 
 At this point, `versin` has no behaviors defined on it. It is very similar to
-an [undefined function](custom-functions-fully-symbolic). We note that
-`versin` is a class, and `versin(x)` is an instance of this class.
+the [undefined functions](custom-functions-fully-symbolic) we discussed above.
+We note that `versin` is a class, and `versin(x)` is an instance of this
+class.
 
 ```
 >>> type(versin)
@@ -454,6 +453,7 @@ using `.args`.
 ...
 ...     def _eval_is_positive(self):
 ...         x = self.args[0]
+...         # versin(x) is positive if x is real and not an even multiple of pi
 ...         return fuzzy_and([x.is_real, fuzzy_not((x/pi).is_even)])
 >>> versin(1).is_nonnegative
 True
@@ -463,10 +463,10 @@ Note the use of `fuzzy_` functions in the more complicated `_eval_is_positive`
 handler. It is important when working with assumptions to always be careful
 about handling [three-valued logic](booleans-guide) correctly.
 
-Note that it is not necessary to define `is_real` because those are deduced
-automatically from the other assumptions, since `nonnegative -> real`. In
-general, you should avoid defining assumptions that the assumptions system can
-deduce automatically given its [known facts](assumptions-guide-predicates).
+It is not necessary to define `is_real` because it is deduced automatically
+from the other assumptions, since `nonnegative -> real`. In general, you
+should avoid defining assumptions that the assumptions system can deduce
+automatically given its [known facts](assumptions-guide-predicates).
 
 ```py
 >>> versin(1).is_real
@@ -487,14 +487,20 @@ It's worth checking if the assumptions system can deduce something
 automatically before manually coding it.
 
 Finally, a word of warning to be careful about correctness when coding
-assumptions. Be careful to use the exact
-[definitions](assumptions-guide-predicates) of the various assumptions, and be
-careful to handle `None` cases correctly. Incorrect or inconsistent
-assumptions can lead to subtle bugs.
+assumptions. Make sure to use the exact
+[definitions](assumptions-guide-predicates) of the various assumptions, and
+always check that you're handling `None` cases correctly. Incorrect or
+inconsistent assumptions can lead to subtle bugs.
 
 ### Numerical Evaluation with `evalf`
 
 ### Rewriting and Simplification
+
+#### Rewrite
+
+#### Simplify
+
+#### doit
 
 ### Differentiation
 
@@ -502,5 +508,19 @@ assumptions can lead to subtle bugs.
 
 ### Printing
 
+### Other Methods
+
+#### `inverse`
+
+#### `as_real_imag`
+
+#### Miscellaneous `_eval_*` methods
+
+
 (custom-functions-complete-example)=
 ## Complete Example
+
+## Additional Tips
+
+- Sharing Code
+- Tests
