@@ -255,11 +255,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
         experimental: [false]
-        include:
-          - python-version: '3.11.0-alpha - 3.11'
-            experimental: true
+        # Maybe use this to add 3.12 when the time comes:
+        #include:
+        #  - python-version: '3.11.0-alpha - 3.11'
+        #    experimental: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
@@ -304,11 +305,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
         experimental: [false]
-        include:
-          - python-version: '3.11.0-alpha - 3.11'
-            experimental: true
+        # Maybe use this to add 3.12 when the time comes:
+        #include:
+        #  - python-version: '3.11.0-alpha - 3.11'
+        #    experimental: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
