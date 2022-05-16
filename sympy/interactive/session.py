@@ -153,7 +153,7 @@ def enable_automatic_int_sympification(shell):
             pass
         else:
             cell = int_to_Integer(cell)
-        old_run_cell(cell, *args, **kwargs)
+        return old_run_cell(cell, *args, **kwargs)
 
     shell.run_cell = my_run_cell
 
