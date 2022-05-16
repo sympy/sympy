@@ -154,11 +154,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', 'pypy-3.8']
+        python-version: ['3.9', '3.10', 'pypy-3.8']
         experimental: [false]
         include:
-          - python-version: '3.10'
-            experimental: true
           - python-version: '3.11.0-alpha - 3.11'
             experimental: true
     steps:
@@ -172,7 +170,13 @@ jobs:
                          wurlitzer autowrap numexpr 'antlr4-python3-runtime==4.7.*'
       # These dependencies are not available for pypy
       - if: ${{ matrix.python-version != 'pypy-3.8' }}
-        run: pip install gmpy2 symengine llvmlite numba
+        run: pip install gmpy2 symengine
+      # The llvmjit tests segfault on Python 3.10. For now we skip this under
+      # 3.10 because the segfault prevents the other tests from running. Also
+      # llvmlite cannot be installed under PyPy. Installing numba pulls in
+      # llvmlite indirectly.
+      - if: ${{ matrix.python-version == '3.9' }}
+        run: pip install llvmlite numba
       # Test external imports
       - run: bin/test_external_imports.py
       - run: bin/test_submodule_imports.py
