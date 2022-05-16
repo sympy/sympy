@@ -13,16 +13,16 @@
 set -o errexit
 
 sudo apt install\
-	texlive-latex-recommended\
-	texlive-fonts-recommended\
-	texlive-fonts-extra\
-	texlive-xetex\
-	latexmk\
+  texlive-latex-recommended\
+  texlive-fonts-recommended\
+  texlive-fonts-extra\
+  texlive-xetex\
+  latexmk\
   dvipng\
   librsvg2-bin\
   imagemagick\
-	chromium-browser\
-	libcanberra-gtk-module\
+  chromium-browser\
+  libcanberra-gtk-module\
   docbook2x\
-	graphviz\
-	#
+  graphviz\
+  #
