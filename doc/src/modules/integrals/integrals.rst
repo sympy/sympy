@@ -27,9 +27,9 @@ SymPy can integrate a vast array of functions. It can integrate polynomial funct
 Rational functions::
 
     >>> integrate(x/(x**2+2*x+1), x)
-    1
+                   1
     log(x + 1) + -----
-    x + 1
+                 x + 1
 
 
 Exponential-polynomial functions. These multiplicative combinations of polynomials and the functions ``exp``, ``cos`` and ``sin`` can be integrated by hand using repeated integration by parts, which is an extremely tedious process. Happily, SymPy will deal with these integrals.
