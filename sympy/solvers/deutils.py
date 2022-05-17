@@ -90,7 +90,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
     eq = expr.subs(reps)
     return eq, func
 
-def ode_order(expr, func):
+def ode_order(expr, func) -> int:
     """
     Returns the order of a given differential
     equation with respect to func.

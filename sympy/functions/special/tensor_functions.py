@@ -443,7 +443,7 @@ class KroneckerDelta(Function):
         else:
             return self.args[1]
 
-    def _get_preferred_index(self):
+    def _get_preferred_index(self) -> int:
         """
         Returns the index which is preferred to keep in the final expression.
 

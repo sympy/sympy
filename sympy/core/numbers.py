@@ -227,7 +227,7 @@ def _literal_float(f):
 # TODO caching with decorator, but not to degrade performance
 
 @lru_cache(1024)
-def igcd(*args):
+def igcd(*args) -> int:
     """Computes nonnegative integer greatest common divisor.
 
     Explanation
@@ -270,7 +270,7 @@ def igcd(*args):
 igcd2 = math.gcd
 
 
-def igcd_lehmer(a, b):
+def igcd_lehmer(a, b) -> int:
     r"""Computes greatest common divisor of two integers.
 
     Explanation

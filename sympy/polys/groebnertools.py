@@ -301,7 +301,7 @@ def lbp(signature, polynomial, number):
 # signature functions
 
 
-def sig_cmp(u, v, order):
+def sig_cmp(u, v, order) -> int:
     """
     Compare two signatures by extending the term order to K[X]^n.
 
@@ -373,7 +373,7 @@ def lbp_mul_term(f, cx):
     return lbp(sig_mult(Sign(f), cx[0]), Polyn(f).mul_term(cx), Num(f))
 
 
-def lbp_cmp(f, g):
+def lbp_cmp(f, g) -> int:
     """
     Compare two labeled polynomials.
 
@@ -438,7 +438,7 @@ def critical_pair(f, g, ring):
         return (Sign(fr), um, f, Sign(gr), vm, g)
 
 
-def cp_cmp(c, d):
+def cp_cmp(c, d) -> int:
     """
     Compare two critical pairs c and d.
 

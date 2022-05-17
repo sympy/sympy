@@ -1926,7 +1926,7 @@ class _EditArrayContraction:
         raise IndexError("argument not found")
 
 
-def get_rank(expr):
+def get_rank(expr) -> int:
     if isinstance(expr, (MatrixExpr, MatrixElement)):
         return 2
     if isinstance(expr, _CodegenArrayAbstract):

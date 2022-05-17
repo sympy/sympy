@@ -967,7 +967,7 @@ if cin:
 
             return combined_variables_stack[-1][0]
 
-        def priority_of(self, op):
+        def priority_of(self, op) -> int:
             """To get the priority of given operator"""
             if op in ['=', '+=', '-=', '*=', '/=', '%=']:
                 return 1

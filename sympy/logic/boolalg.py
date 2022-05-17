@@ -3450,7 +3450,7 @@ def simplify_univariate(expr):
 # Used in gateinputcount method
 BooleanGates = (And, Or, Xor, Nand, Nor, Not, Xnor, ITE)
 
-def gateinputcount(expr):
+def gateinputcount(expr) -> int:
     """
     Return the total number of inputs for the logic gates realizing the
     Boolean expression.

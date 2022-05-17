@@ -541,7 +541,7 @@ class primepi(Function):
         return S(arr2[1])
 
 
-def nextprime(n, ith=1):
+def nextprime(n, ith=1) -> int:
     """ Return the ith prime greater than n.
 
         i must be an integer.

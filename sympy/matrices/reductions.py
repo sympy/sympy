@@ -172,7 +172,7 @@ def _echelon_form(M, iszerofunc=_iszero, simplify=False, with_pivots=False):
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _rank(M, iszerofunc=_iszero, simplify=False):
+def _rank(M, iszerofunc=_iszero, simplify=False) -> int:
     """Returns the rank of a matrix.
 
     Examples

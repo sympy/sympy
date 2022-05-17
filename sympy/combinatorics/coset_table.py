@@ -107,7 +107,7 @@ class CosetTable(DefaultPrinting):
     __repr__ = __str__
 
     @property
-    def n(self):
+    def n(self) -> int:
         """The number `n` represents the length of the sublist containing the
         live cosets.
 

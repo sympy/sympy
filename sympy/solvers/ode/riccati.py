@@ -377,7 +377,7 @@ def inverse_transform_poly(num, den, x):
     return num.cancel(den, include=True)
 
 
-def limit_at_inf(num, den, x):
+def limit_at_inf(num, den, x) -> int:
     """
     Find the limit of a rational function
     at oo
