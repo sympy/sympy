@@ -21,7 +21,7 @@ from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions
     _parts_rule, integral_steps, contains_dont_know, manual_subs)
 from sympy.testing.pytest import raises, slow
 
-x, y, z, u, n, a, b, c = symbols('x y z u n a b c')
+x, y, z, u, n, a, b, c, d, e = symbols('x y z u n a b c d e')
 f = Function('f')
 
 
@@ -589,3 +589,12 @@ def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of(1/sqrt(-3*x**2+4*x+5), sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3)
     assert_is_integral_of(1/sqrt(3*x**2+4*x-5), sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/3)
     assert manualintegrate(1/sqrt(a+b*x+c*x**2), x) == log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
+
+    assert_is_integral_of((7*x+6)/sqrt(3*x**2+4*x+5),
+                          7*sqrt(3*x**2 + 4*x + 5)/3 + 4*sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/9)
+    assert_is_integral_of((7*x+6)/sqrt(-3*x**2+4*x+5),
+                          -7*sqrt(-3*x**2 + 4*x + 5)/3 + 32*sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/9)
+    assert_is_integral_of((7*x+6)/sqrt(3*x**2+4*x-5),
+                          7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/9)
+    assert manualintegrate((d+e*x)/sqrt(a+b*x+c*x**2), x) == \
+           e*sqrt(a + b*x + c*x**2)/c + (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c)
