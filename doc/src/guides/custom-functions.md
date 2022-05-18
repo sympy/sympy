@@ -699,6 +699,59 @@ Derivative(f(x, y), y)
 
 ### Printing
 
+You can define how a function prints itself with the varions
+[printers](module-printing) such as the {class}`string printer
+<sympy.printing.str.StrPrinter>`, {func}`pretty printers
+<sympy.printing.pretty.PrettyPrinter>`, and {func}`LaTeX printer
+<sympy.printing.latex.LatexPrinter>`, as well as code printers for various
+languages such as {class}`C <sympy.printing.c.C99CodePrinter>` and
+{class}`Fortran <sympy.printing.fortran.FCodePrinter>`.
+
+
+In most cases, you will not need to define printing behavior. The default is
+to print functions using their name. However, in some cases we may want to
+define special printing for a function.
+
+For example, for our [divides example
+above](custom-functions-divides-example), we may want the LaTeX printer to
+print a more mathematical expression. Let's print `divides(m, n)` as `\left [
+m \middle | n \right ]`, which looks like $\left [ m \middle | n \right ]$
+(here $[P]$ is the [Iverson
+bracket](https://en.wikipedia.org/wiki/Iverson_bracket), which is $1$ if $P$
+is true and $0$ if $P$ is false).
+
+There are two primary ways to define printing for SymPy objects. One is to
+define a printer on the printer class. Most classes that are part of the SymPy
+library should use this method, by defining the printers on the respective
+classes in sympy.printing. For user code, this may be preferable if you are
+defining a custom printer, or if you have many custom functions that you want
+to define printing for. See [](printer_example) for an example of thos to
+define a printer in this way.
+
+The other method is to define the printing on a method on the class. To do
+this, first look up the `printmethod` attribute on the printer you want to
+define the printing for. This is the name of the method you should define for
+that printer. For the LaTeX printer, `printmethod` is `'_latex'` (see
+{attr}`.LatexPrinter.printmethod`). So you should define a function
+`_latex(self, printer)` on the class. For our `divides` example, it might look
+like
+
+```py
+>>> from sympy import latex
+>>> class divides(Function):
+...     def _latex(self, printer):
+...         m, n = self.args
+...         _m, _n = printer._print(m), printer._print(n)
+...         return r'\left [ %s \middle | %s \right ]' % (_m, _n)
+>>> print(latex(divides(m, n)))
+\left [ m \middle | n \right ]
+```
+
+See [](printer_method_example) for more details on how to define printer
+methods and some pitfalls to avoid. Most importantly, you should always use
+`printer._print()` to recursively print the arguments of the function inside
+of a custom printer.
+
 ### Other Methods
 
 #### `inverse`
