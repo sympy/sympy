@@ -1761,7 +1761,6 @@ class LatexPrinter(Printer):
                 return r"%s^{\dagger}" % s
 
     def _print_MatMul(self, expr):
-        from sympy.matrices.expressions.matmul import MatMul
 
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
                                              False)
@@ -1772,7 +1771,7 @@ class LatexPrinter(Printer):
         else:
             args = list(args)
 
-        if isinstance(expr, MatMul) and expr.could_extract_minus_sign():
+        if len(args) > 0 and args[0].is_real and (args[0] < 0) == True:
             if args[0] == -1:
                 args = args[1:]
             else:
