@@ -47,7 +47,7 @@ from .operations import LatticeOp
 from .parameters import global_parameters
 from .rules import Transform
 from .singleton import S
-from .sympify import sympify
+from .sympify import sympify, _sympify
 
 from .sorting import default_sort_key, ordered
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
@@ -480,7 +480,7 @@ class Function(Application, Expr):
                 pr = max(cls._should_evalf(a) for a in result.args)
                 result = result.evalf(prec_to_dps(pr))
 
-        return result
+        return _sympify(result)
 
     @classmethod
     def _should_evalf(cls, arg):
