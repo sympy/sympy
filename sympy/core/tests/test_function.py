@@ -1452,3 +1452,9 @@ def test_eval_sympified():
 
     # TODO: Disable string inputs (https://github.com/sympy/sympy/issues/11003)
     # raises(SympifyError, lambda: F2('2'))
+
+def test_eval_classmethod_check():
+    with raises(TypeError):
+        class F(Function):
+            def eval(self, x):
+                pass

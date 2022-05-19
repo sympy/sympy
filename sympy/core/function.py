@@ -185,6 +185,14 @@ class FunctionClass(ManagedProperties):
             nargs = (as_int(nargs),)
         cls._nargs = nargs
 
+        # When __init__ is called from UndefinedFunction it is called with
+        # just one arg but when it is called from subclassing Function it is
+        # called with the usual (name, bases, namespace) type() signature.
+        if len(args) == 3:
+            namespace = args[2]
+            if 'eval' in namespace and not isinstance(namespace['eval'], classmethod):
+                raise TypeError("eval on Function subclasses should be a class method (defined with @classmethod)")
+
         super().__init__(*args, **kwargs)
 
     @property
