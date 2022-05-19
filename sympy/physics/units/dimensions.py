@@ -575,47 +575,71 @@ class DimensionSystem(Basic, _QuantityMapper):
 
     def buckingham_pi_theorem(self, *list_of_derived_quantities):
         r"""
-        Description
-        ===========
 
-        list_of_derived_quantities is the input of derived quantities in the form of a list of tuples (quantity_name, dims) where quantity_name
-        is the name of the physical quantity and dims is an instance of Dimension class which possesses the dimensions of the quantity. This function
-        is designed to take in a set of physical variables (all essentially dimensionful) and returns one set of all possible exponents,
-        as guided by the Buckingham's pi theorem (raise the list of quantities to the list of exponents to get the dimensionless numbers).
+        Here, ``list_of_derived_quantities`` is the input of derived quantities in the form of objects of ``Dimension`` class which have all the information about
+        the dimensions of the quantity in the ``DimensionSystem``. This function is designed to take in a set of physical variables (all essentially dimensionful) and returns
+        a matrix of the possible exponents, as guided by the Buckingham's pi theorem (we can raise the list of quantities to the list of exponents to get the dimensionless
+        numbers characterising the physical system of interest). Mathematically, the columns of this output matrix represent the null space of the matrix formed by the
+        exponents to which the base dimensions are raised to which constitute the input physical variables.
 
-        One of the next functions get_dimensionless_numbers() is used to produce the requisite result in the form of a list of instances of Dimension
-        class signifying the actual dimensionless quantities.
-
-        Examples
+        Example
         ========
 
-        For example, consider an RLC circuit with resistance `R`, inductance `L` and capacitance `C` connected to a constant
-        voltage source `V_{amp}`, where current `I(t)` is given by the equation (https://en.wikipedia.org/wiki/RLC_circuit).
+        As an instance, consider an RLC circuit with resistance `R`, inductance `L` and capacitance `C` connected to a constant
+        voltage source `V_{amp}`, where current `I(t)` is given by the equation
 
-        `\begin{equation*} \frac{d^2 I}{d t^2} + \frac{R}{L} \frac{d I(t)}{d t} + \frac{1}{LC}I(t) = 0 \end{equation*}`
+        `\begin{equation} \frac{d^2 I}{d t^2} + \frac{R}{L} \frac{d I(t)}{d t} + \frac{1}{LC}I(t) = 0 \end{equation}`
 
-        In the above equation, the solution could admit a current of amplitude `I_{amp}` and a scale of angular frequency `\omega`.
+        In the above equation, the solution could admit a current of amplitude `I_{amp}` and a scale of angular frequency `\omega`. Let's take for this example the MKS
+        convention or `\textit{the MKS system}`, where `[M], [L], [I],` and `[T]` refer to the dimensions of the base quantities mass, length, current and time respectively.
+        One can verify that, in dimensional notation, `[R] = \frac{ML^2}{T^3I^2}`, `[L] = \frac{M L^2}{T^2 I^2}`, `[C] = \frac{T^4 I^2}{M L^2}`, `[V_{amp}] = \frac{M L^2}{I T^3}`,
+        `[I_{amp}] = I` and `[\omega] = T^{-1}`. What this function does is prescribed by the Buckingham's pi representation; it forms the following matrix representation
+        of the dimensional system by taking the logarithm of the variables we just discussed.
+
+        `\begin{equation} \begin{bmatrix} log([R]) \\ log([L]) \\ log([C]) \\ log([V_{amp}]) \\ log([I_{amp}]) \\ log([\omega]) \end{bmatrix} = A_{exp} \begin{bmatrix} log([M]) \\ log([L]) \\ log([I]) \\ log([T]) \end{bmatrix} \end{equation}`
+
+        where `A_{exp}` is the following `\textit{exponent matrix}`.
+
+        `\begin{equation} A_{exp} = \begin{bmatrix} 1 & 2 & -2 & -3 \\ 1 & 2 & -2 & -2 \\ -1 & -2 & 2 & 4 \\ 1 & 2 & -1 & -3 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & -1 \end{bmatrix} \end{equation}`
+
+        The function computes the nullspace of the matrix `A_{exp}^T` as is exhibited in the following code fragment.
 
         >>> from sympy.physics.units import length, mass, time, current
         >>> from sympy.physics.units.systems.si import dimsys_SI
+        >>> from sympy import pprint
         >>> resistance = mass*length**2*time**(-3)*current**(-2)
         >>> inductance = mass*length**2*time**(-2)*current**(-2)
         >>> capacitance = mass**(-1)*length**(-2)*time**4*current**2
         >>> voltage_amp = mass*length**2*time**(-3)*current**(-1)
         >>> current_amp = current
         >>> omega = time**(-1)
-        >>> dimsys_SI.get_dimensionless_numbers(resistance, inductance, capacitance, voltage_amp, current_amp, omega)
-        [Dimension(capacitance*resistance**2/inductance), Dimension(current_amp*resistance/voltage_amp), Dimension(inductance*omega/resistance)]
+        >>> pprint(dimsys_SI.buckingham_pi_theorem(resistance, inductance, capacitance, voltage_amp, current_amp, omega))
+        [2 ]  [1 ]  [-1]
+        [  ]  [  ]  [  ]
+        [-1]  [0 ]  [1 ]
+        [  ]  [  ]  [  ]
+        [1 ]  [0 ]  [0 ]
+        [[  ], [  ], [  ]]
+        [0 ]  [-1]  [0 ]
+        [  ]  [  ]  [  ]
+        [0 ]  [1 ]  [0 ]
+        [  ]  [  ]  [  ]
+        [0 ]  [0 ]  [1 ]
 
-        The first dimensionless quantity `\zeta^2 = \frac{C R^2}{L}` shows the quantity `\zeta` is known as the damping factor of the
-        RLC circuit, and the last dimensionless quantity `\frac{L*\omega}{R}` is reminiscent of the definition of the attenuation.
-        The second dimensionless quantity is something that simply comes from Ohm's law.
+        Following from the Buckingham-pi theorem, one can take the matrix product of the transpose of the matrix we just got with the
+        column matrix of the original physical quantities `(log([R]), log([L]), log([C]), log([V_{amp}]), log([I_{amp}]), log([\omega]))^T`
+        to obtain the three dimensionless variables `\langle \frac{R^2 C}{L}, \frac{I_{amp} R}{V_{amp}}, \frac{\omega L}{R}\rangle`. We can
+        test the non-dimensionality of these variables in this framework by the function ``verify_dimensionless_numbers()`` defined a little
+        later. But otherwise too, the physical quantity `\frac{I_{amp} R}{V_{amp}}` is reminiscent of what we expect due to Ohm's law,
+        `\frac{\omega L}{R}` is reminiscent from what is known to be attenuation rate and `\frac{C R^2}{L} = 4 \zeta^2` for a
+        series RLC circuit where `\zeta` is known as the damping factor.
+
 
         References
         ==========
 
-        - https://en.wikipedia.org/wiki/Buckingham_%CF%80_theorem
-        - https://en.wikipedia.org/wiki/RLC_circuit
+        .. [1] https://en.wikipedia.org/wiki/Buckingham_%CF%80_theorem
+        .. [2] https://en.wikipedia.org/wiki/RLC_circuit
         """
         number_of_quantities = len(list_of_derived_quantities)
         exponent_matrix = []
@@ -632,8 +656,11 @@ class DimensionSystem(Basic, _QuantityMapper):
 
     def verify_dimensionless_numbers(self, *list_of_derived_quantities):
         """
-        Give the objects of class Dimension that represent the dimensionless quantities.
-        To be preferably used only for test purposes, please refer to /units/test/test_dimensionless.py
+
+        Give the objects of class Dimension that represent the dimensionless quantities, and essentially all
+        of them are desired to be of Dimension(1). To be preferably used only for test purposes, please refer to
+        /units/test/test_dimensionless.py
+
         """
         exponents = self.buckingham_pi_theorem(*list_of_derived_quantities)
         null_space_dims = len(exponents)
@@ -644,27 +671,3 @@ class DimensionSystem(Basic, _QuantityMapper):
             for m in range(number_of_quantities):
                 set_of_dimless_nums[k] = set_of_dimless_nums[k]*(list_of_derived_quantities[m]**exponents[k][m])
         return set_of_dimless_nums
-
-    def get_dimensionless_numbers(self, *list_of_derived_quantities):
-        """
-        Give the resultant list the quantities (as an instance of class Dimension), which are actually the dimensionless numbers
-        in the original unit system.
-        """
-        exponents = self.buckingham_pi_theorem(*list_of_derived_quantities)
-        import traceback, re
-        args_storer = []
-        for elems in traceback.extract_stack(): args_storer.append(elems.line)
-        args_storer1 = args_storer[-2]
-        args_storer1 = re.split(r'\(',args_storer1)
-        args_storer1 = re.split(r'\)',args_storer1[-1])
-        args_storer1 = re.split(',',args_storer1[0])
-        args_storer1 = [args_storer1[k].strip() for k in range(len(list_of_derived_quantities))]
-        null_space_dims = len(exponents)
-        number_of_quantities = len(list_of_derived_quantities)
-        set_of_dimless_quant = [Dimension(1) for k in range(null_space_dims)]
-        list_Of_Original_Dim_Names = [Dimension(args_storer1[k]) for k in range(number_of_quantities)]
-        # Here we take the dot product of the nullspace with the derived quantities
-        for k in range(null_space_dims):
-            for m in range(number_of_quantities):
-                set_of_dimless_quant[k] = set_of_dimless_quant[k]*(list_Of_Original_Dim_Names[m]**exponents[k][m])
-        return set_of_dimless_quant
