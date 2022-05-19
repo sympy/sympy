@@ -43,7 +43,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
 
-x, y, a, t, x_1, x_2, z, s, b = symbols('x y a t x_1 x_2 z s b')
+x, y, z, a, b, c, s, t, x_1, x_2 = symbols('x y z a b c s t x_1 x_2')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -1920,3 +1920,10 @@ def test_hyperbolic():
     assert integrate(coth(x)) == x - log(tanh(x) + 1) + log(tanh(x))
     assert integrate(sech(x)) == 2*atan(tanh(x/2))
     assert integrate(csch(x)) == log(tanh(x/2))
+
+
+def test_sqrt_quadratic():
+    assert integrate(1/sqrt(3*x**2+4*x+5)) == sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3
+    assert integrate(1/sqrt(-3*x**2+4*x+5)) == sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3
+    assert integrate(1/sqrt(3*x**2+4*x-5)) == sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/3
+    assert integrate(1/sqrt(a+b*x+c*x**2), x) == log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
