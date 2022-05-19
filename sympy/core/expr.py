@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Literal, TYPE_CHECKING
 from collections.abc import Iterable
 from functools import reduce
 import re
@@ -22,6 +22,7 @@ from mpmath.libmp.libintmath import giant_steps
 
 if TYPE_CHECKING:
     from .numbers import Number
+    from .symbol import Symbol
 
 from collections import defaultdict
 
@@ -3385,7 +3386,7 @@ class Expr(Basic, EvalfMixin):
                      nseries calls it.""" % self.func)
                      )
 
-    def limit(self, x, xlim, dir='+'):
+    def limit(self, x: 'Symbol', xlim, dir: Literal['+-', '+', '-'] = '+-'):
         """ Compute limit x->xlim.
         """
         from sympy.series.limits import limit

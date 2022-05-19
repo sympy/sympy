@@ -489,7 +489,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
             return 1 + arg_series
-        arg0 = limit(arg_series.removeO(), x, 0)
+        arg0 = limit(arg_series.removeO(), x, 0, '+')
         if arg0 is S.NegativeInfinity:
             return Order(x**n, x)
         if arg0 is S.Infinity:

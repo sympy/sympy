@@ -156,7 +156,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
             for j in range(i):
                 coeff = (coeff / (k + j + 1))
                 sep = integrate(sep, x)
-                sep += (ds.pop() - sep).limit(x, 0)  # constant of integration
+                sep += (ds.pop() - sep).limit(x, 0, '+')  # constant of integration
             return (coeff.subs(k, k - i), sep, i)
 
         else:
@@ -393,7 +393,7 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
     for i in range(k_max + 1, k_max + m + 1):
         if (i < 0) == True:
             continue
-        r = f.diff(x, i).limit(x, 0) / factorial(i)
+        r = f.diff(x, i).limit(x, 0, '+') / factorial(i)
         if r.is_zero:
             continue
 
@@ -449,7 +449,7 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
     shift = k_min + m
     f, P, Q, m = _transformation_a(f, x, P, Q, k, m, shift)
 
-    l = (x*f).limit(x, 0)
+    l = (x*f).limit(x, 0, '+')
     if not isinstance(l, Limit) and l != 0:  # Ideally should only be l != 0
         return None
 
@@ -461,7 +461,7 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
 
     ind, mp = S.Zero, -oo
     for i in range(k_max + m + 1):
-        r = f.diff(x, i).limit(x, 0) / factorial(i)
+        r = f.diff(x, i).limit(x, 0, '+') / factorial(i)
         if r.is_finite is False:
             old_f = f
             f, P, Q, m = _transformation_a(f, x, P, Q, k, m, i)
@@ -470,7 +470,7 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
             sol = _apply_integrate(sol, x, k)
             sol = _apply_shift(sol, i)
             ind = integrate(ind, x)
-            ind += (old_f - ind).limit(x, 0)  # constant of integration
+            ind += (old_f - ind).limit(x, 0, '+')  # constant of integration
             mp += 1
             return sol, ind, mp
         elif r:
@@ -625,7 +625,7 @@ def _solve_simple(f, x, DE, g, k):
     for i in range(len(Add.make_args(RE))):
         if i:
             f = f.diff(x)
-        init[g(k).subs(k, i)] = f.limit(x, 0) / factorial(i)
+        init[g(k).subs(k, i)] = f.limit(x, 0, '+') / factorial(i)
 
     sol = rsolve(RE, g(k), init)
 

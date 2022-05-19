@@ -50,8 +50,8 @@ def test_basic1():
     assert limit((1 + x)**oo, x, 0) == Limit((x + 1)**oo, x, 0)
     assert limit((1 + x)**oo, x, 0, dir='-') == Limit((x + 1)**oo, x, 0, dir='-')
     assert limit((1 + x + y)**oo, x, 0, dir='-') == Limit((1 + x + y)**oo, x, 0, dir='-')
-    assert limit(y/x/log(x), x, 0) == -oo*sign(y)
-    assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
+    assert limit(y/x/log(x), x, 0, '+') == -oo*sign(y)
+    assert limit(cos(x + y)/x, x, 0, '+') == sign(cos(y))*oo
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) is S.NaN
     assert limit(Order(2)*x, x, S.NaN) is S.NaN
@@ -81,7 +81,7 @@ def test_basic1():
     assert limit(1/x, x, 0, dir="+-") is zoo
     # approaching 0
     # from dir="+"
-    assert limit(1 + 1/x, x, 0) is oo
+    assert limit(1 + 1/x, x, 0, '+') is oo
     # from dir='-'
     # Add
     assert limit(1 + 1/x, x, 0, dir='-') is -oo
@@ -152,7 +152,7 @@ def test_piecewise2():
             >= 0), ((2 - 4*x)/Abs(sqrt(4 - 4*(2*x - 1)**2)), True))
     func2 = Piecewise((x**2/2, x <= 0.5), (x/2 - 0.125, True))
     func3 = Piecewise(((x - 9) / 5, x < -1), ((x - 9) / 5, x > 4), (sqrt(Abs(x - 3)), True))
-    assert limit(func1, x, 0) == 1
+    assert limit(func1, x, 0, '+') == 1
     assert limit(func2, x, 0) == 0
     assert limit(func3, x, -1) == 2
 
@@ -451,7 +451,7 @@ def test_issue_4546():
 
 def test_issue_3934():
     assert limit((1 + x**log(3))**(1/x), x, 0) == 1
-    assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
+    assert limit((5**(1/x) + 3**(1/x))**x, x, 0, '+') == 5
 
 
 def test_calculate_series():
@@ -553,50 +553,50 @@ def test_issue_7088():
 
 
 def test_branch_cuts():
-    assert limit(asin(I*x + 2), x, 0) == pi - asin(2)
+    assert limit(asin(I*x + 2), x, 0, '+') == pi - asin(2)
     assert limit(asin(I*x + 2), x, 0, '-') == asin(2)
-    assert limit(asin(I*x - 2), x, 0) == -asin(2)
+    assert limit(asin(I*x - 2), x, 0, '+') == -asin(2)
     assert limit(asin(I*x - 2), x, 0, '-') == -pi + asin(2)
-    assert limit(acos(I*x + 2), x, 0) == -acos(2)
+    assert limit(acos(I*x + 2), x, 0, '+') == -acos(2)
     assert limit(acos(I*x + 2), x, 0, '-') == acos(2)
-    assert limit(acos(I*x - 2), x, 0) == acos(-2)
+    assert limit(acos(I*x - 2), x, 0, '+') == acos(-2)
     assert limit(acos(I*x - 2), x, 0, '-') == 2*pi - acos(-2)
-    assert limit(atan(x + 2*I), x, 0) == I*atanh(2)
+    assert limit(atan(x + 2*I), x, 0, '+') == I*atanh(2)
     assert limit(atan(x + 2*I), x, 0, '-') == -pi + I*atanh(2)
-    assert limit(atan(x - 2*I), x, 0) == pi - I*atanh(2)
+    assert limit(atan(x - 2*I), x, 0, '+') == pi - I*atanh(2)
     assert limit(atan(x - 2*I), x, 0, '-') == -I*atanh(2)
-    assert limit(atan(1/x), x, 0) == pi/2
+    assert limit(atan(1/x), x, 0, '+') == pi/2
     assert limit(atan(1/x), x, 0, '-') == -pi/2
     assert limit(atan(x), x, oo) == pi/2
     assert limit(atan(x), x, -oo) == -pi/2
-    assert limit(acot(x + S(1)/2*I), x, 0) == pi - I*acoth(S(1)/2)
+    assert limit(acot(x + S(1)/2*I), x, 0, '+') == pi - I*acoth(S(1)/2)
     assert limit(acot(x + S(1)/2*I), x, 0, '-') == -I*acoth(S(1)/2)
-    assert limit(acot(x - S(1)/2*I), x, 0) == I*acoth(S(1)/2)
+    assert limit(acot(x - S(1)/2*I), x, 0, '+') == I*acoth(S(1)/2)
     assert limit(acot(x - S(1)/2*I), x, 0, '-') == -pi + I*acoth(S(1)/2)
-    assert limit(acot(x), x, 0) == pi/2
+    assert limit(acot(x), x, 0, '+') == pi/2
     assert limit(acot(x), x, 0, '-') == -pi/2
-    assert limit(asec(I*x + S(1)/2), x, 0) == asec(S(1)/2)
+    assert limit(asec(I*x + S(1)/2), x, 0, '+') == asec(S(1)/2)
     assert limit(asec(I*x + S(1)/2), x, 0, '-') == -asec(S(1)/2)
-    assert limit(asec(I*x - S(1)/2), x, 0) == 2*pi - asec(-S(1)/2)
+    assert limit(asec(I*x - S(1)/2), x, 0, '+') == 2*pi - asec(-S(1)/2)
     assert limit(asec(I*x - S(1)/2), x, 0, '-') == asec(-S(1)/2)
-    assert limit(acsc(I*x + S(1)/2), x, 0) == acsc(S(1)/2)
+    assert limit(acsc(I*x + S(1)/2), x, 0, '+') == acsc(S(1)/2)
     assert limit(acsc(I*x + S(1)/2), x, 0, '-') == pi - acsc(S(1)/2)
-    assert limit(acsc(I*x - S(1)/2), x, 0) == -pi + acsc(S(1)/2)
+    assert limit(acsc(I*x - S(1)/2), x, 0, '+') == -pi + acsc(S(1)/2)
     assert limit(acsc(I*x - S(1)/2), x, 0, '-') == -acsc(S(1)/2)
 
-    assert limit(log(I*x - 1), x, 0) == I*pi
+    assert limit(log(I*x - 1), x, 0, '+') == I*pi
     assert limit(log(I*x - 1), x, 0, '-') == -I*pi
-    assert limit(log(-I*x - 1), x, 0) == -I*pi
+    assert limit(log(-I*x - 1), x, 0, '+') == -I*pi
     assert limit(log(-I*x - 1), x, 0, '-') == I*pi
 
-    assert limit(sqrt(I*x - 1), x, 0) == I
+    assert limit(sqrt(I*x - 1), x, 0, '+') == I
     assert limit(sqrt(I*x - 1), x, 0, '-') == -I
-    assert limit(sqrt(-I*x - 1), x, 0) == -I
+    assert limit(sqrt(-I*x - 1), x, 0, '+') == -I
     assert limit(sqrt(-I*x - 1), x, 0, '-') == I
 
-    assert limit(cbrt(I*x - 1), x, 0) == (-1)**(S(1)/3)
+    assert limit(cbrt(I*x - 1), x, 0, '+') == (-1)**(S(1)/3)
     assert limit(cbrt(I*x - 1), x, 0, '-') == -(-1)**(S(2)/3)
-    assert limit(cbrt(-I*x - 1), x, 0) == -(-1)**(S(2)/3)
+    assert limit(cbrt(-I*x - 1), x, 0, '+') == -(-1)**(S(2)/3)
     assert limit(cbrt(-I*x - 1), x, 0, '-') == (-1)**(S(1)/3)
 
 
@@ -608,8 +608,8 @@ def test_issue_6364():
 
 def test_issue_4099():
     a = Symbol('a')
-    assert limit(a/x, x, 0) == oo*sign(a)
-    assert limit(-a/x, x, 0) == -oo*sign(a)
+    assert limit(a/x, x, 0, '+') == oo*sign(a)
+    assert limit(-a/x, x, 0, '+') == -oo*sign(a)
     assert limit(-a*x, x, oo) == -oo*sign(a)
     assert limit(a*x, x, oo) == oo*sign(a)
 
@@ -753,7 +753,7 @@ def test_issue_14456():
 
 
 def test_issue_14411():
-    assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2)) is -oo
+    assert limit(3*sec(4*pi*x - x/3), x, 3*pi/(24*pi - 2), '+') is -oo
 
 
 def test_issue_13382():
@@ -909,7 +909,7 @@ def test_issue_17431():
 
 
 def test_issue_17671():
-    assert limit(Ei(-log(x)) - log(log(x))/x, x, 1) == EulerGamma
+    assert limit(Ei(-log(x)) - log(log(x))/x, x, 1, '+') == EulerGamma
 
 
 def test_issue_17751():
@@ -965,7 +965,7 @@ def test_issue_18482():
 
 
 def test_issue_18508():
-    assert limit(sin(x)/sqrt(1-cos(x)), x, 0) == sqrt(2)
+    raises(ValueError, lambda: limit(sin(x)/sqrt(1-cos(x)), x, 0))
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='+') == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
 
@@ -1049,9 +1049,9 @@ def test_issue_19770():
 
 
 def test_issue_7535():
-    assert limit(tan(x)/sin(tan(x)), x, pi/2) == Limit(tan(x)/sin(tan(x)), x, pi/2, dir='+')
+    assert limit(tan(x)/sin(tan(x)), x, pi/2) == Limit(tan(x)/sin(tan(x)), x, pi/2, dir='+-')
     assert limit(tan(x)/sin(tan(x)), x, pi/2, dir='-') == Limit(tan(x)/sin(tan(x)), x, pi/2, dir='-')
-    assert limit(tan(x)/sin(tan(x)), x, pi/2, dir='+-') == Limit(tan(x)/sin(tan(x)), x, pi/2, dir='+-')
+    assert limit(tan(x)/sin(tan(x)), x, pi/2, dir='+') == Limit(tan(x)/sin(tan(x)), x, pi/2, dir='+')
     assert limit(sin(tan(x)),x,pi/2) == AccumBounds(-1, 1)
     assert -oo*(1/sin(-oo)) == AccumBounds(-oo, oo)
     assert oo*(1/sin(oo)) == AccumBounds(-oo, oo)

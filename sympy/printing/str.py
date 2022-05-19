@@ -225,11 +225,10 @@ class StrPrinter(Printer):
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
-        if str(dir) == "+":
-            return "Limit(%s, %s, %s)" % tuple(map(self._print, (e, z, z0)))
-        else:
-            return "Limit(%s, %s, %s, dir='%s')" % tuple(map(self._print,
-                                                            (e, z, z0, dir)))
+        args = list(map(self._print, (e, z, z0)))
+        if str(dir) != "+-" and z0 not in (S.Infinity, S.NegativeInfinity):
+            args.append("dir='%s'" % dir)
+        return "Limit(%s)" % ', '.join(args)
 
     def _print_list(self, expr):
         return "[%s]" % self.stringify(expr, ", ")
