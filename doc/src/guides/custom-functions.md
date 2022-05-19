@@ -198,6 +198,16 @@ versin(x)
 True
 ```
 
+```{note}
+
+All the methods described below are optional. They can be included if you want
+to define the given behavior, but if they are omitted, SymPy will default to
+leaving things unevaluated. For example, if you do not define
+[differentiation](custom-functions-differentiation), {func}`~.diff` will just
+return an unevaluated {class}`~.Derivative`.
+
+```
+
 (custom-functions-eval)=
 ### Defining Automatic Evaluation with `eval`
 
@@ -851,5 +861,18 @@ of a custom printer.
 
 ## Additional Tips
 
-- Sharing Code
-- Tests
+- SymPy includes dozens of functions. These can serve as useful examples for
+  how to write a custom function, especially if the function is similar to one
+  that is already implemented. Remember that everything in this guide applies
+  equally well to functions that are included with SymPy and user defined
+  functions.
+
+- If you have many custom functions that share common logic, you can use a
+  common base class to contain this shared logic. For an example of this, see
+  the source code for the trigonometric functions in SymPy, which use
+  `TrigonometricFunction`, `InverseTrigonometricFunction`, and
+  `ReciprocalTrigonometricFunction` base classes with some shared logic.
+
+- As with any code, it is a good idea to write extensive tests for your
+  function. The SymPy test suite is a good resource for examples of how to
+  write tests for such functions.
