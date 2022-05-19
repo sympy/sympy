@@ -59,9 +59,13 @@ class MatMul(MatrixExpr, Mul):
             return factor
 
         if evaluate:
-            return canonicalize(obj)
+            return cls._evaluate(obj)
 
         return obj
+
+    @classmethod
+    def _evaluate(cls, expr):
+        return canonicalize(expr)
 
     @property
     def shape(self):

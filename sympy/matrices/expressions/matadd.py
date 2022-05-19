@@ -52,11 +52,16 @@ class MatAdd(MatrixExpr, Add):
             validate(*args)
 
         if evaluate:
-            if not any(isinstance(i, MatrixExpr) for i in args):
-                return Add(*args, evaluate=True)
-            obj = canonicalize(obj)
+            obj = cls._evaluate(obj)
 
         return obj
+
+    @classmethod
+    def _evaluate(cls, expr):
+        args = expr.args
+        if not any(isinstance(i, MatrixExpr) for i in args):
+            return Add(*args, evaluate=True)
+        return canonicalize(expr)
 
     @property
     def shape(self):

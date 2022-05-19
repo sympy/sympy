@@ -1963,6 +1963,10 @@ class Basic(Printable, metaclass=ManagedProperties):
     def could_extract_minus_sign(self):
         return False  # see Expr.could_extract_minus_sign
 
+    @classmethod
+    def _evaluate(cls, expr):
+        return expr
+
 
 class Atom(Basic):
     """
