@@ -588,7 +588,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         As an instance, consider an RLC circuit with resistance `R`, inductance `L` and capacitance `C` connected to a constant
         voltage source `V_{amp}`, where current `I(t)` is given by the equation
 
-        `\begin{equation} \frac{d^2 I}{d t^2} + \frac{R}{L} \frac{d I(t)}{d t} + \frac{1}{LC}I(t) = 0 \end{equation}`
+        `\begin{equation*} \frac{d^2 I}{d t^2} + \frac{R}{L} \frac{d I(t)}{d t} + \frac{1}{LC}I(t) = 0 \end{equation*}`
 
         In the above equation, the solution could admit a current of amplitude `I_{amp}` and a scale of angular frequency `\omega`. Let's take for this example the MKS
         convention or `\textit{the MKS system}`, where `[M], [L], [I],` and `[T]` refer to the dimensions of the base quantities mass, length, current and time respectively.
@@ -596,11 +596,11 @@ class DimensionSystem(Basic, _QuantityMapper):
         `[I_{amp}] = I` and `[\omega] = T^{-1}`. What this function does is prescribed by the Buckingham's pi representation; it forms the following matrix representation
         of the dimensional system by taking the logarithm of the variables we just discussed.
 
-        `\begin{equation} \begin{bmatrix} log([R]) \\ log([L]) \\ log([C]) \\ log([V_{amp}]) \\ log([I_{amp}]) \\ log([\omega]) \end{bmatrix} = A_{exp} \begin{bmatrix} log([M]) \\ log([L]) \\ log([I]) \\ log([T]) \end{bmatrix} \end{equation}`
+        `\begin{equation*} \begin{bmatrix} log([R]) \\ log([L]) \\ log([C]) \\ log([V_{amp}]) \\ log([I_{amp}]) \\ log([\omega]) \end{bmatrix} = A_{exp} \begin{bmatrix} log([M]) \\ log([L]) \\ log([I]) \\ log([T]) \end{bmatrix} \end{equation*}`
 
         where `A_{exp}` is the following `\textit{exponent matrix}`.
 
-        `\begin{equation} A_{exp} = \begin{bmatrix} 1 & 2 & -2 & -3 \\ 1 & 2 & -2 & -2 \\ -1 & -2 & 2 & 4 \\ 1 & 2 & -1 & -3 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & -1 \end{bmatrix} \end{equation}`
+        `\begin{equation*} A_{exp} = \begin{bmatrix} 1 & 2 & -2 & -3 \\ 1 & 2 & -2 & -2 \\ -1 & -2 & 2 & 4 \\ 1 & 2 & -1 & -3 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & -1 \end{bmatrix} \end{equation*}`
 
         The function computes the nullspace of the matrix `A_{exp}^T` as is exhibited in the following code fragment.
 
