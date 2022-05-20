@@ -1,4 +1,4 @@
-from sympy import MatAdd
+from sympy import MatAdd, MatMul
 from sympy.algebras.quaternion import Quaternion
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutation
@@ -1836,6 +1836,7 @@ def test_matAdd():
 
     assert latex(n * h - (-h + h.T) * (h + h.T)) == 'n h - \\left(- h + h^{T}\\right) \\left(h + h^{T}\\right)'
     assert latex(MatAdd(MatAdd(h, h), MatAdd(h, h))) == '\\left(h + h\\right) + \\left(h + h\\right)'
+    assert latex(MatMul(MatMul(h, h), MatMul(h, h))) == '\\left(h h\\right) \\left(h h\\right)'
 
 
 def test_matMul():
@@ -2466,7 +2467,7 @@ def test_issue_15439():
     y = MatrixSymbol('y', 2, 2)
     assert latex((x * y).subs(y, -y)) == r"x \left(- y\right)"
     assert latex((x * y).subs(y, -2*y)) == r"x \left(- 2 y\right)"
-    assert latex((x * y).subs(x, -x)) == r"- x y"
+    assert latex((x * y).subs(x, -x)) == r"\left(- x\right) y"
 
 
 def test_issue_2934():

@@ -1761,17 +1761,14 @@ class LatexPrinter(Printer):
                 return r"%s^{\dagger}" % s
 
     def _print_MatMul(self, expr):
+        from sympy import MatMul
 
-        parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
-                                             False)
+        # Parenthesize nested MatMul but not other types of Mul objects:
+        parens = lambda x: self._print(x) if isinstance(x, Mul) and not isinstance(x, MatMul) else \
+            self.parenthesize(x, precedence_traditional(expr), False)
 
-        args = expr.args
-        if isinstance(args[0], Mul):
-            args = args[0].as_ordered_factors() + list(args[1:])
-        else:
-            args = list(args)
-
-        if len(args) > 0 and args[0].is_real and (args[0] < 0) == True:
+        args = list(expr.args)
+        if expr.could_extract_minus_sign():
             if args[0] == -1:
                 args = args[1:]
             else:
