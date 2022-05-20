@@ -395,6 +395,7 @@ def test_Mul_is_integer():
     k = Symbol('k', integer=True)
     n = Symbol('n', integer=True)
     nr = Symbol('nr', rational=False)
+    ir = Symbol('ir', irrational=True)
     nz = Symbol('nz', integer=True, zero=False)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
@@ -403,6 +404,7 @@ def test_Mul_is_integer():
     assert (k/3).is_integer is None
     assert (nz/3).is_integer is None
     assert (nr/3).is_integer is False
+    assert (ir/3).is_integer is False
     assert (x*k*n).is_integer is None
     assert (e/2).is_integer is True
     assert (e**2/2).is_integer is True
@@ -1076,6 +1078,8 @@ def test_Pow_is_integer():
     assert (1/(x + 1)).is_integer is False
     assert (1/(-x - 1)).is_integer is False
     assert (-1/(x + 1)).is_integer is False
+    # issue 23287
+    assert (x**2/2).is_integer is None
 
     # issue 8648-like
     k = Symbol('k', even=True)
@@ -1535,6 +1539,23 @@ def test_Mul_is_imaginary_real():
 
 
 def test_Mul_hermitian_antihermitian():
+    xz, yz = symbols('xz, yz', zero=True, antihermitian=True)
+    xf, yf = symbols('xf, yf', hermitian=False, antihermitian=False, finite=True)
+    xh, yh = symbols('xh, yh', hermitian=True, antihermitian=False, nonzero=True)
+    xa, ya = symbols('xa, ya', hermitian=False, antihermitian=True, zero=False, finite=True)
+    assert (xz*xh).is_hermitian is True
+    assert (xz*xh).is_antihermitian is True
+    assert (xz*xa).is_hermitian is True
+    assert (xz*xa).is_antihermitian is True
+    assert (xf*yf).is_hermitian is None
+    assert (xf*yf).is_antihermitian is None
+    assert (xh*yh).is_hermitian is True
+    assert (xh*yh).is_antihermitian is False
+    assert (xh*ya).is_hermitian is False
+    assert (xh*ya).is_antihermitian is True
+    assert (xa*ya).is_hermitian is True
+    assert (xa*ya).is_antihermitian is False
+
     a = Symbol('a', hermitian=True, zero=False)
     b = Symbol('b', hermitian=True)
     c = Symbol('c', hermitian=False)

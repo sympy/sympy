@@ -1,4 +1,4 @@
-"""Miscellaneous stuff that doesn't really fit anywhere else."""
+"""Miscellaneous stuff that does not really fit anywhere else."""
 
 from typing import List
 
@@ -16,20 +16,23 @@ class Undecidable(ValueError):
     pass
 
 
-def filldedent(s, w=70):
+def filldedent(s, w=70, **kwargs):
     """
-    Strips leading and trailing empty lines from a copy of `s`, then dedents,
+    Strips leading and trailing empty lines from a copy of ``s``, then dedents,
     fills and returns it.
 
     Empty line stripping serves to deal with docstrings like this one that
     start with a newline after the initial triple quote, inserting an empty
     line at the beginning of the string.
 
+    Additional keyword arguments will be passed to ``textwrap.fill()``.
+
     See Also
     ========
     strlines, rawlines
+
     """
-    return '\n' + fill(dedent(str(s)).strip('\n'), width=w)
+    return '\n' + fill(dedent(str(s)).strip('\n'), width=w, **kwargs)
 
 
 def strlines(s, c=64, short=False):
@@ -169,7 +172,7 @@ def rawlines(s):
 ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
 
-# XXX: PyPy doesn't support hash randomization
+# XXX: PyPy does not support hash randomization
 HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 
 _debug_tmp = []  # type: List[str]

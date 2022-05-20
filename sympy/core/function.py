@@ -47,7 +47,7 @@ from .operations import LatticeOp
 from .parameters import global_parameters
 from .rules import Transform
 from .singleton import S
-from .sympify import sympify
+from .sympify import sympify, _sympify
 
 from .sorting import default_sort_key, ordered
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
@@ -184,6 +184,14 @@ class FunctionClass(ManagedProperties):
         elif nargs is not None:
             nargs = (as_int(nargs),)
         cls._nargs = nargs
+
+        # When __init__ is called from UndefinedFunction it is called with
+        # just one arg but when it is called from subclassing Function it is
+        # called with the usual (name, bases, namespace) type() signature.
+        if len(args) == 3:
+            namespace = args[2]
+            if 'eval' in namespace and not isinstance(namespace['eval'], classmethod):
+                raise TypeError("eval on Function subclasses should be a class method (defined with @classmethod)")
 
         super().__init__(*args, **kwargs)
 
@@ -480,7 +488,7 @@ class Function(Application, Expr):
                 pr = max(cls._should_evalf(a) for a in result.args)
                 result = result.evalf(prec_to_dps(pr))
 
-        return result
+        return _sympify(result)
 
     @classmethod
     def _should_evalf(cls, arg):
@@ -494,7 +502,7 @@ class Function(Application, Expr):
         ARG is a floating point number.
         This function is used by __new__.
 
-        Returns the precision to evalf to, or -1 if it shouldn't evalf.
+        Returns the precision to evalf to, or -1 if it should not evalf.
         """
         if arg.is_Float:
             return arg._prec
@@ -1276,12 +1284,36 @@ class Derivative(Expr):
         # derivative.
         variable_count = []
         array_likes = (tuple, list, Tuple)
-        integer_likes = (int, Integer)
 
         from sympy.tensor.array import Array, NDimArray
 
         for i, v in enumerate(variables):
-            if isinstance(v, integer_likes):
+            if isinstance(v, UndefinedFunction):
+                raise TypeError(
+                    "cannot differentiate wrt "
+                    "UndefinedFunction: %s" % v)
+
+            if isinstance(v, array_likes):
+                if len(v) == 0:
+                    # Ignore empty tuples: Derivative(expr, ... , (), ... )
+                    continue
+                if isinstance(v[0], array_likes):
+                    # Derive by array: Derivative(expr, ... , [[x, y, z]], ... )
+                    if len(v) == 1:
+                        v = Array(v[0])
+                        count = 1
+                    else:
+                        v, count = v
+                        v = Array(v)
+                else:
+                    v, count = v
+                if count == 0:
+                    continue
+                variable_count.append(Tuple(v, count))
+                continue
+
+            v = sympify(v)
+            if isinstance(v, Integer):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
                 count = v
@@ -1293,28 +1325,7 @@ class Derivative(Expr):
                 else:
                     variable_count[-1] = Tuple(prev, count)
             else:
-                if isinstance(v, array_likes):
-                    if len(v) == 0:
-                        # Ignore empty tuples: Derivative(expr, ... , (), ... )
-                        continue
-                    if isinstance(v[0], array_likes):
-                        # Derive by array: Derivative(expr, ... , [[x, y, z]], ... )
-                        if len(v) == 1:
-                            v = Array(v[0])
-                            count = 1
-                        else:
-                            v, count = v
-                            v = Array(v)
-                    else:
-                        v, count = v
-                    if count == 0:
-                        continue
-                elif isinstance(v, UndefinedFunction):
-                    raise TypeError(
-                        "cannot differentiate wrt "
-                        "UndefinedFunction: %s" % v)
-                else:
-                    count = 1
+                count = 1
                 variable_count.append(Tuple(v, count))
 
         # light evaluation of contiguous, identical
@@ -1500,7 +1511,7 @@ class Derivative(Expr):
 
         * symbols and functions commute with each other
         * derivatives commute with each other
-        * a derivative doesn't commute with anything it contains
+        * a derivative does not commute with anything it contains
         * any other object is not allowed to commute if it has
           free symbols in common with another object
 
@@ -3086,7 +3097,7 @@ def count_ops(expr, visual=False):
     >>> from sympy.abc import a, b, x, y
     >>> from sympy import sin, count_ops
 
-    Although there isn't a SUB object, minus signs are interpreted as
+    Although there is not a SUB object, minus signs are interpreted as
     either negations or subtractions:
 
     >>> (x - y).count_ops(visual=True)

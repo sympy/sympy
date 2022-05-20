@@ -13,7 +13,7 @@ from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh
 from sympy.polys import Poly
 from sympy.series.order import O
 from sympy.sets import FiniteSet
-from sympy.core.power import power
+from sympy.core.power import power, integer_nthroot
 from sympy.testing.pytest import warns, _both_exp_pow
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -607,6 +607,12 @@ def test_issue_21762():
               Pow(Integer(2), Rational(16666666666666667, 25000000000000000)),
               Pow(Integer(5), Rational(8333333333333333, 25000000000000000)))
     assert e.xreplace({x: S.Half}) == ans
+
+
+def test_issue_14704():
+    a = 144**144
+    x, xexact = integer_nthroot(a,a)
+    assert x == 1 and xexact is False
 
 
 def test_rational_powers_larger_than_one():

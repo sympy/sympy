@@ -3,6 +3,7 @@
 
 from functools import wraps, reduce
 from operator import mul
+from typing import Optional
 
 from sympy.core import (
     S, Expr, Add, Tuple
@@ -5418,12 +5419,12 @@ def lcm_list(seq, *gens, **args):
     """
     seq = sympify(seq)
 
-    def try_non_polynomial_lcm(seq):
+    def try_non_polynomial_lcm(seq) -> Optional[Expr]:
         if not gens and not args:
             domain, numbers = construct_domain(seq)
 
             if not numbers:
-                return domain.one
+                return domain.to_sympy(domain.one)
             elif domain.is_Numerical:
                 result, numbers = numbers[0], numbers[1:]
 

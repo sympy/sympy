@@ -1754,7 +1754,7 @@ def _meijerint_indefinite_1(f, x):
             exp(x)
 
         cancel is used before mul_expand since it is possible for an
-        expression to have an additive constant that doesn't become isolated
+        expression to have an additive constant that does not become isolated
         with simple expansion. Such a situation was identified in issue 6369:
 
         Examples

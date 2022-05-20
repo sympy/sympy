@@ -282,7 +282,7 @@ def linodesolve_type(A, t, b=None):
     ======
 
     NotImplementedError
-        When the coefficient matrix doesn't have a commutative antiderivative
+        When the coefficient matrix does not have a commutative antiderivative
 
     See Also
     ========
@@ -882,13 +882,13 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
 
     ValueError
         This error is raised when the coefficient matrix, non-homogeneous term
-        or the antiderivative, if passed, aren't a matrix or
+        or the antiderivative, if passed, are not a matrix or
         do not have correct dimensions
     NonSquareMatrixError
-        When the coefficient matrix or its antiderivative, if passed isn't a square
-        matrix
+        When the coefficient matrix or its antiderivative, if passed is not a
+        square matrix
     NotImplementedError
-        If the coefficient matrix doesn't have a commutative antiderivative
+        If the coefficient matrix does not have a commutative antiderivative
 
     See Also
     ========
@@ -1815,7 +1815,7 @@ def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
     Here, $A2$ is the coefficient matrix for the vector $X''$ and $b$ is the non-homogeneous
     term.
 
-    Default value for `b` is None but if `A1` and `A0` are passed and `b` isn't passed, then the
+    Default value for `b` is None but if `A1` and `A0` are passed and `b` is not passed, then the
     system will be assumed homogeneous.
 
     """
@@ -1992,7 +1992,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     5. Any implicit system which can be divided into system of ODEs which is of the above 4 forms
     6. Any higher order linear system of ODEs that can be reduced to one of the 5 forms of systems described above.
 
-    The types of systems described above aren't limited by the number of equations, i.e. this
+    The types of systems described above are not limited by the number of equations, i.e. this
     function can solve the above types irrespective of the number of equations in the system passed.
     But, the bigger the system, the more time it will take to solve the system.
 
@@ -2017,11 +2017,11 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     doit : Boolean
         Evaluate the solutions if True. Default value is True. Can be
         set to false if the integral evaluation takes too much time and/or
-        isn't required.
+        is not required.
     simplify: Boolean
         Simplify the solutions for the systems. Default value is True.
         Can be set to false if simplification takes too much time and/or
-        isn't required.
+        is not required.
 
     Examples
     ========
@@ -2064,7 +2064,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     NotImplementedError
         When the system of ODEs is not solvable by this function.
     ValueError
-        When the parameters passed aren't in the required form.
+        When the parameters passed are not in the required form.
 
     """
     from sympy.solvers.ode.ode import solve_ics, _extract_funcs, constant_renumber

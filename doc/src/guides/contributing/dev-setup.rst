@@ -49,10 +49,10 @@ After the configuration, your setup should be similar to this:
 .. code-block:: bash
 
    $ git remote -v
-   origin	https://github.com/<your-user-name>/sympy (fetch)
-   origin	https://github.com/<your-user-name>/sympy (push)
-   upstream	https://github.com/sympy/sympy (fetch)
-   upstream	https://github.com/sympy/sympy (push)
+   origin   https://github.com/<your-user-name>/sympy (fetch)
+   origin   https://github.com/<your-user-name>/sympy (push)
+   upstream https://github.com/sympy/sympy (fetch)
+   upstream https://github.com/sympy/sympy (push)
 
 For further development, it is recommended
 to create a development branch.

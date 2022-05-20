@@ -28,7 +28,7 @@ from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
                 Multinomial, NegativeMultinomial, MultivariateNormal,
                 MultivariateLaplace)
-from sympy.testing.pytest import raises, XFAIL, skip
+from sympy.testing.pytest import raises, XFAIL, skip, slow
 from sympy.external import import_module
 
 from sympy.abc import x, y
@@ -272,6 +272,7 @@ def test_NegativeMultinomial():
                     Range(0, oo, 1), Range(0, oo, 1), Range(0, oo, 1))
 
 
+@slow
 def test_JointPSpace_marginal_distribution():
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     got = marginal_distribution(T, T[1])(x)
@@ -384,19 +385,49 @@ def test_sample_seed():
             continue
 
 
+#
+# XXX: This fails for pymc3. Previously the test appeared to pass but that is
+# just because the library argument was not passed so the test always used
+# scipy.
+#
 def test_issue_21057():
     m = Normal("x", [0, 0], [[0, 0], [0, 0]])
     n = MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
     p = Normal("x", [0, 0], [[0, 0], [0, 1]])
     assert m == n
-    libraries = ['scipy', 'numpy', 'pymc3']
+    libraries = ['scipy', 'numpy'] #, 'pymc3'] <-- pymc3 fails
     for library in libraries:
         try:
             imported_lib = import_module(library)
             if imported_lib:
-                s1 = sample(m, size=8)
-                s2 = sample(n, size=8)
-                s3 = sample(p, size=8)
+                s1 = sample(m, size=8, library=library)
+                s2 = sample(n, size=8, library=library)
+                s3 = sample(p, size=8, library=library)
+                assert tuple(s1.flatten()) == tuple(s2.flatten())
+                for s in s3:
+                    assert tuple(s.flatten()) in p.pspace.distribution.set
+        except NotImplementedError:
+            continue
+
+
+#
+# When this passes the pymc3 part can be uncommented in test_issue_21057 above
+# and this can be deleted.
+#
+@XFAIL
+def test_issue_21057_pymc3():
+    m = Normal("x", [0, 0], [[0, 0], [0, 0]])
+    n = MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
+    p = Normal("x", [0, 0], [[0, 0], [0, 1]])
+    assert m == n
+    libraries = ['pymc3']
+    for library in libraries:
+        try:
+            imported_lib = import_module(library)
+            if imported_lib:
+                s1 = sample(m, size=8, library=library)
+                s2 = sample(n, size=8, library=library)
+                s3 = sample(p, size=8, library=library)
                 assert tuple(s1.flatten()) == tuple(s2.flatten())
                 for s in s3:
                     assert tuple(s.flatten()) in p.pspace.distribution.set

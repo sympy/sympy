@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numbers
 import decimal
 import fractions
@@ -5,7 +7,6 @@ import math
 import re as regex
 import sys
 from functools import lru_cache
-from typing import Set as tSet, Tuple as tTuple
 
 from .containers import Tuple
 from .sympify import (SympifyError, _sympy_converter, sympify, _convert_numpy_types,
@@ -488,9 +489,9 @@ def igcdex(a, b):
 
 
 def mod_inverse(a, m):
-    """
-    Return the number c such that, (a * c) = 1 (mod m)
-    where c has the same sign as m. If no such value exists,
+    r"""
+    Return the number $c$ such that, $a \times c = 1 \pmod{m}$
+    where $c$ has the same sign as $m$. If no such value exists,
     a ValueError is raised.
 
     Examples
@@ -498,11 +499,11 @@ def mod_inverse(a, m):
 
     >>> from sympy import mod_inverse, S
 
-    Suppose we wish to find multiplicative inverse x of
-    3 modulo 11. This is the same as finding x such
-    that 3 * x = 1 (mod 11). One value of x that satisfies
-    this congruence is 4. Because 3 * 4 = 12 and 12 = 1 (mod 11).
-    This is the value returned by mod_inverse:
+    Suppose we wish to find multiplicative inverse $x$ of
+    3 modulo 11. This is the same as finding $x$ such
+    that $3x = 1 \pmod{11}$. One value of x that satisfies
+    this congruence is 4. Because $3 \times 4 = 12$ and $12 = 1 \pmod{11}$.
+    This is the value returned by ``mod_inverse``:
 
     >>> mod_inverse(3, 11)
     4
@@ -510,7 +511,7 @@ def mod_inverse(a, m):
     7
 
     When there is a common factor between the numerators of
-    ``a`` and ``m`` the inverse does not exist:
+    `a` and `m` the inverse does not exist:
 
     >>> mod_inverse(2, 4)
     Traceback (most recent call last):
@@ -703,9 +704,6 @@ class Number(AtomicExpr):
         if old == -self:
             return -new
         return self  # there is no other possibility
-
-    def _eval_is_finite(self):
-        return True
 
     @classmethod
     def class_key(cls):
@@ -1020,7 +1018,7 @@ class Float(Number):
     """
     __slots__ = ('_mpf_', '_prec')
 
-    _mpf_: tTuple[int, int, int, int]
+    _mpf_: tuple[int, int, int, int]
 
     # A Float represents many real numbers,
     # both rational and irrational.
@@ -2075,7 +2073,7 @@ class Integer(Rational):
 
     is_Integer = True
 
-    __slots__ = ('p',)
+    __slots__ = ()
 
     def _as_mpf_val(self, prec):
         return mlib.from_int(self.p, prec, rnd)
@@ -2531,7 +2529,7 @@ class AlgebraicNumber(Expr):
     # Optional alias symbol is not free.
     # Actually, alias should be a Str, but some methods
     # expect that it be an instance of Expr.
-    free_symbols: tSet[Basic] = set()
+    free_symbols: set[Basic] = set()
 
     def __new__(cls, expr, coeffs=None, alias=None, **args):
         r"""
@@ -4099,7 +4097,7 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
     Explanation
     ===========
 
-    `\phi = \frac{1 + \sqrt{5}}{2}` is algebraic number.  Two quantities
+    `\phi = \frac{1 + \sqrt{5}}{2}` is an algebraic number.  Two quantities
     are in the golden ratio if their ratio is the same as the ratio of
     their sum to the larger of the two quantities, i.e. their maximum.
 

@@ -1,4 +1,5 @@
-from typing import Callable, Tuple as tTuple
+from __future__ import annotations
+from typing import Callable
 from math import log as _log, sqrt as _sqrt
 from itertools import product
 
@@ -93,7 +94,7 @@ def _integer_nthroot_python(y, n):
     if n == 2:
         x, rem = mpmath_sqrtrem(y)
         return int(x), not rem
-    if n > y:
+    if n >= y.bit_length():
         return 1, False
     # Get initial estimate for Newton's method. Care must be taken to
     # avoid overflow
@@ -275,7 +276,8 @@ class Pow(Expr):
 
     __slots__ = ('is_commutative',)
 
-    args: tTuple[Expr, Expr]
+    args: tuple[Expr, Expr]
+    _args: tuple[Expr, Expr]
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):
@@ -383,11 +385,11 @@ class Pow(Expr):
         return None
 
     @property
-    def base(self):
+    def base(self) -> Expr:
         return self._args[0]
 
     @property
-    def exp(self):
+    def exp(self) -> Expr:
         return self._args[1]
 
     @property
@@ -532,7 +534,7 @@ class Pow(Expr):
                 b, e, m = int(base), int(exp), int(q)
                 mb = m.bit_length()
                 if mb <= 80 and e >= mb and e.bit_length()**4 >= m:
-                    phi = totient(m)
+                    phi = int(totient(m))
                     return Integer(pow(b, phi + e%phi, m))
                 return Integer(pow(b, e, m))
 
@@ -561,12 +563,6 @@ class Pow(Expr):
         if ext_neg is True:
             return self.is_finite
         return ext_neg
-
-    def _eval_is_positive(self):
-        ext_pos = Pow._eval_is_extended_positive(self)
-        if ext_pos is True:
-            return self.is_finite
-        return ext_pos
 
     def _eval_is_extended_positive(self):
         if self.base == self.exp:
@@ -668,7 +664,6 @@ class Pow(Expr):
             return False
 
     def _eval_is_extended_real(self):
-
         if self.base is S.Exp1:
             if self.exp.is_extended_real:
                 return True
@@ -730,7 +725,7 @@ class Pow(Expr):
                 if ok is not None:
                     return ok
 
-        if real_b is False:  # we already know it's not imag
+        if real_b is False and real_e: # we already know it's not imag
             from sympy.functions.elementary.complexes import arg
             i = arg(self.base)*self.exp/S.Pi
             if i.is_complex: # finite
@@ -745,6 +740,9 @@ class Pow(Expr):
             return True
 
     def _eval_is_imaginary(self):
+        if self.base.is_commutative is False:
+            return False
+
         if self.base.is_imaginary:
             if self.exp.is_integer:
                 odd = self.exp.is_odd
@@ -1651,9 +1649,10 @@ class Pow(Expr):
             from sympy.simplify.powsimp import powsimp
             return powsimp(exp_series, deep=True, combine='exp')
         from sympy.simplify.powsimp import powdenest
+        from .numbers import _illegal
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
-        from .numbers import _illegal
+
         if e.has(*_illegal):
             raise PoleError()
 
@@ -1735,9 +1734,14 @@ class Pow(Expr):
                 raise NotImplementedError()
         if not d.is_positive:
             g = g.simplify()
+            if g.is_zero:
+                return f**e
             _, d = g.leadterm(x)
             if not d.is_positive:
-                raise NotImplementedError()
+                g = ((b - f)/f).expand()
+                _, d = g.leadterm(x)
+                if not d.is_positive:
+                    raise NotImplementedError()
 
         from sympy.functions.elementary.integers import ceiling
         gpoly = g._eval_nseries(x, n=ceiling(maxpow), logx=logx, cdir=cdir).removeO()
@@ -1792,11 +1796,7 @@ class Pow(Expr):
             raise PoleError("Cannot expand %s around 0" % (self))
         elif e.has(x):
             lt = exp(e * log(b))
-            try:
-                lt = lt.as_leading_term(x, logx=logx, cdir=cdir)
-            except PoleError:
-                pass
-            return lt
+            return lt.as_leading_term(x, logx=logx, cdir=cdir)
         else:
             from sympy.functions.elementary.complexes import im
             f = b.as_leading_term(x, logx=logx, cdir=cdir)

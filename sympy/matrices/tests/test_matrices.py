@@ -13,6 +13,7 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.integrals.integrals import integrate
 from sympy.polys.polytools import (Poly, PurePoly)
 from sympy.printing.str import sstr
 from sympy.sets.sets import FiniteSet
@@ -3004,3 +3005,10 @@ def test_deprecated_classof_a2idx():
     with warns_deprecated_sympy():
         from sympy.matrices.matrices import a2idx
         assert a2idx(-1, 3) == 2
+
+
+def test_issue_23276():
+    M = Matrix([x, y])
+    assert integrate(M, (x, 0, 1), (y, 0, 1)) == Matrix([
+        [1/2],
+        [1/2]])

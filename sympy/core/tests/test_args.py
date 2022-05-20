@@ -18,7 +18,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 
-from sympy.testing.pytest import XFAIL, SKIP
+from sympy.testing.pytest import SKIP
 
 a, b, c, x, y, z = symbols('a,b,c,x,y,z')
 
@@ -485,6 +485,11 @@ def test_sympy__codegen__numpy_nodes__logaddexp2():
 def test_sympy__codegen__pynodes__List():
     from sympy.codegen.pynodes import List
     assert _test_args(List(1, 2, 3))
+
+
+def test_sympy__codegen__pynodes__NumExprEvaluate():
+    from sympy.codegen.pynodes import NumExprEvaluate
+    assert _test_args(NumExprEvaluate(x))
 
 
 def test_sympy__codegen__scipy_nodes__cosm1():
@@ -2884,10 +2889,6 @@ def test_sympy__integrals__transforms__HankelTransform():
     from sympy.integrals.transforms import HankelTransform
     assert _test_args(HankelTransform(2, x, y, 0))
 
-@XFAIL
-def test_sympy__liealgebras__cartan_type__CartanType_generator():
-    from sympy.liealgebras.cartan_type import CartanType_generator
-    assert _test_args(CartanType_generator("A2"))
 
 def test_sympy__liealgebras__cartan_type__Standard_Cartan():
     from sympy.liealgebras.cartan_type import Standard_Cartan
@@ -3518,10 +3519,18 @@ def test_sympy__physics__quantum__gate__ZGate():
     assert _test_args(ZGate(0))
 
 
-@SKIP("TODO: sympy.physics")
+def test_sympy__physics__quantum__grover__OracleGateFunction():
+    from sympy.physics.quantum.grover import OracleGateFunction
+    @OracleGateFunction
+    def f(qubit):
+        return
+    assert _test_args(f)
+
 def test_sympy__physics__quantum__grover__OracleGate():
     from sympy.physics.quantum.grover import OracleGate
-    assert _test_args(OracleGate())
+    def f(qubit):
+        return
+    assert _test_args(OracleGate(1,f))
 
 
 def test_sympy__physics__quantum__grover__WGate():
@@ -4242,6 +4251,11 @@ def test_sympy__physics__units__quantities__Quantity():
     assert _test_args(Quantity("dam"))
 
 
+def test_sympy__physics__units__quantities__PhysicalConstant():
+    from sympy.physics.units.quantities import PhysicalConstant
+    assert _test_args(PhysicalConstant("foo"))
+
+
 def test_sympy__physics__units__prefixes__Prefix():
     from sympy.physics.units.prefixes import Prefix
     assert _test_args(Prefix('kilo', 'k', 3))
@@ -4907,7 +4921,7 @@ def test_sympy__physics__optics__waves__TWave():
 
 def test_sympy__physics__optics__gaussopt__BeamParameter():
     from sympy.physics.optics import BeamParameter
-    assert _test_args(BeamParameter(530e-9, 1, w=1e-3))
+    assert _test_args(BeamParameter(530e-9, 1, w=1e-3, n=1))
 
 
 def test_sympy__physics__optics__medium__Medium():

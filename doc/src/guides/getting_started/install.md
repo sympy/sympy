@@ -8,7 +8,7 @@ recommended method of installation is through Anaconda, which includes
 mpmath, as well as several other useful libraries.  Alternatively, some Linux
 distributions have SymPy packages available.
 
-SymPy officially supports Python 3.7, 3.8, 3.9, and PyPy.
+SymPy officially supports Python 3.8, 3.9, 3.10, and PyPy.
 
 ## Anaconda
 
@@ -18,7 +18,7 @@ more useful packages for scientific computing. This is recommended because
 many nice features of SymPy are only enabled when certain libraries are
 installed.  For example, without Matplotlib, only simple text-based plotting
 is enabled.  With the IPython notebook or qtconsole, you can get nicer
-$\mathrm{\LaTeX}$ printing by running `init_printing()`.
+$\textrm{\LaTeX}$ printing by running `init_printing()`.
 
 If you already have Anaconda and want to update SymPy to the latest version,
 use:

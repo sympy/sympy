@@ -16,6 +16,19 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 def mathematica(s, additional_translations=None):
+    sympy_deprecation_warning(
+        """The ``mathematica`` function for the Mathematica parser is now
+deprecated. Use ``parse_mathematica`` instead.
+The parameter ``additional_translation`` can be replaced by SymPy's
+.replace( ) or .subs( ) methods on the output expression instead.""",
+        deprecated_since_version="1.11",
+        active_deprecations_target="mathematica-parser-new",
+    )
+    parser = MathematicaParser(additional_translations)
+    return sympify(parser._parse_old(s))
+
+
+def parse_mathematica(s):
     """
     Translate a string containing a Wolfram Mathematica expression to a SymPy
     expression.
@@ -27,10 +40,10 @@ def mathematica(s, additional_translations=None):
     Examples
     ========
 
-    >>> from sympy.parsing.mathematica import mathematica
-    >>> mathematica("Sin[x]^2 Tan[y]")
+    >>> from sympy.parsing.mathematica import parse_mathematica
+    >>> parse_mathematica("Sin[x]^2 Tan[y]")
     sin(x)**2*tan(y)
-    >>> e = mathematica("F[7,5,3]")
+    >>> e = parse_mathematica("F[7,5,3]")
     >>> e
     F(7, 5, 3)
     >>> from sympy import Function, Max, Min
@@ -39,14 +52,14 @@ def mathematica(s, additional_translations=None):
 
     Both standard input form and Mathematica full form are supported:
 
-    >>> mathematica("x*(a + b)")
+    >>> parse_mathematica("x*(a + b)")
     x*(a + b)
-    >>> mathematica("Times[x, Plus[a, b]]")
+    >>> parse_mathematica("Times[x, Plus[a, b]]")
     x*(a + b)
 
     To get a matrix from Wolfram's code:
 
-    >>> m = mathematica("{{a, b}, {c, d}}")
+    >>> m = parse_mathematica("{{a, b}, {c, d}}")
     >>> m
     ((a, b), (c, d))
     >>> from sympy import Matrix
@@ -58,24 +71,14 @@ def mathematica(s, additional_translations=None):
     If the translation into equivalent SymPy expressions fails, an SymPy
     expression equivalent to Wolfram Mathematica's "FullForm" will be created:
 
-    >>> mathematica("x_.")
+    >>> parse_mathematica("x_.")
     Optional(Pattern(x, Blank()))
-    >>> mathematica("Plus @@ {x, y, z}")
+    >>> parse_mathematica("Plus @@ {x, y, z}")
     Apply(Plus, (x, y, z))
-    >>> mathematica("f[x_, 3] := x^3 /; x > 0")
+    >>> parse_mathematica("f[x_, 3] := x^3 /; x > 0")
     SetDelayed(f(Pattern(x, Blank()), 3), Condition(x**3, x > 0))
     """
-    parser = MathematicaParser(additional_translations)
-
-    if additional_translations is not None:
-        sympy_deprecation_warning(
-            """The ``additional_translations`` parameter for the Mathematica parser is now deprecated.
-Use SymPy's .replace( ) or .subs( ) methods on the output expression instead.""",
-            deprecated_since_version="1.11",
-            active_deprecations_target="mathematica-parser-additional-translations",
-        )
-        return sympify(parser._parse_old(s))
-
+    parser = MathematicaParser()
     return parser.parse(s)
 
 
@@ -619,17 +622,40 @@ class MathematicaParser:
     def _from_mathematica_to_tokens(self, code: str):
         tokenizer = self._get_tokenizer()
 
-        # Remove comments:
+        # Find strings:
+        code_splits: List[typing.Union[str, list]] = []
         while True:
-            pos_comment_start = code.find("(*")
-            if pos_comment_start == -1:
+            string_start = code.find("\"")
+            if string_start == -1:
+                if len(code) > 0:
+                    code_splits.append(code)
                 break
-            pos_comment_end = code.find("*)")
-            if pos_comment_end == -1 or pos_comment_end < pos_comment_start:
-                raise SyntaxError("mismatch in comment (*  *) code")
-            code = code[:pos_comment_start] + code[pos_comment_end+2:]
+            match_end = re.search(r'(?<!\\)"', code[string_start+1:])
+            if match_end is None:
+                raise SyntaxError('mismatch in string "  " expression')
+            string_end = string_start + match_end.start() + 1
+            if string_start > 0:
+                code_splits.append(code[:string_start])
+            code_splits.append(["_Str", code[string_start+1:string_end].replace('\\"', '"')])
+            code = code[string_end+1:]
 
-        tokens = tokenizer.findall(code)
+        # Remove comments:
+        for i, code_split in enumerate(code_splits):
+            if isinstance(code_split, list):
+                continue
+            while True:
+                pos_comment_start = code_split.find("(*")
+                if pos_comment_start == -1:
+                    break
+                pos_comment_end = code_split.find("*)")
+                if pos_comment_end == -1 or pos_comment_end < pos_comment_start:
+                    raise SyntaxError("mismatch in comment (*  *) code")
+                code_split = code_split[:pos_comment_start] + code_split[pos_comment_end+2:]
+            code_splits[i] = code_split
+
+        # Tokenize the input strings with a regular expression:
+        token_lists = [tokenizer.findall(i) if isinstance(i, str) else [i] for i in code_splits]
+        tokens = [j for i in token_lists for j in i]
 
         # Remove newlines at the beginning
         while tokens and tokens[0] == "\n":
@@ -936,7 +962,7 @@ class MathematicaParser:
                     args = [converter(arg) for arg in expr[1:]]
                     return Function(head)(*args)
                 else:
-                    raise ValueError("error")
+                    raise ValueError("Empty list of expressions")
             elif isinstance(expr, str):
                 return Symbol(expr)
             else:

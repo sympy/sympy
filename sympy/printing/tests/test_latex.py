@@ -199,7 +199,18 @@ def test_latex_basic():
     assert latex(AlgebraicNumber(sqrt(2), [3, -7], alias='alpha')) == \
         r"3 \alpha - 7"
     assert latex(AlgebraicNumber(2**(S(1)/3), [1, 3, -7], alias='beta')) == \
-           r"\beta^{2} + 3 \beta - 7"
+        r"\beta^{2} + 3 \beta - 7"
+
+    k = ZZ.cyclotomic_field(5)
+    assert latex(k.ext.field_element([1, 2, 3, 4])) == \
+        r"\zeta^{3} + 2 \zeta^{2} + 3 \zeta + 4"
+    assert latex(k.ext.field_element([1, 2, 3, 4]), order='old') == \
+        r"4 + 3 \zeta + 2 \zeta^{2} + \zeta^{3}"
+    assert latex(k.primes_above(19)[0]) == \
+        r"\left(19, \zeta^{2} + 5 \zeta + 1\right)"
+    assert latex(k.primes_above(19)[0], order='old') == \
+           r"\left(19, 1 + 5 \zeta + \zeta^{2}\right)"
+    assert latex(k.primes_above(7)[0]) == r"\left(7\right)"
 
     assert latex(1.5e20*x) == r"1.5 \cdot 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
@@ -331,36 +342,36 @@ def test_latex_vector_expressions():
     A = CoordSys3D('A')
 
     assert latex(Cross(A.i, A.j*A.x*3+A.k)) == \
-        r"\mathbf{\hat{i}_{A}} \times \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
+        r"\mathbf{\hat{i}_{A}} \times \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
     assert latex(Cross(A.i, A.j)) == \
         r"\mathbf{\hat{i}_{A}} \times \mathbf{\hat{j}_{A}}"
     assert latex(x*Cross(A.i, A.j)) == \
         r"x \left(\mathbf{\hat{i}_{A}} \times \mathbf{\hat{j}_{A}}\right)"
     assert latex(Cross(x*A.i, A.j)) == \
-        r'- \mathbf{\hat{j}_{A}} \times \left((x)\mathbf{\hat{i}_{A}}\right)'
+        r'- \mathbf{\hat{j}_{A}} \times \left(\left(x\right)\mathbf{\hat{i}_{A}}\right)'
 
     assert latex(Curl(3*A.x*A.j)) == \
-        r"\nabla\times \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+        r"\nabla\times \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)"
     assert latex(Curl(3*A.x*A.j+A.i)) == \
-        r"\nabla\times \left(\mathbf{\hat{i}_{A}} + (3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+        r"\nabla\times \left(\mathbf{\hat{i}_{A}} + \left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)"
     assert latex(Curl(3*x*A.x*A.j)) == \
-        r"\nabla\times \left((3 \mathbf{{x}_{A}} x)\mathbf{\hat{j}_{A}}\right)"
+        r"\nabla\times \left(\left(3 \mathbf{{x}_{A}} x\right)\mathbf{\hat{j}_{A}}\right)"
     assert latex(x*Curl(3*A.x*A.j)) == \
-        r"x \left(\nabla\times \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)\right)"
+        r"x \left(\nabla\times \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)\right)"
 
     assert latex(Divergence(3*A.x*A.j+A.i)) == \
-        r"\nabla\cdot \left(\mathbf{\hat{i}_{A}} + (3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+        r"\nabla\cdot \left(\mathbf{\hat{i}_{A}} + \left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)"
     assert latex(Divergence(3*A.x*A.j)) == \
-        r"\nabla\cdot \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)"
+        r"\nabla\cdot \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)"
     assert latex(x*Divergence(3*A.x*A.j)) == \
-        r"x \left(\nabla\cdot \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}}\right)\right)"
+        r"x \left(\nabla\cdot \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}}\right)\right)"
 
     assert latex(Dot(A.i, A.j*A.x*3+A.k)) == \
-        r"\mathbf{\hat{i}_{A}} \cdot \left((3 \mathbf{{x}_{A}})\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
+        r"\mathbf{\hat{i}_{A}} \cdot \left(\left(3 \mathbf{{x}_{A}}\right)\mathbf{\hat{j}_{A}} + \mathbf{\hat{k}_{A}}\right)"
     assert latex(Dot(A.i, A.j)) == \
         r"\mathbf{\hat{i}_{A}} \cdot \mathbf{\hat{j}_{A}}"
     assert latex(Dot(x*A.i, A.j)) == \
-        r"\mathbf{\hat{j}_{A}} \cdot \left((x)\mathbf{\hat{i}_{A}}\right)"
+        r"\mathbf{\hat{j}_{A}} \cdot \left(\left(x\right)\mathbf{\hat{i}_{A}}\right)"
     assert latex(x*Dot(A.i, A.j)) == \
         r"x \left(\mathbf{\hat{i}_{A}} \cdot \mathbf{\hat{j}_{A}}\right)"
 
@@ -370,11 +381,11 @@ def test_latex_vector_expressions():
     assert latex(x*Gradient(A.x)) == r"x \left(\nabla \mathbf{{x}_{A}}\right)"
     assert latex(Gradient(x*A.x)) == r"\nabla \left(\mathbf{{x}_{A}} x\right)"
 
-    assert latex(Laplacian(A.x)) == r"\triangle \mathbf{{x}_{A}}"
+    assert latex(Laplacian(A.x)) == r"\Delta \mathbf{{x}_{A}}"
     assert latex(Laplacian(A.x + 3*A.y)) == \
-        r"\triangle \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
-    assert latex(x*Laplacian(A.x)) == r"x \left(\triangle \mathbf{{x}_{A}}\right)"
-    assert latex(Laplacian(x*A.x)) == r"\triangle \left(\mathbf{{x}_{A}} x\right)"
+        r"\Delta \left(\mathbf{{x}_{A}} + 3 \mathbf{{y}_{A}}\right)"
+    assert latex(x*Laplacian(A.x)) == r"x \left(\Delta \mathbf{{x}_{A}}\right)"
+    assert latex(Laplacian(x*A.x)) == r"\Delta \left(\mathbf{{x}_{A}} x\right)"
 
 def test_latex_symbols():
     Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
@@ -448,10 +459,114 @@ def test_latex_functions():
     assert latex(g(x)) == r"\gamma{\left(x \right)}"
     assert latex(g) == r"\gamma"
 
-    a1 = Function('a_1')
+    a_1 = Function('a_1')
+    assert latex(a_1) == r"a_{1}"
+    assert latex(a_1(x)) == r"a_{1}{\left(x \right)}"
+    assert latex(Function('a_1')) == r"a_{1}"
 
-    assert latex(a1) == r"\operatorname{a_{1}}"
-    assert latex(a1(x)) == r"\operatorname{a_{1}}{\left(x \right)}"
+    # Issue #16925
+    # multi letter function names
+    # > simple
+    assert latex(Function('ab')) == r"\operatorname{ab}"
+    assert latex(Function('ab1')) == r"\operatorname{ab}_{1}"
+    assert latex(Function('ab12')) == r"\operatorname{ab}_{12}"
+    assert latex(Function('ab_1')) == r"\operatorname{ab}_{1}"
+    assert latex(Function('ab_12')) == r"\operatorname{ab}_{12}"
+    assert latex(Function('ab_c')) == r"\operatorname{ab}_{c}"
+    assert latex(Function('ab_cd')) == r"\operatorname{ab}_{cd}"
+    # > with argument
+    assert latex(Function('ab')(Symbol('x'))) == r"\operatorname{ab}{\left(x \right)}"
+    assert latex(Function('ab1')(Symbol('x'))) == r"\operatorname{ab}_{1}{\left(x \right)}"
+    assert latex(Function('ab12')(Symbol('x'))) == r"\operatorname{ab}_{12}{\left(x \right)}"
+    assert latex(Function('ab_1')(Symbol('x'))) == r"\operatorname{ab}_{1}{\left(x \right)}"
+    assert latex(Function('ab_c')(Symbol('x'))) == r"\operatorname{ab}_{c}{\left(x \right)}"
+    assert latex(Function('ab_cd')(Symbol('x'))) == r"\operatorname{ab}_{cd}{\left(x \right)}"
+
+    # > with power
+    #   does not work on functions without brackets
+
+    # > with argument and power combined
+    assert latex(Function('ab')()**2) == r"\operatorname{ab}^{2}{\left( \right)}"
+    assert latex(Function('ab1')()**2) == r"\operatorname{ab}_{1}^{2}{\left( \right)}"
+    assert latex(Function('ab12')()**2) == r"\operatorname{ab}_{12}^{2}{\left( \right)}"
+    assert latex(Function('ab_1')()**2) == r"\operatorname{ab}_{1}^{2}{\left( \right)}"
+    assert latex(Function('ab_12')()**2) == r"\operatorname{ab}_{12}^{2}{\left( \right)}"
+    assert latex(Function('ab')(Symbol('x'))**2) == r"\operatorname{ab}^{2}{\left(x \right)}"
+    assert latex(Function('ab1')(Symbol('x'))**2) == r"\operatorname{ab}_{1}^{2}{\left(x \right)}"
+    assert latex(Function('ab12')(Symbol('x'))**2) == r"\operatorname{ab}_{12}^{2}{\left(x \right)}"
+    assert latex(Function('ab_1')(Symbol('x'))**2) == r"\operatorname{ab}_{1}^{2}{\left(x \right)}"
+    assert latex(Function('ab_12')(Symbol('x'))**2) == \
+        r"\operatorname{ab}_{12}^{2}{\left(x \right)}"
+
+    # single letter function names
+    # > simple
+    assert latex(Function('a')) == r"a"
+    assert latex(Function('a1')) == r"a_{1}"
+    assert latex(Function('a12')) == r"a_{12}"
+    assert latex(Function('a_1')) == r"a_{1}"
+    assert latex(Function('a_12')) == r"a_{12}"
+
+    # > with argument
+    assert latex(Function('a')()) == r"a{\left( \right)}"
+    assert latex(Function('a1')()) == r"a_{1}{\left( \right)}"
+    assert latex(Function('a12')()) == r"a_{12}{\left( \right)}"
+    assert latex(Function('a_1')()) == r"a_{1}{\left( \right)}"
+    assert latex(Function('a_12')()) == r"a_{12}{\left( \right)}"
+
+    # > with power
+    #   does not work on functions without brackets
+
+    # > with argument and power combined
+    assert latex(Function('a')()**2) == r"a^{2}{\left( \right)}"
+    assert latex(Function('a1')()**2) == r"a_{1}^{2}{\left( \right)}"
+    assert latex(Function('a12')()**2) == r"a_{12}^{2}{\left( \right)}"
+    assert latex(Function('a_1')()**2) == r"a_{1}^{2}{\left( \right)}"
+    assert latex(Function('a_12')()**2) == r"a_{12}^{2}{\left( \right)}"
+    assert latex(Function('a')(Symbol('x'))**2) == r"a^{2}{\left(x \right)}"
+    assert latex(Function('a1')(Symbol('x'))**2) == r"a_{1}^{2}{\left(x \right)}"
+    assert latex(Function('a12')(Symbol('x'))**2) == r"a_{12}^{2}{\left(x \right)}"
+    assert latex(Function('a_1')(Symbol('x'))**2) == r"a_{1}^{2}{\left(x \right)}"
+    assert latex(Function('a_12')(Symbol('x'))**2) == r"a_{12}^{2}{\left(x \right)}"
+
+    assert latex(Function('a')()**32) == r"a^{32}{\left( \right)}"
+    assert latex(Function('a1')()**32) == r"a_{1}^{32}{\left( \right)}"
+    assert latex(Function('a12')()**32) == r"a_{12}^{32}{\left( \right)}"
+    assert latex(Function('a_1')()**32) == r"a_{1}^{32}{\left( \right)}"
+    assert latex(Function('a_12')()**32) == r"a_{12}^{32}{\left( \right)}"
+    assert latex(Function('a')(Symbol('x'))**32) == r"a^{32}{\left(x \right)}"
+    assert latex(Function('a1')(Symbol('x'))**32) == r"a_{1}^{32}{\left(x \right)}"
+    assert latex(Function('a12')(Symbol('x'))**32) == r"a_{12}^{32}{\left(x \right)}"
+    assert latex(Function('a_1')(Symbol('x'))**32) == r"a_{1}^{32}{\left(x \right)}"
+    assert latex(Function('a_12')(Symbol('x'))**32) == r"a_{12}^{32}{\left(x \right)}"
+
+    assert latex(Function('a')()**a) == r"a^{a}{\left( \right)}"
+    assert latex(Function('a1')()**a) == r"a_{1}^{a}{\left( \right)}"
+    assert latex(Function('a12')()**a) == r"a_{12}^{a}{\left( \right)}"
+    assert latex(Function('a_1')()**a) == r"a_{1}^{a}{\left( \right)}"
+    assert latex(Function('a_12')()**a) == r"a_{12}^{a}{\left( \right)}"
+    assert latex(Function('a')(Symbol('x'))**a) == r"a^{a}{\left(x \right)}"
+    assert latex(Function('a1')(Symbol('x'))**a) == r"a_{1}^{a}{\left(x \right)}"
+    assert latex(Function('a12')(Symbol('x'))**a) == r"a_{12}^{a}{\left(x \right)}"
+    assert latex(Function('a_1')(Symbol('x'))**a) == r"a_{1}^{a}{\left(x \right)}"
+    assert latex(Function('a_12')(Symbol('x'))**a) == r"a_{12}^{a}{\left(x \right)}"
+
+    ab = Symbol('ab')
+    assert latex(Function('a')()**ab) == r"a^{ab}{\left( \right)}"
+    assert latex(Function('a1')()**ab) == r"a_{1}^{ab}{\left( \right)}"
+    assert latex(Function('a12')()**ab) == r"a_{12}^{ab}{\left( \right)}"
+    assert latex(Function('a_1')()**ab) == r"a_{1}^{ab}{\left( \right)}"
+    assert latex(Function('a_12')()**ab) == r"a_{12}^{ab}{\left( \right)}"
+    assert latex(Function('a')(Symbol('x'))**ab) == r"a^{ab}{\left(x \right)}"
+    assert latex(Function('a1')(Symbol('x'))**ab) == r"a_{1}^{ab}{\left(x \right)}"
+    assert latex(Function('a12')(Symbol('x'))**ab) == r"a_{12}^{ab}{\left(x \right)}"
+    assert latex(Function('a_1')(Symbol('x'))**ab) == r"a_{1}^{ab}{\left(x \right)}"
+    assert latex(Function('a_12')(Symbol('x'))**ab) == r"a_{12}^{ab}{\left(x \right)}"
+
+    assert latex(Function('a^12')(x)) == R"a^{12}{\left(x \right)}"
+    assert latex(Function('a^12')(x) ** ab) == R"\left(a^{12}\right)^{ab}{\left(x \right)}"
+    assert latex(Function('a__12')(x)) == R"a^{12}{\left(x \right)}"
+    assert latex(Function('a__12')(x) ** ab) == R"\left(a^{12}\right)^{ab}{\left(x \right)}"
+    assert latex(Function('a_1__1_2')(x)) == R"a^{1}_{1 2}{\left(x \right)}"
 
     # issue 5868
     omega1 = Function('omega1')
@@ -740,7 +855,7 @@ def test_latex_indexed():
     assert indexed_latex == r'\overline{{\Psi}_{0}} {\Psi}_{0}'
 
     # Symbol('gamma') gives r'\gamma'
-    interval = '\\mathrel{..}\\nobreak'
+    interval = '\\mathrel{..}\\nobreak '
     assert latex(Indexed('x1', Symbol('i'))) == r'{x_{1}}_{i}'
     assert latex(Indexed('x2', Idx('i'))) == r'{x_{2}}_{i}'
     assert latex(Indexed('x3', Idx('i', Symbol('N')))) == r'{x_{3}}_{{i}_{0'+interval+'N - 1}}'
@@ -811,6 +926,9 @@ def test_latex_derivatives():
     assert latex(diff(f(x), (x, Max(n1, n2)))) == \
         r'\frac{d^{\max\left(n_{1}, n_{2}\right)}}{d x^{\max\left(n_{1}, n_{2}\right)}} f{\left(x \right)}'
 
+    # set diff operator
+    assert latex(diff(f(x), x), diff_operator="rd") == r'\frac{\mathrm{d}}{\mathrm{d} x} f{\left(x \right)}'
+
 
 def test_latex_subs():
     assert latex(Subs(x*y, (x, y), (1, 2))) == r'\left. x y \right|_{\substack{ x=1\\ y=2 }}'
@@ -850,6 +968,10 @@ def test_latex_integrals():
     assert latex(Integral(x+z/2, z)) == \
         r"\int \left(x + \frac{z}{2}\right)\, dz"
     assert latex(Integral(x**y, z)) == r"\int x^{y}\, dz"
+
+    # set diff operator
+    assert latex(Integral(x, x), diff_operator="rd") == r'\int x\, \mathrm{d}x'
+    assert latex(Integral(x, (x, 0, 1)), diff_operator="rd") == r'\int\limits_{0}^{1} x\, \mathrm{d}x'
 
 
 def test_latex_sets():
@@ -1933,6 +2055,21 @@ def test_Tr():
     assert latex(t) == r'\operatorname{tr}\left(A B\right)'
 
 
+def test_Determinant():
+    from sympy.matrices import Determinant, Inverse, BlockMatrix, OneMatrix, ZeroMatrix
+    m = Matrix(((1, 2), (3, 4)))
+    assert latex(Determinant(m)) == '\\left|{\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}}\\right|'
+    assert latex(Determinant(Inverse(m))) == \
+        '\\left|{\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{-1}}\\right|'
+    X = MatrixSymbol('X', 2, 2)
+    assert latex(Determinant(X)) == '\\left|{X}\\right|'
+    assert latex(Determinant(X + m)) == \
+        '\\left|{\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X}\\right|'
+    assert latex(Determinant(BlockMatrix(((OneMatrix(2, 2), X),
+                                          (m, ZeroMatrix(2, 2)))))) == \
+        '\\left|{\\begin{matrix}1 & X\\\\\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] & 0\\end{matrix}}\\right|'
+
+
 def test_Adjoint():
     from sympy.matrices import Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
@@ -1953,6 +2090,10 @@ def test_Adjoint():
     assert latex(Adjoint(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{\\dagger}'
     assert latex(Adjoint(m+X)) == \
         '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{\\dagger}'
+    from sympy.matrices import BlockMatrix, OneMatrix, ZeroMatrix
+    assert latex(Adjoint(BlockMatrix(((OneMatrix(2, 2), X),
+                                      (m, ZeroMatrix(2, 2)))))) == \
+        '\\left[\\begin{matrix}1 & X\\\\\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] & 0\\end{matrix}\\right]^{\\dagger}'
     # Issue 20959
     Mx = MatrixSymbol('M^x', 2, 2)
     assert latex(Adjoint(Mx)) == r'\left(M^{x}\right)^{\dagger}'
@@ -1973,6 +2114,10 @@ def test_Transpose():
     assert latex(Transpose(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{T}'
     assert latex(Transpose(m+X)) == \
         '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{T}'
+    from sympy.matrices import BlockMatrix, OneMatrix, ZeroMatrix
+    assert latex(Transpose(BlockMatrix(((OneMatrix(2, 2), X),
+                                        (m, ZeroMatrix(2, 2)))))) == \
+        '\\left[\\begin{matrix}1 & X\\\\\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] & 0\\end{matrix}\\right]^{T}'
     # Issue 20959
     Mx = MatrixSymbol('M^x', 2, 2)
     assert latex(Transpose(Mx)) == r'\left(M^{x}\right)^{T}'

@@ -12,6 +12,7 @@ from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (acoth, atanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin,
                                                       atan, cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.bessel import (besselj, besselk)
@@ -146,6 +147,16 @@ def test_piecewise():
     assert limit((real_root(x - 6, 3) + 2)/(x + 2), x, -2, '+') == Rational(1, 12)
 
 
+def test_piecewise2():
+    func1 = 2*sqrt(x)*Piecewise(((4*x - 2)/Abs(sqrt(4 - 4*(2*x - 1)**2)), 4*x - 2\
+            >= 0), ((2 - 4*x)/Abs(sqrt(4 - 4*(2*x - 1)**2)), True))
+    func2 = Piecewise((x**2/2, x <= 0.5), (x/2 - 0.125, True))
+    func3 = Piecewise(((x - 9) / 5, x < -1), ((x - 9) / 5, x > 4), (sqrt(Abs(x - 3)), True))
+    assert limit(func1, x, 0) == 1
+    assert limit(func2, x, 0) == 0
+    assert limit(func3, x, -1) == 2
+
+
 def test_basic5():
     class my(Function):
         @classmethod
@@ -223,6 +234,14 @@ def test_ceiling_requires_robust_assumptions():
     assert limit(ceiling(5 + sin(x)), x, 0, "-") == 5
     assert limit(ceiling(5 + cos(x)), x, 0, "+") == 6
     assert limit(ceiling(5 + cos(x)), x, 0, "-") == 6
+
+
+def test_issue_14355():
+    assert limit(floor(sin(x)/x), x, 0, '+') == 0
+    assert limit(floor(sin(x)/x), x, 0, '-') == 0
+    # test comment https://github.com/sympy/sympy/issues/14355#issuecomment-372121314
+    assert limit(floor(-tan(x)/x), x, 0, '+') == -2
+    assert limit(floor(-tan(x)/x), x, 0, '-') == -2
 
 
 def test_atan():
@@ -929,6 +948,18 @@ def test_issue_18452():
     assert limit(abs(log(x))**x, x, 0, "-") == 1
 
 
+def test_issue_18473():
+    assert limit(sin(x)**(1/x), x, oo) == Limit(sin(x)**(1/x), x, oo, dir='-')
+    assert limit(cos(x)**(1/x), x, oo) == Limit(cos(x)**(1/x), x, oo, dir='-')
+    assert limit(tan(x)**(1/x), x, oo) == Limit(tan(x)**(1/x), x, oo, dir='-')
+    assert limit((cos(x) + 2)**(1/x), x, oo) == 1
+    assert limit((sin(x) + 10)**(1/x), x, oo) == 1
+    assert limit((cos(x) - 2)**(1/x), x, oo) == Limit((cos(x) - 2)**(1/x), x, oo, dir='-')
+    assert limit((cos(x) + 1)**(1/x), x, oo) == AccumBounds(0, 1)
+    assert limit((tan(x)**2)**(2/x) , x, oo) == AccumBounds(0, oo)
+    assert limit((sin(x)**2)**(1/x), x, oo) == AccumBounds(0, 1)
+
+
 def test_issue_18482():
     assert limit((2*exp(3*x)/(exp(2*x) + 1))**(1/x), x, oo) == exp(1)
 
@@ -1090,3 +1121,8 @@ def test_issue_21785():
 
 def test_issue_22181():
     assert limit((-1)**x * 2**(-x), x, oo) == 0
+
+
+def test_issue_23231():
+    f = (2**x - 2**(-x))/(2**x + 2**(-x))
+    assert limit(f, x, -oo) == -1

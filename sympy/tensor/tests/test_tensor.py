@@ -1827,6 +1827,7 @@ def test_tensor_replacement():
     assert expr.replace_with_arrays(repl) == Array([[1, -2], [3, -4]])
     assert expr.replace_with_arrays(repl, [i, j]) == Array([[1, -2], [3, -4]])
     assert expr.replace_with_arrays(repl, [i, -j]) == Array([[1, 2], [3, 4]])
+    assert expr.replace_with_arrays(repl, [Symbol("i"), -Symbol("j")]) == Array([[1, 2], [3, 4]])
     assert expr.replace_with_arrays(repl, [-i, j]) == Array([[1, -2], [-3, 4]])
     assert expr.replace_with_arrays(repl, [-i, -j]) == Array([[1, 2], [-3, -4]])
     assert expr.replace_with_arrays(repl, [j, i]) == Array([[1, 3], [-2, -4]])

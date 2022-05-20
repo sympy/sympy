@@ -41,7 +41,7 @@ class SingletonRegistry(Registry):
     True
 
     For the most part, the fact that certain objects are singletonized is an
-    implementation detail that users shouldn't need to worry about. In SymPy
+    implementation detail that users should not need to worry about. In SymPy
     library code, ``is`` comparison is often used for performance purposes
     The primary advantage of ``S`` for end users is the convenient access to
     certain instances that are otherwise difficult to type, like ``S.Half``

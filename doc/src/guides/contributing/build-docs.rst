@@ -32,7 +32,7 @@ Debian/Ubuntu
 For Debian/Ubuntu::
 
    apt-get install python3-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
-   python -m pip install sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
+   python -m pip install -r doc/requirements.txt
 
 If you get mpmath error, install python-mpmath package::
 
@@ -50,7 +50,7 @@ prerequisites::
 
    dnf install python3-sphinx librsvg2 ImageMagick docbook2X texlive-dvipng-bin
    texlive-scheme-medium librsvg2-tools
-   python -m pip install sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
+   python -m pip install -r doc/requirements.txt
 
 If you get mpmath error, install python3-mpmath package::
 
@@ -69,13 +69,13 @@ Then install these packages with homebrew::
 
    brew install imagemagick graphviz docbook librsvg
 
-Install these packages with either pip or conda::
+Install the docs dependencies with either pip or conda::
 
-   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
+   python -m pip install -r requirements.txt
 
 Or::
 
-   conda install -c conda-forge mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
+   conda install -c conda-forge --file requirements.txt
 
 Making your Sphinx build successful on the Windows system is tricky because
 some dependencies like ``dvipng`` or ``docbook2x`` are not available.
@@ -128,6 +128,19 @@ required dependencies locally, the documentation can be built by running the
    cd doc
    make html
 
+
+SymPy Logos
+~~~~~~~~~~~
+
+SymPy has a collection of official logos, which can be generated from sympy.svg in your local copy of SymPy by:
+
+.. code-block:: none
+
+    $ cd doc
+    $ make logo # will be stored in the _build/logo subdirectory
+
+The license of all the logos is the same as SymPy: BSD. See the
+`LICENSE file <https://github.com/sympy/sympy/blob/master/LICENSE>`_ for more information.
 
 View the Docs
 ^^^^^^^^^^^^^

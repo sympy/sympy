@@ -56,6 +56,7 @@ scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 cupy = import_module('cupy')
+numba = import_module('numba')
 
 if tensorflow:
     # Hide Tensorflow warnings
@@ -334,6 +335,8 @@ def test_trig():
 
 
 def test_integral():
+    if numpy and not scipy:
+        skip("scipy not installed.")
     f = Lambda(x, exp(-x**2))
     l = lambdify(y, Integral(f(x), (x, y, oo)))
     d = l(-oo)
@@ -341,6 +344,8 @@ def test_integral():
 
 
 def test_double_integral():
+    if numpy and not scipy:
+        skip("scipy not installed.")
     # example from http://mpmath.org/doc/current/calculus/integration.html
     i = Integral(1/(1 - x**2*y**2), (x, 0, 1), (y, 0, z))
     l = lambdify([z], i)
@@ -1191,6 +1196,8 @@ def test_issue_14941():
     # test tuple
     f2 = lambdify([x, y], (y, x), 'sympy')
     assert f2(2, 3) == (3, 2)
+    f2b = lambdify([], (1,))  # gh-23224
+    assert f2b() == (1,)
 
     # test list
     f3 = lambdify([x, y], [y, x], 'sympy')
@@ -1348,6 +1355,13 @@ def test_issue_19764():
     f = lambdify(x, expr, 'numpy')
 
     assert f(1).__class__ == numpy.ndarray
+
+def test_issue_20070():
+    if not numba:
+        skip("numba not installed")
+
+    f = lambdify(x, sin(x), 'numpy')
+    assert numba.jit(f)(1)==0.8414709848078965
 
 
 def test_fresnel_integrals_scipy():

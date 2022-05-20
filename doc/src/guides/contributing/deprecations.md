@@ -70,7 +70,7 @@ When considering whether a change requires a deprecation, two things must be
 considered:
 
 - Is the change backwards incompatible?
-- Is the behavior being changed public API?
+- Is the behavior changing public API?
 
 A change is backwards incompatible if user code making use of it would stop
 working after the change.
@@ -90,6 +90,7 @@ the rules.*
 - Function names.
 - Keyword argument names.
 - Keyword argument default values.
+- Positional argument order.
 - Submodule names.
 - The mathematical conventions used to define a function.
 ```
@@ -103,7 +104,6 @@ guidelines).
   return a different but mathematically equivalent form of the same
   expression. This includes a function returning a value which it was not able
   to compute previously.
-- Positional argument names.
 - Functions and methods that are private, i.e., for internal use only. Such
   things should generally be prefixed with an underscore `_`, although this
   convention is not currently universally adhered to in the SymPy codebase.

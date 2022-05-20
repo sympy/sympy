@@ -362,3 +362,9 @@ def test_issue_21245():
 def test_issue_21938():
     expr = sin(1/x + exp(-x)) - sin(1/x)
     assert expr.series(x, oo) == (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
+
+
+def test_issue_23432():
+    expr = 1/sqrt(1 - x**2)
+    result = expr.series(x, 0.5)
+    assert result.is_Add and len(result.args) == 7

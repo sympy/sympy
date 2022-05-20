@@ -39,11 +39,9 @@ from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
 from sympy.solvers.solveset import solveset
 from sympy.external import import_module
-from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
-import warnings
 
 
 x = Symbol('x')
@@ -280,7 +278,7 @@ class RandomSymbol(Expr):
 
     An object of the RandomSymbol type should almost never be created by the
     user. They tend to be created instead by the PSpace class's value method.
-    Traditionally a user doesn't even do this but instead calls one of the
+    Traditionally a user does not even do this but instead calls one of the
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
@@ -841,11 +839,6 @@ def probability(condition, given_condition=None, numsamples=None,
     from sympy.stats.symbolic_probability import Probability
     if evaluate:
         return Probability(condition, given_condition).doit(**kwargs)
-    ### TODO: Remove the user warnings in the future releases
-    message = ("Since version 1.7, using `evaluate=False` returns `Probability` "
-              "object. If you want unevaluated Integral/Sum use "
-              "`P(condition, given_condition, evaluate=False).rewrite(Integral)`")
-    warnings.warn(filldedent(message))
     return Probability(condition, given_condition)
 
 
@@ -1199,8 +1192,8 @@ def quantile(expr, evaluate=True, **kwargs):
     Quantile is defined as the value at which the probability of the random
     variable is less than or equal to the given probability.
 
-    ..math::
-        Q(p) = inf{x \in (-\infty, \infty) such that p <= F(x)}
+    .. math::
+        Q(p) = \inf\{x \in (-\infty, \infty) : p \le F(x)\}
 
     Examples
     ========
@@ -1669,7 +1662,7 @@ def _value_check(condition, message):
     >>> _value_check(2 < 3, '')
     True
 
-    Here, the condition is not False, but it doesn't evaluate to True
+    Here, the condition is not False, but it does not evaluate to True
     so False is returned (but no error is raised). So checking if the
     return value is True or False will tell you if all conditions were
     evaluated.
@@ -1775,7 +1768,7 @@ def sample_stochastic_process(process):
     >>> from sympy import Matrix
     >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
-    >>> next(sample_stochastic_process(Y)) in Y.state_space # doctest: +SKIP
+    >>> next(sample_stochastic_process(Y)) in Y.state_space
     True
     >>> next(sample_stochastic_process(Y))  # doctest: +SKIP
     0

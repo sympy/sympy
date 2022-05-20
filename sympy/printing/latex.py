@@ -161,6 +161,7 @@ class LatexPrinter(Printer):
         "parenthesize_super": True,
         "min": None,
         "max": None,
+        "diff_operator": "d",
     }  # type: tDict[str, Any]
 
     def __init__(self, settings=None):
@@ -212,12 +213,17 @@ class LatexPrinter(Printer):
             "rj": r"\mathrm{j}",
             "tj": r"\text{j}",
         }
-        try:
-            self._settings['imaginary_unit_latex'] = \
-                imaginary_unit_table[self._settings['imaginary_unit']]
-        except KeyError:
-            self._settings['imaginary_unit_latex'] = \
-                self._settings['imaginary_unit']
+        imag_unit = self._settings['imaginary_unit']
+        self._settings['imaginary_unit_latex'] = imaginary_unit_table.get(imag_unit, imag_unit)
+
+        diff_operator_table = {
+            None: r"d",
+            "d": r"d",
+            "rd": r"\mathrm{d}",
+            "td": r"\text{d}",
+        }
+        diff_operator = self._settings['diff_operator']
+        self._settings["diff_operator_latex"] = diff_operator_table.get(diff_operator, diff_operator)
 
     def _add_parens(self, s):
         return r"\left({}\right)".format(s)
@@ -502,7 +508,7 @@ class LatexPrinter(Printer):
 
     def _print_Laplacian(self, expr):
         func = expr._expr
-        return r"\triangle %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+        return r"\Delta %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
         from sympy.physics.units import Quantity
@@ -623,6 +629,13 @@ class LatexPrinter(Printer):
             return self._print(expr.as_poly().as_expr())
         else:
             return self._print(expr.as_expr())
+
+    def _print_PrimeIdeal(self, expr):
+        p = self._print(expr.p)
+        if expr.is_inert:
+            return rf'\left({p}\right)'
+        alpha = self._print(expr.alpha.as_expr())
+        return rf'\left({p}, {alpha}\right)'
 
     def _print_Pow(self, expr):
         # Treat x**Rational(1,n) as special case
@@ -750,7 +763,7 @@ class LatexPrinter(Printer):
                 elif v == -1:
                     o1.append(' - ' + k._latex_form)
                 else:
-                    arg_str = '(' + self._print(v) + ')'
+                    arg_str = r'\left(' + self._print(v) + r'\right)'
                     o1.append(' + ' + arg_str + k._latex_form)
 
         outstr = (''.join(o1))
@@ -777,7 +790,7 @@ class LatexPrinter(Printer):
                 lower = self._print(expr.lower)
             else:
                 lower = self._print(S.Zero)
-            interval = '{lower}\\mathrel{{..}}\\nobreak{upper}'.format(
+            interval = '{lower}\\mathrel{{..}}\\nobreak {upper}'.format(
                     lower = lower, upper = upper)
             return '{{{label}}}_{{{interval}}}'.format(
                 label = label, interval = interval)
@@ -788,7 +801,7 @@ class LatexPrinter(Printer):
         if requires_partial(expr.expr):
             diff_symbol = r'\partial'
         else:
-            diff_symbol = r'd'
+            diff_symbol = self._settings["diff_operator_latex"]
 
         tex = ""
         dim = 0
@@ -829,13 +842,14 @@ class LatexPrinter(Printer):
 
     def _print_Integral(self, expr):
         tex, symbols = "", []
+        diff_symbol = self._settings["diff_operator_latex"]
 
         # Only up to \iiiint exists
         if len(expr.limits) <= 4 and all(len(lim) == 1 for lim in expr.limits):
             # Use len(expr.limits)-1 so that syntax highlighters don't think
             # \" is an escaped quote
             tex = r"\i" + "i"*(len(expr.limits) - 1) + "nt"
-            symbols = [r"\, d%s" % self._print(symbol[0])
+            symbols = [r"\, %s%s" % (diff_symbol, self._print(symbol[0]))
                        for symbol in expr.limits]
 
         else:
@@ -854,7 +868,7 @@ class LatexPrinter(Printer):
                     if len(lim) == 2:
                         tex += "^{%s}" % (self._print(lim[1]))
 
-                symbols.insert(0, r"\, d%s" % self._print(symbol))
+                symbols.insert(0, r"\, %s%s" % (diff_symbol, self._print(symbol)))
 
         return r"%s %s%s" % (tex, self.parenthesize(expr.function,
                                                     PRECEDENCE["Mul"],
@@ -880,17 +894,32 @@ class LatexPrinter(Printer):
         r'''
         Logic to decide how to render a function to latex
           - if it is a recognized latex name, use the appropriate latex command
-          - if it is a single letter, just use that letter
+          - if it is a single letter, excluding sub- and superscripts, just use that letter
           - if it is a longer name, then put \operatorname{} around it and be
             mindful of undercores in the name
         '''
         func = self._deal_with_super_sub(func)
+        superscriptidx = func.find("^")
+        subscriptidx = func.find("_")
         if func in accepted_latex_functions:
             name = r"\%s" % func
-        elif len(func) == 1 or func.startswith('\\'):
+        elif len(func) == 1 or func.startswith('\\') or subscriptidx == 1 or superscriptidx == 1:
             name = func
         else:
-            name = r"\operatorname{%s}" % func
+            if superscriptidx > 0 and subscriptidx > 0:
+                name = r"\operatorname{%s}%s" %(
+                    func[:min(subscriptidx,superscriptidx)],
+                    func[min(subscriptidx,superscriptidx):])
+            elif superscriptidx > 0:
+                name = r"\operatorname{%s}%s" %(
+                    func[:superscriptidx],
+                    func[superscriptidx:])
+            elif subscriptidx > 0:
+                name = r"\operatorname{%s}%s" %(
+                    func[:subscriptidx],
+                    func[subscriptidx:])
+            else:
+                name = r"\operatorname{%s}" % func
         return name
 
     def _print_Function(self, expr, exp=None):
@@ -1059,7 +1088,6 @@ class LatexPrinter(Printer):
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
-    _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
         if self._settings['gothic_re_im']:
@@ -1650,7 +1678,7 @@ class LatexPrinter(Printer):
         tex = r"\begin{cases} %s \end{cases}"
         return tex % r" \\".join(ecpairs)
 
-    def _print_MatrixBase(self, expr):
+    def _print_matrix_contents(self, expr):
         lines = []
 
         for line in range(expr.rows):  # horrible, should be 'rows'
@@ -1670,12 +1698,16 @@ class LatexPrinter(Printer):
         out_str = out_str.replace('%MATSTR%', mat_str)
         if mat_str == 'array':
             out_str = out_str.replace('%s', '{' + 'c'*expr.cols + '}%s')
+        return out_str % r"\\".join(lines)
+
+    def _print_MatrixBase(self, expr):
+        out_str = self._print_matrix_contents(expr)
         if self._settings['mat_delim']:
             left_delim = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
-        return out_str % r"\\".join(lines)
+        return out_str
 
     def _print_MatrixElement(self, expr):
         return self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)\
@@ -1700,8 +1732,9 @@ class LatexPrinter(Printer):
 
     def _print_Transpose(self, expr):
         mat = expr.arg
-        from sympy.matrices import MatrixSymbol
-        if not isinstance(mat, MatrixSymbol) and mat.is_MatrixExpr:
+        from sympy.matrices import MatrixSymbol, BlockMatrix
+        if (not isinstance(mat, MatrixSymbol) and
+            not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
             return r"\left(%s\right)^{T}" % self._print(mat)
         else:
             s = self.parenthesize(mat, precedence_traditional(expr), True)
@@ -1716,8 +1749,9 @@ class LatexPrinter(Printer):
 
     def _print_Adjoint(self, expr):
         mat = expr.arg
-        from sympy.matrices import MatrixSymbol
-        if not isinstance(mat, MatrixSymbol) and mat.is_MatrixExpr:
+        from sympy.matrices import MatrixSymbol, BlockMatrix
+        if (not isinstance(mat, MatrixSymbol) and
+            not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
             return r"\left(%s\right)^{\dagger}" % self._print(mat)
         else:
             s = self.parenthesize(mat, precedence_traditional(expr), True)
@@ -1746,6 +1780,16 @@ class LatexPrinter(Printer):
             return '- ' + ' '.join(map(parens, args))
         else:
             return ' '.join(map(parens, args))
+
+    def _print_Determinant(self, expr):
+        mat = expr.arg
+        if mat.is_MatrixExpr:
+            from sympy.matrices.expressions.blockmatrix import BlockMatrix
+            if isinstance(mat, BlockMatrix):
+                return r"\left|{%s}\right|" % self._print_matrix_contents(mat.blocks)
+            return r"\left|{%s}\right|" % self._print(mat)
+        return r"\left|{%s}\right|" % self._print_matrix_contents(mat)
+
 
     def _print_Mod(self, expr, exp=None):
         if exp is not None:
@@ -1788,7 +1832,7 @@ class LatexPrinter(Printer):
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
         from sympy.matrices import MatrixSymbol
-        if not isinstance(base, MatrixSymbol):
+        if not isinstance(base, MatrixSymbol) and base.is_MatrixExpr:
             return "\\left(%s\\right)^{%s}" % (self._print(base),
                                               self._print(exp))
         else:
@@ -2897,7 +2941,8 @@ def latex(expr, **settings):
         ``True`` for inline mode, ``False`` otherwise.
     inv_trig_style : string, optional
         How inverse trig functions should be displayed. Can be one of
-        ``abbreviated``, ``full``, or ``power``. Defaults to ``abbreviated``.
+        ``'abbreviated'``, ``'full'``, or ``'power'``. Defaults to
+        ``'abbreviated'``.
     itex : boolean, optional
         Specifies if itex-specific syntax is used, including emitting
         ``$$...$$``.
@@ -2908,43 +2953,47 @@ def latex(expr, **settings):
         denominator before the printer breaks off long fractions. If ``None``
         (the default value), long fractions are not broken up.
     mat_delim : string, optional
-        The delimiter to wrap around matrices. Can be one of ``[``, ``(``, or
-        the empty string. Defaults to ``[``.
+        The delimiter to wrap around matrices. Can be one of ``'['``, ``'('``,
+        or the empty string ``''``. Defaults to ``'['``.
     mat_str : string, optional
-        Which matrix environment string to emit. ``smallmatrix``, ``matrix``,
-        ``array``, etc. Defaults to ``smallmatrix`` for inline mode, ``matrix``
-        for matrices of no more than 10 columns, and ``array`` otherwise.
+        Which matrix environment string to emit. ``'smallmatrix'``,
+        ``'matrix'``, ``'array'``, etc. Defaults to ``'smallmatrix'`` for
+        inline mode, ``'matrix'`` for matrices of no more than 10 columns, and
+        ``'array'`` otherwise.
     mode: string, optional
         Specifies how the generated code will be delimited. ``mode`` can be one
-        of ``plain``, ``inline``, ``equation`` or ``equation*``.  If ``mode``
-        is set to ``plain``, then the resulting code will not be delimited at
-        all (this is the default). If ``mode`` is set to ``inline`` then inline
-        LaTeX ``$...$`` will be used. If ``mode`` is set to ``equation`` or
-        ``equation*``, the resulting code will be enclosed in the ``equation``
-        or ``equation*`` environment (remember to import ``amsmath`` for
-        ``equation*``), unless the ``itex`` option is set. In the latter case,
-        the ``$$...$$`` syntax is used.
+        of ``'plain'``, ``'inline'``, ``'equation'`` or ``'equation*'``.  If
+        ``mode`` is set to ``'plain'``, then the resulting code will not be
+        delimited at all (this is the default). If ``mode`` is set to
+        ``'inline'`` then inline LaTeX ``$...$`` will be used. If ``mode`` is
+        set to ``'equation'`` or ``'equation*'``, the resulting code will be
+        enclosed in the ``equation`` or ``equation*`` environment (remember to
+        import ``amsmath`` for ``equation*``), unless the ``itex`` option is
+        set. In the latter case, the ``$$...$$`` syntax is used.
     mul_symbol : string or None, optional
-        The symbol to use for multiplication. Can be one of ``None``, ``ldot``,
-        ``dot``, or ``times``.
+        The symbol to use for multiplication. Can be one of ``None``,
+        ``'ldot'``, ``'dot'``, or ``'times'``.
     order: string, optional
-        Any of the supported monomial orderings (currently ``lex``, ``grlex``,
-        or ``grevlex``), ``old``, and ``none``. This parameter does nothing for
-        Mul objects. Setting order to ``old`` uses the compatibility ordering
-        for Add defined in Printer. For very large expressions, set the
-        ``order`` keyword to ``none`` if speed is a concern.
+        Any of the supported monomial orderings (currently ``'lex'``,
+        ``'grlex'``, or ``'grevlex'``), ``'old'``, and ``'none'``. This
+        parameter does nothing for `~.Mul` objects. Setting order to ``'old'``
+        uses the compatibility ordering for ``~.Add`` defined in Printer. For
+        very large expressions, set the ``order`` keyword to ``'none'`` if
+        speed is a concern.
     symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.
     root_notation : boolean, optional
         If set to ``False``, exponents of the form 1/n are printed in fractonal
         form. Default is ``True``, to print exponent in root form.
     mat_symbol_style : string, optional
-        Can be either ``plain`` (default) or ``bold``. If set to ``bold``,
-        a MatrixSymbol A will be printed as ``\mathbf{A}``, otherwise as ``A``.
+        Can be either ``'plain'`` (default) or ``'bold'``. If set to
+        ``'bold'``, a `~.MatrixSymbol` A will be printed as ``\mathbf{A}``,
+        otherwise as ``A``.
     imaginary_unit : string, optional
-        String to use for the imaginary unit. Defined options are "i" (default)
-        and "j". Adding "r" or "t" in front gives ``\mathrm`` or ``\text``, so
-        "ri" leads to ``\mathrm{i}`` which gives `\mathrm{i}`.
+        String to use for the imaginary unit. Defined options are ``'i'``
+        (default) and ``'j'``. Adding ``r`` or ``t`` in front gives ``\mathrm``
+        or ``\text``, so ``'ri'`` leads to ``\mathrm{i}`` which gives
+        `\mathrm{i}`.
     gothic_re_im : boolean, optional
         If set to ``True``, `\Re` and `\Im` is used for ``re`` and ``im``, respectively.
         The default is ``False`` leading to `\operatorname{re}` and `\operatorname{im}`.
@@ -2963,6 +3012,9 @@ def latex(expr, **settings):
     max: Integer or None, optional
         Sets the upper bound for the exponent to print floating point numbers in
         fixed-point format.
+    diff_operator: string, optional
+        String to use for differential operator. Default is ``'d'``, to print in italic
+        form. ``'rd'``, ``'td'`` are shortcuts for ``\mathrm{d}`` and ``\text{d}``.
 
     Notes
     =====

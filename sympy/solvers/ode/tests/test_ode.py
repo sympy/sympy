@@ -1,5 +1,5 @@
 from sympy.core.function import (Derivative, Function, Subs, diff)
-from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -1069,3 +1069,12 @@ def test_issue_22462():
             Eq(f(x).diff(x), -20*f(x)**2 - 500*f(x)/7200),
             Eq(f(x).diff(x), -2*f(x)**2 - 5*f(x)/7)]:
         assert 'Bernoulli' in classify_ode(de, f(x))
+
+
+def test_issue_23425():
+    x = symbols('x')
+    y = Function('y')
+    eq = Eq(-E**x*y(x).diff().diff() + y(x).diff(), 0)
+    assert classify_ode(eq) == \
+        ('Liouville', 'nth_order_reducible', \
+        '2nd_power_series_ordinary', 'Liouville_Integral')
