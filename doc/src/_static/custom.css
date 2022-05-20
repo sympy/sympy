@@ -1,5 +1,15 @@
-/* Disable most blockquotes. The Furo defaults make block quotes very
- * apparent. However, the parameter blocks from numpydoc render as block
+/* Reduce the vertical space between lines in code blocks. Required to */
+/* make Unicode pretty printing appear correctly. */
+pre {
+    line-height: 120% !important;
+}
+
+article pre {
+    line-height: 120% !important;
+}
+
+/* Disable most blockquotes. The Furo defaults make block quotes very*/
+/* apparent. However, the parameter blocks from numpydoc render as block
  * quotes, which looks bad. Furthermore, it is very easy for things to
  * accidentally have block quotes due to the fact that RST makes indented
  * blocks render as a block quote (unlike Markdown which makes indented blocks
