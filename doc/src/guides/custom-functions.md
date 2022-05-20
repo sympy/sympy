@@ -1,3 +1,4 @@
+ (custom-functions)=
 # Writing Custom Functions
 
 <!-- Note to contributors: if you update one of the examples in this guide, be
