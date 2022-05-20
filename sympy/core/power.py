@@ -534,7 +534,7 @@ class Pow(Expr):
                 b, e, m = int(base), int(exp), int(q)
                 mb = m.bit_length()
                 if mb <= 80 and e >= mb and e.bit_length()**4 >= m:
-                    phi = totient(m)
+                    phi = int(totient(m))
                     return Integer(pow(b, phi + e%phi, m))
                 return Integer(pow(b, e, m))
 
