@@ -70,6 +70,10 @@ class MatAdd(MatrixExpr, Add):
     def could_extract_minus_sign(self):
         return _could_extract_minus_sign(self)
 
+    def expand(self, **kwargs):
+        expanded = super(MatAdd, self).expand(**kwargs)
+        return self._evaluate(expanded)
+
     def _entry(self, i, j, **kwargs):
         return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])
 

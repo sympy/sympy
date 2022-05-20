@@ -975,7 +975,6 @@ class Mul(Expr, AssocOp):
                 args = []
                 for term in terms:
                     t = self.func(plain, term)
-                    t = t._evaluate(t)
                     if t.is_Mul and any(a.is_Add for a in t.args) and deep:
                         t = t._eval_expand_mul()
                     args.append(t)

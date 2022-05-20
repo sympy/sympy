@@ -3567,7 +3567,6 @@ class Expr(Basic, EvalfMixin):
 
             if hit:
                 expr = expr.func(*sargs)
-                expr = expr._evaluate(expr)
 
         if hasattr(expr, hint):
             newexpr = getattr(expr, hint)(**hints)

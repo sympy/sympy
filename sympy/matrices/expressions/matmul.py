@@ -130,6 +130,10 @@ class MatMul(MatrixExpr, Mul):
         coeff, matrices = self.as_coeff_matrices()
         return coeff, MatMul(*matrices)
 
+    def expand(self, **kwargs):
+        expanded = super(MatMul, self).expand(**kwargs)
+        return self._evaluate(expanded)
+
     def _eval_transpose(self):
         """Transposition of matrix multiplication.
 
