@@ -18,7 +18,7 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 
 from __future__ import annotations
-from typing import Dict as tDict, Optional
+from typing import NamedTuple
 from collections import namedtuple, defaultdict
 from collections.abc import Mapping
 from functools import reduce
@@ -122,7 +122,11 @@ UpperGammaRule = Rule("UpperGammaRule", "a e")
 EllipticFRule = Rule("EllipticFRule", "a d")
 EllipticERule = Rule("EllipticERule", "a d")
 
-IntegralInfo = namedtuple('IntegralInfo', 'integrand symbol')
+
+class IntegralInfo(NamedTuple):
+    integrand: Expr
+    symbol: Symbol
+
 
 evaluators = {}
 def evaluates(rule):
@@ -826,6 +830,41 @@ def quadratic_denom_rule(integral):
 
     return
 
+
+def sqrt_quadratic_denom_rule(integral: IntegralInfo):
+    integrand, x = integral
+    numer, denom = integrand.as_numer_denom()
+    a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
+    c = Wild('c', exclude=[x, 0])
+    match = denom.match(sqrt(a+b*x+c*x**2))
+    if match:
+        numer_poly = numer.as_poly(x)
+        if numer_poly is None:
+            return
+        a, b, c = match[a], match[b], match[c]
+        if numer_poly.degree() == 1:
+            # integrand == (d+e*x)/sqrt(a+b*x+c*x**2)
+            e, d = numer_poly.all_coeffs()
+            # rewrite numerator to A*(2*c*x+b) + B
+            A = e/(2*c)
+            B = d-A*b
+            u = Dummy("u")
+            pow_rule = PowerRule(u, -S.Half, 1/sqrt(u), u)
+            pre_substitute = (2*c*x+b)/denom
+            linear_step = URule(u, a+b*x+c*x**2, None, pow_rule, pre_substitute, x)
+            if A != 1:
+                linear_step = ConstantTimesRule(A, pre_substitute, linear_step, A*pre_substitute, x)
+            step = linear_step
+            if B != 0:
+                constant_step = inverse_trig_rule(IntegralInfo(1/denom, x))
+                if B != 1:
+                    constant_step = ConstantTimesRule(B, 1/denom, constant_step, B/denom, x)
+                add = Add(A*pre_substitute, B/denom, evaluate=False)
+                step = RewriteRule(add, AddRule([linear_step, constant_step], add, x), integrand, x)
+            return step
+
+
 def root_mul_rule(integral):
     integrand, symbol = integral
     a = Wild('a', exclude=[symbol])
@@ -1246,8 +1285,8 @@ def fallback_rule(integral):
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
-_integral_cache = {}  # type: tDict[Expr, Optional[Expr]]
-_parts_u_cache = defaultdict(int)  # type: tDict[Expr, int]
+_integral_cache: dict[Expr, Expr | None] = {}
+_parts_u_cache: dict[Expr, int] = defaultdict(int)
 _cache_dummy = Dummy("z")
 
 def integral_steps(integrand, symbol, **options):
@@ -1346,9 +1385,10 @@ def integral_steps(integrand, symbol, **options):
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
-            Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule), \
-                              null_safe(heaviside_rule), null_safe(quadratic_denom_rule), \
-                              null_safe(root_mul_rule)),
+            Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
+                        null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
+                        null_safe(sqrt_quadratic_denom_rule),
+                        null_safe(root_mul_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
