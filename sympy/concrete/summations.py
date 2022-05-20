@@ -1475,11 +1475,15 @@ def eval_sum_residue(f, i_a_b):
         shift = - b / a / n
         return shift
 
+    #Need a dummy symbol with no assumptions set for get_residue_factor
+    z = Dummy('z')
+
     def get_residue_factor(numer, denom, alternating):
+        residue_factor = (numer.as_expr() / denom.as_expr()).subs(i, z)
         if not alternating:
-            residue_factor = (numer.as_expr() / denom.as_expr()) * cot(S.Pi * i)
+            residue_factor *= cot(S.Pi * z)
         else:
-            residue_factor = (numer.as_expr() / denom.as_expr()) * csc(S.Pi * i)
+            residue_factor *= csc(S.Pi * z)
         return residue_factor
 
     # We don't know how to deal with symbolic constants in summand
@@ -1520,7 +1524,7 @@ def eval_sum_residue(f, i_a_b):
             return None
 
         residue_factor = get_residue_factor(numer, denom, alternating)
-        residues = [residue(residue_factor, i, root) for root in nonint_roots]
+        residues = [residue(residue_factor, z, root) for root in nonint_roots]
         return -S.Pi * sum(residues)
 
     if not (a.is_finite and b is S.Infinity):
@@ -1568,7 +1572,7 @@ def eval_sum_residue(f, i_a_b):
             return None
 
     residue_factor = get_residue_factor(numer, denom, alternating)
-    residues = [residue(residue_factor, i, root) for root in int_roots + nonint_roots]
+    residues = [residue(residue_factor, z, root) for root in int_roots + nonint_roots]
     full_sum = -S.Pi * sum(residues)
 
     if not int_roots:

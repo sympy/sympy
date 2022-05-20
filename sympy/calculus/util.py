@@ -480,7 +480,7 @@ def periodicity(f, symbol, check=False):
 
     elif f.is_Mul:
         coeff, g = f.as_independent(symbol, as_Add=False)
-        if isinstance(g, TrigonometricFunction) or coeff is not S.One:
+        if isinstance(g, TrigonometricFunction) or coeff != 1:
             period = periodicity(g, symbol)
 
         else:
