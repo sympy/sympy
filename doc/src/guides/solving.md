@@ -6,7 +6,23 @@ Diophantine equations, and evaluate integrals. SymPy can also solve numerically.
 
 Learn how to use SymPy computer algebra system to:
 
+_Temporary note: This table has solutions in another column_
+| Description                                                  | Example                                                                                                                     | Solution |
+|--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|--------------|
+| [ Solve an equation algebraically ](http://docs.sympy.org)                        | $x^2 = 4$ | $x =\{-2,2\}$                                                                                                |
+| [ Solve a system of equations algebraically ](http://docs.sympy.org)              | $x^2 + y = 2, x - y = 4$ | $\{(x = -3, y = -7), (x = 2, y = 2)\}$                                                                                        |
+| [ Solve an equation numerically ](http://docs.sympy.org)                          | $\cos(x) = x $ | $ x \approx 0.739085133215161$                                                                                           |
+| [ Solve a partial differential equation algebraically ](http://docs.sympy.org)    | ${\frac {\partial ^{2}(x^3 y^3)}{\partial x\partial y}}=9 $ | $ x \ne 0, y = \pm\frac{1}{x} $                                                                     |
+| [ Solve an ordinary differential equation algebraically  ](http://docs.sympy.org) | $y''(x) + 9f(x)=0 $ | $ f(x)=C_{1} \sin(3x)+ C_{2} \cos(3x)$                                                    |
+| [ Solve a system of linear equations algebraically ](http://docs.sympy.org)       | $x + y = 2, x - y = 0 $ | $ x = 1, y = 1$                                                                                           |
+| [ Solve a system of nonlinear equations algebraically ](http://docs.sympy.org)    | $x^2 + y^3 = 1, x^3 - y^2 = 0 $ | $ x = 1, y = 0$                                                                                       |
+| [ Solve a matrix problem algebraically ](http://docs.sympy.org)                   | $ \left[\begin{array}{cc} 1 & 1\\1 & -1\end{array}\right] \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} 2\\0\end{array}\right] $ | $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} 1\\1\end{array}\right]$  |
+| [ Solve an inequality algebraically ](http://docs.sympy.org)                      | $ x^2 < 4 $ | $ -2 < x < 2 $                                                                                                        |
+| [ Solve a system of inequalities algebraically ](http://docs.sympy.org)           | $ x^2 < 4, x > 0 $ | $ 0 < x < 2 $                                                                                                  |
+| [ Solve (find the roots of) a polynomial algebraically ](http://docs.sympy.org)                       | $ x^2 - x = 0 $ | $ x = \{0, 1\} $                                                                                                |
+| [ Solve a Diophantine equation (find integer solutions to a polynomial equation) algebraically ](http://docs.sympy.org)             | $x^2 - 4xy + 8y^2 - 3x + 7y - 5 = 0 $ | $ \{(x = 2, y = 1), (x = 5, y = 1)\}$                                                                                  |
 
+_Temporary note: This table has solutions inline with examples_
 | Description                                                  | Example                                                                                                                     |
 |--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | [ Solve an equation algebraically ](http://docs.sympy.org)                        | $x^2 = 4 \to x =\{-2, 2\} $                                                                                                |
@@ -22,6 +38,7 @@ Learn how to use SymPy computer algebra system to:
 | [ Solve (find the roots of) a polynomial algebraically ](http://docs.sympy.org)                       | $ x^2 - x = 0 \to x = \{0, 1\} $                                                                                                |
 | [ Solve a Diophantine equation (find integer solutions to a polynomial equation) algebraically ](http://docs.sympy.org)             | $x^2 - 4xy + 8y^2 - 3x + 7y - 5 = 0 \to \{(x = 2, y = 1), (x = 5, y = 1)\}$                                                                                  |
 
+_Temporary note: This table has no solutions_
 | Description                                                  | Example                                                                                                                     |
 |--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | [ Solve an equation algebraically ](http://docs.sympy.org)                        | $x^2 = 4 $                                                                                                        |
