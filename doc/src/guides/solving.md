@@ -40,6 +40,8 @@ Learn how to use SymPy computer algebra system to:
 
 Note: SymPy has a function called 
 [`solve`](https://docs.sympy.org/dev/modules/solvers/solvers.html?highlight=solve#sympy.solvers.solvers.solve) 
-which is designed to find the roots of an equation or system of equations. 
+which is designed to find the roots of an equation or system of equations.
 SymPy `solve` may or may not be what you need for a particular problem, 
 so we recommend you use the links on this page to learn how to "solve" your problem.
+And while a common, colloquial expression is, for example, ["solve an integral"](http://docs.sympy.org), 
+in SymPy's terminology it would be ["evaluate an integral."](http://docs.sympy.org)
