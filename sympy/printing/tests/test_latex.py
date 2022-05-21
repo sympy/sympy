@@ -2440,6 +2440,14 @@ def test_Pow():
     assert latex(x2**2) == r'\left(x^{2}\right)^{2}'
 
 
+def test_issue_6975():
+    assert latex((x**x).subs(x,x**x).subs(x,x**x)) == \
+        r"\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)"
+    assert latex((x**x).subs(x,x**x).subs(x,x**x).subs(x,x**x)) == \
+        r"\left(\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)\right)^\left({\left(\left(x^{x}\right)^\left({x^{x}}\right)\right)^\left({\left(x^{x}\right)^\left({x^{x}}\right)}\right)}\right)"
+    assert latex(x**(x/3)) == r'x^{\frac{x}{3}}'
+    assert latex(x**(x*y + x)) == r'x^{x y + x}'
+
 def test_issue_7180():
     assert latex(Equivalent(x, y)) == r"x \Leftrightarrow y"
     assert latex(Not(Equivalent(x, y))) == r"x \not\Leftrightarrow y"
