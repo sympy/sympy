@@ -1,3 +1,4 @@
+from sympy import MatAdd, MatMul
 from sympy.algebras.quaternion import Quaternion
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutation
@@ -1824,27 +1825,33 @@ def test_custom_symbol_names():
 def test_matAdd():
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
-    l = LatexPrinter()
-    assert l._print(C - 2*B) in [r'- 2 B + C', r'C -2 B']
-    assert l._print(C + 2*B) in [r'2 B + C', r'C + 2 B']
-    assert l._print(B - 2*C) in [r'B - 2 C', r'- 2 C + B']
-    assert l._print(B + 2*C) in [r'B + 2 C', r'2 C + B']
+
+    n = symbols("n")
+    h = MatrixSymbol("h", 1, 1)
+
+    assert latex(C - 2*B) in [r'- 2 B + C', r'C -2 B']
+    assert latex(C + 2*B) in [r'2 B + C', r'C + 2 B']
+    assert latex(B - 2*C) in [r'B - 2 C', r'- 2 C + B']
+    assert latex(B + 2*C) in [r'B + 2 C', r'2 C + B']
+
+    assert latex(n * h - (-h + h.T) * (h + h.T)) == 'n h - \\left(- h + h^{T}\\right) \\left(h + h^{T}\\right)'
+    assert latex(MatAdd(MatAdd(h, h), MatAdd(h, h))) == '\\left(h + h\\right) + \\left(h + h\\right)'
+    assert latex(MatMul(MatMul(h, h), MatMul(h, h))) == '\\left(h h\\right) \\left(h h\\right)'
 
 
 def test_matMul():
     A = MatrixSymbol('A', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     x = Symbol('x')
-    lp = LatexPrinter()
-    assert lp._print_MatMul(2*A) == r'2 A'
-    assert lp._print_MatMul(2*x*A) == r'2 x A'
-    assert lp._print_MatMul(-2*A) == r'- 2 A'
-    assert lp._print_MatMul(1.5*A) == r'1.5 A'
-    assert lp._print_MatMul(sqrt(2)*A) == r'\sqrt{2} A'
-    assert lp._print_MatMul(-sqrt(2)*A) == r'- \sqrt{2} A'
-    assert lp._print_MatMul(2*sqrt(2)*x*A) == r'2 \sqrt{2} x A'
-    assert lp._print_MatMul(-2*A*(A + 2*B)) in [r'- 2 A \left(A + 2 B\right)',
-                                                r'- 2 A \left(2 B + A\right)']
+    assert latex(2*A) == r'2 A'
+    assert latex(2*x*A) == r'2 x A'
+    assert latex(-2*A) == r'- 2 A'
+    assert latex(1.5*A) == r'1.5 A'
+    assert latex(sqrt(2)*A) == r'\sqrt{2} A'
+    assert latex(-sqrt(2)*A) == r'- \sqrt{2} A'
+    assert latex(2*sqrt(2)*x*A) == r'2 \sqrt{2} x A'
+    assert latex(-2*A*(A + 2*B)) in [r'- 2 A \left(A + 2 B\right)',
+                                        r'- 2 A \left(2 B + A\right)']
 
 
 def test_latex_MatrixSlice():
@@ -2460,7 +2467,7 @@ def test_issue_15439():
     y = MatrixSymbol('y', 2, 2)
     assert latex((x * y).subs(y, -y)) == r"x \left(- y\right)"
     assert latex((x * y).subs(y, -2*y)) == r"x \left(- 2 y\right)"
-    assert latex((x * y).subs(x, -x)) == r"- x y"
+    assert latex((x * y).subs(x, -x)) == r"\left(- x\right) y"
 
 
 def test_issue_2934():
