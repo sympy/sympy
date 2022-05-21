@@ -2,6 +2,22 @@ from sympy.physics.vector import dynamicsymbols, Point, ReferenceFrame
 from sympy.testing.pytest import raises, ignore_warnings
 import warnings
 
+
+def test_check_fixed():
+    N = ReferenceFrame('N')
+    O = Point('O')
+    O._check_not_moving(N)
+    O.set_vel(N, N.x)
+    raises(ValueError, lambda: O._check_not_moving(N))
+    O.set_vel(N, 0)
+    O._check_not_moving(N)
+    O.set_acc(N, N.x)
+    raises(ValueError, lambda: O._check_not_moving(N))
+    O = Point('O')
+    O.set_acc(N, N.x)
+    raises(ValueError, lambda: O._check_not_moving(N))
+
+
 def test_point_v1pt_theorys():
     q, q2 = dynamicsymbols('q q2')
     qd, q2d = dynamicsymbols('q q2', 1)
@@ -18,6 +34,8 @@ def test_point_v1pt_theorys():
     assert P.v1pt_theory(O, N, B) == N.x + qd * B.y
     P.set_vel(B, B.z)
     assert P.v1pt_theory(O, N, B) == B.z + N.x + qd * B.y
+    O.set_vel(B, B.x)
+    raises(ValueError, lambda: P.v1pt_theory(O, N, B))
 
 
 def test_point_a1pt_theorys():
@@ -52,6 +70,8 @@ def test_point_v2pt_theorys():
     assert P.v2pt_theory(O, N, B) == (qd * B.z ^ B.x)
     O.set_vel(N, N.x)
     assert P.v2pt_theory(O, N, B) == N.x + qd * B.y
+    O.set_vel(B, B.x)
+    raises(ValueError, lambda: P.v1pt_theory(O, N, B))
 
 
 def test_point_a2pt_theorys():
@@ -76,8 +96,8 @@ def test_point_funcs():
     B = ReferenceFrame('B')
     B.set_ang_vel(N, 5 * B.y)
     O = Point('O')
-    P = O.locatenew('P', q * B.x)
-    assert P.pos_from(O) == q * B.x
+    P = O.locatenew('P', q * B.x + q2 * B.y)
+    assert P.pos_from(O) == q * B.x + q2 * B.y
     P.set_vel(B, qd * B.x + q2d * B.y)
     assert P.vel(B) == qd * B.x + q2d * B.y
     O.set_vel(N, 0)
@@ -94,7 +114,7 @@ def test_point_funcs():
 
     B.set_ang_vel(N, 5 * B.y)
     O = Point('O')
-    P = O.locatenew('P', q * B.x)
+    P = O.locatenew('P', q * B.x + q2 * B.y)
     P.set_vel(B, qd * B.x + q2d * B.y)
     O.set_vel(N, 0)
     assert P.v1pt_theory(O, N, B) == qd * B.x + q2d * B.y - 5 * q * B.z
