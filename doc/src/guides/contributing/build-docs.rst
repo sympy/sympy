@@ -104,6 +104,34 @@ convenience than a virtual machine if you partially need a Linux environment
 for your workflow, however this method is only viable for Windows 10 64-bit
 users.
 
+or
+
+Follow instruction below to install Chocolatey (or https://chocolatey.org/install)
+
+Open powershell as an ``Administrator`` and run::
+
+   Get-ExecutionPolicy
+
+If it returns Restricted, then run::
+
+   Set-ExecutionPolicy AllSigned
+
+or::
+
+   Set-ExecutionPolicy Bypass -Scope Process
+
+To install Chocolatey::
+
+   Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+Installing make and other dependencies::
+
+   choco install make graphviz rsvg-convert imagemagick
+
+Installing python dependencies::
+
+   pip install -r doc/requirements.txt
+
 Build the Docs
 ^^^^^^^^^^^^^^^
 
