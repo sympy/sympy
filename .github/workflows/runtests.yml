@@ -20,7 +20,7 @@ jobs:
 
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath flake8
 
@@ -57,12 +57,29 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath mypy
 
       - name: Run mypy on the sympy package
         run: mypy sympy
+
+  # ------------------------- sphinx-lint -------------------------- #
+
+  sphinx-lint:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+      - run: python -m pip install --upgrade pip
+      - run: pip install sphinx-lint
+
+      - name: Run sphinx-lint on the sympy documentation
+        run: sphinx-lint doc/
 
   # --------------------------- check authors ---------------------- #
 
@@ -76,7 +93,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/mailmap_check.py --skip-last-commit
@@ -91,7 +108,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
@@ -107,7 +124,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=1/2
@@ -122,7 +139,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
@@ -133,17 +150,42 @@ jobs:
     needs: code-quality
 
     runs-on: ubuntu-20.04
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.9', '3.10', 'pypy-3.8']
+        experimental: [false]
+        include:
+          - python-version: '3.11.0-alpha - 3.11'
+            experimental: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: ${{ matrix.python-version }}
       - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev
-      - run: python -m pip install --upgrade pip
-      - run: pip install mpmath gmpy2 matplotlib numpy scipy aesara ipython \
-                         symengine cython llvmlite wurlitzer \
-                         autowrap numexpr 'antlr4-python3-runtime==4.7.*' \ 
-                         numba
+      - run: python -m pip install --upgrade pip wheel
+      - run: pip install mpmath matplotlib numpy ipython cython \
+                         wurlitzer autowrap numexpr 'antlr4-python3-runtime==4.7.*'
+      # SciPy cannot yet be installed in Python 3.11 in CI. Also Aesara pulls
+      # in SciPy. Once it is possible to install then this should be done
+      # unconditionally.
+      - if: ${{ ! contains(matrix.python-version, '3.11') }}
+        run: pip install scipy aesara
+      # gmpy2 is not available for pypy
+      - if: ${{ matrix.python-version != 'pypy-3.8' }}
+        run: pip install gmpy2
+      # symengine is not available for pypy and cannot be installed in 3.11 (yet)
+      - if: ${{ matrix.python-version != 'pypy-3.8' && ! contains(matrix.python-version, '3.11') }}
+        run: pip install symengine
+      # The llvmjit tests segfault on Python 3.10. For now we skip this under
+      # 3.10 because the segfault prevents the other tests from running. Also
+      # llvmlite cannot be installed under PyPy. Installing numba pulls in
+      # llvmlite indirectly. Maybe it would be better to disable the llvmlit
+      # tests but still install both of these so at least numbe can be tested.
+      - if: ${{ matrix.python-version == '3.9' }}
+        run: pip install llvmlite numba
       # Test external imports
       - run: bin/test_external_imports.py
       - run: bin/test_submodule_imports.py
@@ -162,7 +204,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath numpy scipy tensorflow
       # Test modules that can use tensorflow
@@ -178,7 +220,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath numpy symengine
       # Test modules that can use tensorflow
@@ -196,7 +238,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=1/2
@@ -211,7 +253,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
@@ -222,9 +264,16 @@ jobs:
     needs: [doctests-latest, tests1-latest, tests2-latest]
 
     runs-on: ubuntu-20.04
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.8', '3.10', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
+        experimental: [false]
+        # Maybe use this to add 3.12 when the time comes:
+        #include:
+        #  - python-version: '3.11.0-alpha - 3.11'
+        #    experimental: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
@@ -240,9 +289,16 @@ jobs:
     needs: [doctests-latest, tests1-latest, tests2-latest]
 
     runs-on: ubuntu-20.04
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.8', '3.10', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
+        experimental: [false]
+        # Maybe use this to add 3.12 when the time comes:
+        #include:
+        #  - python-version: '3.11.0-alpha - 3.11'
+        #    experimental: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
@@ -258,9 +314,16 @@ jobs:
     needs: [doctests-latest, tests1-latest, tests2-latest]
 
     runs-on: ubuntu-20.04
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.8', '3.10', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
+        experimental: [false]
+        # Maybe use this to add 3.12 when the time comes:
+        #include:
+        #  - python-version: '3.11.0-alpha - 3.11'
+        #    experimental: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
@@ -281,8 +344,8 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
-      - run: release/aptinstall.sh
+          python-version: '3.10'
+      - run: doc/aptinstall.sh
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
 
@@ -313,7 +376,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
       - run: pip install asv virtualenv
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 

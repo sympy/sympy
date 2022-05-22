@@ -632,7 +632,7 @@ class LatexPrinter(Printer):
 
     def _print_PrimeIdeal(self, expr):
         p = self._print(expr.p)
-        if expr.alpha.is_rational:
+        if expr.is_inert:
             return rf'\left({p}\right)'
         alpha = self._print(expr.alpha.as_expr())
         return rf'\left({p}, {alpha}\right)'
@@ -894,17 +894,32 @@ class LatexPrinter(Printer):
         r'''
         Logic to decide how to render a function to latex
           - if it is a recognized latex name, use the appropriate latex command
-          - if it is a single letter, just use that letter
+          - if it is a single letter, excluding sub- and superscripts, just use that letter
           - if it is a longer name, then put \operatorname{} around it and be
             mindful of undercores in the name
         '''
         func = self._deal_with_super_sub(func)
+        superscriptidx = func.find("^")
+        subscriptidx = func.find("_")
         if func in accepted_latex_functions:
             name = r"\%s" % func
-        elif len(func) == 1 or func.startswith('\\'):
+        elif len(func) == 1 or func.startswith('\\') or subscriptidx == 1 or superscriptidx == 1:
             name = func
         else:
-            name = r"\operatorname{%s}" % func
+            if superscriptidx > 0 and subscriptidx > 0:
+                name = r"\operatorname{%s}%s" %(
+                    func[:min(subscriptidx,superscriptidx)],
+                    func[min(subscriptidx,superscriptidx):])
+            elif superscriptidx > 0:
+                name = r"\operatorname{%s}%s" %(
+                    func[:superscriptidx],
+                    func[superscriptidx:])
+            elif subscriptidx > 0:
+                name = r"\operatorname{%s}%s" %(
+                    func[:subscriptidx],
+                    func[subscriptidx:])
+            else:
+                name = r"\operatorname{%s}" % func
         return name
 
     def _print_Function(self, expr, exp=None):
@@ -1746,18 +1761,14 @@ class LatexPrinter(Printer):
                 return r"%s^{\dagger}" % s
 
     def _print_MatMul(self, expr):
-        from sympy.matrices.expressions.matmul import MatMul
+        from sympy import MatMul
 
-        parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
-                                             False)
+        # Parenthesize nested MatMul but not other types of Mul objects:
+        parens = lambda x: self._print(x) if isinstance(x, Mul) and not isinstance(x, MatMul) else \
+            self.parenthesize(x, precedence_traditional(expr), False)
 
-        args = expr.args
-        if isinstance(args[0], Mul):
-            args = args[0].as_ordered_factors() + list(args[1:])
-        else:
-            args = list(args)
-
-        if isinstance(expr, MatMul) and expr.could_extract_minus_sign():
+        args = list(expr.args)
+        if expr.could_extract_minus_sign():
             if args[0] == -1:
                 args = args[1:]
             else:

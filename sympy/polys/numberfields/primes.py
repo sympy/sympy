@@ -70,9 +70,17 @@ class PrimeIdeal(IntegerPowerable):
         self.e = e if e is not None else self.valuation(p * ZK)
 
     def __str__(self):
-        if self.alpha.is_rational:
+        if self.is_inert:
             return f'({self.p})'
         return f'({self.p}, {self.alpha.as_expr()})'
+
+    @property
+    def is_inert(self):
+        """
+        Say whether the rational prime we divide is inert, i.e. stays prime in
+        our ring of integers.
+        """
+        return self.f == self.ZK.n
 
     def repr(self, field_gen=None, just_gens=False):
         """
@@ -561,6 +569,8 @@ def _prime_decomp_easy_case(p, ZK):
     T = ZK.parent.T
     T_bar = Poly(T, modulus=p)
     lc, fl = T_bar.factor_list()
+    if len(fl) == 1 and fl[0][1] == 1:
+        return [PrimeIdeal(ZK, p, ZK.parent.zero(), ZK.n, 1)]
     return [PrimeIdeal(ZK, p,
                        ZK.parent.element_from_poly(Poly(t, domain=ZZ)),
                        t.degree(), e)

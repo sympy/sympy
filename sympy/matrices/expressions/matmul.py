@@ -59,17 +59,18 @@ class MatMul(MatrixExpr, Mul):
             return factor
 
         if evaluate:
-            return canonicalize(obj)
+            return cls._evaluate(obj)
 
         return obj
+
+    @classmethod
+    def _evaluate(cls, expr):
+        return canonicalize(expr)
 
     @property
     def shape(self):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
-
-    def could_extract_minus_sign(self):
-        return self.args[0].could_extract_minus_sign()
 
     def _entry(self, i, j, expand=True, **kwargs):
         # Avoid cyclic imports
@@ -125,6 +126,10 @@ class MatMul(MatrixExpr, Mul):
     def as_coeff_mmul(self):
         coeff, matrices = self.as_coeff_matrices()
         return coeff, MatMul(*matrices)
+
+    def expand(self, **kwargs):
+        expanded = super(MatMul, self).expand(**kwargs)
+        return self._evaluate(expanded)
 
     def _eval_transpose(self):
         """Transposition of matrix multiplication.

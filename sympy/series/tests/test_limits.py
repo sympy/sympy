@@ -12,6 +12,7 @@ from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (acoth, atanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin,
                                                       atan, cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.bessel import (besselj, besselk)
@@ -144,6 +145,16 @@ def test_log():
 def test_piecewise():
     # https://github.com/sympy/sympy/issues/18363
     assert limit((real_root(x - 6, 3) + 2)/(x + 2), x, -2, '+') == Rational(1, 12)
+
+
+def test_piecewise2():
+    func1 = 2*sqrt(x)*Piecewise(((4*x - 2)/Abs(sqrt(4 - 4*(2*x - 1)**2)), 4*x - 2\
+            >= 0), ((2 - 4*x)/Abs(sqrt(4 - 4*(2*x - 1)**2)), True))
+    func2 = Piecewise((x**2/2, x <= 0.5), (x/2 - 0.125, True))
+    func3 = Piecewise(((x - 9) / 5, x < -1), ((x - 9) / 5, x > 4), (sqrt(Abs(x - 3)), True))
+    assert limit(func1, x, 0) == 1
+    assert limit(func2, x, 0) == 0
+    assert limit(func3, x, -1) == 2
 
 
 def test_basic5():

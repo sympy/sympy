@@ -1,4 +1,5 @@
-from typing import Callable, Tuple as tTuple
+from __future__ import annotations
+from typing import Callable
 from math import log as _log, sqrt as _sqrt
 from itertools import product
 
@@ -275,7 +276,8 @@ class Pow(Expr):
 
     __slots__ = ('is_commutative',)
 
-    args: tTuple[Expr, Expr]
+    args: tuple[Expr, Expr]
+    _args: tuple[Expr, Expr]
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):
@@ -383,11 +385,11 @@ class Pow(Expr):
         return None
 
     @property
-    def base(self):
+    def base(self) -> Expr:
         return self._args[0]
 
     @property
-    def exp(self):
+    def exp(self) -> Expr:
         return self._args[1]
 
     @property
@@ -532,7 +534,7 @@ class Pow(Expr):
                 b, e, m = int(base), int(exp), int(q)
                 mb = m.bit_length()
                 if mb <= 80 and e >= mb and e.bit_length()**4 >= m:
-                    phi = totient(m)
+                    phi = int(totient(m))
                     return Integer(pow(b, phi + e%phi, m))
                 return Integer(pow(b, e, m))
 
@@ -1732,9 +1734,14 @@ class Pow(Expr):
                 raise NotImplementedError()
         if not d.is_positive:
             g = g.simplify()
+            if g.is_zero:
+                return f**e
             _, d = g.leadterm(x)
             if not d.is_positive:
-                raise NotImplementedError()
+                g = ((b - f)/f).expand()
+                _, d = g.leadterm(x)
+                if not d.is_positive:
+                    raise NotImplementedError()
 
         from sympy.functions.elementary.integers import ceiling
         gpoly = g._eval_nseries(x, n=ceiling(maxpow), logx=logx, cdir=cdir).removeO()

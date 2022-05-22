@@ -196,7 +196,7 @@ Why not use dicts as output?
     represent partial solution of the given equation `fg = 0` using dicts.
     This problem is solved with sets using a ``ConditionSet`` object:
 
-    `sol_f \cup \{x | x \in \mathbb{R} \land g = 0\}`, where `sol_f` is the solution
+    `sol_f \cup \{x | x ∊ \mathbb{R} ∧ g = 0\}`, where `sol_f` is the solution
     of the equation `f = 0`.
 
   * Using a dict may lead to surprising results like:
@@ -459,7 +459,7 @@ How do we deal with cases where only some of the solutions are known?
 
  We can represent it as:
 
- `\{-2, 2\} \cup \{x | x \in \mathbb{R} \land x + \sin(x) = 0\}`
+ `\{-2, 2\} ∪ \{x | x \in \mathbb{R} ∧ x + \sin(x) = 0\}`
 
 
 What is the plan for solve and solveset?

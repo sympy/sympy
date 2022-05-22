@@ -1,3 +1,4 @@
+from sympy import MatAdd, MatMul
 from sympy.algebras.quaternion import Quaternion
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutation
@@ -459,10 +460,114 @@ def test_latex_functions():
     assert latex(g(x)) == r"\gamma{\left(x \right)}"
     assert latex(g) == r"\gamma"
 
-    a1 = Function('a_1')
+    a_1 = Function('a_1')
+    assert latex(a_1) == r"a_{1}"
+    assert latex(a_1(x)) == r"a_{1}{\left(x \right)}"
+    assert latex(Function('a_1')) == r"a_{1}"
 
-    assert latex(a1) == r"\operatorname{a_{1}}"
-    assert latex(a1(x)) == r"\operatorname{a_{1}}{\left(x \right)}"
+    # Issue #16925
+    # multi letter function names
+    # > simple
+    assert latex(Function('ab')) == r"\operatorname{ab}"
+    assert latex(Function('ab1')) == r"\operatorname{ab}_{1}"
+    assert latex(Function('ab12')) == r"\operatorname{ab}_{12}"
+    assert latex(Function('ab_1')) == r"\operatorname{ab}_{1}"
+    assert latex(Function('ab_12')) == r"\operatorname{ab}_{12}"
+    assert latex(Function('ab_c')) == r"\operatorname{ab}_{c}"
+    assert latex(Function('ab_cd')) == r"\operatorname{ab}_{cd}"
+    # > with argument
+    assert latex(Function('ab')(Symbol('x'))) == r"\operatorname{ab}{\left(x \right)}"
+    assert latex(Function('ab1')(Symbol('x'))) == r"\operatorname{ab}_{1}{\left(x \right)}"
+    assert latex(Function('ab12')(Symbol('x'))) == r"\operatorname{ab}_{12}{\left(x \right)}"
+    assert latex(Function('ab_1')(Symbol('x'))) == r"\operatorname{ab}_{1}{\left(x \right)}"
+    assert latex(Function('ab_c')(Symbol('x'))) == r"\operatorname{ab}_{c}{\left(x \right)}"
+    assert latex(Function('ab_cd')(Symbol('x'))) == r"\operatorname{ab}_{cd}{\left(x \right)}"
+
+    # > with power
+    #   does not work on functions without brackets
+
+    # > with argument and power combined
+    assert latex(Function('ab')()**2) == r"\operatorname{ab}^{2}{\left( \right)}"
+    assert latex(Function('ab1')()**2) == r"\operatorname{ab}_{1}^{2}{\left( \right)}"
+    assert latex(Function('ab12')()**2) == r"\operatorname{ab}_{12}^{2}{\left( \right)}"
+    assert latex(Function('ab_1')()**2) == r"\operatorname{ab}_{1}^{2}{\left( \right)}"
+    assert latex(Function('ab_12')()**2) == r"\operatorname{ab}_{12}^{2}{\left( \right)}"
+    assert latex(Function('ab')(Symbol('x'))**2) == r"\operatorname{ab}^{2}{\left(x \right)}"
+    assert latex(Function('ab1')(Symbol('x'))**2) == r"\operatorname{ab}_{1}^{2}{\left(x \right)}"
+    assert latex(Function('ab12')(Symbol('x'))**2) == r"\operatorname{ab}_{12}^{2}{\left(x \right)}"
+    assert latex(Function('ab_1')(Symbol('x'))**2) == r"\operatorname{ab}_{1}^{2}{\left(x \right)}"
+    assert latex(Function('ab_12')(Symbol('x'))**2) == \
+        r"\operatorname{ab}_{12}^{2}{\left(x \right)}"
+
+    # single letter function names
+    # > simple
+    assert latex(Function('a')) == r"a"
+    assert latex(Function('a1')) == r"a_{1}"
+    assert latex(Function('a12')) == r"a_{12}"
+    assert latex(Function('a_1')) == r"a_{1}"
+    assert latex(Function('a_12')) == r"a_{12}"
+
+    # > with argument
+    assert latex(Function('a')()) == r"a{\left( \right)}"
+    assert latex(Function('a1')()) == r"a_{1}{\left( \right)}"
+    assert latex(Function('a12')()) == r"a_{12}{\left( \right)}"
+    assert latex(Function('a_1')()) == r"a_{1}{\left( \right)}"
+    assert latex(Function('a_12')()) == r"a_{12}{\left( \right)}"
+
+    # > with power
+    #   does not work on functions without brackets
+
+    # > with argument and power combined
+    assert latex(Function('a')()**2) == r"a^{2}{\left( \right)}"
+    assert latex(Function('a1')()**2) == r"a_{1}^{2}{\left( \right)}"
+    assert latex(Function('a12')()**2) == r"a_{12}^{2}{\left( \right)}"
+    assert latex(Function('a_1')()**2) == r"a_{1}^{2}{\left( \right)}"
+    assert latex(Function('a_12')()**2) == r"a_{12}^{2}{\left( \right)}"
+    assert latex(Function('a')(Symbol('x'))**2) == r"a^{2}{\left(x \right)}"
+    assert latex(Function('a1')(Symbol('x'))**2) == r"a_{1}^{2}{\left(x \right)}"
+    assert latex(Function('a12')(Symbol('x'))**2) == r"a_{12}^{2}{\left(x \right)}"
+    assert latex(Function('a_1')(Symbol('x'))**2) == r"a_{1}^{2}{\left(x \right)}"
+    assert latex(Function('a_12')(Symbol('x'))**2) == r"a_{12}^{2}{\left(x \right)}"
+
+    assert latex(Function('a')()**32) == r"a^{32}{\left( \right)}"
+    assert latex(Function('a1')()**32) == r"a_{1}^{32}{\left( \right)}"
+    assert latex(Function('a12')()**32) == r"a_{12}^{32}{\left( \right)}"
+    assert latex(Function('a_1')()**32) == r"a_{1}^{32}{\left( \right)}"
+    assert latex(Function('a_12')()**32) == r"a_{12}^{32}{\left( \right)}"
+    assert latex(Function('a')(Symbol('x'))**32) == r"a^{32}{\left(x \right)}"
+    assert latex(Function('a1')(Symbol('x'))**32) == r"a_{1}^{32}{\left(x \right)}"
+    assert latex(Function('a12')(Symbol('x'))**32) == r"a_{12}^{32}{\left(x \right)}"
+    assert latex(Function('a_1')(Symbol('x'))**32) == r"a_{1}^{32}{\left(x \right)}"
+    assert latex(Function('a_12')(Symbol('x'))**32) == r"a_{12}^{32}{\left(x \right)}"
+
+    assert latex(Function('a')()**a) == r"a^{a}{\left( \right)}"
+    assert latex(Function('a1')()**a) == r"a_{1}^{a}{\left( \right)}"
+    assert latex(Function('a12')()**a) == r"a_{12}^{a}{\left( \right)}"
+    assert latex(Function('a_1')()**a) == r"a_{1}^{a}{\left( \right)}"
+    assert latex(Function('a_12')()**a) == r"a_{12}^{a}{\left( \right)}"
+    assert latex(Function('a')(Symbol('x'))**a) == r"a^{a}{\left(x \right)}"
+    assert latex(Function('a1')(Symbol('x'))**a) == r"a_{1}^{a}{\left(x \right)}"
+    assert latex(Function('a12')(Symbol('x'))**a) == r"a_{12}^{a}{\left(x \right)}"
+    assert latex(Function('a_1')(Symbol('x'))**a) == r"a_{1}^{a}{\left(x \right)}"
+    assert latex(Function('a_12')(Symbol('x'))**a) == r"a_{12}^{a}{\left(x \right)}"
+
+    ab = Symbol('ab')
+    assert latex(Function('a')()**ab) == r"a^{ab}{\left( \right)}"
+    assert latex(Function('a1')()**ab) == r"a_{1}^{ab}{\left( \right)}"
+    assert latex(Function('a12')()**ab) == r"a_{12}^{ab}{\left( \right)}"
+    assert latex(Function('a_1')()**ab) == r"a_{1}^{ab}{\left( \right)}"
+    assert latex(Function('a_12')()**ab) == r"a_{12}^{ab}{\left( \right)}"
+    assert latex(Function('a')(Symbol('x'))**ab) == r"a^{ab}{\left(x \right)}"
+    assert latex(Function('a1')(Symbol('x'))**ab) == r"a_{1}^{ab}{\left(x \right)}"
+    assert latex(Function('a12')(Symbol('x'))**ab) == r"a_{12}^{ab}{\left(x \right)}"
+    assert latex(Function('a_1')(Symbol('x'))**ab) == r"a_{1}^{ab}{\left(x \right)}"
+    assert latex(Function('a_12')(Symbol('x'))**ab) == r"a_{12}^{ab}{\left(x \right)}"
+
+    assert latex(Function('a^12')(x)) == R"a^{12}{\left(x \right)}"
+    assert latex(Function('a^12')(x) ** ab) == R"\left(a^{12}\right)^{ab}{\left(x \right)}"
+    assert latex(Function('a__12')(x)) == R"a^{12}{\left(x \right)}"
+    assert latex(Function('a__12')(x) ** ab) == R"\left(a^{12}\right)^{ab}{\left(x \right)}"
+    assert latex(Function('a_1__1_2')(x)) == R"a^{1}_{1 2}{\left(x \right)}"
 
     # issue 5868
     omega1 = Function('omega1')
@@ -1720,27 +1825,33 @@ def test_custom_symbol_names():
 def test_matAdd():
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
-    l = LatexPrinter()
-    assert l._print(C - 2*B) in [r'- 2 B + C', r'C -2 B']
-    assert l._print(C + 2*B) in [r'2 B + C', r'C + 2 B']
-    assert l._print(B - 2*C) in [r'B - 2 C', r'- 2 C + B']
-    assert l._print(B + 2*C) in [r'B + 2 C', r'2 C + B']
+
+    n = symbols("n")
+    h = MatrixSymbol("h", 1, 1)
+
+    assert latex(C - 2*B) in [r'- 2 B + C', r'C -2 B']
+    assert latex(C + 2*B) in [r'2 B + C', r'C + 2 B']
+    assert latex(B - 2*C) in [r'B - 2 C', r'- 2 C + B']
+    assert latex(B + 2*C) in [r'B + 2 C', r'2 C + B']
+
+    assert latex(n * h - (-h + h.T) * (h + h.T)) == 'n h - \\left(- h + h^{T}\\right) \\left(h + h^{T}\\right)'
+    assert latex(MatAdd(MatAdd(h, h), MatAdd(h, h))) == '\\left(h + h\\right) + \\left(h + h\\right)'
+    assert latex(MatMul(MatMul(h, h), MatMul(h, h))) == '\\left(h h\\right) \\left(h h\\right)'
 
 
 def test_matMul():
     A = MatrixSymbol('A', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     x = Symbol('x')
-    lp = LatexPrinter()
-    assert lp._print_MatMul(2*A) == r'2 A'
-    assert lp._print_MatMul(2*x*A) == r'2 x A'
-    assert lp._print_MatMul(-2*A) == r'- 2 A'
-    assert lp._print_MatMul(1.5*A) == r'1.5 A'
-    assert lp._print_MatMul(sqrt(2)*A) == r'\sqrt{2} A'
-    assert lp._print_MatMul(-sqrt(2)*A) == r'- \sqrt{2} A'
-    assert lp._print_MatMul(2*sqrt(2)*x*A) == r'2 \sqrt{2} x A'
-    assert lp._print_MatMul(-2*A*(A + 2*B)) in [r'- 2 A \left(A + 2 B\right)',
-                                                r'- 2 A \left(2 B + A\right)']
+    assert latex(2*A) == r'2 A'
+    assert latex(2*x*A) == r'2 x A'
+    assert latex(-2*A) == r'- 2 A'
+    assert latex(1.5*A) == r'1.5 A'
+    assert latex(sqrt(2)*A) == r'\sqrt{2} A'
+    assert latex(-sqrt(2)*A) == r'- \sqrt{2} A'
+    assert latex(2*sqrt(2)*x*A) == r'2 \sqrt{2} x A'
+    assert latex(-2*A*(A + 2*B)) in [r'- 2 A \left(A + 2 B\right)',
+                                        r'- 2 A \left(2 B + A\right)']
 
 
 def test_latex_MatrixSlice():
@@ -2356,7 +2467,7 @@ def test_issue_15439():
     y = MatrixSymbol('y', 2, 2)
     assert latex((x * y).subs(y, -y)) == r"x \left(- y\right)"
     assert latex((x * y).subs(y, -2*y)) == r"x \left(- 2 y\right)"
-    assert latex((x * y).subs(x, -x)) == r"- x y"
+    assert latex((x * y).subs(x, -x)) == r"\left(- x\right) y"
 
 
 def test_issue_2934():

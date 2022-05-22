@@ -240,6 +240,17 @@ html_theme_options = {
     ],
 }
 
+# Add a header for PR preview builds. See the Circle CI configuration.
+if os.environ.get("CIRCLECI") == "true":
+    PR_NUMBER = os.environ.get('CIRCLE_PR_NUMBER')
+    SHA1 = os.environ.get('CIRCLE_SHA1')
+    html_theme_options['announcement'] = f"""This is a preview build from
+SymPy pull request <a href="https://github.com/sympy/sympy/pull/{PR_NUMBER}">
+#{PR_NUMBER}</a>. It was built against <a
+href="https://github.com/sympy/sympy/pull/{PR_NUMBER}/commits/{SHA1}">{SHA1[:5]}</a>.
+If you aren't looking for a PR preview, go to <a
+href="https://docs.sympy.org/">the main SymPy documentation</a>. """
+
 # custom.css contains changes that aren't possible with the above because they
 # aren't specified in the Furo theme as CSS variables
 html_css_files = ['custom.css']

@@ -1,7 +1,7 @@
 .. _guides:
 
 ==============
- SymPy Guides
+ How-to Guides
 ==============
 
 The SymPy Guide discusses common developer process required to get started,
@@ -17,6 +17,7 @@ a module break down.
    :maxdepth: 2
 
    getting_started/index.rst
-   contributing/index.rst
    assumptions.rst
    booleans.rst
+   contributing/index.rst
+   ../citing.md

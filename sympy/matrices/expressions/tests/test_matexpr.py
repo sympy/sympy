@@ -569,3 +569,4 @@ def test_matrixsymbol_solving():
     assert (-(-A + B) - A + B).expand() == Z
     assert (-(-A + B) - A + B - Z).simplify() == Z
     assert (-(-A + B) - A + B - Z).expand() == Z
+    assert (A*(A + B) + B*(A.T + B.T)).expand() == A**2 + A*B + B*A.T + B*B.T

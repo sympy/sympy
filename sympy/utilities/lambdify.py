@@ -100,7 +100,7 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
-    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
+    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy import *; from scipy.special import *",)),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
