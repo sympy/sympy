@@ -791,7 +791,7 @@ def symbols(names, *, cls=Symbol, **args) -> Any:
         return tuple(result)
     else:
         for name in names:
-            result.append(symbols(name, **args))
+            result.append(symbols(name, cls=cls, **args))
 
         return type(names)(result)
 
