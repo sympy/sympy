@@ -1576,3 +1576,12 @@ def test_lambdify_cse():
 def test_deprecated_set():
     with warns_deprecated_sympy():
         lambdify({x, y}, x + y)
+
+def test_23536_lambdify_cse_dummy():
+
+    f = Function('x')(y)
+    g = Function('w')(y)
+    expr = z + (f**4 + g**5)*(f**3 + (g*f)**3)
+    expr = expr.expand()
+    eval_expr = lambdify(((f, g), z), expr, cse=True)
+    eval_expr((1.0, 2.0), 3.0)
