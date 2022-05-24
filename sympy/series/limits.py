@@ -1,6 +1,7 @@
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
+from sympy.core.function import nfloat
 from sympy.core.numbers import Float, _illegal
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign)
@@ -261,13 +262,6 @@ class Limit(Expr):
                         return expr.args[0] if abs_flag else S.One
             return expr
 
-        if e.has(Float):
-            # Convert floats like 0.5 to exact SymPy numbers like S.Half, to
-            # prevent rounding errors which can lead to unexpected execution
-            # of conditional blocks that work on comparisons
-            # Also see comments in https://github.com/sympy/sympy/issues/19453
-            from sympy.simplify.simplify import nsimplify
-            e = nsimplify(e)
         e = set_signs(e)
 
 
@@ -347,6 +341,14 @@ class Limit(Expr):
 
         l = None
 
+        inexact = e.has(Float)
+        if inexact:
+            # Convert floats like 0.5 to exact SymPy numbers like S.Half, to
+            # prevent rounding errors which can lead to unexpected execution
+            # of conditional blocks that work on comparisons
+            # Also see comments in https://github.com/sympy/sympy/issues/19453
+            from sympy.simplify.simplify import nsimplify
+            e = nsimplify(e)
         try:
             if str(dir) == '+-':
                 r = gruntz(e, z, z0, '+')
@@ -366,4 +368,4 @@ class Limit(Expr):
             if r is None:
                 return self
 
-        return r
+        return nfloat(r) if inexact else r
