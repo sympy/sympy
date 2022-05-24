@@ -15,9 +15,23 @@ Zeta
 
 
 
-from sympy import (Basic, factorial, exp, S, sympify, I, zeta, polylog, log, beta,
-                   hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy,
-                   Lambda, Eq)
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.function import Lambda
+from sympy.core.numbers import I
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.bessel import besseli
+from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.hyper import hyper
+from sympy.functions.special.zeta_functions import (polylog, zeta)
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import _value_check, is_random
 
@@ -146,8 +160,7 @@ def FlorySchulz(name, a):
     Parameters
     ==========
 
-    a
-        A real number between 0 and 1
+    a : A real number between 0 and 1
 
     Returns
     =======
@@ -209,6 +222,9 @@ def Geometric(name, p):
     r"""
     Create a discrete random variable with a Geometric distribution.
 
+    Explanation
+    ===========
+
     The density of the Geometric distribution is given by
 
     .. math::
@@ -217,7 +233,7 @@ def Geometric(name, p):
     Parameters
     ==========
 
-    p: A probability between 0 and 1
+    p : A probability between 0 and 1
 
     Returns
     =======
@@ -291,6 +307,9 @@ def Hermite(name, a1, a2):
     r"""
     Create a discrete random variable with a Hermite distribution.
 
+    Explanation
+    ===========
+
     The density of the Hermite distribution is given by
 
     .. math::
@@ -300,8 +319,8 @@ def Hermite(name, a1, a2):
     Parameters
     ==========
 
-    a1: A Positive number greater than equal to 0.
-    a2: A Positive number greater than equal to 0.
+    a1 : A Positive number greater than equal to 0.
+    a2 : A Positive number greater than equal to 0.
 
     Returns
     =======
@@ -368,6 +387,9 @@ def Logarithmic(name, p):
     r"""
     Create a discrete random variable with a Logarithmic distribution.
 
+    Explanation
+    ===========
+
     The density of the Logarithmic distribution is given by
 
     .. math::
@@ -376,7 +398,7 @@ def Logarithmic(name, p):
     Parameters
     ==========
 
-    p: A value between 0 and 1
+    p : A value between 0 and 1
 
     Returns
     =======
@@ -395,7 +417,7 @@ def Logarithmic(name, p):
     >>> X = Logarithmic("x", p)
 
     >>> density(X)(z)
-    -5**(-z)/(z*log(4/5))
+    -1/(5**z*z*log(4/5))
 
     >>> E(X)
     -1/(-4*log(5) + 8*log(2))
@@ -447,6 +469,9 @@ def NegativeBinomial(name, r, p):
     r"""
     Create a discrete random variable with a Negative Binomial distribution.
 
+    Explanation
+    ===========
+
     The density of the Negative Binomial distribution is given by
 
     .. math::
@@ -455,8 +480,8 @@ def NegativeBinomial(name, r, p):
     Parameters
     ==========
 
-    r: A positive value
-    p: A value between 0 and 1
+    r : A positive value
+    p : A value between 0 and 1
 
     Returns
     =======
@@ -476,7 +501,7 @@ def NegativeBinomial(name, r, p):
     >>> X = NegativeBinomial("x", r, p)
 
     >>> density(X)(z)
-    1024*5**(-z)*binomial(z + 4, z)/3125
+    1024*binomial(z + 4, z)/(3125*5**z)
 
     >>> E(X)
     5/4
@@ -520,6 +545,9 @@ def Poisson(name, lamda):
     r"""
     Create a discrete random variable with a Poisson distribution.
 
+    Explanation
+    ===========
+
     The density of the Poisson distribution is given by
 
     .. math::
@@ -528,7 +556,7 @@ def Poisson(name, lamda):
     Parameters
     ==========
 
-    lamda: Positive number, a rate
+    lamda : Positive number, a rate
 
     Returns
     =======
@@ -601,6 +629,9 @@ def Skellam(name, mu1, mu2):
     r"""
     Create a discrete random variable with a Skellam distribution.
 
+    Explanation
+    ===========
+
     The Skellam is the distribution of the difference N1 - N2
     of two statistically independent random variables N1 and N2
     each Poisson-distributed with respective expected values mu1 and mu2.
@@ -613,8 +644,8 @@ def Skellam(name, mu1, mu2):
     Parameters
     ==========
 
-    mu1: A non-negative value
-    mu2: A non-negative value
+    mu1 : A non-negative value
+    mu2 : A non-negative value
 
     Returns
     =======
@@ -684,6 +715,9 @@ def YuleSimon(name, rho):
     r"""
     Create a discrete random variable with a Yule-Simon distribution.
 
+    Explanation
+    ===========
+
     The density of the Yule-Simon distribution is given by
 
     .. math::
@@ -692,7 +726,7 @@ def YuleSimon(name, rho):
     Parameters
     ==========
 
-    rho: A positive value
+    rho : A positive value
 
     Returns
     =======
@@ -754,6 +788,9 @@ def Zeta(name, s):
     r"""
     Create a discrete random variable with a Zeta distribution.
 
+    Explanation
+    ===========
+
     The density of the Zeta distribution is given by
 
     .. math::
@@ -762,7 +799,7 @@ def Zeta(name, s):
     Parameters
     ==========
 
-    s: A value greater than 1
+    s : A value greater than 1
 
     Returns
     =======

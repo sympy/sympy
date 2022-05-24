@@ -45,7 +45,7 @@ Examples
 So we can divide all the functions into comparability classes (x and x^2
 belong to one class, exp(x) and exp(-x) belong to some other class). In
 principle, we could compare any two functions, but in our algorithm, we
-don't compare anything below the class 2~3~-5 (for example log(x) is
+do not compare anything below the class 2~3~-5 (for example log(x) is
 below this), so we set 2~3~-5 as the lowest comparability class.
 
 Given the function f, we find the list of most rapidly varying (mrv set)
@@ -118,17 +118,18 @@ debug this function to figure out the exact problem.
 """
 from functools import reduce
 
-from sympy import cacheit
-from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul
+from sympy.core import Basic, S, Mul, PoleError
+from sympy.core.cache import cacheit
+from sympy.core.numbers import ilcm, I, oo
+from sympy.core.symbol import Dummy, Wild
+from sympy.core.traversal import bottom_up
 
-from sympy.functions import log, exp
+from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
-from sympy.simplify.powsimp import powsimp, powdenest
-
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
-timeit = timethis('gruntz')
 
+timeit = timethis('gruntz')
 
 
 def compare(a, b, x):
@@ -203,7 +204,7 @@ class SubsSet(dict):
         return super().__repr__() + ', ' + self.rewrites.__repr__()
 
     def __getitem__(self, key):
-        if not key in self:
+        if key not in self:
             self[key] = Dummy()
         return dict.__getitem__(self, key)
 
@@ -245,6 +246,7 @@ class SubsSet(dict):
 def mrv(e, x):
     """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
        and e rewritten in terms of these"""
+    from sympy.simplify.powsimp import powsimp
     e = powsimp(e, deep=True, combine='exp')
     if not isinstance(e, Basic):
         raise TypeError("e should be an instance of Basic")
@@ -313,7 +315,6 @@ def mrv(e, x):
     elif e.is_Derivative:
         raise NotImplementedError("MRV set computation for derviatives"
                                   " not implemented yet.")
-        return mrv(e.args[0], x)
     raise NotImplementedError(
         "Don't know how to calculate the mrv of '%s'" % e)
 
@@ -379,7 +380,6 @@ def sign(e, x):
     for x sufficiently large. [If e is constant, of course, this is just
     the same thing as the sign of e.]
     """
-    from sympy import sign as _sign
     if not isinstance(e, Basic):
         raise TypeError("e should be an instance of Basic")
 
@@ -391,6 +391,8 @@ def sign(e, x):
         return 0
 
     elif not e.has(x):
+        from sympy.simplify import logcombine
+        e = logcombine(e)
         return _sign(e)
     elif e == x:
         return 1
@@ -435,6 +437,7 @@ def limitinf(e, x, leadsimp=False):
 
     if not e.has(x):
         return e  # e is a constant
+    from sympy.simplify.powsimp import powdenest
     if e.has(Order):
         e = e.expand().removeO()
     if not x.is_positive or x.is_integer:
@@ -486,15 +489,27 @@ def calculate_series(e, x, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-    from sympy.polys import cancel
+    from sympy.simplify.powsimp import powdenest
 
     for t in e.lseries(x, logx=logx):
-        t = cancel(t)
+        # bottom_up function is required for a specific case - when e is
+        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p)
+        t = bottom_up(t, lambda w:
+            getattr(w, 'normal', lambda: w)())
+        # And the expression
+        # `(-sin(1/x) + sin((x + exp(x))*exp(-x)/x))*exp(x)`
+        # from the first test of test_gruntz_eval_special needs to
+        # be expanded. But other forms need to be have at least
+        # factor_terms applied. `factor` accomplishes both and is
+        # faster than using `factor_terms` for the gruntz suite. It
+        # does not appear that use of `cancel` is necessary.
+        # t = cancel(t, expand=False)
+        t = t.factor()
 
         if t.has(exp) and t.has(log):
             t = powdenest(t)
 
-        if t.simplify():
+        if not t.is_zero:
             break
 
     return t
@@ -516,10 +531,8 @@ def mrv_leadterm(e, x):
     if x in Omega:
         # move the whole omega up (exponentiate each term):
         Omega_up = moveup2(Omega, x)
-        e_up = moveup([e], x)[0]
         exps_up = moveup([exps], x)[0]
         # NOTE: there is no need to move this down!
-        e = e_up
         Omega = Omega_up
         exps = exps_up
     #
@@ -529,10 +542,21 @@ def mrv_leadterm(e, x):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = Dummy("w", real=True, positive=True)
+    w = Dummy("w", positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    return series.leadterm(w)
+    try:
+        lt = series.leadterm(w, logx=logw)
+    except (ValueError, PoleError):
+        lt = f.as_coeff_exponent(w)
+        # as_coeff_exponent won't always split in required form. It may simply
+        # return (f, 0) when a better form may be obtained. Example (-x)**(-pi)
+        # can be written as (-1**(-pi), -pi) which as_coeff_exponent does not return
+        if lt[0].has(w):
+            base = f.as_base_exp()[0].as_coeff_exponent(w)
+            ex = f.as_base_exp()[1]
+            lt = (base[0]**ex, base[1]*ex)
+    return (lt[0].subs(log(w), logw), lt[1])
 
 
 def build_expression_tree(Omega, rewrites):
@@ -551,13 +575,16 @@ def build_expression_tree(Omega, rewrites):
     This function builds the tree, rewrites then sorts the nodes.
     """
     class Node:
+        def __init__(self):
+            self.before = []
+            self.expr = None
+            self.var = None
         def ht(self):
             return reduce(lambda x, y: x + y,
                           [x.ht() for x in self.before], 1)
     nodes = {}
     for expr, v in Omega:
         n = Node()
-        n.before = []
         n.var = v
         n.expr = expr
         nodes[v] = n
@@ -582,11 +609,10 @@ def rewrite(e, Omega, x, wsym):
     Returns the rewritten e in terms of w and log(w). See test_rewrite1()
     for examples and correct results.
     """
-    from sympy import ilcm
     if not isinstance(Omega, SubsSet):
         raise TypeError("Omega should be an instance of SubsSet")
     if len(Omega) == 0:
-        raise ValueError("Length can not be 0")
+        raise ValueError("Length cannot be 0")
     # all items in Omega must be exponentials
     for t in Omega.keys():
         if not isinstance(t, exp):
@@ -625,6 +651,7 @@ def rewrite(e, Omega, x, wsym):
     # the following powsimp is necessary to automatically combine exponentials,
     # so that the .xreplace() below succeeds:
     # TODO this should not be necessary
+    from sympy.simplify.powsimp import powsimp
     f = powsimp(e, deep=True, combine='exp')
     for a, b in O2:
         f = f.xreplace({a: b})
@@ -637,7 +664,7 @@ def rewrite(e, Omega, x, wsym):
     if sig == 1:
         logw = -logw  # log(w)->log(1/w)=-log(w)
 
-    # Some parts of sympy have difficulty computing series expansions with
+    # Some parts of SymPy have difficulty computing series expansions with
     # non-integral exponents. The following heuristic improves the situation:
     exponent = reduce(ilcm, denominators, 1)
     f = f.subs({wsym: wsym**exponent})
@@ -657,7 +684,7 @@ def gruntz(e, z, z0, dir="+"):
 
     For ``dir="+"`` (default) it calculates the limit from the right
     (z->z0+) and for ``dir="-"`` the limit from the left (z->z0-). For infinite z0
-    (oo or -oo), the dir argument doesn't matter.
+    (oo or -oo), the dir argument does not matter.
 
     This algorithm is fully described in the module docstring in the gruntz.py
     file. It relies heavily on the series expansion. Most frequently, gruntz()

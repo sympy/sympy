@@ -365,7 +365,7 @@ we get the following criterion:
 
     i. `f` is divisible by `g` in `\mathbb{Q}[x]`, and
     ii. the content of `f` is divisible by the content of `g` in
-	`\mathbb{Z}`.
+        `\mathbb{Z}`.
 
 If `f = cp` is irreducible in `\mathbb{Z}[x]`, then either `c` or `p`
 must be a unit. If `p` is not a unit, it must be irreducible also in

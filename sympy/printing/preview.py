@@ -27,12 +27,12 @@ def _check_output_no_window(*args, **kwargs):
 def _run_pyglet(fname, fmt):
     from pyglet import window, image, gl
     from pyglet.window import key
+    from pyglet.image.codecs import ImageDecodeException
 
-    if fmt == "png":
-        from pyglet.image.codecs.png import PNGImageDecoder
-        img = image.load(fname, decoder=PNGImageDecoder())
-    else:
-        raise ValueError("pyglet preview works only for 'png' files.")
+    try:
+        img = image.load(fname)
+    except ImageDecodeException:
+        raise ValueError("pyglet preview does not work for '{}' files.".format(fmt))
 
     offset = 25
 

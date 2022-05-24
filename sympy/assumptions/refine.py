@@ -1,6 +1,7 @@
-from typing import Dict, Callable
+from typing import Dict as tDict, Callable
 
-from sympy.core import S, Add, Expr, Basic, Mul
+from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
+from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
 
 from sympy.assumptions import ask, Q  # type: ignore
@@ -18,8 +19,8 @@ def refine(expr, assumptions=True):
     the form which is only valid under certain assumptions. Note that
     ``simplify()`` is generally not done in refining process.
 
-    Refining boolean expression involves reducing it to ``True`` or
-    ``False``. Unlike :func:~.`ask()`, the expression will not be reduced
+    Refining boolean expression involves reducing it to ``S.true`` or
+    ``S.false``. Unlike :func:`~.ask()`, the expression will not be reduced
     if the truth value cannot be determined.
 
     Examples
@@ -83,8 +84,7 @@ def refine_abs(expr, assumptions):
     -x
 
     """
-    from sympy.core.logic import fuzzy_not
-    from sympy import Abs
+    from sympy.functions.elementary.complexes import Abs
     arg = expr.args[0]
     if ask(Q.real(arg), assumptions) and \
             fuzzy_not(ask(Q.negative(arg), assumptions)):
@@ -133,7 +133,6 @@ def refine_Pow(expr, assumptions):
     (-1)**(x + 1)
 
     """
-    from sympy.core import Pow, Rational
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions import sign
     if isinstance(expr.base, Abs):
@@ -147,7 +146,7 @@ def refine_Pow(expr, assumptions):
             if ask(Q.odd(expr.exp), assumptions):
                 return sign(expr.base) * abs(expr.base) ** expr.exp
         if isinstance(expr.exp, Rational):
-            if type(expr.base) is Pow:
+            if isinstance(expr.base, Pow):
                 return abs(expr.base.base) ** (expr.base.exp * expr.exp)
 
         if expr.base is S.NegativeOne:
@@ -232,7 +231,6 @@ def refine_atan2(expr, assumptions):
     nan
     """
     from sympy.functions.elementary.trigonometric import atan
-    from sympy.core import S
     y, x = expr.args
     if ask(Q.real(y) & Q.positive(x), assumptions):
         return atan(y / x)
@@ -297,6 +295,28 @@ def refine_im(expr, assumptions):
         return - S.ImaginaryUnit * arg
     return _refine_reim(expr, assumptions)
 
+def refine_arg(expr, assumptions):
+    """
+    Handler for complex argument
+
+    Explanation
+    ===========
+
+    >>> from sympy.assumptions.refine import refine_arg
+    >>> from sympy import Q, arg
+    >>> from sympy.abc import x
+    >>> refine_arg(arg(x), Q.positive(x))
+    0
+    >>> refine_arg(arg(x), Q.negative(x))
+    pi
+    """
+    rg = expr.args[0]
+    if ask(Q.positive(rg), assumptions):
+        return S.Zero
+    if ask(Q.negative(rg), assumptions):
+        return S.Pi
+    return None
+
 
 def _refine_reim(expr, assumptions):
     # Helper function for refine_re & refine_im
@@ -358,8 +378,7 @@ def refine_matrixelement(expr, assumptions):
     ========
 
     >>> from sympy.assumptions.refine import refine_matrixelement
-    >>> from sympy import Q
-    >>> from sympy.matrices.expressions.matexpr import MatrixSymbol
+    >>> from sympy import MatrixSymbol, Q
     >>> X = MatrixSymbol('X', 3, 3)
     >>> refine_matrixelement(X[0, 1], Q.symmetric(X))
     X[0, 1]
@@ -379,6 +398,7 @@ handlers_dict = {
     'atan2': refine_atan2,
     're': refine_re,
     'im': refine_im,
+    'arg': refine_arg,
     'sign': refine_sign,
     'MatrixElement': refine_matrixelement
-}  # type: Dict[str, Callable[[Expr, Boolean], Expr]]
+}  # type: tDict[str, Callable[[Expr, Boolean], Expr]]

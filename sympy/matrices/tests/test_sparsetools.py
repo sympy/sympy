@@ -1,5 +1,6 @@
 from sympy.matrices.sparsetools import _doktocsr, _csrtodok, banded
-from sympy import eye, ones, zeros, Matrix, SparseMatrix
+from sympy.matrices.dense import (Matrix, eye, ones, zeros)
+from sympy.matrices import SparseMatrix
 from sympy.testing.pytest import raises
 
 

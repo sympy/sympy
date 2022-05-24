@@ -531,7 +531,7 @@ MatrixDeterminant Class Reference
 MatrixReductions Class Reference
 --------------------------------
 .. autoclass:: MatrixReductions
-    :members:
+   :members:
 
 MatrixSubspaces Class Reference
 -------------------------------
@@ -557,10 +557,13 @@ Matrix Exceptions Reference
 ---------------------------
 
 .. autoclass:: MatrixError
+   :members:
 
 .. autoclass:: ShapeError
+   :members:
 
 .. autoclass:: NonSquareMatrixError
+   :members:
 
 
 Matrix Functions Reference

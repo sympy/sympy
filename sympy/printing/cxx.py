@@ -87,14 +87,14 @@ class _CXXCodePrinterBase:
         super().__init__(settings or {})
 
     def _print_Max(self, expr):
-        from sympy import Max
+        from sympy.functions.elementary.miscellaneous import Max
         if len(expr.args) == 1:
             return self._print(expr.args[0])
         return "%smax(%s, %s)" % (self._ns, self._print(expr.args[0]),
                                   self._print(Max(*expr.args[1:])))
 
     def _print_Min(self, expr):
-        from sympy import Min
+        from sympy.functions.elementary.miscellaneous import Min
         if len(expr.args) == 1:
             return self._print(expr.args[0])
         return "%smin(%s, %s)" % (self._ns, self._print(expr.args[0]),

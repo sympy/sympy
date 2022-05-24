@@ -1,5 +1,10 @@
-from sympy import Symbol, Contains, S, Interval, FiniteSet, oo, Eq
 from sympy.core.expr import unchanged
+from sympy.core.numbers import oo
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.sets.contains import Contains
+from sympy.sets.sets import (FiniteSet, Interval)
 from sympy.testing.pytest import raises
 
 def test_contains_basic():
@@ -40,3 +45,7 @@ def test_as_set():
     # containment in a Set -- rewriting as a Set is not yet implemented
     raises(NotImplementedError, lambda:
            Contains(x, FiniteSet(y)).as_set())
+
+def test_type_error():
+    # Pass in a parameter not of type "set"
+    raises(TypeError, lambda: Contains(2, None))

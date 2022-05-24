@@ -10,8 +10,10 @@ Todo:
 import math
 import random
 
-from sympy import Mul, S
-from sympy import log, sqrt
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.numbers import igcd
 from sympy.ntheory import continued_fraction_periodic as continued_fraction
 from sympy.utilities.iterables import variations
@@ -87,7 +89,7 @@ def shor(N):
     """This function implements Shor's factoring algorithm on the Integer N
 
     The algorithm starts by picking a random number (a) and seeing if it is
-    coprime with N. If it isn't, then the gcd of the two numbers is a factor
+    coprime with N. If it is not, then the gcd of the two numbers is a factor
     and we are done. Otherwise, it begins the period_finding subroutine which
     finds the period of a in modulo N arithmetic. This period, if even, can
     be used to calculate factors by taking a**(r/2)-1 and a**(r/2)+1.
@@ -135,7 +137,7 @@ def period_find(a, N):
     factor = 1/sqrt(2**t)
     qubits = 0
     for arr in variations(range(2), t, repetition=True):
-        qbitArray = arr + start
+        qbitArray = list(arr) + start
         qubits = qubits + Qubit(*qbitArray)
     circuit = (factor*qubits).expand()
     # Controlled second half of register so that we have:

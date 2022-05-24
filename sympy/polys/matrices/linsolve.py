@@ -73,6 +73,12 @@ def _linsolve(eqs, syms):
     Aaug = sympy_dict_to_dm(eqsdict, rhs, syms)
     K = Aaug.domain
 
+    # sdm_irref has issues with float matrices. This uses the ddm_rref()
+    # function. When sdm_rref() can handle float matrices reasonably this
+    # should be removed...
+    if K.is_RealField or K.is_ComplexField:
+        Aaug = Aaug.to_ddm().rref()[0].to_sdm()
+
     # Compute reduced-row echelon form (RREF)
     Arref, pivots, nzcols = sdm_irref(Aaug)
 
@@ -197,7 +203,7 @@ def _lin_eq2dict(a, symset):
             return  coeff * terms_coeff, terms
     elif a.is_Equality:
         return _lin_eq2dict(a.lhs - a.rhs, symset)
-    elif not a.free_symbols & symset:
+    elif not a.has_free(*symset):
         return a, {}
     else:
         raise PolyNonlinearError

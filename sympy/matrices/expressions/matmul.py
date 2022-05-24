@@ -1,6 +1,9 @@
-from sympy import Number
-from sympy.core import Mul, Basic, sympify, S
-from sympy.core.mul import mul
+from sympy.assumptions.ask import ask, Q
+from sympy.assumptions.refine import handlers_dict
+from sympy.core import Basic, sympify, S
+from sympy.core.mul import mul, Mul
+from sympy.core.numbers import Number, Integer
+from sympy.core.symbol import Dummy
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
@@ -56,9 +59,13 @@ class MatMul(MatrixExpr, Mul):
             return factor
 
         if evaluate:
-            return canonicalize(obj)
+            return cls._evaluate(obj)
 
         return obj
+
+    @classmethod
+    def _evaluate(cls, expr):
+        return canonicalize(expr)
 
     @property
     def shape(self):
@@ -66,7 +73,9 @@ class MatMul(MatrixExpr, Mul):
         return (matrices[0].rows, matrices[-1].cols)
 
     def _entry(self, i, j, expand=True, **kwargs):
-        from sympy import Dummy, Sum, Mul, ImmutableMatrix, Integer
+        # Avoid cyclic imports
+        from sympy.concrete.summations import Sum
+        from sympy.matrices.immutable import ImmutableMatrix
 
         coeff, matrices = self.as_coeff_matrices()
 
@@ -117,6 +126,10 @@ class MatMul(MatrixExpr, Mul):
     def as_coeff_mmul(self):
         coeff, matrices = self.as_coeff_matrices()
         return coeff, MatMul(*matrices)
+
+    def expand(self, **kwargs):
+        expanded = super(MatMul, self).expand(**kwargs)
+        return self._evaluate(expanded)
 
     def _eval_transpose(self):
         """Transposition of matrix multiplication.
@@ -226,8 +239,8 @@ def newmul(*args):
     return new(MatMul, *args)
 
 def any_zeros(mul):
-    if any([arg.is_zero or (arg.is_Matrix and arg.is_ZeroMatrix)
-                       for arg in mul.args]):
+    if any(arg.is_zero or (arg.is_Matrix and arg.is_ZeroMatrix)
+                       for arg in mul.args):
         matrices = [arg for arg in mul.args if arg.is_Matrix]
         return ZeroMatrix(matrices[0].rows, matrices[-1].cols)
     return mul
@@ -302,20 +315,37 @@ def factor_in_front(mul):
     return mul
 
 def combine_powers(mul):
-    """Combine consecutive powers with the same base into one
-
-    e.g. A*A**2 -> A**3
+    r"""Combine consecutive powers with the same base into one, e.g.
+    $$A \times A^2 \Rightarrow A^3$$
 
     This also cancels out the possible matrix inverses using the
-    knowledgebase of ``Inverse``.
-
-    e.g. Y * X * X.I -> Y
+    knowledgebase of :class:`~.Inverse`, e.g.,
+    $$ Y \times X \times X^{-1} \Rightarrow Y $$
     """
     factor, args = mul.as_coeff_matrices()
     new_args = [args[0]]
 
-    for B in args[1:]:
+    for i in range(1, len(args)):
         A = new_args[-1]
+        B = args[i]
+
+        if isinstance(B, Inverse) and isinstance(B.arg, MatMul):
+            Bargs = B.arg.args
+            l = len(Bargs)
+            if list(Bargs) == new_args[-l:]:
+                new_args = new_args[:-l] + [Identity(B.shape[0])]
+                continue
+
+        if isinstance(A, Inverse) and isinstance(A.arg, MatMul):
+            Aargs = A.arg.args
+            l = len(Aargs)
+            if list(Aargs) == args[i:i+l]:
+                identity = Identity(A.shape[0])
+                new_args[-1] = identity
+                for j in range(i, i+l):
+                    args[j] = identity
+                continue
+
         if A.is_square == False or B.is_square == False:
             new_args.append(B)
             continue
@@ -422,10 +452,6 @@ def only_squares(*matrices):
             out.append(MatMul(*matrices[start:i+1]).doit())
             start = i+1
     return out
-
-
-from sympy.assumptions.ask import ask, Q
-from sympy.assumptions.refine import handlers_dict
 
 
 def refine_MatMul(expr, assumptions):

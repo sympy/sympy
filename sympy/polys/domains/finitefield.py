@@ -18,8 +18,8 @@ class FiniteField(Field, SimpleDomain):
     :ref:`polys-domainsintro`).
 
     A :py:class:`~.Poly` created from an expression with integer
-    coefficients will have the domain :ref:`ZZ`. Howeer if the ``modulus=p``
-    option is given the the domain will be a finite field instead.
+    coefficients will have the domain :ref:`ZZ`. However, if the ``modulus=p``
+    option is given then the domain will be a finite field instead.
 
     >>> from sympy import Poly, Symbol
     >>> x = Symbol('x')
@@ -100,6 +100,7 @@ class FiniteField(Field, SimpleDomain):
     """
 
     rep = 'FF'
+    alias = 'FF'
 
     is_FiniteField = is_FF = True
     is_Numerical = True
@@ -110,12 +111,12 @@ class FiniteField(Field, SimpleDomain):
     dom = None
     mod = None
 
-    def __init__(self, mod, dom=None, symmetric=True):
+    def __init__(self, mod, symmetric=True):
+        from sympy.polys.domains import ZZ
+        dom = ZZ
+
         if mod <= 0:
             raise ValueError('modulus must be a positive integer, got %s' % mod)
-        if dom is None:
-            from sympy.polys.domains import ZZ
-            dom = ZZ
 
         self.dtype = ModularIntegerFactory(mod, dom, symmetric, self)
         self.zero = self.dtype(0)
@@ -155,13 +156,26 @@ class FiniteField(Field, SimpleDomain):
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
 
+    def from_FF(K1, a, K0=None):
+        """Convert ``ModularInteger(int)`` to ``dtype``. """
+        return K1.dtype(K1.dom.from_ZZ(a.val, K0.dom))
+
     def from_FF_python(K1, a, K0=None):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
         return K1.dtype(K1.dom.from_ZZ_python(a.val, K0.dom))
 
+    def from_ZZ(K1, a, K0=None):
+        """Convert Python's ``int`` to ``dtype``. """
+        return K1.dtype(K1.dom.from_ZZ_python(a, K0))
+
     def from_ZZ_python(K1, a, K0=None):
         """Convert Python's ``int`` to ``dtype``. """
         return K1.dtype(K1.dom.from_ZZ_python(a, K0))
+
+    def from_QQ(K1, a, K0=None):
+        """Convert Python's ``Fraction`` to ``dtype``. """
+        if a.denominator == 1:
+            return K1.from_ZZ_python(a.numerator)
 
     def from_QQ_python(K1, a, K0=None):
         """Convert Python's ``Fraction`` to ``dtype``. """
@@ -187,3 +201,6 @@ class FiniteField(Field, SimpleDomain):
 
         if q == 1:
             return K1.dtype(K1.dom.dtype(p))
+
+
+FF = GF = FiniteField

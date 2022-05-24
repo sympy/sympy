@@ -1,5 +1,11 @@
-from sympy import (S, sqrt, pi, Ynm, symbols, exp, sin, cos, I,
-                   Matrix)
+from sympy.core.numbers import (I, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.spherical_harmonics import Ynm
+from sympy.matrices.dense import Matrix
 from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
         racah, dot_rot_grad_Ynm, wigner_3j, wigner_d_small, wigner_d)
 from sympy.core.numbers import Rational

@@ -1,7 +1,9 @@
 """ This module cooks up a docstring when imported. Its only purpose is to
     be displayed in the sphinx documentation. """
 
-from sympy import latex, Eq, hyper
+from sympy.core.relational import Eq
+from sympy.functions.special.hyper import hyper
+from sympy.printing.latex import latex
 from sympy.simplify.hyperexpand import FormulaCollection
 
 c = FormulaCollection()

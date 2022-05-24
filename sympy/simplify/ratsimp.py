@@ -58,7 +58,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
         Ideal, http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.163.6984
         (specifically, the second algorithm)
     """
-    from sympy import solve
+    from sympy.solvers.solvers import solve
 
     debug('ratsimpmodprime', expr)
 
@@ -77,7 +77,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
         opt.domain = domain.get_field()
     else:
         raise DomainError(
-            "can't compute rational simplification over %s" % domain)
+            "Cannot compute rational simplification over %s" % domain)
 
     # compute only once
     leading_monomials = [g.LM(opt.order) for g in polys[2:]]
@@ -95,8 +95,8 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
             m = [0]*len(opt.gens)
             for i in mi:
                 m[i] += 1
-            if all([monomial_div(m, lmg) is None for lmg in
-                    leading_monomials]):
+            if all(monomial_div(m, lmg) is None for lmg in
+                   leading_monomials):
                 S.append(m)
 
         return [Monomial(s).as_expr(*opt.gens) for s in S] + staircase(n - 1)
@@ -162,7 +162,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
             S = Poly(r, gens=opt.gens).coeffs()
             sol = solve(S, Cs + Ds, particular=True, quick=True)
 
-            if sol and not all([s == 0 for s in sol.values()]):
+            if sol and not all(s == 0 for s in sol.values()):
                 c = c_hat.subs(sol)
                 d = d_hat.subs(sol)
 

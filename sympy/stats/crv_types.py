@@ -58,13 +58,33 @@ WignerSemicircle
 
 
 
-from sympy import beta as beta_fn
-from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
-from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
-                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I, asin,
-                   hyper, uppergamma, sinh, Ne, expint, Rational, integrate)
-from sympy.matrices import MatrixBase, MatrixExpr
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import (atan, cos, sin, tan)
+from sympy.functions.special.bessel import (besseli, besselj, besselk)
+from sympy.functions.special.beta_functions import beta as beta_fn
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.function import Lambda
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.complexes import (Abs, sign)
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.hyperbolic import sinh
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import asin
+from sympy.functions.special.error_functions import (erf, erfc, erfi, erfinv, expint)
+from sympy.functions.special.gamma_functions import (gamma, lowergamma, uppergamma)
+from sympy.functions.special.hyper import hyper
+from sympy.integrals.integrals import integrate
+from sympy.logic.boolalg import And
+from sympy.sets.sets import Interval
+from sympy.matrices import MatrixBase
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.rv import _value_check, is_random
 
@@ -128,7 +148,7 @@ __all__ = ['ContinuousRV',
 
 @is_random.register(MatrixBase)
 def _(x):
-    return any([is_random(i) for i in x])
+    return any(is_random(i) for i in x)
 
 def rv(symbol, cls, args, **kwargs):
     args = list(map(sympify, args))
@@ -496,7 +516,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
 
     alpha : Real number, `\alpha > 0`, a shape
     beta : Real number, `\beta > 0`, a shape
-    lamda: Real number, `\lambda >= 0`, noncentrality parameter
+    lamda : Real number, `\lambda \geq 0`, noncentrality parameter
 
     Returns
     =======
@@ -531,7 +551,8 @@ def BetaNoncentral(name, alpha, beta, lamda):
     /____,
     k = 0
 
-    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
+    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows:
+
     >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
     2*exp(1/2)
 
@@ -625,7 +646,7 @@ class BoundedParetoDistribution(SingleContinuousDistribution):
 
     @property
     def set(self):
-        return Interval(self.left , self.right)
+        return Interval(self.left, self.right)
 
     @staticmethod
     def check(alpha, left, right):
@@ -651,7 +672,7 @@ def BoundedPareto(name, alpha, left, right):
     Parameters
     ==========
 
-    alpha : Real Number, `alpha > 0`
+    alpha : Real Number, `\alpha > 0`
         Shape parameter
     left : Real Number, `left > 0`
         Location parameter
@@ -865,6 +886,9 @@ def ChiNoncentral(name, k, l):
     r"""
     Create a continuous random variable with a non-central Chi distribution.
 
+    Explanation
+    ===========
+
     The density of the non-central Chi distribution is given by
 
     .. math::
@@ -877,8 +901,10 @@ def ChiNoncentral(name, k, l):
     Parameters
     ==========
 
-    k : A positive Integer, `k > 0`, the number of degrees of freedom
-    lambda : Real number, `\lambda > 0`, Shift parameter
+    k : A positive Integer, $k > 0$
+        The number of degrees of freedom.
+    lambda : Real number, `\lambda > 0`
+        Shift parameter.
 
     Returns
     =======
@@ -898,7 +924,7 @@ def ChiNoncentral(name, k, l):
     >>> X = ChiNoncentral("x", k, l)
 
     >>> density(X)(z)
-    l*z**k*(l*z)**(-k/2)*exp(-l**2/2 - z**2/2)*besseli(k/2 - 1, l*z)
+    l*z**k*exp(-l**2/2 - z**2/2)*besseli(k/2 - 1, l*z)/(l*z)**(k/2)
 
     References
     ==========
@@ -944,6 +970,9 @@ def ChiSquared(name, k):
     r"""
     Create a continuous random variable with a Chi-squared distribution.
 
+    Explanation
+    ===========
+
     The density of the Chi-squared distribution is given by
 
     .. math::
@@ -955,7 +984,8 @@ def ChiSquared(name, k):
     Parameters
     ==========
 
-    k : Positive integer, The number of degrees of freedom
+    k : Positive integer
+        The number of degrees of freedom.
 
     Returns
     =======
@@ -974,7 +1004,7 @@ def ChiSquared(name, k):
     >>> X = ChiSquared("x", k)
 
     >>> density(X)(z)
-    2**(-k/2)*z**(k/2 - 1)*exp(-z/2)/gamma(k/2)
+    z**(k/2 - 1)*exp(-z/2)/(2**(k/2)*gamma(k/2))
 
     >>> E(X)
     k
@@ -1022,6 +1052,9 @@ def Dagum(name, p, a, b):
     r"""
     Create a continuous random variable with a Dagum distribution.
 
+    Explanation
+    ===========
+
     The density of the Dagum distribution is given by
 
     .. math::
@@ -1033,9 +1066,12 @@ def Dagum(name, p, a, b):
     Parameters
     ==========
 
-    p : Real number, `p > 0`, a shape
-    a : Real number, `a > 0`, a shape
-    b : Real number, `b > 0`, a scale
+    p : Real number
+        `p > 0`, a shape.
+    a : Real number
+        `a > 0`, a shape.
+    b : Real number
+        `b > 0`, a scale.
 
     Returns
     =======
@@ -1078,6 +1114,9 @@ def Dagum(name, p, a, b):
 def Erlang(name, k, l):
     r"""
     Create a continuous random variable with an Erlang distribution.
+
+    Explanation
+    ===========
 
     The density of the Erlang distribution is given by
 
@@ -1191,21 +1230,25 @@ def ExGaussian(name, mean, std, rate):
     Create a continuous random variable with an Exponentially modified
     Gaussian (EMG) distribution.
 
+    Explanation
+    ===========
+
     The density of the exponentially modified Gaussian distribution is given by
 
     .. math::
         f(x) := \frac{\lambda}{2}e^{\frac{\lambda}{2}(2\mu+\lambda\sigma^2-2x)}
             \text{erfc}(\frac{\mu + \lambda\sigma^2 - x}{\sqrt{2}\sigma})
 
-    with `x > 0`. Note that the expected value is `1/\lambda`.
+    with $x > 0$. Note that the expected value is `1/\lambda`.
 
     Parameters
     ==========
 
-    mu : A Real number, the mean of Gaussian component
-    std: A positive Real number,
+    name : A string giving a name for this distribution
+    mean : A Real number, the mean of Gaussian component
+    std : A positive Real number,
         :math: `\sigma^2 > 0` the variance of Gaussian component
-    lambda: A positive Real number,
+    rate : A positive Real number,
         :math: `\lambda > 0` the rate of Exponential component
 
     Returns
@@ -1293,12 +1336,15 @@ def Exponential(name, rate):
     r"""
     Create a continuous random variable with an Exponential distribution.
 
+    Explanation
+    ===========
+
     The density of the exponential distribution is given by
 
     .. math::
         f(x) := \lambda \exp(-\lambda x)
 
-    with `x > 0`. Note that the expected value is `1/\lambda`.
+    with $x > 0$. Note that the expected value is `1/\lambda`.
 
     Parameters
     ==========
@@ -1392,7 +1438,10 @@ def ExponentialPower(name, mu, alpha, beta):
     r"""
     Create a Continuous Random Variable with Exponential Power distribution.
     This distribution is known also as Generalized Normal
-    distribution version 1
+    distribution version 1.
+
+    Explanation
+    ===========
 
     The density of the Exponential Power distribution is given by
 
@@ -1405,9 +1454,12 @@ def ExponentialPower(name, mu, alpha, beta):
     Parameters
     ==========
 
-    mu : Real number, 'mu' is a location
-    alpha : Real number, 'alpha > 0' is a scale
-    beta : Real number, 'beta > 0' is a shape
+    mu : Real number
+        A location.
+    alpha : Real number,`\alpha > 0`
+        A  scale.
+    beta : Real number, `\beta > 0`
+        A shape.
 
     Returns
     =======
@@ -1476,6 +1528,9 @@ def FDistribution(name, d1, d2):
     r"""
     Create a continuous random variable with a F distribution.
 
+    Explanation
+    ===========
+
     The density of the F distribution is given by
 
     .. math::
@@ -1488,8 +1543,8 @@ def FDistribution(name, d1, d2):
     Parameters
     ==========
 
-    d1 : `d_1 > 0`, where d_1 is the degrees of freedom (n_1 - 1)
-    d2 : `d_2 > 0`, where d_2 is the degrees of freedom (n_2 - 1)
+    d1 : `d_1 > 0`, where `d_1` is the degrees of freedom (`n_1 - 1`)
+    d2 : `d_2 > 0`, where `d_2` is the degrees of freedom (`n_2 - 1`)
 
     Returns
     =======
@@ -1551,6 +1606,9 @@ def FisherZ(name, d1, d2):
     r"""
     Create a Continuous Random Variable with an Fisher's Z distribution.
 
+    Explanation
+    ===========
+
     The density of the Fisher's Z distribution is given by
 
     .. math::
@@ -1563,8 +1621,10 @@ def FisherZ(name, d1, d2):
     Parameters
     ==========
 
-    d1 : `d_1 > 0`, degree of freedom
-    d2 : `d_2 > 0`, degree of freedom
+    d1 : `d_1 > 0`
+        Degree of freedom.
+    d2 : `d_2 > 0`
+        Degree of freedom.
 
     Returns
     =======
@@ -1635,6 +1695,9 @@ def Frechet(name, a, s=1, m=0):
     r"""
     Create a continuous random variable with a Frechet distribution.
 
+    Explanation
+    ===========
+
     The density of the Frechet distribution is given by
 
     .. math::
@@ -1669,10 +1732,10 @@ def Frechet(name, a, s=1, m=0):
     >>> X = Frechet("x", a, s, m)
 
     >>> density(X)(z)
-    a*((-m + z)/s)**(-a - 1)*exp(-((-m + z)/s)**(-a))/s
+    a*((-m + z)/s)**(-a - 1)*exp(-1/((-m + z)/s)**a)/s
 
     >>> cdf(X)(z)
-     Piecewise((exp(-((-m + z)/s)**(-a)), m <= z), (0, True))
+    Piecewise((exp(-1/((-m + z)/s)**a), m <= z), (0, True))
 
     References
     ==========
@@ -1717,6 +1780,9 @@ class GammaDistribution(SingleContinuousDistribution):
 def Gamma(name, k, theta):
     r"""
     Create a continuous random variable with a Gamma distribution.
+
+    Explanation
+    ===========
 
     The density of the Gamma distribution is given by
 
@@ -1821,6 +1887,9 @@ def GammaInverse(name, a, b):
     r"""
     Create a continuous random variable with an inverse Gamma distribution.
 
+    Explanation
+    ===========
+
     The density of the inverse Gamma distribution is given by
 
     .. math::
@@ -1832,8 +1901,8 @@ def GammaInverse(name, a, b):
     Parameters
     ==========
 
-    a : Real number, `a > 0` a shape
-    b : Real number, `b > 0` a scale
+    a : Real number, `a > 0`, a shape
+    b : Real number, `b > 0`, a scale
 
     Returns
     =======
@@ -1916,6 +1985,9 @@ def Gumbel(name, beta, mu, minimum=False):
     r"""
     Create a Continuous Random Variable with Gumbel distribution.
 
+    Explanation
+    ===========
+
     The density of the Gumbel distribution is given by
 
     For Maximum
@@ -1936,9 +2008,9 @@ def Gumbel(name, beta, mu, minimum=False):
     Parameters
     ==========
 
-    mu : Real number, 'mu' is a location
-    beta : Real number, 'beta > 0' is a scale
-    minimum : Boolean, by default, False, set to True for enabling minimum distribution
+    mu : Real number, `\mu`, a location
+    beta : Real number, `\beta > 0`, a scale
+    minimum : Boolean, by default ``False``, set to ``True`` for enabling minimum distribution
 
     Returns
     =======
@@ -1999,18 +2071,21 @@ def Gompertz(name, b, eta):
     r"""
     Create a Continuous Random Variable with Gompertz distribution.
 
+    Explanation
+    ===========
+
     The density of the Gompertz distribution is given by
 
     .. math::
         f(x) := b \eta e^{b x} e^{\eta} \exp \left(-\eta e^{bx} \right)
 
-    with :math: 'x \in [0, \inf)'.
+    with :math:`x \in [0, \infty)`.
 
     Parameters
     ==========
 
-    b: Real number, 'b > 0' a scale
-    eta: Real number, 'eta > 0' a shape
+    b : Real number, `b > 0`, a scale
+    eta : Real number, `\eta > 0`, a shape
 
     Returns
     =======
@@ -2069,6 +2144,9 @@ def Kumaraswamy(name, a, b):
     r"""
     Create a Continuous Random Variable with a Kumaraswamy distribution.
 
+    Explanation
+    ===========
+
     The density of the Kumaraswamy distribution is given by
 
     .. math::
@@ -2079,8 +2157,8 @@ def Kumaraswamy(name, a, b):
     Parameters
     ==========
 
-    a : Real number, `a > 0` a shape
-    b : Real number, `b > 0` a shape
+    a : Real number, `a > 0`, a shape
+    b : Real number, `b > 0`, a shape
 
     Returns
     =======
@@ -2151,6 +2229,9 @@ class LaplaceDistribution(SingleContinuousDistribution):
 def Laplace(name, mu, b):
     r"""
     Create a continuous random variable with a Laplace distribution.
+
+    Explanation
+    ===========
 
     The density of the Laplace distribution is given by
 
@@ -2253,8 +2334,10 @@ def Levy(name, mu, c):
     Parameters
     ==========
 
-    mu : Real number, the location parameter
-    c : Real number, `c > 0`, a scale parameter
+    mu : Real number
+        The location parameter.
+    c : Real number, `c > 0`
+        A scale parameter.
 
     Returns
     =======
@@ -2340,7 +2423,7 @@ def LogCauchy(name, mu, sigma):
     Examples
     ========
 
-    >>> from sympy.stats import  LogCauchy, density, cdf
+    >>> from sympy.stats import LogCauchy, density, cdf
     >>> from sympy import Symbol, S
 
     >>> mu = 2
@@ -2398,6 +2481,9 @@ def Logistic(name, mu, s):
     r"""
     Create a continuous random variable with a logistic distribution.
 
+    Explanation
+    ===========
+
     The density of the logistic distribution is given by
 
     .. math::
@@ -2407,7 +2493,7 @@ def Logistic(name, mu, s):
     ==========
 
     mu : Real number, the location (mean)
-    s : Real number, `s > 0` a scale
+    s : Real number, `s > 0`, a scale
 
     Returns
     =======
@@ -2475,7 +2561,10 @@ class LogLogisticDistribution(SingleContinuousDistribution):
 def LogLogistic(name, alpha, beta):
     r"""
     Create a continuous random variable with a log-logistic distribution.
-    The distribution is unimodal when `beta > 1`.
+    The distribution is unimodal when ``beta > 1``.
+
+    Explanation
+    ===========
 
     The density of the log-logistic distribution is given by
 
@@ -2487,7 +2576,7 @@ def LogLogistic(name, alpha, beta):
     ==========
 
     alpha : Real number, `\alpha > 0`, scale parameter and median of distribution
-    beta : Real number, `\beta > 0` a shape parameter
+    beta : Real number, `\beta > 0`, a shape parameter
 
     Returns
     =======
@@ -2500,8 +2589,8 @@ def LogLogistic(name, alpha, beta):
     >>> from sympy.stats import LogLogistic, density, cdf, quantile
     >>> from sympy import Symbol, pprint
 
-    >>> alpha = Symbol("alpha", real=True, positive=True)
-    >>> beta = Symbol("beta", real=True, positive=True)
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> beta = Symbol("beta", positive=True)
     >>> p = Symbol("p")
     >>> z = Symbol("z", positive=True)
 
@@ -2572,7 +2661,7 @@ def LogitNormal(name, mu, s):
     ==========
 
     mu : Real number, the location (mean)
-    s : Real number, `s > 0` a scale
+    s : Real number, `s > 0`, a scale
 
     Returns
     =======
@@ -2652,6 +2741,9 @@ def LogNormal(name, mean, std):
     r"""
     Create a continuous random variable with a log-normal distribution.
 
+    Explanation
+    ===========
+
     The density of the log-normal distribution is given by
 
     .. math::
@@ -2663,8 +2755,10 @@ def LogNormal(name, mean, std):
     Parameters
     ==========
 
-    mu : Real number, the log-scale
-    sigma : Real number, :math:`\sigma^2 > 0` a shape
+    mu : Real number
+        The log-scale.
+    sigma : Real number
+        A shape. ($\sigma^2 > 0$)
 
     Returns
     =======
@@ -2733,6 +2827,9 @@ def Lomax(name, alpha, lamda):
     r"""
     Create a continuous random variable with a Lomax distribution.
 
+    Explanation
+    ===========
+
     The density of the Lomax distribution is given by
 
     .. math::
@@ -2741,9 +2838,9 @@ def Lomax(name, alpha, lamda):
     Parameters
     ==========
 
-    alpha : Real Number, `alpha > 0`
+    alpha : Real Number, `\alpha > 0`
         Shape parameter
-    lamda : Real Number, `lamda > 0`
+    lamda : Real Number, `\lambda > 0`
         Scale parameter
 
     Examples
@@ -2757,7 +2854,7 @@ def Lomax(name, alpha, lamda):
     >>> density(X)(x)
     a*(1 + x/l)**(-a - 1)/l
     >>> cdf(X)(x)
-    Piecewise((1 - (1 + x/l)**(-a), x >= 0), (0, True))
+    Piecewise((1 - 1/(1 + x/l)**a, x >= 0), (0, True))
     >>> a = 2
     >>> X = Lomax('X', a, l)
     >>> E(X)
@@ -2800,6 +2897,9 @@ class MaxwellDistribution(SingleContinuousDistribution):
 def Maxwell(name, a):
     r"""
     Create a continuous random variable with a Maxwell distribution.
+
+    Explanation
+    ===========
 
     The density of the Maxwell distribution is given by
 
@@ -2882,6 +2982,10 @@ class MoyalDistribution(SingleContinuousDistribution):
 def Moyal(name, mu, sigma):
     r"""
     Create a continuous random variable with a Moyal distribution.
+
+    Explanation
+    ===========
+
     The density of the Moyal distribution is given by
 
     .. math::
@@ -2954,6 +3058,9 @@ def Nakagami(name, mu, omega):
     r"""
     Create a continuous random variable with a Nakagami distribution.
 
+    Explanation
+    ===========
+
     The density of the Nakagami distribution is given by
 
     .. math::
@@ -2965,7 +3072,7 @@ def Nakagami(name, mu, omega):
     Parameters
     ==========
 
-    mu : Real number, `\mu \geq \frac{1}{2}` a shape
+    mu : Real number, `\mu \geq \frac{1}{2}`, a shape
     omega : Real number, `\omega > 0`, the spread
 
     Returns
@@ -3054,6 +3161,9 @@ def Normal(name, mean, std):
     r"""
     Create a continuous random variable with a Normal distribution.
 
+    Explanation
+    ===========
+
     The density of the Normal distribution is given by
 
     .. math::
@@ -3064,7 +3174,7 @@ def Normal(name, mean, std):
 
     mu : Real number or a list representing the mean or the mean vector
     sigma : Real number or a positive definite square matrix,
-         :math:`\sigma^2 > 0` the variance
+         :math:`\sigma^2 > 0`, the variance
 
     Returns
     =======
@@ -3114,12 +3224,13 @@ def Normal(name, mean, std):
 
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
     >>> pprint(density(m)(y, z), use_unicode=False)
-           /1   y\ /2*y   z\   /    z\ /  y   2*z    \
-           |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
-      ___  \2   2/ \ 3    3/   \    2/ \  3    3     /
+              2          2
+             y    y*z   z
+           - -- + --- - -- + z - 1
+      ___    3     3    3
     \/ 3 *e
-    --------------------------------------------------
-                           6*pi
+    ------------------------------
+                 6*pi
 
     >>> marginal_distribution(m, m[0])(1)
      1/(2*sqrt(pi))
@@ -3133,8 +3244,8 @@ def Normal(name, mean, std):
 
     """
 
-    if isinstance(mean, (list, MatrixBase, MatrixExpr)) and\
-        isinstance(std, (list, MatrixBase, MatrixExpr)):
+    if isinstance(mean, list) or getattr(mean, 'is_Matrix', False) and\
+        isinstance(std, list) or getattr(std, 'is_Matrix', False):
         from sympy.stats.joint_rv_types import MultivariateNormal
         return MultivariateNormal(name, mean, std)
     return rv(name, NormalDistribution, (mean, std))
@@ -3184,6 +3295,9 @@ def GaussianInverse(name, mean, shape):
     Create a continuous random variable with an Inverse Gaussian distribution.
     Inverse Gaussian distribution is also known as Wald distribution.
 
+    Explanation
+    ===========
+
     The density of the Inverse Gaussian distribution is given by
 
     .. math::
@@ -3192,8 +3306,10 @@ def GaussianInverse(name, mean, shape):
     Parameters
     ==========
 
-    mu : Positive number representing the mean
-    lambda : Positive number representing the shape parameter
+    mu :
+        Positive number representing the mean.
+    lambda :
+        Positive number representing the shape parameter.
 
     Returns
     =======
@@ -3284,6 +3400,9 @@ def Pareto(name, xm, alpha):
     r"""
     Create a continuous random variable with the Pareto distribution.
 
+    Explanation
+    ===========
+
     The density of the Pareto distribution is given by
 
     .. math::
@@ -3353,7 +3472,10 @@ class PowerFunctionDistribution(SingleContinuousDistribution):
 
 def PowerFunction(name, alpha, a, b):
     r"""
-    Creates a continuous random variable with a Power Function Distribution
+    Creates a continuous random variable with a Power Function Distribution.
+
+    Explanation
+    ===========
 
     The density of PowerFunction distribution is given by
 
@@ -3365,9 +3487,9 @@ def PowerFunction(name, alpha, a, b):
     Parameters
     ==========
 
-    alpha: Positive number, `0 < alpha` the shape paramater
-    a : Real number, :math:`-\infty < a` the left boundary
-    b : Real number, :math:`a < b < \infty` the right boundary
+    alpha : Positive number, `0 < \alpha`, the shape paramater
+    a : Real number, :math:`-\infty < a`, the left boundary
+    b : Real number, :math:`a < b < \infty`, the right boundary
 
     Returns
     =======
@@ -3449,6 +3571,9 @@ class QuadraticUDistribution(SingleContinuousDistribution):
 def QuadraticU(name, a, b):
     r"""
     Create a Continuous Random Variable with a U-quadratic distribution.
+
+    Explanation
+    ===========
 
     The density of the U-quadratic distribution is given by
 
@@ -3536,6 +3661,9 @@ def RaisedCosine(name, mu, s):
     r"""
     Create a Continuous Random Variable with a raised cosine distribution.
 
+    Explanation
+    ===========
+
     The density of the raised cosine distribution is given by
 
     .. math::
@@ -3618,6 +3746,9 @@ class RayleighDistribution(SingleContinuousDistribution):
 def Rayleigh(name, sigma):
     r"""
     Create a continuous random variable with a Rayleigh distribution.
+
+    Explanation
+    ===========
 
     The density of the Rayleigh distribution is given by
 
@@ -3746,18 +3877,21 @@ def ShiftedGompertz(name, b, eta):
     r"""
     Create a continuous random variable with a Shifted Gompertz distribution.
 
+    Explanation
+    ===========
+
     The density of the Shifted Gompertz distribution is given by
 
     .. math::
         f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^(-bx)) \right]
 
-    with :math: 'x \in [0, \inf)'.
+    with :math:`x \in [0, \infty)`.
 
     Parameters
     ==========
 
-    b: Real number, 'b > 0' a scale
-    eta: Real number, 'eta > 0' a shape
+    b : Real number, `b > 0`, a scale
+    eta : Real number, `\eta > 0`, a shape
 
     Returns
     =======
@@ -3815,6 +3949,9 @@ class StudentTDistribution(SingleContinuousDistribution):
 def StudentT(name, nu):
     r"""
     Create a continuous random variable with a student's t distribution.
+
+    Explanation
+    ===========
 
     The density of the student's t distribution is given by
 
@@ -3905,6 +4042,9 @@ def Trapezoidal(name, a, b, c, d):
     r"""
     Create a continuous random variable with a trapezoidal distribution.
 
+    Explanation
+    ===========
+
     The density of the trapezoidal distribution is given by
 
     .. math::
@@ -3920,8 +4060,8 @@ def Trapezoidal(name, a, b, c, d):
     ==========
 
     a : Real number, :math:`a < d`
-    b : Real number, :math:`a <= b < c`
-    c : Real number, :math:`b < c <= d`
+    b : Real number, :math:`a \le b < c`
+    c : Real number, :math:`b < c \le d`
     d : Real number
 
     Returns
@@ -4004,6 +4144,9 @@ class TriangularDistribution(SingleContinuousDistribution):
 def Triangular(name, a, b, c):
     r"""
     Create a continuous random variable with a triangular distribution.
+
+    Explanation
+    ===========
 
     The density of the triangular distribution is given by
 
@@ -4107,7 +4250,6 @@ class UniformDistribution(SingleContinuousDistribution):
                          (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
-        from sympy import Max, Min
         kwargs['evaluate'] = True
         result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
         result = result.subs({Max(self.left, self.right): self.right,
@@ -4118,6 +4260,9 @@ class UniformDistribution(SingleContinuousDistribution):
 def Uniform(name, left, right):
     r"""
     Create a continuous random variable with a uniform distribution.
+
+    Explanation
+    ===========
 
     The density of the uniform distribution is given by
 
@@ -4132,8 +4277,8 @@ def Uniform(name, left, right):
     Parameters
     ==========
 
-    a : Real number, :math:`-\infty < a` the left boundary
-    b : Real number, :math:`a < b < \infty` the right boundary
+    a : Real number, :math:`-\infty < a`, the left boundary
+    b : Real number, :math:`a < b < \infty`, the right boundary
 
     Returns
     =======
@@ -4214,8 +4359,11 @@ def UniformSum(name, n):
     r"""
     Create a continuous random variable with an Irwin-Hall distribution.
 
+    Explanation
+    ===========
+
     The probability distribution function depends on a single parameter
-    `n` which is an integer.
+    $n$ which is an integer.
 
     The density of the Irwin-Hall distribution is given by
 
@@ -4226,7 +4374,7 @@ def UniformSum(name, n):
     Parameters
     ==========
 
-    n : A positive Integer, `n > 0`
+    n : A positive integer, `n > 0`
 
     Returns
     =======
@@ -4300,6 +4448,9 @@ def VonMises(name, mu, k):
     r"""
     Create a Continuous Random Variable with a von Mises distribution.
 
+    Explanation
+    ===========
+
     The density of the von Mises distribution is given by
 
     .. math::
@@ -4310,8 +4461,10 @@ def VonMises(name, mu, k):
     Parameters
     ==========
 
-    mu : Real number, measure of location
-    k : Real number, measure of concentration
+    mu : Real number
+        Measure of location.
+    k : Real number
+        Measure of concentration.
 
     Returns
     =======
@@ -4371,6 +4524,9 @@ def Weibull(name, alpha, beta):
     r"""
     Create a continuous random variable with a Weibull distribution.
 
+    Explanation
+    ===========
+
     The density of the Weibull distribution is given by
 
     .. math::
@@ -4383,8 +4539,8 @@ def Weibull(name, alpha, beta):
     Parameters
     ==========
 
-    lambda : Real number, :math:`\lambda > 0` a scale
-    k : Real number, `k > 0` a shape
+    lambda : Real number, $\lambda > 0$, a scale
+    k : Real number, $k > 0$, a shape
 
     Returns
     =======
@@ -4453,6 +4609,9 @@ def WignerSemicircle(name, R):
     r"""
     Create a continuous random variable with a Wigner semicircle distribution.
 
+    Explanation
+    ===========
+
     The density of the Wigner semicircle distribution is given by
 
     .. math::
@@ -4468,7 +4627,7 @@ def WignerSemicircle(name, R):
     Returns
     =======
 
-    A `RandomSymbol`.
+    A RandomSymbol.
 
     Examples
     ========

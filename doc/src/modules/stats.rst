@@ -98,14 +98,22 @@ Joint Types
 .. autofunction:: NegativeMultinomial
 .. autofunction:: NormalGamma
 
+.. _sympy-stats-stochastic-processes:
+
 Stochastic Processes
 --------------------
 .. autoclass:: DiscreteMarkovChain
+   :members:
 .. autoclass:: ContinuousMarkovChain
+   :members:
 .. autoclass:: BernoulliProcess
+   :members:
 .. autoclass:: PoissonProcess
+   :members:
 .. autoclass:: WienerProcess
+   :members:
 .. autoclass:: GammaProcess
+   :members:
 
 Matrix Distributions
 --------------------
@@ -116,25 +124,31 @@ Matrix Distributions
 Compound Distribution
 ---------------------
 .. autoclass:: sympy.stats.compound_rv.CompoundDistribution
+   :members:
 
 Interface
 ^^^^^^^^^
 
 .. autofunction:: P
 .. autoclass:: Probability
+   :members:
 .. autofunction:: E
 .. autoclass:: Expectation
+   :members:
 .. autofunction:: density
 .. autofunction:: entropy
 .. autofunction:: given
 .. autofunction:: where
 .. autofunction:: variance
 .. autoclass:: Variance
+   :members:
 .. autofunction:: covariance
 .. autoclass:: Covariance
+   :members:
 .. autofunction:: coskewness
 .. autofunction:: median
 .. autofunction:: std
+.. autofunction:: quantile
 .. autofunction:: sample
 .. autofunction:: sample_iter
 .. autofunction:: factorial_moment
@@ -145,12 +159,17 @@ Interface
 .. autofunction:: sympy.stats.rv.sampling_P
 .. autofunction:: sympy.stats.rv.sampling_E
 .. autoclass:: Moment
+   :members:
 .. autofunction:: moment
 .. autoclass:: CentralMoment
+   :members:
 .. autofunction:: cmoment
 .. autoclass:: ExpectationMatrix
+   :members:
 .. autoclass:: VarianceMatrix
+   :members:
 .. autoclass:: CrossCovarianceMatrix
+   :members:
 
 Mechanics
 ^^^^^^^^^

@@ -1,18 +1,24 @@
-from sympy import (
-    symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
-    re, im, O, exp_polar, polar_lift, gruntz, limit,
-    Symbol, I, integrate, Integral, S,
-    sqrt, sin, cos, sinc, sinh, cosh, exp, log, pi, EulerGamma,
-    erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
-    gamma, uppergamma,
-    Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
-    fresnels, fresnelc,
-    hyper, meijerg, E, Rational)
-
+from sympy.core.function import (diff, expand, expand_func)
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (conjugate, im, polar_lift, re)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
+from sympy.functions.special.error_functions import (Chi, Ci, E1, Ei, Li, Shi, Si, erf, erf2, erf2inv, erfc, erfcinv, erfi, erfinv, expint, fresnelc, fresnels, li)
+from sympy.functions.special.gamma_functions import (gamma, uppergamma)
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.series.gruntz import gruntz
+from sympy.series.limits import limit
+from sympy.series.order import O
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.special.error_functions import _erfs, _eis
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises
 
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
@@ -25,7 +31,7 @@ def test_erf():
     assert erf(oo) == 1
     assert erf(-oo) == -1
 
-    assert erf(0) == 0
+    assert erf(0) is S.Zero
 
     assert erf(I*oo) == oo*I
     assert erf(-I*oo) == -oo*I
@@ -41,14 +47,15 @@ def test_erf():
     assert erf(erf2inv(0, erf(erfcinv(1 - erf(erfinv(x)))))) == x
 
     assert erf(I).is_real is False
-    assert erf(0).is_real is True
+    assert erf(0, evaluate=False).is_real
+    assert erf(0, evaluate=False).is_zero
 
     assert conjugate(erf(z)) == erf(conjugate(z))
 
     assert erf(x).as_leading_term(x) == 2*x/sqrt(pi)
     assert erf(x*y).as_leading_term(y) == 2*x*y/sqrt(pi)
     assert (erf(x*y)/erf(y)).as_leading_term(y) == x
-    assert erf(1/x).as_leading_term(x) == erf(1/x)
+    assert erf(1/x).as_leading_term(x) == S.One
 
     assert erf(z).rewrite('uppergamma') == sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erf(z).rewrite('erfc') == S.One - erfc(z)
@@ -93,6 +100,10 @@ def test_erf_series():
 
     assert erf(x).series(x, oo) == \
         -exp(-x**2)*(3/(4*x**5) - 1/(2*x**3) + 1/x + O(x**(-6), (x, oo)))/sqrt(pi) + 1
+    assert erf(x**2).series(x, oo, n=8) == \
+        (-1/(2*x**6) + x**(-2) + O(x**(-8), (x, oo)))*exp(-x**4)/sqrt(pi)*-1 + 1
+    assert erf(sqrt(x)).series(x, oo, n=3) == (sqrt(1/x) - (1/x)**(S(3)/2)/2\
+        + 3*(1/x)**(S(5)/2)/4 + O(x**(-3), (x, oo)))*exp(-x)/sqrt(pi)*-1 + 1
 
 
 def test_erf_evalf():
@@ -114,7 +125,7 @@ def test__erfs():
 def test_erfc():
     assert erfc(nan) is nan
 
-    assert erfc(oo) == 0
+    assert erfc(oo) is S.Zero
     assert erfc(-oo) == 2
 
     assert erfc(0) == 1
@@ -126,14 +137,15 @@ def test_erfc():
     assert erfc(erfcinv(x)) == x
 
     assert erfc(I).is_real is False
-    assert erfc(0).is_real is True
+    assert erfc(0, evaluate=False).is_real
+    assert erfc(0, evaluate=False).is_zero is False
 
     assert erfc(erfinv(x)) == 1 - x
 
     assert conjugate(erfc(z)) == erfc(conjugate(z))
 
     assert erfc(x).as_leading_term(x) is S.One
-    assert erfc(1/x).as_leading_term(x) == erfc(1/x)
+    assert erfc(1/x).as_leading_term(x) == S.Zero
 
     assert erfc(z).rewrite('erf') == 1 - erf(z)
     assert erfc(z).rewrite('erfi') == 1 + I*erfi(I*z)
@@ -194,9 +206,15 @@ def test_erfi():
     assert erfi(I*erf2inv(0, x, evaluate=False)) == I*x # To cover code in erfi
 
     assert erfi(I).is_real is False
-    assert erfi(0).is_real is True
+    assert erfi(0, evaluate=False).is_real
+    assert erfi(0, evaluate=False).is_zero
 
     assert conjugate(erfi(z)) == erfi(conjugate(z))
+
+    assert erfi(x).as_leading_term(x) == 2*x/sqrt(pi)
+    assert erfi(x*y).as_leading_term(y) == 2*x*y/sqrt(pi)
+    assert (erfi(x*y)/erfi(y)).as_leading_term(y) == x
+    assert erfi(1/x).as_leading_term(x) == erfi(1/x)
 
     assert erfi(z).rewrite('erf') == -I*erf(I*z)
     assert erfi(z).rewrite('erfc') == I*erfc(I*z) - I
@@ -260,7 +278,10 @@ def test_erf2():
     assert erf2(x, y).rewrite('expint') == erf(y).rewrite(expint)-erf(x).rewrite(expint)
 
     assert erf2(I, 0).is_real is False
-    assert erf2(0, 0).is_real is True
+    assert erf2(0, 0, evaluate=False).is_real
+    assert erf2(0, 0, evaluate=False).is_zero
+    assert erf2(x, x, evaluate=False).is_zero
+    assert erf2(x, y).is_zero is None
 
     assert expand_func(erf(x) + erf2(x, y)) == erf(y)
 
@@ -282,7 +303,7 @@ def test_erf2():
 
 
 def test_erfinv():
-    assert erfinv(0) == 0
+    assert erfinv(0) is S.Zero
     assert erfinv(1) is S.Infinity
     assert erfinv(nan) is S.NaN
     assert erfinv(-1) is S.NegativeInfinity
@@ -302,7 +323,7 @@ def test_erfinv_evalf():
 
 
 def test_erfcinv():
-    assert erfcinv(1) == 0
+    assert erfcinv(1) is S.Zero
     assert erfcinv(0) is S.Infinity
     assert erfcinv(nan) is S.NaN
 
@@ -334,7 +355,7 @@ def test_erf2inv():
 
 
 def mytn(expr1, expr2, expr3, x, d=0):
-    from sympy.testing.randtest import verify_numerically, random_complex_number
+    from sympy.core.random import verify_numerically, random_complex_number
     subs = {}
     for a in expr1.free_symbols:
         if a != x:
@@ -344,7 +365,7 @@ def mytn(expr1, expr2, expr3, x, d=0):
 
 
 def mytd(expr1, expr2, x):
-    from sympy.testing.randtest import test_derivative_numerically, \
+    from sympy.core.random import test_derivative_numerically, \
         random_complex_number
     subs = {}
     for a in expr1.free_symbols:
@@ -354,7 +375,7 @@ def mytd(expr1, expr2, x):
 
 
 def tn_branch(func, s=None):
-    from random import uniform
+    from sympy.core.random import uniform
 
     def fn(x):
         if s is None:
@@ -480,13 +501,14 @@ def test__eis():
         == Ei(z).diff(z)
 
     assert _eis(z).series(z, n=3) == EulerGamma + log(z) + z*(-log(z) - \
-        EulerGamma + 1) + z**2*(log(z)/2 - Rational(3, 4) + EulerGamma/2) + O(z**3*log(z))
+        EulerGamma + 1) + z**2*(log(z)/2 - Rational(3, 4) + EulerGamma/2)\
+        + O(z**3*log(z))
     raises(ArgumentIndexError, lambda: _eis(z).fdiff(2))
 
 
 def tn_arg(func):
     def test(arg, e1, e2):
-        from random import uniform
+        from sympy.core.random import uniform
         v = uniform(1, 5)
         v1 = func(arg*x).subs(x, v).n()
         v2 = func(e1*v + e2*1e-15).n()
@@ -503,7 +525,7 @@ def test_li():
     zp = Symbol("z", positive=True)
     zn = Symbol("z", negative=True)
 
-    assert li(0) == 0
+    assert li(0) is S.Zero
     assert li(1) is -oo
     assert li(oo) is oo
 
@@ -535,21 +557,21 @@ def test_li():
     assert li(z).rewrite(meijerg) == (-log(1/log(z))/2 - log(-log(z)) + log(log(z))/2 -
                                       meijerg(((), (1,)), ((0, 0), ()), -log(z)))
 
-    assert gruntz(1/li(z), z, oo) == 0
+    assert gruntz(1/li(z), z, oo) is S.Zero
     assert li(z).series(z) == log(z)**5/600 + log(z)**4/96 + log(z)**3/18 + log(z)**2/4 + \
             log(z) + log(log(z)) + EulerGamma
     raises(ArgumentIndexError, lambda: li(z).fdiff(2))
 
 
 def test_Li():
-    assert Li(2) == 0
+    assert Li(2) is S.Zero
     assert Li(oo) is oo
 
     assert isinstance(Li(z), Li)
 
     assert diff(Li(z), z) == 1/log(z)
 
-    assert gruntz(1/Li(z), z, oo) == 0
+    assert gruntz(1/Li(z), z, oo) is S.Zero
     assert Li(z).rewrite(li) == li(z) - li(2)
     assert Li(z).series(z) == \
         log(z)**5/600 + log(z)**4/96 + log(z)**3/18 + log(z)**2/4 + log(z) + log(log(z)) - li(2) + EulerGamma
@@ -605,6 +627,8 @@ def test_si():
     t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
 
+    assert limit(Shi(x), x, S.NegativeInfinity) == -I*pi/2
+
 
 def test_ci():
     m1 = exp_polar(I*pi)
@@ -625,7 +649,7 @@ def test_ci():
     assert Chi(exp_polar(2*I*pi)*x) == Chi(x) + 2*I*pi
     assert Ci(exp_polar(-2*I*pi)*x) == Ci(x) - 2*I*pi
 
-    assert Ci(oo) == 0
+    assert Ci(oo) is S.Zero
     assert Ci(-oo) == I*pi
     assert Chi(oo) is oo
     assert Chi(-oo) is oo
@@ -658,8 +682,8 @@ def test_ci():
 
 
 def test_fresnel():
-    assert fresnels(0) == 0
-    assert fresnels(oo) == S.Half
+    assert fresnels(0) is S.Zero
+    assert fresnels(oo) is S.Half
     assert fresnels(-oo) == Rational(-1, 2)
     assert fresnels(I*oo) == -I*S.Half
 
@@ -710,7 +734,7 @@ def test_fresnel():
         meijerg(((), (1,)), ((Rational(3, 4),),
         (Rational(1, 4), 0)), -pi**2*z**4/16)/(2*(-z)**Rational(3, 4)*(z**2)**Rational(3, 4))
 
-    assert fresnelc(0) == 0
+    assert fresnelc(0) is S.Zero
     assert fresnelc(oo) == S.Half
     assert fresnelc(-oo) == Rational(-1, 2)
     assert fresnelc(I*oo) == I*S.Half
@@ -752,7 +776,7 @@ def test_fresnel():
         meijerg(((), (1,)), ((Rational(1, 4),),
         (Rational(3, 4), 0)), -pi**2*z**4/16)/(2*(-z)**Rational(1, 4)*(z**2)**Rational(1, 4))
 
-    from sympy.testing.randtest import verify_numerically
+    from sympy.core.random import verify_numerically
 
     verify_numerically(re(fresnels(z)), fresnels(z).as_real_imag()[0], z)
     verify_numerically(im(fresnels(z)), fresnels(z).as_real_imag()[1], z)
@@ -772,7 +796,6 @@ def test_fresnel():
     assert fresnelc(x).taylor_term(1, x) == -pi**2*x**5/40
 
 
-@slow
 def test_fresnel_series():
     assert fresnelc(z).series(z, n=15) == \
         z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)

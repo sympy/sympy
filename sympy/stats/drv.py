@@ -1,6 +1,19 @@
-from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-                   Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
-                   series, factorial, And, floor)
+from sympy.concrete.summations import (Sum, summation)
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.function import Lambda
+from sympy.core.numbers import I
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.logic.boolalg import And
+from sympy.polys.polytools import poly
+from sympy.series.series import series
 
 from sympy.polys.polyerrors import PolynomialError
 from sympy.stats.crv import reduce_rational_inequalities_wrap
@@ -21,7 +34,7 @@ class DiscreteDistribution(Distribution):
 
 
 class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
-    """ Discrete distribution of a single variable
+    """ Discrete distribution of a single variable.
 
     Serves as superclass for PoissonDistribution etc....
 
@@ -43,9 +56,9 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_cdf(self, **kwargs):
-        """ Compute the CDF from the PDF
+        """ Compute the CDF from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x = symbols('x', integer=True, cls=Dummy)
         z = symbols('z', real=True, cls=Dummy)
@@ -71,9 +84,9 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_characteristic_function(self, **kwargs):
-        """ Compute the characteristic function from the PDF
+        """ Compute the characteristic function from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
@@ -111,9 +124,9 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_quantile(self, **kwargs):
-        """ Compute the Quantile from the PDF
+        """ Compute the Quantile from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x = Dummy('x', integer=True)
         p = Dummy('p', real=True)
@@ -281,7 +294,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
 
     def sample(self, size=(), library='scipy', seed=None):
         """
-        Internal sample method
+        Internal sample method.
 
         Returns dictionary mapping RandomSymbol to realization value.
         """

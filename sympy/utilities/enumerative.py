@@ -419,6 +419,23 @@ class MultisetPartitionTraverser():
         self.k1 = 0
         self.k2 = 0
         self.p1 = 0
+        self.pstack = None
+        self.f = None
+        self.lpart = 0
+        self.discarded = 0
+        # dp_stack is list of lists of (part_key, start_count) pairs
+        self.dp_stack = []
+
+        # dp_map is map part_key-> count, where count represents the
+        # number of multiset which are descendants of a part with this
+        # key, **or any of its decrements**
+
+        # Thus, when we find a part in the map, we add its count
+        # value to the running total, cut off the enumeration, and
+        # backtrack
+
+        if not hasattr(self, 'dp_map'):
+            self.dp_map = {}
 
     def db_trace(self, msg):
         """Useful for understanding/debugging the algorithms.  Not
@@ -521,7 +538,7 @@ class MultisetPartitionTraverser():
         decision is made to fail, it must be accurate, otherwise the
         enumeration will miss some partitions.  But, it is OK not to
         capture all the possible failures -- if a part is passed that
-        shouldn't be, the resulting too-large partitions are filtered
+        should not be, the resulting too-large partitions are filtered
         by the enumeration one level up.  However, as is usual in
         constrained enumerations, failing early is advantageous.
 
@@ -825,18 +842,15 @@ class MultisetPartitionTraverser():
             return
         self._initialize_enumeration(multiplicities)
         while True:
-            good_partition = True
             while self.spread_part_multiplicity():
-                self.db_trace("spread 1")
+                self.db_trace('spread 1')
                 if self.lpart >= ub:
                     self.discarded += 1
-                    good_partition = False
-                    self.db_trace("  Discarding")
+                    self.db_trace('  Discarding')
                     self.lpart = ub - 2
                     break
-
-            # M4  Visit a partition
-            if good_partition:
+            else:
+                # M4  Visit a partition
                 state = [self.f, self.lpart, self.pstack]
                 yield state
 
@@ -1076,19 +1090,9 @@ class MultisetPartitionTraverser():
         """
         # number of partitions so far in the enumeration
         self.pcount = 0
+
         # dp_stack is list of lists of (part_key, start_count) pairs
         self.dp_stack = []
-
-        # dp_map is map part_key-> count, where count represents the
-        # number of multiset which are descendants of a part with this
-        # key, **or any of its decrements**
-
-        # Thus, when we find a part in the map, we add its count
-        # value to the running total, cut off the enumeration, and
-        # backtrack
-
-        if not hasattr(self, 'dp_map'):
-            self.dp_map = {}
 
         self._initialize_enumeration(multiplicities)
         pkey = part_key(self.top_part())

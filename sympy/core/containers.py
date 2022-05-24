@@ -8,11 +8,15 @@
 
 from collections import OrderedDict
 from collections.abc import MutableSet
+from typing import Any, Callable
 
-from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int
-from sympy.core.sympify import _sympify, sympify, converter, SympifyError
+from .basic import Basic
+from .sorting import default_sort_key, ordered
+from .sympify import _sympify, sympify, _sympy_converter, SympifyError
+from sympy.core.kind import Kind
 from sympy.utilities.iterables import iterable
+from sympy.utilities.misc import as_int
+
 
 class Tuple(Basic):
     """
@@ -31,13 +35,12 @@ class Tuple(Basic):
     sympify : bool
         If ``False``, ``sympify`` is not called on ``args``. This
         can be used for speedups for very large tuples where the
-        elements are known to already be sympy objects.
+        elements are known to already be SymPy objects.
 
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.core.containers import Tuple
+    >>> from sympy import Tuple, symbols
     >>> a, b, c, d = symbols('a b c d')
     >>> Tuple(a, b, c)[1:]
     (b, c)
@@ -142,8 +145,34 @@ class Tuple(Basic):
         else:
             return self.args.index(value, start, stop)
 
+    @property
+    def kind(self):
+        """
+        The kind of a Tuple instance.
 
-converter[tuple] = lambda tup: Tuple(*tup)
+        The kind of a Tuple is always of :class:`TupleKind` but
+        parametrised by the number of elements and the kind of each element.
+
+        Examples
+        ========
+
+        >>> from sympy import Tuple, Matrix
+        >>> Tuple(1, 2).kind
+        TupleKind(NumberKind, NumberKind)
+        >>> Tuple(Matrix([1, 2]), 1).kind
+        TupleKind(MatrixKind(NumberKind), NumberKind)
+        >>> Tuple(1, 2).kind.element_kind
+        (NumberKind, NumberKind)
+
+        See Also
+        ========
+
+        sympy.matrices.common.MatrixKind
+        sympy.core.kind.NumberKind
+        """
+        return TupleKind(*(i.kind for i in self.args))
+
+_sympy_converter[tuple] = lambda tup: Tuple(*tup)
 
 
 
@@ -177,7 +206,7 @@ def tuple_wrapper(method):
     def wrap_tuples(*args, **kw_args):
         newargs = []
         for arg in args:
-            if type(arg) is tuple:
+            if isinstance(arg, tuple):
                 newargs.append(Tuple(*arg))
             else:
                 newargs.append(arg)
@@ -201,8 +230,7 @@ class Dict(Basic):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.core.containers import Dict
+    >>> from sympy import Dict, Symbol
 
     >>> D = Dict({1: 'one', 2: 'two'})
     >>> for key in D:
@@ -232,7 +260,7 @@ class Dict(Basic):
         else:
             raise TypeError('Pass Dict args as Dict((k1, v1), ...) or Dict({k1: v1, ...})')
         elements = frozenset(items)
-        obj = Basic.__new__(cls, elements)
+        obj = Basic.__new__(cls, *ordered(items))
         obj.elements = elements
         obj._dict = dict(items)  # In case Tuple decides it wants to sympify
         return obj
@@ -248,17 +276,6 @@ class Dict(Basic):
 
     def __setitem__(self, key, value):
         raise NotImplementedError("SymPy Dicts are Immutable")
-
-    @property
-    def args(self):
-        """Returns a tuple of arguments of 'self'.
-
-        See Also
-        ========
-
-        sympy.core.basic.Basic.args
-        """
-        return tuple(self.elements)
 
     def items(self):
         '''Returns a set-like object providing a view on dict's items.
@@ -302,12 +319,17 @@ class Dict(Basic):
 
     @property
     def _sorted_args(self):
-        from sympy.utilities import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
+    def __eq__(self, other):
+        if isinstance(other, dict):
+            return self == Dict(other)
+        return super().__eq__(other)
+
+    __hash__ : Callable[[Basic], Any] = Basic.__hash__
 
 # this handles dict, defaultdict, OrderedDict
-converter[dict] = lambda d: Dict(*d.items())
+_sympy_converter[dict] = lambda d: Dict(*d.items())
 
 class OrderedSet(MutableSet):
     def __init__(self, iterable=None):
@@ -356,3 +378,41 @@ class OrderedSet(MutableSet):
     def update(self, iterable):
         for val in iterable:
             self.add(val)
+
+class TupleKind(Kind):
+    """
+    TupleKind is a subclass of Kind, which is used to define Kind of ``Tuple``.
+
+    Parameters of TupleKind will be kinds of all the arguments in Tuples, for
+    example
+
+    Parameters
+    ==========
+
+    args : tuple(element_kind)
+       element_kind is kind of element.
+       args is tuple of kinds of element
+
+    Examples
+    ========
+
+    >>> from sympy import Tuple
+    >>> Tuple(1, 2).kind
+    TupleKind(NumberKind, NumberKind)
+    >>> Tuple(1, 2).kind.element_kind
+    (NumberKind, NumberKind)
+
+    See Also
+    ========
+
+    sympy.core.kind.NumberKind
+    MatrixKind
+    sympy.sets.sets.SetKind
+    """
+    def __new__(cls, *args):
+        obj = super().__new__(cls, *args)
+        obj.element_kind = args
+        return obj
+
+    def __repr__(self):
+        return "TupleKind{}".format(self.element_kind)

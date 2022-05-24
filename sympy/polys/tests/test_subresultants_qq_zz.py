@@ -1,4 +1,5 @@
-from sympy import var, sturm, subresultants, prem, pquo
+from sympy.core.symbol import var
+from sympy.polys.polytools import (pquo, prem, sturm, subresultants)
 from sympy.matrices import Matrix
 from sympy.polys.subresultants_qq_zz import (sylvester, res, res_q, res_z, bezout,
     subresultants_sylv,   modified_subresultants_sylv,

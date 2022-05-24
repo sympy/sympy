@@ -6,14 +6,17 @@ Curve
 
 """
 
-from sympy import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core import sympify, diff
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.symbol import _symbol
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point
 from sympy.integrals import integrate
+from sympy.matrices import Matrix, rot_axis3
+from sympy.utilities.iterables import is_sequence
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 
 class Curve(GeometrySet):
@@ -46,9 +49,8 @@ class Curve(GeometrySet):
     Examples
     ========
 
-    >>> from sympy import sin, cos, interpolate
+    >>> from sympy import Curve, sin, cos, interpolate
     >>> from sympy.abc import t, a
-    >>> from sympy.geometry import Curve
     >>> C = Curve((sin(t), cos(t)), (t, 0, 2))
     >>> C.functions
     (sin(t), cos(t))
@@ -89,6 +91,13 @@ class Curve(GeometrySet):
         if old == self.parameter:
             return Point(*[f.subs(old, new) for f in self.functions])
 
+    def _eval_evalf(self, prec=15, **options):
+        f, (t, a, b) = self.args
+        dps = prec_to_dps(prec)
+        f = tuple([i.evalf(n=dps, **options) for i in f])
+        a, b = [i.evalf(n=dps, **options) for i in (a, b)]
+        return self.func(f, (t, a, b))
+
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the curve.
 
@@ -115,9 +124,8 @@ class Curve(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Symbol
+        >>> from sympy import Curve, Symbol
         >>> from sympy.abc import s
-        >>> from sympy.geometry import Curve
         >>> C = Curve([2*s, s**2], (s, 0, 2))
         >>> C.arbitrary_point()
         Point2D(2*t, t**2)
@@ -160,7 +168,7 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.abc import t, a
-        >>> from sympy.geometry import Curve
+        >>> from sympy import Curve
         >>> Curve((t, t**2), (t, 0, 2)).free_symbols
         set()
         >>> Curve((t, t**2), (t, a, 2)).free_symbols
@@ -187,7 +195,7 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.abc import t
-        >>> from sympy.geometry import Curve
+        >>> from sympy import Curve
         >>> C = Curve((t, t**2), (t, 0, 2))
         >>> C.ambient_dimension
         2
@@ -210,7 +218,7 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.abc import t
-        >>> from sympy.geometry import Curve
+        >>> from sympy import Curve
         >>> C = Curve((t, t**2), (t, 0, 2))
         >>> C.functions
         (t, t**2)
@@ -237,7 +245,7 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.abc import t
-        >>> from sympy.geometry import Curve
+        >>> from sympy import Curve
         >>> C = Curve([t, t**3], (t, -2, 2))
         >>> C.limits
         (t, -2, 2)
@@ -264,7 +272,7 @@ class Curve(GeometrySet):
         ========
 
         >>> from sympy.abc import t
-        >>> from sympy.geometry import Curve
+        >>> from sympy import Curve
         >>> C = Curve([t, t**2], (t, 0, 2))
         >>> C.parameter
         t
@@ -284,7 +292,7 @@ class Curve(GeometrySet):
         Examples
         ========
 
-        >>> from sympy.geometry.curve import Curve
+        >>> from sympy import Curve
         >>> from sympy.abc import t
         >>> Curve((t, t), (t, 0, 1)).length
         sqrt(2)
@@ -352,14 +360,12 @@ class Curve(GeometrySet):
         Examples
         ========
 
-        >>> from sympy.geometry.curve import Curve
+        >>> from sympy import Curve, pi
         >>> from sympy.abc import x
-        >>> from sympy import pi
         >>> Curve((x, x), (x, 0, 1)).rotate(pi/2)
         Curve((-x, x), (x, 0, 1))
 
         """
-        from sympy.matrices import Matrix, rot_axis3
         if pt:
             pt = -Point(pt, dim=2)
         else:
@@ -385,7 +391,7 @@ class Curve(GeometrySet):
         Examples
         ========
 
-        >>> from sympy.geometry.curve import Curve
+        >>> from sympy import Curve
         >>> from sympy.abc import x
         >>> Curve((x, x), (x, 0, 1)).scale(2)
         Curve((2*x, x), (x, 0, 1))
@@ -409,7 +415,7 @@ class Curve(GeometrySet):
         Examples
         ========
 
-        >>> from sympy.geometry.curve import Curve
+        >>> from sympy import Curve
         >>> from sympy.abc import x
         >>> Curve((x, x), (x, 0, 1)).translate(1, 2)
         Curve((x + 1, x + 2), (x, 0, 1))
