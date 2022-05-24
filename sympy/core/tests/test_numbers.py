@@ -1597,25 +1597,25 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).cofactors(Integer(2)) == \
         (Integer(2), Integer(2), Integer(1))
 
-    assert Integer(4).gcd(Float(2.0)) == S.One
+    assert Integer(4).gcd(Float(2.0)) == Float(1.0)
     assert Integer(4).lcm(Float(2.0)) == Float(8.0)
-    assert Integer(4).cofactors(Float(2.0)) == (S.One, Integer(4), Float(2.0))
+    assert Integer(4).cofactors(Float(2.0)) == (Float(1.0), Float(4.0), Float(2.0))
 
-    assert S.Half.gcd(Float(2.0)) == S.One
+    assert S.Half.gcd(Float(2.0)) == Float(1.0)
     assert S.Half.lcm(Float(2.0)) == Float(1.0)
     assert S.Half.cofactors(Float(2.0)) == \
-        (S.One, S.Half, Float(2.0))
+        (Float(1.0), Float(0.5), Float(2.0))
 
 
 def test_Float_gcd_lcm_cofactors():
-    assert Float(2.0).gcd(Integer(4)) == S.One
+    assert Float(2.0).gcd(Integer(4)) == Float(1.0)
     assert Float(2.0).lcm(Integer(4)) == Float(8.0)
-    assert Float(2.0).cofactors(Integer(4)) == (S.One, Float(2.0), Integer(4))
+    assert Float(2.0).cofactors(Integer(4)) == (Float(1.0), Float(2.0), Float(4.0))
 
-    assert Float(2.0).gcd(S.Half) == S.One
+    assert Float(2.0).gcd(S.Half) == Float(1.0)
     assert Float(2.0).lcm(S.Half) == Float(1.0)
     assert Float(2.0).cofactors(S.Half) == \
-        (S.One, Float(2.0), S.Half)
+        (Float(1.0), Float(2.0), Float(0.5))
 
 
 def test_issue_4611():
@@ -2013,7 +2013,7 @@ def test_issue_10020():
 def test_invert_numbers():
     assert S(2).invert(5) == 3
     assert S(2).invert(Rational(5, 2)) == S.Half
-    assert S(2).invert(5.) == 0.5
+    assert S(2).invert(5.) == S.Half
     assert S(2).invert(S(5)) == 3
     assert S(2.).invert(5) == 0.5
     assert S(sqrt(2)).invert(5) == 1/sqrt(2)
@@ -2222,7 +2222,7 @@ def test_floordiv():
 
 def test_negation():
     assert -S.Zero is S.Zero
-    assert -Float(0) is not S.Zero and -Float(0) == 0
+    assert -Float(0) is not S.Zero and -Float(0) == 0.0
 
 
 def test_exponentiation_of_0():

@@ -966,7 +966,7 @@ def test_is_number():
     i = Integral(x, (y, z, z))
     assert i.is_number is False and i.n() == 0
     i = Integral(1, (y, z, z + 2))
-    assert i.is_number is False and i.n() == 2
+    assert i.is_number is False and i.n() == 2.0
 
     assert Integral(x*y, (x, 1, 2), (y, 1, 3)).is_number is True
     assert Integral(x*y, (x, 1, 2), (y, 1, z)).is_number is False

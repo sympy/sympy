@@ -1535,7 +1535,7 @@ class Variable(Node):
         >>> decl1.variable.value == NoneToken()  # OK
         True
         >>> decl2 = x.as_Declaration(value=42.0)
-        >>> decl2.variable.value == 42
+        >>> decl2.variable.value == 42.0
         True
 
         """
