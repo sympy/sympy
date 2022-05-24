@@ -26,7 +26,8 @@ _known_constants_numpy = {
     'EulerGamma': 'euler_gamma',
     'NaN': 'nan',
     'Infinity': 'PINF',
-    'NegativeInfinity': 'NINF'
+    'NegativeInfinity': 'NINF',
+    'ComplexInfinity': 'nan',
 }
 
 _numpy_known_functions = {k: 'numpy.' + v for k, v in _known_functions_numpy.items()}
