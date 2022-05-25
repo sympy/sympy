@@ -196,7 +196,7 @@ jobs:
       # llvmlite cannot be installed under PyPy. Installing numba pulls in
       # llvmlite indirectly. Maybe it would be better to disable the llvmlit
       # tests but still install both of these so at least numbe can be tested.
-      - if: ${{ matrix.python-version == '3.9' }}
+      - if: ${{ matrix.python-version != 'pypy-3.8' }}
         run: pip install llvmlite numba
 
       # Test external imports
