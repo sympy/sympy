@@ -19,7 +19,6 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
 from sympy.utilities.iterables import numbered_symbols
-from sympy.core.cache import cacheit
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
