@@ -10,7 +10,7 @@ from .kind import NumberKind, UndefinedKind
 from .logic import fuzzy_bool
 from .singleton import S
 from .sorting import ordered
-from .sympify import sympify, _sympy_converter, _sympify
+from .sympify import sympify, _sympy_converter
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import sift, is_sequence
 from sympy.utilities.misc import filldedent

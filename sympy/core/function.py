@@ -149,7 +149,6 @@ def arity(cls):
         lambda p:p.default == p.empty, binary=True))
     return no if not yes else tuple(range(no, no + yes + 1))
 
-
 class FunctionClass(ManagedProperties):
     """
     Base class for function classes. FunctionClass is a subclass of type.
