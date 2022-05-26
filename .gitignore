@@ -83,3 +83,8 @@ sample.tex
 
 # pytest related data file for slow tests
 .ci/durations.log
+
+# node files for pyodide test
+node_modules
+package.json
+package-lock.json

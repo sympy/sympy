@@ -144,6 +144,22 @@ jobs:
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
 
+  # -------------------- Test Pyodide on node ---------------------- #
+
+  test-pyodide:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+      - run: npm i pyodide@0.20.1-alpha.2
+      - run: python3 setup.py bdist_wheel
+      - run: python3 -m http.server &
+      - run: node bin/test_pyodide.mjs 2>/dev/null  # ignore node exception
+
   # -------------------- Optional dependency tests ----------------- #
 
   optional-dependencies:
