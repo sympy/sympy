@@ -152,6 +152,8 @@ GTE_S: '\\geqslant';
 
 BANG: '!';
 
+SINGLE_QUOTES: '\''+;
+
 SYMBOL: '\\' [a-zA-Z]+;
 
 math: relation;
@@ -228,7 +230,7 @@ group:
 
 abs_group: BAR expr BAR;
 
-atom: (LETTER | SYMBOL) subexpr?
+atom: (LETTER | SYMBOL) (subexpr? SINGLE_QUOTES? | SINGLE_QUOTES? subexpr?)
 	| NUMBER
 	| DIFFERENTIAL
 	| mathit
@@ -280,7 +282,7 @@ func:
 		L_PAREN func_arg R_PAREN
 		| func_arg_noparens
 	)
-	| (LETTER | SYMBOL) subexpr? // e.g. f(x)
+	| (LETTER | SYMBOL) (subexpr? SINGLE_QUOTES? | SINGLE_QUOTES? subexpr?) // e.g. f(x), f_1'(x)
 	L_PAREN args R_PAREN
 	| FUNC_INT (subexpr supexpr | supexpr subexpr)? (
 		additive? DIFFERENTIAL
