@@ -629,11 +629,6 @@ def test_sympy__core__expr__UnevaluatedExpr():
     assert _test_args(UnevaluatedExpr(x))
 
 
-def test_sympy__core__function__FunctionSymbol():
-    from sympy.core.function import FunctionSymbol, Function
-    assert _test_args(FunctionSymbol(Function('f')))
-
-
 def test_sympy__core__function__Application():
     from sympy.core.function import Application
     assert _test_args(Application(1, 2, 3))
@@ -1911,6 +1906,12 @@ def test_sympy__core__symbol__Str():
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
     assert _test_args(Dummy('t'))
+
+
+def test_sympy__core__symbol__FunctionSymbol():
+    from sympy.core.symbol import FunctionSymbol
+    from sympy.core.function import Function
+    assert _test_args(FunctionSymbol(Function('f')))
 
 
 def test_sympy__core__symbol__Symbol():

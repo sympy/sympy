@@ -35,7 +35,7 @@ from collections.abc import Iterable
 
 from .add import Add
 from .assumptions import ManagedProperties
-from .basic import Basic, _atomic, Atom
+from .basic import Basic, _atomic
 from .cache import cacheit
 from .containers import Tuple, Dict
 from .decorators import _sympifyit
@@ -139,6 +139,7 @@ def arity(cls):
     True
     """
     eval_ = getattr(cls, 'eval', cls)
+
     parameters = inspect.signature(eval_).parameters.items()
     if [p for _, p in parameters if p.kind == p.VAR_POSITIONAL]:
         return
@@ -147,36 +148,6 @@ def arity(cls):
     no, yes = map(len, sift(p_or_k,
         lambda p:p.default == p.empty, binary=True))
     return no if not yes else tuple(range(no, no + yes + 1))
-
-
-class FunctionSymbol(Atom):
-    """
-    Object representing a function symbolically.
-    """
-    attribute_list = ['args', '__sympy__', 'func', 'sort_key']
-
-    def __new__(cls, function):
-        obj = Basic.__new__(cls)
-        obj.name = function.__name__
-        obj.function = function
-        return obj
-
-    def __call__(self, *args):
-        return self.function(*args)
-
-    def __instancecheck__(self, other):
-        if isinstance(other, type(self.function)):
-            return True
-        return super().__instancecheck__(other)
-
-    @property
-    def func(self):
-        return lambda: self.function
-
-    def sort_key(self, order):
-        func = ( 0, 0, self.function.__class__.__name__)
-        args = (1, (str(self.function),))
-        return func, args, S.One.sort_key(), S.One
 
 
 class FunctionClass(ManagedProperties):
@@ -224,16 +195,6 @@ class FunctionClass(ManagedProperties):
                 raise TypeError("eval on Function subclasses should be a class method (defined with @classmethod)")
 
         super().__init__(*args, **kwargs)
-        cls.function_symbol = FunctionSymbol(cls)
-
-    def __getattribute__(self, attr):
-        try:
-            fsym = type.__getattribute__(self, 'function_symbol')
-            if attr in fsym.attribute_list:
-                return getattr(fsym, attr)
-        except AttributeError:
-            pass
-        return super().__getattribute__(attr)
 
     @property
     def __signature__(self):

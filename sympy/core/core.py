@@ -70,9 +70,6 @@ class BasicMeta(type):
         all_classes.add(cls)
         cls.__sympy__ = property(lambda self: True)
 
-    def __instancecheck__(cls, inst):
-        return super().__instancecheck__(inst) or hasattr(inst, 'function_symbol') and cls.__name__ == 'Basic'
-
     def __cmp__(cls, other):
         # If the other object is not a Basic subclass, then we are not equal to
         # it.
