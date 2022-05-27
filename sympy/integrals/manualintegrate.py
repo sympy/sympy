@@ -88,6 +88,7 @@ ReciprocalRule = Rule("ReciprocalRule", "func")
 ArcsinRule = Rule("ArcsinRule")
 InverseHyperbolicRule = Rule("InverseHyperbolicRule", "func")
 ReciprocalSqrtQuadraticRule = Rule("ReciprocalSqrtQuadraticRule", "a b c")
+SqrtQuadraticRule = Rule("SqrtQuadraticRule", "a b c")
 AlternativeRule = Rule("AlternativeRule", "alternatives")
 DontKnowRule = Rule("DontKnowRule")
 DerivativeRule = Rule("DerivativeRule")
@@ -514,6 +515,8 @@ def inverse_trig_rule(integral):
                 return PiecewiseRule([(make_inverse_trig(*args), cond)
                                       for args, cond in possibilities], integrand, symbol)
         return ReciprocalSqrtQuadraticRule(a, b, c, integrand, symbol)
+    if exp == S.Half:
+        return SqrtQuadraticRule(a, b, c, integrand, symbol)
 
 
 def add_rule(integral):
@@ -522,18 +525,17 @@ def add_rule(integral):
               for g in integrand.as_ordered_terms()]
     return None if None in results else AddRule(results, integrand, symbol)
 
-def mul_rule(integral):
+
+def mul_rule(integral: IntegralInfo):
     integrand, symbol = integral
 
     # Constant times function case
     coeff, f = integrand.as_independent(symbol)
-    next_step = integral_steps(f, symbol)
+    if coeff != 1:
+        next_step = integral_steps(f, symbol)
+        if next_step is not None:
+            return ConstantTimesRule(coeff, f, next_step, integrand, symbol)
 
-    if coeff != 1 and next_step is not None:
-        return ConstantTimesRule(
-            coeff, f,
-            next_step,
-            integrand, symbol)
 
 def _parts_rule(integrand, symbol):
     # LIATE rule:
@@ -843,26 +845,29 @@ def sqrt_quadratic_denom_rule(integral: IntegralInfo):
         if numer_poly is None:
             return
         a, b, c = match[a], match[b], match[c]
-        if numer_poly.degree() == 1:
+        deg = numer_poly.degree()
+        if deg <= 1:
             # integrand == (d+e*x)/sqrt(a+b*x+c*x**2)
-            e, d = numer_poly.all_coeffs()
+            e, d = numer_poly.all_coeffs() if deg == 1 else (S.Zero, numer)
             # rewrite numerator to A*(2*c*x+b) + B
             A = e/(2*c)
             B = d-A*b
-            u = Dummy("u")
-            pow_rule = PowerRule(u, -S.Half, 1/sqrt(u), u)
             pre_substitute = (2*c*x+b)/denom
-            linear_step = URule(u, a+b*x+c*x**2, None, pow_rule, pre_substitute, x)
-            if A != 1:
-                linear_step = ConstantTimesRule(A, pre_substitute, linear_step, A*pre_substitute, x)
-            step = linear_step
+            constant_step = linear_step = None
+            if A != 0:
+                u = Dummy("u")
+                pow_rule = PowerRule(u, -S.Half, 1/sqrt(u), u)
+                linear_step = URule(u, a+b*x+c*x**2, None, pow_rule, pre_substitute, x)
+                if A != 1:
+                    linear_step = ConstantTimesRule(A, pre_substitute, linear_step, A*pre_substitute, x)
             if B != 0:
                 constant_step = inverse_trig_rule(IntegralInfo(1/denom, x))
                 if B != 1:
                     constant_step = ConstantTimesRule(B, 1/denom, constant_step, B/denom, x)
+            if linear_step and constant_step:
                 add = Add(A*pre_substitute, B/denom, evaluate=False)
-                step = RewriteRule(add, AddRule([linear_step, constant_step], add, x), integrand, x)
-            return step
+                return RewriteRule(add, AddRule([linear_step, constant_step], add, x), integrand, x)
+            return linear_step or constant_step
 
 
 def root_mul_rule(integral):
@@ -1524,6 +1529,11 @@ def eval_inversehyperbolic(func, integrand, symbol):
 @evaluates(ReciprocalSqrtQuadraticRule)
 def eval_reciprocal_sqrt_quadratic(a, b, c, integrand, x):
     return log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
+
+
+@evaluates(SqrtQuadraticRule)
+def eval_sqrt_quadratic(a, b, c, integrand, x):
+    return x*integrand/2 + _manualintegrate(sqrt_quadratic_denom_rule(IntegralInfo((2*a+b*x)/integrand, x)))/4
 
 
 @evaluates(AlternativeRule)
