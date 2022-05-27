@@ -11,6 +11,7 @@ from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sorting import ordered
+from sympy.simplify.simplify import simplify
 from sympy.core.sympify import sympify
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension, DimensionSystem
@@ -49,6 +50,7 @@ def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
 
 
 def convert_to(expr, target_units, unit_system="SI"):
+    expr=expr.simplify()
     """
     Convert ``expr`` to the same expression with all of its units and quantities
     represented as factors of ``target_units``, whenever the dimension is compatible.
