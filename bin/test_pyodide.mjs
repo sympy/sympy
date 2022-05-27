@@ -1,13 +1,31 @@
-import pyodide_pkg from 'pyodide/pyodide.js'
+import { argv } from 'process'
+import { readdirSync } from 'fs'
+import pyodide_pkg from '../pyodide/pyodide.js'
+
+let sympy
+const fileNames = readdirSync('dist')
+for (const fileName of fileNames) {
+    if (fileName.startsWith('sympy') && fileName.endsWith('.whl')) {
+        sympy = fileName
+    }
+}
 
 const pyodide = await pyodide_pkg.loadPyodide()
 await pyodide.loadPackage([
-    'https://files.pythonhosted.org/packages/d4/cf/3965bddbb4f1a61c49aacae0e78fd1fe36b5dc36c797b31f30cf07dcbbb7/mpmath-1.2.1-py3-none-any.whl',  // latest mpmath on PyPI
-    'https://cdn.jsdelivr.net/pyodide/v0.20.0/full/numpy-1.22.3-cp310-cp310-emscripten_wasm32.whl',  // latest numpy built by pyodide
-    'http://localhost:8000/dist/sympy-1.11.dev0-py3-none-any.whl'  // git version sympy
+    'mpmath',  // provided by pyodide
+    'numpy',  // built by pyodide
+    `../dist/${sympy}`  // git version sympy
 ])
+
+let split = 'None'
+if (argv[2]) {
+    if (argv[2].startsWith('--split=')) {
+        split = `'${argv[2].slice(8)}'`
+    }
+}
+
 pyodide.runPython(`
 import sympy
-if not sympy.test(subprocess=False):
+if not sympy.test(split=${split}, subprocess=False):
     exit(1)
 `)
