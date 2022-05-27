@@ -11,7 +11,6 @@ from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sorting import ordered
-from sympy.simplify.simplify import simplify
 from sympy.core.sympify import sympify
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension, DimensionSystem
