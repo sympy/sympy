@@ -20,11 +20,12 @@ Learn how to use SymPy computer algebra system to:
 | [ Solve (find the roots of) a polynomial algebraically ](../modules/polys/basics.rst)                       | $ x^2 - x = 0 $ | $ x = \{0, 1\} $                                                                                                |
 |  [ Solve a Diophantine equation (find integer solutions to a polynomial equation) algebraically ](../modules/solvers/diophantine.rst)             | $x^2 - 4xy + 8y^2 - 3x + 7y - 5 = 0 $ | $ \{(x = 2, y = 1), (x = 5, y = 1)\}$                                                                                  |
 
+[comment]: <> (The following link to solve should be set to resolve to modules/solvers/solvers.html#sympy.solvers.solvers.solve)
 
 Note: SymPy has a function called 
-[`solve`](https://docs.sympy.org/dev/modules/solvers/solvers.html?highlight=solve#sympy.solvers.solvers.solve) 
+[`solve`](../modules/solvers/solvers.rst) 
 which is designed to find the roots of an equation or system of equations.
 SymPy `solve` may or may not be what you need for a particular problem, 
 so we recommend you use the links on this page to learn how to "solve" your problem.
-And while a common, colloquial expression is, for example, ["solve an integral"](http://docs.sympy.org), 
-in SymPy's terminology it would be ["evaluate an integral."](http://docs.sympy.org)
+And while a common, colloquial expression is, for example, ["solve an integral"](../modules/integrals/integrals.rst), 
+in SymPy's terminology it would be ["evaluate an integral."](../modules/integrals/integrals.rst)
