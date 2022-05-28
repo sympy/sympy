@@ -8,17 +8,17 @@ Learn how to use SymPy computer algebra system to:
 
 | Description                                                  | Example                                                                                                                     | Solution |
 |--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|--------------|
-| [ Solve an equation algebraically ](../modules/solvers/solvers.md)                        | $x^2 = 4$ | $x =\{-2,2\}$                                                                                                |
+| [ Solve an equation algebraically ](../modules/solvers/solvers.rst)                        | $x^2 = 4$ | $x =\{-2,2\}$                                                                                                |
 | [ Solve a system of equations algebraically ](solvers-algebraic-equations)              | $x^2 + y = 2, x - y = 4$ | $\{(x = -3, y = -7), (x = 2, y = 2)\}$                                                                                        |
 |  Solve an equation numerically                           | $\cos(x) = x $ | $ x \approx 0.739085133215161$                                                                                           |
 |  Solve an ordinary differential equation algebraically   | $y''(x) + 9f(x)=0 $ | $ f(x)=C_{1} \sin(3x)+ C_{2} \cos(3x)$                                                    |
-|  Solve a system of linear equations algebraically        | $x + y = 2, x - y = 0 $ | $ x = 1, y = 1$                                                                                           |
-|  Solve a system of nonlinear equations algebraically     | $x^2 + y^3 = 1, x^3 - y^2 = 0 $ | $ x = 1, y = 0$                                                                                       |
+|  [ Solve a system of linear equations algebraically ](../modules/solvers/solvers.rst)        | $x + y = 2, x - y = 0 $ | $ x = 1, y = 1$                                                                                           |
+|  [ Solve a system of nonlinear equations algebraically ](../modules/solvers/solvers.rst)     | $x^2 + y^3 = 1, x^3 - y^2 = 0 $ | $ x = 1, y = 0$                                                                                       |
 |  Solve a matrix problem algebraically                    | $ \left[\begin{array}{cc} 1 & 1\\1 & -1\end{array}\right] \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} 2\\0\end{array}\right] $ | $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} 1\\1\end{array}\right]$  |
-|  Solve an inequality algebraically                       | $ x^2 < 4 $ | $ -2 < x < 2 $                                                                                                        |
-|  Solve a system of inequalities algebraically            | $ x^2 < 4, x > 0 $ | $ 0 < x < 2 $                                                                                                  |
-|  Solve (find the roots of) a polynomial algebraically                        | $ x^2 - x = 0 $ | $ x = \{0, 1\} $                                                                                                |
-|  Solve a Diophantine equation (find integer solutions to a polynomial equation) algebraically              | $x^2 - 4xy + 8y^2 - 3x + 7y - 5 = 0 $ | $ \{(x = 2, y = 1), (x = 5, y = 1)\}$                                                                                  |
+|  [ Solve an inequality algebraically ](../modules/solvers/inequalities.rst)                      | $ x^2 < 4 $ | $ -2 < x < 2 $                                                                                                        |
+|  [ Solve a system of inequalities algebraically ](../modules/solvers/inequalities.rst)           | $ x^2 < 4, x > 0 $ | $ 0 < x < 2 $                                                                                                  |
+| [ Solve (find the roots of) a polynomial algebraically ](../modules/polys/basics.rst)                       | $ x^2 - x = 0 $ | $ x = \{0, 1\} $                                                                                                |
+|  [ Solve a Diophantine equation (find integer solutions to a polynomial equation) algebraically ](../modules/solvers/diophantine.rst)             | $x^2 - 4xy + 8y^2 - 3x + 7y - 5 = 0 $ | $ \{(x = 2, y = 1), (x = 5, y = 1)\}$                                                                                  |
 
 
 Note: SymPy has a function called 
