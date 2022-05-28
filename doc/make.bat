@@ -19,7 +19,7 @@ set LATEXMKOPTS=-halt-on-error -xelatex
 if "%1" == "html" goto html
 if "%1" == "help" goto help
 if "%1" == "livehtml" goto livehtml
-if "%1" == "latex" goto latex
+if "%1" == "pdf" goto pdf
 
 %SPHINXBUILD% >NUL 2>NUL
 if errorlevel 9009 (
@@ -50,16 +50,15 @@ if NOT exist %BUILDDIR%/ (
 sphinx-autobuild --port %PORT% --host %HOST% --open-browser --watch .. %SOURCEDIR% %BUILDDIR%\html
 goto end
 
-:latex
+:pdf
 if NOT exist %BUILDDIR%/logo (
 	mkdir %BUILDDIR%\logo %BUILDDIR%\latex %BUILDDIR%\doctrees
 	python ./generate_logos.py -d
 )
 %SPHINXBUILD% -b latex %ALLSPHINXOPTSlatex% %BUILDDIR%\latex
-echo.
-echo Build finished; the LaTeX files are in %BUILDDIR%\latex.
-echo Set the environment variable LATEXMKOPTS='-xelatex -silent'
-echo And run \`make all' in that directory to run these through xelatex.
+pushd %BUILDDIR%\latex
+latexmk -xelatex -silent -f
+popd
 goto end
 
 :help

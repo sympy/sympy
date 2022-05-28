@@ -4,16 +4,11 @@ from __future__ import annotations
     support SVG images natively (e.g. LaTeX).
 
 """
-import subprocess
 
-from sphinx.errors import ExtensionError
-from sphinx.locale import __
 from sphinx.transforms.post_transforms.images import ImageConverter
 from sphinx.util import logging
-from errno import ENOENT, EPIPE, EINVAL
 import os
 import platform
-import tempfile
 from typing import Any  # NOQA
 from sphinx.application import Sphinx  # NOQA
 
@@ -30,68 +25,67 @@ class Converter(ImageConverter):
         """Confirms if converter is available or not."""
         return True
 
-    def chrome_command(self) -> str:
+    def chrome_command(self) -> str | None:
         if platform.win32_ver()[0]:
-            return os.path.join(os.environ['PROGRAMW6432'],
-             "Google\Chrome\Application\chrome.exe")
-        elif platform.mac_ver()[0]:
-            return "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            if os.system("where chrome") == 0:
+                return "chrome"
+            path = os.path.join(os.environ["PROGRAMW6432"], "Google\\Chrome\\Application\\chrome.exe")
+            if os.path.exists(path):
+                return f'"{path}"'
+            return None
+        if os.system("chrome --version") == 0:
+            return "chrome"
+        if platform.mac_ver()[0]:
+            return "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'"
         elif platform.libc_ver()[0]:
             return "google-chrome"
-        else:
-            logger.error("Not able to find suitable chromium or chrome command for this os")
+        return None
 
-    def chromium_command(self) -> str:
+    def chromium_command(self) -> str | None:
         if platform.win32_ver()[0]:
-            return os.path.join(os.environ['PROGRAMW6432'],
-             "chrome-win/chrome.exe")
-        elif platform.mac_ver()[0]:
-            return "/Applications/Chromium.app/Contents/MacOS/Chromium"
+            if os.system("where chromium") == 0:
+                return "chromium"
+            path = os.path.join(os.environ["PROGRAMW6432"], "Chromium\\Application\\chrome.exe")
+            if os.path.exists(path):
+                return f'"{path}"'
+            return None
+        if os.system("chromium --version") == 0:
+            return "chromium"
+        if platform.mac_ver()[0]:
+            path = "/Applications/Chromium.app/Contents/MacOS/Chromium"
+            if os.path.exists(path):
+                return path
         elif platform.libc_ver()[0]:
-            return "chromium-browser"
+            if os.system("chromium-browser --version") == 0:
+                return "chromium-browser"
+        return None
 
-    def command_runner(self, chrome, _to, temp_name):
-        args = [chrome, '--headless', '--disable-gpu', '--disable-software-rasterizer', '--print-to-pdf=' + _to, temp_name]
-        logger.debug('Invoking %r ...', args)
-        p = subprocess.run(
-            args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        return p
+
+    def command_runner(self, chrome: str | None, _to: str, temp_name: str) -> int:
+        if not chrome:
+            return 1
+        command = f'{chrome} --headless --disable-gpu --disable-software-rasterizer --print-to-pdf={_to} {temp_name}'
+        logger.error(command)
+        return os.system(command)
 
     def convert(self, _from: str, _to: str) -> bool:
         """Converts the image from SVG to PDF using chrome."""
+        with open(_from, 'r') as f:
+            svg = f.read()
 
-        HTML = "<html ><head ><style >body {margin: 0; }</style ><script >function init() {const element = document.getElementById('targetsvg');const positionInfo = element.getBoundingClientRect();const height = positionInfo.height;const width = positionInfo.width;const style = document.createElement('style');style.innerHTML = `@page {margin: 0; size: ${width}px ${height}px}`;document.head.appendChild(style); }window.onload = init;</script ></head><body><img id=\"targetsvg\" src=\"%s\"></body></html>" % (_from)
-        try:
-            temp = tempfile.NamedTemporaryFile(suffix=".html", mode='w', delete=False)
-            with open(temp.name, 'w+') as f:
-                f.write(HTML)
-                f.seek(0)
-            chromium = self.chromium_command()
-            p = self.command_runner(chromium, _to, temp.name)
+        HTML = "<html><head><style>body {margin: 0; }</style><script>function init() {const element = document.querySelector('svg');const positionInfo = element.getBoundingClientRect();const height = positionInfo.height;const width = positionInfo.width;const style = document.createElement('style');style.innerHTML = `@page {margin: 0; size: ${width}px ${height}px}`;document.head.appendChild(style); }window.onload = init;</script></head><body>%s</body></html>" % (svg)
+        temp_name = f'{_from}.html'
+        with open(temp_name, 'w') as f:
+            f.write(HTML)
 
-        except OSError as err:
-            if err.errno != ENOENT:  # No such file or directory
-                raise
-            try:
-                chrome = self.chrome_command()
-                p = self.command_runner(chrome, _to, temp.name)
-            except OSError as err:
-                logger.error('converter command cannot be run. chrome is not a internal or external command')
-                return False
-
-        try:
-            stdout, stderr = p.stdout, p.stderr
-            temp.close()
-            os.unlink(temp.name)
-        except (OSError, IOError) as err:
-            if err.errno not in (EPIPE, EINVAL):
-                raise
-            stdout, stderr = p.stdout, p.stderr
-        if p.returncode != 0:
-            raise ExtensionError(__('converter exited with error:\n'
-                                    '[stderr]\n%s\n[stdout]\n%s') %
-                                 (stderr, stdout))
-
+        chromium = self.chromium_command()
+        code = self.command_runner(chromium, _to, temp_name)
+        if code != 0:
+            chrome = self.chrome_command()
+            code = self.command_runner(chrome, _to, temp_name)
+        if code != 0:
+            logger.error('Fail to convert svg to pdf. Make sure Chromium or Chrome is installed.')
+            exit(1)
         return True
 
 

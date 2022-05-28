@@ -106,29 +106,13 @@ users.
 
 or
 
-Follow instruction below to install Chocolatey (or https://chocolatey.org/install)
+Follow `instruction <https://chocolatey.org/install>`_ to install Chocolatey
 
-Open powershell as an ``Administrator`` and run::
-
-   Get-ExecutionPolicy
-
-If it returns Restricted, then run::
-
-   Set-ExecutionPolicy AllSigned
-
-or::
-
-   Set-ExecutionPolicy Bypass -Scope Process
-
-To install Chocolatey::
-
-   Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-
-Installing make and other dependencies::
+Install make and other dependencies::
 
    choco install make graphviz rsvg-convert imagemagick
 
-Installing python dependencies::
+Install python dependencies::
 
    pip install -r doc/requirements.txt
 
@@ -265,15 +249,22 @@ On Ubuntu, you can install these with::
 On Mac, you can use::
 
     brew install texlive
+    brew install --cask chromium
+    brew tap homebrew/cask-fonts
+    brew install font-dejavu
 
-and also make sure the `Google Chrome browser
-<https://www.google.com/chrome/>`_ is installed in ``/Applications``.
+On Windows 10, you can use::
+
+    choco install chromium strawberryperl miktex dejavufonts
+
+If DejaVu fonts are not installed in ``C:\Windows\Fonts``, then open
+``~\AppData\Local\Microsoft\Windows\Fonts``, select all DejaVu fonts,
+right-click and click ``Install for all users``.
 
 To build the pdf docs run::
 
     cd doc
-
-    make latexpdf
+    make pdf
 
 The resulting PDF will be in::
 
