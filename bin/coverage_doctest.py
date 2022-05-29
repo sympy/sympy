@@ -281,8 +281,8 @@ def find_sphinx(name, mod_path):
     fin = doc_path[1:]
     document_path = fin[:3]
 
-    document_path_tmp = document_path.copy()
-    document_path_other_version = document_path.copy()
+    document_path_copy_1 = document_path.copy()
+    document_path_copy_2 = document_path.copy()
 
     possible_path_list = find_module_html_paths(document_path)
 
@@ -291,15 +291,18 @@ def find_sphinx(name, mod_path):
             with open(path) as f:
                 html_txt = f.read()
             html_tree = html.fromstring(html_txt)
-            document_path_tmp.insert(0, "sympy")
-            document_path_tmp.append(name)
-            fullname = ".".join(document_path_tmp)
 
-            if document_path_other_version[-1] == document_path_other_version[-2]:
-                document_path_other_version.pop()
-            document_path_other_version.insert(0, "sympy")
-            document_path_other_version.append(name)
-            othername = ".".join(document_path_other_version)
+            # Create the formatted module name to be searched for in the html file
+            document_path_copy_1.insert(0, "sympy")
+            document_path_copy_1.append(name)
+            fullname = ".".join(document_path_copy_1)
+
+            # Find another possible module name
+            if document_path_copy_2[-1] == document_path_copy_2[-2]:
+                document_path_copy_2.pop()
+            document_path_copy_2.insert(0, "sympy")
+            document_path_copy_2.append(name)
+            othername = ".".join(document_path_copy_2)
 
             if find_codeblock(html_tree, fullname) or find_codeblock(html_tree, othername):
                 return True
