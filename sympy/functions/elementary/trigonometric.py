@@ -20,6 +20,13 @@ from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
 from sympy.utilities.iterables import numbered_symbols
 
+def _imaginary_unit_as_coefficient(arg):
+    """ Extracts symbolic coefficient for imaginary unit """
+    if getattr(arg, 'is_real', True):
+        return None
+    else:
+        return arg.as_coefficient(S.ImaginaryUnit)
+
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
 ###############################################################################
@@ -305,7 +312,7 @@ class sin(TrigonometricFunction):
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
-        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        i_coeff = _imaginary_unit_as_coefficient(arg)
         if i_coeff is not None:
             from sympy.functions.elementary.hyperbolic import sinh
             return S.ImaginaryUnit*sinh(i_coeff)
@@ -598,7 +605,7 @@ class cos(TrigonometricFunction):
         if arg.could_extract_minus_sign():
             return cls(-arg)
 
-        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        i_coeff = _imaginary_unit_as_coefficient(arg)
         if i_coeff is not None:
             from sympy.functions.elementary.hyperbolic import cosh
             return cosh(i_coeff)
@@ -1059,7 +1066,7 @@ class tan(TrigonometricFunction):
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
-        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        i_coeff = _imaginary_unit_as_coefficient(arg)
         if i_coeff is not None:
             from sympy.functions.elementary.hyperbolic import tanh
             return S.ImaginaryUnit*tanh(i_coeff)
@@ -1392,7 +1399,7 @@ class cot(TrigonometricFunction):
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
-        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        i_coeff = _imaginary_unit_as_coefficient(arg)
         if i_coeff is not None:
             from sympy.functions.elementary.hyperbolic import coth
             return -S.ImaginaryUnit*coth(i_coeff)
@@ -2257,7 +2264,7 @@ class asin(InverseTrigonometricFunction):
             if arg in asin_table:
                 return asin_table[arg]
 
-        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        i_coeff = _imaginary_unit_as_coefficient(arg)
         if i_coeff is not None:
             from sympy.functions.elementary.hyperbolic import asinh
             return S.ImaginaryUnit*asinh(i_coeff)
@@ -2467,7 +2474,7 @@ class acos(InverseTrigonometricFunction):
             elif -arg in asin_table:
                 return pi/2 + asin_table[-arg]
 
-        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        i_coeff = _imaginary_unit_as_coefficient(arg)
         if i_coeff is not None:
             return pi/2 - asin(arg)
 
@@ -2694,7 +2701,7 @@ class atan(InverseTrigonometricFunction):
             if arg in atan_table:
                 return atan_table[arg]
 
-        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        i_coeff = _imaginary_unit_as_coefficient(arg)
         if i_coeff is not None:
             from sympy.functions.elementary.hyperbolic import atanh
             return S.ImaginaryUnit*atanh(i_coeff)
@@ -2890,7 +2897,7 @@ class acot(InverseTrigonometricFunction):
                     ang -= pi
                 return ang
 
-        i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+        i_coeff = _imaginary_unit_as_coefficient(arg)
         if i_coeff is not None:
             from sympy.functions.elementary.hyperbolic import acoth
             return -S.ImaginaryUnit*acoth(i_coeff)
