@@ -19,11 +19,12 @@ from .entity import GeometryEntity
 from .exceptions import GeometryError
 from .point import Point, Point2D, Point3D
 from sympy.core.containers import OrderedSet
-from sympy.core.function import Function
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import Function, expand_mul
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Symbol
 from sympy.core.singleton import S
-from sympy.simplify import simplify
+from sympy.polys.polytools import cancel
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import is_sequence
 
@@ -620,7 +621,7 @@ def idiff(eq, y, x, n=1):
         deq = eq.diff(x)
         b = deq.xreplace({dydx: S.Zero})
         a = (deq - b).xreplace({dydx: S.One})
-        yp = simplify((-b/a)).subs(derivs)
+        yp = factor_terms(expand_mul(cancel((-b/a).subs(derivs)), deep=False))
         if i == n - 1:
             return yp.subs([(v, k) for k, v in f.items()])
         derivs[dydx] = yp
