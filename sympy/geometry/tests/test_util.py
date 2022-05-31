@@ -18,10 +18,10 @@ def test_idiff():
     g = Function('g')
     # the use of idiff in ellipse also provides coverage
     circ = x**2 + y**2 - 4
-    ans = 3*x*(-x**2 - y**2)/y**5
-    assert ans == idiff(circ, y, x, 3).simplify()
-    assert ans == idiff(circ, [y], x, 3).simplify()
-    assert idiff(circ, y, x, 3).simplify() == ans
+    ans = -3*x*(x**2 + y**2)/y**5
+    assert ans == idiff(circ, y, x, 3)
+    assert ans == idiff(circ, [y], x, 3)
+    assert idiff(circ, y, x, 3) == ans
     explicit  = 12*x/sqrt(-x**2 + 4)**5
     assert ans.subs(y, solve(circ, y)[0]).equals(explicit)
     assert True in [sol.diff(x, 3).equals(explicit) for sol in solve(circ, y)]

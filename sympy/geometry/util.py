@@ -22,8 +22,9 @@ from sympy.core.containers import OrderedSet
 from sympy.core.function import Function
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Symbol
+from sympy.core.singleton import S
+from sympy.simplify import simplify
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import is_sequence
 
 
@@ -615,7 +616,11 @@ def idiff(eq, y, x, n=1):
     eq = eq.subs(f)
     derivs = {}
     for i in range(n):
-        yp = solve(eq.diff(x), dydx)[0].subs(derivs)
+        # equation will be linear in dydx, a*dydx + b, so dydx = -b/a
+        deq = eq.diff(x)
+        b = deq.xreplace({dydx: S.Zero})
+        a = (deq - b).xreplace({dydx: S.One})
+        yp = simplify((-b/a)).subs(derivs)
         if i == n - 1:
             return yp.subs([(v, k) for k, v in f.items()])
         derivs[dydx] = yp
