@@ -2,7 +2,6 @@ from sympy.core.logic import FuzzyBool
 
 from sympy.core import S, sympify, cacheit, pi, I, Rational
 from sympy.core.add import Add
-from sympy.core.expr import _imaginary_unit_as_coefficient
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_or, fuzzy_and
 from sympy.functions.combinatorial.factorials import (binomial, factorial,
@@ -13,7 +12,8 @@ from sympy.functions.elementary.exponential import exp, log, match_real_imag
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.trigonometric import (acot, asin, atan, cos,
-                                                      cot, sin, tan)
+                                              cot, sin, tan,
+                                              _imaginary_unit_as_coefficient)
 from sympy.polys.specialpolys import symmetric_poly
 
 

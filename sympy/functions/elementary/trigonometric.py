@@ -2,10 +2,10 @@ from typing import Tuple as tTuple
 
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
-from sympy.core.expr import Expr, _imaginary_unit_as_coefficient
+from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
-from sympy.core.numbers import igcdex, Rational, pi, Integer
+from sympy.core.numbers import igcdex, Rational, pi, Integer, Float
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
@@ -20,6 +20,18 @@ from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
 from sympy.utilities.iterables import numbered_symbols
 
+
+###############################################################################
+########################## UTILITIES ##########################################
+###############################################################################
+
+
+def _imaginary_unit_as_coefficient(arg):
+    """ Helper to extract symbolic coefficient for imaginary unit """
+    if isinstance(arg, Float):
+        return None
+    else:
+        return arg.as_coefficient(S.ImaginaryUnit)
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
