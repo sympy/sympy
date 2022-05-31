@@ -125,7 +125,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ``exact`` to None:
 
         >>> collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x, x, exact=None)
-        x*exp(x) + (y + 2)*sin(x) + 3*x
+        x*exp(x) + 3*x + (y + 2)*sin(x)
 
     You can also apply this function to differential equations, where
     derivatives of arbitrary order can be collected. Note that if you
