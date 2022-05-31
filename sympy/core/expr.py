@@ -41,7 +41,7 @@ def _corem(eq, c):  # helper for extract_additively
 
 def _imaginary_unit_as_coefficient(arg):
     """ Helper to extract symbolic coefficient for imaginary unit """
-    if getattr(arg, 'is_real', True):
+    if arg.is_real:
         return None
     else:
         return arg.as_coefficient(S.ImaginaryUnit)
