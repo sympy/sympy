@@ -481,7 +481,7 @@ class Function(Application, Expr):
                 'given': n})
 
         evaluate = options.pop('evaluate', global_parameters.evaluate)
- 
+
         if evaluate and len(args)>0:
              should = [cls._should_evalf(_sympify(a)) for a in args]
              if not any(p <= 0 for p in should):
