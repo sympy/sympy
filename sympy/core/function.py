@@ -480,13 +480,17 @@ class Function(Application, Expr):
                 'plural': 's'*(min(cls.nargs) != 1),
                 'given': n})
 
-        evaluate = options.get('evaluate', global_parameters.evaluate)
-        result = super().__new__(cls, *args, **options)
-        if evaluate and isinstance(result, cls) and result.args:
-            pr2 = min(cls._should_evalf(a) for a in result.args)
-            if pr2 > 0:
-                pr = max(cls._should_evalf(a) for a in result.args)
-                result = result.evalf(prec_to_dps(pr))
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
+ 
+        if evaluate and len(args)>0:
+             should = [cls._should_evalf(_sympify(a)) for a in args]
+             if not any(p <= 0 for p in should):
+                 pr = max(should)
+                 result = super().__new__(cls, *args, evaluate=False, **options)
+                 return result.evalf(prec_to_dps(pr))
+ 
+        result = super().__new__(cls, *args, evaluate=evaluate, **options)
+
 
         return _sympify(result)
 
