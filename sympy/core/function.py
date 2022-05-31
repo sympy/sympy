@@ -483,7 +483,8 @@ class Function(Application, Expr):
         evaluate = options.pop('evaluate', global_parameters.evaluate)
 
         if evaluate and len(args)>0:
-             should = [cls._should_evalf(_sympify(a)) for a in args]
+             args =[sympify(a)for a in args]
+             should = [cls._should_evalf(a) for a in args]
              if not any(p <= 0 for p in should):
                  pr = max(should)
                  result = super().__new__(cls, *args, evaluate=False, **options)
