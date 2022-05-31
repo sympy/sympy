@@ -38,8 +38,11 @@ from sympy.testing.pytest import (raises, XFAIL, slow, skip,
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
+from sympy.external import import_module
 
 from sympy.abc import a, b, c, d, x, y, z, t
+
+pyodide_js = import_module('pyodide_js')
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -2984,6 +2987,9 @@ def test_func():
 
 
 def test_issue_19809():
+    if pyodide_js:
+        skip("can't run on pyodide")
+
     def f():
         assert _dotprodsimp_state.state == None
         m = Matrix([[1]])

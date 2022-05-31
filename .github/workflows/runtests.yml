@@ -144,6 +144,24 @@ jobs:
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
 
+  # -------------------- Test Pyodide on node ---------------------- #
+
+  test-pyodide:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        split: ['1/2', '2/2']
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+      - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.20.1a1/pyodide-build-0.20.1a1.tar.bz2 | tar xjf -
+      - run: python3 setup.py bdist_wheel
+      - run: node bin/test_pyodide.mjs --split=${{ matrix.split }} 2>/dev/null  # ignore node exception
+
   # -------------------- Optional dependency tests ----------------- #
 
   optional-dependencies:
