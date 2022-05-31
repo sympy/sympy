@@ -488,9 +488,8 @@ class Function(Application, Expr):
                  pr = max(should)
                  result = super().__new__(cls, *args, evaluate=False, **options)
                  return result.evalf(prec_to_dps(pr))
- 
-        result = super().__new__(cls, *args, evaluate=evaluate, **options)
 
+        result = super().__new__(cls, *args, evaluate=evaluate, **options)
 
         return _sympify(result)
 
