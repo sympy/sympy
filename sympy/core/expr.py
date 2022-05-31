@@ -39,7 +39,6 @@ def _corem(eq, c):  # helper for extract_additively
     return Add(*co), Add(*non)
 
 
-
 @sympify_method_args
 class Expr(Basic, EvalfMixin):
     """
