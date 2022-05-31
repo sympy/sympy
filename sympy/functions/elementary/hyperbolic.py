@@ -2,6 +2,7 @@ from sympy.core.logic import FuzzyBool
 
 from sympy.core import S, sympify, cacheit, pi, I, Rational
 from sympy.core.add import Add
+from sympy.core.expr import _imaginary_unit_as_coefficient
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_or, fuzzy_and
 from sympy.functions.combinatorial.factorials import (binomial, factorial,
@@ -128,7 +129,7 @@ class sinh(HyperbolicFunction):
             if arg is S.ComplexInfinity:
                 return S.NaN
 
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+            i_coeff = _imaginary_unit_as_coefficient(arg)
 
             if i_coeff is not None:
                 return S.ImaginaryUnit * sin(i_coeff)
@@ -325,7 +326,7 @@ class cosh(HyperbolicFunction):
             if arg is S.ComplexInfinity:
                 return S.NaN
 
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+            i_coeff = _imaginary_unit_as_coefficient(arg)
 
             if i_coeff is not None:
                 return cos(i_coeff)
@@ -569,7 +570,7 @@ class tanh(HyperbolicFunction):
             if arg is S.ComplexInfinity:
                 return S.NaN
 
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+            i_coeff = _imaginary_unit_as_coefficient(arg)
 
             if i_coeff is not None:
                 if i_coeff.could_extract_minus_sign():
@@ -782,7 +783,7 @@ class coth(HyperbolicFunction):
             if arg is S.ComplexInfinity:
                 return S.NaN
 
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+            i_coeff = _imaginary_unit_as_coefficient(arg)
 
             if i_coeff is not None:
                 if i_coeff.could_extract_minus_sign():
@@ -1151,7 +1152,7 @@ class asinh(InverseHyperbolicFunction):
             if arg.is_zero:
                 return S.Zero
 
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+            i_coeff = _imaginary_unit_as_coefficient(arg)
 
             if i_coeff is not None:
                 return S.ImaginaryUnit * asin(i_coeff)
@@ -1408,7 +1409,7 @@ class atanh(InverseHyperbolicFunction):
                 from sympy.calculus.accumulationbounds import AccumBounds
                 return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
 
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+            i_coeff = _imaginary_unit_as_coefficient(arg)
 
             if i_coeff is not None:
                 return S.ImaginaryUnit * atan(i_coeff)
@@ -1517,7 +1518,7 @@ class acoth(InverseHyperbolicFunction):
             if arg is S.ComplexInfinity:
                 return S.Zero
 
-            i_coeff = arg.as_coefficient(S.ImaginaryUnit)
+            i_coeff = _imaginary_unit_as_coefficient(arg)
 
             if i_coeff is not None:
                 return -S.ImaginaryUnit * acot(i_coeff)

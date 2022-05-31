@@ -39,6 +39,14 @@ def _corem(eq, c):  # helper for extract_additively
     return Add(*co), Add(*non)
 
 
+def _imaginary_unit_as_coefficient(arg):
+    """ Helper to extract symbolic coefficient for imaginary unit """
+    if getattr(arg, 'is_real', True):
+        return None
+    else:
+        return arg.as_coefficient(S.ImaginaryUnit)
+
+
 @sympify_method_args
 class Expr(Basic, EvalfMixin):
     """
