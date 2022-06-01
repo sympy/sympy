@@ -1,4 +1,4 @@
-# Solve Using SymPy
+# Solve Equations
 
 The Python package SymPy can symbolically solve equations, differential equations, 
 linear equations, nonlinear equations, matrix problems, inequalities, 
