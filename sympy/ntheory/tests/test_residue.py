@@ -1,5 +1,7 @@
 from collections import defaultdict
-from sympy import S, Symbol, Tuple, Dummy
+from sympy.core.containers import Tuple
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
 
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
@@ -60,10 +62,8 @@ def test_residue():
     raises(ValueError, lambda: is_quad_residue(1.1, 2))
     raises(ValueError, lambda: is_quad_residue(2, 0))
 
-
     assert quadratic_residues(S.One) == [0]
     assert quadratic_residues(1) == [0]
-    assert quadratic_residues(12) == [0, 1, 4, 9]
     assert quadratic_residues(12) == [0, 1, 4, 9]
     assert quadratic_residues(13) == [0, 1, 3, 4, 9, 10, 12]
     assert [len(quadratic_residues(i)) for i in range(1, 20)] == \

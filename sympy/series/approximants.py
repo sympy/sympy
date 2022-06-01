@@ -1,5 +1,6 @@
-from sympy import Integer
-from sympy.core import Symbol
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.polys.polytools import lcm
 from sympy.utilities import public
 
 @public
@@ -55,15 +56,17 @@ def approximants(l, X=Symbol('x'), simplify=False):
     function mpmath.pade
 
     """
-    p1, q1 = [Integer(1)], [Integer(0)]
-    p2, q2 = [Integer(0)], [Integer(1)]
+    from sympy.simplify import simplify as simp
+    from sympy.simplify.radsimp import denom
+    p1, q1 = [S.One], [S.Zero]
+    p2, q2 = [S.Zero], [S.One]
     while len(l):
         b = 0
         while l[b]==0:
             b += 1
             if b == len(l):
                 return
-        m = [Integer(1)/l[b]]
+        m = [S.One/l[b]]
         for k in range(b+1, len(l)):
             s = 0
             for j in range(b, k):
@@ -87,7 +90,6 @@ def approximants(l, X=Symbol('x'), simplify=False):
         q1, q2 = q2, q
 
         # yield result
-        from sympy import denom, lcm, simplify as simp
         c = 1
         for x in p:
             c = lcm(c, denom(x))
@@ -95,6 +97,8 @@ def approximants(l, X=Symbol('x'), simplify=False):
             c = lcm(c, denom(x))
         out = ( sum(c*e*X**k for k, e in enumerate(p))
               / sum(c*e*X**k for k, e in enumerate(q)) )
-        if simplify: yield(simp(out))
-        else: yield out
+        if simplify:
+            yield(simp(out))
+        else:
+            yield out
     return

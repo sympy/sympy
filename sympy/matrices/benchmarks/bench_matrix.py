@@ -1,4 +1,5 @@
-from sympy import eye, zeros, Integer
+from sympy.core.numbers import Integer
+from sympy.matrices.dense import (eye, zeros)
 
 i3 = Integer(3)
 M = eye(100)

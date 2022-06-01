@@ -247,11 +247,6 @@ object.
     >>> type(1 + 1)
     <... 'int'>
 
-.. note::
-
-   On running the example above in SymPy Live, (1+1) is wrapped
-   by Integer, so it does not show the correct output.
-
 This is usually not a big deal. Python ints work much the same as SymPy
 Integers, but there is one important exception:  division.  In SymPy, the
 division of two Integers gives a Rational:
@@ -263,16 +258,12 @@ division of two Integers gives a Rational:
 
 But in Python ``/`` represents either integer division or floating point
 division, depending on whether you are in Python 2 or Python 3, and depending
-on whether or not you have run ``from __future__ import division``:
+on whether or not you have run ``from __future__ import division`` in Python 2
+which is no longer supported from versions above SymPy 1.5.1:
 
     >>> from __future__ import division
-    >>> 1/2 #doctest: +SKIP
+    >>> 1/2
     0.5
-
-.. note::
-
-   On running the example above in SymPy Live, (1/2) is wrapped
-   by Integer, so it does not show the correct output.
 
 To avoid this, we can construct the rational object explicitly
 
@@ -282,13 +273,8 @@ To avoid this, we can construct the rational object explicitly
 This problem also comes up whenever we have a larger symbolic expression with
 ``int/int`` in it.  For example:
 
-    >>> x + 1/2 #doctest: +SKIP
+    >>> x + 1/2
     x + 0.5
-
-.. note::
-
-   On running the example above in SymPy Live, (1/2) is wrapped
-   by Integer, so it does not show the correct output.
 
 This happens because Python first evaluates ``1/2`` into ``0.5``, and then
 that is cast into a SymPy type when it is added to ``x``.  Again, we can get

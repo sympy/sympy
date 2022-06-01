@@ -1,11 +1,11 @@
-from typing import Dict, Any
+from typing import Dict as tDict, Any
 
 from sympy.multipledispatch import dispatch
 from sympy.multipledispatch.conflict import AmbiguityWarning
 from sympy.testing.pytest import raises, warns
 from functools import partial
 
-test_namespace = dict()  # type: Dict[str, Any]
+test_namespace = dict()  # type: tDict[str, Any]
 
 orig_dispatch = dispatch
 dispatch = partial(dispatch, namespace=test_namespace)
@@ -113,7 +113,7 @@ def test_competing_ambiguous():
     def f(x, y): # noqa:F811
         return 2
 
-    with warns(AmbiguityWarning):
+    with warns(AmbiguityWarning, test_stacklevel=False):
         @dispatch(C, A) # noqa:F811
         def f(x, y): # noqa:F811
             return 2

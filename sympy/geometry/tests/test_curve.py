@@ -1,4 +1,9 @@
-from sympy import Symbol, pi, symbols, Tuple, S, sqrt, asinh, Rational
+from sympy.core.containers import Tuple
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.hyperbolic import asinh
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry import Curve, Line, Point, Ellipse, Ray, Segment, Circle, Polygon, RegularPolygon
 from sympy.testing.pytest import raises, slow
 

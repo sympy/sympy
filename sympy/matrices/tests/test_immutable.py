@@ -1,7 +1,12 @@
 from itertools import product
 
-from sympy import (ImmutableMatrix, Matrix, eye, zeros, S, Equality,
-        Unequality, SparseMatrix, sympify, integrate)
+from sympy.core.relational import (Equality, Unequality)
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
+from sympy.integrals.integrals import integrate
+from sympy.matrices.dense import (Matrix, eye, zeros)
+from sympy.matrices.immutable import ImmutableMatrix
+from sympy.matrices import SparseMatrix
 from sympy.matrices.immutable import \
     ImmutableDenseMatrix, ImmutableSparseMatrix
 from sympy.abc import x, y

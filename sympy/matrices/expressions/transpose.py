@@ -1,4 +1,4 @@
-from sympy import Basic
+from sympy.core.basic import Basic
 from sympy.functions import adjoint, conjugate
 
 from sympy.matrices.expressions.matexpr import MatrixExpr
@@ -15,8 +15,7 @@ class Transpose(MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.matrices import MatrixSymbol, Transpose
-    >>> from sympy.functions import transpose
+    >>> from sympy import MatrixSymbol, Transpose, transpose
     >>> A = MatrixSymbol('A', 3, 5)
     >>> B = MatrixSymbol('B', 5, 3)
     >>> Transpose(A)

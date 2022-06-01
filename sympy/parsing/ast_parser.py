@@ -14,7 +14,7 @@ We use the ast module for this. It is well documented at docs.python.org.
 Some tips to understand how this works: use dump() to get a nice
 representation of any node. Then write a string of what you want to get,
 e.g. "Integer(1)", parse it, dump it and you'll see that you need to do
-"Call(Name('Integer', Load()), [node], [], None, None)". You don't need
+"Call(Name('Integer', Load()), [node], [], None, None)". You do not need
 to bother with lineno and col_offset, just call fix_missing_locations()
 before returning the node.
 """
@@ -32,11 +32,11 @@ class Transform(NodeTransformer):
         self.local_dict = local_dict
         self.global_dict = global_dict
 
-    def visit_Num(self, node):
-        if isinstance(node.n, int):
+    def visit_Constant(self, node):
+        if isinstance(node.value, int):
             return fix_missing_locations(Call(func=Name('Integer', Load()),
                     args=[node], keywords=[]))
-        elif isinstance(node.n, float):
+        elif isinstance(node.value, float):
             return fix_missing_locations(Call(func=Name('Float', Load()),
                     args=[node], keywords=[]))
         return node

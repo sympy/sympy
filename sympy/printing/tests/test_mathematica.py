@@ -12,7 +12,7 @@ from sympy.functions import (exp, sin, cos, fresnelc, fresnels, conjugate, Max,
                              gegenbauer, chebyshevt, chebyshevu, legendre,
                              assoc_legendre, Li, LambertW)
 
-from sympy import mathematica_code as mcode
+from sympy.printing.mathematica import mathematica_code as mcode
 
 x, y, z, w = symbols('x,y,z,w')
 f = Function('f')

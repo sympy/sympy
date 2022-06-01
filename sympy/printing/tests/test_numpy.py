@@ -1,19 +1,25 @@
-from sympy import (
-    Piecewise, lambdify, Equality, Unequality, Sum, Mod, sqrt,
-    MatrixSymbol, BlockMatrix, Identity
-)
-from sympy import eye
+from sympy.concrete.summations import Sum
+from sympy.core.mod import Mod
+from sympy.core.relational import (Equality, Unequality)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.matrices.expressions.blockmatrix import BlockMatrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
+from sympy.utilities.lambdify import lambdify
+
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
+from sympy.tensor.array import Array
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
     PermuteDims, ArrayDiagonal
-from sympy.printing.lambdarepr import NumPyPrinter
+from sympy.printing.numpy import NumPyPrinter, SciPyPrinter, _numpy_known_constants, \
+    _numpy_known_functions, _scipy_known_constants, _scipy_known_functions
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 
-from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.testing.pytest import skip, raises
 from sympy.external import import_module
 
@@ -82,9 +88,9 @@ def test_codegen_einsum():
     cg = convert_matrix_to_array(M * N)
     f = lambdify((M, N), cg, 'numpy')
 
-    ma = np.matrix([[1, 2], [3, 4]])
-    mb = np.matrix([[1,-2], [-1, 3]])
-    assert (f(ma, mb) == ma*mb).all()
+    ma = np.array([[1, 2], [3, 4]])
+    mb = np.array([[1,-2], [-1, 3]])
+    assert (f(ma, mb) == np.matmul(ma, mb)).all()
 
 
 def test_codegen_extra():
@@ -95,10 +101,10 @@ def test_codegen_extra():
     N = MatrixSymbol("N", 2, 2)
     P = MatrixSymbol("P", 2, 2)
     Q = MatrixSymbol("Q", 2, 2)
-    ma = np.matrix([[1, 2], [3, 4]])
-    mb = np.matrix([[1,-2], [-1, 3]])
-    mc = np.matrix([[2, 0], [1, 2]])
-    md = np.matrix([[1,-1], [4, 7]])
+    ma = np.array([[1, 2], [3, 4]])
+    mb = np.array([[1,-2], [-1, 3]])
+    mc = np.array([[2, 0], [1, 2]])
+    md = np.array([[1,-1], [4, 7]])
 
     cg = ArrayTensorProduct(M, N)
     f = lambdify((M, N), cg, 'numpy')
@@ -270,19 +276,6 @@ def test_matsolve():
     assert np.allclose(f_matsolve(m0, x0), f(m0, x0))
 
 
-def test_issue_15601():
-    if not np:
-        skip("Numpy not installed")
-
-    M = MatrixSymbol("M", 3, 3)
-    N = MatrixSymbol("N", 3, 3)
-    expr = M*N
-    f = lambdify((M, N), expr, "numpy")
-
-    with warns_deprecated_sympy():
-        ans = f(eye(3), eye(3))
-        assert np.array_equal(ans, np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]))
-
 def test_16857():
     if not np:
         skip("NumPy not installed")
@@ -310,7 +303,38 @@ def test_issue_17006():
 
     assert (f(ma) == mr).all()
 
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     n = symbols('n', integer=True)
     N = MatrixSymbol("M", n, n)
     raises(NotImplementedError, lambda: lambdify(N, N + Identity(n)))
+
+def test_numpy_array():
+    assert NumPyPrinter().doprint(Array(((1, 2), (3, 5)))) == 'numpy.array([[1, 2], [3, 5]])'
+    assert NumPyPrinter().doprint(Array((1, 2))) == 'numpy.array((1, 2))'
+
+def test_numpy_known_funcs_consts():
+    assert _numpy_known_constants['NaN'] == 'numpy.nan'
+    assert _numpy_known_constants['EulerGamma'] == 'numpy.euler_gamma'
+
+    assert _numpy_known_functions['acos'] == 'numpy.arccos'
+    assert _numpy_known_functions['log'] == 'numpy.log'
+
+def test_scipy_known_funcs_consts():
+    assert _scipy_known_constants['GoldenRatio'] == 'scipy.constants.golden_ratio'
+    assert _scipy_known_constants['Pi'] == 'scipy.constants.pi'
+
+    assert _scipy_known_functions['erf'] == 'scipy.special.erf'
+    assert _scipy_known_functions['factorial'] == 'scipy.special.factorial'
+
+def test_numpy_print_methods():
+    prntr = NumPyPrinter()
+    assert hasattr(prntr, '_print_acos')
+    assert hasattr(prntr, '_print_log')
+
+def test_scipy_print_methods():
+    prntr = SciPyPrinter()
+    assert hasattr(prntr, '_print_acos')
+    assert hasattr(prntr, '_print_log')
+    assert hasattr(prntr, '_print_erf')
+    assert hasattr(prntr, '_print_factorial')
+    assert hasattr(prntr, '_print_chebyshevt')

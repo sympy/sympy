@@ -3,29 +3,33 @@ from sympy.multipledispatch import Dispatcher
 
 class FinitePredicate(Predicate):
     """
-    Finite predicate.
+    Finite number predicate.
 
     Explanation
     ===========
 
-    ``Q.finite(x)`` is true if ``x`` is neither an infinity
-    nor a ``NaN``. In other words, ``ask(Q.finite(x))`` is true for all ``x``
-    having a bounded absolute value.
+    ``Q.finite(x)`` is true if ``x`` is a number but neither an infinity
+    nor a ``NaN``. In other words, ``ask(Q.finite(x))`` is true for all
+    numerical ``x`` having a bounded absolute value.
 
     Examples
     ========
 
-    >>> from sympy import Q, ask, Symbol, S, oo, I
-    >>> x = Symbol('x')
-    >>> ask(Q.finite(S.NaN))
-    False
+    >>> from sympy import Q, ask, S, oo, I, zoo
+    >>> from sympy.abc import x
     >>> ask(Q.finite(oo))
+    False
+    >>> ask(Q.finite(-oo))
+    False
+    >>> ask(Q.finite(zoo))
     False
     >>> ask(Q.finite(1))
     True
     >>> ask(Q.finite(2 + 3*I))
     True
-    >>> print(ask(Q.finite(x), Q.positive(x)))
+    >>> ask(Q.finite(x), Q.positive(x))
+    True
+    >>> print(ask(Q.finite(S.NaN)))
     None
 
     References
@@ -56,3 +60,23 @@ class InfinitePredicate(Predicate):
         "InfiniteHandler",
         doc="""Handler for Q.infinite key."""
     )
+
+
+class PositiveInfinitePredicate(Predicate):
+    """
+    Positive infinity predicate.
+
+    ``Q.positive_infinite(x)`` is true iff ``x`` is positive infinity ``oo``.
+    """
+    name = 'positive_infinite'
+    handler = Dispatcher("PositiveInfiniteHandler")
+
+
+class NegativeInfinitePredicate(Predicate):
+    """
+    Negative infinity predicate.
+
+    ``Q.negative_infinite(x)`` is true iff ``x`` is negative infinity ``-oo``.
+    """
+    name = 'negative_infinite'
+    handler = Dispatcher("NegativeInfiniteHandler")

@@ -1,4 +1,12 @@
-from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum, sqrt, exp, pi, Dummy
+from sympy.concrete.summations import Sum
+from sympy.core.mul import Mul
+from sympy.core.numbers import (oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import Integral
 from sympy.core.expr import unchanged
 from sympy.stats import (Normal, Poisson, variance, Covariance, Variance,
                          Probability, Expectation, Moment, CentralMoment)
@@ -131,7 +139,7 @@ def test_probability_rewrite():
 
 def test_symbolic_Moment():
     mu = symbols('mu', real=True)
-    sigma = symbols('sigma', real=True, positive=True)
+    sigma = symbols('sigma', positive=True)
     x = symbols('x')
     X = Normal('X', mu, sigma)
     M = Moment(X, 4, 2)
@@ -145,12 +153,12 @@ def test_symbolic_Moment():
     assert M.doit() == (mu**4 - 8*mu**3 + 6*mu**2*sigma**2 + \
                 24*mu**2 - 24*mu*sigma**2 - 32*mu + 3*sigma**4 + 24*sigma**2 + 16)
     M = Moment(2, 5)
-    assert M.doit() == 2
+    assert M.doit() == 2**5
 
 
 def test_symbolic_CentralMoment():
     mu = symbols('mu', real=True)
-    sigma = symbols('sigma', real=True, positive=True)
+    sigma = symbols('sigma', positive=True)
     x = symbols('x')
     X = Normal('X', mu, sigma)
     CM = CentralMoment(X, 6)
@@ -164,4 +172,4 @@ def test_symbolic_CentralMoment():
     assert CM.rewrite(Integral).dummy_eq(expri)
     assert CM.doit().simplify() == 15*sigma**6
     CM = Moment(5, 5)
-    assert CM.doit() == 5
+    assert CM.doit() == 5**5

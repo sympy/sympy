@@ -1,5 +1,6 @@
 """Polynomial factorization routines in characteristic zero. """
 
+from sympy.core.random import _randint
 
 from sympy.polys.galoistools import (
     gf_from_int_poly, gf_to_int_poly,
@@ -70,7 +71,6 @@ from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import (
     ExtraneousFactors, DomainError, CoercionFailed, EvaluationFailed)
 
-from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
@@ -162,8 +162,7 @@ def dup_zz_mignotte_bound(f, K):
     ..[1] [Abbott2013]_
 
     """
-    from sympy import binomial
-
+    from sympy.functions.combinatorial.factorials import binomial
     d = dup_degree(f)
     delta = _ceil(d / 2)
     delta2 = _ceil(delta / 2)
@@ -249,7 +248,7 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
 
 
 def dup_zz_hensel_lift(p, f, f_list, l, K):
-    """
+    r"""
     Multifactor Hensel lifting in `Z[x]`.
 
     Given a prime `p`, polynomial `f` over `Z[x]` such that `lc(f)`
@@ -259,7 +258,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
         f = lc(f) f_1 ... f_r (mod p)
 
     and a positive integer `l`, returns a list of monic polynomials
-    `F_1`, `F_2`, ..., `F_r` satisfying::
+    `F_1,\ F_2,\ \dots,\ F_r` satisfying::
 
        f = lc(f) F_1 ... F_r (mod p**l)
 
@@ -318,6 +317,8 @@ def dup_zz_zassenhaus(f, K):
 
     if n == 1:
         return [f]
+
+    from sympy.ntheory import isprime
 
     fc = f[-1]
     A = dup_max_norm(f, K)
@@ -423,6 +424,7 @@ def dup_zz_irreducible_p(f, K):
     e_fc = dup_content(f[1:], K)
 
     if e_fc:
+        from sympy.ntheory import factorint
         e_ff = factorint(int(e_fc))
 
         for p in e_ff.keys():
@@ -447,6 +449,13 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     >>> g = x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1
     >>> R.dup_cyclotomic_p(g)
     True
+
+    References
+    ==========
+
+    Bradford, Russell J., and James H. Davenport. "Effective tests for
+    cyclotomic polynomials." In International Symposium on Symbolic and
+    Algebraic Computation, pp. 244-251. Springer, Berlin, Heidelberg, 1988.
 
     """
     if K.is_QQ:
@@ -508,6 +517,7 @@ def dup_cyclotomic_p(f, K, irreducible=False):
 
 def dup_zz_cyclotomic_poly(n, K):
     """Efficiently generate n-th cyclotomic polynomial. """
+    from sympy.ntheory import factorint
     h = [K.one, -K.one]
 
     for p, k in factorint(n).items():
@@ -518,6 +528,8 @@ def dup_zz_cyclotomic_poly(n, K):
 
 
 def _dup_cyclotomic_decompose(n, K):
+    from sympy.ntheory import factorint
+
     H = [[K.one, -K.one]]
 
     for p, k in factorint(n).items():
@@ -744,7 +756,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
 
         C.append(c)
 
-    if any(not j for j in J):
+    if not all(J):
         raise ExtraneousFactors  # pragma: no cover
 
     CC, HH = [], []
@@ -948,7 +960,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
 
 def dmp_zz_wang(f, u, K, mod=None, seed=None):
-    """
+    r"""
     Factor primitive square-free polynomials in `Z[X]`.
 
     Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which is
@@ -961,7 +973,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
 
                       x_2 -> a_2, ..., x_n -> a_n
 
-    where `a_i`, for `i = 2, ..., n`, are carefully chosen integers.  The
+    where `a_i`, for `i = 2, \dots, n`, are carefully chosen integers.  The
     mapping is used to transform `f` into a univariate polynomial in `Z[x_1]`,
     which can be factored efficiently using Zassenhaus algorithm. The last
     step is to lift univariate factors to obtain true multivariate
@@ -977,7 +989,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     .. [2] [Geddes92]_
 
     """
-    from sympy.testing.randtest import _randint
+    from sympy.ntheory import nextprime
 
     randint = _randint(seed)
 
@@ -1090,11 +1102,11 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
 
 
 def dmp_zz_factor(f, u, K):
-    """
+    r"""
     Factor (non square-free) polynomials in `Z[X]`.
 
     Given a multivariate polynomial `f` in `Z[x]` computes its complete
-    factorization `f_1, ..., f_n` into irreducibles over integers::
+    factorization `f_1, \dots, f_n` into irreducibles over integers::
 
                  f = content(f) f_1**k_1 ... f_n**k_n
 

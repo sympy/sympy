@@ -1,4 +1,10 @@
-from sympy import Mul, S, Pow, Symbol, summation, Dict, factorial as fac
+from sympy.concrete.summations import summation
+from sympy.core.containers import Dict
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.factorials import factorial as fac
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 
@@ -13,7 +19,7 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
     is_deficient, is_amicable, dra, drm)
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 
 from sympy.utilities.iterables import capture
 
@@ -110,8 +116,8 @@ def test_multiplicity_in_factorial():
 
 
 def test_perfect_power():
-    raises(ValueError, lambda: perfect_power(0))
-    raises(ValueError, lambda: perfect_power(Rational(25, 4)))
+    raises(ValueError, lambda: perfect_power(0.1))
+    assert perfect_power(0) is False
     assert perfect_power(1) is False
     assert perfect_power(2) is False
     assert perfect_power(3) is False
@@ -151,7 +157,14 @@ def test_perfect_power():
         m = perfect_power(t*3**d, big=False)
         assert m and m[1] == 2 or d == 1 or d == 3, (d, m)
 
+    # negatives and non-integer rationals
+    assert perfect_power(-4) is False
+    assert perfect_power(-8) == (-2, 3)
+    assert perfect_power(Rational(1, 2)**3) == (S.Half, 3)
+    assert perfect_power(Rational(-3, 2)**3) == (-3*S.Half, 3)
 
+
+@slow
 def test_factorint():
     assert primefactors(123456) == [2, 3, 643]
     assert factorint(0) == {0: 1}
@@ -522,7 +535,7 @@ def test_factorrat():
     assert str(factorrat(Rational(1, 1), visual=True)) == '1'
     assert str(factorrat(S(25)/14, visual=True)) == '5**2/(2*7)'
     assert str(factorrat(Rational(25, 14), visual=True)) == '5**2/(2*7)'
-    assert str(factorrat(S(-25)/14/9, visual=True)) == '-5**2/(2*3**2*7)'
+    assert str(factorrat(S(-25)/14/9, visual=True)) == '-1*5**2/(2*3**2*7)'
 
     assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
     assert factorrat(Rational(1, 1), multiple=True) == []

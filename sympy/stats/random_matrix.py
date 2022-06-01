@@ -1,4 +1,4 @@
-from sympy import Basic
+from sympy.core.basic import Basic
 from sympy.stats.rv import PSpace, _symbol_converter, RandomMatrixSymbol
 
 class RandomMatrixPSpace(PSpace):
@@ -9,9 +9,17 @@ class RandomMatrixPSpace(PSpace):
     """
     def __new__(cls, sym, model=None):
         sym = _symbol_converter(sym)
-        return Basic.__new__(cls, sym, model)
+        if model:
+            return Basic.__new__(cls, sym, model)
+        else:
+            return Basic.__new__(cls, sym)
 
-    model = property(lambda self: self.args[1])
+    @property
+    def model(self):
+        try:
+            return self.args[1]
+        except IndexError:
+            return None
 
     def compute_density(self, expr, *args):
         rms = expr.atoms(RandomMatrixSymbol)

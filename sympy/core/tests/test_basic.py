@@ -3,18 +3,20 @@ of Basic or Atom."""
 
 import collections
 
-from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
+from sympy.assumptions.ask import Q
+from sympy.core.basic import (Basic, Atom, as_Basic,
     _atomic, _aresame)
+from sympy.core.containers import Tuple
+from sympy.core.function import Function, Lambda
+from sympy.core.numbers import I, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol, Dummy
-from sympy.core.sympify import SympifyError
-from sympy.core.function import Function, Lambda
-from sympy.core.compatibility import default_sort_key
-
-from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum
+from sympy.concrete.summations import Sum
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import Integral
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises
-from sympy.core import I, pi
 
 b1 = Basic()
 b2 = Basic(b1)
@@ -23,9 +25,8 @@ b21 = Basic(b2, b1)
 
 
 def test__aresame():
-    assert not _aresame(Basic([]), Basic())
-    assert not _aresame(Basic([]), Basic(()))
-    assert not _aresame(Basic(2), Basic(2.))
+    assert not _aresame(Basic(Tuple()), Basic())
+    assert not _aresame(Basic(S(2)), Basic(S(2.)))
 
 
 def test_structure():
@@ -108,7 +109,8 @@ def test_has():
     assert b21.has(Basic)
     assert not b1.has(b21, b3)
     assert not b21.has()
-    raises(SympifyError, lambda: Symbol("x").has("x"))
+    assert not b21.has(str)
+    assert not Symbol("x").has("x")
 
 
 def test_subs():
@@ -175,29 +177,6 @@ def test_xreplace():
         assert f.xreplace({f: b1}, hack2=True) == b1
 
 
-def test_preorder_traversal():
-    expr = Basic(b21, b3)
-    assert list(
-        preorder_traversal(expr)) == [expr, b21, b2, b1, b1, b3, b2, b1]
-    assert list(preorder_traversal(('abc', ('d', 'ef')))) == [
-        ('abc', ('d', 'ef')), 'abc', ('d', 'ef'), 'd', 'ef']
-
-    result = []
-    pt = preorder_traversal(expr)
-    for i in pt:
-        result.append(i)
-        if i == b2:
-            pt.skip()
-    assert result == [expr, b21, b2, b1, b3, b2]
-
-    w, x, y, z = symbols('w:z')
-    expr = z + w*(x + y)
-    assert list(preorder_traversal([expr], keys=default_sort_key)) == \
-        [[w*(x + y) + z], w*(x + y) + z, z, w*(x + y), w, x + y, x, y]
-    assert list(preorder_traversal((x + y)*z, keys=True)) == \
-        [z*(x + y), z, x + y, x, y]
-
-
 def test_sorted_args():
     x = symbols('x')
     assert b21._sorted_args == b21.args
@@ -237,10 +216,6 @@ def test_rewrite():
     assert f1.rewrite() == f1
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
-    from sympy.integrals.integrals import Integral
-    from sympy.core.symbol import symbols
-    from sympy.core.function import Function
-    from sympy.functions.elementary.trigonometric import cos, sin
     x = symbols('x')
     f = Function('f')
 
@@ -278,7 +253,7 @@ def test_atomic():
     assert _atomic(g(x + h(x))) == {g(x + h(x))}
     assert _atomic(g(x + h(x)), recursive=True) == {h(x), x, g(x + h(x))}
     assert _atomic(1) == set()
-    assert _atomic(Basic(1,2)) == {Basic(1, 2)}
+    assert _atomic(Basic(S(1), S(2))) == set()
 
 
 def test_as_dummy():
@@ -310,7 +285,7 @@ def test_canonical_variables():
 
 
 def test_replace_exceptions():
-    from sympy import Wild
+    from sympy.core.symbol import Wild
     x, y = symbols('x y')
     e = (x**2 + x*y)
     raises(TypeError, lambda: e.replace(sin, 2))

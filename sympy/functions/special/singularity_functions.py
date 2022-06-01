@@ -52,7 +52,7 @@ class SingularityFunction(Function):
     >>> diff(SingularityFunction(x, 4, 0), x, 2)
     SingularityFunction(x, 4, -2)
     >>> SingularityFunction(x, 4, 5).rewrite(Piecewise)
-    Piecewise(((x - 4)**5, x - 4 > 0), (0, True))
+    Piecewise(((x - 4)**5, x > 4), (0, True))
     >>> expr = SingularityFunction(x, a, n)
     >>> y = Symbol('y', positive=True)
     >>> n = Symbol('n', nonnegative=True)
@@ -105,7 +105,7 @@ class SingularityFunction(Function):
             x = sympify(self.args[0])
             a = sympify(self.args[1])
             n = sympify(self.args[2])
-            if n == 0 or n == -1:
+            if n in (S.Zero, S.NegativeOne):
                 return self.func(x, a, n-1)
             elif n.is_positive:
                 return n*self.func(x, a, n-1)
@@ -174,7 +174,7 @@ class SingularityFunction(Function):
             return S.Zero
         if n.is_nonnegative and shift.is_extended_nonnegative:
             return (x - a)**n
-        if n == -1 or n == -2:
+        if n in (S.NegativeOne, -2):
             if shift.is_negative or shift.is_extended_positive:
                 return S.Zero
             if shift.is_zero:
@@ -189,7 +189,7 @@ class SingularityFunction(Function):
         a = self.args[1]
         n = sympify(self.args[2])
 
-        if n == -1 or n == -2:
+        if n in (S.NegativeOne, -2):
             return Piecewise((oo, Eq((x - a), 0)), (0, True))
         elif n.is_nonnegative:
             return Piecewise(((x - a)**n, (x - a) > 0), (0, True))
@@ -209,6 +209,28 @@ class SingularityFunction(Function):
             return diff(Heaviside(x - a), x.free_symbols.pop(), 1)
         if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a)
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        z, a, n = self.args
+        shift = (z - a).subs(x, 0)
+        if n < 0:
+            return S.Zero
+        elif n.is_zero and shift.is_zero:
+            return S.Zero if cdir == -1 else S.One
+        elif shift.is_positive:
+            return shift**n
+        return S.Zero
+
+    def _eval_nseries(self, x, n, logx=None, cdir=0):
+        z, a, n = self.args
+        shift = (z - a).subs(x, 0)
+        if n < 0:
+            return S.Zero
+        elif n.is_zero and shift.is_zero:
+            return S.Zero if cdir == -1 else S.One
+        elif shift.is_positive:
+            return ((z - a)**n)._eval_nseries(x, n, logx=logx, cdir=cdir)
+        return S.Zero
 
     _eval_rewrite_as_DiracDelta = _eval_rewrite_as_Heaviside
     _eval_rewrite_as_HeavisideDiracDelta = _eval_rewrite_as_Heaviside

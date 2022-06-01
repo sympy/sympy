@@ -1,7 +1,14 @@
 """Tests for useful utilities for higher level polynomial classes. """
 
-from sympy import (S, Integer, sin, cos, sqrt, symbols, pi,
-    Eq, Integral, exp, Mul)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Integer, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import Integral
 from sympy.testing.pytest import raises
 
 from sympy.polys.polyutils import (
@@ -98,6 +105,11 @@ def test__sort_gens():
     assert _sort_gens([x, p, q], wrt='x', sort='q > p') == (x, q, p)
     assert _sort_gens([x, p, q], wrt='p', sort='q > x') == (p, q, x)
     assert _sort_gens([x, p, q], wrt='q', sort='p > x') == (q, p, x)
+
+    # https://github.com/sympy/sympy/issues/19353
+    n1 = Symbol('\n1')
+    assert _sort_gens([n1]) == (n1,)
+    assert _sort_gens([x, n1]) == (x, n1)
 
     X = symbols('x0,x1,x2,x10,x11,x12,x20,x21,x22')
 

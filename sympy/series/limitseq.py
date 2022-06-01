@@ -1,5 +1,6 @@
 """Limits of sequences"""
 
+from sympy.calculus.accumulationbounds import AccumulationBounds
 from sympy.core.add import Add
 from sympy.core.function import PoleError
 from sympy.core.power import Pow
@@ -96,7 +97,10 @@ def dominant(expr, n):
     term0 = terms[-1]
     comp = [term0]  # comparable terms
     for t in terms[:-1]:
-        e = (term0 / t).gammasimp()
+        r = term0/t
+        e = r.gammasimp()
+        if e == r:
+            e = r.factor()
         l = limit_seq(e, n)
         if l is None:
             return None
@@ -203,7 +207,6 @@ def limit_seq(expr, n=None, trials=5):
     """
 
     from sympy.concrete.summations import Sum
-    from sympy.calculus.util import AccumulationBounds
     if n is None:
         free = expr.free_symbols
         if len(free) == 1:

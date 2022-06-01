@@ -1,7 +1,13 @@
 from copy import copy
 
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-from sympy import Symbol, Rational, SparseMatrix, Dict, diff, symbols, Indexed, IndexedBase, S
+from sympy.core.containers import Dict
+from sympy.core.function import diff
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.matrices import SparseMatrix
+from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.matrices import Matrix
 from sympy.tensor.array.sparse_ndim_array import ImmutableSparseNDimArray
 from sympy.testing.pytest import raises
@@ -123,8 +129,8 @@ def test_getitem():
 
 def test_iterator():
     array = ImmutableDenseNDimArray(range(4), (2, 2))
-    array[0] == ImmutableDenseNDimArray([0, 1])
-    array[1] == ImmutableDenseNDimArray([2, 3])
+    assert array[0] == ImmutableDenseNDimArray([0, 1])
+    assert array[1] == ImmutableDenseNDimArray([2, 3])
 
     array = array.reshape(4)
     j = 0
@@ -195,7 +201,7 @@ def test_ndim_array_converting():
     dense_array = ImmutableDenseNDimArray([1, 2, 3, 4], (2, 2))
     alist = dense_array.tolist()
 
-    alist == [[1, 2], [3, 4]]
+    assert alist == [[1, 2], [3, 4]]
 
     matrix = dense_array.tomatrix()
     assert (isinstance(matrix, Matrix))
@@ -438,3 +444,9 @@ def test_issue_12665():
 def test_zeros_without_shape():
     arr = ImmutableDenseNDimArray.zeros()
     assert arr == ImmutableDenseNDimArray(0)
+
+def test_issue_21870():
+    a0 = ImmutableDenseNDimArray(0)
+    assert a0.rank() == 0
+    a1 = ImmutableDenseNDimArray(a0)
+    assert a1.rank() == 0

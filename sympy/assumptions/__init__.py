@@ -8,11 +8,11 @@ from .assume import (
 )
 from .ask import Q, ask, register_handler, remove_handler
 from .refine import refine
-from .relation import BinaryRelation
+from .relation import BinaryRelation, AppliedBinaryRelation
 
 __all__ = [
     'AppliedPredicate', 'Predicate', 'AssumptionsContext', 'assuming',
     'global_assumptions', 'Q', 'ask', 'register_handler', 'remove_handler',
     'refine',
-    'BinaryRelation'
+    'BinaryRelation', 'AppliedBinaryRelation'
 ]

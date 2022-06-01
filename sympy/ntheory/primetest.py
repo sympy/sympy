@@ -3,7 +3,11 @@ Primality testing
 
 """
 
-from sympy.core.compatibility import as_int
+from sympy.core.numbers import igcd
+from sympy.core.power import integer_nthroot
+from sympy.core.sympify import sympify
+from sympy.external.gmpy import HAS_GMPY
+from sympy.utilities.misc import as_int
 
 from mpmath.libmp import bitcount as _bitlength
 
@@ -73,7 +77,7 @@ def is_square(n, prep=True):
     References
     ==========
 
-    [1]  http://mersenneforum.org/showpost.php?p=110896
+    .. [1]  http://mersenneforum.org/showpost.php?p=110896
 
     See Also
     ========
@@ -83,15 +87,40 @@ def is_square(n, prep=True):
         n = as_int(n)
         if n < 0:
             return False
-        if n in [0, 1]:
+        if n in (0, 1):
             return True
-    m = n & 127
-    if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
-        m = n % 63
-        if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
-            from sympy.core.power import integer_nthroot
-            return integer_nthroot(n, 2)[1]
-    return False
+    # def magic(n):
+    #     s = {x**2 % n for x in range(n)}
+    #     return sum(1 << bit for bit in s)
+    # >>> print(hex(magic(128)))
+    # 0x2020212020202130202021202030213
+    # >>> print(hex(magic(99)))
+    # 0x209060049048220348a410213
+    # >>> print(hex(magic(91)))
+    # 0x102e403012a0c9862c14213
+    # >>> print(hex(magic(85)))
+    # 0x121065188e001c46298213
+    if not 0x2020212020202130202021202030213 & (1 << (n & 127)):
+        return False  # e.g. 2, 3
+    m = n % (99 * 91 * 85)
+    if not 0x209060049048220348a410213 & (1 << (m % 99)):
+        return False  # e.g. 17, 68
+    if not 0x102e403012a0c9862c14213 & (1 << (m % 91)):
+        return False  # e.g. 97, 388
+    if not 0x121065188e001c46298213 & (1 << (m % 85)):
+        return False  # e.g. 793, 1408
+    # n is either:
+    #   a) odd = 4*even + 1 (and square if even = k*(k + 1))
+    #   b) even with
+    #     odd multiplicity of 2 --> not square, e.g. 39040
+    #     even multiplicity of 2, e.g. 4, 16, 36, ..., 16324
+    #         removal of factors of 2 to give an odd, and rejection if
+    #         any(i%2 for i in divmod(odd - 1, 4))
+    #         will give an odd number in form 4*even + 1.
+    # Use of `trailing` to check the power of 2 is not done since it
+    # does not apply to a large percentage of arbitrary numbers
+    # and the integer_nthroot is able to quickly resolve these cases.
+    return integer_nthroot(n, 2)[1]
 
 
 def _test(n, base, s, t):
@@ -122,11 +151,11 @@ def mr(n, bases):
     References
     ==========
 
-    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-      A Computational Perspective", Springer, 2nd edition, 135-138
+    .. [1] Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+           A Computational Perspective", Springer, 2nd edition, 135-138
 
     A list of thresholds and the bases they require are here:
-    https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
+    https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants
 
     Examples
     ========
@@ -248,10 +277,9 @@ def _lucas_selfridge_params(n):
 
     References
     ==========
-    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
+    .. [1] "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
+           http://mpqs.free.fr/LucasPseudoprimes.pdf
     """
-    from sympy.core import igcd
     from sympy.ntheory.residue_ntheory import jacobi_symbol
     D = 5
     while True:
@@ -272,11 +300,10 @@ def _lucas_extrastrong_params(n):
 
     References
     ==========
-    - OEIS A217719: Extra Strong Lucas Pseudoprimes
-      https://oeis.org/A217719
-    - https://en.wikipedia.org/wiki/Lucas_pseudoprime
+    .. [1] OEIS A217719: Extra Strong Lucas Pseudoprimes
+           https://oeis.org/A217719
+    .. [1] https://en.wikipedia.org/wiki/Lucas_pseudoprime
     """
-    from sympy.core import igcd
     from sympy.ntheory.residue_ntheory import jacobi_symbol
     P, Q, D = 3, 1, 5
     while True:
@@ -559,8 +586,8 @@ def isprime(n):
         return False
     if n < 2809:
         return True
-    if n <= 23001:
-        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951]
+    if n < 31417:
+        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951, 23377]
 
     # bisection search on the sieve if the sieve is large enough
     from sympy.ntheory.generate import sieve as s
@@ -571,7 +598,6 @@ def isprime(n):
     # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
     # This should be a bit faster than our step 2, and for large values will
     # be a lot faster than our step 3 (C+GMP vs. Python).
-    from sympy.core.compatibility import HAS_GMPY
     if HAS_GMPY == 2:
         from gmpy2 import is_strong_prp, is_strong_selfridge_prp
         return is_strong_prp(n, 2) and is_strong_selfridge_prp(n)
@@ -581,6 +607,9 @@ def isprime(n):
     #    https://miller-rabin.appspot.com/
     # for lists.  We have made sure the M-R routine will successfully handle
     # bases larger than n, so we can use the minimal set.
+    # In September 2015 deterministic numbers were extended to over 2^81.
+    #    https://arxiv.org/pdf/1509.00864.pdf
+    #    https://oeis.org/A014233
     if n < 341531:
         return mr(n, [9345883071009581737])
     if n < 885594169:
@@ -595,6 +624,10 @@ def isprime(n):
         return mr(n, [2, 123635709730000, 9233062284813009, 43835965440333360, 761179012939631437, 1263739024124850375])
     if n < 18446744073709551616:
         return mr(n, [2, 325, 9375, 28178, 450775, 9780504, 1795265022])
+    if n < 318665857834031151167461:
+        return mr(n, [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37])
+    if n < 3317044064679887385961981:
+        return mr(n, [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41])
 
     # We could do this instead at any point:
     #if n < 18446744073709551616:
@@ -650,7 +683,6 @@ def is_gaussian_prime(num):
     .. [1] https://oeis.org/wiki/Gaussian_primes
     """
 
-    from sympy import sympify
     num = sympify(num)
     a, b = num.as_real_imag()
     a = as_int(a, strict=False)

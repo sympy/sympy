@@ -1,8 +1,6 @@
 """Singleton mechanism"""
 
 
-from typing import Any, Dict, Type
-
 from .core import Registry
 from .assumptions import ManagedProperties
 from .sympify import sympify
@@ -43,7 +41,7 @@ class SingletonRegistry(Registry):
     True
 
     For the most part, the fact that certain objects are singletonized is an
-    implementation detail that users shouldn't need to worry about. In SymPy
+    implementation detail that users should not need to worry about. In SymPy
     library code, ``is`` comparison is often used for performance purposes
     The primary advantage of ``S`` for end users is the convenient access to
     certain instances that are otherwise difficult to type, like ``S.Half``
@@ -73,8 +71,7 @@ class SingletonRegistry(Registry):
     This is for convenience, since ``S`` is a single letter. It's mostly
     useful for defining rational numbers. Consider an expression like ``x +
     1/2``. If you enter this directly in Python, it will evaluate the ``1/2``
-    and give ``0.5`` (or just ``0`` in Python 2, because of integer division),
-    because both arguments are ints (see also
+    and give ``0.5``, because both arguments are ints (see also
     :ref:`tutorial-gotchas-final-notes`). However, in SymPy, you usually want
     the quotient of two integers to give an exact rational number. The way
     Python's evaluation works, at least one side of an operator needs to be a
@@ -171,26 +168,14 @@ class Singleton(ManagedProperties):
     subclasses to have a different metaclass than the superclass, except the
     subclass may use a subclassed metaclass).
     """
+    def __init__(cls, *args, **kwargs):
+        super().__init__(cls, *args, **kwargs)
+        cls._instance = obj = Basic.__new__(cls)
+        cls.__new__ = lambda cls: obj
+        cls.__getnewargs__ = lambda obj: ()
+        cls.__getstate__ = lambda obj: None
+        S.register(cls)
 
-    _instances = {}  # type: Dict[Type[Any], Any]
-    "Maps singleton classes to their instances."
 
-    def __new__(cls, *args, **kwargs):
-        result = super().__new__(cls, *args, **kwargs)
-        S.register(result)
-        return result
-
-    def __call__(self, *args, **kwargs):
-        # Called when application code says SomeClass(), where SomeClass is a
-        # class of which Singleton is the metaclas.
-        # __call__ is invoked first, before __new__() and __init__().
-        if self not in Singleton._instances:
-            Singleton._instances[self] = \
-                super().__call__(*args, **kwargs)
-                # Invokes the standard constructor of SomeClass.
-        return Singleton._instances[self]
-
-        # Inject pickling support.
-        def __getnewargs__(self):
-            return ()
-        self.__getnewargs__ = __getnewargs__
+# Delayed to avoid cyclic import
+from .basic import Basic

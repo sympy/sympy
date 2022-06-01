@@ -9,7 +9,7 @@ if lfortran:
                                    Return, FunctionDefinition, Assignment,
                                    Declaration, CodeBlock)
     from sympy.core import Integer, Float, Add
-    from sympy import Symbol
+    from sympy.core.symbol import Symbol
 
 
     expr1 = SymPyExpression()
