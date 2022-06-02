@@ -1,7 +1,10 @@
 import itertools
 from collections.abc import Iterable
 
-from sympy import S, Tuple, diff, Basic
+from sympy.core._print_helpers import Printable
+from sympy.core.containers import Tuple
+from sympy.core.function import diff
+from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 
 from sympy.tensor.array.ndim_array import NDimArray
@@ -54,7 +57,7 @@ def tensorproduct(*args):
     from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
     from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
-    from sympy import MatrixSymbol
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
     if any(isinstance(arg, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)) for arg in args):
         return ArrayTensorProduct(*args)
     if len(args) > 2:
@@ -157,12 +160,12 @@ def tensorcontraction(array, *contraction_axes):
     [a*e + b*g, a*f + b*h],
     [c*e + d*g, c*f + d*h]])
     """
-    from sympy.tensor.array.expressions.array_expressions import ArrayContraction
+    from sympy.tensor.array.expressions.array_expressions import _array_contraction
     from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
-    from sympy import MatrixSymbol
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
     if isinstance(array, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
-        return ArrayContraction(array, *contraction_axes)
+        return _array_contraction(array, *contraction_axes)
 
     array, remaining_indices, remaining_shape, summed_deltas = _util_contraction_diagonal(array, *contraction_axes)
 
@@ -229,15 +232,17 @@ def tensordiagonal(array, *diagonal_axes):
     True
 
     """
-    if any([len(i) <= 1 for i in diagonal_axes]):
+    if any(len(i) <= 1 for i in diagonal_axes):
         raise ValueError("need at least two axes to diagonalize")
 
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
     from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
-    from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
-    from sympy import MatrixSymbol
+    from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, _array_diagonal
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
     if isinstance(array, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
-        return ArrayDiagonal(array, *diagonal_axes)
+        return _array_diagonal(array, *diagonal_axes)
+
+    ArrayDiagonal._validate(array, *diagonal_axes)
 
     array, remaining_indices, remaining_shape, diagonal_deltas = _util_contraction_diagonal(array, *diagonal_axes)
 
@@ -326,7 +331,7 @@ def derive_by_array(expr, dx):
             return diff(expr, dx)
 
 
-def permutedims(expr, perm):
+def permutedims(expr, perm=None, index_order_old=None, index_order_new=None):
     """
     Permutes the indices of an array.
 
@@ -358,6 +363,15 @@ def permutedims(expr, perm):
     >>> permutedims(b, (1, 2, 0))
     [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
 
+    An alternative way to specify the same permutations as in the previous
+    lines involves passing the *old* and *new* indices, either as a list or as
+    a string:
+
+    >>> permutedims(b, index_order_old="cba", index_order_new="abc")
+    [[[1, 5], [3, 7]], [[2, 6], [4, 8]]]
+    >>> permutedims(b, index_order_old="cab", index_order_new="abc")
+    [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
+
     ``Permutation`` objects are also allowed:
 
     >>> from sympy.combinatorics import Permutation
@@ -369,10 +383,13 @@ def permutedims(expr, perm):
 
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
     from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
-    from sympy.tensor.array.expressions.array_expressions import PermuteDims
-    from sympy import MatrixSymbol
+    from sympy.tensor.array.expressions.array_expressions import _permute_dims
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
+    from sympy.tensor.array.expressions import PermuteDims
+    from sympy.tensor.array.expressions.array_expressions import get_rank
+    perm = PermuteDims._get_permutation_from_arguments(perm, index_order_old, index_order_new, get_rank(expr))
     if isinstance(expr, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
-        return PermuteDims(expr, perm)
+        return _permute_dims(expr, perm)
 
     if not isinstance(expr, NDimArray):
         expr = ImmutableDenseNDimArray(expr)
@@ -402,7 +419,7 @@ def permutedims(expr, perm):
     return type(expr)(new_array, new_shape)
 
 
-class Flatten(Basic):
+class Flatten(Printable):
     '''
     Flatten an iterable object to a list in a lazy-evaluation way.
 
@@ -470,3 +487,6 @@ class Flatten(Basic):
 
     def next(self):
         return self.__next__()
+
+    def _sympystr(self, printer):
+        return type(self).__name__ + '(' + printer._print(self._iter) + ')'

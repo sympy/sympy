@@ -14,6 +14,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.numbers import Float, Integer
+from sympy.core.symbol import Str
 from sympy.core.sympify import sympify
 from sympy.logic import true, false
 from sympy.utilities.iterables import iterable
@@ -38,14 +39,14 @@ class Program(Token):
     >>> from sympy.codegen.ast import Print
     >>> from sympy.codegen.fnodes import Program
     >>> prog = Program('myprogram', [Print([42])])
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> print(fcode(prog, source_format='free'))
     program myprogram
         print *, 42
     end program
 
     """
-    __slots__ = ('name', 'body')
+    __slots__ = _fields = ('name', 'body')
     _construct_name = String
     _construct_body = staticmethod(lambda body: CodeBlock(*body))
 
@@ -57,7 +58,7 @@ class use_rename(Token):
     ========
 
     >>> from sympy.codegen.fnodes import use_rename, use
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> ren = use_rename("thingy", "convolution2d")
     >>> print(fcode(ren, source_format='free'))
     thingy => convolution2d
@@ -66,7 +67,7 @@ class use_rename(Token):
     use signallib, only: snr, thingy => convolution2d
 
     """
-    __slots__ = ('local', 'original')
+    __slots__ = _fields = ('local', 'original')
     _construct_local = String
     _construct_original = String
 
@@ -83,7 +84,7 @@ class use(Token):
     ========
 
     >>> from sympy.codegen.fnodes import use
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(use('signallib'), source_format='free')
     'use signallib'
     >>> fcode(use('signallib', [('metric', 'snr')]), source_format='free')
@@ -92,7 +93,7 @@ class use(Token):
     'use signallib, only: snr, convolution2d'
 
     """
-    __slots__ = ('namespace', 'rename', 'only')
+    __slots__ = _fields = ('namespace', 'rename', 'only')
     defaults = {'rename': none, 'only': none}
     _construct_namespace = staticmethod(_name)
     _construct_rename = staticmethod(lambda args: Tuple(*[arg if isinstance(arg, use_rename) else use_rename(*arg) for arg in args]))
@@ -106,7 +107,7 @@ class Module(Token):
     ========
 
     >>> from sympy.codegen.fnodes import Module
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> print(fcode(Module('signallib', ['implicit none'], []), source_format='free'))
     module signallib
     implicit none
@@ -117,10 +118,15 @@ class Module(Token):
     end module
 
     """
-    __slots__ = ('name', 'declarations', 'definitions')
+    __slots__ = _fields = ('name', 'declarations', 'definitions')
     defaults = {'declarations': Tuple()}
     _construct_name = String
-    _construct_declarations = staticmethod(lambda arg: CodeBlock(*arg))
+
+    @classmethod
+    def _construct_declarations(cls, args):
+        args = [Str(arg) if isinstance(arg, str) else arg for arg in args]
+        return CodeBlock(*args)
+
     _construct_definitions = staticmethod(lambda arg: CodeBlock(*arg))
 
 
@@ -130,10 +136,9 @@ class Subroutine(Node):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import fcode, symbols
     >>> from sympy.codegen.ast import Print
     >>> from sympy.codegen.fnodes import Subroutine
-    >>> from sympy.printing import fcode
     >>> x, y = symbols('x y', real=True)
     >>> sub = Subroutine('mysub', [x, y], [Print([x**2 + y**2, x*y])])
     >>> print(fcode(sub, source_format='free', standard=2003))
@@ -144,7 +149,8 @@ class Subroutine(Node):
     end subroutine
 
     """
-    __slots__ = ('name', 'parameters', 'body', 'attrs')
+    __slots__ = ('name', 'parameters', 'body')
+    _fields = __slots__ + Node._fields
     _construct_name = String
     _construct_parameters = staticmethod(lambda params: Tuple(*map(Variable.deduced, params)))
 
@@ -162,12 +168,12 @@ class SubroutineCall(Token):
     ========
 
     >>> from sympy.codegen.fnodes import SubroutineCall
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(SubroutineCall('mysub', 'x y'.split()))
     '       call mysub(x, y)'
 
     """
-    __slots__ = ('name', 'subroutine_args')
+    __slots__ = _fields = ('name', 'subroutine_args')
     _construct_name = staticmethod(_name)
     _construct_subroutine_args = staticmethod(_mk_Tuple)
 
@@ -178,10 +184,9 @@ class Do(Token):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import fcode, symbols
     >>> from sympy.codegen.ast import aug_assign, Print
     >>> from sympy.codegen.fnodes import Do
-    >>> from sympy.printing import fcode
     >>> i, n = symbols('i n', integer=True)
     >>> r = symbols('r', real=True)
     >>> body = [aug_assign(r, '+', 1/i), Print([i, r])]
@@ -200,7 +205,7 @@ class Do(Token):
 
     """
 
-    __slots__ = ('body', 'counter', 'first', 'last', 'step', 'concurrent')
+    __slots__ = _fields = ('body', 'counter', 'first', 'last', 'step', 'concurrent')
     defaults = {'step': Integer(1), 'concurrent': false}
     _construct_body = staticmethod(lambda body: CodeBlock(*body))
     _construct_counter = staticmethod(sympify)
@@ -216,7 +221,7 @@ class ArrayConstructor(Token):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import ArrayConstructor
     >>> ac = ArrayConstructor([1, 2, 3])
     >>> fcode(ac, standard=95, source_format='free')
@@ -225,7 +230,7 @@ class ArrayConstructor(Token):
     '[1, 2, 3]'
 
     """
-    __slots__ = ('elements',)
+    __slots__ = _fields = ('elements',)
     _construct_elements = staticmethod(_mk_Tuple)
 
 
@@ -244,7 +249,7 @@ class ImpliedDoLoop(Token):
     '[-28, (i**3, i = -3, 3, 2), 28]'
 
     """
-    __slots__ = ('expr', 'counter', 'first', 'last', 'step')
+    __slots__ = _fields = ('expr', 'counter', 'first', 'last', 'step')
     defaults = {'step': Integer(1)}
     _construct_expr = staticmethod(sympify)
     _construct_counter = staticmethod(sympify)
@@ -261,7 +266,7 @@ class Extent(Basic):
 
     >>> from sympy.codegen.fnodes import Extent
     >>> e = Extent(-3, 3)  # -3, -2, -1, 0, 1, 2, 3
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(e, source_format='free')
     '-3:3'
     >>> from sympy.codegen.ast import Variable, real
@@ -284,7 +289,7 @@ class Extent(Basic):
     def _sympystr(self, printer):
         if len(self.args) == 0:
             return ':'
-        return '%d:%d' % self.args
+        return ":".join(str(arg) for arg in self.args)
 
 assumed_extent = Extent() # or Extent(':'), Extent(None)
 
@@ -295,7 +300,7 @@ def dimension(*args):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import dimension, intent_in
     >>> dim = dimension('2', ':')  # 2 rows, runtime determined number of columns
     >>> from sympy.codegen.ast import Variable, integer
@@ -344,7 +349,7 @@ def array(symbol, dim, intent=None, *, attrs=(), value=None, type=None):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.ast import integer, real
     >>> from sympy.codegen.fnodes import array
     >>> arr = array('a', '*', 'in', type=integer)
@@ -381,7 +386,7 @@ def allocated(array):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import allocated
     >>> alloc = allocated('x')
     >>> fcode(alloc, source_format='free')
@@ -404,7 +409,7 @@ def lbound(array, dim=None, kind=None):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import lbound
     >>> lb = lbound('arr', dim=2)
     >>> fcode(lb, source_format='free')
@@ -440,7 +445,7 @@ def shape(source, kind=None):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import shape
     >>> shp = shape('x')
     >>> fcode(shp, source_format='free')
@@ -460,8 +465,7 @@ def size(array, dim=None, kind=None):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode, Symbol
     >>> from sympy.codegen.ast import FunctionDefinition, real, Return
     >>> from sympy.codegen.fnodes import array, sum_, size
     >>> a = Symbol('a', real=True)
@@ -512,8 +516,7 @@ def bind_C(name=None):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode, Symbol
     >>> from sympy.codegen.ast import FunctionDefinition, real, Return
     >>> from sympy.codegen.fnodes import array, sum_, bind_C
     >>> a = Symbol('a', real=True)
@@ -539,12 +542,12 @@ class GoTo(Token):
 
     >>> from sympy.codegen.fnodes import GoTo
     >>> go = GoTo([10, 20, 30], 'i')
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(go, source_format='free')
     'go to (10, 20, 30), i'
 
     """
-    __slots__ = ('labels', 'expr')
+    __slots__ = _fields = ('labels', 'expr')
     defaults = {'expr': none}
     _construct_labels = staticmethod(_mk_Tuple)
     _construct_expr = staticmethod(sympify)
@@ -566,12 +569,12 @@ class FortranReturn(Token):
     ========
 
     >>> from sympy.codegen.fnodes import FortranReturn
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(FortranReturn('x'))
     '       return x'
 
     """
-    __slots__ = ('return_value',)
+    __slots__ = _fields = ('return_value',)
     defaults = {'return_value': none}
     _construct_return_value = staticmethod(sympify)
 
@@ -641,14 +644,14 @@ class literal_dp(_literal):
 
 
 class sum_(Token, Expr):
-    __slots__ = ('array', 'dim', 'mask')
+    __slots__ = _fields = ('array', 'dim', 'mask')
     defaults = {'dim': none, 'mask': none}
     _construct_array = staticmethod(sympify)
     _construct_dim = staticmethod(sympify)
 
 
 class product_(Token, Expr):
-    __slots__ = ('array', 'dim', 'mask')
+    __slots__ = _fields = ('array', 'dim', 'mask')
     defaults = {'dim': none, 'mask': none}
     _construct_array = staticmethod(sympify)
     _construct_dim = staticmethod(sympify)

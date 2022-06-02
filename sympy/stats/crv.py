@@ -9,15 +9,26 @@ sympy.stats.frv
 """
 
 
-from sympy import (Interval, Intersection, symbols, sympify, Dummy, nan,
-        Integral, And, Or, Piecewise, cacheit, integrate, oo, Lambda,
-        Basic, S, exp, I, FiniteSet, Ne, Eq, Union, poly, series, factorial)
-from sympy.core.function import PoleError
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.function import Lambda, PoleError
+from sympy.core.numbers import (I, nan, oo)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.core.sympify import _sympify, sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.delta_functions import DiracDelta
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.logic.boolalg import (And, Or)
 from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.polytools import poly
+from sympy.series.series import series
+from sympy.sets.sets import (FiniteSet, Intersection, Interval, Union)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
-from sympy.core.sympify import _sympify
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_random,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin, Distribution)
 
@@ -75,7 +86,7 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
 class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     """
     A domain with continuous support that has been further restricted by a
-    condition such as x > 3
+    condition such as $x > 3$.
     """
 
     def compute_expectation(self, expr, variables=None, **kwargs):
@@ -144,14 +155,17 @@ class ContinuousDistribution(Distribution):
 
 
 class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
-    """ Continuous distribution of a single variable
+    """ Continuous distribution of a single variable.
+
+    Explanation
+    ===========
 
     Serves as superclass for Normal/Exponential/UniformDistribution etc....
 
     Represented by parameters for each of the specific classes.  E.g
     NormalDistribution is represented by a mean and standard deviation.
 
-    Provides methods for pdf, cdf, and sampling
+    Provides methods for pdf, cdf, and sampling.
 
     See Also
     ========
@@ -171,9 +185,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_cdf(self, **kwargs):
-        """ Compute the CDF from the PDF
+        """ Compute the CDF from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, z = symbols('x, z', real=True, cls=Dummy)
         left_bound = self.set.start
@@ -198,9 +212,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_characteristic_function(self, **kwargs):
-        """ Compute the characteristic function from the PDF
+        """ Compute the characteristic function from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
@@ -220,9 +234,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_moment_generating_function(self, **kwargs):
-        """ Compute the moment generating function from the PDF
+        """ Compute the moment generating function from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, t = symbols('x, t', real=True, cls=Dummy)
         pdf = self.pdf(x)
@@ -264,9 +278,9 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     @cacheit
     def compute_quantile(self, **kwargs):
-        """ Compute the Quantile from the PDF
+        """ Compute the Quantile from the PDF.
 
-        Returns a Lambda
+        Returns a Lambda.
         """
         x, p = symbols('x, p', real=True, cls=Dummy)
         left_bound = self.set.start
@@ -450,7 +464,7 @@ class ContinuousPSpace(PSpace):
 
 class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     """
-    A continuous probability space over a single univariate variable
+    A continuous probability space over a single univariate variable.
 
     These consist of a Symbol and a SingleContinuousDistribution
 
@@ -468,7 +482,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
     def sample(self, size=(), library='scipy', seed=None):
         """
-        Internal sample method
+        Internal sample method.
 
         Returns dictionary mapping RandomSymbol to realization value.
         """

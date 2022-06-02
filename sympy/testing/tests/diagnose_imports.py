@@ -4,7 +4,7 @@
 Import diagnostics. Run bin/diagnose_imports.py --help for details.
 """
 
-from typing import Dict
+from typing import Dict as tDict
 
 if __name__ == "__main__":
 
@@ -108,7 +108,7 @@ if __name__ == "__main__":
                 repr(self.name), repr(self.definer))
 
     # Maps each function/variable to name of module to define it
-    symbol_definers = {}  # type: Dict[Definition, str]
+    symbol_definers = {}  # type: tDict[Definition, str]
 
     def in_module(a, b):
         """Is a the same module as or a submodule of b?"""
@@ -159,7 +159,7 @@ if __name__ == "__main__":
             for symbol in result.__dict__.iterkeys():
                 definition = Definition(
                     symbol, result.__dict__[symbol], importer_module)
-                if not definition in symbol_definers:
+                if definition not in symbol_definers:
                     symbol_definers[definition] = importee_module
             if hasattr(result, '__path__'):
                 ##PACKAGE##
@@ -183,7 +183,7 @@ if __name__ == "__main__":
                     else:
                         symbol_list = result.__dict__.iterkeys()
                 for symbol in symbol_list:
-                    if not symbol in result.__dict__:
+                    if symbol not in result.__dict__:
                         if options.by_origin:
                             msg('Error: %s.%s is not defined (yet), but %s tries to import it',
                                 importee_module, symbol, importer_reference)

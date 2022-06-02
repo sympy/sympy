@@ -9,32 +9,54 @@ ValueError/TypeError would not be raised anywhere.
 
 """
 
-from sympy.matrices.common import (NonInvertibleMatrixError,
-    NonSquareMatrixError, ShapeError)
 
-
-class DDMError(Exception):
-    """Base class for errors raised by DDM"""
+class DMError(Exception):
+    """Base class for errors raised by DomainMatrix"""
     pass
 
 
-class DDMBadInputError(DDMError):
+class DMBadInputError(DMError):
     """list of lists is inconsistent with shape"""
     pass
 
 
-class DDMDomainError(DDMError):
+class DMDomainError(DMError):
     """domains do not match"""
     pass
 
 
-class DDMShapeError(DDMError):
+class DMNotAField(DMDomainError):
+    """domain is not a field"""
+    pass
+
+
+class DMFormatError(DMError):
+    """mixed dense/sparse not supported"""
+    pass
+
+
+class DMNonInvertibleMatrixError(DMError):
+    """The matrix in not invertible"""
+    pass
+
+
+class DMRankError(DMError):
+    """matrix does not have expected rank"""
+    pass
+
+
+class DMShapeError(DMError):
     """shapes are inconsistent"""
     pass
 
 
-__all__ = [
-    'DDMError', 'DDMShapeError', 'DDMDomainError',
+class DMNonSquareMatrixError(DMShapeError):
+    """The matrix is not square"""
+    pass
 
-    'NonSquareMatrixError', 'NonInvertibleMatrixError', 'ShapeError',
+
+__all__ = [
+    'DMError', 'DMBadInputError', 'DMDomainError', 'DMFormatError',
+    'DMRankError', 'DMShapeError', 'DMNotAField',
+    'DMNonInvertibleMatrixError', 'DMNonSquareMatrixError',
 ]

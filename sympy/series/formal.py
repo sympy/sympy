@@ -2,9 +2,8 @@
 
 from collections import defaultdict
 
-from sympy import oo, zoo, nan
+from sympy.core.numbers import (nan, oo, zoo)
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable
 from sympy.core.expr import Expr
 from sympy.core.function import Derivative, Function, expand
 from sympy.core.mul import Mul
@@ -22,9 +21,10 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
 from sympy.series.order import Order
-from sympy.simplify.powsimp import powsimp
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
+from sympy.utilities.iterables import iterable
+
 
 
 def rational_algorithm(f, x, k, order=4, full=False):
@@ -74,10 +74,10 @@ def rational_algorithm(f, x, k, order=4, full=False):
     >>> ra(1 / (1 - x), x, k)
     (1, 0, 0)
     >>> ra(log(1 + x), x, k)
-    (-(-1)**(-k)/k, 0, 1)
+    (-1/((-1)**k*k), 0, 1)
 
     >>> ra(atan(x), x, k, full=True)
-    ((-I*(-I)**(-k)/2 + I*I**(-k)/2)/k, 0, 1)
+    ((-I/(2*(-I)**k) + I/(2*I**k))/k, 0, 1)
 
     Notes
     =====
@@ -861,9 +861,6 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     # Otherwise symb is being set to S.One
     syms = f.free_symbols.difference({x})
     (f, symb) = expand(f).as_independent(*syms)
-    if symb.is_zero:
-        symb = S.One
-    symb = powsimp(symb)
 
     result = None
 
@@ -878,6 +875,11 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     if result is None:
         return None
 
+    from sympy.simplify.powsimp import powsimp
+    if symb.is_zero:
+        symb = S.One
+    else:
+        symb = powsimp(symb)
     ak = sequence(result[0], (k, result[2], oo))
     xk_formula = powsimp(x**k * symb)
     xk = sequence(xk_formula, (k, 0, oo))
@@ -1140,7 +1142,7 @@ class FormalPowerSeries(SeriesBase):
         if old.has(x):
             return self
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         for t in self:
             if t is not S.Zero:
                 return t
@@ -1244,8 +1246,6 @@ class FormalPowerSeries(SeriesBase):
 
         """
 
-        if x is None:
-            x = self.x
         if n is None:
             return iter(self)
 
@@ -1347,8 +1347,6 @@ class FormalPowerSeries(SeriesBase):
 
         """
 
-        if x is None:
-            x = self.x
         if n is None:
             return iter(self)
 
@@ -1423,8 +1421,6 @@ class FormalPowerSeries(SeriesBase):
 
         """
 
-        if x is None:
-            x = self.x
         if n is None:
             return iter(self)
 

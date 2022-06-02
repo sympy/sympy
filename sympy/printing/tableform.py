@@ -1,4 +1,7 @@
 from sympy.core.containers import Tuple
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import SympifyError
 
 from types import FunctionType
 
@@ -76,7 +79,7 @@ class TableForm:
                             returns None then the _print method will be used.)
 
             wipe_zeros ...
-                            Don't show zeros in the table.
+                            Do not show zeros in the table.
 
                             [default: True]
 
@@ -112,8 +115,7 @@ class TableForm:
          .. . ..
         ... . ...
         """
-        from sympy import Symbol, S, Matrix
-        from sympy.core.sympify import SympifyError
+        from sympy.matrices.dense import Matrix
 
         # We only support 2D data. Check the consistency:
         if isinstance(data, Matrix):
@@ -142,7 +144,7 @@ class TableForm:
                         lj = Symbol(str(lj))
                 line[j] = lj
             data[i] = line
-        _lines = Tuple(*data)
+        _lines = Tuple(*[Tuple(*d) for d in data])
 
         headings = kwarg.get("headings", [None, None])
         if headings == "automatic":
@@ -226,7 +228,7 @@ class TableForm:
         [ 4, 2],
         [10, 3]])
         """
-        from sympy import Matrix
+        from sympy.matrices.dense import Matrix
         return Matrix(self._lines)
 
     def as_str(self):

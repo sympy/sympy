@@ -145,13 +145,14 @@ def get_sympy_short_version(version):
     (like 0.7.3)
     """
     parts = version.split('.')
-    # Remove rc tags
-    # Handle both 1.0.rc1 and 1.1rc1
-    if not parts[-1].isdigit():
-        if parts[-1][0].isdigit():
-            parts[-1] = parts[-1][0]
+    # Remove rc tags e.g. 1.10rc1 -> [1, 10]
+    lastpart = ''
+    for dig in parts[-1]:
+        if dig.isdigit():
+            lastpart += dig
         else:
-            parts.pop(-1)
+            break
+    parts[-1] = lastpart
     return '.'.join(parts)
 
 
@@ -448,7 +449,7 @@ def _sha256(version, print_=True, local=False):
         out = run(*(['shasum', '-a', '256'] + release_files(version)))
     else:
         raise ValueError('Should not get here...')
-        out = run(*(['shasum', '-a', '256', '/root/release/*']))
+        # out = run(*(['shasum', '-a', '256', '/root/release/*']))
     # Remove the release/ part for printing. Useful for copy-pasting into the
     # release notes.
     out = [i.split() for i in out]

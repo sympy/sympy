@@ -1,7 +1,6 @@
 """Euclidean algorithms, GCDs, LCMs and polynomial remainder sequences. """
 
 
-from sympy.ntheory import nextprime
 from sympy.polys.densearith import (
     dup_sub_mul,
     dup_neg, dmp_neg,
@@ -68,7 +67,7 @@ def dup_half_gcdex(f, g, K):
 
     """
     if not K.is_Field:
-        raise DomainError("can't compute half extended GCD over %s" % K)
+        raise DomainError("Cannot compute half extended GCD over %s" % K)
 
     a, b = [K.one], []
 
@@ -703,6 +702,8 @@ def dmp_zz_collins_resultant(f, g, u, K):
     B = K(2)*K.factorial(K(n + m))*A**m*B**n
     r, p, P = dmp_zero(v), K.one, K.one
 
+    from sympy.ntheory import nextprime
+
     while P <= B:
         p = K(nextprime(p))
 
@@ -992,8 +993,7 @@ def dup_rr_prs_gcd(f, g, K):
     h = dup_subresultants(F, G, K)[-1]
     _, h = dup_primitive(h, K)
 
-    if K.is_negative(dup_LC(h, K)):
-        c = -c
+    c *= K.canonical_unit(dup_LC(h, K))
 
     h = dup_mul_ground(h, c, K)
 

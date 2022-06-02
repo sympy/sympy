@@ -15,8 +15,7 @@ Parsing Functions Reference
 
 .. autofunction:: sympy.parsing.maxima.parse_maxima
 
-.. autofunction:: sympy.parsing.mathematica.mathematica
-
+.. autofunction:: sympy.parsing.mathematica.parse_mathematica
 
 Parsing Transformations Reference
 ---------------------------------
@@ -45,7 +44,7 @@ applied in the order given.
 .. autofunction:: sympy.parsing.sympy_parser.convert_xor
 
 These are included in
-:data:``sympy.parsing.sympy_parser.standard_transformations`` and generally
+:data:`sympy.parsing.sympy_parser.standard_transformations` and generally
 don't need to be manually added by the user.
 
 .. autofunction:: sympy.parsing.sympy_parser.lambda_notation
@@ -92,7 +91,7 @@ change between releases, and become stricter, more relaxed, or some mix.
 ----------------------------------------------
 
 .. autoclass:: sympy.parsing.latex.LaTeXParsingError
-
+   :members:
 
 SymPy Expression Reference
 --------------------------
@@ -100,7 +99,7 @@ SymPy Expression Reference
 .. module:: sympy.parsing.sym_expr
 
 .. autoclass:: SymPyExpression
-  :members:
+   :members:
 
 Runtime Installation
 --------------------

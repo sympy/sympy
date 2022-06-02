@@ -218,9 +218,9 @@ class PositiveDefinitePredicate(Predicate):
     Explanation
     ===========
 
-    If ``M`` is a :math:``n \times n`` symmetric real matrix, it is said
+    If $M$ is a :math:`n \times n` symmetric real matrix, it is said
     to be positive definite if :math:`Z^TMZ` is positive for
-    every non-zero column vector ``Z`` of ``n`` real numbers.
+    every non-zero column vector $Z$ of $n$ real numbers.
 
     Examples
     ========
@@ -254,7 +254,7 @@ class UpperTriangularPredicate(Predicate):
     Explanation
     ===========
 
-    A matrix ``M`` is called upper triangular matrix if :math:`M_{ij}=0`
+    A matrix $M$ is called upper triangular matrix if :math:`M_{ij}=0`
     for :math:`i<j`.
 
     Examples
@@ -283,7 +283,7 @@ class LowerTriangularPredicate(Predicate):
     Explanation
     ===========
 
-    A matrix ``M`` is called lower triangular matrix if :math:`a_{ij}=0`
+    A matrix $M$ is called lower triangular matrix if :math:`M_{ij}=0`
     for :math:`i>j`.
 
     Examples

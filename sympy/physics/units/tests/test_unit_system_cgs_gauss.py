@@ -1,6 +1,7 @@
 from sympy.concrete.tests.test_sums_products import NS
 
-from sympy import sqrt, S
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import convert_to, coulomb_constant, elementary_charge, gravitational_constant, planck
 from sympy.physics.units.definitions.unit_definitions import statcoulomb, coulomb, second, gram, centimeter, erg, \
     newton, joule, dyne, speed_of_light, meter

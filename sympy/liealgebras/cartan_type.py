@@ -1,15 +1,15 @@
-from sympy.core import Basic
+from sympy.core import Atom, Basic
 
 
-class CartanType_generator(Basic):
+class CartanType_generator():
     """
     Constructor for actually creating things
     """
     def __call__(self, *args):
         c = args[0]
-        if type(c) == list:
+        if isinstance(c, list):
             letter, n = c[0], int(c[1])
-        elif type(c) == str:
+        elif isinstance(c, str):
             letter, n = c[0], int(c[1:])
         else:
             raise TypeError("Argument must be a string (e.g. 'A3') or a list (e.g. ['A', 3])")
@@ -49,13 +49,13 @@ class CartanType_generator(Basic):
 CartanType = CartanType_generator()
 
 
-class Standard_Cartan(Basic):
+class Standard_Cartan(Atom):
     """
     Concrete base class for Cartan types such as A4, etc
     """
 
     def __new__(cls, series, n):
-        obj = Basic.__new__(cls, series, n)
+        obj = Basic.__new__(cls)
         obj.n = n
         obj.series = series
         return obj

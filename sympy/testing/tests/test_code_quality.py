@@ -38,6 +38,7 @@ message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s
 message_duplicate_test = "This is a duplicate test function: %s, line %s"
 message_self_assignments = "File contains assignments to self/cls: %s, line %s."
 message_func_is = "File contains '.func is': %s, line %s."
+message_bare_expr = "File contains bare expression: %s, line %s."
 
 implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
@@ -125,9 +126,71 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
             file_check(fname)
 
 
+class _Visit(ast.NodeVisitor):
+    """return the line number corresponding to the
+    line on which a bare expression appears if it is a binary op
+    or a comparison that is not in a with block.
+
+    EXAMPLES
+    ========
+
+    >>> import ast
+    >>> class _Visit(ast.NodeVisitor):
+    ...     def visit_Expr(self, node):
+    ...         if isinstance(node.value, (ast.BinOp, ast.Compare)):
+    ...             print(node.lineno)
+    ...     def visit_With(self, node):
+    ...         pass  # no checking there
+    ...
+    >>> code='''x = 1    # line 1
+    ... for i in range(3):
+    ...     x == 2       # <-- 3
+    ... if x == 2:
+    ...     x == 3       # <-- 5
+    ...     x + 1        # <-- 6
+    ...     x = 1
+    ...     if x == 1:
+    ...         print(1)
+    ... while x != 1:
+    ...     x == 1       # <-- 11
+    ... with raises(TypeError):
+    ...     c == 1
+    ...     raise TypeError
+    ... assert x == 1
+    ... '''
+    >>> _Visit().visit(ast.parse(code))
+    3
+    5
+    6
+    11
+    """
+    def visit_Expr(self, node):
+        if isinstance(node.value, (ast.BinOp, ast.Compare)):
+            assert None, message_bare_expr % ('', node.lineno)
+    def visit_With(self, node):
+        pass
+
+
+BareExpr = _Visit()
+
+
+def line_with_bare_expr(code):
+    """return None or else 0-based line number of code on which
+    a bare expression appeared.
+    """
+    tree = ast.parse(code)
+    try:
+        BareExpr.visit(tree)
+    except AssertionError as msg:
+        assert msg.args
+        msg = msg.args[0]
+        assert msg.startswith(message_bare_expr.split(':', 1)[0])
+        return int(msg.rsplit(' ', 1)[1].rstrip('.'))  # the line number
+
+
 def test_files():
     """
-    This test tests all files in sympy and checks that:
+    This test tests all files in SymPy and checks that:
       o no lines contains a trailing whitespace
       o no lines end with \r\n
       o no line uses tabs instead of spaces
@@ -138,6 +201,7 @@ def test_files():
       o no duplicate function names that start with test_
       o no assignments to self variable in class methods
       o no lines contain ".func is" except in the test suite
+      o there is no do-nothing expression like `a == b` or `x + 1`
     """
 
     def test(fname):
@@ -147,6 +211,15 @@ def test_files():
             _test_this_file_encoding(fname, test_file)
 
     def test_this_file(fname, test_file):
+        idx = None
+        code = test_file.read()
+        test_file.seek(0)  # restore reader to head
+        py = fname if sep not in fname else fname.rsplit(sep, 1)[-1]
+        if py.startswith('test_'):
+            idx = line_with_bare_expr(code)
+        if idx is not None:
+            assert False, message_bare_expr % (fname, idx + 1)
+
         line = None  # to flag the case where there were no lines in file
         tests = 0
         test_set = set()
@@ -215,7 +288,7 @@ def test_files():
         "%(sep)squantum%(sep)s__init__.py" % sepd,
         "%(sep)spolys%(sep)s__init__.py" % sepd,
         "%(sep)spolys%(sep)sdomains%(sep)s__init__.py" % sepd,
-        # interactive sympy executes ``from sympy import *``:
+        # interactive SymPy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
         # isympy.py executes ``from sympy import *``:
         "%(sep)sisympy.py" % sepd,
@@ -424,54 +497,14 @@ def test_test_unicode_encoding():
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
 
     fname = 'abc'
-    test_file = ['# coding=utf-8', 'α']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'abc'
-    test_file = ['# coding=utf-8', 'abc']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'abc'
     test_file = ['abc']
     _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist)
 
     fname = 'foo'
-    test_file = ['α']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'foo'
-    test_file = ['# coding=utf-8', 'α']
-    _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist)
-
-    fname = 'foo'
-    test_file = ['# coding=utf-8', 'abc']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'foo'
     test_file = ['abc']
     raises(AssertionError, lambda: _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'bar'
-    test_file = ['α']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'bar'
-    test_file = ['# coding=utf-8', 'α']
-    _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist)
-
-    fname = 'bar'
-    test_file = ['# coding=utf-8', 'abc']
-    _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist)
 
     fname = 'bar'
     test_file = ['abc']

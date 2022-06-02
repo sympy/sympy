@@ -1,8 +1,9 @@
 from functools import reduce
 import operator
 
-from sympy.core import Add, Basic, sympify
-from sympy.core.add import add
+from sympy.core import Basic, sympify
+from sympy.core.add import add, Add, _could_extract_minus_sign
+from sympy.core.sorting import default_sort_key
 from sympy.functions import adjoint
 from sympy.matrices.common import ShapeError
 from sympy.matrices.matrices import MatrixBase
@@ -11,7 +12,7 @@ from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
-from sympy.utilities import default_sort_key, sift
+from sympy.utilities import sift
 
 # XXX: MatAdd should perhaps not subclass directly from Add
 class MatAdd(MatrixExpr, Add):
@@ -46,20 +47,32 @@ class MatAdd(MatrixExpr, Add):
         obj = Basic.__new__(cls, *args)
 
         if check:
-            if all(not isinstance(i, MatrixExpr) for i in args):
+            if not any(isinstance(i, MatrixExpr) for i in args):
                 return Add.fromiter(args)
             validate(*args)
 
         if evaluate:
-            if all(not isinstance(i, MatrixExpr) for i in args):
-                return Add(*args, evaluate=True)
-            obj = canonicalize(obj)
+            obj = cls._evaluate(obj)
 
         return obj
+
+    @classmethod
+    def _evaluate(cls, expr):
+        args = expr.args
+        if not any(isinstance(i, MatrixExpr) for i in args):
+            return Add(*args, evaluate=True)
+        return canonicalize(expr)
 
     @property
     def shape(self):
         return self.args[0].shape
+
+    def could_extract_minus_sign(self):
+        return _could_extract_minus_sign(self)
+
+    def expand(self, **kwargs):
+        expanded = super(MatAdd, self).expand(**kwargs)
+        return self._evaluate(expanded)
 
     def _entry(self, i, j, **kwargs):
         return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])

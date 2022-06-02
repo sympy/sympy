@@ -1,7 +1,8 @@
 from sympy.core import Expr
 from sympy.core.decorators import call_highest_priority, _sympifyit
-from sympy.sets import ImageSet
-from sympy.sets.sets import set_add, set_sub, set_mul, set_div, set_pow, set_function
+from .fancysets import ImageSet
+from .sets import set_add, set_sub, set_mul, set_div, set_pow, set_function
+
 
 class SetExpr(Expr):
     """An expression that can take on values of a set.

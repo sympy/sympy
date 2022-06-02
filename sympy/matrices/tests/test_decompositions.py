@@ -1,8 +1,14 @@
-from sympy import Rational, I, expand_mul, S, simplify, sqrt
+from sympy.core.function import expand_mul
+from sympy.core.numbers import I, Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import Abs
+from sympy.simplify.simplify import simplify
 from sympy.matrices.matrices import NonSquareMatrixError
 from sympy.matrices import Matrix, zeros, eye, SparseMatrix
 from sympy.abc import x, y, z
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 from sympy.testing.matrices import allclose
 
 
@@ -148,6 +154,18 @@ def test_QR():
     assert Q.T * Q == eye(Q.cols)
     assert R.is_upper
     assert A == Q*R
+
+    x = Symbol('x')
+    A = Matrix([x])
+    Q, R = A.QRdecomposition()
+    assert Q == Matrix([x / Abs(x)])
+    assert R == Matrix([Abs(x)])
+
+    A = Matrix([[x, 0], [0, x]])
+    Q, R = A.QRdecomposition()
+    assert Q == x / Abs(x) * Matrix([[1, 0], [0, 1]])
+    assert R == Abs(x) * Matrix([[1, 0], [0, 1]])
+
 
 def test_QR_non_square():
     # Narrow (cols < rows) matrices
@@ -394,6 +412,7 @@ def test_rank_decomposition():
     assert c * f == a
 
 
+@slow
 def test_upper_hessenberg_decomposition():
     A = Matrix([
         [1, 0, sqrt(3)],

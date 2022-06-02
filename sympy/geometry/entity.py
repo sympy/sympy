@@ -19,18 +19,24 @@ Rn is a GeometrySet representing n-dimensional Euclidean space. R2 and
 R3 are currently the only ambient spaces implemented.
 
 """
+from typing import Tuple as tTuple
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
+from sympy.core.evalf import EvalfMixin, N
+from sympy.core.numbers import oo
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
-from sympy.functions import cos, sin
+from sympy.functions.elementary.trigonometric import cos, sin, atan
 from sympy.matrices import eye
 from sympy.multipledispatch import dispatch
-from sympy.sets import Set
+from sympy.printing import sstr
+from sympy.sets import Set, Union, FiniteSet
 from sympy.sets.handlers.intersection import intersection_sets
 from sympy.sets.handlers.union import union_sets
+from sympy.solvers.solvers import solve
 from sympy.utilities.misc import func_name
+from sympy.utilities.iterables import is_sequence
 
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
@@ -58,13 +64,15 @@ ordering_of_classes = [
 ]
 
 
-class GeometryEntity(Basic):
+class GeometryEntity(Basic, EvalfMixin):
     """The base class for all geometrical entities.
 
-    This class doesn't represent any particular geometric entity, it only
+    This class does not represent any particular geometric entity, it only
     provides the implementation of some methods common to all subclasses.
 
     """
+
+    __slots__ = ()  # type: tTuple[str, ...]
 
     def __cmp__(self, other):
         """Comparison of two GeometryEntities."""
@@ -98,7 +106,7 @@ class GeometryEntity(Basic):
 
     def __contains__(self, other):
         """Subclasses should implement this method for anything more complex than equality."""
-        if type(self) == type(other):
+        if type(self) is type(other):
             return self == other
         raise NotImplementedError()
 
@@ -145,7 +153,6 @@ class GeometryEntity(Basic):
 
     def __str__(self):
         """String representation of a GeometryEntity."""
-        from sympy.printing import sstr
         return type(self).__name__ + sstr(self.args)
 
     def _eval_subs(self, old, new):
@@ -162,8 +169,6 @@ class GeometryEntity(Basic):
     def _repr_svg_(self):
         """SVG representation of a GeometryEntity suitable for IPython"""
 
-        from sympy.core.evalf import N
-
         try:
             bounds = self.bounds
         except (NotImplementedError, TypeError):
@@ -171,7 +176,7 @@ class GeometryEntity(Basic):
             # will fall back to the next representation
             return None
 
-        if any([not x.is_number or not x.is_finite for x in bounds]):
+        if not all(x.is_number and x.is_finite for x in bounds):
             return None
 
         svg_top = '''<svg xmlns="http://www.w3.org/2000/svg"
@@ -293,7 +298,7 @@ class GeometryEntity(Basic):
             return self.encloses_point(o)
         elif isinstance(o, Segment):
             return all(self.encloses_point(x) for x in o.points)
-        elif isinstance(o, Ray) or isinstance(o, Line):
+        elif isinstance(o, (Ray, Line)):
             return False
         elif isinstance(o, Ellipse):
             return self.encloses_point(o.center) and \
@@ -381,7 +386,7 @@ class GeometryEntity(Basic):
         Circle(Point2D(-pi, pi), -5)
 
         """
-        from sympy import atan, Point, Dummy, oo
+        from sympy.geometry.point import Point
 
         g = self
         l = line
@@ -519,8 +524,6 @@ class GeometryEntity(Basic):
         Point2D(1, 1)
         """
         from sympy.geometry.point import Point
-        from sympy.core.symbol import Dummy
-        from sympy.solvers.solvers import solve
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):
@@ -536,6 +539,8 @@ class GeometrySet(GeometryEntity, Set):
     """Parent class of all GeometryEntity that are also Sets
     (compatible with sympy.sets)
     """
+    __slots__ = ()
+
     def _contains(self, other):
         """sympy.sets uses the _contains method, so include it for compatibility."""
 
@@ -549,7 +554,6 @@ def union_sets(self, o): # noqa:F811
     """ Returns the union of self and o
     for use with sympy.sets.Set, if possible. """
 
-    from sympy.sets import Union, FiniteSet
 
     # if its a FiniteSet, merge any points
     # we contain and return a union with the rest
@@ -568,8 +572,7 @@ def intersection_sets(self, o): # noqa:F811
     """ Returns a sympy.sets.Set of intersection objects,
     if possible. """
 
-    from sympy.sets import FiniteSet, Union
-    from sympy.geometry import Point
+    from sympy.geometry.point import Point
 
     try:
         # if o is a FiniteSet, find the intersection directly

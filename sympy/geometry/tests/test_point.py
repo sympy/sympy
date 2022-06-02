@@ -1,9 +1,15 @@
-from sympy import I, Rational, Symbol, pi, sqrt, sympify, S, Basic
+from sympy.core.basic import Basic
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.parameters import evaluate
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry import Line, Point, Point2D, Point3D, Line3D, Plane
 from sympy.geometry.entity import rotate, scale, translate, GeometryEntity
 from sympy.matrices import Matrix
 from sympy.utilities.iterables import subsets, permutations, cartes
-from sympy.utilities.misc import  Undecidable
+from sympy.utilities.misc import Undecidable
 from sympy.testing.pytest import raises, warns
 
 
@@ -61,7 +67,7 @@ def test_point():
     p1_3 = Point(x1 + 1, x1)
     assert Point.is_collinear(p3)
 
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert Point.is_collinear(p3, Point(p3, dim=4))
     assert p3.is_collinear()
     assert Point.is_collinear(p3, p4)
@@ -75,9 +81,10 @@ def test_point():
     assert p3.intersection(Point(0, 0)) == [p3]
     assert p3.intersection(p4) == []
     assert p3.intersection(line) == []
-    assert Point.intersection(Point(0, 0, 0), Point(0, 0)) == [Point(0, 0, 0)]
+    with warns(UserWarning, test_stacklevel=False):
+        assert Point.intersection(Point(0, 0, 0), Point(0, 0)) == [Point(0, 0, 0)]
 
-    x_pos = Symbol('x', real=True, positive=True)
+    x_pos = Symbol('x', positive=True)
     p2_1 = Point(x_pos, 0)
     p2_2 = Point(0, x_pos)
     p2_3 = Point(-x_pos, 0)
@@ -254,7 +261,7 @@ def test_point3D():
     assert Point.are_coplanar()
     assert Point.are_coplanar((1, 2, 0), (1, 2, 0), (1, 3, 0))
     assert Point.are_coplanar((1, 2, 0), (1, 2, 3))
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         raises(ValueError, lambda: Point2D.are_coplanar((1, 2), (1, 2, 3)))
     assert Point3D.are_coplanar((1, 2, 0), (1, 2, 3))
     assert Point.are_coplanar((0, 0, 0), (1, 1, 0), (1, 1, 1), (1, 2, 1)) is False
@@ -293,10 +300,10 @@ def test_point3D():
 
     # Test __sub__
     p_4d = Point(0, 0, 0, 1)
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert p - p_4d == Point(1, 1, 1, -1)
     p_4d3d = Point(0, 0, 1, 0)
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert p - p_4d3d == Point(1, 1, 0, 0)
 
 
@@ -332,7 +339,7 @@ def test_issue_11617():
     p1 = Point3D(1,0,2)
     p2 = Point2D(2,0)
 
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert p1.distance(p2) == sqrt(5)
 
 
@@ -445,6 +452,12 @@ def test__normalize_dimension():
     assert Point._normalize_dimension(
         Point(1, 2), Point(3, 4, 0), on_morph='ignore') == [
         Point(1, 2, 0), Point(3, 4, 0)]
+
+
+def test_issue_22684():
+    # Used to give an error
+    with evaluate(False):
+        Point(1, 2)
 
 
 def test_direction_cosine():

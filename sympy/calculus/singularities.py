@@ -15,9 +15,12 @@ the following function types in the given ``Interval``:
 
 """
 
-from sympy import S, Symbol
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.solvers.solveset import solveset
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
 from sympy.utilities.misc import filldedent
 
 
@@ -66,25 +69,22 @@ def singularities(expression, symbol, domain=None):
     Examples
     ========
 
-    >>> from sympy.calculus.singularities import singularities
-    >>> from sympy import Symbol, log
+    >>> from sympy import singularities, Symbol, log
     >>> x = Symbol('x', real=True)
     >>> y = Symbol('y', real=False)
     >>> singularities(x**2 + x + 1, x)
     EmptySet
     >>> singularities(1/(x + 1), x)
-    FiniteSet(-1)
+    {-1}
     >>> singularities(1/(y**2 + 1), y)
-    FiniteSet(I, -I)
+    {-I, I}
     >>> singularities(1/(y**3 + 1), y)
-    FiniteSet(-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2)
+    {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
     >>> singularities(log(x), x)
-    FiniteSet(0)
+    {0}
 
     """
-    from sympy.functions.elementary.exponential import log
-    from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
-    from sympy.core.power import Pow
+    from sympy.solvers.solveset import solveset
 
     if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
@@ -140,6 +140,8 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
         is varied in ``range``, False otherwise.
 
     """
+    from sympy.solvers.solveset import solveset
+
     expression = sympify(expression)
     free = expression.free_symbols
 
@@ -270,11 +272,15 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     >>> from sympy import is_decreasing
     >>> from sympy.abc import x, y
     >>> from sympy import S, Interval, oo
+    >>> is_decreasing(1/(x**2 - 3*x), Interval.open(S(3)/2, 3))
+    True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
     True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
+    False
+    >>> is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, 1.5))
     False
     >>> is_decreasing(-x**2, Interval(-oo, 0))
     False
@@ -316,6 +322,8 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     True
     >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
+    False
+    >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, 1.5))
     False
     >>> is_strictly_decreasing(-x**2, Interval(-oo, 0))
     False
@@ -360,6 +368,8 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     >>> from sympy import is_monotonic
     >>> from sympy.abc import x, y
     >>> from sympy import S, Interval, oo
+    >>> is_monotonic(1/(x**2 - 3*x), Interval.open(S(3)/2, 3))
+    True
     >>> is_monotonic(1/(x**2 - 3*x), Interval.open(1.5, 3))
     True
     >>> is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo))
@@ -372,6 +382,8 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     True
 
     """
+    from sympy.solvers.solveset import solveset
+
     expression = sympify(expression)
 
     free = expression.free_symbols

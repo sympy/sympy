@@ -1,6 +1,8 @@
 from functools import singledispatch
 
-from sympy import Dummy, lambdify, exp
+from sympy.core.symbol import Dummy
+from sympy.functions.elementary.exponential import exp
+from sympy.utilities.lambdify import lambdify
 from sympy.external import import_module
 from sympy.stats import DiscreteDistributionHandmade
 from sympy.stats.crv import SingleContinuousDistribution
@@ -12,9 +14,7 @@ from sympy.stats.drv_types import GeometricDistribution, LogarithmicDistribution
 from sympy.stats.frv import SingleFiniteDistribution
 
 
-scipy = import_module("scipy")
-if scipy is not None:
-    import scipy.stats
+scipy = import_module("scipy", import_kwargs={'fromlist':['stats']})
 
 
 @singledispatch
@@ -103,7 +103,6 @@ def _(dist: CauchyDistribution, size, seed):
 @do_sample_scipy.register(DiscreteDistributionHandmade)
 def _(dist: DiscreteDistributionHandmade, size, seed):
     from scipy.stats import rv_discrete
-    from sympy import lambdify
 
     z = Dummy('z')
     handmade_pmf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])
