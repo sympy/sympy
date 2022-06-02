@@ -102,17 +102,13 @@ def test_rsolve_bulk():
                 assert rsolve_poly(c, q, n) == p
             # See issue 3956:
             if p.is_hypergeometric(n) and len(c) <= 3:
-                sol = rsolve_hyper(c, q, n)
-                if not sol:
-                    # print("FIXME: rsolve_hyper({}, {}, {})".format(c, q, n))
-                    # see test_rsolve_bulk_still_failing
-                    continue
-                assert sol.subs(zip(symbols('C:3'), [0, 0, 0])).expand() == p
+                assert rsolve_hyper(c, q, n).subs(zip(symbols('C:3'), [0, 0, 0])).expand() == p
 
 
-@XFAIL
-def test_rsolve_bulk_still_failing():
-    assert rsolve_hyper([n**2 - n + 12, 1], n*(n**2 - n + 12) + n + 1, n) is not None
+def test_rsolve_0_sol_homogeneous():
+    # fixed by cherry-pick from
+    # https://github.com/diofant/diofant/commit/0fb85d390f2a1d342cfde698596cc2de71711706
+    assert rsolve_hyper([n**2 - n + 12, 1], n*(n**2 - n + 12) + n + 1, n) == n
 
 
 def test_rsolve():
