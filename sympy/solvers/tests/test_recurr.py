@@ -83,6 +83,13 @@ def test_rsolve_hyper():
     assert rsolve_hyper([1, -2*n/a - 2/a, 1], 0, n) == 0
 
 
+@XFAIL
+def test_rsolve_ratio_missed():
+    # this arises during computation
+    # assert rsolve_hyper([-1, 1], 3*(n + n**2), n).expand() == C0 + n**3 - n
+    assert rsolve_ratio([-n, n + 2], n, n) is not None
+
+
 def recurrence_term(c, f):
     """Compute RHS of recurrence in f(n) with coefficients in c."""
     return sum(c[i]*f.subs(n, n + i) for i in range(len(c)))
@@ -228,14 +235,16 @@ def test_issue_18751():
     assert rsolve(f, y(n)) == \
         C0*(r*(cos(theta) - I*Abs(sin(theta))))**n + C1*(r*(cos(theta) + I*Abs(sin(theta))))**n
 
+
 def test_constant_naming():
     #issue 8697
-    assert rsolve(y(n+3) - y(n+2) - y(n+1) + y(n), y(n)) == (-1)**n*C0+C1+C2*n
-    assert rsolve(y(n+3)+3*y(n+2)+3*y(n+1)+y(n), y(n)).expand() == C0*(-1)**n + (-1)**n*C1*n + (-1)**n*C2*n**2
+    assert rsolve(y(n+3) - y(n+2) - y(n+1) + y(n), y(n)) == (-1)**n*C1 + C0 + C2*n
+    assert rsolve(y(n+3)+3*y(n+2)+3*y(n+1)+y(n), y(n)).expand() == (-1)**n*C0 - (-1)**n*C1*n - (-1)**n*C2*n**2
     assert rsolve(y(n) - 2*y(n - 3) + 5*y(n - 2) - 4*y(n - 1),y(n),[1,3,8]) == 3*2**n - n - 2
 
     #issue 19630
     assert rsolve(y(n+3) - 3*y(n+1) + 2*y(n), y(n), {y(1):0, y(2):8, y(3):-2}) == (-2)**n + 2*n
+
 
 @slow
 def test_issue_15751():

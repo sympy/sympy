@@ -557,11 +557,16 @@ def rsolve_hyper(coeffs, f, n, **hints):
             for j in range(r + 1):
                 polys[j] *= Mul(*(denoms[:j] + denoms[j + 1:]))
 
+            # FIXME: The call to rsolve_ratio below should suffice (rsolve_poly
+            # call can be removed) but the XFAIL test_rsolve_ratio_missed must
+            # be fixed first.
             R = rsolve_ratio(polys, Mul(*denoms), n, symbols=True)
             if R is not None:
                 R, syms = R
                 if syms:
                     R = R.subs(zip(syms, [0]*len(syms)))
+            else:
+                R = rsolve_poly(polys, Mul(*denoms), n)
 
             if R:
                 inhomogeneous[i] *= R
