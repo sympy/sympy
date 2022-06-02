@@ -230,13 +230,6 @@ def test_issue_11813():
 
 
 @XFAIL
-def test_issue_11742():
-    i =  integrate(sqrt(-x**2 + 8*x + 48), (x, 4, 12))
-    assert not i.has(Integral)
-    # assert i == 16*pi
-
-
-@XFAIL
 def test_issue_11254a():
     assert not integrate(sech(x), (x, 0, 1)).has(Integral)
 

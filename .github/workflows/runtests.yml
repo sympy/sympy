@@ -144,6 +144,24 @@ jobs:
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
 
+  # -------------------- Test Pyodide on node ---------------------- #
+
+  test-pyodide:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        split: ['1/2', '2/2']
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16.x
+      - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.20.1a1/pyodide-build-0.20.1a1.tar.bz2 | tar xjf -
+      - run: python3 setup.py bdist_wheel
+      - run: node bin/test_pyodide.mjs --split=${{ matrix.split }} 2>/dev/null  # ignore node exception
+
   # -------------------- Optional dependency tests ----------------- #
 
   optional-dependencies:
@@ -164,32 +182,36 @@ jobs:
       - uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
-      - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev
+
+      # Install the non-Python dependencies
+      - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev
       - run: python -m pip install --upgrade pip wheel
-      - run: pip install mpmath matplotlib numpy ipython cython \
+
+      # Use numpy and scipy from git for Python 3.11
+      - if: ${{ contains(matrix.python-version, '3.11') }}
+        run: pip install git+https://github.com/cython/cython@master
+      - if: ${{ contains(matrix.python-version, '3.11') }}
+        run: pip install git+https://github.com/numpy/numpy@main
+      - if: ${{ contains(matrix.python-version, '3.11') }}
+        run: pip install git+https://github.com/scipy/scipy@main
+
+      # dependencies to install in all Python versions:
+      - run: pip install mpmath matplotlib numpy ipython cython scipy aesara \
                          wurlitzer autowrap numexpr 'antlr4-python3-runtime==4.7.*'
-      # SciPy cannot yet be installed in Python 3.11 in CI. Also Aesara pulls
-      # in SciPy. Once it is possible to install then this should be done
-      # unconditionally.
-      - if: ${{ ! contains(matrix.python-version, '3.11') }}
-        run: pip install scipy aesara
+
       # gmpy2 is not available for pypy
       - if: ${{ matrix.python-version != 'pypy-3.8' }}
         run: pip install gmpy2
-      # symengine is not available for pypy and cannot be installed in 3.11 (yet)
+
+      # These are not available for pypy and cannot be installed in 3.11 (yet)
       - if: ${{ matrix.python-version != 'pypy-3.8' && ! contains(matrix.python-version, '3.11') }}
-        run: pip install symengine
-      # The llvmjit tests segfault on Python 3.10. For now we skip this under
-      # 3.10 because the segfault prevents the other tests from running. Also
-      # llvmlite cannot be installed under PyPy. Installing numba pulls in
-      # llvmlite indirectly. Maybe it would be better to disable the llvmlit
-      # tests but still install both of these so at least numbe can be tested.
-      - if: ${{ matrix.python-version == '3.9' }}
-        run: pip install llvmlite numba
+        run: pip install symengine llvmlite numba
+
       # Test external imports
       - run: bin/test_external_imports.py
       - run: bin/test_submodule_imports.py
       - run: bin/test_executable.py
+
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
 
@@ -209,22 +231,6 @@ jobs:
       - run: pip install mpmath numpy scipy tensorflow
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
-
-  # -------------------- PyTorch tests -------------------------- #
-
-  pytorch:
-    needs: code-quality
-
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
-        with:
-          python-version: '3.10'
-      - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy scipy torch torchvision
-      # Test modules that can use pytorch
-      - run: bin/test_pytorch.py
 
   # -------------------- SymEngine tests --------------------------- #
 

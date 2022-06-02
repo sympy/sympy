@@ -1442,6 +1442,10 @@ def test_issue_10567():
     assert integrate(vt, t) == Matrix([[a*t**2/2], [b*t], [c*t]])
 
 
+def test_issue_11742():
+    assert integrate(sqrt(-x**2 + 8*x + 48), (x, 4, 12)) == 16*pi
+
+
 def test_issue_11856():
     t = symbols('t')
     assert integrate(sinc(pi*t), t) == Si(pi*t)/pi
@@ -1936,3 +1940,9 @@ def test_sqrt_quadratic():
            7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/9
     assert integrate((d+e*x)/sqrt(a+b*x+c*x**2), x) == \
            e*sqrt(a + b*x + c*x**2)/c + (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c)
+
+    assert integrate(sqrt(53225*x**2-66732*x+23013)) == \
+           x*sqrt(53225*x**2 - 66732*x + 23013)/2 - 16683*sqrt(53225*x**2 - 66732*x + 23013)/53225 + \
+           111576969*sqrt(2129)*asinh(53225*x/10563 - S(11122)/3521)/1133160250
+    assert integrate(sqrt(a+b*x+c*x**2), x) == b*sqrt(a + b*x + c*x**2)/(4*c) + x*sqrt(a + b*x + c*x**2)/2 + \
+           (2*a - b**2/(2*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/(4*sqrt(c))

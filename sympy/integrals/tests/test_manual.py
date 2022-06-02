@@ -598,3 +598,11 @@ def test_manualintegrate_sqrt_quadratic():
                           7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/9)
     assert manualintegrate((d+e*x)/sqrt(a+b*x+c*x**2), x) == \
            e*sqrt(a + b*x + c*x**2)/c + (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c)
+
+    assert_is_integral_of(sqrt(53225*x**2-66732*x+23013),
+                          x*sqrt(53225*x**2 - 66732*x + 23013)/2 - 16683*sqrt(53225*x**2 - 66732*x + 23013)/53225 +
+                          111576969*sqrt(2129)*asinh(53225*x/10563 - S(11122)/3521)/1133160250)
+    assert manualintegrate(sqrt(a+c*x**2), x) == \
+           x*sqrt(a + c*x**2)/2 + 2*a*log(2*sqrt(c)*sqrt(a + c*x**2) + 2*c*x)/(4*sqrt(c))
+    assert manualintegrate(sqrt(a+b*x+c*x**2), x) == b*sqrt(a + b*x + c*x**2)/(4*c) + x*sqrt(a + b*x + c*x**2)/2 + \
+           (2*a - b**2/(2*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/(4*sqrt(c))
