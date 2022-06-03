@@ -114,7 +114,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         (a + b)*exp(2*x)
 
     If you are interested only in collecting specific powers of some symbols
-    then set ``exact`` flag in arguments::
+    then set ``exact`` flag to True::
 
         >>> collect(a*x**7 + b*x**7, x, exact=True)
         a*x**7 + b*x**7
@@ -125,7 +125,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ``exact`` to None:
 
         >>> collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x, x, exact=None)
-        x*exp(x) + 3*x + (y + 2)*sin(x)
+        x*(exp(x) + 3) + (y + 2)*sin(x)
 
     You can also apply this function to differential equations, where
     derivatives of arbitrary order can be collected. Note that if you
@@ -193,12 +193,13 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     if exact is None:
         _syms = set()
         for i in Add.make_args(expr):
-            if not i.has_free(*syms):
+            if not i.has_free(*syms) or i in syms:
                 continue
             if not i.is_Mul and i not in syms:
                 _syms.add(i)
             else:
-                g = i._new_rawargs(*i.as_coeff_mul(*syms)[1])
+                g = i._new_rawargs(*[_ for _ in
+                    i.as_coeff_mul(*syms)[1] if _ not in syms])
                 if g not in syms:
                     _syms.add(g)
         simple = all(i.is_Pow and i.base in syms for i in _syms)

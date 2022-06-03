@@ -1554,7 +1554,7 @@ def test_as_coefficients_dict():
     assert eq.as_coefficients_dict(x) == {x: b, 1/x: c,
         x*(x + 1): a}
     assert eq.expand().as_coefficients_dict(x) == {x**2: a, x: a + b, 1/x: c}
-    assert x.as_coefficients_dict() == {S.One: x}
+    assert x.as_coefficients_dict() == {x: S.One}
 
 
 def test_args_cnc():
