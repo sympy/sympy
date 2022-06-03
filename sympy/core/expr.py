@@ -1960,8 +1960,7 @@ class Expr(Basic, EvalfMixin):
     def as_coefficients_dict(self, *syms):
         """Return a dictionary mapping terms to their Rational coefficient.
         Since the dictionary is a defaultdict, inquiries about terms which
-        were not present will return a coefficient of 0. If an expression is
-        not an Add it is considered to have a single term.
+        were not present will return a coefficient of 0.
 
         If symbols ``syms`` are provided, any multiplicative terms
         independent of them will be considered a coefficient and a
@@ -1971,7 +1970,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy.abc import a, x
+        >>> from sympy.abc import a, x, y
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
         >>> _[a]
@@ -1980,10 +1979,12 @@ class Expr(Basic, EvalfMixin):
         {a*x: 3}
         >>> (3*a*x).as_coefficients_dict(x)
         {x: 3*a}
+        >>> (3*a*x).as_coefficients_dict(y)
+        {1: 3*a*x}
 
         """
+        d = defaultdict(list)
         if not syms:
-            d = defaultdict(list)
             for ai in Add.make_args(self):
                 c, m = ai.as_coeff_Mul()
                 d[m].append(c)
@@ -1992,11 +1993,7 @@ class Expr(Basic, EvalfMixin):
                     d[k] = v[0]
                 else:
                     d[k] = Add(*v)
-            di = defaultdict(int)
-            di.update(d)
-            return di
         else:
-            d = defaultdict(list)
             ind, dep = self.as_independent(*syms, as_Add=True)
             for i in Add.make_args(dep):
                 if i.is_Mul:
@@ -2005,12 +2002,14 @@ class Expr(Basic, EvalfMixin):
                         d[i].append(c)
                     else:
                         d[i._new_rawargs(*x)].append(c)
-                else:
+                elif i:
                     d[i].append(S.One)
             d = {k: Add(*d[k]) for k in d}
             if ind is not S.Zero:
                 d.update({S.One: ind})
-            return d
+        di = defaultdict(int)
+        di.update(d)
+        return di
 
     def as_base_exp(self) -> tuple[Expr, Expr]:
         # a -> b ** e
