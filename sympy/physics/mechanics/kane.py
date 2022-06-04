@@ -43,10 +43,17 @@ class KanesMethod(_Methods):
         The system's mass matrix
     forcing : Matrix
         The system's forcing vector
+    mass_matrix_kin : Matrix
+        The "mass matrix" for kinematic differential equations
+    forcing_kin : Matrix
+        The forcing vector for kinematic differential equations
     mass_matrix_full : Matrix
-        The "mass matrix" for the u's and q's
+        The "mass matrix" for the u's and q's with explicit kinematics
     forcing_full : Matrix
-        The "forcing vector" for the u's and q's
+        The "forcing vector" for the u's and q's with explicit kinematics
+
+    By default, the kinematic and "full" mass matrix and forcing vector are given
+    with the kinematic equations in explicit form. The method also provides an `_implicit` version for those matrices/vectors where the kinematics are left in implicit form
 
     Examples
     ========
@@ -281,6 +288,10 @@ class KanesMethod(_Methods):
                        'coordinates.')
                 raise ValueError(msg.format(nonlin_vars))
 
+            self._f_k_implicit = f_k.xreplace(uaux_zero)
+            self._k_ku_implicit = k_ku.xreplace(uaux_zero)
+            self._k_kqdot_implicit = k_kqdot
+
             # Solve for q'(t) such that the coefficient matrices are now in
             # this form:
             #
@@ -289,19 +300,19 @@ class KanesMethod(_Methods):
             # NOTE : Solving the kinematic differential equations here is not
             # necessary and prevents the equations from being provided in fully
             # implicit form.
-            f_k = k_kqdot.LUsolve(f_k)
-            k_ku = k_kqdot.LUsolve(k_ku)
-            k_kqdot = eye(len(qdot))
-            self._qdot_u_map = dict(zip(qdot, -(k_ku*u + f_k)))
+            f_k_explicit = k_kqdot.LUsolve(f_k)
+            k_ku_explicit = k_kqdot.LUsolve(k_ku)
+            self._qdot_u_map = dict(zip(qdot, -(k_ku_explicit*u + f_k_explicit)))
 
-            self._f_k = f_k.xreplace(uaux_zero)
-            self._k_ku = k_ku.xreplace(uaux_zero)
-            self._k_kqdot = k_kqdot
+            self._f_k = f_k_explicit.xreplace(uaux_zero)
+            self._k_ku = k_ku_explicit.xreplace(uaux_zero)
+            self._k_kqdot = eye(len(qdot))
+
         else:
             self._qdot_u_map = None
-            self._f_k = Matrix()
-            self._k_ku = Matrix()
-            self._k_kqdot = Matrix()
+            self._f_k_implicit = self._f_k = Matrix()
+            self._k_ku_implicit = self._k_ku = Matrix()
+            self._k_kqdot_implicit = self._k_kqdot = Matrix()
 
     def _form_fr(self, fl):
         """Form the generalized active force."""
@@ -581,7 +592,10 @@ class KanesMethod(_Methods):
                 km = KanesMethod(self._inertial, self.q, self._uaux,
                         u_auxiliary=self._uaux, u_dependent=self._udep,
                         velocity_constraints=(self._k_nh * self.u +
-                        self._f_nh))
+                        self._f_nh),
+                        acceleration_constraints=(self._k_dnh * self._udot +
+                        self._f_dnh)
+                        )
             km._qdot_u_map = self._qdot_u_map
             self._km = km
             fraux = km._form_fr(loads)
@@ -652,31 +666,92 @@ class KanesMethod(_Methods):
         return Matrix([self._k_d, self._k_dnh])
 
     @property
-    def mass_matrix_full(self):
-        """The mass matrix of the system, augmented by the kinematic
-        differential equations."""
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
-        o = len(self.u)
-        n = len(self.q)
-        return ((self._k_kqdot).row_join(zeros(n, o))).col_join((zeros(o,
-                n)).row_join(self.mass_matrix))
-
-    @property
     def forcing(self):
         """The forcing vector of the system."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         return -Matrix([self._f_d, self._f_dnh])
 
+    def _mass_matrix_kin(self, explicit=True):
+        """
+        Returns the "mass matrix" Y_q for the kinematic differential equations
+        Y_q*q' = f_q = Y_u*u + f(q, t)
+        If explicit=True, Y_q = identity
+        """
+        return self._k_kqdot if explicit else self._k_kqdot_implicit
+
+    def _forcing_kin(self, explicit=True):
+        """
+        Returns the "forcing vector" for the kinematic differential equation
+        Y_q*q' = f_q = Y_u*u + f(q, t)
+        If explicit=True (default behavior), assumes Y_q = identity
+        """
+        if explicit:
+            return -(self._k_ku * Matrix(self.u) + self._f_k)
+        else:
+            return -(self._k_ku_implicit * Matrix(self.u) + self._f_k_implicit)
+
+    @property
+    def mass_matrix_kin(self):
+        """The mass matrix of the the kinematic differential equations in explicit form."""
+        return self._mass_matrix_kin(True)
+
+    @property
+    def mass_matrix_kin_implicit(self):
+        """The mass matrix of the the kinematic differential equations in implicit form."""
+        return self._mass_matrix_kin(False)
+
+    @property
+    def forcing_kin(self):
+        """The focing vector  the the kinematic differential equations in explicit form."""
+        return self._forcing_kin(True)
+
+    @property
+    def forcing_kin_implicit(self):
+        """The focing vector  the the kinematic differential equations in implicit form."""
+        return self._forcing_kin(False)
+
+    def _mass_matrix_full(self, explicit=True):
+        """The mass matrix of the system, augmented by the kinematic
+        differential equations in explicit or implicit form."""
+        if not self._fr or not self._frstar:
+            raise ValueError('Need to compute Fr, Fr* first.')
+        o = len(self.u)
+        n = len(self.q)
+        return (
+            self._mass_matrix_kin(explicit).row_join(zeros(n, o))
+                ).col_join(
+            zeros(o,n).row_join(self.mass_matrix)
+                )
+
+    def _forcing_full(self, explicit=True):
+        """The forcing vector of the system, augmented by the kinematic
+        differential equations in explicit or implicit form."""
+        return Matrix([self._forcing_kin(explicit), self.forcing])
+
+    @property
+    def mass_matrix_full(self):
+        """The mass matrix of the system, augmented by the kinematic
+        differential equations in explicit form."""
+        return self._mass_matrix_full(True)
+
+    @property
+    def mass_matrix_full_implicit(self):
+        """The mass matrix of the system, augmented by the kinematic
+        differential equations in implicit form."""
+        return self._mass_matrix_full(False)
+
     @property
     def forcing_full(self):
         """The forcing vector of the system, augmented by the kinematic
-        differential equations."""
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
-        f1 = self._k_ku * Matrix(self.u) + self._f_k
-        return -Matrix([f1, self._f_d, self._f_dnh])
+        differential equations in explicit form."""
+        return self._forcing_full(True)
+
+    @property
+    def forcing_full_implicit(self):
+        """The forcing vector of the system, augmented by the kinematic
+        differential equations in implicit form."""
+        return self._forcing_full(False)
 
     @property
     def q(self):
