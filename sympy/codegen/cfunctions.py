@@ -192,7 +192,7 @@ class exp2(Function):
     log2
     """
     nargs = 1
-
+    _skip_eval_float_arguments = False
 
     def fdiff(self, argindex=1):
         """
