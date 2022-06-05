@@ -519,7 +519,6 @@ class Function(Application, Expr):
         else:
             evaluated_result = super().__new__(cls, *args, evaluate=evaluate, **options)
 
-                 
         return _sympify(evaluated_result)
 
     @classmethod
