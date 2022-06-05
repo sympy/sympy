@@ -465,7 +465,7 @@ class Function(Application, Expr):
         """ Return settings for evaluation
 
         Returns:
-            Tuple with boolean for running eval, boolean for running evalf, 
+            Tuple with boolean for running eval, boolean for running evalf,
             int with evalf precision
         """
         should = [cls._should_evalf(a) for a in args]
