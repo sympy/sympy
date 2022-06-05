@@ -455,7 +455,7 @@ class Function(Application, Expr):
     """
 
     _skip_eval_float_arguments = True
-    
+
     @property
     def _diff_wrt(self):
         return False
@@ -463,12 +463,11 @@ class Function(Application, Expr):
     @classmethod
     def _evaluation_parameters(cls, args):
         """ Return settings for evaluation
-        
+
         Returns:
             Tuple with boolean for running eval, boolean for running evalf, 
             int with evalf precision
         """
-        
         should = [cls._should_evalf(a) for a in args]
         run_evalf= min(should)>0
         pr = max(should)
@@ -479,7 +478,7 @@ class Function(Application, Expr):
                  return True, run_evalf, pr
         else:
             return True, run_evalf, pr
-        
+
     @cacheit
     def __new__(cls, *args, **options):
         # Handle calls like Function('f')
