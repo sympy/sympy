@@ -99,6 +99,7 @@ class DiracDelta(Function):
     """
 
     is_real = True
+    _skip_eval_float_arguments = False
 
     def fdiff(self, argindex=1):
         """

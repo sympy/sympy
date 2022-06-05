@@ -508,6 +508,7 @@ class Abs(Function):
     is_extended_nonnegative = True
     unbranched = True
     _singularities = True  # non-holomorphic
+    _skip_eval_float_arguments = False
 
     def fdiff(self, argindex=1):
         """

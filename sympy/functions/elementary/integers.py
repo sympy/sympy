@@ -293,6 +293,7 @@ class ceiling(RoundFunction):
 
     """
     _dir = 1
+    _skip_eval_float_arguments = False
 
     @classmethod
     def _eval_number(cls, arg):

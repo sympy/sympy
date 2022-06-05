@@ -454,10 +454,32 @@ class Function(Application, Expr):
 
     """
 
+    _skip_eval_float_arguments = True
+    
     @property
     def _diff_wrt(self):
         return False
 
+    @classmethod
+    def _evaluation_parameters(cls, args):
+        """ Return settings for evaluation
+        
+        Returns:
+            Tuple with boolean for running eval, boolean for running evalf, 
+            int with evalf precision
+        """
+        
+        should = [cls._should_evalf(a) for a in args]
+        run_evalf= min(should)>0
+        pr = max(should)
+        if cls._skip_eval_float_arguments:
+             if not any(p <= 0 for p in should):
+                 return False, run_evalf, pr
+             else:
+                 return True, run_evalf, pr
+        else:
+            return True, run_evalf, pr
+        
     @cacheit
     def __new__(cls, *args, **options):
         # Handle calls like Function('f')
@@ -480,15 +502,25 @@ class Function(Application, Expr):
                 'plural': 's'*(min(cls.nargs) != 1),
                 'given': n})
 
-        evaluate = options.get('evaluate', global_parameters.evaluate)
-        result = super().__new__(cls, *args, **options)
-        if evaluate and isinstance(result, cls) and result.args:
-            pr2 = min(cls._should_evalf(a) for a in result.args)
-            if pr2 > 0:
-                pr = max(cls._should_evalf(a) for a in result.args)
-                result = result.evalf(prec_to_dps(pr))
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
 
-        return _sympify(result)
+        if evaluate and len(args)>0:
+             args =[sympify(a)for a in args]
+             full_evaluation, run_evalf, pr = cls._evaluation_parameters(args)
+             #print(f'{cls}: {args} _skip_eval_float_arguments {cls._skip_eval_float_arguments} full_evaluation {full_evaluation} run_evalf {run_evalf} pr {pr}')
+             if full_evaluation or 1:
+                result = super().__new__(cls, *args, evaluate=evaluate, **options)
+             else:
+                 result = super().__new__(cls, *args, evaluate=False, **options)
+             if isinstance(result, cls) and result.args and run_evalf:
+                 evaluated_result = result.evalf(prec_to_dps(pr))
+             else:
+                 evaluated_result = result
+        else:
+            evaluated_result = super().__new__(cls, *args, evaluate=evaluate, **options)
+
+                 
+        return _sympify(evaluated_result)
 
     @classmethod
     def _should_evalf(cls, arg):
