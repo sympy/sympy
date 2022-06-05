@@ -35,6 +35,7 @@ class SchurNumber(Function):
     536
 
     """
+    _skip_eval_float_arguments = False
 
     @classmethod
     def eval(cls, k):

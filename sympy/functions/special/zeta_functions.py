@@ -688,6 +688,7 @@ class stieltjes(Function):
     .. [1] https://en.wikipedia.org/wiki/Stieltjes_constants
 
     """
+    _skip_eval_float_arguments = False
 
     @classmethod
     def eval(cls, n, a=None):

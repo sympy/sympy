@@ -64,6 +64,7 @@ class re(Function):
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
     _singularities = True  # non-holomorphic
+    _skip_eval_float_arguments = False
 
     @classmethod
     def eval(cls, arg):
@@ -186,6 +187,7 @@ class im(Function):
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
     _singularities = True  # non-holomorphic
+    _skip_eval_float_arguments = False
 
     @classmethod
     def eval(cls, arg):
@@ -319,6 +321,7 @@ class sign(Function):
 
     is_complex = True
     _singularities = True
+    _skip_eval_float_arguments = False
 
     def doit(self, **hints):
         s = super().doit()

@@ -507,8 +507,9 @@ class Function(Application, Expr):
         if evaluate and len(args)>0:
              args =[sympify(a)for a in args]
              full_evaluation, run_evalf, pr = cls._evaluation_parameters(args)
-             #print(f'{cls}: {args} _skip_eval_float_arguments {cls._skip_eval_float_arguments} full_evaluation {full_evaluation} run_evalf {run_evalf} pr {pr}')
-             if full_evaluation or 1:
+             if getattr(Function, 'debug_print', False):
+                        print(f'{cls}: {args} _skip_eval_float_arguments {cls._skip_eval_float_arguments} full_evaluation {full_evaluation} run_evalf {run_evalf} pr {pr}')
+             if full_evaluation:
                 result = super().__new__(cls, *args, evaluate=evaluate, **options)
              else:
                  result = super().__new__(cls, *args, evaluate=False, **options)

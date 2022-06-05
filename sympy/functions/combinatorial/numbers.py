@@ -825,6 +825,7 @@ class harmonic(Function):
     # Generate one memoized Harmonic number-generating function for each
     # order and store it in a dictionary
     _functions = {}  # type: tDict[Integer, Callable[[int], Rational]]
+    _skip_eval_float_arguments = False
 
     @classmethod
     def eval(cls, n, m=None):
@@ -1001,6 +1002,8 @@ class euler(Function):
     .. [5] http://dlmf.nist.gov/24.2#ii
 
     """
+
+    _skip_eval_float_arguments = False
 
     @classmethod
     def eval(cls, m, sym=None):
