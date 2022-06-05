@@ -1937,6 +1937,9 @@ class totient(Function):
     .. [2] http://mathworld.wolfram.com/TotientFunction.html
 
     """
+
+    _skip_eval_float_arguments = False
+
     @classmethod
     def eval(cls, n):
         n = sympify(n)

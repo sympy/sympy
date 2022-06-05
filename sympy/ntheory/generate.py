@@ -494,6 +494,9 @@ class primepi(Function):
         primerange : Generate all primes in a given range
         prime : Return the nth prime
     """
+
+    _skip_eval_float_arguments = False
+
     @classmethod
     def eval(cls, n):
         if n is S.Infinity:
