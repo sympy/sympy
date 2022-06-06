@@ -63,6 +63,16 @@ from mpmath.libmp.libmpf import prec_to_dps
 import inspect
 from collections import Counter
 
+_sympy_int_cache = {x: sympify(x) for x in range(10)}
+
+def _integer_sympify(x : int):
+    """ Fast sympiofy for small integers """
+    value = _sympy_int_cache.get(x, None)
+    if value is None:
+        value = sympify(x)
+    return value
+
+
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
 
@@ -464,8 +474,7 @@ class Function(Application, Expr):
         if cls is Function:
             return UndefinedFunction(*args, **options)
 
-        n = len(args)
-        if n not in cls.nargs:
+        if _integer_sympify(len(args)) not in cls.nargs:
             # XXX: exception message must be in exactly this format to
             # make it work with NumPy's functions like vectorize(). See,
             # for example, https://github.com/numpy/numpy/issues/1697.
@@ -478,7 +487,7 @@ class Function(Application, Expr):
                 'qual': 'exactly' if len(cls.nargs) == 1 else 'at least',
                 'args': min(cls.nargs),
                 'plural': 's'*(min(cls.nargs) != 1),
-                'given': n})
+                'given': len(args)})
 
         evaluate = options.get('evaluate', global_parameters.evaluate)
         result = super().__new__(cls, *args, **options)
@@ -2045,7 +2054,7 @@ class Lambda(Expr):
         return self.expr.free_symbols - set(self.variables)
 
     def __call__(self, *args):
-        n = len(args)
+        n = _integer_sympify(len(args))
         if n not in self.nargs:  # Lambda only ever has 1 value in nargs
             # XXX: exception message must be in exactly this format to
             # make it work with NumPy's functions like vectorize(). See,
