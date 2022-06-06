@@ -8,6 +8,6 @@ x, y = symbols('x,y')
 def timeit_Ynm_xy():
     Ynm(1, 1, x, y)
 
-def timeit_beta_evalulate_float():
+def timeit_beta_evaluate_float():
     beta(3.1)
     beta(3.1, 2.1)
