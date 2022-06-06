@@ -66,7 +66,7 @@ from collections import Counter
 _sympy_int_cache = {x: sympify(x) for x in range(10)}
 
 def _integer_sympify(x : int):
-    """ Fast sympiofy for small integers """
+    """ Fast sympify for small integers """
     value = _sympy_int_cache.get(x, None)
     if value is None:
         value = sympify(x)
