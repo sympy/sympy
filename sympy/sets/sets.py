@@ -1917,6 +1917,7 @@ class FiniteSet(Set):
 
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
+        #print(f'FiniteSet {args} {[type(x) for x in args]}')
         if evaluate:
             args = list(map(sympify, args))
 
