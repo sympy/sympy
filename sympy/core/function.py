@@ -512,8 +512,6 @@ class Function(Application, Expr):
         evaluated_result = super().__new__(cls, *args, evaluate=run_evaluation, **options)
 
         if evalf_precision >= 0:
-             if getattr(Function, 'debug_print', False):
-                        print(f'{cls}: {args} _skip_eval_float_arguments {cls._skip_eval_float_arguments} run_evaluation {run_evaluation} evalf_precision {evalf_precision}')
              if isinstance(evaluated_result, cls):
                  evaluated_result = evaluated_result.evalf(prec_to_dps(evalf_precision))
 
