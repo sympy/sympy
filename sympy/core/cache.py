@@ -148,3 +148,14 @@ elif USE_CACHE == 'debug':
 else:
     raise RuntimeError(
         'unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
+
+def cached_property(func):
+    '''Decorator to cache property method'''
+    attrname = '_' + func.__name__
+    def propfunc(self):
+        val = getattr(self, attrname, None)
+        if val is None:
+            val = func(self)
+            setattr(self, attrname, val)
+        return val
+    return property(propfunc)

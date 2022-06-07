@@ -36,7 +36,7 @@ from collections.abc import Iterable
 from .add import Add
 from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
-from .cache import cacheit
+from .cache import cacheit, cached_property
 from .containers import Tuple, Dict
 from .decorators import _sympifyit
 from .evalf import pure_complex
@@ -223,7 +223,7 @@ class FunctionClass(ManagedProperties):
         # to return the right value
         return lambda rule, **_: rule.get(self, self)
 
-    @property
+    @cached_property
     def nargs(self):
         """Return a set of the allowed number of arguments for the function.
 
@@ -2016,7 +2016,7 @@ class Lambda(Expr):
                 yield args
         return tuple(_variables(self.signature))
 
-    @property
+    @cached_property
     def nargs(self):
         from sympy.sets.sets import FiniteSet
         return FiniteSet(len(self.signature))
