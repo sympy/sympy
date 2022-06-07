@@ -1890,7 +1890,7 @@ class FiniteSet(Set):
     Examples
     ========
 
-    >>> from sympy import FiniteSet, symbol
+    >>> from sympy import FiniteSet, Symbol
     >>> FiniteSet(1, 2, 3, 4)
     {1, 2, 3, 4}
     >>> 3 in FiniteSet(1, 2, 3, 4)
