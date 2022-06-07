@@ -261,6 +261,13 @@ class FunctionClass(ManagedProperties):
         # problems with trying to import FiniteSet there
         return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
 
+    def _valid_nargs(self, n : int) -> bool:
+        """ Return True if the specied interger is a valid number of arguments """
+        if self._nargs:
+            return n in self._nargs
+        else:
+            return n in self.nargs
+
     def __repr__(cls):
         return cls.__name__
 
@@ -465,7 +472,8 @@ class Function(Application, Expr):
             return UndefinedFunction(*args, **options)
 
         n = len(args)
-        if n not in cls.nargs:
+
+        if not cls._valid_nargs(n):
             # XXX: exception message must be in exactly this format to
             # make it work with NumPy's functions like vectorize(). See,
             # for example, https://github.com/numpy/numpy/issues/1697.
