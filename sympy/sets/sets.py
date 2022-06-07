@@ -1890,13 +1890,13 @@ class FiniteSet(Set):
     Examples
     ========
 
-    >>> from sympy import FiniteSet
+    >>> from sympy import FiniteSet, symbol
     >>> FiniteSet(1, 2, 3, 4)
     {1, 2, 3, 4}
-    >>> FiniteSet(1, 1.)
-    {1.0, 1}
     >>> 3 in FiniteSet(1, 2, 3, 4)
     True
+    >>> FiniteSet(1, (1, 2), Symbol('x'))
+    {￼1, x, (1,2)}
 
     >>> members = [1, 2, 3, 4]
     >>> f = FiniteSet(*members)
