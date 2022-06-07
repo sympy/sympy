@@ -1885,7 +1885,7 @@ class UniversalSet(Set, metaclass=Singleton):
 
 class FiniteSet(Set):
     """
-    Represents a finite set of discrete numbers.
+    Represents a finite set of Sympy expressions.
 
     Examples
     ========
@@ -1893,6 +1893,8 @@ class FiniteSet(Set):
     >>> from sympy import FiniteSet
     >>> FiniteSet(1, 2, 3, 4)
     {1, 2, 3, 4}
+    >>> FiniteSet(1, 1.)
+    {1.0, 1}
     >>> 3 in FiniteSet(1, 2, 3, 4)
     True
 
