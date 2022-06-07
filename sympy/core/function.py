@@ -39,6 +39,7 @@ from .basic import Basic, _atomic
 from .cache import cacheit
 from .containers import Tuple, Dict
 from .decorators import _sympifyit
+from .evalf import pure_complex
 from .expr import Expr, AtomicExpr
 from .logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
 from .mul import Mul
@@ -508,7 +509,6 @@ class Function(Application, Expr):
             return arg._prec
         if not arg.is_Add:
             return -1
-        from .evalf import pure_complex
         m = pure_complex(arg)
         if m is None or not (m[0].is_Float or m[1].is_Float):
             return -1
