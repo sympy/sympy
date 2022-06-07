@@ -510,7 +510,7 @@ class Function(Application, Expr):
         if not arg.is_Add:
             return -1
         m = pure_complex(arg)
-        if m is None or not (m[0].is_Float or m[1].is_Float):
+        if m is None:
             return -1
         # the elements of m are of type Number, so have a _prec
         return max(m[0]._prec, m[1]._prec)
