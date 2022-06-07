@@ -151,7 +151,7 @@ else:
 
 def cached_property(func):
     '''Decorator to cache property method'''
-    attrname = '_' + func.__name__
+    attrname = '__' + func.__name__
     def propfunc(self):
         val = getattr(self, attrname, None)
         if val is None:
