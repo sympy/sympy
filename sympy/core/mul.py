@@ -1886,6 +1886,7 @@ class Mul(Expr, AssocOp):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         from .function import PoleError
+        from sympy.functions.elementary.exponential import log
         from sympy.functions.elementary.integers import ceiling
         from sympy.series.order import Order
 
@@ -1965,6 +1966,8 @@ class Mul(Expr, AssocOp):
                 return res
 
         if res != self:
+            if res.subs(logx, log(x)) == self:
+                return res
             res += Order(x**n, x)
         return res
 

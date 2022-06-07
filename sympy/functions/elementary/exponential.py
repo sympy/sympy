@@ -507,6 +507,8 @@ class exp(ExpBase, metaclass=ExpMeta):
             nterms = ceiling(n/cf)
         exp_series = exp(t)._taylor(t, nterms)
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
+        if r.subs(logx, log(x)) == self:
+            return r
         if cf and cf > 1:
             r += Order((arg_series - arg0)**n, x)/x**((cf-1)*n)
         else:
@@ -1007,7 +1009,10 @@ class log(Function):
             while s.is_Order:
                 n += 1
                 s = arg.nseries(x, n=n, logx=logx)
-        a, b = s.removeO().leadterm(x)
+        if logx.has(x) and logx != log(x):
+            a, b = arg.subs(log(x), logx).as_leading_term(x), S.Zero
+        else:
+            a, b = s.removeO().leadterm(x)
         p = cancel(s/(a*x**b) - 1).expand().powsimp()
         if p.has(exp):
             p = logcombine(p)
@@ -1015,7 +1020,11 @@ class log(Function):
             n = p.getn()
         _, d = coeff_exp(p, x)
         if not d.is_positive:
-            return log(a) + b*logx + Order(x**n, x)
+            res = log(a) + b*logx
+            if (res.subs(logx, log(x)) == self
+                or res.subs(-logx, -log(x)) == self):
+                return res
+            return res + Order(x**n, x)
 
         def mul(d1, d2):
             res = {}
@@ -1053,24 +1062,47 @@ class log(Function):
         return res + Order(x**n, x)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.calculus.util import AccumBounds
+        # NOTE
+        # Refer https://github.com/sympy/sympy/pull/23592 for more information
+        # on each of the following steps involved in this method.
         arg0 = self.args[0].together()
 
-        arg = arg0.as_leading_term(x, cdir=cdir)
-        x0 = arg0.subs(x, 0)
-        if (x0 is S.NaN and logx is None):
-            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
-        if x0 in (S.NegativeInfinity, S.Infinity):
-            raise PoleError("Cannot expand %s around 0" % (self))
-        if x0 == 1:
-            return (arg0 - S.One).as_leading_term(x)
-        if cdir != 0:
-            cdir = arg0.dir(x, cdir)
-        if x0.is_real and x0.is_negative and im(cdir).is_negative:
-            return self.func(x0) - 2*I*S.Pi
-        if isinstance(arg, AccumBounds):
+        # STEP 1
+        t = Dummy('t', real=True, positive=True)
+        if cdir == 0:
+            cdir = 1
+        z = arg0.subs(x, cdir*t)
+
+        # STEP 2
+        try:
+            c, e = z.leadterm(t, logx=logx, cdir=1)
+        except ValueError:
+            arg = arg0.as_leading_term(x, logx=logx, cdir=cdir)
             return log(arg)
-        return self.func(arg)
+        if c.has(t):
+            c = c.subs(t, x/cdir)
+            if e != 0:
+                raise PoleError("Cannot expand %s around 0" % (self))
+            return log(c)
+
+        # STEP 3
+        if c == S.One and e == S.Zero:
+            return (arg0 - S.One).as_leading_term(x, logx=logx)
+
+        # STEP 4
+        res = log(c) - e*log(cdir)
+        logx = log(x) if logx is None else logx
+        res += e*logx
+
+        # STEP 5
+        if c.is_negative and im(z) != 0:
+            from sympy.functions.special.delta_functions import Heaviside
+            for term in z.lseries(t):
+                if not term.is_real:
+                    break
+            coeff, _ = term.as_coeff_exponent(t)
+            res += -2*I*S.Pi*Heaviside(-im(coeff), 0)
+        return res
 
 
 class LambertW(Function):

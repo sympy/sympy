@@ -165,7 +165,7 @@ def test_add_1():
 def test_ln_args():
     assert O(log(x)) + O(log(2*x)) == O(log(x))
     assert O(log(x)) + O(log(x**3)) == O(log(x))
-    assert O(log(x*y)) + O(log(x) + log(y)) == O(log(x*y))
+    assert O(log(x*y)) + O(log(x) + log(y)) == O(log(x) + log(y), x, y)
 
 
 def test_multivar_0():
