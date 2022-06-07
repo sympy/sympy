@@ -20,6 +20,7 @@ from sympy.matrices import SparseMatrix
 from sympy.sets.sets import Interval
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
+from sympy.series.order import Order
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 
 
@@ -669,6 +670,21 @@ def test_arg_rewrite():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
     assert arg(x + I*y).rewrite(atan2) == atan2(y, x)
+
+
+def test_arg_leading_term_and_series():
+    x = Symbol('x')
+    assert arg(x).as_leading_term(x, cdir = 1) == 0
+    assert arg(x).as_leading_term(x, cdir = 1) == 0
+    assert arg(x + I).as_leading_term(x, cdir = 1) == pi/2
+    assert arg(x + I).as_leading_term(x, cdir = -1) == pi/2
+    assert arg(2*x).as_leading_term(x, cdir = I) == pi/2
+    assert arg(2*x).as_leading_term(x, cdir = -I) == -pi/2
+
+    assert arg(x + I).series(x, 0) == pi/2
+    assert arg(x + I).series(x, 1) == pi/4
+    assert arg(x + I).series(x, -1) == 3*pi/4
+    assert arg(x).nseries(x, 0, 0) == Order(1)
 
 
 def test_adjoint():

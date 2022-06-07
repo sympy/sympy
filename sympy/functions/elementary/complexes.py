@@ -797,6 +797,27 @@ class arg(Function):
         x, y = self.args[0].as_real_imag()
         return atan2(y, x)
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg0 = self.args[0]
+        t = Dummy('t', positive=True)
+        z = arg0.subs(x, cdir*t)
+        z = z.as_leading_term(t, cdir=cdir)
+        if z.has(t):
+            return self.func(cdir)
+        return self.func(z)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+        if n <= 0:
+            return Order(1)
+        arg0 = self.args[0]
+        t = Dummy('t', positive=True)
+        z = arg0.subs(x, cdir*t)
+        z = z.as_leading_term(t, cdir=cdir)
+        if z.has(t):
+            return self.func(cdir)
+        return self.func(z)
+
 
 class conjugate(Function):
     """
