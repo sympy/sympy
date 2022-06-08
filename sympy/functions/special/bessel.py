@@ -8,7 +8,7 @@ from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
-from sympy.core.symbol import Dummy, Wild
+from sympy.core.symbol import Dummy, Wild, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
@@ -1260,9 +1260,13 @@ class airyai(AiryBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0:
             return S.Zero
         else:
@@ -1435,9 +1439,13 @@ class airybi(AiryBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0:
             return S.Zero
         else:

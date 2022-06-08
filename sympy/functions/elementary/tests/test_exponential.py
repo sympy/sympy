@@ -212,7 +212,7 @@ def test_exp_leading_term():
 
 @_both_exp_pow
 def test_exp_taylor_term():
-    x = symbols('x')
+    x, y = symbols('x y')
     assert exp(x).taylor_term(1, x) == x
     assert exp(x).taylor_term(3, x) == x**3/6
     assert exp(x).taylor_term(4, x) == x**4/24
@@ -605,12 +605,12 @@ def test_log_fdiff():
 
 
 def test_log_taylor_term():
-    x = symbols('x')
+    x, y = symbols('x y')
     assert log(x).taylor_term(0, x) == x
     assert log(x).taylor_term(1, x) == -x**2/2
     assert log(x).taylor_term(4, x) == x**5/5
     assert log(x).taylor_term(-1, x) is S.Zero
-
+    assert log(x  + y).taylor_term(2, x) == -x**2/(2*y**2)
 
 def test_exp_expand_NC():
     A, B, C = symbols('A,B,C', commutative=False)

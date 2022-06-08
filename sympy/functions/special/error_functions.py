@@ -167,9 +167,13 @@ class erf(Function):
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -385,9 +389,13 @@ class erfc(Function):
         if arg.could_extract_minus_sign():
             return 2 - cls(-arg)
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN or x not in term.free_symbols:
+                pass
+            return term
         if n == 0:
             return S.One
         elif n < 0 or n % 2 == 0:
@@ -568,9 +576,13 @@ class erfi(Function):
             if isinstance(nz, erf2inv) and nz.args[0].is_zero:
                 return I*nz.args[1]
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -2406,9 +2418,13 @@ class fresnels(FresnelIntegral):
     _trigfunc = sin
     _sign = -S.One
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0:
             return S.Zero
         else:
@@ -2562,9 +2578,13 @@ class fresnelc(FresnelIntegral):
     _trigfunc = cos
     _sign = S.One
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0:
             return S.Zero
         else:

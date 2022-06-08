@@ -3279,7 +3279,7 @@ class Expr(Basic, EvalfMixin):
 
         x = sympify(x)
         _x = Dummy('x')
-        return self.subs(x, _x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / factorial(n)
+        return self.subs(x, _x).diff(_x, n).subs(_x, 0).subs(_x, x) * x**n / factorial(n)
 
     def lseries(self, x=None, x0=0, dir='+', logx=None, cdir=0):
         """

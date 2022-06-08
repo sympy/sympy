@@ -13,7 +13,7 @@ from sympy.core.numbers import Integer, Rational, pi, I, ImaginaryUnit
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Wild, Dummy
+from sympy.core.symbol import Wild, Dummy, Symbol
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import arg, unpolarify, im, re, Abs
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -384,12 +384,16 @@ class exp(ExpBase, metaclass=ExpMeta):
         """
         return S.Exp1
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
         """
         Calculates the next term in the Taylor series expansion.
         """
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0:
             return S.Zero
         if n == 0:
@@ -805,13 +809,17 @@ class log(Function):
         """
         return self, S.One
 
-    @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):  # of log(1+x)
+    def taylor_term(self, n, x, *previous_terms):  # of log(1+x)
         r"""
         Returns the next term in the Taylor series expansion of `\log(1+x)`.
         """
         from sympy.simplify.powsimp import powsimp
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0:
             return S.Zero
         x = sympify(x)
