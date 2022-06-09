@@ -1920,6 +1920,11 @@ def test_issue_18527():
     assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
 
 
+def test_pr_23583():
+    # This result from meijerg is wrong. Check whether new result is correct when this test fail.
+    assert integrate(1/sqrt((x - I)**2-1)) == Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+
+
 def test_hyperbolic():
     assert integrate(coth(x)) == x - log(tanh(x) + 1) + log(tanh(x))
     assert integrate(sech(x)) == 2*atan(tanh(x/2))
@@ -1929,7 +1934,7 @@ def test_hyperbolic():
 def test_sqrt_quadratic():
     assert integrate(1/sqrt(3*x**2+4*x+5)) == sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3
     assert integrate(1/sqrt(-3*x**2+4*x+5)) == sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3
-    assert integrate(1/sqrt(3*x**2+4*x-5)) == sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/3
+    assert integrate(1/sqrt(3*x**2+4*x-5)) == sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/3
     assert integrate(1/sqrt(a+b*x+c*x**2), x) == log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
 
     assert integrate((7*x+6)/sqrt(3*x**2+4*x+5)) == \
@@ -1937,7 +1942,7 @@ def test_sqrt_quadratic():
     assert integrate((7*x+6)/sqrt(-3*x**2+4*x+5)) == \
            -7*sqrt(-3*x**2 + 4*x + 5)/3 + 32*sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/9
     assert integrate((7*x+6)/sqrt(3*x**2+4*x-5)) == \
-           7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/9
+           7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/9
     assert integrate((d+e*x)/sqrt(a+b*x+c*x**2), x) == \
            e*sqrt(a + b*x + c*x**2)/c + (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c)
 

@@ -5,7 +5,7 @@ from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (acosh, acoth, asinh, atanh, csch, cosh, coth, sech, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, csch, cosh, coth, sech, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
@@ -176,21 +176,16 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1/sqrt(ra*x**2 + 1), x) == \
         Piecewise((asin(x*sqrt(-ra))/sqrt(-ra), ra < 0), (asinh(sqrt(ra)*x)/sqrt(ra), ra > 0))
     assert manualintegrate(1/sqrt(ra + x**2), x) == \
-        Piecewise((asinh(x*sqrt(1/ra)), ra > 0), (acosh(x*sqrt(-1/ra)), ra < 0))
+        Piecewise((asinh(x*sqrt(1/ra)), ra > 0), (log(2*x + 2*sqrt(ra + x**2)), True))
 
-    # acosh
-    assert manualintegrate(1/sqrt(x**2 - 1), x) == \
-        acosh(x)
-    assert manualintegrate(1/sqrt(x**2 - 4), x) == \
-        acosh(x/2)
-    assert manualintegrate(1/sqrt(4*x**2 - 4), x) == \
-        acosh(x)/2
-    assert manualintegrate(1/sqrt(9*x**2 - 1), x) == \
-        acosh(3*x)/3
-    assert manualintegrate(1/sqrt(ra*x**2 - 4), x) == \
-        Piecewise((acosh(sqrt(ra)*x/2)/sqrt(ra), ra > 0))
+    # log
+    assert manualintegrate(1/sqrt(x**2 - 1), x) == log(2*x + 2*sqrt(x**2 - 1))
+    assert manualintegrate(1/sqrt(x**2 - 4), x) == log(2*x + 2*sqrt(x**2 - 4))
+    assert manualintegrate(1/sqrt(4*x**2 - 4), x) == log(8*x + 4*sqrt(4*x**2 - 4))/2
+    assert manualintegrate(1/sqrt(9*x**2 - 1), x) == log(18*x + 6*sqrt(9*x**2 - 1))/3
+    assert manualintegrate(1/sqrt(ra*x**2 - 4), x) == log(2*sqrt(ra)*sqrt(ra*x**2 - 4) + 2*ra*x)/sqrt(ra)
     assert manualintegrate(1/sqrt(-ra + 4*x**2), x) == \
-        Piecewise((asinh(2*x*sqrt(-1/ra))/2, -ra > 0), (acosh(2*x*sqrt(1/ra))/2, -ra < 0))
+        Piecewise((asinh(2*x*sqrt(-1/ra))/2, ra < 0), (log(8*x + 4*sqrt(-ra + 4*x**2))/2, True))
 
     # From https://www.wikiwand.com/en/List_of_integrals_of_inverse_trigonometric_functions
     # asin
@@ -222,11 +217,11 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1/sqrt(ra-rb*x**2), x) == \
         Piecewise((asin(x*sqrt(rb/ra))/sqrt(rb), And(-rb < 0, ra > 0)),
                   (asinh(x*sqrt(-rb/ra))/sqrt(-rb), And(-rb > 0, ra > 0)),
-                  (acosh(x*sqrt(rb/ra))/sqrt(-rb), And(-rb > 0, ra < 0)))
+                  (log(-2*rb*x + 2*sqrt(-rb)*sqrt(ra - rb*x**2))/sqrt(-rb), True))
     assert manualintegrate(1/sqrt(ra + rb*x**2), x) == \
         Piecewise((asin(x*sqrt(-rb/ra))/sqrt(-rb), And(ra > 0, rb < 0)),
                   (asinh(x*sqrt(rb/ra))/sqrt(rb), And(ra > 0, rb > 0)),
-                  (acosh(x*sqrt(-rb/ra))/sqrt(rb), And(ra < 0, rb > 0)))
+                  (log(2*sqrt(rb)*sqrt(ra + rb*x**2) + 2*rb*x)/sqrt(rb), True))
 
 
 def test_manualintegrate_trig_substitution():
@@ -584,10 +579,17 @@ def test_issue_23348():
     assert constant_times_step.context == constant_times_step.constant * constant_times_step.other
 
 
+def test_issue_23566():
+    i = Integral(1/sqrt(x**2 - 1), (x, -2, -1)).doit(manual=True)
+    assert i == -log(4 - 2*sqrt(3)) + log(2)
+    assert str(i.n()) == '1.31695789692482'
+
+
 def test_manualintegrate_sqrt_quadratic():
+    assert_is_integral_of(1/sqrt((x - I)**2-1), log(2*x + 2*sqrt(x**2 - 2*I*x - 2) - 2*I))
     assert_is_integral_of(1/sqrt(3*x**2+4*x+5), sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3)
     assert_is_integral_of(1/sqrt(-3*x**2+4*x+5), sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3)
-    assert_is_integral_of(1/sqrt(3*x**2+4*x-5), sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/3)
+    assert_is_integral_of(1/sqrt(3*x**2+4*x-5), sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/3)
     assert manualintegrate(1/sqrt(a+b*x+c*x**2), x) == log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
 
     assert_is_integral_of((7*x+6)/sqrt(3*x**2+4*x+5),
@@ -595,7 +597,7 @@ def test_manualintegrate_sqrt_quadratic():
     assert_is_integral_of((7*x+6)/sqrt(-3*x**2+4*x+5),
                           -7*sqrt(-3*x**2 + 4*x + 5)/3 + 32*sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/9)
     assert_is_integral_of((7*x+6)/sqrt(3*x**2+4*x-5),
-                          7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/9)
+                          7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/9)
     assert manualintegrate((d+e*x)/sqrt(a+b*x+c*x**2), x) == \
            e*sqrt(a + b*x + c*x**2)/c + (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c)
 
