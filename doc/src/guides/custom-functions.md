@@ -13,12 +13,13 @@ that are included with SymPy such as the common {ref}`elementary functions
 and {ref}`number theory functions <ntheory-module>` like
 {class}`~.factorial()` or {func}`~.primepi()`.
 
-This guide describes how to define functions that map a subset of
-$\mathbb{C}^n$ to $\mathbb{C}$. Functions that accept or return other kinds of
-objects should subclass another class, such as {class}`~.Boolean`,
-{class}`~.MatrixExpr`, {class}`~.Expr`, or {class}`~.Basic`. Much of what is
-written here only applies to {class}`~.Function` subclasses and will not work
-for general {class}`~.Basic` or {class}`~.Expr` subclasses.
+This guide describes how to define complex valued functions, that is functions
+that map a subset of $\mathbb{C}^n$ to $\mathbb{C}$. Functions that accept or
+return other kinds of objects than complex numbers should subclass another
+class, such as {class}`~.Boolean`, {class}`~.MatrixExpr`, {class}`~.Expr`, or
+{class}`~.Basic`. Much of what is written here only applies to
+{class}`~.Function` subclasses and will not work for general {class}`~.Basic`
+or {class}`~.Expr` subclasses.
 
 ## Easy Cases: Fully Symbolic or Fully Evaluated
 
@@ -100,7 +101,7 @@ At the other end of the spectrum are functions that always evaluate to
 something no matter what their inputs are. These functions are never left in
 an unevaluated, symbolic form like `f(x)`.
 
-In this case, you should just use a normal Python function using the `def`
+In this case, you should use a normal Python function using the `def`
 keyword.
 
 ```py
@@ -158,11 +159,11 @@ Ultimately, the correct tool for the job depends on what you are doing and
 what exact behavior you want.
 
 (custom-functions-function-subclass)=
-## Creating a custom function
+## Creating a Custom Function
 
 The basic way to create a custom function is to subclass {class}`~.Function`.
 The name of the subclass will be the name of the function. Different methods
-should then e defined on this subclass, depending on what functionality you
+should then be defined on this subclass, depending on what functionality you
 want to provide.
 
 As a motivating example for this document, let's create a custom function
@@ -314,11 +315,11 @@ evaluation with `evalf`](custom-functions-evalf) below.
   actually just be `(1 - cos(x)).diff(x)`, instead of calling [the `fdiff`
   method we define below](custom-functions-differentiation).
 
-  **The point of `eval` is not to define what the function *is*,
-  mathematically, but rather to specify on what inputs it should automatically
-  evaluate.** The mathematical definition of a function is determined through
-  specifying various mathematical properties with the methods outlined below,
-  like [numerical evaluation](custom-functions-evalf),
+  *The point of `eval` is not to define what the function is, mathematically,
+  but rather to specify on what inputs it should automatically evaluate.* The
+  mathematical definition of a function is determined through specifying
+  various mathematical properties with the methods outlined below, like
+  [numerical evaluation](custom-functions-evalf),
   [differentiation](custom-functions-differentiation), and so on.
 
   If you find yourself doing this, you should think about what you actually
@@ -326,7 +327,9 @@ evaluation with `evalf`](custom-functions-evalf) below.
   will be simpler to just [define a Python
   function](custom-functions-fully-evaluated). If you really do want a
   symbolic function, think about when you want it to evaluate to something
-  else and when you want it to stay unevaluated.
+  else and when you want it to stay unevaluated. One option is to make your
+  function unevaluated and define a [doit method](custom-functions-doit) to
+  evaluate it.
 
 - **Avoid too much automatic evaluation.**
 
@@ -373,7 +376,7 @@ evaluation with `evalf`](custom-functions-evalf) below.
   That is, `divides(m, n)` will be `1` if `m` divides `n` and `0` otherwise.
   `divides` clearly only makes sense if `m` and `n` are integers.
 
-  We might want to define the `eval` method for `divides` like this.
+  We might want to define the `eval` method for `divides` like this:
 
   ```py
   >>> class divides(Function):
@@ -414,8 +417,8 @@ evaluation with `evalf`](custom-functions-evalf) below.
   This may seem like an acceptable restriction, but there is a bigger problem.
   Sometimes, SymPy's assumptions system cannot deduce an assumption, even
   though it is mathematically true. In this case, it will give `None` (`None`
-  means "undefined, "unknown", and "cannot compute" in SymPy's assumptions).
-  For example
+  means both "undefined" and "cannot compute" in SymPy's assumptions). For
+  example
 
   ```py
   >>> # n and m are still defined as integer=True as above
@@ -426,7 +429,7 @@ evaluation with `evalf`](custom-functions-evalf) below.
   ```
 
   Here the expression `(m**2 + m)/2` is always an integer, but SymPy's
-  assumptions system is not able to deduce this
+  assumptions system is not able to deduce this:
 
   ```py
   >>> print(((m**2 + m)/2).is_integer)
@@ -434,7 +437,7 @@ evaluation with `evalf`](custom-functions-evalf) below.
   ```
 
   SymPy's assumptions system is always improving, but there will always be
-  cases like this that it cannot deduce, due to the fundamental computation
+  cases like this that it cannot deduce, due to the fundamental computational
   complexity of the problem.
 
   Consequently, one should always test *negated* assumptions for input
@@ -480,6 +483,11 @@ evaluation with `evalf`](custom-functions-evalf) below.
 ### Assumptions
 
 The next thing we might want to define are the assumptions on our function.
+The assumptions system allows defining what mathematical properties your
+function has given its inputs, for example, "$f(x)$ is *positive* when $x$ is
+*real*."
+
+
 The [guide on the assumptions system](assumptions-guide) goes into the
 assumptions system in great detail. It is recommended to read through that
 guide first to understand what the different assumptions mean and how the
@@ -514,23 +522,24 @@ end of this guide.
 
 In general, however, the assumptions of a function depend on the assumptions
 of its inputs. In this case, you should define an <code class="docutils literal notranslate"><span
-class="pre">\_eval\_*assumption*</span> method.
+class="pre">\_eval\_*assumption*</span></code> method.
 
 For our $\operatorname{versin}$ function, the function is always between 0 and
 2 for real valued inputs, and it is 0 whenever the input is an even multiple
-of π. So `versin(x)` should be *nonnegative* whenever `x` is *real* (remember
-that by default, a function's domain is all of $\mathbb{C}$, and indeed our
-`versin` will make sense with non-real `x`) and *positive* whenever `x` is
-*real* and not an *even* multiple of π.
+of π. So `versin(x)` should be *nonnegative* whenever `x` is *real* and
+*positive* whenever `x` is *real* and not an *even* multiple of π. Remember
+that by default, a function's domain is all of $\mathbb{C}$, and indeed
+`versin(x)` makes perfect sense with non-real `x`.
 
 In the assumptions handler methods, as in all methods, we can access the
-arguments of the function using `.args`.
+arguments of the function using `self.args`.
 
 ```py
 >>> from sympy.core.logic import fuzzy_and, fuzzy_not
 >>> class versin(Function):
 ...     def _eval_is_nonnegative(self):
 ...         x = self.args[0]
+...         # versin(x) is nonnegative if x is real
 ...         return x.is_real
 ...
 ...     def _eval_is_positive(self):
@@ -568,7 +577,7 @@ For example, from the above, it can deduce that `versin(2*n*pi)` is zero when
 True
 ```
 
-It's worth checking if the assumptions system can deduce something
+It's always worth checking if the assumptions system can deduce something
 automatically before manually coding it.
 
 Finally, a word of warning: be very careful about correctness when coding
@@ -576,7 +585,9 @@ assumptions. Make sure to use the exact
 [definitions](assumptions-guide-predicates) of the various assumptions, and
 always check that you're handling `None` cases correctly with the fuzzy
 three-valued logic functions. Incorrect or inconsistent assumptions can lead
-to subtle bugs.
+to subtle bugs. It's recommended to use unit tests to check all the various
+cases whenever your function has a nontrivial assumption handler. All
+functions defined in SymPy itself are required to be extensively tested.
 
 (custom-functions-evalf)=
 ### Numerical Evaluation with `evalf`
@@ -584,11 +595,12 @@ to subtle bugs.
 <!-- TODO: this goes over the basics, but it might be useful to have a
      separate guide dedicated to numerical evaluation. -->
 
-Here we show how to define how to define how a function should  numerically
-evaluate to a floating point {class}`~.Float` value, for instance, via `evalf`.
+Here we show how to define how to define how a function should numerically
+evaluate to a floating point {class}`~.Float` value, for instance, via
+`evalf`.
 
 If your function has the same name as a function in
-[mpmath](https://mpmath.org/doc/), as is the case for most functions in SymPy,
+[mpmath](https://mpmath.org/doc/current/), as is the case for most functions in SymPy,
 numerical evaluation will happen automatically and you do not need to do
 anything.
 
@@ -642,17 +654,169 @@ of an expression will be evaluated. A general pattern to follow is to
 recursively call `_eval_evalf` on the arguments of the function.
 
 Whenever possible, it's best to reuse the evalf functionality defined in
-existing SymPy functions. However, in some cases it will be necessary to call
-out to `mpmath` directly.
+existing SymPy functions. However, in some cases it will be necessary to use
+`mpmath` directly.
 
 (custom-functions-rewriting-and-simplification)=
 ### Rewriting and Simplification
 
+Various simplification functions and methods allow specifying their behavior
+on custom subclasses. Not every function in SymPy has such hooks. See the
+documentation of each individual function for details.
+
+(custom-functions-rewrite)=
 #### Rewrite
+
+The {meth}`~.rewrite` method allows rewriting an expression in terms of a
+specific function or rule. For example, `sin(x).rewrite(cos)` returns `cos(x -
+pi/2)`.
+
+To implement rewriting, define a method `_eval_rewrite(self, rule, args,
+**hints)`:
+
+- `rule` is the *rule* passed to the rewrite() method. Typically `rule` will
+  be the class of the object to be rewritten to, although for more complex
+  rewrites, it can be anything. Each object that defines `_eval_rewrite`
+  defines what rule(s) it supports. Rewrite rules to common SymPy functions
+  may be used inside of SymPy functions to perform other simplifications or
+  computations.
+
+- `args` are the arguments of the function to be used for rewriting. This
+  should be used instead of `self.args` because any recursive expressions in
+  the args will be rewritten in `args` (assuming the user uses
+  `rewrite(deep=True)`, which is the default).
+
+- `**hints` are additional keyword arguments which may be used to specify the
+  behavior of the rewrite. Unknown hints should be ignored as they may be
+  passed to other `_eval_rewrite` methods.
+
+
+The function should return a rewritten expression, using `args` as the
+arguments to the function, or `None` if the expression should be unchanged.
+
+For our `versin` example, an obvious rewrite we can implement is rewriting
+`versin(x)` as `1 - cos(x)`.
+
+```py
+>>> class versin(Function):
+...     def _eval_rewrite(self, rule, args, **hints):
+...         if rule == cos:
+...             return 1 - cos(*args)
+>>> versin(x).rewrite(cos)
+1 - cos(x)
+```
+
+Note that this definition actually allows {func}`~.simplify` to simplify some
+expressions containing `versin`:
+
+```
+>>> from sympy import simplify
+>>> simplify(versin(x) + cos(x))
+1
+```
+
+<!--
+
+TODO: simplify() can be customized with _eval_simplify(), but it isn't very
+powerful right now (see https://github.com/sympy/sympy/issues/19281). Most
+users are better off just defining rewrite(), doit(), and/or expand().
 
 #### Simplify
 
-#### doit
+-->
+
+(custom-functions-doit)=
+#### doit()
+
+The {meth}`doit() <sympy.core.basic.Basic.doit>` method is used to evaluate
+"unevaluated" functions. To define `doit` implement `doit(self, deep=True,
+**hints)`. If `deep=True`, `doit` should recursively call doit on the
+arguments. `**hints` will be any other keyword arguments passed to the user,
+which should be passed to any recursive calls to `doit`. You can use `hints`
+to allow the user to specify specific behavior for `doit`.
+
+For example, suppose we wanted to treat our `versin` function as simply a
+placeholder for `1 - cos(x)`, which we intend to replace with the full `1 -
+cos(x)` after doing some calculations.
+
+```py
+>>> class versin(Function):
+...    def doit(self, deep=True, **hints):
+...        x = self.args[0]
+...        if deep:
+...           x = x.doit(deep=deep, **hints)
+...        return 1 - cos(x)
+>>> versin(x).doit()
+1 - cos(x)
+```
+
+Most custom functions will not want to define `doit` in this way. However,
+this can provide a happy medium between having a function that always
+evaluates and a function that never evaluates, producing a function that
+doesn't evaluate by default but can be evaluated on demand (see the
+[discussion above](custom-functions-eval-best-practices)).
+
+(custom-functions-expand)=
+#### expand()
+
+The {func}`~.expand()` function "expands" an expression in various ways. It
+is actually a wrapper around several sub-expansion hints. Each of these
+functions corresponds to a specific expansion method:
+
+- {func}`basic <sympy.core.function.expand>`
+- {func}`log <sympy.core.function.expand_log>`
+- {func}`mul <sympy.core.function.expand_mul>`
+- {func}`multinomial <sympy.core.function.expand_multinomial>`
+- {func}`complex <sympy.core.function.expand_complex>` *
+- {func}`trig <sympy.core.function.expand_trig>` *
+- {func}`power_base <sympy.core.function.expand_power_base>`
+- {func}`power_exp <sympy.core.function.expand_power_exp>`
+- {func}`func <sympy.core.function.expand_func>` *
+
+(Hints marked with * are not performed by the `expand()` function/method
+unless explicitly enabled)
+
+Each function corresponds to a hint to the `expand()` function/method. A
+specific expand *hint* can be defined in a custom function by defining <code
+class="docutils literal notranslate"><span
+class="pre">_eval_expand_*hint*(self, **hints)</span></code>. See the
+documentation links above for details on what each hint is designed to do.
+
+The `basic` and `func` hints are designed as catchall hints for expansions
+that do not fit into any of the other categories---`basic` happens by default
+in `expand()` and the `func` only happens when the `func=True` hint is
+explicitly passed.
+
+The `**hints` keyword arguments are additional hints that may be passed to the
+expand function to specify additional behavior. Unknown hints should be
+ignored as they may apply to other functions' custom `expand()` methods. A
+common hint to define is `force`, where `force=True` would force an expansion
+that might not be mathematically valid for all the given input assumptions,
+for example, `expand_log(log(x*y), force=True)` produces `log(x) + log(y)`
+even though this identity is not true for all complex `x` and `y` (typically
+`force=False` is the default).
+
+Note that expand automatically takes care of recursively expanding expressions
+using its own `deep` flag, so  `_eval_expand_*` methods should not
+recursively call expand on the arguments of the function.
+
+For our `versin` example, we can define rudimentary `trig` expansion by
+recursively calling `expand_trig` on `1 - cos(x)`:
+
+```
+>>> from sympy import expand_trig
+>>> y = symbols('y')
+>>> class versin(Function):
+...    def _eval_expand_trig(self, **hints):
+...        x = self.args[0]
+...        return expand_trig(1 - cos(x))
+>>> versin(x + y).expand(trig=True)
+sin(x)*sin(y) - cos(x)*cos(y) + 1
+```
+
+A more sophisticated implementation might attempt to rewrite the result of
+`expand_trig(1 - cos(x))` back into `versin` functions. We leave this as an
+exercise for the reader.
 
 (custom-functions-differentiation)=
 ### Differentiation
@@ -765,6 +929,8 @@ Derivative(f(x, y), y)
 
 ### Series Expansions
 
+TODO
+
 ### Printing
 
 You can define how a function prints itself with the varions
@@ -824,18 +990,61 @@ of a custom printer.
 
 ### Other Methods
 
+Several other methods can be defined on custom functions to specify various behaviors.
+
 #### `inverse`
+
+The `inverse(self, argindex=1)` method can be defined to specify the inverse
+of the function. This is used by {func}`~.solve` and {func}`~.solveset`. The
+`argindex` argument is the argument of the function, starting at 1 (similar to
+the same argument name for the [`fdiff`
+method](custom-functions-differentiation).
+
+`inverse` should return a function (not an expression) for the inverse. If the
+inverse is a larger expression than a single function, it can return a
+`lambda` function.
+
+`inverse()` should only be defined for functions that are one-to-one. In other
+words, `f(x).inverse()` is the [left
+inverse](https://en.wikipedia.org/wiki/Inverse_function#Left_and_right_inverses)
+of `f(x)`. Defining `inverse()` on a function that is not one-to-one may
+result in `solve()` not given all possible solutions to an expression
+containing the function.
+
+Our example function $\operatorname{versin}$ is not one-to-one (because $\cos$
+is not), but its inverse $\operatorname{arcversin}$ is. We may define it as
+follows (using the same naming convention as other inverse trig functions in
+SymPy):
+
+```py
+>>> class aversin(Function):
+...     def inverse(self, argindex=1):
+...         return versin
+```
+
+This makes `solve()` work on `aversin(x)`:
+
+```
+>>> from sympy import solve
+>>> solve(aversin(x) - y, x)
+[versin(y)]
+```
 
 #### `as_real_imag`
 
+TODO
+
 #### Miscellaneous `_eval_*` methods
 
+TODO
 
 (custom-functions-complete-examples)=
 ## Complete Examples
 
+TODO
+
 (custom-functions-example-fma)=
-### FMA
+### Fused Multiply-Add
 
 ```py
 >>> from sympy import Number, symbols
@@ -865,15 +1074,17 @@ of a custom printer.
 - SymPy includes dozens of functions. These can serve as useful examples for
   how to write a custom function, especially if the function is similar to one
   that is already implemented. Remember that everything in this guide applies
-  equally well to functions that are included with SymPy and user defined
+  equally well to functions that are included with SymPy and user-defined
   functions.
 
 - If you have many custom functions that share common logic, you can use a
   common base class to contain this shared logic. For an example of this, see
-  the source code for the trigonometric functions in SymPy, which use
-  `TrigonometricFunction`, `InverseTrigonometricFunction`, and
+  the [source code for the trigonometric functions in
+  SymPy](https://github.com/sympy/sympy/blob/master/sympy/functions/elementary/trigonometric.py),
+  which use `TrigonometricFunction`, `InverseTrigonometricFunction`, and
   `ReciprocalTrigonometricFunction` base classes with some shared logic.
 
 - As with any code, it is a good idea to write extensive tests for your
-  function. The SymPy test suite is a good resource for examples of how to
-  write tests for such functions.
+  function. The [SymPy test
+  suite](https://github.com/sympy/sympy/tree/master/sympy/functions/elementary/tests)
+  is a good resource for examples of how to write tests for such functions.
