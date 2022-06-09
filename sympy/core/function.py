@@ -39,6 +39,7 @@ from .basic import Basic, _atomic
 from .cache import cacheit
 from .containers import Tuple, Dict
 from .decorators import _sympifyit
+from .evalf import pure_complex
 from .expr import Expr, AtomicExpr
 from .logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
 from .mul import Mul
@@ -499,7 +500,7 @@ class Function(Application, Expr):
         ===========
 
         By default (in this implementation), this happens if (and only if) the
-        ARG is a floating point number.
+        ARG is a floating point number (including complex numbers).
         This function is used by __new__.
 
         Returns the precision to evalf to, or -1 if it should not evalf.
@@ -508,13 +509,11 @@ class Function(Application, Expr):
             return arg._prec
         if not arg.is_Add:
             return -1
-        from .evalf import pure_complex
         m = pure_complex(arg)
-        if m is None or not (m[0].is_Float or m[1].is_Float):
+        if m is None:
             return -1
-        l = [i._prec for i in m if i.is_Float]
-        l.append(-1)
-        return max(l)
+        # the elements of m are of type Number, so have a _prec
+        return max(m[0]._prec, m[1]._prec)
 
     @classmethod
     def class_key(cls):
