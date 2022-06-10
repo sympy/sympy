@@ -484,9 +484,10 @@ class Function(Application, Expr):
         evaluate = options.get('evaluate', global_parameters.evaluate)
         result = super().__new__(cls, *args, **options)
         if evaluate and isinstance(result, cls) and result.args:
-            pr2 = min(cls._should_evalf(a) for a in result.args)
+            _should_evalf = [cls._should_evalf(a) for a in result.args]
+            pr2 = min(_should_evalf)
             if pr2 > 0:
-                pr = max(cls._should_evalf(a) for a in result.args)
+                pr = max(_should_evalf)
                 result = result.evalf(prec_to_dps(pr))
 
         return _sympify(result)
