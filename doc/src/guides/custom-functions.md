@@ -1032,7 +1032,36 @@ This makes `solve()` work on `aversin(x)`:
 
 #### `as_real_imag`
 
-TODO
+The method {meth}`as_real_imag(self, deep=True, **hints)
+<sympy.core.expr.Expr.as_real_imag>` should return a 2-tuple containing the
+real part and imaginary part of the function. That is `expr.as_real_imag()`
+returns `(re(expr), im(expr))`, where `expr == re(expr) + im(expr)*I`.
+
+If `deep=True`, it should recursively call `as_real_imag` on its arguments. As
+with [`doit()`](custom-functions-doit) and [the `_eval_expand_*()`
+methods](custom-functions-expand), `**hints` may be any hints to allow the
+user to specify the behavior of the method. They should be passed through on
+recursive calls.
+
+For our `versin` example, we can recursively use the `as_real_imag` that is
+already defined for `1 - cos(x)`.
+
+```py
+>>> class versin(Function):
+...     def as_real_imag(self, deep=True, **hints):
+...         return (1 - cos(x)).as_real_imag(deep=deep, **hints)
+>>> versin(x).as_real_imag()
+(-cos(re(x))*cosh(im(x)) + 1, sin(re(x))*sinh(im(x)))
+```
+
+Defining `as_real_imag()` also automatically makes {func}`~.expand_complex`
+work.
+
+```py
+>>> versin(x).expand(complex=True)
+I*sin(re(x))*sinh(im(x)) - cos(re(x))*cosh(im(x)) + 1
+```
+
 
 #### Miscellaneous `_eval_*` methods
 
