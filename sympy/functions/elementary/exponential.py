@@ -1097,11 +1097,12 @@ class log(Function):
         # STEP 5
         if c.is_negative and im(z) != 0:
             from sympy.functions.special.delta_functions import Heaviside
-            for term in z.lseries(t):
-                if not term.is_real:
+            for i, term in enumerate(z.lseries(t)):
+                if not term.is_real or i == 5:
                     break
-            coeff, _ = term.as_coeff_exponent(t)
-            res += -2*I*S.Pi*Heaviside(-im(coeff), 0)
+            if i < 5:
+                coeff, _ = term.as_coeff_exponent(t)
+                res += -2*I*S.Pi*Heaviside(-im(coeff), 0)
         return res
 
 

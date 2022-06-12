@@ -996,7 +996,7 @@ class Add(Expr, AssocOp):
         from sympy.series.order import Order
         from sympy.functions.elementary.exponential import log
         from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
-        from .function import expand_mul
+        from .function import expand_log, expand_mul
 
         o = self.getO()
         if o is None:
@@ -1009,10 +1009,7 @@ class Add(Expr, AssocOp):
         # This expansion is the last part of expand_log. expand_log also calls
         # expand_mul with factor=True, which would be more expensive
         if any(isinstance(a, log) for a in self.args):
-            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
-                power_base=False, multinomial=False, basic=False, force=False,
-                factor=False)
-            old = old.expand(**logflags)
+            old = expand_log(old)
         expr = expand_mul(old)
 
         if not expr.is_Add:

@@ -606,6 +606,10 @@ def test_issue_6364():
     assert limit(e, z, 0) == 1/(cos(a)**2 - S.Half)
 
 
+def test_issue_6682():
+    assert limit(exp(2*Ei(-x))/x**2, x, 0) == exp(2*EulerGamma)
+
+
 def test_issue_4099():
     a = Symbol('a')
     assert limit(a/x, x, 0) == oo*sign(a)
@@ -1171,3 +1175,7 @@ def test_issue_22982():
 def test_issue_23231():
     f = (2**x - 2**(-x))/(2**x + 2**(-x))
     assert limit(f, x, -oo) == -1
+
+
+def test_issue_23596():
+    assert integrate(((1 + x)/x**2)*exp(-1/x), (x, 0, oo)) == oo
