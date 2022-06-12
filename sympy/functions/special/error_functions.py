@@ -1219,7 +1219,7 @@ class Ei(Function):
         if x0.is_zero:
             c, e = arg.as_coeff_exponent(x)
             logx = log(x) if logx is None else logx
-            return log(c) + e*log(x) + S.EulerGamma - (
+            return log(c) + e*logx + S.EulerGamma - (
                 S.ImaginaryUnit*pi if re(cdir).is_negative else S.Zero)
         return super()._eval_as_leading_term(x, logx=logx, cdir=cdir)
 

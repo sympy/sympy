@@ -2302,8 +2302,9 @@ class asin(InverseTrigonometricFunction):
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
             return arg.as_leading_term(x)
-        if x0 is S.ComplexInfinity:
-            return S.ImaginaryUnit*log(arg.as_leading_term(x))
+        # Handling Branch cuts (-oo, -1) U (1, oo)
+        if x0 in (-S.One, S.One, S.ComplexInfinity):
+            return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if cdir != 0:
             cdir = arg.dir(x, cdir)
         if im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
@@ -2358,6 +2359,7 @@ class asin(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return -S.ImaginaryUnit*log(S.ImaginaryUnit*x + sqrt(1 - x**2))
+    _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_rewrite_as_acot(self, arg, **kwargs):
         return 2*acot((1 + sqrt(1 - arg**2))/arg)
@@ -2502,10 +2504,9 @@ class acos(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
-        if x0 == 1:
-            return sqrt(2)*sqrt((S.One - arg).as_leading_term(x))
-        if x0 is S.ComplexInfinity:
-            return S.ImaginaryUnit*log(arg.as_leading_term(x))
+        # Handling Branch cuts (-oo, -1) U (1, oo)
+        if x0 in (-S.One, S.One, S.ComplexInfinity):
+            return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if cdir != 0:
             cdir = arg.dir(x, cdir)
         if im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
@@ -2562,6 +2563,7 @@ class acos(InverseTrigonometricFunction):
     def _eval_rewrite_as_log(self, x, **kwargs):
         return S.Pi/2 + S.ImaginaryUnit*\
             log(S.ImaginaryUnit*x + sqrt(1 - x**2))
+    _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_rewrite_as_asin(self, x, **kwargs):
         return S.Pi/2 - asin(x)
@@ -2729,8 +2731,9 @@ class atan(InverseTrigonometricFunction):
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
             return arg.as_leading_term(x)
-        if x0 is S.ComplexInfinity:
-            return acot(1/arg)._eval_as_leading_term(x, cdir=cdir)
+        # Handling Branch cuts (-I*oo, -I) U (I, I*oo)
+        if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.ComplexInfinity):
+            return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if cdir != 0:
             cdir = arg.dir(x, cdir)
         if re(cdir) < 0 and re(x0).is_zero and im(x0) > S.One:
@@ -2757,6 +2760,7 @@ class atan(InverseTrigonometricFunction):
     def _eval_rewrite_as_log(self, x, **kwargs):
         return S.ImaginaryUnit/2*(log(S.One - S.ImaginaryUnit*x)
             - log(S.One + S.ImaginaryUnit*x))
+    _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] is S.Infinity:
@@ -2928,10 +2932,9 @@ class acot(InverseTrigonometricFunction):
             return (1/arg).as_leading_term(x)
         if cdir != 0:
             cdir = arg.dir(x, cdir)
-        if x0.is_zero:
-            if re(cdir) < 0:
-                return self.func(x0) - S.Pi
-            return self.func(x0)
+        # Handling Branch cuts [-I, I]
+        if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.Zero):
+            return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if re(cdir) > 0 and re(x0).is_zero and im(x0) > S.Zero and im(x0) < S.One:
             return self.func(x0) + S.Pi
         if re(cdir) < 0 and re(x0).is_zero and im(x0) < S.Zero and im(x0) > S.NegativeOne:
@@ -2966,6 +2969,7 @@ class acot(InverseTrigonometricFunction):
     def _eval_rewrite_as_log(self, x, **kwargs):
         return S.ImaginaryUnit/2*(log(1 - S.ImaginaryUnit/x)
             - log(1 + S.ImaginaryUnit/x))
+    _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def inverse(self, argindex=1):
         """
@@ -3100,10 +3104,9 @@ class asec(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
-        if x0 == 1:
-            return sqrt(2)*sqrt((arg - S.One).as_leading_term(x))
-        if x0.is_zero:
-            return S.ImaginaryUnit*log(arg.as_leading_term(x))
+        # Handling Branch cuts (-1, 1)
+        if x0 in (-S.One, S.One, S.Zero):
+            return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if cdir != 0:
             cdir = arg.dir(x, cdir)
         if im(cdir) < 0 and x0.is_real and x0 > S.Zero and x0 < S.One:
@@ -3154,6 +3157,7 @@ class asec(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_log(self, arg, **kwargs):
         return S.Pi/2 + S.ImaginaryUnit*log(S.ImaginaryUnit/arg + sqrt(1 - 1/arg**2))
+    _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_rewrite_as_asin(self, arg, **kwargs):
         return S.Pi/2 - asin(1/arg)
@@ -3271,10 +3275,11 @@ class acsc(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
-        if x0.is_zero:
-            return S.ImaginaryUnit*log(arg.as_leading_term(x))
+        # Handling Branch cuts (-1, 1)
+        if x0 in (-S.One, S.One, S.Zero):
+            return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if x0 is S.ComplexInfinity:
-            return arg.as_leading_term(x)
+            return (1/arg).as_leading_term(x)
         if cdir != 0:
             cdir = arg.dir(x, cdir)
         if im(cdir) < 0 and x0.is_real and x0 > S.Zero and x0 < S.One:
@@ -3319,6 +3324,7 @@ class acsc(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_log(self, arg, **kwargs):
         return -S.ImaginaryUnit*log(S.ImaginaryUnit/arg + sqrt(1 - 1/arg**2))
+    _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_rewrite_as_asin(self, arg, **kwargs):
         return asin(1/arg)
