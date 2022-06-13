@@ -1240,6 +1240,32 @@ class acosh(InverseHyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @staticmethod
+    @cacheit
+    def _acosh_table():
+        return {
+            S.ImaginaryUnit: log(S.ImaginaryUnit*(1 + sqrt(2))),
+            -S.ImaginaryUnit: log(-S.ImaginaryUnit*(1 + sqrt(2))),
+            S.Half: S.Pi/3,
+            Rational(-1, 2): S.Pi*Rational(2, 3),
+            sqrt(2)/2: S.Pi/4,
+            -sqrt(2)/2: S.Pi*Rational(3, 4),
+            1/sqrt(2): S.Pi/4,
+            -1/sqrt(2): S.Pi*Rational(3, 4),
+            sqrt(3)/2: S.Pi/6,
+            -sqrt(3)/2: S.Pi*Rational(5, 6),
+            (sqrt(3) - 1)/sqrt(2**3): S.Pi*Rational(5, 12),
+            -(sqrt(3) - 1)/sqrt(2**3): S.Pi*Rational(7, 12),
+            sqrt(2 + sqrt(2))/2: S.Pi/8,
+            -sqrt(2 + sqrt(2))/2: S.Pi*Rational(7, 8),
+            sqrt(2 - sqrt(2))/2: S.Pi*Rational(3, 8),
+            -sqrt(2 - sqrt(2))/2: S.Pi*Rational(5, 8),
+            (1 + sqrt(3))/(2*sqrt(2)): S.Pi/12,
+            -(1 + sqrt(3))/(2*sqrt(2)): S.Pi*Rational(11, 12),
+            (sqrt(5) + 1)/4: S.Pi/5,
+            -(sqrt(5) + 1)/4: S.Pi*Rational(4, 5)
+            }
+
     @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
@@ -1259,28 +1285,7 @@ class acosh(InverseHyperbolicFunction):
                 return S.Pi*S.ImaginaryUnit
 
         if arg.is_number:
-            cst_table = {
-                S.ImaginaryUnit: log(S.ImaginaryUnit*(1 + sqrt(2))),
-                -S.ImaginaryUnit: log(-S.ImaginaryUnit*(1 + sqrt(2))),
-                S.Half: S.Pi/3,
-                Rational(-1, 2): S.Pi*Rational(2, 3),
-                sqrt(2)/2: S.Pi/4,
-                -sqrt(2)/2: S.Pi*Rational(3, 4),
-                1/sqrt(2): S.Pi/4,
-                -1/sqrt(2): S.Pi*Rational(3, 4),
-                sqrt(3)/2: S.Pi/6,
-                -sqrt(3)/2: S.Pi*Rational(5, 6),
-                (sqrt(3) - 1)/sqrt(2**3): S.Pi*Rational(5, 12),
-                -(sqrt(3) - 1)/sqrt(2**3): S.Pi*Rational(7, 12),
-                sqrt(2 + sqrt(2))/2: S.Pi/8,
-                -sqrt(2 + sqrt(2))/2: S.Pi*Rational(7, 8),
-                sqrt(2 - sqrt(2))/2: S.Pi*Rational(3, 8),
-                -sqrt(2 - sqrt(2))/2: S.Pi*Rational(5, 8),
-                (1 + sqrt(3))/(2*sqrt(2)): S.Pi/12,
-                -(1 + sqrt(3))/(2*sqrt(2)): S.Pi*Rational(11, 12),
-                (sqrt(5) + 1)/4: S.Pi/5,
-                -(sqrt(5) + 1)/4: S.Pi*Rational(4, 5)
-            }
+            cst_table = cls._acosh_table()
 
             if arg in cst_table:
                 if arg.is_extended_real:
@@ -1604,26 +1609,10 @@ class asech(InverseHyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    @classmethod
-    def eval(cls, arg):
-        arg = sympify(arg)
-
-        if arg.is_Number:
-            if arg is S.NaN:
-                return S.NaN
-            elif arg is S.Infinity:
-                return S.Pi*S.ImaginaryUnit / 2
-            elif arg is S.NegativeInfinity:
-                return S.Pi*S.ImaginaryUnit / 2
-            elif arg.is_zero:
-                return S.Infinity
-            elif arg is S.One:
-                return S.Zero
-            elif arg is S.NegativeOne:
-                return S.Pi*S.ImaginaryUnit
-
-        if arg.is_number:
-            cst_table = {
+    @staticmethod
+    @cacheit
+    def _asech_table():
+            return {
                 S.ImaginaryUnit: - (S.Pi*S.ImaginaryUnit / 2) + log(1 + sqrt(2)),
                 -S.ImaginaryUnit: (S.Pi*S.ImaginaryUnit / 2) + log(1 + sqrt(2)),
                 (sqrt(6) - sqrt(2)): S.Pi / 12,
@@ -1649,6 +1638,27 @@ class asech(InverseHyperbolicFunction):
                 (sqrt(6) + sqrt(2)): 5*S.Pi / 12,
                 (-sqrt(6) - sqrt(2)): 7*S.Pi / 12,
             }
+
+    @classmethod
+    def eval(cls, arg):
+        arg = sympify(arg)
+
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Pi*S.ImaginaryUnit / 2
+            elif arg is S.NegativeInfinity:
+                return S.Pi*S.ImaginaryUnit / 2
+            elif arg.is_zero:
+                return S.Infinity
+            elif arg is S.One:
+                return S.Zero
+            elif arg is S.NegativeOne:
+                return S.Pi*S.ImaginaryUnit
+
+        if arg.is_number:
+            cst_table = cls._asech_table()
 
             if arg in cst_table:
                 if arg.is_extended_real:
@@ -1735,6 +1745,25 @@ class acsch(InverseHyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    @staticmethod
+    @cacheit
+    def _acsch_table():
+        return {
+                S.ImaginaryUnit: -S.Pi / 2,
+                S.ImaginaryUnit*(sqrt(2) + sqrt(6)): -S.Pi / 12,
+                S.ImaginaryUnit*(1 + sqrt(5)): -S.Pi / 10,
+                S.ImaginaryUnit*2 / sqrt(2 - sqrt(2)): -S.Pi / 8,
+                S.ImaginaryUnit*2: -S.Pi / 6,
+                S.ImaginaryUnit*sqrt(2 + 2/sqrt(5)): -S.Pi / 5,
+                S.ImaginaryUnit*sqrt(2): -S.Pi / 4,
+                S.ImaginaryUnit*(sqrt(5)-1): -3*S.Pi / 10,
+                S.ImaginaryUnit*2 / sqrt(3): -S.Pi / 3,
+                S.ImaginaryUnit*2 / sqrt(2 + sqrt(2)): -3*S.Pi / 8,
+                S.ImaginaryUnit*sqrt(2 - 2/sqrt(5)): -2*S.Pi / 5,
+                S.ImaginaryUnit*(sqrt(6) - sqrt(2)): -5*S.Pi / 12,
+                S(2): -S.ImaginaryUnit*log((1+sqrt(5))/2),
+            }
+
     @classmethod
     def eval(cls, arg):
         arg = sympify(arg)
@@ -1754,21 +1783,7 @@ class acsch(InverseHyperbolicFunction):
                 return - log(1 + sqrt(2))
 
         if arg.is_number:
-            cst_table = {
-                S.ImaginaryUnit: -S.Pi / 2,
-                S.ImaginaryUnit*(sqrt(2) + sqrt(6)): -S.Pi / 12,
-                S.ImaginaryUnit*(1 + sqrt(5)): -S.Pi / 10,
-                S.ImaginaryUnit*2 / sqrt(2 - sqrt(2)): -S.Pi / 8,
-                S.ImaginaryUnit*2: -S.Pi / 6,
-                S.ImaginaryUnit*sqrt(2 + 2/sqrt(5)): -S.Pi / 5,
-                S.ImaginaryUnit*sqrt(2): -S.Pi / 4,
-                S.ImaginaryUnit*(sqrt(5)-1): -3*S.Pi / 10,
-                S.ImaginaryUnit*2 / sqrt(3): -S.Pi / 3,
-                S.ImaginaryUnit*2 / sqrt(2 + sqrt(2)): -3*S.Pi / 8,
-                S.ImaginaryUnit*sqrt(2 - 2/sqrt(5)): -2*S.Pi / 5,
-                S.ImaginaryUnit*(sqrt(6) - sqrt(2)): -5*S.Pi / 12,
-                S(2): -S.ImaginaryUnit*log((1+sqrt(5))/2),
-            }
+            cst_table = cls._acsch_table()
 
             if arg in cst_table:
                 return cst_table[arg]*S.ImaginaryUnit
