@@ -927,9 +927,11 @@ second argument.
 Derivative(f(x, y), y)
 ```
 
-### Series Expansions
+<!-- TODO: series expansion will need its own guide. See
+     https://github.com/sympy/sympy/issues/23625. -->
 
-TODO
+<!-- TODO: integration will need its own guide. See
+     https://github.com/sympy/sympy/issues/23624. -->
 
 ### Printing
 
