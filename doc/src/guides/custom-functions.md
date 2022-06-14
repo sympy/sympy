@@ -298,9 +298,10 @@ evaluation with `evalf`](custom-functions-evalf) below.
   ```py
   >>> from sympy import cos
   >>> class versin(Function):
-  ...    @classmethod
-  ...    def eval(cls, x):
-  ...        return 1 - cos(x)
+  ...     @classmethod
+  ...     def eval(cls, x):
+  ...         # Not actually a good eval() method
+  ...         return 1 - cos(x)
   ```
 
   However, this would make it so that `versin(x)` would *always* return `1 -
@@ -539,12 +540,12 @@ arguments of the function using `self.args`.
 >>> class versin(Function):
 ...     def _eval_is_nonnegative(self):
 ...         x = self.args[0]
-...         # versin(x) is nonnegative if x is real
+...         # versin(x) is nonnegative iff x is real
 ...         return x.is_real
 ...
 ...     def _eval_is_positive(self):
 ...         x = self.args[0]
-...         # versin(x) is positive if x is real and not an even multiple of pi
+...         # versin(x) is positive iff x is real and not an even multiple of pi
 ...         return fuzzy_and([x.is_real, fuzzy_not((x/pi).is_even)])
 ```
 
@@ -625,12 +626,14 @@ incorrectly use `prec` as the decimal precision.
 ```
 
 We can define numerical evaluation for our example $\operatorname{versin}(x)$
-function by recursively evaluating $1 - \cos(x)$.
+function by recursively evaluating $2\sin(\frac{x}{2})^2$, which is a more
+numerically stable way of writing $1 - \cos(x)$.
 
 ```py
+>>> from sympy import sin
 >>> class versin(Function):
 ...     def _eval_evalf(self, prec):
-...         return (1 - cos(self.args[0]))._eval_evalf(prec)
+...         return (2*sin(self.args[0]/2)**2)._eval_evalf(prec)
 ```
 
 ```
@@ -846,7 +849,6 @@ For our example function $\operatorname{versin}(x) = 1 - \cos(x)$, the
 derivative is $\sin(x)$.
 
 ```py
->>> from sympy import sin
 >>> class versin(Function):
 ...     def fdiff(self, argindex=1):
 ...         return sin(self.args[0])
@@ -1052,7 +1054,7 @@ already defined for `1 - cos(x)`.
 ```py
 >>> class versin(Function):
 ...     def as_real_imag(self, deep=True, **hints):
-...         return (1 - cos(x)).as_real_imag(deep=deep, **hints)
+...         return (1 - cos(self.args[0])).as_real_imag(deep=deep, **hints)
 >>> versin(x).as_real_imag()
 (-cos(re(x))*cosh(im(x)) + 1, sin(re(x))*sinh(im(x)))
 ```
@@ -1076,9 +1078,141 @@ how define each method.
 (custom-functions-complete-examples)=
 ## Complete Examples
 
+Here are complete examples for the example functions defined in this guide.
+
 ### Versine
 
-TODO
+```
+>>> from sympy import Function, cos, expand_trig, Integer, pi, sin
+>>> from sympy.core.logic import fuzzy_and, fuzzy_not
+>>> class versin(Function):
+...     """
+...     The versine function
+...
+...     $\operatorname{versin}(x) = 1 - \cos(x) = 2\sin(x/2)^2.$
+...
+...     Geometrically, given a standard right triangle with angle x in the
+...     unit circle, the versine of x is the positive horizontal distance from
+...     the right angle of the triangle to the rightmost point on the unit
+...     circle. It was historically used as a more numerically accurate way to
+...     compute 1 - cos(x), but it is rarely used today.
+...
+...     References
+...     ==========
+...
+...     .. [1] https://en.wikipedia.org/wiki/Versine
+...     .. [2] https://blogs.scientificamerican.com/roots-of-unity/10-secret-trig-functions-your-math-teachers-never-taught-you/
+...     """
+...     @classmethod
+...     def eval(cls, x):
+...         # If x is an integer multiple of pi, x/pi will cancel and be an Integer
+...         n = x/pi
+...         if isinstance(n, Integer):
+...             return 1 - (-1)**n
+...
+...     def _eval_evalf(self, prec):
+...         return (2*sin(self.args[0]/2)**2)._eval_evalf(prec)
+...
+...     def _eval_is_nonnegative(self):
+...         x = self.args[0]
+...         # versin(x) is nonnegative if x is real
+...         return x.is_real
+...
+...     def _eval_is_positive(self):
+...         x = self.args[0]
+...         # versin(x) is positive if x is real and not an even multiple of pi
+...         return fuzzy_and([x.is_real, fuzzy_not((x/pi).is_even)])
+...
+...     def _eval_rewrite(self, rule, args, **hints):
+...         if rule == cos:
+...             return 1 - cos(*args)
+...         elif rule == sin:
+...             return 2*sin(x/2)**2
+...
+...     # You may or may not choose to implement doit() like this. See above.
+...     # def doit(self, deep=True, **hints):
+...     #     x = self.args[0]
+...     #     if deep:
+...     #        x = x.doit(deep=deep, **hints)
+...     #     return 1 - cos(x)
+...
+...     def _eval_expand_trig(self, **hints):
+...         x = self.args[0]
+...         return expand_trig(1 - cos(x))
+...
+...     def as_real_imag(self, deep=True, **hints):
+...         # reuse _eval_rewrite(cos) defined above
+...         return self.rewrite(cos).as_real_imag(deep=deep, **hints)
+...
+...     def fdiff(self, argindex=1):
+...         return sin(self.args[0])
+```
+
+**Examples:**
+
+Evaluation:
+
+```
+>>> x, y = symbols('x y')
+>>> versin(x)
+versin(x)
+>>> versin(2*pi)
+0
+>>> versin(1.0)
+0.459697694131860
+```
+
+Assumptions:
+
+```
+>>> n = symbols('n', integer=True)
+>>> versin(n).is_real
+True
+>>> versin((2*n + 1)*pi).is_positive
+True
+>>> versin(2*n*pi).is_zero
+True
+```
+
+Simplification:
+
+```
+>>> a, b = symbols('a b', real=True)
+>>> from sympy import I
+>>> versin(x).rewrite(cos)
+1 - cos(x)
+>>> versin(x).rewrite(sin)
+2*sin(x/2)**2
+>>> versin(2*x).expand(trig=True)
+2 - 2*cos(x)**2
+>>> versin(a + b*I).expand(complex=True)
+I*sin(a)*sinh(b) - cos(a)*cosh(b) + 1
+```
+
+Differentiation:
+
+```
+>>> versin(x).diff(x)
+sin(x)
+```
+
+Solving:
+
+<!-- Note: doit() is commented out in the example above because it makes the
+     below return 1 - cos(x) instead of versin(x). Most people shouldn't
+     implement doit() like that anyway, though. -->
+
+(a more general version of `aversin` would have all the above methods defined
+as well)
+
+```
+>>> class aversin(Function):
+...     def inverse(self, argindex=1):
+...         return versin
+>>> from sympy import solve
+>>> solve(aversin(x**2) - y, x)
+[-sqrt(versin(y)), sqrt(versin(y))]
+```
 
 ### divides
 
