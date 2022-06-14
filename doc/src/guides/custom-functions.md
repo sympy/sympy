@@ -597,7 +597,9 @@ functions defined in SymPy itself are required to be extensively tested.
 
 Here we show how to define how to define how a function should numerically
 evaluate to a floating point {class}`~.Float` value, for instance, via
-`evalf`.
+`evalf`. Implementing numerical evaluation enables several behaviors in SymPy.
+For example, once `evalf` is defined, you can plot your function, and things
+like inequalities can evaluate to explicit values.
 
 If your function has the same name as a function in
 [mpmath](https://mpmath.org/doc/current/), as is the case for most functions in SymPy,
@@ -943,7 +945,6 @@ You can define how a function prints itself with the varions
 languages such as {class}`C <sympy.printing.c.C99CodePrinter>` and
 {class}`Fortran <sympy.printing.fortran.FCodePrinter>`.
 
-
 In most cases, you will not need to define any printing methods. The default
 behavior is to print functions using their name. However, in some cases we may
 want to define special printing for a function.
@@ -1067,10 +1068,19 @@ I*sin(re(x))*sinh(im(x)) - cos(re(x))*cosh(im(x)) + 1
 
 #### Miscellaneous `_eval_*` methods
 
-TODO
+There are many other functions in SymPy whose behavior can be defined on
+custom functions via a custom `_eval_*` method, analogous to the ones
+described above. See the documentation of the specific function for details on
+how define each method.
 
 (custom-functions-complete-examples)=
 ## Complete Examples
+
+### Versine
+
+TODO
+
+### divides
 
 TODO
 
