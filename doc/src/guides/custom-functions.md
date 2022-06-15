@@ -385,7 +385,7 @@ evaluation with `evalf`](custom-functions-evalf) below.
   ...     def eval(cls, m, n):
   ...         # Evaluate for explicit integer m and n. This part is fine.
   ...         if isinstance(m, Integer) and isinstance(n, Integer):
-  ...             return int(n % m != 0)
+  ...             return int(n % m == 0)
   ...         # For symbolic arguments, require m and n to be integer.
   ...         # If we write the logic this way, we will run into trouble.
   ...         if not m.is_integer or not n.is_integer:
@@ -452,7 +452,7 @@ evaluation with `evalf`](custom-functions-evalf) below.
   ...     def eval(cls, m, n):
   ...         # Evaluate for explicit integer m and n. This part is fine.
   ...         if isinstance(m, Integer) and isinstance(n, Integer):
-  ...             return int(n % m != 0)
+  ...             return int(n % m == 0)
   ...         # For symbolic arguments, require m and n to be integer.
   ...         # This is the better way to write this logic.
   ...         if m.is_integer is False or n.is_integer is False:
@@ -474,7 +474,7 @@ evaluation with `evalf`](custom-functions-evalf) below.
   >>> divides(2, (m**2 + m)/2)
   divides(2, m**2/2 + m/2)
   >>> _.subs(m, 2)
-  1
+  0
   >>> n, m = symbols('n m') # Redefine n and m without the integer assumption
   >>> divides(m, n)
   divides(m, n)
@@ -504,10 +504,13 @@ class="pre">is_*assumption*</span></code> directly on the class.
 ```py
 >>> class divides(Function):
 ...     is_integer = True
+...     is_negative = False
 ```
 
 ```py
 >>> divides(m, n).is_integer
+True
+>>> divides(m, n).is_nonnegative
 True
 ```
 
@@ -1148,9 +1151,9 @@ Here are complete examples for the example functions defined in this guide.
 ...         return sin(self.args[0])
 ```
 
-**Examples:**
+#### Examples
 
-Evaluation:
+**Evaluation:**
 
 ```
 >>> x, y = symbols('x y')
@@ -1162,7 +1165,7 @@ versin(x)
 0.459697694131860
 ```
 
-Assumptions:
+**Assumptions:**
 
 ```
 >>> n = symbols('n', integer=True)
@@ -1174,7 +1177,7 @@ True
 True
 ```
 
-Simplification:
+**Simplification:**
 
 ```
 >>> a, b = symbols('a b', real=True)
@@ -1189,14 +1192,14 @@ Simplification:
 I*sin(a)*sinh(b) - cos(a)*cosh(b) + 1
 ```
 
-Differentiation:
+**Differentiation:**
 
 ```
 >>> versin(x).diff(x)
 sin(x)
 ```
 
-Solving:
+**Solving:**
 
 <!-- Note: doit() is commented out in the example above because it makes the
      below return 1 - cos(x) instead of versin(x). Most people shouldn't
@@ -1216,7 +1219,70 @@ as well)
 
 ### divides
 
-TODO
+```
+>>> from sympy import Function, Integer
+>>> class divides(Function):
+...     @classmethod
+...     def eval(cls, m, n):
+...         # Evaluate for explicit integer m and n.
+...         if isinstance(m, Integer) and isinstance(n, Integer):
+...             return int(n % m == 0)
+...         # For symbolic arguments, require m and n to be integer.
+...         if m.is_integer is False or n.is_integer is False:
+...             raise TypeError("m and n should be integers")
+...
+...     is_integer = True
+...     is_negative = False
+...
+...     # Define doit() as further evaluation on symbolic arguments using
+...     # assumptions.
+...     def doit(self, deep=False, **hints):
+...         m, n = self.args
+...         if deep:
+...            m, n = m.doit(deep=deep, **hints), n.doit(deep=deep, **hints)
+...         isint = (n/m).is_integer
+...         if isint is True:
+...             return 1
+...         elif isint is False:
+...             return 0
+...         else:
+...             return divides(m, n)
+...
+...     # Define some printing methods
+...     def _latex(self, printer):
+...         m, n = self.args
+...         _m, _n = printer._print(m), printer._print(n)
+...         return r'\left [ %s \middle | %s \right ]' % (_m, _n)
+```
+
+#### Examples
+
+**Evaluation**
+
+```
+>>> from sympy import symbols
+>>> n, m, k = symbols('n m k', integer=True)
+>>> divides(3, 10)
+0
+>>> divides(3, 12)
+1
+>>> divides(m, n).is_integer
+True
+>>> divides(k, 2*k)
+divides(k, 2*k)
+>>> divides(k, 2*k).doit()
+1
+```
+
+**Printing:**
+
+```py
+>>> str(divides(m, n)) # This is using the default str printer
+'divides(m, n)'
+>>> print(latex(divides(m, n)))
+\left [ m \middle | n \right ]
+```
+
 
 (custom-functions-example-fma)=
 ### Fused Multiply-Add
