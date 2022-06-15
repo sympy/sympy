@@ -340,7 +340,6 @@ class Truss:
         ========
 
         >>> from sympy.physics.continuum_mechanics.truss import Truss
-        >>> from sympy import symbols
         >>> t = Truss()
         >>> t.add_node('A', 0, 0)
         >>> t.add_node('B', 3, 0)
@@ -368,7 +367,6 @@ class Truss:
         ========
 
         >>> from sympy.physics.continuum_mechanics.truss import Truss
-        >>> from sympy import symbols
         >>> t = Truss()
         >>> t.add_node('A', 0, 0)
         >>> t.add_node('B', 3, 0)
