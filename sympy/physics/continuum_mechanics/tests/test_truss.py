@@ -8,7 +8,7 @@ def test_truss():
     C = Symbol('C')
     AB, BC, AC = symbols('AB, BC, AC')
     P = Symbol('P')
-    
+
     t = Truss()
     assert t.nodes == []
     assert t.node_labels == []
@@ -68,4 +68,3 @@ def test_truss():
     # testing the remove_support method
     t.remove_support(A)
     assert t.supports == {A: 'none', B: 'roller', C: 'none'}
-
