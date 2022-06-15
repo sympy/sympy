@@ -1,4 +1,3 @@
-from multiprocessing.context import assert_spawning
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.physics.continuum_mechanics.truss import Truss
 
