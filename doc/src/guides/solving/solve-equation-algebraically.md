@@ -58,4 +58,6 @@ NotImplementedError: multiple generators [x, cos(x)]
 No algorithms are implemented to solve equation -x + cos(x)
 ```
 
-so you may have to {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` instead. It is also possible that there is a way to solve your equation algebraically, and SymPy has not have implemented an appropriate algorithm.
+so you may have to {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` instead.
+
+It is also possible that there is a way to solve your equation algebraically, and SymPy has not have implemented an appropriate algorithm. You can ask about this on the mailing list, or open an issue on GitHub. *Is it appropriate to include such instructions on a page like this?*
