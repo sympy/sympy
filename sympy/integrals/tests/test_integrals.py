@@ -1535,8 +1535,7 @@ def test_issue_14437():
 
 
 def test_issue_14470():
-    assert integrate(1/sqrt(exp(x) + 1), x) == \
-        log(-1 + 1/sqrt(exp(x) + 1)) - log(1 + 1/sqrt(exp(x) + 1))
+    assert integrate(1/sqrt(exp(x) + 1), x) == log(sqrt(exp(x) + 1) - 1) - log(sqrt(exp(x) + 1) + 1)
 
 
 def test_issue_14877():
