@@ -1,4 +1,4 @@
- (custom-functions)=
+(custom-functions)=
 # Writing Custom Functions
 
 <!-- Note to contributors: if you update one of the examples in this guide, be
@@ -17,9 +17,9 @@ This guide describes how to define complex valued functions, that is functions
 that map a subset of $\mathbb{C}^n$ to $\mathbb{C}$. Functions that accept or
 return other kinds of objects than complex numbers should subclass another
 class, such as {class}`~.Boolean`, {class}`~.MatrixExpr`, {class}`~.Expr`, or
-{class}`~.Basic`. Much of what is written here only applies to
-{class}`~.Function` subclasses and will not work for general {class}`~.Basic`
-or {class}`~.Expr` subclasses.
+{class}`~.Basic`. Some of what is written here will apply to general
+{class}`~.Basic` or {class}`~.Expr` subclasses, but much of it only applies to
+{class}`~.Function` subclasses.
 
 ## Easy Cases: Fully Symbolic or Fully Evaluated
 
@@ -102,7 +102,7 @@ something no matter what their inputs are. These functions are never left in
 an unevaluated, symbolic form like `f(x)`.
 
 In this case, you should use a normal Python function using the `def`
-keyword.
+keyword:
 
 ```py
 >>> def f(x):
@@ -121,10 +121,10 @@ keyword.
 x + 1
 ```
 
-If you find yourself defining an `eval` method on a `Function` subclass where
-you always return a value and never return `None`, you should consider just
-using a normal Python function instead, as there is no benefit to using a
-symbolic `Function` subclass in that case (see the
+If you find yourself defining an [`eval()`](custom-functions-eval) method on a
+`Function` subclass where you always return a value and never return `None`,
+you should consider just using a normal Python function instead, as there is
+no benefit to using a symbolic `Function` subclass in that case (see the
 {any}`custom-functions-eval-best-practices` section below)
 
 Note that in many cases, functions like these can be represented directly
@@ -150,10 +150,22 @@ evaluated for specific values of `x` using {meth}`subs()
 ```
 
 Fully symbolic representations like `Piecewise` have the advantage that they
-accurately represent symbolic values. For example, the above Python `def`
+accurately represent symbolic values. For example, in the above Python `def`
 definition of `f`, `f(x)` implicitly assumes that `x` is nonzero. The
 `Piecewise` version handles this case correctly and won't evaluate to the $x
 \neq 0$ case unless `x` is known to not be zero.
+
+Another option, if you want a function that not only evaluates, but always
+evaluates to a numerical value, is to use {func}`~.lambdify`. This will
+convert a SymPy expression into a function that can be evaluated using NumPy.
+
+```
+>>> from sympy import lambdify
+>>> func = lambdify(x, Piecewise((0, Eq(x, 0)), (x + 1, True)))
+>>> import numpy as np # doctest: +SKIP
+>>> func(np.arange(5)) # doctest: +SKIP
+array([0., 2., 3., 4., 5.])
+```
 
 Ultimately, the correct tool for the job depends on what you are doing and
 what exact behavior you want.
@@ -161,10 +173,10 @@ what exact behavior you want.
 (custom-functions-function-subclass)=
 ## Creating a Custom Function
 
-The basic way to create a custom function is to subclass {class}`~.Function`.
-The name of the subclass will be the name of the function. Different methods
-should then be defined on this subclass, depending on what functionality you
-want to provide.
+The first step to creating a custom function is to subclass
+{class}`~.Function`. The name of the subclass will be the name of the
+function. Different methods should then be defined on this subclass, depending
+on what functionality you want to provide.
 
 As a motivating example for this document, let's create a custom function
 class representing the [versine
@@ -188,12 +200,9 @@ Let us start by subclassing `Function`.
 
 At this point, `versin` has no behaviors defined on it. It is very similar to
 the [undefined functions](custom-functions-fully-symbolic) we discussed above.
-We note that `versin` is a class, and `versin(x)` is an instance of this
-class.
+Note that `versin` is a class, and `versin(x)` is an instance of this class.
 
 ```py
->>> type(versin)
-<class 'sympy.core.function.FunctionClass'>
 >>> versin(x)
 versin(x)
 >>> isinstance(versin(x), versin)
@@ -211,19 +220,21 @@ return an unevaluated {class}`~.Derivative`.
 ```
 
 (custom-functions-eval)=
-### Defining Automatic Evaluation with `eval`
+### Defining Automatic Evaluation with `eval()`
 
 ```{sidebar} Reminder
-Remember that `eval` should be defined with the `@classmethod` decorator.
+Remember that `eval()` should be defined with the `@classmethod` decorator.
 ```
 
 The first and most common thing we might want to define on our custom function
 is automatic evaluation, that is, the cases where it will return an actual
 value instead of just remaining unevaluated as-is.
 
-This is done by defining the class method `eval`. `eval` should take the
+This is done by defining the class method `eval()`. `eval()` should take the
 arguments of the function and return either a value or `None`. If it returns
-`None`, the function will remain unevaluated in that case.
+`None`, the function will remain unevaluated in that case. This also serves to
+define the signature of the function (by default, without an `eval()` method, a
+`Function` subclass will accept any number of arguments).
 
 For our function `versin`, we might recall that $\cos(n\pi) = (-1)^n$ for
 integer $n$, so $\operatorname{versin}(n\pi) = 1 - (-1)^n.$ We can make
@@ -247,24 +258,27 @@ of `pi`:
 2
 >>> versin(2*pi)
 0
+```
+
+Here we make use of the fact that if a Python function does not explicitly
+return a value, it automatically returns `None`. So in the cases where the `if
+isinstance(n, Integer)` statement is not triggered, `eval()` returns `None`
+and `versin` remains unevaluated.
+
+```py
 >>> versin(x*pi)
 versin(pi*x)
 ```
 
-Here we make use of the fact that if a Python function does not explicitly
-return a value, it automatically returns `None`, so in the cases where the `if
-isinstance(n, Integer)` statement is not triggered, `eval` returns `None` and
-`versin` remains unevaluated.
-
 ```{note}
 
 `Function` subclasses should not redefine `__new__` or `__init__`. If you want
-to implement behavior that isn't possible with `eval`, it might make more
+to implement behavior that isn't possible with `eval()`, it might make more
 sense to subclass {class}`~.Expr` rather than `Function`.
 
 ```
 
-`eval` can take any number of arguments, including an arbitrary number with
+`eval()` can take any number of arguments, including an arbitrary number with
 `*args` and optional keyword arguments. The `.args` of the function will
 always be the arguments that were passed in by the user. For example
 
@@ -285,12 +299,14 @@ always be the arguments that were passed in by the user. For example
 ```
 
 Finally, note that automatic evaluation on floating-point inputs happens
-automatically once `evalf` is defined, so you do not need to handle it
-explicitly in `eval`. See the section on [defining numerical evaluation with
-`evalf`](custom-functions-evalf) below.
+automatically once [`evalf()` is defined](custom-functions-evalf), so you do
+not need to handle it explicitly in `eval()`.
 
 (custom-functions-eval-best-practices)=
-#### Best Practices for `eval`
+#### Best Practices for `eval()`
+
+Certain antipatterns are common when defining `eval()` methods and should be
+avoided.
 
 - **Don't just return an expression.**
 
@@ -301,7 +317,7 @@ explicitly in `eval`. See the section on [defining numerical evaluation with
   >>> class versin(Function):
   ...     @classmethod
   ...     def eval(cls, x):
-  ...         # Not actually a good eval() method
+  ...         # !! Not actually a good eval() method !!
   ...         return 1 - cos(x)
   ```
 
@@ -314,15 +330,19 @@ explicitly in `eval`. See the section on [defining numerical evaluation with
   behavior we define below would matter, because the other behaviors we are
   going to define on the `versin` class only apply when the returned object is
   actually a `versin` instance. So for example, `versin(x).diff(x)` would
-  actually just be `(1 - cos(x)).diff(x)`, instead of calling [the `fdiff`
+  actually just be `(1 - cos(x)).diff(x)`, instead of calling [the `fdiff()`
   method we define below](custom-functions-differentiation).
 
-  *The point of `eval` is not to define what the function is, mathematically,
-  but rather to specify on what inputs it should automatically evaluate.* The
-  mathematical definition of a function is determined through specifying
-  various mathematical properties with the methods outlined below, like
-  [numerical evaluation](custom-functions-evalf),
+  ```{admonition} Key Point
+
+  **The purpose of `eval()` is not to define what the function *is*,
+  mathematically, but rather to specify on what inputs it should automatically
+  evaluate.** The mathematical definition of a function is determined through
+  the specification of various mathematical properties with the methods
+  outlined below, like [numerical evaluation](custom-functions-evalf),
   [differentiation](custom-functions-differentiation), and so on.
+
+  ```
 
   If you find yourself doing this, you should think about what you actually
   want to achieve. If you just want a shorthand function for an expression, it
@@ -330,45 +350,53 @@ explicitly in `eval`. See the section on [defining numerical evaluation with
   function](custom-functions-fully-evaluated). If you really do want a
   symbolic function, think about when you want it to evaluate to something
   else and when you want it to stay unevaluated. One option is to make your
-  function unevaluated and define a [doit method](custom-functions-doit) to
-  evaluate it.
+  function unevaluated in `eval()` and define a [`doit()`
+  method](custom-functions-doit) to evaluate it.
 
 - **Avoid too much automatic evaluation.**
 
-  It is recommended to minimize what is evaluated automatically by `eval`. It
-  is typically better to put more advanced simplifications in [other methods
-  like `doit`](custom-functions-rewriting-and-simplification).
-  Remember that whatever you define for automatic evaluation will *always*
-  evaluate. It is technically possible to bypass automatic evaluation by using
-  `evaluate=False`, but this is fragile and tends to be bug prone because
-  other code may be written expecting the automatic evaluation to occur. As in
-  the previous point, if we evaluate every value, there is little point to
-  even having a symbolic function in the first place. For example, we might be
-  tempted to evaluate some trig identities on `versin` in `eval`, but then
+  It is recommended to minimize what is evaluated automatically by `eval()`.
+  It is typically better to put more advanced simplifications in [other
+  methods](custom-functions-rewriting-and-simplification), like
+  [`doit()`](custom-functions-doit). Remember that whatever you define for
+  automatic evaluation will *always* evaluate.[^evaluate-footnote] As in the
+  previous point, if you evaluate every value, there is little point to even
+  having a symbolic function in the first place. For example, we might be
+  tempted to evaluate some trig identities on `versin` in `eval()`, but then
   these identities would always evaluate, and it wouldn't be possible to
   represent one half of the identity.
 
-  One should also avoid doing anything in `eval` that is slow to compute.
+  [^evaluate-footnote]: While it is technically possible to bypass automatic
+      evaluation by using `evaluate=False`, this is recommended against for
+      two reasons. Firstly, `evaluate=False` is fragile because any function
+      that rebuilds the expression from its `.args` will not keep the
+      `evaluate=False` flag, causing it to evaluate. Secondly,
+      `evaluate=False` tends to be bug prone, because other code may be
+      written expecting the invariants from the automatic evaluation to hold.
+      It is much better to not evaluate such cases at all in `eval()`, and
+      move such simplifications to [`doit()`](custom-functions-doit) instead.
+
+  One should also avoid doing anything in `eval()` that is slow to compute.
   SymPy generally assumes that it is cheap to create expressions, and if this
   is not true, it can lead to performance issues.
 
   Finally, it is recommended to avoid performing automatic evaluation in
-  `eval` based on assumptions. Instead, `eval` should typically only evaluate
-  explicit numerical special values and return `None` for everything else. You
-  might have noticed in [the example
+  `eval()` based on assumptions. Instead, `eval()` should typically only
+  evaluate explicit numerical special values and return `None` for everything
+  else. You might have noticed in [the example
   above](custom-functions-versin-eval-example) that we used `isinstance(n,
   Integer)` instead of checking `n.is_integer` using the assumptions system.
   We could have done that instead, which would make `versin(n*pi)` evaluate
   even if `n = Symbol('n', integer=True)`. But this is a case where we might
   not always want evaluation to happen, and if `n` is a more complicated
-  expression, `n.is_integer` might take more time to compute.
+  expression, `n.is_integer` might be more expensive to compute.
 
 - **When restricting the input domain: allow `None` input assumptions.**
 
-  Our example function $\operatorname{versin}$ is a function from $\mathbb{C}$
-  to $\mathbb{C}$, so it can accept any input. But suppose we had a function
-  that only made sense with certain inputs. As a second example, let's define
-  a function `divides` as
+  Our example function $\operatorname{versin}(x)$ is a function from
+  $\mathbb{C}$ to $\mathbb{C}$, so it can accept any input. But suppose we had
+  a function that only made sense with certain inputs. As a second example,
+  let's define a function `divides` as
 
   (custom-functions-divides)=
 
@@ -378,15 +406,18 @@ explicitly in `eval`. See the section on [defining numerical evaluation with
   That is, `divides(m, n)` will be `1` if `m` divides `n` and `0` otherwise.
   `divides` clearly only makes sense if `m` and `n` are integers.
 
-  We might want to define the `eval` method for `divides` like this:
+  We might be tempted to define the `eval()` method for `divides` like this:
 
   ```py
   >>> class divides(Function):
   ...     @classmethod
   ...     def eval(cls, m, n):
+  ...         # !! Not actually a good eval() method !!
+  ...
   ...         # Evaluate for explicit integer m and n. This part is fine.
   ...         if isinstance(m, Integer) and isinstance(n, Integer):
   ...             return int(n % m == 0)
+  ...
   ...         # For symbolic arguments, require m and n to be integer.
   ...         # If we write the logic this way, we will run into trouble.
   ...         if not m.is_integer or not n.is_integer:
@@ -402,6 +433,8 @@ explicitly in `eval`. See the section on [defining numerical evaluation with
 
   ```py
   >>> n, m = symbols('n m')
+  >>> print(n.is_integer)
+  None
   >>> divides(m, n)
   Traceback (most recent call last):
   ...
@@ -446,7 +479,6 @@ explicitly in `eval`. See the section on [defining numerical evaluation with
   variables, that is, fail if the assumption is `False` but allow the
   assumption to be `None`.
 
-
   ```py
   >>> class divides(Function):
   ...     @classmethod
@@ -454,6 +486,7 @@ explicitly in `eval`. See the section on [defining numerical evaluation with
   ...         # Evaluate for explicit integer m and n. This part is fine.
   ...         if isinstance(m, Integer) and isinstance(n, Integer):
   ...             return int(n % m == 0)
+  ...
   ...         # For symbolic arguments, require m and n to be integer.
   ...         # This is the better way to write this logic.
   ...         if m.is_integer is False or n.is_integer is False:
@@ -481,11 +514,15 @@ explicitly in `eval`. See the section on [defining numerical evaluation with
   divides(m, n)
   ```
 
-  Note that this rule of allowing `None` assumptions only applies to instances
+  ```{note}
+
+  This rule of allowing `None` assumptions only applies to instances
   where an exception would be raised, such as type checking an input domain.
-  In cases where simplifications are done, one should treat a `None`
-  assumption as meaning "can be either `True` or `False`" and not perform a
-  simplification that might not be mathematically valid.
+  In cases where simplifications or other operations are done, one should
+  treat a `None` assumption as meaning "can be either `True` or `False`" and
+  not perform an operation that might not be mathematically valid.
+
+  ```
 
 (custom-functions-assumptions)=
 ### Assumptions
@@ -502,11 +539,22 @@ guide first to understand what the different assumptions mean and how the
 assumptions system works.
 
 The simplest case is a function that always has a given assumption regardless
-of its input. For example, the `divides` example we [showed
-above](custom-functions-divides) is always an integer, because its
-value is always either 0 or 1. In this case, you can define <code
-class="docutils literal notranslate"><span
-class="pre">is_*assumption*</span></code> directly on the class.
+of its input. In this case, you can define <code class="docutils
+literal notranslate"><span class="pre">is_*assumption*</span></code> directly
+on the class.
+
+For example, the `divides` function [defined above](custom-functions-divides)
+is always an integer, because its value is always either 0 or 1.
+
+```{note}
+
+From here on out in this guide, in the interest of space, we will omit the
+previous method definitions in the examples unless they are needed for the
+given example to work. There are [complete
+examples](custom-functions-complete-examples) with all methods included at the
+end of this guide.
+
+```
 
 ```py
 >>> class divides(Function):
@@ -519,16 +567,6 @@ class="pre">is_*assumption*</span></code> directly on the class.
 True
 >>> divides(m, n).is_nonnegative
 True
-```
-
-```{note}
-
-From here on out in this guide, in the interest of space, we will omit the
-previous method definitions in the examples unless they are needed for the
-given example to work. There are [complete
-examples](custom-functions-complete-examples) with all methods included at the
-end of this guide.
-
 ```
 
 In general, however, the assumptions of a function depend on the assumptions
@@ -564,11 +602,11 @@ arguments of the function using `self.args`.
 True
 ```
 
-Note the use of `fuzzy_` functions in the more complicated `_eval_is_positive`
+Note the use of `fuzzy_` functions in the more complicated `_eval_is_positive()`
 handler. It is important when working with assumptions to always be careful
 about [handling three-valued logic correctly](booleans-guide).
 
-It is not necessary to define `_eval_is_real` because it is deduced automatically
+It is not necessary to define `_eval_is_real()` because it is deduced automatically
 from the other assumptions, since `nonnegative -> real`. In general, you
 should avoid defining assumptions that the assumptions system can deduce
 automatically given its [known facts](assumptions-guide-predicates).
@@ -601,15 +639,15 @@ cases whenever your function has a nontrivial assumption handler. All
 functions defined in SymPy itself are required to be extensively tested.
 
 (custom-functions-evalf)=
-### Numerical Evaluation with `evalf`
+### Numerical Evaluation with `evalf()`
 
 <!-- TODO: this goes over the basics, but it might be useful to have a
      separate guide dedicated to numerical evaluation. -->
 
 Here we show how to define how to define how a function should numerically
 evaluate to a floating point {class}`~.Float` value, for instance, via
-`evalf`. Implementing numerical evaluation enables several behaviors in SymPy.
-For example, once `evalf` is defined, you can plot your function, and things
+`evalf()`. Implementing numerical evaluation enables several behaviors in SymPy.
+For example, once `evalf()` is defined, you can plot your function, and things
 like inequalities can evaluate to explicit values.
 
 If your function has the same name as a function in
@@ -624,11 +662,11 @@ The method should return the expression evaluated to the given precision, or
 
 ```{note}
 
-The `prec` argument to `_eval_evalf` is the *binary* precision, that is, the
+The `prec` argument to `_eval_evalf()` is the *binary* precision, that is, the
 number of bits in the floating-point representation. This differs from the
-first argument to the `evalf` method, which is the *decimal* precision, or
+first argument to the `evalf()` method, which is the *decimal* precision, or
 `dps`. For example, the default binary precision of `Float` is 53,
-corresponding to a decimal precision of 15. Therefore, when your `_eval_evalf`
+corresponding to a decimal precision of 15. Therefore, when your `_eval_evalf()`
 method recursively calls evalf on another expression, it should call
 `expr._eval_evalf(prec)` rather than `expr.evalf(prec)`, as the latter will
 incorrectly use `prec` as the decimal precision.
@@ -651,9 +689,9 @@ numerically stable way of writing $1 - \cos(x)$.
 0.459697694131860
 ```
 
-Once `_eval_evalf` is defined, this enables the automatic evaluation of
+Once `_eval_evalf()` is defined, this enables the automatic evaluation of
 floating-point inputs. It is not required to implement this manually in
-[`eval`](custom-functions-eval).
+[`eval()`](custom-functions-eval).
 
 ```py
 >>> versin(1.)
@@ -663,10 +701,10 @@ floating-point inputs. It is not required to implement this manually in
 <!-- TODO: Mention _should_evalf() here? Seems like something most people
      shouldn't mess with. -->
 
-Note that `evalf` may be passed any expression, not just one that can be
+Note that `evalf()` may be passed any expression, not just one that can be
 evaluated numerically. In this case, it is expected that the numerical parts
 of an expression will be evaluated. A general pattern to follow is to
-recursively call `_eval_evalf` on the arguments of the function.
+recursively call `_eval_evalf()` on the arguments of the function.
 
 Whenever possible, it's best to reuse the evalf functionality defined in
 existing SymPy functions. However, in some cases it will be necessary to use
@@ -691,7 +729,7 @@ To implement rewriting, define a method `_eval_rewrite(self, rule, args,
 
 - `rule` is the *rule* passed to the rewrite() method. Typically `rule` will
   be the class of the object to be rewritten to, although for more complex
-  rewrites, it can be anything. Each object that defines `_eval_rewrite`
+  rewrites, it can be anything. Each object that defines `_eval_rewrite()`
   defines what rule(s) it supports. Rewrite rules to common SymPy functions
   may be used inside of SymPy functions to perform other simplifications or
   computations.
@@ -703,7 +741,7 @@ To implement rewriting, define a method `_eval_rewrite(self, rule, args,
 
 - `**hints` are additional keyword arguments which may be used to specify the
   behavior of the rewrite. Unknown hints should be ignored as they may be
-  passed to other `_eval_rewrite` methods.
+  passed to other `_eval_rewrite()` methods.
 
 
 The function should return a rewritten expression, using `args` as the
@@ -744,30 +782,30 @@ users are better off just defining rewrite(), doit(), and/or expand().
 #### doit()
 
 The {meth}`doit() <sympy.core.basic.Basic.doit>` method is used to evaluate
-"unevaluated" functions. To define `doit` implement `doit(self, deep=True,
-**hints)`. If `deep=True`, `doit` should recursively call doit on the
+"unevaluated" functions. To define `doit()` implement `doit(self, deep=True,
+**hints)`. If `deep=True`, `doit()` should recursively call doit on the
 arguments. `**hints` will be any other keyword arguments passed to the user,
-which should be passed to any recursive calls to `doit`. You can use `hints`
-to allow the user to specify specific behavior for `doit`.
+which should be passed to any recursive calls to `doit()`. You can use `hints`
+to allow the user to specify specific behavior for `doit()`.
 
-The typical usage of `doit` in custom `Function` subclasses is to perform more
-advanced evaluation which is not performed in [`eval`](custom-functions-eval).
+The typical usage of `doit()` in custom `Function` subclasses is to perform more
+advanced evaluation which is not performed in [`eval()`](custom-functions-eval).
 
 For example, for our [`divides` example](custom-functions-divides),
 there are several instances that could be simplified using some identities.
-For example, we defined `eval` to evaluate on explicit integers, but we might
+For example, we defined `eval()` to evaluate on explicit integers, but we might
 also want to evaluate examples like `divides(k, k*n)` where the divisibility
 is symbolically true. One of the [best practices for
-`eval`](custom-functions-eval-best-practices) is to avoid too much automatic
+`eval()`](custom-functions-eval-best-practices) is to avoid too much automatic
 evaluation. Automatically evaluating in this case might be considered too
 much, as it would make use of the assumptions system, which could be
 expensive. Furthermore, we might want to be able to represent `divides(k,
 k*n)` without it always evaluating.
 
-The solution is to implement these more advanced evaluations in `doit`. That
+The solution is to implement these more advanced evaluations in `doit()`. That
 way, we can explicitly perform them by calling `expr.doit()`, but they won't
-happen by default. An example `doit` for `divides` that performs this
-simplification (along with the above definition of `eval`) might look like
+happen by default. An example `doit()` for `divides` that performs this
+simplification (along with the above definition of `eval()`) might look like
 this:
 
 ```
@@ -810,7 +848,7 @@ divides(k, k*n)
 1
 ```
 
-Another option is for `doit` to always return another expression. This
+Another option is for `doit()` to always return another expression. This
 effectively treats the function as an "unevaluated" form of another
 expression.
 
@@ -852,7 +890,7 @@ FMA(x, y, z)
 x*y + z
 ```
 
-Most custom functions will not want to define `doit` in this way. However,
+Most custom functions will not want to define `doit()` in this way. However,
 this can provide a happy medium between having a function that always
 evaluates and a function that never evaluates, producing a function that
 doesn't evaluate by default but can be evaluated on demand (see the
@@ -903,7 +941,7 @@ using its own `deep` flag, so  `_eval_expand_*` methods should not
 recursively call expand on the arguments of the function.
 
 For our `versin` example, we can define rudimentary `trig` expansion by
-recursively calling `expand_trig` on `1 - cos(x)`:
+recursively calling `expand_trig()` on `1 - cos(x)`:
 
 ```
 >>> from sympy import expand_trig
@@ -923,22 +961,22 @@ exercise for the reader.
 (custom-functions-differentiation)=
 ### Differentiation
 
-To define differentiation via {func}`~.diff`, define a method `fdiff` on the
-class with an argument `argindex`. `fdiff` should return the derivative of the
+To define differentiation via {func}`~.diff`, define a method `fdiff()` on the
+class with an argument `argindex`. `fdiff()` should return the derivative of the
 function without considering the chain rule, with respect to the `argindex`-th
 variable. `argindex` is indexed starting at `1`.
 
 That is, `f(x1, ..., xi, ..., xn).fdiff(i)` should return $\frac{d}{d x_i}
 f(x_1, \ldots, x_i, \ldots, x_n)$, where $x_k$ are independent of one another.
-`diff` will automatically apply the chain rule using the result of `fdiff`.
-User code should use `diff` and not call `fdiff` directly.
+`diff()` will automatically apply the chain rule using the result of `fdiff()`.
+User code should use `diff()` and not call `fdiff()` directly.
 
 ```{note}
 
-`Function` subclasses should define differentiation using `fdiff`. Subclasses
-of {class}`~.Expr` that aren't `Function` subclasess will need to define
-`_eval_derivative` instead. It is not recommended to redefine
-`_eval_derivative` on a `Function` subclass.
+`Function` subclasses should define differentiation using `fdiff()`. Subclasses
+of {class}`~.Expr` that aren't `Function` subclasses will need to define
+`_eval_derivative()` instead. It is not recommended to redefine
+`_eval_derivative()` on a `Function` subclass.
 
 ```
 
@@ -967,7 +1005,7 @@ $$\frac{d}{dx} \operatorname{FMA}(x, y, z) = y,$$
 $$\frac{d}{dy} \operatorname{FMA}(x, y, z) = x,$$
 $$\frac{d}{dz} \operatorname{FMA}(x, y, z) = 1.$$
 
-So the `fdiff` method for `FMA` would look like this
+So the `fdiff()` method for `FMA` would look like this
 
 ```py
 >>> from sympy import Number, symbols
@@ -1002,7 +1040,7 @@ given below.
 
 To leave a derivative unevaluated, raise
 `sympy.core.function.ArgumentIndexError(self, argindex)`. This is the default
-behavior if `fdiff` is not defined. Here is an example function $f(x, y)$ that
+behavior if `fdiff()` is not defined. Here is an example function $f(x, y)$ that
 is linear in the first argument and has an unevaluated derivative on the
 second argument.
 
@@ -1092,15 +1130,15 @@ of a custom printer.
 
 Several other methods can be defined on custom functions to specify various behaviors.
 
-#### `inverse`
+#### `inverse()`
 
 The `inverse(self, argindex=1)` method can be defined to specify the inverse
 of the function. This is used by {func}`~.solve` and {func}`~.solveset`. The
 `argindex` argument is the argument of the function, starting at 1 (similar to
-the same argument name for the [`fdiff`
+the same argument name for the [`fdiff()`
 method](custom-functions-differentiation).
 
-`inverse` should return a function (not an expression) for the inverse. If the
+`inverse()` should return a function (not an expression) for the inverse. If the
 inverse is a larger expression than a single function, it can return a
 `lambda` function.
 
@@ -1130,20 +1168,20 @@ This makes `solve()` work on `aversin(x)`:
 [versin(y)]
 ```
 
-#### `as_real_imag`
+#### `as_real_imag()`
 
 The method {meth}`as_real_imag(self, deep=True, **hints)
 <sympy.core.expr.Expr.as_real_imag>` should return a 2-tuple containing the
 real part and imaginary part of the function. That is `expr.as_real_imag()`
 returns `(re(expr), im(expr))`, where `expr == re(expr) + im(expr)*I`.
 
-If `deep=True`, it should recursively call `as_real_imag` on its arguments. As
+If `deep=True`, it should recursively call `as_real_imag()` on its arguments. As
 with [`doit()`](custom-functions-doit) and [the `_eval_expand_*()`
 methods](custom-functions-expand), `**hints` may be any hints to allow the
 user to specify the behavior of the method. They should be passed through on
 recursive calls.
 
-For our `versin` example, we can recursively use the `as_real_imag` that is
+For our `versin` example, we can recursively use the `as_real_imag()` that is
 already defined for `1 - cos(x)`.
 
 ```py
@@ -1334,7 +1372,7 @@ divide `m`. It is only defined for integer `m` and `n`. The convention $m \mid
 
 `divides` is an example of a function that is only defined for certain input
 values (integers). `divides` also gives an example of defining a custom
-printer (`_latex`).
+printer (`_latex()`).
 
 #### Definition
 
@@ -1362,6 +1400,7 @@ printer (`_latex`).
 ...         # Evaluate for explicit integer m and n.
 ...         if isinstance(m, Integer) and isinstance(n, Integer):
 ...             return int(n % m == 0)
+...
 ...         # For symbolic arguments, require m and n to be integer.
 ...         if m.is_integer is False or n.is_integer is False:
 ...             raise TypeError("m and n should be integers")
@@ -1458,7 +1497,7 @@ evaluate on general symbolic inputs in `versin.eval()`, and `versin.doit()` is
 not defined at all.
 
 `FMA` also represents an example of a continuous function defined on multiple
-variables, which demonstrates how `argindex` works in the
+vriables, which demonstrates how `argindex` works in the
 [`fdiff`](custom-functions-differentiation) example.
 
 The mathematical definition of FMA is very simple and it would be easy to
