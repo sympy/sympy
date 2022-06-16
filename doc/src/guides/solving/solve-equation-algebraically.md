@@ -2,7 +2,11 @@
 
 Use SymPy to solve an equation algebraically. For example, solving $x^2 = 4$ yields $x \in \{-2,2\}$.
 
+There are two high-level functions to solve equations, [`solve`](#) and [`solveset`](#). Here are their advantages and disadvantages: ... *table?*
+
 ## Using {func}`~.solve`
+
+{func}`~.solve` is best for solving equations that...
 
 You can solve an equation using {func}`~.solve` in several ways.
 
@@ -34,6 +38,10 @@ You can solve an equation using {func}`~.solve` in several ways.
 >>> solve(parsed)
 [-2, 2]
 ```
+
+## Using {func}`~.solveset`
+
+{func}`~.solveset` is best for solving equations that...
 
 ## Not all equations can be solved algebraically
 
