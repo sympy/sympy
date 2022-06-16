@@ -285,8 +285,9 @@ always be the arguments that were passed in by the user. For example
 ```
 
 Finally, note that automatic evaluation on floating-point inputs happens
-automatically once `evalf` is defined. See the section on [defining numerical
-evaluation with `evalf`](custom-functions-evalf) below.
+automatically once `evalf` is defined, so you do not need to handle it
+explicitly in `eval`. See the section on [defining numerical evaluation with
+`evalf`](custom-functions-evalf) below.
 
 (custom-functions-eval-best-practices)=
 #### Best Practices for `eval`
@@ -336,7 +337,7 @@ evaluation with `evalf`](custom-functions-evalf) below.
 
   It is recommended to minimize what is evaluated automatically by `eval`. It
   is typically better to put more advanced simplifications in [other methods
-  like `doit` or `simplify`](custom-functions-rewriting-and-simplification).
+  like `doit`](custom-functions-rewriting-and-simplification).
   Remember that whatever you define for automatic evaluation will *always*
   evaluate. It is technically possible to bypass automatic evaluation by using
   `evaluate=False`, but this is fragile and tends to be bug prone because
@@ -369,7 +370,7 @@ evaluation with `evalf`](custom-functions-evalf) below.
   that only made sense with certain inputs. As a second example, let's define
   a function `divides` as
 
-  (custom-functions-divides-example)=
+  (custom-functions-divides)=
 
   $$\operatorname{divides}(m, n) = \begin{cases} 1 & \text{for}\: m \mid n \\
   0 & \text{for}\: m\not\mid n  \end{cases}.$$
@@ -480,6 +481,12 @@ evaluation with `evalf`](custom-functions-evalf) below.
   divides(m, n)
   ```
 
+  Note that this rule of allowing `None` assumptions only applies to instances
+  where an exception would be raised, such as type checking an input domain.
+  In cases where simplifications are done, one should treat a `None`
+  assumption as meaning "can be either `True` or `False`" and not perform a
+  simplification that might not be mathematically valid.
+
 (custom-functions-assumptions)=
 ### Assumptions
 
@@ -496,7 +503,7 @@ assumptions system works.
 
 The simplest case is a function that always has a given assumption regardless
 of its input. For example, the `divides` example we [showed
-above](custom-functions-divides-example) is always an integer, because its
+above](custom-functions-divides) is always an integer, because its
 value is always either 0 or 1. In this case, you can define <code
 class="docutils literal notranslate"><span
 class="pre">is_*assumption*</span></code> directly on the class.
@@ -743,19 +750,106 @@ arguments. `**hints` will be any other keyword arguments passed to the user,
 which should be passed to any recursive calls to `doit`. You can use `hints`
 to allow the user to specify specific behavior for `doit`.
 
-For example, suppose we wanted to treat our `versin` function as simply a
-placeholder for `1 - cos(x)`, which we intend to replace with the full `1 -
-cos(x)` after doing some calculations.
+The typical usage of `doit` in custom `Function` subclasses is to perform more
+advanced evaluation which is not performed in [`eval`](custom-functions-eval).
 
-```py
->>> class versin(Function):
-...    def doit(self, deep=True, **hints):
-...        x = self.args[0]
-...        if deep:
-...           x = x.doit(deep=deep, **hints)
-...        return 1 - cos(x)
->>> versin(x).doit()
-1 - cos(x)
+For example, for our [`divides` example](custom-functions-divides),
+there are several instances that could be simplified using some identities.
+For example, we defined `eval` to evaluate on explicit integers, but we might
+also want to evaluate examples like `divides(k, k*n)` where the divisibility
+is symbolically true. One of the [best practices for
+`eval`](custom-functions-eval-best-practices) is to avoid too much automatic
+evaluation. Automatically evaluating in this case might be considered too
+much, as it would make use of the assumptions system, which could be
+expensive. Furthermore, we might want to be able to represent `divides(k,
+k*n)` without it always evaluating.
+
+The solution is to implement these more advanced evaluations in `doit`. That
+way, we can explicitly perform them by calling `expr.doit()`, but they won't
+happen by default. An example `doit` for `divides` that performs this
+simplification (along with the above definition of `eval`) might look like
+this:
+
+```
+>>> class divides(Function):
+...     @classmethod
+...     def eval(cls, m, n):
+...         # Evaluate for explicit integer m and n.
+...         if isinstance(m, Integer) and isinstance(n, Integer):
+...             return int(n % m == 0)
+...         # For symbolic arguments, require m and n to be integer.
+...         if m.is_integer is False or n.is_integer is False:
+...             raise TypeError("m and n should be integers")
+...
+...     # Define doit() as further evaluation on symbolic arguments using
+...     # assumptions.
+...     def doit(self, deep=False, **hints):
+...         m, n = self.args
+...         if deep:
+...            m, n = m.doit(deep=deep, **hints), n.doit(deep=deep, **hints)
+...         isint = (n/m).is_integer
+...         if isint is True:
+...             return 1
+...         elif isint is False:
+...             return 0
+...         else:
+...             return divides(m, n)
+```
+
+Note that this uses the
+[convention](https://en.wikipedia.org/wiki/Divisor#Definition) that $k \mid 0$
+for all $k$ so that we do not need to check if `m` or `n` are nonzero If we
+used a different convention we would need to check if `m.is_zero` and
+`n.is_zero` before performing the simplification.
+
+```
+>>> n, m, k = symbols('n m k', integer=True)
+>>> divides(k, k*n)
+divides(k, k*n)
+>>> divides(k, k*n).doit()
+1
+```
+
+Another option is for `doit` to always return another expression. This
+effectively treats the function as an "unevaluated" form of another
+expression.
+
+(custom-functions-fma)=
+
+For example, let's define a function for [fused
+multiply-add](https://en.wikipedia.org/w/index.php?title=Fused_multiply_add):
+$\operatorname{FMA}(x, y, z) = xy + z$. It may be useful to express this
+function as a separate option, e.g., for the purposes of code generation, but
+it would also be useful in some contexts to "evaluate" `FMA(x, y, z)` to
+`x*y + z` so that it can properly simplify with other expressions.
+
+```
+>>> from sympy import Number
+>>> class FMA(Function):
+...     """
+...     FMA(x, y, z) = x*y + z
+...     """
+...     @classmethod
+...     def eval(cls, x, y, z):
+...         # Number is the base class of Integer, Rational, and Float
+...         if all(isinstance(i, Number) for i in [x, y, z]):
+...            return x*y + z
+...
+...     def doit(self, deep=True, **hints):
+...         x, y, z = self.args
+...         if deep:
+...             x = x.doit(deep=deep, **hints)
+...             y = y.doit(deep=deep, **hints)
+...             z = z.doit(deep=deep, **hints)
+...         return x*y + z
+```
+
+```
+>>> x, y, z = symbols('x y z')
+>>> FMA(x, y, z)
+FMA(x, y, z)
+>>> FMA(x, y, z).doit()
+x*y + z
 ```
 
 Most custom functions will not want to define `doit` in this way. However,
@@ -864,10 +958,8 @@ sin(x)
 2*x*sin(x**2)
 ```
 
-As an example of a function that has multiple arguments, let's define a
-function for [fused
-multiply-add](https://en.wikipedia.org/w/index.php?title=Fused_multiply_add):
-$\operatorname{FMA}(x, y, z) = xy + z$.
+As an example of a function that has multiple arguments, consider the [fused
+multiply-add (FMA)](custom-functions-fma) example defined above ($\operatorname{FMA}(x, y, z) = xy + z$).
 
 We have
 
@@ -905,8 +997,8 @@ x
 x**2 + 2*x*(x + 1)
 ```
 
-A [more complete example for `FMA`](custom-functions-example-fma) is given
-below.
+A [more complete example for `FMA`](custom-functions-fma-full-example) is
+given below.
 
 To leave a derivative unevaluated, raise
 `sympy.core.function.ArgumentIndexError(self, argindex)`. This is the default
@@ -955,7 +1047,7 @@ behavior is to print functions using their name. However, in some cases we may
 want to define special printing for a function.
 
 For example, for our [divides example
-above](custom-functions-divides-example), we may want the LaTeX printer to
+above](custom-functions-divides), we may want the LaTeX printer to
 print a more mathematical expression. Let's make it print `divides(m, n)` as
 `\left [ m \middle | n \right ]`, which looks like $\left [ m \middle | n
 \right ]$ (here $[P]$ is the [Iverson
@@ -1082,15 +1174,27 @@ how define each method.
 ## Complete Examples
 
 Here are complete examples for the example functions defined in this guide.
+See the above sections for details on each method.
 
+(custom-functions-versine-full-example)=
 ### Versine
+
+The versine (versed sine) function is defined as
+
+$$\operatorname{versin}(x) = 1 - \cos(x).$$
+
+Versine is an example of a simple function defined for all complex numbers.
+The mathematical definition is simple, which makes it straightforward to
+define all the above methods on it.
+
+#### Definition
 
 ```
 >>> from sympy import Function, cos, expand_trig, Integer, pi, sin
 >>> from sympy.core.logic import fuzzy_and, fuzzy_not
 >>> class versin(Function):
-...     """
-...     The versine function
+...     r"""
+...     The versine function.
 ...
 ...     $\operatorname{versin}(x) = 1 - \cos(x) = 2\sin(x/2)^2.$
 ...
@@ -1106,16 +1210,20 @@ Here are complete examples for the example functions defined in this guide.
 ...     .. [1] https://en.wikipedia.org/wiki/Versine
 ...     .. [2] https://blogs.scientificamerican.com/roots-of-unity/10-secret-trig-functions-your-math-teachers-never-taught-you/
 ...     """
+...     # Define evaluation on basic inputs.
 ...     @classmethod
 ...     def eval(cls, x):
-...         # If x is an integer multiple of pi, x/pi will cancel and be an Integer
+...         # If x is an explicit integer multiple of pi, x/pi will cancel and
+...         # be an Integer.
 ...         n = x/pi
 ...         if isinstance(n, Integer):
 ...             return 1 - (-1)**n
 ...
+...     # Define numerical evaluation with evalf().
 ...     def _eval_evalf(self, prec):
 ...         return (2*sin(self.args[0]/2)**2)._eval_evalf(prec)
 ...
+...     # Define basic assumptions.
 ...     def _eval_is_nonnegative(self):
 ...         x = self.args[0]
 ...         # versin(x) is nonnegative if x is real
@@ -1126,18 +1234,13 @@ Here are complete examples for the example functions defined in this guide.
 ...         # versin(x) is positive if x is real and not an even multiple of pi
 ...         return fuzzy_and([x.is_real, fuzzy_not((x/pi).is_even)])
 ...
+...     # Define the behavior for various simplification and rewriting
+...     # functions.
 ...     def _eval_rewrite(self, rule, args, **hints):
 ...         if rule == cos:
 ...             return 1 - cos(*args)
 ...         elif rule == sin:
 ...             return 2*sin(x/2)**2
-...
-...     # You may or may not choose to implement doit() like this. See above.
-...     # def doit(self, deep=True, **hints):
-...     #     x = self.args[0]
-...     #     if deep:
-...     #        x = x.doit(deep=deep, **hints)
-...     #     return 1 - cos(x)
 ...
 ...     def _eval_expand_trig(self, **hints):
 ...         x = self.args[0]
@@ -1147,6 +1250,7 @@ Here are complete examples for the example functions defined in this guide.
 ...         # reuse _eval_rewrite(cos) defined above
 ...         return self.rewrite(cos).as_real_imag(deep=deep, **hints)
 ...
+...     # Define differentiation.
 ...     def fdiff(self, argindex=1):
 ...         return sin(self.args[0])
 ```
@@ -1217,11 +1321,42 @@ as well)
 [-sqrt(versin(y)), sqrt(versin(y))]
 ```
 
+(custom-functions-divides-full-example)=
 ### divides
+
+divides is a function defined by
+$$\operatorname{divides}(m, n) = \begin{cases} 1 & \text{for}\: m \mid n \\
+  0 & \text{for}\: m\not\mid n  \end{cases},$$
+
+that is, `divides(m, n)` is 1 if `m` divides `n` and `0` if `m` does not
+divide `m`. It is only defined for integer `m` and `n`. The convention $m \mid
+0$ for all integer $m$ is used.
+
+`divides` is an example of a function that is only defined for certain input
+values (integers). `divides` also gives an example of defining a custom
+printer (`_latex`).
+
+#### Definition
 
 ```
 >>> from sympy import Function, Integer
+>>> from sympy.core.logic import fuzzy_not
 >>> class divides(Function):
+...     r"""
+...     $$\operatorname{divides}(m, n) = \begin{cases} 1 & \text{for}\: m \mid n \\ 0 & \text{for}\: m\not\mid n  \end{cases}.$$
+...
+...     That is, ``divides(m, n)`` is ``1`` if ``m`` divides ``n`` and ``0``
+...     if ``m`` does not divide ``n`. It is undefined if ``m`` or ``n`` are
+...     not integers. For simplicity, the convention is used that
+...     ``divides(m, 0) = 1`` for all integers ``m``.
+...
+...     References
+...     ==========
+...
+...     .. [1] https://en.wikipedia.org/wiki/Divisor#Definition
+...     """
+...     # Define evaluation on basic inputs, as well as type checking that the
+...     # inputs are not nonintegral.
 ...     @classmethod
 ...     def eval(cls, m, n):
 ...         # Evaluate for explicit integer m and n.
@@ -1231,8 +1366,19 @@ as well)
 ...         if m.is_integer is False or n.is_integer is False:
 ...             raise TypeError("m and n should be integers")
 ...
+...     # Define basic assumptions.
+...
+...     # divides is always either 0 or 1.
 ...     is_integer = True
 ...     is_negative = False
+...
+...     # Whether divides(m, n) is 0 or 1 depends on m and n. Note that this
+...     # method only makes sense because we don't automatically evaluate on
+...     # such cases, but instead simplify these cases in doit() below.
+...     def _eval_is_zero(self):
+...         m, n = self.args
+...         if m.is_integer and n.is_integer:
+...              return fuzzy_not((n/m).is_integer)
 ...
 ...     # Define doit() as further evaluation on symbolic arguments using
 ...     # assumptions.
@@ -1248,11 +1394,13 @@ as well)
 ...         else:
 ...             return divides(m, n)
 ...
-...     # Define some printing methods
+...     # Define LaTeX printing for use with the latex() function and the
+...     # Jupyter notebook.
 ...     def _latex(self, printer):
 ...         m, n = self.args
 ...         _m, _n = printer._print(m), printer._print(n)
 ...         return r'\left [ %s \middle | %s \right ]' % (_m, _n)
+...
 ```
 
 #### Examples
@@ -1270,6 +1418,8 @@ as well)
 True
 >>> divides(k, 2*k)
 divides(k, 2*k)
+>>> divides(k, 2*k).is_zero
+False
 >>> divides(k, 2*k).doit()
 1
 ```
@@ -1284,22 +1434,88 @@ divides(k, 2*k)
 ```
 
 
-(custom-functions-example-fma)=
-### Fused Multiply-Add
+(custom-functions-fma-full-example)=
+### Fused Multiply-Add (FMA)
+
+[Fused Multiply-Add
+(FMA)](https://en.wikipedia.org/wiki/Multiply%E2%80%93accumulate_operation#Fused_multiply%E2%80%93add)
+is a multiplication followed by an addition:
+
+$$\operatorname{FMA}(x, y, z) = xy + z.$$
+
+It is often implemented in hardware as a single floating-point operation that
+has better rounding and performance than the equivalent combination of
+multiplication and addition operations.
+
+FMA is an example of a custom function that is defined as a "shorthand" to
+another function. This is because the [`doit()`](custom-functions-doit) method
+is defined to return `x*y + z`, meaning the `FMA` function can easily be
+"evaluated" to the expression is represents. Contrast this with the
+[versine](custom-functions-versine-full-example) example, which treats
+`versin` as a first-class function in its own regard. Even though `versin(x)`
+can be expressed in terms of other functions (`1 - cos(x)`) it does not
+evaluate on general symbolic inputs in `versin.eval()`, and `versin.doit()` is
+not defined at all.
+
+`FMA` also represents an example of a continuous function defined on multiple
+variables, which demonstrates how `argindex` works in the
+[`fdiff`](custom-functions-differentiation) example.
+
+The mathematical definition of FMA is very simple and it would be easy to
+define every method on it, but only a handful are shown here. See
+the [versine](custom-functions-versine-full-example) and
+[divides](custom-functions-divides-full-example) examples show how to define
+the other important methods discussed in this guide.
+
+#### Definition
 
 ```py
->>> from sympy import Number, symbols
+>>> from sympy import Number, symbols, Add, Mul
 >>> x, y, z = symbols('x y z')
 >>> class FMA(Function):
 ...     """
 ...     FMA(x, y, z) = x*y + z
+...
+...     FMA is often defined as a single operation in hardware for better
+...     rounding and performance.
+...
+...     FMA can be evaluated by using the doit() method.
+...
+...     References
+...     ==========
+...
+...     .. [1] https://en.wikipedia.org/wiki/Multiply%E2%80%93accumulate_operation#Fused_multiply%E2%80%93add
 ...     """
+...     # Define automatic evaluation on explicit numbers
 ...     @classmethod
 ...     def eval(cls, x, y, z):
 ...         # Number is the base class of Integer, Rational, and Float
 ...         if all(isinstance(i, Number) for i in [x, y, z]):
 ...            return x*y + z
 ...
+...     # Define numerical evaluation with evalf().
+...     def _eval_evalf(self, prec):
+...         return self.doit(deep=False)._eval_evalf(prec)
+...
+...     # Define full evaluation to Add and Mul in doit(). This effectively
+...     # treats FMA(x, y, z) as just a shorthand for x*y + z that is useful
+...     # to have as a separate expression in some contexts and which can be
+...     # evaluated to its expanded form in other contexts.
+...     def doit(self, deep=True, **hints):
+...         x, y, z = self.args
+...         if deep:
+...             x = x.doit(deep=deep, **hints)
+...             y = y.doit(deep=deep, **hints)
+...             z = z.doit(deep=deep, **hints)
+...         return x*y + z
+...
+...     # Define FMA.rewrite(Add) and FMA.rewrite(Mul).
+...     def _eval_rewrite(self, rule, args, **hints):
+...         x, y, z = self.args
+...         if rule in [Add, Mul]:
+...             return self.doit()
+...
+...     # Define differentiation.
 ...     def fdiff(self, argindex):
 ...         x, y, z = self.args
 ...         if argindex == 1:
@@ -1308,6 +1524,33 @@ divides(k, 2*k)
 ...             return x
 ...         elif argindex == 3:
 ...             return 1
+```
+
+#### Examples
+
+**Evaluation:**
+
+```
+>>> x, y, z = symbols('x y z')
+>>> FMA(2, 3, 4)
+10
+>>> FMA(x, y, z)
+FMA(x, y, z)
+>>> FMA(x, y, z).doit()
+x*y + z
+>>> FMA(x, y, z).rewrite(Add)
+x*y + z
+>>> FMA(2, pi, 1).evalf()
+7.28318530717959
+```
+
+**Differentiation**
+
+```
+>>> FMA(x, x, y).diff(x)
+2*x
+>>> FMA(x, y, x).diff(x)
+y + 1
 ```
 
 ## Additional Tips
