@@ -16,7 +16,7 @@ from .matpow import MatPow
 from .transpose import transpose
 from .permutation import PermutationMatrix
 from .special import ZeroMatrix, Identity, GenericIdentity, OneMatrix
-from sympy.multipledispatch import restart_ordering, halt_ordering
+from sympy.multipledispatch import enable_ordering_context
 
 # XXX: MatMul should perhaps not subclass directly from Mul
 class MatMul(MatrixExpr, Mul):
@@ -221,9 +221,8 @@ class MatMul(MatrixExpr, Mul):
 
         return lines
 
-restart_ordering()
-mul.register_handlerclass((Mul, MatMul), MatMul)
-halt_ordering()
+with enable_ordering_context():
+    mul.register_handlerclass((Mul, MatMul), MatMul)
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """

@@ -13,7 +13,7 @@ from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
 from sympy.utilities import sift
-from sympy.multipledispatch import restart_ordering, halt_ordering
+from sympy.multipledispatch import enable_ordering_context
 
 # XXX: MatAdd should perhaps not subclass directly from Add
 class MatAdd(MatrixExpr, Add):
@@ -100,9 +100,8 @@ class MatAdd(MatrixExpr, Add):
         add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
         return [j for i in add_lines for j in i]
 
-restart_ordering()
-add.register_handlerclass((Add, MatAdd), MatAdd)
-halt_ordering()
+with enable_ordering_context():
+    add.register_handlerclass((Add, MatAdd), MatAdd)
 
 
 def validate(*args):
