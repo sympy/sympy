@@ -1,8 +1,9 @@
 """Base class for all the objects in SymPy"""
+from __future__ import annotations
+
 from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
-from typing import Set, Tuple, Any
 
 from .assumptions import ManagedProperties
 from .cache import cacheit
@@ -81,8 +82,8 @@ class Basic(Printable, metaclass=ManagedProperties):
                  '_assumptions'
                 )
 
-    _args: 'Tuple[Basic, ...]'
-    _mhash: 'Any'
+    _args: tuple[Basic, ...]
+    _mhash: int | None
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -115,6 +116,8 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_Point = False
     is_MatAdd = False
     is_MatMul = False
+    is_negative: bool | None
+    is_commutative: bool | None
 
     kind: Kind = UndefinedKind
 
@@ -134,6 +137,10 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def __getstate__(self):
         return None
+
+    def __setstate__(self, state):
+        for name, value in state.items():
+            setattr(self, name, value)
 
     def __reduce_ex__(self, protocol):
         if protocol < 2:
@@ -517,8 +524,10 @@ class Basic(Printable, metaclass=ManagedProperties):
         return result
 
     @property
-    def free_symbols(self) -> 'Set[Basic]':
+    def free_symbols(self) -> set[Basic]:
         """Return from the atoms of self those which are free symbols.
+
+        Not all free symbols are ``Symbol``. Eg: IndexedBase('I')[0].free_symbols
 
         For most expressions, all symbols are free symbols. For some classes
         this is not true. e.g. Integrals use Symbols for the dummy variables
@@ -529,7 +538,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         Any other method that uses bound variables should implement a
         free_symbols method."""
-        empty: 'Set[Basic]' = set()
+        empty: set[Basic] = set()
         return empty.union(*(a.free_symbols for a in self.args))
 
     @property
@@ -737,7 +746,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return self.__class__
 
     @property
-    def args(self) -> 'Tuple[Basic, ...]':
+    def args(self) -> tuple[Basic, ...]:
         """Returns a tuple of arguments of 'self'.
 
         Examples

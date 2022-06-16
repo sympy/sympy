@@ -3,7 +3,7 @@ This module provides convenient functions to transform SymPy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from typing import Any, Dict as tDict, Iterable, Union as tUnion, TYPE_CHECKING
+from typing import Any, Dict as tDict
 
 import builtins
 import inspect
@@ -18,10 +18,6 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable, flatten)
 from sympy.utilities.misc import filldedent
-
-
-if TYPE_CHECKING:
-    import sympy.core.expr
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
@@ -104,7 +100,7 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
-    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
+    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy import *; from scipy.special import *",)),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
@@ -179,7 +175,7 @@ _lambdify_generated_counter = 1
 
 
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
-def lambdify(args: tUnion[Iterable, 'sympy.core.expr.Expr'], expr: 'sympy.core.expr.Expr', modules=None, printer=None, use_imps=True,
+def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=False, cse=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
@@ -840,7 +836,7 @@ or tuple for the function arguments.
                 )
 
     # Get the names of the args, for creating a docstring
-    iterable_args: Iterable = (args,) if isinstance(args, Expr) else args
+    iterable_args = (args,) if isinstance(args, Expr) else args
     names = []
 
     # Grab the callers frame, for getting the names by inspection (if needed)
@@ -956,9 +952,9 @@ def _recursive_to_string(doprint, arg):
         return doprint(arg)
     elif iterable(arg):
         if isinstance(arg, list):
-            left, right = "[]"
+            left, right = "[", "]"
         elif isinstance(arg, tuple):
-            left, right = "()"
+            left, right = "(", ",)"
         else:
             raise NotImplementedError("unhandled type: %s, %s" % (type(arg), arg))
         return left +', '.join(_recursive_to_string(doprint, e) for e in arg) + right
@@ -1123,7 +1119,21 @@ class _EvaluatorPrinter:
         if not iterable(args):
             args = [args]
 
-        argstrs, expr = self._preprocess(args, expr)
+        if cses:
+            subvars, subexprs = zip(*cses)
+            try:
+                exprs = expr + list(subexprs)
+            except TypeError:
+                try:
+                    exprs = expr + tuple(subexprs)
+                except TypeError:
+                    expr = [expr]
+                    exprs = expr + list(subexprs)
+            argstrs, exprs = self._preprocess(args, exprs)
+            expr, subexprs = exprs[:len(expr)], exprs[len(expr):]
+            cses = zip(subvars, subexprs)
+        else:
+            argstrs, expr = self._preprocess(args, expr)
 
         # Generate argument unpacking and final argument list
         funcargs = []
@@ -1150,7 +1160,6 @@ class _EvaluatorPrinter:
                 funcbody.append('{} = {}'.format(s, self._exprrepr(e)))
 
         str_expr = _recursive_to_string(self._exprrepr, expr)
-
 
         if '\n' in str_expr:
             str_expr = '({})'.format(str_expr)

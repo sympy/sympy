@@ -143,6 +143,9 @@ class NDimArray(Printable):
         from sympy.tensor.array import ImmutableDenseNDimArray
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
 
+    def __getitem__(self, index):
+        raise NotImplementedError("A subclass of NDimArray should implement __getitem__")
+
     def _parse_index(self, index):
         if isinstance(index, (SYMPY_INTS, Integer)):
             if index >= self._loop_size:

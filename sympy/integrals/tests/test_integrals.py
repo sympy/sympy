@@ -11,7 +11,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import (Abs, im, polar_lift, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
-from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, coth, csch, sinh, tanh, sech)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
@@ -43,7 +43,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
 
-x, y, a, t, x_1, x_2, z, s, b = symbols('x y a t x_1 x_2 z s b')
+x, y, z, a, b, c, d, e, s, t, x_1, x_2 = symbols('x y z a b c d e s t x_1 x_2')
 n = Symbol('n', integer=True)
 f = Function('f')
 
@@ -1442,6 +1442,10 @@ def test_issue_10567():
     assert integrate(vt, t) == Matrix([[a*t**2/2], [b*t], [c*t]])
 
 
+def test_issue_11742():
+    assert integrate(sqrt(-x**2 + 8*x + 48), (x, 4, 12)) == 16*pi
+
+
 def test_issue_11856():
     t = symbols('t')
     assert integrate(sinc(pi*t), t) == Si(pi*t)/pi
@@ -1914,3 +1918,36 @@ def test_issue_18527():
     expr = (cos(x)/(4+(sin(x))**2))
     res_real = integrate(expr.subs(x, xr), xr, manual=True).subs(xr, x)
     assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
+
+
+def test_pr_23583():
+    # This result from meijerg is wrong. Check whether new result is correct when this test fail.
+    assert integrate(1/sqrt((x - I)**2-1)) == Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+
+
+def test_hyperbolic():
+    assert integrate(coth(x)) == x - log(tanh(x) + 1) + log(tanh(x))
+    assert integrate(sech(x)) == 2*atan(tanh(x/2))
+    assert integrate(csch(x)) == log(tanh(x/2))
+
+
+def test_sqrt_quadratic():
+    assert integrate(1/sqrt(3*x**2+4*x+5)) == sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3
+    assert integrate(1/sqrt(-3*x**2+4*x+5)) == sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3
+    assert integrate(1/sqrt(3*x**2+4*x-5)) == sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/3
+    assert integrate(1/sqrt(a+b*x+c*x**2), x) == log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
+
+    assert integrate((7*x+6)/sqrt(3*x**2+4*x+5)) == \
+           7*sqrt(3*x**2 + 4*x + 5)/3 + 4*sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/9
+    assert integrate((7*x+6)/sqrt(-3*x**2+4*x+5)) == \
+           -7*sqrt(-3*x**2 + 4*x + 5)/3 + 32*sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/9
+    assert integrate((7*x+6)/sqrt(3*x**2+4*x-5)) == \
+           7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/9
+    assert integrate((d+e*x)/sqrt(a+b*x+c*x**2), x) == \
+           e*sqrt(a + b*x + c*x**2)/c + (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c)
+
+    assert integrate(sqrt(53225*x**2-66732*x+23013)) == \
+           x*sqrt(53225*x**2 - 66732*x + 23013)/2 - 16683*sqrt(53225*x**2 - 66732*x + 23013)/53225 + \
+           111576969*sqrt(2129)*asinh(53225*x/10563 - S(11122)/3521)/1133160250
+    assert integrate(sqrt(a+b*x+c*x**2), x) == b*sqrt(a + b*x + c*x**2)/(4*c) + x*sqrt(a + b*x + c*x**2)/2 + \
+           (2*a - b**2/(2*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/(4*sqrt(c))

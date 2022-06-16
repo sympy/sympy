@@ -9,7 +9,7 @@
 Welcome to SymPy's documentation!
 ----------------------------------
 
-A PDF version of these docs can be found `here <https://github.com/sympy/sympy/releases>`_.
+A `PDF version of these docs <https://github.com/sympy/sympy/releases>`_ is also available.
 
 `SymPy <https://sympy.org>`_ is a Python library for symbolic mathematics.
 If you are new to SymPy, start with the :ref:`Tutorial <tutorial>`.
@@ -20,11 +20,11 @@ This is the central page for all of SymPy's documentation.
 
 ..  rst-class:: column
 
-:ref:`SymPy Tutorials <tutorial>`
+:ref:`Tutorials <tutorial>`
 -------------------------------------------------------
 
-Tutorials introduce Sympy features to people who are new to the project. It includes
-installation instructons, a basic introduction to Sympy operations and common gotchas.
+Tutorials introduce SymPy features to people who are new to the project. It includes
+installation instructions, a basic introduction to SymPy operations and common gotchas.
 
 
 ..  rst-class:: column
@@ -32,7 +32,7 @@ installation instructons, a basic introduction to Sympy operations and common go
 :ref:`How-to Guides <guides>`
 -------------------------------------------------------
 
-These are step-by-step intructions on how to do different key developer tasks. It details
+These are step-by-step instructions on how to do different key developer tasks. It details
 instructions on installing SymPy from source for development. The development setup and workflow
 is also discussed with elaborate details on debugging, building the docs, and general guidelines
 on writing documentation and docstrings.
@@ -50,7 +50,7 @@ symbolic expressions are detailed but it does not completely exhaust all SymPy o
 
 ..  rst-class:: column
 
-:ref:`SymPy API Reference <reference>`
+:ref:`API Reference <reference>`
 -------------------------------------------------------
 
 This category has a detailed description of the SymPy API, it discusses
@@ -65,4 +65,3 @@ what the different functions and modules do, their arguments and return values.
    guides/index.rst
    explanation/index.rst
    reference/index.rst
-   miscellaneous/index.rst

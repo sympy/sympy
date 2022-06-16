@@ -18,6 +18,8 @@ The *solvers* module in SymPy implements methods for solving equations.
    which solves system of linear equations, and :func:`~.nonlinsolve` which
    solves systems of non linear equations.
 
+.. _solvers-algebraic-equations:
+
 Algebraic equations
 --------------------
 

@@ -17,7 +17,8 @@ To enable simple substitutions, add the match to find_substitutions.
 
 """
 
-from typing import Dict as tDict, Optional
+from __future__ import annotations
+from typing import NamedTuple
 from collections import namedtuple, defaultdict
 from collections.abc import Mapping
 from functools import reduce
@@ -36,8 +37,8 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import (cosh, sinh, acosh, asinh,
-                                                   acoth, atanh)
+from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
+    cosh, coth, sech, sinh, tanh, asinh, acoth, atanh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
@@ -81,14 +82,18 @@ URule = Rule("URule", "u_var u_func constant substep")
 PartsRule = Rule("PartsRule", "u dv v_step second_step")
 CyclicPartsRule = Rule("CyclicPartsRule", "parts_rules coefficient")
 TrigRule = Rule("TrigRule", "func arg")
+HyperbolicRule = Rule("HyperbolicRule", "func arg")
 ExpRule = Rule("ExpRule", "base exp")
 ReciprocalRule = Rule("ReciprocalRule", "func")
 ArcsinRule = Rule("ArcsinRule")
-InverseHyperbolicRule = Rule("InverseHyperbolicRule", "func")
+ArcsinhRule = Rule("ArcsinhRule")
+ReciprocalSqrtQuadraticRule = Rule("ReciprocalSqrtQuadraticRule", "a b c")
+SqrtQuadraticRule = Rule("SqrtQuadraticRule", "a b c")
 AlternativeRule = Rule("AlternativeRule", "alternatives")
 DontKnowRule = Rule("DontKnowRule")
 DerivativeRule = Rule("DerivativeRule")
 RewriteRule = Rule("RewriteRule", "rewritten substep")
+CompleteSquareRule = Rule("CompleteSquareRule", "rewritten substep")
 PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
 HeavisideRule = Rule("HeavisideRule", "harg ibnd substep")
 TrigSubstitutionRule = Rule("TrigSubstitutionRule",
@@ -118,7 +123,11 @@ UpperGammaRule = Rule("UpperGammaRule", "a e")
 EllipticFRule = Rule("EllipticFRule", "a d")
 EllipticERule = Rule("EllipticERule", "a d")
 
-IntegralInfo = namedtuple('IntegralInfo', 'integrand symbol')
+
+class IntegralInfo(NamedTuple):
+    integrand: Expr
+    symbol: Symbol
+
 
 evaluators = {}
 def evaluates(rule):
@@ -209,9 +218,6 @@ def find_substitutions(integrand, symbol, u_var):
         if u_diff == 0:
             return False
         substituted = integrand / u_diff
-        if symbol not in substituted.free_symbols:
-            # replaced everything already
-            return False
         debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
@@ -240,7 +246,7 @@ def find_substitutions(integrand, symbol, u_var):
         return False
 
     def possible_subterms(term):
-        if isinstance(term, (TrigonometricFunction,
+        if isinstance(term, (TrigonometricFunction, HyperbolicFunction,
                              *inverse_trig_functions,
                              exp, log, Heaviside)):
             return [term.args[0]]
@@ -458,65 +464,56 @@ def inverse_trig_rule(integral):
     base, exp = integrand.as_base_exp()
     a = Wild('a', exclude=[symbol])
     b = Wild('b', exclude=[symbol])
-    match = base.match(a + b*symbol**2)
+    c = Wild('c', exclude=[symbol, 0])
+    match = base.match(a + b*symbol + c*symbol**2)
 
     if not match:
         return
 
-    def negative(x):
-        return x.is_negative or x.could_extract_minus_sign()
-
-    def ArcsinhRule(integrand, symbol):
-        return InverseHyperbolicRule(asinh, integrand, symbol)
-
-    def ArccoshRule(integrand, symbol):
-        return InverseHyperbolicRule(acosh, integrand, symbol)
-
-    def make_inverse_trig(RuleClass, base_exp, a, sign_a, b, sign_b):
+    def make_inverse_trig(RuleClass, a, sign_a, c, sign_c, h):
         u_var = Dummy("u")
-        current_base = base
-        current_symbol = symbol
-        constant = u_func = u_constant = substep = None
-        factored = integrand
-        if a != 1:
-            constant = a**base_exp
-            current_base = sign_a + sign_b * (b/a) * current_symbol**2
-            factored = current_base ** base_exp
-        if (b/a) != 1:
-            u_func = sqrt(b/a) * symbol
-            u_constant = sqrt(a/b)
-            current_symbol = u_var
-            current_base = sign_a + sign_b * current_symbol**2
-
-        substep = RuleClass(current_base ** base_exp, current_symbol)
+        rewritten = 1/sqrt(sign_a*a + sign_c*c*(symbol-h)**2)  # a>0, c>0
+        quadratic_base = sqrt(c/a)*(symbol-h)
+        constant = 1/sqrt(c)
+        u_func = None
+        if quadratic_base is not symbol:
+            u_func = quadratic_base
+            quadratic_base = u_var
+        standard_form = 1/sqrt(sign_a + sign_c*quadratic_base**2)
+        substep = RuleClass(standard_form, quadratic_base)
+        if constant != 1:
+            substep = ConstantTimesRule(constant, standard_form, substep, constant*standard_form, symbol)
         if u_func is not None:
-            if u_constant != 1 and substep is not None:
-                substep = ConstantTimesRule(
-                    u_constant, current_base ** base_exp, substep,
-                    u_constant * current_base ** base_exp, symbol)
-            substep = URule(u_var, u_func, u_constant, substep, factored, symbol)
-        if constant is not None and substep is not None:
-            substep = ConstantTimesRule(constant, factored, substep, integrand, symbol)
+            substep = URule(u_var, u_func, None, substep, rewritten, symbol)
+        if h != 0:
+            substep = CompleteSquareRule(rewritten, substep, integrand, symbol)
         return substep
 
-    a, b = [match.get(i, S.Zero) for i in (a, b)]
-    # list of (rule, base_exp, a, sign_a, b, sign_b, condition)
-    possibilities = []
+    a, b, c = [match.get(i, S.Zero) for i in (a, b, c)]
 
     if simplify(2*exp + 1) == 0:
-        possibilities.append((ArcsinRule, exp, a, 1, -b, -1, And(a > 0, b < 0)))
-        possibilities.append((ArcsinhRule, exp, a, 1, b, 1, And(a > 0, b > 0)))
-        possibilities.append((ArccoshRule, exp, -a, -1, b, 1, And(a < 0, b > 0)))
+        h, k = -b/(2*c), a - b**2/(4*c)  # rewrite base to k + c*(symbol-h)**2
+        general_rule = ReciprocalSqrtQuadraticRule(a, b, c, integrand, symbol)
+        if k.is_real and c.is_real:
+            # list of ((rule, base_exp, a, sign_a, b, sign_b), condition)
+            possibilities = []
+            for args, cond in (  # don't apply ArccoshRule to x**2-1
+                ((ArcsinRule, k, 1, -c, -1, h), And(k > 0, c < 0)),  # 1-x**2
+                ((ArcsinhRule, k, 1, c, 1, h), And(k > 0, c > 0)),  # 1+x**2
+            ):
+                if cond is S.true:
+                    return make_inverse_trig(*args)
+                if cond is not S.false:
+                    possibilities.append((args, cond))
+            if possibilities:
+                rules = [(make_inverse_trig(*args), cond) for args, cond in possibilities]
+                if not k.is_positive:  # conditions are not thorough, need fall back rule
+                    rules.append((general_rule, S.true))
+                return PiecewiseRule(rules, integrand, symbol)
+        return general_rule
+    if exp == S.Half:
+        return SqrtQuadraticRule(a, b, c, integrand, symbol)
 
-    possibilities = [p for p in possibilities if p[-1] is not S.false]
-    if a.is_number and b.is_number:
-        possibility = [p for p in possibilities if p[-1] is S.true]
-        if len(possibility) == 1:
-            return make_inverse_trig(*possibility[0][:-1])
-    elif possibilities:
-        return PiecewiseRule(
-            [(make_inverse_trig(*p[:-1]), p[-1]) for p in possibilities],
-            integrand, symbol)
 
 def add_rule(integral):
     integrand, symbol = integral
@@ -524,18 +521,17 @@ def add_rule(integral):
               for g in integrand.as_ordered_terms()]
     return None if None in results else AddRule(results, integrand, symbol)
 
-def mul_rule(integral):
+
+def mul_rule(integral: IntegralInfo):
     integrand, symbol = integral
 
     # Constant times function case
     coeff, f = integrand.as_independent(symbol)
-    next_step = integral_steps(f, symbol)
+    if coeff != 1:
+        next_step = integral_steps(f, symbol)
+        if next_step is not None:
+            return ConstantTimesRule(coeff, f, next_step, integrand, symbol)
 
-    if coeff != 1 and next_step is not None:
-        return ConstantTimesRule(
-            coeff, f,
-            next_step,
-            integrand, symbol)
 
 def _parts_rule(integrand, symbol):
     # LIATE rule:
@@ -832,6 +828,44 @@ def quadratic_denom_rule(integral):
 
     return
 
+
+def sqrt_quadratic_denom_rule(integral: IntegralInfo):
+    integrand, x = integral
+    numer, denom = integrand.as_numer_denom()
+    a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x])
+    c = Wild('c', exclude=[x, 0])
+    match = denom.match(sqrt(a+b*x+c*x**2))
+    if match:
+        numer_poly = numer.as_poly(x)
+        if numer_poly is None:
+            return
+        a, b, c = match[a], match[b], match[c]
+        deg = numer_poly.degree()
+        if deg <= 1:
+            # integrand == (d+e*x)/sqrt(a+b*x+c*x**2)
+            e, d = numer_poly.all_coeffs() if deg == 1 else (S.Zero, numer)
+            # rewrite numerator to A*(2*c*x+b) + B
+            A = e/(2*c)
+            B = d-A*b
+            pre_substitute = (2*c*x+b)/denom
+            constant_step = linear_step = None
+            if A != 0:
+                u = Dummy("u")
+                pow_rule = PowerRule(u, -S.Half, 1/sqrt(u), u)
+                linear_step = URule(u, a+b*x+c*x**2, None, pow_rule, pre_substitute, x)
+                if A != 1:
+                    linear_step = ConstantTimesRule(A, pre_substitute, linear_step, A*pre_substitute, x)
+            if B != 0:
+                constant_step = inverse_trig_rule(IntegralInfo(1/denom, x))
+                if B != 1:
+                    constant_step = ConstantTimesRule(B, 1/denom, constant_step, B/denom, x)
+            if linear_step and constant_step:
+                add = Add(A*pre_substitute, B/denom, evaluate=False)
+                return RewriteRule(add, AddRule([linear_step, constant_step], add, x), integrand, x)
+            return linear_step or constant_step
+
+
 def root_mul_rule(integral):
     integrand, symbol = integral
     a = Wild('a', exclude=[symbol])
@@ -858,6 +892,36 @@ def root_mul_rule(integral):
     next_step = integral_steps(integrand, u)
     if next_step:
         return URule(u, u_func, None, next_step, integrand, symbol)
+
+
+def hyperbolic_rule(integral: tuple[Expr, Symbol]):
+    integrand, symbol = integral
+    if isinstance(integrand, HyperbolicFunction) and integrand.args[0] == symbol:
+        if integrand.func == sinh:
+            return HyperbolicRule('sinh', symbol, integrand, symbol)
+        if integrand.func == cosh:
+            return HyperbolicRule('cosh', symbol, integrand, symbol)
+        u = Dummy('u')
+        if integrand.func == tanh:
+            rewritten = sinh(symbol)/cosh(symbol)
+            return RewriteRule(rewritten,
+                   URule(u, cosh(symbol), None,
+                   ReciprocalRule(u, 1/u, u), rewritten, symbol), integrand, symbol)
+        if integrand.func == coth:
+            rewritten = cosh(symbol)/sinh(symbol)
+            return RewriteRule(rewritten,
+                   URule(u, sinh(symbol), None,
+                   ReciprocalRule(u, 1/u, u), rewritten, symbol), integrand, symbol)
+        else:
+            rewritten = integrand.rewrite(tanh)
+            if integrand.func == sech:
+                return RewriteRule(rewritten,
+                       URule(u, tanh(symbol/2), None,
+                       ArctanRule(S(2), S.One, S.One, 2/(u**2 + 1), u), rewritten, symbol), integrand, symbol)
+            if integrand.func == csch:
+                return RewriteRule(rewritten,
+                       URule(u, tanh(symbol/2), None,
+                       ReciprocalRule(u, 1/u, u), rewritten, symbol), integrand, symbol)
 
 @cacheit
 def make_wilds(symbol):
@@ -1129,7 +1193,7 @@ def substitution_rule(integral):
             if simplify(c - 1) != 0:
                 _, denom = c.as_numer_denom()
                 if subrule:
-                    subrule = ConstantTimesRule(c, substituted, subrule, substituted, u_var)
+                    subrule = ConstantTimesRule(c, substituted, subrule, c * substituted, u_var)
 
                 if denom.free_symbols:
                     piecewise = []
@@ -1222,8 +1286,8 @@ def fallback_rule(integral):
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
-_integral_cache = {}  # type: tDict[Expr, Optional[Expr]]
-_parts_u_cache = defaultdict(int)  # type: tDict[Expr, int]
+_integral_cache: dict[Expr, Expr | None] = {}
+_parts_u_cache: dict[Expr, int] = defaultdict(int)
 _cache_dummy = Dummy("z")
 
 def integral_steps(integrand, symbol, **options):
@@ -1322,9 +1386,10 @@ def integral_steps(integrand, symbol, **options):
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
-            Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule), \
-                              null_safe(heaviside_rule), null_safe(quadratic_denom_rule), \
-                              null_safe(root_mul_rule)),
+            Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
+                        null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
+                        null_safe(sqrt_quadratic_denom_rule),
+                        null_safe(root_mul_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
@@ -1333,6 +1398,7 @@ def integral_steps(integrand, symbol, **options):
         })),
         do_one(
             null_safe(trig_rule),
+            null_safe(hyperbolic_rule),
             null_safe(alternatives(
                 rewrites_rule,
                 substitution_rule,
@@ -1422,6 +1488,15 @@ def eval_trig(func, arg, integrand, symbol):
     elif func == 'csc**2':
         return -cot(arg)
 
+
+@evaluates(HyperbolicRule)
+def eval_hyperbolic(func: str, arg: Expr, integrand, symbol):
+    if func == 'sinh':
+        return cosh(arg)
+    if func == 'cosh':
+        return sinh(arg)
+
+
 @evaluates(ArctanRule)
 def eval_arctan(a, b, c, integrand, symbol):
     return a / b * 1 / sqrt(c / b) * atan(symbol / sqrt(c / b))
@@ -1442,17 +1517,32 @@ def eval_reciprocal(func, integrand, symbol):
 def eval_arcsin(integrand, symbol):
     return asin(symbol)
 
-@evaluates(InverseHyperbolicRule)
-def eval_inversehyperbolic(func, integrand, symbol):
-    return func(symbol)
+
+@evaluates(ArcsinhRule)
+def eval_arcsinh(integrand, x):
+    return asinh(x)
+
+
+@evaluates(ReciprocalSqrtQuadraticRule)
+def eval_reciprocal_sqrt_quadratic(a, b, c, integrand, x):
+    return log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
+
+
+@evaluates(SqrtQuadraticRule)
+def eval_sqrt_quadratic(a, b, c, integrand, x):
+    return x*integrand/2 + _manualintegrate(sqrt_quadratic_denom_rule(IntegralInfo((2*a+b*x)/integrand, x)))/4
+
 
 @evaluates(AlternativeRule)
 def eval_alternative(alternatives, integrand, symbol):
     return _manualintegrate(alternatives[0])
 
+
+@evaluates(CompleteSquareRule)
 @evaluates(RewriteRule)
 def eval_rewrite(rewritten, substep, integrand, symbol):
     return _manualintegrate(substep)
+
 
 @evaluates(PiecewiseRule)
 def eval_piecewise(substeps, integrand, symbol):

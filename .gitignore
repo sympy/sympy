@@ -63,6 +63,7 @@ doc/_build/
 doc/sphinx/
 
 # pdf files generated from svg files (cd doc; make latex)
+*.svg.html
 doc/src/modules/physics/mechanics/*.pdf
 doc/src/modules/physics/vector/*.pdf
 
@@ -83,3 +84,6 @@ sample.tex
 
 # pytest related data file for slow tests
 .ci/durations.log
+
+# Files for pyodide test
+pyodide

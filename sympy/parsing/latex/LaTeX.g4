@@ -73,7 +73,9 @@ LIM_APPROACH_SYM:
 	| '\\Rightarrow'
 	| '\\longrightarrow'
 	| '\\Longrightarrow';
-FUNC_INT: '\\int';
+FUNC_INT:
+    '\\int'
+    | '\\int\\limits';
 FUNC_SUM: '\\sum';
 FUNC_PROD: '\\prod';
 
@@ -112,7 +114,10 @@ FUNC_OVERLINE: '\\overline';
 CMD_TIMES: '\\times';
 CMD_CDOT: '\\cdot';
 CMD_DIV: '\\div';
-CMD_FRAC: '\\frac';
+CMD_FRAC:
+    '\\frac'
+    | '\\dfrac'
+    | '\\tfrac';
 CMD_BINOM: '\\binom';
 CMD_DBINOM: '\\dbinom';
 CMD_TBINOM: '\\tbinom';
@@ -146,6 +151,8 @@ GTE_Q: '\\geqq';
 GTE_S: '\\geqslant';
 
 BANG: '!';
+
+SINGLE_QUOTES: '\''+;
 
 SYMBOL: '\\' [a-zA-Z]+;
 
@@ -205,8 +212,6 @@ comp:
 	| abs_group
 	| func
 	| atom
-	| frac
-	| binom
 	| floor
 	| ceil;
 
@@ -214,8 +219,6 @@ comp_nofunc:
 	group
 	| abs_group
 	| atom
-	| frac
-	| binom
 	| floor
 	| ceil;
 
@@ -227,10 +230,12 @@ group:
 
 abs_group: BAR expr BAR;
 
-atom: (LETTER | SYMBOL) subexpr?
+atom: (LETTER | SYMBOL) (subexpr? SINGLE_QUOTES? | SINGLE_QUOTES? subexpr?)
 	| NUMBER
 	| DIFFERENTIAL
 	| mathit
+	| frac
+	| binom
 	| bra
 	| ket;
 
@@ -277,7 +282,7 @@ func:
 		L_PAREN func_arg R_PAREN
 		| func_arg_noparens
 	)
-	| (LETTER | SYMBOL) subexpr? // e.g. f(x)
+	| (LETTER | SYMBOL) (subexpr? SINGLE_QUOTES? | SINGLE_QUOTES? subexpr?) // e.g. f(x), f_1'(x)
 	L_PAREN args R_PAREN
 	| FUNC_INT (subexpr supexpr | supexpr subexpr)? (
 		additive? DIFFERENTIAL

@@ -1192,8 +1192,8 @@ def quantile(expr, evaluate=True, **kwargs):
     Quantile is defined as the value at which the probability of the random
     variable is less than or equal to the given probability.
 
-    ..math::
-        Q(p) = inf{x \in (-\infty, \infty) such that p <= F(x)}
+    .. math::
+        Q(p) = \inf\{x \in (-\infty, \infty) : p \le F(x)\}
 
     Examples
     ========
@@ -1768,7 +1768,7 @@ def sample_stochastic_process(process):
     >>> from sympy import Matrix
     >>> T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
-    >>> next(sample_stochastic_process(Y)) in Y.state_space # doctest: +SKIP
+    >>> next(sample_stochastic_process(Y)) in Y.state_space
     True
     >>> next(sample_stochastic_process(Y))  # doctest: +SKIP
     0

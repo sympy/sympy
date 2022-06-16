@@ -315,7 +315,6 @@ class PrettyPrinter(Printer):
         pform = self._print(e.args[0])
         pform = prettyForm(*pform.parens('|', '|'))
         return pform
-    _print_Determinant = _print_Abs
 
     def _print_floor(self, e):
         if self._use_unicode:
@@ -761,11 +760,23 @@ class PrettyPrinter(Printer):
 
         return D
 
-    def _print_MatrixBase(self, e):
+    def _print_MatrixBase(self, e, lparens='[', rparens=']'):
         D = self._print_matrix_contents(e)
         D.baseline = D.height()//2
-        D = prettyForm(*D.parens('[', ']'))
+        D = prettyForm(*D.parens(lparens, rparens))
         return D
+
+    def _print_Determinant(self, e):
+        mat = e.arg
+        if mat.is_MatrixExpr:
+            from sympy.matrices.expressions.blockmatrix import BlockMatrix
+            if isinstance(mat, BlockMatrix):
+                return self._print_MatrixBase(mat.blocks, lparens='|', rparens='|')
+            D = self._print(mat)
+            D.baseline = D.height()//2
+            return prettyForm(*D.parens('|', '|'))
+        else:
+            return self._print_MatrixBase(mat, lparens='|', rparens='|')
 
     def _print_TensorProduct(self, expr):
         # This should somehow share the code with _print_WedgeProduct:
@@ -842,21 +853,25 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Transpose(self, expr):
-        pform = self._print(expr.arg)
-        from sympy.matrices import MatrixSymbol
-        if not isinstance(expr.arg, MatrixSymbol) and expr.arg.is_MatrixExpr:
+        mat = expr.arg
+        pform = self._print(mat)
+        from sympy.matrices import MatrixSymbol, BlockMatrix
+        if (not isinstance(mat, MatrixSymbol) and
+            not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
             pform = prettyForm(*pform.parens())
         pform = pform**(prettyForm('T'))
         return pform
 
     def _print_Adjoint(self, expr):
-        pform = self._print(expr.arg)
+        mat = expr.arg
+        pform = self._print(mat)
         if self._use_unicode:
             dag = prettyForm('\N{DAGGER}')
         else:
             dag = prettyForm('+')
-        from sympy.matrices import MatrixSymbol
-        if not isinstance(expr.arg, MatrixSymbol) and expr.arg.is_MatrixExpr:
+        from sympy.matrices import MatrixSymbol, BlockMatrix
+        if (not isinstance(mat, MatrixSymbol) and
+            not isinstance(mat, BlockMatrix) and mat.is_MatrixExpr):
             pform = prettyForm(*pform.parens())
         pform = pform**dag
         return pform
@@ -925,7 +940,7 @@ class PrettyPrinter(Printer):
     def _print_MatPow(self, expr):
         pform = self._print(expr.base)
         from sympy.matrices import MatrixSymbol
-        if not isinstance(expr.base, MatrixSymbol):
+        if not isinstance(expr.base, MatrixSymbol) and expr.base.is_MatrixExpr:
             pform = prettyForm(*pform.parens())
         pform = pform**(self._print(expr.exp))
         return pform
@@ -1144,22 +1159,24 @@ class PrettyPrinter(Printer):
             if '\n' in partstr:
                 tempstr = partstr
                 tempstr = tempstr.replace(vectstrs[i], '')
-                if '\N{right parenthesis extension}' in tempstr:   # If scalar is a fraction
+                if '\N{RIGHT PARENTHESIS EXTENSION}' in tempstr:   # If scalar is a fraction
                     for paren in range(len(tempstr)):
                         flag[i] = 1
-                        if tempstr[paren] == '\N{right parenthesis extension}':
-                            tempstr = tempstr[:paren] + '\N{right parenthesis extension}'\
+                        if tempstr[paren] == '\N{RIGHT PARENTHESIS EXTENSION}' and tempstr[paren + 1] == '\n':
+                            # We want to place the vector string after all the right parentheses, because
+                            # otherwise, the vector will be in the middle of the string
+                            tempstr = tempstr[:paren] + '\N{RIGHT PARENTHESIS EXTENSION}'\
                                          + ' '  + vectstrs[i] + tempstr[paren + 1:]
                             break
                 elif '\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
-                    flag[i] = 1
-                    tempstr = tempstr.replace('\N{RIGHT PARENTHESIS LOWER HOOK}',
-                                        '\N{RIGHT PARENTHESIS LOWER HOOK}'
-                                        + ' ' + vectstrs[i])
-                else:
-                    tempstr = tempstr.replace('\N{RIGHT PARENTHESIS UPPER HOOK}',
-                                        '\N{RIGHT PARENTHESIS UPPER HOOK}'
-                                        + ' ' + vectstrs[i])
+                    # We want to place the vector string after all the right parentheses, because
+                    # otherwise, the vector will be in the middle of the string. For this reason,
+                    # we insert the vector string at the rightmost index.
+                    index = tempstr.rfind('\N{RIGHT PARENTHESIS LOWER HOOK}')
+                    if index != -1: # then this character was found in this string
+                        flag[i] = 1
+                        tempstr = tempstr[:index] + '\N{RIGHT PARENTHESIS LOWER HOOK}'\
+                                     + ' '  + vectstrs[i] + tempstr[index + 1:]
                 o1[i] = tempstr
 
         o1 = [x.split('\n') for x in o1]

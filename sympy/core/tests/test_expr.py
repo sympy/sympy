@@ -1550,6 +1550,11 @@ def test_as_coefficients_dict():
     assert [(3.0*x*y).as_coefficients_dict()[i] for i in check] == \
         [0, 0, 0, 3.0, 0]
     assert (3.0*x*y).as_coefficients_dict()[3.0*x*y] == 0
+    eq = x*(x + 1)*a + x*b + c/x
+    assert eq.as_coefficients_dict(x) == {x: b, 1/x: c,
+        x*(x + 1): a}
+    assert eq.expand().as_coefficients_dict(x) == {x**2: a, x: a + b, 1/x: c}
+    assert x.as_coefficients_dict() == {x: S.One}
 
 
 def test_args_cnc():
@@ -2216,3 +2221,10 @@ def test_21494():
 
 def test_Expr__eq__iterable_handling():
     assert x != range(3)
+
+
+def test_format():
+    assert '{:1.2f}'.format(S.Zero) == '0.00'
+    assert '{:+3.0f}'.format(S(3)) == ' +3'
+    assert '{:23.20f}'.format(pi) == ' 3.14159265358979323846'
+    assert '{:50.48f}'.format(exp(sin(1))) == '2.319776824715853173956590377503266813254904772376'

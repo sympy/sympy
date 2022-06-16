@@ -15,7 +15,7 @@ class SolveFailed(Exception):
     """Raised when solver's conditions were not met. """
 
 
-def solve_poly_system(seq, *gens, **args):
+def solve_poly_system(seq, *gens, strict=False, **args):
     """
     Solve a system of polynomial equations.
 
@@ -27,8 +27,14 @@ def solve_poly_system(seq, *gens, **args):
     gens: generators
         generators of the equations in seq for which we want the
         solutions
+    strict: a boolean (default is False)
+        if strict is True, NotImplementedError will be raised if
+        the solution is known to be incomplete (which can occur if
+        not all solutions are expressible in radicals)
     args: Keyword arguments
-        Special options for solving the equations
+        Special options for solving the equations.
+
+
 
     Returns
     =======
@@ -46,6 +52,11 @@ def solve_poly_system(seq, *gens, **args):
     >>> solve_poly_system([x*y - 2*y, 2*y**2 - x**2], x, y)
     [(0, 0), (2, -sqrt(2)), (2, sqrt(2))]
 
+    >>> solve_poly_system([x**5 - x + y**3, y**2 - 1], x, y, strict=True)
+    Traceback (most recent call last):
+    ...
+    UnsolvableFactorError
+
     """
     try:
         polys, opt = parallel_poly_from_expr(seq, *gens, **args)
@@ -61,7 +72,7 @@ def solve_poly_system(seq, *gens, **args):
             except SolveFailed:
                 pass
 
-    return solve_generic(polys, opt)
+    return solve_generic(polys, opt, strict=strict)
 
 
 def solve_biquadratic(f, g, opt):
@@ -133,7 +144,7 @@ def solve_biquadratic(f, g, opt):
     return sorted(solutions, key=default_sort_key)
 
 
-def solve_generic(polys, opt):
+def solve_generic(polys, opt, strict=False):
     """
     Solve a generic system of polynomial equations.
 
@@ -166,6 +177,9 @@ def solve_generic(polys, opt):
         Listing all the polynomial equations that are needed to be solved
     opt: an Options object
         For specifying keyword arguments and generators
+    strict: a boolean
+        If strict is True, NotImplementedError will be raised if the solution
+        is known to be incomplete
 
     Returns
     =======
@@ -184,6 +198,17 @@ def solve_generic(polys, opt):
 
     .. [Cox97] D. Cox, J. Little, D. O'Shea, Ideals, Varieties
     and Algorithms, Springer, Second Edition, 1997, pp. 112
+
+    Raises
+    ========
+
+    NotImplementedError
+        If the system is not zero-dimensional. (does not have a finite
+        number of solutions)
+
+    UnsolvableFactorError
+        If ``strict`` is True and not all solution components are
+        expressible in radicals
 
     Examples
     ========
@@ -207,6 +232,14 @@ def solve_generic(polys, opt):
     >>> b = Poly(x + y*4, x, y, domain='ZZ')
     >>> solve_generic([a, b], NewOption)
     [(0, 0), (1/4, -1/16)]
+
+    >>> a = Poly(x**5 - x + y**3, x, y, domain='ZZ')
+    >>> b = Poly(y**2 - 1, x, y, domain='ZZ')
+    >>> solve_generic([a, b], NewOption, strict=True)
+    Traceback (most recent call last):
+    ...
+    UnsolvableFactorError
+
     """
     def _is_univariate(f):
         """Returns True if 'f' is univariate in its last variable. """
@@ -228,7 +261,9 @@ def solve_generic(polys, opt):
     def _solve_reduced_system(system, gens, entry=False):
         """Recursively solves reduced polynomial systems. """
         if len(system) == len(gens) == 1:
-            zeros = list(roots(system[0], gens[-1]).keys())
+            # the below line will produce UnsolvableFactorError if
+            # strict=True and the produced by roots is incomplete
+            zeros = list(roots(system[0], gens[-1], strict=strict).keys())
             return [(zero,) for zero in zeros]
 
         basis = groebner(system, gens, polys=True)
@@ -258,7 +293,9 @@ def solve_generic(polys, opt):
         gens = f.gens
         gen = gens[-1]
 
-        zeros = list(roots(f.ltrim(gen)).keys())
+        # the below line will produce UnsolvableFactorError if
+        # strict=True and the produced by roots is incomplete
+        zeros = list(roots(f.ltrim(gen), strict=strict).keys())
 
         if not zeros:
             return []

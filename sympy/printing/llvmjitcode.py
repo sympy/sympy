@@ -475,5 +475,15 @@ def llvm_callable(args, expr, callback_type=None):
     if callback_type and callback_type == 'scipy.integrate':
         arg_ctypes = arg_ctypes_formal
 
-    cfunc = ctypes.CFUNCTYPE(signature.ret_type, *arg_ctypes)(fptr)
+    # PYFUNCTYPE holds the GIL which is needed to prevent a segfault when
+    # calling PyFloat_FromDouble on Python 3.10. Probably it is better to use
+    # ctypes.c_double when returning a float rather than using ctypes.py_object
+    # and returning a PyFloat from inside the jitted function (i.e. let ctypes
+    # handle the conversion from double to PyFloat).
+    if signature.ret_type == ctypes.py_object:
+        FUNCTYPE = ctypes.PYFUNCTYPE
+    else:
+        FUNCTYPE = ctypes.CFUNCTYPE
+
+    cfunc = FUNCTYPE(signature.ret_type, *arg_ctypes)(fptr)
     return cfunc

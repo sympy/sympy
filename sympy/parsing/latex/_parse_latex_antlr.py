@@ -277,10 +277,6 @@ def convert_comp(comp):
         return sympy.Abs(convert_expr(comp.abs_group().expr()), evaluate=False)
     elif comp.atom():
         return convert_atom(comp.atom())
-    elif comp.frac():
-        return convert_frac(comp.frac())
-    elif comp.binom():
-        return convert_binom(comp.binom())
     elif comp.floor():
         return convert_floor(comp.floor())
     elif comp.ceil():
@@ -291,15 +287,16 @@ def convert_comp(comp):
 
 def convert_atom(atom):
     if atom.LETTER():
-        subscriptName = ''
+        sname = atom.LETTER().getText()
         if atom.subexpr():
-            subscript = None
             if atom.subexpr().expr():  # subscript is expr
                 subscript = convert_expr(atom.subexpr().expr())
             else:  # subscript is atom
                 subscript = convert_atom(atom.subexpr().atom())
-            subscriptName = '_{' + StrPrinter().doprint(subscript) + '}'
-        return sympy.Symbol(atom.LETTER().getText() + subscriptName)
+            sname += '_{' + StrPrinter().doprint(subscript) + '}'
+        if atom.SINGLE_QUOTES():
+            sname += atom.SINGLE_QUOTES().getText()  # put after subscript for easy identify
+        return sympy.Symbol(sname)
     elif atom.SYMBOL():
         s = atom.SYMBOL().getText()[1:]
         if s == "infty":
@@ -323,6 +320,10 @@ def convert_atom(atom):
     elif atom.mathit():
         text = rule2text(atom.mathit().mathit_text())
         return sympy.Symbol(text)
+    elif atom.frac():
+        return convert_frac(atom.frac())
+    elif atom.binom():
+        return convert_binom(atom.binom())
     elif atom.bra():
         val = convert_expr(atom.bra().expr())
         return Bra(val)
@@ -462,13 +463,14 @@ def convert_func(func):
             fname = func.SYMBOL().getText()[1:]
         fname = str(fname)  # can't be unicode
         if func.subexpr():
-            subscript = None
             if func.subexpr().expr():  # subscript is expr
                 subscript = convert_expr(func.subexpr().expr())
             else:  # subscript is atom
                 subscript = convert_atom(func.subexpr().atom())
             subscriptName = StrPrinter().doprint(subscript)
             fname += '_{' + subscriptName + '}'
+        if func.SINGLE_QUOTES():
+            fname += func.SINGLE_QUOTES().getText()
         input_args = func.args()
         output_args = []
         while input_args.args():  # handle multiple arguments to function

@@ -286,7 +286,8 @@ def test_autowrap_custom_printer():
 
     tmpdir = tempfile.mkdtemp()
     # write a trivial header file to use in the generated code
-    open(os.path.join(tmpdir, 'shortpi.h'), 'w').write('#define S_PI 3.14')
+    with open(os.path.join(tmpdir, 'shortpi.h'), 'w') as f:
+        f.write('#define S_PI 3.14')
 
     func = autowrap(expr, backend='cython', tempdir=tmpdir, code_gen=gen)
 

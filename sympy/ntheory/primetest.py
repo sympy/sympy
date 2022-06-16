@@ -586,8 +586,8 @@ def isprime(n):
         return False
     if n < 2809:
         return True
-    if n <= 23001:
-        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951]
+    if n < 31417:
+        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951, 23377]
 
     # bisection search on the sieve if the sieve is large enough
     from sympy.ntheory.generate import sieve as s
@@ -607,6 +607,9 @@ def isprime(n):
     #    https://miller-rabin.appspot.com/
     # for lists.  We have made sure the M-R routine will successfully handle
     # bases larger than n, so we can use the minimal set.
+    # In September 2015 deterministic numbers were extended to over 2^81.
+    #    https://arxiv.org/pdf/1509.00864.pdf
+    #    https://oeis.org/A014233
     if n < 341531:
         return mr(n, [9345883071009581737])
     if n < 885594169:
@@ -621,6 +624,10 @@ def isprime(n):
         return mr(n, [2, 123635709730000, 9233062284813009, 43835965440333360, 761179012939631437, 1263739024124850375])
     if n < 18446744073709551616:
         return mr(n, [2, 325, 9375, 28178, 450775, 9780504, 1795265022])
+    if n < 318665857834031151167461:
+        return mr(n, [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37])
+    if n < 3317044064679887385961981:
+        return mr(n, [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41])
 
     # We could do this instead at any point:
     #if n < 18446744073709551616:
