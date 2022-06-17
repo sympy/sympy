@@ -993,10 +993,11 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.core.symbol import Dummy
         from sympy.series.order import Order
         from sympy.functions.elementary.exponential import log
         from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
-        from .function import expand_log, expand_mul
+        from .function import expand_mul
 
         o = self.getO()
         if o is None:
@@ -1009,7 +1010,10 @@ class Add(Expr, AssocOp):
         # This expansion is the last part of expand_log. expand_log also calls
         # expand_mul with factor=True, which would be more expensive
         if any(isinstance(a, log) for a in self.args):
-            old = expand_log(old)
+            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
+                power_base=False, multinomial=False, basic=False, force=False,
+                factor=False)
+            old = old.expand(**logflags)
         expr = expand_mul(old)
 
         if not expr.is_Add:
@@ -1017,7 +1021,8 @@ class Add(Expr, AssocOp):
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        leading_terms = [t.as_leading_term(x, logx=logx, cdir=cdir) for t in expr.args]
+        _logx = Dummy('logx') if logx is None else logx
+        leading_terms = [t.as_leading_term(x, logx=_logx, cdir=cdir) for t in expr.args]
 
         min, new_expr = Order(0), 0
 
@@ -1032,6 +1037,9 @@ class Add(Expr, AssocOp):
 
         except TypeError:
             return expr
+
+        if logx is None:
+            new_expr = new_expr.subs(_logx, log(x))
 
         is_zero = new_expr.is_zero
         if is_zero is None:

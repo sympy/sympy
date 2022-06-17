@@ -1965,6 +1965,10 @@ class Mul(Expr, AssocOp):
                 return res
 
         if res != self:
+            if (self - res).subs(x, 0) == S.Zero and n > 0:
+                lt = self._eval_as_leading_term(x, logx=logx, cdir=cdir)
+                if lt == S.Zero:
+                    return res
             res += Order(x**n, x)
         return res
 

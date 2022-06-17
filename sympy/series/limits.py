@@ -147,9 +147,9 @@ class Limit(Expr):
         z = sympify(z)
         z0 = sympify(z0)
 
-        if z0 is S.Infinity:
+        if z0 in (S.Infinity, S.ImaginaryUnit*S.Infinity):
             dir = "-"
-        elif z0 is S.NegativeInfinity:
+        elif z0 in (S.NegativeInfinity, S.ImaginaryUnit*S.NegativeInfinity):
             dir = "+"
 
         if(z0.has(z)):

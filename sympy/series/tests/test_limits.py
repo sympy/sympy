@@ -1099,6 +1099,13 @@ def test_issue_21227():
     assert f.nseries(x, logx=-x) == log(-x)
     assert f.nseries(x, logx=x) == log(x)
 
+    f = log(log(log(1/x)))
+
+    assert f.nseries(x, logx=y) == log(log(-y))
+    assert f.nseries(x, logx=-y) == log(log(y))
+    assert f.nseries(x, logx=x) == log(log(-x))
+    assert f.nseries(x, logx=-x) == log(log(x))
+
 
 def test_issue_21415():
     exp = (x-1)*cos(1/(x-1))
@@ -1165,11 +1172,6 @@ def test_issue_22220():
     expr = expr = (-log(tan(x/2) - I) +log(tan(x/2) + I))
     assert limit(expr, x, pi, '+') == 2*I*pi
     assert limit(expr, x, pi, '-') == 0
-
-
-def test_issue_22982():
-    x = Symbol('x', real=True, positive=True)
-    assert limit((log(E + 1/x) - 1)**(1 - sqrt(E + 1/x)), x, oo) == 0
 
 
 def test_issue_23231():

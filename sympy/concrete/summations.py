@@ -505,7 +505,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ------------- comparison test ------------- ###
         # 1/(n**p*log(n)**q*log(log(n))**r) comparison
-        n_log_test = order.expr.match(1/(sym**p*log(sym)**q*log(log(sym))**r))
+        n_log_test = (order.expr.match(1/(sym**p*log(1/sym)**q*log(-log(1/sym))**r)) or
+                      order.expr.match(1/(sym**p*(-log(1/sym))**q*log(-log(1/sym))**r)))
         if n_log_test is not None:
             if (n_log_test[p] > 1 or
                 (n_log_test[p] == 1 and n_log_test[q] > 1) or

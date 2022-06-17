@@ -973,6 +973,7 @@ class log(Function):
         #      IMPORTANT.
         from sympy.series.order import Order
         from sympy.simplify.simplify import logcombine
+        _logx = logx
         if not logx:
             logx = log(x)
         if self.args[0] == x:
@@ -1009,10 +1010,13 @@ class log(Function):
             while s.is_Order:
                 n += 1
                 s = arg.nseries(x, n=n, logx=logx)
-        if logx.has(x) and logx != log(x):
-            a, b = arg.subs(log(x), logx).as_leading_term(x), S.Zero
+        if _logx and logx.has(x):
+            a, b = arg.as_leading_term(x, logx=logx), S.Zero
         else:
-            a, b = s.removeO().leadterm(x)
+            try:
+                a, b = s.removeO().leadterm(x)
+            except (ValueError, NotImplementedError, PoleError):
+                a, b = s.removeO().as_leading_term(x), S.Zero
         p = cancel(s/(a*x**b) - 1).expand().powsimp()
         if p.has(exp):
             p = logcombine(p)
@@ -1021,8 +1025,17 @@ class log(Function):
         _, d = coeff_exp(p, x)
         if not d.is_positive:
             res = log(a) + b*logx
-            if (res.subs(logx, log(x)) == self
-                or res.subs(-logx, -log(x)) == self):
+            _res = res
+            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
+                power_base=False, multinomial=False, basic=False, force=True,
+                factor=False)
+            expr = self.expand(**logflags)
+            if (not a.could_extract_minus_sign() and
+                logx.could_extract_minus_sign()):
+                _res = _res.subs(-logx, -log(x)).expand(**logflags)
+            else:
+                _res = _res.subs(logx, log(x)).expand(**logflags)
+            if _res == expr:
                 return res
             return res + Order(x**n, x)
 
