@@ -1170,4 +1170,3 @@ def test_printing_str_array_expressions():
 def test_issue_19435():
     assert str(1/UnevaluatedExpr(sqrt(pi))) == '1/(sqrt(pi))'
     
-    
