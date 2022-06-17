@@ -116,6 +116,8 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_Point = False
     is_MatAdd = False
     is_MatMul = False
+    is_negative: bool | None
+    is_commutative: bool | None
 
     kind: Kind = UndefinedKind
 

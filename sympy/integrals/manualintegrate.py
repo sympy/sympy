@@ -38,7 +38,7 @@ from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
-    cosh, coth, sech, sinh, tanh, acosh, asinh, acoth, atanh)
+    cosh, coth, sech, sinh, tanh, asinh, acoth, atanh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
@@ -86,7 +86,7 @@ HyperbolicRule = Rule("HyperbolicRule", "func arg")
 ExpRule = Rule("ExpRule", "base exp")
 ReciprocalRule = Rule("ReciprocalRule", "func")
 ArcsinRule = Rule("ArcsinRule")
-InverseHyperbolicRule = Rule("InverseHyperbolicRule", "func")
+ArcsinhRule = Rule("ArcsinhRule")
 ReciprocalSqrtQuadraticRule = Rule("ReciprocalSqrtQuadraticRule", "a b c")
 SqrtQuadraticRule = Rule("SqrtQuadraticRule", "a b c")
 AlternativeRule = Rule("AlternativeRule", "alternatives")
@@ -470,12 +470,6 @@ def inverse_trig_rule(integral):
     if not match:
         return
 
-    def ArcsinhRule(integrand, symbol):
-        return InverseHyperbolicRule(asinh, integrand, symbol)
-
-    def ArccoshRule(integrand, symbol):
-        return InverseHyperbolicRule(acosh, integrand, symbol)
-
     def make_inverse_trig(RuleClass, a, sign_a, c, sign_c, h):
         u_var = Dummy("u")
         rewritten = 1/sqrt(sign_a*a + sign_c*c*(symbol-h)**2)  # a>0, c>0
@@ -499,22 +493,24 @@ def inverse_trig_rule(integral):
 
     if simplify(2*exp + 1) == 0:
         h, k = -b/(2*c), a - b**2/(4*c)  # rewrite base to k + c*(symbol-h)**2
+        general_rule = ReciprocalSqrtQuadraticRule(a, b, c, integrand, symbol)
         if k.is_real and c.is_real:
             # list of ((rule, base_exp, a, sign_a, b, sign_b), condition)
             possibilities = []
-            for args, cond in (
+            for args, cond in (  # don't apply ArccoshRule to x**2-1
                 ((ArcsinRule, k, 1, -c, -1, h), And(k > 0, c < 0)),  # 1-x**2
                 ((ArcsinhRule, k, 1, c, 1, h), And(k > 0, c > 0)),  # 1+x**2
-                ((ArccoshRule, -k, -1, c, 1, h), And(k < 0, c > 0)),  # -1+x**2
             ):
                 if cond is S.true:
                     return make_inverse_trig(*args)
                 if cond is not S.false:
                     possibilities.append((args, cond))
             if possibilities:
-                return PiecewiseRule([(make_inverse_trig(*args), cond)
-                                      for args, cond in possibilities], integrand, symbol)
-        return ReciprocalSqrtQuadraticRule(a, b, c, integrand, symbol)
+                rules = [(make_inverse_trig(*args), cond) for args, cond in possibilities]
+                if not k.is_positive:  # conditions are not thorough, need fall back rule
+                    rules.append((general_rule, S.true))
+                return PiecewiseRule(rules, integrand, symbol)
+        return general_rule
     if exp == S.Half:
         return SqrtQuadraticRule(a, b, c, integrand, symbol)
 
@@ -1521,9 +1517,10 @@ def eval_reciprocal(func, integrand, symbol):
 def eval_arcsin(integrand, symbol):
     return asin(symbol)
 
-@evaluates(InverseHyperbolicRule)
-def eval_inversehyperbolic(func, integrand, symbol):
-    return func(symbol)
+
+@evaluates(ArcsinhRule)
+def eval_arcsinh(integrand, x):
+    return asinh(x)
 
 
 @evaluates(ReciprocalSqrtQuadraticRule)
