@@ -197,6 +197,10 @@ those libraries.
   compatible interface for CUDA GPUs. `lambdify` can produce CuPy compatible
   functions using `lambdify(modules='cupy')`.
 
+- **Jax**: [JAX](https://github.com/google/jax) is a library that uses XLA
+  to compile and run NumPy programs on GPUs and TPUs. `lambdify` can produce 
+  JAX compatibly functions using `lambdify(modules='jax')`.
+
 - **TensorFlow**: [TensorFlow](https://www.tensorflow.org/) is a popular
   machine learning library. `lambdify` can produce TensorFlow compatible
   functions using `lambdify(modules='tensorflow')`.

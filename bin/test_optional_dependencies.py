@@ -34,6 +34,10 @@ test_list = [
     # aesara
     '*aesara*',
 
+    # jax
+    '*jax*',
+    'sympy/utilities/tests/test_lambdify.py',
+
     # gmpy
     'polys',
 
