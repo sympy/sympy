@@ -36,7 +36,6 @@ jax = import_module('jax')
 if jax:
     deafult_float_info = jax.numpy.finfo(jax.numpy.array([]).dtype)
     JAX_DEFAULT_EPSILON = deafult_float_info.eps
-    JAX_DEFAULT_SMALLEST_NORMAL = deafult_float_info.smallest_normal
 
 def test_jax_piecewise_regression():
     """
@@ -223,7 +222,7 @@ def test_jax_expm1():
         skip("JAX not installed")
 
     f = lambdify((a,), expm1(a), 'jax')
-    assert abs(f(1e-10) - 1e-10 - 5e-21) <= JAX_DEFAULT_EPSILON
+    assert abs(f(1e-10) - 1e-10 - 5e-21) <= 1e-10 * JAX_DEFAULT_EPSILON
 
 
 def test_jax_log1p():
@@ -231,7 +230,7 @@ def test_jax_log1p():
         skip("JAX not installed")
 
     f = lambdify((a,), log1p(a), 'jax')
-    assert abs(f(1e-99) - 1e-99) <= JAX_DEFAULT_SMALLEST_NORMAL
+    assert abs(f(1e-99) - 1e-99) <= 1e-99 * JAX_DEFAULT_EPSILON
 
 def test_jax_hypot():
     if not jax:

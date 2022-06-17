@@ -28,7 +28,6 @@ np = import_module('numpy')
 if np:
     deafult_float_info = np.finfo(np.array([]).dtype)
     NUMPY_DEFAULT_EPSILON = deafult_float_info.eps
-    NUMPY_DEFAULT_SMALLEST_NORMAL = deafult_float_info.smallest_normal
 
 def test_numpy_piecewise_regression():
     """
@@ -214,7 +213,7 @@ def test_expm1():
         skip("NumPy not installed")
 
     f = lambdify((a,), expm1(a), 'numpy')
-    assert abs(f(1e-10) - 1e-10 - 5e-21) <= NUMPY_DEFAULT_EPSILON
+    assert abs(f(1e-10) - 1e-10 - 5e-21) <= 1e-10 * NUMPY_DEFAULT_EPSILON
 
 
 def test_log1p():
@@ -222,7 +221,7 @@ def test_log1p():
         skip("NumPy not installed")
 
     f = lambdify((a,), log1p(a), 'numpy')
-    assert abs(f(1e-99) - 1e-99) <= NUMPY_DEFAULT_SMALLEST_NORMAL
+    assert abs(f(1e-99) - 1e-99) <= 1e-99 * NUMPY_DEFAULT_EPSILON
 
 def test_hypot():
     if not np:
