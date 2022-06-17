@@ -6,7 +6,9 @@ There are two high-level functions to solve equations, [`solve`](#) and [`solves
 
 ## Using {func}`~.solve`
 
-{func}`~.solve` is best for solving equations that...
+{func}`~.solve`
+- is best for solving equations that...
+- produces outputs in the format of a Python list.
 
 You can solve an equation using {func}`~.solve` in several ways.
 
@@ -29,7 +31,9 @@ You can solve an equation using {func}`~.solve` in several ways.
 [-2, 2]
 ```
 
-3. Parse a string representing the equation into a form that SymPy can understand, then apply {func}`~.solve` to the parsed expression. *But this doesn't work for equality; does for inequality. Is there some way to do this for equality?*
+3. Parse a string representing the equation into a form that SymPy can understand, then apply {func}`~.solve` to the parsed expression. 
+
+*But this doesn't work for equality; does for inequality. Is there some way to do this for equality?*
 
 ```
 >>> from sympy import solve, parse_expr
@@ -41,11 +45,22 @@ You can solve an equation using {func}`~.solve` in several ways.
 
 ## Using {func}`~.solveset`
 
-{func}`~.solveset` is best for solving equations that...
+{func}`~.solveset`
+- is best for solving equations that...
+- produces outputs in the format of [SymPy mathematical Sets](https://docs.sympy.org/dev/modules/sets.html?highlight=sets#module-sympy.sets.sets) rather than [Python sets](https://docs.python.org/3/library/stdtypes.html#set)
+- can return infinitely many solutions
+- clearly separates the complex and real domains
+
+```
+>>> from sympy import solveset
+>>> from sympy.abc import x
+>>> solveset(x**2 - 4)
+FiniteSet(-2, 2)
+```
 
 ## Not all equations can be solved algebraically
 
-Some equations have no algebraic solution. If SymPy returns an empty set, there may be a mistake in the equation:
+Some equations have no algebraic solution, in which case SymPy may return an empty set:
 
 ```
 >>> from sympy import solve, Eq
@@ -54,6 +69,8 @@ Some equations have no algebraic solution. If SymPy returns an empty set, there 
 >>> solve(eqn)
 []
 ```
+
+You may want to check whether there is a mistake in the equation.
 
 If SymPy returns an error such as `NotImplementedError`, there may be no way to solve the equation algebraically:
 
@@ -68,4 +85,6 @@ No algorithms are implemented to solve equation -x + cos(x)
 
 so you may have to {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` instead.
 
-It is also possible that there is a way to solve your equation algebraically, and SymPy has not have implemented an appropriate algorithm. You can ask about this on the mailing list, or open an issue on GitHub. *Is it appropriate to include such instructions on a page like this?*
+It is also possible that there is a way to solve your equation algebraically, and SymPy has not have implemented an appropriate algorithm. You can ask about this on the mailing list, or open an issue on GitHub. 
+
+*Is it appropriate to include such instructions on a page like this?*
