@@ -393,7 +393,7 @@ class AbstractPythonCodePrinter(CodePrinter):
 class ArrayPrinter:
 
     def _arrayify(self, indexed):
-        from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
+        from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
         try:
             return convert_indexed_to_array(indexed)
         except Exception:

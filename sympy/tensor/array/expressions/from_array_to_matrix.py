@@ -559,12 +559,12 @@ def convert_array_to_matrix(expr):
     Examples
     ========
 
-    >>> from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
+    >>> from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
     >>> from sympy.tensor.array import tensorcontraction, tensorproduct
     >>> from sympy import MatrixSymbol, Sum
     >>> from sympy.abc import i, j, k, l, N
-    >>> from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
-    >>> from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+    >>> from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
+    >>> from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
     >>> A = MatrixSymbol("A", N, N)
     >>> B = MatrixSymbol("B", N, N)
     >>> C = MatrixSymbol("C", N, N)

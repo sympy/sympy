@@ -26,7 +26,7 @@ def convert_indexed_to_array(expr, first_indices=None):
     Examples
     ========
 
-    >>> from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
+    >>> from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
     >>> from sympy import MatrixSymbol, Sum, symbols
 
     >>> i, j, k, d = symbols("i j k d")

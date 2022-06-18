@@ -18,7 +18,7 @@ from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct,
     PermuteDims, ArrayDiagonal
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter, _numpy_known_constants, \
     _numpy_known_functions, _scipy_known_constants, _scipy_known_functions
-from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
 from sympy.testing.pytest import skip, raises
 from sympy.external import import_module

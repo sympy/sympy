@@ -403,7 +403,7 @@ class PermuteDims(_CodegenArrayAbstract):
 
     This is evident when transforming back to matrix form:
 
-    >>> from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+    >>> from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
     >>> convert_array_to_matrix(cg)
     M.T
 
@@ -1455,7 +1455,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         Examples
         ========
 
-        >>> from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+        >>> from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
         >>> from sympy import MatrixSymbol
         >>> from sympy.abc import N
         >>> A = MatrixSymbol("A", N, N)
@@ -1497,7 +1497,7 @@ class ArrayContraction(_CodegenArrayAbstract):
 
         >>> from sympy import MatrixSymbol
         >>> from sympy.abc import N
-        >>> from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+        >>> from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
         >>> C = MatrixSymbol("C", N, N)
@@ -1751,7 +1751,7 @@ class _EditArrayContraction:
         if len(self.args_with_ind) == 0:
             self.args_with_ind.append(_ArgE(scalar))
         else:
-            from sympy.tensor.array.expressions.conv_array_to_matrix import _a2m_tensor_product
+            from sympy.tensor.array.expressions.from_array_to_matrix import _a2m_tensor_product
             self.args_with_ind[0].element = _a2m_tensor_product(scalar, self.args_with_ind[0].element)
 
     def to_array_contraction(self):
