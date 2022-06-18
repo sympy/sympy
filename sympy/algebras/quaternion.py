@@ -51,7 +51,7 @@ class Quaternion(Expr):
     is_commutative = False
 
     def __new__(cls, a=0, b=0, c=0, d=0, real_field=True):
-        a, b, c, d = sympify(a), sympify(b), sympify(c), sympify(d)
+        a, b, c, d = map(sympify, (a, b, c, d))
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
