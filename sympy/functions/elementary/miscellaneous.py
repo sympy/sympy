@@ -394,9 +394,8 @@ class MinMaxBase(Expr, LatticeOp):
             # remove redundant args that are easily identified
             args = cls._collapse_arguments(args, **assumptions)
             # find local zeros
-            args = frozenset(cls._find_localzeros(args, **assumptions))
-        else:
-            args = frozenset(args)
+            args = cls._find_localzeros(args, **assumptions)
+        args = frozenset(args)
 
         if not args:
             return cls.identity
