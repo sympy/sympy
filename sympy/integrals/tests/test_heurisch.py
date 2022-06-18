@@ -201,6 +201,9 @@ def test_heurisch_hacking():
     assert heurisch(1/sqrt(9 + 4*x**2), x, hints=[]) == \
         asinh(x*Rational(2, 3))/2
 
+    assert heurisch(1/sqrt(3*x**2-4), x, hints=[]) == \
+           sqrt(3)*log(3*x + sqrt(3)*sqrt(3*x**2 - 4))/3
+
 
 def test_heurisch_function():
     assert heurisch(f(x), x) is None

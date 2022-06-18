@@ -1,3 +1,4 @@
+import math
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
@@ -1040,7 +1041,7 @@ def test_issue_4403():
     assert integrate(sqrt(x**2 + z**2), x) == \
         z**2*asinh(x/z)/2 + x*sqrt(x**2 + z**2)/2
     assert integrate(sqrt(x**2 - z**2), x) == \
-        -z**2*acosh(x/z)/2 + x*sqrt(x**2 - z**2)/2
+        x*sqrt(x**2 - z**2)/2 - z**2*log(x + sqrt(x**2 - z**2))/2
 
     x = Symbol('x', real=True)
     y = Symbol('y', positive=True)
@@ -1918,6 +1919,12 @@ def test_issue_18527():
     expr = (cos(x)/(4+(sin(x))**2))
     res_real = integrate(expr.subs(x, xr), xr, manual=True).subs(xr, x)
     assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
+
+
+def test_issue_23566():
+    i = integrate(1/sqrt(x**2-1), (x, -2, -1))
+    assert i == -log(2 - sqrt(3))
+    assert math.isclose(i.n(), 1.31695789692482)
 
 
 def test_pr_23583():
