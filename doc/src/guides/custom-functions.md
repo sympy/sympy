@@ -5,13 +5,15 @@
      sure to also update the complete example at the end. -->
 
 This guide will describe how to create custom function classes in SymPy.
-Custom functions use the same mechanisms as the {ref}`functions <functions>`
-that are included with SymPy such as the common {ref}`elementary functions
-<elementary-functions>` like {class}`~.exp()` or {class}`~.sin()`,
+Custom user defined functions use the same mechanisms as the {ref}`functions
+<functions>` that are included with SymPy such as the common {ref}`elementary
+functions <elementary-functions>` like {class}`~.exp()` or {class}`~.sin()`,
 {ref}`special functions <special-functions>` like {class}`~.gamma()` or
 {class}`~.Si()`, and {ref}`combinatorial functions <combinatorial-functions>`
 and {ref}`number theory functions <ntheory-module>` like
-{class}`~.factorial()` or {func}`~.primepi()`.
+{class}`~.factorial()` or {func}`~.primepi()`. Consequently, this guide serves
+both as a guide to end users who want to define their own custom functions and
+to SymPy developers wishing to extend the functions included with SymPy.
 
 This guide describes how to define complex valued functions, that is functions
 that map a subset of $\mathbb{C}^n$ to $\mathbb{C}$. Functions that accept or
@@ -184,6 +186,8 @@ function](https://en.wikipedia.org/wiki/Versine). Versine is a trigonometric
 function which was used historically alongside some of the more familiar
 trigonometric functions like sine and cosine. It is rarely used today. Versine
 can be defined by the identity
+
+(custom-functions-versine-definition)=
 
 $$\operatorname{versin}(x) = 1 - \cos(x).$$
 
@@ -398,7 +402,7 @@ avoided.
   a function that only made sense with certain inputs. As a second example,
   let's define a function `divides` as
 
-  (custom-functions-divides)=
+  (custom-functions-divides-definition)=
 
   $$\operatorname{divides}(m, n) = \begin{cases} 1 & \text{for}\: m \mid n \\
   0 & \text{for}\: m\not\mid n  \end{cases}.$$
@@ -479,6 +483,7 @@ avoided.
   variables, that is, fail if the assumption is `False` but allow the
   assumption to be `None`.
 
+  (custom-functions-divides-eval)=
   ```py
   >>> class divides(Function):
   ...     @classmethod
@@ -543,16 +548,18 @@ of its input. In this case, you can define <code class="docutils
 literal notranslate"><span class="pre">is_*assumption*</span></code> directly
 on the class.
 
-For example, the `divides` function [defined above](custom-functions-divides)
-is always an integer, because its value is always either 0 or 1.
+For example, our [example `divides`
+function](custom-functions-divides-definition) is always an integer, because
+its value is always either 0 or 1:
 
-```{note}
+
+```{sidebar} Note
 
 From here on out in this guide, in the interest of space, we will omit the
 previous method definitions in the examples unless they are needed for the
 given example to work. There are [complete
-examples](custom-functions-complete-examples) with all methods included at the
-end of this guide.
+examples](custom-functions-complete-examples) at the end of this guide with
+all the methods.
 
 ```
 
@@ -573,9 +580,10 @@ In general, however, the assumptions of a function depend on the assumptions
 of its inputs. In this case, you should define an <code class="docutils literal notranslate"><span
 class="pre">\_eval\_*assumption*</span></code> method.
 
-For our $\operatorname{versin}$ function, the function is always between 0 and
-2 for real valued inputs, and it is 0 whenever the input is an even multiple
-of π. So `versin(x)` should be *nonnegative* whenever `x` is *real* and
+For our [$\operatorname{versin}(x)$
+example](custom-functions-versine-definition), the function is always in $[0,
+2]$ when $x$ is real, and it is 0 exactly when $x$ is an even multiple of
+$\pi$. So `versin(x)` should be *nonnegative* whenever `x` is *real* and
 *positive* whenever `x` is *real* and not an *even* multiple of π. Remember
 that by default, a function's domain is all of $\mathbb{C}$, and indeed
 `versin(x)` makes perfect sense with non-real `x`.
@@ -602,21 +610,37 @@ arguments of the function using `self.args`.
 True
 ```
 
-Note the use of `fuzzy_` functions in the more complicated `_eval_is_positive()`
-handler. It is important when working with assumptions to always be careful
-about [handling three-valued logic correctly](booleans-guide).
+Note the use of `fuzzy_` functions in the more complicated
+`_eval_is_positive()` handler. It is important when working with assumptions
+to always be careful about [handling three-valued logic
+correctly](booleans-guide). These ensure that the method returns the correct
+answer when `x.is_real` or `(x/pi).is_even` are `None`.
 
-It is not necessary to define `_eval_is_real()` because it is deduced automatically
-from the other assumptions, since `nonnegative -> real`. In general, you
-should avoid defining assumptions that the assumptions system can deduce
-automatically given its [known facts](assumptions-guide-predicates).
+```{warning}
+
+Never define <code class="docutils literal notranslate"><span
+class="pre">is_*assumption*</span></code> as a `@property` method. Doing so
+will break the automatic deduction of other assumptions. <code class="docutils
+literal notranslate"><span class="pre">is_*assumption*</span></code> should
+only ever be defined as a class variable equal to `True` or `False`. If the
+assumption depends on the `.args` of the function somehow, define the <code
+class="docutils literal notranslate"><span
+class="pre">\_eval\_*assumption*</span></code> method.
+
+```
+
+In this example, it is not necessary to define `_eval_is_real()` because it is
+deduced automatically from the other assumptions, since `nonnegative -> real`.
+In general, you should avoid defining assumptions that the assumptions system
+can deduce automatically given its [known
+facts](assumptions-guide-predicates).
 
 ```py
 >>> versin(1).is_real
 True
 ```
 
-The assumptions system is sometimes able to deduce more than you might think.
+The assumptions system is often able to deduce more than you might think.
 For example, from the above, it can deduce that `versin(2*n*pi)` is zero when
 `n` is an integer.
 
@@ -644,16 +668,16 @@ functions defined in SymPy itself are required to be extensively tested.
 <!-- TODO: this goes over the basics, but it might be useful to have a
      separate guide dedicated to numerical evaluation. -->
 
-Here we show how to define how to define how a function should numerically
-evaluate to a floating point {class}`~.Float` value, for instance, via
-`evalf()`. Implementing numerical evaluation enables several behaviors in SymPy.
-For example, once `evalf()` is defined, you can plot your function, and things
+Here we show how to define how a function should numerically evaluate to a
+floating point {class}`~.Float` value, for instance, via `evalf()`.
+Implementing numerical evaluation enables several behaviors in SymPy. For
+example, once `evalf()` is defined, you can plot your function, and things
 like inequalities can evaluate to explicit values.
 
 If your function has the same name as a function in
-[mpmath](https://mpmath.org/doc/current/), as is the case for most functions in SymPy,
-numerical evaluation will happen automatically and you do not need to do
-anything.
+[mpmath](https://mpmath.org/doc/current/), which is the case for most
+functions included with SymPy, numerical evaluation will happen automatically
+and you do not need to do anything.
 
 If this is not the case, numerical evaluation can be specified by defining the
 method `_eval_evalf(self, prec)`, where `prec` binary precision of the input.
@@ -666,16 +690,17 @@ The `prec` argument to `_eval_evalf()` is the *binary* precision, that is, the
 number of bits in the floating-point representation. This differs from the
 first argument to the `evalf()` method, which is the *decimal* precision, or
 `dps`. For example, the default binary precision of `Float` is 53,
-corresponding to a decimal precision of 15. Therefore, when your `_eval_evalf()`
+corresponding to a decimal precision of 15. Therefore, if your `_eval_evalf()`
 method recursively calls evalf on another expression, it should call
 `expr._eval_evalf(prec)` rather than `expr.evalf(prec)`, as the latter will
 incorrectly use `prec` as the decimal precision.
 
 ```
 
-We can define numerical evaluation for our example $\operatorname{versin}(x)$
-function by recursively evaluating $2\sin(\frac{x}{2})^2$, which is a more
-numerically stable way of writing $1 - \cos(x)$.
+We can define numerical evaluation for [our example $\operatorname{versin}(x)$
+function](custom-functions-versine-definition) by recursively evaluating
+$2\sin^2\left(\frac{x}{2}\right)$, which is a more numerically stable way of writing $1 -
+\cos(x)$.
 
 ```py
 >>> from sympy import sin
@@ -704,11 +729,11 @@ floating-point inputs. It is not required to implement this manually in
 Note that `evalf()` may be passed any expression, not just one that can be
 evaluated numerically. In this case, it is expected that the numerical parts
 of an expression will be evaluated. A general pattern to follow is to
-recursively call `_eval_evalf()` on the arguments of the function.
+recursively call `_eval_evalf(prec)` on the arguments of the function.
 
 Whenever possible, it's best to reuse the evalf functionality defined in
 existing SymPy functions. However, in some cases it will be necessary to use
-`mpmath` directly.
+mpmath directly.
 
 (custom-functions-rewriting-and-simplification)=
 ### Rewriting and Simplification
@@ -718,25 +743,29 @@ on custom subclasses. Not every function in SymPy has such hooks. See the
 documentation of each individual function for details.
 
 (custom-functions-rewrite)=
-#### Rewrite
+#### `rewrite()`
 
 The {meth}`~.rewrite` method allows rewriting an expression in terms of a
-specific function or rule. For example, `sin(x).rewrite(cos)` returns `cos(x -
-pi/2)`.
+specific function or rule. For example,
+
+```
+>>> sin(x).rewrite(cos)
+cos(x - pi/2)
+```
 
 To implement rewriting, define a method `_eval_rewrite(self, rule, args,
-**hints)`:
+**hints)`, where
 
-- `rule` is the *rule* passed to the rewrite() method. Typically `rule` will
+- `rule` is the *rule* passed to the `rewrite()` method. Typically `rule` will
   be the class of the object to be rewritten to, although for more complex
   rewrites, it can be anything. Each object that defines `_eval_rewrite()`
-  defines what rule(s) it supports. Rewrite rules to common SymPy functions
-  may be used inside of SymPy functions to perform other simplifications or
+  defines what rule(s) it supports. Many SymPy functions rewrite to common
+  classes, like `expr.rewrite(Add)`, to perform simplifications or other
   computations.
 
 - `args` are the arguments of the function to be used for rewriting. This
   should be used instead of `self.args` because any recursive expressions in
-  the args will be rewritten in `args` (assuming the user uses
+  the args will be rewritten in `args` (assuming the caller used
   `rewrite(deep=True)`, which is the default).
 
 - `**hints` are additional keyword arguments which may be used to specify the
@@ -744,11 +773,11 @@ To implement rewriting, define a method `_eval_rewrite(self, rule, args,
   passed to other `_eval_rewrite()` methods.
 
 
-The function should return a rewritten expression, using `args` as the
+The method should return a rewritten expression, using `args` as the
 arguments to the function, or `None` if the expression should be unchanged.
 
-For our `versin` example, an obvious rewrite we can implement is rewriting
-`versin(x)` as `1 - cos(x)`.
+For our [`versin` example](custom-functions-versine-definition), an obvious
+rewrite we can implement is rewriting `versin(x)` as `1 - cos(x)`:
 
 ```py
 >>> class versin(Function):
@@ -759,7 +788,7 @@ For our `versin` example, an obvious rewrite we can implement is rewriting
 1 - cos(x)
 ```
 
-Note that this definition actually allows {func}`~.simplify` to simplify some
+Once we've defined this, {func}`~.simplify` is now able to simplify some
 expressions containing `versin`:
 
 ```
@@ -783,7 +812,7 @@ users are better off just defining rewrite(), doit(), and/or expand().
 
 The {meth}`doit() <sympy.core.basic.Basic.doit>` method is used to evaluate
 "unevaluated" functions. To define `doit()` implement `doit(self, deep=True,
-**hints)`. If `deep=True`, `doit()` should recursively call doit on the
+**hints)`. If `deep=True`, `doit()` should recursively call `doit()` on the
 arguments. `**hints` will be any other keyword arguments passed to the user,
 which should be passed to any recursive calls to `doit()`. You can use `hints`
 to allow the user to specify specific behavior for `doit()`.
@@ -791,7 +820,7 @@ to allow the user to specify specific behavior for `doit()`.
 The typical usage of `doit()` in custom `Function` subclasses is to perform more
 advanced evaluation which is not performed in [`eval()`](custom-functions-eval).
 
-For example, for our [`divides` example](custom-functions-divides),
+For example, for our [`divides` example](custom-functions-divides-definition),
 there are several instances that could be simplified using some identities.
 For example, we defined `eval()` to evaluate on explicit integers, but we might
 also want to evaluate examples like `divides(k, k*n)` where the divisibility
@@ -805,16 +834,19 @@ k*n)` without it always evaluating.
 The solution is to implement these more advanced evaluations in `doit()`. That
 way, we can explicitly perform them by calling `expr.doit()`, but they won't
 happen by default. An example `doit()` for `divides` that performs this
-simplification (along with the above definition of `eval()`) might look like
-this:
+simplification (along with the [above definition of
+`eval()`](custom-functions-divides-eval)) might look like this:
 
 ```
 >>> class divides(Function):
+...     # Define evaluation on basic inputs, as well as type checking that the
+...     # inputs are not nonintegral.
 ...     @classmethod
 ...     def eval(cls, m, n):
 ...         # Evaluate for explicit integer m and n.
 ...         if isinstance(m, Integer) and isinstance(n, Integer):
 ...             return int(n % m == 0)
+...
 ...         # For symbolic arguments, require m and n to be integer.
 ...         if m.is_integer is False or n.is_integer is False:
 ...             raise TypeError("m and n should be integers")
@@ -823,8 +855,13 @@ this:
 ...     # assumptions.
 ...     def doit(self, deep=False, **hints):
 ...         m, n = self.args
+...         # Recursively call doit() on the args whenever deep=True.
+...         # Be sure to pass deep=True and **hints through here.
 ...         if deep:
 ...            m, n = m.doit(deep=deep, **hints), n.doit(deep=deep, **hints)
+...
+...         # divides(m, n) is 1 iff n/m is an integer. Note that m and n are
+...         # already assumed to be integers because of the logic in eval().
 ...         isint = (n/m).is_integer
 ...         if isint is True:
 ...             return 1
@@ -834,11 +871,11 @@ this:
 ...             return divides(m, n)
 ```
 
-Note that this uses the
+(Note that this uses the
 [convention](https://en.wikipedia.org/wiki/Divisor#Definition) that $k \mid 0$
-for all $k$ so that we do not need to check if `m` or `n` are nonzero If we
+for all $k$ so that we do not need to check if `m` or `n` are nonzero. If we
 used a different convention we would need to check if `m.is_zero` and
-`n.is_zero` before performing the simplification.
+`n.is_zero` before performing the simplification.)
 
 ```
 >>> n, m, k = symbols('n m k', integer=True)
@@ -848,17 +885,17 @@ divides(k, k*n)
 1
 ```
 
-Another option is for `doit()` to always return another expression. This
-effectively treats the function as an "unevaluated" form of another
-expression.
+Another common way to implement `doit()` is for it to always return another
+expression. This effectively treats the function as an "unevaluated" form of
+another expression.
 
-(custom-functions-fma)=
+(custom-functions-fma-definition)=
 
 For example, let's define a function for [fused
 multiply-add](https://en.wikipedia.org/w/index.php?title=Fused_multiply_add):
 $\operatorname{FMA}(x, y, z) = xy + z$. It may be useful to express this
-function as a separate option, e.g., for the purposes of code generation, but
-it would also be useful in some contexts to "evaluate" `FMA(x, y, z)` to
+function as a distinct function, e.g., for the purposes of code generation,
+but it would also be useful in some contexts to "evaluate" `FMA(x, y, z)` to
 `x*y + z` so that it can properly simplify with other expressions.
 
 ```
@@ -875,6 +912,8 @@ it would also be useful in some contexts to "evaluate" `FMA(x, y, z)` to
 ...
 ...     def doit(self, deep=True, **hints):
 ...         x, y, z = self.args
+...         # Recursively call doit() on the args whenever deep=True.
+...         # Be sure to pass deep=True and **hints through here.
 ...         if deep:
 ...             x = x.doit(deep=deep, **hints)
 ...             y = y.doit(deep=deep, **hints)
@@ -899,40 +938,24 @@ doesn't evaluate by default but can be evaluated on demand (see the
 (custom-functions-expand)=
 #### expand()
 
-The {func}`~.expand()` function "expands" an expression in various ways. It
-is actually a wrapper around several sub-expansion hints. Each of these
-functions corresponds to a specific expansion method:
-
-- {func}`basic <sympy.core.function.expand>`
-- {func}`log <sympy.core.function.expand_log>`
-- {func}`mul <sympy.core.function.expand_mul>`
-- {func}`multinomial <sympy.core.function.expand_multinomial>`
-- {func}`complex <sympy.core.function.expand_complex>` *
-- {func}`trig <sympy.core.function.expand_trig>` *
-- {func}`power_base <sympy.core.function.expand_power_base>`
-- {func}`power_exp <sympy.core.function.expand_power_exp>`
-- {func}`func <sympy.core.function.expand_func>` *
-
-(Hints marked with * are not performed by the `expand()` function/method
-unless explicitly enabled)
-
-Each function corresponds to a hint to the `expand()` function/method. A
-specific expand *hint* can be defined in a custom function by defining <code
+The {func}`~.expand()` function "expands" an expression in various ways. It is
+actually a wrapper around several sub-expansion hints. Each function
+corresponds to a hint to the `expand()` function/method. A specific expand
+*hint* can be defined in a custom function by defining <code class="docutils
+literal notranslate"><span class="pre">\_eval_expand_<em>hint</em>(self,
+**hints)</span></code>. See the documentation of {func}`~.expand` for details
+on which hints are defined and the documentation for each specific <code
 class="docutils literal notranslate"><span
-class="pre">_eval_expand_*hint*(self, **hints)</span></code>. See the
-documentation links above for details on what each hint is designed to do.
-
-The `basic` and `func` hints are designed as catchall hints for expansions
-that do not fit into any of the other categories---`basic` happens by default
-in `expand()` and the `func` only happens when the `func=True` hint is
-explicitly passed.
+class="pre">expand_*hint*()</span></code> function (e.g.,
+{func}`~.expand_trig`) for details on what each hint is designed to do.
 
 The `**hints` keyword arguments are additional hints that may be passed to the
-expand function to specify additional behavior. Unknown hints should be
-ignored as they may apply to other functions' custom `expand()` methods. A
+expand function to specify additional behavior (these are separate from the
+predefined *hints* described in the previous paragraph). Unknown hints should
+be ignored as they may apply to other functions' custom `expand()` methods. A
 common hint to define is `force`, where `force=True` would force an expansion
-that might not be mathematically valid for all the given input assumptions,
-for example, `expand_log(log(x*y), force=True)` produces `log(x) + log(y)`
+that might not be mathematically valid for all the given input assumptions.
+For example, `expand_log(log(x*y), force=True)` produces `log(x) + log(y)`
 even though this identity is not true for all complex `x` and `y` (typically
 `force=False` is the default).
 
@@ -940,8 +963,9 @@ Note that expand automatically takes care of recursively expanding expressions
 using its own `deep` flag, so  `_eval_expand_*` methods should not
 recursively call expand on the arguments of the function.
 
-For our `versin` example, we can define rudimentary `trig` expansion by
-recursively calling `expand_trig()` on `1 - cos(x)`:
+For our [`versin` example](custom-functions-versine-definition), we can
+define rudimentary `trig` expansion by recursively calling `expand_trig()` on
+`1 - cos(x)`:
 
 ```
 >>> from sympy import expand_trig
@@ -955,7 +979,7 @@ sin(x)*sin(y) - cos(x)*cos(y) + 1
 ```
 
 A more sophisticated implementation might attempt to rewrite the result of
-`expand_trig(1 - cos(x))` back into `versin` functions. We leave this as an
+`expand_trig(1 - cos(x))` back into `versin` functions. This is left as an
 exercise for the reader.
 
 (custom-functions-differentiation)=
@@ -980,8 +1004,8 @@ of {class}`~.Expr` that aren't `Function` subclasses will need to define
 
 ```
 
-For our example function $\operatorname{versin}(x) = 1 - \cos(x)$, the
-derivative is $\sin(x)$.
+For our [$\operatorname{versin} example
+function](custom-functions-versine-definition), the derivative is $\sin(x)$.
 
 ```py
 >>> class versin(Function):
@@ -997,7 +1021,8 @@ sin(x)
 ```
 
 As an example of a function that has multiple arguments, consider the [fused
-multiply-add (FMA)](custom-functions-fma) example defined above ($\operatorname{FMA}(x, y, z) = xy + z$).
+multiply-add (FMA) example](custom-functions-fma-definition) defined above
+($\operatorname{FMA}(x, y, z) = xy + z$).
 
 We have
 
@@ -1085,7 +1110,7 @@ behavior is to print functions using their name. However, in some cases we may
 want to define special printing for a function.
 
 For example, for our [divides example
-above](custom-functions-divides), we may want the LaTeX printer to
+above](custom-functions-divides-definition), we may want the LaTeX printer to
 print a more mathematical expression. Let's make it print `divides(m, n)` as
 `\left [ m \middle | n \right ]`, which looks like $\left [ m \middle | n
 \right ]$ (here $[P]$ is the [Iverson
@@ -1149,10 +1174,11 @@ of `f(x)`. Defining `inverse()` on a function that is not one-to-one may
 result in `solve()` not given all possible solutions to an expression
 containing the function.
 
-Our example function $\operatorname{versin}$ is not one-to-one (because $\cos$
-is not), but its inverse $\operatorname{arcversin}$ is. We may define it as
-follows (using the same naming convention as other inverse trig functions in
-SymPy):
+Our [example function
+$\operatorname{versin}$](custom-functions-versine-definition) is not
+one-to-one (because $\cos$ is not), but its inverse $\operatorname{arcversin}$
+is. We may define it as follows (using the same naming convention as other
+inverse trig functions in SymPy):
 
 ```py
 >>> class aversin(Function):
@@ -1181,8 +1207,8 @@ methods](custom-functions-expand), `**hints` may be any hints to allow the
 user to specify the behavior of the method. They should be passed through on
 recursive calls.
 
-For our `versin` example, we can recursively use the `as_real_imag()` that is
-already defined for `1 - cos(x)`.
+For our [`versin` example](custom-functions-versine-definition), we can
+recursively use the `as_real_imag()` that is already defined for `1 - cos(x)`.
 
 ```py
 >>> class versin(Function):
@@ -1423,8 +1449,13 @@ printer (`_latex()`).
 ...     # assumptions.
 ...     def doit(self, deep=False, **hints):
 ...         m, n = self.args
+...         # Recursively call doit() on the args whenever deep=True.
+...         # Be sure to pass deep=True and **hints through here.
 ...         if deep:
 ...            m, n = m.doit(deep=deep, **hints), n.doit(deep=deep, **hints)
+...
+...         # divides(m, n) is 1 iff n/m is an integer. Note that m and n are
+...         # already assumed to be integers because of the logic in eval().
 ...         isint = (n/m).is_integer
 ...         if isint is True:
 ...             return 1
@@ -1542,6 +1573,8 @@ the other important methods discussed in this guide.
 ...     # evaluated to its expanded form in other contexts.
 ...     def doit(self, deep=True, **hints):
 ...         x, y, z = self.args
+...         # Recursively call doit() on the args whenever deep=True.
+...         # Be sure to pass deep=True and **hints through here.
 ...         if deep:
 ...             x = x.doit(deep=deep, **hints)
 ...             y = y.doit(deep=deep, **hints)
