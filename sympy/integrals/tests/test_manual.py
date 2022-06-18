@@ -1,11 +1,12 @@
 from sympy.core.expr import Expr
+from sympy.core.mul import Mul
 from sympy.core.function import (Derivative, Function, diff, expand)
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, csch, cosh, coth, sech, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
@@ -144,16 +145,13 @@ def test_manualintegrate_inversetrig():
     rb = Symbol('b', real=True)
     assert manualintegrate(1/(ra + rb*x**2), x) == \
         Piecewise((atan(x/sqrt(ra/rb))/(rb*sqrt(ra/rb)), ra/rb > 0),
-                  (-acoth(x/sqrt(-ra/rb))/(rb*sqrt(-ra/rb)), And(ra/rb < 0, x**2 > -ra/rb)),
-                  (-atanh(x/sqrt(-ra/rb))/(rb*sqrt(-ra/rb)), And(ra/rb < 0, x**2 < -ra/rb)))
+                  ((log(x - sqrt(-ra/rb)) - log(x + sqrt(-ra/rb)))/(2*sqrt(rb)*sqrt(-ra)), True))
     assert manualintegrate(1/(4 + rb*x**2), x) == \
-        Piecewise((atan(x/(2*sqrt(1/rb)))/(2*rb*sqrt(1/rb)), 4/rb > 0),
-                  (-acoth(x/(2*sqrt(-1/rb)))/(2*rb*sqrt(-1/rb)), And(4/rb < 0, x**2 > -4/rb)),
-                  (-atanh(x/(2*sqrt(-1/rb)))/(2*rb*sqrt(-1/rb)), And(4/rb < 0, x**2 < -4/rb)))
+        Piecewise((atan(x/(2*sqrt(1/rb)))/(2*rb*sqrt(1/rb)), 1/rb > 0),
+                  (-I*(log(x - 2*sqrt(-1/rb)) - log(x + 2*sqrt(-1/rb)))/(4*sqrt(rb)), True))
     assert manualintegrate(1/(ra + 4*x**2), x) == \
-        Piecewise((atan(2*x/sqrt(ra))/(2*sqrt(ra)), ra/4 > 0),
-                  (-acoth(2*x/sqrt(-ra))/(2*sqrt(-ra)), And(ra/4 < 0, x**2 > -ra/4)),
-                  (-atanh(2*x/sqrt(-ra))/(2*sqrt(-ra)), And(ra/4 < 0, x**2 < -ra/4)))
+        Piecewise((atan(2*x/sqrt(ra))/(2*sqrt(ra)), ra > 0),
+                  ((log(x - sqrt(-ra)/2) - log(x + sqrt(-ra)/2))/(4*sqrt(-ra)), True))
     assert manualintegrate(1/(4 + 4*x**2), x) == atan(x) / 4
 
     assert manualintegrate(1/(a + b*x**2), x) == atan(x/sqrt(a/b))/(b*sqrt(a/b))
@@ -242,9 +240,11 @@ def test_manualintegrate_trivial_substitution():
     assert manualintegrate((f(x) - f(-x))/x, x) == \
         -Integral(f(-x)/x, x) + Integral(f(x)/x, x)
 
+
 def test_manualintegrate_rational():
-    assert manualintegrate(1/(4 - x**2), x) == Piecewise((acoth(x/2)/2, x**2 > 4), (atanh(x/2)/2, x**2 < 4))
-    assert manualintegrate(1/(-1 + x**2), x) == Piecewise((-acoth(x), x**2 > 1), (-atanh(x), x**2 < 1))
+    assert manualintegrate(1/(4 - x**2), x) == -log(x - 2)/4 + log(x + 2)/4
+    assert manualintegrate(1/(-1 + x**2), x) == log(x - 1)/2 - log(x + 1)/2
+
 
 def test_manualintegrate_special():
     f, F = 4*exp(-x**2/3), 2*sqrt(3)*sqrt(pi)*erf(sqrt(3)*x/3)
@@ -453,9 +453,8 @@ def test_issue_10847():
 
     rc = Symbol('c', real=True)
     assert manualintegrate(x**2 / (x**2 - rc), x) == \
-        rc*Piecewise((atan(x/sqrt(-rc))/sqrt(-rc), -rc > 0),
-                     (-acoth(x/sqrt(rc))/sqrt(rc), And(-rc < 0, x**2 > rc)),
-                     (-atanh(x/sqrt(rc))/sqrt(rc), And(-rc < 0, x**2 < rc))) + x
+        rc*Piecewise((atan(x/sqrt(-rc))/sqrt(-rc), rc < 0),
+                     ((log(-sqrt(rc) + x) - log(sqrt(rc) + x))/(2*sqrt(rc)), True)) + x
 
     assert manualintegrate(sqrt(x - y) * log(z / x), x) == \
         4*y**Rational(3, 2)*atan(sqrt(x - y)/sqrt(y))/3 - 4*y*sqrt(x - y)/3 +\
@@ -464,28 +463,31 @@ def test_issue_10847():
     rz = Symbol('z', real=True)
     assert manualintegrate(sqrt(x - ry) * log(rz / x), x) == \
         4*ry**2*Piecewise((atan(sqrt(x - ry)/sqrt(ry))/sqrt(ry), ry > 0),
-                         (-acoth(sqrt(x - ry)/sqrt(-ry))/sqrt(-ry), And(x - ry > -ry, ry < 0)),
-                         (-atanh(sqrt(x - ry)/sqrt(-ry))/sqrt(-ry), And(x - ry < -ry, ry < 0)))/3 \
+                         ((log(-sqrt(-ry) + sqrt(x - ry)) - log(sqrt(-ry) + sqrt(x - ry)))/(2*sqrt(-ry)), True))/3 \
                          - 4*ry*sqrt(x - ry)/3 + 2*(x - ry)**Rational(3, 2)*log(rz/x)/3 \
                          + 4*(x - ry)**Rational(3, 2)/9
 
     assert manualintegrate(sqrt(x) * log(x), x) == 2*x**Rational(3, 2)*log(x)/3 - 4*x**Rational(3, 2)/9
     assert manualintegrate(sqrt(a*x + b) / x, x) == \
-        2*b*atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b) + 2*sqrt(a*x + b)
+        Piecewise((2*b*atan(sqrt(a*x + b)/sqrt(-b))/sqrt(-b) + 2*sqrt(a*x + b), Ne(a, 0)), (sqrt(b)*log(x), True))
     ra = Symbol('a', real=True)
     rb = Symbol('b', real=True)
     assert manualintegrate(sqrt(ra*x + rb) / x, x) == \
-        -2*rb*Piecewise((-atan(sqrt(ra*x + rb)/sqrt(-rb))/sqrt(-rb), -rb > 0),
-                        (acoth(sqrt(ra*x + rb)/sqrt(rb))/sqrt(rb), And(-rb < 0, ra*x + rb > rb)),
-                        (atanh(sqrt(ra*x + rb)/sqrt(rb))/sqrt(rb), And(-rb < 0, ra*x + rb < rb))) \
-                        + 2*sqrt(ra*x + rb)
+        Piecewise(
+            (-2*rb*Piecewise(
+                (-atan(sqrt(ra*x + rb)/sqrt(-rb))/sqrt(-rb), rb < 0),
+                (-I*(log(-sqrt(rb) + sqrt(ra*x + rb)) - log(sqrt(rb) + sqrt(ra*x + rb)))/(2*sqrt(-rb)), True)) +
+             2*sqrt(ra*x + rb), Ne(ra, 0)),
+            (sqrt(rb)*log(x), True))
 
-    assert expand(manualintegrate(sqrt(ra*x + rb) / (x + rc), x)) == -2*ra*rc*Piecewise((atan(sqrt(ra*x + rb)/sqrt(ra*rc - rb))/sqrt(ra*rc - rb), \
-        ra*rc - rb > 0), (-acoth(sqrt(ra*x + rb)/sqrt(-ra*rc + rb))/sqrt(-ra*rc + rb), And(ra*rc - rb < 0, ra*x + rb > -ra*rc + rb)), \
-        (-atanh(sqrt(ra*x + rb)/sqrt(-ra*rc + rb))/sqrt(-ra*rc + rb), And(ra*rc - rb < 0, ra*x + rb < -ra*rc + rb))) \
-        + 2*rb*Piecewise((atan(sqrt(ra*x + rb)/sqrt(ra*rc - rb))/sqrt(ra*rc - rb), ra*rc - rb > 0), \
-        (-acoth(sqrt(ra*x + rb)/sqrt(-ra*rc + rb))/sqrt(-ra*rc + rb), And(ra*rc - rb < 0, ra*x + rb > -ra*rc + rb)), \
-        (-atanh(sqrt(ra*x + rb)/sqrt(-ra*rc + rb))/sqrt(-ra*rc + rb), And(ra*rc - rb < 0, ra*x + rb < -ra*rc + rb))) + 2*sqrt(ra*x + rb)
+    assert expand(manualintegrate(sqrt(ra*x + rb) / (x + rc), x)) == \
+           Piecewise((-2*ra*rc*Piecewise((atan(sqrt(ra*x + rb)/sqrt(ra*rc - rb))/sqrt(ra*rc - rb), ra*rc - rb > 0),
+                                       (log(-sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)) -
+                                        log(sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)), True)) +
+                      2*rb*Piecewise((atan(sqrt(ra*x + rb)/sqrt(ra*rc - rb))/sqrt(ra*rc - rb), ra*rc - rb > 0),
+                                    (log(-sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)) -
+                                     log(sqrt(-ra*rc + rb) + sqrt(ra*x + rb))/(2*sqrt(-ra*rc + rb)), True)) +
+                      2*sqrt(ra*x + rb), Ne(ra, 0)), (sqrt(rb)*log(rc + x), True))
 
     assert manualintegrate(sqrt(2*x + 3) / (x + 1), x) == 2*sqrt(2*x + 3) - log(sqrt(2*x + 3) + 1) + log(sqrt(2*x + 3) - 1)
     assert manualintegrate(sqrt(2*x + 3) / 2 * x, x) == (2*x + 3)**Rational(5, 2)/20 - (2*x + 3)**Rational(3, 2)/4
@@ -518,8 +520,7 @@ def test_issue_13297():
 
 
 def test_issue_14470():
-    assert manualintegrate(1/(x*sqrt(x + 1)), x) == \
-        log(-1 + 1/sqrt(x + 1)) - log(1 + 1/sqrt(x + 1))
+    assert_is_integral_of(1/(x*sqrt(x + 1)), log(sqrt(x + 1) - 1) - log(sqrt(x + 1) + 1))
 
 
 @slow
@@ -583,6 +584,19 @@ def test_issue_23566():
     i = Integral(1/sqrt(x**2 - 1), (x, -2, -1)).doit(manual=True)
     assert i == -log(4 - 2*sqrt(3)) + log(2)
     assert str(i.n()) == '1.31695789692482'
+
+
+def test_manualintegrate_sqrt_linear():
+    assert_is_integral_of((5*x**3+4)/sqrt(2+3*x),
+                          10*(3*x + 2)**(S(7)/2)/567 - 4*(3*x + 2)**(S(5)/2)/27 +
+                          40*(3*x + 2)**(S(3)/2)/81 + 136*sqrt(3*x + 2)/81)
+    assert manualintegrate(x/sqrt(a+b*x)**3, x) == \
+        Piecewise((Mul(2, b**-2, a/sqrt(a + b*x) + sqrt(a + b*x)), Ne(b, 0)), (x**2/(2*a**(S(3)/2)), True))
+    assert_is_integral_of((sqrt(3*x+3)+1)/((2*x+2)**(1/S(3))+1),
+                          3*sqrt(6)*(2*x + 2)**(S(7)/6)/14 - 3*sqrt(6)*(2*x + 2)**(S(5)/6)/10 -
+                          3*sqrt(6)*(2*x + 2)**(S.One/6)/2 + 3*(2*x + 2)**(S(2)/3)/4 - 3*(2*x + 2)**(S.One/3)/2 +
+                          sqrt(6)*sqrt(2*x + 2)/2 + 3*log((2*x + 2)**(S.One/3) + 1)/2 +
+                          3*sqrt(6)*atan((2*x + 2)**(S.One/6))/2)
 
 
 def test_manualintegrate_sqrt_quadratic():
