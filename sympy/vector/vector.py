@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Type
 
 from sympy.core.add import Add
@@ -31,7 +32,7 @@ class Vector(BasisDependent):
     _add_func = None  # type: Type[Vector]
     _zero_func = None  # type: Type[Vector]
     _base_func = None  # type: Type[Vector]
-    zero = None  # type: VectorZero
+    zero: VectorZero
 
     @property
     def components(self):

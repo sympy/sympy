@@ -291,7 +291,7 @@ class Printer:
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
 
-    def _print(self, expr, **kwargs):
+    def _print(self, expr, **kwargs) -> str:
         """Internal dispatcher
 
         Tries the following concepts to print an expression:

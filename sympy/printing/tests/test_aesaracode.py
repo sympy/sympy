@@ -407,8 +407,6 @@ def test_slice():
     assert theq_slice(aesara_code_(slice(1, x, 3), dtypes=dtypes), slice(1, xt, 3))
 
 def test_MatrixSlice():
-    from aesara.graph.basic import Constant
-
     cache = {}
 
     n = sy.Symbol('n', integer=True)
@@ -422,7 +420,7 @@ def test_MatrixSlice():
     assert Yt.owner.inputs[0] == aesara_code_(X, cache=cache)
     # == doesn't work in Aesara like it does in SymPy. You have to use
     # equals.
-    assert all(Yt.owner.inputs[i].equals(Constant(s, i)) for i in range(1, 7))
+    assert all(Yt.owner.inputs[i].data == i for i in range(1, 7))
 
     k = sy.Symbol('k')
     aesara_code_(k, dtypes={k: 'int32'})
