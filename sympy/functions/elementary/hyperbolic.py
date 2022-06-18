@@ -1224,7 +1224,7 @@ class acosh(InverseHyperbolicFunction):
     >>> from sympy import acosh
     >>> from sympy.abc import x
     >>> acosh(x).diff(x)
-    1/sqrt(x**2 - 1)
+    1/(sqrt(x - 1)*sqrt(x + 1))
     >>> acosh(1)
     0
 
@@ -1236,7 +1236,8 @@ class acosh(InverseHyperbolicFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 1/sqrt(self.args[0]**2 - 1)
+            arg = self.args[0]
+            return 1/(sqrt(arg - 1)*sqrt(arg + 1))
         else:
             raise ArgumentIndexError(self, argindex)
 
