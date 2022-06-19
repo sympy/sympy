@@ -557,14 +557,24 @@ def rsolve_hyper(coeffs, f, n, **hints):
             for j in range(r + 1):
                 polys[j] *= Mul(*(denoms[:j] + denoms[j + 1:]))
 
-            R = rsolve_poly(polys, Mul(*denoms), n)
+            # FIXME: The call to rsolve_ratio below should suffice (rsolve_poly
+            # call can be removed) but the XFAIL test_rsolve_ratio_missed must
+            # be fixed first.
+            R = rsolve_ratio(polys, Mul(*denoms), n, symbols=True)
+            if R is not None:
+                R, syms = R
+                if syms:
+                    R = R.subs(zip(syms, [0]*len(syms)))
+            else:
+                R = rsolve_poly(polys, Mul(*denoms), n)
 
-            if not (R is None or R is S.Zero):
+            if R:
                 inhomogeneous[i] *= R
             else:
                 return None
 
             result = Add(*inhomogeneous)
+            result = simplify(result)
     else:
         result = S.Zero
 
@@ -622,14 +632,13 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if d == 0 and 0 != Add(*[recurr_coeffs[j]*j for j in range(1, r + 1)]):
                 # faster inline check (than calling rsolve_poly) for a
                 # constant solution to a constant coefficient recurrence.
-                C = Symbol("C" + str(len(symbols)))
-                s = [C]
+                sol = [Symbol("C" + str(len(symbols)))]
             else:
-                C, s = rsolve_poly(recurr_coeffs, 0, n, len(symbols), symbols=True)
+                sol, syms = rsolve_poly(recurr_coeffs, 0, n, len(symbols), symbols=True)
+                sol = sol.collect(syms)
+                sol = [sol.coeff(s) for s in syms]
 
-            if C is not None and C is not S.Zero:
-                symbols |= set(s)
-
+            for C in sol:
                 ratio = z * A * C.subs(n, n + 1) / B / C
                 ratio = simplify(ratio)
                 # If there is a nonnegative root in the denominator of the ratio,
@@ -651,11 +660,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
     kernel.sort(key=default_sort_key)
     sk = list(zip(numbered_symbols('C'), kernel))
 
-    if sk:
-        for C, ker in sk:
-            result += C * ker
-    else:
-        return None
+    for C, ker in sk:
+        result += C * ker
 
     if hints.get('symbols', False):
         # XXX: This returns the symbols in a non-deterministic order

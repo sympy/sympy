@@ -49,6 +49,7 @@ na = Symbol('na', nonzero=True, algebraic=True)
 
 def test_sin():
     x, y = symbols('x y')
+    z = symbols('z', imaginary=True)
 
     assert sin.nargs == FiniteSet(1)
     assert sin(nan) is nan
@@ -65,6 +66,7 @@ def test_sin():
 
     assert sin(0) == 0
 
+    assert sin(z*I) == I*sinh(z)
     assert sin(asin(x)) == x
     assert sin(atan(x)) == x / sqrt(1 + x**2)
     assert sin(acos(x)) == sqrt(1 - x**2)

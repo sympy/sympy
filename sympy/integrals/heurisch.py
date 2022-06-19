@@ -15,7 +15,7 @@ from sympy.core.sorting import ordered
 from sympy.core.traversal import iterfreeargs
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
-from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
+from sympy.functions import log, sinh, cosh, tanh, coth, asinh
 from sympy.functions import sqrt, erf, erfi, li, Ei
 from sympy.functions import besselj, bessely, besseli, besselk
 from sympy.functions import hankel1, hankel2, jn, yn
@@ -403,6 +403,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             rewrite = True
 
     terms = components(f, x)
+    dcache = DiffCache(x)
 
     if hints is not None:
         if not hints:
@@ -462,15 +463,16 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
                         if M is not None and M[b].is_positive:
                             if M[a].is_positive:
-                                terms.add(acosh(sqrt(M[a]/M[b])*x))
+                                dF = 1/sqrt(M[a]*x**2 - M[b])
+                                F = log(2*sqrt(M[a])*sqrt(M[a]*x**2 - M[b]) + 2*M[a]*x)/sqrt(M[a])
+                                dcache.cache[F] = dF  # hack: F.diff(x) doesn't automatically simplify to f
+                                terms.add(F)
                             elif M[a].is_negative:
                                 terms.add(-M[b]/2*sqrt(-M[a])*
                                            atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b])))
 
         else:
             terms |= set(hints)
-
-    dcache = DiffCache(x)
 
     for g in set(terms):  # using copy of terms
         terms |= components(dcache.get_diff(g), x)

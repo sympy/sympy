@@ -57,19 +57,19 @@ don't need to be manually added by the user.
 
 .. autofunction:: sympy.parsing.sympy_parser.factorial_notation
 
-Experimental `\textrm{\LaTeX}` Parsing
+Experimental `\mathrm{\LaTeX}` Parsing
 --------------------------------------
 
-`\textrm{\LaTeX}` parsing was ported from
+`\mathrm{\LaTeX}` parsing was ported from
 `latex2sympy <https://github.com/augustt198/latex2sympy>`_. While functional
 and its API should remain stable, the parsing behavior or backend may change in
 future releases.
 
-`\textrm{\LaTeX}` Parsing Caveats
+`\mathrm{\LaTeX}` Parsing Caveats
 ---------------------------------
 
 The current implementation is experimental. The behavior, parser backend and
-API might change in the future. Unlike some of the other parsers, `\textrm{\LaTeX}` is
+API might change in the future. Unlike some of the other parsers, `\mathrm{\LaTeX}` is
 designed as a *type-setting* language, not a *computer algebra system* and so
 can contain typographical conventions that might be interpreted multiple ways.
 
@@ -82,12 +82,12 @@ Will simply find ``x``. What is covered by this behavior will almost certainly
 change between releases, and become stricter, more relaxed, or some mix.
 
 
-`\textrm{\LaTeX}` Parsing Functions Reference
+`\mathrm{\LaTeX}` Parsing Functions Reference
 ---------------------------------------------
 
 .. autofunction:: sympy.parsing.latex.parse_latex
 
-`\textrm{\LaTeX}` Parsing Exceptions Reference
+`\mathrm{\LaTeX}` Parsing Exceptions Reference
 ----------------------------------------------
 
 .. autoclass:: sympy.parsing.latex.LaTeXParsingError

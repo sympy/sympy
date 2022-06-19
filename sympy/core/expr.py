@@ -1957,31 +1957,59 @@ class Expr(Basic, EvalfMixin):
         d.update(dict([self.as_base_exp()]))
         return d
 
-    def as_coefficients_dict(self):
+    def as_coefficients_dict(self, *syms):
         """Return a dictionary mapping terms to their Rational coefficient.
         Since the dictionary is a defaultdict, inquiries about terms which
-        were not present will return a coefficient of 0. If an expression is
-        not an Add it is considered to have a single term.
+        were not present will return a coefficient of 0.
+
+        If symbols ``syms`` are provided, any multiplicative terms
+        independent of them will be considered a coefficient and a
+        regular dictionary of syms-dependent generators as keys and
+        their corresponding coefficients as values will be returned.
 
         Examples
         ========
 
-        >>> from sympy.abc import a, x
+        >>> from sympy.abc import a, x, y
         >>> (3*x + a*x + 4).as_coefficients_dict()
         {1: 4, x: 3, a*x: 1}
         >>> _[a]
         0
         >>> (3*a*x).as_coefficients_dict()
         {a*x: 3}
+        >>> (3*a*x).as_coefficients_dict(x)
+        {x: 3*a}
+        >>> (3*a*x).as_coefficients_dict(y)
+        {1: 3*a*x}
 
         """
-        c, m = self.as_coeff_Mul()
-        if not c.is_Rational:
-            c = S.One
-            m = self
-        d = defaultdict(int)
-        d.update({m: c})
-        return d
+        d = defaultdict(list)
+        if not syms:
+            for ai in Add.make_args(self):
+                c, m = ai.as_coeff_Mul()
+                d[m].append(c)
+            for k, v in d.items():
+                if len(v) == 1:
+                    d[k] = v[0]
+                else:
+                    d[k] = Add(*v)
+        else:
+            ind, dep = self.as_independent(*syms, as_Add=True)
+            for i in Add.make_args(dep):
+                if i.is_Mul:
+                    c, x = i.as_coeff_mul(*syms)
+                    if c is S.One:
+                        d[i].append(c)
+                    else:
+                        d[i._new_rawargs(*x)].append(c)
+                elif i:
+                    d[i].append(S.One)
+            d = {k: Add(*d[k]) for k in d}
+            if ind is not S.Zero:
+                d.update({S.One: ind})
+        di = defaultdict(int)
+        di.update(d)
+        return di
 
     def as_base_exp(self) -> tuple[Expr, Expr]:
         # a -> b ** e
@@ -3500,7 +3528,7 @@ class Expr(Basic, EvalfMixin):
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 
-    def as_coeff_Add(self, rational=False):
+    def as_coeff_Add(self, rational=False) -> tuple['Number', Expr]:
         """Efficiently extract the coefficient of a summation. """
         return S.Zero, self
 

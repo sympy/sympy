@@ -415,37 +415,6 @@ class Add(Expr, AssocOp):
     def could_extract_minus_sign(self):
         return _could_extract_minus_sign(self)
 
-    def as_coefficients_dict(a):
-        """Return a dictionary mapping terms to their Rational coefficient.
-        Since the dictionary is a defaultdict, inquiries about terms which
-        were not present will return a coefficient of 0. If an expression is
-        not an Add it is considered to have a single term.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import a, x
-        >>> (3*x + a*x + 4).as_coefficients_dict()
-        {1: 4, x: 3, a*x: 1}
-        >>> _[a]
-        0
-        >>> (3*a*x).as_coefficients_dict()
-        {a*x: 3}
-        """
-
-        d = defaultdict(list)
-        for ai in a.args:
-            c, m = ai.as_coeff_Mul()
-            d[m].append(c)
-        for k, v in d.items():
-            if len(v) == 1:
-                d[k] = v[0]
-            else:
-                d[k] = Add(*v)
-        di = defaultdict(int)
-        di.update(d)
-        return di
-
     @cacheit
     def as_coeff_add(self, *deps):
         """

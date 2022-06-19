@@ -335,6 +335,8 @@ def test_trig():
 
 
 def test_integral():
+    if numpy and not scipy:
+        skip("scipy not installed.")
     f = Lambda(x, exp(-x**2))
     l = lambdify(y, Integral(f(x), (x, y, oo)))
     d = l(-oo)
@@ -342,6 +344,8 @@ def test_integral():
 
 
 def test_double_integral():
+    if numpy and not scipy:
+        skip("scipy not installed.")
     # example from http://mpmath.org/doc/current/calculus/integration.html
     i = Integral(1/(1 - x**2*y**2), (x, 0, 1), (y, 0, z))
     l = lambdify([z], i)
@@ -1572,3 +1576,12 @@ def test_lambdify_cse():
 def test_deprecated_set():
     with warns_deprecated_sympy():
         lambdify({x, y}, x + y)
+
+def test_23536_lambdify_cse_dummy():
+
+    f = Function('x')(y)
+    g = Function('w')(y)
+    expr = z + (f**4 + g**5)*(f**3 + (g*f)**3)
+    expr = expr.expand()
+    eval_expr = lambdify(((f, g), z), expr, cse=True)
+    eval_expr((1.0, 2.0), 3.0)

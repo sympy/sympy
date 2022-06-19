@@ -282,10 +282,12 @@ def ordered(seq, keys=None, default=True, warn=False):
 
     d = defaultdict(list)
     if keys:
-        if not isinstance(keys, (list, tuple)):
-            keys = [keys]
-        keys = list(keys)
-        f = keys.pop(0)
+        if isinstance(keys, (list, tuple)):
+            keys = list(keys)
+            f = keys.pop(0)
+        else:
+            f = keys
+            keys = []
         for a in seq:
             d[f(a)].append(a)
     else:
@@ -293,17 +295,16 @@ def ordered(seq, keys=None, default=True, warn=False):
             raise ValueError('if default=False then keys must be provided')
         d[None].extend(seq)
 
-    for k in sorted(d.keys()):
-        if len(d[k]) > 1:
+    for k, value in sorted(d.items()):
+        if len(value) > 1:
             if keys:
-                d[k] = ordered(d[k], keys, default, warn)
+                value = ordered(value, keys, default, warn)
             elif default:
-                d[k] = ordered(d[k], (_nodes, default_sort_key,),
+                value = ordered(value, (_nodes, default_sort_key,),
                                default=False, warn=warn)
             elif warn:
-                u = list(uniq(d[k]))
+                u = list(uniq(value))
                 if len(u) > 1:
                     raise ValueError(
                         'not enough keys to break ties: %s' % u)
-        yield from d[k]
-        d.pop(k)
+        yield from value

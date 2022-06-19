@@ -319,6 +319,8 @@ def test_geometric_sums():
             (1, Eq(exp(-2*I*pi*(k - q)/n), 1)), (0, True)
     )
 
+    #Issue 23491
+    assert Sum(1/(n**2 + 1), (n, 1, oo)).doit() == S(-1)/2 + pi/(2*tanh(pi))
 
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))

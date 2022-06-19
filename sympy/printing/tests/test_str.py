@@ -1,3 +1,4 @@
+from sympy import MatAdd
 from sympy.algebras.quaternion import Quaternion
 from sympy.assumptions.ask import Q
 from sympy.calculus.accumulationbounds import AccumBounds
@@ -988,6 +989,8 @@ def test_MatMul_MatAdd():
     assert str(-I*X) == "-I*X"
     assert str((1 + I)*X) == '(1 + I)*X'
     assert str(-(1 + I)*X) == '(-1 - I)*X'
+    assert str(MatAdd(MatAdd(X, Y), MatAdd(X, Y))) == '(X + Y) + (X + Y)'
+
 
 def test_MatrixSlice():
     n = Symbol('n', integer=True)

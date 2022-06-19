@@ -4,9 +4,12 @@ from subprocess import Popen, PIPE
 import os
 
 from sympy.core.singleton import S
-from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns_deprecated_sympy, skip
 from sympy.utilities.misc import (translate, replace, ordinal, rawlines,
                                   strlines, as_int, find_executable)
+from sympy.external import import_module
+
+pyodide_js = import_module('pyodide_js')
 
 
 def test_translate():
@@ -112,6 +115,8 @@ def test_translate_args():
 
 
 def test_debug_output():
+    if pyodide_js:
+        skip("can't run on pyodide")
     env = os.environ.copy()
     env['SYMPY_DEBUG'] = 'True'
     cmd = 'from sympy import *; x = Symbol("x"); print(integrate((1-cos(x))/x, x))'
