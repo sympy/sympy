@@ -1543,11 +1543,21 @@ not defined at all.
 vriables, which demonstrates how `argindex` works in the
 [`fdiff`](custom-functions-differentiation) example.
 
+Finally, `FMA` shows an example of defining some code printers for `C` and
+`C++` (using the method names from {attr}`.C99CodePrinter.printmethod` and
+{attr}`.CXX11CodePrinter.printmethod`), since that is a typical use-case for
+this function.
+
 The mathematical definition of FMA is very simple and it would be easy to
 define every method on it, but only a handful are shown here. The
 [versine](custom-functions-versine-full-example) and
 [divides](custom-functions-divides-full-example) examples show how to define
 the other important methods discussed in this guide.
+
+Note that if you want to actually use fused-multiply add for code generation,
+there is already a version in SymPy `sympy.codegen.cfunctions.fma()` which is
+supported by the existing code printers. The version here is only designed to
+serve as an example.
 
 #### Definition
 
@@ -1608,6 +1618,17 @@ the other important methods discussed in this guide.
 ...             return x
 ...         elif argindex == 3:
 ...             return 1
+...
+...     # Define code printers for ccode() and cxxcode()
+...     def _ccode(self, printer):
+...         x, y, z = self.args
+...         _x, _y, _z = printer._print(x), printer._print(y), printer._print(z)
+...         return "fma(%s, %s, %s)" % (_x, _y, _z)
+...
+...     def _cxxcode(self, printer):
+...         x, y, z = self.args
+...         _x, _y, _z = printer._print(x), printer._print(y), printer._print(z)
+...         return "std::fma(%s, %s, %s)" % (_x, _y, _z)
 ```
 
 #### Examples
@@ -1635,6 +1656,16 @@ x*y + z
 2*x
 >>> FMA(x, y, x).diff(x)
 y + 1
+```
+
+**Code Printers**
+
+```
+>>> from sympy import ccode, cxxcode
+>>> ccode(FMA(x, y, z))
+'fma(x, y, z)'
+>>> cxxcode(FMA(x, y, z))
+'std::fma(x, y, z)'
 ```
 
 ## Additional Tips
