@@ -959,13 +959,13 @@ For example, `expand_log(log(x*y), force=True)` produces `log(x) + log(y)`
 even though this identity is not true for all complex `x` and `y` (typically
 `force=False` is the default).
 
-Note that expand automatically takes care of recursively expanding expressions
-using its own `deep` flag, so  `_eval_expand_*` methods should not
+Note that `expand()` automatically takes care of recursively expanding
+expressions using its own `deep` flag, so `_eval_expand_*` methods should not
 recursively call expand on the arguments of the function.
 
-For our [`versin` example](custom-functions-versine-definition), we can
-define rudimentary `trig` expansion by recursively calling `expand_trig()` on
-`1 - cos(x)`:
+For our [`versin` example](custom-functions-versine-definition), we can define
+rudimentary `trig` expansion by defining an `_eval_expand_trig` method,
+which recursively calls `expand_trig()` on `1 - cos(x)`:
 
 ```
 >>> from sympy import expand_trig
@@ -985,15 +985,15 @@ exercise for the reader.
 (custom-functions-differentiation)=
 ### Differentiation
 
-To define differentiation via {func}`~.diff`, define a method `fdiff()` on the
-class with an argument `argindex`. `fdiff()` should return the derivative of the
-function without considering the chain rule, with respect to the `argindex`-th
-variable. `argindex` is indexed starting at `1`.
+To define differentiation via {func}`~.diff`, define a method `fdiff(self,
+argindex)`. `fdiff()` should return the derivative of the function, without
+considering the chain rule, with respect to the `argindex`-th variable.
+`argindex` is indexed starting at `1`.
 
 That is, `f(x1, ..., xi, ..., xn).fdiff(i)` should return $\frac{d}{d x_i}
 f(x_1, \ldots, x_i, \ldots, x_n)$, where $x_k$ are independent of one another.
-`diff()` will automatically apply the chain rule using the result of `fdiff()`.
-User code should use `diff()` and not call `fdiff()` directly.
+`diff()` will automatically apply the chain rule using the result of
+`fdiff()`. User code should use `diff()` and not call `fdiff()` directly.
 
 ```{note}
 
@@ -1004,7 +1004,7 @@ of {class}`~.Expr` that aren't `Function` subclasses will need to define
 
 ```
 
-For our [$\operatorname{versin} example
+For our [$\operatorname{versin}$ example
 function](custom-functions-versine-definition), the derivative is $\sin(x)$.
 
 ```py
@@ -1030,7 +1030,7 @@ $$\frac{d}{dx} \operatorname{FMA}(x, y, z) = y,$$
 $$\frac{d}{dy} \operatorname{FMA}(x, y, z) = x,$$
 $$\frac{d}{dz} \operatorname{FMA}(x, y, z) = 1.$$
 
-So the `fdiff()` method for `FMA` would look like this
+So the `fdiff()` method for `FMA` would look like this:
 
 ```py
 >>> from sympy import Number, symbols
@@ -1059,9 +1059,6 @@ x
 >>> FMA(x**2, x + 1, y).diff(x)
 x**2 + 2*x*(x + 1)
 ```
-
-A [more complete example for `FMA`](custom-functions-fma-full-example) is
-given below.
 
 To leave a derivative unevaluated, raise
 `sympy.core.function.ArgumentIndexError(self, argindex)`. This is the default
@@ -1102,7 +1099,7 @@ You can define how a function prints itself with the varions
 <sympy.printing.str.StrPrinter>`, {func}`pretty printers
 <sympy.printing.pretty.pretty.PrettyPrinter>`, and {func}`LaTeX printer
 <sympy.printing.latex.LatexPrinter>`, as well as code printers for various
-languages such as {class}`C <sympy.printing.c.C99CodePrinter>` and
+languages like {class}`C <sympy.printing.c.C99CodePrinter>` and
 {class}`Fortran <sympy.printing.fortran.FCodePrinter>`.
 
 In most cases, you will not need to define any printing methods. The default
@@ -1111,26 +1108,30 @@ want to define special printing for a function.
 
 For example, for our [divides example
 above](custom-functions-divides-definition), we may want the LaTeX printer to
-print a more mathematical expression. Let's make it print `divides(m, n)` as
-`\left [ m \middle | n \right ]`, which looks like $\left [ m \middle | n
-\right ]$ (here $[P]$ is the [Iverson
+print a more mathematical expression. Let's make the LaTeX printer represent
+`divides(m, n)` as `\left [ m \middle | n \right ]`, which looks like $\left [
+m \middle | n \right ]$ (here $[P]$ is the [Iverson
 bracket](https://en.wikipedia.org/wiki/Iverson_bracket), which is $1$ if $P$
 is true and $0$ if $P$ is false).
 
 There are two primary ways to define printing for SymPy objects. One is to
 define a printer on the printer class. Most classes that are part of the SymPy
 library should use this method, by defining the printers on the respective
-classes in sympy.printing. For user code, this may be preferable if you are
+classes in `sympy.printing`. For user code, this may be preferable if you are
 defining a custom printer, or if you have many custom functions that you want
-to define printing for. See [](printer_example) for an example of thos to
+to define printing for. See [](printer_example) for an example of how to
 define a printer in this way.
 
-The other method is to define the printing on a method on the class. To do
-this, first look up the `printmethod` attribute on the printer you want to
+The other way is to define the printing as a method on the function class. To
+do this, first look up the `printmethod` attribute on the printer you want to
 define the printing for. This is the name of the method you should define for
 that printer. For the LaTeX printer, {attr}`.LatexPrinter.printmethod` is
-`'_latex'`. So you should define a function `_latex(self, printer)` on the
-class. For our `divides` example, it might look like
+`'_latex'`. The print method always takes one argument, `printer`.
+`printer._print` should be used to recursively print any other expressions,
+including the arguments of the function.
+
+So to define our `divides` LaTeX printer, we will define the function
+`_latex(self, printer)` on the class, like this:
 
 ```py
 >>> from sympy import latex
@@ -1161,7 +1162,7 @@ The `inverse(self, argindex=1)` method can be defined to specify the inverse
 of the function. This is used by {func}`~.solve` and {func}`~.solveset`. The
 `argindex` argument is the argument of the function, starting at 1 (similar to
 the same argument name for the [`fdiff()`
-method](custom-functions-differentiation).
+method](custom-functions-differentiation)).
 
 `inverse()` should return a function (not an expression) for the inverse. If the
 inverse is a larger expression than a single function, it can return a
@@ -1171,12 +1172,11 @@ inverse is a larger expression than a single function, it can return a
 words, `f(x).inverse()` is the [left
 inverse](https://en.wikipedia.org/wiki/Inverse_function#Left_and_right_inverses)
 of `f(x)`. Defining `inverse()` on a function that is not one-to-one may
-result in `solve()` not given all possible solutions to an expression
+result in `solve()` not giving all possible solutions to an expression
 containing the function.
 
-Our [example function
-$\operatorname{versin}$](custom-functions-versine-definition) is not
-one-to-one (because $\cos$ is not), but its inverse $\operatorname{arcversin}$
+Our [example versine function](custom-functions-versine-definition) is not
+one-to-one (because cosine is not), but its inverse $\operatorname{arcversin}$
 is. We may define it as follows (using the same naming convention as other
 inverse trig functions in SymPy):
 
@@ -1196,16 +1196,22 @@ This makes `solve()` work on `aversin(x)`:
 
 #### `as_real_imag()`
 
-The method {meth}`as_real_imag(self, deep=True, **hints)
-<sympy.core.expr.Expr.as_real_imag>` should return a 2-tuple containing the
-real part and imaginary part of the function. That is `expr.as_real_imag()`
-returns `(re(expr), im(expr))`, where `expr == re(expr) + im(expr)*I`.
+The method {meth}`as_real_imag() <sympy.core.expr.Expr.as_real_imag>` method
+defines how to split a function into its real and imaginary parts. It is used
+by various SymPy functions that operate on the real and imaginary parts of an
+expression separately.
 
-If `deep=True`, it should recursively call `as_real_imag()` on its arguments. As
-with [`doit()`](custom-functions-doit) and [the `_eval_expand_*()`
-methods](custom-functions-expand), `**hints` may be any hints to allow the
-user to specify the behavior of the method. They should be passed through on
-recursive calls.
+`as_real_imag(self, deep=True, **hints)` should return a 2-tuple containing
+the real part and imaginary part of the function. That is
+`expr.as_real_imag()` returns `(re(expr), im(expr))`, where `expr == re(expr)
++ im(expr)*I`, and `re(expr)` and `im(expr)` are real.
+
+If `deep=True`, it should recursively call `as_real_imag(deep=True, **hints)`
+on its arguments. As with [`doit()`](custom-functions-doit) and [the
+`_eval_expand_*()` methods](custom-functions-expand), `**hints` may be any
+hints to allow the user to specify the behavior of the method. Unknown hints
+should be ignored and passed through on any recursive calls in case they are
+meant for other `as_real_imag()` methods.
 
 For our [`versin` example](custom-functions-versine-definition), we can
 recursively use the `as_real_imag()` that is already defined for `1 - cos(x)`.
@@ -1225,7 +1231,6 @@ work.
 >>> versin(x).expand(complex=True)
 I*sin(re(x))*sinh(im(x)) - cos(re(x))*cosh(im(x)) + 1
 ```
-
 
 #### Miscellaneous `_eval_*` methods
 
@@ -1249,7 +1254,8 @@ $$\operatorname{versin}(x) = 1 - \cos(x).$$
 
 Versine is an example of a simple function defined for all complex numbers.
 The mathematical definition is simple, which makes it straightforward to
-define all the above methods on it.
+define all the above methods on it (in most cases we can just reuse the
+existing SymPy logic defined on `1 - cos(x)`).
 
 #### Definition
 
@@ -1389,12 +1395,13 @@ as well)
 ### divides
 
 divides is a function defined by
+
 $$\operatorname{divides}(m, n) = \begin{cases} 1 & \text{for}\: m \mid n \\
   0 & \text{for}\: m\not\mid n  \end{cases},$$
 
 that is, `divides(m, n)` is 1 if `m` divides `n` and `0` if `m` does not
-divide `m`. It is only defined for integer `m` and `n`. The convention $m \mid
-0$ for all integer $m$ is used.
+divide `m`. It is only defined for integer `m` and `n`. For the sake of
+simplicity, we use the convention that $m \mid 0$ for all integer $m$.
 
 `divides` is an example of a function that is only defined for certain input
 values (integers). `divides` also gives an example of defining a custom
@@ -1517,10 +1524,15 @@ It is often implemented in hardware as a single floating-point operation that
 has better rounding and performance than the equivalent combination of
 multiplication and addition operations.
 
-FMA is an example of a custom function that is defined as a "shorthand" to
-another function. This is because the [`doit()`](custom-functions-doit) method
-is defined to return `x*y + z`, meaning the `FMA` function can easily be
-"evaluated" to the expression is represents. Contrast this with the
+FMA is an example of a custom function that is defined as an unevaluated
+"shorthand" to another function. This is because the
+[`doit()`](custom-functions-doit) method is defined to return `x*y + z`,
+meaning the `FMA` function can easily be evaluated to the expression is
+represents, but the [`eval()`](custom-functions-eval) method does *not* return
+anything (except when `x`, `y`, and `z` are all explicit numeric values),
+meaning that it stays unevaluated by default.
+
+Contrast this with the
 [versine](custom-functions-versine-full-example) example, which treats
 `versin` as a first-class function in its own regard. Even though `versin(x)`
 can be expressed in terms of other functions (`1 - cos(x)`) it does not
@@ -1532,8 +1544,8 @@ vriables, which demonstrates how `argindex` works in the
 [`fdiff`](custom-functions-differentiation) example.
 
 The mathematical definition of FMA is very simple and it would be easy to
-define every method on it, but only a handful are shown here. See
-the [versine](custom-functions-versine-full-example) and
+define every method on it, but only a handful are shown here. The
+[versine](custom-functions-versine-full-example) and
 [divides](custom-functions-divides-full-example) examples show how to define
 the other important methods discussed in this guide.
 
@@ -1631,7 +1643,8 @@ y + 1
   how to write a custom function, especially if the function is similar to one
   that is already implemented. Remember that everything in this guide applies
   equally well to functions that are included with SymPy and user-defined
-  functions.
+  functions. Indeed, this guide is designed to serve as both a developer guide
+  for contributors to SymPy and a guide for end-users of SymPy.
 
 - If you have many custom functions that share common logic, you can use a
   common base class to contain this shared logic. For an example of this, see
@@ -1644,3 +1657,6 @@ y + 1
   function. The [SymPy test
   suite](https://github.com/sympy/sympy/tree/master/sympy/functions/elementary/tests)
   is a good resource for examples of how to write tests for such functions.
+  All code included in SymPy itself is required to be tested. Functions
+  included in SymPy should also always contain a docstring with references, a
+  mathematical definition, and doctest examples.
