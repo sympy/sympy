@@ -808,7 +808,7 @@ users are better off just defining rewrite(), doit(), and/or expand().
 -->
 
 (custom-functions-doit)=
-#### doit()
+#### `doit()`
 
 The {meth}`doit() <sympy.core.basic.Basic.doit>` method is used to evaluate
 "unevaluated" functions. To define `doit()` implement `doit(self, deep=True,
@@ -936,7 +936,7 @@ doesn't evaluate by default but can be evaluated on demand (see the
 [discussion above](custom-functions-eval-best-practices)).
 
 (custom-functions-expand)=
-#### expand()
+#### `expand()`
 
 The {func}`~.expand()` function "expands" an expression in various ways. It is
 actually a wrapper around several sub-expansion hints. Each function
