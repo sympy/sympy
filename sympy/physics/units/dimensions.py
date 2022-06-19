@@ -15,6 +15,7 @@ from typing import Dict as tDict
 import collections
 from functools import reduce
 
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.singleton import S
@@ -463,6 +464,11 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         List all canonical dimension names.
         """
+        with warns_deprecated_sympy():
+            sympy_deprecation_warning("use base and derive dims instead",
+                 deprecated_since_version="1.10",
+                 active_deprecations_target="list-can-dims deprecated")
+            
         dimset = set()
         for i in self.base_dims:
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
