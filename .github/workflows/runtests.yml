@@ -199,13 +199,14 @@ jobs:
       - run: pip install mpmath matplotlib numpy ipython cython scipy aesara \
                          wurlitzer autowrap numexpr 'antlr4-python3-runtime==4.7.*'
 
+
       # gmpy2 is not available for pypy
       - if: ${{ matrix.python-version != 'pypy-3.8' }}
         run: pip install gmpy2
 
       # These are not available for pypy and cannot be installed in 3.11 (yet)
       - if: ${{ matrix.python-version != 'pypy-3.8' && ! contains(matrix.python-version, '3.11') }}
-        run: pip install symengine llvmlite numba
+        run: pip install symengine llvmlite numba pymc
 
       # Test external imports
       - run: bin/test_external_imports.py
