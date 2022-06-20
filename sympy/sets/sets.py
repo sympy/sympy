@@ -1898,7 +1898,7 @@ class FiniteSet(Set):
     >>> FiniteSet(1, (1, 2), Symbol('x'))
     {1, x, (1, 2)}
     >>> FiniteSet(Interval(1, 2), Naturals0, {1, 2})
-    {{1, 2}, [1, 2], ℕ₀}
+    FiniteSet({1, 2}, Interval(1, 2), Naturals0)
     >>> members = [1, 2, 3, 4]
     >>> f = FiniteSet(*members)
     >>> f
