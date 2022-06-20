@@ -639,7 +639,6 @@ def test_fdiff_argument_index_error():
             raise ArgumentIndexError
     mf = myfunc(x)
     assert mf.diff(x) == Derivative(mf, x)
-    raises(TypeError, lambda: myfunc(x, x))
 
 
 def test_deriv_wrt_function():
