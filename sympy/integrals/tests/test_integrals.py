@@ -1931,6 +1931,23 @@ def test_pr_23583():
     assert integrate(1/sqrt((x - I)**2-1)) == Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
 
 
+def test_issue_7264():
+    assert integrate(exp(x)*sqrt(1 + exp(2*x))) == sqrt(exp(2*x) + 1)*exp(x)/2 + asinh(exp(x))/2
+
+
+def test_issue_11254a():
+    assert integrate(sech(x), (x, 0, 1)) == 2*atan(tanh(S.Half))
+
+
+def test_issue_11254b():
+    assert integrate(csch(x), x) == log(tanh(x/2))
+    assert integrate(csch(x), (x, 0, 1)) == oo
+
+
+def test_issue_11254d():
+    assert integrate((sech(x)**2).rewrite(sinh), x) == 2*tanh(x/2)/(tanh(x/2)**2 + 1)
+
+
 def test_hyperbolic():
     assert integrate(coth(x)) == x - log(tanh(x) + 1) + log(tanh(x))
     assert integrate(sech(x)) == 2*atan(tanh(x/2))
