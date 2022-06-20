@@ -465,22 +465,6 @@ class Function(Application, Expr):
         if cls is Function:
             return UndefinedFunction(*args, **options)
 
-        n = len(args)
-        if n not in cls.nargs:
-            # XXX: exception message must be in exactly this format to
-            # make it work with NumPy's functions like vectorize(). See,
-            # for example, https://github.com/numpy/numpy/issues/1697.
-            # The ideal solution would be just to attach metadata to
-            # the exception and change NumPy to take advantage of this.
-            temp = ('%(name)s takes %(qual)s %(args)s '
-                   'argument%(plural)s (%(given)s given)')
-            raise TypeError(temp % {
-                'name': cls,
-                'qual': 'exactly' if len(cls.nargs) == 1 else 'at least',
-                'args': min(cls.nargs),
-                'plural': 's'*(min(cls.nargs) != 1),
-                'given': n})
-
         evaluate = options.get('evaluate', global_parameters.evaluate)
         result = super().__new__(cls, *args, **options)
         if evaluate and isinstance(result, cls) and result.args:
