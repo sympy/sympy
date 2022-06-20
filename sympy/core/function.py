@@ -264,7 +264,8 @@ class FunctionClass(ManagedProperties):
     def _valid_nargs(self, n : int) -> bool:
         """ Return True if the specified interger is a valid number of arguments
 
-        The n is guaranteed to be an integer and positive    
+        The number of arguments n is guaranteed to be an integer and positive
+
         """
         if self._nargs:
             return n in self._nargs
