@@ -470,8 +470,6 @@ class Pow(Expr):
                     s = 1  # floor = 0
                 elif re(b).is_extended_nonnegative and (abs(e) < 2) == True:
                     s = 1  # floor = 0
-                elif fuzzy_not(im(b).is_zero) and abs(e) == 2:
-                    s = 1  # floor = 0
                 elif _half(other):
                     s = exp(2*S.Pi*S.ImaginaryUnit*other*floor(
                         S.Half - e*arg(b)/(2*S.Pi)))
