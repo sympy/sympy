@@ -357,13 +357,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         generated function:
 
         >>> f, params = lambdify(x, 2*x + 1, parametric=True)
+        >>> params
+        [2.0, 1.0]
         >>> f(1)
-        3
+        3.0
         >>> f(1, params=[1,0])
-        2
+        1.0
         >>> params[1] = 1
         >>> f(1, params=params)
-        2
+        2.0
 
     Examples
     ========
