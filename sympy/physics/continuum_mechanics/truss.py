@@ -335,6 +335,8 @@ class Truss:
         >>> t.members
         [['BC_new', 'B', 'C']]
         """
+        if label not in self._node_labels and label not in self._member_labels:
+            raise ValueError("No such node/member exists")
         if label in self._node_labels:
             for node in self._nodes:
                 if node[0] == label:
