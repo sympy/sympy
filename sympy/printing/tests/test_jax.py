@@ -153,47 +153,57 @@ def test_jax_relational():
 
     e = Equality(x, 1)
 
-    f = lambdify((x,), e)
+    f = lambdify((x,), e, 'jax')
     x_ = jax.numpy.array([0, 1, 2])
     assert jax.numpy.array_equal(f(x_), [False, True, False])
 
     e = Unequality(x, 1)
 
-    f = lambdify((x,), e)
+    f = lambdify((x,), e, 'jax')
     x_ = jax.numpy.array([0, 1, 2])
     assert jax.numpy.array_equal(f(x_), [True, False, True])
 
     e = (x < 1)
 
-    f = lambdify((x,), e)
+    f = lambdify((x,), e, 'jax')
     x_ = jax.numpy.array([0, 1, 2])
     assert jax.numpy.array_equal(f(x_), [True, False, False])
 
     e = (x <= 1)
 
-    f = lambdify((x,), e)
+    f = lambdify((x,), e, 'jax')
     x_ = jax.numpy.array([0, 1, 2])
     assert jax.numpy.array_equal(f(x_), [True, True, False])
 
     e = (x > 1)
 
-    f = lambdify((x,), e)
+    f = lambdify((x,), e, 'jax')
     x_ = jax.numpy.array([0, 1, 2])
     assert jax.numpy.array_equal(f(x_), [False, False, True])
 
     e = (x >= 1)
 
-    f = lambdify((x,), e)
+    f = lambdify((x,), e, 'jax')
     x_ = jax.numpy.array([0, 1, 2])
     assert jax.numpy.array_equal(f(x_), [False, True, True])
 
+    # Multi-condition expressions
+    e = (x >= 1) & (x < 2)
+    f = lambdify((x,), e, 'jax')
+    x_ = jax.numpy.array([0, 1, 2])
+    assert jax.numpy.array_equal(f(x_), [False, True, False])
+
+    e = (x >= 1) | (x < 2)
+    f = lambdify((x,), e, 'jax')
+    x_ = jax.numpy.array([0, 1, 2])
+    assert jax.numpy.array_equal(f(x_), [True, True, True])
 
 def test_jax_mod():
     if not jax:
         skip("JAX not installed")
 
     e = Mod(a, b)
-    f = lambdify((a, b), e)
+    f = lambdify((a, b), e, 'jax')
 
     a_ = jax.numpy.array([0, 1, 2, 3])
     b_ = 2
@@ -278,8 +288,8 @@ def test_jax_matsolve():
     expr = M**(-1) * x + x
     matsolve_expr = MatrixSolve(M, x) + x
 
-    f = lambdify((M, x), expr)
-    f_matsolve = lambdify((M, x), matsolve_expr)
+    f = lambdify((M, x), expr, 'jax')
+    f_matsolve = lambdify((M, x), matsolve_expr, 'jax')
 
     m0 = jax.numpy.array([[1, 2, 3], [3, 2, 5], [5, 6, 7]])
     assert jax.numpy.linalg.matrix_rank(m0) == 3
@@ -310,7 +320,7 @@ def test_issue_17006():
 
     M = MatrixSymbol("M", 2, 2)
 
-    f = lambdify(M, M + Identity(2))
+    f = lambdify(M, M + Identity(2), 'jax')
     ma = jax.numpy.array([[1, 2], [3, 4]])
     mr = jax.numpy.array([[2, 2], [3, 5]])
 
@@ -319,7 +329,7 @@ def test_issue_17006():
     from sympy.core.symbol import symbols
     n = symbols('n', integer=True)
     N = MatrixSymbol("M", n, n)
-    raises(NotImplementedError, lambda: lambdify(N, N + Identity(n)))
+    raises(NotImplementedError, lambda: lambdify(N, N + Identity(n), 'jax'))
 
 def test_jax_array():
     assert JaxPrinter().doprint(Array(((1, 2), (3, 5)))) == 'jax.numpy.array([[1, 2], [3, 5]])'
