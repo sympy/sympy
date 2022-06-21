@@ -220,29 +220,15 @@ def find_substitutions(integrand, symbol, u_var):
         debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
-        if symbol not in substituted.free_symbols:
-            # avoid increasing the degree of a rational function
-            if integrand.is_rational_function(symbol) and substituted.is_rational_function(u_var):
-                deg_before = max([degree(t, symbol) for t in integrand.as_numer_denom()])
-                deg_after = max([degree(t, u_var) for t in substituted.as_numer_denom()])
-                if deg_after > deg_before:
-                    return False
-            return substituted.as_independent(u_var, as_Add=False)
-
-        # special treatment for substitutions u = (a*x+b)**(1/n)
-        if (isinstance(u, Pow) and (1/u.exp).is_Integer and
-            Abs(u.exp) < 1):
-                a = Wild('a', exclude=[symbol])
-                b = Wild('b', exclude=[symbol])
-                match = u.base.match(a*symbol + b)
-                if match:
-                    a, b = [match.get(i, S.Zero) for i in (a, b)]
-                    if a != 0 and b != 0:
-                        substituted = substituted.subs(symbol,
-                            (u_var**(1/u.exp) - b)/a)
-                        return substituted.as_independent(u_var, as_Add=False)
-
-        return False
+        if symbol in substituted.free_symbols:
+            return False
+        # avoid increasing the degree of a rational function
+        if integrand.is_rational_function(symbol) and substituted.is_rational_function(u_var):
+            deg_before = max([degree(t, symbol) for t in integrand.as_numer_denom()])
+            deg_after = max([degree(t, u_var) for t in substituted.as_numer_denom()])
+            if deg_after > deg_before:
+                return False
+        return substituted.as_independent(u_var, as_Add=False)
 
     def possible_subterms(term):
         if isinstance(term, (TrigonometricFunction, HyperbolicFunction,
