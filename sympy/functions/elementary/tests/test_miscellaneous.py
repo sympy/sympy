@@ -479,25 +479,8 @@ def test_Rem():
     assert Rem(Rem(-5, 3) + 3, 3) == 1
 
 
-class NoEvaluation:
-    def __init__(self):
-        pass
-
-    def __enter__(self):
-        clear_cache()
-        gp.evaluate = False
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        clear_cache()
-        gp.evaluate = True
-        if not exc_type:
-            return True
-        else:
-            return False  # do not suppress the raised error
-
-
 def test_minmax_no_evaluate():
+    from sympy import evaluate
     p = Symbol('p', positive=True)
 
     assert Max(1, 3) == 3
@@ -514,7 +497,7 @@ def test_minmax_no_evaluate():
     assert Min(0, p, evaluate=False) != 0
     assert Min(0, p, evaluate=False).args == (0, p)
 
-    with NoEvaluation():
+    with evaluate(False):
         assert Max(1, 3) != 3
         assert Max(1, 3).args == (1, 3)
         assert Max(0, p) != p
