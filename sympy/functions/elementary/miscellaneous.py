@@ -380,7 +380,8 @@ def real_root(arg, n=None, evaluate=None):
 
 class MinMaxBase(Expr, LatticeOp):
     def __new__(cls, *args, **assumptions):
-        evaluate = assumptions.pop('evaluate', True)
+        from sympy.core.parameters import global_parameters
+        evaluate = assumptions.pop('evaluate', global_parameters.evaluate)
         args = (sympify(arg) for arg in args)
 
         # first standard filter, for cls.zero and cls.identity
