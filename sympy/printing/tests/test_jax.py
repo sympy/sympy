@@ -29,8 +29,7 @@ from sympy.external import import_module
 # from the tests in test_numpy.py, only in the fact that they assert lambdify
 # function accuracy to only single precision accuracy.
 # https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision
-#
-# TODO: ensure jax and jaxlib is installed in the test suite?
+
 jax = import_module('jax')
 
 if jax:
