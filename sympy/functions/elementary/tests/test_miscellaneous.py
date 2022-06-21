@@ -6,8 +6,6 @@ from sympy.core.numbers import I, oo, Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.core.parameters import global_parameters as gp
-from sympy.core.cache import clear_cache
 from sympy.external import import_module
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
