@@ -62,6 +62,9 @@ class Truss:
         self._node_position_y = [self._node_positions[1] for i in range(len(self._nodes))]
         self._member_labels = [self._members[i][0] for i in range(len(self._members))]
         self._member_nodes = {}
+        self._nodes_occupied = {}
+        self._reaction_forces = {}
+        self._internal_forces = {}
 
     @property
     def nodes(self):
@@ -113,6 +116,20 @@ class Truss:
         """
         return self._loads
 
+    @property
+    def reaction_forces(self):
+        """
+        Returns the reaction forces for all supports which are all initialized to 0.
+        """
+        return self._reaction_forces
+
+    @property
+    def internal_forces(self):
+        """
+        Returns the internal forces for all members which are all initialized to 0.
+        """
+        return self._internal_forces
+
     def add_node(self, label, x, y):
         """
         This method adds a node to the truss along with its name/label and its location.
@@ -122,10 +139,10 @@ class Truss:
         label:  String or a Symbol
             The label for a node. It is the only way to identify a particular node.
 
-        x: Sympifiable
+        x: Sympifyable
             The x-coordinate of the position of the node.
 
-        y: Sympifiable
+        y: Sympifyable
             The y-coordinate of the position of the node.
 
         Examples
@@ -190,7 +207,11 @@ class Truss:
         if label not in self._node_labels:
             raise ValueError("No such node exists in the truss")
 
-        else :
+        else:
+            members_duplicate = self._members.copy()
+            for member in members_duplicate:
+                if label == self._member_nodes[member[0]][0] or label == self._member_nodes[member[0]][1]:
+                    self.remove_member(member[0])
             self._nodes.remove((label, x, y))
             self._node_labels.remove(label)
             self._node_positions.remove((x, y))
@@ -224,23 +245,26 @@ class Truss:
         >>> t.add_node('C', 2, 2)
         >>> t.add_member('AB', 'A', 'B')
         >>> t.members
-        [('AB', 'A', 'B')]
+        [['AB', 'A', 'B']]
         """
 
-        if start not in self._node_labels or end not in self._node_labels:
+        if start not in self._node_labels or end not in self._node_labels or start==end:
             msg = ("The start and end points of the member must be unique nodes")
             raise ValueError(msg)
 
         elif label in self._member_labels:
             raise ValueError("A member with the same label already exists for the truss")
 
-        elif [start, end] in [[self.members[i][1], self.members[i][2]] for i in range(len(self.members))]:
+        elif self._nodes_occupied.get(tuple([start, end])):
             raise ValueError("A member already exists between the two nodes")
 
         else:
-            self._members.append((label, start, end))
+            self._members.append([label, start, end])
             self._member_labels.append(label)
             self._member_nodes[label] = [start, end]
+            self._nodes_occupied[start, end] = True
+            self._nodes_occupied[end, start] = True
+            self._internal_forces[label] = 0
 
     def remove_member(self, label):
         """
@@ -263,18 +287,94 @@ class Truss:
         >>> t.add_member('AC', 'A', 'C')
         >>> t.add_member('BC', 'B', 'C')
         >>> t.members
-        [('AB', 'A', 'B'), ('AC', 'A', 'C'), ('BC', 'B', 'C')]
+        [['AB', 'A', 'B'], ['AC', 'A', 'C'], ['BC', 'B', 'C']]
         >>> t.remove_member('AC')
         >>> t.members
-        [('AB', 'A', 'B'), ('BC', 'B', 'C')]
+        [['AB', 'A', 'B'], ['BC', 'B', 'C']]
         """
         if label not in self._member_labels:
             raise ValueError("No such member exists in the Truss")
 
         else:
-            self._members.remove((label, self._member_nodes[label][0], self._member_nodes[label][1]))
+            self._members.remove([label, self._member_nodes[label][0], self._member_nodes[label][1]])
             self._member_labels.remove(label)
+            self._nodes_occupied.pop(tuple([self._member_nodes[label][0], self._member_nodes[label][1]]))
+            self._nodes_occupied.pop(tuple([self._member_nodes[label][1], self._member_nodes[label][0]]))
             self._member_nodes.pop(label)
+            self._internal_forces.pop(label)
+
+    def change_label(self, label, new_label):
+        """
+        This method changes the label of a node or a member.
+
+        Parameters
+        ==========
+        label: String or Symbol
+            The label of the node/member for which the label has
+            to be changed.
+
+        new_label: String or Symbol
+            The new label of the node/member.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.truss import Truss
+        >>> t = Truss()
+        >>> t.add_node('A', 0, 0)
+        >>> t.add_node('B', 3, 0)
+        >>> t.nodes
+        [('A', 0, 0), ('B', 3, 0)]
+        >>> t.change_label('A', 'C')
+        >>> t.nodes
+        [('C', 0, 0), ('B', 3, 0)]
+        >>> t.add_member('BC', 'B', 'C')
+        >>> t.members
+        [['BC', 'B', 'C']]
+        >>> t.change_label('BC', 'BC_new')
+        >>> t.members
+        [['BC_new', 'B', 'C']]
+        """
+        if label in self._node_labels:
+            for node in self._nodes:
+                if node[0] == label:
+                    self._node_labels[self._node_labels.index(node[0])] = new_label
+                    self._loads[new_label] = self._loads[node[0]]
+                    self._loads.pop(node[0])
+                    self._supports[new_label] = self._supports[node[0]]
+                    self._supports.pop(node[0])
+                    if self._supports[new_label] == 'pinned':
+                        self._reaction_forces['R_'+str(new_label)+'_x'] = self._reaction_forces['R_'+str(label)+'_x']
+                        self._reaction_forces['R_'+str(new_label)+'_y'] = self._reaction_forces['R_'+str(label)+'_y']
+                    elif self._supports[new_label] == 'roller':
+                        self._reaction_forces['R_'+str(new_label)+'_y'] = self._reaction_forces['R_'+str(label)+'_y']
+                    for member in self._members:
+                        if member[1] == node[0]:
+                            member[1] = new_label
+                            self._member_nodes[member[0]] = [new_label, member[2]]
+                            self._nodes_occupied[(new_label, member[2])] = True
+                            self._nodes_occupied[(member[2], new_label)] = True
+                            self._nodes_occupied.pop(tuple([label, member[2]]))
+                            self._nodes_occupied.pop(tuple([member[2], label]))
+                        elif member[2] == node[0]:
+                            member[2] = new_label
+                            self._member_nodes[member[0]] = [member[1], new_label]
+                            self._nodes_occupied[(member[1], new_label)] = True
+                            self._nodes_occupied[(new_label, member[1])] = True
+                            self._nodes_occupied.pop(tuple([member[1], label]))
+                            self._nodes_occupied.pop(tuple([label, member[1]]))
+                    self._nodes[self._nodes.index((label, node[1], node[2]))] = (new_label, node[1], node[2])
+
+        if label in self._member_labels:
+            members_duplicate = self._members.copy()
+            for member in members_duplicate:
+                if member[0] == label:
+                    self._member_labels[self.member_labels.index(member[0])] = new_label
+                    self._member_nodes[new_label] = [self._member_nodes[label][0], self._member_nodes[label][1]]
+                    self._member_nodes.pop(label)
+                    self._internal_forces[new_label] = self._internal_forces[label]
+                    self._internal_forces.pop(label)
+                    self._members[self._members.index([label, member[1], member[2]])] = [new_label, member[1], member[2]]
 
     def apply_load(self, location, magnitude, direction):
         """
@@ -290,8 +390,9 @@ class Truss:
             the direction of the load are not reflected here.
 
         direction: Sympifyable
-            The angle, in degrees, that the load vector makes with the horizontal. It takes
-            the values 0 to 360, inclusive.
+            The angle, in degrees, that the load vector makes with the horizontal
+            in the counter-clockwise direction . It takes the values 0 to 360,
+            inclusive.
 
         Examples
         ========
@@ -353,6 +454,15 @@ class Truss:
         else:
             self._supports[location] = type
 
+        if type == "pinned":
+            self._reaction_forces['R_'+str(location)+'_x'] = 0
+            self._reaction_forces['R_'+str(location)+'_y'] = 0
+
+        elif type == "roller":
+            self._reaction_forces['R_'+str(location)+'_y'] = 0
+            if 'R_'+str(location)+'_x' in list(self._reaction_forces):
+                self._reaction_forces.pop('R_'+str(location)+'_x')
+
     def remove_support(self, location):
         """
         This method removes support from a particular node
@@ -381,4 +491,7 @@ class Truss:
             raise ValueError("No such node exists in the Truss")
 
         else:
+            self._reaction_forces.pop('R_'+str(location)+'_y')
+            if self._supports[location] == "pinned":
+                self._reaction_forces.pop('R_'+str(location)+'_x')
             self._supports[location] = "none"
