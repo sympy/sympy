@@ -552,7 +552,9 @@ avoided.
 
   SymPy's assumptions system is always improving, but there will always be
   cases like this that it cannot deduce, due to the fundamental computational
-  complexity of the problem.
+  complexity of the problem, and the fact that the general problem is
+  [often](https://en.wikipedia.org/wiki/Hilbert%27s_tenth_problem)
+  [undecidable](https://en.wikipedia.org/wiki/Richardson%27s_theorem).
 
   Consequently, one should always test *negated* assumptions for input
   variables, that is, fail if the assumption is `False` but allow the
@@ -607,7 +609,7 @@ avoided.
 (custom-functions-assumptions)=
 ### Assumptions
 
-The next thing we might want to define are the assumptions on our function.
+The next thing you might want to define are the assumptions on our function.
 The assumptions system allows defining what mathematical properties your
 function has given its inputs, for example, "$f(x)$ is *positive* when $x$ is
 *real*."
