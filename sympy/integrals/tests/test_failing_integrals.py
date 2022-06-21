@@ -5,7 +5,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (csch, sech, sinh)
+from sympy.functions.elementary.hyperbolic import (sech, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, atan, cos, sec, sin, tan)
@@ -230,13 +230,8 @@ def test_issue_11813():
 
 
 @XFAIL
-def test_issue_11254a():
-    assert not integrate(sech(x), (x, 0, 1)).has(Integral)
-
-
-@XFAIL
-def test_issue_11254b():
-    assert not integrate(csch(x), (x, 0, 1)).has(Integral)
+def test_issue_11254c():
+    assert not integrate(sech(x)**2, (x, 0, 1)).has(Integral)
 
 
 @XFAIL
@@ -252,11 +247,6 @@ def test_issue_9723():
 @XFAIL
 def test_issue_9101():
     assert not integrate(log(x + sqrt(x**2 + y**2 + z**2)), z).has(Integral)
-
-
-@XFAIL
-def test_issue_7264():
-    assert not integrate(exp(x)*sqrt(1 + exp(2*x))).has(Integral)
 
 
 @XFAIL

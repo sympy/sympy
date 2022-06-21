@@ -91,7 +91,7 @@ htmlhelp:
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
 	      ".hhp project file in $(BUILDDIR)/htmlhelp."
 
-latex: $(PDFFILES)
+latex:
 	mkdir -p $(BUILDDIR)/latex $(BUILDDIR)/doctrees
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTSlatex) $(BUILDDIR)/latex
 	@echo
@@ -101,9 +101,6 @@ latex: $(PDFFILES)
 
 pdf pdflatex latexpdf: latex
 	$(MAKE) -C $(BUILDDIR)/latex
-
-.svg.pdf:
-	./convert-svg-to-pdf.sh $< $@
 
 changes:
 	mkdir -p $(BUILDDIR)/changes $(BUILDDIR)/doctrees
