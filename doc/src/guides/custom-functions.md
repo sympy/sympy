@@ -395,6 +395,81 @@ avoided.
   not always want evaluation to happen, and if `n` is a more complicated
   expression, `n.is_integer` might be more expensive to compute.
 
+  Let's consider an example. Using the identity $\cos(x + y) = \cos(x)\cos(y) - \sin(x)\sin(y)$, we can derive the identity
+
+  $$\operatorname{versin}(x + y) =
+  \operatorname{versin}(x)\operatorname{versin}(y) -
+  \operatorname{versin}(x) - \operatorname{versin}(y) - \sin(x)\sin(y) + 1.$$
+
+  Suppose we decided to automatically expand this in `eval()`:
+
+  ```
+  >>> from sympy import Add
+  >>> class versin(Function):
+  ...     @classmethod
+  ...     def eval(cls, x):
+  ...         # !! Not actually a good eval() method !!
+  ...         if isinstance(x, Add):
+  ...             a, b = x.as_two_terms()
+  ...             return (versin(a)*versin(b) - versin(a) - versin(b)
+  ...                     - sin(a)*sin(b) + 1)
+  ```
+
+  This method recursively splits `Add` terms into two parts and applies the
+  above identity.
+
+  ```
+  >>> versin(x + y)
+  -sin(x)*sin(y) + versin(x)*versin(y) - versin(x) - versin(y) + 1
+  ```
+
+  But now it's impossible to represent `versin(x + y)` without it expanding.
+  This will affect other methods too. For example, suppose we define
+  [differentiation (see below)](custom-functions-differentiation):
+
+  ```
+  >>> class versin(Function):
+  ...     @classmethod
+  ...     def eval(cls, x):
+  ...         # !! Not actually a good eval() method !!
+  ...         if isinstance(x, Add):
+  ...             a, b = x.as_two_terms()
+  ...             return (versin(a)*versin(b) - versin(a) - versin(b)
+  ...                     - sin(a)*sin(b) + 1)
+  ...
+  ...     def fdiff(self, argindex=1):
+  ...         return sin(self.args[0])
+  ```
+
+  We would expect `versin(x + y).diff(x)` to return `sin(x + y)`, and indeed,
+  if we hadn't expanded this identity in `eval()`, [it
+  would](custom-functions-differentiation-examples). But with this version,
+  `versin(x + y)` gets automatically expanded before `diff()` gets called,
+  instead we get a more complicated expression:
+
+  ```
+  >>> versin(x + y).diff(x)
+  sin(x)*versin(y) - sin(x) - sin(y)*cos(x)
+  ```
+
+  And things are even worse than that. Let's try an `Add` with three terms:
+
+  ```
+  >>> versin(x + y + z)
+  (-sin(y)*sin(z) + versin(y)*versin(z) - versin(y) - versin(z) +
+  1)*versin(x) - sin(x)*sin(y + z) + sin(y)*sin(z) - versin(x) -
+  versin(y)*versin(z) + versin(y) + versin(z)
+  ```
+
+  We can see that things are getting out of control quite quickly. In fact,
+  `versin(Add(*symbols('x:100')))` (`versin()` on an `Add` with 100 terms)
+  takes over a second to evaluate, and that's just to *create* the expression,
+  without even doing anything with it yet.
+
+  Identities like this are better left out of `eval` and implemented in other
+  methods instead (in the case of this identity,
+  [`expand_trig()`](custom-functions-expand)).
+
 - **When restricting the input domain: allow `None` input assumptions.**
 
   Our example function $\operatorname{versin}(x)$ is a function from
@@ -1013,11 +1088,14 @@ function](custom-functions-versine-definition), the derivative is $\sin(x)$.
 ...         return sin(self.args[0])
 ```
 
+(custom-functions-differentiation-examples)=
 ```py
 >>> versin(x).diff(x)
 sin(x)
 >>> versin(x**2).diff(x)
 2*x*sin(x**2)
+>>> versin(x + y).diff(x)
+sin(x + y)
 ```
 
 As an example of a function that has multiple arguments, consider the [fused
