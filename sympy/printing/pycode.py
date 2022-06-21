@@ -94,6 +94,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         fully_qualified_modules=True,
         contract=False,
         standard='python3',
+        parametric=False,
     )
 
     def __init__(self, settings=None):
@@ -115,6 +116,20 @@ class AbstractPythonCodePrinter(CodePrinter):
             'user_functions', {}))
         self.known_constants = dict(self._kc, **(settings or {}).get(
             'user_constants', {}))
+
+        # Handle parameteric form
+        self._param_count = 0
+        self.params = []
+        if self._settings['parametric']:
+            def _parametric_func(expr):
+                param = f"params_{self._param_count}"
+                self.params.append(float(expr))
+                self._param_count += 1
+                return param
+
+            self._print_Float = _parametric_func
+            self._print_Rational = _parametric_func
+            self._print_Integer = _parametric_func
 
     def _declare_number_const(self, name, value):
         return "%s = %s" % (name, value)

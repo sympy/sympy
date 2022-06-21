@@ -174,9 +174,9 @@ def _import(module, reload=False):
 _lambdify_generated_counter = 1
 
 
-@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow'), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, cse=False):
+             dummify=False, cse=False, parametric=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -346,6 +346,24 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         When ``True``, ``sympy.simplify.cse`` is used, otherwise (the default)
         the user may pass a function matching the ``cse`` signature.
 
+    parametric : bool, optional
+        Allow numeric values to be changed in the generated function. Can be
+        useful in scenarios where these numeric values need to be
+        optimised/modified, but manually changing these values and regenerating
+        the function would be inefficient/undesirable.
+
+        When ``True``, the function returned by lambdify will take the below
+        modified form, where params are the default parameter values used in the
+        generated function:
+
+        >>> f, params = lambdify(x, 2*x + 1, parametric=True)
+        >>> f(1)
+        3
+        >>> f(1, params=[1,0])
+        2
+        >>> params[1] = 1
+        >>> f(1, params=params)
+        2
 
     Examples
     ========
@@ -820,9 +838,16 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             if isinstance(m, dict):
                 for k in m:
                     user_functions[k] = k
-        printer = Printer({'fully_qualified_modules': False, 'inline': True,
-                           'allow_unknown_functions': True,
-                           'user_functions': user_functions})
+
+        printer_settings = {
+            'fully_qualified_modules': False,
+            'inline': True,
+            'allow_unknown_functions': True,
+            'user_functions': user_functions,
+            'parametric': parametric
+        }
+
+        printer = Printer(printer_settings)
 
     if isinstance(args, set):
         sympy_deprecation_warning(
@@ -870,6 +895,17 @@ or tuple for the function arguments.
         cses, _expr = (), expr
     funcstr = funcprinter.doprint(funcname, iterable_args, _expr, cses=cses)
 
+    # Modify the generated function string if parametric functions are desired
+    if parametric:
+        default_params = printer.params
+        # Add params kwarg to the function signature
+        funcstr = funcstr.replace("):", f", params={default_params}):")
+        # Unpack params list, this is required for compatibility with NumExpr
+        param_str = ", ".join([f"params_{i}" for i, _ in enumerate(default_params)])
+        # Add unpacking just before return
+        funcstr = funcstr.replace("\n    return", f"\n    [{param_str}] = params"
+                                                   "\n    return")
+
     # Collect the module imports from the code printers.
     imp_mod_lines = []
     for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
@@ -902,6 +938,7 @@ or tuple for the function arguments.
 
     # Apply the docstring
     sig = "func({})".format(", ".join(str(i) for i in names))
+    sig = sig.replace(")", f", params={default_params}):") if parametric else sig
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
     expr_str = str(expr)
     if len(expr_str) > 78:
@@ -916,7 +953,7 @@ or tuple for the function arguments.
         "Imported modules:\n\n"
         "{imp_mods}"
         ).format(sig=sig, expr=expr_str, src=funcstr, imp_mods='\n'.join(imp_mod_lines))
-    return func
+    return func if not parametric else (func, default_params)
 
 def _module_present(modname, modlist):
     if modname in modlist:
