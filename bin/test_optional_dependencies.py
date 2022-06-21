@@ -36,7 +36,6 @@ test_list = [
 
     # jax
     '*jax*',
-    'sympy/utilities/tests/test_lambdify.py',
 
     # gmpy
     'polys',
