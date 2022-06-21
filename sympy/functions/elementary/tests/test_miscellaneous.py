@@ -6,6 +6,8 @@ from sympy.core.numbers import I, oo, Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
+from sympy.core.parameters import global_parameters as gp
+from sympy.core.cache import clear_cache
 from sympy.external import import_module
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
@@ -475,3 +477,47 @@ def test_Rem():
     assert Rem(-5, -3) == -2
     assert Rem(x**3, y) == Rem(x**3, y)
     assert Rem(Rem(-5, 3) + 3, 3) == 1
+
+
+class NoEvaluation:
+    def __init__(self):
+        pass
+
+    def __enter__(self):
+        clear_cache()
+        gp.evaluate = False
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        clear_cache()
+        gp.evaluate = True
+        if not exc_type:
+            return True
+        else:
+            return False  # do not suppress the raised error
+
+
+def test_minmax_no_evaluate():
+    p = Symbol('p', positive=True)
+
+    assert Max(1, 3) == 3
+    assert Max(1, 3).args == ()
+    assert Max(0, p) == p
+    assert Max(0, p).args == ()
+    assert Min(0, p) == 0
+    assert Min(0, p).args == ()
+
+    assert Max(1, 3, evaluate=False) != 3
+    assert Max(1, 3, evaluate=False).args == (1, 3)
+    assert Max(0, p, evaluate=False) != p
+    assert Max(0, p, evaluate=False).args == (0, p)
+    assert Min(0, p, evaluate=False) != 0
+    assert Min(0, p, evaluate=False).args == (0, p)
+
+    with NoEvaluation():
+        assert Max(1, 3) != 3
+        assert Max(1, 3).args == (1, 3)
+        assert Max(0, p) != p
+        assert Max(0, p).args == (0, p)
+        assert Min(0, p) != 0
+        assert Min(0, p).args == (0, p)
