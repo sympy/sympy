@@ -1,3 +1,9 @@
+.. _documentation-style-guide:
+
+===========================
+ Documentation Style Guide
+===========================
+
 General Guidelines
 --------------------
 
