@@ -567,23 +567,23 @@ class Heaviside(Function):
         >>> x = Symbol('x')
 
         >>> Heaviside(x).rewrite(Piecewise)
-        Piecewise((0, x < 0), (1/2, Eq(x, 0)), (1, x > 0))
+        Piecewise((0, x < 0), (1/2, Eq(x, 0)), (1, True))
 
         >>> Heaviside(x,nan).rewrite(Piecewise)
-        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, x > 0))
+        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, True))
 
         >>> Heaviside(x - 5).rewrite(Piecewise)
-        Piecewise((0, x < 5), (1/2, Eq(x, 5)), (1, x > 5))
+        Piecewise((0, x < 5), (1/2, Eq(x, 5)), (1, True))
 
         >>> Heaviside(x**2 - 1).rewrite(Piecewise)
-        Piecewise((0, x**2 < 1), (1/2, Eq(x**2, 1)), (1, x**2 > 1))
+        Piecewise((0, x**2 < 1), (1/2, Eq(x**2, 1)), (1, True))
 
         """
         if H0 == 0:
-            return Piecewise((0, arg <= 0), (1, arg > 0))
+            return Piecewise((0, arg <= 0), (1, True))
         if H0 == 1:
-            return Piecewise((0, arg < 0), (1, arg >= 0))
-        return Piecewise((0, arg < 0), (H0, Eq(arg, 0)), (1, arg > 0))
+            return Piecewise((0, arg < 0), (1, True))
+        return Piecewise((0, arg < 0), (H0, Eq(arg, 0)), (1, True))
 
     def _eval_rewrite_as_sign(self, arg, H0=S.Half, **kwargs):
         """

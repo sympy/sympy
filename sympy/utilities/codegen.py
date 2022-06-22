@@ -574,7 +574,7 @@ class CodeGen:
         self.cse = cse
 
     def routine(self, name, expr, argument_sequence=None, global_vars=None):
-        """Creates an Routine object that is appropriate for this language.
+        """Creates a Routine object that is appropriate for this language.
 
         This implementation is appropriate for at least C/Fortran.  Subclasses
         can override this if necessary.
