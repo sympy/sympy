@@ -393,7 +393,7 @@ class Truss:
 
         direction: Sympifyable
             The angle, in degrees, that the load vector makes with the horizontal
-            in the counter-clockwise direction . It takes the values 0 to 360,
+            in the counter-clockwise direction. It takes the values 0 to 360,
             inclusive.
 
         Examples
