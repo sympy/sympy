@@ -1,43 +1,43 @@
 # Solve an equation algebraically
 
-Use SymPy to solve an equation algebraically. For example, solving $x^2 = 4$ yields $x \in \{-2,2\}$.
+Use SymPy to solve an equation algebraically (symbolically). For example, solving $x^2 = y$ yields $x \in \{-\sqrt{y},\sqrt{y}\}$.
 
 There are two high-level functions to solve equations, [`solve`](#) and [`solveset`](#). Here are their advantages and disadvantages: ... *table?*
+
+For both functions, we recommend you include the variable to be solved for, as the second argument. While this is optional for equations with a single symbol, it is a good practice.
 
 ## Using {func}`~.solve`
 
 {func}`~.solve`
 - is best for solving equations that...
-- produces outputs in the format of a Python list.
+- produces explicit solution expressions that you can use to substitute into something else
+- produces various output formats depending on the answer
+    - unless you use `dict=True` to ensure the result will be formatted as a dictionary, which we recommend if you want to extract information from the result programmatically
 
 You can solve an equation using {func}`~.solve` in several ways.
 
 *Mention assumptions: can set to real for a cubic equation to remove complex roots, if only care about real roots*
 
-1. Use the fact that any expression not in an `Eq` (equation) is automatically assumed to equal 0 by the solving functions. You can rearrange the equation $x^2 = 4$ to $x^2 - 4 = 0$, and {func}`~.solve` that expression. This approach is convenient if you are interactively solving an equation which can easily be rearranged to $expression = 0$.
-
-*Optional: Put variable solving for as second argument*
+1. Use the fact that any expression not in an `Eq` (equation) is automatically assumed to equal 0 by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y = 0$, and {func}`~.solve` that expression. This approach is convenient if you are interactively solving an equation which can easily be rearranged to $expression = 0$.
 
 ```
 >>> from sympy import solve
->>> from sympy.abc import x
->>> solve(x**2 - 4, x)
-[-2, 2]
+>>> from sympy.abc import x, y
+>>> solve(x**2 - y, x)
+[-sqrt(y), sqrt(y)]
 ```
 
 2. Put your equation into `Eq` form, then apply {func}`~.solve` to the `Eq`. This approach is convenient if you are interactively solving an equation which cannot easily be rearranged to $expression = 0$.
 
 ```
 >>> from sympy import solve, Eq
->>> from sympy.abc import x
->>> eqn = Eq(x**2, 4)
->>> solve(eqn)
-[-2, 2]
+>>> from sympy.abc import x, y
+>>> eqn = Eq(x**2, y)
+>>> solve(eqn, x)
+[-sqrt(y), sqrt(y)]
 ```
 
-3. Parse a string representing the equation into a form that SymPy can understand, then apply {func}`~.solve` to the parsed expression.  
-
-*This approach is convenient if you are programatically; should not be used if you're creating the expression, only if you're reading in a string.
+3. Parse a string representing the equation into a form that SymPy can understand, then apply {func}`~.solve` to the parsed expression.  This approach is convenient if you are programmatically reading in a string; we recommend against using it if you are creating the expression yourself.
 
 Should always include the variable to solve for if want to extract results programmatically
 
@@ -47,7 +47,7 @@ https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input
 
 ```
 >>> from sympy import solve, parse_expr
->>> expr = "x**2 == 4"
+>>> expr = "x**2 == y"
 >>> parsed = parse_expr(expr)
 >>> solve(parsed)
 [-2, 2]
@@ -60,20 +60,22 @@ https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input
 - produces outputs in the format of [SymPy mathematical Sets](https://docs.sympy.org/dev/modules/sets.html?highlight=sets#module-sympy.sets.sets) rather than [Python sets](https://docs.python.org/3/library/stdtypes.html#set)
 - can return infinitely many solutions
 - clearly separates the complex and real domains
-- the solution set can be more difficult to parse programatically (trig function as example)
+- the solution set can be more difficult to parse programmatically (trig function as example)
 
 ```
 >>> from sympy import solveset
->>> from sympy.abc import x
->>> solveset(x**2 - 4)
-FiniteSet(-2, 2)
+>>> from sympy.abc import x, y
+>>> solveset(x**2 - y, x)
+FiniteSet(sqrt(y), -sqrt(y))
 ```
 
 *Discuss domain argument--e.g. complex or real numbers: domain=reals*
 
-## Not all equations can be solved algebraically
+## Not all equations can be solved
 
-Some equations have no algebraic solution, in which case SymPy may return an empty set:
+### Equations with no solution
+
+Some equations have no solution, in which case SymPy may return an empty set. For example, the following equation reduces to -7 = 2, which has no solution because no value of $x$ will make it true:
 
 ```
 >>> from sympy import solve, Eq
@@ -85,12 +87,21 @@ Some equations have no algebraic solution, in which case SymPy may return an emp
 
 You may want to check whether there is a mistake in the equation.
 
-If SymPy returns an error such as `NotImplementedError`, there may be no way to solve the equation algebraically:
+### Equations with no analytical solution
+
+The vast majority of arbitrary nonlinear equations are not analytically solvable. The classes of equations that are solvable are basically:
+1. Linear equations.
+2. Polynomials (except where limited by the Abel-Ruffini theorem).
+3. Equations that can be solved by inverting some transcendental functions.
+4. Problems that can be transformed into the cases above (e.g. by turning trig into polynomials).
+5. A few other special cases that can be solved with something like the Lambert W function.
+
+SymPy may reflect that your equation has no solutions that can be expressed algebraically (symbolically) by returning an error such as `NotImplementedError`:
 
 ```
 >>> from sympy import solve, cos
 >>> from sympy.abc import x
->>> solve(cos(x) - x)
+>>> solve(cos(x) - x, x)
 ...
 NotImplementedError: multiple generators [x, cos(x)]
 No algorithms are implemented to solve equation -x + cos(x)
@@ -98,8 +109,8 @@ No algorithms are implemented to solve equation -x + cos(x)
 
 so you may have to {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` instead.
 
-It is also possible that there is a way to solve your equation algebraically, and SymPy has not have implemented an appropriate algorithm. You can ask about this on the mailing list, or open an issue on GitHub. 
+### Equations which have an analytical solution, and SymPy cannot solve
 
-*Ask if someone has an example where there is a mathematical solution but SymPy returns an empty list. Related: sin(x) = 0 will return two solutions but there are infintely many solutions*
+It is also possible that there is a way to solve your equation algebraically, and SymPy has not have implemented an appropriate algorithm. You can ask about this on the [mailing list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub page](https://github.com/sympy/sympy/issues).
 
-*Is it appropriate to include such instructions on a page like this? Yes. Add links to.*
+*Ask if someone has an example where there is a mathematical solution but SymPy returns an empty list. Related: sin(x) = 0 will return two solutions but there are infinitely many solutions*
