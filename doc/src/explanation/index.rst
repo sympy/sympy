@@ -1,10 +1,13 @@
-.. _explanation:
+.. _explanations:
 
-=============
- Explanation
-=============
+==============
+ Explanations
+==============
 
-This section contains a discussion of in-depth feature details, specialized topics and common SymPy pitfalls.
+
+Explanations provide in-depth discussions about select SymPy features. These
+topic guides talk about things like the motivation behind design decisions,
+technical implementation details, and opinionated recommendations.
 
 **Content**
 
