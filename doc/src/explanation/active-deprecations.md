@@ -164,6 +164,13 @@ The trace object `sympy.core.trace.Tr()` was moved to
 `sympy.physics.quantum` submodule, so it was better to have it there than in
 the core.
 
+(list-can-dims-deprecated)
+### `sympy.physics.units.dimensions.DimensionSystem.list_can_dims`
+
+The `sympy.physics.units.dimensions.DimensionSystem.list_can_dims` function is deprecated.
+
+This function listed canonical dimension names which can directly be accessed using properties.
+
 (deprecated-sympy-core-compatibility)=
 ### The `sympy.core.compatibility` submodule
 
