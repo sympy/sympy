@@ -468,7 +468,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         with warns_deprecated_sympy():
             sympy_deprecation_warning("use base and derive dims instead",
                  deprecated_since_version="1.10",
-                 active_deprecations_target="list-can-dims deprecated")
+                 active_deprecations_target="list-can-dims-deprecated")
         dimset = set()
         for i in self.base_dims:
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
