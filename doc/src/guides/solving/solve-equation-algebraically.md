@@ -2,9 +2,9 @@
 
 Use SymPy to solve an equation algebraically (symbolically). For example, solving $x^2 = y$ yields $x \in \{-\sqrt{y},\sqrt{y}\}$.
 
-There are two high-level functions to solve equations, [`solve`](#) and [`solveset`](#). Here are their advantages and disadvantages: ... *table?*
+There are two high-level functions to solve equations, {func}`~.solve` and {func}`~.solveset`. Here are their advantages and disadvantages: ... *table?*
 
-For both functions, we recommend you include the variable to be solved for, as the second argument. While this is optional for equations with a single symbol, it is a good practice.
+We recommend you include the variable to be solved for, as the second argument for either function. While this is optional for equations with a single symbol, it is a good practice because it ensures SymPy will solve for the desired symbol.
 
 ## Using {func}`~.solve`
 
@@ -41,16 +41,17 @@ You can solve an equation using {func}`~.solve` in several ways.
 
 Should always include the variable to solve for if want to extract results programmatically
 
-*But this doesn't work for equality; does for inequality. Is there some way to do this for equality? -- transformations https://docs.sympy.org/dev/modules/parsing.html?highlight=parse_expr#sympy.parsing.sympy_parser.parse_expr convert equal sign transforamtions. Should be in a different guide?*
+*But this doesn't work for equality; does for inequality. Is there some way to do this for equality? -- transformations https://docs.sympy.org/dev/modules/parsing.html?highlight=parse_expr#sympy.parsing.sympy_parser.parse_expr convert equal sign transformations. Should be in a different guide?*
 
 https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input
 
 ```
 >>> from sympy import solve, parse_expr
->>> expr = "x**2 == y"
+>>> from sympy.abc import x
+>>> expr = "Eq(x**2, y)"
 >>> parsed = parse_expr(expr)
->>> solve(parsed)
-[-2, 2]
+>>> solve(parsed, x)
+[-sqrt(y), sqrt(y)]
 ```
 
 ## Using {func}`~.solveset`
