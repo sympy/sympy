@@ -14,8 +14,6 @@ class Truss:
     In engineering, a truss is a structure that
     consists of two-force members only.
 
-    .. image:: truss_explanation.png
-
     Trusses are extremely important in engineering applications
     and can be seen in numerous real-world applications like bridges.
 
@@ -30,22 +28,19 @@ class Truss:
     .. image:: truss_example.png
 
     >>> from sympy.physics.continuum_mechanics.truss import Truss
-    >>> from sympy import (Symbol, symbols)
-    >>> A = Symbol('A')
-    >>> B = Symbol('B')
-    >>> C = Symbol('C')
-    >>> AB, BC, AC = symbols("AB, BC, AC")
-    >>> P = Symbol('P')
     >>> t = Truss()
-    >>> t.add_node(A, 0, 0)
-    >>> t.add_node(B, 2, 2)
-    >>> t.add_node(C, 3, 0)
-    >>> t.add_member(AB, A, B)
-    >>> t.add_member(BC, B, C)
-    >>> t.add_member(AC, A, C)
-    >>> t.apply_load(A, magnitude=P, direction=90)
-    >>> t.add_support(A, type="roller")
-    >>> t.add_support(B, type="fixed")
+    >>> t.add_node("node_1", 0, 0)
+    >>> t.add_node("node_2", 6, 0)
+    >>> t.add_node("node_3", 2, 2)
+    >>> t.add_node("node_4", 2, 0)
+    >>> t.add_member("member_1", "node_1", "node_4")
+    >>> t.add_member("member_2", "node_2", "node_4")
+    >>> t.add_member("member_3", "node_1", "node_3")
+    >>> t.add_member("member_4", "node_2", "node_3")
+    >>> t.add_member("member_5", "node_3", "node_4")
+    >>> t.apply_load("node_4", magnitude=10, direction=270)
+    >>> t.add_support("node_1", type="fixed")
+    >>> t.add_support("node_2", type="roller")
     """
 
     def __init__(self):
@@ -163,7 +158,7 @@ class Truss:
         if label in self._node_labels:
             raise ValueError("Node needs to have a unique label")
 
-        elif x in self._node_position_x and y in self._node_position_y:
+        elif x in self._node_position_x and y in self._node_position_y and self._node_position_x.index(x)==self._node_position_y.index(y):
             raise ValueError("A node already exists at the given position")
 
         else :
