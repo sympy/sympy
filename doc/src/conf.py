@@ -396,6 +396,10 @@ graphviz_output_format = 'svg'
 intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None)
 }
+# Require :external: to reference intersphinx. Prevents accidentally linking
+# to something from matplotlib.
+intersphinx_disabled_reftypes = ['*']
+
 # Requried for linkcode extension.
 # Get commit hash from the external file.
 commit_hash_filepath = '../commit_hash.txt'
