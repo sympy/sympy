@@ -245,8 +245,8 @@ ket: (L_BAR | BAR) expr R_ANGLE;
 mathit: CMD_MATHIT L_BRACE mathit_text R_BRACE;
 mathit_text: LETTER*;
 
-frac:
-	CMD_FRAC L_BRACE upper = expr R_BRACE L_BRACE lower = expr R_BRACE;
+frac: CMD_FRAC L_BRACE upper = expr R_BRACE L_BRACE lower = expr R_BRACE  
+	| CMD_FRAC NUMBER ;
 
 binom:
 	(CMD_BINOM | CMD_DBINOM | CMD_TBINOM) L_BRACE n = expr R_BRACE L_BRACE k = expr R_BRACE;

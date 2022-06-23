@@ -343,6 +343,17 @@ def rule2text(ctx):
 
 
 def convert_frac(frac):
+    if frac.NUMBER():
+        num = frac.NUMBER().getSymbol().text
+        if len(num) == 1:
+            raise LaTeXParsingError("Syntax not yet supported.")
+
+        fraction = sympy.Mul(sympy.Number(num[0]), sympy.Pow(sympy.Number(num[1]), -1, evaluate=False), evaluate=False)
+        if len(num) > 2:
+            return sympy.Mul(fraction, sympy.Number(num[2:]), evaluate=False)
+        else:
+            return fraction
+
     diff_op = False
     partial_op = False
     lower_itv = frac.lower.getSourceInterval()
