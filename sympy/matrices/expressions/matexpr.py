@@ -398,7 +398,7 @@ class MatrixExpr(Expr):
         return self
 
     def as_coeff_mmul(self):
-        return 1, MatMul(self)
+        return S.One, MatMul(self)
 
     @staticmethod
     def from_index_summation(expr, first_index=None, last_index=None, dimensions=None):
