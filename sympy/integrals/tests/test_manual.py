@@ -10,7 +10,7 @@ from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
-from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
 from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfi, fresnelc, fresnels, li)
 from sympy.functions.special.gamma_functions import uppergamma
@@ -302,6 +302,11 @@ def test_manualintegrate_derivative():
 
 
 def test_manualintegrate_Heaviside():
+    assert_is_integral_of(DiracDelta(3*x+2), Heaviside(3*x+2)/3)
+    assert_is_integral_of(DiracDelta(3*x, 0), Heaviside(3*x)/3)
+    assert manualintegrate(DiracDelta(a+b*x, 1), x) == \
+        Piecewise((DiracDelta(a + b*x)/b, Ne(b, 0)), (x*DiracDelta(a, 1), True))
+    assert_is_integral_of(DiracDelta(x/3-1, 2), 3*DiracDelta(x/3-1, 1))
     assert manualintegrate(Heaviside(x), x) == x*Heaviside(x)
     assert manualintegrate(x*Heaviside(2), x) == x**2/2
     assert manualintegrate(x*Heaviside(-2), x) == 0

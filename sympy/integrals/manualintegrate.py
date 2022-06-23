@@ -43,7 +43,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
     cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
-from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.error_functions import (erf, erfi, fresnelc,
     fresnels, Ci, Chi, Si, Shi, Ei, li)
 from sympy.functions.special.gamma_functions import uppergamma
@@ -97,6 +97,7 @@ RewriteRule = Rule("RewriteRule", "rewritten substep")
 CompleteSquareRule = Rule("CompleteSquareRule", "rewritten substep")
 PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
 HeavisideRule = Rule("HeavisideRule", "harg ibnd substep")
+DiracDeltaRule = Rule("DiracDeltaRule", "n a b")
 TrigSubstitutionRule = Rule("TrigSubstitutionRule",
                             "theta func rewritten substep restriction")
 ArctanRule = Rule("ArctanRule", "a b c")
@@ -1237,6 +1238,29 @@ def heaviside_rule(integral):
         m, b = match[m], match[b]
         return HeavisideRule(m*symbol + b, -b/m, result, integrand, symbol)
 
+
+def dirac_delta_rule(integral: IntegralInfo):
+    integrand, x = integral
+    if len(integrand.args) == 1:
+        n = S.Zero
+    else:
+        n = integrand.args[1]
+    if not n.is_Integer or n < 0:
+        return
+    a, b = Wild('a', exclude=[x]), Wild('b', exclude=[x, 0])
+    match = integrand.args[0].match(a+b*x)
+    if not match:
+        return
+    a, b = match[a], match[b]
+    generic_cond = Ne(b, 0)
+    if generic_cond is S.true:
+        degenerate_step = None
+    else:
+        degenerate_step = ConstantRule(DiracDelta(a, n), integrand, x)
+    generic_step = DiracDeltaRule(n, a, b, integrand, x)
+    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
+
+
 def substitution_rule(integral):
     integrand, symbol = integral
 
@@ -1422,17 +1446,10 @@ def integral_steps(integrand, symbol, **options):
 
         if symbol not in integrand.free_symbols:
             return Number
-        elif isinstance(integrand, TrigonometricFunction):
-            return TrigonometricFunction
-        elif isinstance(integrand, Derivative):
-            return Derivative
-        else:
-            for cls in (Pow, Symbol, exp, log,
-                        Add, Mul, *inverse_trig_functions,
-                        Heaviside, OrthogonalPolynomial):
-                if isinstance(integrand, cls):
-                    return cls
-
+        for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
+            if isinstance(integrand, cls):
+                return cls
+        return type(integrand)
 
     def integral_is_subclass(*klasses):
         def _integral_is_subclass(integral):
@@ -1455,6 +1472,7 @@ def integral_steps(integrand, symbol, **options):
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
+            DiracDelta: dirac_delta_rule,
             OrthogonalPolynomial: orthogonal_poly_rule,
             Number: constant_rule
         })),
@@ -1693,6 +1711,14 @@ def eval_heaviside(harg, ibnd, substep, integrand, symbol):
     # then there needs to be continuity at -b/m == ibnd,
     # so we subtract the appropriate term.
     return Heaviside(harg)*(substep - substep.subs(symbol, ibnd))
+
+
+@evaluates(DiracDeltaRule)
+def eval_dirac_delta(n, a, b, integrand, x):
+    if n == 0:
+        return Heaviside(a+b*x)/b
+    return DiracDelta(a+b*x, n-1)/b
+
 
 @evaluates(JacobiRule)
 def eval_jacobi(n, a, b, integrand, symbol):
