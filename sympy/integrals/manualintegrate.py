@@ -55,7 +55,7 @@ from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
 from sympy.logic.boolalg import And
 from sympy.ntheory.factor_ import divisors
-from sympy.polys.polytools import degree, lcm_list
+from sympy.polys.polytools import degree, lcm_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
@@ -907,32 +907,35 @@ def sqrt_linear_rule(integral: IntegralInfo):
         return step
 
 
-def sqrt_quadratic_denom_rule(integral: IntegralInfo, degenerate=True):
+def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     integrand, x = integral
     a = Wild('a', exclude=[x])
     b = Wild('b', exclude=[x])
     c = Wild('c', exclude=[x, 0])
-    numer = Wild('numer')
-    match = integrand.match(numer/sqrt(a+b*x+c*x**2))
-    if match:
-        a, b, c, numer = match[a], match[b], match[c], match[numer]
-        numer_poly = numer.as_poly(x)
-        if numer_poly is None:
-            return
+    f = Wild('f')
+    n = Wild('n', properties=[lambda n: n.is_Integer and n.is_odd])
+    match = integrand.match(f*sqrt(a+b*x+c*x**2)**n)
+    if not match:
+        return
+    a, b, c, f, n = match[a], match[b], match[c], match[f], match[n]
+    f_poly = f.as_poly(x)
+    if f_poly is None:
+        return
 
-        generic_cond = Ne(c, 0)
-        if not degenerate or generic_cond is S.true:
-            degenerate_step = None
-        elif b.is_zero:
-            degenerate_step = integral_steps(numer/sqrt(a), x)
-        else:
-            degenerate_step = sqrt_linear_rule(IntegralInfo(numer/sqrt(a+b*x), x))
+    generic_cond = Ne(c, 0)
+    if not degenerate or generic_cond is S.true:
+        degenerate_step = None
+    elif b.is_zero:
+        degenerate_step = integral_steps(f*sqrt(a)**n, x)
+    else:
+        degenerate_step = sqrt_linear_rule(IntegralInfo(f*sqrt(a+b*x)**n, x))
 
+    def sqrt_quadratic_denom_rule(numer_poly: Poly, integrand: Expr):
         denom = sqrt(a+b*x+c*x**2)
         deg = numer_poly.degree()
         if deg <= 1:
             # integrand == (d+e*x)/sqrt(a+b*x+c*x**2)
-            e, d = numer_poly.all_coeffs() if deg == 1 else (S.Zero, numer)
+            e, d = numer_poly.all_coeffs() if deg == 1 else (S.Zero, numer_poly.as_expr())
             # rewrite numerator to A*(2*c*x+b) + B
             A = e/(2*c)
             B = d-A*b
@@ -956,7 +959,18 @@ def sqrt_quadratic_denom_rule(integral: IntegralInfo, degenerate=True):
         else:
             coeffs = numer_poly.all_coeffs()
             step = SqrtQuadraticDenomRule(a, b, c, coeffs, integrand, x)
-        return _add_degenerate_step(generic_cond, step, degenerate_step)
+        return step
+
+    if n > 0:  # rewrite poly * sqrt(s)**(2*k-1) to poly*s**k / sqrt(s)
+        numer_poly = f_poly * (a+b*x+c*x**2)**((n+1)/2)
+        rewritten = numer_poly.as_expr()/sqrt(a+b*x+c*x**2)
+        substep = sqrt_quadratic_denom_rule(numer_poly, rewritten)
+        generic_step = RewriteRule(rewritten, substep, integrand, x)
+    elif n == -1:
+        generic_step = sqrt_quadratic_denom_rule(f_poly, integrand)
+    else:
+        return  # todo: handle n < -1 case
+    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
@@ -1468,7 +1482,7 @@ def integral_steps(integrand, symbol, **options):
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_linear_rule),
-                        null_safe(sqrt_quadratic_denom_rule)),
+                        null_safe(sqrt_quadratic_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
@@ -1635,8 +1649,8 @@ def eval_sqrt_quadratic_denom(a, b, c, coeffs: list[Expr], integrand, x):
 
 @evaluates(SqrtQuadraticRule)
 def eval_sqrt_quadratic(a, b, c, integrand, x):
-    step = sqrt_quadratic_denom_rule(IntegralInfo((2*a+b*x)/integrand, x), degenerate=False)
-    return x*integrand/2 + _manualintegrate(step)/4
+    step = sqrt_quadratic_rule(IntegralInfo(integrand, x), degenerate=False)
+    return _manualintegrate(step)
 
 
 @evaluates(AlternativeRule)
