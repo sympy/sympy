@@ -375,8 +375,7 @@ class And(AndOr_Base):
     def expand(self):
 
         # first locate Or
-        for i in range(len(self.args)):
-            arg = self.args[i]
+        for i, arg in enumerate(self.args):
             if isinstance(arg, Or):
                 arest = self.args[:i] + self.args[i + 1:]
 

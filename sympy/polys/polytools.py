@@ -623,11 +623,7 @@ class Poly(Basic):
 
         """
         J, new = f.rep.exclude()
-        gens = []
-
-        for j in range(len(f.gens)):
-            if j not in J:
-                gens.append(f.gens[j])
+        gens = [gen for j, gen in enumerate(f.gens) if j not in J]
 
         return f.per(new, gens=gens)
 

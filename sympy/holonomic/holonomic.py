@@ -330,7 +330,7 @@ class DifferentialOperator:
         # if self is `Dx`
         if self.listofpoly == self.parent.derivative_operator.listofpoly:
             sol = []
-            for i in range(0, n):
+            for _ in range(n):
                 sol.append(self.parent.base.zero)
             sol.append(self.parent.base.one)
             return DifferentialOperator(sol, self.parent)
@@ -757,8 +757,8 @@ class HolonomicFunction:
             for i in self.y0:
                 c = self.y0[i]
                 c2 = []
-                for j in range(len(c)):
-                    if c[j] == 0:
+                for j, cj in enumerate(c):
+                    if cj == 0:
                         c2.append(S.Zero)
 
                     # if power on `x` is -1, the integration becomes log(x)
@@ -766,7 +766,7 @@ class HolonomicFunction:
                     elif i + j + 1 == 0:
                         raise NotImplementedError("logarithmic terms in the series are not supported")
                     else:
-                        c2.append(c[j] / S(i + j + 1))
+                        c2.append(cj / S(i + j + 1))
                 y0[i + 1] = c2
 
             if hasattr(limits, "__iter__"):
@@ -2186,11 +2186,11 @@ def from_hyper(func, x0=0, evalf=False):
 
     # generalized hypergeometric differential equation
     r1 = 1
-    for i in range(len(a)):
-        r1 = r1 * (x * Dx + a[i])
+    for ai in a:
+        r1 = r1 * (x * Dx + ai)
     r2 = Dx
-    for i in range(len(b)):
-        r2 = r2 * (x * Dx + b[i] - 1)
+    for bi in b:
+        r2 = r2 * (x * Dx + bi - 1)
     sol = r1 - r2
 
     simp = hyperexpand(func)
@@ -2266,13 +2266,13 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
     mnp = (-1)**(m + n - p)
     r1 = x * mnp
 
-    for i in range(len(a)):
-        r1 *= x * Dx + 1 - a[i]
+    for ai in a:
+        r1 *= x * Dx + 1 - ai
 
     r2 = 1
 
-    for i in range(len(b)):
-        r2 *= x * Dx - b[i]
+    for bi in b:
+        r2 *= x * Dx - bi
 
     sol = r1 - r2
 
