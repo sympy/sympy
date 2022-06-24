@@ -149,12 +149,15 @@ else:
     raise RuntimeError(
         'unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
 
+_cached_property_sentinel = object()
+
+
 def cached_property(func):
     '''Decorator to cache property method'''
     attrname = '__' + func.__name__
     def propfunc(self):
-        val = getattr(self, attrname, None)
-        if val is None:
+        val = getattr(self, attrname, _cached_property_sentinel)
+        if val is _cached_property_sentinel:
             val = func(self)
             setattr(self, attrname, val)
         return val
