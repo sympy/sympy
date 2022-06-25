@@ -879,8 +879,8 @@ def sqrt_linear_rule(integral: IntegralInfo):
         if not exp_.is_Rational:  # exclude x**pi
             return
         match = base.match(a+b*x)
-        if not match:  # exclude non-linear
-            return
+        if not match:  # skip non-linear
+            continue  # for sqrt(x+sqrt(x)), although base is non-linear, we can still substitute sqrt(x)
         a1, b1 = match[a], match[b]
         if a0*b1 != a1*b0 or not (b0/b1).is_nonnegative:  # cannot transform sqrt(x) to sqrt(x+1) or sqrt(-x)
             return
@@ -1474,8 +1474,9 @@ def integral_steps(integrand, symbol, **options):
     result = do_one(
         null_safe(special_function_rule),
         null_safe(switch(key, {
-            Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule), \
-                              null_safe(quadratic_denom_rule)),
+            Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
+                        null_safe(sqrt_linear_rule),
+                        null_safe(quadratic_denom_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,

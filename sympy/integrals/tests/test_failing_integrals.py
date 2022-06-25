@@ -234,11 +234,6 @@ def test_issue_10584():
 
 
 @XFAIL
-def test_issue_9723():
-    assert not integrate(sqrt(x + sqrt(x))).has(Integral)
-
-
-@XFAIL
 def test_issue_9101():
     assert not integrate(log(x + sqrt(x**2 + y**2 + z**2)), z).has(Integral)
 
