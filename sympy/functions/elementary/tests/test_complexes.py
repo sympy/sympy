@@ -1,5 +1,5 @@
 from sympy.core.expr import Expr
-from sympy.core.function import (Derivative, Function, Lambda, expand)
+from sympy.core.function import (Derivative, Function, Lambda, expand, PoleError)
 from sympy.core.numbers import (E, I, Rational, comp, nan, oo, pi, zoo)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -675,16 +675,12 @@ def test_arg_rewrite():
 def test_arg_leading_term_and_series():
     x = Symbol('x')
     assert arg(x).as_leading_term(x, cdir = 1) == 0
-    assert arg(x).as_leading_term(x, cdir = 1) == 0
-    assert arg(x + I).as_leading_term(x, cdir = 1) == pi/2
-    assert arg(x + I).as_leading_term(x, cdir = -1) == pi/2
-    assert arg(2*x).as_leading_term(x, cdir = I) == pi/2
-    assert arg(2*x).as_leading_term(x, cdir = -I) == -pi/2
+    assert arg(x).as_leading_term(x, cdir = -1) == pi
+    raises(PoleError, lambda: arg(x + I).as_leading_term(x, cdir = 1))
+    raises(PoleError, lambda: arg(2*x).as_leading_term(x, cdir = I))
 
-    assert arg(x + I).series(x, 0) == pi/2
-    assert arg(x + I).series(x, 1) == pi/4
-    assert arg(x + I).series(x, -1) == 3*pi/4
-    assert arg(x).nseries(x, 0, 0) == Order(1)
+    assert arg(x).nseries(x) == 0
+    assert arg(x).nseries(x, n=0) == Order(1)
 
 
 def test_adjoint():
