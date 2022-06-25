@@ -786,9 +786,9 @@ functions included with SymPy, numerical evaluation will happen automatically
 and you do not need to do anything.
 
 If this is not the case, numerical evaluation can be specified by defining the
-method `_eval_evalf(self, prec)`, where `prec` binary precision of the input.
-The method should return the expression evaluated to the given precision, or
-`None` if this is not possible.
+method `_eval_evalf(self, prec)`, where `prec` is the binary precision of the
+input. The method should return the expression evaluated to the given
+precision, or `None` if this is not possible.
 
 ```{note}
 
@@ -943,7 +943,13 @@ happen by default. An example `doit()` for `divides` that performs this
 simplification (along with the [above definition of
 `eval()`](custom-functions-divides-eval)) might look like this:
 
+```{note}
+If  `doit()` returns a Python `int` literal, convert it to an `Integer` so
+that the returned object is a SymPy type.
 ```
+
+```
+>>> from sympy import Integer
 >>> class divides(Function):
 ...     # Define evaluation on basic inputs, as well as type checking that the
 ...     # inputs are not nonintegral.
@@ -970,9 +976,9 @@ simplification (along with the [above definition of
 ...         # already assumed to be integers because of the logic in eval().
 ...         isint = (n/m).is_integer
 ...         if isint is True:
-...             return 1
+...             return Integer(1)
 ...         elif isint is False:
-...             return 0
+...             return Integer(0)
 ...         else:
 ...             return divides(m, n)
 ```
@@ -1116,6 +1122,7 @@ function](custom-functions-versine-definition), the derivative is $\sin(x)$.
 ```py
 >>> class versin(Function):
 ...     def fdiff(self, argindex=1):
+...         # argindex indexes the args, starting at 1
 ...         return sin(self.args[0])
 ```
 
@@ -1149,6 +1156,7 @@ So the `fdiff()` method for `FMA` would look like this:
 ...     FMA(x, y, z) = x*y + z
 ...     """
 ...     def fdiff(self, argindex):
+...         # argindex indexes the args, starting at 1
 ...         x, y, z = self.args
 ...         if argindex == 1:
 ...             return y
@@ -1346,7 +1354,7 @@ I*sin(re(x))*sinh(im(x)) - cos(re(x))*cosh(im(x)) + 1
 There are many other functions in SymPy whose behavior can be defined on
 custom functions via a custom `_eval_*` method, analogous to the ones
 described above. See the documentation of the specific function for details on
-how define each method.
+how to define each method.
 
 (custom-functions-complete-examples)=
 ## Complete Examples
@@ -1590,9 +1598,9 @@ printer (`_latex()`).
 ...         # already assumed to be integers because of the logic in eval().
 ...         isint = (n/m).is_integer
 ...         if isint is True:
-...             return 1
+...             return Integer(1)
 ...         elif isint is False:
-...             return 0
+...             return Integer(0)
 ...         else:
 ...             return divides(m, n)
 ...
@@ -1736,6 +1744,7 @@ serve as an example.
 ...
 ...     # Define differentiation.
 ...     def fdiff(self, argindex):
+...         # argindex indexes the args, starting at 1
 ...         x, y, z = self.args
 ...         if argindex == 1:
 ...             return y
