@@ -60,14 +60,20 @@ You can solve an equation using {func}`~.solve` in several ways.
 [-sqrt(y), sqrt(y)]
 ```
 
-3. Parse a string representing the equation into a form that SymPy can understand, then apply {func}`~.solve` to the parsed expression.  This approach is convenient if you are programmatically reading in a string; we [recommend against using parsing a string if you are creating the expression yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).
+3. Parse a string representing the equation into a form that SymPy can understand (`Eq` form), then apply {func}`~.solve` to the parsed expression.  This approach is convenient if you are programmatically reading in a string. We [recommend against using parsing a string if you are creating the expression yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).
 
 You should always include the variable to solve for if you want to extract results programmatically, to ensure that SymPy solves for the desired variable. To ensure SymPy will produce results in a consistent format, use `dict=True`. To extract the solutions, you can iterate through the list of dictionaries:
 
 ```
->>> from sympy import solve
->>> from sympy.abc import x, y
->>> solution = solve(x ** 2 - y, x, dict=True)
+>>> from sympy import parse_expr, solve
+>>> from sympy.abc import x
+>>> from sympy.parsing.sympy_parser import convert_equals_signs, standard_transformations
+>>> expr = "x ** 2 = y"
+>>> parsed = parse_expr(expr, transformations=standard_transformations + (convert_equals_signs,))
+>>> print(parsed)
+Eq(x**2, y)
+>>> solutions = solve(parsed, x, dict=True)
+>>> print(solutions)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 >>> for solution in solutions:
 >>>     for key, val in solution.items():
@@ -76,17 +82,23 @@ You should always include the variable to solve for if you want to extract resul
 sqrt(y)
 ```
 
-*But this doesn't work for equality; does for inequality. Is there some way to do this for equality? -- transformations https://docs.sympy.org/dev/modules/parsing.html?highlight=parse_expr#sympy.parsing.sympy_parser.parse_expr convert equal sign transformations. Should be in a different guide?*
-
-
+If you already have the equation in `Eq` form, you can parse that string:
 
 ```
->>> from sympy import solve, parse_expr
+>>> from sympy import parse_expr, solve
 >>> from sympy.abc import x
 >>> expr = "Eq(x**2, y)"
 >>> parsed = parse_expr(expr)
->>> solve(parsed, x)
-[-sqrt(y), sqrt(y)]
+>>> print(parsed)
+Eq(x**2, y)
+>>> solutions = solve(parsed, x, dict=True)
+>>> print(solutions)
+[{x: -sqrt(y)}, {x: sqrt(y)}]
+>>> for solution in solutions:
+>>>     for key, val in solution.items():
+>>>         print(val)
+-sqrt(y)
+sqrt(y)
 ```
 
 ### Restricting the domain of solutions using {func}`~.solve`
