@@ -669,30 +669,58 @@ that by default, a function's domain is all of $\mathbb{C}$, and indeed
 In the assumptions handler methods, as in all methods, we can access the
 arguments of the function using `self.args`.
 
+To see if `x` is an even multiple of `pi`, we can use {meth}`~.as_independent`
+to match `x` structurally as `coeff*pi`. Pulling apart subexpressions
+structurally like this in assumptions handlers is preferable to using
+something like `(x/pi).is_even`, because that will create a new expression
+`x/pi`. The creation of a new expression is much slower. Furthermore, whenever
+an expression is created, the constructors that are called when creating the
+expression will often themselves cause assumptions to be queried. If you are
+not careful, this can lead to infinite recursion. So a good general rule for
+assumptions handlers is, **never create a new expression in an assumptions
+handler**. Always pull apart the args of the function using structural methods
+like `as_independent`.
+
 ```py
 >>> from sympy.core.logic import fuzzy_and, fuzzy_not
 >>> class versin(Function):
 ...     def _eval_is_nonnegative(self):
-...         x = self.args[0]
 ...         # versin(x) is nonnegative iff x is real
+...         x = self.args[0]
 ...         return x.is_real
 ...
 ...     def _eval_is_positive(self):
-...         x = self.args[0]
 ...         # versin(x) is positive iff x is real and not an even multiple of pi
-...         return fuzzy_and([x.is_real, fuzzy_not((x/pi).is_even)])
+...         x = self.args[0]
+...
+...         # x.as_independent(pi, as_Add=False) will split x as a Mul of the
+...         # form coeff*pi
+...         coeff, pi_ = x.as_independent(pi, as_Add=False)
+...         # If pi_ = pi, x = coeff*pi. Otherwise x is not (structurally) of
+...         # the form coeff*pi.
+...         if pi_ == pi:
+...             return fuzzy_and([x.is_real, fuzzy_not(coeff.is_even)])
+...         elif x.is_real is False:
+...             return False
+...         # else: return None. We do not know for sure whether x is an even
+...         # multiple of pi
 ```
 
 ```py
 >>> versin(1).is_nonnegative
 True
+>>> versin(2*pi).is_positive
+False
+>>> versin(3*pi).is_positive
+True
 ```
 
 Note the use of `fuzzy_` functions in the more complicated
-`_eval_is_positive()` handler. It is important when working with assumptions
-to always be careful about [handling three-valued logic
-correctly](booleans-guide). These ensure that the method returns the correct
-answer when `x.is_real` or `(x/pi).is_even` are `None`.
+`_eval_is_positive()` handler, and the careful handling of the `if`/`elif`. It
+is important when working with assumptions to always be careful about
+[handling three-valued logic correctly](booleans-guide). This ensures that the
+method returns the correct answer when `x.is_real` or `coeff.is_even` are
+`None`.
 
 ```{warning}
 
@@ -1376,14 +1404,25 @@ existing SymPy logic defined on `1 - cos(x)`).
 ...
 ...     # Define basic assumptions.
 ...     def _eval_is_nonnegative(self):
-...         x = self.args[0]
 ...         # versin(x) is nonnegative if x is real
+...         x = self.args[0]
 ...         return x.is_real
 ...
 ...     def _eval_is_positive(self):
+...         # versin(x) is positive iff x is real and not an even multiple of pi
 ...         x = self.args[0]
-...         # versin(x) is positive if x is real and not an even multiple of pi
-...         return fuzzy_and([x.is_real, fuzzy_not((x/pi).is_even)])
+...
+...         # x.as_independent(pi, as_Add=False) will split x as a Mul of the
+...         # form n*pi
+...         coeff, pi_ = x.as_independent(pi, as_Add=False)
+...         # If pi_ = pi, x = coeff*pi. Otherwise pi_ = 1 and x is not
+...         # (structurally) of the form n*pi.
+...         if pi_ == pi:
+...             return fuzzy_and([x.is_real, fuzzy_not(coeff.is_even)])
+...         elif x.is_real is False:
+...             return False
+...         # else: return None. We do not know for sure whether x is an even
+...         # multiple of pi
 ...
 ...     # Define the behavior for various simplification and rewriting
 ...     # functions.
@@ -1430,6 +1469,11 @@ True
 True
 >>> versin(2*n*pi).is_zero
 True
+>>> print(versin(n*pi).is_positive)
+None
+>>> r = symbols('r', real=True)
+>>> print(versin(r).is_positive)
+None
 ```
 
 **Simplification:**
