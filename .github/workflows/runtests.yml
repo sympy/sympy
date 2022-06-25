@@ -197,8 +197,11 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install mpmath matplotlib numpy ipython cython scipy aesara \
-                         wurlitzer autowrap numexpr 'antlr4-python3-runtime==4.7.*'
+                         wurlitzer autowrap 'antlr4-python3-runtime==4.7.*'
 
+      # There is a problem compiling numexpr with the latest release of numpy.
+      - if: ${{ ! contains(matrix.python-version, '3.11') }}
+        run: pip install numexpr
 
       # gmpy2 is not available for pypy
       - if: ${{ matrix.python-version != 'pypy-3.8' }}
