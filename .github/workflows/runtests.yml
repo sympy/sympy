@@ -196,12 +196,15 @@ jobs:
         run: pip install git+https://github.com/scipy/scipy@main
 
       # dependencies to install in all Python versions:
-      - run: pip install mpmath matplotlib numpy ipython cython scipy aesara \
+      - run: pip install mpmath numpy ipython cython scipy aesara \
                          wurlitzer autowrap 'antlr4-python3-runtime==4.7.*'
 
       # There is a problem compiling numexpr with the latest release of numpy.
+      # There is also a problem installing the correct version of matplotlib in
+      # the Python 3.11 bleeding edge setup: filename has '3.5.2', but metadata
+      # has '0.0'
       - if: ${{ ! contains(matrix.python-version, '3.11') }}
-        run: pip install numexpr
+        run: pip install numexpr matplotlib
 
       # gmpy2 is not available for pypy
       - if: ${{ matrix.python-version != 'pypy-3.8' }}
