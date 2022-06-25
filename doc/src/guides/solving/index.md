@@ -26,3 +26,5 @@ SymPy {func}`~.solve` may or may not be what you need for a particular problem,
 so we recommend you use the links on this page to learn how to "solve" your problem.
 And while a common, colloquial expression is, for example, ["solve an integral"](../../modules/integrals/integrals.rst), 
 in SymPy's terminology it would be ["evaluate an integral."](../../modules/integrals/integrals.rst)
+
+```{toctree}
