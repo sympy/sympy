@@ -200,5 +200,3 @@ so you may have to {func}`solve your equation numerically <sympy.solvers.solvers
 ### Equations which have an analytical solution, and SymPy cannot solve
 
 It is also possible that there is a way to solve your equation algebraically, and SymPy has not have implemented an appropriate algorithm. If you think you may have encountered this situation, you can ask about it on the [mailing list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub page](https://github.com/sympy/sympy/issues).
-
-*Ask if someone has an example where there is a mathematical solution but SymPy returns an empty list. Related: sin(x) = 0 will return two solutions but there are infinitely many solutions*
