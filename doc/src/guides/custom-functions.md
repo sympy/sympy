@@ -404,7 +404,7 @@ avoided.
   Suppose we decided to automatically expand this in `eval()`:
 
   ```
-  >>> from sympy import Add
+  >>> from sympy import Add, sin
   >>> class versin(Function):
   ...     @classmethod
   ...     def eval(cls, x):
@@ -419,6 +419,7 @@ avoided.
   above identity.
 
   ```
+  >>> x, y, z = symbols('x y z')
   >>> versin(x + y)
   -sin(x)*sin(y) + versin(x)*versin(y) - versin(x) - versin(y) + 1
   ```
