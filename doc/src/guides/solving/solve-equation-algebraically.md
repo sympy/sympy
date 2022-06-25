@@ -2,16 +2,39 @@
 
 Use SymPy to solve an equation algebraically (symbolically). For example, solving $x^2 = y$ yields $x \in \{-\sqrt{y},\sqrt{y}\}$.
 
-There are two high-level functions to solve equations, {func}`~.solve` and {func}`~.solveset`. Here are their advantages and disadvantages: ... *table?*
+There are two high-level functions to solve equations, {func}`~.solve` and {func}`~.solveset`. Here are recommendations on when to use:
 
-We recommend you include the variable to be solved for, as the second argument for either function. While this is optional for equations with a single symbol, it is a good practice because it ensures SymPy will solve for the desired symbol.
+{func}`~.solve`
+- You need to programmatically extract components (expressions, or individual symbols or constants) from the output by traversing it.
+- You want an explicit solution expression that you can use to substitute into something else.
+
+{func}`~.solveset`
+- You want a consistent input and output interface.
+- You want to get all the solutions, including if there are infinitely many.
+- You want a clear separation between equations in the complex domain and the real domain.
+
+We recommend you include the variable to be solved for as the second argument for either function. While this is optional for equations with a single symbol, it is a good practice because it ensures SymPy will solve for the desired symbol. For example, you may expect the following to solve for $x$, and SymPy will solve for $y$:
+
+```
+>>> from sympy.abc import x, y
+>>> from sympy import solve
+>>> solve(x ** 2 - y)
+[{y: x**2}]
+```
+
+Specifying the variable to solve for ensures that SymPy solves for it:
+
+```
+>>> from sympy.abc import x, y
+>>> from sympy import solve
+>>> solve(x ** 2 - y, x)
+[-sqrt(y), sqrt(y)]
+```
 
 ## Using {func}`~.solve`
 
 {func}`~.solve`
-- is best for solving equations that...
-- produces explicit solution expressions that you can use to substitute into something else
-- produces various output formats depending on the answer
+- Produces various output formats depending on the answer
     - unless you use `dict=True` to ensure the result will be formatted as a dictionary, which we recommend if you want to extract information from the result programmatically
 
 You can solve an equation using {func}`~.solve` in several ways.
@@ -37,13 +60,25 @@ You can solve an equation using {func}`~.solve` in several ways.
 [-sqrt(y), sqrt(y)]
 ```
 
-3. Parse a string representing the equation into a form that SymPy can understand, then apply {func}`~.solve` to the parsed expression.  This approach is convenient if you are programmatically reading in a string; we recommend against using it if you are creating the expression yourself.
+3. Parse a string representing the equation into a form that SymPy can understand, then apply {func}`~.solve` to the parsed expression.  This approach is convenient if you are programmatically reading in a string; we [recommend against using parsing a string if you are creating the expression yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).
 
-Should always include the variable to solve for if want to extract results programmatically
+You should always include the variable to solve for if you want to extract results programmatically, to ensure that SymPy solves for the desired variable. To ensure SymPy will produce results in a consistent format, use `dict=True`. To extract the solutions, you can iterate through the list of dictionaries:
+
+```
+>>> from sympy import solve
+>>> from sympy.abc import x, y
+>>> solution = solve(x ** 2 - y, x, dict=True)
+[{x: -sqrt(y)}, {x: sqrt(y)}]
+>>> for solution in solutions:
+>>>     for key, val in solution.items():
+>>>         print(val)
+-sqrt(y)
+sqrt(y)
+```
 
 *But this doesn't work for equality; does for inequality. Is there some way to do this for equality? -- transformations https://docs.sympy.org/dev/modules/parsing.html?highlight=parse_expr#sympy.parsing.sympy_parser.parse_expr convert equal sign transformations. Should be in a different guide?*
 
-https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input
+
 
 ```
 >>> from sympy import solve, parse_expr
@@ -54,13 +89,33 @@ https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input
 [-sqrt(y), sqrt(y)]
 ```
 
+### Restricting the domain of solutions using {func}`~.solve`
+
+By default, SymPy will return solutions in the complex domains, which also includes purely real and imaginary values. Here, the first two solutions are real, and the last two are imaginary:
+
+```
+>>> from sympy import Symbol, solve
+>>> x = Symbol('x'); x
+>>> solution = solve(x ** 4 - 256, x)
+>>> print(solution)
+[-4, 4, -4*I, 4*I]
+```
+
+If you want to restrict returned solutions to real numbers, you can place an assumption on the symbol to be solved for, $x$:
+
+```
+>>> from sympy import Symbol, solve
+>>> x = Symbol('x', real=True); x
+>>> solution = solve(x ** 4 - 256, x)
+>>> print(solution)
+[-4, 4]
+```
+
 ## Using {func}`~.solveset`
 
 {func}`~.solveset`
-- is best for solving equations that...
-- produces outputs in the format of [SymPy mathematical Sets](https://docs.sympy.org/dev/modules/sets.html?highlight=sets#module-sympy.sets.sets) rather than [Python sets](https://docs.python.org/3/library/stdtypes.html#set)
+- Produces outputs in the format of [SymPy mathematical Sets](https://docs.sympy.org/dev/modules/sets.html?highlight=sets#module-sympy.sets.sets) rather than [Python sets](https://docs.python.org/3/library/stdtypes.html#set)
 - can return infinitely many solutions
-- clearly separates the complex and real domains
 - the solution set can be more difficult to parse programmatically (trig function as example)
 
 ```
@@ -70,7 +125,27 @@ https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input
 FiniteSet(sqrt(y), -sqrt(y))
 ```
 
-*Discuss domain argument--e.g. complex or real numbers: domain=reals*
+### Restricting the domain of solutions using {func}`~.solveset`
+
+By default, SymPy will return solutions in the complex domains, which also includes purely real and imaginary values. Here, the first two solutions are real, and the last two are imaginary:
+
+```
+>>> from sympy import S, solveset
+>>> from sympy.abc import x
+>>> solution = solveset(x**4 - 256, x)
+>>> print(solution)
+{-4, 4, -4*I, 4*I}
+```
+
+If you want to restrict returned solutions to real numbers, you can specify the [domain to solve in](https://docs.sympy.org/dev/modules/solvers/solveset.html?highlight=solveset#what-is-this-domain-argument-about) as `S.Reals`:
+
+```
+>>> from sympy import S, solveset
+>>> from sympy.abc import x
+>>> solution = solveset(x**4 - 256, x, domain=S.Reals)
+>>> print(solution)
+{-4, 4}
+```
 
 ## Not all equations can be solved
 
@@ -86,7 +161,7 @@ Some equations have no solution, in which case SymPy may return an empty set. Fo
 []
 ```
 
-You may want to check whether there is a mistake in the equation.
+So if SymPy returns an empty set, you may want to check whether there is a mistake in the equation.
 
 ### Equations with no analytical solution
 
@@ -112,6 +187,6 @@ so you may have to {func}`solve your equation numerically <sympy.solvers.solvers
 
 ### Equations which have an analytical solution, and SymPy cannot solve
 
-It is also possible that there is a way to solve your equation algebraically, and SymPy has not have implemented an appropriate algorithm. You can ask about this on the [mailing list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub page](https://github.com/sympy/sympy/issues).
+It is also possible that there is a way to solve your equation algebraically, and SymPy has not have implemented an appropriate algorithm. If you think you may have encountered this situation, you can ask about it on the [mailing list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub page](https://github.com/sympy/sympy/issues).
 
 *Ask if someone has an example where there is a mathematical solution but SymPy returns an empty list. Related: sin(x) = 0 will return two solutions but there are infinitely many solutions*
