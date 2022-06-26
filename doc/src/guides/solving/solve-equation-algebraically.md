@@ -73,8 +73,8 @@ You should always include the variable to solve for if you want to extract resul
     >>> print(solutions)
     [{x: -sqrt(y)}, {x: sqrt(y)}]
     >>> for solution in solutions:
-    >>>     for key, val in solution.items():
-    >>>         print(val)
+    ...     for key, val in solution.items():
+    ...         print(val)
     -sqrt(y)
     sqrt(y)
     ```
@@ -92,8 +92,8 @@ You should always include the variable to solve for if you want to extract resul
     >>> print(solutions)
     [{x: -sqrt(y)}, {x: sqrt(y)}]
     >>> for solution in solutions:
-    >>>     for key, val in solution.items():
-    >>>         print(val)
+    ...     for key, val in solution.items():
+    ...         print(val)
     -sqrt(y)
     sqrt(y)
     ```
@@ -104,7 +104,7 @@ By default, SymPy will return solutions in the complex domains, which also inclu
 
 ```py
 >>> from sympy import Symbol, solve
->>> x = Symbol('x'); x
+>>> x = Symbol('x')
 >>> solution = solve(x ** 4 - 256, x)
 >>> print(solution)
 [-4, 4, -4*I, 4*I]
@@ -114,7 +114,7 @@ If you want to restrict returned solutions to real numbers, you can place an ass
 
 ```py
 >>> from sympy import Symbol, solve
->>> x = Symbol('x', real=True); x
+>>> x = Symbol('x', real=True)
 >>> solution = solve(x ** 4 - 256, x)
 >>> print(solution)
 [-4, 4]
@@ -125,13 +125,14 @@ If you want to restrict returned solutions to real numbers, you can place an ass
 {func}`~.solveset`
 - Produces outputs in the format of [SymPy mathematical Sets](https://docs.sympy.org/dev/modules/sets.html?highlight=sets#module-sympy.sets.sets) rather than [Python sets](https://docs.python.org/3/library/stdtypes.html#set)
 - can return infinitely many solutions
-- the solution set can be more difficult to parse programmatically (trig function as example)
+- the solution set can be more difficult to parse programmatically *trig function as example*
 
 ```py
 >>> from sympy import solveset
 >>> from sympy.abc import x, y
->>> solveset(x**2 - y, x)
-FiniteSet(sqrt(y), -sqrt(y))
+>>> solution = solveset(x**2 - y, x)
+>>> print(solution)
+{-sqrt(y), sqrt(y)}
 ```
 
 ### Restricting the domain of solutions using {func}`~.solveset`
@@ -187,7 +188,8 @@ SymPy may reflect that your equation has no solutions that can be expressed alge
 >>> from sympy import solve, cos
 >>> from sympy.abc import x
 >>> solve(cos(x) - x, x)
-...
+Traceback (most recent call last):
+  ...
 NotImplementedError: multiple generators [x, cos(x)]
 No algorithms are implemented to solve equation -x + cos(x)
 ```
