@@ -38,7 +38,7 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 
 You can solve an equation using {func}`~.solve` in several ways.
 
-### Expression equals zero
+### Make your equation into an expression that equals zero
 
 Use the fact that any expression not in an `Eq` (equation) is automatically assumed to equal zero (0) by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y = 0$, and {func}`~.solve` that expression. This approach is convenient if you are interactively solving an equation which can easily be rearranged to $expression = 0$.
     
@@ -130,6 +130,10 @@ If you want to restrict returned solutions to real numbers, you can place an ass
 - Produces outputs in the format of [SymPy mathematical Sets](https://docs.sympy.org/dev/modules/sets.html?highlight=sets#module-sympy.sets.sets) rather than [Python sets](https://docs.python.org/3/library/stdtypes.html#set)
 - can return infinitely many solutions
 - the solution set can be more difficult to parse programmatically *trig function as example*
+
+### Make your equation into an expression that equals zero
+
+Use the fact that any expression not in an `Eq` (equation) is automatically assumed to equal zero (0) by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y = 0$, and {func}`~.solveset` that expression. This approach is convenient if you are interactively solving an equation which can easily be rearranged to $expression = 0$.
 
 ```py
 >>> from sympy import solveset
