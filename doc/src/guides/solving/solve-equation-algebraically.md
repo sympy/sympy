@@ -33,22 +33,25 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 
 ## Using {func}`~.solve`
 
-{func}`~.solve`
 - Produces various output formats depending on the answer
     - unless you use `dict=True` to ensure the result will be formatted as a dictionary, which we recommend if you want to extract information from the result programmatically
 
 You can solve an equation using {func}`~.solve` in several ways.
 
-1. Use the fact that any expression not in an `Eq` (equation) is automatically assumed to equal zero (0) by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y = 0$, and {func}`~.solve` that expression. This approach is convenient if you are interactively solving an equation which can easily be rearranged to $expression = 0$.
+### Expression equals zero
+
+Use the fact that any expression not in an `Eq` (equation) is automatically assumed to equal zero (0) by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y = 0$, and {func}`~.solve` that expression. This approach is convenient if you are interactively solving an equation which can easily be rearranged to $expression = 0$.
     
-    ```py
-    >>> from sympy import solve
-    >>> from sympy.abc import x, y
-    >>> solve(x**2 - y, x)
-    [-sqrt(y), sqrt(y)]
-    ```
+```py
+>>> from sympy import solve
+>>> from sympy.abc import x, y
+>>> solve(x**2 - y, x)
+[-sqrt(y), sqrt(y)]
+```
     
-2. Put your equation into `Eq` form, then apply {func}`~.solve` to the `Eq`. This approach is convenient if you are interactively solving an equation which cannot easily be rearranged to $expression = 0$.
+### Put your equation into `Eq` form
+
+Put your equation into `Eq` form, then apply {func}`~.solve` to the `Eq`. This approach is convenient if you are interactively solving an equation which cannot easily be rearranged to $expression = 0$.
     
     ```py
     >>> from sympy import solve, Eq
@@ -58,45 +61,47 @@ You can solve an equation using {func}`~.solve` in several ways.
     [-sqrt(y), sqrt(y)]
     ```
     
-3. Parse a string representing the equation into a form that SymPy can understand (`Eq` form), then apply {func}`~.solve` to the parsed expression.  This approach is convenient if you are programmatically reading in a string. We [recommend against using parsing a string if you are creating the expression yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).  
+### Parse a string representing the equation
+
+Parse a string representing the equation into a form that SymPy can understand (`Eq` form), then apply {func}`~.solve` to the parsed expression.  This approach is convenient if you are programmatically reading in a string. We [recommend against using parsing a string if you are creating the expression yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).  
 You should always include the variable to solve for if you want to extract results programmatically, to ensure that SymPy solves for the desired variable. To ensure SymPy will produce results in a consistent format, use `dict=True`. To extract the solutions, you can iterate through the list of dictionaries:  
     
-    ```py
-    >>> from sympy import parse_expr, solve
-    >>> from sympy.abc import x
-    >>> from sympy.parsing.sympy_parser import convert_equals_signs, standard_transformations
-    >>> expr = "x ** 2 = y"
-    >>> parsed = parse_expr(expr, transformations=standard_transformations + (convert_equals_signs,))
-    >>> print(parsed)
-    Eq(x**2, y)
-    >>> solutions = solve(parsed, x, dict=True)
-    >>> print(solutions)
-    [{x: -sqrt(y)}, {x: sqrt(y)}]
-    >>> for solution in solutions:
-    ...     for key, val in solution.items():
-    ...         print(val)
-    -sqrt(y)
-    sqrt(y)
-    ```
-  
-    If you already have the equation in `Eq` form, you can parse that string:
-    
-    ```py
-    >>> from sympy import parse_expr, solve
-    >>> from sympy.abc import x
-    >>> expr = "Eq(x**2, y)"
-    >>> parsed = parse_expr(expr)
-    >>> print(parsed)
-    Eq(x**2, y)
-    >>> solutions = solve(parsed, x, dict=True)
-    >>> print(solutions)
-    [{x: -sqrt(y)}, {x: sqrt(y)}]
-    >>> for solution in solutions:
-    ...     for key, val in solution.items():
-    ...         print(val)
-    -sqrt(y)
-    sqrt(y)
-    ```
+```py
+>>> from sympy import parse_expr, solve
+>>> from sympy.abc import x
+>>> from sympy.parsing.sympy_parser import convert_equals_signs, standard_transformations
+>>> expr = "x ** 2 = y"
+>>> parsed = parse_expr(expr, transformations=standard_transformations + (convert_equals_signs,))
+>>> print(parsed)
+Eq(x**2, y)
+>>> solutions = solve(parsed, x, dict=True)
+>>> print(solutions)
+[{x: -sqrt(y)}, {x: sqrt(y)}]
+>>> for solution in solutions:
+...     for key, val in solution.items():
+...         print(val)
+-sqrt(y)
+sqrt(y)
+```
+
+If you already have the equation in `Eq` form, you can parse that string:
+
+```py
+>>> from sympy import parse_expr, solve
+>>> from sympy.abc import x
+>>> expr = "Eq(x**2, y)"
+>>> parsed = parse_expr(expr)
+>>> print(parsed)
+Eq(x**2, y)
+>>> solutions = solve(parsed, x, dict=True)
+>>> print(solutions)
+[{x: -sqrt(y)}, {x: sqrt(y)}]
+>>> for solution in solutions:
+...     for key, val in solution.items():
+...         print(val)
+-sqrt(y)
+sqrt(y)
+```
 
 ### Restricting the domain of solutions using {func}`~.solve`
 
@@ -122,7 +127,6 @@ If you want to restrict returned solutions to real numbers, you can place an ass
 
 ## Using {func}`~.solveset`
 
-{func}`~.solveset`
 - Produces outputs in the format of [SymPy mathematical Sets](https://docs.sympy.org/dev/modules/sets.html?highlight=sets#module-sympy.sets.sets) rather than [Python sets](https://docs.python.org/3/library/stdtypes.html#set)
 - can return infinitely many solutions
 - the solution set can be more difficult to parse programmatically *trig function as example*
