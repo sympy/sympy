@@ -90,6 +90,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
     eq = expr.subs(reps)
     return eq, func
 
+
 def ode_order(expr, func):
     """
     Returns the order of a given differential
@@ -121,15 +122,10 @@ def ode_order(expr, func):
         if expr.args[0] == func:
             return len(expr.variables)
         else:
-            order = 0
-            for arg in expr.args[0].args:
-                order = max(order, ode_order(arg, func) + len(expr.variables))
-            return order
+            return max(ode_order(arg, func) for arg in expr.args[0].args) + len(expr.variables)
     else:
-        order = 0
-        for arg in expr.args:
-            order = max(order, ode_order(arg, func))
-        return order
+        return max(ode_order(arg, func) for arg in expr.args)
+
 
 def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=True, **kwargs):
     """This is a helper function to dsolve and pdsolve in the ode

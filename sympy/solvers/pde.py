@@ -982,14 +982,8 @@ def _separate(eq, dep, others):
     # current hack :(
     # https://github.com/sympy/sympy/issues/4597
     if len(div) > 0:
-        final = 0
-        for term in eq.args:
-            eqn = 0
-            for i in div:
-                eqn += term / i
-            final += simplify(eqn)
-        eq = final
-
+        # double sum required or some tests will fail
+        eq = sum(simplify(sum(term/i for i in div)) for term in eq.args)
     # SECOND PASS - separate the derivatives
     div = set()
     lhs = rhs = 0
