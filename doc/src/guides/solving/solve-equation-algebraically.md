@@ -105,7 +105,7 @@ sqrt(y)
 
 ### Restricting the domain of solutions using {func}`~.solve`
 
-By default, SymPy will return solutions in the complex domains, which also includes purely real and imaginary values. Here, the first two solutions are real, and the last two are imaginary:
+By default, SymPy will return solutions in the complex domain, which also includes purely real and imaginary values. Here, the first two solutions are real, and the last two are imaginary:
 
 ```py
 >>> from sympy import Symbol, solve
@@ -141,7 +141,7 @@ If you want to restrict returned solutions to real numbers, you can place an ass
 
 ### Restricting the domain of solutions using {func}`~.solveset`
 
-By default, SymPy will return solutions in the complex domains, which also includes purely real and imaginary values. Here, the first two solutions are real, and the last two are imaginary:
+By default, SymPy will return solutions in the complex domain, which also includes purely real and imaginary values. Here, the first two solutions are real, and the last two are imaginary:
 
 ```py
 >>> from sympy import S, solveset
@@ -183,7 +183,7 @@ The vast majority of arbitrary nonlinear equations are not analytically solvable
 1. Linear equations
 2. Polynomials, except where limited by the Abel-Ruffini theorem
 3. Equations that can be solved by inverting some transcendental functions
-4. Problems that can be transformed into the cases above (e.g. by turning trig into polynomials)
+4. Problems that can be transformed into the cases above (e.g., by turning trigonometric functions into polynomials)
 5. A few other special cases that can be solved with something like the Lambert W function
 
 SymPy may reflect that your equation has no solutions that can be expressed algebraically (symbolically) by returning an error such as `NotImplementedError`:
