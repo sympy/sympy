@@ -198,14 +198,8 @@ jobs:
         run: pip install git+https://github.com/matplotlib/matplotlib@main
 
       # dependencies to install in all Python versions:
-      - run: pip install mpmath numpy ipython cython scipy aesara \
+      - run: pip install mpmath numpy numexpr ipython cython scipy aesara \
                          wurlitzer autowrap 'antlr4-python3-runtime==4.7.*'
-
-      # There is a problem compiling numexpr with the latest release of numpy:
-      #
-      # https://github.com/pydata/numexpr/issues/397
-      - if: ${{ ! contains(matrix.python-version, '3.11') }}
-        run: pip install numexpr
 
       # gmpy2 is not available for pypy
       - if: ${{ matrix.python-version != 'pypy-3.8' }}
