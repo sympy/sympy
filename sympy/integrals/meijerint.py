@@ -26,6 +26,8 @@ The main references for this are:
     Gordon and Breach Science Publisher
 """
 
+import itertools
+
 from typing import Dict as tDict, Tuple as tTuple
 
 from sympy import SYMPY_DEBUG
@@ -523,11 +525,7 @@ def _inflate_g(g, n):
     # See: [L, page 150, equation (5)]
     def inflate(params, n):
         """ (a1, .., ak) -> (a1/n, (a1+1)/n, ..., (ak + n-1)/n) """
-        res = []
-        for a in params:
-            for i in range(n):
-                res.append((a + i)/n)
-        return res
+        return [(a + i)/n for a, i in itertools.product(params, range(n))]
     v = S(len(g.ap) - len(g.bq))
     C = n**(1 + g.nu + v/2)
     C /= (2*pi)**((n - 1)*g.delta)
@@ -792,17 +790,11 @@ def _check_antecedents_1(g, x, helper=False):
                                             tr(g.an), tr(g.aother), x/eta),
                                     x)
 
-    tmp = []
-    for b in g.bm:
-        tmp += [-re(b) < 1]
-    for a in g.an:
-        tmp += [1 < 1 - re(a)]
+    tmp = [-re(b) < 1 for b in g.bm] + [1 < 1 - re(a) for a in g.an]
     cond_3 = And(*tmp)
 
-    for b in g.bother:
-        tmp += [-re(b) < 1]
-    for a in g.aother:
-        tmp += [1 < 1 - re(a)]
+    tmp += [-re(b) < 1 for b in g.bother]
+    tmp += [1 < 1 - re(a) for a in g.aother]
     cond_3_star = And(*tmp)
 
     cond_4 = (-re(g.nu) + (q + 1 - p)/2 > q - p)
@@ -1022,11 +1014,10 @@ def _check_antecedents(g1, g2, x):
 
     def _c1():
         for g in [g1, g2]:
-            for i in g.an:
-                for j in g.bm:
-                    diff = i - j
-                    if diff.is_integer and diff.is_positive:
-                        return False
+            for i, j in itertools.product(g.an, g.bm):
+                diff = i - j
+                if diff.is_integer and diff.is_positive:
+                    return False
         return True
     c1 = _c1()
     c2 = And(*[re(1 + i + j) > 0 for i in g1.bm for j in g2.bm])
@@ -1393,11 +1384,10 @@ def _check_antecedents_inversion(g, x):
     # Now check if the inversion integral exists.
 
     # Test "condition A"
-    for a in g.an:
-        for b in g.bm:
-            if (a - b).is_integer and a > b:
-                _debug('  Not a valid G function.')
-                return False
+    for a, b in itertools.product(g.an, g.bm):
+        if (a - b).is_integer and a > b:
+            _debug('  Not a valid G function.')
+            return False
 
     # There are two cases. If p >= q, we can directly use a slater expansion
     # like [L], 5.2 (11). Note in particular that the asymptotics of such an
@@ -1648,14 +1638,13 @@ def _rewrite2(f, x):
         lambda p: max(len(_find_splitting_points(p[0], x)),
                       len(_find_splitting_points(p[1], x)))]))
 
-    for recursive in [False, True]:
-        for fac1, fac2 in l:
-            g1 = _rewrite_single(fac1, x, recursive)
-            g2 = _rewrite_single(fac2, x, recursive)
-            if g1 and g2:
-                cond = And(g1[1], g2[1])
-                if cond != False:
-                    return fac, po, g1[0], g2[0], cond
+    for recursive, (fac1, fac2) in itertools.product((False, True), l):
+        g1 = _rewrite_single(fac1, x, recursive)
+        g2 = _rewrite_single(fac2, x, recursive)
+        if g1 and g2:
+            cond = And(g1[1], g2[1])
+            if cond != False:
+                return fac, po, g1[0], g2[0], cond
 
 
 def meijerint_indefinite(f, x):
