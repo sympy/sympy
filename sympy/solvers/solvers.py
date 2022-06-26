@@ -175,12 +175,7 @@ def denoms(eq, *symbols):
     elif len(symbols) == 1:
         if iterable(symbols[0]):
             symbols = symbols[0]
-    rv = []
-    for d in dens:
-        free = d.free_symbols
-        if any(s in free for s in symbols):
-            rv.append(d)
-    return set(rv)
+    return {d for d in dens if any(s in d.free_symbols for s in symbols)}
 
 
 def checksol(f, symbol, sol=None, **flags):
@@ -994,9 +989,7 @@ def solve(f, *symbols, **flags):
                 irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
         if irf:
             for s, rhs in irf:
-                for i, fi in enumerate(f):
-                    f[i] = fi.xreplace({s: rhs})
-                f.append(s - rhs)
+                f = [fi.xreplace({s: rhs}) for fi in f] + [s - rhs]
                 symbols.extend([re(s), im(s)])
             if bare_f:
                 bare_f = False

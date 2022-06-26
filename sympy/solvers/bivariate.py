@@ -186,8 +186,7 @@ def _lambert(eq, x):
                 continue
             rhs = -c/b + (a/d)*w
 
-            for xu in xusolns:
-                sol.append(xu.subs(u, rhs))
+            sol.extend(xu.subs(u, rhs) for xu in xusolns)
     return sol
 
 
