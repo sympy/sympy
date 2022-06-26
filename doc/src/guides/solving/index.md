@@ -28,3 +28,7 @@ And while a common, colloquial expression is, for example, ["solve an integral"]
 in SymPy's terminology it would be ["evaluate an integral."](../../modules/integrals/integrals.rst)
 
 ```{toctree}
+:hidden: true
+
+solve-equation-algebraically.md
+```
