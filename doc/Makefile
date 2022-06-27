@@ -72,6 +72,7 @@ _html: $(BUILDDIR)/logo/sympy-notailtext-favicon.ico
 printwarnings:
 	@printf "\033[0;31mThe docs build failed with the following errors:\033[0m\n"
 	@cat $(WARNINGSFILE)
+	exit 1
 
 $(BUILDDIR)/html/pics/*.png: $(SOURCEDIR)/pics/*.png
 	mkdir -p $(BUILDDIR)/html
