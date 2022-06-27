@@ -54,8 +54,8 @@ from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
 from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
 from sympy.logic.boolalg import And
-from sympy.ntheory.factor_ import divisors
-from sympy.polys.polytools import degree, lcm_list, Poly
+from sympy.ntheory.factor_ import primefactors
+from sympy.polys.polytools import degree, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
@@ -235,6 +235,23 @@ def find_substitutions(integrand, symbol, u_var):
                 return False
         return substituted.as_independent(u_var, as_Add=False)
 
+    def exp_subterms(term: Expr):
+        linear_coeffs = []
+        terms = []
+        n = Wild('n', properties=[lambda n: n.is_Integer])
+        for exp_ in term.find(exp):
+            arg = exp_.args[0]
+            if symbol not in arg.free_symbols:
+                continue
+            match = arg.match(n*symbol)
+            if match:
+                linear_coeffs.append(match[n])
+            else:
+                terms.append(exp_)
+        if linear_coeffs:
+            terms.append(exp(gcd_list(linear_coeffs)*symbol))
+        return terms
+
     def possible_subterms(term):
         if isinstance(term, (TrigonometricFunction, HyperbolicFunction,
                              *inverse_trig_functions,
@@ -254,16 +271,12 @@ def find_substitutions(integrand, symbol, u_var):
                 r.extend(possible_subterms(u))
             return r
         elif isinstance(term, Pow):
-            r = []
-            if term.args[1].is_constant(symbol):
-                r.append(term.args[0])
-            elif term.args[0].is_constant(symbol):
-                r.append(term.args[1])
-            if term.args[1].is_Integer:
-                r.extend([term.args[0]**d for d in divisors(term.args[1])
+            r = [arg for arg in term.args if arg.has(symbol)]
+            if term.exp.is_Integer:
+                r.extend([term.base**d for d in primefactors(term.exp)
                     if 1 < d < abs(term.args[1])])
-                if term.args[0].is_Add:
-                    r.extend([t for t in possible_subterms(term.args[0])
+                if term.base.is_Add:
+                    r.extend([t for t in possible_subterms(term.base)
                         if t.is_Pow])
             return r
         elif isinstance(term, Add):
@@ -274,7 +287,7 @@ def find_substitutions(integrand, symbol, u_var):
             return r
         return []
 
-    for u in possible_subterms(integrand):
+    for u in list(dict.fromkeys(possible_subterms(integrand) + exp_subterms(integrand))):
         if u == symbol:
             continue
         u_diff = manual_diff(u, symbol)
@@ -1327,16 +1340,6 @@ def substitution_rule(integral):
         elif ways:
             return ways[0]
 
-    elif integrand.has(exp):
-        u_func = exp(symbol)
-        c = 1
-        substituted = integrand / u_func.diff(symbol)
-        substituted = substituted.subs(u_func, u_var)
-
-        if symbol not in substituted.free_symbols:
-            return URule(u_var, u_func, c,
-                         integral_steps(substituted, u_var),
-                         integrand, symbol)
 
 partial_fractions_rule = rewriter(
     lambda integrand, symbol: integrand.is_rational_function(),
