@@ -392,14 +392,11 @@ class MinMaxBase(Expr, LatticeOp):
                 args = frozenset(cls._new_args_filter(args))
             except ShortCircuit:
                 return cls.zero
-        else:
-            args = frozenset(args)
-
-        if evaluate:
             # remove redundant args that are easily identified
             args = cls._collapse_arguments(args, **assumptions)
             # find local zeros
             args = cls._find_localzeros(args, **assumptions)
+        args = frozenset(args)
 
         if not args:
             return cls.identity
@@ -408,9 +405,8 @@ class MinMaxBase(Expr, LatticeOp):
             return list(args).pop()
 
         # base creation
-        _args = frozenset(args)
-        obj = Expr.__new__(cls, *ordered(_args), **assumptions)
-        obj._argset = _args
+        obj = Expr.__new__(cls, *ordered(args), **assumptions)
+        obj._argset = args
         return obj
 
     @classmethod

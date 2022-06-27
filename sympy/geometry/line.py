@@ -27,7 +27,7 @@ from sympy.core.sorting import ordered
 from sympy.core.symbol import _symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
+from sympy.functions.elementary.trigonometric import (_pi_coeff, acos, tan, atan2)
 from .entity import GeometryEntity, GeometrySet
 from .exceptions import GeometryError
 from .point import Point, Point3D
@@ -2233,7 +2233,8 @@ class Ray2D(LinearEntity2D, Ray):
                 raise ValueError('A Ray requires two distinct points.')
         elif angle is not None and pt is None:
             # we need to know if the angle is an odd multiple of pi/2
-            c = pi_coeff(sympify(angle))
+            angle = sympify(angle)
+            c = _pi_coeff(angle)
             p2 = None
             if c is not None:
                 if c.is_Rational:
