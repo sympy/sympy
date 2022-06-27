@@ -771,11 +771,6 @@ class Number(AtomicExpr):
         raise NotImplementedError('%s needs .__eq__() method' %
             (self.__class__.__name__))
 
-    #__ne__ method for pypy
-    def __ne__(self, other):
-        raise NotImplementedError('%s needs .__ne__() method' %
-            (self.__class__.__name__))
-
     def __lt__(self, other):
         try:
             other = _sympify(other)
@@ -1400,10 +1395,6 @@ class Float(Number):
             return not other
         return False    # Float != non-Number
 
-    #__ne__ method for pypy
-    def __ne__(self, other):
-        return not self == other
-
     def _Frel(self, other, op):
         try:
             other = _sympify(other)
@@ -1916,10 +1907,6 @@ class Rational(Number):
             return m == self.p and integer_log(self.q, 2) == (-t, True)
         return False
 
-    #__ne__ method for pypy
-    def __ne__(self, other):
-        return not self == other
-
     def _Rrel(self, other, attr):
         # if you want self < other, pass self, other, __gt__
         try:
@@ -2247,10 +2234,6 @@ class Integer(Rational):
         elif isinstance(other, Integer):
             return (self.p == other.p)
         return Rational.__eq__(self, other)
-
-    #__ne__ method for pypy
-    def __ne__(self, other):
-        return not self == other
 
     def __gt__(self, other):
         try:
@@ -3427,10 +3410,6 @@ class Infinity(Number, metaclass=Singleton):
     def __eq__(self, other):
         return other is S.Infinity or other == float('inf')
 
-    #__ne__ method for pypy
-    def __ne__(self, other):
-        return other is not S.Infinity and other != float('inf')
-
     __gt__ = Expr.__gt__
     __ge__ = Expr.__ge__
     __lt__ = Expr.__lt__
@@ -3594,10 +3573,6 @@ class NegativeInfinity(Number, metaclass=Singleton):
     def __eq__(self, other):
         return other is S.NegativeInfinity or other == float('-inf')
 
-    #__ne__ method for pypy
-    def __ne__(self, other):
-        return other is not S.NegativeInfinity and other != float('-inf')
-
     __gt__ = Expr.__gt__
     __ge__ = Expr.__ge__
     __lt__ = Expr.__lt__
@@ -3727,10 +3702,6 @@ class NaN(Number, metaclass=Singleton):
         # NaN is structurally equal to another NaN
         return other is S.NaN
 
-    #__ne__ method for pypy
-    def __ne__(self, other):
-        return other is not S.NaN
-
     # Expr will _sympify and raise TypeError
     __gt__ = Expr.__gt__
     __ge__ = Expr.__ge__
@@ -3859,10 +3830,6 @@ class NumberSymbol(AtomicExpr):
             return False
 
         return False    # NumberSymbol != non-(Number|self)
-
-    #__ne__ method for pypy
-    def __ne__(self, other):
-        return not self == other
 
     def __le__(self, other):
         if self is other:

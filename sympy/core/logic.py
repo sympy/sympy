@@ -242,13 +242,6 @@ class Logic:
         else:
             return a.args == b.args
 
-    #__ne__ method for pypy
-    def __ne__(a, b):
-        if not isinstance(b, type(a)):
-            return True
-        else:
-            return a.args != b.args
-
     def __lt__(self, other):
         if self.__cmp__(other) == -1:
             return True

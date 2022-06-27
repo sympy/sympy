@@ -922,7 +922,7 @@ class UndefinedFunction(FunctionClass):
             self.class_key() == other.class_key() and
             self._kwargs == other._kwargs)
 
-    #__ne__ method for pypy
+    # __ne__ method for pypy
     def __ne__(self, other):
         return not self == other
 
@@ -2331,10 +2331,6 @@ class Subs(Expr):
         if not isinstance(other, Subs):
             return False
         return self._hashable_content() == other._hashable_content()
-
-    #__ne__ method for pypy
-    def __ne__(self, other):
-        return not(self == other)
 
     def __hash__(self):
         return super().__hash__()

@@ -166,7 +166,6 @@ class DDM(list):
             return False
         return (super().__eq__(other) and self.domain == other.domain)
 
-    #__ne__ method for pypy
     def __ne__(self, other):
         return not self.__eq__(other)
 
