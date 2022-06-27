@@ -10,7 +10,7 @@ from sympy.functions.elementary.hyperbolic import (asinh, csch, cosh, coth, sech
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
-from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
 from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfi, fresnelc, fresnels, li)
 from sympy.functions.special.gamma_functions import uppergamma
@@ -55,6 +55,8 @@ def test_manualintegrate_polynomials():
 def test_manualintegrate_exponentials():
     assert manualintegrate(exp(2*x), x) == exp(2*x) / 2
     assert manualintegrate(2**x, x) == (2 ** x) / log(2)
+    assert_is_integral_of(1/sqrt(1-exp(2*x)),
+                          log(sqrt(1 - exp(2*x)) - 1)/2 - log(sqrt(1 - exp(2*x)) + 1)/2)
 
     assert manualintegrate(1 / x, x) == log(x)
     assert manualintegrate(1 / (2*x + 3), x) == log(2*x + 3) / 2
@@ -302,6 +304,11 @@ def test_manualintegrate_derivative():
 
 
 def test_manualintegrate_Heaviside():
+    assert_is_integral_of(DiracDelta(3*x+2), Heaviside(3*x+2)/3)
+    assert_is_integral_of(DiracDelta(3*x, 0), Heaviside(3*x)/3)
+    assert manualintegrate(DiracDelta(a+b*x, 1), x) == \
+        Piecewise((DiracDelta(a + b*x)/b, Ne(b, 0)), (x*DiracDelta(a, 1), True))
+    assert_is_integral_of(DiracDelta(x/3-1, 2), 3*DiracDelta(x/3-1, 1))
     assert manualintegrate(Heaviside(x), x) == x*Heaviside(x)
     assert manualintegrate(x*Heaviside(2), x) == x**2/2
     assert manualintegrate(x*Heaviside(-2), x) == 0
@@ -606,6 +613,11 @@ def test_manualintegrate_sqrt_linear():
                           3*sqrt(6)*(2*x + 2)**(S.One/6)/2 + 3*(2*x + 2)**(S(2)/3)/4 - 3*(2*x + 2)**(S.One/3)/2 +
                           sqrt(6)*sqrt(2*x + 2)/2 + 3*log((2*x + 2)**(S.One/3) + 1)/2 +
                           3*sqrt(6)*atan((2*x + 2)**(S.One/6))/2)
+    assert_is_integral_of(sqrt(x+sqrt(x)),
+                          2*sqrt(sqrt(x) + x)*(sqrt(x)/12 + x/3 - S(1)/8) + log(2*sqrt(x) + 2*sqrt(sqrt(x) + x) + 1)/8)
+    assert_is_integral_of(sqrt(2*x+3+sqrt(4*x+5))**3,
+                          sqrt(2*x + sqrt(4*x + 5) + 3) *
+                          (9*x/10 + 11*(4*x + 5)**(S(3)/2)/40 + sqrt(4*x + 5)/40 + (4*x + 5)**2/10 + S(11)/10)/2)
 
 
 def test_manualintegrate_sqrt_quadratic():
@@ -633,13 +645,16 @@ def test_manualintegrate_sqrt_quadratic():
         sqrt(x**2 - 3*x + 2)*(x**2 + 13*x/4 + S(101)/8) + 135*log(2*x + 2*sqrt(x**2 - 3*x + 2) - 3)/16
 
     assert_is_integral_of(sqrt(53225*x**2-66732*x+23013),
-                          x*sqrt(53225*x**2 - 66732*x + 23013)/2 - 16683*sqrt(53225*x**2 - 66732*x + 23013)/53225 +
+                          (x/2 - S(16683)/53225)*sqrt(53225*x**2 - 66732*x + 23013) +
                           111576969*sqrt(2129)*asinh(53225*x/10563 - S(11122)/3521)/1133160250)
     assert manualintegrate(sqrt(a+c*x**2), x) == \
         Piecewise((a*log(2*sqrt(c)*sqrt(a + c*x**2) + 2*c*x)/(2*sqrt(c)) + x*sqrt(a + c*x**2)/2, Ne(c, 0)),
                   (sqrt(a)*x, True))
     assert manualintegrate(sqrt(a+b*x+c*x**2), x) == \
-        Piecewise((b*sqrt(a + b*x + c*x**2)/(4*c) + x*sqrt(a + b*x + c*x**2)/2 +
-                   (2*a - b**2/(2*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/(4*sqrt(c)), Ne(c, 0)),
+        Piecewise(((x/2 + b/(4*c))*sqrt(a + b*x + c*x**2) +
+                   (a/2 - b**2/(8*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(c, 0)),
                   (2*(a + b*x)**(S(3)/2)/(3*b), Ne(b, 0)),
                   (sqrt(a)*x, True))
+
+    assert_is_integral_of(x*sqrt(x**2+2*x+4),
+                          (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2)

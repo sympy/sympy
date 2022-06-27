@@ -230,6 +230,8 @@ class DiracDelta(Function):
                 return -cls(-arg, k)
             elif k.is_even:
                 return cls(-arg, k) if k else cls(-arg)
+        elif k.is_zero:
+            return cls(arg, evaluate=False)
 
     def _eval_expand_diracdelta(self, **hints):
         """

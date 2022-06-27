@@ -25,7 +25,7 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 
-from sympy.utilities.iterables import has_variety
+from sympy.utilities.iterables import has_variety, sift
 
 import re
 
@@ -516,6 +516,7 @@ class LatexPrinter(Printer):
 
     def _print_Mul(self, expr: Expr):
         from sympy.physics.units import Quantity
+        from sympy.physics.units.prefixes import Prefix
         from sympy.simplify import fraction
         separator: str = self._settings['mul_symbol_latex']
         numbersep: str = self._settings['mul_symbol_latex_numbers']
@@ -530,11 +531,11 @@ class LatexPrinter(Printer):
                     args = list(expr.args)
 
                 # If quantities are present append them at the back
-                args = sorted(args, key=lambda x: isinstance(x, Quantity) or
+                units, nonunits = sift(args, lambda x: isinstance(x, (Quantity, Prefix)) or
                               (isinstance(x, Pow) and
-                               isinstance(x.base, Quantity)))
-
-                return convert_args(args)
+                               isinstance(x.base, Quantity)), binary=True)
+                prefixes, units = sift(units, lambda x: isinstance(x, Prefix), binary=True)
+                return convert_args(nonunits + prefixes + units)
 
         def convert_args(args) -> str:
             _tex = last_term_tex = ""
@@ -542,14 +543,17 @@ class LatexPrinter(Printer):
             for i, term in enumerate(args):
                 term_tex = self._print(term)
 
-                if self._needs_mul_brackets(term, first=(i == 0),
-                                            last=(i == len(args) - 1)):
-                    term_tex = r"\left(%s\right)" % term_tex
+                if not isinstance(term, (Quantity, Prefix)):
+                    if self._needs_mul_brackets(term, first=(i == 0),
+                                                last=(i == len(args) - 1)):
+                        term_tex = r"\left(%s\right)" % term_tex
 
-                if _between_two_numbers_p[0].search(last_term_tex) and \
+                    if  _between_two_numbers_p[0].search(last_term_tex) and \
                         _between_two_numbers_p[1].match(str(term)):
-                    # between two numbers
-                    _tex += numbersep
+                        # between two numbers
+                        _tex += numbersep
+                    elif _tex:
+                        _tex += separator
                 elif _tex:
                     _tex += separator
 
