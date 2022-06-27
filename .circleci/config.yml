@@ -21,7 +21,7 @@ jobs:
       - attach_workspace:
           at: ~/
       - run:
-          name: install dependencies
+          name: Install dependencies
           no_output_timeout: 25m
           command: |
             sudo apt update
@@ -29,9 +29,10 @@ jobs:
             cd doc
             pip install -r requirements.txt
       - run:
-          name: build docs
+          name: Build docs
           no_output_timeout: 25m
           command: |
+            cd doc
             make html
       - store_artifacts:
           path: doc/_build/html
