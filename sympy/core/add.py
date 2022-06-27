@@ -678,8 +678,6 @@ class Add(Expr, AssocOp):
                     return
             elif a.is_imaginary:
                 im_I.append(a*S.ImaginaryUnit)
-            elif (S.ImaginaryUnit*a).is_extended_real:
-                im_I.append(a*S.ImaginaryUnit)
             else:
                 return
         b = self.func(*nz)
@@ -708,8 +706,6 @@ class Add(Expr, AssocOp):
                     return
             elif a.is_imaginary:
                 im += 1
-            elif (S.ImaginaryUnit*a).is_extended_real:
-                im_or_z = True
             else:
                 return
         if z == len(self.args):
