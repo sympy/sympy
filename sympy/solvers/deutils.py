@@ -122,10 +122,13 @@ def ode_order(expr, func):
         if expr.args[0] == func:
             return len(expr.variables)
         else:
-            return max(ode_order(arg, func) for arg in expr.args[0].args, default=0
-                ) + len(expr.variables)
+            args = expr.args[0].args
+            rv = len(expr.variables)
+            if args:
+                rv += max(ode_order(_, func) for _ in args)
+             return rv
     else:
-        return max(ode_order(arg, func) for arg in expr.args, default=0)
+        return max(ode_order(_, func) for _ in expr.args) if expr.args else 0
 
 
 def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=True, **kwargs):
