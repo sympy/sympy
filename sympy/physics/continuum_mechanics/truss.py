@@ -340,7 +340,7 @@ class Truss:
                             self._reaction_loads['R_'+str(new_label)+'_y'] = self._reaction_loads['R_'+str(label)+'_y']
                             self._reaction_loads.pop('R_'+str(label)+'_x')
                             self._reaction_loads.pop('R_'+str(label)+'_y')
-                        self._loads['R_'+str(new_label)+'_x'] = self._loads['R_'+str(label)+'_x'] 
+                        self._loads['R_'+str(new_label)+'_x'] = self._loads['R_'+str(label)+'_x']
                         self._loads['R_'+str(new_label)+'_y'] = self._loads['R_'+str(label)+'_y']
                         self._loads.pop('R_'+str(label)+'_x')
                         self._loads.pop('R_'+str(label)+'_y')
