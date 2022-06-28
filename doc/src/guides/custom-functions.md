@@ -666,9 +666,6 @@ $\pi$. So `versin(x)` should be *nonnegative* whenever `x` is *real* and
 that by default, a function's domain is all of $\mathbb{C}$, and indeed
 `versin(x)` makes perfect sense with non-real `x`.
 
-In the assumptions handler methods, as in all methods, we can access the
-arguments of the function using `self.args`.
-
 To see if `x` is an even multiple of `pi`, we can use {meth}`~.as_independent`
 to match `x` structurally as `coeff*pi`. Pulling apart subexpressions
 structurally like this in assumptions handlers is preferable to using
@@ -681,13 +678,35 @@ assumptions handlers is, **never create a new expression in an assumptions
 handler**. Always pull apart the args of the function using structural methods
 like `as_independent`.
 
+
+Note that $\operatorname{versin}(x)$ can be
+nonnegative for nonreal $x$, for example:
+
+```py
+>>> from sympy import I
+>>> 1 - cos(pi + I*pi)
+1 + cosh(pi)
+>>> (1 - cos(pi + I*pi)).evalf()
+12.5919532755215
+```
+
+So for the `_eval_is_nonnegative` handler, we want to return `True` if
+`x.is_real` is `True` but `None` if `x.is_real` is either `False` or `None`.
+It is left as an exercise to the reader to handle the cases for nonreal `x`
+that make `versin(x)` nonnegative, using similar logic from the
+`_eval_is_positive` handler.
+
+In the assumptions handler methods, as in all methods, we can access the
+arguments of the function using `self.args`.
+
 ```py
 >>> from sympy.core.logic import fuzzy_and, fuzzy_not
 >>> class versin(Function):
 ...     def _eval_is_nonnegative(self):
-...         # versin(x) is nonnegative iff x is real
+...         # versin(x) is nonnegative if x is real
 ...         x = self.args[0]
-...         return x.is_real
+...         if x.is_real is True:
+...             return True
 ...
 ...     def _eval_is_positive(self):
 ...         # versin(x) is positive iff x is real and not an even multiple of pi
@@ -1414,7 +1433,8 @@ existing SymPy logic defined on `1 - cos(x)`).
 ...     def _eval_is_nonnegative(self):
 ...         # versin(x) is nonnegative if x is real
 ...         x = self.args[0]
-...         return x.is_real
+...         if x.is_real is True:
+...             return True
 ...
 ...     def _eval_is_positive(self):
 ...         # versin(x) is positive iff x is real and not an even multiple of pi
@@ -1481,6 +1501,9 @@ True
 None
 >>> r = symbols('r', real=True)
 >>> print(versin(r).is_positive)
+None
+>>> nr = symbols('nr', real=False)
+>>> print(versin(nr).is_nonnegative)
 None
 ```
 
