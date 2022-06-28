@@ -329,9 +329,7 @@ class DifferentialOperator:
 
         # if self is `Dx`
         if self.listofpoly == self.parent.derivative_operator.listofpoly:
-            sol = []
-            for _ in range(n):
-                sol.append(self.parent.base.zero)
+            sol = [self.parent.base.zero]*n
             sol.append(self.parent.base.one)
             return DifferentialOperator(sol, self.parent)
 
