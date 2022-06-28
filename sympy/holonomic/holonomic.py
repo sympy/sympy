@@ -2184,9 +2184,12 @@ def from_hyper(func, x0=0, evalf=False):
 
     # generalized hypergeometric differential equation
     xDx = x*Dx
-    xDx_1 = x*Dx - 1
     r1 = Mul(*[xDx + ai for ai in a])
-    r2 = Mul(*[xDx_1 + bi for bi in b])
+    xDx_1 = xDx - 1
+    # r2 = Mul(*([Dx] + [xDx_1 + bi for bi in b]))  # XXX gives sympify error
+    r2 = Dx
+    for bi in b:
+        r2 *= xDx_1 + bi
     sol = r1 - r2
 
     simp = hyperexpand(func)
