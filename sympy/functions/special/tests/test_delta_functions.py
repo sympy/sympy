@@ -27,6 +27,7 @@ def test_DiracDelta():
     assert DiracDelta(5.1) == 0
     assert DiracDelta(-pi) == 0
     assert DiracDelta(5, 7) == 0
+    assert DiracDelta(x, 0) == DiracDelta(x)
     assert DiracDelta(i) == 0
     assert DiracDelta(j) == 0
     assert DiracDelta(k) == 0

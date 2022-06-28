@@ -16,5 +16,5 @@ For a deeper and elaborate exploration of other SymPy topics, see the
    getting_started/index.rst
    assumptions.rst
    booleans.rst
-   solving.md
+   solving/index.md
    ../citing.md

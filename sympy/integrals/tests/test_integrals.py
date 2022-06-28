@@ -1953,6 +1953,18 @@ def test_issue_22863():
     assert math.isclose(i.n(), -2.98126694400554)
 
 
+def test_issue_9723():
+    assert integrate(sqrt(x + sqrt(x))) == \
+        2*sqrt(sqrt(x) + x)*(sqrt(x)/12 + x/3 - S(1)/8) + log(2*sqrt(x) + 2*sqrt(sqrt(x) + x) + 1)/8
+    assert integrate(sqrt(2*x+3+sqrt(4*x+5))**3) == \
+        sqrt(2*x + sqrt(4*x + 5) + 3) * \
+           (9*x/10 + 11*(4*x + 5)**(S(3)/2)/40 + sqrt(4*x + 5)/40 + (4*x + 5)**2/10 + S(11)/10)/2
+
+
+def test_exp_substitution():
+    assert integrate(1/sqrt(1-exp(2*x))) == log(sqrt(1 - exp(2*x)) - 1)/2 - log(sqrt(1 - exp(2*x)) + 1)/2
+
+
 def test_hyperbolic():
     assert integrate(coth(x)) == x - log(tanh(x) + 1) + log(tanh(x))
     assert integrate(sech(x)) == 2*atan(tanh(x/2))
@@ -1983,10 +1995,13 @@ def test_sqrt_quadratic():
            sqrt(x**2 - 3*x + 2)*(x**2 + 13*x/4 + S(101)/8) + 135*log(2*x + 2*sqrt(x**2 - 3*x + 2) - 3)/16
 
     assert integrate(sqrt(53225*x**2-66732*x+23013)) == \
-           x*sqrt(53225*x**2 - 66732*x + 23013)/2 - 16683*sqrt(53225*x**2 - 66732*x + 23013)/53225 + \
+           (x/2 - S(16683)/53225)*sqrt(53225*x**2 - 66732*x + 23013) + \
            111576969*sqrt(2129)*asinh(53225*x/10563 - S(11122)/3521)/1133160250
     assert integrate(sqrt(a+b*x+c*x**2), x) == \
-        Piecewise((b*sqrt(a + b*x + c*x**2)/(4*c) + x*sqrt(a + b*x + c*x**2)/2 +
-                   (2*a - b**2/(2*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/(4*sqrt(c)), Ne(c, 0)),
+        Piecewise(((x/2 + b/(4*c))*sqrt(a + b*x + c*x**2) +
+                   (a/2 - b**2/(8*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(c, 0)),
                   (2*(a + b*x)**(S(3)/2)/(3*b), Ne(b, 0)),
                   (sqrt(a)*x, True))
+
+    assert integrate(x*sqrt(x**2+2*x+4)) == \
+        (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2

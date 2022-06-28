@@ -111,13 +111,13 @@ class Vector(Printable, EvalfMixin):
                         * (v2[1].dcm(v1[1]))
                         * (v1[0]))[0]
         if Vector.simp:
-            return trigsimp(sympify(out), recursive=True)
+            return trigsimp(out, recursive=True)
         else:
-            return sympify(out)
+            return out
 
     def __truediv__(self, other):
         """This uses mul and inputs self and 1 divided by other. """
-        return self.__mul__(sympify(1) / other)
+        return self.__mul__(S.One / other)
 
     def __eq__(self, other):
         """Tests for equality.
@@ -171,12 +171,10 @@ class Vector(Printable, EvalfMixin):
         """
 
         newlist = [v for v in self.args]
+        other = sympify(other)
         for i, v in enumerate(newlist):
-            newlist[i] = (sympify(other) * newlist[i][0], newlist[i][1])
+            newlist[i] = (other * newlist[i][0], newlist[i][1])
         return Vector(newlist)
-
-    def __ne__(self, other):
-        return not self == other
 
     def __neg__(self):
         return self * -1

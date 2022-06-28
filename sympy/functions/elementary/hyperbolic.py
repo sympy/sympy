@@ -18,7 +18,6 @@ from sympy.polys.specialpolys import symmetric_poly
 
 
 def _rewrite_hyperbolics_as_exp(expr):
-    expr = sympify(expr)
     return expr.xreplace({h: h.rewrite(exp)
         for h in expr.atoms(HyperbolicFunction)})
 
@@ -112,8 +111,6 @@ class sinh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -309,8 +306,6 @@ class cosh(HyperbolicFunction):
     @classmethod
     def eval(cls, arg):
         from sympy.functions.elementary.trigonometric import cos
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -553,8 +548,6 @@ class tanh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -766,8 +759,6 @@ class coth(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1128,8 +1119,6 @@ class asinh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1269,8 +1258,6 @@ class acosh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1393,8 +1380,6 @@ class atanh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1503,8 +1488,6 @@ class acoth(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1642,8 +1625,6 @@ class asech(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1767,8 +1748,6 @@ class acsch(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN

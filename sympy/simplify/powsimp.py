@@ -602,7 +602,7 @@ def powdenest(eq, force=False, polar=False):
         eq, rep = polarify(eq)
         return unpolarify(powdenest(unpolarify(eq, exponents_only=True)), rep)
 
-    new = powsimp(sympify(eq))
+    new = powsimp(eq)
     return new.xreplace(Transform(
         _denest_pow, filter=lambda m: m.is_Pow or isinstance(m, exp)))
 

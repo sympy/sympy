@@ -56,6 +56,7 @@ scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 cupy = import_module('cupy')
+jax = import_module('jax')
 numba = import_module('numba')
 
 if tensorflow:
@@ -1482,6 +1483,43 @@ def test_cupy_dotproduct():
         f3(1, 2, 3) == \
         f4(1, 2, 3) == \
         cupy.array([14])
+
+
+def test_jax_array_arg():
+    if not jax:
+        skip("JAX not installed")
+
+    f = lambdify([[x, y]], x*x + y, 'jax')
+    result = f(jax.numpy.array([2.0, 1.0]))
+    assert result == 5
+    assert "jax" in str(type(result))
+
+
+def test_jax_array_arg_using_numpy():
+    if not jax:
+        skip("JAX not installed")
+
+    f = lambdify([[x, y]], x*x + y, 'numpy')
+    result = f(jax.numpy.array([2.0, 1.0]))
+    assert result == 5
+    assert "jax" in str(type(result))
+
+
+def test_jax_dotproduct():
+    if not jax:
+        skip("JAX not installed")
+
+    A = Matrix([x, y, z])
+    f1 = lambdify([x, y, z], DotProduct(A, A), modules='jax')
+    f2 = lambdify([x, y, z], DotProduct(A, A.T), modules='jax')
+    f3 = lambdify([x, y, z], DotProduct(A.T, A), modules='jax')
+    f4 = lambdify([x, y, z], DotProduct(A, A.T), modules='jax')
+
+    assert f1(1, 2, 3) == \
+        f2(1, 2, 3) == \
+        f3(1, 2, 3) == \
+        f4(1, 2, 3) == \
+        jax.numpy.array([14])
 
 
 def test_lambdify_cse():

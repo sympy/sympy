@@ -1421,11 +1421,9 @@ class MatplotlibBackend(BaseBackend):
                     colormap = ListedColormap(["white", s.line_color])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
-                        ax.contour(xarray, yarray, zarray, cmap=colormap,
-                                   label=_str_or_latex(s.label))
+                        ax.contour(xarray, yarray, zarray, cmap=colormap)
                     else:
-                        ax.contourf(xarray, yarray, zarray, cmap=colormap,
-                                    label=_str_or_latex(s.label))
+                        ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
                 raise NotImplementedError(
                     '{} is not supported in the SymPy plotting module '

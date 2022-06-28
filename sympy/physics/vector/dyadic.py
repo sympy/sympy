@@ -148,8 +148,9 @@ class Dyadic(Printable, EvalfMixin):
         """
 
         newlist = [v for v in self.args]
+        other = sympify(other)
         for i, v in enumerate(newlist):
-            newlist[i] = (sympify(other) * newlist[i][0], newlist[i][1],
+            newlist[i] = (other * newlist[i][0], newlist[i][1],
                           newlist[i][2])
         return Dyadic(newlist)
 
