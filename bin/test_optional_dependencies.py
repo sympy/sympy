@@ -35,6 +35,9 @@ test_list = [
     # aesara
     '*aesara*',
 
+    # jax
+    '*jax*',
+
     # gmpy
     'polys',
 

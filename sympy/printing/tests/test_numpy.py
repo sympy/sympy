@@ -25,6 +25,9 @@ from sympy.external import import_module
 
 np = import_module('numpy')
 
+if np:
+    deafult_float_info = np.finfo(np.array([]).dtype)
+    NUMPY_DEFAULT_EPSILON = deafult_float_info.eps
 
 def test_numpy_piecewise_regression():
     """
@@ -210,7 +213,7 @@ def test_expm1():
         skip("NumPy not installed")
 
     f = lambdify((a,), expm1(a), 'numpy')
-    assert abs(f(1e-10) - 1e-10 - 5e-21) < 1e-22
+    assert abs(f(1e-10) - 1e-10 - 5e-21) <= 1e-10 * NUMPY_DEFAULT_EPSILON
 
 
 def test_log1p():
@@ -218,41 +221,41 @@ def test_log1p():
         skip("NumPy not installed")
 
     f = lambdify((a,), log1p(a), 'numpy')
-    assert abs(f(1e-99) - 1e-99) < 1e-100
+    assert abs(f(1e-99) - 1e-99) <= 1e-99 * NUMPY_DEFAULT_EPSILON
 
 def test_hypot():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a, b), hypot(a, b), 'numpy')(3, 4) - 5) < 1e-16
+    assert abs(lambdify((a, b), hypot(a, b), 'numpy')(3, 4) - 5) <= NUMPY_DEFAULT_EPSILON
 
 def test_log10():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a,), log10(a), 'numpy')(100) - 2) < 1e-16
+    assert abs(lambdify((a,), log10(a), 'numpy')(100) - 2) <= NUMPY_DEFAULT_EPSILON
 
 
 def test_exp2():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a,), exp2(a), 'numpy')(5) - 32) < 1e-16
+    assert abs(lambdify((a,), exp2(a), 'numpy')(5) - 32) <= NUMPY_DEFAULT_EPSILON
 
 
 def test_log2():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a,), log2(a), 'numpy')(256) - 8) < 1e-16
+    assert abs(lambdify((a,), log2(a), 'numpy')(256) - 8) <= NUMPY_DEFAULT_EPSILON
 
 
 def test_Sqrt():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a,), Sqrt(a), 'numpy')(4) - 2) < 1e-16
+    assert abs(lambdify((a,), Sqrt(a), 'numpy')(4) - 2) <= NUMPY_DEFAULT_EPSILON
 
 
 def test_sqrt():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a,), sqrt(a), 'numpy')(4) - 2) < 1e-16
+    assert abs(lambdify((a,), sqrt(a), 'numpy')(4) - 2) <= NUMPY_DEFAULT_EPSILON
 
 
 def test_matsolve():

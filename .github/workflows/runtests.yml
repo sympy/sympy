@@ -208,7 +208,7 @@ jobs:
 
       # These are not available for pypy and cannot be installed in 3.11 (yet)
       - if: ${{ matrix.python-version != 'pypy-3.8' && ! contains(matrix.python-version, '3.11') }}
-        run: pip install symengine llvmlite numba pymc
+        run: pip install symengine llvmlite numba pymc jax jaxlib
 
       # Test external imports
       - run: bin/test_external_imports.py
