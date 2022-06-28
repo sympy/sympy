@@ -57,6 +57,7 @@ clean:
 html:
 	$(MAKE) -s _html || $(MAKE) -s printwarnings
 
+_html: FORCE_COLOR = 1
 _html: $(BUILDDIR)/html/pics/*.png
 _html: SPHINXOPTS += -W --keep-going
 _html: $(BUILDDIR)/logo/sympy-notailtext-favicon.ico
