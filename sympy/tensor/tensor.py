@@ -427,8 +427,8 @@ class _TensorDataLazyEvaluator(CantSympify):
     computed until they are accessed by reading the ``.data`` property
     associated to the tensor expression.
     """
-    _substitutions_dict = dict()  # type: tDict[Any, Any]
-    _substitutions_dict_tensmul = dict()  # type: tDict[Any, Any]
+    _substitutions_dict = {}  # type: tDict[Any, Any]
+    _substitutions_dict_tensmul = {}  # type: tDict[Any, Any]
 
     def __getitem__(self, key):
         dat = self._get(key)
@@ -3729,7 +3729,7 @@ class TensMul(TensExpr, AssocOp):
         """
         Get a dict mapping the index position to TensMul's argument number.
         """
-        pos_map = dict()
+        pos_map = {}
         pos_counter = 0
         for arg_i, arg in enumerate(self.args):
             if not isinstance(arg, TensExpr):

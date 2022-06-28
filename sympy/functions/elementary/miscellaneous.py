@@ -27,9 +27,7 @@ def _minmax_as_Piecewise(op, *args):
     from sympy.functions.elementary.piecewise import Piecewise
     ec = []
     for i, a in enumerate(args):
-        c = []
-        for j in range(i + 1, len(args)):
-            c.append(Relational(a, args[j], op))
+        c = [Relational(a, args[j], op) for j in range(i + 1, len(args))]
         ec.append((a, And(*c)))
     return Piecewise(*ec)
 

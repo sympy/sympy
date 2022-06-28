@@ -1,4 +1,4 @@
-from math import log
+from math import factorial as _factorial, log, prod
 from itertools import chain, islice, product
 
 
@@ -1918,9 +1918,7 @@ class PermutationGroup(Basic):
                 .format(only_sym, only_alt))
 
         n = self.degree
-        sym_order = 1
-        for i in range(2, n+1):
-            sym_order *= i
+        sym_order = _factorial(n)
         order = self.order()
 
         if order == sym_order:
@@ -2991,10 +2989,7 @@ class PermutationGroup(Basic):
             self._order = factorial(n)/2
             return self._order
 
-        basic_transversals = self.basic_transversals
-        m = 1
-        for x in basic_transversals:
-            m *= len(x)
+        m = prod([len(x) for x in self.basic_transversals])
         self._order = m
         return m
 

@@ -99,7 +99,7 @@ class AesaraPrinter(Printer):
     printmethod = "_aesara"
 
     def __init__(self, *args, **kwargs):
-        self.cache = kwargs.pop('cache', dict())
+        self.cache = kwargs.pop('cache', {})
         super().__init__(*args, **kwargs)
 
     def _get_key(self, s, name=None, dtype=None, broadcastable=None):

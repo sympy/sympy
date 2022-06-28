@@ -485,7 +485,7 @@ def opt_cse(exprs, order='canonical'):
     >>> print((k, v.as_unevaluated_basic()))
     (x**(-2), 1/(x**2))
     """
-    opt_subs = dict()
+    opt_subs = {}
 
     adds = OrderedSet()
     muls = OrderedSet()
@@ -573,7 +573,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
         Substitutions containing any Symbol from ``ignore`` will be ignored.
     """
     if opt_subs is None:
-        opt_subs = dict()
+        opt_subs = {}
 
     ## Find repeated sub-expressions
 
@@ -629,7 +629,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
     replacements = []
 
-    subs = dict()
+    subs = {}
 
     def _rebuild(expr):
         if not isinstance(expr, (Basic, Unevaluated)):

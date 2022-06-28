@@ -139,7 +139,7 @@ class Dimension(Expr):
     _op_priority = 13.0
 
     # XXX: This doesn't seem to be used anywhere...
-    _dimensional_dependencies = dict()  # type: ignore
+    _dimensional_dependencies = {}  # type: ignore
 
     is_commutative = True
     is_number = False

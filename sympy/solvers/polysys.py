@@ -135,7 +135,7 @@ def solve_biquadratic(f, g, opt):
     q = q.ltrim(-1)
     q_roots = list(roots(q).keys())
 
-    solutions = [(p_root.subs(y, q_root), q_root) for q_roots, p_roots in
+    solutions = [(p_root.subs(y, q_root), q_root) for q_root, p_root in
                  itertools.product(q_roots, p_roots)]
 
     return sorted(solutions, key=default_sort_key)
