@@ -2265,7 +2265,10 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
     xDx = x*Dx
     xDx1 = xDx + 1
     r1 = Mul(*([x*(-1)**(m + n - p)] + [xDx1 - ai for ai in a]))
-    r2 = Mul(*[xDx - bi for bi in b])
+    # r2 = Mul(*[xDx - bi for bi in b])  # gives sympify error
+    r2 = 1
+    for bi in b:
+        r2 *= xDx - bi
     sol = r1 - r2
 
     if not initcond:
