@@ -66,3 +66,5 @@ what the different functions and modules do, their arguments and return values.
    explanation/index.rst
    reference/index.rst
    doesntexist.rst
+
+:ref:`doesntexist`
