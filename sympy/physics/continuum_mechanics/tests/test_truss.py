@@ -16,7 +16,7 @@ def test_truss():
     assert t.member_labels == []
     assert t.loads == {}
     assert t.supports == {}
-    assert t.reaction_forces == {}
+    assert t.reaction_loads == {}
     assert t.internal_forces == {}
 
     # testing the add_node method
@@ -28,7 +28,7 @@ def test_truss():
     assert t.node_positions == [(0, 0), (2, 2), (3, 0)]
     assert t.loads == {A: [[0, 90]], B: [[0, 90]], C: [[0, 90]]}
     assert t.supports == {A: 'none', B: 'none', C: 'none'}
-    assert t.reaction_forces == {}
+    assert t.reaction_loads == {}
 
     # testing the remove_node method
     t.remove_node(C)
@@ -58,15 +58,15 @@ def test_truss():
 
     D, CD = symbols('D, CD')
 
-    # testing the change_label method
-    t.change_label(B, D)
+    # testing the change_label methods
+    t.change_node_label(B, D)
     assert t.nodes == [(A, 0, 0), (D, 2, 2), (C, 3, 0)]
     assert t.node_labels == [A, D, C]
     assert t.loads == {A: [[0, 90]], D: [[0, 90]], C: [[0, 90]]}
     assert t.supports == {A: 'none', D: 'none', C: 'none'}
     assert t.members == [[AB, A, D], [AC, A, C], [BC, D, C]]
 
-    t.change_label(BC, CD)
+    t.change_member_label(BC, CD)
     assert t.members == [[AB, A, D], [AC, A, C], [CD, D, C]]
     assert t.member_labels == [AB, AC, CD]
     assert t.internal_forces == {AB: 0, CD: 0, AC: 0}
@@ -80,13 +80,18 @@ def test_truss():
     assert t.loads == {A: [[5*P/4, 90], [2*P, 45]], D: [[P/2, 90]], C: [[0, 90]]}
     assert t.loads[A] == [[5*P/4, 90], [2*P, 45]]
 
-    # testing the add_support method
-    t.add_support(A, "pinned")
-    t.add_support(D, "roller")
+    # testing the remove_load method
+    t.remove_load(A, 5*P/4, 90)
+    assert t.loads == {A: [[2*P, 45]], D: [[P/2, 90]], C: [[0, 90]]}
+    assert t.loads[A] == [[2*P, 45]]
+
+    # testing the apply_support method
+    t.apply_support(A, "pinned")
+    t.apply_support(D, "roller")
     assert t.supports == {A: 'pinned', D: 'roller', C: 'none'}
-    assert t.reaction_forces == {'R_A_x': 0, 'R_A_y': 0, 'R_D_y': 0}
+    assert t.reaction_loads == {}
 
     # testing the remove_support method
     t.remove_support(A)
     assert t.supports == {A: 'none', D: 'roller', C: 'none'}
-    assert t.reaction_forces == {'R_D_y': 0}
+    assert t.reaction_loads == {}
