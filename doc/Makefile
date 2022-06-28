@@ -57,7 +57,7 @@ clean:
 html:
 	$(MAKE) -s _html || $(MAKE) -s printwarnings
 
-# Force colors on CI
+# Force colors on CI. Set NO_COLOR=1 on the command line to disable this.
 _html: export FORCE_COLOR = 1
 _html: $(BUILDDIR)/html/pics/*.png
 _html: SPHINXOPTS += -W --keep-going
