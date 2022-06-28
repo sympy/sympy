@@ -2185,12 +2185,10 @@ def from_hyper(func, x0=0, evalf=False):
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
 
     # generalized hypergeometric differential equation
-    r1 = 1
-    for ai in a:
-        r1 = r1 * (x * Dx + ai)
-    r2 = Dx
-    for bi in b:
-        r2 = r2 * (x * Dx + bi - 1)
+    xDx = x*Dx
+    xDx_1 = x*Dx - 1
+    r1 = Mul(*[xDx + ai for ai in a])
+    r2 = Mul(*[xDx_1 + bi for bi in b])
     sol = r1 - r2
 
     simp = hyperexpand(func)
@@ -2263,17 +2261,10 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
 
     # compute the differential equation satisfied by the
     # Meijer G-function.
-    mnp = (-1)**(m + n - p)
-    r1 = x * mnp
-
-    for ai in a:
-        r1 *= x * Dx + 1 - ai
-
-    r2 = 1
-
-    for bi in b:
-        r2 *= x * Dx - bi
-
+    xDx = x*Dx
+    xDx1 = xDx + 1
+    r1 = Mul(*([x*(-1)**(m + n - p)] + [xDx1 - ai for ai in a]))
+    r2 = Mul(*[xDx - bi for bi in b]
     sol = r1 - r2
 
     if not initcond:
