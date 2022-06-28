@@ -1,7 +1,8 @@
+from math import prod
+
 from sympy.concrete.products import (Product, product)
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.function import (Derivative, Function)
-from sympy.core.mul import prod
 from sympy.core import (Catalan, EulerGamma)
 from sympy.core.numbers import (E, I, Rational, nan, oo, pi)
 from sympy.core.relational import Eq

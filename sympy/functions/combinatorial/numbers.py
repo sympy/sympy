@@ -6,7 +6,7 @@ sequences of rational numbers such as Bernoulli and Fibonacci numbers.
 Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
-from math import prod as _prod
+from math import prod
 from collections import defaultdict
 from typing import Callable, Dict as tDict, Tuple as tTuple
 
@@ -16,7 +16,7 @@ from sympy.core.evalf import pure_complex
 from sympy.core.expr import Expr
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
-from sympy.core.mul import Mul, prod
+from sympy.core.mul import Mul
 from sympy.core.numbers import E, pi, oo, Rational, Integer
 from sympy.core.relational import is_le, is_gt
 from sympy.external.gmpy import SYMPY_INTS
@@ -34,7 +34,7 @@ from mpmath.libmp import ifib as _ifib
 
 
 def _product(a, b):
-    return _prod(range(a, b + 1))
+    return prod(range(a, b + 1))
 
 
 # Dummy symbol used for computing polynomial sequences
