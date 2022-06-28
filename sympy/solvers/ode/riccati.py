@@ -667,7 +667,7 @@ def compute_m_ybar(x, poles, choice, N):
     dm = []
     for i, polei in enumerate(poles):
         for j, cij in enumerate(choice[i]):
-            dybar.append(cij/(x - polei)**(j + 1)
+            dybar.append(cij/(x - polei)**(j + 1))
         dm.append(Poly(choice[i][0], x, extension=True))
     ybar += Add(*dybar)
     m -= Add(*dm)
