@@ -180,7 +180,6 @@ def _pi_coeff(arg, cycles=1):
     0
 
     """
-    arg = sympify(arg)
     if arg is pi:
         return S.One
     elif not arg:

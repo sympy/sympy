@@ -20,6 +20,6 @@ a module break down.
    assumptions.rst
    booleans.rst
    custom-functions.md
-   solving.md
+   solving/index.md
    contributing/index.rst
    ../citing.md

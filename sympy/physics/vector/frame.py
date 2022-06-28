@@ -660,8 +660,7 @@ class ReferenceFrame:
             axis, angle = angle, axis
 
         axis = _check_vector(axis)
-        amount = sympify(angle)
-        theta = amount
+        theta = sympify(angle)
         parent_orient_axis = []
 
         if not axis.dt(parent) == 0:
@@ -677,7 +676,7 @@ class ReferenceFrame:
 
         self._dcm(parent, parent_orient_axis)
 
-        thetad = (amount).diff(dynamicsymbols._t)
+        thetad = (theta).diff(dynamicsymbols._t)
         wvec = thetad*axis.express(parent).normalize()
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})

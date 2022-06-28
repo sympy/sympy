@@ -37,6 +37,7 @@ def test_PythonCodePrinter():
     assert prntr.doprint(Mod(-x, y)) == '(-x) % y'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
+    assert prntr.doprint(1/(x+y)) == '1/(x + y)'
     assert not prntr.module_imports
 
     assert prntr.doprint(pi) == 'math.pi'

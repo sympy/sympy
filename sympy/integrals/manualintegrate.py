@@ -18,7 +18,7 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 
 from __future__ import annotations
-from typing import NamedTuple
+from typing import NamedTuple, Type, Callable
 from collections import namedtuple, defaultdict
 from collections.abc import Mapping
 from functools import reduce
@@ -43,7 +43,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
     cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
-from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.error_functions import (erf, erfi, fresnelc,
     fresnels, Ci, Chi, Si, Shi, Ei, li)
 from sympy.functions.special.gamma_functions import uppergamma
@@ -54,8 +54,8 @@ from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
 from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
 from sympy.logic.boolalg import And
-from sympy.ntheory.factor_ import divisors
-from sympy.polys.polytools import degree, lcm_list
+from sympy.ntheory.factor_ import primefactors
+from sympy.polys.polytools import degree, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
@@ -88,6 +88,7 @@ ReciprocalRule = Rule("ReciprocalRule", "func")
 ArcsinRule = Rule("ArcsinRule")
 ArcsinhRule = Rule("ArcsinhRule")
 ReciprocalSqrtQuadraticRule = Rule("ReciprocalSqrtQuadraticRule", "a b c")
+SqrtQuadraticDenomRule = Rule("SqrtQuadraticDenomRule", "a b c coeffs")
 SqrtQuadraticRule = Rule("SqrtQuadraticRule", "a b c")
 AlternativeRule = Rule("AlternativeRule", "alternatives")
 DontKnowRule = Rule("DontKnowRule")
@@ -96,6 +97,7 @@ RewriteRule = Rule("RewriteRule", "rewritten substep")
 CompleteSquareRule = Rule("CompleteSquareRule", "rewritten substep")
 PiecewiseRule = Rule("PiecewiseRule", "subfunctions")
 HeavisideRule = Rule("HeavisideRule", "harg ibnd substep")
+DiracDeltaRule = Rule("DiracDeltaRule", "n a b")
 TrigSubstitutionRule = Rule("TrigSubstitutionRule",
                             "theta func rewritten substep restriction")
 ArctanRule = Rule("ArctanRule", "a b c")
@@ -136,18 +138,21 @@ def evaluates(rule):
         return func
     return _evaluates
 
+
 def contains_dont_know(rule):
     if isinstance(rule, DontKnowRule):
         return True
-    else:
-        for val in rule:
-            if isinstance(val, tuple):
-                if contains_dont_know(val):
-                    return True
-            elif isinstance(val, list):
-                if any(contains_dont_know(i) for i in val):
-                    return True
+    if not isinstance(rule, tuple):
+        return False
+    for val in rule:
+        if isinstance(val, tuple):
+            if contains_dont_know(val):
+                return True
+        elif isinstance(val, list):
+            if any(contains_dont_know(i) for i in val):
+                return True
     return False
+
 
 def manual_diff(f, symbol):
     """Derivative of f in form expected by find_substitutions
@@ -220,29 +225,32 @@ def find_substitutions(integrand, symbol, u_var):
         debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
-        if symbol not in substituted.free_symbols:
-            # avoid increasing the degree of a rational function
-            if integrand.is_rational_function(symbol) and substituted.is_rational_function(u_var):
-                deg_before = max([degree(t, symbol) for t in integrand.as_numer_denom()])
-                deg_after = max([degree(t, u_var) for t in substituted.as_numer_denom()])
-                if deg_after > deg_before:
-                    return False
-            return substituted.as_independent(u_var, as_Add=False)
+        if symbol in substituted.free_symbols:
+            return False
+        # avoid increasing the degree of a rational function
+        if integrand.is_rational_function(symbol) and substituted.is_rational_function(u_var):
+            deg_before = max([degree(t, symbol) for t in integrand.as_numer_denom()])
+            deg_after = max([degree(t, u_var) for t in substituted.as_numer_denom()])
+            if deg_after > deg_before:
+                return False
+        return substituted.as_independent(u_var, as_Add=False)
 
-        # special treatment for substitutions u = (a*x+b)**(1/n)
-        if (isinstance(u, Pow) and (1/u.exp).is_Integer and
-            Abs(u.exp) < 1):
-                a = Wild('a', exclude=[symbol])
-                b = Wild('b', exclude=[symbol])
-                match = u.base.match(a*symbol + b)
-                if match:
-                    a, b = [match.get(i, S.Zero) for i in (a, b)]
-                    if a != 0 and b != 0:
-                        substituted = substituted.subs(symbol,
-                            (u_var**(1/u.exp) - b)/a)
-                        return substituted.as_independent(u_var, as_Add=False)
-
-        return False
+    def exp_subterms(term: Expr):
+        linear_coeffs = []
+        terms = []
+        n = Wild('n', properties=[lambda n: n.is_Integer])
+        for exp_ in term.find(exp):
+            arg = exp_.args[0]
+            if symbol not in arg.free_symbols:
+                continue
+            match = arg.match(n*symbol)
+            if match:
+                linear_coeffs.append(match[n])
+            else:
+                terms.append(exp_)
+        if linear_coeffs:
+            terms.append(exp(gcd_list(linear_coeffs)*symbol))
+        return terms
 
     def possible_subterms(term):
         if isinstance(term, (TrigonometricFunction, HyperbolicFunction,
@@ -263,16 +271,12 @@ def find_substitutions(integrand, symbol, u_var):
                 r.extend(possible_subterms(u))
             return r
         elif isinstance(term, Pow):
-            r = []
-            if term.args[1].is_constant(symbol):
-                r.append(term.args[0])
-            elif term.args[0].is_constant(symbol):
-                r.append(term.args[1])
-            if term.args[1].is_Integer:
-                r.extend([term.args[0]**d for d in divisors(term.args[1])
+            r = [arg for arg in term.args if arg.has(symbol)]
+            if term.exp.is_Integer:
+                r.extend([term.base**d for d in primefactors(term.exp)
                     if 1 < d < abs(term.args[1])])
-                if term.args[0].is_Add:
-                    r.extend([t for t in possible_subterms(term.args[0])
+                if term.base.is_Add:
+                    r.extend([t for t in possible_subterms(term.base)
                         if t.is_Pow])
             return r
         elif isinstance(term, Add):
@@ -283,7 +287,7 @@ def find_substitutions(integrand, symbol, u_var):
             return r
         return []
 
-    for u in possible_subterms(integrand):
+    for u in list(dict.fromkeys(possible_subterms(integrand) + exp_subterms(integrand))):
         if u == symbol:
             continue
         u_diff = manual_diff(u, symbol)
@@ -418,47 +422,75 @@ def orthogonal_poly_rule(integral):
                     return orthogonal_poly_classes[klass](*args)
 
 
+_special_function_patterns: list[tuple[Type, Expr, Callable | None, tuple]] = []
+_wilds = []
+_symbol = Dummy('x')
+
+
 def special_function_rule(integral):
     integrand, symbol = integral
-    a = Wild('a', exclude=[symbol], properties=[lambda x: not x.is_zero])
-    b = Wild('b', exclude=[symbol])
-    c = Wild('c', exclude=[symbol])
-    d = Wild('d', exclude=[symbol], properties=[lambda x: not x.is_zero])
-    e = Wild('e', exclude=[symbol], properties=[
-        lambda x: not (x.is_nonnegative and x.is_integer)])
-    wilds = (a, b, c, d, e)
-    # patterns consist of a SymPy class, a wildcard expr, an optional
-    # condition coded as a lambda (when Wild properties are not enough),
-    # followed by an applicable rule
-    patterns = (
-        (Mul, exp(a*symbol + b)/symbol, None, EiRule),
-        (Mul, cos(a*symbol + b)/symbol, None, CiRule),
-        (Mul, cosh(a*symbol + b)/symbol, None, ChiRule),
-        (Mul, sin(a*symbol + b)/symbol, None, SiRule),
-        (Mul, sinh(a*symbol + b)/symbol, None, ShiRule),
-        (Pow, 1/log(a*symbol + b), None, LiRule),
-        (exp, exp(a*symbol**2 + b*symbol + c), None, ErfRule),
-        (sin, sin(a*symbol**2 + b*symbol + c), None, FresnelSRule),
-        (cos, cos(a*symbol**2 + b*symbol + c), None, FresnelCRule),
-        (Mul, symbol**e*exp(a*symbol), None, UpperGammaRule),
-        (Mul, polylog(b, a*symbol)/symbol, None, PolylogRule),
-        (Pow, 1/sqrt(a - d*sin(symbol)**2),
-            lambda a, d: a != d, EllipticFRule),
-        (Pow, sqrt(a - d*sin(symbol)**2),
-            lambda a, d: a != d, EllipticERule),
-    )
-    for p in patterns:
-        if isinstance(integrand, p[0]):
-            match = integrand.match(p[1])
+    if not _special_function_patterns:
+        a = Wild('a', exclude=[_symbol], properties=[lambda x: not x.is_zero])
+        b = Wild('b', exclude=[_symbol])
+        c = Wild('c', exclude=[_symbol])
+        d = Wild('d', exclude=[_symbol], properties=[lambda x: not x.is_zero])
+        e = Wild('e', exclude=[_symbol], properties=[
+            lambda x: not (x.is_nonnegative and x.is_integer)])
+        _wilds.extend((a, b, c, d, e))
+        # patterns consist of a SymPy class, a wildcard expr, an optional
+        # condition coded as a lambda (when Wild properties are not enough),
+        # followed by an applicable rule
+        linear_pattern = a*_symbol + b
+        quadratic_pattern = a*_symbol**2 + b*_symbol + c
+        _special_function_patterns.extend((
+            (Mul, exp(linear_pattern, evaluate=False)/_symbol, None, EiRule),
+            (Mul, cos(linear_pattern, evaluate=False)/_symbol, None, CiRule),
+            (Mul, cosh(linear_pattern, evaluate=False)/_symbol, None, ChiRule),
+            (Mul, sin(linear_pattern, evaluate=False)/_symbol, None, SiRule),
+            (Mul, sinh(linear_pattern, evaluate=False)/_symbol, None, ShiRule),
+            (Pow, 1/log(linear_pattern, evaluate=False), None, LiRule),
+            (exp, exp(quadratic_pattern, evaluate=False), None, ErfRule),
+            (sin, sin(quadratic_pattern, evaluate=False), None, FresnelSRule),
+            (cos, cos(quadratic_pattern, evaluate=False), None, FresnelCRule),
+            (Mul, _symbol**e*exp(a*_symbol, evaluate=False), None, UpperGammaRule),
+            (Mul, polylog(b, a*_symbol, evaluate=False)/_symbol, None, PolylogRule),
+            (Pow, 1/sqrt(a - d*sin(_symbol, evaluate=False)**2),
+                lambda a, d: a != d, EllipticFRule),
+            (Pow, sqrt(a - d*sin(_symbol, evaluate=False)**2),
+                lambda a, d: a != d, EllipticERule),
+        ))
+    _integrand = integrand.subs(symbol, _symbol)
+    for type_, pattern, constraint, rule in _special_function_patterns:
+        if isinstance(_integrand, type_):
+            match = _integrand.match(pattern)
             if match:
-                wild_vals = tuple(match.get(w) for w in wilds
+                wild_vals = tuple(match.get(w) for w in _wilds
                                   if match.get(w) is not None)
-                if p[2] is None or p[2](*wild_vals):
+                if constraint is None or constraint(*wild_vals):
                     args = wild_vals + (integrand, symbol)
-                    return p[3](*args)
+                    return rule(*args)
 
 
-def inverse_trig_rule(integral):
+def _add_degenerate_step(generic_cond, generic_step, degenerate_step):
+    if degenerate_step is None:
+        return generic_step
+    if isinstance(generic_step, PiecewiseRule):
+        subfunctions = [(substep, (cond & generic_cond).simplify())
+                        for substep, cond in generic_step.subfunctions]
+    else:
+        subfunctions = [(generic_step, generic_cond)]
+    if isinstance(degenerate_step, PiecewiseRule):
+        subfunctions += degenerate_step.subfunctions
+    else:
+        subfunctions.append((degenerate_step, S.true))
+    return PiecewiseRule(subfunctions, generic_step.context, generic_step.symbol)
+
+
+def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
+    """
+    Set degenerate=False on recursive call where coefficient of quadratic term
+    is assumed non-zero.
+    """
     integrand, symbol = integral
     base, exp = integrand.as_base_exp()
     a = Wild('a', exclude=[symbol])
@@ -489,10 +521,17 @@ def inverse_trig_rule(integral):
         return substep
 
     a, b, c = [match.get(i, S.Zero) for i in (a, b, c)]
+    generic_cond = Ne(c, 0)
+    if not degenerate or generic_cond is S.true:
+        degenerate_step = None
+    elif b.is_zero:
+        degenerate_step = ConstantRule(a ** exp, a ** exp, symbol)
+    else:
+        degenerate_step = sqrt_linear_rule(IntegralInfo((a + b * symbol) ** exp, symbol))
 
     if simplify(2*exp + 1) == 0:
         h, k = -b/(2*c), a - b**2/(4*c)  # rewrite base to k + c*(symbol-h)**2
-        general_rule = ReciprocalSqrtQuadraticRule(a, b, c, integrand, symbol)
+        step = general_rule = ReciprocalSqrtQuadraticRule(a, b, c, integrand, symbol)
         if k.is_real and c.is_real:
             # list of ((rule, base_exp, a, sign_a, b, sign_b), condition)
             possibilities = []
@@ -508,10 +547,13 @@ def inverse_trig_rule(integral):
                 rules = [(make_inverse_trig(*args), cond) for args, cond in possibilities]
                 if not k.is_positive:  # conditions are not thorough, need fall back rule
                     rules.append((general_rule, S.true))
-                return PiecewiseRule(rules, integrand, symbol)
-        return general_rule
+                step = PiecewiseRule(rules, integrand, symbol)
+            else:
+                step = general_rule
+        return _add_degenerate_step(generic_cond, step, degenerate_step)
     if exp == S.Half:
-        return SqrtQuadraticRule(a, b, c, integrand, symbol)
+        step = SqrtQuadraticRule(a, b, c, integrand, symbol)
+        return _add_degenerate_step(generic_cond, step, degenerate_step)
 
 
 def add_rule(integral):
@@ -859,8 +901,8 @@ def sqrt_linear_rule(integral: IntegralInfo):
         if not exp_.is_Rational:  # exclude x**pi
             return
         match = base.match(a+b*x)
-        if not match:  # exclude non-linear
-            return
+        if not match:  # skip non-linear
+            continue  # for sqrt(x+sqrt(x)), although base is non-linear, we can still substitute sqrt(x)
         a1, b1 = match[a], match[b]
         if a0*b1 != a1*b0 or not (b0/b1).is_nonnegative:  # cannot transform sqrt(x) to sqrt(x+1) or sqrt(-x)
             return
@@ -879,30 +921,43 @@ def sqrt_linear_rule(integral: IntegralInfo):
     substep = integral_steps(substituted*u**(q0-1)*q0/b0, u)
     if not contains_dont_know(substep):
         step = URule(u, u_x, None, substep, integrand, x)
-        generate_cond = Ne(b0, 0)
-        if generate_cond is not S.true:  # possible degenerate case
+        generic_cond = Ne(b0, 0)
+        if generic_cond is not S.true:  # possible degenerate case
             simplified = integrand.subs({b: 0 for b in bs})
             degenerate_step = integral_steps(simplified, x)
-            step = PiecewiseRule([(step, generate_cond), (degenerate_step, S.true)], integrand, x)
+            step = PiecewiseRule([(step, generic_cond), (degenerate_step, S.true)], integrand, x)
         return step
 
 
-def sqrt_quadratic_denom_rule(integral: IntegralInfo):
+def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     integrand, x = integral
-    numer, denom = integrand.as_numer_denom()
     a = Wild('a', exclude=[x])
     b = Wild('b', exclude=[x])
     c = Wild('c', exclude=[x, 0])
-    match = denom.match(sqrt(a+b*x+c*x**2))
-    if match:
-        numer_poly = numer.as_poly(x)
-        if numer_poly is None:
-            return
-        a, b, c = match[a], match[b], match[c]
+    f = Wild('f')
+    n = Wild('n', properties=[lambda n: n.is_Integer and n.is_odd])
+    match = integrand.match(f*sqrt(a+b*x+c*x**2)**n)
+    if not match:
+        return
+    a, b, c, f, n = match[a], match[b], match[c], match[f], match[n]
+    f_poly = f.as_poly(x)
+    if f_poly is None:
+        return
+
+    generic_cond = Ne(c, 0)
+    if not degenerate or generic_cond is S.true:
+        degenerate_step = None
+    elif b.is_zero:
+        degenerate_step = integral_steps(f*sqrt(a)**n, x)
+    else:
+        degenerate_step = sqrt_linear_rule(IntegralInfo(f*sqrt(a+b*x)**n, x))
+
+    def sqrt_quadratic_denom_rule(numer_poly: Poly, integrand: Expr):
+        denom = sqrt(a+b*x+c*x**2)
         deg = numer_poly.degree()
         if deg <= 1:
             # integrand == (d+e*x)/sqrt(a+b*x+c*x**2)
-            e, d = numer_poly.all_coeffs() if deg == 1 else (S.Zero, numer)
+            e, d = numer_poly.all_coeffs() if deg == 1 else (S.Zero, numer_poly.as_expr())
             # rewrite numerator to A*(2*c*x+b) + B
             A = e/(2*c)
             B = d-A*b
@@ -915,13 +970,29 @@ def sqrt_quadratic_denom_rule(integral: IntegralInfo):
                 if A != 1:
                     linear_step = ConstantTimesRule(A, pre_substitute, linear_step, A*pre_substitute, x)
             if B != 0:
-                constant_step = inverse_trig_rule(IntegralInfo(1/denom, x))
+                constant_step = inverse_trig_rule(IntegralInfo(1/denom, x), degenerate=False)
                 if B != 1:
                     constant_step = ConstantTimesRule(B, 1/denom, constant_step, B/denom, x)
             if linear_step and constant_step:
                 add = Add(A*pre_substitute, B/denom, evaluate=False)
-                return RewriteRule(add, AddRule([linear_step, constant_step], add, x), integrand, x)
-            return linear_step or constant_step
+                step = RewriteRule(add, AddRule([linear_step, constant_step], add, x), integrand, x)
+            else:
+                step = linear_step or constant_step
+        else:
+            coeffs = numer_poly.all_coeffs()
+            step = SqrtQuadraticDenomRule(a, b, c, coeffs, integrand, x)
+        return step
+
+    if n > 0:  # rewrite poly * sqrt(s)**(2*k-1) to poly*s**k / sqrt(s)
+        numer_poly = f_poly * (a+b*x+c*x**2)**((n+1)/2)
+        rewritten = numer_poly.as_expr()/sqrt(a+b*x+c*x**2)
+        substep = sqrt_quadratic_denom_rule(numer_poly, rewritten)
+        generic_step = RewriteRule(rewritten, substep, integrand, x)
+    elif n == -1:
+        generic_step = sqrt_quadratic_denom_rule(f_poly, integrand)
+    else:
+        return  # todo: handle n < -1 case
+    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
 def hyperbolic_rule(integral: tuple[Expr, Symbol]):
@@ -1203,6 +1274,29 @@ def heaviside_rule(integral):
         m, b = match[m], match[b]
         return HeavisideRule(m*symbol + b, -b/m, result, integrand, symbol)
 
+
+def dirac_delta_rule(integral: IntegralInfo):
+    integrand, x = integral
+    if len(integrand.args) == 1:
+        n = S.Zero
+    else:
+        n = integrand.args[1]
+    if not n.is_Integer or n < 0:
+        return
+    a, b = Wild('a', exclude=[x]), Wild('b', exclude=[x, 0])
+    match = integrand.args[0].match(a+b*x)
+    if not match:
+        return
+    a, b = match[a], match[b]
+    generic_cond = Ne(b, 0)
+    if generic_cond is S.true:
+        degenerate_step = None
+    else:
+        degenerate_step = ConstantRule(DiracDelta(a, n), integrand, x)
+    generic_step = DiracDeltaRule(n, a, b, integrand, x)
+    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
+
+
 def substitution_rule(integral):
     integrand, symbol = integral
 
@@ -1255,16 +1349,6 @@ def substitution_rule(integral):
         elif ways:
             return ways[0]
 
-    elif integrand.has(exp):
-        u_func = exp(symbol)
-        c = 1
-        substituted = integrand / u_func.diff(symbol)
-        substituted = substituted.subs(u_func, u_var)
-
-        if symbol not in substituted.free_symbols:
-            return URule(u_var, u_func, c,
-                         integral_steps(substituted, u_var),
-                         integrand, symbol)
 
 partial_fractions_rule = rewriter(
     lambda integrand, symbol: integrand.is_rational_function(),
@@ -1388,17 +1472,10 @@ def integral_steps(integrand, symbol, **options):
 
         if symbol not in integrand.free_symbols:
             return Number
-        elif isinstance(integrand, TrigonometricFunction):
-            return TrigonometricFunction
-        elif isinstance(integrand, Derivative):
-            return Derivative
-        else:
-            for cls in (Pow, Symbol, exp, log,
-                        Add, Mul, *inverse_trig_functions,
-                        Heaviside, OrthogonalPolynomial):
-                if isinstance(integrand, cls):
-                    return cls
-
+        for cls in (Symbol, TrigonometricFunction, OrthogonalPolynomial):
+            if isinstance(integrand, cls):
+                return cls
+        return type(integrand)
 
     def integral_is_subclass(*klasses):
         def _integral_is_subclass(integral):
@@ -1409,18 +1486,20 @@ def integral_steps(integrand, symbol, **options):
     result = do_one(
         null_safe(special_function_rule),
         null_safe(switch(key, {
-            Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule), \
-                              null_safe(quadratic_denom_rule)),
+            Pow: do_one(null_safe(power_rule), null_safe(inverse_trig_rule),
+                        null_safe(sqrt_linear_rule),
+                        null_safe(quadratic_denom_rule)),
             Symbol: power_rule,
             exp: exp_rule,
             Add: add_rule,
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_linear_rule),
-                        null_safe(sqrt_quadratic_denom_rule)),
+                        null_safe(sqrt_quadratic_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
+            DiracDelta: dirac_delta_rule,
             OrthogonalPolynomial: orthogonal_poly_rule,
             Number: constant_rule
         })),
@@ -1553,9 +1632,38 @@ def eval_reciprocal_sqrt_quadratic(a, b, c, integrand, x):
     return log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
 
 
+@evaluates(SqrtQuadraticDenomRule)
+def eval_sqrt_quadratic_denom(a, b, c, coeffs: list[Expr], integrand, x):
+    # Integrate poly/sqrt(a+b*x+c*x**2) using recursion.
+    # coeffs are coefficients of the polynomial.
+    # Let I_n = x**n/sqrt(a+b*x+c*x**2), then
+    # I_n = A * x**(n-1)*sqrt(a+b*x+c*x**2) - B * I_{n-1} - C * I_{n-2}
+    # where A = 1/(n*c), B = (2*n-1)*b/(2*n*c), C = (n-1)*a/(n*c)
+    # See https://github.com/sympy/sympy/pull/23608 for proof.
+    result_coeffs = []
+    coeffs = coeffs.copy()
+    for i in range(len(coeffs)-2):
+        n = len(coeffs)-1-i
+        coeff = coeffs[i]/(c*n)
+        result_coeffs.append(coeff)
+        coeffs[i+1] -= (2*n-1)*b/2*coeff
+        coeffs[i+2] -= (n-1)*a*coeff
+    d, e = coeffs[-1], coeffs[-2]
+    s = sqrt(a+b*x+c*x**2)
+    constant = d-b*e/(2*c)
+    if constant == 0:
+        I0 = 0
+    else:
+        step = inverse_trig_rule(IntegralInfo(1/s, x), degenerate=False)
+        I0 = constant*_manualintegrate(step)
+    return Add(*(result_coeffs[i]*x**(len(coeffs)-2-i)
+                 for i in range(len(result_coeffs))), e/c)*s + I0
+
+
 @evaluates(SqrtQuadraticRule)
 def eval_sqrt_quadratic(a, b, c, integrand, x):
-    return x*integrand/2 + _manualintegrate(sqrt_quadratic_denom_rule(IntegralInfo((2*a+b*x)/integrand, x)))/4
+    step = sqrt_quadratic_rule(IntegralInfo(integrand, x), degenerate=False)
+    return _manualintegrate(step)
 
 
 @evaluates(AlternativeRule)
@@ -1630,6 +1738,14 @@ def eval_heaviside(harg, ibnd, substep, integrand, symbol):
     # then there needs to be continuity at -b/m == ibnd,
     # so we subtract the appropriate term.
     return Heaviside(harg)*(substep - substep.subs(symbol, ibnd))
+
+
+@evaluates(DiracDeltaRule)
+def eval_dirac_delta(n, a, b, integrand, x):
+    if n == 0:
+        return Heaviside(a+b*x)/b
+    return DiracDelta(a+b*x, n-1)/b
+
 
 @evaluates(JacobiRule)
 def eval_jacobi(n, a, b, integrand, symbol):

@@ -48,7 +48,7 @@ from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedba
 from sympy.ntheory.factor_ import (divisor_sigma, primenu, primeomega, reduced_totient, totient, udivisor_sigma)
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
-from sympy.physics.units import meter, gibibyte, microgram, second
+from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.fields import field
 from sympy.polys.polytools import Poly
@@ -2983,6 +2983,9 @@ def test_unit_printing():
     assert latex(5*meter) == r'5 \text{m}'
     assert latex(3*gibibyte) == r'3 \text{gibibyte}'
     assert latex(4*microgram/second) == r'\frac{4 \mu\text{g}}{\text{s}}'
+    assert latex(4*micro*gram/second) == r'\frac{4 \mu \text{g}}{\text{s}}'
+    assert latex(5*milli*meter) == r'5 \text{m} \text{m}'
+    assert latex(milli) == r'\text{m}'
 
 
 def test_issue_17092():
