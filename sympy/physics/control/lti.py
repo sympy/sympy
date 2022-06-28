@@ -2,23 +2,22 @@ from typing import Type
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
-from sympy.core.function import expand
-from sympy.core.mul import Mul
-from sympy.core.power import Pow
-from sympy.core.symbol import Symbol
-from sympy.polys.polyroots import roots
-from sympy.polys.polytools import (cancel, degree)
 from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin
+from sympy.core.expr import Expr
+from sympy.core.function import expand
 from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import Integer, ComplexInfinity
-from sympy.core.symbol import Dummy
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
-from sympy.polys import Poly, rootof
-from sympy.series import limit
 from sympy.matrices import ImmutableMatrix, eye
 from sympy.matrices.expressions import MatMul, MatAdd
+from sympy.polys import Poly, rootof
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import (cancel, degree)
+from sympy.series import limit
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -216,7 +215,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     >>> -tf5
     TransferFunction(-s**4 + 2*s**3 - 5*s - 4, s + 4, s)
 
-    You can use a Float or an Integer (or other constants) as numerator and denominator:
+    You can use a float or an integer (or other constants) as numerator and denominator:
 
     >>> tf6 = TransferFunction(1/2, 4, s)
     >>> tf6.num
@@ -377,7 +376,7 @@ class TransferFunction(SISOLinearTimeInvariant):
                 raise ValueError("Conflicting values found for positional argument `var` ({}). Specify it manually.".format(_free_symbols))
 
         _num, _den = expr.as_numer_denom()
-        if _den == 0 or _num.has(ComplexInfinity):
+        if _den == 0 or _num.has(S.ComplexInfinity):
             raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
         return cls(_num, _den, var)
 
@@ -666,9 +665,9 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def __pow__(self, p):
         p = sympify(p)
-        if not isinstance(p, Integer):
-            raise ValueError("Exponent must be an Integer.")
-        if p == 0:
+        if not p.is_Integer:
+            raise ValueError("Exponent must be an integer.")
+        if p is S.Zero:
             return TransferFunction(1, 1, self.var)
         elif p > 0:
             num_, den_ = self.num**p, self.den**p
@@ -2052,7 +2051,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
             raise ValueError("Product of `sys1` and `sys2` "
                 "must yield a square matrix.")
 
-        if sign not in [-1, 1]:
+        if sign not in (-1, 1):
             raise ValueError("Unsupported type for feedback. `sign` arg should "
                 "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
 

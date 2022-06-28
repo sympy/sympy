@@ -346,23 +346,23 @@ def test_sample_scipy():
         raises(NotImplementedError, lambda: sample(N_c))
 
 
-def test_sample_pymc3():
-    distribs_pymc3 = [
+def test_sample_pymc():
+    distribs_pymc = [
         MultivariateNormal("M", [5, 2], [[1, 0], [0, 1]]),
         MultivariateBeta("B", [0.4, 5, 15]),
         Multinomial("N", 4, [0.3, 0.2, 0.1, 0.4])
     ]
     size = 3
-    pymc3 = import_module('pymc3')
-    if not pymc3:
-        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    pymc = import_module('pymc')
+    if not pymc:
+        skip('PyMC is not installed. Abort tests for _sample_pymc.')
     else:
-        for X in distribs_pymc3:
-            samps = sample(X, size=size, library='pymc3')
+        for X in distribs_pymc:
+            samps = sample(X, size=size, library='pymc')
             for sam in samps:
                 assert tuple(sam.flatten()) in X.pspace.distribution.set
         N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
-        raises(NotImplementedError, lambda: sample(N_c, library='pymc3'))
+        raises(NotImplementedError, lambda: sample(N_c, library='pymc'))
 
 
 def test_sample_seed():
@@ -370,7 +370,7 @@ def test_sample_seed():
     pdf = exp(-x1**2/2 + x1 - x2**2/2 - S.Half)/(2*pi)
     X = JointRV('x', pdf)
 
-    libraries = ['scipy', 'numpy', 'pymc3']
+    libraries = ['scipy', 'numpy', 'pymc']
     for lib in libraries:
         try:
             imported_lib = import_module(lib)
@@ -384,9 +384,8 @@ def test_sample_seed():
         except NotImplementedError:
             continue
 
-
 #
-# XXX: This fails for pymc3. Previously the test appeared to pass but that is
+# XXX: This fails for pymc. Previously the test appeared to pass but that is
 # just because the library argument was not passed so the test always used
 # scipy.
 #
@@ -395,7 +394,7 @@ def test_issue_21057():
     n = MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
     p = Normal("x", [0, 0], [[0, 0], [0, 1]])
     assert m == n
-    libraries = ['scipy', 'numpy'] #, 'pymc3'] <-- pymc3 fails
+    libraries = ('scipy', 'numpy')  # , 'pymc')  # <-- pymc fails
     for library in libraries:
         try:
             imported_lib = import_module(library)
@@ -411,16 +410,16 @@ def test_issue_21057():
 
 
 #
-# When this passes the pymc3 part can be uncommented in test_issue_21057 above
+# When this passes the pymc part can be uncommented in test_issue_21057 above
 # and this can be deleted.
 #
 @XFAIL
-def test_issue_21057_pymc3():
+def test_issue_21057_pymc():
     m = Normal("x", [0, 0], [[0, 0], [0, 0]])
     n = MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
     p = Normal("x", [0, 0], [[0, 0], [0, 1]])
     assert m == n
-    libraries = ['pymc3']
+    libraries = ('pymc',)
     for library in libraries:
         try:
             imported_lib = import_module(library)

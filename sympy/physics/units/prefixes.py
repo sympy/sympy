@@ -30,7 +30,7 @@ class Prefix(Expr):
     _op_priority = 13.0
     is_commutative = True
 
-    def __new__(cls, name, abbrev, exponent, base=sympify(10)):
+    def __new__(cls, name, abbrev, exponent, base=sympify(10), latex_repr=None):
 
         name = sympify(name)
         abbrev = sympify(abbrev)
@@ -43,6 +43,7 @@ class Prefix(Expr):
         obj._scale_factor = base**exponent
         obj._exponent = exponent
         obj._base = base
+        obj._latex_repr = latex_repr
         return obj
 
     @property
@@ -57,20 +58,25 @@ class Prefix(Expr):
     def scale_factor(self):
         return self._scale_factor
 
+    def _latex(self, printer):
+        if self._latex_repr is None:
+            return r'\text{%s}' % self._abbrev
+        return self._latex_repr
+
     @property
     def base(self):
         return self._base
 
     def __str__(self):
-        # TODO: add proper printers and tests:
+        return str(self._abbrev)
+
+    def __repr__(self):
         if self.base == 10:
             return "Prefix(%r, %r, %r)" % (
                 str(self.name), str(self.abbrev), self._exponent)
         else:
             return "Prefix(%r, %r, %r, %r)" % (
                 str(self.name), str(self.abbrev), self._exponent, self.base)
-
-    __repr__ = __str__
 
     def __mul__(self, other):
         from sympy.physics.units import Quantity
@@ -160,7 +166,7 @@ deca = Prefix('deca', 'da', 1)
 deci = Prefix('deci', 'd', -1)
 centi = Prefix('centi', 'c', -2)
 milli = Prefix('milli', 'm', -3)
-micro = Prefix('micro', 'mu', -6)
+micro = Prefix('micro', 'mu', -6, latex_repr=r"\mu")
 nano = Prefix('nano', 'n', -9)
 pico = Prefix('pico', 'p', -12)
 femto = Prefix('femto', 'f', -15)

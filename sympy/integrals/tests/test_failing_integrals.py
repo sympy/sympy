@@ -32,12 +32,6 @@ def test_issue_4212():
 
 
 @XFAIL
-def test_issue_4491():
-    # Can be solved via variable transformation x = y - 1
-    assert not integrate(x*sqrt(x**2 + 2*x + 4), x).has(Integral)
-
-
-@XFAIL
 def test_issue_4511():
     # This works, but gives a complicated answer.  The correct answer is x - cos(x).
     # If current answer is simplified, 1 - cos(x) + x is obtained.
@@ -237,11 +231,6 @@ def test_issue_11254c():
 @XFAIL
 def test_issue_10584():
     assert not integrate(sqrt(x**2 + 1/x**2), x).has(Integral)
-
-
-@XFAIL
-def test_issue_9723():
-    assert not integrate(sqrt(x + sqrt(x))).has(Integral)
 
 
 @XFAIL

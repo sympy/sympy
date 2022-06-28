@@ -1078,7 +1078,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     library : str
         - 'scipy' : Sample using scipy
         - 'numpy' : Sample using numpy
-        - 'pymc3' : Sample using PyMC3
+        - 'pymc'  : Sample using PyMC
 
         Choose any of the available options to sample from as string,
         by default is 'scipy'
@@ -1098,7 +1098,7 @@ def sample(expr, condition=None, size=(), library='scipy',
 
         - 'scipy': int, numpy.random.RandomState, numpy.random.Generator
         - 'numpy': int, numpy.random.RandomState, numpy.random.Generator
-        - 'pymc3': int
+        - 'pymc': int
 
         Optional, by default None, in which case seed settings
         related to the given library will be used.
@@ -1254,7 +1254,7 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
 
         - 'scipy': int, numpy.random.RandomState, numpy.random.Generator
         - 'numpy': int, numpy.random.RandomState, numpy.random.Generator
-        - 'pymc3': int
+        - 'pymc': int
 
         Optional, by default None, in which case seed settings
         related to the given library will be used.
@@ -1312,9 +1312,9 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
             return condition.subs({rv: arg for rv, arg in zip(rvs, args)})
         return False
 
-    if library == 'pymc3':
-        # Currently unable to lambdify in pymc3
-        # TODO : Remove 'pymc3' when lambdify accepts 'pymc3' as module
+    if library in ('pymc', 'pymc3'):
+        # Currently unable to lambdify in pymc
+        # TODO : Remove when lambdify accepts 'pymc' as module
         fn = lambdify(rvs, expr, **kwargs)
     else:
         fn = lambdify(rvs, expr, modules=library, **kwargs)
@@ -1594,7 +1594,7 @@ class Distribution(Basic):
         """ A random realization from the distribution """
 
         module = import_module(library)
-        if library in {'scipy', 'numpy', 'pymc3'} and module is None:
+        if library in {'scipy', 'numpy', 'pymc3', 'pymc'} and module is None:
             raise ValueError("Failed to import %s" % library)
 
         if library == 'scipy':
@@ -1623,14 +1623,18 @@ class Distribution(Basic):
                 rand_state = seed
             _size = None if size == () else size
             samps = do_sample_numpy(self, _size, rand_state)
-        elif library == 'pymc3':
-            from sympy.stats.sampling.sample_pymc3 import do_sample_pymc3
+        elif library in ('pymc', 'pymc3'):
+            from sympy.stats.sampling.sample_pymc import do_sample_pymc
             import logging
-            logging.getLogger("pymc3").setLevel(logging.ERROR)
-            import pymc3
-            with pymc3.Model():
-                if do_sample_pymc3(self):
-                    samps = pymc3.sample(draws=prod(size), chains=1, compute_convergence_checks=False,
+            logging.getLogger("pymc").setLevel(logging.ERROR)
+            try:
+                import pymc
+            except ImportError:
+                import pymc3 as pymc
+
+            with pymc.Model():
+                if do_sample_pymc(self):
+                    samps = pymc.sample(draws=prod(size), chains=1, compute_convergence_checks=False,
                             progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X']
                     samps = samps.reshape(size)
                 else:
