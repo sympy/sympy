@@ -347,6 +347,8 @@ def test_auto_point_acc_compute_vel():
     assert P.acc(N) == -q1.diff(t) ** 2 * A.x + q1.diff(t, 2) * A.y
 
 def test_auto_acc_derivative():
+    # Tests whether the Point.acc method gives the correct acceleration of the
+    # end point of two linkages in serie, while getting minimal information.
     q1, q2 = dynamicsymbols('q1:3')
     u1, u2 = dynamicsymbols('q1:3', 1)
     v1, v2 = dynamicsymbols('q1:3', 2)
@@ -366,6 +368,7 @@ def test_auto_acc_derivative():
     Cm.set_pos(Bm, C.x)
     Cm.set_vel(C, 0)
 
+    # Copy dictionaries to later check the calculation using the 2pt_theories
     Bm_vel_dict, Cm_vel_dict = Bm._vel_dict.copy(), Cm._vel_dict.copy()
     Bm_acc_dict, Cm_acc_dict = Bm._acc_dict.copy(), Cm._acc_dict.copy()
     check = -u1 ** 2 * B.x + v1 * B.y - (u1 + u2) ** 2 * C.x + (v1 + v2) * C.y
