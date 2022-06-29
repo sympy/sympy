@@ -129,3 +129,8 @@ a:hover {
 html {
     scroll-behavior: auto;
 }
+
+/* Color the icons on the main page */
+.item-card-icon {
+    color: var(--color-brand-content);
+}

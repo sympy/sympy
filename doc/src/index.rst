@@ -2,55 +2,64 @@
 
 .. module:: sympy
 
-Welcome to SymPy's documentation!
-----------------------------------
+SymPy |version| Documentation
+-----------------------------
+
+`SymPy <https://sympy.org>`_ is a Python library for symbolic mathematics. It
+aims to become a full-featured computer algebra system (CAS) while keeping the
+code as simple as possible in order to be comprehensible and easily
+extensible. SymPy is written entirely in Python.
+
+If you are new to SymPy, start with the :ref:`introductory tutorial
+<intro-tutorial>`.
 
 A `PDF version of these docs <https://github.com/sympy/sympy/releases>`_ is also available.
 
-`SymPy <https://sympy.org>`_ is a Python library for symbolic mathematics.
-If you are new to SymPy, start with the :ref:`introductory tutorial <intro-tutorial>`.
+.. card:: Installation :material-sharp:`install_desktop;3em;item-card-icon`
+   :link: installation
+   :link-type: ref
 
-This is the central page for all of SymPy's documentation.
+   Instructions on how to install SymPy.
 
-==================================================================
+.. grid:: 2
 
-:ref:`Installation <installation>`
-----------------------------------
+   .. grid-item-card:: Tutorials :material-sharp:`school;3em;item-card-icon`
+      :link: tutorials
+      :link-type: ref
 
-Instructions on how to install SymPy.
+      Tutorials are the best place to start for anyone new to SymPy or one of
+      SymPy's features.
 
-:ref:`Tutorials <tutorials>`
-----------------------------
+   .. grid-item-card:: How-to Guides :octicon:`book;3em;item-card-icon`
+      :link: guides
+      :link-type: ref
 
-Tutorials are the best place to start for anyone new to SymPy or one of
-SymPy's features.
+      How-to guides are step-by-step instructions on how to do specific tasks.
 
-:ref:`How-to Guides <guides>`
------------------------------
+   .. grid-item-card:: Explanations :material-outlined:`article;3em;item-card-icon`
+      :link: explanations
+      :link-type: ref
 
-How-to guides are step-by-step instructions on how to do specific tasks.
+      Explanations provide in-depth discussions about select SymPy features. These
+      topic guides talk about things like the motivation behind design decisions,
+      technical implementation details, and opinionated recommendations.
 
-:ref:`Explanations <explanations>`
-----------------------------------
+   .. grid-item-card:: API Reference :octicon:`code-square;3em;item-card-icon`
+      :link: reference
+      :link-type: ref
 
-Explanations provide in-depth discussions about select SymPy features. These
-topic guides talk about things like the motivation behind design decisions,
-technical implementation details, and opinionated recommendations.
+      The API reference is a detailed description of the SymPy API. Every SymPy
+      function and class is enumerated here with detailed information on what each
+      function does.
 
-:ref:`API Reference <reference>`
---------------------------------
+.. card:: Contributing :octicon:`git-pull-request;3em;item-card-icon`
+   :link: contributing
+   :link-type: ref
 
-The API reference is a detailed description of the SymPy API. Every SymPy
-function and class is enumerated here with detailed information on what each
-function does.
-
-:ref:`Contributing <contributing>`
-----------------------------------
-
-The contributing guide goes over the details necessary to contribute to SymPy.
-See also the full `Development Workflow
-<https://github.com/sympy/sympy/wiki/Development-workflow>`_ guide on the
-SymPy wiki.
+   The contributing guide goes over the details necessary to contribute to SymPy.
+   See also the full `Development Workflow
+   <https://github.com/sympy/sympy/wiki/Development-workflow>`_ guide on the
+   SymPy wiki.
 
 .. toctree::
    :hidden:

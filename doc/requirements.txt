@@ -6,6 +6,7 @@ mpmath
 myst-parser
 Sphinx
 sphinx-autobuild
+sphinx-design
 sphinx-copybutton
 sphinx-math-dollar
 sphinx-reredirects
@@ -15,4 +16,3 @@ sphinxcontrib-htmlhelp
 sphinxcontrib-jsmath
 sphinxcontrib-qthelp
 sphinxcontrib-serializinghtml
-sphinx-reredirects
