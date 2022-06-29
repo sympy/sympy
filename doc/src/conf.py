@@ -47,7 +47,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
 # https://documatt.gitlab.io/sphinx-reredirects/usage.html
 
 redirects = {
-    "install": "guides/getting_started/install.html",
+    "guides/getting_started/install": "../../install.html",
     "documentation-style-guide": "contributing/documentation-style-guide.html",
     "gotchas": "explanation/gotchas.html",
     "special_topics/classification": "../explanation/classification.html",
