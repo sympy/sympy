@@ -13,7 +13,6 @@ For a deeper and elaborate exploration of other SymPy topics, see the
 .. toctree::
    :maxdepth: 2
 
-   getting_started/index.rst
    assumptions.rst
    booleans.rst
    custom-functions.md

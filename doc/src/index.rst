@@ -14,6 +14,11 @@ This is the central page for all of SymPy's documentation.
 
 ==================================================================
 
+:ref:`Installation <installation>`
+----------------------------------
+
+Instructions on how to install SymPy.
+
 :ref:`Tutorials <tutorials>`
 ----------------------------
 
@@ -50,6 +55,7 @@ SymPy wiki.
 .. toctree::
    :hidden:
 
+   install.md
    tutorials/index.rst
    guides/index.rst
    explanation/index.rst
