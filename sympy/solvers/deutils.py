@@ -126,7 +126,7 @@ def ode_order(expr, func):
             rv = len(expr.variables)
             if args:
                 rv += max(ode_order(_, func) for _ in args)
-             return rv
+            return rv
     else:
         return max(ode_order(_, func) for _ in expr.args) if expr.args else 0
 
