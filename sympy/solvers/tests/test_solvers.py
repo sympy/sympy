@@ -30,9 +30,8 @@ from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.bivariate import _filtered_gens, _solve_lambert, _lambert
-from sympy.solvers.solvers import (_invert, unrad, checksol, posify,
-    _ispow, det_quick, det_perm, det_minor, _simple_dens, denoms,
-    coefficient_system)
+from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow, \
+    det_quick, det_perm, det_minor, _simple_dens, denoms
 
 from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
@@ -53,7 +52,7 @@ def test_swap_back():
     assert solve([fx + y - 2, fx - gx - 5], fx, y, gx) == \
         {fx: gx + 5, y: -gx - 3}
     assert solve(fx + gx*x - 2, [fx, gx], dict=True)[0] == {fx: 2, gx: 0}
-    assert solve(fx + gx**2*x - y, [fx, gx], dict=True)[0] == {gx: 0, fx: y}
+    assert solve(fx + gx**2*x - y, [fx, gx], dict=True) == [{fx: y - gx**2*x}]
     assert solve([f(1) - 2, x + 2], dict=True) == [{x: -2, f(1): 2}]
 
 
@@ -137,15 +136,15 @@ def test_solve_args():
     assert solve(y - 3, {y}) == [3]
     # more than 1
     assert solve(y - 3, {x, y}) == [{y: 3}]
-    # no symbols are given: find solution for each factor
+    # multiple symbols: take the first linear solution+
+    # - return as tuple with values for all requested symbols
+    assert solve(x + y - 3, [x, y]) == [(3 - y, y)]
+    # - unless dict is True
+    assert solve(x + y - 3, [x, y], dict=True) == [{x: 3 - y}]
+    # - or no symbols are given
     assert solve(x + y - 3) == [{x: 3 - y}]
-    # multiple symbols: return first solution (linear if possible)
-    assert solve(x + y - 3, [x, y]) == [{x: 3 - y}]
-    # multiple symbols might represent a coefficients system
-    # - that is linear
+    # multiple symbols might represent an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
-    assert solve((a*x + b*x - b + d), (a, b)) == {a: -d, b: d}
-    # this is nonlinear
     args = (a + b)*x - b**2 + 2, a, b
     assert solve(*args) == \
         [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
@@ -156,13 +155,13 @@ def test_solve_args():
     eq = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
     flags = dict(dict=True)
     assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
-        [{h: -b/(2*a), k: (4*a*c - b**2)/(4*a), p: 1/(4*a)}]
+        [{k: c - b**2/(4*a), h: -b/(2*a), p: 1/(4*a)}]
     flags.update(dict(simplify=False))
     assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
-        [{h: -b/(2*a), p: 1/(4*a), k: (4*a*c - b**2)/(4*a)}]
+        [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
     # failing undetermined system
-    assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b, dict=True) == [
-        {a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
+    assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b, dict=True) == \
+        [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
     # failed single equation
     assert solve(1/(1/x - y + exp(y))) == []
     raises(
@@ -719,13 +718,10 @@ def test_solve_undetermined_coeffs():
     # Test that rational functions work
     assert solve_undetermined_coeffs(a/x + b/(x + 1) - (2*x + 1)/(x**2 + x), [a, b], x) == \
         {a: 1, b: 1}
-    # Test cancellation in rational functions  # XXX is this an important feature?
+    # Test cancellation in rational functions
     assert solve_undetermined_coeffs(((c + 1)*a*x**2 + (c + 1)*b*x**2 +
     (c + 1)*b*x + (c + 1)*2*c*x + (c + 1)**2)/(c + 1), [a, b, c], x) == \
         {a: -2, b: 2, c: -1}
-    # reject non-linear cases; let user create their own set of equations
-    # to solve or else pass the system to solve
-    assert solve_undetermined_coeffs(a**2*x - 4*x + b - 3, (a, b), x) is None
 
 
 def test_solve_inequalities():
@@ -782,8 +778,8 @@ def test_issue_4793():
     ans = solve(eq, x)
     assert len(ans) == 5 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
     assert solve(log(x**2) - y**2/exp(x), x, y, set=True) == (
-        [y],
-        {(-sqrt(exp(x)*log(x**2)),), (sqrt(exp(x)*log(x**2)),)})
+        [x, y],
+        {(x, sqrt(exp(x) * log(x ** 2))), (x, -sqrt(exp(x) * log(x ** 2)))})
     assert solve(x**2*z**2 - z**2*y**2) == [{x: -y}, {x: y}, {z: 0}]
     assert solve((x - 1)/(1 + 1/(x - 1))) == []
     assert solve(x**(y*z) - x, x) == [1]
@@ -1464,12 +1460,12 @@ def test_issue_5901():
     assert solve([f(x) - 3*f(x).diff(x)], f(x)) == \
         {f(x): 3*D}
     assert solve([f(x) - 3*f(x).diff(x), f(x)**2 - y + 4], f(x), y) == \
-        [(3*D, 9*D**2 + 4)]
+        [{f(x): 3*D, y: 9*D**2 + 4}]
     assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
-                h(a), g(a), set=True) == (
-        [h(a)], {
-        (-sqrt(g(a)**2*f(a)**2 - G)/f(a),),
-        (sqrt(g(a)**2*f(a)**2 - G)/f(a),)})
+                h(a), g(a), set=True) == \
+        ([g(a)], {
+        (-sqrt(h(a)**2*f(a)**2 + G)/f(a),),
+        (sqrt(h(a)**2*f(a)**2+ G)/f(a),)})
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert set(solve(*args)) == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}
@@ -1658,6 +1654,7 @@ def test_minsolve_linear_system():
     # and give a good error message if someone tries to use
     # particular with a single equation
     raises(ValueError, lambda: solve(x + 1, particular=True))
+
 
 
 def test_real_roots():
@@ -2506,34 +2503,17 @@ def test_issue_22717():
 
 
 def test_issue_10169():
-    _1 = 2**(S(1)/4)
-    _2 = _1**3
-    eq = S(-8*a - x**5*(a + b + c + e) - x**4*(4*a - _2*c + 4*c +
-        d + _2*e + 4*e + k) - x**3*(-4*_2*c + sqrt(2)*c -
-        _2*d + 4*d + sqrt(2)*e + 4*_2*e + _2*k + 4*k) -
-        x**2*(4*sqrt(2)*c - 4*_2*d + sqrt(2)*d + 4*sqrt(2)*e +
-        sqrt(2)*k + 4*_2*k) - x*(2*a + 2*b + 4*sqrt(2)*d +
+    eq = S(-8*a - x**5*(a + b + c + e) - x**4*(4*a - 2**Rational(3,4)*c + 4*c +
+        d + 2**Rational(3,4)*e + 4*e + k) - x**3*(-4*2**Rational(3,4)*c + sqrt(2)*c -
+        2**Rational(3,4)*d + 4*d + sqrt(2)*e + 4*2**Rational(3,4)*e + 2**Rational(3,4)*k + 4*k) -
+        x**2*(4*sqrt(2)*c - 4*2**Rational(3,4)*d + sqrt(2)*d + 4*sqrt(2)*e +
+        sqrt(2)*k + 4*2**Rational(3,4)*k) - x*(2*a + 2*b + 4*sqrt(2)*d +
         4*sqrt(2)*k) + 5)
     assert solve_undetermined_coeffs(eq, [a, b, c, d, e, k], x) == {
-        a: S(5)/8,
-        b: -S(5)/1032,
-        c: -S(40)/129 - 5*_2/129 + 5*_1/1032,
-        d: -20*_2/129 - 10*sqrt(2)/129 - 5*_1/258,
-        e: -S(40)/129 - 5*_1/1032 + 5*_2/129,
-        k: -10*sqrt(2)/129 + 5*_1/258 + 20*_2/129
+        a: Rational(5,8),
+        b: Rational(-5,1032),
+        c: Rational(-40,129) - 5*2**Rational(3,4)/129 + 5*2**Rational(1,4)/1032,
+        d: -20*2**Rational(3,4)/129 - 10*sqrt(2)/129 - 5*2**Rational(1,4)/258,
+        e: Rational(-40,129) - 5*2**Rational(1,4)/1032 + 5*2**Rational(3,4)/129,
+        k: -10*sqrt(2)/129 + 5*2**Rational(1,4)/258 + 20*2**Rational(3,4)/129
     }
-
-
-def test_coefficient_system():
-    assert coefficient_system(y*(a*x + b + c), [a, b, c]) == {a, b + c}
-    assert coefficient_system(a*x + b + c, [a, b]) == {a, b + c}
-    assert coefficient_system(a*x + b*y, [a, b]) == {a, b}
-    assert coefficient_system(a*x + b*y + a*x*y + x*y, [a, b]) == {
-        a, b, a + 1}  # has no solution but these are valid coeffs
-    assert coefficient_system(a*x + b*y + c, [a, b, c]) == {a, b, c}
-    assert coefficient_system(a**2*x + b + c, [a, b]) == {a**2, b + c}
-    assert coefficient_system(a*x + b + c, [a, b, c]) == {a, b + c}
-    assert coefficient_system(a*(1 + x)**2 + b + 2*(1 + x)**2 - 3,
-        [a, b]) == {a + 2, 2*a + 4, a + b - 1}
-    assert coefficient_system(a + b + 2*x + 1, (a, b)) is None
-    assert coefficient_system(a*b + b**2*x*(a + x), (a, b)) == {b**2, a*b**2, a*b}
