@@ -206,6 +206,13 @@ The `sympy.physics.units.dimensions.DimensionSystem.dim` function is deprecated.
 
 This function returned number of dimensions in base dimensions.Use properties instead.
 
+(print-dim-base-deprecated)=
+### `sympy.physics.units.dimensions.DimensionSystem.print_dim_base`
+
+The `sympy.physics.units.dimensions.DimensionSystem.print_dim_base` function is deprecated.
+
+This function the string expression of a dimension in term of the basis symbols.The base and derive dimensions are used instead.
+
 (is-consistent-deprecated)=
 ### `sympy.physics.units.dimensions.DimensionSystem.is_consistent`
 
