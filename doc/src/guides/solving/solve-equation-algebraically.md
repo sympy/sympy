@@ -53,13 +53,13 @@ Use the fact that any expression not in an `Eq` (equation) is automatically assu
 
 Put your equation into `Eq` form, then apply {func}`~.solve` to the `Eq`. This approach is convenient if you are interactively solving an equation which cannot easily be rearranged to $expression = 0$.
     
-    ```py
-    >>> from sympy import solve, Eq
-    >>> from sympy.abc import x, y
-    >>> eqn = Eq(x**2, y)
-    >>> solve(eqn, x)
-    [-sqrt(y), sqrt(y)]
-    ```
+```py
+>>> from sympy import solve, Eq
+>>> from sympy.abc import x, y
+>>> eqn = Eq(x**2, y)
+>>> solve(eqn, x)
+[-sqrt(y), sqrt(y)]
+```
     
 ### Parse a string representing the equation
 
@@ -144,9 +144,15 @@ Use the fact that any expression not in an `Eq` (equation) is automatically assu
 {-sqrt(y), sqrt(y)}
 ```
 
+### Put your equation into `Eq` form
+*adapt solve() example*
+
+### Parse a string representing the equation
+*adapt solve() example*
+
 ### {func}`~.solveset` can return infinitely many solutions when {func}`~.solve` cannot
 
-{func}`~.solveset` can return infinitely many solutions and express them in standard mathematical notation, for example $\sin(x) = 0$ for $x = n * \pi$ for every integer value of $n$:
+{func}`~.solveset` [can return infinitely many solutions](https://docs.sympy.org/dev/modules/solvers/solveset.html?highlight=solveset#why-solveset) and express them in standard mathematical notation, for example $\sin(x) = 0$ for $x = n * \pi$ for every integer value of $n$:
 
 ```py
 >>> from sympy import sin, solve
@@ -156,7 +162,7 @@ Use the fact that any expression not in an `Eq` (equation) is automatically assu
 {2⋅n⋅π │ n ∊ ℤ} ∪ {2⋅n⋅π + π │ n ∊ ℤ}
 ```
 
-where $\mathbb{Z}$ represents the set of integers. However, {func}`~.solve` will only return a finite number of solutions:
+where $\mathbb{Z}$ represents the set of integers. However, {func}`~.solve` will return only a finite number of solutions (two):
 
 ```py
 >>> from sympy import sin, solve
