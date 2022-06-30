@@ -2184,7 +2184,9 @@ def from_hyper(func, x0=0, evalf=False):
 
     # generalized hypergeometric differential equation
     xDx = x*Dx
-    r1 = Mul(*[xDx + ai for ai in a])
+    r1 = 1
+    for ai in a:  # XXX gives sympify error if Mul is used with list of all factors
+        r1 *= xDx + ai
     xDx_1 = xDx - 1
     # r2 = Mul(*([Dx] + [xDx_1 + bi for bi in b]))  # XXX gives sympify error
     r2 = Dx
@@ -2264,7 +2266,9 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
     # Meijer G-function.
     xDx = x*Dx
     xDx1 = xDx + 1
-    r1 = Mul(*([x*(-1)**(m + n - p)] + [xDx1 - ai for ai in a]))
+    r1 = x*(-1)**(m + n - p)
+    for ai in a:  # XXX gives sympify error if args given in list
+        r1 *= xDx1 - ai
     # r2 = Mul(*[xDx - bi for bi in b])  # gives sympify error
     r2 = 1
     for bi in b:
