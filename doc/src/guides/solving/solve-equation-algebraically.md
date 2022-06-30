@@ -159,7 +159,7 @@ Use the fact that any expression not in an `Eq` (equation) is automatically assu
 >>> from sympy.abc import x
 >>> solution = solveset(sin(x), x)
 >>> pprint(solution)
-{2⋅n⋅π │ n ∊ ℤ} ∪ {2⋅n⋅π + π │ n ∊ ℤ}
+{2*n*pi | n in Integers} U {2*n*pi + pi | n in Integers}
 ```
 
 where $\mathbb{Z}$ represents the set of integers. However, {func}`~.solve` will return only a finite number of solutions (two):
