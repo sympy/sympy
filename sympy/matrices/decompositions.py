@@ -1315,8 +1315,8 @@ def _singular_value_decomposition(A):
 
         S = S.zeros(len(Singular_vals))
 
-        for i in range(len(Singular_vals)):
-            S[i, i] = Singular_vals[i]
+        for i, sv in enumerate(Singular_vals):
+            S[i, i] = sv
 
         V, _ = V.QRdecomposition()
         U = A * V * S.inv()
@@ -1333,8 +1333,8 @@ def _singular_value_decomposition(A):
 
         S = S.zeros(len(Singular_vals))
 
-        for i in range(len(Singular_vals)):
-            S[i, i] = Singular_vals[i]
+        for i, sv in enumerate(Singular_vals):
+            S[i, i] = sv
 
         U, _ = U.QRdecomposition()
         V = AH * U * S.inv()

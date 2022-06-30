@@ -138,10 +138,7 @@ class RootSystem(Atom):
             raise ValueError("You've used a root that doesn't exist!")
         a1 = alpha[root1]
         a2 = alpha[root2]
-        newroot = []
-        length = len(a1)
-        for i in range(length):
-            newroot.append(a1[i] + a2[i])
+        newroot = [_a1 + _a2 for _a1, _a2 in zip(a1, a2)]
         return newroot
 
     def add_as_roots(self, root1, root2):
@@ -164,9 +161,7 @@ class RootSystem(Atom):
 
         """
         alpha = self.all_roots()
-        newroot = []
-        for entry in range(len(root1)):
-            newroot.append(root1[entry] + root2[entry])
+        newroot = [r1 + r2 for r1, r2 in zip(root1, root2)]
         if newroot in alpha.values():
             return newroot
         else:

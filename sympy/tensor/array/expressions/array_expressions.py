@@ -621,7 +621,7 @@ class PermuteDims(_CodegenArrayAbstract):
         # Get possible shifts:
         maps = {}
         cumulative_subranks = [0] + list(accumulate(subranks))
-        for i in range(0, len(subranks)):
+        for i in range(len(subranks)):
             s = set([index2arg[new_permutation[j]] for j in range(cumulative_subranks[i], cumulative_subranks[i+1])])
             if len(s) != 1:
                 continue
@@ -669,7 +669,7 @@ class PermuteDims(_CodegenArrayAbstract):
         cyclic_keep = []
         for i, cycle in enumerate(cyclic_form):
             flag = True
-            for j in range(0, len(cumulative_subranks) - 1):
+            for j in range(len(cumulative_subranks) - 1):
                 if cyclic_min[i] >= cumulative_subranks[j] and cyclic_max[i] < cumulative_subranks[j+1]:
                     # Found a sinkable cycle.
                     args[j] = _permute_dims(args[j], Permutation([[k - cumulative_subranks[j] for k in cyclic_form[i]]]))

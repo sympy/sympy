@@ -871,10 +871,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
 
     # Handle arguments
     orig_args = list(fun.args)
-    subs_args = []
-    for s in sep:
-        for j in range(0, len(s.args)):
-            subs_args.append(s.args[j])
+    subs_args = [arg for s in sep for arg in s.args]
 
     if do_add:
         functions = reduce(operator.add, sep)

@@ -776,8 +776,7 @@ def canonicalize(g, dummies, msym, *v):
     size = g.size
     num_tensors = 0
     v1 = []
-    for i in range(len(v)):
-        base_i, gens_i, n_i, sym_i = v[i]
+    for base_i, gens_i, n_i, sym_i in v:
         # check that the BSGS is minimal;
         # this property is used in double_coset_can_rep;
         # if it is not minimal use canonicalize_naive
@@ -819,9 +818,8 @@ def canonicalize(g, dummies, msym, *v):
     # Determine free_i, the list of slots of tensors which are fixed
     # since they are occupied by free indices, which are fixed.
     start = 0
-    for i in range(len(v)):
+    for i, (base_i, gens_i, n_i, sym_i) in enumerate(v):
         free_i = []
-        base_i, gens_i, n_i, sym_i = v[i]
         len_tens = gens_i[0].size - 2
         # for each component tensor get a list od fixed islots
         for j in range(n_i):
