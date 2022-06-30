@@ -553,6 +553,9 @@ class DimensionSystem(Basic, _QuantityMapper):
         """
         Give the string expression of a dimension in term of the basis symbols.
         """
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="print-dim-base-deprecated")
         dims = self.dim_vector(dim)
         symbols = [i.symbol if i.symbol is not None else i.name for i in self.base_dims]
         res = S.One
