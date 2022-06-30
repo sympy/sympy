@@ -995,22 +995,22 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                     AppliedUndef) and deriv.args[0].func == f and
                     len(deriv.args[0].args) == 1 and old == x and not
                     new.has(x) and all(i == deriv.variables[0] for i in
-                    deriv.variables) and not ics[funcarg].has(f)):
+                    deriv.variables) and x not in ics[funcarg].free_symbols):
 
                     dorder = ode_order(deriv, x)
                     temp = 'f' + str(dorder)
                     boundary.update({temp: new, temp + 'val': ics[funcarg]})
                 else:
-                    raise ValueError("Enter valid boundary conditions for Derivatives")
+                    raise ValueError("Invalid boundary conditions for Derivatives")
 
 
             # Separating functions
             elif isinstance(funcarg, AppliedUndef):
                 if (funcarg.func == f and len(funcarg.args) == 1 and
-                    not funcarg.args[0].has(x) and not ics[funcarg].has(f)):
+                    not funcarg.args[0].has(x) and x not in ics[funcarg].free_symbols):
                     boundary.update({'f0': funcarg.args[0], 'f0val': ics[funcarg]})
                 else:
-                    raise ValueError("Enter valid boundary conditions for Function")
+                    raise ValueError("Invalid boundary conditions for Function")
 
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point): value, f(x).diff(x, order).subs(x, point): value}")
