@@ -155,7 +155,7 @@ Use the fact that any expression not in an `Eq` (equation) is automatically assu
 {func}`~.solveset` [can return infinitely many solutions](https://docs.sympy.org/dev/modules/solvers/solveset.html?highlight=solveset#why-solveset) and express them in standard mathematical notation, for example $\sin(x) = 0$ for $x = n * \pi$ for every integer value of $n$:
 
 ```py
->>> from sympy import sin, solve
+>>> from sympy import pprint, sin, solveset
 >>> from sympy.abc import x
 >>> solution = solveset(sin(x), x)
 >>> pprint(solution)
