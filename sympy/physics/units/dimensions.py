@@ -490,6 +490,9 @@ class DimensionSystem(Basic, _QuantityMapper):
         to get them in this basis. Nonetheless if this matrix is not square
         (or not invertible) it means that we have chosen a bad basis.
         """
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="inv-can-transf-matrix-deprecated")
         matrix = reduce(lambda x, y: x.row_join(y),
                         [self.dim_can_vector(d) for d in self.base_dims])
         return matrix
@@ -509,6 +512,9 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         #TODO: the inversion will fail if the system is inconsistent, for
         #      example if the matrix is not a square
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="can-transf-matrix-deprecated")
         return reduce(lambda x, y: x.row_join(y),
                       [self.dim_can_vector(d) for d in sorted(self.base_dims, key=str)]
                       ).inv()
@@ -521,7 +527,9 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         Dimensional representation in terms of the canonical base dimensions.
         """
-
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-can-vector-deprecated")
         vec = []
         for d in self.list_can_dims:
             vec.append(self.get_dimensional_dependencies(dim).get(d, 0))
@@ -536,6 +544,9 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         Vector representation in terms of the base dimensions.
         """
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-vector-deprecated")
         return self.can_transf_matrix * Matrix(self.dim_can_vector(dim))
 
     def print_dim_base(self, dim):
@@ -560,6 +571,9 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         That is return the number of dimensions forming the basis.
         """
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-deprecated")
         return len(self.base_dims)
 
     @property
@@ -575,4 +589,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         # not enough or too many base dimensions compared to independent
         # dimensions
         # in vector language: the set of vectors do not form a basis
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="is-consistent-deprecated")
         return self.inv_can_transf_matrix.is_square
