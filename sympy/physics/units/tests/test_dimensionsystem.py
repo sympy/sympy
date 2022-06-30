@@ -33,6 +33,7 @@ def test_dim_can_vector():
     )
     with warns_deprecated_sympy():
         assert dimsys.dim_can_vector(length) == Matrix([1, 0, 0])
+    with warns_deprecated_sympy():
         assert dimsys.dim_can_vector(velocity) == Matrix([1, 0, -1])
 
     dimsys = DimensionSystem(
@@ -44,7 +45,9 @@ def test_dim_can_vector():
     )
     with warns_deprecated_sympy():
         assert dimsys.dim_can_vector(length) == Matrix([0, 1, 0])
+    with warns_deprecated_sympy():
         assert dimsys.dim_can_vector(velocity) == Matrix([0, 0, 1])
+    with warns_deprecated_sympy():
         assert dimsys.dim_can_vector(time) == Matrix([0, 1, -1])
 
     dimsys = DimensionSystem(
@@ -54,6 +57,7 @@ def test_dim_can_vector():
          action: {mass: 1, length: 2, time: -1}})
     with warns_deprecated_sympy():
         assert dimsys.dim_vector(length) == Matrix([1, 0, 0])
+    with warns_deprecated_sympy():
         assert dimsys.dim_vector(velocity) == Matrix([1, 0, -1])
 
 
