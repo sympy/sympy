@@ -63,7 +63,8 @@ Put your equation into `Eq` form, then apply {func}`~.solve` to the `Eq`. This a
     
 ### Parse a string representing the equation
 
-Parse a string representing the equation into a form that SymPy can understand (`Eq` form), then apply {func}`~.solve` to the parsed expression.  This approach is convenient if you are programmatically reading in a string. We [recommend against using parsing a string if you are creating the expression yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).  
+Parse a string representing the equation into a form that SymPy can understand (`Eq` form), then apply {func}`~.solve` to the parsed expression.  This approach is convenient if you are programmatically reading in a string. We [recommend against using parsing a string if you are creating the expression yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input). Parsing an equation from a string requires you to use [transformations](https://docs.sympy.org/dev/modules/parsing.html?highlight=parse_expr#sympy.parsing.sympy_parser.parse_expr) for SymPy to handle equals signs and create symbols from your variables.
+
 You should always include the variable to solve for if you want to extract results programmatically, to ensure that SymPy solves for the desired variable. To ensure SymPy will produce results in a consistent format, use `dict=True`. To extract the solutions, you can iterate through the list of dictionaries:  
     
 ```py
@@ -141,6 +142,28 @@ Use the fact that any expression not in an `Eq` (equation) is automatically assu
 >>> solution = solveset(x**2 - y, x)
 >>> print(solution)
 {-sqrt(y), sqrt(y)}
+```
+
+### {func}`~.solveset` can return infinitely many solutions when {func}`~.solve` cannot
+
+{func}`~.solveset` can return infinitely many solutions and express them in standard mathematical notation, for example $\sin(x) = 0$ for $x = n * \pi$ for every integer value of $n$:
+
+```py
+>>> from sympy import sin, solve
+>>> from sympy.abc import x
+>>> solution = solveset(sin(x), x)
+>>> pprint(solution)
+{2⋅n⋅π │ n ∊ ℤ} ∪ {2⋅n⋅π + π │ n ∊ ℤ}
+```
+
+where $\mathbb{Z}$ represents the set of integers. However, {func}`~.solve` will only return a finite number of solutions:
+
+```py
+>>> from sympy import sin, solve
+>>> from sympy.abc import x
+>>> solution = solve(sin(x), x)
+>>> print(solution)
+[0, pi]
 ```
 
 ### Restricting the domain of solutions using {func}`~.solveset`
