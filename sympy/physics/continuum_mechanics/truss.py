@@ -206,7 +206,7 @@ class Truss:
             members_duplicate = self._members.copy()
             for member in members_duplicate:
                 if label == self._member_nodes[member[0]][0] or label == self._member_nodes[member[0]][1]:
-                    self.remove_member(member[0])
+                    raise ValueError("The node given has members already attached to it")
             self._nodes.remove((label, x, y))
             self._node_labels.remove(label)
             self._node_positions.remove((x, y))
