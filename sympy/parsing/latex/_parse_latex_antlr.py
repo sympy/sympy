@@ -429,15 +429,15 @@ def convert_func(func):
         if name == "exp":
             expr = sympy.exp(arg, evaluate=False)
 
-        if (name == "log" or name == "ln"):
+        if name in ("log", "lg", "ln"):
             if func.subexpr():
                 if func.subexpr().expr():
                     base = convert_expr(func.subexpr().expr())
                 else:
                     base = convert_atom(func.subexpr().atom())
-            elif name == "log":
+            elif name == "lg":  # ISO 80000-2:2019
                 base = 10
-            elif name == "ln":
+            elif name in ("ln", "log"):  # SymPy's latex printer prints ln as log by default
                 base = sympy.E
             expr = sympy.log(arg, base, evaluate=False)
 

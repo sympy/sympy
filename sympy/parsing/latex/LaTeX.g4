@@ -81,6 +81,7 @@ FUNC_PROD: '\\prod';
 
 FUNC_EXP: '\\exp';
 FUNC_LOG: '\\log';
+FUNC_LG: '\\lg';
 FUNC_LN: '\\ln';
 FUNC_SIN: '\\sin';
 FUNC_COS: '\\cos';
@@ -256,6 +257,7 @@ ceil: L_CEIL val = expr R_CEIL;
 func_normal:
 	FUNC_EXP
 	| FUNC_LOG
+	| FUNC_LG
 	| FUNC_LN
 	| FUNC_SIN
 	| FUNC_COS
