@@ -145,10 +145,49 @@ Use the fact that any expression not in an `Eq` (equation) is automatically assu
 ```
 
 ### Put your equation into `Eq` form
-*adapt solve() example*
+
+Put your equation into `Eq` form, then apply {func}`~.solveset` to the `Eq`. This approach is convenient if you are interactively solving an equation which cannot easily be rearranged to $expression = 0$.
+
+```py
+>>> from sympy import Eq, solveset
+>>> from sympy.abc import x, y
+>>> eqn = Eq(x**2, y)
+>>> solution = solveset(eqn, x)
+>>> print(solution)
+{-sqrt(y), sqrt(y)}
+```
 
 ### Parse a string representing the equation
-*adapt solve() example*
+Parse a string representing the equation into a form that SymPy can understand (`Eq` form), then apply {func}`~.solveset` to the parsed expression.  This approach is convenient if you are programmatically reading in a string. We [recommend against using parsing a string if you are creating the expression yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input). Parsing an equation from a string requires you to use [transformations](https://docs.sympy.org/dev/modules/parsing.html?highlight=parse_expr#sympy.parsing.sympy_parser.parse_expr) for SymPy to handle equals signs and create symbols from your variables.
+
+You should always include the variable to solve for if you want to extract results programmatically, to ensure that SymPy solves for the desired variable.  
+    
+```py
+>>> from sympy import parse_expr, solveset
+>>> from sympy.abc import x
+>>> from sympy.parsing.sympy_parser import convert_equals_signs, standard_transformations
+>>> expr = "x ** 2 = y"
+>>> parsed = parse_expr(expr, transformations=standard_transformations + (convert_equals_signs,))
+>>> print(parsed)
+Eq(x**2, y)
+>>> solutions = solveset(parsed, x)
+>>> print(solutions)
+{-sqrt(y), sqrt(y)}
+```
+
+If you already have the equation in `Eq` form, you can parse that string:
+
+```py
+>>> from sympy import parse_expr, solveset
+>>> from sympy.abc import x
+>>> expr = "Eq(x**2, y)"
+>>> parsed = parse_expr(expr)
+>>> print(parsed)
+Eq(x**2, y)
+>>> solutions = solveset(parsed, x)
+>>> print(solutions)
+{-sqrt(y), sqrt(y)}
+```
 
 ### {func}`~.solveset` can return infinitely many solutions when {func}`~.solve` cannot
 
