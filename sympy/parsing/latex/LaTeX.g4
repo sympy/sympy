@@ -132,10 +132,7 @@ fragment WS_CHAR: [ \t\r\n];
 DIFFERENTIAL: 'd' WS_CHAR*? ([a-zA-Z] | '\\' [a-zA-Z]+);
 
 LETTER: [a-zA-Z];
-fragment DIGIT: [0-9];
-NUMBER:
-	DIGIT+ (',' DIGIT DIGIT DIGIT)*
-	| DIGIT* (',' DIGIT DIGIT DIGIT)* '.' DIGIT+;
+DIGIT: [0-9];
 
 EQUAL: (('&' WS_CHAR*?)? '=') | ('=' (WS_CHAR*? '&')?);
 NEQ: '\\neq';
@@ -230,8 +227,10 @@ group:
 
 abs_group: BAR expr BAR;
 
+number: DIGIT+ (',' DIGIT DIGIT DIGIT)* ('.' DIGIT+)?;
+
 atom: (LETTER | SYMBOL) (subexpr? SINGLE_QUOTES? | SINGLE_QUOTES? subexpr?)
-	| NUMBER
+	| number
 	| DIFFERENTIAL
 	| mathit
 	| frac
@@ -245,8 +244,8 @@ ket: (L_BAR | BAR) expr R_ANGLE;
 mathit: CMD_MATHIT L_BRACE mathit_text R_BRACE;
 mathit_text: LETTER*;
 
-frac:
-	CMD_FRAC L_BRACE upper = expr R_BRACE L_BRACE lower = expr R_BRACE;
+frac: CMD_FRAC (upperd = DIGIT | L_BRACE upper = expr R_BRACE)
+    (lowerd = DIGIT | L_BRACE lower = expr R_BRACE);
 
 binom:
 	(CMD_BINOM | CMD_DBINOM | CMD_TBINOM) L_BRACE n = expr R_BRACE L_BRACE k = expr R_BRACE;
