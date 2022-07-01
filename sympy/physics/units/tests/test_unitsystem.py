@@ -7,7 +7,6 @@ from sympy.physics.units.definitions.dimension_definitions import length, time
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.unitsystem import UnitSystem
 from sympy.physics.units.util import convert_to
-from sympy.testing.pytest import warns_deprecated_sympy
 
 
 def test_definition():
@@ -63,8 +62,7 @@ def test_dim():
 def test_is_consistent():
     dimension_system = DimensionSystem([length, time])
     us = UnitSystem([m, s], dimension_system=dimension_system)
-    with warns_deprecated_sympy():
-        assert us.is_consistent == True
+    assert us.is_consistent == True
 
 
 def test_get_units_non_prefixed():
