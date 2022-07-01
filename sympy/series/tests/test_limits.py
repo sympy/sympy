@@ -20,7 +20,7 @@ from sympy.functions.special.error_functions import (Ei, erf, erfc, erfi, fresne
 from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma)
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.series.limits import (Limit, limit)
-from sympy.simplify.simplify import simplify
+from sympy.simplify.simplify import (logcombine, simplify)
 
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
@@ -606,6 +606,10 @@ def test_issue_6364():
     assert limit(e, z, 0) == 1/(cos(a)**2 - S.Half)
 
 
+def test_issue_6682():
+    assert limit(exp(2*Ei(-x))/x**2, x, 0) == exp(2*EulerGamma)
+
+
 def test_issue_4099():
     a = Symbol('a')
     assert limit(a/x, x, 0) == oo*sign(a)
@@ -1078,6 +1082,31 @@ def test_issue_20578():
     assert limit(expr,x,0,'+-') == 0
 
 
+def test_issue_21227():
+    f = log(x)
+
+    assert f.nseries(x, logx=y) == y
+    assert f.nseries(x, logx=-x) == -x
+
+    f = log(-log(x))
+
+    assert f.nseries(x, logx=y) == log(-y)
+    assert f.nseries(x, logx=-x) == log(x)
+
+    f = log(log(x))
+
+    assert f.nseries(x, logx=y) == log(y)
+    assert f.nseries(x, logx=-x) == log(-x)
+    assert f.nseries(x, logx=x) == log(x)
+
+    f = log(log(log(1/x)))
+
+    assert f.nseries(x, logx=y) == log(log(-y))
+    assert f.nseries(x, logx=-y) == log(log(y))
+    assert f.nseries(x, logx=x) == log(log(-x))
+    assert f.nseries(x, logx=-x) == log(log(x))
+
+
 def test_issue_21415():
     exp = (x-1)*cos(1/(x-1))
     assert exp.limit(x,1) == 0
@@ -1123,6 +1152,32 @@ def test_issue_22181():
     assert limit((-1)**x * 2**(-x), x, oo) == 0
 
 
+def test_issue_22220():
+    e1 = sqrt(30)*atan(sqrt(30)*tan(x/2)/6)/30
+    e2 = sqrt(30)*I*(-log(sqrt(2)*tan(x/2) - 2*sqrt(15)*I/5) +
+                     +log(sqrt(2)*tan(x/2) + 2*sqrt(15)*I/5))/60
+
+    assert limit(e1, x, -pi) == -sqrt(30)*pi/60
+    assert limit(e2, x, -pi) == -sqrt(30)*pi/30
+
+    assert limit(e1, x, -pi, '-') == sqrt(30)*pi/60
+    assert limit(e2, x, -pi, '-') == 0
+
+    # test https://github.com/sympy/sympy/issues/22220#issuecomment-972727694
+    expr = log(x - I) - log(-x - I)
+    expr2 = logcombine(expr, force=True)
+    assert limit(expr, x, oo) == limit(expr2, x, oo) == I*pi
+
+    # test https://github.com/sympy/sympy/issues/22220#issuecomment-1077618340
+    expr = expr = (-log(tan(x/2) - I) +log(tan(x/2) + I))
+    assert limit(expr, x, pi, '+') == 2*I*pi
+    assert limit(expr, x, pi, '-') == 0
+
+
 def test_issue_23231():
     f = (2**x - 2**(-x))/(2**x + 2**(-x))
     assert limit(f, x, -oo) == -1
+
+
+def test_issue_23596():
+    assert integrate(((1 + x)/x**2)*exp(-1/x), (x, 0, oo)) == oo

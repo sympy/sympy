@@ -463,17 +463,17 @@ class MinMaxBase(Expr, LatticeOp):
             # local zeros have not been handled yet, so look through
             # more than the first arg
             if cls == Min:
-                for i in range(len(args)):
-                    if not args[i].is_number:
+                for arg in args:
+                    if not arg.is_number:
                         break
-                    if (args[i] < small) == True:
-                        small = args[i]
+                    if (arg < small) == True:
+                        small = arg
             elif cls == Max:
-                for i in range(len(args)):
-                    if not args[i].is_number:
+                for arg in args:
+                    if not arg.is_number:
                         break
-                    if (args[i] > big) == True:
-                        big = args[i]
+                    if (arg > big) == True:
+                        big = arg
             T = None
             if cls == Min:
                 if small != Min.identity:

@@ -663,10 +663,12 @@ def compute_m_ybar(x, poles, choice, N):
 
     # Calculate the first (nested) summation for ybar
     # as given in Step 9 of the Thesis (Pg 82)
-    for i in range(len(poles)):
-        for j in range(len(choice[i])):
-            ybar += choice[i][j]/(x - poles[i])**(j+1)
-        m -= Poly(choice[i][0], x, extension=True)
+    dybar = []
+    for i, polei in enumerate(poles):
+        for j, cij in enumerate(choice[i]):
+            dybar.append(cij/(x - polei)**(j + 1))
+        m -=Poly(choice[i][0], x, extension=True)  # can't accumulate Poly and use with Add
+    ybar += Add(*dybar)
 
     # Calculate the second summation for ybar
     for i in range(N+1):

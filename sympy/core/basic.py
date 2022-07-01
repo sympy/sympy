@@ -968,10 +968,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             sequence = [(k, sequence[k]) for k in k]
             # do infinities first
             if not simultaneous:
-                redo = []
-                for i in range(len(sequence)):
-                    if sequence[i][1] in _illegal:  # nan, zoo and +/-oo
-                        redo.append(i)
+                redo = [i for i, seq in enumerate(sequence) if seq[1] in _illegal]
                 for i in reversed(redo):
                     sequence.insert(0, sequence.pop(i))
 

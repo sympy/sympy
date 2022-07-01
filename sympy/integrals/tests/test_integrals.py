@@ -15,8 +15,8 @@ from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, lo
 from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, coth, csch, sinh, tanh, sech)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
-from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan, sec)
+from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi, fresnelc, li)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
@@ -1724,7 +1724,7 @@ def test_issue_17473():
 def test_issue_17671():
     assert integrate(log(log(x)) / x**2, [x, 1, oo]) == -EulerGamma
     assert integrate(log(log(x)) / x**3, [x, 1, oo]) == -log(2)/2 - EulerGamma/2
-    assert integrate(log(log(x)) / x**10, [x, 1, oo]) == -2*log(3)/9 - EulerGamma/9
+    assert integrate(log(log(x)) / x**10, [x, 1, oo]) == -log(9)/9 - EulerGamma/9
 
 
 def test_issue_2975():
@@ -1892,6 +1892,12 @@ def test_issue_21024():
     assert F_true == integrate(f, x)
 
 
+def test_issue_21721():
+    a = Symbol('a')
+    assert integrate(1/(pi*(1+(x-a)**2)),(x,-oo,oo)).expand() == \
+    -Heaviside(im(a) - 1, 0) + Heaviside(im(a) + 1, 0)
+
+
 def test_issue_21831():
     theta = symbols('theta')
     assert integrate(cos(3*theta)/(5-4*cos(theta)), (theta, 0, 2*pi)) == pi/12
@@ -1971,6 +1977,10 @@ def test_hyperbolic():
     assert integrate(csch(x)) == log(tanh(x/2))
 
 
+def test_nested_pow():
+    assert integrate(sqrt(x**2)) == x*sqrt(x**2)/2
+
+
 def test_sqrt_quadratic():
     assert integrate(1/sqrt(3*x**2+4*x+5)) == sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3
     assert integrate(1/sqrt(-3*x**2+4*x+5)) == sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3
@@ -2005,3 +2015,10 @@ def test_sqrt_quadratic():
 
     assert integrate(x*sqrt(x**2+2*x+4)) == \
         (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2
+
+
+def test_mul_pow_derivative():
+    assert integrate(x*sec(x)*tan(x)) == x*sec(x) - log(tan(x) + sec(x))
+    assert integrate(x*sec(x)**2, x) == x*tan(x) + log(cos(x))
+    assert integrate(x**3*Derivative(f(x), (x, 4))) == \
+           x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) + 6*x*Derivative(f(x), x) - 6*f(x)

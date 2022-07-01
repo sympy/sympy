@@ -1880,7 +1880,7 @@ class PermutationGroup(Basic):
             if ranks:
                 pows = [1]*ranks[0]
                 for i in ranks:
-                    for j in range(0, i):
+                    for j in range(i):
                         pows[j] = pows[j]*p
                 inv.extend(pows)
         inv.sort()
@@ -4862,7 +4862,7 @@ class PermutationGroup(Basic):
             C_p.table[0][i] = 0
 
         gamma = 1
-        for alpha, x in product(range(0, n), range(2*len_g)):
+        for alpha, x in product(range(n), range(2*len_g)):
             beta = C[alpha][x]
             if beta == gamma:
                 gen = G_p.generators[x//2]**((-1)**(x % 2))

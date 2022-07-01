@@ -695,9 +695,9 @@ def gruntz(e, z, z0, dir="+"):
 
     # convert all limits to the limit z->oo; sign of z is handled in limitinf
     r = None
-    if z0 == oo:
+    if z0 in (oo, I*oo):
         e0 = e
-    elif z0 == -oo:
+    elif z0 in (-oo, -I*oo):
         e0 = e.subs(z, -z)
     else:
         if str(dir) == "-":

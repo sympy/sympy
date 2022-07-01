@@ -1480,8 +1480,8 @@ def modified_subresultants_pg(p, q, x):
 
     # apply Pell-Gordon formula (7) in second reference
     num = 1                                     # numerator of fraction
-    for k in range(len(u_list)):
-        num *= (-1)**u_list[k]
+    for u in u_list:
+        num *= (-1)**u
     num = num * (-1)**v
 
     # denominator depends on complete / incomplete seq
@@ -1539,8 +1539,8 @@ def modified_subresultants_pg(p, q, x):
 
         # apply Pell-Gordon formula (7) in second reference
         num = 1                              # numerator
-        for k in range(len(u_list)):
-            num *= (-1)**u_list[k]
+        for u in u_list:
+            num *= (-1)**u
         num = num * (-1)**v
 
         # denominator depends on complete / incomplete seq

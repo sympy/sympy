@@ -55,7 +55,7 @@ def find_simple_recurrence_vector(l):
 
     """
     q1 = [0]
-    q2 = [S.One]
+    q2 = [1]
     b, z = 0, len(l) >> 1
     while len(q2) <= z:
         while l[b]==0:
@@ -73,10 +73,10 @@ def find_simple_recurrence_vector(l):
         for k in range(b+1, len(l)):
             m.append(-sum(l[j+1]*m[b-j-1] for j in range(b, k))*a)
         l, m = m, [0] * max(len(q2), b+len(q1))
-        for k in range(len(q2)):
-            m[k] = a*q2[k]
-        for k in range(b, b+len(q1)):
-            m[k] += q1[k-b]
+        for k, q in enumerate(q2):
+            m[k] = a*q
+        for k, q in enumerate(q1):
+            m[k+b] += q
         while m[-1]==0: m.pop() # because trailing zeros can occur
         q1, q2, b = q2, m, 1
     return [0]

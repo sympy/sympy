@@ -1,3 +1,4 @@
+.. _ntheory-module:
 
 .. module:: sympy.ntheory.generate
 

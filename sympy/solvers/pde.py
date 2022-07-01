@@ -868,10 +868,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
 
     # Handle arguments
     orig_args = list(fun.args)
-    subs_args = []
-    for s in sep:
-        for j in range(0, len(s.args)):
-            subs_args.append(s.args[j])
+    subs_args = [arg for s in sep for arg in s.args]
 
     if do_add:
         functions = reduce(operator.add, sep)
@@ -979,14 +976,8 @@ def _separate(eq, dep, others):
     # current hack :(
     # https://github.com/sympy/sympy/issues/4597
     if len(div) > 0:
-        final = 0
-        for term in eq.args:
-            eqn = 0
-            for i in div:
-                eqn += term / i
-            final += simplify(eqn)
-        eq = final
-
+        # double sum required or some tests will fail
+        eq = Add(*[simplify(Add(*[term/i for i in div])) for term in eq.args])
     # SECOND PASS - separate the derivatives
     div = set()
     lhs = rhs = 0

@@ -1634,8 +1634,8 @@ def _AOP_product(n):
     else:
         rv[-1:] = rev
     d = defaultdict(int)
-    for i in range(len(rv)):
-        d[i] = rv[i]
+    for i, r in enumerate(rv):
+        d[i] = r
     return d
 
 
