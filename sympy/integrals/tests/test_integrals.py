@@ -1971,6 +1971,10 @@ def test_hyperbolic():
     assert integrate(csch(x)) == log(tanh(x/2))
 
 
+def test_nested_pow():
+    assert integrate(sqrt(x**2)) == x*sqrt(x**2)/2
+
+
 def test_sqrt_quadratic():
     assert integrate(1/sqrt(3*x**2+4*x+5)) == sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3
     assert integrate(1/sqrt(-3*x**2+4*x+5)) == sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3
