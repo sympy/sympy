@@ -479,9 +479,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         Useless method, kept for compatibility with previous versions.
 
         DO NOT USE.
-        
         .. deprecated:: 1.1
-        
         Compute the inverse transformation matrix from the base to the
         canonical dimension basis.
 
