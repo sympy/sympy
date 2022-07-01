@@ -33,7 +33,7 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 
 ## Using {func}`~.solve`
 
-- Produces various output formats depending on the answer
+- produces various output formats depending on the answer
     - unless you use `dict=True` to ensure the result will be formatted as a dictionary, which we recommend if you want to extract information from the result programmatically
 
 You can solve an equation using {func}`~.solve` in several ways.
@@ -128,9 +128,11 @@ If you want to restrict returned solutions to real numbers, you can place an ass
 
 ## Using {func}`~.solveset`
 
-- Produces outputs in the format of [SymPy mathematical Sets](https://docs.sympy.org/dev/modules/sets.html?highlight=sets#module-sympy.sets.sets) rather than [Python sets](https://docs.python.org/3/library/stdtypes.html#set)
+- produces outputs in the format of [SymPy mathematical Sets](https://docs.sympy.org/dev/modules/sets.html?highlight=sets#module-sympy.sets.sets) rather than [Python sets](https://docs.python.org/3/library/stdtypes.html#set)
 - can return infinitely many solutions
-- the solution set can be more difficult to parse programmatically *trig function as example*
+- the solution set can be more difficult to parse programmatically
+
+You can solve an equation using solve() in several ways.
 
 ### Make your equation into an expression that equals zero
 
@@ -201,7 +203,7 @@ Eq(x**2, y)
 {2*n*pi | n in Integers} U {2*n*pi + pi | n in Integers}
 ```
 
-where $\mathbb{Z}$ represents the set of integers. However, {func}`~.solve` will return only a finite number of solutions (two):
+However, {func}`~.solve` will return only a finite number of solutions (here, two):
 
 ```py
 >>> from sympy import sin, solve
@@ -237,12 +239,12 @@ If you want to restrict returned solutions to real numbers, you can specify the 
 
 ### Equations with no solution
 
-Some equations have no solution, in which case SymPy may return an empty set. For example, the following equation reduces to -7 = 2, which has no solution because no value of $x$ will make it true:
+Some equations have no solution, in which case SymPy may return an empty set. For example, the equation $x - 7 = x + 2$ reduces to $-7 = 2$, which has no solution because no value of $x$ will make it true:
 
 ```py
 >>> from sympy import solve, Eq
 >>> from sympy.abc import x
->>> eqn = Eq(3 * x - 7, 3 * x + 2)
+>>> eqn = Eq(x - 7, x + 2)
 >>> solve(eqn)
 []
 ```
