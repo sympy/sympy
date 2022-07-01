@@ -5,6 +5,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
     velocity)
 from sympy.physics.units.dimensions import DimensionSystem
 from sympy.testing.pytest import warns_deprecated_sympy
+from sympy.utilities.exceptions import sympy_deprecated_warning
 
 
 def test_extend():
@@ -32,8 +33,14 @@ def test_dim_can_vector():
         }
     )
     with warns_deprecated_sympy():
+            sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-can-vector-deprecated")
         assert dimsys.dim_can_vector(length) == Matrix([1, 0, 0])
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-can-vector-deprecated")
         assert dimsys.dim_can_vector(velocity) == Matrix([1, 0, -1])
 
     dimsys = DimensionSystem(
@@ -44,10 +51,19 @@ def test_dim_can_vector():
         }
     )
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-can-vector-deprecated")
         assert dimsys.dim_can_vector(length) == Matrix([0, 1, 0])
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-can-vector-deprecated")
         assert dimsys.dim_can_vector(velocity) == Matrix([0, 0, 1])
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-can-vector-deprecated")
         assert dimsys.dim_can_vector(time) == Matrix([0, 1, -1])
 
     dimsys = DimensionSystem(
@@ -56,33 +72,54 @@ def test_dim_can_vector():
         {velocity: {length: 1, time: -1},
          action: {mass: 1, length: 2, time: -1}})
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-can-vector-deprecated")
         assert dimsys.dim_vector(length) == Matrix([1, 0, 0])
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-can-vector-deprecated")
         assert dimsys.dim_vector(velocity) == Matrix([1, 0, -1])
 
 
 def test_inv_can_transf_matrix():
     dimsys = DimensionSystem((length, mass, time))
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-can-vector-deprecated")
         assert dimsys.inv_can_transf_matrix == eye(3)
 
 
 def test_can_transf_matrix():
     dimsys = DimensionSystem((length, mass, time))
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="can-transf-matrix-deprecated")
         assert dimsys.can_transf_matrix == eye(3)
 
     dimsys = DimensionSystem((length, velocity, action))
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="can-transf-matrix-deprecated")
         assert dimsys.can_transf_matrix == eye(3)
 
     dimsys = DimensionSystem((length, time), (velocity,), {velocity: {length: 1, time: -1}})
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="can-transf-matrix-deprecated")
         assert dimsys.can_transf_matrix == eye(2)
 
 
 def test_is_consistent():
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="is-consistent-deprecated")
         assert DimensionSystem((length, time)).is_consistent is True
 
 
@@ -104,4 +141,7 @@ def test_dim():
          action: {mass: 1, length: 2, time: -1}}
     )
     with warns_deprecated_sympy():
+        sympy_deprecation_warning("use base and derive dims instead",
+             deprecated_since_version="1.10",
+             active_deprecations_target="dim-deprecated")
         assert dimsys.dim == 3
