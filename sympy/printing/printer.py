@@ -259,7 +259,7 @@ class Printer:
         self._str = str
 
         self._settings = self._get_initial_settings()
-        self._context = dict()  # mutable during printing
+        self._context = {}  # mutable during printing
 
         if settings is not None:
             self._settings.update(settings)

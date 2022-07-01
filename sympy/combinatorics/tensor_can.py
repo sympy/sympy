@@ -85,12 +85,7 @@ def _min_dummies(dummies, sym, indices):
     [0, 1, 2, 2, 2, 2, 2, 2, 8, 9]
     """
     num_types = len(sym)
-    m = []
-    for dx in dummies:
-        if dx:
-            m.append(min(dx))
-        else:
-            m.append(None)
+    m = [min(dx) if dx else None for dx in dummies]
     res = indices[:]
     for i in range(num_types):
         for c, i in enumerate(indices):

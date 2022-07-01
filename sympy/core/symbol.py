@@ -573,7 +573,7 @@ class Wild(Symbol):
         if not all(f(expr) for f in self.properties):
             return None
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
         else:
             repl_dict = repl_dict.copy()
         repl_dict[self] = expr

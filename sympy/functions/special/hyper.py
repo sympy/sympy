@@ -220,8 +220,8 @@ class hyper(TupleParametersBase):
     def _eval_rewrite_as_Sum(self, ap, bq, z, **kwargs):
         from sympy.concrete.summations import Sum
         n = Dummy("n", integer=True)
-        rfap = Tuple(*[RisingFactorial(a, n) for a in ap])
-        rfbq = Tuple(*[RisingFactorial(b, n) for b in bq])
+        rfap = [RisingFactorial(a, n) for a in ap]
+        rfbq = [RisingFactorial(b, n) for b in bq]
         coeff = Mul(*rfap) / Mul(*rfbq)
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
@@ -251,14 +251,8 @@ class hyper(TupleParametersBase):
         terms = []
 
         for i in range(n):
-            num = 1
-            den = 1
-            for a in ap:
-                num *= RisingFactorial(a, i)
-
-            for b in bq:
-                den *= RisingFactorial(b, i)
-
+            num = Mul(*[RisingFactorial(a, i) for a in ap])
+            den = Mul(*[RisingFactorial(b, i) for b in bq])
             terms.append(((num/den) * (arg**i)) / factorial(i))
 
         return (Add(*terms) + Order(x**n,x))

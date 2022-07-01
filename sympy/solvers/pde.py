@@ -367,10 +367,7 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
                 matching_hints["1st_linear_variable_coeff"] = r
 
     # Order keys based on allhints.
-    retlist = []
-    for i in allhints:
-        if i in matching_hints:
-            retlist.append(i)
+    retlist = [i for i in allhints if i in matching_hints]
 
     if dict:
         # Dictionaries are ordered arbitrarily, so make note of which

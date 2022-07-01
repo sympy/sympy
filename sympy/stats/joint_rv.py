@@ -96,7 +96,7 @@ class JointPSpace(ProductPSpace):
         all_syms = [Symbol(str(i)) for i in orig]
         replace_dict = dict(zip(all_syms, orig))
         sym = tuple(Symbol(str(Indexed(self.symbol, i))) for i in indices)
-        limits = list([i,] for i in all_syms if i not in sym)
+        limits = [[i,] for i in all_syms if i not in sym]
         index = 0
         for i in range(count):
             if i not in indices:

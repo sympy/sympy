@@ -1036,10 +1036,7 @@ class Pow(Expr):
                 from sympy.concrete.products import Product
                 return Product(self.func(b, e.function), *e.limits)
         if e.is_Add and e.is_commutative:
-            expr = []
-            for x in e.args:
-                expr.append(self.func(b, x))
-            return Mul(*expr)
+            return Mul(*[self.func(b, x) for x in e.args])
         return self.func(b, e)
 
     def _eval_expand_power_base(self, **hints):
@@ -1580,7 +1577,7 @@ class Pow(Expr):
     def matches(self, expr, repl_dict=None, old=False):
         expr = _sympify(expr)
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
 
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
