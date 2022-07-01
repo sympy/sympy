@@ -959,8 +959,8 @@ class MatrixSpecial(MatrixRequired):
                 cmax += 1
                 continue
             # process list of lists
-            for i in range(len(m)):
-                for j, _ in enumerate(m[i]):
+            for i, mi in enumerate(m):
+                for j, _ in enumerate(mi):
                     diag_entries[(i + rmax, j + cmax)] = _
             rmax += r
             cmax += c

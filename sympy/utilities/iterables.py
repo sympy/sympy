@@ -174,17 +174,17 @@ def reshape(seq, how):
     container = type(how)
     rv = [None]*n
     for k in range(len(rv)):
-        rv[k] = []
+        _rv = []
         for hi in how:
             if isinstance(hi, int):
-                rv[k].extend(seq[i: i + hi])
+                _rv.extend(seq[i: i + hi])
                 i += hi
             else:
                 n = sum(flatten(hi))
                 hi_type = type(hi)
-                rv[k].append(hi_type(reshape(seq[i: i + n], hi)[0]))
+                _rv.append(hi_type(reshape(seq[i: i + n], hi)[0]))
                 i += n
-        rv[k] = container(rv[k])
+        rv[k] = container(_rv)
     return type(seq)(rv)
 
 
@@ -2255,8 +2255,7 @@ def multiset_derangements(s):
     # of ms would be {mx: 1, 1: n - mx}, i.e. there would
     # be n - mx + 1 values with the condition that n - 2*mx = 1
     if n - 2*mx == 1 and len(ms.values()) == n - mx + 1:
-        for i in range(len(inonM)):
-            i1 = inonM[i]
+        for i, i1 in enumerate(inonM):
             ifill = inonM[:i] + inonM[i+1:]
             for j in ifill:
                 rv[j] = M

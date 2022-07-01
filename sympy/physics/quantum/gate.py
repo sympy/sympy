@@ -245,9 +245,9 @@ class Gate(UnitaryOperator):
             # Make a copy of the incoming qubits.
             new_qubit = qubits.__class__(*qubits.args)
             # Flip the bits that need to be flipped.
-            for bit in range(len(targets)):
-                if new_qubit[targets[bit]] != (index >> bit) & 1:
-                    new_qubit = new_qubit.flip(targets[bit])
+            for bit, target in enumerate(targets):
+                if new_qubit[target] != (index >> bit) & 1:
+                    new_qubit = new_qubit.flip(target)
             # The value in that row and column times the flipped-bit qubit
             # is the result for that part.
             result += column[index]*new_qubit
