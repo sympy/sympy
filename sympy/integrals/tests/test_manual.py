@@ -74,8 +74,6 @@ def test_manualintegrate_parts():
     assert manualintegrate((3*x**2 + 5) * exp(x), x) == \
         3*x**2*exp(x) - 6*x*exp(x) + 11*exp(x)
     assert manualintegrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
-    # Make sure _parts_rule does not go into an infinite loop here
-    assert manualintegrate(log(1/x)/(x + 1), x).has(Integral)
 
     # Make sure _parts_rule doesn't pick u = constant but can pick dv =
     # constant if necessary, e.g. for integrate(atan(x))
@@ -658,3 +656,11 @@ def test_manualintegrate_sqrt_quadratic():
 
     assert_is_integral_of(x*sqrt(x**2+2*x+4),
                           (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2)
+
+
+def test_mul_pow_derivative():
+    assert_is_integral_of(x*sec(x)*tan(x), x*sec(x) - log(tan(x) + sec(x)))
+    assert_is_integral_of(x*sec(x)**2, x*tan(x) + log(cos(x)))
+    assert_is_integral_of(x**3*Derivative(f(x), (x, 4)),
+                          x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) +
+                          6*x*Derivative(f(x), x) - 6*f(x))

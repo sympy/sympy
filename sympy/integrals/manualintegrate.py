@@ -580,7 +580,7 @@ def _parts_rule(integrand, symbol):
     def pull_out_algebraic(integrand):
         integrand = integrand.cancel().together()
         # iterating over Piecewise args would not work here
-        algebraic = ([] if isinstance(integrand, Piecewise)
+        algebraic = ([] if isinstance(integrand, Piecewise) or not integrand.is_Mul
             else [arg for arg in integrand.args if arg.is_algebraic_expr(symbol)])
         if algebraic:
             u = Mul(*algebraic)
@@ -633,7 +633,9 @@ def _parts_rule(integrand, symbol):
                         return
 
             # Can integrate a polynomial times OrthogonalPolynomial
-            if rule == pull_out_algebraic and isinstance(dv, OrthogonalPolynomial):
+            if rule == pull_out_algebraic:
+                if dv.is_Derivative or dv.has(TrigonometricFunction) or \
+                        isinstance(dv, OrthogonalPolynomial):
                     v_step = integral_steps(dv, symbol)
                     if contains_dont_know(v_step):
                         return
@@ -723,12 +725,7 @@ def parts_rule(integral):
             return PartsRule(u, dv, v_step,
                              make_second_step(steps[1:], v * du),
                              integrand, symbol)
-        else:
-            steps = integral_steps(integrand, symbol)
-            if steps:
-                return steps
-            else:
-                return DontKnowRule(integrand, symbol)
+        return integral_steps(integrand, symbol)
 
     if steps:
         u, dv, v, du, v_step = steps[0]

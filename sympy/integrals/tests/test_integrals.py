@@ -15,7 +15,7 @@ from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, lo
 from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, coth, csch, sinh, tanh, sech)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan, sec)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi, fresnelc, li)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
@@ -2005,3 +2005,10 @@ def test_sqrt_quadratic():
 
     assert integrate(x*sqrt(x**2+2*x+4)) == \
         (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2
+
+
+def test_mul_pow_derivative():
+    assert integrate(x*sec(x)*tan(x)) == x*sec(x) - log(tan(x) + sec(x))
+    assert integrate(x*sec(x)**2, x) == x*tan(x) + log(cos(x))
+    assert integrate(x**3*Derivative(f(x), (x, 4))) == \
+           x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) + 6*x*Derivative(f(x), x) - 6*f(x)

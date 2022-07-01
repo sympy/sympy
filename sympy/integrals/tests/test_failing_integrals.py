@@ -8,7 +8,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (sech, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, atan, cos, sec, sin, tan)
+from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import (Integral, integrate)
@@ -118,13 +118,6 @@ def test_issue_16396a():
 def test_issue_16396b():
     i = integrate(x*sin(x)/(1+cos(x)**2), (x, 0, pi))
     assert not i.has(Integral)
-
-
-@XFAIL
-def test_issue_16161():
-    i = integrate(x*sec(x)**2, x)
-    assert not i.has(Integral)
-    # assert i == x*tan(x) + log(cos(x))
 
 
 @XFAIL
@@ -266,3 +259,15 @@ def test_issue_4311_slow():
 def test_issue_20370():
     a = symbols('a', positive=True)
     assert integrate((1 + a * cos(x))**-1, (x, 0, 2 * pi)) == (2 * pi / sqrt(1 - a**2))
+
+
+@XFAIL
+def test_polylog():
+    # log(1/x)*log(x+1)-polylog(2, -x)
+    assert not integrate(log(1/x)/(x + 1), x).has(Integral)
+
+
+@XFAIL
+def test_polylog_manual():
+    # Make sure _parts_rule does not go into an infinite loop here
+    assert not integrate(log(1/x)/(x + 1), x, manual=True).has(Integral)
