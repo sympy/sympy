@@ -166,7 +166,7 @@ an expression when customizing a printer. Mistakes include:
     ...         a, b = [printer.doprint(i) for i in self.args]
     ...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
-    This fails when the `mode` argument is passed to the printer:
+    This fails when the ``mode`` argument is passed to the printer:
 
     >>> print_latex(ModOp(x, m), mode='inline')  # ok
     $\\operatorname{Mod}{\\left(x, m\\right)}$

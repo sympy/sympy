@@ -381,16 +381,21 @@ class Application(Basic, metaclass=FunctionClass):
 
 
 class Function(Application, Expr):
-    """
+    r"""
     Base class for applied mathematical functions.
 
     It also serves as a constructor for undefined function classes.
 
+    See the :ref:`custom-functions` guide for details on how to subclass
+    ``Function`` and what methods can be defined.
+
     Examples
     ========
 
-    First example shows how to use Function as a constructor for undefined
-    function classes:
+    **Undefined Functions**
+
+    To create an undefined function, pass a string of the function name to
+    ``Function``.
 
     >>> from sympy import Function, Symbol
     >>> x = Symbol('x')
@@ -407,8 +412,10 @@ class Function(Application, Expr):
     >>> g.diff(x)
     Derivative(g(x), x)
 
-    Assumptions can be passed to Function, and if function is initialized with a
-    Symbol, the function inherits the name and assumptions associated with the Symbol:
+    Assumptions can be passed to ``Function`` the same as with a
+    :class:`~.Symbol`. Alternatively, you can use a ``Symbol`` with
+    assumptions for the function name and the function will inherit the name
+    and assumptions associated with the ``Symbol``:
 
     >>> f_real = Function('f', real=True)
     >>> f_real(x).is_real
@@ -418,52 +425,16 @@ class Function(Application, Expr):
     True
 
     Note that assumptions on a function are unrelated to the assumptions on
-    the variable it is called on. If you want to add a relationship, subclass
-    Function and define the appropriate ``_eval_is_assumption`` methods.
+    the variables it is called on. If you want to add a relationship, subclass
+    ``Function`` and define custom assumptions handler methods. See the
+    :ref:`custom-functions-assumptions` section of the :ref:`custom-functions`
+    guide for more details.
 
-    In the following example Function is used as a base class for
-    ``my_func`` that represents a mathematical function *my_func*. Suppose
-    that it is well known, that *my_func(0)* is *1* and *my_func* at infinity
-    goes to *0*, so we want those two simplifications to occur automatically.
-    Suppose also that *my_func(x)* is real exactly when *x* is real. Here is
-    an implementation that honours those requirements:
+    **Custom Function Subclasses**
 
-    >>> from sympy import Function, S, oo, I, sin
-    >>> class my_func(Function):
-    ...
-    ...     @classmethod
-    ...     def eval(cls, x):
-    ...         if x.is_Number:
-    ...             if x.is_zero:
-    ...                 return S.One
-    ...             elif x is S.Infinity:
-    ...                 return S.Zero
-    ...
-    ...     def _eval_is_real(self):
-    ...         return self.args[0].is_real
-    ...
-    >>> x = S('x')
-    >>> my_func(0) + sin(0)
-    1
-    >>> my_func(oo)
-    0
-    >>> my_func(3.54).n() # Not yet implemented for my_func.
-    my_func(3.54)
-    >>> my_func(I).is_real
-    False
-
-    In order for ``my_func`` to become useful, several other methods would
-    need to be implemented. See source code of some of the already
-    implemented functions for more complete examples.
-
-    Also, if the function can take more than one argument, then ``nargs``
-    must be defined, e.g. if ``my_func`` can take one or two arguments
-    then,
-
-    >>> class my_func(Function):
-    ...     nargs = (1, 2)
-    ...
-    >>>
+    The :ref:`custom-functions` guide has several
+    :ref:`custom-functions-complete-examples` of how to subclass ``Function``
+    to create a custom function.
 
     """
 
