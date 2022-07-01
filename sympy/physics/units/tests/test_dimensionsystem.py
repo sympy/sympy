@@ -33,7 +33,7 @@ def test_dim_can_vector():
         }
     )
     with warns_deprecated_sympy():
-            sympy_deprecation_warning("use base and derive dims instead",
+        sympy_deprecation_warning("use base and derive dims instead",
              deprecated_since_version="1.10",
              active_deprecations_target="dim-can-vector-deprecated")
         assert dimsys.dim_can_vector(length) == Matrix([1, 0, 0])
