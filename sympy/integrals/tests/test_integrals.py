@@ -16,7 +16,7 @@ from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, coth, csc
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan, sec)
-from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi, fresnelc, li)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
@@ -1724,7 +1724,7 @@ def test_issue_17473():
 def test_issue_17671():
     assert integrate(log(log(x)) / x**2, [x, 1, oo]) == -EulerGamma
     assert integrate(log(log(x)) / x**3, [x, 1, oo]) == -log(2)/2 - EulerGamma/2
-    assert integrate(log(log(x)) / x**10, [x, 1, oo]) == -2*log(3)/9 - EulerGamma/9
+    assert integrate(log(log(x)) / x**10, [x, 1, oo]) == -log(9)/9 - EulerGamma/9
 
 
 def test_issue_2975():
@@ -1890,6 +1890,12 @@ def test_issue_21024():
     f = 2*x**2*exp(-4) + 6/x
     F_true = (2*x**3/3 + 6*exp(4)*log(x))*exp(-4)
     assert F_true == integrate(f, x)
+
+
+def test_issue_21721():
+    a = Symbol('a')
+    assert integrate(1/(pi*(1+(x-a)**2)),(x,-oo,oo)).expand() == \
+    -Heaviside(im(a) - 1, 0) + Heaviside(im(a) + 1, 0)
 
 
 def test_issue_21831():

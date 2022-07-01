@@ -1723,7 +1723,7 @@ class Pow(Expr):
             return res
 
         try:
-            _, d = g.leadterm(x)
+            _, d = g.leadterm(x, logx=logx)
         except (ValueError, NotImplementedError):
             if limit(g/x**maxpow, x, 0) == 0:
                 # g has higher order zero
@@ -1734,10 +1734,10 @@ class Pow(Expr):
             g = g.simplify()
             if g.is_zero:
                 return f**e
-            _, d = g.leadterm(x)
+            _, d = g.leadterm(x, logx=logx)
             if not d.is_positive:
                 g = ((b - f)/f).expand()
-                _, d = g.leadterm(x)
+                _, d = g.leadterm(x, logx=logx)
                 if not d.is_positive:
                     raise NotImplementedError()
 
@@ -1797,7 +1797,10 @@ class Pow(Expr):
             return lt.as_leading_term(x, logx=logx, cdir=cdir)
         else:
             from sympy.functions.elementary.complexes import im
-            f = b.as_leading_term(x, logx=logx, cdir=cdir)
+            try:
+                f = b.as_leading_term(x, logx=logx, cdir=cdir)
+            except PoleError:
+                return self
             if (not e.is_integer and f.is_constant() and f.is_real
                 and f.is_negative and im((b - f).dir(x, cdir)).is_negative):
                 return self.func(f, e) * exp(-2 * e * S.Pi * S.ImaginaryUnit)
