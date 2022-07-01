@@ -15,7 +15,7 @@ from typing import Dict as tDict
 import collections
 from functools import reduce
 
-from sympy.utilities.exceptions import sympy_deprecated_warning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.singleton import S
@@ -465,7 +465,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         List all canonical dimension names.
         .. deprecated:: 1.1
         """
-        sympy_deprecated_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="list-can-dims-deprecated")
+        sympy_deprecation_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="list-can-dims-deprecated")
         dimset = set()
         for i in self.base_dims:
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
@@ -491,10 +491,11 @@ class DimensionSystem(Basic, _QuantityMapper):
         to get them in this basis. Nonetheless if this matrix is not square
         (or not invertible) it means that we have chosen a bad basis.
         """
-        sympy_deprecated_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="inv-can-transf-matrix-deprecated")
-        matrix = reduce(lambda x, y: x.row_join(y),
-                        [self.dim_can_vector(d) for d in self.base_dims])
-        return matrix
+        sympy_deprecation_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="inv-can-transf-matrix-deprecated")
+        with warns_deprecated_sympy():
+            matrix = reduce(lambda x, y: x.row_join(y),
+                            [self.dim_can_vector(d) for d in self.base_dims])
+            return matrix
 
     @property
     def can_transf_matrix(self):
@@ -513,10 +514,11 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         #TODO: the inversion will fail if the system is inconsistent, for
         #      example if the matrix is not a square
-        sympy_deprecated_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="can-transf-matrix-deprecated")
-        return reduce(lambda x, y: x.row_join(y),
-                      [self.dim_can_vector(d) for d in sorted(self.base_dims, key=str)]
-                      ).inv()
+        sympy_deprecation_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="can-transf-matrix-deprecated")
+        with warns_deprecated_sympy():
+            return reduce(lambda x, y: x.row_join(y),
+                          [self.dim_can_vector(d) for d in sorted(self.base_dims, key=str)]
+                          ).inv()
 
     def dim_can_vector(self, dim):
         """
@@ -528,11 +530,12 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         Dimensional representation in terms of the canonical base dimensions.
         """
-        sympy_deprecated_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="dim-can-vector-deprecated")
-        vec = []
-        for d in self.list_can_dims:
-            vec.append(self.get_dimensional_dependencies(dim).get(d, 0))
-        return Matrix(vec)
+        sympy_deprecation_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="dim-can-vector-deprecated")
+        with warns_deprecated_sympy():
+            vec = []
+            for d in self.list_can_dims:
+                vec.append(self.get_dimensional_dependencies(dim).get(d, 0))
+            return Matrix(vec)
 
 
     def dim_vector(self, dim):
@@ -545,8 +548,9 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         Vector representation in terms of the base dimensions.
         """
-        sympy_deprecated_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="dim-vector-deprecated")
-        return self.can_transf_matrix * Matrix(self.dim_can_vector(dim))
+        sympy_deprecation_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="dim-vector-deprecated")
+        with warns_deprecated_sympy():
+            return self.can_transf_matrix * Matrix(self.dim_can_vector(dim))
 
 
     def print_dim_base(self, dim):
@@ -556,13 +560,14 @@ class DimensionSystem(Basic, _QuantityMapper):
         .. deprecated:: 1.1
 
         """
-        sympy_deprecated_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="print-dim-base-deprecated")
-        dims = self.dim_vector(dim)
-        symbols = [i.symbol if i.symbol is not None else i.name for i in self.base_dims]
-        res = S.One
-        for (s, p) in zip(symbols, dims):
-            res *= s**p
-        return res
+        sympy_deprecation_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="print-dim-base-deprecated")
+        with warns_deprecated_sympy():
+            dims = self.dim_vector(dim)
+            symbols = [i.symbol if i.symbol is not None else i.name for i in self.base_dims]
+            res = S.One
+            for (s, p) in zip(symbols, dims):
+                res *= s**p
+            return res
 
     @property
     def dim(self):
@@ -577,7 +582,7 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         That is return the number of dimensions forming the basis.
         """
-        sympy_deprecated_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="dim-deprecated")
+        sympy_deprecation_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="dim-deprecated")
         return len(self.base_dims)
 
     @property
@@ -595,5 +600,6 @@ class DimensionSystem(Basic, _QuantityMapper):
         # not enough or too many base dimensions compared to independent
         # dimensions
         # in vector language: the set of vectors do not form a basis
-        sympy_deprecated_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="is-consistent-deprecated")
-        return self.inv_can_transf_matrix.is_square
+        sympy_deprecation_warning("use base and derive dims instead",deprecated_since_version="1.10",active_deprecations_target="is-consistent-deprecated")
+        with warns_deprecated_sympy():
+            return self.inv_can_transf_matrix.is_square
