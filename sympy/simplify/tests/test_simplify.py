@@ -1031,6 +1031,12 @@ def test_issue_19484():
     assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
 
 
+def test_issue_23543():
+    # Used to give an error
+    x, y, z = symbols("x y z", commutative=False)
+    assert (x*(y + z/2)).simplify() == x*(2*y + z)/2
+
+
 def test_issue_19161():
     polynomial = Poly('x**2').simplify()
     assert (polynomial-x**2).simplify() == 0

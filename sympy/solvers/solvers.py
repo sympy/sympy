@@ -89,12 +89,14 @@ def recast_to_symbols(eqs, symbols):
     """
     if not iterable(eqs) and iterable(symbols):
         raise ValueError('Both eqs and symbols must be iterable')
-    new_symbols = list(symbols)
+    orig = list(symbols)
+    symbols = list(ordered(symbols))
     swap_sym = {}
-    for i, s in enumerate(symbols):
+    i = 0
+    for j, s in enumerate(symbols):
         if not isinstance(s, Symbol) and s not in swap_sym:
             swap_sym[s] = Dummy('X%d' % i)
-            new_symbols[i] = swap_sym[s]
+            i += 1
     new_f = []
     for i in eqs:
         isubs = getattr(i, 'subs', None)
@@ -102,8 +104,8 @@ def recast_to_symbols(eqs, symbols):
             new_f.append(isubs(swap_sym))
         else:
             new_f.append(i)
-    swap_sym = {v: k for k, v in swap_sym.items()}
-    return new_f, new_symbols, swap_sym
+    restore = {v: k for k, v in swap_sym.items()}
+    return new_f, [swap_sym.get(i, i) for i in orig], restore
 
 
 def _ispow(e):
@@ -935,7 +937,7 @@ def solve(f, *symbols, **flags):
 
         # rewrite hyperbolics in terms of exp
         f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction) and \
-            (len(w.free_symbols & set(symbols)) > 0), lambda w: w.rewrite(exp))
+            w.has_free(*symbols), lambda w: w.rewrite(exp))
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
@@ -1286,7 +1288,7 @@ def solve(f, *symbols, **flags):
         elif iterable(solution[0]):
             solution = [dict(list(zip(symbols, s))) for s in solution]
         elif isinstance(solution[0], dict):
-            pass
+            solution = [{k: s[k] for k in ordered(s)} for s in solution]
         else:
             if len(symbols) != 1:
                 raise ValueError("Length should be 1")

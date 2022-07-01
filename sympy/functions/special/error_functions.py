@@ -257,7 +257,7 @@ class erf(Function):
             if ex.is_positive:
                 newn = ceiling(n/ex)
                 s = [S.NegativeOne**k * factorial2(2*k - 1) / (z**(2*k + 1) * 2**k)
-                     for k in range(0, newn)] + [Order(1/z**newn, x)]
+                     for k in range(newn)] + [Order(1/z**newn, x)]
                 return S.One - (exp(-z**2)/sqrt(pi)) * Add(*s)
 
         return super(erf, self)._eval_aseries(n, args0, x, logx)
@@ -642,7 +642,7 @@ class erfi(Function):
         if point is S.Infinity:
             z = self.args[0]
             s = [factorial2(2*k - 1) / (2**k * z**(2*k + 1))
-                    for k in range(0, n)] + [Order(1/z**n, x)]
+                    for k in range(n)] + [Order(1/z**n, x)]
             return -S.ImaginaryUnit + (exp(z**2)/sqrt(pi)) * Add(*s)
 
         return super(erfi, self)._eval_aseries(n, args0, x, logx)
@@ -1236,7 +1236,7 @@ class Ei(Function):
 
         if point is S.Infinity:
             z = self.args[0]
-            s = [factorial(k) / (z)**k for k in range(0, n)] + \
+            s = [factorial(k) / (z)**k for k in range(n)] + \
                     [Order(1/z**n, x)]
             return (exp(z)/z) * Add(*s)
 
@@ -1423,7 +1423,7 @@ class expint(Function):
 
         if point is S.Infinity:
             z = self.args[1]
-            s = [S.NegativeOne**k * RisingFactorial(nu, k) / z**k for k in range(0, n)] + [Order(1/z**n, x)]
+            s = [S.NegativeOne**k * RisingFactorial(nu, k) / z**k for k in range(n)] + [Order(1/z**n, x)]
             return (exp(-z)/z) * Add(*s)
 
         return super(expint, self)._eval_aseries(n, args0, x, logx)
@@ -1898,9 +1898,9 @@ class Si(TrigonometricIntegral):
         if point is S.Infinity:
             z = self.args[0]
             p = [S.NegativeOne**k * factorial(2*k) / z**(2*k)
-                    for k in range(0, int((n - 1)/2))] + [Order(1/z**n, x)]
+                    for k in range(int((n - 1)/2))] + [Order(1/z**n, x)]
             q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*k + 1)
-                    for k in range(0, int(n/2) - 1)] + [Order(1/z**n, x)]
+                    for k in range(int(n/2) - 1)] + [Order(1/z**n, x)]
             return pi/2 - (cos(z)/z)*Add(*p) - (sin(z)/z)*Add(*q)
 
         # All other points are not handled
@@ -2035,9 +2035,9 @@ class Ci(TrigonometricIntegral):
         if point is S.Infinity:
             z = self.args[0]
             p = [S.NegativeOne**k * factorial(2*k) / z**(2*k)
-                    for k in range(0, int((n - 1)/2))] + [Order(1/z**n, x)]
+                    for k in range(int((n - 1)/2))] + [Order(1/z**n, x)]
             q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*k + 1)
-                    for k in range(0, int(n/2) - 1)] + [Order(1/z**n, x)]
+                    for k in range(int(n/2) - 1)] + [Order(1/z**n, x)]
             return (sin(z)/z)*Add(*p) - (cos(z)/z)*Add(*q)
 
         # All other points are not handled
@@ -2619,7 +2619,7 @@ class fresnelc(FresnelIntegral):
             # as only real infinities are dealt with, sin and cos are O(1)
             p = [S.NegativeOne**k * factorial(4*k + 1) /
                  (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*factorial(2*k))
-                 for k in range(0, n) if 4*k + 3 < n]
+                 for k in range(n) if 4*k + 3 < n]
             q = [1/(2*z)] + [S.NegativeOne**k * factorial(4*k - 1) /
                  (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*factorial(2*k - 1))
                  for k in range(1, n) if 4*k + 1 < n]
@@ -2660,8 +2660,8 @@ class _erfs(Function):
         # Expansion at oo
         if point is S.Infinity:
             z = self.args[0]
-            l = [ 1/sqrt(S.Pi) * factorial(2*k)*(-S(
-                4))**(-k)/factorial(k) * (1/z)**(2*k + 1) for k in range(0, n) ]
+            l = [1/sqrt(S.Pi) * factorial(2*k)*(-S(
+                 4))**(-k)/factorial(k) * (1/z)**(2*k + 1) for k in range(n)]
             o = Order(1/z**(2*n + 1), x)
             # It is very inefficient to first add the order and then do the nseries
             return (Add(*l))._eval_nseries(x, n, logx) + o
@@ -2671,8 +2671,8 @@ class _erfs(Function):
         if t is S.Infinity:
             z = self.args[0]
             # TODO: is the series really correct?
-            l = [ 1/sqrt(S.Pi) * factorial(2*k)*(-S(
-                4))**(-k)/factorial(k) * (1/z)**(2*k + 1) for k in range(0, n) ]
+            l = [1/sqrt(S.Pi) * factorial(2*k)*(-S(
+                 4))**(-k)/factorial(k) * (1/z)**(2*k + 1) for k in range(n)]
             o = Order(1/z**(2*n + 1), x)
             # It is very inefficient to first add the order and then do the nseries
             return (Add(*l))._eval_nseries(x, n, logx) + o
@@ -2705,7 +2705,7 @@ class _eis(Function):
             return super(_erfs, self)._eval_aseries(n, args0, x, logx)
 
         z = self.args[0]
-        l = [ factorial(k) * (1/z)**(k + 1) for k in range(0, n) ]
+        l = [factorial(k) * (1/z)**(k + 1) for k in range(n)]
         o = Order(1/z**(n + 1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (Add(*l))._eval_nseries(x, n, logx) + o

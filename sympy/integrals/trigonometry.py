@@ -1,5 +1,5 @@
 from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
-from sympy.functions import binomial, sin, cos, Piecewise
+from sympy.functions import binomial, sin, cos, Piecewise, Abs
 from .integrals import integrate
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
@@ -134,8 +134,8 @@ def trigintegrate(f, x, conds='piecewise'):
     # then S   is integrated with recursive formula
 
     # take largest n or m -- to choose simplest substitution
-    n_ = (abs(n) > abs(m))
-    m_ = (abs(m) > abs(n))
+    n_ = (Abs(n) > Abs(m))
+    m_ = (Abs(m) > Abs(n))
     res = S.Zero
 
     if n_:

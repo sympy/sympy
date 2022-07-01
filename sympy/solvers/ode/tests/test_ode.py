@@ -351,10 +351,13 @@ def test_classify_ode_ics():
     ics = {f(0, 0): 1}
     raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
 
-    # point contains f
-    # XXX: Should be NotImplementedError
-    ics = {f(0): f(1)}
+    # point contains x
+    ics = {f(0): f(x)}
     raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Does not raise
+    ics = {f(0): f(0)}
+    classify_ode(eq, f(x), ics=ics)
 
     # Does not raise
     ics = {f(0): 1}
@@ -385,10 +388,13 @@ def test_classify_ode_ics():
     ics = {Derivative(f(x), x, y).subs(x, 0): 1}
     raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
 
-    # point contains f
-    # XXX: Should be NotImplementedError
-    ics = {f(x).diff(x).subs(x, 0): f(0)}
+    # point contains x
+    ics = {f(x).diff(x).subs(x, 0): f(x)}
     raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Does not raise
+    ics = {f(x).diff(x).subs(x, 0): f(x).diff(x).subs(x, 0)}
+    classify_ode(eq, f(x), ics=ics)
 
     # Does not raise
     ics = {f(x).diff(x).subs(x, 0): 1}
@@ -414,10 +420,13 @@ def test_classify_ode_ics():
     ics = {Derivative(f(x), x, z).subs(x, y): 1}
     raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
 
-    # point contains f
-    # XXX: Should be NotImplementedError
-    ics = {f(x).diff(x).subs(x, y): f(0)}
+    # point contains x
+    ics = {f(x).diff(x).subs(x, y): f(x)}
     raises(ValueError, lambda: classify_ode(eq, f(x), ics=ics))
+
+    # Does not raise
+    ics = {f(x).diff(x).subs(x, 0): f(0)}
+    classify_ode(eq, f(x), ics=ics)
 
     # Does not raise
     ics = {f(x).diff(x).subs(x, y): 1}
@@ -553,6 +562,13 @@ def test_solve_ics():
         C3: L**2*q/(4*EI),
         C4: -L*q/(6*EI)}
 
+    # Allow the ics to refer to f
+    ics = {f(0): f(0)}
+    assert dsolve(f(x).diff(x) - f(x), f(x), ics=ics) == Eq(f(x), f(0)*exp(x))
+
+    ics = {f(x).diff(x).subs(x, 0): f(x).diff(x).subs(x, 0), f(0): f(0)}
+    assert dsolve(f(x).diff(x, x) + f(x), f(x), ics=ics) == \
+        Eq(f(x), f(0)*cos(x) + f(x).diff(x).subs(x, 0)*sin(x))
 
 def test_ode_order():
     f = Function('f')

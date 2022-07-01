@@ -2,7 +2,7 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
-
+from __future__ import annotations
 from typing import Tuple as tTuple, Optional, Union as tUnion, Callable, List, Dict as tDict, Type, TYPE_CHECKING, \
     Any, overload
 
@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from sympy.functions.elementary.integers import ceiling, floor
     from sympy.functions.elementary.trigonometric import atan
     from sympy.functions.combinatorial.numbers import bernoulli
-    from .numbers import Float, Rational, Integer, AlgebraicNumber
+    from .numbers import Float, Rational, Integer, AlgebraicNumber, Number
 
 LG10 = math.log(10, 2)
 rnd = round_nearest
@@ -149,7 +149,7 @@ def fastlog(x: Optional[MPF_TUP]) -> tUnion[int, Any]:
     return x[2] + x[3]
 
 
-def pure_complex(v: 'Expr', or_real=False) -> Optional[tTuple['Expr', 'Expr']]:
+def pure_complex(v: 'Expr', or_real=False) -> tuple['Number', 'Number'] | None:
     """Return a and b if v matches a + I*b where b is not zero and
     a and b are Numbers, else None. If `or_real` is True then 0 will
     be returned for `b` if `v` is a real number.
@@ -175,7 +175,7 @@ def pure_complex(v: 'Expr', or_real=False) -> Optional[tTuple['Expr', 'Expr']]:
         if i is S.ImaginaryUnit:
             return h, c
     elif or_real:
-        return h, t
+        return h, S.Zero
     return None
 
 
@@ -1789,7 +1789,6 @@ def _evalf_with_bounded_error(x: 'Expr', eps: 'Expr' = None, m: int = 0,
     evalf
 
     """
-    eps = sympify(eps)
     if eps is not None:
         if not (eps.is_Rational or eps.is_Float) or not eps > 0:
             raise ValueError("eps must be positive")

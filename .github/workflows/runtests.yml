@@ -187,17 +187,20 @@ jobs:
       - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev
       - run: python -m pip install --upgrade pip wheel
 
-      # Use numpy and scipy from git for Python 3.11
+      # Use various libs from git for Python 3.11
       - if: ${{ contains(matrix.python-version, '3.11') }}
         run: pip install git+https://github.com/cython/cython@master
       - if: ${{ contains(matrix.python-version, '3.11') }}
         run: pip install git+https://github.com/numpy/numpy@main
       - if: ${{ contains(matrix.python-version, '3.11') }}
         run: pip install git+https://github.com/scipy/scipy@main
+      - if: ${{ contains(matrix.python-version, '3.11') }}
+        run: pip install git+https://github.com/matplotlib/matplotlib@main
 
       # dependencies to install in all Python versions:
-      - run: pip install mpmath matplotlib numpy ipython cython scipy aesara \
-                         wurlitzer autowrap numexpr 'antlr4-python3-runtime==4.7.*'
+      - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
+                         aesara wurlitzer autowrap                            \
+                         'antlr4-python3-runtime==4.7.*'
 
       # gmpy2 is not available for pypy
       - if: ${{ matrix.python-version != 'pypy-3.8' }}
@@ -205,7 +208,7 @@ jobs:
 
       # These are not available for pypy and cannot be installed in 3.11 (yet)
       - if: ${{ matrix.python-version != 'pypy-3.8' && ! contains(matrix.python-version, '3.11') }}
-        run: pip install symengine llvmlite numba
+        run: pip install symengine llvmlite numba pymc jax jaxlib
 
       # Test external imports
       - run: bin/test_external_imports.py

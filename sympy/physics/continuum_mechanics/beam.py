@@ -136,7 +136,7 @@ class Beam:
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
-        self._area = area
+        self.area = area
         self._applied_supports = []
         self._support_as_loads = []
         self._applied_loads = []
@@ -2386,7 +2386,7 @@ class Beam3D(Beam):
         """
         super().__init__(length, elastic_modulus, second_moment, variable)
         self.shear_modulus = shear_modulus
-        self._area = area
+        self.area = area
         self._load_vector = [0, 0, 0]
         self._moment_load_vector = [0, 0, 0]
         self._load_Singularity = [0, 0, 0]

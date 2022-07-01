@@ -116,6 +116,10 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_Point = False
     is_MatAdd = False
     is_MatMul = False
+    is_real: bool | None
+    is_zero: bool | None
+    is_negative: bool | None
+    is_commutative: bool | None
 
     kind: Kind = UndefinedKind
 
@@ -964,10 +968,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             sequence = [(k, sequence[k]) for k in k]
             # do infinities first
             if not simultaneous:
-                redo = []
-                for i in range(len(sequence)):
-                    if sequence[i][1] in _illegal:  # nan, zoo and +/-oo
-                        redo.append(i)
+                redo = [i for i, seq in enumerate(sequence) if seq[1] in _illegal]
                 for i in reversed(redo):
                     sequence.insert(0, sequence.pop(i))
 

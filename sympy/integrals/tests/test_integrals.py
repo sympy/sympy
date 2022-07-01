@@ -1,3 +1,4 @@
+import math
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
@@ -14,7 +15,7 @@ from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, lo
 from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, coth, csch, sinh, tanh, sech)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan, sec)
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi, fresnelc, li)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
@@ -1040,7 +1041,7 @@ def test_issue_4403():
     assert integrate(sqrt(x**2 + z**2), x) == \
         z**2*asinh(x/z)/2 + x*sqrt(x**2 + z**2)/2
     assert integrate(sqrt(x**2 - z**2), x) == \
-        -z**2*acosh(x/z)/2 + x*sqrt(x**2 - z**2)/2
+        x*sqrt(x**2 - z**2)/2 - z**2*log(x + sqrt(x**2 - z**2))/2
 
     x = Symbol('x', real=True)
     y = Symbol('y', positive=True)
@@ -1534,8 +1535,7 @@ def test_issue_14437():
 
 
 def test_issue_14470():
-    assert integrate(1/sqrt(exp(x) + 1), x) == \
-        log(-1 + 1/sqrt(exp(x) + 1)) - log(1 + 1/sqrt(exp(x) + 1))
+    assert integrate(1/sqrt(exp(x) + 1), x) == log(sqrt(exp(x) + 1) - 1) - log(sqrt(exp(x) + 1) + 1)
 
 
 def test_issue_14877():
@@ -1676,7 +1676,6 @@ def test_issue_13112():
     assert integrate(sin(t)**2 / (5 - 4*cos(t)), [t, 0, 2*pi]) == pi / 4
 
 
-@slow
 def test_issue_14709b():
     h = Symbol('h', positive=True)
     i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
@@ -1926,29 +1925,100 @@ def test_issue_18527():
     assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
 
 
+def test_issue_23566():
+    i = integrate(1/sqrt(x**2-1), (x, -2, -1))
+    assert i == -log(2 - sqrt(3))
+    assert math.isclose(i.n(), 1.31695789692482)
+
+
+def test_pr_23583():
+    # This result from meijerg is wrong. Check whether new result is correct when this test fail.
+    assert integrate(1/sqrt((x - I)**2-1)) == Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+
+
+def test_issue_7264():
+    assert integrate(exp(x)*sqrt(1 + exp(2*x))) == sqrt(exp(2*x) + 1)*exp(x)/2 + asinh(exp(x))/2
+
+
+def test_issue_11254a():
+    assert integrate(sech(x), (x, 0, 1)) == 2*atan(tanh(S.Half))
+
+
+def test_issue_11254b():
+    assert integrate(csch(x), x) == log(tanh(x/2))
+    assert integrate(csch(x), (x, 0, 1)) == oo
+
+
+def test_issue_11254d():
+    assert integrate((sech(x)**2).rewrite(sinh), x) == 2*tanh(x/2)/(tanh(x/2)**2 + 1)
+
+
+def test_issue_22863():
+    i = integrate((3*x**3-x**2+2*x-4)/sqrt(x**2-3*x+2), (x, 0, 1))
+    assert i == -101*sqrt(2)/8 - 135*log(3 - 2*sqrt(2))/16
+    assert math.isclose(i.n(), -2.98126694400554)
+
+
+def test_issue_9723():
+    assert integrate(sqrt(x + sqrt(x))) == \
+        2*sqrt(sqrt(x) + x)*(sqrt(x)/12 + x/3 - S(1)/8) + log(2*sqrt(x) + 2*sqrt(sqrt(x) + x) + 1)/8
+    assert integrate(sqrt(2*x+3+sqrt(4*x+5))**3) == \
+        sqrt(2*x + sqrt(4*x + 5) + 3) * \
+           (9*x/10 + 11*(4*x + 5)**(S(3)/2)/40 + sqrt(4*x + 5)/40 + (4*x + 5)**2/10 + S(11)/10)/2
+
+
+def test_exp_substitution():
+    assert integrate(1/sqrt(1-exp(2*x))) == log(sqrt(1 - exp(2*x)) - 1)/2 - log(sqrt(1 - exp(2*x)) + 1)/2
+
+
 def test_hyperbolic():
     assert integrate(coth(x)) == x - log(tanh(x) + 1) + log(tanh(x))
     assert integrate(sech(x)) == 2*atan(tanh(x/2))
     assert integrate(csch(x)) == log(tanh(x/2))
 
 
+def test_nested_pow():
+    assert integrate(sqrt(x**2)) == x*sqrt(x**2)/2
+
+
 def test_sqrt_quadratic():
     assert integrate(1/sqrt(3*x**2+4*x+5)) == sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/3
     assert integrate(1/sqrt(-3*x**2+4*x+5)) == sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/3
-    assert integrate(1/sqrt(3*x**2+4*x-5)) == sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/3
-    assert integrate(1/sqrt(a+b*x+c*x**2), x) == log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
+    assert integrate(1/sqrt(3*x**2+4*x-5)) == sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/3
+    assert integrate(1/sqrt(a+b*x+c*x**2), x) == \
+        Piecewise((log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(c, 0)),
+                  (2*sqrt(a + b*x)/b, Ne(b, 0)), (x/sqrt(a), True))
 
     assert integrate((7*x+6)/sqrt(3*x**2+4*x+5)) == \
            7*sqrt(3*x**2 + 4*x + 5)/3 + 4*sqrt(3)*asinh(3*sqrt(11)*(x + S(2)/3)/11)/9
     assert integrate((7*x+6)/sqrt(-3*x**2+4*x+5)) == \
            -7*sqrt(-3*x**2 + 4*x + 5)/3 + 32*sqrt(3)*asin(3*sqrt(19)*(x - S(2)/3)/19)/9
     assert integrate((7*x+6)/sqrt(3*x**2+4*x-5)) == \
-           7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*acosh(3*sqrt(19)*(x + S(2)/3)/19)/9
+           7*sqrt(3*x**2 + 4*x - 5)/3 + 4*sqrt(3)*log(6*x + 2*sqrt(3)*sqrt(3*x**2 + 4*x - 5) + 4)/9
     assert integrate((d+e*x)/sqrt(a+b*x+c*x**2), x) == \
-           e*sqrt(a + b*x + c*x**2)/c + (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c)
+        Piecewise((e*sqrt(a + b*x + c*x**2)/c +
+                   (-b*e/(2*c) + d)*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(c, 0)),
+                  ((2*d*sqrt(a + b*x) + 2*e*(-a*sqrt(a + b*x) + (a + b*x)**(S(3)/2)/3)/b)/b, Ne(b, 0)),
+                  ((d*x + e*x**2/2)/sqrt(a), True))
+
+    assert integrate((3*x**3-x**2+2*x-4)/sqrt(x**2-3*x+2)) == \
+           sqrt(x**2 - 3*x + 2)*(x**2 + 13*x/4 + S(101)/8) + 135*log(2*x + 2*sqrt(x**2 - 3*x + 2) - 3)/16
 
     assert integrate(sqrt(53225*x**2-66732*x+23013)) == \
-           x*sqrt(53225*x**2 - 66732*x + 23013)/2 - 16683*sqrt(53225*x**2 - 66732*x + 23013)/53225 + \
+           (x/2 - S(16683)/53225)*sqrt(53225*x**2 - 66732*x + 23013) + \
            111576969*sqrt(2129)*asinh(53225*x/10563 - S(11122)/3521)/1133160250
-    assert integrate(sqrt(a+b*x+c*x**2), x) == b*sqrt(a + b*x + c*x**2)/(4*c) + x*sqrt(a + b*x + c*x**2)/2 + \
-           (2*a - b**2/(2*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/(4*sqrt(c))
+    assert integrate(sqrt(a+b*x+c*x**2), x) == \
+        Piecewise(((x/2 + b/(4*c))*sqrt(a + b*x + c*x**2) +
+                   (a/2 - b**2/(8*c))*log(b + 2*sqrt(c)*sqrt(a + b*x + c*x**2) + 2*c*x)/sqrt(c), Ne(c, 0)),
+                  (2*(a + b*x)**(S(3)/2)/(3*b), Ne(b, 0)),
+                  (sqrt(a)*x, True))
+
+    assert integrate(x*sqrt(x**2+2*x+4)) == \
+        (x**2/3 + x/6 + S(5)/6)*sqrt(x**2 + 2*x + 4) - 3*asinh(sqrt(3)*(x + 1)/3)/2
+
+
+def test_mul_pow_derivative():
+    assert integrate(x*sec(x)*tan(x)) == x*sec(x) - log(tan(x) + sec(x))
+    assert integrate(x*sec(x)**2, x) == x*tan(x) + log(cos(x))
+    assert integrate(x**3*Derivative(f(x), (x, 4))) == \
+           x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) + 6*x*Derivative(f(x), x) - 6*f(x)

@@ -19,6 +19,6 @@ a module break down.
    getting_started/index.rst
    assumptions.rst
    booleans.rst
-   solving.md
+   solving/index.md
    contributing/index.rst
    ../citing.md

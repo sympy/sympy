@@ -1939,7 +1939,6 @@ class totient(Function):
     """
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n < 1:
                 raise ValueError("n must be a positive integer")
@@ -2014,7 +2013,6 @@ class reduced_totient(Function):
     """
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n < 1:
                 raise ValueError("n must be a positive integer")
@@ -2102,8 +2100,7 @@ class divisor_sigma(Function):
     """
 
     @classmethod
-    def eval(cls, n, k=1):
-        n = sympify(n)
+    def eval(cls, n, k=S.One):
         k = sympify(k)
 
         if n.is_prime:
@@ -2253,8 +2250,7 @@ class udivisor_sigma(Function):
     """
 
     @classmethod
-    def eval(cls, n, k=1):
-        n = sympify(n)
+    def eval(cls, n, k=S.One):
         k = sympify(k)
         if n.is_prime:
             return 1 + n**k
@@ -2302,7 +2298,6 @@ class primenu(Function):
 
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")
@@ -2348,7 +2343,6 @@ class primeomega(Function):
 
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")

@@ -104,9 +104,9 @@ def heuristics(e, z, z0, dir):
             if rv is S.NaN and e.is_Mul and any(isinstance(rr, AccumBounds) for rr in r):
                 r2 = []
                 e2 = []
-                for ii in range(len(r)):
-                    if isinstance(r[ii], AccumBounds):
-                        r2.append(r[ii])
+                for ii, rval in enumerate(r):
+                    if isinstance(rval, AccumBounds):
+                        r2.append(rval)
                     else:
                         e2.append(e.args[ii])
 

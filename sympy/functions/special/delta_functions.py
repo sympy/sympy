@@ -1,4 +1,4 @@
-from sympy.core import S, sympify, diff
+from sympy.core import S, diff
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq, Ne
@@ -73,9 +73,9 @@ class DiracDelta(Function):
     DiracDelta(0)
     >>> diff(DiracDelta(x))
     DiracDelta(x, 1)
-    >>> diff(DiracDelta(x - 1),x,2)
+    >>> diff(DiracDelta(x - 1), x, 2)
     DiracDelta(x - 1, 2)
-    >>> diff(DiracDelta(x**2 - 1),x,2)
+    >>> diff(DiracDelta(x**2 - 1), x, 2)
     2*(2*x**2*DiracDelta(x**2 - 1, 2) + DiracDelta(x**2 - 1, 1))
     >>> DiracDelta(3*x).is_simple(x)
     True
@@ -149,7 +149,7 @@ class DiracDelta(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg, k=0):
+    def eval(cls, arg, k=S.Zero):
         """
         Returns a simplified form or a value of DiracDelta depending on the
         argument passed by the DiracDelta object.
@@ -190,9 +190,6 @@ class DiracDelta(Function):
         >>> DiracDelta(S.NaN)
         nan
 
-        >>> DiracDelta(x).eval(1)
-        0
-
         >>> DiracDelta(x - 100).subs(x, 5)
         0
 
@@ -208,11 +205,9 @@ class DiracDelta(Function):
         arg : argument passed to DiracDelta
 
         """
-        k = sympify(k)
         if not k.is_Integer or k.is_negative:
             raise ValueError("Error: the second argument of DiracDelta must be \
             a non-negative integer, %s given instead." % (k,))
-        arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
         if arg.is_nonzero:
@@ -230,6 +225,8 @@ class DiracDelta(Function):
                 return -cls(-arg, k)
             elif k.is_even:
                 return cls(-arg, k) if k else cls(-arg)
+        elif k.is_zero:
+            return cls(arg, evaluate=False)
 
     def _eval_expand_diracdelta(self, **hints):
         """
@@ -534,9 +531,6 @@ class Heaviside(Function):
         >>> Heaviside(S.NaN)
         nan
 
-        >>> Heaviside(x).eval(42)
-        1
-
         >>> Heaviside(x - 100).subs(x, 5)
         0
 
@@ -551,8 +545,6 @@ class Heaviside(Function):
         H0 : value of Heaviside(0)
 
         """
-        H0 = sympify(H0)
-        arg = sympify(arg)
         if arg.is_extended_negative:
             return S.Zero
         elif arg.is_extended_positive:

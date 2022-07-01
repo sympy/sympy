@@ -5,7 +5,6 @@ from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
 from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
-from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 
@@ -535,7 +534,6 @@ def _per(M):
              prod *= sum([M[i, j] for j in subset])
         perm += prod * S.NegativeOne**sub_len * nC(n - sub_len, m - sub_len)
     perm *= S.NegativeOne**m
-    perm = sympify(perm)
     return perm.simplify()
 
 def _det_DOM(M):
