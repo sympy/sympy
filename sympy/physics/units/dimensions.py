@@ -463,6 +463,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         DO NOT USE.
 
         List all canonical dimension names.
+        .. deprecated:: 1.1
         """
         sympy_deprecation_warning("use base and derive dims instead",
              deprecated_since_version="1.10",
@@ -478,7 +479,9 @@ class DimensionSystem(Basic, _QuantityMapper):
         Useless method, kept for compatibility with previous versions.
 
         DO NOT USE.
-
+        
+        .. deprecated:: 1.1
+        
         Compute the inverse transformation matrix from the base to the
         canonical dimension basis.
 
@@ -503,7 +506,9 @@ class DimensionSystem(Basic, _QuantityMapper):
         Useless method, kept for compatibility with previous versions.
 
         DO NOT USE.
-
+        
+        .. deprecated:: 1.1
+        
         Return the canonical transformation matrix from the canonical to the
         base dimension basis.
 
@@ -524,6 +529,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         Useless method, kept for compatibility with previous versions.
 
         DO NOT USE.
+        
+        .. deprecated:: 1.1
 
         Dimensional representation in terms of the canonical base dimensions.
         """
@@ -540,7 +547,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         Useless method, kept for compatibility with previous versions.
 
         DO NOT USE.
-
+        
+        .. deprecated:: 1.1
 
         Vector representation in terms of the base dimensions.
         """
@@ -552,6 +560,9 @@ class DimensionSystem(Basic, _QuantityMapper):
     def print_dim_base(self, dim):
         """
         Give the string expression of a dimension in term of the basis symbols.
+        
+        .. deprecated:: 1.1
+        
         """
         sympy_deprecation_warning("use base and derive dims instead",
              deprecated_since_version="1.10",
@@ -571,6 +582,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         DO NOT USE.
 
         Give the dimension of the system.
+        
+        .. deprecated:: 1.1
 
         That is return the number of dimensions forming the basis.
         """
@@ -585,6 +598,8 @@ class DimensionSystem(Basic, _QuantityMapper):
         Useless method, kept for compatibility with previous versions.
 
         DO NOT USE.
+        
+        .. deprecated:: 1.1
 
         Check if the system is well defined.
         """
