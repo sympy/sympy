@@ -16,6 +16,7 @@ import collections
 from functools import reduce
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.singleton import S
