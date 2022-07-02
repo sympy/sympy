@@ -90,8 +90,10 @@ def test_truss():
     t.apply_support(D, "roller")
     assert t.supports == {A: 'pinned', D: 'roller', C: 'none'}
     assert t.reaction_loads == {}
+    assert t.loads == {A: [[2*P, 45], [Symbol('R_A_x'), 0], [Symbol('R_A_y'), 90]], D: [[P/2 + Symbol('R_D_y'), 90]], C: [[0, 90]]}
 
     # testing the remove_support method
     t.remove_support(A)
     assert t.supports == {A: 'none', D: 'roller', C: 'none'}
     assert t.reaction_loads == {}
+    assert t.loads == {A: [[2*P, 45], [0, 90]], C: [[0, 90]], D: [[P/2 + Symbol('R_D_y'), 90]]}
