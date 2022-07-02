@@ -1971,6 +1971,14 @@ def test_issue_9723():
            (9*x/10 + 11*(4*x + 5)**(S(3)/2)/40 + sqrt(4*x + 5)/40 + (4*x + 5)**2/10 + S(11)/10)/2
 
 
+def test_issue_23704():
+    # XXX: This is testing that an exception is not raised in risch Ideally
+    # manualintegrate (manual=True) would be able to compute this but
+    # manualintegrate is very slow for this example so we don't test that here.
+    assert (integrate(log(x)/x**2/(c*x**2+b*x+a),x, risch=True)
+        == NonElementaryIntegral(log(x)/(a*x**2 + b*x**3 + c*x**4), x))
+
+
 def test_exp_substitution():
     assert integrate(1/sqrt(1-exp(2*x))) == log(sqrt(1 - exp(2*x)) - 1)/2 - log(sqrt(1 - exp(2*x)) + 1)/2
 
