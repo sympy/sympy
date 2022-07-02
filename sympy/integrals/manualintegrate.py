@@ -225,7 +225,7 @@ def find_substitutions(integrand, symbol, u_var):
         debug("substituted: {}, u: {}, u_var: {}".format(substituted, u, u_var))
         substituted = manual_subs(substituted, u, u_var).cancel()
 
-        if symbol in substituted.free_symbols:
+        if substituted.has_free(symbol):
             return False
         # avoid increasing the degree of a rational function
         if integrand.is_rational_function(symbol) and substituted.is_rational_function(u_var):
