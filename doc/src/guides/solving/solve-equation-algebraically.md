@@ -204,9 +204,9 @@ by substituting the critical points back into the function using {meth}`~.subs`.
 ...     # Extract the value from the dictionary where key is x
 ...     critical_point_value = critical_point[x]
 ...     f_at_critical_point = f.subs(x, critical_point_value)
-...     print(f_at_critical_point)
-1
--5/27
+...     print(f"f({critical_point_value}) = {f_at_critical_point}")
+f(-1) = 1
+f(1/3) = -5/27
 ```
 
 ## Using {func}`~.solveset`
