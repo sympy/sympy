@@ -30,7 +30,8 @@ and SymPy will solve for $y$:
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
->>> solve(x ** 2 - y)
+>>> solution = solve(x ** 2 - y, dict=True)
+>>> print(solution)
 [{y: x**2}]
 ```
 
@@ -39,8 +40,9 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
->>> solve(x ** 2 - y, x)
-[-sqrt(y), sqrt(y)]
+>>> solution = solve(x ** 2 - y, dict=True)
+>>> print(solution)
+[{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
 
 ## Using {func}`~.solve`
@@ -58,10 +60,11 @@ by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y =
 expression which already equals zero, or an equation that you do not mind rearranging to $expression = 0$.
     
 ```py
->>> from sympy import solve
 >>> from sympy.abc import x, y
->>> solve(x**2 - y, x)
-[-sqrt(y), sqrt(y)]
+>>> from sympy import solve
+>>> solution = solve(x ** 2 - y, dict=True)
+>>> print(solution)
+[{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
     
 ### Put your equation into `Eq` form
@@ -74,8 +77,9 @@ or which you think of as an equality.
 >>> from sympy import solve, Eq
 >>> from sympy.abc import x, y
 >>> eqn = Eq(x**2, y)
->>> solve(eqn, x)
-[-sqrt(y), sqrt(y)]
+>>> solution = solve(eqn, x, dict=True)
+>>> print(solution)
+[{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
     
 ### Parse a string representing the equation
