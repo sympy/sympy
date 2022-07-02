@@ -14,7 +14,7 @@ section :ref:`Explanation <explanation>` and the :ref:`API reference <reference>
 a module break down.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    getting_started/index.rst
    assumptions.rst
