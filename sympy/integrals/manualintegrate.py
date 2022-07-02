@@ -77,6 +77,7 @@ def Rule(name, props=""):
 ConstantRule = Rule("ConstantRule", "constant")
 ConstantTimesRule = Rule("ConstantTimesRule", "constant other substep")
 PowerRule = Rule("PowerRule", "base exp")
+NestedPowRule = Rule("NestedPowRule", "base exp")
 AddRule = Rule("AddRule", "substeps")
 URule = Rule("URule", "u_var u_func constant substep")
 PartsRule = Rule("PartsRule", "u dv v_step second_step")
@@ -486,6 +487,33 @@ def _add_degenerate_step(generic_cond, generic_step, degenerate_step):
     return PiecewiseRule(subfunctions, generic_step.context, generic_step.symbol)
 
 
+def nested_pow_rule(integral: IntegralInfo):
+    # nested (c*(a+b*x)**d)**e
+    integrand, x = integral
+    a = Wild('a', exclude=[x])
+    b = Wild('b', exclude=[x, 0])
+    pattern = a+b*x
+    base = x
+    generic_cond = S.true
+    for add_ in integrand.find(Add):
+        match = add_.match(pattern)
+        if match:
+            a, b = match[a], match[b]
+            base = x + a/b
+            generic_cond = Ne(b, 0)
+            break
+    exp_ = ((base*integrand).diff(x)/integrand).cancel() - 1
+    if exp_.has_free(x):
+        return
+    if generic_cond is S.true:
+        degenerate_step = None
+    else:
+        # equivalent with subs(b, 0) but no need to find b
+        degenerate_step = ConstantRule(integrand.subs(x, 0), integrand, x)
+    generic_step = NestedPowRule(base, exp_, integrand, x)
+    return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
+
+
 def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
     """
     Set degenerate=False on recursive call where coefficient of quadratic term
@@ -531,10 +559,17 @@ def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
 
     if simplify(2*exp + 1) == 0:
         h, k = -b/(2*c), a - b**2/(4*c)  # rewrite base to k + c*(symbol-h)**2
-        step = general_rule = ReciprocalSqrtQuadraticRule(a, b, c, integrand, symbol)
+        non_square_cond = Ne(k, 0)
+        square_step = None
+        if non_square_cond is not S.true:
+            square_step = NestedPowRule(symbol-h, -1, 1/sqrt(c*(symbol-h)**2), symbol)
+        if non_square_cond is S.false:
+            return square_step
+        generic_step = ReciprocalSqrtQuadraticRule(a, b, c, integrand, symbol)
+        step = _add_degenerate_step(non_square_cond, generic_step, square_step)
         if k.is_real and c.is_real:
             # list of ((rule, base_exp, a, sign_a, b, sign_b), condition)
-            possibilities = []
+            rules = []
             for args, cond in (  # don't apply ArccoshRule to x**2-1
                 ((ArcsinRule, k, 1, -c, -1, h), And(k > 0, c < 0)),  # 1-x**2
                 ((ArcsinhRule, k, 1, c, 1, h), And(k > 0, c > 0)),  # 1+x**2
@@ -542,14 +577,13 @@ def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
                 if cond is S.true:
                     return make_inverse_trig(*args)
                 if cond is not S.false:
-                    possibilities.append((args, cond))
-            if possibilities:
-                rules = [(make_inverse_trig(*args), cond) for args, cond in possibilities]
+                    rules.append((make_inverse_trig(*args), cond))
+            if rules:
                 if not k.is_positive:  # conditions are not thorough, need fall back rule
-                    rules.append((general_rule, S.true))
+                    rules.append((generic_step, S.true))
                 step = PiecewiseRule(rules, integrand, symbol)
             else:
-                step = general_rule
+                step = generic_step
         return _add_degenerate_step(generic_cond, step, degenerate_step)
     if exp == S.Half:
         step = SqrtQuadraticRule(a, b, c, integrand, symbol)
@@ -1522,6 +1556,7 @@ def integral_steps(integrand, symbol, **options):
                 trig_powers_products_rule,
                 trig_expand_rule
             )),
+            null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(trig_substitution_rule)
         ),
         fallback_rule)(integral)
@@ -1542,6 +1577,14 @@ def eval_power(base, exp, integrand, symbol):
         ((base**(exp + 1))/(exp + 1), Ne(exp, -1)),
         (log(base), True),
         )
+
+
+@evaluates(NestedPowRule)
+def eval_nested_pow(base, exp_, integrand, x):
+    m = base*integrand
+    return Piecewise((m/(exp_+1), Ne(exp_, -1)),
+                     (m*log(base), True))
+
 
 @evaluates(ExpRule)
 def eval_exp(base, exp, integrand, symbol):
