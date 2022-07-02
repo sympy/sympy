@@ -3,6 +3,7 @@ This module can be used to solve problems related
 to 2D Trusses.
 """
 
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 
 
@@ -547,14 +548,12 @@ class Truss:
         else:
             self._supports[location] = type
 
-        if type == "pinned":
-            self._loads['R_'+str(location)+'_x']= []
-            self._loads['R_'+str(location)+'_y']= []
+        if type == 'pinned':
+            self.apply_load(location, Symbol('R_'+str(location)+'_x'), 0)
+            self.apply_load(location, Symbol('R_'+str(location)+'_y'), 90)
 
-        elif type == "roller":
-            self._loads['R_'+str(location)+'_y']= []
-            if 'R_'+str(location)+'_x' in list(self._loads):
-                self._loads.pop('R_'+str(location)+'_x')
+        elif type == 'roller':
+            self.apply_load(location, Symbol('R_'+str(location)+'_y'), 90)
 
     def remove_support(self, location):
         """
@@ -584,7 +583,16 @@ class Truss:
             raise ValueError("No such node exists in the Truss")
 
         else:
-            self._loads.pop('R_'+str(location)+'_y')
-            if self._supports[location] == "pinned":
-                self._loads.pop('R_'+str(location)+'_x')
+            if self._supports[location] == 'pinned':
+                self.remove_load(location, Symbol('R_'+str(location)+'_x'), 0)
+                for load in self._loads[location]:
+                    if load[1] == 90:
+                        load[0] -= Symbol('R_'+str(location)+'_y')
+                        break
+
+            elif self._supports[location] == 'roller':
+                for load in self._loads[location]:
+                    if load[1] == 90:
+                        load[0] -= Symbol('R_'+str(location)+'_y')
+                        break
             self._supports[location] = "none"
