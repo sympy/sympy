@@ -7,7 +7,29 @@ Alternatives to consider:
 - Some equations cannot be solved algebraically (either at all or by SymPy), 
 so you may have to {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` instead.
 
-There are two high-level functions to solve equations, {func}`~.solve` and {func}`~.solveset`. 
+There are two high-level functions to solve equations, {func}`~.solve` and {func}`~.solveset`.
+Here is a simple example of each:
+
+{func}`~.solve`
+
+```py
+>>> from sympy.abc import x, y
+>>> from sympy import solve
+>>> solution = solve(x ** 2 - y, dict=True)
+>>> print(solution)
+[{x: -sqrt(y)}, {x: sqrt(y)}]
+```
+
+{func}`~.solveset`
+
+```py
+>>> from sympy import solveset
+>>> from sympy.abc import x, y
+>>> solution = solveset(x**2 - y, x)
+>>> print(solution)
+{-sqrt(y), sqrt(y)}
+```
+
 Here are recommendations on when to use:
 
 - {func}`~.solve`
@@ -58,7 +80,7 @@ Use the fact that any expression not in an `Eq` (equation) is automatically assu
 by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y = 0$, and 
 {func}`~.solve` that expression. This approach is convenient if you are interactively solving an 
 expression which already equals zero, or an equation that you do not mind rearranging to $expression = 0$.
-    
+
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
