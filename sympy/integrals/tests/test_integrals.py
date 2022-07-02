@@ -677,6 +677,10 @@ def test_integrate_returns_piecewise():
         (-x*cos(n*x)/n + sin(n*x)/n**2, Ne(n, 0)), (0, True))
     assert integrate(exp(x*y), (x, 0, z)) == Piecewise(
         (exp(y*z)/y - 1/y, (y > -oo) & (y < oo) & Ne(y, 0)), (z, True))
+    # https://github.com/sympy/sympy/issues/23707
+    assert integrate(exp(t)*exp(-t*sqrt(x - y)), t) == Piecewise(
+        (-exp(t)/(sqrt(x - y)*exp(t*sqrt(x - y)) - exp(t*sqrt(x - y))),
+        Ne(x, y + 1)), (t, True))
 
 
 def test_integrate_max_min():

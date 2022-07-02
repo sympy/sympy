@@ -3359,6 +3359,10 @@ def unrad(eq, *syms, **flags):
     # recast poly in terms of eigen-gens
     poly = eq.as_poly(*gens)
 
+    # not a polynomial e.g. 1 + sqrt(x)*exp(sqrt(x)) with gen sqrt(x)
+    if poly is None:
+        return
+
     # - an exponent has a symbol of interest (don't handle)
     if any(g.exp.has(*syms) for g in gens):
         return
