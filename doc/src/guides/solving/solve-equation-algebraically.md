@@ -72,7 +72,7 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 - produces various output formats depending on the answer
     - unless you use `dict=True` to ensure the result will be formatted as a dictionary, 
     which we recommend if you want to extract information from the result programmatically
-- produces results which can be substituted into an expression using {func}`~.subs`
+- produces results which can be substituted into an expression using {meth}`~.subs`
 
 You can solve an equation using {func}`~.solve` in several ways.
 
@@ -190,7 +190,7 @@ You can substitute solutions from {func}`~.solve` into an expression.
 A common use case is finding the critical points and values for a function $f$. 
 At the critical points, the derivative equals zero (or is undefined). 
 You can then obtain the function values at those critical points
-by substituting the critical points back into the function using {func}`~.subs`.
+by substituting the critical points back into the function using {meth}`~.subs`.
 
 ```py
 >>> from sympy.abc import x
