@@ -15,7 +15,7 @@ Here is a simple example of each:
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
->>> solution = solve(x ** 2 - y, dict=True)
+>>> solution = solve(x ** 2 - y, x, dict=True)
 >>> print(solution)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
@@ -62,7 +62,7 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
->>> solution = solve(x ** 2 - y, dict=True)
+>>> solution = solve(x ** 2 - y, x, dict=True)
 >>> print(solution)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
@@ -84,7 +84,7 @@ expression which already equals zero, or an equation that you do not mind rearra
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
->>> solution = solve(x ** 2 - y, dict=True)
+>>> solution = solve(x ** 2 - y, x, dict=True)
 >>> print(solution)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
