@@ -352,7 +352,7 @@ $x - 7 = x + 2$ reduces to $-7 = 2$, which has no solution because no value of $
 >>> from sympy import solve, Eq
 >>> from sympy.abc import x
 >>> eqn = Eq(x - 7, x + 2)
->>> solve(eqn)
+>>> solve(eqn, x)
 []
 ```
 
