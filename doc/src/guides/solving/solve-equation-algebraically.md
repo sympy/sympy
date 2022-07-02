@@ -70,7 +70,9 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 ## Using {func}`~.solve`
 
 - produces various output formats depending on the answer
-    - unless you use `dict=True` to ensure the result will be formatted as a dictionary, which we recommend if you want to extract information from the result programmatically
+    - unless you use `dict=True` to ensure the result will be formatted as a dictionary, 
+    which we recommend if you want to extract information from the result programmatically
+- produces results which can be substituted into an expression using {func}`~.subs`
 
 You can solve an equation using {func}`~.solve` in several ways.
 
@@ -179,6 +181,32 @@ symbol to be solved for, $x$:
 >>> solution = solve(x ** 4 - 256, x)
 >>> print(solution)
 [-4, 4]
+```
+
+### Substituting solutions from {func}`~.solve` into an expression
+
+You can substitute solutions from {func}`~.solve` into an expression.
+
+A common use case is finding the critical points and values for a function $f$. 
+At the critical points, the derivative equals zero (or is undefined). 
+You can then obtain the function values at those critical points
+by substituting the critical points back into the function using {func}`~.subs`.
+
+```py
+>>> from sympy.abc import x
+>>> from sympy import solve, diff
+>>> f = x**3 + x**2 - x
+>>> derivative = diff(f, x)
+>>> critical_points = solve(derivative, x, dict=True)
+>>> print(critical_points)
+[{x: -1}, {x: 1/3}]
+>>> for critical_point in critical_points:
+...     # Extract the value from the dictionary where key is x
+...     critical_point_value = critical_point[x]
+...     f_at_critical_point = f.subs(x, critical_point_value)
+...     print(f_at_critical_point)
+1
+-5/27
 ```
 
 ## Using {func}`~.solveset`
