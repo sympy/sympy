@@ -9,7 +9,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
 from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (acoth, atanh, sinh)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, atanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
@@ -716,6 +716,17 @@ def test_issue_10610():
     assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == Rational(1, 3)
 
 
+def test_issue_10868():
+    assert limit(log(x) + asech(x), x, 0, '+') == log(2)
+    assert limit(log(x) + asech(x), x, 0, '-') == log(2) + 2*I*pi
+    raises(ValueError, lambda: limit(log(x) + asech(x), x, 0, '+-'))
+    assert limit(log(x) + asech(x), x, oo) == oo
+    assert limit(log(x) + acsch(x), x, 0, '+') == log(2)
+    assert limit(log(x) + acsch(x), x, 0, '-') == -oo
+    raises(ValueError, lambda: limit(log(x) + acsch(x), x, 0, '+-'))
+    assert limit(log(x) + acsch(x), x, oo) == oo
+
+
 def test_issue_6599():
     assert limit((n + cos(n))/n, n, oo) == 1
 
@@ -1172,6 +1183,9 @@ def test_issue_22220():
     expr = expr = (-log(tan(x/2) - I) +log(tan(x/2) + I))
     assert limit(expr, x, pi, '+') == 2*I*pi
     assert limit(expr, x, pi, '-') == 0
+
+def test_sympyissue_22986():
+    assert limit(acosh(1 + 1/x)*sqrt(x), x, oo) == sqrt(2)
 
 
 def test_issue_23231():

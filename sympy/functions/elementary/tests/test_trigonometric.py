@@ -1788,6 +1788,15 @@ def test_asec_leading_term():
     assert asec(1/x).as_leading_term(x) == pi/2
 
 
+def test_asec_series():
+    assert asec(x).series(x, 0, 9) == \
+        I*log(2) - I*log(x) - I*x**2/4 - 3*I*x**4/32 \
+        - 5*I*x**6/96 - 35*I*x**8/1024 + O(x**9)
+    t4 = asec(x).taylor_term(4, x)
+    assert t4 == -3*I*x**4/32
+    assert asec(x).taylor_term(6, x, t4, 0) == -5*I*x**6/96
+
+
 def test_acsc():
     assert acsc(nan) is nan
     assert acsc(1) == pi/2
@@ -1848,6 +1857,15 @@ def test_acsc_leading_term():
     assert acsc(1/x).as_leading_term(x) == x
 
 
+def test_acsc_series():
+    assert acsc(x).series(x, 0, 9) == \
+        -I*log(2) + pi/2 + I*log(x) + I*x**2/4 \
+        + 3*I*x**4/32 + 5*I*x**6/96 + 35*I*x**8/1024 + O(x**9)
+    t6 = acsc(x).taylor_term(6, x)
+    assert t6 == 5*I*x**6/96
+    assert acsc(x).taylor_term(8, x, t6, 0) == 35*I*x**8/1024
+
+
 def test_inverses_nseries():
     assert asin(x + 2)._eval_nseries(x, 4, None, I) == -asin(2) + pi + sqrt(3)*I*x/3 - sqrt(3)*I*x**2/9 + \
     sqrt(3)*I*x**3/18 + O(x**4)
@@ -1890,6 +1908,7 @@ def test_inverses_nseries():
     # assert acos(exp(x))._eval_nseries(x, 3, None) == sqrt(2)*sqrt(-x) - sqrt(2)*(-x)**(S(3)/2)/6 + sqrt(2)*(-x)**(S(5)/2)/120 + O(x**3)
     # assert acos(-exp(x))._eval_nseries(x, 3, None) == pi - sqrt(2)*sqrt(-x) + sqrt(2)*(-x)**(S(3)/2)/6 - sqrt(2)*(-x)**(S(5)/2)/120 + O(x**3)
 
+
     assert atan(x + 2*I)._eval_nseries(x, 4, None, 1) == I*atanh(2) - x/3 - 2*I*x**2/9 + 13*x**3/81 + O(x**4)
     assert atan(x + 2*I)._eval_nseries(x, 4, None, -1) == I*atanh(2) - pi - x/3 - 2*I*x**2/9 + 13*x**3/81 + O(x**4)
     assert atan(x - 2*I)._eval_nseries(x, 4, None, 1) == -I*atanh(2) + pi - x/3 + 2*I*x**2/9 + 13*x**3/81 + O(x**4)
@@ -1900,6 +1919,10 @@ def test_inverses_nseries():
     # assert atan(x**2 - 2*I)._eval_nseries(x, 3, None, -1) == -I*atanh(2) + pi - x**2/3 + O(x**3)
     assert atan(1/x)._eval_nseries(x, 2, None, 1) == pi/2 - x + O(x**2)
     assert atan(1/x)._eval_nseries(x, 2, None, -1) == -pi/2 - x + O(x**2)
+    # testing nseries for atan at branch points
+    assert atan(x + I)._eval_nseries(x, 6, None) == I*log(2)/2 - pi/4 - I*log(-x)/2 + x/4 + I*x**2/16 - x**3/48 - I*x**4/128 + x**5/320 + O(x**6)
+    assert atan(x - I)._eval_nseries(x, 6, None) == -I*log(2)/2 + pi/4 + I*log(x)/2 + x/4 - I*x**2/16 - x**3/48 + I*x**4/128 + x**5/320 + O(x**6)
+
 
     assert acot(x + S(1)/2*I)._eval_nseries(x, 4, None, 1) == -I*acoth(S(1)/2) + pi - 4*x/3 + 8*I*x**2/9 + 112*x**3/81 + O(x**4)
     assert acot(x + S(1)/2*I)._eval_nseries(x, 4, None, -1) == -I*acoth(S(1)/2) - 4*x/3 + 8*I*x**2/9 + 112*x**3/81 + O(x**4)
@@ -1911,6 +1934,8 @@ def test_inverses_nseries():
     # assert acot(x**2 - S(1)/2*I)._eval_nseries(x, 3, None, -1) == I*acoth(S(1)/2) - 4*x**2/3 + O(x**3)
     # assert acot(x)._eval_nseries(x, 2, None, 1) == pi/2 - x + O(x**2)
     # assert acot(x)._eval_nseries(x, 2, None, -1) == -pi/2 - x + O(x**2)
+    assert acot(x + I)._eval_nseries(x, 6, None) == -I*log(2)/2 + pi/4 + I*log(x)/2 - x/4 - I*x**2/16 + x**3/48 + I*x**4/128 - x**5/320 + O(x**6)
+    assert acot(x - I)._eval_nseries(x, 6, None) == I*log(2)/2 + pi/4 - I*log(x)/2 - x/4 + I*x**2/16 + x**3/48 - I*x**4/128 - x**5/320 + O(x**6)
 
     assert asec(x + S(1)/2)._eval_nseries(x, 4, None, I) == asec(S(1)/2) - 4*sqrt(3)*I*x/3 + \
     8*sqrt(3)*I*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
