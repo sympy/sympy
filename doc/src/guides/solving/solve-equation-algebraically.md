@@ -38,8 +38,9 @@ Here are recommendations on when to use:
     - You want to substitute those explicit solution values into other equations
     or expressions involving the same variable.
 - {func}`~.solveset`
+    - You want to represent the solutions in a mathematically precise way, using [sets](../../modules/sets.html).
+    - You want a representation of all the solutions, including if there are infinitely many.
     - You want a consistent input interface.
-    - You want to get all the solutions, including if there are infinitely many.
     - You want to limit the domain of the solutions to any arbitrary set.
 
 We recommend you include the variable to be solved for as the second argument for either function. 
@@ -207,8 +208,7 @@ by substituting the critical points back into the function using {meth}`~sympy.c
 ## Using {func}`~.solveset`
 
 - produces outputs in the format of 
-[SymPy mathematical Sets](https://docs.sympy.org/dev/modules/sets.html?highlight=sets#module-sympy.sets.sets) rather than 
-[Python sets](https://docs.python.org/3/library/stdtypes.html#set)
+[mathematical Sets](../../modules/sets.html)
 - can represent infinite sets of possible solutions
 - the solution set can be more difficult to parse programmatically
 
@@ -220,7 +220,7 @@ Use the fact that any expression not in an `Eq` (equation) is automatically assu
  by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y = 0$, and 
  {func}`~.solveset` that expression. This approach is convenient if you are interactively solving an 
 expression which already equals zero, or an equation that you do not mind rearranging to $expression = 0$.
-For a FiniteSet of solutions, you can extract each solution by iterating through the set.
+If there are a countable number of solutions ([FiniteSet](../../modules/sets.rst), you can extract each solution by iterating through the set.
 
 ```py
 >>> from sympy import solveset
@@ -255,7 +255,7 @@ Parse a string representing the equation into a form that SymPy can understand (
 reading in a string. We [recommend against using parsing a string if you are creating the expression 
 yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input). 
 Parsing an equation from a string requires you to use 
-[transformations](https://docs.sympy.org/dev/modules/parsing.html?highlight=parse_expr#sympy.parsing.sympy_parser.parse_expr) 
+[transformations](../../modules/parsing.html?highlight=parse_expr#sympy.parsing.sympy_parser.parse_expr) 
 for SymPy to handle equals signs and create symbols from your variables.
 
 You should always include the variable to solve for if you want to extract results programmatically, 
@@ -287,10 +287,10 @@ Eq(x**2, y)
 {-sqrt(y), sqrt(y)}
 ```
 
-### {func}`~.solveset` can return infinitely many solutions when {func}`~.solve` cannot
+### {func}`~.solveset` can explicitly represent infinite sets of possible solutions when {func}`~.solve` cannot
 
 {func}`~.solveset` 
-[can return infinitely many solutions](https://docs.sympy.org/dev/modules/solvers/solveset.html?highlight=solveset#why-solveset) 
+[can represent infinite sets of possible solutions](../../modules/solvers/solveset.html?highlight=solveset#why-solveset) 
 and express them in standard mathematical notation, 
 for example $\sin(x) = 0$ for $x = n * \pi$ for every integer value of $n$:
 
@@ -340,7 +340,7 @@ as `S.Reals`:
 {-4, 4}
 ```
 
-If you restrict the solutions to a domain in which there are no solutions, SymPy will return the empty set:
+If you restrict the solutions to a domain in which there are no solutions, SymPy will return the empty set, [EmptySet](../../modules/sets.rst):
 
 ```py
 >>> from sympy import solveset, S
