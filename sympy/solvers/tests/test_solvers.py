@@ -1278,6 +1278,11 @@ def test_unrad1():
     # make sure numerators which are already polynomial are rejected
     assert unrad((x/(x + 1) + 3)**(-2), x) is None
 
+    # https://github.com/sympy/sympy/issues/23707
+    eq = sqrt(x - y)*exp(t*sqrt(x - y)) - exp(t*sqrt(x - y))
+    assert solve(eq, y) == [x - 1]
+    assert unrad(eq) is None
+
 
 @slow
 def test_unrad_slow():
