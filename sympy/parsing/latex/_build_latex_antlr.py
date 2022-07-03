@@ -76,7 +76,9 @@ def build_parser(output_dir=dir_latex_antlr):
         os.unlink(path)
 
         with open(new_path, "w") as out_file:
-            offset = 2
+            offset = 0
+            while lines[offset].startswith('#'):
+                offset += 1
             out_file.write(header)
             out_file.writelines(lines[offset:])
 

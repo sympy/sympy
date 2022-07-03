@@ -65,12 +65,15 @@ def build_parser(output_dir=dir_autolev_antlr):
 
         new_path = os.path.join(output_dir, os.path.basename(path).lower())
         with open(path, 'r') as f:
-            lines = [line.rstrip() + '\n' for line in f.readlines()]
+            lines = [line.rstrip().replace('AutolevParser import', 'autolevparser import') +'\n'
+                     for line in f.readlines()]
 
         os.unlink(path)
 
         with open(new_path, "w") as out_file:
-            offset = 2
+            offset = 0
+            while lines[offset].startswith('#'):
+                offset += 1
             out_file.write(header)
             out_file.writelines(lines[offset:])
 
