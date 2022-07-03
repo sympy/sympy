@@ -322,8 +322,8 @@ However, for more complex results, it may not be possible to list the solutions:
 Intersection({-sqrt(y), sqrt(y)}, Reals)
 >>> solution_list = list(solution_set)
 Traceback (most recent call last):
-Exception has occurred: TypeError
-The computation had not completed because of the undecidable set membership is found in every candidates.
+    ...
+TypeError: The computation had not completed because of the undecidable set membership is found in every candidates.
 ```
 
 ## Not all equations can be solved
