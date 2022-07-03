@@ -38,7 +38,7 @@ Here are recommendations on when to use:
     - You want to substitute those explicit solution values into other equations
     or expressions involving the same variable.
 - {func}`~.solveset`
-    - You want to represent the solutions in a mathematically precise way, using [sets](../../modules/sets.html).
+    - You want to represent the solutions in a mathematically precise way, using [sets](../../modules/sets.rst).
     - You want a representation of all the solutions, including if there are infinitely many.
     - You want a consistent input interface.
     - You want to limit the domain of the solutions to any arbitrary set.
@@ -112,7 +112,7 @@ then apply {func}`~.solve` to the parsed expression.
 This approach is convenient if you are programmatically reading in a string. 
 We [recommend against using parsing a string if you are creating the expression yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input). 
 Parsing an equation from a string requires you to use 
-[transformations](https://docs.sympy.org/dev/modules/parsing.html?highlight=parse_expr#sympy.parsing.sympy_parser.parse_expr) 
+{func}`transformations <sympy.parsing.sympy_parser.parse_expr>`
 for SymPy to interpret equals signs and create symbols from your variables.
 
 You should always include the variable to solve for if you want to extract results programmatically, 
@@ -208,7 +208,7 @@ by substituting the critical points back into the function using {meth}`~sympy.c
 ## Using {func}`~.solveset`
 
 - produces outputs in the format of 
-[mathematical Sets](../../modules/sets.html)
+[mathematical Sets](../../modules/sets.rst)
 - can represent infinite sets of possible solutions
 - the solution set can be more difficult to parse programmatically
 
@@ -255,7 +255,7 @@ Parse a string representing the equation into a form that SymPy can understand (
 reading in a string. We [recommend against using parsing a string if you are creating the expression 
 yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input). 
 Parsing an equation from a string requires you to use 
-[transformations](../../modules/parsing.html?highlight=parse_expr#sympy.parsing.sympy_parser.parse_expr) 
+{func}`transformations <sympy.parsing.sympy_parser.parse_expr>`
 for SymPy to handle equals signs and create symbols from your variables.
 
 You should always include the variable to solve for if you want to extract results programmatically, 
@@ -290,7 +290,7 @@ Eq(x**2, y)
 ### {func}`~.solveset` can explicitly represent infinite sets of possible solutions when {func}`~.solve` cannot
 
 {func}`~.solveset` 
-[can represent infinite sets of possible solutions](../../modules/solvers/solveset.html?highlight=solveset#why-solveset) 
+[can represent infinite sets of possible solutions](why-solveset)
 and express them in standard mathematical notation, 
 for example $\sin(x) = 0$ for $x = n * \pi$ for every integer value of $n$:
 
@@ -329,7 +329,7 @@ imaginary values. Here, the first two solutions are real, and the last two are i
 ```
 
 If you want to restrict returned solutions to real numbers, you can specify the 
-[domain to solve in](https://docs.sympy.org/dev/modules/solvers/solveset.html?highlight=solveset#what-is-this-domain-argument-about) 
+[domain to solve in](solveset-domain-argument)
 as `S.Reals`:
 
 ```py
