@@ -36,12 +36,19 @@ Here are recommendations on when to use:
     - You want to get explicit symbolic representations of the different values
     a variable could take that would satisfy the equation.
     - You want to substitute those explicit solution values into other equations
-    or expressions involving the same variable.
+    or expressions involving the same variable using {meth}`~sympy.core.basic.Basic.subs`
+
 - {func}`~.solveset`
-    - You want to represent the solutions in a mathematically precise way, using [sets](../../modules/sets.rst).
+    - You want to represent the solutions in a mathematically precise way, using [mathematical sets](../../modules/sets.rst).
     - You want a representation of all the solutions, including if there are infinitely many.
     - You want a consistent input interface.
     - You want to limit the domain of the solutions to any arbitrary set.
+    - You do not need to programmatically extract solutions from the solution set:
+    solution sets cannot necessarily be interrogated programmatically.
+
+## Guidance
+
+### Include the variable to be solved for in the function call
 
 We recommend you include the variable to be solved for as the second argument for either function. 
 While this is optional for equations with a single symbol, it is a good practice because it ensures 
@@ -66,43 +73,60 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
 
-## Using {func}`~.solve`
+### Ensure consistent formatting from {func}`~.solve` by using `dict=True`
 
-- produces various output formats depending on the answer
-    - unless you use `dict=True` to ensure the result will be formatted as a dictionary, 
-    which we recommend if you want to extract information from the result programmatically
-- produces results which can be substituted into an expression using {meth}`~sympy.core.basic.Basic.subs`
+{func}`~.solve` produces various output formats depending on the answer, 
+unless you use `dict=True` to ensure the result will be formatted as a dictionary. 
+We recommend using `dict=True`, especially if you want to 
+extract information from the result programmatically.
 
-You can solve an equation using {func}`~.solve` in several ways.
+## Solving equations using {func}`~.solve` or {func}`~.solveset`
+
+You can solve an equation using in several ways. 
+The examples below demonstrate using both {func}`~.solve` and {func}`~.solveset` where applicable. 
+You can choose the function best suited to your equation.
 
 ### Make your equation into an expression that equals zero
 
 Use the fact that any expression not in an `Eq` (equation) is automatically assumed to equal zero (0) 
 by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y = 0$, and 
-{func}`~.solve` that expression. This approach is convenient if you are interactively solving an 
-expression which already equals zero, or an equation that you do not mind rearranging to $expression = 0$.
+solve that expression. This approach is convenient if you are interactively solving 
+an expression which already equals zero, or an equation that you do not mind rearranging to 
+$expression = 0$.
 
 ```py
+>>> from sympy import solve, solveset
 >>> from sympy.abc import x, y
->>> from sympy import solve
 >>> solution = solve(x ** 2 - y, x, dict=True)
 >>> print(solution)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
+>>> solution_set = solveset(x**2 - y, x)
+>>> print(solution_set)
+{-sqrt(y), sqrt(y)}
 ```
     
 ### Put your equation into `Eq` form
 
-Put your equation into `Eq` form, then apply {func}`~.solve` to the `Eq`. 
-This approach is convenient if you are interactively solving an equation which you already have in the form of an equation,
+Put your equation into `Eq` form, then solve the `Eq`. 
+This approach is convenient if you are interactively solving an equation 
+which you already have in the form of an equation,
 or which you think of as an equality.
     
 ```py
->>> from sympy import solve, Eq
+>>> from sympy import Eq, solve, solveset
 >>> from sympy.abc import x, y
+
 >>> eqn = Eq(x**2, y)
->>> solution = solve(eqn, x, dict=True)
->>> print(solution)
+>>> solutions = solve(eqn, x, dict=True)
+>>> print(solutions)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
+>>> solutions_set = solveset(eqn, x)
+>>> print(solutions_set)
+{-sqrt(y), sqrt(y)}
+>>> for solution_set in solutions_set:
+...     print(solution_set)
+sqrt(y)
+-sqrt(y)
 ```
     
 ### Parse a string representing the equation
@@ -121,7 +145,7 @@ To ensure SymPy will produce results in a consistent format, use `dict=True`.
 To extract the solutions, you can iterate through the list of dictionaries:  
     
 ```py
->>> from sympy import parse_expr, solve
+>>> from sympy import parse_expr, solve, solveset
 >>> from sympy.abc import x
 >>> expr = "x ** 2 = y"
 >>> parsed = parse_expr(expr, transformations="all")
@@ -135,12 +159,15 @@ Eq(x**2, y)
 ...         print(val)
 -sqrt(y)
 sqrt(y)
+>>> solutions_set = solveset(parsed, x)
+>>> print(solutions_set)
+{-sqrt(y), sqrt(y)}
 ```
 
 If you already have the equation in `Eq` form, you can parse that string:
 
 ```py
->>> from sympy import parse_expr, solve
+>>> from sympy import parse_expr, solve, solveset
 >>> from sympy.abc import x
 >>> expr = "Eq(x**2, y)"
 >>> parsed = parse_expr(expr)
@@ -154,34 +181,69 @@ Eq(x**2, y)
 ...         print(val)
 -sqrt(y)
 sqrt(y)
+>>> solutions_set = solveset(parsed, x)
+>>> print(solutions_set)
+{-sqrt(y), sqrt(y)}
 ```
 
-### Restricting the domain of solutions using {func}`~.solve`
+### Restrict the domain of solutions
 
 By default, SymPy will return solutions in the complex domain, which also includes 
 purely real and imaginary values. Here, the first two solutions are real, 
 and the last two are imaginary:
 
 ```py
->>> from sympy import Symbol, solve
->>> x = Symbol('x')
->>> solution = solve(x ** 4 - 256, x)
+>>> from sympy import Symbol, solve, solveset
+>>> x = Symbol('x'); x
+>>> solution = solve(x ** 4 - 256, x, dict=True)
 >>> print(solution)
-[-4, 4, -4*I, 4*I]
+[{x: -4}, {x: 4}, {x: -4*I}, {x: 4*I}]
+>>> solution_set = solveset(x ** 4 - 256, x)
+>>> print(solution_set)
+{-4, 4, -4*I, 4*I}
 ```
 
-If you want to restrict returned solutions to real numbers, you can place an assumption on the 
-symbol to be solved for, $x$:
+If you want to restrict returned solutions to real numbers, you can
+- for {func}`~.solve`, place an assumption on the symbol to be solved for, $x$
 
 ```py
->>> from sympy import Symbol, solve
->>> x = Symbol('x', real=True)
->>> solution = solve(x ** 4 - 256, x)
->>> print(solution)
-[-4, 4]
+from sympy import Symbol, solve, solveset
+x = Symbol('x', real=True)
+solution = solve(x ** 4 - 256, x, dict=True)
+print(solution)
+[{x: -4}, {x: 4}]
 ```
 
-### Substituting solutions from {func}`~.solve` into an expression
+- for {func}`~.solveset`, limit the output domain in the function call
+```py
+>>> from sympy import S, solveset
+>>> from sympy.abc import x
+>>> solution = solveset(x**4 - 256, x, domain=S.Reals)
+>>> print(solution)
+{-4, 4}
+```
+
+If you restrict the solutions to a domain in which there are no solutions, {func}`~.solveset` will return the empty set, [EmptySet](../../modules/sets.rst):
+
+```py
+>>> from sympy import solveset, S
+>>> from sympy.abc import x
+>>> solution = solveset(x**2 + 1, x, domain=S.Reals)
+>>> print(solution)
+EmptySet
+```
+
+Using {func}`~.solveset`, you can restrict returned solutions to any arbitrary set, including an interval:
+
+```py
+>>> from sympy import Interval, pi, sin, solveset
+>>> from sympy.abc import x
+>>> solution = solveset(sin(x), x, Interval(-pi, pi))
+>>> print(solution)
+{0, -pi, pi}
+```
+
+### Substitute solutions from {func}`~.solve` into an expression
 
 You can substitute solutions from {func}`~.solve` into an expression.
 
@@ -203,88 +265,6 @@ by substituting the critical points back into the function using {meth}`~sympy.c
 1
 >>> print(f.subs(point2))
 -5/27
-```
-
-## Using {func}`~.solveset`
-
-- produces outputs in the format of 
-[mathematical Sets](../../modules/sets.rst)
-- can represent infinite sets of possible solutions
-- the solution set can be more difficult to parse programmatically
-
-You can solve an equation using solve() in several ways.
-
-### Make your equation into an expression that equals zero
-
-Use the fact that any expression not in an `Eq` (equation) is automatically assumed to equal zero (0)
- by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y = 0$, and 
- {func}`~.solveset` that expression. This approach is convenient if you are interactively solving an 
-expression which already equals zero, or an equation that you do not mind rearranging to $expression = 0$.
-If there are a countable number of solutions ([FiniteSet](../../modules/sets.rst), you can extract each solution by iterating through the set.
-
-```py
->>> from sympy import solveset
->>> from sympy.abc import x, y
->>> solutions = solveset(x**2 - y, x)
->>> print(solutions)
-{-sqrt(y), sqrt(y)}
->>> for solution in solutions:
-...    print(solution)
-sqrt(y)
--sqrt(y)
-```
-
-### Put your equation into `Eq` form
-
-Put your equation into `Eq` form, then apply {func}`~.solveset` to the `Eq`. 
-This approach is convenient if you are interactively solving an equation which you already have in the form of an equation,
-or which you think of as an equality.
-
-```py
->>> from sympy import Eq, solveset
->>> from sympy.abc import x, y
->>> eqn = Eq(x**2, y)
->>> solution = solveset(eqn, x)
->>> print(solution)
-{-sqrt(y), sqrt(y)}
-```
-
-### Parse a string representing the equation
-Parse a string representing the equation into a form that SymPy can understand (`Eq` form), then apply 
-{func}`~.solveset` to the parsed expression.  This approach is convenient if you are programmatically 
-reading in a string. We [recommend against using parsing a string if you are creating the expression 
-yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input). 
-Parsing an equation from a string requires you to use 
-{func}`transformations <sympy.parsing.sympy_parser.parse_expr>`
-for SymPy to handle equals signs and create symbols from your variables.
-
-You should always include the variable to solve for if you want to extract results programmatically, 
-to ensure that SymPy solves for the desired variable.  
-    
-```py
->>> from sympy import parse_expr, solveset
->>> from sympy.abc import x
->>> expr = "x ** 2 = y"
->>> parsed = parse_expr(expr, transformations="all")
->>> print(parsed)
-Eq(x**2, y)
->>> solutions = solveset(parsed, x)
->>> print(solutions)
-{-sqrt(y), sqrt(y)}
-```
-
-If you already have the equation in `Eq` form, you can parse that string:
-
-```py
->>> from sympy import parse_expr, solveset
->>> from sympy.abc import x
->>> expr = "Eq(x**2, y)"
->>> parsed = parse_expr(expr)
->>> print(parsed)
-Eq(x**2, y)
->>> solutions = solveset(parsed, x)
->>> print(solutions)
-{-sqrt(y), sqrt(y)}
 ```
 
 ### {func}`~.solveset` can explicitly represent infinite sets of possible solutions when {func}`~.solve` cannot
@@ -312,52 +292,35 @@ However, {func}`~.solve` will return only a finite number of solutions:
 [0, pi]
 ```
 
-SymPy tries to return just enough solutions so that all (infinitely many) solutions can generated 
+{func}`~.solve` tries to return just enough solutions so that all (infinitely many) solutions can generated 
 from the returned solutions by adding integer multiples of the periodicity of the equation, here $2\pi$.
 
-### Restricting the domain of solutions using {func}`~.solveset`
+### {func}`~.solveset` solution sets cannot necessarily be interrogated programmatically
 
-By default, SymPy will return solutions in the complex domain, which also includes purely real and 
-imaginary values. Here, the first two solutions are real, and the last two are imaginary:
+If {func}`~.solveset` returns a finite set (class {class}`~.FiniteSet`), you can iterate through the solutions:
 
 ```py
->>> from sympy import S, solveset
->>> from sympy.abc import x
->>> solution = solveset(x**4 - 256, x)
->>> print(solution)
-{-4, 4, -4*I, 4*I}
+>>> from sympy import solveset
+>>> from sympy.abc import x, y
+>>> solution_set = solveset(x**2 - y, x)
+>>> print(solution_set)
+{-sqrt(y), sqrt(y)}
+solution_list = list(solution_set)
+print(solution_list)
+[sqrt(y), -sqrt(y)]
 ```
 
-If you want to restrict returned solutions to real numbers, you can specify the 
-[domain to solve in](solveset-domain-argument)
-as `S.Reals`:
+However, for more complex results, it may not be possible to list the solutions:
 
 ```py
->>> from sympy import S, solveset
->>> from sympy.abc import x
->>> solution = solveset(x**4 - 256, x, domain=S.Reals)
->>> print(solution)
-{-4, 4}
-```
-
-If you restrict the solutions to a domain in which there are no solutions, SymPy will return the empty set, [EmptySet](../../modules/sets.rst):
-
-```py
->>> from sympy import solveset, S
->>> from sympy.abc import x
->>> solution = solveset(x**2 + 1, x, domain=S.Reals)
->>> print(solution)
-EmptySet
-```
-
-You can restrict returned solutions to any arbitrary set, including an interval:
-
-```py
->>> from sympy import Interval, pi, sin, solveset
->>> from sympy.abc import x
->>> solution = solveset(sin(x), x, Interval(-pi, pi))
->>> print(solution)
-{0, -pi, pi}
+>>> from sympy import S, solveset, symbols
+>>> x, y = symbols('x, y')
+>>> solution_set = solveset(x**2 - y, x, domain=S.Reals)
+>>> print(solution_set)
+Intersection({-sqrt(y), sqrt(y)}, Reals)
+>>> solution_list = list(solution_set)
+Exception has occurred: TypeError
+The computation had not completed because of the undecidable set membership is found in every candidates.
 ```
 
 ## Not all equations can be solved
