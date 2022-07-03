@@ -311,8 +311,8 @@ def convert_atom(atom):
                 subscriptName = StrPrinter().doprint(subscript)
                 s += '_{' + subscriptName + '}'
             return sympy.Symbol(s)
-    elif atom.NUMBER():
-        s = atom.NUMBER().getText().replace(",", "")
+    elif atom.number():
+        s = atom.number().getText().replace(",", "")
         return sympy.Number(s)
     elif atom.DIFFERENTIAL():
         var = get_differential_var(atom.DIFFERENTIAL())
@@ -345,43 +345,49 @@ def rule2text(ctx):
 def convert_frac(frac):
     diff_op = False
     partial_op = False
-    lower_itv = frac.lower.getSourceInterval()
-    lower_itv_len = lower_itv[1] - lower_itv[0] + 1
-    if (frac.lower.start == frac.lower.stop
-            and frac.lower.start.type == LaTeXLexer.DIFFERENTIAL):
-        wrt = get_differential_var_str(frac.lower.start.text)
-        diff_op = True
-    elif (lower_itv_len == 2 and frac.lower.start.type == LaTeXLexer.SYMBOL
-          and frac.lower.start.text == '\\partial'
-          and (frac.lower.stop.type == LaTeXLexer.LETTER
-               or frac.lower.stop.type == LaTeXLexer.SYMBOL)):
-        partial_op = True
-        wrt = frac.lower.stop.text
-        if frac.lower.stop.type == LaTeXLexer.SYMBOL:
-            wrt = wrt[1:]
+    if frac.lower and frac.upper:
+        lower_itv = frac.lower.getSourceInterval()
+        lower_itv_len = lower_itv[1] - lower_itv[0] + 1
+        if (frac.lower.start == frac.lower.stop
+                and frac.lower.start.type == LaTeXLexer.DIFFERENTIAL):
+            wrt = get_differential_var_str(frac.lower.start.text)
+            diff_op = True
+        elif (lower_itv_len == 2 and frac.lower.start.type == LaTeXLexer.SYMBOL
+              and frac.lower.start.text == '\\partial'
+              and (frac.lower.stop.type == LaTeXLexer.LETTER
+                   or frac.lower.stop.type == LaTeXLexer.SYMBOL)):
+            partial_op = True
+            wrt = frac.lower.stop.text
+            if frac.lower.stop.type == LaTeXLexer.SYMBOL:
+                wrt = wrt[1:]
 
-    if diff_op or partial_op:
-        wrt = sympy.Symbol(wrt)
-        if (diff_op and frac.upper.start == frac.upper.stop
-                and frac.upper.start.type == LaTeXLexer.LETTER
-                and frac.upper.start.text == 'd'):
-            return [wrt]
-        elif (partial_op and frac.upper.start == frac.upper.stop
-              and frac.upper.start.type == LaTeXLexer.SYMBOL
-              and frac.upper.start.text == '\\partial'):
-            return [wrt]
-        upper_text = rule2text(frac.upper)
+        if diff_op or partial_op:
+            wrt = sympy.Symbol(wrt)
+            if (diff_op and frac.upper.start == frac.upper.stop
+                    and frac.upper.start.type == LaTeXLexer.LETTER
+                    and frac.upper.start.text == 'd'):
+                return [wrt]
+            elif (partial_op and frac.upper.start == frac.upper.stop
+                  and frac.upper.start.type == LaTeXLexer.SYMBOL
+                  and frac.upper.start.text == '\\partial'):
+                return [wrt]
+            upper_text = rule2text(frac.upper)
 
-        expr_top = None
-        if diff_op and upper_text.startswith('d'):
-            expr_top = parse_latex(upper_text[1:])
-        elif partial_op and frac.upper.start.text == '\\partial':
-            expr_top = parse_latex(upper_text[len('\\partial'):])
-        if expr_top:
-            return sympy.Derivative(expr_top, wrt)
-
-    expr_top = convert_expr(frac.upper)
-    expr_bot = convert_expr(frac.lower)
+            expr_top = None
+            if diff_op and upper_text.startswith('d'):
+                expr_top = parse_latex(upper_text[1:])
+            elif partial_op and frac.upper.start.text == '\\partial':
+                expr_top = parse_latex(upper_text[len('\\partial'):])
+            if expr_top:
+                return sympy.Derivative(expr_top, wrt)
+    if frac.upper:
+        expr_top = convert_expr(frac.upper)
+    else:
+        expr_top = sympy.Number(frac.upperd.text)
+    if frac.lower:
+        expr_bot = convert_expr(frac.lower)
+    else:
+        expr_bot = sympy.Number(frac.lowerd.text)
     inverse_denom = sympy.Pow(expr_bot, -1, evaluate=False)
     if expr_top == 1:
         return inverse_denom
@@ -423,15 +429,15 @@ def convert_func(func):
         if name == "exp":
             expr = sympy.exp(arg, evaluate=False)
 
-        if (name == "log" or name == "ln"):
+        if name in ("log", "lg", "ln"):
             if func.subexpr():
                 if func.subexpr().expr():
                     base = convert_expr(func.subexpr().expr())
                 else:
                     base = convert_atom(func.subexpr().atom())
-            elif name == "log":
+            elif name == "lg":  # ISO 80000-2:2019
                 base = 10
-            elif name == "ln":
+            elif name in ("ln", "log"):  # SymPy's latex printer prints ln as log by default
                 base = sympy.E
             expr = sympy.log(arg, base, evaluate=False)
 

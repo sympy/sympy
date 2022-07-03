@@ -3,7 +3,6 @@ from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import I, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
-from sympy.core.sympify import sympify
 from sympy.functions import assoc_legendre
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import Abs, conjugate
@@ -137,8 +136,6 @@ class Ynm(Function):
 
     @classmethod
     def eval(cls, n, m, theta, phi):
-        n, m, theta, phi = [sympify(x) for x in (n, m, theta, phi)]
-
         # Handle negative index m and arguments theta, phi
         if m.could_extract_minus_sign():
             m = -m
@@ -327,13 +324,11 @@ class Znm(Function):
 
     @classmethod
     def eval(cls, n, m, theta, phi):
-        n, m, th, ph = [sympify(x) for x in (n, m, theta, phi)]
-
         if m.is_positive:
-            zz = (Ynm(n, m, th, ph) + Ynm_c(n, m, th, ph)) / sqrt(2)
+            zz = (Ynm(n, m, theta, phi) + Ynm_c(n, m, theta, phi)) / sqrt(2)
             return zz
         elif m.is_zero:
-            return Ynm(n, m, th, ph)
+            return Ynm(n, m, theta, phi)
         elif m.is_negative:
-            zz = (Ynm(n, m, th, ph) - Ynm_c(n, m, th, ph)) / (sqrt(2)*I)
+            zz = (Ynm(n, m, theta, phi) - Ynm_c(n, m, theta, phi)) / (sqrt(2)*I)
             return zz

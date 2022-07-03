@@ -14,7 +14,7 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
-
+import itertools
 from functools import reduce
 
 from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
@@ -274,22 +274,21 @@ def constant_system(A, u, DE):
 
     D = lambda x: derivation(x, DE, basic=True)
 
-    for j in range(A.cols):
-        for i in range(A.rows):
-            if A[i, j].expr.has(*DE.T):
-                # This assumes that const(F(t0, ..., tn) == const(K) == F
-                Ri = A[i, :]
-                # Rm+1; m = A.rows
-                DAij = D(A[i, j])
-                Rm1 = Ri.applyfunc(lambda x: D(x) / DAij)
-                um1 = D(u[i]) / DAij
+    for j, i in itertools.product(range(A.cols), range(A.rows)):
+        if A[i, j].expr.has(*DE.T):
+            # This assumes that const(F(t0, ..., tn) == const(K) == F
+            Ri = A[i, :]
+            # Rm+1; m = A.rows
+            DAij = D(A[i, j])
+            Rm1 = Ri.applyfunc(lambda x: D(x) / DAij)
+            um1 = D(u[i]) / DAij
 
-                Aj = A[:, j]
-                A = A - Aj * Rm1
-                u = u - Aj * um1
+            Aj = A[:, j]
+            A = A - Aj * Rm1
+            u = u - Aj * um1
 
-                A = A.col_join(Rm1)
-                u = u.col_join(Matrix([um1], u.gens))
+            A = A.col_join(Rm1)
+            u = u.col_join(Matrix([um1], u.gens))
 
     return (A, u)
 
@@ -337,12 +336,11 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in range(n, -1, -1):  # [n, ..., 0]
-        for i in range(m):
-            si = Q[i].nth(N + db)/b.LC()
-            sitn = Poly(si*DE.t**N, DE.t)
-            H[i] = H[i] + sitn
-            Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
+    for N, i in itertools.product(range(n, -1, -1), range(m)):  # [n, ..., 0]
+        si = Q[i].nth(N + db)/b.LC()
+        sitn = Poly(si*DE.t**N, DE.t)
+        H[i] = H[i] + sitn
+        Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
 
     if all(qi.is_zero for qi in Q):
         dc = -1
@@ -374,12 +372,11 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in range(n, 0, -1):  # [n, ..., 1]
-        for i in range(m):
-            si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
-            sitn = Poly(si*DE.t**N, DE.t)
-            H[i] = H[i] + sitn
-            Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
+    for N, i in itertools.product(range(n, 0, -1), range(m)):  # [n, ..., 1]
+        si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
+        sitn = Poly(si*DE.t**N, DE.t)
+        H[i] = H[i] + sitn
+        Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
 
     if b.degree(DE.t) > 0:
         for i in range(m):

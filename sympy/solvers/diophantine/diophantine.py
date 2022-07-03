@@ -407,7 +407,7 @@ class Linear(DiophantineEquationType):
 
         '''
         solutions = []
-        for i in range(len(B)):
+        for Ai, Bi in zip(A, B):
             tot_x, tot_y = [], []
 
             for j, arg in enumerate(Add.make_args(c)):
@@ -421,7 +421,7 @@ class Linear(DiophantineEquationType):
                     k, p = arg.as_coeff_Mul()
                     pnew = params[params.index(p) + 1]
 
-                sol = sol_x, sol_y = base_solution_linear(k, A[i], B[i], pnew)
+                sol = sol_x, sol_y = base_solution_linear(k, Ai, Bi, pnew)
 
                 if p is S.One:
                     if None in sol:
@@ -869,7 +869,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
                 E = coeff[y*z]
                 F = coeff[z**2]
 
-                _coeff = dict()
+                _coeff = {}
 
                 _coeff[x**2] = 4*A**2
                 _coeff[y**2] = 4*A*D - B**2
@@ -2894,7 +2894,7 @@ def _transformation_to_normal(var, coeff):
         E = coeff[y*z]
         F = coeff[z**2]
 
-        _coeff = dict()
+        _coeff = {}
 
         _coeff[x**2] = 4*A**2
         _coeff[y**2] = 4*A*D - B**2

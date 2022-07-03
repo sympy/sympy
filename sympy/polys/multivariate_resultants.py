@@ -459,8 +459,8 @@ class MacaulayResultant():
         reduction_set = [v ** self.degrees[i] for i, v
                          in enumerate(self.variables)]
 
-        ais = list([self.polynomials[i].coeff(reduction_set[i])
-                    for i in range(self.n)])
+        ais = [self.polynomials[i].coeff(reduction_set[i])
+               for i in range(self.n)]
 
         reduced_matrix = matrix[:, reduced]
         keep = []

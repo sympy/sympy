@@ -10,7 +10,7 @@ x, y, z = symbols('x y z')
 def test_logaddexp():
     lae_xy = logaddexp(x, y)
     ref_xy = log(exp(x) + exp(y))
-    for wrt, deriv_order in product([x, y, z], range(0, 3)):
+    for wrt, deriv_order in product([x, y, z], range(3)):
         assert (
             lae_xy.diff(wrt, deriv_order) -
             ref_xy.diff(wrt, deriv_order)
@@ -30,7 +30,7 @@ def test_logaddexp():
 def test_logaddexp2():
     lae2_xy = logaddexp2(x, y)
     ref2_xy = log(2**x + 2**y)/log(2)
-    for wrt, deriv_order in product([x, y, z], range(0, 3)):
+    for wrt, deriv_order in product([x, y, z], range(3)):
         assert (
             lae2_xy.diff(wrt, deriv_order) -
             ref2_xy.diff(wrt, deriv_order)

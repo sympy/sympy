@@ -56,16 +56,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             forecolor = 'Gray'
         debug("init_printing: Automatic foreground color:", forecolor)
 
-    preamble = "\\documentclass[varwidth,%s]{standalone}\n" \
-               "\\usepackage{amsmath,amsfonts}%s\\begin{document}"
-    if euler:
-        addpackages = '\\usepackage{euler}'
-    else:
-        addpackages = ''
     if use_latex == "svg":
-        addpackages = addpackages + "\n\\special{color %s}" % forecolor
-
-    preamble = preamble % (fontsize, addpackages)
+        extra_preamble = "\n\\special{color %s}" % forecolor
+    else:
+        extra_preamble = ""
 
     imagesize = 'tight'
     offset = "0cm,0cm"
@@ -79,7 +73,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     debug("init_printing: DVIOPTIONS:", dvioptions)
     debug("init_printing: DVIOPTIONS_SVG:", dvioptions_svg)
-    debug("init_printing: PREAMBLE:", preamble)
 
     latex = latex_printer or default_latex
 
@@ -93,9 +86,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     def _preview_wrapper(o):
         exprbuffer = BytesIO()
         try:
-            preview(o, output='png', viewer='BytesIO',
-                    outputbuffer=exprbuffer, preamble=preamble,
-                    dvioptions=dvioptions)
+            preview(o, output='png', viewer='BytesIO', euler=euler,
+                    outputbuffer=exprbuffer, extra_preamble=extra_preamble,
+                    dvioptions=dvioptions, fontsize=fontsize)
         except Exception as e:
             # IPython swallows exceptions
             debug("png printing:", "_preview_wrapper exception raised:",
@@ -106,9 +99,9 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     def _svg_wrapper(o):
         exprbuffer = BytesIO()
         try:
-            preview(o, output='svg', viewer='BytesIO',
-                    outputbuffer=exprbuffer, preamble=preamble,
-                    dvioptions=dvioptions_svg)
+            preview(o, output='svg', viewer='BytesIO', euler=euler,
+                    outputbuffer=exprbuffer, extra_preamble=extra_preamble,
+                    dvioptions=dvioptions_svg, fontsize=fontsize)
         except Exception as e:
             # IPython swallows exceptions
             debug("svg printing:", "_preview_wrapper exception raised:",
@@ -395,7 +388,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         terminal color setting. See notes.
     backcolor : string, optional, default='Transparent'
         DVI setting for background color. See notes.
-    fontsize : string, optional, default='10pt'
+    fontsize : string or int, optional, default='10pt'
         A font size to pass to the LaTeX documentclass function in the
         preamble. Note that the options are limited by the documentclass.
         Consider using scale instead.

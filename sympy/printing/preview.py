@@ -9,6 +9,7 @@ except ImportError:
     pass
 
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.misc import debug
 from .latex import latex
 
 __doctest_requires__ = {('preview',): ['pyglet']}
@@ -40,7 +41,7 @@ def _run_pyglet(fname, fmt):
     win = window.Window(
         width=img.width + 2*offset,
         height=img.height + 2*offset,
-        caption="sympy",
+        caption="SymPy",
         resizable=False,
         config=config
     )
@@ -78,12 +79,51 @@ def _run_pyglet(fname, fmt):
 
     win.close()
 
+def _get_latex_main(expr, *, preamble=None, packages=(), extra_preamble=None,
+                    euler=True, fontsize=None, **latex_settings):
+    """
+    Generate string of a LaTeX document rendering ``expr``.
+    """
+    if preamble is None:
+        actual_packages = packages + ("amsmath", "amsfonts")
+        if euler:
+            actual_packages += ("euler",)
+        package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
+                                             for p in actual_packages])
+        if extra_preamble:
+            package_includes += extra_preamble
+
+        if not fontsize:
+            fontsize = "12pt"
+        elif isinstance(fontsize, int):
+            fontsize = "{}pt".format(fontsize)
+        preamble = r"""\documentclass[varwidth,%s]{standalone}
+%s
+
+\begin{document}
+""" % (fontsize, package_includes)
+    else:
+        if packages or extra_preamble:
+            raise ValueError("The \"packages\" or \"extra_preamble\" keywords"
+                             "must not be set if a "
+                             "custom LaTeX preamble was specified")
+
+    if isinstance(expr, str):
+        latex_string = expr
+    else:
+        latex_string = ('$\\displaystyle ' +
+                        latex(expr, mode='plain', **latex_settings) +
+                        '$')
+
+    return preamble + '\n' + latex_string + '\n\n' + r"\end{document}"
+
 
 @doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
             filename=None, outputbuffer=None, preamble=None, dvioptions=None,
-            outputTexFile=None, **latex_settings):
+            outputTexFile=None, extra_preamble=None, fontsize=None,
+            **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
@@ -148,6 +188,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     ...            "\\usepackage{amsmath,amsfonts}\\begin{document}"
     >>> preview(x + y, output='png', preamble=preamble)
 
+    It is also possible to use the standard preamble and provide additional
+    information to the preamble using the ``extra_preamble`` keyword argument.
+
+    >>> from sympy import sin
+    >>> extra_preamble = "\\renewcommand{\\sin}{\\cos}"
+    >>> preview(sin(x), output='png', extra_preamble=extra_preamble)
+
     If the value of 'output' is different from 'dvi' then command line
     options can be set ('dvioptions' argument) for the execution of the
     'dvi'+output conversion tool. These options have to be in the form of a
@@ -209,32 +256,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             raise OSError("Unrecognized viewer: %s" % viewer)
 
 
-    if preamble is None:
-        actual_packages = packages + ("amsmath", "amsfonts")
-        if euler:
-            actual_packages += ("euler",)
-        package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
-                                             for p in actual_packages])
+    latex_main = _get_latex_main(expr, preamble=preamble, packages=packages,
+                                 euler=euler, extra_preamble=extra_preamble,
+                                 fontsize=fontsize, **latex_settings)
 
-        preamble = r"""\documentclass[varwidth,12pt]{standalone}
-%s
-
-\begin{document}
-""" % (package_includes)
-    else:
-        if packages:
-            raise ValueError("The \"packages\" keyword must not be set if a "
-                             "custom LaTeX preamble was specified")
-
-    if isinstance(expr, str):
-        latex_string = expr
-    else:
-        latex_string = ('$\\displaystyle ' +
-                        latex(expr, mode='plain', **latex_settings) +
-                        '$')
-
-    latex_main = preamble + '\n' + latex_string + '\n\n' + r"\end{document}"
-
+    debug("Latex code:")
+    debug(latex_main)
     with tempfile.TemporaryDirectory() as workdir:
         with open(join(workdir, 'texput.tex'), 'w', encoding='utf-8') as fh:
             fh.write(latex_main)

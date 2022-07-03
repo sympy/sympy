@@ -14,9 +14,7 @@ path_hack()
 class TestsFailedError(Exception):
     pass
 
-print('Testing optional dependencies')
 
-import sympy
 test_list = [
     # numpy
     '*numpy*',
@@ -28,11 +26,17 @@ test_list = [
     # scipy
     '*scipy*',
 
+    # matplotlib
+    'sympy/plotting/',
+
     # llvmlite
     '*llvm*',
 
     # aesara
     '*aesara*',
+
+    # jax
+    '*jax*',
 
     # gmpy
     'polys',
@@ -66,9 +70,11 @@ test_list = [
 
 ]
 
+
 blacklist = [
     'sympy/physics/quantum/tests/test_circuitplot.py',
 ]
+
 
 doctest_list = [
     # numpy
@@ -77,6 +83,9 @@ doctest_list = [
 
     # scipy
     '*scipy*',
+
+    # matplotlib
+    'sympy/plotting/',
 
     # llvmlite
     '*llvm*',
@@ -111,19 +120,20 @@ doctest_list = [
 
 ]
 
-if not (sympy.test(*test_list, verbose=True, blacklist=blacklist) and sympy.doctest(*doctest_list)):
-    raise TestsFailedError('Tests failed')
+
+print('Testing optional dependencies')
 
 
-print('Testing MATPLOTLIB')
-# Set matplotlib so that it works correctly in headless Travis. We have to do
-# this here because it doesn't work after the sympy plotting module is
-# imported.
-import matplotlib
-matplotlib.use("Agg")
-import sympy
-# Unfortunately, we have to use subprocess=False so that the above will be
-# applied, so no hash randomization here.
-if not (sympy.test('sympy/plotting', 'sympy/physics/quantum/tests/test_circuitplot.py',
-    subprocess=False) and sympy.doctest('sympy/plotting', subprocess=False)):
-    raise TestsFailedError('Tests failed')
+from sympy import test, doctest
+
+
+tests_passed = test(*test_list, blacklist=blacklist)
+doctests_passed = doctest(*doctest_list)
+
+
+if not tests_passed and not doctests_passed:
+    raise TestsFailedError('Tests and doctests failed')
+elif not tests_passed:
+    raise TestsFailedError('Doctests passed but tests failed')
+elif not doctests_passed:
+    raise TestsFailedError('Tests passed but doctests failed')

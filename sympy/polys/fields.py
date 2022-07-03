@@ -264,13 +264,13 @@ class FracField(DefaultPrinting):
                 else:
                     raise
 
-        return _rebuild(sympify(expr))
+        return _rebuild(expr)
 
     def from_expr(self, expr):
         mapping = dict(list(zip(self.symbols, self.gens)))
 
         try:
-            frac = self._rebuild_expr(expr, mapping)
+            frac = self._rebuild_expr(sympify(expr), mapping)
         except CoercionFailed:
             raise ValueError("expected an expression convertible to a rational function in %s, got %s" % (self, expr))
         else:

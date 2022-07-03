@@ -111,6 +111,19 @@ Now you can do the same with
 21
 ```
 
+(deprecated-carmichael-static-methods)=
+### Redundant static methods in `carmichael`
+
+A number of static methods in `~.carmichael` are just wrappers around other
+functions. Instead of ``carmichael.is_perfect_square`` use
+`sympy.ntheory.primetest.is_square` and instead of ``carmichael.is_prime`` use
+`~.isprime`. Finally, ``carmichael.divides`` can be replaced by instead checking
+
+```py
+n % p == 0
+```
+
+
 ## Version 1.10
 
 (deprecated-traversal-functions-moved)=
@@ -632,19 +645,6 @@ strings are the default in Python 3, these are not needed any more. `xstr()`
 should be replaced with just `str()`, the `unicode` argument to `prettyForm`
 should be omitted, and the `prettyForm.unicode` attribute should be replaced
 with the `prettyForm.s` attribute.
-
-(deprecated-printing-code-submodules)=
-### The `sympy.printing.fcode`, `sympy.printing.ccode`, and `sympy.printing.cxxcode` modules
-
-The submodules `sympy.printing.ccode`, `sympy.printing.fcode`, and
-`sympy.printing.cxxcode` were renamed to {mod}`sympy.printing.c`,
-{mod}`sympy.printing.fortran`, and {mod}`sympy.printing.cxx`, respectively.
-These modules were renamed because they conflict with the corresponding
-function names. This causes issues because `from sympy.printing import ccode`
-can give the function or the module, depending on whether the `ccode`
-submodule has been imported yet or not. See [this comment on issue
-#20234](https://github.com/sympy/sympy/issues/20234#issuecomment-707574283)
-for a technical discussion on why this happens.
 
 (deprecated-lambdify-arguments-set)=
 ### Passing the arguments to `lambdify` as a `set`

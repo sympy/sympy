@@ -449,8 +449,7 @@ class Mul(Expr, AssocOp):
                             nc_seq.insert(0, o12)
 
                     else:
-                        nc_part.append(o1)
-                        nc_part.append(o)
+                        nc_part.extend([o1, o])
 
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
@@ -853,9 +852,10 @@ class Mul(Expr, AssocOp):
             elif r.is_zero:
                 coeffi.append(i*S.ImaginaryUnit)
             elif a.is_commutative:
+                aconj = a.conjugate() if other else None
                 # search for complex conjugate pairs:
                 for i, x in enumerate(other):
-                    if x == a.conjugate():
+                    if x == aconj:
                         coeffr.append(Abs(x)**2)
                         del other[i]
                         break
@@ -1066,7 +1066,7 @@ class Mul(Expr, AssocOp):
         multiplication expression being matched against.
         """
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
         else:
             repl_dict = repl_dict.copy()
 
@@ -1175,11 +1175,8 @@ class Mul(Expr, AssocOp):
     @staticmethod
     def _matches_get_other_nodes(dictionary, nodes, node_ind):
         """Find other wildcards that may have already been matched."""
-        other_node_inds = []
-        for ind in dictionary:
-            if nodes[ind] == nodes[node_ind]:
-                other_node_inds.append(ind)
-        return other_node_inds
+        ind_node = nodes[node_ind]
+        return [ind for ind in dictionary if nodes[ind] == ind_node]
 
     @staticmethod
     def _combine_inverse(lhs, rhs):
@@ -1902,7 +1899,7 @@ class Mul(Expr, AssocOp):
 
         try:
             for t in self.args:
-                coeff, exp = t.leadterm(x, logx=logx)
+                coeff, exp = t.leadterm(x)
                 if not coeff.has(x):
                     ords.append((t, exp))
                 else:
@@ -1965,6 +1962,10 @@ class Mul(Expr, AssocOp):
                 return res
 
         if res != self:
+            if (self - res).subs(x, 0) == S.Zero and n > 0:
+                lt = self._eval_as_leading_term(x, logx=logx, cdir=cdir)
+                if lt == S.Zero:
+                    return res
             res += Order(x**n, x)
         return res
 

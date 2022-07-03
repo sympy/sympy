@@ -173,7 +173,7 @@ def to_NNF(expr, composite_map=None):
     from sympy.assumptions.ask import Q
 
     if composite_map is None:
-        composite_map = dict()
+        composite_map = {}
 
 
     binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
@@ -405,8 +405,8 @@ class EncodedCNF:
     """
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
-            data = list()
-            encoding = dict()
+            data = []
+            encoding = {}
         self.data = data
         self.encoding = encoding
         self._symbols = list(encoding.keys())

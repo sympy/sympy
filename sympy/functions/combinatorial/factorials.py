@@ -11,7 +11,7 @@ from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
 
-from math import sqrt as _sqrt
+from math import prod, sqrt as _sqrt
 
 
 class CombinatorialFunction(Function):
@@ -123,13 +123,8 @@ class factorial(CombinatorialFunction):
                 if (n // prime) & 1 == 1:
                     primes.append(prime)
 
-            L_product = R_product = 1
-
-            for prime in sieve.primerange(n//2 + 1, n + 1):
-                L_product *= prime
-
-            for prime in primes:
-                R_product *= prime
+            L_product = prod(sieve.primerange(n//2 + 1, n + 1))
+            R_product = prod(primes)
 
             return L_product*R_product
 
@@ -589,10 +584,10 @@ class RisingFactorial(CombinatorialFunction):
                             else:
                                 return reduce(lambda r, i:
                                               r*(x.shift(i)),
-                                              range(0, int(k)), 1)
+                                              range(int(k)), 1)
                         else:
                             return reduce(lambda r, i: r*(x + i),
-                                        range(0, int(k)), 1)
+                                          range(int(k)), 1)
 
                 else:
                     if x is S.Infinity:
@@ -751,10 +746,10 @@ class FallingFactorial(CombinatorialFunction):
                             else:
                                 return reduce(lambda r, i:
                                               r*(x.shift(-i)),
-                                              range(0, int(k)), 1)
+                                              range(int(k)), 1)
                         else:
                             return reduce(lambda r, i: r*(x - i),
-                                          range(0, int(k)), 1)
+                                          range(int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
