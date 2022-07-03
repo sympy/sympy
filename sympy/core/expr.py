@@ -1059,15 +1059,7 @@ class Expr(Basic, EvalfMixin):
         monom_key = monomial_key(order)
 
         def neg(monom):
-            result = []
-
-            for m in monom:
-                if isinstance(m, tuple):
-                    result.append(neg(m))
-                else:
-                    result.append(-m)
-
-            return tuple(result)
+            return tuple([neg(m) if isinstance(m, tuple) else -m for m in monom])
 
         def key(term):
             _, ((re, im), monom, ncpart) = term
@@ -1529,7 +1521,7 @@ class Expr(Basic, EvalfMixin):
             if not first:
                 l.reverse()
                 sub.reverse()
-            for i in range(0, len(l) - n + 1):
+            for i in range(len(l) - n + 1):
                 if all(l[i + j] == sub[j] for j in range(n)):
                     break
             else:

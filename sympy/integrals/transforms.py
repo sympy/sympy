@@ -1176,8 +1176,7 @@ def _laplace_deep_collect(f, t):
     if len(f.args) == 0:
         return f
     else:
-        for k in range(len(args)):
-            args[k] = _laplace_deep_collect(args[k], t)
+        args = [_laplace_deep_collect(arg, t) for arg in args]
         if func.is_Add:
             return func(*args).collect(t)
         else:

@@ -197,6 +197,10 @@ those libraries.
   compatible interface for CUDA GPUs. `lambdify` can produce CuPy compatible
   functions using `lambdify(modules='cupy')`.
 
+- **Jax**: [JAX](https://github.com/google/jax) is a library that uses XLA
+  to compile and run NumPy programs on GPUs and TPUs. `lambdify` can produce 
+  JAX compatibly functions using `lambdify(modules='jax')`.
+
 - **TensorFlow**: [TensorFlow](https://www.tensorflow.org/) is a popular
   machine learning library. `lambdify` can produce TensorFlow compatible
   functions using `lambdify(modules='tensorflow')`.
@@ -297,8 +301,8 @@ is required to use the sampling functionality of `sympy.stats`.
 - **NumPy**: `sample(library='numpy')` uses the [NumPy
   random module](https://numpy.org/doc/stable/reference/random/index.html).
 
-- **pymc3**: `sample(library='pymc3')` uses
-  [PyMC3](https://docs.pymc.io/en/v3/) to do sampling.
+- **pymc**: `sample(library='pymc')` uses
+  [PyMC](https://pymc.io/) to do sampling.
 
 ### Optional SymEngine Backend
 

@@ -378,10 +378,7 @@ class Factors:
 
             # tidy up -/+1 and I exponents if Rational
 
-            handle = []
-            for k in factors:
-                if k is I or k in (-1, 1):
-                    handle.append(k)
+            handle = [k for k in factors if k is I or k in (-1, 1)]
             if handle:
                 i1 = S.One
                 for k in handle:
@@ -1451,7 +1448,10 @@ def factor_nc(expr):
                     cc = list(Mul.make_args(Mul._from_args(list(cc))/g))
                     args[i][0] = cc
             for i, (cc, _) in enumerate(args):
-                cc[0] = cc[0]/c
+                if cc:
+                    cc[0] = cc[0]/c
+                else:
+                    cc = [1/c]
                 args[i][0] = cc
         # find any noncommutative common prefix
         for i, a in enumerate(args):

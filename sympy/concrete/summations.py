@@ -505,7 +505,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ------------- comparison test ------------- ###
         # 1/(n**p*log(n)**q*log(log(n))**r) comparison
-        n_log_test = order.expr.match(1/(sym**p*log(sym)**q*log(log(sym))**r))
+        n_log_test = (order.expr.match(1/(sym**p*log(1/sym)**q*log(-log(1/sym))**r)) or
+                      order.expr.match(1/(sym**p*(-log(1/sym))**q*log(-log(1/sym))**r)))
         if n_log_test is not None:
             if (n_log_test[p] > 1 or
                 (n_log_test[p] == 1 and n_log_test[q] > 1) or
@@ -743,8 +744,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if b.is_Integer and a.is_Integer:
                 m = min(m, b - a + 1)
             if not eps or f.is_polynomial(i):
-                for k in range(m):
-                    s += f.subs(i, a + k)
+                s = Add(*[f.subs(i, a + k) for k in range(m)])
             else:
                 term = f.subs(i, a)
                 if term:
@@ -754,7 +754,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     elif not (test == False):
                         # a symbolic Relational class, can't go further
                         return term, S.Zero
-                s += term
+                s = term
                 for k in range(1, m):
                     term = f.subs(i, a + k)
                     if abs(term.evalf(3)) < eps and term != 0:
@@ -951,10 +951,7 @@ def telescopic_direct(L, R, n, limits):
 
     """
     (i, a, b) = limits
-    s = 0
-    for m in range(n):
-        s += L.subs(i, a + m) + R.subs(i, b - m)
-    return s
+    return Add(*[L.subs(i, a + m) + R.subs(i, b - m) for m in range(n)])
 
 
 def telescopic(L, R, limits):

@@ -360,6 +360,8 @@ def test_factor_nc():
     factor_nc_test(x*(n*m + 1))
     factor_nc_test(x*(n*m + x))
     factor_nc_test(x*(x*n*m + 1))
+    factor_nc_test(n*(m/x + o))
+    factor_nc_test(m*(n + o/2))
     factor_nc_test(x*n*(x*m + 1))
     factor_nc_test(x*(m*n + x*n*m))
     factor_nc_test(n*(1 - m)*n**2)

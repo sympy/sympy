@@ -735,8 +735,7 @@ def wronskian(functions, var, method='bareiss'):
     hessian
     """
 
-    for index in range(0, len(functions)):
-        functions[index] = sympify(functions[index])
+    functions = [sympify(f) for f in functions]
     n = len(functions)
     if n == 0:
         return S.One

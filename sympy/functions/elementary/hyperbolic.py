@@ -18,7 +18,6 @@ from sympy.polys.specialpolys import symmetric_poly
 
 
 def _rewrite_hyperbolics_as_exp(expr):
-    expr = sympify(expr)
     return expr.xreplace({h: h.rewrite(exp)
         for h in expr.atoms(HyperbolicFunction)})
 
@@ -112,8 +111,6 @@ class sinh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -309,8 +306,6 @@ class cosh(HyperbolicFunction):
     @classmethod
     def eval(cls, arg):
         from sympy.functions.elementary.trigonometric import cos
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -553,8 +548,6 @@ class tanh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -651,13 +644,9 @@ class tanh(HyperbolicFunction):
         elif arg.is_Mul:
             coeff, terms = arg.as_coeff_Mul()
             if coeff.is_Integer and coeff > 1:
-                n = []
-                d = []
                 T = tanh(terms)
-                for k in range(1, coeff + 1, 2):
-                    n.append(nC(range(coeff), k)*T**k)
-                for k in range(0, coeff + 1, 2):
-                    d.append(nC(range(coeff), k)*T**k)
+                n = [nC(range(coeff), k)*T**k for k in range(1, coeff + 1, 2)]
+                d = [nC(range(coeff), k)*T**k for k in range(0, coeff + 1, 2)]
                 return Add(*n)/Add(*d)
         return tanh(arg)
 
@@ -766,8 +755,6 @@ class coth(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1128,8 +1115,6 @@ class asinh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1224,7 +1209,7 @@ class acosh(InverseHyperbolicFunction):
     >>> from sympy import acosh
     >>> from sympy.abc import x
     >>> acosh(x).diff(x)
-    1/sqrt(x**2 - 1)
+    1/(sqrt(x - 1)*sqrt(x + 1))
     >>> acosh(1)
     0
 
@@ -1236,7 +1221,8 @@ class acosh(InverseHyperbolicFunction):
 
     def fdiff(self, argindex=1):
         if argindex == 1:
-            return 1/sqrt(self.args[0]**2 - 1)
+            arg = self.args[0]
+            return 1/(sqrt(arg - 1)*sqrt(arg + 1))
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -1268,8 +1254,6 @@ class acosh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1392,8 +1376,6 @@ class atanh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1502,8 +1484,6 @@ class acoth(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1641,8 +1621,6 @@ class asech(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1766,8 +1744,6 @@ class acsch(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        arg = sympify(arg)
-
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN

@@ -151,13 +151,8 @@ class Mod(Function):
                 return prod_non_mod*cls(net, q)
 
             if q.is_Integer and q is not S.One:
-                _ = []
-                for i in non_mod_l:
-                    if i.is_Integer and (i % q is not S.Zero):
-                        _.append(i%q)
-                    else:
-                        _.append(i)
-                non_mod_l = _
+                non_mod_l = [i % q if i.is_Integer and (i % q is not S.Zero) else i for
+                             i in non_mod_l]
 
             p = Mul(*(non_mod_l + mod_l))
 

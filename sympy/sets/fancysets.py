@@ -1059,19 +1059,19 @@ def normalize_theta_set(theta):
     {0, pi}
 
     """
-    from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
+    from sympy.functions.elementary.trigonometric import _pi_coeff
 
     if theta.is_Interval:
         interval_len = theta.measure
         # one complete circle
         if interval_len >= 2*S.Pi:
             if interval_len == 2*S.Pi and theta.left_open and theta.right_open:
-                k = coeff(theta.start)
+                k = _pi_coeff(theta.start)
                 return Union(Interval(0, k*S.Pi, False, True),
                         Interval(k*S.Pi, 2*S.Pi, True, True))
             return Interval(0, 2*S.Pi, False, True)
 
-        k_start, k_end = coeff(theta.start), coeff(theta.end)
+        k_start, k_end = _pi_coeff(theta.start), _pi_coeff(theta.end)
 
         if k_start is None or k_end is None:
             raise NotImplementedError("Normalizing theta without pi as coefficient is "
@@ -1088,7 +1088,7 @@ def normalize_theta_set(theta):
     elif theta.is_FiniteSet:
         new_theta = []
         for element in theta:
-            k = coeff(element)
+            k = _pi_coeff(element)
             if k is None:
                 raise NotImplementedError('Normalizing theta without pi as '
                                           'coefficient, is not Implemented.')
