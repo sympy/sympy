@@ -33,16 +33,14 @@ Here is a simple example of each:
 Here are recommendations on when to use:
 
 - {func}`~.solve`
-    - You need to programmatically extract components (expressions, or individual symbols or constants) 
-    from the output by traversing it.
-    - You want an explicit solution expression that you can use to substitute into something else.
-    - You want to apply assumptions to symbols (for example, $x$ is real) to determine the 
-    domain of the solutions.
-
+    - You want to get explicit symbolic representations of the different values
+    a variable could take that would satisfy the equation.
+    - You want to substitute those explicit solution values into other equations
+    or expressions involving the same variable.
 - {func}`~.solveset`
-    - You want a consistent input and output interface.
+    - You want a consistent input interface.
     - You want to get all the solutions, including if there are infinitely many.
-    - You want to limit the domain of the solutions (for example, to real values) directly.
+    - You want to limit the domain of the solutions to any arbitrary set.
 
 We recommend you include the variable to be solved for as the second argument for either function. 
 While this is optional for equations with a single symbol, it is a good practice because it ensures 
@@ -124,9 +122,8 @@ To extract the solutions, you can iterate through the list of dictionaries:
 ```py
 >>> from sympy import parse_expr, solve
 >>> from sympy.abc import x
->>> from sympy.parsing.sympy_parser import convert_equals_signs, standard_transformations
 >>> expr = "x ** 2 = y"
->>> parsed = parse_expr(expr, transformations=standard_transformations + (convert_equals_signs,))
+>>> parsed = parse_expr(expr, transformations="all")
 >>> print(parsed)
 Eq(x**2, y)
 >>> solutions = solve(parsed, x, dict=True)
@@ -200,13 +197,11 @@ by substituting the critical points back into the function using {meth}`~sympy.c
 >>> critical_points = solve(derivative, x, dict=True)
 >>> print(critical_points)
 [{x: -1}, {x: 1/3}]
->>> for critical_point in critical_points:
-...     # Extract the value from the dictionary where key is x
-...     critical_point_value = critical_point[x]
-...     f_at_critical_point = f.subs(x, critical_point_value)
-...     print(f"f({critical_point_value}) = {f_at_critical_point}")
-f(-1) = 1
-f(1/3) = -5/27
+>>> point1, point2 = critical_points
+>>> print(f.subs(point1))
+1
+>>> print(f.subs(point2))
+-5/27
 ```
 
 ## Using {func}`~.solveset`
@@ -214,7 +209,7 @@ f(1/3) = -5/27
 - produces outputs in the format of 
 [SymPy mathematical Sets](https://docs.sympy.org/dev/modules/sets.html?highlight=sets#module-sympy.sets.sets) rather than 
 [Python sets](https://docs.python.org/3/library/stdtypes.html#set)
-- can return infinitely many solutions
+- can represent infinite sets of possible solutions
 - the solution set can be more difficult to parse programmatically
 
 You can solve an equation using solve() in several ways.
@@ -225,13 +220,18 @@ Use the fact that any expression not in an `Eq` (equation) is automatically assu
  by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y = 0$, and 
  {func}`~.solveset` that expression. This approach is convenient if you are interactively solving an 
 expression which already equals zero, or an equation that you do not mind rearranging to $expression = 0$.
+For a FiniteSet of solutions, you can extract each solution by iterating through the set.
 
 ```py
 >>> from sympy import solveset
 >>> from sympy.abc import x, y
->>> solution = solveset(x**2 - y, x)
->>> print(solution)
+>>> solutions = solveset(x**2 - y, x)
+>>> print(solutions)
 {-sqrt(y), sqrt(y)}
+>>> for solution in solutions:
+...    print(solution)
+sqrt(y)
+-sqrt(y)
 ```
 
 ### Put your equation into `Eq` form
@@ -264,9 +264,8 @@ to ensure that SymPy solves for the desired variable.
 ```py
 >>> from sympy import parse_expr, solveset
 >>> from sympy.abc import x
->>> from sympy.parsing.sympy_parser import convert_equals_signs, standard_transformations
 >>> expr = "x ** 2 = y"
->>> parsed = parse_expr(expr, transformations=standard_transformations + (convert_equals_signs,))
+>>> parsed = parse_expr(expr, transformations="all")
 >>> print(parsed)
 Eq(x**2, y)
 >>> solutions = solveset(parsed, x)
@@ -341,6 +340,26 @@ as `S.Reals`:
 {-4, 4}
 ```
 
+If you restrict the solutions to a domain in which there are no solutions, SymPy will return the empty set:
+
+```py
+>>> from sympy import solveset, S
+>>> from sympy.abc import x
+>>> solution = solveset(x**2 + 1, x, domain=S.Reals)
+>>> print(solution)
+EmptySet
+```
+
+You can restrict returned solutions to any arbitrary set, including an interval:
+
+```py
+>>> from sympy import Interval, pi, sin, solveset
+>>> from sympy.abc import x
+>>> solution = solveset(sin(x), x, Interval(-pi, pi))
+>>> print(solution)
+{0, -pi, pi}
+```
+
 ## Not all equations can be solved
 
 ### Equations with no solution
@@ -356,7 +375,7 @@ $x - 7 = x + 2$ reduces to $-7 = 2$, which has no solution because no value of $
 []
 ```
 
-So if SymPy returns an empty set, you may want to check whether there is a mistake in the equation.
+So if SymPy returns an empty list, you may want to check whether there is a mistake in the equation.
 
 ### Equations with no analytical solution
 
