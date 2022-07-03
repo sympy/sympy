@@ -80,7 +80,7 @@ unless you use `dict=True` to ensure the result will be formatted as a dictionar
 We recommend using `dict=True`, especially if you want to 
 extract information from the result programmatically.
 
-## Solving equations using {func}`~.solve` or {func}`~.solveset`
+## Solve an equation using {func}`~.solve` or {func}`~.solveset`
 
 You can solve an equation using in several ways. 
 The examples below demonstrate using both {func}`~.solve` and {func}`~.solveset` where applicable. 
@@ -194,7 +194,7 @@ and the last two are imaginary:
 
 ```py
 >>> from sympy import Symbol, solve, solveset
->>> x = Symbol('x'); x
+>>> x = Symbol('x')
 >>> solution = solve(x ** 4 - 256, x, dict=True)
 >>> print(solution)
 [{x: -4}, {x: 4}, {x: -4*I}, {x: 4*I}]
@@ -243,31 +243,7 @@ Using {func}`~.solveset`, you can restrict returned solutions to any arbitrary s
 {0, -pi, pi}
 ```
 
-### Substitute solutions from {func}`~.solve` into an expression
-
-You can substitute solutions from {func}`~.solve` into an expression.
-
-A common use case is finding the critical points and values for a function $f$. 
-At the critical points, the derivative equals zero (or is undefined). 
-You can then obtain the function values at those critical points
-by substituting the critical points back into the function using {meth}`~sympy.core.basic.Basic.subs`.
-
-```py
->>> from sympy.abc import x
->>> from sympy import solve, diff
->>> f = x**3 + x**2 - x
->>> derivative = diff(f, x)
->>> critical_points = solve(derivative, x, dict=True)
->>> print(critical_points)
-[{x: -1}, {x: 1/3}]
->>> point1, point2 = critical_points
->>> print(f.subs(point1))
-1
->>> print(f.subs(point2))
--5/27
-```
-
-### {func}`~.solveset` can explicitly represent infinite sets of possible solutions when {func}`~.solve` cannot
+### Explicitly represent infinite sets of possible solutions using {func}`~.solveset`
 
 {func}`~.solveset` 
 [can represent infinite sets of possible solutions](why-solveset)
@@ -295,6 +271,32 @@ However, {func}`~.solve` will return only a finite number of solutions:
 {func}`~.solve` tries to return just enough solutions so that all (infinitely many) solutions can generated 
 from the returned solutions by adding integer multiples of the periodicity of the equation, here $2\pi$.
 
+## Use the solution result
+
+### Substitute solutions from {func}`~.solve` into an expression
+
+You can substitute solutions from {func}`~.solve` into an expression.
+
+A common use case is finding the critical points and values for a function $f$. 
+At the critical points, the derivative equals zero (or is undefined). 
+You can then obtain the function values at those critical points
+by substituting the critical points back into the function using {meth}`~sympy.core.basic.Basic.subs`.
+
+```py
+>>> from sympy.abc import x
+>>> from sympy import solve, diff
+>>> f = x**3 + x**2 - x
+>>> derivative = diff(f, x)
+>>> critical_points = solve(derivative, x, dict=True)
+>>> print(critical_points)
+[{x: -1}, {x: 1/3}]
+>>> point1, point2 = critical_points
+>>> print(f.subs(point1))
+1
+>>> print(f.subs(point2))
+-5/27
+```
+
 ### {func}`~.solveset` solution sets cannot necessarily be interrogated programmatically
 
 If {func}`~.solveset` returns a finite set (class {class}`~.FiniteSet`), you can iterate through the solutions:
@@ -305,8 +307,8 @@ If {func}`~.solveset` returns a finite set (class {class}`~.FiniteSet`), you can
 >>> solution_set = solveset(x**2 - y, x)
 >>> print(solution_set)
 {-sqrt(y), sqrt(y)}
-solution_list = list(solution_set)
-print(solution_list)
+>>> solution_list = list(solution_set)
+>>> print(solution_list)
 [sqrt(y), -sqrt(y)]
 ```
 
@@ -319,6 +321,7 @@ However, for more complex results, it may not be possible to list the solutions:
 >>> print(solution_set)
 Intersection({-sqrt(y), sqrt(y)}, Reals)
 >>> solution_list = list(solution_set)
+Traceback (most recent call last):
 Exception has occurred: TypeError
 The computation had not completed because of the undecidable set membership is found in every candidates.
 ```
