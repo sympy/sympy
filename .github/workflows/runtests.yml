@@ -8,6 +8,9 @@
 
 name: test
 on: [push, pull_request]
+permissions:
+  contents: read
+
 jobs:
 
   # -------------------- Code quality ------------------------------ #
@@ -447,6 +450,8 @@ jobs:
   # -------------------- Save PR number ---------------------------- #
 
   save-pr-number:
+    permissions:
+      contents: none
     needs: [doctests-latest, tests1-latest, tests2-latest]
 
     # The comment-on-pr workflow needs the issue number of the PR to be able to

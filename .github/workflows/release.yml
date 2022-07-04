@@ -19,6 +19,9 @@ env:
   release_version: '1.10rc1'
   previous_version: '1.9'
 
+permissions:
+  contents: read
+
 jobs:
 
   # -------------------- Build artifacts --------------------------- #
@@ -49,6 +52,8 @@ jobs:
   # -------------------- Test installation ------------------------- #
 
   test-install:
+    permissions:
+      contents: none
     needs: [build]
 
     runs-on: ubuntu-20.04
