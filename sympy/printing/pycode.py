@@ -571,8 +571,6 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
                        'reserved keyword in this language.')
                 raise ValueError(msg.format(name))
             return name + self._settings['reserved_word_suffix']
-        elif '{' in name:   # Remove curly braces from subscripted variables
-            return name.replace('{', '').replace('}', '')
         else:
             return name
 

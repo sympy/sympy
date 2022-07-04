@@ -1,3 +1,4 @@
+from sympy import cos
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.codegen.cfunctions import expm1, log1p
@@ -422,3 +423,11 @@ def test_array_printer():
     assert prntr.doprint(ArrayDiagonal(A, [0,1], [2,3])) == 'tensorflow.linalg.einsum("aabbc->cab", A)'
     assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'tensorflow.linalg.einsum("abcde->abe", A)'
     assert prntr.doprint(Assignment(I[i,j,k], I[i,j,k])) == 'I = I'
+
+
+def test_issue_23374():
+    prntr = SymPyPrinter({'fully_qualified_modules': False, 'inline': True,
+                           'allow_unknown_functions': True})
+    x1, x2 = symbols("x_{1} x_2")
+    assert prntr.doprint(x1) == "x_1"
+    assert prntr.doprint(cos(x1**2 + x2**2)) == "cos(x_2**2 + x_1**2)"

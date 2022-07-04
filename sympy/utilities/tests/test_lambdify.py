@@ -1623,3 +1623,11 @@ def test_23536_lambdify_cse_dummy():
     expr = expr.expand()
     eval_expr = lambdify(((f, g), z), expr, cse=True)
     eval_expr((1.0, 2.0), 3.0)
+
+def test_23374_lambdify_brace_expr():
+    x1, x2 = symbols("x_{1} x_2")
+    f = lambdify([x1, x2], cos(x1**2 + x2**2), modules="sympy")
+    f_str = inspect.getsource(f)
+    assert f_str == """def _lambdifygenerated(x_1, x_2):
+    return cos(x_2**2 + x_1**2)
+"""
