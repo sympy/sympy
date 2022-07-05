@@ -739,8 +739,7 @@ class Function(Application, Expr):
 
                 _x = uniquely_named_symbol('xi', self)
                 e = e.subs(x, _x)
-                for i in range(n - 1):
-                    i += 1
+                for i in range(1, n):
                     fact *= Rational(i)
                     e = e.diff(_x)
                     subs = e.subs(_x, S.Zero)
