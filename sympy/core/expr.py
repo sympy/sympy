@@ -4034,9 +4034,9 @@ class UnevaluatedExpr(Expr):
         obj = Expr.__new__(cls, arg, **kwargs)
         return obj
 
-    def doit(self, **kwargs):
-        if kwargs.get("deep", True):
-            return self.args[0].doit(**kwargs)
+    def doit(self, **hints):
+        if hints.get("deep", True):
+            return self.args[0].doit(**hints)
         else:
             return self.args[0]
 

@@ -897,7 +897,7 @@ class Series(SISOLinearTimeInvariant):
         """
         return self.args[0].var
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         """
         Returns the resultant transfer function obtained after evaluating
         the transfer functions in series configuration.
@@ -1352,7 +1352,7 @@ class Parallel(SISOLinearTimeInvariant):
         """
         return self.args[0].var
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         """
         Returns the resultant transfer function obtained after evaluating
         the transfer functions in parallel configuration.
@@ -1616,7 +1616,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         """Returns the shape of the equivalent MIMO system."""
         return self.num_outputs, self.num_inputs
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         """
         Returns the resultant transfer function matrix obtained after evaluating
         the MIMO systems arranged in a parallel configuration.
@@ -1890,7 +1890,7 @@ class Feedback(SISOLinearTimeInvariant):
 
         return 1/(1 - self.sign*self.sys1.to_expr()*self.sys2.to_expr())
 
-    def doit(self, cancel=False, expand=False, **kwargs):
+    def doit(self, cancel=False, expand=False, **hints):
         """
         Returns the resultant transfer function obtained by the
         feedback interconnection.
@@ -2219,7 +2219,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         return (eye(self.sys1.num_inputs) - \
             self.sign*_sys1_mat*_sys2_mat).inv()
 
-    def doit(self, cancel=True, expand=False, **kwargs):
+    def doit(self, cancel=True, expand=False, **hints):
         r"""
         Returns the resultant transfer function matrix obtained by the
         feedback interconnection.

@@ -993,9 +993,6 @@ class BaseScalarField(Expr):
     # XXX Workaround for limitations on the content of args
     free_symbols = set()  # type: tSet[Any]
 
-    def doit(self):
-        return self
-
 
 class BaseVectorField(Expr):
     r"""Base vector field over a manifold for a given coordinate system.

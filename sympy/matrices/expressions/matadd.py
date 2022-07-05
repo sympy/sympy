@@ -87,10 +87,10 @@ class MatAdd(MatrixExpr, Add):
         from .trace import trace
         return Add(*[trace(arg) for arg in self.args]).doit()
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
         return canonicalize(MatAdd(*args))
