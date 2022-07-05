@@ -270,7 +270,7 @@ def init_python_session():
         """An interactive console with readline support. """
 
         def __init__(self):
-            ns_locals = dict()
+            ns_locals = {}
             InteractiveConsole.__init__(self, locals=ns_locals)
             try:
                 import rlcompleter

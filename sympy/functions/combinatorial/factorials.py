@@ -11,7 +11,7 @@ from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
 
-from math import sqrt as _sqrt
+from math import prod, sqrt as _sqrt
 
 
 class CombinatorialFunction(Function):
@@ -123,13 +123,8 @@ class factorial(CombinatorialFunction):
                 if (n // prime) & 1 == 1:
                     primes.append(prime)
 
-            L_product = R_product = 1
-
-            for prime in sieve.primerange(n//2 + 1, n + 1):
-                L_product *= prime
-
-            for prime in primes:
-                R_product *= prime
+            L_product = prod(sieve.primerange(n//2 + 1, n + 1))
+            R_product = prod(primes)
 
             return L_product*R_product
 

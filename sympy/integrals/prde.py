@@ -760,8 +760,14 @@ def param_rischDE(fa, fd, G, DE):
     # y = Sum(blk'*hk, (k, 1, v))/gamma, where k' = k + m + u.
 
     v = len(h)
-    M = Matrix([wl[:m] + wl[-v:] for wl in W])  # excise dj's.
+    shape = (len(W), m+v)
+    elements = [wl[:m] + wl[-v:] for wl in W] # excise dj's.
+    items = [e for row in elements for e in row]
+
+    # Need to set the shape in case W is empty
+    M = Matrix(*shape, items, DE.t)
     N = M.nullspace()
+
     # N = [n1, ..., ns] where the ni in Const(k)^(m + v) are column
     # vectors generating the space of linear relations between
     # c1, ..., cm, e1, ..., ev.

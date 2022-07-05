@@ -378,10 +378,7 @@ class Factors:
 
             # tidy up -/+1 and I exponents if Rational
 
-            handle = []
-            for k in factors:
-                if k is I or k in (-1, 1):
-                    handle.append(k)
+            handle = [k for k in factors if k is I or k in (-1, 1)]
             if handle:
                 i1 = S.One
                 for k in handle:

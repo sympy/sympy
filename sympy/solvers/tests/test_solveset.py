@@ -1,3 +1,6 @@
+from math import isclose
+
+from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
@@ -6,6 +9,7 @@ from sympy.core.relational import (Eq, Gt, Ne, Ge)
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
@@ -52,6 +56,28 @@ def dumeq(i, j):
     if type(i) in (list, tuple):
         return all(dumeq(i, j) for i, j in zip(i, j))
     return i == j or i.dummy_eq(j)
+
+
+def assert_close_ss(sol1, sol2):
+    """Test solutions with floats from solveset are close"""
+    sol1 = sympify(sol1)
+    sol2 = sympify(sol2)
+    assert isinstance(sol1, FiniteSet)
+    assert isinstance(sol2, FiniteSet)
+    assert len(sol1) == len(sol2)
+    assert all(isclose(v1, v2) for v1, v2 in zip(sol1, sol2))
+
+
+def assert_close_nl(sol1, sol2):
+    """Test solutions with floats from nonlinsolve are close"""
+    sol1 = sympify(sol1)
+    sol2 = sympify(sol2)
+    assert isinstance(sol1, FiniteSet)
+    assert isinstance(sol2, FiniteSet)
+    assert len(sol1) == len(sol2)
+    for s1, s2 in zip(sol1, sol2):
+        assert len(s1) == len(s2)
+        assert all(isclose(v1, v2) for v1, v2 in zip(s1, s2))
 
 
 @_both_exp_pow
@@ -3155,6 +3181,23 @@ def test_issue_22413():
     sols = FiniteSet((x, S.Zero), (-exp(y) - S.Half, y))
     assert res == sols
 
+
+def test_issue_23318():
+    eqs_eq = [
+        Eq(53.5780461486929, x * log(y / (5.0 - y) + 1) / y),
+        Eq(x, 0.0015 * z),
+        Eq(0.0015, 7845.32 * y / z),
+    ]
+    eqs_expr = [eq.rewrite(Add) for eq in eqs_eq]
+
+    sol = {(266.97755814852, 0.0340301680681629, 177985.03876568)}
+
+    assert_close_nl(nonlinsolve(eqs_eq, [x, y, z]), sol)
+    assert_close_nl(nonlinsolve(eqs_expr, [x, y, z]), sol)
+
+    logterm = log(1.91196789933362e-7*z/(5.0 - 1.91196789933362e-7*z) + 1)
+    eq = -0.0015*z*logterm + 1.02439504345316e-5*z
+    assert_close_ss(solveset(eq, z), {0, 177985.038765679})
 
 
 def test_issue_19814():

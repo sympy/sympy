@@ -531,10 +531,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 else:
                     similar[g] = S.Zero
 
-            inhomogeneous = []
-
-            for g, h in similar.items():
-                inhomogeneous.append(g + h)
+            inhomogeneous = [g + h for g, h in similar.items()]
         elif f.is_hypergeometric(n):
             inhomogeneous = [f]
         else:

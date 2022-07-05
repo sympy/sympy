@@ -28,7 +28,7 @@ class StrPrinter(Printer):
         "max": None,
     }  # type: tDict[str, Any]
 
-    _relationals = dict()  # type: tDict[str, str]
+    _relationals = {}  # type: tDict[str, str]
 
     def parenthesize(self, item, level, strict=False):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):

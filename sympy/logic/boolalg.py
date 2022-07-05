@@ -2269,7 +2269,7 @@ def _rem_redundancy(l1, terms):
                                     dommatrix[row2i][primei] = 0
                                     colcount[primei] -= 1
 
-        colcache = dict()
+        colcache = {}
 
         for coli in range(nl1):
             # Still non-dominated?
@@ -2811,8 +2811,8 @@ def simplify_logic(expr, form=None, deep=True, force=False):
         return expr
     # Replace Relationals with Dummys to possibly
     # reduce the number of variables
-    repl = dict()
-    undo = dict()
+    repl = {}
+    undo = {}
     from sympy.core.symbol import Dummy
     variables = expr.atoms(Relational)
     while variables:
