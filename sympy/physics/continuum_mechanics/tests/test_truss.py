@@ -12,8 +12,7 @@ def test_truss():
     assert t.nodes == []
     assert t.node_labels == []
     assert t.node_positions == []
-    assert t.members == []
-    assert t.member_labels == []
+    assert t.members == {}
     assert t.loads == {}
     assert t.supports == {}
     assert t.reaction_loads == {}
@@ -26,8 +25,8 @@ def test_truss():
     assert t.nodes == [(A, 0, 0), (B, 2, 2), (C, 3, 0)]
     assert t.node_labels == [A, B, C]
     assert t.node_positions == [(0, 0), (2, 2), (3, 0)]
-    assert t.loads == {A: [[0, 90]], B: [[0, 90]], C: [[0, 90]]}
-    assert t.supports == {A: 'none', B: 'none', C: 'none'}
+    assert t.loads == {}
+    assert t.supports == {}
     assert t.reaction_loads == {}
 
     # testing the remove_node method
@@ -35,8 +34,8 @@ def test_truss():
     assert t.nodes == [(A, 0, 0), (B, 2, 2)]
     assert t.node_labels == [A, B]
     assert t.node_positions == [(0, 0), (2, 2)]
-    assert t.loads == {A: [[0, 90]], B: [[0, 90]]}
-    assert t.supports == {A: 'none', B: 'none'}
+    assert t.loads == {}
+    assert t.supports == {}
 
     t.add_node(C, 3, 0)
 
@@ -44,14 +43,12 @@ def test_truss():
     t.add_member(AB, A, B)
     t.add_member(BC, B, C)
     t.add_member(AC, A, C)
-    assert t.members == [[AB, A, B], [BC, B, C], [AC, A, C]]
-    assert t.member_labels == [AB, BC, AC]
+    assert t.members == {AB: [A, B], BC: [B, C], AC: [A, C]}
     assert t.internal_forces == {AB: 0, BC: 0, AC: 0}
 
     # testing the remove_member method
     t.remove_member(BC)
-    assert t.members == [[AB, A, B], [AC, A, C]]
-    assert t.member_labels == [AB, AC]
+    assert t.members == {AB: [A, B], AC: [A, C]}
     assert t.internal_forces == {AB: 0, AC: 0}
 
     t.add_member(BC, B, C)
@@ -62,13 +59,12 @@ def test_truss():
     t.change_node_label(B, D)
     assert t.nodes == [(A, 0, 0), (D, 2, 2), (C, 3, 0)]
     assert t.node_labels == [A, D, C]
-    assert t.loads == {A: [[0, 90]], D: [[0, 90]], C: [[0, 90]]}
-    assert t.supports == {A: 'none', D: 'none', C: 'none'}
-    assert t.members == [[AB, A, D], [AC, A, C], [BC, D, C]]
+    assert t.loads == {}
+    assert t.supports == {}
+    assert t.members == {AB: [A, D], BC: [D, C], AC: [A, C]}
 
     t.change_member_label(BC, CD)
-    assert t.members == [[AB, A, D], [AC, A, C], [CD, D, C]]
-    assert t.member_labels == [AB, AC, CD]
+    assert t.members == {AB: [A, D], CD: [D, C], AC: [A, C]}
     assert t.internal_forces == {AB: 0, CD: 0, AC: 0}
 
 
@@ -77,23 +73,23 @@ def test_truss():
     t.apply_load(A, P/4, 90)
     t.apply_load(A, 2*P,45)
     t.apply_load(D, P/2, 90)
-    assert t.loads == {A: [[5*P/4, 90], [2*P, 45]], D: [[P/2, 90]], C: [[0, 90]]}
+    assert t.loads == {A: [[5*P/4, 90], [2*P, 45]], D: [[P/2, 90]]}
     assert t.loads[A] == [[5*P/4, 90], [2*P, 45]]
 
     # testing the remove_load method
     t.remove_load(A, 5*P/4, 90)
-    assert t.loads == {A: [[2*P, 45]], D: [[P/2, 90]], C: [[0, 90]]}
+    assert t.loads == {A: [[2*P, 45]], D: [[P/2, 90]]}
     assert t.loads[A] == [[2*P, 45]]
 
     # testing the apply_support method
     t.apply_support(A, "pinned")
     t.apply_support(D, "roller")
-    assert t.supports == {A: 'pinned', D: 'roller', C: 'none'}
+    assert t.supports == {A: 'pinned', D: 'roller'}
     assert t.reaction_loads == {}
-    assert t.loads == {A: [[2*P, 45], [Symbol('R_A_x'), 0], [Symbol('R_A_y'), 90]], D: [[P/2 + Symbol('R_D_y'), 90]], C: [[0, 90]]}
+    assert t.loads == {A: [[2*P, 45], [Symbol('R_A_x'), 0], [Symbol('R_A_y'), 90]], D: [[P/2 + Symbol('R_D_y'), 90]]}
 
     # testing the remove_support method
     t.remove_support(A)
-    assert t.supports == {A: 'none', D: 'roller', C: 'none'}
+    assert t.supports == {D: 'roller'}
     assert t.reaction_loads == {}
-    assert t.loads == {A: [[2*P, 45], [0, 90]], C: [[0, 90]], D: [[P/2 + Symbol('R_D_y'), 90]]}
+    assert t.loads == {A: [[2*P, 45]], D: [[P/2 + Symbol('R_D_y'), 90]]}
