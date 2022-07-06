@@ -262,14 +262,18 @@ However, {func}`~.solve` will return only a finite number of solutions:
 
 ```py
 >>> from sympy import sin, solve
+>>> from sympy.calculus.util import periodicity
 >>> from sympy.abc import x
->>> solution = solve(sin(x), x)
+>>> f = sin(x)
+>>> solution = solve(f, x)
 >>> print(solution)
 [0, pi]
+>>> print(periodicity(f, x))
+2*pi
 ```
 
 {func}`~.solve` tries to return just enough solutions so that all (infinitely many) solutions can generated 
-from the returned solutions by adding integer multiples of the periodicity of the equation, here $2\pi$.
+from the returned solutions by adding integer multiples of the {func}`~.periodicity` of the equation, here $2\pi$.
 
 ## Use the solution result
 
