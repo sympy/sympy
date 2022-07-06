@@ -368,3 +368,10 @@ def test_issue_23432():
     expr = 1/sqrt(1 - x**2)
     result = expr.series(x, 0.5)
     assert result.is_Add and len(result.args) == 7
+
+
+def test_issue_23727():
+    assert str(series(sqrt(1 - x**2), x, 0.1)) == str(1.00503781525921 - \
+    0.507594856191521*(x - 0.1)**2 - 0.0512722076961133*(x - 0.1)**3 - \
+    0.134654282838277*(x - 0.1)**4 - 0.0397580633088931*(x - 0.1)**5 - \
+    0.100503781525921*x + O((x - Rational(1, 10))**6, (x, Rational(1, 10))))
