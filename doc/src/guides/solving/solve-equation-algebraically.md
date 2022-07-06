@@ -278,9 +278,10 @@ from the returned solutions by adding integer multiples of the periodicity of th
 You can substitute solutions from {func}`~.solve` into an expression.
 
 A common use case is finding the critical points and values for a function $f$. 
-At the critical points, the derivative equals zero (or is undefined). 
+At the critical points, the {func}`~.Derivative` equals zero (or is undefined). 
 You can then obtain the function values at those critical points
-by substituting the critical points back into the function using {meth}`~sympy.core.basic.Basic.subs`.
+by substituting the critical points back into the function using {meth}`~sympy.core.basic.Basic.subs`. You can also tell if the critical point is a maxima or minima by substituting the values
+into the expression for the second derivative: a negative value indicates a maximum, and a positive value indicates a minimum.
 
 ```py
 >>> from sympy.abc import x
@@ -295,6 +296,11 @@ by substituting the critical points back into the function using {meth}`~sympy.c
 1
 >>> print(f.subs(point2))
 -5/27
+curvature = diff(f, x, 2)
+print(curvature.subs(point1))
+print(curvature.subs(point2))
+-4
+4
 ```
 
 ### {func}`~.solveset` solution sets cannot necessarily be interrogated programmatically
