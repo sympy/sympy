@@ -187,7 +187,7 @@ class JuliaCodePrinter(CodePrinter):
             return "%s %s %s" % (sign+multjoin(a, a_str), divsym, b_str[0])
         else:
             divsym = '/' if all(bi.is_number for bi in b) else './'
-            return "%s %s (%s)" % (sign + multjoin(a, a_str), divsym, "(%s)" % multjoin(b, b_str))
+            return "%s %s (%s)" % (sign + multjoin(a, a_str), divsym, "%s" % multjoin(b, b_str))
 
     def _print_Relational(self, expr):
         lhs_code = self._print(expr.lhs)
