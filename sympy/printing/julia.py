@@ -206,7 +206,7 @@ class JuliaCodePrinter(CodePrinter):
         if expr.is_commutative:
             if expr.exp == -S.Half:
                 sym = '/' if expr.base.is_number else './'
-                return "%s %s %s" % ("1", sym, "sqrt(%s)" % self._print(expr.base))
+                return "1 %s sqrt(%s)" % (sym, self._print(expr.base))
             if expr.exp == -S.One:
                 sym = '/' if expr.base.is_number else './'
                 return  "%s %s %s" % ("1", sym, "%s" % self.parenthesize(expr.base, PREC))
