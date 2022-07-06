@@ -177,18 +177,17 @@ class JuliaCodePrinter(CodePrinter):
             r = a_str[0]
             for i in range(1, len(a)):
                 mulsym = '*' if a[i-1].is_number else '.*'
-                r = r + mulsym + a_str[i]
+                r = "%s %s %s" %(r, mulsym, a_str[i])
             return r
 
         if not b:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
             divsym = '/' if b[0].is_number else './'
-            return sign + multjoin(a, a_str) + divsym + b_str[0]
+            return "%s %s %s" %(sign+multjoin(a, a_str), divsym, b_str[0])
         else:
             divsym = '/' if all(bi.is_number for bi in b) else './'
-            return (sign + multjoin(a, a_str) +
-                    divsym + "(%s)" % multjoin(b, b_str))
+            return "%s %s %s" %(sign + multjoin(a, a_str), divsym, "(%s)" % multjoin(b, b_str))
 
     def _print_Relational(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -207,18 +206,18 @@ class JuliaCodePrinter(CodePrinter):
         if expr.is_commutative:
             if expr.exp == -S.Half:
                 sym = '/' if expr.base.is_number else './'
-                return "1" + sym + "sqrt(%s)" % self._print(expr.base)
+                return "%s %s %s" %("1", sym, "sqrt(%s)" % self._print(expr.base))
             if expr.exp == -S.One:
                 sym = '/' if expr.base.is_number else './'
-                return "1" + sym + "%s" % self.parenthesize(expr.base, PREC)
+                return  "%s %s %s" %("1", sym, "%s" % self.parenthesize(expr.base, PREC))
 
-        return '%s%s%s' % (self.parenthesize(expr.base, PREC), powsymbol,
+        return '%s %s %s' % (self.parenthesize(expr.base, PREC), powsymbol,
                            self.parenthesize(expr.exp, PREC))
 
 
     def _print_MatPow(self, expr):
         PREC = precedence(expr)
-        return '%s^%s' % (self.parenthesize(expr.base, PREC),
+        return '%s ^ %s' % (self.parenthesize(expr.base, PREC),
                           self.parenthesize(expr.exp, PREC))
 
 
@@ -395,7 +394,7 @@ class JuliaCodePrinter(CodePrinter):
         return "eye(%s)" % self._print(expr.shape[0])
 
     def _print_HadamardProduct(self, expr):
-        return '.*'.join([self.parenthesize(arg, precedence(expr))
+        return ' .* '.join([self.parenthesize(arg, precedence(expr))
                           for arg in expr.args])
 
     def _print_HadamardPower(self, expr):
@@ -405,7 +404,15 @@ class JuliaCodePrinter(CodePrinter):
             self.parenthesize(expr.exp, PREC)
             ])
 
-    # Note: as of 2015, Julia doesn't have spherical Bessel functions
+    def _print_Rational(self, expr):
+        if expr.q == 1:
+            return str(expr.p)
+        else:
+            if self._settings.get("sympy_integers", False):
+                return "S(%s) / %s" % (expr.p, expr.q)
+            return "%s / %s" % (expr.p, expr.q)
+
+    # Note: as of 2022, Julia doesn't have spherical Bessel functions
     def _print_jn(self, expr):
         from sympy.functions import sqrt, besselj
         x = expr.argument
@@ -455,6 +462,23 @@ class JuliaCodePrinter(CodePrinter):
                 if i == len(expr.args) - 1:
                     lines.append("end")
             return "\n".join(lines)
+
+    def _print_MatMul(self, expr):
+        c, m = expr.as_coeff_mmul()
+
+        sign = ""
+        if c.is_number:
+            re, im = c.as_real_imag()
+            if im.is_zero and re.is_negative:
+                expr = _keep_coeff(-c, m)
+                sign = "-"
+            elif re.is_zero and im.is_negative:
+                expr = _keep_coeff(-c, m)
+                sign = "-"
+
+        return sign + ' * '.join(
+            (self.parenthesize(arg, precedence(expr)) for arg in expr.args)
+        )
 
 
     def indent_code(self, code):
