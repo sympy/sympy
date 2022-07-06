@@ -206,42 +206,59 @@ and the last two are imaginary:
 If you want to restrict returned solutions to real numbers, you can
 - for {func}`~.solve`, place an assumption on the symbol to be solved for, $x$
 
-```py
-from sympy import Symbol, solve, solveset
-x = Symbol('x', real=True)
-solution = solve(x ** 4 - 256, x, dict=True)
-print(solution)
-[{x: -4}, {x: 4}]
-```
+    ```py
+    >>> from sympy import Symbol, solve
+    >>> x = Symbol('x', real=True)
+    >>> solution = solve(x ** 4 - 256, x, dict=True)
+    >>> print(solution)
+    [{x: -4}, {x: 4}]
+    ```  
 
-- for {func}`~.solveset`, limit the output domain in the function call
-```py
->>> from sympy import S, solveset
->>> from sympy.abc import x
->>> solution = solveset(x**4 - 256, x, domain=S.Reals)
->>> print(solution)
-{-4, 4}
-```
+    or restrict the solutions with standard Python techniques for filtering a list such as a list comprehension, or 
+    by adding inequalities to {func}`~.solve` (but the range must be continuous):
 
-If you restrict the solutions to a domain in which there are no solutions, {func}`~.solveset` will return the empty set, [EmptySet](../../modules/sets.rst):
+    ```py
+    >>> from sympy import Or, Symbol, solve
+    >>> x = Symbol('x', real=True)
+    >>> expr = (x-4)*(x-3)*(x-2)*(x-1)
+    >>> solution = solve(expr, x)
+    >>> print(solution)
+    [1, 2, 3, 4]
+    >>> solution_outside_2_3 = [v for v in solution if (v.is_real and Or(v<2,v>3))]
+    >>> print(solution_outside_2_3)
+    [1, 4]
+    >>> solution_2_3 = solve((expr,x>=2,x<=3), x)
+    >>> print(solution_2_3)
+    Eq(x, 2) | Eq(x, 3)
+    ```
 
-```py
->>> from sympy import solveset, S
->>> from sympy.abc import x
->>> solution = solveset(x**2 + 1, x, domain=S.Reals)
->>> print(solution)
-EmptySet
-```
+- for {func}`~.solveset`, limit the output domain in the function call by setting a domain
+    ```py
+    >>> from sympy import S, solveset
+    >>> from sympy.abc import x
+    >>> solution = solveset(x**4 - 256, x, domain=S.Reals)
+    >>> print(solution)
+    {-4, 4}
+    ```  
 
-Using {func}`~.solveset`, you can restrict returned solutions to any arbitrary set, including an interval:
+    or by restricting returned solutions to any arbitrary set, including an interval:
 
-```py
->>> from sympy import Interval, pi, sin, solveset
->>> from sympy.abc import x
->>> solution = solveset(sin(x), x, Interval(-pi, pi))
->>> print(solution)
-{0, -pi, pi}
-```
+    ```py
+    >>> from sympy import Interval, pi, sin, solveset
+    >>> from sympy.abc import x
+    >>> solution = solveset(sin(x), x, Interval(-pi, pi))
+    >>> print(solution)
+    {0, -pi, pi}
+    ```
+    and if you restrict the solutions to a domain in which there are no solutions, {func}`~.solveset` will return the empty set, [EmptySet](../../modules/sets.rst):
+
+    ```py
+    >>> from sympy import solveset, S
+    >>> from sympy.abc import x
+    >>> solution = solveset(x**2 + 1, x, domain=S.Reals)
+    >>> print(solution)
+    EmptySet
+    ```
 
 ### Explicitly represent infinite sets of possible solutions using {func}`~.solveset`
 
@@ -282,7 +299,7 @@ from the returned solutions by adding integer multiples of the {func}`~.periodic
 You can substitute solutions from {func}`~.solve` into an expression.
 
 A common use case is finding the critical points and values for a function $f$. 
-At the critical points, the {func}`~.Derivative` equals zero (or is undefined). 
+At the critical points, the {class}`~.Derivative` equals zero (or is undefined). 
 You can then obtain the function values at those critical points
 by substituting the critical points back into the function using {meth}`~sympy.core.basic.Basic.subs`. You can also tell if the critical point is a maxima or minima by substituting the values
 into the expression for the second derivative: a negative value indicates a maximum, and a positive value indicates a minimum.
