@@ -42,7 +42,7 @@ pip install\
   llvmlite\
   wurlitzer\
   numexpr\
-  'antlr4-python3-runtime==4.7.*'\
+  'antlr4-python3-runtime==4.10.*'\
   sphinx\
   sphinx-math-dollar\
   furo\
