@@ -213,7 +213,7 @@ For {func}`~.solve`, place an assumption on the symbol to be solved for, $x$
 >>> solution = solve(x ** 4 - 256, x, dict=True)
 >>> print(solution)
 [{x: -4}, {x: 4}]
-```  
+```
 
 or restrict the solutions with standard Python techniques for filtering a list such as a list comprehension, or 
 by adding inequalities to {func}`~.solve` (but the range must be continuous):
@@ -234,13 +234,14 @@ Eq(x, 2) | Eq(x, 3)
 ```
 
 For {func}`~.solveset`, limit the output domain in the function call by setting a domain
+
 ```py
 >>> from sympy import S, solveset
 >>> from sympy.abc import x
 >>> solution = solveset(x**4 - 256, x, domain=S.Reals)
 >>> print(solution)
 {-4, 4}
-```  
+```
 
 or by restricting returned solutions to any arbitrary set, including an interval:
 
@@ -321,8 +322,8 @@ into the expression for the second derivative: a negative value indicates a maxi
 -5/27
 >>> curvature = diff(f, x, 2)
 >>> print(curvature.subs(point1))
->>> print(curvature.subs(point2))
 -4
+>>> print(curvature.subs(point2))
 4
 ```
 
