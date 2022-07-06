@@ -554,19 +554,19 @@ def julia_code(expr, assign_to=None, **settings):
     >>> from sympy import julia_code, symbols, sin, pi
     >>> x = symbols('x')
     >>> julia_code(sin(x).series(x).removeO())
-    'x.^5/120 - x.^3/6 + x'
+    'x .^ 5 / 120 - x .^ 3 / 6 + x'
 
     >>> from sympy import Rational, ceiling
     >>> x, y, tau = symbols("x, y, tau")
     >>> julia_code((2*tau)**Rational(7, 2))
-    '8*sqrt(2)*tau.^(7/2)'
+    '8 * sqrt(2) * tau .^ (7 / 2)'
 
     Note that element-wise (Hadamard) operations are used by default between
     symbols.  This is because its possible in Julia to write "vectorized"
     code.  It is harmless if the values are scalars.
 
     >>> julia_code(sin(pi*x*y), assign_to="s")
-    's = sin(pi*x.*y)'
+    's = sin(pi * x .* y)'
 
     If you need a matrix product "*" or matrix power "^", you can specify the
     symbol as a ``MatrixSymbol``.
@@ -575,7 +575,7 @@ def julia_code(expr, assign_to=None, **settings):
     >>> n = Symbol('n', integer=True, positive=True)
     >>> A = MatrixSymbol('A', n, n)
     >>> julia_code(3*pi*A**3)
-    '(3*pi)*A^3'
+    '(3 * pi) * A ^ 3'
 
     This class uses several rules to decide which symbol to use a product.
     Pure numbers use "*", Symbols use ".*" and MatrixSymbols use "*".
@@ -586,7 +586,7 @@ def julia_code(expr, assign_to=None, **settings):
     while a human programmer might write "(x^2*y)*A^3", we generate:
 
     >>> julia_code(x**2*y*A**3)
-    '(x.^2.*y)*A^3'
+    '(x .^ 2 .* y) * A ^ 3'
 
     Matrices are supported using Julia inline notation.  When using
     ``assign_to`` with matrices, the name can be specified either as a string
@@ -595,7 +595,7 @@ def julia_code(expr, assign_to=None, **settings):
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([[x**2, sin(x), ceiling(x)]])
     >>> julia_code(mat, assign_to='A')
-    'A = [x.^2 sin(x) ceil(x)]'
+    'A = [x .^ 2 sin(x) ceil(x)]'
 
     ``Piecewise`` expressions are implemented with logical masking by default.
     Alternatively, you can pass "inline=False" to use if-else conditionals.
@@ -613,7 +613,7 @@ def julia_code(expr, assign_to=None, **settings):
 
     >>> mat = Matrix([[x**2, pw, sin(x)]])
     >>> julia_code(mat, assign_to='A')
-    'A = [x.^2 ((x > 0) ? (x + 1) : (x)) sin(x)]'
+    'A = [x .^ 2 ((x > 0) ? (x + 1) : (x)) sin(x)]'
 
     Custom printing can be defined for certain types by passing a dictionary of
     "type" : "function" to the ``user_functions`` kwarg.  Alternatively, the
@@ -645,7 +645,7 @@ def julia_code(expr, assign_to=None, **settings):
     >>> i = Idx('i', len_y-1)
     >>> e = Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
     >>> julia_code(e.rhs, assign_to=e.lhs, contract=False)
-    'Dy[i] = (y[i + 1] - y[i])./(t[i + 1] - t[i])'
+    'Dy[i] = (y[i + 1] - y[i]) ./ (t[i + 1] - t[i])'
     """
     return JuliaCodePrinter(settings).doprint(expr, assign_to)
 
