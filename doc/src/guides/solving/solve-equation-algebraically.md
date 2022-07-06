@@ -203,62 +203,64 @@ and the last two are imaginary:
 {-4, 4, -4*I, 4*I}
 ```
 
-If you want to restrict returned solutions to real numbers, you can
-- for {func}`~.solve`, place an assumption on the symbol to be solved for, $x$
+To restrict returned solutions to real numbers, or another domain or range, the different solving functions use different methods.
 
-    ```py
-    >>> from sympy import Symbol, solve
-    >>> x = Symbol('x', real=True)
-    >>> solution = solve(x ** 4 - 256, x, dict=True)
-    >>> print(solution)
-    [{x: -4}, {x: 4}]
-    ```  
+For {func}`~.solve`, place an assumption on the symbol to be solved for, $x$
 
-    or restrict the solutions with standard Python techniques for filtering a list such as a list comprehension, or 
-    by adding inequalities to {func}`~.solve` (but the range must be continuous):
+```py
+>>> from sympy import Symbol, solve
+>>> x = Symbol('x', real=True)
+>>> solution = solve(x ** 4 - 256, x, dict=True)
+>>> print(solution)
+[{x: -4}, {x: 4}]
+```  
 
-    ```py
-    >>> from sympy import Or, Symbol, solve
-    >>> x = Symbol('x', real=True)
-    >>> expr = (x-4)*(x-3)*(x-2)*(x-1)
-    >>> solution = solve(expr, x)
-    >>> print(solution)
-    [1, 2, 3, 4]
-    >>> solution_outside_2_3 = [v for v in solution if (v.is_real and Or(v<2,v>3))]
-    >>> print(solution_outside_2_3)
-    [1, 4]
-    >>> solution_2_3 = solve((expr,x>=2,x<=3), x)
-    >>> print(solution_2_3)
-    Eq(x, 2) | Eq(x, 3)
-    ```
+or restrict the solutions with standard Python techniques for filtering a list such as a list comprehension, or 
+by adding inequalities to {func}`~.solve` (but the range must be continuous):
 
-- for {func}`~.solveset`, limit the output domain in the function call by setting a domain
-    ```py
-    >>> from sympy import S, solveset
-    >>> from sympy.abc import x
-    >>> solution = solveset(x**4 - 256, x, domain=S.Reals)
-    >>> print(solution)
-    {-4, 4}
-    ```  
+```py
+>>> from sympy import Or, Symbol, solve
+>>> x = Symbol('x', real=True)
+>>> expr = (x-4)*(x-3)*(x-2)*(x-1)
+>>> solution = solve(expr, x)
+>>> print(solution)
+[1, 2, 3, 4]
+>>> solution_outside_2_3 = [v for v in solution if (v.is_real and Or(v<2,v>3))]
+>>> print(solution_outside_2_3)
+[1, 4]
+>>> solution_2_3 = solve((expr,x>=2,x<=3), x)
+>>> print(solution_2_3)
+Eq(x, 2) | Eq(x, 3)
+```
 
-    or by restricting returned solutions to any arbitrary set, including an interval:
+For {func}`~.solveset`, limit the output domain in the function call by setting a domain
+```py
+>>> from sympy import S, solveset
+>>> from sympy.abc import x
+>>> solution = solveset(x**4 - 256, x, domain=S.Reals)
+>>> print(solution)
+{-4, 4}
+```  
 
-    ```py
-    >>> from sympy import Interval, pi, sin, solveset
-    >>> from sympy.abc import x
-    >>> solution = solveset(sin(x), x, Interval(-pi, pi))
-    >>> print(solution)
-    {0, -pi, pi}
-    ```
-    and if you restrict the solutions to a domain in which there are no solutions, {func}`~.solveset` will return the empty set, [EmptySet](../../modules/sets.rst):
+or by restricting returned solutions to any arbitrary set, including an interval:
 
-    ```py
-    >>> from sympy import solveset, S
-    >>> from sympy.abc import x
-    >>> solution = solveset(x**2 + 1, x, domain=S.Reals)
-    >>> print(solution)
-    EmptySet
-    ```
+```py
+>>> from sympy import Interval, pi, sin, solveset
+>>> from sympy.abc import x
+>>> solution = solveset(sin(x), x, Interval(-pi, pi))
+>>> print(solution)
+{0, -pi, pi}
+```
+
+and if you restrict the solutions to a domain in which there are no solutions, {func}`~.solveset` will return the empty set, [EmptySet](../../modules/sets.rst):
+
+```py
+>>> from sympy import solveset, S
+>>> from sympy.abc import x
+>>> solution = solveset(x**2 + 1, x, domain=S.Reals)
+>>> print(solution)
+EmptySet
+```
 
 ### Explicitly represent infinite sets of possible solutions using {func}`~.solveset`
 
@@ -317,9 +319,9 @@ into the expression for the second derivative: a negative value indicates a maxi
 1
 >>> print(f.subs(point2))
 -5/27
-curvature = diff(f, x, 2)
-print(curvature.subs(point1))
-print(curvature.subs(point2))
+>>> curvature = diff(f, x, 2)
+>>> print(curvature.subs(point1))
+>>> print(curvature.subs(point2))
 -4
 4
 ```
