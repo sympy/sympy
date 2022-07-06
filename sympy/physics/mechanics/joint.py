@@ -312,6 +312,8 @@ class Joint(ABC):
 class PinJoint(Joint):
     """Pin (Revolute) Joint.
 
+    .. image:: PinJoint.*
+
     Explanation
     ===========
 
@@ -534,6 +536,8 @@ class PinJoint(Joint):
 
 class PrismaticJoint(Joint):
     """Prismatic (Sliding) Joint.
+
+    .. image:: PrismaticJoint.*
 
     Explanation
     ===========
