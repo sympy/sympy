@@ -177,17 +177,17 @@ class JuliaCodePrinter(CodePrinter):
             r = a_str[0]
             for i in range(1, len(a)):
                 mulsym = '*' if a[i-1].is_number else '.*'
-                r = "%s %s %s" %(r, mulsym, a_str[i])
+                r = "%s %s %s" % (r, mulsym, a_str[i])
             return r
 
         if not b:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
             divsym = '/' if b[0].is_number else './'
-            return "%s %s %s" %(sign+multjoin(a, a_str), divsym, b_str[0])
+            return "%s %s %s" % (sign+multjoin(a, a_str), divsym, b_str[0])
         else:
             divsym = '/' if all(bi.is_number for bi in b) else './'
-            return "%s %s %s" %(sign + multjoin(a, a_str), divsym, "(%s)" % multjoin(b, b_str))
+            return "%s %s %s" % (sign + multjoin(a, a_str), divsym, "(%s)" % multjoin(b, b_str))
 
     def _print_Relational(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -206,10 +206,10 @@ class JuliaCodePrinter(CodePrinter):
         if expr.is_commutative:
             if expr.exp == -S.Half:
                 sym = '/' if expr.base.is_number else './'
-                return "%s %s %s" %("1", sym, "sqrt(%s)" % self._print(expr.base))
+                return "%s %s %s" % ("1", sym, "sqrt(%s)" % self._print(expr.base))
             if expr.exp == -S.One:
                 sym = '/' if expr.base.is_number else './'
-                return  "%s %s %s" %("1", sym, "%s" % self.parenthesize(expr.base, PREC))
+                return  "%s %s %s" % ("1", sym, "%s" % self.parenthesize(expr.base, PREC))
 
         return '%s %s %s' % (self.parenthesize(expr.base, PREC), powsymbol,
                            self.parenthesize(expr.exp, PREC))
@@ -407,10 +407,7 @@ class JuliaCodePrinter(CodePrinter):
     def _print_Rational(self, expr):
         if expr.q == 1:
             return str(expr.p)
-        else:
-            if self._settings.get("sympy_integers", False):
-                return "S(%s) / %s" % (expr.p, expr.q)
-            return "%s / %s" % (expr.p, expr.q)
+        return "%s / %s" % (expr.p, expr.q)
 
     # Note: as of 2022, Julia doesn't have spherical Bessel functions
     def _print_jn(self, expr):
