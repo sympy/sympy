@@ -209,7 +209,7 @@ class JuliaCodePrinter(CodePrinter):
                 return "1 %s sqrt(%s)" % (sym, self._print(expr.base))
             if expr.exp == -S.One:
                 sym = '/' if expr.base.is_number else './'
-                return  "%s %s %s" % ("1", sym, "%s" % self.parenthesize(expr.base, PREC))
+                return  "1 %s %s" % (sym, self.parenthesize(expr.base, PREC))
 
         return '%s %s %s' % (self.parenthesize(expr.base, PREC), powsymbol,
                            self.parenthesize(expr.exp, PREC))
