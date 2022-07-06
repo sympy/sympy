@@ -223,10 +223,10 @@ class KroneckerProduct(MatrixExpr):
         else:
             return self * other
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
         return canonicalize(KroneckerProduct(*args))

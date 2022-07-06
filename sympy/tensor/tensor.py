@@ -2473,10 +2473,10 @@ class TensAdd(TensExpr, AssocOp):
         else:
             return set()
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
 
@@ -2851,7 +2851,7 @@ class Tensor(TensExpr):
             index_map[idx] = (indices.index(idx),)
         return index_map
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         args, indices, free, dum = TensMul._tensMul_contract_indices([self])
         return args[0]
 
@@ -3395,11 +3395,11 @@ class TensMul(TensExpr, AssocOp):
             ind_pos += arg.ext_rank
             args[i] = Tensor(arg.component, indices[prev_pos:ind_pos])
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         is_canon_bp = self._is_canon_bp
-        deep = kwargs.get('deep', True)
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
 

@@ -82,7 +82,7 @@ class LeviCivita(Function):
         if has_dups(args):
             return S.Zero
 
-    def doit(self):
+    def doit(self, **hints):
         return eval_levicivita(*self.args)
 
 

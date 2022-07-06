@@ -490,7 +490,7 @@ class Cross(Vector):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return cross(self._expr1, self._expr2)
 
 
@@ -523,7 +523,7 @@ class Dot(Expr):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return dot(self._expr1, self._expr2)
 
 
