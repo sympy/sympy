@@ -407,7 +407,7 @@ class JuliaCodePrinter(CodePrinter):
     def _print_Rational(self, expr):
         if expr.q == 1:
             return str(expr.p)
-        return "%s / %s" % (expr.p, expr.q)
+        return "%s // %s" % (expr.p, expr.q)
 
     # Note: as of 2022, Julia doesn't have spherical Bessel functions
     def _print_jn(self, expr):
