@@ -39,8 +39,7 @@ Next, we also define the first three joints. ::
 
 Now we can formulate the holonomic constraint that will close the kinematic loop. ::
 
-   >>> loop = link4.masscenter.pos_from(link1.masscenter) \
-   ...        + l1 / 2 * link1.x + l4 / 2 * link4.x
+   >>> loop = link4.masscenter.pos_from(link1.masscenter) + l1 / 2 * link1.x + l4 / 2 * link4.x
    >>> fh = Matrix([loop.dot(link1.x), loop.dot(link1.y)])
 
 In order to generate the equations of motions, we will use the ``JointsMethod`` as our fronted. Before setting up the :class:`~.KanesMethod` as its backend we need to calculate the velocity constraints. ::
