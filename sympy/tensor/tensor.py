@@ -31,12 +31,12 @@ lowered when the tensor is put in canonical form.
 
 from typing import Any, Dict as tDict, List, Set as tSet, Tuple as tTuple
 from functools import reduce
+from math import prod
 
 from abc import abstractmethod, ABCMeta
 from collections import defaultdict
 import operator
 import itertools
-from sympy.core.mul import prod
 from sympy.core.numbers import (Integer, Rational)
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \

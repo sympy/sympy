@@ -983,7 +983,7 @@ class Mul(Expr, AssocOp):
             terms = []
             from sympy.ntheory.multinomial import multinomial_coefficients_iterator
             for kvals, c in multinomial_coefficients_iterator(m, n):
-                p = prod([arg.diff((s, k)) for k, arg in zip(kvals, args)])
+                p = Mul(*[arg.diff((s, k)) for k, arg in zip(kvals, args)])
                 terms.append(c * p)
             return Add(*terms)
         from sympy.concrete.summations import Sum
@@ -994,7 +994,7 @@ class Mul(Expr, AssocOp):
         nfact = factorial(n)
         e, l = (# better to use the multinomial?
             nfact/prod(map(factorial, kvals))/factorial(klast)*\
-            prod([args[t].diff((s, kvals[t])) for t in range(m-1)])*\
+            Mul(*[args[t].diff((s, kvals[t])) for t in range(m-1)])*\
             args[-1].diff((s, Max(0, klast))),
             [(k, 0, n) for k in kvals])
         return Sum(e, *l)
