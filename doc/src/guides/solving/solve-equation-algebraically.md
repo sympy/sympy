@@ -1,6 +1,6 @@
 # Solve an equation algebraically
 
-Use SymPy to solve an equation algebraically (symbolically). For example, solving $x^2 = y$ yields $x \in \{-\sqrt{y},\sqrt{y}\}$.
+Use SymPy to solve an equation algebraically (symbolically). For example, solving $x^2 = y$ for $x$ yields $x \in \{-\sqrt{y},\sqrt{y}\}$.
 
 Alternatives to consider:
 - SymPy can also [solve many other types of problems including sets of equations](index.md).
@@ -115,7 +115,6 @@ or which you think of as an equality.
 ```py
 >>> from sympy import Eq, solve, solveset
 >>> from sympy.abc import x, y
-
 >>> eqn = Eq(x**2, y)
 >>> solutions = solve(eqn, x, dict=True)
 >>> print(solutions)
@@ -443,7 +442,7 @@ so you may have to {func}`solve your equation numerically <sympy.solvers.solvers
 
 It is also possible that there is an algebraic solution to your equation, 
 and SymPy has not implemented an appropriate algorithm. 
-If that happens, or SymPy returns an empty set when there is a 
+If that happens, or SymPy returns an empty set or list when there is a 
 mathematical solution (indicating a bug in SymPy), please post it on the 
 [mailing list](https://groups.google.com/g/sympy), or open an issue on 
 [SymPy's GitHub page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you can 
