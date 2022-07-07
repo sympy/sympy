@@ -136,32 +136,39 @@ def test_solve_args():
     assert solve(y - 3, {y}) == [3]
     # more than 1
     assert solve(y - 3, {x, y}) == [{y: 3}]
-    # multiple symbols: take the first linear solution+
-    # - return as tuple with values for all requested symbols
-    assert solve(x + y - 3, [x, y]) == [(3 - y, y)]
-    # - unless dict is True
-    assert solve(x + y - 3, [x, y], dict=True) == [{x: 3 - y}]
-    # - or no symbols are given
+    # no symbols are given: find solution for each factor
     assert solve(x + y - 3) == [{x: 3 - y}]
-    # multiple symbols might represent an undetermined coefficients system
-    assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
+    # multiple symbols: return first solution (linear if possible)
+    assert solve(x + y - 3, [x, y]) == [(3 - y, y)]
+    # - that is nonlinear
     args = (a + b)*x - b**2 + 2, a, b
-    assert solve(*args) == \
-        [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
-    assert solve(*args, set=True) == \
-        ([a, b], {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))})
-    assert solve(*args, dict=True) == \
-        [{b: sqrt(2), a: -sqrt(2)}, {b: -sqrt(2), a: sqrt(2)}]
+    assert solve(*args) == [((b**2 - b*x - 2)/x, b)]
     eq = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
     flags = dict(dict=True)
     assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
-        [{k: c - b**2/(4*a), h: -b/(2*a), p: 1/(4*a)}]
+        [{p: (h - x)**2/(a*x**2 + b*x + c - k)/4}]
     flags.update(dict(simplify=False))
     assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
-        [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
-    # failing undetermined system
-    assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b, dict=True) == \
-        [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
+        [{p: (-h + x)**2/(4*a*x**2 + 4*b*x + 4*c - 4*k)}]
+    # multiple symbols might represent a coefficients system
+    # - that is linear
+    assert solve(a + b*x - 2, [a, b]) == {b: 0, a: 2}
+    # - this is linear and can be solved as undetermined coefficients
+    # system but it fails the expectation that we are solving for all
+    # symbols except one, so an algebraic solution is returned
+    assert solve((a*x + b*x - b + d), (a, b)) == [((-b*x + b - d)/x, b)]
+    # - this is not linear and also fails the expectations
+    assert solve(a*x + b**2/x - 3*x - 4/x, a, b, **flags) == [
+        {a: -b**2/x**2 + 3 + 4/x**2}]
+    # Examples like the last two will require the user to build the
+    # system of equations and pass them to solve if they want to solve
+    # for coefficients:
+    #>>> list((a*x + b**2/x - 3*x - 4/x).as_coefficients_dict(x).values())
+    #[b**2 - 4, a - 3]
+    #>>> solve(_)
+    #[{b: -2, a: 3}, {b: 2, a: 3}]
+    assert solve(a*x + b**2/x - 3*x - 4/x, a, b, undetermined=False) == [
+        ((-b**2 + 3*x**2 + 4)/x**2, b)]
     # failed single equation
     assert solve(1/(1/x - y + exp(y))) == []
     raises(
@@ -790,8 +797,8 @@ def test_issue_4793():
     ans = solve(eq, x)
     assert len(ans) == 5 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
     assert solve(log(x**2) - y**2/exp(x), x, y, set=True) == (
-        [x, y],
-        {(x, sqrt(exp(x) * log(x ** 2))), (x, -sqrt(exp(x) * log(x ** 2)))})
+        [y],
+        {(-sqrt(exp(x)*log(x**2)),), (sqrt(exp(x)*log(x**2)),)})
     assert solve(x**2*z**2 - z**2*y**2) == [{x: -y}, {x: y}, {z: 0}]
     assert solve((x - 1)/(1 + 1/(x - 1))) == []
     assert solve(x**(y*z) - x, x) == [1]
@@ -851,10 +858,12 @@ def test_issue_5197():
     assert solve((n - 1)*(n + 2)*(2*n - 1), n) == [1]
     x = Symbol('x', positive=True)
     y = Symbol('y')
+    # following is not {x: -3, y: 1} b/c x is positive
     assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == []
-                 # not {x: -3, y: 1} b/c x is positive
-    # The solution following should not contain (-sqrt(2), sqrt(2))
-    assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
+    # formerly recognized as coefficient system, now:
+    assert solve((x + y)*n - y**2 + 2, x, y) == [((-n*y + y**2 - 2)/n, y)]
+    # The solution following should not contain (-2, 2)
+    assert solve((x + y, y**2 - 4), x, y) == [(2, -2)]
     y = Symbol('y', positive=True)
     # The solution following should not contain {y: -x*exp(x/2)}
     assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: x*exp(x/2)}]
@@ -919,21 +928,20 @@ def test_issue_5132():
         (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
         (-log(3), -sqrt(-exp(2*x) - sin(log(3))))})
     assert solve(eqs, x, z, set=True) == (
-        [x, z],
-        {(x, sqrt(-exp(2*x) + sin(y))), (x, -sqrt(-exp(2*x) + sin(y)))})
-    assert set(solve(eqs, x, y)) == \
-        {
-            (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
-        (log(-z**2 - sin(log(3)))/2, -log(3))}
-    assert set(solve(eqs, y, z)) == \
-        {
-            (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
-        (-log(3), sqrt(-exp(2*x) - sin(log(3))))}
+        [z],
+        {(sqrt(-exp(2*x) + sin(y)),), (-sqrt(-exp(2*x) + sin(y)),)})
+    assert solve(eqs, x, y) == [
+        (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
+        (log(-z**2 - sin(log(3)))/2, -log(3))]
+    assert solve(eqs, y, z) == [
+        (-log(3),
+        -sqrt(-exp(2*x) - sin(log(3)))),
+        (-log(3), sqrt(-exp(2*x) - sin(log(3))))]
     eqs = [exp(x)**2 - sin(y) + z, 1/exp(y) - 3]
     assert solve(eqs, set=True) == ([y, z], {
         (-log(3), -exp(2*x) - sin(log(3)))})
     assert solve(eqs, x, z, set=True) == (
-        [x, z], {(x, -exp(2*x) + sin(y))})
+        [z], {(-exp(2*x) + sin(y),)})
     assert set(solve(eqs, x, y)) == {
             (log(-sqrt(-z - sin(log(3)))), -log(3)),
             (log(-z - sin(log(3)))/2, -log(3))}
@@ -1477,15 +1485,21 @@ def test_issue_5901():
     assert solve([f(x) - 3*f(x).diff(x)], f(x)) == \
         {f(x): 3*D}
     assert solve([f(x) - 3*f(x).diff(x), f(x)**2 - y + 4], f(x), y) == \
-        [{f(x): 3*D, y: 9*D**2 + 4}]
+        [(3*D, 9*D**2 + 4)]
     assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
-                h(a), g(a), set=True) == \
-        ([g(a)], {
-        (-sqrt(h(a)**2*f(a)**2 + G)/f(a),),
-        (sqrt(h(a)**2*f(a)**2+ G)/f(a),)})
+                h(a), g(a), set=True) == (
+        [h(a)], {
+        (-sqrt(g(a)**2*f(a)**2 - G)/f(a),),
+        (sqrt(g(a)**2*f(a)**2 - G)/f(a),)})
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
-    assert set(solve(*args)) == \
-        {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}
+    # when solved as coefficient system with coefficients of the
+    # derivative and nonderivative, it gives
+    assert solve([f(x) + g(x), -g(x)**2 + 2], f(x), g(x)) == [
+        (-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
+    # but now, algebraically
+    assert solve(*args) == [
+        ((g(x)**2 - g(x)*Derivative(f(x), (x, 2)) - 2
+        )/Derivative(f(x), (x, 2)), g(x))]
     eqs = [f(x)**2 + g(x) - 2*f(x).diff(x), g(x)**2 - 4]
     assert solve(eqs, f(x), g(x), set=True) == \
         ([f(x), g(x)], {
