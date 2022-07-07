@@ -557,7 +557,7 @@ def julia_code(expr, assign_to=None, **settings):
     >>> from sympy import Rational, ceiling
     >>> x, y, tau = symbols("x, y, tau")
     >>> julia_code((2*tau)**Rational(7, 2))
-    '8 * sqrt(2) * tau .^ (7 / 2)'
+    '8 * sqrt(2) * tau .^ (7 // 2)'
 
     Note that element-wise (Hadamard) operations are used by default between
     symbols.  This is because its possible in Julia to write "vectorized"
