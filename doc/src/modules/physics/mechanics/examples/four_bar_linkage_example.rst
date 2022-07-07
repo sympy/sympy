@@ -2,11 +2,11 @@
 A four bar linkage
 ==================
 
-The four bar linkage is a common example used in mechanics, which has two holonomic constraints. This example will make use of joints functionality provided in :mod:`sympy.physics.mechanics`. In summary we will use bodies and joints to define the open loop system. Next, we define the configuration constraints to close the loop. The :class:`~.JointsMethod` will be used to do the "book-keeping" of the open-loop system. From this we will get the input used in combination with the constraints to manually setup the :class:`~.KanesMethod` as the backend.
+The four bar linkage is a common example used in mechanics, which has two holonomic constraints. This example will make use of joints functionality provided in :mod:`sympy.physics.mechanics`. In summary we will use bodies and joints to define the open loop system. Next, we define the configuration constraints to close the loop. The ``JointsMethod`` will be used to do the "book-keeping" of the open-loop system. From this we will get the input used in combination with the constraints to manually setup the :class:`~.KanesMethod` as the backend.
 
 .. image:: four_bar_linkage.*
    :align: center
-   :width: 400
+   :width: 600
 
 First we need to create the :func:`~.dynamicsymbols` needed to describe the system as shown in the above diagram. In this case, the generalized coordinates `q_1`, `q_2` and `q_3` represent the angles between the links. Likewise, the generalized speeds `u_1`, `u_2` and `u_3` represent the angular velocities between the links. We also create some :func:`~.symbols` to represent the lengths and density of the links. ::
 
@@ -43,7 +43,7 @@ Now we can formulate the holonomic constraint that will close the kinematic loop
    ...        + l1 / 2 * link1.x + l4 / 2 * link4.x
    >>> fh = Matrix([loop.dot(link1.x), loop.dot(link1.y)])
 
-In order to generate the equations of motions, we will use the :class:`~.JointsMethod` as our fronted. Before setting up the :class:`~.KanesMethod` as its backend we need to calculate the velocity constraints. ::
+In order to generate the equations of motions, we will use the ``JointsMethod`` as our fronted. Before setting up the :class:`~.KanesMethod` as its backend we need to calculate the velocity constraints. ::
 
    >>> method = JointsMethod(link1, joint1, joint2, joint3)
    >>> t = dynamicsymbols._t
