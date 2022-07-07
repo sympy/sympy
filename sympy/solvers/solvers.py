@@ -1310,39 +1310,35 @@ def _solve(f, *symbols, **flags):
     not_impl_msg = "No algorithms are implemented to solve equation %s"
 
     if len(symbols) != 1:
-        soln = None
-        free = f.free_symbols
-        ex = free - set(symbols)
-        if len(ex) != 1:
-            ind, dep = f.as_independent(*symbols)
-            ex = ind.free_symbols & dep.free_symbols
-        if len(ex) == 1:
-            ex = ex.pop()
-            try:
-                if flags.get('undetermined', True):
-                    soln = solve_undetermined_coeffs(f, symbols, ex, **flags)
-            except (ValueError, NotImplementedError):
-                pass
-            if soln:
-                if flags.get('simplify', True):
-                    if isinstance(soln, dict):
-                        for k in soln:
-                            soln[k] = simplify(soln[k])
-                    elif isinstance(soln, list):
-                        if isinstance(soln[0], dict):
-                            for d in soln:
-                                for k in d:
-                                    d[k] = simplify(d[k])
-                        elif isinstance(soln[0], tuple):
-                            soln = [tuple(simplify(i) for i in j) for j in soln]
+        if flags.get('undetermined', True):
+            free = f.free_symbols
+            ex = free - set(symbols)
+            if len(ex) != 1:
+                ind, dep = f.as_independent(*symbols)
+                ex = ind.free_symbols & dep.free_symbols
+            if len(ex) == 1:
+                ex = ex.pop()
+                soln = solve_undetermined_coeffs(f, symbols, ex, **flags)
+                if soln:  # neither [] nor None
+                    if flags.get('simplify', True):
+                        if isinstance(soln, dict):
+                            for k in soln:
+                                soln[k] = simplify(soln[k])
+                        elif isinstance(soln, list):
+                            if isinstance(soln[0], dict):
+                                for d in soln:
+                                    for k in d:
+                                        d[k] = simplify(d[k])
+                            elif isinstance(soln[0], tuple):
+                                soln = [tuple(simplify(i) for i in j) for j in soln]
+                            else:
+                                raise TypeError('unrecognized args in list')
+                        elif isinstance(soln, tuple):
+                            sym, sols = soln
+                            soln = sym, {tuple(simplify(i) for i in j) for j in sols}
                         else:
-                            raise TypeError('unrecognized args in list')
-                    elif isinstance(soln, tuple):
-                        sym, sols = soln
-                        soln = sym, {tuple(simplify(i) for i in j) for j in sols}
-                    else:
-                        raise TypeError('unrecognized solution type')
-                return soln
+                            raise TypeError('unrecognized solution type')
+                    return soln
 
         # look for solutions for desired symbols that are independent
         # of symbols already solved for, e.g. if we solve for x = y
@@ -2346,14 +2342,14 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     r"""
     Solve equation of a type $p(x; a_1, \ldots, a_k) = q(x)$ where both
     $p$ and $q$ are univariate polynomials that depend linearly on $k$
-    parameters. A ValueError is raised if the system is not linear in
     parameters.
 
     Explanation
     ===========
 
     The result of this function is a dictionary with symbolic values of those
-    parameters with respect to coefficients in $q$.
+    parameters with respect to coefficients in $q$, an empty list if there
+    is no solution, and None if the system was not recognized.
 
     This function accepts both equations class instances and ordinary
     SymPy expressions. Specification of parameters and variables is
@@ -2393,11 +2389,8 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
             flags['dict'] = dwas
         if swas != miss:
             flags['set'] = swas
-        if rv and type(rv) is not dict:
-            raise ValueError('system not linear in coefficients')
-        return rv
-    else:
-        return None  # no solutions
+        if not rv or type(rv) is dict:
+            return rv
 
 
 def solve_linear_system_LU(matrix, syms):

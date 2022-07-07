@@ -731,9 +731,9 @@ def test_solve_undetermined_coeffs():
     assert solve(a*x - x + b, a, b, dict=True) == [{a: 1, b: 0}]
     assert solve(a*x - x + b, a, b, set=True) == ([a, b], {(1, 0)})
     # </mark>
-    # test that it fails for nonlinear systems
-    raises(ValueError, lambda: solve_undetermined_coeffs(
-        a**2*x + b - 2*x -3, (a, b), x))
+    # test that it returns None for nonlinear systems
+    assert solve_undetermined_coeffs(a**2*x + b - 2*x -3, (a, b), x,
+        ) is None
 
 
 def test_solve_inequalities():
