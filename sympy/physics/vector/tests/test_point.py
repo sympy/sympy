@@ -33,10 +33,8 @@ def test_point_a1pt_theorys():
     O.set_vel(N, 0)
     assert P.a1pt_theory(O, N, B) == -(qd**2) * B.x + qdd * B.y
     P.set_vel(B, q2d * B.z)
-    O._acc_dict, P._acc_dict = {}, {}
     assert P.a1pt_theory(O, N, B) == -(qd**2) * B.x + qdd * B.y + q2dd * B.z
     O.set_vel(N, q2d * B.x)
-    O._acc_dict, P._acc_dict = {}, {}
     assert P.a1pt_theory(O, N, B) == ((q2dd - qd**2) * B.x + (q2d * qd + qdd) * B.y +
                                q2dd * B.z)
 

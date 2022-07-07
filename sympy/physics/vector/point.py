@@ -245,9 +245,9 @@ class Point:
         _check_frame(frame)
         if not (frame in self._acc_dict):
             if self.vel(frame) != 0:
-                self.set_acc(frame, (self._vel_dict[frame]).dt(frame))
+                return (self._vel_dict[frame]).dt(frame)
             else:
-                self.set_acc(frame, 0)
+                return Vector(0)
         return self._acc_dict[frame]
 
     def locatenew(self, name, value):
