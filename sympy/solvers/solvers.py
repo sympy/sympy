@@ -50,7 +50,7 @@ from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debug
 from sympy.utilities.iterables import (connected_components,
-    generate_bell, uniq, iterable, is_sequence, subsets, flatten)
+    generate_bell, uniq, iterable, is_sequence, subsets)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
@@ -859,11 +859,6 @@ def solve(f, *symbols, **flags):
             consider using a solver like `diophantine` if you are
             looking for a solution in integers."""))
 
-    ordered_symbols = (symbols and
-                       symbols[0] and
-                       (isinstance(symbols[0], Symbol) or
-                        is_sequence(symbols[0],
-                        include=GeneratorType)))
     f, symbols = (_sympified_list(w) for w in [f, symbols])
     if isinstance(f, list):
         f = [s for s in f if s is not S.true and s is not True]
@@ -871,6 +866,7 @@ def solve(f, *symbols, **flags):
 
     # preprocess symbol(s)
     ###########################################################################
+    ordered_symbols = False
     if not symbols:
         # get symbols from equations
         symbols = set().union(*[fi.free_symbols for fi in f])
@@ -883,10 +879,11 @@ def solve(f, *symbols, **flags):
                         symbols.add(p)
                         pot.skip()  # don't go any deeper
         symbols = list(symbols)
-
-        ordered_symbols = False
-    elif len(symbols) == 1 and iterable(symbols[0]):
-        symbols = symbols[0]
+    else:
+        if len(symbols) == 1 and iterable(symbols[0]):
+            symbols = symbols[0]
+        ordered_symbols = symbols and is_sequence(symbols,
+                        include=GeneratorType)
 
     # remove symbols the user is not interested in
     exclude = flags.pop('exclude', set())
@@ -931,7 +928,8 @@ def solve(f, *symbols, **flags):
         if isinstance(fi, Poly):
             f[i] = fi.as_expr()
 
-        # rewrite hyperbolics in terms of exp
+        # rewrite hyperbolics in terms of exp if they have symbols of
+        # interest
         f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction) and \
             w.has_free(*symbols), lambda w: w.rewrite(exp))
 
@@ -1005,6 +1003,8 @@ def solve(f, *symbols, **flags):
         # contains a system of nonlinear equations; all other cases should
         # be unambiguous
         symbols = sorted(symbols, key=default_sort_key)
+    else:
+        ordered_symbols = list(symbols)
 
     # we can solve for non-symbol entities by replacing them with Dummy symbols
     f, symbols, swap_sym = recast_to_symbols(f, symbols)
@@ -1094,6 +1094,7 @@ def solve(f, *symbols, **flags):
     # capture any denominators before rewriting since
     # they may disappear after the rewrite, e.g. issue 14779
     flags['_denominators'] = _simple_dens(f[0], symbols)
+
     # Any embedded piecewise functions need to be brought out to the
     # top level so that the appropriate strategy gets selected.
     # However, this is necessary only if one of the piecewise
@@ -1167,9 +1168,8 @@ def solve(f, *symbols, **flags):
     # solved with poly-system if all symbols are present
     if (
             not flags.get('dict', False) and
-            solution and
             ordered_symbols and
-            not isinstance(solution, dict) and
+            solution and not isinstance(solution, dict) and
             all(isinstance(sol, dict) for sol in solution)
     ):
         solution = [tuple([r.get(s, s) for s in symbols]) for r in solution]
@@ -1269,18 +1269,23 @@ def solve(f, *symbols, **flags):
     if not as_set and isinstance(solution, list):
         # Make sure that a list of solutions is ordered in a canonical way.
         solution.sort(key=default_sort_key)
+        if solution and type(solution[0]) is tuple:
+            # XXX better to handle at source of introduction?,
+            # e.g solve([x**2 + y -2, y**2 - 4], x, y) would
+            # otherwise have (0, 2) appearing twice
+            solution = list(uniq(solution))
 
     if not as_dict and not as_set:
         return solution or []
 
-    # return a list of mappings or []
+    # return a list of mappings with canonical order or []
     if not solution:
         solution = []
     else:
         if isinstance(solution, dict):
-            solution = [solution]
+            solution = [{k: v for k, v in ordered(solution.items())}]
         elif iterable(solution[0]):
-            solution = [dict(list(zip(symbols, s))) for s in solution]
+            solution = [dict(ordered(zip(symbols, s))) for s in solution]
         elif isinstance(solution[0], dict):
             solution = [{k: s[k] for k in ordered(s)} for s in solution]
         else:
@@ -1291,7 +1296,7 @@ def solve(f, *symbols, **flags):
         return solution
     assert as_set
     # each dict does not necessarily have the same keys so unify them
-    k = list(ordered(set(flatten(tuple(i.keys()) for i in solution))))
+    k = list(ordered(set([k for i in solution for k in i if i[k] != k])))
     return k, {tuple([s.get(ki, ki) for ki in k]) for s in solution}
 
 
