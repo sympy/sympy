@@ -22,12 +22,12 @@ def test_Integer():
 
 
 def test_Rational():
-    assert julia_code(Rational(3, 7)) == "3 / 7"
+    assert julia_code(Rational(3, 7)) == "3 // 7"
     assert julia_code(Rational(18, 9)) == "2"
-    assert julia_code(Rational(3, -7)) == "-3 / 7"
-    assert julia_code(Rational(-3, -7)) == "3 / 7"
-    assert julia_code(x + Rational(3, 7)) == "x + 3 / 7"
-    assert julia_code(Rational(3, 7)*x) == "3 * x / 7"
+    assert julia_code(Rational(3, -7)) == "-3 // 7"
+    assert julia_code(Rational(-3, -7)) == "3 // 7"
+    assert julia_code(x + Rational(3, 7)) == "x + 3 // 7"
+    assert julia_code(Rational(3, 7)*x) == "(3 // 7) * x"
 
 
 def test_Relational():
@@ -48,7 +48,7 @@ def test_Function():
 def test_Pow():
     assert julia_code(x**3) == "x .^ 3"
     assert julia_code(x**(y**3)) == "x .^ (y .^ 3)"
-    assert julia_code(x**Rational(2, 3)) == 'x .^ (2 / 3)'
+    assert julia_code(x**Rational(2, 3)) == 'x .^ (2 // 3)'
     g = implemented_function('g', Lambda(x, 2*x))
     assert julia_code(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "(3.5 * 2 * x) .^ (-x + y .^ x) ./ (x .^ 2 + y)"
@@ -95,14 +95,14 @@ def test_mix_number_mult_symbols():
     assert julia_code(1/x/y) == "1 ./ (x .* y)"
     assert julia_code(2*pi*x/y/z) == "2 * pi * x ./ (y .* z)"
     assert julia_code(3*pi/x) == "3 * pi ./ x"
-    assert julia_code(S(3)/5) == "3 / 5"
-    assert julia_code(S(3)/5*x) == "3 * x / 5"
+    assert julia_code(S(3)/5) == "3 // 5"
+    assert julia_code(S(3)/5*x) == "(3 // 5) * x"
     assert julia_code(x/y/z) == "x ./ (y .* z)"
     assert julia_code((x+y)/z) == "(x + y) ./ z"
     assert julia_code((x+y)/(z+x)) == "(x + y) ./ (x + z)"
     assert julia_code((x+y)/EulerGamma) == "(x + y) / eulergamma"
     assert julia_code(x/3/pi) == "x / (3 * pi)"
-    assert julia_code(S(3)/5*x*y/pi) == "3 * x .* y / (5 * pi)"
+    assert julia_code(S(3)/5*x*y/pi) == "(3 // 5) * x .* y / pi"
 
 
 def test_mix_number_pow_symbols():
@@ -118,7 +118,7 @@ def test_imag():
     I = S('I')
     assert julia_code(I) == "im"
     assert julia_code(5*I) == "5im"
-    assert julia_code((S(3)/2)*I) == "3 * im / 2"
+    assert julia_code((S(3)/2)*I) == "(3 // 2) * im"
     assert julia_code(3+4*I) == "3 + 4im"
 
 
@@ -170,8 +170,8 @@ def test_Matrices():
 def test_vector_entries_hadamard():
     # For a row or column, user might to use the other dimension
     A = Matrix([[1, sin(2/x), 3*pi/x/5]])
-    assert julia_code(A) == "[1 sin(2 ./ x) 3 * pi ./ (5 * x)]"
-    assert julia_code(A.T) == "[1, sin(2 ./ x), 3 * pi ./ (5 * x)]"
+    assert julia_code(A) == "[1 sin(2 ./ x) (3 // 5) * pi ./ x]"
+    assert julia_code(A.T) == "[1, sin(2 ./ x), (3 // 5) * pi ./ x]"
 
 
 @XFAIL
@@ -196,7 +196,7 @@ def test_MatrixSymbol():
     assert julia_code(A*(B + 3*Identity(n))) == "A * (3 * eye(n) + B)"
     assert julia_code(A**(x**2)) == "A ^ (x .^ 2)"
     assert julia_code(A**3) == "A ^ 3"
-    assert julia_code(A**S.Half) == "A ^ (1 / 2)"
+    assert julia_code(A**S.Half) == "A ^ (1 // 2)"
 
 
 def test_special_matrices():
@@ -371,8 +371,8 @@ def test_specfun():
         assert julia_code(f(x)) == f.__name__ + '(x)'
     assert julia_code(hankel1(n, x)) == 'hankelh1(n, x)'
     assert julia_code(hankel2(n, x)) == 'hankelh2(n, x)'
-    assert julia_code(jn(n, x)) == 'sqrt(2) * sqrt(pi) * sqrt(1 ./ x) .* besselj(n + 1 / 2, x) / 2'
-    assert julia_code(yn(n, x)) == 'sqrt(2) * sqrt(pi) * sqrt(1 ./ x) .* bessely(n + 1 / 2, x) / 2'
+    assert julia_code(jn(n, x)) == 'sqrt(2) * sqrt(pi) * sqrt(1 ./ x) .* besselj(n + 1 // 2, x) / 2'
+    assert julia_code(yn(n, x)) == 'sqrt(2) * sqrt(pi) * sqrt(1 ./ x) .* bessely(n + 1 // 2, x) / 2'
 
 
 def test_MatrixElement_printing():

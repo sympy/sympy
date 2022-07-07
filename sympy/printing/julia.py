@@ -153,11 +153,12 @@ class JuliaCodePrinter(CodePrinter):
                     if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
                         pow_paren.append(item)
                     b.append(Pow(item.base, -item.exp))
-            elif item.is_Rational and item is not S.Infinity:
-                if item.p != 1:
-                    a.append(Rational(item.p))
-                if item.q != 1:
-                    b.append(Rational(item.q))
+            elif item.is_Rational and item is not S.Infinity and item.p == 1:
+                # Save the Rational type in julia Unless the numerator is 1.
+                # For example:
+                # julia_code(Rational(3, 7)*x) --> (3 // 7) * x
+                # julia_code(x/3) --> x / 3 but not x * (1 // 3)
+                b.append(Rational(item.q))
             else:
                 a.append(item)
 
