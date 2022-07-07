@@ -356,6 +356,46 @@ Traceback (most recent call last):
 TypeError: The computation had not completed because of the undecidable set membership is found in every candidates.
 ```
 
+## Options for {func}`~.solve`
+
+### Include solutions making any denominator zero using `check=False`
+
+Normally, {func}`~.solve` checks whether any solutions make any denominator zero, and automatically excludes them.
+If you want to include those solutions, 
+and speed up {func}`~.solve` (at the risk of obtaining invalid solutions), set `check=False`:
+
+```py
+>>> from sympy import Symbol, sin, solve
+>>> x = Symbol("x")
+>>> solution_check_true = solve(sin(x)/x)  # 0 is excluded
+>>> print(solution_check_true)
+[pi]
+>>> solution_check_false = solve(sin(x)/x, check=False)  # 0 is excluded
+>>> print(solution_check_false)
+[0, pi]
+```
+
+### Do not simplify solutions using `simplify=False`
+
+Normally, {func}`~.solve` simplifies all but polynomials of order 3 or greater 
+before returning them and (if `check` is not False) 
+uses the general simplify function on the solutions 
+and the expression obtained when they are substituted into the function which should be zero.
+If you do not want the solutions simplified, 
+and want to speed up {func}`~.solve`, use `simplify=False`.
+
+```py
+>>> from sympy import solve
+>>> from sympy.abc import x, y
+>>> expr = x**2 - (y**5 - 3*y**3 + y**2 - 3)
+>>> solution_simplify_true = solve(expr, x, dict=True)  # 0 is excluded
+>>> print(solution_simplify_true)
+[{x: -sqrt(y**5 - 3*y**3 + y**2 - 3)}, {x: sqrt(y**5 - 3*y**3 + y**2 - 3)}]
+>>> solution_simplify_false = solve(expr, x, dict=True, simplify=False)  # 0 is excluded
+>>> print(solution_simplify_false)
+[{x: -sqrt((y + 1)*(y**2 - 3)*(y**2 - y + 1))}, {x: sqrt((y + 1)*(y**2 - 3)*(y**2 - y + 1))}]
+```
+
 ## Not all equations can be solved
 
 ### Equations with no solution
