@@ -722,6 +722,18 @@ def test_solve_undetermined_coeffs():
     assert solve_undetermined_coeffs(((c + 1)*a*x**2 + (c + 1)*b*x**2 +
     (c + 1)*b*x + (c + 1)*2*c*x + (c + 1)**2)/(c + 1), [a, b, c], x) == \
         {a: -2, b: 2, c: -1}
+    # test that dict and set flags are ignored
+    assert solve_undetermined_coeffs(a*x - x, [a], x, set=True) == {a: 1}
+    assert solve_undetermined_coeffs(a*x - x, [a], x, dict=True) == {a: 1}
+    # <mark> can be removed after solve_undetermined_coeffs handling is
+    # removed from solve
+    assert solve(a*x - x + b, a, b) == {a: 1, b: 0}
+    assert solve(a*x - x + b, a, b, dict=True) == [{a: 1, b: 0}]
+    assert solve(a*x - x + b, a, b, set=True) == ([a, b], {(1, 0)})
+    # </mark>
+    # test that it fails for nonlinear systems
+    raises(ValueError, lambda: solve_undetermined_coeffs(
+        a**2*x + b - 2*x -3, (a, b), x))
 
 
 def test_solve_inequalities():
@@ -1659,7 +1671,6 @@ def test_minsolve_linear_system():
     # and give a good error message if someone tries to use
     # particular with a single equation
     raises(ValueError, lambda: solve(x + 1, particular=True))
-
 
 
 def test_real_roots():

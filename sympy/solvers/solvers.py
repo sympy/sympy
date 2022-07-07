@@ -1319,10 +1319,9 @@ def _solve(f, *symbols, **flags):
         if len(ex) == 1:
             ex = ex.pop()
             try:
-                # soln may come back as dict, list of dicts or tuples, or
-                # tuple of symbol list and set of solution tuples
-                soln = solve_undetermined_coeffs(f, symbols, ex, **flags)
-            except NotImplementedError:
+                if flags.get('undetermined', True):
+                    soln = solve_undetermined_coeffs(f, symbols, ex, **flags)
+            except (ValueError, NotImplementedError):
                 pass
             if soln:
                 if flags.get('simplify', True):
@@ -2346,7 +2345,9 @@ def solve_linear_system(system, *symbols, **flags):
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     r"""
     Solve equation of a type $p(x; a_1, \ldots, a_k) = q(x)$ where both
-    $p$ and $q$ are univariate polynomials that depend on $k$ parameters.
+    $p$ and $q$ are univariate polynomials that depend linearly on $k$
+    parameters. A ValueError is raised if the system is not linear in
+    parameters.
 
     Explanation
     ===========
@@ -2384,7 +2385,17 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
         # consecutive powers in the input expressions have
         # been successfully collected, so solve remaining
         # system using Gaussian elimination algorithm
-        return solve(system, *coeffs, **flags)
+        miss = Dummy()
+        dwas = flags.pop('dict', miss)
+        swas = flags.pop('set', miss)
+        rv = solve(system, *coeffs, **flags)
+        if dwas != miss:
+            flags['dict'] = dwas
+        if swas != miss:
+            flags['set'] = swas
+        if rv and type(rv) is not dict:
+            raise ValueError('system not linear in coefficients')
+        return rv
     else:
         return None  # no solutions
 
