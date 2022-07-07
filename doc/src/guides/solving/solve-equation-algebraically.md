@@ -356,7 +356,7 @@ Traceback (most recent call last):
 TypeError: The computation had not completed because of the undecidable set membership is found in every candidates.
 ```
 
-## Options for {func}`~.solve`
+## Options that can speed up {func}`~.solve`
 
 ### Include solutions making any denominator zero by using `check=False`
 
@@ -379,7 +379,7 @@ and speed up {func}`~.solve` (at the risk of obtaining invalid solutions), set `
 
 Normally, {func}`~.solve` simplifies all but polynomials of order 3 or greater 
 before returning them and (if `check` is not False) 
-uses the general simplify function on the solutions 
+uses the general {func}`simplify <sympy.simplify.simplify.simplify>` function on the solutions 
 and the expression obtained when they are substituted into the function which should be zero.
 If you do not want the solutions simplified, 
 and want to speed up {func}`~.solve`, use `simplify=False`.
@@ -441,8 +441,9 @@ so you may have to {func}`solve your equation numerically <sympy.solvers.solvers
 
 ### Equations which have an analytical solution, and SymPy cannot solve
 
-It is also possible that there is a way to solve your equation algebraically, and SymPy has not have 
-implemented an appropriate algorithm. If that happens, or SymPy returns an empty set when there is a 
+It is also possible that there is an algebraic solution to your equation, 
+and SymPy has not implemented an appropriate algorithm. 
+If that happens, or SymPy returns an empty set when there is a 
 mathematical solution (indicating a bug in SymPy), please post it on the 
 [mailing list](https://groups.google.com/g/sympy), or open an issue on 
 [SymPy's GitHub page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you can 
