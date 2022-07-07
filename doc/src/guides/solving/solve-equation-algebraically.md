@@ -358,7 +358,7 @@ TypeError: The computation had not completed because of the undecidable set memb
 
 ## Options for {func}`~.solve`
 
-### Include solutions making any denominator zero using `check=False`
+### Include solutions making any denominator zero by using `check=False`
 
 Normally, {func}`~.solve` checks whether any solutions make any denominator zero, and automatically excludes them.
 If you want to include those solutions, 
@@ -375,7 +375,7 @@ and speed up {func}`~.solve` (at the risk of obtaining invalid solutions), set `
 [0, pi]
 ```
 
-### Do not simplify solutions using `simplify=False`
+### Do not simplify solutions by using `simplify=False`
 
 Normally, {func}`~.solve` simplifies all but polynomials of order 3 or greater 
 before returning them and (if `check` is not False) 
