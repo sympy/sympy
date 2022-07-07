@@ -45,6 +45,7 @@ from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
+from sympy.polys.polytools import div
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debug
@@ -1353,7 +1354,6 @@ def _solve(f, *symbols, **flags):
         # one or several symbols.
         nonlin_s = []
         got_s = set()
-        rhs_s = set()
         result = []
         for s in symbols:
             xi, v = solve_linear(f, symbols=[s])
@@ -1361,15 +1361,19 @@ def _solve(f, *symbols, **flags):
                 # no need to check but we should simplify if desired
                 if flags.get('simplify', True):
                     v = simplify(v)
-                vfree = v.free_symbols
-                if vfree & got_s:
-                    # was linear, but has redundant relationship
-                    # e.g. x - y = 0 has y == x is redundant for x == y
-                    # so ignore
-                    continue
-                rhs_s |= vfree
                 got_s.add(xi)
                 result.append({xi: v})
+                # check to see if this was a factor of f
+                try:
+                    w, r = div(f, xi - v)
+                except PolynomialError:
+                    w, r = 1, 1
+                if not r:
+                    f = w
+                elif not w:
+                    # it is not a factor so any other solutions will
+                    # just be a re-arrangement of this relationship
+                    break
             elif xi:  # there might be a non-linear solution if xi is not 0
                 nonlin_s.append(s)
         if not nonlin_s:
