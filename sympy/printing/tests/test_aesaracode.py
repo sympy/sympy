@@ -606,11 +606,12 @@ def test_Relationals():
 
 
 def test_complexfunctions():
-    xt, yt = aesara_code(x, dtypes={x:'complex128'}), aesara_code(y, dtypes={y: 'complex128'})
+    dtypes = {x:'complex128', y:'complex128'}
+    xt, yt = aesara_code(x, dtypes=dtypes), aesara_code(y, dtypes=dtypes)
     from sympy.functions.elementary.complexes import conjugate
     from aesara.tensor import as_tensor_variable as atv
     from aesara.tensor import complex as cplx
-    assert theq(aesara_code(y*conjugate(x)), yt*(xt.conj()))
+    assert theq(aesara_code(y*conjugate(x), dtypes=dtypes), yt*(xt.conj()))
     assert theq(aesara_code((1+2j)*x), xt*(atv(1.0)+atv(2.0)*cplx(0,1)))
 
 
