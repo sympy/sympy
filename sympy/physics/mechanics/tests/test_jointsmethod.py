@@ -10,7 +10,6 @@ from sympy.testing.pytest import raises
 from sympy.core.backend import zeros
 from sympy.utilities.lambdify import lambdify
 from sympy.solvers.solvers import solve
-from numpy import array
 
 
 t = dynamicsymbols._t # type: ignore
@@ -198,11 +197,15 @@ def test_four_bar_linkage_with_manual_constraints():
     p_vals = [0.13, 0.24, 0.21, 0.34, 997]
     q_vals = [2.1, 0.6655470375077588, 2.527408138024188]  # Satisfies fh
     u_vals = [0.2, -0.17963733938852067, 0.1309060540601612]  # Satisfies fhd
-    mass_check = array([[3.45270982e+01, 7.00394880e+00, -4.93969097e+00],
-                        [-2.19824159e-14, 2.07170248e-01, 2.84291757e-01],
-                        [-1.30000000e-01, -8.83693490e-03, 1.86489133e-01]])
-    forcing_check = array([[-0.03121182],
-                           [-0.00066023],
-                           [0.00181356]])
-    assert (abs(eval_m(q_vals, p_vals) - mass_check) < 1e-7).all()
-    assert (abs(eval_f(q_vals, u_vals, p_vals) - forcing_check) < 1e-7).all()
+    mass_check = Matrix([[3.452709815256506e+01, 7.003948798374735e+00,
+                          -4.939690970641498e+00],
+                         [-2.203792703880936e-14, 2.071702479957077e-01,
+                          2.842917573033711e-01],
+                         [-1.300000000000123e-01, -8.836934896046506e-03,
+                          1.864891330060847e-01]])
+    forcing_check = Matrix([[-0.031211821321648],
+                            [-0.00066022608181],
+                            [0.001813559741243]])
+    assert all(abs(x) < 1e-10 for x in (eval_m(q_vals, p_vals) - mass_check))
+    assert all(abs(x) < 1e-10 for x in
+               (eval_f(q_vals, u_vals, p_vals) - forcing_check))
