@@ -1,8 +1,8 @@
 .. _documentation-style-guide:
 
-===========================
- Documentation Style Guide
-===========================
+=====================
+Docstring Style Guide
+=====================
 
 General Guidelines
 --------------------

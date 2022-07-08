@@ -652,14 +652,16 @@ class OrthogonalKet(OrthogonalState, KetBase):
         if len(self.args) != len(bra.args):
             raise ValueError('Cannot multiply a ket that has a different number of labels.')
 
-        for i in range(len(self.args)):
-            diff = self.args[i] - bra.args[i]
+        for arg, bra_arg in zip(self.args, bra.args):
+            diff = arg - bra_arg
             diff = diff.expand()
 
-            if diff.is_zero is False:
+            is_zero = diff.is_zero
+
+            if is_zero is False:
                 return 0
 
-            if diff.is_zero is None:
+            if is_zero is None:
                 return None
 
         return 1

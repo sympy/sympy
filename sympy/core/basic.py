@@ -968,10 +968,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             sequence = [(k, sequence[k]) for k in k]
             # do infinities first
             if not simultaneous:
-                redo = []
-                for i in range(len(sequence)):
-                    if sequence[i][1] in _illegal:  # nan, zoo and +/-oo
-                        redo.append(i)
+                redo = [i for i, seq in enumerate(sequence) if seq[1] in _illegal]
                 for i in reversed(redo):
                     sequence.insert(0, sequence.pop(i))
 
@@ -1628,7 +1625,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return None
 
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
         else:
             repl_dict = repl_dict.copy()
 
@@ -1986,7 +1983,7 @@ class Atom(Basic):
     def matches(self, expr, repl_dict=None, old=False):
         if self == expr:
             if repl_dict is None:
-                return dict()
+                return {}
             return repl_dict.copy()
 
     def xreplace(self, rule, hack2=False):

@@ -635,7 +635,7 @@ class MarkovProcess(StochasticProcess):
 
             rv = rv[0]
             states = condition.as_set()
-            prob, gstate = dict(), None
+            prob, gstate = {}, None
             for gc in gcs:
                 if gc.has(min_key_rv):
                     if gc.has(Probability):

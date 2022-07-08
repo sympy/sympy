@@ -235,7 +235,7 @@ this object, use the * or + operator instead.
             return None
 
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
 
         # handle simple patterns
         if self == expr:

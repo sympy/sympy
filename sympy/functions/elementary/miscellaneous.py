@@ -27,9 +27,7 @@ def _minmax_as_Piecewise(op, *args):
     from sympy.functions.elementary.piecewise import Piecewise
     ec = []
     for i, a in enumerate(args):
-        c = []
-        for j in range(i + 1, len(args)):
-            c.append(Relational(a, args[j], op))
+        c = [Relational(a, args[j], op) for j in range(i + 1, len(args))]
         ec.append((a, And(*c)))
     return Piecewise(*ec)
 
@@ -465,17 +463,17 @@ class MinMaxBase(Expr, LatticeOp):
             # local zeros have not been handled yet, so look through
             # more than the first arg
             if cls == Min:
-                for i in range(len(args)):
-                    if not args[i].is_number:
+                for arg in args:
+                    if not arg.is_number:
                         break
-                    if (args[i] < small) == True:
-                        small = args[i]
+                    if (arg < small) == True:
+                        small = arg
             elif cls == Max:
-                for i in range(len(args)):
-                    if not args[i].is_number:
+                for arg in args:
+                    if not arg.is_number:
                         break
-                    if (args[i] > big) == True:
-                        big = args[i]
+                    if (arg > big) == True:
+                        big = arg
             T = None
             if cls == Min:
                 if small != Min.identity:
@@ -901,21 +899,17 @@ class Rem(Function):
 
     @classmethod
     def eval(cls, p, q):
-        def doit(p, q):
-            """ the function remainder if both p,q are numbers
-                and q is not zero
-            """
+        """ the function remainder if both p,q are numbers
+            and q is not zero
+        """
 
-            if q.is_zero:
-                raise ZeroDivisionError("Division by zero")
-            if p is S.NaN or q is S.NaN or p.is_finite is False or q.is_finite is False:
-                return S.NaN
-            if p is S.Zero or p in (q, -q) or (p.is_integer and q == 1):
-                return S.Zero
+        if q.is_zero:
+            raise ZeroDivisionError("Division by zero")
+        if p is S.NaN or q is S.NaN or p.is_finite is False or q.is_finite is False:
+            return S.NaN
+        if p is S.Zero or p in (q, -q) or (p.is_integer and q == 1):
+            return S.Zero
 
-            if q.is_Number:
-                if p.is_Number:
-                    return p - Integer(p/q)*q
-        rv = doit(p, q)
-        if rv is not None:
-            return rv
+        if q.is_Number:
+            if p.is_Number:
+                return p - Integer(p/q)*q

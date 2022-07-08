@@ -215,7 +215,7 @@ def test_solve_polynomial1():
             y: (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
         }
 
-    solution = {y: S.Zero, x: S.Zero}
+    solution = {x: S.Zero, y: S.Zero}
 
     assert solve((x - y, x + y), x, y ) == solution
     assert solve((x - y, x + y), (x, y)) == solution
@@ -368,7 +368,7 @@ def test_linear_system():
                 [-1, 0, 1, 0, 0]])
 
     assert solve_linear_system(M, x, y, z, t) == \
-        {x: t*(-n-1)/n, z: t*(-n-1)/n, y: 0}
+        {x: t*(-n-1)/n, y: 0, z: t*(-n-1)/n}
 
     assert solve([x + y + z + t, -z - t], x, y, z, t) == {x: -y, z: -t}
 
@@ -1277,6 +1277,11 @@ def test_unrad1():
     assert unrad(s**2 - s**3) == (x**3 - 6*x**2 + 9*x - 4, [])
     # make sure numerators which are already polynomial are rejected
     assert unrad((x/(x + 1) + 3)**(-2), x) is None
+
+    # https://github.com/sympy/sympy/issues/23707
+    eq = sqrt(x - y)*exp(t*sqrt(x - y)) - exp(t*sqrt(x - y))
+    assert solve(eq, y) == [x - 1]
+    assert unrad(eq) is None
 
 
 @slow

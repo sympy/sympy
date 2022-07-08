@@ -500,7 +500,7 @@ class ImageSet(Set):
     def is_iterable(self):
         return all(s.is_iterable for s in self.base_sets)
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         from sympy.sets.setexpr import SetExpr
         f = self.lamda
         sig = f.signature

@@ -644,13 +644,9 @@ class tanh(HyperbolicFunction):
         elif arg.is_Mul:
             coeff, terms = arg.as_coeff_Mul()
             if coeff.is_Integer and coeff > 1:
-                n = []
-                d = []
                 T = tanh(terms)
-                for k in range(1, coeff + 1, 2):
-                    n.append(nC(range(coeff), k)*T**k)
-                for k in range(0, coeff + 1, 2):
-                    d.append(nC(range(coeff), k)*T**k)
+                n = [nC(range(coeff), k)*T**k for k in range(1, coeff + 1, 2)]
+                d = [nC(range(coeff), k)*T**k for k in range(0, coeff + 1, 2)]
                 return Add(*n)/Add(*d)
         return tanh(arg)
 

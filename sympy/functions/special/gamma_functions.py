@@ -1,3 +1,5 @@
+from math import prod
+
 from sympy.core import Add, S, Dummy, expand_func
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError
@@ -141,8 +143,7 @@ class gamma(Function):
                         else:
                             coeff = S.NegativeOne
 
-                    for i in range(3, 2*k, 2):
-                        coeff *= i
+                    coeff *= prod(range(3, 2*k, 2))
 
                     if arg.is_positive:
                         return coeff*sqrt(S.Pi) / 2**n
@@ -799,14 +800,14 @@ class polygamma(Function):
                             z - i, e) for i in range(1, int(coeff) + 1)])
                     else:
                         tail = -Add(*[Pow(
-                            z + i, e) for i in range(0, int(-coeff))])
+                            z + i, e) for i in range(int(-coeff))])
                     return polygamma(n, z - coeff) + S.NegativeOne**n*factorial(n)*tail
 
             elif z.is_Mul:
                 coeff, z = z.as_two_terms()
                 if coeff.is_Integer and coeff.is_positive:
-                    tail = [ polygamma(n, z + Rational(
-                        i, coeff)) for i in range(0, int(coeff)) ]
+                    tail = [polygamma(n, z + Rational(
+                        i, coeff)) for i in range(int(coeff))]
                     if n == 0:
                         return Add(*tail)/coeff + log(coeff)
                     else:

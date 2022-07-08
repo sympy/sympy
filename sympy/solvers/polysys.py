@@ -1,4 +1,5 @@
 """Solvers of systems of polynomial equations. """
+import itertools
 
 from sympy.core import S
 from sympy.core.sorting import default_sort_key
@@ -134,12 +135,8 @@ def solve_biquadratic(f, g, opt):
     q = q.ltrim(-1)
     q_roots = list(roots(q).keys())
 
-    solutions = []
-
-    for q_root in q_roots:
-        for p_root in p_roots:
-            solution = (p_root.subs(y, q_root), q_root)
-            solutions.append(solution)
+    solutions = [(p_root.subs(y, q_root), q_root) for q_root, p_root in
+                 itertools.product(q_roots, p_roots)]
 
     return sorted(solutions, key=default_sort_key)
 

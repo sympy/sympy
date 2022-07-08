@@ -54,8 +54,9 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
     while prec1 <= prec:
         # when dealing with non-Rational numbers we usually evaluate
         # with `subs` argument but we only need a ballpark evaluation
-        xv = {x:v if not v.is_number else v.n(prec1)}
-        fe = [f.as_expr().xreplace(xv) for f in factors]
+        fe = [f.as_expr().xreplace({x:v}) for f in factors]
+        if v.is_number:
+            fe = [f.n(prec) for f in fe]
 
         # assign integers [0, n) to symbols (if any)
         for n in subsets(range(bound), k=len(symbols), repetition=True):

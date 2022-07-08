@@ -6,7 +6,7 @@ from .dispatcher import Dispatcher, MethodDispatcher, ambiguity_warn
 
 # XXX: This parameter to dispatch isn't documented and isn't used anywhere in
 # sympy. Maybe it should just be removed.
-global_namespace = dict()  # type: tDict[str, Any]
+global_namespace = {}  # type: tDict[str, Any]
 
 
 def dispatch(*types, namespace=global_namespace, on_ambiguity=ambiguity_warn):

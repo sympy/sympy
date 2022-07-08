@@ -959,8 +959,8 @@ class MatrixSpecial(MatrixRequired):
                 cmax += 1
                 continue
             # process list of lists
-            for i in range(len(m)):
-                for j, _ in enumerate(m[i]):
+            for i, mi in enumerate(m):
+                for j, _ in enumerate(mi):
                     diag_entries[(i + rmax, j + cmax)] = _
             rmax += r
             cmax += c
@@ -2090,8 +2090,8 @@ class MatrixOperations(MatrixRequired):
         """
         return self._eval_conjugate()
 
-    def doit(self, **kwargs):
-        return self.applyfunc(lambda x: x.doit())
+    def doit(self, **hints):
+        return self.applyfunc(lambda x: x.doit(**hints))
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """Apply evalf() to each element of self."""

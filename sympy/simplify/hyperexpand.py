@@ -59,6 +59,7 @@ It is described in great(er) detail in the Sphinx documentation.
 from collections import defaultdict
 from itertools import product
 from functools import reduce
+from math import prod
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
@@ -1177,19 +1178,11 @@ class MeijerUnShiftA(Operator):
         bq = list(bq)
         bi = bm.pop(i) - 1
 
-        m = Poly(1, _x)
-        for b in bm:
-            m *= Poly(b - _x, _x)
-        for b in bq:
-            m *= Poly(_x - b, _x)
+        m = Poly(1, _x) * prod(Poly(b - _x, _x) for b in bm) * prod(Poly(_x - b, _x) for b in bq)
 
         A = Dummy('A')
         D = Poly(bi - A, A)
-        n = Poly(z, A)
-        for a in an:
-            n *= (D + 1 - a)
-        for a in ap:
-            n *= (-D + a - 1)
+        n = Poly(z, A) * prod((D + 1 - a) for a in an) * prod((-D + a - 1) for a in ap)
 
         b0 = n.nth(0)
         if b0 == 0:
@@ -1686,20 +1679,16 @@ def try_shifted_sum(func, z):
     ops.reverse()
 
     fac = factorial(k)/z**k
-    for a in nap:
-        fac /= rf(a, k)
-    for b in nbq:
-        fac *= rf(b, k)
+    fac *= Mul(*[rf(b, k) for b in nbq])
+    fac /= Mul(*[rf(a, k) for a in nap])
 
     ops += [MultOperator(fac)]
 
     p = 0
     for n in range(k):
         m = z**n/factorial(n)
-        for a in nap:
-            m *= rf(a, n)
-        for b in nbq:
-            m /= rf(b, n)
+        m *= Mul(*[rf(a, n) for a in nap])
+        m /= Mul(*[rf(b, n) for b in nbq])
         p += m
 
     return Hyper_Function(nap, nbq), ops, -p
@@ -1727,10 +1716,8 @@ def try_polynomial(func, z):
     for n in Tuple(*list(range(-a))):
         fac *= z
         fac /= n + 1
-        for a in func.ap:
-            fac *= a + n
-        for b in func.bq:
-            fac /= b + n
+        fac *= Mul(*[a + n for a in func.ap])
+        fac /= Mul(*[b + n for b in func.bq])
         res += fac
     return res
 
