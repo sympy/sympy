@@ -206,6 +206,7 @@ def test_four_bar_linkage_with_manual_constraints():
     forcing_check = Matrix([[-0.031211821321648],
                             [-0.00066022608181],
                             [0.001813559741243]])
-    assert all(abs(x) < 1e-10 for x in (eval_m(q_vals, p_vals) - mass_check))
     assert all(abs(x) < 1e-10 for x in
-               (eval_f(q_vals, u_vals, p_vals) - forcing_check))
+               (Matrix(eval_m(q_vals, p_vals)) - mass_check))
+    assert all(abs(x) < 1e-10 for x in
+               (Matrix(eval_f(q_vals, u_vals, p_vals)) - forcing_check))
