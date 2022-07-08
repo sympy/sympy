@@ -1,24 +1,22 @@
 """ Functions to support rewriting of SymPy expressions """
 
-from __future__ import print_function, division
-
-from sympy import Expr
+from sympy.core.expr import Expr
 from sympy.assumptions import ask
 from sympy.strategies.tools import subs
 from sympy.unify.usympy import rebuild, unify
 
 def rewriterule(source, target, variables=(), condition=None, assume=None):
-    """ Rewrite rule
+    """ Rewrite rule.
 
     Transform expressions that match source into expressions that match target
-    treating all `variables` as wilds.
+    treating all ``variables`` as wilds.
 
     Examples
     ========
 
     >>> from sympy.abc import w, x, y, z
     >>> from sympy.unify.rewrite import rewriterule
-    >>> from sympy.utilities import default_sort_key
+    >>> from sympy import default_sort_key
     >>> rl = rewriterule(x + y, x**y, [x, y])
     >>> sorted(rl(z + 3), key=default_sort_key)
     [3**z, z**3]

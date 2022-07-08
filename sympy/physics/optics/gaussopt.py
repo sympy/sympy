@@ -21,8 +21,6 @@ image distance
     positive for real images
 """
 
-from __future__ import print_function, division
-
 __all__ = [
     'RayTransferMatrix',
     'FreeSpace',
@@ -43,8 +41,14 @@ __all__ = [
 ]
 
 
-from sympy import (atan2, Expr, I, im, Matrix, pi, re, sqrt, sympify,
-    together, MutableDenseMatrix)
+from sympy.core.expr import Expr
+from sympy.core.numbers import (I, pi)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import (im, re)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import atan2
+from sympy.matrices.dense import Matrix, MutableDenseMatrix
+from sympy.polys.rationaltools import together
 from sympy.utilities.misc import filldedent
 
 ###
@@ -56,13 +60,14 @@ class RayTransferMatrix(MutableDenseMatrix):
     """
     Base class for a Ray Transfer Matrix.
 
-    It should be used if there isn't already a more specific subclass mentioned
+    It should be used if there is not already a more specific subclass mentioned
     in See Also.
 
     Parameters
     ==========
 
-    parameters : A, B, C and D or 2x2 matrix (Matrix(2, 2, [A, B, C, D]))
+    parameters :
+        A, B, C and D or 2x2 matrix (Matrix(2, 2, [A, B, C, D]))
 
     Examples
     ========
@@ -232,8 +237,10 @@ class FlatRefraction(RayTransferMatrix):
     Parameters
     ==========
 
-    n1 : refractive index of one medium
-    n2 : refractive index of other medium
+    n1 :
+        Refractive index of one medium.
+    n2 :
+        Refractive index of other medium.
 
     See Also
     ========
@@ -263,9 +270,12 @@ class CurvedRefraction(RayTransferMatrix):
     Parameters
     ==========
 
-    R : radius of curvature (positive for concave)
-    n1 : refractive index of one medium
-    n2 : refractive index of other medium
+    R :
+        Radius of curvature (positive for concave).
+    n1 :
+        Refractive index of one medium.
+    n2 :
+        Refractive index of other medium.
 
     See Also
     ========
@@ -347,7 +357,8 @@ class ThinLens(RayTransferMatrix):
     Parameters
     ==========
 
-    f : the focal distance
+    f :
+        The focal distance.
 
     See Also
     ========
@@ -475,7 +486,8 @@ class BeamParameter(Expr):
     wavelen : the wavelength,
     z : the distance to waist, and
     w : the waist, or
-    z_r : the rayleigh range
+    z_r : the rayleigh range.
+    n : the refractive index of medium.
 
     Examples
     ========
@@ -515,18 +527,19 @@ class BeamParameter(Expr):
     # subclass it. See:
     # https://groups.google.com/d/topic/sympy/7XkU07NRBEs/discussion
 
-    def __new__(cls, wavelen, z, z_r=None, w=None):
+    def __new__(cls, wavelen, z, z_r=None, w=None, n=1):
         wavelen = sympify(wavelen)
         z = sympify(z)
+        n = sympify(n)
 
         if z_r is not None and w is None:
             z_r = sympify(z_r)
         elif w is not None and z_r is None:
-            z_r = waist2rayleigh(sympify(w), wavelen)
-        else:
-            raise ValueError('Constructor expects exactly one named argument.')
+            z_r = waist2rayleigh(sympify(w), wavelen, n)
+        elif z_r is None and w is None:
+            raise ValueError('Must specify one of w and z_r.')
 
-        return Expr.__new__(cls, wavelen, z, z_r)
+        return Expr.__new__(cls, wavelen, z, z_r, n)
 
     @property
     def wavelen(self):
@@ -539,6 +552,10 @@ class BeamParameter(Expr):
     @property
     def z_r(self):
         return self.args[2]
+
+    @property
+    def n(self):
+        return self.args[3]
 
     @property
     def q(self):
@@ -573,12 +590,14 @@ class BeamParameter(Expr):
     @property
     def w(self):
         """
-        The beam radius at `1/e^2` intensity.
+        The radius of the beam w(z), at any position z along the beam.
+        The beam radius at `1/e^2` intensity (axial value).
 
         See Also
         ========
 
-        w_0 : the minimal radius of beam
+        w_0 :
+            The minimal radius of beam.
 
         Examples
         ========
@@ -593,12 +612,12 @@ class BeamParameter(Expr):
     @property
     def w_0(self):
         """
-        The beam waist (minimal radius).
+         The minimal radius of beam at `1/e^2` intensity (peak value).
 
         See Also
         ========
 
-        w : the beam radius at `1/e^2` intensity
+        w : the beam radius at `1/e^2` intensity (axial value).
 
         Examples
         ========
@@ -608,7 +627,7 @@ class BeamParameter(Expr):
         >>> p.w_0
         0.00100000000000000
         """
-        return sqrt(self.z_r/pi*self.wavelen)
+        return sqrt(self.z_r/(pi*self.n)*self.wavelen)
 
     @property
     def divergence(self):
@@ -645,6 +664,9 @@ class BeamParameter(Expr):
         """
         The minimal waist for which the gauss beam approximation is valid.
 
+        Explanation
+        ===========
+
         The gauss beam is a solution to the paraxial equation. For curvatures
         that are too great it is not a valid approximation.
 
@@ -663,7 +685,7 @@ class BeamParameter(Expr):
 # Utilities
 ###
 
-def waist2rayleigh(w, wavelen):
+def waist2rayleigh(w, wavelen, n=1):
     """
     Calculate the rayleigh range from the waist of a gaussian beam.
 
@@ -682,7 +704,7 @@ def waist2rayleigh(w, wavelen):
     pi*w**2/wavelen
     """
     w, wavelen = map(sympify, (w, wavelen))
-    return w**2*pi/wavelen
+    return w**2*n*pi/wavelen
 
 
 def rayleigh2waist(z_r, wavelen):
@@ -709,6 +731,9 @@ def rayleigh2waist(z_r, wavelen):
 def geometric_conj_ab(a, b):
     """
     Conjugation relation for geometrical beams under paraxial conditions.
+
+    Explanation
+    ===========
 
     Takes the distances to the optical element and returns the needed
     focal distance.
@@ -737,6 +762,9 @@ def geometric_conj_ab(a, b):
 def geometric_conj_af(a, f):
     """
     Conjugation relation for geometrical beams under paraxial conditions.
+
+    Explanation
+    ===========
 
     Takes the object distance (for geometric_conj_af) or the image distance
     (for geometric_conj_bf) to the optical element and the focal distance.
@@ -771,17 +799,23 @@ def gaussian_conj(s_in, z_r_in, f):
     Parameters
     ==========
 
-    s_in : the distance to optical element from the waist
-    z_r_in : the rayleigh range of the incident beam
-    f : the focal length of the optical element
+    s_in :
+        The distance to optical element from the waist.
+    z_r_in :
+        The rayleigh range of the incident beam.
+    f :
+        The focal length of the optical element.
 
     Returns
     =======
 
     a tuple containing (s_out, z_r_out, m)
-    s_out : the distance between the new waist and the optical element
-    z_r_out : the rayleigh range of the emergent beam
-    m : the ration between the new and the old waists
+    s_out :
+        The distance between the new waist and the optical element.
+    z_r_out :
+        The rayleigh range of the emergent beam.
+    m :
+        The ration between the new and the old waists.
 
     Examples
     ========
@@ -813,17 +847,23 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     Parameters
     ==========
 
-    wavelen : the wavelength of the beam
-    waist_in and waist_out : the waists to be conjugated
-    f : the focal distance of the element used in the conjugation
+    wavelen :
+        The wavelength of the beam.
+    waist_in and waist_out :
+        The waists to be conjugated.
+    f :
+        The focal distance of the element used in the conjugation.
 
     Returns
     =======
 
     a tuple containing (s_in, s_out, f)
-    s_in : the distance before the optical element
-    s_out : the distance after the optical element
-    f : the focal distance of the optical element
+    s_in :
+        The distance before the optical element.
+    s_out :
+        The distance after the optical element.
+    f :
+        The focal distance of the optical element.
 
     Examples
     ========

@@ -3,7 +3,7 @@
 Includes functions for fast creating matrices like zero, one/eye, random
 matrix, etc.
 """
-from .common import ShapeError, NonSquareMatrixError
+from .common import ShapeError, NonSquareMatrixError, MatrixKind
 from .dense import (
     GramSchmidt, casoratian, diag, eye, hessian, jordan_cell,
     list2numpy, matrix2numpy, matrix_multiply_elementwise, ones,
@@ -12,7 +12,8 @@ from .dense import (
 from .dense import MutableDenseMatrix
 from .matrices import DeferredVector, MatrixBase
 
-Matrix = MutableMatrix = MutableDenseMatrix
+MutableMatrix = MutableDenseMatrix
+Matrix = MutableMatrix
 
 from .sparse import MutableSparseMatrix
 from .sparsetools import banded
@@ -28,12 +29,12 @@ from .expressions import (
     hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
     diagonalize_vector, DiagMatrix, DiagonalMatrix, DiagonalOf, trace,
     DotProduct, kronecker_product, KroneckerProduct,
-    PermutationMatrix, MatrixPermute, MatrixSet)
+    PermutationMatrix, MatrixPermute, MatrixSet, Permanent, per)
 
 from .utilities import dotprodsimp
 
 __all__ = [
-    'ShapeError', 'NonSquareMatrixError',
+    'ShapeError', 'NonSquareMatrixError', 'MatrixKind',
 
     'GramSchmidt', 'casoratian', 'diag', 'eye', 'hessian', 'jordan_cell',
     'list2numpy', 'matrix2numpy', 'matrix_multiply_elementwise', 'ones',
@@ -62,6 +63,7 @@ __all__ = [
     'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
     'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute', 'MatrixSet',
+    'Permanent', 'per',
 
     'dotprodsimp',
 ]

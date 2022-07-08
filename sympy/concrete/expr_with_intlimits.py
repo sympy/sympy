@@ -12,7 +12,7 @@ class ReorderError(NotImplementedError):
 
 class ExprWithIntLimits(ExprWithLimits):
     """
-    Superclass for Product and Sum
+    Superclass for Product and Sum.
 
     See Also
     ========
@@ -21,6 +21,8 @@ class ExprWithIntLimits(ExprWithLimits):
     sympy.concrete.products.Product
     sympy.concrete.summations.Sum
     """
+    __slots__ = ()
+
     def change_index(self, var, trafo, newvar=None):
         r"""
         Change index of a Sum or Product.
@@ -29,8 +31,8 @@ class ExprWithIntLimits(ExprWithLimits):
         `x`. For `a` the only values allowed are `\pm 1`. A new variable to be used
         after the change of index can also be specified.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``change_index(expr, var, trafo, newvar=None)`` where ``var`` specifies the
         index variable `x` to transform. The transformation ``trafo`` must be linear
@@ -144,8 +146,8 @@ class ExprWithIntLimits(ExprWithLimits):
         """
         Return the index of a dummy variable in the list of limits.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``index(expr, x)``  returns the index of the dummy variable ``x`` in the
         limits of ``expr``. Note that we start counting with 0 at the inner-most
@@ -182,8 +184,8 @@ class ExprWithIntLimits(ExprWithLimits):
         """
         Reorder limits in a expression containing a Sum or a Product.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``expr.reorder(*arg)`` reorders the limits in the expression ``expr``
         according to the list of tuples given by ``arg``. These tuples can
@@ -247,8 +249,8 @@ class ExprWithIntLimits(ExprWithLimits):
         """
         Interchange two limit tuples of a Sum or Product expression.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``expr.reorder_limit(x, y)`` interchanges two limit tuples. The
         arguments ``x`` and ``y`` are integers corresponding to the index

@@ -54,18 +54,20 @@ expressions or as keys to dictionaries.  If you need an immutable version of
 Basic Operations
 ================
 
+Here are some basic operations on ``Matrix``.
+
 Shape
 -----
 
-Here are some basic operations on ``Matrix``.  To get the shape of a matrix
-use ``shape``
+To get the shape of a matrix, use :func:`~.shape()` function.
 
+    >>> from sympy import shape
     >>> M = Matrix([[1, 2, 3], [-2, 0, 4]])
     >>> M
     ⎡1   2  3⎤
     ⎢        ⎥
     ⎣-2  0  4⎦
-    >>> M.shape
+    >>> shape(M)
     (2, 3)
 
 Accessing Rows and Columns
@@ -317,7 +319,7 @@ Eigenvalues, Eigenvectors, and Diagonalization
 ----------------------------------------------
 
 To find the eigenvalues of a matrix, use ``eigenvals``.  ``eigenvals``
-returns a dictionary of ``eigenvalue:algebraic multiplicity`` pairs (similar to the
+returns a dictionary of ``eigenvalue: algebraic_multiplicity`` pairs (similar to the
 output of :ref:`roots <tutorial-roots>`).
 
     >>> M = Matrix([[3, -2,  4, -2], [5,  3, -3, -2], [5, -2,  2, -2], [5, -2, -3,  3]])
@@ -337,7 +339,7 @@ eigenvalues -2 and 3 have algebraic multiplicity 1 and that the eigenvalue 5
 has algebraic multiplicity 2.
 
 To find the eigenvectors of a matrix, use ``eigenvects``.  ``eigenvects``
-returns a list of tuples of the form ``(eigenvalue:algebraic multiplicity,
+returns a list of tuples of the form ``(eigenvalue, algebraic_multiplicity,
 [eigenvectors])``.
 
     >>> M.eigenvects()

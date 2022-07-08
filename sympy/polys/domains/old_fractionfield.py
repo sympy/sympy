@@ -1,6 +1,5 @@
 """Implementation of :class:`FractionField` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
@@ -66,6 +65,10 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
             den[k] = self.dom.from_sympy(v)
 
         return self((num, den)).cancel()
+
+    def from_ZZ(K1, a, K0):
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K1.dom.convert(a, K0))
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """

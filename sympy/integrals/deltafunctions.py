@@ -1,7 +1,8 @@
-from sympy.core import Mul
-from sympy.functions import DiracDelta, Heaviside
-from sympy.core.compatibility import default_sort_key
+from sympy.core.mul import Mul
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.functions import DiracDelta, Heaviside
+from .integrals import Integral, integrate
 
 
 def change_mul(node, x):
@@ -9,6 +10,9 @@ def change_mul(node, x):
 
        Rearranges the operands of a product, bringing to front any simple
        DiracDelta expression.
+
+       Explanation
+       ===========
 
        If no simple DiracDelta expression was found, then all the DiracDelta
        expressions are simplified (using DiracDelta.expand(diracdelta=True, wrt=x)).
@@ -78,6 +82,9 @@ def deltaintegrate(f, x):
     """
     deltaintegrate(f, x)
 
+    Explanation
+    ===========
+
     The idea for integration is the following:
 
     - If we are dealing with a DiracDelta expression, i.e. DiracDelta(g(x)),
@@ -130,9 +137,6 @@ def deltaintegrate(f, x):
     if not f.has(DiracDelta):
         return None
 
-    from sympy.integrals import Integral, integrate
-    from sympy.solvers import solve
-
     # g(x) = DiracDelta(h(x))
     if f.func == DiracDelta:
         h = f.expand(diracdelta=True, wrt=x)
@@ -163,6 +167,7 @@ def deltaintegrate(f, x):
                     fh = integrate(rest_mult, x)
                     return fh
             else:
+                from sympy.solvers import solve
                 deltaterm = deltaterm.expand(diracdelta=True, wrt=x)
                 if deltaterm.is_Mul:  # Take out any extracted factors
                     deltaterm, rest_mult_2 = change_mul(deltaterm, x)
@@ -181,7 +186,7 @@ def deltaintegrate(f, x):
                 n = (0 if len(deltaterm.args)==1 else deltaterm.args[1])
                 m = 0
                 while n >= 0:
-                    r = (-1)**n*rest_mult.diff(x, n).subs(x, point)
+                    r = S.NegativeOne**n*rest_mult.diff(x, n).subs(x, point)
                     if r.is_zero:
                         n -= 1
                         m += 1

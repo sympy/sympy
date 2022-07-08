@@ -1,7 +1,7 @@
 from .cartan_type import CartanType
-from sympy.core.backend import Basic
+from sympy.core.basic import Atom
 
-class RootSystem(Basic):
+class RootSystem(Atom):
     """Represent the root system of a simple Lie algebra
 
     Every simple Lie algebra has a unique root system.  To find the root
@@ -26,8 +26,11 @@ class RootSystem(Basic):
     Therefore, we see that the simple roots span the root space of a given
     simple Lie algebra.
 
-    References: https://en.wikipedia.org/wiki/Root_system
-                Lie Algebras and Representation Theory - Humphreys
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Root_system
+    .. [2] Lie Algebras and Representation Theory - Humphreys
 
     """
 
@@ -41,7 +44,7 @@ class RootSystem(Basic):
         cartan_type attribute of the RootSystem instance.
 
         """
-        obj = Basic.__new__(cls, cartantype)
+        obj = Atom.__new__(cls)
         obj.cartan_type = CartanType(cartantype)
         return obj
 
@@ -135,10 +138,7 @@ class RootSystem(Basic):
             raise ValueError("You've used a root that doesn't exist!")
         a1 = alpha[root1]
         a2 = alpha[root2]
-        newroot = []
-        length = len(a1)
-        for i in range(length):
-            newroot.append(a1[i] + a2[i])
+        newroot = [_a1 + _a2 for _a1, _a2 in zip(a1, a2)]
         return newroot
 
     def add_as_roots(self, root1, root2):
@@ -161,9 +161,7 @@ class RootSystem(Basic):
 
         """
         alpha = self.all_roots()
-        newroot = []
-        for entry in range(len(root1)):
-            newroot.append(root1[entry] + root2[entry])
+        newroot = [r1 + r2 for r1, r2 in zip(root1, root2)]
         if newroot in alpha.values():
             return newroot
         else:

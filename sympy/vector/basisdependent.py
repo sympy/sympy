@@ -1,11 +1,17 @@
-from typing import Any, Dict
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-from sympy.simplify import simplify as simp, trigsimp as tsimp
+from sympy.simplify import simplify as simp, trigsimp as tsimp  # type: ignore
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.assumptions import StdFactKB
-from sympy import factor as fctr, diff as df, Integral
+from sympy.core.function import diff as df
+from sympy.integrals.integrals import Integral
+from sympy.polys.polytools import factor as fctr
 from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
+
+if TYPE_CHECKING:
+    from sympy.vector.vector import BaseVector
 
 
 class BasisDependent(Expr):
@@ -15,6 +21,8 @@ class BasisDependent(Expr):
     Named so because the representation of these quantities in
     sympy.vector is dependent on the basis they are expressed in.
     """
+
+    zero: BasisDependentZero
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
@@ -46,16 +54,13 @@ class BasisDependent(Expr):
         return self._mul_func(S.NegativeOne, self)
 
     @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         return self._div_helper(other)
 
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
+    @call_highest_priority('__truediv__')
+    def __rtruediv__(self, other):
         return TypeError("Invalid divisor for division")
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
@@ -300,9 +305,8 @@ class BasisDependentZero(BasisDependent):
     """
     Class to denote a zero basis dependent instance.
     """
-    # XXX: Can't type the keys as BaseVector because of cyclic import
-    # problems.
-    components = {}  # type: Dict[Any, Expr]
+    components: dict['BaseVector', Expr] = {}
+    _latex_form: str
 
     def __new__(cls):
         obj = super().__new__(cls)

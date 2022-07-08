@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict as tDict, Any
 
 import inspect
 
@@ -6,10 +6,10 @@ from .dispatcher import Dispatcher, MethodDispatcher, ambiguity_warn
 
 # XXX: This parameter to dispatch isn't documented and isn't used anywhere in
 # sympy. Maybe it should just be removed.
-global_namespace = dict()  # type: Dict[str, Any]
+global_namespace = {}  # type: tDict[str, Any]
 
 
-def dispatch(*types, **kwargs):
+def dispatch(*types, namespace=global_namespace, on_ambiguity=ambiguity_warn):
     """ Dispatch function on the types of the inputs
 
     Supports dispatch on all non-keyword arguments.
@@ -53,9 +53,6 @@ def dispatch(*types, **kwargs):
     ...     def __init__(self, datum): # noqa: F811
     ...         self.data = [datum]
     """
-    namespace = kwargs.get('namespace', global_namespace)
-    on_ambiguity = kwargs.get('on_ambiguity', ambiguity_warn)
-
     types = tuple(types)
 
     def _(func):

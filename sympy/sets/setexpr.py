@@ -1,10 +1,14 @@
 from sympy.core import Expr
 from sympy.core.decorators import call_highest_priority, _sympifyit
-from sympy.sets import ImageSet
-from sympy.sets.sets import set_add, set_sub, set_mul, set_div, set_pow, set_function
+from .fancysets import ImageSet
+from .sets import set_add, set_sub, set_mul, set_div, set_pow, set_function
+
 
 class SetExpr(Expr):
-    """An expression that can take on values of a set
+    """An expression that can take on values of a set.
+
+    Examples
+    ========
 
     >>> from sympy import Interval, FiniteSet
     >>> from sympy.sets.setexpr import SetExpr
@@ -24,7 +28,7 @@ class SetExpr(Expr):
     set = property(lambda self: self.args[0])
 
     def _latex(self, printer):
-        return r"SetExpr\left({0}\right)".format(printer._print(self.set))
+        return r"SetExpr\left({}\right)".format(printer._print(self.set))
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
@@ -67,17 +71,14 @@ class SetExpr(Expr):
         return _setexpr_apply_operation(set_pow, other, self)
 
     @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rdiv__')
-    def __div__(self, other):
+    @call_highest_priority('__rtruediv__')
+    def __truediv__(self, other):
         return _setexpr_apply_operation(set_div, self, other)
 
     @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__div__')
-    def __rdiv__(self, other):
+    @call_highest_priority('__truediv__')
+    def __rtruediv__(self, other):
         return _setexpr_apply_operation(set_div, other, self)
-
-    __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
     def _eval_func(self, func):
         # TODO: this could be implemented straight into `imageset`:

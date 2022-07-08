@@ -2,31 +2,20 @@ from sympy.core.basic import Basic
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S, Singleton
 
-from sympy.core.compatibility import exec_
-
 def test_Singleton():
-    global instantiated
-    instantiated = 0
 
     class MySingleton(Basic, metaclass=Singleton):
-        def __new__(cls):
-            global instantiated
-            instantiated += 1
-            return Basic.__new__(cls)
+        pass
 
-    assert instantiated == 0
     MySingleton() # force instantiation
-    assert instantiated == 1
     assert MySingleton() is not Basic()
     assert MySingleton() is MySingleton()
     assert S.MySingleton is MySingleton()
-    assert instantiated == 1
 
     class MySingleton_sub(MySingleton):
         pass
-    assert instantiated == 1
+
     MySingleton_sub()
-    assert instantiated == 2
     assert MySingleton_sub() is not MySingleton()
     assert MySingleton_sub() is MySingleton_sub()
 
@@ -65,7 +54,7 @@ def test_names_in_namespace():
     # str printer should print a form that does not use S. This is because
     # sympify() disables attribute lookups by default for safety purposes.
     d = {}
-    exec_('from sympy import *', d)
+    exec('from sympy import *', d)
 
     for name in dir(S) + list(S._classes_to_install):
         if name.startswith('_'):

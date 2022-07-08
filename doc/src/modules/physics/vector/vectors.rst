@@ -549,10 +549,6 @@ In :mod:`sympy.physics.vector` multiple interfaces to vector multiplication have
 implemented, at the operator level, method level, and function level. The
 vector dot product can work as follows: ::
 
-  >>> N.x & N.x
-  1
-  >>> N.x & N.y
-  0
   >>> N.x.dot(N.x)
   1
   >>> N.x.dot(N.y)
@@ -573,17 +569,13 @@ The cross product is the other vector multiplication which will be discussed
 here. It offers similar interfaces to the dot product, and comes with the same
 warnings. ::
 
-  >>> N.x ^ N.x
-  0
-  >>> N.x ^ N.y
-  N.z
   >>> N.x.cross(N.x)
   0
   >>> N.x.cross(N.z)
   - N.y
   >>> cross(N.x, N.y)
   N.z
-  >>> N.x ^ (N.y + N.z)
+  >>> cross(N.x, (N.y + N.z))
   - N.y + N.z
 
 Two additional operations can be done with vectors: normalizing the vector to
@@ -639,7 +631,7 @@ functionality. ::
 
 If we desire, we can view the DCM between these two frames at any time. This
 can be calculated with the ``dcm`` method. This code: ``N.dcm(A)`` gives the
-dcm :math:`^{\mathbf{N}} \mathbf{C} ^{\mathbf{A}}`.
+dcm :math:`^{\mathbf{A}} \mathbf{C} ^{\mathbf{N}}`.
 
 This orients the :math:`\mathbf{A}` frame relative to the :math:`\mathbf{N}`
 frame by a simple rotation around the Y axis, by an amount x. Other, more

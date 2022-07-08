@@ -4,7 +4,7 @@ from sympy.vector.coordsysrect import CoordSys3D
 from sympy.simplify import simplify
 from sympy.core.symbol import symbols
 from sympy.core import S
-from sympy import sin, cos
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.vector.vector import Dot
 from sympy.vector.operators import curl, divergence, gradient, Gradient, Divergence, Cross
 from sympy.vector.deloperator import Del
@@ -162,8 +162,8 @@ def test_product_rules():
 
     # Sixth product rule
     lhs = (delop ^ (u ^ v)).doit()
-    rhs = ((u * (delop & v) - v * (delop & u) +
-           (v & delop)(u) - (u & delop)(v))).doit()
+    rhs = (u * (delop & v) - v * (delop & u) +
+           (v & delop)(u) - (u & delop)(v)).doit()
     assert simplify(lhs) == simplify(rhs)
 
 

@@ -1,10 +1,10 @@
-from sympy.diffgeom.rn import R2, R2_p, R2_r, R3_r, R3_c, R3_s
-from sympy.diffgeom import (Commutator, Differential, TensorProduct,
+from sympy.core import Lambda, Symbol, symbols
+from sympy.diffgeom.rn import R2, R2_p, R2_r, R3_r, R3_c, R3_s, R2_origin
+from sympy.diffgeom import (Manifold, Patch, CoordSystem, Commutator, Differential, TensorProduct,
         WedgeProduct, BaseCovarDerivativeOp, CovarDerivativeOp, LieDerivative,
         covariant_order, contravariant_order, twoform_to_matrix, metric_to_Christoffel_1st,
         metric_to_Christoffel_2nd, metric_to_Riemann_components,
         metric_to_Ricci_components, intcurve_diffequ, intcurve_series)
-from sympy.core import Symbol, symbols
 from sympy.simplify import trigsimp, simplify
 from sympy.functions import sqrt, atan2, sin
 from sympy.matrices import Matrix
@@ -12,6 +12,78 @@ from sympy.testing.pytest import raises, nocache_fail
 from sympy.testing.pytest import warns_deprecated_sympy
 
 TP = TensorProduct
+
+
+def test_coordsys_transform():
+    # test inverse transforms
+    p, q, r, s = symbols('p q r s')
+    rel = {('first', 'second'): [(p, q), (q, -p)]}
+    R2_pq = CoordSystem('first', R2_origin, [p, q], rel)
+    R2_rs = CoordSystem('second', R2_origin, [r, s], rel)
+    r, s = R2_rs.symbols
+    assert R2_rs.transform(R2_pq) == Matrix([[-s], [r]])
+
+    # inverse transform impossible case
+    a, b = symbols('a b', positive=True)
+    rel = {('first', 'second'): [(a,), (-a,)]}
+    R2_a = CoordSystem('first', R2_origin, [a], rel)
+    R2_b = CoordSystem('second', R2_origin, [b], rel)
+    # This transformation is uninvertible because there is no positive a, b satisfying a = -b
+    with raises(NotImplementedError):
+        R2_b.transform(R2_a)
+
+    # inverse transform ambiguous case
+    c, d = symbols('c d')
+    rel = {('first', 'second'): [(c,), (c**2,)]}
+    R2_c = CoordSystem('first', R2_origin, [c], rel)
+    R2_d = CoordSystem('second', R2_origin, [d], rel)
+    # The transform method should throw if it finds multiple inverses for a coordinate transformation.
+    with raises(ValueError):
+        R2_d.transform(R2_c)
+
+    # test indirect transformation
+    a, b, c, d, e, f = symbols('a, b, c, d, e, f')
+    rel = {('C1', 'C2'): [(a, b), (2*a, 3*b)],
+        ('C2', 'C3'): [(c, d), (3*c, 2*d)]}
+    C1 = CoordSystem('C1', R2_origin, (a, b), rel)
+    C2 = CoordSystem('C2', R2_origin, (c, d), rel)
+    C3 = CoordSystem('C3', R2_origin, (e, f), rel)
+    a, b = C1.symbols
+    c, d = C2.symbols
+    e, f = C3.symbols
+    assert C2.transform(C1) == Matrix([c/2, d/3])
+    assert C1.transform(C3) == Matrix([6*a, 6*b])
+    assert C3.transform(C1) == Matrix([e/6, f/6])
+    assert C3.transform(C2) == Matrix([e/3, f/2])
+
+    a, b, c, d, e, f = symbols('a, b, c, d, e, f')
+    rel = {('C1', 'C2'): [(a, b), (2*a, 3*b + 1)],
+        ('C3', 'C2'): [(e, f), (-e - 2, 2*f)]}
+    C1 = CoordSystem('C1', R2_origin, (a, b), rel)
+    C2 = CoordSystem('C2', R2_origin, (c, d), rel)
+    C3 = CoordSystem('C3', R2_origin, (e, f), rel)
+    a, b = C1.symbols
+    c, d = C2.symbols
+    e, f = C3.symbols
+    assert C2.transform(C1) == Matrix([c/2, (d - 1)/3])
+    assert C1.transform(C3) == Matrix([-2*a - 2, (3*b + 1)/2])
+    assert C3.transform(C1) == Matrix([-e/2 - 1, (2*f - 1)/3])
+    assert C3.transform(C2) == Matrix([-e - 2, 2*f])
+
+    # old signature uses Lambda
+    a, b, c, d, e, f = symbols('a, b, c, d, e, f')
+    rel = {('C1', 'C2'): Lambda((a, b), (2*a, 3*b + 1)),
+        ('C3', 'C2'): Lambda((e, f), (-e - 2, 2*f))}
+    C1 = CoordSystem('C1', R2_origin, (a, b), rel)
+    C2 = CoordSystem('C2', R2_origin, (c, d), rel)
+    C3 = CoordSystem('C3', R2_origin, (e, f), rel)
+    a, b = C1.symbols
+    c, d = C2.symbols
+    e, f = C3.symbols
+    assert C2.transform(C1) == Matrix([c/2, (d - 1)/3])
+    assert C1.transform(C3) == Matrix([-2*a - 2, (3*b + 1)/2])
+    assert C3.transform(C1) == Matrix([-e/2 - 1, (2*f - 1)/3])
+    assert C3.transform(C2) == Matrix([-e - 2, 2*f])
 
 
 def test_R2():
@@ -36,6 +108,7 @@ def test_R2():
         assert m == R2_p.coord_tuple_transform_to(
             R2_r, R2_r.coord_tuple_transform_to(R2_p, m)).applyfunc(simplify)
 
+
 def test_R3():
     a, b, c = symbols('a b c', positive=True)
     m = Matrix([[a], [b], [c]])
@@ -59,6 +132,12 @@ def test_R3():
         assert m == R3_s.coord_tuple_transform_to(
             R3_c, R3_c.coord_tuple_transform_to(R3_s, m)).applyfunc(simplify)
         #TODO assert m == R3_c.coord_tuple_transform_to(R3_s, R3_s.coord_tuple_transform_to(R3_c, m)).applyfunc(simplify)
+
+
+def test_CoordinateSymbol():
+    x, y = R2_r.symbols
+    r, theta = R2_p.symbols
+    assert y.rewrite(R2_p) == r*sin(theta)
 
 
 def test_point():
@@ -239,3 +318,25 @@ def test_simplify():
     assert simplify(dx*dy) == dx*dy
     assert simplify(ex*ey) == ex*ey
     assert ((1-x)*dx)/(1-x)**2 == dx/(1-x)
+
+
+def test_issue_17917():
+    X = R2.x*R2.e_x - R2.y*R2.e_y
+    Y = (R2.x**2 + R2.y**2)*R2.e_x - R2.x*R2.y*R2.e_y
+    assert LieDerivative(X, Y).expand() == (
+        R2.x**2*R2.e_x - 3*R2.y**2*R2.e_x - R2.x*R2.y*R2.e_y)
+
+def test_deprecations():
+    m = Manifold('M', 2)
+    p = Patch('P', m)
+    with warns_deprecated_sympy():
+        CoordSystem('Car2d', p, names=['x', 'y'])
+
+    with warns_deprecated_sympy():
+        c = CoordSystem('Car2d', p, ['x', 'y'])
+
+    with warns_deprecated_sympy():
+        list(m.patches)
+
+    with warns_deprecated_sympy():
+        list(c.transforms)

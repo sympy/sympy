@@ -18,6 +18,7 @@ Contents
    subsets.rst
    graycode.rst
    named_groups.rst
+   group_numbers.rst
    util.rst
    group_constructs.rst
    testutil.rst

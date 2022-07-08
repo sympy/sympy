@@ -1,23 +1,26 @@
-from typing import Any, Set
+from typing import Any, Set as tSet
 
+from functools import reduce
 from itertools import permutations
 
 from sympy.combinatorics import Permutation
 from sympy.core import (
     Basic, Expr, Function, diff,
-    Pow, Mul, Add, Atom, Lambda, S, Tuple, Dict
+    Pow, Mul, Add, Lambda, S, Tuple, Dict
 )
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import reduce
+
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions import factorial
 from sympy.matrices import ImmutableDenseMatrix as Matrix
-from sympy.simplify import simplify
 from sympy.solvers import solve
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import (sympy_deprecation_warning,
+                                        SymPyDeprecationWarning,
+                                        ignore_warnings)
+
 
 # TODO you are a bit excessive in the use of Dummies
 # TODO dummy point, literal field
@@ -25,15 +28,16 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 # tests and find out why
 from sympy.tensor.array import ImmutableDenseNDimArray
 
-class Manifold(Atom):
-    """A mathematical manifold.
+
+class Manifold(Basic):
+    """
+    A mathematical manifold.
 
     Explanation
     ===========
 
     A manifold is a topological space that locally resembles
     Euclidean space near each point [1].
-
     This class does not provide any means to study the topological
     characteristics of the manifold that it represents, though.
 
@@ -60,7 +64,6 @@ class Manifold(Atom):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Manifold
-
     """
 
     def __new__(cls, name, dim, **kwargs):
@@ -70,12 +73,11 @@ class Manifold(Atom):
         obj = super().__new__(cls, name, dim)
 
         obj.patches = _deprecated_list(
-            "Manifold.patches",
-            "external container for registry",
-            19321,
-            "1.7",
-            []
-        )
+            """
+            Manifold.patches is deprecated. The Manifold object is now
+            immutable. Instead use a separate list to keep track of the
+            patches.
+            """, [])
         return obj
 
     @property
@@ -86,17 +88,19 @@ class Manifold(Atom):
     def dim(self):
         return self.args[1]
 
-class Patch(Atom):
-    """A patch on a manifold.
+
+class Patch(Basic):
+    """
+    A patch on a manifold.
 
     Explanation
     ===========
 
-    Coordinate patch, or patch in short, is a simply-connected open set around a point
-    in the manifold [1]. On a manifold one can have many patches that do not always
-    include the whole manifold. On these patches coordinate charts can be defined that
-    permit the parameterization of any point on the patch in terms of a tuple of
-    real numbers (the coordinates).
+    Coordinate patch, or patch in short, is a simply-connected open set around
+    a point in the manifold [1]. On a manifold one can have many patches that
+    do not always include the whole manifold. On these patches coordinate
+    charts can be defined that permit the parameterization of any point on the
+    patch in terms of a tuple of real numbers (the coordinates).
 
     This class does not provide any means to study the topological
     characteristics of the patch that it represents.
@@ -124,7 +128,8 @@ class Patch(Atom):
     References
     ==========
 
-    .. [1] G. Sussman, J. Wisdom, W. Farr, Functional Differential Geometry (2013)
+    .. [1] G. Sussman, J. Wisdom, W. Farr, Functional Differential Geometry
+           (2013)
 
     """
     def __new__(cls, name, manifold, **kwargs):
@@ -134,12 +139,11 @@ class Patch(Atom):
 
         obj.manifold.patches.append(obj) # deprecated
         obj.coord_systems = _deprecated_list(
-            "Patch.coord_systems",
-            "external container for registry",
-            19321,
-            "1.7",
-            []
-        )
+            """
+            Patch.coord_systms is deprecated. The Patch class is now
+            immutable. Instead use a separate list to keep track of coordinate
+            systems.
+            """, [])
         return obj
 
     @property
@@ -154,21 +158,26 @@ class Patch(Atom):
     def dim(self):
         return self.manifold.dim
 
-class CoordSystem(Atom):
-    """A coordinate system defined on the patch.
+
+class CoordSystem(Basic):
+    """
+    A coordinate system defined on the patch.
 
     Explanation
     ===========
 
-    Coordinate system is a system that uses one or more coordinates to uniquely determine
-    the position of the points or other geometric elements on a manifold [1].
+    Coordinate system is a system that uses one or more coordinates to uniquely
+    determine the position of the points or other geometric elements on a
+    manifold [1].
 
-    By passing Symbols to *symbols* parameter, user can define the name and assumptions
-    of coordinate symbols of the coordinate system. If not passed, these symbols are
-    generated automatically and are assumed to be real valued.
-    By passing *relations* parameter, user can define the tranform relations of coordinate
-    systems. Inverse transformation and indirect transformation can be found automatically.
-    If this parameter is not passed, coordinate transformation cannot be done.
+    By passing ``Symbols`` to *symbols* parameter, user can define the name and
+    assumptions of coordinate symbols of the coordinate system. If not passed,
+    these symbols are generated automatically and are assumed to be real valued.
+
+    By passing *relations* parameter, user can define the tranform relations of
+    coordinate systems. Inverse transformation and indirect transformation can
+    be found automatically. If this parameter is not passed, coordinate
+    transformation cannot be done.
 
     Parameters
     ==========
@@ -183,38 +192,50 @@ class CoordSystem(Atom):
         Defines the names and assumptions of coordinate symbols.
 
     relations : dict, optional
-        - key : tuple of two strings, who are the names of systems where
-            the coordinates transform from and transform to.
-        - value : Lambda returning the transformed coordinates.
+        Key is a tuple of two strings, who are the names of the systems where
+        the coordinates transform from and transform to.
+        Value is a tuple of the symbols before transformation and a tuple of
+        the expressions after transformation.
 
     Examples
     ========
 
-    >>> from sympy import symbols, pi, Lambda, Matrix, sqrt, atan2, cos, sin
+    We define two-dimensional Cartesian coordinate system and polar coordinate
+    system.
+
+    >>> from sympy import symbols, pi, sqrt, atan2, cos, sin
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
-
     >>> x, y = symbols('x y', real=True)
     >>> r, theta = symbols('r theta', nonnegative=True)
     >>> relation_dict = {
-    ... ('Car2D', 'Pol'): Lambda((x, y), Matrix([sqrt(x**2 + y**2), atan2(y, x)])),
-    ... ('Pol', 'Car2D'): Lambda((r, theta), Matrix([r*cos(theta), r*sin(theta)]))
+    ... ('Car2D', 'Pol'): [(x, y), (sqrt(x**2 + y**2), atan2(y, x))],
+    ... ('Pol', 'Car2D'): [(r, theta), (r*cos(theta), r*sin(theta))]
     ... }
-    >>> Car2D = CoordSystem('Car2D', p, [x, y], relation_dict)
-    >>> Pol = CoordSystem('Pol', p, [r, theta], relation_dict)
+    >>> Car2D = CoordSystem('Car2D', p, (x, y), relation_dict)
+    >>> Pol = CoordSystem('Pol', p, (r, theta), relation_dict)
+
+    ``symbols`` property returns ``CoordinateSymbol`` instances. These symbols
+    are not same with the symbols used to construct the coordinate system.
 
     >>> Car2D
     Car2D
     >>> Car2D.dim
     2
     >>> Car2D.symbols
-    [x, y]
+    (x, y)
+    >>> _[0].func
+    <class 'sympy.diffgeom.diffgeom.CoordinateSymbol'>
+
+    ``transformation()`` method returns the transformation function from
+    one coordinate system to another. ``transform()`` method returns the
+    transformed coordinates.
+
     >>> Car2D.transformation(Pol)
     Lambda((x, y), Matrix([
     [sqrt(x**2 + y**2)],
     [      atan2(y, x)]]))
-
     >>> Car2D.transform(Pol)
     Matrix([
     [sqrt(x**2 + y**2)],
@@ -224,6 +245,11 @@ class CoordSystem(Atom):
     [sqrt(5)],
     [atan(2)]])
 
+    ``jacobian()`` method returns the Jacobian matrix of coordinate
+    transformation between two systems. ``jacobian_determinant()`` method
+    returns the Jacobian determinant of coordinate transformation between two
+    systems.
+
     >>> Pol.jacobian(Car2D)
     Matrix([
     [cos(theta), -r*sin(theta)],
@@ -232,6 +258,10 @@ class CoordSystem(Atom):
     Matrix([
     [0, -1],
     [1,  0]])
+    >>> Car2D.jacobian_determinant(Pol)
+    1/sqrt(x**2 + y**2)
+    >>> Car2D.jacobian_determinant(Pol, [1,0])
+    1
 
     References
     ==========
@@ -248,15 +278,24 @@ class CoordSystem(Atom):
             names = kwargs.get('names', None)
             if names is None:
                 symbols = Tuple(
-                    *[Symbol('%s_%s' % (name.name, i), real=True) for i in range(patch.dim)]
+                    *[Symbol('%s_%s' % (name.name, i), real=True)
+                      for i in range(patch.dim)]
                 )
             else:
-                SymPyDeprecationWarning(
-                    feature="Class signature 'names' of CoordSystem",
-                    useinstead="class signature 'symbols'",
-                    issue=19321,
-                    deprecated_since_version="1.7"
-                ).warn()
+                sympy_deprecation_warning(
+                    f"""
+The 'names' argument to CoordSystem is deprecated. Use 'symbols' instead. That
+is, replace
+
+    CoordSystem(..., names={names})
+
+with
+
+    CoordSystem(..., symbols=[{', '.join(["Symbol(" + repr(n) + ", real=True)" for n in names])}])
+                    """,
+                    deprecated_since_version="1.7",
+                    active_deprecations_target="deprecated-diffgeom-mutable",
+                )
                 symbols = Tuple(
                     *[Symbol(n, real=True) for n in names]
                 )
@@ -266,12 +305,18 @@ class CoordSystem(Atom):
                 if isinstance(s, Symbol):
                     syms.append(Symbol(s.name, **s._assumptions.generator))
                 elif isinstance(s, str):
-                    SymPyDeprecationWarning(
-                        feature="Passing str as coordinate symbol's name",
-                        useinstead="Symbol which contains the name and assumption for coordinate symbol",
-                        issue=19321,
-                        deprecated_since_version="1.7"
-                    ).warn()
+                    sympy_deprecation_warning(
+                        f"""
+
+Passing a string as the coordinate symbol name to CoordSystem is deprecated.
+Pass a Symbol with the appropriate name and assumptions instead.
+
+That is, replace {s} with Symbol({s!r}, real=True).
+                        """,
+
+                        deprecated_since_version="1.7",
+                        active_deprecations_target="deprecated-diffgeom-mutable",
+                    )
                     syms.append(Symbol(s, real=True))
             symbols = Tuple(*syms)
 
@@ -284,6 +329,12 @@ class CoordSystem(Atom):
             if not isinstance(s2, Str):
                 s2 = Str(s2)
             key = Tuple(s1, s2)
+
+            # Old version used Lambda as a value.
+            if isinstance(v, Lambda):
+                v = (tuple(v.signature), tuple(v.expr))
+            else:
+                v = (tuple(v[0]), tuple(v[1]))
             rel_temp[key] = v
         relations = Dict(rel_temp)
 
@@ -292,12 +343,11 @@ class CoordSystem(Atom):
 
         # Add deprecated attributes
         obj.transforms = _deprecated_dict(
-            "Mutable CoordSystem.transforms",
-            "'relations' parameter in class signature",
-            19321,
-            "1.7",
-            {}
-        )
+            """
+            CoordSystem.transforms is deprecated. The CoordSystem class is now
+            immutable. Use the 'relations' keyword argument to the
+            CoordSystems() constructor to specify relations.
+            """, {})
         obj._names = [str(n) for n in symbols]
         obj.patch.coord_systems.append(obj) # deprecated
         obj._dummies = [Dummy(str(n)) for n in symbols] # deprecated
@@ -319,11 +369,8 @@ class CoordSystem(Atom):
 
     @property
     def symbols(self):
-        return [
-            CoordinateSymbol(
-                self, i, **s._assumptions.generator
-            ) for i,s in enumerate(self.args[2])
-        ]
+        return tuple(CoordinateSymbol(self, i, **s._assumptions.generator)
+            for i,s in enumerate(self.args[2]))
 
     @property
     def relations(self):
@@ -339,55 +386,94 @@ class CoordSystem(Atom):
 
     def transformation(self, sys):
         """
-        Return coordinate transform relation from *self* to *sys* as Lambda.
+        Return coordinate transformation function from *self* to *sys*.
+
+        Parameters
+        ==========
+
+        sys : CoordSystem
+
+        Returns
+        =======
+
+        sympy.Lambda
+
+        Examples
+        ========
+
+        >>> from sympy.diffgeom.rn import R2_r, R2_p
+        >>> R2_r.transformation(R2_p)
+        Lambda((x, y), Matrix([
+        [sqrt(x**2 + y**2)],
+        [      atan2(y, x)]]))
+
         """
-        if self.relations != sys.relations:
-            raise TypeError(
-        "Two coordinate systems have different relations")
+        signature = self.args[2]
 
         key = Tuple(self.name, sys.name)
-        if key in self.relations:
-            return self.relations[key]
+        if self == sys:
+            expr = Matrix(self.symbols)
+        elif key in self.relations:
+            expr = Matrix(self.relations[key][1])
         elif key[::-1] in self.relations:
-            return self._inverse_transformation(sys, self)
+            expr = Matrix(self._inverse_transformation(sys, self))
         else:
-            return self._indirect_transformation(self, sys)
+            expr = Matrix(self._indirect_transformation(self, sys))
+        return Lambda(signature, expr)
 
     @staticmethod
-    def _inverse_transformation(sys1, sys2):
+    def _solve_inverse(sym1, sym2, exprs, sys1_name, sys2_name):
+        ret = solve(
+            [t[0] - t[1] for t in zip(sym2, exprs)],
+            list(sym1), dict=True)
+
+        if len(ret) == 0:
+            temp = "Cannot solve inverse relation from {} to {}."
+            raise NotImplementedError(temp.format(sys1_name, sys2_name))
+        elif len(ret) > 1:
+            temp = "Obtained multiple inverse relation from {} to {}."
+            raise ValueError(temp.format(sys1_name, sys2_name))
+
+        return ret[0]
+
+    @classmethod
+    def _inverse_transformation(cls, sys1, sys2):
         # Find the transformation relation from sys2 to sys1
-        forward_transform = sys1.transform(sys2)
-        forward_syms, forward_results = forward_transform.args
-
-        inv_syms = [i.as_dummy() for i in forward_syms]
-        inv_results = solve(
-            [t[0] - t[1] for t in zip(inv_syms, forward_results)],
-            list(forward_syms), dict=True)[0]
-        inv_results = [inv_results[s] for s in forward_syms]
-
-        signature = tuple(inv_syms)
-        expr = Matrix(inv_results)
-        return Lambda(signature, expr)
+        forward = sys1.transform(sys2)
+        inv_results = cls._solve_inverse(sys1.symbols, sys2.symbols, forward,
+                                         sys1.name, sys2.name)
+        signature = tuple(sys1.symbols)
+        return [inv_results[s] for s in signature]
 
     @classmethod
     @cacheit
     def _indirect_transformation(cls, sys1, sys2):
-        # Find the transformation relation between two indirectly connected coordinate systems
+        # Find the transformation relation between two indirectly connected
+        # coordinate systems
+        rel = sys1.relations
         path = cls._dijkstra(sys1, sys2)
-        Lambdas = []
-        for i in range(len(path) - 1):
-            s1, s2 = path[i], path[i + 1]
-            Lambdas.append(s1.transformation(s2))
-        syms = Lambdas[-1].signature
-        expr = syms
-        for l in reversed(Lambdas):
-            expr = l(*expr)
-        return Lambda(syms, expr)
+
+        transforms = []
+        for s1, s2 in zip(path, path[1:]):
+            if (s1, s2) in rel:
+                transforms.append(rel[(s1, s2)])
+            else:
+                sym2, inv_exprs = rel[(s2, s1)]
+                sym1 = tuple(Dummy() for i in sym2)
+                ret = cls._solve_inverse(sym2, sym1, inv_exprs, s2, s1)
+                ret = tuple(ret[s] for s in sym2)
+                transforms.append((sym1, ret))
+        syms = sys1.args[2]
+        exprs = syms
+        for newsyms, newexprs in transforms:
+            exprs = tuple(e.subs(zip(newsyms, exprs)) for e in newexprs)
+        return exprs
 
     @staticmethod
     def _dijkstra(sys1, sys2):
         # Use Dijkstra algorithm to find the shortest path between two indirectly-connected
         # coordinate systems
+        # return value is the list of the names of the systems.
         relations = sys1.relations
         graph = {}
         for s1, s2 in relations.keys():
@@ -411,7 +497,7 @@ class CoordSystem(Atom):
                     path_dict[newsys][1] = [i for i in path_dict[sys][1]]
                     path_dict[newsys][1].append(sys)
 
-        visit(sys1)
+        visit(sys1.name)
 
         while True:
             min_distance = max(path_dict.values(), key=lambda x:x[0])[0]
@@ -424,20 +510,23 @@ class CoordSystem(Atom):
                 break
             visit(newsys)
 
-        result = path_dict[sys2][1]
-        result.append(sys2)
+        result = path_dict[sys2.name][1]
+        result.append(sys2.name)
 
-        if result == [sys2]:
+        if result == [sys2.name]:
             raise KeyError("Two coordinate systems are not connected.")
         return result
 
     def connect_to(self, to_sys, from_coords, to_exprs, inverse=True, fill_in_gaps=False):
-        SymPyDeprecationWarning(
-            feature="CoordSystem.connect_to",
-            useinstead="new instance generated with new 'transforms' parameter",
-            issue=19321,
-            deprecated_since_version="1.7"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            The CoordSystem.connect_to() method is deprecated. Instead,
+            generate a new instance of CoordSystem with the 'relations'
+            keyword argument (CoordSystem classes are now immutable).
+            """,
+            deprecated_since_version="1.7",
+            active_deprecations_target="deprecated-diffgeom-mutable",
+        )
 
         from_coords, to_exprs = dummyfy(from_coords, to_exprs)
         self.transforms[to_sys] = Matrix(from_coords), Matrix(to_exprs)
@@ -471,34 +560,90 @@ class CoordSystem(Atom):
         """
         Return the result of coordinate transformation from *self* to *sys*.
         If coordinates are not given, coordinate symbols of *self* are used.
+
+        Parameters
+        ==========
+
+        sys : CoordSystem
+
+        coordinates : Any iterable, optional.
+
+        Returns
+        =======
+
+        sympy.ImmutableDenseMatrix containing CoordinateSymbol
+
+        Examples
+        ========
+
+        >>> from sympy.diffgeom.rn import R2_r, R2_p
+        >>> R2_r.transform(R2_p)
+        Matrix([
+        [sqrt(x**2 + y**2)],
+        [      atan2(y, x)]])
+        >>> R2_r.transform(R2_p, [0, 1])
+        Matrix([
+        [   1],
+        [pi/2]])
+
         """
         if coordinates is None:
-            coordinates = Matrix(self.symbols)
-        else:
-            coordinates = Matrix(coordinates)
+            coordinates = self.symbols
         if self != sys:
             transf = self.transformation(sys)
             coordinates = transf(*coordinates)
+        else:
+            coordinates = Matrix(coordinates)
         return coordinates
 
     def coord_tuple_transform_to(self, to_sys, coords):
         """Transform ``coords`` to coord system ``to_sys``."""
-        SymPyDeprecationWarning(
-            feature="CoordSystem.coord_tuple_transform_to",
-            useinstead="CoordSystem.transform",
-            issue=19321,
-            deprecated_since_version="1.7"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            The CoordSystem.coord_tuple_transform_to() method is deprecated.
+            Use the CoordSystem.transform() method instead.
+            """,
+            deprecated_since_version="1.7",
+            active_deprecations_target="deprecated-diffgeom-mutable",
+        )
 
         coords = Matrix(coords)
         if self != to_sys:
-            transf = self.transforms[to_sys]
+            with ignore_warnings(SymPyDeprecationWarning):
+                transf = self.transforms[to_sys]
             coords = transf[1].subs(list(zip(transf[0], coords)))
         return coords
 
     def jacobian(self, sys, coordinates=None):
         """
-        Return the jacobian matrix of a transformation.
+        Return the jacobian matrix of a transformation on given coordinates.
+        If coordinates are not given, coordinate symbols of *self* are used.
+
+        Parameters
+        ==========
+
+        sys : CoordSystem
+
+        coordinates : Any iterable, optional.
+
+        Returns
+        =======
+
+        sympy.ImmutableDenseMatrix
+
+        Examples
+        ========
+
+        >>> from sympy.diffgeom.rn import R2_r, R2_p
+        >>> R2_p.jacobian(R2_r)
+        Matrix([
+        [cos(theta), -rho*sin(theta)],
+        [sin(theta),  rho*cos(theta)]])
+        >>> R2_p.jacobian(R2_r, [1, 0])
+        Matrix([
+        [1, 0],
+        [0, 1]])
+
         """
         result = self.transform(sys).jacobian(self.symbols)
         if coordinates is not None:
@@ -507,7 +652,33 @@ class CoordSystem(Atom):
     jacobian_matrix = jacobian
 
     def jacobian_determinant(self, sys, coordinates=None):
-        """Return the jacobian determinant of a transformation."""
+        """
+        Return the jacobian determinant of a transformation on given
+        coordinates. If coordinates are not given, coordinate symbols of *self*
+        are used.
+
+        Parameters
+        ==========
+
+        sys : CoordSystem
+
+        coordinates : Any iterable, optional.
+
+        Returns
+        =======
+
+        sympy.Expr
+
+        Examples
+        ========
+
+        >>> from sympy.diffgeom.rn import R2_r, R2_p
+        >>> R2_r.jacobian_determinant(R2_p)
+        1/sqrt(x**2 + y**2)
+        >>> R2_r.jacobian_determinant(R2_p, [1, 0])
+        1
+
+        """
         return self.jacobian(sys, coordinates).det()
 
 
@@ -560,6 +731,7 @@ class CoordSystem(Atom):
         For more details see the ``base_oneform`` method of this class."""
         return [self.base_oneform(i) for i in range(self.dim)]
 
+
 class CoordinateSymbol(Symbol):
     """A symbol which denotes an abstract value of i-th coordinate of
     the coordinate system with given context.
@@ -583,23 +755,38 @@ class CoordinateSymbol(Symbol):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Lambda, Matrix, sqrt, atan2, cos, sin
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
-    >>> _x, _y = symbols('x y', nonnegative=True)
+    >>> x, y = symbols('x y', real=True)
+    >>> r, theta = symbols('r theta', nonnegative=True)
+    >>> relation_dict = {
+    ... ('Car2D', 'Pol'): Lambda((x, y), Matrix([sqrt(x**2 + y**2), atan2(y, x)])),
+    ... ('Pol', 'Car2D'): Lambda((r, theta), Matrix([r*cos(theta), r*sin(theta)]))
+    ... }
+    >>> Car2D = CoordSystem('Car2D', p, [x, y], relation_dict)
+    >>> Pol = CoordSystem('Pol', p, [r, theta], relation_dict)
+    >>> x, y = Car2D.symbols
 
-    >>> C = CoordSystem('C', p, [_x, _y])
-    >>> x, y = C.symbols
+    ``CoordinateSymbol`` contains its coordinate symbol and index.
 
     >>> x.name
     'x'
-    >>> x.coord_sys == C
+    >>> x.coord_sys == Car2D
     True
     >>> x.index
     0
-    >>> x.is_nonnegative
+    >>> x.is_real
     True
+
+    You can transform ``CoordinateSymbol`` into other coordinate system using
+    ``rewrite()`` method.
+
+    >>> x.rewrite(Pol)
+    r*cos(theta)
+    >>> sqrt(x**2 + y**2).rewrite(Pol).simplify()
+    r
 
     """
     def __new__(cls, coord_sys, index, **assumptions):
@@ -616,6 +803,12 @@ class CoordinateSymbol(Symbol):
         return (
             self.coord_sys, self.index
         ) + tuple(sorted(self.assumptions0.items()))
+
+    def _eval_rewrite(self, rule, args, **hints):
+        if isinstance(rule, CoordSystem):
+            return rule.transform(self.coord_sys)[self.index]
+        return super()._eval_rewrite(rule, args, **hints)
+
 
 class Point(Basic):
     """Point defined in a coordinate system.
@@ -698,6 +891,7 @@ class Point(Basic):
     @property
     def free_symbols(self):
         return self._coords.free_symbols
+
 
 class BaseScalarField(Expr):
     """Base scalar field over a manifold for a given coordinate system.
@@ -797,10 +991,7 @@ class BaseScalarField(Expr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols = set()  # type: Set[Any]
-
-    def doit(self):
-        return self
+    free_symbols = set()  # type: tSet[Any]
 
 
 class BaseVectorField(Expr):
@@ -926,6 +1117,7 @@ class BaseVectorField(Expr):
         result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
         return result.doit()
 
+
 def _find_coords(expr):
     # Finds CoordinateSystems existing in expr
     fields = expr.atoms(BaseScalarField, BaseVectorField)
@@ -933,6 +1125,7 @@ def _find_coords(expr):
     for f in fields:
         result.add(f._coord_sys)
     return result
+
 
 class Commutator(Expr):
     r"""Commutator of two vector fields.
@@ -950,7 +1143,7 @@ class Commutator(Expr):
 
     >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import Commutator
-    >>> from sympy.simplify import simplify
+    >>> from sympy import simplify
 
     >>> fx, fy = R2_r.base_scalars()
     >>> e_x, e_y = R2_r.base_vectors()
@@ -1120,6 +1313,7 @@ class Differential(Expr):
                         t = f.rcall(*(c,) + v[:i] + v[i + 1:j] + v[j + 1:])
                         ret += (-1)**(i + j)*t
             return ret
+
 
 class TensorProduct(Expr):
     """Tensor product of forms.
@@ -1457,6 +1651,7 @@ class CovarDerivativeOp(Expr):
             raise ValueError('Covariant derivatives are defined only with '
                              'respect to vector fields. The supplied argument '
                              'was not a vector field.')
+        christoffel = ImmutableDenseNDimArray(christoffel)
         obj = super().__new__(cls, wrt, christoffel)
         # deprecated assigments
         obj._wrt = wrt
@@ -1702,7 +1897,6 @@ def dummyfy(args, exprs):
     d_exprs = Matrix([_sympify(expr).subs(reps) for expr in exprs])
     return d_args, d_exprs
 
-
 ###############################################################################
 # Helpers
 ###############################################################################
@@ -1897,8 +2091,7 @@ def metric_to_Christoffel_1st(expr):
         raise ValueError(
             'The two-form representing the metric is not symmetric.')
     coord_sys = _find_coords(expr).pop()
-    deriv_matrices = [matrix.applyfunc(lambda a: d(a))
-                      for d in coord_sys.base_vectors()]
+    deriv_matrices = [matrix.applyfunc(d) for d in coord_sys.base_vectors()]
     indices = list(range(coord_sys.dim))
     christoffel = [[[(deriv_matrices[k][i, j] + deriv_matrices[j][i, k] - deriv_matrices[i][j, k])/2
                      for k in indices]
@@ -2038,23 +2231,21 @@ def metric_to_Ricci_components(expr):
 # Classes for deprecation
 ###############################################################################
 
-class _deprecated_container(object):
+class _deprecated_container:
     # This class gives deprecation warning.
     # When deprecated features are completely deleted, this should be removed as well.
     # See https://github.com/sympy/sympy/pull/19368
-    def __init__(self, feature, useinstead, issue, version, data):
+    def __init__(self, message, data):
         super().__init__(data)
-        self.feature = feature
-        self.useinstead = useinstead
-        self.issue = issue
-        self.version = version
+        self.message = message
 
     def warn(self):
-        SymPyDeprecationWarning(
-                    feature=self.feature,
-                    useinstead=self.useinstead,
-                    issue=self.issue,
-                    deprecated_since_version=self.version).warn()
+        sympy_deprecation_warning(
+            self.message,
+            deprecated_since_version="1.7",
+            active_deprecations_target="deprecated-diffgeom-mutable",
+            stacklevel=4
+        )
 
     def __iter__(self):
         self.warn()
@@ -2068,8 +2259,14 @@ class _deprecated_container(object):
         self.warn()
         return super().__contains__(key)
 
+
 class _deprecated_list(_deprecated_container, list):
     pass
 
+
 class _deprecated_dict(_deprecated_container, dict):
     pass
+
+
+# Import at end to avoid cyclic imports
+from sympy.simplify.simplify import simplify

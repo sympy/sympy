@@ -1,7 +1,7 @@
 """
 Fortran code printer
 
-The FCodePrinter converts single sympy expressions into single Fortran
+The FCodePrinter converts single SymPy expressions into single Fortran
 expressions, using the functions defined in the Fortran 77 standard where
 possible. Some useful pointers to Fortran can be found on wikipedia:
 
@@ -17,9 +17,7 @@ SymPy is case sensitive. So, fcode adds underscores to variable names when
 it is necessary to make them different for Fortran.
 """
 
-from __future__ import print_function, division
-
-from typing import Dict, Any
+from typing import Dict as tDict, Any
 
 from collections import defaultdict
 from itertools import chain
@@ -68,7 +66,7 @@ known_functions = {
 
 
 class FCodePrinter(CodePrinter):
-    """A printer to convert sympy expressions to strings of Fortran code"""
+    """A printer to convert SymPy expressions to strings of Fortran code"""
     printmethod = "_fcode"
     language = "Fortran"
 
@@ -107,7 +105,7 @@ class FCodePrinter(CodePrinter):
         'contract': True,
         'standard': 77,
         'name_mangling' : True,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     _operators = {
         'and': '.and.',
@@ -130,7 +128,7 @@ class FCodePrinter(CodePrinter):
                                        settings.pop('type_aliases', {}).items()))
         self.type_mappings = dict(chain(self.type_mappings.items(),
                                         settings.pop('type_mappings', {}).items()))
-        super(FCodePrinter, self).__init__(settings)
+        super().__init__(settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
@@ -164,7 +162,7 @@ class FCodePrinter(CodePrinter):
 
             expr = expr.xreplace(self.mangled_symbols)
 
-        name = super(FCodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
         return name
 
     def _rate_index_position(self, p):
@@ -174,10 +172,10 @@ class FCodePrinter(CodePrinter):
         return codestring
 
     def _get_comment(self, text):
-        return "! {0}".format(text)
+        return "! {}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "parameter ({0} = {1})".format(name, self._print(value))
+        return "parameter ({} = {})".format(name, self._print(value))
 
     def _print_NumberSymbol(self, expr):
         # A Number symbol that is not implemented here or with _printmethod
@@ -204,7 +202,7 @@ class FCodePrinter(CodePrinter):
         return open_lines, close_lines
 
     def _print_sign(self, expr):
-        from sympy import Abs
+        from sympy.functions.elementary.complexes import Abs
         arg, = expr.args
         if arg.is_integer:
             new_expr = merge(0, isign(1, arg), Eq(arg, 0))
@@ -258,7 +256,7 @@ class FCodePrinter(CodePrinter):
                                       "standards earlier than Fortran95.")
 
     def _print_MatrixElement(self, expr):
-        return "{0}({1}, {2})".format(self.parenthesize(expr.parent,
+        return "{}({}, {})".format(self.parenthesize(expr.parent,
                 PRECEDENCE["Atom"], strict=True), expr.i + 1, expr.j + 1)
 
     def _print_Add(self, expr):
@@ -374,7 +372,7 @@ class FCodePrinter(CodePrinter):
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
         op = op if op not in self._relationals else self._relationals[op]
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
         inds = [ self._print(i) for i in expr.indices ]
@@ -604,7 +602,7 @@ class FCodePrinter(CodePrinter):
         tabwidth = 3
         new_code = []
         for i, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 new_code.append(line)
                 continue
             level -= decrease[i]
@@ -711,7 +709,7 @@ class FCodePrinter(CodePrinter):
         )
 
     def _print_FunctionPrototype(self, fp):
-        entity = "{0} function ".format(self._print(fp.return_type))
+        entity = "{} function ".format(self._print(fp.return_type))
         return (
             "interface\n"
             "{function_head}\n"
@@ -727,7 +725,7 @@ class FCodePrinter(CodePrinter):
         else:
             prefix = ''
 
-        entity = "{0} function ".format(self._print(fd.return_type))
+        entity = "{} function ".format(self._print(fd.return_type))
         with printer_context(self, result_name=fd.name):
             return (
                 "{prefix}{function_head}\n"

@@ -16,11 +16,9 @@ A more traditional version can be found here
 http://aima.cs.berkeley.edu/python/logic.html
 """
 
-from __future__ import print_function, division
-
 from sympy.utilities.iterables import kbins
 
-class Compound(object):
+class Compound:
     """ A little class to represent an interior node in the tree
 
     This is analogous to SymPy.Basic for non-Atoms
@@ -30,7 +28,7 @@ class Compound(object):
         self.args = args
 
     def __eq__(self, other):
-        return (type(self) == type(other) and self.op == other.op and
+        return (type(self) is type(other) and self.op == other.op and
                 self.args == other.args)
 
     def __hash__(self):
@@ -39,13 +37,13 @@ class Compound(object):
     def __str__(self):
         return "%s[%s]" % (str(self.op), ', '.join(map(str, self.args)))
 
-class Variable(object):
+class Variable:
     """ A Wild token """
     def __init__(self, arg):
         self.arg = arg
 
     def __eq__(self, other):
-        return type(self) == type(other) and self.arg == other.arg
+        return type(self) is type(other) and self.arg == other.arg
 
     def __hash__(self):
         return hash((type(self), self.arg))
@@ -53,18 +51,18 @@ class Variable(object):
     def __str__(self):
         return "Variable(%s)" % str(self.arg)
 
-class CondVariable(object):
-    """ A wild token that matches conditionally
+class CondVariable:
+    """ A wild token that matches conditionally.
 
-    arg   - a wild token
-    valid - an additional constraining function on a match
+    arg   - a wild token.
+    valid - an additional constraining function on a match.
     """
     def __init__(self, arg, valid):
         self.arg = arg
         self.valid = valid
 
     def __eq__(self, other):
-        return (type(self) == type(other) and
+        return (type(self) is type(other) and
                 self.arg == other.arg and
                 self.valid == other.valid)
 
@@ -75,13 +73,13 @@ class CondVariable(object):
         return "CondVariable(%s)" % str(self.arg)
 
 def unify(x, y, s=None, **fns):
-    """ Unify two expressions
+    """ Unify two expressions.
 
     Parameters
     ==========
 
-        x, y - expression trees containing leaves, Compounds and Variables
-        s    - a mapping of variables to subtrees
+        x, y - expression trees containing leaves, Compounds and Variables.
+        s    - a mapping of variables to subtrees.
 
     Returns
     =======
@@ -102,11 +100,9 @@ def unify(x, y, s=None, **fns):
     if x == y:
         yield s
     elif isinstance(x, (Variable, CondVariable)):
-        for match in unify_var(x, y, s, **fns):
-            yield match
+        yield from unify_var(x, y, s, **fns)
     elif isinstance(y, (Variable, CondVariable)):
-        for match in unify_var(y, x, s, **fns):
-            yield match
+        yield from unify_var(y, x, s, **fns)
     elif isinstance(x, Compound) and isinstance(y, Compound):
         is_commutative = fns.get('is_commutative', lambda x: False)
         is_associative = fns.get('is_associative', lambda x: False)
@@ -120,24 +116,20 @@ def unify(x, y, s=None, **fns):
                 for aaargs, bbargs in combs:
                     aa = [unpack(Compound(a.op, arg)) for arg in aaargs]
                     bb = [unpack(Compound(b.op, arg)) for arg in bbargs]
-                    for match in unify(aa, bb, sop, **fns):
-                        yield match
+                    yield from unify(aa, bb, sop, **fns)
             elif len(x.args) == len(y.args):
-                for match in unify(x.args, y.args, sop, **fns):
-                    yield match
+                yield from unify(x.args, y.args, sop, **fns)
 
     elif is_args(x) and is_args(y) and len(x) == len(y):
         if len(x) == 0:
             yield s
         else:
             for shead in unify(x[0], y[0], s, **fns):
-                for match in unify(x[1:], y[1:], shead, **fns):
-                    yield match
+                yield from unify(x[1:], y[1:], shead, **fns)
 
 def unify_var(var, x, s, **fns):
     if var in s:
-        for match in unify(s[var], x, s, **fns):
-            yield match
+        yield from unify(s[var], x, s, **fns)
     elif occur_check(var, x):
         pass
     elif isinstance(var, CondVariable) and var.valid(x):
@@ -173,9 +165,12 @@ def unpack(x):
 
 def allcombinations(A, B, ordered):
     """
-    Restructure A and B to have the same number of elements
+    Restructure A and B to have the same number of elements.
 
-    ordered must be either 'commutative' or 'associative'
+    Parameters
+    ==========
+
+    ordered must be either 'commutative' or 'associative'.
 
     A and B can be rearranged so that the larger of the two lists is
     reorganized into smaller sublists.
@@ -215,7 +210,7 @@ def allcombinations(A, B, ordered):
             yield partition(A, part), tuple((b,) for b in B)
 
 def partition(it, part):
-    """ Partition a tuple/list into pieces defined by indices
+    """ Partition a tuple/list into pieces defined by indices.
 
     Examples
     ========
@@ -227,7 +222,7 @@ def partition(it, part):
     return type(it)([index(it, ind) for ind in part])
 
 def index(it, ind):
-    """ Fancy indexing into an indexable iterable (tuple, list)
+    """ Fancy indexing into an indexable iterable (tuple, list).
 
     Examples
     ========

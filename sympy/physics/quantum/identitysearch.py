@@ -1,10 +1,12 @@
-from __future__ import print_function, division
-
 from collections import deque
-from random import randint
+from sympy.core.random import randint
 
 from sympy.external import import_module
-from sympy import Mul, Basic, Number, Pow, Integer
+from sympy.core.basic import Basic
+from sympy.core.mul import Mul
+from sympy.core.numbers import Number
+from sympy.core.power import Pow
+from sympy.core.singleton import S
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 
@@ -81,7 +83,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         corrected_real = np.where(bool_real, 0.0, dense_matrix.real)
         corrected_imag = np.where(bool_imag, 0.0, dense_matrix.imag)
         # Convert the matrix with real values into imaginary values
-        corrected_imag = corrected_imag * np.complex(1j)
+        corrected_imag = corrected_imag * complex(1j)
         # Recombine the real and imaginary components
         corrected_dense = corrected_real + corrected_imag
 
@@ -463,7 +465,7 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
 
     if isinstance(gate_seq, Number):
         if return_as_muls:
-            return {(Integer(1), Integer(1))}
+            return {(S.One, S.One)}
         else:
             return {((), ())}
 
@@ -578,7 +580,7 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
     """
 
     if isinstance(gate_seq, Number):
-        return {Integer(1)}
+        return {S.One}
     elif isinstance(gate_seq, Mul):
         gate_seq = gate_seq.args
 

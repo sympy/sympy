@@ -2,14 +2,12 @@
 A few practical conventions common to all printers.
 """
 
-from __future__ import print_function, division
-
 import re
 
-from sympy.core.compatibility import Iterable
-from sympy import Derivative
+from collections.abc import Iterable
+from sympy.core.function import Derivative
 
-_name_with_digits_p = re.compile(r'^([a-zA-Z]+)([0-9]+)$')
+_name_with_digits_p = re.compile(r'^([^\W\d_]+)(\d+)$', re.U)
 
 
 def split_super_sub(text):
@@ -62,7 +60,7 @@ def split_super_sub(text):
         else:
             raise RuntimeError("This should never happen.")
 
-    # make a little exception when a name ends with digits, i.e. treat them
+    # Make a little exception when a name ends with digits, i.e. treat them
     # as a subscript too.
     m = _name_with_digits_p.match(name)
     if m:
@@ -76,7 +74,7 @@ def requires_partial(expr):
     """Return whether a partial derivative symbol is required for printing
 
     This requires checking how many free variables there are,
-    filtering out the ones that are integers. Some expressions don't have
+    filtering out the ones that are integers. Some expressions do not have
     free variables. In that case, check its variable list explicitly to
     get the context of the expression.
     """

@@ -17,16 +17,16 @@ non-implemented methods. They may also supply new implementations of the
 convenience methods, for example if there are faster algorithms available.
 """
 
-from __future__ import print_function, division
 
 from copy import copy
+from functools import reduce
 
-from sympy.core.compatibility import iterable, reduce
 from sympy.polys.agca.ideals import Ideal
 from sympy.polys.domains.field import Field
 from sympy.polys.orderings import ProductOrder, monomial_key
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.core.basic import _aresame
+from sympy.utilities.iterables import iterable
 
 # TODO
 # - module saturation
@@ -40,7 +40,7 @@ from sympy.core.basic import _aresame
 ##########################################################################
 
 
-class Module(object):
+class Module:
     """
     Abstract base class for modules.
 
@@ -88,12 +88,10 @@ class Module(object):
         """Generate a quotient module."""
         raise NotImplementedError
 
-    def __div__(self, e):
+    def __truediv__(self, e):
         if not isinstance(e, Module):
             e = self.submodule(*e)
         return self.quotient_module(e)
-
-    __truediv__ = __div__
 
     def contains(self, elem):
         """Return True if ``elem`` is an element of this module."""
@@ -158,7 +156,7 @@ class Module(object):
         raise NotImplementedError
 
 
-class ModuleElement(object):
+class ModuleElement:
     """
     Base class for module element wrappers.
 
@@ -234,15 +232,13 @@ class ModuleElement(object):
 
     __rmul__ = __mul__
 
-    def __div__(self, o):
+    def __truediv__(self, o):
         if not isinstance(o, self.module.ring.dtype):
             try:
                 o = self.module.ring.convert(o)
             except CoercionFailed:
                 return NotImplemented
         return self.__class__(self.module, self.div(self.data, o))
-
-    __truediv__ = __div__
 
     def __eq__(self, om):
         if not isinstance(om, self.__class__) or om.module != self.module:
@@ -273,7 +269,7 @@ class FreeModuleElement(ModuleElement):
         return tuple(x / p for x in d)
 
     def __repr__(self):
-        from sympy import sstr
+        from sympy.printing.str import sstr
         return '[' + ', '.join(sstr(x) for x in self.data) + ']'
 
     def __iter__(self):
@@ -1157,7 +1153,8 @@ class SubModulePolyRing(SubModule):
     def _groebner_vec(self, extended=False):
         """Returns a standard basis in element form."""
         if not extended:
-            return [self.convert(self.ring._sdm_to_vector(x, self.rank))
+            return [FreeModuleElement(self,
+                        tuple(self.ring._sdm_to_vector(x, self.rank)))
                     for x in self._groebner()]
         gb, gbe = self._groebner(extended=True)
         return ([self.convert(self.ring._sdm_to_vector(x, self.rank))
@@ -1174,12 +1171,12 @@ class SubModulePolyRing(SubModule):
         """Compute syzygies. See [SCA, algorithm 2.5.4]."""
         # NOTE if self.gens is a standard basis, this can be done more
         #      efficiently using Schreyer's theorem
-        from sympy.matrices import eye
 
         # First bullet point
         k = len(self.gens)
         r = self.rank
-        im = eye(k)
+        zero = self.ring.convert(0)
+        one = self.ring.convert(1)
         Rkr = self.ring.free_module(r + k)
         newgens = []
         for j, f in enumerate(self.gens):
@@ -1187,8 +1184,9 @@ class SubModulePolyRing(SubModule):
             for i, v in enumerate(f):
                 m[i] = f[i]
             for i in range(k):
-                m[r + i] = im[j, i]
-            newgens.append(Rkr.convert(m))
+                m[r + i] = one if j == i else zero
+            m = FreeModuleElement(Rkr, tuple(m))
+            newgens.append(m)
         # Note: we need *descending* order on module index, and TOP=False to
         #       get an elimination order
         F = Rkr.submodule(*newgens, order='ilex', TOP=False)
@@ -1197,8 +1195,7 @@ class SubModulePolyRing(SubModule):
         G = F._groebner_vec()
 
         # Third bullet point: G0 = G intersect the new k components
-        G0 = [x[r:] for x in G if all(y == self.ring.convert(0)
-                                      for y in x[:r])]
+        G0 = [x[r:] for x in G if all(y == zero for y in x[:r])]
 
         # Fourth and fifth bullet points: we are done
         return G0

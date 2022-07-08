@@ -1,24 +1,21 @@
-from __future__ import print_function, division
-
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import is_sequence, iterable, ordered
 from sympy.core.containers import Tuple
 from sympy.core.decorators import call_highest_priority
 from sympy.core.parameters import global_parameters
-from sympy.core.function import AppliedUndef
+from sympy.core.function import AppliedUndef, expand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import S, Singleton
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.sympify import sympify
+from sympy.matrices import Matrix
 from sympy.polys import lcm, factor
 from sympy.sets.sets import Interval, Intersection
-from sympy.simplify import simplify
 from sympy.tensor.indexed import Idx
-from sympy.utilities.iterables import flatten
-from sympy import expand
+from sympy.utilities.iterables import flatten, is_sequence, iterable
 
 
 ###############################################################################
@@ -97,8 +94,8 @@ class SeqBase(Basic):
         >>> SeqFormula(m*n**2, (n, 0, 5)).free_symbols
         {m}
         """
-        return (set(j for i in self.args for j in i.free_symbols
-                   .difference(self.variables)))
+        return ({j for i in self.args for j in i.free_symbols
+                   .difference(self.variables)})
 
     @cacheit
     def coeff(self, pt):
@@ -115,6 +112,9 @@ class SeqBase(Basic):
 
     def _ith_point(self, i):
         """Returns the i'th point of a sequence.
+
+        Explanation
+        ===========
 
         If start point is negative infinity, point is returned from the end.
         Assumes the first point to be indexed zero.
@@ -158,6 +158,9 @@ class SeqBase(Basic):
         """
         Should only be used internally.
 
+        Explanation
+        ===========
+
         self._add(other) returns a new, term-wise added sequence if self
         knows how to add with other, otherwise it returns ``None``.
 
@@ -170,6 +173,9 @@ class SeqBase(Basic):
     def _mul(self, other):
         """
         Should only be used internally.
+
+        Explanation
+        ===========
 
         self._mul(other) returns a new, term-wise multiplied sequence if self
         knows how to multiply with other, otherwise it returns ``None``.
@@ -222,7 +228,7 @@ class SeqBase(Basic):
         return self + other
 
     def __sub__(self, other):
-        """Returns the term-wise subtraction of 'self' and 'other'.
+        """Returns the term-wise subtraction of ``self`` and ``other``.
 
         ``other`` should be a sequence.
 
@@ -298,8 +304,8 @@ class SeqBase(Basic):
     def find_linear_recurrence(self,n,d=None,gfvar=None):
         r"""
         Finds the shortest linear recurrence that satisfies the first n
-        terms of sequence of order `\leq` n/2 if possible.
-        If d is specified, find shortest linear recurrence of order
+        terms of sequence of order `\leq` ``n/2`` if possible.
+        If ``d`` is specified, find shortest linear recurrence of order
         `\leq` min(d, n/2) if possible.
         Returns list of coefficients ``[b(1), b(2), ...]`` corresponding to the
         recurrence relation ``x(n) = b(1)*x(n-1) + b(2)*x(n-2) + ...``
@@ -329,7 +335,7 @@ class SeqBase(Basic):
         >>> sequence(lucas(n)).find_linear_recurrence(15,gfvar=x)
         ([1, 1], (x - 2)/(x**2 + x - 1))
         """
-        from sympy.matrices import Matrix
+        from sympy.simplify import simplify
         x = [simplify(expand(t)) for t in self[:n]]
         lx = len(x)
         if d is None:
@@ -417,7 +423,8 @@ class SeqExpr(SeqBase):
 
     >>> from sympy.series.sequences import SeqExpr
     >>> from sympy.abc import x
-    >>> s = SeqExpr((1, 2, 3), (x, 0, 10))
+    >>> from sympy import Tuple
+    >>> s = SeqExpr(Tuple(1, 2, 3), Tuple(x, 0, 10))
     >>> s.gen
     (1, 2, 3)
     >>> s.interval
@@ -458,7 +465,8 @@ class SeqExpr(SeqBase):
 
 
 class SeqPer(SeqExpr):
-    """Represents a periodic sequence.
+    """
+    Represents a periodic sequence.
 
     The elements are repeated after a given period.
 
@@ -602,7 +610,8 @@ class SeqPer(SeqExpr):
 
 
 class SeqFormula(SeqExpr):
-    """Represents sequence based on a formula.
+    """
+    Represents sequence based on a formula.
 
     Elements are generated using a formula.
 
@@ -716,7 +725,11 @@ class SeqFormula(SeqExpr):
         return SeqFormula(expand(self.formula, *args, **kwargs), self.args[1])
 
 class RecursiveSeq(SeqBase):
-    """A finite degree recursive sequence.
+    """
+    A finite degree recursive sequence.
+
+    Explanation
+    ===========
 
     That is, a sequence a(n) that depends on a fixed, finite number of its
     previous values. The general form is
@@ -909,9 +922,13 @@ class RecursiveSeq(SeqBase):
 
 
 def sequence(seq, limits=None):
-    """Returns appropriate sequence object.
+    """
+    Returns appropriate sequence object.
 
-    If ``seq`` is a sympy sequence, returns :class:`SeqPer` object
+    Explanation
+    ===========
+
+    If ``seq`` is a SymPy sequence, returns :class:`SeqPer` object
     otherwise returns :class:`SeqFormula` object.
 
     Examples
@@ -944,7 +961,8 @@ def sequence(seq, limits=None):
 
 
 class SeqExprOp(SeqBase):
-    """Base class for operations on sequences.
+    """
+    Base class for operations on sequences.
 
     Examples
     ========
@@ -1109,6 +1127,9 @@ class SeqAdd(SeqExprOp):
 class SeqMul(SeqExprOp):
     r"""Represents term-wise multiplication of sequences.
 
+    Explanation
+    ===========
+
     Handles multiplication of sequences only. For multiplication
     with other objects see :func:`SeqBase.coeff_mul`.
 
@@ -1175,6 +1196,9 @@ class SeqMul(SeqExprOp):
     @staticmethod
     def reduce(args):
         """Simplify a :class:`SeqMul` using known rules.
+
+        Explanation
+        ===========
 
         Iterates through all pairs and ask the constituent
         sequences if they can simplify themselves with any other constituent.

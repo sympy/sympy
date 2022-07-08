@@ -1,11 +1,9 @@
 """Fourier Series"""
 
-from __future__ import print_function, division
-
-from sympy import pi, oo, Wild
+from sympy.core.numbers import (oo, pi)
+from sympy.core.symbol import Wild
 from sympy.core.expr import Expr
 from sympy.core.add import Add
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
@@ -14,7 +12,7 @@ from sympy.functions.elementary.trigonometric import sin, cos, sinc
 from sympy.series.series_class import SeriesBase
 from sympy.series.sequences import SeqFormula
 from sympy.sets.sets import Interval
-from sympy.simplify.fu import TR2, TR1, TR10, sincos_to_sum
+from sympy.utilities.iterables import is_sequence
 
 
 def fourier_cos_seq(func, limits, n):
@@ -41,6 +39,9 @@ def _process_limits(func, limits):
     """
     Limits should be of the form (x, start, stop).
     x should be a symbol. Both start and stop should be bounded.
+
+    Explanation
+    ===========
 
     * If x is not given, x is determined from func.
     * If limits is None. Limit of the form (x, -pi, pi) is returned.
@@ -104,6 +105,7 @@ def finite_check(f, x, L):
             else:
                 return False
 
+    from sympy.simplify.fu import TR2, TR1, sincos_to_sum
     _expr = sincos_to_sum(TR2(TR1(f)))
     add_coeff = _expr.as_coeff_add()
 
@@ -121,6 +123,9 @@ def finite_check(f, x, L):
 
 class FourierSeries(SeriesBase):
     r"""Represents Fourier sine/cosine series.
+
+    Explanation
+    ===========
 
     This class only represents a fourier series.
     No computation is performed.
@@ -190,16 +195,18 @@ class FourierSeries(SeriesBase):
         """
         Return the first n nonzero terms of the series.
 
-        If n is None return an iterator.
+        If ``n`` is None return an iterator.
 
         Parameters
         ==========
+
         n : int or None
             Amount of non-zero terms in approximation or None.
 
         Returns
         =======
-        Expr or iterator
+
+        Expr or iterator :
             Approximation of function expanded into Fourier series.
 
         Examples
@@ -233,6 +240,9 @@ class FourierSeries(SeriesBase):
         Return :math:`\sigma`-approximation of Fourier series with respect
         to order n.
 
+        Explanation
+        ===========
+
         Sigma approximation adjusts a Fourier summation to eliminate the Gibbs
         phenomenon which would otherwise occur at discontinuities.
         A sigma-approximated summation for a Fourier series of a T-periodical
@@ -252,12 +262,14 @@ class FourierSeries(SeriesBase):
 
         Parameters
         ==========
+
         n : int
             Highest order of the terms taken into account in approximation.
 
         Returns
         =======
-        Expr
+
+        Expr :
             Sigma approximation of function expanded into Fourier series.
 
         Examples
@@ -294,7 +306,11 @@ class FourierSeries(SeriesBase):
         return Add(*terms)
 
     def shift(self, s):
-        """Shift the function by a term independent of x.
+        """
+        Shift the function by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> f(x) + s
 
@@ -321,7 +337,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (a0, self.an, self.bn))
 
     def shiftx(self, s):
-        """Shift x by a term independent of x.
+        """
+        Shift x by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> f(x + s)
 
@@ -349,7 +369,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
     def scale(self, s):
-        """Scale the function by a term independent of x.
+        """
+        Scale the function by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> s * f(x)
 
@@ -378,7 +402,11 @@ class FourierSeries(SeriesBase):
         return self.func(sfunc, self.args[1], (a0, an, bn))
 
     def scalex(self, s):
-        """Scale x by a term independent of x.
+        """
+        Scale x by a term independent of x.
+
+        Explanation
+        ===========
 
         f(x) -> f(s*x)
 
@@ -405,7 +433,7 @@ class FourierSeries(SeriesBase):
 
         return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         for t in self:
             if t is not S.Zero:
                 return t
@@ -449,6 +477,7 @@ class FiniteFourierSeries(FourierSeries):
 
     Parameters
     ==========
+
     f : Expr
         Expression for finding fourier_series
 
@@ -467,6 +496,7 @@ class FiniteFourierSeries(FourierSeries):
 
     Methods
     =======
+
     This class is an extension of FourierSeries class.
     Please refer to sympy.series.fourier.FourierSeries for
     further information.
@@ -483,9 +513,10 @@ class FiniteFourierSeries(FourierSeries):
         limits = sympify(limits)
         exprs = sympify(exprs)
 
-        if not (type(exprs) == Tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
+        if not (isinstance(exprs, Tuple) and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
             # Converts the expression to fourier form
             c, e = exprs.as_coeff_add()
+            from sympy.simplify.fu import TR10
             rexpr = c + Add(*[TR10(i) for i in e])
             a0, exp_ls = rexpr.expand(trig=False, power_base=False, power_exp=False, log=False).as_coeff_add()
 
@@ -495,8 +526,8 @@ class FiniteFourierSeries(FourierSeries):
             a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k is not S.Zero, ])
             b = Wild('b', properties=[lambda k: x not in k.free_symbols, ])
 
-            an = dict()
-            bn = dict()
+            an = {}
+            bn = {}
 
             # separates the coefficients of sin and cos terms in dictionaries an, and bn
             for p in exp_ls:
@@ -614,7 +645,7 @@ def fourier_series(f, limits=None, finite=True):
     not throughout the whole real line.
 
     This also brings a lot of ease for the computation because
-    you don't have to make $f(x)$ artificially periodic by
+    you do not have to make $f(x)$ artificially periodic by
     wrapping it with piecewise, modulo operations,
     but you can shape the function to look like the desired periodic
     function only in the interval $(a, b)$, and the computed series will

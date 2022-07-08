@@ -27,9 +27,9 @@ SymPy can integrate a vast array of functions. It can integrate polynomial funct
 Rational functions::
 
     >>> integrate(x/(x**2+2*x+1), x)
-    1
+                   1
     log(x + 1) + -----
-    x + 1
+                 x + 1
 
 
 Exponential-polynomial functions. These multiplicative combinations of polynomials and the functions ``exp``, ``cos`` and ``sin`` can be integrated by hand using repeated integration by parts, which is an extremely tedious process. Happily, SymPy will deal with these integrals.
@@ -46,11 +46,11 @@ Exponential-polynomial functions. These multiplicative combinations of polynomia
 
 even a few nonelementary integrals (in particular, some integrals involving the error function) can be evaluated::
 
-	>>> integrate(exp(-x**2)*erf(x), x)
-	  ____    2
-	\/ pi *erf (x)
-	--------------
-	      4
+    >>> integrate(exp(-x**2)*erf(x), x)
+      ____    2
+    \/ pi *erf (x)
+    --------------
+          4
 
 
 Integral Transforms
@@ -62,29 +62,42 @@ SymPy has special support for definite integrals, and integral transforms.
 
 .. autofunction:: mellin_transform
 .. autoclass:: MellinTransform
+   :members:
 .. autofunction:: inverse_mellin_transform
 .. autoclass:: InverseMellinTransform
+   :members:
 .. autofunction:: laplace_transform
 .. autoclass:: LaplaceTransform
+   :members:
 .. autofunction:: inverse_laplace_transform
 .. autoclass:: InverseLaplaceTransform
+   :members:
+.. autofunction:: _fast_inverse_laplace
 .. autofunction:: fourier_transform
 .. autofunction:: _fourier_transform
 .. autoclass:: FourierTransform
+   :members:
 .. autofunction:: inverse_fourier_transform
 .. autoclass:: InverseFourierTransform
+   :members:
 .. autofunction:: sine_transform
 .. autoclass:: SineTransform
+   :members:
 .. autofunction:: inverse_sine_transform
 .. autoclass:: InverseSineTransform
+   :members:
 .. autofunction:: cosine_transform
 .. autoclass:: CosineTransform
+   :members:
 .. autofunction:: inverse_cosine_transform
 .. autoclass:: InverseCosineTransform
+   :members:
 .. autofunction:: hankel_transform
 .. autoclass:: HankelTransform
+   :members:
 .. autofunction:: inverse_hankel_transform
 .. autoclass:: InverseHankelTransform
+   :members:
 .. autoclass:: IntegralTransform
    :members:
 .. autoexception:: IntegralTransformError
@@ -136,6 +149,7 @@ SymPy first applies several heuristic algorithms, as these are the fastest:
 
    .. autofunction:: sympy.integrals.risch::risch_integrate
    .. autoclass:: sympy.integrals.risch::NonElementaryIntegral
+      :members:
 
 6. For non-elementary definite integrals, SymPy uses so-called Meijer G-functions.
    Details are described in :ref:`g-functions`.
@@ -184,7 +198,7 @@ common superclass of :class:`~.Integral` and :class:`~.Sum`.
 
 TODO and Bugs
 -------------
-There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?q=label%3AIntegration
+There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?q=is%3Aissue+is%3Aopen+label%3Aintegrals
 
 Numeric Integrals
 =================

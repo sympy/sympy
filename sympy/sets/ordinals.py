@@ -1,11 +1,12 @@
 from sympy.core import Basic, Integer
 import operator
 
+
 class OmegaPower(Basic):
     """
     Represents ordinal exponential and multiplication terms one of the
-    building blocks of the Ordinal class.
-    In OmegaPower(a, b) a represents exponent and b represents multiplicity.
+    building blocks of the :class:`Ordinal` class.
+    In ``OmegaPower(a, b)``, ``a`` represents exponent and ``b`` represents multiplicity.
     """
     def __new__(cls, a, b):
         if isinstance(b, int):
@@ -51,19 +52,21 @@ class OmegaPower(Basic):
                 return NotImplemented
         return self._compare_term(other, operator.lt)
 
+
 class Ordinal(Basic):
     """
     Represents ordinals in Cantor normal form.
 
-    Internally, this class is just a list of instances of OmegaPower
+    Internally, this class is just a list of instances of OmegaPower.
+
     Examples
     ========
-    >>> from sympy.sets import Ordinal, OmegaPower
+    >>> from sympy import Ordinal, OmegaPower
     >>> from sympy.sets.ordinals import omega
     >>> w = omega
     >>> w.is_limit_ordinal
     True
-    >>> Ordinal(OmegaPower(w + 1 ,1), OmegaPower(3, 2))
+    >>> Ordinal(OmegaPower(w + 1, 1), OmegaPower(3, 2))
     w**(w + 1) + w**3*2
     >>> 3 + w
     w
@@ -76,7 +79,7 @@ class Ordinal(Basic):
     .. [1] https://en.wikipedia.org/wiki/Ordinal_arithmetic
     """
     def __new__(cls, *terms):
-        obj = super(Ordinal, cls).__new__(cls, *terms)
+        obj = super().__new__(cls, *terms)
         powers = [i.exp for i in obj.args]
         if not all(powers[i] >= powers[i+1] for i in range(len(powers) - 1)):
             raise ValueError("powers must be in decreasing order")
@@ -220,18 +223,18 @@ class Ordinal(Basic):
             return ord0
         a_exp = self.degree
         a_mult = self.leading_term.mult
-        sum = []
+        summation = []
         if other.is_limit_ordinal:
             for arg in other.terms:
-                sum.append(OmegaPower(a_exp + arg.exp, arg.mult))
+                summation.append(OmegaPower(a_exp + arg.exp, arg.mult))
 
         else:
             for arg in other.terms[:-1]:
-                sum.append(OmegaPower(a_exp + arg.exp, arg.mult))
+                summation.append(OmegaPower(a_exp + arg.exp, arg.mult))
             b_mult = other.trailing_term.mult
-            sum.append(OmegaPower(a_exp, a_mult*b_mult))
-            sum += list(self.terms[1:])
-        return Ordinal(*sum)
+            summation.append(OmegaPower(a_exp, a_mult*b_mult))
+            summation += list(self.terms[1:])
+        return Ordinal(*summation)
 
     def __rmul__(self, other):
         if not isinstance(other, Ordinal):
@@ -246,12 +249,14 @@ class Ordinal(Basic):
             return NotImplemented
         return Ordinal(OmegaPower(other, 1))
 
+
 class OrdinalZero(Ordinal):
     """The ordinal zero.
 
     OrdinalZero can be imported as ``ord0``.
     """
     pass
+
 
 class OrdinalOmega(Ordinal):
     """The ordinal omega which forms the base of all ordinals in cantor normal form.
@@ -271,6 +276,7 @@ class OrdinalOmega(Ordinal):
     @property
     def terms(self):
         return (OmegaPower(1, 1),)
+
 
 ord0 = OrdinalZero()
 omega = OrdinalOmega()

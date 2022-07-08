@@ -35,11 +35,6 @@ environment.
     >>> from sympy import init_printing
     >>> init_printing() # doctest: +SKIP
 
-.. sidebar:: Quick Tip
-
-   You can also change the printer used in SymPy Live. Just change the "Output
-   Format" in the settings.
-
 If you plan to work in an interactive calculator-type session, the
 ``init_session()`` function will automatically import everything in SymPy,
 create some common Symbols, setup plotting, and run ``init_printing()``.

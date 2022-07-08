@@ -1,11 +1,9 @@
 """Tools for manipulation of expressions using paths. """
 
-from __future__ import print_function, division
-
 from sympy.core import Basic
 
 
-class EPath(object):
+class EPath:
     r"""
     Manipulate expressions using paths.
 
@@ -54,7 +52,7 @@ class EPath(object):
             index = 0
 
             for c in selector:
-                if c.isalnum() or c == '_' or c == '|' or c == '?':
+                if c.isalnum() or c in ('_', '|', '?'):
                     index += 1
                 else:
                     break
@@ -197,7 +195,7 @@ class EPath(object):
                 args = list(args)
 
                 if span is not None:
-                    if type(span) == slice:
+                    if isinstance(span, slice):
                         indices = range(*span.indices(len(args)))
                     else:
                         indices = [span]
@@ -264,7 +262,7 @@ class EPath(object):
                     return
 
                 if span is not None:
-                    if type(span) == slice:
+                    if isinstance(span, slice):
                         args = args[span]
                     else:
                         try:
@@ -283,6 +281,9 @@ class EPath(object):
 def epath(path, expr=None, func=None, args=None, kwargs=None):
     r"""
     Manipulate parts of an expression selected by a path.
+
+    Explanation
+    ===========
 
     This function allows to manipulate large nested expressions in single
     line of code, utilizing techniques to those applied in XML processing

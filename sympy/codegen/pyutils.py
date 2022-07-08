@@ -4,12 +4,12 @@ from sympy.printing.pycode import PythonCodePrinter
 
 
 def render_as_module(content, standard='python3'):
-    """Renders python code as a module (with the required imports)
+    """Renders Python code as a module (with the required imports).
 
     Parameters
     ==========
 
-    standard
+    standard :
         See the parameter ``standard`` in
         :meth:`sympy.printing.pycode.pycode`
     """

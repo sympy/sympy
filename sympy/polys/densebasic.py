@@ -1,8 +1,7 @@
 """Basic tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
-from __future__ import print_function, division
 
-from sympy import oo
+from sympy.core.numbers import oo
 from sympy.core import igcd
 from sympy.polys.monomials import monomial_min, monomial_div
 from sympy.polys.orderings import monomial_key
@@ -312,15 +311,15 @@ def dmp_strip(f, u):
 
 def _rec_validate(f, g, i, K):
     """Recursive helper for :func:`dmp_validate`."""
-    if type(g) is not list:
+    if not isinstance(g, list):
         if K is not None and not K.of_type(g):
             raise TypeError("%s in %s in not of type %s" % (g, f, K.dtype))
 
-        return set([i - 1])
+        return {i - 1}
     elif not g:
-        return set([i])
+        return {i}
     else:
-        levels = set([])
+        levels = set()
 
         for c in g:
             levels |= _rec_validate(f, c, i + 1, K)
@@ -936,7 +935,7 @@ def dup_from_dict(f, K):
 
     n, h = max(f.keys()), []
 
-    if type(n) is int:
+    if isinstance(n, int):
         for k in range(n, -1, -1):
             h.append(f.get(k, K.zero))
     else:

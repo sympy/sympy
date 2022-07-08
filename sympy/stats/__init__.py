@@ -24,7 +24,7 @@ Examples
 ========
 
 >>> from sympy.stats import P, E, variance, Die, Normal
->>> from sympy import Eq, simplify
+>>> from sympy import simplify
 >>> X, Y = Die('X', 6), Die('Y', 6) # Define two six sided dice
 >>> Z = Normal('Z', 0, 1) # Declare a Normal random variable with mean 0, std 1
 >>> P(X>3) # Probability X is greater than 3
@@ -84,7 +84,7 @@ exp(-x)
 3. If you want to create a Finite Random Variable:
 
 >>> from sympy.stats import FiniteRV, P, E
->>> from sympy import Rational
+>>> from sympy import Rational, Eq
 >>> pmf = {1: Rational(1, 3), 2: Rational(1, 6), 3: Rational(1, 4), 4: Rational(1, 4)}
 >>> X = FiniteRV('X', pmf)
 >>> E(X)
@@ -109,20 +109,20 @@ __all__ = [
     'coskewness', 'sample_stochastic_process',
 
     'FiniteRV', 'DiscreteUniform', 'Die', 'Bernoulli', 'Coin', 'Binomial',
-    'BetaBinomial', 'Hypergeometric', 'Rademacher',
+    'BetaBinomial', 'Hypergeometric', 'Rademacher', 'IdealSoliton', 'RobustSoliton',
     'FiniteDistributionHandmade',
 
     'ContinuousRV', 'Arcsin', 'Benini', 'Beta', 'BetaNoncentral', 'BetaPrime',
     'BoundedPareto', 'Cauchy', 'Chi', 'ChiNoncentral', 'ChiSquared', 'Dagum', 'Erlang',
     'ExGaussian', 'Exponential', 'ExponentialPower', 'FDistribution',
     'FisherZ', 'Frechet', 'Gamma', 'GammaInverse', 'Gompertz', 'Gumbel',
-    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic', 'LogLogistic', 'LogNormal', 'Lomax',
+    'Kumaraswamy', 'Laplace', 'Levy', 'Logistic','LogCauchy', 'LogLogistic', 'LogitNormal', 'LogNormal', 'Lomax',
     'Moyal', 'Maxwell', 'Nakagami', 'Normal', 'GaussianInverse', 'Pareto', 'PowerFunction',
     'QuadraticU', 'RaisedCosine', 'Rayleigh','Reciprocal', 'StudentT', 'ShiftedGompertz',
     'Trapezoidal', 'Triangular', 'Uniform', 'UniformSum', 'VonMises', 'Wald',
     'Weibull', 'WignerSemicircle', 'ContinuousDistributionHandmade',
 
-    'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
+    'FlorySchulz', 'Geometric','Hermite', 'Logarithmic', 'NegativeBinomial', 'Poisson', 'Skellam',
     'YuleSimon', 'Zeta', 'DiscreteRV', 'DiscreteDistributionHandmade',
 
     'JointRV', 'Dirichlet', 'GeneralizedMultivariateLogGamma',
@@ -142,7 +142,7 @@ __all__ = [
     'joint_eigen_distribution', 'JointEigenDistribution',
     'level_spacing_distribution',
 
-    'MatrixGamma', 'Wishart', 'MatrixNormal',
+    'MatrixGamma', 'Wishart', 'MatrixNormal', 'MatrixStudentT',
 
     'Probability', 'Expectation', 'Variance', 'Covariance', 'Moment',
     'CentralMoment',
@@ -159,18 +159,20 @@ from .rv_interface import (P, E, H, density, where, given, sample, cdf, median,
 
 from .frv_types import (FiniteRV, DiscreteUniform, Die, Bernoulli, Coin,
         Binomial, BetaBinomial, Hypergeometric, Rademacher,
-        FiniteDistributionHandmade)
+        FiniteDistributionHandmade, IdealSoliton, RobustSoliton)
 
 from .crv_types import (ContinuousRV, Arcsin, Benini, Beta, BetaNoncentral,
-        BetaPrime, BoundedPareto, Cauchy, Chi, ChiNoncentral, ChiSquared, Dagum, Erlang,
-        ExGaussian, Exponential, ExponentialPower, FDistribution, FisherZ,
-        Frechet, Gamma, GammaInverse, Gompertz, Gumbel, Kumaraswamy, Laplace,
-        Levy, Logistic, LogLogistic, LogNormal, Lomax, Maxwell, Moyal, Nakagami, Normal,
-        GaussianInverse, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, StudentT,
-        PowerFunction, ShiftedGompertz, Trapezoidal, Triangular, Uniform, UniformSum,
-        VonMises, Wald, Weibull, WignerSemicircle, ContinuousDistributionHandmade)
+        BetaPrime, BoundedPareto, Cauchy, Chi, ChiNoncentral, ChiSquared,
+        Dagum, Erlang, ExGaussian, Exponential, ExponentialPower,
+        FDistribution, FisherZ, Frechet, Gamma, GammaInverse, GaussianInverse,
+        Gompertz, Gumbel, Kumaraswamy, Laplace, Levy, Logistic, LogCauchy,
+        LogLogistic, LogitNormal, LogNormal, Lomax, Maxwell, Moyal, Nakagami,
+        Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh, Reciprocal,
+        StudentT, PowerFunction, ShiftedGompertz, Trapezoidal, Triangular,
+        Uniform, UniformSum, VonMises, Wald, Weibull, WignerSemicircle,
+        ContinuousDistributionHandmade)
 
-from .drv_types import (Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
+from .drv_types import (FlorySchulz, Geometric, Hermite, Logarithmic, NegativeBinomial, Poisson,
         Skellam, YuleSimon, Zeta, DiscreteRV, DiscreteDistributionHandmade)
 
 from .joint_rv_types import (JointRV, Dirichlet,
@@ -191,7 +193,7 @@ from .random_matrix_models import (CircularEnsemble, CircularUnitaryEnsemble,
         GaussianSymplecticEnsemble, joint_eigen_distribution,
         JointEigenDistribution, level_spacing_distribution)
 
-from .matrix_distributions import MatrixGamma, Wishart, MatrixNormal
+from .matrix_distributions import MatrixGamma, Wishart, MatrixNormal, MatrixStudentT
 
 from .symbolic_probability import (Probability, Expectation, Variance,
         Covariance, Moment, CentralMoment)

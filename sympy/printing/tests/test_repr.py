@@ -1,11 +1,22 @@
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
-from sympy.testing.pytest import raises
-from sympy import (symbols, sympify, Function, Integer, Matrix, Abs,
-    Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
-    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol)
+from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.assumptions.ask import Q
+from sympy.core.function import (Function, WildFunction)
+from sympy.core.numbers import (AlgebraicNumber, Float, Integer, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.logic.boolalg import (false, true)
+from sympy.matrices.dense import (Matrix, ones)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.combinatorics import Cycle, Permutation
-from sympy.core.compatibility import exec_
+from sympy.core.symbol import Str
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
 from sympy.polys import ring, field, ZZ, QQ, lex, grlex, Poly
@@ -16,11 +27,11 @@ x, y = symbols('x,y')
 
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
-ENV = {}  # type: Dict[str, Any]
-exec_("from sympy import *", ENV)
+ENV = {"Str": Str}  # type: tDict[str, Any]
+exec("from sympy import *", ENV)
 
 
-def sT(expr, string, import_stmt=None):
+def sT(expr, string, import_stmt=None, **kwargs):
     """
     sT := sreprTest
 
@@ -31,9 +42,9 @@ def sT(expr, string, import_stmt=None):
         ENV2 = ENV
     else:
         ENV2 = ENV.copy()
-        exec_(import_stmt, ENV2)
+        exec(import_stmt, ENV2)
 
-    assert srepr(expr) == string
+    assert srepr(expr, **kwargs) == string
     assert eval(string, ENV2) == expr
 
 
@@ -52,7 +63,8 @@ def test_Add():
 
 
 def test_more_than_255_args_issue_10259():
-    from sympy import Add, Mul
+    from sympy.core.add import Add
+    from sympy.core.mul import Mul
     for op in (Add, Mul):
         expr = op(*symbols('x:256'))
         assert eval(srepr(expr)) == expr
@@ -65,6 +77,11 @@ def test_Function():
 
     sT(sin(x), "sin(Symbol('x'))")
     sT(sin, "sin")
+
+
+def test_Heaviside():
+    sT(Heaviside(x), "Heaviside(Symbol('x'))")
+    sT(Heaviside(x, 1), "Heaviside(Symbol('x'), Integer(1))")
 
 
 def test_Geometry():
@@ -90,6 +107,15 @@ def test_Singletons():
     sT(S.One, 'Integer(1)')
     sT(S.Pi, 'pi')
     sT(S.Zero, 'Integer(0)')
+    sT(S.Complexes, 'Complexes')
+    sT(S.EmptySequence, 'EmptySequence')
+    sT(S.EmptySet, 'EmptySet')
+    # sT(S.IdentityFunction, 'Lambda(_x, _x)')
+    sT(S.Naturals, 'Naturals')
+    sT(S.Naturals0, 'Naturals0')
+    sT(S.Rationals, 'Rationals')
+    sT(S.Reals, 'Reals')
+    sT(S.UniversalSet, 'UniversalSet')
 
 
 def test_Integer():
@@ -295,9 +321,9 @@ def test_matrix_expressions():
     n = symbols('n', integer=True)
     A = MatrixSymbol("A", n, n)
     B = MatrixSymbol("B", n, n)
-    sT(A, "MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True))")
-    sT(A*B, "MatMul(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
-    sT(A + B, "MatAdd(MatrixSymbol(Symbol('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Symbol('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
+    sT(A, "MatrixSymbol(Str('A'), Symbol('n', integer=True), Symbol('n', integer=True))")
+    sT(A*B, "MatMul(MatrixSymbol(Str('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Str('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
+    sT(A + B, "MatAdd(MatrixSymbol(Str('A'), Symbol('n', integer=True), Symbol('n', integer=True)), MatrixSymbol(Str('B'), Symbol('n', integer=True), Symbol('n', integer=True)))")
 
 
 def test_Cycle():
@@ -310,10 +336,16 @@ def test_Cycle():
 
 def test_Permutation():
     import_stmt = "from sympy.combinatorics import Permutation"
-    sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
+    sT(Permutation(1, 2)(3, 4), "Permutation([0, 2, 1, 4, 3])", import_stmt, perm_cyclic=False)
+    sT(Permutation(1, 2)(3, 4), "Permutation(1, 2)(3, 4)", import_stmt, perm_cyclic=True)
+
+    with warns_deprecated_sympy():
+        old_print_cyclic = Permutation.print_cyclic
+        Permutation.print_cyclic = False
+        sT(Permutation(1, 2)(3, 4), "Permutation([0, 2, 1, 4, 3])", import_stmt)
+        Permutation.print_cyclic = old_print_cyclic
 
 def test_dict():
-    from sympy import srepr
     from sympy.abc import x, y, z
     d = {}
     assert srepr(d) == "{}"
@@ -328,9 +360,14 @@ def test_dict():
     assert srepr(d) == "{Symbol('x'): {Symbol('y'): Symbol('z')}}"
 
 def test_set():
-    from sympy import srepr
     from sympy.abc import x, y
     s = set()
     assert srepr(s) == "set()"
     s = {x, y}
     assert srepr(s) in ("{Symbol('x'), Symbol('y')}", "{Symbol('y'), Symbol('x')}")
+
+def test_Predicate():
+    sT(Q.even, "Q.even")
+
+def test_AppliedPredicate():
+    sT(Q.even(Symbol('z')), "AppliedPredicate(Q.even, Symbol('z'))")

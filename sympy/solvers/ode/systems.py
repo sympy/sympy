@@ -1,9 +1,9 @@
-from sympy.core import Add, Mul
+from sympy.core import Add, Mul, S
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.function import (expand_mul, expand, Derivative,
                                  AppliedUndef, Function, Subs)
@@ -11,14 +11,16 @@ from sympy.functions import (exp, im, cos, sin, re, Piecewise,
                              piecewise_fold, sqrt, log)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase, eye
-from sympy.polys import Poly
-from sympy.simplify import simplify, collect, powsimp, ratsimp
-from sympy.simplify.powsimp import powdenest
+from sympy.polys import Poly, together
+from sympy.simplify import collect, radsimp, signsimp # type: ignore
+from sympy.simplify.powsimp import powdenest, powsimp
+from sympy.simplify.ratsimp import ratsimp
+from sympy.simplify.simplify import simplify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError, solveset
-from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import ordered
+from sympy.utilities.iterables import (connected_components, iterable,
+                                       strongly_connected_components)
 from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
 
@@ -50,7 +52,7 @@ def _simpsol(soleq):
     terms = []
     for coeff, monom in zip(p.coeffs(), p.monoms()):
         coeff = piecewise_fold(coeff)
-        if type(coeff) is Piecewise:
+        if isinstance(coeff, Piecewise):
             coeff = Piecewise(*((ratsimp(coef).collect(syms), cond) for coef, cond in coeff.args))
         else:
             coeff = ratsimp(coeff).collect(syms)
@@ -66,6 +68,137 @@ def _solsimp(e, t):
     has_t = has_t.replace(exp, lambda a: exp(factor_terms(a)))
 
     return no_t + has_t
+
+
+def simpsol(sol, wrt1, wrt2, doit=True):
+    """Simplify solutions from dsolve_system."""
+
+    # The parameter sol is the solution as returned by dsolve (list of Eq).
+    #
+    # The parameters wrt1 and wrt2 are lists of symbols to be collected for
+    # with those in wrt1 being collected for first. This allows for collecting
+    # on any factors involving the independent variable before collecting on
+    # the integration constants or vice versa using e.g.:
+    #
+    #     sol = simpsol(sol, [t], [C1, C2])  # t first, constants after
+    #     sol = simpsol(sol, [C1, C2], [t])  # constants first, t after
+    #
+    # If doit=True (default) then simpsol will begin by evaluating any
+    # unevaluated integrals. Since many integrals will appear multiple times
+    # in the solutions this is done intelligently by computing each integral
+    # only once.
+    #
+    # The strategy is to first perform simple cancellation with factor_terms
+    # and then multiply out all brackets with expand_mul. This gives an Add
+    # with many terms.
+    #
+    # We split each term into two multiplicative factors dep and coeff where
+    # all factors that involve wrt1 are in dep and any constant factors are in
+    # coeff e.g.
+    #         sqrt(2)*C1*exp(t) -> ( exp(t), sqrt(2)*C1 )
+    #
+    # The dep factors are simplified using powsimp to combine expanded
+    # exponential factors e.g.
+    #              exp(a*t)*exp(b*t) -> exp(t*(a+b))
+    #
+    # We then collect coefficients for all terms having the same (simplified)
+    # dep. The coefficients are then simplified using together and ratsimp and
+    # lastly by recursively applying the same transformation to the
+    # coefficients to collect on wrt2.
+    #
+    # Finally the result is recombined into an Add and signsimp is used to
+    # normalise any minus signs.
+
+    def simprhs(rhs, rep, wrt1, wrt2):
+        """Simplify the rhs of an ODE solution"""
+        if rep:
+            rhs = rhs.subs(rep)
+        rhs = factor_terms(rhs)
+        rhs = simp_coeff_dep(rhs, wrt1, wrt2)
+        rhs = signsimp(rhs)
+        return rhs
+
+    def simp_coeff_dep(expr, wrt1, wrt2=None):
+        """Split rhs into terms, split terms into dep and coeff and collect on dep"""
+        add_dep_terms = lambda e: e.is_Add and e.has(*wrt1)
+        expandable = lambda e: e.is_Mul and any(map(add_dep_terms, e.args))
+        expand_func = lambda e: expand_mul(e, deep=False)
+        expand_mul_mod = lambda e: e.replace(expandable, expand_func)
+        terms = Add.make_args(expand_mul_mod(expr))
+        dc = {}
+        for term in terms:
+            coeff, dep = term.as_independent(*wrt1, as_Add=False)
+            # Collect together the coefficients for terms that have the same
+            # dependence on wrt1 (after dep is normalised using simpdep).
+            dep = simpdep(dep, wrt1)
+
+            # See if the dependence on t cancels out...
+            if dep is not S.One:
+                dep2 = factor_terms(dep)
+                if not dep2.has(*wrt1):
+                    coeff *= dep2
+                    dep = S.One
+
+            if dep not in dc:
+                dc[dep] = coeff
+            else:
+                dc[dep] += coeff
+        # Apply the method recursively to the coefficients but this time
+        # collecting on wrt2 rather than wrt2.
+        termpairs = ((simpcoeff(c, wrt2), d) for d, c in dc.items())
+        if wrt2 is not None:
+            termpairs = ((simp_coeff_dep(c, wrt2), d) for c, d in termpairs)
+        return Add(*(c * d for c, d in termpairs))
+
+    def simpdep(term, wrt1):
+        """Normalise factors involving t with powsimp and recombine exp"""
+        def canonicalise(a):
+            # Using factor_terms here isn't quite right because it leads to things
+            # like exp(t*(1+t)) that we don't want. We do want to cancel factors
+            # and pull out a common denominator but ideally the numerator would be
+            # expressed as a standard form polynomial in t so we expand_mul
+            # and collect afterwards.
+            a = factor_terms(a)
+            num, den = a.as_numer_denom()
+            num = expand_mul(num)
+            num = collect(num, wrt1)
+            return num / den
+
+        term = powsimp(term)
+        rep = {e: exp(canonicalise(e.args[0])) for e in term.atoms(exp)}
+        term = term.subs(rep)
+        return term
+
+    def simpcoeff(coeff, wrt2):
+        """Bring to a common fraction and cancel with ratsimp"""
+        coeff = together(coeff)
+        if coeff.is_polynomial():
+            # Calling ratsimp can be expensive. The main reason is to simplify
+            # sums of terms with irrational denominators so we limit ourselves
+            # to the case where the expression is polynomial in any symbols.
+            # Maybe there's a better approach...
+            coeff = ratsimp(radsimp(coeff))
+        # collect on secondary variables first and any remaining symbols after
+        if wrt2 is not None:
+            syms = list(wrt2) + list(ordered(coeff.free_symbols - set(wrt2)))
+        else:
+            syms = list(ordered(coeff.free_symbols))
+        coeff = collect(coeff, syms)
+        coeff = together(coeff)
+        return coeff
+
+    # There are often repeated integrals. Collect unique integrals and
+    # evaluate each once and then substitute into the final result to replace
+    # all occurrences in each of the solution equations.
+    if doit:
+        integrals = set().union(*(s.atoms(Integral) for s in sol))
+        rep = {i: factor_terms(i).doit() for i in integrals}
+    else:
+        rep = {}
+
+    sol = [Eq(s.lhs, simprhs(s.rhs, rep, wrt1, wrt2)) for s in sol]
+
+    return sol
 
 
 def linodesolve_type(A, t, b=None):
@@ -137,7 +270,7 @@ def linodesolve_type(A, t, b=None):
     Traceback (most recent call last):
     ...
     NotImplementedError:
-    The system doesn't have a commutative antiderivative, it can't be
+    The system does not have a commutative antiderivative, it cannot be
     solved by linodesolve.
 
     Returns
@@ -149,7 +282,7 @@ def linodesolve_type(A, t, b=None):
     ======
 
     NotImplementedError
-        When the coefficient matrix doesn't have a commutative antiderivative
+        When the coefficient matrix does not have a commutative antiderivative
 
     See Also
     ========
@@ -170,7 +303,7 @@ def linodesolve_type(A, t, b=None):
         B, is_commuting = _is_commutative_anti_derivative(A, t)
         if not is_commuting:
             raise NotImplementedError(filldedent('''
-                The system doesn't have a commutative antiderivative, it can't be solved
+                The system does not have a commutative antiderivative, it cannot be solved
                 by linodesolve.
             '''))
 
@@ -218,7 +351,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     matrix differential equation [1]. For example the system $x' = x + y + 1$
     and $y' = x - y$ can be represented as
 
-    .. math:: A_1 X' = A0 X + b
+    .. math:: A_1 X' = A_0 X + b
 
     where $A_1$ and $A_0$ are $2 \times 2$ matrices and $b$, $X$ and $X'$ are
     $2 \times 1$ matrices with $X = [x, y]^T$.
@@ -231,7 +364,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Examples
     ========
 
-    >>> from sympy import (Function, Symbol, Matrix, Eq)
+    >>> from sympy import Function, Symbol, Matrix, Eq
     >>> from sympy.solvers.ode.systems import linear_ode_to_matrix
     >>> t = Symbol('t')
     >>> x = Function('x')
@@ -291,7 +424,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Parameters
     ==========
 
-    eqs : list of sympy expressions or equalities
+    eqs : list of SymPy expressions or equalities
         The equations as expressions (assumed equal to zero).
     funcs : list of applied functions
         The dependent variables of the system of ODEs.
@@ -716,7 +849,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
 
     >>> eqs = [Eq(f(x).diff(x), f(x) + x*g(x)), Eq(g(x).diff(x), -x*f(x) + g(x))]
 
-    The system defined above is already in the desired form, so we don't have to convert it.
+    The system defined above is already in the desired form, so we do not have to convert it.
 
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
     >>> A = A0
@@ -749,13 +882,13 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
 
     ValueError
         This error is raised when the coefficient matrix, non-homogeneous term
-        or the antiderivative, if passed, aren't a matrix or
-        don't have correct dimensions
+        or the antiderivative, if passed, are not a matrix or
+        do not have correct dimensions
     NonSquareMatrixError
-        When the coefficient matrix or its antiderivative, if passed isn't a square
-        matrix
+        When the coefficient matrix or its antiderivative, if passed is not a
+        square matrix
     NotImplementedError
-        If the coefficient matrix doesn't have a commutative antiderivative
+        If the coefficient matrix does not have a commutative antiderivative
 
     See Also
     ========
@@ -825,7 +958,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         type = system_info["type_of_equation"]
         B = system_info["antiderivative"]
 
-    if type == "type5" or type == "type6":
+    if type in ("type5", "type6"):
         is_transformed = True
         if passed_type != "auto":
             if tau is None:
@@ -840,14 +973,15 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
                 A = system_info['A']
                 b = system_info['b']
 
-    if type in ["type1", "type2", "type5", "type6"]:
+    if type in ("type1", "type2", "type5", "type6"):
         P, J = matrix_exp_jordan_form(A, t)
         P = simplify(P)
 
-        if type == "type1" or type == "type5":
+        if type in ("type1", "type5"):
             sol_vector = P * (J * Cvect)
         else:
-            sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+            Jinv = J.subs(t, -t)
+            sol_vector = P * J * ((Jinv * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
 
     else:
         if B is None:
@@ -1030,7 +1164,7 @@ def _is_second_order_type2(A, t):
         poly = Poly(term.expand(), t)
         monoms = poly.monoms()
 
-        if monoms[0][0] == 4 or monoms[0][0] == 2:
+        if monoms[0][0] in (2, 4):
             cs = _get_poly_coeffs(poly, 4)
             a, b, c, d, e = cs
 
@@ -1223,7 +1357,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
     t: Symbol
         Independent variable of the equations in eqs
     is_canon: Boolean
-        If True, then this function won't try to get the
+        If True, then this function will not try to get the
         system in canonical form. Default value is False
 
     Returns
@@ -1356,9 +1490,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
             match['commutative_antiderivative'] = antiderivative
 
         return match
-
-    if is_higher_order:
-
+    else:
         match['type_of_equation'] = "type0"
 
         if is_second_order:
@@ -1392,9 +1524,6 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
         match['is_higher_order'] = is_higher_order
 
         return match
-
-    return None
-
 
 def _preprocess_eqs(eqs):
     processed_eqs = []
@@ -1450,7 +1579,6 @@ def _combine_type1_subsystems(subsystem, funcs, t):
 
 
 def _component_division(eqs, funcs, t):
-    from sympy.utilities.iterables import connected_components, strongly_connected_components
 
     # Assuming that each eq in eqs is in canonical form,
     # that is, [f(x).diff(x) = .., g(x).diff(x) = .., etc]
@@ -1516,7 +1644,8 @@ def _higher_order_ode_solver(match):
     else:
         new_eqs, new_funcs = _higher_order_to_first_order(eqs, sysorder, t, funcs=funcs,
                                                           type=type, J=match.get('J', None),
-                                                          f_t=match.get('f(t)', None))
+                                                          f_t=match.get('f(t)', None),
+                                                          P=match.get('P', None), b=match.get('rhs', None))
 
     if is_transformed:
         t = match.get('t_', t)
@@ -1686,7 +1815,7 @@ def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
     Here, $A2$ is the coefficient matrix for the vector $X''$ and $b$ is the non-homogeneous
     term.
 
-    Default value for `b` is None but if `A1` and `A0` are passed and `b` isn't passed, then the
+    Default value for `b` is None but if `A1` and `A0` are passed and `b` is not passed, then the
     system will be assumed homogeneous.
 
     """
@@ -1726,7 +1855,7 @@ def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
     return _higher_order_to_first_order(eqs, sys_order, t, funcs=funcs)
 
 
-def _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order):
+def _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order, b=None, P=None):
 
     # Note: To add a test for this ValueError
     if J is None or f_t is None or not _matrix_is_constant(J, t):
@@ -1735,8 +1864,17 @@ def _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order):
             Type 2
         '''))
 
+    if P is None and b is not None and not b.is_zero_matrix:
+        raise ValueError(filldedent('''
+            Provide the keyword 'P' for matrix P in A = P * J * P-1.
+        '''))
+
     new_funcs = Matrix([Function(Dummy('{}__0'.format(f.func.__name__)))(t) for f in funcs])
     new_eqs = new_funcs.diff(t, max_order) - f_t * J * new_funcs
+
+    if b is not None and not b.is_zero_matrix:
+        new_eqs -= P.inv() * b
+
     new_eqs = canonical_odes(new_eqs, new_funcs, t)[0]
 
     return new_eqs, new_funcs
@@ -1802,9 +1940,11 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
     if type == "type2":
         J = kwargs.get('J', None)
         f_t = kwargs.get('f_t', None)
+        b = kwargs.get('b', None)
+        P = kwargs.get('P', None)
         max_order = max(sys_order[func] for func in funcs)
 
-        return _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order)
+        return _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order, P=P, b=b)
 
         # Note: To be changed to this after doit option is disabled for default cases
         # new_sysorder = _get_func_order(new_eqs, new_funcs)
@@ -1834,7 +1974,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
     return eqs, new_funcs
 
 
-def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
+def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     r"""
     Solves any(supported) system of Ordinary Differential Equations
 
@@ -1852,7 +1992,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     5. Any implicit system which can be divided into system of ODEs which is of the above 4 forms
     6. Any higher order linear system of ODEs that can be reduced to one of the 5 forms of systems described above.
 
-    The types of systems described above aren't limited by the number of equations, i.e. this
+    The types of systems described above are not limited by the number of equations, i.e. this
     function can solve the above types irrespective of the number of equations in the system passed.
     But, the bigger the system, the more time it will take to solve the system.
 
@@ -1875,7 +2015,13 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     ics : Dict or None
         Set of initial boundary/conditions for the system of ODEs
     doit : Boolean
-        Evaluate the solutions if True. Default value is False
+        Evaluate the solutions if True. Default value is True. Can be
+        set to false if the integral evaluation takes too much time and/or
+        is not required.
+    simplify: Boolean
+        Simplify the solutions for the systems. Default value is True.
+        Can be set to false if simplification takes too much time and/or
+        is not required.
 
     Examples
     ========
@@ -1890,16 +2036,19 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     You can also pass the initial conditions for the system of ODEs:
+
     >>> dsolve_system(eqs, ics={f(0): 1, g(0): 0})
     [[Eq(f(x), exp(x)/2 + exp(-x)/2), Eq(g(x), exp(x)/2 - exp(-x)/2)]]
 
     Optionally, you can pass the dependent variables and the independent
     variable for which the system is to be solved:
+
     >>> funcs = [f(x), g(x)]
     >>> dsolve_system(eqs, funcs=funcs, t=x)
     [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     Lets look at an implicit system of ODEs:
+
     >>> eqs = [Eq(f(x).diff(x)**2, g(x)**2), Eq(g(x).diff(x), g(x))]
     >>> dsolve_system(eqs)
     [[Eq(f(x), C1 - C2*exp(x)), Eq(g(x), C2*exp(x))], [Eq(f(x), C1 + C2*exp(x)), Eq(g(x), C2*exp(x))]]
@@ -1915,7 +2064,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
     NotImplementedError
         When the system of ODEs is not solvable by this function.
     ValueError
-        When the parameters passed aren't in the required form.
+        When the parameters passed are not in the required form.
 
     """
     from sympy.solvers.ode.ode import solve_ics, _extract_funcs, constant_renumber
@@ -1943,7 +2092,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
 
     if len(eqs) != len(funcs):
         raise ValueError(filldedent('''
-            Number of equations and number of functions don't match
+            Number of equations and number of functions do not match
         '''))
 
     if t is not None and not isinstance(t, Symbol):
@@ -1982,8 +2131,9 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False):
                 solved_constants = solve_ics(sol, funcs, constants, ics)
                 sol = [s.subs(solved_constants) for s in sol]
 
-            if doit:
-                sol = [s.doit() for s in sol]
+            if simplify:
+                constants = Tuple(*sol).free_symbols - variables
+                sol = simpsol(sol, [t], constants, doit=doit)
 
             final_sols.append(sol)
 

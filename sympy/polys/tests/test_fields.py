@@ -7,7 +7,9 @@ from sympy.polys.orderings import lex
 
 from sympy.testing.pytest import raises, XFAIL
 from sympy.core import symbols, E
-from sympy import sqrt, Rational, exp, log
+from sympy.core.numbers import Rational
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
 
 def test_FracField___init__():
     F1 = FracField("x,y", ZZ, lex)
@@ -266,7 +268,7 @@ def test_FracElement___mul__():
     assert dict(f.numer) == {(1, 1, 0, 0): u + 1, (0, 0, 0, 0): 1}
     assert dict(f.denom) == {(0, 0, 1, 0): v - 1, (0, 0, 0, 1): -u*v, (0, 0, 0, 0): -1}
 
-def test_FracElement___div__():
+def test_FracElement___truediv__():
     F, x,y = field("x,y", QQ)
 
     f, g = 1/x, 1/y
@@ -347,4 +349,14 @@ def test_FracElement_subs():
     raises(ZeroDivisionError, lambda: f.subs(z, 0))
 
 def test_FracElement_compose():
+    pass
+
+def test_FracField_index():
+    a = symbols("a")
+    F, x, y, z = field('x y z', QQ)
+    assert F.index(x) == 0
+    assert F.index(y) == 1
+
+    raises(ValueError, lambda: F.index(1))
+    raises(ValueError, lambda: F.index(a))
     pass

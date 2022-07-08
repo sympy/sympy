@@ -22,14 +22,15 @@ Manuel Bronstein.  See also the docstring of risch.py.
 """
 
 from operator import mul
+from functools import reduce
 
 from sympy.core import oo
-from sympy.core.compatibility import reduce
 from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
 
-from sympy import sqrt, re, im
+from sympy.functions.elementary.complexes import (im, re)
+from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     splitfactor, NonElementaryIntegralException, DecrementLevel, recognize_log_derivative)
@@ -40,6 +41,9 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
 def order_at(a, p, t):
     """
     Computes the order of a at p, with respect to t.
+
+    Explanation
+    ===========
 
     For a, p in k[t], the order of a at p is defined as nu_p(a) = max({n
     in Z+ such that p**n|a}), where a != 0.  If a == 0, nu_p(a) = +oo.
@@ -93,6 +97,9 @@ def weak_normalizer(a, d, DE, z=None):
     """
     Weak normalization.
 
+    Explanation
+    ===========
+
     Given a derivation D on k[t] and f == a/d in k(t), return q in k[t]
     such that f - Dq/q is weakly normalized with respect to t.
 
@@ -141,6 +148,9 @@ def normal_denom(fa, fd, ga, gd, DE):
     """
     Normal part of the denominator.
 
+    Explanation
+    ===========
+
     Given a derivation D on k[t] and f, g in k(t) with f weakly
     normalized with respect to t, either raise NonElementaryIntegralException,
     in which case the equation Dy + f*y == g has no solution in k(t), or the
@@ -175,6 +185,9 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     """
     Special part of the denominator.
 
+    Explanation
+    ===========
+
     case is one of {'exp', 'tan', 'primitive'} for the hyperexponential,
     hypertangent, and primitive cases, respectively.  For the
     hyperexponential (resp. hypertangent) case, given a derivation D on
@@ -184,12 +197,11 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     A, B, C, h in k[t] and for any solution q in k<t> of a*Dq + b*q == c,
     r = qh in k[t] satisfies A*Dr + B*r == C.
 
-    For case == 'primitive', k<t> == k[t], so it returns (a, b, c, 1) in
+    For ``case == 'primitive'``, k<t> == k[t], so it returns (a, b, c, 1) in
     this case.
 
     This constitutes step 2 of the outline given in the rde.py docstring.
     """
-    from sympy.integrals.prde import parametric_log_deriv
     # TODO: finish writing this and write tests
 
     if case == 'auto':
@@ -199,7 +211,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
         p = Poly(DE.t, DE.t)
     elif case == 'tan':
         p = Poly(DE.t**2 + 1, DE.t)
-    elif case in ['primitive', 'base']:
+    elif case in ('primitive', 'base'):
         B = ba.to_field().quo(bd)
         C = ca.to_field().quo(cd)
         return (a, B, C, Poly(1, DE.t))
@@ -213,7 +225,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     n = min(0, nc - min(0, nb))
     if not nb:
         # Possible cancellation.
-
+        from .prde import parametric_log_deriv
         if case == 'exp':
             dcoeff = DE.d.quo(Poly(DE.t, DE.t))
             with DecrementLevel(DE):  # We are guaranteed to not have problems,
@@ -257,19 +269,20 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     """
     Bound on polynomial solutions.
 
-    Given a derivation D on k[t] and a, b, c in k[t] with a != 0, return
+    Explanation
+    ===========
+
+    Given a derivation D on k[t] and ``a``, ``b``, ``c`` in k[t] with ``a != 0``, return
     n in ZZ such that deg(q) <= n for any solution q in k[t] of
     a*Dq + b*q == c, when parametric=False, or deg(q) <= n for any solution
     c1, ..., cm in Const(k) and q in k[t] of a*Dq + b*q == Sum(ci*gi, (i, 1, m))
     when parametric=True.
 
-    For parametric=False, cQ is c, a Poly; for parametric=True, cQ is Q ==
+    For ``parametric=False``, ``cQ`` is ``c``, a ``Poly``; for ``parametric=True``, ``cQ`` is Q ==
     [q1, ..., qm], a list of Polys.
 
     This constitutes step 3 of the outline given in the rde.py docstring.
     """
-    from sympy.integrals.prde import (parametric_log_deriv, limited_integrate,
-        is_log_deriv_k_t_radical_in_field)
     # TODO: finish writing this and write tests
 
     if case == 'auto':
@@ -304,6 +317,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
         with DecrementLevel(DE):
             alphaa, alphad = frac_in(alpha, DE.t)
             if db == da - 1:
+                from .prde import limited_integrate
                 # if alpha == m*Dt + Dz for z in k and m in ZZ:
                 try:
                     (za, zd), m = limited_integrate(alphaa, alphad, [(etaa, etad)],
@@ -320,6 +334,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                     # beta = -lc(a*Dz + b*z)/(z*lc(a))
                     # if beta == m*Dt + Dw for w in k and m in ZZ:
                         # n = max(n, m)
+                from .prde import is_log_deriv_k_t_radical_in_field
                 A = is_log_deriv_k_t_radical_in_field(alphaa, alphad, DE)
                 if A is not None:
                     aa, z = A
@@ -327,6 +342,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                         beta = -(a*derivation(z, DE).as_poly(t1) +
                             b*z.as_poly(t1)).LC()/(z.as_expr()*a.LC())
                         betaa, betad = frac_in(beta, DE.t)
+                        from .prde import limited_integrate
                         try:
                             (za, zd), m = limited_integrate(betaa, betad,
                                 [(etaa, etad)], DE)
@@ -335,9 +351,11 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                         else:
                             if len(m) != 1:
                                 raise ValueError("Length of m should be 1")
-                            n = max(n, m[0])
+                            n = max(n, m[0].as_expr())
 
     elif case == 'exp':
+        from .prde import parametric_log_deriv
+
         n = max(0, dc - max(db, da))
         if da == db:
             etaa, etad = frac_in(DE.d.quo(Poly(DE.t, DE.t)), DE.T[DE.level - 1])
@@ -351,7 +369,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                     if a == 1:
                         n = max(n, m)
 
-    elif case in ['tan', 'other_nonlinear']:
+    elif case in ('tan', 'other_nonlinear'):
         delta = DE.d.degree(DE.t)
         lam = DE.d.LC()
         alpha = cancel(alpha/lam)
@@ -370,9 +388,12 @@ def spde(a, b, c, n, DE):
     """
     Rothstein's Special Polynomial Differential Equation algorithm.
 
-    Given a derivation D on k[t], an integer n and a, b, c in k[t] with
-    a != 0, either raise NonElementaryIntegralException, in which case the
-    equation a*Dq + b*q == c has no solution of degree at most n in
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], an integer n and ``a``,``b``,``c`` in k[t] with
+    ``a != 0``, either raise NonElementaryIntegralException, in which case the
+    equation a*Dq + b*q == c has no solution of degree at most ``n`` in
     k[t], or return the tuple (B, C, m, alpha, beta) such that B, C,
     alpha, beta in k[t], m in ZZ, and any solution q in k[t] of degree
     at most n of a*Dq + b*q == c must be of the form
@@ -414,12 +435,15 @@ def no_cancel_b_large(b, c, n, DE):
     """
     Poly Risch Differential Equation - No cancellation: deg(b) large enough.
 
-    Given a derivation D on k[t], n either an integer or +oo, and b, c
-    in k[t] with b != 0 and either D == d/dt or
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], ``n`` either an integer or +oo, and ``b``,``c``
+    in k[t] with ``b != 0`` and either D == d/dt or
     deg(b) > max(0, deg(D) - 1), either raise NonElementaryIntegralException, in
-    which case the equation Dq + b*q == c has no solution of degree at
+    which case the equation ``Dq + b*q == c`` has no solution of degree at
     most n in k[t], or a solution q in k[t] of this equation with
-    deg(q) < n.
+    ``deg(q) < n``.
     """
     q = Poly(0, DE.t)
 
@@ -441,7 +465,10 @@ def no_cancel_b_small(b, c, n, DE):
     """
     Poly Risch Differential Equation - No cancellation: deg(b) small enough.
 
-    Given a derivation D on k[t], n either an integer or +oo, and b, c
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], ``n`` either an integer or +oo, and ``b``,``c``
     in k[t] with deg(b) < deg(D) - 1 and either D == d/dt or
     deg(D) >= 2, either raise NonElementaryIntegralException, in which case the
     equation Dq + b*q == c has no solution of degree at most n in k[t],
@@ -484,6 +511,9 @@ def no_cancel_b_small(b, c, n, DE):
 def no_cancel_equal(b, c, n, DE):
     """
     Poly Risch Differential Equation - No cancellation: deg(b) == deg(D) - 1
+
+    Explanation
+    ===========
 
     Given a derivation D on k[t] with deg(D) >= 2, n either an integer
     or +oo, and b, c in k[t] with deg(b) == deg(D) - 1, either raise
@@ -529,14 +559,17 @@ def cancel_primitive(b, c, n, DE):
     """
     Poly Risch Differential Equation - Cancellation: Primitive case.
 
-    Given a derivation D on k[t], n either an integer or +oo, b in k, and
-    c in k[t] with Dt in k and b != 0, either raise
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], n either an integer or +oo, ``b`` in k, and
+    ``c`` in k[t] with Dt in k and ``b != 0``, either raise
     NonElementaryIntegralException, in which case the equation Dq + b*q == c
     has no solution of degree at most n in k[t], or a solution q in k[t] of
     this equation with deg(q) <= n.
     """
-    from sympy.integrals.prde import is_log_deriv_k_t_radical_in_field
-
+    # Delayed imports
+    from .prde import is_log_deriv_k_t_radical_in_field
     with DecrementLevel(DE):
         ba, bd = frac_in(b, DE.t)
         A = is_log_deriv_k_t_radical_in_field(ba, bd, DE)
@@ -576,14 +609,16 @@ def cancel_exp(b, c, n, DE):
     """
     Poly Risch Differential Equation - Cancellation: Hyperexponential case.
 
-    Given a derivation D on k[t], n either an integer or +oo, b in k, and
-    c in k[t] with Dt/t in k and b != 0, either raise
+    Explanation
+    ===========
+
+    Given a derivation D on k[t], n either an integer or +oo, ``b`` in k, and
+    ``c`` in k[t] with Dt/t in k and ``b != 0``, either raise
     NonElementaryIntegralException, in which case the equation Dq + b*q == c
     has no solution of degree at most n in k[t], or a solution q in k[t] of
     this equation with deg(q) <= n.
     """
-    from sympy.integrals.prde import parametric_log_deriv
-
+    from .prde import parametric_log_deriv
     eta = DE.d.quo(Poly(DE.t, DE.t)).as_expr()
 
     with DecrementLevel(DE):
@@ -632,21 +667,20 @@ def cancel_exp(b, c, n, DE):
 
 def solve_poly_rde(b, cQ, n, DE, parametric=False):
     """
-    Solve a Polynomial Risch Differential Equation with degree bound n.
+    Solve a Polynomial Risch Differential Equation with degree bound ``n``.
 
     This constitutes step 4 of the outline given in the rde.py docstring.
 
     For parametric=False, cQ is c, a Poly; for parametric=True, cQ is Q ==
     [q1, ..., qm], a list of Polys.
     """
-    from sympy.integrals.prde import (prde_no_cancel_b_large,
-        prde_no_cancel_b_small)
-
     # No cancellation
     if not b.is_zero and (DE.case == 'base' or
             b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
 
         if parametric:
+            # Delayed imports
+            from .prde import prde_no_cancel_b_large
             return prde_no_cancel_b_large(b, cQ, n, DE)
         return no_cancel_b_large(b, cQ, n, DE)
 
@@ -654,6 +688,7 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
             (DE.case == 'base' or DE.d.degree(DE.t) >= 2):
 
         if parametric:
+            from .prde import prde_no_cancel_b_small
             return prde_no_cancel_b_small(b, cQ, n, DE)
 
         R = no_cancel_b_small(b, cQ, n, DE)
@@ -726,6 +761,9 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
 def rischDE(fa, fd, ga, gd, DE):
     """
     Solve a Risch Differential Equation: Dy + f*y == g.
+
+    Explanation
+    ===========
 
     See the outline in the docstring of rde.py for more information
     about the procedure used.  Either raise NonElementaryIntegralException, in

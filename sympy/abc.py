@@ -12,7 +12,7 @@ instead of the slightly more clunky-looking
 Caveats
 =======
 
-1. As of the time of writing this, the names ``C``, ``O``, ``S``, ``I``, ``N``,
+1. As of the time of writing this, the names ``O``, ``S``, ``I``, ``N``,
 ``E``, and ``Q`` are colliding with names defined in SymPy. If you import them
 from both ``sympy.abc`` and ``sympy``, the second import will "win".
 This is an issue only for * imports, which should only be used for short-lived
@@ -51,15 +51,13 @@ pi(C, Q)
 
 """
 
-from __future__ import print_function, division
-
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 import string
 
 from .core import Symbol, symbols
 from .core.alphabets import greeks
-from .core.compatibility import exec_
+from sympy.parsing.sympy_parser import null
 
 ##### Symbol definitions #####
 
@@ -88,26 +86,26 @@ phi, chi, psi, omega = symbols('phi, chi, psi, omega')
 # This is mostly for diagnosing SymPy's namespace during SymPy development.
 
 _latin = list(string.ascii_letters)
-# OSINEQ should not be imported as they clash; gamma, pi and zeta clash, too
+# QOSINE should not be imported as they clash; gamma, pi and zeta clash, too
 _greek = list(greeks) # make a copy, so we can mutate it
 # Note: We import lamda since lambda is a reserved keyword in Python
 _greek.remove("lambda")
 _greek.append("lamda")
 
-ns = {}  # type: Dict[str, Any]
-exec_('from sympy import *', ns)
-_clash1 = {}
-_clash2 = {}
+ns: tDict[str, Any] = {}
+exec('from sympy import *', ns)
+_clash1: tDict[str, Any] = {}
+_clash2: tDict[str, Any] = {}
 while ns:
     _k, _ = ns.popitem()
     if _k in _greek:
-        _clash2[_k] = Symbol(_k)
+        _clash2[_k] = null
         _greek.remove(_k)
     elif _k in _latin:
-        _clash1[_k] = Symbol(_k)
+        _clash1[_k] = null
         _latin.remove(_k)
 _clash = {}
 _clash.update(_clash1)
 _clash.update(_clash2)
 
-del _latin, _greek, Symbol, _k
+del _latin, _greek, Symbol, _k, null

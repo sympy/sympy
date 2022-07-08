@@ -12,6 +12,9 @@ def gauss_legendre(n, n_digits):
     r"""
     Computes the Gauss-Legendre quadrature [1]_ points and weights.
 
+    Explanation
+    ===========
+
     The Gauss-Legendre quadrature approximates the integral:
 
     .. math::
@@ -26,9 +29,10 @@ def gauss_legendre(n, n_digits):
     Parameters
     ==========
 
-    n : the order of quadrature
-
-    n_digits : number of significant digits of the points and weights to return
+    n :
+        The order of quadrature.
+    n_digits :
+        Number of significant digits of the points and weights to return.
 
     Returns
     =======
@@ -80,6 +84,9 @@ def gauss_laguerre(n, n_digits):
     r"""
     Computes the Gauss-Laguerre quadrature [1]_ points and weights.
 
+    Explanation
+    ===========
+
     The Gauss-Laguerre quadrature approximates the integral:
 
     .. math::
@@ -95,14 +102,15 @@ def gauss_laguerre(n, n_digits):
     Parameters
     ==========
 
-    n : the order of quadrature
-
-    n_digits : number of significant digits of the points and weights to return
+    n :
+        The order of quadrature.
+    n_digits :
+        Number of significant digits of the points and weights to return.
 
     Returns
     =======
 
-    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats.
+    (x, w) : The ``x`` and ``w`` are lists of points and weights as Floats.
              The points `x_i` and weights `w_i` are returned as ``(x, w)``
              tuple of lists.
 
@@ -149,6 +157,9 @@ def gauss_hermite(n, n_digits):
     r"""
     Computes the Gauss-Hermite quadrature [1]_ points and weights.
 
+    Explanation
+    ===========
+
     The Gauss-Hermite quadrature approximates the integral:
 
     .. math::
@@ -164,14 +175,15 @@ def gauss_hermite(n, n_digits):
     Parameters
     ==========
 
-    n : the order of quadrature
-
-    n_digits : number of significant digits of the points and weights to return
+    n :
+        The order of quadrature.
+    n_digits :
+        Number of significant digits of the points and weights to return.
 
     Returns
     =======
 
-    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats.
+    (x, w) : The ``x`` and ``w`` are lists of points and weights as Floats.
              The points `x_i` and weights `w_i` are returned as ``(x, w)``
              tuple of lists.
 
@@ -221,6 +233,9 @@ def gauss_gen_laguerre(n, alpha, n_digits):
     r"""
     Computes the generalized Gauss-Laguerre quadrature [1]_ points and weights.
 
+    Explanation
+    ===========
+
     The generalized Gauss-Laguerre quadrature approximates the integral:
 
     .. math::
@@ -237,11 +252,14 @@ def gauss_gen_laguerre(n, alpha, n_digits):
     Parameters
     ==========
 
-    n : the order of quadrature
+    n :
+        The order of quadrature.
 
-    alpha : the exponent of the singularity, `\alpha > -1`
+    alpha :
+        The exponent of the singularity, `\alpha > -1`.
 
-    n_digits : number of significant digits of the points and weights to return
+    n_digits :
+        Number of significant digits of the points and weights to return.
 
     Returns
     =======
@@ -298,6 +316,9 @@ def gauss_chebyshev_t(n, n_digits):
     Computes the Gauss-Chebyshev quadrature [1]_ points and weights of
     the first kind.
 
+    Explanation
+    ===========
+
     The Gauss-Chebyshev quadrature of the first kind approximates the integral:
 
     .. math::
@@ -313,9 +334,11 @@ def gauss_chebyshev_t(n, n_digits):
     Parameters
     ==========
 
-    n : the order of quadrature
+    n :
+        The order of quadrature.
 
-    n_digits : number of significant digits of the points and weights to return
+    n_digits :
+        Number of significant digits of the points and weights to return.
 
     Returns
     =======
@@ -363,6 +386,9 @@ def gauss_chebyshev_u(n, n_digits):
     r"""
     Computes the Gauss-Chebyshev quadrature [1]_ points and weights of
     the second kind.
+
+    Explanation
+    ===========
 
     The Gauss-Chebyshev quadrature of the second kind approximates the
     integral:
@@ -429,6 +455,9 @@ def gauss_jacobi(n, alpha, beta, n_digits):
     r"""
     Computes the Gauss-Jacobi quadrature [1]_ points and weights.
 
+    Explanation
+    ===========
+
     The Gauss-Jacobi quadrature of the first kind approximates the integral:
 
     .. math::
@@ -483,7 +512,8 @@ def gauss_jacobi(n, alpha, beta, n_digits):
     See Also
     ========
 
-    gauss_legendre, gauss_laguerre, gauss_hermite, gauss_gen_laguerre, gauss_chebyshev_t, gauss_chebyshev_u, gauss_lobatto
+    gauss_legendre, gauss_laguerre, gauss_hermite, gauss_gen_laguerre,
+    gauss_chebyshev_t, gauss_chebyshev_u, gauss_lobatto
 
     References
     ==========
@@ -513,6 +543,9 @@ def gauss_jacobi(n, alpha, beta, n_digits):
 def gauss_lobatto(n, n_digits):
     r"""
     Computes the Gauss-Lobatto quadrature [1]_ points and weights.
+
+    Explanation
+    ===========
 
     The Gauss-Lobatto quadrature approximates the integral:
 

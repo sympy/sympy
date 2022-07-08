@@ -30,7 +30,7 @@ Del
 
 .. autoclass:: sympy.vector.deloperator.Del
    :members:
-   
+
 
 ParametricRegion
 ================
@@ -44,7 +44,7 @@ ImplicitRegion
 
 .. autoclass:: sympy.vector.implicitregion.ImplicitRegion
    :members:
-      
+
 
 ParametricIntegral
 ==================

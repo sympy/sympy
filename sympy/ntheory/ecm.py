@@ -1,6 +1,7 @@
 from sympy.ntheory import sieve, isprime
+from sympy.core.numbers import mod_inverse
 from sympy.core.power import integer_log
-from sympy.core.compatibility import as_int
+from sympy.utilities.misc import as_int
 import random
 
 rgen = random.Random()
@@ -34,8 +35,8 @@ class Point:
         """
         Initial parameters for the Point class.
 
-        Parameters:
-        ===========
+        Parameters
+        ==========
 
         x_cord : X coordinate of the Point
         z_cord : Z coordinate of the Point
@@ -50,7 +51,6 @@ class Point:
     def __eq__(self, other):
         """Two points are equal if X/Z of both points are equal
         """
-        from sympy import mod_inverse
         if self.a_24 != other.a_24 or self.mod != other.mod:
             return False
         return self.x_cord * mod_inverse(self.z_cord, self.mod) % self.mod ==\
@@ -68,8 +68,8 @@ class Point:
         So, we always know what the difference between the point is.
 
 
-        Parameters:
-        ===========
+        Parameters
+        ==========
 
         Q : point on the curve in Montgomery form
         diff : self - Q
@@ -123,7 +123,7 @@ class Point:
         A total of 11 multiplications are required in each step of this
         algorithm.
 
-        Parameters:
+        Parameters
         ==========
 
         k : The positive integer multiplier
@@ -179,8 +179,8 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     scalar multiplication by p to get p*k*P = O. Here a second bound B2
     restrict the size of possible values of p.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     n : Number to be Factored
     B1 : Stage 1 Bound
@@ -193,7 +193,6 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     .. [1]  Carl Pomerance and Richard Crandall "Prime Numbers:
         A Computational Perspective" (2nd Ed.), page 344
     """
-    from sympy import gcd, mod_inverse, sqrt
     n = as_int(n)
     if B1 % 2 != 0 or B2 % 2 != 0:
         raise ValueError("The Bounds should be an even integer")
@@ -202,6 +201,8 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     if isprime(n):
         return n
 
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.polys.polytools import gcd
     curve = 0
     D = int(sqrt(B2))
     beta = [0]*(D + 1)
@@ -209,8 +210,6 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     k = 1
     for p in sieve.primerange(1, B1 + 1):
         k *= pow(p, integer_log(B1, p)[0])
-    g = 1
-
     while(curve <= max_curve):
         curve += 1
 
@@ -228,7 +227,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
             return gcd(4*u_3*v, n)
 
         a24 = (C + 2)*mod_inverse(4, n) % n
-        Q = Point(u_3 , pow(v, 3, n), a24, n)
+        Q = Point(u_3, pow(v, 3, n), a24, n)
         Q = Q.mont_ladder(k)
         g = gcd(Q.z_cord, n)
 
@@ -280,8 +279,8 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     of n. First all the small factors are taken out using trial division.
     Then `ecm_one_factor` is used to compute one factor at a time.
 
-    Parameters:
-    ===========
+    Parameters
+    ==========
 
     n : Number to be Factored
     B1 : Stage 1 Bound

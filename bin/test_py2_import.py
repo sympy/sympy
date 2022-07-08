@@ -18,7 +18,7 @@ try:
     import sympy
 except ImportError as exc:
     message = str(exc)
-    # "Python version 3.5 or above is required for SymPy."
+    # e.g. "Python version 3.5 or above is required for SymPy."
     assert message.startswith("Python version")
     assert message.endswith(" or above is required for SymPy.")
 else:

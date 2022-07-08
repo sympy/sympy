@@ -1,15 +1,19 @@
-from __future__ import print_function, division
-
 from itertools import product
 
-from sympy import Tuple, Add, Mul, Matrix, log, expand, S
-from sympy.core.trace import Tr
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.function import expand
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import log
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import HermitianOperator
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 from sympy.physics.quantum.tensorproduct import TensorProduct, tensor_product_simp
+from sympy.physics.quantum.trace import Tr
 
 
 class Density(HermitianOperator):
@@ -38,7 +42,7 @@ class Density(HermitianOperator):
     @classmethod
     def _eval_args(cls, args):
         # call this to qsympify the args
-        args = super(Density, cls)._eval_args(args)
+        args = super()._eval_args(args)
 
         for arg in args:
             # Check if arg is a tuple
@@ -221,7 +225,7 @@ def entropy(density):
     Parameters
     ==========
 
-    density : density matrix of type Density, sympy matrix,
+    density : density matrix of type Density, SymPy matrix,
     scipy.sparse or numpy.ndarray
 
     Examples
@@ -252,7 +256,7 @@ def entropy(density):
         return -np.sum(eigvals*np.log(eigvals))
     else:
         raise ValueError(
-            "numpy.ndarray, scipy.sparse or sympy matrix expected")
+            "numpy.ndarray, scipy.sparse or SymPy matrix expected")
 
 
 def fidelity(state1, state2):

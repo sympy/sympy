@@ -82,6 +82,10 @@ ratsimp
 ^^^^^^^
 .. autofunction:: ratsimp
 
+ratsimpmodprime
+^^^^^^^^^^^^^^^
+.. autofunction:: ratsimpmodprime
+
 Trigonometric simplification
 ----------------------------
 .. module:: sympy.simplify.trigsimp
@@ -141,14 +145,6 @@ Hypergeometric Function Expansion
 hyperexpand
 ^^^^^^^^^^^
 .. autofunction:: hyperexpand
-
-Traversal Tools
----------------
-.. module:: sympy.simplify.traversaltools
-
-use
-^^^
-.. autofunction:: use
 
 EPath Tools
 -----------

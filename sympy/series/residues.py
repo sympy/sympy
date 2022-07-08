@@ -3,9 +3,9 @@ This module implements the Residue function and related tools for working
 with residues.
 """
 
-from __future__ import print_function, division
-
-from sympy import sympify
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 from sympy.utilities.timeutils import timethis
 
 
@@ -14,8 +14,8 @@ def residue(expr, x, x0):
     """
     Finds the residue of ``expr`` at the point x=x0.
 
-    The residue is defined as the coefficient of 1/(x-x0) in the power series
-    expansion about x=x0.
+    The residue is defined as the coefficient of ``1/(x-x0)`` in the power series
+    expansion about ``x=x0``.
 
     Examples
     ========
@@ -48,11 +48,12 @@ def residue(expr, x, x0):
     # For the definition of a resultant, see section 1.4 (and any
     # previous sections for more review).
 
-    from sympy import collect, Mul, Order, S
+    from sympy.series.order import Order
+    from sympy.simplify.radsimp import collect
     expr = sympify(expr)
     if x0 != 0:
         expr = expr.subs(x, x + x0)
-    for n in [0, 1, 2, 4, 8, 16, 32]:
+    for n in (0, 1, 2, 4, 8, 16, 32):
         s = expr.nseries(x, n=n)
         if not s.has(Order) or s.getn() >= 0:
             break
@@ -65,7 +66,7 @@ def residue(expr, x, x0):
     for arg in args:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)
-        if not (m == 1 or m == x or (m.is_Pow and m.exp.is_Integer)):
+        if not (m in (S.One, x) or (m.is_Pow and m.exp.is_Integer)):
             raise NotImplementedError('term of unexpected form: %s' % m)
         if m == 1/x:
             res += c

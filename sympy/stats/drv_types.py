@@ -2,6 +2,7 @@
 
 Contains
 ========
+FlorySchulz
 Geometric
 Hermite
 Logarithmic
@@ -13,16 +14,30 @@ Zeta
 """
 
 
-from __future__ import print_function, division
 
-from sympy import (Basic, factorial, exp, S, sympify, I, zeta, polylog, log, beta,
-                   hyper, binomial, Piecewise, floor, besseli, sqrt, Sum, Dummy,
-                   Lambda)
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.function import Lambda
+from sympy.core.numbers import I
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.bessel import besseli
+from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.hyper import hyper
+from sympy.functions.special.zeta_functions import (polylog, zeta)
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import _value_check, is_random
 
 
-__all__ = ['Geometric',
+__all__ = ['FlorySchulz',
+'Geometric',
 'Hermite',
 'Logarithmic',
 'NegativeBinomial',
@@ -33,10 +48,11 @@ __all__ = ['Geometric',
 ]
 
 
-def rv(symbol, cls, *args):
+def rv(symbol, cls, *args, **kwargs):
     args = list(map(sympify, args))
     dist = cls(*args)
-    dist.check(*args)
+    if kwargs.pop('check', True):
+        dist.check(*args)
     pspace = SingleDiscretePSpace(symbol, dist)
     if any(is_random(arg) for arg in args):
         from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
@@ -58,9 +74,11 @@ class DiscreteDistributionHandmade(SingleDiscreteDistribution):
     def check(pdf, set):
         x = Dummy('x')
         val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
-        _value_check(val == S.One, "The pdf is incorrect on the given set.")
+        _value_check(Eq(val, 1) != S.false, "The pdf is incorrect on the given set.")
 
-def DiscreteRV(symbol, density, set=S.Integers):
+
+
+def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
     """
     Create a Discrete Random Variable given the following:
 
@@ -73,6 +91,10 @@ def DiscreteRV(symbol, density, set=S.Integers):
         Represents probability density function.
     set : set
         Represents the region where the pdf is valid, by default is real line.
+    check : bool
+        If True, it will check whether the given density
+        integrates to 1 over the given set. If False, it
+        will not perform this check. Default is False.
 
     Examples
     ========
@@ -97,7 +119,80 @@ def DiscreteRV(symbol, density, set=S.Integers):
     set = sympify(set)
     pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
     pdf = Lambda(symbol, pdf)
-    return rv(symbol.name, DiscreteDistributionHandmade, pdf, set)
+    # have a default of False while `rv` should have a default of True
+    kwargs['check'] = kwargs.pop('check', False)
+    return rv(symbol.name, DiscreteDistributionHandmade, pdf, set, **kwargs)
+
+
+#-------------------------------------------------------------------------------
+# Flory-Schulz distribution ------------------------------------------------------------
+
+class FlorySchulzDistribution(SingleDiscreteDistribution):
+    _argnames = ('a',)
+    set = S.Naturals
+
+    @staticmethod
+    def check(a):
+        _value_check((0 < a, a < 1), "a must be between 0 and 1")
+
+    def pdf(self, k):
+        a = self.a
+        return (a**2 * k * (1 - a)**(k - 1))
+
+    def _characteristic_function(self, t):
+        a = self.a
+        return a**2*exp(I*t)/((1 + (a - 1)*exp(I*t))**2)
+
+    def _moment_generating_function(self, t):
+        a = self.a
+        return a**2*exp(t)/((1 + (a - 1)*exp(t))**2)
+
+
+def FlorySchulz(name, a):
+    r"""
+    Create a discrete random variable with a FlorySchulz distribution.
+
+    The density of the FlorySchulz distribution is given by
+
+    .. math::
+        f(k) := (a^2) k (1 - a)^{k-1}
+
+    Parameters
+    ==========
+
+    a : A real number between 0 and 1
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import density, E, variance, FlorySchulz
+    >>> from sympy import Symbol, S
+
+    >>> a = S.One / 5
+    >>> z = Symbol("z")
+
+    >>> X = FlorySchulz("x", a)
+
+    >>> density(X)(z)
+    (4/5)**(z - 1)*z/25
+
+    >>> E(X)
+    9
+
+    >>> variance(X)
+    40
+
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/Flory%E2%80%93Schulz_distribution
+    """
+    return rv(name, FlorySchulzDistribution, a)
 
 
 #-------------------------------------------------------------------------------
@@ -127,6 +222,9 @@ def Geometric(name, p):
     r"""
     Create a discrete random variable with a Geometric distribution.
 
+    Explanation
+    ===========
+
     The density of the Geometric distribution is given by
 
     .. math::
@@ -135,7 +233,7 @@ def Geometric(name, p):
     Parameters
     ==========
 
-    p: A probability between 0 and 1
+    p : A probability between 0 and 1
 
     Returns
     =======
@@ -209,6 +307,9 @@ def Hermite(name, a1, a2):
     r"""
     Create a discrete random variable with a Hermite distribution.
 
+    Explanation
+    ===========
+
     The density of the Hermite distribution is given by
 
     .. math::
@@ -218,8 +319,8 @@ def Hermite(name, a1, a2):
     Parameters
     ==========
 
-    a1: A Positive number greater than equal to 0.
-    a2: A Positive number greater than equal to 0.
+    a1 : A Positive number greater than equal to 0.
+    a2 : A Positive number greater than equal to 0.
 
     Returns
     =======
@@ -286,6 +387,9 @@ def Logarithmic(name, p):
     r"""
     Create a discrete random variable with a Logarithmic distribution.
 
+    Explanation
+    ===========
+
     The density of the Logarithmic distribution is given by
 
     .. math::
@@ -294,7 +398,7 @@ def Logarithmic(name, p):
     Parameters
     ==========
 
-    p: A value between 0 and 1
+    p : A value between 0 and 1
 
     Returns
     =======
@@ -313,7 +417,7 @@ def Logarithmic(name, p):
     >>> X = Logarithmic("x", p)
 
     >>> density(X)(z)
-    -5**(-z)/(z*log(4/5))
+    -1/(5**z*z*log(4/5))
 
     >>> E(X)
     -1/(-4*log(5) + 8*log(2))
@@ -361,10 +465,12 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
 
         return ((1 - p) / (1 - p * exp(t)))**r
 
-
 def NegativeBinomial(name, r, p):
     r"""
     Create a discrete random variable with a Negative Binomial distribution.
+
+    Explanation
+    ===========
 
     The density of the Negative Binomial distribution is given by
 
@@ -374,8 +480,8 @@ def NegativeBinomial(name, r, p):
     Parameters
     ==========
 
-    r: A positive value
-    p: A value between 0 and 1
+    r : A positive value
+    p : A value between 0 and 1
 
     Returns
     =======
@@ -395,7 +501,7 @@ def NegativeBinomial(name, r, p):
     >>> X = NegativeBinomial("x", r, p)
 
     >>> density(X)(z)
-    1024*5**(-z)*binomial(z + 4, z)/3125
+    1024*binomial(z + 4, z)/(3125*5**z)
 
     >>> E(X)
     5/4
@@ -439,6 +545,9 @@ def Poisson(name, lamda):
     r"""
     Create a discrete random variable with a Poisson distribution.
 
+    Explanation
+    ===========
+
     The density of the Poisson distribution is given by
 
     .. math::
@@ -447,7 +556,7 @@ def Poisson(name, lamda):
     Parameters
     ==========
 
-    lamda: Positive number, a rate
+    lamda : Positive number, a rate
 
     Returns
     =======
@@ -520,6 +629,9 @@ def Skellam(name, mu1, mu2):
     r"""
     Create a discrete random variable with a Skellam distribution.
 
+    Explanation
+    ===========
+
     The Skellam is the distribution of the difference N1 - N2
     of two statistically independent random variables N1 and N2
     each Poisson-distributed with respective expected values mu1 and mu2.
@@ -532,8 +644,8 @@ def Skellam(name, mu1, mu2):
     Parameters
     ==========
 
-    mu1: A non-negative value
-    mu2: A non-negative value
+    mu1 : A non-negative value
+    mu2 : A non-negative value
 
     Returns
     =======
@@ -603,6 +715,9 @@ def YuleSimon(name, rho):
     r"""
     Create a discrete random variable with a Yule-Simon distribution.
 
+    Explanation
+    ===========
+
     The density of the Yule-Simon distribution is given by
 
     .. math::
@@ -611,7 +726,7 @@ def YuleSimon(name, rho):
     Parameters
     ==========
 
-    rho: A positive value
+    rho : A positive value
 
     Returns
     =======
@@ -673,6 +788,9 @@ def Zeta(name, s):
     r"""
     Create a discrete random variable with a Zeta distribution.
 
+    Explanation
+    ===========
+
     The density of the Zeta distribution is given by
 
     .. math::
@@ -681,7 +799,7 @@ def Zeta(name, s):
     Parameters
     ==========
 
-    s: A value greater than 1
+    s : A value greater than 1
 
     Returns
     =======

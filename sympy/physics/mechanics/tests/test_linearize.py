@@ -1,9 +1,12 @@
-from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, Rational
-from sympy import solve, simplify, sympify
+from sympy.core.backend import (symbols, Matrix, cos, sin, atan, sqrt,
+    Rational, _simplify_matrix)
+from sympy.core.sympify import sympify
+from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
-from sympy.testing.pytest import slow, warns_deprecated_sympy
+from sympy.testing.pytest import slow
 
 
 @slow
@@ -74,8 +77,7 @@ def test_linearize_rolling_disc_kane():
     KM = KanesMethod(N, [q1, q2, q3, q4, q5], [u1, u2, u3], kd_eqs=kindiffs,
             q_dependent=[q6], configuration_constraints=f_c,
             u_dependent=[u4, u5, u6], velocity_constraints=f_v)
-    with warns_deprecated_sympy():
-        (fr, fr_star) = KM.kanes_equations(FL, BL)
+    (fr, fr_star) = KM.kanes_equations(BL, FL)
 
     # Test generalized form equations
     linearizer = KM.to_linearizer()
@@ -158,8 +160,7 @@ def test_linearize_pendulum_kane_minimal():
 
     # Solve for eom with kanes method
     KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], kd_eqs=kde)
-    with warns_deprecated_sympy():
-        (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
+    (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
 
     # Linearize
     A, B, inp_vec = KM.linearize(A_and_B=True, simplify=True)
@@ -218,8 +219,7 @@ def test_linearize_pendulum_kane_nonminimal():
     KM = KanesMethod(N, q_ind=[q2], u_ind=[u2], q_dependent=[q1],
             u_dependent=[u1], configuration_constraints=f_c,
             velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde)
-    with warns_deprecated_sympy():
-        (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
+    (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
 
     # Set the operating point to be straight down, and non-moving
     q_op = {q1: L, q2: 0}
@@ -260,7 +260,7 @@ def test_linearize_pendulum_lagrange_minimal():
     # Linearize
     A, B, inp_vec = LM.linearize([q1], [q1d], A_and_B=True)
 
-    assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
+    assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
 
 def test_linearize_pendulum_lagrange_nonminimal():
@@ -293,7 +293,7 @@ def test_linearize_pendulum_lagrange_nonminimal():
     # Perform the Linearization
     A, B, inp_vec = LM.linearize([q2], [q2d], [q1], [q1d],
             op_point=op_point, A_and_B=True)
-    assert A == Matrix([[0, 1], [-9.8/L, 0]])
+    assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
 
 def test_linearize_rolling_disc_lagrange():

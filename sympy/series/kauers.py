@@ -1,6 +1,3 @@
-from __future__ import print_function, division
-
-
 def finite_diff(expression, variable, increment=1):
     """
     Takes as input a polynomial expression and the variable used to construct

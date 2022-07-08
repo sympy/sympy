@@ -10,7 +10,7 @@ from .matexpr import MatrixExpr, MatrixSymbol, matrix_symbols
 from .matmul import MatMul
 from .matpow import MatPow
 from .trace import Trace, trace
-from .determinant import Determinant, det
+from .determinant import Determinant, det, Permanent, per
 from .transpose import Transpose
 from .adjoint import Adjoint
 from .hadamard import hadamard_product, HadamardProduct, hadamard_power, HadamardPower
@@ -57,4 +57,6 @@ __all__ = [
     'kronecker_product', 'KroneckerProduct', 'combine_kronecker',
 
     'PermutationMatrix', 'MatrixPermute',
+
+    'Permanent', 'per'
 ]

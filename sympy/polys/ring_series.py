@@ -15,7 +15,7 @@ There are a few things to be kept in mind when adding a new function here::
 
       Strictly speaking, a generator of a ring should not be considered a
       constant. However, for series expansion both the cases need similar
-      treatment (as the user doesn't care about inner details), i.e, use an
+      treatment (as the user does not care about inner details), i.e, use an
       addition formula to separate the constant part and the variable part (see
       rs_sin for reference).
 
@@ -49,8 +49,8 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
-from sympy.core.compatibility import as_int
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
+from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import giant_steps
 import math
 
@@ -82,8 +82,8 @@ def _invert_monoms(p1):
     p = R.zero
     cv = p1.listcoeffs()
     mv = p1.listmonoms()
-    for i in range(len(mv)):
-        p[(deg - mv[i][0],)] = cv[i]
+    for mvi, cvi in zip(mv, cv):
+        p[(deg - mvi[0],)] = cvi
     return p
 
 def _giant_steps(target):
@@ -233,7 +233,7 @@ def rs_mul(p1, p2, x, prec):
         raise ValueError('p1 and p2 must have the same ring')
     iv = R.gens.index(x)
     if not isinstance(p2, PolyElement):
-        raise ValueError('p1 and p2 must have the same ring')
+        raise ValueError('p2 must be a polynomial')
     if R == p2.ring:
         get = p.get
         items2 = list(p2.items())
@@ -941,7 +941,7 @@ def rs_nth_root(p, n, x, prec):
 
     The result of this function is dependent on the ring over which the
     polynomial has been defined. If the answer involves a root of a constant,
-    make sure that the polynomial is over a real field. It can not yet handle
+    make sure that the polynomial is over a real field. It cannot yet handle
     roots of symbols.
 
     Examples
@@ -981,13 +981,13 @@ def rs_nth_root(p, n, x, prec):
                 c_expr = c.as_expr()
                 const = R(c_expr**(QQ(1, n)))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         else:
             try:                              # RealElement doesn't support
                 const = R(c**Rational(1, n))  # exponentiation with mpq object
             except ValueError:                # as exponent
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         res = rs_nth_root(p/c, n, x, prec)*const
     else:
@@ -1045,7 +1045,7 @@ def rs_log(p, x, prec):
                 try:
                     const = R(log(c))
                 except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise DomainError("The given series cannot be expanded in "
                         "this domain.")
 
         dlog = p.diff(x)
@@ -1139,11 +1139,11 @@ def rs_exp(p, x, prec):
             try:
                 const = R(exp(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy functions to evaluate the values of the cos/sin
+    # Makes use of SymPy functions to evaluate the values of the cos/sin
     # of the constant term.
         return const*rs_exp(p1, x, prec)
 
@@ -1212,13 +1212,13 @@ def rs_atan(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(atan(c_expr))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         else:
             try:
                 const = R(atan(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
 
     # Instead of using a closed form formula, we differentiate atan(p) to get
@@ -1341,11 +1341,11 @@ def rs_tan(p, x, prec):
             try:
                 const = R(tan(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy functions to evaluate the values of the cos/sin
+    # Makes use of SymPy functions to evaluate the values of the cos/sin
     # of the constant term.
         t2 = rs_tan(p1, x, prec)
         t = rs_series_inversion(1 - const*t2, x, prec)
@@ -1439,11 +1439,11 @@ def rs_sin(p, x, prec):
             try:
                 t1, t2 = R(sin(c)), R(cos(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy cos, sin functions to evaluate the values of the
+    # Makes use of SymPy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
         return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
 
@@ -1506,11 +1506,11 @@ def rs_cos(p, x, prec):
             try:
                 _, _ = R(sin(c)), R(cos(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy cos, sin functions to evaluate the values of the
+    # Makes use of SymPy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
         p_cos = rs_cos(p1, x, prec)
         p_sin = rs_sin(p1, x, prec)
@@ -1600,13 +1600,13 @@ def rs_atanh(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(atanh(c_expr))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         else:
             try:
                 const = R(atanh(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
 
     # Instead of using a closed form formula, we differentiate atanh(p) to get
@@ -1729,13 +1729,13 @@ def rs_tanh(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(tanh(c_expr))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         else:
             try:
                 const = R(tanh(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         p1 = p - c
         t1 = rs_tanh(p1, x, prec)
@@ -1967,7 +1967,7 @@ def rs_series(expr, a, prec):
     prec : order of the series expansion
 
     Currently supports multivariate Taylor series expansion. This is much
-    faster that Sympy's series method as it uses sparse polynomial operations.
+    faster that SymPy's series method as it uses sparse polynomial operations.
 
     It automatically creates the simplest ring required to represent the series
     expansion through repeated calls to sring.
@@ -1976,9 +1976,7 @@ def rs_series(expr, a, prec):
     ========
 
     >>> from sympy.polys.ring_series import rs_series
-    >>> from sympy.functions import sin, cos, exp, tan
-    >>> from sympy.core import symbols
-    >>> from sympy.polys.domains import QQ
+    >>> from sympy import sin, cos, exp, tan, symbols, QQ
     >>> a, b, c = symbols('a, b, c')
     >>> rs_series(sin(a) + exp(a), a, 5)
     1/24*a**4 + 1/2*a**2 + 2*a + 1

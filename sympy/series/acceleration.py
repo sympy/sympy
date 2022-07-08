@@ -9,9 +9,9 @@ Springer 1999. (Shanks transformation: pp. 368-375, Richardson
 extrapolation: pp. 375-377.)
 """
 
-from __future__ import print_function, division
-
-from sympy import factorial, Integer, S
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
+from sympy.functions.combinatorial.factorials import factorial
 
 
 def richardson(A, k, n, N):
@@ -19,6 +19,9 @@ def richardson(A, k, n, N):
     Calculate an approximation for lim k->oo A(k) using Richardson
     extrapolation with the terms A(n), A(n+1), ..., A(n+N+1).
     Choosing N ~= 2*n often gives good results.
+
+    Examples
+    ========
 
     A simple example is to calculate exp(1) using the limit definition.
     This limit converges slowly; n = 100 only produces two accurate
@@ -60,8 +63,8 @@ def richardson(A, k, n, N):
     """
     s = S.Zero
     for j in range(0, N + 1):
-        s += A.subs(k, Integer(n + j)).doit() * (n + j)**N * (-1)**(j + N) / \
-            (factorial(j) * factorial(N - j))
+        s += (A.subs(k, Integer(n + j)).doit() * (n + j)**N *
+              S.NegativeOne**(j + N) / (factorial(j) * factorial(N - j)))
     return s
 
 

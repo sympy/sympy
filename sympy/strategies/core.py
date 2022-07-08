@@ -1,7 +1,4 @@
 """ Generic SymPy-Independent Strategies """
-from __future__ import print_function, division
-
-from sympy.core.compatibility import get_function_name
 
 identity = lambda x: x
 
@@ -54,7 +51,7 @@ def debug(rule, file=None):
         expr = args[0]
         result = rule(*args, **kwargs)
         if result != expr:
-            file.write("Rule: %s\n" % get_function_name(rule))
+            file.write("Rule: %s\n" % rule.__name__)
             file.write("In:   %s\nOut:  %s\n\n"%(expr, result))
         return result
     return debug_rl
@@ -95,7 +92,7 @@ def switch(key, ruledict):
         return rl(expr)
     return switch_rl
 
-def minimize(*rules, **kwargs):
+def minimize(*rules, objective=identity):
     """ Select result of rules that minimizes objective
 
     >>> from sympy.strategies import minimize
@@ -110,7 +107,6 @@ def minimize(*rules, **kwargs):
     5
     """
 
-    objective = kwargs.get('objective', identity)
     def minrule(expr):
         return min([rule(expr) for rule in rules], key=objective)
     return minrule

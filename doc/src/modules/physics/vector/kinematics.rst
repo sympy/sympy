@@ -421,7 +421,7 @@ It should be clear by now that the topic of kinematics here has been mostly
 describing the correct way to manipulate vectors into representing the
 velocities of points. Within :mod:`sympy.physics.vector` there are convenient methods for
 storing these velocities associated with frames and points. We'll now revisit
-the above examples and show how to represent them in :mod:`sympy`.
+the above examples and show how to represent them in ``sympy``.
 
 The topic of reference frame creation has already been covered. When a
 ``ReferenceFrame`` is created though, it automatically calculates the angular

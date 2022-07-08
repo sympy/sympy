@@ -25,7 +25,10 @@
     metric(LorentzIndex,LorentzIndex)
 
 """
-from sympy import S, Mul, eye, trace
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.matrices.dense import eye
+from sympy.matrices.expressions.trace import trace
 from sympy.tensor.tensor import TensorIndexType, TensorIndex,\
     TensMul, TensAdd, tensor_mul, Tensor, TensorHead, TensorSymmetry
 
@@ -482,9 +485,7 @@ def kahane_simplify(expression):
     # All values in `links` are integers, negative numbers are used in the case
     # where it is necessary to insert gamma matrices between free indices, in
     # order to make Kahane's algorithm work (see paper).
-    links = dict()
-    for i in range(first_dum_pos, total_number):
-        links[i] = []
+    links = {i: [] for i in range(first_dum_pos, total_number)}
 
     # `cum_sign` is a step variable to mark the sign of every index, see paper.
     cum_sign = -1

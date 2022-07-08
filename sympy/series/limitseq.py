@@ -1,7 +1,6 @@
 """Limits of sequences"""
 
-from __future__ import print_function, division
-
+from sympy.calculus.accumulationbounds import AccumulationBounds
 from sympy.core.add import Add
 from sympy.core.function import PoleError
 from sympy.core.power import Pow
@@ -19,6 +18,9 @@ from sympy.series.limits import Limit
 
 def difference_delta(expr, n=None, step=1):
     """Difference Operator.
+
+    Explanation
+    ===========
 
     Discrete analog of differential operator. Given a sequence x[n],
     returns the sequence x[n + step] - x[n].
@@ -66,6 +68,9 @@ def dominant(expr, n):
     """Finds the dominant term in a sum, that is a term that dominates
     every other term.
 
+    Explanation
+    ===========
+
     If limit(a/b, n, oo) is oo then a dominates b.
     If limit(a/b, n, oo) is 0 then b dominates a.
     Otherwise, a and b are comparable.
@@ -92,7 +97,10 @@ def dominant(expr, n):
     term0 = terms[-1]
     comp = [term0]  # comparable terms
     for t in terms[:-1]:
-        e = (term0 / t).gammasimp()
+        r = term0/t
+        e = r.gammasimp()
+        if e == r:
+            e = r.factor()
         l = limit_seq(e, n)
         if l is None:
             return None
@@ -151,13 +159,13 @@ def _limit_seq(expr, n, trials):
 
 
 def limit_seq(expr, n=None, trials=5):
-    """Finds the limit of a sequence as index n tends to infinity.
+    """Finds the limit of a sequence as index ``n`` tends to infinity.
 
     Parameters
     ==========
 
     expr : Expr
-        SymPy expression for the n-th term of the sequence
+        SymPy expression for the ``n-th`` term of the sequence
     n : Symbol, optional
         The index of the sequence, an integer that tends to positive
         infinity. If None, inferred from the expression unless it has
@@ -199,7 +207,6 @@ def limit_seq(expr, n=None, trials=5):
     """
 
     from sympy.concrete.summations import Sum
-    from sympy.calculus.util import AccumulationBounds
     if n is None:
         free = expr.free_symbols
         if len(free) == 1:

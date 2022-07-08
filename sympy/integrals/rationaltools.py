@@ -1,17 +1,30 @@
 """This module implements tools for integrating rational functions. """
 
-from sympy import S, Symbol, symbols, I, log, atan, \
-    roots, RootSum, Lambda, cancel, Dummy
-
+from sympy.core.function import Lambda
+from sympy.core.numbers import I
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import atan
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import cancel
+from sympy.polys.rootoftools import RootSum
 from sympy.polys import Poly, resultant, ZZ
+
 
 def ratint(f, x, **flags):
     """
     Performs indefinite integration of rational functions.
 
+    Explanation
+    ===========
+
     Given a field :math:`K` and a rational function :math:`f = p/q`,
     where :math:`p` and :math:`q` are polynomials in :math:`K[x]`,
     returns a function :math:`g` such that :math:`f = g'`.
+
+    Examples
+    ========
 
     >>> from sympy.integrals.rationaltools import ratint
     >>> from sympy.abc import x
@@ -22,7 +35,7 @@ def ratint(f, x, **flags):
     References
     ==========
 
-    .. [Bro05] M. Bronstein, Symbolic Integration I: Transcendental
+    .. [1] M. Bronstein, Symbolic Integration I: Transcendental
        Functions, Second Edition, Springer-Verlag, 2005, pp. 35-70
 
     See Also
@@ -33,10 +46,10 @@ def ratint(f, x, **flags):
     sympy.integrals.rationaltools.ratint_ratpart
 
     """
-    if type(f) is not tuple:
-        p, q = f.as_numer_denom()
-    else:
+    if isinstance(f, tuple):
         p, q = f
+    else:
+        p, q = f.as_numer_denom()
 
     p, q = Poly(p, x, composite=False, field=True), Poly(q, x, composite=False, field=True)
 
@@ -72,12 +85,11 @@ def ratint(f, x, **flags):
         real = flags.get('real')
 
         if real is None:
-            if type(f) is not tuple:
-                atoms = f.atoms()
-            else:
+            if isinstance(f, tuple):
                 p, q = f
-
                 atoms = p.atoms() | q.atoms()
+            else:
+                atoms = f.atoms()
 
             for elt in atoms - {x}:
                 if not elt.is_extended_real:
@@ -113,6 +125,9 @@ def ratint_ratpart(f, g, x):
     """
     Horowitz-Ostrogradsky algorithm.
 
+    Explanation
+    ===========
+
     Given a field K and polynomials f and g in K[x], such that f and g
     are coprime and deg(f) < deg(g), returns fractions A and B in K(x),
     such that f/g = A' + B and B has square-free denominator.
@@ -138,7 +153,7 @@ def ratint_ratpart(f, g, x):
 
     ratint, ratint_logpart
     """
-    from sympy import solve
+    from sympy.solvers.solvers import solve
 
     f = Poly(f, x)
     g = Poly(g, x)
@@ -172,6 +187,9 @@ def ratint_ratpart(f, g, x):
 def ratint_logpart(f, g, x, t=None):
     r"""
     Lazard-Rioboo-Trager algorithm.
+
+    Explanation
+    ===========
 
     Given a field K and polynomials f and g in K[x], such that f and g
     are coprime, deg(f) < deg(g) and g is square-free, returns a list
@@ -212,7 +230,7 @@ def ratint_logpart(f, g, x, t=None):
     res, R = resultant(a, b, includePRS=True)
     res = Poly(res, t, composite=False)
 
-    assert res, "BUG: resultant(%s, %s) can't be zero" % (a, b)
+    assert res, "BUG: resultant(%s, %s) cannot be zero" % (a, b)
 
     R_map, H = {}, []
 
@@ -261,6 +279,9 @@ def log_to_atan(f, g):
     """
     Convert complex logarithms to real arctangents.
 
+    Explanation
+    ===========
+
     Given a real field K and polynomials f and g in K[x], with g != 0,
     returns a sum h of arctangents of polynomials in K[x], such that:
 
@@ -307,6 +328,9 @@ def log_to_real(h, q, x, t):
     r"""
     Convert complex logarithms to real functions.
 
+    Explanation
+    ===========
+
     Given real field K and polynomials h in K[t,x] and q in K[t],
     returns real function f such that:
                           ___
@@ -333,7 +357,7 @@ def log_to_real(h, q, x, t):
 
     log_to_atan
     """
-    from sympy import collect
+    from sympy.simplify.radsimp import collect
     u, v = symbols('u,v', cls=Dummy)
 
     H = h.as_expr().subs({t: u + I*v}).expand()

@@ -1,4 +1,4 @@
-from sympy import Float
+from sympy.core.numbers import Float
 
 from sympy.physics.quantum.constants import hbar
 

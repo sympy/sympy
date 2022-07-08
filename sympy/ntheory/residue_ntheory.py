@@ -1,13 +1,18 @@
-from sympy.core.compatibility import as_int
+from __future__ import annotations
+
 from sympy.core.function import Function
-from sympy.utilities.iterables import cartes
 from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
 from sympy.core.singleton import S
+from sympy.polys import Poly
+from sympy.polys.domains import ZZ
+from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
-from random import randint, Random
+from sympy.utilities.misc import as_int
+from sympy.core.random import _randint, randint
 
+from itertools import cycle, product
 
 
 def n_order(a, n):
@@ -277,8 +282,7 @@ def _product(*iters):
     Author: Fernando Sumudu
     with small changes
     """
-    import itertools
-    inf_iters = tuple(itertools.cycle(enumerate(it)) for it in iters)
+    inf_iters = tuple(cycle(enumerate(it)) for it in iters)
     num_iters = len(inf_iters)
     cur_val = [None]*num_iters
 
@@ -316,8 +320,6 @@ def sqrt_mod_iter(a, p, domain=int):
     >>> list(sqrt_mod_iter(11, 43))
     [21, 22]
     """
-    from sympy.polys.galoistools import gf_crt1, gf_crt2
-    from sympy.polys.domains import ZZ
     a, p = as_int(a), abs(as_int(p))
     if isprime(p):
         a = a % p
@@ -382,9 +384,6 @@ def _sqrt_mod_prime_power(a, p, k):
     .. [2] http://www.numbertheory.org/php/squareroot.html
     .. [3] [Gathen99]_
     """
-    from sympy.core.numbers import igcdex
-    from sympy.polys.domains import ZZ
-
     pk = p**k
     a = a % pk
 
@@ -645,7 +644,7 @@ def is_nthpow_residue(a, n, m):
 
 
 def _is_nthpow_residue_bign(a, n, m):
-    """Returns True if ``x**n == a (mod m)`` has solutions for n > 2."""
+    r"""Returns True if `x^n = a \pmod{n}` has solutions for `n > 2`."""
     # assert n > 2
     # assert a > 0 and m > 0
     if primitive_root(m) is None or igcd(a, m) != 1:
@@ -655,13 +654,13 @@ def _is_nthpow_residue_bign(a, n, m):
                 return False
         return True
     f = totient(m)
-    k = f // igcd(f, n)
-    return pow(a, k, m) == 1
+    k = int(f // igcd(f, n))
+    return pow(a, k, int(m)) == 1
 
 
 def _is_nthpow_residue_bign_prime_power(a, n, p, k):
-    """Returns True/False if a solution for ``x**n == a (mod(p**k))``
-    does/doesn't exist."""
+    r"""Returns True/False if a solution for `x^n = a \pmod{p^k}`
+    does/does not exist."""
     # assert a > 0
     # assert n > 2
     # assert p is prime
@@ -795,7 +794,8 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
     for x, y in dd.items():
         m.append(x)
         a.append(list(y))
-    return sorted({crt(m, list(i))[0] for i in cartes(*a)})
+    return sorted({crt(m, list(i))[0] for i in product(*a)})
+
 
 def _nthroot_mod_composite(a, n, m):
     """
@@ -830,7 +830,6 @@ def nthroot_mod(a, n, p, all_roots=False):
     >>> nthroot_mod(68, 3, 109)
     23
     """
-    from sympy.core.numbers import igcdex
     a = a % p
     a, n, p = as_int(a), as_int(n), as_int(p)
 
@@ -868,13 +867,13 @@ def nthroot_mod(a, n, p, all_roots=False):
         else:
             res = a
     elif pa == 2:
-        return sqrt_mod(a, p , all_roots)
+        return sqrt_mod(a, p, all_roots)
     else:
         res = _nthroot_mod1(a, pa, p, all_roots)
     return res
 
 
-def quadratic_residues(p):
+def quadratic_residues(p) -> list[int]:
     """
     Returns the list of quadratic residues.
 
@@ -886,10 +885,8 @@ def quadratic_residues(p):
     [0, 1, 2, 4]
     """
     p = as_int(p)
-    r = set()
-    for i in range(p // 2 + 1):
-        r.add(pow(i, 2, p))
-    return sorted(list(r))
+    r = {pow(i, 2, p) for i in range(p // 2 + 1)}
+    return sorted(r)
 
 
 def legendre_symbol(a, p):
@@ -999,7 +996,7 @@ def jacobi_symbol(m, n):
     if n < 0 or not n % 2:
         raise ValueError("n should be an odd positive integer")
     if m < 0 or m > n:
-        m = m % n
+        m %= n
     if not m:
         return int(n == 1)
     if n == 1 or m == 1:
@@ -1008,21 +1005,15 @@ def jacobi_symbol(m, n):
         return 0
 
     j = 1
-    if m < 0:
-        m = -m
-        if n % 4 == 3:
-            j = -j
     while m != 0:
         while m % 2 == 0 and m > 0:
             m >>= 1
             if n % 8 in [3, 5]:
                 j = -j
         m, n = n, m
-        if m % 4 == 3 and n % 4 == 3:
+        if m % 4 == n % 4 == 3:
             j = -j
         m %= n
-    if n != 1:
-        j = 0
     return j
 
 
@@ -1154,7 +1145,7 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     if order is None:
         order = n_order(b, n)
     m = isqrt(order) + 1
-    T = dict()
+    T = {}
     x = 1
     for i in range(m):
         T[x] = i
@@ -1200,13 +1191,11 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
     if order is None:
         order = n_order(b, n)
-    prng = Random()
-    if rseed is not None:
-        prng.seed(rseed)
+    randint = _randint(rseed)
 
     for i in range(retries):
-        aa = prng.randint(1, order - 1)
-        ba = prng.randint(1, order - 1)
+        aa = randint(1, order - 1)
+        ba = randint(1, order - 1)
         xa = pow(b, aa, n) * pow(a, ba, n) % n
 
         c = xa % 3
@@ -1378,7 +1367,6 @@ def quadratic_congruence(a, b, c, p):
     c : integer
     p : positive integer
     """
-    from sympy.polys.galoistools import linear_congruence
     a = as_int(a)
     b = as_int(b)
     c = as_int(c)
@@ -1408,7 +1396,7 @@ def quadratic_congruence(a, b, c, p):
         for i in y:
             res.add((i - b // 2) % p)
         return sorted(res)
-    y = sqrt_mod(b * b - 4 * a * c , 4 * a * p, all_roots=True)
+    y = sqrt_mod(b * b - 4 * a * c, 4 * a * p, all_roots=True)
     res = set()
     for i in y:
         root = linear_congruence(2 * a, i - b, 4 * a * p)
@@ -1490,12 +1478,10 @@ def _valid_expr(expr):
     with integer coefficients else raise a ValueError.
     """
 
-    from sympy import Poly
-    from sympy.polys.domains import ZZ
     if not expr.is_polynomial():
         raise ValueError("The expression should be a polynomial")
     polynomial = Poly(expr)
-    if not  polynomial.is_univariate:
+    if not polynomial.is_univariate:
         raise ValueError("The expression should be univariate")
     if not polynomial.domain == ZZ:
         raise ValueError("The expression should should have integer coefficients")

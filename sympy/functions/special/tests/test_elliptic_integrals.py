@@ -1,8 +1,16 @@
-from sympy import (S, Symbol, pi, I, oo, zoo, sin, sqrt, tan, gamma,
-    atanh, hyper, meijerg, O, Dummy, Integral, Rational)
+from sympy.core.numbers import (I, Rational, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.elementary.hyperbolic import atanh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (sin, tan)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.integrals.integrals import Integral
+from sympy.series.order import O
 from sympy.functions.special.elliptic_integrals import (elliptic_k as K,
     elliptic_f as F, elliptic_e as E, elliptic_pi as P)
-from sympy.testing.randtest import (test_derivative_numerically as td,
+from sympy.core.random import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       verify_numerically as tn)
 from sympy.abc import z, m, n
@@ -27,7 +35,7 @@ def test_K():
 
     zi = Symbol('z', real=False)
     assert K(zi).conjugate() == K(zi.conjugate())
-    zr = Symbol('z', real=True, negative=True)
+    zr = Symbol('z', negative=True)
     assert K(zr).conjugate() == K(zr)
 
     assert K(z).rewrite(hyper) == \
@@ -61,7 +69,7 @@ def test_F():
 
     mi = Symbol('m', real=False)
     assert F(z, mi).conjugate() == F(z.conjugate(), mi.conjugate())
-    mr = Symbol('m', real=True, negative=True)
+    mr = Symbol('m', negative=True)
     assert F(z, mr).conjugate() == F(z.conjugate(), mr)
 
     assert F(z, m).series(z) == \
@@ -95,7 +103,7 @@ def test_E():
     mi = Symbol('m', real=False)
     assert E(z, mi).conjugate() == E(z.conjugate(), mi.conjugate())
     assert E(mi).conjugate() == E(mi.conjugate())
-    mr = Symbol('m', real=True, negative=True)
+    mr = Symbol('m', negative=True)
     assert E(z, mr).conjugate() == E(z.conjugate(), mr)
     assert E(mr).conjugate() == E(mr)
 
@@ -138,8 +146,8 @@ def test_P():
     ni, mi = Symbol('n', real=False), Symbol('m', real=False)
     assert P(ni, z, mi).conjugate() == \
         P(ni.conjugate(), z.conjugate(), mi.conjugate())
-    nr, mr = Symbol('n', real=True, negative=True), \
-        Symbol('m', real=True, negative=True)
+    nr, mr = Symbol('n', negative=True), \
+        Symbol('m', negative=True)
     assert P(nr, z, mr).conjugate() == P(nr, z.conjugate(), mr)
     assert P(n, m).conjugate() == P(n.conjugate(), m.conjugate())
 
@@ -152,10 +160,15 @@ def test_P():
     assert P(n, m).diff(n) == (E(m) + (m - n)*K(m)/n +
         (n**2 - m)*P(n, m)/n)/(2*(m - n)*(n - 1))
     assert P(n, m).diff(m) == (E(m)/(m - 1) + P(n, m))/(2*(n - m))
-    rx, ry = randcplx(), randcplx()
-    assert td(P(n, rx, ry), n)
-    assert td(P(rx, z, ry), z)
-    assert td(P(rx, ry, m), m)
+
+    # These tests fail due to
+    # https://github.com/fredrik-johansson/mpmath/issues/571#issuecomment-777201962
+    # https://github.com/sympy/sympy/issues/20933#issuecomment-777080385
+    #
+    # rx, ry = randcplx(), randcplx()
+    # assert td(P(n, rx, ry), n)
+    # assert td(P(rx, z, ry), z)
+    # assert td(P(rx, ry, m), m)
 
     assert P(n, z, m).series(z) == z + z**3*(m/6 + n/3) + \
         z**5*(3*m**2/40 + m*n/10 - m/30 + n**2/5 - n/15) + O(z**6)

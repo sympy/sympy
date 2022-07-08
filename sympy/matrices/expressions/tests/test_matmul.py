@@ -1,4 +1,5 @@
 from sympy.core import I, symbols, Basic, Mul, S
+from sympy.core.mul import mul
 from sympy.functions import adjoint, transpose
 from sympy.matrices import (Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix,
         eye, ImmutableMatrix)
@@ -7,7 +8,9 @@ from sympy.matrices.expressions.special import GenericIdentity
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, combine_powers, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
-from sympy import refine, Q, Symbol
+from sympy.assumptions.ask import Q
+from sympy.assumptions.refine import refine
+from sympy.core.symbol import Symbol
 
 from sympy.testing.pytest import XFAIL
 
@@ -62,6 +65,10 @@ def test_remove_ids():
 def test_combine_powers():
     assert combine_powers(MatMul(D, Inverse(D), D, evaluate=False)) == \
                  MatMul(Identity(n), D, evaluate=False)
+    assert combine_powers(MatMul(B.T, Inverse(E*A), E, A, B, evaluate=False)) == \
+        MatMul(B.T, Identity(m), B, evaluate=False)
+    assert combine_powers(MatMul(A, E, Inverse(A*E), D, evaluate=False)) == \
+        MatMul(Identity(n), D, evaluate=False)
 
 
 def test_any_zeros():
@@ -153,6 +160,20 @@ def test_construction_with_Mul():
     assert Mul(C, D) == MatMul(C, D)
     assert Mul(D, C) == MatMul(D, C)
 
+def test_construction_with_mul():
+    assert mul(C, D) == MatMul(C, D)
+    assert mul(D, C) == MatMul(D, C)
+    assert mul(C, D) != MatMul(D, C)
+
 def test_generic_identity():
     assert MatMul.identity == GenericIdentity()
     assert MatMul.identity != S.One
+
+
+def test_issue_23519():
+    N = Symbol("N", integer=True)
+    M1 = MatrixSymbol("M1", N, N)
+    M2 = MatrixSymbol("M2", N, N)
+    I = Identity(N)
+    z = (M2 + 2 * (M2 + I) * M1 + I)
+    assert z.coeff(M1) == 2*I + 2*M2

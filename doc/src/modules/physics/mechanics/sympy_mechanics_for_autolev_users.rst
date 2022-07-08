@@ -680,10 +680,10 @@ The tools in the PyDy workflow are :
     offers introspection, rich media, shell syntax, tab completion,
     and history.
 
--  `Theano <http://deeplearning.net/software/theano/>`_: Theano is
-    a numerical computation library for Python. In Theano,
+-  `Aesara <https://aesara.readthedocs.io/en/latest/>`_: Aesara is
+    a numerical computation library for Python. In Aesara,
     computations are expressed using a NumPy-esque syntax and
-    compiled to run efficiently on either CPU or GPU architectures
+    compiled to run efficiently on either CPU or GPU architectures.
 
 -  `Cython <http://cython.org/>`_: Cython is a superset of the
     Python programming language, designed to give C-like performance

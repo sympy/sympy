@@ -1,11 +1,31 @@
-from sympy import symbols, pi, sin, cos, ImmutableMatrix as Matrix
+from sympy.core.numbers import (Float, pi)
+from sympy.core.symbol import symbols
+from sympy.core.sorting import ordered
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols, dot
+from sympy.physics.vector.vector import VectorTypeError
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
 
 
 Vector.simp = True
 A = ReferenceFrame('A')
+
+
+def test_free_dynamicsymbols():
+    A, B, C, D = symbols('A, B, C, D', cls=ReferenceFrame)
+    a, b, c, d, e, f = dynamicsymbols('a, b, c, d, e, f')
+    B.orient_axis(A, a, A.x)
+    C.orient_axis(B, b, B.y)
+    D.orient_axis(C, c, C.x)
+
+    v = d*D.x + e*D.y + f*D.z
+
+    assert set(ordered(v.free_dynamicsymbols(A))) == {a, b, c, d, e, f}
+    assert set(ordered(v.free_dynamicsymbols(B))) == {b, c, d, e, f}
+    assert set(ordered(v.free_dynamicsymbols(C))) == {c, d, e, f}
+    assert set(ordered(v.free_dynamicsymbols(D))) == {d, e, f}
 
 
 def test_Vector():
@@ -78,7 +98,7 @@ def test_Vector_diffs():
 
     assert v1.dt(N) == q2d * A.x + q2 * q3d * A.y + q3d * N.y
     assert v1.dt(A) == q2d * A.x + q3 * q3d * N.x + q3d * N.y
-    assert v1.dt(B) == (q2d * A.x + q3 * q3d * N.x + q3d *\
+    assert v1.dt(B) == (q2d * A.x + q3 * q3d * N.x + q3d *
                         N.y - q3 * cos(q3) * q2d * N.z)
     assert v2.dt(N) == (q2d * A.x + (q2 + q3) * q3d * A.y + q3d * B.x + q3d *
                         N.y)
@@ -129,6 +149,24 @@ def test_Vector_diffs():
     assert v4.diff(q2d, B) == A.x - q3 * cos(q3) * N.z
     assert v4.diff(q3d, B) == B.x + q3 * N.x + N.y
 
+    # diff() should only express vector components in the derivative frame if
+    # the orientation of the component's frame depends on the variable
+    v6 = q2**2*N.y + q2**2*A.y + q2**2*B.y
+    # already expressed in N
+    n_measy = 2*q2
+    # A_C_N does not depend on q2, so don't express in N
+    a_measy = 2*q2
+    # B_C_N depends on q2, so express in N
+    b_measx = (q2**2*B.y).dot(N.x).diff(q2)
+    b_measy = (q2**2*B.y).dot(N.y).diff(q2)
+    b_measz = (q2**2*B.y).dot(N.z).diff(q2)
+    n_comp, a_comp = v6.diff(q2, N).args
+    assert len(v6.diff(q2, N).args) == 2  # only N and A parts
+    assert n_comp[1] == N
+    assert a_comp[1] == A
+    assert n_comp[0] == Matrix([b_measx, b_measy + n_measy, b_measz])
+    assert a_comp[0] == Matrix([0, a_measy, 0])
+
 
 def test_vector_var_in_dcm():
 
@@ -169,3 +207,41 @@ def test_vector_simplify():
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * N.x
     test4 = test4.simplify()
     assert (test4 & N.x) == -2 * y
+
+
+def test_vector_evalf():
+    a, b = symbols('a b')
+    v = pi * A.x
+    assert v.evalf(2) == Float('3.1416', 2) * A.x
+    v = pi * A.x + 5 * a * A.y - b * A.z
+    assert v.evalf(3) == Float('3.1416', 3) * A.x + Float('5', 3) * a * A.y - b * A.z
+    assert v.evalf(5, subs={a: 1.234, b:5.8973}) == Float('3.1415926536', 5) * A.x + Float('6.17', 5) * A.y - Float('5.8973', 5) * A.z
+
+
+def test_vector_angle():
+    A = ReferenceFrame('A')
+    v1 = A.x + A.y
+    v2 = A.z
+    assert v1.angle_between(v2) == pi/2
+    B = ReferenceFrame('B')
+    B.orient_axis(A, A.x, pi)
+    v3 = A.x
+    v4 = B.x
+    assert v3.angle_between(v4) == 0
+
+
+def test_vector_xreplace():
+    x, y, z = symbols('x y z')
+    v = x**2 * A.x + x*y * A.y + x*y*z * A.z
+    assert v.xreplace({x : cos(x)}) == cos(x)**2 * A.x + y*cos(x) * A.y + y*z*cos(x) * A.z
+    assert v.xreplace({x*y : pi}) == x**2 * A.x + pi * A.y + x*y*z * A.z
+    assert v.xreplace({x*y*z : 1}) == x**2*A.x + x*y*A.y + A.z
+    assert v.xreplace({x:1, z:0}) == A.x + y * A.y
+    raises(TypeError, lambda: v.xreplace())
+    raises(TypeError, lambda: v.xreplace([x, y]))
+
+def test_issue_23366():
+    u1 = dynamicsymbols('u1')
+    N = ReferenceFrame('N')
+    N_v_A = u1*N.x
+    raises(VectorTypeError, lambda: N_v_A.diff(N, u1))

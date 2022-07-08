@@ -54,9 +54,9 @@ an ``Interval`` or ``ImageSet`` of the solutions.
     >>> solveset(x - x, x, domain=S.Reals)
     ℝ
     >>> solveset(sin(x) - 1, x, domain=S.Reals)
-    ⎧        π        ⎫
-    ⎨2⋅n⋅π + ─ | n ∊ ℤ⎬
-    ⎩        2        ⎭
+    ⎧        π │      ⎫
+    ⎨2⋅n⋅π + ─ │ n ∊ ℤ⎬
+    ⎩        2 │      ⎭
 
 
 If there are no solutions, an ``EmptySet`` is returned and if it
@@ -65,7 +65,7 @@ is not able to find solutions then a ``ConditionSet`` is returned.
     >>> solveset(exp(x), x)     # No solution exists
     ∅
     >>> solveset(cos(x) - x, x)  # Not able to find solution
-    {x | x ∊ ℂ ∧ (-x + cos(x) = 0)}
+    {x │ x ∊ ℂ ∧ (-x + cos(x) = 0)}
 
 
 In the ``solveset`` module, the linear system of equations is solved using ``linsolve``.
@@ -74,20 +74,20 @@ is an example of the syntax of ``linsolve``.
 
 * List of Equations Form:
 
-	>>> linsolve([x + y + z - 1, x + y + 2*z - 3 ], (x, y, z))
-	{(-y - 1, y, 2)}
+    >>> linsolve([x + y + z - 1, x + y + 2*z - 3 ], (x, y, z))
+    {(-y - 1, y, 2)}
 
 * Augmented Matrix Form:
 
-	>>> linsolve(Matrix(([1, 1, 1, 1], [1, 1, 2, 3])), (x, y, z))
-	{(-y - 1, y, 2)}
+    >>> linsolve(Matrix(([1, 1, 1, 1], [1, 1, 2, 3])), (x, y, z))
+    {(-y - 1, y, 2)}
 
 * A*x = b Form
 
-	>>> M = Matrix(((1, 1, 1, 1), (1, 1, 2, 3)))
-	>>> system = A, b = M[:, :-1], M[:, -1]
-	>>> linsolve(system, x, y, z)
-	{(-y - 1, y, 2)}
+    >>> M = Matrix(((1, 1, 1, 1), (1, 1, 2, 3)))
+    >>> system = A, b = M[:, :-1], M[:, -1]
+    >>> linsolve(system, x, y, z)
+    {(-y - 1, y, 2)}
 
 .. note::
 
@@ -99,37 +99,37 @@ In the ``solveset`` module, the non linear system of equations is solved using
 
 1. When only real solution is present:
 
-	>>> a, b, c, d = symbols('a, b, c, d', real=True)
-	>>> nonlinsolve([a**2 + a, a - b], [a, b])
-	{(-1, -1), (0, 0)}
-	>>> nonlinsolve([x*y - 1, x - 2], x, y)
-	{(2, 1/2)}
+    >>> a, b, c, d = symbols('a, b, c, d', real=True)
+    >>> nonlinsolve([a**2 + a, a - b], [a, b])
+    {(-1, -1), (0, 0)}
+    >>> nonlinsolve([x*y - 1, x - 2], x, y)
+    {(2, 1/2)}
 
 2. When only complex solution is present:
 
-	>>> nonlinsolve([x**2 + 1, y**2 + 1], [x, y])
-	{(-ⅈ, -ⅈ), (-ⅈ, ⅈ), (ⅈ, -ⅈ), (ⅈ, ⅈ)}
+    >>> nonlinsolve([x**2 + 1, y**2 + 1], [x, y])
+    {(-ⅈ, -ⅈ), (-ⅈ, ⅈ), (ⅈ, -ⅈ), (ⅈ, ⅈ)}
 
 3. When both real and complex solution are present:
 
-	>>> from sympy import sqrt
-	>>> system = [x**2 - 2*y**2 -2, x*y - 2]
-	>>> vars = [x, y]
-	>>> nonlinsolve(system, vars)
-	{(-2, -1), (2, 1), (-√2⋅ⅈ, √2⋅ⅈ), (√2⋅ⅈ, -√2⋅ⅈ)}
+    >>> from sympy import sqrt
+    >>> system = [x**2 - 2*y**2 -2, x*y - 2]
+    >>> vars = [x, y]
+    >>> nonlinsolve(system, vars)
+    {(-2, -1), (2, 1), (-√2⋅ⅈ, √2⋅ⅈ), (√2⋅ⅈ, -√2⋅ⅈ)}
 
-	>>> system = [exp(x) - sin(y), 1/y - 3]
-	>>> nonlinsolve(system, vars)
-	{({2⋅n⋅ⅈ⋅π + log(sin(1/3)) | n ∊ ℤ}, 1/3)}
+    >>> system = [exp(x) - sin(y), 1/y - 3]
+    >>> nonlinsolve(system, vars)
+    {({2⋅n⋅ⅈ⋅π + log(sin(1/3)) │ n ∊ ℤ}, 1/3)}
 
 4. When the system is positive-dimensional system (has infinitely many solutions):
 
-	>>> nonlinsolve([x*y, x*y - x], [x, y])
-	{(0, y)}
+    >>> nonlinsolve([x*y, x*y - x], [x, y])
+    {(0, y)}
 
-	>>> system = [a**2 + a*c, a - b]
-	>>> nonlinsolve(system, [a, b])
-	{(0, 0), (-c, -c)}
+    >>> system = [a**2 + a*c, a - b]
+    >>> nonlinsolve(system, [a, b])
+    {(0, 0), (-c, -c)}
 
 
 .. note::
@@ -142,6 +142,10 @@ In the ``solveset`` module, the non linear system of equations is solved using
    ``solve`` can be used for such cases:
 
    >>> solve([x**2 - y**2/exp(x)], [x, y], dict=True)
+   ⎡⎧         ____⎫  ⎧        ____⎫⎤
+   ⎢⎨        ╱  x ⎬  ⎨       ╱  x ⎬⎥
+   ⎣⎩y: -x⋅╲╱  ℯ  ⎭, ⎩y: x⋅╲╱  ℯ  ⎭⎦
+   >>> solve(x**2 - y**2/exp(x), x, dict=True)
    ⎡⎧      ⎛-y ⎞⎫  ⎧      ⎛y⎞⎫⎤
    ⎢⎨x: 2⋅W⎜───⎟⎬, ⎨x: 2⋅W⎜─⎟⎬⎥
    ⎣⎩      ⎝ 2 ⎠⎭  ⎩      ⎝2⎠⎭⎦

@@ -26,7 +26,8 @@ __all__ = [
     'PolificationFailed', 'OptionError', 'FlagError',
 
     'minpoly', 'minimal_polynomial', 'primitive_element', 'field_isomorphism',
-    'to_number_field', 'isolate',
+    'to_number_field', 'isolate', 'round_two', 'prime_decomp',
+    'prime_valuation',
 
     'itermonomials', 'Monomial',
 
@@ -42,7 +43,7 @@ __all__ = [
     'GMPYRationalField', 'AlgebraicField', 'PolynomialRing', 'FractionField',
     'ExpressionDomain', 'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy',
     'QQ_python', 'QQ_gmpy', 'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR',
-    'CC', 'EX',
+    'CC', 'EX', 'EXRAW',
 
     'construct_domain',
 
@@ -87,7 +88,8 @@ from .polyerrors import (BasePolynomialError, ExactQuotientFailed,
         FlagError)
 
 from .numberfields import (minpoly, minimal_polynomial, primitive_element,
-        field_isomorphism, to_number_field, isolate)
+        field_isomorphism, to_number_field, isolate, round_two, prime_decomp,
+        prime_valuation)
 
 from .monomials import itermonomials, Monomial
 
@@ -102,7 +104,7 @@ from .domains import (Domain, FiniteField, IntegerRing, RationalField,
         PythonIntegerRing, GMPYIntegerRing, PythonRational, GMPYRationalField,
         AlgebraicField, PolynomialRing, FractionField, ExpressionDomain,
         FF_python, FF_gmpy, ZZ_python, ZZ_gmpy, QQ_python, QQ_gmpy, GF, FF,
-        ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX)
+        ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, EXRAW)
 
 from .constructor import construct_domain
 

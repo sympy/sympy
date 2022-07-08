@@ -11,6 +11,9 @@ __all__ = [
 class Dagger(adjoint):
     """General Hermitian conjugate operation.
 
+    Explanation
+    ===========
+
     Take the Hermetian conjugate of an argument [1]_. For matrices this
     operation is equivalent to transpose and complex conjugate [2]_.
 
@@ -18,7 +21,7 @@ class Dagger(adjoint):
     ==========
 
     arg : Expr
-        The sympy expression that we want to take the dagger of.
+        The SymPy expression that we want to take the dagger of.
 
     Examples
     ========

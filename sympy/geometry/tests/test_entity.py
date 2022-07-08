@@ -1,9 +1,41 @@
-from sympy import Symbol, Rational
-from sympy.geometry import Circle, Ellipse, Line, Point, Polygon, Ray, RegularPolygon, Segment, Triangle
-from sympy.geometry.entity import scale
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.geometry import (Circle, Ellipse, Point, Line, Parabola,
+    Polygon, Ray, RegularPolygon, Segment, Triangle, Plane, Curve)
+from sympy.geometry.entity import scale, GeometryEntity
 from sympy.testing.pytest import raises
 
-from random import random
+
+def test_entity():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+
+    assert GeometryEntity(x, y) in GeometryEntity(x, y)
+    raises(NotImplementedError, lambda: Point(0, 0) in GeometryEntity(x, y))
+
+    assert GeometryEntity(x, y) == GeometryEntity(x, y)
+    assert GeometryEntity(x, y).equals(GeometryEntity(x, y))
+
+    c = Circle((0, 0), 5)
+    assert GeometryEntity.encloses(c, Point(0, 0))
+    assert GeometryEntity.encloses(c, Segment((0, 0), (1, 1)))
+    assert GeometryEntity.encloses(c, Line((0, 0), (1, 1))) is False
+    assert GeometryEntity.encloses(c, Circle((0, 0), 4))
+    assert GeometryEntity.encloses(c, Polygon(Point(0, 0), Point(1, 0), Point(0, 1)))
+    assert GeometryEntity.encloses(c, RegularPolygon(Point(8, 8), 1, 3)) is False
+
+
+def test_svg():
+    a = Symbol('a')
+    b = Symbol('b')
+    d = Symbol('d')
+
+    entity = Circle(Point(a, b), d)
+    assert entity._repr_svg_() is None
+
+    entity = Circle(Point(0, 0), S.Infinity)
+    assert entity._repr_svg_() is None
 
 
 def test_subs():
@@ -51,8 +83,10 @@ def test_reflect_entity_overrides():
     assert c.area == -cr.area
 
     pent = RegularPolygon((1, 2), 1, 5)
-    l = Line(pent.vertices[1],
-        slope=Rational(random() - .5, random() - .5))
+    slope = S.ComplexInfinity
+    while slope is S.ComplexInfinity:
+        slope = Rational(*(x._random()/2).as_real_imag())
+    l = Line(pent.vertices[1], slope=slope)
     rpent = pent.reflect(l)
     assert rpent.center == pent.center.reflect(l)
     rvert = [i.reflect(l) for i in pent.vertices]
@@ -64,3 +98,23 @@ def test_reflect_entity_overrides():
                 break
     assert not rvert
     assert pent.area.equals(-rpent.area)
+
+
+def test_geometry_EvalfMixin():
+    x = pi
+    t = Symbol('t')
+    for g in [
+            Point(x, x),
+            Plane(Point(0, x, 0), (0, 0, x)),
+            Curve((x*t, x), (t, 0, x)),
+            Ellipse((x, x), x, -x),
+            Circle((x, x), x),
+            Line((0, x), (x, 0)),
+            Segment((0, x), (x, 0)),
+            Ray((0, x), (x, 0)),
+            Parabola((0, x), Line((-x, 0), (x, 0))),
+            Polygon((0, 0), (0, x), (x, 0), (x, x)),
+            RegularPolygon((0, x), x, 4, x),
+            Triangle((0, 0), (x, 0), (x, x)),
+            ]:
+        assert str(g).replace('pi', '3.1') == str(g.n(2))

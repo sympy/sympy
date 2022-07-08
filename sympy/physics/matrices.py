@@ -1,13 +1,12 @@
 """Known matrices related to physics"""
 
-from __future__ import print_function, division
-
-from sympy import Matrix, I, pi, sqrt
-from sympy.functions import exp
+from sympy.core.numbers import I
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.utilities.decorator import deprecated
 
 
 def msigma(i):
-    r"""Returns a Pauli matrix `\sigma_i` with `i=1,2,3`
+    r"""Returns a Pauli matrix `\sigma_i` with `i=1,2,3`.
 
     References
     ==========
@@ -24,20 +23,20 @@ def msigma(i):
     [1, 0]])
     """
     if i == 1:
-        mat = ( (
+        mat = (
             (0, 1),
             (1, 0)
-        ) )
+        )
     elif i == 2:
-        mat = ( (
+        mat = (
             (0, -I),
             (I, 0)
-        ) )
+        )
     elif i == 3:
-        mat = ( (
+        mat = (
             (1, 0),
             (0, -1)
-        ) )
+        )
     else:
         raise IndexError("Invalid Pauli index")
     return Matrix(mat)
@@ -77,6 +76,9 @@ def mgamma(mu, lower=False):
     r"""Returns a Dirac gamma matrix `\gamma^\mu` in the standard
     (Dirac) representation.
 
+    Explanation
+    ===========
+
     If you want `\gamma_\mu`, use ``gamma(mu, True)``.
 
     We use a convention:
@@ -101,7 +103,7 @@ def mgamma(mu, lower=False):
     [ 0, -1, 0, 0],
     [-1,  0, 0, 0]])
     """
-    if not mu in [0, 1, 2, 3, 5]:
+    if mu not in (0, 1, 2, 3, 5):
         raise IndexError("Invalid Dirac index")
     if mu == 0:
         mat = (
@@ -140,7 +142,7 @@ def mgamma(mu, lower=False):
         )
     m = Matrix(mat)
     if lower:
-        if mu in [1, 2, 3, 5]:
+        if mu in (1, 2, 3, 5):
             m = -m
     return m
 
@@ -153,32 +155,22 @@ minkowski_tensor = Matrix( (
     (0, 0, 0, -1)
 ))
 
+
+@deprecated(
+    """
+    The sympy.physics.matrices.mdft method is deprecated. Use
+    sympy.DFT(n).as_explicit() instead.
+    """,
+    deprecated_since_version="1.9",
+    active_deprecations_target="deprecated-physics-mdft",
+)
 def mdft(n):
     r"""
-    Returns an expression of a discrete Fourier transform as a matrix multiplication.
-    It is an n X n matrix.
+    .. deprecated:: 1.9
 
-    References
-    ==========
+       Use DFT from sympy.matrices.expressions.fourier instead.
 
-    .. [1] https://en.wikipedia.org/wiki/DFT_matrix
-
-    Examples
-    ========
-
-    >>> from sympy.physics.matrices import mdft
-    >>> mdft(3)
-    Matrix([
-    [sqrt(3)/3,                sqrt(3)/3,                sqrt(3)/3],
-    [sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3,  sqrt(3)*exp(2*I*pi/3)/3],
-    [sqrt(3)/3,  sqrt(3)*exp(2*I*pi/3)/3, sqrt(3)*exp(-2*I*pi/3)/3]])
+       To get identical behavior to ``mdft(n)``, use ``DFT(n).as_explicit()``.
     """
-    mat = [[None for x in range(n)] for y in range(n)]
-    base = exp(-2*pi*I/n)
-    mat[0] = [1]*n
-    for i in range(n):
-        mat[i][0] = 1
-    for i in range(1, n):
-        for j in range(i, n):
-            mat[i][j] = mat[j][i] = base**(i*j)
-    return (1/sqrt(n))*Matrix(mat)
+    from sympy.matrices.expressions.fourier import DFT
+    return DFT(n).as_mutable()

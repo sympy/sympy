@@ -35,7 +35,8 @@ else:
     veryslow_group, slow_group = [], []
 
 if os.path.exists(blacklist_path):
-    blacklist_group = _mk_group(json.loads(open(blacklist_path, 'rt').read()))
+    with open(blacklist_path, 'rt') as stream:
+        blacklist_group = _mk_group(json.load(stream))
 else:
     warnings.warn("conftest.py:28: Could not find %s, no tests will be skipped due to blacklisting\n" % blacklist_path)
     blacklist_group = []

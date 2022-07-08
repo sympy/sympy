@@ -1,7 +1,19 @@
-from sympy import (Abs, Add, Function, Number, Rational, S, Symbol,
-                   diff, exp, integrate, log, sin, sqrt, symbols)
-from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
-                                 volume, kilometer)
+import warnings
+
+from sympy.core.add import Add
+from sympy.core.function import (Function, diff)
+from sympy.core.numbers import (Number, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import integrate
+from sympy.physics.units import (amount_of_substance, area, convert_to, find_unit,
+                                 volume, kilometer, joule, molar_gas_constant,
+                                 vacuum_permittivity, elementary_charge, volt,
+                                 ohm)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
     minute, quart, s, second, speed_of_light, bit,
@@ -10,10 +22,10 @@ from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
 
 from sympy.physics.units.definitions.dimension_definitions import (
     Dimension, charge, length, time, temperature, pressure,
-    energy
+    energy, mass
 )
 from sympy.physics.units.prefixes import PREFIXES, kilo
-from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.quantities import PhysicalConstant, Quantity
 from sympy.physics.units.systems import SI
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 
@@ -44,6 +56,10 @@ def test_convert_to():
     # Wrong dimension to convert:
     assert q.convert_to(s) == q
     assert speed_of_light.convert_to(m) == speed_of_light
+
+    expr = joule*second
+    conv = convert_to(expr, joule)
+    assert conv == joule*second
 
 
 def test_Quantity_definition():
@@ -154,8 +170,8 @@ def test_quantity_abs():
         assert Dq == Dq1
 
     assert SI.get_dimension_system().get_dimensional_dependencies(Dq) == {
-        'length': 1,
-        'time': -1,
+        length: 1,
+        time: -1,
     }
     assert meter == sqrt(meter**2)
 
@@ -282,11 +298,17 @@ def test_find_unit():
         'astronomical_units']
     assert find_unit(inch**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(length**-1) == ['D', 'dioptre', 'optical_power']
+    assert find_unit(inch ** 2) == ['ha', 'hectare', 'planck_area']
     assert find_unit(inch ** 3) == [
-        'l', 'cl', 'dl', 'ml', 'liter', 'quart', 'liters', 'quarts',
+        'L', 'l', 'cL', 'cl', 'dL', 'dl', 'mL', 'ml', 'liter', 'quart', 'liters', 'quarts',
         'deciliter', 'centiliter', 'deciliters', 'milliliter',
         'centiliters', 'milliliters', 'planck_volume']
     assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'planck_voltage']
+    assert find_unit(grams) == ['g', 't', 'Da', 'kg', 'mg', 'ug', 'amu', 'mmu', 'amus',
+                                'gram', 'mmus', 'grams', 'pound', 'tonne', 'dalton',
+                                'pounds', 'kilogram', 'kilograms', 'microgram', 'milligram',
+                                'metric_ton', 'micrograms', 'milligrams', 'planck_mass',
+                                'milli_mass_unit', 'atomic_mass_unit', 'atomic_mass_constant']
 
 
 def test_Quantity_derivative():
@@ -308,10 +330,10 @@ def test_quantity_postprocessing():
     q = q1 + q2
     Dq = Dimension(SI.get_dimensional_expr(q))
     assert SI.get_dimension_system().get_dimensional_dependencies(Dq) == {
-        'length': -1,
-        'mass': 2,
-        'temperature': 1,
-        'time': -5,
+        length: -1,
+        mass: 2,
+        temperature: 1,
+        time: -5,
     }
 
 
@@ -361,7 +383,8 @@ def test_factor_and_dimension_with_Abs():
         v_w1 = Quantity('v_w1', length/time, Rational(3, 2)*meter/second)
     v_w1.set_global_relative_scale_factor(Rational(3, 2), meter/second)
     expr = v_w1 - Abs(v_w1)
-    assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
+    with warns_deprecated_sympy():
+        assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
 
 
 def test_dimensional_expr_of_derivative():
@@ -453,10 +476,10 @@ def test_issue_14932():
 
 def test_issue_14547():
     # the root issue is that an argument with dimensions should
-    # not raise an error when the the `arg - 1` calculation is
+    # not raise an error when the `arg - 1` calculation is
     # performed in the assumptions system
     from sympy.physics.units import foot, inch
-    from sympy import Eq
+    from sympy.core.relational import Eq
     assert log(foot).is_zero is None
     assert log(foot).is_positive is None
     assert log(foot).is_nonnegative is None
@@ -480,3 +503,70 @@ def test_deprecated_quantity_methods():
         step.set_scale_factor(2*meter)
         assert convert_to(step, centimeter) == 200*centimeter
         assert convert_to(1000*step/second, kilometer/second) == 2*kilometer/second
+
+def test_issue_22164():
+    warnings.simplefilter("error")
+    dm = Quantity("dm")
+    SI.set_quantity_dimension(dm, length)
+    SI.set_quantity_scale_factor(dm, 1)
+
+    bad_exp = Quantity("bad_exp")
+    SI.set_quantity_dimension(bad_exp, length)
+    SI.set_quantity_scale_factor(bad_exp, 1)
+
+    expr = dm ** bad_exp
+
+    # deprecation warning is not expected here
+    SI._collect_factor_and_dimension(expr)
+
+
+def test_issue_22819():
+    from sympy.physics.units import tonne, gram, Da
+    from sympy.physics.units.systems.si import dimsys_SI
+    assert tonne.convert_to(gram) == 1000000*gram
+    assert dimsys_SI.get_dimensional_dependencies(area) == {length: 2}
+    assert Da.scale_factor == 1.66053906660000e-24
+
+
+def test_issue_20288():
+    from sympy.core.numbers import E
+    from sympy.physics.units import energy
+    u = Quantity('u')
+    v = Quantity('v')
+    SI.set_quantity_dimension(u, energy)
+    SI.set_quantity_dimension(v, energy)
+    u.set_global_relative_scale_factor(1, joule)
+    v.set_global_relative_scale_factor(1, joule)
+    expr = 1 + exp(u**2/v**2)
+    assert SI._collect_factor_and_dimension(expr) == (1 + E, Dimension(1))
+
+
+def test_prefixed_property():
+    assert not meter.is_prefixed
+    assert not joule.is_prefixed
+    assert not day.is_prefixed
+    assert not second.is_prefixed
+    assert not volt.is_prefixed
+    assert not ohm.is_prefixed
+    assert centimeter.is_prefixed
+    assert kilometer.is_prefixed
+    assert kilogram.is_prefixed
+    assert pebibyte.is_prefixed
+
+def test_physics_constant():
+    from sympy.physics.units import definitions
+
+    for name in dir(definitions):
+        quantity = getattr(definitions, name)
+        if not isinstance(quantity, Quantity):
+            continue
+        if name.endswith('_constant'):
+            assert isinstance(quantity, PhysicalConstant), f"{quantity} must be PhysicalConstant, but is {type(quantity)}"
+            assert quantity.is_physical_constant, f"{name} is not marked as physics constant when it should be"
+
+    for const in [gravitational_constant, molar_gas_constant, vacuum_permittivity, speed_of_light, elementary_charge]:
+        assert isinstance(const, PhysicalConstant), f"{const} must be PhysicalConstant, but is {type(const)}"
+        assert const.is_physical_constant, f"{const} is not marked as physics constant when it should be"
+
+    assert not meter.is_physical_constant
+    assert not joule.is_physical_constant

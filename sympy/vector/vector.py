@@ -1,14 +1,20 @@
+from __future__ import annotations
+from itertools import product
 from typing import Type
 
+from sympy.core.add import Add
 from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow, sympify
 from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.compatibility import default_sort_key
-from sympy import sqrt, ImmutableMatrix as Matrix, Add
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+from sympy.vector.basisdependent import (BasisDependentZero,
+    BasisDependent, BasisDependentMul, BasisDependentAdd)
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
-                                         BasisDependentMul, BasisDependentZero)
-from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
+from sympy.vector.dyadic import Dyadic, BaseDyadic, DyadicAdd
 
 
 class Vector(BasisDependent):
@@ -18,6 +24,7 @@ class Vector(BasisDependent):
     instantiated by the user.
     """
 
+    is_scalar = False
     is_Vector = True
     _op_priority = 12.0
 
@@ -26,7 +33,7 @@ class Vector(BasisDependent):
     _add_func = None  # type: Type[Vector]
     _zero_func = None  # type: Type[Vector]
     _base_func = None  # type: Type[Vector]
-    zero = None  # type: VectorZero
+    zero: VectorZero
 
     @property
     def components(self):
@@ -65,7 +72,7 @@ class Vector(BasisDependent):
         """
         Returns the dot product of this Vector, either with another
         Vector, or a Dyadic, or a Del operator.
-        If 'other' is a Vector, returns the dot product scalar (Sympy
+        If 'other' is a Vector, returns the dot product scalar (SymPy
         expression).
         If 'other' is a Dyadic, the dot product is returned as a Vector.
         If 'other' is an instance of Del, returns the directional
@@ -110,7 +117,7 @@ class Vector(BasisDependent):
                 outvec += vect_dot * v * k.args[1]
             return outvec
         from sympy.vector.deloperator import Del
-        if not isinstance(other, Vector) and not isinstance(other, Del):
+        if not isinstance(other, (Del, Vector)):
             raise TypeError(str(other) + " is not a vector, dyadic or " +
                             "del operator")
 
@@ -208,10 +215,8 @@ class Vector(BasisDependent):
 
         # Iterate over components of both the vectors to generate
         # the required Dyadic instance
-        args = []
-        for k1, v1 in self.components.items():
-            for k2, v2 in other.components.items():
-                args.append((v1 * v2) * BaseDyadic(k1, k2))
+        args = [(v1 * v2) * BaseDyadic(k1, k2) for (k1, v1), (k2, v2)
+                in product(self.components.items(), other.components.items())]
 
         return DyadicAdd(*args)
 
@@ -234,7 +239,7 @@ class Vector(BasisDependent):
 
         """
         if self.equals(Vector.zero):
-            return S.zero if scalar else Vector.zero
+            return S.Zero if scalar else Vector.zero
 
         if scalar:
             return self.dot(other) / self.dot(self)
@@ -263,10 +268,10 @@ class Vector(BasisDependent):
         (0, 0, 0)
         """
 
-        from sympy.vector.operators import _get_coord_sys_from_expr
+        from sympy.vector.operators import _get_coord_systems
         if isinstance(self, VectorZero):
             return (S.Zero, S.Zero, S.Zero)
-        base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
+        base_vec = next(iter(_get_coord_systems(self))).base_vectors()
         return tuple([self.dot(i) for i in base_vec])
 
     def __or__(self, other):
@@ -345,8 +350,6 @@ class BaseVector(Vector, AtomicExpr):
     """
     Class to denote a base vector.
 
-    Unicode pretty forms in Python 2 should use the prefix ``u``.
-
     """
 
     def __new__(cls, index, system, pretty_str=None, latex_str=None):
@@ -390,6 +393,10 @@ class BaseVector(Vector, AtomicExpr):
 
     def _sympystr(self, printer):
         return self._name
+
+    def _sympyrepr(self, printer):
+        index, system = self._id
+        return printer._print(system) + '.' + system._vector_names[index]
 
     @property
     def free_symbols(self):
@@ -482,7 +489,7 @@ class Cross(Vector):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return cross(self._expr1, self._expr2)
 
 
@@ -515,7 +522,7 @@ class Dot(Expr):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return dot(self._expr1, self._expr2)
 
 

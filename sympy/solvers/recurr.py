@@ -46,29 +46,27 @@ For the sake of completeness, `f(n)` can be:
     [2] a rational function        -> rsolve_ratio
     [3] a hypergeometric function  -> rsolve_hyper
 """
-from __future__ import print_function, division
-
 from collections import defaultdict
 
+from sympy.concrete import product
 from sympy.core.singleton import S
 from sympy.core.numbers import Rational, I
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.relational import Equality
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core import sympify
+from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar  # type: ignore
 from sympy.solvers import solve, solve_undetermined_coeffs
 from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
-from sympy.concrete import product
-from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import numbered_symbols
 
 
-def rsolve_poly(coeffs, f, n, **hints):
+def rsolve_poly(coeffs, f, n, shift=0, **hints):
     r"""
     Given linear recurrence operator `\operatorname{L}` of order
     `k` with polynomial coefficients and inhomogeneous equation
@@ -190,7 +188,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         y = E = S.Zero
 
         for i in range(N + 1):
-            C.append(Symbol('C' + str(i)))
+            C.append(Symbol('C' + str(i + shift)))
             y += C[i] * n**i
 
         for i in range(r + 1):
@@ -303,7 +301,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         if not homogeneous:
             h = Add(*[(g*p).expand() for g, p in zip(G, P)])
 
-        C = [Symbol('C' + str(i)) for i in range(A)]
+        C = [Symbol('C' + str(i + shift)) for i in range(A)]
 
         g = lambda i: Add(*[c*_delta(q, i) for c, q in zip(C, Q)])
 
@@ -533,10 +531,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 else:
                     similar[g] = S.Zero
 
-            inhomogeneous = []
-
-            for g, h in similar.items():
-                inhomogeneous.append(g + h)
+            inhomogeneous = [g + h for g, h in similar.items()]
         elif f.is_hypergeometric(n):
             inhomogeneous = [f]
         else:
@@ -559,14 +554,24 @@ def rsolve_hyper(coeffs, f, n, **hints):
             for j in range(r + 1):
                 polys[j] *= Mul(*(denoms[:j] + denoms[j + 1:]))
 
-            R = rsolve_poly(polys, Mul(*denoms), n)
+            # FIXME: The call to rsolve_ratio below should suffice (rsolve_poly
+            # call can be removed) but the XFAIL test_rsolve_ratio_missed must
+            # be fixed first.
+            R = rsolve_ratio(polys, Mul(*denoms), n, symbols=True)
+            if R is not None:
+                R, syms = R
+                if syms:
+                    R = R.subs(zip(syms, [0]*len(syms)))
+            else:
+                R = rsolve_poly(polys, Mul(*denoms), n)
 
-            if not (R is None or R is S.Zero):
+            if R:
                 inhomogeneous[i] *= R
             else:
                 return None
 
             result = Add(*inhomogeneous)
+            result = simplify(result)
     else:
         result = S.Zero
 
@@ -620,11 +625,17 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if z.is_zero:
                 continue
 
-            (C, s) = rsolve_poly([polys[i].as_expr()*z**i for i in range(r + 1)], 0, n, symbols=True)
+            recurr_coeffs = [polys[i].as_expr()*z**i for i in range(r + 1)]
+            if d == 0 and 0 != Add(*[recurr_coeffs[j]*j for j in range(1, r + 1)]):
+                # faster inline check (than calling rsolve_poly) for a
+                # constant solution to a constant coefficient recurrence.
+                sol = [Symbol("C" + str(len(symbols)))]
+            else:
+                sol, syms = rsolve_poly(recurr_coeffs, 0, n, len(symbols), symbols=True)
+                sol = sol.collect(syms)
+                sol = [sol.coeff(s) for s in syms]
 
-            if C is not None and C is not S.Zero:
-                symbols |= set(s)
-
+            for C in sol:
                 ratio = z * A * C.subs(n, n + 1) / B / C
                 ratio = simplify(ratio)
                 # If there is a nonnegative root in the denominator of the ratio,
@@ -646,11 +657,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
     kernel.sort(key=default_sort_key)
     sk = list(zip(numbered_symbols('C'), kernel))
 
-    if sk:
-        for C, ker in sk:
-            result += C * ker
-    else:
-        return None
+    for C, ker in sk:
+        result += C * ker
 
     if hints.get('symbols', False):
         # XXX: This returns the symbols in a non-deterministic order
@@ -795,7 +803,7 @@ def rsolve(f, y, init=None):
 
     solution, symbols = result
 
-    if init == {} or init == []:
+    if init in ({}, []):
         init = None
 
     if symbols and init is not None:

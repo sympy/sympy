@@ -10,7 +10,7 @@ from sympy.external import import_module
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
-                                                      Max, real_root)
+                                                      Max, real_root, Rem)
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.delta_functions import Heaviside
 
@@ -369,7 +369,8 @@ def test_rewrite_MaxMin_as_Heaviside():
 
 
 def test_rewrite_MaxMin_as_Piecewise():
-    from sympy import symbols, Piecewise
+    from sympy.core.symbol import symbols
+    from sympy.functions.elementary.piecewise import Piecewise
     x, y, z, a, b = symbols('x y z a b', real=True)
     vx, vy, va = symbols('vx vy va')
     assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a >= b), (b, True))
@@ -395,7 +396,7 @@ def test_issue_11099():
     assert Max(x, y).evalf(subs=fixed_test_data) == \
         Max(x, y).subs(fixed_test_data).evalf()
     # randomly generate some test data
-    from random import randint
+    from sympy.core.random import randint
     for i in range(20):
         random_test_data = {x: randint(-100, 100), y: randint(-100, 100)}
         assert Min(x, y).evalf(subs=random_test_data) == \
@@ -409,6 +410,10 @@ def test_issue_12638():
     assert Min(a, b, c, Max(a, b)) == Min(a, b, c)
     assert Min(a, b, Max(a, b, c)) == Min(a, b)
     assert Min(a, b, Max(a, c)) == Min(a, b)
+
+def test_issue_21399():
+    from sympy.abc import a, b, c
+    assert Max(Min(a, b), Min(a, b, c)) == Min(a, b)
 
 
 def test_instantiation_evaluation():
@@ -455,3 +460,45 @@ def test_issue_14000():
 
     assert root(16, 4, 2, evaluate=False).has(Pow) == True
     assert real_root(-8, 3, evaluate=False).has(Pow) == True
+
+def test_issue_6899():
+    from sympy.core.function import Lambda
+    x = Symbol('x')
+    eqn = Lambda(x, x)
+    assert eqn.func(*eqn.args) == eqn
+
+def test_Rem():
+    from sympy.abc import x, y
+    assert Rem(5, 3) == 2
+    assert Rem(-5, 3) == -2
+    assert Rem(5, -3) == 2
+    assert Rem(-5, -3) == -2
+    assert Rem(x**3, y) == Rem(x**3, y)
+    assert Rem(Rem(-5, 3) + 3, 3) == 1
+
+
+def test_minmax_no_evaluate():
+    from sympy import evaluate
+    p = Symbol('p', positive=True)
+
+    assert Max(1, 3) == 3
+    assert Max(1, 3).args == ()
+    assert Max(0, p) == p
+    assert Max(0, p).args == ()
+    assert Min(0, p) == 0
+    assert Min(0, p).args == ()
+
+    assert Max(1, 3, evaluate=False) != 3
+    assert Max(1, 3, evaluate=False).args == (1, 3)
+    assert Max(0, p, evaluate=False) != p
+    assert Max(0, p, evaluate=False).args == (0, p)
+    assert Min(0, p, evaluate=False) != 0
+    assert Min(0, p, evaluate=False).args == (0, p)
+
+    with evaluate(False):
+        assert Max(1, 3) != 3
+        assert Max(1, 3).args == (1, 3)
+        assert Max(0, p) != p
+        assert Max(0, p).args == (0, p)
+        assert Min(0, p) != 0
+        assert Min(0, p).args == (0, p)

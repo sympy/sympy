@@ -1,6 +1,5 @@
 """Advanced tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
-from __future__ import print_function, division
 
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
@@ -275,7 +274,7 @@ def dup_eval(f, a, K):
 
     """
     if not a:
-        return dup_TC(f, K)
+        return K.convert(dup_TC(f, K))
 
     result = K.zero
 

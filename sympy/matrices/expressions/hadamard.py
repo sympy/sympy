@@ -1,4 +1,10 @@
+from collections import Counter
+
 from sympy.core import Mul, sympify
+from sympy.core.add import Add
+from sympy.core.expr import ExprBuilder
+from sympy.core.sorting import default_sort_key
+from sympy.functions.elementary.exponential import log
 from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
@@ -14,7 +20,7 @@ def hadamard_product(*matrices):
     Examples
     ========
 
-    >>> from sympy.matrices import hadamard_product, MatrixSymbol
+    >>> from sympy import hadamard_product, MatrixSymbol
     >>> A = MatrixSymbol('A', 2, 3)
     >>> B = MatrixSymbol('B', 2, 3)
     >>> hadamard_product(A)
@@ -43,7 +49,7 @@ class HadamardProduct(MatrixExpr):
 
     Hadamard product for matrix symbols:
 
-    >>> from sympy.matrices import hadamard_product, HadamardProduct, MatrixSymbol
+    >>> from sympy import hadamard_product, HadamardProduct, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
     >>> isinstance(hadamard_product(A, B), HadamardProduct)
@@ -58,9 +64,8 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
+    def __new__(cls, *args, evaluate=False, check=True):
         args = list(map(sympify, args))
-        check = kwargs.get('check', True)
         if check:
             validate(*args)
 
@@ -80,10 +85,10 @@ class HadamardProduct(MatrixExpr):
         from sympy.matrices.expressions.transpose import transpose
         return HadamardProduct(*list(map(transpose, self.args)))
 
-    def doit(self, **ignored):
-        expr = self.func(*[i.doit(**ignored) for i in self.args])
+    def doit(self, **hints):
+        expr = self.func(*[i.doit(**hints) for i in self.args])
         # Check for explicit matrices:
-        from sympy import MatrixBase
+        from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.immutable import ImmutableMatrix
         explicit = [i for i in expr.args if isinstance(i, MatrixBase)]
         if explicit:
@@ -96,7 +101,6 @@ class HadamardProduct(MatrixExpr):
         return canonicalize(expr)
 
     def _eval_derivative(self, x):
-        from sympy import Add
         terms = []
         args = list(self.args)
         for i in range(len(args)):
@@ -105,8 +109,8 @@ class HadamardProduct(MatrixExpr):
         return Add.fromiter(terms)
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.core.expr import ExprBuilder
-        from sympy.codegen.array_utils import CodegenArrayDiagonal, CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
         from sympy.matrices.expressions.matexpr import _make_matrix
 
         with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
@@ -123,10 +127,10 @@ class HadamardProduct(MatrixExpr):
                 l1 = i._lines[i._first_line_index]
                 l2 = i._lines[i._second_line_index]
                 subexpr = ExprBuilder(
-                    CodegenArrayDiagonal,
+                    ArrayDiagonal,
                     [
                         ExprBuilder(
-                            CodegenArrayTensorProduct,
+                            ArrayTensorProduct,
                             [
                                 ExprBuilder(_make_matrix, [l1]),
                                 hadam,
@@ -163,8 +167,8 @@ def canonicalize(x):
     Examples
     ========
 
-    >>> from sympy.matrices.expressions import MatrixSymbol, HadamardProduct
-    >>> from sympy.matrices.expressions import OneMatrix, ZeroMatrix
+    >>> from sympy import MatrixSymbol, HadamardProduct
+    >>> from sympy import OneMatrix, ZeroMatrix
     >>> from sympy.matrices.expressions.hadamard import canonicalize
     >>> from sympy import init_printing
     >>> init_printing(use_unicode=False)
@@ -239,8 +243,6 @@ def canonicalize(x):
 
     .. [1] https://en.wikipedia.org/wiki/Hadamard_product_(matrices)
     """
-    from sympy.core.compatibility import default_sort_key
-
     # Associativity
     rule = condition(
             lambda x: isinstance(x, HadamardProduct),
@@ -270,7 +272,6 @@ def canonicalize(x):
 
     # Rewriting with HadamardPower
     if isinstance(x, HadamardProduct):
-        from collections import Counter
         tally = Counter(x.args)
 
         new_arg = []
@@ -420,7 +421,6 @@ class HadamardPower(MatrixExpr):
         return HadamardPower(transpose(self.base), self.exp)
 
     def _eval_derivative(self, x):
-        from sympy import log
         dexp = self.exp.diff(x)
         logbase = self.base.applyfunc(log)
         dlbase = logbase.diff(x)
@@ -430,9 +430,8 @@ class HadamardPower(MatrixExpr):
         )
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.codegen.array_utils import CodegenArrayTensorProduct
-        from sympy.codegen.array_utils import CodegenArrayDiagonal
-        from sympy.core.expr import ExprBuilder
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
         from sympy.matrices.expressions.matexpr import _make_matrix
 
         lr = self.base._eval_derivative_matrix_lines(x)
@@ -442,10 +441,10 @@ class HadamardPower(MatrixExpr):
             l1 = i._lines[i._first_line_index]
             l2 = i._lines[i._second_line_index]
             subexpr = ExprBuilder(
-                CodegenArrayDiagonal,
+                ArrayDiagonal,
                 [
                     ExprBuilder(
-                        CodegenArrayTensorProduct,
+                        ArrayTensorProduct,
                         [
                             ExprBuilder(_make_matrix, [l1]),
                             self.exp*hadamard_power(self.base, self.exp-1),
@@ -453,7 +452,7 @@ class HadamardPower(MatrixExpr):
                         ]
                     ),
                 *diagonal],
-                validator=CodegenArrayDiagonal._validate
+                validator=ArrayDiagonal._validate
             )
             i._first_pointer_parent = subexpr.args[0].args[0].args
             i._first_pointer_index = 0

@@ -1,6 +1,10 @@
 recursive-include data *
 recursive-include doc *
 prune doc/_build
+prune doc/ext/__pycache__
+exclude doc/src/modules/physics/mechanics/examples/*.pdf
+exclude doc/src/modules/physics/vector/*.pdf
+exclude doc/src/modules/vector/*.pdf
 recursive-include examples *.py README
 
 include sympy/utilities/mathml/data/*.xsl

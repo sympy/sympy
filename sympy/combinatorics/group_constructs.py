@@ -9,6 +9,9 @@ def DirectProduct(*groups):
     """
     Returns the direct product of several groups as a permutation group.
 
+    Explanation
+    ===========
+
     This is implemented much like the __mul__ procedure for taking the direct
     product of two permutation groups, but the idea of shifting the
     generators is realized in the case of an arbitrary number of groups.

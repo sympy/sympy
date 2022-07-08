@@ -1,4 +1,4 @@
-from sympy.vector.coordsysrect import CoordSys3D, CoordSysCartesian
+from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.vector import (Vector, VectorAdd, VectorMul,
                                  BaseVector, VectorZero, Cross, Dot, cross, dot)
 from sympy.vector.dyadic import (Dyadic, DyadicAdd, DyadicMul,
@@ -14,8 +14,8 @@ from sympy.vector.point import Point
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
 from sympy.vector.operators import Gradient, Divergence, Curl, Laplacian, gradient, curl, divergence
-from sympy.vector.parametricregion import (ParametricRegion, parametric_region_list)
 from sympy.vector.implicitregion import ImplicitRegion
+from sympy.vector.parametricregion import (ParametricRegion, parametric_region_list)
 from sympy.vector.integrals import (ParametricIntegral, vector_integrate)
 
 __all__ = [
@@ -28,7 +28,7 @@ __all__ = [
 
     'Del',
 
-    'CoordSys3D', 'CoordSysCartesian',
+    'CoordSys3D',
 
     'express', 'matrix_to_vector', 'laplacian', 'is_conservative',
     'is_solenoidal', 'scalar_potential', 'directional_derivative',

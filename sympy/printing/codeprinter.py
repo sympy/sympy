@@ -1,20 +1,20 @@
-from __future__ import print_function, division
-
-from typing import Any, Dict, Set, Tuple
+from typing import Any, Dict as tDict, Set as tSet, Tuple as tTuple
 
 from functools import wraps
 
 from sympy.core import Add, Expr, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
-from sympy.core.compatibility import default_sort_key
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol
+from sympy.functions.elementary.complexes import re
 from sympy.printing.str import StrPrinter
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 
 
-class requires(object):
+class requires:
     """ Decorator for registering requirements on print methods. """
     def __init__(self, **kwargs):
         self._req = kwargs
@@ -32,6 +32,16 @@ class AssignmentError(Exception):
     Raised if an assignment variable for a loop is missing.
     """
     pass
+
+
+def _convert_python_lists(arg):
+    if isinstance(arg, list):
+        from sympy.codegen.abstract_nodes import List
+        return List(*(_convert_python_lists(e) for e in arg))
+    elif isinstance(arg, tuple):
+        return tuple(_convert_python_lists(e) for e in arg)
+    else:
+        return arg
 
 
 class CodePrinter(StrPrinter):
@@ -53,21 +63,45 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     # Functions which are "simple" to rewrite to other functions that
     # may be supported
+    # function_to_rewrite : (function_to_rewrite_to, iterable_with_other_functions_required)
     _rewriteable_functions = {
-            'erf2': 'erf',
-            'Li': 'li',
-            'beta': 'gamma'
+            'catalan': ('gamma', []),
+            'fibonacci': ('sqrt', []),
+            'lucas': ('sqrt', []),
+            'beta': ('gamma', []),
+            'sinc': ('sin', ['Piecewise']),
+            'Mod': ('floor', []),
+            'factorial': ('gamma', []),
+            'factorial2': ('gamma', ['Piecewise']),
+            'subfactorial': ('uppergamma', []),
+            'RisingFactorial': ('gamma', ['Piecewise']),
+            'FallingFactorial': ('gamma', ['Piecewise']),
+            'binomial': ('gamma', []),
+            'frac': ('floor', []),
+            'Max': ('Piecewise', []),
+            'Min': ('Piecewise', []),
+            'Heaviside': ('Piecewise', []),
+            'erf2': ('erf', []),
+            'erfc': ('erf', []),
+            'Li': ('li', []),
+            'Ei': ('li', []),
+            'dirichlet_eta': ('zeta', []),
+            'riemann_xi': ('zeta', ['gamma']),
     }
 
     def __init__(self, settings=None):
 
-        super(CodePrinter, self).__init__(settings=settings)
+        super().__init__(settings=settings)
         if not hasattr(self, 'reserved_words'):
             self.reserved_words = set()
+
+    def _handle_UnevaluatedExpr(self, expr):
+        return expr.replace(re, lambda arg: arg if isinstance(
+            arg, UnevaluatedExpr) and arg.args[0].is_real else re(arg))
 
     def doprint(self, expr, assign_to=None):
         """
@@ -78,32 +112,40 @@ class CodePrinter(StrPrinter):
         expr : Expression
             The expression to be printed.
 
-        assign_to : Symbol, MatrixSymbol, or string (optional)
-            If provided, the printed code will set the expression to a
-            variable with name ``assign_to``.
+        assign_to : Symbol, string, MatrixSymbol, list of strings or Symbols (optional)
+            If provided, the printed code will set the expression to a variable or multiple variables
+            with the name or names given in ``assign_to``.
         """
-        from sympy.codegen.ast import Assignment
         from sympy.matrices.expressions.matexpr import MatrixSymbol
+        from sympy.codegen.ast import CodeBlock, Assignment
 
-        if isinstance(assign_to, str):
-            if expr.is_Matrix:
-                assign_to = MatrixSymbol(assign_to, *expr.shape)
-            else:
-                assign_to = Symbol(assign_to)
-        elif not isinstance(assign_to, (Basic, type(None))):
-            raise TypeError("{0} cannot assign to object of type {1}".format(
-                    type(self).__name__, type(assign_to)))
+        def _handle_assign_to(expr, assign_to):
+            if assign_to is None:
+                return sympify(expr)
+            if isinstance(assign_to, (list, tuple)):
+                if len(expr) != len(assign_to):
+                    raise ValueError('Failed to assign an expression of length {} to {} variables'.format(len(expr), len(assign_to)))
+                return CodeBlock(*[_handle_assign_to(lhs, rhs) for lhs, rhs in zip(expr, assign_to)])
+            if isinstance(assign_to, str):
+                if expr.is_Matrix:
+                    assign_to = MatrixSymbol(assign_to, *expr.shape)
+                else:
+                    assign_to = Symbol(assign_to)
+            elif not isinstance(assign_to, Basic):
+                raise TypeError("{} cannot assign to object of type {}".format(
+                        type(self).__name__, type(assign_to)))
+            return Assignment(assign_to, expr)
 
-        if assign_to:
-            expr = Assignment(assign_to, expr)
-        else:
-            # _sympify is not enough b/c it errors on iterables
-            expr = sympify(expr)
+        expr = _convert_python_lists(expr)
+        expr = _handle_assign_to(expr, assign_to)
+
+        # Remove re(...) nodes due to UnevaluatedExpr.is_real always is None:
+        expr = self._handle_UnevaluatedExpr(expr)
 
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
         self._not_supported = set()
-        self._number_symbols = set()  # type: Set[Tuple[Expr, Float]]
+        self._number_symbols = set()  # type: tSet[tTuple[Expr, Float]]
 
         lines = self._print(expr).splitlines()
 
@@ -112,7 +154,7 @@ class CodePrinter(StrPrinter):
             frontlines = []
             if self._not_supported:
                 frontlines.append(self._get_comment(
-                        "Not supported in {0}:".format(self.language)))
+                        "Not supported in {}:".format(self.language)))
                 for expr in sorted(self._not_supported, key=str):
                     frontlines.append(self._get_comment(type(expr).__name__))
             for name, value in sorted(self._number_symbols, key=str):
@@ -122,7 +164,7 @@ class CodePrinter(StrPrinter):
             result = "\n".join(lines)
         else:
             lines = self._format_code(lines)
-            num_syms = set([(k, self._print(v)) for k, v in self._number_symbols])
+            num_syms = {(k, self._print(v)) for k, v in self._number_symbols}
             result = (num_syms, self._not_supported, "\n".join(lines))
         self._not_supported = set()
         self._number_symbols = set()
@@ -339,7 +381,7 @@ class CodePrinter(StrPrinter):
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
-        return self._get_statement("{0} {1} {2}".format(
+        return self._get_statement("{} {} {}".format(
             *map(lambda arg: self._print(arg),
                  [lhs_code, expr.op, rhs_code])))
 
@@ -352,13 +394,9 @@ class CodePrinter(StrPrinter):
     def _print_Variable(self, expr):
         return self._print(expr.symbol)
 
-    def _print_Statement(self, expr):
-        arg, = expr.args
-        return self._get_statement(self._print(arg))
-
     def _print_Symbol(self, expr):
 
-        name = super(CodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
 
         if name in self.reserved_words:
             if self._settings['error_on_reserved']:
@@ -368,6 +406,11 @@ class CodePrinter(StrPrinter):
             return name + self._settings['reserved_word_suffix']
         else:
             return name
+
+    def _can_print(self, name):
+        """ Check if function ``name`` is either a known function or has its own
+            printing method. Used to check if rewriting is possible."""
+        return name in self.known_functions or getattr(self, '_print_{}'.format(name), False)
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
@@ -387,16 +430,20 @@ class CodePrinter(StrPrinter):
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
-        elif (expr.func.__name__ in self._rewriteable_functions and
-              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+        elif expr.func.__name__ in self._rewriteable_functions:
             # Simple rewrite to supported function possible
-            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
-        elif expr.is_Function and self._settings.get('allow_unknown_functions', False):
+            target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
+            if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
+                return self._print(expr.rewrite(target_f))
+        if expr.is_Function and self._settings.get('allow_unknown_functions', False):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
             return self._print_not_supported(expr)
 
     _print_Expr = _print_Function
+
+    # Don't inherit the str-printer method for Heaviside to the code printers
+    _print_Heaviside = None
 
     def _print_NumberSymbol(self, expr):
         if self._settings.get("inline", False):
@@ -433,14 +480,14 @@ class CodePrinter(StrPrinter):
 
     def _print_Xor(self, expr):
         if self._operators.get('xor') is None:
-            return self._print_not_supported(expr)
+            return self._print(expr.to_nnf())
         PREC = precedence(expr)
         return (" %s " % self._operators['xor']).join(self.parenthesize(a, PREC)
                 for a in expr.args)
 
     def _print_Equivalent(self, expr):
         if self._operators.get('equivalent') is None:
-            return self._print_not_supported(expr)
+            return self._print(expr.to_nnf())
         PREC = precedence(expr)
         return (" %s " % self._operators['equivalent']).join(self.parenthesize(a, PREC)
                 for a in expr.args)
@@ -448,6 +495,9 @@ class CodePrinter(StrPrinter):
     def _print_Not(self, expr):
         PREC = precedence(expr)
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
+
+    def _print_BooleanFunction(self, expr):
+        return self._print(expr.to_nnf())
 
     def _print_Mul(self, expr):
 
@@ -485,7 +535,14 @@ class CodePrinter(StrPrinter):
 
         a = a or [S.One]
 
-        a_str = [self.parenthesize(x, prec) for x in a]
+        if len(a) == 1 and sign == "-":
+            # Unary minus does not have a SymPy class, and hence there's no
+            # precedence weight associated with it, Python's unary minus has
+            # an operator precedence between multiplication and exponentiation,
+            # so we use this to compute a weight.
+            a_str = [self.parenthesize(a[0], 0.5*(PRECEDENCE["Pow"]+PRECEDENCE["Mul"]))]
+        else:
+            a_str = [self.parenthesize(x, prec) for x in a]
         b_str = [self.parenthesize(x, prec) for x in b]
 
         # To parenthesize Pow with exp = -1 and having more than one Symbol
@@ -545,7 +602,7 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,
@@ -682,7 +739,7 @@ def fcode(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,
@@ -718,7 +775,7 @@ def fcode(expr, assign_to=None, **settings):
     name_mangling : bool, optional
         If True, then the variables that would become identical in
         case-insensitive Fortran are mangled by appending different number
-        of ``_`` at the end. If False, SymPy won't interfere with naming of
+        of ``_`` at the end. If False, SymPy Will not interfere with naming of
         variables. [default=True]
 
     Examples

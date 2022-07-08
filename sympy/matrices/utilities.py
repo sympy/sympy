@@ -1,15 +1,12 @@
-from __future__ import division, print_function
-
 from contextlib import contextmanager
 from threading import local
 
 from sympy.core.function import expand_mul
-from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 
 
 class DotProdSimpState(local):
     def __init__(self):
-        self.state = False
+        self.state = None
 
 _dotprodsimp_state = DotProdSimpState()
 
@@ -23,6 +20,13 @@ def dotprodsimp(x):
     finally:
         _dotprodsimp_state.state = old
 
+
+def _dotprodsimp(expr, withsimp=False):
+    """Wrapper for simplify.dotprodsimp to avoid circular imports."""
+    from sympy.simplify.simplify import dotprodsimp as dps
+    return dps(expr, withsimp=withsimp)
+
+
 def _get_intermediate_simp(deffunc=lambda x: x, offfunc=lambda x: x,
         onfunc=_dotprodsimp, dotprodsimp=None):
     """Support function for controlling intermediate simplification. Returns a
@@ -32,7 +36,7 @@ def _get_intermediate_simp(deffunc=lambda x: x, offfunc=lambda x: x,
     ``deffunc``     - Function to be used by default.
     ``offfunc``     - Function to be used if dotprodsimp has been turned off.
     ``onfunc``      - Function to be used if dotprodsimp has been turned on.
-    ``dotprodsimp`` - True, False or None. Will be overriden by global
+    ``dotprodsimp`` - True, False or None. Will be overridden by global
                       _dotprodsimp_state.state if that is not None.
     """
 
@@ -42,6 +46,7 @@ def _get_intermediate_simp(deffunc=lambda x: x, offfunc=lambda x: x,
         return onfunc
 
     return deffunc # None, None
+
 
 def _get_intermediate_simp_bool(default=False, dotprodsimp=None):
     """Same as ``_get_intermediate_simp`` but returns bools instead of functions
@@ -59,3 +64,9 @@ def _is_zero_after_expand_mul(x):
     """Tests by expand_mul only, suitable for polynomials and rational
     functions."""
     return expand_mul(x) == 0
+
+
+def _simplify(expr):
+    """ Wrapper to avoid circular imports. """
+    from sympy.simplify.simplify import simplify
+    return simplify(expr)

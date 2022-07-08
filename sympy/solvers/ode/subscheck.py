@@ -1,5 +1,4 @@
 from sympy.core import S, Pow
-from sympy.core.compatibility import iterable, is_sequence
 from sympy.core.function import (Derivative, AppliedUndef, diff)
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Dummy
@@ -8,11 +7,12 @@ from sympy.core.sympify import sympify
 from sympy.logic.boolalg import BooleanAtom
 from sympy.functions import exp
 from sympy.series import Order
-from sympy.simplify import (simplify, trigsimp, posify,
-                            besselsimp, sqrtdenest) # type: ignore
+from sympy.simplify.simplify import simplify, posify, besselsimp
+from sympy.simplify.trigsimp import trigsimp
+from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.solvers import solve
-
 from sympy.solvers.deutils import _preprocess, ode_order
+from sympy.utilities.iterables import iterable, is_sequence
 
 
 def sub_func_doit(eq, func, new):
@@ -24,7 +24,7 @@ def sub_func_doit(eq, func, new):
     ========
 
     >>> from sympy import Derivative, symbols, Function
-    >>> from sympy.solvers.ode.ode import sub_func_doit
+    >>> from sympy.solvers.ode.subscheck import sub_func_doit
     >>> x, z = symbols('x, z')
     >>> y = Function('y')
 
@@ -351,8 +351,7 @@ def checksysodesol(eqs, sols, func=None):
         for eq in eqs:
             derivs = eq.atoms(Derivative)
             func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
-            for func_ in  func:
-                funcs.append(func_)
+            funcs.extend(func)
         funcs = list(set(funcs))
     if not all(isinstance(func, AppliedUndef) and len(func.args) == 1 for func in funcs)\
     and len({func.args for func in funcs})!=1:
@@ -362,7 +361,7 @@ def checksysodesol(eqs, sols, func=None):
             raise ValueError("solutions should have one function only")
     if len(funcs) != len({sol.lhs for sol in sols}):
         raise ValueError("number of solutions provided does not match the number of equations")
-    dictsol = dict()
+    dictsol = {}
     for sol in sols:
         func = list(sol.atoms(AppliedUndef))[0]
         if sol.rhs == func:

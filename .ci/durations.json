@@ -631,6 +631,9 @@
         "sympy/core/tests/test_sympify.py": [
             "test_kernS"
         ],
+        "sympy/core/tests/test_traversal.py": [
+            "test_use"
+        ],
         "sympy/crypto/tests/test_crypto.py": [
             "test_dh_private_key",
             "test_dh_public_key",
@@ -683,9 +686,6 @@
         ],
         "sympy/external/tests/test_numpy.py": [
             "test_systematic_basic"
-        ],
-        "sympy/external/tests/test_sage.py": [
-            "test_issue_4023"
         ],
         "sympy/functions/combinatorial/tests/test_comb_factorials.py": [
             "test_binomial",
@@ -1223,7 +1223,7 @@
             "test_trigintegrate_mixed",
             "test_trigintegrate_odd"
         ],
-        "sympy/interactive/tests/test_ipythonprinting.py": [
+        "sympy/interactive/tests/test_ipython.py": [
             "test_matplotlib_bad_latex"
         ],
         "sympy/liealgebras/tests/test_weyl_group.py": [
@@ -2136,9 +2136,6 @@
             "test_sqrtdenest3",
             "test_sqrtdenest4",
             "test_sqrtdenest_rec"
-        ],
-        "sympy/simplify/tests/test_traversaltools.py": [
-            "test_use"
         ],
         "sympy/simplify/tests/test_trigsimp.py": [
             "test_Piecewise",

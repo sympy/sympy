@@ -1,6 +1,10 @@
-from sympy import Basic, Sum, Dummy, Lambda, Integral
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.function import Lambda
+from sympy.core.symbol import Dummy
+from sympy.integrals.integrals import Integral
 from sympy.stats.rv import (NamedArgsMixin, random_symbols, _symbol_converter,
-                        PSpace, RandomSymbol, is_random)
+                        PSpace, RandomSymbol, is_random, Distribution)
 from sympy.stats.crv import ContinuousDistribution, SingleContinuousPSpace
 from sympy.stats.drv import DiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.frv import SingleFiniteDistribution, SingleFinitePSpace
@@ -87,16 +91,16 @@ class CompoundPSpace(PSpace):
         elif isinstance(dist, DiscreteDistribution):
             return SingleDiscretePSpace(sym, DiscreteDistributionHandmade(pdf, _set))
         elif isinstance(dist, SingleFiniteDistribution):
-            dens = dict((k, pdf(k)) for k in _set)
+            dens = {k: pdf(k) for k in _set}
             return SingleFinitePSpace(sym, FiniteDistributionHandmade(dens))
 
-    def compute_density(self, expr, **kwargs):
-        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
+    def compute_density(self, expr, *, compound_evaluate=True, **kwargs):
+        new_pspace = self._get_newpspace(compound_evaluate)
         expr = expr.subs({self.value: new_pspace.value})
         return new_pspace.compute_density(expr, **kwargs)
 
-    def compute_cdf(self, expr, **kwargs):
-        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
+    def compute_cdf(self, expr, *, compound_evaluate=True, **kwargs):
+        new_pspace = self._get_newpspace(compound_evaluate)
         expr = expr.subs({self.value: new_pspace.value})
         return new_pspace.compute_cdf(expr, **kwargs)
 
@@ -109,18 +113,18 @@ class CompoundPSpace(PSpace):
             return new_pspace.compute_expectation(expr, rvs, **kwargs)
         return new_pspace.compute_expectation(expr, rvs, evaluate, **kwargs)
 
-    def probability(self, condition, **kwargs):
-        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
+    def probability(self, condition, *, compound_evaluate=True, **kwargs):
+        new_pspace = self._get_newpspace(compound_evaluate)
         condition = condition.subs({self.value: new_pspace.value})
         return new_pspace.probability(condition)
 
-    def conditional_space(self, condition, **kwargs):
-        new_pspace = self._get_newpspace(kwargs.pop('compound_evaluate', True))
+    def conditional_space(self, condition, *, compound_evaluate=True, **kwargs):
+        new_pspace = self._get_newpspace(compound_evaluate)
         condition = condition.subs({self.value: new_pspace.value})
         return new_pspace.conditional_space(condition)
 
 
-class CompoundDistribution(Basic, NamedArgsMixin):
+class CompoundDistribution(Distribution, NamedArgsMixin):
     """
     Class for Compound Distributions.
 

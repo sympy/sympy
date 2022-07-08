@@ -1,4 +1,4 @@
-from sympy import Derivative
+from sympy.core.function import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing
@@ -49,8 +49,8 @@ class VectorLatexPrinter(LatexPrinter):
         func = expr.func.__name__
         t = dynamicsymbols._t
 
-        if hasattr(self, '_print_' + func) and \
-            not isinstance(type(expr), UndefinedFunction):
+        if (hasattr(self, '_print_' + func) and not
+            isinstance(type(expr), UndefinedFunction)):
             return getattr(self, '_print_' + func)(expr, exp)
         elif isinstance(type(expr), UndefinedFunction) and (expr.args == (t,)):
             # treat this function like a symbol
@@ -78,8 +78,8 @@ class VectorLatexPrinter(LatexPrinter):
         expr = der_expr.expr
         red = expr.atoms(AppliedUndef)
         syms = der_expr.variables
-        test1 = not all([True for i in red if i.free_symbols == {t}])
-        test2 = not all([(t == i) for i in syms])
+        test1 = not all(True for i in red if i.free_symbols == {t})
+        test2 = not all(t == i for i in syms)
         if test1 or test2:
             return super()._print_Derivative(der_expr)
 
@@ -96,7 +96,7 @@ class VectorLatexPrinter(LatexPrinter):
             base = r"\dddot{%s}" % base
         elif dots == 4:
             base = r"\ddddot{%s}" % base
-        else: # Fallback to standard printing
+        else:  # Fallback to standard printing
             return super()._print_Derivative(der_expr)
         if len(base_split) != 1:
             base += '_' + base_split[1]
@@ -118,32 +118,33 @@ class VectorPrettyPrinter(PrettyPrinter):
                 syms.pop()
                 dot_i += 1
             else:
-                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+                return super()._print_Derivative(deriv)
 
-        if not (isinstance(type(deriv.expr), UndefinedFunction)
-                and (deriv.expr.args == (t,))):
-                return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+        if not (isinstance(type(deriv.expr), UndefinedFunction) and
+                (deriv.expr.args == (t,))):
+            return super()._print_Derivative(deriv)
         else:
             pform = self._print_Function(deriv.expr)
 
         # the following condition would happen with some sort of non-standard
         # dynamic symbol I guess, so we'll just print the SymPy way
         if len(pform.picture) > 1:
-            return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+            return super()._print_Derivative(deriv)
 
         # There are only special symbols up to fourth-order derivatives
         if dot_i >= 5:
-            return super(VectorPrettyPrinter, self)._print_Derivative(deriv)
+            return super()._print_Derivative(deriv)
 
         # Deal with special symbols
-        dots = {0 : u"",
-                1 : u"\N{COMBINING DOT ABOVE}",
-                2 : u"\N{COMBINING DIAERESIS}",
-                3 : u"\N{COMBINING THREE DOTS ABOVE}",
-                4 : u"\N{COMBINING FOUR DOTS ABOVE}"}
+        dots = {0: "",
+                1: "\N{COMBINING DOT ABOVE}",
+                2: "\N{COMBINING DIAERESIS}",
+                3: "\N{COMBINING THREE DOTS ABOVE}",
+                4: "\N{COMBINING FOUR DOTS ABOVE}"}
 
         d = pform.__dict__
-        #if unicode is false then calculate number of apostrophes needed and add to output
+        # if unicode is false then calculate number of apostrophes needed and
+        # add to output
         if not self._use_unicode:
             apostrophes = ""
             for i in range(0, dot_i):
@@ -151,7 +152,6 @@ class VectorPrettyPrinter(PrettyPrinter):
             d['picture'][0] += apostrophes + "(t)"
         else:
             d['picture'] = [center_accent(d['picture'][0], dots[dot_i])]
-        d['unicode'] =  center_accent(d['unicode'], dots[dot_i])
         return pform
 
     def _print_Function(self, e):
@@ -166,7 +166,7 @@ class VectorPrettyPrinter(PrettyPrinter):
         # dynamic symbol, so we'll skip the (t). The rest of the code is
         # identical to the normal PrettyPrinter code
         if not (isinstance(func, UndefinedFunction) and (args == (t,))):
-            return super(VectorPrettyPrinter, self)._print_Function(e)
+            return super()._print_Function(e)
         return pform
 
 
@@ -199,7 +199,7 @@ def vprint(expr, **settings):
 
     outstr = vsprint(expr, **settings)
 
-    from sympy.core.compatibility import builtins
+    import builtins
     if (outstr != 'None'):
         builtins._ = outstr
         print(outstr)
@@ -292,7 +292,8 @@ def vlatex(expr, **settings):
     objects.
 
     For latex representation of Vectors, Dyadics, and dynamicsymbols. Takes the
-    same options as SymPy's :func:`~.latex`; see that function for more information;
+    same options as SymPy's :func:`~.latex`; see that function for more
+    information;
 
     Parameters
     ==========
@@ -364,6 +365,7 @@ def init_vprinting(**kwargs):
     kwargs['pretty_printer'] = vpprint
     kwargs['latex_printer'] = vlatex
     init_printing(**kwargs)
+
 
 params = init_printing.__doc__.split('Examples\n    ========')[0]  # type: ignore
 init_vprinting.__doc__ = init_vprinting.__doc__.format(params)  # type: ignore

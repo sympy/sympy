@@ -5,7 +5,7 @@ from sympy.physics.mechanics.functions import find_dynamicsymbols
 __all__ = ['SymbolicSystem']
 
 
-class SymbolicSystem(object):
+class SymbolicSystem:
     """SymbolicSystem is a class that contains all the information about a
     system in a symbolic format such as the equations of motions and the bodies
     and loads in the system.
@@ -263,9 +263,9 @@ class SymbolicSystem(object):
 
         # Change the body and loads iterables to tuples if they are not tuples
         # already
-        if type(bodies) != tuple and bodies is not None:
+        if not isinstance(bodies, tuple) and bodies is not None:
             bodies = tuple(bodies)
-        if type(loads) != tuple and loads is not None:
+        if not isinstance(loads, tuple) and loads is not None:
             loads = tuple(loads)
         self._bodies = bodies
         self._loads = loads

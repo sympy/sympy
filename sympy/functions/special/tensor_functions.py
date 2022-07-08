@@ -1,9 +1,14 @@
+from math import prod
+
 from sympy.core import S, Integer
-from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_not
-from sympy.core.mul import prod
-from sympy.utilities.iterables import (has_dups, default_sort_key)
+from sympy.core.relational import Ne
+from sympy.core.sorting import default_sort_key
+from sympy.external.gmpy import SYMPY_INTS
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.utilities.iterables import has_dups
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -27,7 +32,6 @@ def Eijk(*args, **kwargs):
 
 def eval_levicivita(*args):
     """Evaluate Levi-Civita symbol."""
-    from sympy import factorial
     n = len(args)
     return prod(
         prod(args[j] - args[i] for j in range(i + 1, n))
@@ -79,7 +83,7 @@ class LeviCivita(Function):
         if has_dups(args):
             return S.Zero
 
-    def doit(self):
+    def doit(self, **hints):
         return eval_levicivita(*self.args)
 
 
@@ -98,7 +102,7 @@ class KroneckerDelta(Function):
 
     An example with integer indices:
 
-        >>> from sympy.functions.special.tensor_functions import KroneckerDelta
+        >>> from sympy import KroneckerDelta
         >>> KroneckerDelta(1, 2)
         0
         >>> KroneckerDelta(3, 3)
@@ -147,7 +151,7 @@ class KroneckerDelta(Function):
         Examples
         ========
 
-        >>> from sympy.functions.special.tensor_functions import KroneckerDelta
+        >>> from sympy import KroneckerDelta
         >>> from sympy.abc import i, j, k
 
         >>> KroneckerDelta(i, j)
@@ -203,7 +207,7 @@ class KroneckerDelta(Function):
     def _eval_power(self, expt):
         if expt.is_positive:
             return self
-        if expt.is_negative and not -expt is S.One:
+        if expt.is_negative and expt is not S.NegativeOne:
             return 1/self
 
     @property
@@ -214,8 +218,7 @@ class KroneckerDelta(Function):
         Examples
         ========
 
-        >>> from sympy.functions.special.tensor_functions import KroneckerDelta
-        >>> from sympy import Symbol
+        >>> from sympy import KroneckerDelta, Symbol
         >>> a = Symbol('a', above_fermi=True)
         >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
@@ -247,8 +250,7 @@ class KroneckerDelta(Function):
         Examples
         ========
 
-        >>> from sympy.functions.special.tensor_functions import KroneckerDelta
-        >>> from sympy import Symbol
+        >>> from sympy import KroneckerDelta, Symbol
         >>> a = Symbol('a', above_fermi=True)
         >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
@@ -280,8 +282,7 @@ class KroneckerDelta(Function):
         Examples
         ========
 
-        >>> from sympy.functions.special.tensor_functions import KroneckerDelta
-        >>> from sympy import Symbol
+        >>> from sympy import KroneckerDelta, Symbol
         >>> a = Symbol('a', above_fermi=True)
         >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
@@ -312,8 +313,7 @@ class KroneckerDelta(Function):
         Examples
         ========
 
-        >>> from sympy.functions.special.tensor_functions import KroneckerDelta
-        >>> from sympy import Symbol
+        >>> from sympy import KroneckerDelta, Symbol
         >>> a = Symbol('a', above_fermi=True)
         >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
@@ -344,8 +344,7 @@ class KroneckerDelta(Function):
         Examples
         ========
 
-        >>> from sympy.functions.special.tensor_functions import KroneckerDelta
-        >>> from sympy import Symbol
+        >>> from sympy import KroneckerDelta, Symbol
         >>> a = Symbol('a', above_fermi=True)
         >>> i = Symbol('i', below_fermi=True)
         >>> p = Symbol('p')
@@ -383,8 +382,7 @@ class KroneckerDelta(Function):
         Examples
         ========
 
-        >>> from sympy.functions.special.tensor_functions import KroneckerDelta
-        >>> from sympy import Symbol
+        >>> from sympy import KroneckerDelta, Symbol
         >>> a = Symbol('a', above_fermi=True)
         >>> i = Symbol('i', below_fermi=True)
         >>> j = Symbol('j', below_fermi=True)
@@ -423,8 +421,7 @@ class KroneckerDelta(Function):
         Examples
         ========
 
-        >>> from sympy.functions.special.tensor_functions import KroneckerDelta
-        >>> from sympy import Symbol
+        >>> from sympy import KroneckerDelta, Symbol
         >>> a = Symbol('a', above_fermi=True)
         >>> i = Symbol('i', below_fermi=True)
         >>> j = Symbol('j', below_fermi=True)
@@ -472,12 +469,6 @@ class KroneckerDelta(Function):
     def indices(self):
         return self.args[0:2]
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.kronecker_delta(self.args[0]._sage_(), self.args[1]._sage_())
-
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        from sympy.functions.elementary.piecewise import Piecewise
-        from sympy.core.relational import Ne
         i, j = args
         return Piecewise((0, Ne(i, j)), (1, True))

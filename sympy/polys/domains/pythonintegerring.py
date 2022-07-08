@@ -1,10 +1,9 @@
 """Implementation of :class:`PythonIntegerRing` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.groundtypes import (
-    PythonInteger, SymPyInteger, python_sqrt,
-    python_factorial, python_gcdex, python_gcd, python_lcm,
+    PythonInteger, SymPyInteger, sqrt as python_sqrt,
+    factorial as python_factorial, python_gcdex, python_gcd, python_lcm,
 )
 from sympy.polys.domains.integerring import IntegerRing
 from sympy.polys.polyerrors import CoercionFailed
@@ -12,7 +11,11 @@ from sympy.utilities import public
 
 @public
 class PythonIntegerRing(IntegerRing):
-    """Integer ring based on Python's ``int`` type. """
+    """Integer ring based on Python's ``int`` type.
+
+    This will be used as :ref:`ZZ` if ``gmpy`` and ``gmpy2`` are not
+    installed. Elements are instances of the standard Python ``int`` type.
+    """
 
     dtype = PythonInteger
     zero = dtype(0)
@@ -42,6 +45,11 @@ class PythonIntegerRing(IntegerRing):
     def from_ZZ_python(K1, a, K0):
         """Convert Python's ``int`` to Python's ``int``. """
         return a
+
+    def from_QQ(K1, a, K0):
+        """Convert Python's ``Fraction`` to Python's ``int``. """
+        if a.denominator == 1:
+            return a.numerator
 
     def from_QQ_python(K1, a, K0):
         """Convert Python's ``Fraction`` to Python's ``int``. """
