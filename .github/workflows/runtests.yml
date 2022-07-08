@@ -115,7 +115,11 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
+        env:
+          PYTHONWARNINGS: error
       - run: examples/all.py -q
+        env:
+          PYTHONWARNINGS: error
 
   # -------------------- Test split 1/2 latest Python -------------- #
 
@@ -131,6 +135,8 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=1/2
+        env:
+          PYTHONWARNINGS: error
 
   # -------------------- Test split 2/2 latest Python -------------- #
 
@@ -146,6 +152,8 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
+        env:
+          PYTHONWARNINGS: error
 
   # -------------------- Test Pyodide on node ---------------------- #
 
@@ -224,6 +232,8 @@ jobs:
 
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
+        env:
+          PYTHONWARNINGS: error
 
   # -------------------- Tensorflow tests -------------------------- #
 
@@ -239,8 +249,11 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath numpy scipy tensorflow
+
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
+        env:
+          PYTHONWARNINGS: error
 
   # -------------------- SymEngine tests --------------------------- #
 
@@ -259,6 +272,7 @@ jobs:
       - run: bin/test_symengine.py
         env:
           USE_SYMENGINE: '1'
+          PYTHONWARNINGS: error
 
   # -------------------- Slow test split 1/2 ----------------------- #
 
@@ -274,6 +288,8 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --slow --timeout=595 --split=1/2
+        env:
+          PYTHONWARNINGS: error
 
   # -------------------- Slow test split 2/2 ----------------------- #
 
@@ -289,6 +305,8 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --slow --timeout=595 --split=2/2
+        env:
+          PYTHONWARNINGS: error
 
   # -------------------- Test split 1/2 older (and newer) Python --------------- #
 
@@ -314,6 +332,8 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=1/2
+        env:
+          PYTHONWARNINGS: error
 
   # -------------------- Test split 2/2 older (and newer) Python --------------- #
 
@@ -339,6 +359,8 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
+        env:
+          PYTHONWARNINGS: error
 
   # -------------------- Doctests older (and newer) Python --------------------- #
 
@@ -364,7 +386,11 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
+        env:
+          PYTHONWARNINGS: error
       - run: examples/all.py -q
+        env:
+          PYTHONWARNINGS: error
 
   # -------------------- Build the html/latex docs ----------------- #
 
