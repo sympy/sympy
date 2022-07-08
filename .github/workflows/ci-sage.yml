@@ -47,7 +47,7 @@ env:
   SPKG:             sympy
   # Sage distribution packages to build
   TARGETS_PRE:      build/make/Makefile
-  TARGETS:          SAGE_CHECK=no SAGE_CHECK_PACKAGES=sympy build ptest
+  TARGETS:          SAGE_CHECK=no SAGE_CHECK_PACKAGES=sympy build SAGE_DOCTEST_RANDOM_SEED=0 ptest
   TARGETS_OPTIONAL: build/make/Makefile
   # Standard setting: Test the current beta release of Sage:
   SAGE_REPO:        sagemath/sage
