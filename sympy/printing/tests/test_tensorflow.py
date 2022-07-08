@@ -12,14 +12,22 @@ from sympy.functions import \
 from sympy.matrices import Matrix, MatrixBase, eye, randMatrix
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
-from sympy.printing.tensorflow import tensorflow_code
 from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 from sympy.utilities.lambdify import lambdify
 from sympy.testing.pytest import skip
 from sympy.testing.pytest import XFAIL
+from sympy.utilities.exceptions import ignore_warnings
 
 
-tf = tensorflow = import_module("tensorflow")
+with ignore_warnings(DeprecationWarning):
+    # Warnings when importing tensorflow:
+    #
+    # DeprecationWarning: The distutils package is deprecated and slated for
+    # removal in Python 3.12. Use setuptools or check PEP 632 for potential
+    # alternatives
+    from sympy.printing.tensorflow import tensorflow_code
+    tf = tensorflow = import_module("tensorflow")
+
 
 if tensorflow:
     # Hide Tensorflow warnings
@@ -33,6 +41,7 @@ P = MatrixSymbol("P", 3, 3)
 Q = MatrixSymbol("Q", 3, 3)
 
 x, y, z, t = symbols("x y z t")
+
 
 if tf is not None:
     llo = [list(range(i, i+3)) for i in range(0, 9, 3)]
