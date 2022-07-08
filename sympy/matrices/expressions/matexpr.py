@@ -610,10 +610,10 @@ class MatrixElement(Expr):
     def symbol(self):
         return self.args[0]
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
         return args[0][args[1], args[2]]

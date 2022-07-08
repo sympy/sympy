@@ -40,7 +40,7 @@ class Mod(Function):
 
     @classmethod
     def eval(cls, p, q):
-        def doit(p, q):
+        def number_eval(p, q):
             """Try to return p % q if both are numbers or +/-p is known
             to be less than or equal q.
             """
@@ -99,7 +99,7 @@ class Mod(Function):
                             return -d + q
                     break
 
-        rv = doit(p, q)
+        rv = number_eval(p, q)
         if rv is not None:
             return rv
 
@@ -206,7 +206,7 @@ class Mod(Function):
             G, p, q = [-i for i in (G, p, q)]
 
         # check again to see if p and q can now be handled as numbers
-        rv = doit(p, q)
+        rv = number_eval(p, q)
         if rv is not None:
             return rv*G
 

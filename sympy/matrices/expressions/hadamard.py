@@ -85,8 +85,8 @@ class HadamardProduct(MatrixExpr):
         from sympy.matrices.expressions.transpose import transpose
         return HadamardProduct(*list(map(transpose, self.args)))
 
-    def doit(self, **ignored):
-        expr = self.func(*[i.doit(**ignored) for i in self.args])
+    def doit(self, **hints):
+        expr = self.func(*[i.doit(**hints) for i in self.args])
         # Check for explicit matrices:
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.immutable import ImmutableMatrix

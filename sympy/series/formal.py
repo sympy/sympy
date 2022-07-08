@@ -406,10 +406,8 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
         c2 = q.subs(k, 1/k).leadterm(k)[0]
         res *= (-c1 / c2)**k
 
-        for r, mul in roots(p, k).items():
-            res *= rf(-r, k)**mul
-        for r, mul in roots(q, k).items():
-            res /= rf(-r, k)**mul
+        res *= Mul(*[rf(-r, k)**mul for r, mul in roots(p, k).items()])
+        res /= Mul(*[rf(-r, k)**mul for r, mul in roots(q, k).items()])
 
         sol.append((res, kterm))
 
