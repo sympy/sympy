@@ -193,7 +193,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     association without searching for the above readers, use
 
     >>> from sympy.printing.preview import system_default_viewer
-    >>> preview(x + y, output=system_default_viewer)
+    >>> preview(x + y, output='dvi', viewer=system_default_viewer)
 
     If this still does not find the viewer you want, it can be set explicitly.
 
