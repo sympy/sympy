@@ -40,7 +40,10 @@ test_list = [
     '*jax*',
 
     # gmpy
-    'polys',
+    'sympy/polys',
+
+    # gmpy, numpy, scipy, autowrap, matplotlib
+    'sympy/external',
 
     # autowrap
     '*autowrap*',
@@ -58,6 +61,7 @@ test_list = [
     'sympy/codegen/',
     'sympy/utilities/tests/test_codegen',
     'sympy/utilities/_compilation/tests/test_compilation',
+    'sympy/external/tests/test_codegen.py',
 
     # cloudpickle
     'pickling',
