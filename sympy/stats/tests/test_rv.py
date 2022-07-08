@@ -24,6 +24,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
 from sympy.testing.pytest import raises, skip, XFAIL, warns_deprecated_sympy
+from sympy.utilities.exceptions import ignore_warnings
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
@@ -210,16 +211,27 @@ def test_Sample():
     assert sample(X) in [1, 2, 3, 4, 5, 6]
     assert isinstance(sample(X + Y), float)
 
-    assert P(X + Y > 0, Y < 0, numsamples=10).is_number
+    # XXX: This should be fixed in lambdify to not use numpy functions from the
+    # scipy module.
+    #
+    # DeprecationWarning: scipy.greater is deprecated and will be removed
+    # in SciPy 2.0.0, use numpy.greater instead
+    # DeprecationWarning: scipy.sin is deprecated and will be removed in SciPy
+    # 2.0.0, use numpy.sin instead
+    with ignore_warnings(DeprecationWarning):
+        assert P(X + Y > 0, Y < 0, numsamples=10).is_number
+
     assert E(X + Y, numsamples=10).is_number
     assert E(X**2 + Y, numsamples=10).is_number
     assert E((X + Y)**2, numsamples=10).is_number
     assert variance(X + Y, numsamples=10).is_number
 
-    raises(TypeError, lambda: P(Y > z, numsamples=5))
+    with ignore_warnings(DeprecationWarning):
+        raises(TypeError, lambda: P(Y > z, numsamples=5))
 
-    assert P(sin(Y) <= 1, numsamples=10) == 1.0
-    assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1.0
+    with ignore_warnings(DeprecationWarning):
+        assert P(sin(Y) <= 1, numsamples=10) == 1.0
+        assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1.0
 
     assert all(i in range(1, 7) for i in density(X, numsamples=10))
     assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))

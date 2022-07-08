@@ -17,7 +17,20 @@ from sympy.utilities.exceptions import ignore_warnings
 
 aesaralogger = logging.getLogger('aesara.configdefaults')
 aesaralogger.setLevel(logging.CRITICAL)
-aesara = import_module('aesara')
+
+# Warnings when importing Aesara:
+#
+# E   DeprecationWarning:
+# E     `numpy.distutils` is deprecated since NumPy 1.23.0, as a result
+# E     of the deprecation of `distutils` itself. It will be removed for
+# E     Python >= 3.12.
+# E   UserWarning:
+# E       Optimized (vendor) Blas libraries are not found.
+# E       Falls back to netlib Blas library which has worse performance.
+#
+with ignore_warnings((DeprecationWarning, UserWarning)):
+    aesara = import_module('aesara')
+
 aesaralogger.setLevel(logging.WARNING)
 
 

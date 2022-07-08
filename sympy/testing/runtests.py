@@ -38,6 +38,8 @@ from inspect import unwrap
 from sympy.core.cache import clear_cache
 from sympy.external import import_module
 from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
+from sympy.utilities.exceptions import ignore_warnings
+
 
 IS_WINDOWS = (os.name == 'nt')
 ON_CI = os.getenv('CI', None)
@@ -709,11 +711,22 @@ def _get_doctest_blacklist():
     if ON_CI or import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
-    if import_module('aesara') is None:
-        blacklist.extend([
-            "sympy/printing/aesaracode.py",
-            "doc/src/modules/numeric-computation.rst",
-        ])
+    # Warnings when importing Aesara:
+    #
+    # E   DeprecationWarning:
+    # E     `numpy.distutils` is deprecated since NumPy 1.23.0, as a result
+    # E     of the deprecation of `distutils` itself. It will be removed for
+    # E     Python >= 3.12.
+    # E   UserWarning:
+    # E       Optimized (vendor) Blas libraries are not found.
+    # E       Falls back to netlib Blas library which has worse performance.
+    #
+    with ignore_warnings((DeprecationWarning, UserWarning)):
+        if import_module('aesara') is None:
+            blacklist.extend([
+                "sympy/printing/aesaracode.py",
+                "doc/src/modules/numeric-computation.rst",
+            ])
 
     if import_module('cupy') is None:
         blacklist.extend([

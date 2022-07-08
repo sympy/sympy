@@ -7,6 +7,7 @@ from sympy.stats import Beta, Chi, Normal, Gamma, Exponential, LogNormal, Pareto
     BetaPrime, Cauchy, GammaInverse, GaussianInverse, StudentT, Weibull, density, ContinuousRV, FDistribution, \
     Gumbel, Laplace, Logistic, Rayleigh, Triangular
 from sympy.testing.pytest import skip, raises
+from sympy.utilities.exceptions import ignore_warnings
 
 
 def test_sample_numpy():
@@ -162,19 +163,30 @@ def test_sample_continuous():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    assert sample(Z) in Z.pspace.domain.set
-    sym, val = list(Z.pspace.sample().items())[0]
+
+    # XXX: Sampling with scipy under -Werror fails with
+    #
+    # RuntimeWarning: invalid value encountered in _cdf_single (vectorized)
+    #
+    # It isn't immediately clear if this is a bug in SciPy or SymPy.
+
+    with ignore_warnings(RuntimeWarning):
+        assert sample(Z) in Z.pspace.domain.set
+        sym, val = list(Z.pspace.sample().items())[0]
+
     assert sym == Z and val in Interval(0, oo)
 
     libraries = ['scipy', 'numpy', 'pymc']
     for lib in libraries:
+        ignore = RuntimeWarning if lib == 'scipy' else ()
         try:
             imported_lib = import_module(lib)
             if imported_lib:
                 s0, s1, s2 = [], [], []
-                s0 = sample(Z, size=10, library=lib, seed=0)
-                s1 = sample(Z, size=10, library=lib, seed=0)
-                s2 = sample(Z, size=10, library=lib, seed=1)
+                with ignore_warnings(ignore):
+                    s0 = sample(Z, size=10, library=lib, seed=0)
+                    s1 = sample(Z, size=10, library=lib, seed=0)
+                    s2 = sample(Z, size=10, library=lib, seed=1)
                 assert all(s0 == s1)
                 assert all(s1 != s2)
         except NotImplementedError:
