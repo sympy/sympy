@@ -4,7 +4,7 @@ from functools import reduce
 from operator import attrgetter
 from .basic import _args_sortkey
 from .parameters import global_parameters
-from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
+from .logic import _fuzzy_group, fuzzy_or
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
