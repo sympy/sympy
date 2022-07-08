@@ -129,7 +129,6 @@ def print_tree(node, assumptions=True):
     | extended_real: True
     | finite: True
     | hermitian: True
-    | imaginary: False
     | infinite: False
     | integer: True
     | irrational: False

@@ -328,7 +328,7 @@ def common_assumptions(exprs, check=None):
     >>> from sympy import oo, pi, sqrt
     >>> common_assumptions([-4, 0, sqrt(2), 2, pi, oo])
     {'commutative': True, 'composite': False,
-    'extended_real': True, 'imaginary': False, 'odd': False}
+    'extended_real': True, 'odd': False}
 
     By default, all assumptions are tested; pass an iterable of the
     assumptions to limit those that are reported:

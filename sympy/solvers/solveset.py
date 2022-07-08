@@ -2202,7 +2202,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     >>> i = Symbol('i', imaginary=True)
     >>> solveset(Eq(i**2 + i*sin(i), 1), i, domain=S.Reals)
-    ConditionSet(_R, Eq(_R**2 + _R*sin(_R) - 1, 0), Reals)
+    ConditionSet(i, Eq(i**2 + i*sin(i) - 1, 0), Reals)
 
     * Inequalities can be solved over the real domain only. Use of a complex
       domain leads to a NotImplementedError.
