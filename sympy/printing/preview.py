@@ -189,9 +189,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     then 'view' will look for available 'dvi' viewers on your system
     (predefined in the function, so it will try evince, first, then kdvi and
     xdvi). If nothing is found, it will fall back to using a system file
-    association (via ``open`` and ``xdg-open``).
+    association (via ``open`` and ``xdg-open``). To always use your system file
+    association without searching for the above readers, use
 
-    If this does not find the viewer you want, it can be set explicitly.
+    >>> preview(x + y, output=sympy.printing.preview.system_default_viewer)
+
+    If this still does not find the viewer you want, it can be set explicitly.
 
     >>> preview(x + y, output='dvi', viewer='superior-dvi-viewer')
 
