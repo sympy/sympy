@@ -250,6 +250,15 @@ def test_sign():
 
     x = Symbol('x', imaginary=True)
     assert sign(x).is_imaginary is True
+    assert sign(x).is_integer is None
+    assert sign(x).is_real is None
+    assert sign(x).is_zero is None
+    assert sign(x).diff(x) == 2*DiracDelta(-I*x)
+    assert sign(x).doit() == sign(x, evaluate=False)
+    assert conjugate(sign(x)) == -sign(x)
+
+    x = Symbol('x', imaginary=True, zero=False)
+    assert sign(x).is_imaginary is True
     assert sign(x).is_integer is False
     assert sign(x).is_real is False
     assert sign(x).is_zero is False
@@ -258,7 +267,7 @@ def test_sign():
     assert conjugate(sign(x)) == -sign(x)
 
     x = Symbol('x', real=True)
-    assert sign(x).is_imaginary is False
+    assert sign(x).is_imaginary is None
     assert sign(x).is_integer is True
     assert sign(x).is_real is True
     assert sign(x).is_zero is None
@@ -285,7 +294,7 @@ def test_sign():
     assert Abs(sign(x)) == 1
 
     x = 0
-    assert sign(x).is_imaginary is False
+    assert sign(x).is_imaginary is True
     assert sign(x).is_integer is True
     assert sign(x).is_real is True
     assert sign(x).is_zero is True
@@ -357,7 +366,7 @@ def test_as_real_imag():
                (a**2 + b**2)**Rational(1, 4)*sin(atan2(b, a)/2)/2)
 
     assert sqrt(a**2).as_real_imag() == (sqrt(a**2), 0)
-    i = symbols('i', imaginary=True)
+    i = symbols('i', imaginary=True, zero=False)
     assert sqrt(i**2).as_real_imag() == (0, abs(i))
 
     assert ((1 + I)/(1 - I)).as_real_imag() == (0, 1)
@@ -996,18 +1005,13 @@ def test_issue_22189():
 
 def test_zero_assumptions():
     nr = Symbol('nonreal', real=False, finite=True)
-    ni = Symbol('nonimaginary', imaginary=False)
-    # imaginary implies not zero
-    nzni = Symbol('nonzerononimaginary', zero=False, imaginary=False)
+    ni = Symbol('nonimaginary', imaginary=False, finite=True)
 
     assert re(nr).is_zero is None
     assert im(nr).is_zero is False
 
-    assert re(ni).is_zero is None
+    assert re(ni).is_zero is False
     assert im(ni).is_zero is None
-
-    assert re(nzni).is_zero is False
-    assert im(nzni).is_zero is None
 
 
 @_both_exp_pow

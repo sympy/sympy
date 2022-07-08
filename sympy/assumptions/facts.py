@@ -88,8 +88,10 @@ def get_number_facts(x = None):
             Q.positive(x), Q.positive_infinite(x)),
 
         # build complex plane
-        Exclusive(Q.real(x), Q.imaginary(x)),
         Implies(Q.real(x) | Q.imaginary(x), Q.complex(x)),
+        Equivalent(Q.real(x) & Q.imaginary(x), Q.zero(x)),
+        Implies(Q.real(x) & ~Q.zero(x), ~Q.imaginary(x)),
+        Implies(Q.imaginary(x) & ~Q.zero(x), ~Q.real(x)),
 
         # other subsets of complex
         Exclusive(Q.transcendental(x), Q.algebraic(x)),

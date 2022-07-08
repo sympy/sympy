@@ -10,7 +10,7 @@ from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .intfunc import integer_nthroot, trailing
-from .logic import fuzzy_not, _fuzzy_group
+from .logic import fuzzy_not, fuzzy_or, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
 from .kind import KindDispatcher
@@ -736,6 +736,8 @@ class Mul(Expr, AssocOp):
                         if t:
                             from sympy.functions.elementary.complexes import sign
                             r = sympify(n)/d
+                            # XXX: does it matter if a (self) is zero here?
+                            # Then this would be zero*one but possibly unevaluated...
                             return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
 
         p = Pow(self, e, evaluate=False)
@@ -1479,47 +1481,56 @@ class Mul(Expr, AssocOp):
     def _eval_real_imag(self, real):
         zero = False
         t_not_re_im = None
+        imaginary = False
 
         for t in self.args:
-            if (t.is_complex or t.is_infinite) is False and t.is_extended_real is False:
+            # Handle definite zeros and nonreal infinities first
+            if t.is_zero:
+                if all(a.is_finite for a in self.args):
+                    return True
+                else:
+                    return None
+            elif (t.is_complex or t.is_infinite) is False and t.is_extended_real is False:
                 return False
-            elif t.is_imaginary:  # I
-                real = not real
-            elif t.is_extended_real:  # 2
-                if not zero:
-                    z = t.is_zero
-                    if not z and zero is False:
-                        zero = z
-                    elif z:
-                        if all(a.is_finite for a in self.args):
-                            return True
-                        return
-            elif t.is_extended_real is False:
-                # symbolic or literal like `2 + I` or symbolic imaginary
-                if t_not_re_im:
-                    return  # complex terms might cancel
-                t_not_re_im = t
-            elif t.is_imaginary is False:  # symbolic like `2` or `2 + I`
-                if t_not_re_im:
-                    return  # complex terms might cancel
-                t_not_re_im = t
-            else:
-                return
 
-        if t_not_re_im:
-            if t_not_re_im.is_extended_real is False:
-                if real:  # like 3
-                    return zero  # 3*(smthng like 2 + I or i) is not real
-            if t_not_re_im.is_imaginary is False:  # symbolic 2 or 2 + I
-                if not real:  # like I
-                    return zero  # I*(smthng like 2 or 2 + I) is not real
-        elif zero is False:
-            return real  # can't be trumped by 0
-        elif real:
-            return real  # doesn't matter what zero is
+            # Since zero is both real and imaginary we need to keep track of
+            # whether we are sure that this product is not zero.
+            if t.is_zero is None:
+                zero = None
+
+            # Check for every factor whether it is on the real or imaginary
+            # axis or if it definitely is not on either axis. We can allow one
+            # factor that is definitely not on at least one of the axes. If any
+            # factor cannot be determined to lie on or definitely not on any
+            # axis then we gives up.
+            if t.is_imaginary:
+                real = not real
+            elif t.is_extended_real:
+                pass
+            elif t.is_extended_real is False or t.is_imaginary is False:
+                if t_not_re_im is not None:
+                    return None
+                else:
+                    t_not_re_im = t
+            else:
+                return None
+
+        if t_not_re_im is not None:
+            # Every term was either on the real or imaginary axis (or both)
+            # except this one.
+            if real:
+                return fuzzy_or([zero, t_not_re_im.is_extended_real])
+            elif t_not_re_im.is_extended_real is False and t_not_re_im.is_imaginary is False:
+                return zero
+        else:
+            # All terms were imaginary or real
+            if real:
+                return fuzzy_or([zero, not imaginary])
+            else:
+                return fuzzy_or([zero, imaginary])
 
     def _eval_is_imaginary(self):
-        if all(a.is_zero is False and a.is_finite for a in self.args):
+        if all(a.is_finite for a in self.args):
             return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):

@@ -349,11 +349,10 @@ class Add(Expr, AssocOp):
             #   finite_real + infinite_im
             #   infinite_real + infinite_im
             # addition of a finite real or imaginary number won't be able to
-            # change the zoo nature; adding an infinite qualtity would result
+            # change the zoo nature; adding an infinite quantity would result
             # in a NaN condition if it had sign opposite of the infinite
             # portion of zoo, e.g., infinite_real - infinite_real.
-            newseq = [c for c in newseq if not (c.is_finite and
-                                                c.is_extended_real is not None)]
+            newseq = [c for c in newseq if not (c.is_finite)]
 
         # process O(x)
         if order_factors:
@@ -630,6 +629,8 @@ class Add(Expr, AssocOp):
     # assumption methods
     _eval_is_real = lambda self: _fuzzy_group(
         (a.is_real for a in self.args), quick_exit=True)
+    _eval_is_imaginary = lambda self: _fuzzy_group(
+        (a.is_imaginary for a in self.args), quick_exit=True)
     _eval_is_extended_real = lambda self: _fuzzy_group(
         (a.is_extended_real for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: _fuzzy_group(
@@ -662,34 +663,6 @@ class Add(Expr, AssocOp):
                 sawinf = True
         return sawinf
 
-    def _eval_is_imaginary(self):
-        nz = []
-        im_I = []
-        for a in self.args:
-            if a.is_extended_real:
-                if a.is_zero:
-                    pass
-                elif a.is_zero is False:
-                    nz.append(a)
-                else:
-                    return
-            elif a.is_imaginary:
-                im_I.append(a*S.ImaginaryUnit)
-            elif a.is_Mul and S.ImaginaryUnit in a.args:
-                coeff, ai = a.as_coeff_mul(S.ImaginaryUnit)
-                if ai == (S.ImaginaryUnit,) and coeff.is_extended_real:
-                    im_I.append(-coeff)
-                else:
-                    return
-            else:
-                return
-        b = self.func(*nz)
-        if b != self:
-            if b.is_zero:
-                return fuzzy_not(self.func(*im_I).is_zero)
-            elif b.is_zero is False:
-                return False
-
     def _eval_is_zero(self):
         if self.is_commutative is False:
             # issue 10528: there is no way to know if a nc symbol
@@ -707,14 +680,10 @@ class Add(Expr, AssocOp):
                     nz.append(a)
                 else:
                     return
-            elif a.is_imaginary:
+            elif a.is_imaginary and a.is_zero is False:
                 im += 1
-            elif a.is_Mul and S.ImaginaryUnit in a.args:
-                coeff, ai = a.as_coeff_mul(S.ImaginaryUnit)
-                if ai == (S.ImaginaryUnit,) and coeff.is_extended_real:
-                    im_or_z = True
-                else:
-                    return
+            elif a.is_imaginary:
+                im_or_z = True
             else:
                 return
         if z == len(self.args):

@@ -296,7 +296,7 @@ def test_solve_univariate_inequality():
     assert isolve((x + I)*(x + 2*I) < 0, x) == Eq(x, 0)
     assert isolve(((x - 1)*(x - 2) + I)*((x - 1)*(x - 2) + 2*I) < 0, x) == Or(Eq(x, 1), Eq(x, 2))
     assert isolve((((x - 1)*(x - 2) + I)*((x - 1)*(x - 2) + 2*I))/(x - 2) > 0, x) == Eq(x, 1)
-    raises (ValueError, lambda: isolve((x**2 - 3*x*I + 2)/x < 0, x))
+    raises (NotImplementedError, lambda: isolve((x**2 - 3*x*I + 2)/x < 0, x))
 
     # numerical testing in valid() is needed
     assert isolve(x**7 - x - 2 > 0, x) == \

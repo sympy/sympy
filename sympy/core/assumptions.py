@@ -41,9 +41,7 @@ Here follows a list of possible assumption names:
     imaginary
         object value is a number that can be written as a real
         number multiplied by the imaginary unit ``I``.  See
-        [3]_.  Please note that ``0`` is not considered to be an
-        imaginary number, see
-        `issue #7649 <https://github.com/sympy/sympy/issues/7649>`_.
+        [3]_.
 
     real
         object can have only values from the set
@@ -278,6 +276,7 @@ def _generate_assumption_rules():
     'zero           ->  even & finite',
     'zero           ==  extended_nonnegative & extended_nonpositive',
     'zero           ==  nonnegative & nonpositive',
+    'zero           ==  real & imaginary',
     'nonzero        ->  real',
 
     'prime          ->  integer & positive',
@@ -286,7 +285,8 @@ def _generate_assumption_rules():
 
     'irrational     ==  real & !rational',
 
-    'imaginary      ->  !extended_real',
+    'imaginary      ->  zero | !extended_real',
+    'imaginary      ->  !extended_negative & !extended_positive',
 
     'infinite       ==  !finite',
     'noninteger     ==  extended_real & !integer',

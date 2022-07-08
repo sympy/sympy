@@ -416,14 +416,14 @@ class Pow(Expr):
         elif self.base.is_extended_nonpositive:
             if self.exp.is_odd:
                 return False
-        elif self.base.is_imaginary:
+        elif self.base.is_imaginary and self.base.is_zero is False:
             if self.exp.is_integer:
                 m = self.exp % 4
                 if m.is_zero:
                     return True
                 if m.is_integer and m.is_zero is False:
                     return False
-            if self.exp.is_imaginary:
+            if self.exp.is_imaginary and self.exp.is_zero is False:
                 from sympy.functions.elementary.exponential import log
                 return log(self.base).is_imaginary
 
@@ -506,14 +506,14 @@ class Pow(Expr):
 
         from sympy.functions.elementary.exponential import log, exp
         real_b = self.base.is_extended_real
-        if real_b is None:
+        if real_b is None and self.base.is_imaginary is None:
             if self.base.func == exp and self.base.exp.is_imaginary:
                 return self.exp.is_imaginary
             if self.base.func == Pow and self.base.base is S.Exp1 and self.base.exp.is_imaginary:
                 return self.exp.is_imaginary
             return
         real_e = self.exp.is_extended_real
-        if real_e is None:
+        if real_e is None and self.exp.is_imaginary is None:
             return
         if real_b and real_e:
             if self.base.is_extended_positive:
@@ -577,12 +577,13 @@ class Pow(Expr):
         if self.base.is_commutative is False:
             return False
 
-        if self.base.is_imaginary:
-            if self.exp.is_integer:
-                odd = self.exp.is_odd
-                if odd is not None:
-                    return odd
-                return
+        if self.base.is_imaginary and self.exp.is_integer:
+            if self.base.is_zero is False:
+                return self.exp.is_odd
+            elif self.exp.is_nonnegative and self.exp.is_odd:
+                return True
+            else:
+                return None
 
         if self.base == S.Exp1:
             f = 2 * self.exp / (S.Pi*S.ImaginaryUnit)
@@ -597,30 +598,25 @@ class Pow(Expr):
         if self.exp.is_imaginary:
             from sympy.functions.elementary.exponential import log
             imlog = log(self.base).is_imaginary
-            if imlog is not None:
+            if imlog:
                 return False  # I**i -> real; (2*I)**i -> complex ==> not imaginary
 
         if self.base.is_extended_real and self.exp.is_extended_real:
-            if self.base.is_positive:
+            if self.base.is_positive and self.exp.is_real:
                 return False
             else:
                 rat = self.exp.is_rational
                 if not rat:
                     return rat
-                if self.exp.is_integer:
+                if self.exp.is_integer and self.base.is_zero is False:
                     return False
-                else:
-                    half = (2*self.exp).is_integer
-                    if half:
-                        return self.base.is_negative
-                    return half
+                elif (2*self.exp).is_odd and self.base.is_zero is False:
+                    return self.base.is_negative
 
-        if self.base.is_extended_real is False:  # we already know it's not imag
+        if self.exp.is_integer and self.base.is_zero is False:
             from sympy.functions.elementary.complexes import arg
             i = arg(self.base)*self.exp/S.Pi
-            isodd = (2*i).is_odd
-            if isodd is not None:
-                return isodd
+            return (2*i).is_odd
 
     def _eval_is_odd(self):
         if self.exp.is_integer:

@@ -1185,7 +1185,7 @@ def test_atan2():
     assert ex.subs({x:2, y:3*I}).rewrite(arg) == -pi - I*log(sqrt(5)*I/5)
     assert ex.subs({x:2*I, y:3}).rewrite(arg) == -pi/2 - I*log(sqrt(5)*I)
     assert ex.subs({x:2*I, y:3*I}).rewrite(arg) == -pi + atan(Rational(2, 3)) + atan(Rational(3, 2))
-    i = symbols('i', imaginary=True)
+    i = symbols('i', imaginary=True, zero=False)
     r = symbols('r', real=True)
     e = atan2(i, r)
     rewrite = e.rewrite(arg)

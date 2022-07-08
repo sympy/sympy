@@ -1707,12 +1707,12 @@ def test_zoo():
             assert i - zoo is zoo
             assert zoo + i is zoo
             assert zoo - i is zoo
-        elif i.is_finite is not False:
+        elif i.is_finite is None:
             assert (i + zoo).is_Add
             assert (i - zoo).is_Add
             assert (zoo + i).is_Add
             assert (zoo - i).is_Add
-        else:
+        elif i.is_finite is False:
             assert (i + zoo) is S.NaN
             assert (i - zoo) is S.NaN
             assert (zoo + i) is S.NaN

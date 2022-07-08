@@ -127,8 +127,9 @@ class re(Function):
         return self.args[0].is_algebraic
 
     def _eval_is_zero(self):
-        # is_imaginary implies nonzero
-        return fuzzy_or([self.args[0].is_imaginary, self.args[0].is_zero])
+        # Imaginary implies finite so hold back for e.g. I*oo
+        if self.args[0].is_finite:
+            return fuzzy_or([self.args[0].is_imaginary, self.args[0].is_zero])
 
     def _eval_is_finite(self):
         if self.args[0].is_finite:

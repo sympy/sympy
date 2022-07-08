@@ -2143,7 +2143,7 @@ def test_real_imag_splitting():
     a, b = symbols('a b', real=True)
     assert solve(sqrt(a**2 + b**2) - 3, a) == \
         [-sqrt(-b**2 + 9), sqrt(-b**2 + 9)]
-    a, b = symbols('a b', imaginary=True)
+    a, b = symbols('a b', imaginary=True, zero=False)
     assert solve(sqrt(a**2 + b**2) - 3, a) == []
 
 
