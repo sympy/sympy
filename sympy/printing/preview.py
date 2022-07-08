@@ -192,7 +192,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     association (via ``open`` and ``xdg-open``). To always use your system file
     association without searching for the above readers, use
 
-    >>> preview(x + y, output=sympy.printing.preview.system_default_viewer)
+    >>> from sympy.printing.preview import system_default_viewer
+    >>> preview(x + y, output=system_default_viewer)
 
     If this still does not find the viewer you want, it can be set explicitly.
 
