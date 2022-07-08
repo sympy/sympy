@@ -118,6 +118,7 @@ def test_translate_args():
 @skip_under_pyodide("Cannot create subprocess under pyodide.")
 def test_debug_output():
     env = os.environ.copy()
+    del env['PYTHONWARNINGS']
     env['SYMPY_DEBUG'] = 'True'
     cmd = 'from sympy import *; x = Symbol("x"); print(integrate((1-cos(x))/x, x))'
     cmdline = [sys.executable, '-c', cmd]
