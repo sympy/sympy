@@ -152,10 +152,6 @@ for SymPy to
 for example the exponent operator can be parsed from `^` rather than having 
 to use Python's `**`.
 
-You should always include the variable to solve for if you want to extract 
-results programmatically, to ensure that SymPy solves for the desired 
-variable. 
-To ensure SymPy will produce results in a consistent format, use `dict=True`. 
 To extract the solutions, you can iterate through the list of dictionaries:  
     
 ```py
