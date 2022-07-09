@@ -24,7 +24,7 @@ from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
-# disable tests if antlr4-python*-runtime is not present
+# disable tests if antlr4-python3-runtime is not present
 if not antlr4:
     disabled = True
 
