@@ -320,6 +320,8 @@ class Truss:
         """
         if label not in self._node_labels:
             raise ValueError("No such node exists for the Truss")
+        elif new_label in self._node_labels:
+            raise ValueError("A node with the given label already exists")
         else:
             for node in self._nodes:
                 if node[0] == label:
@@ -352,7 +354,6 @@ class Truss:
                             self.apply_load(new_label, Symbol('R_'+str(new_label)+'_y'), 90)
                             self._loads.pop(label)
                         elif self._supports[new_label] == 'roller':
-                            # self._loads[label].remove([Symbol('R_'+str(label)+'_y'), 90])
                             self._loads[new_label] = self._loads[label]
                             for load in self._loads[label]:
                                 if load[1] == 90:
@@ -360,7 +361,6 @@ class Truss:
                                     if load[0] == 0:
                                         self._loads[label].remove(load)
                                     break
-                            # self._loads[new_label].append([Symbol('R_'+str(new_label)+'_y'), 90])
                             self.apply_load(new_label, Symbol('R_'+str(new_label)+'_y'), 90)
                             self._loads.pop(label)
                     else:
@@ -456,7 +456,7 @@ class Truss:
         >>> t.apply_load('A', P/2, 45)
         >>> t.apply_load('A', P/4, 90)
         >>> t.loads
-        {'A': [[5*P/4, 90], [P/2, 45]]}
+        {'A': [[P, 90], [P/2, 45], [P/4, 90]]}
         """
         magnitude = sympify(magnitude)
         direction = sympify(direction)
@@ -466,13 +466,7 @@ class Truss:
 
         else:
             if location in list(self._loads):
-                if direction in [self._loads[location][i][1] for i in range(len(self._loads[location]))]:
-                    for i in range(len(self._loads[location])):
-                        if self._loads[location][i][1] == direction:
-                            self._loads[location][i][0] += magnitude
-                            break
-                else:
-                    self._loads[location].append([magnitude, direction])
+                self._loads[location].append([magnitude, direction])
             else:
                 self._loads[location] = [[magnitude, direction]]
 
@@ -507,10 +501,10 @@ class Truss:
         >>> t.apply_load('A', P/2, 45)
         >>> t.apply_load('A', P/4, 90)
         >>> t.loads
-        {'A': [[5*P/4, 90], [P/2, 45]]}
-        >>> t.remove_load('A', 5*P/4, 90)
+        {'A': [[P, 90], [P/2, 45], [P/4, 90]]}
+        >>> t.remove_load('A', P/4, 90)
         >>> t.loads
-        {'A': [[P/2, 45]]}
+        {'A': [[P, 90], [P/2, 45]]}
         """
         magnitude = sympify(magnitude)
         direction = sympify(direction)
@@ -601,20 +595,7 @@ class Truss:
         else:
             if self._supports[location] == 'pinned':
                 self.remove_load(location, Symbol('R_'+str(location)+'_x'), 0)
-                for load in self._loads[location]:
-                    if load[1] == 90:
-                        load[0] -= Symbol('R_'+str(location)+'_y')
-                        if load[0] == 0:
-                            self._loads[location].remove(load)
-                        break
-
+                self.remove_load(location, Symbol('R_'+str(location)+'_y'), 90)
             elif self._supports[location] == 'roller':
-                for load in self._loads[location]:
-                    if load[1] == 90:
-                        load[0] -= Symbol('R_'+str(location)+'_y')
-                        if load[0] == 0:
-                            self._loads[location].remove(load)
-                        break
+                self.remove_load(location, Symbol('R_'+str(location)+'_y'), 90)
             self._supports.pop(location)
-            if self._loads[location] == []:
-                self._loads.pop(location)

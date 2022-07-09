@@ -1,4 +1,4 @@
-from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.symbol import Symbol, symbols
 from sympy.physics.continuum_mechanics.truss import Truss
 
 def test_truss():
@@ -73,23 +73,23 @@ def test_truss():
     t.apply_load(A, P/4, 90)
     t.apply_load(A, 2*P,45)
     t.apply_load(D, P/2, 90)
-    assert t.loads == {A: [[5*P/4, 90], [2*P, 45]], D: [[P/2, 90]]}
-    assert t.loads[A] == [[5*P/4, 90], [2*P, 45]]
+    assert t.loads == {A: [[P, 90], [P/4, 90], [2*P, 45]], D: [[P/2, 90]]}
+    assert t.loads[A] == [[P, 90], [P/4, 90], [2*P, 45]]
 
     # testing the remove_load method
-    t.remove_load(A, 5*P/4, 90)
-    assert t.loads == {A: [[2*P, 45]], D: [[P/2, 90]]}
-    assert t.loads[A] == [[2*P, 45]]
+    t.remove_load(A, P/4, 90)
+    assert t.loads == {A: [[P, 90], [2*P, 45]], D: [[P/2, 90]]}
+    assert t.loads[A] == [[P, 90], [2*P, 45]]
 
     # testing the apply_support method
     t.apply_support(A, "pinned")
     t.apply_support(D, "roller")
     assert t.supports == {A: 'pinned', D: 'roller'}
     assert t.reaction_loads == {}
-    assert t.loads == {A: [[2*P, 45], [Symbol('R_A_x'), 0], [Symbol('R_A_y'), 90]], D: [[P/2 + Symbol('R_D_y'), 90]]}
+    assert t.loads == {A: [[P, 90], [2*P, 45], [Symbol('R_A_x'), 0], [Symbol('R_A_y'), 90]],  D: [[P/2, 90], [Symbol('R_D_y'), 90]]}
 
     # testing the remove_support method
     t.remove_support(A)
     assert t.supports == {D: 'roller'}
     assert t.reaction_loads == {}
-    assert t.loads == {A: [[2*P, 45]], D: [[P/2 + Symbol('R_D_y'), 90]]}
+    assert t.loads == {A: [[P, 90], [2*P, 45]], D: [[P/2, 90], [Symbol('R_D_y'), 90]]}
