@@ -116,6 +116,8 @@ or which you think of as an equality.
 >>> from sympy import Eq, solve, solveset
 >>> from sympy.abc import x, y
 >>> eqn = Eq(x**2, y)
+>>> eqn
+Eq(x**2, y)
 >>> solutions = solve(eqn, x, dict=True)
 >>> print(solutions)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
@@ -136,7 +138,11 @@ This approach is convenient if you are programmatically reading in a string.
 We [recommend against using parsing a string if you are creating the expression yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input). 
 Parsing an equation from a string requires you to use 
 {func}`transformations <sympy.parsing.sympy_parser.parse_expr>`
-for SymPy to interpret equals signs and create symbols from your variables.
+for SymPy to
+- interpret equals signs
+- create symbols from your variables
+-  use more mathematical (rather than standard Python) notation, 
+for example the exponent operator can be parsed from `^` rather than having to use Python's `**`.
 
 You should always include the variable to solve for if you want to extract results programmatically, 
 to ensure that SymPy solves for the desired variable. 
@@ -146,7 +152,7 @@ To extract the solutions, you can iterate through the list of dictionaries:
 ```py
 >>> from sympy import parse_expr, solve, solveset
 >>> from sympy.abc import x
->>> expr = "x ** 2 = y"
+>>> expr = "x^2 = y"
 >>> parsed = parse_expr(expr, transformations="all")
 >>> print(parsed)
 Eq(x**2, y)
@@ -168,8 +174,8 @@ If you already have the equation in `Eq` form, you can parse that string:
 ```py
 >>> from sympy import parse_expr, solve, solveset
 >>> from sympy.abc import x
->>> expr = "Eq(x**2, y)"
->>> parsed = parse_expr(expr)
+>>> expr = "Eq(x^2, y)"
+>>> parsed = parse_expr(expr, transformations="all")
 >>> print(parsed)
 Eq(x**2, y)
 >>> solutions = solve(parsed, x, dict=True)
