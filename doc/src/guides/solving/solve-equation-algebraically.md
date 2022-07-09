@@ -3,12 +3,15 @@
 Use SymPy to solve an equation algebraically (symbolically). For example, solving $x^2 = y$ for $x$ yields $x \in \{-\sqrt{y},\sqrt{y}\}$.
 
 Alternatives to consider:
-- SymPy can also [solve many other types of problems including sets of equations](index.md).
+- SymPy can also 
+[solve many other types of problems including sets of equations](index.md).
 - Some equations cannot be solved algebraically (either at all or by SymPy), 
-so you may have to {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` instead.
+so you may have to 
+{func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` 
+instead.
 
-There are two high-level functions to solve equations, {func}`~.solve` and {func}`~.solveset`.
-Here is a simple example of each:
+There are two high-level functions to solve equations, {func}`~.solve` and 
+{func}`~.solveset`. Here is a simple example of each:
 
 {func}`~.solve`
 
@@ -33,26 +36,31 @@ Here is a simple example of each:
 Here are recommendations on when to use:
 
 - {func}`~.solve`
-    - You want to get explicit symbolic representations of the different values
-    a variable could take that would satisfy the equation.
-    - You want to substitute those explicit solution values into other equations
-    or expressions involving the same variable using {meth}`~sympy.core.basic.Basic.subs`
+    - You want to get explicit symbolic representations of the different 
+    values a variable could take that would satisfy the equation.
+    - You want to substitute those explicit solution values into other 
+    equations or expressions involving the same variable using 
+    {meth}`~sympy.core.basic.Basic.subs`
 
 - {func}`~.solveset`
-    - You want to represent the solutions in a mathematically precise way, using [mathematical sets](../../modules/sets.rst).
-    - You want a representation of all the solutions, including if there are infinitely many.
+    - You want to represent the solutions in a mathematically precise way, 
+    using [mathematical sets](../../modules/sets.rst).
+    - You want a representation of all the solutions, including if there are 
+    infinitely many.
     - You want a consistent input interface.
     - You want to limit the domain of the solutions to any arbitrary set.
-    - You do not need to programmatically extract solutions from the solution set:
-    solution sets cannot necessarily be interrogated programmatically.
+    - You do not need to programmatically extract solutions from the solution 
+    set: solution sets cannot necessarily be interrogated programmatically.
 
 ## Guidance
 
 ### Include the variable to be solved for in the function call
 
-We recommend you include the variable to be solved for as the second argument for either function. 
-While this is optional for equations with a single symbol, it is a good practice because it ensures 
-SymPy will solve for the desired symbol. For example, you may expect the following to solve for $x$, 
+We recommend you include the variable to be solved for as the second argument 
+for either function. While this is optional for equations with a single 
+symbol, it is a good practice because it ensures 
+SymPy will solve for the desired symbol. For example, you may expect the 
+following to solve for $x$, 
 and SymPy will solve for $y$:
 
 ```py
@@ -76,22 +84,24 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 ### Ensure consistent formatting from {func}`~.solve` by using `dict=True`
 
 {func}`~.solve` produces various output formats depending on the answer, 
-unless you use `dict=True` to ensure the result will be formatted as a dictionary. 
-We recommend using `dict=True`, especially if you want to 
+unless you use `dict=True` to ensure the result will be formatted as a 
+dictionary. We recommend using `dict=True`, especially if you want to 
 extract information from the result programmatically.
 
 ## Solve an equation using {func}`~.solve` or {func}`~.solveset`
 
 You can solve an equation using in several ways. 
-The examples below demonstrate using both {func}`~.solve` and {func}`~.solveset` where applicable. 
+The examples below demonstrate using both {func}`~.solve` and 
+{func}`~.solveset` where applicable. 
 You can choose the function best suited to your equation.
 
 ### Make your equation into an expression that equals zero
 
-Use the fact that any expression not in an `Eq` (equation) is automatically assumed to equal zero (0) 
-by the solving functions. You can rearrange the equation $x^2 = y$ to $x^2 - y = 0$, and 
-solve that expression. This approach is convenient if you are interactively solving 
-an expression which already equals zero, or an equation that you do not mind rearranging to 
+Use the fact that any expression not in an `Eq` (equation) is automatically 
+assumed to equal zero (0) by the solving functions. You can rearrange the 
+equation $x^2 = y$ to $x^2 - y = 0$, and solve that expression. This approach 
+is convenient if you are interactively solving an expression which already 
+equals zero, or an equation that you do not mind rearranging to 
 $expression = 0$.
 
 ```py
@@ -132,20 +142,25 @@ sqrt(y)
     
 ### Parse a string representing the equation
 
-Parse a string representing the equation into a form that SymPy can understand (`Eq` form), 
+Parse a string representing the equation into a form that SymPy can 
+understand (`Eq` form), 
 then apply {func}`~.solve` to the parsed expression.  
 This approach is convenient if you are programmatically reading in a string. 
-We [recommend against using parsing a string if you are creating the expression yourself](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input). 
+If you are creating the expression yourself, we 
+[recommend against using parsing a string](
+https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input). 
 Parsing an equation from a string requires you to use 
 {func}`transformations <sympy.parsing.sympy_parser.parse_expr>`
 for SymPy to
 - interpret equals signs
 - create symbols from your variables
 -  use more mathematical (rather than standard Python) notation, 
-for example the exponent operator can be parsed from `^` rather than having to use Python's `**`.
+for example the exponent operator can be parsed from `^` rather than having 
+to use Python's `**`.
 
-You should always include the variable to solve for if you want to extract results programmatically, 
-to ensure that SymPy solves for the desired variable. 
+You should always include the variable to solve for if you want to extract 
+results programmatically, to ensure that SymPy solves for the desired 
+variable. 
 To ensure SymPy will produce results in a consistent format, use `dict=True`. 
 To extract the solutions, you can iterate through the list of dictionaries:  
     
@@ -193,9 +208,9 @@ sqrt(y)
 
 ### Restrict the domain of solutions
 
-By default, SymPy will return solutions in the complex domain, which also includes 
-purely real and imaginary values. Here, the first two solutions are real, 
-and the last two are imaginary:
+By default, SymPy will return solutions in the complex domain, which also 
+includes purely real and imaginary values. Here, the first two solutions are 
+real, and the last two are imaginary:
 
 ```py
 >>> from sympy import Symbol, solve, solveset
@@ -208,7 +223,8 @@ and the last two are imaginary:
 {-4, 4, -4*I, 4*I}
 ```
 
-To restrict returned solutions to real numbers, or another domain or range, the different solving functions use different methods.
+To restrict returned solutions to real numbers, or another domain or range, 
+the different solving functions use different methods.
 
 For {func}`~.solve`, place an assumption on the symbol to be solved for, $x$
 
@@ -220,7 +236,8 @@ For {func}`~.solve`, place an assumption on the symbol to be solved for, $x$
 [{x: -4}, {x: 4}]
 ```
 
-or restrict the solutions with standard Python techniques for filtering a list such as a list comprehension, or 
+or restrict the solutions with standard Python techniques for filtering a 
+list such as a list comprehension, or 
 by adding inequalities to {func}`~.solve` (but the range must be continuous):
 
 ```py
@@ -238,7 +255,8 @@ by adding inequalities to {func}`~.solve` (but the range must be continuous):
 Eq(x, 2) | Eq(x, 3)
 ```
 
-For {func}`~.solveset`, limit the output domain in the function call by setting a domain
+For {func}`~.solveset`, limit the output domain in the function call by 
+setting a domain
 
 ```py
 >>> from sympy import S, solveset
@@ -248,7 +266,8 @@ For {func}`~.solveset`, limit the output domain in the function call by setting 
 {-4, 4}
 ```
 
-or by restricting returned solutions to any arbitrary set, including an interval:
+or by restricting returned solutions to any arbitrary set, including an 
+interval:
 
 ```py
 >>> from sympy import Interval, pi, sin, solveset
@@ -258,7 +277,9 @@ or by restricting returned solutions to any arbitrary set, including an interval
 {0, -pi, pi}
 ```
 
-and if you restrict the solutions to a domain in which there are no solutions, {func}`~.solveset` will return the empty set, [EmptySet](../../modules/sets.rst):
+and if you restrict the solutions to a domain in which there are no solutions,
+{func}`~.solveset` will return the empty set,
+[EmptySet](../../modules/sets.rst):
 
 ```py
 >>> from sympy import solveset, S
@@ -270,10 +291,9 @@ EmptySet
 
 ### Explicitly represent infinite sets of possible solutions using {func}`~.solveset`
 
-{func}`~.solveset` 
-[can represent infinite sets of possible solutions](why-solveset)
-and express them in standard mathematical notation, 
-for example $\sin(x) = 0$ for $x = n * \pi$ for every integer value of $n$:
+{func}`~.solveset` [can represent infinite sets of possible
+solutions](why-solveset) and express them in standard mathematical notation, for
+example $\sin(x) = 0$ for $x = n * \pi$ for every integer value of $n$:
 
 ```py
 >>> from sympy import pprint, sin, solveset
@@ -297,8 +317,10 @@ However, {func}`~.solve` will return only a finite number of solutions:
 2*pi
 ```
 
-{func}`~.solve` tries to return just enough solutions so that all (infinitely many) solutions can generated 
-from the returned solutions by adding integer multiples of the {func}`~.periodicity` of the equation, here $2\pi$.
+{func}`~.solve` tries to return just enough solutions so that all 
+(infinitely many) solutions can generated from the returned solutions 
+by adding integer multiples of the {func}`~.periodicity` of the 
+equation, here $2\pi$.
 
 ## Use the solution result
 
@@ -306,11 +328,14 @@ from the returned solutions by adding integer multiples of the {func}`~.periodic
 
 You can substitute solutions from {func}`~.solve` into an expression.
 
-A common use case is finding the critical points and values for a function $f$. 
-At the critical points, the {class}`~.Derivative` equals zero (or is undefined). 
-You can then obtain the function values at those critical points
-by substituting the critical points back into the function using {meth}`~sympy.core.basic.Basic.subs`. You can also tell if the critical point is a maxima or minima by substituting the values
-into the expression for the second derivative: a negative value indicates a maximum, and a positive value indicates a minimum.
+A common use case is finding the critical points and values for a function 
+$f$. At the critical points, the {class}`~.Derivative` equals zero (or is 
+undefined). You can then obtain the function values at those critical points
+by substituting the critical points back into the function using 
+{meth}`~sympy.core.basic.Basic.subs`. You can also tell if the critical point 
+is a maxima or minima by substituting the values into the expression for the 
+second derivative: a negative value indicates a maximum, and a positive value 
+indicates a minimum.
 
 ```py
 >>> from sympy.abc import x
@@ -334,7 +359,8 @@ into the expression for the second derivative: a negative value indicates a maxi
 
 ### {func}`~.solveset` solution sets cannot necessarily be interrogated programmatically
 
-If {func}`~.solveset` returns a finite set (class {class}`~.FiniteSet`), you can iterate through the solutions:
+If {func}`~.solveset` returns a finite set (class {class}`~.FiniteSet`), you can
+iterate through the solutions:
 
 ```py
 >>> from sympy import solveset
@@ -347,7 +373,8 @@ If {func}`~.solveset` returns a finite set (class {class}`~.FiniteSet`), you can
 [sqrt(y), -sqrt(y)]
 ```
 
-However, for more complex results, it may not be possible to list the solutions:
+However, for more complex results, it may not be possible to list the 
+solutions:
 
 ```py
 >>> from sympy import S, solveset, symbols
@@ -358,16 +385,18 @@ Intersection({-sqrt(y), sqrt(y)}, Reals)
 >>> solution_list = list(solution_set)
 Traceback (most recent call last):
     ...
-TypeError: The computation had not completed because of the undecidable set membership is found in every candidates.
+TypeError: The computation had not completed because of the undecidable set 
+membership is found in every candidates.
 ```
 
 ## Options that can speed up {func}`~.solve`
 
 ### Include solutions making any denominator zero by using `check=False`
 
-Normally, {func}`~.solve` checks whether any solutions make any denominator zero, and automatically excludes them.
-If you want to include those solutions, 
-and speed up {func}`~.solve` (at the risk of obtaining invalid solutions), set `check=False`:
+Normally, {func}`~.solve` checks whether any solutions make any denominator 
+zero, and automatically excludes them. If you want to include those 
+solutions, and speed up {func}`~.solve` (at the risk of obtaining invalid 
+solutions), set `check=False`:
 
 ```py
 >>> from sympy import Symbol, sin, solve
@@ -382,12 +411,12 @@ and speed up {func}`~.solve` (at the risk of obtaining invalid solutions), set `
 
 ### Do not simplify solutions by using `simplify=False`
 
-Normally, {func}`~.solve` simplifies all but polynomials of order 3 or greater 
-before returning them and (if `check` is not False) 
-uses the general {func}`simplify <sympy.simplify.simplify.simplify>` function on the solutions 
-and the expression obtained when they are substituted into the function which should be zero.
-If you do not want the solutions simplified, 
-and want to speed up {func}`~.solve`, use `simplify=False`.
+Normally, {func}`~.solve` simplifies all but polynomials of order 3 or 
+greater before returning them and (if `check` is not False) uses the general 
+{func}`simplify <sympy.simplify.simplify.simplify>` function on the solutions 
+and the expression obtained when they are substituted into the function which 
+should be zero. If you do not want the solutions simplified, and want to 
+speed up {func}`~.solve`, use `simplify=False`.
 
 ```py
 >>> from sympy import solve
@@ -405,8 +434,9 @@ and want to speed up {func}`~.solve`, use `simplify=False`.
 
 ### Equations with no solution
 
-Some equations have no solution, in which case SymPy may return an empty set. For example, the equation 
-$x - 7 = x + 2$ reduces to $-7 = 2$, which has no solution because no value of $x$ will make it true:
+Some equations have no solution, in which case SymPy may return an empty set. 
+For example, the equation $x - 7 = x + 2$ reduces to $-7 = 2$, which has no 
+solution because no value of $x$ will make it true:
 
 ```py
 >>> from sympy import solve, Eq
@@ -416,21 +446,24 @@ $x - 7 = x + 2$ reduces to $-7 = 2$, which has no solution because no value of $
 []
 ```
 
-So if SymPy returns an empty list, you may want to check whether there is a mistake in the equation.
+So if SymPy returns an empty list, you may want to check whether there is a 
+mistake in the equation.
 
 ### Equations with no analytical solution
 
-The vast majority of arbitrary nonlinear equations are not analytically solvable. 
-The classes of equations that are solvable are basically:
+The vast majority of arbitrary nonlinear equations are not analytically 
+solvable. The classes of equations that are solvable are basically:
 1. Linear equations
 2. Polynomials, except where limited by the Abel-Ruffini theorem
 3. Equations that can be solved by inverting some transcendental functions
 4. Problems that can be transformed into the cases above 
 (e.g., by turning trigonometric functions into polynomials)
-5. A few other special cases that can be solved with something like the Lambert W function
+5. A few other special cases that can be solved with something like the
+Lambert W function
 
 SymPy may reflect that your equation has no solutions that can be expressed 
-algebraically (symbolically) by returning an error such as `NotImplementedError`:
+algebraically (symbolically) by returning an error such as 
+`NotImplementedError`:
 
 ```py
 >>> from sympy import solve, cos
@@ -442,9 +475,11 @@ NotImplementedError: multiple generators [x, cos(x)]
 No algorithms are implemented to solve equation -x + cos(x)
 ```
 
-so you may have to {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` instead.
+so you may have to {func}`solve your equation numerically
+<sympy.solvers.solvers.nsolve>` instead.
 
-If you receive non-closed-form solutions, you can evaluate them numerically using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
+If you receive non-closed-form solutions, you can evaluate them numerically 
+using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
 
 ```py
 >>> from sympy import solve
@@ -452,11 +487,12 @@ If you receive non-closed-form solutions, you can evaluate them numerically usin
 >>> solutions = solve(x**5 - x - 1, x, dict=True)
 >>> print(solutions)
 [{x: CRootOf(x**5 - x - 1, 0)}, {x: CRootOf(x**5 - x - 1, 1)}, {x: CRootOf(x**5 - x - 1, 2)}, {x: CRootOf(x**5 - x - 1, 3)}, {x: CRootOf(x**5 - x - 1, 4)}]
-[solution[x].n(3) for solution in solutions]
+>>> [solution[x].n(3) for solution in solutions]
 [1.17, -0.765 - 0.352*I, -0.765 + 0.352*I, 0.181 - 1.08*I, 0.181 + 1.08*I]
 ```
 
-({class}`CRootOf <sympy.polys.rootoftools.ComplexRootOf>` represents an indexed complex root of a polynomial.)
+({class}`CRootOf <sympy.polys.rootoftools.ComplexRootOf>` represents an 
+indexed complex root of a polynomial.)
 
 ### Equations which have an analytical solution, and SymPy cannot solve
 
@@ -465,5 +501,7 @@ and SymPy has not implemented an appropriate algorithm.
 If that happens, or SymPy returns an empty set or list when there is a 
 mathematical solution (indicating a bug in SymPy), please post it on the 
 [mailing list](https://groups.google.com/g/sympy), or open an issue on 
-[SymPy's GitHub page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you can 
-{func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` instead.
+[SymPy's GitHub page](https://github.com/sympy/sympy/issues). Until the issue 
+is resolved, you can 
+{func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` 
+instead.
