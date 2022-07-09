@@ -438,6 +438,20 @@ No algorithms are implemented to solve equation -x + cos(x)
 
 so you may have to {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` instead.
 
+If you receive non-closed-form solutions, you can evaluate them numerically using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
+
+```py
+>>> from sympy import solve
+>>> from sympy.abc import x
+>>> solutions = solve(x**5 - x - 1, x, dict=True)
+>>> print(solutions)
+[{x: CRootOf(x**5 - x - 1, 0)}, {x: CRootOf(x**5 - x - 1, 1)}, {x: CRootOf(x**5 - x - 1, 2)}, {x: CRootOf(x**5 - x - 1, 3)}, {x: CRootOf(x**5 - x - 1, 4)}]
+[solution[x].n(3) for solution in solutions]
+[1.17, -0.765 - 0.352*I, -0.765 + 0.352*I, 0.181 - 1.08*I, 0.181 + 1.08*I]
+```
+
+({class}`CRootOf <sympy.polys.rootoftools.ComplexRootOf>` represents an indexed complex root of a polynomial.)
+
 ### Equations which have an analytical solution, and SymPy cannot solve
 
 It is also possible that there is an algebraic solution to your equation, 
