@@ -728,6 +728,14 @@ def _get_doctest_blacklist():
                 "doc/src/modules/numeric-computation.rst",
             ])
 
+    # Here we import tensorflow just so that we can suppress the warning:
+    #
+    # DeprecationWarning: The distutils package is deprecated and slated for
+    # removal in Python 3.12. Use setuptools or check PEP 632 for potential
+    # alternatives
+    with ignore_warnings(DeprecationWarning):
+        import_module('tensorflow')
+
     if import_module('cupy') is None:
         blacklist.extend([
             "doc/src/modules/numeric-computation.rst",
