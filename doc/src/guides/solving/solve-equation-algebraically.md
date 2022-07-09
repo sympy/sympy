@@ -18,8 +18,7 @@ There are two high-level functions to solve equations, {func}`~.solve` and
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
->>> solution = solve(x ** 2 - y, x, dict=True)
->>> print(solution)
+>>> solve(x ** 2 - y, x, dict=True)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
 
@@ -28,8 +27,7 @@ There are two high-level functions to solve equations, {func}`~.solve` and
 ```py
 >>> from sympy import solveset
 >>> from sympy.abc import x, y
->>> solution = solveset(x**2 - y, x)
->>> print(solution)
+>>> solveset(x**2 - y, x)
 {-sqrt(y), sqrt(y)}
 ```
 
@@ -66,8 +64,7 @@ and SymPy will solve for $y$:
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
->>> solution = solve(x ** 2 - y, dict=True)
->>> print(solution)
+>>> solve(x ** 2 - y, dict=True)
 [{y: x**2}]
 ```
 
@@ -76,8 +73,7 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
->>> solution = solve(x ** 2 - y, x, dict=True)
->>> print(solution)
+>>> solve(x ** 2 - y, x, dict=True)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
 
@@ -107,11 +103,9 @@ $expression = 0$.
 ```py
 >>> from sympy import solve, solveset
 >>> from sympy.abc import x, y
->>> solution = solve(x ** 2 - y, x, dict=True)
->>> print(solution)
+>>> solve(x ** 2 - y, x, dict=True)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
->>> solution_set = solveset(x**2 - y, x)
->>> print(solution_set)
+>>> solveset(x**2 - y, x)
 {-sqrt(y), sqrt(y)}
 ```
     
@@ -179,8 +173,7 @@ Eq(x**2, y)
 ...         print(val)
 -sqrt(y)
 sqrt(y)
->>> solutions_set = solveset(parsed, x)
->>> print(solutions_set)
+>>> solveset(parsed, x)
 {-sqrt(y), sqrt(y)}
 ```
 
@@ -215,11 +208,9 @@ real, and the last two are imaginary:
 ```py
 >>> from sympy import Symbol, solve, solveset
 >>> x = Symbol('x')
->>> solution = solve(x ** 4 - 256, x, dict=True)
->>> print(solution)
+>>> solve(x ** 4 - 256, x, dict=True)
 [{x: -4}, {x: 4}, {x: -4*I}, {x: 4*I}]
->>> solution_set = solveset(x ** 4 - 256, x)
->>> print(solution_set)
+>>> solveset(x ** 4 - 256, x)
 {-4, 4, -4*I, 4*I}
 ```
 
@@ -231,8 +222,7 @@ For {func}`~.solve`, place an assumption on the symbol to be solved for, $x$
 ```py
 >>> from sympy import Symbol, solve
 >>> x = Symbol('x', real=True)
->>> solution = solve(x ** 4 - 256, x, dict=True)
->>> print(solution)
+>>> solve(x ** 4 - 256, x, dict=True)
 [{x: -4}, {x: 4}]
 ```
 
@@ -261,8 +251,7 @@ setting a domain
 ```py
 >>> from sympy import S, solveset
 >>> from sympy.abc import x
->>> solution = solveset(x**4 - 256, x, domain=S.Reals)
->>> print(solution)
+>>> solveset(x**4 - 256, x, domain=S.Reals)
 {-4, 4}
 ```
 
@@ -272,8 +261,7 @@ interval:
 ```py
 >>> from sympy import Interval, pi, sin, solveset
 >>> from sympy.abc import x
->>> solution = solveset(sin(x), x, Interval(-pi, pi))
->>> print(solution)
+>>> solveset(sin(x), x, Interval(-pi, pi))
 {0, -pi, pi}
 ```
 
@@ -284,8 +272,7 @@ and if you restrict the solutions to a domain in which there are no solutions,
 ```py
 >>> from sympy import solveset, S
 >>> from sympy.abc import x
->>> solution = solveset(x**2 + 1, x, domain=S.Reals)
->>> print(solution)
+>>> solveset(x**2 + 1, x, domain=S.Reals)
 EmptySet
 ```
 
@@ -310,10 +297,9 @@ However, {func}`~.solve` will return only a finite number of solutions:
 >>> from sympy.calculus.util import periodicity
 >>> from sympy.abc import x
 >>> f = sin(x)
->>> solution = solve(f, x)
->>> print(solution)
+>>> solve(f, x)
 [0, pi]
->>> print(periodicity(f, x))
+>>> periodicity(f, x)
 2*pi
 ```
 
@@ -401,11 +387,9 @@ solutions), set `check=False`:
 ```py
 >>> from sympy import Symbol, sin, solve
 >>> x = Symbol("x")
->>> solution_check_true = solve(sin(x)/x)  # 0 is excluded
->>> print(solution_check_true)
+>>> solve(sin(x)/x)  # 0 is excluded
 [pi]
->>> solution_check_false = solve(sin(x)/x, check=False)  # 0 is excluded
->>> print(solution_check_false)
+>>> solve(sin(x)/x, check=False)  # 0 is not excluded
 [0, pi]
 ```
 
@@ -422,11 +406,9 @@ speed up {func}`~.solve`, use `simplify=False`.
 >>> from sympy import solve
 >>> from sympy.abc import x, y
 >>> expr = x**2 - (y**5 - 3*y**3 + y**2 - 3)
->>> solution_simplify_true = solve(expr, x, dict=True)  # 0 is excluded
->>> print(solution_simplify_true)
+>>> solve(expr, x, dict=True)
 [{x: -sqrt(y**5 - 3*y**3 + y**2 - 3)}, {x: sqrt(y**5 - 3*y**3 + y**2 - 3)}]
->>> solution_simplify_false = solve(expr, x, dict=True, simplify=False)  # 0 is excluded
->>> print(solution_simplify_false)
+>>> solve(expr, x, dict=True, simplify=False)
 [{x: -sqrt((y + 1)*(y**2 - 3)*(y**2 - y + 1))}, {x: sqrt((y + 1)*(y**2 - 3)*(y**2 - y + 1))}]
 ```
 
