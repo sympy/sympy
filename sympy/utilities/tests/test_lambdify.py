@@ -62,7 +62,15 @@ scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 numexpr = import_module('numexpr')
 tensorflow = import_module('tensorflow')
 cupy = import_module('cupy')
-jax = import_module('jax')
+
+# Warning when importing jax (comes indirectly because jax imports
+# flatbuffers):
+#
+# DeprecationWarning: the imp module is deprecated in favour of importlib; see
+# the module's documentation for alternative uses
+with ignore_warnings(DeprecationWarning):
+    jax = import_module('jax')
+
 numba = import_module('numba')
 
 if tensorflow:

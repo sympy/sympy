@@ -741,10 +741,16 @@ def _get_doctest_blacklist():
             "doc/src/modules/numeric-computation.rst",
         ])
 
-    if import_module('jax') is None:
-        blacklist.extend([
-            "doc/src/modules/numeric-computation.rst",
-        ])
+    # Warning when importing jax (comes indirectly because jax imports
+    # flatbuffers):
+    #
+    # DeprecationWarning: the imp module is deprecated in favour of importlib; see
+    # the module's documentation for alternative uses
+    with ignore_warnings(DeprecationWarning):
+        if import_module('jax') is None:
+            blacklist.extend([
+                "doc/src/modules/numeric-computation.rst",
+            ])
 
     if import_module('antlr4') is None:
         blacklist.extend([

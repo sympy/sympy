@@ -21,6 +21,7 @@ from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_t
 
 from sympy.testing.pytest import skip, raises
 from sympy.external import import_module
+from sympy.utilities.exceptions import ignore_warnings
 
 # Unlike NumPy which will aggressively promote operands to double precision,
 # jax always uses single precision. Double precision in jax can be
@@ -30,7 +31,15 @@ from sympy.external import import_module
 # function accuracy to only single precision accuracy.
 # https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html#double-64bit-precision
 
-jax = import_module('jax')
+
+# Warning when importing jax (comes indirectly because jax imports
+# flatbuffers):
+#
+# DeprecationWarning: the imp module is deprecated in favour of importlib; see
+# the module's documentation for alternative uses
+with ignore_warnings(DeprecationWarning):
+    jax = import_module('jax')
+
 
 if jax:
     deafult_float_info = jax.numpy.finfo(jax.numpy.array([]).dtype)
