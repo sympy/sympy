@@ -43,6 +43,7 @@ from sympy.printing.numpy import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
 from sympy.testing.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.exceptions import ignore_warnings
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import uppergamma, lowergamma
 
@@ -283,14 +284,13 @@ def test_issue_9334():
     foo, bar = numpy.random.random((2, 4))
     func_numexpr(foo, bar)
 
+
 def test_issue_12984():
-    import warnings
     if not numexpr:
         skip("numexpr not installed.")
     func_numexpr = lambdify((x,y,z), Piecewise((y, x >= 0), (z, x > -1)), numexpr)
-    assert func_numexpr(1, 24, 42) == 24
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
+    with ignore_warnings(RuntimeWarning):
+        assert func_numexpr(1, 24, 42) == 24
         assert str(func_numexpr(-1, 24, 42)) == 'nan'
 
 
@@ -491,8 +491,9 @@ def test_numpy_old_matrix():
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
     f = lambdify((x, y, z), A, [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy'])
-    numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
-    assert isinstance(f(1, 2, 3), numpy.matrix)
+    with ignore_warnings(PendingDeprecationWarning):
+        numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
+        assert isinstance(f(1, 2, 3), numpy.matrix)
 
 
 def test_scipy_sparse_matrix():
