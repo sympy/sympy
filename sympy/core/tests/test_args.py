@@ -19,6 +19,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 
 from sympy.testing.pytest import SKIP
+from sympy.utilities.exceptions import ignore_warnings
+
 
 a, b, c, x, y, z = symbols('a,b,c,x,y,z')
 
@@ -27,6 +29,7 @@ whitelist = [
      "sympy.assumptions.predicates",    # tested by test_predicates()
      "sympy.assumptions.relation.equality",    # tested by test_predicates()
 ]
+
 
 def test_all_classes_are_tested():
     this = os.path.split(__file__)[0]
@@ -60,8 +63,19 @@ def test_all_classes_are_tested():
             if not names:
                 continue
 
+            # aesaracode imports aesara which imports distutils which warns:
+            #
+            # DeprecationWarning: The distutils package is deprecated and
+            # slated for removal in Python 3.12. Use setuptools or check PEP
+            # 632 for potential alternatives
+            if submodule == 'sympy.printing.aesaracode':
+                warnings = DeprecationWarning
+            else:
+                warnings = ()
+
             try:
-                mod = __import__(submodule, fromlist=names)
+                with ignore_warnings(warnings):
+                    mod = __import__(submodule, fromlist=names)
             except ImportError:
                 continue
 
