@@ -388,7 +388,7 @@ and the set of real numbers:
 [sqrt(y), -sqrt(y)]
 ```
 
-Alternatively, you can extract the sets from the solution set using {prop}`args
+Alternatively, you can extract the sets from the solution set using {any}`args
 <sympy.core.basic.Basic.args>`, then create a list from the set containing the
 symbolic solutions:
 
