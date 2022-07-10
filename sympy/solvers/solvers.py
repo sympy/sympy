@@ -531,40 +531,39 @@ def solve(f, *symbols, **flags):
 
     Single expression and more than one symbol.
 
-        Some care must be taken here since, currently, SymPy might try
-        to treat this as an attempt to match coefficients instead of
-        as a request to give solutions for as many of the symbols as
-        possible.
-
-        You will know when the case of undetermined coefficients has been
-        identified by Sympy because a singe dictionary will be returned.
-        Here, it might be obvious that one is trying to match coefficients.
+        One might pass more than one symbol with a single equation
+        to indicate that an algebraic solution for any of the symbols
+        is desired. But when all but one symbol is passed it might
+        be desired to get a solution for all of the symbols by matching
+        coefficients on forms of the unspecified symbol. The latter
+        case must be requested by using `match=True`. If there is a
+        solution it will be returned; if any variables appears
+        non-linearly, an error will be raised; if there is no solution,
+        the empty list will be returned:
 
             >>> eq_ab = Eq(a*x + b, 2*x - 3)
-            >>> solve(eq_ab, a, b)
+            >>> solve(eq_ab, a, b, match=True)
             {a: 2, b: -3}
+            >>> solve(a*(1 + x)**2 - b, a, b)
 
-        But that might not be what you wanted. To disable that behavior,
-        set the flag ``undetermined=False``. In the future, the only
-        way to get this behavior will be to call directly the currently
-        available function, `solve_undetermined_coeffs`.
+        Without the `match=True` flag, the default mode for `solve`
+        is to return an algebaic solution for one or more of the
+        symbols.
 
-            >>> solve(eq_ab, a, b, undetermined=False)
-            [((-b + 2*x - 3)/x, b)]
-
-        If the request is not recognized as involving undetermined coefficients,
-        then the solutions are returned as tuples for the symbols passed (if they
-        were not passed as a set):
+        If the symbols are ordered, a list of one or more tuples
+        giving the values for each of the variables is returned:
 
             >>> eq = a*b*c - a*c*y - b*c*x + c*x*y  # = c*(x - a)*(y - b)
-            >>> solve(eq, a, b)
+            >>> solve(eq, x, y)
             [(a, y), (x, b)]
 
-        If the symbols are passed as set then the ordering of solutions in the
-        tuples would be ambiguous so a list of dictionaries is returned:
+        A list of dictionaries is returned if the symbols were passed
+        as a set (or were requested with a flag):
 
+            >>> solve(eq, a, b, dict=True)
+            [{x: a}, {y: b}]
             >>> solve(eq, {a, b})
-            [{a: x}, {b: y}]
+            [{x: a}, {y: b}]
 
         When given the choice, SymPy will prefer to return solutions
         for variables that appear linearly.
@@ -1147,7 +1146,22 @@ def solve(f, *symbols, **flags):
     # try to get a solution
     ###########################################################################
     if bare_f:
-        solution = _solve(f[0], *symbols, **flags)
+        eq = f[0]
+        if flags.get('match', False):
+            solution = None
+            free = eq.free_symbols
+            syms = set(symbols)
+            ex = free - syms
+            if len(ex) != 1:
+                ind, dep = eq.as_independent(*symbols)
+                ex = dep.free_symbols - syms
+            if len(ex) == 1:
+                ex = ex.pop()
+                solution = solve_undetermined_coeffs(eq, symbols, ex)
+            if solution is None:
+                raise ValueError('%s not recognized as a linear coefficient system in variables %s' % (eq, symbols))
+        else:
+            solution = _solve(eq, *symbols, **flags)
     else:
         solution = _solve_system(f, symbols, **flags)
 
@@ -1337,11 +1351,9 @@ def solve(f, *symbols, **flags):
 
 
 def _solve(f, *symbols, **flags):
-    """
-    Return a checked solution for *f* in terms of one or more of the
-    symbols. A list should be returned except for the case when a linear
-    undetermined-coefficients equation is encountered (in which case
-    a dictionary is returned).
+    """Return a checked solution for *f* in terms of one or more of the
+    symbols in the form of a list of values (if there is one symbol)
+    else a list of dictionaries.
 
     If no method is implemented to solve the equation, a NotImplementedError
     will be raised. In the case that conversion of an expression to a Poly
@@ -1352,47 +1364,16 @@ def _solve(f, *symbols, **flags):
     not_impl_msg = "No algorithms are implemented to solve equation %s"
 
     if len(symbols) != 1:
-        if flags.get('undetermined', True):
-            free = f.free_symbols
-            ex = free - set(symbols)
-            if len(ex) != 1:
-                ind, dep = f.as_independent(*symbols)
-                ex = ind.free_symbols & dep.free_symbols
-            if len(ex) == 1:
-                ex = ex.pop()
-                soln = solve_undetermined_coeffs(f, symbols, ex, **flags)
-                if soln:  # neither [] nor None
-                    if flags.get('simplify', True):
-                        if isinstance(soln, dict):
-                            for k in soln:
-                                soln[k] = simplify(soln[k])
-                        elif isinstance(soln, list):
-                            if isinstance(soln[0], dict):
-                                for d in soln:
-                                    for k in d:
-                                        d[k] = simplify(d[k])
-                            elif isinstance(soln[0], tuple):
-                                soln = [tuple(simplify(i) for i in j) for j in soln]
-                            else:
-                                raise TypeError('unrecognized args in list')
-                        elif isinstance(soln, tuple):
-                            sym, sols = soln
-                            soln = sym, {tuple(simplify(i) for i in j) for j in sols}
-                        else:
-                            raise TypeError('unrecognized solution type')
-                    return soln
-
         # look for solutions for desired symbols that are independent
         # of symbols already solved for, e.g. if we solve for x = y
         # then no symbol having x in its solution will be returned.
+
         # First solve for linear symbols (since that is easier and limits
         # solution size) and then proceed with symbols appearing
         # in a non-linear fashion. Ideally, if one is solving a single
         # expression for several symbols, they would have to be
         # appear in factors of an expression, but we do not here
-        # attempt factorization.  XXX perhaps handling a Mul
-        # should come first in this routine whether there is
-        # one or several symbols.
+        # attempt factorization.
         nonlin_s = []
         got_s = set()
         result = []

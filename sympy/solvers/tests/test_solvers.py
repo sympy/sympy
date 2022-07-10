@@ -150,25 +150,6 @@ def test_solve_args():
     flags.update(dict(simplify=False))
     assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
         [{p: (-h + x)**2/(4*a*x**2 + 4*b*x + 4*c - 4*k)}]
-    # multiple symbols might represent a coefficients system
-    # - that is linear
-    assert solve(a + b*x - 2, [a, b]) == {b: 0, a: 2}
-    # - this is linear and can be solved as undetermined coefficients
-    # system but it fails the expectation that we are solving for all
-    # symbols except one, so an algebraic solution is returned
-    assert solve((a*x + b*x - b + d), (a, b)) == [((-b*x + b - d)/x, b)]
-    # - this is not linear and also fails the expectations
-    assert solve(a*x + b**2/x - 3*x - 4/x, a, b, **flags) == [
-        {a: -b**2/x**2 + 3 + 4/x**2}]
-    # Examples like the last two will require the user to build the
-    # system of equations and pass them to solve if they want to solve
-    # for coefficients:
-    #>>> list((a*x + b**2/x - 3*x - 4/x).as_coefficients_dict(x).values())
-    #[b**2 - 4, a - 3]
-    #>>> solve(_)
-    #[{b: -2, a: 3}, {b: 2, a: 3}]
-    assert solve(a*x + b**2/x - 3*x - 4/x, a, b, undetermined=False) == [
-        ((-b**2 + 3*x**2 + 4)/x**2, b)]
     # failed single equation
     assert solve(1/(1/x - y + exp(y))) == []
     raises(
@@ -201,6 +182,24 @@ def test_solve_args():
     assert solve([x - 1, False], [x], set=True) == ([], set())
     assert solve([-y*(x + y - 1)/2, (y - 1)/x/y + 1/y],
         set=True, check=False) == ([x, y], {(1 - y, y), (x, 0)})
+
+
+def test_solve_match():
+    # using match=True
+    # - linear in coefficients
+    fx = Function('f')(x)
+    assert solve(a + a*x - 2, [a], match=True) == []
+    assert solve(fx + b*x - 2, [fx, b], match=True) == {b: 0, fx: 2}
+    assert solve(a + b*fx - 2, [a, b], match=True) == {b: 0, a: 2}
+    assert solve(a + b*x - 2, [a, b], match=True) == {b: 0, a: 2}
+    assert solve((a*x + b*x - b + d), (a, b), match=True
+        ) == {a: -d, b: d}
+    assert solve(a*x + b/x - 3*x - 4/x, a, b, match=True
+        ) == {a: 3, b: 4}
+    assert solve(a*x + b/sin(x) - 3*x - 4/sin(x), a, b, match=True
+        ) == {a: 3, b: 4}
+    # - nonlinear in coefficients
+    raises(ValueError, lambda: solve(a*x + b**2/x - 3*x - 4/x, a, b, match=True))
 
 
 def test_solve_polynomial1():
