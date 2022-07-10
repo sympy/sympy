@@ -1,3 +1,5 @@
+from __future__ import annotations
+from itertools import product
 from typing import Type
 
 from sympy.core.add import Add
@@ -31,7 +33,7 @@ class Vector(BasisDependent):
     _add_func = None  # type: Type[Vector]
     _zero_func = None  # type: Type[Vector]
     _base_func = None  # type: Type[Vector]
-    zero = None  # type: VectorZero
+    zero: VectorZero
 
     @property
     def components(self):
@@ -213,10 +215,8 @@ class Vector(BasisDependent):
 
         # Iterate over components of both the vectors to generate
         # the required Dyadic instance
-        args = []
-        for k1, v1 in self.components.items():
-            for k2, v2 in other.components.items():
-                args.append((v1 * v2) * BaseDyadic(k1, k2))
+        args = [(v1 * v2) * BaseDyadic(k1, k2) for (k1, v1), (k2, v2)
+                in product(self.components.items(), other.components.items())]
 
         return DyadicAdd(*args)
 
@@ -489,7 +489,7 @@ class Cross(Vector):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return cross(self._expr1, self._expr2)
 
 
@@ -522,7 +522,7 @@ class Dot(Expr):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return dot(self._expr1, self._expr2)
 
 

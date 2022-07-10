@@ -85,6 +85,18 @@ a drop-in replacement for numpy.
     [ 0.84147098  0.84119981  0.84092844 ... -0.05426074 -0.05433146
      -0.05440211]
 
+JAX is a similar alternative to CuPy that provides GPU and TPU acceleration via
+just-in-time compliation to XLA. It too, can in some cases, be used as a drop-in
+replacement for numpy.
+
+    >>> f = lambdify(x, expr, "jax")
+    >>> import jax.numpy as jnp
+    >>> data = jnp.linspace(1, 10, 10000)
+    >>> y = f(data) # perform the computation
+    >>> numpy.asarray(y) # explicitly copy to CPU / numpy array
+    array([ 0.84147096,  0.8411998 ,  0.84092844, ..., -0.05426079,
+       -0.05433151, -0.05440211], dtype=float32)
+
 uFuncify
 --------
 
@@ -134,21 +146,23 @@ The options here were listed in order from slowest and least dependencies to
 fastest and most dependencies.  For example, if you have Aesara installed then
 that will often be the best choice.  If you don't have Aesara but do have
 ``f2py`` then you should use ``ufuncify``. If you have been comfortable using
-lambdify with the numpy module, but have a GPU, CuPy can provide substantial
+lambdify with the numpy module, but have a GPU, CuPy and JAX can provide substantial
 speedups with little effort.
 
-+-----------------+-------+-----------------------------+---------------+
-| Tool            | Speed | Qualities                   | Dependencies  |
-+=================+=======+=============================+===============+
-| subs/evalf      | 50us  | Simple                      | None          |
-+-----------------+-------+-----------------------------+---------------+
-| lambdify        | 1us   | Scalar functions            | math          |
-+-----------------+-------+-----------------------------+---------------+
-| lambdify-numpy  | 10ns  | Vector functions            | numpy         |
-+-----------------+-------+-----------------------------+---------------+
-| ufuncify        | 10ns  | Complex vector expressions  | f2py, Cython  |
-+-----------------+-------+-----------------------------+---------------+
-| lambdify-cupy   | 10ns  | Vector functions on GPUs    | cupy          |
-+-----------------+-------+-----------------------------+---------------+
-| Aesara          | 10ns  | Many outputs, CSE, GPUs     | Aesara        |
-+-----------------+-------+-----------------------------+---------------+
++-----------------+-------+------------------------------------------+---------------+
+| Tool            | Speed | Qualities                                | Dependencies  |
++=================+=======+==========================================+===============+
+| subs/evalf      | 50us  | Simple                                   | None          |
++-----------------+-------+------------------------------------------+---------------+
+| lambdify        | 1us   | Scalar functions                         | math          |
++-----------------+-------+------------------------------------------+---------------+
+| lambdify-numpy  | 10ns  | Vector functions                         | numpy         |
++-----------------+-------+------------------------------------------+---------------+
+| ufuncify        | 10ns  | Complex vector expressions               | f2py, Cython  |
++-----------------+-------+------------------------------------------+---------------+
+| lambdify-cupy   | 10ns  | Vector functions on GPUs                 | cupy          |
++-----------------+-------+------------------------------------------+---------------+
+| lambdify-jax    | 10ns  | Vector functions on CPUs, GPUs and TPUs  | jax           |
++-----------------+-------+------------------------------------------+---------------+
+| Aesara          | 10ns  | Many outputs, CSE, GPUs                  | Aesara        |
++-----------------+-------+------------------------------------------+---------------+

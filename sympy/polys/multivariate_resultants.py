@@ -8,8 +8,9 @@ are:
 Multivariate resultants are used to identify whether a multivariate
 system has common roots. That is when the resultant is equal to zero.
 """
+from math import prod
 
-from sympy.core.mul import (Mul, prod)
+from sympy.core.mul import Mul
 from sympy.matrices.dense import (Matrix, diag)
 from sympy.polys.polytools import (Poly, degree_list, rem)
 from sympy.simplify.simplify import simplify
@@ -459,8 +460,8 @@ class MacaulayResultant():
         reduction_set = [v ** self.degrees[i] for i, v
                          in enumerate(self.variables)]
 
-        ais = list([self.polynomials[i].coeff(reduction_set[i])
-                    for i in range(self.n)])
+        ais = [self.polynomials[i].coeff(reduction_set[i])
+               for i in range(self.n)]
 
         reduced_matrix = matrix[:, reduced]
         keep = []

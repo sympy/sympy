@@ -89,12 +89,14 @@ def recast_to_symbols(eqs, symbols):
     """
     if not iterable(eqs) and iterable(symbols):
         raise ValueError('Both eqs and symbols must be iterable')
-    new_symbols = list(symbols)
+    orig = list(symbols)
+    symbols = list(ordered(symbols))
     swap_sym = {}
-    for i, s in enumerate(symbols):
+    i = 0
+    for j, s in enumerate(symbols):
         if not isinstance(s, Symbol) and s not in swap_sym:
             swap_sym[s] = Dummy('X%d' % i)
-            new_symbols[i] = swap_sym[s]
+            i += 1
     new_f = []
     for i in eqs:
         isubs = getattr(i, 'subs', None)
@@ -102,8 +104,8 @@ def recast_to_symbols(eqs, symbols):
             new_f.append(isubs(swap_sym))
         else:
             new_f.append(i)
-    swap_sym = {v: k for k, v in swap_sym.items()}
-    return new_f, new_symbols, swap_sym
+    restore = {v: k for k, v in swap_sym.items()}
+    return new_f, [swap_sym.get(i, i) for i in orig], restore
 
 
 def _ispow(e):
@@ -175,12 +177,7 @@ def denoms(eq, *symbols):
     elif len(symbols) == 1:
         if iterable(symbols[0]):
             symbols = symbols[0]
-    rv = []
-    for d in dens:
-        free = d.free_symbols
-        if any(s in free for s in symbols):
-            rv.append(d)
-    return set(rv)
+    return {d for d in dens if any(s in d.free_symbols for s in symbols)}
 
 
 def checksol(f, symbol, sol=None, **flags):
@@ -935,7 +932,7 @@ def solve(f, *symbols, **flags):
 
         # rewrite hyperbolics in terms of exp
         f[i] = f[i].replace(lambda w: isinstance(w, HyperbolicFunction) and \
-            (len(w.free_symbols & set(symbols)) > 0), lambda w: w.rewrite(exp))
+            w.has_free(*symbols), lambda w: w.rewrite(exp))
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
@@ -994,9 +991,7 @@ def solve(f, *symbols, **flags):
                 irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
         if irf:
             for s, rhs in irf:
-                for i, fi in enumerate(f):
-                    f[i] = fi.xreplace({s: rhs})
-                f.append(s - rhs)
+                f = [fi.xreplace({s: rhs}) for fi in f] + [s - rhs]
                 symbols.extend([re(s), im(s)])
             if bare_f:
                 bare_f = False
@@ -1286,7 +1281,7 @@ def solve(f, *symbols, **flags):
         elif iterable(solution[0]):
             solution = [dict(list(zip(symbols, s))) for s in solution]
         elif isinstance(solution[0], dict):
-            pass
+            solution = [{k: s[k] for k in ordered(s)} for s in solution]
         else:
             if len(symbols) != 1:
                 raise ValueError("Length should be 1")
@@ -3356,6 +3351,10 @@ def unrad(eq, *syms, **flags):
 
     # recast poly in terms of eigen-gens
     poly = eq.as_poly(*gens)
+
+    # not a polynomial e.g. 1 + sqrt(x)*exp(sqrt(x)) with gen sqrt(x)
+    if poly is None:
+        return
 
     # - an exponent has a symbol of interest (don't handle)
     if any(g.exp.has(*syms) for g in gens):

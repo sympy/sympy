@@ -1109,7 +1109,11 @@ def _solveset(f, symbol, domain, _check=False):
                                         # non-trivial factoring of equation
                                         # but use form with constants
                                         # in case they need special handling
-                                        t_result = solver(factored, symbol)
+                                        t_results = []
+                                        for fac in Mul.make_args(factored):
+                                            if fac.has(symbol):
+                                                t_results.append(solver(fac, symbol))
+                                        t_result = Union(*t_results)
                             result += t_result
                 else:
                     result += solver(equation, symbol)
@@ -2286,13 +2290,13 @@ def _solveset_multi(eqs, syms, domains):
 
     eqs = sorted(eqs, key=lambda eq: len(eq.free_symbols & set(syms)))
 
-    for n in range(len(eqs)):
+    for n, eq in enumerate(eqs):
         sols = []
         all_handled = True
         for sym in syms:
-            if sym not in eqs[n].free_symbols:
+            if sym not in eq.free_symbols:
                 continue
-            sol = solveset(eqs[n], sym, domains[syms.index(sym)])
+            sol = solveset(eq, sym, domains[syms.index(sym)])
 
             if isinstance(sol, FiniteSet):
                 i = syms.index(sym)

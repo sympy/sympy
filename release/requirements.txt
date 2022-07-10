@@ -1,7 +1,7 @@
 absl-py==0.13.0
 aesara==2.2.0
 alabaster==0.7.12
-antlr4-python3-runtime==4.7.2
+antlr4-python3-runtime==4.10
 appnope==0.1.2
 astunparse==1.6.3
 Babel==2.9.1

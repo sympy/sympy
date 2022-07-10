@@ -14,3 +14,13 @@ Beam
 
     beam.rst
     beam_problems.rst
+
+Truss
+=====
+
+.. toctree::
+    :maxdepth: 3
+
+    truss.rst
+
+

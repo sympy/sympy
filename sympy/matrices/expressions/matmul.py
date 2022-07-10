@@ -59,17 +59,18 @@ class MatMul(MatrixExpr, Mul):
             return factor
 
         if evaluate:
-            return canonicalize(obj)
+            return cls._evaluate(obj)
 
         return obj
+
+    @classmethod
+    def _evaluate(cls, expr):
+        return canonicalize(expr)
 
     @property
     def shape(self):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
-
-    def could_extract_minus_sign(self):
-        return self.args[0].could_extract_minus_sign()
 
     def _entry(self, i, j, expand=True, **kwargs):
         # Avoid cyclic imports
@@ -126,6 +127,10 @@ class MatMul(MatrixExpr, Mul):
         coeff, matrices = self.as_coeff_matrices()
         return coeff, MatMul(*matrices)
 
+    def expand(self, **kwargs):
+        expanded = super(MatMul, self).expand(**kwargs)
+        return self._evaluate(expanded)
+
     def _eval_transpose(self):
         """Transposition of matrix multiplication.
 
@@ -174,10 +179,10 @@ class MatMul(MatrixExpr, Mul):
         except ShapeError:
             return Inverse(self)
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
 
@@ -186,9 +191,15 @@ class MatMul(MatrixExpr, Mul):
         return expr
 
     # Needed for partial compatibility with Mul
-    def args_cnc(self, **kwargs):
+    def args_cnc(self, cset=False, warn=True, **kwargs):
         coeff_c = [x for x in self.args if x.is_commutative]
         coeff_nc = [x for x in self.args if not x.is_commutative]
+        if cset:
+            clen = len(coeff_c)
+            coeff_c = set(coeff_c)
+            if clen and warn and len(coeff_c) != clen:
+                raise ValueError('repeated commutative arguments: %s' %
+                                 [ci for ci in coeff_c if list(self.args).count(ci) > 1])
         return [coeff_c, coeff_nc]
 
     def _eval_derivative_matrix_lines(self, x):

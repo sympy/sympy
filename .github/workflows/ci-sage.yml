@@ -47,7 +47,7 @@ env:
   SPKG:             sympy
   # Sage distribution packages to build
   TARGETS_PRE:      build/make/Makefile
-  TARGETS:          SAGE_CHECK=no SAGE_CHECK_PACKAGES=sympy build ptest
+  TARGETS:          SAGE_CHECK=no SAGE_CHECK_PACKAGES=sympy build SAGE_DOCTEST_RANDOM_SEED=0 ptest
   TARGETS_OPTIONAL: build/make/Makefile
   # Standard setting: Test the current beta release of Sage:
   SAGE_REPO:        sagemath/sage
@@ -55,7 +55,7 @@ env:
   # Uncomment to temporarily test with the branch from a sage ticket
   # (this is a no-op after that ticket is merged)
   SAGE_TRAC_GIT:    https://github.com/sagemath/sagetrac-mirror.git
-  SAGE_TICKET:      32420
+  SAGE_TICKET:      34118
   REMOVE_PATCHES:   "*"
 
 jobs:

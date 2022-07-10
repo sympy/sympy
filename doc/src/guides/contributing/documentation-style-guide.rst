@@ -1,3 +1,7 @@
+=====================
+Docstring Style Guide
+=====================
+
 General Guidelines
 --------------------
 

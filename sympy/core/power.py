@@ -470,8 +470,6 @@ class Pow(Expr):
                     s = 1  # floor = 0
                 elif re(b).is_extended_nonnegative and (abs(e) < 2) == True:
                     s = 1  # floor = 0
-                elif fuzzy_not(im(b).is_zero) and abs(e) == 2:
-                    s = 1  # floor = 0
                 elif _half(other):
                     s = exp(2*S.Pi*S.ImaginaryUnit*other*floor(
                         S.Half - e*arg(b)/(2*S.Pi)))
@@ -534,7 +532,7 @@ class Pow(Expr):
                 b, e, m = int(base), int(exp), int(q)
                 mb = m.bit_length()
                 if mb <= 80 and e >= mb and e.bit_length()**4 >= m:
-                    phi = totient(m)
+                    phi = int(totient(m))
                     return Integer(pow(b, phi + e%phi, m))
                 return Integer(pow(b, e, m))
 
@@ -1038,10 +1036,7 @@ class Pow(Expr):
                 from sympy.concrete.products import Product
                 return Product(self.func(b, e.function), *e.limits)
         if e.is_Add and e.is_commutative:
-            expr = []
-            for x in e.args:
-                expr.append(self.func(b, x))
-            return Mul(*expr)
+            return Mul(*[self.func(b, x) for x in e.args])
         return self.func(b, e)
 
     def _eval_expand_power_base(self, **hints):
@@ -1582,7 +1577,7 @@ class Pow(Expr):
     def matches(self, expr, repl_dict=None, old=False):
         expr = _sympify(expr)
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
 
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
@@ -1725,7 +1720,7 @@ class Pow(Expr):
             return res
 
         try:
-            _, d = g.leadterm(x)
+            _, d = g.leadterm(x, logx=logx)
         except (ValueError, NotImplementedError):
             if limit(g/x**maxpow, x, 0) == 0:
                 # g has higher order zero
@@ -1736,10 +1731,10 @@ class Pow(Expr):
             g = g.simplify()
             if g.is_zero:
                 return f**e
-            _, d = g.leadterm(x)
+            _, d = g.leadterm(x, logx=logx)
             if not d.is_positive:
                 g = ((b - f)/f).expand()
-                _, d = g.leadterm(x)
+                _, d = g.leadterm(x, logx=logx)
                 if not d.is_positive:
                     raise NotImplementedError()
 
@@ -1799,7 +1794,10 @@ class Pow(Expr):
             return lt.as_leading_term(x, logx=logx, cdir=cdir)
         else:
             from sympy.functions.elementary.complexes import im
-            f = b.as_leading_term(x, logx=logx, cdir=cdir)
+            try:
+                f = b.as_leading_term(x, logx=logx, cdir=cdir)
+            except PoleError:
+                return self
             if (not e.is_integer and f.is_constant() and f.is_real
                 and f.is_negative and im((b - f).dir(x, cdir)).is_negative):
                 return self.func(f, e) * exp(-2 * e * S.Pi * S.ImaginaryUnit)

@@ -19,11 +19,13 @@ from .entity import GeometryEntity
 from .exceptions import GeometryError
 from .point import Point, Point2D, Point3D
 from sympy.core.containers import OrderedSet
-from sympy.core.function import Function
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import Function, expand_mul
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Symbol
+from sympy.core.singleton import S
+from sympy.polys.polytools import cancel
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import is_sequence
 
 
@@ -615,7 +617,11 @@ def idiff(eq, y, x, n=1):
     eq = eq.subs(f)
     derivs = {}
     for i in range(n):
-        yp = solve(eq.diff(x), dydx)[0].subs(derivs)
+        # equation will be linear in dydx, a*dydx + b, so dydx = -b/a
+        deq = eq.diff(x)
+        b = deq.xreplace({dydx: S.Zero})
+        a = (deq - b).xreplace({dydx: S.One})
+        yp = factor_terms(expand_mul(cancel((-b/a).subs(derivs)), deep=False))
         if i == n - 1:
             return yp.subs([(v, k) for k, v in f.items()])
         derivs[dydx] = yp
@@ -704,7 +710,7 @@ def intersection(*entities, pairwise=False, **kwargs):
 
     # find all pairwise intersections
     ans = []
-    for j in range(0, len(entities)):
+    for j in range(len(entities)):
         for k in range(j + 1, len(entities)):
             ans.extend(intersection(entities[j], entities[k]))
     return list(ordered(set(ans)))

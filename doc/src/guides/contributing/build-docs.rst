@@ -104,6 +104,18 @@ convenience than a virtual machine if you partially need a Linux environment
 for your workflow, however this method is only viable for Windows 10 64-bit
 users.
 
+or
+
+Follow `instruction <https://chocolatey.org/install>`_ to install Chocolatey
+
+Install make and other dependencies::
+
+   choco install make graphviz rsvg-convert imagemagick
+
+Install python dependencies::
+
+   pip install -r doc/requirements.txt
+
 Build the Docs
 ^^^^^^^^^^^^^^^
 
@@ -128,6 +140,19 @@ required dependencies locally, the documentation can be built by running the
    cd doc
    make html
 
+
+SymPy Logos
+~~~~~~~~~~~
+
+SymPy has a collection of official logos, which can be generated from sympy.svg in your local copy of SymPy by:
+
+.. code-block:: none
+
+    $ cd doc
+    $ make logo # will be stored in the _build/logo subdirectory
+
+The license of all the logos is the same as SymPy: BSD. See the
+`LICENSE file <https://github.com/sympy/sympy/blob/master/LICENSE>`_ for more information.
 
 View the Docs
 ^^^^^^^^^^^^^
@@ -224,15 +249,22 @@ On Ubuntu, you can install these with::
 On Mac, you can use::
 
     brew install texlive
+    brew install --cask chromium
+    brew tap homebrew/cask-fonts
+    brew install font-dejavu
 
-and also make sure the `Google Chrome browser
-<https://www.google.com/chrome/>`_ is installed in ``/Applications``.
+On Windows 10, you can use::
+
+    choco install chromium strawberryperl miktex dejavufonts
+
+If DejaVu fonts are not installed in ``C:\Windows\Fonts``, then open
+``~\AppData\Local\Microsoft\Windows\Fonts``, select all DejaVu fonts,
+right-click and click ``Install for all users``.
 
 To build the pdf docs run::
 
     cd doc
-
-    make latexpdf
+    make pdf
 
 The resulting PDF will be in::
 

@@ -52,11 +52,16 @@ class MatAdd(MatrixExpr, Add):
             validate(*args)
 
         if evaluate:
-            if not any(isinstance(i, MatrixExpr) for i in args):
-                return Add(*args, evaluate=True)
-            obj = canonicalize(obj)
+            obj = cls._evaluate(obj)
 
         return obj
+
+    @classmethod
+    def _evaluate(cls, expr):
+        args = expr.args
+        if not any(isinstance(i, MatrixExpr) for i in args):
+            return Add(*args, evaluate=True)
+        return canonicalize(expr)
 
     @property
     def shape(self):
@@ -64,6 +69,10 @@ class MatAdd(MatrixExpr, Add):
 
     def could_extract_minus_sign(self):
         return _could_extract_minus_sign(self)
+
+    def expand(self, **kwargs):
+        expanded = super(MatAdd, self).expand(**kwargs)
+        return self._evaluate(expanded)
 
     def _entry(self, i, j, **kwargs):
         return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])
@@ -78,10 +87,10 @@ class MatAdd(MatrixExpr, Add):
         from .trace import trace
         return Add(*[trace(arg) for arg in self.args]).doit()
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
         return canonicalize(MatAdd(*args))

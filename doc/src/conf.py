@@ -33,7 +33,8 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
               'sphinx_math_dollar', 'sphinx.ext.mathjax', 'numpydoc',
               'sphinx_reredirects', 'sphinx_copybutton',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
-              'myst_parser', 'sphinx.ext.intersphinx']
+              'myst_parser', 'convert-svg-to-pdf', 'sphinx.ext.intersphinx'
+              ]
 
 redirects = {
     "install.rst": "guides/getting_started/install.html",
@@ -247,7 +248,7 @@ if os.environ.get("CIRCLECI") == "true":
     html_theme_options['announcement'] = f"""This is a preview build from
 SymPy pull request <a href="https://github.com/sympy/sympy/pull/{PR_NUMBER}">
 #{PR_NUMBER}</a>. It was built against <a
-href="https://github.com/sympy/sympy/pull/{PR_NUMBER}/commits/{SHA1}">{SHA1[:5]}</a>.
+href="https://github.com/sympy/sympy/pull/{PR_NUMBER}/commits/{SHA1}">{SHA1[:7]}</a>.
 If you aren't looking for a PR preview, go to <a
 href="https://docs.sympy.org/">the main SymPy documentation</a>. """
 

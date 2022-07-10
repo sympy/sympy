@@ -168,7 +168,7 @@ def test_radsimp_issue_3214():
 
 
 def test_collect_1():
-    """Collect with respect to a Symbol"""
+    """Collect with respect to Symbol"""
     x, y, z, n = symbols('x,y,z,n')
     assert collect(1, x) == 1
     assert collect( x + y*x, x ) == x * (1 + y)
@@ -184,6 +184,8 @@ def test_collect_1():
     # symbols can be given as any iterable
     expr = x + y
     assert collect(expr, expr.free_symbols) == expr
+    assert collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x, x, exact=None
+        ) == x*(exp(x) + 3) + (y + 2)*sin(x)
 
 
 def test_collect_2():

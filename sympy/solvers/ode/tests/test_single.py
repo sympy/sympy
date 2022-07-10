@@ -40,7 +40,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (asinh, cosh, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sec, sin, tan)
@@ -953,8 +953,8 @@ def _get_examples_ode_sol_factorable():
     'fact_06': {
         'eq': (f(x).diff(x, 2)-exp(f(x)))*f(x).diff(x),
         'sol': [
-            Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 + x)) - 1))),
-            Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 - x)) - 1))),
+            Eq(f(x), log(-C1/(cos(sqrt(-C1)*(C2 + x)) + 1))),
+            Eq(f(x), log(-C1/(cos(sqrt(-C1)*(C2 - x)) + 1))),
             Eq(f(x), C1)
         ],
         'slow': True,
@@ -2859,7 +2859,8 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
 
     '1st_homogeneous_coeff_best_08': {
         'eq': f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x),
-        'sol': [Eq(log(x), C1 - log(f(x)/x) + acosh(f(x)/x))],
+        'sol': [Eq(f(x), -sqrt(-x*exp(2*C1)/(x - 2*exp(C1)))), Eq(f(x), sqrt(-x*exp(2*C1)/(x - 2*exp(C1))))],
+        'checkodesol_XFAIL': True  # solutions are valid in a range
     },
     }
     }

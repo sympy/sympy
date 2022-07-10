@@ -638,7 +638,7 @@ def RGS_generalized(m):
     [203,   0,   0,  0,  0, 0, 0]])
     """
     d = zeros(m + 1)
-    for i in range(0, m + 1):
+    for i in range(m + 1):
         d[0, i] = 1
 
     for i in range(1, m + 1):

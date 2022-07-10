@@ -220,6 +220,12 @@ class _CodegenArrayAbstract(Basic):
     def shape(self):
         return self._shape
 
+    def doit(self, **hints):
+        deep = hints.get("deep", True)
+        if deep:
+            return self.func(*[arg.doit(**hints) for arg in self.args])._canonicalize()
+        else:
+            return self._canonicalize()
 
 class ArrayTensorProduct(_CodegenArrayAbstract):
     r"""
@@ -302,13 +308,6 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
 
         return self.func(*args, canonicalize=False)
 
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
-
     @classmethod
     def _flatten(cls, args):
         args = [i for arg in args for i in (arg.args if isinstance(arg, cls) else [arg])]
@@ -360,13 +359,6 @@ class ArrayAdd(_CodegenArrayAbstract):
         elif len(args) == 1:
             return args[0]
         return self.func(*args, canonicalize=False)
-
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
 
     @classmethod
     def _flatten_args(cls, args):
@@ -500,13 +492,6 @@ class PermuteDims(_CodegenArrayAbstract):
             return expr
         return self.func(expr, permutation, canonicalize=False)
 
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
-
     @property
     def expr(self):
         return self.args[0]
@@ -621,7 +606,7 @@ class PermuteDims(_CodegenArrayAbstract):
         # Get possible shifts:
         maps = {}
         cumulative_subranks = [0] + list(accumulate(subranks))
-        for i in range(0, len(subranks)):
+        for i in range(len(subranks)):
             s = set([index2arg[new_permutation[j]] for j in range(cumulative_subranks[i], cumulative_subranks[i+1])])
             if len(s) != 1:
                 continue
@@ -669,7 +654,7 @@ class PermuteDims(_CodegenArrayAbstract):
         cyclic_keep = []
         for i, cycle in enumerate(cyclic_form):
             flag = True
-            for j in range(0, len(cumulative_subranks) - 1):
+            for j in range(len(cumulative_subranks) - 1):
                 if cyclic_min[i] >= cumulative_subranks[j] and cyclic_max[i] < cumulative_subranks[j+1]:
                     # Found a sinkable cycle.
                     args[j] = _permute_dims(args[j], Permutation([[k - cumulative_subranks[j] for k in cyclic_form[i]]]))
@@ -819,13 +804,6 @@ class ArrayDiagonal(_CodegenArrayAbstract):
             positions, shape = self._get_positions_shape(expr.shape, diagonal_indices)
             return ZeroArray(*shape)
         return self.func(expr, *diagonal_indices, canonicalize=False)
-
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
 
     @staticmethod
     def _validate(expr, *diagonal_indices, **kwargs):
@@ -1052,13 +1030,6 @@ class ArrayContraction(_CodegenArrayAbstract):
             return expr
 
         return self.func(expr, *contraction_indices, canonicalize=False)
-
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
 
     def __mul__(self, other):
         if other == 1:

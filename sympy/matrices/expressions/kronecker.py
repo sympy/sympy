@@ -1,7 +1,8 @@
 """Implementation of the Kronecker product"""
 from functools import reduce
+from math import prod
 
-from sympy.core import Mul, prod, sympify
+from sympy.core import Mul, sympify
 from sympy.functions import adjoint
 from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
@@ -144,7 +145,7 @@ class KroneckerProduct(MatrixExpr):
 
     def _eval_trace(self):
         from .trace import trace
-        return prod(trace(a) for a in self.args)
+        return Mul(*[trace(a) for a in self.args])
 
     def _eval_determinant(self):
         from .determinant import det, Determinant
@@ -152,7 +153,7 @@ class KroneckerProduct(MatrixExpr):
             return Determinant(self)
 
         m = self.rows
-        return prod(det(a)**(m/a.rows) for a in self.args)
+        return Mul(*[det(a)**(m/a.rows) for a in self.args])
 
     def _eval_inverse(self):
         try:
@@ -223,10 +224,10 @@ class KroneckerProduct(MatrixExpr):
         else:
             return self * other
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
         return canonicalize(KroneckerProduct(*args))

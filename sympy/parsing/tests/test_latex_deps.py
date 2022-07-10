@@ -3,7 +3,7 @@ from sympy.testing.pytest import ignore_warnings, raises
 
 antlr4 = import_module("antlr4", warn_not_installed=False)
 
-# disable tests if antlr4-python*-runtime is not present
+# disable tests if antlr4-python3-runtime is not present
 if antlr4:
     disabled = True
 

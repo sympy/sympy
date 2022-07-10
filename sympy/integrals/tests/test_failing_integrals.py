@@ -5,10 +5,10 @@ from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (csch, sech, sinh)
+from sympy.functions.elementary.hyperbolic import (sech, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, atan, cos, sec, sin, tan)
+from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import (Integral, integrate)
@@ -29,12 +29,6 @@ def test_issue_3880():
 @XFAIL
 def test_issue_4212():
     assert not integrate(sign(x), x).has(Integral)
-
-
-@XFAIL
-def test_issue_4491():
-    # Can be solved via variable transformation x = y - 1
-    assert not integrate(x*sqrt(x**2 + 2*x + 4), x).has(Integral)
 
 
 @XFAIL
@@ -124,13 +118,6 @@ def test_issue_16396a():
 def test_issue_16396b():
     i = integrate(x*sin(x)/(1+cos(x)**2), (x, 0, pi))
     assert not i.has(Integral)
-
-
-@XFAIL
-def test_issue_16161():
-    i = integrate(x*sec(x)**2, x)
-    assert not i.has(Integral)
-    # assert i == x*tan(x) + log(cos(x))
 
 
 @XFAIL
@@ -230,20 +217,8 @@ def test_issue_11813():
 
 
 @XFAIL
-def test_issue_11742():
-    i =  integrate(sqrt(-x**2 + 8*x + 48), (x, 4, 12))
-    assert not i.has(Integral)
-    # assert i == 16*pi
-
-
-@XFAIL
-def test_issue_11254a():
-    assert not integrate(sech(x), (x, 0, 1)).has(Integral)
-
-
-@XFAIL
-def test_issue_11254b():
-    assert not integrate(csch(x), (x, 0, 1)).has(Integral)
+def test_issue_11254c():
+    assert not integrate(sech(x)**2, (x, 0, 1)).has(Integral)
 
 
 @XFAIL
@@ -252,18 +227,8 @@ def test_issue_10584():
 
 
 @XFAIL
-def test_issue_9723():
-    assert not integrate(sqrt(x + sqrt(x))).has(Integral)
-
-
-@XFAIL
 def test_issue_9101():
     assert not integrate(log(x + sqrt(x**2 + y**2 + z**2)), z).has(Integral)
-
-
-@XFAIL
-def test_issue_7264():
-    assert not integrate(exp(x)*sqrt(1 + exp(2*x))).has(Integral)
 
 
 @XFAIL
@@ -294,3 +259,15 @@ def test_issue_4311_slow():
 def test_issue_20370():
     a = symbols('a', positive=True)
     assert integrate((1 + a * cos(x))**-1, (x, 0, 2 * pi)) == (2 * pi / sqrt(1 - a**2))
+
+
+@XFAIL
+def test_polylog():
+    # log(1/x)*log(x+1)-polylog(2, -x)
+    assert not integrate(log(1/x)/(x + 1), x).has(Integral)
+
+
+@XFAIL
+def test_polylog_manual():
+    # Make sure _parts_rule does not go into an infinite loop here
+    assert not integrate(log(1/x)/(x + 1), x, manual=True).has(Integral)

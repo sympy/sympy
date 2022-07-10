@@ -337,7 +337,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         Notes
         =====
 
-        This only preprocesses the ``sqrt`` as math formatter
+        This preprocesses the ``sqrt`` as math formatter and prints division
 
         Examples
         ========
@@ -357,6 +357,10 @@ class AbstractPythonCodePrinter(CodePrinter):
         'x**(-1/2)'
         >>> printer._hprint_Pow(1/sqrt(x), rational=False)
         '1/math.sqrt(x)'
+        >>> printer._hprint_Pow(1/x, rational=False)
+        '1/x'
+        >>> printer._hprint_Pow(1/x, rational=True)
+        'x**(-1)'
 
         Using sqrt from numpy or mpmath
 
@@ -377,13 +381,17 @@ class AbstractPythonCodePrinter(CodePrinter):
             arg = self._print(expr.base)
             return '{func}({arg})'.format(func=func, arg=arg)
 
-        if expr.is_commutative:
-            if -expr.exp is S.Half and not rational:
+        if expr.is_commutative and not rational:
+            if -expr.exp is S.Half:
                 func = self._module_format(sqrt)
                 num = self._print(S.One)
                 arg = self._print(expr.base)
-                return "{num}/{func}({arg})".format(
-                    num=num, func=func, arg=arg)
+                return f"{num}/{func}({arg})"
+            if expr.exp is S.NegativeOne:
+                num = self._print(S.One)
+                arg = self.parenthesize(expr.base, PREC, strict=False)
+                return f"{num}/{arg}"
+
 
         base_str = self.parenthesize(expr.base, PREC, strict=False)
         exp_str = self.parenthesize(expr.exp, PREC, strict=False)

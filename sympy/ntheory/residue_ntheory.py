@@ -654,8 +654,8 @@ def _is_nthpow_residue_bign(a, n, m):
                 return False
         return True
     f = totient(m)
-    k = f // igcd(f, n)
-    return pow(a, k, m) == 1
+    k = int(f // igcd(f, n))
+    return pow(a, k, int(m)) == 1
 
 
 def _is_nthpow_residue_bign_prime_power(a, n, p, k):
@@ -1145,7 +1145,7 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     if order is None:
         order = n_order(b, n)
     m = isqrt(order) + 1
-    T = dict()
+    T = {}
     x = 1
     for i in range(m):
         T[x] = i

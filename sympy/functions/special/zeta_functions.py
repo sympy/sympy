@@ -281,7 +281,6 @@ class polylog(Function):
 
     @classmethod
     def eval(cls, s, z):
-        s, z = sympify((s, z))
         if z is S.One:
             return zeta(s)
         elif z is S.NegativeOne:
@@ -691,8 +690,6 @@ class stieltjes(Function):
 
     @classmethod
     def eval(cls, n, a=None):
-        n = sympify(n)
-
         if a is not None:
             a = sympify(a)
             if a is S.NaN:

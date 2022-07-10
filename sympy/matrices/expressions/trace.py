@@ -102,9 +102,9 @@ class Trace(Expr):
     def arg(self):
         return self.args[0]
 
-    def doit(self, **kwargs):
-        if kwargs.get('deep', True):
-            arg = self.arg.doit(**kwargs)
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            arg = self.arg.doit(**hints)
             try:
                 return arg._eval_trace()
             except (AttributeError, NotImplementedError):

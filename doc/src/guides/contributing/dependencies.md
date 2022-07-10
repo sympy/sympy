@@ -109,7 +109,7 @@ images rendered with LaTeX. `preview()` can either save the image to a file or
 show it with a viewer.
 
 (dependencies-latex)=
-- **LaTeX**: A $\textrm{\LaTeX}$ distributions such as [TeXLive](https://tug.org/texlive/) or
+- **LaTeX**: A $\LaTeX$ distributions such as [TeXLive](https://tug.org/texlive/) or
 [MiKTeX](https://miktex.org/) is required for {func}`~.preview` to function.
 
 ### Parsing
@@ -124,9 +124,9 @@ require any external dependencies.
   {func}`LaTeX parser <sympy.parsing.latex.parse_latex>` and
   [Autolev](autolev_parser) parsers. They both require the Antlr Python
   runtime to be installed. The package for this is called
-  `antlr4-python-runtime` with conda and `antlr4-python3-runtime` with pip).
+  `antlr-python-runtime` with conda and `antlr4-python3-runtime` with pip).
   Also be aware that the version of the Antlr Python runtime must match the
-  version that was used to compile the LaTeX and Autolev parsers (4.7).
+  version that was used to compile the LaTeX and Autolev parsers (4.10).
 
 - **Clang Python Bindings**: The C parser (`sympy.parsing.c.parse_c`) requires
   the Clang Python bindings. The package for this is called `python-clang`
@@ -196,6 +196,10 @@ those libraries.
 - **CuPy**: [CuPy](https://cupy.dev/) is a library that provides a NumPy
   compatible interface for CUDA GPUs. `lambdify` can produce CuPy compatible
   functions using `lambdify(modules='cupy')`.
+
+- **Jax**: [JAX](https://github.com/google/jax) is a library that uses XLA
+  to compile and run NumPy programs on GPUs and TPUs. `lambdify` can produce 
+  JAX compatibly functions using `lambdify(modules='jax')`.
 
 - **TensorFlow**: [TensorFlow](https://www.tensorflow.org/) is a popular
   machine learning library. `lambdify` can produce TensorFlow compatible
@@ -297,8 +301,8 @@ is required to use the sampling functionality of `sympy.stats`.
 - **NumPy**: `sample(library='numpy')` uses the [NumPy
   random module](https://numpy.org/doc/stable/reference/random/index.html).
 
-- **pymc3**: `sample(library='pymc3')` uses
-  [PyMC3](https://docs.pymc.io/en/v3/) to do sampling.
+- **pymc**: `sample(library='pymc')` uses
+  [PyMC](https://pymc.io/) to do sampling.
 
 ### Optional SymEngine Backend
 

@@ -21,7 +21,8 @@ from sympy.functions.combinatorial.numbers import _nT
 from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
 
-from sympy.testing.pytest import XFAIL, raises, nocache_fail
+from sympy.testing.pytest import (XFAIL, raises, nocache_fail,
+                                  warns_deprecated_sympy)
 from sympy.abc import x
 
 
@@ -31,14 +32,11 @@ def test_carmichael():
     assert carmichael.find_carmichael_numbers_in_range(561, 1105) == carmichael.find_carmichael_numbers_in_range(561,
                                                                                                                  562)
     assert carmichael.find_first_n_carmichaels(5) == [561, 1105, 1729, 2465, 2821]
-    assert carmichael.is_prime(2821) == False
-    assert carmichael.is_prime(2465) == False
-    assert carmichael.is_prime(1729) == False
-    assert carmichael.is_prime(1105) == False
-    assert carmichael.is_prime(561) == False
     raises(ValueError, lambda: carmichael.is_carmichael(-2))
     raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(-2, 2))
     raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(22, 2))
+    with warns_deprecated_sympy():
+        assert carmichael.is_prime(2821) == False
 
 
 def test_bernoulli():
