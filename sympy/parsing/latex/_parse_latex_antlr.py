@@ -1,7 +1,7 @@
 # Ported from latex2sympy by @augustt198
 # https://github.com/augustt198/latex2sympy
 # See license in LICENSE.txt
-
+from importlib.metadata import version
 import sympy
 from sympy.external import import_module
 from sympy.printing.str import StrPrinter
@@ -59,13 +59,13 @@ if ErrorListener:
 
 
 def parse_latex(sympy):
-    antlr4 = import_module('antlr4', warn_not_installed=True)
+    antlr4 = import_module('antlr4')
 
-    if None in [antlr4, MathErrorListener]:
+    if None in [antlr4, MathErrorListener] or \
+            version('antlr4-python3-runtime') != '4.10':
         raise ImportError("LaTeX parsing requires the antlr4 Python package,"
-                          " provided by pip (antlr4-python2-runtime or"
-                          " antlr4-python3-runtime) or"
-                          " conda (antlr-python-runtime)")
+                          " provided by pip (antlr4-python3-runtime) or"
+                          " conda (antlr-python-runtime), version 4.10")
 
     matherror = MathErrorListener(sympy)
 
