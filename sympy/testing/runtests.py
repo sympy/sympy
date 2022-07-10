@@ -2248,6 +2248,17 @@ class PyTestReporter(Reporter):
         with ignore_warnings(ImportWarning):
             numpy = import_module('numpy')
 
+        # Import pymc to suppress warnings from Aesara and netCDF4:
+        #
+        # DeprecationWarning: The distutils package is deprecated and slated
+        # for removal in Python 3.12. Use setuptools or check PEP 632 for
+        # potential alternatives
+        #   File "src/netCDF4/_netCDF4.pyx", line 1, in init netCDF4._netCDF4
+        # RuntimeWarning: numpy.ndarray size changed, may indicate binary
+        # incompatibility. Expected 16 from C header, got 88 from PyObject
+        with ignore_warnings((DeprecationWarning, RuntimeWarning)):
+            import_module('pymc')
+
         self.write("numpy:              %s\n" % (None if not numpy else numpy.__version__))
         if seed is not None:
             self.write("random seed:        %d\n" % seed)
