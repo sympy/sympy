@@ -99,7 +99,7 @@ doctest_list = [
     '*aesara*',
 
     # gmpy
-    'polys',
+    'sympy/polys',
 
     # autowrap
     '*autowrap*',
@@ -132,8 +132,8 @@ print('Testing optional dependencies')
 from sympy import test, doctest
 
 
-tests_passed = test(*test_list, blacklist=blacklist)
-doctests_passed = doctest(*doctest_list)
+tests_passed = test(*test_list, blacklist=blacklist, force_colors=True)
+doctests_passed = doctest(*doctest_list, force_colors=True)
 
 
 if not tests_passed and not doctests_passed:
