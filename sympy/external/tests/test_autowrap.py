@@ -310,4 +310,22 @@ def test_ufuncify_numpy():
     # This test doesn't use Cython, but if Cython works, then there is a valid
     # C compiler, which is needed.
     has_module('Cython')
-    runtest_ufuncify('C99', 'numpy')
+
+    # The ufuncify function generates a setup.py that uses distutils which
+    # is now deprecated:
+    #
+    # DeprecationWarning: The distutils package is deprecated and slated
+    # for removal in Python 3.12. Use setuptools or check PEP 632 for
+    # potential alternatives
+    #
+    # We will disable the PYTHONWARNINGS environment variable temporarily. It
+    # is not possible to use ignore_warnings here because the warning arises in
+    # a subprocess that will inherit PYTHONWARNINGS.
+    try:
+        envvar = os.environ.pop('PYTHONWARNINGS', None)
+
+        # The actual test:
+        runtest_ufuncify('C99', 'numpy')
+    finally:
+        if envvar is not None:
+            os.environ['PYTHONWARNINGS'] = envvar
