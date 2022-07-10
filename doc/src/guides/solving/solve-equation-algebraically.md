@@ -372,7 +372,7 @@ membership is found in every candidates.
 ```
 
 In this case, it is because, if $y$ is negative, its square root would be
-imaginary rather than real and therefor outside the declared domain of the
+imaginary rather than real and therefore outside the declared domain of the
 solution set. By declaring $y$ to be real and positive, SymPy can determine that
 its square root is real, and thus resolve the intersection between the solutions
 and the set of real numbers:
@@ -385,6 +385,23 @@ and the set of real numbers:
 >>> print(solution_set)
 {-sqrt(y), sqrt(y)}
 >>> list(solution_set)
+[sqrt(y), -sqrt(y)]
+```
+
+Alternatively, you can extract the sets from the solution set using {prop}`args
+<sympy.core.basic.Basic.args>`, then create a list from the set containing the
+symbolic solutions:
+
+```py
+>>> from sympy import S, solveset, symbols
+>>> x, y = symbols('x, y')
+>>> solution_set = solveset(x**2 - y, x, domain=S.Reals)
+>>> print(solution_set)
+Intersection({-sqrt(y), sqrt(y)}, Reals)
+>>> solution_set_args = solution_set.args
+>>> print(solution_set.args)
+(Reals, {-sqrt(y), sqrt(y)})
+>>> list(solution_set_args[1])
 [sqrt(y), -sqrt(y)]
 ```
 
