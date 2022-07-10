@@ -2238,7 +2238,16 @@ class PyTestReporter(Reporter):
                 import gmpy2 as gmpy
             version = gmpy.version()
         self.write("ground types:       %s %s\n" % (GROUND_TYPES, version))
-        numpy = import_module('numpy')
+
+        # Importing numpy gives a warning with pypy 3.8
+        #
+        #     from .mtrand import RandomState
+        #   File "mtrand.pyx", line 19, in init numpy.random.mtrand
+        # ImportWarning: can't resolve package from __spec__ or __package__,
+        # falling back on __name__ and __path__
+        with ignore_warnings(ImportWarning):
+            numpy = import_module('numpy')
+
         self.write("numpy:              %s\n" % (None if not numpy else numpy.__version__))
         if seed is not None:
             self.write("random seed:        %d\n" % seed)
