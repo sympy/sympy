@@ -93,3 +93,15 @@ def test_truss():
     assert t.supports == {D: 'roller'}
     assert t.reaction_loads == {}
     assert t.loads == {A: [[P, 90], [2*P, 45]], D: [[P/2, 90], [Symbol('R_D_y'), 90]]}
+
+    t.apply_support(A, "pinned")
+
+    # testing the solve method
+    t.solve()
+    assert t.reaction_loads['R_A_x']/P - (-1.4142135623731) < 1e-10
+    assert t.reaction_loads['R_A_y']/P - (-2.41421356237309) < 1e-10
+    assert t.reaction_loads['R_D_y']/P - (-0.5) < 1e-10
+    assert t.internal_forces[AB]/P < 1e-10
+    assert t.internal_forces[CD] < 1e-10
+    assert t.internal_forces[AC] < 1e-10
+    # assert t.internal_forces == {AB: 3.06161699786838e-17*P, CD: 0, AC: 0}
