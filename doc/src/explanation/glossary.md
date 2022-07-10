@@ -372,6 +372,12 @@ lamda
     is used sometimes in SymPy because `lambda` is a reserved keyword in
     Python, so a symbol representing λ must be named something else.
 
+lambdify
+
+    *{func}`lambdify`* is a function that converts a SymPy
+    expression into a Python function that can be evaluated numerically,
+    typically making use of a {term}`numeric` library such as NumPy.
+
 Matrix
 
     *Matrix* refers to the set of classes used by SymPy to represent matrices.
