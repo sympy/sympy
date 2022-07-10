@@ -364,11 +364,28 @@ solutions:
 >>> solution_set = solveset(x**2 - y, x, domain=S.Reals)
 >>> print(solution_set)
 Intersection({-sqrt(y), sqrt(y)}, Reals)
->>> solution_list = list(solution_set)
+>>> list(solution_set)
 Traceback (most recent call last):
     ...
 TypeError: The computation had not completed because of the undecidable set 
 membership is found in every candidates.
+```
+
+In this case, it is because, if $y$ is negative, its square root would be
+imaginary rather than real and therefor outside the declared domain of the
+solution set. By declaring $y$ to be real and positive, SymPy can determine that
+its square root is real, and thus resolve the intersection between the solutions
+and the set of real numbers:
+
+```py
+>>> from sympy import S, Symbol, solveset
+>>> x = Symbol('x')
+>>> y = Symbol('y', real=True, positive=True)
+>>> solution_set = solveset(x**2 - y, x, domain=S.Reals)
+>>> print(solution_set)
+{-sqrt(y), sqrt(y)}
+>>> list(solution_set)
+[sqrt(y), -sqrt(y)]
 ```
 
 ## Options that can speed up {func}`~.solve`
