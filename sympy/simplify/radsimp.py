@@ -125,7 +125,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ``exact`` to None:
 
         >>> collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x, x, exact=None)
-        x*(exp(x) + 3) + (y + 2)*sin(x)
+        x*exp(x) + 3*x + (y + 2)*sin(x)
+        >>> collect(a*x*y + x*y + b*x + x, [x, y], exact=None)
+        x*y*(a + 1) + x*(b + 1)
 
     You can also apply this function to differential equations, where
     derivatives of arbitrary order can be collected. Note that if you
@@ -198,8 +200,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             if not i.is_Mul and i not in syms:
                 _syms.add(i)
             else:
-                g = i._new_rawargs(*[_ for _ in
-                    i.as_coeff_mul(*syms)[1] if _ not in syms])
+                # identify compound generators
+                g = i._new_rawargs(*i.as_coeff_mul(*syms)[1])
                 if g not in syms:
                     _syms.add(g)
         simple = all(i.is_Pow and i.base in syms for i in _syms)
