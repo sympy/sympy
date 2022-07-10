@@ -2386,17 +2386,18 @@ def solve_linear_system(system, *symbols, **flags):
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     r"""
     Solve equation of a type $p(x; a_1, \ldots, a_k) = q(x)$ where both
-    $p$ and $q$ are univariate polynomials that depend linearly on $k$
+    $p$ and $q$ are univariate expressions that depend linearly on $k$
     parameters.
 
     Explanation
     ===========
 
-    The result of this function is a dictionary with symbolic values of those
-    parameters with respect to coefficients in $q$, an empty list if there
-    is no solution, and None if the system was not recognized.
+    The result of this function is a dictionary with symbolic values of
+    those parameters with respect to coefficients in $q$, an empty list
+    if there is no solution, and None if the system was not recognized.
+    Any flags (except for `dict` and `set`) are passed along to `solve`.
 
-    This function accepts both equations class instances and ordinary
+    This function accepts both Equality class instances and ordinary
     SymPy expressions. Specification of parameters and variables is
     obligatory for efficiency and simplicity reasons.
 
@@ -2413,6 +2414,8 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     {a: 1/c, b: -1/c}
 
     """
+    from sympy.solvers.solveset import (linsolve, NonlinearError,
+        linear_eq_to_matrix)
     if isinstance(equ, Eq):
         # got equation, so move all the
         # terms to the left hand side
@@ -2420,12 +2423,26 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
 
     equ = cancel(equ).as_numer_denom()[0]
 
-    system = list(collect(equ.expand(), sym, evaluate=False).values())
+    system = list(collect(equ.expand(), sym, evaluate=False, exact=None).values())
 
     if not any(equ.has(sym) for equ in system):
-        # consecutive powers in the input expressions have
-        # been successfully collected, so solve remaining
-        # system using Gaussian elimination algorithm
+        coeffs = list(ordered(coeffs))
+        # test that it is linear
+        try:
+            A, b = linear_eq_to_matrix(system, *coeffs)
+        except NonlinearError:
+            return
+        # solve system of equations defining coefficients
+        if not flags or len(flags) == 1 and flags.get('simplify', 0):
+            sol = list(linsolve(A.hstack(A, b)))
+            if not sol:
+                return sol
+            assert len(sol) == 1
+            sol = dict(zip(coeffs, sol.pop()))
+            if flags:
+                sol = {k: v.simplify() for k, v in sol.items()}
+            return sol
+        # legacy use of solve
         miss = Dummy()
         dwas = flags.pop('dict', miss)
         swas = flags.pop('set', miss)
