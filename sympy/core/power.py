@@ -1807,9 +1807,14 @@ class Pow(Expr):
                 f = b.as_leading_term(x, logx=logx, cdir=cdir)
             except PoleError:
                 return self
-            if (not e.is_integer and f.is_constant() and f.is_real
-                and f.is_negative and im((b - f).dir(x, cdir)).is_negative):
-                return self.func(f, e) * exp(-2 * e * S.Pi * S.ImaginaryUnit)
+            if not e.is_integer and f.is_negative:
+                ndir = (b - f).dir(x, cdir)
+                if im(ndir).is_negative:
+                    return self.func(f, e) * exp(-2 * e * S.Pi * S.ImaginaryUnit)
+                elif im(ndir).is_zero:
+                    log_leadterm = log(b)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+                    if log_leadterm.is_infinite is False:
+                        return exp(e*log_leadterm)
             return self.func(f, e)
 
     @cacheit

@@ -922,12 +922,16 @@ def test_asin_series():
     assert t5 == 3*x**5/40
     assert asin(x).taylor_term(7, x, t5, 0) == 5*x**7/112
 
+
 def test_asin_leading_term():
     assert asin(x).as_leading_term(x) == x
     assert asin(x + 1).as_leading_term(x) == pi/2
     assert asin(x - 1).as_leading_term(x) == -pi/2
     assert asin(1/x).as_leading_term(x, cdir=1) == I*log(x) + pi/2 - I*log(2)
     assert asin(1/x).as_leading_term(x, cdir=-1) == -I*log(x) - 3*pi/2 + I*log(2)
+    # Tests concerning im(ndir) == 0
+    assert asin(-I*x**2 + x - 2).as_leading_term(x, cdir=1) == -pi/2 + I*log(2 - sqrt(3))
+    assert asin(-I*x**2 + x - 2).as_leading_term(x, cdir=-1) == -pi/2 + I*log(2 - sqrt(3))
 
 
 def test_asin_rewrite():
@@ -994,6 +998,9 @@ def test_acos_leading_term():
     assert acos(x - 1).as_leading_term(x) == pi
     assert acos(1/x).as_leading_term(x, cdir=1) == -I*log(x) + I*log(2)
     assert acos(1/x).as_leading_term(x, cdir=-1) == I*log(x) + 2*pi - I*log(2)
+    # Tests concerning im(ndir) == 0
+    assert acos(-I*x**2 + x - 2).as_leading_term(x, cdir=1) == pi + I*log(sqrt(3) + 2)
+    assert acos(-I*x**2 + x - 2).as_leading_term(x, cdir=-1) == pi + I*log(sqrt(3) + 2)
 
 
 def test_acos_series():
@@ -1104,6 +1111,9 @@ def test_atan_leading_term():
     assert atan(x - I).as_leading_term(x, cdir=-1) == I*log(x)/2 + pi/4 - I*log(2)/2
     assert atan(1/x).as_leading_term(x, cdir=1) == pi/2
     assert atan(1/x).as_leading_term(x, cdir=-1) == -pi/2
+    # Tests concerning re(ndir) == 0
+    assert atan(2*I - I*x - x**2).as_leading_term(x, cdir=1) == -pi/2 + I*log(3)/2
+    assert atan(2*I - I*x - x**2).as_leading_term(x, cdir=-1) == -pi/2 + I*log(3)/2
 
 
 def test_atan2():
@@ -1243,6 +1253,9 @@ def test_acot_leading_term():
     assert acot(x - I).as_leading_term(x, cdir=1) == -I*log(x)/2 + pi/4 + I*log(2)/2
     assert acot(x - I).as_leading_term(x, cdir=-1) == -I*log(x)/2 - 3*pi/4 + I*log(2)/2
     assert acot(1/x).as_leading_term(x) == x
+    # Tests concerning re(ndir) == 0
+    assert acot(I/2 - I*x - x**2).as_leading_term(x, cdir=1) == -pi/2 - I*log(3)/2
+    assert acot(I/2 - I*x - x**2).as_leading_term(x, cdir=-1) == -pi/2 - I*log(3)/2
 
 
 def test_attributes():
@@ -1786,6 +1799,9 @@ def test_asec_leading_term():
     assert asec(x + 1).as_leading_term(x) == sqrt(2)*sqrt(x)
     assert asec(x - 1).as_leading_term(x) == pi
     assert asec(1/x).as_leading_term(x) == pi/2
+    # Tests concerning im(ndir) == 0
+    assert asec(-I*x**2 + x - Rational(1, 2)).as_leading_term(x, cdir=1) == pi + I*log(2 - sqrt(3))
+    assert asec(-I*x**2 + x - Rational(1, 2)).as_leading_term(x, cdir=-1) == pi + I*log(2 - sqrt(3))
 
 
 def test_asec_series():
@@ -1849,12 +1865,16 @@ def test_csc_rewrite():
            -1/cos(-pi/2 - 1 + cos(I*besselj(I, I)) +
                   I*cos(-pi/2 + I*besselj(I, I), evaluate=False), evaluate=False)
 
+
 def test_acsc_leading_term():
     assert acsc(x).as_leading_term(x, cdir=1) == I*log(x) + pi/2 - I*log(2)
     assert acsc(x).as_leading_term(x, cdir=-1) == -I*log(x) - 3*pi/2 + I*log(2)
     assert acsc(x + 1).as_leading_term(x) == pi/2
     assert acsc(x - 1).as_leading_term(x) == -pi/2
     assert acsc(1/x).as_leading_term(x) == x
+    # Tests concerning im(ndir) == 0
+    assert acsc(-I*x**2 + x - Rational(1, 2)).as_leading_term(x, cdir=1) == -pi/2 + I*log(sqrt(3) + 2)
+    assert acsc(-I*x**2 + x - Rational(1, 2)).as_leading_term(x, cdir=-1) == -pi/2 + I*log(sqrt(3) + 2)
 
 
 def test_acsc_series():

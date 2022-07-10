@@ -1179,7 +1179,7 @@ class asinh(InverseHyperbolicFunction):
                 F = factorial(k)
                 return S.NegativeOne**k * R / F * x**n / n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asinh
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
@@ -1188,11 +1188,16 @@ class asinh(InverseHyperbolicFunction):
         if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if re(cdir) > 0 and re(x0).is_zero and im(x0) < S.NegativeOne:
-            return -self.func(x0) - I*pi
-        elif re(cdir) < 0 and re(x0).is_zero and im(x0) > S.One:
-            return -self.func(x0) + I*pi
+            ndir = arg.dir(x, cdir)
+        if (1 + x0**2).is_negative:
+            if re(ndir).is_positive:
+                if im(x0).is_negative:
+                    return -self.func(x0) - I*pi
+            elif re(ndir).is_negative:
+                if im(x0).is_positive:
+                    return -self.func(x0) + I*pi
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
     def _eval_rewrite_as_log(self, x, **kwargs):
@@ -1337,18 +1342,23 @@ class acosh(InverseHyperbolicFunction):
                 F = factorial(k)
                 return -R / F * S.ImaginaryUnit * x**n / n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acosh
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         # Handling Branch cuts (-oo, 1)
         if x0 in (-S.One, S.Zero, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
-            return self.func(x0) - 2*I*pi
-        elif im(cdir) > 0 and x0.is_real and x0 > S.One:
-            return self.func(x0)
+            ndir = arg.dir(x, cdir)
+        if (1 - x0**2).is_negative:
+            if im(ndir).is_negative:
+                if re(x0).is_negative:
+                    return self.func(x0) - 2*I*pi
+            elif im(ndir).is_positive:
+                if re(x0).is_positive:
+                    return self.func(x0)
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
     def _eval_rewrite_as_log(self, x, **kwargs):
@@ -1448,7 +1458,7 @@ class atanh(InverseHyperbolicFunction):
             x = sympify(x)
             return x**n / n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # atanh
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
@@ -1457,11 +1467,16 @@ class atanh(InverseHyperbolicFunction):
         if x0 in (-S.One, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if im(cdir) > 0 and x0.is_real and x0 > S.One:
-            return self.func(x0) + I*pi
-        elif im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
-            return self.func(x0) - I*pi
+            ndir = arg.dir(x, cdir)
+        if (1 - x0**2).is_negative:
+            if im(ndir).is_negative:
+                if re(x0).is_negative:
+                    return self.func(x0) - I*pi
+            elif im(ndir).is_positive:
+                if re(x0).is_positive:
+                    return self.func(x0) + I*pi
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
     def _eval_rewrite_as_log(self, x, **kwargs):
@@ -1551,20 +1566,25 @@ class acoth(InverseHyperbolicFunction):
             x = sympify(x)
             return x**n / n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acoth
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
-        if cdir != 0:
-            cdir = arg.dir(x, cdir)
         # Handling Branch cuts [-1, 1]
         if x0 in (-S.One, S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
-        if im(cdir) < 0 and x0.is_real and x0 > S.Zero and x0 < S.One:
-            return self.func(x0) + I*pi
-        if im(cdir) > 0 and x0.is_real and x0 < S.Zero and x0 > S.NegativeOne:
-            return self.func(x0) - I*pi
+        if cdir != 0:
+            ndir = arg.dir(x, cdir)
+        if (1 - x0**2).is_positive:
+            if im(ndir).is_negative:
+                if re(x0).is_positive:
+                    return self.func(x0) + I*pi
+            elif im(ndir).is_positive:
+                if re(x0).is_negative:
+                    return self.func(x0) - I*pi
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
     def _eval_rewrite_as_log(self, x, **kwargs):
@@ -1702,19 +1722,24 @@ class asech(InverseHyperbolicFunction):
                 F = factorial(k) * n // 2 * n // 2
                 return -1 * R / F * x**n / 4
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asech
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         # Handling Branch cuts (-oo, 0] U (1, oo)
         if x0 in (-S.One, S.Zero, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        res = x0 < S.NegativeOne or x0 > S.One
-        if im(cdir) > 0 and x0.is_real and res:
-            return -self.func(x0)
-        elif im(cdir) < 0 and x0.is_real and res:
-            return self.func(x0)
+            ndir = arg.dir(x, cdir)
+        res = (1 - x0**2).is_negative
+        if res:
+            if im(ndir).is_negative:
+                if re(x0) != S.Zero:
+                    return self.func(x0)
+            elif im(ndir).is_positive:
+                if re(x0) != S.Zero:
+                    return -self.func(x0)
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
     def inverse(self, argindex=1):
@@ -1841,7 +1866,7 @@ class acsch(InverseHyperbolicFunction):
                 F = factorial(k) * n // 2 * n // 2
                 return S.NegativeOne**(k +1) * R / F * x**n / 4
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acsch
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         # Handling Branch cuts (-I, I)
@@ -1850,11 +1875,16 @@ class acsch(InverseHyperbolicFunction):
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
         if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if re(cdir) > 0 and re(x0).is_zero and im(x0) > S.Zero and im(x0) < S.One:
-            return -self.func(x0) - I*pi
-        elif re(cdir) < 0 and re(x0).is_zero and im(x0) < S.Zero and im(x0) > S.NegativeOne:
-            return -self.func(x0) + I*pi
+            ndir = arg.dir(x, cdir)
+        if (1 + x0**2).is_positive:
+            if re(ndir).is_positive:
+                if im(x0).is_positive:
+                    return -self.func(x0) - I*pi
+            elif re(ndir).is_negative:
+                if im(x0).is_negative:
+                    return -self.func(x0) + I*pi
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
     def inverse(self, argindex=1):

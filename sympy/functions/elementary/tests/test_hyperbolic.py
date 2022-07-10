@@ -573,6 +573,9 @@ def test_asinh_leading_term():
     assert asinh(x + 2*I).as_leading_term(x, cdir=-1) == -I*asin(2) + I*pi
     assert asinh(x - 2*I).as_leading_term(x, cdir=1) == -I*pi + I*asin(2)
     assert asinh(x - 2*I).as_leading_term(x, cdir=-1) == -I*asin(2)
+    # Tests concerning re(ndir) == 0
+    assert asinh(2*I + I*x - x**2).as_leading_term(x, cdir=1) == log(2 - sqrt(3)) + I*pi/2
+    assert asinh(2*I + I*x - x**2).as_leading_term(x, cdir=-1) == log(2 - sqrt(3)) + I*pi/2
 
 
 def test_asinh_series():
@@ -665,6 +668,9 @@ def test_acosh_leading_term():
     # Tests concerning internal points between branch cuts
     assert acosh(I*x - 2).as_leading_term(x, cdir=1) == acosh(-2)
     assert acosh(-I*x - 2).as_leading_term(x, cdir=1) == -2*I*pi + acosh(-2)
+    # Tests concerning im(ndir) == 0
+    assert acosh(-I*x**2 + x - 2).as_leading_term(x, cdir=1) == log(sqrt(3) + 2) - I*pi
+    assert acosh(-I*x**2 + x - 2).as_leading_term(x, cdir=-1) == log(sqrt(3) + 2) - I*pi
 
 
 def test_acosh_series():
@@ -752,6 +758,9 @@ def test_asech_leading_term():
     assert asech(-I*x + 3).as_leading_term(x, cdir=1) == asech(3)
     assert asech(I*x - 3).as_leading_term(x, cdir=1) == -asech(-3)
     assert asech(-I*x - 3).as_leading_term(x, cdir=1) == asech(-3)
+    # Tests concerning im(ndir) == 0
+    assert asech(-I*x**2 + x - 3).as_leading_term(x, cdir=1) == log(Rational(-1, 3) + 2*sqrt(2)*I/3)
+    assert asech(-I*x**2 + x - 3).as_leading_term(x, cdir=-1) == log(Rational(-1, 3) + 2*sqrt(2)*I/3)
 
 
 def test_asech_series():
@@ -851,6 +860,9 @@ def test_acsch_leading_term():
     assert acsch(x + I/2).as_leading_term(x, cdir=-1) == acsch(I/2)
     assert acsch(x - I/2).as_leading_term(x, cdir=1) == -acsch(I/2)
     assert acsch(x - I/2).as_leading_term(x, cdir=-1) == acsch(I/2) + I*pi
+    # Tests concerning re(ndir) == 0
+    assert acsch(I/2 + I*x - x**2).as_leading_term(x, cdir=1) == log(2 - sqrt(3)) - I*pi/2
+    assert acsch(I/2 + I*x - x**2).as_leading_term(x, cdir=-1) == log(2 - sqrt(3)) - I*pi/2
 
 
 def test_acsch_series():
@@ -950,6 +962,9 @@ def test_atanh_leading_term():
     assert atanh(-I*x + 2).as_leading_term(x, cdir=1) == atanh(2)
     assert atanh(I*x - 2).as_leading_term(x, cdir=1) == -atanh(2)
     assert atanh(-I*x - 2).as_leading_term(x, cdir=1) == -I*pi - atanh(2)
+    # Tests concerning im(ndir) == 0
+    assert atanh(-I*x**2 + x - 2).as_leading_term(x, cdir=1) == -log(3)/2 - I*pi/2
+    assert atanh(-I*x**2 + x - 2).as_leading_term(x, cdir=-1) == -log(3)/2 - I*pi/2
 
 
 def test_atanh_series():
@@ -1022,6 +1037,9 @@ def test_acoth_leading_term():
     assert acoth(-I*x + 1/2).as_leading_term(x, cdir=1) == acoth(1/2) + I*pi
     assert acoth(I*x - 1/2).as_leading_term(x, cdir=1) == -I*pi - acoth(1/2)
     assert acoth(-I*x - 1/2).as_leading_term(x, cdir=1) == -acoth(1/2)
+    # Tests concerning im(ndir) == 0
+    assert acoth(-I*x**2 - x - Rational(1, 2)).as_leading_term(x, cdir=1) == -log(3)/2 + I*pi/2
+    assert acoth(-I*x**2 - x - Rational(1, 2)).as_leading_term(x, cdir=-1) == -log(3)/2 + I*pi/2
 
 
 def test_acoth_series():

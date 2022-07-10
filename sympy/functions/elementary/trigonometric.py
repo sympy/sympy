@@ -2313,7 +2313,7 @@ class asin(InverseTrigonometricFunction):
                 F = factorial(k)
                 return R/F*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asin
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
@@ -2322,11 +2322,16 @@ class asin(InverseTrigonometricFunction):
         if x0 in (-S.One, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
-            return -pi - self.func(x0)
-        elif im(cdir) > 0 and x0.is_real and x0 > S.One:
-            return pi - self.func(x0)
+            ndir = arg.dir(x, cdir)
+        if (1 - x0**2).is_negative:
+            if im(ndir).is_negative:
+                if re(x0).is_negative:
+                    return -pi - self.func(x0)
+            elif im(ndir).is_positive:
+                if re(x0).is_positive:
+                    return pi - self.func(x0)
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # asin
@@ -2517,7 +2522,7 @@ class acos(InverseTrigonometricFunction):
                 F = factorial(k)
                 return -R/F*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acos
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         # Handling Branch cuts (-oo, -1) U (1, oo)
@@ -2526,11 +2531,16 @@ class acos(InverseTrigonometricFunction):
         if x0 in (-S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
-            return 2*pi - self.func(x0)
-        elif im(cdir) > 0 and x0.is_real and x0 > S.One:
-            return -self.func(x0)
+            ndir = arg.dir(x, cdir)
+        if (1 - x0**2).is_negative:
+            if im(ndir).is_negative:
+                if re(x0).is_negative:
+                    return 2*pi - self.func(x0)
+            elif im(ndir).is_positive:
+                if re(x0).is_positive:
+                    return -self.func(x0)
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_is_extended_real(self):
@@ -2744,7 +2754,7 @@ class atan(InverseTrigonometricFunction):
             x = sympify(x)
             return S.NegativeOne**((n - 1)//2)*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # atan
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
@@ -2753,11 +2763,16 @@ class atan(InverseTrigonometricFunction):
         if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if re(cdir) < 0 and re(x0).is_zero and im(x0) > S.One:
-            return self.func(x0) - pi
-        elif re(cdir) > 0 and re(x0).is_zero and im(x0) < S.NegativeOne:
-            return self.func(x0) + pi
+            ndir = arg.dir(x, cdir)
+        if (1 + x0**2).is_negative:
+            if re(ndir).is_negative:
+                if im(x0).is_positive:
+                    return self.func(x0) - pi
+            elif re(ndir).is_positive:
+                if im(x0).is_negative:
+                    return self.func(x0) + pi
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # atan
@@ -2968,20 +2983,25 @@ class acot(InverseTrigonometricFunction):
             x = sympify(x)
             return S.NegativeOne**((n + 1)//2)*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acot
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
-        if cdir != 0:
-            cdir = arg.dir(x, cdir)
         # Handling Branch cuts [-I, I]
         if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
-        if re(cdir) > 0 and re(x0).is_zero and im(x0) > S.Zero and im(x0) < S.One:
-            return self.func(x0) + pi
-        if re(cdir) < 0 and re(x0).is_zero and im(x0) < S.Zero and im(x0) > S.NegativeOne:
-            return self.func(x0) - pi
+        if cdir != 0:
+            ndir = arg.dir(x, cdir)
+        if (1 + x0**2).is_positive:
+            if re(ndir).is_positive:
+                if im(x0).is_positive:
+                    return self.func(x0) + pi
+            elif re(ndir).is_negative:
+                if im(x0).is_negative:
+                    return self.func(x0) - pi
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # acot
@@ -3187,7 +3207,7 @@ class asec(InverseTrigonometricFunction):
                 F = factorial(k) * n // 2 * n // 2
                 return -S.ImaginaryUnit * R / F * x**n / 4
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asec
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         # Handling Branch cuts (-1, 1)
@@ -3196,11 +3216,16 @@ class asec(InverseTrigonometricFunction):
         if x0 in (-S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if im(cdir) < 0 and x0.is_real and x0 > S.Zero and x0 < S.One:
-            return -self.func(x0)
-        elif im(cdir) > 0 and x0.is_real and x0 < S.Zero and x0 > S.NegativeOne:
-            return 2*pi - self.func(x0)
+            ndir = arg.dir(x, cdir)
+        if (1 - x0**2).is_positive:
+            if im(ndir).is_negative:
+                if re(x0).is_positive:
+                    return -self.func(x0)
+            elif im(ndir).is_positive:
+                if re(x0).is_negative:
+                    return 2*pi - self.func(x0)
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # asec
@@ -3378,7 +3403,7 @@ class acsc(InverseTrigonometricFunction):
                 F = factorial(k) * n // 2 * n // 2
                 return S.ImaginaryUnit * R / F * x**n / 4
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acsc
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         # Handling Branch cuts (-1, 1)
@@ -3387,11 +3412,16 @@ class acsc(InverseTrigonometricFunction):
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
         if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if im(cdir) < 0 and x0.is_real and x0 > S.Zero and x0 < S.One:
-            return pi - self.func(x0)
-        elif im(cdir) > 0 and x0.is_real and x0 < S.Zero and x0 > S.NegativeOne:
-            return -pi - self.func(x0)
+            ndir = arg.dir(x, cdir)
+        if (1 - x0**2).is_positive:
+            if im(ndir).is_negative:
+                if re(x0).is_positive:
+                    return pi - self.func(x0)
+            elif im(ndir).is_positive:
+                if re(x0).is_negative:
+                    return -pi - self.func(x0)
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # acsc
