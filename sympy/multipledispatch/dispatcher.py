@@ -87,7 +87,7 @@ def restart_ordering(on_ambiguity=ambiguity_warn):
 
 class enable_ordering_context:
     """ Context manager to enable to dispatcher ordering """
-    
+
     def __enter__(self):
         self.original_state = _resolve[0]
         restart_ordering()
