@@ -185,7 +185,10 @@ def test_collect_1():
     expr = x + y
     assert collect(expr, expr.free_symbols) == expr
     assert collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x, x, exact=None
-        ) == x*(exp(x) + 3) + (y + 2)*sin(x)
+        ) == x*exp(x) + 3*x + (y + 2)*sin(x)
+    assert collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x + y*x +
+        y*x*exp(x), x, exact=None
+        ) == x*exp(x)*(y + 1) + (3 + y)*x + (y + 2)*sin(x)
 
 
 def test_collect_2():
