@@ -198,6 +198,7 @@ def test_solve_match():
         ) == {a: 3, b: 4}
     assert solve(a*x + b/sin(x) - 3*x - 4/sin(x), a, b, match=True
         ) == {a: 3, b: 4}
+    assert solve(a*x + b - 3*x + 4, [a, b, z], match=True) == {a: 3, b: -4}
     # - nonlinear in coefficients
     raises(ValueError, lambda: solve(a*x + b**2/x - 3*x - 4/x, a, b, match=True))
 
@@ -731,12 +732,11 @@ def test_solve_undetermined_coeffs():
     # test that dict and set flags are ignored
     assert solve_undetermined_coeffs(a*x - x, [a], x, set=True) == {a: 1}
     assert solve_undetermined_coeffs(a*x - x, [a], x, dict=True) == {a: 1}
-    # <mark> can be removed after solve_undetermined_coeffs handling is
-    # removed from solve
-    assert solve(a*x - x + b, a, b) == {a: 1, b: 0}
-    assert solve(a*x - x + b, a, b, dict=True) == [{a: 1, b: 0}]
-    assert solve(a*x - x + b, a, b, set=True) == ([a, b], {(1, 0)})
-    # </mark>
+    assert solve_undetermined_coeffs(a*x + b - 3*x + 4, [a, b, z], x
+        ) == {a: 3, b: -4}
+    # test compound generators and passing parameters in a set
+    assert solve_undetermined_coeffs(a*x + b/sin(x) - 3*x - 4/sin(x), {a, b}, x
+        ) == {a: 3, b: 4}
     # test that it returns None for nonlinear systems
     assert solve_undetermined_coeffs(a**2*x + b - 2*x -3, (a, b), x,
         ) is None

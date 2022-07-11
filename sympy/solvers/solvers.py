@@ -544,7 +544,8 @@ def solve(f, *symbols, **flags):
             >>> eq_ab = Eq(a*x + b, 2*x - 3)
             >>> solve(eq_ab, a, b, match=True)
             {a: 2, b: -3}
-            >>> solve(a*(1 + x)**2 - b, a, b)
+            >>> solve(a*(1 + x)**2 - b*x + 2, a, b, match=True)
+            []
 
         Without the `match=True` flag, the default mode for `solve`
         is to return an algebaic solution for one or more of the
@@ -560,9 +561,9 @@ def solve(f, *symbols, **flags):
         A list of dictionaries is returned if the symbols were passed
         as a set (or were requested with a flag):
 
-            >>> solve(eq, a, b, dict=True)
+            >>> solve(eq, x, y, dict=True)
             [{x: a}, {y: b}]
-            >>> solve(eq, {a, b})
+            >>> solve(eq, {x, y})
             [{x: a}, {y: b}]
 
         When given the choice, SymPy will prefer to return solutions
@@ -1150,14 +1151,14 @@ def solve(f, *symbols, **flags):
         if flags.get('match', False):
             solution = None
             free = eq.free_symbols
-            syms = set(symbols)
+            syms = set(symbols) & free
             ex = free - syms
             if len(ex) != 1:
                 ind, dep = eq.as_independent(*symbols)
                 ex = dep.free_symbols - syms
             if len(ex) == 1:
                 ex = ex.pop()
-                solution = solve_undetermined_coeffs(eq, symbols, ex)
+                solution = solve_undetermined_coeffs(eq, syms, ex)
             if solution is None:
                 raise ValueError('%s not recognized as a linear coefficient system in variables %s' % (eq, symbols))
         else:
@@ -2376,6 +2377,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     The result of this function is a dictionary with symbolic values of
     those parameters with respect to coefficients in $q$, an empty list
     if there is no solution, and None if the system was not recognized.
+
     Any flags (except for `dict` and `set`) are passed along to `solve`.
 
     This function accepts both Equality class instances and ordinary
@@ -2395,8 +2397,6 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     {a: 1/c, b: -1/c}
 
     """
-    from sympy.solvers.solveset import (linsolve, NonlinearError,
-        linear_eq_to_matrix)
     if isinstance(equ, Eq):
         # got equation, so move all the
         # terms to the left hand side
@@ -2404,36 +2404,24 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
 
     equ = cancel(equ).as_numer_denom()[0]
 
-    system = list(collect(equ.expand(), sym, evaluate=False, exact=None).values())
+    system = list(collect(_mexpand(equ, recursive=True), sym,
+        evaluate=False, exact=None).values())
+    try:
+        assert all(linear_coeffs(s, *coeffs) for s in system)
+    except NonlinearError:
+        return
 
-    if not any(equ.has(sym) for equ in system):
-        coeffs = list(ordered(coeffs))
-        # test that it is linear
-        try:
-            A, b = linear_eq_to_matrix(system, *coeffs)
-        except NonlinearError:
-            return
-        # solve system of equations defining coefficients
-        if not flags or len(flags) == 1 and flags.get('simplify', 0):
-            sol = list(linsolve(A.hstack(A, b)))
-            if not sol:
-                return sol
-            assert len(sol) == 1
-            sol = dict(zip(coeffs, sol.pop()))
-            if flags:
-                sol = {k: v.simplify() for k, v in sol.items()}
-            return sol
-        # legacy use of solve
+    if not any(equ.has(sym) for equ in system):  # can this happen?
         miss = Dummy()
         dwas = flags.pop('dict', miss)
         swas = flags.pop('set', miss)
-        rv = solve(system, *coeffs, **flags)
+        sol = solve(system, *coeffs, **flags)
         if dwas != miss:
             flags['dict'] = dwas
         if swas != miss:
             flags['set'] = swas
-        if not rv or type(rv) is dict:
-            return rv
+        if not sol or type(sol) is dict:
+            return {k: sol[k] for k in ordered(sol)}
 
 
 def solve_linear_system_LU(matrix, syms):
@@ -3616,3 +3604,4 @@ def unrad(eq, *syms, **flags):
 # Delayed imports
 from sympy.solvers.bivariate import (
     bivariate_type, _solve_lambert, _filtered_gens)
+from sympy.solvers.solveset import (linear_coeffs, NonlinearError)
