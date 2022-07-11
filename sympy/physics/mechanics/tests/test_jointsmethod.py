@@ -193,6 +193,7 @@ def test_four_bar_linkage_with_manual_constraints():
     u = Matrix([u1, u2, u3])
     eval_m = lambdify((q, p), kane.mass_matrix)
     eval_f = lambdify((q, u, p), kane.forcing)
+    eval_fhd = lambdify((q, u, p), fhd)
 
     p_vals = [0.13, 0.24, 0.21, 0.34, 997]
     q_vals = [2.1, 0.6655470375077588, 2.527408138024188]  # Satisfies fh
@@ -206,7 +207,9 @@ def test_four_bar_linkage_with_manual_constraints():
     forcing_check = Matrix([[-0.031211821321648],
                             [-0.00066022608181],
                             [0.001813559741243]])
-    assert all(abs(x) < 1e-10 for x in
+    eps = 1e-10
+    assert all(abs(x) < eps for x in eval_fhd(q_vals, u_vals, p_vals))
+    assert all(abs(x) < eps for x in
                (Matrix(eval_m(q_vals, p_vals)) - mass_check))
-    assert all(abs(x) < 1e-10 for x in
+    assert all(abs(x) < eps for x in
                (Matrix(eval_f(q_vals, u_vals, p_vals)) - forcing_check))
