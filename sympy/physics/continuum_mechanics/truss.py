@@ -624,8 +624,9 @@ class Truss:
         The given condition is derived from the fact that a system of equations is solvable
         only when the number of variables is lesser than or equal to the number of equations.
         Equilibrium Equations in x and y directions give two equations per node giving 2n number
-        equations. The number of variables is simply the sum of the number of reaction forces and
-        member forces.
+        equations. However, the truss needs to be stable as well and may be unstable if 2n > r + m.
+        The number of variables is simply the sum of the number of reaction forces and member
+        forces.
 
         Examples
         ========
@@ -652,11 +653,13 @@ class Truss:
         """
         count_reaction_loads = 0
         for node in self._nodes:
-            if node in list(self._supports):
+            if node[0] in list(self._supports):
                 if self._supports[node[0]]=='pinned':
                     count_reaction_loads += 2
                 elif self._supports[node[0]]=='roller':
                     count_reaction_loads += 1
+        if 2*len(self._nodes) != len(self._members) + count_reaction_loads:
+            raise ValueError("The given truss cannot be solved")
         coefficients_matrix = [[0 for i in range(2*len(self._nodes))] for j in range(2*len(self._nodes))]
         load_matrix = zeros(2*len(self.nodes), 1)
         load_matrix_row = 0
