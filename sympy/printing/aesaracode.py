@@ -139,7 +139,7 @@ class AesaraPrinter(Printer):
         if key in self.cache:
             return self.cache[key]
 
-        value = aet.tensor(name=name, dtype=dtype, shape=broadcastable)
+        value = aet.tensor(name=name, dtype=dtype, broadcastable=broadcastable)
         self.cache[key] = value
         return value
 
