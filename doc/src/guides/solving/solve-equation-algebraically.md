@@ -86,7 +86,7 @@ extract information from the result programmatically.
 
 ## Solve an equation using {func}`~.solve` or {func}`~.solveset`
 
-You can solve an equation using in several ways. 
+You can solve an equation in several ways. 
 The examples below demonstrate using both {func}`~.solve` and 
 {func}`~.solveset` where applicable. 
 You can choose the function best suited to your equation.
