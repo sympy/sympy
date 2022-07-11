@@ -45,7 +45,7 @@ from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
-from sympy.polys.polytools import div
+from sympy.polys.polytools import div, quo
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debug
@@ -1146,7 +1146,17 @@ def solve(f, *symbols, **flags):
     #
     # try to get a solution
     ###########################################################################
-    if bare_f:
+    if len(f) == 1 and f[0].is_Mul:
+        solution = []
+        for fi in f[0].args:
+            if not fi.has_free(*symbols):
+                continue
+            s = _solve(fi, *symbols, **flags)
+            if s:
+                solution.extend(s)
+        solution = list(ordered(uniq(solution)))
+        flags['check'] = flags['simplify'] = False
+    elif bare_f:
         eq = f[0]
         if flags.get('match', False):
             solution = None
@@ -1354,14 +1364,14 @@ def solve(f, *symbols, **flags):
 def _solve(f, *symbols, **flags):
     """Return a checked solution for *f* in terms of one or more of the
     symbols in the form of a list of values (if there is one symbol)
-    else a list of dictionaries.
+    else a list of dictionaries. f is assumed to contain at least one
+    of the symbols in f.
 
     If no method is implemented to solve the equation, a NotImplementedError
     will be raised. In the case that conversion of an expression to a Poly
     gives None a ValueError will be raised.
 
     """
-
     not_impl_msg = "No algorithms are implemented to solve equation %s"
 
     if len(symbols) != 1:
@@ -1375,17 +1385,22 @@ def _solve(f, *symbols, **flags):
         # expression for several symbols, they would have to be
         # appear in factors of an expression, but we do not here
         # attempt factorization.
-        nonlin_s = []
         got_s = set()
+        nonlin_s = []
         result = []
-        for s in symbols:
+        i = 0
+        while i < len(symbols):
+            s = symbols[i]
             xi, v = solve_linear(f, symbols=[s])
             if xi == s:
-                # no need to check but we should simplify if desired
+                i = 0
+                # no need to check but cancel may be needed
+                # so the div will work if we aren't already
+                # simplifying
                 if flags.get('simplify', True):
-                    v = simplify(v)
-                got_s.add(xi)
-                result.append({xi: v})
+                    v = v.simplify()
+                else:
+                    v = v.cancel()
                 # check to see if this was a factor of f
                 try:
                     w, r = div(f, xi - v)
@@ -1393,12 +1408,25 @@ def _solve(f, *symbols, **flags):
                     w, r = 1, 1
                 if not r:
                     f = w
+                    if not f.has_free(*symbols):
+                        i = None  # signal done
                 elif not w:
                     # it is not a factor so any other solutions will
                     # just be a re-arrangement of this relationship
-                    break
-            elif xi:  # there might be a non-linear solution if xi is not 0
+                    i = None  # signal done
+                if v.is_Symbol and v in symbols:
+                    # order canonically if both were symbols of
+                    # interest
+                    got_s.add(v)
+                    xi, v = ordered((xi, v))
+                result.append({xi: v})
+                got_s.add(xi)
+                if i is None:
+                    return result
+                continue
+            elif xi:
                 nonlin_s.append(s)
+            i += 1
         if not nonlin_s:
             return result
         for s in nonlin_s:

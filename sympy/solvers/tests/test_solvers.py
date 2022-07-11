@@ -149,7 +149,7 @@ def test_solve_args():
         [{p: (h - x)**2/(a*x**2 + b*x + c - k)/4}]
     flags.update(dict(simplify=False))
     assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
-        [{p: (-h + x)**2/(4*a*x**2 + 4*b*x + 4*c - 4*k)}]
+        [{p: (h**2 - 2*h*x + x**2)/(4*a*x**2 + 4*b*x + 4*c - 4*k)}]
     # failed single equation
     assert solve(1/(1/x - y + exp(y))) == []
     raises(
@@ -2546,3 +2546,13 @@ def test_issue_10169():
         e: Rational(-40,129) - 5*2**Rational(1,4)/1032 + 5*2**Rational(3,4)/129,
         k: -10*sqrt(2)/129 + 5*2**Rational(1,4)/258 + 20*2**Rational(3,4)/129
     }
+
+
+def test_choose_canonical_linear_solns():
+    eq = a**3*c - a**3*x - c**2 + c*x
+    sol = [{c: a**3}, {c: x}]
+    assert solve(eq) == sol
+    # make sure cancel is at least applied
+    assert solve(eq, simplify=False) == sol
+    assert solve(eq.factor()) == sol
+    assert solve(eq, c) == [a**3, x]
