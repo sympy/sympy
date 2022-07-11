@@ -104,22 +104,22 @@ class MatrixExpr(Expr):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return MatAdd(self, other, check=True).doit()
+        return MatAdd(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return MatAdd(other, self, check=True).doit()
+        return MatAdd(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return MatAdd(self, -other, check=True).doit()
+        return MatAdd(self, -other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return MatAdd(other, -self, check=True).doit()
+        return MatAdd(other, -self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
@@ -398,7 +398,7 @@ class MatrixExpr(Expr):
         return self
 
     def as_coeff_mmul(self):
-        return 1, MatMul(self)
+        return S.One, MatMul(self)
 
     @staticmethod
     def from_index_summation(expr, first_index=None, last_index=None, dimensions=None):

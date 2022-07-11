@@ -123,6 +123,13 @@ functions. Instead of ``carmichael.is_perfect_square`` use
 n % p == 0
 ```
 
+(remove-check-argument-from-matrix-operations)=
+### The `check` argument to `HadamardProduct`, `MatAdd` and `MatMul`
+
+This argument can be used to pass incorrect values to `~.HadamardProduct`,
+`~.MatAdd`, and `~.MatMul` leading to later problems. The `check` argument
+will be removed and the arguments will always be checked for correctness, i.e.,
+the arguments are matrices or matrix symbols.
 
 ## Version 1.10
 
