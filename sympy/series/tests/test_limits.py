@@ -942,6 +942,7 @@ def test_issue_18473():
     # Tests for issue #23751
     assert limit((cos(x) + 1)**(1/x), x, -oo) == AccumBounds(1, oo)
     assert limit((sin(x)**2)**(1/x), x, -oo) == AccumBounds(1, oo)
+    assert limit((tan(x)**2)**(2/x) , x, -oo) == AccumBounds(0, oo)
 
 
 def test_issue_18482():
