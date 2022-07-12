@@ -488,7 +488,14 @@ No algorithms are implemented to solve equation -x + cos(x)
 ```
 
 so you may have to {func}`solve your equation numerically
-<sympy.solvers.solvers.nsolve>` instead.
+<sympy.solvers.solvers.nsolve>` instead, for example
+
+```py
+>>> from sympy import nsolve, cos
+>>> from sympy.abc import x
+>>> nsolve(cos(x) - x, x, 2)
+0.739085133215161
+```
 
 If you receive non-closed-form solutions, you can evaluate them numerically 
 using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
