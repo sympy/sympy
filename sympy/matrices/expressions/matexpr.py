@@ -179,6 +179,9 @@ class MatrixExpr(Expr):
         return Adjoint(Transpose(self))
 
     def as_real_imag(self, deep=True, **hints):
+        return self._eval_as_real_imag()
+
+    def _eval_as_real_imag(self):
         real = S.Half * (self + self._eval_conjugate())
         im = (self - self._eval_conjugate())/(2*S.ImaginaryUnit)
         return (real, im)
