@@ -323,7 +323,7 @@ class Limit(Expr):
                     if cdir == 1:
                         return S.Infinity*sign(coeff)
                     elif cdir == -1:
-                        return S.Infinity*sign(coeff)*S.NegativeOne**ex
+                        return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
                     else:
                         return S.ComplexInfinity
 
