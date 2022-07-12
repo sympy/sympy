@@ -98,7 +98,7 @@ specify this conversion was:
 
 ```py
 >>> from sympy.parsing.mathematica import mathematica
->>> mathematica('F[7,5,3]', {'F[*x]': 'Max(*x)*Min(*x)'})
+>>> mathematica('F[7,5,3]', {'F[*x]': 'Max(*x)*Min(*x)'})   # doctest: +SKIP
 21
 ```
 

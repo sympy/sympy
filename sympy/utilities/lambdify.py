@@ -470,25 +470,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       of numexpr functions can be found at:
       https://numexpr.readthedocs.io/en/latest/user_guide.html#supported-functions
 
-    - In previous versions of SymPy, ``lambdify`` replaced ``Matrix`` with
-      ``numpy.matrix`` by default. As of SymPy 1.0 ``numpy.array`` is the
-      default. To get the old default behavior you must pass in
-      ``[{'ImmutableDenseMatrix':  numpy.matrix}, 'numpy']`` to the
-      ``modules`` kwarg.
-
-      >>> from sympy import lambdify, Matrix
-      >>> from sympy.abc import x, y
-      >>> import numpy
-      >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
-      >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
-      >>> f(1, 2)
-      [[1]
-       [2]]
-
     - In the above examples, the generated functions can accept scalar
       values or numpy arrays as arguments.  However, in some cases
       the generated function relies on the input being a numpy array:
 
+      >>> import numpy
       >>> from sympy import Piecewise
       >>> from sympy.testing.pytest import ignore_warnings
       >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")

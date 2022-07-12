@@ -12,6 +12,9 @@ import logging
 from sympy.external import import_module
 from sympy.testing.pytest import raises, SKIP
 
+from sympy.utilities.exceptions import ignore_warnings
+
+
 aesaralogger = logging.getLogger('aesara.configdefaults')
 aesaralogger.setLevel(logging.CRITICAL)
 aesara = import_module('aesara')
@@ -272,9 +275,10 @@ def test_factorial():
     assert aesara_code_(sy.factorial(n))
 
 def test_Derivative():
-    simp = lambda expr: aesara_simplify(fgraph_of(expr))
-    assert theq(simp(aesara_code_(sy.Derivative(sy.sin(x), x, evaluate=False))),
-                simp(aesara.grad(aet.sin(xt), xt)))
+    with ignore_warnings(UserWarning):
+        simp = lambda expr: aesara_simplify(fgraph_of(expr))
+        assert theq(simp(aesara_code_(sy.Derivative(sy.sin(x), x, evaluate=False))),
+                    simp(aesara.grad(aet.sin(xt), xt)))
 
 
 def test_aesara_function_simple():
