@@ -1187,8 +1187,7 @@ class asinh(InverseHyperbolicFunction):
         # Handling branch points (-I*oo, -I) U (I, I*oo)
         if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
-        if cdir != 0:
-            ndir = arg.dir(x, cdir)
+        ndir = arg.dir(x, cdir if cdir else 1)
         if (1 + x0**2).is_negative:
             if re(ndir).is_positive:
                 if im(x0).is_negative:
@@ -1202,6 +1201,7 @@ class asinh(InverseHyperbolicFunction):
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return log(x + sqrt(x**2 + 1))
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def inverse(self, argindex=1):
@@ -1348,21 +1348,19 @@ class acosh(InverseHyperbolicFunction):
         # Handling Branch cuts (-oo, 1)
         if x0 in (-S.One, S.Zero, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
-        if cdir != 0:
-            ndir = arg.dir(x, cdir)
-        if (1 - x0**2).is_negative:
+        ndir = arg.dir(x, cdir if cdir else 1)
+        if (x0 - 1).is_negative:
             if im(ndir).is_negative:
-                if re(x0).is_negative:
+                if (x0 + 1).is_negative:
                     return self.func(x0) - 2*I*pi
-            elif im(ndir).is_positive:
-                if re(x0).is_positive:
-                    return self.func(x0)
-            else:
+                return -self.func(x0)
+            elif not im(ndir).is_positive:
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return log(x + sqrt(x + 1) * sqrt(x - 1))
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def inverse(self, argindex=1):
@@ -1466,14 +1464,13 @@ class atanh(InverseHyperbolicFunction):
         # Handling Branch cuts (-oo, -1] U [1, oo)
         if x0 in (-S.One, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
-        if cdir != 0:
-            ndir = arg.dir(x, cdir)
+        ndir = arg.dir(x, cdir if cdir else 1)
         if (1 - x0**2).is_negative:
             if im(ndir).is_negative:
-                if re(x0).is_negative:
+                if x0.is_negative:
                     return self.func(x0) - I*pi
             elif im(ndir).is_positive:
-                if re(x0).is_positive:
+                if x0.is_positive:
                     return self.func(x0) + I*pi
             else:
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
@@ -1481,6 +1478,7 @@ class atanh(InverseHyperbolicFunction):
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return (log(1 + x) - log(1 - x)) / 2
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_is_zero(self):
@@ -1574,14 +1572,13 @@ class acoth(InverseHyperbolicFunction):
         # Handling Branch cuts [-1, 1]
         if x0 in (-S.One, S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
-        if cdir != 0:
-            ndir = arg.dir(x, cdir)
-        if (1 - x0**2).is_positive:
+        ndir = arg.dir(x, cdir if cdir else 1)
+        if x0.is_real and (1 - x0**2).is_positive:
             if im(ndir).is_negative:
-                if re(x0).is_positive:
+                if x0.is_positive:
                     return self.func(x0) + I*pi
             elif im(ndir).is_positive:
-                if re(x0).is_negative:
+                if x0.is_negative:
                     return self.func(x0) - I*pi
             else:
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
@@ -1589,6 +1586,7 @@ class acoth(InverseHyperbolicFunction):
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return (log(1 + 1/x) - log(1 - 1/x)) / 2
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def inverse(self, argindex=1):
@@ -1728,17 +1726,13 @@ class asech(InverseHyperbolicFunction):
         # Handling Branch cuts (-oo, 0] U (1, oo)
         if x0 in (-S.One, S.Zero, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
-        if cdir != 0:
-            ndir = arg.dir(x, cdir)
-        res = (1 - x0**2).is_negative
-        if res:
-            if im(ndir).is_negative:
-                if re(x0) != S.Zero:
-                    return self.func(x0)
-            elif im(ndir).is_positive:
-                if re(x0) != S.Zero:
+        ndir = arg.dir(x, cdir if cdir else 1)
+        if x0.is_negative or (1 - x0).is_negative:
+            if im(ndir).is_positive:
+                if x0.is_positive or (x0 + 1).is_negative:
                     return -self.func(x0)
-            else:
+                return self.func(x0) - 2*I*pi
+            elif not im(ndir).is_negative:
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
@@ -1750,6 +1744,7 @@ class asech(InverseHyperbolicFunction):
 
     def _eval_rewrite_as_log(self, arg, **kwargs):
         return log(1/arg + sqrt(1/arg - 1) * sqrt(1/arg + 1))
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
 
@@ -1874,9 +1869,8 @@ class acsch(InverseHyperbolicFunction):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
-        if cdir != 0:
-            ndir = arg.dir(x, cdir)
-        if (1 + x0**2).is_positive:
+        ndir = arg.dir(x, cdir if cdir else 1)
+        if x0.is_imaginary and (1 + x0**2).is_positive:
             if re(ndir).is_positive:
                 if im(x0).is_positive:
                     return -self.func(x0) - I*pi
@@ -1895,6 +1889,7 @@ class acsch(InverseHyperbolicFunction):
 
     def _eval_rewrite_as_log(self, arg, **kwargs):
         return log(1/arg + sqrt(1/arg**2 + 1))
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_is_zero(self):

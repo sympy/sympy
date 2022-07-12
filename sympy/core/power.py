@@ -1770,9 +1770,14 @@ class Pow(Expr):
 
         from sympy.functions.elementary.complexes import im
 
-        if (not e.is_integer and m.is_zero and f.is_real
-            and f.is_negative and im((b - f).dir(x, cdir)).is_negative):
-            inco, inex = coeff_exp(f**e*exp(-2*e*S.Pi*S.ImaginaryUnit), x)
+        if not e.is_integer and m.is_zero and f.is_negative:
+            ndir = (b - f).dir(x, cdir)
+            if im(ndir).is_negative:
+                inco, inex = coeff_exp(f**e*(-1)**(-2*e), x)
+            elif im(ndir).is_zero:
+                inco, inex = coeff_exp(exp(e*log(b)).as_leading_term(x, logx=logx, cdir=cdir), x)
+            else:
+                inco, inex = coeff_exp(f**e, x)
         else:
             inco, inex = coeff_exp(f**e, x)
         res = S.Zero
@@ -1810,7 +1815,10 @@ class Pow(Expr):
             if not e.is_integer and f.is_negative:
                 ndir = (b - f).dir(x, cdir)
                 if im(ndir).is_negative:
-                    return self.func(f, e) * exp(-2 * e * S.Pi * S.ImaginaryUnit)
+                    # Normally, f**e would evaluate to exp(e*log(f)) but on branch cuts
+                    # an other value is expected through the following computation
+                    # exp(e*(log(f) - 2*pi*I)) == f**e*exp(-2*e*pi*I) == f**e*(-1)**(-2*e).
+                    return self.func(f, e) * (-1)**(-2*e)
                 elif im(ndir).is_zero:
                     log_leadterm = log(b)._eval_as_leading_term(x, logx=logx, cdir=cdir)
                     if log_leadterm.is_infinite is False:
