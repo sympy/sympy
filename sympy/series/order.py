@@ -423,9 +423,9 @@ class Order(Expr):
             r = None
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
+            from sympy.series.limits import Limit
             for s in common_symbols:
-                from sympy.series.limits import Limit
-                l = Limit(ratio, s, point).doit(heuristics=False)
+                l = Limit(ratio, s, point, '+').doit(heuristics=False)
                 if not isinstance(l, Limit):
                     l = l != 0
                 else:
@@ -486,7 +486,7 @@ class Order(Expr):
                             e2 = sol.args[1]
                             sol = set(e1) - set(e2)
                         res = [dict(zip((d, ), sol))]
-                        point = d.subs(res[0]).limit(old, self.point[i])
+                        point = d.subs(res[0]).limit(old, self.point[i], '+')
                     newvars[i] = var
                     newpt[i] = point
                 elif old not in syms:

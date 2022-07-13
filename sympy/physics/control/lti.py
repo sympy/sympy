@@ -504,7 +504,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         """
         m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
-        return limit(m, self.var, 0)
+        return limit(m, self.var, 0, '+')
 
     def poles(self):
         """

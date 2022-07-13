@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Literal
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
@@ -10,7 +12,8 @@ from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
 from .gruntz import gruntz
 
-def limit(e, z, z0, dir="+"):
+
+def limit(e: Expr, z: Symbol, z0, dir: Literal["+-", "+", "-"] = "+-") -> Expr:
     """Computes the limit of ``e(z)`` at the point ``z0``.
 
     Parameters
@@ -25,7 +28,7 @@ def limit(e, z, z0, dir="+"):
     z0 : the value toward which ``z`` tends. Can be any expression,
         including ``oo`` and ``-oo``.
 
-    dir : string, optional (default: "+")
+    dir : string, optional (default: "+-")
         The limit is bi-directional if ``dir="+-"``, from the right
         (z->z0+) if ``dir="+"``, and from the left (z->z0-) if
         ``dir="-"``. For infinite ``z0`` (``oo`` or ``-oo``), the ``dir``
@@ -39,12 +42,12 @@ def limit(e, z, z0, dir="+"):
     >>> from sympy.abc import x
     >>> limit(sin(x)/x, x, 0)
     1
-    >>> limit(1/x, x, 0) # default dir='+'
-    oo
+    >>> limit(1/x, x, 0) # default dir='+-'
+    zoo
     >>> limit(1/x, x, 0, dir="-")
     -oo
-    >>> limit(1/x, x, 0, dir='+-')
-    zoo
+    >>> limit(1/x, x, 0, dir="+")
+    oo
     >>> limit(1/x, x, oo)
     0
 
@@ -142,7 +145,7 @@ class Limit(Expr):
 
     """
 
-    def __new__(cls, e, z, z0, dir="+"):
+    def __new__(cls, e: Expr, z: Symbol, z0, dir: Literal["+-", "+", "-"] | Symbol = "+-"):
         e = sympify(e)
         z = sympify(z)
         z0 = sympify(z0)
@@ -179,18 +182,18 @@ class Limit(Expr):
 
 
     def pow_heuristics(self, e):
-        _, z, z0, _ = self.args
+        _, z, z0, dir = self.args
         b1, e1 = e.base, e.exp
         if not b1.has(z):
-            res = limit(e1*log(b1), z, z0)
+            res = limit(e1*log(b1), z, z0, dir)
             return exp(res)
 
-        ex_lim = limit(e1, z, z0)
-        base_lim = limit(b1, z, z0)
+        ex_lim = limit(e1, z, z0, dir)
+        base_lim = limit(b1, z, z0, dir)
 
         if base_lim is S.One:
             if ex_lim in (S.Infinity, S.NegativeInfinity):
-                res = limit(e1*(b1 - 1), z, z0)
+                res = limit(e1*(b1 - 1), z, z0, dir)
                 return exp(res)
         if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
             return S.ComplexInfinity
