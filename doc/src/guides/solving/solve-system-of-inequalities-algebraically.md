@@ -124,8 +124,11 @@ right-hand side `lhs` *link* to extract the constants:
 >>> x = symbols('x')
 >>> one_third = Integer(1)/Integer(3)
 >>> eq = solve([x >= one_third, x**2 <= pi])
->>> [(i.lhs, i.rel_op, i.rhs) for i in [i.canonical for i in eq.atoms(Relational)]]
-[(x, '<=', sqrt(pi)), (x, '>=', 1/3)]
+>>> relations = [(i.lhs, i.rel_op, i.rhs) for i in [i.canonical for i in eq.atoms(Relational)]]
+>>> # Sorting relations just to ensure consistent list order for docstring testing
+>>> relations_sorted = sorted(relations, key=lambda x: float(x[2]))
+>>> print(relations_sorted)
+[(x, '>=', 1/3), (x, '<=', sqrt(pi))]
 ```
 
 ### Extract args *link*
