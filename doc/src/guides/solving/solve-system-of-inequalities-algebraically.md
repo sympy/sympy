@@ -6,7 +6,7 @@ Alternatives to consider:
 - *alternative 1*
 - *alternative 2*
 
-Here is a simple example of solving a system of inequalities algebraically:
+Here is a simple example of solving a system of inequalities algebraically. solve *link* accepts a list of inequalities to be solved as a system:
 
 ```py
 >>> from sympy import symbols, solve, pi
@@ -18,17 +18,6 @@ Here is a simple example of solving a system of inequalities algebraically:
 
 ## Guidance
 
-### *Guidance 1*
-
-*Guidance 1 content*
-
-### *Guidance 2*
-
-*Guidance 2 content*
-
-
-## Examples
-
 ### Using exact values
 
 If you want to preserve the exact mathematical value of symbols, for example fractions, define them so that SymPy can interpret them symbolically, for example:
@@ -38,9 +27,10 @@ If you want to preserve the exact mathematical value of symbols, for example fra
 >>> x = symbols('x')
 >>> one_third = Integer(1)/Integer(3)
 >>> solve([x >= one_third, x**2 <= pi])
+(1/3 <= x) & (x <= sqrt(pi))
 ```
 
-If you use Python's standard division operator between the numerator and denominator, for example `1/3`, Python will perform the division and pass a numerical value to SymPy, leading to an inexact, numerical solution for all parts:
+If you use the division operator between standard Python numbers, for example `1/3`, Python will perform the division and pass a numerical value to SymPy, leading to an inexact, numerical solution for all parts:
 
 ```py
 >>> from sympy import symbols, solve, pi, Integer
@@ -50,19 +40,66 @@ If you use Python's standard division operator between the numerator and denomin
 (0.333333333333333 <= x) & (x <= 1.77245385090552)
 ```
 
-### *Method 2*
+## Solve a system of inequalities algebraically
 
-*Method 2 content*
+You can solve a system of inequalities algebraically in several ways.
+
+### Enter your inequalities directly
+
+You can create your inequalities directly, then solve the system:
+
+```py
+>>> from sympy import symbols, solve, pi, Integer
+>>> x = symbols('x')
+>>> one_third = Integer(1)/Integer(3)
+>>> solve([x >= one_third, x**2 <= pi])
+(1/3 <= x) & (x <= sqrt(pi))
+```
+
+### Put your inequalities into classes
+*gt, etc*
+
+### Parse a string representing each inequality
+
+Parse a string representing each inequality into a form that SymPy can understand, then apply solve() to the list of parsed inequalities.
+This approach is convenient if you are programmatically reading in a string. If you are creating the expression yourself, we [recommend against parsing a string](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).
 
 ## Use the solution result
 
-### *Usage method 1*
+A common way to use the solution result is to extract the bounds for the symbol. For example, for a solution of $0 < x < \sqrt{pi}$, you might want to extract $0$ and $\sqrt{pi}$.
 
-*Usage method 1 content*
+### Extract relational atoms
 
-### *Usage method 2*
+You can decompose a set of relations which is joined by `^` (or) or `&` (and) into individual relations using relational atoms *link*. The canonical *link* method will put them in order so the symbol is on the left so you can take the right-hand side `lhs` *link* to extract the constants:
 
-*Usage method 2 content*
+```py
+>>> from sympy import symbols, solve, Integer, pi
+>>> from sympy.core.relational import Relational
+>>> x = symbols('x')
+>>> one_third = Integer(1)/Integer(3)
+>>> eq = solve([x >= one_third, x**2 <= pi])
+>>> [(i.lhs, i.rel_op, i.rhs) for i in [i.canonical for i in eq.atoms(Relational)]]
+[(x, '>=', 1/3), (x, '<=', sqrt(pi))]
+```
+
+### Extract args *link*
+
+The args *link* of a solution set are the individual relations, so you can extract the constants from the left- or right-hand side of the `args`:
+
+```py
+>>> from sympy import symbols, solve, Integer, pi
+>>> x = symbols('x')
+>>> eq = solve([x >= Integer(1)/Integer(3), x**2 <= pi])
+>>> eq.args
+(1/3 <= x, x <= sqrt(pi))
+>>> constants = []
+>>> for arg in eq.args:
+...     if arg.lhs == x:
+...         constants.append(arg.rhs)
+...     else:
+...         constants.append(arg.lhs)
+>>> constants
+[1/3, sqrt(pi)]
 
 ## *Tradeoffs (speed vs. accuracy, etc.) for function*
 
@@ -74,7 +111,7 @@ If you use Python's standard division operator between the numerator and denomin
 
 *Speed-up option 2 content*
 
-## Not all equations can be solved
+## Not all systems of inequalities can be solved
 
 ### Systems of inequalities with no solution
 
@@ -102,9 +139,8 @@ The inequality, -x + cos(x) > 0, cannot be solved using
 solve_univariate_inequality.
 ```
 
-so you may have to 
-{func}`solve your equation numerically <sympy.solvers.solvers.nsolve>` 
-instead.
+so you may have to solve your equation numerically instead using [Wolfram
+Alpha](https://www.wolframalpha.com/input?i2d=true&i=solve%5C%2840%29cos%5C%2840%29x%5C%2841%29+-+x+%3E+0+and+++x%3E0%5C%2844%29x%5C%2841%29).
 
 ### Equations which have an analytical solution, and SymPy cannot solve
 
