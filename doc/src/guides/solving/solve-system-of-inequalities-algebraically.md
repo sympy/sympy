@@ -188,9 +188,7 @@ algebraically (symbolically) by returning an error such as
 >>> solve([cos(x) - x > 0, x > 0])
 Traceback (most recent call last):
     ...
-NotImplementedError: 
-The inequality, -x + cos(x) > 0, cannot be solved using
-solve_univariate_inequality.
+NotImplementedError: The inequality, -x + cos(x) > 0, cannot be solved using solve_univariate_inequality.
 ```
 
 so you may have to solve your equation numerically instead using [Wolfram
@@ -209,8 +207,7 @@ symbol:
 >>> solve([x**2 < y, x > 0])
 Traceback (most recent call last):
     ...
-NotImplementedError: 
-inequality has more than one symbol of interest.
+NotImplementedError: inequality has more than one symbol of interest.
 ```
 
 You can use [Wolfram
