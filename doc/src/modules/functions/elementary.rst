@@ -329,6 +329,8 @@ Piecewise
 
    .. automethod:: sympy.functions.elementary.piecewise.Piecewise._eval_integral
 
+.. autofunction:: sympy.functions.elementary.piecewise.piecewise_exclusive
+
 .. autofunction:: sympy.functions.elementary.piecewise.piecewise_fold
 
 

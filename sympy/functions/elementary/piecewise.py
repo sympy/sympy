@@ -1364,3 +1364,55 @@ def piecewise_simplify(expr, **kwargs):
         else:
             prevexpr = expr
     return Piecewise(*args)
+
+
+def piecewise_exclusive(expr, *, skip_nan=False):
+    """
+    Return a :class:`Piecewise` with exclusive conditions, i.e., where exactly
+    one condition is True.
+
+    SymPy normally represents the condition in an "if-elif"-fashion, which
+    leads to that more than one condition can be True. This is sometimes not
+    wanted when representing the :class:`Piecewise` mathematically.
+
+    Note that further manipulation of the resulting :class:`Piecewise`, e.g.
+    simplifying it, will most likely make it non-exclusive. Hence, this is
+    primarily a function to be used in conjunction with printing the Piecewise
+    or if one would like to reorder the expression-condition pairs.
+
+    ``piecewise_exclusive`` will also explicitly add a final
+    :class:`~sympy.core.numbers.NaN` segment to the :class:`Piecewise`, unless
+    all cases are covered. This can be avoided by passing ``skip_nan=True`` as
+    a final argument. It can also be used in some situations where SymPy cannot
+    determine that all cases are covered.
+
+    Examples
+    ========
+    >>> from sympy import piecewise_exclusive, Symbol, Piecewise, S
+    >>> x = Symbol('x', real=True)
+    >>> p = Piecewise((0, x < 0), (S.Half, x <= 0), (1, True))
+    >>> piecewise_exclusive(p)
+    Piecewise((0, x < 0), (1/2, Eq(x, 0)), (1, x > 0))
+    >>> piecewise_exclusive(Piecewise((2, x > 1)))
+    Piecewise((2, x > 1), (nan, x <= 1))
+    >>> piecewise_exclusive(Piecewise((2, x > 1)), skip_nan=True)
+    Piecewise((2, x > 1))
+
+    """
+    if not expr.has(Piecewise):
+        return expr
+    if isinstance(expr, Piecewise):
+        cumcond = false
+        newargs = []
+        for arg in expr.args:
+            cancond = And(arg.cond, Not(cumcond)).simplify()
+            cumcond = Or(arg.cond, cumcond).simplify()
+            newargs.append(
+                ExprCondPair(piecewise_exclusive(arg.expr, skip_nan=skip_nan),
+                             cancond))
+        if not skip_nan and cumcond is not true:
+            newargs.append(ExprCondPair(Undefined, Not(cumcond).simplify()))
+        return Piecewise(*newargs, evaluate=False)
+    return expr.func(*[piecewise_exclusive(arg, skip_nan=skip_nan)
+                       for arg in expr.args],
+                     evaluate=False)
