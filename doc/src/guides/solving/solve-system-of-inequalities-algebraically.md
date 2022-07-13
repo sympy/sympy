@@ -76,6 +76,7 @@ strict greater than (`gt` or `>`), or less than or equal to (`le` or `<=`):
 >>> x = symbols('x')
 >>> inequality1 = Rel(x, Integer(1)/Integer(3), 'gt')
 >>> inequality1
+x > 1/3
 >>> inequality2 = Rel(x**2, pi, '<=')
 >>> inequality2
 x**2 <= pi
@@ -124,7 +125,7 @@ right-hand side `lhs` *link* to extract the constants:
 >>> one_third = Integer(1)/Integer(3)
 >>> eq = solve([x >= one_third, x**2 <= pi])
 >>> [(i.lhs, i.rel_op, i.rhs) for i in [i.canonical for i in eq.atoms(Relational)]]
-[(x, '>=', 1/3), (x, '<=', sqrt(pi))]
+[(x, '<=', sqrt(pi)), (x, '>=', 1/3)]
 ```
 
 ### Extract args *link*
