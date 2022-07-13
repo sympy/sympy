@@ -1,12 +1,14 @@
 # Solve a system of inequalities algebraically
 
-Use SymPy to solve a system of inequalities algebraically. For example, solving $x^2 < \pi$ and $x > 0$ yields $0 < x < \sqrt{pi}$.
+Use SymPy to solve a system of inequalities algebraically. For example, solving
+$x^2 < \pi$, $x > 0$ yields $0 < x < \sqrt{pi}$.
 
 Alternatives to consider:
-- *alternative 1*
-- *alternative 2*
+- For systems with more than one symbol (variable), try [Wolfram
+Alpha](https://www.wolframalpha.com/)
 
-Here is a simple example of solving a system of inequalities algebraically. solve *link* accepts a list of inequalities to be solved as a system:
+Here is a simple example of solving a system of inequalities algebraically.
+solve *link* accepts a list of inequalities to be solved as a system:
 
 ```py
 >>> from sympy import symbols, solve, pi
@@ -18,9 +20,13 @@ Here is a simple example of solving a system of inequalities algebraically. solv
 
 ## Guidance
 
-### Using exact values
+### Use exact values
 
-If you want to preserve the exact mathematical value of symbols, for example fractions, define them so that SymPy can interpret them symbolically, for example:
+If you want to preserve the exact mathematical values of symbols such as
+fractions *link to gotcha* and square roots *link
+sympy.functions.elementary.miscellaneous.sqrt*, define them so that SymPy can
+interpret them symbolically, for example define one-third as
+`Integer(1)/Integer(3)`:
 
 ```py
 >>> from sympy import symbols, solve, pi, Integer
@@ -30,7 +36,9 @@ If you want to preserve the exact mathematical value of symbols, for example fra
 (1/3 <= x) & (x <= sqrt(pi))
 ```
 
-If you use the division operator between standard Python numbers, for example `1/3`, Python will perform the division and pass a numerical value to SymPy, leading to an inexact, numerical solution for all parts:
+If you use the division operator between standard Python numbers, for example
+`1/3`, Python will perform the division numerically and pass that inexact value to SymPy,
+leading to an inexact, numerical expression for all relations:
 
 ```py
 >>> from sympy import symbols, solve, pi, Integer
@@ -46,7 +54,7 @@ You can solve a system of inequalities algebraically in several ways.
 
 ### Enter your inequalities directly
 
-You can create your inequalities directly, then solve the system:
+You can create your inequalities directly, then solve the system as a list:
 
 ```py
 >>> from sympy import symbols, solve, pi, Integer
@@ -56,21 +64,58 @@ You can create your inequalities directly, then solve the system:
 (1/3 <= x) & (x <= sqrt(pi))
 ```
 
-### Put your inequalities into classes
-*gt, etc*
+### Put your inequalities into Rel *link*
+
+You can create each inequality using the Relational class *link* by specifying
+the left-hand side, the right-hand side, and then a relational operator such
+strict greater than (`gt` or `>`), or less than or equal to (`le` or `<=`):
+
+```py
+>>> from sympy.core import Rel
+>>> from sympy import symbols, Integer, pi, solve
+>>> x = symbols('x')
+>>> inequality1 = Rel(x, Integer(1)/Integer(3), 'gt')
+>>> inequality1
+>>> inequality2 = Rel(x**2, pi, '<=')
+>>> inequality2
+x**2 <= pi
+>>> solve([inequality1, inequality2], x)
+(1/3 < x) & (x <= sqrt(pi))
+```
 
 ### Parse a string representing each inequality
 
-Parse a string representing each inequality into a form that SymPy can understand, then apply solve() to the list of parsed inequalities.
-This approach is convenient if you are programmatically reading in a string. If you are creating the expression yourself, we [recommend against parsing a string](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).
+Parse a string representing each inequality into a form that SymPy can
+understand, then apply solve() to the list of parsed inequalities. This approach
+is convenient if you are programmatically reading in a string for each
+inequality. If you are creating the expression yourself, we [recommend against
+parsing a
+string](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).
+
+```py
+>>> from sympy import parse_expr, pi, solve
+>>> inequality1 = 'x >= 0'
+>>> inequality2 = 'x**2 <= pi'
+>>> inequalities = [inequality1, inequality2]
+>>> inequalities_parsed = [parse_expr(inequality) for inequality in inequalities]
+>>> inequalities_parsed
+[x >= 0, x**2 <= pi]
+>>> solve(inequalities_parsed)
+(0 <= x) & (x <= sqrt(pi))
+```
 
 ## Use the solution result
 
-A common way to use the solution result is to extract the bounds for the symbol. For example, for a solution of $0 < x < \sqrt{pi}$, you might want to extract $0$ and $\sqrt{pi}$.
+A common way to use the solution result is to extract the bounds for the symbol
+(variable). For example, for a solution of $0 < x < \sqrt{pi}$, you might want
+to extract $0$ and $\sqrt{pi}$.
 
 ### Extract relational atoms
 
-You can decompose a set of relations which is joined by `^` (or) or `&` (and) into individual relations using relational atoms *link*. The canonical *link* method will put them in order so the symbol is on the left so you can take the right-hand side `lhs` *link* to extract the constants:
+You can decompose a set of relations which is joined by `^` (or) or `&` (and)
+into individual relations using relational atoms *link*. The canonical *link*
+method will put them in order so the symbol is on the left so you can take the
+right-hand side `lhs` *link* to extract the constants:
 
 ```py
 >>> from sympy import symbols, solve, Integer, pi
@@ -84,7 +129,8 @@ You can decompose a set of relations which is joined by `^` (or) or `&` (and) in
 
 ### Extract args *link*
 
-The args *link* of a solution set are the individual relations, so you can extract the constants from the left- or right-hand side of the `args`:
+The args *link* of a solution set are the individual relations, so you can
+extract the constants from the left- or right-hand side of the `args`:
 
 ```py
 >>> from sympy import symbols, solve, Integer, pi
@@ -100,6 +146,7 @@ The args *link* of a solution set are the individual relations, so you can extra
 ...         constants.append(arg.lhs)
 >>> constants
 [1/3, sqrt(pi)]
+```
 
 ## *Tradeoffs (speed vs. accuracy, etc.) for function*
 
@@ -115,7 +162,8 @@ The args *link* of a solution set are the individual relations, so you can extra
 
 ### Systems of inequalities with no solution
 
-If the system of inequalities has incompatible conditions, for example $x < 0$ and $x > \pi$, SymPy will return `False`:
+If the system of inequalities has incompatible conditions, for example $x < 0$
+and $x > \pi$, SymPy will return `False`:
 
 ```py
 >>> from sympy import symbols, solve, pi
@@ -126,7 +174,9 @@ False
 
 ### Equations with no analytical solution
 
-SymPy may reflect that your equation has no solutions that can be expressed algebraically (symbolically) by returning an error such as `NotImplementedError`:
+SymPy may reflect that your equation has no solutions that can be expressed
+algebraically (symbolically) by returning an error such as
+`NotImplementedError`:
 
 ```py
 >>> from sympy import symbols, solve, cos
@@ -144,7 +194,9 @@ Alpha](https://www.wolframalpha.com/input?i2d=true&i=solve%5C%2840%29cos%5C%2840
 
 ### Equations which have an analytical solution, and SymPy cannot solve
 
-SymPy has implemented algorithms to solve inequalities involving only one symbol ("variable"), so it cannot solve a set of inequalities involving more than one symbol:
+SymPy has implemented algorithms to solve inequalities involving only one symbol
+(variable), so it cannot solve a set of inequalities involving more than one
+symbol:
 
 ```py
 >>> from sympy import solve, symbols
