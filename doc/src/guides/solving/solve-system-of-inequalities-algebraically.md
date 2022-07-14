@@ -1,13 +1,12 @@
-# Solve a system of inequalities algebraically
+# Solve a system of inequalities of a single variable algebraically
 
-Use SymPy to solve a system of inequalities algebraically. For example, solving
-$x^2 < \pi$, $x > 0$ yields $0 < x < \sqrt{pi}$.
+Use SymPy to solve a system of univariate inequalities algebraically.
+For example, solving $x^2 < \pi$, $x > 0$ yields $0 < x < \sqrt{pi}$.
 
 Alternatives to consider:
-- For systems with more than one symbol (variable), try [Wolfram
-Alpha](https://www.wolframalpha.com/)
+- For multivariate systems (more than one symbol), try this [SciPy linear programming function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
 
-Here is a simple example of solving a system of inequalities algebraically.
+Here is a simple example of solving a system of inequalities of a single variable algebraically.
 solve {func}`~.solve` accepts a list or tuple of inequalities to be solved as a system:
 
 ```py
@@ -29,12 +28,13 @@ for {func}`~.solve`. While {func}`~.solve` can currently solve systems of equati
 If you want to preserve the exact mathematical values of symbols such as
 [fractions](tutorial-gotchas-final-notes) and [square
 roots](symbolic-computation), define them so that SymPy can interpret them
-symbolically, for example define one-third as `Integer(1)/Integer(3)`:
+symbolically, for example define one-third as a {class}`rational object <sympy.core.numbers.Rational>` using `Rational(1, 3)`:
+
 
 ```py
->>> from sympy import symbols, solve, pi, Integer
+>>> from sympy import symbols, solve, pi, Rational
 >>> x = symbols('x')
->>> one_third = Integer(1)/Integer(3)
+>>> one_third = Rational(1, 3)
 >>> solve((x >= one_third, x**2 <= pi), x)
 (1/3 <= x) & (x <= sqrt(pi))
 ```
