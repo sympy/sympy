@@ -27,10 +27,9 @@ for {func}`~.solve`. While {func}`~.solve` can currently solve systems of equati
 ### Use exact values
 
 If you want to preserve the exact mathematical values of symbols such as
-[fractions](tutorial-gotchas-final-notes) and {any}`square roots
-<sympy.core.basic.Basic.args>`, define them so that SymPy can
-interpret them symbolically, for example define one-third as
-`Integer(1)/Integer(3)`:
+[fractions](tutorial-gotchas-final-notes) and [square
+roots](symbolic-computation), define them so that SymPy can interpret them
+symbolically, for example define one-third as `Integer(1)/Integer(3)`:
 
 ```py
 >>> from sympy import symbols, solve, pi, Integer
