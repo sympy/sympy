@@ -346,7 +346,7 @@ def test_auto_point_acc_compute_vel():
 
 def test_auto_acc_derivative():
     # Tests whether the Point.acc method gives the correct acceleration of the
-    # end point of two linkages in serie, while getting minimal information.
+    # end point of two linkages in series, while getting minimal information.
     q1, q2 = dynamicsymbols('q1:3')
     u1, u2 = dynamicsymbols('q1:3', 1)
     v1, v2 = dynamicsymbols('q1:3', 2)
