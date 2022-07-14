@@ -8,23 +8,27 @@ Alternatives to consider:
 Alpha](https://www.wolframalpha.com/)
 
 Here is a simple example of solving a system of inequalities algebraically.
-solve *link* accepts a list of inequalities to be solved as a system:
+solve {func}`~.solve` accepts a list or tuple of inequalities to be solved as a system:
 
 ```py
 >>> from sympy import symbols, solve, pi
->>> from sympy.core.relational import Relational
 >>> x = symbols('x')
->>> solve([x >= 0, x**2 <= pi])
+>>> solve([x >= 0, x**2 <= pi], x)
 (0 <= x) & (x <= sqrt(pi))
 ```
 
 ## Guidance
 
+### Include the variable to be solved for in the function call
+
+We recommend you include the variable to be solved for as the second argument 
+for {func}`~.solve`. While {func}`~.solve` can currently solve systems of equations with only one symbol, it is a good practice in case that capability is expanded, and because {func}`~.solve` can solve an equation with more than one symbol.
+
 ### Use exact values
 
 If you want to preserve the exact mathematical values of symbols such as
-fractions *link to gotcha* and square roots *link
-sympy.functions.elementary.miscellaneous.sqrt*, define them so that SymPy can
+[fractions](tutorial-gotchas-final-notes) and {any}`square roots
+<sympy.core.basic.Basic.args>`, define them so that SymPy can
 interpret them symbolically, for example define one-third as
 `Integer(1)/Integer(3)`:
 
@@ -32,19 +36,19 @@ interpret them symbolically, for example define one-third as
 >>> from sympy import symbols, solve, pi, Integer
 >>> x = symbols('x')
 >>> one_third = Integer(1)/Integer(3)
->>> solve([x >= one_third, x**2 <= pi])
+>>> solve((x >= one_third, x**2 <= pi), x)
 (1/3 <= x) & (x <= sqrt(pi))
 ```
 
 If you use the division operator between standard Python numbers, for example
-`1/3`, Python will perform the division numerically and pass that inexact value to SymPy,
+`1/3`, [Python will perform the division numerically](python-vs-sympy-numbers) and pass that inexact value to SymPy,
 leading to an inexact, numerical expression for all relations:
 
 ```py
 >>> from sympy import symbols, solve, pi, Integer
 >>> x = symbols('x')
 >>> one_third = 1/3
->>> solve([x >= one_third, x**2 <= pi])
+>>> solve([x >= one_third, x**2 <= pi], x)
 (0.333333333333333 <= x) & (x <= 1.77245385090552)
 ```
 
@@ -60,13 +64,14 @@ You can create your inequalities directly, then solve the system as a list:
 >>> from sympy import symbols, solve, pi, Integer
 >>> x = symbols('x')
 >>> one_third = Integer(1)/Integer(3)
->>> solve([x >= one_third, x**2 <= pi])
+>>> solve([x >= one_third, x**2 <= pi], x)
 (1/3 <= x) & (x <= sqrt(pi))
 ```
 
-### Put your inequalities into Rel *link*
+### Put your inequalities into the Relational class
 
-You can create each inequality using the Relational class *link* by specifying
+You can create each inequality using the {class}`Relational class
+<sympy.core.relational.Relational>` by specifying
 the left-hand side, the right-hand side, and then a relational operator such
 strict greater than (`gt` or `>`), or less than or equal to (`le` or `<=`):
 
@@ -95,13 +100,14 @@ string](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-i
 
 ```py
 >>> from sympy import parse_expr, pi, solve
+>>> from sympy.abc import x
 >>> inequality1 = 'x >= 0'
 >>> inequality2 = 'x**2 <= pi'
 >>> inequalities = [inequality1, inequality2]
 >>> inequalities_parsed = [parse_expr(inequality) for inequality in inequalities]
 >>> inequalities_parsed
 [x >= 0, x**2 <= pi]
->>> solve(inequalities_parsed)
+>>> solve(inequalities_parsed, x)
 (0 <= x) & (x <= sqrt(pi))
 ```
 
@@ -114,16 +120,17 @@ to extract $0$ and $\sqrt{pi}$.
 ### Extract relational atoms
 
 You can decompose a set of relations which is joined by `^` (or) or `&` (and)
-into individual relations using relational atoms *link*. The canonical *link*
-method will put them in order so the symbol is on the left so you can take the
-right-hand side `lhs` *link* to extract the constants:
+into individual relations using relational atoms. Using {any}`canonical
+<sympy.core.relational.Relational.canonical>` will put order each relation so
+the symbol is on the left, so you can take the right-hand side {any}`rhs
+<sympy.core.relational.Relational.lhs>` to extract the constants:
 
 ```py
 >>> from sympy import symbols, solve, Integer, pi
 >>> from sympy.core.relational import Relational
 >>> x = symbols('x')
 >>> one_third = Integer(1)/Integer(3)
->>> eq = solve([x >= one_third, x**2 <= pi])
+>>> eq = solve([x >= one_third, x**2 <= pi], x)
 >>> relations = [(i.lhs, i.rel_op, i.rhs) for i in [i.canonical for i in eq.atoms(Relational)]]
 >>> # Sorting relations just to ensure consistent list order for docstring testing
 >>> relations_sorted = sorted(relations, key=lambda x: float(x[2]))
@@ -131,15 +138,16 @@ right-hand side `lhs` *link* to extract the constants:
 [(x, '>=', 1/3), (x, '<=', sqrt(pi))]
 ```
 
-### Extract args *link*
+### Extract arguments
 
-The args *link* of a solution set are the individual relations, so you can
-extract the constants from the left- or right-hand side of the `args`:
+The {any}`args <sympy.core.basic.Basic.args>` of a solution set are the
+individual relations, so you can extract the constants from the left- or
+right-hand side of the `args`:
 
 ```py
 >>> from sympy import symbols, solve, Integer, pi
 >>> x = symbols('x')
->>> eq = solve([x >= Integer(1)/Integer(3), x**2 <= pi])
+>>> eq = solve([x >= Integer(1)/Integer(3), x**2 <= pi], x)
 >>> eq.args
 (1/3 <= x, x <= sqrt(pi))
 >>> constants = []
@@ -185,7 +193,7 @@ algebraically (symbolically) by returning an error such as
 ```py
 >>> from sympy import symbols, solve, cos
 >>> x = symbols('x')
->>> solve([cos(x) - x > 0, x > 0])
+>>> solve([cos(x) - x > 0, x > 0], x)
 Traceback (most recent call last):
     ...
 NotImplementedError: The inequality, -x + cos(x) > 0, cannot be solved using solve_univariate_inequality.
@@ -204,7 +212,7 @@ symbol:
 >>> from sympy import solve, symbols
 >>> x, y = symbols('x y')
 >>> from sympy.abc import x, y
->>> solve([x**2 < y, x > 0])
+>>> solve([x**2 < y, x > 0], x)
 Traceback (most recent call last):
     ...
 NotImplementedError: inequality has more than one symbol of interest.
