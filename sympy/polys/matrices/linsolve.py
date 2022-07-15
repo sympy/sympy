@@ -234,7 +234,7 @@ def _lin_eq2dict(a, symset, strict=True):
                 terms_coeff = ci
             else:
                 raise PolyNonlinearError
-        coeff = Mul(*coeff_list)
+        coeff = Mul._from_args(coeff_list)
         if terms is None:
             return coeff, {}
         else:
