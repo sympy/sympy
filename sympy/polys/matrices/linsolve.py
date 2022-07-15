@@ -199,7 +199,7 @@ def _lin_eq2dict(a, symset, strict=True):
     Use results with caution if the equation was not fully expanded since
     the coefficients may contain expressions that would simplify to 0:
 
-    >>> _lin_eq2dict(x*(y + 1)*(y - 1) - x*y**2 + x + 2], {x})
+    >>> _lin_eq2dict(x*(y + 1)*(y - 1) - x*y**2 + x + 2, {x})
     (2, {x: -y**2 + (y - 1)*(y + 1) + 1})
     >>> c, d = _; d[x].simplify() == 0
     True
