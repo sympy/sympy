@@ -930,12 +930,12 @@ def test_asin_series():
 
 def test_asin_leading_term():
     assert asin(x).as_leading_term(x) == x
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert asin(x + 1).as_leading_term(x) == pi/2
     assert asin(x - 1).as_leading_term(x) == -pi/2
     assert asin(1/x).as_leading_term(x, cdir=1) == I*log(x) + pi/2 - I*log(2)
     assert asin(1/x).as_leading_term(x, cdir=-1) == -I*log(x) - 3*pi/2 + I*log(2)
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert asin(I*x + 2).as_leading_term(x, cdir=1) == pi - asin(2)
     assert asin(-I*x + 2).as_leading_term(x, cdir=1) == asin(2)
     assert asin(I*x - 2).as_leading_term(x, cdir=1) == -asin(2)
@@ -1005,12 +1005,12 @@ def test_acos():
 
 def test_acos_leading_term():
     assert acos(x).as_leading_term(x) == pi/2
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert acos(x + 1).as_leading_term(x) == sqrt(2)*sqrt(-x)
     assert acos(x - 1).as_leading_term(x) == pi
     assert acos(1/x).as_leading_term(x, cdir=1) == -I*log(x) + I*log(2)
     assert acos(1/x).as_leading_term(x, cdir=-1) == I*log(x) + 2*pi - I*log(2)
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert acos(I*x + 2).as_leading_term(x, cdir=1) == -acos(2)
     assert acos(-I*x + 2).as_leading_term(x, cdir=1) == acos(2)
     assert acos(I*x - 2).as_leading_term(x, cdir=1) == acos(-2)
@@ -1123,12 +1123,12 @@ def test_atan_leading_term():
     assert atan(x).as_leading_term(x) == x
     assert atan(1/x).as_leading_term(x, cdir=1) == pi/2
     assert atan(1/x).as_leading_term(x, cdir=-1) == -pi/2
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert atan(x + I).as_leading_term(x, cdir=1) == -I*log(x)/2 + pi/4 + I*log(2)/2
     assert atan(x + I).as_leading_term(x, cdir=-1) == -I*log(x)/2 - 3*pi/4 + I*log(2)/2
     assert atan(x - I).as_leading_term(x, cdir=1) == I*log(x)/2 + pi/4 - I*log(2)/2
     assert atan(x - I).as_leading_term(x, cdir=-1) == I*log(x)/2 + pi/4 - I*log(2)/2
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert atan(x + 2*I).as_leading_term(x, cdir=1) == I*atanh(2)
     assert atan(x + 2*I).as_leading_term(x, cdir=-1) == -pi + I*atanh(2)
     assert atan(x - 2*I).as_leading_term(x, cdir=1) == pi - I*atanh(2)
@@ -1269,12 +1269,12 @@ def test_acot_fdiff():
 
 def test_acot_leading_term():
     assert acot(1/x).as_leading_term(x) == x
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert acot(x + I).as_leading_term(x, cdir=1) == I*log(x)/2 + pi/4 - I*log(2)/2
     assert acot(x + I).as_leading_term(x, cdir=-1) == I*log(x)/2 + pi/4 - I*log(2)/2
     assert acot(x - I).as_leading_term(x, cdir=1) == -I*log(x)/2 + pi/4 + I*log(2)/2
     assert acot(x - I).as_leading_term(x, cdir=-1) == -I*log(x)/2 - 3*pi/4 + I*log(2)/2
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert acot(x).as_leading_term(x, cdir=1) == pi/2
     assert acot(x).as_leading_term(x, cdir=-1) == -pi/2
     assert acot(x + I/2).as_leading_term(x, cdir=1) == pi - I*acoth(S(1)/2)
@@ -1818,10 +1818,10 @@ def test_asec_is_real():
 
 def test_asec_leading_term():
     assert asec(1/x).as_leading_term(x) == pi/2
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert asec(x + 1).as_leading_term(x) == sqrt(2)*sqrt(x)
     assert asec(x - 1).as_leading_term(x) == pi
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert asec(x).as_leading_term(x, cdir=1) == -I*log(x) + I*log(2)
     assert asec(x).as_leading_term(x, cdir=-1) == I*log(x) + 2*pi - I*log(2)
     assert asec(I*x + 1/2).as_leading_term(x, cdir=1) == asec(1/2)
@@ -1898,10 +1898,10 @@ def test_csc_rewrite():
 
 def test_acsc_leading_term():
     assert acsc(1/x).as_leading_term(x) == x
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert acsc(x + 1).as_leading_term(x) == pi/2
     assert acsc(x - 1).as_leading_term(x) == -pi/2
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert acsc(x).as_leading_term(x, cdir=1) == I*log(x) + pi/2 - I*log(2)
     assert acsc(x).as_leading_term(x, cdir=-1) == -I*log(x) - 3*pi/2 + I*log(2)
     assert acsc(I*x + 1/2).as_leading_term(x, cdir=1) == acsc(1/2)

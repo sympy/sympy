@@ -567,12 +567,12 @@ def test_asinh_rewrite():
 def test_asinh_leading_term():
     x = Symbol('x')
     assert asinh(x).as_leading_term(x, cdir=1) == x
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert asinh(x + I).as_leading_term(x, cdir=1) == I*pi/2
     assert asinh(x - I).as_leading_term(x, cdir=1) == -I*pi/2
     assert asinh(1/x).as_leading_term(x, cdir=1) == -log(x) + log(2)
     assert asinh(1/x).as_leading_term(x, cdir=-1) == log(x) - log(2) - I*pi
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert asinh(x + 2*I).as_leading_term(x, cdir=1) == I*asin(2)
     assert asinh(x + 2*I).as_leading_term(x, cdir=-1) == -I*asin(2) + I*pi
     assert asinh(x - 2*I).as_leading_term(x, cdir=1) == -I*pi + I*asin(2)
@@ -671,13 +671,13 @@ def test_acosh_rewrite():
 
 def test_acosh_leading_term():
     x = Symbol('x')
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert acosh(x).as_leading_term(x) == I*pi/2
     assert acosh(x + 1).as_leading_term(x) == sqrt(2)*sqrt(x)
     assert acosh(x - 1).as_leading_term(x) == I*pi
     assert acosh(1/x).as_leading_term(x, cdir=1) == -log(x) + log(2)
     assert acosh(1/x).as_leading_term(x, cdir=-1) == -log(x) + log(2) + 2*I*pi
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert acosh(I*x - 2).as_leading_term(x, cdir=1) == acosh(-2)
     assert acosh(-I*x - 2).as_leading_term(x, cdir=1) == -2*I*pi + acosh(-2)
     assert acosh(x**2 - I*x + S(1)/3).as_leading_term(x, cdir=1) == -acosh(S(1)/3)
@@ -763,12 +763,12 @@ def test_asech():
 
 def test_asech_leading_term():
     x = Symbol('x')
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert asech(x).as_leading_term(x, cdir=1) == -log(x) + log(2)
     assert asech(x).as_leading_term(x, cdir=-1) == -log(x) + log(2) + 2*I*pi
     assert asech(x + 1).as_leading_term(x, cdir=1) == sqrt(2)*I*sqrt(x)
     assert asech(1/x).as_leading_term(x, cdir=1) == I*pi/2
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert asech(x - 1).as_leading_term(x, cdir=1) == I*pi
     assert asech(I*x + 3).as_leading_term(x, cdir=1) == -asech(3)
     assert asech(-I*x + 3).as_leading_term(x, cdir=1) == asech(3)
@@ -872,10 +872,10 @@ def test_acsch_infinities():
 def test_acsch_leading_term():
     x = Symbol('x')
     assert acsch(1/x).as_leading_term(x) == x
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert acsch(x + I).as_leading_term(x) == -I*pi/2
     assert acsch(x - I).as_leading_term(x) == I*pi/2
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert acsch(x).as_leading_term(x, cdir=1) == -log(x) + log(2)
     assert acsch(x).as_leading_term(x, cdir=-1) == log(x) - log(2) - I*pi
     assert acsch(x + I/2).as_leading_term(x, cdir=1) == -I*pi - acsch(I/2)
@@ -978,14 +978,14 @@ def test_atanh_rewrite():
 def test_atanh_leading_term():
     x = Symbol('x')
     assert atanh(x).as_leading_term(x) == x
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert atanh(x + 1).as_leading_term(x, cdir=1) == -log(x)/2 + log(2)/2 - I*pi/2
     assert atanh(x + 1).as_leading_term(x, cdir=-1) == -log(x)/2 + log(2)/2 + I*pi/2
     assert atanh(x - 1).as_leading_term(x, cdir=1) == log(x)/2 - log(2)/2
     assert atanh(x - 1).as_leading_term(x, cdir=-1) == log(x)/2 - log(2)/2
     assert atanh(1/x).as_leading_term(x, cdir=1) == -I*pi/2
     assert atanh(1/x).as_leading_term(x, cdir=-1) == I*pi/2
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert atanh(I*x + 2).as_leading_term(x, cdir=1) == atanh(2) + I*pi
     assert atanh(-I*x + 2).as_leading_term(x, cdir=1) == atanh(2)
     assert atanh(I*x - 2).as_leading_term(x, cdir=1) == -atanh(2)
@@ -1056,12 +1056,12 @@ def test_acoth_rewrite():
 
 def test_acoth_leading_term():
     x = Symbol('x')
-    # Tests concerning boundary points lying on branch cuts
+    # Tests concerning branch points
     assert acoth(x + 1).as_leading_term(x, cdir=1) == -log(x)/2 + log(2)/2
     assert acoth(x + 1).as_leading_term(x, cdir=-1) == -log(x)/2 + log(2)/2
     assert acoth(x - 1).as_leading_term(x, cdir=1) == log(x)/2 - log(2)/2 + I*pi/2
     assert acoth(x - 1).as_leading_term(x, cdir=-1) == log(x)/2 - log(2)/2 - I*pi/2
-    # Tests concerning internal points between branch cuts
+    # Tests concerning points lying on branch cuts
     assert acoth(x).as_leading_term(x, cdir=-1) == I*pi/2
     assert acoth(x).as_leading_term(x, cdir=1) == -I*pi/2
     assert acoth(I*x + 1/2).as_leading_term(x, cdir=1) == acoth(1/2)
