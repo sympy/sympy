@@ -186,6 +186,8 @@ def _lin_eq2dict(a, symset, strict=True):
     is detected. To allow cross-terms involving object containing (but not
     equal to) a symbol, use ``strict=False``
 
+    The values in the dictionary will be non-zero if the original expression was expanded
+    but may contain expressions which will simplify to zero, otherwise.
     Examples
     ========
 
@@ -193,6 +195,14 @@ def _lin_eq2dict(a, symset, strict=True):
     >>> from sympy.abc import x, y
     >>> _lin_eq2dict(x + 2*y + 3, {x, y})
     (3, {x: 1, y: 2})
+
+    Use results with caution if the equation was not fully expanded since
+    the coefficients may contain expressions that would simplify to 0:
+
+    >>> _lin_eq2dict(x*(y + 1)*(y - 1) - x*y**2 + x + 2], {x})
+    (2, {x: -y**2 + (y - 1)*(y + 1) + 1})
+    >>> c, d = _; d[x].simplify() == 0
+    True
 
     The following does not raise an error because ``x**2`` does not appear in
     ``x``:

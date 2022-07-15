@@ -1277,7 +1277,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         True
         >>> f(x+1).has_free_arg({x+1})
         True
-        >>> f(x+1).has_free_arg({x+y+1})
+        >>> f(x+y+1).has_free_arg({x + 1})
         False
         """
         return any(a in s for a in iterfreeargs(self))
@@ -1285,7 +1285,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     @cacheit
     def has_free(self, *patterns):
         """return True if self has any of the patterns as a free expression
-        else False.
+        (or literal subexpression) else False.
 
         Examples
         ========
