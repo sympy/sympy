@@ -158,25 +158,64 @@ def _linear_eq_to_dict(eqs, syms):
 
 
 def _linear_eq_to_dict_inner(eqs, syms):
-    """Convert a system Expr/Eq equations into dict form"""
+    """Convert a system Expr/Eq equations into dict form, returning
+    the coefficient dictionaries and a list of syms-independent terms
+    from each expression in ``eqs```.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.matrices.linsolve import _linear_eq_to_dict_inner as F
+    >>> from sympy.abc import x
+    >>> F([2*x + 3], {x})
+    ([{x: 2}], [3])
+    """
     syms = set(syms)
-    eqsdict, eqs_rhs = [], []
+    eqsdict, ind = [], []
     for eq in eqs:
-        rhs, eqdict = _lin_eq2dict(eq, syms)
+        c, eqdict = _lin_eq2dict(eq, syms)
         eqsdict.append(eqdict)
-        eqs_rhs.append(rhs)
-    return eqsdict, eqs_rhs
+        ind.append(c)
+    return eqsdict, ind
 
 
-def _lin_eq2dict(a, symset):
-    """Efficiently convert a linear equation to a dict of coefficients"""
+def _lin_eq2dict(a, symset, strict=True):
+    """return (c, d) where c is the sym-independent part of ``a`` and
+    ``d`` is an efficiently calculated dictionary mapping symbols to
+    their coefficients. A PolyNonlinearError is raised if non-linearity
+    is detected. To allow cross-terms involving object containing (but not
+    equal to) a symbol, use ``strict=False``
+
+    Examples
+    ========
+
+    >>> from sympy.polys.matrices.linsolve import _lin_eq2dict
+    >>> from sympy.abc import x, y
+    >>> _lin_eq2dict(x + 2*y + 3, {x, y})
+    (3, {x: 1, y: 2})
+
+    The following does not raise an error because ``x**2`` does not appear in
+    ``x``:
+
+    >>> strict = True
+    >>> _lin_eq2dict(x*(x**2 + 1), {x**2}, strict)
+    (x, {x**2: x})
+
+    But the reverse raises an error because ``x`` is in ``x**2``; the
+    error is suppressed by using ``strict=False`. This might
+    be most useful when wanting to allow ``f(x)`` and ``f(x).diff()`` to be
+    treated as independent of each other.
+
+    >>> _lin_eq2dict(x*(x**2 + 1), {x}, not strict)
+    (0, {x: x**2 + 1})
+    """
     if a in symset:
         return S.Zero, {a: S.One}
     elif a.is_Add:
         terms_list = defaultdict(list)
         coeff_list = []
         for ai in a.args:
-            ci, ti = _lin_eq2dict(ai, symset)
+            ci, ti = _lin_eq2dict(ai, symset, strict)
             coeff_list.append(ci)
             for mij, cij in ti.items():
                 terms_list[mij].append(cij)
@@ -187,7 +226,7 @@ def _lin_eq2dict(a, symset):
         terms = terms_coeff = None
         coeff_list = []
         for ai in a.args:
-            ci, ti = _lin_eq2dict(ai, symset)
+            ci, ti = _lin_eq2dict(ai, symset, strict)
             if not ti:
                 coeff_list.append(ci)
             elif terms is None:
@@ -202,8 +241,8 @@ def _lin_eq2dict(a, symset):
             terms = {sym: coeff * c for sym, c in terms.items()}
             return  coeff * terms_coeff, terms
     elif a.is_Equality:
-        return _lin_eq2dict(a.lhs - a.rhs, symset)
-    elif not a.has_free(*symset):
+        return _lin_eq2dict(a.lhs - a.rhs, symset, strict)
+    elif not a.has_free_arg(symset) or not strict:
         return a, {}
     else:
         raise PolyNonlinearError
