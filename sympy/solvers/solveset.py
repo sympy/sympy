@@ -2512,6 +2512,8 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
         raise ValueError('duplicate symbols given')
     has = set(iterfreeargs(eq)) & symset
     if not has:
+        if isinstance(eq, Equality):
+            eq = eq.rewrite(Add)
         if dict:
             return {1: eq}
         return [S.Zero]*len(syms) + [eq]

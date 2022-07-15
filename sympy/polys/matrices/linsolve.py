@@ -242,7 +242,9 @@ def _lin_eq2dict(a, symset, strict=True):
             return  coeff * terms_coeff, terms
     elif a.is_Equality:
         # don't allow nonlinear terms to cancel
-        return _lin_eq2dict(a.rewrite(Add, evaluate=False), symset, strict)
+        c, d = _lin_eq2dict(a.rewrite(Add, evaluate=False), symset, strict)
+        # but don't include any keys that ended up having cancelling terms
+        return c, {k: v for k, v in d.items() if v}
     elif not a.has_free_arg(symset) or not strict:
         return a, {}
     else:
