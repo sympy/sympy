@@ -4,7 +4,7 @@ from typing import Tuple as tTuple, Union as tUnion, FrozenSet, Dict as tDict, L
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import MatMul, Basic, Wild
+from sympy import MatMul, Basic, Wild, KroneckerProduct
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -167,12 +167,35 @@ def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
     return _array_tensor_product(*[i for i in args if i is not None]), removed
 
 
+def _find_trivial_kronecker_products_broadcast(expr: ArrayTensorProduct):
+    newargs: List[Basic] = []
+    removed = []
+    count_dims = 0
+    for i, arg in enumerate(expr.args):
+        count_dims += get_rank(arg)
+        shape = get_shape(arg)
+        current_range = [count_dims-i for i in range(len(shape), 0, -1)]
+        if (shape == (1, 1) and len(newargs) > 0 and 1 not in get_shape(newargs[-1]) and
+            isinstance(newargs[-1], MatrixExpr) and isinstance(arg, MatrixExpr)):
+            # KroneckerProduct object allows the trick of broadcasting:
+            newargs[-1] = KroneckerProduct(newargs[-1], arg)
+            removed.extend(current_range)
+        elif 1 not in shape and len(newargs) > 0 and get_shape(newargs[-1]) == (1, 1):
+            # Broadcast:
+            newargs[-1] = KroneckerProduct(newargs[-1], arg)
+            prev_range = [i for i in range(min(current_range)) if i not in removed]
+            removed.extend(prev_range[-2:])
+        else:
+            newargs.append(arg)
+    return _array_tensor_product(*newargs), removed
+
+
 @singledispatch
 def _array2matrix(expr):
     return expr
 
 
-@_array2matrix.register(ZeroArray) # type: ignore
+@_array2matrix.register(ZeroArray)
 def _(expr: ZeroArray):
     if get_rank(expr) == 2:
         return ZeroMatrix(*expr.shape)
@@ -180,12 +203,12 @@ def _(expr: ZeroArray):
         return expr
 
 
-@_array2matrix.register(ArrayTensorProduct) # type: ignore
+@_array2matrix.register(ArrayTensorProduct)
 def _(expr: ArrayTensorProduct):
     return _a2m_tensor_product(*[_array2matrix(arg) for arg in expr.args])
 
 
-@_array2matrix.register(ArrayContraction) # type: ignore
+@_array2matrix.register(ArrayContraction)
 def _(expr: ArrayContraction):
     expr = expr.flatten_contraction_of_diagonal()
     expr = identify_removable_identity_matrices(expr)
@@ -226,7 +249,7 @@ def _(expr: ArrayContraction):
             return _array_contraction(ret, *expr.contraction_indices)
 
 
-@_array2matrix.register(ArrayDiagonal) # type: ignore
+@_array2matrix.register(ArrayDiagonal)
 def _(expr: ArrayDiagonal):
     pexpr = _array_diagonal(_array2matrix(expr.expr), *expr.diagonal_indices)
     pexpr = identify_hadamard_products(pexpr)
@@ -237,7 +260,7 @@ def _(expr: ArrayDiagonal):
     return _array2matrix(pexpr)
 
 
-@_array2matrix.register(PermuteDims) # type: ignore
+@_array2matrix.register(PermuteDims)
 def _(expr: PermuteDims):
     if expr.permutation.array_form == [1, 0]:
         return _a2m_transpose(_array2matrix(expr.expr))
@@ -269,11 +292,7 @@ def _(expr: PermuteDims):
     elif isinstance(expr.expr, ArrayContraction):
         mat_mul_lines = _array2matrix(expr.expr)
         if not isinstance(mat_mul_lines, ArrayTensorProduct):
-            flat_cyclic_form = [j for i in expr.permutation.cyclic_form for j in i]
-            expr_shape = get_shape(expr)
-            if all(expr_shape[i] == 1 for i in flat_cyclic_form):
-                return mat_mul_lines
-            return mat_mul_lines
+            return _permute_dims(mat_mul_lines, expr.permutation)
         # TODO: this assumes that all arguments are matrices, it may not be the case:
         permutation = Permutation(2*len(mat_mul_lines.args)-1)*expr.permutation
         permuted = [permutation(i) for i in range(2*len(mat_mul_lines.args))]
@@ -283,23 +302,22 @@ def _(expr: PermuteDims):
             p2 = permuted[2*i+1]
             if p1 // 2 != p2 // 2:
                 return _permute_dims(mat_mul_lines, permutation)
-            pos = p1 // 2
             if p1 > p2:
-                args_array[i] = _a2m_transpose(mat_mul_lines.args[pos])
+                args_array[i] = _a2m_transpose(mat_mul_lines.args[p1 // 2])
             else:
-                args_array[i] = mat_mul_lines.args[pos]
+                args_array[i] = mat_mul_lines.args[p1 // 2]
         return _a2m_tensor_product(*args_array)
     else:
         return expr
 
 
-@_array2matrix.register(ArrayAdd) # type: ignore
+@_array2matrix.register(ArrayAdd)
 def _(expr: ArrayAdd):
     addends = [_array2matrix(arg) for arg in expr.args]
     return _a2m_add(*addends)
 
 
-@_array2matrix.register(ArrayElementwiseApplyFunc) # type: ignore
+@_array2matrix.register(ArrayElementwiseApplyFunc)
 def _(expr: ArrayElementwiseApplyFunc):
     subexpr = _array2matrix(expr.expr)
     if isinstance(subexpr, MatrixExpr):
@@ -315,7 +333,7 @@ def _(expr: ArrayElementwiseApplyFunc):
         return ArrayElementwiseApplyFunc(expr.function, subexpr)
 
 
-@_array2matrix.register(ArrayElement) # type: ignore
+@_array2matrix.register(ArrayElement)
 def _(expr: ArrayElement):
     ret = _array2matrix(expr.name)
     if isinstance(ret, MatrixExpr):
@@ -328,7 +346,7 @@ def _remove_trivial_dims(expr):
     return expr, []
 
 
-@_remove_trivial_dims.register(ArrayTensorProduct) # type: ignore
+@_remove_trivial_dims.register(ArrayTensorProduct)
 def _(expr: ArrayTensorProduct):
     # Recognize expressions like [x, y] with shape (k, 1, k, 1) as `x*y.T`.
     # The matrix expression has to be equivalent to the tensor product of the
@@ -400,19 +418,25 @@ def _(expr: ArrayTensorProduct):
     if isinstance(newexpr, ArrayTensorProduct):
         newexpr, newremoved2 = _find_trivial_matrices_rewrite(newexpr)
         newremoved = _combine_removed(-1, newremoved, newremoved2)
+    if isinstance(newexpr, ArrayTensorProduct):
+        newexpr, newremoved2 = _find_trivial_kronecker_products_broadcast(newexpr)
+        newremoved = _combine_removed(-1, newremoved, newremoved2)
     return newexpr, newremoved
 
 
-@_remove_trivial_dims.register(ArrayAdd) # type: ignore
+@_remove_trivial_dims.register(ArrayAdd)
 def _(expr: ArrayAdd):
     rec = [_remove_trivial_dims(arg) for arg in expr.args]
     newargs, removed = zip(*rec)
-    if len(set(map(tuple, removed))) != 1:
+    if len(set([get_shape(i) for i in newargs])) > 1:
         return expr, []
-    return _a2m_add(*newargs), removed[0]
+    if len(removed) == 0:
+        return expr, removed
+    removed1 = removed[0]
+    return _a2m_add(*newargs), removed1
 
 
-@_remove_trivial_dims.register(PermuteDims) # type: ignore
+@_remove_trivial_dims.register(PermuteDims)
 def _(expr: PermuteDims):
     subexpr, subremoved = _remove_trivial_dims(expr.expr)
     p = expr.permutation.array_form
@@ -429,7 +453,7 @@ def _(expr: PermuteDims):
     return newexpr, premoved
 
 
-@_remove_trivial_dims.register(ArrayContraction) # type: ignore
+@_remove_trivial_dims.register(ArrayContraction)
 def _(expr: ArrayContraction):
     new_expr, removed0 = _array_contraction_to_diagonal_multiple_identity(expr)
     if new_expr != expr:
@@ -483,15 +507,15 @@ def _remove_diagonalized_identity_matrices(expr: ArrayDiagonal):
     return editor.to_array_contraction(), removed
 
 
-@_remove_trivial_dims.register(ArrayDiagonal) # type: ignore
+@_remove_trivial_dims.register(ArrayDiagonal)
 def _(expr: ArrayDiagonal):
     newexpr, removed = _remove_trivial_dims(expr.expr)
     shifts = list(accumulate([0] + [1 if i in removed else 0 for i in range(get_rank(expr.expr))]))
-    new_diag_indices = {i: tuple(j for j in i if j not in removed) for i in expr.diagonal_indices}
-    for old_diag_tuple, new_diag_tuple in new_diag_indices.items():
+    new_diag_indices_map = {i: tuple(j for j in i if j not in removed) for i in expr.diagonal_indices}
+    for old_diag_tuple, new_diag_tuple in new_diag_indices_map.items():
         if len(new_diag_tuple) == 1:
             removed = [i for i in removed if i not in old_diag_tuple]
-    new_diag_indices = [tuple(j - shifts[j] for j in i) for i in new_diag_indices.values()]
+    new_diag_indices = [tuple(j - shifts[j] for j in i) for i in new_diag_indices_map.values()]
     rank = get_rank(expr.expr)
     removed = ArrayDiagonal._push_indices_up(expr.diagonal_indices, removed, rank)
     removed = sorted({i for i in removed})
@@ -510,7 +534,7 @@ def _(expr: ArrayDiagonal):
         return newexpr2, removed
 
 
-@_remove_trivial_dims.register(ElementwiseApplyFunction) # type: ignore
+@_remove_trivial_dims.register(ElementwiseApplyFunction)
 def _(expr: ElementwiseApplyFunction):
     subexpr, removed = _remove_trivial_dims(expr.expr)
     if subexpr.shape == (1, 1):
@@ -519,7 +543,7 @@ def _(expr: ElementwiseApplyFunction):
     return ElementwiseApplyFunction(expr.function, subexpr), []
 
 
-@_remove_trivial_dims.register(ArrayElementwiseApplyFunc) # type: ignore
+@_remove_trivial_dims.register(ArrayElementwiseApplyFunc)
 def _(expr: ArrayElementwiseApplyFunc):
     subexpr, removed = _remove_trivial_dims(expr.expr)
     return ArrayElementwiseApplyFunc(expr.function, subexpr), removed

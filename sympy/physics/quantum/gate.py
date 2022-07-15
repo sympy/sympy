@@ -94,16 +94,16 @@ def _min(*args, **kwargs):
 
 
 def normalized(normalize):
-    """Set flag controlling normalization of Hadamard gates by 1/sqrt(2).
+    r"""Set flag controlling normalization of Hadamard gates by `1/\sqrt{2}`.
 
     This is a global setting that can be used to simplify the look of various
-    expressions, by leaving off the leading 1/sqrt(2) of the Hadamard gate.
+    expressions, by leaving off the leading `1/\sqrt{2}` of the Hadamard gate.
 
     Parameters
     ----------
     normalize : bool
-        Should the Hadamard gate include the 1/sqrt(2) normalization factor?
-        When True, the Hadamard gate will have the 1/sqrt(2). When False, the
+        Should the Hadamard gate include the `1/\sqrt{2}` normalization factor?
+        When True, the Hadamard gate will have the `1/\sqrt{2}`. When False, the
         Hadamard gate will not have this factor.
     """
     global _normalized
@@ -192,7 +192,7 @@ class Gate(UnitaryOperator):
     #-------------------------------------------------------------------------
 
     def get_target_matrix(self, format='sympy'):
-        """The matrix rep. of the target part of the gate.
+        """The matrix represenation of the target part of the gate.
 
         Parameters
         ----------
@@ -245,9 +245,9 @@ class Gate(UnitaryOperator):
             # Make a copy of the incoming qubits.
             new_qubit = qubits.__class__(*qubits.args)
             # Flip the bits that need to be flipped.
-            for bit in range(len(targets)):
-                if new_qubit[targets[bit]] != (index >> bit) & 1:
-                    new_qubit = new_qubit.flip(targets[bit])
+            for bit, target in enumerate(targets):
+                if new_qubit[target] != (index >> bit) & 1:
+                    new_qubit = new_qubit.flip(target)
             # The value in that row and column times the flipped-bit qubit
             # is the result for that part.
             result += column[index]*new_qubit
@@ -874,7 +874,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
 
     """
     gate_name = 'CNOT'
-    gate_name_latex = 'CNOT'
+    gate_name_latex = r'\text{CNOT}'
     simplify_cgate = True
 
     #-------------------------------------------------------------------------
@@ -980,7 +980,7 @@ class SwapGate(TwoQubitGate):
 
     """
     gate_name = 'SWAP'
-    gate_name_latex = 'SWAP'
+    gate_name_latex = r'\text{SWAP}'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('SWAP', format)

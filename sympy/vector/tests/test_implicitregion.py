@@ -1,6 +1,5 @@
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.abc import x, y, z, s, t
 from sympy.sets import FiniteSet, EmptySet
 from sympy.geometry import Point
@@ -36,12 +35,9 @@ def test_regular_point():
 
 def test_singular_points_and_multiplicty():
     r1 = ImplicitRegion((x, y, z), Eq(x + y + z, 0))
-    assert r1.singular_points() == FiniteSet((-y - z, y, z))
-    assert r1.multiplicity((0, 0, 0)) == 1
-    assert r1.multiplicity((-y - z, y, z)) == 1
+    assert r1.singular_points() == EmptySet
     r2 = ImplicitRegion((x, y, z), x*y*z + y**4 -x**2*z**2)
-    assert r2.singular_points() == FiniteSet((0, 0, z), ((-y*sqrt(4*y**2 + 1)/2 + y/2)/z, y, z),\
-                            ((y*sqrt(4*y**2 + 1)/2 + y/2)/z, y, z))
+    assert r2.singular_points() == FiniteSet((0, 0, z), (x, 0, 0))
     assert r2.multiplicity((0, 0, 0)) == 3
     assert r2.multiplicity((0, 0, 6)) == 2
     r3 = ImplicitRegion((x, y, z), z**2 - x**2 - y**2)

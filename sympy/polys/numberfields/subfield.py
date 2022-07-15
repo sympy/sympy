@@ -36,7 +36,7 @@ from sympy.core.add import Add
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.ntheory import sieve
 from sympy.polys.densetools import dup_eval
 from sympy.polys.domains import QQ
@@ -45,11 +45,11 @@ from sympy.polys.polyerrors import IsomorphismFailed
 from sympy.polys.polytools import Poly, PurePoly, factor_list
 from sympy.utilities import public
 
-from mpmath import pslq, mp
+from mpmath import MPContext
 
 
 def is_isomorphism_possible(a, b):
-    """Returns `True` if there is a chance for isomorphism. """
+    """Necessary but not sufficient test for isomorphism. """
     n = a.minpoly.degree()
     m = b.minpoly.degree()
 
@@ -88,45 +88,47 @@ def field_isomorphism_pslq(a, b):
     g = b.minpoly.replace(f.gen)
 
     n, m, prev = 100, b.minpoly.degree(), None
+    ctx = MPContext()
 
     for i in range(1, 5):
         A = a.root.evalf(n)
         B = b.root.evalf(n)
 
-        basis = [1, B] + [ B**i for i in range(2, m) ] + [A]
+        basis = [1, B] + [ B**i for i in range(2, m) ] + [-A]
 
-        dps, mp.dps = mp.dps, n
-        coeffs = pslq(basis, maxcoeff=int(1e10), maxsteps=1000)
-        mp.dps = dps
+        ctx.dps = n
+        coeffs = ctx.pslq(basis, maxcoeff=10**10, maxsteps=1000)
 
         if coeffs is None:
+            # PSLQ can't find an integer linear combination. Give up.
             break
 
         if coeffs != prev:
             prev = coeffs
         else:
+            # Increasing precision didn't produce anything new. Give up.
             break
 
+        # We have
+        #   c0 + c1*B + c2*B^2 + ... + cm-1*B^(m-1) - cm*A ~ 0.
+        # So bring cm*A to the other side, and divide through by cm,
+        # for an approximate representation of A as a polynomial in B.
+        # (We know cm != 0 since `b.minpoly` is irreducible.)
         coeffs = [S(c)/coeffs[-1] for c in coeffs[:-1]]
 
+        # Throw away leading zeros.
         while not coeffs[-1]:
             coeffs.pop()
 
         coeffs = list(reversed(coeffs))
         h = Poly(coeffs, f.gen, domain='QQ')
 
+        # We only have A ~ h(B). We must check whether the relation is exact.
         if f.compose(h).rem(g).is_zero:
-            d, approx = len(coeffs) - 1, 0
-
-            for i, coeff in enumerate(coeffs):
-                approx += coeff*B**(d - i)
-
-            if A*approx < 0:
-                return [ -c for c in coeffs ]
-            else:
-                return coeffs
-        elif f.compose(-h).rem(g).is_zero:
-            return [ -c for c in coeffs ]
+            # Now we know that h(b) is in fact equal to _some conjugate of_ a.
+            # But from the very precise approximation A ~ h(B) we can assume
+            # the conjugate is a itself.
+            return coeffs
         else:
             n *= 2
 
@@ -136,23 +138,24 @@ def field_isomorphism_pslq(a, b):
 def field_isomorphism_factor(a, b):
     """Construct field isomorphism via factorization. """
     _, factors = factor_list(a.minpoly, extension=b)
-
     for f, _ in factors:
         if f.degree() == 1:
-            coeffs = f.rep.TC().to_sympy_list()
+            # Any linear factor f(x) represents some conjugate of a in QQ(b).
+            # We want to know whether this linear factor represents a itself.
+            # Let f = x - c
+            c = -f.rep.TC()
+            # Write c as polynomial in b
+            coeffs = c.to_sympy_list()
             d, terms = len(coeffs) - 1, []
-
             for i, coeff in enumerate(coeffs):
                 terms.append(coeff*b.root**(d - i))
-
-            root = Add(*terms)
-
-            if (a.root - root).evalf(chop=True) == 0:
+            r = Add(*terms)
+            # Check whether we got the number a
+            if a.minpoly.same_root(r, a):
                 return coeffs
 
-            if (a.root + root).evalf(chop=True) == 0:
-                return [-c for c in coeffs]
-
+    # If none of the linear factors represented a in QQ(b), then in fact a is
+    # not an element of QQ(b).
     return None
 
 
@@ -337,6 +340,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
     """
     if not extension:
         raise ValueError("Cannot compute primitive element for empty extension")
+    extension = [_sympify(ext) for ext in extension]
 
     if x is not None:
         x, cls = sympify(x), Poly
@@ -347,6 +351,9 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         gen, coeffs = extension[0], [1]
         g = minimal_polynomial(gen, x, polys=True)
         for ext in extension[1:]:
+            if ext.is_Rational:
+                coeffs.append(0)
+                continue
             _, factors = factor_list(g, extension=ext)
             g = _choose_factor(factors, x, gen)
             s, _, g = g.sqf_norm()
@@ -363,6 +370,10 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
     K = QQ.algebraic_field((f, gen))  # incrementally constructed field
     reps = [K.unit]  # representations of extension elements in K
     for ext in extension[1:]:
+        if ext.is_Rational:
+            coeffs.append(0)    # rational ext is not included in the expression of a primitive element
+            reps.append(K.convert(ext))    # but it is included in reps
+            continue
         p = minimal_polynomial(ext, x, polys=True)
         L = QQ.algebraic_field((p, ext))
         _, factors = factor_list(f, domain=L)
@@ -376,7 +387,12 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         ogen = K.unit - s*erep  # old gen as element of K
         reps = [dup_eval(_.rep, ogen, K) for _ in reps] + [erep]
 
-    H = [_.rep for _ in reps]
+    if K.ext.root.is_Rational:  # all extensions are rational
+        H = [K.convert(_).rep for _ in extension]
+        coeffs = [0]*len(extension)
+        f = cls(x, domain=QQ)
+    else:
+        H = [_.rep for _ in reps]
     if not polys:
         return f.as_expr(), coeffs, H
     else:
@@ -384,7 +400,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
 
 
 @public
-def to_number_field(extension, theta=None, *, gen=None):
+def to_number_field(extension, theta=None, *, gen=None, alias=None):
     r"""
     Express one algebraic number in the field generated by another.
 
@@ -438,7 +454,10 @@ def to_number_field(extension, theta=None, *, gen=None):
         ``extension`` and turning the computed primitive element into an
         :py:class:`~.AlgebraicNumber`.
     gen : :py:class:`~.Symbol`, None, optional (default=None)
-        If provided, this will be used as the generator symbol for the returned
+        If provided, this will be used as the generator symbol for the minimal
+        polynomial in the returned :py:class:`~.AlgebraicNumber`.
+    alias : str, :py:class:`~.Symbol`, None, optional (default=None)
+        If provided, this will be used as the alias symbol for the returned
         :py:class:`~.AlgebraicNumber`.
 
     Returns
@@ -466,23 +485,23 @@ def to_number_field(extension, theta=None, *, gen=None):
         extension = [extension]
 
     if len(extension) == 1 and isinstance(extension[0], tuple):
-        return AlgebraicNumber(extension[0])
+        return AlgebraicNumber(extension[0], alias=alias)
 
     minpoly, coeffs = primitive_element(extension, gen, polys=True)
     root = sum([ coeff*ext for coeff, ext in zip(coeffs, extension) ])
 
     if theta is None:
-        return AlgebraicNumber((minpoly, root))
+        return AlgebraicNumber((minpoly, root), alias=alias)
     else:
         theta = sympify(theta)
 
         if not theta.is_AlgebraicNumber:
-            theta = AlgebraicNumber(theta, gen=gen)
+            theta = AlgebraicNumber(theta, gen=gen, alias=alias)
 
         coeffs = field_isomorphism(root, theta)
 
         if coeffs is not None:
-            return AlgebraicNumber(theta, coeffs)
+            return AlgebraicNumber(theta, coeffs, alias=alias)
         else:
             raise IsomorphismFailed(
                 "%s is not in a subfield of %s" % (root, theta.root))

@@ -159,7 +159,7 @@ class GroupHomomorphism:
         if elem not in self.domain:
             if isinstance(elem, (list, tuple)):
                 return [self._apply(e) for e in elem]
-            raise ValueError("The supplied element doesn't belong to the domain")
+            raise ValueError("The supplied element does not belong to the domain")
         if elem.is_identity:
             return self.codomain.identity
         else:
@@ -450,9 +450,8 @@ def group_isomorphism(G, H, isomorphism=True):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
+    >>> from sympy.combinatorics import free_group, Permutation
     >>> from sympy.combinatorics.perm_groups import PermutationGroup
-    >>> from sympy.combinatorics.free_groups import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup
     >>> from sympy.combinatorics.homomorphisms import group_isomorphism
     >>> from sympy.combinatorics.named_groups import DihedralGroup, AlternatingGroup

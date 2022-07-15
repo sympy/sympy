@@ -30,7 +30,7 @@ def _base_ordering(base, degree):
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup
+    >>> from sympy.combinatorics import SymmetricGroup
     >>> from sympy.combinatorics.util import _base_ordering
     >>> S = SymmetricGroup(4)
     >>> S.schreier_sims()
@@ -81,7 +81,7 @@ def _check_cycles_alt_sym(perm):
     ========
 
     >>> from sympy.combinatorics.util import _check_cycles_alt_sym
-    >>> from sympy.combinatorics.permutations import Permutation
+    >>> from sympy.combinatorics import Permutation
     >>> a = Permutation([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12]])
     >>> _check_cycles_alt_sym(a)
     False
@@ -277,7 +277,7 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup
+    >>> from sympy.combinatorics import SymmetricGroup
     >>> from sympy.combinatorics.util import _distribute_gens_by_base
     >>> S = SymmetricGroup(3)
     >>> S.schreier_sims()
@@ -334,7 +334,7 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup
+    >>> from sympy.combinatorics import SymmetricGroup
     >>> from sympy.combinatorics.util import _remove_gens
     >>> from sympy.combinatorics.testutil import _verify_bsgs
     >>> S = SymmetricGroup(15)
@@ -398,7 +398,7 @@ def _strip(g, base, orbits, transversals):
 
     This process is called "sifting". A sift is unsuccessful when a certain
     orbit element is not found or when after the sift the decomposition
-    doesn't end with the identity element.
+    does not end with the identity element.
 
     The argument ``transversals`` is a list of dictionaries that provides
     transversal elements for the orbits ``orbits``.
@@ -419,8 +419,7 @@ def _strip(g, base, orbits, transversals):
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup
-    >>> from sympy.combinatorics.permutations import Permutation
+    >>> from sympy.combinatorics import Permutation, SymmetricGroup
     >>> from sympy.combinatorics.util import _strip
     >>> S = SymmetricGroup(5)
     >>> S.schreier_sims()
@@ -510,7 +509,7 @@ def _strong_gens_from_distr(strong_gens_distr):
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup
+    >>> from sympy.combinatorics import SymmetricGroup
     >>> from sympy.combinatorics.util import (_strong_gens_from_distr,
     ... _distribute_gens_by_base)
     >>> S = SymmetricGroup(3)

@@ -120,9 +120,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         if all(variable.is_commutative for variable in variables):
             monomials_list_comm = []
             for item in combinations_with_replacement(variables, max_degree):
-                powers = dict()
-                for variable in variables:
-                    powers[variable] = 0
+                powers = {variable: 0 for variable in variables}
                 for variable in item:
                     if variable != 1:
                         powers[variable] += 1
@@ -132,9 +130,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         else:
             monomials_list_non_comm = []
             for item in product(variables, repeat=max_degree):
-                powers = dict()
-                for variable in variables:
-                    powers[variable] = 0
+                powers = {variable: 0 for variable in variables}
                 for variable in item:
                     if variable != 1:
                         powers[variable] += 1

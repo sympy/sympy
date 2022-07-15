@@ -1,3 +1,5 @@
+.. _special-functions:
+
 Special
 =======
 

@@ -675,7 +675,7 @@ def test_polymorphism():
         def _eval_simplify(x, **kwargs):
             return S.One
 
-    a = A(5, 2)
+    a = A(S(5), S(2))
     assert simplify(a) == 1
 
 
@@ -1029,6 +1029,12 @@ def test_issue_19484():
     f = Function('f')
     e = x + sign(x + f(x)**3)
     assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
+
+
+def test_issue_23543():
+    # Used to give an error
+    x, y, z = symbols("x y z", commutative=False)
+    assert (x*(y + z/2)).simplify() == x*(2*y + z)/2
 
 
 def test_issue_19161():

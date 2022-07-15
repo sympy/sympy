@@ -1,5 +1,3 @@
-from functools import wraps
-
 from sympy.concrete.summations import Sum
 from sympy.core.function import expand
 from sympy.core.numbers import Integer
@@ -16,17 +14,8 @@ from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry,
     riemann_cyclic_replace, riemann_cyclic, TensMul, tensor_heads, \
     TensorManager, TensExpr, TensorHead, canon_bp, \
     tensorhead, tensorsymmetry, TensorType, substitute_indices
-from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy, ignore_warnings
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 from sympy.matrices import diag
-
-
-def filter_warnings_decorator(f):
-    @wraps(f)
-    def wrapper():
-        with ignore_warnings(SymPyDeprecationWarning):
-            f()
-    return wrapper
 
 def _is_equal(arg1, arg2):
     if isinstance(arg1, TensExpr):
@@ -511,7 +500,7 @@ def test_TensExpr():
     #raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__truediv__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__rtruediv__(t, 'a'))
-    with ignore_warnings(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         # DO NOT REMOVE THIS AFTER DEPRECATION REMOVED:
         raises(ValueError, lambda: A(a, b)**2)
     raises(NotImplementedError, lambda: 2**A(a, b))
@@ -1085,34 +1074,34 @@ def test_contract_delta1():
     t1 = t.contract_delta(delta)
     assert t1.equals(n**2 - 1)
 
-@filter_warnings_decorator
 def test_fun():
-    D = Symbol('D')
-    Lorentz = TensorIndexType('Lorentz', dim=D, dummy_name='L')
-    a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
-    g = Lorentz.metric
+    with warns_deprecated_sympy():
+        D = Symbol('D')
+        Lorentz = TensorIndexType('Lorentz', dim=D, dummy_name='L')
+        a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
+        g = Lorentz.metric
 
-    p, q = tensor_heads('p q', [Lorentz])
-    t = q(c)*p(a)*q(b) + g(a,b)*g(c,d)*q(-d)
-    assert t(a,b,c) == t
-    assert canon_bp(t - t(b,a,c) - q(c)*p(a)*q(b) + q(c)*p(b)*q(a)) == 0
-    assert t(b,c,d) == q(d)*p(b)*q(c) + g(b,c)*g(d,e)*q(-e)
-    t1 = t.substitute_indices((a,b),(b,a))
-    assert canon_bp(t1 - q(c)*p(b)*q(a) - g(a,b)*g(c,d)*q(-d)) == 0
+        p, q = tensor_heads('p q', [Lorentz])
+        t = q(c)*p(a)*q(b) + g(a,b)*g(c,d)*q(-d)
+        assert t(a,b,c) == t
+        assert canon_bp(t - t(b,a,c) - q(c)*p(a)*q(b) + q(c)*p(b)*q(a)) == 0
+        assert t(b,c,d) == q(d)*p(b)*q(c) + g(b,c)*g(d,e)*q(-e)
+        t1 = t.substitute_indices((a,b),(b,a))
+        assert canon_bp(t1 - q(c)*p(b)*q(a) - g(a,b)*g(c,d)*q(-d)) == 0
 
-    # check that g_{a b; c} = 0
-    # example taken from  L. Brewin
-    # "A brief introduction to Cadabra" arxiv:0903.2085
-    # dg_{a b c} = \partial_{a} g_{b c} is symmetric in b, c
-    dg = TensorHead('dg', [Lorentz]*3, TensorSymmetry.direct_product(1, 2))
-    # gamma^a_{b c} is the Christoffel symbol
-    gamma = S.Half*g(a,d)*(dg(-b,-d,-c) + dg(-c,-b,-d) - dg(-d,-b,-c))
-    # t = g_{a b; c}
-    t = dg(-c,-a,-b) - g(-a,-d)*gamma(d,-b,-c) - g(-b,-d)*gamma(d,-a,-c)
-    t = t.contract_metric(g)
-    assert t == 0
-    t = q(c)*p(a)*q(b)
-    assert t(b,c,d) == q(d)*p(b)*q(c)
+        # check that g_{a b; c} = 0
+        # example taken from  L. Brewin
+        # "A brief introduction to Cadabra" arxiv:0903.2085
+        # dg_{a b c} = \partial_{a} g_{b c} is symmetric in b, c
+        dg = TensorHead('dg', [Lorentz]*3, TensorSymmetry.direct_product(1, 2))
+        # gamma^a_{b c} is the Christoffel symbol
+        gamma = S.Half*g(a,d)*(dg(-b,-d,-c) + dg(-c,-b,-d) - dg(-d,-b,-c))
+        # t = g_{a b; c}
+        t = dg(-c,-a,-b) - g(-a,-d)*gamma(d,-b,-c) - g(-b,-d)*gamma(d,-a,-c)
+        t = t.contract_metric(g)
+        assert t == 0
+        t = q(c)*p(a)*q(b)
+        assert t(b,c,d) == q(d)*p(b)*q(c)
 
 def test_TensorManager():
     Lorentz = TensorIndexType('Lorentz', dummy_name='L')
@@ -1270,443 +1259,441 @@ def _get_valued_base_test_variables():
             n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4)
 
 
-@filter_warnings_decorator
 def test_valued_tensor_iter():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    list_BA = [Array([1, 2, 3, 4]), Array([5, 6, 7, 8]), Array([9, 0, -1, -2]), Array([-3, -4, -5, -6])]
-    # iteration on VTensorHead
-    assert list(A) == [E, px, py, pz]
-    assert list(ba_matrix) == [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, -1, -2, -3, -4, -5, -6]
-    assert list(BA) == list_BA
+        list_BA = [Array([1, 2, 3, 4]), Array([5, 6, 7, 8]), Array([9, 0, -1, -2]), Array([-3, -4, -5, -6])]
+        # iteration on VTensorHead
+        assert list(A) == [E, px, py, pz]
+        assert list(ba_matrix) == [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, -1, -2, -3, -4, -5, -6]
+        assert list(BA) == list_BA
 
-    # iteration on VTensMul
-    assert list(A(i1)) == [E, px, py, pz]
-    assert list(BA(i1, i2)) == list_BA
-    assert list(3 * BA(i1, i2)) == [3 * i for i in list_BA]
-    assert list(-5 * BA(i1, i2)) == [-5 * i for i in list_BA]
+        # iteration on VTensMul
+        assert list(A(i1)) == [E, px, py, pz]
+        assert list(BA(i1, i2)) == list_BA
+        assert list(3 * BA(i1, i2)) == [3 * i for i in list_BA]
+        assert list(-5 * BA(i1, i2)) == [-5 * i for i in list_BA]
 
-    # iteration on VTensAdd
-    # A(i1) + A(i1)
-    assert list(A(i1) + A(i1)) == [2*E, 2*px, 2*py, 2*pz]
-    assert BA(i1, i2) - BA(i1, i2) == 0
-    assert list(BA(i1, i2) - 2 * BA(i1, i2)) == [-i for i in list_BA]
+        # iteration on VTensAdd
+        # A(i1) + A(i1)
+        assert list(A(i1) + A(i1)) == [2*E, 2*px, 2*py, 2*pz]
+        assert BA(i1, i2) - BA(i1, i2) == 0
+        assert list(BA(i1, i2) - 2 * BA(i1, i2)) == [-i for i in list_BA]
 
 
-@filter_warnings_decorator
 def test_valued_tensor_covariant_contravariant_elements():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    assert A(-i0)[0] == A(i0)[0]
-    assert A(-i0)[1] == -A(i0)[1]
+        assert A(-i0)[0] == A(i0)[0]
+        assert A(-i0)[1] == -A(i0)[1]
 
-    assert AB(i0, i1)[1, 1] == -1
-    assert AB(i0, -i1)[1, 1] == 1
-    assert AB(-i0, -i1)[1, 1] == -1
-    assert AB(-i0, i1)[1, 1] == 1
+        assert AB(i0, i1)[1, 1] == -1
+        assert AB(i0, -i1)[1, 1] == 1
+        assert AB(-i0, -i1)[1, 1] == -1
+        assert AB(-i0, i1)[1, 1] == 1
 
 
-@filter_warnings_decorator
 def test_valued_tensor_get_matrix():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    matab = AB(i0, i1).get_matrix()
-    assert matab == Matrix([
-                            [1,  0,  0,  0],
-                            [0, -1,  0,  0],
-                            [0,  0, -1,  0],
-                            [0,  0,  0, -1],
-                            ])
-    # when alternating contravariant/covariant with [1, -1, -1, -1] metric
-    # it becomes the identity matrix:
-    assert AB(i0, -i1).get_matrix() == eye(4)
+        matab = AB(i0, i1).get_matrix()
+        assert matab == Matrix([
+                                [1,  0,  0,  0],
+                                [0, -1,  0,  0],
+                                [0,  0, -1,  0],
+                                [0,  0,  0, -1],
+                                ])
+        # when alternating contravariant/covariant with [1, -1, -1, -1] metric
+        # it becomes the identity matrix:
+        assert AB(i0, -i1).get_matrix() == eye(4)
 
-    # covariant and contravariant forms:
-    assert A(i0).get_matrix() == Matrix([E, px, py, pz])
-    assert A(-i0).get_matrix() == Matrix([E, -px, -py, -pz])
+        # covariant and contravariant forms:
+        assert A(i0).get_matrix() == Matrix([E, px, py, pz])
+        assert A(-i0).get_matrix() == Matrix([E, -px, -py, -pz])
 
-
-@filter_warnings_decorator
 def test_valued_tensor_contraction():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    assert (A(i0) * A(-i0)).data == E ** 2 - px ** 2 - py ** 2 - pz ** 2
-    assert (A(i0) * A(-i0)).data == A ** 2
-    assert (A(i0) * A(-i0)).data == A(i0) ** 2
-    assert (A(i0) * B(-i0)).data == -px - 2 * py - 3 * pz
+        assert (A(i0) * A(-i0)).data == E ** 2 - px ** 2 - py ** 2 - pz ** 2
+        assert (A(i0) * A(-i0)).data == A ** 2
+        assert (A(i0) * A(-i0)).data == A(i0) ** 2
+        assert (A(i0) * B(-i0)).data == -px - 2 * py - 3 * pz
 
-    for i in range(4):
-        for j in range(4):
-            assert (A(i0) * B(-i1))[i, j] == [E, px, py, pz][i] * [0, -1, -2, -3][j]
+        for i in range(4):
+            for j in range(4):
+                assert (A(i0) * B(-i1))[i, j] == [E, px, py, pz][i] * [0, -1, -2, -3][j]
 
-    # test contraction on the alternative Minkowski metric: [-1, 1, 1, 1]
-    assert (C(mu0) * C(-mu0)).data == -E ** 2 + px ** 2 + py ** 2 + pz ** 2
+        # test contraction on the alternative Minkowski metric: [-1, 1, 1, 1]
+        assert (C(mu0) * C(-mu0)).data == -E ** 2 + px ** 2 + py ** 2 + pz ** 2
 
-    contrexp = A(i0) * AB(i1, -i0)
-    assert A(i0).rank == 1
-    assert AB(i1, -i0).rank == 2
-    assert contrexp.rank == 1
-    for i in range(4):
-        assert contrexp[i] == [E, px, py, pz][i]
+        contrexp = A(i0) * AB(i1, -i0)
+        assert A(i0).rank == 1
+        assert AB(i1, -i0).rank == 2
+        assert contrexp.rank == 1
+        for i in range(4):
+            assert contrexp[i] == [E, px, py, pz][i]
 
-
-@filter_warnings_decorator
 def test_valued_tensor_self_contraction():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    assert AB(i0, -i0).data == 4
-    assert BA(i0, -i0).data == 2
+        assert AB(i0, -i0).data == 4
+        assert BA(i0, -i0).data == 2
 
 
-@filter_warnings_decorator
 def test_valued_tensor_pow():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    assert C**2 == -E**2 + px**2 + py**2 + pz**2
-    assert C**1 == sqrt(-E**2 + px**2 + py**2 + pz**2)
-    assert C(mu0)**2 == C**2
-    assert C(mu0)**1 == C**1
+        assert C**2 == -E**2 + px**2 + py**2 + pz**2
+        assert C**1 == sqrt(-E**2 + px**2 + py**2 + pz**2)
+        assert C(mu0)**2 == C**2
+        assert C(mu0)**1 == C**1
 
 
-@filter_warnings_decorator
 def test_valued_tensor_expressions():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    x1, x2, x3 = symbols('x1:4')
+        x1, x2, x3 = symbols('x1:4')
 
-    # test coefficient in contraction:
-    rank2coeff = x1 * A(i3) * B(i2)
-    assert rank2coeff[1, 1] == x1 * px
-    assert rank2coeff[3, 3] == 3 * pz * x1
-    coeff_expr = ((x1 * A(i4)) * (B(-i4) / x2)).data
+        # test coefficient in contraction:
+        rank2coeff = x1 * A(i3) * B(i2)
+        assert rank2coeff[1, 1] == x1 * px
+        assert rank2coeff[3, 3] == 3 * pz * x1
+        coeff_expr = ((x1 * A(i4)) * (B(-i4) / x2)).data
 
-    assert coeff_expr.expand() == -px*x1/x2 - 2*py*x1/x2 - 3*pz*x1/x2
+        assert coeff_expr.expand() == -px*x1/x2 - 2*py*x1/x2 - 3*pz*x1/x2
 
-    add_expr = A(i0) + B(i0)
+        add_expr = A(i0) + B(i0)
 
-    assert add_expr[0] == E
-    assert add_expr[1] == px + 1
-    assert add_expr[2] == py + 2
-    assert add_expr[3] == pz + 3
+        assert add_expr[0] == E
+        assert add_expr[1] == px + 1
+        assert add_expr[2] == py + 2
+        assert add_expr[3] == pz + 3
 
-    sub_expr = A(i0) - B(i0)
+        sub_expr = A(i0) - B(i0)
 
-    assert sub_expr[0] == E
-    assert sub_expr[1] == px - 1
-    assert sub_expr[2] == py - 2
-    assert sub_expr[3] == pz - 3
+        assert sub_expr[0] == E
+        assert sub_expr[1] == px - 1
+        assert sub_expr[2] == py - 2
+        assert sub_expr[3] == pz - 3
 
-    assert (add_expr * B(-i0)).data == -px - 2*py - 3*pz - 14
+        assert (add_expr * B(-i0)).data == -px - 2*py - 3*pz - 14
 
-    expr1 = x1*A(i0) + x2*B(i0)
-    expr2 = expr1 * B(i1) * (-4)
-    expr3 = expr2 + 3*x3*AB(i0, i1)
-    expr4 = expr3 / 2
-    assert expr4 * 2 == expr3
-    expr5 = (expr4 * BA(-i1, -i0))
+        expr1 = x1*A(i0) + x2*B(i0)
+        expr2 = expr1 * B(i1) * (-4)
+        expr3 = expr2 + 3*x3*AB(i0, i1)
+        expr4 = expr3 / 2
+        assert expr4 * 2 == expr3
+        expr5 = (expr4 * BA(-i1, -i0))
 
-    assert expr5.data.expand() == 28*E*x1 + 12*px*x1 + 20*py*x1 + 28*pz*x1 + 136*x2 + 3*x3
+        assert expr5.data.expand() == 28*E*x1 + 12*px*x1 + 20*py*x1 + 28*pz*x1 + 136*x2 + 3*x3
 
 
-@filter_warnings_decorator
 def test_valued_tensor_add_scalar():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    # one scalar summand after the contracted tensor
-    expr1 = A(i0)*A(-i0) - (E**2 - px**2 - py**2 - pz**2)
-    assert expr1.data == 0
+        # one scalar summand after the contracted tensor
+        expr1 = A(i0)*A(-i0) - (E**2 - px**2 - py**2 - pz**2)
+        assert expr1.data == 0
 
-    # multiple scalar summands in front of the contracted tensor
-    expr2 = E**2 - px**2 - py**2 - pz**2 - A(i0)*A(-i0)
-    assert expr2.data == 0
+        # multiple scalar summands in front of the contracted tensor
+        expr2 = E**2 - px**2 - py**2 - pz**2 - A(i0)*A(-i0)
+        assert expr2.data == 0
 
-    # multiple scalar summands after the contracted tensor
-    expr3 =  A(i0)*A(-i0) - E**2 + px**2 + py**2 + pz**2
-    assert expr3.data == 0
+        # multiple scalar summands after the contracted tensor
+        expr3 =  A(i0)*A(-i0) - E**2 + px**2 + py**2 + pz**2
+        assert expr3.data == 0
 
-    # multiple scalar summands and multiple tensors
-    expr4 = C(mu0)*C(-mu0) + 2*E**2 - 2*px**2 - 2*py**2 - 2*pz**2 - A(i0)*A(-i0)
-    assert expr4.data == 0
+        # multiple scalar summands and multiple tensors
+        expr4 = C(mu0)*C(-mu0) + 2*E**2 - 2*px**2 - 2*py**2 - 2*pz**2 - A(i0)*A(-i0)
+        assert expr4.data == 0
 
-
-@filter_warnings_decorator
 def test_noncommuting_components():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    euclid = TensorIndexType('Euclidean')
-    euclid.data = [1, 1]
-    i1, i2, i3 = tensor_indices('i1:4', euclid)
+        euclid = TensorIndexType('Euclidean')
+        euclid.data = [1, 1]
+        i1, i2, i3 = tensor_indices('i1:4', euclid)
 
-    a, b, c, d = symbols('a b c d', commutative=False)
-    V1 = TensorHead('V1', [euclid]*2)
-    V1.data = [[a, b], (c, d)]
-    V2 = TensorHead('V2', [euclid]*2)
-    V2.data = [[a, c], [b, d]]
+        a, b, c, d = symbols('a b c d', commutative=False)
+        V1 = TensorHead('V1', [euclid]*2)
+        V1.data = [[a, b], (c, d)]
+        V2 = TensorHead('V2', [euclid]*2)
+        V2.data = [[a, c], [b, d]]
 
-    vtp = V1(i1, i2) * V2(-i2, -i1)
+        vtp = V1(i1, i2) * V2(-i2, -i1)
 
-    assert vtp.data == a**2 + b**2 + c**2 + d**2
-    assert vtp.data != a**2 + 2*b*c + d**2
+        assert vtp.data == a**2 + b**2 + c**2 + d**2
+        assert vtp.data != a**2 + 2*b*c + d**2
 
-    vtp2 = V1(i1, i2)*V1(-i2, -i1)
+        vtp2 = V1(i1, i2)*V1(-i2, -i1)
 
-    assert vtp2.data == a**2 + b*c + c*b + d**2
-    assert vtp2.data != a**2 + 2*b*c + d**2
+        assert vtp2.data == a**2 + b*c + c*b + d**2
+        assert vtp2.data != a**2 + 2*b*c + d**2
 
-    Vc = (b * V1(i1, -i1)).data
-    assert Vc.expand() == b * a + b * d
+        Vc = (b * V1(i1, -i1)).data
+        assert Vc.expand() == b * a + b * d
 
 
-@filter_warnings_decorator
 def test_valued_non_diagonal_metric():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    mmatrix = Matrix(ndm_matrix)
-    assert (NA(n0)*NA(-n0)).data == (NA(n0).get_matrix().T * mmatrix * NA(n0).get_matrix())[0, 0]
+        mmatrix = Matrix(ndm_matrix)
+        assert (NA(n0)*NA(-n0)).data == (NA(n0).get_matrix().T * mmatrix * NA(n0).get_matrix())[0, 0]
 
 
-@filter_warnings_decorator
 def test_valued_assign_numpy_ndarray():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    # this is needed to make sure that a numpy.ndarray can be assigned to a
-    # tensor.
-    arr = [E+1, px-1, py, pz]
-    A.data = Array(arr)
-    for i in range(4):
-            assert A(i0).data[i] == arr[i]
+        # this is needed to make sure that a numpy.ndarray can be assigned to a
+        # tensor.
+        arr = [E+1, px-1, py, pz]
+        A.data = Array(arr)
+        for i in range(4):
+                assert A(i0).data[i] == arr[i]
 
-    qx, qy, qz = symbols('qx qy qz')
-    A(-i0).data = Array([E, qx, qy, qz])
-    for i in range(4):
-        assert A(i0).data[i] == [E, -qx, -qy, -qz][i]
-        assert A.data[i] == [E, -qx, -qy, -qz][i]
+        qx, qy, qz = symbols('qx qy qz')
+        A(-i0).data = Array([E, qx, qy, qz])
+        for i in range(4):
+            assert A(i0).data[i] == [E, -qx, -qy, -qz][i]
+            assert A.data[i] == [E, -qx, -qy, -qz][i]
 
-    # test on multi-indexed tensors.
-    random_4x4_data = [[(i**3-3*i**2)%(j+7) for i in range(4)] for j in range(4)]
-    AB(-i0, -i1).data = random_4x4_data
+        # test on multi-indexed tensors.
+        random_4x4_data = [[(i**3-3*i**2)%(j+7) for i in range(4)] for j in range(4)]
+        AB(-i0, -i1).data = random_4x4_data
 
-    for i in range(4):
-        for j in range(4):
-            assert AB(i0, i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)*(-1 if j else 1)
-            assert AB(-i0, i1).data[i, j] == random_4x4_data[i][j]*(-1 if j else 1)
-            assert AB(i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)
-            assert AB(-i0, -i1).data[i, j] == random_4x4_data[i][j]
+        for i in range(4):
+            for j in range(4):
+                assert AB(i0, i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)*(-1 if j else 1)
+                assert AB(-i0, i1).data[i, j] == random_4x4_data[i][j]*(-1 if j else 1)
+                assert AB(i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)
+                assert AB(-i0, -i1).data[i, j] == random_4x4_data[i][j]
 
-    AB(-i0, i1).data = random_4x4_data
-    for i in range(4):
-        for j in range(4):
-            assert AB(i0, i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)
-            assert AB(-i0, i1).data[i, j] == random_4x4_data[i][j]
-            assert AB(i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)*(-1 if j else 1)
-            assert AB(-i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if j else 1)
+        AB(-i0, i1).data = random_4x4_data
+        for i in range(4):
+            for j in range(4):
+                assert AB(i0, i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)
+                assert AB(-i0, i1).data[i, j] == random_4x4_data[i][j]
+                assert AB(i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if i else 1)*(-1 if j else 1)
+                assert AB(-i0, -i1).data[i, j] == random_4x4_data[i][j]*(-1 if j else 1)
 
 
-@filter_warnings_decorator
 def test_valued_metric_inverse():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    # let's assign some fancy matrix, just to verify it:
-    # (this has no physical sense, it's just testing sympy);
-    # it is symmetrical:
-    md = [[2, 2, 2, 1], [2, 3, 1, 0], [2, 1, 2, 3], [1, 0, 3, 2]]
-    Lorentz.data = md
-    m = Matrix(md)
-    metric = Lorentz.metric
-    minv = m.inv()
+        # let's assign some fancy matrix, just to verify it:
+        # (this has no physical sense, it's just testing sympy);
+        # it is symmetrical:
+        md = [[2, 2, 2, 1], [2, 3, 1, 0], [2, 1, 2, 3], [1, 0, 3, 2]]
+        Lorentz.data = md
+        m = Matrix(md)
+        metric = Lorentz.metric
+        minv = m.inv()
 
-    meye = eye(4)
+        meye = eye(4)
 
-    # the Kronecker Delta:
-    KD = Lorentz.get_kronecker_delta()
+        # the Kronecker Delta:
+        KD = Lorentz.get_kronecker_delta()
 
-    for i in range(4):
-        for j in range(4):
-            assert metric(i0, i1).data[i, j] == m[i, j]
-            assert metric(-i0, -i1).data[i, j] == minv[i, j]
-            assert metric(i0, -i1).data[i, j] == meye[i, j]
-            assert metric(-i0, i1).data[i, j] == meye[i, j]
-            assert metric(i0, i1)[i, j] == m[i, j]
-            assert metric(-i0, -i1)[i, j] == minv[i, j]
-            assert metric(i0, -i1)[i, j] == meye[i, j]
-            assert metric(-i0, i1)[i, j] == meye[i, j]
+        for i in range(4):
+            for j in range(4):
+                assert metric(i0, i1).data[i, j] == m[i, j]
+                assert metric(-i0, -i1).data[i, j] == minv[i, j]
+                assert metric(i0, -i1).data[i, j] == meye[i, j]
+                assert metric(-i0, i1).data[i, j] == meye[i, j]
+                assert metric(i0, i1)[i, j] == m[i, j]
+                assert metric(-i0, -i1)[i, j] == minv[i, j]
+                assert metric(i0, -i1)[i, j] == meye[i, j]
+                assert metric(-i0, i1)[i, j] == meye[i, j]
 
-            assert KD(i0, -i1)[i, j] == meye[i, j]
+                assert KD(i0, -i1)[i, j] == meye[i, j]
 
 
-@filter_warnings_decorator
 def test_valued_canon_bp_swapaxes():
-    (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
-     n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
+    with warns_deprecated_sympy():
+        (A, B, AB, BA, C, Lorentz, E, px, py, pz, LorentzD, mu0, mu1, mu2, ndm, n0, n1,
+         n2, NA, NB, NC, minkowski, ba_matrix, ndm_matrix, i0, i1, i2, i3, i4) = _get_valued_base_test_variables()
 
-    e1 = A(i1)*A(i0)
-    e2 = e1.canon_bp()
-    assert e2 == A(i0)*A(i1)
-    for i in range(4):
-        for j in range(4):
-            assert e1[i, j] == e2[j, i]
-    o1 = B(i2)*A(i1)*B(i0)
-    o2 = o1.canon_bp()
-    for i in range(4):
-        for j in range(4):
-            for k in range(4):
-                assert o1[i, j, k] == o2[j, i, k]
+        e1 = A(i1)*A(i0)
+        e2 = e1.canon_bp()
+        assert e2 == A(i0)*A(i1)
+        for i in range(4):
+            for j in range(4):
+                assert e1[i, j] == e2[j, i]
+        o1 = B(i2)*A(i1)*B(i0)
+        o2 = o1.canon_bp()
+        for i in range(4):
+            for j in range(4):
+                for k in range(4):
+                    assert o1[i, j, k] == o2[j, i, k]
 
 
-@filter_warnings_decorator
 def test_valued_components_with_wrong_symmetry():
-    IT = TensorIndexType('IT', dim=3)
-    i0, i1, i2, i3 = tensor_indices('i0:4', IT)
-    IT.data = [1, 1, 1]
-    A_nosym = TensorHead('A', [IT]*2)
-    A_sym = TensorHead('A', [IT]*2, TensorSymmetry.fully_symmetric(2))
-    A_antisym = TensorHead('A', [IT]*2, TensorSymmetry.fully_symmetric(-2))
+    with warns_deprecated_sympy():
+        IT = TensorIndexType('IT', dim=3)
+        i0, i1, i2, i3 = tensor_indices('i0:4', IT)
+        IT.data = [1, 1, 1]
+        A_nosym = TensorHead('A', [IT]*2)
+        A_sym = TensorHead('A', [IT]*2, TensorSymmetry.fully_symmetric(2))
+        A_antisym = TensorHead('A', [IT]*2, TensorSymmetry.fully_symmetric(-2))
 
-    mat_nosym = Matrix([[1,2,3],[4,5,6],[7,8,9]])
-    mat_sym = mat_nosym + mat_nosym.T
-    mat_antisym = mat_nosym - mat_nosym.T
+        mat_nosym = Matrix([[1,2,3],[4,5,6],[7,8,9]])
+        mat_sym = mat_nosym + mat_nosym.T
+        mat_antisym = mat_nosym - mat_nosym.T
 
-    A_nosym.data = mat_nosym
-    A_nosym.data = mat_sym
-    A_nosym.data = mat_antisym
+        A_nosym.data = mat_nosym
+        A_nosym.data = mat_sym
+        A_nosym.data = mat_antisym
 
-    def assign(A, dat):
-        A.data = dat
+        def assign(A, dat):
+            A.data = dat
 
-    A_sym.data = mat_sym
-    raises(ValueError, lambda: assign(A_sym, mat_nosym))
-    raises(ValueError, lambda: assign(A_sym, mat_antisym))
+        A_sym.data = mat_sym
+        raises(ValueError, lambda: assign(A_sym, mat_nosym))
+        raises(ValueError, lambda: assign(A_sym, mat_antisym))
 
-    A_antisym.data = mat_antisym
-    raises(ValueError, lambda: assign(A_antisym, mat_sym))
-    raises(ValueError, lambda: assign(A_antisym, mat_nosym))
+        A_antisym.data = mat_antisym
+        raises(ValueError, lambda: assign(A_antisym, mat_sym))
+        raises(ValueError, lambda: assign(A_antisym, mat_nosym))
 
-    A_sym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-    A_antisym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        A_sym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        A_antisym.data = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
 
-
-@filter_warnings_decorator
 def test_issue_10972_TensMul_data():
-    Lorentz = TensorIndexType('Lorentz', metric_symmetry=1, dummy_name='i', dim=2)
-    Lorentz.data = [-1, 1]
+    with warns_deprecated_sympy():
+        Lorentz = TensorIndexType('Lorentz', metric_symmetry=1, dummy_name='i', dim=2)
+        Lorentz.data = [-1, 1]
 
-    mu, nu, alpha, beta = tensor_indices('\\mu, \\nu, \\alpha, \\beta',
-                                         Lorentz)
+        mu, nu, alpha, beta = tensor_indices('\\mu, \\nu, \\alpha, \\beta',
+                                             Lorentz)
 
-    u = TensorHead('u', [Lorentz])
-    u.data = [1, 0]
+        u = TensorHead('u', [Lorentz])
+        u.data = [1, 0]
 
-    F = TensorHead('F', [Lorentz]*2, TensorSymmetry.fully_symmetric(-2))
-    F.data = [[0, 1],
-              [-1, 0]]
+        F = TensorHead('F', [Lorentz]*2, TensorSymmetry.fully_symmetric(-2))
+        F.data = [[0, 1],
+                  [-1, 0]]
 
-    mul_1 = F(mu, alpha) * u(-alpha) * F(nu, beta) * u(-beta)
-    assert (mul_1.data == Array([[0, 0], [0, 1]]))
+        mul_1 = F(mu, alpha) * u(-alpha) * F(nu, beta) * u(-beta)
+        assert (mul_1.data == Array([[0, 0], [0, 1]]))
 
-    mul_2 = F(mu, alpha) * F(nu, beta) * u(-alpha) * u(-beta)
-    assert (mul_2.data == mul_1.data)
+        mul_2 = F(mu, alpha) * F(nu, beta) * u(-alpha) * u(-beta)
+        assert (mul_2.data == mul_1.data)
 
-    assert ((mul_1 + mul_1).data == 2 * mul_1.data)
+        assert ((mul_1 + mul_1).data == 2 * mul_1.data)
 
 
-@filter_warnings_decorator
 def test_TensMul_data():
-    Lorentz = TensorIndexType('Lorentz', metric_symmetry=1, dummy_name='L', dim=4)
-    Lorentz.data = [-1, 1, 1, 1]
+    with warns_deprecated_sympy():
+        Lorentz = TensorIndexType('Lorentz', metric_symmetry=1, dummy_name='L', dim=4)
+        Lorentz.data = [-1, 1, 1, 1]
 
-    mu, nu, alpha, beta = tensor_indices('\\mu, \\nu, \\alpha, \\beta',
-                                         Lorentz)
+        mu, nu, alpha, beta = tensor_indices('\\mu, \\nu, \\alpha, \\beta',
+                                             Lorentz)
 
-    u = TensorHead('u', [Lorentz])
-    u.data = [1, 0, 0, 0]
+        u = TensorHead('u', [Lorentz])
+        u.data = [1, 0, 0, 0]
 
-    F = TensorHead('F', [Lorentz]*2, TensorSymmetry.fully_symmetric(-2))
-    Ex, Ey, Ez, Bx, By, Bz = symbols('E_x E_y E_z B_x B_y B_z')
-    F.data = [
-        [0, Ex, Ey, Ez],
-        [-Ex, 0, Bz, -By],
-        [-Ey, -Bz, 0, Bx],
-        [-Ez, By, -Bx, 0]]
+        F = TensorHead('F', [Lorentz]*2, TensorSymmetry.fully_symmetric(-2))
+        Ex, Ey, Ez, Bx, By, Bz = symbols('E_x E_y E_z B_x B_y B_z')
+        F.data = [
+            [0, Ex, Ey, Ez],
+            [-Ex, 0, Bz, -By],
+            [-Ey, -Bz, 0, Bx],
+            [-Ez, By, -Bx, 0]]
 
-    E = F(mu, nu) * u(-nu)
+        E = F(mu, nu) * u(-nu)
 
-    assert ((E(mu) * E(nu)).data ==
-            Array([[0, 0, 0, 0],
-                         [0, Ex ** 2, Ex * Ey, Ex * Ez],
-                         [0, Ex * Ey, Ey ** 2, Ey * Ez],
-                         [0, Ex * Ez, Ey * Ez, Ez ** 2]])
-            )
+        assert ((E(mu) * E(nu)).data ==
+                Array([[0, 0, 0, 0],
+                             [0, Ex ** 2, Ex * Ey, Ex * Ez],
+                             [0, Ex * Ey, Ey ** 2, Ey * Ez],
+                             [0, Ex * Ez, Ey * Ez, Ez ** 2]])
+                )
 
-    assert ((E(mu) * E(nu)).canon_bp().data == (E(mu) * E(nu)).data)
+        assert ((E(mu) * E(nu)).canon_bp().data == (E(mu) * E(nu)).data)
 
-    assert ((F(mu, alpha) * F(beta, nu) * u(-alpha) * u(-beta)).data ==
-            - (E(mu) * E(nu)).data
-            )
-    assert ((F(alpha, mu) * F(beta, nu) * u(-alpha) * u(-beta)).data ==
-            (E(mu) * E(nu)).data
-            )
+        assert ((F(mu, alpha) * F(beta, nu) * u(-alpha) * u(-beta)).data ==
+                - (E(mu) * E(nu)).data
+                )
+        assert ((F(alpha, mu) * F(beta, nu) * u(-alpha) * u(-beta)).data ==
+                (E(mu) * E(nu)).data
+                )
 
-    g = TensorHead('g', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
-    g.data = Lorentz.data
+        g = TensorHead('g', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
+        g.data = Lorentz.data
 
-    # tensor 'perp' is orthogonal to vector 'u'
-    perp = u(mu) * u(nu) + g(mu, nu)
+        # tensor 'perp' is orthogonal to vector 'u'
+        perp = u(mu) * u(nu) + g(mu, nu)
 
-    mul_1 = u(-mu) * perp(mu, nu)
-    assert (mul_1.data == Array([0, 0, 0, 0]))
+        mul_1 = u(-mu) * perp(mu, nu)
+        assert (mul_1.data == Array([0, 0, 0, 0]))
 
-    mul_2 = u(-mu) * perp(mu, alpha) * perp(nu, beta)
-    assert (mul_2.data == Array.zeros(4, 4, 4))
+        mul_2 = u(-mu) * perp(mu, alpha) * perp(nu, beta)
+        assert (mul_2.data == Array.zeros(4, 4, 4))
 
-    Fperp = perp(mu, alpha) * perp(nu, beta) * F(-alpha, -beta)
-    assert (Fperp.data[0, :] == Array([0, 0, 0, 0]))
-    assert (Fperp.data[:, 0] == Array([0, 0, 0, 0]))
+        Fperp = perp(mu, alpha) * perp(nu, beta) * F(-alpha, -beta)
+        assert (Fperp.data[0, :] == Array([0, 0, 0, 0]))
+        assert (Fperp.data[:, 0] == Array([0, 0, 0, 0]))
 
-    mul_3 = u(-mu) * Fperp(mu, nu)
-    assert (mul_3.data == Array([0, 0, 0, 0]))
+        mul_3 = u(-mu) * Fperp(mu, nu)
+        assert (mul_3.data == Array([0, 0, 0, 0]))
 
+        # Test the deleter
+        del g.data
 
-@filter_warnings_decorator
 def test_issue_11020_TensAdd_data():
-    Lorentz = TensorIndexType('Lorentz', metric_symmetry=1, dummy_name='i', dim=2)
-    Lorentz.data = [-1, 1]
+    with warns_deprecated_sympy():
+        Lorentz = TensorIndexType('Lorentz', metric_symmetry=1, dummy_name='i', dim=2)
+        Lorentz.data = [-1, 1]
 
-    a, b, c, d = tensor_indices('a, b, c, d', Lorentz)
-    i0, i1 = tensor_indices('i_0:2', Lorentz)
+        a, b, c, d = tensor_indices('a, b, c, d', Lorentz)
+        i0, i1 = tensor_indices('i_0:2', Lorentz)
 
-    # metric tensor
-    g = TensorHead('g', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
-    g.data = Lorentz.data
+        # metric tensor
+        g = TensorHead('g', [Lorentz]*2, TensorSymmetry.fully_symmetric(2))
+        g.data = Lorentz.data
 
-    u = TensorHead('u', [Lorentz])
-    u.data = [1, 0]
+        u = TensorHead('u', [Lorentz])
+        u.data = [1, 0]
 
-    add_1 = g(b, c) * g(d, i0) * u(-i0) - g(b, c) * u(d)
-    assert (add_1.data == Array.zeros(2, 2, 2))
-    # Now let us replace index `d` with `a`:
-    add_2 = g(b, c) * g(a, i0) * u(-i0) - g(b, c) * u(a)
-    assert (add_2.data == Array.zeros(2, 2, 2))
+        add_1 = g(b, c) * g(d, i0) * u(-i0) - g(b, c) * u(d)
+        assert (add_1.data == Array.zeros(2, 2, 2))
+        # Now let us replace index `d` with `a`:
+        add_2 = g(b, c) * g(a, i0) * u(-i0) - g(b, c) * u(a)
+        assert (add_2.data == Array.zeros(2, 2, 2))
 
-    # some more tests
-    # perp is tensor orthogonal to u^\mu
-    perp = u(a) * u(b) + g(a, b)
-    mul_1 = u(-a) * perp(a, b)
-    assert (mul_1.data == Array([0, 0]))
+        # some more tests
+        # perp is tensor orthogonal to u^\mu
+        perp = u(a) * u(b) + g(a, b)
+        mul_1 = u(-a) * perp(a, b)
+        assert (mul_1.data == Array([0, 0]))
 
-    mul_2 = u(-c) * perp(c, a) * perp(d, b)
-    assert (mul_2.data == Array.zeros(2, 2, 2))
+        mul_2 = u(-c) * perp(c, a) * perp(d, b)
+        assert (mul_2.data == Array.zeros(2, 2, 2))
 
 
 def test_index_iteration():
@@ -1840,6 +1827,7 @@ def test_tensor_replacement():
     assert expr.replace_with_arrays(repl) == Array([[1, -2], [3, -4]])
     assert expr.replace_with_arrays(repl, [i, j]) == Array([[1, -2], [3, -4]])
     assert expr.replace_with_arrays(repl, [i, -j]) == Array([[1, 2], [3, 4]])
+    assert expr.replace_with_arrays(repl, [Symbol("i"), -Symbol("j")]) == Array([[1, 2], [3, 4]])
     assert expr.replace_with_arrays(repl, [-i, j]) == Array([[1, -2], [-3, 4]])
     assert expr.replace_with_arrays(repl, [-i, -j]) == Array([[1, 2], [-3, -4]])
     assert expr.replace_with_arrays(repl, [j, i]) == Array([[1, 3], [-2, -4]])
@@ -1987,3 +1975,7 @@ def test_TensorType():
         Lorentz = TensorIndexType('Lorentz')
         S2 = TensorType([Lorentz]*2, sym2)
         assert isinstance(S2, TensorType)
+
+def test_dummy_fmt():
+    with warns_deprecated_sympy():
+        TensorIndexType('Lorentz', dummy_fmt='L')

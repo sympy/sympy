@@ -623,11 +623,12 @@ another.  This works for any function in SymPy, not just special functions.
 To rewrite an expression in terms of a function, use
 ``expr.rewrite(function)``.  For example,
 
-    >>> tan(x).rewrite(sin)
-         2
-    2⋅sin (x)
-    ─────────
-     sin(2⋅x)
+    >>> tan(x).rewrite(cos)
+       ⎛    π⎞
+    cos⎜x - ─⎟
+       ⎝    2⎠
+    ──────────
+      cos(x)
     >>> factorial(x).rewrite(gamma)
     Γ(x + 1)
 
@@ -836,12 +837,6 @@ Now we repeat this process
                         a₄
 
 
-.. sidebar:: Quick Tip
-
-   You can execute multiple lines at once in SymPy Live.  Typing
-   ``Shift-Enter`` instead of ``Enter`` will enter a newline instead of
-   executing.
-
 Of course, this exercise seems pointless, because we already know that our
 ``frac`` is ``list_to_frac([a0, a1, a2, a3, a4])``.  So try the following
 exercise.  Take a list of symbols and randomize them, and create the canceled
@@ -854,8 +849,7 @@ example
     >>> orig_frac = frac = cancel(list_to_frac(l))
     >>> del l
 
-Click on "Run code block in SymPy Live" on the definition of ``list_to_frac()``
-above, and then on the above example, and try to reproduce ``l`` from
+In SymPy, on the above example, try to reproduce ``l`` from
 ``frac``.  I have deleted ``l`` at the end to remove the temptation for
 peeking (you can check your answer at the end by calling
 ``cancel(list_to_frac(l))`` on the list that you generate at the end, and

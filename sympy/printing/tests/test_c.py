@@ -11,7 +11,7 @@ from sympy.functions import (
 from sympy.sets import Range
 from sympy.logic import ITE, Implies, Equivalent
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
@@ -814,7 +814,10 @@ def test_ccode_Type():
 
 
 def test_ccode_codegen_ast():
-    assert ccode(Comment("this is a comment")) == "// this is a comment"
+    # Note that C only allows comments of the form /* ... */, double forward
+    # slash is not standard C, and some C compilers will grind to a halt upon
+    # encountering them.
+    assert ccode(Comment("this is a comment")) == "/* this is a comment */"  # not //
     assert ccode(While(abs(x) > 1, [aug_assign(x, '-', 1)])) == (
         'while (fabs(x) > 1) {\n'
         '   x -= 1;\n'
@@ -846,12 +849,6 @@ def test_ccode_codegen_ast():
         'pwer(x);',
         'return x;',
     ])
-
-def test_ccode_submodule():
-    # Test the compatibility sympy.printing.ccode module imports
-    with warns_deprecated_sympy():
-        import sympy.printing.ccode # noqa:F401
-
 
 def test_ccode_UnevaluatedExpr():
     assert ccode(UnevaluatedExpr(y * x) + z) == "z + x*y"

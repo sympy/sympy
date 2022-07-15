@@ -1,3 +1,6 @@
+=====================
+Docstring Style Guide
+=====================
 
 General Guidelines
 --------------------
@@ -72,9 +75,6 @@ The following lists the processing tools:
   * ``matplotlib.sphinxext.plot_directive``: Provides directives for included
     matplotlib generated figures in reStructuredText. See
     https://matplotlib.org/devel/plot_directive.html for more info.
-  * ``sympylive``: Adds a button on each example in the HTML documentation that
-    opens the example in SymPy Live. *No bearing on documentation source
-    format.*
 
 Everything supported by the above processing tools is available for use in the
 SymPy documentation, but this style guide supersedes any recommendations made
@@ -115,11 +115,9 @@ This is the main place where users go to learn how to use SymPy. It contains a
 tutorial for SymPy as well as technical documentation for all of the modules.
 The source files are hosted in the main SymPy repository in the `doc directory
 <https://github.com/sympy/sympy/tree/master/doc>`_ at and are built using the
-`Sphinx site generator <http://www.sphinx-doc.org/en/master/>`_ and uploaded to
-the docs.sympy.org site automatically. The docs website also contains a built-
-in shell (SymPy Live) that allows users to interactively execute examples.
-There are two primary types of pages that are generated from different source
-files in the docs directory:
+`Sphinx site generator <http://www.sphinx-doc.org/en/master/>`_ and uploaded
+to the docs.sympy.org site automatically. There are two primary types of pages
+that are generated from different source files in the docs directory:
 
 * Narrative Pages: reStructuredText files that correspond to manually written
   documentation pages not present in the Python source code. Examples are the
@@ -171,6 +169,19 @@ collective documents, tutorials, and guides that teach users how to use SymPy.
 Reference documentation should go in the docstrings and be pulled into the RST
 with autodoc. The RST itself should only have narrative style documentation
 that is not a reference for a single specific function.
+
+Documentation using Markdown
+----------------------------
+
+Narrative documentation can be written using either Restructured Text
+(``.rst``) or Markdown (``.md``). Markdown documentation uses `MyST
+<https://myst-parser.readthedocs.io/en/latest/index.html>`_. See `this guide
+<https://myst-parser.readthedocs.io/en/latest/syntax/syntax.html>`_ for more
+information on how to write documents in MArkdown. Markdown is only supported
+for narrative documentation. Docstrings should continue to use RST syntax. Any
+part of this style guide that is not specific to RST syntax should still apply
+to Markdown documents.
+
 
 .. _style_guide_best_practices_for_writing_documentation:
 

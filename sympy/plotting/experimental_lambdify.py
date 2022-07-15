@@ -192,7 +192,7 @@ class lambdify:
             warnings.warn(
                 'The evaluation of the expression is problematic. '
                 'We are trying a failback method that may still work. '
-                'Please report this as a bug.')
+                'Please report this as a bug.', stacklevel=2)
             return self.__call__(args)
 
 
@@ -265,7 +265,7 @@ class Lambdifier:
             print(newexpr)
         eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
         self.eval_str = eval_str
-        exec("from __future__ import division; MYNEWLAMBDA = %s" % eval_str, namespace)
+        exec("MYNEWLAMBDA = %s" % eval_str, namespace)
         self.lambda_func = namespace['MYNEWLAMBDA']
 
     def __call__(self, *args, **kwargs):

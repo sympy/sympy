@@ -10,7 +10,7 @@ from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.simplify.simplify import signsimp
 
 
-from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises
 
 from sympy.core.expr import unchanged
 
@@ -27,6 +27,7 @@ def test_DiracDelta():
     assert DiracDelta(5.1) == 0
     assert DiracDelta(-pi) == 0
     assert DiracDelta(5, 7) == 0
+    assert DiracDelta(x, 0) == DiracDelta(x)
     assert DiracDelta(i) == 0
     assert DiracDelta(j) == 0
     assert DiracDelta(k) == 0
@@ -69,16 +70,11 @@ def test_DiracDelta():
     assert DiracDelta(x - y) != DiracDelta(y - x)
     assert signsimp(DiracDelta(x - y) - DiracDelta(y - x)) == 0
 
-    with warns_deprecated_sympy():
-        assert DiracDelta(x*y).simplify(x) == DiracDelta(x)/abs(y)
-    with warns_deprecated_sympy():
-        assert DiracDelta(x*y).simplify(y) == DiracDelta(y)/abs(x)
-    with warns_deprecated_sympy():
-        assert DiracDelta(x**2*y).simplify(x) == DiracDelta(x**2*y)
-    with warns_deprecated_sympy():
-        assert DiracDelta(y).simplify(x) == DiracDelta(y)
-    with warns_deprecated_sympy():
-        assert DiracDelta((x - 1)*(x - 2)*(x - 3)).simplify(x) == (
+    assert DiracDelta(x*y).expand(diracdelta=True, wrt=x) == DiracDelta(x)/abs(y)
+    assert DiracDelta(x*y).expand(diracdelta=True, wrt=y) == DiracDelta(y)/abs(x)
+    assert DiracDelta(x**2*y).expand(diracdelta=True, wrt=x) == DiracDelta(x**2*y)
+    assert DiracDelta(y).expand(diracdelta=True, wrt=x) == DiracDelta(y)
+    assert DiracDelta((x - 1)*(x - 2)*(x - 3)).expand(diracdelta=True) == (
             DiracDelta(x - 3)/2 + DiracDelta(x - 2) + DiracDelta(x - 1)/2)
 
     raises(ArgumentIndexError, lambda: DiracDelta(x).fdiff(2))
@@ -124,17 +120,17 @@ def test_heaviside():
 def test_rewrite():
     x, y = Symbol('x', real=True), Symbol('y')
     assert Heaviside(x).rewrite(Piecewise) == (
-        Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, x > 0)))
+        Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, True)))
     assert Heaviside(y).rewrite(Piecewise) == (
-        Piecewise((0, y < 0), (Heaviside(0), Eq(y, 0)), (1, y > 0)))
+        Piecewise((0, y < 0), (Heaviside(0), Eq(y, 0)), (1, True)))
     assert Heaviside(x, y).rewrite(Piecewise) == (
-        Piecewise((0, x < 0), (y, Eq(x, 0)), (1, x > 0)))
+        Piecewise((0, x < 0), (y, Eq(x, 0)), (1, True)))
     assert Heaviside(x, 0).rewrite(Piecewise) == (
-        Piecewise((0, x <= 0), (1, x > 0)))
+        Piecewise((0, x <= 0), (1, True)))
     assert Heaviside(x, 1).rewrite(Piecewise) == (
-        Piecewise((0, x < 0), (1, x >= 0)))
+        Piecewise((0, x < 0), (1, True)))
     assert Heaviside(x, nan).rewrite(Piecewise) == (
-        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, x > 0)))
+        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, True)))
 
     assert Heaviside(x).rewrite(sign) == \
         Heaviside(x, H0=Heaviside(0)).rewrite(sign) == \

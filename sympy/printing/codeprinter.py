@@ -69,6 +69,18 @@ class CodePrinter(StrPrinter):
     # may be supported
     # function_to_rewrite : (function_to_rewrite_to, iterable_with_other_functions_required)
     _rewriteable_functions = {
+            'cot': ('tan', []),
+            'csc': ('sin', []),
+            'sec': ('cos', []),
+            'acot': ('atan', []),
+            'acsc': ('asin', []),
+            'asec': ('acos', []),
+            'coth': ('exp', []),
+            'csch': ('exp', []),
+            'sech': ('exp', []),
+            'acoth': ('log', []),
+            'acsch': ('log', []),
+            'asech': ('log', []),
             'catalan': ('gamma', []),
             'fibonacci': ('sqrt', []),
             'lucas': ('sqrt', []),

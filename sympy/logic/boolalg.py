@@ -15,7 +15,7 @@ from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
-from sympy.core.sympify import converter, _sympify, sympify
+from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
@@ -111,7 +111,7 @@ class Boolean(Basic):
         ========
 
         >>> from sympy.abc import A, B, C
-        >>> from sympy.logic.boolalg import And, Or, Not
+        >>> from sympy import And, Or, Not
         >>> (A >> B).equals(~B >> ~A)
         True
         >>> Not(And(A, B, C)).equals(And(Not(A), Not(B), Not(C)))
@@ -299,7 +299,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     case.  Finally, for boolean flags, it's better to just use ``if x``
     instead of ``if x is True``. To quote PEP 8:
 
-    Don't compare boolean values to ``True`` or ``False``
+    Do not compare boolean values to ``True`` or ``False``
     using ``==``.
 
     * Yes:   ``if greeting:``
@@ -347,6 +347,13 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
 
     def __hash__(self):
         return hash(True)
+
+    def __eq__(self, other):
+        if other is True:
+            return True
+        if other is False:
+            return False
+        return super().__eq__(other)
 
     @property
     def negated(self):
@@ -416,6 +423,13 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     def __hash__(self):
         return hash(False)
 
+    def __eq__(self, other):
+        if other is True:
+            return False
+        if other is False:
+            return True
+        return super().__eq__(other)
+
     @property
     def negated(self):
         return S.true
@@ -443,7 +457,7 @@ false = BooleanFalse()
 S.true = true
 S.false = false
 
-converter[bool] = lambda x: S.true if x else S.false
+_sympy_converter[bool] = lambda x: S.true if x else S.false
 
 
 class BooleanFunction(Application, Boolean):
@@ -566,7 +580,7 @@ class And(LatticeOp, BooleanFunction):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.logic.boolalg import And
+    >>> from sympy import And
     >>> x & y
     x & y
 
@@ -575,7 +589,7 @@ class And(LatticeOp, BooleanFunction):
 
     The ``&`` operator is provided as a convenience, but note that its use
     here is different from its normal use in Python, which is bitwise
-    and. Hence, ``And(a, b)`` and ``a & b`` will return different things if
+    and. Hence, ``And(a, b)`` and ``a & b`` will produce different results if
     ``a`` and ``b`` are integers.
 
     >>> And(x, y).subs(x, 1)
@@ -726,7 +740,7 @@ class Or(LatticeOp, BooleanFunction):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.logic.boolalg import Or
+    >>> from sympy import Or
     >>> x | y
     x | y
 
@@ -832,7 +846,7 @@ class Not(BooleanFunction):
     Examples
     ========
 
-    >>> from sympy.logic.boolalg import Not, And, Or
+    >>> from sympy import Not, And, Or
     >>> from sympy.abc import x, A, B
     >>> Not(True)
     False
@@ -1338,6 +1352,9 @@ class ITE(BooleanFunction):
     ``ITE(A, B, C)`` evaluates and returns the result of B if A is true
     else it returns the result of C. All args must be Booleans.
 
+    From a logic gate perspective, ITE corresponds to a 2-to-1 multiplexer,
+    where A is the select signal.
+
     Examples
     ========
 
@@ -1441,7 +1458,7 @@ class ITE(BooleanFunction):
         return self.to_nnf().as_set()
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        from sympy.functions import Piecewise
+        from sympy.functions.elementary.piecewise import Piecewise
         return Piecewise((args[1], args[0]), (args[2], True))
 
 
@@ -1638,7 +1655,8 @@ def to_nnf(expr, simplify=True):
     Converts ``expr`` to Negation Normal Form (NNF).
 
     A logical expression is in NNF if it
-    contains only And, Or and Not, and Not is applied only to literals.
+    contains only :py:class:`~.And`, :py:class:`~.Or` and :py:class:`~.Not`,
+    and :py:class:`~.Not` is applied only to literals.
     If ``simplify`` is ``True``, the result contains no redundant clauses.
 
     Examples
@@ -1663,8 +1681,8 @@ def to_cnf(expr, simplify=False, force=False):
     form: ``((A | ~B | ...) & (B | C | ...) & ...)``.
     If ``simplify`` is ``True``, ``expr`` is evaluated to its simplest CNF
     form using the Quine-McCluskey algorithm; this may take a long
-    time if there are more than 8 variables and requires that the
-    ``force`` flag be set to ``True`` (default is ``False``).
+    time. If there are more than 8 variables the  `force`` flag must be set
+    to ``True`` to simplify (default is ``False``).
 
     Examples
     ========
@@ -1705,8 +1723,8 @@ def to_dnf(expr, simplify=False, force=False):
     form: ``((A & ~B & ...) | (B & C & ...) | ...)``.
     If ``simplify`` is ``True``, ``expr`` is evaluated to its simplest DNF form using
     the Quine-McCluskey algorithm; this may take a long
-    time if there are more than 8 variables and requires that the
-    ``force`` flag be set to ``True`` (default is ``False``).
+    time. If there are more than 8 variables, the ``force`` flag must be set to
+    ``True`` to simplify (default is ``False``).
 
     Examples
     ========
@@ -1754,6 +1772,7 @@ def is_anf(expr):
 
     Examples
     ========
+
     >>> from sympy.logic.boolalg import And, Not, Xor, true, is_anf
     >>> from sympy.abc import A, B, C
     >>> is_anf(true)
@@ -1799,7 +1818,8 @@ def is_nnf(expr, simplified=True):
     Checks if ``expr`` is in Negation Normal Form (NNF).
 
     A logical expression is in NNF if it
-    contains only And, Or and Not, and Not is applied only to literals.
+    contains only :py:class:`~.And`, :py:class:`~.Or` and :py:class:`~.Not`,
+    and :py:class:`~.Not` is applied only to literals.
     If ``simplified`` is ``True``, checks if result contains no redundant clauses.
 
     Examples
@@ -1906,7 +1926,8 @@ def _is_form(expr, function1, function2):
 
 def eliminate_implications(expr):
     """
-    Change ``Implies`` and ``Equivalent`` into ``And``, ``Or``, and ``Not``.
+    Change :py:class:`~.Implies` and :py:class:`~.Equivalent` into
+    :py:class:`~.And`, :py:class:`~.Or`, and :py:class:`~.Not`.
     That is, return an expression that is equivalent to ``expr``, but has only
     ``&``, ``|``, and ``~`` as logical
     operators.
@@ -1991,7 +2012,7 @@ def to_int_repr(clauses, symbols):
 
 def term_to_integer(term):
     """
-    Return an integer corresponding to the base-2 digits given by ``term``.
+    Return an integer corresponding to the base-2 digits given by *term*.
 
     Parameters
     ==========
@@ -2122,7 +2143,7 @@ def _convert_to_varsPOS(maxterm, variables):
 
 def _convert_to_varsANF(term, variables):
     """
-    Converts a term in the expansion of a function from binary to it's
+    Converts a term in the expansion of a function from binary to its
     variable form (for ANF).
 
     Parameters
@@ -2248,7 +2269,7 @@ def _rem_redundancy(l1, terms):
                                     dommatrix[row2i][primei] = 0
                                     colcount[primei] -= 1
 
-        colcache = dict()
+        colcache = {}
 
         for coli in range(nl1):
             # Still non-dominated?
@@ -2331,12 +2352,12 @@ def SOPform(variables, minterms, dontcares=None):
     """
     The SOPform function uses simplified_pairs and a redundant group-
     eliminating algorithm to convert the list of all input combos that
-    generate '1' (the minterms) into the smallest Sum of Products form.
+    generate '1' (the minterms) into the smallest sum-of-products form.
 
     The variables must be given as the first argument.
 
-    Return a logical Or function (i.e., the "sum of products" or "SOP"
-    form) that gives the desired outcome. If there are inputs that can
+    Return a logical :py:class:`~.Or` function (i.e., the "sum of products" or
+    "SOP" form) that gives the desired outcome. If there are inputs that can
     be ignored, pass them as a list, too.
 
     The result will be one of the (perhaps many) functions that satisfy
@@ -2406,12 +2427,12 @@ def POSform(variables, minterms, dontcares=None):
     """
     The POSform function uses simplified_pairs and a redundant-group
     eliminating algorithm to convert the list of all input combinations
-    that generate '1' (the minterms) into the smallest Product of Sums form.
+    that generate '1' (the minterms) into the smallest product-of-sums form.
 
     The variables must be given as the first argument.
 
-    Return a logical And function (i.e., the "product of sums" or "POS"
-    form) that gives the desired outcome. If there are inputs that can
+    Return a logical :py:class:`~.And` function (i.e., the "product of sums"
+    or "POS" form) that gives the desired outcome. If there are inputs that can
     be ignored, pass them as a list, too.
 
     The result will be one of the (perhaps many) functions that satisfy
@@ -2485,11 +2506,11 @@ def ANFform(variables, truthvalues):
 
     The variables must be given as the first argument.
 
-    Return True, False, logical And funciton (i.e., the
-    "Zhegalkin monomial") or logical Xor function (i.e.,
+    Return True, False, logical :py:class:`~.And` funciton (i.e., the
+    "Zhegalkin monomial") or logical :py:class:`~.Xor` function (i.e.,
     the "Zhegalkin polynomial"). When True and False
     are represented by 1 and 0, respectively, then
-    And is multiplication and Xor is addition.
+    :py:class:`~.And` is multiplication and :py:class:`~.Xor` is addition.
 
     Formally a "Zhegalkin monomial" is the product (logical
     And) of a finite set of distinct variables, including
@@ -2723,7 +2744,8 @@ def _find_predicates(expr):
 def simplify_logic(expr, form=None, deep=True, force=False):
     """
     This function simplifies a boolean function to its simplified version
-    in SOP or POS form. The return type is an Or or And object in SymPy.
+    in SOP or POS form. The return type is an :py:class:`~.Or` or
+    :py:class:`~.And` object in SymPy.
 
     Parameters
     ==========
@@ -2789,8 +2811,8 @@ def simplify_logic(expr, form=None, deep=True, force=False):
         return expr
     # Replace Relationals with Dummys to possibly
     # reduce the number of variables
-    repl = dict()
-    undo = dict()
+    repl = {}
+    undo = {}
     from sympy.core.symbol import Dummy
     variables = expr.atoms(Relational)
     while variables:
@@ -3422,3 +3444,67 @@ def simplify_univariate(expr):
                 c = And(a < x, x < b)
         args.append(c)
     return Or(*args)
+
+
+# Classes corresponding to logic gates
+# Used in gateinputcount method
+BooleanGates = (And, Or, Xor, Nand, Nor, Not, Xnor, ITE)
+
+def gateinputcount(expr):
+    """
+    Return the total number of inputs for the logic gates realizing the
+    Boolean expression.
+
+    Returns
+    =======
+
+    int
+        Number of gate inputs
+
+    Note
+    ====
+
+    Not all Boolean functions count as gate here, only those that are
+    considered to be standard gates. These are: :py:class:`~.And`,
+    :py:class:`~.Or`, :py:class:`~.Xor`, :py:class:`~.Not`, and
+    :py:class:`~.ITE` (multiplexer). :py:class:`~.Nand`, :py:class:`~.Nor`,
+    and :py:class:`~.Xnor` will be evaluated to ``Not(And())`` etc.
+
+    Examples
+    ========
+
+    >>> from sympy.logic import And, Or, Nand, Not, gateinputcount
+    >>> from sympy.abc import x, y, z
+    >>> expr = And(x, y)
+    >>> gateinputcount(expr)
+    2
+    >>> gateinputcount(Or(expr, z))
+    4
+
+    Note that ``Nand`` is automatically evaluated to ``Not(And())`` so
+
+    >>> gateinputcount(Nand(x, y, z))
+    4
+    >>> gateinputcount(Not(And(x, y, z)))
+    4
+
+    Although this can be avoided by using ``evaluate=False``
+
+    >>> gateinputcount(Nand(x, y, z, evaluate=False))
+    3
+
+    Also note that a comparison will count as a Boolean variable:
+
+    >>> gateinputcount(And(x > z, y >= 2))
+    2
+
+    As will a symbol:
+    >>> gateinputcount(x)
+    0
+
+    """
+    if not isinstance(expr, Boolean):
+        raise TypeError("Expression must be Boolean")
+    if isinstance(expr, BooleanGates):
+        return len(expr.args) + sum(gateinputcount(x) for x in expr.args)
+    return 0

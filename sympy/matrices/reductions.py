@@ -1,9 +1,6 @@
 from types import FunctionType
 
-from sympy.simplify.simplify import (
-    simplify as _simplify, dotprodsimp as _dotprodsimp)
-
-from .utilities import _get_intermediate_simp, _iszero
+from .utilities import _get_intermediate_simp, _iszero, _dotprodsimp, _simplify
 from .determinant import _find_reasonable_pivot
 
 
@@ -290,6 +287,24 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     [0, 1]])
     >>> rref_pivots
     (0, 1)
+
+    ``iszerofunc`` can correct rounding errors in matrices with float
+    values. In the following example, calling ``rref()`` leads to
+    floating point errors, incorrectly row reducing the matrix.
+    ``iszerofunc= lambda x: abs(x)<1e-9`` sets sufficiently small numbers
+    to zero, avoiding this error.
+
+    >>> m = Matrix([[0.9, -0.1, -0.2, 0], [-0.8, 0.9, -0.4, 0], [-0.1, -0.8, 0.6, 0]])
+    >>> m.rref()
+    (Matrix([
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0]]), (0, 1, 2))
+    >>> m.rref(iszerofunc=lambda x:abs(x)<1e-9)
+    (Matrix([
+    [1, 0, -0.301369863013699, 0],
+    [0, 1, -0.712328767123288, 0],
+    [0, 0,         0,          0]]), (0, 1))
 
     Notes
     =====

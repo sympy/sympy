@@ -1,6 +1,7 @@
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.add import Add
 from sympy.core.function import (Lambda, diff)
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.power import Pow
@@ -10,7 +11,8 @@ from sympy.functions.elementary.complexes import (arg, conjugate, im, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh, coth, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, atan2, cos, cot, csc, sec, sin, sinc, tan)
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, atan2,
+                                                      cos, cot, csc, sec, sin, sinc, tan)
 from sympy.functions.special.bessel import (besselj, jn)
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.matrices.dense import Matrix
@@ -48,6 +50,7 @@ na = Symbol('na', nonzero=True, algebraic=True)
 
 def test_sin():
     x, y = symbols('x y')
+    z = symbols('z', imaginary=True)
 
     assert sin.nargs == FiniteSet(1)
     assert sin(nan) is nan
@@ -64,6 +67,7 @@ def test_sin():
 
     assert sin(0) == 0
 
+    assert sin(z*I) == I*sinh(z)
     assert sin(asin(x)) == x
     assert sin(atan(x)) == x / sqrt(1 + x**2)
     assert sin(acos(x)) == sqrt(1 - x**2)
@@ -160,7 +164,7 @@ def test_sin():
                        Interval(0, 1)))
 
     for d in list(range(1, 22)) + [60, 85]:
-        for n in range(0, d*2 + 1):
+        for n in range(d*2 + 1):
             x = n*pi/d
             e = abs( float(sin(x)) - sin(float(x)) )
             assert e < 1e-12
@@ -189,7 +193,9 @@ def test_sin_series():
 def test_sin_rewrite():
     assert sin(x).rewrite(exp) == -I*(exp(I*x) - exp(-I*x))/2
     assert sin(x).rewrite(tan) == 2*tan(x/2)/(1 + tan(x/2)**2)
-    assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
+    assert sin(x).rewrite(cot) == \
+        Piecewise((0, Eq(im(x), 0) & Eq(Mod(x, pi), 0)),
+                  (2*cot(x/2)/(cot(x/2)**2 + 1), True))
     assert sin(sinh(x)).rewrite(
         exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, sinh(3)).n()
     assert sin(cosh(x)).rewrite(
@@ -384,7 +390,7 @@ def test_cos():
     assert cos(2*k*pi) == 1
 
     for d in list(range(1, 22)) + [60, 85]:
-        for n in range(0, 2*d + 1):
+        for n in range(2*d + 1):
             x = n*pi/d
             e = abs( float(cos(x)) - cos(float(x)) )
             assert e < 1e-12
@@ -406,7 +412,9 @@ def test_cos_series():
 def test_cos_rewrite():
     assert cos(x).rewrite(exp) == exp(I*x)/2 + exp(-I*x)/2
     assert cos(x).rewrite(tan) == (1 - tan(x/2)**2)/(1 + tan(x/2)**2)
-    assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
+    assert cos(x).rewrite(cot) == \
+        Piecewise((1, Eq(im(x), 0) & Eq(Mod(x, 2*pi), 0)),
+                  ((cot(x/2)**2 - 1)/(cot(x/2)**2 + 1), True))
     assert cos(sinh(x)).rewrite(
         exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, sinh(3)).n()
     assert cos(cosh(x)).rewrite(
@@ -897,7 +905,6 @@ def test_asin():
                 assert asin(sin(n*pi/d)) == n*pi/d
 
     assert asin(x).diff(x) == 1/sqrt(1 - x**2)
-    assert asin(1/x).as_leading_term(x) == I*log(1/x)
 
     assert asin(0.2, evaluate=False).is_real is True
     assert asin(-2).is_real is False
@@ -919,6 +926,13 @@ def test_asin_series():
     t5 = asin(x).taylor_term(5, x)
     assert t5 == 3*x**5/40
     assert asin(x).taylor_term(7, x, t5, 0) == 5*x**7/112
+
+def test_asin_leading_term():
+    assert asin(x).as_leading_term(x) == x
+    assert asin(x + 1).as_leading_term(x) == pi/2
+    assert asin(x - 1).as_leading_term(x) == -pi/2
+    assert asin(1/x).as_leading_term(x, cdir=1) == I*log(x) + pi/2 - I*log(2)
+    assert asin(1/x).as_leading_term(x, cdir=-1) == -I*log(x) - 3*pi/2 + I*log(2)
 
 
 def test_asin_rewrite():
@@ -961,7 +975,6 @@ def test_acos():
     assert acos(2*I) == pi/2 - asin(2*I)
 
     assert acos(x).diff(x) == -1/sqrt(1 - x**2)
-    assert acos(1/x).as_leading_term(x) == I*log(1/x)
 
     assert acos(0.2).is_real is True
     assert acos(-2).is_real is False
@@ -980,6 +993,14 @@ def test_acos():
     assert acos(z).conjugate() != acos(conjugate(z))
 
 
+def test_acos_leading_term():
+    assert acos(x).as_leading_term(x) == pi/2
+    assert acos(x + 1).as_leading_term(x) == sqrt(2)*sqrt(-x)
+    assert acos(x - 1).as_leading_term(x) == pi
+    assert acos(1/x).as_leading_term(x, cdir=1) == -I*log(x) + I*log(2)
+    assert acos(1/x).as_leading_term(x, cdir=-1) == I*log(x) + 2*pi - I*log(2)
+
+
 def test_acos_series():
     assert acos(x).series(x, 0, 8) == \
         pi/2 - x - x**3/6 - 3*x**5/40 - 5*x**7/112 + O(x**8)
@@ -993,8 +1014,7 @@ def test_acos_series():
 
 def test_acos_rewrite():
     assert acos(x).rewrite(log) == pi/2 + I*log(I*x + sqrt(1 - x**2))
-    assert acos(x).rewrite(atan) == \
-           atan(sqrt(1 - x**2)/x) + (pi/2)*(1 - x*sqrt(1/x**2))
+    assert acos(x).rewrite(atan) == pi*(-x*sqrt(x**(-2)) + 1)/2 + atan(sqrt(1 - x**2)/x)
     assert acos(0).rewrite(atan) == S.Pi/2
     assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
     assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)
@@ -1035,7 +1055,6 @@ def test_atan():
 
     assert atan(oo) == pi/2
     assert atan(x).diff(x) == 1/(1 + x**2)
-    assert atan(1/x).as_leading_term(x) == pi/2
 
     assert atan(r).is_real is True
 
@@ -1079,6 +1098,16 @@ def test_atan_rewrite():
 def test_atan_fdiff():
     assert atan(x).fdiff() == 1/(x**2 + 1)
     raises(ArgumentIndexError, lambda: atan(x).fdiff(2))
+
+
+def test_atan_leading_term():
+    assert atan(x).as_leading_term(x) == x
+    assert atan(x + I).as_leading_term(x, cdir=1) == -I*log(x)/2 + pi/4 + I*log(2)/2
+    assert atan(x + I).as_leading_term(x, cdir=-1) == -I*log(x)/2 - 3*pi/4 + I*log(2)/2
+    assert atan(x - I).as_leading_term(x, cdir=1) == I*log(x)/2 + pi/4 - I*log(2)/2
+    assert atan(x - I).as_leading_term(x, cdir=-1) == I*log(x)/2 + pi/4 - I*log(2)/2
+    assert atan(1/x).as_leading_term(x, cdir=1) == pi/2
+    assert atan(1/x).as_leading_term(x, cdir=-1) == -pi/2
 
 
 def test_atan2():
@@ -1178,7 +1207,6 @@ def test_acot():
     assert acot(1/sqrt(3)) == pi/3
     assert acot(-1/sqrt(3)) == -pi/3
     assert acot(x).diff(x) == -1/(1 + x**2)
-    assert acot(1/x).as_leading_term(x) == x
 
     assert acot(r).is_extended_real is True
 
@@ -1210,6 +1238,15 @@ def test_acot_rewrite():
 def test_acot_fdiff():
     assert acot(x).fdiff() == -1/(x**2 + 1)
     raises(ArgumentIndexError, lambda: acot(x).fdiff(2))
+
+def test_acot_leading_term():
+    assert acot(x).as_leading_term(x, cdir=1) == pi/2
+    assert acot(x).as_leading_term(x, cdir=-1) == -pi/2
+    assert acot(x + I).as_leading_term(x, cdir=1) == I*log(x)/2 + pi/4 - I*log(2)/2
+    assert acot(x + I).as_leading_term(x, cdir=-1) == I*log(x)/2 + pi/4 - I*log(2)/2
+    assert acot(x - I).as_leading_term(x, cdir=1) == -I*log(x)/2 + pi/4 + I*log(2)/2
+    assert acot(x - I).as_leading_term(x, cdir=-1) == -I*log(x)/2 - 3*pi/4 + I*log(2)/2
+    assert acot(1/x).as_leading_term(x) == x
 
 
 def test_attributes():
@@ -1262,22 +1299,11 @@ def test_evenodd_rewrite():
             x - y) == -func(y - x)  # it doesn't matter which form is canonical
 
 
-def test_issue_4547():
-    assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
-    assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
-    assert tan(x).rewrite(cot) == 1/cot(x)
-    assert cot(x).fdiff() == -1 - cot(x)**2
-
-
 def test_as_leading_term_issue_5272():
     assert sin(x).as_leading_term(x) == x
     assert cos(x).as_leading_term(x) == 1
     assert tan(x).as_leading_term(x) == x
     assert cot(x).as_leading_term(x) == 1/x
-    assert asin(x).as_leading_term(x) == x
-    assert acos(x).as_leading_term(x) == pi/2
-    assert atan(x).as_leading_term(x) == x
-    assert acot(x).as_leading_term(x) == pi/2
 
 
 def test_leading_terms():
@@ -1285,11 +1311,10 @@ def test_leading_terms():
     assert sin(S.Half).as_leading_term(x) == sin(S.Half)
     assert cos(1/x).as_leading_term(x) == AccumBounds(-1, 1)
     assert cos(S.Half).as_leading_term(x) == cos(S.Half)
-
-    for func in [tan, cot]:
-        for a in (1/x, S.Half):
-            eq = func(a)
-            assert eq.as_leading_term(x) == eq
+    assert sec(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert csc(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert tan(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert cot(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
 
     # https://github.com/sympy/sympy/issues/21038
     f = sin(pi*(x + 4))/(3*x)
@@ -1732,13 +1757,14 @@ def test_asec():
     assert asec(sqrt(2) - sqrt(6)) == pi*Rational(11, 12)
 
     assert asec(x).diff(x) == 1/(x**2*sqrt(1 - 1/x**2))
-    assert asec(x).as_leading_term(x) == I*log(x)
 
     assert asec(x).rewrite(log) == I*log(sqrt(1 - 1/x**2) + I/x) + pi/2
     assert asec(x).rewrite(asin) == -asin(1/x) + pi/2
     assert asec(x).rewrite(acos) == acos(1/x)
-    assert asec(x).rewrite(atan) == (2*atan(x + sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
-    assert asec(x).rewrite(acot) == (2*acot(x - sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
+    assert asec(x).rewrite(atan) == \
+        pi*(1 - sqrt(x**2)/x)/2 + sqrt(x**2)*atan(sqrt(x**2 - 1))/x
+    assert asec(x).rewrite(acot) == \
+        pi*(1 - sqrt(x**2)/x)/2 + sqrt(x**2)*acot(1/sqrt(x**2 - 1))/x
     assert asec(x).rewrite(acsc) == -acsc(x) + pi/2
     raises(ArgumentIndexError, lambda: asec(x).fdiff(2))
 
@@ -1751,6 +1777,14 @@ def test_asec_is_real():
     assert asec(r).is_real is None
     t = Symbol('t', real=False, finite=True)
     assert asec(t).is_real is False
+
+
+def test_asec_leading_term():
+    assert asec(x).as_leading_term(x, cdir=1) == -I*log(x) + I*log(2)
+    assert asec(x).as_leading_term(x, cdir=-1) == I*log(x) + 2*pi - I*log(2)
+    assert asec(x + 1).as_leading_term(x) == sqrt(2)*sqrt(x)
+    assert asec(x - 1).as_leading_term(x) == pi
+    assert asec(1/x).as_leading_term(x) == pi/2
 
 
 def test_acsc():
@@ -1779,12 +1813,12 @@ def test_acsc():
     assert acsc(sqrt(2) - sqrt(6)) == pi*Rational(-5, 12)
 
     assert acsc(x).diff(x) == -1/(x**2*sqrt(1 - 1/x**2))
-    assert acsc(x).as_leading_term(x) == I*log(x)
 
     assert acsc(x).rewrite(log) == -I*log(sqrt(1 - 1/x**2) + I/x)
     assert acsc(x).rewrite(asin) == asin(1/x)
     assert acsc(x).rewrite(acos) == -acos(1/x) + pi/2
-    assert acsc(x).rewrite(atan) == (-atan(sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
+    assert acsc(x).rewrite(atan) == \
+        (-atan(sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
     assert acsc(x).rewrite(acot) == (-acot(1/sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
     assert acsc(x).rewrite(asec) == -asec(x) + pi/2
     raises(ArgumentIndexError, lambda: acsc(x).fdiff(2))
@@ -1805,6 +1839,13 @@ def test_csc_rewrite():
     assert csc(1 - exp(-besselj(I, I))).rewrite(cos) == \
            -1/cos(-pi/2 - 1 + cos(I*besselj(I, I)) +
                   I*cos(-pi/2 + I*besselj(I, I), evaluate=False), evaluate=False)
+
+def test_acsc_leading_term():
+    assert acsc(x).as_leading_term(x, cdir=1) == I*log(x) + pi/2 - I*log(2)
+    assert acsc(x).as_leading_term(x, cdir=-1) == -I*log(x) - 3*pi/2 + I*log(2)
+    assert acsc(x + 1).as_leading_term(x) == pi/2
+    assert acsc(x - 1).as_leading_term(x) == -pi/2
+    assert acsc(1/x).as_leading_term(x) == x
 
 
 def test_inverses_nseries():

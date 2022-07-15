@@ -312,6 +312,8 @@ class Joint(ABC):
 class PinJoint(Joint):
     """Pin (Revolute) Joint.
 
+    .. image:: PinJoint.png
+
     Explanation
     ===========
 
@@ -526,14 +528,16 @@ class PinJoint(Joint):
 
     def _set_linear_velocity(self):
         self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.parent.frame, 0)
+        self.child_point.set_vel(self.child.frame, 0)
         self.child_point.set_pos(self.parent_point, 0)
-        self.child.masscenter.v2pt_theory(self.parent.masscenter,
+        self.child.masscenter.v2pt_theory(self.parent_point,
                                           self.parent.frame, self.child.frame)
 
 
 class PrismaticJoint(Joint):
     """Prismatic (Sliding) Joint.
+
+    .. image:: PrismaticJoint.png
 
     Explanation
     ===========
@@ -702,7 +706,7 @@ class PrismaticJoint(Joint):
     v_J1(t)*W_frame.x
 
     >>> Part2.masscenter.vel(wall.frame)
-    v_J1(t)*W_frame.x + v_J2(t)*P1_frame.x
+    v_J1(t)*W_frame.x + Derivative(x_J2(t), t)*P1_frame.x
 
     """
 

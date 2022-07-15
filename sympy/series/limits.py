@@ -1,16 +1,13 @@
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, _illegal
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.elementary.complexes import (Abs, sign)
+from sympy.functions.elementary.complexes import (Abs, sign, arg)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
-from sympy.simplify.powsimp import powsimp
-from sympy.simplify.ratsimp import ratsimp
-from sympy.simplify.simplify import nsimplify, together
 from .gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
@@ -82,6 +79,7 @@ def heuristics(e, z, z0, dir):
             return
     elif e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:
         r = []
+        from sympy.simplify.simplify import together
         for a in e.args:
             l = limit(a, z, z0, dir)
             if l.has(S.Infinity) and l.is_finite is None:
@@ -106,9 +104,9 @@ def heuristics(e, z, z0, dir):
             if rv is S.NaN and e.is_Mul and any(isinstance(rr, AccumBounds) for rr in r):
                 r2 = []
                 e2 = []
-                for ii in range(len(r)):
-                    if isinstance(r[ii], AccumBounds):
-                        r2.append(r[ii])
+                for ii, rval in enumerate(r):
+                    if isinstance(rval, AccumBounds):
+                        r2.append(rval)
                     else:
                         e2.append(e.args[ii])
 
@@ -119,6 +117,7 @@ def heuristics(e, z, z0, dir):
 
             if rv is S.NaN:
                 try:
+                    from sympy.simplify.ratsimp import ratsimp
                     rat_e = ratsimp(e)
                 except PolynomialError:
                     return
@@ -148,9 +147,9 @@ class Limit(Expr):
         z = sympify(z)
         z0 = sympify(z0)
 
-        if z0 is S.Infinity:
+        if z0 in (S.Infinity, S.ImaginaryUnit*S.Infinity):
             dir = "-"
-        elif z0 is S.NegativeInfinity:
+        elif z0 in (S.NegativeInfinity, S.ImaginaryUnit*S.NegativeInfinity):
             dir = "+"
 
         if(z0.has(z)):
@@ -231,7 +230,7 @@ class Limit(Expr):
         if z0 is S.NaN:
             return S.NaN
 
-        if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
+        if e.has(*_illegal):
             return self
 
         if e.is_Order:
@@ -250,16 +249,19 @@ class Limit(Expr):
             if newargs != expr.args:
                 expr = expr.func(*newargs)
             abs_flag = isinstance(expr, Abs)
+            arg_flag = isinstance(expr, arg)
             sign_flag = isinstance(expr, sign)
-            if abs_flag or sign_flag:
+            if abs_flag or sign_flag or arg_flag:
                 sig = limit(expr.args[0], z, z0, dir)
                 if sig.is_zero:
                     sig = limit(1/expr.args[0], z, z0, dir)
                 if sig.is_extended_real:
                     if (sig < 0) == True:
-                        return -expr.args[0] if abs_flag else S.NegativeOne
+                        return (-expr.args[0] if abs_flag else
+                                S.NegativeOne if sign_flag else S.Pi)
                     elif (sig > 0) == True:
-                        return expr.args[0] if abs_flag else S.One
+                        return (expr.args[0] if abs_flag else
+                                S.One if sign_flag else S.Zero)
             return expr
 
         if e.has(Float):
@@ -267,6 +269,7 @@ class Limit(Expr):
             # prevent rounding errors which can lead to unexpected execution
             # of conditional blocks that work on comparisons
             # Also see comments in https://github.com/sympy/sympy/issues/19453
+            from sympy.simplify.simplify import nsimplify
             e = nsimplify(e)
         e = set_signs(e)
 
@@ -306,13 +309,16 @@ class Limit(Expr):
             coeff, ex = newe.leadterm(z, cdir=cdir)
         except (ValueError, NotImplementedError, PoleError):
             # The NotImplementedError catching is for custom functions
+            from sympy.simplify.powsimp import powsimp
             e = powsimp(e)
             if e.is_Pow:
                 r = self.pow_heuristics(e)
                 if r is not None:
                     return r
         else:
-            if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            if isinstance(coeff, AccumBounds) and ex == S.Zero:
+                return coeff
+            if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
                 return self
             if not coeff.has(z):
                 if ex.is_positive:

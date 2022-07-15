@@ -1,6 +1,6 @@
 from sympy.core.evalf import N
 from sympy.core.function import (Derivative, Function, PoleError, Subs)
-from sympy.core.numbers import (E, Rational, oo, pi)
+from sympy.core.numbers import (E, Rational, oo, pi, I)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
@@ -237,6 +237,16 @@ def test_issue_12791():
     assert expr.series(beta, 0.5, 2).trigsimp() == sol
 
 
+def test_issue_14384():
+    x, a = symbols('x a')
+    assert series(x**a, x) == x**a
+    assert series(x**(-2*a), x) == x**(-2*a)
+    assert series(exp(a*log(x)), x) == exp(a*log(x))
+    assert series(x**I, x) == x**I
+    assert series(x**(I + 1), x) == x**(1 + I)
+    assert series(exp(I*log(x)), x) == exp(I*log(x))
+
+
 def test_issue_14885():
     assert series(x**Rational(-3, 2)*exp(x), x, 0) == (x**Rational(-3, 2) + 1/sqrt(x) +
         sqrt(x)/2 + x**Rational(3, 2)/6 + x**Rational(5, 2)/24 + x**Rational(7, 2)/120 +
@@ -352,3 +362,9 @@ def test_issue_21245():
 def test_issue_21938():
     expr = sin(1/x + exp(-x)) - sin(1/x)
     assert expr.series(x, oo) == (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
+
+
+def test_issue_23432():
+    expr = 1/sqrt(1 - x**2)
+    result = expr.series(x, 0.5)
+    assert result.is_Add and len(result.args) == 7

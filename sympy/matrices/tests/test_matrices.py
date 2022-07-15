@@ -13,6 +13,7 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.integrals.integrals import integrate
 from sympy.polys.polytools import (Poly, PurePoly)
 from sympy.printing.str import sstr
 from sympy.sets.sets import FiniteSet
@@ -31,12 +32,17 @@ from sympy.matrices.utilities import _dotprodsimp_state
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture, iterable
-from sympy.testing.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
+from sympy.utilities.exceptions import ignore_warnings, SymPyDeprecationWarning
+from sympy.testing.pytest import (raises, XFAIL, slow, skip,
+                                  warns_deprecated_sympy, warns)
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
+from sympy.external import import_module
 
 from sympy.abc import a, b, c, d, x, y, z, t
+
+pyodide_js = import_module('pyodide_js')
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -2442,6 +2448,10 @@ def test_dot():
     assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), conjugate_convention="left") == 5
     raises(ValueError, lambda: Matrix([1, 2]).dot(Matrix([3, 4]), hermitian=True, conjugate_convention="test"))
 
+    with warns_deprecated_sympy():
+        A = Matrix([[1, 2], [3, 4]])
+        B = Matrix([[2, 3], [1, 2]])
+        assert A.dot(B) == [11, 7, 16, 10]
 
 def test_dual():
     B_x, B_y, B_z, E_x, E_y, E_z = symbols(
@@ -2578,7 +2588,7 @@ def test_replace_map():
         K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}),
                           (G(1), {F(1): G(1)}), (G(2), {F(2): G(2)})])
     M = Matrix(2, 2, lambda i, j: F(i+j))
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         N = M.replace(F, G, True)
     assert N == K
 
@@ -2692,7 +2702,8 @@ def test_17522_numpy():
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 
-    m = _matrixify(matrix([[1, 2], [3, 4]]))
+    with ignore_warnings(PendingDeprecationWarning):
+        m = _matrixify(matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 
@@ -2977,6 +2988,9 @@ def test_func():
 
 
 def test_issue_19809():
+    if pyodide_js:
+        skip("can't run on pyodide")
+
     def f():
         assert _dotprodsimp_state.state == None
         m = Matrix([[1]])
@@ -2987,3 +3001,21 @@ def test_issue_19809():
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(f)
             assert future.result()
+
+def test_deprecated_classof_a2idx():
+    with warns_deprecated_sympy():
+        from sympy.matrices.matrices import classof
+        M = Matrix([[1, 2], [3, 4]])
+        IM = ImmutableMatrix([[1, 2], [3, 4]])
+        assert classof(M, IM) == ImmutableDenseMatrix
+
+    with warns_deprecated_sympy():
+        from sympy.matrices.matrices import a2idx
+        assert a2idx(-1, 3) == 2
+
+
+def test_issue_23276():
+    M = Matrix([x, y])
+    assert integrate(M, (x, 0, 1), (y, 0, 1)) == Matrix([
+        [1/2],
+        [1/2]])

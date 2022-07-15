@@ -28,10 +28,10 @@ sudo apt install\
 	#
 
 sudo apt install\
-	python3.7\
-	python3.7-venv\
 	python3.9\
 	python3.9-venv\
+	python3.10\
+	python3.10-venv\
 	# python3.8 is installed by default in 20.04
 
 python3 -m venv release/venv_main

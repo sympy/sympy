@@ -8,12 +8,14 @@ from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
-    sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
+    sin, cos, tan, sec, csc, atan)
+from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh
 from sympy.polys import Poly
 from sympy.series.order import O
 from sympy.sets import FiniteSet
-from sympy.core.power import power
-from sympy.testing.pytest import warns_deprecated_sympy, _both_exp_pow
+from sympy.core.power import power, integer_nthroot
+from sympy.testing.pytest import warns, _both_exp_pow
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def test_rational():
@@ -198,7 +200,8 @@ def test_Pow_Expr_args():
     x = Symbol('x')
     bases = [Basic(), Poly(x, x), FiniteSet(x)]
     for base in bases:
-        with warns_deprecated_sympy():
+        # The cache can mess with the stacklevel test
+        with warns(SymPyDeprecationWarning, test_stacklevel=False):
             Pow(base, S.One)
 
 
@@ -400,8 +403,12 @@ def test_issue_7638():
                                                               Rational(3, 2) + I/2]
     assert sqrt(r**Rational(4, 3)) != r**Rational(2, 3)
     assert sqrt((p + I)**Rational(4, 3)) == (p + I)**Rational(2, 3)
-    assert sqrt((p - p**2*I)**2) == p - p**2*I
-    assert sqrt((p**2*I - p)**2) == p**2*I - p  # XXX ok?
+
+    for q in 1+I, 1-I:
+        assert sqrt(q**2) == q
+    for q in -1+I, -1-I:
+        assert sqrt(q**2) == -q
+
     assert sqrt((p + r*I)**2) != p + r*I
     e = (1 + I/5)
     assert sqrt(e**5) == e**(5*S.Half)
@@ -604,6 +611,12 @@ def test_issue_21762():
               Pow(Integer(2), Rational(16666666666666667, 25000000000000000)),
               Pow(Integer(5), Rational(8333333333333333, 25000000000000000)))
     assert e.xreplace({x: S.Half}) == ans
+
+
+def test_issue_14704():
+    a = 144**144
+    x, xexact = integer_nthroot(a,a)
+    assert x == 1 and xexact is False
 
 
 def test_rational_powers_larger_than_one():

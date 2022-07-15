@@ -9,11 +9,14 @@ from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.mod import Mod
 from sympy.core.numbers import oo, igcd, Rational
 from sympy.core.relational import Eq, is_eq
+from sympy.core.kind import NumberKind
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
-from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.sympify import _sympify, sympify, _sympy_converter
+from sympy.functions.elementary.integers import ceiling, floor
+from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.logic.boolalg import And, Or
-from .sets import Set, Interval, Union, FiniteSet, ProductSet
+from .sets import Set, Interval, Union, FiniteSet, ProductSet, SetKind
 from sympy.utilities.misc import filldedent
 
 
@@ -61,6 +64,9 @@ class Rationals(Set, metaclass=Singleton):
     @property
     def _boundary(self):
         return S.Reals
+
+    def _kind(self):
+        return SetKind(NumberKind)
 
 
 class Naturals(Set, metaclass=Singleton):
@@ -123,8 +129,10 @@ class Naturals(Set, metaclass=Singleton):
         return self
 
     def as_relational(self, x):
-        from sympy.functions.elementary.integers import floor
         return And(Eq(floor(x), x), x >= self.inf, x < oo)
+
+    def _kind(self):
+        return SetKind(NumberKind)
 
 
 class Naturals0(Naturals):
@@ -214,8 +222,10 @@ class Integers(Set, metaclass=Singleton):
     def _boundary(self):
         return self
 
+    def _kind(self):
+        return SetKind(NumberKind)
+
     def as_relational(self, x):
-        from sympy.functions.elementary.integers import floor
         return And(Eq(floor(x), x), -oo < x, x < oo)
 
     def _eval_is_subset(self, other):
@@ -490,7 +500,7 @@ class ImageSet(Set):
     def is_iterable(self):
         return all(s.is_iterable for s in self.base_sets)
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         from sympy.sets.setexpr import SetExpr
         f = self.lamda
         sig = f.signature
@@ -500,6 +510,9 @@ class ImageSet(Set):
         if all(s.is_FiniteSet for s in self.base_sets):
             return FiniteSet(*(f(*a) for a in product(*self.base_sets)))
         return self
+
+    def _kind(self):
+        return SetKind(self.lamda.expr.kind)
 
 
 class Range(Set):
@@ -586,7 +599,6 @@ class Range(Set):
     """
 
     def __new__(cls, *args):
-        from sympy.functions.elementary.integers import ceiling
         if len(args) == 1:
             if isinstance(args[0], range):
                 raise TypeError(
@@ -624,7 +636,6 @@ class Range(Set):
             dif = stop - start
             n = dif/step
             if n.is_Rational:
-                from sympy.functions.elementary.integers import floor
                 if dif == 0:
                     null = True
                 else:  # (x, x + 5, 2) or (x, 3*x, x)
@@ -690,6 +701,9 @@ class Range(Set):
             return self
         return self.func(
             self.stop - self.step, self.start - self.step, -self.step)
+
+    def _kind(self):
+        return SetKind(NumberKind)
 
     def _contains(self, other):
         if self.start == self.stop:
@@ -769,7 +783,6 @@ class Range(Set):
         if n.is_infinite:
             return S.Infinity
         if  n.is_extended_nonnegative and all(i.is_integer for i in self.args):
-            from sympy.functions.elementary.integers import floor
             return abs(floor(n))
         raise ValueError('Invalid method for symbolic Range')
 
@@ -796,7 +809,6 @@ class Range(Set):
         return not bool(b)
 
     def __getitem__(self, i):
-        from sympy.functions.elementary.integers import ceiling
         ooslice = "cannot slice from the end with an infinite value"
         zerostep = "slice step cannot be zero"
         infinite = "slicing not possible on range with infinite start"
@@ -1007,7 +1019,7 @@ class Range(Set):
         return And(in_seq, ints, range_cond)
 
 
-converter[range] = lambda r: Range(r.start, r.stop, r.step)
+_sympy_converter[range] = lambda r: Range(r.start, r.stop, r.step)
 
 def normalize_theta_set(theta):
     r"""
@@ -1047,19 +1059,19 @@ def normalize_theta_set(theta):
     {0, pi}
 
     """
-    from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
+    from sympy.functions.elementary.trigonometric import _pi_coeff
 
     if theta.is_Interval:
         interval_len = theta.measure
         # one complete circle
         if interval_len >= 2*S.Pi:
             if interval_len == 2*S.Pi and theta.left_open and theta.right_open:
-                k = coeff(theta.start)
+                k = _pi_coeff(theta.start)
                 return Union(Interval(0, k*S.Pi, False, True),
                         Interval(k*S.Pi, 2*S.Pi, True, True))
             return Interval(0, 2*S.Pi, False, True)
 
-        k_start, k_end = coeff(theta.start), coeff(theta.end)
+        k_start, k_end = _pi_coeff(theta.start), _pi_coeff(theta.end)
 
         if k_start is None or k_end is None:
             raise NotImplementedError("Normalizing theta without pi as coefficient is "
@@ -1076,7 +1088,7 @@ def normalize_theta_set(theta):
     elif theta.is_FiniteSet:
         new_theta = []
         for element in theta:
-            k = coeff(element)
+            k = _pi_coeff(element)
             if k is None:
                 raise NotImplementedError('Normalizing theta without pi as '
                                           'coefficient, is not Implemented.')
@@ -1310,6 +1322,9 @@ class ComplexRegion(Set):
         """
         return self.sets._measure
 
+    def _kind(self):
+        return self.args[0].kind
+
     @classmethod
     def from_real(cls, sets):
         """
@@ -1337,7 +1352,7 @@ class ComplexRegion(Set):
             raise ValueError('expecting Tuple of length 2')
 
         # If the other is not an Expression, and neither a Tuple
-        if not isinstance(other, Expr) and not isinstance(other, Tuple):
+        if not isinstance(other, (Expr, Tuple)):
             return S.false
         # self in rectangular form
         if not self.polar:
@@ -1469,7 +1484,6 @@ class PolarComplexRegion(ComplexRegion):
 
     @property
     def expr(self):
-        from sympy.functions.elementary.trigonometric import sin, cos
         r, theta = self.variables
         return r*(cos(theta) + S.ImaginaryUnit*sin(theta))
 

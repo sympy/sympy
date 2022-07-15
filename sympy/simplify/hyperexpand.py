@@ -59,6 +59,7 @@ It is described in great(er) detail in the Sphinx documentation.
 from collections import defaultdict
 from itertools import product
 from functools import reduce
+from math import prod
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
@@ -74,7 +75,9 @@ from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
         HyperRep_cosasin, HyperRep_sinasin, meijerg)
-from sympy.polys import poly, Poly
+from sympy.matrices import Matrix, eye, zeros
+from sympy.polys import apart, poly, Poly
+from sympy.series import residue
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
 
@@ -96,8 +99,6 @@ def _mod1(x):
 # leave add formulae at the top for easy reference
 def add_formulae(formulae):
     """ Create our knowledge base. """
-    from sympy.matrices import Matrix
-
     a, b, c, z = symbols('a b c, z', cls=Dummy)
 
     def add(ap, bq, res):
@@ -385,8 +386,6 @@ def add_formulae(formulae):
 
 
 def add_meijerg_formulae(formulae):
-    from sympy.matrices import Matrix
-
     a, b, c, z = list(map(Dummy, 'abcz'))
     rho = Dummy('rho')
 
@@ -703,8 +702,6 @@ class Formula:
            closed_form = C B
            z d/dz B = M B.
         """
-        from sympy.matrices import Matrix, eye, zeros
-
         afactors = [_x + a for a in self.func.ap]
         bfactors = [_x + b - 1 for b in self.func.bq]
         expr = _x*Mul(*bfactors) - self.z*Mul(*afactors)
@@ -1181,19 +1178,11 @@ class MeijerUnShiftA(Operator):
         bq = list(bq)
         bi = bm.pop(i) - 1
 
-        m = Poly(1, _x)
-        for b in bm:
-            m *= Poly(b - _x, _x)
-        for b in bq:
-            m *= Poly(_x - b, _x)
+        m = Poly(1, _x) * prod(Poly(b - _x, _x) for b in bm) * prod(Poly(_x - b, _x) for b in bq)
 
         A = Dummy('A')
         D = Poly(bi - A, A)
-        n = Poly(z, A)
-        for a in an:
-            n *= (D + 1 - a)
-        for a in ap:
-            n *= (-D + a - 1)
+        n = Poly(z, A) * prod((D + 1 - a) for a in an) * prod((-D + a - 1) for a in ap)
 
         b0 = n.nth(0)
         if b0 == 0:
@@ -1690,20 +1679,16 @@ def try_shifted_sum(func, z):
     ops.reverse()
 
     fac = factorial(k)/z**k
-    for a in nap:
-        fac /= rf(a, k)
-    for b in nbq:
-        fac *= rf(b, k)
+    fac *= Mul(*[rf(b, k) for b in nbq])
+    fac /= Mul(*[rf(a, k) for a in nap])
 
     ops += [MultOperator(fac)]
 
     p = 0
     for n in range(k):
         m = z**n/factorial(n)
-        for a in nap:
-            m *= rf(a, n)
-        for b in nbq:
-            m /= rf(b, n)
+        m *= Mul(*[rf(a, n) for a in nap])
+        m /= Mul(*[rf(b, n) for b in nbq])
         p += m
 
     return Hyper_Function(nap, nbq), ops, -p
@@ -1731,10 +1716,8 @@ def try_polynomial(func, z):
     for n in Tuple(*list(range(-a))):
         fac *= z
         fac /= n + 1
-        for a in func.ap:
-            fac *= a + n
-        for b in func.bq:
-            fac /= b + n
+        fac *= Mul(*[a + n for a in func.ap])
+        fac /= Mul(*[b + n for b in func.bq])
         res += fac
     return res
 
@@ -1750,8 +1733,6 @@ def try_lerchphi(func):
     # section 18.
     # We don't need to implement the reduction to polylog here, this
     # is handled by expand_func.
-    from sympy.matrices import Matrix, zeros
-    from sympy.polys import apart
 
     # First we need to figure out if the summation coefficient is a rational
     # function of the summation index, and construct that rational function.
@@ -1881,7 +1862,6 @@ def build_hypergeometric_formula(func):
     # would have kicked in. However, `ap` could be empty. In this case we can
     # use a different basis.
     # I'm not aware of a basis that works in all cases.
-    from sympy.matrices.dense import (Matrix, eye, zeros)
     z = Dummy('z')
     if func.ap:
         afactors = [_x + a for a in func.ap]
@@ -1996,7 +1976,6 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     def carryout_plan(f, ops):
         C = apply_operators(f.C.subs(f.z, z0), ops,
                             make_derivative_operator(f.M.subs(f.z, z0), z0))
-        from sympy.matrices.dense import eye
         C = apply_operators(C, ops0,
                             make_derivative_operator(f.M.subs(f.z, z0)
                                          + prem*eye(f.M.shape[0]), z0))
@@ -2285,7 +2264,6 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
     def do_slater(an, bm, ap, bq, z, zfinal):
         # zfinal is the value that will eventually be substituted for z.
         # We pass it to _hyperexpand to improve performance.
-        from sympy.series import residue
         func = G_Function(an, bm, ap, bq)
         _, pbm, pap, _ = func.compute_buckets()
         if not can_do(pbm, pap):

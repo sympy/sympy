@@ -473,6 +473,27 @@ def test_orient_body():
     B.orient_body_fixed(A, (1,1,0), 'XYX')
     assert B.dcm(A) == Matrix([[cos(1), sin(1)**2, -sin(1)*cos(1)], [0, cos(1), sin(1)], [sin(1), -sin(1)*cos(1), cos(1)**2]])
 
+
+def test_orient_body_simple_ang_vel():
+    """orient_body_fixed() uses kinematic_equations() internally and solves
+    those equations for the measure numbers of the angular velocity. This test
+    ensures that the simplest form of that linear system solution is returned,
+    thus the == for the expression comparison."""
+
+    psi, theta, phi = dynamicsymbols('psi, theta, varphi')
+    t = dynamicsymbols._t
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_body_fixed(A, (psi, theta, phi), 'ZXZ')
+    A_w_B = B.ang_vel_in(A)
+    assert A_w_B.args[0][1] == B
+    assert A_w_B.args[0][0][0] == (sin(theta)*sin(phi)*psi.diff(t) +
+                                   cos(phi)*theta.diff(t))
+    assert A_w_B.args[0][0][1] == (sin(theta)*cos(phi)*psi.diff(t) -
+                                   sin(phi)*theta.diff(t))
+    assert A_w_B.args[0][0][2] == cos(theta)*psi.diff(t) + phi.diff(t)
+
+
 def test_orient_space():
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')

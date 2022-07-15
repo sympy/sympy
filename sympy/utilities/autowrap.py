@@ -254,6 +254,8 @@ ext_mods = [Extension(
 setup(ext_modules=cythonize(ext_mods, **cy_opts))
 """
 
+    _cythonize_options = {'compiler_directives':{'language_level' : "3"}}
+
     pyx_imports = (
         "import numpy as np\n"
         "cimport numpy as np\n\n")
@@ -309,7 +311,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         self._extra_compile_args = kwargs.pop('extra_compile_args', [])
         self._extra_compile_args.append(self.std_compile_flag)
         self._extra_link_args = kwargs.pop('extra_link_args', [])
-        self._cythonize_options = kwargs.pop('cythonize_options', {})
+        self._cythonize_options = kwargs.pop('cythonize_options', self._cythonize_options)
 
         self._need_numpy = False
 

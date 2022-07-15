@@ -6,7 +6,8 @@ sequences of rational numbers such as Bernoulli and Fibonacci numbers.
 Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
-
+from math import prod
+from collections import defaultdict
 from typing import Callable, Dict as tDict, Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
@@ -15,19 +16,15 @@ from sympy.core.evalf import pure_complex
 from sympy.core.expr import Expr
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
-from sympy.core.mul import Mul, prod
+from sympy.core.mul import Mul
 from sympy.core.numbers import E, pi, oo, Rational, Integer
 from sympy.core.relational import is_le, is_gt
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
-from sympy.functions.elementary.exponential import log
-from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.miscellaneous import sqrt, cbrt
-from sympy.functions.elementary.trigonometric import sin, cos, cot
-from sympy.ntheory import isprime
-from sympy.ntheory.primetest import is_square
+from sympy.ntheory.primetest import isprime, is_square
 from sympy.utilities.enumerative import MultisetPartitionTraverser
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import multiset, multiset_derangements, iterable
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
@@ -37,11 +34,7 @@ from mpmath.libmp import ifib as _ifib
 
 
 def _product(a, b):
-    p = 1
-    for k in range(a, b + 1):
-        p *= k
-    return p
-
+    return prod(range(a, b + 1))
 
 
 # Dummy symbol used for computing polynomial sequences
@@ -54,34 +47,38 @@ _sym = Symbol('x')
 #                                                                            #
 #----------------------------------------------------------------------------#
 
+def _divides(p, n):
+    return n % p == 0
 
 class carmichael(Function):
-    """
+    r"""
     Carmichael Numbers:
 
     Certain cryptographic algorithms make use of big prime numbers.
     However, checking whether a big number is prime is not so easy.
-    Randomized prime number checking tests exist that offer a high degree of confidence of
-    accurate determination at low cost, such as the Fermat test.
+    Randomized prime number checking tests exist that offer a high degree of
+    confidence of accurate determination at low cost, such as the Fermat test.
 
-    Let 'a' be a random number between 2 and n - 1, where n is the number whose primality we are testing.
-    Then, n is probably prime if it satisfies the modular arithmetic congruence relation :
+    Let 'a' be a random number between $2$ and $n - 1$, where $n$ is the
+    number whose primality we are testing. Then, $n$ is probably prime if it
+    satisfies the modular arithmetic congruence relation:
 
-    a^(n-1) = 1(mod n).
+    .. math :: a^{n-1} = 1 \pmod{n}
+
     (where mod refers to the modulo operation)
 
     If a number passes the Fermat test several times, then it is prime with a
     high probability.
 
-    Unfortunately, certain composite numbers (non-primes) still pass the Fermat test
-    with every number smaller than themselves.
+    Unfortunately, certain composite numbers (non-primes) still pass the Fermat
+    test with every number smaller than themselves.
     These numbers are called Carmichael numbers.
 
-    A Carmichael number will pass a Fermat primality test to every base b relatively prime to the number,
-    even though it is not actually prime. This makes tests based on Fermat's Little Theorem less effective than
-    strong probable prime tests such as the Baillie-PSW primality test and the Miller-Rabin primality test.
-    mr functions given in sympy/sympy/ntheory/primetest.py will produce wrong results for each and every
-    carmichael number.
+    A Carmichael number will pass a Fermat primality test to every base $b$
+    relatively prime to the number, even though it is not actually prime.
+    This makes tests based on Fermat's Little Theorem less effective than
+    strong probable prime tests such as the Baillie-PSW primality test and
+    the Miller-Rabin primality test.
 
     Examples
     ========
@@ -89,10 +86,6 @@ class carmichael(Function):
     >>> from sympy import carmichael
     >>> carmichael.find_first_n_carmichaels(5)
     [561, 1105, 1729, 2465, 2821]
-    >>> carmichael.is_prime(2465)
-    False
-    >>> carmichael.is_prime(1729)
-    False
     >>> carmichael.find_carmichael_numbers_in_range(0, 562)
     [561]
     >>> carmichael.find_carmichael_numbers_in_range(0,1000)
@@ -110,34 +103,55 @@ class carmichael(Function):
 
     @staticmethod
     def is_perfect_square(n):
+        sympy_deprecation_warning(
+        """
+is_perfect_square is just a wrapper around sympy.ntheory.primetest.is_square
+so use that directly instead.
+        """,
+        deprecated_since_version="1.11",
+        active_deprecations_target='deprecated-carmichael-static-methods',
+        )
         return is_square(n)
 
     @staticmethod
     def divides(p, n):
+        sympy_deprecation_warning(
+        """
+        divides can be replaced by directly testing n % p == 0.
+        """,
+        deprecated_since_version="1.11",
+        active_deprecations_target='deprecated-carmichael-static-methods',
+        )
         return n % p == 0
 
     @staticmethod
     def is_prime(n):
+        sympy_deprecation_warning(
+        """
+is_prime is just a wrapper around sympy.ntheory.primetest.isprime so use that
+directly instead.
+        """,
+        deprecated_since_version="1.11",
+        active_deprecations_target='deprecated-carmichael-static-methods',
+        )
         return isprime(n)
 
     @staticmethod
     def is_carmichael(n):
         if n >= 0:
-            if (n == 1) or (carmichael.is_prime(n)) or (n % 2 == 0):
+            if (n == 1) or isprime(n) or (n % 2 == 0):
                 return False
 
-            divisors = list([1, n])
+            divisors = [1, n]
 
             # get divisors
-            for i in range(3, n // 2 + 1, 2):
-                if n % i == 0:
-                    divisors.append(i)
+            divisors.extend([i for i in range(3, n // 2 + 1, 2) if n % i == 0])
 
             for i in divisors:
-                if carmichael.is_perfect_square(i) and i != 1:
+                if is_square(i) and i != 1:
                     return False
-                if carmichael.is_prime(i):
-                    if not carmichael.divides(i - 1, n - 1):
+                if isprime(i):
+                    if not _divides(i - 1, n - 1):
                         return False
 
             return True
@@ -149,9 +163,9 @@ class carmichael(Function):
     def find_carmichael_numbers_in_range(x, y):
         if 0 <= x <= y:
             if x % 2 == 0:
-                return list([i for i in range(x + 1, y, 2) if carmichael.is_carmichael(i)])
+                return [i for i in range(x + 1, y, 2) if carmichael.is_carmichael(i)]
             else:
-                return list([i for i in range(x, y, 2) if carmichael.is_carmichael(i)])
+                return [i for i in range(x, y, 2) if carmichael.is_carmichael(i)]
 
         else:
             raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
@@ -246,6 +260,7 @@ class fibonacci(Function):
                 return cls._fibpoly(n).subs(_sym, sym)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
+        from sympy.functions.elementary.miscellaneous import sqrt
         return 2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
 
     def _eval_rewrite_as_GoldenRatio(self,n, **kwargs):
@@ -300,7 +315,8 @@ class lucas(Function):
             return fibonacci(n + 1) + fibonacci(n - 1)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
-        return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
+       from sympy.functions.elementary.miscellaneous import sqrt
+       return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
 
 
 #----------------------------------------------------------------------------#
@@ -375,6 +391,7 @@ class tribonacci(Function):
                 return cls._tribpoly(n).subs(_sym, sym)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
+        from sympy.functions.elementary.miscellaneous import cbrt, sqrt
         w = (-1 + S.ImaginaryUnit * sqrt(3)) / 2
         a = (1 + cbrt(19 + 3*sqrt(33)) + cbrt(19 - 3*sqrt(33))) / 3
         b = (1 + w*cbrt(19 + 3*sqrt(33)) + w**2*cbrt(19 - 3*sqrt(33))) / 3
@@ -385,6 +402,8 @@ class tribonacci(Function):
         return Tn
 
     def _eval_rewrite_as_TribonacciConstant(self, n, **kwargs):
+        from sympy.functions.elementary.integers import floor
+        from sympy.functions.elementary.miscellaneous import cbrt, sqrt
         b = cbrt(586 + 102*sqrt(33))
         Tn = 3 * b * S.TribonacciConstant**n / (b**2 - 2*b + 4)
         return floor(Tn + S.Half)
@@ -520,9 +539,8 @@ class bernoulli(Function):
                     return b
                 # Bernoulli polynomials
                 else:
-                    n, result = int(n), []
-                    for k in range(n + 1):
-                        result.append(binomial(n, k)*cls(k)*sym**(n - k))
+                    n = int(n)
+                    result = [binomial(n, k)*cls(k)*sym**(n - k) for k in range(n + 1)]
                     return Add(*result)
             else:
                 raise ValueError("Bernoulli numbers are defined only"
@@ -897,6 +915,9 @@ class harmonic(Function):
                 u = p // q
                 p = p - u * q
                 if u.is_nonnegative and p.is_positive and q.is_positive and p < q:
+                    from sympy.functions.elementary.exponential import log
+                    from sympy.functions.elementary.integers import floor
+                    from sympy.functions.elementary.trigonometric import sin, cos, cot
                     k = Dummy("k")
                     t1 = q * Sum(1 / (q * k + p), (k, 0, u))
                     t2 = 2 * Sum(cos((2 * pi * p * k) / S(q)) *
@@ -1022,9 +1043,8 @@ class euler(Function):
                             res = mp.eulerpoly(m, sym)
                         return Expr._from_mpmath(res, prec)
                     # Construct polynomial symbolically from definition
-                    m, result = int(m), []
-                    for k in range(m + 1):
-                        result.append(binomial(m, k)*cls(k)/(2**k)*(sym - S.Half)**(m - k))
+                    m = int(m)
+                    result = [binomial(m, k)*cls(k)/(2**k)*(sym - S.Half)**(m - k) for k in range(m + 1)]
                     return Add(*result).expand()
             else:
                 raise ValueError("Euler numbers are defined only"
@@ -1165,6 +1185,7 @@ class catalan(Function):
                 return Rational(-1, 2)
 
     def fdiff(self, argindex=1):
+        from sympy.functions.elementary.exponential import log
         from sympy.functions.special.gamma_functions import polygamma
         n = self.args[0]
         return catalan(n)*(polygamma(0, n + S.Half) - polygamma(0, n + 2) + log(4))
@@ -1592,7 +1613,6 @@ def _AOP_product(n):
     http://tinyurl.com/cep849r, but in a refactored form.
 
     """
-    from collections import defaultdict
 
     n = list(n)
     ord = sum(n)
@@ -1614,8 +1634,8 @@ def _AOP_product(n):
     else:
         rv[-1:] = rev
     d = defaultdict(int)
-    for i in range(len(rv)):
-        d[i] = rv[i]
+    for i, r in enumerate(rv):
+        d[i] = r
     return d
 
 
@@ -2220,7 +2240,6 @@ def nD(i=None, brute=None, *, n=None, m=None):
 
     """
     from sympy.integrals.integrals import integrate
-    from sympy.functions.elementary.exponential import exp
     from sympy.functions.special.polynomials import laguerre
     from sympy.abc import x
     def ok(x):
@@ -2290,5 +2309,6 @@ def nD(i=None, brute=None, *, n=None, m=None):
                     s.extend([i]*m)
                     i += 1
         return Integer(sum(1 for i in multiset_derangements(s)))
+    from sympy.functions.elementary.exponential import exp
     return Integer(abs(integrate(exp(-x)*Mul(*[
         laguerre(i, x)**m for i, m in counts.items()]), (x, 0, oo))))

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numbers
 import decimal
 import fractions
@@ -5,11 +7,10 @@ import math
 import re as regex
 import sys
 from functools import lru_cache
-from typing import Set as tSet, Tuple as tTuple
 
 from .containers import Tuple
-from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
-                      _is_numpy_instance)
+from .sympify import (SympifyError, _sympy_converter, sympify, _convert_numpy_types,
+              _sympify, _is_numpy_instance)
 from .singleton import S, Singleton
 from .basic import Basic
 from .expr import Expr, AtomicExpr
@@ -33,20 +34,18 @@ from mpmath.libmp.libmpf import (
 from sympy.utilities.misc import as_int, debug, filldedent
 from .parameters import global_parameters
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 _LOG2 = math.log(2)
 
 
 def comp(z1, z2, tol=None):
-    """Return a bool indicating whether the error between z1 and z2
-    is <= tol.
+    r"""Return a bool indicating whether the error between z1 and z2
+    is $\le$ ``tol``.
 
     Examples
     ========
 
-    If ``tol`` is None then True will be returned if
-    ``abs(z1 - z2)*10**p <= 5`` where ``p`` is minimum value of the
+    If ``tol`` is ``None`` then ``True`` will be returned if
+    :math:`|z1 - z2|\times 10^p \le 5` where $p$ is minimum value of the
     decimal precision of each value.
 
     >>> from sympy import comp, pi
@@ -67,8 +66,8 @@ def comp(z1, z2, tol=None):
     >>> comp(pi4, 3.1415, '')
     False
 
-    When ``tol`` is provided and ``z2`` is non-zero and
-    ``|z1| > 1`` the error is normalized by ``|z1|``:
+    When ``tol`` is provided and $z2$ is non-zero and
+    :math:`|z1| > 1` the error is normalized by :math:`|z1|`:
 
     >>> abs(pi4 - 3.14)/pi4
     0.000509791731426756
@@ -77,7 +76,7 @@ def comp(z1, z2, tol=None):
     >>> comp(pi4, 3.14, .0005)  # difference less than 0.1%
     False
 
-    When ``|z1| <= 1`` the absolute error is used:
+    When :math:`|z1| \le 1` the absolute error is used:
 
     >>> 1/pi4
     0.3183
@@ -99,7 +98,7 @@ def comp(z1, z2, tol=None):
     >>> comp(pi4 - 3.14, 0, .001)
     False
     """
-    if type(z2) is str:
+    if isinstance(z2, str):
         if not pure_complex(z1, or_real=True):
             raise ValueError('when z2 is a str z1 must be a Number')
         return str(z1) == z2
@@ -234,8 +233,8 @@ def igcd(*args):
     Explanation
     ===========
 
-    The algorithm is based on the well known Euclid's algorithm. To
-    improve speed, igcd() has its own caching mechanism implemented.
+    The algorithm is based on the well known Euclid's algorithm [1]_. To
+    improve speed, ``igcd()`` has its own caching mechanism.
 
     Examples
     ========
@@ -245,6 +244,11 @@ def igcd(*args):
     2
     >>> igcd(5, 10, 15)
     5
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euclidean_algorithm
 
     """
     if len(args) < 2:
@@ -267,30 +271,30 @@ igcd2 = math.gcd
 
 
 def igcd_lehmer(a, b):
-    """Computes greatest common divisor of two integers.
+    r"""Computes greatest common divisor of two integers.
 
     Explanation
     ===========
 
     Euclid's algorithm for the computation of the greatest
-    common divisor  gcd(a, b)  of two (positive) integers
-    a and b is based on the division identity
-        a = q*b + r,
-    where the quotient  q  and the remainder  r  are integers
-    and  0 <= r < b. Then each common divisor of  a  and  b
-    divides  r, and it follows that  gcd(a, b) == gcd(b, r).
+    common divisor ``gcd(a, b)``  of two (positive) integers
+    $a$ and $b$ is based on the division identity
+       $$ a = q \times b + r$$,
+    where the quotient  $q$  and the remainder  $r$  are integers
+    and  $0 \le r < b$. Then each common divisor of  $a$  and  $b$
+    divides  $r$, and it follows that  ``gcd(a, b) == gcd(b, r)``.
     The algorithm works by constructing the sequence
     r0, r1, r2, ..., where  r0 = a, r1 = b,  and each  rn
     is the remainder from the division of the two preceding
     elements.
 
-    In Python, q = a // b  and  r = a % b  are obtained by the
+    In Python, ``q = a // b``  and  ``r = a % b``  are obtained by the
     floor division and the remainder operations, respectively.
     These are the most expensive arithmetic operations, especially
     for large  a  and  b.
 
-    Lehmer's algorithm is based on the observation that the quotients
-    qn = r(n-1) // rn  are in general small integers even
+    Lehmer's algorithm [1]_ is based on the observation that the quotients
+    ``qn = r(n-1) // rn``  are in general small integers even
     when  a  and  b  are very large. Hence the quotients can be
     usually determined from a relatively small number of most
     significant bits.
@@ -485,9 +489,9 @@ def igcdex(a, b):
 
 
 def mod_inverse(a, m):
-    """
-    Return the number c such that, (a * c) = 1 (mod m)
-    where c has the same sign as m. If no such value exists,
+    r"""
+    Return the number $c$ such that, $a \times c = 1 \pmod{m}$
+    where $c$ has the same sign as $m$. If no such value exists,
     a ValueError is raised.
 
     Examples
@@ -495,11 +499,11 @@ def mod_inverse(a, m):
 
     >>> from sympy import mod_inverse, S
 
-    Suppose we wish to find multiplicative inverse x of
-    3 modulo 11. This is the same as finding x such
-    that 3 * x = 1 (mod 11). One value of x that satisfies
-    this congruence is 4. Because 3 * 4 = 12 and 12 = 1 (mod 11).
-    This is the value returned by mod_inverse:
+    Suppose we wish to find multiplicative inverse $x$ of
+    3 modulo 11. This is the same as finding $x$ such
+    that $3x = 1 \pmod{11}$. One value of x that satisfies
+    this congruence is 4. Because $3 \times 4 = 12$ and $12 = 1 \pmod{11}$.
+    This is the value returned by ``mod_inverse``:
 
     >>> mod_inverse(3, 11)
     4
@@ -507,7 +511,7 @@ def mod_inverse(a, m):
     7
 
     When there is a common factor between the numerators of
-    ``a`` and ``m`` the inverse does not exist:
+    `a` and `m` the inverse does not exist:
 
     >>> mod_inverse(2, 4)
     Traceback (most recent call last):
@@ -700,9 +704,6 @@ class Number(AtomicExpr):
         if old == -self:
             return -new
         return self  # there is no other possibility
-
-    def _eval_is_finite(self):
-        return True
 
     @classmethod
     def class_key(cls):
@@ -1017,7 +1018,7 @@ class Float(Number):
     """
     __slots__ = ('_mpf_', '_prec')
 
-    _mpf_: tTuple[int, int, int, int]
+    _mpf_: tuple[int, int, int, int]
 
     # A Float represents many real numbers,
     # both rational and irrational.
@@ -1030,17 +1031,7 @@ class Float(Number):
 
     is_Float = True
 
-    def __new__(cls, num, dps=None, prec=None, precision=None):
-        if prec is not None:
-            SymPyDeprecationWarning(
-                            feature="Using 'prec=XX' to denote decimal precision",
-                            useinstead="'dps=XX' for decimal precision and 'precision=XX' "\
-                                              "for binary precision",
-                            issue=12820,
-                            deprecated_since_version="1.1").warn()
-            dps = prec
-        del prec  # avoid using this deprecated kwarg
-
+    def __new__(cls, num, dps=None, precision=None):
         if dps is not None and precision is not None:
             raise ValueError('Both decimal and binary precision supplied. '
                              'Supply only one. ')
@@ -1480,7 +1471,7 @@ class Float(Number):
 
 
 # Add sympify converters
-converter[float] = converter[decimal.Decimal] = Float
+_sympy_converter[float] = _sympy_converter[decimal.Decimal] = Float
 
 # this is here to work nicely in Sage
 RealNumber = Float
@@ -2082,7 +2073,7 @@ class Integer(Rational):
 
     is_Integer = True
 
-    __slots__ = ('p',)
+    __slots__ = ()
 
     def _as_mpf_val(self, prec):
         return mlib.from_int(self.p, prec, rnd)
@@ -2505,7 +2496,7 @@ class Integer(Rational):
         return Integer(~self.p)
 
 # Add sympify converters
-converter[int] = Integer
+_sympy_converter[int] = Integer
 
 
 class AlgebraicNumber(Expr):
@@ -2538,7 +2529,7 @@ class AlgebraicNumber(Expr):
     # Optional alias symbol is not free.
     # Actually, alias should be a Str, but some methods
     # expect that it be an instance of Expr.
-    free_symbols: tSet[Basic] = set()
+    free_symbols: set[Basic] = set()
 
     def __new__(cls, expr, coeffs=None, alias=None, **args):
         r"""
@@ -2835,6 +2826,50 @@ class AlgebraicNumber(Expr):
                     return AlgebraicNumber(r)
         return self
 
+    def field_element(self, coeffs):
+        r"""
+        Form another element of the same number field.
+
+        Explanation
+        ===========
+
+        If we represent $\alpha \in \mathbb{Q}(\theta)$, form another element
+        $\beta \in \mathbb{Q}(\theta)$ of the same number field.
+
+        Parameters
+        ==========
+
+        coeffs : list, :py:class:`~.ANP`
+            Like the *coeffs* arg to the class
+            :py:meth:`constructor<.AlgebraicNumber.__new__>`, defines the
+            new element as a polynomial in the primitive element.
+
+            If a list, the elements should be integers or rational numbers.
+            If an :py:class:`~.ANP`, we take its coefficients (using its
+            :py:meth:`~.ANP.to_list()` method).
+
+        Examples
+        ========
+
+        >>> from sympy import AlgebraicNumber, sqrt
+        >>> a = AlgebraicNumber(sqrt(5), [-1, 1])
+        >>> b = a.field_element([3, 2])
+        >>> print(a)
+        1 - sqrt(5)
+        >>> print(b)
+        2 + 3*sqrt(5)
+        >>> print(b.primitive_element() == a.primitive_element())
+        True
+
+        See Also
+        ========
+
+        .AlgebraicNumber.__new__()
+
+        """
+        return AlgebraicNumber(
+            (self.minpoly, self.root), coeffs=coeffs, alias=self.alias)
+
     @property
     def is_primitive_element(self):
         r"""
@@ -2858,7 +2893,7 @@ class AlgebraicNumber(Expr):
         """
         if self.is_primitive_element:
             return self
-        return AlgebraicNumber((self.minpoly, self.root), coeffs=[1, 0])
+        return self.field_element([1, 0])
 
     def to_primitive_element(self, radicals=True):
         r"""
@@ -2979,39 +3014,10 @@ class AlgebraicNumber(Expr):
         roots = m.all_roots(radicals=radicals)
         if len(roots) == 1:
             return roots[0]
-        root = None
-        if all(hasattr(r, "_get_interval") for r in roots):
-            root = self._to_root_by_intervals(roots)
-        if root is not None:
-            return root
-        return self._to_root_by_distance(roots)
-
-    def _to_root_by_intervals(self, roots):
-        intervals = [r._get_interval() for r in roots]
-        D0 = int(max(i.max_denom for i in intervals))
-        # Make n more than the number of decimal places in D0. This is to
-        # eliminate false positives, i.e. cases where we appear to belong to
-        # an interval but only due to rounding errors.
-        n = math.ceil(D0.bit_length()/3.3) + 2
-        c = self.evalf(n).as_real_imag()
-        for j, i in enumerate(intervals):
-            if c in i:
-                return roots[j]
-        return None
-
-    def _to_root_by_distance(self, roots, max_prec=160):
-        # Compare sympy.polys.numberfields.minpoly._choose_factor()
-        prec1 = 10
-        while prec1 <= max_prec:
-            r0 = self.evalf(prec1)
-            candidates = [(abs(r0 - r.evalf(prec1)), j)
-                          for j, r in enumerate(roots)]
-            can = sorted(candidates)
-            (a, ix), (b, _) = can[:2]
-            if b > a * 10 ** 6:
-                return roots[ix]
-            prec1 *= 2
-        raise NotImplementedError("Could not locate root.")
+        ex = self.as_expr()
+        for b in roots:
+            if m.same_root(b, ex):
+                return b
 
 
 class RationalConstant(Rational):
@@ -4091,7 +4097,7 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
     Explanation
     ===========
 
-    `\phi = \frac{1 + \sqrt{5}}{2}` is algebraic number.  Two quantities
+    `\phi = \frac{1 + \sqrt{5}}{2}` is an algebraic number.  Two quantities
     are in the golden ratio if their ratio is the same as the ratio of
     their sum to the larger of the two quantities, i.e. their maximum.
 
@@ -4283,9 +4289,9 @@ class Catalan(NumberSymbol, metaclass=Singleton):
     Explanation
     ===========
 
-    `K = 0.91596559\ldots` is given by the infinite series
+    $G = 0.91596559\ldots$ is given by the infinite series
 
-    .. math:: K = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
+    .. math:: G = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
 
     Catalan is a singleton, and can be accessed by ``S.Catalan``.
 
@@ -4335,6 +4341,9 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         from sympy.concrete.summations import Sum
         k = Dummy('k', integer=True, nonnegative=True)
         return Sum(S.NegativeOne**k / (2*k+1)**2, (k, 0, S.Infinity))
+
+    def _latex(self, printer):
+        return "G"
 
 
 class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
@@ -4429,7 +4438,7 @@ def _eval_is_eq(self, other): # noqa: F811
 def sympify_fractions(f):
     return Rational(f.numerator, f.denominator, 1)
 
-converter[fractions.Fraction] = sympify_fractions
+_sympy_converter[fractions.Fraction] = sympify_fractions
 
 if HAS_GMPY:
     def sympify_mpz(x):
@@ -4441,28 +4450,28 @@ if HAS_GMPY:
     def sympify_mpq(x):
         return Rational(int(x.numerator), int(x.denominator))
 
-    converter[type(gmpy.mpz(1))] = sympify_mpz
-    converter[type(gmpy.mpq(1, 2))] = sympify_mpq
+    _sympy_converter[type(gmpy.mpz(1))] = sympify_mpz
+    _sympy_converter[type(gmpy.mpq(1, 2))] = sympify_mpq
 
 
 def sympify_mpmath_mpq(x):
     p, q = x._mpq_
     return Rational(p, q, 1)
 
-converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
+_sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
 
 
 def sympify_mpmath(x):
     return Expr._from_mpmath(x, x.context.prec)
 
-converter[mpnumeric] = sympify_mpmath
+_sympy_converter[mpnumeric] = sympify_mpmath
 
 
 def sympify_complex(a):
     real, imag = list(map(sympify, (a.real, a.imag)))
     return real + S.ImaginaryUnit*imag
 
-converter[complex] = sympify_complex
+_sympy_converter[complex] = sympify_complex
 
 from .power import Pow, integer_nthroot
 from .mul import Mul
@@ -4477,3 +4486,5 @@ def _register_classes():
     numbers.Integral.register(Integer)
 
 _register_classes()
+
+_illegal = (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity)

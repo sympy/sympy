@@ -12,6 +12,9 @@ import logging
 from sympy.external import import_module
 from sympy.testing.pytest import raises, SKIP
 
+from sympy.utilities.exceptions import ignore_warnings
+
+
 aesaralogger = logging.getLogger('aesara.configdefaults')
 aesaralogger.setLevel(logging.CRITICAL)
 aesara = import_module('aesara')
@@ -272,9 +275,10 @@ def test_factorial():
     assert aesara_code_(sy.factorial(n))
 
 def test_Derivative():
-    simp = lambda expr: aesara_simplify(fgraph_of(expr))
-    assert theq(simp(aesara_code_(sy.Derivative(sy.sin(x), x, evaluate=False))),
-                simp(aesara.grad(aet.sin(xt), xt)))
+    with ignore_warnings(UserWarning):
+        simp = lambda expr: aesara_simplify(fgraph_of(expr))
+        assert theq(simp(aesara_code_(sy.Derivative(sy.sin(x), x, evaluate=False))),
+                    simp(aesara.grad(aet.sin(xt), xt)))
 
 
 def test_aesara_function_simple():
@@ -407,8 +411,6 @@ def test_slice():
     assert theq_slice(aesara_code_(slice(1, x, 3), dtypes=dtypes), slice(1, xt, 3))
 
 def test_MatrixSlice():
-    from aesara.graph.basic import Constant
-
     cache = {}
 
     n = sy.Symbol('n', integer=True)
@@ -422,7 +424,7 @@ def test_MatrixSlice():
     assert Yt.owner.inputs[0] == aesara_code_(X, cache=cache)
     # == doesn't work in Aesara like it does in SymPy. You have to use
     # equals.
-    assert all(Yt.owner.inputs[i].equals(Constant(s, i)) for i in range(1, 7))
+    assert all(Yt.owner.inputs[i].data == i for i in range(1, 7))
 
     k = sy.Symbol('k')
     aesara_code_(k, dtypes={k: 'int32'})
@@ -608,11 +610,12 @@ def test_Relationals():
 
 
 def test_complexfunctions():
-    xt, yt = aesara_code(x, dtypes={x:'complex128'}), aesara_code(y, dtypes={y: 'complex128'})
+    dtypes = {x:'complex128', y:'complex128'}
+    xt, yt = aesara_code(x, dtypes=dtypes), aesara_code(y, dtypes=dtypes)
     from sympy.functions.elementary.complexes import conjugate
     from aesara.tensor import as_tensor_variable as atv
     from aesara.tensor import complex as cplx
-    assert theq(aesara_code(y*conjugate(x)), yt*(xt.conj()))
+    assert theq(aesara_code(y*conjugate(x), dtypes=dtypes), yt*(xt.conj()))
     assert theq(aesara_code((1+2j)*x), xt*(atv(1.0)+atv(2.0)*cplx(0,1)))
 
 

@@ -558,6 +558,10 @@ def test_asinh():
 def test_asinh_rewrite():
     x = Symbol('x')
     assert asinh(x).rewrite(log) == log(x + sqrt(x**2 + 1))
+    assert asinh(x).rewrite(atanh) == atanh(x/sqrt(1 + x**2))
+    assert asinh(x).rewrite(asin) == asinh(x)
+    assert asinh(x*(1 + I)).rewrite(asin) == -I*asin(I*x*(1+I))
+    assert asinh(x).rewrite(acos) == I*(-I*asinh(x) + pi/2) - I*pi/2
 
 
 def test_asinh_series():
@@ -637,6 +641,14 @@ def test_acosh():
 def test_acosh_rewrite():
     x = Symbol('x')
     assert acosh(x).rewrite(log) == log(x + sqrt(x - 1)*sqrt(x + 1))
+    assert acosh(x).rewrite(asin) == sqrt(x - 1)*(-asin(x) + pi/2)/sqrt(1 - x)
+    assert acosh(x).rewrite(asinh) == sqrt(x - 1)*(-asin(x) + pi/2)/sqrt(1 - x)
+    assert acosh(x).rewrite(atanh) == \
+        (sqrt(x - 1)*sqrt(x + 1)*atanh(sqrt(x**2 - 1)/x)/sqrt(x**2 - 1) +
+         pi*sqrt(x - 1)*(-x*sqrt(x**(-2)) + 1)/(2*sqrt(1 - x)))
+    x = Symbol('x', positive=True)
+    assert acosh(x).rewrite(atanh) == \
+        sqrt(x - 1)*sqrt(x + 1)*atanh(sqrt(x**2 - 1)/x)/sqrt(x**2 - 1)
 
 
 def test_acosh_series():
@@ -721,6 +733,10 @@ def test_asech_series():
 def test_asech_rewrite():
     x = Symbol('x')
     assert asech(x).rewrite(log) == log(1/x + sqrt(1/x - 1) * sqrt(1/x + 1))
+    assert asech(x).rewrite(acosh) == acosh(1/x)
+    assert asech(x).rewrite(asinh) == sqrt(-1 + 1/x)*(-asin(1/x) + pi/2)/sqrt(1 - 1/x)
+    assert asech(x).rewrite(atanh) == \
+        sqrt(x + 1)*sqrt(1/(x + 1))*atanh(sqrt(1 - x**2)) + I*pi*(-sqrt(x)*sqrt(1/x) + 1 - I*sqrt(x**2)/(2*sqrt(-x**2)) - I*sqrt(-x)/(2*sqrt(x)))
 
 
 def test_asech_fdiff():
@@ -796,6 +812,10 @@ def test_acsch_infinities():
 def test_acsch_rewrite():
     x = Symbol('x')
     assert acsch(x).rewrite(log) == log(1/x + sqrt(1/x**2 + 1))
+    assert acsch(x).rewrite(asinh) == asinh(1/x)
+    assert acsch(x).rewrite(atanh) == (sqrt(-x**2)*(-sqrt(-(x**2 + 1)**2)
+                                                    *atanh(sqrt(x**2 + 1))/(x**2 + 1)
+                                                    + pi/2)/x)
 
 
 def test_acsch_fdiff():
@@ -864,6 +884,8 @@ def test_atanh():
 def test_atanh_rewrite():
     x = Symbol('x')
     assert atanh(x).rewrite(log) == (log(1 + x) - log(1 - x)) / 2
+    assert atanh(x).rewrite(asinh) == \
+        pi*x/(2*sqrt(-x**2)) - sqrt(-x)*sqrt(1 - x**2)*sqrt(1/(x**2 - 1))*asinh(sqrt(1/(x**2 - 1)))/sqrt(x)
 
 
 def test_atanh_series():
@@ -920,6 +942,9 @@ def test_acoth():
 def test_acoth_rewrite():
     x = Symbol('x')
     assert acoth(x).rewrite(log) == (log(1 + 1/x) - log(1 - 1/x)) / 2
+    assert acoth(x).rewrite(atanh) == atanh(1/x)
+    assert acoth(x).rewrite(asinh) == \
+        x*sqrt(x**(-2))*asinh(sqrt(1/(x**2 - 1))) + I*pi*(sqrt((x - 1)/x)*sqrt(x/(x - 1)) - sqrt(x/(x + 1))*sqrt(1 + 1/x))/2
 
 
 def test_acoth_series():
@@ -956,8 +981,8 @@ def test_leading_term():
     for func in [sinh, tanh, asinh, atanh]:
         assert func(x).as_leading_term(x) == x
     for func in [sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth]:
-        for arg in (1/x, S.Half):
-            eq = func(arg)
+        for ar in (1/x, S.Half):
+            eq = func(ar)
             assert eq.as_leading_term(x) == eq
     for func in [csch, sech]:
         eq = func(S.Half)
@@ -1102,7 +1127,8 @@ def test_derivs():
     assert sech(x).diff(x) == -tanh(x)*sech(x)
     assert acoth(x).diff(x) == 1/(-x**2 + 1)
     assert asinh(x).diff(x) == 1/sqrt(x**2 + 1)
-    assert acosh(x).diff(x) == 1/sqrt(x**2 - 1)
+    assert acosh(x).diff(x) == 1/(sqrt(x - 1)*sqrt(x + 1))
+    assert acosh(x).diff(x) == acosh(x).rewrite(log).diff(x).together()
     assert atanh(x).diff(x) == 1/(-x**2 + 1)
     assert asech(x).diff(x) == -1/(x*sqrt(1 - x**2))
     assert acsch(x).diff(x) == -1/(x**2*sqrt(1 + x**(-2)))

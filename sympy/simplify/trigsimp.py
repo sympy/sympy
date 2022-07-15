@@ -427,23 +427,33 @@ _trigs = (TrigonometricFunction, HyperbolicFunction)
 
 
 def trigsimp(expr, **opts):
-    """
-    reduces expression by using known trig identities
+    """Returns a reduced expression by using known trig identities.
 
-    Explanation
-    ===========
+    Parameters
+    ==========
 
-    method:
-    - Determine the method to use. Valid choices are 'matching' (default),
-    'groebner', 'combined', and 'fu'. If 'matching', simplify the
-    expression recursively by targeting common patterns. If 'groebner', apply
-    an experimental groebner basis algorithm. In this case further options
-    are forwarded to ``trigsimp_groebner``, please refer to its docstring.
-    If 'combined', first run the groebner basis algorithm with small
-    default parameters, then run the 'matching' algorithm. 'fu' runs the
-    collection of trigonometric transformations described by Fu, et al.
-    (see the `fu` docstring).
+    method : string, optional
+        Specifies the method to use. Valid choices are:
 
+        - ``'matching'``, default
+        - ``'groebner'``
+        - ``'combined'``
+        - ``'fu'``
+        - ``'old'``
+
+        If ``'matching'``, simplify the expression recursively by targeting
+        common patterns. If ``'groebner'``, apply an experimental groebner
+        basis algorithm. In this case further options are forwarded to
+        ``trigsimp_groebner``, please refer to
+        its docstring. If ``'combined'``, it first runs the groebner basis
+        algorithm with small default parameters, then runs the ``'matching'``
+        algorithm. If ``'fu'``, run the collection of trigonometric
+        transformations described by Fu, et al. (see the
+        :py:func:`~sympy.simplify.fu.fu` docstring). If ``'old'``, the original
+        SymPy trig simplication function is run.
+    opts :
+        Optional keyword arguments passed to the method. See each method's
+        function docstring for details.
 
     Examples
     ========
@@ -459,10 +469,10 @@ def trigsimp(expr, **opts):
     >>> trigsimp(log(e))
     log(2)
 
-    Using `method="groebner"` (or `"combined"`) might lead to greater
-    simplification.
+    Using ``method='groebner'`` (or ``method='combined'``) might lead to
+    greater simplification.
 
-    The old trigsimp routine can be accessed as with method 'old'.
+    The old trigsimp routine can be accessed as with method ``method='old'``.
 
     >>> from sympy import coth, tanh
     >>> t = 3*tanh(x)**7 - 2/coth(x)**7
