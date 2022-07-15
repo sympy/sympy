@@ -2806,6 +2806,7 @@ def test_linear_coeffs():
     assert linear_coeffs(x + 2*y + 3, x, y) == [1, 2, 3]
     assert linear_coeffs(x + 2*y + 3, y, x) == [2, 1, 3]
     assert linear_coeffs(x + 2*x**2 + 3, x, x**2) == [1, 2, 3]
+    assert linear_coeffs(x*y + x*z + 3, x) == [y + z, 3]
     raises(NonlinearError, lambda:
         linear_coeffs(x + 2*x**2 + x**3, x, x**2))
     raises(NonlinearError, lambda:
@@ -2825,7 +2826,7 @@ def test_linear_coeffs():
     assert F(x + 2*y + 3, y, x) == [2, 1, 3]
     assert F(x + 2*x**2 + 3, x, x**2) == [1, 2, 3]
     assert F(x + 2*x**2 + x**3, x, x**2) == [1, 2, x**3]
-    #assert F(1/x*(x - 1) + 1/x, x) == [1/x, 0]
+    assert F(1/x*(x - 1) + 1/x, x) == [1/x, 0]
     assert F(a*(x + y), x, y) == [a, a, 0]
     assert F(1.0, x, y) == [0, 0, 1.0]
     assert F(x*(y + 1) + x*y, y, 1 + y) == [x, x, 0]

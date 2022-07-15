@@ -241,7 +241,8 @@ def _lin_eq2dict(a, symset, strict=True):
             terms = {sym: coeff * c for sym, c in terms.items()}
             return  coeff * terms_coeff, terms
     elif a.is_Equality:
-        return _lin_eq2dict(a.lhs - a.rhs, symset, strict)
+        # don't allow nonlinear terms to cancel
+        return _lin_eq2dict(a.rewrite(Add, evaluate=False), symset, strict)
     elif not a.has_free_arg(symset) or not strict:
         return a, {}
     else:

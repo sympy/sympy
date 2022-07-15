@@ -2505,8 +2505,6 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
     from builtins import dict as _dict
     from sympy.polys.matrices.linsolve import _lin_eq2dict
     eq = _sympify(eq)
-    if isinstance(eq, Equality):
-        eq = eq.rewrite(Add, evaluate=False)
     if len(syms) == 1 and iterable(syms[0]) and not isinstance(syms[0], Basic):
         raise ValueError('pass unpacked symbols, *syms')
     symset = set(syms)
