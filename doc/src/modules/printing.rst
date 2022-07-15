@@ -1,3 +1,5 @@
+.. _module-printing:
+
 ========
 Printing
 ========

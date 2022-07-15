@@ -869,7 +869,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
                 E = coeff[y*z]
                 F = coeff[z**2]
 
-                _coeff = dict()
+                _coeff = {}
 
                 _coeff[x**2] = 4*A**2
                 _coeff[y**2] = 4*A*D - B**2
@@ -2894,7 +2894,7 @@ def _transformation_to_normal(var, coeff):
         E = coeff[y*z]
         F = coeff[z**2]
 
-        _coeff = dict()
+        _coeff = {}
 
         _coeff[x**2] = 4*A**2
         _coeff[y**2] = 4*A*D - B**2

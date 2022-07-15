@@ -124,9 +124,9 @@ require any external dependencies.
   {func}`LaTeX parser <sympy.parsing.latex.parse_latex>` and
   [Autolev](autolev_parser) parsers. They both require the Antlr Python
   runtime to be installed. The package for this is called
-  `antlr4-python-runtime` with conda and `antlr4-python3-runtime` with pip).
+  `antlr-python-runtime` with conda and `antlr4-python3-runtime` with pip).
   Also be aware that the version of the Antlr Python runtime must match the
-  version that was used to compile the LaTeX and Autolev parsers (4.7).
+  version that was used to compile the LaTeX and Autolev parsers (4.10).
 
 - **Clang Python Bindings**: The C parser (`sympy.parsing.c.parse_c`) requires
   the Clang Python bindings. The package for this is called `python-clang`

@@ -24,7 +24,7 @@ from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
-# disable tests if antlr4-python*-runtime is not present
+# disable tests if antlr4-python3-runtime is not present
 if not antlr4:
     disabled = True
 
@@ -151,6 +151,8 @@ GOOD_PAIRS = [
     (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3)),
     (r"\lim_{x \to 3^{+}} a", Limit(a, x, 3, dir='+')),
     (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir='-')),
+    (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir='+')),
+    (r"\lim_{x \to 3^-} a", Limit(a, x, 3, dir='-')),
     (r"\infty", oo),
     (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Pow(x, -1), x, oo)),
     (r"\frac{d}{dx} x", Derivative(x, x)),

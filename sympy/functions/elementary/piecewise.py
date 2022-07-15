@@ -1,4 +1,4 @@
-from sympy.core import S, Function, diff, Tuple, Dummy
+from sympy.core import S, Function, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
@@ -1023,12 +1023,7 @@ class Piecewise(Function):
                 raise UnrecognizedCondition(cls)
 
             b1, b2 = rules[cls]
-            k = 1
-            for c in args:
-                if b1:
-                    k *= 1 - rewrite(c)
-                else:
-                    k *= rewrite(c)
+            k = Mul(*[1 - rewrite(c) for c in args]) if b1 else Mul(*[rewrite(c) for c in args])
 
             if b2:
                 return 1 - k

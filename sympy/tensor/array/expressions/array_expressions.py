@@ -220,6 +220,12 @@ class _CodegenArrayAbstract(Basic):
     def shape(self):
         return self._shape
 
+    def doit(self, **hints):
+        deep = hints.get("deep", True)
+        if deep:
+            return self.func(*[arg.doit(**hints) for arg in self.args])._canonicalize()
+        else:
+            return self._canonicalize()
 
 class ArrayTensorProduct(_CodegenArrayAbstract):
     r"""
@@ -302,13 +308,6 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
 
         return self.func(*args, canonicalize=False)
 
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
-
     @classmethod
     def _flatten(cls, args):
         args = [i for arg in args for i in (arg.args if isinstance(arg, cls) else [arg])]
@@ -360,13 +359,6 @@ class ArrayAdd(_CodegenArrayAbstract):
         elif len(args) == 1:
             return args[0]
         return self.func(*args, canonicalize=False)
-
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
 
     @classmethod
     def _flatten_args(cls, args):
@@ -499,13 +491,6 @@ class PermuteDims(_CodegenArrayAbstract):
         if plist == sorted(plist):
             return expr
         return self.func(expr, permutation, canonicalize=False)
-
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
 
     @property
     def expr(self):
@@ -820,13 +805,6 @@ class ArrayDiagonal(_CodegenArrayAbstract):
             return ZeroArray(*shape)
         return self.func(expr, *diagonal_indices, canonicalize=False)
 
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
-
     @staticmethod
     def _validate(expr, *diagonal_indices, **kwargs):
         # Check that no diagonalization happens on indices with mismatched
@@ -1052,13 +1030,6 @@ class ArrayContraction(_CodegenArrayAbstract):
             return expr
 
         return self.func(expr, *contraction_indices, canonicalize=False)
-
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
 
     def __mul__(self, other):
         if other == 1:

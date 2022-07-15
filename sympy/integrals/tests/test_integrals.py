@@ -5,7 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function, Lambda, diff)
 from sympy.core import EulerGamma
-from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi)
+from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -677,6 +677,10 @@ def test_integrate_returns_piecewise():
         (-x*cos(n*x)/n + sin(n*x)/n**2, Ne(n, 0)), (0, True))
     assert integrate(exp(x*y), (x, 0, z)) == Piecewise(
         (exp(y*z)/y - 1/y, (y > -oo) & (y < oo) & Ne(y, 0)), (z, True))
+    # https://github.com/sympy/sympy/issues/23707
+    assert integrate(exp(t)*exp(-t*sqrt(x - y)), t) == Piecewise(
+        (-exp(t)/(sqrt(x - y)*exp(t*sqrt(x - y)) - exp(t*sqrt(x - y))),
+        Ne(x, y + 1)), (t, True))
 
 
 def test_integrate_max_min():
@@ -1925,6 +1929,27 @@ def test_issue_18527():
     assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
 
 
+def test_issue_23718():
+    f = 1/(b*cos(x) + a*sin(x))
+    Fpos = (-log(-a/b + tan(x/2) - sqrt(a**2 + b**2)/b)/sqrt(a**2 + b**2)
+            +log(-a/b + tan(x/2) + sqrt(a**2 + b**2)/b)/sqrt(a**2 + b**2))
+    F = Piecewise(
+        # XXX: The zoo case here is for a=b=0 so it should just be zoo or maybe
+        # it doesn't really need to be included at all given that the original
+        # integrand is really undefined in that case anyway.
+        (zoo*(-log(tan(x/2) - 1) + log(tan(x/2) + 1)),  Eq(a, 0) & Eq(b, 0)),
+        (log(tan(x/2))/a,                               Eq(b, 0)),
+        (-I/(-I*b*sin(x) + b*cos(x)),                   Eq(a, -I*b)),
+        (I/(I*b*sin(x) + b*cos(x)),                     Eq(a,  I*b)),
+        (Fpos,                                          True),
+    )
+    assert integrate(f, x) == F
+
+    ap, bp = symbols('a, b', positive=True)
+    rep = {a: ap, b: bp}
+    assert integrate(f.subs(rep), x) == Fpos.subs(rep)
+
+
 def test_issue_23566():
     i = integrate(1/sqrt(x**2-1), (x, -2, -1))
     assert i == -log(2 - sqrt(3))
@@ -1965,6 +1990,14 @@ def test_issue_9723():
     assert integrate(sqrt(2*x+3+sqrt(4*x+5))**3) == \
         sqrt(2*x + sqrt(4*x + 5) + 3) * \
            (9*x/10 + 11*(4*x + 5)**(S(3)/2)/40 + sqrt(4*x + 5)/40 + (4*x + 5)**2/10 + S(11)/10)/2
+
+
+def test_issue_23704():
+    # XXX: This is testing that an exception is not raised in risch Ideally
+    # manualintegrate (manual=True) would be able to compute this but
+    # manualintegrate is very slow for this example so we don't test that here.
+    assert (integrate(log(x)/x**2/(c*x**2+b*x+a),x, risch=True)
+        == NonElementaryIntegral(log(x)/(a*x**2 + b*x**3 + c*x**4), x))
 
 
 def test_exp_substitution():

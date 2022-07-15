@@ -193,11 +193,7 @@ def use(expr, func, level=0, args=(), kwargs={}):
                 return expr
             else:
                 level -= 1
-                _args = []
-
-                for arg in expr.args:
-                    _args.append(_use(arg, level))
-
+                _args = [_use(arg, level) for arg in expr.args]
                 return expr.__class__(*_args)
 
     return _use(sympify(expr), level)

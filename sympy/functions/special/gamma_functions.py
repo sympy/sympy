@@ -1,3 +1,5 @@
+from math import prod
+
 from sympy.core import Add, S, Dummy, expand_func
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError
@@ -141,8 +143,7 @@ class gamma(Function):
                         else:
                             coeff = S.NegativeOne
 
-                    for i in range(3, 2*k, 2):
-                        coeff *= i
+                    coeff *= prod(range(3, 2*k, 2))
 
                     if arg.is_positive:
                         return coeff*sqrt(S.Pi) / 2**n

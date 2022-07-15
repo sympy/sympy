@@ -66,6 +66,9 @@ doc/sphinx/
 *.svg.html
 doc/src/modules/physics/mechanics/*.pdf
 doc/src/modules/physics/vector/*.pdf
+doc/src/modules/physics/mechanics/examples/*.pdf
+doc/src/modules/physics/mechanics/examples/*.pdf
+doc/src/modules/vector/*.pdf
 
 # Mac OS X Junk
 .DS_Store

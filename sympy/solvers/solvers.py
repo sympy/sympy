@@ -177,12 +177,7 @@ def denoms(eq, *symbols):
     elif len(symbols) == 1:
         if iterable(symbols[0]):
             symbols = symbols[0]
-    rv = []
-    for d in dens:
-        free = d.free_symbols
-        if any(s in free for s in symbols):
-            rv.append(d)
-    return set(rv)
+    return {d for d in dens if any(s in d.free_symbols for s in symbols)}
 
 
 def checksol(f, symbol, sol=None, **flags):
@@ -996,9 +991,7 @@ def solve(f, *symbols, **flags):
                 irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
         if irf:
             for s, rhs in irf:
-                for i, fi in enumerate(f):
-                    f[i] = fi.xreplace({s: rhs})
-                f.append(s - rhs)
+                f = [fi.xreplace({s: rhs}) for fi in f] + [s - rhs]
                 symbols.extend([re(s), im(s)])
             if bare_f:
                 bare_f = False
@@ -3358,6 +3351,10 @@ def unrad(eq, *syms, **flags):
 
     # recast poly in terms of eigen-gens
     poly = eq.as_poly(*gens)
+
+    # not a polynomial e.g. 1 + sqrt(x)*exp(sqrt(x)) with gen sqrt(x)
+    if poly is None:
+        return
 
     # - an exponent has a symbol of interest (don't handle)
     if any(g.exp.has(*syms) for g in gens):

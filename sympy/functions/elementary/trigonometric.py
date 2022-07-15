@@ -5,17 +5,19 @@ from sympy.core.basic import sympify, cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
+from sympy.core.mod import Mod
 from sympy.core.numbers import igcdex, Rational, pi, Integer, Float
-from sympy.core.relational import Ne
+from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.combinatorial.numbers import bernoulli, euler
-from sympy.functions.elementary.complexes import arg, im, re
+from sympy.functions.elementary.complexes import arg as arg_f, im, re
 from sympy.functions.elementary.exponential import log, exp
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.logic.boolalg import And
 from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
 from sympy.utilities.iterables import numbered_symbols
@@ -438,7 +440,8 @@ class sin(TrigonometricFunction):
 
     def _eval_rewrite_as_cot(self, arg, **kwargs):
         cot_half = cot(S.Half*arg)
-        return 2*cot_half/(1 + cot_half**2)
+        return Piecewise((0, And(Eq(im(arg), 0), Eq(Mod(arg, pi), 0))),
+                         (2*cot_half/(1 + cot_half**2), True))
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
         return self.rewrite(cos).rewrite(pow)
@@ -774,7 +777,8 @@ class cos(TrigonometricFunction):
 
     def _eval_rewrite_as_cot(self, arg, **kwargs):
         cot_half = cot(S.Half*arg)**2
-        return (cot_half - 1)/(cot_half + 1)
+        return Piecewise((1, And(Eq(im(arg), 0), Eq(Mod(arg, 2*pi), 0))),
+                         ((cot_half - 1)/(cot_half + 1), True))
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
         return self._eval_rewrite_as_sqrt(arg)
@@ -3163,6 +3167,9 @@ class asec(InverseTrigonometricFunction):
             elif -arg in acsc_table:
                 return pi/2 + acsc_table[-arg]
 
+        if arg.is_infinite:
+            return S.Pi/2
+
         if isinstance(arg, sec):
             ang = arg.args[0]
             if ang.is_comparable:
@@ -3278,11 +3285,13 @@ class asec(InverseTrigonometricFunction):
     def _eval_rewrite_as_acos(self, arg, **kwargs):
         return acos(1/arg)
 
-    def _eval_rewrite_as_atan(self, arg, **kwargs):
-        return sqrt(arg**2)/arg*(-pi/2 + 2*atan(arg + sqrt(arg**2 - 1)))
+    def _eval_rewrite_as_atan(self, x, **kwargs):
+        sx2x = sqrt(x**2)/x
+        return pi/2*(1 - sx2x) + sx2x*atan(sqrt(x**2 - 1))
 
-    def _eval_rewrite_as_acot(self, arg, **kwargs):
-        return sqrt(arg**2)/arg*(-pi/2 + 2*acot(arg - sqrt(arg**2 - 1)))
+    def _eval_rewrite_as_acot(self, x, **kwargs):
+        sx2x = sqrt(x**2)/x
+        return pi/2*(1 - sx2x) + sx2x*acot(1/sqrt(x**2 - 1))
 
     def _eval_rewrite_as_acsc(self, arg, **kwargs):
         return pi/2 - acsc(arg)
@@ -3347,6 +3356,9 @@ class acsc(InverseTrigonometricFunction):
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
+
+        if arg.is_infinite:
+            return S.Zero
 
         if arg.is_number:
             acsc_table = cls._acsc_table()
@@ -3468,8 +3480,8 @@ class acsc(InverseTrigonometricFunction):
     def _eval_rewrite_as_acos(self, arg, **kwargs):
         return pi/2 - acos(1/arg)
 
-    def _eval_rewrite_as_atan(self, arg, **kwargs):
-        return sqrt(arg**2)/arg*(pi/2 - atan(sqrt(arg**2 - 1)))
+    def _eval_rewrite_as_atan(self, x, **kwargs):
+        return sqrt(x**2)/x*(pi/2 - atan(sqrt(x**2 - 1)))
 
     def _eval_rewrite_as_acot(self, arg, **kwargs):
         return sqrt(arg**2)/arg*(pi/2 - acot(1/sqrt(arg**2 - 1)))
@@ -3632,10 +3644,10 @@ class atan2(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_arg(self, y, x, **kwargs):
         if x.is_extended_real and y.is_extended_real:
-            return arg(x + y*S.ImaginaryUnit)
+            return arg_f(x + y*S.ImaginaryUnit)
         n = x + S.ImaginaryUnit*y
         d = x**2 + y**2
-        return arg(n/sqrt(d)) - S.ImaginaryUnit*log(abs(n)/sqrt(abs(d)))
+        return arg_f(n/sqrt(d)) - S.ImaginaryUnit*log(abs(n)/sqrt(abs(d)))
 
     def _eval_is_extended_real(self):
         return self.args[0].is_extended_real and self.args[1].is_extended_real

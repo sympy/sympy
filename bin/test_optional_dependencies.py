@@ -22,6 +22,7 @@ test_list = [
     'sympy/matrices/',
     'sympy/physics/quantum/',
     'sympy/utilities/tests/test_lambdify.py',
+    'sympy/physics/control/',
 
     # scipy
     '*scipy*',
@@ -39,7 +40,10 @@ test_list = [
     '*jax*',
 
     # gmpy
-    'polys',
+    'sympy/polys',
+
+    # gmpy, numpy, scipy, autowrap, matplotlib
+    'sympy/external',
 
     # autowrap
     '*autowrap*',
@@ -57,6 +61,7 @@ test_list = [
     'sympy/codegen/',
     'sympy/utilities/tests/test_codegen',
     'sympy/utilities/_compilation/tests/test_compilation',
+    'sympy/external/tests/test_codegen.py',
 
     # cloudpickle
     'pickling',
@@ -94,7 +99,7 @@ doctest_list = [
     '*aesara*',
 
     # gmpy
-    'polys',
+    'sympy/polys',
 
     # autowrap
     '*autowrap*',
@@ -127,8 +132,8 @@ print('Testing optional dependencies')
 from sympy import test, doctest
 
 
-tests_passed = test(*test_list, blacklist=blacklist)
-doctests_passed = doctest(*doctest_list)
+tests_passed = test(*test_list, blacklist=blacklist, force_colors=True)
+doctests_passed = doctest(*doctest_list, force_colors=True)
 
 
 if not tests_passed and not doctests_passed:

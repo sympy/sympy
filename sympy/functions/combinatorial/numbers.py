@@ -6,7 +6,7 @@ sequences of rational numbers such as Bernoulli and Fibonacci numbers.
 Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
-
+from math import prod
 from collections import defaultdict
 from typing import Callable, Dict as tDict, Tuple as tTuple
 
@@ -16,7 +16,7 @@ from sympy.core.evalf import pure_complex
 from sympy.core.expr import Expr
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
-from sympy.core.mul import Mul, prod
+from sympy.core.mul import Mul
 from sympy.core.numbers import E, pi, oo, Rational, Integer
 from sympy.core.relational import is_le, is_gt
 from sympy.external.gmpy import SYMPY_INTS
@@ -34,11 +34,7 @@ from mpmath.libmp import ifib as _ifib
 
 
 def _product(a, b):
-    p = 1
-    for k in range(a, b + 1):
-        p *= k
-    return p
-
+    return prod(range(a, b + 1))
 
 
 # Dummy symbol used for computing polynomial sequences
@@ -146,12 +142,10 @@ directly instead.
             if (n == 1) or isprime(n) or (n % 2 == 0):
                 return False
 
-            divisors = list([1, n])
+            divisors = [1, n]
 
             # get divisors
-            for i in range(3, n // 2 + 1, 2):
-                if n % i == 0:
-                    divisors.append(i)
+            divisors.extend([i for i in range(3, n // 2 + 1, 2) if n % i == 0])
 
             for i in divisors:
                 if is_square(i) and i != 1:
@@ -169,9 +163,9 @@ directly instead.
     def find_carmichael_numbers_in_range(x, y):
         if 0 <= x <= y:
             if x % 2 == 0:
-                return list([i for i in range(x + 1, y, 2) if carmichael.is_carmichael(i)])
+                return [i for i in range(x + 1, y, 2) if carmichael.is_carmichael(i)]
             else:
-                return list([i for i in range(x, y, 2) if carmichael.is_carmichael(i)])
+                return [i for i in range(x, y, 2) if carmichael.is_carmichael(i)]
 
         else:
             raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
@@ -545,9 +539,8 @@ class bernoulli(Function):
                     return b
                 # Bernoulli polynomials
                 else:
-                    n, result = int(n), []
-                    for k in range(n + 1):
-                        result.append(binomial(n, k)*cls(k)*sym**(n - k))
+                    n = int(n)
+                    result = [binomial(n, k)*cls(k)*sym**(n - k) for k in range(n + 1)]
                     return Add(*result)
             else:
                 raise ValueError("Bernoulli numbers are defined only"
@@ -1050,9 +1043,8 @@ class euler(Function):
                             res = mp.eulerpoly(m, sym)
                         return Expr._from_mpmath(res, prec)
                     # Construct polynomial symbolically from definition
-                    m, result = int(m), []
-                    for k in range(m + 1):
-                        result.append(binomial(m, k)*cls(k)/(2**k)*(sym - S.Half)**(m - k))
+                    m = int(m)
+                    result = [binomial(m, k)*cls(k)/(2**k)*(sym - S.Half)**(m - k) for k in range(m + 1)]
                     return Add(*result).expand()
             else:
                 raise ValueError("Euler numbers are defined only"

@@ -1,7 +1,8 @@
+from math import prod
+
 from sympy.core import S, Integer
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_not
-from sympy.core.mul import prod
 from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
 from sympy.external.gmpy import SYMPY_INTS
@@ -82,7 +83,7 @@ class LeviCivita(Function):
         if has_dups(args):
             return S.Zero
 
-    def doit(self):
+    def doit(self, **hints):
         return eval_levicivita(*self.args)
 
 
