@@ -2830,8 +2830,8 @@ def test_linear_coeffs():
     assert F(a*(x + y), x, y) == [a, a, 0]
     assert F(1.0, x, y) == [0, 0, 1.0]
     assert F(x*(y + 1) + x*y, y, 1 + y) == [x, x, 0]
-    z = y*(x**2 + 1)
-    assert F(y*(x + 2)*(x**2 + 1), x) == [z, 2*z]
+    _ = y*(x**2 + 1)
+    assert F(y*(x + 2)*(x**2 + 1), x) == [_, 2*_]
     raises(NonlinearError, lambda: F((x + 1)*(x + 2), x))
     assert linear_coeffs(Eq(a*(2*x + 3*y) + 4*y, 5), x, y) == [2*a, 3*a + 4, -5]
 
