@@ -63,7 +63,7 @@ In any case, this is what will happen:
 - In the IPython QTConsole, if `\mathrm{\LaTeX}` is installed, it will enable a printer
   that uses `\mathrm{\LaTeX}`.
 
-  .. image:: ../pics/ipythonqtconsole.png
+  .. image:: ../../pics/ipythonqtconsole.png
      :height: 500
 
   If `\mathrm{\LaTeX}` is not installed, but Matplotlib is installed, it will use the
@@ -72,19 +72,19 @@ In any case, this is what will happen:
 
 - In the IPython notebook, it will use MathJax to render `\mathrm{\LaTeX}`.
 
-  .. image:: ../pics/ipythonnotebook.png
+  .. image:: ../../pics/ipythonnotebook.png
      :height: 250
 
 - In an IPython console session, or a regular Python session, it will use the
   Unicode pretty printer if the terminal supports Unicode.
 
-  .. image:: ../pics/consoleunicode.png
+  .. image:: ../../pics/consoleunicode.png
      :width: 700
 
 - In a terminal that does not support Unicode, the ASCII pretty printer is
   used.
 
-  .. image:: ../pics/consoleascii.png
+  .. image:: ../../pics/consoleascii.png
      :width: 700
 
 To explicitly not use `\mathrm{\LaTeX}`, pass ``use_latex=False`` to ``init_printing()``
