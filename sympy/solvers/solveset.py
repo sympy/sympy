@@ -2510,29 +2510,19 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
     symset = set(syms)
     if len(symset) != len(syms):
         raise ValueError('duplicate symbols given')
-    has = set(iterfreeargs(eq)) & symset
-    if not has:
-        if isinstance(eq, Equality):
-            eq = eq.rewrite(Add)
-        if dict:
-            return {1: eq}
-        return [S.Zero]*len(syms) + [eq]
     try:
-        c, d = _lin_eq2dict(eq, has, strict)
+        c, d = _lin_eq2dict(eq, symset, strict)
     except PolyNonlinearError as exc:
         raise NonlinearError(str(exc))
     if dict:
         if c:
             d[1] = c
         return d
-    if len(has)*10 > 9*len(syms):
-        # dense
-        return [d.get(i, S.Zero) for i in syms] + [c]
-    # faster to set defaults and fill in non-zeros when sparse
     rv = [S.Zero]*len(syms)
-    ix = _dict(zip(syms, range(len(syms))))
-    for k in d:
-        rv[ix[k]] = d[k]
+    for i, k in enumerate(syms):
+        if k not in d:
+            continue
+        rv[i] = d[k]
     return rv + [c]
 
 
