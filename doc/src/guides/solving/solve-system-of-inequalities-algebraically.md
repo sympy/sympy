@@ -66,28 +66,6 @@ x**2 <= pi
 (1/3 < x) & (x <= sqrt(pi))
 ```
 
-### Parse a string representing each inequality
-
-Parse a string representing each inequality into a form that SymPy can
-understand, then apply solve() to the list of parsed inequalities. This approach
-is convenient if you are programmatically reading in a string for each
-inequality. If you are creating the expression yourself, we [recommend against
-parsing a
-string](https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).
-
-```py
->>> from sympy import parse_expr, pi, solve
->>> from sympy.abc import x
->>> inequality1 = 'x >= 0'
->>> inequality2 = 'x**2 <= pi'
->>> inequalities = [inequality1, inequality2]
->>> inequalities_parsed = [parse_expr(inequality) for inequality in inequalities]
->>> inequalities_parsed
-[x >= 0, x**2 <= pi]
->>> solve(inequalities_parsed, x)
-(0 <= x) & (x <= sqrt(pi))
-```
-
 ## Use the solution result
 
 A common way to use the solution result is to extract the bounds for the symbol
