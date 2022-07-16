@@ -35,7 +35,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Build release files
         run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
