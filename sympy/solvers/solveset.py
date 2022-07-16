@@ -2682,7 +2682,7 @@ def linear_eq_to_matrix(equations, *symbols, strict=True):
 
     # construct the dictionaries
     try:
-        eq, c = _linear_eq_to_dict(equations, symbols, strict=strict)
+        eq, c = _linear_eq_to_dict(equations, symbols, strict=strict, _expand=False)
     except PolyNonlinearError as err:
         raise NonlinearError(str(err)) from err
     ix = dict(zip(symbols, range(len(symbols))))

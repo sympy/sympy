@@ -133,43 +133,35 @@ def sympy_dict_to_dm(eqs_coeffs, eqs_rhs, syms):
     return sdm_aug
 
 
-def _expand_eqs_deprecated(eqs):
-    """Use expand to cancel nonlinear terms.
-
-    This approach matches previous behaviour of linsolve but should be
-    deprecated.
-    """
-    def expand_eq(eq):
-        if eq.is_Equality:
-            eq = eq.lhs - eq.rhs
-        return eq.expand()
-
-    return [expand_eq(eq) for eq in eqs]
-
-
-def _linear_eq_to_dict(eqs, syms, strict=True):
-    """Convert a system Expr/Eq equations into dict form"""
-    try:
-        return _linear_eq_to_dict_inner(eqs, syms, strict)
-    except PolyNonlinearError:
-        # XXX: This should be deprecated:
-        eqs = _expand_eqs_deprecated(eqs)
-        return _linear_eq_to_dict_inner(eqs, syms, strict)
-
-
-def _linear_eq_to_dict_inner(eqs, syms, strict):
+def _linear_eq_to_dict(eqs, syms, strict=True, _expand=True):
     """Convert a system Expr/Eq equations into dict form, returning
     the coefficient dictionaries and a list of syms-independent terms
-    from each expression in ``eqs```.
+    from each expression in ``eqs```. Use of ``strict=False`` allows
+    symbol-dependent cross terms to be treated as independent of
+    ``syms`` but still disallows cross terms to contain more than
+    one literal element from ``syms`` (in which case a PolyNonlinear
+    error is raised).
 
     Examples
     ========
 
-    >>> from sympy.polys.matrices.linsolve import _linear_eq_to_dict_inner as F
+    >>> from sympy.polys.matrices.linsolve import _linear_eq_to_dict as F
     >>> from sympy.abc import x
     >>> F([2*x + 3], {x})
     ([{x: 2}], [3])
     """
+    try:
+        return _linear_eq_to_dict_inner(eqs, syms, strict)
+    except PolyNonlinearError as err:
+        if not _expand:
+            raise err
+        # XXX: This should be deprecated:
+        from sympy.core.function import _mexpand
+        eqs = [_mexpand(i, recursive=True) for i in eqs]
+        return _linear_eq_to_dict_inner(eqs, syms, strict)
+
+
+def _linear_eq_to_dict_inner(eqs, syms, strict):
     syms = set(syms)
     eqsdict, ind = [], []
     for eq in eqs:
@@ -188,6 +180,7 @@ def _lin_eq2dict(a, symset, strict=True):
 
     The values in the dictionary will be non-zero if the original expression was expanded
     but may contain expressions which will simplify to zero, otherwise.
+
     Examples
     ========
 
