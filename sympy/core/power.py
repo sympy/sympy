@@ -1720,13 +1720,19 @@ class Pow(Expr):
             return res
 
         try:
-            _, d = g.leadterm(x, logx=logx)
+            c, d = g.leadterm(x, logx=logx)
         except (ValueError, NotImplementedError):
             if limit(g/x**maxpow, x, 0) == 0:
                 # g has higher order zero
                 return f**e + e*f**e*g  # first term of binomial series
             else:
                 raise NotImplementedError()
+        if c.is_Float and d == S.Zero:
+            # Convert floats like 0.5 to exact SymPy numbers like S.Half, to
+            # prevent rounding errors which can induce wrong values of d leading
+            # to execution of an inappropriate code block (line 1741 - 1750)
+            from sympy.simplify.simplify import nsimplify
+            _, d = nsimplify(g).leadterm(x, logx=logx)
         if not d.is_positive:
             g = g.simplify()
             if g.is_zero:
@@ -1761,9 +1767,14 @@ class Pow(Expr):
 
         from sympy.functions.elementary.complexes import im
 
-        if (not e.is_integer and m.is_zero and f.is_real
-            and f.is_negative and im((b - f).dir(x, cdir)).is_negative):
-            inco, inex = coeff_exp(f**e*exp(-2*e*S.Pi*S.ImaginaryUnit), x)
+        if not e.is_integer and m.is_zero and f.is_negative:
+            ndir = (b - f).dir(x, cdir)
+            if im(ndir).is_negative:
+                inco, inex = coeff_exp(f**e*(-1)**(-2*e), x)
+            elif im(ndir).is_zero:
+                inco, inex = coeff_exp(exp(e*log(b)).as_leading_term(x, logx=logx, cdir=cdir), x)
+            else:
+                inco, inex = coeff_exp(f**e, x)
         else:
             inco, inex = coeff_exp(f**e, x)
         res = S.Zero
@@ -1798,9 +1809,17 @@ class Pow(Expr):
                 f = b.as_leading_term(x, logx=logx, cdir=cdir)
             except PoleError:
                 return self
-            if (not e.is_integer and f.is_constant() and f.is_real
-                and f.is_negative and im((b - f).dir(x, cdir)).is_negative):
-                return self.func(f, e) * exp(-2 * e * S.Pi * S.ImaginaryUnit)
+            if not e.is_integer and f.is_negative:
+                ndir = (b - f).dir(x, cdir)
+                if im(ndir).is_negative:
+                    # Normally, f**e would evaluate to exp(e*log(f)) but on branch cuts
+                    # an other value is expected through the following computation
+                    # exp(e*(log(f) - 2*pi*I)) == f**e*exp(-2*e*pi*I) == f**e*(-1)**(-2*e).
+                    return self.func(f, e) * (-1)**(-2*e)
+                elif im(ndir).is_zero:
+                    log_leadterm = log(b)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+                    if log_leadterm.is_infinite is False:
+                        return exp(e*log_leadterm)
             return self.func(f, e)
 
     @cacheit
