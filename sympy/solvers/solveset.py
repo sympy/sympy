@@ -2515,11 +2515,11 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
         # try raise a helpful error
         if strict:
             try:
-                noxterms = _linear_eq_to_dict(equations, symbols, strict=False, _expand=False)
+                _linear_eq_to_dict([eq], syms, strict=False, _expand=False)
                 print(filldedent('''
                 A term dependent on symbols of interest (but not appearing
                 as a symbol of interest) was detected. To ignore, use flag `strict=False`.'''))
-            except PolyNonlinearError as err:
+            except PolyNonlinearError:
                 print(filldedent('''
                 There are cross-terms containing symbols of interest. If expansion would
                 remove such terms, that must be done before calling this routine.'''))
@@ -2698,11 +2698,11 @@ def linear_eq_to_matrix(equations, *symbols, strict=True):
         # try raise a helpful error
         if strict:
             try:
-                noxterms = _linear_eq_to_dict(equations, symbols, strict=False, _expand=False)
+                _linear_eq_to_dict(equations, symbols, strict=False, _expand=False)
                 print(filldedent('''
                 A term dependent on symbols of interest (but not appearing
                 as a symbol of interest) was detected. To ignore, use flag `strict=False`.'''))
-            except PolyNonlinearError as err:
+            except PolyNonlinearError:
                 print(filldedent('''
                 There are cross-terms containing symbols of interest. If expansion would
                 remove such terms, that must be done before calling this routine.'''))
