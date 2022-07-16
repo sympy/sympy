@@ -141,32 +141,3 @@ sqrt(y)
 >>> print(solutions_set)
 {-sqrt(y), sqrt(y)}
 ```
-
-## *Tradeoffs (speed vs. accuracy, etc.) for function*
-
-### *Tradeoff 1*
-
-*Speed-up option 1 content*
-
-### *Speed-up option 2*
-
-*Speed-up option 2 content*
-
-## Not all equations can be solved
-
-### Equations with no solution
-
-*Equations with no solution content*
-
-### Equations with no analytical solution
-
-*Equations with no analytical solution content*
-
-### Equations which have an analytical solution, and SymPy cannot solve
-
-*Equations which have an analytical solution, and SymPy cannot solve content*
-
-Please post the problem on the 
-[mailing list](https://groups.google.com/g/sympy), or open an issue on 
-[SymPy's GitHub page](https://github.com/sympy/sympy/issues). Until the issue 
-is resolved, you can *workaround*.
