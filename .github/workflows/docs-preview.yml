@@ -2,6 +2,8 @@ name: Docs Preview
 on: [status]
 jobs:
   circleci_artifacts_redirector_job:
+    env:
+      TEST: ${{ github.event_name }}
     runs-on: ubuntu-latest
     name: Run CircleCI artifacts redirector
     steps:
