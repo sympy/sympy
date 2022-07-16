@@ -2730,7 +2730,7 @@ def linear_eq_to_matrix(equations, *symbols, strict=True, fmt=''):
     return A, b
 
 
-def linsolve(system, *symbols):
+def linsolve(system, *symbols, strict=True):
     r"""
     Solve system of $N$ linear equations with $M$ variables; both
     underdetermined and overdetermined systems are supported.
@@ -2738,7 +2738,10 @@ def linsolve(system, *symbols):
     Zero solutions throws a ValueError, whereas infinite
     solutions are represented parametrically in terms of the given
     symbols. For unique solution a :class:`~.FiniteSet` of ordered tuples
-    is returned.
+    is returned. To treat symbol-dependent expressions that do not
+    appear in ``symbols`` (but are dependent on one or more of the
+    symbols) use ``strict=False``; an error will then only be raised
+    when cross-terms containing symbols are detected.
 
     All standard input formats are supported:
     For the given set of equations, the respective input types
@@ -2931,9 +2934,15 @@ def linsolve(system, *symbols):
             eqs = system
             eqs = [sympify(eq) for eq in eqs]
             try:
-                sol = _linsolve(eqs, symbols)
+                sol = _linsolve(eqs, symbols, strict)
             except PolyNonlinearError as err:
-                # e.g. cos(x) contains an element of the set of generators
+                if strict:
+                    print(filldedent('''
+                    Either a term dependent on symbols of interest (but not appearing
+                    as a symbol of interest) was detected (in which case using `strict=False`
+                    might make more sense) or else there was a cross-term containing symbols
+                    of interest (in which case expansion before calling this routine might
+                    help).'''))
                 raise NonlinearError(str(err)) from err
 
             if sol is None:
