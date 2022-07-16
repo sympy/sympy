@@ -190,7 +190,7 @@ def gamma_trace(t):
 
     """
     if isinstance(t, TensAdd):
-        res = TensAdd(*[_trace_single_line(x) for x in t.args])
+        res = TensAdd(*[gamma_trace(x) for x in t.args])
         return res
     t = _simplify_single_line(t)
     res = _trace_single_line(t)
