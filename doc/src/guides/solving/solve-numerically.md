@@ -6,11 +6,13 @@ Alternatives to consider:
 - *alternative 1*
 - *alternative 2*
 
-Here is a simple example of *title*:
+Here is a simple example of numerically solving an equation:
 
 ```py
->>> code
-result
+>>> from sympy import solve, cos, Eq, nsolve
+>>> x = Symbol('x')
+>>> nsolve(cos(x) - x, x, 1)
+0.739085133215161
 ```
 
 nsolve *link* is based on [mpmath.findroot](https://mpmath.org/doc/current/calculus/optimization.html#root-finding-findroot), and can pass parameters to it.
