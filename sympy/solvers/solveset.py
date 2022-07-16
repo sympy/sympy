@@ -2707,7 +2707,7 @@ def linear_eq_to_matrix(equations, *symbols, strict=True, fmt=''):
     rhs = [-i for i in c]
     del c
     if fmt != '':
-        types = set(map(type, eq.values())) | set(map(type, c))
+        types = set(map(type, eq.values())) | set(map(type, rhs))
         dom = None
         if len(types) == 1:
             if rhs[0].is_Integer:
