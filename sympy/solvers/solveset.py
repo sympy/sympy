@@ -2702,7 +2702,7 @@ def linear_eq_to_matrix(equations, *symbols, strict=True, fmt=''):
             of interest (in which case expansion before calling this routine might
             help).'''))
         raise NonlinearError(str(err)) from err
-    n, m = shape = (len(eq), len(symbols)
+    n, m = shape = len(eq), len(symbols)
     ix = dict(zip(symbols, range(m)))
     rhs = [-i for i in c]
     del c
