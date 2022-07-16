@@ -38,7 +38,7 @@ from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
-from sympy.matrices import Matrix, MatrixBase
+from sympy.matrices import zeros, MatrixBase
 from sympy.ntheory import totient
 from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
@@ -2510,8 +2510,8 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
         raise ValueError('duplicate symbols given')
     try:
         c, d = _lin_eq2dict(eq, symset, strict)
-    except PolyNonlinearError as exc:
-        raise NonlinearError(str(exc))
+    except PolyNonlinearError as err:
+        raise NonlinearError(str(err)) from err
     if dict:
         if c:
             d[1] = c
@@ -2643,6 +2643,7 @@ def linear_eq_to_matrix(equations, *symbols, strict=True):
             ...
             NonlinearError: nonlinear term: y*(x + 1)
     """
+    from sympy.polys.matrices.linsolve import _linear_eq_to_dict
     if not symbols:
         raise ValueError(filldedent('''
             Symbols must be given, for which coefficients
@@ -2673,12 +2674,25 @@ def linear_eq_to_matrix(equations, *symbols, strict=True):
             Eq or Matrix.
             '''))
 
-    A, b = [], []
-    for i, f in enumerate(equations):
-        coeff_list = linear_coeffs(f, *symbols, strict=strict)
-        b.append(-coeff_list.pop())
-        A.append(coeff_list)
-    A, b = map(Matrix, (A, b))
+    # convert Eq now because _linear_eq_to_dict will allow cancellation
+    # of nonlinear terms -- this can be removed when the XFAIL for this
+    # passes
+    equations = [i.rewrite(Add, evaluate=False) if isinstance(i, Eq)
+        else i for i in equations]
+
+    # construct the dictionaries
+    try:
+        eq, c = _linear_eq_to_dict(equations, symbols, strict=strict)
+    except PolyNonlinearError as err:
+        raise NonlinearError(str(err)) from err
+    ix = dict(zip(symbols, range(len(symbols))))
+    A = zeros(len(eq), len(symbols))
+    b = zeros(len(eq), 1)
+    for i, d in enumerate(eq):
+        for s in d:
+            j = ix[s]
+            A[i, j] = d[s]
+        b[i, 0] = -c[i]
     return A, b
 
 
@@ -2735,13 +2749,13 @@ def linsolve(system, *symbols):
         system = (A, b)
 
     Symbols can always be passed but are actually only needed
-    when 1) a system of equations is being passed and 2) the
-    system is passed as an underdetermined matrix and one wants
+    when 1) a system of equations is being passed or 2) the
+    system is passed as an underdetermined matrix for which one wants
     to control the name of the free variables in the result.
     An error is raised if no symbols are used for case 1, but if
     no symbols are provided for case 2, internally generated symbols
-    will be provided. When providing symbols for case 2, there should
-    be at least as many symbols are there are columns in matrix A.
+    will be provided (and there should be at least as many symbols as
+    there are columns in matrix A).
 
     The algorithm used here is Gauss-Jordan elimination, which
     results, after elimination, in a row echelon form matrix.
@@ -2884,9 +2898,9 @@ def linsolve(system, *symbols):
             eqs = [sympify(eq) for eq in eqs]
             try:
                 sol = _linsolve(eqs, symbols)
-            except PolyNonlinearError as exc:
+            except PolyNonlinearError as err:
                 # e.g. cos(x) contains an element of the set of generators
-                raise NonlinearError(str(exc))
+                raise NonlinearError(str(err)) from err
 
             if sol is None:
                 return S.EmptySet

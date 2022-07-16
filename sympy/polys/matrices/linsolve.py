@@ -43,7 +43,7 @@ from .sdm import (
 )
 
 
-def _linsolve(eqs, syms):
+def _linsolve(eqs, syms, strict=True):
     """Solve a linear system of equations.
 
     Examples
@@ -69,7 +69,7 @@ def _linsolve(eqs, syms):
     nsyms = len(syms)
 
     # Convert to sparse augmented matrix (len(eqs) x (nsyms+1))
-    eqsdict, rhs = _linear_eq_to_dict(eqs, syms)
+    eqsdict, rhs = _linear_eq_to_dict(eqs, syms, strict)
     Aaug = sympy_dict_to_dm(eqsdict, rhs, syms)
     K = Aaug.domain
 
@@ -147,17 +147,17 @@ def _expand_eqs_deprecated(eqs):
     return [expand_eq(eq) for eq in eqs]
 
 
-def _linear_eq_to_dict(eqs, syms):
+def _linear_eq_to_dict(eqs, syms, strict=True):
     """Convert a system Expr/Eq equations into dict form"""
     try:
-        return _linear_eq_to_dict_inner(eqs, syms)
+        return _linear_eq_to_dict_inner(eqs, syms, strict)
     except PolyNonlinearError:
         # XXX: This should be deprecated:
         eqs = _expand_eqs_deprecated(eqs)
-        return _linear_eq_to_dict_inner(eqs, syms)
+        return _linear_eq_to_dict_inner(eqs, syms, strict)
 
 
-def _linear_eq_to_dict_inner(eqs, syms):
+def _linear_eq_to_dict_inner(eqs, syms, strict):
     """Convert a system Expr/Eq equations into dict form, returning
     the coefficient dictionaries and a list of syms-independent terms
     from each expression in ``eqs```.
@@ -173,7 +173,7 @@ def _linear_eq_to_dict_inner(eqs, syms):
     syms = set(syms)
     eqsdict, ind = [], []
     for eq in eqs:
-        c, eqdict = _lin_eq2dict(eq, syms)
+        c, eqdict = _lin_eq2dict(eq, syms, strict)
         eqsdict.append(eqdict)
         ind.append(c)
     return eqsdict, ind
