@@ -24,7 +24,6 @@ from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
-from sympy.core.traversal import iterfreeargs
 from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
 from sympy.simplify import powdenest, logcombine
@@ -2502,7 +2501,6 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
         >>> eq.equals(r[-1] + sum([prod(i) for i in zip(v, r)]))
         True
     """
-    from builtins import dict as _dict
     from sympy.polys.matrices.linsolve import _lin_eq2dict
     eq = _sympify(eq)
     if len(syms) == 1 and iterable(syms[0]) and not isinstance(syms[0], Basic):
