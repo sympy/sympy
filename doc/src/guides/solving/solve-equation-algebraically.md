@@ -400,58 +400,6 @@ solution because no value of $x$ will make it true:
 So if SymPy returns an empty list, you may want to check whether there is a 
 mistake in the equation.
 
-### Equations with no analytical solution
-
-The vast majority of arbitrary nonlinear equations are not analytically 
-solvable. The classes of equations that are solvable are basically:
-1. Linear equations
-2. Polynomials, except where limited by the Abel-Ruffini theorem
-3. Equations that can be solved by inverting some transcendental functions
-4. Problems that can be transformed into the cases above 
-(e.g., by turning trigonometric functions into polynomials)
-5. A few other special cases that can be solved with something like the
-Lambert W function
-
-SymPy may reflect that your equation has no solutions that can be expressed 
-algebraically (symbolically) by returning an error such as 
-`NotImplementedError`:
-
-```py
->>> from sympy import solve, cos
->>> from sympy.abc import x
->>> solve(cos(x) - x, x)
-Traceback (most recent call last):
-  ...
-NotImplementedError: multiple generators [x, cos(x)]
-No algorithms are implemented to solve equation -x + cos(x)
-```
-
-so you may have to {func}`solve your equation numerically
-<sympy.solvers.solvers.nsolve>` instead, for example
-
-```py
->>> from sympy import nsolve, cos
->>> from sympy.abc import x
->>> nsolve(cos(x) - x, x, 2)
-0.739085133215161
-```
-
-If you receive non-closed-form solutions, you can evaluate them numerically 
-using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
-
-```py
->>> from sympy import solve
->>> from sympy.abc import x
->>> solutions = solve(x**5 - x - 1, x, dict=True)
->>> print(solutions)
-[{x: CRootOf(x**5 - x - 1, 0)}, {x: CRootOf(x**5 - x - 1, 1)}, {x: CRootOf(x**5 - x - 1, 2)}, {x: CRootOf(x**5 - x - 1, 3)}, {x: CRootOf(x**5 - x - 1, 4)}]
->>> [solution[x].n(3) for solution in solutions]
-[1.17, -0.765 - 0.352*I, -0.765 + 0.352*I, 0.181 - 1.08*I, 0.181 + 1.08*I]
-```
-
-({class}`CRootOf <sympy.polys.rootoftools.ComplexRootOf>` represents an 
-indexed complex root of a polynomial.)
-
 ### Equations which have an analytical solution, and SymPy cannot solve
 
 It is also possible that there is an algebraic solution to your equation, 
