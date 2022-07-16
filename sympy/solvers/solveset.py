@@ -2730,7 +2730,7 @@ def linear_eq_to_matrix(equations, *symbols, strict=True, fmt=''):
     return A, b
 
 
-def linsolve(system, *symbols, strict=True):
+def linsolve(system, *symbols, strict=False):
     r"""
     Solve system of $N$ linear equations with $M$ variables; both
     underdetermined and overdetermined systems are supported.
@@ -2741,7 +2741,9 @@ def linsolve(system, *symbols, strict=True):
     is returned. To treat symbol-dependent expressions that do not
     appear in ``symbols`` (but are dependent on one or more of the
     symbols) use ``strict=False``; an error will then only be raised
-    when cross-terms containing symbols are detected.
+    when cross-terms containing symbols are detected; if the flag is
+    True then cross-terms or extra symbol-dependent objects will raise
+    the NonlinearError.
 
     All standard input formats are supported:
     For the given set of equations, the respective input types
