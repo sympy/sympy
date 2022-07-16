@@ -402,7 +402,7 @@ def test_gamma_matrix_trace():
     assert r.equals(4*p2*p2*p2*p2)
 
 def test_bug_13636():
-    """Test issue 13636 regarding handling traces of sums of products 
+    """Test issue 13636 regarding handling traces of sums of products
     of GammaMatrix mixed with other factors."""
     pi, ki, pf = tensor_heads("pi, ki, pf", [LorentzIndex])
     i0, i1, i2, i3, i4 = tensor_indices("i0:5", LorentzIndex)
