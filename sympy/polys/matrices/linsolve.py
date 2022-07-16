@@ -29,6 +29,7 @@
 from collections import defaultdict
 
 from sympy.core.add import Add
+from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 
@@ -156,7 +157,6 @@ def _linear_eq_to_dict(eqs, syms, strict=True, _expand=True):
         if not _expand:
             raise err
         # XXX: This should be deprecated:
-        from sympy.core.function import _mexpand
         eqs = [_mexpand(i, recursive=True) for i in eqs]
         return _linear_eq_to_dict_inner(eqs, syms, strict)
 
