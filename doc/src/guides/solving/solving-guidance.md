@@ -2,9 +2,7 @@
 
 Here are guidelines that apply to many types of solving.
 
-## Guidance
-
-### Equations with no analytical solution
+## Equations with no analytical solution
 
 The vast majority of arbitrary nonlinear equations are not analytically 
 solvable. The classes of equations that are solvable are basically:
@@ -56,7 +54,7 @@ using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
 ({class}`CRootOf <sympy.polys.rootoftools.ComplexRootOf>` represents an 
 indexed complex root of a polynomial.)
 
-### Use exact values
+## Use exact values
 
 If you want to preserve the exact mathematical values of symbols such as
 [fractions](tutorial-gotchas-final-notes) and [square
@@ -83,7 +81,7 @@ leading to an inexact, numerical expression for all relations:
 (0.333333333333333 <= x) & (x <= 1.77245385090552)
 ```
 
-### How to parse a string representing the equation
+## How to parse a string representing the equation
 
 If you are creating the expression yourself, we 
 [recommend against using parsing a string](
