@@ -2326,8 +2326,8 @@ class asin(InverseTrigonometricFunction):
         if x0 in (-S.One, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         # Handling points lying on branch cuts (-oo, -1) U (1, oo)
-        ndir = arg.dir(x, cdir if cdir else 1)
         if (1 - x0**2).is_negative:
+            ndir = arg.dir(x, cdir if cdir else 1)
             if im(ndir).is_negative:
                 if x0.is_negative:
                     return -pi - self.func(x0)
@@ -2536,8 +2536,8 @@ class acos(InverseTrigonometricFunction):
         if x0 in (-S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         # Handling points lying on branch cuts (-oo, -1) U (1, oo)
-        ndir = arg.dir(x, cdir if cdir else 1)
         if (1 - x0**2).is_negative:
+            ndir = arg.dir(x, cdir if cdir else 1)
             if im(ndir).is_negative:
                 if x0.is_negative:
                     return 2*pi - self.func(x0)
@@ -2769,8 +2769,8 @@ class atan(InverseTrigonometricFunction):
         if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         # Handling points lying on branch cuts (-I*oo, -I) U (I, I*oo)
-        ndir = arg.dir(x, cdir if cdir else 1)
         if (1 + x0**2).is_negative:
+            ndir = arg.dir(x, cdir if cdir else 1)
             if re(ndir).is_negative:
                 if im(x0).is_positive:
                     return self.func(x0) - pi
@@ -2782,32 +2782,7 @@ class atan(InverseTrigonometricFunction):
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # atan
-        from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
-        if arg0 is S.ImaginaryUnit:
-            t = Dummy('t', positive=True)
-            ser = atan(S.ImaginaryUnit - t**2).rewrite(log).nseries(t, 0, 2*n)
-            arg1 = S.ImaginaryUnit - self.args[0]
-            f = arg1.as_leading_term(x)
-            g = (arg1 - f)/ f
-            if not g.is_meromorphic(x, 0):   # cannot be expanded
-                return O(1) if n == 0 else S.ImaginaryUnit*S.Infinity + O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
-            res = (res1.removeO()*sqrt(f)).expand()
-            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
-
-        if arg0 is S.NegativeOne*S.ImaginaryUnit:
-            t = Dummy('t', positive=True)
-            ser = atan(S.NegativeOne*S.ImaginaryUnit + t**2).rewrite(log).nseries(t, 0, 2*n)
-            arg1 = S.ImaginaryUnit + self.args[0]
-            f = arg1.as_leading_term(x)
-            g = (arg1 - f)/ f
-            if not g.is_meromorphic(x, 0):   # cannot be expanded
-                return O(1) if n == 0 else S.ImaginaryUnit*S.NegativeInfinity + O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
-            res = (res1.removeO()*sqrt(f)).expand()
-            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
-
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if cdir != 0:
             cdir = self.args[0].dir(x, cdir)
@@ -2999,8 +2974,8 @@ class acot(InverseTrigonometricFunction):
         if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         # Handling points lying on branch cuts [-I, I]
-        ndir = arg.dir(x, cdir if cdir else 1)
         if x0.is_imaginary and (1 + x0**2).is_positive:
+            ndir = arg.dir(x, cdir if cdir else 1)
             if re(ndir).is_positive:
                 if im(x0).is_positive:
                     return self.func(x0) + pi
@@ -3012,32 +2987,7 @@ class acot(InverseTrigonometricFunction):
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # acot
-        from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
-        if arg0 is S.ImaginaryUnit:
-            t = Dummy('t', positive=True)
-            ser = acot(S.ImaginaryUnit + t**2).rewrite(log).nseries(t, 0, 2*n)
-            arg1 = -S.ImaginaryUnit + self.args[0]
-            f = arg1.as_leading_term(x)
-            g = (arg1 - f)/ f
-            if not g.is_meromorphic(x, 0):   # cannot be expanded
-                return O(1) if n == 0 else S.ImaginaryUnit*S.NegativeInfinity + O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
-            res = (res1.removeO()*sqrt(f)).expand()
-            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
-
-        if arg0 is S.NegativeOne*S.ImaginaryUnit:
-            t = Dummy('t', positive=True)
-            ser = acot(S.NegativeOne*S.ImaginaryUnit + t**2).rewrite(log).nseries(t, 0, 2*n)
-            arg1 = S.ImaginaryUnit + self.args[0]
-            f = arg1.as_leading_term(x)
-            g = (arg1 - f)/ f
-            if not g.is_meromorphic(x, 0):   # cannot be expanded
-                return O(1) if n == 0 else S.ImaginaryUnit*S.Infinity + O(sqrt(x))
-            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
-            res = (res1.removeO()*sqrt(f)).expand()
-            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
-
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
@@ -3227,8 +3177,8 @@ class asec(InverseTrigonometricFunction):
         if x0 in (-S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         # Handling points lying on branch cuts (-1, 1)
-        ndir = arg.dir(x, cdir if cdir else 1)
         if x0.is_real and (1 - x0**2).is_positive:
+            ndir = arg.dir(x, cdir if cdir else 1)
             if im(ndir).is_negative:
                 if x0.is_positive:
                     return -self.func(x0)
@@ -3429,8 +3379,8 @@ class acsc(InverseTrigonometricFunction):
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
         # Handling points lying on branch cuts (-1, 1)
-        ndir = arg.dir(x, cdir if cdir else 1)
         if x0.is_real and (1 - x0**2).is_positive:
+            ndir = arg.dir(x, cdir if cdir else 1)
             if im(ndir).is_negative:
                 if x0.is_positive:
                     return pi - self.func(x0)
