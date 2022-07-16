@@ -1,13 +1,16 @@
 # Solve a system of inequalities of a single variable algebraically
 
-Use SymPy to solve a system of univariate inequalities algebraically.
-For example, solving $x^2 < \pi$, $x > 0$ yields $0 < x < \sqrt{pi}$.
+Use SymPy to solve a system of univariate inequalities algebraically. For
+example, solving $x^2 < \pi$, $x > 0$ yields $0 < x < \sqrt{pi}$.
 
 Alternatives to consider:
-- For multivariate systems (more than one symbol), try this [SciPy linear programming function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
+- For multivariate systems (more than one symbol), try this [SciPy linear
+  programming
+  function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
 
-Here is a simple example of solving a system of inequalities of a single variable algebraically.
-solve {func}`~.solve` accepts a list or tuple of inequalities to be solved as a system:
+Here is a simple example of solving a system of inequalities of a single
+variable algebraically. solve {func}`~.solve` accepts a list or tuple of
+inequalities to be solved as a system:
 
 ```py
 >>> from sympy import symbols, solve, pi
@@ -20,8 +23,11 @@ solve {func}`~.solve` accepts a list or tuple of inequalities to be solved as a 
 
 ### Include the variable to be solved for in the function call
 
-We recommend you include the variable to be solved for as the second argument 
-for {func}`~.solve`. While {func}`~.solve` can currently solve systems of equations with only one symbol, it is a good practice in case that capability is expanded, and because {func}`~.solve` can solve an equation with more than one symbol.
+We recommend you include the variable to be solved for as the second argument
+for {func}`~.solve`. While {func}`~.solve` can currently solve systems of
+equations with only one symbol, it is a good practice in case that capability is
+expanded, and because {func}`~.solve` can solve an equation with more than one
+symbol.
 
 ## Solve a system of inequalities algebraically
 
@@ -42,9 +48,9 @@ You can create your inequalities directly, then solve the system as a list:
 ### Put your inequalities into the Relational class
 
 You can create each inequality using the {class}`Relational class
-<sympy.core.relational.Relational>` by specifying
-the left-hand side, the right-hand side, and then a relational operator such
-strict greater than (`gt` or `>`), or less than or equal to (`le` or `<=`):
+<sympy.core.relational.Relational>` by specifying the left-hand side, the
+right-hand side, and then a relational operator such strict greater than (`gt`
+or `>`), or less than or equal to (`le` or `<=`):
 
 ```py
 >>> from sympy.core import Rel
@@ -170,8 +176,9 @@ Traceback (most recent call last):
 NotImplementedError: The inequality, -x + cos(x) > 0, cannot be solved using solve_univariate_inequality.
 ```
 
-so you may have to solve your equation numerically instead using [Wolfram
-Alpha](https://www.wolframalpha.com/input?i2d=true&i=solve%5C%2840%29cos%5C%2840%29x%5C%2841%29+-+x+%3E+0+and+++x%3E0%5C%2844%29x%5C%2841%29).
+so you may have to solve your equation numerically instead using this [SciPy
+linear programming
+function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html).
 
 ### Equations which have an analytical solution, and SymPy cannot solve
 
@@ -189,13 +196,13 @@ Traceback (most recent call last):
 NotImplementedError: inequality has more than one symbol of interest.
 ```
 
-You can use [Wolfram
-Alpha](https://www.wolframalpha.com/input?i2d=true&i=solve%5C%2840%29Power%5Bx%2C2%5D+%3C+y+and+++x%3E0%5C%2844%29x%5C%2841%29)
+You can use this [SciPy linear programming
+function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
 to solve this problem.
 
 If you encounter a problem with SymPy, please post the problem on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-may be able to use [Wolfram
-Alpha](https://www.wolframalpha.com/input?i2d=true&i=solve%5C%2840%29Power%5Bx%2C2%5D+%3C+y+and+++x%3E0%5C%2844%29x%5C%2841%29)
+may be able to use this [SciPy linear programming
+function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
 to solve the problem.
