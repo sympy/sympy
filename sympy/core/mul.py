@@ -736,8 +736,6 @@ class Mul(Expr, AssocOp):
                         if t:
                             from sympy.functions.elementary.complexes import sign
                             r = sympify(n)/d
-                            # XXX: does it matter if a (self) is zero here?
-                            # Then this would be zero*one but possibly unevaluated...
                             return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
 
         p = Pow(self, e, evaluate=False)
