@@ -139,7 +139,6 @@ git_whitelist = {
     'release/github_release.py',
     'release/helpers.py',
     'release/releasecheck.py',
-    'release/test_install.py',
     'release/sha256.py',
     'release/authors.py',
     'release/ci_release_script.sh',
