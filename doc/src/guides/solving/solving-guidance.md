@@ -1,19 +1,6 @@
-# Title
+# Solving Guidance
 
-*Note: add this page to toc on solving/index.md*
-
-Use SymPy to *title*. For example, *example from solving main page*.
-
-Alternatives to consider:
-- *alternative 1*
-- *alternative 2*
-
-Here is a simple example of *title*:
-
-```py
->>> code
-result
-```
+Here are guidelines that apply to many types of solving.
 
 ## Guidance
 
