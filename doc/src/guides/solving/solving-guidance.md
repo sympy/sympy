@@ -4,9 +4,33 @@ Here are guidelines that apply to many types of solving.
 
 ## Guidance
 
-### *Guidance 1*
+### Use exact values
 
-*Guidance 1 content*
+If you want to preserve the exact mathematical values of symbols such as
+[fractions](tutorial-gotchas-final-notes) and [square
+roots](symbolic-computation), define them so that SymPy can interpret them
+symbolically, for example define one-third as a {class}`rational object <sympy.core.numbers.Rational>` using `Rational(1, 3)`:
+
+
+```py
+>>> from sympy import symbols, solve, pi, Rational
+>>> x = symbols('x')
+>>> one_third = Rational(1, 3)
+>>> solve((x >= one_third, x**2 <= pi), x)
+(1/3 <= x) & (x <= sqrt(pi))
+```
+
+If you use the division operator between standard Python numbers, for example
+`1/3`, [Python will perform the division numerically](python-vs-sympy-numbers) and pass that inexact value to SymPy,
+leading to an inexact, numerical expression for all relations:
+
+```py
+>>> from sympy import symbols, solve, pi, Integer
+>>> x = symbols('x')
+>>> one_third = 1/3
+>>> solve([x >= one_third, x**2 <= pi], x)
+(0.333333333333333 <= x) & (x <= 1.77245385090552)
+```
 
 ### *Guidance 2*
 
