@@ -25,10 +25,38 @@ def _check_output_no_window(*args, **kwargs):
     return check_output(*args, creationflags=creation_flag, **kwargs)
 
 
-def _run_pyglet(fname, fmt):
-    from pyglet import window, image, gl
-    from pyglet.window import key
-    from pyglet.image.codecs import ImageDecodeException
+def system_default_viewer(fname, fmt):
+    """ Open fname with the default system viewer.
+
+    In practice, it is impossible for python to know when the system viewer is
+    done. For this reason, we ensure the passed file will not be deleted under
+    it, and this function does not attempt to block.
+    """
+    # copy to a new temporary file that will not be deleted
+    with tempfile.NamedTemporaryFile(prefix='sympy-preview-',
+                                     suffix=os.path.splitext(fname)[1],
+                                     delete=False) as temp_f:
+        with open(fname, 'rb') as f:
+            shutil.copyfileobj(f, temp_f)
+
+    import platform
+    if platform.system() == 'Darwin':
+        import subprocess
+        subprocess.call(('open', temp_f.name))
+    elif platform.system() == 'Windows':
+        os.startfile(temp_f.name)
+    else:
+        import subprocess
+        subprocess.call(('xdg-open', temp_f.name))
+
+
+def pyglet_viewer(fname, fmt):
+    try:
+        from pyglet import window, image, gl
+        from pyglet.window import key
+        from pyglet.image.codecs import ImageDecodeException
+    except ImportError:
+        raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
 
     try:
         img = image.load(fname)
@@ -78,6 +106,7 @@ def _run_pyglet(fname, fmt):
         pass
 
     win.close()
+
 
 def _get_latex_main(expr, *, preamble=None, packages=(), extra_preamble=None,
                     euler=True, fontsize=None, **latex_settings):
@@ -159,21 +188,28 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     then 'view' will look for available 'dvi' viewers on your system
     (predefined in the function, so it will try evince, first, then kdvi and
-    xdvi). If nothing is found you will need to set the viewer explicitly.
+    xdvi). If nothing is found, it will fall back to using a system file
+    association (via ``open`` and ``xdg-open``). To always use your system file
+    association without searching for the above readers, use
+
+    >>> from sympy.printing.preview import system_default_viewer
+    >>> preview(x + y, output='dvi', viewer=system_default_viewer)
+
+    If this still does not find the viewer you want, it can be set explicitly.
 
     >>> preview(x + y, output='dvi', viewer='superior-dvi-viewer')
 
     This will skip auto-detection and will run user specified
-    'superior-dvi-viewer'. If 'view' fails to find it on your system it will
+    'superior-dvi-viewer'. If ``view`` fails to find it on your system it will
     gracefully raise an exception.
 
-    You may also enter 'file' for the viewer argument. Doing so will cause
-    this function to return a file object in read-only mode, if 'filename'
+    You may also enter ``'file'`` for the viewer argument. Doing so will cause
+    this function to return a file object in read-only mode, if ``filename``
     is unset. However, if it was set, then 'preview' writes the genereted
     file to this filename instead.
 
-    There is also support for writing to a BytesIO like object, which needs
-    to be passed to the 'outputbuffer' argument.
+    There is also support for writing to a ``io.BytesIO`` like object, which
+    needs to be passed to the ``outputbuffer`` argument.
 
     >>> from io import BytesIO
     >>> obj = BytesIO()
@@ -198,63 +234,62 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     If the value of 'output' is different from 'dvi' then command line
     options can be set ('dvioptions' argument) for the execution of the
     'dvi'+output conversion tool. These options have to be in the form of a
-    list of strings (see subprocess.Popen).
+    list of strings (see ``subprocess.Popen``).
 
-    Additional keyword args will be passed to the latex call, e.g., the
-    symbol_names flag.
+    Additional keyword args will be passed to the :func:`~sympy.printing.latex.latex` call,
+    e.g., the ``symbol_names`` flag.
 
     >>> phidd = Symbol('phidd')
-    >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'})
+    >>> preview(phidd, symbol_names={phidd: r'\ddot{\varphi}'})
 
     For post-processing the generated TeX File can be written to a file by
     passing the desired filename to the 'outputTexFile' keyword
     argument. To write the TeX code to a file named
-    "sample.tex" and run the default png viewer to display the resulting
+    ``"sample.tex"`` and run the default png viewer to display the resulting
     bitmap, do
 
     >>> preview(x + y, outputTexFile="sample.tex")
 
 
     """
-    special = [ 'pyglet' ]
-
-    if viewer is None:
-        if output == "png":
-            viewer = "pyglet"
+    # pyglet is the default for png
+    if viewer is None and output == "png":
+        try:
+            import pyglet  # noqa: F401
+        except ImportError:
+            pass
         else:
-            # sorted in order from most pretty to most ugly
-            # very discussable, but indeed 'gv' looks awful :)
-            # TODO add candidates for windows to list
-            candidates = {
-                "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
-                "ps": [ "evince", "okular", "gsview", "gv" ],
-                "pdf": [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
-            }
+            viewer = pyglet_viewer
 
-            try:
-                candidate_viewers = candidates[output]
-            except KeyError:
-                raise ValueError("Invalid output format: %s" % output) from None
+    # look up a known application
+    if viewer is None:
+        # sorted in order from most pretty to most ugly
+        # very discussable, but indeed 'gv' looks awful :)
+        candidates = {
+            "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
+            "ps": [ "evince", "okular", "gsview", "gv" ],
+            "pdf": [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
+        }
 
-            for candidate in candidate_viewers:
-                path = shutil.which(candidate)
-                if path is not None:
-                    viewer = path
-                    break
-            else:
-                raise OSError(
-                    "No viewers found for '%s' output format." % output)
-    else:
-        if viewer == "file":
-            if filename is None:
-                raise ValueError("filename has to be specified if viewer=\"file\"")
-        elif viewer == "BytesIO":
-            if outputbuffer is None:
-                raise ValueError("outputbuffer has to be a BytesIO "
-                                 "compatible object if viewer=\"BytesIO\"")
-        elif viewer not in special and not shutil.which(viewer):
-            raise OSError("Unrecognized viewer: %s" % viewer)
+        for candidate in candidates.get(output, []):
+            path = shutil.which(candidate)
+            if path is not None:
+                viewer = path
+                break
 
+    # otherwise, use the system default for file association
+    if viewer is None:
+        viewer = system_default_viewer
+
+    if viewer == "file":
+        if filename is None:
+            raise ValueError("filename has to be specified if viewer=\"file\"")
+    elif viewer == "BytesIO":
+        if outputbuffer is None:
+            raise ValueError("outputbuffer has to be a BytesIO "
+                             "compatible object if viewer=\"BytesIO\"")
+    elif not callable(viewer) and not shutil.which(viewer):
+        raise OSError("Unrecognized viewer: %s" % viewer)
 
     latex_main = _get_latex_main(expr, preamble=preamble, packages=packages,
                                  euler=euler, extra_preamble=extra_preamble,
@@ -343,13 +378,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         elif viewer == "BytesIO":
             with open(join(workdir, src), 'rb') as fh:
                 outputbuffer.write(fh.read())
-        elif viewer == "pyglet":
-            try:
-                import pyglet  # noqa: F401
-            except ImportError:
-                raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
-
-            return _run_pyglet(join(workdir, src), fmt=output)
+        elif callable(viewer):
+            viewer(join(workdir, src), fmt=output)
         else:
             try:
                 _check_output_no_window(
