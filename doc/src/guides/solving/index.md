@@ -20,6 +20,8 @@ Learn how to use SymPy computer algebra system to:
 | [ Solve (find the roots of) a polynomial algebraically ](../../modules/polys/basics.rst)                       | $ x^2 - x = 0 $ | $ x \in \{0, 1\} $                                                                                                |
 |  [ Solve a Diophantine equation (find integer solutions to a polynomial equation) algebraically ](../../modules/solvers/diophantine.rst)             | $x^2 - 4xy + 8y^2 - 3x + 7y - 5 = 0 $ | $ \{(x = 2, y = 1), (x = 5, y = 1)\}$                                                                                  |
 
+Refer to [solving guidance](solving-guidance.md) applicable to many types of solving.
+
 Note: SymPy has a function called {func}`~.solve` 
 which is designed to find the roots of an equation or system of equations.
 SymPy {func}`~.solve` may or may not be what you need for a particular problem, 
