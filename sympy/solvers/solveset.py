@@ -24,6 +24,7 @@ from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
+from sympy.polys.matrices.linsolve import _linear_eq_to_dict
 from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
 from sympy.simplify import powdenest, logcombine
@@ -2511,6 +2512,17 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
     try:
         c, d = _lin_eq2dict(eq, symset, strict)
     except PolyNonlinearError as err:
+        # try raise a helpful error
+        if strict:
+            try:
+                noxterms = _linear_eq_to_dict(equations, symbols, strict=False, _expand=False)
+                print(filldedent('''
+                A term dependent on symbols of interest (but not appearing
+                as a symbol of interest) was detected. To ignore, use flag `strict=False`.'''))
+            except PolyNonlinearError as err:
+                print(filldedent('''
+                There are cross-terms containing symbols of interest. If expansion would
+                remove such terms, that must be done before calling this routine.'''))
         raise NonlinearError(str(err)) from err
     if dict:
         if c:
@@ -2643,7 +2655,6 @@ def linear_eq_to_matrix(equations, *symbols, strict=True):
             ...
             NonlinearError: nonlinear term: y*(x + 1)
     """
-    from sympy.polys.matrices.linsolve import _linear_eq_to_dict
     if not symbols:
         raise ValueError(filldedent('''
             Symbols must be given, for which coefficients
@@ -2684,6 +2695,17 @@ def linear_eq_to_matrix(equations, *symbols, strict=True):
     try:
         eq, c = _linear_eq_to_dict(equations, symbols, strict=strict, _expand=False)
     except PolyNonlinearError as err:
+        # try raise a helpful error
+        if strict:
+            try:
+                noxterms = _linear_eq_to_dict(equations, symbols, strict=False, _expand=False)
+                print(filldedent('''
+                A term dependent on symbols of interest (but not appearing
+                as a symbol of interest) was detected. To ignore, use flag `strict=False`.'''))
+            except PolyNonlinearError as err:
+                print(filldedent('''
+                There are cross-terms containing symbols of interest. If expansion would
+                remove such terms, that must be done before calling this routine.'''))
         raise NonlinearError(str(err)) from err
     ix = dict(zip(symbols, range(len(symbols))))
     A = zeros(len(eq), len(symbols))
