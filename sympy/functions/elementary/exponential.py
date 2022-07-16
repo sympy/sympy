@@ -542,6 +542,8 @@ class exp(ExpBase, metaclass=ExpMeta):
             # AccumBounds(-oo, 0) or AccumBounds(-oo, oo).
             # Check out function: test_issue_18473() in test_exponential.py and
             # test_limits.py for more information.
+            if re(cdir) < S.Zero:
+                return exp(-arg0)
             return exp(arg0)
         if arg0 is S.NaN:
             arg0 = arg.limit(x, 0)
