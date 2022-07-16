@@ -24,6 +24,8 @@ from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
+from sympy.polys.domains import QQ, ZZ, EXRAW
+from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.matrices.linsolve import _linear_eq_to_dict
 from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
@@ -2512,17 +2514,13 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
     try:
         c, d = _lin_eq2dict(eq, symset, strict)
     except PolyNonlinearError as err:
-        # try raise a helpful error
         if strict:
-            try:
-                _linear_eq_to_dict([eq], syms, strict=False, _expand=False)
-                print(filldedent('''
-                A term dependent on symbols of interest (but not appearing
-                as a symbol of interest) was detected. To ignore, use flag `strict=False`.'''))
-            except PolyNonlinearError:
-                print(filldedent('''
-                There are cross-terms containing symbols of interest. If expansion would
-                remove such terms, that must be done before calling this routine.'''))
+            print(filldedent('''
+            Either a term dependent on symbols of interest (but not appearing
+            as a symbol of interest) was detected (in which case using `strict=False`
+            might make more sense) or else there was a cross-term containing symbols
+            of interest (in which case expansion before calling this routine might
+            help).'''))
         raise NonlinearError(str(err)) from err
     if dict:
         if c:
@@ -2536,12 +2534,13 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
     return rv + [c]
 
 
-def linear_eq_to_matrix(equations, *symbols, strict=True):
+def linear_eq_to_matrix(equations, *symbols, strict=True, fmt=''):
     r"""
     Converts a given System of Equations into Matrix form.
     Here `equations` must be a linear system of equations in
     `symbols`. Element ``M[i, j]`` corresponds to the coefficient
-    of the jth symbol in the ith equation.
+    of the jth symbol in the ith equation. If a DomainMatrix is
+    desired, specify the desired format (None, 'sparse' or 'dense').
 
     The Matrix form corresponds to the augmented matrix form.
     For example:
@@ -2695,26 +2694,39 @@ def linear_eq_to_matrix(equations, *symbols, strict=True):
     try:
         eq, c = _linear_eq_to_dict(equations, symbols, strict=strict, _expand=False)
     except PolyNonlinearError as err:
-        # try raise a helpful error
         if strict:
-            try:
-                _linear_eq_to_dict(equations, symbols, strict=False, _expand=False)
-                print(filldedent('''
-                A term dependent on symbols of interest (but not appearing
-                as a symbol of interest) was detected. To ignore, use flag `strict=False`.'''))
-            except PolyNonlinearError:
-                print(filldedent('''
-                There are cross-terms containing symbols of interest. If expansion would
-                remove such terms, that must be done before calling this routine.'''))
+            print(filldedent('''
+            Either a term dependent on symbols of interest (but not appearing
+            as a symbol of interest) was detected (in which case using `strict=False`
+            might make more sense) or else there was a cross-term containing symbols
+            of interest (in which case expansion before calling this routine might
+            help).'''))
         raise NonlinearError(str(err)) from err
-    ix = dict(zip(symbols, range(len(symbols))))
-    A = zeros(len(eq), len(symbols))
-    b = zeros(len(eq), 1)
-    for i, d in enumerate(eq):
-        for s in d:
-            j = ix[s]
-            A[i, j] = d[s]
-        b[i, 0] = -c[i]
+    n, m = shape = (len(eq), len(symbols)
+    ix = dict(zip(symbols, range(m)))
+    rhs = [-i for i in c]
+    del c
+    if fmt != '':
+        types = set(map(type, eq.values())) | set(map(type, c))
+        dom = None
+        if len(types) == 1:
+            if rhs[0].is_Integer:
+                dom = ZZ
+            elif rhs[0].is_Rational:
+                dom = QQ
+        if dom is None:
+            dom = EXRAW
+        dod = {row: {ix[k]: d[k] for k in d} for row, d in enumerate(eq)}
+        A = DomainMatrix(dod, shape, dom, fmt=fmt)
+        b = DomainMatrix([[i] for i in rhs], (n, 1), dom, fmt=fmt)
+    else:
+        A = zeros(*shape)
+        b = zeros(n, 1)
+        for i, d in enumerate(eq):
+            for s in d:
+                j = ix[s]
+                A[i, j] = d[s]
+            b[i, 0] = rhs[i]
     return A, b
 
 
