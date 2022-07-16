@@ -32,32 +32,64 @@ leading to an inexact, numerical expression for all relations:
 (0.333333333333333 <= x) & (x <= 1.77245385090552)
 ```
 
-### *Guidance 2*
+### How to parse a string representing the equation
 
-*Guidance 2 content*
+If you are creating the expression yourself, we 
+[recommend against using parsing a string](
+https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input). But if you are programmatically reading in a string, this approach is convenient.
 
+You can parse a string representing the equation into a form that SymPy can
+understand (for example, `Eq` form), then apply solve the parsed expression.
+Parsing an equation from a string requires you to use {func}`transformations
+<sympy.parsing.sympy_parser.parse_expr>` for SymPy to
+- interpret equals signs
+- create symbols from your variables
+-  use more mathematical (rather than standard Python) notation, 
+for example the exponent operator can be parsed from `^` rather than having 
+to use Python's `**`.
 
-## *Title*
+To extract the solutions, you can iterate through the list of dictionaries:  
+    
+```py
+>>> from sympy import parse_expr, solve, solveset
+>>> from sympy.abc import x
+>>> expr = "x^2 = y"
+>>> parsed = parse_expr(expr, transformations="all")
+>>> print(parsed)
+Eq(x**2, y)
+>>> solutions = solve(parsed, x, dict=True)
+>>> print(solutions)
+[{x: -sqrt(y)}, {x: sqrt(y)}]
+>>> for solution in solutions:
+...     for key, val in solution.items():
+...         print(val)
+-sqrt(y)
+sqrt(y)
+>>> solveset(parsed, x)
+{-sqrt(y), sqrt(y)}
+```
 
-You can *title* in several ways. 
+If you already have the equation in `Eq` form, you can parse that string:
 
-### *Method 1*
-
-*Method 1 content*
-
-### *Method 2*
-
-*Method 2 content*
-
-## Use the solution result
-
-### *Usage method 1*
-
-*Usage method 1 content*
-
-### *Usage method 2*
-
-*Usage method 2 content*
+```py
+>>> from sympy import parse_expr, solve, solveset
+>>> from sympy.abc import x
+>>> expr = "Eq(x^2, y)"
+>>> parsed = parse_expr(expr, transformations="all")
+>>> print(parsed)
+Eq(x**2, y)
+>>> solutions = solve(parsed, x, dict=True)
+>>> print(solutions)
+[{x: -sqrt(y)}, {x: sqrt(y)}]
+>>> for solution in solutions:
+...     for key, val in solution.items():
+...         print(val)
+-sqrt(y)
+sqrt(y)
+>>> solutions_set = solveset(parsed, x)
+>>> print(solutions_set)
+{-sqrt(y), sqrt(y)}
+```
 
 ## *Tradeoffs (speed vs. accuracy, etc.) for function*
 
