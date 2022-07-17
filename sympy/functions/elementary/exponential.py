@@ -975,18 +975,23 @@ class log(Function):
         #      IMPORTANT.
         from sympy.series.order import Order
         from sympy.simplify.simplify import logcombine
+        from sympy.core.symbol import Dummy
         _logx = logx
         if not logx:
             logx = log(x)
         if self.args[0] == x:
             return logx
         arg = self.args[0]
+        t = Dummy('t', positive=True)
+        if cdir == 0:
+            cdir = 1
+        z = arg.subs(x, cdir*t)
         k, l = Wild("k"), Wild("l")
-        r = arg.match(k*x**l)
+        r = z.match(k*t**l)
         if r is not None:
             k, l = r[k], r[l]
-            if l != 0 and not l.has(x) and not k.has(x):
-                r = log(k) + l*logx  # XXX true regardless of assumptions?
+            if l != 0 and not l.has(t) and not k.has(t):
+                r = log(k) - l*log(cdir) + l*logx  # XXX true regardless of assumptions?
                 return r
 
         def coeff_exp(term, x):
@@ -1005,28 +1010,29 @@ class log(Function):
 
         # TODO new and probably slow
         try:
-            a, b = arg.leadterm(x)
-            s = arg.nseries(x, n=n+b, logx=logx)
+            a, b = z.leadterm(t)
+            s = z.nseries(t, n=n+b, logx=logx)
         except (ValueError, NotImplementedError, PoleError):
-            s = arg.nseries(x, n=n, logx=logx)
+            s = z.nseries(t, n=n, logx=logx)
             while s.is_Order:
                 n += 1
-                s = arg.nseries(x, n=n, logx=logx)
-        if _logx and logx.has(x):
-            a, b = arg.as_leading_term(x, logx=logx), S.Zero
+                s = z.nseries(t, n=n, logx=logx)
+        if _logx and logx.has(t):
+            a, b = z.as_leading_term(t, logx=logx), S.Zero
         else:
             try:
-                a, b = s.removeO().leadterm(x)
+                a, b = s.removeO().leadterm(t)
             except (ValueError, NotImplementedError, PoleError):
-                a, b = s.removeO().as_leading_term(x), S.Zero
-        p = cancel(s/(a*x**b) - 1).expand().powsimp()
+                a, b = s.removeO().as_leading_term(t), S.Zero
+        p = cancel(s/(a*t**b) - 1).expand().powsimp()
         if p.has(exp):
             p = logcombine(p)
         if isinstance(p, Order):
             n = p.getn()
-        _, d = coeff_exp(p, x)
+        _, d = coeff_exp(p, t)
         if not d.is_positive:
-            res = log(a) + b*logx
+            res = log(a) - b*log(cdir) + b*logx
+            res = res.subs(t, x/cdir)
             _res = res
             logflags = dict(deep=True, log=True, mul=False, power_exp=False,
                 power_base=False, multinomial=False, basic=False, force=True,
@@ -1052,7 +1058,7 @@ class log(Function):
         pterms = {}
 
         for term in Add.make_args(p):
-            co1, e1 = coeff_exp(term, x)
+            co1, e1 = coeff_exp(term, t)
             pterms[e1] = pterms.get(e1, S.Zero) + co1.removeO()
 
         k = S.One
@@ -1066,14 +1072,20 @@ class log(Function):
             pk = mul(pk, pterms)
             k += S.One
 
-        res = log(a) + b*logx
+        res = log(a) - b*log(cdir) + b*logx
         for ex in terms:
-            res += terms[ex]*x**(ex)
+            res += terms[ex]*t**(ex)
 
-        if cdir != 0:
-            cdir = self.args[0].dir(x, cdir)
-        if a.is_real and a.is_negative and im(cdir) < 0:
-            res -= 2*I*S.Pi
+        if a.is_negative and im(z) != 0:
+            from sympy.functions.special.delta_functions import Heaviside
+            for i, term in enumerate(z.lseries(t)):
+                if not term.is_real or i == 5:
+                    break
+            if i < 5:
+                coeff, _ = term.as_coeff_exponent(t)
+                res += -2*I*S.Pi*Heaviside(-im(coeff), 0)
+
+        res = res.subs(t, x/cdir)
         return res + Order(x**n, x)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -1083,7 +1095,7 @@ class log(Function):
         arg0 = self.args[0].together()
 
         # STEP 1
-        t = Dummy('t', real=True, positive=True)
+        t = Dummy('t', positive=True)
         if cdir == 0:
             cdir = 1
         z = arg0.subs(x, cdir*t)

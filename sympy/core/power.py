@@ -1730,7 +1730,7 @@ class Pow(Expr):
         if c.is_Float and d == S.Zero:
             # Convert floats like 0.5 to exact SymPy numbers like S.Half, to
             # prevent rounding errors which can induce wrong values of d leading
-            # to execution of an inappropriate code block (line 1741 - 1750)
+            # to a NotImplementedError being returned from the block below.
             from sympy.simplify.simplify import nsimplify
             _, d = nsimplify(g).leadterm(x, logx=logx)
         if not d.is_positive:
