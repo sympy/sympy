@@ -44,7 +44,7 @@ from .sdm import (
 )
 
 
-def _linsolve(eqs, syms, strict=True):
+def _linsolve(eqs, syms, strict=True, _expand=True):
     """Solve a linear system of equations.
 
     Examples
@@ -70,7 +70,7 @@ def _linsolve(eqs, syms, strict=True):
     nsyms = len(syms)
 
     # Convert to sparse augmented matrix (len(eqs) x (nsyms+1))
-    eqsdict, rhs = _linear_eq_to_dict(eqs, syms, strict)
+    eqsdict, rhs = _linear_eq_to_dict(eqs, syms, strict, _expand)
     Aaug = sympy_dict_to_dm(eqsdict, rhs, syms)
     K = Aaug.domain
 
@@ -134,7 +134,7 @@ def sympy_dict_to_dm(eqs_coeffs, eqs_rhs, syms):
     return sdm_aug
 
 
-def _linear_eq_to_dict(eqs, syms, strict=True, _expand=True):
+def _linear_eq_to_dict(eqs, syms, strict, _expand):
     """Convert a system Expr/Eq equations into dict form, returning
     the coefficient dictionaries and a list of syms-independent terms
     from each expression in ``eqs```. Use of ``strict=False`` allows
@@ -152,26 +152,26 @@ def _linear_eq_to_dict(eqs, syms, strict=True, _expand=True):
     ([{x: 2}], [3])
     """
     try:
-        return _linear_eq_to_dict_inner(eqs, syms, strict)
+        return _linear_eq_to_dict_inner(eqs, syms, strict, _expand)
     except PolyNonlinearError as err:
         if not _expand:
             raise err
         # XXX: This should be deprecated:
         eqs = [_mexpand(i, recursive=True) for i in eqs]
-        return _linear_eq_to_dict_inner(eqs, syms, strict)
+        return _linear_eq_to_dict_inner(eqs, syms, strict, _expand)
 
 
-def _linear_eq_to_dict_inner(eqs, syms, strict):
+def _linear_eq_to_dict_inner(eqs, syms, strict, _expand):
     syms = set(syms)
     eqsdict, ind = [], []
     for eq in eqs:
-        c, eqdict = _lin_eq2dict(eq, syms, strict)
+        c, eqdict = _lin_eq2dict(eq, syms, strict, _expand)
         eqsdict.append(eqdict)
         ind.append(c)
     return eqsdict, ind
 
 
-def _lin_eq2dict(a, symset, strict=True):
+def _lin_eq2dict(a, symset, strict=True, _expand=True):
     """return (c, d) where c is the sym-independent part of ``a`` and
     ``d`` is an efficiently calculated dictionary mapping symbols to
     their coefficients. A PolyNonlinearError is raised if non-linearity
@@ -236,7 +236,7 @@ def _lin_eq2dict(a, symset, strict=True):
                 terms = ti
                 terms_coeff = ci
             else:
-                raise PolyNonlinearError
+                raise PolyNonlinearError('nonlinear cross-terms encountered: %s' % a)
         coeff = Mul._from_args(coeff_list)
         if terms is None:
             return coeff, {}
@@ -245,10 +245,10 @@ def _lin_eq2dict(a, symset, strict=True):
             return  coeff * terms_coeff, terms
     elif a.is_Equality:
         # don't allow nonlinear terms to cancel
-        c, d = _lin_eq2dict(a.rewrite(Add, evaluate=False), symset, strict)
+        c, d = _lin_eq2dict(a.rewrite(Add, evaluate=_expand), symset, strict)
         # but don't include any keys that ended up having cancelling terms
         return c, {k: v for k, v in d.items() if v}
     elif not a.has_free_arg(symset) or not strict:
         return a, {}
     else:
-        raise PolyNonlinearError
+        raise PolyNonlinearError('symbol-dependent term encountered: %s' % a)

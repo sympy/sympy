@@ -2730,7 +2730,7 @@ def linear_eq_to_matrix(equations, *symbols, strict=True, fmt=''):
     return A, b
 
 
-def linsolve(system, *symbols, strict=False):
+def linsolve(system, *symbols, strict=True, _expand=True):
     r"""
     Solve system of $N$ linear equations with $M$ variables; both
     underdetermined and overdetermined systems are supported.
@@ -2935,8 +2935,10 @@ def linsolve(system, *symbols, strict=False):
             #
             eqs = system
             eqs = [sympify(eq) for eq in eqs]
+            eqs = [i.rewrite(Add, evaluate=_expand) if isinstance(i, Eq
+                ) else i for i in eqs]
             try:
-                sol = _linsolve(eqs, symbols, strict)
+                sol = _linsolve(eqs, symbols, strict, _expand)
             except PolyNonlinearError as err:
                 if strict:
                     print(filldedent('''
