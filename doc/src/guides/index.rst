@@ -17,5 +17,4 @@ For a deeper and elaborate exploration of other SymPy topics, see the
    booleans.rst
    custom-functions.md
    solving/index.md
-   contributing/index.rst
    ../citing.md
