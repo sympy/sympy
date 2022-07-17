@@ -42,6 +42,7 @@ from .sdm import (
     sdm_particular_from_rref,
     sdm_nullspace_from_rref
 )
+from sympy.utilities.misc import filldedent
 
 
 def _linsolve(eqs, syms, strict=True, _expand=True):
@@ -137,18 +138,17 @@ def sympy_dict_to_dm(eqs_coeffs, eqs_rhs, syms):
 def _linear_eq_to_dict(eqs, syms, strict, _expand):
     """Convert a system Expr/Eq equations into dict form, returning
     the coefficient dictionaries and a list of syms-independent terms
-    from each expression in ``eqs```. Use of ``strict=False`` allows
-    symbol-dependent cross terms to be treated as independent of
-    ``syms`` but still disallows cross terms to contain more than
-    one literal element from ``syms`` (in which case a PolyNonlinear
-    error is raised).
+    from each expression in ``eqs```. When ``strict`` is False,
+    symbol-dependent cross terms are treated as independent of
+    ``syms`` but cross terms containing more than one literal element
+    from ``syms`` will still raise PolyNonlinearError.
 
     Examples
     ========
 
     >>> from sympy.polys.matrices.linsolve import _linear_eq_to_dict as F
     >>> from sympy.abc import x
-    >>> F([2*x + 3], {x})
+    >>> F([2*x + 3], {x}, True, False)
     ([{x: 2}], [3])
     """
     try:
@@ -190,7 +190,8 @@ def _lin_eq2dict(a, symset, strict=True, _expand=True):
     (3, {x: 1, y: 2})
 
     Use results with caution if the equation was not fully expanded since
-    the coefficients may contain expressions that would simplify to 0:
+    the coefficients may contain expressions that would simplify to 0.
+    For example, the following does not depend on ``x`` or ``y``:
 
     >>> _lin_eq2dict(x*(y + 1)*(y - 1) - x*y**2 + x + 2, {x})
     (2, {x: -y**2 + (y - 1)*(y + 1) + 1})
@@ -236,7 +237,7 @@ def _lin_eq2dict(a, symset, strict=True, _expand=True):
                 terms = ti
                 terms_coeff = ci
             else:
-                raise PolyNonlinearError('nonlinear cross-terms encountered: %s' % a)
+                raise PolyNonlinearError('nonlinear cross-terms encountered')
         coeff = Mul._from_args(coeff_list)
         if terms is None:
             return coeff, {}
@@ -251,4 +252,6 @@ def _lin_eq2dict(a, symset, strict=True, _expand=True):
     elif not a.has_free_arg(symset) or not strict:
         return a, {}
     else:
-        raise PolyNonlinearError('symbol-dependent term encountered: %s' % a)
+        raise PolyNonlinearError(filldedent('''
+            symbol-dependent term can be ignored using `strict=False`
+            '''))

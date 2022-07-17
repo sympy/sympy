@@ -2462,12 +2462,12 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
         >>> linear_coeffs(eq, x)
         Traceback (most recent call last):
         ...
-        NonlinearError: nonlinear term: 1/x
+        NonlinearError: symbol-dependent term can be ignored using `strict=False`
 
         >>> linear_coeffs(x*(y + 1) + 3, x, y)
         Traceback (most recent call last):
         ...
-        NonlinearError: nonlinear term: x*(y + 1)
+        NonlinearError: nonlinear cross-terms encountered
 
     An error is not raised when dependent symbols are passed, however:
 
@@ -2482,7 +2482,7 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
         >>> linear_coeffs(x*(y**2 + 1) + x*y, x, y, strict=False)
         Traceback (most recent call last):
         ...
-        NonlinearError: nonlinear term: x*y
+        NonlinearError: nonlinear cross-terms encountered
 
     But the error will no longer raise if the unexpanded expression
     does not contain such a term:
@@ -2514,13 +2514,6 @@ def linear_coeffs(eq, *syms, dict=False, strict=True, first=True):
     try:
         c, d = _lin_eq2dict(eq, symset, strict)
     except PolyNonlinearError as err:
-        if strict:
-            print(filldedent('''
-            Either a term dependent on symbols of interest (but not appearing
-            as a symbol of interest) was detected (in which case using `strict=False`
-            might make more sense) or else there was a cross-term containing symbols
-            of interest (in which case expansion before calling this routine might
-            help).'''))
         raise NonlinearError(str(err)) from err
     if dict:
         if c:
@@ -2613,7 +2606,7 @@ def linear_eq_to_matrix(equations, *symbols, strict=True, fmt=''):
             >>> linear_eq_to_matrix(eqns, [x, y])
             Traceback (most recent call last):
             ...
-            NonlinearError: nonlinear term: (x**2 - 3*x)/(x - 3)
+            NonlinearError: symbol-dependent term can be ignored using `strict=False`
 
         Simplifying these equations will discard the removable singularity
         in the first and reveal the linear structure of the second:
@@ -2652,7 +2645,7 @@ def linear_eq_to_matrix(equations, *symbols, strict=True, fmt=''):
             >>> linear_eq_to_matrix([x + y + y*(x + 1)], [x, y], strict=False)
             Traceback (most recent call last):
             ...
-            NonlinearError: nonlinear term: y*(x + 1)
+            NonlinearError: nonlinear term: nonlinear cross-terms encountered
     """
     if not symbols:
         raise ValueError(filldedent('''
@@ -2694,13 +2687,6 @@ def linear_eq_to_matrix(equations, *symbols, strict=True, fmt=''):
     try:
         eq, c = _linear_eq_to_dict(equations, symbols, strict=strict, _expand=False)
     except PolyNonlinearError as err:
-        if strict:
-            print(filldedent('''
-            Either a term dependent on symbols of interest (but not appearing
-            as a symbol of interest) was detected (in which case using `strict=False`
-            might make more sense) or else there was a cross-term containing symbols
-            of interest (in which case expansion before calling this routine might
-            help).'''))
         raise NonlinearError(str(err)) from err
     n, m = shape = len(eq), len(symbols)
     ix = dict(zip(symbols, range(m)))
@@ -2895,11 +2881,14 @@ def linsolve(system, *symbols, strict=True, _expand=True):
 
     >>> linsolve([x*(1/x - 1), (y - 1)**2 - y**2 + 1], x, y)
     {(1, 1)}
-    >>> linsolve([x**2 - 1], x)
+
+    >>> linsolve([x*(x + 1) - 1], x)
     Traceback (most recent call last):
     ...
-    NonlinearError:
-    nonlinear term: x**2
+    NonlinearError: symbol-dependent term can be ignored using `strict=False`
+
+    >>> linsolve([x*(x + 1) - 1], x, strict=False)
+    {(1 - x**2,)}
     """
     if not system:
         return S.EmptySet
@@ -2940,13 +2929,6 @@ def linsolve(system, *symbols, strict=True, _expand=True):
             try:
                 sol = _linsolve(eqs, symbols, strict, _expand)
             except PolyNonlinearError as err:
-                if strict:
-                    print(filldedent('''
-                    Either a term dependent on symbols of interest (but not appearing
-                    as a symbol of interest) was detected (in which case using `strict=False`
-                    might make more sense) or else there was a cross-term containing symbols
-                    of interest (in which case expansion before calling this routine might
-                    help).'''))
                 raise NonlinearError(str(err)) from err
 
             if sol is None:
