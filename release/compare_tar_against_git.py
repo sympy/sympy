@@ -38,11 +38,13 @@ git_whitelist = {
     '.github/workflows/ci-sage.yml',
     '.github/workflows/comment-on-pr.yml',
     '.github/workflows/release.yml',
+    '.github/workflows/docs-preview.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
     '.ci/blacklisted.json',
     '.ci/README.rst',
+    '.circleci/config.yml',
     '.github/FUNDING.yml',
     '.editorconfig',
     '.coveragerc',
@@ -96,6 +98,7 @@ git_whitelist = {
     'bin/mailmap_check.py',
     'bin/test_symengine.py',
     'bin/test_tensorflow.py',
+    'bin/test_pyodide.mjs',
     # The notebooks are not ready for shipping yet. They need to be cleaned
     # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
@@ -122,7 +125,6 @@ git_whitelist = {
     # This stuff :)
     'release/.gitignore',
     'release/README.md',
-    'release/Vagrantfile',
     'release/compare_tar_against_git.py',
     'release/update_docs.py',
     'release/build_docs.py',
