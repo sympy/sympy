@@ -41,7 +41,7 @@ from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
-from sympy.matrices import zeros, MatrixBase
+from sympy.matrices import SparseMatrix, MatrixBase
 from sympy.ntheory import totient
 from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
@@ -2690,6 +2690,7 @@ def linear_eq_to_matrix(equations, *symbols, strict=True, fmt=''):
         raise NonlinearError(str(err)) from err
     n, m = shape = len(eq), len(symbols)
     ix = dict(zip(symbols, range(m)))
+    dod = {row: {ix[k]: d[k] for k in d} for row, d in enumerate(eq)}
     rhs = [-i for i in c]
     del c
     if fmt != '':
@@ -2702,17 +2703,11 @@ def linear_eq_to_matrix(equations, *symbols, strict=True, fmt=''):
                 dom = QQ
         if dom is None:
             dom = EXRAW
-        dod = {row: {ix[k]: d[k] for k in d} for row, d in enumerate(eq)}
         A = DomainMatrix(dod, shape, dom, fmt=fmt)
         b = DomainMatrix([[i] for i in rhs], (n, 1), dom, fmt=fmt)
     else:
-        A = zeros(*shape)
-        b = zeros(n, 1)
-        for i, d in enumerate(eq):
-            for s in d:
-                j = ix[s]
-                A[i, j] = d[s]
-            b[i, 0] = rhs[i]
+        A = SparseMatrix(*shape, dod)
+        b = SparseMatrix(n, 1, rhs)
     return A, b
 
 
