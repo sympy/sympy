@@ -2443,12 +2443,24 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
 
     system = list(collect(_mexpand(equ, recursive=True), sym,
         evaluate=False, exact=None).values())
+
+    # keep only symbols that appear
+    has = []
+    for i in coeffs:
+        s = {i}
+        for e in system:
+            if e.has_free_arg(s):
+                has.append(i)
+                break
+    coeffs = has
+
     try:
-        assert all(linear_coeffs(s, *coeffs) for s in system)
+        for s in system:
+            linear_coeffs(s, *coeffs)  # see if it raises error
     except NonlinearError:
         return
 
-    if not any(equ.has(sym) for equ in system):  # can this happen?
+    if not any(equ.has_free_arg({sym}) for equ in system):  # can this happen?
         miss = Dummy()
         dwas = flags.pop('dict', miss)
         swas = flags.pop('set', miss)
