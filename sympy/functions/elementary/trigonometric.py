@@ -2795,6 +2795,11 @@ class atan(InverseTrigonometricFunction):
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # atan
         arg0 = self.args[0].subs(x, 0)
+
+        # Handling branch points
+        if arg0 in (S.ImaginaryUnit, S.NegativeOne*S.ImaginaryUnit):
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         ndir = self.args[0].dir(x, cdir if cdir else 1)
         if arg0 is S.ComplexInfinity:
@@ -3005,6 +3010,11 @@ class acot(InverseTrigonometricFunction):
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # acot
         arg0 = self.args[0].subs(x, 0)
+
+        # Handling branch points
+        if arg0 in (S.ImaginaryUnit, S.NegativeOne*S.ImaginaryUnit):
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res

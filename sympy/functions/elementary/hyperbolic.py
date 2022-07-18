@@ -1596,6 +1596,31 @@ class atanh(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
+    def _eval_nseries(self, x, n, logx, cdir=0):  # atanh
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+
+        # Handling series on branch points
+        if arg0 in (S.One, S.NegativeOne):
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+
+        # Handling series for points lying on branch cuts (-oo, -1] U [1, oo)
+        if (1 - arg0**2).is_negative:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if arg0.is_negative:
+                    return res - I*pi
+            elif im(ndir).is_positive:
+                if arg0.is_positive:
+                    return res + I*pi
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+        return res
+
     def _eval_rewrite_as_log(self, x, **kwargs):
         return (log(1 + x) - log(1 - x)) / 2
 
@@ -1709,6 +1734,31 @@ class acoth(InverseHyperbolicFunction):
             else:
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):  # acoth
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+
+        # Handling branch points
+        if arg0 in (S.One, S.NegativeOne):
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+
+        # Handling points lying on branch cuts [-1, 1]
+        if arg0.is_real and (1 - arg0**2).is_positive:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if arg0.is_positive:
+                    return res + I*pi
+            elif im(ndir).is_positive:
+                if arg0.is_negative:
+                    return res - I*pi
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+        return res
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return (log(1 + 1/x) - log(1 - 1/x)) / 2
