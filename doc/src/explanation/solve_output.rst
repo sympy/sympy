@@ -94,12 +94,11 @@ prevents the solution from being returned as a boolean expression.
     [2]
 
 For those that used a version of SymPy older than 1.12, `solve` automatically
-tried to detect when single equation might provide a solution for several
-variables by matching coefficients on single variable that was not specified.
-That would happen when a single expression was passed with symbols being all
-but one of the free symbols in the equation. The output would be a single
+tried to detect when a single equation might provide a solution for several
+variables by matching coefficients on expressions. The output would be a single
 dictionary (if the symbols appeared in a linear fashion) or else a list of
 tuples if the system could be solved, otherwise an algebraic solution was sought
-for one or more of the symbols. Anyone using an older version can avoid the
- undetermined coefficients solution by passing the equation as a list and
-using the keyword `dict=True`.
+for one or more of the symbols. Newer versions of SymPy require permission for
+this coefficient extraction via keyword ``match=True``, otherwise the algebraic
+solution is returned. Anyone using an older version of SymPy can avoid the
+undetermined coefficients solution by passing the equation as a *list*.
