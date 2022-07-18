@@ -834,6 +834,11 @@ def solve(f, *symbols, **flags):
         manual=True (default is False)
             Do not use the polys/matrix method to solve a system of
             equations, solve them one at a time as you might "manually."
+        match=True (default is False)
+            For a single multivariate expression, construct a system of
+            equations in terms of other symbols that can be solved to
+            determine the given symbols (or, equivalently, the non-excluded
+            symbols) via the `solve_undetermined_coeffs` function.
         implicit=True (default is False)
             Allows ``solve`` to return a solution for a pattern in terms of
             other functions that contain that pattern; this is only
