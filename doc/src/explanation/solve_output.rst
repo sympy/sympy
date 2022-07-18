@@ -74,6 +74,7 @@ symbols were passed as a set.
 than an Equality is given as an expression to solve. A single equality, or more
 complicated relational expression might be returned.
 
+    >>> from sympy import Ne
     >>> solve([x**2 - 4, Ne(x, -2)])
     Eq(x, 2)
     >>> solve([x**2 > 4, x > 0])
@@ -92,7 +93,7 @@ prevents the solution from being returned as a boolean expression.
     >>> solve(p**2  - 4)
     [2]
 
-For those that used a version of SymPy older than 1.11, `solve` automatically
+For those that used a version of SymPy older than 1.12, `solve` automatically
 tried to detect when single equation might provide a solution for several
 variables by matching coefficients on single variable that was not specified.
 That would happen when a single expression was passed with symbols being all
