@@ -1398,11 +1398,18 @@ def _solve(f, *symbols, **flags):
         nonlin_s = []
         result = []
         i = 0
+        saw = {}
         while i < len(symbols):
             s = symbols[i]
+            saw.setdefault((s, f), []).append(None)
+            if all(len(saw[i]) == 2 for i in saw):
+                raise AssertionError(filldedent('''
+                    Please report
+                    to https://github.com/sympy/sympy/issues that an
+                    infinite loop was encountered while trying
+                    to solve %s for %s''' % (f, symbols)))
             xi, v = solve_linear(f, symbols=[s])
             if xi == s:
-                i = 0
                 # no need to check but cancel may be needed
                 # so the div will work if we aren't already
                 # simplifying
@@ -1430,9 +1437,9 @@ def _solve(f, *symbols, **flags):
                     xi, v = ordered((xi, v))
                 result.append({xi: v})
                 got_s.add(xi)
-                if i is None:
+                if i is None or isinstance(f, Piecewise):
                     return result
-                continue
+                i = -1  # to start over
             elif xi:
                 nonlin_s.append(s)
             i += 1
