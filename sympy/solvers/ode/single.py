@@ -9,6 +9,7 @@ from typing import Dict as tDict, Type, Iterator, List, Optional
 
 from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
+from sympy.core.cache import cached_property
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
@@ -38,18 +39,6 @@ from .lie_group import _ode_lie_group
 class ODEMatchError(NotImplementedError):
     """Raised if a SingleODESolver is asked to solve an ODE it does not match"""
     pass
-
-
-def cached_property(func):
-    '''Decorator to cache property method'''
-    attrname = '_' + func.__name__
-    def propfunc(self):
-        val = getattr(self, attrname, None)
-        if val is None:
-            val = func(self)
-            setattr(self, attrname, val)
-        return val
-    return property(propfunc)
 
 
 class SingleODEProblem:

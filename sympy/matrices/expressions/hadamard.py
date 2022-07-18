@@ -11,6 +11,7 @@ from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort
 )
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 def hadamard_product(*matrices):
@@ -64,10 +65,21 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, evaluate=False, check=True):
+    def __new__(cls, *args, evaluate=False, check=None):
         args = list(map(sympify, args))
-        if check:
+        if check is not None:
+            sympy_deprecation_warning(
+                "Passing check to HadamardProduct is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
+
+        if check in (True, None):
             validate(*args)
+        else:
+            sympy_deprecation_warning(
+                "Passing check=False to HadamardProduct is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
 
         obj = super().__new__(cls, *args)
         if evaluate:

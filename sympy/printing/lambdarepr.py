@@ -150,8 +150,20 @@ class NumExprPrinter(LambdaPrinter):
                 ans.append('where(%s, %s, ' % (cond, expr))
                 parenthesis_count += 1
         if not is_last_cond_True:
+            # See https://github.com/pydata/numexpr/issues/298
+            #
             # simplest way to put a nan but raises
             # 'RuntimeWarning: invalid value encountered in log'
+            #
+            # There are other ways to do this such as
+            #
+            #   >>> import numexpr as ne
+            #   >>> nan = float('nan')
+            #   >>> ne.evaluate('where(x < 0, -1, nan)', {'x': [-1, 2, 3], 'nan':nan})
+            #   array([-1., nan, nan])
+            #
+            # That needs to be handled in the lambdified function though rather
+            # than here in the printer.
             ans.append('log(-1)')
         return ''.join(ans) + ')' * parenthesis_count
 

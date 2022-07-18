@@ -57,6 +57,8 @@ env:
   SAGE_TRAC_GIT:    https://github.com/sagemath/sagetrac-mirror.git
   SAGE_TICKET:      34118
   REMOVE_PATCHES:   "*"
+  # Until https://trac.sagemath.org/ticket/23712 is resolved
+  EXTRA_CONFIGURE_ARGS: "--without-system-tachyon"
 
 jobs:
 
