@@ -1146,14 +1146,23 @@ def solve(f, *symbols, **flags):
     #
     # try to get a solution
     ###########################################################################
-    if len(f) == 1 and f[0].is_Mul:
+    if len(f) == 1 and f[0].is_Mul and len(symbols) > 1:
         solution = []
+        check = flags.get('check', True)
+        if check:
+            dens = flags.get('_denominators', _simple_dens(f, symbols))
+        else:
+            dens = None
         for fi in f[0].args:
             if not fi.has_free(*symbols):
                 continue
-            s = _solve(fi, *symbols, **flags)
-            if s:
-                solution.extend(s)
+            si = _solve(fi, *symbols, **flags)
+            if dens:
+                si = [s for s in si if
+                    not any(checksol(den, s, **flags) for den in
+                        dens)]
+            if si:
+                solution.extend(si)
         solution = list(ordered(uniq(solution)))
         flags['check'] = flags['simplify'] = False
     elif bare_f:
