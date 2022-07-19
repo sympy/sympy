@@ -174,10 +174,10 @@ def test_solve_args():
     # When one or more args are Boolean
     assert solve(Eq(x**2, 0.0)) == [0]  # issue 19048
     assert solve([True, Eq(x, 0)], [x], dict=True) == [{x: 0}]
-    assert solve([Eq(x, x), Eq(x, 0), Eq(x, x+1)], [x], dict=True) == []
-    assert not solve([Eq(x, x+1), x < 2], x)
-    assert solve([Eq(x, 0), x+1<2]) == Eq(x, 0)
-    assert solve([Eq(x, x), Eq(x, x+1)], x) == []
+    assert solve([Eq(x, x), Eq(x, 0), Eq(x, x + 1)], [x], dict=True) == []
+    assert not solve([Eq(x, x + 1), x < 2], x)
+    assert solve([Eq(x, 0), x + 1 < 2]) == Eq(x, 0)
+    assert solve([Eq(x, x), Eq(x, x + 1)], x) == []
     assert solve(True, x) == []
     assert solve([x - 1, False], [x], set=True) == ([], set())
     assert solve([-y*(x + y - 1)/2, (y - 1)/x/y + 1/y],
@@ -200,7 +200,27 @@ def test_solve_match():
         ) == {a: 3, b: 4}
     assert solve(a*x + b - 3*x + 4, [a, b, z], match=True) == {a: 3, b: -4}
     # - nonlinear in coefficients
-    raises(ValueError, lambda: solve(a*x + b**2/x - 3*x - 4/x, a, b, match=True))
+    raises(ValueError, lambda: solve(a*x + b**2/x - 3*x - 4/x, a, b,
+        match=True))
+    # product of linear factors still fails on purpose -- user
+    # should build list of solutions made by solving each factor;
+    # to do so automatically is an abuse of "solving an equation
+    # via undetermined coefficient"
+    eq = (a*x + b - 2*x - 5)*(c - 4)
+    raises(ValueError, lambda: solve(eq, a, b, c, match=True))
+    # return value of dict is always unambiguous
+    assert solve(a*x + b - 2*x - 5, {a, b, c}, match=True
+        ) == {a: 2, b: 5}
+    # use dummy generator if necessary
+    assert solve(c - 4, a, b, c, match=True) == {c: 4}
+
+
+def test_removing_linear_factors():
+    eq = (a*x + b - 2*x - 5)*(c - 4)
+    sol = solve(eq, a, b, c)
+    assert sol == [(a, b, 4), ((-b + 2*x + 5)/x, b, c)]
+    # use unambiguous return value
+    assert solve(eq, {a, b, c}) == [{a: (-b + 2*x + 5)/x}, {c: 4}]
 
 
 def test_solve_polynomial1():
