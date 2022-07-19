@@ -12,8 +12,8 @@ Here is a simple example of solving a system of equations algebraically:
 ```py
 >>> from sympy import solve
 >>> from sympy.abc import x, y
->>> solve([x**2 + y - 2, x - y - 4], x, y, dict=True)
-[{x: -3, y: -7}, {x: 2, y: -2}]
+>>> solve([x**2 + y - 2*z, y + 4*z], x, y, dict=True)
+[{x: -sqrt(6)*sqrt(z), y: -4*z}, {x: sqrt(6)*sqrt(z), y: -4*z}]
 ```
 
 ## Guidance
@@ -40,11 +40,11 @@ tuple):
 ```py
 >>> from sympy import solve
 >>> from sympy.abc import x, y, z
->>> equations = [x**2 + y - 2*z, x - y - 4*z]
+>>> equations = [x**2 + y - 2*z, y + 4*z]
 >>> solve(equations, x, y, dict=True)
-[{x: -sqrt(24*z + 1)/2 - 1/2, y: -4*z - sqrt(24*z + 1)/2 - 1/2}, {x: sqrt(24*z + 1)/2 - 1/2, y: -4*z + sqrt(24*z + 1)/2 - 1/2}]
+[{x: -sqrt(6)*sqrt(z), y: -4*z}, {x: sqrt(6)*sqrt(z), y: -4*z}]
 >>> solve(equations, [x, y], dict=True)
-[{x: -sqrt(24*z + 1)/2 - 1/2, y: -4*z - sqrt(24*z + 1)/2 - 1/2}, {x: sqrt(24*z + 1)/2 - 1/2, y: -4*z + sqrt(24*z + 1)/2 - 1/2}]
+[{x: -sqrt(6)*sqrt(z), y: -4*z}, {x: sqrt(6)*sqrt(z), y: -4*z}]
 ```
 
 ### Return a set of solution(s)
@@ -55,9 +55,8 @@ To get a list of symbols and set of solution(s) use `set=True` instead of
 ```py
 >>> from sympy import solve
 >>> from sympy.abc import x, y, z
->>> equations = [x**2 + y - 2*z, x - y - 4*z]
->>> solve(equations, x, y, set=True)
-([x, y], {(-sqrt(24*z + 1)/2 - 1/2, -4*z - sqrt(24*z + 1)/2 - 1/2), (sqrt(24*z + 1)/2 - 1/2, -4*z + sqrt(24*z + 1)/2 - 1/2)})
+>>> solve([x**2 + y - 2*z, y + 4*z], x, y, set=True)
+#([x, y], {(-sqrt(6)*sqrt(z), -4*z), (sqrt(6)*sqrt(z), -4*z)})
 ```
 
 ## Use the solution result
@@ -69,14 +68,14 @@ You can extract solutions by specifying in brackets ("slicing") the solution num
 ```py
 >>> from sympy import solve
 >>> from sympy.abc import x, y, z
->>> equations = [x**2 + y - 2*z, x - y - 4*z]
->>> solution = solve(equations, x, y, dict=True)
->>> solution
-[{x: -sqrt(24*z + 1)/2 - 1/2, y: -4*z - sqrt(24*z + 1)/2 - 1/2}, {x: sqrt(24*z + 1)/2 - 1/2, y: -4*z + sqrt(24*z + 1)/2 - 1/2}]
+>>> equations = [x**2 + y - 2*z, y + 4*z]
+>>> solution = solve([x**2 + y - 2*z, y + 4*z], x, y, dict=True)
+solution
+[{x: -sqrt(6)*sqrt(z), y: -4*z}, {x: sqrt(6)*sqrt(z), y: -4*z}]
 >>> solution[0][x]
--sqrt(24*z + 1)/2 - 1/2
+-sqrt(6)*sqrt(z)
 >>> solution[0][y]
--4*z - sqrt(24*z + 1)/2 - 1/2
+-4*z
 ```
 
 ### Use a set of solutions
