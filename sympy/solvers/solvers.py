@@ -1239,16 +1239,6 @@ def solve(f, *symbols, **flags):
                 solution[i] = {swap_sym.get(k, k): v.subs(swap_sym)
                               for k, v in sol.items()}
 
-    # undo the dictionary solutions returned when the system was only partially
-    # solved with poly-system if all symbols are present
-    if (
-            not flags.get('dict', False) and
-            ordered_symbols and
-            solution and not isinstance(solution, dict) and
-            all(isinstance(sol, dict) for sol in solution)
-    ):
-        solution = [tuple([r.get(s, s) for s in symbols]) for r in solution]
-
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still
     # returned.
@@ -1341,34 +1331,50 @@ def solve(f, *symbols, **flags):
     as_dict = flags.get('dict', False)
     as_set = flags.get('set', False)
 
+    if type(solution) not in (list, dict, tuple):
+        return solution
+
+    if not solution:
+        return []
+
+    # undo the dictionary solutions returned when the system was only partially
+    # solved with poly-system if all symbols are present
+    if (
+            not as_dict and
+            ordered_symbols and
+            not isinstance(solution, dict) and
+            isinstance(solution[0], dict)
+    ):
+        solution = [tuple([r.get(s, s) for s in symbols]) for r in solution]
+
     if not as_set and isinstance(solution, list):
         # Make sure that a list of solutions is ordered in a canonical way.
         solution.sort(key=default_sort_key)
         if solution and type(solution[0]) is tuple:
-            # XXX better to handle at source of introduction?,
-            # e.g solve([x**2 + y -2, y**2 - 4], x, y) would
+            # XXX is it better to handle at source of introduction?
+            # if we don't do it then (or now) then
+            # solve([x**2 + y -2, y**2 - 4], x, y) would
             # otherwise have (0, 2) appearing twice
             solution = list(uniq(solution))
 
     if not as_dict and not as_set:
-        return solution or []
+        return solution
 
     # return a list of mappings with canonical order or []
-    if not solution:
-        solution = []
+    if isinstance(solution, dict):
+        solution = [{k: v for k, v in ordered(solution.items())}]
+    elif iterable(solution[0]):
+        solution = [dict(ordered(zip(symbols, s))) for s in solution]
+    elif isinstance(solution[0], dict):
+        solution = [{k: s[k] for k in ordered(s)} for s in solution]
     else:
-        if isinstance(solution, dict):
-            solution = [{k: v for k, v in ordered(solution.items())}]
-        elif iterable(solution[0]):
-            solution = [dict(ordered(zip(symbols, s))) for s in solution]
-        elif isinstance(solution[0], dict):
-            solution = [{k: s[k] for k in ordered(s)} for s in solution]
-        else:
-            if len(symbols) != 1:
-                raise ValueError("Length should be 1")
-            solution = [{symbols[0]: s} for s in solution]
+        if len(symbols) != 1:
+            raise ValueError("Length should be 1")
+        solution = [{symbols[0]: s} for s in solution]
+
     if as_dict:
         return solution
+
     assert as_set
     # each dict does not necessarily have the same keys so unify them
     k = list(ordered(set([k for i in solution for k in i if i[k] != k])))
