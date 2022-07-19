@@ -1331,7 +1331,7 @@ def solve(f, *symbols, **flags):
     as_dict = flags.get('dict', False)
     as_set = flags.get('set', False)
 
-    if type(solution) not in (list, dict, tuple):
+    if solution is not None and type(solution) not in (list, dict, tuple):
         return solution
 
     if not solution:

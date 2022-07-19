@@ -90,8 +90,8 @@ complicated relational expression, might be returned.
     a dictionary as follows:
 
     >>> soln = Eq(x, 2)
-    >>> dict(list(soln))
-    {x: 2}
+    >>> dict([soln.args]) == {soln.lhs: soln.rhs} == {x: 2}
+    True
 
 Note: using relational expressions to filter the solution only works when
 solving for a single variable. Simple constraints to limit output to integers,
