@@ -404,7 +404,7 @@ def solve(f, *symbols, **flags):
     things:
 
         1) If no solution is found then an empty list is returned.
-        2) A consistent output can be obtained by using one of two flags:
+        2) A consistent output can be obtained by using one of three flags:
 
         * to always get a list of solution mappings, use flag
           dict=True:
@@ -420,7 +420,15 @@ def solve(f, *symbols, **flags):
             >>> solve([x**2 - 3, y - 1], set=True)
             ([x, y], {(-sqrt(3), 1), (sqrt(3), 1)})
 
-        3) As the above examples show, it is not necessary to provide symbols.
+        * to always get a list of tuples showing the value for every symbol
+          in the order given, use flag tuple=True:
+
+            >>> solve(x - 3, z, y, x, tuple=True)
+            [(z, y, 3)]
+            >>> solve([x - 4, z], x, y, z, tuple=True)
+            [(4, y, 0)]
+
+        3) As the first two examples show, it is not necessary to provide symbols.
         If you don't, then a solution for one or more of the symbols present
         in the equations that have been provided will be sought. The output
         will depend on whether a single expression is passed (and whether it
@@ -803,6 +811,9 @@ def solve(f, *symbols, **flags):
             Return list (perhaps empty) of solution mappings.
         set=True (default is False)
             Return list of symbols and set of tuple(s) of solution(s).
+        tuple=True (default is False)
+            Always return a full tuple with values for all symbols (not
+            only when solving a nonlinear set of equations)
         exclude=[] (default)
             Do not try to solve for any of the free symbols in exclude;
             if expressions are given, the free symbols in them will
@@ -900,6 +911,12 @@ def solve(f, *symbols, **flags):
             consider using a solver like `diophantine` if you are
             looking for a solution in integers."""))
 
+    # check usage of match flag
+    if flags.get('match', False) and not bare_f:
+        raise ValueError(filldedent("""
+            The 'match' flag can only be used when passing
+            a single expression *not in a list*."""))
+
     f, symbols = (_sympified_list(w) for w in [f, symbols])
     if isinstance(f, list):
         f = [s for s in f if s is not S.true and s is not True]
@@ -925,6 +942,9 @@ def solve(f, *symbols, **flags):
             symbols = symbols[0]
         ordered_symbols = symbols and is_sequence(symbols,
                         include=GeneratorType)
+
+    if flags.get('tuple', False) and not ordered_symbols and len(symbols) > 1:
+        raise ValueError('symbols must be ordered to return tuple solutions')
 
     # remove symbols the user is not interested in
     exclude = flags.pop('exclude', set())
@@ -1151,7 +1171,9 @@ def solve(f, *symbols, **flags):
     #
     # try to get a solution
     ###########################################################################
-    if len(f) == 1 and f[0].is_Mul and len(symbols) > 1:
+    if not flags.get('match', False
+        ) and len(f) == 1 and f[0].is_Mul and len(symbols) > 1:
+        # if match=True, handle as a whole, otherwise factor-wise
         solution = []
         check = flags.get('check', True)
         if check:
@@ -1176,13 +1198,15 @@ def solve(f, *symbols, **flags):
             solution = None
             free = eq.free_symbols
             syms = set(symbols) & free
-            # if there is no generator on which to match, the
-            # constant term can still be determined but we need
-            # a dummy generator
-            ex = {Dummy()} if len(syms) == 1 else free - syms
+            ex = free - syms
             if len(ex) != 1:
-                ind, dep = eq.as_independent(*symbols)
-                ex = dep.free_symbols - syms
+                if syms and len(free) == 1:
+                    # supply generator
+                    # solve(a + 4, a, match=True)
+                    ex = {Dummy()}
+                else:
+                    ind, dep = eq.as_independent(*symbols)
+                    ex = dep.free_symbols - syms
             if len(ex) == 1:
                 ex = ex.pop()
                 solution = solve_undetermined_coeffs(eq, syms, ex)
@@ -1335,6 +1359,7 @@ def solve(f, *symbols, **flags):
 
     as_dict = flags.get('dict', False)
     as_set = flags.get('set', False)
+    as_tuple = flags.get('tuple', False)
 
     if solution is not None and type(solution) not in (list, dict, tuple):
         return solution
@@ -1342,9 +1367,17 @@ def solve(f, *symbols, **flags):
     if not solution:
         return []
 
-    # undo the dictionary solutions returned when the system was only partially
-    # solved with poly-system if all symbols are present
-    if (
+    if as_tuple:
+        if type(solution) is dict:
+            solution = [solution]
+        if type(solution[0]) not in (tuple, dict):
+            assert len(symbols) == 1
+            solution = [(i,) for i in solution]
+        elif type(solution[0]) is dict:
+            solution = [tuple([r.get(s, s) for s in symbols]) for r in solution]
+    elif (
+            # undo the dictionary solutions returned when the system was
+            # only partially solved with poly-system
             not as_dict and
             ordered_symbols and
             not isinstance(solution, dict) and

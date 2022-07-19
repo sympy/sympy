@@ -182,6 +182,15 @@ def test_solve_args():
     assert solve([x - 1, False], [x], set=True) == ([], set())
     assert solve([-y*(x + y - 1)/2, (y - 1)/x/y + 1/y],
         set=True, check=False) == ([x, y], {(1 - y, y), (x, 0)})
+    # tuple=True
+    assert solve(x, x, tuple=True) == [(0,)]
+    assert solve(x, {x}, tuple=True) == [(0,)]
+    assert solve(x, x, y, tuple=True) == [(0, y)]
+    assert solve(x**2 - 4, x, y, tuple=True) == [(-2, y), (2, y)]
+    assert solve([x], x, y, tuple=True) == [(0, y)]
+    assert solve(a*x - 3*x + b - 2, a, b, c, tuple=True, match=True
+        ) == [(3, 2, c)]
+    raises(ValueError, lambda: solve(x, {x, y}, tuple=True))
 
 
 def test_solve_match():
@@ -213,6 +222,13 @@ def test_solve_match():
         ) == {a: 2, b: 5}
     # use dummy generator if necessary
     assert solve(c - 4, a, b, c, match=True) == {c: 4}
+    # independent appears to be `b` and there is no coeff
+    # to match so there is no solution
+    assert solve(c - a, a, match=True) == []
+    # not recognized since this has mv generators: b and c
+    raises(ValueError, lambda: solve(a + b + c, a, match=True))
+    # match is not for lists, only single expressions
+    raises(ValueError, lambda: solve([a*x - 2*x], a, match=True))
 
 
 def test_removing_linear_factors():
