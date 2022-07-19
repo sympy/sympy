@@ -12,10 +12,11 @@ interaction rather than programmatic use. The type of output will depend on the
 type of equation(s) (and how they are entered) and the number of symbols that
 are provided (and how they are provided).
 
-Since this output is controllable by using the `dict=True` keyword to give either a
-boolean expression or a list of dictionaries, the following is an explanation
-for those that might prefer the default output but wish to understand better why
-it is being given.
+Since this output is controllable by using the `dict=True` keyword to give
+a list of dictionaries mapping symbol to solution (when not dealing with
+relational expressions), the following is an explanation for those that
+might prefer the default output but wish to understand better the
+conditions under which it is given.
 
     >>> from sympy import sqrt, exp, solve, Symbol
     >>> from sympy.abc import x, y
@@ -45,9 +46,9 @@ monotonic) for the symbols specified.
     {x: log(y)}
 
 4. A list of tuples, each giving a set of values for the symbols in the order
-they were given - this is the result when more than one symbol was given in a
+they were given, is given when more than one symbol was given in a
 well defined order and either an expression was passed or a list of
-expressions with at least one not being linear/monotonic.
+expressions with at least one being linear/monotonic:
 
     >>> solve(x - 1, x, y)
     [(1, y)]
@@ -61,7 +62,8 @@ expressions with at least one not being linear/monotonic.
 5. A list of dictionaries is returned when the expression was not univariate or
 there was a nonlinear/nonmonotonic expression in a list *and* the order of
 symbols would otherwise be ambiguous because a) no symbols were passed or b) the
-symbols were passed as a set.
+symbols were passed as a set. The dictionary will only contain values that are
+distinct from the keys.
 
     >>> solve(x - y)
     [{x: y}]
@@ -72,7 +74,7 @@ symbols were passed as a set.
 
 6. A boolean expression is returned when a relational expression other
 than an Equality is given as an expression to solve. A single equality, or more
-complicated relational expression might be returned.
+complicated relational expression, might be returned.
 
     >>> from sympy import Ne
     >>> solve([x**2 - 4, Ne(x, -2)])
@@ -82,6 +84,14 @@ complicated relational expression might be returned.
     >>> b = Symbol('b', positive=True)
     >>> solve([x**2 > b, x > 0],x)
     (0 < x) & (x < oo) & ((sqrt(b) < x) | (x < -sqrt(b)))
+
+    The ``dict=True`` setting is ignored when working with relational
+    expressions. When an equality is returned, it can be converted to
+    a dictionary as follows:
+
+    >>> soln = Eq(x, 2)
+    >>> dict(list(soln))
+    {x: 2}
 
 Note: using relational expressions to filter the solution only works when
 solving for a single variable. Simple constraints to limit output to integers,
