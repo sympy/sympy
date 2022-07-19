@@ -18,7 +18,7 @@ relational expressions), the following is an explanation for those that
 might prefer the default output but wish to understand better the
 conditions under which it is given.
 
-    >>> from sympy import sqrt, exp, solve, Symbol
+    >>> from sympy import sqrt, exp, solve, Symbol, Eq
     >>> from sympy.abc import x, y
 
 1. An empty list indicates that no solution was found.
