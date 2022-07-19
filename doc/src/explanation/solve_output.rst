@@ -19,7 +19,7 @@ might prefer the default output but wish to understand better the
 conditions under which it is given.
 
     >>> from sympy import sqrt, exp, solve, Symbol, Eq
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x, y, a, b
 
 1. An empty list indicates that no solution was found.
 
@@ -38,12 +38,15 @@ single symbol was specified as being of interest.
 3. A single dictionary with keys being symbols and values being the solutions
 for those symbols is the result when one or more equations (passed as a
 *list*) has only a single, unique solution (e.g. the system is linear or else is
-monotonic) for the symbols specified.
+monotonic) for the symbols specified. Such a system is automatically generated
+when ``match=True``.
 
     >>> solve([x + y - 2, x - y + 2], x, y)
     {x: 0, y: 2}
     >>> solve([exp(x) - y], x)
     {x: log(y)}
+    >>> solve(a*x - 2*x + b - 5, {a, b}, match=True)
+    {a: 2, b: 5}
 
 4. A list of tuples, each giving a set of values for the symbols in the order
 they were given, is given when more than one symbol was given in a
