@@ -1176,7 +1176,10 @@ def solve(f, *symbols, **flags):
             solution = None
             free = eq.free_symbols
             syms = set(symbols) & free
-            ex = free - syms
+            # if there is no generator on which to match, the
+            # constant term can still be determined but we need
+            # a dummy generator
+            ex = {Dummy()} if len(syms) == 1 else free - syms
             if len(ex) != 1:
                 ind, dep = eq.as_independent(*symbols)
                 ex = dep.free_symbols - syms
@@ -1184,7 +1187,9 @@ def solve(f, *symbols, **flags):
                 ex = ex.pop()
                 solution = solve_undetermined_coeffs(eq, syms, ex)
             if solution is None:
-                raise ValueError('%s not recognized as a linear coefficient system in variables %s' % (eq, symbols))
+                raise ValueError(filldedent('''
+                    %s not recognized as a linear coefficient system
+                    in variables %s''' % (eq, symbols)))
         else:
             solution = _solve(eq, *symbols, **flags)
     else:
@@ -1360,7 +1365,7 @@ def solve(f, *symbols, **flags):
     if not as_dict and not as_set:
         return solution
 
-    # return a list of mappings with canonical order or []
+    # return a list of mappings with canonical order
     if isinstance(solution, dict):
         solution = [{k: v for k, v in ordered(solution.items())}]
     elif iterable(solution[0]):
