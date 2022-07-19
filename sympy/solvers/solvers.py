@@ -1435,7 +1435,8 @@ def _solve(f, *symbols, **flags):
                     v = v.cancel()
                 # check to see if this was a factor of f
                 try:
-                    w, r = div(f, xi - v)
+                    ni, di = (xi - v).as_numer_denom()
+                    w, r = div(f*di, ni)
                 except PolynomialError:
                     w, r = 1, 1
                 if not r:

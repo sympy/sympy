@@ -217,7 +217,7 @@ def test_solve_match():
 
 def test_removing_linear_factors():
     eq = (a*x + b - 2*x - 5)*(c - 4)
-    sol = solve(eq, a, b, c)
+    sol = solve(eq.expand(), a, b, c)
     assert sol == [(a, b, 4), ((-b + 2*x + 5)/x, b, c)]
     # use unambiguous return value
     assert solve(eq, {a, b, c}) == [{a: (-b + 2*x + 5)/x}, {c: 4}]
