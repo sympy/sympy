@@ -162,8 +162,7 @@ For {func}`~.solve`, place an assumption on the symbol to be solved for, $x$
 ```
 
 or restrict the solutions with standard Python techniques for filtering a 
-list such as a list comprehension, or 
-by adding inequalities to {func}`~.solve` (but the range must be continuous):
+list such as a list comprehension:
 
 ```py
 >>> from sympy import Or, Symbol, solve
@@ -175,9 +174,6 @@ by adding inequalities to {func}`~.solve` (but the range must be continuous):
 >>> solution_outside_2_3 = [v for v in solution if (v.is_real and Or(v<2,v>3))]
 >>> print(solution_outside_2_3)
 [1, 4]
->>> solution_2_3 = solve((expr,x>=2,x<=3), x)
->>> print(solution_2_3)
-Eq(x, 2) | Eq(x, 3)
 ```
 
 For {func}`~.solveset`, limit the output domain in the function call by 
