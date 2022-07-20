@@ -702,7 +702,7 @@ scientific computing with Python.
 Links
 ----------
 
-:ref:`SymPy Tutorial <tutorial>`
+:ref:`SymPy Introductory Tutorial <intro-tutorial>`
 
 :ref:`SymPy Documentation <documentation>`
 

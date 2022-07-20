@@ -99,7 +99,7 @@ except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
 from Cython.Build import cythonize
-cy_opts = {}
+cy_opts = {'compiler_directives': {'language_level': '3'}}
 
 ext_mods = [Extension(
     'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],

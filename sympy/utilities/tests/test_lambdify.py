@@ -12,12 +12,13 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial)
 from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import acosh
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, cos, sin, sinc, tan)
+from sympy.functions.elementary.trigonometric import (acos, cos, cot, sin,
+                                                      sinc, tan)
 from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
@@ -43,6 +44,7 @@ from sympy.printing.numpy import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
 from sympy.testing.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.exceptions import ignore_warnings
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import uppergamma, lowergamma
 
@@ -283,14 +285,13 @@ def test_issue_9334():
     foo, bar = numpy.random.random((2, 4))
     func_numexpr(foo, bar)
 
+
 def test_issue_12984():
-    import warnings
     if not numexpr:
         skip("numexpr not installed.")
     func_numexpr = lambdify((x,y,z), Piecewise((y, x >= 0), (z, x > -1)), numexpr)
-    assert func_numexpr(1, 24, 42) == 24
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
+    with ignore_warnings(RuntimeWarning):
+        assert func_numexpr(1, 24, 42) == 24
         assert str(func_numexpr(-1, 24, 42)) == 'nan'
 
 
@@ -491,8 +492,9 @@ def test_numpy_old_matrix():
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
     f = lambdify((x, y, z), A, [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy'])
-    numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
-    assert isinstance(f(1, 2, 3), numpy.matrix)
+    with ignore_warnings(PendingDeprecationWarning):
+        numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
+        assert isinstance(f(1, 2, 3), numpy.matrix)
 
 
 def test_scipy_sparse_matrix():
@@ -1348,6 +1350,24 @@ def test_issue_22739():
     assert abs(f.subs(point) - F(*point.values())) <= 1e-10
 
 
+def test_issue_22992():
+    if not numpy:
+        skip("numpy not installed")
+
+    a, t = symbols('a t')
+    expr = a*(log(cot(t/2)) - cos(t))
+    F = lambdify([a, t], expr, 'numpy')
+
+    point = {a: 10, t: 2}
+
+    assert abs(expr.subs(point) - F(*point.values())) <= 1e-10
+
+    # Standard math
+    F = lambdify([a, t], expr)
+
+    assert abs(expr.subs(point) - F(*point.values())) <= 1e-10
+
+
 def test_issue_19764():
     if not numpy:
         skip("numpy not installed")
@@ -1394,6 +1414,7 @@ def test_beta_math():
 
     assert abs(beta(1.3, 2.3) - F(1.3, 2.3)) <= 1e-10
 
+
 def test_betainc_scipy():
     if not scipy:
         skip("scipy not installed")
@@ -1402,6 +1423,7 @@ def test_betainc_scipy():
     F = lambdify((w, x, y, z), f, modules='scipy')
 
     assert abs(betainc(1.4, 3.1, 0.1, 0.5) - F(1.4, 3.1, 0.1, 0.5)) <= 1e-10
+
 
 def test_betainc_regularized_scipy():
     if not scipy:
