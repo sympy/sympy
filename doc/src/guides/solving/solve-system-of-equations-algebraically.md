@@ -11,7 +11,7 @@ Here is a simple example of solving a system of equations algebraically:
 
 ```py
 >>> from sympy import solve
->>> from sympy.abc import x, y
+>>> from sympy.abc import x, y, z
 >>> solve([x**2 + y - 2*z, y + 4*z], x, y, dict=True)
 [{x: -sqrt(6)*sqrt(z), y: -4*z}, {x: sqrt(6)*sqrt(z), y: -4*z}]
 ```
@@ -56,7 +56,7 @@ To get a list of symbols and set of solution(s) use `set=True` instead of
 >>> from sympy import solve
 >>> from sympy.abc import x, y, z
 >>> solve([x**2 + y - 2*z, y + 4*z], x, y, set=True)
-#([x, y], {(-sqrt(6)*sqrt(z), -4*z), (sqrt(6)*sqrt(z), -4*z)})
+([x, y], {(-sqrt(6)*sqrt(z), -4*z), (sqrt(6)*sqrt(z), -4*z)})
 ```
 
 ## Use the solution result
@@ -70,7 +70,7 @@ You can extract solutions by specifying in brackets ("slicing") the solution num
 >>> from sympy.abc import x, y, z
 >>> equations = [x**2 + y - 2*z, y + 4*z]
 >>> solution = solve([x**2 + y - 2*z, y + 4*z], x, y, dict=True)
-solution
+>>> solution
 [{x: -sqrt(6)*sqrt(z), y: -4*z}, {x: sqrt(6)*sqrt(z), y: -4*z}]
 >>> solution[0][x]
 -sqrt(6)*sqrt(z)
