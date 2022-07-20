@@ -1,7 +1,7 @@
 # Solve a system of inequalities of a single variable algebraically
 
 Use SymPy to solve a system of univariate inequalities algebraically. For
-example, solving $x^2 < \pi$, $x > 0$ yields $0 < x < \sqrt{pi}$.
+example, solving $x^2 < \pi$, $x > 0$ yields $0 < x < \sqrt{\pi}$.
 
 Alternatives to consider:
 - For multivariate systems (more than one symbol), try this [SciPy linear
@@ -31,11 +31,7 @@ symbol.
 
 ## Solve a system of inequalities algebraically
 
-You can solve a system of inequalities algebraically in several ways.
-
-### Enter your inequalities directly
-
-You can create your inequalities directly, then solve the system as a list:
+You can create your inequalities, then solve the system as a list:
 
 ```py
 >>> from sympy import symbols, solve, pi, Integer
@@ -45,32 +41,11 @@ You can create your inequalities directly, then solve the system as a list:
 (1/3 <= x) & (x <= sqrt(pi))
 ```
 
-### Put your inequalities into the Relational class
-
-You can create each inequality using the {class}`Relational class
-<sympy.core.relational.Relational>` by specifying the left-hand side, the
-right-hand side, and then a relational operator such strict greater than (`gt`
-or `>`), or less than or equal to (`le` or `<=`):
-
-```py
->>> from sympy.core import Rel
->>> from sympy import symbols, Integer, pi, solve
->>> x = symbols('x')
->>> inequality1 = Rel(x, Integer(1)/Integer(3), 'gt')
->>> inequality1
-x > 1/3
->>> inequality2 = Rel(x**2, pi, '<=')
->>> inequality2
-x**2 <= pi
->>> solve([inequality1, inequality2], x)
-(1/3 < x) & (x <= sqrt(pi))
-```
-
 ## Use the solution result
 
 A common way to use the solution result is to extract the bounds for the symbol
-(variable). For example, for a solution of $0 < x < \sqrt{pi}$, you might want
-to extract $0$ and $\sqrt{pi}$.
+(variable). For example, for a solution of $0 < x < \sqrt{\pi}$, you might want
+to extract $0$ and $\sqrt{\pi}$.
 
 ### Extract relational atoms
 
