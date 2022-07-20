@@ -136,9 +136,10 @@ Automatic Simplification
 
     *{class}`~.Boolean`* is the base class for the classes in the
     {mod}`~.logic` module. `Boolean` instances represent logical predicates
-    that are elements of a boolean algebra and can be thought of as having a
-    "true" or "false" value (note that `Boolean` objects do not use the
-    {term}`three-valued logic` used by the {term}`assumptions`).
+    that are elements of a [boolean
+    algebra](https://en.wikipedia.org/wiki/Boolean_algebra) and can be thought
+    of as having a "true" or "false" value (note that `Boolean` objects do not
+    use the {term}`three-valued logic` used by the {term}`assumptions`).
 
 Canonical Form
 Canonicalize
@@ -522,34 +523,33 @@ Simplification
     very specific mathematical manipulations to an expression.
 
 Solve
+Solvers
 
     To *solve* an {term}`equation` or system of equations means to find a set
     of {term}`expressions <expression>` that make the equation(s) true when
     the given {term}`symbol(s) <symbol>` are {term}`substituted
     <substitution>` with them. For example, the solution to the equation $x^2
-    = 1$ with respect to $x$ would be the set $\{-1, 1\}$. In the context of
-    solvers, an {term}`expression` is often implicitly thought of as
-    equivalent to an {term}`equation` equaling 0, i.e.,
-    `some_solve_function(expression)` is typically equivalent to
-    `some_solve_function(Eq(expression, 0))`. Different types of equations can
-    be solved by SymPy using different [solvers](solvers-docs) functions. For
-    instance, algebraic equations can be solved with {func}`~.solve`,
-    differential equations can be solved with {func}`~.dsolve`, and so on.
+    = 1$ with respect to $x$ would be the set $\{-1, 1\}$. Different types of
+    equations can be solved by SymPy using different
+    [*solvers*](solving-guide) functions. For instance, algebraic equations
+    can be solved with {func}`~.solve`, differential equations can be solved
+    with {func}`~.dsolve`, and so on.
 
-    SymPy generally uses the word "solve" to mean equation solving in this
-    sense. It is not used in the sense of "solving a problem". For instance,
-    one would generally prefer to use a word like "compute" or "evaluate" to
-    refer to the computation of an integral using a function like
-    {func}`~.integrate`.
+    SymPy generally uses the word "solve" and "solvers" to mean equation
+    solving in this sense. It is not used in the sense of "solving a problem".
+    For instance, one would generally prefer to say "compute an integral" or
+    "evaluate an integral" rather than "solve an integral" to refer to
+    symbolic integration using the function {func}`~.integrate`.
 
 Structural Equality
 
-    Two {term}`expressions <expression>` are *structurally equal* if they are
-    the same SymPy object. Two structurally equal expressions are considered
-    to be identical by SymPy, since all SymPy expressions are
-    {term}`immutable`. Structural equality can be checked with the `==`
-    operator, which always returns `True` or `False`. Symbolic {term}`equality
-    <equation>` can be represented using {class}`Eq
+    Two SymPy objects are *structurally equal* if they are equal as
+    {term}`expressions <expression>`, that is, they have the same as
+    {term}`expression trees <expression tree>`. Two structurally equal
+    expressions are considered to be identical by SymPy, since all SymPy
+    expressions are {term}`immutable`. Structural equality can be checked with
+    the `==` operator, which always returns `True` or `False`. Symbolic
+    {term}`equality <equation>` can be represented using {class}`Eq
     <sympy.core.relational.Equality>`.
 
     Typically, two expressions are structurally equal if they are the same
@@ -565,7 +565,7 @@ Structural Equality
     {term}`canonicalized <canonicalize>` to the same thing by {term}`automatic
     simplification`. For example, `x + y` and `y + x` are structurally equal
     because the {class}`~.Add` constructor automatically sorts its arguments,
-    making them both the same object.
+    making them both the same.
 
 Subexpression
 
@@ -586,7 +586,7 @@ Substitution
     {meth}`replace <sympy.core.basic.Basic.replace>`, and {meth}`xreplace
     <sympy.core.basic.Basic.xreplace>`. The methods may differ depending on
     whether they perform substitution using only strict {term}`structural
-    equality` or by making more use of mathematical knowledge when determining
+    equality` or by making use of mathematical knowledge when determining
     where a subexpression appears in an expression. Substitution is the
     standard way to treat an expression as a mathematical {term}`function` and
     evaluate it at a point.
@@ -595,16 +595,16 @@ Symbolic
 
     A *symbolic* representation of a mathematical object is a representation
     that is partially or completely unevaluated at runtime. It may include
-    named {term}`symbols <symbol>` in place of explicit numeric values. A
-    symbolic representation is often contrasted with a {term}`numeric` one.
-    Symbolic representations are mathematically exact, to contrast with
-    numeric representations which are typically rounded so they can fit within
-    a floating-point value. Symbolic {term}`expression <expression>`
-    representing mathematical objects may be aware of mathematical properties
-    of these objects and be able to {term}`simplify <simplification>` to
-    equivalent symbolic expressions using those properties. The goal of SymPy
-    is to represent and manipulate symbolic expressions representing
-    mathematical objects.
+    named {term}`symbolic constants <symbol>` in place of explicit numeric
+    values. A symbolic representation is often contrasted with a
+    {term}`numeric` one. Symbolic representations are mathematically exact, to
+    contrast with numeric representations which are typically rounded so they
+    can fit within a floating-point value. Symbolic {term}`expressions
+    <expression>` representing mathematical objects may be aware of
+    mathematical properties of these objects and be able to {term}`simplify
+    <simplification>` to equivalent symbolic expressions using those
+    properties. The goal of SymPy is to represent and manipulate symbolic
+    expressions representing various mathematical objects.
 
     Some sources use the phrases "analytic solution" or "closed-form" to refer
     to the concept of "symbolic", but this terminology is not used in SymPy.
@@ -619,13 +619,15 @@ Symbolic
 
 {class}`~.Symbol`
 
-    A *{class}`~.Symbol`* is an object that represents a single mathematical
-    variable in an expression. The {class}`~.Symbol` class is a subclass of
-    {term}`Expr` and is {term}`atomic <atom>`. A `Symbol` contains a name,
-    which is any string, and {term}`assumptions`. Symbols are typically
-    defined with the `Symbol` constructor or the {func}`~.symbols` function.
-    Two Symbols with the same name and assumptions are considered {term}`equal
-    <structural equality>`.
+    *{class}`~.Symbol`* is the class for symbol objects. A symbol represents a
+    single mathematical variable in an expression. The {class}`~.Symbol` class
+    is a subclass of {term}`Expr` and is {term}`atomic <atom>`. A `Symbol`
+    contains a name, which is any string, and {term}`assumptions`. Symbols are
+    typically defined with the `Symbol` constructor or the {func}`~.symbols`
+    function. Two Symbols with the same name and assumptions are considered
+    {term}`equal <structural equality>`. Symbols are implicitly assumed to be
+    independent or constant with respect to one another. SymPy does not
+    distinguish between symbols that are constants, variables, or parameters.
 
 {func}`~.sympify`
 
@@ -650,19 +652,20 @@ Three-valued logic
 
     *Three-valued logic* is a logic with three values, `True`, `False`, and
     `None`. It is also sometimes called *fuzzy logic*, although this term also
-    has different meanings in the mathematical literature so "three-valued
+    has different meanings in the mathematical literature, so "three-valued
     logic" is preferred. `True` and `False` work the same as in the usual
     two-valued predicate logic. `None` is an additional term that represents
     "unknown", "noncomputable", or "could be either True or False"
     (philosophically these are distinct concepts, but logically they all
     function identically). The semantics of `None` are that it absorbs other
     terms in logical operations whenever the result would differ if it were
-    replaced with `True` or `False`. For example, `None OR False` is `None`.
-    However, `None OR True` is `True` because the expression is `True` whether
-    the `None` "really" represents a value of `True` or `False`. One must be
-    careful to not use the usual Python logical operators like `and`, `or` and
-    `not` on three-valued logic, since `None` is falsy. See [](booleans) for
-    more details on how to code with three-valued logic.
+    replaced with `True` or `False`. For example, `None OR False` is `None`,
+    but `None OR True` is `True` because the predicate is `True` whether the
+    `None` "really" represents a value of `True` or `False`. One must be
+    careful when using the usual Python logical operators like `and`, `or` and
+    `not` on three-valued logic, since `None` is falsy. See [the guide for
+    symbolic and fuzzy booleans](booleans-guide) for more details on how to
+    code with three-valued logic.
 
     Three-valued logic is used by the {term}`assumptions` system to represent
     assumptions that are not known. For instance, `x.is_positive` might be
@@ -678,12 +681,10 @@ Undefined Function
     passing a string name of the function to `Function`, like `f =
     Function('f')`. Undefined functions are commonly used when working with
     [ODEs](ode-docs). Undefined functions are also the easiest way to make
-    {term}`symbols <symbol>` that depend on other symbols. For example, if `f
-    = Function('f')` and `x = Symbol('x')`, then SymPy will know that `f(x)`
-    depends on `x`, meaning, for instance, that the derivative `diff(f(x), x)`
-    will not be evaluated to 0. Otherwise, by default, SymPy assumes that all
-    symbols do not depend on other symbols, that is, that they are
-    mathematically "constant" or "independent variables" .
+    {term}`symbols <symbol>` that mathematically depend on other symbols. For
+    example, if `f = Function('f')` and `x = Symbol('x')`, then SymPy will
+    know that `f(x)` depends on `x`, meaning, for instance, that the
+    derivative `diff(f(x), x)` will not be evaluated to `0`.
 
 Unevaluated
 
@@ -700,8 +701,10 @@ Unevaluated
 
 {class}`zoo <sympy.core.numbers.ComplexInfinity>`
 
-    *{class}`zoo <sympy.core.numbers.ComplexInfinity>`* represents complex
-    infinity, i.e., the north pole of the Riemann sphere. The reason it is
+    *{class}`zoo <sympy.core.numbers.ComplexInfinity>`* represents [complex
+    infinity](https://mathworld.wolfram.com/ComplexInfinity.html), i.e., the
+    north pole of the [Riemann
+    sphere](https://en.wikipedia.org/wiki/Riemann_sphere). The reason it is
     spelled this way is that it is "z-oo", where "z" is the symbol commonly
     used for complex variables, and {term}`oo` is the symbol SymPy uses for
     real positive infinity.
