@@ -3894,7 +3894,7 @@ def pow_rep_recursive(n_i, k, n_remaining, terms, p):
     # Invalid arguments
     if n_i <= 0 or k <= 0:
         return
-    
+
     # No solutions may exist
     if n_remaining < k:
         return
