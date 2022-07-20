@@ -47,7 +47,7 @@ A common way to use the solution result is to extract the bounds for the symbol
 (variable). For example, for a solution of $0 < x < \sqrt{\pi}$, you might want
 to extract $0$ and $\sqrt{\pi}$.
 
-### Extract relational atoms
+### Extract a list of decomposed relations
 
 You can decompose a set of relations which is joined by `^` (or) or `&` (and)
 into individual relations using relational atoms. Using {any}`canonical
@@ -61,6 +61,8 @@ the symbol is on the left, so you can take the right-hand side {any}`rhs
 >>> x = symbols('x')
 >>> one_third = Integer(1)/Integer(3)
 >>> eq = solve([x >= one_third, x**2 <= pi], x)
+>>> eq
+(1/3 <= x) & (x <= sqrt(pi))
 >>> relations = [(i.lhs, i.rel_op, i.rhs) for i in [i.canonical for i in eq.atoms(Relational)]]
 >>> # Sorting relations just to ensure consistent list order for docstring testing
 >>> relations_sorted = sorted(relations, key=lambda x: float(x[2]))
@@ -68,7 +70,7 @@ the symbol is on the left, so you can take the right-hand side {any}`rhs
 [(x, '>=', 1/3), (x, '<=', sqrt(pi))]
 ```
 
-### Extract arguments
+### Extract a tuple of relations
 
 The {any}`args <sympy.core.basic.Basic.args>` of a solution set are the
 individual relations, so you can extract the constants from the left- or
