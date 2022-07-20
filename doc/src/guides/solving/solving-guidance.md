@@ -4,18 +4,18 @@ Here are guidelines that apply to many types of solving.
 
 ## Equations with no analytical solution
 
-The vast majority of arbitrary nonlinear equations are not analytically 
+The vast majority of arbitrary nonlinear equations are not analytically
 solvable. The classes of equations that are solvable are basically:
 1. Linear equations
 2. Polynomials, except where limited by the Abel-Ruffini theorem
 3. Equations that can be solved by inverting some transcendental functions
-4. Problems that can be transformed into the cases above 
-(e.g., by turning trigonometric functions into polynomials)
-5. A few other special cases that can be solved with something like the
-Lambert W function
+4. Problems that can be transformed into the cases above (e.g., by turning
+trigonometric functions into polynomials)
+5. A few other special cases that can be solved with something like the Lambert
+W function
 
-SymPy may reflect that your equation has no solutions that can be expressed 
-algebraically (symbolically) by returning an error such as 
+SymPy may reflect that your equation has no solutions that can be expressed
+algebraically (symbolically) by returning an error such as
 `NotImplementedError`:
 
 ```py
@@ -51,15 +51,16 @@ them numerically using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
 [1.17, -0.765 - 0.352*I, -0.765 + 0.352*I, 0.181 - 1.08*I, 0.181 + 1.08*I]
 ```
 
-({class}`CRootOf <sympy.polys.rootoftools.ComplexRootOf>` represents an 
-indexed complex root of a polynomial.)
+({class}`CRootOf <sympy.polys.rootoftools.ComplexRootOf>` represents an indexed
+complex root of a polynomial.)
 
 ## Use exact values
 
 If you want to preserve the exact mathematical values of symbols such as
 [fractions](tutorial-gotchas-final-notes) and [square
 roots](symbolic-computation), define them so that SymPy can interpret them
-symbolically, for example define one-third as a {class}`rational object <sympy.core.numbers.Rational>` using `Rational(1, 3)`:
+symbolically, for example define one-third as a {class}`rational object
+<sympy.core.numbers.Rational>` using `Rational(1, 3)`:
 
 ```py
 >>> from sympy import symbols, solve, pi, Rational
@@ -79,11 +80,28 @@ inexact value to SymPy, leading to an inexact, numerical solution:
 [{x: -1.77245385090552}, {x: 1.77245385090552}]
 ```
 
+In certain cases, using an inexact value will prevent SymPy from finding a
+result. For example, this exact equation can be solved:
+
+```py
+>>> from sympy import symbols, solve, sqrt
+>>> x = symbols('x')
+>>> eq = x**sqrt(2) - 2
+>>> solve(eq, x, dict=True)
+[{x: 2**(sqrt(2)/2)}]
+```
+
+but if you use the inexact equation `eq = x**sqrt(2).n() - 2` (where
+{func}`evalf n <sympy.core.evalf.EvalfMixin.n>` is the numerical evaluation
+function), SymPy will not return a result despite attempting for a long time. 
+
 ## How to parse a string representing the equation
 
-If you are creating the expression yourself, we 
-[recommend against using parsing a string](
-https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input). But if you are programmatically reading in a string, this approach is convenient.
+If you are creating the expression yourself, we [recommend against using parsing
+a string](
+https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).
+But if you are programmatically reading in a string, this approach is
+convenient.
 
 You can parse a string representing the equation into a form that SymPy can
 understand (for example, `Eq` form), then apply solve the parsed expression.
@@ -91,9 +109,9 @@ Parsing an equation from a string requires you to use {func}`transformations
 <sympy.parsing.sympy_parser.parse_expr>` for SymPy to
 - interpret equals signs
 - create symbols from your variables
--  use more mathematical (rather than standard Python) notation, 
-for example the exponent operator can be parsed from `^` rather than having 
-to use Python's `**`.
+-  use more mathematical (rather than standard Python) notation, for example the
+exponent operator can be parsed from `^` rather than having to use Python's
+`**`.
 
 To extract the solutions, you can iterate through the list of dictionaries:  
     
