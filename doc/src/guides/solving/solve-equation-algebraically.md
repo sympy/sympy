@@ -18,7 +18,7 @@ There are two high-level functions to solve equations, {func}`~.solve` and
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
->>> solve(x ** 2 - y, x, dict=True)
+>>> solve(x**2 - y, x, dict=True)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
 
@@ -64,7 +64,7 @@ and SymPy will solve for $y$:
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
->>> solve(x ** 2 - y, dict=True)
+>>> solve(x**2 - y, dict=True)
 [{y: x**2}]
 ```
 
@@ -73,7 +73,7 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 ```py
 >>> from sympy.abc import x, y
 >>> from sympy import solve
->>> solve(x ** 2 - y, x, dict=True)
+>>> solve(x**2 - y, x, dict=True)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 ```
 
@@ -103,7 +103,7 @@ $expression = 0$.
 ```py
 >>> from sympy import solve, solveset
 >>> from sympy.abc import x, y
->>> solve(x ** 2 - y, x, dict=True)
+>>> solve(x**2 - y, x, dict=True)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 >>> solveset(x**2 - y, x)
 {-sqrt(y), sqrt(y)}
@@ -143,9 +143,9 @@ real, and the last two are imaginary:
 ```py
 >>> from sympy import Symbol, solve, solveset
 >>> x = Symbol('x')
->>> solve(x ** 4 - 256, x, dict=True)
+>>> solve(x**4 - 256, x, dict=True)
 [{x: -4}, {x: 4}, {x: -4*I}, {x: 4*I}]
->>> solveset(x ** 4 - 256, x)
+>>> solveset(x**4 - 256, x)
 {-4, 4, -4*I, 4*I}
 ```
 
@@ -157,7 +157,7 @@ For {func}`~.solve`, place an assumption on the symbol to be solved for, $x$
 ```py
 >>> from sympy import Symbol, solve
 >>> x = Symbol('x', real=True)
->>> solve(x ** 4 - 256, x, dict=True)
+>>> solve(x**4 - 256, x, dict=True)
 [{x: -4}, {x: 4}]
 ```
 
