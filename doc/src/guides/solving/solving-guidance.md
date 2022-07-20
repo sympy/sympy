@@ -38,8 +38,8 @@ so you may have to {func}`solve your equation numerically
 0.739085133215161
 ```
 
-If you receive non-closed-form solutions, you can evaluate them numerically 
-using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
+If you receive non-closed-form solutions such as `CRootOf`, you can evaluate
+them numerically using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
 
 ```py
 >>> from sympy import solve
@@ -64,21 +64,19 @@ symbolically, for example define one-third as a {class}`rational object <sympy.c
 ```py
 >>> from sympy import symbols, solve, pi, Rational
 >>> x = symbols('x')
->>> one_third = Rational(1, 3)
->>> solve((x >= one_third, x**2 <= pi), x)
-(1/3 <= x) & (x <= sqrt(pi))
+>>> solve(x**2 - pi, x, dict=True)
+[{x: -sqrt(pi)}, {x: sqrt(pi)}]
 ```
 
-If you use the division operator between standard Python numbers, for example
-`1/3`, [Python will perform the division numerically](python-vs-sympy-numbers) and pass that inexact value to SymPy,
-leading to an inexact, numerical expression for all relations:
+If you use the standard Python math version of $\pi$, Python will pass that
+inexact value to SymPy, leading to an inexact, numerical solution:
 
 ```py
->>> from sympy import symbols, solve, pi, Integer
+>>> from sympy import symbols, solve
+>>> from math import pi
 >>> x = symbols('x')
->>> one_third = 1/3
->>> solve([x >= one_third, x**2 <= pi], x)
-(0.333333333333333 <= x) & (x <= 1.77245385090552)
+>>> solve(x**2 - pi, x, dict=True)
+[{x: -1.77245385090552}, {x: 1.77245385090552}]
 ```
 
 ## How to parse a string representing the equation
