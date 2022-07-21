@@ -2506,7 +2506,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     for i in coeffs:
         s = {i}
         for e in system:
-            if e.has_free_arg(s):
+            if e.has_free(*s):  # XXX e.has_free_arg(s):
                 has.append(i)
                 break
     coeffs = has
@@ -2517,7 +2517,8 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     except NonlinearError:
         return
 
-    if not any(equ.has_free_arg({sym}) for equ in system):  # can this happen?
+    # XXX if not any(equ.has_free_arg({sym}) for equ in system):  # can this happen?
+    if not any(equ.has_free(sym) for equ in system):  # can this happen?
         miss = Dummy()
         dwas = flags.pop('dict', miss)
         swas = flags.pop('set', miss)
