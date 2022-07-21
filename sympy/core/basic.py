@@ -1258,30 +1258,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         return self._has(iterargs, *patterns)
 
-    def has_free_arg(self, s):
-        """return True if self has any of the patterns in s as a free argument,
-        else False. This is like `Basic.has_free` but this will only report exact
-        argument matches.
-
-        Examples
-        ========
-
-        >>> from sympy import Function
-        >>> from sympy.abc import x, y
-        >>> f = Function('f')
-        >>> f(x).has_free_arg({f})
-        False
-        >>> f(x).has_free_arg({f(x)})
-        True
-        >>> f(x+1).has_free_arg({x})
-        True
-        >>> f(x+1).has_free_arg({x+1})
-        True
-        >>> f(x+y+1).has_free_arg({x + 1})
-        False
-        """
-        return any(a in s for a in iterfreeargs(self))
-
     @cacheit
     def has_free(self, *patterns):
         """return True if self has any of the patterns as a free expression
