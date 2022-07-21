@@ -526,17 +526,10 @@ def solve(f, *symbols, **flags):
 
         * When undetermined coefficients are identified:
 
-            * That are linear:
-
                 >>> solve((a + b)*x - b + 2, a, b)
                 {a: -2, b: 2}
 
-            * That are nonlinear:
-
-                >>> solve((a + b)*x - b**2 + 2, a, b, set=True)
-                ([a, b], {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))})
-
-        * If there is no linear solution, then the first successful
+         * If there is no linear solution, then the first successful
           attempt for a nonlinear solution will be returned:
 
             >>> solve(x**2 - y**2, x, y, dict=True)
