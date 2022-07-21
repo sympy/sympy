@@ -2346,15 +2346,19 @@ def solve_linear_system(system, *symbols, **flags):
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     r"""
     Solve equation of a type $p(x; a_1, \ldots, a_k) = q(x)$ where both
-    $p$ and $q$ are univariate polynomials that depend on $k$ parameters.
+    $p$ and $q$ are univariate expressions that depend linearly on $k$
+    parameters (or depend in such a way as to give a single solution).
 
     Explanation
     ===========
 
-    The result of this function is a dictionary with symbolic values of those
-    parameters with respect to coefficients in $q$.
+    The result of this function is a dictionary with symbolic values of
+    those parameters with respect to coefficients in $q$, an empty list
+    if there is no solution, and None if the system was not recognized.
+    Flags (other than those controlling output type) are passed along to
+    `solve`.
 
-    This function accepts both equations class instances and ordinary
+    This function accepts both Equality class instances and ordinary
     SymPy expressions. Specification of parameters and variables is
     obligatory for efficiency and simplicity reasons.
 
@@ -2363,13 +2367,10 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
 
     >>> from sympy import Eq, solve_undetermined_coeffs
     >>> from sympy.abc import a, b, c, x
-
-    >>> solve_undetermined_coeffs(Eq(2*a*x + a+b, x), [a, b], x)
+    >>> solve_undetermined_coeffs(Eq(2*a*x + a + b, x), [a, b], x)
     {a: 1/2, b: -1/2}
-
-    >>> solve_undetermined_coeffs(Eq(a*c*x + a+b, x), [a, b], x)
+    >>> solve_undetermined_coeffs(Eq(a*c*x + a + b, x), [a, b], x)
     {a: 1/c, b: -1/c}
-
     """
     if isinstance(equ, Eq):
         # got equation, so move all the
@@ -2378,15 +2379,18 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
 
     equ = cancel(equ).as_numer_denom()[0]
 
-    system = list(collect(equ.expand(), sym, evaluate=False).values())
+    system = list(collect(_mexpand(equ, recursive=True), sym,
+        evaluate=False, exact=None).values())
 
-    if not any(equ.has(sym) for equ in system):
-        # consecutive powers in the input expressions have
-        # been successfully collected, so solve remaining
-        # system using Gaussian elimination algorithm
-        return solve(system, *coeffs, **flags)
-    else:
-        return None  # no solutions
+    # save flags
+    _flags = flags.copy()
+    flags.pop('set', None)
+    flags.pop('dict', None)
+    sol = solve(system, *coeffs, **flags)
+    # restore flags
+    flags = _flags
+    if not sol or type(sol) is dict:
+        return sol
 
 
 def solve_linear_system_LU(matrix, syms):
