@@ -26,11 +26,11 @@ class SparseRepMatrix(RepMatrix):
     ========
 
     >>> from sympy import SparseMatrix, ones
-    >>> SparseMatrix(2, 2, range(4))  # list
+    >>> SparseMatrix(2, 2, range(4))
     Matrix([
     [0, 1],
     [2, 3]])
-    >>> SparseMatrix(2, 2, {(1, 1): 2})  # dictionary of locations; values
+    >>> SparseMatrix(2, 2, {(1, 1): 2})
     Matrix([
     [0, 0],
     [0, 2]])
