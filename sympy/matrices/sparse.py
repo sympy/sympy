@@ -26,18 +26,14 @@ class SparseRepMatrix(RepMatrix):
     ========
 
     >>> from sympy import SparseMatrix, ones
-    >>> SparseMatrix(2, 2, range(4))  # list
+    >>> SparseMatrix(2, 2, range(4))
     Matrix([
     [0, 1],
     [2, 3]])
-    >>> SparseMatrix(2, 2, {(1, 1): 2})  # dictionary of locations; values
+    >>> SparseMatrix(2, 2, {(1, 1): 2})
     Matrix([
     [0, 0],
     [0, 2]])
-    >>> SparseMatrix(2, 3, {0: {1: 2}, 1: {2: 3}})  # dod format
-    Matrix([
-    [0, 2, 0],
-    [0, 0, 3]])
 
     A SparseMatrix can be instantiated from a ragged list of lists:
 
@@ -162,31 +158,17 @@ class SparseRepMatrix(RepMatrix):
                         smat[i, j] = v
 
                 # manual copy, copy.deepcopy() doesn't work
-                try:
-                    for (r, c), v in args[2].items():
-                        if isinstance(v, MatrixBase):
-                            for (i, j), vv in v.todok().items():
-                                update(r + i, c + j, vv)
-                        elif isinstance(v, (list, tuple)):
-                            _, _, smat = cls._handle_creation_inputs(v, **kwargs)
-                            for i, j in smat:
-                                update(r + i, c + j, smat[i, j])
-                        else:
-                            v = cls._sympify(v)
-                            update(r, c, cls._sympify(v))
-                except TypeError:  # maybe dod format
-                    for r, cv in args[2].items():
-                        for c, v in cv.items():
-                            if isinstance(v, MatrixBase):
-                                for (i, j), vv in v.todok().items():
-                                    update(r + i, c + j, vv)
-                            elif isinstance(v, (list, tuple)):
-                                _, _, smat = cls._handle_creation_inputs(v, **kwargs)
-                                for i, j in smat:
-                                    update(r + i, c + j, smat[i, j])
-                            else:
-                                v = cls._sympify(v)
-                                update(r, c, cls._sympify(v))
+                for (r, c), v in args[2].items():
+                    if isinstance(v, MatrixBase):
+                        for (i, j), vv in v.todok().items():
+                            update(r + i, c + j, vv)
+                    elif isinstance(v, (list, tuple)):
+                        _, _, smat = cls._handle_creation_inputs(v, **kwargs)
+                        for i, j in smat:
+                            update(r + i, c + j, smat[i, j])
+                    else:
+                        v = cls._sympify(v)
+                        update(r, c, cls._sympify(v))
 
             elif is_sequence(args[2]):
                 flat = not any(is_sequence(i) for i in args[2])
