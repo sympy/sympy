@@ -1287,19 +1287,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> (2*x*y + 3).has_free(x*y)
         True
         """
-        if not patterns:
-            return False
-        p0 = patterns[0]
-        if len(patterns) == 1 and iterable(p0) and not isinstance(p0, Basic):
-            # Basic can contain iterables (though not non-Basic, ideally)
-            # but don't encourage mixed passing patterns
-            raise ValueError('expecting one or more Basic patterns')
-        # try quick test first
-        s = set(patterns)
-        rv = self.has_free_arg(s)
-        if rv:
-            return rv
-        # now try matching through slower _has
         return self._has(iterfreeargs, *patterns)
 
     def _has(self, iterargs, *patterns):
