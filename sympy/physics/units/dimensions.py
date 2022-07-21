@@ -549,7 +549,7 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         Vector representation in terms of the base dimensions.
         """
-       with ignore_warnings(SymPyDeprecationWarning):
+        with ignore_warnings(SymPyDeprecationWarning):
             sympy_deprecation_warning("use base and derive dims instead",
                     deprecated_since_version="1.10",
                     active_deprecations_target="dim-vector-deprecated",
@@ -608,4 +608,3 @@ class DimensionSystem(Basic, _QuantityMapper):
                 active_deprecations_target="is-consistent-deprecated",
                 stacklevel=3)
             return self.inv_can_transf_matrix.is_square
-
