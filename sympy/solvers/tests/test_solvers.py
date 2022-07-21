@@ -143,9 +143,9 @@ def test_solve_args():
     assert solve(x + y - 3, [x, y], dict=True) == [{x: 3 - y}]
     # - or no symbols are given
     assert solve(x + y - 3) == [{x: 3 - y}]
-    # multiple symbols might represent an undetermined coefficients system
+    # multiple symbols and nonlinear system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
-    args = (a + b)*x - b**2 + 2, a, b
+    args = [(a + b),- b**2 + 2], a, b
     assert solve(*args) == \
         [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
     assert solve(*args, set=True) == \
@@ -852,7 +852,7 @@ def test_issue_5197():
     assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == []
                  # not {x: -3, y: 1} b/c x is positive
     # The solution following should not contain (-sqrt(2), sqrt(2))
-    assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
+    assert solve([(x + y), - y**2 + 2], x, y) == [(sqrt(2), -sqrt(2))]
     y = Symbol('y', positive=True)
     # The solution following should not contain {y: -x*exp(x/2)}
     assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: x*exp(x/2)}]
@@ -1481,7 +1481,7 @@ def test_issue_5901():
         ([g(a)], {
         (-sqrt(h(a)**2*f(a)**2 + G)/f(a),),
         (sqrt(h(a)**2*f(a)**2+ G)/f(a),)})
-    args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
+    args = [(f(x) + g(x),- g(x)**2 + 2), f(x), g(x)]
     assert set(solve(*args)) == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}
     eqs = [f(x)**2 + g(x) - 2*f(x).diff(x), g(x)**2 - 4]
