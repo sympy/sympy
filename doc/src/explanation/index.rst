@@ -15,6 +15,5 @@ technical implementation details, and opinionated recommendations.
    :maxdepth: 2
 
    gotchas.rst
-   solve_output.rst
    special_topics/index.rst
    active-deprecations.md
