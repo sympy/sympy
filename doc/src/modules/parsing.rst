@@ -109,17 +109,13 @@ The currently-packaged LaTeX parser backend is partially generated with
 but to use the parser, you only need the ``antlr4`` Python package available.
 
 Depending on your package manager, you can install the right package with, for
-example, ``pip3`` (Python 3 only)::
+example, ``pip``::
 
-    $ pip3 install antlr4-python3-runtime
+    $ pip install antlr4-python3-runtime==4.10
 
-or ``pip`` (Python 2 only)::
+or ``conda``::
 
-    $ pip install antlr4-python2-runtime
-
-or ``conda`` (Python 2 or Python 3)::
-
-    $ conda install --channel=conda-forge antlr-python-runtime
+    $ conda install -c conda-forge antlr-python-runtime==4.10
 
 The C parser depends on ``clang`` and the Fortran parser depends on ``LFortran``.
 You can install these packages using::

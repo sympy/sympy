@@ -623,11 +623,12 @@ another.  This works for any function in SymPy, not just special functions.
 To rewrite an expression in terms of a function, use
 ``expr.rewrite(function)``.  For example,
 
-    >>> tan(x).rewrite(sin)
-         2
-    2⋅sin (x)
-    ─────────
-     sin(2⋅x)
+    >>> tan(x).rewrite(cos)
+       ⎛    π⎞
+    cos⎜x - ─⎟
+       ⎝    2⎠
+    ──────────
+      cos(x)
     >>> factorial(x).rewrite(gamma)
     Γ(x + 1)
 

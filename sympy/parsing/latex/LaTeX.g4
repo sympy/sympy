@@ -13,7 +13,7 @@
 grammar LaTeX;
 
 options {
-	language = Python2;
+	language = Python3;
 }
 
 WS: [ \t\r\n]+ -> skip;
@@ -299,7 +299,7 @@ args: (expr ',' args) | expr;
 
 limit_sub:
 	UNDERSCORE L_BRACE (LETTER | SYMBOL) LIM_APPROACH_SYM expr (
-		CARET L_BRACE (ADD | SUB) R_BRACE
+		CARET ((L_BRACE (ADD | SUB) R_BRACE) | ADD | SUB)
 	)? R_BRACE;
 
 func_arg: expr | (expr ',' func_arg);

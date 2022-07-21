@@ -791,7 +791,7 @@ class MatrixSpecial(MatrixRequired):
     @classmethod
     def _eval_eye(cls, rows, cols):
         vals = [cls.zero]*(rows*cols)
-        vals[::cols+1] = [cls.one]*min(rows, cols)
+        vals[::cols + 1] = [cls.one]*min(rows, cols)
         return cls._new(rows, cols, vals, copy=False)
 
     @classmethod
@@ -2090,8 +2090,8 @@ class MatrixOperations(MatrixRequired):
         """
         return self._eval_conjugate()
 
-    def doit(self, **kwargs):
-        return self.applyfunc(lambda x: x.doit())
+    def doit(self, **hints):
+        return self.applyfunc(lambda x: x.doit(**hints))
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """Apply evalf() to each element of self."""

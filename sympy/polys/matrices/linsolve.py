@@ -29,6 +29,7 @@
 from collections import defaultdict
 
 from sympy.core.add import Add
+from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 
@@ -41,9 +42,10 @@ from .sdm import (
     sdm_particular_from_rref,
     sdm_nullspace_from_rref
 )
+from sympy.utilities.misc import filldedent
 
 
-def _linsolve(eqs, syms):
+def _linsolve(eqs, syms, strict=True, _expand=True):
     """Solve a linear system of equations.
 
     Examples
@@ -69,7 +71,7 @@ def _linsolve(eqs, syms):
     nsyms = len(syms)
 
     # Convert to sparse augmented matrix (len(eqs) x (nsyms+1))
-    eqsdict, rhs = _linear_eq_to_dict(eqs, syms)
+    eqsdict, rhs = _linear_eq_to_dict(eqs, syms, strict, _expand)
     Aaug = sympy_dict_to_dm(eqsdict, rhs, syms)
     K = Aaug.domain
 
@@ -133,50 +135,91 @@ def sympy_dict_to_dm(eqs_coeffs, eqs_rhs, syms):
     return sdm_aug
 
 
-def _expand_eqs_deprecated(eqs):
-    """Use expand to cancel nonlinear terms.
+def _linear_eq_to_dict(eqs, syms, strict, _expand):
+    """Convert a system Expr/Eq equations into dict form, returning
+    the coefficient dictionaries and a list of syms-independent terms
+    from each expression in ``eqs```. When ``strict`` is False,
+    symbol-dependent cross terms are treated as independent of
+    ``syms`` but cross terms containing more than one literal element
+    from ``syms`` will still raise PolyNonlinearError.
 
-    This approach matches previous behaviour of linsolve but should be
-    deprecated.
+    Examples
+    ========
+
+    >>> from sympy.polys.matrices.linsolve import _linear_eq_to_dict as F
+    >>> from sympy.abc import x
+    >>> F([2*x + 3], {x}, True, False)
+    ([{x: 2}], [3])
     """
-    def expand_eq(eq):
-        if eq.is_Equality:
-            eq = eq.lhs - eq.rhs
-        return eq.expand()
-
-    return [expand_eq(eq) for eq in eqs]
-
-
-def _linear_eq_to_dict(eqs, syms):
-    """Convert a system Expr/Eq equations into dict form"""
     try:
-        return _linear_eq_to_dict_inner(eqs, syms)
-    except PolyNonlinearError:
+        return _linear_eq_to_dict_inner(eqs, syms, strict, _expand)
+    except PolyNonlinearError as err:
+        if not _expand:
+            raise err
         # XXX: This should be deprecated:
-        eqs = _expand_eqs_deprecated(eqs)
-        return _linear_eq_to_dict_inner(eqs, syms)
+        eqs = [_mexpand(i, recursive=True) for i in eqs]
+        return _linear_eq_to_dict_inner(eqs, syms, strict, _expand)
 
 
-def _linear_eq_to_dict_inner(eqs, syms):
-    """Convert a system Expr/Eq equations into dict form"""
+def _linear_eq_to_dict_inner(eqs, syms, strict, _expand):
     syms = set(syms)
-    eqsdict, eqs_rhs = [], []
+    eqsdict, ind = [], []
     for eq in eqs:
-        rhs, eqdict = _lin_eq2dict(eq, syms)
+        c, eqdict = _lin_eq2dict(eq, syms, strict, _expand)
         eqsdict.append(eqdict)
-        eqs_rhs.append(rhs)
-    return eqsdict, eqs_rhs
+        ind.append(c)
+    return eqsdict, ind
 
 
-def _lin_eq2dict(a, symset):
-    """Efficiently convert a linear equation to a dict of coefficients"""
+def _lin_eq2dict(a, symset, strict=True, _expand=True):
+    """return (c, d) where c is the sym-independent part of ``a`` and
+    ``d`` is an efficiently calculated dictionary mapping symbols to
+    their coefficients. A PolyNonlinearError is raised if non-linearity
+    is detected. To allow cross-terms involving object containing (but not
+    equal to) a symbol, use ``strict=False``
+
+    The values in the dictionary will be non-zero if the original expression was expanded
+    but may contain expressions which will simplify to zero, otherwise.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.matrices.linsolve import _lin_eq2dict
+    >>> from sympy.abc import x, y
+    >>> _lin_eq2dict(x + 2*y + 3, {x, y})
+    (3, {x: 1, y: 2})
+
+    Use results with caution if the equation was not fully expanded since
+    the coefficients may contain expressions that would simplify to 0.
+    For example, the following does not depend on ``x`` or ``y``:
+
+    >>> _lin_eq2dict(x*(y + 1)*(y - 1) - x*y**2 + x + 2, {x})
+    (2, {x: -y**2 + (y - 1)*(y + 1) + 1})
+    >>> c, d = _; d[x].simplify() == 0
+    True
+
+    The following does not raise an error because ``x**2`` does not appear in
+    ``x``:
+
+    >>> strict = True
+    >>> _lin_eq2dict(x*(x**2 + 1), {x**2}, strict)
+    (x, {x**2: x})
+
+    But the reverse raises an error because ``x`` is in ``x**2``; the
+    error is suppressed by using ``strict=False`. This might
+    be most useful when wanting to allow ``f(x)`` and ``f(x).diff()`` to be
+    treated as independent of each other.
+
+    >>> _lin_eq2dict(x*(x**2 + 1), {x}, not strict)
+    (0, {x: x**2 + 1})
+    """
     if a in symset:
         return S.Zero, {a: S.One}
     elif a.is_Add:
         terms_list = defaultdict(list)
         coeff_list = []
         for ai in a.args:
-            ci, ti = _lin_eq2dict(ai, symset)
+            ci, ti = _lin_eq2dict(ai, symset, strict)
             coeff_list.append(ci)
             for mij, cij in ti.items():
                 terms_list[mij].append(cij)
@@ -187,23 +230,28 @@ def _lin_eq2dict(a, symset):
         terms = terms_coeff = None
         coeff_list = []
         for ai in a.args:
-            ci, ti = _lin_eq2dict(ai, symset)
+            ci, ti = _lin_eq2dict(ai, symset, strict)
             if not ti:
                 coeff_list.append(ci)
             elif terms is None:
                 terms = ti
                 terms_coeff = ci
             else:
-                raise PolyNonlinearError
-        coeff = Mul(*coeff_list)
+                raise PolyNonlinearError('nonlinear cross-terms encountered')
+        coeff = Mul._from_args(coeff_list)
         if terms is None:
             return coeff, {}
         else:
             terms = {sym: coeff * c for sym, c in terms.items()}
             return  coeff * terms_coeff, terms
     elif a.is_Equality:
-        return _lin_eq2dict(a.lhs - a.rhs, symset)
-    elif not a.has_free(*symset):
+        # don't allow nonlinear terms to cancel
+        c, d = _lin_eq2dict(a.rewrite(Add, evaluate=_expand), symset, strict)
+        # but don't include any keys that ended up having cancelling terms
+        return c, {k: v for k, v in d.items() if v}
+    elif not a.has_free_arg(symset) or not strict:
         return a, {}
     else:
-        raise PolyNonlinearError
+        raise PolyNonlinearError(filldedent('''
+            symbol-dependent term can be ignored using `strict=False`
+            '''))

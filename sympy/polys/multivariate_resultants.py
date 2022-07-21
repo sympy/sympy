@@ -8,8 +8,9 @@ are:
 Multivariate resultants are used to identify whether a multivariate
 system has common roots. That is when the resultant is equal to zero.
 """
+from math import prod
 
-from sympy.core.mul import (Mul, prod)
+from sympy.core.mul import Mul
 from sympy.matrices.dense import (Matrix, diag)
 from sympy.polys.polytools import (Poly, degree_list, rem)
 from sympy.simplify.simplify import simplify

@@ -74,6 +74,10 @@ will need to either add a `warnings` filter as above or use pytest to filter
 SymPy deprecation warnings.
 ```
 
+## Version 1.12
+
+There are no deprecations yet for 1.12.
+
 ## Version 1.11
 
 (mathematica-parser-new)=
@@ -98,7 +102,7 @@ specify this conversion was:
 
 ```py
 >>> from sympy.parsing.mathematica import mathematica
->>> mathematica('F[7,5,3]', {'F[*x]': 'Max(*x)*Min(*x)'})
+>>> mathematica('F[7,5,3]', {'F[*x]': 'Max(*x)*Min(*x)'})   # doctest: +SKIP
 21
 ```
 
@@ -123,6 +127,13 @@ functions. Instead of ``carmichael.is_perfect_square`` use
 n % p == 0
 ```
 
+(remove-check-argument-from-matrix-operations)=
+### The `check` argument to `HadamardProduct`, `MatAdd` and `MatMul`
+
+This argument can be used to pass incorrect values to `~.HadamardProduct`,
+`~.MatAdd`, and `~.MatMul` leading to later problems. The `check` argument
+will be removed and the arguments will always be checked for correctness, i.e.,
+the arguments are matrices or matrix symbols.
 
 ## Version 1.10
 

@@ -1,8 +1,8 @@
-.. _tutorial:
+.. _intro-tutorial:
 
-==========
- Tutorials
-==========
+=====================
+Introductory Tutorial
+=====================
 
 This tutorial aims to give an introduction to SymPy for someone who has not
 used the library before.  Many features of SymPy will be introduced in this

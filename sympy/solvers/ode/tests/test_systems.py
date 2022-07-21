@@ -1071,10 +1071,11 @@ def test_sysode_linear_neq_order1_type2():
     eqs6 = [Eq(Derivative(f(x), x), -9*f(x) - 4*g(x)),
             Eq(Derivative(g(x), x), -4*g(x)),
             Eq(Derivative(h(x), x), h(x) + exp(x))]
-    sol6 = [Eq(f(x), C1*exp(-4*x)*Rational(-4, 5) + C2*exp(-9*x)),
-            Eq(g(x), C1*exp(-4*x)),
+    sol6 = [Eq(f(x), C2*exp(-4*x)*Rational(-4, 5) + C1*exp(-9*x)),
+            Eq(g(x), C2*exp(-4*x)),
             Eq(h(x), C3*exp(x) + x*exp(x))]
-    assert dsolve(eqs6) == sol6
+    got = dsolve(eqs6)
+    assert got == sol6, got
     assert checksysodesol(eqs6, sol6) == (True, [0, 0, 0])
 
     # Regression test case for issue #8859
@@ -1647,11 +1648,11 @@ def test_higher_order_to_first_order_9():
 
     eqs9 = [f(x) + g(x) - 2*exp(I*x) + 2*Derivative(f(x), x) + Derivative(f(x), (x, 2)),
             f(x) + g(x) - 2*exp(I*x) + 2*Derivative(g(x), x) + Derivative(g(x), (x, 2))]
-    sol9 =  [Eq(f(x), -C1 + C2*exp(-2*x)/2 - (C3/2 - C4/2)*exp(-x)*cos(x)
-                    + (C3/2 + C4/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
+    sol9 =  [Eq(f(x), -C1 + C4*exp(-2*x)/2 - (C2/2 - C3/2)*exp(-x)*cos(x)
+                    + (C2/2 + C3/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
                     + 2*((1 - 2*I)*exp(I*x)*cos(x)**2/5)),
-            Eq(g(x), C1 - C2*exp(-2*x)/2 - (C3/2 - C4/2)*exp(-x)*cos(x)
-                    + (C3/2 + C4/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
+            Eq(g(x), C1 - C4*exp(-2*x)/2 - (C2/2 - C3/2)*exp(-x)*cos(x)
+                    + (C2/2 + C3/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
                     + 2*((1 - 2*I)*exp(I*x)*cos(x)**2/5))]
     assert dsolve(eqs9) == sol9
     assert checksysodesol(eqs9, sol9) == (True, [0, 0])

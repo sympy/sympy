@@ -212,6 +212,20 @@ class Limit(Expr):
 
         e, z, z0, dir = self.args
 
+        if str(dir) == '+-':
+            r = limit(e, z, z0, dir='+')
+            l = limit(e, z, z0, dir='-')
+            if isinstance(r, Limit) and isinstance(l, Limit):
+                if r.args[0] == l.args[0]:
+                    return self
+            if r == l:
+                return l
+            if r.is_infinite and l.is_infinite:
+                return S.ComplexInfinity
+            raise ValueError("The limit does not exist since "
+                             "left hand limit = %s and right hand limit = %s"
+                             % (l, r))
+
         if z0 is S.ComplexInfinity:
             raise NotImplementedError("Limits at complex "
                                     "infinity are not implemented")
@@ -351,15 +365,7 @@ class Limit(Expr):
         l = None
 
         try:
-            if str(dir) == '+-':
-                r = gruntz(e, z, z0, '+')
-                l = gruntz(e, z, z0, '-')
-                if l != r:
-                    raise ValueError("The limit does not exist since "
-                            "left hand limit = %s and right hand limit = %s"
-                            % (l, r))
-            else:
-                r = gruntz(e, z, z0, dir)
+            r = gruntz(e, z, z0, dir)
             if r is S.NaN or l is S.NaN:
                 raise PoleError()
         except (PoleError, ValueError):

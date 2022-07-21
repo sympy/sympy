@@ -8,11 +8,10 @@ sympy.stats.frv
 sympy.stats.crv
 sympy.stats.drv
 """
-
+from math import prod
 
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
-from sympy.core.mul import prod
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.core.sympify import sympify

@@ -31,6 +31,7 @@ from sympy.polys.partfrac import apart
 from sympy.polys.polytools import factor, cancel, Poly
 from sympy.polys.rationaltools import together
 from sympy.series.order import O
+from sympy.sets.sets import FiniteSet
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.gammasimp import gammasimp
 from sympy.simplify.powsimp import powsimp
@@ -1624,11 +1625,20 @@ def test_has_free():
     assert Integral(f(x), (f(x), 1, y)).has_free(y)
     assert not Integral(f(x), (f(x), 1, y)).has_free(x)
     assert not Integral(f(x), (f(x), 1, y)).has_free(f(x))
+    # simple extraction
+    assert (x + 1 + y).has_free(x + 1)
+    assert not (x + 2 + y).has_free(x + 1)
+    assert (2 + 3*x*y).has_free(3*x)
+    raises(ValueError, lambda: x.has_free({x, y}))
+    s = FiniteSet(1, 2)
+    assert Piecewise((s, x > 3), (4, True)).has_free(s)
+    assert not Piecewise((1, x > 3), (4, True)).has_free(s)
 
 
 def test_issue_5300():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
+
 
 def test_floordiv():
     from sympy.functions.elementary.integers import floor

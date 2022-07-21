@@ -13,7 +13,7 @@ some of which are specified forces and torques. The system is shown below:
 The system will be modeled using ``JointsMethod``. First we need to create the
 ``dynamicsymbols`` needed to describe the system as shown in the above diagram.
 In this case, the generalized coordinates :math:`q_1` represent lateral distance of block from wall,
-:math:`q_2` represents ngle of the compound pendulum from vertical, :math:`q_3`  represents angle of the simple
+:math:`q_2` represents angle of the compound pendulum from vertical, :math:`q_3`  represents angle of the simple
 pendulum from the compound pendulum. The generalized speeds :math:`u_1` represents lateral speed of block,
 :math:`u_2` represents lateral speed of compound pendulum and :math:`u_3` represents angular speed of C relative to B.
 

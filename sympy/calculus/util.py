@@ -652,7 +652,7 @@ def is_convex(f, *syms, domain=S.Reals):
     To determine concavity of a function pass `-f` as the concerned function.
     To determine logarithmic convexity of a function pass `\log(f)` as
     concerned function.
-    To determine logartihmic concavity of a function pass `-\log(f)` as
+    To determine logarithmic concavity of a function pass `-\log(f)` as
     concerned function.
 
     Currently, convexity check of multivariate functions is not handled.

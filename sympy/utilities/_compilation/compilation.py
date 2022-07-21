@@ -535,7 +535,8 @@ def _write_sources_to_build_dir(sources, build_dir):
         sha256_in_mem = sha256_of_string(src.encode('utf-8')).hexdigest()
         if os.path.exists(dest):
             if os.path.exists(dest + '.sha256'):
-                sha256_on_disk = open(dest + '.sha256').read()
+                with open(dest + '.sha256') as fh:
+                    sha256_on_disk = fh.read()
             else:
                 sha256_on_disk = sha256_of_file(dest).hexdigest()
 
@@ -543,7 +544,8 @@ def _write_sources_to_build_dir(sources, build_dir):
         if differs:
             with open(dest, 'wt') as fh:
                 fh.write(src)
-                open(dest + '.sha256', 'wt').write(sha256_in_mem)
+            with open(dest + '.sha256', 'wt') as fh:
+                fh.write(sha256_in_mem)
         source_files.append(dest)
     return source_files, build_dir
 

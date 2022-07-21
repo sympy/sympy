@@ -1212,7 +1212,7 @@ class Add(Expr, AssocOp):
                         if q not in common_q:
                             r.pop(q)
                     for q in r:
-                        r[q] = prod(r[q])
+                        r[q] = Mul(*r[q])
                 # find the gcd of bases for each q
                 G = []
                 for q in common_q:
@@ -1258,5 +1258,5 @@ class Add(Expr, AssocOp):
 
 add = AssocOpDispatcher('add')
 
-from .mul import Mul, _keep_coeff, prod, _unevaluated_Mul
+from .mul import Mul, _keep_coeff, _unevaluated_Mul
 from .numbers import Rational
