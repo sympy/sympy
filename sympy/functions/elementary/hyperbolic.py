@@ -1243,8 +1243,7 @@ class asinh(InverseHyperbolicFunction):
 
         # Handling branch points
         if arg0 in (S.ImaginaryUnit, -S.ImaginaryUnit):
-            res = I * asin(-I*arg)._eval_nseries(x, n, logx=logx, cdir=cdir)
-            return res.expand()
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
@@ -1442,9 +1441,7 @@ class acosh(InverseHyperbolicFunction):
 
         # Handling branch points
         if arg0 in (S.One, S.NegativeOne):
-            res = acos(arg)*sqrt(arg - 1)/sqrt(1 - arg)
-            res = res._eval_nseries(x, n, logx=logx, cdir=cdir)
-            return res
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
@@ -1600,7 +1597,7 @@ class atanh(InverseHyperbolicFunction):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
 
-        # Handling series on branch points
+        # Handling branch points
         if arg0 in (S.One, S.NegativeOne):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
@@ -1608,7 +1605,7 @@ class atanh(InverseHyperbolicFunction):
         if arg0 is S.ComplexInfinity:
             return res
 
-        # Handling series for points lying on branch cuts (-oo, -1] U [1, oo)
+        # Handling points lying on branch cuts (-oo, -1] U [1, oo)
         if (1 - arg0**2).is_negative:
             ndir = arg.dir(x, cdir if cdir else 1)
             if im(ndir).is_negative:
@@ -1930,8 +1927,8 @@ class asech(InverseHyperbolicFunction):
         # Handling branch points
         if arg0 is S.One:
             t = Dummy('t', positive=True)
-            ser = asech(S.One + t**2).rewrite(log).nseries(t, 0, 2*n)
-            arg1 = -S.One + self.args[0]
+            ser = asech(S.One - t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.One - self.args[0]
             f = arg1.as_leading_term(x)
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
@@ -2149,7 +2146,7 @@ class acsch(InverseHyperbolicFunction):
             res = ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
             return res
 
-        if arg0 is S.NegativeOne*S.ImaginaryUnit:
+        if arg0 == S.NegativeOne*S.ImaginaryUnit:
             t = Dummy('t', positive=True)
             ser = acsch(-S.ImaginaryUnit + t**2).rewrite(log).nseries(t, 0, 2*n)
             arg1 = S.ImaginaryUnit + self.args[0]
@@ -2173,7 +2170,7 @@ class acsch(InverseHyperbolicFunction):
                     return -res - I*pi
             elif re(ndir).is_negative:
                 if im(arg0).is_negative:
-                    return -self.res + I*pi
+                    return -res + I*pi
             else:
                 return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
         return res

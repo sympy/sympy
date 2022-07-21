@@ -594,12 +594,12 @@ def test_asinh_series():
 def test_asinh_nseries():
     x = Symbol('x')
     # Tests concerning branch points
-    assert asinh(x + I)._eval_nseries(x, 4, None) == I*pi/2 - \
-    sqrt(2)*I*sqrt(I*x) - sqrt(2)*I*(I*x)**(S(3)/2)/12 - 3*sqrt(2)*I*(I*x)**(S(5)/2)/160 - \
-    5*sqrt(2)*I*(I*x)**(S(7)/2)/896 + O(x**4)
+    assert asinh(x + I)._eval_nseries(x, 4, None) == I*pi/2 + \
+    sqrt(x)*(1 - I) + x**(S(3)/2)*(S(1)/12 + I/12) + x**(S(5)/2)*(-S(3)/160 + 3*I/160) + \
+    x**(S(7)/2)*(-S(5)/896 - 5*I/896) + O(x**4)
     assert asinh(x - I)._eval_nseries(x, 4, None) == -I*pi/2 + \
-    sqrt(2)*I*sqrt(-I*x) + sqrt(2)*I*(-I*x)**(S(3)/2)/12 + 3*sqrt(2)*I*(-I*x)**(S(5)/2)/160 + \
-    5*sqrt(2)*I*(-I*x)**(S(7)/2)/896 + O(x**4)
+    sqrt(x)*(1 + I) + x**(S(3)/2)*(S(1)/12 - I/12) + x**(S(5)/2)*(-S(3)/160 - 3*I/160) + \
+    x**(S(7)/2)*(-S(5)/896 + 5*I/896) + O(x**4)
     # Tests concerning points lying on branch cuts
     assert asinh(x + 2*I)._eval_nseries(x, 4, None, cdir=1) == I*asin(2) - \
     sqrt(3)*I*x/3 + sqrt(3)*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
@@ -609,13 +609,9 @@ def test_asinh_nseries():
     sqrt(3)*I*x/3 + sqrt(3)*x**2/9 - sqrt(3)*I*x**3/18 + O(x**4)
     assert asinh(x - 2*I)._eval_nseries(x, 4, None, cdir=-1) == -I*asin(2) - \
     sqrt(3)*I*x/3 - sqrt(3)*x**2/9 + sqrt(3)*I*x**3/18 + O(x**4)
-    # TODO: Tests concerning re(ndir) == 0
-    # assert asinh(2*I + I*x - x**2)._eval_nseries(x, 4, None, cdir=1) == I*pi/2 + \
-    # log(2 - sqrt(3)) - sqrt(3)*x/3 - sqrt(3)*I*x**2/3 + sqrt(3)*x**2/9 + \
-    # 2*sqrt(3)*I*x**3/9 - sqrt(3)*x**3/18 + O(x**4)
-    # assert asinh(2*I + I*x - x**2)._eval_nseries(x, 4, None, cdir=1) == I*pi/2 + \
-    # log(2 - sqrt(3)) - sqrt(3)*x/3 - sqrt(3)*I*x**2/3 + sqrt(3)*x**2/9 + \
-    # 2*sqrt(3)*I*x**3/9 - sqrt(3)*x**3/18 + O(x**4)
+    # Tests concerning re(ndir) == 0
+    assert asinh(2*I + I*x - x**2)._eval_nseries(x, 4, None) == I*pi/2 + log(2 - sqrt(3)) - \
+    sqrt(3)*x/3 + x**2*(sqrt(3)/9 - sqrt(3)*I/3) + x**3*(-sqrt(3)/18 + 2*sqrt(3)*I/9) + O(x**4)
 
 
 def test_asinh_fdiff():
@@ -728,9 +724,8 @@ def test_acosh_series():
 def test_acosh_nseries():
     x = Symbol('x')
     # Tests concerning branch points
-    assert acosh(x + 1)._eval_nseries(x, 4, None) == -sqrt(2)*I*sqrt(-x) - \
-    sqrt(2)*I*(-x)**(S(3)/2)/12 - 3*sqrt(2)*I*(-x)**(S(5)/2)/160 - \
-    5*sqrt(2)*I*(-x)**(S(7)/2)/896 + O(x**4)
+    assert acosh(x + 1)._eval_nseries(x, 4, None) == sqrt(2)*sqrt(x) - \
+    sqrt(2)*x**(S(3)/2)/12 + 3*sqrt(2)*x**(S(5)/2)/160 - 5*sqrt(2)*x**(S(7)/2)/896 + O(x**4)
     # Tests concerning points lying on branch cuts
     assert acosh(x - 1)._eval_nseries(x, 4, None) == I*pi - \
     sqrt(2)*I*sqrt(x) - sqrt(2)*I*x**(S(3)/2)/12 - 3*sqrt(2)*I*x**(S(5)/2)/160 - \
@@ -743,13 +738,9 @@ def test_acosh_nseries():
     sqrt(2)*x/12 + 17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
     assert acosh(1/(I*x - 3))._eval_nseries(x, 4, None, cdir=-1) == acosh(-S(1)/3) - \
     sqrt(2)*x/12 - 17*sqrt(2)*I*x**2/576 + 443*sqrt(2)*x**3/41472 + O(x**4)
-    #     # TODO: Tests concerning re(ndir) == 0
-    # assert acosh(-I*x**2 + x - 2)._eval_nseries(x, 4, None, cdir=1) == -I*pi + \
-    # log(sqrt(3) + 2) - sqrt(3)*x/3 + sqrt(3)*I*x**2/3 - sqrt(3)*x**2/9 + \
-    # 2*sqrt(3)*I*x**3/9 - sqrt(3)*x**3/18 + O(x**4)
-    # assert acosh(-I*x**2 + x - 2)._eval_nseries(x, 4, None, cdir=-1) == -I*pi + \
-    # log(sqrt(3) + 2) - sqrt(3)*x/3 + sqrt(3)*I*x**2/3 - sqrt(3)*x**2/9 + \
-    # 2*sqrt(3)*I*x**3/9 - sqrt(3)*x**3/18 + O(x**4)
+    # Tests concerning im(ndir) == 0
+    assert acosh(-I*x**2 + x - 2)._eval_nseries(x, 4, None) == -I*pi + log(sqrt(3) + 2) - \
+    sqrt(3)*x/3 + x**2*(-sqrt(3)/9 + sqrt(3)*I/3) + x**3*(-sqrt(3)/18 + 2*sqrt(3)*I/9) + O(x**4)
 
 
 def test_acosh_fdiff():
@@ -837,11 +828,34 @@ def test_asech_leading_term():
 
 def test_asech_series():
     x = Symbol('x')
-    assert asech(x).series(x, 0, 9) == log(2) - log(x) - x**2/4 - 3*x**4/32 \
+    assert asech(x).series(x, 0, 9, cdir=1) == log(2) - log(x) - x**2/4 - 3*x**4/32 \
     - 5*x**6/96 - 35*x**8/1024 + O(x**9)
+    assert asech(x).series(x, 0, 9, cdir=-1) == I*pi + log(2) - log(-x) - x**2/4 - \
+    3*x**4/32 - 5*x**6/96 - 35*x**8/1024 + O(x**9)
     t6 = asech(x).taylor_term(6, x)
     assert t6 == -5*x**6/96
     assert asech(x).taylor_term(8, x, t6, 0) == -35*x**8/1024
+
+
+def test_asech_nseries():
+    x = Symbol('x')
+    # Tests concerning branch points
+    assert asech(x + 1)._eval_nseries(x, 4, None) == sqrt(2)*sqrt(-x) + 5*sqrt(2)*(-x)**(S(3)/2)/12 + \
+    43*sqrt(2)*(-x)**(S(5)/2)/160 + 177*sqrt(2)*(-x)**(S(7)/2)/896 + O(x**4)
+    # Tests concerning points lying on branch cuts
+    assert asech(x - 1)._eval_nseries(x, 4, None) == I*pi + sqrt(2)*sqrt(x) + \
+    5*sqrt(2)*x**(S(3)/2)/12 + 43*sqrt(2)*x**(S(5)/2)/160 + 177*sqrt(2)*x**(S(7)/2)/896 + O(x**4)
+    assert asech(I*x + 3)._eval_nseries(x, 4, None) == -asech(3) + sqrt(2)*x/12 - \
+    17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
+    assert asech(-I*x + 3)._eval_nseries(x, 4, None) == asech(3) + sqrt(2)*x/12 + \
+    17*sqrt(2)*I*x**2/576 - 443*sqrt(2)*x**3/41472 + O(x**4)
+    assert asech(I*x - 3)._eval_nseries(x, 4, None) == -asech(-3) - sqrt(2)*x/12 - \
+    17*sqrt(2)*I*x**2/576 + 443*sqrt(2)*x**3/41472 + O(x**4)
+    assert asech(-I*x - 3)._eval_nseries(x, 4, None) == asech(-3) - sqrt(2)*x/12 + \
+    17*sqrt(2)*I*x**2/576 + 443*sqrt(2)*x**3/41472 + O(x**4)
+    # Tests concerning im(ndir) == 0
+    assert asech(-I*x**2 + x - 2)._eval_nseries(x, 3, None) == 2*I*pi/3 + sqrt(3)*I*x/6 + \
+    x**2*(sqrt(3)/6 + 7*sqrt(3)*I/72) + O(x**3)
 
 
 def test_asech_rewrite():
@@ -948,6 +962,30 @@ def test_acsch_series():
     t4 = acsch(x).taylor_term(4, x)
     assert t4 == -3*x**4/32
     assert acsch(x).taylor_term(6, x, t4, 0) == 5*x**6/96
+
+
+def test_acsch_nseries():
+    x = Symbol('x')
+    # Tests concerning branch points
+    assert acsch(x + I)._eval_nseries(x, 4, None) == -I*pi/2 + I*sqrt(x) + \
+    sqrt(x) + 5*I*x**(S(3)/2)/12 - 5*x**(S(3)/2)/12 - 43*I*x**(S(5)/2)/160 - \
+    43*x**(S(5)/2)/160 - 177*I*x**(S(7)/2)/896 + 177*x**(S(7)/2)/896 + O(x**4)
+    assert acsch(x - I)._eval_nseries(x, 4, None) == I*pi/2 - I*sqrt(x) + \
+    sqrt(x) - 5*I*x**(S(3)/2)/12 - 5*x**(S(3)/2)/12 + 43*I*x**(S(5)/2)/160 - \
+    43*x**(S(5)/2)/160 + 177*I*x**(S(7)/2)/896 + 177*x**(S(7)/2)/896 + O(x**4)
+    # Tests concerning points lying on branch cuts
+    assert acsch(x + I/2)._eval_nseries(x, 4, None, cdir=1) == -acsch(I/2) - \
+    I*pi + 4*sqrt(3)*I*x/3 - 8*sqrt(3)*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
+    assert acsch(x + I/2)._eval_nseries(x, 4, None, cdir=-1) == acsch(I/2) - \
+    4*sqrt(3)*I*x/3 + 8*sqrt(3)*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
+    assert acsch(x - I/2)._eval_nseries(x, 4, None, cdir=1) == -acsch(I/2) - \
+    4*sqrt(3)*I*x/3 - 8*sqrt(3)*x**2/9 + 16*sqrt(3)*I*x**3/9 + O(x**4)
+    assert acsch(x - I/2)._eval_nseries(x, 4, None, cdir=-1) == I*pi + \
+    acsch(I/2) + 4*sqrt(3)*I*x/3 + 8*sqrt(3)*x**2/9 - 16*sqrt(3)*I*x**3/9 + O(x**4)
+    # TODO: Tests concerning re(ndir) == 0
+    assert acsch(I/2 + I*x - x**2)._eval_nseries(x, 4, None) == -I*pi/2 + \
+    log(2 - sqrt(3)) + 4*sqrt(3)*x/3 + x**2*(-8*sqrt(3)/9 + 4*sqrt(3)*I/3) + \
+    x**3*(16*sqrt(3)/9 - 16*sqrt(3)*I/9) + O(x**4)
 
 
 def test_acsch_rewrite():
@@ -1075,11 +1113,9 @@ def test_atanh_nseries():
     2*x**2/9 + 13*I*x**3/81 + O(x**4)
     assert atanh(I*x - 2)._eval_nseries(x, 4, None, cdir=-1) == -atanh(2) - I*pi - \
     I*x/3 + 2*x**2/9 + 13*I*x**3/81 + O(x**4)
-    # TODO: Tests concerning re(ndir) == 0
-    # atanh(-I*x**2 + x - 2)._eval_nseries(x, 4, None, cdir=1) == -I*pi/2 - log(3)/2 - \
-    # x/3 + x**2*(-1/4 + I/2) + x**2*(1/36 - I/6) + x**3*(-1/6 + I/2) + x**3*(1/162 - I/18) + O(x**4)
-    # atanh(-I*x**2 + x - 2)._eval_nseries(x, 4, None, cdir=-1) == -I*pi/2 - log(3)/2 - \
-    # x/3 + x**2*(-1/4 + I/2) + x**2*(1/36 - I/6) + x**3*(-1/6 + I/2) + x**3*(1/162 - I/18) + O(x**4)
+    # Tests concerning im(ndir) == 0
+    assert atanh(-I*x**2 + x - 2)._eval_nseries(x, 4, None) == -I*pi/2 - log(3)/2 - x/3 + \
+    x**2*(-S(1)/4 + I/2) + x**2*(S(1)/36 - I/6) + x**3*(-S(1)/6 + I/2) + x**3*(S(1)/162 - I/18) + O(x**4)
 
 
 def test_atanh_fdiff():
@@ -1174,15 +1210,13 @@ def test_acoth_nseries():
     4*I*x/3 - 8*x**2/9 - 112*I*x**3/81 + O(x**4)
     assert acoth(I*x + S(1)/2)._eval_nseries(x, 4, None, cdir=-1) == I*pi + \
     acoth(S(1)/2) + 4*I*x/3 - 8*x**2/9 - 112*I*x**3/81 + O(x**4)
-    assert acoth(I*x - S(1)/2)._eval_nseries(x, 4, None, cdir=1) == -acoth(1/2) - \
+    assert acoth(I*x - S(1)/2)._eval_nseries(x, 4, None, cdir=1) == -acoth(S(1)/2) - \
     I*pi + 4*I*x/3 + 8*x**2/9 - 112*I*x**3/81 + O(x**4)
-    assert acoth(I*x - S(1)/2)._eval_nseries(x, 4, None, cdir=-1) == -acoth(1/2) + \
+    assert acoth(I*x - S(1)/2)._eval_nseries(x, 4, None, cdir=-1) == -acoth(S(1)/2) + \
     4*I*x/3 + 8*x**2/9 - 112*I*x**3/81 + O(x**4)
-    # TODO: Tests concerning re(ndir) == 0
-    # acoth(-I*x**2 - x - S(1)/2)._eval_nseries(x, 4, None, cdir=1) == I*pi/2 - log(3)/2 - \
-    # 4*x/3 + x**2*(-8/9 + 2*I/3) - 2*I*x**2 + x**3*(104/81 - 16*I/9) - 8*x**3/3 + O(x**4)
-    # acoth(-I*x**2 - x - S(1)/2)._eval_nseries(x, 4, None, cdir=-1) == I*pi/2 - log(3)/2 - \
-    # 4*x/3 + x**2*(-8/9 + 2*I/3) - 2*I*x**2 + x**3*(104/81 - 16*I/9) - 8*x**3/3 + O(x**4)
+    # Tests concerning im(ndir) == 0
+    assert acoth(-I*x**2 - x - S(1)/2)._eval_nseries(x, 4, None) == I*pi/2 - log(3)/2 - \
+    4*x/3 + x**2*(-S(8)/9 + 2*I/3) - 2*I*x**2 + x**3*(S(104)/81 - 16*I/9) - 8*x**3/3 + O(x**4)
 
 
 def test_acoth_fdiff():

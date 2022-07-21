@@ -306,10 +306,11 @@ class ceiling(RoundFunction):
             return arg.approximation_interval(Integer)[1]
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
-        if arg0 is S.NaN:
+        if arg0 is S.NaN or isinstance(arg0, AccumBounds):
             arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
             r = ceiling(arg0)
         if arg0.is_finite:

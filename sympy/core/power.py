@@ -1809,7 +1809,7 @@ class Pow(Expr):
                 f = b.as_leading_term(x, logx=logx, cdir=cdir)
             except PoleError:
                 return self
-            if not e.is_integer and f.is_negative:
+            if not e.is_integer and f.is_negative and not f.has(x):
                 ndir = (b - f).dir(x, cdir)
                 if im(ndir).is_negative:
                     # Normally, f**e would evaluate to exp(e*log(f)) but on branch cuts

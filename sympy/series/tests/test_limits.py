@@ -197,6 +197,8 @@ def test_floor():
     # test issue 9158
     assert limit(floor(atan(x)), x, oo) == 1
     assert limit(floor(atan(x)), x, -oo) == -2
+    assert limit(ceiling(atan(x)), x, oo) == 2
+    assert limit(ceiling(atan(x)), x, -oo) == -1
 
 
 def test_floor_requires_robust_assumptions():
