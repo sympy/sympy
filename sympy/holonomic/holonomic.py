@@ -1604,9 +1604,10 @@ class HolonomicFunction:
                     eqs.append(eq)
 
                 # solve the system of equations formed
-                soleqs = solve(eqs, *unknowns)
+                soleqs = solve(eqs, *unknowns, dict=True)
 
-                if isinstance(soleqs, dict):
+                if len(soleqs) == 1:
+                    soleqs = soleqs[0]
 
                     for i in range(len(u0), order):
 

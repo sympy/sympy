@@ -791,7 +791,7 @@ class MatrixSpecial(MatrixRequired):
     @classmethod
     def _eval_eye(cls, rows, cols):
         vals = [cls.zero]*(rows*cols)
-        vals[::cols+1] = [cls.one]*min(rows, cols)
+        vals[::cols + 1] = [cls.one]*min(rows, cols)
         return cls._new(rows, cols, vals, copy=False)
 
     @classmethod

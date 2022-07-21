@@ -1258,10 +1258,34 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         return self._has(iterargs, *patterns)
 
+    def has_free_arg(self, s):
+        """return True if self has any of the patterns in s as a free argument,
+        else False. This is like `Basic.has_free` but this will only report exact
+        argument matches.
+
+        Examples
+        ========
+
+        >>> from sympy import Function
+        >>> from sympy.abc import x, y
+        >>> f = Function('f')
+        >>> f(x).has_free_arg({f})
+        False
+        >>> f(x).has_free_arg({f(x)})
+        True
+        >>> f(x+1).has_free_arg({x})
+        True
+        >>> f(x+1).has_free_arg({x+1})
+        True
+        >>> f(x+y+1).has_free_arg({x + 1})
+        False
+        """
+        return any(a in s for a in iterfreeargs(self))
+
     @cacheit
     def has_free(self, *patterns):
-        """return True if self has object(s) ``x`` as a free expression
-        else False.
+        """return True if self has any of the patterns as a free expression
+        (or literal subexpression) else False.
 
         Examples
         ========
@@ -1275,17 +1299,31 @@ class Basic(Printable, metaclass=ManagedProperties):
         {y}
         >>> expr.has_free(g(y))
         True
-        >>> expr.has_free(*(x, f(x)))
+        >>> expr.has_free(x, f(x))
         False
 
-        This works for subexpressions and types, too:
+        This works for literal subexpressions and types, too:
 
         >>> expr.has_free(g)
         True
         >>> (x + y + 1).has_free(y + 1)
         True
-
+        >>> (2*x*y + 3).has_free(x*y)
+        True
         """
+        if not patterns:
+            return False
+        p0 = patterns[0]
+        if len(patterns) == 1 and iterable(p0) and not isinstance(p0, Basic):
+            # Basic can contain iterables (though not non-Basic, ideally)
+            # but don't encourage mixed passing patterns
+            raise ValueError('expecting one or more Basic patterns')
+        # try quick test first
+        s = set(patterns)
+        rv = self.has_free_arg(s)
+        if rv:
+            return rv
+        # now try matching through slower _has
         return self._has(iterfreeargs, *patterns)
 
     def _has(self, iterargs, *patterns):

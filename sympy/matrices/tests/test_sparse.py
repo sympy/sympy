@@ -180,11 +180,14 @@ def test_sparse_matrix():
         [1, 2, 3],
         [1, 2, 0],
         [1, 0, 0]])
-    assert SparseMatrix(4, 4, {(1, 1): sparse_eye(2)}) == Matrix([
+    a = SparseMatrix(4, 4, {(1, 1): sparse_eye(2)})
+    b = Matrix([
         [0, 0, 0, 0],
         [0, 1, 0, 0],
         [0, 0, 1, 0],
         [0, 0, 0, 0]])
+    assert a == b
+    assert SparseMatrix(*a.shape, a.todod()) == b
     raises(ValueError, lambda: SparseMatrix(1, 1, {(1, 1): 1}))
     assert SparseMatrix(1, 2, [1, 2]).tolist() == [[1, 2]]
     assert SparseMatrix(2, 2, [1, [2, 3]]).tolist() == [[1, 0], [2, 3]]
