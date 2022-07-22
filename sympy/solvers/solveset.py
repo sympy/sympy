@@ -23,7 +23,7 @@ from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
-from sympy.polys.matrices.linsolve import _linear_eq_to_dict
+from sympy.polys.matrices.linsolve import _linear_eq_to_dict, _lin_eq2dict
 from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
 from sympy.simplify import powdenest, logcombine
@@ -2509,7 +2509,6 @@ def linear_coeffs(eq, *syms, dict=False, strict=True):
         >>> eq.equals(r[-1] + sum([prod(i) for i in zip(v, r)]))
         True
     """
-    from sympy.polys.matrices.linsolve import _lin_eq2dict
     eq = _sympify(eq)
     if len(syms) == 1 and iterable(syms[0]) and not isinstance(syms[0], Basic):
         raise ValueError('pass unpacked symbols, *syms')
@@ -2522,14 +2521,15 @@ def linear_coeffs(eq, *syms, dict=False, strict=True):
         raise NonlinearError(str(err)) from err
     if dict:
         if c:
-            d[1] = c
+            d[S.One] = c
         return d
-    rv = [S.Zero]*len(syms)
+    rv = [S.Zero]*(len(syms) + 1)
+    rv[-1] = c
     for i, k in enumerate(syms):
         if k not in d:
             continue
         rv[i] = d[k]
-    return rv + [c]
+    return rv
 
 
 def linear_eq_to_matrix(equations, *symbols, strict=True):
