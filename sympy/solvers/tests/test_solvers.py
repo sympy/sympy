@@ -1661,7 +1661,6 @@ def test_minsolve_linear_system():
     raises(ValueError, lambda: solve(x + 1, particular=True))
 
 
-
 def test_real_roots():
     # cf. issue 6650
     x = Symbol('x', real=True)

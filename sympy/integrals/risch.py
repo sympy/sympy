@@ -1254,8 +1254,8 @@ def recognize_log_derivative(a, d, DE, z=None):
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
     for s, _ in Sp:
-        # TODO also consider the complex roots
-        # incase we have complex roots it should turn the flag false
+        # TODO also consider the complex roots which should
+        # turn the flag false
         a = real_roots(s.as_poly(z))
 
         if not all(j.is_Integer for j in a):
