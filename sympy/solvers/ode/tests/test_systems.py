@@ -1071,8 +1071,8 @@ def test_sysode_linear_neq_order1_type2():
     eqs6 = [Eq(Derivative(f(x), x), -9*f(x) - 4*g(x)),
             Eq(Derivative(g(x), x), -4*g(x)),
             Eq(Derivative(h(x), x), h(x) + exp(x))]
-    sol6 = [Eq(f(x), C1*exp(-4*x)*Rational(-4, 5) + C2*exp(-9*x)),
-            Eq(g(x), C1*exp(-4*x)),
+    sol6 = [Eq(f(x), C2*exp(-4*x)*Rational(-4, 5) + C1*exp(-9*x)),
+            Eq(g(x), C2*exp(-4*x)),
             Eq(h(x), C3*exp(x) + x*exp(x))]
     assert dsolve(eqs6) == sol6
     assert checksysodesol(eqs6, sol6) == (True, [0, 0, 0])

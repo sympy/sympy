@@ -16,13 +16,16 @@ from sympy.polys.solvers import PolyNonlinearError
 
 
 def test__linsolve():
-    assert _linsolve([], [x]) == {x:x}
-    assert _linsolve([S.Zero], [x]) == {x:x}
-    assert _linsolve([x-1,x-2], [x]) is None
-    assert _linsolve([x-1], [x]) == {x:1}
-    assert _linsolve([x-1, y], [x, y]) == {x:1, y:S.Zero}
+    assert _linsolve([], [x]) == {x: x}
+    assert _linsolve([S.Zero], [x]) == {x: x}
+    assert _linsolve([x - 1, x - 2], [x]) is None
+    assert _linsolve([x - 1], [x]) == {x: 1}
+    assert _linsolve([x - 1, y], [x, y]) == {x:1, y:S.Zero}
     assert _linsolve([2*I], [x]) is None
     raises(PolyNonlinearError, lambda: _linsolve([x*(1 + x)], [x]))
+    raises(PolyNonlinearError, lambda: _linsolve([Eq(x**2, x**2 + y)], [x, y]))
+    raises(PolyNonlinearError, lambda: _linsolve([(x + y)**2 - x**2], [x]))
+    raises(PolyNonlinearError, lambda: _linsolve([Eq((x + y)**2, x**2)], [x]))
 
 
 def test__linsolve_float():
@@ -100,9 +103,3 @@ def test__linsolve_float():
     # from top and bottom. It should be possible to avoid this somehow because
     # the inverse of the matrix only has a quadratic factor (the determinant)
     # in the denominator.
-
-
-def test__linsolve_deprecated():
-    assert _linsolve([Eq(x**2, x**2+y)], [x, y]) == {x:x, y:S.Zero}
-    assert _linsolve([(x+y)**2-x**2], [x]) == {x:-y/2}
-    assert _linsolve([Eq((x+y)**2, x**2)], [x]) == {x:-y/2}

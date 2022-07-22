@@ -12,7 +12,7 @@ This module contains functions to:
 """
 from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
-                        Add)
+                        Add, Basic)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig, nfloat)
@@ -23,7 +23,7 @@ from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
-from sympy.core.traversal import iterfreeargs
+from sympy.polys.matrices.linsolve import _linear_eq_to_dict
 from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
 from sympy.simplify import powdenest, logcombine
@@ -38,7 +38,7 @@ from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
-from sympy.matrices import Matrix, MatrixBase
+from sympy.matrices import SparseMatrix, MatrixBase
 from sympy.ntheory import totient
 from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
@@ -54,11 +54,10 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
 from sympy.solvers.polysys import solve_poly_system
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import (numbered_symbols, has_dups,
-                                       is_sequence)
+                                       is_sequence, iterable)
 from sympy.calculus.util import periodicity, continuous_domain, function_range
 
 from types import GeneratorType
-from collections import defaultdict
 
 
 class NonlinearError(ValueError):
@@ -2411,7 +2410,7 @@ def solvify(f, symbol, domain):
 ###############################################################################
 
 
-def linear_coeffs(eq, *syms, **_kw):
+def linear_coeffs(eq, *syms, dict=False, strict=True):
     """Return a list whose elements are the coefficients of the
     corresponding symbols in the sum of terms in  ``eq``.
     The additive constant is returned as the last element of the
@@ -2422,6 +2421,19 @@ def linear_coeffs(eq, *syms, **_kw):
 
     NonlinearError
         The equation contains a nonlinear term
+    ValueError
+        duplicate or unordered symbols are passed
+
+    Parameters
+    ==========
+
+    dict - (default False) when True, return coefficients as a
+        dictionary with coefficients keyed to syms that were present;
+        key 1 gives the constant term
+    strict - (default True) when False will only raise an error
+        if any term in the expanded expression contains more than one
+        of the symbols as factors, i.e. it allows symbol-dependent
+        factors to appear in the same term
 
     Examples
     ========
@@ -2434,60 +2446,93 @@ def linear_coeffs(eq, *syms, **_kw):
 
     It is not necessary to expand the expression:
 
-    >>> linear_coeffs(x + y*(z*(x*3 + 2) + 3), x)
-    [3*y*z + 1, y*(2*z + 3)]
+        >>> linear_coeffs(x + y*(z*(x*3 + 2) + 3), x)
+        [3*y*z + 1, y*(2*z + 3)]
 
-    But if there are nonlinear or cross terms -- even if they would
-    cancel after simplification -- an error is raised so the situation
-    does not pass silently past the caller's attention:
+    When nonlinear is detected, an error will be raised:
 
-    >>> eq = 1/x*(x - 1) + 1/x
-    >>> linear_coeffs(eq.expand(), x)
-    [0, 1]
-    >>> linear_coeffs(eq, x)
-    Traceback (most recent call last):
-    ...
-    NonlinearError: nonlinear term encountered: 1/x
+        * even if they would cancel after expansion (so the
+        situation does not pass silently past the caller's
+        attention)
 
-    >>> linear_coeffs(x*(y + 1) - x*y, x, y)
-    Traceback (most recent call last):
-    ...
-    NonlinearError: nonlinear term encountered: x*(y + 1)
+        >>> eq = 1/x*(x - 1) + 1/x
+        >>> linear_coeffs(eq.expand(), x)
+        [0, 1]
+        >>> linear_coeffs(eq, x)
+        Traceback (most recent call last):
+        ...
+        NonlinearError:
+        nonlinear in given generators
+
+        * when there are cross terms
+
+        >>> linear_coeffs(x*(y + 1), x, y)
+        Traceback (most recent call last):
+        ...
+        NonlinearError:
+        symbol-dependent cross-terms encountered
+
+        * when there are terms containing, as a generator, one of the
+        given generators (e.g. ``x**2`` contains ``x`` as a generator)
+
+        >>> linear_coeffs(x**2, x)
+        Traceback (most recent call last):
+        ...
+        NonlinearError:
+        nonlinear in given generators
+
+        * unless the nonlinear term is given as a symbol or does not
+          contain, as a literal generator, one of the symbols given
+
+        >>> linear_coeffs(x + 2*x**2, x, x**2)
+        [1, 2, 0]
+        >>> linear_coeffs(x**4 + 2*x**2, x**2)
+        [2, x**4]
+
+    The last example is a feature of how the function works: ``x**4``
+    has, as a generator, ``x**2`` the same way ``x**2` as ``x`` as a
+    generator, but in the arg traversal, the `x**2`` is not seen in
+    ``x**4``.  More often, one will treat functions or derivatives
+    as independent of the symbols by using keyword `strict=False`:
+
+        >>> from sympy import cos
+        >>> eq, v = x*(cos(y) + 1) + 3, [x, y]
+        >>> linear_coeffs(eq, *v, strict=False)
+        [cos(y) + 1, 0, 3]
+
+    Regardless of the setting of `strict`, it should always be
+    true that the result will reconstruct an expression that is
+    equivalent to the input expression.
+
+        >>> from math import prod
+        >>> r = _  # result from above
+        >>> eq.equals(r[-1] + sum([prod(i) for i in zip(v, r)]))
+        True
     """
-    d = defaultdict(list)
+    from sympy.polys.matrices.linsolve import _lin_eq2dict
     eq = _sympify(eq)
+    if len(syms) == 1 and iterable(syms[0]) and not isinstance(syms[0], Basic):
+        raise ValueError('pass unpacked symbols, *syms')
     symset = set(syms)
     if len(symset) != len(syms):
         raise ValueError('duplicate symbols given')
-    has = set(iterfreeargs(eq)) & symset
-    if not has:
-        return [S.Zero]*len(syms) + [eq]
-    c, terms = eq.as_coeff_add(*has)
-    d[0].extend(Add.make_args(c))
-    for t in terms:
-        m, f = t.as_coeff_mul(*has)
-        if len(f) != 1:
-            break
-        f = f[0]
-        if f in symset:
-            d[f].append(m)
-        elif f.is_Add:
-            d1 = linear_coeffs(f, *has, **{'dict': True})
-            d[0].append(m*d1.pop(0))
-            for xf, vf in d1.items():
-                d[xf].append(m*vf)
-        else:
-            break
-    else:
-        for k, v in d.items():
-            d[k] = Add(*v)
-        if not _kw:
-            return [d.get(s, S.Zero) for s in syms]+ [d[0]]
-        return d  # default is still list but this won't matter
-    raise NonlinearError('nonlinear term encountered: %s' % t)
+    try:
+        c, d = _lin_eq2dict(eq, symset, strict)
+    except PolyNonlinearError as err:
+        raise NonlinearError(str(err)) from err
+    if dict:
+        if c:
+            d[1] = c
+        return d
+    rv = [S.Zero]*len(syms)
+    for i, k in enumerate(syms):
+        if k not in d:
+            continue
+        rv[i] = d[k]
+    return rv + [c]
 
 
-def linear_eq_to_matrix(equations, *symbols):
+def linear_eq_to_matrix(equations, *symbols, strict=True):
     r"""
     Converts a given System of Equations into Matrix form.
     Here `equations` must be a linear system of equations in
@@ -2514,6 +2559,18 @@ def linear_eq_to_matrix(equations, *symbols):
     The only simplification performed is to convert
     ``Eq(a, b)`` $\Rightarrow a - b$.
 
+    To suppress the error raised when nonlinearity is detected, pass
+    keyword `strict=False` and use the result with caution. There will
+    be a naive separation of coefficients from literal occurances of
+    the indicated symbols with limited error reporting.
+
+    Parameters
+    ==========
+
+    strict - (default True) when False, allows non-linear instances
+        of symbols and non-Symbol objects as long no more than one of
+        them appear as a literal factor in any term
+
     Raises
     ======
 
@@ -2531,39 +2588,63 @@ def linear_eq_to_matrix(equations, *symbols):
     The coefficients (numerical or symbolic) of the symbols will
     be returned as matrices:
 
-    >>> eqns = [c*x + z - 1 - c, y + z, x - y]
-    >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
-    >>> A
-    Matrix([
-    [c,  0, 1],
-    [0,  1, 1],
-    [1, -1, 0]])
-    >>> b
-    Matrix([
-    [c + 1],
-    [    0],
-    [    0]])
+        >>> eqns = [c*x + z - 1 - c, y + z, x - y]
+        >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
+        >>> A
+        Matrix([
+        [c,  0, 1],
+        [0,  1, 1],
+        [1, -1, 0]])
+        >>> b
+        Matrix([
+        [c + 1],
+        [    0],
+        [    0]])
 
     This routine does not simplify expressions and will raise an error
     if nonlinearity is encountered:
 
-    >>> eqns = [
-    ...     (x**2 - 3*x)/(x - 3) - 3,
-    ...     y**2 - 3*y - y*(y - 4) + x - 4]
-    >>> linear_eq_to_matrix(eqns, [x, y])
-    Traceback (most recent call last):
-    ...
-    NonlinearError:
-    The term (x**2 - 3*x)/(x - 3) is nonlinear in {x, y}
+            >>> eqns = [
+            ...     (x**2 - 3*x)/(x - 3) - 3,
+            ...     y**2 - 3*y - y*(y - 4) + x - 4]
+            >>> linear_eq_to_matrix(eqns, [x, y])
+            Traceback (most recent call last):
+            ...
+            NonlinearError:
+            symbol-dependent term can be ignored using `strict=False`
 
-    Simplifying these equations will discard the removable singularity
-    in the first, reveal the linear structure of the second:
+        Simplifying these equations will discard the removable singularity
+        in the first and reveal the linear structure of the second:
 
-    >>> [e.simplify() for e in eqns]
-    [x - 3, x + y - 4]
+            >>> [e.simplify() for e in eqns]
+            [x - 3, x + y - 4]
 
-    Any such simplification needed to eliminate nonlinear terms must
-    be done before calling this routine.
+        Any such simplification needed to eliminate nonlinear terms must
+        be done *before* calling this routine.
+
+    If one wishes to ignore nonlinear terms that are free of the given
+    generators, the keyword `strict=False` can be used.
+
+            >>> from sympy import Function
+            >>> f = Function('f')
+            >>> linear_eq_to_matrix([f(x) + x + y], [x], strict=False)
+            (Matrix([[1]]), Matrix([[-y - f(x)]]))
+            >>> linear_eq_to_matrix([f(x)*f(x).diff() + y], [f(x)], strict=False)
+            (Matrix([[Derivative(f(x), x)]]), Matrix([[-y]]))
+
+        Terms that contain the given generators will still raise an error:
+
+            >>> linear_eq_to_matrix([x**2*y + x + x**3], [x**2, x], strict=False)
+            Traceback (most recent call last):
+            ...
+            NonlinearError:
+            nonlinear in given generators
+
+            >>> linear_eq_to_matrix([x + y + y*(x + 1)], [x, y], strict=False)
+            Traceback (most recent call last):
+            ...
+            NonlinearError:
+            symbol-dependent cross-terms encountered
     """
     if not symbols:
         raise ValueError(filldedent('''
@@ -2574,11 +2655,12 @@ def linear_eq_to_matrix(equations, *symbols):
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
 
-    for i in symbols:
-        if not isinstance(i, Symbol):
-            raise ValueError(filldedent('''
-            Expecting a Symbol but got %s
-            ''' % i))
+    if strict:
+        for i in symbols:
+            if not isinstance(i, Symbol):
+                raise ValueError(filldedent('''
+                Expecting a Symbol but got %s
+                ''' % i))
 
     if has_dups(symbols):
         raise ValueError('Symbols must be unique')
@@ -2594,18 +2676,23 @@ def linear_eq_to_matrix(equations, *symbols):
             Eq or Matrix.
             '''))
 
-    A, b = [], []
-    for i, f in enumerate(equations):
-        if isinstance(f, Equality):
-            f = f.rewrite(Add, evaluate=False)
-        coeff_list = linear_coeffs(f, *symbols)
-        b.append(-coeff_list.pop())
-        A.append(coeff_list)
-    A, b = map(Matrix, (A, b))
+    # construct the dictionaries
+    try:
+        eq, c = _linear_eq_to_dict(equations, symbols, strict=strict)
+    except PolyNonlinearError as err:
+        raise NonlinearError(str(err)) from err
+    # prepare output matrices
+    n, m = shape = len(eq), len(symbols)
+    ix = dict(zip(symbols, range(m)))
+    dat = {(row, ix[k]): d[k] for row, d in enumerate(eq) for k in d}
+    rhs = [-i for i in c]
+    del c
+    A = SparseMatrix(*shape, dat)
+    b = SparseMatrix(n, 1, rhs)
     return A, b
 
 
-def linsolve(system, *symbols):
+def linsolve(system, *symbols, strict=True):
     r"""
     Solve system of $N$ linear equations with $M$ variables; both
     underdetermined and overdetermined systems are supported.
@@ -2689,7 +2776,7 @@ def linsolve(system, *symbols):
     Examples
     ========
 
-    >>> from sympy import Matrix, linsolve, symbols
+    >>> from sympy import Matrix, linsolve, symbols, cos
     >>> x, y, z = symbols("x, y, z")
     >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
     >>> b = Matrix([3, 6, 9])
@@ -2761,15 +2848,28 @@ def linsolve(system, *symbols):
     EmptySet
 
     * An error is raised if, after expansion, any nonlinearity
-      is detected:
+      is detected.
 
-    >>> linsolve([x*(1/x - 1), (y - 1)**2 - y**2 + 1], x, y)
-    {(1, 1)}
-    >>> linsolve([x**2 - 1], x)
+    >>> linsolve([x*(x + 1) - 1], x)
     Traceback (most recent call last):
     ...
     NonlinearError:
-    nonlinear term encountered: x**2
+    symbol-dependent cross-terms encountered
+
+    In some cases the message will indicate that using ``strict=False``
+    might be able to ignore the factor:
+
+    >>> linsolve([x*cos(x) - 1], x)
+    Traceback (most recent call last):
+    ...
+    NonlinearError:
+    symbol-dependent term can be ignored using `strict=False`
+
+    But use ``strict=False`` with caution since the results may need
+    nuanced interpretation:
+
+    >>> linsolve([x*cos(x) - 1], x, strict=False)
+    {(1/cos(x),)}
     """
     if not system:
         return S.EmptySet
@@ -2806,10 +2906,9 @@ def linsolve(system, *symbols):
             eqs = system
             eqs = [sympify(eq) for eq in eqs]
             try:
-                sol = _linsolve(eqs, symbols)
-            except PolyNonlinearError as exc:
-                # e.g. cos(x) contains an element of the set of generators
-                raise NonlinearError(str(exc))
+                sol = _linsolve(eqs, symbols, strict)
+            except PolyNonlinearError as err:
+                raise NonlinearError(str(err)) from err
 
             if sol is None:
                 return S.EmptySet

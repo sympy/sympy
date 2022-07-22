@@ -1362,6 +1362,8 @@ def test_abs_invert_solvify():
 
 
 def test_linear_eq_to_matrix():
+    assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
+
     eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
     eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
 
@@ -1388,8 +1390,17 @@ def test_linear_eq_to_matrix():
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, 1/a, y]))
     # 4) a nonlinear term is detected in the original expression
     raises(NonlinearError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x), [x]))
+    # -- even when strict is False if it contains a generator
+    raises(NonlinearError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x), [x],
+        strict=False))
+    # -- but not when the symbol-dependent term is not a generator
+    assert linear_eq_to_matrix(Eq(cos(x) + x, 1), [x], strict=False) == (
+        Matrix([[1]]), Matrix([[1 - cos(x)]]))
+    F = Function('F')
+    df = F(x).diff()
+    assert linear_eq_to_matrix([x*F(x) - df], [x], strict=False
+        ) == (Matrix([[F(x)]]), Matrix([[df]]))
 
-    assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
     # issue 15195
     assert linear_eq_to_matrix(x + y*(z*(3*x + 2) + 3), x) == (
         Matrix([[3*y*z + 1]]), Matrix([[-y*(2*z + 3)]]))
@@ -1505,9 +1516,12 @@ def test_linsolve():
     # linsolve fully expands expressions, so removable singularities
     # and other nonlinearity does not raise an error
     assert linsolve([Eq(x, x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
+    raises(NonlinearError, lambda: linsolve(
+        [Eq(1/x, 1/x + y)], [x, y]))
+    raises(NonlinearError, lambda: linsolve(
+        [Eq(y/x, y/x + y)], [x, y]))
+    raises(NonlinearError, lambda: linsolve(
+        [Eq(x*(x + 1), x**2 + y)], [x, y]))
 
     # corner cases
     #
@@ -1574,7 +1588,7 @@ def test_solve_decomposition():
     assert solve_decomposition(f7, x, S.Reals) == S.EmptySet
     assert solve_decomposition(x, x, Interval(1, 2)) == S.EmptySet
 
-# nonlinsolve testcases
+
 def test_nonlinsolve_basic():
     assert nonlinsolve([],[]) == S.EmptySet
     assert nonlinsolve([],[x, y]) == S.EmptySet
@@ -1780,6 +1794,7 @@ def test_nonlinsolve_inexact():
             0.460812006002492 + 0.539199997693599*I)]
     assert all(abs(res.args[i][j] - sol[i][j]) < 1e-9
                for i in range(5) for j in range(2))
+
 
 @XFAIL
 def test_solve_nonlinear_trans():
@@ -2716,6 +2731,7 @@ def test_logarithmic():
         log(3*x) - log(-x + 1) - log(4*x + 1), x) == FiniteSet(Rational(-1, 2), S.Half)
     assert solveset(log(x**y) - y*log(x), x, S.Reals) == S.Reals
 
+
 @XFAIL
 def test_uselogcombine_2():
     eq = log(exp(2*x) + 1) + log(-tanh(x) + 1) - log(2)
@@ -2785,6 +2801,31 @@ def test_linear_coeffs():
         linear_coeffs(x, x, x))
     assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
     assert linear_coeffs(1.0, x, y) == [0, 0, 1.0]
+    # duplicate symbols
+    raises(ValueError, lambda: linear_coeffs(x, x, x))
+    # unordered symbols
+    raises(ValueError, lambda: linear_coeffs(x, {x, y}))
+    assert linear_coeffs(y, x, dict=True) == {1: y}
+    # strict=False
+    F = lambda a, *b: linear_coeffs(a, *b, strict=False)
+    assert F(0, x) == [0, 0]
+    assert all(i is S.Zero for i in F(0, x))
+    assert F(x + 2*y + 3, x, y) == [1, 2, 3]
+    assert F(x + 2*y + 3, y, x) == [2, 1, 3]
+    assert F(x + 2*x**2 + 3, x, x**2) == [1, 2, 3]
+    assert F(x + 2*x**2 + x**3, x**3, x**2) == [1, 2, x]
+    assert F(cos(x)*(x + 1) - 1, x) == [cos(x), cos(x) -  1]
+    assert F(a*(x + y), x, y) == [a, a, 0]
+    assert F(1.0, x, y) == [0, 0, 1.0]
+    assert F(x*(y + 1) + x*y, y, 1 + y) == [x, x, 0]
+    _ = y*(cos(x) + 1)
+    assert F(y*(x + 2)*(cos(x) + 1), x) == [_, 2*_]
+    raises(NonlinearError, lambda: F(x + x**2, x))
+    raises(NonlinearError, lambda: F((x + 1)*(x + 2), x))
+    raises(NonlinearError, lambda: F((x - 1)/x + 1/x, x))
+    assert linear_coeffs(Eq(a*(2*x + 3*y) + 4*y, 5), x, y) == [
+        2*a, 3*a + 4, -5]
+
 
 # modular tests
 def test_is_modular():
