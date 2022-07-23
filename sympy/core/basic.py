@@ -1258,6 +1258,33 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         return self._has(iterargs, *patterns)
 
+    def has_xfree(self, s):
+        """return True if self has any of the patterns in s as a
+        free argument, else False. This is like `Basic.has_free`
+        but this will only report exact argument matches.
+
+        Examples
+        ========
+
+        >>> from sympy import Function
+        >>> from sympy.abc import x, y
+        >>> f = Function('f')
+        >>> f(x).has_xfree({f})
+        False
+        >>> f(x).has_xfree({f(x)})
+        True
+        >>> f(x + 1).has_xfree({x})
+        True
+        >>> f(x + 1).has_xfree({x + 1})
+        True
+        >>> f(x + y + 1).has_xfree({x + 1})
+        False
+        """
+        # protect O(1) containment check by requiring:
+        if not type(s) in (dict, set):
+            raise ValueError('expecting set or dict argument')
+        return any(a in s for a in iterfreeargs(self))
+
     @cacheit
     def has_free(self, *patterns):
         """return True if self has object(s) ``x`` as a free expression
@@ -1284,8 +1311,26 @@ class Basic(Printable, metaclass=ManagedProperties):
         True
         >>> (x + y + 1).has_free(y + 1)
         True
-
         """
+        if not patterns:
+            return False
+        p0 = patterns[0]
+        if len(patterns) == 1 and iterable(p0) and not isinstance(p0, Basic):
+            # Basic can contain iterables (though not non-Basic, ideally)
+            # but don't encourage mixed passing patterns
+            raise ValueError(filldedent('''
+                Expecting 1 or more Basic args, not a single
+                non-Basic iterable. Don't forget to unpack
+                iterables: `eq.has_free(*patterns)`'''))
+        # try quick test first
+        try:
+            s = set(patterns)
+            rv = self.has_xfree(s)
+            if rv:
+                return rv
+        except TypeError:
+            pass
+        # now try matching through slower _has
         return self._has(iterfreeargs, *patterns)
 
     def _has(self, iterargs, *patterns):
