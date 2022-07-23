@@ -3,6 +3,9 @@ This module can be used to solve problems related
 to 2D Trusses.
 """
 
+from cmath import inf
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy import Matrix, pi
@@ -628,6 +631,13 @@ class Truss:
         The number of variables is simply the sum of the number of reaction forces and member
         forces.
 
+        .. note::
+           The sign convention for the internal forces present in a member revolves around whether each
+           force is compressive or tensile. While forming equations for each node, internal force due
+           to a member on the node is assumed to be away from the node i.e. each force is assumed to
+           be compressive by default. Hence, a positive value for an internal force implies the
+           presence of compressive force in the member and a negative value implies a tensile force.
+
         Examples
         ========
 
@@ -647,7 +657,7 @@ class Truss:
         >>> t.apply_support("node_2", type="roller")
         >>> t.solve()
         >>> t.reaction_loads
-        {'R_node_1_x': 1.83697019872103e-15, 'R_node_1_y': 6.66666666666667, 'R_node_2_y': 3.33333333333333}
+        {'R_node_1_x': 0, 'R_node_1_y': 6.66666666666667, 'R_node_2_y': 3.33333333333333}
         >>> t.internal_forces
         {'member_1': 6.66666666666666, 'member_2': 6.66666666666667, 'member_3': -6.66666666666667*sqrt(2), 'member_4': -3.33333333333333*sqrt(5), 'member_5': 10.0}
         """
@@ -700,6 +710,16 @@ class Truss:
         forces_matrix = (Matrix(coefficients_matrix)**-1)*load_matrix
         self._reaction_loads = {}
         i = 0
+        min_load = inf
+        for node in self._nodes:
+            if node[0] in list(self._loads):
+                for load in self._loads[node[0]]:
+                    if type(load[0]) not in [Symbol, Mul, Add]:
+                        min_load = min(min_load, load[0])
+        for j in range(len(forces_matrix)):
+            if type(forces_matrix[j]) not in [Symbol, Mul, Add]:
+                if abs(forces_matrix[j]/min_load) <1E-10:
+                    forces_matrix[j] = 0
         for node in self._nodes:
             if node[0] in list(self._supports):
                 if self._supports[node[0]]=='pinned':
