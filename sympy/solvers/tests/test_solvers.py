@@ -178,6 +178,13 @@ def test_solve_args():
     assert solve(x**2 - pi, pi) == [x**2]
     # no equations
     assert solve([], [x]) == []
+    # nonlinear systen
+    assert solve((x**2 - 4, y - 2), x, y) == [(-2, 2), (2, 2)]
+    assert solve((x**2 - 4, y - 2), y, x) == [(2, -2), (2, 2)]
+    assert solve((x**2 - 4 + z, y - 2 - z), a, z, y, x, set=True
+        ) == ([a, z, y, x], {
+        (a, z, z + 2, -sqrt(4 - z)),
+        (a, z, z + 2, sqrt(4 - z))})
     # overdetermined system
     # - nonlinear
     assert solve([(x + y)**2 - 4, x + y - 2]) == [{x: -y + 2}]
@@ -194,6 +201,9 @@ def test_solve_args():
     assert solve([x - 1, False], [x], set=True) == ([], set())
     assert solve([-y*(x + y - 1)/2, (y - 1)/x/y + 1/y],
         set=True, check=False) == ([x, y], {(1 - y, y), (x, 0)})
+    # ordering should be canonical, fastest to order by keys instead
+    # of by size
+    assert list(solve((y - 1, x - sqrt(3)*z)).keys()) == [x, y]
 
 
 def test_solve_polynomial1():
@@ -325,6 +335,7 @@ def test_solve_rational():
 def test_solve_conjugate():
     """Test solve for simple conjugate functions"""
     assert solve(conjugate(x) -3 + I) == [3 + I]
+
 
 def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y, dict=True) == [{x: -y}, {x: y}]
@@ -1465,12 +1476,12 @@ def test_issue_5901():
     assert solve([f(x) - 3*f(x).diff(x)], f(x)) == \
         {f(x): 3*D}
     assert solve([f(x) - 3*f(x).diff(x), f(x)**2 - y + 4], f(x), y) == \
-        [{f(x): 3*D, y: 9*D**2 + 4}]
+        [(3*D, 9*D**2 + 4)]
     assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
                 h(a), g(a), set=True) == \
-        ([g(a)], {
-        (-sqrt(h(a)**2*f(a)**2 + G)/f(a),),
-        (sqrt(h(a)**2*f(a)**2+ G)/f(a),)})
+        ([h(a), g(a)], {
+        (-sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a)),
+        (sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a))})
     args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
     assert set(solve(*args)) == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}
