@@ -468,13 +468,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
     for o in range(order, -1, -1):
         # Work from the highest derivative down
-        funcs_deriv = [func.diff(t, o) for func in funcs]
-
-        # linear_eq_to_matrix expects a proper symbol so substitute e.g.
-        # Derivative(x(t), t) for a Dummy.
-        rep = {func_deriv: Dummy() for func_deriv in funcs_deriv}
-        eqs = [eq.subs(rep) for eq in eqs]
-        syms = [rep[func_deriv] for func_deriv in funcs_deriv]
+        syms = [func.diff(t, o) for func in funcs]
 
         # Ai is the matrix for X(t).diff(t, o)
         # eqs is minus the remainder of the equations.
