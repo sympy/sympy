@@ -1110,8 +1110,16 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     if bare_f:
         solution = _solve(f[0], *symbols, **flags)
+        # solution is:
+        # dict or list of tuples for coeficient system with one/many solutions
+        # list of values
+        # list of dicts
     else:
         solution = _solve_system(f, symbols, **flags)
+        # solution is:
+        # dict
+        # list of dicts
+        # list of tuples
     #
     # postprocessing
     ###########################################################################
@@ -1121,26 +1129,21 @@ def solve(f, *symbols, **flags):
         def _do_dict(solution):
             return {k: v.subs(non_inverts) for k, v in
                          solution.items()}
-        for i in range(1):
-            if isinstance(solution, dict):
-                solution = _do_dict(solution)
-                break
-            elif solution and isinstance(solution, list):
-                if isinstance(solution[0], dict):
-                    solution = [_do_dict(s) for s in solution]
-                    break
-                elif isinstance(solution[0], tuple):
-                    solution = [tuple([v.subs(non_inverts) for v in s]) for s
-                                in solution]
-                    break
-                else:
-                    solution = [v.subs(non_inverts) for v in solution]
-                    break
-            elif not solution:
-                break
+        if isinstance(solution, dict):
+            solution = _do_dict(solution)
+        elif solution and isinstance(solution, list):
+            if isinstance(solution[0], dict):
+                solution = [_do_dict(s) for s in solution]
+            elif isinstance(solution[0], tuple):
+                solution = [tuple([v.subs(non_inverts) for v in s]) for s
+                            in solution]
+            else:
+                solution = [v.subs(non_inverts) for v in solution]
+        elif not solution:
+            pass
         else:
             raise NotImplementedError(filldedent('''
-                            no handling of %s was implemented''' % solution))
+                no handling of %s was implemented''' % solution))
 
     # Restore original "symbols" if a dictionary is returned.
     # This is not necessary for
@@ -1332,14 +1335,14 @@ def solve(f, *symbols, **flags):
 
 def _solve(f, *symbols, **flags):
     """Return a checked solution for *f* in terms of one or more of the
-    symbols in the form of a list of values (if there is one symbol)
-    else a list of dictionaries. f is assumed to contain at least one
-    of the symbols in f.
+    symbols in the form of a list of values (if there is one symbol),
+    a list of dictionaries, or a single dictionary to represent the
+    unique solution for undetermined coefficients. f is assumed to
+    contain at least one of the symbols in f.
 
     If no method is implemented to solve the equation, a NotImplementedError
     will be raised. In the case that conversion of an expression to a Poly
     gives None a ValueError will be raised.
-
     """
 
     not_impl_msg = "No algorithms are implemented to solve equation %s"
