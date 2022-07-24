@@ -145,21 +145,20 @@ def test_solve_args():
     assert solve(x + y - 3) == [{x: 3 - y}]
     # multiple symbols might represent an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
-    args = (a + b)*x - b**2 + 2, a, b
-    assert solve(*args) == \
-        [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
-    assert solve(*args, set=True) == \
-        ([a, b], {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))})
-    assert solve(*args, dict=True) == \
-        [{b: sqrt(2), a: -sqrt(2)}, {b: -sqrt(2), a: sqrt(2)}]
     eq = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
-    flags = dict(dict=True)
-    assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
-        [{k: c - b**2/(4*a), h: -b/(2*a), p: 1/(4*a)}]
-    flags.update(dict(simplify=False))
-    assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
-        [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
-    # failing undetermined system
+    # - check that flags are obeyed
+    sol = solve(eq, [h, p, k], exclude=[a, b, c])
+    assert sol == {h: -b/(2*a), k: c - b**2/(4*a), p: 1/(4*a)}
+    assert solve(eq, [h, p, k], dict=True) == [sol]
+    assert solve(eq, [h, p, k], set=True) == \
+        ([h, p, k], {(-b/(2*a), 1/(4*a), c - b**2/(4*a))})
+    assert solve(eq, [h, p, k], exclude=[a, b, c], simplify=False) == \
+        {h: -b/(2*a), k: (4*a*c - b**2)/(4*a), p: 1/(4*a)}
+    # but this only happens when system has a single solution
+    args = (a + b)*x - b**2 + 2, a, b
+    assert solve(*args) == [((b**2 - b*x - 2)/x, b)]
+    # and if the system has a solution; the following doesn't so
+    # an algebraic solution is returned
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b, dict=True) == \
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
     # failed single equation
@@ -856,7 +855,7 @@ def test_issue_5197():
     assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == []
                  # not {x: -3, y: 1} b/c x is positive
     # The solution following should not contain (-sqrt(2), sqrt(2))
-    assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
+    assert solve([(x + y), 2 - y**2], x, y) == [(sqrt(2), -sqrt(2))]
     y = Symbol('y', positive=True)
     # The solution following should not contain {y: -x*exp(x/2)}
     assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: x*exp(x/2)}]
@@ -1485,8 +1484,8 @@ def test_issue_5901():
         ([h(a), g(a)], {
         (-sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a)),
         (sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a))})
-    args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
-    assert set(solve(*args)) == \
+    args = [[f(x).diff(x, 2)*(f(x) + g(x)), 2 - g(x)**2], f(x), g(x)]
+    assert solve(*args, set=True)[1] == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}
     eqs = [f(x)**2 + g(x) - 2*f(x).diff(x), g(x)**2 - 4]
     assert solve(eqs, f(x), g(x), set=True) == \
