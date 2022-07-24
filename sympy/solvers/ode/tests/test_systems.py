@@ -1977,11 +1977,8 @@ def test_linodesolve():
 
     # non-homogeneous term assumed to be 0
     sol1 = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
-                - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 +
-                sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2
-                - exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2,
-            C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)
-                + exp(-t/2 + sqrt(5)*t/2)*Integral(0, t) + exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)]
+                - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2,
+            C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)]
     assert constant_renumber(linodesolve(A, t, type="type2"), variables=[t]) == sol1
 
     # Testing the Errors

@@ -197,7 +197,6 @@ def simpsol(sol, wrt1, wrt2, doit=True):
         rep = {}
 
     sol = [Eq(s.lhs, simprhs(s.rhs, rep, wrt1, wrt2)) for s in sol]
-
     return sol
 
 
@@ -941,7 +940,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     # constants = numbered_symbols(prefix='C', cls=Dummy, start=const_idx+1)
     Cvect = Matrix(list(Dummy() for _ in range(n)))
 
-    if any(type == typ for typ in ["type2", "type4", "type6"]) and b is None:
+    if b is None and any(type == typ for typ in ["type2", "type4", "type6"]):
         b = zeros(n, 1)
 
     is_transformed = tau is not None
@@ -967,6 +966,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
                 A = system_info['A']
                 b = system_info['b']
 
+    intx_wrtt = lambda x: Integral(x, t) if x else 0
     if type in ("type1", "type2", "type5", "type6"):
         P, J = matrix_exp_jordan_form(A, t)
         P = simplify(P)
@@ -975,8 +975,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
             sol_vector = P * (J * Cvect)
         else:
             Jinv = J.subs(t, -t)
-            sol_vector = P * J * ((Jinv * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
-
+            sol_vector = P * J * ((Jinv * P.inv() * b).applyfunc(intx_wrtt) + Cvect)
     else:
         if B is None:
             B, _ = _is_commutative_anti_derivative(A, t)
@@ -984,7 +983,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         if type == "type3":
             sol_vector = B.exp() * Cvect
         else:
-            sol_vector = B.exp() * (((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+            sol_vector = B.exp() * (((-B).exp() * b).applyfunc(intx_wrtt) + Cvect)
 
     if is_transformed:
         sol_vector = sol_vector.subs(t, tau)
