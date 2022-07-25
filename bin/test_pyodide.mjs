@@ -11,14 +11,14 @@ for (const fileName of fileNames) {
     }
 }
 
+await micropip.install('multipledispatch') // Not provided by pyodide
+
 const pyodide = await pyodide_pkg.loadPyodide()
 await pyodide.loadPackage([
     'mpmath',  // provided by pyodide
     'numpy',  // built by pyodide
     `../dist/${sympy}`  // git version sympy
 ])
-
-micropip.install('multipledispatch') // Not provided by pyodide
 
 let split = 'None'
 if (argv[2]) {
