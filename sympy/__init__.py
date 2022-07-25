@@ -240,7 +240,15 @@ from .printing import (pager_print, pretty, pretty_print, pprint,
         print_tree, StrPrinter, sstr, sstrrepr, TableForm, dotprint,
         maple_code, print_maple_code)
 
-from .testing import test, doctest
+def test(*args, **kwargs):
+    """ Call to sympy.testing.test """
+    from .testing import test as sympy_test # lazy import
+    return sympy_test(*args, **kwargs)
+
+def doctest(*args, **kwargs):
+    """ Call to sympy.testing.doctest """
+    from .testing import doctest as sympy_doctest # lazy import
+    return sympy_doctest(*args, **kwargs)
 
 # This module causes conflicts with other modules:
 # from .stats import *
