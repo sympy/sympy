@@ -1,7 +1,7 @@
 import { argv } from 'process'
 import { readdirSync } from 'fs'
 import pyodide_pkg from '../pyodide/pyodide.js'
-import micropip
+import micropip from '../pyodide/pyodide.js'
 
 let sympy
 const fileNames = readdirSync('dist')
