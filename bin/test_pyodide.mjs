@@ -2,6 +2,16 @@ import { argv } from 'process'
 import { readdirSync } from 'fs'
 import pyodide_pkg from '../pyodide/pyodide.js'
 
+// Messing with fetch is needed to be able to use micropip in node.js. They
+// prevent the error:
+//
+// File "/lib/python3.10/site-packages/pyodide/http.py", line 228, in pyfetch
+//   from js import fetch as _jsfetch
+// ImportError: cannot import name 'fetch' from 'js' (unknown location)
+//
+import fetch from 'node-fetch'
+globalThis.fetch = fetch
+
 let sympy
 const fileNames = readdirSync('dist')
 for (const fileName of fileNames) {
