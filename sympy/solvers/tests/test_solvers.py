@@ -51,8 +51,8 @@ def test_swap_back():
     fx, gx = f(x), g(x)
     assert solve([fx + y - 2, fx - gx - 5], fx, y, gx) == \
         {fx: gx + 5, y: -gx - 3}
-    assert solve(fx + gx*x - 2, [fx, gx], dict=True)[0] == {fx: 2, gx: 0}
-    assert solve(fx + gx**2*x - y, [fx, gx], dict=True) == [{fx: y - gx**2*x}]
+    assert solve(fx + gx*x - 2, [fx, gx], dict=True) == [{fx: 2, gx: 0}]
+    assert solve(fx + gx**2*x - y, [fx, gx], dict=True) == [{fx: y, gx: 0}]
     assert solve([f(1) - 2, x + 2], dict=True) == [{x: -2, f(1): 2}]
 
 
@@ -145,6 +145,7 @@ def test_solve_args():
     assert solve(x + y - 3) == [{x: 3 - y}]
     # multiple symbols might represent an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
+    assert solve((a + b)*x + b - c, [a, b]) == {a: -c, b: c}
     eq = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
     # - check that flags are obeyed
     sol = solve(eq, [h, p, k], exclude=[a, b, c])

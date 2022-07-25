@@ -1366,6 +1366,8 @@ def _solve(f, *symbols, **flags):
         if len(ex) != 1:
             ind, dep = f.as_independent(*symbols)    # (2*x - c, a*x + b)
             ex = ind.free_symbols & dep.free_symbols # {x, c} & {a, x, b} -> {x}
+        if len(ex) != 1:                           # e.g. (a+b)*x + b - c -> {c}, {a, b, x}
+            ex = dep.free_symbols - set(symbols)  # {x} = {a,b,x}-{a.b}
         if len(ex) == 1:
             ex = ex.pop()
             try:
