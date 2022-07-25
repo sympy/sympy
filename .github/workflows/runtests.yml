@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath flake8
+      - run: pip install mpmath multipledispatch flake8
 
       - name: Basic code quality tests
         run: bin/test quality
@@ -59,7 +59,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath mypy
+      - run: pip install mpmath multipledispatch mypy
 
       - name: Run mypy on the sympy package
         run: mypy sympy
@@ -95,7 +95,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install mpmath multipledispatch
       - run: bin/mailmap_check.py --skip-last-commit
 
   # -------------------- Doctests latest Python -------------------- #
@@ -110,7 +110,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install mpmath multipledispatch
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
 
@@ -126,7 +126,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install mpmath multipledispatch
       - run: bin/test --force-colors --split=1/2
 
   # -------------------- Test split 2/2 latest Python -------------- #
@@ -141,7 +141,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install mpmath multipledispatch
       - run: bin/test --force-colors --split=2/2
 
   # -------------------- Test Pyodide on node ---------------------- #
@@ -198,7 +198,7 @@ jobs:
         run: pip install git+https://github.com/matplotlib/matplotlib@main
 
       # dependencies to install in all Python versions:
-      - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
+      - run: pip install mpmath multipledispatch numpy numexpr matplotlib ipython cython scipy \
                          aesara wurlitzer autowrap                            \
                          'antlr4-python3-runtime==4.10.*'
 
@@ -231,7 +231,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy scipy tensorflow
+      - run: pip install mpmath multipledispatch numpy scipy tensorflow
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
 
@@ -247,7 +247,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy symengine
+      - run: pip install mpmath multipledispatch numpy symengine
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
         env:
@@ -265,7 +265,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install mpmath multipledispatch
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=1/2
 
   # -------------------- Slow test split 2/2 ----------------------- #
@@ -280,7 +280,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install mpmath multipledispatch
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
 
   # -------------------- Test split 1/2 older Python --------------- #
@@ -305,7 +305,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install mpmath multipledispatch
       - run: bin/test --force-colors --split=1/2
 
   # -------------------- Test split 2/2 older Python --------------- #
@@ -330,7 +330,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install mpmath multipledispatch
       - run: bin/test --force-colors --split=2/2
 
   # -------------------- Doctests older Python --------------------- #
@@ -355,7 +355,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install mpmath multipledispatch
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
 

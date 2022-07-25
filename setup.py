@@ -481,6 +481,7 @@ if __name__ == '__main__':
             ],
           install_requires=[
             'mpmath>=%s' % min_mpmath_version,
+            'multipledispatch>=0.6.0',
             ],
           **extra_kwargs
           )
