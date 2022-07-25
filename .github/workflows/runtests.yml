@@ -160,7 +160,7 @@ jobs:
           node-version: 16.x
       - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.20.1a1/pyodide-build-0.20.1a1.tar.bz2 | tar xjf -
       - run: python3 setup.py bdist_wheel
-      - run: node bin/test_pyodide.mjs --split=${{ matrix.split }}
+      - run: node bin/test_pyodide.mjs --split=${{ matrix.split }} 2>/dev/null  # ignore node exception
 
   # -------------------- Optional dependency tests ----------------- #
 
