@@ -3,6 +3,7 @@ linkify-it-py
 matplotlib
 matplotlib-inline
 mpmath
+multipledispatch
 myst-parser
 Sphinx
 sphinx-autobuild
