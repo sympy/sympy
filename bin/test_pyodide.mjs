@@ -1,6 +1,7 @@
 import { argv } from 'process'
 import { readdirSync } from 'fs'
 import pyodide_pkg from '../pyodide/pyodide.js'
+import micropip
 
 let sympy
 const fileNames = readdirSync('dist')
@@ -13,10 +14,11 @@ for (const fileName of fileNames) {
 const pyodide = await pyodide_pkg.loadPyodide()
 await pyodide.loadPackage([
     'mpmath',  // provided by pyodide
-    'multipledispatch',  // provided by pyodide
     'numpy',  // built by pyodide
     `../dist/${sympy}`  // git version sympy
 ])
+
+micropip.install('multipledispatch') // Not provided by pyodide
 
 let split = 'None'
 if (argv[2]) {
