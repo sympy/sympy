@@ -13,7 +13,7 @@ from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
-from sympy.core.mul import Mul, prod
+from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm, Rational, Integer
 from sympy.core.power import integer_nthroot, Pow, integer_log
 from sympy.core.singleton import S
@@ -1939,7 +1939,6 @@ class totient(Function):
     """
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n < 1:
                 raise ValueError("n must be a positive integer")
@@ -2014,7 +2013,6 @@ class reduced_totient(Function):
     """
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n < 1:
                 raise ValueError("n must be a positive integer")
@@ -2102,8 +2100,7 @@ class divisor_sigma(Function):
     """
 
     @classmethod
-    def eval(cls, n, k=1):
-        n = sympify(n)
+    def eval(cls, n, k=S.One):
         k = sympify(k)
 
         if n.is_prime:
@@ -2114,7 +2111,7 @@ class divisor_sigma(Function):
                 raise ValueError("n must be a positive integer")
             elif k.is_Integer:
                 k = int(k)
-                return Integer(prod(
+                return Integer(math.prod(
                     (p**(k*(e + 1)) - 1)//(p**k - 1) if k != 0
                     else e + 1 for p, e in factorint(n).items()))
             else:
@@ -2253,8 +2250,7 @@ class udivisor_sigma(Function):
     """
 
     @classmethod
-    def eval(cls, n, k=1):
-        n = sympify(n)
+    def eval(cls, n, k=S.One):
         k = sympify(k)
         if n.is_prime:
             return 1 + n**k
@@ -2302,7 +2298,6 @@ class primenu(Function):
 
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")
@@ -2348,7 +2343,6 @@ class primeomega(Function):
 
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")

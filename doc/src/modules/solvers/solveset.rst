@@ -35,6 +35,8 @@ deficiencies. For example:
    critical points where it is important to know if it has returned all the
    solutions. ``solve`` does not guarantee this.
 
+.. _why-solveset:
+
 Why Solveset?
 -------------
 
@@ -229,6 +231,8 @@ Domain
 
 ``solveset`` removes the ``flags`` argument of ``solve``, which had made the
 input API more complicated and output API inconsistent.
+
+.. _solveset-domain-argument:
 
 What is this domain argument about?
 -----------------------------------

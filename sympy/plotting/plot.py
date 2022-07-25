@@ -76,7 +76,7 @@ class Plot:
     For interactive work the function :func:`plot()` is better suited.
 
     This class permits the plotting of SymPy expressions using numerous
-    backends (:mod:`matplotlib`, textplot, the old pyglet module for SymPy, Google
+    backends (:external:mod:`matplotlib`, textplot, the old pyglet module for SymPy, Google
     charts api, etc).
 
     The figure can contain an arbitrary number of plots of SymPy expressions,
@@ -1329,7 +1329,7 @@ class MatplotlibBackend(BaseBackend):
     @staticmethod
     def get_segments(x, y, z=None):
         """ Convert two list of coordinates to a list of segments to be used
-        with Matplotlib's :class:`~matplotlib.collections.LineCollection`.
+        with Matplotlib's :external:class:`~matplotlib.collections.LineCollection`.
 
         Parameters
         ==========
@@ -1421,11 +1421,9 @@ class MatplotlibBackend(BaseBackend):
                     colormap = ListedColormap(["white", s.line_color])
                     xarray, yarray, zarray, plot_type = points
                     if plot_type == 'contour':
-                        ax.contour(xarray, yarray, zarray, cmap=colormap,
-                                   label=_str_or_latex(s.label))
+                        ax.contour(xarray, yarray, zarray, cmap=colormap)
                     else:
-                        ax.contourf(xarray, yarray, zarray, cmap=colormap,
-                                    label=_str_or_latex(s.label))
+                        ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
                 raise NotImplementedError(
                     '{} is not supported in the SymPy plotting module '
@@ -1739,26 +1737,26 @@ def plot(*args, show=True, **kwargs):
     annotations : list, optional
         A list of dictionaries specifying the type of annotation
         required. The keys in the dictionary should be equivalent
-        to the arguments of the :mod:`matplotlib`'s
-        :meth:`~matplotlib.axes.Axes.annotate` method.
+        to the arguments of the :external:mod:`matplotlib`'s
+        :external:meth:`~matplotlib.axes.Axes.annotate` method.
 
     markers : list, optional
         A list of dictionaries specifying the type the markers required.
         The keys in the dictionary should be equivalent to the arguments
-        of the :mod:`matplotlib`'s :func:`~matplotlib.pyplot.plot()` function
+        of the :external:mod:`matplotlib`'s :external:func:`~matplotlib.pyplot.plot()` function
         along with the marker related keyworded arguments.
 
     rectangles : list, optional
         A list of dictionaries specifying the dimensions of the
         rectangles to be plotted. The keys in the dictionary should be
-        equivalent to the arguments of the :mod:`matplotlib`'s
-        :class:`~matplotlib.patches.Rectangle` class.
+        equivalent to the arguments of the :external:mod:`matplotlib`'s
+        :external:class:`~matplotlib.patches.Rectangle` class.
 
     fill : dict, optional
         A dictionary specifying the type of color filling required in
         the plot. The keys in the dictionary should be equivalent to the
-        arguments of the :mod:`matplotlib`'s
-        :meth:`~matplotlib.axes.Axes.fill_between` method.
+        arguments of the :external:mod:`matplotlib`'s
+        :external:meth:`~matplotlib.axes.Axes.fill_between` method.
 
     adaptive : bool, optional
         The default value is set to ``True``. Set adaptive to ``False``

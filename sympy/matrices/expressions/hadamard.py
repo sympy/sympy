@@ -11,6 +11,7 @@ from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort
 )
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 def hadamard_product(*matrices):
@@ -64,10 +65,21 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, evaluate=False, check=True):
+    def __new__(cls, *args, evaluate=False, check=None):
         args = list(map(sympify, args))
-        if check:
+        if check is not None:
+            sympy_deprecation_warning(
+                "Passing check to HadamardProduct is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
+
+        if check in (True, None):
             validate(*args)
+        else:
+            sympy_deprecation_warning(
+                "Passing check=False to HadamardProduct is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
 
         obj = super().__new__(cls, *args)
         if evaluate:
@@ -85,8 +97,8 @@ class HadamardProduct(MatrixExpr):
         from sympy.matrices.expressions.transpose import transpose
         return HadamardProduct(*list(map(transpose, self.args)))
 
-    def doit(self, **ignored):
-        expr = self.func(*[i.doit(**ignored) for i in self.args])
+    def doit(self, **hints):
+        expr = self.func(*[i.doit(**hints) for i in self.args])
         # Check for explicit matrices:
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.immutable import ImmutableMatrix

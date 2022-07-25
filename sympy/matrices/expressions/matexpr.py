@@ -104,22 +104,22 @@ class MatrixExpr(Expr):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return MatAdd(self, other, check=True).doit()
+        return MatAdd(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return MatAdd(other, self, check=True).doit()
+        return MatAdd(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return MatAdd(self, -other, check=True).doit()
+        return MatAdd(self, -other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return MatAdd(other, -self, check=True).doit()
+        return MatAdd(other, -self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
@@ -179,6 +179,9 @@ class MatrixExpr(Expr):
         return Adjoint(Transpose(self))
 
     def as_real_imag(self, deep=True, **hints):
+        return self._eval_as_real_imag()
+
+    def _eval_as_real_imag(self):
         real = S.Half * (self + self._eval_conjugate())
         im = (self - self._eval_conjugate())/(2*S.ImaginaryUnit)
         return (real, im)
@@ -398,7 +401,7 @@ class MatrixExpr(Expr):
         return self
 
     def as_coeff_mmul(self):
-        return 1, MatMul(self)
+        return S.One, MatMul(self)
 
     @staticmethod
     def from_index_summation(expr, first_index=None, last_index=None, dimensions=None):
@@ -610,10 +613,10 @@ class MatrixElement(Expr):
     def symbol(self):
         return self.args[0]
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
         return args[0][args[1], args[2]]

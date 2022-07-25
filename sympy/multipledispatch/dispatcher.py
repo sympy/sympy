@@ -122,8 +122,8 @@ class Dispatcher:
 
     def __init__(self, name, doc=None):
         self.name = self.__name__ = name
-        self.funcs = dict()
-        self._cache = dict()
+        self.funcs = {}
+        self._cache = {}
         self.ordering = []
         self.doc = doc
 
@@ -324,7 +324,7 @@ class Dispatcher:
         self.name = d['name']
         self.funcs = d['funcs']
         self.ordering = ordering(self.funcs)
-        self._cache = dict()
+        self._cache = {}
 
     @property
     def __doc__(self):

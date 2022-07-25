@@ -407,7 +407,7 @@ class Linear(DiophantineEquationType):
 
         '''
         solutions = []
-        for i in range(len(B)):
+        for Ai, Bi in zip(A, B):
             tot_x, tot_y = [], []
 
             for j, arg in enumerate(Add.make_args(c)):
@@ -421,7 +421,7 @@ class Linear(DiophantineEquationType):
                     k, p = arg.as_coeff_Mul()
                     pnew = params[params.index(p) + 1]
 
-                sol = sol_x, sol_y = base_solution_linear(k, A[i], B[i], pnew)
+                sol = sol_x, sol_y = base_solution_linear(k, Ai, Bi, pnew)
 
                 if p is S.One:
                     if None in sol:
@@ -869,7 +869,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
                 E = coeff[y*z]
                 F = coeff[z**2]
 
-                _coeff = dict()
+                _coeff = {}
 
                 _coeff[x**2] = 4*A**2
                 _coeff[y**2] = 4*A*D - B**2
@@ -2894,7 +2894,7 @@ def _transformation_to_normal(var, coeff):
         E = coeff[y*z]
         F = coeff[z**2]
 
-        _coeff = dict()
+        _coeff = {}
 
         _coeff[x**2] = 4*A**2
         _coeff[y**2] = 4*A*D - B**2
@@ -3891,15 +3891,34 @@ sum_of_powers = power_representation
 
 
 def pow_rep_recursive(n_i, k, n_remaining, terms, p):
+    # Invalid arguments
+    if n_i <= 0 or k <= 0:
+        return
+
+    # No solutions may exist
+    if n_remaining < k:
+        return
+    if k * pow(n_i, p) < n_remaining:
+        return
 
     if k == 0 and n_remaining == 0:
         yield tuple(terms)
+
+    elif k == 1:
+        # next_term^p must equal to n_remaining
+        next_term, exact = integer_nthroot(n_remaining, p)
+        if exact and next_term <= n_i:
+            yield tuple(terms + [next_term])
+        return
+
     else:
+        # TODO: Fall back to diop_DN when k = 2
         if n_i >= 1 and k > 0:
-            yield from pow_rep_recursive(n_i - 1, k, n_remaining, terms, p)
-            residual = n_remaining - pow(n_i, p)
-            if residual >= 0:
-                yield from pow_rep_recursive(n_i, k - 1, residual, terms + [n_i], p)
+            for next_term in range(1, n_i + 1):
+                residual = n_remaining - pow(next_term, p)
+                if residual < 0:
+                    break
+                yield from pow_rep_recursive(next_term, k - 1, residual, terms + [next_term], p)
 
 
 def sum_of_squares(n, k, zeros=False):

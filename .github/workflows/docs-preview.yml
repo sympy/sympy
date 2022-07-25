@@ -2,6 +2,7 @@ name: Docs Preview
 on: [status]
 jobs:
   circleci_artifacts_redirector_job:
+    if: "github.event.context == 'ci/circleci: Build Docs Preview'"
     runs-on: ubuntu-latest
     name: Run CircleCI artifacts redirector
     steps:

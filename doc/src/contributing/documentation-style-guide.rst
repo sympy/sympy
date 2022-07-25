@@ -1,3 +1,9 @@
+.. _documentation-style-guide:
+
+=====================
+Docstring Style Guide
+=====================
+
 General Guidelines
 --------------------
 

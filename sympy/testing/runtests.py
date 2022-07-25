@@ -712,6 +712,11 @@ def _get_doctest_blacklist():
             "doc/src/modules/numeric-computation.rst",
         ])
 
+    if import_module('jax') is None:
+        blacklist.extend([
+            "doc/src/modules/numeric-computation.rst",
+        ])
+
     if import_module('antlr4') is None:
         blacklist.extend([
             "sympy/parsing/autolev/__init__.py",
@@ -2025,7 +2030,7 @@ class PyTestReporter(Reporter):
                 process = subprocess.Popen(['stty', '-a'],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
-                stdout = process.stdout.read()
+                stdout, stderr = process.communicate()
                 stdout = stdout.decode("utf-8")
             except OSError:
                 pass

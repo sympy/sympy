@@ -1,4 +1,4 @@
-.. _assumptions:
+.. _assumptions-guide:
 
 =============
  Assumptions
@@ -352,6 +352,8 @@ infer that is should have ``rational=True`` because every integer is a
 rational number.
 
 A full table of the possible predicates and their definitions is given below.
+
+.. _assumptions-guide-predicates:
 
 .. list-table:: Assumptions predicates for the (old) assumptions
     :widths: 20, 45, 35

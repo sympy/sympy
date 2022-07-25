@@ -33,18 +33,53 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
               'sphinx_math_dollar', 'sphinx.ext.mathjax', 'numpydoc',
               'sphinx_reredirects', 'sphinx_copybutton',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
-              'myst_parser', 'sphinx.ext.intersphinx']
+              'myst_parser', 'convert-svg-to-pdf', 'sphinx.ext.intersphinx'
+              ]
+
+# Add redirects here. This should be done whenever a page that is in the
+# existing release docs is moved somewhere else so that the URLs don't break.
+# The format is
+
+# "page/path/without/extension": "../relative_path_with.html"
+
+# Note that the html path is relative to the redirected page. Always test the
+# redirect manually (they aren't tested automatically). See
+# https://documatt.gitlab.io/sphinx-reredirects/usage.html
 
 redirects = {
-    "install.rst": "guides/getting_started/install.html",
-    "documentation-style-guide.rst": "guides/contributing/documentation-style-guide.html",
-    "gotchas.rst": "explanation/gotchas.html",
-    "special_topics/classification.rst": "explanation/classification.html",
-    "special_topics/finite_diff_derivatives.rst": "explanation/finite_diff_derivatives.html",
-    "special_topics/intro.rst": "explanation/index.html",
-    "special_topics/index.rst": "explanation/index.html",
-    "modules/index.rst": "reference/public/index.html",
-    "modules/physics/index.rst": "reference/physics/index.html",
+    "guides/getting_started/install": "../../install.html",
+    "documentation-style-guide": "contributing/documentation-style-guide.html",
+    "gotchas": "explanation/gotchas.html",
+    "special_topics/classification": "../explanation/classification.html",
+    "special_topics/finite_diff_derivatives": "../explanation/finite_diff_derivatives.html",
+    "special_topics/intro": "../explanation/index.html",
+    "special_topics/index": "../explanation/index.html",
+    "modules/index": "../reference/index.html",
+    "modules/physics/index": "../../reference/public/physics/index.html",
+
+    "guides/contributing/index": "../../contributing/index.html",
+    "guides/contributing/dev-setup": "../../contributing/dev-setup.html",
+    "guides/contributing/dependencies": "../../contributing/dependencies.html",
+    "guides/contributing/build-docs": "../../contributing/build-docs.html",
+    "guides/contributing/debug": "../../contributing/debug.html",
+    "guides/contributing/docstring": "../../contributing/docstring.html",
+    "guides/documentation-style-guide": "../../contributing/contributing/documentation-style-guide.html",
+    "guides/make-a-contribution": "../../contributing/make-a-contribution.html",
+    "guides/contributing/deprecations": "../../contributing/deprecations.html",
+
+    "tutorial/preliminaries": "../tutorials/intro-tutorial/preliminaries.html",
+    "tutorial/intro": "../tutorials/intro-tutorial/intro.html",
+    "tutorial/gotchas": "../tutorials/intro-tutorial/gotchas.html",
+    "tutorial/features": "../tutorials/intro-tutorial/features.html",
+    "tutorial/next": "../tutorials/intro-tutorial/next.html",
+    "tutorial/basic_operations": "../tutorials/intro-tutorial/basic_operations.html",
+    "tutorial/printing": "../tutorials/intro-tutorial/printing.html",
+    "tutorial/simplification": "../tutorials/intro-tutorial/simplification.html",
+    "tutorial/calculus": "../tutorials/intro-tutorial/calculus.html",
+    "tutorial/solvers": "../tutorials/intro-tutorial/solvers.html",
+    "tutorial/matrices": "../tutorials/intro-tutorial/matrices.html",
+    "tutorial/manipulation": "../tutorials/intro-tutorial/manipulation.html",
+
 }
 
 html_baseurl = "https://docs.sympy.org/latest/"
@@ -247,7 +282,7 @@ if os.environ.get("CIRCLECI") == "true":
     html_theme_options['announcement'] = f"""This is a preview build from
 SymPy pull request <a href="https://github.com/sympy/sympy/pull/{PR_NUMBER}">
 #{PR_NUMBER}</a>. It was built against <a
-href="https://github.com/sympy/sympy/pull/{PR_NUMBER}/commits/{SHA1}">{SHA1[:5]}</a>.
+href="https://github.com/sympy/sympy/pull/{PR_NUMBER}/commits/{SHA1}">{SHA1[:7]}</a>.
 If you aren't looking for a PR preview, go to <a
 href="https://docs.sympy.org/">the main SymPy documentation</a>. """
 
@@ -361,6 +396,10 @@ graphviz_output_format = 'svg'
 intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None)
 }
+# Require :external: to reference intersphinx. Prevents accidentally linking
+# to something from matplotlib.
+intersphinx_disabled_reftypes = ['*']
+
 # Requried for linkcode extension.
 # Get commit hash from the external file.
 commit_hash_filepath = '../commit_hash.txt'

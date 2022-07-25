@@ -1,4 +1,4 @@
-from sympy import MatAdd, MatMul
+from sympy import MatAdd, MatMul, Array
 from sympy.algebras.quaternion import Quaternion
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutation
@@ -48,7 +48,7 @@ from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedba
 from sympy.ntheory.factor_ import (divisor_sigma, primenu, primeomega, reduced_totient, totient, udivisor_sigma)
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
-from sympy.physics.units import meter, gibibyte, microgram, second
+from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.fields import field
 from sympy.polys.polytools import Poly
@@ -2983,6 +2983,9 @@ def test_unit_printing():
     assert latex(5*meter) == r'5 \text{m}'
     assert latex(3*gibibyte) == r'3 \text{gibibyte}'
     assert latex(4*microgram/second) == r'\frac{4 \mu\text{g}}{\text{s}}'
+    assert latex(4*micro*gram/second) == r'\frac{4 \mu \text{g}}{\text{s}}'
+    assert latex(5*milli*meter) == r'5 \text{m} \text{m}'
+    assert latex(milli) == r'\text{m}'
 
 
 def test_issue_17092():
@@ -3101,3 +3104,11 @@ def test_printing_latex_array_expressions():
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
     assert latex(ArrayElement(M*N, [x, 0])) == "{{\\left(M N\\right)}_{x, 0}}"
+
+def test_Array():
+    arr = Array(range(10))
+    assert latex(arr) == r'\left[\begin{matrix}0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9\end{matrix}\right]'
+
+    arr = Array(range(11))
+    # added empty arguments {}
+    assert latex(arr) == r'\left[\begin{array}{}0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\end{array}\right]'

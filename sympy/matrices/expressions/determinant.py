@@ -40,7 +40,7 @@ class Determinant(Expr):
     def kind(self):
         return self.arg.kind.element_kind
 
-    def doit(self, expand=False):
+    def doit(self, expand=False, **hints):
         try:
             return self.arg._eval_determinant()
         except (AttributeError, NotImplementedError):
@@ -89,7 +89,7 @@ class Permanent(Expr):
     def arg(self):
         return self.args[0]
 
-    def doit(self, expand=False):
+    def doit(self, expand=False, **hints):
         try:
             return self.arg.per()
         except (AttributeError, NotImplementedError):

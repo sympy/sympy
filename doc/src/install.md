@@ -85,7 +85,7 @@ From here, execute some simple SymPy statements like the ones below:
 log(x)
 ```
 
-For a starter guide on using SymPy effectively, refer to the {ref}`tutorial`.
+For a starter guide on using SymPy effectively, refer to the {ref}`intro-tutorial`.
 
 (mpmath-install)=
 ## mpmath

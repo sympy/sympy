@@ -28,6 +28,7 @@ MPMATH_DEFAULT = {}  # type: tDict[str, Any]
 NUMPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
 SCIPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
 CUPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
+JAX_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
 TENSORFLOW_DEFAULT = {}  # type: tDict[str, Any]
 SYMPY_DEFAULT = {}  # type: tDict[str, Any]
 NUMEXPR_DEFAULT = {}  # type: tDict[str, Any]
@@ -41,6 +42,7 @@ MPMATH = MPMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
 CUPY = CUPY_DEFAULT.copy()
+JAX = JAX_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
 NUMEXPR = NUMEXPR_DEFAULT.copy()
@@ -90,6 +92,7 @@ NUMPY_TRANSLATIONS = {
     }  # type: tDict[str, str]
 SCIPY_TRANSLATIONS = {}  # type: tDict[str, str]
 CUPY_TRANSLATIONS = {}  # type: tDict[str, str]
+JAX_TRANSLATIONS = {}  # type: tDict[str, str]
 
 TENSORFLOW_TRANSLATIONS = {}  # type: tDict[str, str]
 
@@ -102,6 +105,7 @@ MODULES = {
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy import *; from scipy.special import *",)),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
+    "jax": (JAX, JAX_DEFAULT, JAX_TRANSLATIONS, ("import jax",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -117,7 +121,7 @@ def _import(module, reload=False):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy", "tensorflow".
+    "mpmath", "numpy", "sympy", "tensorflow", "jax".
     These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
@@ -310,7 +314,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         *modules* can be one of the following types:
 
         - The strings ``"math"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
-          ``"scipy"``, ``"sympy"``, or ``"tensorflow"``. This uses the
+          ``"scipy"``, ``"sympy"``, or ``"tensorflow"`` or ``"jax"``. This uses the
           corresponding printer and namespace mapping for that module.
         - A module (e.g., ``math``). This uses the global namespace of the
           module. If the module is one of the above known modules, it will
@@ -466,25 +470,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       of numexpr functions can be found at:
       https://numexpr.readthedocs.io/en/latest/user_guide.html#supported-functions
 
-    - In previous versions of SymPy, ``lambdify`` replaced ``Matrix`` with
-      ``numpy.matrix`` by default. As of SymPy 1.0 ``numpy.array`` is the
-      default. To get the old default behavior you must pass in
-      ``[{'ImmutableDenseMatrix':  numpy.matrix}, 'numpy']`` to the
-      ``modules`` kwarg.
-
-      >>> from sympy import lambdify, Matrix
-      >>> from sympy.abc import x, y
-      >>> import numpy
-      >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
-      >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
-      >>> f(1, 2)
-      [[1]
-       [2]]
-
     - In the above examples, the generated functions can accept scalar
       values or numpy arrays as arguments.  However, in some cases
       the generated function relies on the input being a numpy array:
 
+      >>> import numpy
       >>> from sympy import Piecewise
       >>> from sympy.testing.pytest import ignore_warnings
       >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
@@ -807,6 +797,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
         elif _module_present('cupy', namespaces):
             from sympy.printing.numpy import CuPyPrinter as Printer # type: ignore
+        elif _module_present('jax', namespaces):
+            from sympy.printing.numpy import JaxPrinter as Printer # type: ignore
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):

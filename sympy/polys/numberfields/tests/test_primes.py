@@ -1,6 +1,7 @@
+from math import prod
+
 from sympy import QQ, ZZ
 from sympy.abc import x, theta
-from sympy.core.mul import prod
 from sympy.ntheory import factorint
 from sympy.ntheory.residue_ntheory import n_order
 from sympy.polys import Poly, cyclotomic_poly

@@ -993,12 +993,16 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.core.symbol import Dummy
         from sympy.series.order import Order
         from sympy.functions.elementary.exponential import log
         from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
         from .function import expand_mul
 
-        old = self
+        o = self.getO()
+        if o is None:
+            o = Order(0)
+        old = self.removeO()
 
         if old.has(Piecewise):
             old = piecewise_fold(old)
@@ -1017,7 +1021,8 @@ class Add(Expr, AssocOp):
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        leading_terms = [t.as_leading_term(x, logx=logx, cdir=cdir) for t in expr.args]
+        _logx = Dummy('logx') if logx is None else logx
+        leading_terms = [t.as_leading_term(x, logx=_logx, cdir=cdir) for t in expr.args]
 
         min, new_expr = Order(0), 0
 
@@ -1033,6 +1038,9 @@ class Add(Expr, AssocOp):
         except TypeError:
             return expr
 
+        if logx is None:
+            new_expr = new_expr.subs(_logx, log(x))
+
         is_zero = new_expr.is_zero
         if is_zero is None:
             new_expr = new_expr.trigsimp().cancel()
@@ -1040,16 +1048,19 @@ class Add(Expr, AssocOp):
         if is_zero is True:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
-            n0 = min.getn()
+            try:
+                n0 = min.getn()
+            except NotImplementedError:
+                n0 = 1
             res = Order(1)
             incr = S.One
             while res.is_Order:
-                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
+                res = old._eval_nseries(x, n=n0+incr, logx=logx, cdir=cdir).cancel().powsimp().trigsimp()
                 incr *= 2
             return res.as_leading_term(x, logx=logx, cdir=cdir)
 
         elif new_expr is S.NaN:
-            return old.func._from_args(infinite)
+            return old.func._from_args(infinite) + o
 
         else:
             return new_expr
@@ -1201,7 +1212,7 @@ class Add(Expr, AssocOp):
                         if q not in common_q:
                             r.pop(q)
                     for q in r:
-                        r[q] = prod(r[q])
+                        r[q] = Mul(*r[q])
                 # find the gcd of bases for each q
                 G = []
                 for q in common_q:
@@ -1247,5 +1258,5 @@ class Add(Expr, AssocOp):
 
 add = AssocOpDispatcher('add')
 
-from .mul import Mul, _keep_coeff, prod, _unevaluated_Mul
+from .mul import Mul, _keep_coeff, _unevaluated_Mul
 from .numbers import Rational
