@@ -11,7 +11,7 @@ from .sorting import ordered
 from .logic import fuzzy_and
 from .parameters import global_parameters
 from sympy.utilities.iterables import sift
-from multipledispatch.dispatcher import Dispatcher, str_signature
+from multipledispatch.dispatcher import str_signature
 from .kind import _Dispatcher
 from sympy.multipledispatch.dispatcher import (ambiguity_register_error_ignore_dup,
     RaiseNotImplementedError)
