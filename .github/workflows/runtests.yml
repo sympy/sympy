@@ -147,7 +147,7 @@ jobs:
   # -------------------- Test Pyodide on node ---------------------- #
 
   test-pyodide:
-    #needs: code-quality
+    needs: code-quality
 
     runs-on: ubuntu-20.04
     strategy:
