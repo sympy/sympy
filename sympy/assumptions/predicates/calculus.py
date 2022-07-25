@@ -1,5 +1,5 @@
 from sympy.assumptions import Predicate
-from sympy.multipledispatch import Dispatcher
+from multipledispatch import Dispatcher
 
 class FinitePredicate(Predicate):
     """

@@ -13,7 +13,7 @@ from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.common import NonSquareMatrixError
 from sympy.matrices.matrices import MatrixKind, MatrixBase
-from sympy.multipledispatch import dispatch
+from multipledispatch import dispatch
 from sympy.utilities.misc import filldedent
 
 

@@ -20,7 +20,7 @@ __all__ = (
 )
 
 from .expr import Expr
-from sympy.multipledispatch import dispatch
+from multipledispatch import dispatch
 from .containers import Tuple
 from .symbol import Symbol
 
@@ -1350,7 +1350,7 @@ def is_ge(lhs, rhs, assumptions=None):
     New types can be supported by dispatching to ``_eval_is_ge``.
 
     >>> from sympy import Expr, sympify
-    >>> from sympy.multipledispatch import dispatch
+    >>> from multipledispatch import dispatch
     >>> class MyExpr(Expr):
     ...     def __new__(cls, arg):
     ...         return super().__new__(cls, sympify(arg))
@@ -1464,7 +1464,7 @@ def is_eq(lhs, rhs, assumptions=None):
     New types can be supported by dispatching to ``_eval_is_eq``.
 
     >>> from sympy import Basic, sympify
-    >>> from sympy.multipledispatch import dispatch
+    >>> from multipledispatch import dispatch
     >>> class MyBasic(Basic):
     ...     def __new__(cls, arg):
     ...         return Basic.__new__(cls, sympify(arg))

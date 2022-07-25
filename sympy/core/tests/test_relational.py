@@ -1,6 +1,6 @@
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
-from sympy.multipledispatch import dispatch
+from multipledispatch import dispatch
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy.assumptions.ask import Q
 from sympy.core.add import Add

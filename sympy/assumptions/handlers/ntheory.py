@@ -9,7 +9,7 @@ from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NaN,
 from sympy.functions import Abs, im, re
 from sympy.ntheory import isprime
 
-from sympy.multipledispatch import MDNotImplementedError
+from multipledispatch import MDNotImplementedError
 
 from ..predicates.ntheory import (PrimePredicate, CompositePredicate,
     EvenPredicate, OddPredicate)

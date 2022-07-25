@@ -9,7 +9,7 @@ from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.sets.fancysets import ComplexRegion
 from sympy.sets.sets import (FiniteSet, Intersection, Interval, Set, Union)
-from sympy.multipledispatch import Dispatcher
+from multipledispatch import Dispatcher
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
     ImageSet, Rationals)

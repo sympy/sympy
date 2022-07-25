@@ -28,9 +28,10 @@ This module defines basic kinds for core objects. Other kinds such as
 from collections import defaultdict
 
 from .cache import cacheit
-from sympy.multipledispatch.dispatcher import (Dispatcher,
-    ambiguity_warn, ambiguity_register_error_ignore_dup,
-    str_signature, RaiseNotImplementedError)
+from multipledispatch.dispatcher import (Dispatcher,
+    ambiguity_warn, str_signature)
+from sympy.multipledispatch.dispatcher import (ambiguity_register_error_ignore_dup,
+    RaiseNotImplementedError)
 
 
 class KindMeta(type):
@@ -187,6 +188,12 @@ class _BooleanKind(Kind):
 BooleanKind = _BooleanKind()
 
 
+class _Dispatcher(Dispatcher):
+    def add(self, signature, func, on_ambiguity=ambiguity_warn):
+        super().add(signature, func)
+        super().reorder(on_ambiguity=on_ambiguity)
+
+
 class KindDispatcher:
     """
     Dispatcher to select a kind from multiple kinds by binary dispatching.
@@ -258,7 +265,7 @@ class KindDispatcher:
         self.name = name
         self.doc = doc
         self.commutative = commutative
-        self._dispatcher = Dispatcher(name)
+        self._dispatcher = _Dispatcher(name)
 
     def __repr__(self):
         return "<dispatched %s>" % self.name

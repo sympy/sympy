@@ -9,7 +9,7 @@ from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.repmatrix import RepMatrix
 from sympy.matrices.sparse import SparseRepMatrix
-from sympy.multipledispatch import dispatch
+from multipledispatch import dispatch
 
 
 def sympify_matrix(arg):

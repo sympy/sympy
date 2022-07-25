@@ -6,7 +6,7 @@ from sympy.core.relational import is_le, is_lt, is_ge, is_gt
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import And
-from sympy.multipledispatch import dispatch
+from multipledispatch import dispatch
 from sympy.series.order import Order
 from sympy.sets.sets import FiniteSet
 
