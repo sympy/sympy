@@ -13,6 +13,7 @@ for (const fileName of fileNames) {
 const pyodide = await pyodide_pkg.loadPyodide()
 await pyodide.loadPackage([
     'mpmath',  // provided by pyodide
+    'multipledispatch',  // provided by pyodide
     'numpy',  // built by pyodide
     `../dist/${sympy}`  // git version sympy
 ])
