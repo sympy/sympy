@@ -78,9 +78,10 @@ def test_cached_property():
 
 
 def test_lazy_function():
-    module_name='sympy.combinatorics.free_groups'
-    free_group = lazy_function(module_name, 'free_group')
+    module_name='xmlrpc.client'
+    function_name = 'gzip_decode'
+    lazy = lazy_function(module_name, function_name)
     assert module_name not in sys.modules
-    free_group(['s'])
+    assert lazy(b'') == b''
     assert module_name in sys.modules
-    assert 'free_group' in str(free_group)
+    assert function_name in str(lazy)
