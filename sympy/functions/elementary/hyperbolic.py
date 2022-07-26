@@ -2,6 +2,7 @@ from sympy.core import S, sympify, cacheit, pi, I, Rational
 from sympy.core.add import Add
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_or, fuzzy_and, FuzzyBool
+from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import (binomial, factorial,
                                                       RisingFactorial)
 from sympy.functions.combinatorial.numbers import bernoulli, euler, nC
@@ -1236,6 +1237,31 @@ class asinh(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
+    def _eval_nseries(self, x, n, logx, cdir=0):  # asinh
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+
+        # Handling branch points
+        if arg0 in (S.ImaginaryUnit, -S.ImaginaryUnit):
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+
+        # Handling points lying on branch cuts (-I*oo, -I) U (I, I*oo)
+        if (1 + arg0**2).is_negative:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if re(ndir).is_positive:
+                if im(arg0).is_negative:
+                    return -res - I*pi
+            elif re(ndir).is_negative:
+                if im(arg0).is_positive:
+                    return -res + I*pi
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+        return res
+
     def _eval_rewrite_as_log(self, x, **kwargs):
         return log(x + sqrt(x**2 + 1))
 
@@ -1409,6 +1435,29 @@ class acosh(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
+    def _eval_nseries(self, x, n, logx, cdir=0):  # acosh
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+
+        # Handling branch points
+        if arg0 in (S.One, S.NegativeOne):
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+
+        # Handling points lying on branch cuts (-oo, 1)
+        if (arg0 - 1).is_negative:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if (arg0 + 1).is_negative:
+                    return res - 2*I*pi
+                return -res
+            elif not im(ndir).is_positive:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+        return res
+
     def _eval_rewrite_as_log(self, x, **kwargs):
         return log(x + sqrt(x + 1) * sqrt(x - 1))
 
@@ -1544,6 +1593,31 @@ class atanh(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
+    def _eval_nseries(self, x, n, logx, cdir=0):  # atanh
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+
+        # Handling branch points
+        if arg0 in (S.One, S.NegativeOne):
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+
+        # Handling points lying on branch cuts (-oo, -1] U [1, oo)
+        if (1 - arg0**2).is_negative:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if arg0.is_negative:
+                    return res - I*pi
+            elif im(ndir).is_positive:
+                if arg0.is_positive:
+                    return res + I*pi
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+        return res
+
     def _eval_rewrite_as_log(self, x, **kwargs):
         return (log(1 + x) - log(1 - x)) / 2
 
@@ -1657,6 +1731,31 @@ class acoth(InverseHyperbolicFunction):
             else:
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):  # acoth
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+
+        # Handling branch points
+        if arg0 in (S.One, S.NegativeOne):
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+
+        # Handling points lying on branch cuts [-1, 1]
+        if arg0.is_real and (1 - arg0**2).is_positive:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if arg0.is_positive:
+                    return res + I*pi
+            elif im(ndir).is_positive:
+                if arg0.is_negative:
+                    return res - I*pi
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+        return res
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return (log(1 + 1/x) - log(1 - 1/x)) / 2
@@ -1820,6 +1919,51 @@ class asech(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
 
+    def _eval_nseries(self, x, n, logx, cdir=0):  # asech
+        from sympy.series.order import O
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+
+        # Handling branch points
+        if arg0 is S.One:
+            t = Dummy('t', positive=True)
+            ser = asech(S.One - t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.One - self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            if not g.is_meromorphic(x, 0):   # cannot be expanded
+                return O(1) if n == 0 else O(sqrt(x))
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+
+        if arg0 is S.NegativeOne:
+            t = Dummy('t', positive=True)
+            ser = asech(S.NegativeOne + t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.One + self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            if not g.is_meromorphic(x, 0):   # cannot be expanded
+                return O(1) if n == 0 else I*pi + O(sqrt(x))
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+
+        # Handling points lying on branch cuts (-oo, 0] U (1, oo)
+        if arg0.is_negative or (1 - arg0).is_negative:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if im(ndir).is_positive:
+                if arg0.is_positive or (arg0 + 1).is_negative:
+                    return -res
+                return res - 2*I*pi
+            elif not im(ndir).is_negative:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+        return res
+
     def inverse(self, argindex=1):
         """
         Returns the inverse of this function.
@@ -1982,6 +2126,54 @@ class acsch(InverseHyperbolicFunction):
             else:
                 return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         return self.func(x0)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):  # acsch
+        from sympy.series.order import O
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+
+        # Handling branch points
+        if arg0 is S.ImaginaryUnit:
+            t = Dummy('t', positive=True)
+            ser = acsch(S.ImaginaryUnit + t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = -S.ImaginaryUnit + self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            if not g.is_meromorphic(x, 0):   # cannot be expanded
+                return O(1) if n == 0 else -I*pi/2 + O(sqrt(x))
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            res = ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+            return res
+
+        if arg0 == S.NegativeOne*S.ImaginaryUnit:
+            t = Dummy('t', positive=True)
+            ser = acsch(-S.ImaginaryUnit + t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = S.ImaginaryUnit + self.args[0]
+            f = arg1.as_leading_term(x)
+            g = (arg1 - f)/ f
+            if not g.is_meromorphic(x, 0):   # cannot be expanded
+                return O(1) if n == 0 else I*pi/2 + O(sqrt(x))
+            res1 = sqrt(S.One + g)._eval_nseries(x, n=n, logx=logx)
+            res = (res1.removeO()*sqrt(f)).expand()
+            return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
+
+        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        if arg0 is S.ComplexInfinity:
+            return res
+
+        # Handling points lying on branch cuts (-I, I)
+        if arg0.is_imaginary and (1 + arg0**2).is_positive:
+            ndir = self.args[0].dir(x, cdir if cdir else 1)
+            if re(ndir).is_positive:
+                if im(arg0).is_positive:
+                    return -res - I*pi
+            elif re(ndir).is_negative:
+                if im(arg0).is_negative:
+                    return -res + I*pi
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+        return res
 
     def inverse(self, argindex=1):
         """
