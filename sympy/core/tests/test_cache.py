@@ -1,4 +1,5 @@
-from sympy.core.cache import cacheit, cached_property
+import sys
+from sympy.core.cache import cacheit, cached_property, lazy_function
 from sympy.testing.pytest import raises
 
 def test_cacheit_doc():
@@ -74,3 +75,14 @@ def test_cached_property():
     assert a.calls == 1
     b = A(None)
     assert b.prop == None
+
+
+def test_lazy_function():
+    module_name='sympy.combinatorics.free_groups'
+    free_group = lazy_function(module_name, 'free_group')
+    assert module_name not in sys.modules
+    free_group(['s'])
+    assert module_name in sys.modules
+    assert 'free_group' in str(free_group)
+
+

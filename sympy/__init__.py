@@ -27,6 +27,7 @@ except ImportError:
 del mpmath
 
 from sympy.release import __version__
+from sympy.core.cache import lazy_function
 
 if 'dev' in __version__:
     def enable_warnings():
@@ -240,15 +241,8 @@ from .printing import (pager_print, pretty, pretty_print, pprint,
         print_tree, StrPrinter, sstr, sstrrepr, TableForm, dotprint,
         maple_code, print_maple_code)
 
-def test(*args, **kwargs):
-    """ Call to sympy.testing.test """
-    from .testing import test as sympy_test # lazy import
-    return sympy_test(*args, **kwargs)
-
-def doctest(*args, **kwargs):
-    """ Call to sympy.testing.doctest """
-    from .testing import doctest as sympy_doctest # lazy import
-    return sympy_doctest(*args, **kwargs)
+test = lazy_function('sympy.testing.runtests', 'test')
+doctest = lazy_function('sympy.testing.runtests', 'doctest')
 
 # This module causes conflicts with other modules:
 # from .stats import *
