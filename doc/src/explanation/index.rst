@@ -14,6 +14,7 @@ technical implementation details, and opinionated recommendations.
 .. toctree::
    :maxdepth: 2
 
+   best-practices.md
    gotchas.rst
    special_topics/index.rst
    active-deprecations.md
