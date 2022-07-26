@@ -18,7 +18,8 @@ class SolveFailed(Exception):
 
 def solve_poly_system(seq, *gens, strict=False, **args):
     """
-    Solve a system of polynomial equations.
+    returns a list of solutions for the system of polynomial equations
+    or else None if... XXX TODO
 
     Parameters
     ==========
@@ -34,7 +35,6 @@ def solve_poly_system(seq, *gens, strict=False, **args):
         not all solutions are expressible in radicals)
     args: Keyword arguments
         Special options for solving the equations.
-
 
 
     Returns
@@ -146,15 +146,15 @@ def solve_generic(polys, opt, strict=False):
     Solve a generic system of polynomial equations.
 
     Returns all possible solutions over C[x_1, x_2, ..., x_m] of a
-    set F = { f_1, f_2, ..., f_n } of polynomial equations,  using
+    set F = { f_1, f_2, ..., f_n } of polynomial equations, using
     Groebner basis approach. For now only zero-dimensional systems
     are supported, which means F can have at most a finite number
-    of solutions.
+    of solutions. None is returned if ... XXX TODO
 
     The algorithm works by the fact that, supposing G is the basis
-    of F with respect to an elimination order  (here lexicographic
+    of F with respect to an elimination order (here lexicographic
     order is used), G and F generate the same ideal, they have the
-    same set of solutions. By the elimination property,  if G is a
+    same set of solutions. By the elimination property, if G is a
     reduced, zero-dimensional Groebner basis, then there exists an
     univariate polynomial in G (in its last variable). This can be
     solved by computing its roots. Substituting all computed roots
@@ -200,7 +200,7 @@ def solve_generic(polys, opt, strict=False):
     ========
 
     NotImplementedError
-        If the system is not zero-dimensional. (does not have a finite
+        If the system is not zero-dimensional (does not have a finite
         number of solutions)
 
     UnsolvableFactorError
@@ -259,7 +259,7 @@ def solve_generic(polys, opt, strict=False):
         """Recursively solves reduced polynomial systems. """
         if len(system) == len(gens) == 1:
             # the below line will produce UnsolvableFactorError if
-            # strict=True and the produced by roots is incomplete
+            # strict=True and the solution from `roots` is incomplete
             zeros = list(roots(system[0], gens[-1], strict=strict).keys())
             return [(zero,) for zero in zeros]
 
@@ -291,7 +291,7 @@ def solve_generic(polys, opt, strict=False):
         gen = gens[-1]
 
         # the below line will produce UnsolvableFactorError if
-        # strict=True and the produced by roots is incomplete
+        # strict=True and the solution from `roots` is incomplete
         zeros = list(roots(f.ltrim(gen), strict=strict).keys())
 
         if not zeros:
@@ -329,8 +329,6 @@ def solve_generic(polys, opt, strict=False):
 
     if result is not None:
         return sorted(result, key=default_sort_key)
-    else:
-        return None
 
 
 def solve_triangulated(polys, *gens, **args):
