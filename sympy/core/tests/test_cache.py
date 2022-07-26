@@ -84,5 +84,3 @@ def test_lazy_function():
     free_group(['s'])
     assert module_name in sys.modules
     assert 'free_group' in str(free_group)
-
-

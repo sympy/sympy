@@ -186,7 +186,7 @@ def lazy_function(module : str, name : str) -> Callable:
             docstring = _get_function().__doc__
             docstring += f"\n\nNote: this is a {self.__class__.__name__} wrapper of '{module}.{name}'"
             return docstring
-        
+
     class LazyFunction(metaclass=LazyFunctionMeta):
         def __call__(self, *args, **kwargs):
             return _get_function()(*args, **kwargs)
@@ -203,6 +203,3 @@ def lazy_function(module : str, name : str) -> Callable:
         def __repr__(self):
             return f"<{__class__.__name__} object at 0x{id(self):x}>: wrapping '{module}.{name}'"
     return LazyFunction()
-
-#s=lazy_function('os', 'getuid')
-#print(repr(s))
