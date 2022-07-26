@@ -1260,6 +1260,8 @@ def solve(f, *symbols, **flags):
         return solution
 
     if not solution:
+        if as_set:
+            return symbols, set()
         return []
 
     if (

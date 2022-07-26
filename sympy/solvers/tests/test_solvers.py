@@ -204,6 +204,9 @@ def test_solve_args():
     # ordering should be canonical, fastest to order by keys instead
     # of by size
     assert list(solve((y - 1, x - sqrt(3)*z)).keys()) == [x, y]
+    # as set always returns as symbols, set even if no solution
+    assert solve([x - 1, x], (y, x), set=True) == ([y, x], set())
+    assert solve([x - 1, x], {y, x}, set=True) == ([x, y], set())
 
 
 def test_solve_polynomial1():
