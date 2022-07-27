@@ -1,5 +1,5 @@
 from sympy.core import (
-    S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio, EulerGamma, Catalan,
+    S, pi, oo, Symbol, symbols, Rational, Integer, Float, Function, Mod, GoldenRatio, EulerGamma, Catalan,
     Lambda, Dummy, nan, Mul, Pow, UnevaluatedExpr
 )
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
@@ -179,6 +179,15 @@ def test_ccode_user_functions():
     assert ccode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
     assert ccode(Abs(x), user_functions=custom_functions) == "fabs(x)"
     assert ccode(Abs(n), user_functions=custom_functions) == "abs(n)"
+
+    expr = Symbol('a')
+    muladd = Function('muladd')
+    for i in range(0, 100):
+        # the large number of terms acts as a regression test for gh-23839
+        expr = muladd(Rational(1, 2), Symbol(f'a{i}'), expr)
+    out = ccode(expr, user_functions={'muladd':'muladd'})
+    assert 'a99' in out
+    assert out.count('muladd') == 100
 
 
 def test_ccode_boolean():
