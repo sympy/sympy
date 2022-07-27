@@ -2454,6 +2454,7 @@ def test_issue_20747():
     sol = [THT*term**(1/c1) - term**(1/c1) + 1]
     assert solve(eq, HT) == sol
 
+
 def test_issue_20902():
     f = (t / ((1 + t) ** 2))
     assert solve(f.subs({t: 3 * x + 2}).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)

@@ -2421,8 +2421,6 @@ class Triangle(Polygon):
         Point2D(1/2, 1/2)
         """
         a, b, c = [x.perpendicular_bisector() for x in self.sides]
-        if not a.intersection(b):
-            print(a,b,a.intersection(b))
         return a.intersection(b)[0]
 
     @property

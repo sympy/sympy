@@ -82,11 +82,11 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
     There are two methods for computing the polynomial solutions.
     If the degree bound is relatively small, i.e. it's smaller than
     or equal to the order of the recurrence, then naive method of
-    undetermined coefficients is being used. This gives system
+    undetermined coefficients is being used. This gives a system
     of algebraic equations with `N+1` unknowns.
 
     In the other case, the algorithm performs transformation of the
-    initial equation to an equivalent one, for which the system of
+    initial equation to an equivalent one for which the system of
     algebraic equations has only `r` indeterminates. This method is
     quite sophisticated (in comparison with the naive one) and was
     invented together by Abramov, Bronstein and Petkovsek.
@@ -366,14 +366,14 @@ def rsolve_ratio(coeffs, f, n, **hints):
             `y(n) = u(n)/v(n)` and solve it for `u(n)` finding all its
             polynomial solutions. Return ``None`` if none were found.
 
-    Algorithm implemented here is a revised version of the original
+    The algorithm implemented here is a revised version of the original
     Abramov's algorithm, developed in 1989. The new approach is much
     simpler to implement and has better overall efficiency. This
-    method can be easily adapted to q-difference equations case.
+    method can be easily adapted to the q-difference equations case.
 
     Besides finding rational solutions alone, this functions is
-    an important part of Hyper algorithm were it is used to find
-    particular solution of inhomogeneous part of a recurrence.
+    an important part of Hyper algorithm where it is used to find
+    a particular solution for the inhomogeneous part of a recurrence.
 
     Examples
     ========

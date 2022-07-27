@@ -596,7 +596,7 @@ def solve(f, *symbols, **flags):
     **Additional Examples**
 
     ``solve()`` with check=True (default) will run through the symbol tags to
-    elimate unwanted solutions. If no assumptions are included, all possible
+    eliminate unwanted solutions. If no assumptions are included, all possible
     solutions will be returned:
 
         >>> from sympy import Symbol, solve
@@ -3607,6 +3607,6 @@ def unrad(eq, *syms, **flags):
     return eq, cov
 
 
-# Delayed imports
+# delayed imports
 from sympy.solvers.bivariate import (
     bivariate_type, _solve_lambert, _filtered_gens)
