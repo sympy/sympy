@@ -19,7 +19,7 @@ class SolveFailed(Exception):
 def solve_poly_system(seq, *gens, strict=False, **args):
     """
     returns a list of solutions for the system of polynomial equations
-    or else None if... XXX TODO
+    or else None.
 
     Parameters
     ==========
@@ -41,8 +41,10 @@ def solve_poly_system(seq, *gens, strict=False, **args):
     =======
 
     List[Tuple]
-        A List of tuples. Solutions for symbols that satisfy the
-        equations listed in seq
+        a list of tuples with elements being solutions for the
+        symbols in the order they were passed as gens
+    None
+        None is returned when the computed basis contains only the ground.
 
     Examples
     ========
@@ -93,8 +95,10 @@ def solve_biquadratic(f, g, opt):
     =======
 
     List[Tuple]
-        A List of tuples. Solutions for symbols that satisfy the
-        equations listed in seq.
+        a list of tuples with elements being solutions for the
+        symbols in the order they were passed as gens
+    None
+        None is returned when the computed basis contains only the ground.
 
     Examples
     ========
@@ -149,7 +153,8 @@ def solve_generic(polys, opt, strict=False):
     set F = { f_1, f_2, ..., f_n } of polynomial equations, using
     Groebner basis approach. For now only zero-dimensional systems
     are supported, which means F can have at most a finite number
-    of solutions. None is returned if ... XXX TODO
+    of solutions. If the basis contains only the ground, None is
+    returned.
 
     The algorithm works by the fact that, supposing G is the basis
     of F with respect to an elimination order (here lexicographic
@@ -182,8 +187,10 @@ def solve_generic(polys, opt, strict=False):
     =======
 
     List[Tuple]
-        A List of tuples. Solutions for symbols that satisfy the
-        equations listed in seq
+        a list of tuples with elements being solutions for the
+        symbols in the order they were passed as gens
+    None
+        None is returned when the computed basis contains only the ground.
 
     References
     ==========
