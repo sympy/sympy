@@ -15,12 +15,14 @@ from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin,
                                                       atan, cos, cot, csc, sec, sin, tan)
-from sympy.functions.special.bessel import (besselj, besselk)
+from sympy.functions.special.bessel import (besseli, besselj, besselk)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, erfi, fresnelc, fresnels)
 from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma)
+from sympy.functions.special.hyper import meijerg
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.series.limits import (Limit, limit)
 from sympy.simplify.simplify import (logcombine, simplify)
+from sympy.simplify.hyperexpand import hyperexpand
 
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
@@ -630,6 +632,19 @@ def test_issue_4503():
         exp(x)/(2*sqrt(exp(x) + 1))
 
 
+def test_issue_6052():
+    G = meijerg((), (), (1,), (0,), -x)
+    g = hyperexpand(G)
+    assert limit(g, x, 0, '+-') == 0
+    assert limit(g, x, oo) == -oo
+
+
+def test_issue_7224():
+    expr = sqrt(x)*besseli(1,sqrt(8*x))
+    assert limit(x*diff(expr, x, x)/expr, x, 0) == 2
+    assert limit(x*diff(expr, x, x)/expr, x, 1).evalf(n=2) == 2.0
+
+
 def test_issue_8208():
     assert limit(n**(Rational(1, 1e9) - 1), n, oo) == 0
 
@@ -1032,6 +1047,11 @@ def test_issue_16708():
     m, vi = symbols('m vi', positive=True)
     B, ti, d = symbols('B ti d')
     assert limit((B*ti*vi - sqrt(m)*sqrt(-2*B*d*vi + m*(vi)**2) + m*vi)/(B*vi), B, 0) == (d + ti*vi)/vi
+
+
+def test_issue_19154():
+    assert limit(besseli(1, 3 *x)/(x *besseli(1, x)**3), x , oo) == 2*sqrt(3)*pi/3
+    assert limit(besseli(1, 3 *x)/(x *besseli(1, x)**3), x , -oo) == -2*sqrt(3)*pi/3
 
 
 def test_issue_19453():

@@ -122,6 +122,18 @@ def heuristics(e, z, z0, dir):
                 except PolynomialError:
                     return
                 if rat_e is S.NaN or rat_e == e:
+                    if e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:
+                        leading_terms = []
+                        for a in e.args:
+                            try:
+                                term = a.as_leading_term(z)
+                                leading_terms.append(term)
+                            except (NotImplementedError, PoleError, ValueError):
+                                    return
+                        if leading_terms:
+                            lt = e.func(*leading_terms)
+                            if lt != e and not isinstance(lt, Limit):
+                                return limit(lt, z, z0, dir)
                     return
                 return limit(rat_e, z, z0, dir)
     return rv

@@ -12,6 +12,7 @@ from sympy.core.symbol import Dummy, Wild
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
+from sympy.functions.elementary.hyperbolic import cosh
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import cbrt, sqrt, root
@@ -223,11 +224,21 @@ class besselj(BesselBase):
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         nu, z = self.args
-        arg = z.as_leading_term(x)
-        if x in arg.free_symbols:
-            return arg**nu/(2**nu*gamma(nu + 1))
-        else:
-            return self.func(nu, z.subs(x, 0))
+        try:
+            arg = z.as_leading_term(x)
+        except NotImplementedError:
+            return self
+        _, e = arg.as_coeff_exponent(x)
+
+        if e.is_positive:
+            if x in arg.free_symbols:
+                return arg**nu/(2**nu*gamma(nu + 1))
+            else:
+                return self.func(nu, z.subs(x, 0))
+        elif e.is_negative:
+            return sqrt(2)*cos(z - pi*(2*nu + 1)/4)/sqrt(pi*z)
+
+        return super(besselj, self)._eval_as_leading_term(x, logx, cdir)
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -338,14 +349,25 @@ class bessely(BesselBase):
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         nu, z = self.args
-        term_one = ((2/pi)*log(z/2)*besselj(nu, z))
-        term_two = -(z/2)**(-nu)*factorial(nu - 1)/pi if (nu).is_positive else S.Zero
-        term_three = -(z/2)**nu/(pi*factorial(nu))*(digamma(nu + 1) - S.EulerGamma)
-        arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
-        if (x in arg.free_symbols or logx in arg.free_symbols):
-            return arg
-        else:
-            return self.func(nu, z.subs(x, 0).cancel())
+        try:
+            arg = z.as_leading_term(x)
+        except NotImplementedError:
+            return self
+        _, e = arg.as_coeff_exponent(x)
+
+        if e.is_positive:
+            term_one = ((2/pi)*log(z/2)*besselj(nu, z))
+            term_two = -(z/2)**(-nu)*factorial(nu - 1)/pi if (nu).is_positive else S.Zero
+            term_three = -(z/2)**nu/(pi*factorial(nu))*(digamma(nu + 1) - S.EulerGamma)
+            arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
+            if (x in arg.free_symbols or logx in arg.free_symbols):
+                return arg
+            else:
+                return self.func(nu, z.subs(x, 0).cancel())
+        elif e.is_negative:
+            return sqrt(2)*sin(z - pi*nu/2 - pi/4)/sqrt(pi*z)
+
+        return super(bessely, self)._eval_as_leading_term(x, logx, cdir)
 
     def _eval_is_extended_real(self):
         nu, z = self.args
@@ -375,11 +397,15 @@ class bessely(BesselBase):
                 return o
             t = (_mexpand(r**2) + o).removeO()
 
-            if nu > S.One:
+            if nu > S.Zero:
                 term = r**(-nu)*factorial(nu - 1)/pi
                 b.append(term)
-                for k in range(1, nu - 1):
-                    term *= t*(nu - k - 1)/k
+                for k in range(1, nu):
+                    denom = (nu - k)*k
+                    if denom == S.Zero:
+                        term *= t/k
+                    else:
+                        term *= t/denom
                     term = (_mexpand(term) + o).removeO()
                     b.append(term)
 
@@ -452,6 +478,10 @@ class besseli(BesselBase):
                 return S.NaN
         if im(z) in (S.Infinity, S.NegativeInfinity):
             return S.Zero
+        if z is S.Infinity:
+            return S.Infinity
+        if z is S.NegativeInfinity:
+            return (-1)**nu*S.Infinity
 
         if z.could_extract_minus_sign():
             return (z)**nu*(-z)**(-nu)*besseli(nu, -z)
@@ -490,6 +520,54 @@ class besseli(BesselBase):
         nu, z = self.args
         if nu.is_integer and z.is_extended_real:
             return True
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        nu, z = self.args
+        try:
+            arg = z.as_leading_term(x)
+        except NotImplementedError:
+            return self
+        _, e = arg.as_coeff_exponent(x)
+
+        if e.is_positive:
+            if x in arg.free_symbols:
+                return arg**nu/(2**nu*gamma(nu + 1))
+            else:
+                return self.func(nu, z.subs(x, 0))
+        elif e.is_negative:
+            return (-1)**(S(1)/4)*sqrt(2)*exp(I*pi*nu/2)*cosh(z - \
+                    I*pi*(2*nu + 1)/4)/sqrt(pi*z)
+
+        return super(besseli, self)._eval_as_leading_term(x, logx, cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+        nu, z = self.args
+
+        # In case of powers less than 1, number of terms need to be computed
+        # separately to avoid repeated callings of _eval_nseries with wrong n
+        try:
+            _, exp = z.leadterm(x)
+        except (ValueError, NotImplementedError):
+            return self
+
+        if exp.is_positive:
+            newn = ceiling(n/exp)
+            o = Order(x**n, x)
+            r = (z/2)._eval_nseries(x, n, logx, cdir).removeO()
+            if r is S.Zero:
+                return o
+            t = (_mexpand(r**2) + o).removeO()
+
+            term = r**nu/gamma(nu + 1)
+            s = [term]
+            for k in range(1, (newn + 1)//2):
+                term *= t/(k*(nu + k))
+                term = (_mexpand(term) + o).removeO()
+                s.append(term)
+            return Add(*s) + o
+
+        return super(besseli, self)._eval_nseries(x, n, logx, cdir)
 
 
 class besselk(BesselBase):
@@ -572,6 +650,75 @@ class besselk(BesselBase):
         nu, z = self.args
         if nu.is_integer and z.is_positive:
             return True
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        nu, z = self.args
+        try:
+            arg = z.as_leading_term(x)
+        except NotImplementedError:
+            return self
+        _, e = arg.as_coeff_exponent(x)
+
+        if e.is_positive:
+            term_one = ((-1)**(nu -1)*log(z/2)*besseli(nu, z))
+            term_two = (z/2)**(-nu)*factorial(nu - 1)/2 if (nu).is_positive else S.Zero
+            term_three = (-1)**nu*(z/2)**nu/(2*factorial(nu))*(digamma(nu + 1) - S.EulerGamma)
+            arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
+            if (x in arg.free_symbols or logx in arg.free_symbols):
+                return arg
+            else:
+                return self.func(nu, z.subs(x, 0).cancel())
+        elif e.is_negative:
+            return sqrt(pi)*exp(-z)/sqrt(2*z)
+
+        return super(besselk, self)._eval_as_leading_term(x, logx, cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+        nu, z = self.args
+
+        # In case of powers less than 1, number of terms need to be computed
+        # separately to avoid repeated callings of _eval_nseries with wrong n
+        try:
+            _, exp = z.leadterm(x)
+        except (ValueError, NotImplementedError):
+            return self
+
+        if exp.is_positive and nu.is_integer:
+            newn = ceiling(n/exp)
+            bn = besseli(nu, z)
+            a = ((-1)**(nu - 1)*log(z/2)*bn)._eval_nseries(x, n, logx, cdir)
+
+            b, c = [], []
+            o = Order(x**n, x)
+            r = (z/2)._eval_nseries(x, n, logx, cdir).removeO()
+            if r is S.Zero:
+                return o
+            t = (_mexpand(r**2) + o).removeO()
+
+            if nu > S.Zero:
+                term = r**(-nu)*factorial(nu - 1)/2
+                b.append(term)
+                for k in range(1, nu):
+                    denom = (k - nu)*k
+                    if denom == S.Zero:
+                        term *= t/k
+                    else:
+                        term *= t/denom
+                    term = (_mexpand(term) + o).removeO()
+                    b.append(term)
+
+            p = r**nu*(-1)**nu/(2*factorial(nu))
+            term = p*(digamma(nu + 1) - S.EulerGamma)
+            c.append(term)
+            for k in range(1, (newn + 1)//2):
+                p *= t/(k*(k + nu))
+                p = (_mexpand(p) + o).removeO()
+                term = p*(digamma(k + nu + 1) + digamma(k + 1))
+                c.append(term)
+            return a + Add(*b) + Add(*c) # Order term comes from a
+
+        return super(besselk, self)._eval_nseries(x, n, logx, cdir)
 
 
 class hankel1(BesselBase):
