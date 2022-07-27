@@ -278,6 +278,7 @@ for const in _numpy_known_constants:
 
 
 _known_functions_scipy_special = {
+    'Ei': 'expi',
     'erf': 'erf',
     'erfc': 'erfc',
     'besselj': 'jv',
