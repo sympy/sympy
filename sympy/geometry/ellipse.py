@@ -675,7 +675,9 @@ class Ellipse(GeometrySet):
 
         elif isinstance(o, (Segment2D, Ray2D)):
             ellipse_equation = self.equation(x, y)
-            result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
+            result = solve([ellipse_equation, Line(
+                o.points[0], o.points[1]).equation(x, y)], [x, y],
+                set=True)[1]
             return list(ordered([Point(i) for i in result if i in o]))
 
         elif isinstance(o, Polygon):
@@ -686,7 +688,9 @@ class Ellipse(GeometrySet):
                 return self
             else:
                 ellipse_equation = self.equation(x, y)
-                return list(ordered([Point(i) for i in solve([ellipse_equation, o.equation(x, y)], [x, y])]))
+                return list(ordered([Point(i) for i in solve(
+                    [ellipse_equation, o.equation(x, y)], [x, y],
+                    set=True)[1]]))
         elif isinstance(o, LinearEntity3D):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
