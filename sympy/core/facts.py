@@ -461,6 +461,34 @@ class FactRules:
             prereq[k] |= pitems
         self.prereq = prereq
 
+    def to_python(self):
+        d={}
+        for key in ['full_implications', 'beta_triggers', 'prereq']:
+            value = getattr(self, key)
+            d[key] = dict(value)
+        for key in ['beta_rules']:
+            value = getattr(self, key)
+            d[key]  = list(value)
+        for key in ['defined_facts']:
+            value = getattr(self, key)
+            d[key]  = list(value)
+        return d
+
+    @classmethod
+    def from_python(cls, data):
+        self=cls('')
+        for key in ['full_implications', 'beta_triggers', 'prereq']:
+            d=defaultdict(set)
+            d.update(data[key])
+            setattr(self, key, d)
+        for key in ['beta_rules']:
+            d= list(data[key])
+            setattr(self, key, d)
+        for key in ['defined_facts']:
+            d= set(data[key])
+            setattr(self, key, d)
+
+        return self
 
 class InconsistentAssumptions(ValueError):
     def __str__(self):
