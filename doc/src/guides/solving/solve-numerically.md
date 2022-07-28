@@ -11,7 +11,7 @@ can each solve a system of linear scalar equations
 Here is a simple example of numerically solving an equation:
 
 ```py
->>> from sympy import solve, cos, Eq, nsolve, Symbol
+>>> from sympy import cos, nsolve, Symbol
 >>> x = Symbol('x')
 >>> nsolve(cos(x) - x, x, 1)
 0.739085133215161
@@ -60,11 +60,9 @@ You can ensure the root found is in a given interval, if such a root exists, usi
 -1.00000000000000
 ```
 
-## *Title*
+## Solve a nonlinear equation system numerically
 
-You can *title* in several ways. 
-
-### *Method 1*
+### Solve multidimensional functions
 
 To solve multidimensional functions, supply a tuple of
 - functions `(f1, f2)`
@@ -81,9 +79,20 @@ To solve multidimensional functions, supply a tuple of
 Matrix([[-1.19287309935246], [1.27844411169911]])
 ```
 
-### *Method 2*
+### Use SciPy on a lambda function *what is the advantage of this method?*
 
-*Method 2 content*
+You can *description*
+
+```py
+>>> from sympy.abc import x
+>>> from sympy.utilities.lambdify import implemented_function
+>>> from sympy import lambdify
+>>> from scipy import optimize
+>>> f = implemented_function('f', lambda x: x**3 - 1)
+>>> lam_f = lambdify(x, f(x))
+>>> sol = optimize.root_scalar(lam_f, bracket=[0, 2], method='brentq')
+>>> sol.root
+```
 
 ## Use the solution result
 
@@ -95,31 +104,54 @@ Matrix([[-1.19287309935246], [1.27844411169911]])
 
 *Usage method 2 content*
 
-## *Tradeoffs (speed vs. accuracy, etc.) for function*
+## Tradeoffs
 
-### *Tradeoff 1*
+### Do not use `verify` for functions which are very steep near the root
 
-*Speed-up option 1 content*
+For functions which are very steep near the root, the verification of the solution may fail. In this case you should use the flag `verify=False` and independently verify the solution.
 
-### *Speed-up option 2*
-
-*Speed-up option 2 content*
+```py
+>>> from sympy import cos, cosh, nsolve, Symbol
+>>> x = Symbol('x')
+>>> f = cos(x)*cosh(x) - 1
+>>> nsolve(f, 3.14*100)
+Traceback (most recent call last):
+...
+ValueError: Could not find root within given tolerance. (1.39267e+230 > 2.1684e-19)
+ans = nsolve(f, 3.14*100, verify=False); ans
+312.588469032184
+>>> f.subs(x, ans).n(2)
+2.1e+121
+>>> (f/f.diff(x)).subs(x, ans).n(2)
+7.4e-15
+```
 
 ## Not all equations can be solved
 
+{func}`~.nsolve` is a numerical solving function, so it is often the solution to equations which cannot be solved algebraically.
+
 ### Equations with no solution
 
-*Equations with no solution content*
+Some equations have no solution, in which case SymPy may return an empty set. 
+For example, the equation $x - 7 - x - 2 = 0$ reduces to $-9 = 0$, which has no 
+solution because no value of $x$ will make it true:
 
-### Equations with no analytical solution
+```py
+>>> from sympy import nsolve
+>>> from sympy.abc import x
+>>> nsolve(x - 7 - x - 2, x, 1)
+ValueError: 
+expected a one-dimensional and numerical function
+```
 
-*Equations with no analytical solution content*
+SymPy reports that the function to be solved is not one-dimensional, because SymPy simplifies $x - x$ to $0$, leaving a zero-dimensional function.
 
-### Equations which have an analytical solution, and SymPy cannot solve
+## Report a problem
 
-*Equations which have an analytical solution, and SymPy cannot solve content*
-
-Please post the problem on the 
+If you find a problem with {func}`~.nsolve`, please post it on the 
 [mailing list](https://groups.google.com/g/sympy), or open an issue on 
 [SymPy's GitHub page](https://github.com/sympy/sympy/issues). Until the issue 
-is resolved, you can *workaround*.
+is resolved, you can use a [NumPy](https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html?highlight=solve#numpy.linalg.solve)
+or
+[SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.solve.html#scipy.linalg.solve)
+solver.
