@@ -524,18 +524,6 @@ def solve(f, *symbols, **flags):
             >>> solve(x**2 - y, x, y, dict=True)
             [{y: x**2}]
 
-        * When undetermined coefficients are identified:
-
-            * That are linear:
-
-                >>> solve((a + b)*x - b + 2, a, b)
-                {a: -2, b: 2}
-
-            * That are nonlinear:
-
-                >>> solve((a + b)*x - b**2 + 2, a, b, set=True)
-                ([a, b], {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))})
-
         * If there is no linear solution, then the first successful
           attempt for a nonlinear solution will be returned:
 
@@ -545,6 +533,28 @@ def solve(f, *symbols, **flags):
             [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
             >>> solve(x**2 - y**2/exp(x), y, x)
             [(-x*sqrt(exp(x)), x), (x*sqrt(exp(x)), x)]
+
+        * When undetermined coefficients are identified:
+
+            This happens when it is possible to form a linear set of
+            equations in the variables provided from the coefficients
+            of the expressions in symbols not provided. A single
+            dictionary with specified values will be returned:
+
+            >>> eq = (a + b)*x - b + 2
+            >>> solve(eq, a, b)
+            {a: -2, b: 2}
+
+            The coefficient system solved was:
+
+            >>> list(eq.expand().as_coefficients_dict(x).values())
+            [a + b, 2 - b]
+
+            To obtain an algebraic solution in terms of ``a`` or ``b``
+            pass the equation in a list:
+
+            >>> solve([eq], a, b)
+            {a: b*(1 - x)/x - 2/x}
 
     Iterable of one or more of the above:
 
@@ -1111,13 +1121,13 @@ def solve(f, *symbols, **flags):
     if bare_f:
         solution = _solve(f[0], *symbols, **flags)
         # solution is:
-        # dict or list of tuples for coeficient system with one/many solutions
+        # dict for coeficient system with one solution
         # list of values
         # list of dicts
     else:
         solution = _solve_system(f, symbols, **flags)
         # solution is:
-        # dict
+        # dict for linear/monotonic solution
         # list of dicts
         # list of tuples
     #
@@ -1349,41 +1359,42 @@ def _solve(f, *symbols, **flags):
 
     not_impl_msg = "No algorithms are implemented to solve equation %s"
 
-    if len(symbols) != 1:
+    if len(symbols) != 1:                            # solve(a*x + 2*x + b - c, a, b)
         soln = None
-        free = f.free_symbols
-        ex = free - set(symbols)
+        free = f.free_symbols                        # {a, b, c, x}
+        ex = free - set(symbols)                     # {c, x}
         if len(ex) != 1:
-            ind, dep = f.as_independent(*symbols)
-            ex = ind.free_symbols & dep.free_symbols
+            ind, dep = f.as_independent(*symbols)    # (2*x - c, a*x + b)
+            ex = ind.free_symbols & dep.free_symbols # {x, c} & {a, x, b} -> {x}
+        if len(ex) != 1:                           # e.g. (a+b)*x + b - c -> {c}, {a, b, x}
+            ex = dep.free_symbols - set(symbols)  # {x} = {a,b,x}-{a.b}
         if len(ex) == 1:
             ex = ex.pop()
             try:
-                # soln may come back as dict, list of dicts or tuples, or
-                # tuple of symbol list and set of solution tuples
+                # force dict return for solution
+                missing = Dummy()
+                was = {k: flags.pop(k, missing) for k in ('dict', 'set')}
+                flags['dict'] = True
+                # get solution which (because it will call solve with
+                # flags) will be simplified and checked
                 soln = solve_undetermined_coeffs(f, symbols, ex, **flags)
-            except NotImplementedError:
-                pass
-            if soln:
-                if flags.get('simplify', True):
-                    if isinstance(soln, dict):
+                flags['check'] = False  # already checked
+                # restore keys that weren't missing
+                for k in was:
+                    if was[k] != missing:
+                        flags[k] = was[k]
+                if soln and len(soln) == 1:
+                    soln = soln[0]
+                    if flags.get('simplify', True):
                         for k in soln:
                             soln[k] = simplify(soln[k])
-                    elif isinstance(soln, list):
-                        if isinstance(soln[0], dict):
-                            for d in soln:
-                                for k in d:
-                                    d[k] = simplify(d[k])
-                        elif isinstance(soln[0], tuple):
-                            soln = [tuple(simplify(i) for i in j) for j in soln]
-                        else:
-                            raise TypeError('unrecognized args in list')
-                    elif isinstance(soln, tuple):
-                        sym, sols = soln
-                        soln = sym, {tuple(simplify(i) for i in j) for j in sols}
-                    else:
-                        raise TypeError('unrecognized solution type')
-                return soln
+                    return soln
+                # solve_undetermined_coeffs assumes a linear system
+                # and we actually don't want this nonalgebraic feature
+                # enabled by default, so take this as a first step
+                # and fall back now to normal algebraic rearrangement
+            except NotImplementedError:
+                pass
 
         # look for solutions for desired symbols that are independent
         # of symbols already solved for, e.g. if we solve for x = y
