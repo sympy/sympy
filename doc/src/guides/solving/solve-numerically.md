@@ -1,4 +1,4 @@
-# Solve a nonlinear equation system numerically
+# Solve a system of equations numerically
 
 Use SymPy to numerically solve a system of one or more equations. For example, numerically solving $\cos(x) = x $ returns $ x \approx 0.739085133215161$.
 
@@ -7,8 +7,9 @@ Alternatives to consider:
 and
 [SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.solve.html#scipy.linalg.solve)
 can each solve a system of linear scalar equations
+- To solve an underdetermined system of linear equations, convert them to matrices and solve using [`gauss_jordan_solve`](gauss_jordan_solve).
 
-Here is a simple example of numerically solving an equation:
+Here is a simple example of numerically solving one equation:
 
 ```py
 >>> from sympy import cos, nsolve, Symbol
@@ -60,7 +61,7 @@ You can ensure the root found is in a given interval, if such a root exists, usi
 -1.00000000000000
 ```
 
-## Solve a nonlinear equation system numerically
+## Solve a system of equations numerically
 
 ### Solve multidimensional functions
 
@@ -99,10 +100,6 @@ f3 = x1 + x2
 
 print(nsolve((f1, f2, f3), (x1, x2), (-1, 1)))
 
-### Solve underdetermined systems
-
-*content*
-
 ### Use SciPy on a lambda function *what is the advantage of this method?*
 
 You can *description*
@@ -121,9 +118,39 @@ You can *description*
 
 ## Use the solution result
 
-### *subs*
+### Substitute the result into an expression
 
-*Usage method 1 content*
+You can use [`subs`](sympy.core.basic.Basic.subs) to substitute numerical values into expressions to numerically evaluate them fully:
+
+```py
+>>> from sympy import cos, nsolve, Symbol, diff
+>>> x = Symbol('x')
+>>> f = cos(x) - x
+>>> x_value = nsolve(f, x, 1); x_value
+0.739085133215161
+>>> f.subs(x, x_value) # Verify that root is correct
+0
+>>> derivative = diff(f, x)
+>>> derivative.subs(x, x_value) # Calculate the derivative where the function value is zero
+-1.67361202918321
+```
+
+or leave some symbols as variables:
+
+```py
+>>> from sympy import cos, nsolve, Symbol, diff
+>>> x = Symbol('x')
+>>> f = cos(x) - x
+>>> x_value = nsolve(f, x, 1); x_value
+0.739085133215161
+>>> y = Symbol('y')
+>>> g = x * y**2
+>>> g.subs(x, x_value)
+0.739085133215161*y**2
+>>> derivative = diff(g, y)
+>>> derivative.subs(x, x_value)
+1.47817026643032*y
+```
 
 ## Tradeoffs
 
