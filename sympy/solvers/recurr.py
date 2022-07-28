@@ -197,6 +197,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
         solutions = solve_undetermined_coeffs(E - f, C, n)
 
         if solutions is not None:
+            _C = C
             C = [c for c in C if (c not in solutions)]
             result = y.subs(solutions)
         else:
@@ -329,6 +330,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
         else:
             result = h
 
+        _C = C[:]
         for c, q in list(zip(C, Q)):
             if c in solutions:
                 s = solutions[c]*q
@@ -337,6 +339,11 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
                 s = c*q
 
             result += s.expand()
+
+    if C != _C:
+        # renumber so they are contiguous
+        result = result.xreplace(dict(zip(C, _C)))
+        C = _C[:len(C)]
 
     if hints.get('symbols', False):
         return (result, C)
@@ -382,7 +389,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
     >>> from sympy.solvers.recurr import rsolve_ratio
     >>> rsolve_ratio([-2*x**3 + x**2 + 2*x - 1, 2*x**3 + x**2 - 6*x,
     ... - 2*x**3 - 11*x**2 - 18*x - 9, 2*x**3 + 13*x**2 + 22*x + 8], 0, x)
-    C2*(2*x - 3)/(2*(x**2 - 1))
+    C0*(2*x - 3)/(2*(x**2 - 1))
 
     References
     ==========
