@@ -183,11 +183,11 @@ class Order(Expr):
             if any(p != point[0] for p in point):
                 raise NotImplementedError(
                     "Multivariable orders at different points are not supported.")
-            if point[0] is S.Infinity:
+            if point[0] in (S.Infinity, S.Infinity*S.ImaginaryUnit):
                 s = {k: 1/Dummy() for k in variables}
                 rs = {1/v: 1/k for k, v in s.items()}
                 ps = [S.Zero for p in point]
-            elif point[0] is S.NegativeInfinity:
+            elif point[0] in (S.NegativeInfinity, S.NegativeInfinity*S.ImaginaryUnit):
                 s = {k: -1/Dummy() for k in variables}
                 rs = {-1/v: -1/k for k, v in s.items()}
                 ps = [S.Zero for p in point]

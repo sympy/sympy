@@ -197,10 +197,18 @@ jobs:
       - if: ${{ contains(matrix.python-version, '3.11') }}
         run: pip install git+https://github.com/matplotlib/matplotlib@main
 
+      # SciPy 1.8.1 does not build with Cython 0.29.31 under PyPy. This can be
+      # removed when SciPy builds successfully with any newer release of
+      # Cython.
+      - run: echo 'cython!=0.29.31' > constraints.txt
+
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
                          aesara wurlitzer autowrap                            \
                          'antlr4-python3-runtime==4.10.*'
+        env:
+          # Remove when SciPy builds without this.
+          PIP_CONSTRAINT: /home/runner/work/sympy/sympy/constraints.txt
 
       # gmpy2 is not available for pypy
       - if: ${{ matrix.python-version != 'pypy-3.8' }}
@@ -387,6 +395,20 @@ jobs:
         with:
           python-version: '2.7'
       - run: bin/test_py2_import.py
+
+  # -------------------- Check the list of files for sdist --------- #
+
+  sdist-check:
+    needs: [doctests-latest, tests1-latest, tests2-latest]
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+      - run: python setup.py sdist
+      - run: release/compare_tar_against_git.py dist/*.tar.gz .
 
   # -------- Run benchmarks against master and previous release ---- #
 

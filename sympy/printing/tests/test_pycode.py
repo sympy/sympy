@@ -19,7 +19,6 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayDiagonal, ArrayContraction, ZeroArray, OneArray
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
-from sympy.parsing.latex import parse_latex
 
 
 x, y, z = symbols('x y z')
@@ -187,13 +186,11 @@ def test_pycode_reserved_words():
 
 
 def test_issue_20762():
-    antlr4 = import_module("antlr4")
-    if not antlr4:
-        skip('antlr not installed.')
     # Make sure pycode removes curly braces from subscripted variables
-    expr = parse_latex(r'a_b \cdot b')
+    a_b, b, a_11 = symbols('a_{b} b a_{11}')
+    expr = a_b*b
     assert pycode(expr) == 'a_b*b'
-    expr = parse_latex(r'a_{11} \cdot b')
+    expr = a_11*b
     assert pycode(expr) == 'a_11*b'
 
 
