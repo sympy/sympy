@@ -461,7 +461,8 @@ class FactRules:
             prereq[k] |= pitems
         self.prereq = prereq
 
-    def to_python(self):
+    def _to_python(self):
+        """ Generate a plain python representation of the instance """
         d={}
         for key in ['full_implications', 'beta_triggers', 'prereq']:
             value = getattr(self, key)
@@ -475,7 +476,8 @@ class FactRules:
         return d
 
     @classmethod
-    def from_python(cls, data):
+    def _from_python(cls, data):
+        """ Generate an instance from the plain python representation """
         self=cls('')
         for key in ['full_implications', 'beta_triggers', 'prereq']:
             d=defaultdict(set)

@@ -222,7 +222,7 @@ def _load_pre_generated_assumption_rules():
 
     To update the pre-generated data, see :method::`_generate_assumption_rules`
     """
-    _assume_rules=FactRules.from_python(_pre_calculated_assumptions)
+    _assume_rules=FactRules._from_python(_pre_calculated_assumptions)
     return _assume_rules
 
 def _generate_assumption_rules():
@@ -233,7 +233,7 @@ def _generate_assumption_rules():
     To update the pre-generated assumptions run:
 
     >>> from sympy.core.assumptions import _generate_assuption_rules()
-    >>> print(str(generated_assumptions.to_python()))
+    >>> print(str(generated_assumptions._to_python()))
 
     And copy the generated output to 
 
