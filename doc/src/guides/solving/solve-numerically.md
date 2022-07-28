@@ -79,6 +79,30 @@ To solve multidimensional functions, supply a tuple of
 Matrix([[-1.19287309935246], [1.27844411169911]])
 ```
 
+### Solve overdetermined systems
+
+In an overdetermined system, there are more equations than unknowns. In general, this means that there is no exact solution, but there will be an approximate solution that is the closest fit to the equations. Overdetermined systems are common when the data is noisy, and the approximate solution is useful rather than giving up because there is no exact solution.
+
+*Thought this would work but it throws an error*
+
+from sympy import Symbol, nsolve
+
+x1 = Symbol('x1')
+
+x2 = Symbol('x2')
+
+f1 = 3 * x1**2 - 2 * x2**2 - 1
+
+f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
+
+f3 = x1 + x2
+
+print(nsolve((f1, f2, f3), (x1, x2), (-1, 1)))
+
+### Solve underdetermined systems
+
+*content*
+
 ### Use SciPy on a lambda function *what is the advantage of this method?*
 
 You can *description*
@@ -92,17 +116,14 @@ You can *description*
 >>> lam_f = lambdify(x, f(x))
 >>> sol = optimize.root_scalar(lam_f, bracket=[0, 2], method='brentq')
 >>> sol.root
+1.0
 ```
 
 ## Use the solution result
 
-### *Usage method 1*
+### *subs*
 
 *Usage method 1 content*
-
-### *Usage method 2*
-
-*Usage method 2 content*
 
 ## Tradeoffs
 
@@ -118,7 +139,7 @@ For functions which are very steep near the root, the verification of the soluti
 Traceback (most recent call last):
 ...
 ValueError: Could not find root within given tolerance. (1.39267e+230 > 2.1684e-19)
-ans = nsolve(f, 3.14*100, verify=False); ans
+>>> ans = nsolve(f, 3.14*100, verify=False); ans
 312.588469032184
 >>> f.subs(x, ans).n(2)
 2.1e+121
@@ -140,7 +161,9 @@ solution because no value of $x$ will make it true:
 >>> from sympy import nsolve
 >>> from sympy.abc import x
 >>> nsolve(x - 7 - x - 2, x, 1)
-ValueError: 
+Traceback (most recent call last):
+...
+ValueError:
 expected a one-dimensional and numerical function
 ```
 
