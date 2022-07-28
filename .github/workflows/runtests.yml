@@ -197,10 +197,18 @@ jobs:
       - if: ${{ contains(matrix.python-version, '3.11') }}
         run: pip install git+https://github.com/matplotlib/matplotlib@main
 
+      # SciPy 1.8.1 does not build with Cython 0.29.31 under PyPy. This can be
+      # removed when SciPy builds successfully with any newer release of
+      # Cython.
+      - run: echo 'cython!=0.29.31' > constraints.txt
+
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
                          aesara wurlitzer autowrap                            \
                          'antlr4-python3-runtime==4.10.*'
+        env:
+          # Remove when SciPy builds without this.
+          PIP_CONSTRAINT: /home/runner/work/sympy/sympy/constraints.txt
 
       # gmpy2 is not available for pypy
       - if: ${{ matrix.python-version != 'pypy-3.8' }}
