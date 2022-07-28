@@ -169,11 +169,11 @@ def test_solve_io():
     assert [solve(e, y, **f) for f in flags] == \
         [[],
         [],
-        []] #([y], set())]
+        ([y], set())]
     assert [solve([e], y, **f) for f in flags] == [
         [],
         [],
-        []] #([y], set())]
+        ([y], set())]
     e = nx
     def lot(lod):
         from sympy.core.sorting import ordered
@@ -226,7 +226,7 @@ def test_solve_io():
     assert [solve(e, y, **f) for f in flags] == \
         [[],
         [],
-        []] # ([y], set())]
+        ([y], set())]
     e = lxly
     assert [solve(e, **f) for f in flags] == \
         [[{x: y - 1}],

@@ -1073,6 +1073,8 @@ def solve(f, *symbols, **flags):
         if ok:
             newf.append(fi)
     if not newf:
+        if as_set:
+            return symbols, set()
         return []
     f = newf
     del newf
