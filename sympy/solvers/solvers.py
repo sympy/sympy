@@ -1033,8 +1033,10 @@ def solve(f, *symbols, **flags):
     # we can solve for non-symbol entities by replacing them with Dummy symbols
     f, symbols, swap_sym = recast_to_symbols(f, symbols)
 
-    # this is needed in the next two events
+    # this is needed in the next two events and at the end
     symset = set(symbols)
+    if len(symbols) != len(symset):
+        raise ValueError('duplicate symbols given')
 
     # get rid of equations that have no symbols of interest; we don't
     # try to solve them because the user didn't ask and they might be
