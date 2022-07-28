@@ -17,13 +17,13 @@ Here is a simple example of numerically solving an equation:
 0.739085133215161
 ```
 
-{func}`~.nsolve` is based on [mpmath.findroot](https://mpmath.org/doc/current/calculus/optimization.html#root-finding-findroot), and can pass parameters to it.
+{func}`~.nsolve` calls, and can pass parameters to, [mpmath.findroot](https://mpmath.org/doc/current/calculus/optimization.html#root-finding-findroot).
 
 ## Guidance
 
-### Finding complex roots of real function
+### Find complex roots of real function
 
-To solve for complex roots of real functions, a nonreal (either purely imaginary, or complex) initial point must be specified:
+To solve for complex roots of real functions, specify a nonreal (either purely imaginary, or complex) initial point:
 
 ```py
 >>> from sympy import nsolve
@@ -40,10 +40,25 @@ Try another starting point or tweak arguments.
 1.4142135623731*I
 ```
 
-### *Guidance 2*
+### Ensure the root found is in a given interval
 
-*Guidance 2 content*
+It is not guaranteed that nsolve will find the root closest to the initial point. Here, even though the root `-1` is closer to the initial point of `-0.1`, nsolve finds the root `1`:
 
+```py
+>>> from sympy import nsolve
+>>> from sympy.abc import x
+>>> nsolve(x**2 - 1, -0.1)
+1.00000000000000
+```
+
+You can ensure the root found is in a given interval, if such a root exists, using `solver='bisect'` by specifying the interval in a tuple. Here, specifying the interval `(-10, 0)` ensures that the root `-1` is found:
+
+```py
+>>> from sympy import nsolve
+>>> from sympy.abc import x
+>>> nsolve(x**2 - 1, (-10, 0), solver='bisect', verify=False)
+-1.00000000000000
+```
 
 ## *Title*
 
