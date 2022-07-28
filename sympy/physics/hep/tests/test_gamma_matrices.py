@@ -401,6 +401,7 @@ def test_gamma_matrix_trace():
     r = gamma_trace(t)
     assert r.equals(4*p2*p2*p2*p2)
 
+
 def test_bug_13636():
     """Test issue 13636 regarding handling traces of sums of products
     of GammaMatrix mixed with other factors."""
@@ -416,9 +417,9 @@ def test_bug_13636():
     ta = gamma_trace(a)
     tb = gamma_trace(b)
     t_a_plus_b = gamma_trace(a + b)
-    assert ta.equals(
-        -16 * ki(i0) * ki(-i0) * pf(i1) * pi(-i1)
-        + 32 * ki(i0) * ki(i1) * pf(-i0) * pi(-i1)
+    assert ta == 4 * (
+        -4 * ki(i0) * ki(-i0) * pf(i1) * pi(-i1)
+        + 8 * ki(i0) * ki(i1) * pf(-i0) * pi(-i1)
     )
-    assert tb.equals(-8 * x * ki(i0) * pf(-i0) * pi(i1) * pi(-i1))
-    assert t_a_plus_b.equals(ta + tb)
+    assert tb == -8 * x * ki(i0) * pf(-i0) * pi(i1) * pi(-i1)
+    assert t_a_plus_b == ta + tb
