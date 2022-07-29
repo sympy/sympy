@@ -93,6 +93,9 @@ Assumptions
     older one. Most users of SymPy should prefer the older assumptions system
     at this time.
 
+    See the {ref}`assumptions guide <assumptions-guide>` for more details on
+    assumptions.
+
 Atom
 
     An *atom* is an expression whose {term}`args` is the empty tuple `()`.
@@ -212,7 +215,8 @@ Equation
     [*`evalf`*](sympy.core.evalf.EvalfMixin.evalf) is the method present on
     every {term}`Expr` object that evaluates it to a floating-point numerical
     value, or converts the constant parts of the expression to a numerical
-    value if it contains {term}`symbols <symbol>`. "evalf" stands for
+    value if it contains {term}`symbols <symbol>`. The {meth}`~.n` method and
+    {func}`~.N` function are both shorthands for `evalf`. "evalf" stands for
     "evaluate floating-point". `evalf` uses {term}`mpmath` under the hood to
     evaluate expressions to arbitrary precision.
 
@@ -246,7 +250,7 @@ Expression
     *expression*. Sometimes, the term "expression" is reserved for
     {term}`Expr` objects, which are algebraic expressions. Expressions are not
     to be confused with {term}`equations <equation>`, which are a specific
-    type of expression with that represents a mathematical equality.
+    types of expressions that represents mathematical equalities.
 
 Expression Tree
 
@@ -280,10 +284,11 @@ Free symbols
 
     The *`func`* property is the function of an {term}`expression`, which can
     be obtained by `expr.func`. This is usually the same as `type(expr)`, but
-    may differ in some cases, so it should be preferred to `type(expr)` when
-    rebuilding expressions with {term}`args`. Every SymPy expression can be
-    rebuilt exactly with `func` and `args`, that is, `expr.func(*expr.args) ==
-    expr` will always be true of any SymPy expression `expr`.
+    may differ in some cases, so it should be preferred to use `expr.func`
+    instead of` type(expr)` when rebuilding expressions with {term}`args`.
+    Every SymPy expression can be rebuilt exactly with `func` and `args`, that
+    is, `expr.func(*expr.args) == expr` will always be true of any SymPy
+    expression `expr`.
 
 Function
 
@@ -366,16 +371,17 @@ Interactive
     Attributes in SymPy that start with *`is_`* and use a *lowercase* name
     query the given {term}`assumption <assumptions>` on that object (note:
     there are a few properties that are an exception to this because they do
-    not use the assumptions system). For example, `x.is_integer` will query
-    the `integer` assumption on `x`. `is_*` attributes that use a
+    not use the assumptions system, see {ref}`the assumptions guide
+    <assumptions-guide-other-is-properties>`). For example, `x.is_integer`
+    will query the `integer` assumption on `x`. `is_*` attributes that use a
     *Capitalized* name test if an object is an instance of the given class.
     Sometimes the same name will exist for both the lowercase and Capitalized
     property, but they are different things. For example, `x.is_Integer` is
     only `True` if `x` is an instance of {class}`~.Integer`, whereas
     `x.is_integer` is `True` if `x` is `integer` in the assumptions system,
     such as `x = symbols('x', integer=True)`. In general, it is recommended to
-    not use `is_Capitalized` properties. They exist for historical purposes, but
-    they are unneeded because the same thing can be achieved with
+    not use `is_Capitalized` properties. They exist for historical purposes,
+    but they are unneeded because the same thing can be achieved with
     `isinstance()`. See also {term}`Number`.
 
 `isympy`
@@ -470,7 +476,6 @@ Number
       <sympy.core.numbers.Pi>`. Note that `is_number` is not part of the
       {term}`assumptions` system.
 
-
     This distinction is important for the `is_Number` and `is_number`
     properties. `x.is_Number` will check if `x` is an instance of the class
     {class}`~.Number`.
@@ -498,12 +503,12 @@ Polys
 Printing
 
     *Printing* refers to the act of taking an {term}`expression` and
-    converting it into a form that can be viewed on screen. SymPy has several
-    printers which represent expressions using different formats. Some of the
-    more common printers are the string printer (`str()`), the pretty printer
+    converting it into a form that can be viewed on screen. Printing is also
+    often used to refer to {term}`code generation`. SymPy has several printers
+    which represent expressions using different formats. Some of the more
+    common printers are the string printer (`str()`), the pretty printer
     ({func}`pprint() <sympy.printing.pretty.pretty.pretty_print>`) the LaTeX
-    printer ({func}`~.latex`), and code printers (see {term}`code
-    generation`).
+    printer ({func}`~.latex`), and code printers.
 
 Relational
 
@@ -572,7 +577,7 @@ Solvers
 Structural Equality
 
     Two SymPy objects are *structurally equal* if they are equal as
-    {term}`expressions <expression>`, that is, they have the same as
+    {term}`expressions <expression>`, that is, they have the same
     {term}`expression trees <expression tree>`. Two structurally equal
     expressions are considered to be identical by SymPy, since all SymPy
     expressions are {term}`immutable`. Structural equality can be checked with
@@ -599,11 +604,11 @@ Subexpression
 
     A *subexpression* is an {term}`expression` that is contained within a
     larger expression. A subexpression appears somewhere in the
-    {term}`expression tree`. In some contexts, a subtree of the expression
-    tree is also considered a subexpression. For instance, `x + y` may
-    sometimes be considered a subexpression of `x + y + z`, even though the
-    expression tree for `Add(x, y)` is not a direct child of the expression
-    tree for `Add(x, y, z)`, but rather is a subtree of it.
+    {term}`expression tree`. For `Add` and `Mul` terms, commutative and
+    associative laws may be taken into account when determining what is a
+    subexpression. For instance, `x + y` may sometimes be considered a
+    subexpression of `x + y + z`, even though the expression tree for `Add(x,
+    y)` is not a direct child of the expression tree for `Add(x, y, z)`.
 
 Substitution
 
@@ -639,11 +644,11 @@ Symbolic
     If used in SymPy, "analytic" would refer to the property of being [an
     analytic function](https://en.wikipedia.org/wiki/Analytic_function), and
     in SymPy {term}`solve` refers only to a certain type of symbolic
-    operation. "Closed-form" in SymPy would typically refer the mathematical
-    sense of the term, whereas "symbolic" would generally refer to the
-    implementation detail of how a mathematical concept is implemented, and be
-    in contrast with a {term}`numeric` implementation of the same mathematical
-    concept.
+    operation. "Closed-form" in SymPy would typically refer to the
+    mathematical sense of the term, whereas "symbolic" would generally refer
+    to the implementation detail of how a mathematical concept is implemented,
+    and be in contrast with a {term}`numeric` implementation of the same
+    mathematical concept.
 
 {class}`~.Symbol`
 
@@ -654,8 +659,9 @@ Symbolic
     typically defined with the `Symbol` constructor or the {func}`~.symbols`
     function. Two Symbols with the same name and assumptions are considered
     {term}`equal <structural equality>`. Symbols are implicitly assumed to be
-    independent or constant with respect to one another. SymPy does not
-    distinguish between symbols that are constants, variables, or parameters.
+    independent or constant with respect to one another. Constants, variables,
+    and parameters are all represented by Symbols. The distinction is
+    generally made in the way the Symbols are used in a given SymPy function.
 
 {func}`~.sympify`
 
