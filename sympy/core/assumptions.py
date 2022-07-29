@@ -230,7 +230,7 @@ def _generate_assumption_rules():
     """ Generate the default assumption rules
 
     This method should only be called to update the pre-generated assumption rules.
-    
+
     These are stored in the variable `_pre_calculated_assumptions`
     To update the pre-generated assumptions run: bin/ask_update.py
 
@@ -295,7 +295,7 @@ def _generate_assumption_rules():
     ])
     return _assume_rules
 
-    
+
 _assume_rules = _load_pre_generated_assumption_rules()
 _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')

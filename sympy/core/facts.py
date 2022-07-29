@@ -327,7 +327,7 @@ class Prover:
 
         # a -> b & c    -->  a -> b  ;  a -> c
         # (?) FIXME this is only correct when b & c != null !
-        
+
         if isinstance(b, And):
             sorted_bargs = sorted(b.args, key=str)
             for barg in sorted_bargs:
@@ -478,7 +478,7 @@ class FactRules:
             d[key]  = list(value)
         for key in ['defined_facts']:
             value = getattr(self, key)
-            d[key]  = list(value)
+            d[key]  = sorted(list(value))
         return d
 
     @classmethod

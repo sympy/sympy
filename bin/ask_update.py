@@ -109,7 +109,6 @@ with open('sympy/core/assumptions_generated.py', 'w') as f:
     """
 
     _pre_calculated_assumptions = %s
-    
     ''')
 
     code = code_string % (representation,)
