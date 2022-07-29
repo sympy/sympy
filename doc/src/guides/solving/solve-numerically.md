@@ -1,13 +1,15 @@
 # Solve a system of equations numerically
 
-Use SymPy to numerically solve a system of one or more equations. For example, numerically solving $\cos(x) = x $ returns $ x \approx 0.739085133215161$.
+Use SymPy to numerically solve a system of one or more equations. For example,
+numerically solving $\cos(x) = x $ returns $ x \approx 0.739085133215161$.
 
 Alternatives to consider:
 - [NumPy](https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html?highlight=solve#numpy.linalg.solve)
 and
 [SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.solve.html#scipy.linalg.solve)
 can each solve a system of linear scalar equations
-- To solve an underdetermined system of linear equations, convert them to matrices and solve using [`gauss_jordan_solve`](gauss_jordan_solve).
+- To solve an underdetermined system of linear equations, convert them to
+  matrices and solve using [`gauss_jordan_solve`](gauss_jordan_solve).
 
 Here is a simple example of numerically solving one equation:
 
@@ -18,13 +20,15 @@ Here is a simple example of numerically solving one equation:
 0.739085133215161
 ```
 
-{func}`~.nsolve` calls, and can pass parameters to, [mpmath.findroot](https://mpmath.org/doc/current/calculus/optimization.html#root-finding-findroot).
+{func}`~.nsolve` calls, and can pass parameters to,
+[mpmath.findroot](https://mpmath.org/doc/current/calculus/optimization.html#root-finding-findroot).
 
 ## Guidance
 
 ### Find complex roots of real function
 
-To solve for complex roots of real functions, specify a nonreal (either purely imaginary, or complex) initial point:
+To solve for complex roots of real functions, specify a nonreal (either purely
+imaginary, or complex) initial point:
 
 ```py
 >>> from sympy import nsolve
@@ -43,7 +47,9 @@ Try another starting point or tweak arguments.
 
 ### Ensure the root found is in a given interval
 
-It is not guaranteed that nsolve will find the root closest to the initial point. Here, even though the root `-1` is closer to the initial point of `-0.1`, nsolve finds the root `1`:
+It is not guaranteed that nsolve will find the root closest to the initial
+point. Here, even though the root `-1` is closer to the initial point of `-0.1`,
+nsolve finds the root `1`:
 
 ```py
 >>> from sympy import nsolve
@@ -52,7 +58,9 @@ It is not guaranteed that nsolve will find the root closest to the initial point
 1.00000000000000
 ```
 
-You can ensure the root found is in a given interval, if such a root exists, using `solver='bisect'` by specifying the interval in a tuple. Here, specifying the interval `(-10, 0)` ensures that the root `-1` is found:
+You can ensure the root found is in a given interval, if such a root exists,
+using `solver='bisect'` by specifying the interval in a tuple. Here, specifying
+the interval `(-10, 0)` ensures that the root `-1` is found:
 
 ```py
 >>> from sympy import nsolve
@@ -82,7 +90,11 @@ Matrix([[-1.19287309935246], [1.27844411169911]])
 
 ### Solve overdetermined systems
 
-In an overdetermined system, there are more equations than unknowns. In general, this means that there is no exact solution, but there will be an approximate solution that is the closest fit to the equations. Overdetermined systems are common when the data is noisy, and the approximate solution is useful rather than giving up because there is no exact solution.
+In an overdetermined system, there are more equations than unknowns. In general,
+this means that there is no exact solution, but there will be an approximate
+solution that is the closest fit to the equations. Overdetermined systems are
+common when the data is noisy, and the approximate solution is useful rather
+than giving up because there is no exact solution.
 
 *Thought this would work but it throws an error*
 
@@ -120,7 +132,8 @@ You can *description*
 
 ### Substitute the result into an expression
 
-You can use [`subs`](sympy.core.basic.Basic.subs) to substitute numerical values into expressions to numerically evaluate them fully:
+You can use [`subs`](sympy.core.basic.Basic.subs) to substitute numerical values
+into expressions to numerically evaluate them fully:
 
 ```py
 >>> from sympy import cos, nsolve, Symbol, diff
@@ -156,7 +169,9 @@ or leave some symbols as variables:
 
 ### Do not use `verify` for functions which are very steep near the root
 
-For functions which are very steep near the root, the verification of the solution may fail. In this case you should use the flag `verify=False` and independently verify the solution.
+For functions which are very steep near the root, the verification of the
+solution may fail. In this case you should use the flag `verify=False` and
+independently verify the solution.
 
 ```py
 >>> from sympy import cos, cosh, nsolve, Symbol
@@ -176,12 +191,13 @@ ValueError: Could not find root within given tolerance. (1.39267e+230 > 2.1684e-
 
 ## Not all equations can be solved
 
-{func}`~.nsolve` is a numerical solving function, so it is often the solution to equations which cannot be solved algebraically.
+{func}`~.nsolve` is a numerical solving function, so it is often the solution to
+equations which cannot be solved algebraically.
 
 ### Equations with no solution
 
-Some equations have no solution, in which case SymPy may return an empty set. 
-For example, the equation $x - 7 - x - 2 = 0$ reduces to $-9 = 0$, which has no 
+Some equations have no solution, in which case SymPy may return an empty set.
+For example, the equation $x - 7 - x - 2 = 0$ reduces to $-9 = 0$, which has no
 solution because no value of $x$ will make it true:
 
 ```py
@@ -194,14 +210,16 @@ ValueError:
 expected a one-dimensional and numerical function
 ```
 
-SymPy reports that the function to be solved is not one-dimensional, because SymPy simplifies $x - x$ to $0$, leaving a zero-dimensional function.
+SymPy reports that the function to be solved is not one-dimensional, because
+SymPy simplifies $x - x$ to $0$, leaving a zero-dimensional function.
 
 ## Report a problem
 
-If you find a problem with {func}`~.nsolve`, please post it on the 
-[mailing list](https://groups.google.com/g/sympy), or open an issue on 
-[SymPy's GitHub page](https://github.com/sympy/sympy/issues). Until the issue 
-is resolved, you can use a [NumPy](https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html?highlight=solve#numpy.linalg.solve)
+If you find a problem with {func}`~.nsolve`, please post it on the [mailing
+list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
+page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
+can use a
+[NumPy](https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html?highlight=solve#numpy.linalg.solve)
 or
 [SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.solve.html#scipy.linalg.solve)
 solver.
