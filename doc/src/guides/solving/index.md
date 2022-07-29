@@ -1,3 +1,4 @@
+(solving-guide)=
 # Solve Equations
 
 The Python package SymPy can symbolically solve equations, differential equations,
