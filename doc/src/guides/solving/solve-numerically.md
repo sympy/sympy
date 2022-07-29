@@ -1,15 +1,21 @@
-# Solve a system of equations numerically
+# Solve one or a system of equations numerically
 
 Use SymPy to numerically solve a system of one or more equations. For example,
 numerically solving $\cos(x) = x $ returns $ x \approx 0.739085133215161$.
+
+Solving numerically is useful if:
+- You only need a numeric solution, not a symbolic one
+- A closed-form solution is not available or is overly complicated
+
+{func}`~.solve` and {func}`~.solveset` will not try to find a numeric solution,
+only a mathematically exact symbolic solution. So if you want a numeric
+solution, use {func}`~.nsolve`.
 
 Alternatives to consider:
 - [NumPy](https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html?highlight=solve#numpy.linalg.solve)
 and
 [SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.solve.html#scipy.linalg.solve)
 can each solve a system of linear scalar equations
-- To solve an underdetermined system of linear equations, convert them to
-  matrices and solve using [`gauss_jordan_solve`](gauss_jordan_solve).
 
 Here is a simple example of numerically solving one equation:
 
@@ -22,6 +28,8 @@ Here is a simple example of numerically solving one equation:
 
 {func}`~.nsolve` calls, and can pass parameters to,
 [mpmath.findroot](https://mpmath.org/doc/current/calculus/optimization.html#root-finding-findroot).
+
+Overdetermined systems of equations are supported.
 
 ## Guidance
 
@@ -65,7 +73,7 @@ the interval `(-10, 0)` ensures that the root `-1` is found:
 ```py
 >>> from sympy import nsolve
 >>> from sympy.abc import x
->>> nsolve(x**2 - 1, (-10, 0), solver='bisect', verify=False)
+>>> nsolve(x**2 - 1, (-10, 0), solver='bisect')
 -1.00000000000000
 ```
 
@@ -87,30 +95,6 @@ To solve multidimensional functions, supply a tuple of
 >>> print(nsolve((f1, f2), (x1, x2), (-1, 1)))
 Matrix([[-1.19287309935246], [1.27844411169911]])
 ```
-
-### Solve overdetermined systems
-
-In an overdetermined system, there are more equations than unknowns. In general,
-this means that there is no exact solution, but there will be an approximate
-solution that is the closest fit to the equations. Overdetermined systems are
-common when the data is noisy, and the approximate solution is useful rather
-than giving up because there is no exact solution.
-
-*Thought this would work but it throws an error*
-
-from sympy import Symbol, nsolve
-
-x1 = Symbol('x1')
-
-x2 = Symbol('x2')
-
-f1 = 3 * x1**2 - 2 * x2**2 - 1
-
-f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
-
-f3 = x1 + x2
-
-print(nsolve((f1, f2, f3), (x1, x2), (-1, 1)))
 
 ### Use SciPy on a lambda function *what is the advantage of this method?*
 
