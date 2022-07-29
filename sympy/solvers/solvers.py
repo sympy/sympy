@@ -2074,7 +2074,8 @@ def _solve_system(exprs, symbols, **flags):
     if not result:
         return []
 
-    default_simplify = bool(failed)  # rely on system-solvers to simplify
+    # rely on linear system solvers to simplify
+    default_simplify = bool(failed) or not linear
     if flags.get('simplify', default_simplify):
         for r in result:
             for k in r:

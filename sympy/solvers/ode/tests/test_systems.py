@@ -85,11 +85,12 @@ def test__classify_linear_system():
 
     eqs_2 = (5 * (x1**2) + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * t * x(t) + 3 * y(t) + t))
     sol2 = {'is_implicit': True,
-            'canon_eqs': [[Eq(Derivative(x(t), t), -sqrt(-12*x(t)/5 + 6*y(t)/5)),
-            Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)],
-            [Eq(Derivative(x(t), t), sqrt(-12*x(t)/5 + 6*y(t)/5)),
-            Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]]}
-    assert _classify_linear_system(eqs_2, funcs, t) == sol2
+           'canon_eqs': [[Eq(Derivative(x(t), t), -sqrt(-60*x(t) + 30*y(t))/5),
+           Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)],
+           [Eq(Derivative(x(t), t), sqrt(-60*x(t) + 30*y(t))/5),
+           Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]]}
+    got = _classify_linear_system(eqs_2, funcs, t)
+    assert got == sol2
 
     eqs_2_1 = [Eq(Derivative(x(t), t), -sqrt(-12*x(t)/5 + 6*y(t)/5)),
             Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]
