@@ -506,12 +506,44 @@ def test_log_leading_term():
 
 
 def test_log_nseries():
+    p = Symbol('p')
+    assert log(1/x)._eval_nseries(x, 4, logx=-p, cdir=1) == p
+    assert log(1/x)._eval_nseries(x, 4, logx=-p, cdir=-1) == p + 2*I*pi
     assert log(x - 1)._eval_nseries(x, 4, None, I) == I*pi - x - x**2/2 - x**3/3 + O(x**4)
     assert log(x - 1)._eval_nseries(x, 4, None, -I) == -I*pi - x - x**2/2 - x**3/3 + O(x**4)
     assert log(I*x + I*x**3 - 1)._eval_nseries(x, 3, None, 1) == I*pi - I*x + x**2/2 + O(x**3)
     assert log(I*x + I*x**3 - 1)._eval_nseries(x, 3, None, -1) == -I*pi - I*x + x**2/2 + O(x**3)
     assert log(I*x**2 + I*x**3 - 1)._eval_nseries(x, 3, None, 1) == I*pi - I*x**2 + O(x**3)
     assert log(I*x**2 + I*x**3 - 1)._eval_nseries(x, 3, None, -1) == I*pi - I*x**2 + O(x**3)
+    assert log(2*x + (3 - I)*x**2)._eval_nseries(x, 3, None, 1) == log(2) + log(x) + \
+    x*(S(3)/2 - I/2) + x**2*(-1 + 3*I/4) + O(x**3)
+    assert log(2*x + (3 - I)*x**2)._eval_nseries(x, 3, None, -1) == -2*I*pi + log(2) + \
+    log(x) - x*(-S(3)/2 + I/2) + x**2*(-1 + 3*I/4) + O(x**3)
+    assert log(-2*x + (3 - I)*x**2)._eval_nseries(x, 3, None, 1) == -I*pi + log(2) + log(x) + \
+    x*(-S(3)/2 + I/2) + x**2*(-1 + 3*I/4) + O(x**3)
+    assert log(-2*x + (3 - I)*x**2)._eval_nseries(x, 3, None, -1) == -I*pi + log(2) + log(x) - \
+    x*(S(3)/2 - I/2) + x**2*(-1 + 3*I/4) + O(x**3)
+    assert log(sqrt(-I*x**2 - 3)*sqrt(-I*x**2 - 1) - 2)._eval_nseries(x, 3, None, 1) == -I*pi + \
+    log(sqrt(3) + 2) + I*x**2*(-2 + 4*sqrt(3)/3) + O(x**3)
+    assert log(-1/(1 - x))._eval_nseries(x, 3, None, 1) == I*pi + x + x**2/2 + O(x**3)
+    assert log(-1/(1 - x))._eval_nseries(x, 3, None, -1) == I*pi + x + x**2/2 + O(x**3)
+
+
+def test_log_series():
+    # Note Series at infinities other than oo/-oo were introduced as a part of
+    # pull request 23798. Refer https://github.com/sympy/sympy/pull/23798 for
+    # more information.
+    expr1 = log(1 + x)
+    expr2 = log(x + sqrt(x**2 + 1))
+
+    assert expr1.series(x, x0=I*oo, n=4) == 1/(3*x**3) - 1/(2*x**2) + 1/x + \
+    I*pi/2 - log(I/x) + O(x**(-4), (x, oo*I))
+    assert expr1.series(x, x0=-I*oo, n=4) == 1/(3*x**3) - 1/(2*x**2) + 1/x - \
+    I*pi/2 - log(-I/x) + O(x**(-4), (x, -oo*I))
+    assert expr2.series(x, x0=I*oo, n=4) == 1/(4*x**2) + I*pi/2 + log(2) - \
+    log(I/x) + O(x**(-4), (x, oo*I))
+    assert expr2.series(x, x0=-I*oo, n=4) == -1/(4*x**2) - I*pi/2 - log(2) + \
+    log(-I/x) + O(x**(-4), (x, -oo*I))
 
 
 def test_log_expand():

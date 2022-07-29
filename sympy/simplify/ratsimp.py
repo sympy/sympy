@@ -208,6 +208,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
         newsol = []
         for c_hat, d_hat, S, ng in allsol:
             sol = solve(S, ng, particular=True, quick=False)
+            # all values of sol should be numbers; if not, solve is broken
             newsol.append((c_hat.subs(sol), d_hat.subs(sol)))
         c, d = min(newsol, key=lambda x: len(x[0].terms()) + len(x[1].terms()))
 

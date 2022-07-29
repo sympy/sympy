@@ -1721,7 +1721,7 @@ def CollectReciprocals(expr, x):
         pattern = u_ + e_/(a_ + b_*x) + f_/(c_+d_*x)
         match = expr.match(pattern)
         if match:
-            try: # .match() does not work peoperly always
+            try: # .match() does not work properly always
                 keys = [u_, a_, b_, c_, d_, e_, f_]
                 u, a, b, c, d, e, f = tuple([match[i] for i in keys])
                 if ZeroQ(b*c + a*d) & ZeroQ(d*e + b*f):

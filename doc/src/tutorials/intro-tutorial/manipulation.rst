@@ -7,6 +7,8 @@
 In this section, we discuss some ways that we can perform advanced
 manipulation of expressions.
 
+.. _tutorial-expression-trees:
+
 Understanding Expression Trees
 ==============================
 

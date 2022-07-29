@@ -19,7 +19,6 @@ from sympy.functions.elementary.complexes import arg, unpolarify, im, re, Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 from sympy.ntheory.factor_ import factorint
-from sympy.polys.polytools import cancel
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -975,18 +974,23 @@ class log(Function):
         #      IMPORTANT.
         from sympy.series.order import Order
         from sympy.simplify.simplify import logcombine
-        _logx = logx
-        if not logx:
-            logx = log(x)
+        from sympy.core.symbol import Dummy
+
         if self.args[0] == x:
-            return logx
+            return log(x) if logx is None else logx
         arg = self.args[0]
+        t = Dummy('t', positive=True)
+        if cdir == 0:
+            cdir = 1
+        z = arg.subs(x, cdir*t)
+
         k, l = Wild("k"), Wild("l")
-        r = arg.match(k*x**l)
+        r = z.match(k*t**l)
         if r is not None:
             k, l = r[k], r[l]
-            if l != 0 and not l.has(x) and not k.has(x):
-                r = log(k) + l*logx  # XXX true regardless of assumptions?
+            if l != 0 and not l.has(t) and not k.has(t):
+                r = l*log(x) if logx is None else l*logx
+                r += log(k) - l*log(cdir) # XXX true regardless of assumptions?
                 return r
 
         def coeff_exp(term, x):
@@ -1005,28 +1009,27 @@ class log(Function):
 
         # TODO new and probably slow
         try:
-            a, b = arg.leadterm(x)
-            s = arg.nseries(x, n=n+b, logx=logx)
+            a, b = z.leadterm(t, logx=logx, cdir=1)
         except (ValueError, NotImplementedError, PoleError):
-            s = arg.nseries(x, n=n, logx=logx)
+            s = z._eval_nseries(t, n=n, logx=logx, cdir=1)
             while s.is_Order:
                 n += 1
-                s = arg.nseries(x, n=n, logx=logx)
-        if _logx and logx.has(x):
-            a, b = arg.as_leading_term(x, logx=logx), S.Zero
-        else:
+                s = z._eval_nseries(t, n=n, logx=logx, cdir=1)
             try:
-                a, b = s.removeO().leadterm(x)
-            except (ValueError, NotImplementedError, PoleError):
-                a, b = s.removeO().as_leading_term(x), S.Zero
-        p = cancel(s/(a*x**b) - 1).expand().powsimp()
+                a, b = s.removeO().leadterm(t, cdir=1)
+            except ValueError:
+                a, b = s.removeO().as_leading_term(t, cdir=1), S.Zero
+
+        p = (z/(a*t**b) - 1)._eval_nseries(t, n=n, logx=logx, cdir=1)
         if p.has(exp):
             p = logcombine(p)
         if isinstance(p, Order):
             n = p.getn()
-        _, d = coeff_exp(p, x)
+        _, d = coeff_exp(p, t)
+        logx = log(x) if logx is None else logx
+
         if not d.is_positive:
-            res = log(a) + b*logx
+            res = log(a) - b*log(cdir) + b*logx
             _res = res
             logflags = dict(deep=True, log=True, mul=False, power_exp=False,
                 power_base=False, multinomial=False, basic=False, force=True,
@@ -1051,9 +1054,9 @@ class log(Function):
 
         pterms = {}
 
-        for term in Add.make_args(p):
-            co1, e1 = coeff_exp(term, x)
-            pterms[e1] = pterms.get(e1, S.Zero) + co1.removeO()
+        for term in Add.make_args(p.removeO()):
+            co1, e1 = coeff_exp(term, t)
+            pterms[e1] = pterms.get(e1, S.Zero) + co1
 
         k = S.One
         terms = {}
@@ -1062,18 +1065,25 @@ class log(Function):
         while k*d < n:
             coeff = -S.NegativeOne**k/k
             for ex in pk:
-                terms[ex] = terms.get(ex, S.Zero) + coeff*pk[ex]
+                _ = terms.get(ex, S.Zero) + coeff*pk[ex]
+                terms[ex] = _.nsimplify()
             pk = mul(pk, pterms)
             k += S.One
 
-        res = log(a) + b*logx
+        res = log(a) - b*log(cdir) + b*logx
         for ex in terms:
-            res += terms[ex]*x**(ex)
+            res += terms[ex]*t**(ex)
 
-        if cdir != 0:
-            cdir = self.args[0].dir(x, cdir)
-        if a.is_real and a.is_negative and im(cdir) < 0:
-            res -= 2*I*S.Pi
+        if a.is_negative and im(z) != 0:
+            from sympy.functions.special.delta_functions import Heaviside
+            for i, term in enumerate(z.lseries(t)):
+                if not term.is_real or i == 5:
+                    break
+            if i < 5:
+                coeff, _ = term.as_coeff_exponent(t)
+                res += -2*I*S.Pi*Heaviside(-im(coeff), 0)
+
+        res = res.subs(t, x/cdir)
         return res + Order(x**n, x)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -1083,7 +1093,7 @@ class log(Function):
         arg0 = self.args[0].together()
 
         # STEP 1
-        t = Dummy('t', real=True, positive=True)
+        t = Dummy('t', positive=True)
         if cdir == 0:
             cdir = 1
         z = arg0.subs(x, cdir*t)
