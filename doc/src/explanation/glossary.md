@@ -141,6 +141,17 @@ Automatic Simplification
     of as having a "true" or "false" value (note that `Boolean` objects do not
     use the {term}`three-valued logic` used by the {term}`assumptions`).
 
+Bound symbols
+
+    A {term}`symbol` in an expression is *bound* if it is not {term}`free
+    <free symbols>`. A bound symbol can be replaced everywhere with new symbol
+    and the resulting expression will still be mathematically equivalent.
+    Examples of bound symbols are integration variables in definite integrals
+    and substituted variables in a {class}`~.Subs`. Bound symbols are
+    sometimes represented by {term}`dummy` symbols, but the are not always
+    {class}`~.Dummy` objects, and {class}`~.Dummy` objects are not always
+    bound symbols.
+
 Canonical Form
 Canonicalize
 
@@ -167,6 +178,14 @@ Core
     functionality used by all SymPy objects. This includes the {term}`Basic`
     and {term}`Expr` base classes, classes like {class}`~.Add`,
     {class}`~.Mul`, and {class}`~.Pow`, and the {term}`assumptions`.
+
+Dummy
+
+    A *dummy* {term}`symbol` is a symbol that is automatically unequal to any
+    other dummy symbol other than itself, even if it has the same name. Dummy
+    symbols are used when a function needs to return an expression with a new
+    symbol, so that it cannot accidentally clash with a {term}`symbol` of the
+    same name. Dummy symbols can be created with {class}`~.Dummy`.
 
 Equation
 
@@ -247,6 +266,15 @@ Expression Tree
     expression tree as being a
     [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph), where
     identical subexpressions are only represented in the graph once.
+
+Free symbols
+
+    A {term}`symbol` in an expression is *free* if the expression
+    mathematically depends on the value of that symbol. That is, if the symbol
+    were replaced with a new symbol, the result would be a different
+    expression. Symbols that are not free are {term}`bound <bound symbols>`.
+    The free symbols of an expression can be accessed with the
+    {attr}`free_symbols <sympy.core.basic.Basic.free_symbols>` attribute.
 
 `func`
 
