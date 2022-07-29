@@ -2,23 +2,22 @@ from typing import Type
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
-from sympy.core.function import expand
-from sympy.core.mul import Mul
-from sympy.core.power import Pow
-from sympy.core.symbol import Symbol
-from sympy.polys.polyroots import roots
-from sympy.polys.polytools import (cancel, degree)
 from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin
+from sympy.core.expr import Expr
+from sympy.core.function import expand
 from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import Integer, ComplexInfinity
-from sympy.core.symbol import Dummy
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
-from sympy.polys import Poly, rootof
-from sympy.series import limit
 from sympy.matrices import ImmutableMatrix, eye
 from sympy.matrices.expressions import MatMul, MatAdd
+from sympy.polys import Poly, rootof
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import (cancel, degree)
+from sympy.series import limit
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -105,7 +104,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     denominator polynomials of the ``TransferFunction`` respectively, and the third argument is
     a complex variable of the Laplace transform used by these polynomials of the transfer function.
     ``num`` and ``den`` can be either polynomials or numbers, whereas ``var``
-    has to be a Symbol.
+    has to be a :py:class:`~.Symbol`.
 
     Explanation
     ===========
@@ -216,7 +215,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     >>> -tf5
     TransferFunction(-s**4 + 2*s**3 - 5*s - 4, s + 4, s)
 
-    You can use a Float or an Integer (or other constants) as numerator and denominator:
+    You can use a float or an integer (or other constants) as numerator and denominator:
 
     >>> tf6 = TransferFunction(1/2, 4, s)
     >>> tf6.num
@@ -377,7 +376,7 @@ class TransferFunction(SISOLinearTimeInvariant):
                 raise ValueError("Conflicting values found for positional argument `var` ({}). Specify it manually.".format(_free_symbols))
 
         _num, _den = expr.as_numer_denom()
-        if _den == 0 or _num.has(ComplexInfinity):
+        if _den == 0 or _num.has(S.ComplexInfinity):
             raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
         return cls(_num, _den, var)
 
@@ -666,9 +665,9 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def __pow__(self, p):
         p = sympify(p)
-        if not isinstance(p, Integer):
-            raise ValueError("Exponent must be an Integer.")
-        if p == 0:
+        if not p.is_Integer:
+            raise ValueError("Exponent must be an integer.")
+        if p is S.Zero:
             return TransferFunction(1, 1, self.var)
         elif p > 0:
             num_, den_ = self.num**p, self.den**p
@@ -898,7 +897,7 @@ class Series(SISOLinearTimeInvariant):
         """
         return self.args[0].var
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         """
         Returns the resultant transfer function obtained after evaluating
         the transfer functions in series configuration.
@@ -1353,7 +1352,7 @@ class Parallel(SISOLinearTimeInvariant):
         """
         return self.args[0].var
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         """
         Returns the resultant transfer function obtained after evaluating
         the transfer functions in parallel configuration.
@@ -1617,7 +1616,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         """Returns the shape of the equivalent MIMO system."""
         return self.num_outputs, self.num_inputs
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         """
         Returns the resultant transfer function matrix obtained after evaluating
         the MIMO systems arranged in a parallel configuration.
@@ -1891,7 +1890,7 @@ class Feedback(SISOLinearTimeInvariant):
 
         return 1/(1 - self.sign*self.sys1.to_expr()*self.sys2.to_expr())
 
-    def doit(self, cancel=False, expand=False, **kwargs):
+    def doit(self, cancel=False, expand=False, **hints):
         """
         Returns the resultant transfer function obtained by the
         feedback interconnection.
@@ -2052,7 +2051,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
             raise ValueError("Product of `sys1` and `sys2` "
                 "must yield a square matrix.")
 
-        if sign not in [-1, 1]:
+        if sign not in (-1, 1):
             raise ValueError("Unsupported type for feedback. `sign` arg should "
                 "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
 
@@ -2220,7 +2219,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         return (eye(self.sys1.num_inputs) - \
             self.sign*_sys1_mat*_sys2_mat).inv()
 
-    def doit(self, cancel=True, expand=False, **kwargs):
+    def doit(self, cancel=True, expand=False, **hints):
         r"""
         Returns the resultant transfer function matrix obtained by the
         feedback interconnection.

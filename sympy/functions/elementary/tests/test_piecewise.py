@@ -2,6 +2,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
+from sympy.core.expr import unchanged
 from sympy.core.function import (Function, diff, expand)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Rational, oo, pi, zoo)
@@ -12,22 +13,20 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, adjoint, arg, conjugate, im, re, transpose)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
-from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold)
+from sympy.functions.elementary.piecewise import (Piecewise,
+    piecewise_fold, Undefined, ExprCondPair)
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import (And, ITE, Not, Or)
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.printing import srepr
 from sympy.sets.contains import Contains
 from sympy.sets.sets import Interval
 from sympy.solvers.solvers import solve
-from sympy.utilities.lambdify import lambdify
-from sympy.core.expr import unchanged
-from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
-from sympy.printing import srepr
 from sympy.testing.pytest import raises, slow
-from sympy.simplify import simplify
+from sympy.utilities.lambdify import lambdify
 
 a, b, c, d, x, y = symbols('a:d, x, y')
 z = symbols('z', nonzero=True)
@@ -124,7 +123,7 @@ def test_piecewise1():
     assert p6.subs(x, n) == Undefined
 
     # Test evalf
-    assert p.evalf() == p
+    assert p.evalf() == Piecewise((-1.0, x < -1), (x**2, x < 0), (log(x), True))
     assert p.evalf(subs={x: -2}) == -1
     assert p.evalf(subs={x: -1}) == 1
     assert p.evalf(subs={x: 1}) == log(1)
@@ -479,6 +478,56 @@ def test_piecewise_simplify():
     t = Symbol("t", positive=True)
     expr = Piecewise((-d + 2*n, Eq(1/t, 1)), (t**(1 - 4*n)*t**(4*n - 1)*(-d + 2*n), True))
     assert expr.simplify() == -d + 2*n
+
+    # issue 22747
+    p = Piecewise((0, (t < -2) & (t < -1) & (t < 0)), ((t/2 + 1)*(t +
+        1)*(t + 2), (t < -1) & (t < 0)), ((S.Half - t/2)*(1 - t)*(t + 1),
+        (t < -2) & (t < -1) & (t < 1)), ((t + 1)*(-t*(t/2 + 1) + (S.Half
+        - t/2)*(1 - t)), (t < -2) & (t < -1) & (t < 0) & (t < 1)), ((t +
+        1)*((S.Half - t/2)*(1 - t) + (t/2 + 1)*(t + 2)), (t < -1) & (t <
+        1)), ((t + 1)*(-t*(t/2 + 1) + (S.Half - t/2)*(1 - t)), (t < -1) &
+        (t < 0) & (t < 1)), (0, (t < -2) & (t < -1)), ((t/2 + 1)*(t +
+        1)*(t + 2), t < -1), ((t + 1)*(-t*(t/2 + 1) + (S.Half - t/2)*(t +
+        1)), (t < 0) & ((t < -2) | (t < 0))), ((S.Half - t/2)*(1 - t)*(t
+        + 1), (t < 1) & ((t < -2) | (t < 1))), (0, True)) + Piecewise((0,
+        (t < -1) & (t < 0) & (t < 1)), ((1 - t)*(t/2 + S.Half)*(t + 1),
+        (t < 0) & (t < 1)), ((1 - t)*(1 - t/2)*(2 - t), (t < -1) & (t <
+        0) & (t < 2)), ((1 - t)*((1 - t)*(t/2 + S.Half) + (1 - t/2)*(2 -
+        t)), (t < -1) & (t < 0) & (t < 1) & (t < 2)), ((1 - t)*((1 -
+        t/2)*(2 - t) + (t/2 + S.Half)*(t + 1)), (t < 0) & (t < 2)), ((1 -
+        t)*((1 - t)*(t/2 + S.Half) + (1 - t/2)*(2 - t)), (t < 0) & (t <
+        1) & (t < 2)), (0, (t < -1) & (t < 0)), ((1 - t)*(t/2 +
+        S.Half)*(t + 1), t < 0), ((1 - t)*(t*(1 - t/2) + (1 - t)*(t/2 +
+        S.Half)), (t < 1) & ((t < -1) | (t < 1))), ((1 - t)*(1 - t/2)*(2
+        - t), (t < 2) & ((t < -1) | (t < 2))), (0, True))
+    assert p.simplify() == Piecewise(
+        (0, t < -2), ((t + 1)*(t + 2)**2/2, t < -1), (-3*t**3/2
+        - 5*t**2/2 + 1, t < 0), (3*t**3/2 - 5*t**2/2 + 1, t < 1), ((1 -
+        t)*(t - 2)**2/2, t < 2), (0, True))
+
+    # coverage
+    nan = Undefined
+    covered = Piecewise((1, x > 3), (2, x < 2), (3, x > 1))
+    assert covered.simplify().args  == covered.args
+    assert Piecewise((1, x < 2), (2, x < 1), (3, True)).simplify(
+        ) == Piecewise((1, x < 2), (3, True))
+    assert Piecewise((1, x > 2)).simplify() == Piecewise((1, x > 2),
+        (nan, True))
+    assert Piecewise((1, (x >= 2) & (x < oo))
+        ).simplify() == Piecewise((1, (x >= 2) & (x < oo)), (nan, True))
+    assert Piecewise((1, x < 2), (2, (x > 1) & (x < 3)), (3, True)
+        ). simplify() == Piecewise((1, x < 2), (2, x < 3), (3, True))
+    assert Piecewise((1, x < 2), (2, (x <= 3) & (x > 1)), (3, True)
+        ).simplify() == Piecewise((1, x < 2), (2, x <= 3), (3, True))
+    assert Piecewise((1, x < 2), (2, (x > 2) & (x < 3)), (3, True)
+        ).simplify() == Piecewise((1, x < 2), (2, (x > 2) & (x < 3)),
+        (3, True))
+    assert Piecewise((1, x < 2), (2, (x >= 1) & (x <= 3)), (3, True)
+        ).simplify() == Piecewise((1, x < 2), (2, x <= 3), (3, True))
+    assert Piecewise((1, x < 1), (2, (x >= 2) & (x <= 3)), (3, True)
+        ).simplify() == Piecewise((1, x < 1), (2, (x >= 2) & (x <= 3)),
+        (3, True))
+
 
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
@@ -1402,7 +1451,7 @@ def test_issue_20360():
     n = symbols("n", integer=True)
     lam = pi * (n - S.Half)
     eq = integrate(exp(lam * tau), (tau, 0, t))
-    assert simplify(eq) == (2*exp(pi*t*(2*n - 1)/2) - 2)/(pi*(2*n - 1))
+    assert eq.simplify() == (2*exp(pi*t*(2*n - 1)/2) - 2)/(pi*(2*n - 1))
 
 
 def test_piecewise_eval():

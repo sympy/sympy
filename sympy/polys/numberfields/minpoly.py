@@ -3,20 +3,16 @@
 from functools import reduce
 
 from sympy.core.add import Add
-from sympy.core.function import expand_mul, expand_multinomial
+from sympy.core.exprtools import Factors
+from sympy.core.function import expand_mul, expand_multinomial, _mexpand
 from sympy.core.mul import Mul
-from sympy.core import (GoldenRatio, TribonacciConstant)
-from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.numbers import (I, Rational, pi, _illegal)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
-
-from sympy.functions import sqrt, cbrt
-
-from sympy.core.exprtools import Factors
-from sympy.core.function import _mexpand
 from sympy.core.traversal import preorder_traversal
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.ntheory.factor_ import divisors
 from sympy.utilities.iterables import subsets
@@ -31,13 +27,11 @@ from sympy.polys.polytools import (
     Poly, PurePoly, invert, factor_list, groebner, resultant,
     degree, poly_from_expr, parallel_poly_from_expr, lcm
 )
-from sympy.polys.polyutils import dict_from_expr, expr_from_dict, illegal
+from sympy.polys.polyutils import dict_from_expr, expr_from_dict
 from sympy.polys.ring_series import rs_compose_add
 from sympy.polys.rings import ring
 from sympy.polys.rootoftools import CRootOf
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.simplify.radsimp import _split_gcd
-from sympy.simplify.simplify import _is_sum_surds
 from sympy.utilities import (
     numbered_symbols, public, sift
 )
@@ -60,8 +54,9 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
     while prec1 <= prec:
         # when dealing with non-Rational numbers we usually evaluate
         # with `subs` argument but we only need a ballpark evaluation
-        xv = {x:v if not v.is_number else v.n(prec1)}
-        fe = [f.as_expr().xreplace(xv) for f in factors]
+        fe = [f.as_expr().xreplace({x:v}) for f in factors]
+        if v.is_number:
+            fe = [f.n(prec) for f in fe]
 
         # assign integers [0, n) to symbols (if any)
         for n in subsets(range(bound), k=len(symbols), repetition=True):
@@ -74,7 +69,7 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
 
             # if we get invalid numbers (e.g. from division by zero)
             # we try again
-            if any(i in illegal for i, _ in candidates):
+            if any(i in _illegal for i, _ in candidates):
                 continue
 
             # find the smallest two -- if they differ significantly
@@ -89,6 +84,13 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
 
     raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % v)
 
+
+def _is_sum_surds(p):
+    args = p.args if p.is_Add else [p]
+    for y in args:
+        if not ((y**2).is_Rational and y.is_extended_real):
+            return False
+    return True
 
 
 def _separate_sq(p):
@@ -142,6 +144,7 @@ def _separate_sq(p):
     for i in range(len(surds)):
         if surds[i] != 1:
             break
+    from sympy.simplify.radsimp import _split_gcd
     g, b1, b2 = _split_gcd(*surds[i:])
     a1 = []
     a2 = []
@@ -344,7 +347,7 @@ def _minpoly_pow(ex, pw, x, dom, mp=None):
     if not mp:
         mp = _minpoly_compose(ex, x, dom)
     if not pw.is_rational:
-        raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+        raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
     if pw < 0:
         if mp == x:
             raise ZeroDivisionError('%s is zero' % ex)
@@ -422,7 +425,7 @@ def _minpoly_sin(ex, x):
             res = _minpoly_compose(expr, x, QQ)
             return res
 
-    raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+    raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
 
 
 def _minpoly_cos(ex, x):
@@ -453,7 +456,7 @@ def _minpoly_cos(ex, x):
             res = _choose_factor(factors, x, ex)
             return res
 
-    raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+    raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
 
 
 def _minpoly_tan(ex, x):
@@ -477,7 +480,7 @@ def _minpoly_tan(ex, x):
             res = _choose_factor(factors, x, ex)
             return res
 
-    raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+    raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
 
 
 def _minpoly_exp(ex, x):
@@ -512,8 +515,8 @@ def _minpoly_exp(ex, x):
             mp = _choose_factor(factors, x, ex)
             return mp
         else:
-            raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
-    raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+            raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
+    raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
 
 
 def _minpoly_rootof(ex, x):
@@ -549,14 +552,14 @@ def _minpoly_compose(ex, x, dom):
         _, factors = factor_list(x**2 + 1, x, domain=dom)
         return x**2 + 1 if len(factors) == 1 else x - I
 
-    if ex is GoldenRatio:
+    if ex is S.GoldenRatio:
         _, factors = factor_list(x**2 - x - 1, x, domain=dom)
         if len(factors) == 1:
             return x**2 - x - 1
         else:
             return _choose_factor(factors, x, (1 + sqrt(5))/2, dom=dom)
 
-    if ex is TribonacciConstant:
+    if ex is S.TribonacciConstant:
         _, factors = factor_list(x**3 - x**2 - x - 1, x, domain=dom)
         if len(factors) == 1:
             return x**3 - x**2 - x - 1
@@ -615,7 +618,7 @@ def _minpoly_compose(ex, x, dom):
     elif ex.__class__ is CRootOf:
         res = _minpoly_rootof(ex, x)
     else:
-        raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+        raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
     return res
 
 
@@ -813,7 +816,7 @@ def _minpoly_groebner(ex, x, cls):
             else:
                 return symbols[ex]
 
-        raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+        raise NotAlgebraic("%s does not seem to be an algebraic number" % ex)
 
     def simpler_inverse(ex):
         """

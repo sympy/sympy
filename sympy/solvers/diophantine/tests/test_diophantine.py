@@ -623,6 +623,17 @@ def test_diop_general_sum_of_squares_quick():
     raises(NotImplementedError, lambda: classify_diop(-eq))
 
 
+def test_issue_23807():
+    # fixes recursion error
+    eq = x**2 + y**2 + z**2 - 1000000
+    base_soln = {(0, 0, 1000), (0, 352, 936), (480, 600, 640), (24, 640, 768), (192, 640, 744),
+                 (192, 480, 856), (168, 224, 960), (0, 600, 800), (280, 576, 768), (152, 480, 864),
+                 (0, 280, 960), (352, 360, 864), (424, 480, 768), (360, 480, 800), (224, 600, 768),
+                 (96, 360, 928), (168, 576, 800), (96, 480, 872)}
+
+    assert diophantine(eq) == base_soln
+
+
 def test_diop_partition():
     for n in [8, 10]:
         for k in range(1, 8):

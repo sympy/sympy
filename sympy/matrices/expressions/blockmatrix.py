@@ -1,6 +1,7 @@
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core import Basic, Add, Mul, S
 from sympy.core.sympify import _sympify
+from sympy.functions import adjoint
 from sympy.functions.elementary.complexes import re, im
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
@@ -185,6 +186,15 @@ class BlockMatrix(MatrixExpr):
         M = M.transpose()
         return BlockMatrix(M)
 
+    def _eval_adjoint(self):
+        # Adjoint all the individual matrices
+        matrices = [adjoint(matrix) for matrix in self.blocks]
+        # Make a copy
+        M = Matrix(self.blockshape[0], self.blockshape[1], matrices)
+        # Transpose the block structure
+        M = M.transpose()
+        return BlockMatrix(M)
+
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
             return Add(*[trace(self.blocks[i, i])
@@ -204,14 +214,14 @@ class BlockMatrix(MatrixExpr):
                 return det(D)*det(A - B*D.I*C)
         return Determinant(self)
 
-    def as_real_imag(self):
+    def _eval_as_real_imag(self):
         real_matrices = [re(matrix) for matrix in self.blocks]
         real_matrices = Matrix(self.blockshape[0], self.blockshape[1], real_matrices)
 
         im_matrices = [im(matrix) for matrix in self.blocks]
         im_matrices = Matrix(self.blockshape[0], self.blockshape[1], im_matrices)
 
-        return (real_matrices, im_matrices)
+        return (BlockMatrix(real_matrices), BlockMatrix(im_matrices))
 
     def transpose(self):
         """Return transpose of matrix.
@@ -653,7 +663,7 @@ class BlockDiagMatrix(BlockMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import BlockDiagMatrix, Matrix
+        >>> from sympy import BlockDiagMatrix, Matrix
 
         >>> A = Matrix([[1, 2], [3, 4]])
         >>> B = Matrix([[5, 6], [7, 8]])

@@ -1,4 +1,4 @@
-from sympy.abc import theta, x
+from sympy.abc import x
 from sympy.core import S
 from sympy.core.numbers import AlgebraicNumber
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -61,7 +61,7 @@ def test_round_two():
         (x**3 + 15 * x**2 - 9 * x + 13, DM([((1, 6), (1, 3), (1, 6)), (0, 1, 0), (0, 0, 1)], QQ).transpose(), -5292),
     )
     for f, B_exp, d_exp in cases:
-        K = QQ.algebraic_field((f, theta))
+        K = QQ.alg_field_from_poly(f)
         B = K.maximal_order().QQ_matrix
         d = K.discriminant()
         assert d == d_exp
@@ -78,5 +78,5 @@ def test_AlgebraicField_integral_basis():
     B2 = k.integral_basis(fmt='alg')
     assert B0 == [k([1]), k([S.Half, S.Half])]
     assert B1 == [1, S.Half + alpha/2]
-    assert B2 == [alpha.field_element([1]),
-                  alpha.field_element([S.Half, S.Half])]
+    assert B2 == [k.ext.field_element([1]),
+                  k.ext.field_element([S.Half, S.Half])]

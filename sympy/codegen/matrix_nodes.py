@@ -12,7 +12,7 @@ transform matrix multiplication under certain assumptions:
     >>> A = MatrixSymbol('A', n, n)
     >>> x = MatrixSymbol('x', n, 1)
     >>> expr = A**(-1) * x
-    >>> from sympy.assumptions import assuming, Q
+    >>> from sympy import assuming, Q
     >>> from sympy.codegen.rewriting import matinv_opt, optimize
     >>> with assuming(Q.fullrank(A)):
     ...     optimize(expr, [matinv_opt])
@@ -57,7 +57,7 @@ class MatrixSolve(Token, MatrixExpr):
     'A \\\\ x'
 
     """
-    __slots__ = ('matrix', 'vector')
+    __slots__ = _fields = ('matrix', 'vector')
 
     _construct_matrix = staticmethod(sympify)
 

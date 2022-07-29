@@ -6,7 +6,7 @@ from sympy.utilities.decorator import deprecated
 
 
 def msigma(i):
-    r"""Returns a Pauli matrix `\sigma_i` with ``i=1,2,3``.
+    r"""Returns a Pauli matrix `\sigma_i` with `i=1,2,3`.
 
     References
     ==========
@@ -156,13 +156,21 @@ minkowski_tensor = Matrix( (
 ))
 
 
-@deprecated(issue=20246, useinstead="DFT(n).as_mutable(), DFT(n), DFT(n).as_explicit()",
-            deprecated_since_version="1.9")
+@deprecated(
+    """
+    The sympy.physics.matrices.mdft method is deprecated. Use
+    sympy.DFT(n).as_explicit() instead.
+    """,
+    deprecated_since_version="1.9",
+    active_deprecations_target="deprecated-physics-mdft",
+)
 def mdft(n):
     r"""
-    Deprecated. Use DFT from sympy.matrices.expressions.fourier instead.
+    .. deprecated:: 1.9
 
-    To get identical behavior to ``mdft(n)``, use ``DFT(n).as_mutable()``.
+       Use DFT from sympy.matrices.expressions.fourier instead.
+
+       To get identical behavior to ``mdft(n)``, use ``DFT(n).as_explicit()``.
     """
     from sympy.matrices.expressions.fourier import DFT
     return DFT(n).as_mutable()

@@ -4,6 +4,7 @@
 from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
     expand_mul, expand_multinomial)
 from sympy.core.exprtools import decompose_power, decompose_power_rat
+from sympy.core.numbers import _illegal
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
@@ -165,14 +166,13 @@ def _sort_factors(factors, **args):
     else:
         return sorted(factors, key=order_no_multiple_key)
 
-illegal = [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]
-illegal_types = [type(obj) for obj in illegal]
-finf = [float(i) for i in illegal[1:3]]
+illegal_types = [type(obj) for obj in _illegal]
+finf = [float(i) for i in _illegal[1:3]]
 def _not_a_coeff(expr):
     """Do not treat NaN and infinities as valid polynomial coefficients. """
     if type(expr) in illegal_types or expr in finf:
         return True
-    if type(expr) is float and float(expr) != expr:
+    if isinstance(expr, float) and float(expr) != expr:
         return True  # nan
     return  # could be
 
@@ -470,8 +470,15 @@ class PicklableWithSlots:
 
         # Get all data that should be stored from super classes
         for c in cls.__bases__:
-            if hasattr(c, "__getstate__"):
-                d.update(c.__getstate__(self, c))
+            # XXX: Python 3.11 defines object.__getstate__ and it does not
+            # accept any arguments so we need to make sure not to call it with
+            # an argument here. To be compatible with Python < 3.11 we need to
+            # be careful not to assume that c or object has a __getstate__
+            # method though.
+            getstate = getattr(c, "__getstate__", None)
+            objstate = getattr(object, "__getstate__", None)
+            if getstate is not None and getstate is not objstate:
+                d.update(getstate(self, c))
 
         # Get all information that should be stored from cls and return the dict
         for name in cls.__slots__:

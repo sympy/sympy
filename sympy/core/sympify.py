@@ -10,7 +10,7 @@ from sympy.core.random import choice
 
 from .parameters import global_parameters
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 
 
@@ -28,9 +28,13 @@ class SympifyError(ValueError):
             str(self.base_exc)))
 
 
-# See sympify docstring.
 converter = {}  # type: tDict[Type[Any], Callable[[Any], Basic]]
 
+#holds the conversions defined in SymPy itself, i.e. non-user defined conversions
+_sympy_converter = {} # type: tDict[Type[Any], Callable[[Any], Basic]]
+
+#alias for clearer use in the library
+_external_converter = converter
 
 class CantSympify:
     """
@@ -57,7 +61,8 @@ class CantSympify:
     SympifyError: SympifyError: {}
 
     """
-    pass
+
+    __slots__ = ()
 
 
 def _is_numpy_instance(a):
@@ -77,7 +82,7 @@ def _convert_numpy_types(a, **sympify_args):
     import numpy as np
     if not isinstance(a, np.floating):
         if np.iscomplex(a):
-            return converter[complex](a.item())
+            return _sympy_converter[complex](a.item())
         else:
             return sympify(a.item(), **sympify_args)
     else:
@@ -203,6 +208,13 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Traceback (most recent call last):
     ...
     SympifyError: SympifyError: None
+
+    .. deprecated:: 1.6
+
+       ``sympify(obj)`` automatically falls back to ``str(obj)`` when all
+       other conversion methods fail, but this is deprecated. ``strict=True``
+       will disable this deprecated behavior. See
+       :ref:`deprecated-sympify-string-fallback`.
 
     Evaluation
     ----------
@@ -358,18 +370,18 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     if isinstance(a, CantSympify):
         raise SympifyError(a)
-    cls = getattr(a, "__class__", None)
-    if cls is None:
-        cls = type(a)  # Probably an old-style class
-    conv = converter.get(cls, None)
-    if conv is not None:
-        return conv(a)
 
+    cls = getattr(a, "__class__", None)
+
+    #Check if there exists a converter for any of the types in the mro
     for superclass in getmro(cls):
-        try:
-            return converter[superclass](a)
-        except KeyError:
-            continue
+        #First check for user defined converters
+        conv = _external_converter.get(superclass)
+        if conv is None:
+            #if none exists, check for SymPy defined converters
+            conv = _sympy_converter.get(superclass)
+        if conv is not None:
+            return conv(a)
 
     if cls is type(None):
         if strict:
@@ -450,14 +462,22 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             a = str(a)
         except Exception as exc:
             raise SympifyError(a, exc)
-        SymPyDeprecationWarning(
-            feature="String fallback in sympify",
-            useinstead= \
-                'sympify(str(obj)) or ' + \
-                'sympy.core.sympify.converter or obj._sympy_',
-            issue=18066,
-            deprecated_since_version='1.6'
-        ).warn()
+        sympy_deprecation_warning(
+            f"""
+The string fallback in sympify() is deprecated.
+
+To explicitly convert the string form of an object, use
+sympify(str(obj)). To add define sympify behavior on custom
+objects, use sympy.core.sympify.converter or define obj._sympy_
+(see the sympify() docstring).
+
+sympify() performed the string fallback resulting in the following string:
+
+{a!r}
+            """,
+            deprecated_since_version='1.6',
+            active_deprecations_target="deprecated-sympify-string-fallback",
+        )
 
     from sympy.parsing.sympy_parser import (parse_expr, TokenError,
                                             standard_transformations)
@@ -511,7 +531,7 @@ def _sympify(a):
 
 def kernS(s):
     """Use a hack to try keep autosimplification from distributing a
-    a number into an Add; this modification doesn't
+    a number into an Add; this modification does not
     prevent the 2-arg Mul from becoming an Add, however.
 
     Examples

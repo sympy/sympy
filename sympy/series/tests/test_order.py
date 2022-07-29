@@ -157,7 +157,11 @@ def test_add_1():
     assert Order(3*x - 2*x**2) == Order(x)
     assert Order(1 + x) == Order(1, x)
     assert Order(1 + 1/x) == Order(1/x)
-    assert Order(log(x) + 1/log(x)) == Order(log(x))
+    # TODO : A better output for Order(log(x) + 1/log(x))
+    # could be Order(log(x)). Currently Order for expressions
+    # where all arguments would involve a log term would fall
+    # in this category and outputs for these should be improved.
+    assert Order(log(x) + 1/log(x)) == Order((log(x)**2 + 1)/log(x))
     assert Order(exp(1/x) + x) == Order(exp(1/x))
     assert Order(exp(1/x) + 1/x**20) == Order(exp(1/x))
 
@@ -165,7 +169,7 @@ def test_add_1():
 def test_ln_args():
     assert O(log(x)) + O(log(2*x)) == O(log(x))
     assert O(log(x)) + O(log(x**3)) == O(log(x))
-    assert O(log(x*y)) + O(log(x) + log(y)) == O(log(x*y))
+    assert O(log(x*y)) + O(log(x) + log(y)) == O(log(x) + log(y), x, y)
 
 
 def test_multivar_0():
@@ -382,7 +386,7 @@ def test_order_at_infinity():
 
     # issue 7207
     assert Order(exp(x), (x, oo)).expr == Order(2*exp(x), (x, oo)).expr == exp(x)
-    assert Order(y**x, (x, oo)).expr == Order(2*y**x, (x, oo)).expr == exp(log(y)*x)
+    assert Order(y**x, (x, oo)).expr == Order(2*y**x, (x, oo)).expr == exp(x*log(y))
 
     # issue 19545
     assert Order(1/x - 3/(3*x + 2), (x, oo)).expr == x**(-2)
@@ -458,6 +462,15 @@ def test_issue_18606():
 
 def test_issue_22165():
     assert O(log(x)).contains(2)
+
+
+def test_issue_23231():
+    # This test checks Order for expressions having
+    # arguments containing variables in exponents/powers.
+    assert O(x**x + 2**x, (x, oo)) == O(exp(x*log(x)), (x, oo))
+    assert O(x**x + x**2, (x, oo)) == O(exp(x*log(x)), (x, oo))
+    assert O(x**x + 1/x**2, (x, oo)) == O(exp(x*log(x)), (x, oo))
+    assert O(2**x + 3**x , (x, oo)) == O(exp(x*log(3)), (x, oo))
 
 
 def test_issue_9917():

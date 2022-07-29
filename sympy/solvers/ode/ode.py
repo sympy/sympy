@@ -117,7 +117,7 @@ function for every hint, except for ``_Integral`` hints
 (:py:meth:`~sympy.solvers.ode.dsolve` takes care of those automatically).
 Hint names should be all lowercase, unless a word is commonly capitalized
 (such as Integral or Bernoulli).  If you have a hint that you do not want to
-run with ``all_Integral`` that doesn't have an ``_Integral`` counterpart (such
+run with ``all_Integral`` that does not have an ``_Integral`` counterpart (such
 as a best hint that would defeat the purpose of ``all_Integral``), you will
 need to remove it manually in the :py:meth:`~sympy.solvers.ode.dsolve` code.
 See also the :py:meth:`~sympy.solvers.ode.classify_ode` docstring for
@@ -208,7 +208,7 @@ tested.  Add a test for each method in ``test_ode.py``.  Follow the
 conventions there, i.e., test the solver using ``dsolve(eq, f(x),
 hint=your_hint)``, and also test the solution using
 :py:meth:`~sympy.solvers.ode.checkodesol` (you can put these in a separate
-tests and skip/XFAIL if it runs too slow/doesn't work).  Be sure to call your
+tests and skip/XFAIL if it runs too slow/does not work).  Be sure to call your
 hint specifically in :py:meth:`~sympy.solvers.ode.dsolve`, that way the test
 will not be broken simply by the introduction of another matching hint.  If your
 method works for higher order (>1) ODEs, you will need to run ``sol =
@@ -378,7 +378,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         ``f(x)`` is a function of one variable whose derivatives in that
             variable make up the ordinary differential equation ``eq``.  In
             many cases it is not necessary to provide this; it will be
-            autodetected (and an error raised if it couldn't be detected).
+            autodetected (and an error raised if it could not be detected).
 
         ``hint`` is the solving method that you want dsolve to use.  Use
             ``classify_ode(eq, f(x))`` to get all of the possible hints for an
@@ -515,7 +515,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         ``func`` holds ``x(t)`` and ``y(t)`` being functions of one variable which
         together with some of their derivatives make up the system of ordinary
         differential equation ``eq``. It is not necessary to provide this; it
-        will be autodetected (and an error raised if it couldn't be detected).
+        will be autodetected (and an error raised if it could not be detected).
 
     **Hints**
 
@@ -995,22 +995,22 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                     AppliedUndef) and deriv.args[0].func == f and
                     len(deriv.args[0].args) == 1 and old == x and not
                     new.has(x) and all(i == deriv.variables[0] for i in
-                    deriv.variables) and not ics[funcarg].has(f)):
+                    deriv.variables) and x not in ics[funcarg].free_symbols):
 
                     dorder = ode_order(deriv, x)
                     temp = 'f' + str(dorder)
                     boundary.update({temp: new, temp + 'val': ics[funcarg]})
                 else:
-                    raise ValueError("Enter valid boundary conditions for Derivatives")
+                    raise ValueError("Invalid boundary conditions for Derivatives")
 
 
             # Separating functions
             elif isinstance(funcarg, AppliedUndef):
                 if (funcarg.func == f and len(funcarg.args) == 1 and
-                    not funcarg.args[0].has(x) and not ics[funcarg].has(f)):
+                    not funcarg.args[0].has(x) and x not in ics[funcarg].free_symbols):
                     boundary.update({'f0': funcarg.args[0], 'f0val': ics[funcarg]})
                 else:
-                    raise ValueError("Enter valid boundary conditions for Function")
+                    raise ValueError("Invalid boundary conditions for Function")
 
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point): value, f(x).diff(x, order).subs(x, point): value}")
@@ -1171,7 +1171,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     'is_constant' (boolean), which tells if the system of ODEs is constant coefficient
     or not. This key is temporary addition for now and is in the match dict only when
     the system of ODEs is linear first order constant coefficient homogeneous. So, this
-    key's value is True for now if it is available else it doesn't exist.
+    key's value is True for now if it is available else it does not exist.
 
     'is_homogeneous' (boolean), which tells if the system of ODEs is homogeneous. Like the
     key 'is_constant', this key is a temporary addition and it is True since this key value
@@ -1223,7 +1223,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
         "For scalar ODEs, classify_ode should be used")
 
     # find all the functions if not given
-    order = dict()
+    order = {}
     if funcs==[None]:
         funcs = _extract_funcs(eq)
 
@@ -1233,7 +1233,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     # This logic of list of lists in funcs to
     # be replaced later.
-    func_dict = dict()
+    func_dict = {}
     for func in funcs:
         if not order.get(func, False):
             max_order = 0
@@ -1317,7 +1317,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
                     type_of_equation = check_linear_2eq_order1(eq, funcs, func_coef)
                 else:
                     type_of_equation = None
-            # If the equation doesn't match up with any of the
+            # If the equation does not match up with any of the
             # general case solvers in systems.py and the number
             # of equations is greater than 2, then NotImplementedError
             # should be raised.
@@ -1350,7 +1350,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
     y = func[1].func
     fc = func_coef
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    r = dict()
+    r = {}
     # for equations Eq(a1*diff(x(t),t), b1*x(t) + c1*y(t) + d1)
     # and Eq(a2*diff(y(t),t), b2*x(t) + c2*y(t) + d2)
     r['a1'] = fc[0,x(t),1] ; r['a2'] = fc[1,y(t),1]
@@ -2647,7 +2647,7 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     # each solution n times to get n+1 equations.
     #
     # We then try to solve those n+1 equations for the integrations constants
-    # in sol2. If we can find a solution that doesn't depend on x then it
+    # in sol2. If we can find a solution that does not depend on x then it
     # means that some value of the constants in sol1 is a special case of
     # sol2 corresponding to a particular choice of the integration constants.
 
@@ -2735,8 +2735,7 @@ def ode_1st_power_series(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, pprint, exp
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import Function, pprint, exp, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)
@@ -2872,13 +2871,10 @@ def sysode_linear_2eq_order1(match_):
     func = match_['func']
     fc = match_['func_coeff']
     eq = match_['eq']
-    r = dict()
+    r = {}
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     for i in range(2):
-        eqs = 0
-        for terms in Add.make_args(eq[i]):
-            eqs += terms/fc[i,func[i],1]
-        eq[i] = eqs
+        eq[i] = Add(*[terms/fc[i,func[i],1] for terms in Add.make_args(eq[i])])
 
     # for equations Eq(a1*diff(x(t),t), a*x(t) + b*y(t) + k1)
     # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)

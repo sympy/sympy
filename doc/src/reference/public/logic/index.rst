@@ -11,4 +11,3 @@ Logic
 
     ../../../modules/logic.rst
     ../../../modules/sets.rst
-    

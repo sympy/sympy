@@ -311,7 +311,7 @@ def test_files():
         "%(sep)sutilities%(sep)sbenchmarking.py" % sepd,
     }
     check_files(top_level_files, test)
-    check_directory_tree(BIN_PATH, test, {"~", ".pyc", ".sh"}, "*")
+    check_directory_tree(BIN_PATH, test, {"~", ".pyc", ".sh", ".mjs"}, "*")
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
 
@@ -497,54 +497,14 @@ def test_test_unicode_encoding():
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
 
     fname = 'abc'
-    test_file = ['# coding=utf-8', 'α']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'abc'
-    test_file = ['# coding=utf-8', 'abc']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'abc'
     test_file = ['abc']
     _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist)
 
     fname = 'foo'
-    test_file = ['α']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'foo'
-    test_file = ['# coding=utf-8', 'α']
-    _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist)
-
-    fname = 'foo'
-    test_file = ['# coding=utf-8', 'abc']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'foo'
     test_file = ['abc']
     raises(AssertionError, lambda: _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'bar'
-    test_file = ['α']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'bar'
-    test_file = ['# coding=utf-8', 'α']
-    _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist)
-
-    fname = 'bar'
-    test_file = ['# coding=utf-8', 'abc']
-    _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist)
 
     fname = 'bar'
     test_file = ['abc']

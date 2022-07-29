@@ -370,7 +370,7 @@ def test_hyperbolic():
     assert acosh(x).nseries(x, n=6) == \
         pi*I/2 - I*x - 3*I*x**5/40 - I*x**3/6 + O(x**6)
     assert atanh(x).nseries(x, n=6) == x + x**3/3 + x**5/5 + O(x**6)
-    assert acoth(x).nseries(x, n=6) == x + x**3/3 + x**5/5 + pi*I/2 + O(x**6)
+    assert acoth(x).nseries(x, n=6) == -I*pi/2 + x + x**3/3 + x**5/5 + O(x**6)
 
 
 def test_series2():
@@ -473,6 +473,16 @@ def test_dir():
     assert floor(x + 2.2).series(x, 0, dir='-') == 2
     assert ceiling(x + 2.2).series(x, 0, dir='-') == 3
     assert sin(x + y).series(x, 0, dir='-') == sin(x + y).series(x, 0, dir='+')
+
+
+def test_cdir():
+    assert abs(x).series(x, 0, cdir=1) == x
+    assert abs(x).series(x, 0, cdir=-1) == -x
+    assert floor(x + 2).series(x, 0, cdir=1) == 2
+    assert floor(x + 2).series(x, 0, cdir=-1) == 1
+    assert floor(x + 2.2).series(x, 0, cdir=1) == 2
+    assert ceiling(x + 2.2).series(x, 0, cdir=-1) == 3
+    assert sin(x + y).series(x, 0, cdir=-1) == sin(x + y).series(x, 0, cdir=1)
 
 
 def test_issue_3504():

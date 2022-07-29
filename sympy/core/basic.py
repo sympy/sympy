@@ -1,20 +1,21 @@
 """Base class for all the objects in SymPy"""
+from __future__ import annotations
+
 from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
-from typing import Set, Tuple
 
 from .assumptions import ManagedProperties
 from .cache import cacheit
 from .core import BasicMeta
-from .sympify import _sympify, sympify, SympifyError
+from .sympify import _sympify, sympify, SympifyError, _external_converter
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
 
 from sympy.utilities.decorator import deprecated
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import iterable, numbered_symbols, NotIterable
+from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
 
 from inspect import getmro
@@ -81,7 +82,8 @@ class Basic(Printable, metaclass=ManagedProperties):
                  '_assumptions'
                 )
 
-    _args: 'Tuple[Basic, ...]'
+    _args: tuple[Basic, ...]
+    _mhash: int | None
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -114,6 +116,10 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_Point = False
     is_MatAdd = False
     is_MatMul = False
+    is_real: bool | None
+    is_zero: bool | None
+    is_negative: bool | None
+    is_commutative: bool | None
 
     kind: Kind = UndefinedKind
 
@@ -134,13 +140,17 @@ class Basic(Printable, metaclass=ManagedProperties):
     def __getstate__(self):
         return None
 
+    def __setstate__(self, state):
+        for name, value in state.items():
+            setattr(self, name, value)
+
     def __reduce_ex__(self, protocol):
         if protocol < 2:
             msg = "Only pickle protocol 2 or higher is supported by SymPy"
             raise NotImplementedError(msg)
         return super().__reduce_ex__(protocol)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
@@ -318,6 +328,25 @@ class Basic(Printable, metaclass=ManagedProperties):
         args = len(args), tuple([inner_key(arg) for arg in args])
         return self.class_key(), args, S.One.sort_key(), S.One
 
+    def _do_eq_sympify(self, other):
+        """Returns a boolean indicating whether a == b when either a
+        or b is not a Basic. This is only done for types that were either
+        added to `converter` by a 3rd party or when the object has `_sympy_`
+        defined. This essentially reuses the code in `_sympify` that is
+        specific for this use case. Non-user defined types that are meant
+        to work with SymPy should be handled directly in the __eq__ methods
+        of the `Basic` classes it could equate to and not be converted. Note
+        that after conversion, `==`  is used again since it is not
+        neccesarily clear whether `self` or `other`'s __eq__ method needs
+        to be used."""
+        for superclass in type(other).__mro__:
+            conv = _external_converter.get(superclass)
+            if conv is not None:
+                return self == conv(other)
+        if hasattr(other, '_sympy_'):
+            return self == other._sympy_()
+        return NotImplemented
+
     def __eq__(self, other):
         """Return a boolean indicating whether a == b on the basis of
         their symbolic trees.
@@ -343,21 +372,22 @@ class Basic(Printable, metaclass=ManagedProperties):
             return True
 
         if not isinstance(other, Basic):
-            if iterable(other, exclude=(str, NotIterable)
-                    ) and not hasattr(other, '_sympy_'):
-                # XXX iterable self should have it's own __eq__
-                # method if the path gives a false negative
-                # comparison
+            return self._do_eq_sympify(other)
+
+        # check for pure number expr
+        if  not (self.is_Number and other.is_Number) and (
+                type(self) != type(other)):
+            return False
+        a, b = self._hashable_content(), other._hashable_content()
+        if a != b:
+            return False
+        # check number *in* an expression
+        for a, b in zip(a, b):
+            if not isinstance(a, Basic):
+                continue
+            if a.is_Number and type(a) != type(b):
                 return False
-            try:
-                other = _sympify(other)
-            except (SympifyError, SyntaxError):
-                return NotImplemented
-
-        if type(self) != type(other):
-            return NotImplemented
-
-        return self._hashable_content() == other._hashable_content()
+        return True
 
     def __ne__(self, other):
         """``a != b``  -> Compare two symbolic trees and see whether they are different
@@ -496,8 +526,10 @@ class Basic(Printable, metaclass=ManagedProperties):
         return result
 
     @property
-    def free_symbols(self) -> 'Set[Basic]':
+    def free_symbols(self) -> set[Basic]:
         """Return from the atoms of self those which are free symbols.
+
+        Not all free symbols are ``Symbol``. Eg: IndexedBase('I')[0].free_symbols
 
         For most expressions, all symbols are free symbols. For some classes
         this is not true. e.g. Integrals use Symbols for the dummy variables
@@ -508,14 +540,17 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         Any other method that uses bound variables should implement a
         free_symbols method."""
-        empty: 'Set[Basic]' = set()
+        empty: set[Basic] = set()
         return empty.union(*(a.free_symbols for a in self.args))
 
     @property
     def expr_free_symbols(self):
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning("""
+        The expr_free_symbols property is deprecated. Use free_symbols to get
+        the free symbols of an expression.
+        """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-expr-free-symbols")
         return set()
 
     def as_dummy(self):
@@ -713,7 +748,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return self.__class__
 
     @property
-    def args(self) -> 'Tuple[Basic, ...]':
+    def args(self) -> tuple[Basic, ...]:
         """Returns a tuple of arguments of 'self'.
 
         Examples
@@ -739,7 +774,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         Never use self._args, always use self.args.
         Only use _args in __new__ when creating a new function.
-        Don't override .args() from Basic (so that it's easy to
+        Do not override .args() from Basic (so that it is easy to
         change the interface in the future if needed).
         """
         return self._args
@@ -879,7 +914,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         from .containers import Dict
         from .symbol import Dummy, Symbol
-        from sympy.polys.polyutils import illegal
+        from .numbers import _illegal
 
         unordered = False
         if len(args) == 1:
@@ -933,10 +968,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             sequence = [(k, sequence[k]) for k in k]
             # do infinities first
             if not simultaneous:
-                redo = []
-                for i in range(len(sequence)):
-                    if sequence[i][1] in illegal:  # nan, zoo and +/-oo
-                        redo.append(i)
+                redo = [i for i, seq in enumerate(sequence) if seq[1] in _illegal]
                 for i in reversed(redo):
                     sequence.insert(0, sequence.pop(i))
 
@@ -972,7 +1004,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         """Substitutes an expression old -> new.
 
         If self is not equal to old then _eval_subs is called.
-        If _eval_subs doesn't want to make any special replacement
+        If _eval_subs does not want to make any special replacement
         then a None is received which indicates that the fallback
         should be applied wherein a search for replacements is made
         amongst the arguments of self.
@@ -989,7 +1021,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> (x + y + z).subs(x + y, 1)
         z + 1
 
-        Add's _eval_subs doesn't need to know how to find x + y in
+        Add's _eval_subs does not need to know how to find x + y in
         the following:
 
         >>> Add._eval_subs(z*(x + y) + 3, x + y, 1) is None
@@ -1131,7 +1163,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> (x + 2 + exp(x + 2)).xreplace({x + 2: y})
         x + exp(y) + 2
 
-        xreplace doesn't differentiate between free and bound symbols. In the
+        xreplace does not differentiate between free and bound symbols. In the
         following, subs(x, y) would not change x since it is a bound symbol,
         but xreplace does:
 
@@ -1271,11 +1303,11 @@ class Basic(Printable, metaclass=ManagedProperties):
                     continue  # Basic won't have this in it
             p_set.add(p)  # fails if object defines __eq__ but
                           # doesn't define __hash__
-                                  #
+        types = tuple(type_set)   #
         for i in iterargs(self):  #
             if i in p_set:        # <--- here, too
                 return True
-            if type(i) in type_set or any(isinstance(i, t) for t in type_set):
+            if isinstance(i, types):
                 return True
 
         # use matcher if defined, e.g. operations defines
@@ -1297,7 +1329,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         If ``map = True`` then also return the mapping {old: new} where ``old``
         was a sub-expression found with query and ``new`` is the replacement
-        value for it. If the expression itself doesn't match the query, then
+        value for it. If the expression itself does not match the query, then
         the returned value will be ``self.xreplace(map)`` otherwise it should
         be ``self.subs(ordered(map.items()))``.
 
@@ -1593,7 +1625,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return None
 
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
         else:
             repl_dict = repl_dict.copy()
 
@@ -1951,7 +1983,7 @@ class Atom(Basic):
     def matches(self, expr, repl_dict=None, old=False):
         if self == expr:
             if repl_dict is None:
-                return dict()
+                return {}
             return repl_dict.copy()
 
     def xreplace(self, rule, hack2=False):
@@ -2033,7 +2065,7 @@ def _ne(a, b):
 
 def _atomic(e, recursive=False):
     """Return atom-like quantities as far as substitution is
-    concerned: Derivatives, Functions and Symbols. Don't
+    concerned: Derivatives, Functions and Symbols. Do not
     return any 'atoms' that are inside such quantities unless
     they also appear outside, too, unless `recursive` is True.
 
@@ -2095,5 +2127,14 @@ from .traversal import (preorder_traversal as _preorder_traversal,
    iterargs, iterfreeargs)
 
 preorder_traversal = deprecated(
-    useinstead="sympy.core.traversal.preorder_traversal",
-    deprecated_since_version="1.10", issue=22288)(_preorder_traversal)
+    """
+    Using preorder_traversal from the sympy.core.basic submodule is
+    deprecated.
+
+    Instead, use preorder_traversal from the top-level sympy namespace, like
+
+        sympy.preorder_traversal
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved",
+)(_preorder_traversal)

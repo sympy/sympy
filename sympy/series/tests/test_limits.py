@@ -9,16 +9,18 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
 from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (acoth, atanh, sinh)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, atanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
-from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, sec, sin, tan)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin,
+                                                      atan, cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.bessel import (besselj, besselk)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, erfi, fresnelc, fresnels)
 from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma)
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.series.limits import (Limit, limit)
-from sympy.simplify.simplify import simplify
+from sympy.simplify.simplify import (logcombine, simplify)
 
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
@@ -65,6 +67,10 @@ def test_basic1():
     assert limit(1/tan(x**3), x, (2*pi)**Rational(1, 3), dir="-") is -oo
     assert limit(1/cot(x)**3, x, (pi*Rational(3, 2)), dir="+") is -oo
     assert limit(1/cot(x)**3, x, (pi*Rational(3, 2)), dir="-") is oo
+    assert limit(tan(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(cot(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(sec(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(csc(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
 
     # test bi-directional limits
     assert limit(sin(x)/x, x, 0, dir="+-") == 1
@@ -141,6 +147,16 @@ def test_piecewise():
     assert limit((real_root(x - 6, 3) + 2)/(x + 2), x, -2, '+') == Rational(1, 12)
 
 
+def test_piecewise2():
+    func1 = 2*sqrt(x)*Piecewise(((4*x - 2)/Abs(sqrt(4 - 4*(2*x - 1)**2)), 4*x - 2\
+            >= 0), ((2 - 4*x)/Abs(sqrt(4 - 4*(2*x - 1)**2)), True))
+    func2 = Piecewise((x**2/2, x <= 0.5), (x/2 - 0.125, True))
+    func3 = Piecewise(((x - 9) / 5, x < -1), ((x - 9) / 5, x > 4), (sqrt(Abs(x - 3)), True))
+    assert limit(func1, x, 0) == 1
+    assert limit(func2, x, 0) == 0
+    assert limit(func3, x, -1) == 2
+
+
 def test_basic5():
     class my(Function):
         @classmethod
@@ -177,6 +193,12 @@ def test_floor():
     # https://github.com/sympy/sympy/issues/14478
     assert limit(x*floor(3/x)/2, x, 0, '+') == Rational(3, 2)
     assert limit(floor(x + 1/2) - floor(x), x, oo) == AccumBounds(-S.Half, S(3)/2)
+
+    # test issue 9158
+    assert limit(floor(atan(x)), x, oo) == 1
+    assert limit(floor(atan(x)), x, -oo) == -2
+    assert limit(ceiling(atan(x)), x, oo) == 2
+    assert limit(ceiling(atan(x)), x, -oo) == -1
 
 
 def test_floor_requires_robust_assumptions():
@@ -218,6 +240,14 @@ def test_ceiling_requires_robust_assumptions():
     assert limit(ceiling(5 + sin(x)), x, 0, "-") == 5
     assert limit(ceiling(5 + cos(x)), x, 0, "+") == 6
     assert limit(ceiling(5 + cos(x)), x, 0, "-") == 6
+
+
+def test_issue_14355():
+    assert limit(floor(sin(x)/x), x, 0, '+') == 0
+    assert limit(floor(sin(x)/x), x, 0, '-') == 0
+    # test comment https://github.com/sympy/sympy/issues/14355#issuecomment-372121314
+    assert limit(floor(-tan(x)/x), x, 0, '+') == -2
+    assert limit(floor(-tan(x)/x), x, 0, '-') == -2
 
 
 def test_atan():
@@ -582,6 +612,10 @@ def test_issue_6364():
     assert limit(e, z, 0) == 1/(cos(a)**2 - S.Half)
 
 
+def test_issue_6682():
+    assert limit(exp(2*Ei(-x))/x**2, x, 0) == exp(2*EulerGamma)
+
+
 def test_issue_4099():
     a = Symbol('a')
     assert limit(a/x, x, 0) == oo*sign(a)
@@ -688,6 +722,17 @@ def test_issue_10610():
     assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == Rational(1, 3)
 
 
+def test_issue_10868():
+    assert limit(log(x) + asech(x), x, 0, '+') == log(2)
+    assert limit(log(x) + asech(x), x, 0, '-') == log(2) + 2*I*pi
+    raises(ValueError, lambda: limit(log(x) + asech(x), x, 0, '+-'))
+    assert limit(log(x) + asech(x), x, oo) == oo
+    assert limit(log(x) + acsch(x), x, 0, '+') == log(2)
+    assert limit(log(x) + acsch(x), x, 0, '-') == -oo
+    raises(ValueError, lambda: limit(log(x) + acsch(x), x, 0, '+-'))
+    assert limit(log(x) + acsch(x), x, oo) == oo
+
+
 def test_issue_6599():
     assert limit((n + cos(n))/n, n, oo) == 1
 
@@ -756,6 +801,16 @@ def test_issue_13750():
 
 def test_issue_14514():
     assert limit((1/(log(x)**log(x)))**(1/x), x, oo) == 1
+
+
+def test_issues_14525():
+    assert limit(sin(x)**2 - cos(x) + tan(x)*csc(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(sin(x)**2 - cos(x) + sin(x)*cot(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(cot(x) - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(cos(x) - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.One)
+    assert limit(sin(x) - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.One)
+    assert limit(cos(x)**2 - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.One)
+    assert limit(tan(x)**2 + sin(x)**2 - cos(x), x, oo) == AccumBounds(-S.One, S.Infinity)
 
 
 def test_issue_14574():
@@ -914,6 +969,22 @@ def test_issue_18452():
     assert limit(abs(log(x))**x, x, 0, "-") == 1
 
 
+def test_issue_18473():
+    assert limit(sin(x)**(1/x), x, oo) == Limit(sin(x)**(1/x), x, oo, dir='-')
+    assert limit(cos(x)**(1/x), x, oo) == Limit(cos(x)**(1/x), x, oo, dir='-')
+    assert limit(tan(x)**(1/x), x, oo) == Limit(tan(x)**(1/x), x, oo, dir='-')
+    assert limit((cos(x) + 2)**(1/x), x, oo) == 1
+    assert limit((sin(x) + 10)**(1/x), x, oo) == 1
+    assert limit((cos(x) - 2)**(1/x), x, oo) == Limit((cos(x) - 2)**(1/x), x, oo, dir='-')
+    assert limit((cos(x) + 1)**(1/x), x, oo) == AccumBounds(0, 1)
+    assert limit((tan(x)**2)**(2/x) , x, oo) == AccumBounds(0, oo)
+    assert limit((sin(x)**2)**(1/x), x, oo) == AccumBounds(0, 1)
+    # Tests for issue #23751
+    assert limit((cos(x) + 1)**(1/x), x, -oo) == AccumBounds(1, oo)
+    assert limit((sin(x)**2)**(1/x), x, -oo) == AccumBounds(1, oo)
+    assert limit((tan(x)**2)**(2/x) , x, -oo) == AccumBounds(0, oo)
+
+
 def test_issue_18482():
     assert limit((2*exp(3*x)/(exp(2*x) + 1))**(1/x), x, oo) == exp(1)
 
@@ -1032,6 +1103,31 @@ def test_issue_20578():
     assert limit(expr,x,0,'+-') == 0
 
 
+def test_issue_21227():
+    f = log(x)
+
+    assert f.nseries(x, logx=y) == y
+    assert f.nseries(x, logx=-x) == -x
+
+    f = log(-log(x))
+
+    assert f.nseries(x, logx=y) == log(-y)
+    assert f.nseries(x, logx=-x) == log(x)
+
+    f = log(log(x))
+
+    assert f.nseries(x, logx=y) == log(y)
+    assert f.nseries(x, logx=-x) == log(-x)
+    assert f.nseries(x, logx=x) == log(x)
+
+    f = log(log(log(1/x)))
+
+    assert f.nseries(x, logx=y) == log(log(-y))
+    assert f.nseries(x, logx=-y) == log(log(y))
+    assert f.nseries(x, logx=x) == log(log(-x))
+    assert f.nseries(x, logx=-x) == log(log(x))
+
+
 def test_issue_21415():
     exp = (x-1)*cos(1/(x-1))
     assert exp.limit(x,1) == 0
@@ -1075,3 +1171,46 @@ def test_issue_21785():
 
 def test_issue_22181():
     assert limit((-1)**x * 2**(-x), x, oo) == 0
+
+
+def test_issue_22220():
+    e1 = sqrt(30)*atan(sqrt(30)*tan(x/2)/6)/30
+    e2 = sqrt(30)*I*(-log(sqrt(2)*tan(x/2) - 2*sqrt(15)*I/5) +
+                     +log(sqrt(2)*tan(x/2) + 2*sqrt(15)*I/5))/60
+
+    assert limit(e1, x, -pi) == -sqrt(30)*pi/60
+    assert limit(e2, x, -pi) == -sqrt(30)*pi/30
+
+    assert limit(e1, x, -pi, '-') == sqrt(30)*pi/60
+    assert limit(e2, x, -pi, '-') == 0
+
+    # test https://github.com/sympy/sympy/issues/22220#issuecomment-972727694
+    expr = log(x - I) - log(-x - I)
+    expr2 = logcombine(expr, force=True)
+    assert limit(expr, x, oo) == limit(expr2, x, oo) == I*pi
+
+    # test https://github.com/sympy/sympy/issues/22220#issuecomment-1077618340
+    expr = expr = (-log(tan(x/2) - I) +log(tan(x/2) + I))
+    assert limit(expr, x, pi, '+') == 2*I*pi
+    assert limit(expr, x, pi, '-') == 0
+
+def test_sympyissue_22986():
+    assert limit(acosh(1 + 1/x)*sqrt(x), x, oo) == sqrt(2)
+
+
+def test_issue_23231():
+    f = (2**x - 2**(-x))/(2**x + 2**(-x))
+    assert limit(f, x, -oo) == -1
+
+
+def test_issue_23596():
+    assert integrate(((1 + x)/x**2)*exp(-1/x), (x, 0, oo)) == oo
+
+
+def test_issue_23752():
+    expr1 = sqrt(-I*x**2 + x - 3)
+    expr2 = sqrt(-I*x**2 + I*x - 3)
+    assert limit(expr1, x, 0, '+') == -sqrt(3)*I
+    assert limit(expr1, x, 0, '-') == -sqrt(3)*I
+    assert limit(expr2, x, 0, '+') == sqrt(3)*I
+    assert limit(expr2, x, 0, '-') == -sqrt(3)*I

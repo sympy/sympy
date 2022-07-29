@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import subprocess
 import sys
 from os.path import join, splitext, basename
@@ -10,7 +11,7 @@ from shutil import copytree
 
 
 
-def main(sympy_doc_git, doc_html_zip, version, push=None):
+def main(sympy_doc_git, doc_html_zip, version, dev_version, push=None):
     """Run this as ./update_docs.py SYMPY_DOC_GIT DOC_HTML_ZIP VERSION [--push]
 
     !!!!!!!!!!!!!!!!!
@@ -23,7 +24,8 @@ def main(sympy_doc_git, doc_html_zip, version, push=None):
 
     SYMPY_DOC_GIT: Path to the sympy_doc repo.
     DOC_HTML_ZIP: Path to the zip of the built html docs.
-    VERSION: Version string (e.g. "1.6")
+    VERSION: Version string of the release (e.g. "1.6")
+    DEV_VERSION: Version string of the development version (e.g. "1.7.dev")
     --push (optional): Push the results (Warning this pushes direct to github)
 
     This script automates the "release docs" step described in the README of the
@@ -38,10 +40,10 @@ def main(sympy_doc_git, doc_html_zip, version, push=None):
     else:
         raise ValueError("Invalid arguments")
 
-    update_docs(sympy_doc_git, doc_html_zip, version, push)
+    update_docs(sympy_doc_git, doc_html_zip, version, dev_version, push)
 
 
-def update_docs(sympy_doc_git, doc_html_zip, version, push):
+def update_docs(sympy_doc_git, doc_html_zip, version, dev_version, push):
 
     # We started with a clean tree so restore it on error
     with git_rollback_on_error(sympy_doc_git, branch='gh-pages') as run:
@@ -56,10 +58,12 @@ def update_docs(sympy_doc_git, doc_html_zip, version, push):
         run('git', 'add', 'latest')
         run('git', 'commit', '-m', 'Add sympy %s docs' % version)
 
-        # Update indexes
-        run('./generate_indexes.py')
+        # Update versions.json
+        with open(join(sympy_doc_git, 'versions.json'), 'w') as f:
+            json.dump({'latest': version, 'dev': dev_version}, f)
         run('git', 'diff')
-        run('git', 'commit', '-a', '-m', 'Update indexes')
+        run('git', 'add', 'versions.json')
+        run('git', 'commit', '-m', 'Update versions.json')
 
         if push:
             run('git', 'push')

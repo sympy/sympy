@@ -98,6 +98,8 @@ is a polynomial over the simplest (almost) possible ring that does the job. It
 recursively builds the ring as it parses the given expression, adding
 generators to the ring when it needs them. Some examples::
 
+    >>> from sympy.polys.ring_series import rs_series
+    >>> from sympy.functions.elementary.trigonometric import sin
     >>> rs_series(sin(a + b), a, 5) # doctest: +SKIP
     1/24*sin(b)*a**4 - 1/2*sin(b)*a**2 + sin(b) - 1/6*cos(b)*a**3 + cos(b)*a
 
@@ -138,8 +140,8 @@ different atoms. For all practical purposes, we could let `b = 1/a` and `c =
 a**(1/7)` and do the manipulations. Effectively, expressions involving `1/a`
 and `a**(1/7)` (and their powers) will never simplify::
 
-    >>> expr*R(1/a) # doctest: +SKIP
-    (1/a)**2 + (1/a)*(a**(1/7))**3
+    >>> expr*R(1/a)
+    (1/a)**4 + (1/a)*(a**(1/7))**3
 
 This leads to similar issues with manipulating Laurent and Puiseux series as
 faced earlier. Fortunately, this time we have an elegant solution and are able
@@ -149,7 +151,7 @@ polynomials (see :class:`sympy.polys.polyoptions.Options`). Thus, when we want
 ``sring`` to allow rational exponents we supply a ``series=True`` flag to
 ``sring``::
 
-    >>> rs_series(sin(a**QQ(1, 2)), a, 3) # doctest: +SKIP
+    >>> rs_series(sin(a**QQ(1, 3)), a, 3)
     -1/5040*a**(7/3) + 1/120*a**(5/3) - 1/6*a + a**(1/3)
 
 Contribute

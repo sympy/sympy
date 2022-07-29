@@ -11,7 +11,7 @@ from sympy.functions.elementary.complexes import (adjoint, conjugate, re, sign, 
 from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys.polytools import gcd
 from sympy.series.order import O
@@ -484,13 +484,66 @@ def test_log_apply_evalf():
     assert value.epsilon_eq(Float("0.58496250072115618145373"))
 
 
+def test_log_leading_term():
+    p = Symbol('p')
+
+    # Test for STEP 3
+    assert log(1 + x + x**2).as_leading_term(x, cdir=1) == x
+    # Test for STEP 4
+    assert log(2*x).as_leading_term(x, cdir=1) == log(x) + log(2)
+    assert log(2*x).as_leading_term(x, cdir=-1) == log(x) + log(2)
+    assert log(-2*x).as_leading_term(x, cdir=1, logx=p) == p + log(2) + I*pi
+    assert log(-2*x).as_leading_term(x, cdir=-1, logx=p) == p + log(2) - I*pi
+    # Test for STEP 5
+    assert log(-2*x + (3 - I)*x**2).as_leading_term(x, cdir=1) == log(x) + log(2) - I*pi
+    assert log(-2*x + (3 - I)*x**2).as_leading_term(x, cdir=-1) == log(x) + log(2) - I*pi
+    assert log(2*x + (3 - I)*x**2).as_leading_term(x, cdir=1) == log(x) + log(2)
+    assert log(2*x + (3 - I)*x**2).as_leading_term(x, cdir=-1) == log(x) + log(2) - 2*I*pi
+    assert log(-1 + x - I*x**2 + I*x**3).as_leading_term(x, cdir=1) == -I*pi
+    assert log(-1 + x - I*x**2 + I*x**3).as_leading_term(x, cdir=-1) == -I*pi
+    assert log(-1/(1 - x)).as_leading_term(x, cdir=1) == I*pi
+    assert log(-1/(1 - x)).as_leading_term(x, cdir=-1) == I*pi
+
+
 def test_log_nseries():
+    p = Symbol('p')
+    assert log(1/x)._eval_nseries(x, 4, logx=-p, cdir=1) == p
+    assert log(1/x)._eval_nseries(x, 4, logx=-p, cdir=-1) == p + 2*I*pi
     assert log(x - 1)._eval_nseries(x, 4, None, I) == I*pi - x - x**2/2 - x**3/3 + O(x**4)
     assert log(x - 1)._eval_nseries(x, 4, None, -I) == -I*pi - x - x**2/2 - x**3/3 + O(x**4)
     assert log(I*x + I*x**3 - 1)._eval_nseries(x, 3, None, 1) == I*pi - I*x + x**2/2 + O(x**3)
     assert log(I*x + I*x**3 - 1)._eval_nseries(x, 3, None, -1) == -I*pi - I*x + x**2/2 + O(x**3)
     assert log(I*x**2 + I*x**3 - 1)._eval_nseries(x, 3, None, 1) == I*pi - I*x**2 + O(x**3)
     assert log(I*x**2 + I*x**3 - 1)._eval_nseries(x, 3, None, -1) == I*pi - I*x**2 + O(x**3)
+    assert log(2*x + (3 - I)*x**2)._eval_nseries(x, 3, None, 1) == log(2) + log(x) + \
+    x*(S(3)/2 - I/2) + x**2*(-1 + 3*I/4) + O(x**3)
+    assert log(2*x + (3 - I)*x**2)._eval_nseries(x, 3, None, -1) == -2*I*pi + log(2) + \
+    log(x) - x*(-S(3)/2 + I/2) + x**2*(-1 + 3*I/4) + O(x**3)
+    assert log(-2*x + (3 - I)*x**2)._eval_nseries(x, 3, None, 1) == -I*pi + log(2) + log(x) + \
+    x*(-S(3)/2 + I/2) + x**2*(-1 + 3*I/4) + O(x**3)
+    assert log(-2*x + (3 - I)*x**2)._eval_nseries(x, 3, None, -1) == -I*pi + log(2) + log(x) - \
+    x*(S(3)/2 - I/2) + x**2*(-1 + 3*I/4) + O(x**3)
+    assert log(sqrt(-I*x**2 - 3)*sqrt(-I*x**2 - 1) - 2)._eval_nseries(x, 3, None, 1) == -I*pi + \
+    log(sqrt(3) + 2) + I*x**2*(-2 + 4*sqrt(3)/3) + O(x**3)
+    assert log(-1/(1 - x))._eval_nseries(x, 3, None, 1) == I*pi + x + x**2/2 + O(x**3)
+    assert log(-1/(1 - x))._eval_nseries(x, 3, None, -1) == I*pi + x + x**2/2 + O(x**3)
+
+
+def test_log_series():
+    # Note Series at infinities other than oo/-oo were introduced as a part of
+    # pull request 23798. Refer https://github.com/sympy/sympy/pull/23798 for
+    # more information.
+    expr1 = log(1 + x)
+    expr2 = log(x + sqrt(x**2 + 1))
+
+    assert expr1.series(x, x0=I*oo, n=4) == 1/(3*x**3) - 1/(2*x**2) + 1/x + \
+    I*pi/2 - log(I/x) + O(x**(-4), (x, oo*I))
+    assert expr1.series(x, x0=-I*oo, n=4) == 1/(3*x**3) - 1/(2*x**2) + 1/x - \
+    I*pi/2 - log(-I/x) + O(x**(-4), (x, -oo*I))
+    assert expr2.series(x, x0=I*oo, n=4) == 1/(4*x**2) + I*pi/2 + log(2) - \
+    log(I/x) + O(x**(-4), (x, oo*I))
+    assert expr2.series(x, x0=-I*oo, n=4) == -1/(4*x**2) - I*pi/2 - log(2) + \
+    log(-I/x) + O(x**(-4), (x, -oo*I))
 
 
 def test_log_expand():
@@ -536,6 +589,11 @@ def test_log_simplify():
 
 def test_log_AccumBounds():
     assert log(AccumBounds(1, E)) == AccumBounds(0, 1)
+    assert log(AccumBounds(0, E)) == AccumBounds(-oo, 1)
+    assert log(AccumBounds(-1, E)) == S.NaN
+    assert log(AccumBounds(0, oo)) == AccumBounds(-oo, oo)
+    assert log(AccumBounds(-oo, 0)) == S.NaN
+    assert log(AccumBounds(-oo, oo)) == S.NaN
 
 
 @_both_exp_pow
@@ -729,3 +787,20 @@ def test_log_expand_factor():
 def test_issue_9116():
     n = Symbol('n', positive=True, integer=True)
     assert log(n).is_nonnegative is True
+
+
+def test_issue_18473():
+    assert exp(x*log(cos(1/x))).as_leading_term(x) == S.NaN
+    assert exp(x*log(tan(1/x))).as_leading_term(x) == S.NaN
+    assert log(cos(1/x)).as_leading_term(x) == S.NaN
+    assert log(tan(1/x)).as_leading_term(x) == S.NaN
+    assert log(cos(1/x) + 2).as_leading_term(x) == AccumBounds(0, log(3))
+    assert exp(x*log(cos(1/x) + 2)).as_leading_term(x) == 1
+    assert log(cos(1/x) - 2).as_leading_term(x) == S.NaN
+    assert exp(x*log(cos(1/x) - 2)).as_leading_term(x) == S.NaN
+    assert log(cos(1/x) + 1).as_leading_term(x) == AccumBounds(-oo, log(2))
+    assert exp(x*log(cos(1/x) + 1)).as_leading_term(x) == AccumBounds(0, 1)
+    assert log(sin(1/x)**2).as_leading_term(x) == AccumBounds(-oo, 0)
+    assert exp(x*log(sin(1/x)**2)).as_leading_term(x) == AccumBounds(0, 1)
+    assert log(tan(1/x)**2).as_leading_term(x) == AccumBounds(-oo, oo)
+    assert exp(2*x*(log(tan(1/x)**2))).as_leading_term(x) == AccumBounds(0, oo)

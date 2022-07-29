@@ -1,5 +1,6 @@
 """Polynomial factorization routines in characteristic zero. """
 
+from sympy.core.random import _randint
 
 from sympy.polys.galoistools import (
     gf_from_int_poly, gf_to_int_poly,
@@ -70,7 +71,6 @@ from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import (
     ExtraneousFactors, DomainError, CoercionFailed, EvaluationFailed)
 
-from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
@@ -163,7 +163,6 @@ def dup_zz_mignotte_bound(f, K):
 
     """
     from sympy.functions.combinatorial.factorials import binomial
-
     d = dup_degree(f)
     delta = _ceil(d / 2)
     delta2 = _ceil(delta / 2)
@@ -319,6 +318,8 @@ def dup_zz_zassenhaus(f, K):
     if n == 1:
         return [f]
 
+    from sympy.ntheory import isprime
+
     fc = f[-1]
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
@@ -423,6 +424,7 @@ def dup_zz_irreducible_p(f, K):
     e_fc = dup_content(f[1:], K)
 
     if e_fc:
+        from sympy.ntheory import factorint
         e_ff = factorint(int(e_fc))
 
         for p in e_ff.keys():
@@ -447,6 +449,13 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     >>> g = x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1
     >>> R.dup_cyclotomic_p(g)
     True
+
+    References
+    ==========
+
+    Bradford, Russell J., and James H. Davenport. "Effective tests for
+    cyclotomic polynomials." In International Symposium on Symbolic and
+    Algebraic Computation, pp. 244-251. Springer, Berlin, Heidelberg, 1988.
 
     """
     if K.is_QQ:
@@ -508,6 +517,7 @@ def dup_cyclotomic_p(f, K, irreducible=False):
 
 def dup_zz_cyclotomic_poly(n, K):
     """Efficiently generate n-th cyclotomic polynomial. """
+    from sympy.ntheory import factorint
     h = [K.one, -K.one]
 
     for p, k in factorint(n).items():
@@ -518,6 +528,8 @@ def dup_zz_cyclotomic_poly(n, K):
 
 
 def _dup_cyclotomic_decompose(n, K):
+    from sympy.ntheory import factorint
+
     H = [[K.one, -K.one]]
 
     for p, k in factorint(n).items():
@@ -977,7 +989,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     .. [2] [Geddes92]_
 
     """
-    from sympy.core.random import _randint
+    from sympy.ntheory import nextprime
 
     randint = _randint(seed)
 

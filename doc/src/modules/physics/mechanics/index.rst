@@ -80,6 +80,7 @@ Guide to Mechanics
     masses.rst
     kane.rst
     lagrange.rst
+    joints.rst
     symsystem.rst
     linearize.rst
     examples.rst
@@ -95,10 +96,10 @@ Mechanics API
     :maxdepth: 2
 
     api/part_bod.rst
+    api/body.rst
     api/kane_lagrange.rst
+    api/joint.rst
     api/system.rst
     api/linearize.rst
     api/expr_manip.rst
     api/printing.rst
-    api/body.rst
-    api/joint.rst

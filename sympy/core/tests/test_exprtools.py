@@ -317,6 +317,11 @@ def test_factor_terms():
         assert factor_terms(F(x, (y, 1, 10)) + x) == x * (1 + F(1, (y, 1, 10)))
         assert factor_terms(F(x*y + x*y**2, (y, 1, 10))) == x*F(y*(y + 1), (y, 1, 10))
 
+    # expressions involving Pow terms with base 0
+    assert factor_terms(0**(x - 2) - 1) == 0**(x - 2) - 1
+    assert factor_terms(0**(x + 2) - 1) == 0**(x + 2) - 1
+    assert factor_terms((0**(x + 2) - 1).subs(x,-2)) == 0
+
 
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
@@ -355,6 +360,8 @@ def test_factor_nc():
     factor_nc_test(x*(n*m + 1))
     factor_nc_test(x*(n*m + x))
     factor_nc_test(x*(x*n*m + 1))
+    factor_nc_test(n*(m/x + o))
+    factor_nc_test(m*(n + o/2))
     factor_nc_test(x*n*(x*m + 1))
     factor_nc_test(x*(m*n + x*n*m))
     factor_nc_test(n*(1 - m)*n**2)

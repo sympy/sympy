@@ -37,7 +37,7 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> A = Matrix([
     ...     [1, 3, 1, 4],
     ...     [2, 7, 3, 9],
@@ -113,7 +113,7 @@ def _liupc(M):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> S = SparseMatrix([
     ... [1, 0, 3, 2],
     ... [0, 0, 1, 0],
@@ -161,7 +161,7 @@ def _row_structure_symbolic_cholesky(M):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> S = SparseMatrix([
     ... [1, 0, 3, 2],
     ... [0, 0, 1, 0],
@@ -204,7 +204,7 @@ def _cholesky(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     >>> A.cholesky()
     Matrix([
@@ -298,7 +298,7 @@ def _cholesky_sparse(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
     >>> A.cholesky()
     Matrix([
@@ -412,7 +412,7 @@ def _LDLdecomposition(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, eye
+    >>> from sympy import Matrix, eye
     >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     >>> L, D = A.LDLdecomposition()
     >>> L
@@ -499,7 +499,7 @@ def _LDLdecomposition_sparse(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     >>> L, D = A.LDLdecomposition()
     >>> L
@@ -1315,8 +1315,8 @@ def _singular_value_decomposition(A):
 
         S = S.zeros(len(Singular_vals))
 
-        for i in range(len(Singular_vals)):
-            S[i, i] = Singular_vals[i]
+        for i, sv in enumerate(Singular_vals):
+            S[i, i] = sv
 
         V, _ = V.QRdecomposition()
         U = A * V * S.inv()
@@ -1333,8 +1333,8 @@ def _singular_value_decomposition(A):
 
         S = S.zeros(len(Singular_vals))
 
-        for i in range(len(Singular_vals)):
-            S[i, i] = Singular_vals[i]
+        for i, sv in enumerate(Singular_vals):
+            S[i, i] = sv
 
         U, _ = U.QRdecomposition()
         V = AH * U * S.inv()
@@ -1363,7 +1363,7 @@ def _QRdecomposition_optional(M, normalize=True):
             Q[:, j] -= Q[:, i] * R[i, j]
 
         Q[:, j] = dps(Q[:, j])
-        if Q[:, j].is_zero_matrix is False:
+        if Q[:, j].is_zero_matrix is not True:
             ranked.append(j)
             R[j, j] = M.one
 
