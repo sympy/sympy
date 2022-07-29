@@ -215,10 +215,11 @@ Equation
     [*`evalf`*](sympy.core.evalf.EvalfMixin.evalf) is the method present on
     every {term}`Expr` object that evaluates it to a floating-point numerical
     value, or converts the constant parts of the expression to a numerical
-    value if it contains {term}`symbols <symbol>`. The {meth}`~.n` method and
-    {func}`~.N` function are both shorthands for `evalf`. "evalf" stands for
-    "evaluate floating-point". `evalf` uses {term}`mpmath` under the hood to
-    evaluate expressions to arbitrary precision.
+    value if it contains {term}`symbols <symbol>`. The {meth}`.n()
+    <sympy.core.evalf.EvalfMixin.n>` method and {func}`~.N` function are both
+    shorthands for `evalf`. "evalf" stands for "evaluate floating-point".
+    `evalf` uses {term}`mpmath` under the hood to evaluate expressions to
+    arbitrary precision.
 
 Evaluate
 
