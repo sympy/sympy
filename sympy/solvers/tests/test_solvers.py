@@ -114,6 +114,446 @@ def test_guess_transcendental():
     assert guess_solve_strategy(a*x**b - y, x)  # == GS_TRANSCENDENTAL
 
 
+def test_solve_io():
+    lx = x
+    nx = x**2 - 4
+    lxly = x - y + 1
+    lxny = x + y**2 - 1
+    nxly = y + x**2 - 1
+    nxny = y**2 + x**2 - 1
+    flags = {}, dict(dict=True), dict(set=True)
+    e = lx
+    assert [solve(e, **f) for f in flags] == \
+        [[0],
+        [{x: 0}],
+        ([x], {(0,)})]
+    assert [solve([e], **f) for f in flags] == [
+        {x: 0},
+        [{x: 0}],
+        ([x], {(0,)})]
+    assert [solve(e, x, **f) for f in flags] == \
+        [[0],
+        [{x: 0}],
+        ([x], {(0,)})]
+    assert [solve([e], x, **f) for f in flags] == [
+        {x: 0},
+        [{x: 0}],
+        ([x], {(0,)})]
+    assert [solve(e, {x}, **f) for f in flags] == \
+        [[0],
+        [{x: 0}],
+        ([x], {(0,)})]
+    assert [solve([e], {x}, **f) for f in flags] == [
+        {x: 0},
+        [{x: 0}],
+        ([x], {(0,)})]
+    assert [solve(e, y, x, **f) for f in flags] == \
+        [[(y, 0)],
+        [{x: 0}],
+        ([y, x], {(y, 0)})]
+        #([x, y], {(0, y)})]master
+    assert [solve([e], y, x, **f) for f in flags] == [
+        {x: 0},
+        [{x: 0}],
+        ([y, x], {(y, 0)})]
+        #([x], {(0,)})]#master
+    assert [solve(e, {y, x}, **f) for f in flags] == \
+        [[{x: 0}],
+        [{x: 0}],
+        ([x], {(0,)})]
+    assert [solve([e], {y, x}, **f) for f in flags] == [
+        #[{x: 0}],
+        {x: 0},#master
+        [{x: 0}],
+        ([x], {(0,)})]
+    assert [solve(e, y, **f) for f in flags] == \
+        [[],
+        [],
+        []] #([y], set())]
+    assert [solve([e], y, **f) for f in flags] == [
+        [],
+        [],
+        []] #([y], set())]
+    e = nx
+    def lot(lod):
+        from sympy.core.sorting import ordered
+        s = list(ordered(lod[0].keys()))
+        return [tuple([d[i] for i in s]) for d in lod]
+    assert [solve(e, **f) for f in flags] == \
+        [[-2, 2],
+        [{x: -2}, {x: 2}],
+        ([x], {(2,), (-2,)})]
+    assert [solve([e], **f) for f in flags] == [
+        [{x: -2}, {x: 2}],
+        [{x: -2}, {x: 2}],
+        ([x], {(2,), (-2,)})]
+    assert [solve(e, x, **f) for f in flags] == \
+        [[-2, 2],
+        [{x: -2}, {x: 2}],
+        ([x], {(2,), (-2,)})]
+    assert [solve([e], x, **f) for f in flags] == [
+        lot([{x: -2}, {x: 2}]),
+        [{x: -2}, {x: 2}],
+        ([x], {(2,), (-2,)})]
+    assert [solve(e, {x}, **f) for f in flags] == \
+        [[-2, 2],
+        [{x: -2}, {x: 2}],
+        ([x], {(2,), (-2,)})]
+    assert [solve([e], {x}, **f) for f in flags] == [
+        [{x: -2}, {x: 2}],
+        [{x: -2}, {x: 2}],
+        ([x], {(2,), (-2,)})]
+    assert [solve(e, x, y, **f) for f in flags] == \
+        [[(-2, y), (2, y)],
+        [{x: -2}, {x: 2}],
+        ([x, y], {(2, y), (-2, y)})]
+    assert [solve([e], x, y, **f) for f in flags] == [
+        [(-2, y), (2, y)],
+        [{x: -2}, {x: 2}],
+        ([x, y], {(2, y), (-2, y)})]
+    assert [solve(e, y, x, **f) for f in flags] == \
+        [[(y, -2), (y, 2)],
+        [{x: -2}, {x: 2}],
+        ([y, x], {(y, -2), (y, 2)})]
+    assert [solve([e], y, x, **f) for f in flags] == [
+        [(y, -2), (y, 2)],
+        [{x: -2}, {x: 2}],
+        ([y, x], {(y, -2), (y, 2)})]
+    assert [solve(e, {y, x}, **f) for f in flags] == \
+        [[{x: -2}, {x: 2}],
+        [{x: -2}, {x: 2}],
+        ([x], {(2,), (-2,)})]
+    assert [solve(e, y, **f) for f in flags] == \
+        [[],
+        [],
+        []] # ([y], set())]
+    e = lxly
+    assert [solve(e, **f) for f in flags] == \
+        [[{x: y - 1}],
+        [{x: y - 1}],
+        ([x], {(y - 1,)})],[solve(e, **f) for f in flags]
+    assert [solve([e], **f) for f in flags] == [
+        {x: y - 1}, #[{x: y - 1}],
+        [{x: y - 1}],
+        ([x], {(y - 1,)})]
+    assert [solve(e, x, **f) for f in flags] == \
+        [[y - 1],
+        [{x: y - 1}],
+        ([x], {(y - 1,)})]
+    assert [solve([e], x, **f) for f in flags] == [
+        {x: y - 1},
+        [{x: y - 1}],
+        ([x], {(y - 1,)})]
+    assert [solve(e, {x}, **f) for f in flags] == \
+        [[y - 1],
+        [{x: y - 1}],
+        ([x], {(y - 1,)})]
+    assert [solve([e], {x}, **f) for f in flags] == [
+        {x: y - 1},
+        [{x: y - 1}],
+        ([x], {(y - 1,)})]
+    assert [solve(e, x, y, **f) for f in flags] == \
+        [[(y - 1, y)],
+        [{x: y - 1}],
+        ([x, y], {(y - 1, y)})]
+    assert [solve([e], x, y, **f) for f in flags] == [
+        {x: y - 1},
+        [{x: y - 1}],
+        ([x, y], {(y - 1, y)})]
+    assert [solve(e, y, x, **f) for f in flags] == \
+        [[(x + 1, x)],
+        [{y: x + 1}],
+        ([y, x], {(x + 1, x)})]
+    assert [solve([e], y, x, **f) for f in flags] == [
+        {y: x + 1}, #[(x + 1, x)],
+        [{y: x + 1}],
+        ([y, x], {(x + 1, x)})]
+    assert [solve(e, {y, x}, **f) for f in flags] == \
+        [[{x: y - 1}],
+        [{x: y - 1}],
+        ([x], {(y - 1,)})]
+    assert [solve([e], {y, x}, **f) for f in flags] == [
+        {x: y - 1}, #[{x: y - 1}],
+        [{x: y - 1}],
+        ([x], {(y - 1,)})]
+    assert [solve(e, x, z, y, **f) for f in flags] == \
+        [[(y - 1, z, y)],
+        [{x: y - 1}],
+        ([x, z, y], {(y - 1, z, y)})]
+    assert [solve([e], x, z, y, **f) for f in flags] == [
+        {x: y - 1}, #[(y - 1, z, y)],
+        [{x: y - 1}],
+        ([x, z, y], {(y - 1, z, y)})]
+    e = lxny
+    assert [solve(e, **f) for f in flags] == \
+        [[{x: 1 - y**2}],
+        [{x: 1 - y**2}],
+        ([x], {(1 - y**2,)})]
+    Y = (y - 1)*(y + 1)*-1  # XXX solution is not being simplified
+    assert [solve([e], **f) for f in flags] == [
+        [{x: Y}],
+        [{x: Y}],
+        ([x], {(Y,)})]
+    assert [solve(e, x, **f) for f in flags] == \
+        [[1 - y**2],
+        [{x: 1 - y**2}],
+        ([x], {(1 - y**2,)})]
+    assert [solve([e], x, **f) for f in flags] == [
+        {x: 1 - y**2},
+        [{x: 1 - y**2}],
+        ([x], {(1 - y**2,)})],[solve(e, x, **f) for f in flags]
+    assert [solve(e, {x}, **f) for f in flags] == \
+        [[1 - y**2],
+        [{x: 1 - y**2}],
+        ([x], {(1 - y**2,)})]
+    assert [solve([e], {x}, **f) for f in flags] == [
+        {x: 1 - y**2},
+        [{x: 1 - y**2}],
+        ([x], {(1 - y**2,)})],[solve(e, x, **f) for f in flags]
+    assert [solve(e, x, y, **f) for f in flags] == \
+        [[(1 - y**2, y)],
+        [{x: 1 - y**2}],
+        ([x, y], {(1 - y**2, y)})]
+    assert [solve([e], x, y, **f) for f in flags] == [
+        [(Y, y)],
+        [{x: Y}],
+        ([x, y], {(Y, y)})]
+    assert [solve(e, y, x, **f) for f in flags] == \
+        [[(y, 1 - y**2)],
+        [{x: 1 - y**2}],
+        ([y, x], {(y, 1 - y**2)})]
+    assert [solve([e], y, x, **f) for f in flags] == [
+        [(y, Y)],
+        [{x: Y}],
+        ([y, x], {(y, Y)})]
+    assert [solve(e, {y, x}, **f) for f in flags] == \
+        [[{x: 1 - y**2}],
+        [{x: 1 - y**2}],
+        ([x], {(1 - y**2,)})]
+    assert [solve([e], {y, x}, **f) for f in flags] == [
+        [{x: Y}],
+        [{x: Y}],
+        ([x], {(Y,)})]
+    assert [solve(e, x, z, y, **f) for f in flags] == \
+        [[(1 - y**2, z, y)],
+        [{x: 1 - y**2}],
+        ([x, z, y], {(1 - y**2, z, y)})]
+    assert [solve([e], x, z, y, **f) for f in flags] == [
+        [(Y, z, y)],
+        [{x: Y}],
+        ([x, z, y], {(Y, z, y)})]
+    assert [solve(e, {x, z, y}, **f) for f in flags] == \
+        [[{x: 1 - y**2}],
+        [{x: 1 - y**2}],
+        ([x], {(1 - y**2,)})]
+    assert [solve([e], {x, z, y}, **f) for f in flags] == [
+        [{x: Y}],
+        [{x: Y}],
+        ([x], {(Y,)})]
+    e = nxly
+    assert [solve(e, **f) for f in flags] == \
+        [[{y: 1 - x**2}],
+        [{y: 1 - x**2}],
+        ([y], {(1 - x**2,)})]
+    assert [solve([e], x, **f) for f in flags] == [
+        lot([{x: -sqrt(1 - y)}, {x: sqrt(1 - y)}]),
+        [{x: -sqrt(1 - y)}, {x: sqrt(1 - y)}],
+        ([x], {(-sqrt(1 - y),), (sqrt(1 - y),)})]
+    assert [solve(e, {x}, **f) for f in flags] == \
+        [[-sqrt(1 - y), sqrt(1 - y)],
+        [{x: -sqrt(1 - y)},
+        {x: sqrt(1 - y)}],
+        ([x], {(-sqrt(1 - y),), (sqrt(1 - y),)})]
+    assert [solve([e], {x}, **f) for f in flags] == [
+        [{x: -sqrt(1 - y)}, {x: sqrt(1 - y)}],
+        [{x: -sqrt(1 - y)}, {x: sqrt(1 - y)}],
+        ([x], {(-sqrt(1 - y),), (sqrt(1 - y),)})]
+    assert [solve(e, x, y, **f) for f in flags] == \
+        [[(x, 1 - x**2)],
+        [{y: 1 - x**2}],
+        ([x, y], {(x, 1 - x**2)})]
+    assert [solve([e], x, y, **f) for f in flags] == [
+        [(-sqrt(1 - y), y), (sqrt(1 - y), y)],
+        [{x: -sqrt(1 - y)}, {x: sqrt(1 - y)}],
+        ([x, y], {(-sqrt(1 - y), y), (sqrt(1 - y), y)})]
+    assert [solve(e, y, x, **f) for f in flags] == \
+        [[(1 - x**2, x)],
+        [{y: 1 - x**2}],
+        ([y, x], {(1 - x**2, x)})]
+    assert [solve([e], y, x, **f) for f in flags] == [
+        [(y, -sqrt(1 - y)), (y, sqrt(1 - y))],
+        [{x: -sqrt(1 - y)}, {x: sqrt(1 - y)}],
+        ([y, x], {(y, -sqrt(1 - y)), (y, sqrt(1 - y))})]
+    assert [solve(e, {y, x}, **f) for f in flags] == \
+        [[{y: 1 - x**2}],
+        [{y: 1 - x**2}],
+        ([y], {(1 - x**2,)})]
+    assert [solve([e], {y, x}, **f) for f in flags] == [
+        [{x: -sqrt(1 - y)}, {x: sqrt(1 - y)}],
+        [{x: -sqrt(1 - y)}, {x: sqrt(1 - y)}],
+        ([x], {(sqrt(1 - y),), (-sqrt(1 - y),)})]
+    assert [solve(e, x, z, y, **f) for f in flags] == \
+        [[(x, z, 1 - x**2)],
+        [{y: 1 - x**2}],
+        ([x, z, y], {(x, z, 1 - x**2)})]
+    assert [solve([e], x, z, y, **f) for f in flags] == [
+        [(-sqrt(1 - y), z, y), (sqrt(1 - y), z, y)],
+        [{x: -sqrt(1 - y)}, {x: sqrt(1 - y)}],
+        ([x, z, y], {(-sqrt(1 - y), z, y), (sqrt(1 - y), z, y)})]
+    assert [solve(e, {x, z, y}, **f) for f in flags] == \
+        [[{y: 1 - x**2}],
+        [{y: 1 - x**2}],
+        ([y], {(1 - x**2,)})]
+    assert [solve([e], {x, z, y}, **f) for f in flags] == [
+        [{x: -sqrt(1 - y)}, {x: sqrt(1 - y)}],
+        [{x: -sqrt(1 - y)}, {x: sqrt(1 - y)}],
+        ([x], {(sqrt(1 - y),), (-sqrt(1 - y),)})]
+    e = nxny
+    assert [solve(e, **f) for f in flags] == \
+        [[{x: -sqrt(1 - y**2)}, {x: sqrt(1 - y**2)}],
+        [{x: -sqrt(1 - y**2)}, {x: sqrt(1 - y**2)}],
+        ([x], {(-sqrt(1 - y**2),), (sqrt(1 - y**2),)})]
+    assert [solve([e], **f) for f in flags] == [
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        ([x], {(sqrt(Y),), (-sqrt(Y),)})]
+    assert [solve(e, x, **f) for f in flags] == \
+        [[-sqrt(1 - y**2), sqrt(1 - y**2)],
+        [{x: -sqrt(1 - y**2)}, {x: sqrt(1 - y**2)}],
+        ([x], {(-sqrt(1 - y**2),), (sqrt(1 - y**2),)})]
+    assert [solve([e], x, **f) for f in flags] == [
+        lot([{x: -sqrt(Y)}, {x: sqrt(Y)}]),
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        ([x], {(sqrt(Y),), (-sqrt(Y),)})]
+    assert [solve(e, {x}, **f) for f in flags] == \
+        [[-sqrt(1 - y**2), sqrt(1 - y**2)],
+        [{x: -sqrt(1 - y**2)}, {x: sqrt(1 - y**2)}],
+        ([x], {(-sqrt(1 - y**2),), (sqrt(1 - y**2),)})]
+    assert [solve([e], {x}, **f) for f in flags] == [
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        ([x], {(sqrt(Y),), (-sqrt(Y),)})]
+    assert [solve(e, x, y, **f) for f in flags] == \
+        [[(-sqrt(1 - y**2), y), (sqrt(1 - y**2), y)],
+        [{x: -sqrt(1 - y**2)}, {x: sqrt(1 - y**2)}],
+        ([x, y], {(-sqrt(1 - y**2), y), (sqrt(1 - y**2), y)})]
+    assert [solve([e], x, y, **f) for f in flags] == [
+        [(-sqrt(Y), y), (sqrt(Y), y)],
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        ([x, y], {(-sqrt(Y), y), (sqrt(Y), y)})]
+    assert [solve(e, y, x, **f) for f in flags] == \
+        [[(-sqrt(1 - x**2), x), (sqrt(1 - x**2), x)],
+        [{y: -sqrt(1 - x**2)}, {y: sqrt(1 - x**2)}],
+        ([y, x], {(sqrt(1 - x**2), x), (-sqrt(1 - x**2), x)})]
+    assert [solve([e], y, x, **f) for f in flags] == [
+        [(y, -sqrt(Y)), (y, sqrt(Y))],
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        ([y, x], {(y, sqrt(Y)), (y, -sqrt(Y))})]
+    assert [solve(e, {y, x}, **f) for f in flags] == \
+        [[{x: -sqrt(1 - y**2)}, {x: sqrt(1 - y**2)}],
+        [{x: -sqrt(1 - y**2)}, {x: sqrt(1 - y**2)}],
+        ([x], {(-sqrt(1 - y**2),), (sqrt(1 - y**2),)})]
+    assert [solve([e], {y, x}, **f) for f in flags] == [
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        ([x], {(sqrt(Y),), (-sqrt(Y),)})]
+    assert [solve(e, x, z, y, **f) for f in flags] == \
+        [[(-sqrt(1 - y**2), z, y), (sqrt(1 - y**2), z, y)],
+        [{x: -sqrt(1 - y**2)}, {x: sqrt(1 - y**2)}],
+        ([x, z, y], {(sqrt(1 - y**2), z, y), (-sqrt(1 - y**2), z, y)})]
+    assert [solve([e], x, z, y, **f) for f in flags] == [
+        [(-sqrt(Y), z, y), (sqrt(Y), z, y)],
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        ([x, z, y], {(-sqrt(Y), z, y), (sqrt(Y), z, y)})]
+    assert [solve(e, {x, z, y}, **f) for f in flags] == \
+        [[{x: -sqrt(1 - y**2)}, {x: sqrt(1 - y**2)}],
+        [{x: -sqrt(1 - y**2)}, {x: sqrt(1 - y**2)}],
+        ([x], {(-sqrt(1 - y**2),), (sqrt(1 - y**2),)})]
+    assert [solve([e], {x, z, y}, **f) for f in flags] == [
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        [{x: -sqrt(Y)}, {x: sqrt(Y)}],
+        ([x], {(sqrt(Y),), (-sqrt(Y),)})]
+
+    e = lx, lxny
+    assert [solve([*e], **f) for f in flags] == \
+        [[{x: 0, y: -1}, {x: 0, y: 1}],
+        [{x: 0, y: -1}, {x: 0, y: 1}],
+        ([x, y], {(0, -1), (0, 1)})]
+    assert [solve([*e], x, **f) for f in flags] == \
+        [[],
+        [],
+        ([x], set())]
+    assert [solve([*e], {x}, **f) for f in flags] == \
+        [[],
+        [],
+        ([x], set())]
+    assert [solve([*e], x, y, **f) for f in flags] == \
+        [[(0, -1), (0, 1)],
+        [{x: 0, y: -1}, {x: 0, y: 1}],
+        ([x, y], {(0, -1), (0, 1)})]
+    assert [solve([*e], y, x, **f) for f in flags] == \
+        [[(-1, 0), (1, 0)],
+        [{y: -1, x: 0}, {y: 1, x: 0}],
+        ([y, x], {(-1, 0), (1, 0)})]
+    assert [solve([*e], {y, x}, **f) for f in flags] == \
+        [[{x: 0, y: -1}, {x: 0, y: 1}],
+        [{x: 0, y: -1}, {x: 0, y: 1}],
+        ([x, y], {(0, -1), (0, 1)})]
+    assert [solve([*e], x, z, y, **f) for f in flags] == \
+        [[(0, z, -1), (0, z, 1)],
+        [{x: 0, y: -1}, {x: 0, y: 1}],
+        ([x, z, y], {(0, z, 1), (0, z, -1)})]
+    assert [solve([*e], {x, z, y}, **f) for f in flags] == \
+        [[{x: 0, y: -1}, {x: 0, y: 1}],
+        [{x: 0, y: -1}, {x: 0, y: 1}],
+        ([x, y], {(0, -1), (0, 1)})]
+    # monotonic solution is treated like linear so some of
+    # the lines below should be a simple dict
+    assert solve((exp(x) - 1, y - 2)) == {x: 0, y: 2}
+    e = lx, nxly
+    assert [solve([*e], **f) for f in flags] == \
+        [[{x: 0, y: 1}], # {x: 0, y: 1},
+        [{x: 0, y: 1}],
+        ([x, y], {(0, 1)})]
+    assert [solve([*e], x, **f) for f in flags] == \
+        [[],
+        [],
+        ([x], set())]
+    assert [solve([*e], {x}, **f) for f in flags] == \
+        [[],
+        [],
+        ([x], set())]
+    assert [solve([*e], x, y, **f) for f in flags] == \
+        [[(0, 1)], #{x: 0, y: 1},
+        [{x: 0, y: 1}],
+        ([x, y], {(0, 1)})]
+    assert [solve([*e], y, x, **f) for f in flags] == \
+        [[(1, 0)], # {x: 0, y: 1},
+        [{y: 1, x: 0}],
+        ([y, x], {(1, 0)})]
+    assert [solve([*e], {y, x}, **f) for f in flags] == \
+        [[{x: 0, y: 1}], #{x: 0, y: 1},
+        [{x: 0, y: 1}],
+        ([x, y], {(0, 1)})]
+    assert [solve([*e], x, z, y, **f) for f in flags] == \
+        [[(0, z, 1)],
+        [{x: 0, y: 1}],
+        ([x, z, y], {(0, z, 1)})]
+    assert [solve([*e], {x, z, y}, **f) for f in flags] == \
+        [[{x: 0, y: 1}],
+        [{x: 0, y: 1}],
+        ([x, y], {(0, 1)})]
+    e = a*x + b - 2*x - y
+    assert [solve(e, a, b, **f) for f in flags] == \
+        [{a: 2, b: y},
+        [{a: 2, b: y}],
+        ([a, b], {(2, y)})]
+    assert [solve(e - b + b**2, a, b, **f) for f in flags] == [
+        [((-b**2 + 2*x + y)/x, b)], # master solved as nonlinear coeff sys
+        [{a: (-b**2 + 2*x + y)/x}],
+        ([a, b], {((-b**2 + 2*x + y)/x, b)})]
+
+
 def test_solve_args():
     # equation container, issue 5113
     ans = {x: -3, y: 1}
