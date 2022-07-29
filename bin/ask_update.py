@@ -26,9 +26,9 @@ from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.facts import (get_known_facts,
     generate_known_facts_dict, get_known_facts_keys)
 from sympy.core import Symbol
+from textwrap import dedent, wrap
 
 def generate_code():
-    from textwrap import dedent, wrap
 
     LINE = ",\n        "
     HANG = ' '*8
@@ -94,5 +94,23 @@ def generate_code():
     return code_string % (p, m)
 
 with open('sympy/assumptions/ask_generated.py', 'w') as f:
-    code = generate_code()
+     code = generate_code()
+     f.write(code)
+
+from sympy.core.assumptions import _generate_assumption_rules
+
+with open('sympy/core/assumptions_generated.py', 'w') as f:
+    representation = _generate_assumption_rules()._to_python()
+
+    code_string = dedent('''\
+    """
+    Do NOT manually edit this file.
+    Instead, run ./bin/ask_update.py.
+    """
+
+    _pre_calculated_assumptions = %s
+    
+    ''')
+
+    code = code_string % (representation,)
     f.write(code)

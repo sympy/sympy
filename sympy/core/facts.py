@@ -422,7 +422,7 @@ class FactRules:
 
             a = Logic.fromstring(a)
             b = Logic.fromstring(b)
-            print(b)
+
             if op == '->':
                 P.process_rule(a, b)
             elif op == '==':
