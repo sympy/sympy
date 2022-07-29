@@ -327,24 +327,27 @@ class Prover:
 
         # a -> b & c    -->  a -> b  ;  a -> c
         # (?) FIXME this is only correct when b & c != null !
+        
         if isinstance(b, And):
-            for barg in b.args:
+            sorted_bargs = sorted(b.args, key=str)
+            for barg in sorted_bargs:
                 self.process_rule(a, barg)
 
         # a -> b | c    -->  !b & !c -> !a
         #               -->   a & !b -> c
         #               -->   a & !c -> b
         elif isinstance(b, Or):
+            sorted_bargs = sorted(b.args, key=str)
             # detect tautology first
             if not isinstance(a, Logic):    # Atom
                 # tautology:  a -> a|c|...
-                if a in b.args:
+                if a in sorted_bargs:
                     raise TautologyDetected(a, b, 'a -> a|c|...')
             self.process_rule(And(*[Not(barg) for barg in b.args]), Not(a))
 
-            for bidx in range(len(b.args)):
-                barg = b.args[bidx]
-                brest = b.args[:bidx] + b.args[bidx + 1:]
+            for bidx in range(len(sorted_bargs)):
+                barg = sorted_bargs[bidx]
+                brest = sorted_bargs[:bidx] + sorted_bargs[bidx + 1:]
                 self.process_rule(And(a, Not(barg)), Or(*brest))
 
         # left part
@@ -352,15 +355,17 @@ class Prover:
         # a & b -> c    -->  IRREDUCIBLE CASE -- WE STORE IT AS IS
         #                    (this will be the basis of beta-network)
         elif isinstance(a, And):
-            if b in a.args:
+            sorted_aargs = sorted(a.args, key=str)
+            if b in sorted_aargs:
                 raise TautologyDetected(a, b, 'a & b -> a')
             self.proved_rules.append((a, b))
             # XXX NOTE at present we ignore  !c -> !a | !b
 
         elif isinstance(a, Or):
-            if b in a.args:
+            sorted_aargs = sorted(a.args, key=str)
+            if b in sorted_aargs:
                 raise TautologyDetected(a, b, 'a | b -> a')
-            for aarg in a.args:
+            for aarg in sorted_aargs:
                 self.process_rule(aarg, b)
 
         else:
@@ -417,7 +422,7 @@ class FactRules:
 
             a = Logic.fromstring(a)
             b = Logic.fromstring(b)
-
+            print(b)
             if op == '->':
                 P.process_rule(a, b)
             elif op == '==':
@@ -464,6 +469,7 @@ class FactRules:
     def _to_python(self):
         """ Generate a plain python representation of the instance """
         d={}
+        # defaultdict type
         for key in ['full_implications', 'beta_triggers', 'prereq']:
             value = getattr(self, key)
             d[key] = dict(value)
@@ -484,7 +490,7 @@ class FactRules:
             d.update(data[key])
             setattr(self, key, d)
         for key in ['beta_rules']:
-            d= list(data[key])
+            d= sorted(list(data[key]))
             setattr(self, key, d)
         for key in ['defined_facts']:
             d= set(data[key])
