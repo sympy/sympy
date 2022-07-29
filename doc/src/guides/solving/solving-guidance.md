@@ -1,6 +1,11 @@
 # Solving Guidance
 
-Here are guidelines that apply to many types of solving.
+These guidelines apply to many types of solving.
+
+## Numeric solutions
+Solving functions such as {func}`~.solve` and {func}`~.solveset` will not try to
+find a numeric solution, only a mathematically-exact symbolic solution. So if
+you want a numeric solution, use {func}`~.nsolve`.
 
 ## Equations with no analytical solution
 
@@ -91,9 +96,8 @@ result. For example, this exact equation can be solved:
 [{x: 2**(sqrt(2)/2)}]
 ```
 
-but if you use the inexact equation `eq = x**sqrt(2).n() - 2` (where
-{func}`evalf n <sympy.core.evalf.EvalfMixin.n>` is the numerical evaluation
-function), SymPy will not return a result despite attempting for a long time. 
+but if you use the inexact equation `eq = x**1.4142135623730951 - 2`, SymPy will
+not return a result despite attempting for a long time. 
 
 ## How to parse a string representing the equation
 
