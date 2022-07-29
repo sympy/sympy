@@ -339,17 +339,17 @@ Immutable
 
     In Python, objects are *immutable* if they can not be modified in-place.
     In order to change an immutable object, a new object must be created. In
-    SymPy, all objects are immutable. This means that all functions that
-    operate on {term}`expressions <expression>` will return a new expression
-    and leave the original unchanged. Performing an operation on an expression
-    will never change other objects or expressions that reference that
-    expression. This also means that any two objects that are {term}`equal
-    <structural equality>` are completely interchangeable and may be thought
-    of as being the same object, even if they happen to be two different
-    objects in memory. Immutability makes it easier to maintain a mental model
-    of code, because there is no hidden state. SymPy objects being immutable
-    also means that they are hashable, which allows them to be used as
-    dictionary keys.
+    SymPy, all {term}`Basic` objects are immutable. This means that all
+    functions that operate on {term}`expressions <expression>` will return a
+    new expression and leave the original unchanged. Performing an operation
+    on an expression will never change other objects or expressions that
+    reference that expression. This also means that any two objects that are
+    {term}`equal <structural equality>` are completely interchangeable and may
+    be thought of as being the same object, even if they happen to be two
+    different objects in memory. Immutability makes it easier to maintain a
+    mental model of code, because there is no hidden state. SymPy objects
+    being immutable also means that they are hashable, which allows them to be
+    used as dictionary keys.
 
 Interactive
 
