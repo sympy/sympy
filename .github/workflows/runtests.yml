@@ -197,6 +197,10 @@ jobs:
       - if: ${{ contains(matrix.python-version, '3.11') }}
         run: pip install git+https://github.com/matplotlib/matplotlib@main
 
+      # SciPy 1.9.0 fails to compile under PyPy
+      - if: ${{ matrix.python-version == 'pypy-3.8' }}
+        run: pip install scipy!=1.9.0
+
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
                          aesara wurlitzer autowrap                            \

@@ -278,7 +278,7 @@ Mathematical Equivalents
 +-----------------------+-----------------------+-----------------------+
 | ``Roots(Polynomial(   | ``sm.solve(           | For more information  |
 | a*x^2 + b*x + c, x,   | sm.Poly(a*x**2 +      | refer to              |
-| 2)``                  | b*x + c))``           | :ref:`solvers`.       |
+| 2)``                  | b*x + c))``           | :ref:`solvers-docs`.  |
 |                       |                       |                       |
 | ``Roots([1;2;3])``    | ``sm.solve(sm.Poly(   | For numerical         |
 |                       | sm.Matrix([1,2,3]).   | computation related   |
@@ -302,7 +302,7 @@ Mathematical Equivalents
 |                       |                       | ``nonlinsolve`` and   |
 |                       |                       | ``nsolve`` in         |
 |                       |                       | :ref:`solvers.        |
-|                       |                       | <solvers>`            |
+|                       |                       | <solvers-docs>`       |
 +-----------------------+-----------------------+-----------------------+
 | ``RowMatrix = [1, 2,  | ``row_matrix =        | For more information  |
 | 3, 4]``               | sm.Matrix([[1],[2],   | refer to              |

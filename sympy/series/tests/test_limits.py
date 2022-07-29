@@ -194,6 +194,12 @@ def test_floor():
     assert limit(x*floor(3/x)/2, x, 0, '+') == Rational(3, 2)
     assert limit(floor(x + 1/2) - floor(x), x, oo) == AccumBounds(-S.Half, S(3)/2)
 
+    # test issue 9158
+    assert limit(floor(atan(x)), x, oo) == 1
+    assert limit(floor(atan(x)), x, -oo) == -2
+    assert limit(ceiling(atan(x)), x, oo) == 2
+    assert limit(ceiling(atan(x)), x, -oo) == -1
+
 
 def test_floor_requires_robust_assumptions():
     assert limit(floor(sin(x)), x, 0, "+") == 0

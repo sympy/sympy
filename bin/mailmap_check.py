@@ -53,7 +53,11 @@ def main(*args):
 
     # find who git knows ahout
     try:
-        git_people = get_authors_from_git(skip_last=args.skip_last_commit)
+        git_people = get_authors_from_git()
+        if args.skip_last_commit:
+            git_people_skip = get_authors_from_git(skip_last=True)
+        else:
+            git_people_skip = git_people
     except AssertionError as msg:
         print(red(msg))
         return 1
@@ -81,7 +85,12 @@ def main(*args):
     ambiguous = False
     dups = defaultdict(list)
 
-    for person in git_people:
+    #
+    # Here we use the git people with the most recent commit skipped. This
+    # means we don't need to add .mailmap entries for the temporary merge
+    # commit created in CI on a PR.
+    #
+    for person in git_people_skip:
         email = key(person)
         dups[email].append(person)
         if email not in who:
@@ -129,6 +138,9 @@ def main(*args):
         print(red("The mailmap file was reordered"))
 
     # Check if changes to AUTHORS file are also needed
+    #
+    # Here we don't skip the last commit. We need authors from the most recent
+    # commit if the AUTHORS file was updated.
     lines_authors = make_authors_file_lines(git_people)
     old_lines_authors = read_lines(authors_path())
 

@@ -51,8 +51,8 @@ def test_swap_back():
     fx, gx = f(x), g(x)
     assert solve([fx + y - 2, fx - gx - 5], fx, y, gx) == \
         {fx: gx + 5, y: -gx - 3}
-    assert solve(fx + gx*x - 2, [fx, gx], dict=True)[0] == {fx: 2, gx: 0}
-    assert solve(fx + gx**2*x - y, [fx, gx], dict=True) == [{fx: y - gx**2*x}]
+    assert solve(fx + gx*x - 2, [fx, gx], dict=True) == [{fx: 2, gx: 0}]
+    assert solve(fx + gx**2*x - y, [fx, gx], dict=True) == [{fx: y, gx: 0}]
     assert solve([f(1) - 2, x + 2], dict=True) == [{x: -2, f(1): 2}]
 
 
@@ -145,21 +145,21 @@ def test_solve_args():
     assert solve(x + y - 3) == [{x: 3 - y}]
     # multiple symbols might represent an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
-    args = (a + b)*x - b**2 + 2, a, b
-    assert solve(*args) == \
-        [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
-    assert solve(*args, set=True) == \
-        ([a, b], {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))})
-    assert solve(*args, dict=True) == \
-        [{b: sqrt(2), a: -sqrt(2)}, {b: -sqrt(2), a: sqrt(2)}]
+    assert solve((a + b)*x + b - c, [a, b]) == {a: -c, b: c}
     eq = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
-    flags = dict(dict=True)
-    assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
-        [{k: c - b**2/(4*a), h: -b/(2*a), p: 1/(4*a)}]
-    flags.update(dict(simplify=False))
-    assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
-        [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
-    # failing undetermined system
+    # - check that flags are obeyed
+    sol = solve(eq, [h, p, k], exclude=[a, b, c])
+    assert sol == {h: -b/(2*a), k: c - b**2/(4*a), p: 1/(4*a)}
+    assert solve(eq, [h, p, k], dict=True) == [sol]
+    assert solve(eq, [h, p, k], set=True) == \
+        ([h, p, k], {(-b/(2*a), 1/(4*a), c - b**2/(4*a))})
+    assert solve(eq, [h, p, k], exclude=[a, b, c], simplify=False) == \
+        {h: -b/(2*a), k: (4*a*c - b**2)/(4*a), p: 1/(4*a)}
+    # but this only happens when system has a single solution
+    args = (a + b)*x - b**2 + 2, a, b
+    assert solve(*args) == [((b**2 - b*x - 2)/x, b)]
+    # and if the system has a solution; the following doesn't so
+    # an algebraic solution is returned
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b, dict=True) == \
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
     # failed single equation
@@ -178,6 +178,13 @@ def test_solve_args():
     assert solve(x**2 - pi, pi) == [x**2]
     # no equations
     assert solve([], [x]) == []
+    # nonlinear systen
+    assert solve((x**2 - 4, y - 2), x, y) == [(-2, 2), (2, 2)]
+    assert solve((x**2 - 4, y - 2), y, x) == [(2, -2), (2, 2)]
+    assert solve((x**2 - 4 + z, y - 2 - z), a, z, y, x, set=True
+        ) == ([a, z, y, x], {
+        (a, z, z + 2, -sqrt(4 - z)),
+        (a, z, z + 2, sqrt(4 - z))})
     # overdetermined system
     # - nonlinear
     assert solve([(x + y)**2 - 4, x + y - 2]) == [{x: -y + 2}]
@@ -194,6 +201,12 @@ def test_solve_args():
     assert solve([x - 1, False], [x], set=True) == ([], set())
     assert solve([-y*(x + y - 1)/2, (y - 1)/x/y + 1/y],
         set=True, check=False) == ([x, y], {(1 - y, y), (x, 0)})
+    # ordering should be canonical, fastest to order by keys instead
+    # of by size
+    assert list(solve((y - 1, x - sqrt(3)*z)).keys()) == [x, y]
+    # as set always returns as symbols, set even if no solution
+    assert solve([x - 1, x], (y, x), set=True) == ([y, x], set())
+    assert solve([x - 1, x], {y, x}, set=True) == ([x, y], set())
 
 
 def test_solve_polynomial1():
@@ -325,6 +338,7 @@ def test_solve_rational():
 def test_solve_conjugate():
     """Test solve for simple conjugate functions"""
     assert solve(conjugate(x) -3 + I) == [3 + I]
+
 
 def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y, dict=True) == [{x: -y}, {x: y}]
@@ -842,7 +856,7 @@ def test_issue_5197():
     assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == []
                  # not {x: -3, y: 1} b/c x is positive
     # The solution following should not contain (-sqrt(2), sqrt(2))
-    assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
+    assert solve([(x + y), 2 - y**2], x, y) == [(sqrt(2), -sqrt(2))]
     y = Symbol('y', positive=True)
     # The solution following should not contain {y: -x*exp(x/2)}
     assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: x*exp(x/2)}]
@@ -1465,14 +1479,14 @@ def test_issue_5901():
     assert solve([f(x) - 3*f(x).diff(x)], f(x)) == \
         {f(x): 3*D}
     assert solve([f(x) - 3*f(x).diff(x), f(x)**2 - y + 4], f(x), y) == \
-        [{f(x): 3*D, y: 9*D**2 + 4}]
+        [(3*D, 9*D**2 + 4)]
     assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
                 h(a), g(a), set=True) == \
-        ([g(a)], {
-        (-sqrt(h(a)**2*f(a)**2 + G)/f(a),),
-        (sqrt(h(a)**2*f(a)**2+ G)/f(a),)})
-    args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
-    assert set(solve(*args)) == \
+        ([h(a), g(a)], {
+        (-sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a)),
+        (sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a))})
+    args = [[f(x).diff(x, 2)*(f(x) + g(x)), 2 - g(x)**2], f(x), g(x)]
+    assert solve(*args, set=True)[1] == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}
     eqs = [f(x)**2 + g(x) - 2*f(x).diff(x), g(x)**2 - 4]
     assert solve(eqs, f(x), g(x), set=True) == \
@@ -1659,7 +1673,6 @@ def test_minsolve_linear_system():
     # and give a good error message if someone tries to use
     # particular with a single equation
     raises(ValueError, lambda: solve(x + 1, particular=True))
-
 
 
 def test_real_roots():
@@ -2440,6 +2453,7 @@ def test_issue_20747():
             / (1 - exp(c0/(DBH*c3 + THT*c4 + c2))))
     sol = [THT*term**(1/c1) - term**(1/c1) + 1]
     assert solve(eq, HT) == sol
+
 
 def test_issue_20902():
     f = (t / ((1 + t) ** 2))

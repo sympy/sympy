@@ -1730,7 +1730,7 @@ class Pow(Expr):
         if c.is_Float and d == S.Zero:
             # Convert floats like 0.5 to exact SymPy numbers like S.Half, to
             # prevent rounding errors which can induce wrong values of d leading
-            # to execution of an inappropriate code block (line 1741 - 1750)
+            # to a NotImplementedError being returned from the block below.
             from sympy.simplify.simplify import nsimplify
             _, d = nsimplify(g).leadterm(x, logx=logx)
         if not d.is_positive:
@@ -1809,7 +1809,7 @@ class Pow(Expr):
                 f = b.as_leading_term(x, logx=logx, cdir=cdir)
             except PoleError:
                 return self
-            if not e.is_integer and f.is_negative:
+            if not e.is_integer and f.is_negative and not f.has(x):
                 ndir = (b - f).dir(x, cdir)
                 if im(ndir).is_negative:
                     # Normally, f**e would evaluate to exp(e*log(f)) but on branch cuts
