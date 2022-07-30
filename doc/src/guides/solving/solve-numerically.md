@@ -8,7 +8,7 @@ Solving numerically is useful if:
 - A closed-form solution is not available or is overly complicated
 
 {func}`~.solve` and {func}`~.solveset` will not try to find a numeric solution,
-only a mathematically exact symbolic solution. So if you want a numeric
+only a mathematically-exact symbolic solution. So if you want a numeric
 solution, use {func}`~.nsolve`.
 
 Alternatives to consider:
@@ -26,8 +26,8 @@ Here is a simple example of numerically solving one equation:
 0.739085133215161
 ```
 
-{func}`~.nsolve` calls, and can pass parameters to,
-[mpmath.findroot](https://mpmath.org/doc/current/calculus/optimization.html#root-finding-findroot).
+{func}`~.nsolve` calls, and can pass parameters to, 
+mpmath's {external:func}`~mpmath.findroot`.
 
 Overdetermined systems of equations are supported.
 
