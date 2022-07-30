@@ -1,3 +1,5 @@
+.. _core_module:
+
 ====
 Core
 ====
