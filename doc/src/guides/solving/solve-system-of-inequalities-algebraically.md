@@ -3,6 +3,10 @@
 Use SymPy to solve a system of univariate inequalities algebraically. For
 example, solving $x^2 < \pi$, $x > 0$ yields $0 < x < \sqrt{\pi}$.
 
+```{note}
+SymPy can currently solve inequalities involving only one variable (symbol).
+```
+
 Alternatives to consider:
 - For multivariate systems (more than one symbol), try this [SciPy linear
   programming
