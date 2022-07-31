@@ -23,7 +23,7 @@ from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
-from sympy.polys.matrices.linsolve import _linear_eq_to_dict, _lin_eq2dict
+from sympy.polys.matrices.linsolve import _linear_eq_to_dict
 from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
 from sympy.simplify import powdenest, logcombine
@@ -38,7 +38,7 @@ from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
-from sympy.matrices import SparseMatrix, MatrixBase
+from sympy.matrices import zeros, Matrix, MatrixBase
 from sympy.ntheory import totient
 from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
@@ -2483,7 +2483,9 @@ def linear_coeffs(eq, *syms, dict=False):
     if len(symset) != len(syms):
         raise ValueError('duplicate symbols given')
     try:
-        c, d = _lin_eq2dict(eq, symset)
+        d, c = _linear_eq_to_dict([eq], symset)
+        d = d[0]
+        c = c[0]
     except PolyNonlinearError as err:
         raise NonlinearError(str(err))
     if dict:
@@ -2608,11 +2610,12 @@ def linear_eq_to_matrix(equations, *symbols):
     # prepare output matrices
     n, m = shape = len(eq), len(symbols)
     ix = dict(zip(symbols, range(m)))
-    dat = {(row, ix[k]): d[k] for row, d in enumerate(eq) for k in d}
-    rhs = [-i for i in c]
-    del c
-    A = SparseMatrix(*shape, dat)
-    b = SparseMatrix(n, 1, rhs)
+    A = zeros(*shape)
+    for row, d in enumerate(eq):
+        for k in d:
+            col = ix[k]
+            A[row, col] = d[k]
+    b = Matrix(n, 1, [-i for i in c])
     return A, b
 
 
@@ -2772,7 +2775,7 @@ def linsolve(system, *symbols):
     EmptySet
 
     * An error is raised if any nonlinearity is detected, even
-    if it could be removed with expansion
+      if it could be removed with expansion
 
     >>> linsolve([x*(1/x - 1)], x)
     Traceback (most recent call last):

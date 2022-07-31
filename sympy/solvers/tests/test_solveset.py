@@ -1516,6 +1516,8 @@ def test_linsolve():
     # linsolve does not allow expansion (real or implemented)
     # to remove singularities, but it will cancel linear terms
     assert linsolve([Eq(x, x + y)], [x, y]) == {(x, 0)}
+    assert linsolve([Eq(x + x*y, 1 + y)], [x]) == {(1,)}
+    assert linsolve([Eq(1 + y, x + x*y)], [x]) == {(1,)}
     raises(NonlinearError, lambda:
         linsolve([Eq(x**2, x**2 + y)], [x, y]))
 
@@ -2796,7 +2798,7 @@ def test_linear_coeffs():
     assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
     assert linear_coeffs(1.0, x, y) == [0, 0, 1.0]
     # don't include coefficients of 0
-    assert linear_coeffs(Eq(x, x + y), x, y, dict=True) == {y: 1}
+    assert linear_coeffs(Eq(x, x + y), x, y, dict=True) == {y: -1}
     assert linear_coeffs(0, x, y, dict=True) == {}
 
 

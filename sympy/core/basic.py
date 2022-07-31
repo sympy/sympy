@@ -1258,7 +1258,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         return self._has(iterargs, *patterns)
 
-    def has_xfree(self, s):
+    def has_xfree(self, s: set[Basic]):
         """return True if self has any of the patterns in s as a
         free argument, else False. This is like `Basic.has_free`
         but this will only report exact argument matches.
@@ -1281,8 +1281,8 @@ class Basic(Printable, metaclass=ManagedProperties):
         False
         """
         # protect O(1) containment check by requiring:
-        if not type(s) in (dict, set):
-            raise ValueError('expecting set or dict argument')
+        if type(s) is not set:
+            raise TypeError('expecting set argument')
         return any(a in s for a in iterfreeargs(self))
 
     @cacheit
@@ -1318,18 +1318,15 @@ class Basic(Printable, metaclass=ManagedProperties):
         if len(patterns) == 1 and iterable(p0) and not isinstance(p0, Basic):
             # Basic can contain iterables (though not non-Basic, ideally)
             # but don't encourage mixed passing patterns
-            raise ValueError(filldedent('''
+            raise TypeError(filldedent('''
                 Expecting 1 or more Basic args, not a single
                 non-Basic iterable. Don't forget to unpack
                 iterables: `eq.has_free(*patterns)`'''))
         # try quick test first
-        try:
-            s = set(patterns)
-            rv = self.has_xfree(s)
-            if rv:
-                return rv
-        except TypeError:
-            pass
+        s = set(patterns)
+        rv = self.has_xfree(s)
+        if rv:
+            return rv
         # now try matching through slower _has
         return self._has(iterfreeargs, *patterns)
 

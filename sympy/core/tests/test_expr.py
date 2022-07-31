@@ -1629,20 +1629,20 @@ def test_has_free():
     assert (x + 1 + y).has_free(x + 1)
     assert not (x + 2 + y).has_free(x + 1)
     assert (2 + 3*x*y).has_free(3*x)
-    raises(ValueError, lambda: x.has_free({x, y}))
+    raises(TypeError, lambda: x.has_free({x, y}))
     s = FiniteSet(1, 2)
     assert Piecewise((s, x > 3), (4, True)).has_free(s)
     assert not Piecewise((1, x > 3), (4, True)).has_free(s)
     # can't make set of these, but fallback will handle
-    assert not x.has_free(y, [])
+    raises(TypeError, lambda: x.has_free(y, []))
 
 
 def test_has_xfree():
     assert (x + 1).has_xfree({x})
     assert ((x + 1)**2).has_xfree({x + 1})
     assert not (x + y + 1).has_xfree({x + 1})
-    raises(ValueError, lambda: x.has_xfree(x))
-    raises(ValueError, lambda: x.has_xfree([x]))
+    raises(TypeError, lambda: x.has_xfree(x))
+    raises(TypeError, lambda: x.has_xfree([x]))
 
 
 def test_issue_5300():

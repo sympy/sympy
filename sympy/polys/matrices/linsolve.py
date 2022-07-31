@@ -153,7 +153,22 @@ def _linear_eq_to_dict(eqs, syms):
     ind = []
     symset = set(syms)
     for i, e in enumerate(eqs):
-        c, d = _lin_eq2dict(e, symset)
+        if e.is_Equality:
+            coeff, terms = _lin_eq2dict(e.lhs, symset)
+            cR, tR = _lin_eq2dict(e.rhs, symset)
+            # there were no nonlinear errors so now
+            # cancellation is allowed
+            coeff -= cR
+            for k, v in tR.items():
+                if k in terms:
+                    terms[k] -= v
+                else:
+                    terms[k] = -v
+            # don't store coefficients of 0, however
+            terms = {k: v for k, v in terms.items() if v}
+            c, d = coeff, terms
+        else:
+            c, d = _lin_eq2dict(e, symset)
         coeffs.append(d)
         ind.append(c)
     return coeffs, ind
@@ -177,7 +192,7 @@ def _lin_eq2dict(a, symset):
     """
     if a in symset:
         return S.Zero, {a: S.One}
-    if a.is_Add:
+    elif a.is_Add:
         terms_list = defaultdict(list)
         coeff_list = []
         for ai in a.args:
@@ -188,7 +203,7 @@ def _lin_eq2dict(a, symset):
         coeff = Add(*coeff_list)
         terms = {sym: Add(*coeffs) for sym, coeffs in terms_list.items()}
         return coeff, terms
-    if a.is_Mul:
+    elif a.is_Mul:
         terms = terms_coeff = None
         coeff_list = []
         for ai in a.args:
@@ -209,20 +224,7 @@ def _lin_eq2dict(a, symset):
         else:
             terms = {sym: coeff * c for sym, c in terms.items()}
             return  coeff * terms_coeff, terms
-    if a.is_Equality:
-        (coeff, terms), (cR, tR) = [_lin_eq2dict(ai, symset)
-            for ai in a.args]
-        # there were no nonlinear errors so now
-        # cancellation is allowed
-        coeff -= cR
-        for k, v in tR.items():
-            if k in terms:
-                terms[k] -= v
-            else:
-                terms[k] = v
-        # don't store coefficients of 0, however
-        terms = {k: v for k, v in terms.items() if v}
-        return coeff, terms
-    if not a.has_xfree(symset):
+    elif not a.has_xfree(symset):
         return a, {}
-    raise PolyNonlinearError('nonlinear term: %s' % a)
+    else:
+        raise PolyNonlinearError('nonlinear term: %s' % a)
