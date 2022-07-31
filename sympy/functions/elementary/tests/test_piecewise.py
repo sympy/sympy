@@ -715,6 +715,18 @@ def test_piecewise_exclusive():
     assert piecewise_exclusive(Piecewise((1, x > y)),
                                skip_nan=True) == Piecewise((1, x > y))
 
+    xr, yr = symbols('xr, yr', real=True)
+
+    p1 = Piecewise((1, xr < 0), (2, True), evaluate=False)
+    p1x = Piecewise((1, xr < 0), (2, xr >= 0), evaluate=False)
+
+    p2 = Piecewise((p1, yr < 0), (3, True), evaluate=False)
+    p2x = Piecewise((p1, yr < 0), (3, yr >= 0), evaluate=False)
+    p2xx = Piecewise((p1x, yr < 0), (3, yr >= 0), evaluate=False)
+
+    assert piecewise_exclusive(p2) == p2xx
+    assert piecewise_exclusive(p2, deep=False) == p2x
+
 
 def test_piecewise_collapse():
     assert Piecewise((x, True)) == x
