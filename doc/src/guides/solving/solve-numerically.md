@@ -175,7 +175,7 @@ ValueError: Could not find root within given tolerance. (1.39267e+230 > 2.1684e-
 
 ## Not all equations can be solved
 
-{func}`~.nsolve` is a numerical solving function, so it is often the solution to
+{func}`~.nsolve` is a numerical solving function, so it can often provide a solution for
 equations which cannot be solved algebraically.
 
 ### Equations with no solution
