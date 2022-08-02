@@ -1,6 +1,7 @@
 from sympy.core.symbol import Symbol, symbols
 from sympy.physics.continuum_mechanics.truss import Truss
 
+
 def test_truss():
     A = Symbol('A')
     B = Symbol('B')
