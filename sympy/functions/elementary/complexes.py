@@ -73,7 +73,7 @@ class re(Function):
             return S.NaN
         elif arg.is_extended_real:
             return arg
-        elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_extended_real:
+        elif arg.is_imaginary or arg.coeff(S.ImaginaryUnit).is_extended_real:
             return S.Zero
         elif arg.is_Matrix:
             return arg.as_real_imag()[0]
@@ -195,7 +195,7 @@ class im(Function):
             return S.NaN
         elif arg.is_extended_real:
             return S.Zero
-        elif arg.is_imaginary or (S.ImaginaryUnit*arg).is_extended_real:
+        elif arg.is_imaginary or arg.coeff(S.ImaginaryUnit).is_extended_real:
             return -S.ImaginaryUnit * arg
         elif arg.is_Matrix:
             return arg.as_real_imag()[1]

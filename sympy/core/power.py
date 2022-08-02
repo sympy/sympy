@@ -1443,7 +1443,7 @@ class Pow(Expr):
                         return False
                     elif (self.exp/S.Pi).is_rational:
                         return False
-                    elif (self.exp/(S.ImaginaryUnit*S.Pi)).is_rational:
+                    elif (self.exp.coeff(S.ImaginaryUnit*S.Pi)).is_rational:
                         return True
             else:
                 return s.is_algebraic

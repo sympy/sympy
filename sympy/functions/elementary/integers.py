@@ -32,7 +32,7 @@ class RoundFunction(Function):
 
         if arg.is_integer or arg.is_finite is False:
             return arg
-        if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
+        if arg.is_imaginary or arg.coeff(S.ImaginaryUnit).is_real:
             i = im(arg)
             if not i.has(S.ImaginaryUnit):
                 return cls(i)*S.ImaginaryUnit
@@ -71,7 +71,7 @@ class RoundFunction(Function):
         spart += npart
         if not spart:
             return ipart
-        elif spart.is_imaginary or (S.ImaginaryUnit*spart).is_real:
+        elif spart.is_imaginary or spart.coeff(S.ImaginaryUnit).is_real:
             return ipart + cls(im(spart), evaluate=False)*S.ImaginaryUnit
         elif isinstance(spart, (floor, ceiling)):
             return ipart + spart
@@ -493,7 +493,7 @@ class frac(Function):
         for t in terms:
             # Two checks are needed for complex arguments
             # see issue-7649 for details
-            if t.is_imaginary or (S.ImaginaryUnit*t).is_real:
+            if t.is_imaginary or t.coeff(S.ImaginaryUnit).is_real:
                 i = im(t)
                 if not i.has(S.ImaginaryUnit):
                     imag += i

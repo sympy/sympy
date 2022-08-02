@@ -1292,3 +1292,17 @@ def test_common_assumptions():
     assert common_assumptions([0, 1, 2], []) == {}
     assert common_assumptions([], ['integer']) == {}
     assert common_assumptions([0], ['integer']) == {'integer': True}
+
+
+def test_issue_22428():
+    # creation of new expressions while checking assumptions
+    # caused this to fail; it is ok to test a subset of args
+    # but not to create a larger expression to test, e.g.
+    # testing c of e = c*I is ok, but testing I*e leads to
+    # potential problems
+    from sympy.core.parameters import evaluate
+    from sympy.abc import x, h
+    f = 2**x**7
+    with evaluate(False):
+        fh = f.xreplace({x: x + h})
+        assert fh.exp.is_rational is None
