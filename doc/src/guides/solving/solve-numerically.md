@@ -149,37 +149,39 @@ cos(x*(x + 1)/2)
 
 ### Substitute the result into an expression
 
-You can use [`subs`](sympy.core.basic.Basic.subs) to substitute numerical values
-into expressions to numerically evaluate them fully:
+The best practice is to use {func}`sympy.core.evalf` to to substitute numerical
+values into expressions. Using [`subs`](sympy.core.basic.Basic.subs) can give
+incorrect result due to precision errors:
 
 ```py
->>> from sympy import cos, nsolve, Symbol, diff
->>> x = Symbol('x')
->>> f = cos(x) - x
->>> x_value = nsolve(f, x, 1); x_value
-0.739085133215161
->>> f.subs(x, x_value) # Verify that root is correct
-0
->>> derivative = diff(f, x)
->>> derivative.subs(x, x_value) # Calculate the derivative where the function value is zero
--1.67361202918321
-```
-
-or leave some symbols as variables:
-
-```py
->>> from sympy import cos, nsolve, Symbol, diff
+>>> from sympy import cos, nsolve, Symbol
 >>> x = Symbol('x')
 >>> f = cos(x) - x
 >>> x_value = nsolve(f, x, 1); x_value
 0.739085133215161
 >>> y = Symbol('y')
+>>> z = Symbol('z')
+>>> values = {x: x_value, y: 1e16, z: 1e16}
+>>> (x + y - z).evalf(subs=values) # Gives correct result
+0.739085133215161
+>>> (x + y - z).subs(values) # Gives incorrect result due to precision errors
+0
+```
+
+You can also leave some symbols as variables:
+
+```py
+>>> from sympy import cos, nsolve, Symbol
+>>> x = Symbol('x')
+>>> f = cos(x) - x
+>>> x_value = nsolve(f, x, 1); x_value
+0.739085133215161
+>>> y = Symbol('y')
+>>> z = Symbol('z')
 >>> g = x * y**2
->>> g.subs(x, x_value)
-0.739085133215161*y**2
->>> derivative = diff(g, y)
->>> derivative.subs(x, x_value)
-1.47817026643032*y
+>>> values = {x: x_value, y: 1}
+>>> (x + y - z).evalf(subs=values)
+1.73908513321516 - z
 ```
 
 ## Tradeoffs
