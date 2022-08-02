@@ -11,6 +11,16 @@ Solving numerically is useful if:
 only a mathematically-exact symbolic solution. So if you want a numeric
 solution, use {func}`~.nsolve`.
 
+SymPy is designed for symbolic mathematics. If you do not need to do symbolic
+operations, then for numerical operations you can use another free and
+open-source package such as NumPy or SciPy which will be faster, work with
+arrays, and have more algorithms implemented. The main reasons to use SymPy (or
+its dependency mpmath) for numerical calculations are:
+- to do a simple numerical calculation within the context of a symbolic
+  calculation using SymPy
+- if you need the arbitrary precision capabilities to get more digits of
+  precision than you would get from float64.
+
 Alternatives to consider:
 - [NumPy](https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html?highlight=solve#numpy.linalg.solve)
 and
@@ -26,8 +36,8 @@ Here is a simple example of numerically solving one equation:
 0.739085133215161
 ```
 
-{func}`~.nsolve` calls, and can pass parameters to, 
-mpmath's {external:func}`~mpmath.findroot`.
+{func}`~.nsolve` calls, and can pass parameters to, mpmath's
+{external:func}`~mpmath.findroot`.
 
 Overdetermined systems of equations are supported.
 
@@ -96,20 +106,43 @@ To solve multidimensional functions, supply a tuple of
 Matrix([[-1.19287309935246], [1.27844411169911]])
 ```
 
-### Use SciPy on a lambda function *what is the advantage of this method?*
+### Increase precision of the solution
 
-You can *description*
+You can increase the precision of the solution using `prec`:
 
 ```py
->>> from sympy.abc import x
+>>> from sympy import Symbol, nsolve
+>>> x1 = Symbol('x1')
+>>> x2 = Symbol('x2')
+>>> f1 = 3 * x1**2 - 2 * x2**2 - 1
+>>> f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
+>>> print(nsolve((f1, f2), (x1, x2), (-1, 1), prec=25))
+Matrix([[-1.192873099352460791205211], [1.278444111699106966687122]])
+```
+
+### Create a function that can be solved with SciPy
+
+As noted above, SymPy focuses on symbolic computation and is not optimized for
+numerical calculations. A recommend use case for SymPy in a workflow is as given
+below:
+- use SymPy to generate (by symbolically simplifying or solving an equation) the
+  mathematical expression
+- use a numerical library such as SciPy to generate numerical solutions
+
+```py
+>>> from sympy import simplify, cos, sin
+>>> from sympy.abc import x, y
+>>> expr = cos(x * (x + x**2)/(x*sin(y)**2 + x*cos(y)**2 + x))
+>>> simplify(expr)
+cos(x*(x + 1)/2)
 >>> from sympy.utilities.lambdify import implemented_function
 >>> from sympy import lambdify
->>> from scipy import optimize
->>> f = implemented_function('f', lambda x: x**3 - 1)
+>>> f = implemented_function('f', lambda x: cos(x*(x + 1)/2))
 >>> lam_f = lambdify(x, f(x))
+>>> from scipy import optimize
 >>> sol = optimize.root_scalar(lam_f, bracket=[0, 2], method='brentq')
 >>> sol.root
-1.0
+1.3416277185114782
 ```
 
 ## Use the solution result
@@ -175,23 +208,22 @@ ValueError: Could not find root within given tolerance. (1.39267e+230 > 2.1684e-
 
 ## Not all equations can be solved
 
-{func}`~.nsolve` is a numerical solving function, so it can often provide a solution for
-equations which cannot be solved algebraically.
+{func}`~.nsolve` is a numerical solving function, so it can often provide a
+solution for equations which cannot be solved algebraically.
 
 ### Equations with no solution
 
 Some equations have no solution, in which case SymPy may return an empty set.
-For example, the equation $x - 7 - x - 2 = 0$ reduces to $-9 = 0$, which has no
-solution because no value of $x$ will make it true:
+For example, the equation $exp(x) = 0$ has no solution:
 
 ```py
->>> from sympy import nsolve
+>>> from sympy import nsolve, exp
 >>> from sympy.abc import x
->>> nsolve(x - 7 - x - 2, x, 1)
+>>> nsolve(exp(x), x, 1, prec=20)
 Traceback (most recent call last):
 ...
-ValueError:
-expected a one-dimensional and numerical function
+ValueError: Could not find root within given tolerance. (5.4877893607115270300540019e-18 > 1.6543612251060553497428174e-24)
+Try another starting point or tweak arguments.
 ```
 
 SymPy reports that the function to be solved is not one-dimensional, because
