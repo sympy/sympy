@@ -2778,6 +2778,8 @@ def linsolve(system, *symbols):
     if symbols and hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
     sym_gen = isinstance(symbols, GeneratorType)
+    dup_msg = 'duplicate symbols given'
+
 
     b = None  # if we don't get b the input was bad
     # unpack system
@@ -2796,6 +2798,8 @@ def linsolve(system, *symbols):
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
                 '''))
+            if len(set(symbols)) != len(symbols):
+                raise ValueError(dup_msg)
 
             #
             # Pass to the sparse solver implemented in polys. It is important
@@ -2827,13 +2831,16 @@ def linsolve(system, *symbols):
         raise ValueError("Invalid arguments")
     if sym_gen:
         symbols = [next(symbols) for i in range(A.cols)]
-        if any(set(symbols) & (A.free_symbols | b.free_symbols)):
+        symset = set(symbols)
+        if any(symset & (A.free_symbols | b.free_symbols)):
             raise ValueError(filldedent('''
                 At least one of the symbols provided
                 already appears in the system to be solved.
                 One way to avoid this is to use Dummy symbols in
                 the generator, e.g. numbered_symbols('%s', cls=Dummy)
             ''' % symbols[0].name.rstrip('1234567890')))
+        elif len(symset) != len(symbols):
+            raise ValueError(dup_msg)
 
     if not symbols:
         symbols = [Dummy() for _ in range(A.cols)]
