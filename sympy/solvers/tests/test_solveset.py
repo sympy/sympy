@@ -1437,6 +1437,8 @@ def test_linsolve():
     raises(ValueError, lambda: linsolve(x1, x2))
     raises(ValueError, lambda: linsolve((A,), x1, x2))
     raises(ValueError, lambda: linsolve(A, B, x1, x2))
+    raises(ValueError, lambda: linsolve([x1], x1, x1))
+    raises(ValueError, lambda: linsolve([x1], (i for i in (x1, x1))))
 
     #raise ValueError if equations are non-linear in given variables
     raises(NonlinearError, lambda: linsolve([x + y - 1, x ** 2 + y - 3], [x, y]))
