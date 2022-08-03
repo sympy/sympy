@@ -204,9 +204,6 @@ ValueError: Could not find root within given tolerance. (5.487789360711527030054
 Try another starting point or tweak arguments.
 ```
 
-SymPy reports that the function to be solved is not one-dimensional, because
-SymPy simplifies $x - x$ to $0$, leaving a zero-dimensional function.
-
 ## Report a problem
 
 If you find a problem with {func}`~.nsolve`, please post it on the [mailing
