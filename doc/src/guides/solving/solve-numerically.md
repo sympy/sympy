@@ -184,30 +184,6 @@ You can also leave some symbols as variables:
 1.73908513321516 - z
 ```
 
-## Tradeoffs
-
-### Do not use `verify` for functions which are very steep near the root
-
-For functions which are very steep near the root, the verification of the
-solution may fail. In this case you should use the flag `verify=False` and
-independently verify the solution.
-
-```py
->>> from sympy import cos, cosh, nsolve, Symbol
->>> x = Symbol('x')
->>> f = cos(x)*cosh(x) - 1
->>> nsolve(f, 3.14*100)
-Traceback (most recent call last):
-...
-ValueError: Could not find root within given tolerance. (1.39267e+230 > 2.1684e-19)
->>> ans = nsolve(f, 3.14*100, verify=False); ans
-312.588469032184
->>> f.subs(x, ans).n(2)
-2.1e+121
->>> (f/f.diff(x)).subs(x, ans).n(2)
-7.4e-15
-```
-
 ## Not all equations can be solved
 
 {func}`~.nsolve` is a numerical solving function, so it can often provide a
