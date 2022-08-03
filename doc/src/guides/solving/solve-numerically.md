@@ -191,8 +191,8 @@ solution for equations which cannot be solved algebraically.
 
 ### Equations with no solution
 
-Some equations have no solution, in which case SymPy may return an empty set.
-For example, the equation $exp(x) = 0$ has no solution:
+Some equations have no solution, in which case SymPy may return an error. For
+example, the equation $exp(x) = 0$ has no solution:
 
 ```py
 >>> from sympy import nsolve, exp
