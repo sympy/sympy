@@ -23,7 +23,7 @@ def test_rsolve_poly():
 
     assert rsolve_poly([-1, n + 1], n, n) == 1
     assert rsolve_poly([-1, 1], n, n) == C0 + (n**2 - n)/2
-    assert rsolve_poly([-n - 1, n], 1, n) == C1*n - 1
+    assert rsolve_poly([-n - 1, n], 1, n) == C0*n - 1
     assert rsolve_poly([-4*n - 2, 1], 4*n + 1, n) == -1
 
     assert rsolve_poly([-1, 1], n**5 + n**3, n) == \
@@ -33,14 +33,7 @@ def test_rsolve_poly():
 def test_rsolve_ratio():
     solution = rsolve_ratio([-2*n**3 + n**2 + 2*n - 1, 2*n**3 + n**2 - 6*n,
         -2*n**3 - 11*n**2 - 18*n - 9, 2*n**3 + 13*n**2 + 22*n + 8], 0, n)
-
-    assert solution in [
-        C1*((-2*n + 3)/(n**2 - 1))/3,
-        (S.Half)*(C1*(-3 + 2*n)/(-1 + n**2)),
-        (S.Half)*(C1*( 3 - 2*n)/( 1 - n**2)),
-        (S.Half)*(C2*(-3 + 2*n)/(-1 + n**2)),
-        (S.Half)*(C2*( 3 - 2*n)/( 1 - n**2)),
-    ]
+    assert solution == C0*(2*n - 3)/(n**2 - 1)/2
 
 
 def test_rsolve_hyper():

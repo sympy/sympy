@@ -16,9 +16,8 @@ from typing import Tuple as tTuple, Dict as tDict, Any, Callable, \
 from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.basic import Basic
 from sympy.core import Symbol
-from sympy.core.function import arity, Function
-from sympy.utilities.iterables import iterable
-from sympy.utilities.misc import filldedent, func_name
+from sympy.core.function import Function
+from sympy.utilities.misc import func_name
 from sympy.functions.elementary.miscellaneous import Max, Min
 
 
@@ -1069,19 +1068,6 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
             raise ValueError('unknown transformation group name')
     else:
         _transformations = transformations
-    if _transformations:
-        if not iterable(_transformations):
-            raise TypeError(
-                '`transformations` should be a list of functions.')
-        for _ in _transformations:
-            if not callable(_):
-                raise TypeError(filldedent('''
-                    expected a function in `transformations`,
-                    not %s''' % func_name(_)))
-            if arity(_) != 3:
-                raise TypeError(filldedent('''
-                    a transformation should be function that
-                    takes 3 arguments'''))
 
     code = stringify_expr(s, local_dict, global_dict, _transformations)
 

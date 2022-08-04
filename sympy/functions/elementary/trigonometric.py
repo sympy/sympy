@@ -2341,6 +2341,7 @@ class asin(InverseTrigonometricFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):  # asin
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
+        # Handling branch points
         if arg0 is S.One:
             t = Dummy('t', positive=True)
             ser = asin(S.One - t**2).rewrite(log).nseries(t, 0, 2*n)
@@ -2368,12 +2369,17 @@ class asin(InverseTrigonometricFunction):
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
-        if cdir != 0:
-            cdir = self.args[0].dir(x, cdir)
-        if im(cdir) < 0 and arg0.is_real and arg0 < S.NegativeOne:
-            return -pi - res
-        elif im(cdir) > 0 and arg0.is_real and arg0 > S.One:
-            return pi - res
+        # Handling points lying on branch cuts (-oo, -1) U (1, oo)
+        if (1 - arg0**2).is_negative:
+            ndir = self.args[0].dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if arg0.is_negative:
+                    return -pi - res
+            elif im(ndir).is_positive:
+                if arg0.is_positive:
+                    return pi - res
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
         return res
 
     def _eval_rewrite_as_acos(self, x, **kwargs):
@@ -2558,6 +2564,7 @@ class acos(InverseTrigonometricFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):  # acos
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
+        # Handling branch points
         if arg0 is S.One:
             t = Dummy('t', positive=True)
             ser = acos(S.One - t**2).rewrite(log).nseries(t, 0, 2*n)
@@ -2585,12 +2592,17 @@ class acos(InverseTrigonometricFunction):
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
-        if cdir != 0:
-            cdir = self.args[0].dir(x, cdir)
-        if im(cdir) < 0 and arg0.is_real and arg0 < S.NegativeOne:
-            return 2*pi - res
-        elif im(cdir) > 0 and arg0.is_real and arg0 > S.One:
-            return -res
+        # Handling points lying on branch cuts (-oo, -1) U (1, oo)
+        if (1 - arg0**2).is_negative:
+            ndir = self.args[0].dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if arg0.is_negative:
+                    return 2*pi - res
+            elif im(ndir).is_positive:
+                if arg0.is_positive:
+                    return -res
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
         return res
 
     def _eval_rewrite_as_log(self, x, **kwargs):
@@ -2783,17 +2795,27 @@ class atan(InverseTrigonometricFunction):
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # atan
         arg0 = self.args[0].subs(x, 0)
+
+        # Handling branch points
+        if arg0 in (S.ImaginaryUnit, S.NegativeOne*S.ImaginaryUnit):
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+
         res = Function._eval_nseries(self, x, n=n, logx=logx)
-        if cdir != 0:
-            cdir = self.args[0].dir(x, cdir)
+        ndir = self.args[0].dir(x, cdir if cdir else 1)
         if arg0 is S.ComplexInfinity:
-            if re(cdir) > 0:
+            if re(ndir) > 0:
                 return res - pi
             return res
-        if re(cdir) < 0 and re(arg0).is_zero and im(arg0) > S.One:
-            return res - pi
-        elif re(cdir) > 0 and re(arg0).is_zero and im(arg0) < S.NegativeOne:
-            return res + pi
+        # Handling points lying on branch cuts (-I*oo, -I) U (I, I*oo)
+        if (1 + arg0**2).is_negative:
+            if re(ndir).is_negative:
+                if im(arg0).is_positive:
+                    return res - pi
+            elif re(ndir).is_positive:
+                if im(arg0).is_negative:
+                    return res + pi
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
         return res
 
     def _eval_rewrite_as_log(self, x, **kwargs):
@@ -2988,19 +3010,29 @@ class acot(InverseTrigonometricFunction):
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # acot
         arg0 = self.args[0].subs(x, 0)
+
+        # Handling branch points
+        if arg0 in (S.ImaginaryUnit, S.NegativeOne*S.ImaginaryUnit):
+            return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
+
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
-        if cdir != 0:
-            cdir = self.args[0].dir(x, cdir)
+        ndir = self.args[0].dir(x, cdir if cdir else 1)
         if arg0.is_zero:
-            if re(cdir) < 0:
+            if re(ndir) < 0:
                 return res - pi
             return res
-        if re(cdir) > 0 and re(arg0).is_zero and im(arg0) > S.Zero and im(arg0) < S.One:
-            return res + pi
-        if re(cdir) < 0 and re(arg0).is_zero and im(arg0) < S.Zero and im(arg0) > S.NegativeOne:
-            return res - pi
+        # Handling points lying on branch cuts [-I, I]
+        if arg0.is_imaginary and (1 + arg0**2).is_positive:
+            if re(ndir).is_positive:
+                if im(arg0).is_positive:
+                    return res + pi
+            elif re(ndir).is_negative:
+                if im(arg0).is_negative:
+                    return res - pi
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
         return res
 
     def _eval_aseries(self, n, args0, x, logx):
@@ -3192,6 +3224,7 @@ class asec(InverseTrigonometricFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):  # asec
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
+        # Handling branch points
         if arg0 is S.One:
             t = Dummy('t', positive=True)
             ser = asec(S.One + t**2).rewrite(log).nseries(t, 0, 2*n)
@@ -3215,12 +3248,17 @@ class asec(InverseTrigonometricFunction):
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
-        if cdir != 0:
-            cdir = self.args[0].dir(x, cdir)
-        if im(cdir) < 0 and arg0.is_real and arg0 > S.Zero and arg0 < S.One:
-            return -res
-        elif im(cdir) > 0 and arg0.is_real and arg0 < S.Zero and arg0 > S.NegativeOne:
-            return 2*pi - res
+        # Handling points lying on branch cuts (-1, 1)
+        if arg0.is_real and (1 - arg0**2).is_positive:
+            ndir = self.args[0].dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if arg0.is_positive:
+                    return -res
+            elif im(ndir).is_positive:
+                if arg0.is_negative:
+                    return 2*pi - res
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
         return res
 
     def _eval_is_extended_real(self):
@@ -3394,6 +3432,7 @@ class acsc(InverseTrigonometricFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):  # acsc
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
+        # Handling branch points
         if arg0 is S.One:
             t = Dummy('t', positive=True)
             ser = acsc(S.One + t**2).rewrite(log).nseries(t, 0, 2*n)
@@ -3417,12 +3456,17 @@ class acsc(InverseTrigonometricFunction):
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
-        if cdir != 0:
-            cdir = self.args[0].dir(x, cdir)
-        if im(cdir) < 0 and arg0.is_real and arg0 > S.Zero and arg0 < S.One:
-            return pi - res
-        elif im(cdir) > 0 and arg0.is_real and arg0 < S.Zero and arg0 > S.NegativeOne:
-            return -pi - res
+        # Handling points lying on branch cuts (-1, 1)
+        if arg0.is_real and (1 - arg0**2).is_positive:
+            ndir = self.args[0].dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if arg0.is_positive:
+                    return pi - res
+            elif im(ndir).is_positive:
+                if arg0.is_negative:
+                    return -pi - res
+            else:
+                return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
         return res
 
     def _eval_rewrite_as_log(self, arg, **kwargs):

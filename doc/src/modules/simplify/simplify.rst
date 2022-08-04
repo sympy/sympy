@@ -1,3 +1,5 @@
+.. _simplify-docs:
+
 ========
 Simplify
 ========

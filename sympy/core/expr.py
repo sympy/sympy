@@ -2973,33 +2973,45 @@ class Expr(Basic, EvalfMixin):
         if len(dir) != 1 or dir not in '+-':
             raise ValueError("Dir must be '+' or '-'")
 
-        if x0 in [S.Infinity, S.NegativeInfinity]:
+        x0 = sympify(x0)
+        cdir = sympify(cdir)
+        from sympy.functions.elementary.complexes import im, sign
+
+        if not cdir.is_zero:
+            if cdir.is_real:
+                dir = '+' if cdir.is_positive else '-'
+            else:
+                dir = '+' if im(cdir).is_positive else '-'
+        else:
+            if x0 and x0.is_infinite:
+                cdir = sign(x0).simplify()
+            elif str(dir) == "+":
+                cdir = S.One
+            elif str(dir) == "-":
+                cdir = S.NegativeOne
+            elif cdir == S.Zero:
+                cdir = S.One
+
+        cdir = cdir/abs(cdir)
+
+        if x0 and x0.is_infinite:
             from .function import PoleError
             try:
-                sgn = 1 if x0 is S.Infinity else -1
-                s = self.subs(x, sgn/x).series(x, n=n, dir='+', cdir=cdir)
+                s = self.subs(x, cdir/x).series(x, n=n, dir='+', cdir=1)
                 if n is None:
-                    return (si.subs(x, sgn/x) for si in s)
-                return s.subs(x, sgn/x)
+                    return (si.subs(x, cdir/x) for si in s)
+                return s.subs(x, cdir/x)
             except PoleError:
-                s = self.subs(x, sgn*x).aseries(x, n=n)
-                return s.subs(x, sgn*x)
+                s = self.subs(x, cdir*x).aseries(x, n=n)
+                return s.subs(x, cdir*x)
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
-        if x0 or dir == '-':
-            if dir == '-':
-                rep = -x + x0
-                rep2 = -x
-                rep2b = x0
-            else:
-                rep = x + x0
-                rep2 = x
-                rep2b = -x0
-            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx, cdir=cdir)
+        if x0 or cdir != 1:
+            s = self.subs({x: x0 + cdir*x}).series(x, x0=0, n=n, dir='+', logx=logx, cdir=1)
             if n is None:  # lseries...
-                return (si.subs(x, rep2 + rep2b) for si in s)
-            return s.subs(x, rep2 + rep2b)
+                return (si.subs({x: x/cdir - x0/cdir}) for si in s)
+            return s.subs({x: x/cdir - x0/cdir})
 
         # from here on it's x0=0 and dir='+' handling
 
