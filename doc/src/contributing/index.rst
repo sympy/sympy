@@ -15,6 +15,7 @@ SymPy wiki.
    :maxdepth: 2
 
    dev-setup.rst
+   development-workflow.rst
    dependencies.md
    build-docs.rst
    debug.rst
