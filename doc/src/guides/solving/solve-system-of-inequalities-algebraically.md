@@ -8,9 +8,8 @@ SymPy can currently solve inequalities involving only one variable (symbol).
 ```
 
 Alternatives to consider:
-- For multivariate systems (more than one symbol), try this [SciPy linear
-  programming
-  function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
+- For multivariate systems (more than one symbol), try SciPy's {external:func}`~scipy.optimize.linprog`
+- To reduce Boolean expressions, use {func}`sympy.logic.boolalg.Boolean.as_set`
 
 Here is a simple example of solving a system of inequalities of a single
 variable algebraically. solve {func}`~.solve` accepts a list or tuple of
@@ -135,9 +134,7 @@ Traceback (most recent call last):
 NotImplementedError: The inequality, -x + cos(x) > 0, cannot be solved using solve_univariate_inequality.
 ```
 
-so you may have to solve your equation numerically instead using this [SciPy
-linear programming
-function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html).
+so you may have to solve your equation numerically instead using SciPy's {external:func}`~scipy.optimize.linprog`.
 
 ### Equations which have an analytical solution, and SymPy cannot solve
 
@@ -155,13 +152,11 @@ Traceback (most recent call last):
 NotImplementedError: inequality has more than one symbol of interest.
 ```
 
-You can use this [SciPy linear programming
-function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
+You can use SciPy's {external:func}`~scipy.optimize.linprog`
 to solve this problem.
 
 If you encounter a problem with SymPy, please post the problem on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-may be able to use this [SciPy linear programming
-function](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
+may be able to use SciPy's {external:func}`~scipy.optimize.linprog`
 to solve the problem.
