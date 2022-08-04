@@ -39,8 +39,7 @@ You can create your inequalities, then solve the system as a list:
 ```py
 >>> from sympy import symbols, solve, pi, Integer
 >>> x = symbols('x')
->>> one_third = Integer(1)/Integer(3)
->>> solve([x >= one_third, x**2 <= pi], x)
+>>> eq = solve([3*x >= 1, x**2 <= pi], x); eq
 (1/3 <= x) & (x <= sqrt(pi))
 ```
 
@@ -62,8 +61,7 @@ the symbol is on the left, so you can take the right-hand side {any}`rhs
 >>> from sympy import symbols, solve, Integer, pi
 >>> from sympy.core.relational import Relational
 >>> x = symbols('x')
->>> one_third = Integer(1)/Integer(3)
->>> eq = solve([x >= one_third, x**2 <= pi], x)
+>>> eq = solve([3*x >= 1, x**2 <= pi], x)
 >>> eq
 (1/3 <= x) & (x <= sqrt(pi))
 >>> relations = [(i.lhs, i.rel_op, i.rhs) for i in [i.canonical for i in eq.atoms(Relational)]]
@@ -82,7 +80,7 @@ right-hand side of the `args`:
 ```py
 >>> from sympy import symbols, solve, Integer, pi
 >>> x = symbols('x')
->>> eq = solve([x >= Integer(1)/Integer(3), x**2 <= pi], x)
+>>> eq = solve([3*x >= 1, x**2 <= pi], x)
 >>> eq.args
 (1/3 <= x, x <= sqrt(pi))
 >>> constants = []
