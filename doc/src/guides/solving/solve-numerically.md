@@ -22,10 +22,9 @@ its dependency mpmath) for numerical calculations are:
   precision than you would get from float64.
 
 Alternatives to consider:
-- [NumPy](https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html?highlight=solve#numpy.linalg.solve)
-and
-[SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.solve.html#scipy.linalg.solve)
-can each solve a system of linear scalar equations
+- NumPy's {external:func}`~numpy.linalg.solve` and SciPy's
+  {external:func}`~scipy.linalg.solve` can each solve a system of linear scalar
+  equations
 
 Here is a simple example of numerically solving one equation:
 
