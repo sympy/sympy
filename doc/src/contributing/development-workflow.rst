@@ -2,8 +2,6 @@
  Development workflow
 ======================
 
-.. contents:: Table Of Contents
-
 Introduction
 ============
 
@@ -632,90 +630,108 @@ Add your name and email address to the .mailmap file.
 Every author's name and email address is stored in the AUTHORS file but this file should not be edited directly. The AUTHORS file is updated automatically when a new version of SymPy is released based on the name and email addresses that are recorded in the commits. Every commit made with git stores the name and email address that git is configured with (see "Configure git settings" above). The .mailmap file is used to associate the name/email recorded in the commits with an author name and email address that will be listed in the AUTHORS file.
 
 The first time you make a pull request you will need to add your name and email address to the .mailmap file by adding a line like
-```
-Joe Bloggs <joe@bloggs.com>
-```
-This name and email should exactly match the name and email that you have configured with git before making the commits (see "Configure git settings" above). The `bin/mailmap_check.py` script can check that this has been done correctly. If you have made a commit but not yet added yourself to the .mailmap file then you will see this:
-```console
-$ python bin/mailmap_check.py 
-This author is not included in the .mailmap file:
-Joe Bloggs <joe@bloggs.com>
 
-The .mailmap file needs to be updated because there are commits with
-unrecognised author/email metadata.
-        
+.. code::
 
-For instructions on updating the .mailmap file see:
-https://github.com/sympy/sympy/wiki/Development-workflow
+   Joe Bloggs <joe@bloggs.com>
 
-The following authors will be added to the AUTHORS file at the
-time of the next SymPy release.
-```
+This name and email should exactly match the name and email that you have configured with git before making the commits (see "Configure git settings" above). The ``bin/mailmap_check.py`` script can check that this has been done correctly. If you have made a commit but not yet added yourself to the .mailmap file then you will see this:
+
+.. code-block:: bash
+
+   $ python bin/mailmap_check.py
+   This author is not included in the .mailmap file:
+   Joe Bloggs <joe@bloggs.com>
+
+   The .mailmap file needs to be updated because there are commits with
+   unrecognised author/email metadata.
+
+
+   For instructions on updating the .mailmap file see:
+   https://github.com/sympy/sympy/wiki/Development-workflow
+
+   The following authors will be added to the AUTHORS file at the
+   time of the next SymPy release.
+
 This means that you should add your name and email address to the .mailmap file. If you add this at the end of the file then `git diff` will show:
-```console
-$ git diff
-diff --git a/.mailmap b/.mailmap
-index 3af6dc1..7fa63b1 100644
---- a/.mailmap
-+++ b/.mailmap
-@@ -1307,3 +1307,4 @@ zsc347 <zsc347@gmail.com>
- Øyvind Jensen <jensen.oyvind@gmail.com>
- Łukasz Pankowski <lukpank@o2.pl>
- 彭于斌 <1931127624@qq.com>
-+Joe Bloggs <joe@bloggs.com>
-```
+
+.. code-block:: bash
+
+   $ git diff
+   diff --git a/.mailmap b/.mailmap
+   index 3af6dc1..7fa63b1 100644
+   --- a/.mailmap
+   +++ b/.mailmap
+   @@ -1307,3 +1307,4 @@ zsc347 <zsc347@gmail.com>
+    Øyvind Jensen <jensen.oyvind@gmail.com>
+    Łukasz Pankowski <lukpank@o2.pl>
+    彭于斌 <1931127624@qq.com>
+   +Joe Bloggs <joe@bloggs.com>
+
 Now you can rerun the `bin/mailmap_check.py` script and you should see:
-```console
-$ python bin/mailmap_check.py 
-The mailmap file was reordered
 
-For instructions on updating the .mailmap file see:
-https://github.com/sympy/sympy/wiki/Development-workflow
+.. code-block:: bash
 
-The following authors will be added to the AUTHORS file at the
-time of the next SymPy release.
+   $ python bin/mailmap_check.py
+   The mailmap file was reordered
 
-Joe Bloggs <joe@bloggs.com>
-```
+   For instructions on updating the .mailmap file see:
+   https://github.com/sympy/sympy/wiki/Development-workflow
+
+   The following authors will be added to the AUTHORS file at the
+   time of the next SymPy release.
+
+   Joe Bloggs <joe@bloggs.com>
+
 The first line their says that the .mailmap file was "reordered". This is because the file should be in alphabetical order. The script will have moved your name into the correct position so now you can see the change as:
-```console
-$ git diff
-diff --git a/.mailmap b/.mailmap
-index 3af6dc1..7598d94 100644
---- a/.mailmap
-+++ b/.mailmap
-@@ -562,6 +562,7 @@ Joannah Nanjekye <joannah.nanjekye@ibm.com> Joannah Nanjekye <jnanjekye@python.o
- Joannah Nanjekye <joannah.nanjekye@ibm.com> nanjekyejoannah <joannah.nanjekye@ibm.com>
- Joaquim Monserrat <qmonserrat@mailoo.org>
- Jochen Voss <voss@seehuhn.de>
-+Joe Bloggs <joe@bloggs.com>
- Jogi Miglani <jmig5776@gmail.com> jmig5776 <jmig5776@gmail.com>
- Johan Blåbäck <johan_bluecreek@riseup.net> <johan.blaback@cea.fr>
- Johan Guzman <jguzm022@ucr.edu>
-```
+
+.. code-block:: bash
+
+   $ git diff
+   diff --git a/.mailmap b/.mailmap
+   index 3af6dc1..7598d94 100644
+   --- a/.mailmap
+   +++ b/.mailmap
+   @@ -562,6 +562,7 @@ Joannah Nanjekye <joannah.nanjekye@ibm.com> Joannah Nanjekye <jnanjekye@python.o
+    Joannah Nanjekye <joannah.nanjekye@ibm.com> nanjekyejoannah <joannah.nanjekye@ibm.com>
+    Joaquim Monserrat <qmonserrat@mailoo.org>
+    Jochen Voss <voss@seehuhn.de>
+   +Joe Bloggs <joe@bloggs.com>
+    Jogi Miglani <jmig5776@gmail.com> jmig5776 <jmig5776@gmail.com>
+    Johan Blåbäck <johan_bluecreek@riseup.net> <johan.blaback@cea.fr>
+    Johan Guzman <jguzm022@ucr.edu>
+
 Now if you rerun the script you will see:
-```console
-$ python bin/mailmap_check.py 
-No changes needed in .mailmap
 
-The following authors will be added to the AUTHORS file at the
-time of the next SymPy release.
+.. code-block:: bash
 
-Joe Bloggs <joe@bloggs.com>
-```
+   $ python bin/mailmap_check.py
+   No changes needed in .mailmap
+
+   The following authors will be added to the AUTHORS file at the
+   time of the next SymPy release.
+
+   Joe Bloggs <joe@bloggs.com>
+
 The key information here is "No changes needed in .mailmap" which means that you have correctly updated the .mailmap file. You should now add and commit these changes as well:
-```console
-$ git add .mailmap
-$ git commit -m 'author: add Joe Bloggs to .mailmap'
-```
-Sometimes a commit will be made with an incorrect name or email address or an author will make multiple commits with different names and email addresses. In this case a line should be added to the .mailmap file where the first name and email address is what should be recorded in the AUTHORS file and the others are the name and email address that was incorrectly used in the other commits. For example if the commit was recorded with the name `joeb` and the email address `wrong@email.com` but the AUTHORS file should show `Joe Bloggs` as above then there should be a line in the .mailmap file like:
-```
-Joe Bloggs <joe@bloggs.com> joeb <wrong@email.com>
-```
-A common reason that this can happen is if making commits with the GitHub web UI which always recorded the name as github username and the email as something like `1785690389+joeb@users.noreply.github.com`. In this case a line will need to be added to .mailmap like:
-```
-Joe Bloggs <joe@bloggs.com> joeb <1785690389+joeb@users.noreply.github.com>
-```
+
+.. code-block:: bash
+
+   $ git add .mailmap
+   $ git commit -m 'author: add Joe Bloggs to .mailmap'
+
+Sometimes a commit will be made with an incorrect name or email address or an author will make multiple commits with different names and email addresses. In this case a line should be added to the .mailmap file where the first name and email address is what should be recorded in the AUTHORS file and the others are the name and email address that was incorrectly used in the other commits. For example if the commit was recorded with the name ``joeb`` and the email address ``wrong@email.com`` but the AUTHORS file should show ``Joe Bloggs`` as above then there should be a line in the .mailmap file like:
+
+.. code::
+
+   Joe Bloggs <joe@bloggs.com> joeb <wrong@email.com>
+
+A common reason that this can happen is if making commits with the GitHub web UI which always recorded the name as github username and the email as something like ``1785690389+joeb@users.noreply.github.com``. In this case a line will need to be added to .mailmap like:
+
+.. code::
+
+   Joe Bloggs <joe@bloggs.com> joeb <1785690389+joeb@users.noreply.github.com>
+
 Multiple lines like this can be added to the .mailmap file. They should record all of the different name and email address combinations that have been used by an author and map all of them to a single author name that will show in the AUTHORS file.
 
 If your pull request is merged and you have not previously been added to the AUTHORS file then your name will be added at the time of the next release of SymPy.
@@ -1157,7 +1173,9 @@ Ans:
 
 References
 ==========
-.. .. rubric:: Footnotes
+
+.. rubric:: Footnotes
+
 This page is based upon present SymPy_ pages [2-6], GitHub help [8-9], [11-12] and inspired
 by Sage guide [10]:
 
