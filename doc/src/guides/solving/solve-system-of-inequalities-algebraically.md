@@ -1,45 +1,51 @@
-# Solve a system of inequalities of a single variable algebraically
+# Reduce a system of inequalities of a single variable algebraically
 
-Use SymPy to solve a system of univariate inequalities algebraically. For
+Use SymPy to reduce a system of univariate inequalities algebraically. For
 example, solving $x^2 < \pi$, $x > 0$ yields $0 < x < \sqrt{\pi}$.
 
 ```{note}
-SymPy can currently solve inequalities involving only one variable (symbol).
+SymPy can currently reduce inequalities involving only one variable (symbol).
 ```
 
 Alternatives to consider:
-- For multivariate systems (more than one symbol), try SciPy's {external:func}`~scipy.optimize.linprog`
+- For multivariate systems (more than one symbol), try SciPy's
+  {external:func}`~scipy.optimize.linprog`
 - To reduce Boolean expressions, use {func}`sympy.logic.boolalg.Boolean.as_set`
 
-Here is a simple example of solving a system of inequalities of a single
-variable algebraically. solve {func}`~.solve` accepts a list or tuple of
-inequalities to be solved as a system:
+Here is a simple example of reducing a system of inequalities of a single
+variable algebraically. {func}`~.reduce_inequalities` accepts a list or tuple of
+inequalities to be reduced as a system:
 
 ```py
->>> from sympy import symbols, solve, pi
+>>> from sympy import symbols, reduce_inequalities, pi
 >>> x = symbols('x')
->>> solve([x >= 0, x**2 <= pi], x)
+>>> reduce_inequalities([x >= 0, x**2 <= pi], x)
 (0 <= x) & (x <= sqrt(pi))
+```
+
+```{note}
+While {func}`~.solve` currently accomplishes the same thing (by calling 
+{func}`~.reduce_inequalities` internally), that functionality may be 
+deprecated or removed from {func}`~.solve`. We thus recommend using 
+{func}`~.reduce_inequalities`.
 ```
 
 ## Guidance
 
-### Include the variable to be solved for in the function call
+### Include the variable to be reduced for in the function call
 
-We recommend you include the variable to be solved for as the second argument
-for {func}`~.solve`. While {func}`~.solve` can currently solve systems of
-equations with only one symbol, it is a good practice in case that capability is
-expanded, and because {func}`~.solve` can solve an equation with more than one
-symbol.
+We recommend you include the variable to be reduced for as the second argument
+for {func}`~.reduce_inequalities` to ensure that it reduced for the desired
+variable.
 
-## Solve a system of inequalities algebraically
+## Reduce a system of inequalities algebraically
 
-You can create your inequalities, then solve the system as a list:
+You can create your inequalities, then reduce the system as a list:
 
 ```py
->>> from sympy import symbols, solve, pi, Integer
+>>> from sympy import symbols, reduce_inequalities, pi
 >>> x = symbols('x')
->>> eq = solve([3*x >= 1, x**2 <= pi], x); eq
+>>> reduce_inequalities([3*x >= 1, x**2 <= pi], x)
 (1/3 <= x) & (x <= sqrt(pi))
 ```
 
@@ -58,11 +64,10 @@ the symbol is on the left, so you can take the right-hand side {any}`rhs
 <sympy.core.relational.Relational.lhs>` to extract the constants:
 
 ```py
->>> from sympy import symbols, solve, Integer, pi
+>>> from sympy import symbols, reduce_inequalities, pi
 >>> from sympy.core.relational import Relational
 >>> x = symbols('x')
->>> eq = solve([3*x >= 1, x**2 <= pi], x)
->>> eq
+>>> eq = reduce_inequalities([3*x >= 1, x**2 <= pi], x); eq
 (1/3 <= x) & (x <= sqrt(pi))
 >>> relations = [(i.lhs, i.rel_op, i.rhs) for i in [i.canonical for i in eq.atoms(Relational)]]
 >>> # Sorting relations just to ensure consistent list order for docstring testing
@@ -78,9 +83,10 @@ individual relations, so you can extract the constants from the left- or
 right-hand side of the `args`:
 
 ```py
->>> from sympy import symbols, solve, Integer, pi
+>>> from sympy import symbols, reduce_inequalities, pi
 >>> x = symbols('x')
->>> eq = solve([3*x >= 1, x**2 <= pi], x)
+>>> eq = reduce_inequalities([3*x >= 1, x**2 <= pi], x); eq
+(1/3 <= x) & (x <= sqrt(pi))
 >>> eq.args
 (1/3 <= x, x <= sqrt(pi))
 >>> constants = []
@@ -93,17 +99,7 @@ right-hand side of the `args`:
 [1/3, sqrt(pi)]
 ```
 
-## *Tradeoffs (speed vs. accuracy, etc.) for function*
-
-### *Tradeoff 1*
-
-*Speed-up option 1 content*
-
-### *Speed-up option 2*
-
-*Speed-up option 2 content*
-
-## Not all systems of inequalities can be solved
+## Not all systems of inequalities can be reduced
 
 ### Systems of inequalities with no solution
 
@@ -111,50 +107,52 @@ If the system of inequalities has incompatible conditions, for example $x < 0$
 and $x > \pi$, SymPy will return `False`:
 
 ```py
->>> from sympy import symbols, solve, pi
+>>> from sympy import symbols, reduce_inequalities, pi
 >>> x = symbols('x')
->>> solve([x < 0, x > pi])
+>>> reduce_inequalities([x < 0, x > pi], x)
 False
 ```
 
-### Equations with no analytical solution
+### Systems of inequalities that cannot be reduced analytically
 
-SymPy may reflect that your equation has no solutions that can be expressed
-algebraically (symbolically) by returning an error such as
+SymPy may reflect that your system of inequalities has no solutions that can be
+expressed algebraically (symbolically) by returning an error such as
 `NotImplementedError`:
 
 ```py
->>> from sympy import symbols, solve, cos
+>>> from sympy import symbols, reduce_inequalities, cos
 >>> x = symbols('x')
->>> solve([cos(x) - x > 0, x > 0], x)
+>>> reduce_inequalities([cos(x) - x > 0, x > 0], x)
 Traceback (most recent call last):
     ...
 NotImplementedError: The inequality, -x + cos(x) > 0, cannot be solved using solve_univariate_inequality.
 ```
 
-so you may have to solve your equation numerically instead using SciPy's {external:func}`~scipy.optimize.linprog`.
+so you may have to reduce your inequalities numerically instead using SciPy's
+{external:func}`~scipy.optimize.linprog`.
 
-### Equations which have an analytical solution, and SymPy cannot solve
+### Inequalities which can be reduced analytically, and SymPy cannot reduce
 
-SymPy has implemented algorithms to solve inequalities involving only one symbol
-(variable), so it cannot solve a set of inequalities involving more than one
+SymPy has implemented algorithms to reduce inequalities involving only one
+symbol (variable), so it cannot reduce a set of inequalities for more than one
 symbol:
 
 ```py
->>> from sympy import solve, symbols
->>> x, y = symbols('x y')
->>> from sympy.abc import x, y
->>> solve([x**2 < y, x > 0], x)
+>>> from sympy import reduce_inequalities, symbols
+>>> x, y = symbols("x y")
+>>> reduce_inequalities([x + y > 1, y > 0], [x, y])
 Traceback (most recent call last):
     ...
 NotImplementedError: inequality has more than one symbol of interest.
 ```
 
-You can use SciPy's {external:func}`~scipy.optimize.linprog`
-to solve this problem.
+You can use SciPy's {external:func}`~scipy.optimize.linprog` to reduce this
+system of inequalities.
+
+### Report a problem with SymPy
 
 If you encounter a problem with SymPy, please post the problem on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-may be able to use SciPy's {external:func}`~scipy.optimize.linprog`
-to solve the problem.
+may be able to use SciPy's {external:func}`~scipy.optimize.linprog` to reduce
+the system of inequalities.
