@@ -1,7 +1,8 @@
-# Reduce a system of inequalities of a single variable algebraically
+# Reduce a system of inequalities for a single variable algebraically
 
-Use SymPy to reduce a system of univariate inequalities algebraically. For
-example, solving $x^2 < \pi$, $x > 0$ yields $0 < x < \sqrt{\pi}$.
+Use SymPy to reduce a system of inequalities for a single variable
+algebraically. For example, reducing $x^2 < \pi$, $x > 0$ yields $0 < x <
+\sqrt{\pi}$.
 
 ```{note}
 SymPy can currently reduce for only one symbol (variable) in a system of 
@@ -9,11 +10,11 @@ inequalities. SymPy can reduce a system containing more than one symbol.
 ```
 
 Alternatives to consider:
-- For multivariate systems (more than one symbol), try SciPy's
+- To reduce for more than one symbol, try SciPy's
   {external:func}`~scipy.optimize.linprog`
 - To reduce Boolean expressions, use {func}`sympy.logic.boolalg.Boolean.as_set`
 
-Here is a simple example of reducing a system of inequalities of a single
+Here is a simple example of reducing a system of inequalities for a single
 variable algebraically. {func}`~.reduce_inequalities` accepts a list or tuple of
 inequalities to be reduced as a system:
 
@@ -30,6 +31,10 @@ While {func}`~.solve` currently accomplishes the same thing (by calling
 deprecated or removed from {func}`~.solve`. We thus recommend using 
 {func}`~.reduce_inequalities`.
 ```
+
+{func}`~.reduce_inequalities` is the top-level inequality-reducing function
+which will internally call any other lower-level [inequality-reducing
+functions](modules/solvers/inequalities.rst) as needed.
 
 ## Guidance
 
@@ -66,9 +71,9 @@ You can create your inequalities, then reduce the system as a list:
 (1/3 <= x) & (x <= sqrt(pi))
 ```
 
-## Use the solution result
+## Use the result
 
-A common way to use the solution result is to extract the bounds for the symbol
+A common way to use the result is to extract the bounds for the symbol
 (variable). For example, for a solution of $0 < x < \sqrt{\pi}$, you might want
 to extract $0$ and $\sqrt{\pi}$.
 
@@ -87,15 +92,14 @@ the symbol is on the left, so you can take the right-hand side {any}`rhs
 >>> eq = reduce_inequalities([3*x >= 1, x**2 <= pi], x); eq
 (1/3 <= x) & (x <= sqrt(pi))
 >>> relations = [(i.lhs, i.rel_op, i.rhs) for i in [i.canonical for i in eq.atoms(Relational)]]
->>> # Sorting relations just to ensure consistent list order for docstring testing
->>> relations_sorted = sorted(relations, key=lambda x: float(x[2]))
+>>> relations_sorted = sorted(relations, key=lambda x: float(x[2])) # Sorting relations just to ensure consistent list order for docstring testing
 >>> print(relations_sorted)
 [(x, '>=', 1/3), (x, '<=', sqrt(pi))]
 ```
 
 ### Extract a tuple of relations
 
-The {any}`args <sympy.core.basic.Basic.args>` of a solution set are the
+The {any}`args <sympy.core.basic.Basic.args>` of reduced relations are the
 individual relations, so you can extract the constants from the left- or
 right-hand side of the `args`:
 
@@ -118,7 +122,7 @@ right-hand side of the `args`:
 
 ## Not all systems of inequalities can be reduced
 
-### Systems of inequalities with no solution
+### Systems of inequalities which cannot be satisfied
 
 If the system of inequalities has incompatible conditions, for example $x < 0$
 and $x > \pi$, SymPy will return `False`:
@@ -150,9 +154,8 @@ so you may have to reduce your inequalities numerically instead using SciPy's
 
 ### Inequalities which can be reduced analytically, and SymPy cannot reduce
 
-SymPy has implemented algorithms to reduce inequalities involving only one
-symbol (variable), so it cannot reduce a set of inequalities for more than one
-symbol:
+SymPy has implemented algorithms to reduce inequalities for only one symbol
+(variable), so it cannot reduce a set of inequalities for more than one symbol:
 
 ```py
 >>> from sympy import reduce_inequalities, symbols
