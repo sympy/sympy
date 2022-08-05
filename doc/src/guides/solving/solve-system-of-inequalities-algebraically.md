@@ -4,7 +4,8 @@ Use SymPy to reduce a system of univariate inequalities algebraically. For
 example, solving $x^2 < \pi$, $x > 0$ yields $0 < x < \sqrt{\pi}$.
 
 ```{note}
-SymPy can currently reduce inequalities involving only one variable (symbol).
+SymPy can currently reduce for only one symbol (variable) in a system of 
+inequalities. SymPy can reduce a system containing more than one symbol.
 ```
 
 Alternatives to consider:
@@ -35,8 +36,24 @@ deprecated or removed from {func}`~.solve`. We thus recommend using
 ### Include the variable to be reduced for in the function call
 
 We recommend you include the variable to be reduced for as the second argument
-for {func}`~.reduce_inequalities` to ensure that it reduced for the desired
+for {func}`~.reduce_inequalities` to ensure that it reduces for the desired
 variable.
+
+### Recognize that SymPy can reduce for only one variable
+
+SymPy can currently reduce for only one symbol (variable) in a system of
+inequalities. SymPy can reduce a system containing more than one symbol. For
+example, the following system of inequalities has two variables, $x$ and $y$.
+SymPy can reduce for $x$, and gives the constraints on $y$.
+
+```py
+>>> from sympy import reduce_inequalities, symbols
+>>> x, y = symbols("x y")
+>>> reduce_inequalities([x + y > 1, y > 0], x)
+(0 < y) & (y < oo) & (x > 1 - y)
+```
+
+However, SymPy cannot arrive at the more complete result `(x < 1) & (y > 0)`.
 
 ## Reduce a system of inequalities algebraically
 
