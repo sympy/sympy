@@ -3,6 +3,7 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.numbers import _sympifyit, oo, zoo
 from sympy.core.relational import is_le, is_lt, is_ge, is_gt
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import And
@@ -523,6 +524,8 @@ class AccumulationBounds(Expr):
                             return AccumBounds(self.max**other, oo)
                         if self.max.is_zero:
                             return AccumBounds(self.min**other, oo)
+                        if self.has(Symbol):
+                            return AccumBounds(self.max**other, self.min**other)
                         return AccumBounds(0, oo)
                     return AccumBounds(
                         S.Zero, Max(self.min**other, self.max**other))
@@ -532,6 +535,8 @@ class AccumulationBounds(Expr):
                             return AccumBounds(self.max**other, oo)
                         if self.max.is_zero:
                             return AccumBounds(-oo, self.min**other)
+                        if self.has(Symbol):
+                            return AccumBounds(self.max**other, self.min**other)
                         return AccumBounds(-oo, oo)
                     return AccumBounds(self.min**other, self.max**other)
 

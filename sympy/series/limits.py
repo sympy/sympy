@@ -3,7 +3,7 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Float, _illegal
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.elementary.complexes import (Abs, sign, arg)
+from sympy.functions.elementary.complexes import (Abs, sign, arg, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
@@ -122,18 +122,6 @@ def heuristics(e, z, z0, dir):
                 except PolynomialError:
                     return
                 if rat_e is S.NaN or rat_e == e:
-                    if e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:
-                        leading_terms = []
-                        for a in e.args:
-                            try:
-                                term = a.as_leading_term(z)
-                                leading_terms.append(term)
-                            except (NotImplementedError, PoleError, ValueError):
-                                    return
-                        if leading_terms:
-                            lt = e.func(*leading_terms)
-                            if lt != e and not isinstance(lt, Limit):
-                                return limit(lt, z, z0, dir)
                     return
                 return limit(rat_e, z, z0, dir)
     return rv
@@ -341,6 +329,12 @@ class Limit(Expr):
                 r = self.pow_heuristics(e)
                 if r is not None:
                     return r
+            try:
+                coeff, ex = newe.as_leading_term(z, cdir=cdir), S.Zero
+                if coeff != newe and coeff.has(exp):
+                    return gruntz(coeff, z, 0, "-" if re(cdir).is_negative else "+")
+            except (ValueError, NotImplementedError, PoleError):
+                pass
         else:
             if isinstance(coeff, AccumBounds) and ex == S.Zero:
                 return coeff
@@ -366,6 +360,8 @@ class Limit(Expr):
                             return S.Infinity*sign(coeff)*S.NegativeOne**ex
                         else:
                             return S.ComplexInfinity
+                else:
+                    raise NotImplementedError("Not sure of sign of %s" % ex)
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.

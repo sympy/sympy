@@ -12,7 +12,6 @@ from sympy.core.symbol import Dummy, Wild
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
-from sympy.functions.elementary.hyperbolic import cosh
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import cbrt, sqrt, root
@@ -231,12 +230,10 @@ class besselj(BesselBase):
         _, e = arg.as_coeff_exponent(x)
 
         if e.is_positive:
-            if x in arg.free_symbols:
-                return arg**nu/(2**nu*gamma(nu + 1))
-            else:
-                return self.func(nu, z.subs(x, 0))
+            return arg**nu/(2**nu*gamma(nu + 1))
         elif e.is_negative:
-            return sqrt(2)*cos(z - pi*(2*nu + 1)/4)/sqrt(pi*z)
+            return sqrt(2)*(-(-1)**(S(3)/4)*I**nu*exp(-I*pi*nu + I*z) + \
+                    (-1)**(S(1)/4)*I**nu*exp(-I*z))/(2*sqrt(pi)*sqrt(z))
 
         return super(besselj, self)._eval_as_leading_term(x, logx, cdir)
 
@@ -360,12 +357,9 @@ class bessely(BesselBase):
             term_two = -(z/2)**(-nu)*factorial(nu - 1)/pi if (nu).is_positive else S.Zero
             term_three = -(z/2)**nu/(pi*factorial(nu))*(digamma(nu + 1) - S.EulerGamma)
             arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
-            if (x in arg.free_symbols or logx in arg.free_symbols):
-                return arg
-            else:
-                return self.func(nu, z.subs(x, 0).cancel())
+            return arg
         elif e.is_negative:
-            return sqrt(2)*sin(z - pi*nu/2 - pi/4)/sqrt(pi*z)
+            return (-I*exp(-I*pi*nu/2 + I*z - I*pi/4) + I*exp(I*pi*nu/2 - I*z + I*pi/4))/sqrt(2*pi*z)
 
         return super(bessely, self)._eval_as_leading_term(x, logx, cdir)
 
@@ -530,13 +524,9 @@ class besseli(BesselBase):
         _, e = arg.as_coeff_exponent(x)
 
         if e.is_positive:
-            if x in arg.free_symbols:
-                return arg**nu/(2**nu*gamma(nu + 1))
-            else:
-                return self.func(nu, z.subs(x, 0))
+            return arg**nu/(2**nu*gamma(nu + 1))
         elif e.is_negative:
-            return (-1)**(S(1)/4)*sqrt(2)*exp(I*pi*nu/2)*cosh(z - \
-                    I*pi*(2*nu + 1)/4)/sqrt(pi*z)
+            return (exp(z) + I*exp(I*pi*nu - z))/sqrt(2*pi*z)
 
         return super(besseli, self)._eval_as_leading_term(x, logx, cdir)
 
@@ -664,10 +654,7 @@ class besselk(BesselBase):
             term_two = (z/2)**(-nu)*factorial(nu - 1)/2 if (nu).is_positive else S.Zero
             term_three = (-1)**nu*(z/2)**nu/(2*factorial(nu))*(digamma(nu + 1) - S.EulerGamma)
             arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
-            if (x in arg.free_symbols or logx in arg.free_symbols):
-                return arg
-            else:
-                return self.func(nu, z.subs(x, 0).cancel())
+            return arg
         elif e.is_negative:
             return sqrt(pi)*exp(-z)/sqrt(2*z)
 
