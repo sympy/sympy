@@ -5,7 +5,24 @@ These guidelines apply to many types of solving.
 ## Numeric solutions
 Solving functions such as {func}`~.solve` and {func}`~.solveset` will not try to
 find a numeric solution, only a mathematically-exact symbolic solution. So if
-you want a numeric solution, use {func}`~.nsolve`.
+you want a numeric solution, consider {func}`~.nsolve`.
+
+In some situations, even though a closed-form solution is available, it may be
+too cumbersome to be desirable. In that case, you can use {func}`evalf n
+<sympy.core.evalf>` instead if a numerical solution is acceptable:
+
+```py
+>>> from sympy import symbols, solve
+>>> x = symbols('x')
+>>> solutions = solve(x**4 + 10*x**2 + x + 1, x, dict=True); solutions
+[{x: -sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3))/2 - sqrt(-40/3 - 2*(1307/432 + sqrt(434607)*I/144)**(1/3) + 2/sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3)) - 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)))/2}, {x: sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3))/2 - sqrt(-40/3 - 2*(1307/432 + sqrt(434607)*I/144)**(1/3) - 2/sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3)) - 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)))/2}, {x: sqrt(-40/3 - 2*(1307/432 + sqrt(434607)*I/144)**(1/3) - 2/sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3)) - 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)))/2 + sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3))/2}, {x: sqrt(-40/3 - 2*(1307/432 + sqrt(434607)*I/144)**(1/3) + 2/sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3)) - 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)))/2 - sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3))/2}]
+>>> for solution in solutions:
+...     print(solution[x].n())
+-0.0509758447494279 + 0.313552108895239*I
+0.0509758447494279 + 3.14751999969868*I
+0.0509758447494279 - 3.14751999969868*I
+-0.0509758447494279 - 0.313552108895239*I
+```
 
 ## Equations with no analytical solution
 
@@ -16,8 +33,8 @@ solvable. The classes of equations that are solvable are basically:
 3. Equations that can be solved by inverting some transcendental functions
 4. Problems that can be transformed into the cases above (e.g., by turning
 trigonometric functions into polynomials)
-5. A few other special cases that can be solved with something like the Lambert
-W function
+5. A few other special cases that can be solved with something like the
+{class}`Lambert W function <sympy.functions.elementary.exponential.LambertW>` 
 
 SymPy may reflect that your equation has no solutions that can be expressed
 algebraically (symbolically) by returning an error such as
@@ -43,8 +60,9 @@ so you may have to {func}`solve your equation numerically
 0.739085133215161
 ```
 
-If you receive non-closed-form solutions such as `CRootOf`, you can evaluate
-them numerically using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
+If you receive non-closed-form solutions such as {class}`CRootOf
+<sympy.polys.rootoftools.ComplexRootOf>`, you can evaluate them numerically
+using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
 
 ```py
 >>> from sympy import solve
@@ -64,11 +82,10 @@ complex root of a polynomial.)
 If you want to preserve the exact mathematical values of symbols such as
 [fractions](tutorial-gotchas-final-notes) and [square
 roots](symbolic-computation), define them so that SymPy can interpret them
-symbolically, for example define one-third as a {class}`rational object
-<sympy.core.numbers.Rational>` using `Rational(1, 3)`:
+symbolically, for example use SymPy's {class}`.Pi`:
 
 ```py
->>> from sympy import symbols, solve, pi, Rational
+>>> from sympy import symbols, solve, pi
 >>> x = symbols('x')
 >>> solve(x**2 - pi, x, dict=True)
 [{x: -sqrt(pi)}, {x: sqrt(pi)}]
@@ -99,7 +116,7 @@ result. For example, this exact equation can be solved:
 but if you use the inexact equation `eq = x**1.4142135623730951 - 2`, SymPy will
 not return a result despite attempting for a long time. 
 
-## How to parse a string representing the equation
+## Parse a string representing the equation
 
 If you are creating the expression yourself, we [recommend against using parsing
 a string](
@@ -108,9 +125,9 @@ But if you are programmatically reading in a string, this approach is
 convenient.
 
 You can parse a string representing the equation into a form that SymPy can
-understand (for example, `Eq` form), then apply solve the parsed expression.
-Parsing an equation from a string requires you to use {func}`transformations
-<sympy.parsing.sympy_parser.parse_expr>` for SymPy to
+understand (for example, {any}`Eq <sympy.core.relational.Eq>` form), then apply
+solve the parsed expression. Parsing an equation from a string requires you to
+use {func}`transformations <sympy.parsing.sympy_parser.parse_expr>` for SymPy to
 - interpret equals signs
 - create symbols from your variables
 -  use more mathematical (rather than standard Python) notation, for example the
@@ -138,7 +155,8 @@ sqrt(y)
 {-sqrt(y), sqrt(y)}
 ```
 
-If you already have the equation in `Eq` form, you can parse that string:
+If you already have the equation in {any}`Eq <sympy.core.relational.Eq>` form,
+you can parse that string:
 
 ```py
 >>> from sympy import parse_expr, solve, solveset
