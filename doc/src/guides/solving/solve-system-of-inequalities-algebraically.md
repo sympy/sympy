@@ -60,6 +60,44 @@ SymPy can reduce for $x$, and gives the constraints on $y$.
 
 However, SymPy cannot arrive at the more complete result `(x < 1) & (y > 0)`.
 
+### Recognize that not all results are returned
+
+The results returned for trigonometric inequalities are restricted in its
+periodic interval. {func}`~.reduce_inequalities` tries to return just enough
+solutions so that all (infinitely many) solutions can generated from the
+returned solutions by adding integer multiples of the {func}`~.periodicity` of
+the equation, here $2\pi$.
+
+```py
+>>> from sympy import reduce_inequalities, cos
+>>> from sympy.abc import x, y
+>>> from sympy.calculus.util import periodicity
+>>> reduce_inequalities([2*cos(x) < 1, x > 0], x)
+(0 < x) & (x < oo) & (pi/3 < x) & (x < 5*pi/3)
+>>> periodicity(2*cos(x), x)
+2*pi
+```
+
+### Recognize other limitations
+
+For example, {func}`~.reduce_inequalities` can solve a system of inequalities
+involving a power of the symbol to be reduced for, or involving another symbol,
+but not both:
+
+```py
+>>> from sympy import reduce_inequalities
+>>> from sympy.abc import x, y
+>>> reduce_inequalities([x ** 2 < 4, x > 0], x)
+(0 < x) & (x < 2)
+>>> reduce_inequalities([x < y, x > 0], x)
+(0 < x) & (x < oo) & (x < y)
+>>> reduce_inequalities([x ** 2 - y < 4, x > 0], x)
+Traceback (most recent call last):
+    ...
+NotImplementedError: 
+The inequality, -_y + x**2 < 0, cannot be solved using solve_univariate_inequality.
+```
+
 ## Reduce a system of inequalities algebraically
 
 You can create your inequalities, then reduce the system as a list:
