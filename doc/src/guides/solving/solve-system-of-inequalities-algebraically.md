@@ -34,7 +34,7 @@ deprecated or removed from {func}`~.solve`. We thus recommend using
 
 {func}`~.reduce_inequalities` is the top-level inequality-reducing function
 which will internally call any other lower-level [inequality-reducing
-functions](modules/solvers/inequalities.rst) as needed.
+functions](../../modules/solvers/inequalities.rst) as needed.
 
 ## Guidance
 
@@ -95,7 +95,8 @@ but not both:
 Traceback (most recent call last):
     ...
 NotImplementedError: 
-The inequality, -_y + x**2 < 0, cannot be solved using solve_univariate_inequality.
+The inequality, -_y + x**2 - 4 < 0, cannot be solved using
+solve_univariate_inequality.
 ```
 
 ## Reduce a system of inequalities algebraically
