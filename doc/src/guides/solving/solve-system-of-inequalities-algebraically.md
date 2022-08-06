@@ -84,7 +84,7 @@ For example, {func}`~.reduce_inequalities` can solve a system of inequalities
 involving a power of the symbol to be reduced for, or involving another symbol,
 but not both:
 
-```py
+```
 >>> from sympy import reduce_inequalities
 >>> from sympy.abc import x, y
 >>> reduce_inequalities([x ** 2 < 4, x > 0], x)
