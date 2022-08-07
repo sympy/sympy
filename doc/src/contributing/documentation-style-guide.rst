@@ -1,3 +1,5 @@
+.. _documentation-style-guide:
+
 =====================
 Docstring Style Guide
 =====================

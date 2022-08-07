@@ -2317,20 +2317,25 @@ class asin(InverseTrigonometricFunction):
                 F = factorial(k)
                 return R/F*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asin
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
             return arg.as_leading_term(x)
-        # Handling Branch cuts (-oo, -1) U (1, oo)
+        # Handling branch points
         if x0 in (-S.One, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
-        if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
-            return -pi - self.func(x0)
-        elif im(cdir) > 0 and x0.is_real and x0 > S.One:
-            return pi - self.func(x0)
+        # Handling points lying on branch cuts (-oo, -1) U (1, oo)
+        if (1 - x0**2).is_negative:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if x0.is_negative:
+                    return -pi - self.func(x0)
+            elif im(ndir).is_positive:
+                if x0.is_positive:
+                    return pi - self.func(x0)
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # asin
@@ -2379,6 +2384,7 @@ class asin(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return -S.ImaginaryUnit*log(S.ImaginaryUnit*x + sqrt(1 - x**2))
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_rewrite_as_acot(self, arg, **kwargs):
@@ -2521,20 +2527,25 @@ class acos(InverseTrigonometricFunction):
                 F = factorial(k)
                 return -R/F*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acos
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
-        # Handling Branch cuts (-oo, -1) U (1, oo)
+        # Handling branch points
         if x0 == 1:
             return sqrt(2)*sqrt((S.One - arg).as_leading_term(x))
         if x0 in (-S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
-        if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if im(cdir) < 0 and x0.is_real and x0 < S.NegativeOne:
-            return 2*pi - self.func(x0)
-        elif im(cdir) > 0 and x0.is_real and x0 > S.One:
-            return -self.func(x0)
+        # Handling points lying on branch cuts (-oo, -1) U (1, oo)
+        if (1 - x0**2).is_negative:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if x0.is_negative:
+                    return 2*pi - self.func(x0)
+            elif im(ndir).is_positive:
+                if x0.is_positive:
+                    return -self.func(x0)
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_is_extended_real(self):
@@ -2585,6 +2596,7 @@ class acos(InverseTrigonometricFunction):
     def _eval_rewrite_as_log(self, x, **kwargs):
         return pi/2 + S.ImaginaryUnit*\
             log(S.ImaginaryUnit*x + sqrt(1 - x**2))
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_rewrite_as_asin(self, x, **kwargs):
@@ -2748,20 +2760,25 @@ class atan(InverseTrigonometricFunction):
             x = sympify(x)
             return S.NegativeOne**((n - 1)//2)*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # atan
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
             return arg.as_leading_term(x)
-        # Handling Branch cuts (-I*oo, -I) U (I, I*oo)
+        # Handling branch points
         if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
-        if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if re(cdir) < 0 and re(x0).is_zero and im(x0) > S.One:
-            return self.func(x0) - pi
-        elif re(cdir) > 0 and re(x0).is_zero and im(x0) < S.NegativeOne:
-            return self.func(x0) + pi
+        # Handling points lying on branch cuts (-I*oo, -I) U (I, I*oo)
+        if (1 + x0**2).is_negative:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if re(ndir).is_negative:
+                if im(x0).is_positive:
+                    return self.func(x0) - pi
+            elif re(ndir).is_positive:
+                if im(x0).is_negative:
+                    return self.func(x0) + pi
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # atan
@@ -2782,6 +2799,7 @@ class atan(InverseTrigonometricFunction):
     def _eval_rewrite_as_log(self, x, **kwargs):
         return S.ImaginaryUnit/2*(log(S.One - S.ImaginaryUnit*x)
             - log(S.One + S.ImaginaryUnit*x))
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_aseries(self, n, args0, x, logx):
@@ -2947,20 +2965,25 @@ class acot(InverseTrigonometricFunction):
             x = sympify(x)
             return S.NegativeOne**((n + 1)//2)*x**n/n
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acot
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
-        if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        # Handling Branch cuts [-I, I]
+        # Handling branch points
         if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
-        if re(cdir) > 0 and re(x0).is_zero and im(x0) > S.Zero and im(x0) < S.One:
-            return self.func(x0) + pi
-        if re(cdir) < 0 and re(x0).is_zero and im(x0) < S.Zero and im(x0) > S.NegativeOne:
-            return self.func(x0) - pi
+        # Handling points lying on branch cuts [-I, I]
+        if x0.is_imaginary and (1 + x0**2).is_positive:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if re(ndir).is_positive:
+                if im(x0).is_positive:
+                    return self.func(x0) + pi
+            elif re(ndir).is_negative:
+                if im(x0).is_negative:
+                    return self.func(x0) - pi
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # acot
@@ -2991,6 +3014,7 @@ class acot(InverseTrigonometricFunction):
     def _eval_rewrite_as_log(self, x, **kwargs):
         return S.ImaginaryUnit/2*(log(1 - S.ImaginaryUnit/x)
             - log(1 + S.ImaginaryUnit/x))
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def inverse(self, argindex=1):
@@ -3126,20 +3150,43 @@ class asec(InverseTrigonometricFunction):
         """
         return sec
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return S.ImaginaryUnit*log(2 / x)
+        elif n < 0 or n % 2 == 1:
+            return S.Zero
+        else:
+            x = sympify(x)
+            if len(previous_terms) > 2 and n > 2:
+                p = previous_terms[-2]
+                return p * ((n - 1)*(n-2)) * x**2/(4 * (n//2)**2)
+            else:
+                k = n // 2
+                R = RisingFactorial(S.Half, k) *  n
+                F = factorial(k) * n // 2 * n // 2
+                return -S.ImaginaryUnit * R / F * x**n / 4
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asec
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
-        # Handling Branch cuts (-1, 1)
+        # Handling branch points
         if x0 == 1:
             return sqrt(2)*sqrt((arg - S.One).as_leading_term(x))
         if x0 in (-S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
-        if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if im(cdir) < 0 and x0.is_real and x0 > S.Zero and x0 < S.One:
-            return -self.func(x0)
-        elif im(cdir) > 0 and x0.is_real and x0 < S.Zero and x0 > S.NegativeOne:
-            return 2*pi - self.func(x0)
+        # Handling points lying on branch cuts (-1, 1)
+        if x0.is_real and (1 - x0**2).is_positive:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if x0.is_positive:
+                    return -self.func(x0)
+            elif im(ndir).is_positive:
+                if x0.is_negative:
+                    return 2*pi - self.func(x0)
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # asec
@@ -3184,6 +3231,7 @@ class asec(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_log(self, arg, **kwargs):
         return pi/2 + S.ImaginaryUnit*log(S.ImaginaryUnit/arg + sqrt(1 - 1/arg**2))
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_rewrite_as_asin(self, arg, **kwargs):
@@ -3304,20 +3352,43 @@ class acsc(InverseTrigonometricFunction):
         """
         return csc
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return pi/2 - S.ImaginaryUnit*log(2) + S.ImaginaryUnit*log(x)
+        elif n < 0 or n % 2 == 1:
+            return S.Zero
+        else:
+            x = sympify(x)
+            if len(previous_terms) > 2 and n > 2:
+                p = previous_terms[-2]
+                return p * ((n - 1)*(n-2)) * x**2/(4 * (n//2)**2)
+            else:
+                k = n // 2
+                R = RisingFactorial(S.Half, k) *  n
+                F = factorial(k) * n // 2 * n // 2
+                return S.ImaginaryUnit * R / F * x**n / 4
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acsc
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
-        # Handling Branch cuts (-1, 1)
+        # Handling branch points
         if x0 in (-S.One, S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
-        if cdir != 0:
-            cdir = arg.dir(x, cdir)
-        if im(cdir) < 0 and x0.is_real and x0 > S.Zero and x0 < S.One:
-            return pi - self.func(x0)
-        elif im(cdir) > 0 and x0.is_real and x0 < S.Zero and x0 > S.NegativeOne:
-            return -pi - self.func(x0)
+        # Handling points lying on branch cuts (-1, 1)
+        if x0.is_real and (1 - x0**2).is_positive:
+            ndir = arg.dir(x, cdir if cdir else 1)
+            if im(ndir).is_negative:
+                if x0.is_positive:
+                    return pi - self.func(x0)
+            elif im(ndir).is_positive:
+                if x0.is_negative:
+                    return -pi - self.func(x0)
+            else:
+                return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # acsc
@@ -3356,6 +3427,7 @@ class acsc(InverseTrigonometricFunction):
 
     def _eval_rewrite_as_log(self, arg, **kwargs):
         return -S.ImaginaryUnit*log(S.ImaginaryUnit/arg + sqrt(1 - 1/arg**2))
+
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     def _eval_rewrite_as_asin(self, arg, **kwargs):

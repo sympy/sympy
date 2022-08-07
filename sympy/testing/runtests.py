@@ -2030,7 +2030,7 @@ class PyTestReporter(Reporter):
                 process = subprocess.Popen(['stty', '-a'],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
-                stdout = process.stdout.read()
+                stdout, stderr = process.communicate()
                 stdout = stdout.decode("utf-8")
             except OSError:
                 pass
