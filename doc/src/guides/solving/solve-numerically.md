@@ -1,4 +1,4 @@
-# Solve one or a system of equations numerically
+# Solve One or a System of Equations Numerically
 
 Use SymPy to numerically solve a system of one or more equations. For example,
 numerically solving $\cos(x) = x $ returns $ x \approx 0.739085133215161$.
@@ -42,7 +42,7 @@ Overdetermined systems of equations are supported.
 
 ## Guidance
 
-### Find complex roots of real function
+### Find Complex Roots of a Real Function
 
 To solve for complex roots of real functions, specify a nonreal (either purely
 imaginary, or complex) initial point:
@@ -62,7 +62,7 @@ Try another starting point or tweak arguments.
 1.4142135623731*I
 ```
 
-### Ensure the root found is in a given interval
+### Ensure the Root Found is in a Given Interval
 
 It is not guaranteed that nsolve will find the root closest to the initial
 point. Here, even though the root `-1` is closer to the initial point of `-0.1`,
@@ -86,9 +86,9 @@ the interval `(-10, 0)` ensures that the root `-1` is found:
 -1.00000000000000
 ```
 
-## Solve a system of equations numerically
+## Solve a System of Equations Numerically
 
-### Solve multidimensional functions
+### Solve Multidimensional Functions
 
 To solve multidimensional functions, supply a tuple of
 - functions `(f1, f2)`
@@ -105,7 +105,7 @@ To solve multidimensional functions, supply a tuple of
 Matrix([[-1.19287309935246], [1.27844411169911]])
 ```
 
-### Increase precision of the solution
+### Increase Precision of the Solution
 
 You can increase the precision of the solution using `prec`:
 
@@ -119,7 +119,7 @@ You can increase the precision of the solution using `prec`:
 Matrix([[-1.192873099352460791205211], [1.278444111699106966687122]])
 ```
 
-### Create a function that can be solved with SciPy
+### Create a Function That Can Be Solved With SciPy
 
 As noted above, SymPy focuses on symbolic computation and is not optimized for
 numerical calculations. A recommend use case for SymPy in a workflow is as given
@@ -144,9 +144,9 @@ cos(x*(x + 1)/2)
 1.3416277185114782
 ```
 
-## Use the solution result
+## Use the Solution Result
 
-### Substitute the result into an expression
+### Substitute the Result Into an Expression
 
 The best practice is to use {func}`sympy.core.evalf` to to substitute numerical
 values into expressions. Using [`subs`](sympy.core.basic.Basic.subs) can give
@@ -183,12 +183,12 @@ You can also leave some symbols as variables:
 1.73908513321516 - z
 ```
 
-## Not all equations can be solved
+## Not all Equations Can be Solved
 
 {func}`~.nsolve` is a numerical solving function, so it can often provide a
 solution for equations which cannot be solved algebraically.
 
-### Equations with no solution
+### Equations With no Solution
 
 Some equations have no solution, in which case SymPy may return an error. For
 example, the equation $exp(x) = 0$ has no solution:
@@ -203,7 +203,7 @@ ValueError: Could not find root within given tolerance. (5.487789360711527030054
 Try another starting point or tweak arguments.
 ```
 
-## Report a problem
+## Report a Problem
 
 If you find a problem with {func}`~.nsolve`, please post it on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
