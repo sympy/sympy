@@ -1,4 +1,4 @@
-# Solve a system of equations algebraically
+# Solve a System of Equations Algebraically
 
 Use SymPy to solve a system of equations algebraically. For example, $x^2 + y =
 2, x - y = 4$ yields $\{(x = -3, y = -7), (x = 2, y = 2)\}$.
@@ -32,7 +32,7 @@ Here is a simple example of solving a system of equations algebraically:
 
 ## Examples
 
-### Return a dictionary of solutions
+### Return a Dictionary of Solutions
 
 You can solve a system of equations leaving another symbol as a variable. You
 can specify the variables to solve for as multiple arguments, or as a list (or
@@ -48,7 +48,7 @@ tuple):
 [{x: -sqrt(6)*sqrt(z), y: -4*z}, {x: sqrt(6)*sqrt(z), y: -4*z}]
 ```
 
-### Return a set of solution(s)
+### Return a Set of Solution(s)
 
 To get a list of symbols and set of solution(s) use `set=True` instead of
 `dict=True`:
@@ -60,9 +60,9 @@ To get a list of symbols and set of solution(s) use `set=True` instead of
 ([x, y], {(-sqrt(6)*sqrt(z), -4*z), (sqrt(6)*sqrt(z), -4*z)})
 ```
 
-## Use the solution result
+## Use the Solution Result
 
-### Use a dictionary of solutions
+### Use a Dictionary of Solutions
 
 You can extract solutions by specifying in brackets ("slicing") the solution
 number, and then the symbol, for example `solution[0][x]` gives the result for
@@ -81,14 +81,14 @@ number, and then the symbol, for example `solution[0][x]` gives the result for
 -4*z
 ```
 
-## Options that can speed up {func}`~.solve`
+## Options That Can Speed up {func}`~.solve`
 
 *After solving-guidance merged, link to target in it speed_up_solve as:* `Refer
 to [solving guidance](speed_up_solve).`
 
-## Not all systems of equations can be solved
+## Not All Systems of Equations Can be Solved
 
-### Systems of equations with no solution
+### Systems of Equations With no Solution
 
 Some systems of equations have no solution. For example, the following system
 reduces to $z = 2z$, which has no general solution:
@@ -110,11 +110,11 @@ than unknowns to be solved for (2, namely $x$ and $y$):
 []
 ```
 
-### Equations with no analytical solution
+### Equations With no Analytical Solution
 
 *Equations with no analytical solution content*
 
-### Equations which have an analytical solution, and SymPy cannot solve
+### Equations Which Have an Analytical Solution, and SymPy Cannot Solve
 
 *Equations which have an analytical solution, and SymPy cannot solve content*
 
