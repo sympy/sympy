@@ -336,7 +336,7 @@ Intersection({-sqrt(y), sqrt(y)}, Reals)
 
 ## Options that can speed up {func}`~.solve`
 
-Refer to [solving guidance](speed_up_solve).
+Refer to [solving guidance](solving-guidance.md#options-that-can-speed-up).
 
 ## Not all equations can be solved
 

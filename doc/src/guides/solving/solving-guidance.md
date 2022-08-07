@@ -118,7 +118,6 @@ result. For example, this exact equation can be solved:
 but if you use the inexact equation `eq = x**1.4142135623730951 - 2`, SymPy will
 not return a result despite attempting for a long time. 
 
-(speed_up_solve)=
 ## Options that can speed up {func}`~.solve`
 
 ### Include solutions making any denominator zero by using `check=False`
