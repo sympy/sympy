@@ -45,7 +45,7 @@ algebraically (symbolically) by returning an error such as
 ```py
 >>> from sympy import solve, cos
 >>> from sympy.abc import x
->>> solve(cos(x) - x, x)
+>>> solve(cos(x) - x, x, dict=True)
 Traceback (most recent call last):
   ...
 NotImplementedError: multiple generators [x, cos(x)]
@@ -131,9 +131,9 @@ and speed up {func}`~.solve` (at the risk of obtaining invalid solutions), set
 ```py
 >>> from sympy import Symbol, sin, solve
 >>> x = Symbol("x")
->>> solve(sin(x)/x)  # 0 is excluded
+>>> solve(sin(x)/x, x, dict=True) # 0 is excluded
 [pi]
->>> solve(sin(x)/x, check=False)  # 0 is not excluded
+>>> solve(sin(x)/x, x, dict=True, check=False) # 0 is not excluded
 [0, pi]
 ```
 
