@@ -1,4 +1,4 @@
-# Reduce a system of inequalities for a single variable algebraically
+# Reduce a System of Inequalities for a Single Variable Algebraically
 
 Use SymPy to reduce a system of inequalities for a single variable
 algebraically. For example, reducing $x^2 < \pi$, $x > 0$ yields $0 < x <
@@ -12,7 +12,8 @@ inequalities. SymPy can reduce a system containing more than one symbol.
 Alternatives to consider:
 - To reduce for more than one symbol, try SciPy's
   {external:func}`~scipy.optimize.linprog`
-- To reduce Boolean expressions, use {func}`as_set <sympy.logic.boolalg.Boolean.as_set>`
+- To reduce Boolean expressions, use {func}`as_set
+  <sympy.logic.boolalg.Boolean.as_set>`
 
 Here is a simple example of reducing a system of inequalities for a single
 variable algebraically. {func}`~.reduce_inequalities` accepts a list or tuple of
@@ -38,13 +39,13 @@ functions](../../modules/solvers/inequalities.rst) as needed.
 
 ## Guidance
 
-### Include the variable to be reduced for in the function call
+### Include the Variable to Be Reduced for in the Function Call
 
 We recommend you include the variable to be reduced for as the second argument
 for {func}`~.reduce_inequalities` to ensure that it reduces for the desired
 variable.
 
-### Recognize that SymPy can reduce for only one variable
+### Recognize That SymPy Can Reduce for Only One Variable
 
 SymPy can currently reduce for only one symbol (variable) in a system of
 inequalities. SymPy can reduce a system containing more than one symbol. For
@@ -60,7 +61,7 @@ SymPy can reduce for $x$, and gives the constraints on $y$.
 
 However, SymPy cannot arrive at the more complete result `(x < 1) & (y > 0)`.
 
-### Recognize that not all results are returned
+### Recognize That Not All Results Are Returned
 
 The results returned for trigonometric inequalities are restricted in its
 periodic interval. {func}`~.reduce_inequalities` tries to return just enough
@@ -78,7 +79,7 @@ the equation, here $2\pi$.
 2*pi
 ```
 
-### Recognize other limitations
+### Recognize Other Limitations
 
 For example, {func}`~.reduce_inequalities` can solve a system of inequalities
 involving a power of the symbol to be reduced for, or involving another symbol,
@@ -99,7 +100,7 @@ The inequality, -_y + x**2 - 4 < 0, cannot be solved using
 solve_univariate_inequality.
 ```
 
-## Reduce a system of inequalities algebraically
+## Reduce a System of Inequalities Algebraically
 
 You can create your inequalities, then reduce the system as a list:
 
@@ -110,13 +111,13 @@ You can create your inequalities, then reduce the system as a list:
 (1/3 <= x) & (x <= sqrt(pi))
 ```
 
-## Use the result
+## Use the Result
 
 A common way to use the result is to extract the bounds for the symbol
 (variable). For example, for a solution of $0 < x < \sqrt{\pi}$, you might want
 to extract $0$ and $\sqrt{\pi}$.
 
-### Extract a list of decomposed relations
+### Extract a List of Decomposed Relations
 
 You can decompose a set of relations which is joined by `^` (or) or `&` (and)
 into individual relations using relational atoms. Using {any}`canonical
@@ -136,7 +137,7 @@ the symbol is on the left, so you can take the right-hand side {any}`rhs
 [(x, '>=', 1/3), (x, '<=', sqrt(pi))]
 ```
 
-### Extract a tuple of relations
+### Extract a Tuple of Relations
 
 The {any}`args <sympy.core.basic.Basic.args>` of reduced relations are the
 individual relations, so you can extract the constants from the left- or
@@ -159,9 +160,9 @@ right-hand side of the `args`:
 [1/3, sqrt(pi)]
 ```
 
-## Not all systems of inequalities can be reduced
+## Not All Systems of Inequalities Can Be Reduced
 
-### Systems of inequalities which cannot be satisfied
+### Systems of Inequalities Which Cannot Be Satisfied
 
 If the system of inequalities has incompatible conditions, for example $x < 0$
 and $x > \pi$, SymPy will return `False`:
@@ -173,7 +174,7 @@ and $x > \pi$, SymPy will return `False`:
 False
 ```
 
-### Systems of inequalities that cannot be reduced analytically
+### Systems of Inequalities That Cannot Be Reduced Analytically
 
 SymPy may reflect that your system of inequalities has no solutions that can be
 expressed algebraically (symbolically) by returning an error such as
@@ -191,7 +192,7 @@ NotImplementedError: The inequality, -x + cos(x) > 0, cannot be solved using sol
 so you may have to reduce your inequalities numerically instead using SciPy's
 {external:func}`~scipy.optimize.linprog`.
 
-### Inequalities which can be reduced analytically, and SymPy cannot reduce
+### Inequalities Which Can Be Reduced Analytically, and SymPy Cannot Reduce
 
 SymPy has implemented algorithms to reduce inequalities for only one symbol
 (variable), so it cannot reduce a set of inequalities for more than one symbol:
@@ -208,7 +209,7 @@ NotImplementedError: inequality has more than one symbol of interest.
 You can use SciPy's {external:func}`~scipy.optimize.linprog` to reduce this
 system of inequalities.
 
-### Report a problem with SymPy
+### Report a Problem With SymPy
 
 If you encounter a problem with SymPy, please post the problem on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
