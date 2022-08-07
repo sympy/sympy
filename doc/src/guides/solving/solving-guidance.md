@@ -131,9 +131,9 @@ and speed up {func}`~.solve` (at the risk of obtaining invalid solutions), set
 >>> from sympy import Symbol, sin, solve
 >>> x = Symbol("x")
 >>> solve(sin(x)/x, x, dict=True) # 0 is excluded
-[pi]
+[{x: pi}]
 >>> solve(sin(x)/x, x, dict=True, check=False) # 0 is not excluded
-[0, pi]
+[{x: 0}, {x: pi}]
 ```
 
 ### Do not simplify solutions by using `simplify=False`
