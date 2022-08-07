@@ -12,7 +12,7 @@ inequalities. SymPy can reduce a system containing more than one symbol.
 Alternatives to consider:
 - To reduce for more than one symbol, try SciPy's
   {external:func}`~scipy.optimize.linprog`
-- To reduce Boolean expressions, use {func}`sympy.logic.boolalg.Boolean.as_set`
+- To reduce Boolean expressions, use {func}`as_set <sympy.logic.boolalg.Boolean.as_set>`
 
 Here is a simple example of reducing a system of inequalities for a single
 variable algebraically. {func}`~.reduce_inequalities` accepts a list or tuple of
