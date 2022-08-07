@@ -709,7 +709,7 @@ arguments of the function using `self.args`.
 ...             return True
 ...
 ...     def _eval_is_positive(self):
-...         # versin(x) is positive iff x is real and not an even multiple of pi
+...         # versin(x) is positive if x is real and not an even multiple of pi
 ...         x = self.args[0]
 ...
 ...         # x.as_independent(pi, as_Add=False) will split x as a Mul of the
@@ -1437,7 +1437,7 @@ existing SymPy logic defined on `1 - cos(x)`).
 ...             return True
 ...
 ...     def _eval_is_positive(self):
-...         # versin(x) is positive iff x is real and not an even multiple of pi
+...         # versin(x) is positive if x is real and not an even multiple of pi
 ...         x = self.args[0]
 ...
 ...         # x.as_independent(pi, as_Add=False) will split x as a Mul of the
@@ -1696,7 +1696,7 @@ evaluate on general symbolic inputs in `versin.eval()`, and `versin.doit()` is
 not defined at all.
 
 `FMA` also represents an example of a continuous function defined on multiple
-vriables, which demonstrates how `argindex` works in the
+variables, which demonstrates how `argindex` works in the
 [`fdiff`](custom-functions-differentiation) example.
 
 Finally, `FMA` shows an example of defining some code printers for `C` and

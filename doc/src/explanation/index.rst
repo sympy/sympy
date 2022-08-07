@@ -17,3 +17,4 @@ technical implementation details, and opinionated recommendations.
    gotchas.rst
    special_topics/index.rst
    active-deprecations.md
+   glossary.md

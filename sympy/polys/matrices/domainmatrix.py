@@ -58,11 +58,10 @@ class DomainMatrix:
     ===========
 
     DomainMatrix uses :py:class:`~.Domain` for its internal representation
-    which makes it more faster for many common operations
-    than current SymPy Matrix class, but this advantage makes it not
-    entirely compatible with Matrix.
-    DomainMatrix could be found analogous to numpy arrays with "dtype".
-    In the DomainMatrix, each matrix has a domain such as :ref:`ZZ`
+    which makes it faster than the SymPy Matrix class (currently) for many
+    common operations, but this advantage makes it not entirely compatible
+    with Matrix. DomainMatrix are analogous to numpy arrays with "dtype".
+    In the DomainMatrix, each element has a domain such as :ref:`ZZ`
     or  :ref:`QQ(a)`.
 
 
@@ -80,7 +79,7 @@ class DomainMatrix:
     >>> A
     DomainMatrix({0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}, (2, 2), ZZ)
 
-    Driectly forming a DomainMatrix:
+    Directly forming a DomainMatrix:
 
     >>> from sympy import ZZ
     >>> from sympy.polys.matrices import DomainMatrix

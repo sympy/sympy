@@ -32,8 +32,8 @@ a way that is compatible with existing APIs. New APIs do not necessarily need
 to completely supplant old ones. It is sometimes possible for old APIs to
 exist alongside newer, better designed ones without removing them. For
 example, the newer {ref}`solveset <solveset>` API was designed to be a
-superior replacement for the older {ref}`solve <solvers>` API. But the older
-`solve()` function remains intact and is still supported.
+superior replacement for the older {ref}`solve <solvers-docs>` API. But the
+older `solve()` function remains intact and is still supported.
 
 It is important to try to be cognizant of API design whenever adding new
 functionality. Try to consider what a function may do in the future, and

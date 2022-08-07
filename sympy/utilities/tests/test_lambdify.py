@@ -22,7 +22,7 @@ from sympy.functions.elementary.trigonometric import (acos, cos, cot, sin,
 from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
-from sympy.functions.special.error_functions import (erf, erfc, fresnelc, fresnels)
+from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels)
 from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
@@ -1077,8 +1077,8 @@ def test_scipy_fns():
     if not scipy:
         skip("scipy not installed")
 
-    single_arg_sympy_fns = [erf, erfc, factorial, gamma, loggamma, digamma]
-    single_arg_scipy_fns = [scipy.special.erf, scipy.special.erfc,
+    single_arg_sympy_fns = [Ei, erf, erfc, factorial, gamma, loggamma, digamma]
+    single_arg_scipy_fns = [scipy.special.expi, scipy.special.erf, scipy.special.erfc,
         scipy.special.factorial, scipy.special.gamma, scipy.special.gammaln,
         scipy.special.psi]
     numpy.random.seed(0)

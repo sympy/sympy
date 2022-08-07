@@ -1437,6 +1437,8 @@ def test_linsolve():
     raises(ValueError, lambda: linsolve(x1, x2))
     raises(ValueError, lambda: linsolve((A,), x1, x2))
     raises(ValueError, lambda: linsolve(A, B, x1, x2))
+    raises(ValueError, lambda: linsolve([x1], x1, x1))
+    raises(ValueError, lambda: linsolve([x1], (i for i in (x1, x1))))
 
     #raise ValueError if equations are non-linear in given variables
     raises(NonlinearError, lambda: linsolve([x + y - 1, x ** 2 + y - 3], [x, y]))
@@ -2952,9 +2954,11 @@ def test_issue_10426():
         Intersection(S.Complexes, ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))),
         S.Integers)))).dummy_eq(Dummy('x,n'))
 
+
 def test_solveset_conjugate():
     """Test solveset for simple conjugate functions"""
     assert solveset(conjugate(x) -3 + I) == FiniteSet(3 + I)
+
 
 def test_issue_18208():
     variables = symbols('x0:16') + symbols('y0:12')
