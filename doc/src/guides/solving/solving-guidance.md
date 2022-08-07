@@ -3,6 +3,8 @@
 These guidelines apply to many types of solving.
 
 ## Numeric solutions
+
+### Numeric solutions by choice
 Solving functions such as {func}`~.solve` and {func}`~.solveset` will not try to
 find a numeric solution, only a mathematically-exact symbolic solution. So if
 you want a numeric solution, consider {func}`~.nsolve`.
@@ -24,7 +26,7 @@ too cumbersome to be desirable. In that case, you can use {func}`evalf n
 -0.0509758447494279 - 0.313552108895239*I
 ```
 
-## Equations with no analytical solution
+### Equations with no analytical solution
 
 The vast majority of arbitrary nonlinear equations are not analytically
 solvable. The classes of equations that are solvable are basically:
@@ -115,6 +117,44 @@ result. For example, this exact equation can be solved:
 
 but if you use the inexact equation `eq = x**1.4142135623730951 - 2`, SymPy will
 not return a result despite attempting for a long time. 
+
+(speed_up_solve)=
+## Options that can speed up {func}`~.solve`
+
+### Include solutions making any denominator zero by using `check=False`
+
+Normally, {func}`~.solve` checks whether any solutions make any denominator
+zero, and automatically excludes them. If you want to include those solutions,
+and speed up {func}`~.solve` (at the risk of obtaining invalid solutions), set
+`check=False`:
+
+```py
+>>> from sympy import Symbol, sin, solve
+>>> x = Symbol("x")
+>>> solve(sin(x)/x)  # 0 is excluded
+[pi]
+>>> solve(sin(x)/x, check=False)  # 0 is not excluded
+[0, pi]
+```
+
+### Do not simplify solutions by using `simplify=False`
+
+Normally, {func}`~.solve` simplifies all but polynomials of order 3 or greater
+before returning them and (if `check` is not False) uses the general
+{func}`simplify <sympy.simplify.simplify.simplify>` function on the solutions
+and the expression obtained when they are substituted into the function which
+should be zero. If you do not want the solutions simplified, and want to speed
+up {func}`~.solve`, use `simplify=False`.
+
+```py
+>>> from sympy import solve
+>>> from sympy.abc import x, y
+>>> expr = x**2 - (y**5 - 3*y**3 + y**2 - 3)
+>>> solve(expr, x, dict=True)
+[{x: -sqrt(y**5 - 3*y**3 + y**2 - 3)}, {x: sqrt(y**5 - 3*y**3 + y**2 - 3)}]
+>>> solve(expr, x, dict=True, simplify=False)
+[{x: -sqrt((y + 1)*(y**2 - 3)*(y**2 - y + 1))}, {x: sqrt((y + 1)*(y**2 - 3)*(y**2 - y + 1))}]
+```
 
 ## Parse a string representing the equation
 
