@@ -131,7 +131,8 @@ class DiophantineSolutionSet(set):
     def __call__(self, *args):
         if len(args) > len(self.parameters):
             raise ValueError("Evaluation should have at most %s values, not %s" % (len(self.parameters), len(args)))
-        return self.subs(list(zip(self.parameters, args)))
+        rep = {p: v for p, v in zip(self.parameters, args) if v is not None}
+        return self.subs(rep)
 
 
 class DiophantineEquationType:
