@@ -4,8 +4,9 @@ Use SymPy to solve a system of equations algebraically. For example, $x^2 + y =
 2, x - y = 4$ yields $\{(x = -3, y = -7), (x = 2, y = 2)\}$.
 
 Alternatives to consider:
-- *alternative 1*
-- *alternative 2*
+- Some systems of equations cannot be solved algebraically (either at all or by
+SymPy), so you may have to {func}`solve your system of equations numerically
+<sympy.solvers.solvers.nsolve>` instead.
 
 Here is a simple example of solving a system of equations algebraically:
 
@@ -63,7 +64,9 @@ To get a list of symbols and set of solution(s) use `set=True` instead of
 
 ### Use a dictionary of solutions
 
-You can extract solutions by specifying in brackets ("slicing") the solution number, and then the symbol, for example `solution[0][x]` gives the result for `x` in the first solution:
+You can extract solutions by specifying in brackets ("slicing") the solution
+number, and then the symbol, for example `solution[0][x]` gives the result for
+`x` in the first solution:
 
 ```py
 >>> from sympy import solve
@@ -78,25 +81,34 @@ You can extract solutions by specifying in brackets ("slicing") the solution num
 -4*z
 ```
 
-### Use a set of solutions
+## Options that can speed up {func}`~.solve`
 
-*Usage method 2 content*
+*After solving-guidance merged, link to target in it speed_up_solve as:* `Refer
+to [solving guidance](speed_up_solve).`
 
-## *Tradeoffs (speed vs. accuracy, etc.) for function*
+## Not all systems of equations can be solved
 
-### *Tradeoff 1*
+### Systems of equations with no solution
 
-*Speed-up option 1 content*
+Some systems of equations have no solution. For example, the following system
+reduces to $z = 2z$, which has no general solution:
 
-### *Speed-up option 2*
+```py
+>>> from sympy import solve
+>>> from sympy.abc import x, y, z
+>>> solve([x + y - z, x + y - 2*z], [x, y], dict=True)
+[]
+```
 
-*Speed-up option 2 content*
+The following system is overconstrained, meaning there are more equations (3)
+than unknowns to be solved for (2, namely $x$ and $y$):
 
-## Not all equations can be solved
-
-### Equations with no solution
-
-*Equations with no solution content*
+```py
+>>> from sympy import solve
+>>> from sympy.abc import x, y, z
+>>> solve([x + y - z, x - 2*z, 2*x - y], [x, y], dict=True)
+[]
+```
 
 ### Equations with no analytical solution
 
