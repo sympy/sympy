@@ -2,9 +2,9 @@
 
 These guidelines apply to many types of solving.
 
-## Numeric solutions
+## Numeric Solutions
 
-### Numeric solutions by choice
+### Numeric Solutions by Choice
 Solving functions such as {func}`~.solve` and {func}`~.solveset` will not try to
 find a numeric solution, only a mathematically-exact symbolic solution. So if
 you want a numeric solution, consider {func}`~.nsolve`.
@@ -26,7 +26,7 @@ too cumbersome to be desirable. In that case, you can use {func}`evalf n
 -0.0509758447494279 - 0.313552108895239*I
 ```
 
-### Equations with no analytical solution
+### Equations With no Analytical Solution
 
 The vast majority of arbitrary nonlinear equations are not analytically
 solvable. The classes of equations that are solvable are basically:
@@ -79,7 +79,7 @@ using {func}`evalf n <sympy.core.evalf.EvalfMixin.n>`:
 ({class}`CRootOf <sympy.polys.rootoftools.ComplexRootOf>` represents an indexed
 complex root of a polynomial.)
 
-## Use exact values
+## Use Exact Values
 
 If you want to preserve the exact mathematical values of symbols such as
 [fractions](tutorial-gotchas-final-notes) and [square
@@ -118,9 +118,9 @@ result. For example, this exact equation can be solved:
 but if you use the inexact equation `eq = x**1.4142135623730951 - 2`, SymPy will
 not return a result despite attempting for a long time. 
 
-## Options that can speed up {func}`~.solve`
+## Options That Can Speed up {func}`~.solve`
 
-### Include solutions making any denominator zero by using `check=False`
+### Include Solutions Making Any Denominator Zero by Using `check=False`
 
 Normally, {func}`~.solve` checks whether any solutions make any denominator
 zero, and automatically excludes them. If you want to include those solutions,
@@ -136,7 +136,7 @@ and speed up {func}`~.solve` (at the risk of obtaining invalid solutions), set
 [{x: 0}, {x: pi}]
 ```
 
-### Do not simplify solutions by using `simplify=False`
+### Do Not Simplify Solutions by Using `simplify=False`
 
 Normally, {func}`~.solve` simplifies all but polynomials of order 3 or greater
 before returning them and (if `check` is not False) uses the general
@@ -155,7 +155,7 @@ up {func}`~.solve`, use `simplify=False`.
 [{x: -sqrt((y + 1)*(y**2 - 3)*(y**2 - y + 1))}, {x: sqrt((y + 1)*(y**2 - 3)*(y**2 - y + 1))}]
 ```
 
-## Parse a string representing the equation
+## Parse a String Representing the Equation
 
 If you are creating the expression yourself, we [recommend against using parsing
 a string](
