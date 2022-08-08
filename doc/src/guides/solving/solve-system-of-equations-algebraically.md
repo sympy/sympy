@@ -1,12 +1,13 @@
 # Solve a System of Equations Algebraically
 
 Use SymPy to solve a system of equations algebraically. For example, $x^2 + y =
-2, x - y = 4$ yields $\{(x = -3, y = -7), (x = 2, y = 2)\}$.
+2z, y = -4z$ yields $\{(x = -\sqrt{6z}, y = -4z),$ ${(x = \sqrt{6z}, y =
+-4z)\}}$.
 
 Alternatives to consider:
 - Some systems of equations cannot be solved algebraically (either at all or by
 SymPy), so you may have to {func}`solve your system of equations numerically
-<sympy.solvers.solvers.nsolve>` instead.
+using nsolve() <sympy.solvers.solvers.nsolve>` instead.
 
 Here is a simple example of solving a system of equations algebraically:
 
@@ -110,15 +111,28 @@ than unknowns to be solved for (2, namely $x$ and $y$):
 []
 ```
 
-### Equations With no Analytical Solution
+### Systems of Equations With no Analytical Solution
 
-*Equations with no analytical solution content*
+Some systems of equations cannot be solved algebraically, for example:
+
+```py
+>>> from sympy import cos, solve
+>>> from sympy.abc import x, y, z
+>>> solve([x - y, cos(x) - y], [x, y], dict=True)
+Traceback (most recent call last):
+    ...
+NotImplementedError: could not solve -y + cos(y)
+```
+
+So you can use {func}`~.nsolve` to find a numerical solution.
 
 ### Equations Which Have an Analytical Solution, and SymPy Cannot Solve
 
-*Equations which have an analytical solution, and SymPy cannot solve content*
-
-Please post the problem on the [mailing
+It is also possible that there is an algebraic solution to your equation, and
+SymPy has not implemented an appropriate algorithm. If that happens, or SymPy
+returns an empty set or list when there is a mathematical solution (indicating a
+bug in SymPy), please post it on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-can *workaround*.
+can {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>`
+instead.
