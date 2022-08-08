@@ -575,7 +575,6 @@ def test_diophantine():
     assert diophantine((y**2-x), t) == {(t**2, -t)}
 
 
-
 def test_general_pythagorean():
     from sympy.abc import a, b, c, d, e
 

@@ -901,14 +901,16 @@ def solve(f, *symbols, **flags):
         else:
             symbols = _symbols
 
-
-    # remove symbols the user is not interested in
+    # check for duplicates
+    if len(symbols) != len(set(symbols)):
+        raise ValueError('duplicate symbols given')
+    # remove those not of interest
     exclude = flags.pop('exclude', set())
     if exclude:
         if isinstance(exclude, Expr):
             exclude = [exclude]
         exclude = set().union(*[e.free_symbols for e in sympify(exclude)])
-    symbols = [s for s in symbols if s not in exclude]
+        symbols = [s for s in symbols if s not in exclude]
 
 
     # preprocess equation(s)
@@ -1016,8 +1018,7 @@ def solve(f, *symbols, **flags):
 
     # we can solve for non-symbol entities by replacing them with Dummy symbols
     f, symbols, swap_sym = recast_to_symbols(f, symbols)
-
-    # this is needed in the next two events
+    # this set of symbols (perhaps recast) is needed below
     symset = set(symbols)
 
     # get rid of equations that have no symbols of interest; we don't

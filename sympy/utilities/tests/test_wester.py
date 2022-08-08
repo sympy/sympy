@@ -2630,7 +2630,6 @@ def test_W25():
     assert (i2 - pi*a/2).simplify() == 0
 
 
-
 def test_W26():
     x, y = symbols('x y', real=True)
     assert integrate(integrate(abs(y - x**2), (y, 0, 2)),
