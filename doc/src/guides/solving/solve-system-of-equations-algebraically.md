@@ -9,7 +9,7 @@ Alternatives to consider:
 SymPy), so you may have to {func}`solve your system of equations numerically
 using nsolve() <sympy.solvers.solvers.nsolve>` instead.
 
-Here is a simple example of solving a system of equations algebraically:
+Here is an example of solving a system of equations algebraically:
 
 ```py
 >>> from sympy import solve
