@@ -1236,7 +1236,6 @@ def test_multi_exp():
              ProductSet(S.Integers, S.Integers, S.Integers, S.Integers))))
 
 
-
 def test__solveset_multi():
     from sympy.solvers.solveset import _solveset_multi
     from sympy.sets import Reals

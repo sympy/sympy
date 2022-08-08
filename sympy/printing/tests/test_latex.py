@@ -2927,7 +2927,6 @@ def test_PermutationMatrix():
         r'P_{\left( 0\; 3\right)\left( 1\; 2\right)}'
 
 
-
 def test_issue_21758():
     from sympy.functions.elementary.piecewise import piecewise_fold
     from sympy.series.fourier import FourierSeries

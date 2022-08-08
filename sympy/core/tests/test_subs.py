@@ -882,7 +882,6 @@ def test_issue_19558():
     assert (sin(x) + cos(x)).subs(x, oo) == AccumBounds(-2, 2)
 
 
-
 def test_issue_22033():
     xr = Symbol('xr', real=True)
     e = (1/xr)
