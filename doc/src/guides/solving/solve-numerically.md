@@ -26,7 +26,7 @@ Alternatives to consider:
   {external:func}`~scipy.linalg.solve` can each solve a system of linear scalar
   equations
 
-Here is a simple example of numerically solving one equation:
+Here is an example of numerically solving one equation:
 
 ```py
 >>> from sympy import cos, nsolve, Symbol
