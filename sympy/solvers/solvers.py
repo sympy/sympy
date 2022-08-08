@@ -1019,6 +1019,8 @@ def solve(f, *symbols, **flags):
 
     # this is needed in the next two events
     symset = set(symbols)
+    if len(symbols) != len(symset):
+        raise ValueError('duplicate symbols given')
 
     # get rid of equations that have no symbols of interest; we don't
     # try to solve them because the user didn't ask and they might be
