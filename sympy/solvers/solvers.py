@@ -839,27 +839,21 @@ def solve(f, *symbols, **flags):
     """
     from .inequalities import reduce_inequalities
 
-    # checking/recording flags
-    ###########################################################################
-
     # set solver types explicitly; as soon as one is False
     # all the rest will be False
+    ###########################################################################
+
     hints = ('cubics', 'quartics', 'quintics')
     default = True
     for k in hints:
         default = flags.setdefault(k, bool(flags.get(k, default)))
 
-    # allow solution to contain symbol if True:
-    implicit = flags.get('implicit', False)
+    # keeping track of how f was passed since if it is a list
+    # a dictionary of results will be returned.
+    ###########################################################################
 
-    # record desire to see warnings
-    warn = flags.get('warn', False)
-
-    # this flag will be needed for quick exits below, so record
-    # now -- but don't record `dict` yet since it might change
-    as_set = flags.get('set', False)
-
-    # keeping track of how f was passed
+    def _sympified_list(w):
+        return list(map(sympify, w if iterable(w) else [w]))
     bare_f = not iterable(f)
 
     # check flag usage for particular/quick which should only be used
@@ -874,16 +868,13 @@ def solve(f, *symbols, **flags):
             consider using a solver like `diophantine` if you are
             looking for a solution in integers."""))
 
-    # sympify everything, creating list of expressions and list of symbols
-    ###########################################################################
-
-    def _sympified_list(w):
-        return list(map(sympify, w if iterable(w) else [w]))
     f, symbols = (_sympified_list(w) for w in [f, symbols])
+    if isinstance(f, list):
+        f = [s for s in f if s is not S.true and s is not True]
+    implicit = flags.get('implicit', False)
 
     # preprocess symbol(s)
     ###########################################################################
-
     ordered_symbols = None  # were the symbols in a well defined order?
     if not symbols:
         # get symbols from equations
@@ -910,9 +901,8 @@ def solve(f, *symbols, **flags):
         else:
             symbols = _symbols
 
-    # remove symbols the user is not interested in
-    ###########################################################################
 
+    # remove symbols the user is not interested in
     exclude = flags.pop('exclude', set())
     if exclude:
         if isinstance(exclude, Expr):
@@ -920,14 +910,9 @@ def solve(f, *symbols, **flags):
         exclude = set().union(*[e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
 
+
     # preprocess equation(s)
     ###########################################################################
-
-    # automatically ignore True values
-    if isinstance(f, list):
-        f = [s for s in f if s is not S.true]
-
-    # handle canonicalization of equation types
     for i, fi in enumerate(f):
         if isinstance(fi, (Eq, Ne)):
             if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
@@ -954,7 +939,6 @@ def solve(f, *symbols, **flags):
                     fi = fi.rewrite(Add, evaluate=False)
             f[i] = fi
 
-        # *** dispatch and handle as a system of relationals
         if fi.is_Relational:
             return reduce_inequalities(f, symbols=symbols)
 
@@ -986,7 +970,7 @@ def solve(f, *symbols, **flags):
 
     # real/imag handling -----------------------------
     if any(isinstance(fi, (bool, BooleanAtom)) for fi in f):
-        if as_set:
+        if flags.get('set', False):
             return [], set()
         return []
 
@@ -1033,10 +1017,8 @@ def solve(f, *symbols, **flags):
     # we can solve for non-symbol entities by replacing them with Dummy symbols
     f, symbols, swap_sym = recast_to_symbols(f, symbols)
 
-    # this is needed in the next two events and at the end
+    # this is needed in the next two events
     symset = set(symbols)
-    if len(symbols) != len(symset):
-        raise ValueError('duplicate symbols given')
 
     # get rid of equations that have no symbols of interest; we don't
     # try to solve them because the user didn't ask and they might be
@@ -1073,8 +1055,6 @@ def solve(f, *symbols, **flags):
         if ok:
             newf.append(fi)
     if not newf:
-        if as_set:
-            return symbols, set()
         return []
     f = newf
     del newf
@@ -1283,9 +1263,8 @@ def solve(f, *symbols, **flags):
     # done
     ###########################################################################
 
-    # find out how values should be returned; the dict flag might have
-    # been changed above so we read it now
     as_dict = flags.get('dict', False)
+    as_set = flags.get('set', False)
 
     if solution is not None and type(solution) not in (list, dict):
         return solution
@@ -1970,6 +1949,7 @@ def _solve_system(exprs, symbols, **flags):
                 except NotImplementedError:
                     failed.extend([g.as_expr() for g in polys])
                     solved_syms = []
+                    result = None
 
     if result:
         if isinstance(result, dict):
@@ -2071,12 +2051,8 @@ def _solve_system(exprs, symbols, **flags):
                     if b in result:
                         result.remove(b)
 
-    if not result:
-        return []
-
-    # rely on linear system solvers to simplify
-    default_simplify = bool(failed) or not linear
-    if flags.get('simplify', default_simplify):
+    default_simplify = bool(failed)  # rely on system-solvers to simplify
+    if  flags.get('simplify', default_simplify):
         for r in result:
             for k in r:
                 r[k] = simplify(r[k])
