@@ -131,6 +131,9 @@ def test_solve_args():
     assert solve([sqrt(2)],[x]) == []
     # duplicate symbols raises
     raises(ValueError, lambda: solve((x - 3, y + 2), x, y, x))
+    raises(ValueError, lambda: solve(x, x, x))
+    # no error in exclude
+    assert solve(x, x, exclude=[y, y]) == [0]
     # unordered symbols
     # only 1
     assert solve(y - 3, {y}) == [3]
