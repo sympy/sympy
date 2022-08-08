@@ -1018,7 +1018,7 @@ def solve(f, *symbols, **flags):
 
     # we can solve for non-symbol entities by replacing them with Dummy symbols
     f, symbols, swap_sym = recast_to_symbols(f, symbols)
-    # udpate symset
+    # this set of symbols (perhaps recast) is needed below
     symset = set(symbols)
 
     # get rid of equations that have no symbols of interest; we don't
