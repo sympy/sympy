@@ -15,8 +15,8 @@ Alternatives to consider:
 - To reduce Boolean expressions, use {func}`as_set
   <sympy.logic.boolalg.Boolean.as_set>`
 
-Here is a simple example of reducing a system of inequalities for a single
-variable algebraically. {func}`~.reduce_inequalities` accepts a list or tuple of
+Here is an example of reducing a system of inequalities for a single variable
+algebraically. {func}`~.reduce_inequalities` accepts a list or tuple of
 inequalities to be reduced as a system:
 
 ```py
