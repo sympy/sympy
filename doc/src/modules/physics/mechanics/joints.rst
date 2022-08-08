@@ -20,7 +20,7 @@ kinematic relationships between
 :class:`bodies<sympy.physics.mechanics.body.Body>`. Each joint has a setup as
 shown in the image below (this is the example of the :class:`~.PrismaticJoint`).
 
-.. image:: api/PrismaticJoint.png
+.. image:: api/PrismaticJoint.svg
    :align: center
    :width: 600
 
