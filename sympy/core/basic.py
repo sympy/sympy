@@ -935,21 +935,28 @@ class Basic(Printable, metaclass=ManagedProperties):
         else:
             raise ValueError("subs accepts either 1 or 2 arguments")
 
-        sequence = list(sequence)
-        for i, s in enumerate(sequence):
-            if isinstance(s[0], str):
-                # when old is a string we prefer Symbol
-                s = Symbol(s[0]), s[1]
-            try:
-                s = [sympify(_, strict=not isinstance(_, (str, type)))
-                     for _ in s]
-            except SympifyError:
-                # if it can't be sympified, skip it
-                sequence[i] = None
-                continue
-            # skip if there is no change
-            sequence[i] = None if _aresame(*s) else tuple(s)
-        sequence = list(filter(None, sequence))
+        def sympify_old(old):
+            if isinstance(old, str):
+                # Use Symbol rather than parse_expr for old
+                return Symbol(old)
+            elif isinstance(old, type):
+                # Allow a type e.g. Function('f') or sin
+                return sympify(old, strict=False)
+            else:
+                return sympify(old, strict=True)
+
+        def sympify_new(new):
+            if isinstance(new, (str, type)):
+                # Allow a type or parse a string input
+                return sympify(new, strict=False)
+            else:
+                return sympify(new, strict=True)
+
+        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in sequence]
+
+        # skip if there is no change
+        sequence = [(s1, s2) for s1, s2 in sequence if not _aresame(s1, s2)]
+
         simultaneous = kwargs.pop('simultaneous', False)
 
         if unordered:
