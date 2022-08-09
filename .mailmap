@@ -34,6 +34,9 @@
 #
 #   ...
 #
+# If it fails, you may need to replace `python` by `python3`, here and below, if
+# you're on a system that still uses python2 by default.
+#
 # 3. Add a line to this file with that same name and email address like:
 #
 #   Joe Bloggs <joe@bloggs.com>

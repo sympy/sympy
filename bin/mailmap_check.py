@@ -15,13 +15,13 @@ from __future__ import print_function
 
 import sys
 import os
+if sys.version_info < (3, 8):
+    sys.exit("This script requires Python 3.8 or newer")
+
 from pathlib import Path
 from subprocess import run, PIPE
 from collections import OrderedDict, defaultdict
 from argparse import ArgumentParser
-
-if sys.version_info < (3, 8):
-    sys.exit("This script requires Python 3.8 or newer")
 
 def sympy_dir():
     return Path(__file__).resolve().parent.parent
@@ -304,7 +304,7 @@ def make_authors_file_lines(git_people):
         to their names are not found in the metadata of the git history. This
         file is generated automatically by running `./bin/authors_update.py`.
         """).lstrip()
-    header_extra = f"There are a total of {len(git_people)} authors."""
+    header_extra = "There are a total of %d authors."  % len(git_people)
     lines = header.splitlines()
     lines.append('')
     lines.append(header_extra)
