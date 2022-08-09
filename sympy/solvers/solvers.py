@@ -1147,38 +1147,8 @@ def solve(f, *symbols, **flags):
     ###########################################################################
     if bare_f:
         solution = None
-        # check for undetermined coefficients situation: `solve(a*x + 2*x + b - c, a, b)`
         if len(symbols) != 1:
-            g = f[0]
-            free = g.free_symbols                        # {a, b, c, x}
-            ex = free - symset                           # {c, x}
-            if len(ex) != 1:
-                ind, dep = g.as_independent(*symbols)    # (2*x - c, a*x + b)
-                ex = ind.free_symbols & dep.free_symbols # {x, c} & {a, x, b} -> {x}
-            if len(ex) != 1:                             # e.g. (a+b)*x + b - c -> {c}, {a, b, x}
-                ex = dep.free_symbols - symset           # {x} = {a,b,x}-{a.b}
-            if len(ex) == 1:
-                ex = ex.pop()
-                try:
-                    # force dict return for solution
-                    missing = Dummy()
-                    was = {k: flags.pop(k, missing) for k in ('dict', 'set')}
-                    flags['dict'] = True
-                    # get solution which (because it will call solve with
-                    # flags) will be simplified and checked
-                    soln = solve_undetermined_coeffs(g, symbols, ex, **flags)
-                    # restore keys that weren't missing after
-                    # removing added 'dict'
-                    flags.pop('dict', None)
-                    for k in was:
-                        if was[k] != missing:
-                            flags[k] = was[k]
-                    if soln and len(soln) == 1:
-                        solution = soln
-                except NotImplementedError:
-                    # continue with algebraic attempt
-                    solution = None
-                    pass
+            solution = _solve_undetermined(f[0], symbols, flags)
         if not solution:
             solution = _solve(f[0], *symbols, **flags)
     else:
@@ -1306,6 +1276,25 @@ def solve(f, *symbols, **flags):
         # just unify the symbols for which solutions were found
         k = list(ordered(set(flatten(tuple(i.keys()) for i in solution))))
     return k, {tuple([s.get(ki, ki) for ki in k]) for s in solution}
+
+
+def _solve_undetermined(g, symbols, flags):
+    # helper to find independent variable for undetermined coefficients
+    # call and to return a list with a single dictionary else None
+    #                                              a*x + 2*x + b - c
+    symset = set(symbols)                        # {a, b}
+    free = g.free_symbols                        # {a, b, c, x}
+    ex = free - symset                           # {c, x}
+    if len(ex) != 1:
+        ind, dep = g.as_independent(*symbols)    # (2*x - c, a*x + b)
+        ex = ind.free_symbols & dep.free_symbols # {x, c} & {a, x, b} -> {x}
+    if len(ex) != 1:                             # e.g. (a + b)*x + b - c -> {c}, {a, b, x}
+        ex = dep.free_symbols - symset           # {x} = {a, b, x}-{a, b}
+    if len(ex) == 1:
+        ex = ex.pop()
+        sol = solve_undetermined_coeffs(g, symbols, ex, **flags)
+        if type(sol) is dict:
+            return [sol]
 
 
 def _solve(f, *symbols, **flags):
@@ -2329,7 +2318,8 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     ===========
 
     The result of this function is a dictionary with symbolic values of those
-    parameters with respect to coefficients in $q$.
+    parameters with respect to coefficients in $q$, [] if there is no
+    solution, else None if the system was not recognized.
 
     This function accepts both equations class instances and ordinary
     SymPy expressions. Specification of parameters and variables is
@@ -2347,6 +2337,12 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     >>> solve_undetermined_coeffs(Eq(a*c*x + a+b, x), [a, b], x)
     {a: 1/c, b: -1/c}
 
+    >>> solve_undetermined_coeffs(0, [a], x)
+    []
+
+    >>> solve_undetermined_coeffs(a**2*x + 2*x + b + 3, [a, b], x) is None
+    True
+
     """
     if isinstance(equ, Eq):
         # got equation, so move all the
@@ -2361,9 +2357,12 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
         # consecutive powers in the input expressions have
         # been successfully collected, so solve remaining
         # system using Gaussian elimination algorithm
-        return solve(system, *coeffs, **flags)
-    else:
-        return None  # no solutions
+        _flags = dict(flags, set=None, dict=True)
+        sol = solve(system, *coeffs, **_flags)
+        if len(sol) == 1:
+            return sol[0]
+        elif not sol:
+            return []
 
 
 def solve_linear_system_LU(matrix, syms):
