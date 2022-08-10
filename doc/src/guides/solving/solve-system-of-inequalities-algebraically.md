@@ -59,8 +59,6 @@ SymPy can reduce for $x$, and gives the constraints on $y$.
 (0 < y) & (y < oo) & (x > 1 - y)
 ```
 
-However, SymPy cannot arrive at the more complete result `(x < 1) & (y > 0)`.
-
 ### Recognize That Not All Results Are Returned
 
 The results returned for trigonometric inequalities are restricted in its
@@ -81,9 +79,9 @@ the equation, here $2\pi$.
 
 ### Recognize Other Limitations
 
-For example, {func}`~.reduce_inequalities` can solve a system of inequalities
-involving a power of the symbol to be reduced for, or involving another symbol,
-but not both:
+{func}`~.reduce_inequalities` can solve a system of inequalities involving a
+power of the symbol to be reduced for, or involving another symbol, but not
+both:
 
 ```
 >>> from sympy import reduce_inequalities
