@@ -6,7 +6,8 @@ solving $y''(x) + 9y(x)=0 $ yields $ y(x)=C_{1} \sin(3x)+ C_{2} \cos(3x)$.
 Alternatives to consider:
 - To solve a system of ordinary differential equations, use
   {func}`~.dsolve_system`
-- *alternative 2*
+- *which SciPy functions? from
+  https://docs.scipy.org/doc/scipy/reference/integrate.html?highlight=ode?*
 
 Here is an example of solving an ordinary differential equation algebraically:
 
