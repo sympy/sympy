@@ -198,7 +198,7 @@ those libraries.
   functions using `lambdify(modules='cupy')`.
 
 - **Jax**: [JAX](https://github.com/google/jax) is a library that uses XLA
-  to compile and run NumPy programs on GPUs and TPUs. `lambdify` can produce 
+  to compile and run NumPy programs on GPUs and TPUs. `lambdify` can produce
   JAX compatibly functions using `lambdify(modules='jax')`.
 
 - **TensorFlow**: [TensorFlow](https://www.tensorflow.org/) is a popular

@@ -1,3 +1,4 @@
+(solving-guide)=
 # Solve Equations
 
 The Python package SymPy can symbolically solve equations, differential
@@ -33,4 +34,3 @@ would be ["evaluate an integral."](../../modules/integrals/integrals.rst)
 
 solve-equation-algebraically.md
 solve-ode.md
-```

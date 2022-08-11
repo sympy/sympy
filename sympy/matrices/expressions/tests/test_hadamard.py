@@ -59,7 +59,6 @@ def test_canonicalize():
     assert HadamardProduct(X, Z, U, Y).doit() == Z
 
 
-
 def test_hadamard():
     m, n, p = symbols('m, n, p', integer=True)
     A = MatrixSymbol('A', m, n)

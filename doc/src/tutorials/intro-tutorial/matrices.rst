@@ -124,9 +124,9 @@ place. In general, a method that does not operate in place will return a new
 Basic Methods
 =============
 
-As noted above, simple operations like addition and multiplication are done
-just by using ``+``, ``*``, and ``**``.  To find the inverse of a matrix, just
-raise it to the ``-1`` power.
+As noted above, simple operations like addition, multiplication and power are
+done just by using ``+``, ``*``, and ``**``.  To find the inverse of a matrix,
+just raise it to the ``-1`` power.
 
     >>> M = Matrix([[1, 3], [-2, 3]])
     >>> N = Matrix([[0, 3], [0, 7]])
