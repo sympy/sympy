@@ -20,16 +20,7 @@ Here is an example of solving a system of equations algebraically:
 
 ## Guidance
 
-*Just link to solving guidance page?*
-
-### *Guidance 1*
-
-*Guidance 1 content*
-
-### *Guidance 2*
-
-*Guidance 2 content*
-
+*Link to solving guidance page after merged*
 
 ## Examples
 
@@ -85,7 +76,7 @@ number, and then the symbol, for example `solution[0][x]` gives the result for
 ## Options That Can Speed up {func}`~.solve`
 
 *After solving-guidance merged, link to target in it speed_up_solve as:* `Refer
-to [solving guidance](speed_up_solve).`
+to [solving guidance](options-that-can-speed-up).`
 
 ## Not All Systems of Equations Can be Solved
 
@@ -101,8 +92,8 @@ reduces to $z = 2z$, which has no general solution:
 []
 ```
 
-The following system is overconstrained, meaning there are more equations (3)
-than unknowns to be solved for (2, namely $x$ and $y$):
+The following system is overconstrained, meaning there are more equations
+(three) than unknowns to be solved for (two, namely $x$ and $y$):
 
 ```py
 >>> from sympy import solve
