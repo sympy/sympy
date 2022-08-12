@@ -56,7 +56,7 @@ above with arbitrary linked position vectors: ::
    ...     'slider', parent, child, q1, u1,
    ...     parent_joint_pos=parent.frame.x / 2 + parent.frame.y / 10,
    ...     child_joint_pos=-(child.frame.x + child.frame.y) / 10,
-   ...     parent_axis=parent.frame.x, child_axis=child.frame.x)
+   ...     joint_axis=parent.frame.x)
    >>> joint.kdes
    [u1 - q1']
    >>> child.masscenter.pos_from(parent.masscenter)

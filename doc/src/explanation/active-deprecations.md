@@ -76,7 +76,54 @@ SymPy deprecation warnings.
 
 ## Version 1.12
 
-There are no deprecations yet for 1.12.
+(deprecated-mechanics-joint-axis)=
+### New Joint description
+
+The definition of the joint axis in the ``sympy.physics.mechanics`` has changed.
+Instead of using the arguments ``parent_axis`` and ``child_axis`` to
+automatically determine the joint axis and an intermediate reference frame. The
+joints now use an intermediate frame argument for both the parent and the child
+body, i.e. ``parent_interframe`` and ``child_interframe``. This means that you
+can now fully define the joint attachment, consisting of a point and frame, for
+both bodies. And if a joint like the ``PinJoint`` has a specific joint axis,
+i.e. the axis around which the rotation occurs, than this axis can be specified
+using the ``joint_axis`` argument. A big advantage of this setup is that you can
+be more specific about the transformation from parent body to child body.
+
+For example, suppose you want a ``PinJoint`` rotates the child body around the
+``parent.z`` axis and ``-child.z`` axis. The previous way to specify this joint
+was:
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> PinJoint('pin', parent, child, parent_axis=parent.z, child_axis=-child.z)
+>>> parent.dcm(child)
+Matrix([
+[-cos(theta_pin(t)), -sin(theta_pin(t)),  0],
+[-sin(theta_pin(t)),  cos(theta_pin(t)),  0],
+[                 0,                  0, -1]])
+```
+
+When inspecting this matrix you will notice that for ``theta_pin = 0`` the child
+body is rotated $\pi$ rad around the ``parent.y`` axis and it is possible to
+specify this differently. In the new definition you can see that we get the same
+result, but this time we have also specified this exact rotation:
+
+```py
+>>> from sympy import pi
+>>> from sympy.physics.mechanics import Body, PinJoint, ReferenceFrame
+>>> parent, child, = Body('parent'), Body('child')
+>>> int_frame = ReferenceFrame('int_frame')
+>>> int_frame.orient_axis(child.frame, child.y, pi)
+>>> PinJoint('pin', parent, child, joint_axis=parent.z,
+...          child_interframe=int_frame)
+>>> parent.dcm(child)
+Matrix([
+[-cos(theta_pin(t)), -sin(theta_pin(t)),  0],
+[-sin(theta_pin(t)),  cos(theta_pin(t)),  0],
+[                 0,                  0, -1]])
+```
 
 ## Version 1.11
 

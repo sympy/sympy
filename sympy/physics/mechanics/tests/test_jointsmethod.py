@@ -6,7 +6,8 @@ from sympy.simplify.trigsimp import trigsimp
 from sympy.physics.mechanics import (PinJoint, JointsMethod, Body, KanesMethod,
                                     PrismaticJoint, LagrangesMethod, inertia)
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import (raises, ignore_warnings,
+                                  SymPyDeprecationWarning)
 from sympy.core.backend import zeros
 from sympy.utilities.lambdify import lambdify
 from sympy.solvers.solvers import solve
@@ -59,13 +60,13 @@ def test_complete_simple_double_pendulum():
     C = Body('C')  # ceiling
     PartP = Body('P', mass=m)
     PartR = Body('R', mass=m)
-
-    J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1,
-                  child_joint_pos=-l*PartP.x, parent_axis=C.z,
-                  child_axis=PartP.z)
-    J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2,
-                  child_joint_pos=-l*PartR.x, parent_axis=PartP.z,
-                  child_axis=PartR.z)
+    with ignore_warnings(SymPyDeprecationWarning):
+        J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1,
+                      child_joint_pos=-l*PartP.x, parent_axis=C.z,
+                      child_axis=PartP.z)
+        J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2,
+                      child_joint_pos=-l*PartR.x, parent_axis=PartP.z,
+                      child_axis=PartR.z)
 
     PartP.apply_force(m*g*C.x)
     PartR.apply_force(m*g*C.x)
@@ -107,8 +108,9 @@ def test_simple_pedulum():
     C = Body('C')
     b = Body('b', mass=m)
     q = dynamicsymbols('q')
-    P = PinJoint('P', C, b, speeds=q.diff(t), coordinates=q, child_joint_pos = -l*b.x,
-                    parent_axis=C.z, child_axis=b.z)
+    with ignore_warnings(SymPyDeprecationWarning):
+        P = PinJoint('P', C, b, speeds=q.diff(t), coordinates=q,
+                     child_joint_pos=-l * b.x, parent_axis=C.z, child_axis=b.z)
     b.potential_energy = - m * g * l * cos(q)
     method = JointsMethod(C, P)
     method.form_eoms(LagrangesMethod)
@@ -126,10 +128,13 @@ def test_chaos_pendulum():
     rod = Body('rod', mass=mA, frame=A, central_inertia=inertia(A, IAxx, IAxx, 0))
     plate = Body('plate', mass=mB, frame=B, central_inertia=inertia(B, IBxx, IByy, IBzz))
     C = Body('C')
-    J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega,
-                  child_joint_pos=-lA*rod.z, parent_axis=C.y, child_axis=rod.y)
-    J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha,
-                  parent_joint_pos=(lB-lA)*rod.z, parent_axis=rod.z, child_axis=plate.z)
+    with ignore_warnings(SymPyDeprecationWarning):
+        J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega,
+                      child_joint_pos=-lA * rod.z, parent_axis=C.y,
+                      child_axis=rod.y)
+        J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha,
+                      parent_joint_pos=(lB - lA) * rod.z, parent_axis=rod.z,
+                      child_axis=plate.z)
 
     rod.apply_force(mA*g*C.z)
     plate.apply_force(mB*g*C.z)
@@ -158,15 +163,19 @@ def test_four_bar_linkage_with_manual_constraints():
     link3 = Body('Link3', mass=rho * l3, central_inertia=inertias[2])
     link4 = Body('Link4', mass=rho * l4, central_inertia=inertias[3])
 
-    joint1 = PinJoint('J1', link1, link2, coordinates=q1, speeds=u1,
-                      parent_axis=link1.z, parent_joint_pos=l1 / 2 * link1.x,
-                      child_axis=link2.z, child_joint_pos=-l2 / 2 * link2.x)
-    joint2 = PinJoint('J2', link2, link3, coordinates=q2, speeds=u2,
-                      parent_axis=link2.z, parent_joint_pos=l2 / 2 * link2.x,
-                      child_axis=link3.z, child_joint_pos=-l3 / 2 * link3.x)
-    joint3 = PinJoint('J3', link3, link4, coordinates=q3, speeds=u3,
-                      parent_axis=link3.z, parent_joint_pos=l3 / 2 * link3.x,
-                      child_axis=link4.z, child_joint_pos=-l4 / 2 * link4.x)
+    with ignore_warnings(SymPyDeprecationWarning):
+        joint1 = PinJoint(
+            'J1', link1, link2, coordinates=q1, speeds=u1, parent_axis=link1.z,
+            parent_joint_pos=l1 / 2 * link1.x, child_axis=link2.z,
+            child_joint_pos=-l2 / 2 * link2.x)
+        joint2 = PinJoint(
+            'J2', link2, link3, coordinates=q2, speeds=u2, parent_axis=link2.z,
+            parent_joint_pos=l2 / 2 * link2.x, child_axis=link3.z,
+            child_joint_pos=-l3 / 2 * link3.x)
+        joint3 = PinJoint(
+            'J3', link3, link4, coordinates=q3, speeds=u3, parent_axis=link3.z,
+            parent_joint_pos=l3 / 2 * link3.x, child_axis=link4.z,
+            child_joint_pos=-l4 / 2 * link4.x)
 
     loop = link4.masscenter.pos_from(link1.masscenter) \
            + l1 / 2 * link1.x + l4 / 2 * link4.x

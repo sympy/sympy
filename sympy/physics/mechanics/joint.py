@@ -4,9 +4,10 @@ from abc import ABC, abstractmethod
 
 from sympy.core.numbers import pi
 from sympy.physics.mechanics.body import Body
-from sympy.physics.vector import Vector, dynamicsymbols, cross
-from sympy.physics.vector.frame import ReferenceFrame
+from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
+                                  ReferenceFrame)
 
+from sympy.utilities.exceptions import sympy_deprecation_warning
 import warnings
 
 __all__ = ['Joint', 'PinJoint', 'PrismaticJoint']
@@ -44,18 +45,30 @@ class Joint(ABC):
         Generalized coordinates of the joint.
     speeds : List of dynamicsymbols, optional
         Generalized speeds of joint.
-    parent_joint_pos : Vector, optional
-        Vector from the parent body's mass center to the point where the parent
-        and child are connected. The default value is the zero vector.
-    child_joint_pos : Vector, optional
-        Vector from the child body's mass center to the point where the parent
-        and child are connected. The default value is the zero vector.
+    parent_joint_pos : Point or Vector, optional
+        Attachment point where the joint is fixed to the parent body. If a
+        vector is provided, than the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the parent's mass
+        center.
+    child_joint_pos : Point or Vector, optional
+        Attachment point where the joint is fixed to the child body. If a
+        vector is provided, than the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the child's mass
+        center.
     parent_axis : Vector, optional
         Axis fixed in the parent body which aligns with an axis fixed in the
         child body. The default is x axis in parent's reference frame.
     child_axis : Vector, optional
         Axis fixed in the child body which aligns with an axis fixed in the
         parent body. The default is x axis in child's reference frame.
+    parent_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the parent body, i.e. frame in the of
+        parent body with respect to which the joint is formulated. The default
+        value is the parent's own frame.
+    child_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the child body, i.e. frame in the of
+        child body with respect to which the joint is formulated. The default
+        value is the child's own frame.
 
     Attributes
     ==========
@@ -71,13 +84,19 @@ class Joint(ABC):
     speeds : list
         List of the joint's generalized speeds.
     parent_point : Point
-        The point fixed in the parent body that represents the joint.
+        Attachment point where the joint is fixed to the parent body.
     child_point : Point
-        The point fixed in the child body that represents the joint.
+        Attachment point where the joint is fixed to the child body.
     parent_axis : Vector
         The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
         The axis fixed in the child frame that represents the joint.
+    parent_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the parent body, i.e. frame in the of
+        parent body with respect to which the joint is formulated.
+    child_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the child body, i.e. frame in the of
+        child body with respect to which the joint is formulated.
     kdes : list
         Kinematical differential equations of the joint.
 
@@ -88,9 +107,9 @@ class Joint(ABC):
     simple rotation about an axis that is normal to both ``child_axis`` and
     ``parent_axis``. In general, the normal axis is formed by crossing the
     ``child_axis`` into the ``parent_axis`` except if the child and parent axes
-    are in exactly opposite directions. In that case the rotation vector is chosen
-    using the rules in the following table where ``C`` is the child reference
-    frame and ``P`` is the parent reference frame:
+    are in exactly opposite directions. In that case the rotation vector is
+    chosen using the rules in the following table where ``C`` is the child
+    reference frame and ``P`` is the parent reference frame:
 
     .. list-table::
        :header-rows: 1
@@ -124,7 +143,8 @@ class Joint(ABC):
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None,
                  parent_joint_pos=None, child_joint_pos=None, parent_axis=None,
-                 child_axis=None):
+                 child_axis=None, parent_interframe=None,
+                 child_interframe=None):
 
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
@@ -142,11 +162,27 @@ class Joint(ABC):
         self._speeds = self._generate_speeds(speeds)
         self._kdes = self._generate_kdes()
 
-        self._parent_axis = self._axis(parent, parent_axis)
-        self._child_axis = self._axis(child, child_axis)
+        self._parent_axis, _ = self._axis(parent_axis, parent.frame)
+        self._child_axis, _ = self._axis(child_axis, child.frame)
 
         self._parent_point = self._locate_joint_pos(parent, parent_joint_pos)
         self._child_point = self._locate_joint_pos(child, child_joint_pos)
+        if parent_axis is not None or child_axis is not None:
+            sympy_deprecation_warning(
+                """
+                The parent_axis and child_axis arguments for the Joint classes
+                are deprecated. Instead use the combination of the arguments:
+                parent_interframe, child_interframe and possibly axis.
+                """,
+                deprecated_since_version="1.12",
+                active_deprecations_target="deprecated-mechanics-joint-axis",
+            )
+            parent_interframe = self._set_orientation()
+            child_interframe = child.frame
+        self._parent_interframe = self._locate_joint_frame(parent,
+                                                           parent_interframe)
+        self._child_interframe = self._locate_joint_frame(child,
+                                                          child_interframe)
 
         self._orient_frames()
         self._set_angular_velocity()
@@ -160,6 +196,7 @@ class Joint(ABC):
 
     @property
     def name(self):
+        """Name of the joint."""
         return self._name
 
     @property
@@ -199,13 +236,21 @@ class Joint(ABC):
 
     @property
     def parent_point(self):
-        """The joint's point where parent body is connected to the joint."""
+        """Attachment point where the joint is fixed to the parent body."""
         return self._parent_point
 
     @property
     def child_point(self):
-        """The joint's point where child body is connected to the joint."""
+        """Attachment point where the joint is fixed to the child body."""
         return self._child_point
+
+    @property
+    def parent_interframe(self):
+        return self._parent_interframe
+
+    @property
+    def child_interframe(self):
+        return self._child_interframe
 
     @abstractmethod
     def _generate_coordinates(self, coordinates):
@@ -224,45 +269,88 @@ class Joint(ABC):
 
     @abstractmethod
     def _set_angular_velocity(self):
+        """Set angular velocity of the joint related frames."""
         pass
 
     @abstractmethod
     def _set_linear_velocity(self):
+        """Set velocity of related points to the joint."""
         pass
 
+    @staticmethod
+    def _to_vector(matrix, frame):
+        """Converts a matrix to a vector in the given frame."""
+        v = Vector(0)
+        for xi, vi in zip(matrix, frame):
+            v += xi * vi
+        return v
+
+    @staticmethod
+    def _axis(ax, *frames):
+        """Check whether an axis is fixed in one of the frames."""
+        if ax is None:
+            ax = frames[0].x
+            return ax, frames[0]
+        if not isinstance(ax, Vector):
+            raise TypeError("Axis must be a Vector.")
+        ref_frame = None  # Find a body in which the axis can be expressed
+        for frame in frames:
+            try:
+                ax.to_matrix(frame)
+                ref_frame = frame
+                break
+            except ValueError:
+                pass
+        if ref_frame is None:
+            raise ValueError("Axis cannot be expressed in one of the body's "
+                             "frames.")
+        if not ax.dt(ref_frame) == 0:
+            raise ValueError('Axis cannot be time-varying when viewed from the '
+                             'associated body.')
+        return ax, ref_frame
+
     def _generate_kdes(self):
+        """Generate kinematical differential equations as $\dot{q}=u$."""
         kdes = []
         t = dynamicsymbols._t
         for i in range(len(self.coordinates)):
             kdes.append(-self.coordinates[i].diff(t) + self.speeds[i])
         return kdes
 
-    def _axis(self, body, ax):
-        if ax is None:
-            ax = body.frame.x
-            return ax
-        if not isinstance(ax, Vector):
-            raise TypeError("Axis must be of type Vector.")
-        if not ax.dt(body.frame) == 0:
-            msg = ('Axis cannot be time-varying when viewed from the '
-                   'associated body.')
-            raise ValueError(msg)
-        return ax
-
     def _locate_joint_pos(self, body, joint_pos):
+        """Returns the attachment point of a body."""
         if joint_pos is None:
-            joint_pos = Vector(0)
-        if not isinstance(joint_pos, Vector):
-            raise ValueError('Joint Position must be supplied as Vector.')
-        if not joint_pos.dt(body.frame) == 0:
-            msg = ('Position Vector cannot be time-varying when viewed from '
-                   'the associated body.')
-            raise ValueError(msg)
-        point_name = self._name + '_' + body.name + '_joint'
-        return body.masscenter.locatenew(point_name, joint_pos)
+            return body.masscenter
+        if not isinstance(joint_pos, (Point, Vector)):
+            raise TypeError('Attachment point must be a Point or Vector.')
+        if isinstance(joint_pos, Vector):
+            point_name = self._name + '_' + body.name + '_joint'
+            joint_pos = body.masscenter.locatenew(point_name, joint_pos)
+        if not joint_pos.pos_from(body.masscenter).dt(body.frame) == 0:
+            raise ValueError('Attachment point must be fixed to the associated '
+                             'body.')
+        return joint_pos
+
+    def _locate_joint_frame(self, body, interframe):
+        """Returns the attachment frame of a body."""
+        # TODO Decide whether None should give body.frame or a new frame, which
+        #  is not rotated with respect to body.frame. _locate_joint_pos should
+        #  do the same only than with the masscenter.
+        #  Don't forget _axis_to_interframes
+        if interframe is None:
+            return body.frame
+        if not isinstance(interframe, ReferenceFrame):
+            raise TypeError('Interframe must be a ReferenceFrame.')
+        if not interframe.ang_vel_in(body.frame) == 0:
+            raise ValueError(f'Interframe {interframe} is not fixed to body '
+                             f'{body}.')
+        return interframe
 
     def _alignment_rotation(self, parent, child):
-        # Returns the axis and angle between two axis(vectors).
+        # Returns the axis and angle between two axis(vectors), as if the parent
+        # and child body are not rotated with respect to each other.
+        child = self._to_vector(child.to_matrix(self.child.frame),
+                                self.parent.frame)
         angle = parent.angle_between(child)
         axis = cross(child, parent).normalize()
         return angle, axis
@@ -273,26 +361,25 @@ class Joint(ABC):
         x, y, z = components[0], components[1], components[2]
 
         if x != 0:
-            if y!=0:
-                if z!=0:
-                    return cross(self.parent_axis,
-                                parent_frame.x)
-            if z!=0:
+            if y != 0:
+                if z != 0:
+                    return cross(self.parent_axis, parent_frame.x)
+            if z != 0:
                 return parent_frame.y
             return parent_frame.z
 
         if x == 0:
-            if y!=0:
-                if z!=0:
+            if y != 0:
+                if z != 0:
                     return parent_frame.x
                 return parent_frame.x
             return parent_frame.y
 
     def _set_orientation(self):
-        #Helper method for `orient_axis()`
-        self.child.frame.orient_axis(self.parent.frame, self.parent_axis, 0)
+        # Helper method to determine parent_interframe based on parent_axis and
+        # child_axis.
         angle, axis = self._alignment_rotation(self.parent_axis,
-                                                self.child_axis)
+                                               self.child_axis)
 
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=UserWarning)
@@ -303,7 +390,6 @@ class Joint(ABC):
                     axis = self._generate_vector()
 
                 int_frame = ReferenceFrame('int_frame')
-                int_frame.orient_axis(self.child.frame, self.child_axis, 0)
                 int_frame.orient_axis(self.parent.frame, axis, angle)
                 return int_frame
         return self.parent.frame
@@ -339,18 +425,30 @@ class PinJoint(Joint):
         Generalized coordinates of the joint.
     speeds : dynamicsymbol, optional
         Generalized speeds of joint.
-    parent_joint_pos : Vector, optional
-        Vector from the parent body's mass center to the point where the parent
-        and child are connected. The default value is the zero vector.
-    child_joint_pos : Vector, optional
-        Vector from the child body's mass center to the point where the parent
-        and child are connected. The default value is the zero vector.
+    parent_joint_pos : Point or Vector, optional
+        Attachment point where the joint is fixed to the parent body. If a
+        vector is provided, than the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the parent's mass
+        center.
+    child_joint_pos : Point or Vector, optional
+        Attachment point where the joint is fixed to the child body. If a
+        vector is provided, than the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the child's mass
+        center.
     parent_axis : Vector, optional
         Axis fixed in the parent body which aligns with an axis fixed in the
         child body. The default is x axis in parent's reference frame.
     child_axis : Vector, optional
         Axis fixed in the child body which aligns with an axis fixed in the
         parent body. The default is x axis in child's reference frame.
+    parent_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the parent body, i.e. frame in the of
+        parent body with respect to which the joint is formulated. The default
+        value is the parent's own frame.
+    child_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the child body, i.e. frame in the of
+        child body with respect to which the joint is formulated. The default
+        value is the child's own frame.
 
     Attributes
     ==========
@@ -366,13 +464,19 @@ class PinJoint(Joint):
     speeds : list
         List of the joint's generalized speeds.
     parent_point : Point
-        The point fixed in the parent body that represents the joint.
+        Attachment point where the joint is fixed to the parent body.
     child_point : Point
-        The point fixed in the child body that represents the joint.
+        Attachment point where the joint is fixed to the child body.
     parent_axis : Vector
         The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
         The axis fixed in the child frame that represents the joint.
+    parent_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the parent body, i.e. frame in the of
+        parent body with respect to which the joint is formulated.
+    child_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the child body, i.e. frame in the of
+        child body with respect to which the joint is formulated.
     kdes : list
         Kinematical differential equations of the joint.
 
@@ -399,9 +503,9 @@ class PinJoint(Joint):
     >>> joint.child
     C
     >>> joint.parent_point
-    PC_P_joint
+    P_masscenter
     >>> joint.child_point
-    PC_C_joint
+    C_masscenter
     >>> joint.parent_axis
     P_frame.x
     >>> joint.child_axis
@@ -440,16 +544,14 @@ class PinJoint(Joint):
 
     >>> ceiling_joint = PinJoint('P1', ceiling, upper_bob,
     ... child_joint_pos=-l1*upper_bob.frame.x,
-    ... parent_axis=ceiling.frame.z,
-    ... child_axis=upper_bob.frame.z)
+    ... joint_axis=ceiling.frame.z)
 
     The second joint will connect the lower bob to the upper bob by a distance
     of ``l2`` and the joint axis will also be about the Z axis for each body.
 
     >>> pendulum_joint = PinJoint('P2', upper_bob, lower_bob,
     ... child_joint_pos=-l2*lower_bob.frame.x,
-    ... parent_axis=upper_bob.frame.z,
-    ... child_axis=lower_bob.frame.z)
+    ... joint_axis=upper_bob.frame.z)
 
     Once the joints are established the kinematics of the connected bodies can
     be accessed. First the direction cosine matrices of pendulum link relative
@@ -491,15 +593,24 @@ class PinJoint(Joint):
 
     def __init__(self, name, parent, child, coordinates=None, speeds=None,
                  parent_joint_pos=None, child_joint_pos=None, parent_axis=None,
-                 child_axis=None):
+                 child_axis=None, joint_axis=None, parent_interframe=None,
+                 child_interframe=None):
 
+        if parent_axis is not None or child_axis is not None:
+            joint_axis = parent_axis
+        self._joint_axis = joint_axis
         super().__init__(name, parent, child, coordinates, speeds,
                          parent_joint_pos, child_joint_pos, parent_axis,
-                         child_axis)
+                         child_axis, parent_interframe, child_interframe)
 
     def __str__(self):
         return (f'PinJoint: {self.name}  parent: {self.parent}  '
                 f'child: {self.child}')
+
+    @property
+    def joint_axis(self):
+        """Axis along which the child rotates with respect to the parent."""
+        return self._joint_axis
 
     def _generate_coordinates(self, coordinate):
         coordinates = []
@@ -518,18 +629,23 @@ class PinJoint(Joint):
         return speeds
 
     def _orient_frames(self):
-        frame = self._set_orientation()
-        self.child.frame.orient_axis(frame, self.parent_axis,
-                                    self.coordinates[0])
+        self._joint_axis, ref_frame = self._axis(
+            self.joint_axis, self.parent_interframe, self.child_interframe)
+        if ref_frame == self.child_interframe:
+            self.parent_interframe.orient_axis(
+                self.child_interframe, self.joint_axis, -self.coordinates[0])
+        else:
+            self.child_interframe.orient_axis(
+                self.parent_interframe, self.joint_axis, self.coordinates[0])
 
     def _set_angular_velocity(self):
-        self.child.frame.set_ang_vel(self.parent.frame, self.speeds[0] *
-                                     self.parent_axis.normalize())
+        self.child_interframe.set_ang_vel(self.parent_interframe, self.speeds[
+            0] * self.joint_axis.normalize())
 
     def _set_linear_velocity(self):
+        self.child_point.set_pos(self.parent_point, 0)
         self.parent_point.set_vel(self.parent.frame, 0)
         self.child_point.set_vel(self.child.frame, 0)
-        self.child_point.set_pos(self.parent_point, 0)
         self.child.masscenter.v2pt_theory(self.parent_point,
                                           self.parent.frame, self.child.frame)
 
@@ -544,9 +660,10 @@ class PrismaticJoint(Joint):
 
     It is defined such that the child body translates with respect to the parent
     body along the body fixed parent axis. The location of the joint is defined
-    by two points in each body which coincides when the generalized coordinate is zero. The direction cosine matrix between
-    the child and parent is formed using a simple rotation about an axis that is normal to
-    both ``child_axis`` and ``parent_axis``, see the Notes section for a detailed explanation of
+    by two points in each body which coincides when the generalized coordinate
+    is zero. The direction cosine matrix between the child and parent is formed
+    using a simple rotation about an axis that is normal to both ``child_axis``
+    and ``parent_axis``, see the Notes section for a detailed explanation of
     this.
 
     Parameters
@@ -562,18 +679,30 @@ class PrismaticJoint(Joint):
         Generalized coordinates of the joint.
     speeds : dynamicsymbol, optional
         Generalized speeds of joint.
-    parent_joint_pos : Vector, optional
-        Vector from the parent body's mass center to the point where the parent
-        and child are connected. The default value is the zero vector.
-    child_joint_pos : Vector, optional
-        Vector from the child body's mass center to the point where the parent
-        and child are connected. The default value is the zero vector.
+    parent_joint_pos : Point or Vector, optional
+        Attachment point where the joint is fixed to the parent body. If a
+        vector is provided, than the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the parent's mass
+        center.
+    child_joint_pos : Point or Vector, optional
+        Attachment point where the joint is fixed to the child body. If a
+        vector is provided, than the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the child's mass
+        center.
     parent_axis : Vector, optional
         Axis fixed in the parent body which aligns with an axis fixed in the
         child body. The default is x axis in parent's reference frame.
     child_axis : Vector, optional
         Axis fixed in the child body which aligns with an axis fixed in the
         parent body. The default is x axis in child's reference frame.
+    parent_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the parent body, i.e. frame in the of
+        parent body with respect to which the joint is formulated. The default
+        value is the parent's own frame.
+    child_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the child body, i.e. frame in the of
+        child body with respect to which the joint is formulated. The default
+        value is the child's own frame.
 
     Attributes
     ==========
@@ -589,21 +718,27 @@ class PrismaticJoint(Joint):
     speeds : list
         List of the joint's generalized speeds.
     parent_point : Point
-        The point fixed in the parent body that represents the joint.
+        Attachment point where the joint is fixed to the parent body.
     child_point : Point
-        The point fixed in the child body that represents the joint.
+        Attachment point where the joint is fixed to the child body.
     parent_axis : Vector
         The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
         The axis fixed in the child frame that represents the joint.
+    parent_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the parent body, i.e. frame in the of
+        parent body with respect to which the joint is formulated.
+    child_interframe : ReferenceFrame, optional
+        Interframe of the joint fixed to the child body, i.e. frame in the of
+        child body with respect to which the joint is formulated.
     kdes : list
         Kinematical differential equations of the joint.
 
     Examples
     =========
 
-    A single prismatic joint is created from two bodies and has the following basic
-    attributes:
+    A single prismatic joint is created from two bodies and has the following
+    basic attributes:
 
     >>> from sympy.physics.mechanics import Body, PrismaticJoint
     >>> parent = Body('P')
@@ -622,9 +757,9 @@ class PrismaticJoint(Joint):
     >>> joint.child
     C
     >>> joint.parent_point
-    PC_P_joint
+    P_masscenter
     >>> joint.child_point
-    PC_C_joint
+    C_masscenter
     >>> joint.parent_axis
     P_frame.x
     >>> joint.child_axis
@@ -643,9 +778,10 @@ class PrismaticJoint(Joint):
     >>> joint.child_point.pos_from(joint.parent_point)
     x_PC(t)*P_frame.x
 
-    To further demonstrate the use of the prismatic joint, the kinematics of
-    two masses sliding, one moving relative to a fixed body and the other relative to the
-    moving body. about the X axis of each connected body can be created as follows.
+    To further demonstrate the use of the prismatic joint, the kinematics of two
+    masses sliding, one moving relative to a fixed body and the other relative
+    to the moving body. about the X axis of each connected body can be created
+    as follows.
 
     >>> from sympy.physics.mechanics import PrismaticJoint, Body
 
@@ -710,15 +846,26 @@ class PrismaticJoint(Joint):
 
     """
 
-    def __init__(self, name, parent, child, coordinates=None, speeds=None, parent_joint_pos=None,
-        child_joint_pos=None, parent_axis=None, child_axis=None):
+    def __init__(self, name, parent, child, coordinates=None, speeds=None,
+                 parent_joint_pos=None, child_joint_pos=None, parent_axis=None,
+                 child_axis=None, joint_axis=None, parent_interframe=None,
+                 child_interframe=None):
 
-        super().__init__(name, parent, child, coordinates, speeds, parent_joint_pos,
-                        child_joint_pos, parent_axis, child_axis)
+        if parent_axis is not None or child_axis is not None:
+            joint_axis = parent_axis
+        self._joint_axis = joint_axis
+        super().__init__(name, parent, child, coordinates, speeds,
+                         parent_joint_pos, child_joint_pos, parent_axis,
+                         child_axis, parent_interframe, child_interframe)
 
     def __str__(self):
         return (f'PrismaticJoint: {self.name}  parent: {self.parent}  '
                 f'child: {self.child}')
+
+    @property
+    def joint_axis(self):
+        """Axis along which the child translates with respect to the parent."""
+        return self._joint_axis
 
     def _generate_coordinates(self, coordinate):
         coordinates = []
@@ -737,15 +884,24 @@ class PrismaticJoint(Joint):
         return speeds
 
     def _orient_frames(self):
-        frame = self._set_orientation()
-        self.child.frame.orient_axis(frame, self.parent_axis, 0)
+        self._joint_axis, ref_frame = self._axis(
+            self.joint_axis, self.parent_interframe, self.child_interframe)
+        if ref_frame == self.child_interframe:
+            self.parent_interframe.orient_axis(
+                self.child_interframe, self.joint_axis, 0)
+        else:
+            self.child_interframe.orient_axis(
+                self.parent_interframe, self.joint_axis, 0)
 
     def _set_angular_velocity(self):
-        self.child.frame.set_ang_vel(self.parent.frame, 0)
+        self.child_interframe.set_ang_vel(self.parent_interframe, 0)
 
     def _set_linear_velocity(self):
+        self.child_point.set_pos(self.parent_point, self.coordinates[
+            0] * self.parent_axis.normalize())
         self.parent_point.set_vel(self.parent.frame, 0)
         self.child_point.set_vel(self.child.frame, 0)
-        self.child_point.set_pos(self.parent_point, self.coordinates[0] * self.parent_axis.normalize())
-        self.child_point.set_vel(self.parent.frame, self.speeds[0] * self.parent_axis.normalize())
-        self.child.masscenter.set_vel(self.parent.frame, self.speeds[0] * self.parent_axis.normalize())
+        self.child_point.set_vel(self.parent.frame, self.speeds[
+            0] * self.parent_axis.normalize())
+        self.child.masscenter.set_vel(self.parent.frame, self.speeds[
+            0] * self.parent_axis.normalize())
