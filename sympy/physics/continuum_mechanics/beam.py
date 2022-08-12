@@ -1055,8 +1055,7 @@ class Beam:
                 (self.bending_moment(), self.variable<self.length),
                 (float("nan"), True))
 
-        points = solve(moment_curve.rewrite(Piecewise), self.variable,
-                        domain=S.Reals)
+        points = solve(moment_curve.rewrite(Piecewise), self.variable)
         return points
 
     def slope(self):
@@ -1269,8 +1268,7 @@ class Beam:
                 (self.slope(), self.variable<self.length),
                 (float("nan"), True))
 
-        points = solve(slope_curve.rewrite(Piecewise), self.variable,
-                        domain=S.Reals)
+        points = solve(slope_curve.rewrite(Piecewise), self.variable)
         deflection_curve = self.deflection()
         deflections = [deflection_curve.subs(self.variable, x) for x in points]
         deflections = list(map(abs, deflections))
@@ -3359,8 +3357,7 @@ class Beam3D(Beam):
                 (self._load_vector[dir_num], self.variable<self.length),
                 (float("nan"), True))
 
-        points = solve(load_curve.rewrite(Piecewise), self.variable,
-                        domain=S.Reals)
+        points = solve(load_curve.rewrite(Piecewise), self.variable)
         points.append(0)
         points.append(self.length)
         shear_curve = self.shear_force()[dir_num]
@@ -3434,8 +3431,7 @@ class Beam3D(Beam):
                 (self.shear_force()[dir_num], self.variable<self.length),
                 (float("nan"), True))
 
-        points = solve(shear_curve.rewrite(Piecewise), self.variable,
-                        domain=S.Reals)
+        points = solve(shear_curve.rewrite(Piecewise), self.variable)
         points.append(0)
         points.append(self.length)
         bending_moment_curve = self.bending_moment()[dir_num]
@@ -3511,8 +3507,7 @@ class Beam3D(Beam):
                 (self.slope()[dir_num], self.variable<self.length),
                 (float("nan"), True))
 
-        points = solve(slope_curve.rewrite(Piecewise), self.variable,
-                        domain=S.Reals)
+        points = solve(slope_curve.rewrite(Piecewise), self.variable)
         points.append(0)
         points.append(self._length)
         deflection_curve = self.deflection()[dir_num]

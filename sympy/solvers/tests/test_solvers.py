@@ -1679,9 +1679,9 @@ def test_minsolve_linear_system():
         assert not all(v for v in solve(
             [x + y + z, y + z + a], quick=_q,
             particular=True).values())
-        # raise error if quick used w/o particular=True
-        raises(ValueError, lambda: solve([x + 1], quick=_q))
-        raises(ValueError, lambda: solve([x + 1], quick=_q, particular=False))
+    # raise error if quick used w/o particular=True
+    raises(ValueError, lambda: solve([x + 1], quick=True))
+    raises(ValueError, lambda: solve([x + 1], quick=True, particular=False))
     # and give a good error message if someone tries to use
     # particular with a single equation
     raises(ValueError, lambda: solve(x + 1, particular=True))

@@ -302,13 +302,13 @@ def checksol(f, symbol, sol=None, **flags):
         elif attempt == 2:
             if minimal:
                 return
-            if flags.get('simplify', True):
+            if flags.get('simplify', None) in (None, True):
                 for k in sol:
                     sol[k] = simplify(sol[k])
             # start over without the failed expanded form, possibly
             # with a simplified solution
             val = simplify(f.subs(sol))
-            if flags.get('force', True):
+            if flags.get('force', None) in (None, True):
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
                 exval = _mexpand(val, recursive=True)
@@ -335,7 +335,7 @@ def checksol(f, symbol, sol=None, **flags):
                     break
             if saw_pow_func is False:
                 return False
-            if flags.get('force', True):
+            if flags.get('force', None) in (None, True):
                 # don't do a zero check with the positive assumptions in place
                 val = val.subs(reps)
             nz = fuzzy_not(val.is_zero)
@@ -369,7 +369,18 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def solve(f, *symbols, **flags):
+# solve accepts keyword only arguments 'dict' and 'set' but we need to refer to
+# the builtins inside solve so we make an alias for them here.
+_set = set
+_dict = dict
+
+
+def solve(f, *symbols,
+        dict=False, set=False, exclude=(), check=True, numerical=True,
+        minimal=False, warn=False, simplify=None, force=None, rational=None,
+        manual=False, implicit=False, particular=False, quick=False,
+        cubics=True, quartics=True, quintics=True,
+        incomplete=True, _denominators=(), _unrad=True):
     r"""
     Algebraically solves equations and systems of equations.
 
@@ -790,16 +801,16 @@ def solve(f, *symbols, **flags):
             A very fast, minimal testing.
         warn=True (default is False)
             Show a warning if ``checksol()`` could not conclude.
-        simplify=True (default)
+        simplify=True/False (default is None)
             Simplify all but polynomials of order 3 or greater before
             returning them and (if check is not False) use the
             general simplify function on the solutions and the
             expression obtained when they are substituted into the
             function which should be zero.
-        force=True (default is False)
+        force=True/False (default is None)
             Make positive all symbols without assumptions regarding sign.
-        rational=True (default)
-            Recast Floats as Rational; if this option is not used, the
+        rational=True/False (default is None)
+            Recast Floats as Rational; if rational is False a polynomial
             system containing Floats may fail to solve because of issues
             with polys. If rational=None, Floats will be recast as
             rationals but the answer will be recast as Floats. If the
@@ -829,6 +840,15 @@ def solve(f, *symbols, **flags):
         quintics=True (default)
             Return explicit solutions (if possible) when quintic expressions
             are encountered.
+        incomplete=False (default is True)
+            In certain situations this allows solve to return an incomplete set
+            of solution expressions.
+        _denominators
+            This is a private keyword argument used by solve when calling
+            itself recursively.
+        _unrad
+            This is a private keyword argument used to control whether unrad is
+            applied when solving an equation.
 
     See Also
     ========
@@ -839,40 +859,62 @@ def solve(f, *symbols, **flags):
     """
     from .inequalities import reduce_inequalities
 
+    # Rename the kwargs set and dict so we can use the builtins by their usual
+    # names below.
+    as_set, as_dict = set, dict
+    set, dict = _set, _dict
+
     # checking/recording flags
     ###########################################################################
 
+    # We need to keep track of whether f was passed as a single
+    # expression/equation or as a list of equations (including a list of length
+    # 1). If dict=True or set=True is not passed then the output format from
+    # solve is different depending on whether the inputs were passed as a list
+    # or not.
+    bare_f = not iterable(f)
+
     # set solver types explicitly; as soon as one is False
     # all the rest will be False
-    hints = ('cubics', 'quartics', 'quintics')
-    default = True
-    for k in hints:
-        default = flags.setdefault(k, bool(flags.get(k, default)))
-
-    # allow solution to contain symbol if True:
-    implicit = flags.get('implicit', False)
-
-    # record desire to see warnings
-    warn = flags.get('warn', False)
-
-    # this flag will be needed for quick exits below, so record
-    # now -- but don't record `dict` yet since it might change
-    as_set = flags.get('set', False)
-
-    # keeping track of how f was passed
-    bare_f = not iterable(f)
+    if not cubics:
+        quartics = quintics = False
+    elif not quartics:
+        quintics = False
 
     # check flag usage for particular/quick which should only be used
     # with systems of equations
-    if flags.get('quick', None) is not None:
-        if not flags.get('particular', None):
-            raise ValueError('when using `quick`, `particular` should be True')
-    if flags.get('particular', False) and bare_f:
+    if quick and not particular:
+        raise ValueError('when using `quick`, `particular` should be True')
+    if bare_f and particular:
         raise ValueError(filldedent("""
             The 'particular/quick' flag is usually used with systems of
             equations. Either pass your equation in a list or
             consider using a solver like `diophantine` if you are
             looking for a solution in integers."""))
+
+    # These are the flags that will be passed recursively to _solve,
+    # _solve_system or solve_undetermined_coefficients. In some cases for
+    # example solve_undetermined_coefficients solve will be called again
+    # recursively and these flags need to be passed through here.
+    flags = {
+        # general options
+        'warn':warn, 'simplify':simplify, 'force':force,
+        # options related to checking
+        'check':check, 'numerical':numerical, 'minimal':minimal,
+        # polynomial root handling in _solve
+        'cubics':cubics, 'quartics':quartics, 'quintics':quintics,
+        # options for linear systems for _solve_system
+        'manual':manual, 'particular':particular, 'quick':quick,
+        # random argument passed in test_issue_8755 but not used anywhere else.
+        '_unrad':_unrad,
+        # random argument passed in test_high_order_multivariate but not used
+        # anywhere else:
+        'incomplete':incomplete,
+    }
+    # The flags dict, set, exclude, implicit and rational are all handled here
+    # so are not passed recursively to the other functions. Also _denominators
+    # will be added to flags below and is passed through to _solve et al for
+    # checking.
 
     # sympify everything, creating list of expressions and list of symbols
     ###########################################################################
@@ -894,7 +936,7 @@ def solve(f, *symbols, **flags):
                 for p in pot:
                     if isinstance(p, AppliedUndef):
                         if not as_set:
-                            flags['dict'] = True  # better show symbols
+                            as_dict = True  # better show symbols
                         symbols.add(p)
                         pot.skip()  # don't go any deeper
         ordered_symbols = False
@@ -915,7 +957,6 @@ def solve(f, *symbols, **flags):
     if len(symbols) != len(set(symbols)):
         raise ValueError('duplicate symbols given')
     # remove those not of interest
-    exclude = flags.pop('exclude', set())
     if exclude:
         if isinstance(exclude, Expr):
             exclude = [exclude]
@@ -1037,7 +1078,7 @@ def solve(f, *symbols, **flags):
                 symbols.extend([re(s), im(s)])
             if bare_f:
                 bare_f = False
-            flags['dict'] = True
+            as_dict = True
     # end of real/imag handling  -----------------------------
 
     # we can solve for non-symbol entities by replacing them with Dummy symbols
@@ -1120,7 +1161,7 @@ def solve(f, *symbols, **flags):
 
     # rationalize Floats
     floats = False
-    if flags.get('rational', True) is not False:
+    if rational in (None, True):
         for i, fi in enumerate(f):
             if fi.has(Float):
                 floats = True
@@ -1158,8 +1199,6 @@ def solve(f, *symbols, **flags):
     #
     # postprocessing
     ###########################################################################
-    # capture as_dict flag now (as_set already captured)
-    as_dict = flags.get('dict', False)
 
     # define how solution will get unpacked
     tuple_format = lambda s: [tuple([i.get(x, x) for x in symbols]) for i in s]
@@ -1211,14 +1250,12 @@ def solve(f, *symbols, **flags):
     # Get assumptions about symbols, to filter solutions.
     # Note that if assumptions about a solution can't be verified, it is still
     # returned.
-    check = flags.get('check', True)
 
     # restore floats
-    if floats and solution and flags.get('rational', None) is None:
+    if rational is None and floats and solution:
         solution = nfloat(solution, exponent=False)
 
     if check and solution:  # assumption checking
-        warn = flags.get('warn', False)
         got_None = []  # solutions for which one or more symbols gave None
         no_False = []  # solutions for which no symbols gave False
         for sol in solution:
@@ -1329,7 +1366,7 @@ def _solve(f, *symbols, **flags):
             xi, v = solve_linear(f, symbols=[s])
             if xi == s:
                 # no need to check but we should simplify if desired
-                if flags.get('simplify', True):
+                if flags['simplify'] in (None, True):
                     v = simplify(v)
                 vfree = v.free_symbols
                 if vfree & got_s:
@@ -1439,7 +1476,7 @@ def _solve(f, *symbols, **flags):
             return []
         elif f_num.is_Symbol:
             # no need to check but simplify if desired
-            if flags.get('simplify', True):
+            if flags.get('simplify', None) in (None, True):
                 sol = simplify(sol)
             return [{f_num: sol}]
 
@@ -1655,7 +1692,8 @@ def _solve(f, *symbols, **flags):
                             # whose roots can be shown to be real with the
                             # unsimplified form of the solution whereas only one of
                             # the simplified forms appears to be real.
-                            flags['simplify'] = flags.get('simplify', False)
+                            if flags['simplify'] is None:
+                                flags['simplify'] = False
                 if soln is not None:
                     result = [{symbol: v} for v in soln]
 
@@ -1683,7 +1721,8 @@ def _solve(f, *symbols, **flags):
                     result = [{symbol: v} for v in rv]
                     # if the flag wasn't set then unset it since unrad results
                     # can be quite long or of very high order
-                    flags['simplify'] = flags.get('simplify', False)
+                    if flags.get('simplify', None) is None:
+                        flags['simplify'] = False
             else:
                 pass  # for coverage
 
@@ -1701,7 +1740,7 @@ def _solve(f, *symbols, **flags):
     if result is False:
         raise NotImplementedError('\n'.join([msg, not_impl_msg % f]))
 
-    if flags.get('simplify', True):
+    if flags.get('simplify', None) in (None, True):
         result = [{k: d[k].simplify() for k in d} for d in result]
         # we just simplified the solution so we now set the flag to
         # False so the simplification doesn't happen again in checksol()
@@ -1771,8 +1810,8 @@ def _solve_system(exprs, symbols, **flags):
     result = []
     solved_syms = []
     linear = True
-    manual = flags.get('manual', False)
-    checkdens = check = flags.get('check', True)
+    manual = flags['manual']
+    checkdens = check = flags['check']
 
     for j, g in enumerate(exprs):
         dens.update(_simple_dens(g, symbols))
@@ -1968,7 +2007,7 @@ def _solve_system(exprs, symbols, **flags):
     # so the docs should be updated to reflect that or else
     # the following should be `bool(failed) or not linear`
     default_simplify = bool(failed)
-    if flags.get('simplify', default_simplify):
+    if flags['simplify'] == True or flags['simplify'] is None and default_simplify:
         for r in result:
             for k in r:
                 r[k] = simplify(r[k])
@@ -2180,7 +2219,7 @@ def minsolve_linear_system(system, *symbols, **flags):
     If ``quick=True``, a heuristic is used.
 
     """
-    quick = flags.get('quick', False)
+    quick = flags['quick']
     # Check if there are any non-zero solutions at all
     s0 = solve_linear_system(system, *symbols, **flags)
     if not s0 or all(v == 0 for v in s0.values()):
@@ -2567,7 +2606,8 @@ def _tsolve(eq, sym, **flags):
             if f.is_Mul:
                 return _vsolve(f, sym, **flags)
             if rhs:
-                f = logcombine(lhs, force=flags.get('force', True))
+                force = flags['force'] in (None, True)
+                f = logcombine(lhs, force=force)
                 if f.count(log) != lhs.count(log):
                     if isinstance(f, log):
                         return _vsolve(f.args[0] - exp(rhs), sym, **flags)
@@ -2758,7 +2798,7 @@ def _tsolve(eq, sym, **flags):
                 else:
                     pass
 
-    if flags.pop('force', True):
+    if flags.get('force', None) in (None, True):
         flags['force'] = False
         pos, reps = posify(lhs - rhs)
         if rhs == S.ComplexInfinity:
