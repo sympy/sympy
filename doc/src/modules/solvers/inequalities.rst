@@ -3,6 +3,9 @@
 Inequality Solvers
 ==================
 
+For general cases the reduce_equalities function should be used.
+Other functions are the subcategories useful for special dedicated operations.
+
 .. module:: sympy.solvers.inequalities
 
 .. autofunction:: solve_rational_inequalities
