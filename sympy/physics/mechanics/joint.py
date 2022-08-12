@@ -310,7 +310,7 @@ class Joint(ABC):
         return ax, ref_frame
 
     def _generate_kdes(self):
-        """Generate kinematical differential equations as $\dot{q}=u$."""
+        """Generate kinematical differential equations."""
         kdes = []
         t = dynamicsymbols._t
         for i in range(len(self.coordinates)):
