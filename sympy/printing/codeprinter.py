@@ -427,18 +427,17 @@ class CodePrinter(StrPrinter):
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
-            func = None
             if isinstance(cond_func, str):
-                func = cond_func
+                return "%s(%s)" % (cond_func, self.stringify(expr.args, ", "))
             else:
                 for cond, func in cond_func:
                     if cond(*expr.args):
                         break
-            if func is not None:
-                try:
-                    return func(*[self.parenthesize(item, 0) for item in expr.args])
-                except TypeError:
-                    return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                if func is not None:
+                    try:
+                        return func(*[self.parenthesize(item, 0) for item in expr.args])
+                    except TypeError:
+                        return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))

@@ -30,6 +30,8 @@ former is number and the latter is matrix.
     >>> type(Integral(A, x))
     <class 'sympy.integrals.integrals.Integral'>
 
+.. _kind_classification:
+
 kind
 ====
 

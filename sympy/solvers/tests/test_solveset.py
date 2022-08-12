@@ -1236,7 +1236,6 @@ def test_multi_exp():
              ProductSet(S.Integers, S.Integers, S.Integers, S.Integers))))
 
 
-
 def test__solveset_multi():
     from sympy.solvers.solveset import _solveset_multi
     from sympy.sets import Reals
@@ -1362,73 +1361,55 @@ def test_abs_invert_solvify():
 
 
 def test_linear_eq_to_matrix():
+    assert linear_eq_to_matrix(0, x) == (Matrix([[0]]), Matrix([[0]]))
+    assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
+
+    # integer coefficients
     eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
     eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
 
-    for strict in (True, False):
-        K = dict(strict=strict)
-        assert linear_eq_to_matrix([x], [y], **K) == (
-            Matrix([[0]]), Matrix([[-x]]))
-        assert linear_eq_to_matrix([x],[x], **K) == (
-            Matrix([[1]]), Matrix([[0]]))
+    A, B = linear_eq_to_matrix(eqns1, x, y, z)
+    assert A == Matrix([[2, 1, -2], [1, -1, -1], [1, 1, 3]])
+    assert B == Matrix([[3], [0], [12]])
 
-        A, B = linear_eq_to_matrix(eqns1, x, y, z, **K)
-        assert A == Matrix([[2, 1, -2], [1, -1, -1], [1, 1, 3]])
-        assert B == Matrix([[3], [0], [12]])
+    A, B = linear_eq_to_matrix(eqns2, x, y, z)
+    assert A == Matrix([[3, 2, -1], [2, -2, 4], [-2, 1, -2]])
+    assert B == Matrix([[1], [-2], [0]])
 
-        A, B = linear_eq_to_matrix(eqns2, x, y, z, **K)
-        assert A == Matrix([[3, 2, -1], [2, -2, 4], [-2, 1, -2]])
-        assert B == Matrix([[1], [-2], [0]])
+    # Pure symbolic coefficients
+    eqns3 = [a*b*x + b*y + c*z - d, e*x + d*x + f*y + g*z - h, i*x + j*y + k*z - l]
+    A, B = linear_eq_to_matrix(eqns3, x, y, z)
+    assert A == Matrix([[a*b, b, c], [d + e, f, g], [i, j, k]])
+    assert B == Matrix([[d], [h], [l]])
 
-        # Pure symbolic coefficients
-        eqns3 = [a*b*x + b*y + c*z - d, e*x + d*x + f*y + g*z - h, i*x + j*y + k*z - l]
-        A, B = linear_eq_to_matrix(eqns3, x, y, z, **K)
-        assert A == Matrix([[a*b, b, c], [d + e, f, g], [i, j, k]])
-        assert B == Matrix([[d], [h], [l]])
-
-        assert linear_eq_to_matrix(1, x, **K) == (
-            Matrix([[0]]), Matrix([[-1]]))
-
-        # issue 15195 - /!\ user of `strict`, you were warned
-        assert linear_eq_to_matrix(x + y*(z*(3*x + 2) + 3), x, **K) == (
-            Matrix([[3*y*z + 1]]), Matrix([[-y*(2*z + 3)]])
-            ) if strict else (
-            Matrix([[1]]), Matrix([[-y*(z*(3*x + 2) + 3)]]))
-        assert linear_eq_to_matrix(Matrix(
-            [[a*x + b*y - 7], [5*x + 6*y - c]]), x, y, **K) == (
-            Matrix([[a, b], [5, 6]]), Matrix([[7], [c]]))
-
-        # issue 15312
-        assert linear_eq_to_matrix(Eq(x + 2, 1), x, **K) == (
-            Matrix([[1]]), Matrix([[-1]]))
-
-    # raise ValueError if
+    # raise Errors if
     # 1) no symbols are given
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3))
     # 2) there are duplicates
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, x, y]))
-    # 3) there are non-symbols
-    raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, 1/a, y]))
-    # -- but not when strict is False
-    assert linear_eq_to_matrix(eqns3, [x, 1/a, y], strict=False) == (
-        Matrix([
-        [  a*b, 0, b],
-        [d + e, 0, f],
-        [    i, 0, j]]), Matrix([
-        [-c*z + d],
-        [-g*z + h],
-        [-k*z + l]]))
-    assert linear_eq_to_matrix([2*y/a], [x, 1/a], strict=False) == (
-        Matrix([[0, 2*y]]), Matrix([[0]]))
-    # 4) a nonlinear term is detected in the original expression
+    # 3) a nonlinear term is detected in the original expression
     raises(NonlinearError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x), [x]))
-    # -- but not when strict is False
-    assert linear_eq_to_matrix(Eq(1/x + x, 1/x), [x], strict=False) == (
-        Matrix([[1]]), Matrix([[0]]))
-    F = Function('F')
-    df = F(x).diff()
-    assert linear_eq_to_matrix([x*F(x) - df], [x], strict=False
-        ) == (Matrix([[F(x)]]), Matrix([[df]]))
+    raises(NonlinearError, lambda: linear_eq_to_matrix([x**2], [x]))
+    raises(NonlinearError, lambda: linear_eq_to_matrix([x*y], [x, y]))
+    # 4) Eq being used to represent equations autoevaluates
+    # (use unevaluated Eq instead)
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x), x))
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x + 1), x))
+
+
+    # if non-symbols are passed, the user is responsible for interpreting
+    assert linear_eq_to_matrix([x], [1/x]) == (Matrix([[0]]), Matrix([[-x]]))
+
+    # issue 15195
+    assert linear_eq_to_matrix(x + y*(z*(3*x + 2) + 3), x) == (
+        Matrix([[3*y*z + 1]]), Matrix([[-y*(2*z + 3)]]))
+    assert linear_eq_to_matrix(Matrix(
+        [[a*x + b*y - 7], [5*x + 6*y - c]]), x, y) == (
+        Matrix([[a, b], [5, 6]]), Matrix([[7], [c]]))
+
+    # issue 15312
+    assert linear_eq_to_matrix(Eq(x + 2, 1), x) == (
+        Matrix([[1]]), Matrix([[-1]]))
 
 
 def test_issue_16577():
@@ -1466,6 +1447,8 @@ def test_linsolve():
     raises(ValueError, lambda: linsolve(x1, x2))
     raises(ValueError, lambda: linsolve((A,), x1, x2))
     raises(ValueError, lambda: linsolve(A, B, x1, x2))
+    raises(ValueError, lambda: linsolve([x1], x1, x1))
+    raises(ValueError, lambda: linsolve([x1], (i for i in (x1, x1))))
 
     #raise ValueError if equations are non-linear in given variables
     raises(NonlinearError, lambda: linsolve([x + y - 1, x ** 2 + y - 3], [x, y]))
@@ -1531,12 +1514,13 @@ def test_linsolve():
     assert linsolve(Eqns, x, y) == {
             (kilo*newton*Rational(-28, 3), kN*Rational(4, 3))}
 
-    # linsolve fully expands expressions, so removable singularities
-    # and other nonlinearity does not raise an error
+    # linsolve does not allow expansion (real or implemented)
+    # to remove singularities, but it will cancel linear terms
     assert linsolve([Eq(x, x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
+    assert linsolve([Eq(x + x*y, 1 + y)], [x]) == {(1,)}
+    assert linsolve([Eq(1 + y, x + x*y)], [x]) == {(1,)}
+    raises(NonlinearError, lambda:
+        linsolve([Eq(x**2, x**2 + y)], [x, y]))
 
     # corner cases
     #
@@ -2333,23 +2317,23 @@ def test_issue_10397():
 
 
 def test_issue_14987():
-    raises(NonlinearError, lambda: linear_eq_to_matrix(
+    raises(ValueError, lambda: linear_eq_to_matrix(
         [x**2], x))
-    raises(NonlinearError, lambda: linear_eq_to_matrix(
+    raises(ValueError, lambda: linear_eq_to_matrix(
         [x*(-3/x + 1) + 2*y - a], [x, y]))
-    raises(NonlinearError, lambda: linear_eq_to_matrix(
+    raises(ValueError, lambda: linear_eq_to_matrix(
         [(x**2 - 3*x)/(x - 3) - 3], x))
-    raises(NonlinearError, lambda: linear_eq_to_matrix(
+    raises(ValueError, lambda: linear_eq_to_matrix(
         [(x + 1)**3 - x**3 - 3*x**2 + 7], x))
-    raises(NonlinearError, lambda: linear_eq_to_matrix(
+    raises(ValueError, lambda: linear_eq_to_matrix(
         [x*(1/x + 1) + y], [x, y]))
-    raises(NonlinearError, lambda: linear_eq_to_matrix(
+    raises(ValueError, lambda: linear_eq_to_matrix(
         [(x + 1)*y], [x, y]))
-    raises(NonlinearError, lambda: linear_eq_to_matrix(
+    raises(ValueError, lambda: linear_eq_to_matrix(
         [Eq(1/x, 1/x + y)], [x, y]))
-    raises(NonlinearError, lambda: linear_eq_to_matrix(
+    raises(ValueError, lambda: linear_eq_to_matrix(
         [Eq(y/x, y/x + y)], [x, y]))
-    raises(NonlinearError, lambda: linear_eq_to_matrix(
+    raises(ValueError, lambda: linear_eq_to_matrix(
         [Eq(x*(x + 1), x**2 + y)], [x, y]))
 
 
@@ -2806,37 +2790,19 @@ def test_linear_coeffs():
     assert linear_coeffs(x + 2*y + 3, x, y) == [1, 2, 3]
     assert linear_coeffs(x + 2*y + 3, y, x) == [2, 1, 3]
     assert linear_coeffs(x + 2*x**2 + 3, x, x**2) == [1, 2, 3]
-    assert linear_coeffs(x*y + x*z + 3, x) == [y + z, 3]
-    raises(NonlinearError, lambda:
+    raises(ValueError, lambda:
         linear_coeffs(x + 2*x**2 + x**3, x, x**2))
-    raises(NonlinearError, lambda:
+    raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
+    raises(ValueError, lambda:
+        linear_coeffs(x, x, x))
     assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
     assert linear_coeffs(1.0, x, y) == [0, 0, 1.0]
-    # duplicate symbols
-    raises(ValueError, lambda: linear_coeffs(x, x, x))
-    # unordered symbols
-    raises(ValueError, lambda: linear_coeffs(x, {x, y}))
-    assert linear_coeffs(y, x, dict=True) == {1: y}
-    # strict=False
-    F = lambda a, *b: linear_coeffs(a, *b, strict=False)
-    assert F(0, x) == [0, 0]
-    assert all(i is S.Zero for i in F(0, x))
-    assert F(x + 2*y + 3, x, y) == [1, 2, 3]
-    assert F(x + 2*y + 3, y, x) == [2, 1, 3]
-    assert F(x + 2*x**2 + 3, x, x**2) == [1, 2, 3]
-    assert F(x + 2*x**2 + x**3, x, x**2) == [1, 2, x**3]
-    assert F(1/x*(x - 1) + 1/x, x) == [1/x, 0]
-    assert F(a*(x + y), x, y) == [a, a, 0]
-    assert F(1.0, x, y) == [0, 0, 1.0]
-    assert F(x*(y + 1) + x*y, y, 1 + y) == [x, x, 0]
-    _ = y*(x**2 + 1)
-    assert F(y*(x + 2)*(x**2 + 1), x) == [_, 2*_]
-    raises(NonlinearError, lambda: F((x + 1)*(x + 2), x))
-    assert linear_coeffs(Eq(a*(2*x + 3*y) + 4*y, 5), x, y) == [2*a, 3*a + 4, -5]
+    # don't include coefficients of 0
+    assert linear_coeffs(Eq(x, x + y), x, y, dict=True) == {y: -1}
+    assert linear_coeffs(0, x, y, dict=True) == {}
 
 
-# modular tests
 def test_is_modular():
     assert _is_modular(y, x) is False
     assert _is_modular(Mod(x, 3) - 1, x) is True
@@ -3002,9 +2968,11 @@ def test_issue_10426():
         Intersection(S.Complexes, ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))),
         S.Integers)))).dummy_eq(Dummy('x,n'))
 
+
 def test_solveset_conjugate():
     """Test solveset for simple conjugate functions"""
     assert solveset(conjugate(x) -3 + I) == FiniteSet(3 + I)
+
 
 def test_issue_18208():
     variables = symbols('x0:16') + symbols('y0:12')

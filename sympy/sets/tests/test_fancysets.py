@@ -546,7 +546,6 @@ def test_range_is_finite_set():
     assert Range(oo, n).is_finite_set is True
 
 
-
 def test_Range_is_iterable():
     assert Range(-100, 100).is_iterable is True
     assert Range(2, oo).is_iterable is False

@@ -1074,8 +1074,7 @@ def test_sysode_linear_neq_order1_type2():
     sol6 = [Eq(f(x), C2*exp(-4*x)*Rational(-4, 5) + C1*exp(-9*x)),
             Eq(g(x), C2*exp(-4*x)),
             Eq(h(x), C3*exp(x) + x*exp(x))]
-    got = dsolve(eqs6)
-    assert got == sol6, got
+    assert dsolve(eqs6) == sol6
     assert checksysodesol(eqs6, sol6) == (True, [0, 0, 0])
 
     # Regression test case for issue #8859
@@ -1978,11 +1977,8 @@ def test_linodesolve():
 
     # non-homogeneous term assumed to be 0
     sol1 = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
-                - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 +
-                sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2
-                - exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2,
-            C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)
-                + exp(-t/2 + sqrt(5)*t/2)*Integral(0, t) + exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)]
+                - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2,
+            C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)]
     assert constant_renumber(linodesolve(A, t, type="type2"), variables=[t]) == sol1
 
     # Testing the Errors
