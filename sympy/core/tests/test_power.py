@@ -274,15 +274,17 @@ def test_zero():
     assert power(0, -oo) is zoo
     assert Float(0)**-oo is zoo
 
+
 def test_pow_as_base_exp():
     assert (S.Infinity**(2 - x)).as_base_exp() == (S.Infinity, 2 - x)
     assert (S.Infinity**(x - 2)).as_base_exp() == (S.Infinity, x - 2)
+    # issue 23918
     p = S.Half**x
     assert p.base, p.exp == p.as_base_exp() == (S(2), -x)
     p = (S(3)/2)**x
     assert p.base, p.exp == p.as_base_exp() == (3*S.Half, x)
     p = (S(2)/3)**x
-    assert p.as_base_exp() == (S(2)/3, x)
+    assert p.as_base_exp() == (S(3)/2, -x)
     assert p.base, p.exp == (S(2)/3, x)
     # issue 8344:
     assert Pow(1, 2, evaluate=False).as_base_exp() == (S.One, S(2))
@@ -646,11 +648,6 @@ def test_powers_of_I():
         1, sqrt(I), I, sqrt(I)**3, -1, -sqrt(I), -I, -sqrt(I)**3,
         1, sqrt(I), I, sqrt(I)**3, -1]
     assert sqrt(I)**(S(9)/2) == -I**(S(1)/4)
-
-
-def test_issue_23918():
-    b = S(2)/3
-    assert (b**x).as_base_exp() == (b, x)
 
 
 def test_issue_26546():

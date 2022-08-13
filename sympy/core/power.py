@@ -821,8 +821,8 @@ class Pow(Expr):
 
         """
         b, e = self.args
-        if b.is_Rational and b.p == 1 and b.q != 1:
-            return Integer(b.q), -e
+        if b.is_Rational and b.p < b.q and b.p > 0:
+            return 1/b, -e
         return b, e
 
     def _eval_adjoint(self):
