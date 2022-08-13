@@ -423,7 +423,7 @@ class bernoulli(Function):
     The Bernoulli numbers are a sequence of rational numbers
     defined by `B_0 = 1` and the recursive relation (`n > 0`):
 
-    .. math :: 0 = \sum_{k=0}^n \binom{n+1}{k} B_k
+    .. math :: n+1 = \sum_{k=0}^n \binom{n+1}{k} B_k
 
     They are also commonly defined by their exponential generating
     function, which is `\frac{x}{e^x - 1}`. For odd indices > 1, the
@@ -431,10 +431,10 @@ class bernoulli(Function):
 
     The Bernoulli polynomials satisfy the analogous formula:
 
-    .. math :: B_n(x) = \sum_{k=0}^n \binom{n}{k} B_k x^{n-k}
+    .. math :: B_n(x) = \sum_{k=0}^n (-1)^k \binom{n}{k} B_k x^{n-k}
 
     Bernoulli numbers and Bernoulli polynomials are related as
-    `B_n(0) = B_n`.
+    `B_n(1) = B_n`.
 
     We compute Bernoulli numbers using Ramanujan's formula:
 
@@ -463,7 +463,7 @@ class bernoulli(Function):
     >>> from sympy import bernoulli
 
     >>> [bernoulli(n) for n in range(11)]
-    [1, -1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
+    [1, 1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
     >>> bernoulli(1000001)
     0
 
@@ -513,7 +513,7 @@ class bernoulli(Function):
                     return S.One
                 elif n is S.One:
                     if sym is None:
-                        return Rational(-1, 2)
+                        return S.Half
                     else:
                         return sym - S.Half
                 # Bernoulli numbers
@@ -540,7 +540,7 @@ class bernoulli(Function):
                 # Bernoulli polynomials
                 else:
                     n = int(n)
-                    result = [binomial(n, k)*cls(k)*sym**(n - k) for k in range(n + 1)]
+                    result = [S.NegativeOne**k*binomial(n, k)*cls(k)*sym**(n - k) for k in range(n + 1)]
                     return Add(*result)
             else:
                 raise ValueError("Bernoulli numbers are defined only"
@@ -1245,14 +1245,14 @@ class genocchi(Function):
     The Genocchi numbers are a sequence of integers `G_n` that satisfy the
     relation:
 
-    .. math:: \frac{2t}{e^t + 1} = \sum_{n=1}^\infty \frac{G_n t^n}{n!}
+    .. math:: \frac{-2t}{1 + e^{-t}} = \sum_{n=0}^\infty \frac{G_n t^n}{n!}
 
     Examples
     ========
 
     >>> from sympy import genocchi, Symbol
-    >>> [genocchi(n) for n in range(1, 9)]
-    [1, -1, 0, 1, 0, -3, 0, 17]
+    >>> [genocchi(n) for n in range(9)]
+    [0, -1, -1, 0, 1, 0, -3, 0, 17]
     >>> n = Symbol('n', integer=True, positive=True)
     >>> genocchi(2*n + 1)
     0
@@ -1273,16 +1273,16 @@ class genocchi(Function):
     @classmethod
     def eval(cls, n):
         if n.is_Number:
-            if (not n.is_Integer) or n.is_nonpositive:
+            if (not n.is_Integer) or n.is_negative:
                 raise ValueError("Genocchi numbers are defined only for " +
-                                 "positive integers")
+                                 "nonnegative integers")
             return 2 * (1 - S(2) ** n) * bernoulli(n)
 
         if n.is_odd and (n - 1).is_positive:
             return S.Zero
 
         if (n - 1).is_zero:
-            return S.One
+            return S.NegativeOne
 
     def _eval_rewrite_as_bernoulli(self, n, **kwargs):
         if n.is_integer and n.is_nonnegative:

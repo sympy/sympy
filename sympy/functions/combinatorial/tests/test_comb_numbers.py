@@ -41,7 +41,7 @@ def test_carmichael():
 
 def test_bernoulli():
     assert bernoulli(0) == 1
-    assert bernoulli(1) == Rational(-1, 2)
+    assert bernoulli(1) == Rational(1, 2)
     assert bernoulli(2) == Rational(1, 6)
     assert bernoulli(3) == 0
     assert bernoulli(4) == Rational(-1, 30)
@@ -425,9 +425,9 @@ def test_catalan():
 
 
 def test_genocchi():
-    genocchis = [1, -1, 0, 1, 0, -3, 0, 17]
+    genocchis = [0, -1, -1, 0, 1, 0, -3, 0, 17]
     for n, g in enumerate(genocchis):
-        assert genocchi(n + 1) == g
+        assert genocchi(n) == g
 
     m = Symbol('m', integer=True)
     n = Symbol('n', integer=True, positive=True)
