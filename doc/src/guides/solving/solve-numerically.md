@@ -5,7 +5,8 @@ numerically solving $\cos(x) = x $ returns $ x \approx 0.739085133215161$.
 
 Solving numerically is useful if:
 - You only need a numeric solution, not a symbolic one
-- A closed-form solution is not available or is overly complicated
+- A closed-form solution is not available or is overly complicated *Link to
+  Numeric solutions by Choice once Solving Guidance merged*
 
 {func}`~.solve` and {func}`~.solveset` will not try to find a numeric solution,
 only a mathematically-exact symbolic solution. So if you want a numeric
@@ -15,7 +16,7 @@ SymPy is designed for symbolic mathematics. If you do not need to do symbolic
 operations, then for numerical operations you can use another free and
 open-source package such as NumPy or SciPy which will be faster, work with
 arrays, and have more algorithms implemented. The main reasons to use SymPy (or
-its dependency mpmath) for numerical calculations are:
+its dependency [mpmath](https://mpmath.org/)) for numerical calculations are:
 - to do a simple numerical calculation within the context of a symbolic
   calculation using SymPy
 - if you need the arbitrary precision capabilities to get more digits of
