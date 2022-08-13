@@ -426,7 +426,7 @@ class bernoulli(Function):
     .. math :: n+1 = \sum_{k=0}^n \binom{n+1}{k} B_k
 
     They are also commonly defined by their exponential generating
-    function, which is `\frac{x}{e^x - 1}`. For odd indices > 1, the
+    function, which is `\frac{x}{1 - e^{-x}}`. For odd indices > 1, the
     Bernoulli numbers are zero.
 
     The Bernoulli polynomials satisfy the analogous formula:
