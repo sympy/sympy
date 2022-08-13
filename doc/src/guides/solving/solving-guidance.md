@@ -104,6 +104,9 @@ inexact value to SymPy, leading to an inexact, numerical solution:
 [{x: -1.77245385090552}, {x: 1.77245385090552}]
 ```
 
+To use exact values for numbers such as $6.2$ or $1/2$, refer to [Python numbers
+vs. SymPy Numbers](python-vs-sympy-numbers).
+
 In certain cases, using an inexact value will prevent SymPy from finding a
 result. For example, this exact equation can be solved:
 
