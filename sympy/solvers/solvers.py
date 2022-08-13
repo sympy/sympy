@@ -1866,9 +1866,9 @@ def _solve_system(exprs, symbols, **flags):
 
             # returns a dictionary ({symbols: values}) or None
             if flags.pop('particular', False):
-                result = minsolve_linear_system(matrix, *symbols, **flags)
+                result = minsolve_linear_system(matrix, *symbols, quick=flags['quick'])
             else:
-                result = solve_linear_system(matrix, *symbols, **flags)
+                result = solve_linear_system(matrix, *symbols)
             result = [result] if result else []
             if failed:
                 if result:
@@ -2226,7 +2226,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     return n, d
 
 
-def minsolve_linear_system(system, *symbols, **flags):
+def minsolve_linear_system(system, *symbols, quick=False):
     r"""
     Find a particular solution to a linear system.
 
@@ -2238,9 +2238,8 @@ def minsolve_linear_system(system, *symbols, **flags):
     If ``quick=True``, a heuristic is used.
 
     """
-    quick = flags['quick']
     # Check if there are any non-zero solutions at all
-    s0 = solve_linear_system(system, *symbols, **flags)
+    s0 = solve_linear_system(system, *symbols)
     if not s0 or all(v == 0 for v in s0.values()):
         return s0
     if quick:
@@ -2309,7 +2308,7 @@ def minsolve_linear_system(system, *symbols, **flags):
         return bestsol
 
 
-def solve_linear_system(system, *symbols, **flags):
+def solve_linear_system(system, *symbols):
     r"""
     Solve system of $N$ linear equations with $M$ variables, which means
     both under- and overdetermined systems are supported.
