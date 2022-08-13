@@ -73,8 +73,8 @@ def heuristics(e, z, z0, dir):
     """
 
     rv = None
-    if abs(z0) is S.Infinity:
-        rv = limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
+    if z0 is S.Infinity:
+        rv = limit(e.subs(z, 1/z), z, S.Zero, "+")
         if isinstance(rv, Limit):
             return
     elif e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:
@@ -230,6 +230,13 @@ class Limit(Expr):
             raise NotImplementedError("Limits at complex "
                                     "infinity are not implemented")
 
+        if z0.is_infinite:
+            cdir = sign(z0)
+            cdir = cdir/abs(cdir)
+            e = e.subs(z, cdir*z)
+            dir = "-"
+            z0 = S.Infinity
+
         if hints.get('deep', True):
             e = e.doit(**hints)
             z = z.doit(**hints)
@@ -289,7 +296,7 @@ class Limit(Expr):
 
 
         if e.is_meromorphic(z, z0):
-            if abs(z0) is S.Infinity:
+            if z0 is S.Infinity:
                 newe = e.subs(z, 1/z)
                 # cdir changes sign as oo- should become 0+
                 cdir = -cdir
@@ -311,7 +318,7 @@ class Limit(Expr):
                 else:
                     return S.ComplexInfinity
 
-        if abs(z0) is S.Infinity:
+        if z0 is S.Infinity:
             if e.is_Mul:
                 e = factor_terms(e)
             newe = e.subs(z, 1/z)

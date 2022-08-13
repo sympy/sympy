@@ -15,7 +15,7 @@ from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin,
                                                       atan, cos, cot, csc, sec, sin, tan)
-from sympy.functions.special.bessel import (besseli, besselj, besselk)
+from sympy.functions.special.bessel import (besseli, bessely, besselj, besselk)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, erfi, fresnelc, fresnels)
 from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma)
 from sympy.functions.special.hyper import meijerg
@@ -348,6 +348,33 @@ def test_series_AccumBounds():
     assert limit(e, x, oo) == AccumBounds(0, oo)
 
 
+def test_bessel_functions_at_infinity():
+    # Pull Request 23844 implements limits for all bessel and modified bessel
+    # functions approaching infinity along any direction i.e. abs(z0) tends to oo
+
+    assert limit(besselj(1, x), x, oo) == 0
+    assert limit(besselj(1, x), x, -oo) == 0
+    assert limit(besselj(1, x), x, I*oo) == oo*I
+    assert limit(besselj(1, x), x, -I*oo) == -oo*I
+    assert limit(bessely(1, x), x, oo) == 0
+    assert limit(bessely(1, x), x, -oo) == 0
+    assert limit(bessely(1, x), x, I*oo) == -oo*I*sign(I**(S(3)/2))
+    assert limit(bessely(1, x), x, I*oo).n() == -oo
+    assert limit(bessely(1, x), x, -I*oo) == -oo*I*sign(1/sqrt(-I))
+    assert limit(bessely(1, x), x, -I*oo).n() == -oo
+    assert limit(besseli(1, x), x, oo) == oo
+    assert limit(besseli(1, x), x, -oo) == -oo
+    assert limit(besseli(1, x), x, I*oo) == 0
+    assert limit(besseli(1, x), x, -I*oo) == 0
+    assert limit(besselk(1, x), x, oo) == 0
+    assert limit(besselk(1, x), x, -oo) == -oo*I
+    assert limit(besselk(1, x), x, I*oo) == 0
+    assert limit(besselk(1, x), x, -I*oo) == 0
+
+    # test issue 14874
+    assert limit(besselk(0, x), x, oo) == 0
+
+
 @XFAIL
 def test_doit2():
     f = Integral(2 * x, x)
@@ -531,7 +558,7 @@ def test_factorial():
     # see Stirling's approximation:
     # https://en.wikipedia.org/wiki/Stirling's_approximation
     assert limit(f/(sqrt(2*pi*x)*(x/E)**x), x, oo) == 1
-    assert limit(f, x, -oo) == factorial(-oo)
+    assert limit(f, x, -oo) == gamma(-oo)
 
 
 def test_issue_6560():
@@ -917,10 +944,6 @@ def test_issue_14811():
     assert limit(((1 + ((S(2)/3)**(x + 1)))**(2**x))/(2**((S(4)/3)**(x - 1))), x, oo) == oo
 
 
-def test_issue_14874():
-    assert limit(besselk(0, x), x, oo) == 0
-
-
 def test_issue_16222():
     assert limit(exp(x), x, 1000000000) == exp(1000000000)
 
@@ -1213,6 +1236,14 @@ def test_issue_22220():
     expr = expr = (-log(tan(x/2) - I) +log(tan(x/2) + I))
     assert limit(expr, x, pi, '+') == 2*I*pi
     assert limit(expr, x, pi, '-') == 0
+
+
+def test_issue_22334():
+    k, n  = symbols('k, n', positive=True)
+    assert limit((n+1)**k/((n+1)**(k+1) - (n)**(k+1)), n, oo) == 1/(k + 1)
+    assert limit((n+1)**k/((n+1)**(k+1) - (n)**(k+1)).expand(), n, oo) == 1/(k + 1)
+    assert limit((n+1)**k/(n*(-n**k + (n + 1)**k) + (n + 1)**k), n, oo) == 1/(k + 1)
+
 
 def test_sympyissue_22986():
     assert limit(acosh(1 + 1/x)*sqrt(x), x, oo) == sqrt(2)
