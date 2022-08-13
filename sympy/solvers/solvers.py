@@ -180,7 +180,14 @@ def denoms(eq, *symbols):
     return {d for d in dens if any(s in d.free_symbols for s in symbols)}
 
 
-def checksol(f, symbol, sol=None, **flags):
+# The checksol function has a simplify kwarg but also needs to use the simplify
+# function so we make an alias for it here.
+_simplify = simplify
+
+
+def checksol(f, symbol, sol=None, *,
+        numerical=True, minimal=False, warn=False, simplify=None, force=None,
+        **ignore):
     """
     Checks whether sol is a solution of equation f == 0.
 
@@ -231,7 +238,16 @@ def checksol(f, symbol, sol=None, **flags):
     """
     from sympy.physics.units import Unit
 
-    minimal = flags.get('minimal', False)
+    do_simplify = simplify
+    simplify = _simplify
+
+    flags = {
+        'numerical':numerical,
+        'minimal':minimal,
+        'warn':warn,
+        'simplify':simplify,
+        'force':force,
+    }
 
     if sol is not None:
         sol = {symbol: sol}
@@ -283,7 +299,6 @@ def checksol(f, symbol, sol=None, **flags):
 
     was = f
     attempt = -1
-    numerical = flags.get('numerical', True)
     while 1:
         attempt += 1
         if attempt == 0:
@@ -302,13 +317,13 @@ def checksol(f, symbol, sol=None, **flags):
         elif attempt == 2:
             if minimal:
                 return
-            if flags.get('simplify', None) in (None, True):
+            if do_simplify in (None, True):
                 for k in sol:
                     sol[k] = simplify(sol[k])
             # start over without the failed expanded form, possibly
             # with a simplified solution
             val = simplify(f.subs(sol))
-            if flags.get('force', None) in (None, True):
+            if force in (None, True):
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
                 exval = _mexpand(val, recursive=True)
@@ -335,7 +350,7 @@ def checksol(f, symbol, sol=None, **flags):
                     break
             if saw_pow_func is False:
                 return False
-            if flags.get('force', None) in (None, True):
+            if force in (None, True):
                 # don't do a zero check with the positive assumptions in place
                 val = val.subs(reps)
             nz = fuzzy_not(val.is_zero)
@@ -363,7 +378,7 @@ def checksol(f, symbol, sol=None, **flags):
             return val == 0
         was = val
 
-    if flags.get('warn', False):
+    if warn:
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
