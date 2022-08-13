@@ -2712,7 +2712,7 @@ class Beam3D(Beam):
             sum_moments -= self._torsion_moment[pointsList[i-1]]
             torque_diagram += Piecewise((0, x<=pointsList[i-1]), (sum_moments, x<=pointsList[i]), (0, x>=pointsList[i]))
         integrated_torque_diagram = integrate(torque_diagram)
-        self._angular_deflection =  integrated_torque_diagram/(self.shear_modulus*self.polar_moment())#.subs(x, position)
+        self._angular_deflection =  integrated_torque_diagram/(self.shear_modulus*self.polar_moment())
 
     def solve_slope_deflection(self):
         x = self.variable
