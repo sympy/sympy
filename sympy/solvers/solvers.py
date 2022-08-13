@@ -186,7 +186,7 @@ _simplify = simplify
 
 
 def checksol(f, symbol, sol=None, *,
-        numerical=True, minimal=False, warn=False, simplify=None, force=None,
+        numerical=True, minimal=False, warn=False, simplify=None, force=True,
         **ignore):
     """
     Checks whether sol is a solution of equation f == 0.
@@ -232,7 +232,7 @@ def checksol(f, symbol, sol=None, *,
         'simplify=True (default)'
            simplify solution before substituting into function and
            simplify the function before trying specific simplifications
-        'force=True (default is False)'
+        'force=True (default)'
            make positive all symbols without assumptions regarding sign.
 
     """
@@ -323,7 +323,7 @@ def checksol(f, symbol, sol=None, *,
             # start over without the failed expanded form, possibly
             # with a simplified solution
             val = simplify(f.subs(sol))
-            if force in (None, True):
+            if force:
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
                 exval = _mexpand(val, recursive=True)
@@ -350,7 +350,7 @@ def checksol(f, symbol, sol=None, *,
                     break
             if saw_pow_func is False:
                 return False
-            if force in (None, True):
+            if force:
                 # don't do a zero check with the positive assumptions in place
                 val = val.subs(reps)
             nz = fuzzy_not(val.is_zero)
@@ -392,7 +392,7 @@ _dict = dict
 
 def solve(f, *symbols,
         dict=False, set=False, exclude=(), check=True, numerical=True,
-        minimal=False, warn=False, simplify=None, force=None, rational=None,
+        minimal=False, warn=False, simplify=None, force=True, rational=None,
         manual=False, implicit=False, particular=False, quick=False,
         cubics=True, quartics=True, quintics=True,
         incomplete=True, _denominators=(), _unrad=True):
@@ -822,8 +822,12 @@ def solve(f, *symbols,
             general simplify function on the solutions and the
             expression obtained when they are substituted into the
             function which should be zero.
-        force=True/False (default is None)
-            Make positive all symbols without assumptions regarding sign.
+        force=False (default is True)
+            This is passed to checksol and used in some situations to make
+            simplifications that might not hold in general depending on the
+            unknown sign of symbols involved in an expression. Setting
+            ``force=False`` disables this but might mean that ``solve`` fails
+            to find some solutions.
         rational=True/False (default is None)
             Recast Floats as Rational; if rational is False a polynomial
             system containing Floats may fail to solve because of issues
@@ -2621,8 +2625,7 @@ def _tsolve(eq, sym, **flags):
             if f.is_Mul:
                 return _vsolve(f, sym, **flags)
             if rhs:
-                force = flags['force'] in (None, True)
-                f = logcombine(lhs, force=force)
+                f = logcombine(lhs, force=flags.get('force', True))
                 if f.count(log) != lhs.count(log):
                     if isinstance(f, log):
                         return _vsolve(f.args[0] - exp(rhs), sym, **flags)
@@ -2813,7 +2816,7 @@ def _tsolve(eq, sym, **flags):
                 else:
                     pass
 
-    if flags.get('force', None) in (None, True):
+    if flags.get('force', True):
         flags['force'] = False
         pos, reps = posify(lhs - rhs)
         if rhs == S.ComplexInfinity:
