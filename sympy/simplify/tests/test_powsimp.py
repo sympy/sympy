@@ -364,3 +364,10 @@ def test_issue_22546():
     ans = ref.subs(i, e)
     assert ans.is_Pow
     assert powsimp(x**e/y**e) == ans
+
+
+def test_issue_23918():
+    # the change happens in as_base_exp but
+    # shows up in powsimp
+    b = S(2)/3
+    assert powsimp(b**x) == (1/b)**-x
