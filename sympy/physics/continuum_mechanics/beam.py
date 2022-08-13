@@ -2684,9 +2684,9 @@ class Beam3D(Beam):
         Solves for the angular deflection due to the torsional effects of
         moments being applied in the x-direction i.e. out of or into the beam.
 
-        Here, a positive torque means the direction of the torque is positive 
-        i.e. out of the beam along the beam-axis.
-        Likewise, a negative torque signifies a torque into the beam cross-section.
+        Here, a positive torque means the direction of the torque is positive
+        i.e. out of the beam along the beam-axis. Likewise, a negative torque
+        signifies a torque into the beam cross-section.
 
         Examples
         ========
