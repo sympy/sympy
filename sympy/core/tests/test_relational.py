@@ -12,6 +12,7 @@ from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -807,6 +808,13 @@ def test_simplify_relational():
     # These two tests the same branch
     assert simplify(m*x + 2*m*y > 1) is S.false
     assert simplify(m*x + y > 1 + y) is S.false
+
+    # issue 23914
+    assert simplify((x < 1) & (1/x < 1)) == (x < 0)
+    assert simplify((x <= 1) & (1/x <= 1)) == Eq(x, 1) | (x < 0)
+    ax = Abs(x)
+    assert simplify((ax < 1) & (1/ax < 1)) == False
+    assert simplify((ax <= 1) & (1/ax <= 1)) == Eq(x, 1)
 
 
 def test_equals():

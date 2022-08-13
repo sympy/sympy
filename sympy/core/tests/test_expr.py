@@ -4,7 +4,7 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import (ExprBuilder, unchanged, Expr,
-    UnevaluatedExpr)
+    UnevaluatedExpr, generators)
 from sympy.core.function import (Function, expand, WildFunction,
     AppliedUndef, Derivative, diff, Subs)
 from sympy.core.mul import Mul
@@ -26,6 +26,7 @@ from sympy.functions.special.delta_functions import (Heaviside,
 from sympy.functions.special.error_functions import Si
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import integrate, Integral
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.physics.secondquant import FockState
 from sympy.polys.partfrac import apart
 from sympy.polys.polytools import factor, cancel, Poly
@@ -41,7 +42,7 @@ from sympy.simplify.simplify import simplify, nsimplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.tensor.indexed import Indexed
 from sympy.physics.units import meter
-
+from sympy.tensor.indexed import IndexedBase
 from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
@@ -1645,6 +1646,20 @@ def test_has_xfree():
     raises(TypeError, lambda: x.has_xfree([x]))
 
 
+def test_generators():
+    from sympy import IndexedBase, Function, MatrixSymbol
+    from sympy.core.expr import generators
+    X = IndexedBase("X")
+    M = MatrixSymbol("M", 1, 1)
+    f = Function('f')
+    for i in [X[a], f(a, b), M[0, 0]]:
+        assert generators(i) == {i}
+    assert generators(x + f(x, y)) == {x, f(x, y)}
+    assert generators(y**(2*x)) == {y**x}
+    assert generators(y**(3*x/2)) == {y**(x/2)}
+    assert generators(exp(3*x/2)) == {exp(x/2)}
+
+
 def test_issue_5300():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
@@ -2241,6 +2256,33 @@ def test_21494():
 
 def test_Expr__eq__iterable_handling():
     assert x != range(3)
+
+
+def test_expr_generators():
+    assert generators([1 + x, y]) == {x, y}
+    assert generators(S.One) == set()
+    assert generators((1 + x, y)) == {x, y}
+    assert generators(x + y) == {x, y}
+    assert generators(2**x + 4**x + S.Half**x) == {2**x}
+    r = S(3)/2
+    assert generators(r**x + (r**2)**x + (1/r**3)**x) == {r**x}
+    assert generators(r**x + (r**2)**x + (5/r**3)**x) == {r**x, (5/r**3)**x}
+    assert generators(x**2) == {x}
+    assert generators(x**(2*y)) == {x**y}
+    assert generators(x**(2*y/3)) == {x**(y/3)}
+    f = Function('f')
+    assert generators(x + f(x) + cos(2*x)) == {x, f(x), cos(2*x)}
+    assert generators(f(x) + cos(2*x)) == {f(x), cos(2*x)}
+    assert generators(cos(f(x)) + y) == {y, cos(f(x))}
+    assert generators(2*x + f(x, y)) == {x, f(x, y)}
+    assert generators(exp(2*x) + exp(x) + 1) == {exp(x)}
+
+    X = IndexedBase("X")
+    M = MatrixSymbol("M", 1, 1)
+    f = Function('f')
+    for i in [X[a], f(a, b), M[0, 0]]:
+        assert generators(i) == {i}
+    assert generators(x + f(x, y)) == {x, f(x, y)}
 
 
 def test_format():
