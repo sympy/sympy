@@ -265,8 +265,8 @@ def test_issue_14177():
     a = Symbol('a')
 
     assert zeta(2*n) == (-1)**(n + 1)*2**(2*n - 1)*pi**(2*n)*bernoulli(2*n)/factorial(2*n)
-    assert zeta(-n) == -bernoulli(n + 1)/(n + 1)
-    assert zeta(-n, a) == -bernoulli(n + 1, a)/(n + 1)
+    assert zeta(-n) == bernoulli(n+1) / (-n-1)
+    assert zeta(-n, a) == bernoulli(n+1, a) / (-n-1)
 
     n = Symbol('n')
 

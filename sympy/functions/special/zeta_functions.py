@@ -442,25 +442,24 @@ class zeta(Function):
     >>> zeta(s).rewrite(dirichlet_eta)
     dirichlet_eta(s)/(1 - 2**(1 - s))
 
-    The Riemann zeta function at positive even integer and negative odd integer
-    values is related to the Bernoulli numbers:
+    The Riemann zeta function at nonnegative even and negative integer
+    values is related to the Bernoulli numbers and polynomials:
 
     >>> zeta(2)
     pi**2/6
     >>> zeta(4)
     pi**4/90
+    >>> zeta(0)
+    -1/2
     >>> zeta(-1)
     -1/12
+    >>> zeta(-4)
+    0
 
     The specific formulae are:
 
     .. math:: \zeta(2n) = (-1)^{n+1} \frac{B_{2n} (2\pi)^{2n}}{2(2n)!}
-    .. math:: \zeta(-n) = -\frac{B_{n+1}}{n+1}
-
-    At negative even integers the Riemann zeta function is zero:
-
-    >>> zeta(-4)
-    0
+    .. math:: \zeta(-n,a) = -\frac{B_{n+1}(a)}{n+1}
 
     No closed-form expressions are known at positive odd integers, but
     numerical evaluation is possible:
@@ -526,9 +525,9 @@ class zeta(Function):
         if z.is_integer:
             if z.is_nonpositive:
                 if a is S.One:
-                    return -bernoulli(1-z) / (1-z)
+                    return bernoulli(1-z) / (z-1)
                 else:
-                    return -bernoulli(1-z, a) / (1-z)
+                    return bernoulli(1-z, a) / (z-1)
             elif a.is_Integer:
                 if z.is_even:
                     B, F = bernoulli(z), factorial(z)

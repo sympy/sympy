@@ -425,9 +425,18 @@ class bernoulli(Function):
 
     .. math :: n+1 = \sum_{k=0}^n \binom{n+1}{k} B_k
 
-    They are also commonly defined by their exponential generating
-    function, which is `\frac{x}{1 - e^{-x}}`. For odd indices > 1, the
-    Bernoulli numbers are zero.
+    This gives `B_1 = +\frac12`, which allows the sequence to be
+    interpolated by an entire function intimately connected to the
+    Riemann zeta function and confers several theoretical advantages [5]_:
+
+    .. math :: B_n = -n\zeta(1-n)
+
+    Older versions of SymPy and some other sources define `B_1 = -\frac12`.
+    The resulting sequence can be obtained with ``(-1)**n*bernoulli(n)``.
+
+    The Bernoulli numbers are also commonly defined by their exponential
+    generating function, which is `\frac{x}{1 - e^{-x}}`. For odd indices > 1,
+    the Bernoulli numbers are zero.
 
     The Bernoulli polynomials satisfy the analogous formula:
 
@@ -479,6 +488,8 @@ class bernoulli(Function):
     .. [2] https://en.wikipedia.org/wiki/Bernoulli_polynomial
     .. [3] http://mathworld.wolfram.com/BernoulliNumber.html
     .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
+    .. [5] Peter Luschny, "An introduction to the Bernoulli function",
+           https://arxiv.org/abs/2009.06743
 
     """
 
