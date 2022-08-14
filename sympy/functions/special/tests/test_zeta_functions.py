@@ -59,8 +59,8 @@ def test_zeta_eval():
 
     assert zeta(-1, 3) == Rational(-37, 12)
     assert zeta(-1, 7) == Rational(-253, 12)
-    assert zeta(-1, -4) == Rational(119, 12)
-    assert zeta(-1, -9) == Rational(539, 12)
+    assert zeta(-1, -4) == Rational(-121, 12)
+    assert zeta(-1, -9) == Rational(-541, 12)
 
     assert zeta(-4, 3) == -17
     assert zeta(-4, -8) == 8772
@@ -239,7 +239,7 @@ def test_stieltjes():
 def test_stieltjes_evalf():
     assert abs(stieltjes(0).evalf() - 0.577215664) < 1E-9
     assert abs(stieltjes(0, 0.5).evalf() - 1.963510026) < 1E-9
-    assert abs(stieltjes(1, 2).evalf() + 0.072815845 ) < 1E-9
+    assert abs(stieltjes(1, 2).evalf() + 0.072815845) < 1E-9
 
 
 def test_issue_10475():
@@ -261,10 +261,12 @@ def test_issue_10475():
 
 
 def test_issue_14177():
-    n = Symbol('n', positive=True, integer=True)
+    n = Symbol('n', nonnegative=True, integer=True)
+    a = Symbol('a')
 
     assert zeta(2*n) == (-1)**(n + 1)*2**(2*n - 1)*pi**(2*n)*bernoulli(2*n)/factorial(2*n)
-    assert zeta(-n) == (-1)**(-n)*bernoulli(n + 1)/(n + 1)
+    assert zeta(-n) == -bernoulli(n + 1)/(n + 1)
+    assert zeta(-n, a) == -bernoulli(n + 1, a)/(n + 1)
 
     n = Symbol('n')
 
