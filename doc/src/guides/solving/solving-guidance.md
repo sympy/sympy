@@ -82,9 +82,9 @@ complex root of a polynomial.)
 ## Use Exact Values
 
 If you want to preserve the exact mathematical values of symbols such as
-[fractions](tutorial-gotchas-final-notes) and [square
-roots](symbolic-computation), define them so that SymPy can interpret them
-symbolically, for example use SymPy's {class}`.Pi`:
+transcendental numbers and [square roots](symbolic-computation), define them so
+that SymPy can interpret them symbolically, for example use SymPy's
+{class}`.Pi`:
 
 ```py
 >>> from sympy import symbols, solve, pi
