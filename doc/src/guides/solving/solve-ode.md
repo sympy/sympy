@@ -14,9 +14,9 @@ Here is an example of solving an ordinary differential equation algebraically:
 ```py
 >>> from sympy import Function, dsolve, Derivative
 >>> from sympy.abc import x
->>> f = Function('f')
->>> result = dsolve(Derivative(f(x), x, x) + 9*f(x), f(x)); result
-Eq(f(x), C1*sin(3*x) + C2*cos(3*x))
+>>> y = Function('y')
+>>> result = dsolve(Derivative(y(x), x, x) + 9*y(x), y(x)); result
+Eq(y(x), C1*sin(3*x) + C2*cos(3*x))
 ```
 
 You can then use SymPy to verify that the solution is correct:
@@ -25,7 +25,7 @@ You can then use SymPy to verify that the solution is correct:
 >>> from sympy import checkodesol
 >>> solution = result.rhs; solution
 C1*sin(3*x) + C2*cos(3*x)
->>> checkodesol(Derivative(f(x), x, x) + 9*f(x), solution)
+>>> checkodesol(Derivative(y(x), x, x) + 9*y(x), solution)
 (True, 0)
 ```
 
