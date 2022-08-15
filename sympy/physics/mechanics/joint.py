@@ -162,8 +162,8 @@ class Joint(ABC):
         self._speeds = self._generate_speeds(speeds)
         self._kdes = self._generate_kdes()
 
-        self._parent_axis, _ = self._axis(parent_axis, parent.frame)
-        self._child_axis, _ = self._axis(child_axis, child.frame)
+        self._parent_axis = self._axis(parent_axis, parent.frame)
+        self._child_axis = self._axis(child_axis, child.frame)
 
         self._parent_point = self._locate_joint_pos(parent, parent_joint_pos)
         self._child_point = self._locate_joint_pos(child, child_joint_pos)
@@ -290,7 +290,7 @@ class Joint(ABC):
         """Check whether an axis is fixed in one of the frames."""
         if ax is None:
             ax = frames[0].x
-            return ax, frames[0]
+            return ax
         if not isinstance(ax, Vector):
             raise TypeError("Axis must be a Vector.")
         ref_frame = None  # Find a body in which the axis can be expressed
@@ -307,7 +307,20 @@ class Joint(ABC):
         if not ax.dt(ref_frame) == 0:
             raise ValueError('Axis cannot be time-varying when viewed from the '
                              'associated body.')
-        return ax, ref_frame
+        return ax
+
+    def _express_axis(self, axis, frame):
+        """Helper function to get an axis expressed in a specified frame."""
+        try:
+            ax_mat = axis.to_matrix(self.parent_interframe)
+        except ValueError:
+            ax_mat = axis.to_matrix(self.child_interframe)
+        try:
+            self.parent_interframe.dcm(frame)  # Check if connected
+            int_frame = self.parent_interframe
+        except ValueError:
+            int_frame = self.child_interframe
+        return self._to_vector(ax_mat, int_frame).express(frame)
 
     def _generate_kdes(self):
         """Generate kinematical differential equations."""
@@ -597,7 +610,7 @@ class PinJoint(Joint):
                  child_interframe=None):
 
         if parent_axis is not None or child_axis is not None:
-            joint_axis = parent_axis
+            joint_axis = self._axis(parent_axis, parent.frame)
         self._joint_axis = joint_axis
         super().__init__(name, parent, child, coordinates, speeds,
                          parent_joint_pos, child_joint_pos, parent_axis,
@@ -629,14 +642,11 @@ class PinJoint(Joint):
         return speeds
 
     def _orient_frames(self):
-        self._joint_axis, ref_frame = self._axis(
+        self._joint_axis = self._axis(
             self.joint_axis, self.parent_interframe, self.child_interframe)
-        if ref_frame == self.child_interframe:
-            self.parent_interframe.orient_axis(
-                self.child_interframe, self.joint_axis, -self.coordinates[0])
-        else:
-            self.child_interframe.orient_axis(
-                self.parent_interframe, self.joint_axis, self.coordinates[0])
+        axis = self._express_axis(self.joint_axis, self.parent_interframe)
+        self.child_interframe.orient_axis(
+            self.parent_interframe, axis, self.coordinates[0])
 
     def _set_angular_velocity(self):
         self.child_interframe.set_ang_vel(self.parent_interframe, self.speeds[
@@ -852,7 +862,7 @@ class PrismaticJoint(Joint):
                  child_interframe=None):
 
         if parent_axis is not None or child_axis is not None:
-            joint_axis = parent_axis
+            joint_axis = self._axis(parent_axis, parent.frame)
         self._joint_axis = joint_axis
         super().__init__(name, parent, child, coordinates, speeds,
                          parent_joint_pos, child_joint_pos, parent_axis,
@@ -884,14 +894,10 @@ class PrismaticJoint(Joint):
         return speeds
 
     def _orient_frames(self):
-        self._joint_axis, ref_frame = self._axis(
+        self._joint_axis = self._axis(
             self.joint_axis, self.parent_interframe, self.child_interframe)
-        if ref_frame == self.child_interframe:
-            self.parent_interframe.orient_axis(
-                self.child_interframe, self.joint_axis, 0)
-        else:
-            self.child_interframe.orient_axis(
-                self.parent_interframe, self.joint_axis, 0)
+        axis = self._express_axis(self.joint_axis, self.parent_interframe)
+        self.child_interframe.orient_axis(self.parent_interframe, axis, 0)
 
     def _set_angular_velocity(self):
         self.child_interframe.set_ang_vel(self.parent_interframe, 0)
