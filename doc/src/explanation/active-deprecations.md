@@ -97,8 +97,9 @@ was:
 ```py
 >>> from sympy.physics.mechanics import Body, PinJoint
 >>> parent, child = Body('parent'), Body('child')
->>> PinJoint('pin', parent, child, parent_axis=parent.z, child_axis=-child.z)
->>> parent.dcm(child)
+>>> pin = PinJoint('pin', parent, child, parent_axis=parent.z,
+...                child_axis=-child.z)   # doctest: +SKIP
+>>> parent.dcm(child)   # doctest: +SKIP
 Matrix([
 [-cos(theta_pin(t)), -sin(theta_pin(t)),  0],
 [-sin(theta_pin(t)),  cos(theta_pin(t)),  0],
@@ -116,8 +117,8 @@ result, but this time we have also specified this exact rotation:
 >>> parent, child, = Body('parent'), Body('child')
 >>> int_frame = ReferenceFrame('int_frame')
 >>> int_frame.orient_axis(child.frame, child.y, pi)
->>> PinJoint('pin', parent, child, joint_axis=parent.z,
-...          child_interframe=int_frame)
+>>> pin = PinJoint('pin', parent, child, joint_axis=parent.z,
+...                child_interframe=int_frame)
 >>> parent.dcm(child)
 Matrix([
 [-cos(theta_pin(t)), -sin(theta_pin(t)),  0],
