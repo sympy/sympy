@@ -74,6 +74,8 @@ def test_bernoulli():
     assert bernoulli(2 * n + 1) == 0
     raises(ValueError, lambda: bernoulli(-2))
 
+    assert bernoulli(x, 1) == bernoulli(x)
+
 
 def test_fibonacci():
     assert [fibonacci(n) for n in range(-3, 5)] == [2, -1, 1, 0, 1, 1, 2, 3]
