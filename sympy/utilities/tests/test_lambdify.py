@@ -23,7 +23,7 @@ from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels)
-from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, polygamma)
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
@@ -1077,7 +1077,7 @@ def test_scipy_fns():
     if not scipy:
         skip("scipy not installed")
 
-    single_arg_sympy_fns = [Ei, erf, erfc, factorial, gamma, loggamma, digamma]
+    single_arg_sympy_fns = [Ei, erf, erfc, factorial, gamma, loggamma, digamma, polygamma]
     single_arg_scipy_fns = [scipy.special.expi, scipy.special.erf, scipy.special.erfc,
         scipy.special.factorial, scipy.special.gamma, scipy.special.gammaln,
         scipy.special.psi]
@@ -1097,7 +1097,7 @@ def test_scipy_fns():
                 tv = numpy.abs(tv)
             # SymPy's digamma evaluates as polygamma(0, z)
             # which SciPy supports for real arguments only
-            if sympy_fn == digamma:
+            if sympy_fn in (digamma, polygamma):
                 tv = numpy.real(tv)
             sympy_result = sympy_fn(tv).evalf()
             assert abs(f(tv) - sympy_result) < 1e-13*(1 + abs(sympy_result))
