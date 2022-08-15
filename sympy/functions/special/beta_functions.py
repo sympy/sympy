@@ -2,6 +2,7 @@ from sympy.core import S
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Dummy
 from sympy.functions.special.gamma_functions import gamma, digamma
+from sympy.functions.combinatorial.numbers import catalan
 from sympy.functions.elementary.complexes import conjugate
 
 # See mpmath #569 and SymPy #20569
@@ -120,10 +121,32 @@ class beta(Function):
     def eval(cls, x, y=None):
         if y is None:
             return beta(x, x)
+        if x.is_Number and y.is_Number:
+            return beta(x, y, evaluate=False).doit()
+
+    def doit(self, **hints):
+        x = xold = self.args[0]
+        # Deal with unevaluated single argument beta
+        single_argument = len(self.args) == 1
+        y = yold = self.args[0] if single_argument else self.args[1]
+        if hints.get('deep', True):
+            x = x.doit(**hints)
+            y = y.doit(**hints)
+        if y.is_zero or x.is_zero:
+            return S.ComplexInfinity
         if y is S.One:
             return 1/x
         if x is S.One:
             return 1/y
+        if y == x + 1:
+            return 1/(x*y*catalan(x))
+        s = x + y
+        if (s.is_integer and s.is_negative and x.is_integer is False and
+            y.is_integer is False):
+            return S.Zero
+        if x == xold and y == yold and not single_argument:
+            return self
+        return beta(x, y)
 
     def _eval_expand_func(self, **hints):
         x, y = self.args
