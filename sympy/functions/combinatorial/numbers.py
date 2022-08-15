@@ -458,7 +458,7 @@ class bernoulli(Function):
     * ``bernoulli(n, x)`` gives the nth Bernoulli polynomial in `x`, `B_n(x)`
 
     .. versionchanged:: 1.11
-        ``bernoulli(1)`` gives `+\frac12` instead of `-\frac12`.
+        ``bernoulli(1)`` gives `+\frac{1}{2}` instead of `-\frac{1}{2}`.
         This allows the sequence to be interpolated by an entire function
         intimately connected to the Riemann zeta function and confers
         several theoretical advantages [5]_:
