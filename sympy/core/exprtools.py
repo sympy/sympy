@@ -232,6 +232,8 @@ def decompose_power(expr: Expr) -> tTuple[Expr, int]:
     (exp(y/3), 2)
 
     """
+    from sympy.ntheory.factor_ import perfect_power
+
     base, exp = expr.as_base_exp()
 
     if exp.is_Number:
@@ -242,6 +244,21 @@ def decompose_power(expr: Expr) -> tTuple[Expr, int]:
         else:
             base, e = expr, 1
     else:
+        if base.is_Rational and not exp.is_Rational:
+            if base.is_Integer:
+                pp = perfect_power(base)
+                if pp:
+                    base, _exp = pp
+                    exp *= _exp
+            else:
+                npp = perfect_power(base.p)
+                if npp:
+                    n, _exp = npp
+                    dpp = perfect_power(base.q, [_exp])
+                    if dpp:
+                        d, _ = dpp
+                        base = Rational(n, d, gcd=1)
+                        exp *= _exp
         exp, tail = exp.as_coeff_Mul(rational=True)
 
         if exp is S.NegativeOne:

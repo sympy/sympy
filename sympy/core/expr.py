@@ -4138,38 +4138,6 @@ class ExprBuilder:
         return None
 
 
-def _power_gens(expr):
-    from sympy.ntheory.factor_ import perfect_power
-    # helper for generators to analyze the powers of the
-    # factors in expr
-    p = expr
-    if expr.is_Pow:
-        cb, e = expr.as_base_exp()
-        b = cb.as_coeff_Mul()[1] if not cb.is_Rational else cb
-        c, e = e.as_coeff_Mul(rational=True)
-        assert not e.is_Add
-        e /= c.q
-        # Poly differentiates between x and 1/x; to
-        # do so here, uncomment the 2 lines below
-        #if c.p < 0:
-        #    e = -e
-        if b.is_Rational and not e.is_Integer:
-            if b.is_Integer:
-                pp = perfect_power(b)
-                if pp:
-                    b, _exp = pp
-            else:
-                npp = perfect_power(b.p)
-                if npp:
-                    n, _exp = npp
-                    dpp = perfect_power(b.q, [_exp])
-                    if dpp:
-                        d, _ = dpp
-                        b = Rational(n, d, gcd=1)
-        p = Pow(b, e, evaluate=False) if e - 1 else b
-    return {p}
-
-
 def generators(self, all=False):
     """return a set of expressions which would appear in the expanded
     version of self as 1) the bases of powers with Integer exponents
@@ -4237,6 +4205,7 @@ def generators(self, all=False):
     {y, Integral(f(x), (f(x), 1, y))}
     """
     from sympy.polys.polytools import Poly
+    from sympy.core.exprtools import decompose_power_rat
     R = lambda x: generators(x, all)
     if not isinstance(self, Basic):
         if iterable(self):
@@ -4248,8 +4217,9 @@ def generators(self, all=False):
         return reduce(set.union, map(R, self.args), set())
     rv = set()
     for i in (g for v in self.as_coefficients_dict().keys()
-         if not v.is_number for g in Poly(v).gens):
-        rv.update(_power_gens(i))
+            if not v.is_number for g in Poly(v).gens):
+        b, e = decompose_power_rat(i)
+        rv.add(b)  # or add(b if (e > 0) else 1/b)
     if all:
         args = set(rv)
         while args:
