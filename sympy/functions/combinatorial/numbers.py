@@ -1259,6 +1259,14 @@ class genocchi(Function):
 
     .. math:: \frac{-2t}{1 + e^{-t}} = \sum_{n=0}^\infty \frac{G_n t^n}{n!}
 
+    They are related to the Bernoulli numbers by
+
+    .. math:: G_n = 2 (1 - 2^n) B_n.
+
+    .. versionchanged:: 1.11
+        ``genocchi(1)`` gives `-1` instead of `1` and ``genocchi(0)`` is now
+        defined as `0`.
+
     Examples
     ========
 
