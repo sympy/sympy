@@ -6,7 +6,8 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, polar_lift)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.special.zeta_functions import (dirichlet_eta, lerchphi, polylog, riemann_xi, stieltjes, zeta)
+from sympy.functions.special.zeta_functions import (dirichlet_eta, lerchphi,
+    polylog, riemann_xi, stieltjes, zeta, bernoulli_entire)
 from sympy.series.order import O
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial
@@ -48,9 +49,9 @@ def test_zeta_eval():
     assert zeta(6, 4) == pi**6/945 - Rational(47449, 46656)
     assert zeta(7, 4) == zeta(7) - Rational(282251, 279936)
 
-    assert zeta(2, -2) is nan
-    assert zeta(4, -3) is nan
-    assert zeta(6, -4) is nan
+    assert zeta(2, 0) is nan
+    assert zeta(3, -1) is nan
+    assert zeta(4, -2) is nan
 
     assert zeta(oo) == 1
 
@@ -83,8 +84,33 @@ def test_zeta_series():
         zeta(x, z) - x*(a-z)*zeta(x+1, z) + O((a-z)**2, (a, z))
 
 
-def test_dirichlet_eta_eval():
+def test_bernoulli_entire_eval():
+    n = Symbol('n', nonnegative=True, integer=True)
+    assert bernoulli_entire(0) == 1
+    assert bernoulli_entire(0, a) == 1
+    assert bernoulli_entire(0, -4) == 1
+    assert bernoulli_entire(1) == S.Half
+    assert bernoulli_entire(1, a) == a - S.Half
+    assert bernoulli_entire(1, -4) == Rational(-9, 2)
+    assert bernoulli_entire(2) == Rational(1, 6)
+    assert bernoulli_entire(2, a) == a**2 - a + Rational(1, 6)
+    assert bernoulli_entire(2, -4) == Rational(121, 6)
+    assert bernoulli_entire(n) == bernoulli(n)
+    assert bernoulli_entire(n, a) == bernoulli(n, a)
+    assert bernoulli_entire(n, -4) == bernoulli(n, -4)
 
+    assert bernoulli_entire(-1, 0) is nan
+    assert bernoulli_entire(-2, -1) is nan
+    assert bernoulli_entire(-3, -2) is nan
+
+    assert bernoulli_entire(-1, 1) == pi**2/6
+    assert bernoulli_entire(-4, 1) == 4*zeta(5)
+    assert bernoulli_entire(-2, 2) == 2*zeta(3) - 2
+    assert bernoulli_entire(-3, 4) == pi**4/30 - Rational(1393, 432)
+    assert bernoulli_entire(-5, a) == 5*zeta(6, a)
+
+
+def test_dirichlet_eta_eval():
     assert dirichlet_eta(0) == S.Half
     assert dirichlet_eta(-1) == Rational(1, 4)
     assert dirichlet_eta(1) == log(2)
@@ -107,6 +133,7 @@ def test_rewriting():
     assert verify_numerically(dirichlet_eta(x), dirichlet_eta(x).rewrite(zeta), x)
     assert verify_numerically(zeta(x), zeta(x).rewrite(dirichlet_eta), x)
 
+    assert bernoulli_entire(x, a).rewrite(zeta) == -x * zeta(1-x, a)
     assert zeta(x, a).rewrite(lerchphi) == lerchphi(1, x, a)
     assert polylog(s, z).rewrite(lerchphi) == lerchphi(z, s, 1)*z
 

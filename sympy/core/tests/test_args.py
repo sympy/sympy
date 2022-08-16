@@ -2785,6 +2785,11 @@ def test_sympy__functions__special__zeta_functions__zeta():
     assert _test_args(zeta(101))
 
 
+def test_sympy__functions__special__zeta_functions__bernoulli_entire():
+    from sympy.functions.special.zeta_functions import bernoulli_entire
+    assert _test_args(bernoulli_entire(4, 2))
+
+
 def test_sympy__functions__special__zeta_functions__lerchphi():
     from sympy.functions.special.zeta_functions import lerchphi
     assert _test_args(lerchphi(x, y, z))
