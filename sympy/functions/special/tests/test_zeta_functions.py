@@ -42,12 +42,15 @@ def test_zeta_eval():
     assert zeta(6) == pi**6/945
 
     assert zeta(2, 2) == pi**2/6 - 1
+    assert zeta(3, 2) == zeta(3) - 1
     assert zeta(4, 3) == pi**4/90 - Rational(17, 16)
+    assert zeta(5, 3) == zeta(5) - Rational(33, 32)
     assert zeta(6, 4) == pi**6/945 - Rational(47449, 46656)
+    assert zeta(7, 4) == zeta(7) - Rational(282251, 279936)
 
-    assert zeta(2, -2) == pi**2/6 + Rational(5, 4)
-    assert zeta(4, -3) == pi**4/90 + Rational(1393, 1296)
-    assert zeta(6, -4) == pi**6/945 + Rational(3037465, 2985984)
+    assert zeta(2, -2) is nan
+    assert zeta(4, -3) is nan
+    assert zeta(6, -4) is nan
 
     assert zeta(oo) == 1
 
@@ -76,8 +79,8 @@ def test_zeta_eval():
 
 
 def test_zeta_series():
-    assert zeta(x, a).series(a, 0, 2) == \
-        zeta(x, 0) - x*a*zeta(x + 1, 0) + O(a**2)
+    assert zeta(x, a).series(a, z, 2) == \
+        zeta(x, z) - x*(a-z)*zeta(x+1, z) + O((a-z)**2, (a, z))
 
 
 def test_dirichlet_eta_eval():
@@ -262,9 +265,8 @@ def test_issue_10475():
 
 def test_issue_14177():
     n = Symbol('n', nonnegative=True, integer=True)
-    a = Symbol('a')
 
-    assert zeta(2*n) == (-1)**(n + 1)*2**(2*n - 1)*pi**(2*n)*bernoulli(2*n)/factorial(2*n)
+    assert zeta(2*n) == -(2*I*pi)**(2*n)*bernoulli(2*n) / (2*factorial(2*n))
     assert zeta(-n) == bernoulli(n+1) / (-n-1)
     assert zeta(-n, a) == bernoulli(n+1, a) / (-n-1)
 

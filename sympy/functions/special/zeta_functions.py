@@ -402,12 +402,9 @@ class zeta(Function):
     .. math:: \zeta(s, a) = \sum_{n=0}^\infty \frac{1}{(n + a)^s},
 
     where the standard choice of argument for $n + a$ is used. For fixed
-    $a$ with $\operatorname{Re}(a) > 0$ the Hurwitz zeta function admits a
-    meromorphic continuation to all of $\mathbb{C}$, it is an unbranched
+    $a$ not a nonpositive integer the Hurwitz zeta function admits a
+    meromorphic continuation to all of $\mathbb{C}$; it is an unbranched
     function with a simple pole at $s = 1$.
-
-    Analytic continuation to other $a$ is possible under some circumstances,
-    but this is not typically done.
 
     The Hurwitz zeta function is a special case of the Lerch transcendent:
 
@@ -458,7 +455,7 @@ class zeta(Function):
 
     The specific formulae are:
 
-    .. math:: \zeta(2n) = (-1)^{n+1} \frac{B_{2n} (2\pi)^{2n}}{2(2n)!}
+    .. math:: \zeta(2n) = -\frac{(2\pi i)^{2n} B_{2n}}{2(2n)!}
     .. math:: \zeta(-n,a) = -\frac{B_{n+1}(a)}{n+1}
 
     No closed-form expressions are known at positive odd integers, but
@@ -500,47 +497,28 @@ class zeta(Function):
     """
 
     @classmethod
-    def eval(cls, z, a_=None):
-        if a_ is None:
-            z, a = list(map(sympify, (z, 1)))
-        else:
-            z, a = list(map(sympify, (z, a_)))
-
-        if a.is_Number:
-            if a is S.NaN:
-                return S.NaN
-            elif a is S.One and a_ is not None:
-                return cls(z)
-            # TODO Should a == 0 return S.NaN as well?
-
-        if z.is_Number:
-            if z is S.NaN:
-                return S.NaN
-            elif z is S.Infinity:
-                return S.One
-            elif z.is_zero:
-                return S.Half - a
-            elif z is S.One:
-                return S.ComplexInfinity
-        if z.is_integer:
-            if z.is_nonpositive:
-                if a is S.One:
-                    return bernoulli(1-z) / (z-1)
-                else:
-                    return bernoulli(1-z, a) / (z-1)
-            elif a.is_Integer:
-                if z.is_even:
-                    B, F = bernoulli(z), factorial(z)
-                    zeta = (S.NegativeOne**(z/2+1) * 2**(z - 1) * B * pi**z) / F
-                else:
-                    return
-
-                if a.is_negative:
-                    return zeta + harmonic(abs(a), z)
-                else:
-                    return zeta - harmonic(a - 1, z)
-        if z.is_zero:
-            return S.Half - a
+    def eval(cls, s, a=None):
+        if a is S.One:
+            return cls(s)
+        elif s is S.NaN or a is S.NaN:
+            return S.NaN
+        elif s is S.One:
+            return S.ComplexInfinity
+        elif s is S.Infinity:
+            return S.One
+        elif s.is_integer and s.is_nonpositive:
+            if a is None:
+                return bernoulli(1-s) / (s-1)
+            return bernoulli(1-s, a) / (s-1)
+        elif a is None:
+            if s.is_integer and s.is_even:
+                return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
+            return
+        elif a.is_integer is not True:
+            return
+        elif a.is_positive:
+            return cls(s) - harmonic(a-1, s)
+        return S.NaN
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1, **kwargs):
         if a != 1:
