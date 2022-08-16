@@ -1,7 +1,7 @@
 from typing import Tuple as tTuple
 
 from sympy.core.add import Add
-from sympy.core.basic import sympify, cacheit
+from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
@@ -10,6 +10,7 @@ from sympy.core.numbers import igcdex, Rational, pi, Integer, Float
 from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.combinatorial.numbers import bernoulli, euler
 from sympy.functions.elementary.complexes import arg as arg_f, im, re
@@ -107,23 +108,23 @@ class TrigonometricFunction(Function):
 
         raise NotImplementedError("Use the periodicity function instead.")
 
-    @staticmethod
-    @cacheit
-    def _table2():
-        # If nested sqrt's are worse than un-evaluation
-        # you can require q to be in (1, 2, 3, 4, 6, 12)
-        # q <= 12, q=15, q=20, q=24, q=30, q=40, q=60, q=120 return
-        # expressions with 2 or fewer sqrt nestings.
-        return {
-            12: (3, 4),
-            20: (4, 5),
-            30: (5, 6),
-            15: (6, 10),
-            24: (6, 8),
-            40: (8, 10),
-            60: (20, 30),
-            120: (40, 60)
-            }
+
+@cacheit
+def _table2():
+    # If nested sqrt's are worse than un-evaluation
+    # you can require q to be in (1, 2, 3, 4, 6, 12)
+    # q <= 12, q=15, q=20, q=24, q=30, q=40, q=60, q=120 return
+    # expressions with 2 or fewer sqrt nestings.
+    return {
+        12: (3, 4),
+        20: (4, 5),
+        30: (5, 6),
+        15: (6, 10),
+        24: (6, 8),
+        40: (8, 10),
+        60: (20, 30),
+        120: (40, 60)
+    }
 
 
 def _peeloff_pi(arg):
@@ -678,7 +679,7 @@ class cos(TrigonometricFunction):
                 # you can require q to be in (1, 2, 3, 4, 6, 12)
                 # q <= 12, q=15, q=20, q=24, q=30, q=40, q=60, q=120 return
                 # expressions with 2 or fewer sqrt nestings.
-                table2 = TrigonometricFunction._table2()
+                table2 = _table2()
                 if q in table2:
                     a, b = table2[q]
                     a, b = p*pi/a, p*pi/b
@@ -1127,7 +1128,7 @@ class tan(TrigonometricFunction):
                             return S.ComplexInfinity
                         return 1/sresult - cresult/sresult
 
-                table2 = TrigonometricFunction._table2()
+                table2 = _table2()
                 if q in table2:
                     a, b = table2[q]
                     nvala, nvalb = cls(p*pi/a), cls(p*pi/b)
@@ -1438,7 +1439,7 @@ class cot(TrigonometricFunction):
                         return 1/sresult + cresult/sresult
                 q = pi_coeff.q
                 p = pi_coeff.p % q
-                table2 = TrigonometricFunction._table2()
+                table2 = _table2()
                 if q in table2:
                     a, b = table2[q]
                     nvala, nvalb = cls(p*pi/a), cls(p*pi/b)
