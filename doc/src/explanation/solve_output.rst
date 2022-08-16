@@ -123,7 +123,7 @@ Boolean or Relational
 ---------------------
 
     A boolean expression is returned when a relational expression other
-    than an :func:`~.Equality` is given as an expression to solve. A single `Equality`
+    than an :class:`~.Equality` is given as an expression to solve. A single `Equality`
     or a more complicated relational expression might be returned. The
     use of :func:`~.solve` here is equivalent to passing the equation set and
     symbols to :func:`~.reduce_inequalities` (and ``dict``, ``set``, and ``check``
