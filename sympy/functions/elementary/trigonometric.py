@@ -107,6 +107,24 @@ class TrigonometricFunction(Function):
 
         raise NotImplementedError("Use the periodicity function instead.")
 
+    @staticmethod
+    @cacheit
+    def _table2():
+        # If nested sqrt's are worse than un-evaluation
+        # you can require q to be in (1, 2, 3, 4, 6, 12)
+        # q <= 12, q=15, q=20, q=24, q=30, q=40, q=60, q=120 return
+        # expressions with 2 or fewer sqrt nestings.
+        return {
+            12: (3, 4),
+            20: (4, 5),
+            30: (5, 6),
+            15: (6, 10),
+            24: (6, 8),
+            40: (8, 10),
+            60: (20, 30),
+            120: (40, 60)
+            }
+
 
 def _peeloff_pi(arg):
     r"""
@@ -660,18 +678,10 @@ class cos(TrigonometricFunction):
                 # you can require q to be in (1, 2, 3, 4, 6, 12)
                 # q <= 12, q=15, q=20, q=24, q=30, q=40, q=60, q=120 return
                 # expressions with 2 or fewer sqrt nestings.
-                table2 = {
-                    12: (3, 4),
-                    20: (4, 5),
-                    30: (5, 6),
-                    15: (6, 10),
-                    24: (6, 8),
-                    40: (8, 10),
-                    60: (20, 30),
-                    120: (40, 60)
-                    }
+                table2 = TrigonometricFunction._table2()
                 if q in table2:
-                    a, b = p*pi/table2[q][0], p*pi/table2[q][1]
+                    a, b = table2[q]
+                    a, b = p*pi/a, p*pi/b
                     nvala, nvalb = cls(a), cls(b)
                     if None in (nvala, nvalb):
                         return None
@@ -1116,18 +1126,11 @@ class tan(TrigonometricFunction):
                         if sresult == 0:
                             return S.ComplexInfinity
                         return 1/sresult - cresult/sresult
-                table2 = {
-                    12: (3, 4),
-                    20: (4, 5),
-                    30: (5, 6),
-                    15: (6, 10),
-                    24: (6, 8),
-                    40: (8, 10),
-                    60: (20, 30),
-                    120: (40, 60)
-                    }
+
+                table2 = TrigonometricFunction._table2()
                 if q in table2:
-                    nvala, nvalb = cls(p*pi/table2[q][0]), cls(p*pi/table2[q][1])
+                    a, b = table2[q]
+                    nvala, nvalb = cls(p*pi/a), cls(p*pi/b)
                     if None in (nvala, nvalb):
                         return None
                     return (nvala - nvalb)/(1 + nvala*nvalb)
@@ -1433,20 +1436,12 @@ class cot(TrigonometricFunction):
                     if not isinstance(cresult, cos) \
                             and not isinstance(sresult, cos):
                         return 1/sresult + cresult/sresult
-                table2 = {
-                    12: (3, 4),
-                    20: (4, 5),
-                    30: (5, 6),
-                    15: (6, 10),
-                    24: (6, 8),
-                    40: (8, 10),
-                    60: (20, 30),
-                    120: (40, 60)
-                    }
                 q = pi_coeff.q
                 p = pi_coeff.p % q
+                table2 = TrigonometricFunction._table2()
                 if q in table2:
-                    nvala, nvalb = cls(p*pi/table2[q][0]), cls(p*pi/table2[q][1])
+                    a, b = table2[q]
+                    nvala, nvalb = cls(p*pi/a), cls(p*pi/b)
                     if None in (nvala, nvalb):
                         return None
                     return (1 + nvala*nvalb)/(nvalb - nvala)
