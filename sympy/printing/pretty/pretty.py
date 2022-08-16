@@ -2643,12 +2643,16 @@ class PrettyPrinter(Printer):
 
     def _print_JacobiTheta(self, e):
         if self._use_unicode:
-            return self._print_number_function(e, '\N{GREEK THETA SYMBOL}')
+            func_name = f'\N{GREEK THETA SYMBOL}{e._type_val}'
         else:
-            return self._print_number_function(e, "theta")
+            func_name = f'theta{e._type_val}'
+        return self._helper_print_function(e.func, e.args, func_name=func_name)
 
-    def _print_JacobiEllipticFunction(self, e):
-        return self._helper_print_function(e.func, e.vals, func_name=str(e.type_str))
+    def _print_JacobiEllipticFunctionBase(self, e):
+        return self._helper_print_function(e.func, e.args, func_name=e._type_str)
+
+    def _print_elliptic_nome_q(self, e):
+        return self._helper_print_function(e.func, e.args, func_name="q")
 
     def _print_KroneckerDelta(self, e):
         pform = self._print(e.args[0])

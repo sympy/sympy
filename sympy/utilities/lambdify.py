@@ -85,7 +85,6 @@ MPMATH_TRANSLATIONS = {
     "RisingFactorial": "rf",
     "FallingFactorial": "ff",
     "betainc_regularized": "betainc",
-    "JacobiTheta": "jtheta"
 }
 
 NUMPY_TRANSLATIONS = {

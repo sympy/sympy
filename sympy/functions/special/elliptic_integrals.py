@@ -1,25 +1,25 @@
 """ Elliptic Integrals. """
+import functools
 
 from sympy.core import S
-from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import Rational, Integer, pi, I
-from sympy.core.symbol import Dummy, Str
+from sympy.core.symbol import Dummy
 from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import atanh, sech, tanh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper, meijerg
 
-from mpmath import mp, workprec
-
 
 class elliptic_k(Function):
     r"""
     The complete elliptic integral of the first kind, defined by
 
-    .. math:: K(m) = F\left(\tfrac{\pi}{2}\middle| m\right)
+    .. math:: K(m) = F\left(\tfrac{\pi}{2}\middle| m\right) =
+              \int_0^{\frac{\pi}{2} \frac{dt}{\sqrt{1 - m \sin^2 t}}
 
     where $F\left(z\middle| m\right)$ is the Legendre incomplete
     elliptic integral of the first kind.
@@ -450,85 +450,349 @@ class elliptic_pi(Function):
         return Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z))
 
 
-class JacobiTheta(Function):
-    """
+class ThetaBase(Function):
+    r"""
     Base class for Jacobi theta function $\vartheta_n(z,q)$, where $n=1,2,3,4$.
+
+    See Also
+    ========
+
+    theta1, theta2, theta3, theta4
+
     """
 
-    def __new__(cls, type_val, z, q=0):
-        if not isinstance(type_val, (int, Integer)) or type_val <= 0 or type_val >= 5:
-            raise ValueError("First argument, the type, must be an integer" \
-                             "between 1 and 4.")
+    def __new__(cls, z, q=0):
         if q is None:
-            return super().__new__(cls, type_val, 0, z)
+            return super().__new__(cls, 0, z)
 
-        return super().__new__(cls, type_val, z, q)
-
-    @property
-    def vals(self):
-        return self.args[1:3]
-
-    @property
-    def type_val(self):
-        return self.args[0]
+        return super().__new__(cls, z, q)
 
     def _latex(self, printer):
-        args = ", ".join(printer._print(arg) for arg in self.vals)
-        return r"\vartheta_{}\left({}\right)".format(self.type_val, args)
+        args = ", ".join(printer._print(arg) for arg in self.args)
+        return r"\vartheta_{}\left({}\right)".format(self._type_val, args)
 
+    def _eval_mpmath(self):
+        from mpmath import jtheta
+        return jtheta, (Integer(self._type_val), *self.args)
+
+
+class theta1(ThetaBase):
+    r"""
+    Jacobi theta function $\vartheta_1(z,q)$ defined as
+
+    .. math:: \vartheta_1(z,q) = 2 q^{\sfrac{1}{4}} \sum_{n=0}^\infty
+              (-1)^n q^{n^2 + n} \sin((2n + 1)z)
+
+    See Also
+    ========
+
+    theta2, theta3, theta4
+
+    """
+
+    _type_val = 1
 
     @classmethod
-    def eval(cls, type_val, z, q):
-        q0vals = {1 : S.Zero, 2 : S.Zero, 3 : S.One, 4 : S.One}
+    def eval(cls, z, q):
+        if q.is_zero or z.is_zero or (z/pi).is_integer:
+            return S.Zero
+
+    def _eval_rewrite_as_theta2(self, *args):
+        z, q = self.args
+        return theta2(z - pi/2, q)
+
+    def _eval_rewrite_as_theta3(self, *args):
+        z, q = self.args
+        return -I*exp(I*z)*q**(Rational(1, 4))*theta3(z + (pi - I*log(q))/2, q)
+
+    def _eval_rewrite_as_theta4(self, *args):
+        z, q = self.args
+        return I*exp(-I*z)*q**(Rational(1, 4))*theta4(z + I*log(q)/2, q)
+
+
+class theta2(ThetaBase):
+    r"""
+    Jacobi theta function $\vartheta_2(z,q)$ defined as
+
+    .. math:: \vartheta_2(z,q) = 2 q^{\sfrac{1}{4}} \sum_{n=0}^\infty
+              q^{n^2 + n} \cos((2n + 1)z)
+
+    See Also
+    ========
+
+    theta1, theta3, theta4
+    """
+
+    _type_val = 2
+
+    @classmethod
+    def eval(cls, z, q):
+        if q.is_zero or z in (pi/2, -pi/2) or ((z - pi/2)/pi).is_integer:
+            return S.Zero
+
+    def _eval_rewrite_as_theta1(self, *args):
+        z, q = self.args
+        return theta1(z + pi/2, q)
+
+    def _eval_rewrite_as_theta3(self, *args):
+        z, q = self.args
+        return exp(I*z)*q**(Rational(1, 4))*theta3(z - I*log(q)/2, q)
+
+    def _eval_rewrite_as_theta4(self, *args):
+        z, q = self.args
+        return exp(I*z)*q**(Rational(1, 4))*theta4(z + (pi - I*log(q))/2, q)
+
+
+class theta3(ThetaBase):
+    r"""
+    Jacobi theta function $\vartheta_3(z,q)$.
+
+    .. math:: \vartheta_3(z,q) = 1 + 2 \sum_{n=0}^\infty q^{n^2 + n} \cos(2nz)
+
+    See Also
+    ========
+
+    theta1, theta2, theta4
+    """
+
+    _type_val = 3
+
+    @classmethod
+    def eval(cls, z, q):
         if q.is_zero:
-            return q0vals[type_val]
+            return S.One
+        if z.is_zero and q.could_extract_minus_sign():
+            return theta4(z, -q)
+
+    def _eval_rewrite_as_theta1(self, *args):
+        z, q = self.args
+        return exp(-I*z)*q**(Rational(1, 4))*theta1(z + (pi + I*log(q))/2, q)
+
+    def _eval_rewrite_as_theta2(self, *args):
+        z, q = self.args
+        return exp(I*z)*q**(Rational(1, 4))*theta2(z - I*log(q)/2, q)
+
+    def _eval_rewrite_as_theta4(self, *args):
+        z, q = self.args
+        return theta4(z + pi/2, q)
 
 
-class JacobiEllipticFunction(Function):
+class theta4(ThetaBase):
+    r"""
+    Jacobi theta function $\vartheta_4(z,q)$.
+
+    .. math:: \vartheta_4(z,q) = 1 + 2 \sum_{n=0}^\infty (-q)^{n^2 + n} \cos(2nz)
+
+    See Also
+    ========
+
+    theta1, theta2, theta4
     """
-    Base class for Jacobi elliptic functions.
-    """
-    def __new__(cls, type_str, u, m):
-        if (not isinstance(type_str, (str, Str)) or len(type_str) != 2
-            or any(x not in 'cdns' for x in str(type_str))):
-            raise ValueError("First argument must be a string with exactly two"\
-                             " characters from c, d, n, s.")
 
-        return super().__new__(cls, Str(str(type_str)), u, m)
-
-    def _eval_evalf(self, prec):
-        if all(x.is_number for x in self.args):
-            u = self.args[1]._to_mpmath(prec)
-            m = self.args[2]._to_mpmath(prec)
-            with workprec(prec):
-                res = mp.ellipfun(self.type_str, u, m)
-            return Expr._from_mpmath(res, prec)
-        else:
-            return self
-
-    def _latex(self, printer):
-        args = ", ".join(printer._print(arg) for arg in self.vals)
-        return r"\operatorname{{{}}}\left({}\right)".format(self.type_str, args)
-
-
-    @property
-    def type_str(self):
-        return str(self.args[0])
-
-    @property
-    def vals(self):
-        return self.args[1:3]
+    _type_val = 4
 
     @classmethod
-    def eval(cls, type_str, u, m):
-        utmp = Dummy()
-        u0vals = {'c' : S.One, 'd' : S.One, 'n' : S.One, 's' : S.Zero}
-        m0vals = {'c' : cos(utmp), 'd' : S.One, 'n' : S.One, 's' : sin(utmp)}
-        m1vals = {'c' : sech(utmp), 'd' : sech(utmp), 'n' : S.One, 's' : tanh(utmp)}
+    def eval(cls, z, q):
+        if q.is_zero:
+            return S.One
+        if z.is_zero and q.could_extract_minus_sign():
+            return theta3(z, -q)
+
+    def _eval_rewrite_as_theta1(self, *args):
+        z, q = self.args
+        return I*exp(-I*z)*q**(Rational(1, 4))*theta1(z + I*log(q)/2, q)
+
+    def _eval_rewrite_as_theta2(self, *args):
+        z, q = self.args
+        return I*exp(-I*z)*q**(Rational(1, 4))*theta2(z - (pi - I*log(q))/2, q)
+
+    def _eval_rewrite_as_theta3(self, *args):
+        z, q = self.args
+        return theta3(z + pi/2, q)
+
+
+class JacobiEllipticFunctionBase(Function):
+    r"""
+    Base class for Jacobi elliptic functions.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cm, jacobi_cs, jacobi_dc, jacobi_dm, jacobi_ds,
+    jacobi_mc, jacobi_md, jacobi_ms, jacobi_sc, jacobi_sd, jacobi_sm
+
+    """
+    def _eval_mpmath(self):
+        from mpmath import ellipfun
+        ellipfunspec = functools.partial(ellipfun, self._type_str)
+        return ellipfunspec, self.args
+
+    def _latex(self, printer):
+        args = ", ".join(printer._print(arg) for arg in self.args)
+        return r"\operatorname{{{}}}\left({}\right)".format(self._type_str, args)
+
+    @staticmethod
+    def _eval(type_str, u, m):
         c1, c2 = str(type_str)
+        utmp = Dummy()
+        u0vals = {'c': S.One, 'd': S.One, 'n': S.One, 's': S.Zero}
+        m0vals = {'c': cos(utmp), 'd': S.One, 'n': S.One, 's': sin(utmp)}
+        m1vals = {'c': sech(utmp), 'd': sech(utmp), 'n': S.One, 's': tanh(utmp)}
+        if u is S.Zero:
+            return u0vals[c1]/u0vals[c2]
+        if m is S.Zero:
+            return (m0vals[c1]/m0vals[c2]).subs(utmp, u)
+        if m is S.One:
+            return (m1vals[c1]/m1vals[c2]).subs(utmp, u)
+
+    def doit(self, **hints):
+        return self._eval_doit(**hints)
+
+    def _eval_doit(self, **hints):
+        u, m = self.args
+        if hints.get('deep', True):
+            u, m = u.doit(**hints), m.doit(**hints)
+        c1, c2 = str(self._type_str)
+        utmp = Dummy()
+        u0vals = {'c': S.One, 'd': S.One, 'n': S.One, 's': S.Zero}
+        m0vals = {'c': cos(utmp), 'd': S.One, 'n': S.One, 's': sin(utmp)}
+        m1vals = {'c': sech(utmp), 'd': sech(utmp), 'n': S.One, 's': tanh(utmp)}
         if u.is_zero:
             return u0vals[c1]/u0vals[c2]
         if m.is_zero:
             return (m0vals[c1]/m0vals[c2]).subs(utmp, u)
-        if m == S.One:
+        if m.equals(S.One):
             return (m1vals[c1]/m1vals[c2]).subs(utmp, u)
+
+
+class jacobi_cd(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function:
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cm, jacobi_cs, jacobi_dc, jacobi_dm, jacobi_ds,
+    jacobi_mc, jacobi_md, jacobi_ms, jacobi_sc, jacobi_sd, jacobi_sm
+
+    """
+    _type_str = "cd"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("cd", u, m)
+
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return (m - 1)*jacobi_nd(u, m)*jacobi_sd(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
+
+
+class jacobi_nd(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function: (wrong)
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cm, jacobi_cs, jacobi_dc, jacobi_dm, jacobi_ds,
+    jacobi_mc, jacobi_md, jacobi_ms, jacobi_sc, jacobi_sd, jacobi_sm
+
+    """
+    _type_str = "nd"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("nd", u, m)
+
+
+class jacobi_sd(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function: (wrong)
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cm, jacobi_cs, jacobi_dc, jacobi_dm, jacobi_ds,
+    jacobi_mc, jacobi_md, jacobi_ms, jacobi_sc, jacobi_sd, jacobi_sm
+
+    """
+    _type_str = "sd"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("sd", u, m)
+
+
+class elliptic_nome_q(Function):
+    r"""
+    Elliptic nome $q(m)$, defined as
+
+    .. math::
+
+        q(m) = \exp\left(-\frac{\pi K(1-m)}{K(m)}\right)
+
+    where $K(m)$ is :class:`elliptic_k`.
+
+    """
+    @classmethod
+    def eval(cls, m):
+        if m.is_Number:
+            if m is S.Zero:
+                return S.Zero
+            if m is S.One:
+                return S.One
+            if m is S.Half:
+                return exp(-pi)
+
+    def doit(self, **hints):
+        return self._eval_doit(**hints)
+
+    def _latex(self, printer):
+        return fr"q\left({self.args[0]}\right)"
+
+    def _eval_doit(self, **hints):
+        m = self.args[0]
+        if hints.get('deep', True):
+            m = m.doit(**hints)
+        if m.is_zero:
+            return S.Zero
+        if m.equals(S.One):
+            return S.One
+        if m.equals(S.Half):
+            return exp(-pi)
+        return self.func(m)
+
+    def _eval_rewrite_as_elliptic_k(self, *args):
+        m = self.args[0]
+        return exp(-pi*elliptic_k(1 - m)/elliptic_k(m))
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            m = self.args[0]
+            return pi**2*elliptic_nome_q(m)/(4*(m-1)*m*elliptic_k(m)**2)
+        raise ArgumentIndexError(self, argindex)
