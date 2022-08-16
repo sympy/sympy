@@ -5,7 +5,8 @@ solving $y''(x) + 9y(x)=0 $ yields $ y(x)=C_{1} \sin(3x)+ C_{2} \cos(3x)$.
 
 Alternatives to consider:
 - To solve a system of ordinary differential equations, use
-  {func}`~.dsolve_system`
+  {func}`~.dsolve_system` *any reason to recommend dsolve_system instead of
+  dsolve?*
 - *which SciPy functions? from
   https://docs.scipy.org/doc/scipy/reference/integrate.html?highlight=ode?*
 
@@ -34,20 +35,90 @@ tells whether the substitution results in `0`.
 
 ## Guidance
 
-### *Guidance 1*
+### Input Format
 
-*Guidance 1 content*
+*Make a recommendation on Derivative() vs. diff()?* The one required input is
+the differential equation(s). The derivatives, such as $y''(x)$, should be
+expressed using {class}`~.Derivative` rather than {func}`~.diff`. Using
+{func}`~.diff` is a common mistake 
 
-### *Guidance 2*
+We recommend specifying the function to be solved for, as the second argument to
+{func}`~.dsolve`. Note that it must be a function rather than a variable
+(symbol). SymPy will give an error if you specify a variable ($x$) rather than a
+function ($f(x)$):
 
-*Guidance 2 content*
+```py
+>>> dsolve(Derivative(y(x), x, x) + 9*y(x), x)
+Traceback (most recent call last):
+    ...
+ValueError: dsolve() and classify_ode() only work with functions of one variable, not x
+```
 
+You can define the function to be solved for in two ways. The subsequent syntax
+for specifying initial conditions depends on your choice.
 
-## *Title*
+## Define a Function Without Including Its Independent Variable
 
-You can *title* in several ways. 
+As in the example above, you can define a function without including its
+independent variable:
 
-### *Method 1*
+```py
+>>> from sympy import symbols, Eq, Function, dsolve
+>>> f, g = symbols("f g", cls=Function)
+>>> x = symbols("x")
+>>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
+>>> dsolve(eqs)
+[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]
+```
+
+### Specify Initial (Boundary) Conditions
+
+If your differential equation(s) have initial or boundary conditions, specify
+them with the {func}`~.dsolve` optional argument `ics`. It should be given in
+the form of `{f(x0): x1, f(x).diff(x).subs(x, x2): x3}` and so on. For power
+series solutions, if no initial conditions are specified `f(0)` is assumed to be
+`C0` and the power series solution is calculated about 0.
+
+Here is an example of setting the initial values for functions:
+
+```py
+>>> from sympy import symbols, Eq, Function, dsolve
+>>> f, g = symbols("f g", cls=Function)
+>>> x = symbols("x")
+>>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
+>>> dsolve(eqs)
+[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]
+>>> dsolve(eqs, ics={f(0): 1, g(0): 0})
+[Eq(f(x), exp(x)/2 + exp(-x)/2), Eq(g(x), exp(x)/2 - exp(-x)/2)]
+```
+
+## Define a Function of an Independent Variable
+
+You may prefer to specify a function (for example $x$) of its independent
+variable (for example $t$):
+
+```py
+>>> from sympy import symbols, Function, dsolve
+>>> t = symbols('t')
+>>> x = Function('x')(t); x
+x(t)
+>>> xp = x.diff()
+>>> xpp = xp.diff()
+>>> eq = xpp + 2*xp + x; eq
+x(t) + 2*Derivative(x(t), t) + Derivative(x(t), (t, 2))
+>>> dsolve(eq, x)
+Eq(x(t), (C1 + C2*t)*exp(-t))
+```
+
+Using that syntax, you specify initial conditions by substituting in values of
+the independent variable using {func}`subs <sympy.core.basic.Basic.subs>`
+because the function $x$ already has its independent variable as an argument
+$t$:
+
+```py
+>>> dsolve(eq, x, ics={x.subs(t, 0): 0})
+Eq(x(t), C2*t*exp(-t))
+```
 
 *Method 1 content*
 
@@ -55,11 +126,56 @@ You can *title* in several ways.
 
 *Method 2 content*
 
-## Use the solution result
+## Use the Solution Result
 
-### *Usage method 1*
+### Extract the Result From the Equality
 
-*Usage method 1 content*
+Unlike other solving functions, {func}`~.dsolve` returns an {class}`~.Equality`
+(equation) formatted as, for example, `Eq(y(x), C1*sin(3*x) + C2*cos(3*x))`
+which is equivalent to the mathematical notation $y(x) = C1 \sin(3x) + C2
+\cos(3x)$. You can extract the result using the right-hand side property
+{any}`rhs <sympy.core.relational.Relational.rhs>`:
+
+```py
+>>> from sympy import Function, dsolve, Derivative
+>>> from sympy.abc import x
+>>> y = Function('y')
+>>> result = dsolve(Derivative(y(x), x, x) + 9*y(x), y(x)); result
+Eq(y(x), C1*sin(3*x) + C2*cos(3*x))
+>>> result.rhs
+C1*sin(3*x) + C2*cos(3*x)
+```
+
+If you are solving a system of equations with multiple unknown functions,
+{func}`~.dsolve` will return a nested list of equalities, the outer list
+representing each solution and the inner list representing each function. While
+you can extract results by specifying the index of each function ("slicing" each
+solution), we recommend an approach which is robust with respect to function
+ordering. The following converts each solution into a dictionary so you can
+easily extract the result for the desired function. It uses standard Python
+techniques such as a loops or comprehensions, in a nested fashion.
+
+```py
+>>> from sympy import symbols, Eq, Function, dsolve
+>>> y, z = symbols("y z", cls=Function)
+>>> x = symbols("x")
+>>> eqs = [Eq(y(x).diff(x)**2, z(x)**2), Eq(z(x).diff(x), z(x))]
+>>> solutions = dsolve(eqs); solutions
+[[Eq(y(x), C1 - C2*exp(x)), Eq(z(x), C2*exp(x))], [Eq(y(x), C1 + C2*exp(x)), Eq(z(x), C2*exp(x))]]
+>>> solutions_list = [] # nested list approach
+>>> for solution in solutions:
+...     solution_dict = {}
+...     for fn in solution:
+...             solution_dict.update({fn.lhs: fn.rhs})
+...     solutions_list.append(solution_dict)
+>>> solutions_list
+[{y(x): C1 - C2*exp(x), z(x): C2*exp(x)}, {y(x): C1 + C2*exp(x), z(x): C2*exp(x)}]
+>>> solutions_list = [{fn.lhs:fn.rhs for fn in solution} for solution in solutions]
+>>> solutions_list # nested comprehension approach
+[{y(x): C1 - C2*exp(x), z(x): C2*exp(x)}, {y(x): C1 + C2*exp(x), z(x): C2*exp(x)}]
+>>> solutions_list[0][y(x)]
+C1 - C2*exp(x)
+```
 
 ### *Usage method 2*
 
@@ -74,6 +190,10 @@ You can *title* in several ways.
 ### *Speed-up option 2*
 
 *Speed-up option 2 content*
+
+## Ordinary Differential Equation Type and Solving Strategy
+
+*`hint` and `classifiy_ode`*
 
 ## Not all equations can be solved
 
