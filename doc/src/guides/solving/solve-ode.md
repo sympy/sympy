@@ -110,6 +110,8 @@ x(t) + 2*Derivative(x(t), t) + Derivative(x(t), (t, 2))
 Eq(x(t), (C1 + C2*t)*exp(-t))
 ```
 
+### Specify Initial (Boundary) Conditions Using {func}`subs <sympy.core.basic.Basic.subs>`
+
 Using that syntax, you specify initial conditions by substituting in values of
 the independent variable using {func}`subs <sympy.core.basic.Basic.subs>`
 because the function $x$ already has its independent variable as an argument
@@ -120,21 +122,17 @@ $t$:
 Eq(x(t), C2*t*exp(-t))
 ```
 
-*Method 1 content*
-
-### *Method 2*
-
-*Method 2 content*
-
 ## Use the Solution Result
-
-### Extract the Result From the Equality
 
 Unlike other solving functions, {func}`~.dsolve` returns an {class}`~.Equality`
 (equation) formatted as, for example, `Eq(y(x), C1*sin(3*x) + C2*cos(3*x))`
 which is equivalent to the mathematical notation $y(x) = C1 \sin(3x) + C2
-\cos(3x)$. You can extract the result using the right-hand side property
-{any}`rhs <sympy.core.relational.Relational.rhs>`:
+\cos(3x)$.
+
+### Extract the Result for One Solution and Function
+
+You can extract the result from an {class}`~.Equality` using the right-hand side
+property {any}`rhs <sympy.core.relational.Relational.rhs>`:
 
 ```py
 >>> from sympy import Function, dsolve, Derivative
@@ -145,6 +143,8 @@ Eq(y(x), C1*sin(3*x) + C2*cos(3*x))
 >>> result.rhs
 C1*sin(3*x) + C2*cos(3*x)
 ```
+
+### Extract the Result for Multiple Function-Solution Pairs
 
 If you are solving a system of equations with multiple unknown functions,
 {func}`~.dsolve` will return a nested list of equalities, the outer list
@@ -177,10 +177,6 @@ techniques such as a loops or comprehensions, in a nested fashion.
 C1 - C2*exp(x)
 ```
 
-### *Usage method 2*
-
-*Usage method 2 content*
-
 ## *Tradeoffs (speed vs. accuracy, etc.) for function*
 
 ### *Tradeoff 1*
@@ -195,17 +191,17 @@ C1 - C2*exp(x)
 
 *`hint` and `classifiy_ode`*
 
-## Not all equations can be solved
+## Not All Equations Can Be Solved
 
-### Equations with no solution
+### Equations With No Solution
 
 *Equations with no solution content*
 
-### Equations with no analytical solution
+### Equations With No Analytical Solution
 
 *Equations with no analytical solution content*
 
-### Equations which have an analytical solution, and SymPy cannot solve
+### Equations Which Have An Analytical Solution, and SymPy Cannot Solve
 
 *Equations which have an analytical solution, and SymPy cannot solve content*
 
