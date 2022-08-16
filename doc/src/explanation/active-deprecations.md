@@ -86,9 +86,9 @@ joints now use an intermediate frame argument for both the parent and the child
 body, i.e. ``parent_interframe`` and ``child_interframe``. This means that you
 can now fully define the joint attachment, consisting of a point and frame, for
 both bodies. And if a joint like the ``PinJoint`` has a specific joint axis,
-i.e. the axis around which the rotation occurs, than this axis can be specified
+e.g. the axis around which the rotation occurs, than this axis can be specified
 using the ``joint_axis`` argument. A big advantage of this setup is that you can
-be more specific about the transformation from parent body to child body.
+be more accurately define the transformation from parent body to child body.
 
 For example, suppose you want a ``PinJoint`` rotates the child body around the
 ``parent.z`` axis and ``-child.z`` axis. The previous way to specify this joint
