@@ -55,11 +55,12 @@ def test_pinjoint():
 
     P1 = Body('P1')
     C1 = Body('C1')
-    with ignore_warnings(SymPyDeprecationWarning):
-        J1 = PinJoint('J1', P1, C1, parent_joint_pos=l*P1.frame.x,
-                      child_joint_pos=m*C1.frame.y, parent_axis=P1.frame.z)
-
-    assert J1._parent_axis == P1.frame.z
+    Pint = ReferenceFrame('P_int')
+    Pint.orient_axis(P1.frame, P1.y, pi / 2)
+    J1 = PinJoint('J1', P1, C1, parent_joint_pos=l*P1.frame.x,
+                  child_joint_pos=m*C1.frame.y, joint_axis=P1.frame.z,
+                  parent_interframe=Pint)
+    assert J1._joint_axis == P1.frame.z
     assert J1._child_point.pos_from(C1.masscenter) == m * C1.frame.y
     assert J1._parent_point.pos_from(P1.masscenter) == l * P1.frame.x
     assert J1._parent_point.pos_from(J1._child_point) == Vector(0)
@@ -71,6 +72,7 @@ def test_pinjoint():
     J = PinJoint('J', P, C, q, u, parent_joint_pos=N.x + N.y,
                  child_joint_pos=C.y + C.z, parent_interframe=Pint,
                  child_interframe=Cint, joint_axis=N.z)
+    assert J.joint_axis == N.z
     assert J.parent_point.vel(N) == 0
     assert J.child_point.pos_from(P.masscenter) == N.x + N.y
     assert J.parent_point.pos_from(C.masscenter) == C.y + C.z
@@ -90,13 +92,10 @@ def test_pin_joint_double_pendulum():
     PartP = Body('P', frame=A, mass=m)
     PartR = Body('R', frame=B, mass=m)
 
-    with ignore_warnings(SymPyDeprecationWarning):
-        J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1,
-                      child_joint_pos=-l*A.x, parent_axis=C.frame.z,
-                      child_axis=PartP.frame.z)
-        J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2,
-                      child_joint_pos=-l*B.x, parent_axis=PartP.frame.z,
-                      child_axis=PartR.frame.z)
+    J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1,
+                  child_joint_pos=-l*A.x, joint_axis=C.frame.z)
+    J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2,
+                  child_joint_pos=-l*B.x, joint_axis=PartP.frame.z)
 
     # Check orientation
     assert N.dcm(A) == Matrix([[cos(q1), -sin(q1), 0],
@@ -133,11 +132,10 @@ def test_pin_joint_chaos_pendulum():
     rod = Body('rod', frame=A, mass=mA)
     plate = Body('plate', mass=mB, frame=B)
     C = Body('C', frame=N)
-    with ignore_warnings(SymPyDeprecationWarning):
-        J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega,
-                      child_joint_pos=lA*A.z, parent_axis=N.y, child_axis=A.y)
-        J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha,
-                      parent_joint_pos=lC*A.z, parent_axis=A.z, child_axis=B.z)
+    J1 = PinJoint('J1', C, rod, coordinates=theta, speeds=omega,
+                  child_joint_pos=lA*A.z, joint_axis=N.y)
+    J2 = PinJoint('J2', rod, plate, coordinates=phi, speeds=alpha,
+                  parent_joint_pos=lC*A.z, joint_axis=A.z)
 
     # Check orientation
     assert A.dcm(N) == Matrix([[cos(theta), 0, -sin(theta)],
@@ -464,11 +462,13 @@ def test_slidingjoint():
 
     N, A, P, C = _generate_body()
     l, m = symbols('l m')
-    with ignore_warnings(SymPyDeprecationWarning):
-        S = PrismaticJoint('S', P, C, parent_joint_pos=l * P.frame.x,
-                           child_joint_pos=m * C.frame.y, parent_axis=P.frame.z)
+    Pint = ReferenceFrame('P_int')
+    Pint.orient_axis(P.frame, P.y, pi / 2)
+    S = PrismaticJoint('S', P, C, parent_joint_pos=l * P.frame.x,
+                       child_joint_pos=m * C.frame.y, joint_axis=P.frame.z,
+                       parent_interframe=Pint)
 
-    assert S.parent_axis == P.frame.z
+    assert S.joint_axis == P.frame.z
     assert S.child_point.pos_from(C.masscenter) == m * C.frame.y
     assert S.parent_point.pos_from(P.masscenter) == l * P.frame.x
     assert S.parent_point.pos_from(S.child_point) == - x * P.frame.z
@@ -478,10 +478,12 @@ def test_slidingjoint():
     assert P.ang_vel_in(C) == 0
 
     _, _, P, C = _generate_body()
-    with ignore_warnings(SymPyDeprecationWarning):
-        S = PrismaticJoint('S', P, C, parent_joint_pos=l * P.frame.z,
-                           child_joint_pos=m * C.frame.x, parent_axis=P.frame.z)
-    assert S.parent_axis == P.frame.z
+    Pint = ReferenceFrame('P_int')
+    Pint.orient_axis(P.frame, P.y, pi / 2)
+    S = PrismaticJoint('S', P, C, parent_joint_pos=l * P.frame.z,
+                       child_joint_pos=m * C.frame.x, joint_axis=P.frame.z,
+                       parent_interframe=Pint)
+    assert S.joint_axis == P.frame.z
     assert S.child_point.pos_from(C.masscenter) == m * C.frame.x
     assert S.parent_point.pos_from(P.masscenter) == l * P.frame.z
     assert S.parent_point.pos_from(S.child_point) == - x * P.frame.z
