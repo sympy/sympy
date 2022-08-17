@@ -486,7 +486,7 @@ class zeta(Function):
     See Also
     ========
 
-    bernoulli_entire, dirichlet_eta, lerchphi, polylog
+    dirichlet_eta, lerchphi, polylog
 
     References
     ==========
@@ -559,67 +559,6 @@ class zeta(Function):
             return -s*zeta(s + 1, a)
         else:
             raise ArgumentIndexError
-
-
-class bernoulli_entire(Function):
-    r"""
-    Entire (generalized) Bernoulli function.
-
-    Explanation
-    ===========
-
-    For $a$ not a nonpositive integer this function is defined as
-
-    .. math:: \operatorname{B}(s, a) = \begin{cases}
-              -s \zeta(1-s, a) & s \ne 0 \\ 1 & s = 0 \end{cases}
-
-    The multiplication by $-s$ removes the zeta function's pole at $s=1$,
-    making this function entire.
-
-    If no value is passed for $a$ a default value of $a = 1$ is assumed,
-    yielding the ordinary entire Bernoulli function.
-
-    Examples
-    ========
-
-    When $s$ is a nonnegative integer this function reduces to the
-    Bernoulli polynomials:
-
-    >>> from sympy import bernoulli_entire, bernoulli
-    >>> from sympy.abc import x
-    >>> bernoulli_entire(3, x)
-    x**3 - 3*x**2/2 + x/2
-    >>> bernoulli(3, x)
-    x**3 - 3*x**2/2 + x/2
-
-    See Also
-    ========
-
-    zeta
-
-    References
-    ==========
-
-    .. [1] Peter Luschny, "An introduction to the Bernoulli function",
-           https://arxiv.org/abs/2009.06743
-
-    """
-
-    @classmethod
-    def eval(cls, s, a=None):
-        if s.is_zero:
-            return S.One
-        if s.is_integer and s.is_nonnegative:
-            return bernoulli(s) if a is None else bernoulli(s, a)
-        if a is None:
-            return -s * zeta(1-s)
-        if a.is_integer and a.is_nonpositive:
-            return S.NaN
-        return -s * zeta(1-s, a)
-
-    def _eval_rewrite_as_zeta(self, s, a=None, **kwargs):
-        z = zeta(1-s) if a is None else zeta(1-s, a)
-        return -s * z
 
 
 class dirichlet_eta(Function):

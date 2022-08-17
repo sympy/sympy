@@ -151,8 +151,6 @@ Riemann Zeta and Related Functions
 
 .. autoclass:: zeta
    :members:
-.. autoclass:: bernoulli_entire
-   :members:
 .. autoclass:: dirichlet_eta
    :members:
 .. autoclass:: polylog
