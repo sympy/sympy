@@ -10,7 +10,7 @@ from sympy.functions.special.zeta_functions import (dirichlet_eta, lerchphi,
     polylog, riemann_xi, stieltjes, zeta, bernoulli_entire)
 from sympy.series.order import O
 from sympy.core.function import ArgumentIndexError
-from sympy.functions.combinatorial.numbers import bernoulli, factorial
+from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
 from sympy.testing.pytest import raises
 from sympy.core.random import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically)
@@ -293,9 +293,11 @@ def test_issue_10475():
 def test_issue_14177():
     n = Symbol('n', nonnegative=True, integer=True)
 
-    assert zeta(2*n) == -(2*I*pi)**(2*n)*bernoulli(2*n) / (2*factorial(2*n))
-    assert zeta(-n) == bernoulli(n+1) / (-n-1)
-    assert zeta(-n, a) == bernoulli(n+1, a) / (-n-1)
+    assert zeta(-n).rewrite(bernoulli) == bernoulli(n+1) / (-n-1)
+    assert zeta(-n, a).rewrite(bernoulli) == bernoulli(n+1, a) / (-n-1)
+    z2n = -(2*I*pi)**(2*n)*bernoulli(2*n) / (2*factorial(2*n))
+    assert zeta(2*n).rewrite(bernoulli) == z2n
+    assert zeta(s, n+1).expand(func=True) == zeta(s) - harmonic(n, s)
 
     n = Symbol('n')
 

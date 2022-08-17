@@ -506,19 +506,27 @@ class zeta(Function):
             return S.ComplexInfinity
         elif s is S.Infinity:
             return S.One
-        elif s.is_integer and s.is_nonpositive:
-            if a is None:
-                return bernoulli(1-s) / (s-1)
+
+        sint = s.is_Integer
+        if a is None:
+            a = S.One
+        if sint and s.is_nonpositive:
             return bernoulli(1-s, a) / (s-1)
-        elif a is None:
-            if s.is_integer and s.is_even:
+        elif a is S.One:
+            if sint and s.is_even:
                 return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
-            return
-        elif a.is_integer is not True:
-            return
-        elif a.is_positive:
-            return cls(s) - harmonic(a-1, s)
-        return S.NaN
+        elif a.is_Integer:
+            if a.is_positive:
+                return cls(s) - harmonic(a-1, s)
+            return S.NaN
+
+    def _eval_rewrite_as_bernoulli(self, s, a=1, **kwargs):
+        if s.is_integer:
+            if s.is_nonpositive:
+                return bernoulli(1-s, a) / (s-1)
+            if s.is_even and a == 1:
+                return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
+        return self
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1, **kwargs):
         if a != 1:
@@ -533,6 +541,17 @@ class zeta(Function):
         arg_is_one = (self.args[0] - 1).is_zero
         if arg_is_one is not None:
             return not arg_is_one
+
+    def _eval_expand_func(self, **hints):
+        s = self.args[0]
+        a = self.args[1] if len(self.args) == 2 else S.One
+        if a.is_integer:
+            if a.is_positive:
+                return zeta(s) - harmonic(a-1, s)
+            if a.is_nonpositive and (s.is_integer is False or
+                    s.is_nonpositive is False):
+                return S.NaN
+        return self
 
     def fdiff(self, argindex=1):
         if len(self.args) == 2:
