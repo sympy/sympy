@@ -418,7 +418,7 @@ class tribonacci(Function):
 
 class bernoulli(Function):
     r"""
-    Bernoulli numbers / Bernoulli polynomials
+    Bernoulli numbers / Bernoulli polynomials / Bernoulli function
 
     The Bernoulli numbers are a sequence of rational numbers
     defined by `B_0 = 1` and the recursive relation (`n > 0`):
@@ -436,6 +436,21 @@ class bernoulli(Function):
     Bernoulli numbers and Bernoulli polynomials are related as
     `B_n(1) = B_n`.
 
+    The generalized Bernoulli function `\operatorname{B}(s, a)`
+    is defined for any complex `s` and `a`, except where `a` is a
+    nonpositive integer and `s` is not a nonnegative integer. It is
+    an entire function of `s` for fixed `a`, related to the Hurwitz
+    zeta function by
+
+    .. math:: \operatorname{B}(s, a) = \begin{cases}
+              -s \zeta(1-s, a) & s \ne 0 \\ 1 & s = 0 \end{cases}
+
+    When `s` is a nonnegative integer this function reduces to the
+    Bernoulli polynomials: `\operatorname{B}(n, x) = B_n(x)`. When
+    `a` is omitted it is assumed to be 1, yielding the (ordinary)
+    Bernoulli function which interpolates the Bernoulli numbers and is
+    related to the Riemann zeta function.
+
     We compute Bernoulli numbers using Ramanujan's formula:
 
     .. math :: B_n = \frac{A(n) - S(n)}{\binom{n+3}{n}}
@@ -451,31 +466,33 @@ class bernoulli(Function):
     .. math :: S(n) = \sum_{k=1}^{[n/6]} \binom{n+3}{n-6k} B_{n-6k}
 
     This formula is similar to the sum given in the definition, but
-    cuts 2/3 of the terms. For Bernoulli polynomials, we use the
-    formula in the definition.
+    cuts `\frac{2}{3}` of the terms. For Bernoulli polynomials, we use
+    the formula in the definition.
 
     * ``bernoulli(n)`` gives the nth Bernoulli number, `B_n`
+    * ``bernoulli(s)`` gives the Bernoulli function `\operatorname{B}(s)`
     * ``bernoulli(n, x)`` gives the nth Bernoulli polynomial in `x`, `B_n(x)`
+    * ``bernoulli(s, a)`` gives the generalized Bernoulli function
+      `\operatorname{B}(s, a)`
 
     .. versionchanged:: 1.11
         ``bernoulli(1)`` gives `+\frac{1}{2}` instead of `-\frac{1}{2}`.
-        This allows the sequence to be interpolated by an entire function
-        intimately connected to the Riemann zeta function and confers
-        several theoretical advantages [5]_:
-
-        .. math :: B_n = -n\zeta(1-n)
-
-        The previous behavior can be obtained with ``(-1)**n*bernoulli(n)``.
+        This choice of value confers several theoretical advantages [5]_,
+        including the extension to complex parameters described above
+        which this function now implements. The previous behavior can
+        be obtained with ``(-1)**n*bernoulli(n)``.
 
     Examples
     ========
 
     >>> from sympy import bernoulli
-
+    >>> from sympy.abc import x
     >>> [bernoulli(n) for n in range(11)]
     [1, 1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
     >>> bernoulli(1000001)
     0
+    >>> bernoulli(3, x)
+    x**3 - 3*x**2/2 + x/2
 
     See Also
     ========
@@ -491,6 +508,8 @@ class bernoulli(Function):
     .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
     .. [5] Peter Luschny, "The Bernoulli Manifesto",
            http://luschny.de/math/zeta/The-Bernoulli-Manifesto.html
+    .. [6] Peter Luschny, "An introduction to the Bernoulli function",
+           https://arxiv.org/abs/2009.06743
 
     """
 
@@ -524,8 +543,7 @@ class bernoulli(Function):
         elif n.is_zero:
             return S.One
         elif n.is_integer is False or n.is_nonnegative is False:
-            raise ValueError("Bernoulli numbers and polynomials are"
-                             " defined only for nonnegative integer n.")
+            return
         # Bernoulli numbers
         elif x is None:
             if n is S.One:
@@ -557,6 +575,12 @@ class bernoulli(Function):
             n = int(n)
             result = [S.NegativeOne**k*binomial(n, k)*cls(k)*x**(n - k) for k in range(n + 1)]
             return Add(*result)
+
+    def _eval_rewrite_as_zeta(self, n, x=1, **kwargs):
+        from sympy.functions.special.zeta_functions import zeta
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.core.relational import Eq
+        return Piecewise((1, Eq(n, 0)), (-n * zeta(1-n, x), True))
 
 
 #----------------------------------------------------------------------------#

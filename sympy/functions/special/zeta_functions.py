@@ -515,18 +515,15 @@ class zeta(Function):
         elif a is S.One:
             if sint and s.is_even:
                 return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
-        elif a.is_Integer:
+        elif s.is_number and a.is_Integer:
             if a.is_positive:
                 return cls(s) - harmonic(a-1, s)
             return S.NaN
 
     def _eval_rewrite_as_bernoulli(self, s, a=1, **kwargs):
-        if s.is_integer:
-            if s.is_nonpositive:
-                return bernoulli(1-s, a) / (s-1)
-            if s.is_even and a == 1:
-                return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
-        return self
+        if a == 1 and s.is_integer and s.is_even:
+            return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
+        return bernoulli(1-s, a) / (s-1)
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1, **kwargs):
         if a != 1:
