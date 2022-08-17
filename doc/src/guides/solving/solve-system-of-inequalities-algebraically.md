@@ -66,11 +66,11 @@ to extract $0$ and $\sqrt{\pi}$.
 
 ### Extract a List of Decomposed Relations
 
-You can decompose a set of relations which is joined by `^` (or) or `&` (and)
-into individual relations using relational atoms. Using {any}`canonical
-<sympy.core.relational.Relational.canonical>` will put order each relation so
-the symbol is on the left, so you can take the right-hand side {any}`rhs
-<sympy.core.relational.Relational.lhs>` to extract the constants:
+You can decompose a set of relations which is joined by `^` ({class}`~.Or`) or
+`&` ({class}`~.And`) into individual relations using relational atoms. Using
+{any}`canonical <sympy.core.relational.Relational.canonical>` will put order
+each relation so the symbol is on the left, so you can take the right-hand side
+{any}`rhs <sympy.core.relational.Relational.rhs>` to extract the constants:
 
 ```py
 >>> from sympy import symbols, reduce_inequalities, pi
@@ -236,7 +236,7 @@ so you may have to reduce your inequalities numerically instead using SciPy's
 
 ### Inequalities Which Can Be Reduced Analytically, and SymPy Cannot Reduce
 Refer to [Limitations of Inequality Reduction Using
-SymPy](#limitations-of-inequality-reduction-using-sympy) above
+SymPy](#limitations-of-inequality-reduction-using-sympy) above.
 
 ### Report a Problem With SymPy
 
