@@ -5,12 +5,14 @@ algebraically. For example, reducing $x^2 < \pi$, $x > 0$ yields $0 < x <
 \sqrt{\pi}$.
 
 ```{note}
-SymPy can currently reduce for only one symbol (variable) in a system of 
-inequalities. SymPy can reduce a system containing more than one symbol.
+SymPy can currently reduce for only one symbol (variable) in an inequality.
 ```
 
+SymPy can reduce a system containing more than one symbol, if there is only one
+symbol per inequality.
+
 Alternatives to consider:
-- To reduce for more than one symbol, try SciPy's
+- To reduce for more than one symbol in an inequality, try SciPy's
   {external:func}`~scipy.optimize.linprog`
 - To reduce Boolean expressions, use {func}`as_set
   <sympy.logic.boolalg.Boolean.as_set>`
@@ -193,7 +195,8 @@ so you may have to reduce your inequalities numerically instead using SciPy's
 ### Inequalities Which Can Be Reduced Analytically, and SymPy Cannot Reduce
 
 SymPy has implemented algorithms to reduce inequalities for only one symbol
-(variable), so it cannot reduce a set of inequalities for more than one symbol:
+(variable) per inequality, so it cannot reduce an inequality for more than one
+symbol:
 
 ```py
 >>> from sympy import reduce_inequalities, symbols
@@ -206,6 +209,28 @@ NotImplementedError: inequality has more than one symbol of interest.
 
 You can use SciPy's {external:func}`~scipy.optimize.linprog` to reduce this
 system of inequalities.
+
+However, if each inequality contains only one symbol to be reduced for, SymPy
+can reduce the set of inequalities:
+
+```py
+>>> from sympy import reduce_inequalities, symbols
+>>> x, y = symbols("x y")
+>>> reduce_inequalities([x > 1, y > 0], [x, y])
+(0 < y) & (1 < x) & (x < oo) & (y < oo)
+```
+
+Note that this provides no mathematical insight beyond reducing the inequalities
+separately:
+
+```py
+>>> reduce_inequalities(x > 1, x)
+(1 < x) & (x < oo)
+>>> reduce_inequalities(y > 0, y)
+(0 < y) & (y < oo)
+```
+
+so the benefit of solving such inequalities as a set maybe only convenience.
 
 ### Report a Problem With SymPy
 
