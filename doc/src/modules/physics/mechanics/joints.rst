@@ -58,6 +58,7 @@ mass center. The intermediate frames are not set, so those are the same as the
 body's frame. ::
 
    >>> from sympy.physics.mechanics import *
+   >>> mechanics_printing(pretty_print=False)
    >>> theta, omega = dynamicsymbols('theta, omega')
    >>> parent = Body('parent')
    >>> child = Body('child')
