@@ -47,59 +47,6 @@ We recommend you include the variable to be reduced for as the second argument
 for {func}`~.reduce_inequalities` to ensure that it reduces for the desired
 variable.
 
-### Recognize That SymPy Can Reduce for Only One Variable
-
-SymPy can currently reduce for only one symbol (variable) in a system of
-inequalities. SymPy can reduce a system containing more than one symbol. For
-example, the following system of inequalities has two variables, $x$ and $y$.
-SymPy can reduce for $x$, and gives the constraints on $y$.
-
-```py
->>> from sympy import reduce_inequalities, symbols
->>> x, y = symbols("x y")
->>> reduce_inequalities([x + y > 1, y > 0], x)
-(0 < y) & (y < oo) & (x > 1 - y)
-```
-
-### Recognize That Not All Results Are Returned
-
-The results returned for trigonometric inequalities are restricted in its
-periodic interval. {func}`~.reduce_inequalities` tries to return just enough
-solutions so that all (infinitely many) solutions can generated from the
-returned solutions by adding integer multiples of the {func}`~.periodicity` of
-the equation, here $2\pi$.
-
-```py
->>> from sympy import reduce_inequalities, cos
->>> from sympy.abc import x, y
->>> from sympy.calculus.util import periodicity
->>> reduce_inequalities([2*cos(x) < 1, x > 0], x)
-(0 < x) & (x < oo) & (pi/3 < x) & (x < 5*pi/3)
->>> periodicity(2*cos(x), x)
-2*pi
-```
-
-### Recognize Other Limitations
-
-{func}`~.reduce_inequalities` can solve a system of inequalities involving a
-power of the symbol to be reduced for, or involving another symbol, but not
-both:
-
-```
->>> from sympy import reduce_inequalities
->>> from sympy.abc import x, y
->>> reduce_inequalities([x ** 2 < 4, x > 0], x)
-(0 < x) & (x < 2)
->>> reduce_inequalities([x < y, x > 0], x)
-(0 < x) & (x < oo) & (x < y)
->>> reduce_inequalities([x ** 2 - y < 4, x > 0], x)
-Traceback (most recent call last):
-    ...
-NotImplementedError: 
-The inequality, -_y + x**2 - 4 < 0, cannot be solved using
-solve_univariate_inequality.
-```
-
 ## Reduce a System of Inequalities Algebraically
 
 You can create your inequalities, then reduce the system as a list:
@@ -160,6 +107,101 @@ right-hand side of the `args`:
 [1/3, sqrt(pi)]
 ```
 
+## Limitations of Inequality Reduction Using SymPy
+
+### SymPy Can Reduce for Only One Symbol of Interest Per Inequality
+
+SymPy can currently reduce for only one symbol (variable) of interest in a given
+inequality.
+
+```py
+>>> from sympy import reduce_inequalities, symbols
+>>> x, y = symbols("x y")
+>>> reduce_inequalities([x + y > 1, y > 0], [x, y])
+Traceback (most recent call last):
+    ...
+NotImplementedError: inequality has more than one symbol of interest.
+```
+
+You can use SciPy's {external:func}`~scipy.optimize.linprog` to reduce this
+system of inequalities.
+
+SymPy can reduce for more than one symbol in a system, if there is only one
+symbol of interest per inequality. For example, the following system of
+inequalities has two variables, $x$ and $y$. SymPy can reduce for $x$, and gives
+the constraints on $y$.
+
+```py
+>>> from sympy import reduce_inequalities, symbols
+>>> x, y = symbols("x y")
+>>> reduce_inequalities([x + y > 1, y > 0], x)
+(0 < y) & (y < oo) & (x > 1 - y)
+```
+
+If each inequality contains only one symbol to be reduced for, SymPy can reduce
+the set of inequalities for multiple symbols:
+
+```py
+>>> from sympy import reduce_inequalities, symbols
+>>> x, y = symbols("x y")
+>>> x_y_reduced = reduce_inequalities([x > 1, y > 0], [x, y]); x_y_reduced
+(0 < y) & (1 < x) & (x < oo) & (y < oo)
+```
+
+Note that this provides no mathematical insight beyond reducing the inequalities
+separately:
+
+```py
+>>> from sympy import And
+>>> x_reduced = reduce_inequalities(x > 1, x); x_reduced
+(1 < x) & (x < oo)
+>>> y_reduced = reduce_inequalities(y > 0, y); y_reduced
+(0 < y) & (y < oo)
+>>> And(x_reduced, y_reduced) == x_y_reduced
+True
+```
+
+so the benefit of solving such inequalities as a set maybe only convenience.
+
+### Limitations on Types of Inequalities That SymPy Can Solve
+
+{func}`~.reduce_inequalities` can solve a system of inequalities involving a
+power of the symbol to be reduced for, or involving another symbol, but not
+both:
+
+```
+>>> from sympy import reduce_inequalities
+>>> from sympy.abc import x, y
+>>> reduce_inequalities([x ** 2 < 4, x > 0], x)
+(0 < x) & (x < 2)
+>>> reduce_inequalities([x < y, x > 0], x)
+(0 < x) & (x < oo) & (x < y)
+>>> reduce_inequalities([x ** 2 - y < 4, x > 0], x)
+Traceback (most recent call last):
+    ...
+NotImplementedError: 
+The inequality, -_y + x**2 - 4 < 0, cannot be solved using
+solve_univariate_inequality.
+```
+
+### Not All Results Are Returned for Periodic Functions
+
+The results returned for trigonometric inequalities are restricted in its
+periodic interval. {func}`~.reduce_inequalities` tries to return just enough
+solutions so that all (infinitely many) solutions can generated from the
+returned solutions by adding integer multiples of the {func}`~.periodicity` of
+the equation, here $2\pi$.
+
+```py
+>>> from sympy import reduce_inequalities, cos
+>>> from sympy.abc import x, y
+>>> from sympy.calculus.util import periodicity
+>>> reduce_inequalities([2*cos(x) < 1, x > 0], x)
+(0 < x) & (x < oo) & (pi/3 < x) & (x < 5*pi/3)
+>>> periodicity(2*cos(x), x)
+2*pi
+```
+
 ## Not All Systems of Inequalities Can Be Reduced
 
 ### Systems of Inequalities Which Cannot Be Satisfied
@@ -193,44 +235,8 @@ so you may have to reduce your inequalities numerically instead using SciPy's
 {external:func}`~scipy.optimize.linprog`.
 
 ### Inequalities Which Can Be Reduced Analytically, and SymPy Cannot Reduce
-
-SymPy has implemented algorithms to reduce inequalities for only one symbol
-(variable) per inequality, so it cannot reduce an inequality for more than one
-symbol:
-
-```py
->>> from sympy import reduce_inequalities, symbols
->>> x, y = symbols("x y")
->>> reduce_inequalities([x + y > 1, y > 0], [x, y])
-Traceback (most recent call last):
-    ...
-NotImplementedError: inequality has more than one symbol of interest.
-```
-
-You can use SciPy's {external:func}`~scipy.optimize.linprog` to reduce this
-system of inequalities.
-
-However, if each inequality contains only one symbol to be reduced for, SymPy
-can reduce the set of inequalities:
-
-```py
->>> from sympy import reduce_inequalities, symbols
->>> x, y = symbols("x y")
->>> reduce_inequalities([x > 1, y > 0], [x, y])
-(0 < y) & (1 < x) & (x < oo) & (y < oo)
-```
-
-Note that this provides no mathematical insight beyond reducing the inequalities
-separately:
-
-```py
->>> reduce_inequalities(x > 1, x)
-(1 < x) & (x < oo)
->>> reduce_inequalities(y > 0, y)
-(0 < y) & (y < oo)
-```
-
-so the benefit of solving such inequalities as a set maybe only convenience.
+Refer to [Limitations of Inequality Reduction Using
+SymPy](#limitations-of-inequality-reduction-using-sympy) above
 
 ### Report a Problem With SymPy
 
