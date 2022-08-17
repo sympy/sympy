@@ -185,7 +185,8 @@ jobs:
 
       # Install the non-Python dependencies
       - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev
-      - run: python -m pip install --upgrade pip wheel setuptools
+      # Pin setuptools until new pymc4 is released
+      - run: python -m pip install --upgrade pip wheel "setuptools<65"
 
       # Use various libs from git for Python 3.11
       - if: ${{ contains(matrix.python-version, '3.11') }}
