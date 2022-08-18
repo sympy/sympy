@@ -34,7 +34,7 @@ For Debian/Ubuntu::
 
    apt-get install python3-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
 
-First install pip using::
+Install pip using::
    
    sudo apt install python3-pip
    
