@@ -75,6 +75,15 @@ def test_bernoulli():
 
     assert bernoulli(x, 1) == bernoulli(x)
 
+    assert str(bernoulli(0.0, 2.3).evalf(n=10)) == '1.000000000'
+    assert str(bernoulli(1.0).evalf(n=10)) == '0.5000000000'
+    assert str(bernoulli(1.2).evalf(n=10)) == '0.4195995367'
+    assert str(bernoulli(1.2, 0.8).evalf(n=10)) == '0.2144830348'
+    assert str(bernoulli(1.2, -0.8).evalf(n=10)) == '-1.158865646 - 0.6745558744*I'
+    assert str(bernoulli(3.0, 1j).evalf(n=10)) == '1.5 - 0.5*I'
+    assert str(bernoulli(I).evalf(n=10)) == '0.9268485643 - 0.5821580598*I'
+    assert str(bernoulli(I, I).evalf(n=10)) == '0.1267792071 + 0.01947413152*I'
+
 
 def test_bernoulli_rewrite():
     from sympy.functions.elementary.piecewise import Piecewise

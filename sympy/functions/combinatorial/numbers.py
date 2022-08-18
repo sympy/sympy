@@ -585,6 +585,21 @@ class bernoulli(Function):
         from sympy.core.relational import Eq
         return Piecewise((1, Eq(n, 0)), (-n * zeta(1-n, x), True))
 
+    def _eval_evalf(self, prec):
+        from mpmath import mp, workprec
+        n = self.args[0]._to_mpmath(prec)
+        x = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
+        with workprec(prec):
+            if n == 0:
+                res = mp.mpf(1)
+            elif n == 1:
+                res = x - mp.mpf(0.5)
+            elif mp.isint(n) and n >= 0:
+                res = mp.bernoulli(n) if x == 1 else mp.bernpoly(n, x)
+            else:
+                res = -n * mp.zeta(1-n, x)
+        return Expr._from_mpmath(res, prec)
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -765,6 +780,10 @@ class harmonic(Function):
     * ``harmonic(n, m)`` gives the nth generalized harmonic number
       of order `m`, `\operatorname{H}_{n,m}`, where
       ``harmonic(n) == harmonic(n, 1)``
+
+    This function can be extended to arbitrary `n` and `m` using zeta functions as
+
+    .. math:: \operatorname{H}_{n,m} = \zeta(m) - \zeta(m, n+1)
 
     Examples
     ========
