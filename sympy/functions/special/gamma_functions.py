@@ -674,7 +674,6 @@ class polygamma(Function):
         if n.is_number and n.is_real and \
                 (n.is_integer or n == int(n)) and n.is_nonnegative:
             return super()._eval_evalf(prec)
-        from mpmath import mp, workprec
         s = n._to_mpmath(prec+12)
         z = self.args[1]._to_mpmath(prec+12)
         with workprec(prec+12):
