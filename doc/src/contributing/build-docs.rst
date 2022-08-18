@@ -35,11 +35,18 @@ For Debian/Ubuntu::
    apt-get install python3-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
 
 Install pip using::
-   
-   sudo apt install python3-pip
-   
 
-After installing pip, run::
+   sudo apt install python3-pip
+
+However, you can also create a virtual environment and use pip in it using::
+
+   python3 -m venv /path/to/my/venv  # create the venv
+
+Then activate it using::
+
+   source /path/to/my/venv/bin/activate  # need to rerun this each time you open a new terminal
+
+After installing pip through either of the two methods given above, run::
 
    python -m pip install -r doc/requirements.txt
 
@@ -58,9 +65,9 @@ For Fedora (and maybe other RPM-based distributions), install the
 prerequisites::
 
    dnf install python3-sphinx librsvg2 ImageMagick docbook2X texlive-dvipng-bin
-   
+
    texlive-scheme-medium librsvg2-tools
-   
+
    python -m pip install -r doc/requirements.txt
 
 If you get mpmath error, install python3-mpmath package::
@@ -149,7 +156,7 @@ required dependencies locally, the documentation can be built by running the
 ``makefile`` in the ``doc`` subdirectory::
 
    cd doc
-   
+
    make html
 
 
@@ -161,7 +168,7 @@ SymPy has a collection of official logos, which can be generated from sympy.svg 
 .. code-block:: none
 
     $ cd doc
-    
+ 
     $ make logo # will be stored in the _build/logo subdirectory
 
 The license of all the logos is the same as SymPy: BSD. See the
@@ -224,7 +231,7 @@ Local Installation
 If you installed the build dependencies locally, then simply use::
 
    cd doc
-   
+
    make livehtml
 
 to start the server. Your web browser should then automatically open a new tab,
@@ -263,11 +270,11 @@ On Ubuntu, you can install these with::
 On Mac, you can use::
 
     brew install texlive
-    
+ 
     brew install --cask chromium
-    
+ 
     brew tap homebrew/cask-fonts
-    
+ 
     brew install font-dejavu
 
 On Windows 10, you can use::
@@ -281,7 +288,7 @@ right-click and click ``Install for all users``.
 To build the pdf docs run::
 
     cd doc
-    
+ 
     make pdf
 
 The resulting PDF will be in::
