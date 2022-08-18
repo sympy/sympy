@@ -4,7 +4,7 @@ Inequality Solvers
 ==================
 
 For general cases :func:`~.reduce_equalities` should be used.
-Other functions are the subcategories useful for special dedicated operations.
+Other functions are the subcategories useful for special dedicated operations, and will be called internally as needed by ``reduce_equalities``.
 
 .. module:: sympy.solvers.inequalities
 
