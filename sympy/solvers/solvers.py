@@ -460,10 +460,11 @@ def solve(f, *symbols, **flags):
             >>> solve([x - y, y - 3], x)
             {x: y}
 
-    The case of determining undetermined coefficients is
-    *automatically* detected when you pass all but one of the free
-    symbols. If, instead, you want an algebraic solutions for one
-    or more of the symbols, pass the expression in a list:
+    When you pass all but one of the free symbols, an attempt
+    is made to find a single solution based on the method of
+    undetermined coefficients. If it succeeds, a dictionary of values
+    is returned. If you want an algebraic solutions for one
+    or more of the symbols, pass the expression to be solved in a list:
 
         >>> e = a*x + b - 2*x - 3
         >>> solve(e, [a, b])
@@ -508,7 +509,7 @@ def solve(f, *symbols, **flags):
         >>> solve(eqs, eqs.atoms(Indexed))
         {A[1]: 1, A[2]: 2}
 
-        * To solve for a function within a derivative, use ``dsolve``.
+        * To solve for a function within a derivative, use :func:`~.dsolve`.
 
     To solve for a symbol implicitly, use implicit=True:
 
@@ -517,8 +518,8 @@ def solve(f, *symbols, **flags):
         >>> solve(x + exp(x), x, implicit=True)
         [-exp(x)]
 
-    It is possible to solve for anything that can be targeted with
-    subs:
+    It is possible to solve for anything in an expression that can be
+    replaced with a symbol using :obj:`~sympy.core.basic.Basic.subs`:
 
         >>> solve(x + 2 + sqrt(3), x + 2)
         [-sqrt(3)]
@@ -613,7 +614,7 @@ def solve(f, *symbols, **flags):
         >>> solve(r**2 > 4)
         (2 < r) | (r < -2)
 
-    There is currently no algorithm in SymPy that allows one use
+    There is currently no algorithm in SymPy that allows you to use
     relationships to resolve more than one variable. So the following
     does not determine that ``q < 0`` (and trying to solve for ``r``
     and ``q`` will raise an error):
@@ -623,8 +624,8 @@ def solve(f, *symbols, **flags):
         >>> solve([r + q - 3, r > 3], r)
         (3 < r) & Eq(r, 3 - q)
 
-    One can directly call the routine that ``solve`` calls
-    when it encounters a relational: ``reduce_inequalities``.
+    You can directly call the routine that ``solve`` calls
+    when it encounters a relational: :func:`~.reduce_inequalities`.
     It treats Expr like Equality.
 
         >>> from sympy import reduce_inequalities
