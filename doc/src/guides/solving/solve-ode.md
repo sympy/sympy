@@ -122,6 +122,27 @@ $t$:
 Eq(x(t), C2*t*exp(-t))
 ```
 
+### Beware Copying and Pasting Results
+
+If you choose to define a function of an independent variable, note that copying
+a result and pasting it into subsequent code may cause an error because `x` is
+already defined as `x(t)`, so if you paste in `x(t)` it is interpreted as
+`x(t)(t)`:
+
+```py
+>>> dsolve(x(t).diff(), x)
+Traceback (most recent call last):
+    ...
+TypeError: 'x' object is not callable
+```
+
+So remember to exclude the independent variable call `(t)`:
+
+```py
+>>> dsolve(x.diff(), x)
+Eq(x(t), C1)
+```
+
 ## Use the Solution Result
 
 Unlike other solving functions, {func}`~.dsolve` returns an {class}`~.Equality`
