@@ -814,7 +814,7 @@ class harmonic(Function):
     We can rewrite harmonic numbers in terms of polygamma functions:
 
     >>> from sympy import digamma, polygamma
-    >>> m = Symbol("m")
+    >>> m = Symbol("m", integer=True, positive=True)
 
     >>> harmonic(n).rewrite(digamma)
     polygamma(0, n + 1) + EulerGamma
@@ -928,6 +928,11 @@ class harmonic(Function):
             m = S.One
         return Sum(k**(-m), (k, 1, n))
 
+    def _eval_rewrite_as_zeta(self, n, m=S.One, **kwargs):
+        from sympy.functions.special.zeta_functions import zeta
+        if not (m-1).is_zero:
+            return zeta(m) - zeta(m, n+1)
+
     def _eval_expand_func(self, **hints):
         from sympy.concrete.summations import Sum
         n = self.args[0]
@@ -970,8 +975,11 @@ class harmonic(Function):
 
     def _eval_evalf(self, prec):
         from sympy.functions.special.gamma_functions import polygamma
+        from sympy.functions.special.zeta_functions import zeta
         if all(i.is_number for i in self.args):
-            return self.rewrite(polygamma)._eval_evalf(prec)
+            m = S.One if len(self.args) < 2 else self.args[1]
+            choice = polygamma if (m-1).is_zero else zeta
+            return self.rewrite(choice)._eval_evalf(prec)
 
 
 #----------------------------------------------------------------------------#

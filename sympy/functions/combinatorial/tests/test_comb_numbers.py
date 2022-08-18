@@ -15,7 +15,7 @@ from sympy.series.limits import limit
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
-    trigamma, polygamma, loggamma, factorial, sin, cos, cot, zeta)
+    trigamma, polygamma, factorial, sin, cos, cot, zeta)
 from sympy.functions.combinatorial.numbers import _nT
 
 from sympy.core.expr import unchanged
@@ -305,7 +305,7 @@ def test_harmonic_rational():
 def test_harmonic_evalf():
     assert str(harmonic(1.5).evalf(n=10)) == '1.280372306'
     assert str(harmonic(1.5, 2).evalf(n=10)) == '1.154576311'  # issue 7443
-    # assert str(harmonic(4.0, -3).evalf(n=10)) == '100.0'
+    assert str(harmonic(4.0, -3).evalf(n=10)) == '100.0000000'
 
 
 def test_harmonic_rewrite():
@@ -313,8 +313,8 @@ def test_harmonic_rewrite():
     m = Symbol("m", integer=True, positive=True)
 
     assert harmonic(n).rewrite(digamma) == polygamma(0, n + 1) + EulerGamma
-    assert harmonic(n).rewrite(trigamma) ==  polygamma(0, n + 1) + EulerGamma
-    assert harmonic(n).rewrite(polygamma) ==  polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(trigamma) == polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(polygamma) == polygamma(0, n + 1) + EulerGamma
 
     assert harmonic(n,3).rewrite(polygamma) == polygamma(2, n + 1)/2 - polygamma(2, 1)/2
     assert harmonic(n,m).rewrite(polygamma) == (-1)**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) / gamma(m)
