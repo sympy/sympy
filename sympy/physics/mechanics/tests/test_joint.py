@@ -46,7 +46,7 @@ def test_pinjoint():
     assert Pj.coordinates == [theta]
     assert Pj.speeds == [omega]
     assert Pj.kdes == [omega - theta.diff(t)]
-    assert Pj.parent_axis == P.frame.x
+    assert Pj.joint_axis == P.frame.x
     assert Pj.child_point.pos_from(C.masscenter) == Vector(0)
     assert Pj.parent_point.pos_from(P.masscenter) == Vector(0)
     assert Pj.parent_point.pos_from(Pj._child_point) == Vector(0)
@@ -449,8 +449,7 @@ def test_slidingjoint():
     assert S.coordinates == [x]
     assert S.speeds == [v]
     assert S.kdes == [v - x.diff(t)]
-    assert S.parent_axis == P.frame.x
-    assert S.child_axis == C.frame.x
+    assert S.joint_axis == P.frame.x
     assert S.child_point.pos_from(C.masscenter) == Vector(0)
     assert S.parent_point.pos_from(P.masscenter) == Vector(0)
     assert S.parent_point.pos_from(S.child_point) == - x * P.frame.x
