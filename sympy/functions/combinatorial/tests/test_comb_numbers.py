@@ -15,7 +15,7 @@ from sympy.series.limits import limit
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
-    trigamma, polygamma, factorial, sin, cos, cot, zeta)
+    trigamma, polygamma, loggamma, factorial, sin, cos, cot, zeta)
 from sympy.functions.combinatorial.numbers import _nT
 
 from sympy.core.expr import unchanged
@@ -305,6 +305,7 @@ def test_harmonic_rational():
 def test_harmonic_evalf():
     assert str(harmonic(1.5).evalf(n=10)) == '1.280372306'
     assert str(harmonic(1.5, 2).evalf(n=10)) == '1.154576311'  # issue 7443
+    # assert str(harmonic(4.0, -3).evalf(n=10)) == '100.0'
 
 
 def test_harmonic_rewrite():
@@ -316,12 +317,12 @@ def test_harmonic_rewrite():
     assert harmonic(n).rewrite(polygamma) ==  polygamma(0, n + 1) + EulerGamma
 
     assert harmonic(n,3).rewrite(polygamma) == polygamma(2, n + 1)/2 - polygamma(2, 1)/2
-    assert harmonic(n,m).rewrite(polygamma) == (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
+    assert harmonic(n,m).rewrite(polygamma) == (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/gamma(m)
 
     assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
     assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
-    assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
+    assert harmonic(n, m).rewrite("tractable").has(loggamma)
 
     _k = Dummy("k")
     assert harmonic(n).rewrite(Sum).dummy_eq(Sum(1/_k, (_k, 1, n)))

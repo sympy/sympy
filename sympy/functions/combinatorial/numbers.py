@@ -469,6 +469,8 @@ class bernoulli(Function):
     cuts `\frac{2}{3}` of the terms. For Bernoulli polynomials, we use
     the formula in the definition.
 
+    For `n` a nonnegative integer and `s`, `a`, `x` arbitrary complex numbers,
+
     * ``bernoulli(n)`` gives the nth Bernoulli number, `B_n`
     * ``bernoulli(s)`` gives the Bernoulli function `\operatorname{B}(s)`
     * ``bernoulli(n, x)`` gives the nth Bernoulli polynomial in `x`, `B_n(x)`
@@ -479,8 +481,9 @@ class bernoulli(Function):
         ``bernoulli(1)`` gives `+\frac{1}{2}` instead of `-\frac{1}{2}`.
         This choice of value confers several theoretical advantages [5]_,
         including the extension to complex parameters described above
-        which this function now implements. The previous behavior can
-        be obtained with ``(-1)**n*bernoulli(n)``.
+        which this function now implements. The previous behavior, defined
+        only for nonnegative integers `n`, can be obtained with
+        ``(-1)**n*bernoulli(n)``.
 
     Examples
     ========
@@ -573,8 +576,8 @@ class bernoulli(Function):
             return x - S.Half
         elif n.is_Number:
             n = int(n)
-            result = [S.NegativeOne**k*binomial(n, k)*cls(k)*x**(n - k) for k in range(n + 1)]
-            return Add(*result)
+            result = [binomial(n,k) * cls(k) * x**(n-k) for k in range(0, n+1, 2)]
+            return Add(*result) - S.Half * n * x**(n-1)
 
     def _eval_rewrite_as_zeta(self, n, x=1, **kwargs):
         from sympy.functions.special.zeta_functions import zeta
@@ -906,8 +909,8 @@ class harmonic(Function):
             return cls._functions[m](int(n))
 
     def _eval_rewrite_as_polygamma(self, n, m=1, **kwargs):
-        from sympy.functions.special.gamma_functions import polygamma
-        return S.NegativeOne**m/factorial(m - 1) * (polygamma(m - 1, 1) - polygamma(m - 1, n + 1))
+        from sympy.functions.special.gamma_functions import gamma, polygamma
+        return S.NegativeOne**m/gamma(m) * (polygamma(m-1, 1) - polygamma(m-1, n+1))
 
     def _eval_rewrite_as_digamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
