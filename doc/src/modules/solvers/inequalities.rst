@@ -3,7 +3,7 @@
 Inequality Solvers
 ==================
 
-For general cases the reduce_equalities function should be used.
+For general cases :func:`~.reduce_equalities` should be used.
 Other functions are the subcategories useful for special dedicated operations.
 
 .. module:: sympy.solvers.inequalities
