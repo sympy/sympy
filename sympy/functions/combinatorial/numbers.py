@@ -29,7 +29,7 @@ from sympy.utilities.iterables import multiset, multiset_derangements, iterable
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 
-from mpmath import bernfrac, workprec
+from mpmath import mp, workprec
 from mpmath.libmp import ifib as _ifib
 
 
@@ -557,7 +557,7 @@ class bernoulli(Function):
                 n = int(n)
                 # Use mpmath for enormous Bernoulli numbers
                 if n > 500:
-                    p, q = bernfrac(n)
+                    p, q = mp.bernfrac(n)
                     return Rational(int(p), int(q))
                 case = n % 6
                 highest_cached = cls._highest[case]
@@ -586,7 +586,6 @@ class bernoulli(Function):
         return Piecewise((1, Eq(n, 0)), (-n * zeta(1-n, x), True))
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
         if not all(x.is_number for x in self.args):
             return
         n = self.args[0]._to_mpmath(prec)
