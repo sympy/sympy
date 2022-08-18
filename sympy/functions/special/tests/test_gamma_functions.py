@@ -5,7 +5,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.combinatorial.numbers import harmonic
-from sympy.functions.elementary.complexes import (Abs, conjugate, im, re)
+from sympy.functions.elementary.complexes import (conjugate, im, re)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.miscellaneous import sqrt

@@ -908,9 +908,10 @@ class harmonic(Function):
                 cls._functions[m] = f
             return cls._functions[m](int(n))
 
-    def _eval_rewrite_as_polygamma(self, n, m=1, **kwargs):
+    def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
-        return S.NegativeOne**m/gamma(m) * (polygamma(m-1, 1) - polygamma(m-1, n+1))
+        if m.is_integer and m.is_positive:
+            return S.NegativeOne**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) / gamma(m)
 
     def _eval_rewrite_as_digamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
