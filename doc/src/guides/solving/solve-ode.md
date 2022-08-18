@@ -198,6 +198,44 @@ techniques such as a loops or comprehensions, in a nested fashion.
 C1 - C2*exp(x)
 ```
 
+### Work With Arbitrary Constants
+
+When you want to simplify arbitrary constants such as `C1`, `C2`, `C3`, etc.,
+use {func}`~.constantsimp`. For example, if you add two ODE solutions together,
+there may be an opportunity to simplify the constants:
+
+```py
+>>> from sympy import Function, dsolve, Derivative, symbols
+>>> from sympy.abc import x
+>>> from sympy.solvers.ode.ode import constantsimp
+>>> y = Function('y')
+>>> result = dsolve(Derivative(y(x), x, x) + 9*y(x), y(x)); result
+Eq(y(x), C1*sin(3*x) + C2*cos(3*x))
+>>> sol = result.rhs; sol
+C1*sin(3*x) + C2*cos(3*x)
+>>> ex = sol + (3 * sol / 2); ex
+5*C1*sin(3*x)/2 + 5*C2*cos(3*x)/2
+>>> C1, C2, C3 = symbols("C1 C2 C3")
+>>> constantsimp(ex, {C1, C2, C3})
+C1*sin(3*x) + C2*cos(3*x)
+```
+
+After simplifying the arbitrary constants, those constants may be
+non-consecutive ordered. For example the simplified result may contain `C1` and
+`C3` but not `C2`. You can fix this using {func}`~.constant_renumber`:
+
+```py
+>>> from sympy import symbols, cos, sin
+>>> from sympy.solvers.ode.ode import constantsimp, constant_renumber
+>>> C1, C2, C3 = symbols("C1 C2 C3")
+>>> expr = C1*cos(x) + C2*cos(x) + C3*sin(x); expr
+C1*cos(x) + C2*cos(x) + C3*sin(x)
+>>> simplified = constantsimp(expr, {C1, C2, C3}); simplified
+C1*cos(x) + C3*sin(x)
+>>> constant_renumber(simplified)
+C1*sin(x) + C2*cos(x)
+```
+
 ## *Tradeoffs (speed vs. accuracy, etc.) for function*
 
 ### *Tradeoff 1*
