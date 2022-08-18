@@ -168,7 +168,7 @@ SymPy has a collection of official logos, which can be generated from sympy.svg 
 .. code-block:: none
 
     $ cd doc
- 
+
     $ make logo # will be stored in the _build/logo subdirectory
 
 The license of all the logos is the same as SymPy: BSD. See the
@@ -270,11 +270,11 @@ On Ubuntu, you can install these with::
 On Mac, you can use::
 
     brew install texlive
- 
+
     brew install --cask chromium
- 
+
     brew tap homebrew/cask-fonts
- 
+
     brew install font-dejavu
 
 On Windows 10, you can use::
@@ -288,7 +288,7 @@ right-click and click ``Install for all users``.
 To build the pdf docs run::
 
     cd doc
- 
+
     make pdf
 
 The resulting PDF will be in::
