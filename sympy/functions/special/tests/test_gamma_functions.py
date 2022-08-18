@@ -342,20 +342,17 @@ def test_polygamma():
     assert polygamma(I, 3).is_negative is None
 
     # issue 17350
-    assert polygamma(pi, 3).evalf() == polygamma(pi, 3)
     assert (I*polygamma(I, pi)).as_real_imag() == \
            (-im(polygamma(I, pi)), re(polygamma(I, pi)))
     assert (tanh(polygamma(I, 1))).rewrite(exp) == \
            (exp(polygamma(I, 1)) - exp(-polygamma(I, 1)))/(exp(polygamma(I, 1)) + exp(-polygamma(I, 1)))
-    assert (I / polygamma(I, 4)).rewrite(exp) == \
-           I*sqrt(re(polygamma(I, 4))**2 + im(polygamma(I, 4))**2)\
-           /((re(polygamma(I, 4)) + I*im(polygamma(I, 4)))*Abs(polygamma(I, 4)))
-    assert unchanged(polygamma, 2.3, 1.0)
 
     # issue 12569
     assert unchanged(im, polygamma(0, I))
     assert polygamma(Symbol('a', positive=True), Symbol('b', positive=True)).is_real is True
     assert polygamma(0, I).is_real is None
+
+    assert abs(polygamma(2.3, 1.0).evalf() - (-3.00330290914645)) < 1e-9
 
 
 def test_polygamma_expand_func():

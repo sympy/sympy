@@ -574,6 +574,12 @@ class polygamma(Function):
     .. math::
         \psi^{(n)} (z) := \frac{\mathrm{d}^{n+1}}{\mathrm{d} z^{n+1}} \log\Gamma(z).
 
+    For `n` not a nonnegative integer the generalisation by Espinosa and Moll [5]_
+    is used:
+
+    .. math:: \psi(s,z) = \frac{\zeta'(s+1, z) + (\gamma + \psi(-s)) \zeta(s+1, z)}
+        {\Gamma(-s)}
+
     Examples
     ========
 
@@ -657,15 +663,25 @@ class polygamma(Function):
     .. [2] http://mathworld.wolfram.com/PolygammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma/
     .. [4] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+    .. [5] O. Espinosa and V. Moll, "A generalized polygamma function",
+           *Integral Transforms and Special Functions* (2004), 101-115.
 
     """
 
     def _eval_evalf(self, prec):
         n = self.args[0]
         # the mpmath polygamma implementation valid only for nonnegative integers
-        if n.is_number and n.is_real:
-            if (n.is_integer or n == int(n)) and n.is_nonnegative:
-                return super()._eval_evalf(prec)
+        if n.is_number and n.is_real and \
+                (n.is_integer or n == int(n)) and n.is_nonnegative:
+            return super()._eval_evalf(prec)
+        from mpmath import mp, workprec
+        s = n._to_mpmath(prec+12)
+        z = self.args[1]._to_mpmath(prec+12)
+        with workprec(prec+12):
+            zt = mp.zeta(s+1, z)
+            dzt = mp.zeta(s+1, z, 1)
+            res = (dzt + (mp.euler + mp.digamma(-s)) * zt) * mp.rgamma(-s)
+        return Expr._from_mpmath(res, prec)
 
     def fdiff(self, argindex=2):
         if argindex == 2:
@@ -684,12 +700,20 @@ class polygamma(Function):
         return fuzzy_and([z.is_complex, fuzzy_not(is_negative_integer)])
 
     def _eval_is_positive(self):
-        if self.args[0].is_positive and self.args[1].is_positive:
-            return self.args[0].is_odd
+        n, z = self.args
+        if n.is_positive:
+            if n.is_odd and z.is_real:
+                return True
+            if n.is_even and z.is_positive:
+                return False
 
     def _eval_is_negative(self):
-        if self.args[0].is_positive and self.args[1].is_positive:
-            return self.args[0].is_even
+        n, z = self.args
+        if n.is_positive:
+            if n.is_even and z.is_positive:
+                return True
+            if n.is_odd and z.is_real:
+                return False
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order

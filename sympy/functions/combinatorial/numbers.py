@@ -826,7 +826,7 @@ class harmonic(Function):
     polygamma(2, n + 1)/2 - polygamma(2, 1)/2
 
     >>> harmonic(n,m).rewrite(polygamma)
-    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
+    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/gamma(m)
 
     Integer offsets in the argument can be pulled out:
 
