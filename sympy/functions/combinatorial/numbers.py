@@ -587,6 +587,8 @@ class bernoulli(Function):
 
     def _eval_evalf(self, prec):
         from mpmath import mp, workprec
+        if not all(x.is_number for x in self.args):
+            return
         n = self.args[0]._to_mpmath(prec)
         x = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
         with workprec(prec):

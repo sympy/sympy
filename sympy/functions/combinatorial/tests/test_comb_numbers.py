@@ -83,6 +83,7 @@ def test_bernoulli():
     assert str(bernoulli(3.0, 1j).evalf(n=10)) == '1.5 - 0.5*I'
     assert str(bernoulli(I).evalf(n=10)) == '0.9268485643 - 0.5821580598*I'
     assert str(bernoulli(I, I).evalf(n=10)) == '0.1267792071 + 0.01947413152*I'
+    assert bernoulli(x).evalf() == bernoulli(x)
 
 
 def test_bernoulli_rewrite():
