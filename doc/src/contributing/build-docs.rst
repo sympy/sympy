@@ -38,15 +38,8 @@ Install pip using::
    
    sudo apt install python3-pip
    
-However, you can also create a virtual environment and use pip in it using::
 
-   python3 -m venv /path/to/my/venv  # create the venv
-   
-Then activate it using::
-
-   source /path/to/my/venv/bin/activate  # need to rerun this each time you open a new terminal
-
-After installing pip through either of the two methods given above, run::
+After installing pip, run::
 
    python -m pip install -r doc/requirements.txt
 
