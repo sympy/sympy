@@ -180,7 +180,7 @@ simplified, and want to speed up {func}`~.solve`, use `simplify=False`.
 
 ## Parse a String Representing the Equation
 
-If you are creating the expression yourself, we [against using string parsing to
+If you are creating the expression yourself, we advise [against using string parsing to
 create expressions](
 https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).
 But if you are programmatically reading in a string, this approach is
