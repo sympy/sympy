@@ -89,7 +89,7 @@ view them all), compared to eight when expressed numerically:
 
 In other situations, even if the exact solution has few terms, you may want a
 numeric solution so you know its approximate numerical value. For example, it
-may be difficult to estimate that $\sqrt{2} * e^{\pi}/2$ is approximately $16$:
+may be difficult to estimate that $\sqrt{2} e^{\pi}/2$ is approximately $16$:
 
 ```py
 >>> from sympy import pi, sqrt, exp, solve, evalf
