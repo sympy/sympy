@@ -188,7 +188,7 @@ convenient.
 
 You can parse a string representing the equation into a form that SymPy can
 understand (for example, {any}`Eq() <sympy.core.relational.Eq>` form), then
-apply solve the parsed expression. Parsing an equation from a string requires
+solve the parsed expression. Parsing an equation from a string requires
 you to use {func}`transformations <sympy.parsing.sympy_parser.parse_expr>` for
 SymPy to
 - interpret equals signs
