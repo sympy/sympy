@@ -208,13 +208,8 @@ To extract the solutions, you can iterate through the list of dictionaries:
 >>> print(parsed)
 Eq(x**2, y)
 >>> solutions = solve(parsed, x, dict=True)
->>> print(solutions)
-[{x: -sqrt(y)}, {x: sqrt(y)}]
->>> for solution in solutions:
-...     for key, val in solution.items():
-...         print(val)
--sqrt(y)
-sqrt(y)
+>>> [s[x] for s in solutions]
+[-sqrt(y), sqrt(y)]
 >>> solveset(parsed, x)
 {-sqrt(y), sqrt(y)}
 ```
