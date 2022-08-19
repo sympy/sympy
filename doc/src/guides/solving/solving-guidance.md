@@ -229,17 +229,6 @@ If you already have the equation in {any}`Eq() <sympy.core.relational.Eq>`
 >>> parsed = parse_expr(expr, transformations="all")
 >>> print(parsed)
 Eq(x**2, y)
->>> solutions = solve(parsed, x, dict=True)
->>> print(solutions)
-[{x: -sqrt(y)}, {x: sqrt(y)}]
->>> for solution in solutions:
-...     for key, val in solution.items():
-...         print(val)
--sqrt(y)
-sqrt(y)
->>> solutions_set = solveset(parsed, x)
->>> print(solutions_set)
-{-sqrt(y), sqrt(y)}
 ```
 
 SymPy can also parse [LaTeX](https://www.latex-project.org/) into expressions
