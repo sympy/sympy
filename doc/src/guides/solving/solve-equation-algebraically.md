@@ -1,4 +1,4 @@
-# Solve an equation algebraically
+# Solve an Equation Algebraically
 
 Use SymPy to solve an equation algebraically (symbolically). For example,
 solving $x^2 = y$ for $x$ yields $x \in \{-\sqrt{y},\sqrt{y}\}$.
@@ -56,13 +56,13 @@ Refer to
 [](solving-guidance.md#include-the-variable-to-be-solved-for-in-the-function-call)
 and [](solving-guidance.md#ensure-consistent-formatting-from).
 
-## Solve an equation using {func}`~.solve` or {func}`~.solveset`
+## Solve an Equation Algebraically
 
 You can solve an equation in several ways. The examples below demonstrate using
 both {func}`~.solve` and {func}`~.solveset` where applicable. You can choose the
 function best suited to your equation.
 
-### Make your equation into an expression that equals zero
+### Make Your Equation Into an Expression That Equals Zero
 
 Use the fact that any expression not in an `Eq` (equation) is automatically
 assumed to equal zero (0) by the solving functions. You can rearrange the
@@ -79,7 +79,7 @@ zero, or an equation that you do not mind rearranging to $expression = 0$.
 {-sqrt(y), sqrt(y)}
 ```
 
-### Put your equation into `Eq` form
+### Put Your Equation Into `Eq` Form
 
 Put your equation into `Eq` form, then solve the `Eq`. This approach is
 convenient if you are interactively solving an equation which you already have
@@ -104,7 +104,7 @@ sqrt(y)
 -sqrt(y)
 ```
 
-### Restrict the domain of solutions
+### Restrict the Domain of Solutions
 
 By default, SymPy will return solutions in the complex domain, which also
 includes purely real and imaginary values. Here, the first two solutions are
@@ -177,7 +177,7 @@ and if you restrict the solutions to a domain in which there are no solutions,
 EmptySet
 ```
 
-### Explicitly represent infinite sets of possible solutions using {func}`~.solveset`
+### Explicitly Represent Infinite Sets of Possible Solutions
 
 {func}`~.solveset` [can represent infinite sets of possible
 solutions](why-solveset) and express them in standard mathematical notation, for
@@ -208,9 +208,9 @@ However, {func}`~.solve` will return only a finite number of solutions:
 many) solutions can generated from the returned solutions by adding integer
 multiples of the {func}`~.periodicity` of the equation, here $2\pi$.
 
-## Use the solution result
+## Use the Solution Result
 
-### Substitute solutions from {func}`~.solve` into an expression
+### Substitute Solutions From {func}`~.solve` Into an Expression
 
 You can substitute solutions from {func}`~.solve` into an expression.
 
@@ -243,7 +243,7 @@ a minimum.
 4
 ```
 
-### {func}`~.solveset` solution sets cannot necessarily be interrogated programmatically
+### {func}`~.solveset` Solution Sets Cannot Necessarily Be Interrogated Programmatically
 
 If {func}`~.solveset` returns a finite set (class {class}`~.FiniteSet`), you can
 iterate through the solutions:
@@ -308,13 +308,13 @@ Intersection({-sqrt(y), sqrt(y)}, Reals)
 [sqrt(y), -sqrt(y)]
 ```
 
-## Options that can speed up {func}`~.solve`
+## Options That Can Speed up {func}`~.solve`
 
 Refer to [solving guidance](solving-guidance.md#options-that-can-speed-up).
 
-## Not all equations can be solved
+## Not All Equations Can Be Solved
 
-### Equations with no solution
+### Equations With No Solution
 
 Some equations have no solution, in which case SymPy may return an empty set.
 For example, the equation $x - 7 = x + 2$ reduces to $-7 = 2$, which has no
@@ -331,7 +331,7 @@ solution because no value of $x$ will make it true:
 So if SymPy returns an empty list, you may want to check whether there is a
 mistake in the equation.
 
-### Equations which have an analytical solution, and SymPy cannot solve
+### Equations Which Have an Analytical Solution, and SymPy Cannot Solve
 
 It is also possible that there is an algebraic solution to your equation, and
 SymPy has not implemented an appropriate algorithm. If that happens, or SymPy
