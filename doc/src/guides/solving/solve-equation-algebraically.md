@@ -78,10 +78,9 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 
 ### Ensure consistent formatting from {func}`~.solve` by using `dict=True`
 
-{func}`~.solve` produces various output formats depending on the answer, unless
-you use `dict=True` to ensure the result will be formatted as a dictionary. We
-recommend using `dict=True`, especially if you want to extract information from
-the result programmatically.
+{func}`~.solve` produces a variety of output as explained in :ref:`solve_output`. Using
+`dict=True` will give a consistent output format which is especially important when
+extracting information about the solution programmatically.
 
 ## Solve an equation using {func}`~.solve` or {func}`~.solveset`
 
