@@ -382,77 +382,107 @@ def solve(f, *symbols, **flags):
         - piecewise combinations of the above
         - systems of linear and polynomial equations
         - systems containing relational expressions
+        - systems implied by undetermined coefficients
 
     Examples
     ========
 
-    The output varies according to the input and can be seen by example:
+    The default output varies according to the input and might
+    be a list (possibly empty), a dictionary, a list of
+    dictionaries or tuples, or an expression involving relationals.
+    For specifics regarding different forms of output that may appear, see :ref:`solve_output`.
+    Let it suffice here to say that to obtain a uniform output from
+    `solve` use ``dict=True`` or ``set=True`` (see below).
 
-        >>> from sympy import solve, Poly, Eq, Function, exp
+        >>> from sympy import solve, Poly, Eq, Matrix, Symbol
         >>> from sympy.abc import x, y, z, a, b
-        >>> f = Function('f')
 
-    Boolean or univariate Relational:
+    The expressions that are passed can be Expr, Equality, or Poly
+    classes (or lists of the same); a Matrix is considered to be a
+    list of all the elements of the matrix:
 
-        >>> solve(x < 3)
-        (-oo < x) & (x < 3)
-
-
-    To always get a list of solution mappings, use flag dict=True:
-
-        >>> solve(x - 3, dict=True)
-        [{x: 3}]
-        >>> sol = solve([x - 3, y - 1], dict=True)
-        >>> sol
-        [{x: 3, y: 1}]
-        >>> sol[0][x]
-        3
-        >>> sol[0][y]
-        1
-
-
-    To get a list of *symbols* and set of solution(s) use flag set=True:
-
-        >>> solve([x**2 - 3, y - 1], set=True)
-        ([x, y], {(-sqrt(3), 1), (sqrt(3), 1)})
-
-
-    Single expression and single symbol that is in the expression:
-
-        >>> solve(x - y, x)
-        [y]
         >>> solve(x - 3, x)
         [3]
         >>> solve(Eq(x, 3), x)
         [3]
         >>> solve(Poly(x - 3), x)
         [3]
-        >>> solve(x**2 - y**2, x, set=True)
-        ([x], {(-y,), (y,)})
-        >>> solve(x**4 - 1, x, set=True)
-        ([x], {(-1,), (1,), (-I,), (I,)})
+        >>> solve(Matrix([[x, x + y]]), x, y) == solve([x, x + y], x, y)
+        True
 
-    Single expression with no symbol that is in the expression:
+    If no symbols are indicated to be of interest and the equation is
+    univariate, a list of values is returned; otherwise, the keys in
+    a dictionary will indicate which (of all the variables used in
+    the expression(s)) variables and solutions were found:
 
+        >>> solve(x**2 - 4)
+        [-2, 2]
+        >>> solve((x - a)*(y - b))
+        [{a: x}, {b: y}]
+        >>> solve([x - 3, y - 1])
+        {x: 3, y: 1}
+        >>> solve([x - 3, y**2 - 1])
+        [{x: 3, y: -1}, {x: 3, y: 1}]
+
+    If you pass symbols for which solutions are sought, the output will vary
+    depending on the number of symbols you passed, whether you are passing
+    a list of expressions or not, and whether a linear system was solved.
+    Uniform output is attained by using ``dict=True`` or ``set=True``.
+
+        >>> #### *** feel free to skip to the stars below *** ####
+        >>> from sympy import TableForm
+        >>> h = [None, ';|;'.join(['e', 's', 'solve(e, s)', 'solve(e, s, dict=True)',
+        ... 'solve(e, s, set=True)']).split(';')]
+        >>> t = []
+        >>> for e, s in [
+        ...         (x - y, y),
+        ...         (x - y, [x, y]),
+        ...         (x**2 - y, [x, y]),
+        ...         ([x - 3, y -1], [x, y]),
+        ...         ]:
+        ...     how = [{}, dict(dict=True), dict(set=True)]
+        ...     res = [solve(e, s, **f) for f in how]
+        ...     t.append([e, '|', s, '|'] + [res[0], '|', res[1], '|', res[2]])
+        ...
+        >>> # ******************************************************* #
+        >>> TableForm(t, headings=h, alignments="<")
+        e              | s      | solve(e, s)  | solve(e, s, dict=True) | solve(e, s, set=True)
+        ---------------------------------------------------------------------------------------
+        x - y          | y      | [x]          | [{y: x}]               | ([y], {(x,)})
+        x - y          | [x, y] | [(y, y)]     | [{x: y}]               | ([x, y], {(y, y)})
+        x**2 - y       | [x, y] | [(x, x**2)]  | [{y: x**2}]            | ([x, y], {(x, x**2)})
+        [x - 3, y - 1] | [x, y] | {x: 3, y: 1} | [{x: 3, y: 1}]         | ([x, y], {(3, 1)})
+
+        * If any equation does not depend on the symbol(s) given, it will be
+          eliminated from the equation set and an answer may be given
+          implicitly in terms of variables that were not of interest:
+
+            >>> solve([x - y, y - 3], x)
+            {x: y}
+
+    When you pass all but one of the free symbols, an attempt
+    is made to find a single solution based on the method of
+    undetermined coefficients. If it succeeds, a dictionary of values
+    is returned. If you want an algebraic solutions for one
+    or more of the symbols, pass the expression to be solved in a list:
+
+        >>> e = a*x + b - 2*x - 3
+        >>> solve(e, [a, b])
+        {a: 2, b: 3}
+        >>> solve([e], [a, b])
+        {a: -b/x + (2*x + 3)/x}
+
+    When there is no solution for any given symbol which will make all
+    expressions zero, the empty list is returned (or an empty set in
+    the tuple when ``set=True``):
+
+        >>> from sympy import sqrt
         >>> solve(3, x)
         []
         >>> solve(x - 3, y)
         []
-
-    Single expression with no symbol given. In this case, all free *symbols*
-    will be selected as potential *symbols* to solve for. If the equation is
-    univariate then a list of solutions is returned; otherwise - as is the case
-    when *symbols* are given as an iterable of length greater than 1 - a list of
-    mappings will be returned:
-
-        >>> solve(x - 3)
-        [3]
-        >>> solve(x**2 - y**2)
-        [{x: -y}, {x: y}]
-        >>> solve(z**2*x**2 - z**2*y**2)
-        [{x: -y}, {x: y}, {z: 0}]
-        >>> solve(z**2*x - z**2*y**2)
-        [{x: y**2}, {z: 0}]
+        >>> solve(sqrt(x) + 1, x, set=True)
+        ([x], set())
 
     When an object other than a Symbol is given as a symbol, it is
     isolated algebraically and an implicit solution may be obtained.
@@ -460,6 +490,9 @@ def solve(f, *symbols, **flags):
     the object with a Symbol and solving for that Symbol. It will only
     work if the specified object can be replaced with a Symbol using the
     subs method:
+
+        >>> from sympy import exp, Function
+        >>> f = Function('f')
 
         >>> solve(f(x) - x, f(x))
         [x]
@@ -470,26 +503,28 @@ def solve(f, *symbols, **flags):
         >>> solve(x + exp(x)**2, exp(x), set=True)
         ([exp(x)], {(-sqrt(-x),), (sqrt(-x),)})
 
-        >>> from sympy import Indexed, IndexedBase, Tuple, sqrt
+        >>> from sympy import Indexed, IndexedBase, Tuple
         >>> A = IndexedBase('A')
         >>> eqs = Tuple(A[1] + A[2] - 3, A[1] - A[2] + 1)
         >>> solve(eqs, eqs.atoms(Indexed))
         {A[1]: 1, A[2]: 2}
 
-        * To solve for a symbol implicitly, use implicit=True:
+        * To solve for a function within a derivative, use :func:`~.dsolve`.
 
-            >>> solve(x + exp(x), x)
-            [-LambertW(1)]
-            >>> solve(x + exp(x), x, implicit=True)
-            [-exp(x)]
+    To solve for a symbol implicitly, use implicit=True:
 
-        * It is possible to solve for anything that can be targeted with
-          subs:
+        >>> solve(x + exp(x), x)
+        [-LambertW(1)]
+        >>> solve(x + exp(x), x, implicit=True)
+        [-exp(x)]
 
-            >>> solve(x + 2 + sqrt(3), x + 2)
-            [-sqrt(3)]
-            >>> solve((x + 2 + sqrt(3), x + 4 + y), y, x + 2)
-            {y: -2 + sqrt(3), x + 2: -sqrt(3)}
+    It is possible to solve for anything in an expression that can be
+    replaced with a symbol using :obj:`~sympy.core.basic.Basic.subs`:
+
+        >>> solve(x + 2 + sqrt(3), x + 2)
+        [-sqrt(3)]
+        >>> solve((x + 2 + sqrt(3), x + 4 + y), y, x + 2)
+        {y: -2 + sqrt(3), x + 2: -sqrt(3)}
 
         * Nothing heroic is done in this implicit solving so you may end up
           with a symbol still in the solution:
@@ -500,7 +535,7 @@ def solve(f, *symbols, **flags):
             >>> solve(eqs, y*x, x)
             {x: -y - 4, x*y: -3*y - sqrt(3)}
 
-        * If you attempt to solve for a number remember that the number
+        * If you attempt to solve for a number, remember that the number
           you have obtained does not necessarily mean that the value is
           equivalent to the expression obtained:
 
@@ -511,117 +546,21 @@ def solve(f, *symbols, **flags):
             >>> [_.subs(z, -1) for _ in solve((x - y + 1).subs(-1, z), 1)]
             [-x + y]
 
-        * To solve for a function within a derivative, use ``dsolve``.
-
-    Single expression and more than one symbol:
-
-        * When there is a linear solution:
-
-            >>> solve(x - y**2, x, y)
-            [(y**2, y)]
-            >>> solve(x**2 - y, x, y)
-            [(x, x**2)]
-            >>> solve(x**2 - y, x, y, dict=True)
-            [{y: x**2}]
-
-        * If there is no linear solution, then the first successful
-          attempt for a nonlinear solution will be returned:
-
-            >>> solve(x**2 - y**2, x, y, dict=True)
-            [{x: -y}, {x: y}]
-            >>> solve(x**2 - y**2/exp(x), x, y, dict=True)
-            [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
-            >>> solve(x**2 - y**2/exp(x), y, x)
-            [(-x*sqrt(exp(x)), x), (x*sqrt(exp(x)), x)]
-
-        * When undetermined coefficients are identified:
-
-            This happens when it is possible to form a linear set of
-            equations in the variables provided from the coefficients
-            of the expressions in symbols not provided. A single
-            dictionary with specified values will be returned:
-
-            >>> eq = (a + b)*x - b + 2
-            >>> solve(eq, a, b)
-            {a: -2, b: 2}
-
-            The coefficient system solved was:
-
-            >>> list(eq.expand().as_coefficients_dict(x).values())
-            [a + b, 2 - b]
-
-            To obtain an algebraic solution in terms of ``a`` or ``b``
-            pass the equation in a list:
-
-            >>> solve([eq], a, b)
-            {a: b*(1 - x)/x - 2/x}
-
-    Iterable of one or more of the above:
-
-        * Involving relationals or bools:
-
-            >>> solve([x < 3, x - 2])
-            Eq(x, 2)
-            >>> solve([x > 3, x - 2])
-            False
-
-        * When the system is linear:
-
-            * With a solution:
-
-                >>> solve([x - 3], x)
-                {x: 3}
-                >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y)
-                {x: -3, y: 1}
-                >>> solve((x + 5*y - 2, -3*x + 6*y - 15), x, y, z)
-                {x: -3, y: 1}
-                >>> solve((x + 5*y - 2, -3*x + 6*y - z), z, x, y)
-                {x: 2 - 5*y, z: 21*y - 6}
-
-            * Without a solution:
-
-                >>> solve([x + 3, x - 3])
-                []
-
-        * When the system is not linear:
-
-            >>> solve([x**2 + y -2, y**2 - 4], x, y, set=True)
-            ([x, y], {(-2, -2), (0, 2), (2, -2)})
-
-        * If no *symbols* are given, all free *symbols* will be selected and a
-          list of mappings returned:
-
-            >>> solve([x - 2, x**2 + y])
-            [{x: 2, y: -4}]
-            >>> solve([x - 2, x**2 + f(x)], {f(x), x})
-            [{x: 2, f(x): -4}]
-
-        * If any equation does not depend on the symbol(s) given, it will be
-          eliminated from the equation set and an answer may be given
-          implicitly in terms of variables that were not of interest:
-
-            >>> solve([x - y, y - 3], x)
-            {x: y}
-
     **Additional Examples**
 
     ``solve()`` with check=True (default) will run through the symbol tags to
     eliminate unwanted solutions. If no assumptions are included, all possible
     solutions will be returned:
 
-        >>> from sympy import Symbol, solve
         >>> x = Symbol("x")
         >>> solve(x**2 - 1)
         [-1, 1]
 
-    By using the positive tag, only one solution will be returned:
+    By setting the ``positive`` flag, only one solution will be returned:
 
         >>> pos = Symbol("pos", positive=True)
         >>> solve(pos**2 - 1)
         [1]
-
-    Assumptions are not checked when ``solve()`` input involves
-    relationals or bools.
 
     When the solutions are checked, those that make any denominator zero
     are automatically excluded. If you do not want to exclude such solutions,
@@ -631,15 +570,15 @@ def solve(f, *symbols, **flags):
         >>> solve(sin(x)/x)  # 0 is excluded
         [pi]
 
-    If check=False, then a solution to the numerator being zero is found: x = 0.
-    In this case, this is a spurious solution since $\sin(x)/x$ has the well
-    known limit (without dicontinuity) of 1 at x = 0:
+    If ``check=False``, then a solution to the numerator being zero is found
+    but the value of $x = 0$ is a spurious solution since $\sin(x)/x$ has the well
+    known limit (without discontinuity) of 1 at $x = 0$:
 
         >>> solve(sin(x)/x, check=False)
         [0, pi]
 
     In the following case, however, the limit exists and is equal to the
-    value of x = 0 that is excluded when check=True:
+    value of $x = 0$ that is excluded when check=True:
 
         >>> eq = x**2*(1/x - z**2/x)
         >>> solve(eq, x)
@@ -650,6 +589,63 @@ def solve(f, *symbols, **flags):
         0
         >>> limit(eq, x, 0, '+')
         0
+
+    **Solving Relationships**
+
+    When one or more expressions passed to ``solve`` is a relational,
+    a relational result is returned (and the ``dict`` and ``set`` flags
+    are ignored):
+
+        >>> solve(x < 3)
+        (-oo < x) & (x < 3)
+        >>> solve([x < 3, x**2 > 4], x)
+        ((-oo < x) & (x < -2)) | ((2 < x) & (x < 3))
+        >>> solve([x + y - 3, x > 3], x)
+        (3 < x) & (x < oo) & Eq(x, 3 - y)
+
+    Although checking of assumptions on symbols in relationals
+    is not done, setting assumptions will affect how certain
+    relationals might automatically simplify:
+
+        >>> solve(x**2 > 4)
+        ((-oo < x) & (x < -2)) | ((2 < x) & (x < oo))
+
+        >>> r = Symbol('r', real=True)
+        >>> solve(r**2 > 4)
+        (2 < r) | (r < -2)
+
+    There is currently no algorithm in SymPy that allows you to use
+    relationships to resolve more than one variable. So the following
+    does not determine that ``q < 0`` (and trying to solve for ``r``
+    and ``q`` will raise an error):
+
+        >>> from sympy import symbols
+        >>> r, q = symbols('r, q', real=True)
+        >>> solve([r + q - 3, r > 3], r)
+        (3 < r) & Eq(r, 3 - q)
+
+    You can directly call the routine that ``solve`` calls
+    when it encounters a relational: :func:`~.reduce_inequalities`.
+    It treats Expr like Equality.
+
+        >>> from sympy import reduce_inequalities
+        >>> reduce_inequalities([x**2 - 4])
+        Eq(x, -2) | Eq(x, 2)
+
+    If each relationship contains only one symbol of interest,
+    the expressions can be processed for multiple symbols:
+
+        >>> reduce_inequalities([0 <= x  - 1, y < 3], [x, y])
+        (-oo < y) & (1 <= x) & (x < oo) & (y < 3)
+
+    But an error is raised if any relationship has more than one
+    symbol of interest:
+
+        >>> reduce_inequalities([0 <= x*y  - 1, y < 3], [x, y])
+        Traceback (most recent call last):
+        ...
+        NotImplementedError:
+        inequality has more than one symbol of interest.
 
     **Disabling High-Order Explicit Solutions**
 
