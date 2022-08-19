@@ -309,19 +309,6 @@ class Joint(ABC):
                              'associated body.')
         return ax
 
-    def _express_axis(self, axis, frame):
-        """Helper function to get an axis expressed in a specified frame."""
-        try:
-            ax_mat = axis.to_matrix(self.parent_interframe)
-        except ValueError:
-            ax_mat = axis.to_matrix(self.child_interframe)
-        try:
-            self.parent_interframe.dcm(frame)  # Check if connected
-            int_frame = self.parent_interframe
-        except ValueError:
-            int_frame = self.child_interframe
-        return self._to_vector(ax_mat, int_frame).express(frame)
-
     def _generate_kdes(self):
         """Generate kinematical differential equations."""
         kdes = []
@@ -346,10 +333,6 @@ class Joint(ABC):
 
     def _locate_joint_frame(self, body, interframe):
         """Returns the attachment frame of a body."""
-        # TODO Decide whether None should give body.frame or a new frame, which
-        #  is not rotated with respect to body.frame. _locate_joint_pos should
-        #  do the same only than with the masscenter.
-        #  Don't forget _axis_to_interframes
         if interframe is None:
             return body.frame
         if not isinstance(interframe, ReferenceFrame):
@@ -408,7 +391,23 @@ class Joint(ABC):
         return self.parent.frame
 
 
-class PinJoint(Joint):
+class JointAxisMixin:
+    def _express_joint_axis(self, frame):
+        """Helper method to get an axis expressed in a specified frame."""
+        try:
+            ax_mat = self.joint_axis.to_matrix(self.parent_interframe)
+        except ValueError:
+            ax_mat = self.joint_axis.to_matrix(self.child_interframe)
+        try:
+            self.parent_interframe.dcm(frame)  # Check if connected
+        except ValueError:
+            int_frame = self.child_interframe
+        else:
+            int_frame = self.parent_interframe
+        return self._to_vector(ax_mat, int_frame).express(frame)
+
+
+class PinJoint(JointAxisMixin, Joint):
     """Pin (Revolute) Joint.
 
     .. image:: PinJoint.svg
@@ -644,7 +643,7 @@ class PinJoint(Joint):
     def _orient_frames(self):
         self._joint_axis = self._axis(
             self.joint_axis, self.parent_interframe, self.child_interframe)
-        axis = self._express_axis(self.joint_axis, self.parent_interframe)
+        axis = self._express_joint_axis(self.parent_interframe)
         self.child_interframe.orient_axis(
             self.parent_interframe, axis, self.coordinates[0])
 
@@ -660,7 +659,7 @@ class PinJoint(Joint):
                                           self.parent.frame, self.child.frame)
 
 
-class PrismaticJoint(Joint):
+class PrismaticJoint(JointAxisMixin, Joint):
     """Prismatic (Sliding) Joint.
 
     .. image:: PrismaticJoint.svg
@@ -896,7 +895,7 @@ class PrismaticJoint(Joint):
     def _orient_frames(self):
         self._joint_axis = self._axis(
             self.joint_axis, self.parent_interframe, self.child_interframe)
-        axis = self._express_axis(self.joint_axis, self.parent_interframe)
+        axis = self._express_joint_axis(self.parent_interframe)
         self.child_interframe.orient_axis(self.parent_interframe, axis, 0)
 
     def _set_angular_velocity(self):
