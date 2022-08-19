@@ -55,10 +55,10 @@ Here are recommendations on when to use:
 ### Include the variable to be solved for in the function call
 
 We recommend you include the variable to be solved for as the second argument
-for either function. While this is optional for univariate equations,
-it is a good practice because it ensures SymPy will solve for the desired
-symbol. For example, you might be interested in a solution for $x$, but SymPy
-solves for $y$:
+for either function. While this is optional for univariate equations, it is a
+good practice because it ensures SymPy will solve for the desired symbol. For
+example, you might be interested in a solution for $x$, but SymPy solves for
+$y$:
 
 ```py
 >>> from sympy.abc import x, y
@@ -78,9 +78,10 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 
 ### Ensure consistent formatting from {func}`~.solve` by using `dict=True`
 
-{func}`~.solve` produces a variety of output as explained in :ref:`solve_output`. Using
-`dict=True` will give a consistent output format which is especially important when
-extracting information about the solution programmatically.
+{func}`~.solve` produces a variety of output as explained in
+:ref:`solve_output`. Using `dict=True` will give a consistent output format
+which is especially important when extracting information about the solution
+programmatically.
 
 ## Solve an equation using {func}`~.solve` or {func}`~.solveset`
 
@@ -109,7 +110,8 @@ zero, or an equation that you do not mind rearranging to $expression = 0$.
 
 Put your equation into `Eq` form, then solve the `Eq`. This approach is
 convenient if you are interactively solving an equation which you already have
-in the form of an equation, or which you think of as an equality.
+in the form of an equation, or which you think of as an equality. It also helps
+to prevent sign errors when subtracting one side from the other.
 
 ```py
 >>> from sympy import Eq, solve, solveset

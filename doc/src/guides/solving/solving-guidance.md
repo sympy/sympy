@@ -10,13 +10,15 @@ The vast majority of arbitrary nonlinear equations are not analytically
 solvable. The classes of equations that are solvable are basically:
 1. Linear equations
 2. Polynomials, except where limited by the [Abel-Ruffini
-   theorem](https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem)
+   theorem](https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem) (learn
+   more about solving polynomials using a {class}`~.GroebnerBasis`)
 3. Equations that can be solved by inverting some transcendental functions
 4. Problems that can be transformed into the cases above (e.g., by turning
 trigonometric functions into polynomials)
 5. A few other special cases that can be solved with something like the
 {class}`Lambert W function <sympy.functions.elementary.exponential.LambertW>`
-6. Equations that can be decomposed via any of the above
+6. Equations that you can {func}`~sympy.polys.polytools.decompose` via any of
+   the above
 
 SymPy may reflect that your equation has no solutions that can be expressed
 algebraically (symbolically), or that SymPy lacks an algorithm to find a
@@ -180,17 +182,16 @@ simplified, and want to speed up {func}`~.solve`, use `simplify=False`.
 
 ## Parse a String Representing the Equation
 
-If you are creating the expression yourself, we advise [against using string parsing to
-create expressions](
+If you are creating the expression yourself, we advise [against using string
+parsing to create expressions](
 https://github.com/sympy/sympy/wiki/Idioms-and-Antipatterns#strings-as-input).
 But if you are programmatically reading in a string, this approach is
 convenient.
 
 You can parse a string representing the equation into a form that SymPy can
 understand (for example, {any}`Eq() <sympy.core.relational.Eq>` form), then
-solve the parsed expression. Parsing an equation from a string requires
-you to use {func}`transformations <sympy.parsing.sympy_parser.parse_expr>` for
-SymPy to
+solve the parsed expression. Parsing an equation from a string requires you to
+use {func}`transformations <sympy.parsing.sympy_parser.parse_expr>` for SymPy to
 - interpret equals signs
 - create symbols from your variables
 -  use more mathematical (rather than standard Python) notation, for example the
