@@ -1559,7 +1559,7 @@ def _solve(f, *symbols, **flags):
                     # if no Functions left, we can proceed with usual solve
                     if not ftry.has(symbol):
                         cv_sols = _solve(ftry, t, **flags)
-                        cv_inv = _vsolve(t - f1, symbol, **flags)[0]
+                        cv_inv = list(ordered(_vsolve(t - f1, symbol, **flags)))[0]
                         result = [{symbol: cv_inv.subs(sol)} for sol in cv_sols]
 
                 if result is False:
