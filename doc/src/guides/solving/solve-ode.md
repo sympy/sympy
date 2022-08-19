@@ -110,12 +110,11 @@ x(t) + 2*Derivative(x(t), t) + Derivative(x(t), (t, 2))
 Eq(x(t), (C1 + C2*t)*exp(-t))
 ```
 
-### Specify Initial (Boundary) Conditions Using {func}`subs <sympy.core.basic.Basic.subs>`
+### Specify Initial (Boundary) Conditions Using {func}`~sympy.core.basic.Basic.subs`
 
 Using that syntax, you specify initial conditions by substituting in values of
-the independent variable using {func}`subs <sympy.core.basic.Basic.subs>`
-because the function $x$ already has its independent variable as an argument
-$t$:
+the independent variable using {func}`~sympy.core.basic.Basic.subs` because the
+function $x$ already has its independent variable as an argument $t$:
 
 ```py
 >>> dsolve(eq, x, ics={x.subs(t, 0): 0})
