@@ -57,8 +57,8 @@ Here are recommendations on when to use:
 We recommend you include the variable to be solved for as the second argument
 for either function. While this is optional for univariate equations,
 it is a good practice because it ensures SymPy will solve for the desired
-symbol. For example, you may expect the following to solve for $x$, and SymPy
-will solve for $y$:
+symbol. For example, you might be interested in a solution for $x$, but SymPy
+solves for $y$:
 
 ```py
 >>> from sympy.abc import x, y
