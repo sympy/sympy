@@ -490,6 +490,11 @@ def test_issue_3934():
 
 
 def test_calculate_series():
+    # NOTE
+    # The calculate_series method is being deprecated and is no longer responsible
+    # for result being returned. The mrv_leadterm function now uses simple leadterm
+    # calls rather than calculate_series.
+
     # needs gruntz calculate_series to go to n = 32
     assert limit(x**Rational(77, 3)/(1 + x**Rational(77, 3)), x, oo) == 1
     # needs gruntz calculate_series to go to n = 128

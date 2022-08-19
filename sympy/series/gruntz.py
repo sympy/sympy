@@ -126,6 +126,7 @@ from sympy.core.traversal import bottom_up
 
 from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 
@@ -488,6 +489,14 @@ def calculate_series(e, x, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
+
+    SymPyDeprecationWarning(
+        feature="calculate_series",
+        useinstead="series() with suitable n, or as_leading_term",
+        issue=21838,
+        deprecated_since_version="1.11"
+    ).warn()
+
     from sympy.simplify.powsimp import powdenest
 
     for t in e.lseries(x, logx=logx):

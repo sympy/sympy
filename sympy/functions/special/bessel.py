@@ -232,6 +232,8 @@ class besselj(BesselBase):
         if e.is_positive:
             return arg**nu/(2**nu*gamma(nu + 1))
         elif e.is_negative:
+            # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/06/02/02/02/0005/
+            # for more information on asymptotic approximation of besselj function.
             return sqrt(2)*(-(-1)**(S(3)/4)*I**nu*exp(-I*pi*nu + I*z) + \
                     (-1)**(S(1)/4)*I**nu*exp(-I*z))/(2*sqrt(pi)*sqrt(z))
 
@@ -243,6 +245,8 @@ class besselj(BesselBase):
             return True
 
     def _eval_nseries(self, x, n, logx, cdir=0):
+        # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/06/01/04/01/01/0003/
+        # for more information on nseries expansion of besselj function.
         from sympy.series.order import Order
         nu, z = self.args
 
@@ -359,6 +363,8 @@ class bessely(BesselBase):
             arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
             return arg
         elif e.is_negative:
+            # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/06/02/02/02/0006/
+            # for more information on asymptotic approximation of bessely function.
             return (-I*exp(-I*pi*nu/2 + I*z - I*pi/4) + I*exp(I*pi*nu/2 - I*z + I*pi/4))/sqrt(2*pi*z)
 
         return super(bessely, self)._eval_as_leading_term(x, logx, cdir)
@@ -369,6 +375,8 @@ class bessely(BesselBase):
             return True
 
     def _eval_nseries(self, x, n, logx, cdir=0):
+        # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/06/01/04/01/02/0008/
+        # for more information on nseries expansion of bessely function.
         from sympy.series.order import Order
         nu, z = self.args
 
@@ -526,11 +534,15 @@ class besseli(BesselBase):
         if e.is_positive:
             return arg**nu/(2**nu*gamma(nu + 1))
         elif e.is_negative:
+            # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselI/06/02/02/02/0006/
+            # for more information on asymptotic approximation of besseli function.
             return (exp(z) + I*exp(I*pi*nu - z))/sqrt(2*pi*z)
 
         return super(besseli, self)._eval_as_leading_term(x, logx, cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
+        # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselI/06/01/04/01/01/0003/
+        # for more information on nseries expansion of besseli function.
         from sympy.series.order import Order
         nu, z = self.args
 
@@ -656,11 +668,15 @@ class besselk(BesselBase):
             arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
             return arg
         elif e.is_negative:
+            # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/06/02/01/02/0005/
+            # for more information on asymptotic approximation of besselk function.
             return sqrt(pi)*exp(-z)/sqrt(2*z)
 
         return super(besselk, self)._eval_as_leading_term(x, logx, cdir)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
+        # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/06/01/04/01/02/0008/
+        # for more information on nseries expansion of besselk function.
         from sympy.series.order import Order
         nu, z = self.args
 

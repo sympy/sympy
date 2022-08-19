@@ -1266,7 +1266,7 @@ class LambertW(Function):
             from sympy.functions.elementary.integers import ceiling
             from sympy.series.order import Order
             arg = self.args[0].nseries(x, n=n, logx=logx)
-            lt = arg.compute_leading_term(x, logx=logx)
+            lt = arg.as_leading_term(x, logx=logx)
             lte = 1
             if lt.is_Pow:
                 lte = lt.exp

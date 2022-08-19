@@ -337,7 +337,7 @@ class Limit(Expr):
                 if r is not None:
                     return r
             try:
-                coeff, ex = newe.as_leading_term(z, cdir=cdir), S.Zero
+                coeff = newe.as_leading_term(z, cdir=cdir)
                 if coeff != newe and coeff.has(exp):
                     return gruntz(coeff, z, 0, "-" if re(cdir).is_negative else "+")
             except (ValueError, NotImplementedError, PoleError):
