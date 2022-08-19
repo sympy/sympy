@@ -52,36 +52,9 @@ Here are recommendations on when to use:
 
 ## Guidance
 
-### Include the variable to be solved for in the function call
-
-We recommend you include the variable to be solved for as the second argument
-for either function. While this is optional for univariate equations, it is a
-good practice because it ensures SymPy will solve for the desired symbol. For
-example, you might be interested in a solution for $x$, but SymPy solves for
-$y$:
-
-```py
->>> from sympy.abc import x, y
->>> from sympy import solve
->>> solve(x**2 - y, dict=True)
-[{y: x**2}]
-```
-
-Specifying the variable to solve for ensures that SymPy solves for it:
-
-```py
->>> from sympy.abc import x, y
->>> from sympy import solve
->>> solve(x**2 - y, x, dict=True)
-[{x: -sqrt(y)}, {x: sqrt(y)}]
-```
-
-### Ensure consistent formatting from {func}`~.solve` by using `dict=True`
-
-{func}`~.solve` produces a variety of output as explained in
-:ref:`solve_output`. Using `dict=True` will give a consistent output format
-which is especially important when extracting information about the solution
-programmatically.
+Refer to
+[](solving-guidance.md#include-the-variable-to-be-solved-for-in-the-function-call)
+and [](solving-guidance.md#ensure-consistent-formatting-from).
 
 ## Solve an equation using {func}`~.solve` or {func}`~.solveset`
 

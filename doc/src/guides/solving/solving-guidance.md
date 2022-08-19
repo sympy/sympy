@@ -144,9 +144,56 @@ result. For example, this exact equation can be solved:
 but if you use the inexact equation `eq = x**1.4142135623730951 - 2`, SymPy will
 not return a result despite attempting for a long time. 
 
+## Include the Variable to be Solved for in the Function Call
+
+We recommend you include the variable to be solved for as the second argument
+for solving functions including {func}`~.solve` and {func}`~.solveset`. While
+this is optional for univariate equations, it is a good practice because it
+ensures SymPy will solve for the desired symbol. For example, you might be
+interested in a solution for $x$, but SymPy solves for $y$:
+
+```py
+>>> from sympy.abc import x, y
+>>> from sympy import solve
+>>> solve(x**2 - y, dict=True)
+[{y: x**2}]
+```
+
+Specifying the variable to solve for ensures that SymPy solves for it:
+
+```py
+>>> from sympy.abc import x, y
+>>> from sympy import solve
+>>> solve(x**2 - y, x, dict=True)
+[{x: -sqrt(y)}, {x: sqrt(y)}]
+```
+
+## Ensure Consistent Formatting From {func}`~.solve`
+
+{func}`~.solve` produces a variety of output as explained in
+{ref}`solve_output`. Using `dict=True` will give a consistent output format
+which is especially important when extracting information about the solution
+programmatically.
+
+To extract the solutions, you can iterate through the list of dictionaries:  
+    
+```py
+>>> from sympy import parse_expr, solve, solveset
+>>> from sympy.abc import x
+>>> expr = "x^2 = y"
+>>> parsed = parse_expr(expr, transformations="all")
+>>> parsed
+Eq(x**2, y)
+>>> solutions = solve(parsed, x, dict=True)
+>>> [solution[x] for solution in solutions]
+[-sqrt(y), sqrt(y)]
+>>> solveset(parsed, x)
+{-sqrt(y), sqrt(y)}
+```
+
 ## Options That Can Speed up {func}`~.solve`
 
-### Include Solutions Making Any Denominator Zero by Using `check=False`
+### Include Solutions Making Any Denominator Zero
 
 Normally, {func}`~.solve` checks whether any solutions make any denominator
 zero, and automatically excludes them. If you want to include those solutions,
@@ -162,7 +209,7 @@ and speed up {func}`~.solve` (at the risk of obtaining invalid solutions), set
 [{x: 0}, {x: pi}]
 ```
 
-### Do Not Simplify Solutions by Using `simplify=False`
+### Do Not Simplify Solutions
 
 Normally, {func}`~.solve` simplifies many results before returning them and (if
 `check` is not False) uses the general {func}`~sympy.simplify.simplify.simplify`
@@ -197,22 +244,6 @@ use {func}`transformations <sympy.parsing.sympy_parser.parse_expr>` for SymPy to
 -  use more mathematical (rather than standard Python) notation, for example the
 exponent operator can be parsed from `^` rather than having to use Python's
 `**`.
-
-To extract the solutions, you can iterate through the list of dictionaries:  
-    
-```py
->>> from sympy import parse_expr, solve, solveset
->>> from sympy.abc import x
->>> expr = "x^2 = y"
->>> parsed = parse_expr(expr, transformations="all")
->>> print(parsed)
-Eq(x**2, y)
->>> solutions = solve(parsed, x, dict=True)
->>> [s[x] for s in solutions]
-[-sqrt(y), sqrt(y)]
->>> solveset(parsed, x)
-{-sqrt(y), sqrt(y)}
-```
 
 If you already have the equation in {any}`Eq() <sympy.core.relational.Eq>`
 (equation) form, you can parse that string:
