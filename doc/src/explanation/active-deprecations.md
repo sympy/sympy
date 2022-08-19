@@ -77,7 +77,7 @@ SymPy deprecation warnings.
 ## Version 1.12
 
 (deprecated-mechanics-joint-axis)=
-### New Joint description
+### New Joint intermediate frames
 
 The definition of the joint axis in the ``sympy.physics.mechanics`` has changed.
 Instead of using the arguments ``parent_axis`` and ``child_axis`` to
@@ -124,6 +124,58 @@ Matrix([
 [-cos(theta_pin(t)), -sin(theta_pin(t)),  0],
 [-sin(theta_pin(t)),  cos(theta_pin(t)),  0],
 [                 0,                  0, -1]])
+```
+
+(deprecated-mechanics-joint-pos)=
+### Change in joint attachment point argument
+
+The argument names for specifying the attachment points of a joint in
+``sympy.physics.mechanics`` , i.e. ``parent_joint_pos`` and ``child_joint_pos``,
+has been changed to ``parent_point`` and ``child_point``. Since these arguments
+can now also be ``Point`` objects, so they can be exactly the same as the
+``parent_point`` and ``child_point`` attributes.
+
+For example, suppose you want a ``PinJoint`` in the parent to be positioned at
+``parent.frame.x`` with respect to the mass center, and in the child at
+``-child.frame.x``. The previous way to specify this was:
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> pin = PinJoint('pin', parent, child, parent_joint_pos=parent.frame.x,
+...                child_joint_pos=-child.frame.x)   # doctest: +SKIP
+>>> pin.parent_point.pos_from(parent.masscenter)   # doctest: +SKIP
+parent_frame.x
+>>> pin.child_point.pos_from(child.masscenter)   # doctest: +SKIP
+- child_frame.x
+```
+
+Now you can do the same with either
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> pin = PinJoint('pin', parent, child, parent_point=parent.frame.x,
+...                child_point=-child.frame.x)
+>>> pin.parent_point.pos_from(parent.masscenter)
+parent_frame.x
+>>> pin.child_point.pos_from(child.masscenter)
+- child_frame.x
+```
+
+Or
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint, Point
+>>> parent, child = Body('parent'), Body('child')
+>>> parent_point = parent.masscenter.locatenew('parent_point', parent.frame.x)
+>>> child_point = child.masscenter.locatenew('child_point', -child.frame.x)
+>>> pin = PinJoint('pin', parent, child, parent_point=parent_point,
+...                child_point=child_point)
+>>> pin.parent_point.pos_from(parent.masscenter)
+parent_frame.x
+>>> pin.child_point.pos_from(child.masscenter)
+- child_frame.x
 ```
 
 ## Version 1.11

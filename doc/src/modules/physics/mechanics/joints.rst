@@ -29,8 +29,7 @@ define the relationships. First off it needs two bodies: the parent body (shown
 in green) and the child body (shown in blue). The attachment of the joint to the
 body consists of a point and a frame. In the parent body the point is called
 ``parent_point`` and the frame ``parent_interframe``. For the child body these
-are called ``child_point`` and ``child_interframe``. The arguments for of the
-attachment points are ``parent_joint_pos`` and ``child_joint_pos``.
+are called ``child_point`` and ``child_interframe``.
 
 For describing the joint transformation the joint generally needs
 :func:`~.dynamicsymbols` for the generalized coordinates and speeds. Some joints
@@ -64,8 +63,8 @@ body's frame. ::
    >>> child = Body('child')
    >>> joint = PinJoint(
    ...     'hinge', parent, child, theta, omega,
-   ...     parent_joint_pos=3 * parent.frame.x,
-   ...     child_joint_pos=-3 * child.frame.x,
+   ...     parent_point=3 * parent.frame.x,
+   ...     child_point=-3 * child.frame.x,
    ...     joint_axis=parent.frame.z)
    >>> joint.kdes
    [omega - theta']
