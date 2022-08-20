@@ -85,12 +85,11 @@ def test__classify_linear_system():
 
     eqs_2 = (5 * (x1**2) + 12 * x(t) - 6 * (y(t)), (2 * y1 - 11 * t * x(t) + 3 * y(t) + t))
     sol2 = {'is_implicit': True,
-           'canon_eqs': [[Eq(Derivative(x(t), t), -sqrt(-60*x(t) + 30*y(t))/5),
-           Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)],
-           [Eq(Derivative(x(t), t), sqrt(-60*x(t) + 30*y(t))/5),
-           Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]]}
-    got = _classify_linear_system(eqs_2, funcs, t)
-    assert got == sol2
+            'canon_eqs': [[Eq(Derivative(x(t), t), -sqrt(-12*x(t)/5 + 6*y(t)/5)),
+            Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)],
+            [Eq(Derivative(x(t), t), sqrt(-12*x(t)/5 + 6*y(t)/5)),
+            Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]]}
+    assert _classify_linear_system(eqs_2, funcs, t) == sol2
 
     eqs_2_1 = [Eq(Derivative(x(t), t), -sqrt(-12*x(t)/5 + 6*y(t)/5)),
             Eq(Derivative(y(t), t), 11*t*x(t)/2 - t/2 - 3*y(t)/2)]
@@ -1072,8 +1071,8 @@ def test_sysode_linear_neq_order1_type2():
     eqs6 = [Eq(Derivative(f(x), x), -9*f(x) - 4*g(x)),
             Eq(Derivative(g(x), x), -4*g(x)),
             Eq(Derivative(h(x), x), h(x) + exp(x))]
-    sol6 = [Eq(f(x), C1*exp(-4*x)*Rational(-4, 5) + C2*exp(-9*x)),
-            Eq(g(x), C1*exp(-4*x)),
+    sol6 = [Eq(f(x), C2*exp(-4*x)*Rational(-4, 5) + C1*exp(-9*x)),
+            Eq(g(x), C2*exp(-4*x)),
             Eq(h(x), C3*exp(x) + x*exp(x))]
     assert dsolve(eqs6) == sol6
     assert checksysodesol(eqs6, sol6) == (True, [0, 0, 0])
@@ -1648,11 +1647,11 @@ def test_higher_order_to_first_order_9():
 
     eqs9 = [f(x) + g(x) - 2*exp(I*x) + 2*Derivative(f(x), x) + Derivative(f(x), (x, 2)),
             f(x) + g(x) - 2*exp(I*x) + 2*Derivative(g(x), x) + Derivative(g(x), (x, 2))]
-    sol9 =  [Eq(f(x), -C1 + C2*exp(-2*x)/2 - (C3/2 - C4/2)*exp(-x)*cos(x)
-                    + (C3/2 + C4/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
+    sol9 =  [Eq(f(x), -C1 + C4*exp(-2*x)/2 - (C2/2 - C3/2)*exp(-x)*cos(x)
+                    + (C2/2 + C3/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
                     + 2*((1 - 2*I)*exp(I*x)*cos(x)**2/5)),
-            Eq(g(x), C1 - C2*exp(-2*x)/2 - (C3/2 - C4/2)*exp(-x)*cos(x)
-                    + (C3/2 + C4/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
+            Eq(g(x), C1 - C4*exp(-2*x)/2 - (C2/2 - C3/2)*exp(-x)*cos(x)
+                    + (C2/2 + C3/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
                     + 2*((1 - 2*I)*exp(I*x)*cos(x)**2/5))]
     assert dsolve(eqs9) == sol9
     assert checksysodesol(eqs9, sol9) == (True, [0, 0])
@@ -1978,11 +1977,8 @@ def test_linodesolve():
 
     # non-homogeneous term assumed to be 0
     sol1 = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
-                - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 +
-                sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2
-                - exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2,
-            C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)
-                + exp(-t/2 + sqrt(5)*t/2)*Integral(0, t) + exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)]
+                - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2,
+            C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)]
     assert constant_renumber(linodesolve(A, t, type="type2"), variables=[t]) == sol1
 
     # Testing the Errors

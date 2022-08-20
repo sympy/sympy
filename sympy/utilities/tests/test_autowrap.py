@@ -269,7 +269,6 @@ def test_autowrap_store_files_issue_gh12939():
         shutil.rmtree(tmp)
 
 
-
 def test_binary_function():
     x, y = symbols('x y')
     f = binary_function('f', x + y, backend='dummy')

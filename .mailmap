@@ -34,6 +34,9 @@
 #
 #   ...
 #
+# If it fails, you may need to replace `python` by `python3`, here and below, if
+# you're on a system that still uses python2 by default.
+#
 # 3. Add a line to this file with that same name and email address like:
 #
 #   Joe Bloggs <joe@bloggs.com>
@@ -334,6 +337,7 @@ Arihant Parsoya <parsoyaarihant@gmail.com>
 Arpan Chattopadhyay <f20180319@pilani.bits-pilani.ac.in> Arpan612 <f20180319@pilani.bits-pilani.ac.in>
 Arpit Goyal <agmps18@gmail.com>
 Arshdeep Singh <singh.arshdeep1999@gmail.com>
+Arthur Milchior <arthur@milchior.fr>
 Arthur Ryman <arthur.ryman@gmail.com>
 Arun Singh <arunsin997@gmail.com> Arun Singh <erarungwl2013@gmail.com>
 Arun sanganal <74652697+ArunSanganal@users.noreply.github.com>
@@ -962,6 +966,7 @@ Nishant Nikhil <nishantiam@gmail.com>
 Nishith Shah <nishithshah.2211@gmail.com>
 Nitin Chaudhary <nitinmax1000@gmail.com>
 Nityananda Gohain <nityanandagohain@gmail.com>
+NotWearingPants <26556598+NotWearingPants@users.noreply.github.com>
 Noumbissi valere Gille Geovan <noumbissivalere@gmail.com>
 Oleksandr Gituliar <gituliar@gmail.com>
 Oliver Lee <oliverzlee@gmail.com>
@@ -1204,6 +1209,7 @@ Shivam Vats <shivamvats.iitkgp@gmail.com> <shivamhzb@gmail.com>
 Shivang Dubey <shivangdubey8@gmail.com>
 Shivani Kohli <shivanikohli.09@gmail.com>
 Shravas K Rao <shravas@gmail.com>
+Shreyash Mishra <72146041+Shreyash-cyber@users.noreply.github.com>
 Shruti Mangipudi <shruti2395@gmail.com>
 Shubham Abhang <shubhamabhang77@gmail.com>
 Shubham Agrawal <shubham.ag6845@gmail.com>
@@ -1240,6 +1246,7 @@ Srinivasa Arun Yeragudipati <ysarun1999@gmail.com> arun <ysarun1999@gmail.com>
 Srinivasa Arun Yeragudipati <ysarun1999@gmail.com> arun-y99 <ysarun1999@gmail.com>
 Stan Schymanski <stan.schymanski@env.ethz.ch>
 Stas Kelvich <stanconn@gmail.com>
+Stefan Behnle <84378403+behnle@users.noreply.github.com>
 Stefan Krastanov <krastanov.stefan@gmail.com>
 Stefan Petrea <stefan@garage-coding.com>
 Stefan van der Walt <stefan@sun.ac.za>

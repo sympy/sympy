@@ -1181,7 +1181,6 @@ def test_scipy_polys():
                     )
 
 
-
 def test_lambdify_inspect():
     f = lambdify(x, x**2)
     # Test that inspect.getsource works but don't hard-code implementation

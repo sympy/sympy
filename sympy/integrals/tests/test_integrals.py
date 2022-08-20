@@ -943,7 +943,6 @@ def test_issue_18153():
     )
 
 
-
 def test_is_number():
     from sympy.abc import x, y, z
     assert Integral(x).is_number is False

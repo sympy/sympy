@@ -581,6 +581,7 @@ def test_cse_release_variables():
     (_3, x0/x2 + x1), (_4, x2**x0), (x2, None), (_0, x1),
     (x1, None), (_2, x0), (x0, None), (_1, x)], (_0, _1, _2, _3, _4))
     r.reverse()
+    r = [(s, v) for s, v in r if v is not None]
     assert eqs == [i.subs(r) for i in e]
 
 def test_cse_list():
