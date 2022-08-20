@@ -52,44 +52,18 @@ Here are recommendations on when to use:
 
 ## Guidance
 
-### Include the Variable to be Solved for in the Function Call
 
-We recommend you include the variable to be solved for as the second argument
-for either function. While this is optional for equations with a single symbol,
-it is a good practice because it ensures SymPy will solve for the desired
-symbol. For example, you may expect the following to solve for $x$, and SymPy
-will solve for $y$:
+Refer to
+[](solving-guidance.md#include-the-variable-to-be-solved-for-in-the-function-call)
+and [](solving-guidance.md#ensure-consistent-formatting-from).
 
-```py
->>> from sympy.abc import x, y
->>> from sympy import solve
->>> solve(x**2 - y, dict=True)
-[{y: x**2}]
-```
-
-Specifying the variable to solve for ensures that SymPy solves for it:
-
-```py
->>> from sympy.abc import x, y
->>> from sympy import solve
->>> solve(x**2 - y, x, dict=True)
-[{x: -sqrt(y)}, {x: sqrt(y)}]
-```
-
-### Ensure Consistent Formatting from {func}`~.solve` by Using `dict=True`
-
-{func}`~.solve` produces various output formats depending on the answer, unless
-you use `dict=True` to ensure the result will be formatted as a dictionary. We
-recommend using `dict=True`, especially if you want to extract information from
-the result programmatically.
-
-## Solve an Equation Using {func}`~.solve` or {func}`~.solveset`
+## Solve an Equation Algebraically
 
 You can solve an equation in several ways. The examples below demonstrate using
 both {func}`~.solve` and {func}`~.solveset` where applicable. You can choose the
 function best suited to your equation.
 
-### Make your Equation Into an Expression that Equals Zero
+### Make Your Equation Into an Expression That Equals Zero
 
 Use the fact that any expression not in an `Eq` (equation) is automatically
 assumed to equal zero (0) by the solving functions. You can rearrange the
@@ -106,11 +80,12 @@ zero, or an equation that you do not mind rearranging to $expression = 0$.
 {-sqrt(y), sqrt(y)}
 ```
 
-### Put your Equation Into `Eq` Form
+### Put Your Equation Into `Eq` Form
 
 Put your equation into `Eq` form, then solve the `Eq`. This approach is
 convenient if you are interactively solving an equation which you already have
-in the form of an equation, or which you think of as an equality.
+in the form of an equation, or which you think of as an equality. It also helps
+to prevent sign errors when subtracting one side from the other.
 
 ```py
 >>> from sympy import Eq, solve, solveset
@@ -203,7 +178,7 @@ and if you restrict the solutions to a domain in which there are no solutions,
 EmptySet
 ```
 
-### Explicitly Represent Infinite Sets of Possible Solutions Using {func}`~.solveset`
+### Explicitly Represent Infinite Sets of Possible Solutions
 
 {func}`~.solveset` [can represent infinite sets of possible
 solutions](why-solveset) and express them in standard mathematical notation, for
@@ -269,7 +244,7 @@ a minimum.
 4
 ```
 
-### {func}`~.solveset` Solution Sets Cannot Necessarily be Interrogated Programmatically
+### {func}`~.solveset` Solution Sets Cannot Necessarily Be Interrogated Programmatically
 
 If {func}`~.solveset` returns a finite set (class {class}`~.FiniteSet`), you can
 iterate through the solutions:
@@ -336,61 +311,28 @@ Intersection({-sqrt(y), sqrt(y)}, Reals)
 
 ## Options That Can Speed up {func}`~.solve`
 
-### Include Solutions Making any Denominator Zero by Using `check=False`
+Refer to [solving guidance](solving-guidance.md#options-that-can-speed-up).
 
-Normally, {func}`~.solve` checks whether any solutions make any denominator
-zero, and automatically excludes them. If you want to include those solutions,
-and speed up {func}`~.solve` (at the risk of obtaining invalid solutions), set
-`check=False`:
+## Not All Equations Can Be Solved
 
-```py
->>> from sympy import Symbol, sin, solve
->>> x = Symbol("x")
->>> solve(sin(x)/x)  # 0 is excluded
-[pi]
->>> solve(sin(x)/x, check=False)  # 0 is not excluded
-[0, pi]
-```
+### Equations With No Closed-Form Solution
 
-### Do Not Simplify Solutions by Using `simplify=False`
-
-Normally, {func}`~.solve` simplifies all but polynomials of order 3 or greater
-before returning them and (if `check` is not False) uses the general
-{func}`simplify <sympy.simplify.simplify.simplify>` function on the solutions
-and the expression obtained when they are substituted into the function which
-should be zero. If you do not want the solutions simplified, and want to speed
-up {func}`~.solve`, use `simplify=False`.
+Some equations have no closed-form solution, in which case SymPy may return an
+empty set or give an error. For example, the following [transcendental
+equation](https://en.wikipedia.org/wiki/Transcendental_equation) has no
+closed-form solution:
 
 ```py
->>> from sympy import solve
->>> from sympy.abc import x, y
->>> expr = x**2 - (y**5 - 3*y**3 + y**2 - 3)
->>> solve(expr, x, dict=True)
-[{x: -sqrt(y**5 - 3*y**3 + y**2 - 3)}, {x: sqrt(y**5 - 3*y**3 + y**2 - 3)}]
->>> solve(expr, x, dict=True, simplify=False)
-[{x: -sqrt((y + 1)*(y**2 - 3)*(y**2 - y + 1))}, {x: sqrt((y + 1)*(y**2 - 3)*(y**2 - y + 1))}]
-```
-
-## Not all Equations Can be Solved
-
-### Equations With no Solution
-
-Some equations have no solution, in which case SymPy may return an empty set.
-For example, the equation $x - 7 = x + 2$ reduces to $-7 = 2$, which has no
-solution because no value of $x$ will make it true:
-
-```py
->>> from sympy import solve, Eq
+>>> from sympy import cos, solve
 >>> from sympy.abc import x
->>> eqn = Eq(x - 7, x + 2)
->>> solve(eqn, x)
-[]
+>>> solve(cos(x) - x, x, dict=True)
+Traceback (most recent call last):
+    ...
+NotImplementedError: multiple generators [x, cos(x)]
+No algorithms are implemented to solve equation -x + cos(x)
 ```
 
-So if SymPy returns an empty list, you may want to check whether there is a
-mistake in the equation.
-
-### Equations Which Have an Analytical Solution, and SymPy Cannot Solve
+### Equations Which Have a Closed-Form Solution, and SymPy Cannot Solve
 
 It is also possible that there is an algebraic solution to your equation, and
 SymPy has not implemented an appropriate algorithm. If that happens, or SymPy

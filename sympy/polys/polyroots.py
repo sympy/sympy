@@ -29,6 +29,10 @@ from sympy.utilities import public
 from sympy.utilities.misc import filldedent
 
 
+
+z = Symbol('z')  # importing from abc cause O to be lost as clashing symbol
+
+
 def roots_linear(f):
     """Returns a list of roots of a linear polynomial."""
     r = -f.nth(0)/f.nth(1)
@@ -568,7 +572,6 @@ def roots_quintic(f):
 
     Res = [None, [None]*5, [None]*5, [None]*5, [None]*5]
     Res_n = [None, [None]*5, [None]*5, [None]*5, [None]*5]
-    sol = Symbol('sol')
 
     # Simplifying improves performance a lot for exact expressions
     R1 = _quintic_simplify(R1)
@@ -576,23 +579,27 @@ def roots_quintic(f):
     R3 = _quintic_simplify(R3)
     R4 = _quintic_simplify(R4)
 
-    # Solve imported here. Causing problems if imported as 'solve'
-    # and hence the changed name
-    from sympy.solvers.solvers import solve as _solve
-    a, b = symbols('a b', cls=Dummy)
-    _sol = _solve( sol**5 - a - I*b, sol)
-    for i in range(5):
-        _sol[i] = factor(_sol[i])
+    # hard-coded results for [factor(i) for i in _vsolve(x**5 - a - I*b, x)]
+    x0 = z**(S(1)/5)
+    x1 = sqrt(2)
+    x2 = sqrt(5)
+    x3 = sqrt(5 - x2)
+    x4 = I*x2
+    x5 = x4 + I
+    x6 = I*x0/4
+    x7 = x1*sqrt(x2 + 5)
+    sol = [x0, -x6*(x1*x3 - x5), x6*(x1*x3 + x5), -x6*(x4 + x7 - I), x6*(-x4 + x7 + I)]
+
     R1 = R1.as_real_imag()
     R2 = R2.as_real_imag()
     R3 = R3.as_real_imag()
     R4 = R4.as_real_imag()
 
-    for i, currentroot in enumerate(_sol):
-        Res[1][i] = _quintic_simplify(currentroot.subs({ a: R1[0], b: R1[1] }))
-        Res[2][i] = _quintic_simplify(currentroot.subs({ a: R2[0], b: R2[1] }))
-        Res[3][i] = _quintic_simplify(currentroot.subs({ a: R3[0], b: R3[1] }))
-        Res[4][i] = _quintic_simplify(currentroot.subs({ a: R4[0], b: R4[1] }))
+    for i, s in enumerate(sol):
+        Res[1][i] = _quintic_simplify(s.xreplace({z: R1[0] + I*R1[1]}))
+        Res[2][i] = _quintic_simplify(s.xreplace({z: R2[0] + I*R2[1]}))
+        Res[3][i] = _quintic_simplify(s.xreplace({z: R3[0] + I*R3[1]}))
+        Res[4][i] = _quintic_simplify(s.xreplace({z: R4[0] + I*R4[1]}))
 
     for i in range(1, 5):
         for j in range(5):

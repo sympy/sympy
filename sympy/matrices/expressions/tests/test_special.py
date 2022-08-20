@@ -111,7 +111,6 @@ def test_one_matrix_creation():
     raises(ValueError, lambda: OneMatrix(n, n))
 
 
-
 def test_ZeroMatrix():
     n, m = symbols('n m', integer=True)
     A = MatrixSymbol('A', n, m)

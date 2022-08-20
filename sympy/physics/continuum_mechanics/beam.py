@@ -2389,9 +2389,11 @@ class Beam3D(Beam):
         self.area = area
         self._load_vector = [0, 0, 0]
         self._moment_load_vector = [0, 0, 0]
+        self._torsion_moment = {}
         self._load_Singularity = [0, 0, 0]
         self._slope = [0, 0, 0]
         self._deflection = [0, 0, 0]
+        self._angular_deflection = 0
 
     @property
     def shear_modulus(self):
@@ -2556,6 +2558,11 @@ class Beam3D(Beam):
         if dir == "x":
             if not order == -2:
                 self._moment_load_vector[0] += value
+            else:
+                if start in list(self._torsion_moment):
+                    self._torsion_moment[start] += value
+                else:
+                    self._torsion_moment[start] = value
             self._load_Singularity[0] += value*SingularityFunction(x, start, order)
         elif dir == "y":
             if not order == -2:
@@ -2672,6 +2679,42 @@ class Beam3D(Beam):
         """
         return self.bending_moment()[0]
 
+    def solve_for_torsion(self):
+        """
+        Solves for the angular deflection due to the torsional effects of
+        moments being applied in the x-direction i.e. out of or into the beam.
+
+        Here, a positive torque means the direction of the torque is positive
+        i.e. out of the beam along the beam-axis. Likewise, a negative torque
+        signifies a torque into the beam cross-section.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+        >>> from sympy import symbols
+        >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+        >>> b = Beam3D(20, E, G, I, A, x)
+        >>> b.apply_moment_load(4, 4, -2, dir='x')
+        >>> b.apply_moment_load(4, 8, -2, dir='x')
+        >>> b.apply_moment_load(4, 8, -2, dir='x')
+        >>> b.solve_for_torsion()
+        >>> b.angular_deflection().subs(x, 3)
+        18/(G*I)
+        """
+        x = self.variable
+        sum_moments = 0
+        for point in list(self._torsion_moment):
+            sum_moments += self._torsion_moment[point]
+        list(self._torsion_moment).sort()
+        pointsList = list(self._torsion_moment)
+        torque_diagram = Piecewise((sum_moments, x<=pointsList[0]), (0, x>=pointsList[0]))
+        for i in range(len(pointsList))[1:]:
+            sum_moments -= self._torsion_moment[pointsList[i-1]]
+            torque_diagram += Piecewise((0, x<=pointsList[i-1]), (sum_moments, x<=pointsList[i]), (0, x>=pointsList[i]))
+        integrated_torque_diagram = integrate(torque_diagram)
+        self._angular_deflection =  integrated_torque_diagram/(self.shear_modulus*self.polar_moment())
+
     def solve_slope_deflection(self):
         x = self.variable
         l = self.length
@@ -2753,6 +2796,13 @@ class Beam3D(Beam):
         the three axes.
         """
         return self._deflection
+
+    def angular_deflection(self):
+        """
+        Returns a function in x depicting how the angular deflection, due to moments
+        in the x-axis on the beam, varies with x.
+        """
+        return self._angular_deflection
 
     def _plot_shear_force(self, dir, subs=None):
 

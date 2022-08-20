@@ -190,9 +190,6 @@ def test_Interval_arithmetic():
     assert n23cc/i12cc == SetExpr(Interval(-2, 3))
 
 
-
-
-
 def test_SetExpr_Intersection():
     x, y, z, w = symbols("x y z w")
     set1 = Interval(x, y)

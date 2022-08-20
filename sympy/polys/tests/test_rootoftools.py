@@ -124,7 +124,6 @@ def test_CRootOf_attributes():
     raises(NotImplementedError, lambda: rootof(Poly(x**3 + y*x + 1, x), 0))
 
 
-
 def test_CRootOf___eq__():
     assert (rootof(x**3 + x + 3, 0) == rootof(x**3 + x + 3, 0)) is True
     assert (rootof(x**3 + x + 3, 0) == rootof(x**3 + x + 3, 1)) is False
