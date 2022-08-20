@@ -314,24 +314,24 @@ Refer to [solving guidance](solving-guidance.md#options-that-can-speed-up).
 
 ## Not All Equations Can Be Solved
 
-### Equations With No Solution
+### Equations With No Closed-Form Solution
 
-Some equations have no solution, in which case SymPy may return an empty set.
-For example, the equation $x - 7 = x + 2$ reduces to $-7 = 2$, which has no
-solution because no value of $x$ will make it true:
+Some equations have no closed-form solution, in which case SymPy may return an
+empty set or give an error. For example, the following [transcendental
+equation](https://en.wikipedia.org/wiki/Transcendental_equation) has no
+closed-form solution:
 
 ```py
->>> from sympy import solve, Eq
+>>> from sympy import cos, solve
 >>> from sympy.abc import x
->>> eqn = Eq(x - 7, x + 2)
->>> solve(eqn, x)
-[]
+>>> solve(cos(x) - x, x, dict=True)
+Traceback (most recent call last):
+    ...
+NotImplementedError: multiple generators [x, cos(x)]
+No algorithms are implemented to solve equation -x + cos(x)
 ```
 
-So if SymPy returns an empty list, you may want to check whether there is a
-mistake in the equation.
-
-### Equations Which Have an Analytical Solution, and SymPy Cannot Solve
+### Equations Which Have a Closed-Form Solution, and SymPy Cannot Solve
 
 It is also possible that there is an algebraic solution to your equation, and
 SymPy has not implemented an appropriate algorithm. If that happens, or SymPy

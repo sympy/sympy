@@ -4,10 +4,10 @@ These guidelines apply to many types of solving.
 
 ## Numeric Solutions
 
-### Equations With no Analytical Solution
+### Equations With no Closed-Form Solution
 
-The vast majority of arbitrary nonlinear equations are not analytically
-solvable. The classes of equations that are solvable are basically:
+The vast majority of arbitrary nonlinear equations have no closed-form solution.
+The classes of equations that are solvable are basically:
 1. Linear equations
 2. Polynomials, except where limited by the [Abel-Ruffini
    theorem](https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem) (learn
