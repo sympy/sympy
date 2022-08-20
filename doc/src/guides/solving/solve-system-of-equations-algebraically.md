@@ -20,63 +20,60 @@ Here is an example of solving a system of equations algebraically:
 
 ## Guidance
 
-*Link to solving guidance page after merged*
+Refer to
+[](solving-guidance.md#include-the-variable-to-be-solved-for-in-the-function-call)
+and [](solving-guidance.md#ensure-consistent-formatting-from).
 
-## Examples
+There are two methods below for containing solution results: dictionary or set.
+A dictionary is easier to interrogate programmatically, so if you need to
+extract solutions using code, we recommend the dictionary approach.
 
-### Return a Dictionary of Solutions
+## Solve and Use Results in a Dictionary
 
-You can solve a system of equations leaving another symbol as a variable. You
-can specify the variables to solve for as multiple arguments, or as a list (or
+### Solve Into a Dictionary of Solutions
+
+You can solve a system of equations for some variables (for example, $x$ and
+$y$) leaving another symbol as a variable (for example, $z$). You can specify
+the variables to solve for as multiple separate arguments, or as a list (or
 tuple):
 
 ```py
 >>> from sympy import solve
 >>> from sympy.abc import x, y, z
 >>> equations = [x**2 + y - 2*z, y + 4*z]
->>> solve(equations, x, y, dict=True)
-[{x: -sqrt(6)*sqrt(z), y: -4*z}, {x: sqrt(6)*sqrt(z), y: -4*z}]
->>> solve(equations, [x, y], dict=True)
+>>> solutions = solve(equations, x, y, dict=True)
+>>> solutions
 [{x: -sqrt(6)*sqrt(z), y: -4*z}, {x: sqrt(6)*sqrt(z), y: -4*z}]
 ```
-
-### Return a Set of Solution(s)
-
-To get a list of symbols and set of solution(s) use `set=True` instead of
-`dict=True`:
-
-```py
->>> from sympy import solve
->>> from sympy.abc import x, y, z
->>> solve([x**2 + y - 2*z, y + 4*z], x, y, set=True)
-([x, y], {(-sqrt(6)*sqrt(z), -4*z), (sqrt(6)*sqrt(z), -4*z)})
-```
-
-## Use the Solution Result
 
 ### Use a Dictionary of Solutions
 
-You can extract solutions by specifying in brackets ("slicing") the solution
-number, and then the symbol, for example `solution[0][x]` gives the result for
-`x` in the first solution:
+You can then extract solutions by specifying in brackets ("slicing") the
+solution number, and then the symbol. For example `solutions[0][x]` gives the
+result for `x` in the first solution:
 
 ```py
->>> from sympy import solve
->>> from sympy.abc import x, y, z
->>> equations = [x**2 + y - 2*z, y + 4*z]
->>> solution = solve([x**2 + y - 2*z, y + 4*z], x, y, dict=True)
->>> solution
-[{x: -sqrt(6)*sqrt(z), y: -4*z}, {x: sqrt(6)*sqrt(z), y: -4*z}]
->>> solution[0][x]
+>>> solutions[0][x]
 -sqrt(6)*sqrt(z)
->>> solution[0][y]
+>>> solutions[0][y]
 -4*z
+```
+
+## Solve Results in a Set
+
+To get a list of symbols and set of solutions, use `set=True` instead of
+`dict=True`:
+
+```py
+from sympy import solve
+from sympy.abc import x, y, z
+solve([x**2 + y - 2*z, y + 4*z], [x, y], set=True)
+([x, y], {(-sqrt(6)*sqrt(z), -4*z), (sqrt(6)*sqrt(z), -4*z)})
 ```
 
 ## Options That Can Speed up {func}`~.solve`
 
-*After solving-guidance merged, link to target in it speed_up_solve as:* `Refer
-to [solving guidance](options-that-can-speed-up).`
+Refer to [](solving-guidance.md#options-that-can-speed-up).
 
 ## Not All Systems of Equations Can be Solved
 
