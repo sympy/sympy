@@ -4,9 +4,6 @@ Use SymPy to solve an ordinary differential equation algebraically. For example,
 solving $y''(x) + 9y(x)=0 $ yields $ y(x)=C_{1} \sin(3x)+ C_{2} \cos(3x)$.
 
 Alternatives to consider:
-- To solve a system of ordinary differential equations, use
-  {func}`~.dsolve_system` *any reason to recommend dsolve_system instead of
-  dsolve?*
 - *which SciPy functions? from
   https://docs.scipy.org/doc/scipy/reference/integrate.html?highlight=ode?*
 
@@ -37,10 +34,24 @@ tells whether the substitution results in `0`.
 
 ### Input Format
 
-*Make a recommendation on Derivative() vs. diff()?* The one required input is
-the differential equation(s). The derivatives, such as $y''(x)$, should be
-expressed using {class}`~.Derivative` rather than {func}`~.diff`. Using
-{func}`~.diff` is a common mistake 
+There are many ways to express derivatives of functions. For an undefined
+function, both {class}`~.Derivative` and {func}`~.diff` represent the undefined
+derivative. Thus, all of the following `ypp` represent $y''$ ("y prime prime"),
+the second derivative with respect to $x$ of a function $y(x)$:
+
+```py
+ypp = y(x).diff(x, x)
+ypp = y(x).diff(x, 2)
+ypp = y(x).diff((x, 2))
+ypp = diff(y(x), x, x)
+ypp = diff(y(x), x, 2)
+ypp = Derivative(y(x), x, x)
+ypp = Derivative(y(x), x, 2)
+ypp = Derivative(Derivative(y(y(x), x), x)
+ypp = diff(diff(y(x), x), x)
+yp = y(x).diff(x)
+ypp = yp.diff(x)
+```
 
 We recommend specifying the function to be solved for, as the second argument to
 {func}`~.dsolve`. Note that it must be a function rather than a variable
