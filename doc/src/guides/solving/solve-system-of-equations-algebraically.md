@@ -102,9 +102,11 @@ The following system is overconstrained, meaning there are more equations
 []
 ```
 
-### Systems of Equations With no Analytical Solution
+### Systems of Equations With no Closed-Form Solution
 
-Some systems of equations cannot be solved algebraically, for example:
+Some systems of equations cannot be solved algebraically, for example those
+containing [transcendental
+equations](https://en.wikipedia.org/wiki/Transcendental_equation):
 
 ```py
 >>> from sympy import cos, solve
@@ -117,13 +119,13 @@ NotImplementedError: could not solve -y + cos(y)
 
 So you can use {func}`~.nsolve` to find a numerical solution.
 
-### Equations Which Have an Analytical Solution, and SymPy Cannot Solve
+### Equations Which Have a Closed-Form Solution, and SymPy Cannot Solve
 
 It is also possible that there is an algebraic solution to your equation, and
-SymPy has not implemented an appropriate algorithm. If that happens, or SymPy
-returns an empty set or list when there is a mathematical solution (indicating a
-bug in SymPy), please post it on the [mailing
-list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
+SymPy has not implemented an appropriate algorithm. If SymPy returns an empty
+set or list when you know there is a closed-form solution (indicating a bug in
+SymPy), please post it on the [mailing list](https://groups.google.com/g/sympy),
+or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
 can {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>`
 instead.
