@@ -190,7 +190,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     multi-letter names that are defined in ``abc``).
 
     >>> from sympy.abc import _clash1
-    >>> set(_clash1)
+    >>> set(_clash1)  # if this fails, see issue #23903
     {'E', 'I', 'N', 'O', 'Q', 'S'}
     >>> sympify('I & Q', _clash1)
     I & Q

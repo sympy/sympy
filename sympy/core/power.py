@@ -965,9 +965,9 @@ class Pow(Expr):
         Explanation
         ===========
 
-        If base is 1/Integer, then return Integer, -exp. If this extra
-        processing is not needed, the base and exp properties will
-        give the raw arguments
+        If base a Rational less than 1, then return 1/Rational, -exp.
+        If this extra processing is not needed, the base and exp
+        properties will give the raw arguments.
 
         Examples
         ========
@@ -978,12 +978,14 @@ class Pow(Expr):
         (2, -2)
         >>> p.args
         (1/2, 2)
+        >>> p.base, p.exp
+        (1/2, 2)
 
         """
 
         b, e = self.args
-        if b.is_Rational and b.p == 1 and b.q != 1:
-            return Integer(b.q), -e
+        if b.is_Rational and b.p < b.q and b.p > 0:
+            return 1/b, -e
         return b, e
 
     def _eval_adjoint(self):

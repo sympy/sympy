@@ -115,7 +115,6 @@ def test_del_operator():
                             2*x*z*i + 2*x*z*j + 2*x*z*k
 
 
-
 def test_product_rules():
     """
     Tests the six product rules defined with respect to the Del
