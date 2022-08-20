@@ -5,6 +5,9 @@ The Python package SymPy can symbolically solve equations, differential equation
 linear equations, nonlinear equations, matrix problems, inequalities,
 Diophantine equations, and evaluate integrals. SymPy can also solve numerically.
 
+The [solving guide](solving-guidance.md) provides suggestions for many
+types of solving tasks.
+
 Learn how to use SymPy computer algebra system to:
 
 | Description                                                  | Example                                                                                                                     | Solution |
@@ -31,5 +34,6 @@ in SymPy's terminology it would be ["evaluate an integral."](../../modules/integ
 ```{toctree}
 :hidden: true
 
+solving-guidance.md
 solve-equation-algebraically.md
 ```
