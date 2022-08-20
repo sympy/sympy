@@ -222,7 +222,9 @@ C1 - C2*exp(x)
 
 ## Ordinary Differential Equation Type and Solving Strategy
 
-*`hint` and `classifiy_ode`*
+*`hint` and `classifiy_ode` [The most important thing here is the `_Integral`
+hints, which let you get the result of the ODE with unevaluated
+integrals](https://github.com/sympy/sympy/pull/23916#issuecomment-1221079195).*
 
 ## Not All Equations Can Be Solved
 
