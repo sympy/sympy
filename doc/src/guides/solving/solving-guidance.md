@@ -82,7 +82,7 @@ view them all), compared to eight when expressed numerically:
 >>> solutions
 [{x: -sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3))/2 - sqrt(-40/3 - 2*(1307/432 + sqrt(434607)*I/144)**(1/3) + 2/sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3)) - 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)))/2}, {x: sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3))/2 - sqrt(-40/3 - 2*(1307/432 + sqrt(434607)*I/144)**(1/3) - 2/sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3)) - 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)))/2}, {x: sqrt(-40/3 - 2*(1307/432 + sqrt(434607)*I/144)**(1/3) - 2/sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3)) - 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)))/2 + sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3))/2}, {x: sqrt(-40/3 - 2*(1307/432 + sqrt(434607)*I/144)**(1/3) + 2/sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3)) - 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)))/2 - sqrt(-20/3 + 56/(9*(1307/432 + sqrt(434607)*I/144)**(1/3)) + 2*(1307/432 + sqrt(434607)*I/144)**(1/3))/2}]
 >>> for solution in solutions:
-...     print(solution[x].evalf())
+...     solution[x].evalf()
 -0.0509758447494279 + 0.313552108895239*I
 0.0509758447494279 + 3.14751999969868*I
 0.0509758447494279 - 3.14751999969868*I
@@ -127,8 +127,8 @@ inexact value to SymPy, leading to an inexact, numerical solution:
 [{x: -1.77245385090552}, {x: 1.77245385090552}]
 ```
 
-To use exact values for numbers such as $6.2$ or $1/2$, refer to [Python numbers
-vs. SymPy Numbers](python-vs-sympy-numbers).
+To use exact values for numbers such as $6.2$ or $1/2$, refer to
+[](python-vs-sympy-numbers).
 
 In certain cases, using an inexact value will prevent SymPy from finding a
 result. For example, this exact equation can be solved:
@@ -236,16 +236,16 @@ But if you are programmatically reading in a string, this approach is
 convenient.
 
 You can parse a string representing the equation into a form that SymPy can
-understand (for example, {any}`Eq() <sympy.core.relational.Eq>` form), then
-solve the parsed expression. Parsing an equation from a string requires you to
-use {func}`transformations <sympy.parsing.sympy_parser.parse_expr>` for SymPy to
+understand (for example, {class}`~sympy.core.relational.Eq` form), then solve
+the parsed expression. Parsing an equation from a string requires you to use
+{func}`transformations <sympy.parsing.sympy_parser.parse_expr>` for SymPy to
 - interpret equals signs
 - create symbols from your variables
 -  use more mathematical (rather than standard Python) notation, for example the
 exponent operator can be parsed from `^` rather than having to use Python's
 `**`.
 
-If you already have the equation in {any}`Eq() <sympy.core.relational.Eq>`
+If you already have the equation in {class}`~sympy.core.relational.Eq`
 (equation) form, you can parse that string:
 
 ```py
@@ -253,7 +253,7 @@ If you already have the equation in {any}`Eq() <sympy.core.relational.Eq>`
 >>> from sympy.abc import x
 >>> expr = "Eq(x^2, y)"
 >>> parsed = parse_expr(expr, transformations="all")
->>> print(parsed)
+>>> parsed
 Eq(x**2, y)
 ```
 
