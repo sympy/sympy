@@ -89,8 +89,10 @@ reduces to $z = 2z$, which has no general solution:
 []
 ```
 
-The following system is overconstrained, meaning there are more equations
-(three) than unknowns to be solved for (two, namely $x$ and $y$):
+The following system is
+[overconstrained](https://en.wikipedia.org/wiki/Overdetermined_system), meaning
+there are more equations (three) than unknowns to be solved for (two, namely $x$
+and $y$), and has no solution:
 
 ```py
 >>> from sympy import solve
