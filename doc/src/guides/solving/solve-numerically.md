@@ -5,8 +5,8 @@ numerically solving $\cos(x) = x $ returns $ x \approx 0.739085133215161$.
 
 Solving numerically is useful if:
 - You only need a numeric solution, not a symbolic one
-- A closed-form solution is not available or is overly complicated *Link to
-  Numeric solutions by Choice once Solving Guidance merged*
+- A closed-form solution is not available or is overly complicated; refer to
+  [](solving-guidance.md#when-you-might-prefer-a-numeric-solution)  
 
 {func}`~.solve` and {func}`~.solveset` will not try to find a numeric solution,
 only a mathematically-exact symbolic solution. So if you want a numeric
@@ -23,8 +23,8 @@ its dependency [mpmath](https://mpmath.org/)) for numerical calculations are:
   precision than you would get from float64.
 
 Alternatives to consider:
-- NumPy's {external:func}`~numpy.linalg.solve` and SciPy's
-  {external:func}`~scipy.linalg.solve` can each solve a system of linear scalar
+- NumPy's {external:func}`numpy.linalg.solve` and SciPy's
+  {external:func}`scipy.linalg.solve` can each solve a system of linear scalar
   equations
 
 Here is an example of numerically solving one equation:
@@ -149,7 +149,7 @@ cos(x*(x + 1)/2)
 
 ### Substitute the Result Into an Expression
 
-The best practice is to use {func}`sympy.core.evalf` to to substitute numerical
+The best practice is to use {func}`~sympy.core.evalf` to to substitute numerical
 values into expressions. Using [`subs`](sympy.core.basic.Basic.subs) can give
 incorrect result due to precision errors:
 
@@ -192,7 +192,7 @@ solution for equations which cannot be solved algebraically.
 ### Equations With no Solution
 
 Some equations have no solution, in which case SymPy may return an error. For
-example, the equation $exp(x) = 0$ has no solution:
+example, the equation $e^x = 0$ (`exp(x)` in SymPy) has no solution:
 
 ```py
 >>> from sympy import nsolve, exp
@@ -209,8 +209,5 @@ Try another starting point or tweak arguments.
 If you find a problem with {func}`~.nsolve`, please post it on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-can use a
-[NumPy](https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html?highlight=solve#numpy.linalg.solve)
-or
-[SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.solve.html#scipy.linalg.solve)
-solver.
+can use NumPy's {external:func}`numpy.linalg.solve` or SciPy's
+{external:func}`scipy.linalg.solve`.
