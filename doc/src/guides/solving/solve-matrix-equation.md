@@ -12,7 +12,7 @@ Alternatives to consider:
   once published*
 - *alternative 2*
 
-Here is an example of solving a matrix equation with SymPy's {func}`~.LUsolve`.
+Here is an example of solving a matrix equation with SymPy's {meth}`~.LUsolve`.
 We use the standard matrix equation formulation $Ax=b$ where
 - $A$ is the matrix representing the coefficients in the linear equations
 - $x$ is the column vector of unknowns to be solved for
