@@ -618,8 +618,8 @@ class JacobiEllipticFunctionBase(Function):
     See also
     ========
 
-    jacobi_cd, jacobi_cm, jacobi_cs, jacobi_dc, jacobi_dm, jacobi_ds,
-    jacobi_mc, jacobi_md, jacobi_ms, jacobi_sc, jacobi_sd, jacobi_sm
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
 
     """
     def _eval_mpmath(self):
@@ -664,6 +664,16 @@ class JacobiEllipticFunctionBase(Function):
         if m.equals(S.One):
             return (m1vals[c1]/m1vals[c2]).subs(utmp, u)
 
+    def _eval_expand_func(self, **kwargs):
+        num, den = self._type_str
+        u, m = self.args
+        if den == 's':
+            return self
+        funcs = {'c': jacobi_cs, 'd': jacobi_ds, 'n': jacobi_ns}
+        if num == 's':
+            return 1/funcs[den](u, m)
+        return funcs[num](u, m)/funcs[den](u, m)
+
 
 class jacobi_cd(JacobiEllipticFunctionBase):
     r"""
@@ -678,8 +688,8 @@ class jacobi_cd(JacobiEllipticFunctionBase):
     See also
     ========
 
-    jacobi_cd, jacobi_cm, jacobi_cs, jacobi_dc, jacobi_dm, jacobi_ds,
-    jacobi_mc, jacobi_md, jacobi_ms, jacobi_sc, jacobi_sd, jacobi_sm
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
 
     """
     _type_str = "cd"
@@ -698,6 +708,164 @@ class jacobi_cd(JacobiEllipticFunctionBase):
         raise ArgumentIndexError(self, argindex)
 
 
+class jacobi_cn(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function: (wrong)
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
+
+    """
+    _type_str = "cm"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("cm", u, m)
+
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return -jacobi_sn(u, m)*jacobi_dn(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
+
+
+class jacobi_cs(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function: (wrong)
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
+
+    """
+    _type_str = "cs"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("cs", u, m)
+
+
+class jacobi_dc(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function:
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
+
+    """
+    _type_str = "cd"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("dc", u, m)
+
+
+class jacobi_dn(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function: (wrong)
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
+
+    """
+    _type_str = "dm"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("dm", u, m)
+
+
+class jacobi_ds(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function: (wrong)
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
+
+    """
+    _type_str = "ds"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("ds", u, m)
+
+
+class jacobi_nc(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function: (wrong)
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
+
+    """
+    _type_str = "nc"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("nc", u, m)
+
+
 class jacobi_nd(JacobiEllipticFunctionBase):
     r"""
     Jacobi elliptic function: (wrong)
@@ -711,8 +879,8 @@ class jacobi_nd(JacobiEllipticFunctionBase):
     See also
     ========
 
-    jacobi_cd, jacobi_cm, jacobi_cs, jacobi_dc, jacobi_dm, jacobi_ds,
-    jacobi_mc, jacobi_md, jacobi_ms, jacobi_sc, jacobi_sd, jacobi_sm
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
 
     """
     _type_str = "nd"
@@ -721,6 +889,56 @@ class jacobi_nd(JacobiEllipticFunctionBase):
     def eval(cls, u, m):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("nd", u, m)
+
+
+class jacobi_ns(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function: (wrong)
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
+
+    """
+    _type_str = "ns"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("ns", u, m)
+
+
+class jacobi_sc(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function: (wrong)
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
+
+    """
+    _type_str = "sc"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("sc", u, m)
 
 
 class jacobi_sd(JacobiEllipticFunctionBase):
@@ -736,8 +954,8 @@ class jacobi_sd(JacobiEllipticFunctionBase):
     See also
     ========
 
-    jacobi_cd, jacobi_cm, jacobi_cs, jacobi_dc, jacobi_dm, jacobi_ds,
-    jacobi_mc, jacobi_md, jacobi_ms, jacobi_sc, jacobi_sd, jacobi_sm
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
 
     """
     _type_str = "sd"
@@ -746,6 +964,31 @@ class jacobi_sd(JacobiEllipticFunctionBase):
     def eval(cls, u, m):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("sd", u, m)
+
+
+class jacobi_sn(JacobiEllipticFunctionBase):
+    r"""
+    Jacobi elliptic function: (wrong)
+
+    .. math::
+
+        \operatorname{cd}(u \mid m) = \frac{\cos(\phi)}{\sqrt{1 - m \sin^2(\phi)}
+
+    where $\phi = \operatorname{am}(u \mid m)$.
+
+    See also
+    ========
+
+    jacobi_cd, jacobi_cn, jacobi_cs, jacobi_dc, jacobi_dn, jacobi_ds,
+    jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
+
+    """
+    _type_str = "sn"
+
+    @classmethod
+    def eval(cls, u, m):
+        if u.is_Number and m.is_Number:
+            return JacobiEllipticFunctionBase._eval("sn", u, m)
 
 
 class elliptic_nome_q(Function):
