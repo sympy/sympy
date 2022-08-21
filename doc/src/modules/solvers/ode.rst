@@ -45,6 +45,8 @@ constantsimp
 ^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode::constantsimp
 
+.. _hints:
+
 Hint Functions
 --------------
 These functions are intended for internal use by
@@ -215,8 +217,8 @@ lie_group
 Lie heuristics
 --------------
 These functions are intended for internal use of the Lie Group Solver.
-Nonetheless, they contain useful information in their docstrings on the algorithms
-implemented for the various heuristics.
+Nonetheless, they contain useful information in their docstrings on the
+algorithms implemented for the various heuristics.
 
 abaco1_simple
 ^^^^^^^^^^^^^
@@ -256,9 +258,8 @@ linear
 
 Rational Riccati Solver
 -----------------------
-These functions are intended for internal use to solve
-a first order Riccati differential equation with atleast
-one rational particular solution.
+These functions are intended for internal use to solve a first order Riccati
+differential equation with atleast one rational particular solution.
 
 riccati_normal
 ^^^^^^^^^^^^^^

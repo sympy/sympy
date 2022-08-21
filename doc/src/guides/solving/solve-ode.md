@@ -7,7 +7,8 @@ Alternatives to consider:
 - *which SciPy functions? from
   https://docs.scipy.org/doc/scipy/reference/integrate.html?highlight=ode?*
 
-Here is an example of solving an ordinary differential equation algebraically:
+Here is an example of solving an ordinary differential equation algebraically
+using {func}`~.dsolve`:
 
 ```py
 >>> from sympy import Function, dsolve, Derivative
@@ -210,21 +211,36 @@ C1 - C2*exp(x)
 
 ### Work With Arbitrary Constants *include such a section?*
 
-## *Tradeoffs (speed vs. accuracy, etc.) for function*
+## Ordinary Differential Equation Solving Hints
 
-### *Tradeoff 1*
+### Return Unevaluated Integrals
 
-*Speed-up option 1 content*
+By default, {func}`~.dsolve` attempts to evaluate the integrals it produces to
+solve your ordinary differential equation. You can disable evaluation of the
+integrals by using {ref}`hints` ending with `_Integral`, for example
+`separable_Integral`. This is useful because
+{func}`~sympy.core.expr.Expr.integrate` is an expensive routine. SymPy may hang
+(appear to never complete the operation) because of a difficult or impossible
+integral, so using an `_Integral` hint will at least return an (unintegrated)
+result, which you can then consider. The simplest way to disable integration is
+with the `all_Integral` hint because you do not need to know which hint to
+supply: for any hint with a corresponding `_Integral` hint, `all_Integral` only
+returns the `_Integral` hint.
 
-### *Speed-up option 2*
+### Select a Specific Solver
 
-*Speed-up option 2 content*
-
-## Ordinary Differential Equation Type and Solving Strategy
-
-*`hint` and `classifiy_ode` [The most important thing here is the `_Integral`
-hints, which let you get the result of the ODE with unevaluated
-integrals](https://github.com/sympy/sympy/pull/23916#issuecomment-1221079195).*
+You may wish to select a specific solver using a hint for a couple of reasons:
+- educational purposes: for example if you are learning about a specific method
+  to solve ODEs and want to get a result that exactly matches that method
+- form of the result: sometimes an ODE can be solved by many different solvers,
+  and they can return different results. They will be mathematically equivalent,
+  though the arbitrary constants may not be. {func}`~.dsolve` by default tries
+  to use the "best" solvers first, which are most likely to return the most
+  usable output, but it is not a perfect heuristic. For example, the "best"
+  solver may produce a result with an integral that SymPy cannot solve, but
+  another solver may produce a different integral that SymPy can solve. So if
+  the solution isn't in a form you like, you can try other hints to check
+  whether they give a preferable result.
 
 ## Not All Equations Can Be Solved
 
