@@ -1882,7 +1882,6 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy.core.symbol import Symbol
         from .function import PoleError
         from sympy.functions.elementary.integers import ceiling
         from sympy.series.order import Order
@@ -1935,8 +1934,6 @@ class Mul(Expr, AssocOp):
             ords3 = [coeff_exp(term, x) for term in fac]
             coeffs, powers = zip(*ords3)
             power = sum(powers)
-            if power.has(Symbol):
-                return self
             if (power - n).is_negative:
                 res += Mul(*coeffs)*(x**power)
 

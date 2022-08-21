@@ -227,15 +227,18 @@ class besselj(BesselBase):
             arg = z.as_leading_term(x)
         except NotImplementedError:
             return self
-        _, e = arg.as_coeff_exponent(x)
+        c, e = arg.as_coeff_exponent(x)
 
         if e.is_positive:
             return arg**nu/(2**nu*gamma(nu + 1))
         elif e.is_negative:
-            # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/06/02/02/02/0005/
-            # for more information on asymptotic approximation of besselj function.
-            return sqrt(2)*(-(-1)**(S(3)/4)*I**nu*exp(-I*pi*nu + I*z) + \
-                    (-1)**(S(1)/4)*I**nu*exp(-I*z))/(2*sqrt(pi)*sqrt(z))
+            cdir = 1 if cdir == 0 else cdir
+            sign = c*cdir**e
+            if not sign.is_negative and sign.is_real:
+                # Refer Abramowitz and Stegun 1965, p. 364 for more information on
+                # asymptotic approximation of besselj function.
+                return sqrt(2)*cos(z - pi*(2*nu + 1)/4)/sqrt(pi*z)
+            return self
 
         return super(besselj, self)._eval_as_leading_term(x, logx, cdir)
 
@@ -331,6 +334,10 @@ class bessely(BesselBase):
                 return S.NaN
         if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
+        if z == S.ImaginaryUnit*S.Infinity:
+            return exp(I*pi*(nu + 1)/2) * S.Infinity
+        if z == S.ImaginaryUnit*S.NegativeInfinity:
+            return exp(-I*pi*(nu + 1)/2) * S.Infinity
 
         if nu.is_integer:
             if nu.could_extract_minus_sign():
@@ -354,7 +361,7 @@ class bessely(BesselBase):
             arg = z.as_leading_term(x)
         except NotImplementedError:
             return self
-        _, e = arg.as_coeff_exponent(x)
+        c, e = arg.as_coeff_exponent(x)
 
         if e.is_positive:
             term_one = ((2/pi)*log(z/2)*besselj(nu, z))
@@ -363,9 +370,13 @@ class bessely(BesselBase):
             arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
             return arg
         elif e.is_negative:
-            # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/06/02/02/02/0006/
-            # for more information on asymptotic approximation of bessely function.
-            return (-I*exp(-I*pi*nu/2 + I*z - I*pi/4) + I*exp(I*pi*nu/2 - I*z + I*pi/4))/sqrt(2*pi*z)
+            cdir = 1 if cdir == 0 else cdir
+            sign = c*cdir**e
+            if not sign.is_negative and sign.is_real:
+                # Refer Abramowitz and Stegun 1965, p. 364 for more information on
+                # asymptotic approximation of bessely function.
+                return sqrt(2)*(-sin(pi*nu/2 - z + pi/4) + 3*cos(pi*nu/2 - z + pi/4)/(8*z))*sqrt(1/z)/sqrt(pi)
+            return self
 
         return super(bessely, self)._eval_as_leading_term(x, logx, cdir)
 
@@ -529,14 +540,18 @@ class besseli(BesselBase):
             arg = z.as_leading_term(x)
         except NotImplementedError:
             return self
-        _, e = arg.as_coeff_exponent(x)
+        c, e = arg.as_coeff_exponent(x)
 
         if e.is_positive:
             return arg**nu/(2**nu*gamma(nu + 1))
         elif e.is_negative:
-            # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselI/06/02/02/02/0006/
-            # for more information on asymptotic approximation of besseli function.
-            return (exp(z) + I*exp(I*pi*nu - z))/sqrt(2*pi*z)
+            cdir = 1 if cdir == 0 else cdir
+            sign = c*cdir**e
+            if not sign.is_negative and sign.is_real:
+                # Refer Abramowitz and Stegun 1965, p. 377 for more information on
+                # asymptotic approximation of besseli function.
+                return exp(z)/sqrt(2*pi*z)
+            return self
 
         return super(besseli, self)._eval_as_leading_term(x, logx, cdir)
 
@@ -668,8 +683,8 @@ class besselk(BesselBase):
             arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
             return arg
         elif e.is_negative:
-            # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/06/02/01/02/0005/
-            # for more information on asymptotic approximation of besselk function.
+            # Refer Abramowitz and Stegun 1965, p. 378 for more information on
+            # asymptotic approximation of besselk function.
             return sqrt(pi)*exp(-z)/sqrt(2*z)
 
         return super(besselk, self)._eval_as_leading_term(x, logx, cdir)

@@ -358,10 +358,8 @@ def test_bessel_functions_at_infinity():
     assert limit(besselj(1, x), x, -I*oo) == -oo*I
     assert limit(bessely(1, x), x, oo) == 0
     assert limit(bessely(1, x), x, -oo) == 0
-    assert limit(bessely(1, x), x, I*oo) == -oo*I*sign(I**(S(3)/2))
-    assert limit(bessely(1, x), x, I*oo).n() == -oo
-    assert limit(bessely(1, x), x, -I*oo) == -oo*I*sign(1/sqrt(-I))
-    assert limit(bessely(1, x), x, -I*oo).n() == -oo
+    assert limit(bessely(1, x), x, I*oo) == -oo
+    assert limit(bessely(1, x), x, -I*oo) == -oo
     assert limit(besseli(1, x), x, oo) == oo
     assert limit(besseli(1, x), x, -oo) == -oo
     assert limit(besseli(1, x), x, I*oo) == 0

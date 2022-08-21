@@ -494,7 +494,7 @@ def calculate_series(e, x, logx=None):
         feature="calculate_series",
         useinstead="series() with suitable n, or as_leading_term",
         issue=21838,
-        deprecated_since_version="1.11"
+        deprecated_since_version="1.12"
     ).warn()
 
     from sympy.simplify.powsimp import powdenest

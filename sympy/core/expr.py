@@ -3434,7 +3434,7 @@ class Expr(Basic, EvalfMixin):
             feature="compute_leading_term",
             useinstead="as_leading_term",
             issue=21843,
-            deprecated_since_version="1.11"
+            deprecated_since_version="1.12"
         ).warn()
 
         from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
