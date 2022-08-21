@@ -667,12 +667,18 @@ class JacobiEllipticFunctionBase(Function):
     def _eval_expand_func(self, **kwargs):
         num, den = self._type_str
         u, m = self.args
-        if den == 's':
+        if den == 'n':
             return self
-        funcs = {'c': jacobi_cs, 'd': jacobi_ds, 'n': jacobi_ns}
-        if num == 's':
+        funcs = {'c': jacobi_cn, 'd': jacobi_dn, 'n': jacobi_sn}
+        if num == 'n':
             return 1/funcs[den](u, m)
         return funcs[num](u, m)/funcs[den](u, m)
+
+    def _eval_rewrite_as_theta2(self, *args):
+        expanded = self._eval_expand_func()
+        if expanded.has(jacobi_cn, jacobi_sn, jacobi_dn):
+            return expanded.rewrite(theta2)
+        return self
 
 
 class jacobi_cd(JacobiEllipticFunctionBase):
@@ -725,7 +731,7 @@ class jacobi_cn(JacobiEllipticFunctionBase):
     jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
 
     """
-    _type_str = "cm"
+    _type_str = "cn"
 
     @classmethod
     def eval(cls, u, m):
@@ -739,6 +745,12 @@ class jacobi_cn(JacobiEllipticFunctionBase):
         if argindex == 2:
             raise NotImplementedError
         raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_theta2(self, *args):
+        u, m = self.args
+        q = elliptic_nome_q(m)
+        t = u/theta3(0, q)**2
+        return theta4(0, q)/theta2(0, q)*theta2(t, q)/theta4(t, q)
 
 
 class jacobi_cs(JacobiEllipticFunctionBase):
@@ -765,6 +777,14 @@ class jacobi_cs(JacobiEllipticFunctionBase):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("cs", u, m)
 
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return -jacobi_ds(u, m)*jacobi_ns(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
+
 
 class jacobi_dc(JacobiEllipticFunctionBase):
     r"""
@@ -783,12 +803,20 @@ class jacobi_dc(JacobiEllipticFunctionBase):
     jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
 
     """
-    _type_str = "cd"
+    _type_str = "dc"
 
     @classmethod
     def eval(cls, u, m):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("dc", u, m)
+
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return (1 - m)*jacobi_nc(u, m)*jacobi_sd(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
 
 
 class jacobi_dn(JacobiEllipticFunctionBase):
@@ -808,12 +836,26 @@ class jacobi_dn(JacobiEllipticFunctionBase):
     jacobi_nc, jacobi_nd, jacobi_ns, jacobi_sc, jacobi_sd, jacobi_sn
 
     """
-    _type_str = "dm"
+    _type_str = "dn"
 
     @classmethod
     def eval(cls, u, m):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("dm", u, m)
+
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return -m*jacobi_sn(u, m)*jacobi_cn(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_theta2(self, *args):
+        u, m = self.args
+        q = elliptic_nome_q(m)
+        t = u/theta3(0, q)**2
+        return theta4(0, q)/theta3(0, q)*theta3(t, q)/theta4(t, q)
 
 
 class jacobi_ds(JacobiEllipticFunctionBase):
@@ -840,6 +882,14 @@ class jacobi_ds(JacobiEllipticFunctionBase):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("ds", u, m)
 
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return -jacobi_cs(u, m)*jacobi_ns(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
+
 
 class jacobi_nc(JacobiEllipticFunctionBase):
     r"""
@@ -864,6 +914,14 @@ class jacobi_nc(JacobiEllipticFunctionBase):
     def eval(cls, u, m):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("nc", u, m)
+
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return jacobi_dc(u, m)*jacobi_sc(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
 
 
 class jacobi_nd(JacobiEllipticFunctionBase):
@@ -890,6 +948,14 @@ class jacobi_nd(JacobiEllipticFunctionBase):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("nd", u, m)
 
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return m*jacobi_cd(u, m)*jacobi_sd(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
+
 
 class jacobi_ns(JacobiEllipticFunctionBase):
     r"""
@@ -914,6 +980,14 @@ class jacobi_ns(JacobiEllipticFunctionBase):
     def eval(cls, u, m):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("ns", u, m)
+
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return -jacobi_cs(u, m)*jacobi_ds(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
 
 
 class jacobi_sc(JacobiEllipticFunctionBase):
@@ -940,6 +1014,14 @@ class jacobi_sc(JacobiEllipticFunctionBase):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("sc", u, m)
 
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return jacobi_dc(u, m)*jacobi_nc(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
+
 
 class jacobi_sd(JacobiEllipticFunctionBase):
     r"""
@@ -965,6 +1047,14 @@ class jacobi_sd(JacobiEllipticFunctionBase):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("sd", u, m)
 
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return jacobi_cd(u, m)*jacobi_nd(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
+
 
 class jacobi_sn(JacobiEllipticFunctionBase):
     r"""
@@ -989,6 +1079,20 @@ class jacobi_sn(JacobiEllipticFunctionBase):
     def eval(cls, u, m):
         if u.is_Number and m.is_Number:
             return JacobiEllipticFunctionBase._eval("sn", u, m)
+
+    def fdiff(self, argindex=1):
+        u, m = self.args
+        if argindex == 1:
+            return -jacobi_cn(u, m)*jacobi_dn(u, m)
+        if argindex == 2:
+            raise NotImplementedError
+        raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_theta2(self, *args):
+        u, m = self.args
+        q = elliptic_nome_q(m)
+        t = u/theta3(0, q)**2
+        return theta3(0, q)/theta2(0, q)*theta3(1, q)/theta4(t, q)
 
 
 class elliptic_nome_q(Function):
@@ -1034,8 +1138,17 @@ class elliptic_nome_q(Function):
         m = self.args[0]
         return exp(-pi*elliptic_k(1 - m)/elliptic_k(m))
 
+    _eval_rewrite_as_exp = _eval_rewrite_as_elliptic_k
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             m = self.args[0]
             return pi**2*elliptic_nome_q(m)/(4*(m-1)*m*elliptic_k(m)**2)
         raise ArgumentIndexError(self, argindex)
+
+
+def elliptic_nome_q_from_k(k):
+    return elliptic_nome_q(k**2)
+
+def elliptic_modulus_from_nome_q(q):
+    return theta2(q)**2/theta3(q)**2

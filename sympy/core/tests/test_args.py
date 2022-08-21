@@ -2478,7 +2478,7 @@ def test_sympy__functions__special__elliptic_integrals__jacobi_cs():
     assert _test_args(jacobi_cs(y, z))
 
 
-def test_sympy__functions__special__elliptic_integrals__jacobi_cd():
+def test_sympy__functions__special__elliptic_integrals__jacobi_dc():
     from sympy.functions.special.elliptic_integrals import jacobi_dc
     assert _test_args(jacobi_dc(y, z))
 
