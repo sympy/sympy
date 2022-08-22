@@ -57,16 +57,16 @@ class Joint(ABC):
         center.
     parent_axis : Vector, optional
         .. deprecated:: 1.12
-            This argument is deprecated and will be removed in a future version.
-            See :ref:`deprecated-mechanics-joint-axis` for more information.
-        Axis fixed in the parent body which aligns with an axis fixed in the
-        child body. The default is x axis in parent's reference frame.
+            Axis fixed in the parent body which aligns with an axis fixed in the
+            child body. The default is the x axis of parent's reference frame.
+            For more information on this deprecation, see
+            :ref:`deprecated-mechanics-joint-axis`.
     child_axis : Vector, optional
         .. deprecated:: 1.12
-            This argument is deprecated and will be removed in a future version.
-            See :ref:`deprecated-mechanics-joint-axis` for more information.
-        Axis fixed in the child body which aligns with an axis fixed in the
-        parent body. The default is x axis in child's reference frame.
+            Axis fixed in the child body which aligns with an axis fixed in the
+            parent body. The default is the x axis of child's reference frame.
+            For more information on this deprecation, see
+            :ref:`deprecated-mechanics-joint-axis`.
     parent_interframe : ReferenceFrame, optional
         Interframe of the joint fixed to the parent body, i.e. frame in the of
         parent body with respect to which the joint is formulated. The default
@@ -122,41 +122,43 @@ class Joint(ABC):
      .. deprecated:: 1.12
         The below discussed ``parent_axis`` and ``child_axis`` are deprecated,
         see :ref:`deprecated-mechanics-joint-axis` for more information.
-    The direction cosine matrix between the child and parent is formed using a
-    simple rotation about an axis that is normal to both ``child_axis`` and
-    ``parent_axis``. In general, the normal axis is formed by crossing the
-    ``child_axis`` into the ``parent_axis`` except if the child and parent axes
-    are in exactly opposite directions. In that case the rotation vector is
-    chosen using the rules in the following table where ``C`` is the child
-    reference frame and ``P`` is the parent reference frame:
 
-    .. list-table::
-       :header-rows: 1
+        The direction cosine matrix between the child and parent is formed using
+        a simple rotation about an axis that is normal to both ``child_axis``
+        and ``parent_axis``. In general, the normal axis is formed by crossing
+        the ``child_axis`` into the ``parent_axis`` except if the child and
+        parent axes are in exactly opposite directions. In that case the
+        rotation vector is chosen using the rules in the following table where
+        ``C`` is the child reference frame and ``P`` is the parent reference
+        frame:
 
-       * - ``child_axis``
-         - ``parent_axis``
-         - ``rotation_axis``
-       * - ``-C.x``
-         - ``P.x``
-         - ``P.z``
-       * - ``-C.y``
-         - ``P.y``
-         - ``P.x``
-       * - ``-C.z``
-         - ``P.z``
-         - ``P.y``
-       * - ``-C.x-C.y``
-         - ``P.x+P.y``
-         - ``P.z``
-       * - ``-C.y-C.z``
-         - ``P.y+P.z``
-         - ``P.x``
-       * - ``-C.x-C.z``
-         - ``P.x+P.z``
-         - ``P.y``
-       * - ``-C.x-C.y-C.z``
-         - ``P.x+P.y+P.z``
-         - ``(P.x+P.y+P.z) × P.x``
+        .. list-table::
+           :header-rows: 1
+
+           * - ``child_axis``
+             - ``parent_axis``
+             - ``rotation_axis``
+           * - ``-C.x``
+             - ``P.x``
+             - ``P.z``
+           * - ``-C.y``
+             - ``P.y``
+             - ``P.x``
+           * - ``-C.z``
+             - ``P.z``
+             - ``P.y``
+           * - ``-C.x-C.y``
+             - ``P.x+P.y``
+             - ``P.z``
+           * - ``-C.y-C.z``
+             - ``P.y+P.z``
+             - ``P.x``
+           * - ``-C.x-C.z``
+             - ``P.x+P.z``
+             - ``P.y``
+           * - ``-C.x-C.y-C.z``
+             - ``P.x+P.y+P.z``
+             - ``(P.x+P.y+P.z) × P.x``
 
     """
 
@@ -489,16 +491,16 @@ class PinJoint(JointAxisMixin, Joint):
         center.
     parent_axis : Vector, optional
         .. deprecated:: 1.12
-            This argument is deprecated and will be removed in a future version.
-            See :ref:`deprecated-mechanics-joint-axis` for more information.
-        Axis fixed in the parent body which aligns with an axis fixed in the
-        child body. The default is x axis in parent's reference frame.
+            Axis fixed in the parent body which aligns with an axis fixed in the
+            child body. The default is the x axis of parent's reference frame.
+            For more information on this deprecation, see
+            :ref:`deprecated-mechanics-joint-axis`.
     child_axis : Vector, optional
         .. deprecated:: 1.12
-            This argument is deprecated and will be removed in a future version.
-            See :ref:`deprecated-mechanics-joint-axis` for more information.
-        Axis fixed in the child body which aligns with an axis fixed in the
-        parent body. The default is x axis in child's reference frame.
+            Axis fixed in the child body which aligns with an axis fixed in the
+            parent body. The default is the x axis of child's reference frame.
+            For more information on this deprecation, see
+            :ref:`deprecated-mechanics-joint-axis`.
     parent_interframe : ReferenceFrame, optional
         Interframe of the joint fixed to the parent body, i.e. frame in the of
         parent body with respect to which the joint is formulated. The default
@@ -765,16 +767,16 @@ class PrismaticJoint(JointAxisMixin, Joint):
         center.
     parent_axis : Vector, optional
         .. deprecated:: 1.12
-            This argument is deprecated and will be removed in a future version.
-            See :ref:`deprecated-mechanics-joint-axis` for more information.
-        Axis fixed in the parent body which aligns with an axis fixed in the
-        child body. The default is x axis in parent's reference frame.
+            Axis fixed in the parent body which aligns with an axis fixed in the
+            child body. The default is the x axis of parent's reference frame.
+            For more information on this deprecation, see
+            :ref:`deprecated-mechanics-joint-axis`.
     child_axis : Vector, optional
         .. deprecated:: 1.12
-            This argument is deprecated and will be removed in a future version.
-            See :ref:`deprecated-mechanics-joint-axis` for more information.
-        Axis fixed in the child body which aligns with an axis fixed in the
-        parent body. The default is x axis in child's reference frame.
+            Axis fixed in the child body which aligns with an axis fixed in the
+            parent body. The default is the x axis of child's reference frame.
+            For more information on this deprecation, see
+            :ref:`deprecated-mechanics-joint-axis`.
     parent_interframe : ReferenceFrame, optional
         Interframe of the joint fixed to the parent body, i.e. frame in the of
         parent body with respect to which the joint is formulated. The default
