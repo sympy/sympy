@@ -10,7 +10,7 @@ from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
 from sympy.utilities.exceptions import sympy_deprecation_warning
 import warnings
 
-__all__ = ['Joint', 'PinJoint', 'PrismaticJoint']
+__all__ = ['Joint', 'JointAxisMixin', 'PinJoint', 'PrismaticJoint']
 
 
 class Joint(ABC):
@@ -30,7 +30,7 @@ class Joint(ABC):
     - ``_generate_speeds``
     - ``_orient_frames``
     - ``_set_angular_velocity``
-    - ``_set_linar_velocity``
+    - ``_set_linear_velocity``
 
     Parameters
     ==========
@@ -56,9 +56,15 @@ class Joint(ABC):
         vector to the body's mass center. The default value is the child's mass
         center.
     parent_axis : Vector, optional
+        .. deprecated:: 1.12
+            This argument is deprecated and will be removed in a future version.
+            See :ref:`deprecated-mechanics-joint-axis` for more information.
         Axis fixed in the parent body which aligns with an axis fixed in the
         child body. The default is x axis in parent's reference frame.
     child_axis : Vector, optional
+        .. deprecated:: 1.12
+            This argument is deprecated and will be removed in a future version.
+            See :ref:`deprecated-mechanics-joint-axis` for more information.
         Axis fixed in the child body which aligns with an axis fixed in the
         parent body. The default is x axis in child's reference frame.
     parent_interframe : ReferenceFrame, optional
@@ -70,9 +76,15 @@ class Joint(ABC):
         child body with respect to which the joint is formulated. The default
         value is the child's own frame.
     parent_joint_pos : Point or Vector, optional
-        Deprecated argument, which is replaced by parent_point.
+        .. deprecated:: 1.12
+            This argument is replaced by parent_point and will be removed in a
+            future version.
+            See :ref:`deprecated-mechanics-joint-pos` for more information.
     child_joint_pos : Point or Vector, optional
-        Deprecated argument, which is replaced by child_point.
+        .. deprecated:: 1.12
+            This argument is replaced by child_point and will be removed in a
+            future version.
+            See :ref:`deprecated-mechanics-joint-pos` for more information.
 
     Attributes
     ==========
@@ -107,6 +119,9 @@ class Joint(ABC):
     Notes
     =====
 
+     .. deprecated:: 1.12
+        The below discussed ``parent_axis`` and ``child_axis`` are deprecated,
+        see :ref:`deprecated-mechanics-joint-axis` for more information.
     The direction cosine matrix between the child and parent is formed using a
     simple rotation about an axis that is normal to both ``child_axis`` and
     ``parent_axis``. In general, the normal axis is formed by crossing the
@@ -173,11 +188,11 @@ class Joint(ABC):
             sympy_deprecation_warning(
                 """
                 The parent_joint_pos and child_joint_pos arguments for the Joint
-                classes are deprecated. Instead use parent_point and
-                child_point.
+                classes are deprecated. Instead use parent_point and child_point.
                 """,
                 deprecated_since_version="1.12",
                 active_deprecations_target="deprecated-mechanics-joint-pos",
+                stacklevel=4
             )
             if parent_point is None:
                 parent_point = parent_joint_pos
@@ -190,10 +205,11 @@ class Joint(ABC):
                 """
                 The parent_axis and child_axis arguments for the Joint classes
                 are deprecated. Instead use the combination of the arguments:
-                parent_interframe, child_interframe and possibly axis.
+                parent_interframe, child_interframe and possibly joint_axis.
                 """,
                 deprecated_since_version="1.12",
                 active_deprecations_target="deprecated-mechanics-joint-axis",
+                stacklevel=4
             )
             parent_interframe = self._set_orientation()
             child_interframe = child.frame
@@ -245,11 +261,13 @@ class Joint(ABC):
     @property
     def parent_axis(self):
         """The axis of parent frame."""
+        # Will be removed with `deprecated-mechanics-joint-axis`
         return self._parent_axis
 
     @property
     def child_axis(self):
         """The axis of child frame."""
+        # Will be removed with `deprecated-mechanics-joint-axis`
         return self._child_axis
 
     @property
@@ -363,6 +381,7 @@ class Joint(ABC):
     def _alignment_rotation(self, parent, child):
         # Returns the axis and angle between two axis(vectors), as if the parent
         # and child body are not rotated with respect to each other.
+        # Will be removed with `deprecated-mechanics-joint-axis`
         child = self._to_vector(child.to_matrix(self.child.frame),
                                 self.parent.frame)
         angle = parent.angle_between(child)
@@ -370,6 +389,7 @@ class Joint(ABC):
         return angle, axis
 
     def _generate_vector(self):
+        # Will be removed with `deprecated-mechanics-joint-axis`
         parent_frame = self.parent.frame
         components = self.parent_axis.to_matrix(parent_frame)
         x, y, z = components[0], components[1], components[2]
@@ -392,6 +412,7 @@ class Joint(ABC):
     def _set_orientation(self):
         # Helper method to determine parent_interframe based on parent_axis and
         # child_axis.
+        # Will be removed with `deprecated-mechanics-joint-axis`
         angle, axis = self._alignment_rotation(self.parent_axis,
                                                self.child_axis)
 
@@ -410,8 +431,9 @@ class Joint(ABC):
 
 
 class JointAxisMixin:
+    """Mixin class, which provides joint axis support methods."""
     def _express_joint_axis(self, frame):
-        """Helper method to get an axis expressed in a specified frame."""
+        """Helper method to express the joint axis in a specified frame."""
         try:
             ax_mat = self.joint_axis.to_matrix(self.parent_interframe)
         except ValueError:
@@ -437,10 +459,10 @@ class PinJoint(JointAxisMixin, Joint):
     the child and parent and the location of the joint is relative to the mass
     center of each body. The child rotates an angle, θ, from the parent about
     the rotation axis and has a simple angular speed, ω, relative to the
-    parent. The direction cosine matrix between the child and parent is formed
-    using a simple rotation about an axis that is normal to both ``child_axis``
-    and ``parent_axis``, see the Notes section for a detailed explanation of
-    this.
+    parent. The direction cosine matrix between the childinterframe and
+    parentinterframe is formed using a simple rotation about the joint axis.
+    The page on the joints framework gives a more detailed explanation on the
+    intermediate frames.
 
     Parameters
     ==========
@@ -466,9 +488,15 @@ class PinJoint(JointAxisMixin, Joint):
         vector to the body's mass center. The default value is the child's mass
         center.
     parent_axis : Vector, optional
+        .. deprecated:: 1.12
+            This argument is deprecated and will be removed in a future version.
+            See :ref:`deprecated-mechanics-joint-axis` for more information.
         Axis fixed in the parent body which aligns with an axis fixed in the
         child body. The default is x axis in parent's reference frame.
     child_axis : Vector, optional
+        .. deprecated:: 1.12
+            This argument is deprecated and will be removed in a future version.
+            See :ref:`deprecated-mechanics-joint-axis` for more information.
         Axis fixed in the child body which aligns with an axis fixed in the
         parent body. The default is x axis in child's reference frame.
     parent_interframe : ReferenceFrame, optional
@@ -479,10 +507,19 @@ class PinJoint(JointAxisMixin, Joint):
         Interframe of the joint fixed to the child body, i.e. frame in the of
         child body with respect to which the joint is formulated. The default
         value is the child's own frame.
+    joint_axis : Vector
+        The axis around which the rotation occurs. Note that the components
+        of this axis are the same in the parent_interframe and child_interframe.
     parent_joint_pos : Point or Vector, optional
-        Deprecated argument, which is replaced by parent_point.
+        .. deprecated:: 1.12
+            This argument is replaced by parent_point and will be removed in a
+            future version.
+            See :ref:`deprecated-mechanics-joint-pos` for more information.
     child_joint_pos : Point or Vector, optional
-        Deprecated argument, which is replaced by child_point.
+        .. deprecated:: 1.12
+            This argument is replaced by child_point and will be removed in a
+            future version.
+            See :ref:`deprecated-mechanics-joint-pos` for more information.
 
     Attributes
     ==========
@@ -511,6 +548,9 @@ class PinJoint(JointAxisMixin, Joint):
     child_interframe : ReferenceFrame, optional
         Interframe of the joint fixed to the child body, i.e. frame in the of
         child body with respect to which the joint is formulated.
+    joint_axis : Vector
+        The axis around which the rotation occurs. Note that the components of
+        this axis are the same in the parent_interframe and child_interframe.
     kdes : list
         Kinematical differential equations of the joint.
 
@@ -691,12 +731,14 @@ class PrismaticJoint(JointAxisMixin, Joint):
     ===========
 
     It is defined such that the child body translates with respect to the parent
-    body along the body fixed parent axis. The location of the joint is defined
-    by two points in each body which coincides when the generalized coordinate
-    is zero. The direction cosine matrix between the child and parent is formed
-    using a simple rotation about an axis that is normal to both ``child_axis``
-    and ``parent_axis``, see the Notes section for a detailed explanation of
-    this.
+    body along the body fixed joint axis. The location of the joint is defined
+    by two points, one in each body, which coincides when the generalized
+    coordinate is zero. The direction cosine matrix between the
+    parent_interframe and child_interframe is the identity matrix. So the
+    direction cosine matrix between the parent and child frames, is fully
+    defined by the definition of the intermediate frames. For a detailed
+    explanation on the intermediate frames, see the page on the joints
+    framework.
 
     Parameters
     ==========
@@ -722,9 +764,15 @@ class PrismaticJoint(JointAxisMixin, Joint):
         vector to the body's mass center. The default value is the child's mass
         center.
     parent_axis : Vector, optional
+        .. deprecated:: 1.12
+            This argument is deprecated and will be removed in a future version.
+            See :ref:`deprecated-mechanics-joint-axis` for more information.
         Axis fixed in the parent body which aligns with an axis fixed in the
         child body. The default is x axis in parent's reference frame.
     child_axis : Vector, optional
+        .. deprecated:: 1.12
+            This argument is deprecated and will be removed in a future version.
+            See :ref:`deprecated-mechanics-joint-axis` for more information.
         Axis fixed in the child body which aligns with an axis fixed in the
         parent body. The default is x axis in child's reference frame.
     parent_interframe : ReferenceFrame, optional
@@ -735,10 +783,19 @@ class PrismaticJoint(JointAxisMixin, Joint):
         Interframe of the joint fixed to the child body, i.e. frame in the of
         child body with respect to which the joint is formulated. The default
         value is the child's own frame.
+    joint_axis : Vector
+        The axis across which the translation occurs. Note that the components
+        of this axis are the same in the parent_interframe and child_interframe.
     parent_joint_pos : Point or Vector, optional
-        Deprecated argument, which is replaced by parent_point.
+        .. deprecated:: 1.12
+            This argument is replaced by parent_point and will be removed in a
+            future version.
+            See :ref:`deprecated-mechanics-joint-pos` for more information.
     child_joint_pos : Point or Vector, optional
-        Deprecated argument, which is replaced by child_point.
+        .. deprecated:: 1.12
+            This argument is replaced by child_point and will be removed in a
+            future version.
+            See :ref:`deprecated-mechanics-joint-pos` for more information.
 
     Attributes
     ==========

@@ -34,9 +34,12 @@ are called ``child_point`` and ``child_interframe``.
 For describing the joint transformation the joint generally needs
 :func:`~.dynamicsymbols` for the generalized coordinates and speeds. Some joints
 like the :class:`~.PinJoint`, :class:`~.PrismaticJoint` also require a
-``joint_axis``, which is an axis that does not change between the
-``parent_interframe`` and ``child_interframe``. So in case of the
-:class:`~.PinJoint`, also shown below, this means that the ``joint_axis`` is the
+``joint_axis``, which consists of the same components in the
+``parent_interframe`` and ``child_interframe``. This means that if for example
+the joint axis is defined in the ``parent_interframe`` as $2\hat{p}_x +
+4\hat{p}_y + 3\hat{p}_z$, than this will also be $2\hat{c}_x + 4\hat{c}_y +
+3\hat{c}_z$ in the ``child_interframe``. Practically this means that in the case
+of the :class:`~.PinJoint`, also shown below, that the ``joint_axis`` is the
 axis of rotation. With the generalized coordinate :math:`\theta` as the angle of
 rotation and the generalized speed :math:`\omega` as the angular velocity.
 
@@ -62,7 +65,7 @@ body's frame. ::
    >>> parent = Body('parent')
    >>> child = Body('child')
    >>> joint = PinJoint(
-   ...     'hinge', parent, child, theta, omega,
+   ...     'hinge', parent, child, coordinates=theta, speeds=omega,
    ...     parent_point=3 * parent.frame.x,
    ...     child_point=-3 * child.frame.x,
    ...     joint_axis=parent.frame.z)
