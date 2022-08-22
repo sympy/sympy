@@ -1605,6 +1605,12 @@ def test_piecewise_simplify4():
             (0, x >= y))
     assert Piecewise((x, Ne(x, 1)), (1, True)).simplify() == x
 
+    # Ideally a single simplify should be enough
+    p = Piecewise((x, And(Ne(x, 1), Ne(x, 2))), (1, Eq(x, 1)), (2, Eq(x, 2)))
+    psimp = p.simplify()
+    assert psimp == Piecewise((x, Ne(x, 2)), (2, True))
+    assert psimp.simplify() == x
+
 
 def test_issue_8453():
     assert Piecewise((1, x>0),(2, x>=0),(3, True)).simplify() == Piecewise(

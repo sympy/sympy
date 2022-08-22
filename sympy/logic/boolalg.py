@@ -48,14 +48,14 @@ def as_Boolean(e):
     """
     from sympy.core.symbol import Symbol
     if e == True:
-        return S.true
+        return true
     if e == False:
-        return S.false
+        return false
     if isinstance(e, Symbol):
         z = e.is_zero
         if z is None:
             return e
-        return S.false if z else S.true
+        return false if z else true
     if isinstance(e, Boolean):
         return e
     raise TypeError('expecting bool or Boolean, not `%s`.' % e)
@@ -357,7 +357,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
 
     @property
     def negated(self):
-        return S.false
+        return false
 
     def as_set(self):
         """
@@ -432,7 +432,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
 
     @property
     def negated(self):
-        return S.true
+        return true
 
     def as_set(self):
         """
@@ -500,9 +500,9 @@ class BooleanFunction(Application, Boolean):
                 if x in bin_syms and x in r.free_symbols:
                     if isinstance(r, (Eq, Ne)):
                         if not (
-                                S.true in r.args or
-                                S.false in r.args):
-                            reps[r] = S.false
+                                true in r.args or
+                                false in r.args):
+                            reps[r] = false
                     else:
                         raise TypeError(filldedent('''
                             Incompatible use of binary symbol `%s` as a
@@ -613,7 +613,7 @@ class And(LatticeOp, BooleanFunction):
                 if c in rel:
                     continue
                 elif c.negated.canonical in rel:
-                    return [S.false]
+                    return [false]
                 else:
                     rel.add(c)
             newargs.append(x)
@@ -631,7 +631,7 @@ class And(LatticeOp, BooleanFunction):
                     bad = i
                 continue
             if i == False:
-                return S.false
+                return false
             elif i != True:
                 args.append(i)
         if bad is not None:
@@ -712,7 +712,7 @@ class And(LatticeOp, BooleanFunction):
         patterns = _simplify_patterns_and()
         threeterm_patterns = _simplify_patterns_and3()
         return _apply_patternbased_simplification(rv, patterns,
-                                                  measure, S.false,
+                                                  measure, false,
                                                   threeterm_patterns=threeterm_patterns)
 
     def _eval_as_set(self):
@@ -771,7 +771,7 @@ class Or(LatticeOp, BooleanFunction):
                     continue
                 nc = c.negated.canonical
                 if any(r == nc for r in rel):
-                    return [S.true]
+                    return [true]
                 rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
@@ -788,7 +788,7 @@ class Or(LatticeOp, BooleanFunction):
                     bad = i
                 continue
             if i == True:
-                return S.true
+                return true
             elif i != False:
                 args.append(i)
         if bad is not None:
@@ -824,7 +824,7 @@ class Or(LatticeOp, BooleanFunction):
             return rv
         patterns = _simplify_patterns_or()
         return _apply_patternbased_simplification(rv, patterns,
-                                                  kwargs['measure'], S.true)
+                                                  kwargs['measure'], true)
 
     def to_anf(self, deep=True):
         args = range(1, len(self.args) + 1)
@@ -1243,10 +1243,10 @@ class Implies(BooleanFunction):
         if A in (True, False) or B in (True, False):
             return Or(Not(A), B)
         elif A == B:
-            return S.true
+            return true
         elif A.is_Relational and B.is_Relational:
             if A.canonical == B.canonical:
-                return S.true
+                return true
             if A.negated.canonical == B.canonical:
                 return B
         else:
@@ -1396,17 +1396,17 @@ class ITE(BooleanFunction):
             if len(set(a.args) - bin_syms) == 1:
                 # one arg is a binary_symbols
                 _a = a
-                if a.lhs is S.true:
+                if a.lhs is true:
                     a = a.rhs
-                elif a.rhs is S.true:
+                elif a.rhs is true:
                     a = a.lhs
-                elif a.lhs is S.false:
+                elif a.lhs is false:
                     a = Not(a.rhs)
-                elif a.rhs is S.false:
+                elif a.rhs is false:
                     a = Not(a.lhs)
                 else:
                     # binary can only equal True or False
-                    a = S.false
+                    a = false
                 if isinstance(_a, Ne):
                     a = Not(a)
         else:
@@ -1426,26 +1426,26 @@ class ITE(BooleanFunction):
         a, b, c = args
         if isinstance(a, (Ne, Eq)):
             _a = a
-            if S.true in a.args:
-                a = a.lhs if a.rhs is S.true else a.rhs
-            elif S.false in a.args:
-                a = Not(a.lhs) if a.rhs is S.false else Not(a.rhs)
+            if true in a.args:
+                a = a.lhs if a.rhs is true else a.rhs
+            elif false in a.args:
+                a = Not(a.lhs) if a.rhs is false else Not(a.rhs)
             else:
                 _a = None
             if _a is not None and isinstance(_a, Ne):
                 a = Not(a)
-        if a is S.true:
+        if a is true:
             return b
-        if a is S.false:
+        if a is false:
             return c
         if b == c:
             return b
         else:
             # or maybe the results allow the answer to be expressed
             # in terms of the condition
-            if b is S.true and c is S.false:
+            if b is true and c is false:
                 return a
-            if b is S.false and c is S.true:
+            if b is false and c is true:
                 return Not(a)
         if [a, b, c] != args:
             return cls(a, b, c, evaluate=False)
@@ -3259,11 +3259,11 @@ def _simplify_patterns_and():
     # Relationals patterns should be in alphabetical order
     # (pattern1, pattern2, simplified)
     # Do not use Ge, Gt
-    _matchers_and = ((Tuple(Eq(a, b), Lt(a, b)), S.false),
-                     #(Tuple(Eq(a, b), Lt(b, a)), S.false),
-                     #(Tuple(Le(b, a), Lt(a, b)), S.false),
-                     #(Tuple(Lt(b, a), Le(a, b)), S.false),
-                     (Tuple(Lt(b, a), Lt(a, b)), S.false),
+    _matchers_and = ((Tuple(Eq(a, b), Lt(a, b)), false),
+                     #(Tuple(Eq(a, b), Lt(b, a)), false),
+                     #(Tuple(Le(b, a), Lt(a, b)), false),
+                     #(Tuple(Lt(b, a), Le(a, b)), false),
+                     (Tuple(Lt(b, a), Lt(a, b)), false),
                      (Tuple(Eq(a, b), Le(b, a)), Eq(a, b)),
                      #(Tuple(Eq(a, b), Le(a, b)), Eq(a, b)),
                      #(Tuple(Le(b, a), Lt(b, a)), Gt(a, b)),
@@ -3282,15 +3282,15 @@ def _simplify_patterns_and():
                      (Tuple(Le(a, b), Le(a, c)), Le(a, Min(b, c))),
                      (Tuple(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
                      (Tuple(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
-                     (Tuple(Le(a, b), Le(c, a)), ITE(Eq(b, c), Eq(a, b), ITE(b < c, S.false, And(Le(a, b), Ge(a, c))))),
-                     (Tuple(Le(c, a), Le(a, b)), ITE(Eq(b, c), Eq(a, b), ITE(b < c, S.false, And(Le(a, b), Ge(a, c))))),
-                     (Tuple(Lt(a, b), Lt(c, a)), ITE(b < c, S.false, And(Lt(a, b), Gt(a, c)))),
-                     (Tuple(Lt(c, a), Lt(a, b)), ITE(b < c, S.false, And(Lt(a, b), Gt(a, c)))),
-                     (Tuple(Le(a, b), Lt(c, a)), ITE(b <= c, S.false, And(Le(a, b), Gt(a, c)))),
-                     (Tuple(Le(c, a), Lt(a, b)), ITE(b <= c, S.false, And(Lt(a, b), Ge(a, c)))),
-                     (Tuple(Eq(a, b), Eq(a, c)), ITE(Eq(b, c), Eq(a, b), S.false)),
-                     (Tuple(Lt(a, b), Lt(-b, a)), ITE(b > 0, Lt(Abs(a), b), S.false)),
-                     (Tuple(Le(a, b), Le(-b, a)), ITE(b >= 0, Le(Abs(a), b), S.false)),
+                     (Tuple(Le(a, b), Le(c, a)), ITE(Eq(b, c), Eq(a, b), ITE(b < c, false, And(Le(a, b), Ge(a, c))))),
+                     (Tuple(Le(c, a), Le(a, b)), ITE(Eq(b, c), Eq(a, b), ITE(b < c, false, And(Le(a, b), Ge(a, c))))),
+                     (Tuple(Lt(a, b), Lt(c, a)), ITE(b < c, false, And(Lt(a, b), Gt(a, c)))),
+                     (Tuple(Lt(c, a), Lt(a, b)), ITE(b < c, false, And(Lt(a, b), Gt(a, c)))),
+                     (Tuple(Le(a, b), Lt(c, a)), ITE(b <= c, false, And(Le(a, b), Gt(a, c)))),
+                     (Tuple(Le(c, a), Lt(a, b)), ITE(b <= c, false, And(Lt(a, b), Ge(a, c)))),
+                     (Tuple(Eq(a, b), Eq(a, c)), ITE(Eq(b, c), Eq(a, b), false)),
+                     (Tuple(Lt(a, b), Lt(-b, a)), ITE(b > 0, Lt(Abs(a), b), false)),
+                     (Tuple(Le(a, b), Le(-b, a)), ITE(b >= 0, Le(Abs(a), b), false)),
                      )
     return _matchers_and
 
@@ -3308,10 +3308,10 @@ def _simplify_patterns_and3():
     # Relationals patterns should be in alphabetical order
     # (pattern1, pattern2, pattern3, simplified)
     # Do not use Le, Lt
-    _matchers_and = ((Tuple(Ge(a, b), Ge(b, c), Gt(c, a)), S.false),
-                     (Tuple(Ge(a, b), Gt(b, c), Gt(c, a)), S.false),
-                     (Tuple(Gt(a, b), Gt(b, c), Gt(c, a)), S.false),
-                     # (Tuple(Ge(c, a), Gt(a, b), Gt(b, c)), S.false),
+    _matchers_and = ((Tuple(Ge(a, b), Ge(b, c), Gt(c, a)), false),
+                     (Tuple(Ge(a, b), Gt(b, c), Gt(c, a)), false),
+                     (Tuple(Gt(a, b), Gt(b, c), Gt(c, a)), false),
+                     # (Tuple(Ge(c, a), Gt(a, b), Gt(b, c)), false),
                      # Lower bound relations
                      # Commented out combinations that does not simplify
                      (Tuple(Ge(a, b), Ge(a, c), Ge(b, c)), And(Ge(a, b), Ge(b, c))),
@@ -3353,15 +3353,17 @@ def _simplify_patterns_or():
     # (pattern1, pattern2, simplified)
     # Do not use Ge, Gt
     # reca = 1/a
-    _matchers_or = ((Tuple(Le(b, a), Le(a, b)), S.true),
-                    #(Tuple(Le(b, a), Lt(a, b)), S.true),
-                    (Tuple(Le(b, a), Ne(a, b)), S.true),
-                    #(Tuple(Le(a, b), Lt(b, a)), S.true),
-                    #(Tuple(Le(a, b), Ne(a, b)), S.true),
+    _matchers_or = ((Tuple(Le(b, a), Le(a, b)), true),
+                    #(Tuple(Le(b, a), Lt(a, b)), true),
+                    (Tuple(Le(b, a), Ne(a, b)), true),
+                    #(Tuple(Le(a, b), Lt(b, a)), true),
+                    #(Tuple(Le(a, b), Ne(a, b)), true),
                     #(Tuple(Eq(a, b), Le(b, a)), Ge(a, b)),
                     #(Tuple(Eq(a, b), Lt(b, a)), Ge(a, b)),
                     (Tuple(Eq(a, b), Le(a, b)), Le(a, b)),
                     (Tuple(Eq(a, b), Lt(a, b)), Le(a, b)),
+                    (Tuple(Eq(a, b), Ne(a, c)), ITE(Eq(b, c), true, Ne(a, c))),
+                    (Tuple(Ne(a, b), Ne(a, c)), ITE(Eq(b, c), Ne(a, b), true)),
                     #(Tuple(Le(b, a), Lt(b, a)), Ge(a, b)),
                     (Tuple(Lt(b, a), Lt(a, b)), Ne(a, b)),
                     (Tuple(Lt(b, a), Ne(a, b)), Ne(a, b)),
@@ -3369,7 +3371,7 @@ def _simplify_patterns_or():
                     #(Tuple(Lt(a, b), Ne(a, b)), Ne(a, b)),
                     # Reciprocal
                     # (Tuple(Lt(a, b), Lt(reca, b)), ITE(Eq(b, 1), Ne(a, 1), Or(Lt(reca, b), Lt(a, b)))),
-                    # (Tuple(Le(a, b), Le(reca, b)), ITE(Eq(b, 1), S.true, Or(Le(reca, b), Le(a, b)))),
+                    # (Tuple(Le(a, b), Le(reca, b)), ITE(Eq(b, 1), true, Or(Le(reca, b), Le(a, b)))),
                     # Min/Max/ITE
                     (Tuple(Le(b, a), Le(c, a)), Ge(a, Min(b, c))),
                     #(Tuple(Ge(b, a), Ge(c, a)), Ge(Min(b, c), a)),
@@ -3381,14 +3383,14 @@ def _simplify_patterns_or():
                     (Tuple(Le(a, b), Lt(a, c)), ITE(b >= c, Le(a, b), Lt(a, c))),
                     (Tuple(Lt(a, b), Lt(a, c)), Lt(a, Max(b, c))),
                     #(Tuple(Lt(b, a), Lt(c, a)), Lt(Max(b, c), a)),
-                    (Tuple(Le(a, b), Le(c, a)), ITE(b >= c, S.true, Or(Le(a, b), Ge(a, c)))),
-                    (Tuple(Le(c, a), Le(a, b)), ITE(b >= c, S.true, Or(Le(a, b), Ge(a, c)))),
-                    (Tuple(Lt(a, b), Lt(c, a)), ITE(b > c, S.true, Or(Lt(a, b), Gt(a, c)))),
-                    (Tuple(Lt(c, a), Lt(a, b)), ITE(b > c, S.true, Or(Lt(a, b), Gt(a, c)))),
-                    (Tuple(Le(a, b), Lt(c, a)), ITE(b >= c, S.true, Or(Le(a, b), Gt(a, c)))),
-                    (Tuple(Le(c, a), Lt(a, b)), ITE(b >= c, S.true, Or(Lt(a, b), Ge(a, c)))),
-                    (Tuple(Lt(b, a), Lt(a, -b)), ITE(b >= 0, Gt(Abs(a), b), S.true)),
-                    (Tuple(Le(b, a), Le(a, -b)), ITE(b > 0, Ge(Abs(a), b), S.true)),
+                    (Tuple(Le(a, b), Le(c, a)), ITE(b >= c, true, Or(Le(a, b), Ge(a, c)))),
+                    (Tuple(Le(c, a), Le(a, b)), ITE(b >= c, true, Or(Le(a, b), Ge(a, c)))),
+                    (Tuple(Lt(a, b), Lt(c, a)), ITE(b > c, true, Or(Lt(a, b), Gt(a, c)))),
+                    (Tuple(Lt(c, a), Lt(a, b)), ITE(b > c, true, Or(Lt(a, b), Gt(a, c)))),
+                    (Tuple(Le(a, b), Lt(c, a)), ITE(b >= c, true, Or(Le(a, b), Gt(a, c)))),
+                    (Tuple(Le(c, a), Lt(a, b)), ITE(b >= c, true, Or(Lt(a, b), Ge(a, c)))),
+                    (Tuple(Lt(b, a), Lt(a, -b)), ITE(b >= 0, Gt(Abs(a), b), true)),
+                    (Tuple(Le(b, a), Le(a, -b)), ITE(b > 0, Ge(Abs(a), b), true)),
                     )
     return _matchers_or
 
@@ -3406,8 +3408,8 @@ def _simplify_patterns_xor():
     # Relationals patterns should be in alphabetical order
     # (pattern1, pattern2, simplified)
     # Do not use Ge, Gt
-    _matchers_xor = (#(Tuple(Le(b, a), Lt(a, b)), S.true),
-                     #(Tuple(Lt(b, a), Le(a, b)), S.true),
+    _matchers_xor = (#(Tuple(Le(b, a), Lt(a, b)), true),
+                     #(Tuple(Lt(b, a), Le(a, b)), true),
                      #(Tuple(Eq(a, b), Le(b, a)), Gt(a, b)),
                      #(Tuple(Eq(a, b), Lt(b, a)), Ge(a, b)),
                      (Tuple(Eq(a, b), Le(a, b)), Lt(a, b)),
@@ -3457,12 +3459,12 @@ def simplify_univariate(expr):
     if not ok:
         return c
     if not i:
-        return S.false
+        return false
     args = []
     for a, b, _, _ in i:
         if a is S.NegativeInfinity:
             if b is S.Infinity:
-                c = S.true
+                c = true
             else:
                 if c.subs(x, b) == True:
                     c = (x <= b)
