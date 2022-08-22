@@ -2770,11 +2770,12 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         aware that this can lead to very long simplification times.
 
     dontcare : Boolean expression
-        Optimize expression under the assumption that this expression is false.
-        This is useful in e.g. Piecewise conditions, where later confitions
-        are subject to the previous conditions being false. Hence, if a previous
-        condition is And(A, B), the simplification of expr can be made with
-        don't cares for And(A, B).
+        Optimize expression under the assumption that inputs where this
+        expression is true are don't care. This is useful in e.g. Piecewise
+        conditions, where later conditions do not need to consider inputs that
+        are convered by previous conditions. Hence, if a previous condition is
+        ``And(A, B)``, the simplification of expr can be made with don't cares
+        for ``And(A, B)``.
 
     Examples
     ========
@@ -3057,7 +3058,8 @@ def _apply_patternbased_simplification(rv, patterns, measure,
         Boolean expression
 
     patterns : tuple
-        Tuple of tuples, with (pattern to simplify, simplified pattern).
+        Tuple of tuples, with (pattern to simplify, simplified pattern) with
+        two variables.
 
     measure : function
         Simplification measure.
@@ -3076,6 +3078,9 @@ def _apply_patternbased_simplification(rv, patterns, measure,
         If ``replacementvalue`` is ``None`` and ``dominatingvalue`` is not
         ``None``, ``replacementvalue = dominatingvalue``.
 
+    threeterm_patterns : tuple, optional
+        Tuple of tuples, with (pattern to simplify, simplified pattern) with
+        three variables.
     """
     from sympy.core.relational import Relational, _canonical
 
@@ -3240,6 +3245,7 @@ def _apply_patternbased_threeterm_simplification(Rel, patterns, func,
     return Rel
 
 
+@cacheit
 def _simplify_patterns_and():
     """ Two-term patterns for And."""
 
@@ -3289,6 +3295,7 @@ def _simplify_patterns_and():
     return _matchers_and
 
 
+@cacheit
 def _simplify_patterns_and3():
     """ Three-term patterns for And."""
 
@@ -3331,6 +3338,7 @@ def _simplify_patterns_and3():
     return _matchers_and
 
 
+@cacheit
 def _simplify_patterns_or():
     """ Two-term patterns for Or."""
 
@@ -3384,6 +3392,8 @@ def _simplify_patterns_or():
                     )
     return _matchers_or
 
+
+@cacheit
 def _simplify_patterns_xor():
     """ Two-term patterns for Xor."""
 

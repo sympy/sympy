@@ -1465,6 +1465,15 @@ def _piecewise_simplify_ne(args):
     """
     See if not equal expressions happens to evaluate to the
     same function as in the next piecewise segment for the not equal condition.
+
+    Example
+    =======
+
+    >>> from sympy.functions.elementary.piecewise import _piecewise_simplify_ne
+    >>> from sympy import Ne, S, true
+    >>> from sympy.abc import x
+    >>> _piecewise_simplify_ne([(x, Ne(x, S.One)), (S.One, true)])
+    [(x, Ne(x, 1)), (x, True)]
     """
     if not any(cond.has(Ne) for (expr, cond) in args):
         return args
