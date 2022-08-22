@@ -86,7 +86,24 @@ You can *title* in several ways.
 
 ### Equations With No Solution
 
-*Equations with no solution content*
+If the determinant of a matrix is zero, matrix equations with it have no
+solution:
+
+```py
+>>> from sympy import symbols
+>>> from sympy.matrices import Matrix
+>>> c, d, e = symbols("c, d, e")
+>>> A = Matrix([[c*e**2, d*e], [c*e, d]])
+>>> A
+Matrix([
+[c*e**2, d*e],
+[   c*e,   d]])
+>>> b = Matrix([2, 0])
+>>> A.LUsolve(b)
+Traceback (most recent call last):
+    ...
+NonInvertibleMatrixError: Matrix det == 0; not invertible.
+```
 
 ### Equations With No Analytical Solution
 
