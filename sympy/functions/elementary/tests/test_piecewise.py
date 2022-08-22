@@ -1555,7 +1555,7 @@ def test_piecewise_simplify2():
                                                           (x*y, True))
 
     p = Piecewise((x**2, And(Ne(x, 2), Ne(x, y))), (2*x, Ne(x, 4)), (x*y, True))
-    assert p.simplify() == Piecewise((x**2, Ne(x, 4) | (Ne(x, 2) & Ne(x, y))),
+    assert p.simplify() == Piecewise((x**2, Ne(x, 4) | Ne(x, y)),
                                       (x*y, True))
 
     # From example in #15705

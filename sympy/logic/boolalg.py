@@ -3553,3 +3553,45 @@ def gateinputcount(expr):
     if isinstance(expr, BooleanGates):
         return len(expr.args) + sum(gateinputcount(x) for x in expr.args)
     return 0
+
+
+def simplify_relations(e, **kwargs):
+    from sympy.core.relational import Relational
+    and_patterns = _simplify_patterns_and()
+    and3_patterns = _simplify_patterns_and3()
+    or_patterns = _simplify_patterns_or()
+
+    measure = kwargs['measure']
+    def _simplify_relations(expr, simplify=False):
+        if not isinstance(expr, BooleanFunction) or not expr.has(Relational):
+            return expr
+        if isinstance(expr, And):
+            if expr.has(Or):
+                or_expr = distribute_or_over_and(expr)
+                if isinstance(or_expr, Or):
+                    args = or_expr.args
+                    newargs = [_simplify_relations(a, simplify=True) for a in args]
+                    return Or(*newargs)
+                return or_expr
+            else:
+                if simplify and expr.has(Relational):
+                    return _apply_patternbased_simplification(
+                        expr, and_patterns, measure, false, threeterm_patterns=and3_patterns)
+                return expr
+
+        if isinstance(expr, Or):
+            if expr.has(And):
+                and_expr = distribute_and_over_or(expr)
+                if isinstance(and_expr, And):
+                    args = and_expr.args
+                    newargs = [_simplify_relations(a, simplify=True) for a in args]
+                    return And(*newargs)
+                return and_expr
+            else:
+                if simplify and expr.has(Relational):
+                    return _apply_patternbased_simplification(expr, or_patterns,
+                                                              measure, true)
+                return expr
+        return expr
+
+    return simplify_logic(_simplify_relations(e))

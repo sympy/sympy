@@ -9,7 +9,8 @@ from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
-    true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
+    true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and,
+    simplify_relations)
 from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
@@ -62,6 +63,7 @@ class ExprCondPair(Tuple):
 
     def _eval_simplify(self, **kwargs):
         return self.func(*[a.simplify(**kwargs) for a in self.args])
+
 
 class Piecewise(Function):
     """
@@ -1226,6 +1228,7 @@ def piecewise_simplify(expr, **kwargs):
     measure = kwargs.get('measure', count_ops)
     ratio = kwargs.get('ratio', 1.7)
     args = list(expr.args)
+    args = _piecewise_simplify_conds(args, measure, ratio)
     args = _piecewise_simplify_and_eq(args)
     args = _piecewise_simplify_eq_next_segment(args)
     args = _piecewise_simplify_or_and_eq(args, measure, ratio)
@@ -1238,6 +1241,7 @@ def piecewise_simplify(expr, **kwargs):
     args = _piecewise_simplify_ne(args)
     args = _piecewise_replace_equal_expressions(args)
     args = _piecewise_simplify_identical_expressions(args)
+    args = _piecewise_simplify_conds(args, measure, ratio)
     return Piecewise(*args)
 
 
@@ -1282,6 +1286,9 @@ def _piecewise_simplify_eq_next_segment(args):
     prevexpr = None
     for i, (expr, cond) in reversed(list(enumerate(args))):
         if prevexpr is not None:
+            if isinstance(cond, Or) and cond.has(Eq):
+                # Rewrite to cnf form
+                cond = simplify_logic(cond, form='cnf')
             if isinstance(cond, And):
                 eqs, other = sift(cond.args,
                     lambda i: isinstance(i, Eq), binary=True)
@@ -1591,14 +1598,30 @@ def _piecewise_simplify_conditions(args, measure, ratio):
     prevnewcond = S.false
     for expr, cond in args:
         newcond = (cond & ~cummulatedcond).simplify()
-        shortcond = shorter(newcond, cond)
-        newcond = simplify_logic(shortcond, form='cnf', dontcare=cummulatedcond)
-        shortcond = shorter(newcond, shortcond)
+        if isinstance(cond, Ne) and isinstance(newcond, Eq):
+            shortcond = newcond
+        else:
+            shortcond = shorter(newcond, cond)
+            newcond = simplify_logic(shortcond, form='cnf', dontcare=cummulatedcond)
+            shortcond = shorter(newcond, shortcond)
         if shortcond != False and shortcond not in [prevcond, prevnewcond]:
             newargs.append((expr, shortcond))
         cummulatedcond = (cummulatedcond | shortcond).simplify()
         prevcond, prevnewcond = cond, newcond
     return newargs
+
+
+def _piecewise_simplify_conds(args, measure, ratio):
+    """
+    Expand conditions
+    """
+    for i, (expr, cond) in enumerate(args):
+        newcond = simplify_relations(cond, measure=measure, ratio=ratio)
+        oldcost = measure(cond)
+        newcost = measure(newcond)
+        if newcost < ratio*oldcost:
+            args[i] = (expr, newcond)
+    return args
 
 
 def _piecewise_collapse_arguments(_args):
