@@ -42,8 +42,11 @@ from .sdm import (
     sdm_nullspace_from_rref
 )
 
+from sympy.utilities.misc import filldedent
+
 
 def _linsolve(eqs, syms):
+
     """Solve a linear system of equations.
 
     Examples
@@ -69,8 +72,8 @@ def _linsolve(eqs, syms):
     nsyms = len(syms)
 
     # Convert to sparse augmented matrix (len(eqs) x (nsyms+1))
-    eqsdict, rhs = _linear_eq_to_dict(eqs, syms)
-    Aaug = sympy_dict_to_dm(eqsdict, rhs, syms)
+    eqsdict, const = _linear_eq_to_dict(eqs, syms)
+    Aaug = sympy_dict_to_dm(eqsdict, const, syms)
     K = Aaug.domain
 
     # sdm_irref has issues with float matrices. This uses the ddm_rref()
@@ -126,50 +129,67 @@ def sympy_dict_to_dm(eqs_coeffs, eqs_rhs, syms):
     for eq, rhs in zip(eqs_coeffs, eqs_rhs):
         eqdict = {sym2index[s]: elem_map[c] for s, c in eq.items()}
         if rhs:
-            eqdict[nsyms] = - elem_map[rhs]
+            eqdict[nsyms] = -elem_map[rhs]
         if eqdict:
             eqsdict.append(eqdict)
-    sdm_aug = SDM(enumerate(eqsdict), (neqs, nsyms+1), K)
+    sdm_aug = SDM(enumerate(eqsdict), (neqs, nsyms + 1), K)
     return sdm_aug
 
 
-def _expand_eqs_deprecated(eqs):
-    """Use expand to cancel nonlinear terms.
-
-    This approach matches previous behaviour of linsolve but should be
-    deprecated.
-    """
-    def expand_eq(eq):
-        if eq.is_Equality:
-            eq = eq.lhs - eq.rhs
-        return eq.expand()
-
-    return [expand_eq(eq) for eq in eqs]
-
-
 def _linear_eq_to_dict(eqs, syms):
-    """Convert a system Expr/Eq equations into dict form"""
-    try:
-        return _linear_eq_to_dict_inner(eqs, syms)
-    except PolyNonlinearError:
-        # XXX: This should be deprecated:
-        eqs = _expand_eqs_deprecated(eqs)
-        return _linear_eq_to_dict_inner(eqs, syms)
+    """Convert a system Expr/Eq equations into dict form, returning
+    the coefficient dictionaries and a list of syms-independent terms
+    from each expression in ``eqs```.
 
+    Examples
+    ========
 
-def _linear_eq_to_dict_inner(eqs, syms):
-    """Convert a system Expr/Eq equations into dict form"""
-    syms = set(syms)
-    eqsdict, eqs_rhs = [], []
-    for eq in eqs:
-        rhs, eqdict = _lin_eq2dict(eq, syms)
-        eqsdict.append(eqdict)
-        eqs_rhs.append(rhs)
-    return eqsdict, eqs_rhs
+    >>> from sympy.polys.matrices.linsolve import _linear_eq_to_dict
+    >>> from sympy.abc import x
+    >>> _linear_eq_to_dict([2*x + 3], {x})
+    ([{x: 2}], [3])
+    """
+    coeffs = []
+    ind = []
+    symset = set(syms)
+    for i, e in enumerate(eqs):
+        if e.is_Equality:
+            coeff, terms = _lin_eq2dict(e.lhs, symset)
+            cR, tR = _lin_eq2dict(e.rhs, symset)
+            # there were no nonlinear errors so now
+            # cancellation is allowed
+            coeff -= cR
+            for k, v in tR.items():
+                if k in terms:
+                    terms[k] -= v
+                else:
+                    terms[k] = -v
+            # don't store coefficients of 0, however
+            terms = {k: v for k, v in terms.items() if v}
+            c, d = coeff, terms
+        else:
+            c, d = _lin_eq2dict(e, symset)
+        coeffs.append(d)
+        ind.append(c)
+    return coeffs, ind
 
 
 def _lin_eq2dict(a, symset):
-    """Efficiently convert a linear equation to a dict of coefficients"""
+    """return (c, d) where c is the sym-independent part of ``a`` and
+    ``d`` is an efficiently calculated dictionary mapping symbols to
+    their coefficients. A PolyNonlinearError is raised if non-linearity
+    is detected.
+
+    The values in the dictionary will be non-zero.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.matrices.linsolve import _lin_eq2dict
+    >>> from sympy.abc import x, y
+    >>> _lin_eq2dict(x + 2*y + 3, {x, y})
+    (3, {x: 1, y: 2})
+    """
     if a in symset:
         return S.Zero, {a: S.One}
     elif a.is_Add:
@@ -194,16 +214,17 @@ def _lin_eq2dict(a, symset):
                 terms = ti
                 terms_coeff = ci
             else:
-                raise PolyNonlinearError
-        coeff = Mul(*coeff_list)
+                # since ti is not null and we already have
+                # a term, this is a cross term
+                raise PolyNonlinearError(filldedent('''
+                    nonlinear cross-term: %s''' % a))
+        coeff = Mul._from_args(coeff_list)
         if terms is None:
             return coeff, {}
         else:
             terms = {sym: coeff * c for sym, c in terms.items()}
             return  coeff * terms_coeff, terms
-    elif a.is_Equality:
-        return _lin_eq2dict(a.lhs - a.rhs, symset)
-    elif not a.has_free(*symset):
+    elif not a.has_xfree(symset):
         return a, {}
     else:
-        raise PolyNonlinearError
+        raise PolyNonlinearError('nonlinear term: %s' % a)

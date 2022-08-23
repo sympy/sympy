@@ -41,6 +41,7 @@ def iterfreeargs(expr, _first=True):
 
     Examples
     ========
+
     >>> from sympy import Integral, Function
     >>> from sympy.abc import x
     >>> f = Function('f')
@@ -64,8 +65,6 @@ def iterfreeargs(expr, _first=True):
             args.extend(i.args)
         except TypeError:
             pass  # for cases like f being an arg
-
-
 
 
 class preorder_traversal:
