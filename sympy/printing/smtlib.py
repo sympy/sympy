@@ -24,7 +24,7 @@ class SMTLibPrinter(Printer):
     # based on dReal, an automated reasoning tool for solving problems that can be encoded as first-order logic formulas over the real numbers.
     # dReal's special strength is in handling problems that involve a wide range of nonlinear real functions.
     _default_settings = {
-        'precision': 5,
+        'precision': None,
         'known_types': {
             bool: 'Bool',
             int: 'Int',
@@ -75,6 +75,7 @@ class SMTLibPrinter(Printer):
         settings = settings or {}
         self.symbol_table = symbol_table or {}
         Printer.__init__(self, settings)
+        self._precision = self._settings['precision']
         self._known_types = dict(self._settings['known_types'])
         self._known_constants = dict(self._settings['known_constants'])
         self._known_functions = dict(self._settings['known_functions'])
@@ -172,7 +173,8 @@ class SMTLibPrinter(Printer):
         return 'false'
 
     def _print_Float(self, x: Float):
-        return str(x.evalf(self._settings['precision'])).rstrip('0')
+        f = x.evalf(self._precision) if self._precision else x.evalf()
+        return str(f).rstrip('0')
 
     def _print_float(self, x: float):
         return str(x)
@@ -213,7 +215,7 @@ class SMTLibPrinter(Printer):
 def smtlib_code(
     expr,
     auto_assert=True, auto_declare=True,
-    precision=16,
+    precision=None,
     symbol_table=None,
     known_types=None, known_constants=None, known_functions=None,
     prefix_expressions=None, suffix_expressions=None,
@@ -307,12 +309,14 @@ def smtlib_code(
         for _ in expr
     ]
 
-    settings = {'precision': precision}
-
     if not symbol_table: symbol_table = {}
     symbol_table = _auto_infer_smtlib_types(
         *expr, symbol_table=symbol_table, log_warn=log_warn
     )
+
+    settings = {}
+    if precision: settings['precision'] = precision
+    del precision
 
     if known_types: settings['known_types'] = known_types
     del known_types
