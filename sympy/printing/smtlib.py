@@ -1,6 +1,6 @@
 import builtins
 import typing
-from typing import List, Type
+from typing import List
 
 import sympy
 from sympy.core import Add, Mul
@@ -11,7 +11,7 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log, Pow
 from sympy.functions.elementary.hyperbolic import sinh, cosh, tanh
 from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.functions.elementary.piecewise import ExprCondPair, Piecewise
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import sin, cos, tan, asin, acos, atan, atan2
 from sympy.logic.boolalg import And, Or, Xor, Implies
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse, BooleanFunction, Not, ITE
@@ -70,9 +70,9 @@ class SMTLibPrinter(Printer):
         }
     }
 
-    symbol_table: typing.Dict[Symbol, Type]
+    symbol_table: dict
 
-    def __init__(self, settings: dict = None, symbol_table: typing.Dict[Symbol, Type] = None):
+    def __init__(self, settings: dict = None, symbol_table=None):
         settings = settings or {}
         self.symbol_table = symbol_table or {}
         Printer.__init__(self, settings)
@@ -89,15 +89,15 @@ class SMTLibPrinter(Printer):
         if s[0].isnumeric(): return False
         return all(_.isalnum() or _ == '_' for _ in s)
 
-    def _s_expr(self, op: str, args: list) -> str:
-        args = ' '.join(
+    def _s_expr(self, op: str, args: typing.Union[list, tuple]) -> str:
+        args_str = ' '.join(
             a if isinstance(a, str)
             else self._print(a)
             for a in args
         )
-        return f'({op} {args})'
+        return f'({op} {args_str})'
 
-    def _print_Function(self, e: Function):
+    def _print_Function(self, e):
         if e in self._known_functions:
             op = self._known_functions[e]
         elif type(e) in self._known_functions:
@@ -127,7 +127,7 @@ class SMTLibPrinter(Printer):
             return self._s_expr(not_op, [self._s_expr(eq_op, e.args)])
 
     def _print_Piecewise(self, e: Piecewise):
-        def _print_Piecewise_recursive(args: List[ExprCondPair]):
+        def _print_Piecewise_recursive(args: typing.Union[list, tuple]):
             e, c = args[0]
             if len(args) == 1:
                 assert (c is True) or isinstance(c, BooleanTrue)
@@ -196,7 +196,7 @@ class SMTLibPrinter(Printer):
         name = self._known_constants.get(x)
         return name if name else self._print_Float(x)
 
-    def _print_UndefinedFunction(self, x: UndefinedFunction):
+    def _print_UndefinedFunction(self, x):
         assert self._is_legal_name(x.name)
         return x.name
 
@@ -389,7 +389,7 @@ def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, 
             )
 
         type_signature = p.symbol_table[type(sym)]
-        assert isinstance(type_signature, typing.Callable)
+        assert callable(type_signature)
         type_signature = [p._known_types[_] for _ in type_signature.__args__]
         assert len(type_signature) > 0
         params_signature = f"({' '.join(type_signature[:-1])})"
@@ -435,8 +435,9 @@ def _auto_infer_smtlib_types(
 
     _symbols = dict(symbol_table) if symbol_table else {}
 
-    def safe_update(syms: typing.Set[Symbol], inf):
+    def safe_update(syms: set, inf):
         for s in syms:
+            assert s.is_Symbol
             if (old_type := _symbols.setdefault(s, inf)) != inf:
                 raise TypeError(f"Could not infer type of `{s}`. Apparently both `{old_type}` and `{inf}`?")
 
