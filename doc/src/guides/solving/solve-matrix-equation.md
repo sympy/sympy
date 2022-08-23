@@ -33,7 +33,7 @@ Matrix([
 Matrix([
 [2],
 [0]])
->>> A.LUsolve(b)
+>>> A.solve(b)
 Matrix([
 [2*e/(c*e + d)],
 [  2/(c*e + d)]])
@@ -41,9 +41,27 @@ Matrix([
 
 ## Guidance
 
-### *Guidance 1*
+### Matrix Must Be Square
 
-*Guidance 1 content*
+The matrix $A$ must be square to represent a system of linear equations with the
+same number of unknowns as equations. If not, SymPy will give an error:
+
+```py
+>>> from sympy import symbols
+>>> from sympy.matrices import Matrix
+>>> c, d, e = symbols("c, d, e")
+>>> not_square = Matrix([[c,d], [1, -e], [d, e]])
+>>> not_square
+Matrix([
+[c,  d],
+[1, -e],
+[d,  e]])
+>>> b = Matrix([2, 0])
+>>> not_square.solve(b)
+Traceback (most recent call last):
+    ...
+sympy.matrices.common.NonInvertibleMatrixError: Matrix det == 0; not invertible.
+```
 
 ### *Guidance 2*
 
