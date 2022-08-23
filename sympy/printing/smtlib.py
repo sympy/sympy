@@ -260,14 +260,15 @@ def smtlib_code(
     Examples
     ========
 
-    >>> from sympy import smtlib_code, symbols, sin
+    >>> noop = (lambda _: None)
+    >>> from sympy import smtlib_code, symbols, sin, Eq
     >>> x = symbols('x')
-    >>> smtlib_code(sin(x).series(x).removeO())
+    >>> smtlib_code(sin(x).series(x).removeO(), log_warn=noop)
     '(declare-const x Real)\n(+ x (* (/ -1 6) (pow x 3)) (* (/ 1 120) (pow x 5)))'
 
     >>> from sympy import Rational
     >>> x, y, tau = symbols("x, y, tau")
-    >>> smtlib_code((2*tau)**Rational(7, 2))
+    >>> smtlib_code((2*tau)**Rational(7, 2), log_warn=noop)
     '(declare-const tau Real)\n(* 8 (pow 2 (/ 1 2)) (pow tau (/ 7 2)))'
 
     ``Piecewise`` expressions are implemented with ``ite`` expressions by default.
@@ -277,8 +278,9 @@ def smtlib_code(
 
     >>> from sympy import Piecewise
     >>> pw = Piecewise((x + 1, x > 0), (x, True))
-    >>> smtlib_code(pw)
-    '(declare-const x Real)\n(ite (> x 0) (+ 1 x) x)'
+    >>> smtlib_code(Eq(pw, 3))
+    Could not infer type of `x`. Defaulting to float.
+    '(declare-const x Real)\n(assert (= (ite (> x 0) (+ 1 x) x) 3))'
 
     Custom printing can be defined for certain types by passing a dictionary of
     PythonType : "SMT Name" to the ``known_types``, ``known_constants``, and ``known_functions`` kwargs.
@@ -295,6 +297,7 @@ def smtlib_code(
     ...   g: Callable[[int], float],
     ... }
     >>> smtlib_code(f(x) + g(x), symbol_table=user_def_funcs, known_functions=smt_builtin_funcs)
+    Non-Boolean expression `f(x) + g(x)` will not be asserted. Converting to SMTLib verbatim.
     '(declare-const x Int)\n(declare-fun g (Int) Real)\n(sum (existing_smtlib_fcn x) (g x))'
     """
     if not log_warn: log_warn = (lambda _: None)
