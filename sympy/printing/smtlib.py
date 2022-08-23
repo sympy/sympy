@@ -23,7 +23,7 @@ class SMTLibPrinter(Printer):
 
     # based on dReal, an automated reasoning tool for solving problems that can be encoded as first-order logic formulas over the real numbers.
     # dReal's special strength is in handling problems that involve a wide range of nonlinear real functions.
-    _default_settings = {
+    _default_settings: dict = {
         'precision': None,
         'known_types': {
             bool: 'Bool',
