@@ -1,6 +1,5 @@
 import builtins
 import typing
-from typing import List
 
 import sympy
 from sympy.core import Add, Mul
