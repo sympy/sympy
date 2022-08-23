@@ -318,10 +318,7 @@ class Joint(ABC):
     @staticmethod
     def _to_vector(matrix, frame):
         """Converts a matrix to a vector in the given frame."""
-        v = Vector(0)
-        for xi, vi in zip(matrix, frame):
-            v += xi * vi
-        return v
+        return Vector([(matrix, frame)])
 
     @staticmethod
     def _axis(ax, *frames):
