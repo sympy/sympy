@@ -260,7 +260,7 @@ def smtlib_code(
     Examples
     ========
 
-    >>> from sympy import smtlib_code, symbols, sin, pi
+    >>> from sympy import smtlib_code, symbols, sin
     >>> x = symbols('x')
     >>> smtlib_code(sin(x).series(x).removeO())
     '(declare-const x Real)\n(+ x (* (/ -1 6) (pow x 3)) (* (/ 1 120) (pow x 5)))'
