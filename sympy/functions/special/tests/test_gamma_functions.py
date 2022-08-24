@@ -120,6 +120,10 @@ def tn_branch(s, func):
 def test_lowergamma():
     from sympy.functions.special.error_functions import expint
     from sympy.functions.special.hyper import meijerg
+    n = Symbol('n', nonzero = True)
+    assert lowergamma(0, 1) == zoo
+    assert lowergamma(0, oo) == zoo
+    assert lowergamma(0, n) == zoo
     assert lowergamma(x, 0) == 0
     assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
