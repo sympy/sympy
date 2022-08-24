@@ -4,6 +4,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, diff)
 from sympy.core import EulerGamma
 from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
@@ -345,6 +346,22 @@ def test_series_AccumBounds():
     e = 2**(-x)*(sin(x) + 1)**x
     assert limit(e, x, oo) == AccumBounds(0, oo)
 
+
+def test_limit_for_symbolic_point():
+    x, z = symbols('x z')
+    assert limit(sin(x)/x, x, z) == Piecewise((1, Eq(z, 0)), (sin(z)/z, True))
+    assert limit(1/x, x, z) == Piecewise((oo, Eq(z, 0)), (1/z, True))
+    assert limit((x**3 + 2*x + 1)/(x**2 -1), x, z) == Piecewise((-oo, Eq(z, -oo)), (oo, Eq(z, -1) | Eq(z, 1) | Eq(z, oo)), ((z**3 + 2*z + 1)/(z**2 - 1), True))
+    assert limit(1/(5 - x)**3, x, z, dir="+") == Piecewise((-oo, Eq(z, 5)), ((5 - z)**(-3), True))
+    assert limit(1/(5 - x)**3, x, z, dir="-") == Piecewise((oo, Eq(z, 5)), ((5 - z)**(-3), True))
+    assert limit(log(1 + x)/x, x, z) == Piecewise((0, Eq(z, -oo)), (oo, Eq(z, -1)), (1, Eq(z, 0)), (0, Eq(z, oo)), (log(z + 1)/z, True))
+    assert limit((1 + x)/x, x, z) == Piecewise((1, Eq(z, -oo)), (oo, Eq(z, 0)), (1, Eq(z, oo)), ((z + 1)/z, True))
+    assert limit((1 + 1/x)**x, x, z) == Piecewise((E, Eq(z, -oo)), (1, Eq(z, 0)), (E, Eq(z, oo)), ((1 + 1/z)**z, True))
+    assert limit((5**(1/x) + 3**(1/x))**x, x, z) == Piecewise((5, Eq(z, 0)), ((exp(log(3)/z) + exp(log(5)/z))**z, True))
+
+    raises(ValueError, lambda: limit((1 + x)/x, x, z, dir = '+-'))
+    raises(ValueError, lambda: limit(1/(5 - x)**3, x, z, dir="+-"))
+    raises(ValueError, lambda: limit((x**3 + 2*x + 1)/(x**2 -1), x, z, dir = '+-'))
 
 @XFAIL
 def test_doit2():

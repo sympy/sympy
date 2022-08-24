@@ -22,7 +22,7 @@ def limit(e, z, z0, dir="+"):
         Other symbols are treated as constants. Multivariate limits
         are not supported.
 
-    z0 : the value toward which ``z`` tends. Can be any expression,
+    z0 : the value or the symbolic point toward which ``z`` tends. Can be any expression,
         including ``oo`` and ``-oo``.
 
     dir : string, optional (default: "+")
@@ -35,8 +35,8 @@ def limit(e, z, z0, dir="+"):
     Examples
     ========
 
-    >>> from sympy import limit, sin, oo
-    >>> from sympy.abc import x
+    >>> from sympy import limit, sin, cos, oo
+    >>> from sympy.abc import x, z
     >>> limit(sin(x)/x, x, 0)
     1
     >>> limit(1/x, x, 0) # default dir='+'
@@ -47,6 +47,12 @@ def limit(e, z, z0, dir="+"):
     zoo
     >>> limit(1/x, x, oo)
     0
+    >>> limit(sin(x)/x, x, z)
+    Piecewise((1, Eq(z, 0)), (sin(z)/z, True))
+    >>> limit((1- cos(x))/x**2, x, z)
+    Piecewise((1/2, Eq(z, 0)), (-(cos(z) - 1)/z**2, True))
+    >>> limit(1/(5 - x)**3, x, z, dir="-")
+    Piecewise((oo, Eq(z, 5)), ((5 - z)**(-3), True))
 
     Notes
     =====
@@ -127,6 +133,71 @@ def heuristics(e, z, z0, dir):
     return rv
 
 
+def _limit_for_symbolic_point(expr, z0, cdir):
+    """Helper function to evaluate limits when the point, ``z0``, is passed as a Symbol.
+    Returns the limit in piecewise form over the complete real number line from
+    Negative Infinity to Positive Infinity.
+
+    Note: This method is currently implemented for expressions having finite discontinuities.
+
+    Examples
+    ========
+
+    >>> from sympy import limit, sin, log
+    >>> from sympy.abc import x, z
+    >>> limit(sin(x)/x, x, z)
+    Piecewise((1, Eq(z, 0)), (sin(z)/z, True))
+    >>> limit(log(x + 1)/x, x, z)
+    Piecewise((0, Eq(z, -oo)), (oo, Eq(z, -1)), (1, Eq(z, 0)), (0, Eq(z, oo)), (log(z + 1)/z, True))
+    >>> limit((1 + 1/(x**2 -4))**x, x, z)
+    Piecewise((1, Eq(z, -oo)), (0, Eq(z, -2)), (oo, Eq(z, 2)), (1, Eq(z, oo)), ((z**2/(z**2 - 4) - 3/(z**2 - 4))**z, True))
+    >>> limit(1/(5 - x)**3, x, z, dir="-")
+    Piecewise((oo, Eq(z, 5)), ((5 - z)**(-3), True))
+
+    """
+    from sympy.calculus.singularities import singularities
+    from sympy.core.relational import Eq
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.sets.sets import FiniteSet
+
+    if isinstance(singularities(expr, z0), FiniteSet):
+        piecewise_list = []
+        if cdir == 1:
+            dir = "+"
+        elif cdir == -1:
+            dir = "-"
+        elif cdir == 0:
+            conditions = []
+            left_limit = _limit_for_symbolic_point(expr, z0, -1)
+            right_limit = _limit_for_symbolic_point(expr, z0, +1)
+
+            for LHL, RHL in zip(left_limit.args, right_limit.args):
+                if LHL != RHL:
+                    conditions.append(LHL[1])
+            if conditions:
+                # Removing Eq(z0, -oo) and Eq(z0, oo) from the equality conditions
+                new_conditions = []
+                for equality in conditions:
+                    if not isinstance(equality, Eq):
+                        new_conditions = [eq for eq in equality.args]
+                    else:
+                        new_conditions.append(equality)
+                new_conditions = [cond for cond in new_conditions if cond != Eq(z0, S.NegativeInfinity) and cond != Eq(z0, S.Infinity)]
+                raise ValueError("Bi-Directional limits at following equalities do not exist : %s" % (new_conditions))
+            return left_limit
+
+        if limit(expr, z0, S.NegativeInfinity) != expr.subs(z0, S.NegativeInfinity):
+            piecewise_list.append((limit(expr, z0, S.NegativeInfinity), Eq(z0, S.NegativeInfinity)))
+        for singularity in singularities(expr, z0):
+            piecewise_list.append((limit(expr, z0, singularity, dir), Eq(z0, singularity)))
+        if limit(expr, z0, S.Infinity) != expr.subs(z0, S.Infinity):
+            piecewise_list.append((limit(expr, z0, S.Infinity), Eq(z0, S.Infinity)))
+        piecewise_list.append((expr,True))
+        expr = Piecewise(*piecewise_list)
+
+    return expr
+
+
 class Limit(Expr):
     """Represents an unevaluated limit.
 
@@ -194,6 +265,38 @@ class Limit(Expr):
                 return exp(res)
         if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
             return S.ComplexInfinity
+
+
+    def _limit_from_leading_term(self, coeff, ex, e, z, z0, cdir):
+        """Helper function to evaluate limits using the leading term of the
+        expression after transforming the point, ``z0`` to 0.
+        """
+        if isinstance(coeff, AccumBounds) and ex == S.Zero:
+            return coeff
+        if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
+            return self
+        if not coeff.has(z):
+            if ex.is_positive:
+                return S.Zero
+            elif ex == 0:
+                if z0.is_Symbol and not z0 in e.free_symbols:
+                    return _limit_for_symbolic_point(coeff, z0, cdir)
+                return coeff
+            elif ex.is_negative:
+                if ex.is_integer:
+                    if cdir == 1 or ex.is_even:
+                        return S.Infinity*sign(coeff)
+                    elif cdir == -1:
+                        return S.NegativeInfinity*sign(coeff)
+                    else:
+                        return S.ComplexInfinity
+                else:
+                    if cdir == 1:
+                        return S.Infinity*sign(coeff)
+                    elif cdir == -1:
+                        return S.Infinity*sign(coeff)*S.NegativeOne**ex
+                    else:
+                        return S.ComplexInfinity
 
 
     def doit(self, **hints):
@@ -300,16 +403,9 @@ class Limit(Expr):
             except ValueError:
                 pass
             else:
-                if ex > 0:
-                    return S.Zero
-                elif ex == 0:
-                    return coeff
-                if cdir == 1 or not(int(ex) & 1):
-                    return S.Infinity*sign(coeff)
-                elif cdir == -1:
-                    return S.NegativeInfinity*sign(coeff)
-                else:
-                    return S.ComplexInfinity
+                res = self._limit_from_leading_term(coeff, ex, e, z, z0, cdir)
+                if not res is None:
+                    return res
 
         if abs(z0) is S.Infinity:
             if e.is_Mul:
@@ -330,30 +426,9 @@ class Limit(Expr):
                 if r is not None:
                     return r
         else:
-            if isinstance(coeff, AccumBounds) and ex == S.Zero:
-                return coeff
-            if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
-                return self
-            if not coeff.has(z):
-                if ex.is_positive:
-                    return S.Zero
-                elif ex == 0:
-                    return coeff
-                elif ex.is_negative:
-                    if ex.is_integer:
-                        if cdir == 1 or ex.is_even:
-                            return S.Infinity*sign(coeff)
-                        elif cdir == -1:
-                            return S.NegativeInfinity*sign(coeff)
-                        else:
-                            return S.ComplexInfinity
-                    else:
-                        if cdir == 1:
-                            return S.Infinity*sign(coeff)
-                        elif cdir == -1:
-                            return S.Infinity*sign(coeff)*S.NegativeOne**ex
-                        else:
-                            return S.ComplexInfinity
+            res = self._limit_from_leading_term(coeff, ex, e, z, z0, cdir)
+            if not res is None:
+                return res
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
@@ -375,4 +450,6 @@ class Limit(Expr):
             if r is None:
                 return self
 
+        if z0.is_Symbol and not z0 in e.free_symbols:
+            return _limit_for_symbolic_point(r, z0, cdir)
         return r
