@@ -217,28 +217,19 @@ def decompose_power(expr: Expr) -> tTuple[Expr, int]:
     """
     Decompose power into symbolic base and integer exponent.
 
-    Explanation
-    ===========
-
-    This is strictly only valid if the exponent from which
-    the integer is extracted is itself an integer or the
-    base is positive. These conditions are assumed and not
-    checked here.
-
     Examples
     ========
 
     >>> from sympy.core.exprtools import decompose_power
     >>> from sympy.abc import x, y
+    >>> from sympy import exp
 
     >>> decompose_power(x)
     (x, 1)
     >>> decompose_power(x**2)
     (x, 2)
-    >>> decompose_power(x**(2*y))
-    (x**y, 2)
-    >>> decompose_power(x**(2*y/3))
-    (x**(y/3), 2)
+    >>> decompose_power(exp(2*y/3))
+    (exp(y/3), 2)
 
     """
     base, exp = expr.as_base_exp()
@@ -268,28 +259,25 @@ def decompose_power(expr: Expr) -> tTuple[Expr, int]:
 
 def decompose_power_rat(expr: Expr) -> tTuple[Expr, Rational]:
     """
-    Decompose power into symbolic base and rational exponent.
+    Decompose power into symbolic base and rational exponent;
+    if the exponent is not a Rational, then separate only the
+    integer coefficient.
+
+    Examples
+    ========
+
+    >>> from sympy.core.exprtools import decompose_power_rat
+    >>> from sympy.abc import x
+    >>> from sympy import sqrt, exp
+
+    >>> decompose_power_rat(sqrt(x))
+    (x, 1/2)
+    >>> decompose_power_rat(exp(-3*x/2))
+    (exp(x/2), -3)
 
     """
-    base, exp = expr.as_base_exp()
-
-    if exp.is_Number:
-        if exp.is_Rational:
-            e: Rational = exp  # type: ignore
-        else:
-            base, e = expr, S.One
-    else:
-        exp, tail = exp.as_coeff_Mul(rational=True)
-
-        if exp is S.NegativeOne:
-            base, e = Pow(base, tail), S.NegativeOne
-        elif exp is not S.One:
-            tail = _keep_coeff(Rational(1, exp.q), tail)  # type: ignore
-            base, e = Pow(base, tail), Integer(exp.p)  # type: ignore
-        else:
-            base, e = expr, S.One
-
-    return base, e
+    _ = base, exp = expr.as_base_exp()
+    return _ if exp.is_Rational else decompose_power(expr)
 
 
 class Factors:

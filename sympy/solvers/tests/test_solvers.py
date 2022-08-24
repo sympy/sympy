@@ -2474,10 +2474,10 @@ def test_issue_20902():
 def test_issue_21034():
     a = symbols('a', real=True)
     system = [x - cosh(cos(4)), y - sinh(cos(a)), z - tanh(x)]
+    # constants inside hyperbolic functions should not be rewritten in terms of exp
     assert solve(system, x, y, z) == [(cosh(cos(4)), sinh(cos(a)), tanh(cosh(cos(4))))]
-    # constants inside hyperbolic functions should not be rewritten
-    # in terms of exp; rewriting should only happen with hyperbolics
-    # containing a symbol if interest
+    # but if the variable of interest is present in a hyperbolic function,
+    # then it should be rewritten in terms of exp and solved further
     newsystem = [(exp(x) - exp(-x)) - tanh(x)*(exp(x) + exp(-x)) + x - 5]
     assert solve(newsystem, x) == {x: 5}
 
