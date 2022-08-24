@@ -19,6 +19,7 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, pi, oo, Rational, Integer
 from sympy.core.relational import is_le, is_gt
+from sympy.core.sympify import sympify
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
@@ -2312,3 +2313,147 @@ def nD(i=None, brute=None, *, n=None, m=None):
     from sympy.functions.elementary.exponential import exp
     return Integer(abs(integrate(exp(-x)*Mul(*[
         laguerre(i, x)**m for i, m in counts.items()]), (x, 0, oo))))
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Padovan numbers                                  #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class padovan(Function):
+    r"""
+    In number theory, the Padovan sequence is the sequence of integers P(n)
+    defined by the initial values `P_0 = 1`, `P_1 = 1` , `P_2 = 1` and the
+    the two-term recurrence `P_n = P_{n-2} + P_{n-3}`.
+
+    * ``padovan(n)`` gives the `n^{th}` Padovan number, `P_n`
+
+    Examples
+    ========
+
+    >>> from sympy import padovan
+
+    >>> padovan.is_padovan(2)
+    True
+    >>> [padovan(x) for x in range(0,11)]
+    [1, 1, 1, 2, 2, 3, 4, 5, 7, 9, 12]
+    >>> padovan.find_first_n_padovan_numbers(8)
+    [1, 1, 1, 2, 2, 3, 4, 5]
+    >>> padovan.padovan_range(2,39)
+    [2, 2, 3, 4, 5, 7, 9, 12, 16, 21, 28, 37]
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Padovan_sequence
+    .. [2] https://mathworld.wolfram.com/PadovanSequence.html
+
+    """
+
+    @staticmethod
+    def is_padovan(n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n > 0:
+                if n == 1 :
+                    return True
+
+                sn0, sn1, sn2 = 1, 1, 1
+                while sn2 < n :
+                    b = sn0 + sn1
+                    sn0 = sn1
+                    sn1 = sn2
+                    sn2 = b
+
+                return sn2 == n
+
+            if n <= 0:
+                if n in (0, -1):
+                    return True
+
+                sn0, sn1, sn2 = 1, 0, 1
+                while sn2 > n :
+                    b = sn0 - sn2
+                    sn0 = sn1
+                    sn1 = sn2
+                    sn2 = b
+
+                return sn2 == n
+
+        else:
+            return False
+
+    @staticmethod
+    def find_first_n_padovan_numbers(n):
+        # Returns first n non-negative numbers from the padovan sequence
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a positive integer')
+        if n < 0:
+            raise ValueError('The provided number must be a positive integer')
+        padovan = [1]
+        if n > 1:
+            padovan.append(1)
+
+        sn0, sn1, sn2 = 1, 1, 1
+        i = 2
+        while i < n :
+            padovan.append(sn2)
+            b = sn0 + sn1
+            sn0 = sn1
+            sn1 = sn2
+            sn2 = b
+            i = i + 1
+
+        return padovan
+
+    @staticmethod
+    def padovan_range(x, y):
+        # Returns padovan numbers in between the inputs excluding the end point
+        if not (0 <= x <= y):
+            raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
+
+        padovan = list()
+        if x <=1 <= y:
+            padovan.extend([1,1])
+        sn0, sn1, sn2 = 1, 1, 1
+        i = 2
+        while sn2 < y:
+            if sn2 >= x:
+                padovan.append(sn2)
+            b = sn0 + sn1
+            sn0 = sn1
+            sn1 = sn2
+            sn2 = b
+            i = i + 1
+
+        return padovan
+
+    @classmethod
+    def eval(cls, n):
+        if n is S.Infinity:
+            return S.Infinity
+
+        try:
+            n = as_int(n)
+        except ValueError:
+            return None
+
+        if n in (0, 1, 2):
+            return 1
+
+        if n == -1:
+            return 0
+
+        if n == -2:
+            return -1
+
+        if n > 0:
+            return padovan(n - 2) + padovan(n - 3)
+
+        if n < 0:
+            return padovan(n + 3) - padovan(n + 1)

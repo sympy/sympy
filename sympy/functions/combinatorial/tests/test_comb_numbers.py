@@ -14,7 +14,7 @@ from sympy.polys.polytools import cancel
 from sympy.series.limits import limit
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    genocchi, padovan, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, zeta)
 from sympy.functions.combinatorial.numbers import _nT
 
@@ -740,3 +740,14 @@ def test_nD_derangements():
     raises(TypeError, lambda: nD({1: x}))
     raises(TypeError, lambda: nD(m={1: x}))
     raises(TypeError, lambda: nD(m={x: 1}))
+
+
+def test_padovan():
+    assert padovan.is_padovan(3) is True
+    assert padovan.is_padovan(6) is False
+    assert padovan.is_padovan(200) is True
+    assert [padovan(x) for x in range(0,11)] == [1, 1, 1, 2, 2, 3, 4, 5, 7, 9, 12]
+    assert padovan.find_first_n_padovan_numbers(8) == [1, 1, 1, 2, 2, 3, 4, 5]
+    assert padovan.padovan_range(1,86) == [1, 1, 1, 2, 2, 3, 4, 5, 7, 9, 12, 16, 21, 28, 37, 49, 65]
+    raises(ValueError, lambda: padovan.find_first_n_padovan_numbers(8.5))
+    raises(ValueError, lambda: padovan.find_first_n_padovan_numbers(-2))
