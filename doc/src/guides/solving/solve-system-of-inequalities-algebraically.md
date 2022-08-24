@@ -171,7 +171,7 @@ so the benefit of solving such inequalities as a set maybe only convenience.
 power of the symbol to be reduced for, or involving another symbol, but not
 both:
 
-```
+```py
 >>> from sympy import reduce_inequalities
 >>> from sympy.abc import x, y
 >>> reduce_inequalities([x ** 2 < 4, x > 0], x)
@@ -181,8 +181,7 @@ both:
 >>> reduce_inequalities([x ** 2 - y < 4, x > 0], x)
 Traceback (most recent call last):
 ...
-NotImplementedError: 
-The inequality, -_y + x**2 - 4 < 0, cannot be solved using
+NotImplementedError: The inequality, -_y + x**2 - 4 < 0, cannot be solved using
 solve_univariate_inequality.
 ```
 
