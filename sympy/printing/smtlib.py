@@ -221,7 +221,7 @@ def smtlib_code(
     prefix_expressions=None, suffix_expressions=None,
     log_warn=builtins.print
 ):
-    r"""Converts `expr` to a string of smtlib code.
+    r"""Converts ``expr`` to a string of smtlib code.
 
     Parameters
     ==========
@@ -248,7 +248,7 @@ def smtlib_code(
     known_constants: dict, optional
         A dictionary where keys are ``NumberSymbol`` instances and values are their SMT variable names.
         When using this feature, extra caution must be taken to avoid naming collisions between user symbols and listed constants.
-        If not given, constants will be expanded inline i.e. '3.14159' instead of 'MY_SMT_VARIABLE_FOR_PI'.
+        If not given, constants will be expanded inline i.e. ``3.14159`` instead of ``MY_SMT_VARIABLE_FOR_PI``.
     prefix_expressions: list, optional
         A list of lists of ``str`` and/or expressions to convert into SMTLib and prefix to the output.
     suffix_expressions: list, optional
