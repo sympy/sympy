@@ -86,8 +86,8 @@ each relation so the symbol is on the left, so you can take the right-hand side
 
 ### Extract a Tuple of Relations
 
-The {any}`args <sympy.core.basic.Basic.args>` of reduced relations are the
-individual relations, so you can extract the constants from the left- or
+The {any}`args <sympy.core.basic.Basic.args>` (arguments) of reduced relations
+are the individual relations, so you can extract the constants from the left- or
 right-hand side of the `args`:
 
 ```py
@@ -119,7 +119,7 @@ inequality.
 >>> x, y = symbols("x y")
 >>> reduce_inequalities([x + y > 1, y > 0], [x, y])
 Traceback (most recent call last):
-    ...
+...
 NotImplementedError: inequality has more than one symbol of interest.
 ```
 
@@ -137,6 +137,8 @@ the constraints on $y$.
 >>> reduce_inequalities([x + y > 1, y > 0], x)
 (0 < y) & (y < oo) & (x > 1 - y)
 ```
+
+(`oo` is {class}`~.Infinity`.)
 
 If each inequality contains only one symbol to be reduced for, SymPy can reduce
 the set of inequalities for multiple symbols:
