@@ -80,7 +80,7 @@ each relation so the symbol is on the left, so you can take the right-hand side
 (1/3 <= x) & (x <= sqrt(pi))
 >>> relations = [(i.lhs, i.rel_op, i.rhs) for i in [i.canonical for i in eq.atoms(Relational)]]
 >>> relations_sorted = sorted(relations, key=lambda x: float(x[2])) # Sorting relations just to ensure consistent list order for docstring testing
->>> print(relations_sorted)
+>>> relations_sorted
 [(x, '>=', 1/3), (x, '<=', sqrt(pi))]
 ```
 
@@ -169,7 +169,7 @@ so the benefit of solving such inequalities as a set maybe only convenience.
 power of the symbol to be reduced for, or involving another symbol, but not
 both:
 
-```
+```py
 >>> from sympy import reduce_inequalities
 >>> from sympy.abc import x, y
 >>> reduce_inequalities([x ** 2 < 4, x > 0], x)
@@ -178,7 +178,7 @@ both:
 (0 < x) & (x < oo) & (x < y)
 >>> reduce_inequalities([x ** 2 - y < 4, x > 0], x)
 Traceback (most recent call last):
-    ...
+...
 NotImplementedError: 
 The inequality, -_y + x**2 - 4 < 0, cannot be solved using
 solve_univariate_inequality.
@@ -227,7 +227,7 @@ expressed algebraically (symbolically) by returning an error such as
 >>> x = symbols('x')
 >>> reduce_inequalities([cos(x) - x > 0, x > 0], x)
 Traceback (most recent call last):
-    ...
+...
 NotImplementedError: The inequality, -x + cos(x) > 0, cannot be solved using solve_univariate_inequality.
 ```
 
