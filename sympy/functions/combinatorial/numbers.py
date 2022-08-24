@@ -478,7 +478,7 @@ class bernoulli(Function):
     * ``bernoulli(s, a)`` gives the generalized Bernoulli function
       `\operatorname{B}(s, a)`
 
-    .. versionchanged:: 1.11
+    .. versionchanged:: 1.12
         ``bernoulli(1)`` gives `+\frac{1}{2}` instead of `-\frac{1}{2}`.
         This choice of value confers several theoretical advantages [5]_,
         including the extension to complex parameters described above
@@ -1314,7 +1314,7 @@ class genocchi(Function):
 
     .. math:: G_n = 2 (1 - 2^n) B_n.
 
-    .. versionchanged:: 1.11
+    .. versionchanged:: 1.12
         ``genocchi(1)`` gives `-1` instead of `1` and ``genocchi(0)`` is now
         defined as `0`.
 
