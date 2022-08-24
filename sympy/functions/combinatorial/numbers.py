@@ -2195,6 +2195,151 @@ class motzkin(Function):
         return Integer(cls._motzkin(n - 1))
 
 
+#-----------------------------------------------------------------------------#
+#                                                                             #
+#                         Schoeder numbers                                    #
+#                                                                             #
+#-----------------------------------------------------------------------------#
+
+
+class schroeder(Function):
+    r"""
+    In mathematics, the Schroeder number, also called a large Schroeder
+    number or big Schroeder number, describes the number of lattice
+    paths from the southwest corner $(0, 0)$ of an $n\times n$ grid to
+    the northeast corner $(n, n)$ using only single steps north, $(0,
+    1)$ northeast, $(1, 1)$ or east, $(1, 0)$ that do not rise above the
+    SW-NE diagonal. The nth Schroeder number is the number of Schroeder
+    paths of length n. The Schroeder numbers were named after the German
+    mathematician Ernst Schroeder.
+
+    Schroeder numbers are the integer sequences defined by the initial
+    terms `S_0 = 1`, `S_1 = 2` and the two-term recurrence relation `S_n
+    = \frac{6*n - 3}{n + 1} * S_{n-1} - \frac{n - 2}{n + 1} * S_{n-2}`.
+
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import schroeder
+
+    Compute the nth Schroeder number:
+
+    >>> schroeder(2)
+    2
+    >>> schroeder(5)
+    90
+
+    Check if a number is a Schroeder number:
+
+    >>> schroeder.is_schroeder(2)
+    True
+    >>> schroeder.is_schroeder(7)
+    False
+
+    Find the first n Schroeder numbers:
+
+    >>> schroeder.find_first_n_schroeder_numbers(1)
+    [1]
+    >>> schroeder.find_first_n_schroeder_numbers(10)
+    [1, 2, 6, 22, 90, 394, 1806, 8558, 41586, 206098]
+
+    Find Schroeder numbers in a given range:
+
+    >>> schroeder.find_schroeder_numbers_in_range(1, 10)
+    [1, 2, 6]
+    >>> schroeder.find_schroeder_numbers_in_range(2, 400)
+    [2, 6, 22, 90, 394]
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Schr%C3%B6der_number
+    .. [2] https://mathworld.wolfram.com/SchroederNumber.html
+
+    """
+
+    @staticmethod
+    def is_schroeder(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            return False
+        if n > 0:
+            if n in (1, 2):
+                return True
+
+            for i in schroeder._iterator():
+                if i == n:
+                    return True
+                if i > n:
+                    return False
+
+        else:
+            return False
+
+    @staticmethod
+    def find_first_n_schroeder_numbers(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a positive integer')
+        if n < 0:
+            raise ValueError('The provided number must be a positive integer')
+        if n == 1:
+            return [1]
+        schroder = [1]
+        for i in schroeder._iterator():
+            schroder.append(i)
+            if len(schroder) == n:
+                break
+
+        return schroder
+
+    @staticmethod
+    def find_schroeder_numbers_in_range(x, y):
+        """
+        Returns all the schroeder numbers in the range (x, y), x and y
+        inclusive.
+
+        """
+
+        if x < 0 or y < x:
+            raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
+        else:
+            schroder = []
+            if x <= 1 <= y:
+                schroder.append(1)
+            for i in schroeder._iterator():
+                if i >= x and i <= y:
+                    schroder.append(i)
+                if i > y:
+                    break
+
+            return schroder
+
+    @staticmethod
+    def _iterator():
+        sn, i = 2, 2
+        while True:
+            yield sn
+            sn = schroeder._schroeder(i)
+            i = i + 1
+
+    @staticmethod
+    @recurrence_memo([S.One, 2*S.One])
+    def _schroeder(n, prev):
+        return ((6*n - 3)*prev[-1] - (n - 2)*prev[-2]) // (n + 1)
+
+    @classmethod
+    def eval(cls, n):
+        if n.is_Number:
+            if (not n.is_Integer) or (n.is_nonpositive):
+                raise ValueError('The provided number must be a positive integer')
+            return Integer(cls._schroeder(n - 1))
+
+
 def nD(i=None, brute=None, *, n=None, m=None):
     """return the number of derangements for: ``n`` unique items, ``i``
     items (as a sequence or multiset), or multiplicities, ``m`` given

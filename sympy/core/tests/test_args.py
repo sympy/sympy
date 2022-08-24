@@ -1993,6 +1993,11 @@ def test_sympy__functions__combinatorial__numbers__motzkin():
     assert _test_args(motzkin(5))
 
 
+def test_sympy__functions__combinatorial__numbers__schroeder():
+    from sympy.functions.combinatorial.numbers import schroeder
+    assert _test_args(schroeder(x))
+
+
 def test_sympy__functions__combinatorial__numbers__fibonacci():
     from sympy.functions.combinatorial.numbers import fibonacci
     assert _test_args(fibonacci(x))
