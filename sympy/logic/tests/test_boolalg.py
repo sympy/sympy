@@ -1111,6 +1111,10 @@ def test_relational_simplification():
     # From #16690
     assert And(x >= y, Eq(y, 0)).simplify() == And(x >= 0, Eq(y, 0))
 
+    assert Or(Ne(x, 1), Ne(x, 2)).simplify() == S.true
+    assert And(Eq(x, 1), Ne(2, x)).simplify() == Eq(x, 1)
+    assert Or(Eq(x, 1), Ne(2, x)).simplify() == Ne(x, 2)
+
 
 def test_issue_8373():
     x = symbols('x', real=True)
@@ -1272,6 +1276,10 @@ def test_gateinputcount():
     assert gateinputcount(a | b & c & d ^ (e | a)) == 9
     assert gateinputcount(And(a, True)) == 0
     raises(TypeError, lambda: gateinputcount(a*b))
+
+
+def test_simplify_logic_dontcare():
+    assert simplify_logic((a & b) | c | d, dontcare=(a & b)) == c | d
 
 
 def test_refine():

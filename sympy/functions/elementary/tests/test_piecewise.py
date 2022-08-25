@@ -4,6 +4,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import unchanged
 from sympy.core.function import (Function, diff, expand)
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Rational, oo, pi, zoo)
 from sympy.core.relational import (Eq, Ge, Gt, Ne)
@@ -1532,3 +1533,138 @@ def test_issue_22533():
     x = Symbol('x', real=True)
     f = Piecewise((-1 / x, x <= 0), (1 / x, True))
     assert integrate(f, x) == Piecewise((-log(x), x <= 0), (log(x), True))
+
+
+def test_piecewise_simplify2():
+    assert Piecewise((2+y, And(Eq(x, 2), Eq(y, 0))), (x, True)).simplify() == x
+    assert Piecewise((2+y, Or(Eq(x, 4), And(Eq(x, 2), Eq(y, 0)))),
+                     (x, True)).simplify() == Piecewise((2 + y, Eq(x, 4)),
+                                                        (x, True))
+    assert Piecewise((1, Eq(x, 0)), (sin(x)/x, True)).simplify() == \
+        Piecewise((1, Eq(x, 0)), (sin(x)/x, True))
+    assert Piecewise((1, Eq(x, 0)), (sin(x) + 1 + x, True)).simplify() == \
+        x + sin(x) + 1
+
+    assert Piecewise((x**2, Ne(x, y)), (x*y, True)).simplify() == x**2
+
+    assert Piecewise((x**2, Ne(x, 2)), (2*x, Ne(x, 4)),
+                     (x*y, True)).simplify() == x**2
+
+    assert Piecewise((y*x**2, Eq(x, 2)), (y*2*x, Ge(x, 4)),
+                     (x*y, True)).simplify() == Piecewise((2*x*y, Or(Eq(x, 2), Ge(x, 4))),
+                                                          (x*y, True))
+
+    p = Piecewise((x**2, And(Ne(x, 2), Ne(x, y))), (2*x, Ne(x, 4)), (x*y, True))
+    assert p.simplify() == Piecewise((x**2, Ne(x, 4) | Ne(x, y)),
+                                      (x*y, True))
+
+    # From example in #15705
+    a = symbols('a', real=True)
+    expr = Piecewise((-a, -a > a), (a, a >= -a))
+    p = Piecewise((0, 0 < expr), (expr, expr <= 0))
+    pf = piecewise_fold(p)
+    assert pf.simplify() == 0
+    # It actually works when simplifying the joint Piecewise as well
+    assert p.simplify() == 0
+
+
+def test_piecewise_simplify3():
+    # See 6951
+    # p = piecewise_fold(integrate(y*cos(x*y), x, y))
+    x, y = symbols("x y")
+    p = Piecewise((-cos(x*y)/x, (y < 0) & Ne(x, 0)),
+                  (0, y < 0),
+                  (-cos(x*y)/x, (x > -oo) & (x < oo) & Ne(x, 0)),
+                  (-1/x, Ne(x, 0)),
+                  (0, True))
+    assert p.simplify() == Piecewise((-cos(x*y)/x, Ne(x, 0) & ((x > -oo) | (y < 0)) & ((x < oo) | (y < 0))),
+                                     (0, Eq(x, 0) | (y < 0)),
+                                     (-1/x, True))
+    x, y = symbols("x y", real=True)
+    # p = piecewise_fold(integrate(y*cos(x*y), x, y))
+    p = Piecewise((-cos(x*y)/x, (y < 0) & Ne(x, 0)),
+                  (0, y < 0),
+                  (-cos(x*y)/x, Ne(x, 0)),
+                  (0, True))
+    assert p.simplify() == Piecewise((-cos(x*y)/x, Ne(x, 0)),
+                                     (0, True))
+
+    C, u, x = symbols('C u x', real=True)
+    p = Piecewise((0, Ne(u, 1)), (C*(2*x + 1)*exp(2*x), Eq(u, 0)), (0, True))
+    assert p.simplify() == 0
+
+
+def test_piecewise_simplify4():
+    x, y = symbols("x y", real=True)
+    p = Piecewise((1, (x >= y) & (y >= 0)), (0, (x >= y)), (1, S.true))
+    assert p.simplify() == Piecewise((1, (y >= 0) | (x < y)),
+                                     (0, S.true))
+    p = Piecewise((1, (x >= y) & (y >= 0)), (0, (x >= y)), (1, x >= 0))
+    assert p.simplify() == Piecewise(
+            (1, ((x >= 0) & (x < y)) | ((x >= y) & (y >= 0))),
+            (0, x >= y))
+    assert Piecewise((x, Ne(x, 1)), (1, True)).simplify() == x
+
+    # Ideally a single simplify should be enough
+    p = Piecewise((x, And(Ne(x, 1), Ne(x, 2))), (1, Eq(x, 1)), (2, Eq(x, 2)))
+    psimp = p.simplify()
+    assert psimp == Piecewise((x, Ne(x, 2)), (2, True))
+    assert psimp.simplify() == x
+
+
+def test_issue_8453():
+    assert Piecewise((1, x>0),(2, x>=0),(3, True)).simplify() == Piecewise(
+        (1, x > 0), (2, Eq(x, 0)), (3, True))
+    assert Piecewise((1, x>0),(2, x>2),(3, True)).simplify() == Piecewise(
+        (1, x > 0), (3, True))
+
+
+def test_issue_17283():
+    x = Symbol('x', extended_real=True)
+    eq = Piecewise((0, x <= 1), (1, Eq(x, -oo)), (2, True))
+    assert eq.simplify() == Piecewise((0, x <= 1), (2, True))
+
+
+def test_issue_22066():
+    x   = symbols("x")
+    L   = symbols("L", nonzero = True)
+    k, l = symbols("k, l",   integer=True, nonnegative = True )
+
+    integral = Integral(cos((x*k*pi)/L) * cos( (x*l*pi) / L), (x, -L, L))
+    res = Piecewise((2*L, Eq(k, 0) & Eq(l, 0)),
+                    (L, Eq(k, l) | Eq(k, -l)),
+                    (0, True))
+    assert integral.doit().simplify() == res
+
+
+def test_issue_22148():
+    x, y = symbols('x y', real=True, positive=True)
+    pw = Piecewise((0, (x > 1) & (x - y >= 1)), (3, x - y >= 1), (0, True))
+    assert pw.simplify() == 0
+
+
+@slow
+def test_issue_21481():
+    b, e = symbols('b e')
+    A = Piecewise((1, Eq(b, 1) | Eq(e, 0) | (Eq(b, -1) & Eq(Mod(e, 2), 0))),
+                  (0, Eq(b, 0) & (e > 0)), (-1, Eq(b, -1) & Eq(Mod(e, 2), 1)),
+                  (Piecewise((2, ((b > 1) & (e > 0)) | ((b > 0) & (b < 1) & (e < 0)) |
+                              ((e >= 2) & (b < -1) & Eq(Mod(e, 2), 0)) |
+                              ((e <= -2) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 0))),
+                             (S.Half, ((b > 1) & (e < 0)) | ((b > 0) & (e > 0) & (b < 1)) |
+                              ((e <= -2) & (b < -1) & Eq(Mod(e, 2), 0)) |
+                              ((e >= 2) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 0))),
+                             (-S.Half, Eq(Mod(e, 2), 1) & (((e <= -1) & (b < -1)) |
+                                                           ((e >= 1) & (b > -1) & (b < 0)))),
+                             (-2, ((e >= 1) & (b < -1) & Eq(Mod(e, 2), 1)) |
+                              ((e <= -1) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 1)))),
+                   Eq(im(b), 0) & Eq(im(e), 0)))
+    B = piecewise_fold(A)
+    sa = A.simplify()
+    sb = B.simplify()
+    v = Tuple(-2, -1, -0.5, 0, 0.5, 1, 2)
+    for i in v:
+        for j in v:
+            r = {b:i, e:j}
+            ok = [k.xreplace(r) for k in (A, B, sa, sb)]
+            assert len(set(ok)) == 1
