@@ -1681,7 +1681,7 @@ def to_cnf(expr, simplify=False, force=False):
     form: ``((A | ~B | ...) & (B | C | ...) & ...)``.
     If ``simplify`` is ``True``, ``expr`` is evaluated to its simplest CNF
     form using the Quine-McCluskey algorithm; this may take a long
-    time. If there are more than 8 variables the  `force`` flag must be set
+    time. If there are more than 8 variables the  ``force`` flag must be set
     to ``True`` to simplify (default is ``False``).
 
     Examples
