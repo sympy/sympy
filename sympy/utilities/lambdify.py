@@ -180,7 +180,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, cse=False):
+             dummify=None, cse=True):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -742,8 +742,35 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     argument is not provided, ``lambdify`` creates functions using the NumPy
     and SciPy namespaces.
     """
-    from sympy.core.symbol import Symbol
+    from sympy.core.symbol import Symbol, Dummy
     from sympy.core.expr import Expr
+    from sympy.matrices import DeferredVector
+    from sympy.core.basic import Basic
+    from sympy.core.function import Derivative, Function
+    if dummify is not False:
+        if not iterable(args, exclude=DeferredVector):
+            it = False
+            args = [args]
+        else:
+            it = True
+        reps = {}
+        for a in args:
+            if isinstance(a, (Function, Derivative)):
+                d = Dummy()
+                reps.update({a: d})
+        if reps:
+            args = [reps.get(a, a) for a in args]
+            if not it:
+                args = args[0]
+            if iterable(expr):
+                if isinstance(expr, DeferredVector):
+                    expr = expr.xreplace(reps)
+                else:
+                    expr = [i.xreplace(reps) for i in expr]
+            elif isinstance(expr, Basic):
+                expr = expr.xreplace(reps)
+            return lambdify(args, expr, modules=modules, printer=printer,
+                use_imps=use_imps, dummify=dummify, cse=cse)
 
     # If the user hasn't specified any modules, use what is available.
     if modules is None:
@@ -895,7 +922,7 @@ or tuple for the function arguments.
     # Apply the docstring
     sig = "func({})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
-    expr_str = str(expr)
+    expr_str = str(expr)  # this is the input but _expr may be modified with cse
     if len(expr_str) > 78:
         expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
     func.__doc__ = (
@@ -1056,13 +1083,8 @@ def lambdastr(args, expr, printer=None, dummify=None):
         return 'lambda %s: (%s)(%s)' % (','.join(dum_args), lstr, indexed_args)
 
     dummies_dict = {}
-    if dummify:
+    if dummify or iterable(args, exclude=DeferredVector):
         args = sub_args(args, dummies_dict)
-    else:
-        if isinstance(args, str):
-            pass
-        elif iterable(args, exclude=DeferredVector):
-            args = ",".join(str(a) for a in args)
 
     # Transform expr
     if dummify:
@@ -1072,6 +1094,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
             expr = sub_expr(expr, dummies_dict)
     expr = _recursive_to_string(lambdarepr, expr)
     return "lambda %s: (%s)" % (args, expr)
+
 
 class _EvaluatorPrinter:
     def __init__(self, printer=None, dummify=False):
@@ -1108,7 +1131,8 @@ class _EvaluatorPrinter:
 
         funcbody = []
 
-        if not iterable(args):
+        it = iterable(args)
+        if not it:
             args = [args]
 
         if cses:
