@@ -1113,16 +1113,9 @@ class _EvaluatorPrinter:
 
         if cses:
             subvars, subexprs = zip(*cses)
-            try:
-                exprs = expr + list(subexprs)
-            except TypeError:
-                try:
-                    exprs = expr + tuple(subexprs)
-                except TypeError:
-                    expr = [expr]
-                    exprs = expr + list(subexprs)
+            exprs = [expr] + list(subexprs)
             argstrs, exprs = self._preprocess(args, exprs)
-            expr, subexprs = exprs[:len(expr)], exprs[len(expr):]
+            expr, subexprs = exprs[0], exprs[1:]
             cses = zip(subvars, subexprs)
         else:
             argstrs, expr = self._preprocess(args, expr)
