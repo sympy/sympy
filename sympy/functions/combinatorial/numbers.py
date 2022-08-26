@@ -1347,6 +1347,8 @@ class genocchi(Function):
 
     .. [1] https://en.wikipedia.org/wiki/Genocchi_number
     .. [2] http://mathworld.wolfram.com/GenocchiNumber.html
+    .. [3] Peter Luschny, "An introduction to the Bernoulli function",
+           https://arxiv.org/abs/2009.06743
 
     """
 
