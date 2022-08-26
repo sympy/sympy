@@ -1285,3 +1285,11 @@ Now:
 >>> l.equation()
 (-x + y - 1, -x + z - 2)
 ```
+
+(deprecated-conv-array-expr-module-names)=
+### Modules `sympy.tensor.array.expressions.conv_*` renamed to `sympy.tensor.array.expressions.from_*`
+
+In order to avoid possible naming and tab-completion conflicts with
+functions with similar names to the names of the modules, all modules whose
+name starts with `conv_*` in `sympy.tensor.array.expressions` have been renamed
+to `from_*`.
