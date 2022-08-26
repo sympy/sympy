@@ -1636,6 +1636,7 @@ def test_deprecated_set():
     with warns_deprecated_sympy():
         lambdify({x, y}, x + y)
 
+
 def test_23536_lambdify_cse_dummy():
 
     f = Function('x')(y)
@@ -1643,4 +1644,5 @@ def test_23536_lambdify_cse_dummy():
     expr = z + (f**4 + g**5)*(f**3 + (g*f)**3)
     expr = expr.expand()
     eval_expr = lambdify(((f, g), z), expr, cse=True)
-    eval_expr((1.0, 2.0), 3.0)
+    ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
+    assert ans == 300.0  # not a list and value is 300
