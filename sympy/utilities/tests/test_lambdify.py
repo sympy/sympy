@@ -1206,13 +1206,13 @@ def test_issue_14941():
     assert f3(2, 3) == [3, 2]
 
 
-def test_lambdify_Derivative_arg_issue_16468():
+def test_lambdify_Derivative_arg_issue_14648():
     f = Function('f')(x)
     fx = f.diff()
     assert lambdify((f, fx), f + fx)(10, 5) == 15
     assert eval(lambdastr((f, fx), f/fx))(10, 5) == 2
-    raises(SyntaxError, lambda:
-        eval(lambdastr((f, fx), f/fx, dummify=False)))
+    raises(NameError, lambda:
+        eval(lambdastr((f, fx), f/fx, dummify=False))(1, 2))
     assert eval(lambdastr((f, fx), f/fx, dummify=True))(10, 5) == 2
     assert eval(lambdastr((fx, f), f/fx, dummify=True))(S(10), 5) == S.Half
     assert lambdify(fx, 1 + fx)(41) == 42
@@ -1638,11 +1638,10 @@ def test_deprecated_set():
 
 
 def test_23536_lambdify_cse_dummy():
-
     f = Function('x')(y)
     g = Function('w')(y)
     expr = z + (f**4 + g**5)*(f**3 + (g*f)**3)
     expr = expr.expand()
     eval_expr = lambdify(((f, g), z), expr, cse=True)
-    ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
+    ans = eval_expr((1.0, 2.0), 3.0)
     assert ans == 300.0  # not a list and value is 300
