@@ -180,7 +180,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=None, cse=True):
+             dummify=None, cse=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
