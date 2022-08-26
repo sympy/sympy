@@ -14,7 +14,8 @@ using {func}`~.dsolve`:
 >>> from sympy import Function, dsolve, Derivative
 >>> from sympy.abc import x
 >>> y = Function('y')
->>> result = dsolve(Derivative(y(x), x, x) + 9*y(x), y(x)); result
+>>> result = dsolve(Derivative(y(x), x, x) + 9*y(x), y(x))
+>>> result
 Eq(y(x), C1*sin(3*x) + C2*cos(3*x))
 ```
 
@@ -22,7 +23,8 @@ You can then use SymPy to verify that the solution is correct:
 
 ```py
 >>> from sympy import checkodesol
->>> solution = result.rhs; solution
+>>> solution = result.rhs
+>>> solution
 C1*sin(3*x) + C2*cos(3*x)
 >>> checkodesol(Derivative(y(x), x, x) + 9*y(x), solution)
 (True, 0)
@@ -112,11 +114,13 @@ variable (for example $t$):
 ```py
 >>> from sympy import symbols, Function, dsolve
 >>> t = symbols('t')
->>> x = Function('x')(t); x
+>>> x = Function('x')(t)
+>>> x
 x(t)
 >>> xp = x.diff()
 >>> xpp = xp.diff()
->>> eq = xpp + 2*xp + x; eq
+>>> eq = xpp + 2*xp + x
+>>> eq
 x(t) + 2*Derivative(x(t), t) + Derivative(x(t), (t, 2))
 >>> dsolve(eq, x)
 Eq(x(t), (C1 + C2*t)*exp(-t))
@@ -170,7 +174,8 @@ property {any}`rhs <sympy.core.relational.Relational.rhs>`:
 >>> from sympy import Function, dsolve, Derivative
 >>> from sympy.abc import x
 >>> y = Function('y')
->>> result = dsolve(Derivative(y(x), x, x) + 9*y(x), y(x)); result
+>>> result = dsolve(Derivative(y(x), x, x) + 9*y(x), y(x))
+>>> result
 Eq(y(x), C1*sin(3*x) + C2*cos(3*x))
 >>> result.rhs
 C1*sin(3*x) + C2*cos(3*x)
@@ -192,7 +197,8 @@ techniques such as a loops or comprehensions, in a nested fashion.
 >>> y, z = symbols("y z", cls=Function)
 >>> x = symbols("x")
 >>> eqs = [Eq(y(x).diff(x)**2, z(x)**2), Eq(z(x).diff(x), z(x))]
->>> solutions = dsolve(eqs); solutions
+>>> solutions = dsolve(eqs)
+>>> solutions
 [[Eq(y(x), C1 - C2*exp(x)), Eq(z(x), C2*exp(x))], [Eq(y(x), C1 + C2*exp(x)), Eq(z(x), C2*exp(x))]]
 >>> solutions_list = [] # nested list approach
 >>> for solution in solutions:
@@ -209,7 +215,23 @@ techniques such as a loops or comprehensions, in a nested fashion.
 C1 - C2*exp(x)
 ```
 
-### Work With Arbitrary Constants *include such a section?*
+### Work With Arbitrary Constants
+
+You can manipulate arbitrary constants such as `C1`, `C2`, and `C3`, which are
+generated automatically by {func}`~.dsolve`, by creating them as symbols. For
+example, if you want to assign values to arbitrary constants, you can create
+them as symbols and then use {meth}`~sympy.core.basic.Basic.subs`:
+
+```py
+>>> from sympy import Function, dsolve, Derivative, symbols, pi
+>>> x, C1, C2 = symbols("x, C1, C2")
+>>> y = Function('y')
+>>> result = dsolve(Derivative(y(x), x, x) + 9*y(x), y(x)).rhs
+>>> result
+C1*sin(3*x) + C2*cos(3*x)
+>>> result.subs({C1: 7, C2: pi})
+7*sin(3*x) + pi*cos(3*x)
+```
 
 ## Ordinary Differential Equation Solving Hints
 
