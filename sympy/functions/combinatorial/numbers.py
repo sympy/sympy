@@ -18,10 +18,11 @@ from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, pi, oo, Rational, Integer
-from sympy.core.relational import is_le, is_gt
+from sympy.core.relational import Eq, is_le, is_gt
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.ntheory.primetest import isprime, is_square
 from sympy.utilities.enumerative import MultisetPartitionTraverser
 from sympy.utilities.exceptions import sympy_deprecation_warning
