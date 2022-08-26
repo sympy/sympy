@@ -268,7 +268,17 @@ You may wish to select a specific solver using a hint for a couple of reasons:
 
 ### Equations With No Solution
 
-*Equations with no solution content*
+Not all differential equations can be solved, for example:
+
+```py
+>>> from sympy import Function, dsolve, Derivative, symbols
+>>> x, C1, C2 = symbols("x, C1, C2")
+>>> y = Function('y')
+>>> dsolve(Derivative(y(x), x, 3) - (y(x)**2), y(x)).rhs
+Traceback (most recent call last):
+    ...
+NotImplementedError: solve: Cannot solve -y(x)**2 + Derivative(y(x), (x, 3))
+```
 
 ### Equations With No Analytical Solution
 
