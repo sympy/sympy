@@ -1008,7 +1008,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
     from sympy.matrices import DeferredVector
     from sympy.core.basic import Basic
     from sympy.core.function import (Derivative, Function)
-    from sympy.core.symbol import (Dummy, Symbol)
+    from sympy.core.symbol import Dummy
     from sympy.core.sympify import sympify
 
     if printer is not None:
@@ -1033,7 +1033,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
             return ",".join(str(a) for a in dummies)
         else:
             # replace these with Dummy symbols
-            if isinstance(args, (Function, Symbol, Derivative)):
+            if isinstance(args, (Function, Derivative)):
                 dummies = Dummy()
                 dummies_dict.update({args : dummies})
                 return str(dummies)
