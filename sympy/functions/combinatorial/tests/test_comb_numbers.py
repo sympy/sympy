@@ -362,9 +362,11 @@ def test_euler():
     assert euler(n) != -1
     assert euler(n).subs(n, 2) == -1
 
-    raises(ValueError, lambda: euler(-2))
-    raises(ValueError, lambda: euler(-3))
-    raises(ValueError, lambda: euler(2.3))
+    assert euler(-1) == S.Pi / 2
+    assert euler(-2).evalf() == (2*S.Catalan).evalf()
+    assert euler(-3).evalf() == (S.Pi**3 / 16).evalf()
+    assert str(euler(2.3).evalf(n=10)) == '-1.052850274'
+    assert str(euler(1.2, 3.4).evalf(n=10)) == '3.575613489'
 
     assert euler(20).evalf() == 370371188237525.0
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
