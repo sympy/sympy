@@ -29,7 +29,7 @@ from sympy.utilities.iterables import multiset, multiset_derangements, iterable
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 
-from mpmath import bernfrac, workprec
+from mpmath import mp, workprec
 from mpmath.libmp import ifib as _ifib
 
 
@@ -506,49 +506,65 @@ class bernoulli(Function):
     _highest = {0: 0, 2: 2, 4: 4}
 
     @classmethod
-    def eval(cls, n, sym=None):
-        if n.is_Number:
-            if n.is_Integer and n.is_nonnegative:
-                if n.is_zero:
-                    return S.One
-                elif n is S.One:
-                    if sym is None:
-                        return Rational(-1, 2)
-                    else:
-                        return sym - S.Half
-                # Bernoulli numbers
-                elif sym is None:
-                    if n.is_odd:
-                        return S.Zero
-                    n = int(n)
-                    # Use mpmath for enormous Bernoulli numbers
-                    if n > 500:
-                        p, q = bernfrac(n)
-                        return Rational(int(p), int(q))
-                    case = n % 6
-                    highest_cached = cls._highest[case]
-                    if n <= highest_cached:
-                        return cls._cache[n]
-                    # To avoid excessive recursion when, say, bernoulli(1000) is
-                    # requested, calculate and cache the entire sequence ... B_988,
-                    # B_994, B_1000 in increasing order
-                    for i in range(highest_cached + 6, n + 6, 6):
-                        b = cls._calc_bernoulli(i)
-                        cls._cache[i] = b
-                        cls._highest[case] = i
-                    return b
-                # Bernoulli polynomials
-                else:
-                    n = int(n)
-                    result = [binomial(n, k)*cls(k)*sym**(n - k) for k in range(n + 1)]
-                    return Add(*result)
-            else:
-                raise ValueError("Bernoulli numbers are defined only"
-                                 " for nonnegative integer indices.")
-
-        if sym is None:
-            if n.is_odd and (n - 1).is_positive:
+    def eval(cls, n, x=None):
+        if x is S.One:
+            return cls(n)
+        elif n.is_zero:
+            return S.One
+        elif n.is_integer is False or n.is_nonnegative is False:
+            raise ValueError("Bernoulli numbers are defined only"
+                             " for nonnegative integer indices.")
+        # Bernoulli numbers
+        elif x is None:
+            if n is S.One:
+                return -S.Half
+            elif n.is_odd and (n-1).is_positive:
                 return S.Zero
+            elif n.is_Number:
+                n = int(n)
+                # Use mpmath for enormous Bernoulli numbers
+                if n > 500:
+                    p, q = mp.bernfrac(n)
+                    return Rational(int(p), int(q))
+                case = n % 6
+                highest_cached = cls._highest[case]
+                if n <= highest_cached:
+                    return cls._cache[n]
+                # To avoid excessive recursion when, say, bernoulli(1000) is
+                # requested, calculate and cache the entire sequence ... B_988,
+                # B_994, B_1000 in increasing order
+                for i in range(highest_cached + 6, n + 6, 6):
+                    b = cls._calc_bernoulli(i)
+                    cls._cache[i] = b
+                    cls._highest[case] = i
+                return b
+        # Bernoulli polynomials
+        elif n is S.One:
+            return x - S.Half
+        elif n.is_Number:
+            n = int(n)
+            result = [binomial(n,k) * cls(k) * x**(n-k) for k in range(0, n+1, 2)]
+            return Add(*result) - S.Half * n * x**(n-1)
+
+    def _eval_rewrite_as_zeta(self, n, x=1, **kwargs):
+        from sympy.functions.special.zeta_functions import zeta
+        return Piecewise((1, Eq(n, 0)), (-n * zeta(1-n, x), True))
+
+    def _eval_evalf(self, prec):
+        if not all(x.is_number for x in self.args):
+            return
+        n = self.args[0]._to_mpmath(prec)
+        x = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
+        with workprec(prec):
+            if n == 0:
+                res = mp.mpf(1)
+            elif n == 1:
+                res = x - mp.mpf(0.5)
+            elif mp.isint(n) and n >= 0:
+                res = mp.bernoulli(n) if x == 1 else mp.bernpoly(n, x)
+            else:
+                res = -n * mp.zeta(1-n, x)
+        return Expr._from_mpmath(res, prec)
 
 
 #----------------------------------------------------------------------------#
