@@ -1303,7 +1303,7 @@ class catalan(Function):
 
 class genocchi(Function):
     r"""
-    Genocchi numbers
+    Genocchi numbers / Genocchi polynomials / Genocchi function
 
     The Genocchi numbers are a sequence of integers `G_n` that satisfy the
     relation:
@@ -1312,7 +1312,13 @@ class genocchi(Function):
 
     They are related to the Bernoulli numbers by
 
-    .. math:: G_n = 2 (1 - 2^n) B_n.
+    .. math:: G_n = 2 (1 - 2^n) B_n
+
+    and generalize like the Bernoulli numbers to the Genocchi polynomials and
+    function as
+
+    .. math:: \operatorname{G}(s, a) = 2^s (\operatorname{B}(s, a/2) -
+                                            \operatorname{B}(s, (a+1)/2))
 
     .. versionchanged:: 1.12
         ``genocchi(1)`` gives `-1` instead of `1` and ``genocchi(0)`` is now
@@ -1327,6 +1333,9 @@ class genocchi(Function):
     >>> n = Symbol('n', integer=True, positive=True)
     >>> genocchi(2*n + 1)
     0
+    >>> x = Symbol('x')
+    >>> genocchi(4, x)
+    -4*x**3 + 6*x**2 - 1
 
     See Also
     ========
@@ -1342,61 +1351,81 @@ class genocchi(Function):
     """
 
     @classmethod
-    def eval(cls, n):
-        if n.is_Number:
-            if (not n.is_Integer) or n.is_negative:
-                raise ValueError("Genocchi numbers are defined only for " +
-                                 "nonnegative integers")
-            return 2 * (1 - S(2) ** n) * bernoulli(n)
+    def eval(cls, n, x=None):
+        if x is S.One:
+            return cls(n)
+        elif n.is_integer is False or n.is_nonnegative is False:
+            return
+        # Genocchi numbers
+        elif x is None:
+            if n.is_odd and (n-1).is_positive:
+                return S.Zero
+            elif n.is_Number:
+                return 2 * (1-S(2)**n) * bernoulli(n)
+        # Genocchi polynomials
+        elif n.is_Number:
+            return (S(2)**n * (bernoulli(n, x/S(2)) - bernoulli(n, (x+1)/S(2)))).expand()
 
-        if n.is_odd and (n - 1).is_positive:
-            return S.Zero
-
-        if (n - 1).is_zero:
-            return S.NegativeOne
-
-    def _eval_rewrite_as_bernoulli(self, n, **kwargs):
-        if n.is_integer and n.is_nonnegative:
-            return (1 - S(2) ** n) * bernoulli(n) * 2
+    def _eval_rewrite_as_bernoulli(self, n, x=1, **kwargs):
+        if x == 1 and n.is_integer and n.is_nonnegative:
+            return 2 * (1-S(2)**n) * bernoulli(n)
+        return S(2)**n * (bernoulli(n, x/S(2)) - bernoulli(n, (x+1)/S(2)))
 
     def _eval_is_integer(self):
-        if self.args[0].is_integer and self.args[0].is_positive:
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
+        n = self.args[0]
+        if n.is_integer and n.is_nonnegative:
             return True
 
     def _eval_is_negative(self):
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
         n = self.args[0]
-        if n.is_integer and n.is_positive:
+        if n.is_integer and n.is_nonnegative:
             if n.is_odd:
-                return False
-            return (n / 2).is_odd
+                return fuzzy_not((n-1).is_positive)
+            return (n/2).is_odd
 
     def _eval_is_positive(self):
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
         n = self.args[0]
-        if n.is_integer and n.is_positive:
-            if n.is_odd:
-                return fuzzy_not((n - 1).is_positive)
-            return (n / 2).is_even
+        if n.is_integer and n.is_nonnegative:
+            if n.is_zero or n.is_odd:
+                return False
+            return (n/2).is_even
 
     def _eval_is_even(self):
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
         n = self.args[0]
-        if n.is_integer and n.is_positive:
+        if n.is_integer and n.is_nonnegative:
             if n.is_even:
-                return False
-            return (n - 1).is_positive
+                return n.is_zero
+            return (n-1).is_positive
 
     def _eval_is_odd(self):
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
         n = self.args[0]
-        if n.is_integer and n.is_positive:
+        if n.is_integer and n.is_nonnegative:
             if n.is_even:
-                return True
-            return fuzzy_not((n - 1).is_positive)
+                return fuzzy_not(n.is_zero)
+            return fuzzy_not((n-1).is_positive)
 
     def _eval_is_prime(self):
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
         n = self.args[0]
         # only G_6 = -3 and G_8 = 17 are prime,
         # but SymPy does not consider negatives as prime
         # so only n=8 is tested
-        return (n - 8).is_zero
+        return (n-8).is_zero
+
+    def _eval_evalf(self, prec):
+        if all(i.is_number for i in self.args):
+            return self.rewrite(bernoulli)._eval_evalf(prec)
 
 
 #----------------------------------------------------------------------------#

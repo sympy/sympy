@@ -454,23 +454,30 @@ def test_genocchi():
         assert genocchi(n) == g
 
     m = Symbol('m', integer=True)
-    n = Symbol('n', integer=True, positive=True)
+    n = Symbol('n', integer=True, nonnegative=True)
     assert unchanged(genocchi, m)
-    assert genocchi(2*n + 1) == 0
-    assert genocchi(n).rewrite(bernoulli) == (1 - 2 ** n) * bernoulli(n) * 2
-    assert genocchi(2 * n).is_odd
-    assert genocchi(2 * n).is_even is False
-    assert genocchi(2 * n + 1).is_even
+    assert genocchi(2*n + 3) == 0
+    assert genocchi(n).rewrite(bernoulli) == (2-2*2**n) * bernoulli(n)
+    assert genocchi(2*n + 2).is_odd
+    assert genocchi(2*n + 2).is_even is False
+    assert genocchi(2*n + 3).is_even
     assert genocchi(n).is_integer
-    assert genocchi(4 * n).is_positive
+    assert genocchi(4*n + 4).is_positive
     # these are the only 2 prime Genocchi numbers
     assert genocchi(6, evaluate=False).is_prime == S(-3).is_prime
     assert genocchi(8, evaluate=False).is_prime
-    assert genocchi(4 * n + 2).is_negative
-    assert genocchi(4 * n + 1).is_negative is False
-    assert genocchi(4 * n - 2).is_negative
-    raises(ValueError, lambda: genocchi(Rational(5, 4)))
-    raises(ValueError, lambda: genocchi(-2))
+    assert genocchi(4*n + 2).is_negative
+    assert genocchi(4*n + 5).is_negative is False
+
+    g0 = genocchi(0, evaluate=False)
+    assert g0.is_positive is False
+    assert g0.is_negative is False
+    assert g0.is_even is True
+    assert g0.is_odd is False
+    assert str(genocchi(5.0, 4.0).evalf(n=10)) == '-660.0000000'
+    assert str(genocchi(1.25).evalf(n=10)) == '-1.104286457'
+    assert str(genocchi(-2).evalf(n=10)) == '3.606170709'
+    assert str(genocchi(1.3, 3.7).evalf(n=10)) == '-1.847375373'
 
 
 @nocache_fail
