@@ -81,9 +81,12 @@ independent variable:
 >>> f, g = symbols("f g", cls=Function)
 >>> x = symbols("x")
 >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
->>> dsolve(eqs)
+>>> dsolve(eqs, [f(x), g(x)])
 [Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]
 ```
+
+Note that you supply the functions to be solved for as a list as the second
+argument of {func}`~.dsolve`, here `[f(x), g(x)]`.
 
 ### Specify Initial (Boundary) Conditions
 
@@ -100,9 +103,9 @@ Here is an example of setting the initial values for functions:
 >>> f, g = symbols("f g", cls=Function)
 >>> x = symbols("x")
 >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
->>> dsolve(eqs)
+>>> dsolve(eqs, [f(x), g(x)])
 [Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]
->>> dsolve(eqs, ics={f(0): 1, g(0): 0})
+>>> dsolve(eqs, [f(x), g(x)], ics={f(0): 1, g(0): 0})
 [Eq(f(x), exp(x)/2 + exp(-x)/2), Eq(g(x), exp(x)/2 - exp(-x)/2)]
 ```
 
@@ -125,6 +128,9 @@ x(t) + 2*Derivative(x(t), t) + Derivative(x(t), (t, 2))
 >>> dsolve(eq, x)
 Eq(x(t), (C1 + C2*t)*exp(-t))
 ```
+
+Using this convention, the second argument of {func}`~.dsolve`, `x`, represents
+`x(t)`, so SymPy recognizes it as a valid function to solve for.
 
 ### Specify Initial (Boundary) Conditions Using {func}`~sympy.core.basic.Basic.subs`
 
@@ -197,7 +203,7 @@ techniques such as a loops or comprehensions, in a nested fashion.
 >>> y, z = symbols("y z", cls=Function)
 >>> x = symbols("x")
 >>> eqs = [Eq(y(x).diff(x)**2, z(x)**2), Eq(z(x).diff(x), z(x))]
->>> solutions = dsolve(eqs)
+>>> solutions = dsolve(eqs, [y(x), z(x)])
 >>> solutions
 [[Eq(y(x), C1 - C2*exp(x)), Eq(z(x), C2*exp(x))], [Eq(y(x), C1 + C2*exp(x)), Eq(z(x), C2*exp(x))]]
 >>> solutions_list = [] # nested list approach
@@ -220,7 +226,8 @@ C1 - C2*exp(x)
 You can manipulate arbitrary constants such as `C1`, `C2`, and `C3`, which are
 generated automatically by {func}`~.dsolve`, by creating them as symbols. For
 example, if you want to assign values to arbitrary constants, you can create
-them as symbols and then use {meth}`~sympy.core.basic.Basic.subs`:
+them as symbols and then substitute in their values using
+{meth}`~sympy.core.basic.Basic.subs`:
 
 ```py
 >>> from sympy import Function, dsolve, Derivative, symbols, pi
