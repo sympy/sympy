@@ -517,13 +517,13 @@ class zeta(Function):
         elif a is S.One:
             if sint and s.is_even:
                 return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
-        elif s.is_number and a.is_Integer:
+        elif sint and a.is_Integer:
             if a.is_positive:
                 return cls(s) - harmonic(a-1, s)
             return S.NaN
 
     def _eval_rewrite_as_bernoulli(self, s, a=1, **kwargs):
-        if a == 1 and s.is_integer and s.is_even:
+        if a == 1 and s.is_integer and s.is_nonnegative and s.is_even:
             return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
         return bernoulli(1-s, a) / (s-1)
 
@@ -543,7 +543,7 @@ class zeta(Function):
 
     def _eval_expand_func(self, **hints):
         s = self.args[0]
-        a = self.args[1] if len(self.args) == 2 else S.One
+        a = self.args[1] if len(self.args) > 1 else S.One
         if a.is_integer:
             if a.is_positive:
                 return zeta(s) - harmonic(a-1, s)
