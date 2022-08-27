@@ -39,7 +39,7 @@ tells whether the substitution results in `0`.
 
 There are many ways to express derivatives of functions. For an undefined
 function, both {class}`~.Derivative` and {func}`~.diff` represent the undefined
-derivative. Thus, all of the following `ypp` represent $y''$ ("y prime prime"),
+derivative. Thus, all of the following `ypp` ("y prime prime") represent $y''$,
 the second derivative with respect to $x$ of a function $y(x)$:
 
 ```py
@@ -94,11 +94,13 @@ argument of {func}`~.dsolve`, here `[f(x), g(x)]`.
 
 If your differential equation(s) have initial or boundary conditions, specify
 them with the {func}`~.dsolve` optional argument `ics`. It should be given in
-the form of `{f(x0): x1, f(x).diff(x).subs(x, x2): x3}` and so on. For power
-series solutions, if no initial conditions are specified `f(0)` is assumed to be
-`C0` and the power series solution is calculated about 0.
+the form of `{f(x0): y0, f(x).diff(x).subs(x, x1): y1}` and so on where, for
+example, the value of `f(x)` at $x = $ `x0` is `y0`. For power series solutions,
+if no initial conditions are specified `f(0)` is assumed to be `C0` and the
+power series solution is calculated about $0$.
 
-Here is an example of setting the initial values for functions:
+Here is an example of setting the initial values for functions, namely namely
+$f(0) = 1$ and $g(2) = 3$:
 
 ```py
 >>> from sympy import symbols, Eq, Function, dsolve
@@ -107,8 +109,16 @@ Here is an example of setting the initial values for functions:
 >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
 >>> dsolve(eqs, [f(x), g(x)])
 [Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]
->>> dsolve(eqs, [f(x), g(x)], ics={f(0): 1, g(0): 0})
-[Eq(f(x), exp(x)/2 + exp(-x)/2), Eq(g(x), exp(x)/2 - exp(-x)/2)]
+>>> dsolve(eqs, [f(x), g(x)], ics={f(0): 1, g(2): 3})
+[Eq(f(x), (1 + 3*exp(2))*exp(x)/(1 + exp(4)) - (-exp(4) + 3*exp(2))*exp(-x)/(1 + exp(4))), Eq(g(x), (1 + 3*exp(2))*exp(x)/(1 + exp(4)) + (-exp(4) + 3*exp(2))*exp(-x)/(1 + exp(4)))]
+```
+
+Here is an example of setting the initial value for the derivative of a
+function, namely $f'(1) = 2$:
+
+```py
+>>> dsolve(eqs, [f(x), g(x)], ics={f(x).diff(x).subs(x, 1): 2})
+[Eq(f(x), C2*exp(x) + (C2*exp(2) - 2*E)*exp(-x)), Eq(g(x), C2*exp(x) - (C2*exp(2) - 2*E)*exp(-x))]
 ```
 
 ## Define a Function of an Independent Variable
@@ -134,7 +144,7 @@ Eq(x(t), (C1 + C2*t)*exp(-t))
 Using this convention, the second argument of {func}`~.dsolve`, `x`, represents
 `x(t)`, so SymPy recognizes it as a valid function to solve for.
 
-### Specify Initial (Boundary) Conditions Using {func}`~sympy.core.basic.Basic.subs`
+### Specify Initial (Boundary) Conditions
 
 Using that syntax, you specify initial conditions by substituting in values of
 the independent variable using {func}`~sympy.core.basic.Basic.subs` because the
