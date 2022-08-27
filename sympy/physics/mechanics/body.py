@@ -1,5 +1,5 @@
 from sympy.core.backend import Symbol
-from sympy.physics.vector import Point, Vector, ReferenceFrame
+from sympy.physics.vector import Point, Vector, ReferenceFrame, Dyadic
 from sympy.physics.mechanics import RigidBody, Particle, inertia
 
 __all__ = ['Body']
@@ -133,7 +133,7 @@ class Body(RigidBody, Particle):  # type: ignore
             self.frame = frame
             self.masscenter = masscenter
             Particle.__init__(self, name, masscenter, _mass)
-            self._central_inertia = None
+            self._central_inertia = Dyadic(0)
         else:
             RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)
 
@@ -157,8 +157,18 @@ class Body(RigidBody, Particle):  # type: ignore
         return self.frame.z
 
     @property
+    def inertia(self):
+        if self.is_rigidbody:
+            return RigidBody.inertia.fget(self)
+        return (self.central_inertia, self.masscenter)
+
+    @inertia.setter
+    def inertia(self, I):
+        RigidBody.inertia.fset(self, I)
+
+    @property
     def is_rigidbody(self):
-        if self.central_inertia is not None:
+        if hasattr(self, '_inertia'):
             return True
         return False
 

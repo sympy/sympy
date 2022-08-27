@@ -1,5 +1,5 @@
 from sympy.core.backend import Symbol, symbols, sin, cos, Matrix
-from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols, Dyadic
 from sympy.physics.mechanics import inertia, Body
 from sympy.testing.pytest import raises
 
@@ -62,6 +62,8 @@ def test_particle_body():
     assert hasattr(particle_body, 'frame')
     assert hasattr(particle_body, 'masscenter')
     assert hasattr(particle_body, 'mass')
+    assert particle_body.inertia == (Dyadic(0), particle_body.masscenter)
+    assert particle_body.central_inertia == Dyadic(0)
 
     assert not particle_body.is_rigidbody
 
