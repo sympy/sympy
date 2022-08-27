@@ -12,7 +12,7 @@ from sympy.functions.elementary.hyperbolic import sinh, cosh, tanh
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import sin, cos, tan, asin, acos, atan, atan2
-from sympy.logic.boolalg import And, Or, Xor, Implies
+from sympy.logic.boolalg import And, Or, Xor, Implies, Boolean
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse, BooleanFunction, Not, ITE
 from sympy.printing.printer import Printer
 from sympy.sets import Interval
@@ -150,12 +150,7 @@ class SMTLibPrinter(Printer):
 
     # todo: Sympy does not support quantifiers yet as of 2022, but quantifiers can be handy in SMT.
     # For now, users can extend this class and build in their own quantifier support.
-    # See test_smtlib.py for an example of how this might look.
-
-    # def _type_name(self, symbol: Symbol) -> str:
-    #     return self.known_types[self.symbol_table.setdefault(
-    #         symbol, int if symbol.is_integer else float
-    #     )]
+    # See `test_quantifier_extensions()` in test_smtlib.py for an example of how this might look.
 
     # def _print_ForAll(self, e: ForAll):
     #     return self._s('forall', [
@@ -421,7 +416,7 @@ def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, 
 
 
 def _auto_assert_smtlib(e: Expr, p: SMTLibPrinter, log_warn=print):
-    if e.is_Boolean or e.is_Relational or (
+    if isinstance(e, Boolean) or (
         e in p.symbol_table and p.symbol_table[e] == bool
     ) or (
         e.is_Function and

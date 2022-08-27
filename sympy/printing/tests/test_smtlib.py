@@ -1,7 +1,7 @@
 from typing import Callable
 
 import sympy
-from sympy import Add
+from sympy import Add, Implies, sqrt
 from sympy.core import Mul, Pow
 from sympy.core import (S, pi, symbols, Function, Rational, Integer,
                         Symbol, Eq, Ne, Le, Lt, Gt, Ge)
@@ -132,6 +132,92 @@ def test_basic_ops():
     # todo: implement re-write, currently does '(+ x (* -1 y))' instead
     # assert smtlib_code(x - y, auto_declare=False) == "(- x y)"
     assert smtlib_code(-x, auto_declare=False) == "(* -1 x)"
+
+
+def test_quantifier_extensions():
+    from sympy.logic.boolalg import Boolean
+    from sympy.concrete.expr_with_limits import ExprWithLimits
+    from sympy import Interval, Tuple
+
+    # start For-all quantifier class example
+    class ForAll(Boolean, ExprWithLimits):
+        def _latex(self, printer) -> str:
+            def over_symbol_latex(symbol, interval) -> str:
+                set = (
+                          r'\mathbb{Z}' if symbol.is_integer else
+                          r'\mathbb{Q}' if symbol.is_Rational else
+                          r'\mathbb{R}'
+                      ) + (
+                          '^+' if symbol.is_positive else
+                          '^-' if symbol.is_negative else
+                          ''
+                      ) + '\cap' + printer._print(interval)
+                return rf'{printer._print(symbol)} \in {set}'
+
+            return (
+                r'\forall ' +
+                r'\forall '.join(
+                    over_symbol_latex(sym, Interval(start, end)) for sym, start, end in self.limits
+                ) + ', ' +
+                printer._print(self.function)
+            )
+
+        def _smt(self, printer):
+            bound_symbol_declarations = [
+                printer._s_expr(sym.name, [
+                    printer._known_types[printer.symbol_table[sym]],
+                    Interval(start, end)
+                ]) for sym, start, end in self.limits
+            ]
+            return printer._s_expr('forall', [
+                printer._s_expr('', bound_symbol_declarations),
+                self.function
+            ])
+
+        def __new__(cls, *args):
+            symbols = [a for a in args if isinstance(a, tuple) or isinstance(a, Tuple)]
+            function = [a for a in args if isinstance(a, Boolean)]
+            assert len(symbols) + 1 == len(args)
+            assert len(function) == 1
+            return ExprWithLimits.__new__(cls, *function, *symbols)
+
+        def equals(self, other):
+            return ExprWithLimits.equals(self, other)
+
+    # end For-All Quantifier class example
+
+    f = Function('f')
+    assert smtlib_code(
+        ForAll((x, -42, +21), Eq(f(x), f(x))),
+        symbol_table={f: Callable[[float], float]}
+    ) == '(assert (forall ( (x Real [-42, 21])) true))'
+
+    assert smtlib_code(
+        ForAll(
+            (x, -42, +21), (y, -100, 3),
+            Implies(Eq(x, y), Eq(f(x), f(y)))
+        ),
+        symbol_table={f: Callable[[float], float]}
+    ) == '(declare-fun f (Real) Real)\n' \
+         '(assert (' \
+         'forall ( (x Real [-42, 21]) (y Real [-100, 3])) ' \
+         '(=> (= x y) (= (f x) (f y)))' \
+         '))'
+
+    a = Symbol('a', integer=True)
+    b = Symbol('b', real=True)
+    c = Symbol('c')
+
+    assert smtlib_code(
+        ForAll(
+            (a, 2, 100), ForAll(
+                (b, 2, 100),
+                Implies(a < b, sqrt(a) < b) | c
+            ))
+    ) == '(declare-const c Bool)\n' \
+         '(assert (forall ( (b Real [2, 100]) (a Int [2, 100])) ' \
+         '(or c (=> (< a b) (< (pow a (/ 1 2)) b)))' \
+         '))'
 
 
 def test_mix_number_mult_symbols():
