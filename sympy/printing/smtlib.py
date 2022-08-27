@@ -352,17 +352,17 @@ def smtlib_code(
 
     declarations = []
     if auto_declare:
-        constants = {sym for e in expr for sym in e.free_symbols
+        constants = {sym.name: sym for e in expr for sym in e.free_symbols
                      if sym not in p._known_constants}
-        functions = {fnc for e in expr for fnc in e.atoms(Function)
+        functions = {fnc.name: fnc for e in expr for fnc in e.atoms(Function)
                      if type(fnc) not in p._known_functions and not fnc.is_Piecewise}
         declarations = \
             [
                 _auto_declare_smtlib(sym, p, log_warn=log_warn)
-                for sym in constants
+                for sym in constants.values()
             ] + [
                 _auto_declare_smtlib(fnc, p, log_warn=log_warn)
-                for fnc in functions
+                for fnc in functions.values()
             ]
         declarations = [decl for decl in declarations if decl]
 
