@@ -122,6 +122,12 @@ class RigidBody:
         """The body's central inertia dyadic."""
         return self._central_inertia
 
+    @central_inertia.setter
+    def central_inertia(self, I):
+        if not isinstance(I, Dyadic):
+            raise TypeError("RigidBody inertia must be a Dyadic object.")
+        self.inertia = (I, self.masscenter)
+
     def linear_momentum(self, frame):
         """ Linear momentum of the rigid body.
 
