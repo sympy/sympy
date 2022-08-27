@@ -3,6 +3,7 @@ from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer, inertia
 from sympy.physics.mechanics import inertia_of_point_mass
 from sympy.core.backend import expand, zeros
+from sympy.simplify.trigsimp import trigsimp
 
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
@@ -127,8 +128,8 @@ def test_parallel_axis():
     assert Ip == Ip_expected
     A = ReferenceFrame('A')
     A.orient_axis(N, N.z, 1)
-    assert (R.parallel_axis(p, A).to_matrix(A) -
-            Ip_expected.to_matrix(A)).simplify() == zeros(3, 3)
+    assert trigsimp(R.parallel_axis(p, A).to_matrix(A) -
+                    Ip_expected.to_matrix(A)) == zeros(3, 3)
 
 
 

@@ -1,4 +1,5 @@
 from sympy.core.backend import Symbol, symbols, sin, cos, Matrix, zeros
+from sympy.simplify.trigsimp import trigsimp
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics import inertia, Body
 from sympy.testing.pytest import raises
@@ -289,8 +290,8 @@ def test_parallel_axis():
     assert Ip == Ip_expected
     A = ReferenceFrame('A')
     A.orient_axis(N, N.z, 1)
-    assert (R.parallel_axis(p, A).to_matrix(A) -
-            Ip_expected.to_matrix(A)).simplify() == zeros(3, 3)
+    assert trigsimp(R.parallel_axis(p, A).to_matrix(A) -
+            Ip_expected.to_matrix(A)) == zeros(3, 3)
     # Test Particle
     o = Point('o')
     p = o.locatenew('p', a * N.x + b * N.y)
