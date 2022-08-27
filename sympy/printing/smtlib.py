@@ -311,8 +311,10 @@ def smtlib_code(
 
     if not symbol_table: symbol_table = {}
     symbol_table = _auto_infer_smtlib_types(
-        *expr, symbol_table=symbol_table, log_warn=log_warn
+        *expr, symbol_table=symbol_table
     )
+    # See [FALLBACK RULES]
+    # Need SMTLibPrinter to populate known_functions and known_constants first.
 
     settings = {}
     if precision: settings['precision'] = precision
@@ -331,6 +333,27 @@ def smtlib_code(
     if not suffix_expressions: suffix_expressions = []
 
     p = SMTLibPrinter(settings, symbol_table)
+    del symbol_table
+
+    # [FALLBACK RULES]
+    for e in expr:
+        for sym in e.atoms(Symbol, Function):
+            if (
+                sym.is_Symbol and
+                sym not in p._known_constants and
+                sym not in p.symbol_table
+            ):
+                log_warn(f"Could not infer type of `{sym}`. Defaulting to float.")
+                p.symbol_table[sym] = float
+            if (
+                sym.is_Function and
+                type(sym) not in p._known_functions and
+                type(sym) not in p.symbol_table and
+                not sym.is_Piecewise
+            ): raise TypeError(
+                f"Unknown type of undefined function `{sym}`. "
+                f"Must be mapped to ``str`` in known_functions or mapped to ``Callable[..]`` in symbol_table."
+            )
 
     declarations = []
     if auto_declare:
@@ -378,22 +401,12 @@ def smtlib_code(
 
 def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, log_warn=print):
     if sym.is_Symbol:
-        if sym not in p.symbol_table:
-            log_warn(f"Could not infer type of `{sym}`. Defaulting to float.")
-            p.symbol_table[sym] = float
-
         type_signature = p.symbol_table[sym]
         assert isinstance(type_signature, type)
         type_signature = p._known_types[type_signature]
         return p._s_expr('declare-const', [sym, type_signature])
 
     elif sym.is_Function:
-        if type(sym) not in p.symbol_table:
-            raise TypeError(
-                f"Unknown type of undefined function `{sym}`. "
-                f"Must be mapped to ``str`` in known_functions or mapped to ``Callable[..]`` in symbol_table."
-            )
-
         type_signature = p.symbol_table[type(sym)]
         assert callable(type_signature)
         type_signature = [p._known_types[_] for _ in type_signature.__args__]
@@ -423,8 +436,7 @@ def _auto_assert_smtlib(e: Expr, p: SMTLibPrinter, log_warn=print):
 
 def _auto_infer_smtlib_types(
     *exprs: Basic,
-    symbol_table: dict = None,
-    log_warn=print
+    symbol_table: dict = None
 ) -> dict:
     # [TYPE INFERENCE RULES]
     # X is alone in an expr => X is bool
