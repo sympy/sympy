@@ -68,6 +68,8 @@ Traceback (most recent call last):
 ValueError: dsolve() and classify_ode() only work with functions of one variable, not x
 ```
 
+Similarly, you must specify the argument of the function: $f(x)$, not just $f$.
+
 You can define the function to be solved for in two ways. The subsequent syntax
 for specifying initial conditions depends on your choice.
 
@@ -112,7 +114,7 @@ Here is an example of setting the initial values for functions:
 ## Define a Function of an Independent Variable
 
 You may prefer to specify a function (for example $x$) of its independent
-variable (for example $t$):
+variable (for example $t$), so that `x`, represents `x(t)`:
 
 ```py
 >>> from sympy import symbols, Function, dsolve
