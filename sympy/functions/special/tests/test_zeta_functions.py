@@ -47,6 +47,7 @@ def test_zeta_eval():
     assert zeta(5, 3) == zeta(5) - Rational(33, 32)
     assert zeta(6, 4) == pi**6/945 - Rational(47449, 46656)
     assert zeta(7, 4) == zeta(7) - Rational(282251, 279936)
+    assert zeta(S.Pi, 2) == zeta(pi) - 1
 
     assert zeta(2, 0) is nan
     assert zeta(3, -1) is nan

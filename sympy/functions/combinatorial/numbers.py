@@ -919,7 +919,7 @@ class harmonic(Function):
         if n == 0:
             return S.Zero
 
-        if n.is_Integer and n.is_nonnegative and m.is_Integer:
+        if n.is_Integer and n.is_nonnegative:
             if m not in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
