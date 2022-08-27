@@ -151,7 +151,7 @@ def test_quantifier_extensions():
                           '^+' if symbol.is_positive else
                           '^-' if symbol.is_negative else
                           ''
-                      ) + '\cap' + printer._print(interval)
+                      ) + r'\cap' + printer._print(interval)
                 return rf'{printer._print(symbol)} \in {set}'
 
             return (
