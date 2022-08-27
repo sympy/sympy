@@ -2,7 +2,7 @@ from sympy.core.symbol import symbols
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer, inertia
 from sympy.physics.mechanics import inertia_of_point_mass
-from sympy.core.backend import expand
+from sympy.core.backend import expand, zeros
 
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
@@ -125,6 +125,11 @@ def test_parallel_axis():
     Ip_expected = inertia(N, Ix + m * b**2, Iy + m * a**2,
                           Iz + m * (a**2 + b**2), ixy=-m * a * b)
     assert Ip == Ip_expected
+    A = ReferenceFrame('A')
+    A.orient_axis(N, N.z, 1)
+    assert (R.parallel_axis(p, A).to_matrix(A) -
+            Ip_expected.to_matrix(A)).simplify() == zeros(3, 3)
+
 
 
 def test_deprecated_set_potential_energy():

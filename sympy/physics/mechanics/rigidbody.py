@@ -6,7 +6,6 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 __all__ = ['RigidBody']
 
 
-
 class RigidBody:
     """An idealized rigid body.
 
@@ -329,9 +328,7 @@ method is deprecated. Instead use
         )
         self.potential_energy = scalar
 
-    # XXX: To be consistent with the parallel_axis method in Particle this
-    # should have a frame argument...
-    def parallel_axis(self, point):
+    def parallel_axis(self, point, frame=None):
         """Returns the inertia dyadic of the body with respect to another
         point.
 
@@ -340,6 +337,8 @@ method is deprecated. Instead use
 
         point : sympy.physics.vector.Point
             The point to express the inertia dyadic about.
+        frame : sympy.physics.vector.ReferenceFrame
+            The reference frame used to construct the dyadic.
 
         Returns
         =======
@@ -350,8 +349,8 @@ method is deprecated. Instead use
 
         """
         # circular import issue
-        from sympy.physics.mechanics.functions import inertia
-        a, b, c = self.masscenter.pos_from(point).to_matrix(self.frame)
-        I = self.mass * inertia(self.frame, b**2 + c**2, c**2 + a**2, a**2 +
-                                b**2, -a * b, -b * c, -a * c)
-        return self.central_inertia + I
+        from sympy.physics.mechanics.functions import inertia_of_point_mass
+        if frame is None:
+            frame = self.frame
+        return self.central_inertia.express(frame) + inertia_of_point_mass(
+            self.mass, self.masscenter.pos_from(point), frame)
