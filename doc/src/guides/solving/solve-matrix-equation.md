@@ -6,14 +6,17 @@ x\\y\end{array}\right] = \left[\begin{array}{cc} 2\\0\end{array}\right] $ yields
 $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc}
 \frac{2e}{ce+d}\\\frac{2}{ce+d}\end{array}\right]$.
 
-Alternatives to consider:
+## Alternatives to consider
 - Solving a matrix equation is equivalent to solving a system of linear
   equations, so if you prefer you can use *link to solve a system of equations
   once published*
 - *alternative 2*
 
-Here is an example of solving a matrix equation with SymPy's {meth}`~.LUsolve`.
-We use the standard matrix equation formulation $Ax=b$ where
+## Solve a Matrix Equation
+
+Here is an example of solving a matrix equation with SymPy's
+{meth}`sympy.matrices.matrices.MatrixBase.solve`. We use the standard matrix
+equation formulation $Ax=b$ where
 - $A$ is the matrix representing the coefficients in the linear equations
 - $x$ is the column vector of unknowns to be solved for
 - $b$ is the column vector of constants, where each row is the value of an
@@ -67,6 +70,8 @@ You can *title* in several ways.
 
 *Method 2 content*
 
+## Working With Symbolic Matrices
+
 ## Use the Solution Result
 
 ### *Usage Method 1*
@@ -110,15 +115,10 @@ Traceback (most recent call last):
 NonInvertibleMatrixError: Matrix det == 0; not invertible.
 ```
 
-### Equations With No Analytical Solution
+## If You Encounter a Problem With SymPy Matrix Solving
 
-*Equations with no analytical solution content*
-
-### Equations Which Have an Analytical Solution, and SymPy Cannot Solve
-
-*Equations which have an analytical solution, and SymPy cannot solve content*
-
-Please post the problem on the [mailing
+If you know your matrix equation has a solution, and SymPy cannot find it,
+please post the problem on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-can *workaround*.
+can try one of the [](#alternatives-to-consider).
