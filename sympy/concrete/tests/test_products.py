@@ -275,8 +275,9 @@ def test_conjugate_transpose():
     assert p.conjugate().doit() == p.doit().conjugate()
     assert p.transpose().doit() == p.doit().transpose()
 
+
 def test_simplify_prod():
-    y, t, b, c = symbols('y, t, b, c', integer = True)
+    y, t, b, c, v, d = symbols('y, t, b, c, v, d', integer = True)
 
     _simplify = lambda e: simplify(e, doit=False)
     assert _simplify(Product(x*y, (x, n, m), (y, a, k)) * \
@@ -294,6 +295,12 @@ def test_simplify_prod():
     assert _simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
         Product(y, (t, a, b))) == Product(x*y, (t, a, b)) * \
             Product(x, (t, b+1, c))
+    assert _simplify(Product(sin(t)**2 + cos(t)**2 + 1, (t, a, b))) == \
+        Product(2, (t, a, b))
+    assert _simplify(Product(sin(t)**2 + cos(t)**2 - 1, (t, a, b))) == \
+           Product(0, (t, a, b))
+    assert _simplify(Product(v*Product(sin(t)**2 + cos(t)**2, (t, a, b)),
+                             (v, c, d))) == Product(v*Product(1, (t, a, b)), (v, c, d))
 
 
 def test_change_index():
