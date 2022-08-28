@@ -36,18 +36,18 @@ def test_zeta_eval():
     assert zeta(1, x) is zoo
 
     assert zeta(2, 1) == pi**2/6
+    assert zeta(3, 1) == zeta(3)
 
     assert zeta(2) == pi**2/6
     assert zeta(4) == pi**4/90
     assert zeta(6) == pi**6/945
 
-    assert zeta(2, 2) == pi**2/6 - 1
-    assert zeta(3, 2) == zeta(3) - 1
     assert zeta(4, 3) == pi**4/90 - Rational(17, 16)
-    assert zeta(5, 3) == zeta(5) - Rational(33, 32)
-    assert zeta(6, 4) == pi**6/945 - Rational(47449, 46656)
     assert zeta(7, 4) == zeta(7) - Rational(282251, 279936)
-    assert zeta(S.Pi, 2) == zeta(pi) - 1
+    assert zeta(S.Half, 2).func == zeta
+    assert expand_func(zeta(S.Half, 2)) == zeta(S.Half) - 1
+    assert zeta(x, 3).func == zeta
+    assert expand_func(zeta(x, 3)) == zeta(x) - 1 - 1/2**x
 
     assert zeta(2, 0) is nan
     assert zeta(3, -1) is nan
