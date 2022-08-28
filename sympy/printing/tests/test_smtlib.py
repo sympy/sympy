@@ -136,32 +136,10 @@ def test_basic_ops():
 
 def test_quantifier_extensions():
     from sympy.logic.boolalg import Boolean
-    from sympy.concrete.expr_with_limits import ExprWithLimits
-    from sympy import Interval, Tuple
+    from sympy import Interval, Tuple, sympify
 
     # start For-all quantifier class example
-    class ForAll(Boolean, ExprWithLimits):
-        def _latex(self, printer) -> str:
-            def over_symbol_latex(symbol, interval) -> str:
-                set = (
-                          r'\mathbb{Z}' if symbol.is_integer else
-                          r'\mathbb{Q}' if symbol.is_Rational else
-                          r'\mathbb{R}'
-                      ) + (
-                          '^+' if symbol.is_positive else
-                          '^-' if symbol.is_negative else
-                          ''
-                      ) + r'\cap' + printer._print(interval)
-                return rf'{printer._print(symbol)} \in {set}'
-
-            return (
-                r'\forall ' +
-                r'\forall '.join(
-                    over_symbol_latex(sym, Interval(start, end)) for sym, start, end in self.limits
-                ) + ', ' +
-                printer._print(self.function)
-            )
-
+    class ForAll(Boolean):
         def _smtlib(self, printer):
             bound_symbol_declarations = [
                 printer._s_expr(sym.name, [
@@ -174,15 +152,33 @@ def test_quantifier_extensions():
                 self.function
             ])
 
-        def __new__(cls, *args):
-            symbols = [a for a in args if isinstance(a, tuple) or isinstance(a, Tuple)]
-            function = [a for a in args if isinstance(a, Boolean)]
-            assert len(symbols) + 1 == len(args)
-            assert len(function) == 1
-            return ExprWithLimits.__new__(cls, *function, *symbols)
+        @property
+        def bound_symbols(self):
+            return {s for s, _, _ in self.limits}
 
-        def equals(self, other):
-            return ExprWithLimits.equals(self, other)
+        @property
+        def free_symbols(self):
+            bound_symbol_names = {s.name for s in self.bound_symbols}
+            return {
+                s for s in self.function.free_symbols
+                if s.name not in bound_symbol_names
+            }
+
+        def __new__(cls, *args):
+            limits = [sympify(a) for a in args if isinstance(a, tuple) or isinstance(a, Tuple)]
+            function = [sympify(a) for a in args if isinstance(a, Boolean)]
+            assert len(limits) + len(function) == len(args)
+            assert len(function) == 1
+            function = function[0]
+
+            if isinstance(function, ForAll): return ForAll.__new__(
+                ForAll, *(limits + function.limits), function.function
+            )
+            inst = Boolean.__new__(cls)
+            inst._args = tuple(limits + [function])
+            inst.limits = limits
+            inst.function = function
+            return inst
 
     # end For-All Quantifier class example
 
@@ -215,7 +211,7 @@ def test_quantifier_extensions():
                 Implies(a < b, sqrt(a) < b) | c
             ))
     ) == '(declare-const c Bool)\n' \
-         '(assert (forall ( (b Real [2, 100]) (a Int [2, 100])) ' \
+         '(assert (forall ( (a Int [2, 100]) (b Real [2, 100])) ' \
          '(or c (=> (< a b) (< (pow a (/ 1 2)) b)))' \
          '))'
 
