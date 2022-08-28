@@ -292,18 +292,23 @@ def test_harmonic_rational():
 def test_harmonic_evalf():
     assert str(harmonic(1.5).evalf(n=10)) == '1.280372306'
     assert str(harmonic(1.5, 2).evalf(n=10)) == '1.154576311'  # issue 7443
+    assert str(harmonic(4.0, -3).evalf(n=10)) == '100.0000000'
+    assert str(harmonic(7.0, 1.0).evalf(n=10)) == '2.592857143'
+    assert str(harmonic(1, pi).evalf(n=10)) == '1.000000000'
+    assert str(harmonic(2, pi).evalf(n=10)) == '1.113314732'
+    assert str(harmonic(1000.0, pi).evalf(n=10)) == '1.176241563'
 
 
 def test_harmonic_rewrite():
     n = Symbol("n")
-    m = Symbol("m")
+    m = Symbol("m", integer=True, positive=True)
 
     assert harmonic(n).rewrite(digamma) == polygamma(0, n + 1) + EulerGamma
-    assert harmonic(n).rewrite(trigamma) ==  polygamma(0, n + 1) + EulerGamma
-    assert harmonic(n).rewrite(polygamma) ==  polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(trigamma) == polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(polygamma) == polygamma(0, n + 1) + EulerGamma
 
     assert harmonic(n,3).rewrite(polygamma) == polygamma(2, n + 1)/2 - polygamma(2, 1)/2
-    assert harmonic(n,m).rewrite(polygamma) == (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
+    assert harmonic(n,m).rewrite(polygamma) == (-1)**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) / gamma(m)
 
     assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
     assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
