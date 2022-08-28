@@ -11,6 +11,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial)
+from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import acosh
@@ -1465,6 +1466,14 @@ def test_scipy_special_math():
 
     cm1 = lambdify((x,), cosm1(x), modules='scipy')
     assert abs(cm1(1e-20) + 5e-41) < 1e-200
+
+
+def test_scipy_bernoulli():
+    if not scipy:
+        skip("scipy not installed")
+
+    bern = lambdify((x,), bernoulli(x), modules='scipy')
+    assert bern(1) == 0.5
 
 
 def test_cupy_array_arg():

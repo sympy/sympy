@@ -510,9 +510,7 @@ class zeta(Function):
         sint = s.is_Integer
         if a is None:
             a = S.One
-        if s.is_zero:
-            return S.Half - a
-        elif sint and s.is_nonpositive:
+        if sint and s.is_nonpositive:
             return bernoulli(1-s, a) / (s-1)
         elif a is S.One:
             if sint and s.is_even:
