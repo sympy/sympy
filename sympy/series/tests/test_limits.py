@@ -799,6 +799,13 @@ def test_issue_13750():
     assert limit(erf(sqrt(x) - x), x, oo) == -1
 
 
+def test_issue_14276():
+    assert isinstance(limit(sin(x)**log(x), x, oo), Limit)
+    assert isinstance(limit(sin(x)**cos(x), x, oo), Limit)
+    assert isinstance(limit(sin(log(cos(x))), x, oo), Limit)
+    assert limit((1 + 1/(x**2 + cos(x)))**(x**2 + x), x, oo) == E
+
+
 def test_issue_14514():
     assert limit((1/(log(x)**log(x)))**(1/x), x, oo) == 1
 
