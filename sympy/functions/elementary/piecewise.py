@@ -1071,6 +1071,8 @@ def piecewise_fold(expr, evaluate=True):
     rv = Piecewise(*new_args, evaluate=evaluate)
     if evaluate is None and len(rv.args) == 1 and rv.args[0].cond == True:
         return rv.args[0].expr
+    if any(s.expr.has(Piecewise) for p in rv.atoms(Piecewise) for s in p.args):
+        return piecewise_fold(rv)
     return rv
 
 

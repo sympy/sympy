@@ -1,9 +1,13 @@
 from math import prod
 
+from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.concrete.products import (Product, product)
-from sympy.concrete.summations import (Sum, summation)
+from sympy.concrete.summations import (Sum, summation, telescopic,
+     eval_sum_residue, _dummy_with_inherited_properties_concrete)
 from sympy.core.function import (Derivative, Function)
 from sympy.core import (Catalan, EulerGamma)
+from sympy.core.facts import InconsistentAssumptions
+from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, nan, oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -25,19 +29,14 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And, Or
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
+from sympy.matrices import (Matrix, SparseMatrix,
+    ImmutableDenseMatrix, ImmutableSparseMatrix, diag)
 from sympy.sets.fancysets import Range
 from sympy.sets.sets import Interval
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.simplify import simplify
 from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
-from sympy.concrete.summations import (
-    telescopic, _dummy_with_inherited_properties_concrete, eval_sum_residue)
-from sympy.concrete.expr_with_intlimits import ReorderError
-from sympy.core.facts import InconsistentAssumptions
 from sympy.testing.pytest import XFAIL, raises, slow
-from sympy.matrices import (Matrix, SparseMatrix,
-    ImmutableDenseMatrix, ImmutableSparseMatrix)
-from sympy.core.mod import Mod
 from sympy.abc import a, b, c, d, k, m, x, y, z
 
 n = Symbol('n', integer=True)
@@ -863,6 +862,8 @@ def test_simplify_sum():
     assert _simplify(Sum(Sum(d * t, (x, a, b - 1)) + \
                 Sum(d * t, (x, b, c)), (t, a, b))) == \
                     d * Sum(1, (x, a, c)) * Sum(t, (t, a, b))
+    assert _simplify(Sum(sin(t)**2 + cos(t)**2 + 1, (t, a, b))) == \
+        2 * Sum(1, (t, a, b))
 
 
 def test_change_index():
@@ -1162,6 +1163,12 @@ def test_issue_14112():
     assert Sum((-1)**n/sqrt(n), (n, 1, oo)).is_absolutely_convergent() is S.false
     assert Sum((-1)**(2*n)/n, (n, 1, oo)).is_convergent() is S.false
     assert Sum((-2)**n + (-3)**n, (n, 1, oo)).is_convergent() is S.false
+
+
+def test_issue_14219():
+    A = diag(0, 2, -3)
+    res = diag(1, 15, -20)
+    assert Sum(A**n, (n, 0, 3)).doit() == res
 
 
 def test_sin_times_absolutely_convergent():

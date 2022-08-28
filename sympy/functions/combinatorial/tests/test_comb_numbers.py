@@ -451,7 +451,7 @@ def test_catalan():
 
 
 def test_genocchi():
-    genocchis = [0, -1, -1, 0, 1, 0, -3, 0, 17]
+    genocchis = [-1, -1, 0, 1, 0, -3, 0, 17]
     for n, g in enumerate(genocchis):
         assert genocchi(n) == g
 
