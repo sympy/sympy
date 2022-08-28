@@ -162,7 +162,7 @@ def test_quantifier_extensions():
                 printer._print(self.function)
             )
 
-        def _smt(self, printer):
+        def _smtlib(self, printer):
             bound_symbol_declarations = [
                 printer._s_expr(sym.name, [
                     printer._known_types[printer.symbol_table[sym]],

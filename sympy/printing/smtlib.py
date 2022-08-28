@@ -19,7 +19,7 @@ from sympy.sets import Interval
 
 
 class SMTLibPrinter(Printer):
-    printmethod = "_smt"
+    printmethod = "_smtlib"
 
     # based on dReal, an automated reasoning tool for solving problems that can be encoded as first-order logic formulas over the real numbers.
     # dReal's special strength is in handling problems that involve a wide range of nonlinear real functions.
