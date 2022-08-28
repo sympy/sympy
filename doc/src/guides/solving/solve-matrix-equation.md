@@ -6,11 +6,15 @@ x\\y\end{array}\right] = \left[\begin{array}{cc} 2\\0\end{array}\right] $ yields
 $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc}
 \frac{2e}{ce+d}\\\frac{2}{ce+d}\end{array}\right]$.
 
-## Alternatives to consider
+## Alternatives to Consider
 - Solving a matrix equation is equivalent to solving a system of linear
   equations, so if you prefer you can use *link to solve a system of equations
   once published*
-- *alternative 2*
+- If you formulated your problem as a system of linear equations, and want to
+  convert it to matrix form, you can use {func}`~.linear_eq_to_matrix` and then
+  follow the procedures in this guide.
+- *SciPy linalg solve*
+- *NumPy linalg solve*
 
 ## Solve a Matrix Equation
 
@@ -92,9 +96,7 @@ You can *title* in several ways.
 
 *Tradeoff 2 content*
 
-## Not All Equations Can Be Solved
-
-### Equations With No Solution
+## Equations With No Solution
 
 If the determinant of a matrix is zero, matrix equations with it have no
 solution:
@@ -115,7 +117,7 @@ Traceback (most recent call last):
 NonInvertibleMatrixError: Matrix det == 0; not invertible.
 ```
 
-## If You Encounter a Problem With SymPy Matrix Solving
+## If You Encounter a Problem With SymPy Matrix Equation Solving
 
 If you know your matrix equation has a solution, and SymPy cannot find it,
 please post the problem on the [mailing
