@@ -7,14 +7,19 @@ $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc}
 \frac{2e}{ce+d}\\\frac{2}{ce+d}\end{array}\right]$.
 
 ## Alternatives to Consider
+- If your matrix and constant vector contain only numbers, not symbols, for
+  example $\left[\begin{array}{cc} 1 & 2\\3 & 4\end{array}\right]
+\left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc}
+  2\\0\end{array}\right]$, you can use one of these other free and open-source
+  packages instead of SymPy:
+    - NumPy's {external:func}`numpy.linalg.solve`
+    - SciPy's {external:func}`scipy.linalg.solve`
 - Solving a matrix equation is equivalent to solving a system of linear
   equations, so if you prefer you can use *link to solve a system of equations
   once published*
 - If you formulated your problem as a system of linear equations, and want to
   convert it to matrix form, you can use {func}`~.linear_eq_to_matrix` and then
   follow the procedures in this guide.
-- *SciPy linalg solve*
-- *NumPy linalg solve*
 
 ## Solve a Matrix Equation
 
