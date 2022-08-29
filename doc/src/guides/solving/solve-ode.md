@@ -1,11 +1,14 @@
-# Solve an Ordinary Differential Equation Algebraically
+# Solve an Ordinary Differential Equation (ODE) Algebraically
 
-Use SymPy to solve an ordinary differential equation algebraically. For example,
-solving $y''(x) + 9y(x)=0 $ yields $ y(x)=C_{1} \sin(3x)+ C_{2} \cos(3x)$.
+Use SymPy to solve an ordinary differential equation (ODE) algebraically. For
+example, solving $y''(x) + 9y(x)=0 $ yields $ y(x)=C_{1} \sin(3x)+ C_{2}
+\cos(3x)$.
 
-Alternatives to consider:
+## Alternatives to Consider
 - *which SciPy functions? from
   https://docs.scipy.org/doc/scipy/reference/integrate.html?highlight=ode?*
+
+## Solve an Ordinary Differential Equation (ODE)
 
 Here is an example of solving an ordinary differential equation algebraically
 using {func}`~.dsolve`:
@@ -31,7 +34,8 @@ C1*sin(3*x) + C2*cos(3*x)
 ```
 
 The output of {func}`~.checkodesol` is a tuple where the first item, a boolean,
-tells whether the substitution results in `0`.
+tells whether substituting the solution into the ODE results in `0`, indicating
+the solution is correct.
 
 ## Guidance
 
@@ -303,11 +307,7 @@ NotImplementedError: solve: Cannot solve -y(x)**2 + Derivative(y(x), (x, 3))
 
 *Equations with no analytical solution content*
 
-### Equations Which Have An Analytical Solution, and SymPy Cannot Solve
-
-*Equations which have an analytical solution, and SymPy cannot solve content*
-
 Please post the problem on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-can *workaround*.
+can try one of the [](#alternatives-to-consider).
