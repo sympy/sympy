@@ -1347,8 +1347,8 @@ class genocchi(Function):
     ========
 
     >>> from sympy import genocchi, Symbol
-    >>> [genocchi(n) for n in range(1, 9)]
-    [-1, -1, 0, 1, 0, -3, 0, 17]
+    >>> [genocchi(n) for n in range(9)]
+    [0, -1, -1, 0, 1, 0, -3, 0, 17]
     >>> n = Symbol('n', integer=True, positive=True)
     >>> genocchi(2*n + 1)
     0
