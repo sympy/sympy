@@ -6,7 +6,7 @@ example, solving $y''(x) + 9y(x)=0 $ yields $ y(x)=C_{1} \sin(3x)+ C_{2}
 
 ## Alternatives to Consider
 - To numerically solve a system of ODEs, use SciPy's
-  {external:func}`~scipy.integrate.solve_ivp` or another [SciPy ODE
+  {external:func}`scipy.integrate.solve_ivp` or another [SciPy ODE
   solver](https://docs.scipy.org/doc/scipy/reference/integrate.html#solving-initial-value-problems-for-ode-systems).
 
 ## Solve an Ordinary Differential Equation (ODE)
