@@ -2192,6 +2192,9 @@ class LatexPrinter(Printer):
     def _print_bernoulli(self, expr, exp=None):
         return self.__print_number_polynomial(expr, "B", exp)
 
+    def _print_genocchi(self, expr, exp=None):
+        return self.__print_number_polynomial(expr, "G", exp)
+
     def _print_bell(self, expr, exp=None):
         if len(expr.args) == 3:
             tex1 = r"B_{%s, %s}" % (self._print(expr.args[0]),
@@ -2204,7 +2207,6 @@ class LatexPrinter(Printer):
                 tex = tex1 + tex2
             return tex
         return self.__print_number_polynomial(expr, "B", exp)
-
 
     def _print_fibonacci(self, expr, exp=None):
         return self.__print_number_polynomial(expr, "F", exp)

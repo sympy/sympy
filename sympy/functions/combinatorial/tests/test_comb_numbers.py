@@ -448,15 +448,18 @@ def test_catalan():
 
 
 def test_genocchi():
-    genocchis = [-1, -1, 0, 1, 0, -3, 0, 17]
+    genocchis = [0, -1, -1, 0, 1, 0, -3, 0, 17]
     for n, g in enumerate(genocchis):
-        assert genocchi(n + 1) == g
+        assert genocchi(n) == g
 
     m = Symbol('m', integer=True)
     n = Symbol('n', integer=True, positive=True)
     assert unchanged(genocchi, m)
     assert genocchi(2*n + 1) == 0
-    assert genocchi(n).rewrite(bernoulli) == (1 - 2 ** n) * bernoulli(n) * 2
+    gn = 2 * (1 - 2**n) * bernoulli(n)
+    assert genocchi(n).rewrite(bernoulli).factor() == gn.factor()
+    gnx = 2 * (bernoulli(n, x) - 2**n * bernoulli(n, (x+1) / 2))
+    assert genocchi(n, x).rewrite(bernoulli).factor() == gnx.factor()
     assert genocchi(2 * n).is_odd
     assert genocchi(2 * n).is_even is False
     assert genocchi(2 * n + 1).is_even
@@ -468,8 +471,24 @@ def test_genocchi():
     assert genocchi(4 * n + 2).is_negative
     assert genocchi(4 * n + 1).is_negative is False
     assert genocchi(4 * n - 2).is_negative
-    raises(ValueError, lambda: genocchi(Rational(5, 4)))
-    raises(ValueError, lambda: genocchi(-2))
+
+    g0 = genocchi(0, evaluate=False)
+    assert g0.is_positive is False
+    assert g0.is_negative is False
+    assert g0.is_even is True
+    assert g0.is_odd is False
+
+    assert genocchi(0, x).expand() == 0
+    assert genocchi(1, x).expand() == -1
+    assert genocchi(2, x).expand() == 1 - 2*x
+    assert genocchi(3, x).expand() == 3*x - 3*x**2
+    assert genocchi(4, x).expand() == -1 + 6*x**2 - 4*x**3
+
+    assert str(genocchi(5.0, 4.0).evalf(n=10)) == '-660.0000000'
+    assert str(genocchi(Rational(5, 4)).evalf(n=10)) == '-1.104286457'
+    assert str(genocchi(-2).evalf(n=10)) == '3.606170709'
+    assert str(genocchi(1.3, 3.7).evalf(n=10)) == '-1.847375373'
+    assert str(genocchi(I, 1.0).evalf(n=10)) == '-0.3161917278 - 1.45311955*I'
 
 
 @nocache_fail
