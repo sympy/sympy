@@ -478,11 +478,11 @@ def test_genocchi():
     assert g0.is_even is True
     assert g0.is_odd is False
 
-    assert genocchi(0, x).expand() == 0
-    assert genocchi(1, x).expand() == -1
-    assert genocchi(2, x).expand() == 1 - 2*x
-    assert genocchi(3, x).expand() == 3*x - 3*x**2
-    assert genocchi(4, x).expand() == -1 + 6*x**2 - 4*x**3
+    assert genocchi(0, x) == 0
+    assert genocchi(1, x) == -1
+    assert genocchi(2, x) == 1 - 2*x
+    assert genocchi(3, x) == 3*x - 3*x**2
+    assert genocchi(4, x) == -1 + 6*x**2 - 4*x**3
 
     assert str(genocchi(5.0, 4.0).evalf(n=10)) == '-660.0000000'
     assert str(genocchi(Rational(5, 4)).evalf(n=10)) == '-1.104286457'

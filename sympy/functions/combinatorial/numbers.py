@@ -1352,7 +1352,7 @@ class genocchi(Function):
                 return 2 * (1-S(2)**n) * bernoulli(n)
         # Genocchi polynomials
         elif n.is_Number:
-            return 2 * (bernoulli(n, x) - S(2)**n * bernoulli(n, (x+S.One) / 2))
+            return (2 * (bernoulli(n, x) - S(2)**n * bernoulli(n, (x+S.One) / 2))).expand()
 
     def _eval_rewrite_as_bernoulli(self, n, x=1, **kwargs):
         if x == 1 and n.is_integer and n.is_nonnegative:
