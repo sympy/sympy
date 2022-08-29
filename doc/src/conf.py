@@ -395,6 +395,7 @@ graphviz_output_format = 'svg'
 # Enable links to other packages
 intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None),
+    'mpmath': ('https://mpmath.org/doc/current/', None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
 }

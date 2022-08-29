@@ -14,6 +14,9 @@ $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc}
   packages instead of SymPy:
     - NumPy's {external:func}`numpy.linalg.solve`
     - SciPy's {external:func}`scipy.linalg.solve`
+    - mpmath's
+      [lu_solve()](https://mpmath.org/doc/current/matrices.html#linear-equations)
+      *Example of mpmath object that does work: {external:func}`mpmath.isinf`*
 - Solving a matrix equation is equivalent to solving a system of linear
   equations, so if you prefer you can use *link to solve a system of equations
   once published*
@@ -62,10 +65,89 @@ same number of unknowns as equations. If not, SymPy will give an error:
 ShapeError: `self` and `rhs` must have the same number of rows.
 ```
 
-### *Guidance 2*
+### Solving Several Matrix Equations With the Same Matrix
 
-*Guidance 2 content*
+If you need to repeatedly solve matrix equations with the same matrix $A$ but
+different constant vectors $b$, it is more efficient to use one of the following
+methods: use [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition)
+via {meth}`~sympy.matrices.matrices.MatrixBase.LUdecomposition`
 
+```py
+>>> from sympy import symbols, Matrix, eye
+>>> c, d, e = symbols("c, d, e")
+>>> A = Matrix([[c,d], [1, -e]])
+>>> A
+Matrix([
+[c,  d],
+[1, -e]])
+>>> L, U, perm = A.LUdecomposition()
+>>> L
+Matrix([
+[1, 0],
+[c, 1]])
+>>> U
+Matrix([
+[1,      -e],
+[0, c*e + d]])
+>>> perm
+[[0, 1]]
+>>> b = Matrix([2, 0])
+>>> b
+Matrix([
+[2],
+[0]])
+>>> b2 = Matrix([4, 0])
+>>> b2
+Matrix([
+[4],
+[0]])
+>>> P = eye(A.rows).permuteFwd(perm)
+>>> P
+Matrix([
+[0, 1],
+[1, 0]])
+>>> y = L.solve(P*b) # Step-by-step approach, step 1
+>>> y
+Matrix([
+[0],
+[2]])
+>>> U.solve(y) # Step-by-step approach, step 2
+Matrix([
+[2*e/(c*e + d)],
+[  2/(c*e + d)]])
+>>> U.solve(L.solve(P*b)) # One-line approach
+Matrix([
+[2*e/(c*e + d)],
+[  2/(c*e + d)]])
+>>> U.solve(L.solve(P*b2)) # Repeating one-line approach for b2
+Matrix([
+[4*e/(c*e + d)],
+[  4/(c*e + d)]])
+```
+
+or compute the inverse matrix using
+{meth}`~sympy.matrices.matrices.MatrixBase.inv`:
+
+```py
+>>> from sympy import symbols, Matrix
+>>> c, d, e = symbols("c, d, e")
+>>> A = Matrix([[c,d], [1, -e]])
+>>> b = Matrix([2, 0])
+>>> b2 = Matrix([4, 0])
+>>> inv = A.inv()
+>>> inv
+Matrix([
+[e/(c*e + d),  d/(c*e + d)],
+[1/(c*e + d), -c/(c*e + d)]])
+>>> inv * b # Solves to Ax = b for x
+Matrix([
+[2*e/(c*e + d)],
+[  2/(c*e + d)]])
+>>> inv * b2 # Solves to Ax = b2 for x
+Matrix([
+[4*e/(c*e + d)],
+[  4/(c*e + d)]])
+```
 
 ## *Title*
 
