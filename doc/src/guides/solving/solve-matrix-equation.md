@@ -59,11 +59,8 @@ Matrix([
 ### Matrix Must Be Square
 
 The matrix $A$ must be square to represent a system of linear equations with the
-same number of unknowns as equations. If not, SymPy will give an error:
-
-```py
-ShapeError: `self` and `rhs` must have the same number of rows.
-```
+same number of unknowns as equations. If not, SymPy will give the error
+``ShapeError: `self` and `rhs` must have the same number of rows.``
 
 ### Solving Several Matrix Equations With the Same Matrix
 
