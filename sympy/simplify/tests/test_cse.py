@@ -347,6 +347,10 @@ def test_cse_MatrixSymbol():
     B = MatrixSymbol("B", n, n)
     assert cse(B) == ([], [B])
 
+    assert cse(A[0] * A[0]) == ([], [A[0]*A[0]])
+
+    assert cse(A[0,0]*A[0,1] + A[0,0]*A[0,1]*A[0,2]) == ([(x0, A[0, 0]*A[0, 1])], [x0*A[0, 2] + x0])
+
 def test_cse_MatrixExpr():
     A = MatrixSymbol('A', 3, 3)
     y = MatrixSymbol('y', 3, 1)
@@ -577,6 +581,7 @@ def test_cse_release_variables():
     (_3, x0/x2 + x1), (_4, x2**x0), (x2, None), (_0, x1),
     (x1, None), (_2, x0), (x0, None), (_1, x)], (_0, _1, _2, _3, _4))
     r.reverse()
+    r = [(s, v) for s, v in r if v is not None]
     assert eqs == [i.subs(r) for i in e]
 
 def test_cse_list():

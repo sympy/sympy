@@ -22,7 +22,7 @@
 
     // This list needs to be updated after each release of sympy. The branch to
     // be checked should always be the previous release.
-    "branches": ["upstream/1.9", "upstream/master", "HEAD"], // for git
+    "branches": ["upstream/1.11", "upstream/master", "HEAD"], // for git
     // "branches": ["tip"],    // for mercurial
 
     // The DVCS being used.  If not set, it will be automatically

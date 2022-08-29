@@ -70,7 +70,6 @@ def test_nsolve():
         mpf('0.31883011387318591')) < 1e-15
 
 
-
 def test_issue_6408():
     x = Symbol('x')
     assert nsolve(Piecewise((x, x < 1), (x**2, True)), x, 2) == 0.0

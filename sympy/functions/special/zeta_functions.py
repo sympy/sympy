@@ -7,8 +7,9 @@ from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
 from sympy.functions.elementary.complexes import re, unpolarify, Abs, polar_lift
 from sympy.functions.elementary.exponential import log, exp_polar, exp
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys.polytools import Poly
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -122,7 +123,6 @@ class lerchphi(Function):
     """
 
     def _eval_expand_func(self, **hints):
-        from sympy.polys.polytools import Poly
         z, s, a = self.args
         if z == 1:
             return zeta(s, a)
@@ -281,7 +281,6 @@ class polylog(Function):
 
     @classmethod
     def eval(cls, s, z):
-        s, z = sympify((s, z))
         if z is S.One:
             return zeta(s)
         elif z is S.NegativeOne:
@@ -354,7 +353,6 @@ class polylog(Function):
             return True
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy.functions.elementary.integers import ceiling
         from sympy.series.order import Order
         nu, z = self.args
 
@@ -404,12 +402,9 @@ class zeta(Function):
     .. math:: \zeta(s, a) = \sum_{n=0}^\infty \frac{1}{(n + a)^s},
 
     where the standard choice of argument for $n + a$ is used. For fixed
-    $a$ with $\operatorname{Re}(a) > 0$ the Hurwitz zeta function admits a
-    meromorphic continuation to all of $\mathbb{C}$, it is an unbranched
+    $a$ not a nonpositive integer the Hurwitz zeta function admits a
+    meromorphic continuation to all of $\mathbb{C}$; it is an unbranched
     function with a simple pole at $s = 1$.
-
-    Analytic continuation to other $a$ is possible under some circumstances,
-    but this is not typically done.
 
     The Hurwitz zeta function is a special case of the Lerch transcendent:
 
@@ -419,8 +414,8 @@ class zeta(Function):
     $s$ and $a$ (also $\operatorname{Re}(a) < 0$), see the documentation of
     :class:`lerchphi` for a description of the branching behavior.
 
-    If no value is passed for $a$, by this function assumes a default value
-    of $a = 1$, yielding the Riemann zeta function.
+    If no value is passed for $a$ a default value of $a = 1$ is assumed,
+    yielding the Riemann zeta function.
 
     Examples
     ========
@@ -444,25 +439,24 @@ class zeta(Function):
     >>> zeta(s).rewrite(dirichlet_eta)
     dirichlet_eta(s)/(1 - 2**(1 - s))
 
-    The Riemann zeta function at positive even integer and negative odd integer
-    values is related to the Bernoulli numbers:
+    The Riemann zeta function at nonnegative even and negative integer
+    values is related to the Bernoulli numbers and polynomials:
 
     >>> zeta(2)
     pi**2/6
     >>> zeta(4)
     pi**4/90
+    >>> zeta(0)
+    -1/2
     >>> zeta(-1)
     -1/12
+    >>> zeta(-4)
+    0
 
     The specific formulae are:
 
-    .. math:: \zeta(2n) = (-1)^{n+1} \frac{B_{2n} (2\pi)^{2n}}{2(2n)!}
-    .. math:: \zeta(-n) = -\frac{B_{n+1}}{n+1}
-
-    At negative even integers the Riemann zeta function is zero:
-
-    >>> zeta(-4)
-    0
+    .. math:: \zeta(2n) = -\frac{(2\pi i)^{2n} B_{2n}}{2(2n)!}
+    .. math:: \zeta(-n,a) = -\frac{B_{n+1}(a)}{n+1}
 
     No closed-form expressions are known at positive odd integers, but
     numerical evaluation is possible:
@@ -503,44 +497,33 @@ class zeta(Function):
     """
 
     @classmethod
-    def eval(cls, z, a_=None):
-        if a_ is None:
-            z, a = list(map(sympify, (z, 1)))
-        else:
-            z, a = list(map(sympify, (z, a_)))
+    def eval(cls, s, a=None):
+        if a is S.One:
+            return cls(s)
+        elif s is S.NaN or a is S.NaN:
+            return S.NaN
+        elif s is S.One:
+            return S.ComplexInfinity
+        elif s is S.Infinity:
+            return S.One
 
-        if a.is_Number:
-            if a is S.NaN:
-                return S.NaN
-            elif a is S.One and a_ is not None:
-                return cls(z)
-            # TODO Should a == 0 return S.NaN as well?
+        sint = s.is_Integer
+        if a is None:
+            a = S.One
+        if sint and s.is_nonpositive:
+            return bernoulli(1-s, a) / (s-1)
+        elif a is S.One:
+            if sint and s.is_even:
+                return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
+        elif sint and a.is_Integer:
+            if a.is_positive:
+                return cls(s) - harmonic(a-1, s)
+            return S.NaN
 
-        if z.is_Number:
-            if z is S.NaN:
-                return S.NaN
-            elif z is S.Infinity:
-                return S.One
-            elif z.is_zero:
-                return S.Half - a
-            elif z is S.One:
-                return S.ComplexInfinity
-        if z.is_integer:
-            if a.is_Integer:
-                if z.is_negative:
-                    zeta = S.NegativeOne**z * bernoulli(-z + 1)/(-z + 1)
-                elif z.is_even and z.is_positive:
-                    B, F = bernoulli(z), factorial(z)
-                    zeta = (S.NegativeOne**(z/2+1) * 2**(z - 1) * B * pi**z) / F
-                else:
-                    return
-
-                if a.is_negative:
-                    return zeta + harmonic(abs(a), z)
-                else:
-                    return zeta - harmonic(a - 1, z)
-        if z.is_zero:
-            return S.Half - a
+    def _eval_rewrite_as_bernoulli(self, s, a=1, **kwargs):
+        if a == 1 and s.is_integer and s.is_nonnegative and s.is_even:
+            return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
+        return bernoulli(1-s, a) / (s-1)
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1, **kwargs):
         if a != 1:
@@ -555,6 +538,17 @@ class zeta(Function):
         arg_is_one = (self.args[0] - 1).is_zero
         if arg_is_one is not None:
             return not arg_is_one
+
+    def _eval_expand_func(self, **hints):
+        s = self.args[0]
+        a = self.args[1] if len(self.args) > 1 else S.One
+        if a.is_integer:
+            if a.is_positive:
+                return zeta(s) - harmonic(a-1, s)
+            if a.is_nonpositive and (s.is_integer is False or
+                    s.is_nonpositive is False):
+                return S.NaN
+        return self
 
     def fdiff(self, argindex=1):
         if len(self.args) == 2:
@@ -692,8 +686,6 @@ class stieltjes(Function):
 
     @classmethod
     def eval(cls, n, a=None):
-        n = sympify(n)
-
         if a is not None:
             a = sympify(a)
             if a is S.NaN:

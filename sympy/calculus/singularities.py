@@ -272,11 +272,15 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     >>> from sympy import is_decreasing
     >>> from sympy.abc import x, y
     >>> from sympy import S, Interval, oo
+    >>> is_decreasing(1/(x**2 - 3*x), Interval.open(S(3)/2, 3))
+    True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
     True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
+    False
+    >>> is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, 1.5))
     False
     >>> is_decreasing(-x**2, Interval(-oo, 0))
     False
@@ -318,6 +322,8 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     True
     >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, S(3)/2))
+    False
+    >>> is_strictly_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, 1.5))
     False
     >>> is_strictly_decreasing(-x**2, Interval(-oo, 0))
     False
@@ -362,6 +368,8 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     >>> from sympy import is_monotonic
     >>> from sympy.abc import x, y
     >>> from sympy import S, Interval, oo
+    >>> is_monotonic(1/(x**2 - 3*x), Interval.open(S(3)/2, 3))
+    True
     >>> is_monotonic(1/(x**2 - 3*x), Interval.open(1.5, 3))
     True
     >>> is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo))

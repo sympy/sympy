@@ -17,7 +17,8 @@ from sympy.logic.boolalg import (
     BooleanAtom, is_literal, term_to_integer,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
-    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,)
+    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,
+    gateinputcount)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -575,7 +576,6 @@ def test_to_CNF():
     assert CNF.CNF_to_cnf(CNF.to_CNF(A & B)) == to_cnf(A & B)
 
 
-
 def test_to_dnf():
     assert to_dnf(~(B | C)) == And(Not(B), Not(C))
     assert to_dnf(A & (B | C)) == Or(And(A, B), And(A, C))
@@ -1110,7 +1110,9 @@ def test_relational_simplification():
     assert And(x > 1, x < -1, Eq(x, y)).simplify() == S.false
     # From #16690
     assert And(x >= y, Eq(y, 0)).simplify() == And(x >= 0, Eq(y, 0))
-
+    assert Or(Ne(x, 1), Ne(x, 2)).simplify() == S.true
+    assert And(Eq(x, 1), Ne(2, x)).simplify() == Eq(x, 1)
+    assert Or(Eq(x, 1), Ne(2, x)).simplify() == Ne(x, 2)
 
 def test_issue_8373():
     x = symbols('x', real=True)
@@ -1264,6 +1266,14 @@ def test_convert_to_varsSOP():
 def test_convert_to_varsPOS():
     assert _convert_to_varsPOS([0, 1, 0], [x, y, z]) == Or(x, Not(y), z)
     assert _convert_to_varsPOS([3, 1, 0], [x, y, z]) ==  Or(Not(y), z)
+
+
+def test_gateinputcount():
+    a, b, c, d, e = symbols('a:e')
+    assert gateinputcount(And(a, b)) == 2
+    assert gateinputcount(a | b & c & d ^ (e | a)) == 9
+    assert gateinputcount(And(a, True)) == 0
+    raises(TypeError, lambda: gateinputcount(a*b))
 
 
 def test_refine():

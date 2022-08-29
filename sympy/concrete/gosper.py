@@ -2,8 +2,6 @@
 
 from sympy.core import S, Dummy, symbols
 from sympy.polys import Poly, parallel_poly_from_expr, factor
-from sympy.solvers import solve
-from sympy.simplify import hypersimp
 from sympy.utilities.iterables import is_sequence
 
 
@@ -94,7 +92,7 @@ def gosper_term(f, n):
     .. math::
         s_n = \sum_{k=0}^{n-1} f_k
 
-    and `f_k` doesn't depend on `n`. Returns a hypergeometric
+    and `f_k` does not depend on `n`. Returns a hypergeometric
     term `g_n` such that `g_{n+1} - g_n = f_n`.
 
     Examples
@@ -108,6 +106,7 @@ def gosper_term(f, n):
     (-n - 1/2)/(n + 1/4)
 
     """
+    from sympy.simplify import hypersimp
     r = hypersimp(f, n)
 
     if r is None:
@@ -144,6 +143,7 @@ def gosper_term(f, n):
     x = Poly(coeffs, n, domain=domain)
     H = A*x.shift(1) - B*x - C
 
+    from sympy.solvers.solvers import solve
     solution = solve(H.coeffs(), coeffs)
 
     if solution is None:
@@ -173,7 +173,7 @@ def gosper_sum(f, k):
     .. math ::
         s_n = \sum_{k=0}^{n-1} f_k
 
-    and `f(n)` doesn't depend on `n`, returns `g_{n} - g(0)` where
+    and `f(n)` does not depend on `n`, returns `g_{n} - g(0)` where
     `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` cannot be expressed
     in closed form as a sum of hypergeometric terms.
 

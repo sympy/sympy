@@ -51,7 +51,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     Explanation
     ===========
 
-    If you don't know what a Dyadic is, just treat this like the inertia
+    If you do not know what a Dyadic is, just treat this like the inertia
     tensor. Then, do the easy thing and define it in a body-fixed frame.
 
     Parameters
@@ -84,15 +84,21 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
 
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Need to define the inertia in a frame')
-    ol = sympify(ixx) * (frame.x | frame.x)
-    ol += sympify(ixy) * (frame.x | frame.y)
-    ol += sympify(izx) * (frame.x | frame.z)
-    ol += sympify(ixy) * (frame.y | frame.x)
-    ol += sympify(iyy) * (frame.y | frame.y)
-    ol += sympify(iyz) * (frame.y | frame.z)
-    ol += sympify(izx) * (frame.z | frame.x)
-    ol += sympify(iyz) * (frame.z | frame.y)
-    ol += sympify(izz) * (frame.z | frame.z)
+    ixx = sympify(ixx)
+    ixy = sympify(ixy)
+    iyy = sympify(iyy)
+    iyz = sympify(iyz)
+    izx = sympify(izx)
+    izz = sympify(izz)
+    ol = ixx * (frame.x | frame.x)
+    ol += ixy * (frame.x | frame.y)
+    ol += izx * (frame.x | frame.z)
+    ol += ixy * (frame.y | frame.x)
+    ol += iyy * (frame.y | frame.y)
+    ol += iyz * (frame.y | frame.z)
+    ol += izx * (frame.z | frame.x)
+    ol += iyz * (frame.z | frame.y)
+    ol += izz * (frame.z | frame.z)
     return ol
 
 

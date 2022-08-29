@@ -255,7 +255,7 @@ class C89CodePrinter(CodePrinter):
         return codestring if codestring.endswith(';') else codestring + ';'
 
     def _get_comment(self, text):
-        return "// {}".format(text)
+        return "/* {} */".format(text)
 
     def _declare_number_const(self, name, value):
         type_ = self.type_aliases[real]

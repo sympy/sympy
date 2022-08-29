@@ -4,12 +4,13 @@ from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, Union, imageset,
-                             Intersection, ProductSet)
+                             Intersection, ProductSet, SetKind)
 from sympy.sets.conditionset import ConditionSet
 from sympy.simplify.simplify import simplify
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
+from sympy.core.containers import Tuple, TupleKind
 from sympy.core.function import Lambda
+from sympy.core.kind import NumberKind
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -251,6 +252,9 @@ def test_Range_set():
     raises(TypeError, lambda: next(it))
 
     assert empty.intersect(S.Integers) == empty
+    assert Range(-1, 10, 1).intersect(S.Complexes) == Range(-1, 10, 1)
+    assert Range(-1, 10, 1).intersect(S.Reals) == Range(-1, 10, 1)
+    assert Range(-1, 10, 1).intersect(S.Rationals) == Range(-1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Naturals) == Range(1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Naturals0) == Range(0, 10, 1)
@@ -516,6 +520,11 @@ def test_range_interval_intersection():
     assert Range(4).intersect(Interval(0.1, 3.1)) == Range(1, 4)
     assert Range(4).intersect(Interval.open(0, 3)) == Range(1, 3)
     assert Range(4).intersect(Interval.open(0.1, 0.5)) is S.EmptySet
+    assert Interval(-1, 5).intersect(S.Complexes) == Interval(-1, 5)
+    assert Interval(-1, 5).intersect(S.Reals) == Interval(-1, 5)
+    assert Interval(-1, 5).intersect(S.Integers) == Range(-1, 6)
+    assert Interval(-1, 5).intersect(S.Naturals) == Range(1, 6)
+    assert Interval(-1, 5).intersect(S.Naturals0) == Range(0, 6)
 
     # Null Range intersections
     assert Range(0).intersect(Interval(0.2, 0.8)) is S.EmptySet
@@ -543,7 +552,6 @@ def test_range_is_finite_set():
     assert Range(-oo, n).is_finite_set is False
     assert Range(n, -oo).is_finite_set is True
     assert Range(oo, n).is_finite_set is True
-
 
 
 def test_Range_is_iterable():
@@ -1123,6 +1131,20 @@ def test_ComplexRegion_FiniteSet():
 def test_union_RealSubSet():
     assert (S.Complexes).union(Interval(1, 2)) == S.Complexes
     assert (S.Complexes).union(S.Integers) == S.Complexes
+
+
+def test_SetKind_fancySet():
+    G = lambda *args: ImageSet(Lambda(x, x ** 2), *args)
+    assert G(Interval(1, 4)).kind is SetKind(NumberKind)
+    assert G(FiniteSet(1, 4)).kind is SetKind(NumberKind)
+    assert S.Rationals.kind is SetKind(NumberKind)
+    assert S.Naturals.kind is SetKind(NumberKind)
+    assert S.Integers.kind is SetKind(NumberKind)
+    assert Range(3).kind is SetKind(NumberKind)
+    a = Interval(2, 3)
+    b = Interval(4, 6)
+    c1 = ComplexRegion(a*b)
+    assert c1.kind is SetKind(TupleKind(NumberKind, NumberKind))
 
 
 def test_issue_9980():

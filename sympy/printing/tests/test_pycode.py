@@ -6,18 +6,19 @@ from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt
+from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
     MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
 )
+from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter
 from sympy.testing.pytest import raises, skip
-from sympy.tensor import IndexedBase
+from sympy.tensor import IndexedBase, Idx
+from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayDiagonal, ArrayContraction, ZeroArray, OneArray
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
-from sympy.parsing.latex import parse_latex
 
 
 x, y, z = symbols('x y z')
@@ -35,6 +36,7 @@ def test_PythonCodePrinter():
     assert prntr.doprint(Mod(-x, y)) == '(-x) % y'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
+    assert prntr.doprint(1/(x+y)) == '1/(x + y)'
     assert not prntr.module_imports
 
     assert prntr.doprint(pi) == 'math.pi'
@@ -45,6 +47,11 @@ def test_PythonCodePrinter():
     assert prntr.module_imports == {'math': {'pi', 'sqrt'}}
 
     assert prntr.doprint(acos(x)) == 'math.acos(x)'
+    assert prntr.doprint(cot(x)) == '1/math.tan(x)'
+    assert prntr.doprint(coth(x)) == '(math.exp(x) + math.exp(-x))/(math.exp(x) - math.exp(-x))'
+    assert prntr.doprint(asec(x)) == 'math.acos(1/x)'
+    assert prntr.doprint(acsch(x)) == 'math.log(math.sqrt(1 + x**(-2)) + 1/x)'
+
     assert prntr.doprint(Assignment(x, 2)) == 'x = 2'
     assert prntr.doprint(Piecewise((1, Eq(x, 0)),
                         (2, x>6))) == '((1) if (x == 0) else (2) if (x > 6) else None)'
@@ -58,18 +65,17 @@ def test_PythonCodePrinter():
     assert prntr.doprint((2,3)) == "(2, 3)"
     assert prntr.doprint([2,3]) == "[2, 3]"
 
+    assert prntr.doprint(Min(x, y)) == "min(x, y)"
+    assert prntr.doprint(Max(x, y)) == "max(x, y)"
+
 
 def test_PythonCodePrinter_standard():
-    import sys
-    prntr = PythonCodePrinter({'standard':None})
+    prntr = PythonCodePrinter()
 
-    python_version = sys.version_info.major
-    if python_version == 2:
-        assert prntr.standard == 'python2'
-    if python_version == 3:
-        assert prntr.standard == 'python3'
+    assert prntr.standard == 'python3'
 
     raises(ValueError, lambda: PythonCodePrinter({'standard':'python4'}))
+
 
 def test_MpmathPrinter():
     p = MpmathPrinter()
@@ -180,13 +186,11 @@ def test_pycode_reserved_words():
 
 
 def test_issue_20762():
-    antlr4 = import_module("antlr4")
-    if not antlr4:
-        skip('antlr not installed.')
     # Make sure pycode removes curly braces from subscripted variables
-    expr = parse_latex(r'a_b \cdot b')
+    a_b, b, a_11 = symbols('a_{b} b a_{11}')
+    expr = a_b*b
     assert pycode(expr) == 'a_b*b'
-    expr = parse_latex(r'a_{11} \cdot b')
+    expr = a_11*b
     assert pycode(expr) == 'a_11*b'
 
 
@@ -194,10 +198,6 @@ def test_sqrt():
     prntr = PythonCodePrinter()
     assert prntr._print_Pow(sqrt(x), rational=False) == 'math.sqrt(x)'
     assert prntr._print_Pow(1/sqrt(x), rational=False) == '1/math.sqrt(x)'
-
-    prntr = PythonCodePrinter({'standard' : 'python2'})
-    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1./2.)'
-    assert prntr._print_Pow(1/sqrt(x), rational=True) == 'x**(-1./2.)'
 
     prntr = PythonCodePrinter({'standard' : 'python3'})
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
@@ -225,7 +225,6 @@ def test_frac():
     from sympy.functions.elementary.integers import frac
 
     expr = frac(x)
-
     prntr = NumPyPrinter()
     assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
 
@@ -263,8 +262,9 @@ def test_codegen_ast_nodes():
 def test_issue_14283():
     prntr = PythonCodePrinter()
 
-    assert prntr.doprint(zoo) == "float('nan')"
+    assert prntr.doprint(zoo) == "math.nan"
     assert prntr.doprint(-oo) == "float('-inf')"
+
 
 def test_NumPyPrinter_print_seq():
     n = NumPyPrinter()
@@ -399,3 +399,28 @@ def test_numerical_accuracy_functions():
     assert prntr.doprint(expm1(x)) == 'numpy.expm1(x)'
     assert prntr.doprint(log1p(x)) == 'numpy.log1p(x)'
     assert prntr.doprint(cosm1(x)) == 'scipy.special.cosm1(x)'
+
+def test_array_printer():
+    A = ArraySymbol('A', (4,4,6,6,6))
+    I = IndexedBase('I')
+    i,j,k = Idx('i', (0,1)), Idx('j', (2,3)), Idx('k', (4,5))
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(ZeroArray(5)) == 'numpy.zeros((5,))'
+    assert prntr.doprint(OneArray(5)) == 'numpy.ones((5,))'
+    assert prntr.doprint(ArrayContraction(A, [2,3])) == 'numpy.einsum("abccd->abd", A)'
+    assert prntr.doprint(I) == 'I'
+    assert prntr.doprint(ArrayDiagonal(A, [2,3,4])) == 'numpy.einsum("abccc->abc", A)'
+    assert prntr.doprint(ArrayDiagonal(A, [0,1], [2,3])) == 'numpy.einsum("aabbc->cab", A)'
+    assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'numpy.einsum("abcde->abe", A)'
+    assert prntr.doprint(Assignment(I[i,j,k], I[i,j,k])) == 'I = I'
+
+    prntr = TensorflowPrinter()
+    assert prntr.doprint(ZeroArray(5)) == 'tensorflow.zeros((5,))'
+    assert prntr.doprint(OneArray(5)) == 'tensorflow.ones((5,))'
+    assert prntr.doprint(ArrayContraction(A, [2,3])) == 'tensorflow.linalg.einsum("abccd->abd", A)'
+    assert prntr.doprint(I) == 'I'
+    assert prntr.doprint(ArrayDiagonal(A, [2,3,4])) == 'tensorflow.linalg.einsum("abccc->abc", A)'
+    assert prntr.doprint(ArrayDiagonal(A, [0,1], [2,3])) == 'tensorflow.linalg.einsum("aabbc->cab", A)'
+    assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'tensorflow.linalg.einsum("abcde->abe", A)'
+    assert prntr.doprint(Assignment(I[i,j,k], I[i,j,k])) == 'I = I'

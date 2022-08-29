@@ -861,12 +861,12 @@ class WignerD(Expr):
         return WignerD(*self.args, **hints)
 
     def _eval_wignerd(self):
-        j = sympify(self.j)
-        m = sympify(self.m)
-        mp = sympify(self.mp)
-        alpha = sympify(self.alpha)
-        beta = sympify(self.beta)
-        gamma = sympify(self.gamma)
+        j = self.j
+        m = self.m
+        mp = self.mp
+        alpha = self.alpha
+        beta = self.beta
+        gamma = self.gamma
         if alpha == 0 and beta == 0 and gamma == 0:
             return KroneckerDelta(m, mp)
         if not j.is_number:

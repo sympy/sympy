@@ -9,6 +9,7 @@ from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
 from sympy.matrices.matrices import MatrixBase
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from .inverse import Inverse
 from .matexpr import MatrixExpr
@@ -37,7 +38,7 @@ class MatMul(MatrixExpr, Mul):
 
     identity = GenericIdentity()
 
-    def __new__(cls, *args, evaluate=False, check=True, _sympify=True):
+    def __new__(cls, *args, evaluate=False, check=None, _sympify=True):
         if not args:
             return cls.identity
 
@@ -49,8 +50,19 @@ class MatMul(MatrixExpr, Mul):
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
 
-        if check:
+        if check is not None:
+            sympy_deprecation_warning(
+                "Passing check to MatMul is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
+
+        if check in (True, None):
             validate(*matrices)
+        else:
+            sympy_deprecation_warning(
+                "Passing check=False to MatMul is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
 
         if not matrices:
             # Should it be
@@ -59,17 +71,18 @@ class MatMul(MatrixExpr, Mul):
             return factor
 
         if evaluate:
-            return canonicalize(obj)
+            return cls._evaluate(obj)
 
         return obj
+
+    @classmethod
+    def _evaluate(cls, expr):
+        return canonicalize(expr)
 
     @property
     def shape(self):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
-
-    def could_extract_minus_sign(self):
-        return self.args[0].could_extract_minus_sign()
 
     def _entry(self, i, j, expand=True, **kwargs):
         # Avoid cyclic imports
@@ -126,6 +139,10 @@ class MatMul(MatrixExpr, Mul):
         coeff, matrices = self.as_coeff_matrices()
         return coeff, MatMul(*matrices)
 
+    def expand(self, **kwargs):
+        expanded = super(MatMul, self).expand(**kwargs)
+        return self._evaluate(expanded)
+
     def _eval_transpose(self):
         """Transposition of matrix multiplication.
 
@@ -174,10 +191,10 @@ class MatMul(MatrixExpr, Mul):
         except ShapeError:
             return Inverse(self)
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
 
@@ -186,9 +203,15 @@ class MatMul(MatrixExpr, Mul):
         return expr
 
     # Needed for partial compatibility with Mul
-    def args_cnc(self, **kwargs):
+    def args_cnc(self, cset=False, warn=True, **kwargs):
         coeff_c = [x for x in self.args if x.is_commutative]
         coeff_nc = [x for x in self.args if not x.is_commutative]
+        if cset:
+            clen = len(coeff_c)
+            coeff_c = set(coeff_c)
+            if clen and warn and len(coeff_c) != clen:
+                raise ValueError('repeated commutative arguments: %s' %
+                                 [ci for ci in coeff_c if list(self.args).count(ci) > 1])
         return [coeff_c, coeff_nc]
 
     def _eval_derivative_matrix_lines(self, x):
@@ -320,8 +343,27 @@ def combine_powers(mul):
     factor, args = mul.as_coeff_matrices()
     new_args = [args[0]]
 
-    for B in args[1:]:
+    for i in range(1, len(args)):
         A = new_args[-1]
+        B = args[i]
+
+        if isinstance(B, Inverse) and isinstance(B.arg, MatMul):
+            Bargs = B.arg.args
+            l = len(Bargs)
+            if list(Bargs) == new_args[-l:]:
+                new_args = new_args[:-l] + [Identity(B.shape[0])]
+                continue
+
+        if isinstance(A, Inverse) and isinstance(A.arg, MatMul):
+            Aargs = A.arg.args
+            l = len(Aargs)
+            if list(Aargs) == args[i:i+l]:
+                identity = Identity(A.shape[0])
+                new_args[-1] = identity
+                for j in range(i, i+l):
+                    args[j] = identity
+                continue
+
         if A.is_square == False or B.is_square == False:
             new_args.append(B)
             continue

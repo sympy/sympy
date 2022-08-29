@@ -9,6 +9,7 @@ from typing import Dict as tDict, Type, Iterator, List, Optional
 
 from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
+from sympy.core.cache import cached_property
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, mexpand
@@ -38,18 +39,6 @@ from .lie_group import _ode_lie_group
 class ODEMatchError(NotImplementedError):
     """Raised if a SingleODESolver is asked to solve an ODE it does not match"""
     pass
-
-
-def cached_property(func):
-    '''Decorator to cache property method'''
-    attrname = '_' + func.__name__
-    def propfunc(self):
-        val = getattr(self, attrname, None)
-        if val is None:
-            val = func(self)
-            setattr(self, attrname, val)
-        return val
-    return property(propfunc)
 
 
 class SingleODEProblem:
@@ -677,8 +666,7 @@ class AlmostLinear(SinglePatternODESolver):
     Examples
     ========
 
-    >>> from sympy import Function, pprint, sin, cos
-    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy import dsolve, Function, pprint, sin, cos
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -937,8 +925,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     zero.
 
     >>> from sympy.abc import x, a, b, c, d
-    >>> from sympy.solvers.ode import dsolve, checkodesol
-    >>> from sympy import pprint, Function
+    >>> from sympy import dsolve, checkodesol, pprint, Function
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
@@ -1352,8 +1339,7 @@ class SeparableReduced(Separable):
     Examples
     ========
 
-    >>> from sympy import Function, pprint
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -1794,8 +1780,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
     Examples
     ========
 
-    >>> from sympy import Function, pprint
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> df = f(x).diff(x)
@@ -1875,10 +1860,9 @@ class LinearCoefficients(HomogeneousCoeffBest):
         Examples
         ========
 
-        >>> from sympy import Function
+        >>> from sympy import Function, sin
         >>> from sympy.abc import x
         >>> from sympy.solvers.ode.single import LinearCoefficients
-        >>> from sympy.functions.elementary.trigonometric import sin
         >>> f = Function('f')
         >>> eq = (-25*f(x) - 8*x + 62)/(4*f(x) + 11*x - 11)
         >>> obj = LinearCoefficients(eq)
@@ -2242,7 +2226,7 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
     ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
     simplifying the integrals manually.  Also, prefer using
     ``nth_linear_constant_coeff_undetermined_coefficients`` when it
-    applies, because it doesn't use integration, making it faster and more
+    applies, because it does not use integration, making it faster and more
     reliable.
 
     Warning, using simplify=False with
@@ -2530,7 +2514,7 @@ class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
     ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
     simplifying the integrals manually.  Also, prefer using
     ``nth_linear_constant_coeff_undetermined_coefficients`` when it
-    applies, because it doesn't use integration, making it faster and more
+    applies, because it does not use integration, making it faster and more
     reliable.
 
     Warning, using simplify=False with
@@ -2702,8 +2686,7 @@ class SecondLinearBessel(SingleODESolver):
     >>> from sympy.abc import x
     >>> from sympy import Symbol
     >>> v = Symbol('v', positive=True)
-    >>> from sympy.solvers.ode import dsolve
-    >>> from sympy import Function
+    >>> from sympy import dsolve, Function
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = x**2*y.diff(x, 2) + x*y.diff(x) + (x**2 - v**2)*y

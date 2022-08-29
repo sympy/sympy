@@ -5,8 +5,7 @@ import types
 import inspect
 from functools import wraps, update_wrapper
 
-from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
@@ -138,7 +137,6 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_vers
     python_version should be the minimum Python version required, as a tuple
     (like (3, 0))
     """
-
     dependencies = {}
     if exe is not None:
         dependencies['executables'] = exe
@@ -150,6 +148,7 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_vers
         dependencies['python_version'] = python_version
 
     def skiptests():
+        from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter # lazy import
         r = PyTestReporter()
         t = SymPyDocTests(r, None)
         try:
@@ -240,29 +239,91 @@ def memoize_property(propfunc):
     return property(accessor)
 
 
-def deprecated(**decorator_kwargs):
-    """This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emitted
-    when the function is used."""
+def deprecated(message, *, deprecated_since_version,
+               active_deprecations_target, stacklevel=3):
+    '''
+    Mark a function as deprecated.
 
-    def _warn_deprecation(wrapped, stacklevel):
-        decorator_kwargs.setdefault('feature', wrapped.__name__)
-        SymPyDeprecationWarning(**decorator_kwargs).warn(stacklevel=stacklevel)
+    This decorator should be used if an entire function or class is
+    deprecated. If only a certain functionality is deprecated, you should use
+    :func:`~.warns_deprecated_sympy` directly. This decorator is just a
+    convenience. There is no functional difference between using this
+    decorator and calling ``warns_deprecated_sympy()`` at the top of the
+    function.
 
+    The decorator takes the same arguments as
+    :func:`~.warns_deprecated_sympy`. See its
+    documentation for details on what the keywords to this decorator do.
+
+    See the :ref:`deprecation-policy` document for details on when and how
+    things should be deprecated in SymPy.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.decorator import deprecated
+    >>> from sympy import simplify
+    >>> @deprecated("""\
+    ... The simplify_this(expr) function is deprecated. Use simplify(expr)
+    ... instead.""", deprecated_since_version="1.1",
+    ... active_deprecations_target='simplify-this-deprecation')
+    ... def simplify_this(expr):
+    ...     """
+    ...     Simplify ``expr``.
+    ...
+    ...     .. deprecated:: 1.1
+    ...
+    ...        The ``simplify_this`` function is deprecated. Use :func:`simplify`
+    ...        instead. See its documentation for more information. See
+    ...        :ref:`simplify-this-deprecation` for details.
+    ...
+    ...     """
+    ...     return simplify(expr)
+    >>> from sympy.abc import x
+    >>> simplify_this(x*(x + 1) - x**2) # doctest: +SKIP
+    <stdin>:1: SymPyDeprecationWarning:
+    <BLANKLINE>
+    The simplify_this(expr) function is deprecated. Use simplify(expr)
+    instead.
+    <BLANKLINE>
+    See https://docs.sympy.org/latest/explanation/active-deprecations.html#simplify-this-deprecation
+    for details.
+    <BLANKLINE>
+    This has been deprecated since SymPy version 1.1. It
+    will be removed in a future version of SymPy.
+    <BLANKLINE>
+      simplify_this(x)
+    x
+
+    See Also
+    ========
+    sympy.utilities.exceptions.SymPyDeprecationWarning
+    sympy.utilities.exceptions.sympy_deprecation_warning
+    sympy.utilities.exceptions.ignore_warnings
+    sympy.testing.pytest.warns_deprecated_sympy
+
+    '''
+    decorator_kwargs = dict(deprecated_since_version=deprecated_since_version,
+               active_deprecations_target=active_deprecations_target)
     def deprecated_decorator(wrapped):
         if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
             class wrapper(wrapped):
                 __doc__ = wrapped.__doc__
-                __name__ = wrapped.__name__
                 __module__ = wrapped.__module__
                 _sympy_deprecated_func = wrapped
-                def __init__(self, *args, **kwargs):
-                    _warn_deprecation(wrapped, 4)
-                    super().__init__(*args, **kwargs)
+                if '__new__' in wrapped.__dict__:
+                    def __new__(cls, *args, **kwargs):
+                        sympy_deprecation_warning(message, **decorator_kwargs, stacklevel=stacklevel)
+                        return super().__new__(cls, *args, **kwargs)
+                else:
+                    def __init__(self, *args, **kwargs):
+                        sympy_deprecation_warning(message, **decorator_kwargs, stacklevel=stacklevel)
+                        super().__init__(*args, **kwargs)
+            wrapper.__name__ = wrapped.__name__
         else:
             @wraps(wrapped)
             def wrapper(*args, **kwargs):
-                _warn_deprecation(wrapped, 3)
+                sympy_deprecation_warning(message, **decorator_kwargs, stacklevel=stacklevel)
                 return wrapped(*args, **kwargs)
             wrapper._sympy_deprecated_func = wrapped
         return wrapper

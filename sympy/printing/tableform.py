@@ -79,7 +79,7 @@ class TableForm:
                             returns None then the _print method will be used.)
 
             wipe_zeros ...
-                            Don't show zeros in the table.
+                            Do not show zeros in the table.
 
                             [default: True]
 

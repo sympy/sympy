@@ -8,8 +8,9 @@ are:
 Multivariate resultants are used to identify whether a multivariate
 system has common roots. That is when the resultant is equal to zero.
 """
+from math import prod
 
-from sympy.core.mul import (Mul, prod)
+from sympy.core.mul import Mul
 from sympy.matrices.dense import (Matrix, diag)
 from sympy.polys.polytools import (Poly, degree_list, rem)
 from sympy.simplify.simplify import simplify
@@ -19,7 +20,7 @@ from sympy.polys.orderings import monomial_key
 from sympy.polys.polytools import poly_from_expr, total_degree
 from sympy.functions.combinatorial.factorials import binomial
 from itertools import combinations_with_replacement
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 class DixonResultant():
     """
@@ -92,9 +93,13 @@ class DixonResultant():
 
     @property
     def max_degrees(self):
-        SymPyDeprecationWarning(feature="max_degrees",
-                        issue=17763,
-                        deprecated_since_version="1.5").warn()
+        sympy_deprecation_warning(
+            """
+            The max_degrees property of DixonResultant is deprecated.
+            """,
+            deprecated_since_version="1.5",
+            active_deprecations_target="deprecated-dixonresultant-properties",
+        )
         return self._max_degrees
 
     def get_dixon_polynomial(self):
@@ -134,11 +139,14 @@ class DixonResultant():
         return poly_from_expr(dixon_polynomial, self.dummy_variables)[0]
 
     def get_upper_degree(self):
-        SymPyDeprecationWarning(feature="get_upper_degree",
-                        useinstead="get_max_degrees",
-                        issue=17763,
-                        deprecated_since_version="1.5").warn()
-
+        sympy_deprecation_warning(
+            """
+            The get_upper_degree() method of DixonResultant is deprecated. Use
+            get_max_degrees() instead.
+            """,
+            deprecated_since_version="1.5",
+            active_deprecations_target="deprecated-dixonresultant-properties"
+        )
         list_of_products = [self.variables[i] ** self._max_degrees[i]
                             for i in range(self.n)]
         product = prod(list_of_products)
@@ -452,8 +460,8 @@ class MacaulayResultant():
         reduction_set = [v ** self.degrees[i] for i, v
                          in enumerate(self.variables)]
 
-        ais = list([self.polynomials[i].coeff(reduction_set[i])
-                    for i in range(self.n)])
+        ais = [self.polynomials[i].coeff(reduction_set[i])
+               for i in range(self.n)]
 
         reduced_matrix = matrix[:, reduced]
         keep = []

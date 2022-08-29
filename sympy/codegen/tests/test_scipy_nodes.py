@@ -10,7 +10,7 @@ x, y, z = symbols('x y z')
 def test_cosm1():
     cm1_xy = cosm1(x*y)
     ref_xy = cos(x*y) - 1
-    for wrt, deriv_order in product([x, y, z], range(0, 3)):
+    for wrt, deriv_order in product([x, y, z], range(3)):
         assert (
             cm1_xy.diff(wrt, deriv_order) -
             ref_xy.diff(wrt, deriv_order)

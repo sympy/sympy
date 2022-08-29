@@ -1,4 +1,4 @@
-from sympy import Lambda
+from sympy import Lambda, KroneckerProduct
 from sympy.core.symbol import symbols, Dummy
 from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct)
 from sympy.matrices.expressions.inverse import Inverse
@@ -8,9 +8,9 @@ from sympy.matrices.expressions.special import Identity
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayContraction, \
-    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, _array_contraction, _array_tensor_product
-from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
-from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, _array_contraction, _array_tensor_product, Reshape
+from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
 i, j, k, l, m, n = symbols("i j k l m n")
 
@@ -118,3 +118,11 @@ def test_arrayexpr_convert_matrix_to_array():
     expr = a.T*b
     cg = convert_matrix_to_array(expr)
     assert cg == ArrayContraction(ArrayTensorProduct(a, b), (0, 2))
+
+    expr = KroneckerProduct(A, B)
+    cg = convert_matrix_to_array(expr)
+    assert cg == Reshape(PermuteDims(ArrayTensorProduct(A, B), [0, 2, 1, 3]), (k**2, k**2))
+
+    expr = KroneckerProduct(A, B, C, D)
+    cg = convert_matrix_to_array(expr)
+    assert cg == Reshape(PermuteDims(ArrayTensorProduct(A, B, C, D), [0, 2, 4, 6, 1, 3, 5, 7]), (k**4, k**4))

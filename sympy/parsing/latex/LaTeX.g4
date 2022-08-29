@@ -13,7 +13,7 @@
 grammar LaTeX;
 
 options {
-	language = Python2;
+	language = Python3;
 }
 
 WS: [ \t\r\n]+ -> skip;
@@ -73,12 +73,15 @@ LIM_APPROACH_SYM:
 	| '\\Rightarrow'
 	| '\\longrightarrow'
 	| '\\Longrightarrow';
-FUNC_INT: '\\int';
+FUNC_INT:
+    '\\int'
+    | '\\int\\limits';
 FUNC_SUM: '\\sum';
 FUNC_PROD: '\\prod';
 
 FUNC_EXP: '\\exp';
 FUNC_LOG: '\\log';
+FUNC_LG: '\\lg';
 FUNC_LN: '\\ln';
 FUNC_SIN: '\\sin';
 FUNC_COS: '\\cos';
@@ -112,7 +115,10 @@ FUNC_OVERLINE: '\\overline';
 CMD_TIMES: '\\times';
 CMD_CDOT: '\\cdot';
 CMD_DIV: '\\div';
-CMD_FRAC: '\\frac';
+CMD_FRAC:
+    '\\frac'
+    | '\\dfrac'
+    | '\\tfrac';
 CMD_BINOM: '\\binom';
 CMD_DBINOM: '\\dbinom';
 CMD_TBINOM: '\\tbinom';
@@ -127,10 +133,7 @@ fragment WS_CHAR: [ \t\r\n];
 DIFFERENTIAL: 'd' WS_CHAR*? ([a-zA-Z] | '\\' [a-zA-Z]+);
 
 LETTER: [a-zA-Z];
-fragment DIGIT: [0-9];
-NUMBER:
-	DIGIT+ (',' DIGIT DIGIT DIGIT)*
-	| DIGIT* (',' DIGIT DIGIT DIGIT)* '.' DIGIT+;
+DIGIT: [0-9];
 
 EQUAL: (('&' WS_CHAR*?)? '=') | ('=' (WS_CHAR*? '&')?);
 NEQ: '\\neq';
@@ -146,6 +149,8 @@ GTE_Q: '\\geqq';
 GTE_S: '\\geqslant';
 
 BANG: '!';
+
+SINGLE_QUOTES: '\''+;
 
 SYMBOL: '\\' [a-zA-Z]+;
 
@@ -205,8 +210,6 @@ comp:
 	| abs_group
 	| func
 	| atom
-	| frac
-	| binom
 	| floor
 	| ceil;
 
@@ -214,8 +217,6 @@ comp_nofunc:
 	group
 	| abs_group
 	| atom
-	| frac
-	| binom
 	| floor
 	| ceil;
 
@@ -227,10 +228,14 @@ group:
 
 abs_group: BAR expr BAR;
 
-atom: (LETTER | SYMBOL) subexpr?
-	| NUMBER
+number: DIGIT+ (',' DIGIT DIGIT DIGIT)* ('.' DIGIT+)?;
+
+atom: (LETTER | SYMBOL) (subexpr? SINGLE_QUOTES? | SINGLE_QUOTES? subexpr?)
+	| number
 	| DIFFERENTIAL
 	| mathit
+	| frac
+	| binom
 	| bra
 	| ket;
 
@@ -240,8 +245,8 @@ ket: (L_BAR | BAR) expr R_ANGLE;
 mathit: CMD_MATHIT L_BRACE mathit_text R_BRACE;
 mathit_text: LETTER*;
 
-frac:
-	CMD_FRAC L_BRACE upper = expr R_BRACE L_BRACE lower = expr R_BRACE;
+frac: CMD_FRAC (upperd = DIGIT | L_BRACE upper = expr R_BRACE)
+    (lowerd = DIGIT | L_BRACE lower = expr R_BRACE);
 
 binom:
 	(CMD_BINOM | CMD_DBINOM | CMD_TBINOM) L_BRACE n = expr R_BRACE L_BRACE k = expr R_BRACE;
@@ -252,6 +257,7 @@ ceil: L_CEIL val = expr R_CEIL;
 func_normal:
 	FUNC_EXP
 	| FUNC_LOG
+	| FUNC_LG
 	| FUNC_LN
 	| FUNC_SIN
 	| FUNC_COS
@@ -277,7 +283,7 @@ func:
 		L_PAREN func_arg R_PAREN
 		| func_arg_noparens
 	)
-	| (LETTER | SYMBOL) subexpr? // e.g. f(x)
+	| (LETTER | SYMBOL) (subexpr? SINGLE_QUOTES? | SINGLE_QUOTES? subexpr?) // e.g. f(x), f_1'(x)
 	L_PAREN args R_PAREN
 	| FUNC_INT (subexpr supexpr | supexpr subexpr)? (
 		additive? DIFFERENTIAL
@@ -293,7 +299,7 @@ args: (expr ',' args) | expr;
 
 limit_sub:
 	UNDERSCORE L_BRACE (LETTER | SYMBOL) LIM_APPROACH_SYM expr (
-		CARET L_BRACE (ADD | SUB) R_BRACE
+		CARET ((L_BRACE (ADD | SUB) R_BRACE) | ADD | SUB)
 	)? R_BRACE;
 
 func_arg: expr | (expr ',' func_arg);

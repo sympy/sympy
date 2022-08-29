@@ -4,6 +4,7 @@ from sympy.core.mul import Mul
 from sympy.core.symbol import symbols
 from sympy.core.relational import Eq
 from sympy.concrete.summations import Sum
+from sympy.functions.elementary.complexes import im, re
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.common import NonSquareMatrixError, ShapeError
 from sympy.matrices.immutable import ImmutableDenseMatrix
@@ -110,7 +111,6 @@ def test_one_matrix_creation():
     raises(ValueError, lambda: OneMatrix(n, n))
 
 
-
 def test_ZeroMatrix():
     n, m = symbols('n m', integer=True)
     A = MatrixSymbol('A', n, m)
@@ -125,6 +125,9 @@ def test_ZeroMatrix():
 
     assert Z.transpose() == ZeroMatrix(m, n)
     assert Z.conjugate() == Z
+    assert Z.adjoint() == ZeroMatrix(m, n)
+    assert re(Z) == Z
+    assert im(Z) == Z
 
     assert ZeroMatrix(n, n)**0 == Identity(n)
     with raises(NonSquareMatrixError):
@@ -155,6 +158,9 @@ def test_OneMatrix():
     assert isinstance(A + U, Add)
     assert U.transpose() == OneMatrix(m, n)
     assert U.conjugate() == U
+    assert U.adjoint() == OneMatrix(m, n)
+    assert re(U) == U
+    assert im(U) == ZeroMatrix(n, m)
 
     assert OneMatrix(n, n) ** 0 == Identity(n)
     with raises(NonSquareMatrixError):
@@ -203,6 +209,9 @@ def test_Identity():
     assert In.transpose() == In
     assert In.inverse() == In
     assert In.conjugate() == In
+    assert In.adjoint() == In
+    assert re(In) == In
+    assert im(In) == ZeroMatrix(n, n)
 
     assert In[i, j] != 0
     assert Sum(In[i, j], (i, 0, n-1), (j, 0, n-1)).subs(n,3).doit() == 3

@@ -1,5 +1,6 @@
+from math import prod
+
 from sympy.core.basic import Basic
-from sympy.core.mul import prod
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
@@ -139,23 +140,26 @@ class SampleMatrixNumpy:
 
 
 class SampleMatrixPymc:
-    """Returns the sample from pymc3 of the given distribution"""
+    """Returns the sample from pymc of the given distribution"""
 
     def __new__(cls, dist, size, seed=None):
-        return cls._sample_pymc3(dist, size, seed)
+        return cls._sample_pymc(dist, size, seed)
 
     @classmethod
-    def _sample_pymc3(cls, dist, size, seed):
-        """Sample from PyMC3."""
+    def _sample_pymc(cls, dist, size, seed):
+        """Sample from PyMC."""
 
-        import pymc3
-        pymc3_rv_map = {
-            'MatrixNormalDistribution': lambda dist: pymc3.MatrixNormal('X',
+        try:
+            import pymc
+        except ImportError:
+            import pymc3 as pymc
+        pymc_rv_map = {
+            'MatrixNormalDistribution': lambda dist: pymc.MatrixNormal('X',
                 mu=matrix2numpy(dist.location_matrix, float),
                 rowcov=matrix2numpy(dist.scale_matrix_1, float),
                 colcov=matrix2numpy(dist.scale_matrix_2, float),
                 shape=dist.location_matrix.shape),
-            'WishartDistribution': lambda dist: pymc3.WishartBartlett('X',
+            'WishartDistribution': lambda dist: pymc.WishartBartlett('X',
                 nu=int(dist.n), S=matrix2numpy(dist.scale_matrix, float))
         }
 
@@ -164,20 +168,21 @@ class SampleMatrixPymc:
             'MatrixNormalDistribution' : lambda dist: dist.location_matrix.shape
         }
 
-        dist_list = pymc3_rv_map.keys()
+        dist_list = pymc_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
         import logging
-        logging.getLogger("pymc3").setLevel(logging.ERROR)
-        with pymc3.Model():
-            pymc3_rv_map[dist.__class__.__name__](dist)
-            samps = pymc3.sample(draws=prod(size), chains=1, progressbar=False, random_seed=seed, return_inferencedata=False, compute_convergence_checks=False)['X']
+        logging.getLogger("pymc").setLevel(logging.ERROR)
+        with pymc.Model():
+            pymc_rv_map[dist.__class__.__name__](dist)
+            samps = pymc.sample(draws=prod(size), chains=1, progressbar=False, random_seed=seed, return_inferencedata=False, compute_convergence_checks=False)['X']
         return samps.reshape(size + sample_shape[dist.__class__.__name__](dist))
 
 _get_sample_class_matrixrv = {
     'scipy': SampleMatrixScipy,
     'pymc3': SampleMatrixPymc,
+    'pymc': SampleMatrixPymc,
     'numpy': SampleMatrixNumpy
 }
 
@@ -210,7 +215,7 @@ class MatrixDistribution(Distribution, NamedArgsMixin):
         Returns dictionary mapping RandomSymbol to realization value.
         """
 
-        libraries = ['scipy', 'numpy', 'pymc3']
+        libraries = ['scipy', 'numpy', 'pymc3', 'pymc']
         if library not in libraries:
             raise NotImplementedError("Sampling from %s is not supported yet."
                                         % str(library))

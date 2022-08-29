@@ -4,7 +4,7 @@ from sympy.physics.mechanics import dynamicsymbols, outer, inertia
 from sympy.physics.mechanics import inertia_of_point_mass
 from sympy.core.backend import expand
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_rigidbody():
@@ -125,3 +125,13 @@ def test_parallel_axis():
     Ip_expected = inertia(N, Ix + m * b**2, Iy + m * a**2,
                           Iz + m * (a**2 + b**2), ixy=-m * a * b)
     assert Ip == Ip_expected
+
+
+def test_deprecated_set_potential_energy():
+    m, g, h = symbols('m g h')
+    A = ReferenceFrame('A')
+    P = Point('P')
+    I = Dyadic(0)
+    B = RigidBody('B', P, A, m, (I, P))
+    with warns_deprecated_sympy():
+        B.set_potential_energy(m*g*h)

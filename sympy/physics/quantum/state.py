@@ -139,12 +139,12 @@ class StateBase(QExpr):
 
         # Setup for unicode vs ascii
         if use_unicode:
-            lbracket, rbracket = self.lbracket_ucode, self.rbracket_ucode
+            lbracket, rbracket = getattr(self, 'lbracket_ucode', ""), getattr(self, 'rbracket_ucode', "")
             slash, bslash, vert = '\N{BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT}', \
                                   '\N{BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT}', \
                                   '\N{BOX DRAWINGS LIGHT VERTICAL}'
         else:
-            lbracket, rbracket = self.lbracket, self.rbracket
+            lbracket, rbracket = getattr(self, 'lbracket', ""), getattr(self, 'rbracket', "")
             slash, bslash, vert = '/', '\\', '|'
 
         # If height is 1, just return brackets
@@ -177,7 +177,7 @@ class StateBase(QExpr):
 
     def _sympystr(self, printer, *args):
         contents = self._print_contents(printer, *args)
-        return '%s%s%s' % (self.lbracket, contents, self.rbracket)
+        return '%s%s%s' % (getattr(self, 'lbracket', ""), contents, getattr(self, 'rbracket', ""))
 
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
@@ -194,7 +194,7 @@ class StateBase(QExpr):
         contents = self._print_contents_latex(printer, *args)
         # The extra {} brackets are needed to get matplotlib's latex
         # rendered to render this properly.
-        return '{%s%s%s}' % (self.lbracket_latex, contents, self.rbracket_latex)
+        return '{%s%s%s}' % (getattr(self, 'lbracket_latex', ""), contents, getattr(self, 'rbracket_latex', ""))
 
 
 class KetBase(StateBase):
@@ -652,14 +652,16 @@ class OrthogonalKet(OrthogonalState, KetBase):
         if len(self.args) != len(bra.args):
             raise ValueError('Cannot multiply a ket that has a different number of labels.')
 
-        for i in range(len(self.args)):
-            diff = self.args[i] - bra.args[i]
+        for arg, bra_arg in zip(self.args, bra.args):
+            diff = arg - bra_arg
             diff = diff.expand()
 
-            if diff.is_zero is False:
+            is_zero = diff.is_zero
+
+            if is_zero is False:
                 return 0
 
-            if diff.is_zero is None:
+            if is_zero is None:
                 return None
 
         return 1

@@ -1,11 +1,19 @@
 """ Tools for doing common subexpression elimination.
 """
+from collections import defaultdict
+
 from sympy.core import Basic, Mul, Add, Pow, sympify
 from sympy.core.containers import Tuple, OrderedSet
 from sympy.core.exprtools import factor_terms
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol
+from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
+                            SparseMatrix, ImmutableSparseMatrix)
+from sympy.matrices.expressions import (MatrixExpr, MatrixSymbol, MatMul,
+                                        MatAdd, MatPow)
+from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.polys.rootoftools import RootOf
 from sympy.utilities.iterables import numbered_symbols, sift, \
         topological_sort, iterable
 
@@ -265,7 +273,6 @@ class FuncArgTracker:
         ``argset``. Entries have at least 2 items in common.  All keys have
         value at least ``min_func_i``.
         """
-        from collections import defaultdict
         count_map = defaultdict(lambda: 0)
         if not argset:
             return count_map
@@ -478,8 +485,7 @@ def opt_cse(exprs, order='canonical'):
     >>> print((k, v.as_unevaluated_basic()))
     (x**(-2), 1/(x**2))
     """
-    from sympy.matrices.expressions import MatAdd, MatMul, MatPow
-    opt_subs = dict()
+    opt_subs = {}
 
     adds = OrderedSet()
     muls = OrderedSet()
@@ -566,11 +572,8 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
     ignore : iterable of Symbols
         Substitutions containing any Symbol from ``ignore`` will be ignored.
     """
-    from sympy.matrices.expressions import MatrixExpr, MatrixSymbol, MatMul, MatAdd
-    from sympy.polys.rootoftools import RootOf
-
     if opt_subs is None:
-        opt_subs = dict()
+        opt_subs = {}
 
     ## Find repeated sub-expressions
 
@@ -586,7 +589,10 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
         if isinstance(expr, RootOf):
             return
 
-        if isinstance(expr, Basic) and (expr.is_Atom or expr.is_Order):
+        if isinstance(expr, Basic) and (
+                expr.is_Atom or
+                expr.is_Order or
+                isinstance(expr, (MatrixSymbol, MatrixElement))):
             if expr.is_Symbol:
                 excluded_symbols.add(expr)
             return
@@ -623,7 +629,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
     replacements = []
 
-    subs = dict()
+    subs = {}
 
     def _rebuild(expr):
         if not isinstance(expr, (Basic, Unevaluated)):
@@ -772,9 +778,6 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     >>> cse(x, list=False)
     ([], x)
     """
-    from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
-                                SparseMatrix, ImmutableSparseMatrix)
-
     if not list:
         return _cse_homogeneous(exprs,
             symbols=symbols, optimizations=optimizations,

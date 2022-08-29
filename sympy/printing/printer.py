@@ -135,8 +135,7 @@ Example of Custom Printing Method
 In the example below, the latex printing of the modulo operator is modified.
 This is done by overriding the method ``_latex`` of ``Mod``.
 
->>> from sympy import Symbol, Mod, Integer
->>> from sympy.printing.latex import print_latex
+>>> from sympy import Symbol, Mod, Integer, print_latex
 
 >>> # Always use printer._print()
 >>> class ModOp(Mod):
@@ -167,7 +166,7 @@ an expression when customizing a printer. Mistakes include:
     ...         a, b = [printer.doprint(i) for i in self.args]
     ...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
-    This fails when the `mode` argument is passed to the printer:
+    This fails when the ``mode`` argument is passed to the printer:
 
     >>> print_latex(ModOp(x, m), mode='inline')  # ok
     $\\operatorname{Mod}{\\left(x, m\\right)}$
@@ -260,7 +259,7 @@ class Printer:
         self._str = str
 
         self._settings = self._get_initial_settings()
-        self._context = dict()  # mutable during printing
+        self._context = {}  # mutable during printing
 
         if settings is not None:
             self._settings.update(settings)
@@ -292,7 +291,7 @@ class Printer:
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
 
-    def _print(self, expr, **kwargs):
+    def _print(self, expr, **kwargs) -> str:
         """Internal dispatcher
 
         Tries the following concepts to print an expression:

@@ -356,7 +356,7 @@ class ComplexRootOf(RootOf):
         if not dom.is_ZZ:
             raise NotImplementedError("CRootOf is not supported over %s" % dom)
 
-        root = cls._indexed_root(poly, index)
+        root = cls._indexed_root(poly, index, lazy=True)
         return coeff * cls._postprocess_root(root, radicals)
 
     @classmethod
@@ -395,10 +395,12 @@ class ComplexRootOf(RootOf):
 
     def _eval_is_real(self):
         """Return ``True`` if the root is real. """
+        self._ensure_reals_init()
         return self.index < len(_reals_cache[self.poly])
 
     def _eval_is_imaginary(self):
         """Return ``True`` if the root is imaginary. """
+        self._ensure_reals_init()
         if self.index >= len(_reals_cache[self.poly]):
             ivl = self._get_interval()
             return ivl.ax*ivl.bx <= 0  # all others are on one side or the other
@@ -573,10 +575,10 @@ class ComplexRootOf(RootOf):
                 # contiguous because a discontinuity should only
                 # happen once
                 fs.remove(complexes[i - 1][F])
-        for i in range(len(complexes)):
+        for i, cmplx in enumerate(complexes):
             # negative im part (conj=True) comes before
             # positive im part (conj=False)
-            assert complexes[i][C].conj is (i % 2 == 0)
+            assert cmplx[C].conj is (i % 2 == 0)
 
         # update cache
         cache = {}
@@ -636,9 +638,15 @@ class ComplexRootOf(RootOf):
         return sum([k for _, _, k in roots])
 
     @classmethod
-    def _indexed_root(cls, poly, index):
+    def _indexed_root(cls, poly, index, lazy=False):
         """Get a root of a composite polynomial by index. """
         factors = _pure_factors(poly)
+
+        # If the given poly is already irreducible, then the index does not
+        # need to be adjusted, and we can postpone the heavy lifting of
+        # computing and refining isolating intervals until that is needed.
+        if lazy and len(factors) == 1 and factors[0][1] == 1:
+            return poly, index
 
         reals = cls._get_reals(factors)
         reals_count = cls._count_roots(reals)
@@ -648,6 +656,16 @@ class ComplexRootOf(RootOf):
         else:
             complexes = cls._get_complexes(factors)
             return cls._complexes_index(complexes, index - reals_count)
+
+    def _ensure_reals_init(self):
+        """Ensure that our poly has entries in the reals cache. """
+        if self.poly not in _reals_cache:
+            self._indexed_root(self.poly, self.index)
+
+    def _ensure_complexes_init(self):
+        """Ensure that our poly has entries in the complexes cache. """
+        if self.poly not in _complexes_cache:
+            self._indexed_root(self.poly, self.index)
 
     @classmethod
     def _real_roots(cls, poly):
@@ -779,18 +797,22 @@ class ComplexRootOf(RootOf):
 
     def _get_interval(self):
         """Internal function for retrieving isolation interval from cache. """
+        self._ensure_reals_init()
         if self.is_real:
             return _reals_cache[self.poly][self.index]
         else:
             reals_count = len(_reals_cache[self.poly])
+            self._ensure_complexes_init()
             return _complexes_cache[self.poly][self.index - reals_count]
 
     def _set_interval(self, interval):
         """Internal function for updating isolation interval in cache. """
+        self._ensure_reals_init()
         if self.is_real:
             _reals_cache[self.poly][self.index] = interval
         else:
             reals_count = len(_reals_cache[self.poly])
+            self._ensure_complexes_init()
             _complexes_cache[self.poly][self.index - reals_count] = interval
 
     def _eval_subs(self, old, new):

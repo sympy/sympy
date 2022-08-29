@@ -13,8 +13,8 @@ See the webpage for more information and documentation:
 
 
 import sys
-if sys.version_info < (3, 7):
-    raise ImportError("Python version 3.7 or above is required for SymPy.")
+if sys.version_info < (3, 8):
+    raise ImportError("Python version 3.8 or above is required for SymPy.")
 del sys
 
 
@@ -27,6 +27,7 @@ except ImportError:
 del mpmath
 
 from sympy.release import __version__
+from sympy.core.cache import lazy_function
 
 if 'dev' in __version__:
     def enable_warnings():
@@ -118,11 +119,11 @@ from .functions import (factorial, factorial2, rf, ff, binomial,
         asin, acos, atan, asec, acsc, acot, atan2, exp_polar, exp, ln, log,
         LambertW, sinh, cosh, tanh, coth, sech, csch, asinh, acosh, atanh,
         acoth, asech, acsch, floor, ceiling, frac, Piecewise, piecewise_fold,
-        erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv, Ei, expint, E1, li,
-        Li, Si, Ci, Shi, Chi, fresnels, fresnelc, gamma, lowergamma,
-        uppergamma, polygamma, loggamma, digamma, trigamma, multigamma,
-        dirichlet_eta, zeta, lerchphi, polylog, stieltjes, Eijk, LeviCivita,
-        KroneckerDelta, SingularityFunction, DiracDelta, Heaviside,
+        piecewise_exclusive, erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
+        Ei, expint, E1, li, Li, Si, Ci, Shi, Chi, fresnels, fresnelc, gamma,
+        lowergamma, uppergamma, polygamma, loggamma, digamma, trigamma,
+        multigamma, dirichlet_eta, zeta, lerchphi, polylog, stieltjes, Eijk,
+        LeviCivita, KroneckerDelta, SingularityFunction, DiracDelta, Heaviside,
         bspline_basis, bspline_basis_set, interpolating_spline, besselj,
         bessely, besseli, besselk, hankel1, hankel2, jn, yn, jn_zeros, hn1,
         hn2, airyai, airybi, airyaiprime, airybiprime, marcumq, hyper,
@@ -225,7 +226,7 @@ from .parsing import parse_expr
 
 from .calculus import (euler_equations, singularities, is_increasing,
         is_strictly_increasing, is_decreasing, is_strictly_decreasing,
-        is_monotonic, finite_diff_weights, apply_finite_diff, as_finite_diff,
+        is_monotonic, finite_diff_weights, apply_finite_diff,
         differentiate_finite, periodicity, not_empty_in, AccumBounds,
         is_convex, stationary_points, minimum, maximum)
 
@@ -240,7 +241,8 @@ from .printing import (pager_print, pretty, pretty_print, pprint,
         print_tree, StrPrinter, sstr, sstrrepr, TableForm, dotprint,
         maple_code, print_maple_code)
 
-from .testing import test, doctest
+test = lazy_function('sympy.testing.runtests', 'test')
+doctest = lazy_function('sympy.testing.runtests', 'doctest')
 
 # This module causes conflicts with other modules:
 # from .stats import *
@@ -254,6 +256,8 @@ from .interactive import init_session, init_printing, interactive_traversal
 evalf._create_evalf_table()
 
 __all__ = [
+    '__version__',
+
     # sympy.core
     'sympify', 'SympifyError', 'cacheit', 'Basic', 'Atom',
     'preorder_traversal', 'S', 'Expr', 'AtomicExpr', 'UnevaluatedExpr',
@@ -336,11 +340,11 @@ __all__ = [
     'acot', 'atan2', 'exp_polar', 'exp', 'ln', 'log', 'LambertW', 'sinh',
     'cosh', 'tanh', 'coth', 'sech', 'csch', 'asinh', 'acosh', 'atanh',
     'acoth', 'asech', 'acsch', 'floor', 'ceiling', 'frac', 'Piecewise',
-    'piecewise_fold', 'erf', 'erfc', 'erfi', 'erf2', 'erfinv', 'erfcinv',
-    'erf2inv', 'Ei', 'expint', 'E1', 'li', 'Li', 'Si', 'Ci', 'Shi', 'Chi',
-    'fresnels', 'fresnelc', 'gamma', 'lowergamma', 'uppergamma', 'polygamma',
-    'loggamma', 'digamma', 'trigamma', 'multigamma', 'dirichlet_eta', 'zeta',
-    'lerchphi', 'polylog', 'stieltjes', 'Eijk', 'LeviCivita',
+    'piecewise_fold', 'piecewise_exclusive', 'erf', 'erfc', 'erfi', 'erf2',
+    'erfinv', 'erfcinv', 'erf2inv', 'Ei', 'expint', 'E1', 'li', 'Li', 'Si',
+    'Ci', 'Shi', 'Chi', 'fresnels', 'fresnelc', 'gamma', 'lowergamma',
+    'uppergamma', 'polygamma', 'loggamma', 'digamma', 'trigamma', 'multigamma',
+    'dirichlet_eta', 'zeta', 'lerchphi', 'polylog', 'stieltjes', 'Eijk', 'LeviCivita',
     'KroneckerDelta', 'SingularityFunction', 'DiracDelta', 'Heaviside',
     'bspline_basis', 'bspline_basis_set', 'interpolating_spline', 'besselj',
     'bessely', 'besseli', 'besselk', 'hankel1', 'hankel2', 'jn', 'yn',
@@ -465,7 +469,7 @@ __all__ = [
     'euler_equations', 'singularities', 'is_increasing',
     'is_strictly_increasing', 'is_decreasing', 'is_strictly_decreasing',
     'is_monotonic', 'finite_diff_weights', 'apply_finite_diff',
-    'as_finite_diff', 'differentiate_finite', 'periodicity', 'not_empty_in',
+    'differentiate_finite', 'periodicity', 'not_empty_in',
     'AccumBounds', 'is_convex', 'stationary_points', 'minimum', 'maximum',
 
     # sympy.algebras

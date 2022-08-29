@@ -1,13 +1,15 @@
 from collections import defaultdict
 from functools import reduce
+from math import prod
 
 from sympy.core.function import expand_log, count_ops, _coeff_isneg
 from sympy.core import sympify, Basic, Dummy, S, Add, Mul, Pow, expand_mul, factor_terms
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.numbers import Integer, Rational
-from sympy.core.mul import prod, _keep_coeff
+from sympy.core.mul import _keep_coeff
 from sympy.core.rules import Transform
 from sympy.functions import exp_polar, exp, log, root, polarify, unpolarify
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys import lcm, gcd
 from sympy.ntheory.factor_ import multiplicity
 
@@ -98,8 +100,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     x*y*sqrt(x*sqrt(y))
 
     """
-    from sympy.matrices.expressions.matexpr import MatrixSymbol
-
     def recurse(arg, **kwargs):
         _deep = kwargs.get('deep', deep)
         _combine = kwargs.get('combine', combine)
@@ -603,7 +603,7 @@ def powdenest(eq, force=False, polar=False):
         eq, rep = polarify(eq)
         return unpolarify(powdenest(unpolarify(eq, exponents_only=True)), rep)
 
-    new = powsimp(sympify(eq))
+    new = powsimp(eq)
     return new.xreplace(Transform(
         _denest_pow, filter=lambda m: m.is_Pow or isinstance(m, exp)))
 

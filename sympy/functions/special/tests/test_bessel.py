@@ -23,7 +23,7 @@ from sympy.core.random import (random_complex_number as randcplx,
                                       test_derivative_numerically as td,
                                       _randint)
 from sympy.simplify import besselsimp
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 
 from sympy.abc import z, n, k, x
 
@@ -54,9 +54,9 @@ def test_besselj_leading_term():
 
 
 def test_bessely_leading_term():
-    assert bessely(0, x).as_leading_term(x) == (2*log(x) - 2*log(2))/pi
-    assert bessely(1, sin(x)).as_leading_term(x) == (x*log(x) - x*log(2))/pi
-    assert bessely(1, 2*sqrt(x)).as_leading_term(x) == sqrt(x)*log(x)/pi
+    assert bessely(0, x).as_leading_term(x) == (2*log(x) - 2*log(2) + 2*S.EulerGamma)/pi
+    assert bessely(1, sin(x)).as_leading_term(x) == -2/(pi*x)
+    assert bessely(1, 2*sqrt(x)).as_leading_term(x) == -1/(pi*sqrt(x))
 
 
 def test_besselj_series():
@@ -248,6 +248,8 @@ def test_expand():
         assert expand_func(besselx(-oo, x)) == besselx(-oo, x, evaluate=False)
 
 
+# Quite varying time, but often really slow
+@slow
 def test_slow_expand():
     def check(eq, ans):
         return tn(eq, ans) and eq == ans

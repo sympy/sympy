@@ -1,3 +1,5 @@
+.. _sets-module:
+
 ====
 Sets
 ====
@@ -58,6 +60,11 @@ SymmetricDifference
 .. autoclass:: SymmetricDifference
    :members:
 
+DisjointUnion
+^^^^^^^^^^^^^
+.. autoclass:: DisjointUnion
+   :members:
+
 Singleton Sets
 --------------
 
@@ -74,6 +81,11 @@ UniversalSet
 Special Sets
 ------------
 .. automodule:: sympy.sets.fancysets
+
+Rationals
+^^^^^^^^^
+.. autoclass:: Rationals
+   :members:
 
 Naturals
 ^^^^^^^^
@@ -173,4 +185,10 @@ Relations on sets
 ^^^^^^^^^^^^^^^^^
 
 .. autoclass:: Contains
+   :members:
+
+SetKind
+--------------
+
+.. autoclass:: SetKind
    :members:

@@ -1,7 +1,7 @@
 from sympy.core.backend import sympify
 from sympy.physics.vector import Point
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['Particle']
 
@@ -243,12 +243,16 @@ class Particle:
         self._pe = sympify(scalar)
 
     def set_potential_energy(self, scalar):
-        SymPyDeprecationWarning(
-                feature="Method sympy.physics.mechanics." +
-                    "Particle.set_potential_energy(self, scalar)",
-                useinstead="property sympy.physics.mechanics." +
-                    "Particle.potential_energy",
-                deprecated_since_version="1.5", issue=9800).warn()
+        sympy_deprecation_warning(
+            """
+The sympy.physics.mechanics.Particle.set_potential_energy()
+method is deprecated. Instead use
+
+    P.potential_energy = scalar
+            """,
+        deprecated_since_version="1.5",
+        active_deprecations_target="deprecated-set-potential-energy",
+        )
         self.potential_energy = scalar
 
     def parallel_axis(self, point, frame):

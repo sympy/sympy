@@ -1,5 +1,5 @@
 from sympy.core import (
-    S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio, EulerGamma, Catalan,
+    S, pi, oo, Symbol, symbols, Rational, Integer, Float, Function, Mod, GoldenRatio, EulerGamma, Catalan,
     Lambda, Dummy, nan, Mul, Pow, UnevaluatedExpr
 )
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
@@ -11,7 +11,7 @@ from sympy.functions import (
 from sympy.sets import Range
 from sympy.logic import ITE, Implies, Equivalent
 from sympy.codegen import For, aug_assign, Assignment
-from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
@@ -88,7 +88,6 @@ def test_ccode_constants_mathh():
     assert ccode(oo) == "INFINITY"
     assert ccode(-oo, standard='c99') == "-INFINITY"
     assert ccode(pi, type_aliases={real: float80}) == "M_PIl"
-
 
 
 def test_ccode_constants_other():
@@ -179,6 +178,15 @@ def test_ccode_user_functions():
     assert ccode(ceiling(x), user_functions=custom_functions) == "ceil(x)"
     assert ccode(Abs(x), user_functions=custom_functions) == "fabs(x)"
     assert ccode(Abs(n), user_functions=custom_functions) == "abs(n)"
+
+    expr = Symbol('a')
+    muladd = Function('muladd')
+    for i in range(0, 100):
+        # the large number of terms acts as a regression test for gh-23839
+        expr = muladd(Rational(1, 2), Symbol(f'a{i}'), expr)
+    out = ccode(expr, user_functions={'muladd':'muladd'})
+    assert 'a99' in out
+    assert out.count('muladd') == 100
 
 
 def test_ccode_boolean():
@@ -814,7 +822,10 @@ def test_ccode_Type():
 
 
 def test_ccode_codegen_ast():
-    assert ccode(Comment("this is a comment")) == "// this is a comment"
+    # Note that C only allows comments of the form /* ... */, double forward
+    # slash is not standard C, and some C compilers will grind to a halt upon
+    # encountering them.
+    assert ccode(Comment("this is a comment")) == "/* this is a comment */"  # not //
     assert ccode(While(abs(x) > 1, [aug_assign(x, '-', 1)])) == (
         'while (fabs(x) > 1) {\n'
         '   x -= 1;\n'
@@ -846,12 +857,6 @@ def test_ccode_codegen_ast():
         'pwer(x);',
         'return x;',
     ])
-
-def test_ccode_submodule():
-    # Test the compatibility sympy.printing.ccode module imports
-    with warns_deprecated_sympy():
-        import sympy.printing.ccode # noqa:F401
-
 
 def test_ccode_UnevaluatedExpr():
     assert ccode(UnevaluatedExpr(y * x) + z) == "z + x*y"

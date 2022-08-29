@@ -39,6 +39,7 @@ from .basic import Basic, _atomic
 from .cache import cacheit
 from .containers import Tuple, Dict
 from .decorators import _sympifyit
+from .evalf import pure_complex
 from .expr import Expr, AtomicExpr
 from .logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
 from .mul import Mul
@@ -47,10 +48,11 @@ from .operations import LatticeOp
 from .parameters import global_parameters
 from .rules import Transform
 from .singleton import S
-from .sympify import sympify
+from .sympify import sympify, _sympify
 
 from .sorting import default_sort_key, ordered
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import (sympy_deprecation_warning,
+                                        SymPyDeprecationWarning, ignore_warnings)
 from sympy.utilities.iterables import (has_dups, sift, iterable,
     is_sequence, uniq, topological_sort)
 from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
@@ -116,7 +118,7 @@ class BadArgumentsError(TypeError):
     pass
 
 
-# Python 2/3 version that does not raise a Deprecation warning
+# Python 3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
 
@@ -183,6 +185,14 @@ class FunctionClass(ManagedProperties):
         elif nargs is not None:
             nargs = (as_int(nargs),)
         cls._nargs = nargs
+
+        # When __init__ is called from UndefinedFunction it is called with
+        # just one arg but when it is called from subclassing Function it is
+        # called with the usual (name, bases, namespace) type() signature.
+        if len(args) == 3:
+            namespace = args[2]
+            if 'eval' in namespace and not isinstance(namespace['eval'], classmethod):
+                raise TypeError("eval on Function subclasses should be a class method (defined with @classmethod)")
 
         super().__init__(*args, **kwargs)
 
@@ -251,6 +261,18 @@ class FunctionClass(ManagedProperties):
         # XXX it would be nice to handle this in __init__ but there are import
         # problems with trying to import FiniteSet there
         return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
+
+    def _valid_nargs(self, n : int) -> bool:
+        """ Return True if the specified interger is a valid number of arguments
+
+        The number of arguments n is guaranteed to be an integer and positive
+
+        """
+        if self._nargs:
+            return n in self._nargs
+
+        nargs = self.nargs
+        return nargs is S.Naturals0 or n in nargs
 
     def __repr__(cls):
         return cls.__name__
@@ -359,16 +381,21 @@ class Application(Basic, metaclass=FunctionClass):
 
 
 class Function(Application, Expr):
-    """
+    r"""
     Base class for applied mathematical functions.
 
     It also serves as a constructor for undefined function classes.
 
+    See the :ref:`custom-functions` guide for details on how to subclass
+    ``Function`` and what methods can be defined.
+
     Examples
     ========
 
-    First example shows how to use Function as a constructor for undefined
-    function classes:
+    **Undefined Functions**
+
+    To create an undefined function, pass a string of the function name to
+    ``Function``.
 
     >>> from sympy import Function, Symbol
     >>> x = Symbol('x')
@@ -385,8 +412,10 @@ class Function(Application, Expr):
     >>> g.diff(x)
     Derivative(g(x), x)
 
-    Assumptions can be passed to Function, and if function is initialized with a
-    Symbol, the function inherits the name and assumptions associated with the Symbol:
+    Assumptions can be passed to ``Function`` the same as with a
+    :class:`~.Symbol`. Alternatively, you can use a ``Symbol`` with
+    assumptions for the function name and the function will inherit the name
+    and assumptions associated with the ``Symbol``:
 
     >>> f_real = Function('f', real=True)
     >>> f_real(x).is_real
@@ -396,52 +425,16 @@ class Function(Application, Expr):
     True
 
     Note that assumptions on a function are unrelated to the assumptions on
-    the variable it is called on. If you want to add a relationship, subclass
-    Function and define the appropriate ``_eval_is_assumption`` methods.
+    the variables it is called on. If you want to add a relationship, subclass
+    ``Function`` and define custom assumptions handler methods. See the
+    :ref:`custom-functions-assumptions` section of the :ref:`custom-functions`
+    guide for more details.
 
-    In the following example Function is used as a base class for
-    ``my_func`` that represents a mathematical function *my_func*. Suppose
-    that it is well known, that *my_func(0)* is *1* and *my_func* at infinity
-    goes to *0*, so we want those two simplifications to occur automatically.
-    Suppose also that *my_func(x)* is real exactly when *x* is real. Here is
-    an implementation that honours those requirements:
+    **Custom Function Subclasses**
 
-    >>> from sympy import Function, S, oo, I, sin
-    >>> class my_func(Function):
-    ...
-    ...     @classmethod
-    ...     def eval(cls, x):
-    ...         if x.is_Number:
-    ...             if x.is_zero:
-    ...                 return S.One
-    ...             elif x is S.Infinity:
-    ...                 return S.Zero
-    ...
-    ...     def _eval_is_real(self):
-    ...         return self.args[0].is_real
-    ...
-    >>> x = S('x')
-    >>> my_func(0) + sin(0)
-    1
-    >>> my_func(oo)
-    0
-    >>> my_func(3.54).n() # Not yet implemented for my_func.
-    my_func(3.54)
-    >>> my_func(I).is_real
-    False
-
-    In order for ``my_func`` to become useful, several other methods would
-    need to be implemented. See source code of some of the already
-    implemented functions for more complete examples.
-
-    Also, if the function can take more than one argument, then ``nargs``
-    must be defined, e.g. if ``my_func`` can take one or two arguments
-    then,
-
-    >>> class my_func(Function):
-    ...     nargs = (1, 2)
-    ...
-    >>>
+    The :ref:`custom-functions` guide has several
+    :ref:`custom-functions-complete-examples` of how to subclass ``Function``
+    to create a custom function.
 
     """
 
@@ -456,7 +449,8 @@ class Function(Application, Expr):
             return UndefinedFunction(*args, **options)
 
         n = len(args)
-        if n not in cls.nargs:
+
+        if not cls._valid_nargs(n):
             # XXX: exception message must be in exactly this format to
             # make it work with NumPy's functions like vectorize(). See,
             # for example, https://github.com/numpy/numpy/issues/1697.
@@ -474,12 +468,13 @@ class Function(Application, Expr):
         evaluate = options.get('evaluate', global_parameters.evaluate)
         result = super().__new__(cls, *args, **options)
         if evaluate and isinstance(result, cls) and result.args:
-            pr2 = min(cls._should_evalf(a) for a in result.args)
+            _should_evalf = [cls._should_evalf(a) for a in result.args]
+            pr2 = min(_should_evalf)
             if pr2 > 0:
-                pr = max(cls._should_evalf(a) for a in result.args)
+                pr = max(_should_evalf)
                 result = result.evalf(prec_to_dps(pr))
 
-        return result
+        return _sympify(result)
 
     @classmethod
     def _should_evalf(cls, arg):
@@ -490,22 +485,20 @@ class Function(Application, Expr):
         ===========
 
         By default (in this implementation), this happens if (and only if) the
-        ARG is a floating point number.
+        ARG is a floating point number (including complex numbers).
         This function is used by __new__.
 
-        Returns the precision to evalf to, or -1 if it shouldn't evalf.
+        Returns the precision to evalf to, or -1 if it should not evalf.
         """
         if arg.is_Float:
             return arg._prec
         if not arg.is_Add:
             return -1
-        from .evalf import pure_complex
         m = pure_complex(arg)
-        if m is None or not (m[0].is_Float or m[1].is_Float):
+        if m is None:
             return -1
-        l = [i._prec for i in m if i.is_Float]
-        l.append(-1)
-        return max(l)
+        # the elements of m are of type Number, so have a _prec
+        return max(m[0]._prec, m[1]._prec)
 
     @classmethod
     def class_key(cls):
@@ -746,8 +739,7 @@ class Function(Application, Expr):
 
                 _x = uniquely_named_symbol('xi', self)
                 e = e.subs(x, _x)
-                for i in range(n - 1):
-                    i += 1
+                for i in range(1, n):
                     fact *= Rational(i)
                     e = e.diff(_x)
                     subs = e.subs(_x, S.Zero)
@@ -1019,7 +1011,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
             return None
 
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
         else:
             repl_dict = repl_dict.copy()
 
@@ -1275,12 +1267,36 @@ class Derivative(Expr):
         # derivative.
         variable_count = []
         array_likes = (tuple, list, Tuple)
-        integer_likes = (int, Integer)
 
         from sympy.tensor.array import Array, NDimArray
 
         for i, v in enumerate(variables):
-            if isinstance(v, integer_likes):
+            if isinstance(v, UndefinedFunction):
+                raise TypeError(
+                    "cannot differentiate wrt "
+                    "UndefinedFunction: %s" % v)
+
+            if isinstance(v, array_likes):
+                if len(v) == 0:
+                    # Ignore empty tuples: Derivative(expr, ... , (), ... )
+                    continue
+                if isinstance(v[0], array_likes):
+                    # Derive by array: Derivative(expr, ... , [[x, y, z]], ... )
+                    if len(v) == 1:
+                        v = Array(v[0])
+                        count = 1
+                    else:
+                        v, count = v
+                        v = Array(v)
+                else:
+                    v, count = v
+                if count == 0:
+                    continue
+                variable_count.append(Tuple(v, count))
+                continue
+
+            v = sympify(v)
+            if isinstance(v, Integer):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
                 count = v
@@ -1292,28 +1308,7 @@ class Derivative(Expr):
                 else:
                     variable_count[-1] = Tuple(prev, count)
             else:
-                if isinstance(v, array_likes):
-                    if len(v) == 0:
-                        # Ignore empty tuples: Derivative(expr, ... , (), ... )
-                        continue
-                    if isinstance(v[0], array_likes):
-                        # Derive by array: Derivative(expr, ... , [[x, y, z]], ... )
-                        if len(v) == 1:
-                            v = Array(v[0])
-                            count = 1
-                        else:
-                            v, count = v
-                            v = Array(v)
-                    else:
-                        v, count = v
-                    if count == 0:
-                        continue
-                elif isinstance(v, UndefinedFunction):
-                    raise TypeError(
-                        "cannot differentiate wrt "
-                        "UndefinedFunction: %s" % v)
-                else:
-                    count = 1
+                count = 1
                 variable_count.append(Tuple(v, count))
 
         # light evaluation of contiguous, identical
@@ -1499,7 +1494,7 @@ class Derivative(Expr):
 
         * symbols and functions commute with each other
         * derivatives commute with each other
-        * a derivative doesn't commute with anything it contains
+        * a derivative does not commute with anything it contains
         * any other object is not allowed to commute if it has
           free symbols in common with another object
 
@@ -1961,11 +1956,14 @@ class Lambda(Expr):
 
     def __new__(cls, signature, expr):
         if iterable(signature) and not isinstance(signature, (tuple, Tuple)):
-            SymPyDeprecationWarning(
-                feature="non tuple iterable of argument symbols to Lambda",
-                useinstead="tuple of argument symbols",
-                issue=17474,
-                deprecated_since_version="1.5").warn()
+            sympy_deprecation_warning(
+                """
+                Using a non-tuple iterable as the first argument to Lambda
+                is deprecated. Use Lambda(tuple(args), expr) instead.
+                """,
+                deprecated_since_version="1.5",
+                active_deprecations_target="deprecated-non-tuple-lambda",
+            )
             signature = tuple(signature)
         sig = signature if iterable(signature) else (signature,)
         sig = sympify(sig)
@@ -2318,11 +2316,16 @@ class Subs(Expr):
 
     @property
     def expr_free_symbols(self):
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
-        return (self.expr.expr_free_symbols - set(self.variables) |
-            set(self.point.expr_free_symbols))
+        sympy_deprecation_warning("""
+        The expr_free_symbols property is deprecated. Use free_symbols to get
+        the free symbols of an expression.
+        """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-expr-free-symbols")
+        # Don't show the warning twice from the recursive call
+        with ignore_warnings(SymPyDeprecationWarning):
+            return (self.expr.expr_free_symbols - set(self.variables) |
+                    set(self.point.expr_free_symbols))
 
     def __eq__(self, other):
         if not isinstance(other, Subs):
@@ -3164,7 +3167,7 @@ def count_ops(expr, visual=False):
     >>> from sympy.abc import a, b, x, y
     >>> from sympy import sin, count_ops
 
-    Although there isn't a SUB object, minus signs are interpreted as
+    Although there is not a SUB object, minus signs are interpreted as
     either negations or subtractions:
 
     >>> (x - y).count_ops(visual=True)

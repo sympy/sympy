@@ -1,12 +1,11 @@
 """Prime ideals in number fields. """
 
-from sympy.core.expr import Expr
 from sympy.polys.polytools import Poly
 from sympy.polys.domains.finitefield import FF
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.matrices.domainmatrix import DomainMatrix
-from sympy.polys.polyerrors import CoercionFailed, GeneratorsNeeded
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyutils import IntegerPowerable
 from sympy.utilities.decorator import public
 from .basis import round_two, nilradical_mod_p
@@ -70,7 +69,20 @@ class PrimeIdeal(IntegerPowerable):
         self._test_factor = None
         self.e = e if e is not None else self.valuation(p * ZK)
 
-    def pretty(self, field_gen=None, just_gens=False):
+    def __str__(self):
+        if self.is_inert:
+            return f'({self.p})'
+        return f'({self.p}, {self.alpha.as_expr()})'
+
+    @property
+    def is_inert(self):
+        """
+        Say whether the rational prime we divide is inert, i.e. stays prime in
+        our ring of integers.
+        """
+        return self.f == self.ZK.n
+
+    def repr(self, field_gen=None, just_gens=False):
         """
         Print a representation of this prime ideal.
 
@@ -82,11 +94,11 @@ class PrimeIdeal(IntegerPowerable):
         >>> T = cyclotomic_poly(7, x)
         >>> K = QQ.algebraic_field((T, zeta))
         >>> P = K.primes_above(11)
-        >>> print(P[0].pretty())
+        >>> print(P[0].repr())
         [ (11, x**3 + 5*x**2 + 4*x - 1) e=1, f=3 ]
-        >>> print(P[0].pretty(field_gen=zeta))
+        >>> print(P[0].repr(field_gen=zeta))
         [ (11, zeta**3 + 5*zeta**2 + 4*zeta - 1) e=1, f=3 ]
-        >>> print(P[0].pretty(field_gen=zeta, just_gens=True))
+        >>> print(P[0].repr(field_gen=zeta, just_gens=True))
         (11, zeta**3 + 5*zeta**2 + 4*zeta - 1)
 
         Parameters
@@ -114,7 +126,7 @@ class PrimeIdeal(IntegerPowerable):
         return f'[ {gens} e={e}, f={f} ]'
 
     def __repr__(self):
-        return self.pretty()
+        return self.repr()
 
     def as_submodule(self):
         r"""
@@ -256,78 +268,90 @@ class PrimeIdeal(IntegerPowerable):
         """
         return prime_valuation(I, self)
 
-    def reduce_poly(self, f, gen=None):
-        r"""
-        Reduce a univariate :py:class:`~.Poly` *f*, or an :py:class:`~.Expr`
-        expressing the same, modulo this :py:class:`~.PrimeIdeal`.
-
-        Explanation
-        ===========
-
-        If our second generator $\alpha$ is zero, then we simply reduce the
-        coefficients of *f* mod the rational prime $p$ lying under this ideal.
-
-        Otherwise we first reduce *f* mod $\alpha$ (as a polynomial in the same
-        variable as *f*), and then mod $p$.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ, cyclotomic_poly, symbols
-        >>> zeta = symbols('zeta')
-        >>> Phi = cyclotomic_poly(7, zeta)
-        >>> k = QQ.algebraic_field((Phi, zeta))
-        >>> P = k.primes_above(11)
-        >>> frp = P[0]
-        >>> B = k.integral_basis(fmt='sympy')
-        >>> print([frp.reduce_poly(b, zeta) for b in B])
-        [1, zeta, zeta**2, -5*zeta**2 - 4*zeta + 1, -zeta**2 - zeta - 5,
-         4*zeta**2 - zeta - 1]
+    def reduce_element(self, elt):
+        """
+        Reduce a :py:class:`~.PowerBasisElement` to a "small representative"
+        modulo this prime ideal.
 
         Parameters
         ==========
 
-        f : :py:class:`~.Poly`, :py:class:`~.Expr`
-            The univariate polynomial to be reduced.
-
-        gen : :py:class:`~.Symbol`, None, optional (default=None)
-            Symbol to use as the variable in the polynomials. If *f* is a
-            :py:class:`~.Poly` or a non-constant :py:class:`~.Expr`, this
-            replaces its variable. If *f* is a constant :py:class:`~.Expr`,
-            then *gen* must be supplied.
+        elt : :py:class:`~.PowerBasisElement`
+            The element to be reduced.
 
         Returns
         =======
 
-        :py:class:`~.Poly`, :py:class:`~.Expr`
-            Type is same as that of given *f*. If returning a
-            :py:class:`~.Poly`, its domain will be the finite field
-            $\mathbb{F}_p$.
+        :py:class:`~.PowerBasisElement`
+            The reduced element.
 
-        Raises
-        ======
+        See Also
+        ========
 
-        GeneratorsNeeded
-            If *f* is a constant :py:class:`~.Expr` and *gen* is ``None``.
-        NotImplementedError
-            If *f* is other than :py:class:`~.Poly` or :py:class:`~.Expr`,
-            or is not univariate.
+        reduce_ANP
+        reduce_alg_num
+        .Submodule.reduce_element
 
         """
-        if isinstance(f, Expr):
-            try:
-                g = Poly(f)
-            except GeneratorsNeeded as e:
-                if gen is None:
-                    raise e from None
-                g = Poly(f, gen)
-            return self.reduce_poly(g).as_expr()
-        if isinstance(f, Poly) and f.is_univariate:
-            a = self.alpha.poly(f.gen)
-            if a != 0:
-                f = f.rem(a)
-            return f.set_modulus(self.p)
-        raise NotImplementedError
+        return self.as_submodule().reduce_element(elt)
+
+    def reduce_ANP(self, a):
+        """
+        Reduce an :py:class:`~.ANP` to a "small representative" modulo this
+        prime ideal.
+
+        Parameters
+        ==========
+
+        elt : :py:class:`~.ANP`
+            The element to be reduced.
+
+        Returns
+        =======
+
+        :py:class:`~.ANP`
+            The reduced element.
+
+        See Also
+        ========
+
+        reduce_element
+        reduce_alg_num
+        .Submodule.reduce_element
+
+        """
+        elt = self.ZK.parent.element_from_ANP(a)
+        red = self.reduce_element(elt)
+        return red.to_ANP()
+
+    def reduce_alg_num(self, a):
+        """
+        Reduce an :py:class:`~.AlgebraicNumber` to a "small representative"
+        modulo this prime ideal.
+
+        Parameters
+        ==========
+
+        elt : :py:class:`~.AlgebraicNumber`
+            The element to be reduced.
+
+        Returns
+        =======
+
+        :py:class:`~.AlgebraicNumber`
+            The reduced element.
+
+        See Also
+        ========
+
+        reduce_element
+        reduce_ANP
+        .Submodule.reduce_element
+
+        """
+        elt = self.ZK.parent.element_from_alg_num(a)
+        red = self.reduce_element(elt)
+        return a.field_element(list(reversed(red.QQ_col.flat())))
 
 
 def _compute_test_factor(p, gens, ZK):
@@ -385,11 +409,8 @@ def prime_valuation(I, P):
     ========
 
     >>> from sympy import QQ
-    >>> from sympy.abc import theta
-    >>> from sympy.polys import cyclotomic_poly
     >>> from sympy.polys.numberfields import prime_valuation
-    >>> T = cyclotomic_poly(5)
-    >>> K = QQ.algebraic_field((T, theta))
+    >>> K = QQ.cyclotomic_field(5)
     >>> P = K.primes_above(5)
     >>> ZK = K.maximal_order()
     >>> print(prime_valuation(25*ZK, P[0]))
@@ -548,6 +569,8 @@ def _prime_decomp_easy_case(p, ZK):
     T = ZK.parent.T
     T_bar = Poly(T, modulus=p)
     lc, fl = T_bar.factor_list()
+    if len(fl) == 1 and fl[0][1] == 1:
+        return [PrimeIdeal(ZK, p, ZK.parent.zero(), ZK.n, 1)]
     return [PrimeIdeal(ZK, p,
                        ZK.parent.element_from_poly(Poly(t, domain=ZZ)),
                        t.degree(), e)

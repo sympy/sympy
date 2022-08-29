@@ -1,4 +1,5 @@
 """Tools for solving inequalities and systems of inequalities. """
+import itertools
 
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
@@ -114,8 +115,8 @@ def solve_poly_inequalities(polys):
     Examples
     ========
 
+    >>> from sympy import Poly
     >>> from sympy.solvers.inequalities import solve_poly_inequalities
-    >>> from sympy.polys import Poly
     >>> from sympy.abc import x
     >>> solve_poly_inequalities(((
     ... Poly(x**2 - 3), ">"), (
@@ -162,12 +163,12 @@ def solve_rational_inequalities(eqs):
 
             intervals = []
 
-            for numer_interval in numer_intervals:
-                for global_interval in global_intervals:
-                    interval = numer_interval.intersect(global_interval)
+            for numer_interval, global_interval in itertools.product(
+                    numer_intervals, global_intervals):
+                interval = numer_interval.intersect(global_interval)
 
-                    if interval is not S.EmptySet:
-                        intervals.append(interval)
+                if interval is not S.EmptySet:
+                    intervals.append(interval)
 
             global_intervals = intervals
 
@@ -319,22 +320,14 @@ def reduce_abs_inequality(expr, rel, gen):
                 if not exprs:
                     exprs = _exprs
                 else:
-                    args = []
-
-                    for expr, conds in exprs:
-                        for _expr, _conds in _exprs:
-                            args.append((op(expr, _expr), conds + _conds))
-
-                    exprs = args
+                    exprs = [(op(expr, _expr), conds + _conds) for (expr, conds), (_expr, _conds) in
+                            itertools.product(exprs, _exprs)]
         elif expr.is_Pow:
             n = expr.exp
             if not n.is_Integer:
                 raise ValueError("Only Integer Powers are allowed on Abs.")
 
-            _exprs = _bottom_up_scan(expr.base)
-
-            for expr, conds in _exprs:
-                exprs.append((expr**n, conds))
+            exprs.extend((expr**n, conds) for expr, conds in _bottom_up_scan(expr.base))
         elif isinstance(expr, Abs):
             _exprs = _bottom_up_scan(expr.args[0])
 
@@ -346,12 +339,10 @@ def reduce_abs_inequality(expr, rel, gen):
 
         return exprs
 
-    exprs = _bottom_up_scan(expr)
-
     mapping = {'<': '>', '<=': '>='}
     inequalities = []
 
-    for expr, conds in exprs:
+    for expr, conds in _bottom_up_scan(expr):
         if rel not in mapping.keys():
             expr = Relational( expr, 0, rel)
         else:
@@ -403,7 +394,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
         The domain over which the equation is solved
     continuous: bool
         True if expr is known to be continuous over the given domain
-        (and so continuous_domain() doesn't need to be called on it)
+        (and so continuous_domain() does not need to be called on it)
 
     Raises
     ======
@@ -927,14 +918,8 @@ def _reduce_inequalities(inequalities, symbols):
             else:
                 other.append(_solve_inequality(Relational(expr, 0, rel), gen))
 
-    poly_reduced = []
-    abs_reduced = []
-
-    for gen, exprs in poly_part.items():
-        poly_reduced.append(reduce_rational_inequalities([exprs], gen))
-
-    for gen, exprs in abs_part.items():
-        abs_reduced.append(reduce_abs_inequalities(exprs, gen))
+    poly_reduced = [reduce_rational_inequalities([exprs], gen) for gen, exprs in poly_part.items()]
+    abs_reduced = [reduce_abs_inequalities(exprs, gen) for gen, exprs in abs_part.items()]
 
     return And(*(poly_reduced + abs_reduced + other))
 

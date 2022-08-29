@@ -21,7 +21,8 @@ from sympy.functions.combinatorial.numbers import _nT
 from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
 
-from sympy.testing.pytest import XFAIL, raises, nocache_fail
+from sympy.testing.pytest import (XFAIL, raises, nocache_fail,
+                                  warns_deprecated_sympy)
 from sympy.abc import x
 
 
@@ -31,19 +32,16 @@ def test_carmichael():
     assert carmichael.find_carmichael_numbers_in_range(561, 1105) == carmichael.find_carmichael_numbers_in_range(561,
                                                                                                                  562)
     assert carmichael.find_first_n_carmichaels(5) == [561, 1105, 1729, 2465, 2821]
-    assert carmichael.is_prime(2821) == False
-    assert carmichael.is_prime(2465) == False
-    assert carmichael.is_prime(1729) == False
-    assert carmichael.is_prime(1105) == False
-    assert carmichael.is_prime(561) == False
     raises(ValueError, lambda: carmichael.is_carmichael(-2))
     raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(-2, 2))
     raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(22, 2))
+    with warns_deprecated_sympy():
+        assert carmichael.is_prime(2821) == False
 
 
 def test_bernoulli():
     assert bernoulli(0) == 1
-    assert bernoulli(1) == Rational(-1, 2)
+    assert bernoulli(1) == Rational(1, 2)
     assert bernoulli(2) == Rational(1, 6)
     assert bernoulli(3) == 0
     assert bernoulli(4) == Rational(-1, 30)
@@ -74,7 +72,30 @@ def test_bernoulli():
     assert isinstance(bernoulli(2 * l + 1), bernoulli)
     assert isinstance(bernoulli(2 * m + 1), bernoulli)
     assert bernoulli(2 * n + 1) == 0
-    raises(ValueError, lambda: bernoulli(-2))
+
+    assert bernoulli(x, 1) == bernoulli(x)
+
+    assert str(bernoulli(0.0, 2.3).evalf(n=10)) == '1.000000000'
+    assert str(bernoulli(1.0).evalf(n=10)) == '0.5000000000'
+    assert str(bernoulli(1.2).evalf(n=10)) == '0.4195995367'
+    assert str(bernoulli(1.2, 0.8).evalf(n=10)) == '0.2144830348'
+    assert str(bernoulli(1.2, -0.8).evalf(n=10)) == '-1.158865646 - 0.6745558744*I'
+    assert str(bernoulli(3.0, 1j).evalf(n=10)) == '1.5 - 0.5*I'
+    assert str(bernoulli(I).evalf(n=10)) == '0.9268485643 - 0.5821580598*I'
+    assert str(bernoulli(I, I).evalf(n=10)) == '0.1267792071 + 0.01947413152*I'
+    assert bernoulli(x).evalf() == bernoulli(x)
+
+
+def test_bernoulli_rewrite():
+    from sympy.functions.elementary.piecewise import Piecewise
+    n = Symbol('n', integer=True, nonnegative=True)
+
+    assert bernoulli(-1).rewrite(zeta) == pi**2/6
+    assert bernoulli(-2).rewrite(zeta) == 2*zeta(3)
+    assert not bernoulli(n, -3).rewrite(zeta).has(harmonic)
+    assert bernoulli(-4, x).rewrite(zeta) == 4*zeta(5, x)
+    assert isinstance(bernoulli(n, x).rewrite(zeta), Piecewise)
+    assert bernoulli(n+1, x).rewrite(zeta) == -(n+1) * zeta(-n, x)
 
 
 def test_fibonacci():
@@ -427,7 +448,7 @@ def test_catalan():
 
 
 def test_genocchi():
-    genocchis = [1, -1, 0, 1, 0, -3, 0, 17]
+    genocchis = [-1, -1, 0, 1, 0, -3, 0, 17]
     for n, g in enumerate(genocchis):
         assert genocchi(n + 1) == g
 

@@ -16,7 +16,7 @@ from sympy.sets.fancysets import Range
 from sympy.tensor.indexed import Idx
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift, is_sequence
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 def _common_new(cls, function, *symbols, discrete, **assumptions):
@@ -30,12 +30,20 @@ def _common_new(cls, function, *symbols, discrete, **assumptions):
         # but that is only valid for definite integrals.
         limits, orientation = _process_limits(*symbols, discrete=discrete)
         if not (limits and all(len(limit) == 3 for limit in limits)):
-            SymPyDeprecationWarning(
-                feature='Integral(Eq(x, y))',
-                useinstead='Eq(Integral(x, z), Integral(y, z))',
-                issue=18053,
-                deprecated_since_version=1.6,
-            ).warn()
+            sympy_deprecation_warning(
+                """
+                Creating a indefinite integral with an Eq() argument is
+                deprecated.
+
+                This is because indefinite integrals do not preserve equality
+                due to the arbitrary constants. If you want an equality of
+                indefinite integrals, use Eq(Integral(a, x), Integral(b, x))
+                explicitly.
+                """,
+                deprecated_since_version="1.6",
+                active_deprecations_target="deprecated-indefinite-integral-eq",
+                stacklevel=5,
+            )
 
         lhs = function.lhs
         rhs = function.rhs
@@ -531,6 +539,8 @@ class AddWithLimits(ExprWithLimits):
     r"""Represents unevaluated oriented additions.
         Parent class for Integral and Sum.
     """
+
+    __slots__ = ()
 
     def __new__(cls, function, *symbols, **assumptions):
         from sympy.concrete.summations import Sum
