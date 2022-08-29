@@ -890,9 +890,10 @@ def test_dummification():
     #Test that \alpha was properly dummified
     lam = lambdify((alpha, t), 2*alpha + t)
     assert lam(2, 1) == 5
-    raises(SyntaxError, lambda: lambdify(F(t) * G(t), F(t) * G(t) + 5))
-    raises(SyntaxError, lambda: lambdify(2 * F(t), 2 * F(t) + 5))
-    raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
+    assert lambdify(F(t) * G(t), F(t) * G(t) + 5)(2) == 7
+    assert lambdify(2* F(t), 2*F(t) + 5)(2) == 7
+    assert lambdify(2 * F(t), 4 * F(t) + 5)(2) == 9
+    raises(NameError, lambda: lambdify(t*F(t), 2*F(t))(1))
 
 
 def test_curly_matrix_symbol():
@@ -1207,13 +1208,13 @@ def test_issue_14941():
     assert f3(2, 3) == [3, 2]
 
 
-def test_lambdify_Derivative_arg_issue_16468():
+def test_lambdify_Derivative_arg_issue_14648():
     f = Function('f')(x)
     fx = f.diff()
     assert lambdify((f, fx), f + fx)(10, 5) == 15
     assert eval(lambdastr((f, fx), f/fx))(10, 5) == 2
-    raises(SyntaxError, lambda:
-        eval(lambdastr((f, fx), f/fx, dummify=False)))
+    raises(NameError, lambda:
+        eval(lambdastr((f, fx), f/fx, dummify=False))(1, 2))
     assert eval(lambdastr((f, fx), f/fx, dummify=True))(10, 5) == 2
     assert eval(lambdastr((fx, f), f/fx, dummify=True))(S(10), 5) == S.Half
     assert lambdify(fx, 1 + fx)(41) == 42
@@ -1651,17 +1652,17 @@ def test_lambdify_cse():
             result = f(*case.num_args)
             case.assertAllClose(result)
 
+
 def test_deprecated_set():
     with warns_deprecated_sympy():
         lambdify({x, y}, x + y)
 
 
 def test_23536_lambdify_cse_dummy():
-
     f = Function('x')(y)
     g = Function('w')(y)
     expr = z + (f**4 + g**5)*(f**3 + (g*f)**3)
     expr = expr.expand()
     eval_expr = lambdify(((f, g), z), expr, cse=True)
-    ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
+    ans = eval_expr((1.0, 2.0), 3.0)
     assert ans == 300.0  # not a list and value is 300

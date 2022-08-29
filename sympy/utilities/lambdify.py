@@ -180,7 +180,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, cse=False):
+             dummify=None, cse=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -742,8 +742,35 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     argument is not provided, ``lambdify`` creates functions using the NumPy
     and SciPy namespaces.
     """
-    from sympy.core.symbol import Symbol
+    from sympy.core.symbol import Symbol, Dummy
     from sympy.core.expr import Expr
+    if dummify is not False and not type(args) is str:
+        reps = {}
+        def _dum(e):
+            # return Dummy for any non-Symbol sympy object with args;
+            # do so recursively through any iterables
+            if hasattr(e, 'args'):
+                if not isinstance(e, Symbol):
+                    d = Dummy()
+                    c, a = e.as_coeff_Mul()
+                    reps.setdefault(a, d/c)
+                    return d
+            elif iterable(e):
+                return type(e)([_dum(_) for _ in e])
+            return e
+        args = _dum(args)
+        if reps:
+            def _dumreps(e):
+                # replace with Dummy non-Symbol sympy object with args;
+                # do so recursively through any iterables
+                if hasattr(e, 'args'):
+                    return e.xreplace(reps)
+                if iterable(e):
+                    return type(e)([_dumreps(_) for _ in e])
+                return e
+            expr = _dumreps(expr)
+            return lambdify(args, expr, modules=modules, printer=printer,
+                use_imps=use_imps, dummify=dummify, cse=cse)
 
     # If the user hasn't specified any modules, use what is available.
     if modules is None:
@@ -895,7 +922,7 @@ or tuple for the function arguments.
     # Apply the docstring
     sig = "func({})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
-    expr_str = str(expr)
+    expr_str = str(expr)  # this is the input but _expr may be modified with cse
     if len(expr_str) > 78:
         expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
     func.__doc__ = (
@@ -981,7 +1008,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
     from sympy.matrices import DeferredVector
     from sympy.core.basic import Basic
     from sympy.core.function import (Derivative, Function)
-    from sympy.core.symbol import (Dummy, Symbol)
+    from sympy.core.symbol import Dummy
     from sympy.core.sympify import sympify
 
     if printer is not None:
@@ -1006,7 +1033,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
             return ",".join(str(a) for a in dummies)
         else:
             # replace these with Dummy symbols
-            if isinstance(args, (Function, Symbol, Derivative)):
+            if isinstance(args, (Function, Derivative)):
                 dummies = Dummy()
                 dummies_dict.update({args : dummies})
                 return str(dummies)
@@ -1056,13 +1083,8 @@ def lambdastr(args, expr, printer=None, dummify=None):
         return 'lambda %s: (%s)(%s)' % (','.join(dum_args), lstr, indexed_args)
 
     dummies_dict = {}
-    if dummify:
+    if dummify or iterable(args, exclude=DeferredVector):
         args = sub_args(args, dummies_dict)
-    else:
-        if isinstance(args, str):
-            pass
-        elif iterable(args, exclude=DeferredVector):
-            args = ",".join(str(a) for a in args)
 
     # Transform expr
     if dummify:
@@ -1072,6 +1094,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
             expr = sub_expr(expr, dummies_dict)
     expr = _recursive_to_string(lambdarepr, expr)
     return "lambda %s: (%s)" % (args, expr)
+
 
 class _EvaluatorPrinter:
     def __init__(self, printer=None, dummify=False):
@@ -1108,7 +1131,8 @@ class _EvaluatorPrinter:
 
         funcbody = []
 
-        if not iterable(args):
+        it = iterable(args)
+        if not it:
             args = [args]
 
         if cses:
