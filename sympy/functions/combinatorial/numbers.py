@@ -419,23 +419,38 @@ class tribonacci(Function):
 
 class bernoulli(Function):
     r"""
-    Bernoulli numbers / Bernoulli polynomials
+    Bernoulli numbers / Bernoulli polynomials / Bernoulli function
 
     The Bernoulli numbers are a sequence of rational numbers
     defined by `B_0 = 1` and the recursive relation (`n > 0`):
 
-    .. math :: 0 = \sum_{k=0}^n \binom{n+1}{k} B_k
+    .. math :: n+1 = \sum_{k=0}^n \binom{n+1}{k} B_k
 
     They are also commonly defined by their exponential generating
-    function, which is `\frac{x}{e^x - 1}`. For odd indices > 1, the
-    Bernoulli numbers are zero.
+    function, which is `\frac{x}{1 - e^{-x}}`. For odd indices > 1,
+    the Bernoulli numbers are zero.
 
     The Bernoulli polynomials satisfy the analogous formula:
 
-    .. math :: B_n(x) = \sum_{k=0}^n \binom{n}{k} B_k x^{n-k}
+    .. math :: B_n(x) = \sum_{k=0}^n (-1)^k \binom{n}{k} B_k x^{n-k}
 
     Bernoulli numbers and Bernoulli polynomials are related as
-    `B_n(0) = B_n`.
+    `B_n(1) = B_n`.
+
+    The generalized Bernoulli function `\operatorname{B}(s, a)`
+    is defined for any complex `s` and `a`, except where `a` is a
+    nonpositive integer and `s` is not a nonnegative integer. It is
+    an entire function of `s` for fixed `a`, related to the Hurwitz
+    zeta function by
+
+    .. math:: \operatorname{B}(s, a) = \begin{cases}
+              -s \zeta(1-s, a) & s \ne 0 \\ 1 & s = 0 \end{cases}
+
+    When `s` is a nonnegative integer this function reduces to the
+    Bernoulli polynomials: `\operatorname{B}(n, x) = B_n(x)`. When
+    `a` is omitted it is assumed to be 1, yielding the (ordinary)
+    Bernoulli function which interpolates the Bernoulli numbers and is
+    related to the Riemann zeta function.
 
     We compute Bernoulli numbers using Ramanujan's formula:
 
@@ -452,21 +467,36 @@ class bernoulli(Function):
     .. math :: S(n) = \sum_{k=1}^{[n/6]} \binom{n+3}{n-6k} B_{n-6k}
 
     This formula is similar to the sum given in the definition, but
-    cuts 2/3 of the terms. For Bernoulli polynomials, we use the
-    formula in the definition.
+    cuts `\frac{2}{3}` of the terms. For Bernoulli polynomials, we use
+    the formula in the definition.
+
+    For `n` a nonnegative integer and `s`, `a`, `x` arbitrary complex numbers,
 
     * ``bernoulli(n)`` gives the nth Bernoulli number, `B_n`
+    * ``bernoulli(s)`` gives the Bernoulli function `\operatorname{B}(s)`
     * ``bernoulli(n, x)`` gives the nth Bernoulli polynomial in `x`, `B_n(x)`
+    * ``bernoulli(s, a)`` gives the generalized Bernoulli function
+      `\operatorname{B}(s, a)`
+
+    .. versionchanged:: 1.12
+        ``bernoulli(1)`` gives `+\frac{1}{2}` instead of `-\frac{1}{2}`.
+        This choice of value confers several theoretical advantages [5]_,
+        including the extension to complex parameters described above
+        which this function now implements. The previous behavior, defined
+        only for nonnegative integers `n`, can be obtained with
+        ``(-1)**n*bernoulli(n)``.
 
     Examples
     ========
 
     >>> from sympy import bernoulli
-
+    >>> from sympy.abc import x
     >>> [bernoulli(n) for n in range(11)]
-    [1, -1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
+    [1, 1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
     >>> bernoulli(1000001)
     0
+    >>> bernoulli(3, x)
+    x**3 - 3*x**2/2 + x/2
 
     See Also
     ========
@@ -480,6 +510,10 @@ class bernoulli(Function):
     .. [2] https://en.wikipedia.org/wiki/Bernoulli_polynomial
     .. [3] http://mathworld.wolfram.com/BernoulliNumber.html
     .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
+    .. [5] Peter Luschny, "The Bernoulli Manifesto",
+           http://luschny.de/math/zeta/The-Bernoulli-Manifesto.html
+    .. [6] Peter Luschny, "An introduction to the Bernoulli function",
+           https://arxiv.org/abs/2009.06743
 
     """
 
@@ -513,12 +547,11 @@ class bernoulli(Function):
         elif n.is_zero:
             return S.One
         elif n.is_integer is False or n.is_nonnegative is False:
-            raise ValueError("Bernoulli numbers are defined only"
-                             " for nonnegative integer indices.")
+            return
         # Bernoulli numbers
         elif x is None:
             if n is S.One:
-                return -S.Half
+                return S.Half
             elif n.is_odd and (n-1).is_positive:
                 return S.Zero
             elif n.is_Number:
@@ -1275,22 +1308,38 @@ class catalan(Function):
 
 class genocchi(Function):
     r"""
-    Genocchi numbers
+    Genocchi numbers / Genocchi polynomials / Genocchi function
 
     The Genocchi numbers are a sequence of integers `G_n` that satisfy the
     relation:
 
-    .. math:: \frac{2t}{e^t + 1} = \sum_{n=1}^\infty \frac{G_n t^n}{n!}
+    .. math:: \frac{-2t}{1 + e^{-t}} = \sum_{n=0}^\infty \frac{G_n t^n}{n!}
+
+    They are related to the Bernoulli numbers by
+
+    .. math:: G_n = 2 (1 - 2^n) B_n
+
+    and generalize like the Bernoulli numbers to the Genocchi polynomials and
+    function as
+
+    .. math:: \operatorname{G}(s, a) = 2 \left(\operatorname{B}(s, a) -
+              2^s \operatorname{B}\left(s, \frac{a+1}{2}\right)\right)
+
+    .. versionchanged:: 1.12
+        ``genocchi(1)`` gives `-1` instead of `1`.
 
     Examples
     ========
 
     >>> from sympy import genocchi, Symbol
-    >>> [genocchi(n) for n in range(1, 9)]
-    [1, -1, 0, 1, 0, -3, 0, 17]
+    >>> [genocchi(n) for n in range(9)]
+    [0, -1, -1, 0, 1, 0, -3, 0, 17]
     >>> n = Symbol('n', integer=True, positive=True)
     >>> genocchi(2*n + 1)
     0
+    >>> x = Symbol('x')
+    >>> genocchi(4, x)
+    -4*x**3 + 6*x**2 - 1
 
     See Also
     ========
@@ -1302,65 +1351,89 @@ class genocchi(Function):
 
     .. [1] https://en.wikipedia.org/wiki/Genocchi_number
     .. [2] http://mathworld.wolfram.com/GenocchiNumber.html
+    .. [3] Peter Luschny, "An introduction to the Bernoulli function",
+           https://arxiv.org/abs/2009.06743
 
     """
 
     @classmethod
-    def eval(cls, n):
-        if n.is_Number:
-            if (not n.is_Integer) or n.is_nonpositive:
-                raise ValueError("Genocchi numbers are defined only for " +
-                                 "positive integers")
-            return 2 * (1 - S(2) ** n) * bernoulli(n)
+    def eval(cls, n, x=None):
+        if x is S.One:
+            return cls(n)
+        elif n.is_integer is False or n.is_nonnegative is False:
+            return
+        # Genocchi numbers
+        elif x is None:
+            if n.is_odd and (n-1).is_positive:
+                return S.Zero
+            elif n.is_Number:
+                return 2 * (1-S(2)**n) * bernoulli(n)
+        # Genocchi polynomials
+        elif n.is_Number:
+            x_ = Dummy("x")
+            res = 2 * (bernoulli(n, x_) - 2**n * bernoulli(n, (x_+1) / 2))
+            return res.expand().subs(x_, x)
 
-        if n.is_odd and (n - 1).is_positive:
-            return S.Zero
-
-        if (n - 1).is_zero:
-            return S.One
-
-    def _eval_rewrite_as_bernoulli(self, n, **kwargs):
-        if n.is_integer and n.is_nonnegative:
-            return (1 - S(2) ** n) * bernoulli(n) * 2
+    def _eval_rewrite_as_bernoulli(self, n, x=1, **kwargs):
+        if x == 1 and n.is_integer and n.is_nonnegative:
+            return 2 * (1-S(2)**n) * bernoulli(n)
+        return 2 * (bernoulli(n, x) - 2**n * bernoulli(n, (x+1) / 2))
 
     def _eval_is_integer(self):
-        if self.args[0].is_integer and self.args[0].is_positive:
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
+        n = self.args[0]
+        if n.is_integer and n.is_nonnegative:
             return True
 
     def _eval_is_negative(self):
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
         n = self.args[0]
-        if n.is_integer and n.is_positive:
+        if n.is_integer and n.is_nonnegative:
             if n.is_odd:
-                return False
-            return (n / 2).is_odd
+                return fuzzy_not((n-1).is_positive)
+            return (n/2).is_odd
 
     def _eval_is_positive(self):
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
         n = self.args[0]
-        if n.is_integer and n.is_positive:
-            if n.is_odd:
-                return fuzzy_not((n - 1).is_positive)
-            return (n / 2).is_even
+        if n.is_integer and n.is_nonnegative:
+            if n.is_zero or n.is_odd:
+                return False
+            return (n/2).is_even
 
     def _eval_is_even(self):
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
         n = self.args[0]
-        if n.is_integer and n.is_positive:
+        if n.is_integer and n.is_nonnegative:
             if n.is_even:
-                return False
-            return (n - 1).is_positive
+                return n.is_zero
+            return (n-1).is_positive
 
     def _eval_is_odd(self):
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
         n = self.args[0]
-        if n.is_integer and n.is_positive:
+        if n.is_integer and n.is_nonnegative:
             if n.is_even:
-                return True
-            return fuzzy_not((n - 1).is_positive)
+                return fuzzy_not(n.is_zero)
+            return fuzzy_not((n-1).is_positive)
 
     def _eval_is_prime(self):
+        if len(self.args) > 1 and self.args[1] != 1:
+            return
         n = self.args[0]
         # only G_6 = -3 and G_8 = 17 are prime,
         # but SymPy does not consider negatives as prime
         # so only n=8 is tested
-        return (n - 8).is_zero
+        return (n-8).is_zero
+
+    def _eval_evalf(self, prec):
+        if all(i.is_number for i in self.args):
+            return self.rewrite(bernoulli)._eval_evalf(prec)
 
 
 #----------------------------------------------------------------------------#
