@@ -223,6 +223,8 @@ def test_harmonic():
     assert harmonic(oo, 1 + ip) is zeta(1 + ip)
 
     assert harmonic(0, m) == 0
+    assert harmonic(-1, 2) is S.NaN
+    assert harmonic(-2, n) is S.NaN
 
 
 def test_harmonic_rational():
@@ -297,7 +299,11 @@ def test_harmonic_evalf():
     assert str(harmonic(1, pi).evalf(n=10)) == '1.000000000'
     assert str(harmonic(2, pi).evalf(n=10)) == '1.113314732'
     assert str(harmonic(1000.0, pi).evalf(n=10)) == '1.176241563'
+    assert str(harmonic(I).evalf(n=10)) == '0.6718659855 + 1.076674047*I'
+    assert str(harmonic(I, I).evalf(n=10)) == '-0.3970915266 + 1.9629689*I'
 
+    assert harmonic(-1.0, 1).evalf() is S.NaN
+    assert harmonic(-2.0, 2.0).evalf() is S.NaN
 
 def test_harmonic_rewrite():
     n = Symbol("n")

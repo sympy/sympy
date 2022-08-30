@@ -882,8 +882,10 @@ class harmonic(Function):
                 return S.Infinity
             elif is_gt(m, S.One):
                 return zeta(m)
-        elif n.is_Integer and n.is_nonnegative:
-            if m not in cls._functions:
+        elif n.is_Integer:
+            if n.is_negative:
+                return S.NaN
+            elif m not in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
                     return prev[-1] + S.One / n**m
@@ -961,6 +963,8 @@ class harmonic(Function):
             return
         n = self.args[0]._to_mpmath(prec)
         m = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
+        if mp.isint(n) and n < 0:
+            return S.NaN
         with workprec(prec):
             if m == 1:
                 res = mp.harmonic(n)
