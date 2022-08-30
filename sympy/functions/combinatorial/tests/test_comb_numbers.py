@@ -22,8 +22,7 @@ from sympy.functions.combinatorial.numbers import _nT
 from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
 
-from sympy.testing.pytest import (XFAIL, raises, nocache_fail,
-                                  warns_deprecated_sympy)
+from sympy.testing.pytest import raises, nocache_fail, warns_deprecated_sympy
 from sympy.abc import x
 
 
