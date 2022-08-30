@@ -870,14 +870,10 @@ class harmonic(Function):
     pi**2/6
 
     >>> limit(harmonic(n, 3), n, oo)
-    -polygamma(2, 1)/2
+    zeta(3)
 
-    However we cannot compute the general relation yet:
-
-    >>> limit(harmonic(n, m), n, oo)
-    harmonic(oo, m)
-
-    which equals ``zeta(m)`` for ``m > 1``.
+    >>> limit(harmonic(n, m+1), n, oo) # does not hold for m == 1
+    zeta(m + 1)
 
     See Also
     ========
@@ -988,8 +984,8 @@ class harmonic(Function):
         return self
 
     def _eval_rewrite_as_tractable(self, n, m=1, limitvar=None, **kwargs):
-        from sympy.functions.special.gamma_functions import polygamma
-        return self.rewrite(polygamma).rewrite("tractable", deep=True)
+        from sympy.functions.special.zeta_functions import zeta
+        return (zeta(m) - zeta(m, n+1)).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
         if not all(x.is_number for x in self.args):
@@ -1004,6 +1000,17 @@ class harmonic(Function):
             else:
                 res = mp.zeta(m) - mp.zeta(m, n+1)
         return Expr._from_mpmath(res, prec)
+
+    def fdiff(self, argindex=1):
+        from sympy.functions.special.zeta_functions import zeta
+        if len(self.args) == 2:
+            n, m = self.args
+        else:
+            n, m = self.args + (1,)
+        if argindex == 1:
+            return m * zeta(m+1, n+1)
+        else:
+            raise ArgumentIndexError
 
 
 #----------------------------------------------------------------------------#

@@ -12,6 +12,7 @@ from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.integers import floor
 from sympy.polys.polytools import cancel
 from sympy.series.limits import limit
+from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
@@ -342,19 +343,21 @@ def test_harmonic_rewrite():
     assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
     assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
-    assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
+    assert harmonic(n, m).rewrite("tractable") == zeta(m) - zeta(m, n+1)
 
     _k = Dummy("k")
     assert harmonic(n).rewrite(Sum).dummy_eq(Sum(1/_k, (_k, 1, n)))
     assert harmonic(n, m).rewrite(Sum).dummy_eq(Sum(_k**(-m), (_k, 1, n)))
 
 
-@XFAIL
-def test_harmonic_limit_fail():
-    n = Symbol("n")
-    m = Symbol("m")
-    # For m > 1:
-    assert limit(harmonic(n, m), n, oo) == zeta(m)
+def test_harmonic_calculus():
+    y = Symbol("y", positive=True)
+    assert harmonic(x, 1).limit(x, 0) == 0
+    assert harmonic(x, y).limit(x, 0) == 0
+    assert harmonic(x, 1).series(x, y, 2) == \
+            harmonic(y) + (x - y)*zeta(2, y + 1) + O((x - y)**2, (x, y))
+    assert limit(harmonic(x, y), x, oo) == harmonic(oo, y)
+    assert limit(harmonic(x, y+1), x, oo) == zeta(y+1)
 
 
 def test_euler():
