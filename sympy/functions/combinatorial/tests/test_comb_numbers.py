@@ -456,7 +456,7 @@ def test_genocchi():
         assert genocchi(n) == g
 
     m = Symbol('m', integer=True)
-    n = Symbol('n', integer=True, nonnegative=True)
+    n = Symbol('n', integer=True, positive=True)
     assert unchanged(genocchi, m)
     assert genocchi(2*n + 1) == 0
     gn = 2 * (1 - 2**n) * bernoulli(n)
@@ -467,7 +467,7 @@ def test_genocchi():
     assert genocchi(2 * n).is_even is False
     assert genocchi(2 * n + 1).is_even
     assert genocchi(n).is_integer
-    assert genocchi(4*n + 4).is_positive
+    assert genocchi(4 * n).is_positive
     # these are the only 2 prime Genocchi numbers
     assert genocchi(6, evaluate=False).is_prime == S(-3).is_prime
     assert genocchi(8, evaluate=False).is_prime
