@@ -483,6 +483,8 @@ def test_genocchi():
     assert genocchi(2, x) == 1 - 2*x
     assert genocchi(3, x) == 3*x - 3*x**2
     assert genocchi(4, x) == -1 + 6*x**2 - 4*x**3
+    y = Symbol("y")
+    assert genocchi(5, (x+y)**100) == -5*(x+y)**400 + 10*(x+y)**300 - 5*(x+y)**100
 
     assert str(genocchi(5.0, 4.0).evalf(n=10)) == '-660.0000000'
     assert str(genocchi(Rational(5, 4)).evalf(n=10)) == '-1.104286457'
