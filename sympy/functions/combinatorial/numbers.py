@@ -1336,12 +1336,11 @@ class genocchi(Function):
     and generalize like the Bernoulli numbers to the Genocchi polynomials and
     function as
 
-    .. math:: \operatorname{G}(s, a) = 2^s (\operatorname{B}(s, a/2) -
-                                            \operatorname{B}(s, (a+1)/2))
+    .. math:: \operatorname{G}(s, a) = 2 \left(\operatorname{B}(s, a) -
+              2^s \operatorname{B}\left(s, \frac{a+1}{2}\right)\right)
 
     .. versionchanged:: 1.12
-        ``genocchi(1)`` gives `-1` instead of `1` and ``genocchi(0)`` is now
-        defined as `0`.
+        ``genocchi(1)`` gives `-1` instead of `1`.
 
     Examples
     ========
@@ -1385,12 +1384,14 @@ class genocchi(Function):
                 return 2 * (1-S(2)**n) * bernoulli(n)
         # Genocchi polynomials
         elif n.is_Number:
-            return (S(2)**n * (bernoulli(n, x/S(2)) - bernoulli(n, (x+1)/S(2)))).expand()
+            x_ = Dummy("x")
+            res = 2 * (bernoulli(n, x_) - 2**n * bernoulli(n, (x_+1) / 2))
+            return res.expand().subs(x_, x)
 
     def _eval_rewrite_as_bernoulli(self, n, x=1, **kwargs):
         if x == 1 and n.is_integer and n.is_nonnegative:
             return 2 * (1-S(2)**n) * bernoulli(n)
-        return S(2)**n * (bernoulli(n, x/S(2)) - bernoulli(n, (x+1)/S(2)))
+        return 2 * (bernoulli(n, x) - 2**n * bernoulli(n, (x+1) / 2))
 
     def _eval_is_integer(self):
         if len(self.args) > 1 and self.args[1] != 1:
