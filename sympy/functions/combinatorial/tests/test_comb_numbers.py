@@ -2,7 +2,7 @@ import string
 
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
-from sympy.core.function import (diff, expand_func)
+from sympy.core.function import (ArgumentIndexError, diff, expand_func)
 from sympy.core import (EulerGamma, TribonacciConstant)
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
