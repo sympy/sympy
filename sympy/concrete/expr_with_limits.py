@@ -592,7 +592,8 @@ class AddWithLimits(ExprWithLimits):
 
     def _eval_expand_basic(self, **hints):
         summand = self.function.expand(**hints)
-        if summand.is_Add and summand.is_commutative:
+        if (summand.is_Add and summand.is_commutative and
+                self.has_finite_limits is not False):
             return Add(*[self.func(i, *self.limits) for i in summand.args])
         elif isinstance(summand, MatrixBase):
             return summand.applyfunc(lambda x: self.func(x, *self.limits))
