@@ -1,6 +1,6 @@
 from sympy.core.add import Add
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import expand_log, _mexpand
+from sympy.core.function import expand_log, mexpand
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
@@ -125,7 +125,7 @@ def _lambert(eq, x):
     where X = g(x) and x = g^-1(X), return the Lambert solution,
         ``x = g^-1(-c/b + (a/d)*W(d/(a*b)*exp(c*d/a/b)*exp(-f/a)))``.
     """
-    eq = _mexpand(expand_log(eq))
+    eq = mexpand(expand_log(eq))
     mainlog = _mostfunc(eq, log, x)
     if not mainlog:
         return []  # violated assumptions
@@ -473,7 +473,7 @@ def bivariate_type(f, x, y, *, first=True):
     args = Add.make_args(p.as_expr())
     new = []
     for a in args:
-        a = _mexpand(a.subs(x, u/y))
+        a = mexpand(a.subs(x, u/y))
         free = a.free_symbols
         if x in free or y in free:
             break
@@ -482,7 +482,7 @@ def bivariate_type(f, x, y, *, first=True):
         return x*y, Add(*new), u
 
     def ok(f, v, c):
-        new = _mexpand(f.subs(v, c))
+        new = mexpand(f.subs(v, c))
         free = new.free_symbols
         return None if (x in free or y in free) else new
 

@@ -15,7 +15,7 @@ from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
                         Add, Basic)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log, _mexpand, expand_trig, nfloat)
+                                expand_log, mexpand, expand_trig, nfloat)
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd, I, Number, Rational, oo, ilcm
 from sympy.core.power import integer_log
@@ -583,7 +583,7 @@ def _is_function_class_equation(func_class, f, symbol):
 
 def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
-    f = together(_mexpand(f, recursive=True), deep=True)
+    f = together(mexpand(f, recursive=True), deep=True)
     g, h = fraction(f)
     if not h.has(symbol):
         try:

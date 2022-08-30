@@ -4,7 +4,7 @@ from functools import reduce
 from sympy.core import (sympify, Basic, S, Expr, factor_terms,
                         Mul, Add, bottom_up)
 from sympy.core.cache import cacheit
-from sympy.core.function import (count_ops, _mexpand, FunctionClass, expand,
+from sympy.core.function import (count_ops, mexpand, FunctionClass, expand,
                                  expand_mul, Derivative)
 from sympy.core.numbers import I, Integer, igcd
 from sympy.core.sorting import _nodes
@@ -1147,7 +1147,7 @@ def _futrig(e):
         TR12,  # expand tan of sum
         lambda x: _eapply(factor, x, trigs),
         TR2,  # tan-cot -> sin-cos
-        [identity, lambda x: _eapply(_mexpand, x, trigs)],
+        [identity, lambda x: _eapply(mexpand, x, trigs)],
         TR2i,  # sin-cos ratio -> tan
         lambda x: _eapply(lambda i: factor(i.normal()), x, trigs),
         TR14,  # factored identities
@@ -1156,7 +1156,7 @@ def _futrig(e):
         TR11, _TR11, TR6, # reduce double angles and rewrite cos pows
         lambda x: _eapply(factor, x, trigs),
         TR14,  # factored powers of identities
-        [identity, lambda x: _eapply(_mexpand, x, trigs)],
+        [identity, lambda x: _eapply(mexpand, x, trigs)],
         TR10i,  # sin-cos products > sin-cos of sums
         TRmorrie,
         [identity, TR8],  # sin-cos products -> sin-cos of sums

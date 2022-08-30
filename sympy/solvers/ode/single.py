@@ -12,7 +12,7 @@ from sympy.core import Add, S, Pow, Rational
 from sympy.core.cache import cached_property
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
-from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
+from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, mexpand
 from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
@@ -1885,7 +1885,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
             that returns Rationals a, b, c
             if eq is a*x + b*f(x) + c, else None.
             '''
-            eq = _mexpand(eq)
+            eq = mexpand(eq)
             c = eq.as_independent(x, f(x), as_Add=True)[0]
             if not c.is_Rational:
                 return

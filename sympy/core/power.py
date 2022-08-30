@@ -9,7 +9,7 @@ from .singleton import S
 from .expr import Expr
 from .evalf import PrecisionExhausted
 from .function import (expand_complex, expand_multinomial,
-    expand_mul, _mexpand, PoleError)
+    expand_mul, mexpand, PoleError)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .parameters import global_parameters
 from .relational import is_gt, is_lt
@@ -1786,7 +1786,7 @@ class Pow(Expr):
             res += terms[e1]*inco*x**(ex)
 
         if not (e.is_integer and e.is_positive and (e*d - n).is_nonpositive and
-                res == _mexpand(self)):
+                res == mexpand(self)):
             res += Order(x**n, x)
         return res
 

@@ -4,7 +4,8 @@ from sympy.core.cache import clear_cache
 from sympy.core.containers import Dict, Tuple
 from sympy.core.expr import Expr, unchanged
 from sympy.core.function import (Subs, Function, diff, Lambda, expand,
-    nfloat, Derivative)
+    nfloat, Derivative, PoleError, mexpand, mexpand_cse, arity,
+    BadSignatureError, BadArgumentsError)
 from sympy.core.numbers import E, Float, zoo, Rational, pi, I, oo, nan
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
@@ -21,8 +22,6 @@ from sympy.matrices.dense import Matrix
 from sympy.printing.str import sstr
 from sympy.series.order import O
 from sympy.tensor.indexed import Indexed
-from sympy.core.function import (PoleError, _mexpand, arity,
-        BadSignatureError, BadArgumentsError)
 from sympy.core.parameters import _exp_is_pow
 from sympy.core.sympify import sympify, SympifyError
 from sympy.matrices import MutableMatrix, ImmutableMatrix
@@ -1039,10 +1038,20 @@ def test_issue_7688():
 
 
 def test_mexpand():
-    from sympy.abc import x
-    assert _mexpand(None) is None
-    assert _mexpand(1) is S.One
-    assert _mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()
+    assert mexpand(1) is S.One
+    assert mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()
+    n, d = (x + 1)**2, (x - 1)**2
+    xn, xd = x**2 + 2*x + 1, x**2 - 2*x + 1
+    assert mexpand(n/d, frac=True) == xn/xd
+    assert mexpand(n/d, numer=True) == xn/d
+    assert mexpand(n/d, denom=True) == n/xd
+    assert mexpand(n/d) == (xn/xd).expand()
+
+
+def test_mexpand_cse():
+    eq = (1 + (x + 1)**2/(1 - (x + 1)**2))/(x + 1)**2
+    assert mexpand_cse(eq) == 1/(-x**4 - 4*x**3 - 5*x**2 - 2*x)
+    assert mexpand_cse(eq, _final_denom=False) == 1/((1 - (x + 1)**2)*(x + 1)**2)
 
 
 def test_issue_8469():

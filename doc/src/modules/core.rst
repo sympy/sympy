@@ -489,6 +489,14 @@ expand_power_base
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: expand_power_base
 
+mexpand
+^^^^^^^
+.. autofunction:: mexpand
+
+mexpand_cse
+^^^^^^^^^^^
+.. autofunction:: mexpand_cse
+
 nfloat
 ^^^^^^
 .. autofunction:: nfloat

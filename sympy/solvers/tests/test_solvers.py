@@ -1,7 +1,7 @@
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.function import (Derivative, Function, diff, mexpand_cse)
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio, TribonacciConstant)
 from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
@@ -1130,7 +1130,7 @@ def test_unrad1():
     assert solve(sqrt(17*x - sqrt(x**2 - 5)) - 7) == [3]
     assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) == []
 
-    # don't posify the expression in unrad and do use _mexpand
+    # don't posify the expression in unrad and do use mexpand
     z = sqrt(2*x + 1)/sqrt(x) - sqrt(2 + 1/x)
     p = posify(z)[0]
     assert solve(p) == []
@@ -2229,18 +2229,16 @@ def test_issue_12114():
     s2 = sqrt(2 - f**2)
     s3 = sqrt(6 - 3*f**2)
     s4 = sqrt(3)*f
-    s5 = sqrt(3)*s2
-    assert sol == [
-        {a: -s, b: -s, c: -s, d: f, e: f, g: -1},
-        {a: s, b: s, c: s, d: f, e: f, g: -1},
-        {a: -s4/2 - s2/2, b: s4/2 - s2/2, c: s2,
-            d: -f/2 + s3/2, e: -f/2 - s5/2, g: 2},
-        {a: -s4/2 + s2/2, b: s4/2 + s2/2, c: -s2,
-            d: -f/2 - s3/2, e: -f/2 + s5/2, g: 2},
-        {a: s4/2 - s2/2, b: -s4/2 - s2/2, c: s2,
-            d: -f/2 - s3/2, e: -f/2 + s5/2, g: 2},
-        {a: s4/2 + s2/2, b: -s4/2 + s2/2, c: -s2,
-            d: -f/2 + s3/2, e: -f/2 - s5/2, g: 2}]
+    assert s == [{a: -s, b: -s, c: -s, d: f, e: f, g: -1},
+                 {a: s, b: s, c: s, d: f, e: f, g: -1},
+                 {a: -s4/2 - s2/2, b: s4/2 - s2/2, c: s2,
+                  d: -f/2 + s3/2, e: -f/2 - s3/2, g: 2},
+                 {a: -s4/2 + s2/2, b: s4/2 + s2/2, c: -s2,
+                  d: -f/2 - s3/2, e: -f/2 + s3/2, g: 2},
+                 {a: s4/2 - s2/2, b: -s4/2 - s2/2, c: s2,
+                  d: -f/2 - s3/2, e: -f/2 + s3/2, g: 2},
+                 {a: s4/2 + s2/2, b: -s4/2 + s2/2, c: -s2,
+                  d: -f/2 + s3/2, e: -f/2 - s3/2, g: 2}]
 
 
 def test_inf():
@@ -2542,6 +2540,30 @@ def test_solver_flags():
     root = solve(x**5 + x**2 - x - 1, cubics=False)
     rad = solve(x**5 + x**2 - x - 1, cubics=True)
     assert root != rad
+
+
+@slow
+def test_issue_8516():
+    eqs, v = [x + y + z - a, x*y + y*z + x*z - b, x*y*z - c], [x, y, z]
+    sol = solve(eqs, v, manual=True, simplify=False, check=False)
+    # the checker, if used, removes 2 of 8 solutions
+    #
+    # x,y,z = permutations of 1,2,3 when a,b,c = 6,11,6
+    # but it takes about 3X longer to show this by substitution
+    # and evaluation with these roots than it does to simply
+    # demonstrate that the solutions satisfy the original equation
+    # for 6 of the roots. So not this:
+    # reps = {a:6, b: 11, c: 6}
+    # for s in sol:
+    #     print([i.xreplace(reps).n(2) for i in s])
+    # but this:
+    nroots = 0
+    for s in sol:
+        reps = dict(zip((x, y, z), s))
+        if [mexpand_cse(e.xreplace(reps), _final_denom=False)
+                for e in eqs].count(0) == 3:
+            nroots += 1
+    assert nroots == 6
 
 
 def test_issue_22768():

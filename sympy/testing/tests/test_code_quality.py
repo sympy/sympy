@@ -131,7 +131,7 @@ class _Visit(ast.NodeVisitor):
     line on which a bare expression appears if it is a binary op
     or a comparison that is not in a with block.
 
-    EXAMPLES
+    Examples
     ========
 
     >>> import ast

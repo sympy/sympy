@@ -2,7 +2,7 @@ from sympy.core.add import Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import _mexpand
+from sympy.core.function import mexpand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.numbers import igcdex, ilcm, igcd
@@ -579,7 +579,7 @@ class BinaryQuadratic(DiophantineEquationType):
             if A != 0:
                 r = sqrt(discr)
                 u, v = symbols("u, v", integer=True)
-                eq = _mexpand(
+                eq = mexpand(
                     4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u) +
                     2*A*4*A*E*(u - v) + 4*A*r*4*A*F)
 
@@ -635,8 +635,8 @@ class BinaryQuadratic(DiophantineEquationType):
                     for r, s in solns_pell:
                         _a = (r + s*sqrt(D))*(T + U*sqrt(D))**t
                         _b = (r - s*sqrt(D))*(T - U*sqrt(D))**t
-                        x_n = _mexpand(S(_a + _b) / 2)
-                        y_n = _mexpand(S(_a - _b) / (2*sqrt(D)))
+                        x_n = mexpand(S(_a + _b) / 2)
+                        y_n = mexpand(S(_a - _b) / (2*sqrt(D)))
                         s = P*Matrix([x_n, y_n]) + Q
                         result.add(s)
 
@@ -1367,7 +1367,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         if not d.is_number:
             dsol = diophantine(d)
             good = diophantine(n) - dsol
-            return {s for s in good if _mexpand(d.subs(zip(var, s)))}
+            return {s for s in good if mexpand(d.subs(zip(var, s)))}
         else:
             eq = n
         eq = factor_terms(eq)
@@ -1951,7 +1951,7 @@ def is_solution_quad(var, coeff, u, v):
     """
     reps = dict(zip(var, (u, v)))
     eq = Add(*[j*i.xreplace(reps) for i, j in coeff.items()])
-    return _mexpand(eq) == 0
+    return mexpand(eq) == 0
 
 
 def diop_DN(D, N, t=symbols("t", integer=True)):
@@ -2740,7 +2740,7 @@ def _find_DN(var, coeff):
     v = (A*Matrix([X, Y]) + B)[1]
     eq = x**2*coeff[x**2] + x*y*coeff[x*y] + y**2*coeff[y**2] + x*coeff[x] + y*coeff[y] + coeff[1]
 
-    simplified = _mexpand(eq.subs(zip((x, y), (u, v))))
+    simplified = mexpand(eq.subs(zip((x, y), (u, v))))
 
     coeff = simplified.as_coefficients_dict()
 
@@ -3027,14 +3027,14 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
     r, p, q = symbols("r, p, q", integer=True)
 
     eq = sum(k*v for k, v in coeff.items())
-    eq_1 = _mexpand(eq.subs(zip(
+    eq_1 = mexpand(eq.subs(zip(
         (x, y, z), (r*x_0, r*y_0 + p, r*z_0 + q))))
     A, B = eq_1.as_independent(r, as_Add=True)
 
 
     x = A*x_0
-    y = (A*y_0 - _mexpand(B/r*p))
-    z = (A*z_0 - _mexpand(B/r*q))
+    y = (A*y_0 - mexpand(B/r*p))
+    z = (A*z_0 - mexpand(B/r*q))
 
     return _remove_gcd(x, y, z)
 

@@ -1844,7 +1844,7 @@ class Derivative(Expr):
         We can also specify the discretized values to be used in a
         sequence:
 
-        >>> f(x).diff(x).as_finite_difference([x, x+h, x+2*h])
+        >>> f(x).diff(x).as_finite_difference([x, x + h, x + 2*h])
         -3*f(x)/(2*h) + 2*f(h + x)/h - f(2*h + x)/(2*h)
 
         The algorithm is not restricted to use equidistant spacing, nor
@@ -1852,8 +1852,8 @@ class Derivative(Expr):
         an expression estimating the derivative at an offset:
 
         >>> e, sq2 = exp(1), sqrt(2)
-        >>> xl = [x-h, x+h, x+e*h]
-        >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
+        >>> xl = [x - h, x + h, x + e*h]
+        >>> f(x).diff(x, 1).as_finite_difference(xl, x + h*sq2)  # doctest: +ELLIPSIS
         2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/...
 
         To approximate ``Derivative`` around ``x0`` using a non-equidistant
@@ -1861,7 +1861,7 @@ class Derivative(Expr):
         functions to ``points``:
 
         >>> dx = Function('dx')
-        >>> f(x).diff(x).as_finite_difference(points=dx(x), x0=x-h)
+        >>> f(x).diff(x).as_finite_difference(points=dx(x), x0=x - h)
         -f(-h + x - dx(-h + x)/2)/dx(-h + x) + f(-h + x + dx(-h + x)/2)/dx(-h + x)
 
         Partial derivatives are also supported:
@@ -2811,7 +2811,8 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     ========
 
     expand_log, expand_mul, expand_multinomial, expand_complex, expand_trig,
-    expand_power_base, expand_power_exp, expand_func, sympy.simplify.hyperexpand.hyperexpand
+    expand_power_base, expand_power_exp, expand_func, mexpand, mexpand_cse,
+    sympy.simplify.hyperexpand.hyperexpand
 
     """
     # don't modify this; modify the Expr.expand method
@@ -2825,19 +2826,105 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
 
 # This is a special application of two hints
 
-def _mexpand(expr, recursive=False):
-    # expand multinomials and then expand products; this may not always
-    # be sufficient to give a fully expanded expression (see
-    # test_issue_8247_8354 in test_arit)
-    if expr is None:
-        return
-    was = None
-    while was != expr:
-        was, expr = expr, expand_mul(expand_multinomial(expr))
-        if not recursive:
-            break
-    return expr
+def mexpand(expr, recursive=False, *, numer=None, denom=None, frac=None):
+    """expand multinomials and then expand products in ``expr``.
 
+    If recursive is False, this may not always be sufficient to
+    give a fully expanded expression.
+
+    To target expansion only on the numerator or denominator, set
+    ``numer`` or ``denom`` to True, respectively. To keep numerator
+    and denominator over each other and expand each, make `frac`` True.
+
+    Examples
+    ========
+
+    >>> from sympy.core.function import mexpand
+    >>> from sympy.abc import x
+    >>> eq = (x - 1)**2/(1 - x)**2
+    >>> mexpand(eq, frac=True)
+    1
+    >>> mexpand(eq, numer=True)
+    (x**2 - 2*x + 1)/(1 - x)**2
+    >>> mexpand(eq, denom=True)
+    (x - 1)**2/(x**2 - 2*x + 1)
+    >>> mexpand(eq)
+    x**2/(x**2 - 2*x + 1) - 2*x/(x**2 - 2*x + 1) + 1/(x**2 - 2*x + 1)
+
+    >>> eq -= 1
+    >>> mexpand(eq, frac=True)
+    0
+    >>> mexpand(eq, numer=True)
+    0
+    >>> mexpand(eq, denom=True)
+    -1 + (x - 1)**2/(1 - x)**2
+    >>> mexpand(eq)
+    0
+
+    See Also
+    ========
+    mexpand_cse, expand
+    """
+    from sympy.simplify.radsimp import fraction
+    def do(expr):
+        was = None
+        while was != expr:
+            was, expr = expr, expand_mul(expand_multinomial(expr))
+            if not recursive:
+                break
+        return expr
+    n, d = fraction(sympify(expr), exact=True)
+    both = False
+    if frac or numer is None and denom is None:
+        both = numer = denom = True
+    if numer:
+        n = do(n)
+    if denom:
+        if not d.is_Atom:
+            d = do(d)
+    if n.is_Add and both and not frac:
+        return n.func(*[i/d for i in n.args])
+    return n/d
+
+
+def mexpand_cse(e, _final_denom=True):
+    """return a recursively expanded expression using
+    multinomial and product expansions, but introduce
+    any repeated subexpressions 1 at a time while doing so.
+
+    Examples
+    ========
+
+    >>> from sympy.core.function import mexpand_cse, mexpand
+    >>> from sympy.abc import x
+    >>> eq = 1 + (x + 1)**2/(1 - (x + 1)**2)
+
+    Besides expanding incrementally, ``mexpand_cse`` will always
+    attempt to return the input as a rational expression:
+
+    >>> mexpand_cse(eq)
+    1/(-x**2 - 2*x)
+
+    By contrast, ``mexpand`` does not do so: if the expression is
+    not already expressed as a fraction, it will not be returned as
+    one:
+
+    >>> mexpand(eq)
+    x**2/(-x**2 - 2*x) + 2*x/(-x**2 - 2*x) + 1 + 1/(-x**2 - 2*x)
+
+    See Also
+    ========
+    mexpand, expand
+    """
+    from sympy.simplify.cse_main import cse
+    r, e = cse(e, list=False)
+    for r in reversed(r):
+        e = mexpand(e, recursive=True).xreplace(dict([r]))
+    e, d = e.as_numer_denom()
+    e = mexpand(e, recursive=True)
+    if _final_denom:
+        d = mexpand(d, recursive=True)
+    return e/d
 
 # These are simple wrappers around single hints.
 
@@ -2852,7 +2939,7 @@ def expand_mul(expr, deep=True):
 
     >>> from sympy import symbols, expand_mul, exp, log
     >>> x, y = symbols('x,y', positive=True)
-    >>> expand_mul(exp(x+y)*(x+y)*log(x*y**2))
+    >>> expand_mul(exp(x + y)*(x + y)*log(x*y**2))
     x*exp(x + y)*log(x*y**2) + y*exp(x + y)*log(x*y**2)
 
     """
@@ -2888,7 +2975,7 @@ def expand_log(expr, deep=True, force=False, factor=False):
 
     >>> from sympy import symbols, expand_log, exp, log
     >>> x, y = symbols('x,y', positive=True)
-    >>> expand_log(exp(x+y)*(x+y)*log(x*y**2))
+    >>> expand_log(exp(x + y)*(x + y)*log(x*y**2))
     (x + y)*(log(x) + 2*log(y))*exp(x + y)
 
     """
@@ -2938,7 +3025,7 @@ def expand_trig(expr, deep=True):
 
     >>> from sympy import expand_trig, sin
     >>> from sympy.abc import x, y
-    >>> expand_trig(sin(x+y)*(x+y))
+    >>> expand_trig(sin(x + y)*(x + y))
     (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
 
     """
@@ -3017,14 +3104,14 @@ def expand_power_base(expr, deep=True, force=False):
     Notice that sums are left untouched. If this is not the desired behavior,
     apply full ``expand()`` to the expression:
 
-    >>> expand_power_base(((x+y)*z)**2)
+    >>> expand_power_base(((x + y)*z)**2)
     z**2*(x + y)**2
-    >>> (((x+y)*z)**2).expand()
+    >>> (((x + y)*z)**2).expand()
     x**2*z**2 + 2*x*y*z**2 + y**2*z**2
 
-    >>> expand_power_base((2*y)**(1+z))
+    >>> expand_power_base((2*y)**(1 + z))
     2**(z + 1)*y**(z + 1)
-    >>> ((2*y)**(1+z)).expand()
+    >>> ((2*y)**(1 + z)).expand()
     2*2**z*y*y**z
 
     See Also

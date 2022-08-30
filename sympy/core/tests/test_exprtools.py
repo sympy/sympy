@@ -335,15 +335,15 @@ def test_factor_nc():
     n, m, o = symbols('n,m,o', commutative=False)
 
     # mul and multinomial expansion is needed
-    from sympy.core.function import _mexpand
+    from sympy.core.function import mexpand
     e = x*(1 + y)**2
-    assert _mexpand(e) == x + x*2*y + x*y**2
+    assert mexpand(e) == x + x*2*y + x*y**2
 
     def factor_nc_test(e):
-        ex = _mexpand(e)
+        ex = mexpand(e)
         assert ex.is_Add
         f = factor_nc(ex)
-        assert not f.is_Add and _mexpand(f) == ex
+        assert not f.is_Add and mexpand(f) == ex
 
     factor_nc_test(x*(1 + y))
     factor_nc_test(n*(x + 1))
