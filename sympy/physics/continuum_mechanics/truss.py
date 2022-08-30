@@ -3,17 +3,21 @@ This module can be used to solve problems related
 to 2D Trusses.
 """
 
+
 from cmath import inf
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy import Matrix, pi
+from sympy.external.importtools import import_module
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import zeros
 import math
+from sympy.plotting import plot, plot_parametric
+from sympy.utilities.decorator import doctest_depends_on
 
-
+numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
 class Truss:
     """
@@ -733,3 +737,226 @@ class Truss:
             self._internal_forces[member] = forces_matrix[i]
             i += 1
         return
+
+    @doctest_depends_on(modules=('numpy',))
+    def draw(self):
+        """
+        Returns a plot object of the Truss with all its nodes, members,
+        supports and loads.
+
+        .. note::
+            The user must be careful while entering load values their
+            directions. The draw function assumes a sign convention which
+            is used for plotting loads.
+
+            Given a right handed coordinate system with XYZ coordinates,
+            the supports are assumed to be such that reaction forces of a
+            pinned support are in the +X and +Y direction while those of a
+            roller support are in the +Y direction. For the load, the range
+            of angles one can input goes all the way to 360 degrees which, in the
+            plot, is the angle that the load vector makes with positive x-axis.
+
+            For example, for a 90 degree angle, the load will be a vertically
+            directed along +Y while a 270 degrees angle denotes a vertical
+            load as well but along -Y.
+
+        Examples
+        ========
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.truss import Truss
+            >>> t = Truss()
+            >>> t.add_node("node_1", 0, 0)
+            >>> t.add_node("node_2", 6, 0)
+            >>> t.add_node("node_3", 2, 6)
+            >>> t.add_node("node_4", 2, 0)
+            >>> t.add_member("member_1", "node_1", "node_4")
+            >>> t.add_member("member_2", "node_2", "node_4")
+            >>> t.add_member("member_3", "node_1", "node_3")
+            >>> t.add_member("member_4", "node_2", "node_3")
+            >>> t.add_member("member_5", "node_3", "node_4")
+            >>> t.apply_load("node_4", magnitude=10, direction=270)
+            >>> t.apply_support("node_1", type="pinned")
+            >>> t.apply_support("node_2", type="roller")
+            >>> p = t.draw()
+            >>> p
+            Plot object containing:
+            [0]: cartesian line: 0 for x over (0.0, 2.0)
+            [1]: cartesian line: 0 for x over (2.0, 6.0)
+            [2]: cartesian line: 3*x for x over (0.0, 2.0)
+            [3]: cartesian line: 9 - 3*x/2 for x over (2.0, 6.0)
+            [4]: parametric cartesian line: (2, y) for y over (0.0, 6.0)
+            >>> p.show()
+        """
+        if not numpy:
+            raise ImportError("To use this function numpy module is required")
+
+        markers = []
+        annotations = []
+
+        node_markers = self._draw_nodes()
+        markers += node_markers
+
+        support_markers = self._draw_supports()
+        markers += support_markers
+
+        load_annotations = self._draw_loads()
+        annotations += load_annotations
+
+        xmax = max(self._node_position_x)
+        xmin = min(self._node_position_x)
+        ymax = max(self._node_position_y)
+        ymin = min(self._node_position_y)
+
+        lim = max(xmax*1.1-xmin*0.8+1, ymax*1.1-ymin*0.8+1)
+
+        if lim==xmax*1.1-xmin*0.8+1:
+            sing_plot = plot(markers=markers, show=False, annotations=annotations, xlim=(xmin*0.8-0.05*lim, xmax*1.1), ylim=(xmin*0.8-0.05*lim, xmax*1.1), axis=False)
+        else:
+            sing_plot = plot(markers=markers, show=False, annotations=annotations, xlim=(ymin*0.8-0.05*lim, ymax*1.1), ylim=(ymin*0.8-0.05*lim, ymax*1.1), axis=False)
+
+
+        sing_plot.extend(self._draw_members())
+
+        return sing_plot
+
+
+    def _draw_nodes(self):
+        node_markers = []
+
+        for node in self._nodes:
+            node_markers.append(
+                {
+                    'args':[[node[1]], [node[2]]],
+                    'marker':'o',
+                    'markersize':5,
+                    'color':'black'
+                }
+            )
+
+        return node_markers
+
+    def _draw_members(self):
+        x = Symbol('x')
+        y = Symbol('y')
+
+        member_plot = plot(show=False)
+
+        for member in self._members:
+            x1 = self._node_coordinates[self._members[member][0]][0]
+            y1 = self._node_coordinates[self._members[member][0]][1]
+            x2 = self._node_coordinates[self._members[member][1]][0]
+            y2 = self._node_coordinates[self._members[member][1]][1]
+            if x1!= x2:
+                p1 = plot(((y2-y1)*x/(x2-x1)+(y2*x1-y1*x2)/(x1-x2), (x, min(x1, x2), max(x1, x2))), show=False, line_color="brown", linewidth=20)
+            else:
+                p1 = plot_parametric((x1, y), (y, min(y1, y2), max(y1, y2)), line_color="brown", show=False)
+            member_plot.extend(p1)
+
+        return member_plot
+
+    def _draw_supports(self):
+        support_markers = []
+
+        xmax = max(self._node_position_x)
+        xmin = min(self._node_position_x)
+        ymax = max(self._node_position_y)
+        ymin = min(self._node_position_y)
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
+
+        for node in self._supports:
+            if self._supports[node]=='pinned':
+                support_markers.append(
+                    {
+                        'args':[
+                            [self._node_coordinates[node][0]],
+                            [self._node_coordinates[node][1]]
+                        ],
+                        'marker':6,
+                        'markersize':15,
+                        'color':'black',
+                        'markerfacecolor':'none'
+                    }
+                )
+                support_markers.append(
+                    {
+                        'args':[
+                            [self._node_coordinates[node][0]],
+                            [self._node_coordinates[node][1]-0.035*max_diff]
+                        ],
+                        'marker':'_',
+                        'markersize':14,
+                        'color':'black'
+                    }
+                )
+
+            elif self._supports[node]=='roller':
+                support_markers.append(
+                    {
+                        'args':[
+                            [self._node_coordinates[node][0]],
+                            [self._node_coordinates[node][1]-0.02*max_diff]
+                        ],
+                        'marker':'o',
+                        'markersize':11,
+                        'color':'black',
+                        'markerfacecolor':'none'
+                    }
+                )
+                support_markers.append(
+                    {
+                        'args':[
+                            [self._node_coordinates[node][0]],
+                            [self._node_coordinates[node][1]-0.0375*max_diff]
+                        ],
+                        'marker':'_',
+                        'markersize':14,
+                        'color':'black'
+                    }
+                )
+
+        return support_markers
+
+    def _draw_loads(self):
+        load_annotations = []
+
+        xmax = max(self._node_position_x)
+        xmin = min(self._node_position_x)
+        ymax = max(self._node_position_y)
+        ymin = min(self._node_position_y)
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin+5
+        else:
+            max_diff = 1.1*ymax-0.8*ymin+5
+
+        for node in self._loads:
+            for load in self._loads[node]:
+                if load[0] in [Symbol('R_'+str(node)+'_x'), Symbol('R_'+str(node)+'_y')]:
+                    continue
+                x = self._node_coordinates[node][0]
+                y = self._node_coordinates[node][1]
+                load_annotations.append(
+                    {
+                        'text':'',
+                        'xy':(
+                            x-math.cos(pi*load[1]/180)*(max_diff/100),
+                            y-math.sin(pi*load[1]/180)*(max_diff/100)
+                        ),
+                        'xytext':(
+                            x-(max_diff/100+abs(xmax-xmin)+abs(ymax-ymin))*math.cos(pi*load[1]/180)/20,
+                            y-(max_diff/100+abs(xmax-xmin)+abs(ymax-ymin))*math.sin(pi*load[1]/180)/20
+                        ),
+                        'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')
+                    }
+                )
+
+        return load_annotations
