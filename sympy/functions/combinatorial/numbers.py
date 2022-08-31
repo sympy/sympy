@@ -12,7 +12,6 @@ from typing import Callable, Dict as tDict, Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.evalf import pure_complex
 from sympy.core.expr import Expr
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
