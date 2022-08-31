@@ -399,10 +399,8 @@ def test_euler_polynomials():
     assert isinstance(euler(m, x), euler)
     from sympy.core.numbers import Float
     A = Float('-0.46237208575048694923364757452876131e8')  # from Maple
-    B = euler(19, S.Pi.evalf(32))
-    assert abs((A - B)/A) < 1e-31  # expect low relative error
-    C = euler(19, S.Pi, evaluate=False).evalf(32)
-    assert abs((A - C)/A) < 1e-31
+    B = euler(19, S.Pi).evalf(32)
+    assert abs((A - B)/A) < 1e-31
 
 
 def test_euler_polynomial_rewrite():
