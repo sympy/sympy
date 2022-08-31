@@ -342,7 +342,8 @@ def test_harmonic_rewrite():
     assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
     assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
-    assert harmonic(n, m).rewrite("tractable") == zeta(m) - zeta(m, n+1)
+    assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
+    assert harmonic(n, x).rewrite("tractable") == zeta(x) - zeta(x, n+1)
 
     _k = Dummy("k")
     assert harmonic(n).rewrite(Sum).dummy_eq(Sum(1/_k, (_k, 1, n)))

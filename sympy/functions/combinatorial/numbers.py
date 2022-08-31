@@ -870,7 +870,7 @@ class harmonic(Function):
     pi**2/6
 
     >>> limit(harmonic(n, 3), n, oo)
-    zeta(3)
+    -polygamma(2, 1)/2
 
     >>> limit(harmonic(n, m+1), n, oo) # does not hold for m == 1
     zeta(m + 1)
@@ -985,6 +985,10 @@ class harmonic(Function):
 
     def _eval_rewrite_as_tractable(self, n, m=1, limitvar=None, **kwargs):
         from sympy.functions.special.zeta_functions import zeta
+        from sympy.functions.special.gamma_functions import polygamma
+        pg = self.rewrite(polygamma)
+        if not isinstance(pg, harmonic):
+            return pg.rewrite("tractable", deep=True)
         return (zeta(m) - zeta(m, n+1)).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
