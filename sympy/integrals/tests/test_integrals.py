@@ -804,6 +804,10 @@ def test_subs7():
 def test_expand():
     e = Integral(f(x)+f(x**2), (x, 1, y))
     assert e.expand() == Integral(f(x), (x, 1, y)) + Integral(f(x**2), (x, 1, y))
+    e = Integral(f(x)+f(x**2), (x, 1, oo))
+    assert e.expand() == e
+    assert e.expand(force=True) == Integral(f(x), (x, 1, oo)) + \
+           Integral(f(x**2), (x, 1, oo))
 
 
 def test_integration_variable():
