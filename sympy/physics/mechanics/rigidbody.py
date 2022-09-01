@@ -70,6 +70,7 @@ class RigidBody:
 
     @property
     def frame(self):
+        """The ReferenceFrame fixed to the body."""
         return self._frame
 
     @frame.setter
@@ -80,6 +81,7 @@ class RigidBody:
 
     @property
     def masscenter(self):
+        """The body's center of mass."""
         return self._masscenter
 
     @masscenter.setter
@@ -90,6 +92,7 @@ class RigidBody:
 
     @property
     def mass(self):
+        """The body's mass."""
         return self._mass
 
     @mass.setter
@@ -98,6 +101,7 @@ class RigidBody:
 
     @property
     def inertia(self):
+        """The body's inertia about a point; stored as (Dyadic, Point)."""
         return (self._inertia, self._inertia_point)
 
     @inertia.setter

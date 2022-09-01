@@ -158,6 +158,7 @@ class Body(RigidBody, Particle):  # type: ignore
 
     @property
     def inertia(self):
+        """The body's inertia about a point; stored as (Dyadic, Point)."""
         if self.is_rigidbody:
             return RigidBody.inertia.fget(self)
         return (self.central_inertia, self.masscenter)
