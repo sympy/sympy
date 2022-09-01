@@ -944,9 +944,9 @@ def test_factor_expand_subs():
     assert Sum(x+1,(x,1,y)).expand() == Sum(x,(x,1,y)) + Sum(1,(x,1,y))
     assert Sum(x+a*x**2,(x,1,y)).expand() == Sum(x,(x,1,y)) + Sum(a*x**2,(x,1,y))
     assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand() \
-        == Sum(x*x**n, (n, -1, oo)) + Sum(n*x*x**n, (n, -1, oo))
+        == Sum(n*x*x**n + x*x**n, (n, -1, oo))
     assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand(power_exp=False) \
-        == Sum(n*x**(n+1), (n, -1, oo)) + Sum(x**(n+1), (n, -1, oo))
+        == Sum(n*x**(n + 1) + x**(n + 1), (n, -1, oo))
     assert Sum(a*n+a*n**2,(n,0,4)).expand() \
         == Sum(a*n,(n,0,4)) + Sum(a*n**2,(n,0,4))
     assert Sum(x**a*x**n,(x,0,3)) \
