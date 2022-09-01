@@ -12,7 +12,6 @@ from typing import Callable, Dict as tDict, Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.evalf import pure_complex
 from sympy.core.expr import Expr
 from sympy.core.function import ArgumentIndexError, Function, expand_mul
 from sympy.core.logic import fuzzy_not
@@ -1026,7 +1025,7 @@ class harmonic(Function):
 
 class euler(Function):
     r"""
-    Euler numbers / Euler polynomials
+    Euler numbers / Euler polynomials / Euler function
 
     The Euler numbers are given by:
 
@@ -1047,8 +1046,20 @@ class euler(Function):
     However, numerical evaluation of the Euler polynomial is computed
     more efficiently (and more accurately) using the mpmath library.
 
-    * ``euler(n)`` gives the `n^{th}` Euler number, `E_n`.
-    * ``euler(n, x)`` gives the `n^{th}` Euler polynomial, `E_n(x)`.
+    The Euler polynomials are special cases of the generalized Euler function,
+    related to the Genocchi function as
+
+    .. math:: \operatorname{E}(s, a) = -\frac{\operatorname{G}(s+1, a)}{s+1}
+
+    with the limit of `\psi\left(\frac{a+1}{2}\right) - \psi\left(\frac{a}{2}\right)`
+    being taken when `s = -1`. The (ordinary) Euler function interpolating
+    the Euler numbers is then obtained as
+    `\operatorname{E}(s) = 2^s \operatorname{E}\left(s, \frac{1}{2}\right)`.
+
+    * ``euler(n)`` gives the nth Euler number `E_n`.
+    * ``euler(s)`` gives the Euler function `\operatorname{E}(s)`.
+    * ``euler(n, x)`` gives the nth Euler polynomial `E_n(x)`.
+    * ``euler(s, a)`` gives the generalized Euler function `\operatorname{E}(s, a)`.
 
     Examples
     ========
@@ -1056,6 +1067,8 @@ class euler(Function):
     >>> from sympy import euler, Symbol, S
     >>> [euler(n) for n in range(10)]
     [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
+    >>> [2**n*euler(n,1) for n in range(10)]
+    [1, 1, 0, -2, 0, 16, 0, -272, 0, 7936]
     >>> n = Symbol("n")
     >>> euler(n + 2*n)
     euler(3*n)
@@ -1097,40 +1110,31 @@ class euler(Function):
     """
 
     @classmethod
-    def eval(cls, m, sym=None):
-        if m.is_Number:
-            if m.is_Integer and m.is_nonnegative:
-                # Euler numbers
-                if sym is None:
-                    if m.is_odd:
-                        return S.Zero
-                    from mpmath import mp
-                    m = m._to_mpmath(mp.prec)
-                    res = mp.eulernum(m, exact=True)
-                    return Integer(res)
-                # Euler polynomial
-                else:
-                    reim = pure_complex(sym, or_real=True)
-                    # Evaluate polynomial numerically using mpmath
-                    if reim and all(a.is_Float or a.is_Integer for a in reim) \
-                            and any(a.is_Float for a in reim):
-                        from mpmath import mp
-                        m = int(m)
-                        # XXX ComplexFloat (#12192) would be nice here, above
-                        prec = min([a._prec for a in reim if a.is_Float])
-                        with workprec(prec):
-                            res = mp.eulerpoly(m, sym)
-                        return Expr._from_mpmath(res, prec)
-                    # Construct polynomial symbolically from definition
-                    m = int(m)
-                    result = [binomial(m, k)*cls(k)/(2**k)*(sym - S.Half)**(m - k) for k in range(m + 1)]
-                    return Add(*result).expand()
-            else:
-                raise ValueError("Euler numbers are defined only"
-                                 " for nonnegative integer indices.")
-        if sym is None:
-            if m.is_odd and m.is_positive:
+    def eval(cls, n, x=None):
+        if n.is_zero:
+            return S.One
+        elif (n+1).is_zero:
+            if x is None:
+                return S.Pi/2
+            from sympy.functions.special.gamma_functions import digamma
+            return digamma((x+1)/2) - digamma(x/2)
+        elif n.is_integer is False or n.is_nonnegative is False:
+            return
+        # Euler numbers
+        elif x is None:
+            if n.is_odd and n.is_positive:
                 return S.Zero
+            elif n.is_Number:
+                from mpmath import mp
+                n = n._to_mpmath(mp.prec)
+                res = mp.eulernum(n, exact=True)
+                return Integer(res)
+        # Euler polynomials
+        elif n.is_Number:
+            n = int(n)
+            x_ = Dummy("x")
+            result = [binomial(n,k) * cls(k)/(2**k) * (x_-S.Half)**(n-k) for k in range(0, n+1, 2)]
+            return Add(*result).expand().subs(x_, x)
 
     def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
         from sympy.concrete.summations import Sum
@@ -1146,22 +1150,29 @@ class euler(Function):
             k = Dummy("k", integer=True)
             return Sum(binomial(n, k)*euler(k)/2**k*(x - S.Half)**(n - k), (k, 0, n))
 
-    def _eval_evalf(self, prec):
-        m, x = (self.args[0], None) if len(self.args) == 1 else self.args
+    def _eval_rewrite_as_genocchi(self, n, x=None, **kwargs):
+        if x is None:
+            return Piecewise((S.Pi/2, Eq(n, -1)),
+                             (-2**n * genocchi(n+1, S.Half) / (n+1), True))
+        from sympy.functions.special.gamma_functions import digamma
+        return Piecewise((digamma((x+1)/2) - digamma(x/2), Eq(n, -1)),
+                         (-genocchi(n+1, x) / (n+1), True))
 
-        if x is None and m.is_Integer and m.is_nonnegative:
+    def _eval_evalf(self, prec):
+        if not all(i.is_number for i in self.args):
+            return
+        m, x = (self.args[0], None) if len(self.args) == 1 else self.args
+        if m.is_Integer and m.is_nonnegative:
             from mpmath import mp
-            m = m._to_mpmath(prec)
             with workprec(prec):
-                res = mp.eulernum(m)
+                if x is None:
+                    res = mp.eulernum(m)
+                else:
+                    x = x._to_mpmath(prec)
+                    res = mp.eulerpoly(m, x)
             return Expr._from_mpmath(res, prec)
-        if x and x.is_number and m.is_Integer and m.is_nonnegative:
-            from mpmath import mp
-            m = int(m)
-            x = x._to_mpmath(prec)
-            with workprec(prec):
-                res = mp.eulerpoly(m, x)
-            return Expr._from_mpmath(res, prec)
+        return self.rewrite(genocchi)._eval_evalf(prec)
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #
