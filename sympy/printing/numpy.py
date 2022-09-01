@@ -404,6 +404,9 @@ class SciPyPrinter(NumPyPrinter):
         # scipy's bernoulli is inconsistent with SymPy's so rewrite
         return self._print(expr._eval_rewrite_as_zeta(*expr.args))
 
+    def _print_harmonic(self, expr):
+        return self._print(expr._eval_rewrite_as_zeta(*expr.args))
+
     def _print_Integral(self, e):
         integration_vars, limits = _unpack_integral_limits(e)
 

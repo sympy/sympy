@@ -14,7 +14,7 @@ from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.evalf import pure_complex
 from sympy.core.expr import Expr
-from sympy.core.function import Function, expand_mul
+from sympy.core.function import ArgumentIndexError, Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, pi, oo, Rational, Integer
@@ -781,6 +781,12 @@ class harmonic(Function):
       of order `m`, `\operatorname{H}_{n,m}`, where
       ``harmonic(n) == harmonic(n, 1)``
 
+    This function can be extended to complex `n` and `m` where `n` is not a
+    negative integer as
+
+    .. math:: \operatorname{H}_{n,m} = \begin{cases} \zeta(m) - \zeta(m, n+1)
+            & m \ne 1 \\ \psi(n+1) + \gamma & m = 1 \end{cases}
+
     Examples
     ========
 
@@ -829,7 +835,7 @@ class harmonic(Function):
     We can rewrite harmonic numbers in terms of polygamma functions:
 
     >>> from sympy import digamma, polygamma
-    >>> m = Symbol("m")
+    >>> m = Symbol("m", integer=True, positive=True)
 
     >>> harmonic(n).rewrite(digamma)
     polygamma(0, n + 1) + EulerGamma
@@ -841,7 +847,7 @@ class harmonic(Function):
     polygamma(2, n + 1)/2 - polygamma(2, 1)/2
 
     >>> harmonic(n,m).rewrite(polygamma)
-    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
+    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/gamma(m)
 
     Integer offsets in the argument can be pulled out:
 
@@ -866,12 +872,8 @@ class harmonic(Function):
     >>> limit(harmonic(n, 3), n, oo)
     -polygamma(2, 1)/2
 
-    However we cannot compute the general relation yet:
-
-    >>> limit(harmonic(n, m), n, oo)
-    harmonic(oo, m)
-
-    which equals ``zeta(m)`` for ``m > 1``.
+    >>> limit(harmonic(n, m+1), n, oo) # does not hold for m == 1
+    zeta(m + 1)
 
     See Also
     ========
@@ -898,34 +900,31 @@ class harmonic(Function):
             return cls(n)
         if m is None:
             m = S.One
-
-        if m.is_zero:
+        if n.is_zero:
+            return S.Zero
+        elif m.is_zero:
             return n
-
-        if n is S.Infinity:
+        elif n is S.Infinity:
             if m.is_negative:
                 return S.NaN
             elif is_le(m, S.One):
                 return S.Infinity
             elif is_gt(m, S.One):
                 return zeta(m)
-            else:
-                return
-
-        if n == 0:
-            return S.Zero
-
-        if n.is_Integer and n.is_nonnegative:
-            if m not in cls._functions:
+        elif n.is_Integer:
+            if n.is_negative:
+                return S.NaN
+            elif m not in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
                     return prev[-1] + S.One / n**m
                 cls._functions[m] = f
             return cls._functions[m](int(n))
 
-    def _eval_rewrite_as_polygamma(self, n, m=1, **kwargs):
-        from sympy.functions.special.gamma_functions import polygamma
-        return S.NegativeOne**m/factorial(m - 1) * (polygamma(m - 1, 1) - polygamma(m - 1, n + 1))
+    def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
+        from sympy.functions.special.gamma_functions import gamma, polygamma
+        if m.is_integer and m.is_positive:
+            return S.NegativeOne**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) / gamma(m)
 
     def _eval_rewrite_as_digamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
@@ -941,6 +940,12 @@ class harmonic(Function):
         if m is None:
             m = S.One
         return Sum(k**(-m), (k, 1, n))
+
+    def _eval_rewrite_as_zeta(self, n, m=S.One, **kwargs):
+        from sympy.functions.special.zeta_functions import zeta
+        from sympy.functions.special.gamma_functions import digamma
+        return Piecewise((digamma(n + 1) + S.EulerGamma, Eq(m, 1)),
+                         (zeta(m) - zeta(m, n+1), True))
 
     def _eval_expand_func(self, **hints):
         from sympy.concrete.summations import Sum
@@ -979,13 +984,37 @@ class harmonic(Function):
         return self
 
     def _eval_rewrite_as_tractable(self, n, m=1, limitvar=None, **kwargs):
+        from sympy.functions.special.zeta_functions import zeta
         from sympy.functions.special.gamma_functions import polygamma
-        return self.rewrite(polygamma).rewrite("tractable", deep=True)
+        pg = self.rewrite(polygamma)
+        if not isinstance(pg, harmonic):
+            return pg.rewrite("tractable", deep=True)
+        return (zeta(m) - zeta(m, n+1)).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
-        from sympy.functions.special.gamma_functions import polygamma
-        if all(i.is_number for i in self.args):
-            return self.rewrite(polygamma)._eval_evalf(prec)
+        if not all(x.is_number for x in self.args):
+            return
+        n = self.args[0]._to_mpmath(prec)
+        m = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
+        if mp.isint(n) and n < 0:
+            return S.NaN
+        with workprec(prec):
+            if m == 1:
+                res = mp.harmonic(n)
+            else:
+                res = mp.zeta(m) - mp.zeta(m, n+1)
+        return Expr._from_mpmath(res, prec)
+
+    def fdiff(self, argindex=1):
+        from sympy.functions.special.zeta_functions import zeta
+        if len(self.args) == 2:
+            n, m = self.args
+        else:
+            n, m = self.args + (1,)
+        if argindex == 1:
+            return m * zeta(m+1, n+1)
+        else:
+            raise ArgumentIndexError
 
 
 #----------------------------------------------------------------------------#

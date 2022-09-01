@@ -11,7 +11,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial)
-from sympy.functions.combinatorial.numbers import bernoulli
+from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import acosh
@@ -1474,6 +1474,16 @@ def test_scipy_bernoulli():
 
     bern = lambdify((x,), bernoulli(x), modules='scipy')
     assert bern(1) == 0.5
+
+
+def test_scipy_harmonic():
+    if not scipy:
+        skip("scipy not installed")
+
+    hn = lambdify((x,), harmonic(x), modules='scipy')
+    assert hn(2) == 1.5
+    hnm = lambdify((x, y), harmonic(x, y), modules='scipy')
+    assert hnm(2, 2) == 1.25
 
 
 def test_cupy_array_arg():
