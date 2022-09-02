@@ -12,9 +12,8 @@ from typing import Callable, Dict as tDict, Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.evalf import pure_complex
 from sympy.core.expr import Expr
-from sympy.core.function import Function, expand_mul
+from sympy.core.function import ArgumentIndexError, Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, pi, oo, Rational, Integer
@@ -781,9 +780,11 @@ class harmonic(Function):
       of order `m`, `\operatorname{H}_{n,m}`, where
       ``harmonic(n) == harmonic(n, 1)``
 
-    This function can be extended to arbitrary `n` and `m` using zeta functions as
+    This function can be extended to complex `n` and `m` where `n` is not a
+    negative integer as
 
-    .. math:: \operatorname{H}_{n,m} = \zeta(m) - \zeta(m, n+1)
+    .. math:: \operatorname{H}_{n,m} = \begin{cases} \zeta(m) - \zeta(m, n+1)
+            & m \ne 1 \\ \psi(n+1) + \gamma & m = 1 \end{cases}
 
     Examples
     ========
@@ -870,12 +871,8 @@ class harmonic(Function):
     >>> limit(harmonic(n, 3), n, oo)
     -polygamma(2, 1)/2
 
-    However we cannot compute the general relation yet:
-
-    >>> limit(harmonic(n, m), n, oo)
-    harmonic(oo, m)
-
-    which equals ``zeta(m)`` for ``m > 1``.
+    >>> limit(harmonic(n, m+1), n, oo) # does not hold for m == 1
+    zeta(m + 1)
 
     See Also
     ========
@@ -902,25 +899,21 @@ class harmonic(Function):
             return cls(n)
         if m is None:
             m = S.One
-
-        if m.is_zero:
+        if n.is_zero:
+            return S.Zero
+        elif m.is_zero:
             return n
-
-        if n is S.Infinity:
+        elif n is S.Infinity:
             if m.is_negative:
                 return S.NaN
             elif is_le(m, S.One):
                 return S.Infinity
             elif is_gt(m, S.One):
                 return zeta(m)
-            else:
-                return
-
-        if n == 0:
-            return S.Zero
-
-        if n.is_Integer and n.is_nonnegative:
-            if m not in cls._functions:
+        elif n.is_Integer:
+            if n.is_negative:
+                return S.NaN
+            elif m not in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
                     return prev[-1] + S.One / n**m
@@ -949,8 +942,9 @@ class harmonic(Function):
 
     def _eval_rewrite_as_zeta(self, n, m=S.One, **kwargs):
         from sympy.functions.special.zeta_functions import zeta
-        if not (m-1).is_zero:
-            return zeta(m) - zeta(m, n+1)
+        from sympy.functions.special.gamma_functions import digamma
+        return Piecewise((digamma(n + 1) + S.EulerGamma, Eq(m, 1)),
+                         (zeta(m) - zeta(m, n+1), True))
 
     def _eval_expand_func(self, **hints):
         from sympy.concrete.summations import Sum
@@ -989,16 +983,37 @@ class harmonic(Function):
         return self
 
     def _eval_rewrite_as_tractable(self, n, m=1, limitvar=None, **kwargs):
+        from sympy.functions.special.zeta_functions import zeta
         from sympy.functions.special.gamma_functions import polygamma
-        return self.rewrite(polygamma).rewrite("tractable", deep=True)
+        pg = self.rewrite(polygamma)
+        if not isinstance(pg, harmonic):
+            return pg.rewrite("tractable", deep=True)
+        return (zeta(m) - zeta(m, n+1)).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
-        from sympy.functions.special.gamma_functions import polygamma
+        if not all(x.is_number for x in self.args):
+            return
+        n = self.args[0]._to_mpmath(prec)
+        m = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
+        if mp.isint(n) and n < 0:
+            return S.NaN
+        with workprec(prec):
+            if m == 1:
+                res = mp.harmonic(n)
+            else:
+                res = mp.zeta(m) - mp.zeta(m, n+1)
+        return Expr._from_mpmath(res, prec)
+
+    def fdiff(self, argindex=1):
         from sympy.functions.special.zeta_functions import zeta
-        if all(i.is_number for i in self.args):
-            m = S.One if len(self.args) < 2 else self.args[1]
-            choice = polygamma if (m-1).is_zero else zeta
-            return self.rewrite(choice)._eval_evalf(prec)
+        if len(self.args) == 2:
+            n, m = self.args
+        else:
+            n, m = self.args + (1,)
+        if argindex == 1:
+            return m * zeta(m+1, n+1)
+        else:
+            raise ArgumentIndexError
 
 
 #----------------------------------------------------------------------------#
@@ -1034,11 +1049,12 @@ class euler(Function):
     The Euler polynomials are special cases of the generalized Euler function,
     related to the Genocchi function as
 
-    .. math:: \operatorname{E}(s, a) = -\operatorname{G}(s+1, a) / (s+1)
+    .. math:: \operatorname{E}(s, a) = -\frac{\operatorname{G}(s+1, a)}{s+1}
 
-    with the limit of `\psi((s+1)/2) - \psi(s/2)` being taken when `s = -1`.
-    The (ordinary) Euler function interpolating the Euler numbers is then
-    obtained as `\operatorname{E}(s) = 2^s \operatorname{E}(s, 1/2)`.
+    with the limit of `\psi\left(\frac{a+1}{2}\right) - \psi\left(\frac{a}{2}\right)`
+    being taken when `s = -1`. The (ordinary) Euler function interpolating
+    the Euler numbers is then obtained as
+    `\operatorname{E}(s) = 2^s \operatorname{E}\left(s, \frac{1}{2}\right)`.
 
     * ``euler(n)`` gives the nth Euler number `E_n`.
     * ``euler(s)`` gives the Euler function `\operatorname{E}(s)`.
@@ -1094,39 +1110,31 @@ class euler(Function):
     """
 
     @classmethod
-    def eval(cls, m, x=None):
-        if m.is_zero:
+    def eval(cls, n, x=None):
+        if n.is_zero:
             return S.One
-        elif (m+1).is_zero:
+        elif (n+1).is_zero:
             if x is None:
                 return S.Pi/2
             from sympy.functions.special.gamma_functions import digamma
             return digamma((x+1)/2) - digamma(x/2)
-        elif m.is_integer is False or m.is_nonnegative is False:
+        elif n.is_integer is False or n.is_nonnegative is False:
             return
         # Euler numbers
         elif x is None:
-            if m.is_odd and m.is_positive:
+            if n.is_odd and n.is_positive:
                 return S.Zero
-            elif m.is_Number:
+            elif n.is_Number:
                 from mpmath import mp
-                m = m._to_mpmath(mp.prec)
-                res = mp.eulernum(m, exact=True)
+                n = n._to_mpmath(mp.prec)
+                res = mp.eulernum(n, exact=True)
                 return Integer(res)
         # Euler polynomials
-        elif m.is_Number:
-            m = int(m)
-            reim = pure_complex(x, or_real=True)
-            if reim and all(a.is_Float or a.is_Integer for a in reim) \
-                    and any(a.is_Float for a in reim):
-                from mpmath import mp
-                # XXX ComplexFloat (#12192) would be nice here, above
-                prec = min([a._prec for a in reim if a.is_Float])
-                with workprec(prec):
-                    res = mp.eulerpoly(m, x)
-                return Expr._from_mpmath(res, prec)
-            result = [binomial(m, k)*cls(k)/(2**k)*(x - S.Half)**(m - k) for k in range(m + 1)]
-            return Add(*result).expand()
+        elif n.is_Number:
+            n = int(n)
+            x_ = Dummy("x")
+            result = [binomial(n,k) * cls(k)/(2**k) * (x_-S.Half)**(n-k) for k in range(0, n+1, 2)]
+            return Add(*result).expand().subs(x_, x)
 
     def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
         from sympy.concrete.summations import Sum

@@ -12,6 +12,7 @@ from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.integers import floor
 from sympy.polys.polytools import cancel
 from sympy.series.limits import limit
+from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
@@ -21,8 +22,7 @@ from sympy.functions.combinatorial.numbers import _nT
 from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
 
-from sympy.testing.pytest import (XFAIL, raises, nocache_fail,
-                                  warns_deprecated_sympy)
+from sympy.testing.pytest import raises, nocache_fail, warns_deprecated_sympy
 from sympy.abc import x
 
 
@@ -246,6 +246,8 @@ def test_harmonic():
     assert harmonic(oo, 1 + ip) is zeta(1 + ip)
 
     assert harmonic(0, m) == 0
+    assert harmonic(-1, 2) is S.NaN
+    assert harmonic(-2, n) is S.NaN
 
 
 def test_harmonic_rational():
@@ -316,7 +318,15 @@ def test_harmonic_evalf():
     assert str(harmonic(1.5).evalf(n=10)) == '1.280372306'
     assert str(harmonic(1.5, 2).evalf(n=10)) == '1.154576311'  # issue 7443
     assert str(harmonic(4.0, -3).evalf(n=10)) == '100.0000000'
+    assert str(harmonic(7.0, 1.0).evalf(n=10)) == '2.592857143'
+    assert str(harmonic(1, pi).evalf(n=10)) == '1.000000000'
+    assert str(harmonic(2, pi).evalf(n=10)) == '1.113314732'
+    assert str(harmonic(1000.0, pi).evalf(n=10)) == '1.176241563'
+    assert str(harmonic(I).evalf(n=10)) == '0.6718659855 + 1.076674047*I'
+    assert str(harmonic(I, I).evalf(n=10)) == '-0.3970915266 + 1.9629689*I'
 
+    assert harmonic(-1.0, 1).evalf() is S.NaN
+    assert harmonic(-2.0, 2.0).evalf() is S.NaN
 
 def test_harmonic_rewrite():
     n = Symbol("n")
@@ -333,18 +343,21 @@ def test_harmonic_rewrite():
     assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
     assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
+    assert harmonic(n, x).rewrite("tractable") == zeta(x) - zeta(x, n+1)
 
     _k = Dummy("k")
     assert harmonic(n).rewrite(Sum).dummy_eq(Sum(1/_k, (_k, 1, n)))
     assert harmonic(n, m).rewrite(Sum).dummy_eq(Sum(_k**(-m), (_k, 1, n)))
 
 
-@XFAIL
-def test_harmonic_limit_fail():
-    n = Symbol("n")
-    m = Symbol("m")
-    # For m > 1:
-    assert limit(harmonic(n, m), n, oo) == zeta(m)
+def test_harmonic_calculus():
+    y = Symbol("y", positive=True)
+    assert harmonic(x, 1).limit(x, 0) == 0
+    assert harmonic(x, y).limit(x, 0) == 0
+    assert harmonic(x, 1).series(x, y, 2) == \
+            harmonic(y) + (x - y)*zeta(2, y + 1) + O((x - y)**2, (x, y))
+    assert limit(harmonic(x, y), x, oo) == harmonic(oo, y)
+    assert limit(harmonic(x, y+1), x, oo) == zeta(y+1)
 
 
 def test_euler():
@@ -363,10 +376,13 @@ def test_euler():
     assert euler(n).subs(n, 2) == -1
 
     assert euler(-1) == S.Pi / 2
+    assert euler(-1, 1) == 2*log(2)
     assert euler(-2).evalf() == (2*S.Catalan).evalf()
     assert euler(-3).evalf() == (S.Pi**3 / 16).evalf()
     assert str(euler(2.3).evalf(n=10)) == '-1.052850274'
     assert str(euler(1.2, 3.4).evalf(n=10)) == '3.575613489'
+    assert str(euler(I).evalf(n=10)) == '1.248446443 - 0.7675445124*I'
+    assert str(euler(I, I).evalf(n=10)) == '0.04812930469 + 0.01052411008*I'
 
     assert euler(20).evalf() == 370371188237525.0
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
@@ -397,10 +413,8 @@ def test_euler_polynomials():
     assert isinstance(euler(m, x), euler)
     from sympy.core.numbers import Float
     A = Float('-0.46237208575048694923364757452876131e8')  # from Maple
-    B = euler(19, S.Pi.evalf(32))
-    assert abs((A - B)/A) < 1e-31  # expect low relative error
-    C = euler(19, S.Pi, evaluate=False).evalf(32)
-    assert abs((A - C)/A) < 1e-31
+    B = euler(19, S.Pi).evalf(32)
+    assert abs((A - B)/A) < 1e-31
 
 
 def test_euler_polynomial_rewrite():

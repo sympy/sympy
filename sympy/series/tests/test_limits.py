@@ -649,6 +649,11 @@ def test_issue_8481():
     assert limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
 
 
+def test_issue_8462():
+    assert limit(binomial(n, n/2), n, oo) == oo
+    assert limit(binomial(n, n/2) * 3 ** (-n), n, oo) == 0
+
+
 def test_issue_8635_18176():
     x = Symbol('x', real=True)
     k = Symbol('k', positive=True)

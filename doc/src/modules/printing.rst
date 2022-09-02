@@ -291,6 +291,20 @@ translated in pure Fortran and (iii) a string of Fortran code. A few examples:
     >>> fcode(x - pi**2, human=False)
     ({(pi, '3.1415926535897932d0')}, set(), '      x - pi**2')
 
+SMT-Lib printing
+---------------------------------
+
+.. module:: sympy.printing.smtlib
+
+.. autoclass:: sympy.printing.smtlib.SMTLibPrinter
+   :members:
+
+   .. autoattribute:: SMTLibPrinter.printmethod
+
+   .. autoattribute:: SMTLibPrinter._default_settings
+
+.. autofunction:: sympy.printing.smtlib.smtlib_code
+
 Mathematica code printing
 -------------------------
 

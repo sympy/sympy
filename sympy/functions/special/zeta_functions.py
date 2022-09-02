@@ -506,6 +506,8 @@ class zeta(Function):
             return S.ComplexInfinity
         elif s is S.Infinity:
             return S.One
+        elif a is S.Infinity:
+            return S.Zero
 
         sint = s.is_Integer
         if a is None:
