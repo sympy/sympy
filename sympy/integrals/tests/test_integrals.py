@@ -1718,10 +1718,14 @@ def test_li_integral():
 def test_issue_17473():
     x = Symbol('x')
     n = Symbol('n')
-    assert integrate(sin(x**n), x) == \
-        x*x**n*gamma(S(1)/2 + 1/(2*n))*hyper((S(1)/2 + 1/(2*n),),
-                     (S(3)/2, S(3)/2 + 1/(2*n)),
-                     -x**(2*n)/4)/(2*n*gamma(S(3)/2 + 1/(2*n)))
+    h = S.Half
+    ans = x**(n + 1)*gamma(h + h/n)*hyper((h + h/n,),
+        (3*h, 3*h + h/n), -x**(2*n)/4)/(2*n*gamma(3*h + h/n))
+    got = integrate(sin(x**n), x)
+    assert got == ans
+    _x = Symbol('x', zero=False)
+    reps = {x: _x}
+    assert integrate(sin(_x**n), _x) == ans.xreplace(reps).expand()
 
 
 def test_issue_17671():

@@ -2986,7 +2986,7 @@ def expand_power_base(expr, deep=True, force=False):
     only happen if the base is non-negative or the exponent is an integer.
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy import expand_power_base, sin, cos, exp
+    >>> from sympy import expand_power_base, sin, cos, exp, Symbol
 
     >>> (x*y)**2
     x**2*y**2
@@ -3025,7 +3025,24 @@ def expand_power_base(expr, deep=True, force=False):
     >>> expand_power_base((2*y)**(1+z))
     2**(z + 1)*y**(z + 1)
     >>> ((2*y)**(1+z)).expand()
-    2*2**z*y*y**z
+    2*2**z*y**(z + 1)
+
+    The power that is unexpanded can be expanded safely when
+    ``y != 0``, otherwise different values might be obtained for the expression:
+
+    >>> prev = _
+
+    If we indicate that ``y`` is positive but then replace it with
+    a value of 0 after expansion, the expression becomes 0:
+
+    >>> p = Symbol('p', positive=True)
+    >>> prev.subs(y, p).expand().subs(p, 0)
+    0
+
+    But if ``z = -1`` the expression would not be zero:
+
+    >>> prev.subs(y, 0).subs(z, -1)
+    1
 
     See Also
     ========
@@ -3047,9 +3064,18 @@ def expand_power_exp(expr, deep=True):
     Examples
     ========
 
-    >>> from sympy import expand_power_exp
+    >>> from sympy import expand_power_exp, Symbol
     >>> from sympy.abc import x, y
+    >>> expand_power_exp(3**(y + 2))
+    9*3**y
     >>> expand_power_exp(x**(y + 2))
+    x**(y + 2)
+
+    If ``x = 0`` the value of the expression depends on the
+    value of ``y``; if the expression were expanded the result
+    would be 0. So expansion is only done if ``x != 0``:
+
+    >>> expand_power_exp(Symbol('x', zero=False)**(y + 2))
     x**2*x**y
     """
     return sympify(expr).expand(deep=deep, complex=False, basic=False,

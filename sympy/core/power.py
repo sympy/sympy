@@ -1037,9 +1037,16 @@ class Pow(Expr):
             if isinstance(e, Sum) and e.is_commutative:
                 from sympy.concrete.products import Product
                 return Product(self.func(b, e.function), *e.limits)
-        if e.is_Add and e.is_commutative:
-            return Mul(*[self.func(b, x) for x in e.args])
-        return self.func(b, e)
+        if e.is_Add and (hints.get('force', False) or
+                b.is_zero is False or e._all_nonneg_or_nonppos()):
+            if e.is_commutative:
+                return Mul(*[self.func(b, x) for x in e.args])
+            if b.is_commutative:
+                c, nc = sift(e.args, lambda x: x.is_commutative, binary=True)
+                if c:
+                    return Mul(*[self.func(b, x) for x in c]
+                        )*b**Add._from_args(nc)
+        return self
 
     def _eval_expand_power_base(self, **hints):
         """(a*b)**n -> a**n * b**n"""
@@ -1271,18 +1278,18 @@ class Pow(Expr):
         elif (exp.is_Rational and exp.p < 0 and base.is_Add and
                 abs(exp.p) > exp.q):
             return 1 / self.func(base, -exp)._eval_expand_multinomial()
-        elif exp.is_Add and base.is_Number:
+        elif exp.is_Add and base.is_Number and (hints.get('force', False) or
+                base.is_zero is False or exp._all_nonneg_or_nonppos()):
             #  a + b      a  b
             #  n      --> n  n, where n, a, b are Numbers
-
-            coeff, tail = S.One, S.Zero
+            # XXX should be in expand_power_exp?
+            coeff, tail = [], []
             for term in exp.args:
                 if term.is_Number:
-                    coeff *= self.func(base, term)
+                    coeff.append(self.func(base, term))
                 else:
-                    tail += term
-
-            return coeff * self.func(base, tail)
+                    tail.append(term)
+            return Mul(*(coeff + [self.func(base, Add._from_args(tail))]))
         else:
             return result
 
