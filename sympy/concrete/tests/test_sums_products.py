@@ -948,6 +948,8 @@ def test_factor_expand_subs():
         == Sum(n*_x*_x**n + _x*_x**n, (n, -1, oo))
     assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand(power_exp=False) \
         == Sum(n*x**(n + 1) + x**(n + 1), (n, -1, oo))
+    assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand(force=True) \
+           == Sum(x*x**n, (n, -1, oo)) + Sum(n*x*x**n, (n, -1, oo))
     assert Sum(a*n+a*n**2,(n,0,4)).expand() \
         == Sum(a*n,(n,0,4)) + Sum(a*n**2,(n,0,4))
     assert Sum(_x**a*_x**n,(x,0,3)) \
