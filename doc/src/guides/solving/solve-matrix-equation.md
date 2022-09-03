@@ -148,6 +148,8 @@ Matrix([
 
 ## Working With Symbolic Matrices
 
+*Awaiting content tips*
+
 ## Use the Solution Result
 
 ### Use the Solution as a Vector
@@ -183,17 +185,21 @@ the solution is correct.
 
 ### Extract Elements From the Solution
 
-*List comprehension or slicing*
+Because you can iterate through the elements in a column vector, you can extract
+its elements using standard Python techniques. For example, you can create a
+list of the elements using list comprehension
 
-## *Tradeoffs (speed vs. accuracy, etc.) for function*
+```py
+>>> [element for element in solution]
+[2*e/(c*e + d), 2/(c*e + d)]
+```
 
-### *Tradeoff 1*
+or you can extract individual elements by subscripting ("slicing")
 
-*Tradeoff 1 content*
-
-### *Tradeoff 2*
-
-*Tradeoff 2 content*
+```py
+>>> solution[0]
+2*e/(c*e + d)
+```
 
 ## Equations With No Solution
 
