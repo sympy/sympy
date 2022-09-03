@@ -917,7 +917,7 @@ class harmonic(Function):
             if n.is_negative and (m.is_integer is False or m.is_nonpositive is False):
                 return S.ComplexInfinity if m is S.One else S.NaN
             if n.is_nonnegative:
-                return sum(k**(-m) for k in range(1, int(n)+1))
+                return Add(*(k**(-m) for k in range(1, int(n)+1)))
 
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
