@@ -1401,6 +1401,10 @@ class genocchi(Function):
             return 2 * (1-S(2)**n) * bernoulli(n)
         return 2 * (bernoulli(n, x) - 2**n * bernoulli(n, (x+1) / 2))
 
+    def _eval_rewrite_as_dirichlet_eta(self, n, x=1, **kwargs):
+        from sympy.functions.special.zeta_functions import dirichlet_eta
+        return -2*n * dirichlet_eta(1-n, x)
+
     def _eval_is_integer(self):
         if len(self.args) > 1 and self.args[1] != 1:
             return
