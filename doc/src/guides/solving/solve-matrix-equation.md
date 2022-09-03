@@ -146,29 +146,44 @@ Matrix([
 [  4/(c*e + d)]])
 ```
 
-## *Title*
-
-You can *title* in several ways. 
-
-### *Method 1*
-
-*Method 1 content*
-
-### *Method 2*
-
-*Method 2 content*
-
 ## Working With Symbolic Matrices
 
 ## Use the Solution Result
 
-### *Usage Method 1*
+### Use the Solution as a Vector
 
-*Usage method 1 content*
+You can use the solution result as a vector. For example, to prove that the
+solution $x$ is correct, you can multiply it the matrix $A$ and verify that it
+produces the constants vector $b$:
 
-### *Usage Method 2*
+```py
+>>> from sympy import symbols, simplify
+>>> from sympy.matrices import Matrix
+>>> c, d, e = symbols("c, d, e")
+>>> A = Matrix([[c,d], [1, -e]])
+>>> b = Matrix([2, 0])
+>>> solution = A.solve(b)
+>>> solution
+Matrix([
+[2*e/(c*e + d)],
+[  2/(c*e + d)]])
+>>> (A * solution) - b # Not immediately obvious whether this result is a zeroes vector
+Matrix([
+[2*c*e/(c*e + d) + 2*d/(c*e + d) - 2],
+[                                  0]])
+>>> simplify((A * solution) - b) # simplify reveals that this result is a zeroes vector
+Matrix([
+[0],
+[0]])
+```
 
-*Usage method 2 content*
+Note that we had to use {func}`~sympy.simplify.simplify.simplify` to make SymPy
+simplify the expression in a matrix element to make it immediately obvious that
+the solution is correct.
+
+### Extract Elements From the Solution
+
+*List comprehension or slicing*
 
 ## *Tradeoffs (speed vs. accuracy, etc.) for function*
 
