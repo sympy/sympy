@@ -234,7 +234,7 @@ class besselj(BesselBase):
         elif e.is_negative:
             cdir = 1 if cdir == 0 else cdir
             sign = c*cdir**e
-            if not sign.is_negative and sign.is_real:
+            if not sign.is_negative:
                 # Refer Abramowitz and Stegun 1965, p. 364 for more information on
                 # asymptotic approximation of besselj function.
                 return sqrt(2)*cos(z - pi*(2*nu + 1)/4)/sqrt(pi*z)
@@ -372,7 +372,7 @@ class bessely(BesselBase):
         elif e.is_negative:
             cdir = 1 if cdir == 0 else cdir
             sign = c*cdir**e
-            if not sign.is_negative and sign.is_real:
+            if not sign.is_negative:
                 # Refer Abramowitz and Stegun 1965, p. 364 for more information on
                 # asymptotic approximation of bessely function.
                 return sqrt(2)*(-sin(pi*nu/2 - z + pi/4) + 3*cos(pi*nu/2 - z + pi/4)/(8*z))*sqrt(1/z)/sqrt(pi)
@@ -547,7 +547,7 @@ class besseli(BesselBase):
         elif e.is_negative:
             cdir = 1 if cdir == 0 else cdir
             sign = c*cdir**e
-            if not sign.is_negative and sign.is_real:
+            if not sign.is_negative:
                 # Refer Abramowitz and Stegun 1965, p. 377 for more information on
                 # asymptotic approximation of besseli function.
                 return exp(z)/sqrt(2*pi*z)

@@ -14,7 +14,7 @@ from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.evalf import pure_complex
 from sympy.core.expr import Expr
-from sympy.core.function import Function, expand_mul
+from sympy.core.function import ArgumentIndexError, Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, pi, oo, Rational, Integer
@@ -29,7 +29,7 @@ from sympy.utilities.iterables import multiset, multiset_derangements, iterable
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 
-from mpmath import bernfrac, workprec
+from mpmath import mp, bernfrac, workprec
 from mpmath.libmp import ifib as _ifib
 
 
@@ -873,9 +873,10 @@ class harmonic(Function):
                 cls._functions[m] = f
             return cls._functions[m](int(n))
 
-    def _eval_rewrite_as_polygamma(self, n, m=1, **kwargs):
-        from sympy.functions.special.gamma_functions import polygamma
-        return S.NegativeOne**m/factorial(m - 1) * (polygamma(m - 1, 1) - polygamma(m - 1, n + 1))
+    def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
+        from sympy.functions.special.gamma_functions import gamma, polygamma
+        if m.is_integer and m.is_positive:
+            return S.NegativeOne**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) / gamma(m)
 
     def _eval_rewrite_as_digamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
@@ -929,13 +930,39 @@ class harmonic(Function):
         return self
 
     def _eval_rewrite_as_tractable(self, n, m=1, limitvar=None, **kwargs):
+        from sympy.functions.special.zeta_functions import zeta
         from sympy.functions.special.gamma_functions import polygamma
-        return self.rewrite(polygamma).rewrite("tractable", deep=True)
+        pg = self.rewrite(polygamma)
+        if not isinstance(pg, harmonic):
+            return pg.rewrite("tractable", deep=True)
+        arg = m - S.One
+        if arg.is_nonzero:
+            return (zeta(m) - zeta(m, n+1)).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
-        from sympy.functions.special.gamma_functions import polygamma
-        if all(i.is_number for i in self.args):
-            return self.rewrite(polygamma)._eval_evalf(prec)
+        if not all(x.is_number for x in self.args):
+            return
+        n = self.args[0]._to_mpmath(prec)
+        m = (self.args[1] if len(self.args) > 1 else S.One)._to_mpmath(prec)
+        if mp.isint(n) and n < 0:
+            return S.NaN
+        with workprec(prec):
+            if m == 1:
+                res = mp.harmonic(n)
+            else:
+                res = mp.zeta(m) - mp.zeta(m, n+1)
+        return Expr._from_mpmath(res, prec)
+
+    def fdiff(self, argindex=1):
+        from sympy.functions.special.zeta_functions import zeta
+        if len(self.args) == 2:
+            n, m = self.args
+        else:
+            n, m = self.args + (1,)
+        if argindex == 1:
+            return m * zeta(m+1, n+1)
+        else:
+            raise ArgumentIndexError
 
 
 #----------------------------------------------------------------------------#
