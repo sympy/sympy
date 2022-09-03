@@ -8,7 +8,7 @@ the separate 'factorials' module.
 """
 from math import prod
 from collections import defaultdict
-from typing import Callable, Dict as tDict, Tuple as tTuple
+from typing import Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
