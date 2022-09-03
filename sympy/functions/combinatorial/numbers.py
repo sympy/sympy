@@ -8,7 +8,7 @@ the separate 'factorials' module.
 """
 from math import prod
 from collections import defaultdict
-from typing import Callable, Dict as tDict, Tuple as tTuple
+from typing import Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
@@ -546,6 +546,8 @@ class bernoulli(Function):
         elif n.is_zero:
             return S.One
         elif n.is_integer is False or n.is_nonnegative is False:
+            if x is not None and x.is_Integer and x.is_nonpositive:
+                return S.NaN
             return
         # Bernoulli numbers
         elif x is None:
@@ -781,7 +783,7 @@ class harmonic(Function):
       ``harmonic(n) == harmonic(n, 1)``
 
     This function can be extended to complex `n` and `m` where `n` is not a
-    negative integer as
+    negative integer or `m` is a nonpositive integer as
 
     .. math:: \operatorname{H}_{n,m} = \begin{cases} \zeta(m) - \zeta(m, n+1)
             & m \ne 1 \\ \psi(n+1) + \gamma & m = 1 \end{cases}
@@ -871,7 +873,10 @@ class harmonic(Function):
     >>> limit(harmonic(n, 3), n, oo)
     -polygamma(2, 1)/2
 
-    >>> limit(harmonic(n, m+1), n, oo) # does not hold for m == 1
+    For `m > 1`, `H_{n,m}` tends to `\zeta(m)` in the limit of infinite `n`:
+
+    >>> m = Symbol("m", positive=True)
+    >>> limit(harmonic(n, m+1), n, oo)
     zeta(m + 1)
 
     See Also
@@ -887,10 +892,6 @@ class harmonic(Function):
     .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
 
     """
-
-    # Generate one memoized Harmonic number-generating function for each
-    # order and store it in a dictionary
-    _functions = {}  # type: tDict[Integer, Callable[[int], Rational]]
 
     @classmethod
     def eval(cls, n, m=None):
@@ -910,15 +911,13 @@ class harmonic(Function):
                 return S.Infinity
             elif is_gt(m, S.One):
                 return zeta(m)
+        elif m.is_Integer and m.is_nonpositive:
+            return (bernoulli(1-m, n+1) - bernoulli(1-m)) / (1-m)
         elif n.is_Integer:
-            if n.is_negative:
-                return S.NaN
-            elif m not in cls._functions:
-                @recurrence_memo([0])
-                def f(n, prev):
-                    return prev[-1] + S.One / n**m
-                cls._functions[m] = f
-            return cls._functions[m](int(n))
+            if n.is_negative and (m.is_integer is False or m.is_nonpositive is False):
+                return S.ComplexInfinity if m is S.One else S.NaN
+            if n.is_nonnegative:
+                return Add(*(k**(-m) for k in range(1, int(n)+1)))
 
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
