@@ -135,7 +135,7 @@ def euler_poly(n, x=None, polys=False):
 def andre_poly(n, x=None, polys=False):
     """Generates the André polynomial of degree `n` in `x`.
 
-    Luschny calls these the _Swiss-knife polynomials_.
+    Luschny calls these the *Swiss-knife polynomials*.
 
     Parameters
     ==========
