@@ -574,6 +574,12 @@ class polygamma(Function):
     .. math::
         \psi^{(n)} (z) := \frac{\mathrm{d}^{n+1}}{\mathrm{d} z^{n+1}} \log\Gamma(z).
 
+    For `n` not a nonnegative integer the generalization by Espinosa and Moll [5]_
+    is used:
+
+    .. math:: \psi(s,z) = \frac{\zeta'(s+1, z) + (\gamma + \psi(-s)) \zeta(s+1, z)}
+        {\Gamma(-s)}
+
     Examples
     ========
 
@@ -657,80 +663,10 @@ class polygamma(Function):
     .. [2] http://mathworld.wolfram.com/PolygammaFunction.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma/
     .. [4] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+    .. [5] O. Espinosa and V. Moll, "A generalized polygamma function",
+           *Integral Transforms and Special Functions* (2004), 101-115.
 
     """
-
-    def _eval_evalf(self, prec):
-        n = self.args[0]
-        # the mpmath polygamma implementation valid only for nonnegative integers
-        if n.is_number and n.is_real:
-            if (n.is_integer or n == int(n)) and n.is_nonnegative:
-                return super()._eval_evalf(prec)
-
-    def fdiff(self, argindex=2):
-        if argindex == 2:
-            n, z = self.args[:2]
-            return polygamma(n + 1, z)
-        else:
-            raise ArgumentIndexError(self, argindex)
-
-    def _eval_is_real(self):
-        if self.args[0].is_positive and self.args[1].is_positive:
-            return True
-
-    def _eval_is_complex(self):
-        z = self.args[1]
-        is_negative_integer = fuzzy_and([z.is_negative, z.is_integer])
-        return fuzzy_and([z.is_complex, fuzzy_not(is_negative_integer)])
-
-    def _eval_is_positive(self):
-        if self.args[0].is_positive and self.args[1].is_positive:
-            return self.args[0].is_odd
-
-    def _eval_is_negative(self):
-        if self.args[0].is_positive and self.args[1].is_positive:
-            return self.args[0].is_even
-
-    def _eval_aseries(self, n, args0, x, logx):
-        from sympy.series.order import Order
-        if args0[1] != oo or not \
-                (self.args[0].is_Integer and self.args[0].is_nonnegative):
-            return super()._eval_aseries(n, args0, x, logx)
-        z = self.args[1]
-        N = self.args[0]
-
-        if N == 0:
-            # digamma function series
-            # Abramowitz & Stegun, p. 259, 6.3.18
-            r = log(z) - 1/(2*z)
-            o = None
-            if n < 2:
-                o = Order(1/z, x)
-            else:
-                m = ceiling((n + 1)//2)
-                l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
-                r -= Add(*l)
-                o = Order(1/z**n, x)
-            return r._eval_nseries(x, n, logx) + o
-        else:
-            # proper polygamma function
-            # Abramowitz & Stegun, p. 260, 6.4.10
-            # We return terms to order higher than O(x**n) on purpose
-            # -- otherwise we would not be able to return any terms for
-            #    quite a long time!
-            fac = gamma(N)
-            e0 = fac + N*fac/(2*z)
-            m = ceiling((n + 1)//2)
-            for k in range(1, m):
-                fac = fac*(2*k + N - 1)*(2*k + N - 2) / ((2*k)*(2*k - 1))
-                e0 += bernoulli(2*k)*fac/z**(2*k)
-            o = Order(1/z**(2*m), x)
-            if n == 0:
-                o = Order(1/z, x)
-            elif n == 1:
-                o = Order(1/z**2, x)
-            r = e0._eval_nseries(z, n, logx) + o
-            return (-1 * (-1/z)**N * r)._eval_nseries(x, n, logx)
 
     @classmethod
     def eval(cls, n, z):
@@ -739,13 +675,11 @@ class polygamma(Function):
                 nz = unpolarify(z)
                 if z != nz:
                     return polygamma(n, nz)
-
             if n.is_positive:
                 if z is S.Half:
                     return S.NegativeOne**(n + 1)*factorial(n)*(2**(n + 1) - 1)*zeta(n + 1)
-
             if n is S.NegativeOne:
-                return loggamma(z)
+                return loggamma(z) - log(2*pi) / 2
             else:
                 if z.is_Number:
                     if z is S.NaN:
@@ -766,14 +700,11 @@ class polygamma(Function):
                                 return harmonic(z - 1, 1) - S.EulerGamma
                             elif n.is_odd:
                                 return S.NegativeOne**(n + 1)*factorial(n)*zeta(n + 1, z)
-
         if n.is_zero:
             if z is S.NaN:
                 return S.NaN
             elif z.is_Rational:
-
                 p, q = z.as_numer_denom()
-
                 # only expand for small denominators to avoid creating long expressions
                 if q <= 5:
                     return expand_func(polygamma(S.Zero, z, evaluate=False))
@@ -786,6 +717,31 @@ class polygamma(Function):
                     return S.Infinity
 
         # TODO n == 1 also can do some rational z
+
+    def _eval_is_real(self):
+        if self.args[0].is_positive and self.args[1].is_positive:
+            return True
+
+    def _eval_is_complex(self):
+        z = self.args[1]
+        is_negative_integer = fuzzy_and([z.is_negative, z.is_integer])
+        return fuzzy_and([z.is_complex, fuzzy_not(is_negative_integer)])
+
+    def _eval_is_positive(self):
+        n, z = self.args
+        if n.is_positive:
+            if n.is_odd and z.is_real:
+                return True
+            if n.is_even and z.is_positive:
+                return False
+
+    def _eval_is_negative(self):
+        n, z = self.args
+        if n.is_positive:
+            if n.is_even and z.is_positive:
+                return True
+            if n.is_odd and z.is_real:
+                return False
 
     def _eval_expand_func(self, **hints):
         n, z = self.args
@@ -831,12 +787,18 @@ class polygamma(Function):
                 z0 = z + n
                 return part_1 - Add(*[1 / (z0 - 1 - k) for k in range(n)])
 
+        if n == -1:
+            return loggamma(z) - log(2*pi) / 2
+        if n.is_integer is False or n.is_nonnegative is False:
+            s = Dummy("s")
+            dzt = zeta(s, z).diff(s).subs(s, n+1)
+            return (dzt + (S.EulerGamma + digamma(-n)) * zeta(n+1, z)) / gamma(-n)
+
         return polygamma(n, z)
 
     def _eval_rewrite_as_zeta(self, n, z, **kwargs):
-        if n.is_integer:
-            if (n - S.One).is_nonnegative:
-                return S.NegativeOne**(n + 1)*factorial(n)*zeta(n + 1, z)
+        if n.is_integer and n.is_positive:
+            return S.NegativeOne**(n + 1)*factorial(n)*zeta(n + 1, z)
 
     def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
         if n.is_integer:
@@ -853,6 +815,68 @@ class polygamma(Function):
             return o.getn() * log(x)
         else:
             return self.func(n, z)
+
+    def fdiff(self, argindex=2):
+        if argindex == 2:
+            n, z = self.args[:2]
+            return polygamma(n + 1, z)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        if args0[1] != oo or not \
+                (self.args[0].is_Integer and self.args[0].is_nonnegative):
+            return super()._eval_aseries(n, args0, x, logx)
+        z = self.args[1]
+        N = self.args[0]
+
+        if N == 0:
+            # digamma function series
+            # Abramowitz & Stegun, p. 259, 6.3.18
+            r = log(z) - 1/(2*z)
+            o = None
+            if n < 2:
+                o = Order(1/z, x)
+            else:
+                m = ceiling((n + 1)//2)
+                l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
+                r -= Add(*l)
+                o = Order(1/z**n, x)
+            return r._eval_nseries(x, n, logx) + o
+        else:
+            # proper polygamma function
+            # Abramowitz & Stegun, p. 260, 6.4.10
+            # We return terms to order higher than O(x**n) on purpose
+            # -- otherwise we would not be able to return any terms for
+            #    quite a long time!
+            fac = gamma(N)
+            e0 = fac + N*fac/(2*z)
+            m = ceiling((n + 1)//2)
+            for k in range(1, m):
+                fac = fac*(2*k + N - 1)*(2*k + N - 2) / ((2*k)*(2*k - 1))
+                e0 += bernoulli(2*k)*fac/z**(2*k)
+            o = Order(1/z**(2*m), x)
+            if n == 0:
+                o = Order(1/z, x)
+            elif n == 1:
+                o = Order(1/z**2, x)
+            r = e0._eval_nseries(z, n, logx) + o
+            return (-1 * (-1/z)**N * r)._eval_nseries(x, n, logx)
+
+    def _eval_evalf(self, prec):
+        if not all(i.is_number for i in self.args):
+            return
+        s = self.args[0]._to_mpmath(prec+12)
+        z = self.args[1]._to_mpmath(prec+12)
+        with workprec(prec+12):
+            if mp.isint(s) and s >= 0:
+                res = mp.polygamma(s, z)
+            else:
+                zt = mp.zeta(s+1, z)
+                dzt = mp.zeta(s+1, z, 1)
+                res = (dzt + (mp.euler + mp.digamma(-s)) * zt) * mp.rgamma(-s)
+        return Expr._from_mpmath(res, prec)
 
 
 class loggamma(Function):
@@ -936,8 +960,8 @@ class loggamma(Function):
     >>> series(loggamma(x), x, 0, 4).cancel()
     -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + O(x**4)
 
-    We can numerically evaluate the ``gamma`` function to arbitrary precision
-    on the whole complex plane:
+    We can numerically evaluate the ``loggamma`` function
+    to arbitrary precision on the whole complex plane:
 
     >>> from sympy import I
     >>> loggamma(5).evalf(30)
