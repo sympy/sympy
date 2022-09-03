@@ -304,9 +304,13 @@ Traceback (most recent call last):
 NotImplementedError: solve: Cannot solve -y(x)**2 + Derivative(y(x), (x, 3))
 ```
 
-### Equations With No Analytical Solution
+### Equations With No Closed-Form Solution
 
-*Equations with no analytical solution content*
+Some systems of differential equations have no closed-form solution because they
+are chaotic, for example the [Lorenz
+system](https://en.wikipedia.org/wiki/Lorenz_system#Overview). For such cases,
+you can solve the equations numerically as mentioned in
+[](#alternatives-to-consider).
 
 Please post the problem on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
