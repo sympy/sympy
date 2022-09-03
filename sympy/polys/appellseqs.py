@@ -60,7 +60,7 @@ def appell_poly(n, seq, v, f, K, x=None, polys=False):
     """
     if n < 0:
         raise ValueError(
-            "Cannot generate Appell sequence polynomial of order %s" % n)
+            "Cannot generate Appell sequence polynomial of index %s" % n)
     poly = DMP(dup_appell(int(n), seq, v, f, K), K)
     if x is not None:
         poly = Poly.new(poly, x)

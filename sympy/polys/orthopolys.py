@@ -46,8 +46,7 @@ def jacobi_poly(n, a, b, x=None, polys=False):
         coefficients.
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
     if n < 0:
         raise ValueError("Cannot generate Jacobi polynomial of degree %s" % n)
@@ -90,8 +89,7 @@ def gegenbauer_poly(n, a, x=None, polys=False):
         Decides minimal domain for the list of
         coefficients.
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
     if n < 0:
         raise ValueError(
@@ -130,8 +128,7 @@ def chebyshevt_poly(n, x=None, polys=False):
         `n` decides the degree of polynomial
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
     if n < 0:
         raise ValueError(
@@ -169,8 +166,7 @@ def chebyshevu_poly(n, x=None, polys=False):
         `n` decides the degree of polynomial
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
     if n < 0:
         raise ValueError(
@@ -212,8 +208,7 @@ def hermite_poly(n, x=None, polys=False):
         `n` decides the degree of polynomial
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
     if n < 0:
         raise ValueError("Cannot generate Hermite polynomial of degree %s" % n)
@@ -252,8 +247,7 @@ def legendre_poly(n, x=None, polys=False):
         `n` decides the degree of polynomial
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
     if n < 0:
         raise ValueError("Cannot generate Legendre polynomial of degree %s" % n)
@@ -295,8 +289,7 @@ def laguerre_poly(n, x=None, alpha=None, polys=False):
         Decides minimal domain for the list
         of coefficients.
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
     if n < 0:
         raise ValueError("Cannot generate Laguerre polynomial of degree %s" % n)
@@ -358,8 +351,7 @@ def spherical_bessel_fn(n, x=None, polys=False):
         `n` decides the degree of polynomial
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
 
     Examples
     ========

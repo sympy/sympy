@@ -44,6 +44,10 @@ unicode_whitelist = [
 
     # joint.py uses some unicode for variable names in the docstrings
     r'*/sympy/physics/mechanics/joint.py',
+
+    # Files that contain the name of Désiré André
+    r'*/sympy/polys/appellseqs.py',
+    r'*/sympy/testing/quality_unicode.py'
 ]
 
 unicode_strict_whitelist = [
