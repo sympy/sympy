@@ -13,8 +13,8 @@ Here is an example of solving a polynomial algebraically:
 ```py
 >>> from sympy import solve
 >>> from sympy.abc import x, a, b, c
-solve(a*x**2 + b*x + c, x, dict=True)
-[{x: (-b + sqrt(-4*a*c + b**2))/(2*a)}, {x: -(b + sqrt(-4*a*c + b**2))/(2*a)}]
+>>> solve(a*x**2 + b*x + c, x, dict=True)
+[{x: (-b - sqrt(-4*a*c + b**2))/(2*a)}, {x: (-b + sqrt(-4*a*c + b**2))/(2*a)}]
 ```
 
 This example reproduces the [quadratic
