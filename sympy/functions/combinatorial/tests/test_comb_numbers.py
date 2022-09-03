@@ -246,8 +246,12 @@ def test_harmonic():
     assert harmonic(oo, 1 + ip) is zeta(1 + ip)
 
     assert harmonic(0, m) == 0
+    assert harmonic(-1, -1) == 0
+    assert harmonic(-1, 0) == -1
+    assert harmonic(-1, 1) is S.ComplexInfinity
     assert harmonic(-1, 2) is S.NaN
-    assert harmonic(-2, n) is S.NaN
+    assert harmonic(-3, -2) == -5
+    assert harmonic(-3, -3) == 9
 
 
 def test_harmonic_rational():
