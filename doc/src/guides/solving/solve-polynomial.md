@@ -44,7 +44,7 @@ on whether you
   one.
 
 ```py
->>> from sympy import solve, roots, real_roots, factor, nroots, RootOf
+>>> from sympy import solve, roots, real_roots, factor, nroots, RootOf, expand
 >>> from sympy import Poly
 >>> from sympy.abc import x, a, b
 >>> expression = (x+2)**2 * (x-3)
@@ -95,6 +95,28 @@ there is no guarantee that they have closed-form solutions at all, as explained
 by the [Abel-Ruffini
 theorem](https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem).
 
+#### {func}`~.factor`
+
+A different approach is to factor a polynomial using {func}`~.factor`, which
+does not give the roots directly but can give you simpler expressions:
+
+```py
+>>> expression_expanded = expand(expression)
+>>> expression_expanded
+x**3 + x**2 - 8*x - 12
+>>> factor(expression_expanded)
+(x - 3)*(x + 2)**2
+>>> symbolic_expanded = expand(symbolic)
+>>> symbolic_expanded
+-a**2*b + a**2*x - 2*a*b*x + 2*a*x**2 - b*x**2 + x**3
+>>> factor(symbolic_expanded)
+(a + x)**2*(-b + x)
+```
+
+### Exact Numeric Solution Without Root Multiplicities
+
+### Exact Numeric Solution With Root Multiplicities
+
 #### {func}`~.real_roots`
 
 If the roots to your polynomial are real, using {func}`~.real_roots` ensures
@@ -105,10 +127,23 @@ that only real (not complex) roots will be returned.
 [-2, -2, 3]
 ```
 
-### Numeric Solution Without Root Multiplicities
+### Approximate Numeric Solution With Root Multiplicities
 
-### Numeric Solution With Root Multiplicities
+#### {func}`~.nroots`
 
+{func}`~.nroots` gives an approximate numerical approximation to the roots of a
+polynomial. This example demonstrates that it can include numerical noise, for
+example a (negligible) imaginary component in what should be a real root:
+
+```py
+>>> nroots(expression)
+[3.0, -2.0 - 4.18482169793536e-14*I, -2.0 + 4.55872552179222e-14*I]
+```
+
+nroots(expression)
+# [3.00000000000000,
+#  -2.0 - 4.18482169793536e-14*I,
+#  -2.0 + 4.55872552179222e-14*I]
 ## Use the Solution Result
 
 ### *Usage Method 1*
