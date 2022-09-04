@@ -745,20 +745,19 @@ class Truss:
         supports and loads.
 
         .. note::
-            The user must be careful while entering load values their
-            directions. The draw function assumes a sign convention which
+            The user must be careful while entering load values in their
+            directions. The draw function assumes a sign convention that
             is used for plotting loads.
 
-            Given a right handed coordinate system with XYZ coordinates,
-            the supports are assumed to be such that reaction forces of a
-            pinned support are in the +X and +Y direction while those of a
-            roller support are in the +Y direction. For the load, the range
-            of angles one can input goes all the way to 360 degrees which, in the
-            plot, is the angle that the load vector makes with positive x-axis in the
-            antilockwise direction.
+            Given a right-handed coordinate system with XYZ coordinates,
+            the supports are assumed to be such that the reaction forces of a
+            pinned support is in the +X and +Y direction while those of a
+            roller support is in the +Y direction. For the load, the range
+            of angles, one can input goes all the way to 360 degrees which, in the
+            the plot is the angle that the load vector makes with the positive x-axis in the anticlockwise direction.
 
-            For example, for a 90 degree angle, the load will be a vertically
-            directed along +Y while a 270 degrees angle denotes a vertical
+            For example, for a 90-degree angle, the load will be a vertically
+            directed along +Y while a 270-degree angle denotes a vertical
             load as well but along -Y.
 
         Examples
