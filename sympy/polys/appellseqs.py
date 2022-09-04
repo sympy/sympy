@@ -45,7 +45,7 @@ def bernoulli_poly(n, x=None, polys=False):
 
     `\operatorname{B}_n(x)` is the unique polynomial satisfying
 
-    .. math :: \int_{x}^{x+1} B_n(t) \,dt = x^n.
+    .. math :: \int_{x}^{x+1} \operatorname{B}_n(t) \,dt = x^n.
 
     Based on this, we have for nonnegative integer `s` and integer
     `a` and `b`
@@ -118,7 +118,7 @@ def bernoulli_c_poly(n, x=None, polys=False):
     r"""Generates the central Bernoulli polynomial `\operatorname{B}_n^c(x)`.
 
     These are scaled and shifted versions of the plain Bernoulli polynomials,
-    done in such a way that `operatorname{B}_n^c(x)` is an even or odd function
+    done in such a way that `\operatorname{B}_n^c(x)` is an even or odd function
     for even or odd `n` respectively:
 
     .. math :: \operatorname{B}_n^c(x) = 2^n \operatorname{B}_n
