@@ -155,7 +155,7 @@ def dup_genocchi(n, K):
 
 @public
 def genocchi_poly(n, x=None, polys=False):
-    """Generates the Genocchi polynomial `\operatorname{G}_n(x)`.
+    r"""Generates the Genocchi polynomial `\operatorname{G}_n(x)`.
 
     `\operatorname{G}_n(x)` is twice the difference between the plain and
     central Bernoulli polynomials, so has degree `n-1`:
