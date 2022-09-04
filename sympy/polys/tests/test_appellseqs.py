@@ -72,6 +72,9 @@ def test_euler_poly():
     assert euler_poly(1).dummy_eq(x - Q(1,2))
     assert euler_poly(1, polys=True) == Poly(x - Q(1,2))
 
+    assert genocchi_poly(9, x) == euler_poly(8, x) * -9
+    assert genocchi_poly(10, x) == euler_poly(9, x) * -10
+
 def test_andre_poly():
     raises(ValueError, lambda: andre_poly(-1, x))
     assert andre_poly(1, x, polys=True) == Poly(x)

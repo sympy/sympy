@@ -5,9 +5,9 @@ An Appell sequence is a zero-indexed sequence of polynomials `p_i(x)`
 satisfying `p_{i+1}'(x)=(i+1)p_i(x)` for all `i`. This definition leads
 to the following iterative algorithm:
 
-.. math :: p_i(x) = i \int_0^x p_{i-1}(t)\,dt + c_i
+.. math :: p_0(x) = c_0,\ p_i(x) = i \int_0^x p_{i-1}(t)\,dt + c_i
 
-where the new constant terms `c_i` are usually determined from the
+The constant coefficients `c_i` are usually determined from the
 just-evaluated integral and `i`.
 
 Appell sequences satisfy the following identity from umbral calculus:
@@ -197,7 +197,11 @@ def dup_euler(n, K):
 
 @public
 def euler_poly(n, x=None, polys=False):
-    """Generates the Euler polynomial `\operatorname{E}_n(x)`.
+    r"""Generates the Euler polynomial `\operatorname{E}_n(x)`.
+
+    These are scaled and reindexed versions of the Genocchi polynomials:
+
+    .. math :: \operatorname{E}_n(x) = -\frac{\operatorname{G}_{n+1}(x)}{n+1}
 
     Parameters
     ==========
@@ -230,9 +234,41 @@ def dup_andre(n, K):
 
 @public
 def andre_poly(n, x=None, polys=False):
-    """Generates the Andre polynomial of degree `n` in `x`.
+    r"""Generates the Andre polynomial `\mathcal{A}_n(x)`.
 
-    Luschny calls these the *Swiss-knife polynomials*.
+    This is the Appell sequence where the constant coefficients form the sequence
+    of Euler numbers ``euler(n)``. As such they have integer coefficients.
+
+    Luschny calls these the *Swiss-knife polynomials* because their values
+    at 0 and 1 can be simply transformed into both the Bernoulli and Euler
+    numbers. Here they are called the Andre polynomials because
+    `|\mathcal{A}_n(n\bmod 2)|` for `n \ge 0` generates what Luschny calls
+    the *Andre numbers*, A000111 in the OEIS.
+
+    Examples
+    ========
+
+    >>> from sympy import bernoulli, euler, genocchi
+    >>> from sympy.abc import x
+    >>> from sympy.polys import andre_poly
+    >>> andre_poly(9, x)
+    x**9 - 36*x**7 + 630*x**5 - 5124*x**3 + 12465*x
+
+    >>> [andre_poly(n, 0) for n in range(11)]
+    [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0, -50521]
+    >>> [euler(n) for n in range(11)]
+    [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0, -50521]
+    >>> [andre_poly(n-1, 1) * n / (4**n - 2**n) for n in range(1, 11)]
+    [1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
+    >>> [bernoulli(n) for n in range(1, 11)]
+    [1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66]
+    >>> [-andre_poly(n-1, -1) * n / (-2)**(n-1) for n in range(1, 11)]
+    [-1, -1, 0, 1, 0, -3, 0, 17, 0, -155]
+    >>> [genocchi(n) for n in range(1, 11)]
+    [-1, -1, 0, 1, 0, -3, 0, 17, 0, -155]
+
+    >>> [abs(andre_poly(n, n%2)) for n in range(11)]
+    [1, 1, 1, 2, 5, 16, 61, 272, 1385, 7936, 50521]
 
     Parameters
     ==========
