@@ -4,7 +4,7 @@ to 2D Trusses.
 """
 
 
-from cmath import inf
+from cmath import atan, inf
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol
@@ -14,7 +14,7 @@ from sympy.external.importtools import import_module
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import zeros
 import math
-from sympy.plotting import plot, plot_parametric
+from sympy.plotting import plot
 from sympy.utilities.decorator import doctest_depends_on
 
 numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
@@ -754,7 +754,8 @@ class Truss:
             pinned support are in the +X and +Y direction while those of a
             roller support are in the +Y direction. For the load, the range
             of angles one can input goes all the way to 360 degrees which, in the
-            plot, is the angle that the load vector makes with positive x-axis.
+            plot, is the angle that the load vector makes with positive x-axis in the
+            antilockwise direction.
 
             For example, for a 90 degree angle, the load will be a vertically
             directed along +Y while a 270 degrees angle denotes a vertical
@@ -769,37 +770,51 @@ class Truss:
             :include-source: True
 
             >>> from sympy.physics.continuum_mechanics.truss import Truss
+            >>> import math
             >>> t = Truss()
-            >>> t.add_node("node_1", 0, 0)
-            >>> t.add_node("node_2", 6, 0)
-            >>> t.add_node("node_3", 2, 6)
-            >>> t.add_node("node_4", 2, 0)
-            >>> t.add_member("member_1", "node_1", "node_4")
-            >>> t.add_member("member_2", "node_2", "node_4")
-            >>> t.add_member("member_3", "node_1", "node_3")
-            >>> t.add_member("member_4", "node_2", "node_3")
-            >>> t.add_member("member_5", "node_3", "node_4")
-            >>> t.apply_load("node_4", magnitude=10, direction=270)
-            >>> t.apply_support("node_1", type="pinned")
-            >>> t.apply_support("node_2", type="roller")
+            >>> t.add_node("A", -4, 0)
+            >>> t.add_node("B", 0, 0)
+            >>> t.add_node("C", 4, 0)
+            >>> t.add_node("D", 8, 0)
+            >>> t.add_node("E", 6, 2/math.sqrt(3))
+            >>> t.add_node("F", 2, 2*math.sqrt(3))
+            >>> t.add_node("G", -2, 2/math.sqrt(3))
+            >>> t.add_member("AB","A","B")
+            >>> t.add_member("BC","B","C")
+            >>> t.add_member("CD","C","D")
+            >>> t.add_member("AG","A","G")
+            >>> t.add_member("GB","G","B")
+            >>> t.add_member("GF","G","F")
+            >>> t.add_member("BF","B","F")
+            >>> t.add_member("FC","F","C")
+            >>> t.add_member("CE","C","E")
+            >>> t.add_member("FE","F","E")
+            >>> t.add_member("DE","D","E")
+            >>> t.apply_support("A","pinned")
+            >>> t.apply_support("D","roller")
+            >>> t.apply_load("G", 3, 90)
+            >>> t.apply_load("E", 3, 90)
+            >>> t.apply_load("F", 2, 90)
             >>> p = t.draw()
             >>> p
             Plot object containing:
-            [0]: cartesian line: 0 for x over (0.0, 2.0)
-            [1]: cartesian line: 0 for x over (2.0, 6.0)
-            [2]: cartesian line: 3*x for x over (0.0, 2.0)
-            [3]: cartesian line: 9 - 3*x/2 for x over (2.0, 6.0)
-            [4]: parametric cartesian line: (2, y) for y over (0.0, 6.0)
+            [0]: cartesian line: 1 for x over (1.0, 1.0)
             >>> p.show()
         """
         if not numpy:
             raise ImportError("To use this function numpy module is required")
 
+        x = Symbol('x')
+
         markers = []
         annotations = []
+        rectangles = []
 
         node_markers = self._draw_nodes()
         markers += node_markers
+
+        member_rectangles = self._draw_members()
+        rectangles += member_rectangles
 
         support_markers = self._draw_supports()
         markers += support_markers
@@ -815,12 +830,9 @@ class Truss:
         lim = max(xmax*1.1-xmin*0.8+1, ymax*1.1-ymin*0.8+1)
 
         if lim==xmax*1.1-xmin*0.8+1:
-            sing_plot = plot(markers=markers, show=False, annotations=annotations, xlim=(xmin*0.8-0.05*lim, xmax*1.1), ylim=(xmin*0.8-0.05*lim, xmax*1.1), axis=False)
+            sing_plot = plot(1, (x, 1, 1), markers=markers, show=False, annotations=annotations, xlim=(xmin-0.05*lim, xmax*1.1), ylim=(xmin-0.05*lim, xmax*1.1), axis=False, rectangles=rectangles)
         else:
-            sing_plot = plot(markers=markers, show=False, annotations=annotations, xlim=(ymin*0.8-0.05*lim, ymax*1.1), ylim=(ymin*0.8-0.05*lim, ymax*1.1), axis=False)
-
-
-        sing_plot.extend(self._draw_members())
+            sing_plot = plot(1, (x, 1, 1), markers=markers, show=False, annotations=annotations, xlim=(ymin-0.05*lim, ymax*1.1), ylim=(ymin-0.05*lim, ymax*1.1), axis=False, rectangles=rectangles)
 
         return sing_plot
 
@@ -841,23 +853,67 @@ class Truss:
         return node_markers
 
     def _draw_members(self):
-        x = Symbol('x')
-        y = Symbol('y')
 
-        member_plot = plot(show=False)
+        member_rectangles = []
+
+        xmax = max(self._node_position_x)
+        xmin = min(self._node_position_x)
+        ymax = max(self._node_position_y)
+        ymin = min(self._node_position_y)
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
 
         for member in self._members:
             x1 = self._node_coordinates[self._members[member][0]][0]
             y1 = self._node_coordinates[self._members[member][0]][1]
             x2 = self._node_coordinates[self._members[member][1]][0]
             y2 = self._node_coordinates[self._members[member][1]][1]
-            if x1!= x2:
-                p1 = plot(((y2-y1)*x/(x2-x1)+(y2*x1-y1*x2)/(x1-x2), (x, min(x1, x2), max(x1, x2))), show=False, line_color="brown", linewidth=20)
+            if x2!=x1 and y2!=y1:
+                if x2>x1:
+                    member_rectangles.append(
+                        {
+                            'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2),
+                            'height':0.005*max_diff,
+                            'angle':180*atan((y2-y1)/(x2-x1))/pi,
+                            'color':'brown'
+                        }
+                    )
+                else:
+                    member_rectangles.append(
+                        {
+                            'xy':(x2-0.005*max_diff/2, y2-0.005*max_diff/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2),
+                            'height':0.005*max_diff,
+                            'angle':180*atan((y2-y1)/(x2-x1))/pi,
+                            'color':'brown'
+                        }
+                    )
+            elif y2==y1:
+                member_rectangles.append(
+                    {
+                        'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
+                        'width':sqrt((x1-x2)**2+(y1-y2)**2),
+                        'height':0.005*max_diff,
+                        'angle':90*(1-math.copysign(1, x2-x1)),
+                        'color':'brown'
+                    }
+                )
             else:
-                p1 = plot_parametric((x1, y), (y, min(y1, y2), max(y1, y2)), line_color="brown", show=False)
-            member_plot.extend(p1)
+                member_rectangles.append(
+                    {
+                        'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
+                        'width':sqrt((x1-x2)**2+(y1-y2)**2),
+                        'height':0.005*max_diff,
+                        'angle':90*math.copysign(1, y2-y1),
+                        'color':'brown'
+                    }
+                )
 
-        return member_plot
+        return member_rectangles
 
     def _draw_supports(self):
         support_markers = []
