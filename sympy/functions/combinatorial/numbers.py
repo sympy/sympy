@@ -843,10 +843,11 @@ class harmonic(Function):
     polygamma(0, n + 1) + EulerGamma
 
     >>> harmonic(n,3).rewrite(polygamma)
-    polygamma(2, n + 1)/2 - polygamma(2, 1)/2
+    polygamma(2, n + 1)/2 + zeta(3)
 
-    >>> harmonic(n,m).rewrite(polygamma)
-    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/gamma(m)
+    >>> simplify(harmonic(n,m).rewrite(polygamma))
+    Piecewise((polygamma(0, n + 1) + EulerGamma, Eq(m, 1)),
+    (-(-1)**m*polygamma(m - 1, n + 1)/factorial(m - 1) + zeta(m), True))
 
     Integer offsets in the argument can be pulled out:
 
@@ -869,7 +870,7 @@ class harmonic(Function):
     pi**2/6
 
     >>> limit(harmonic(n, 3), n, oo)
-    -polygamma(2, 1)/2
+    zeta(3)
 
     >>> limit(harmonic(n, m+1), n, oo) # does not hold for m == 1
     zeta(m + 1)
@@ -923,7 +924,9 @@ class harmonic(Function):
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
         if m.is_integer and m.is_positive:
-            return S.NegativeOne**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) / gamma(m)
+            return Piecewise((polygamma(0, n+1) + S.EulerGamma, Eq(m, 1)),
+                    (S.NegativeOne**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) /
+                    gamma(m), True))
 
     def _eval_rewrite_as_digamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma

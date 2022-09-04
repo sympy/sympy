@@ -250,6 +250,7 @@ def test_polygamma():
 
     assert polygamma(0, -9) is zoo
     assert polygamma(0, -1) is zoo
+    assert polygamma(Rational(3, 2), -1) is zoo
 
     assert polygamma(0, 0) is zoo
 
@@ -356,6 +357,7 @@ def test_polygamma():
 
     assert str(polygamma(pi, 3).evalf(n=10)) == "0.1169314564"
     assert str(polygamma(2.3, 1.0).evalf(n=10)) == "-3.003302909"
+    assert str(polygamma(-1, 1).evalf(n=10)) == "-0.9189385332" # not zero
     assert str(polygamma(I, 1).evalf(n=10)) == "-3.109856569 + 1.89089016*I"
     assert str(polygamma(1, I).evalf(n=10)) == "-0.5369999034 - 0.7942335428*I"
     assert str(polygamma(I, I).evalf(n=10)) == "6.332362889 + 45.92828268*I"

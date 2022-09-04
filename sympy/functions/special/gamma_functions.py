@@ -77,7 +77,7 @@ class gamma(Function):
 
     >>> from sympy import series
     >>> series(gamma(x), x, 0, 3)
-    1/x - EulerGamma + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma*pi**2/12 + polygamma(2, 1)/6 - EulerGamma**3/6) + O(x**3)
+    1/x - EulerGamma + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma*pi**2/12 - zeta(3)/3 - EulerGamma**3/6) + O(x**3)
 
     We can numerically evaluate the ``gamma`` function to arbitrary precision
     on the whole complex plane:
@@ -670,53 +670,33 @@ class polygamma(Function):
 
     @classmethod
     def eval(cls, n, z):
-        if n.is_integer:
-            if n.is_nonnegative:
-                nz = unpolarify(z)
-                if z != nz:
-                    return polygamma(n, nz)
-            if n.is_positive:
-                if z is S.Half:
-                    return S.NegativeOne**(n + 1)*factorial(n)*(2**(n + 1) - 1)*zeta(n + 1)
-            if n is S.NegativeOne:
-                return loggamma(z) - log(2*pi) / 2
-            else:
-                if z.is_Number:
-                    if z is S.NaN:
-                        return S.NaN
-                    elif z is S.Infinity:
-                        if n.is_Number:
-                            if n.is_zero:
-                                return S.Infinity
-                            else:
-                                return S.Zero
-                        if n.is_zero:
-                            return S.Infinity
-                    elif z.is_Integer:
-                        if z.is_nonpositive:
-                            return S.ComplexInfinity
-                        else:
-                            if n.is_zero:
-                                return harmonic(z - 1, 1) - S.EulerGamma
-                            elif n.is_odd:
-                                return S.NegativeOne**(n + 1)*factorial(n)*zeta(n + 1, z)
-        if n.is_zero:
-            if z is S.NaN:
-                return S.NaN
+        if n is S.NaN or z is S.NaN:
+            return S.NaN
+        elif z is S.Infinity:
+            return S.Infinity if n.is_zero else S.Zero
+        elif z.is_Integer and z.is_nonpositive:
+            return S.ComplexInfinity
+        elif n is S.NegativeOne:
+            return loggamma(z) - log(2*pi) / 2
+        elif n.is_zero:
+            if z is -oo or z.extract_multiplicatively(I) in (oo, -oo):
+                return S.Infinity
+            elif z.is_Integer:
+                return harmonic(z-1) - S.EulerGamma
             elif z.is_Rational:
+                # TODO n == 1 also can do some rational z
                 p, q = z.as_numer_denom()
                 # only expand for small denominators to avoid creating long expressions
-                if q <= 5:
+                if q <= 6:
                     return expand_func(polygamma(S.Zero, z, evaluate=False))
-
-            elif z in (S.Infinity, S.NegativeInfinity):
-                return S.Infinity
-            else:
-                t = z.extract_multiplicatively(S.ImaginaryUnit)
-                if t in (S.Infinity, S.NegativeInfinity):
-                    return S.Infinity
-
-        # TODO n == 1 also can do some rational z
+        elif n.is_integer and n.is_nonnegative:
+            nz = unpolarify(z)
+            if z != nz:
+                return polygamma(n, nz)
+            if z.is_Integer:
+                return S.NegativeOne**(n+1) * factorial(n) * zeta(n+1, z)
+            elif z is S.Half:
+                return S.NegativeOne**(n+1) * factorial(n) * (2**(n+1)-1) * zeta(n+1)
 
     def _eval_is_real(self):
         if self.args[0].is_positive and self.args[1].is_positive:
@@ -869,6 +849,8 @@ class polygamma(Function):
             return
         s = self.args[0]._to_mpmath(prec+12)
         z = self.args[1]._to_mpmath(prec+12)
+        if mp.isint(z) and z <= 0:
+            return S.ComplexInfinity
         with workprec(prec+12):
             if mp.isint(s) and s >= 0:
                 res = mp.polygamma(s, z)
@@ -958,7 +940,7 @@ class loggamma(Function):
 
     >>> from sympy import series
     >>> series(loggamma(x), x, 0, 4).cancel()
-    -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + O(x**4)
+    -log(x) - EulerGamma*x + pi**2*x**2/12 - x**3*zeta(3)/3 + O(x**4)
 
     We can numerically evaluate the ``loggamma`` function
     to arbitrary precision on the whole complex plane:
