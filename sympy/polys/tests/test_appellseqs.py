@@ -2,7 +2,7 @@
 from sympy.core.numbers import Rational as Q
 from sympy.polys.polytools import Poly
 from sympy.testing.pytest import raises
-from sympy.polys.appellseqs import (bernoulli_poly, central_bernoulli_poly,
+from sympy.polys.appellseqs import (bernoulli_poly, bernoulli_c_poly,
     euler_poly, genocchi_poly, andre_poly)
 from sympy.abc import x
 
@@ -21,20 +21,23 @@ def test_bernoulli_poly():
     assert bernoulli_poly(1).dummy_eq(x - Q(1,2))
     assert bernoulli_poly(1, polys=True) == Poly(x - Q(1,2))
 
-def test_central_bernoulli_poly():
-    raises(ValueError, lambda: central_bernoulli_poly(-1, x))
-    assert central_bernoulli_poly(1, x, polys=True) == Poly(x, domain='QQ')
+def test_bernoulli_c_poly():
+    raises(ValueError, lambda: bernoulli_c_poly(-1, x))
+    assert bernoulli_c_poly(1, x, polys=True) == Poly(x, domain='QQ')
 
-    assert central_bernoulli_poly(0, x) == 1
-    assert central_bernoulli_poly(1, x) == x
-    assert central_bernoulli_poly(2, x) == x**2 - Q(1,3)
-    assert central_bernoulli_poly(3, x) == x**3 - x
-    assert central_bernoulli_poly(4, x) == x**4 - 2*x**2 + Q(7,15)
-    assert central_bernoulli_poly(5, x) == x**5 - Q(10,3)*x**3 + Q(7,3)*x
-    assert central_bernoulli_poly(6, x) == x**6 - 5*x**4 + 7*x**2 - Q(31,21)
+    assert bernoulli_c_poly(0, x) == 1
+    assert bernoulli_c_poly(1, x) == x
+    assert bernoulli_c_poly(2, x) == x**2 - Q(1,3)
+    assert bernoulli_c_poly(3, x) == x**3 - x
+    assert bernoulli_c_poly(4, x) == x**4 - 2*x**2 + Q(7,15)
+    assert bernoulli_c_poly(5, x) == x**5 - Q(10,3)*x**3 + Q(7,3)*x
+    assert bernoulli_c_poly(6, x) == x**6 - 5*x**4 + 7*x**2 - Q(31,21)
 
-    assert central_bernoulli_poly(1).dummy_eq(x)
-    assert central_bernoulli_poly(1, polys=True) == Poly(x, domain='QQ')
+    assert bernoulli_c_poly(1).dummy_eq(x)
+    assert bernoulli_c_poly(1, polys=True) == Poly(x, domain='QQ')
+
+    assert 2**8 * bernoulli_poly(8, (x+1)/2).expand() == bernoulli_c_poly(8, x)
+    assert 2**9 * bernoulli_poly(9, (x+1)/2).expand() == bernoulli_c_poly(9, x)
 
 def test_genocchi_poly():
     raises(ValueError, lambda: genocchi_poly(-1, x))
@@ -50,6 +53,9 @@ def test_genocchi_poly():
 
     assert genocchi_poly(2).dummy_eq(-2*x + 1)
     assert genocchi_poly(2, polys=True) == Poly(-2*x + 1)
+
+    assert 2 * (bernoulli_poly(8, x) - bernoulli_c_poly(8, x)) == genocchi_poly(8, x)
+    assert 2 * (bernoulli_poly(9, x) - bernoulli_c_poly(9, x)) == genocchi_poly(9, x)
 
 def test_euler_poly():
     raises(ValueError, lambda: euler_poly(-1, x))

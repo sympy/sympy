@@ -170,9 +170,8 @@ Appell sequences
 
 .. currentmodule:: sympy.polys.appellseqs
 
-.. autofunction:: appell_poly
 .. autofunction:: bernoulli_poly
-.. autofunction:: central_bernoulli_poly
+.. autofunction:: bernoulli_c_poly
 .. autofunction:: genocchi_poly
 .. autofunction:: euler_poly
 .. autofunction:: andre_poly
