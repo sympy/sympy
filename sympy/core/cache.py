@@ -165,7 +165,7 @@ def cached_property(func):
     return property(propfunc)
 
 
-def lazy_function(module : str, name : Union[str, List[str]]) -> Callable:
+def lazy_function(module : str, name : str) -> Callable:
     """ Create a lazy proxy for a function in a module
 
     The module containing the function is not imported until the function is used.
@@ -210,5 +210,5 @@ def lazy_function(module : str, name : Union[str, List[str]]) -> Callable:
     return LazyFunction()
 
 def lazy_functions(module : str, name : List[str]) -> List[Callable]:
-    """ Create a lazy proxies for functions in a module """
+    """ Create lazy proxies for functions in a module """
     return [lazy_function(module, n) for n in name]

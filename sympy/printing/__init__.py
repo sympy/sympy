@@ -10,7 +10,7 @@ from .tableform import TableForm
 # lazy import of functions
 latex, print_latex, multiline_latex = lazy_functions('sympy.printing.latex', ['latex', 'print_latex', 'multiline_latex'])
 mathml, print_mathml= lazy_functions('sympy.printing.mathml', ['mathml', 'print_mathml'])
-python, print_python = lazy_function('sympy.printing.python', ['python', 'print_python'])
+python, print_python = lazy_functions('sympy.printing.python', ['python', 'print_python'])
 print_ccode, print_fcode= lazy_functions('sympy.printing.codeprinter', ['print_ccode', 'print_fcode'])
 ccode, fcode, cxxcode = lazy_functions('sympy.printing.codeprinter', ['ccode', 'fcode', 'cxxcode'])
 glsl_code = lazy_function('sympy.printing.glsl', 'glsl_code')
