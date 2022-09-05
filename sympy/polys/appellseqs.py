@@ -21,23 +21,22 @@ References
 .. [2] Peter Luschny, "An introduction to the Bernoulli function",
        https://arxiv.org/abs/2009.06743
 """
-from sympy.core.symbol import Dummy
 from sympy.polys.densearith import dup_mul_ground, dup_sub_ground
 from sympy.polys.densetools import dup_eval, dup_integrate
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.polyclasses import DMP
-from sympy.polys.polytools import Poly, PurePoly
+from sympy.polys.polytools import named_poly
 from sympy.utilities import public
 
 def dup_bernoulli(n, K):
     """Low-level implementation of Bernoulli polynomials."""
-    seq = [[1], [1, K(-1,2)]]
+    if n < 1:
+        return [1]
+    p = [1, K(-1,2)]
     for i in range(2, n+1):
-        q = dup_integrate(dup_mul_ground(seq[-1], i, K), 1, K)
-        if i&1 ^ 1:
-            q = dup_sub_ground(q, dup_eval(q, K(1,2), K) * K(1<<(i-1), (1<<i)-1), K)
-        seq.append(q)
-    return seq[n]
+        p = dup_integrate(dup_mul_ground(p, i, K), 1, K)
+        if i % 2 == 0:
+            p = dup_sub_ground(p, dup_eval(p, K(1,2), K) * K(1<<(i-1), (1<<i)-1), K)
+    return p
 
 @public
 def bernoulli_poly(n, x=None, polys=False):
@@ -93,25 +92,17 @@ def bernoulli_poly(n, x=None, polys=False):
 
     .. [1] https://en.wikipedia.org/wiki/Bernoulli_polynomials
     """
-    if n < 0:
-        raise ValueError("Cannot generate Bernoulli polynomial of degree %s" % n)
-    poly = DMP(dup_bernoulli(int(n), QQ), QQ)
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
-    return poly if polys else poly.as_expr()
+    return named_poly(n, dup_bernoulli, QQ, "Bernoulli polynomial", (x,), polys)
 
 
 def dup_bernoulli_c(n, K):
     """Low-level implementation of central Bernoulli polynomials."""
-    seq = [[1], [1, 0]]
-    for i in range(2, n+1):
-        q = dup_integrate(dup_mul_ground(seq[-1], i, K), 1, K)
-        if i&1 ^ 1:
-            q = dup_sub_ground(q, dup_eval(q, 1, K) * K((1<<(i-1))-1, (1<<i)-1), K)
-        seq.append(q)
-    return seq[n]
+    p = [1]
+    for i in range(1, n+1):
+        p = dup_integrate(dup_mul_ground(p, i, K), 1, K)
+        if i % 2 == 0:
+            p = dup_sub_ground(p, dup_eval(p, 1, K) * K((1<<(i-1))-1, (1<<i)-1), K)
+    return p
 
 @public
 def bernoulli_c_poly(n, x=None, polys=False):
@@ -133,25 +124,19 @@ def bernoulli_c_poly(n, x=None, polys=False):
     polys : bool, optional
         If True, return a Poly, otherwise (default) return an expression.
     """
-    if n < 0:
-        raise ValueError("Cannot generate central Bernoulli polynomial of degree %s" % n)
-    poly = DMP(dup_bernoulli_c(int(n), QQ), QQ)
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
-    return poly if polys else poly.as_expr()
+    return named_poly(n, dup_bernoulli_c, QQ, "central Bernoulli polynomial", (x,), polys)
 
 
 def dup_genocchi(n, K):
     """Low-level implementation of Genocchi polynomials."""
-    seq = [[0], [-1]]
+    if n < 1:
+        return [0]
+    p = [-1]
     for i in range(2, n+1):
-        q = dup_integrate(dup_mul_ground(seq[-1], i, K), 1, K)
-        if i&1 ^ 1:
-            q = dup_sub_ground(q, dup_eval(q, 1, K) >> 1, K)
-        seq.append(q)
-    return seq[n]
+        p = dup_integrate(dup_mul_ground(p, i, K), 1, K)
+        if i % 2 == 0:
+            p = dup_sub_ground(p, dup_eval(p, 1, K) >> 1, K)
+    return p
 
 @public
 def genocchi_poly(n, x=None, polys=False):
@@ -175,25 +160,17 @@ def genocchi_poly(n, x=None, polys=False):
     polys : bool, optional
         If True, return a Poly, otherwise (default) return an expression.
     """
-    if n < 0:
-        raise ValueError("Cannot generate Genocchi polynomial of degree %s" % (n-1))
-    poly = DMP(dup_genocchi(int(n), ZZ), ZZ)
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
-    return poly if polys else poly.as_expr()
+    return named_poly(n, dup_genocchi, ZZ, "Genocchi polynomial", (x,), polys)
 
 
 def dup_euler(n, K):
     """Low-level implementation of Euler polynomials."""
-    seq = [[1], [1, K(-1,2)]]
-    for i in range(2, n+1):
-        q = dup_integrate(dup_mul_ground(seq[-1], i, K), 1, K)
-        if i&1:
-            q = dup_sub_ground(q, dup_eval(q, 1, K) / 2, K)
-        seq.append(q)
-    return seq[n]
+    p = [1]
+    for i in range(1, n+1):
+        p = dup_integrate(dup_mul_ground(p, i, K), 1, K)
+        if i % 2 == 1:
+            p = dup_sub_ground(p, dup_eval(p, 1, K) / 2, K)
+    return p
 
 @public
 def euler_poly(n, x=None, polys=False):
@@ -212,32 +189,25 @@ def euler_poly(n, x=None, polys=False):
     polys : bool, optional
         If True, return a Poly, otherwise (default) return an expression.
     """
-    if n < 0:
-        raise ValueError("Cannot generate Euler polynomial of degree %s" % n)
-    poly = DMP(dup_euler(int(n), QQ), QQ)
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
-    return poly if polys else poly.as_expr()
+    return named_poly(n, dup_euler, QQ, "Euler polynomial", (x,), polys)
 
 
 def dup_andre(n, K):
     """Low-level implementation of Andre polynomials."""
-    seq = [[1], [1, 0]]
-    for i in range(2, n+1):
-        q = dup_integrate(dup_mul_ground(seq[-1], i, K), 1, K)
-        if i&1 ^ 1:
-            q = dup_sub_ground(q, dup_eval(q, 1, K), K)
-        seq.append(q)
-    return seq[n]
+    p = [1]
+    for i in range(1, n+1):
+        p = dup_integrate(dup_mul_ground(p, i, K), 1, K)
+        if i % 2 == 0:
+            p = dup_sub_ground(p, dup_eval(p, 1, K), K)
+    return p
 
 @public
 def andre_poly(n, x=None, polys=False):
     r"""Generates the Andre polynomial `\mathcal{A}_n(x)`.
 
     This is the Appell sequence where the constant coefficients form the sequence
-    of Euler numbers ``euler(n)``. As such they have integer coefficients.
+    of Euler numbers ``euler(n)``. As such they have integer coefficients
+    and parities matching the parity of `n`.
 
     Luschny calls these the *Swiss-knife polynomials* because their values
     at 0 and 1 can be simply transformed into both the Bernoulli and Euler
@@ -285,11 +255,4 @@ def andre_poly(n, x=None, polys=False):
     .. [1] Peter Luschny, "An introduction to the Bernoulli function",
            https://arxiv.org/abs/2009.06743
     """
-    if n < 0:
-        raise ValueError("Cannot generate Andre polynomial of degree %s" % n)
-    poly = DMP(dup_andre(int(n), ZZ), ZZ)
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
-    return poly if polys else poly.as_expr()
+    return named_poly(n, dup_andre, ZZ, "Andre polynomial", (x,), polys)

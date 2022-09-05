@@ -18,7 +18,7 @@ from sympy.ntheory.factor_ import divisors
 from sympy.utilities.iterables import subsets
 
 from sympy.polys.domains import ZZ, QQ, FractionField
-from sympy.polys.orthopolys import dup_chebyshevt
+from sympy.polys.orthopolys import dup_chebyshev
 from sympy.polys.polyerrors import (
     NotAlgebraic,
     GeneratorsError,
@@ -404,7 +404,7 @@ def _minpoly_sin(ex, x):
                 # for a = pi*p/q with q odd prime, using chebyshevt
                 # write sin(q*a) = mp(sin(a))*sin(a);
                 # the roots of mp(x) are sin(pi*p/q) for p = 1,..., q - 1
-                a = dup_chebyshevt(n, ZZ)
+                a = dup_chebyshev(n, 1, ZZ)
                 return Add(*[x**(n - i - 1)*a[i] for i in range(n)])
             if c.p == 1:
                 if q == 9:
@@ -413,8 +413,8 @@ def _minpoly_sin(ex, x):
             if n % 2 == 1:
                 # for a = pi*p/q with q odd, use
                 # sin(q*a) = 0 to see that the minimal polynomial must be
-                # a factor of dup_chebyshevt(n, ZZ)
-                a = dup_chebyshevt(n, ZZ)
+                # a factor of dup_chebyshev(n, 1, ZZ)
+                a = dup_chebyshev(n, 1, ZZ)
                 a = [x**(n - i)*a[i] for i in range(n + 1)]
                 r = Add(*a)
                 _, factors = factor_list(r)
@@ -449,7 +449,7 @@ def _minpoly_cos(ex, x):
 
             # for a = pi*p/q, cos(q*a) =T_q(cos(a)) = (-1)**p
             n = int(c.q)
-            a = dup_chebyshevt(n, ZZ)
+            a = dup_chebyshev(n, 1, ZZ)
             a = [x**(n - i)*a[i] for i in range(n + 1)]
             r = Add(*a) - (-1)**c.p
             _, factors = factor_list(r)
