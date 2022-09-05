@@ -1,6 +1,6 @@
 """ Caching facility for SymPy """
 from importlib import import_module
-from typing import Callable
+from typing import Callable, List, Union
 
 class _cache(list):
     """ List of cached functions """
@@ -165,7 +165,7 @@ def cached_property(func):
     return property(propfunc)
 
 
-def lazy_function(module : str, name : str) -> Callable:
+def lazy_function(module : str, name : Union[str, List[str]]) -> Callable:
     """ Create a lazy proxy for a function in a module
 
     The module containing the function is not imported until the function is used.
@@ -208,3 +208,7 @@ def lazy_function(module : str, name : str) -> Callable:
             return f"<{__class__.__name__} object at 0x{id(self):x}>: wrapping '{module}.{name}'"
 
     return LazyFunction()
+
+def lazy_functions(module : str, name : List[str]) -> List[Callable]:
+    """ Create a lazy proxies for functions in a module """
+    return [lazy_function(module, n) for n in name]
