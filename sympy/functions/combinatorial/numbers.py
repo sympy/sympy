@@ -8,7 +8,7 @@ the separate 'factorials' module.
 """
 from math import prod
 from collections import defaultdict
-from typing import Callable, Dict as tDict, Tuple as tTuple
+from typing import Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
@@ -23,6 +23,7 @@ from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.ntheory.primetest import isprime, is_square
+from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
 from sympy.utilities.enumerative import MultisetPartitionTraverser
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import multiset, multiset_derangements, iterable
@@ -467,7 +468,7 @@ class bernoulli(Function):
 
     This formula is similar to the sum given in the definition, but
     cuts `\frac{2}{3}` of the terms. For Bernoulli polynomials, we use
-    the formula in the definition.
+    Appell sequences.
 
     For `n` a nonnegative integer and `s`, `a`, `x` arbitrary complex numbers,
 
@@ -546,6 +547,8 @@ class bernoulli(Function):
         elif n.is_zero:
             return S.One
         elif n.is_integer is False or n.is_nonnegative is False:
+            if x is not None and x.is_Integer and x.is_nonpositive:
+                return S.NaN
             return
         # Bernoulli numbers
         elif x is None:
@@ -572,12 +575,8 @@ class bernoulli(Function):
                     cls._highest[case] = i
                 return b
         # Bernoulli polynomials
-        elif n is S.One:
-            return x - S.Half
         elif n.is_Number:
-            n = int(n)
-            result = [binomial(n,k) * cls(k) * x**(n-k) for k in range(0, n+1, 2)]
-            return Add(*result) - S.Half * n * x**(n-1)
+            return bernoulli_poly(n, x)
 
     def _eval_rewrite_as_zeta(self, n, x=1, **kwargs):
         from sympy.functions.special.zeta_functions import zeta
@@ -781,7 +780,7 @@ class harmonic(Function):
       ``harmonic(n) == harmonic(n, 1)``
 
     This function can be extended to complex `n` and `m` where `n` is not a
-    negative integer as
+    negative integer or `m` is a nonpositive integer as
 
     .. math:: \operatorname{H}_{n,m} = \begin{cases} \zeta(m) - \zeta(m, n+1)
             & m \ne 1 \\ \psi(n+1) + \gamma & m = 1 \end{cases}
@@ -871,7 +870,10 @@ class harmonic(Function):
     >>> limit(harmonic(n, 3), n, oo)
     -polygamma(2, 1)/2
 
-    >>> limit(harmonic(n, m+1), n, oo) # does not hold for m == 1
+    For `m > 1`, `H_{n,m}` tends to `\zeta(m)` in the limit of infinite `n`:
+
+    >>> m = Symbol("m", positive=True)
+    >>> limit(harmonic(n, m+1), n, oo)
     zeta(m + 1)
 
     See Also
@@ -887,10 +889,6 @@ class harmonic(Function):
     .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
 
     """
-
-    # Generate one memoized Harmonic number-generating function for each
-    # order and store it in a dictionary
-    _functions = {}  # type: tDict[Integer, Callable[[int], Rational]]
 
     @classmethod
     def eval(cls, n, m=None):
@@ -910,15 +908,13 @@ class harmonic(Function):
                 return S.Infinity
             elif is_gt(m, S.One):
                 return zeta(m)
+        elif m.is_Integer and m.is_nonpositive:
+            return (bernoulli(1-m, n+1) - bernoulli(1-m)) / (1-m)
         elif n.is_Integer:
-            if n.is_negative:
-                return S.NaN
-            elif m not in cls._functions:
-                @recurrence_memo([0])
-                def f(n, prev):
-                    return prev[-1] + S.One / n**m
-                cls._functions[m] = f
-            return cls._functions[m](int(n))
+            if n.is_negative and (m.is_integer is False or m.is_nonpositive is False):
+                return S.ComplexInfinity if m is S.One else S.NaN
+            if n.is_nonnegative:
+                return Add(*(k**(-m) for k in range(1, int(n)+1)))
 
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
@@ -1038,12 +1034,8 @@ class euler(Function):
 
     .. math:: E_n = 2^n E_n\left(\frac{1}{2}\right).
 
-    We compute symbolic Euler polynomials using [5]_
-
-    .. math:: E_n(x) = \sum_{k=0}^n \binom{n}{k} \frac{E_k}{2^k}
-                       \left(x - \frac{1}{2}\right)^{n-k}.
-
-    However, numerical evaluation of the Euler polynomial is computed
+    We compute symbolic Euler polynomials using Appell sequences,
+    but numerical evaluation of the Euler polynomial is computed
     more efficiently (and more accurately) using the mpmath library.
 
     The Euler polynomials are special cases of the generalized Euler function,
@@ -1105,7 +1097,6 @@ class euler(Function):
     .. [2] http://mathworld.wolfram.com/EulerNumber.html
     .. [3] https://en.wikipedia.org/wiki/Alternating_permutation
     .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
-    .. [5] http://dlmf.nist.gov/24.2#ii
 
     """
 
@@ -1113,7 +1104,7 @@ class euler(Function):
     def eval(cls, n, x=None):
         if n.is_zero:
             return S.One
-        elif (n+1).is_zero:
+        elif n is S.NegativeOne:
             if x is None:
                 return S.Pi/2
             from sympy.functions.special.gamma_functions import digamma
@@ -1131,10 +1122,7 @@ class euler(Function):
                 return Integer(res)
         # Euler polynomials
         elif n.is_Number:
-            n = int(n)
-            x_ = Dummy("x")
-            result = [binomial(n,k) * cls(k)/(2**k) * (x_-S.Half)**(n-k) for k in range(0, n+1, 2)]
-            return Add(*result).expand().subs(x_, x)
+            return euler_poly(n, x)
 
     def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
         from sympy.concrete.summations import Sum
@@ -1392,14 +1380,16 @@ class genocchi(Function):
                 return 2 * (1-S(2)**n) * bernoulli(n)
         # Genocchi polynomials
         elif n.is_Number:
-            x_ = Dummy("x")
-            res = 2 * (bernoulli(n, x_) - 2**n * bernoulli(n, (x_+1) / 2))
-            return res.expand().subs(x_, x)
+            return genocchi_poly(n, x)
 
     def _eval_rewrite_as_bernoulli(self, n, x=1, **kwargs):
         if x == 1 and n.is_integer and n.is_nonnegative:
             return 2 * (1-S(2)**n) * bernoulli(n)
         return 2 * (bernoulli(n, x) - 2**n * bernoulli(n, (x+1) / 2))
+
+    def _eval_rewrite_as_dirichlet_eta(self, n, x=1, **kwargs):
+        from sympy.functions.special.zeta_functions import dirichlet_eta
+        return -2*n * dirichlet_eta(1-n, x)
 
     def _eval_is_integer(self):
         if len(self.args) > 1 and self.args[1] != 1:

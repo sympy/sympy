@@ -16,7 +16,7 @@ from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
-    trigamma, polygamma, factorial, sin, cos, cot, zeta)
+    trigamma, polygamma, factorial, sin, cos, cot, zeta, dirichlet_eta)
 from sympy.functions.combinatorial.numbers import _nT
 
 from sympy.core.expr import unchanged
@@ -246,8 +246,12 @@ def test_harmonic():
     assert harmonic(oo, 1 + ip) is zeta(1 + ip)
 
     assert harmonic(0, m) == 0
+    assert harmonic(-1, -1) == 0
+    assert harmonic(-1, 0) == -1
+    assert harmonic(-1, 1) is S.ComplexInfinity
     assert harmonic(-1, 2) is S.NaN
-    assert harmonic(-2, n) is S.NaN
+    assert harmonic(-3, -2) == -5
+    assert harmonic(-3, -3) == 9
 
 
 def test_harmonic_rational():
@@ -508,6 +512,9 @@ def test_genocchi():
     assert str(genocchi(-2).evalf(n=10)) == '3.606170709'
     assert str(genocchi(1.3, 3.7).evalf(n=10)) == '-1.847375373'
     assert str(genocchi(I, 1.0).evalf(n=10)) == '-0.3161917278 - 1.45311955*I'
+
+    n = Symbol('n')
+    assert genocchi(n, x).rewrite(dirichlet_eta) == -2*n * dirichlet_eta(1-n, x)
 
 
 @nocache_fail
