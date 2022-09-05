@@ -1207,7 +1207,7 @@ def test_issue_14941():
     assert f3(2, 3) == [3, 2]
 
 
-def test_lambdify_Derivative_arg_issue_16468():
+def test_lambdify_Derivative_arg_issue_14648():
     f = Function('f')(x)
     fx = f.diff()
     assert lambdify((f, fx), f + fx)(10, 5) == 15
