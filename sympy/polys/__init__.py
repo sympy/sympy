@@ -53,6 +53,9 @@ __all__ = [
     'jacobi_poly', 'chebyshevt_poly', 'chebyshevu_poly', 'hermite_poly',
     'legendre_poly', 'laguerre_poly',
 
+    'bernoulli_poly', 'bernoulli_c_poly', 'genocchi_poly', 'euler_poly',
+    'andre_poly',
+
     'apart', 'apart_list', 'assemble_partfrac_list',
 
     'Options',
@@ -113,6 +116,9 @@ from .specialpolys import (swinnerton_dyer_poly, cyclotomic_poly,
 
 from .orthopolys import (jacobi_poly, chebyshevt_poly, chebyshevu_poly,
         hermite_poly, legendre_poly, laguerre_poly)
+
+from .appellseqs import (bernoulli_poly, bernoulli_c_poly, genocchi_poly,
+        euler_poly, andre_poly)
 
 from .partfrac import apart, apart_list, assemble_partfrac_list
 

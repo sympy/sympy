@@ -69,6 +69,7 @@ class RigidBody:
 
     @property
     def frame(self):
+        """The ReferenceFrame fixed to the body."""
         return self._frame
 
     @frame.setter
@@ -79,6 +80,7 @@ class RigidBody:
 
     @property
     def masscenter(self):
+        """The body's center of mass."""
         return self._masscenter
 
     @masscenter.setter
@@ -89,6 +91,7 @@ class RigidBody:
 
     @property
     def mass(self):
+        """The body's mass."""
         return self._mass
 
     @mass.setter
@@ -97,6 +100,7 @@ class RigidBody:
 
     @property
     def inertia(self):
+        """The body's inertia about a point; stored as (Dyadic, Point)."""
         return (self._inertia, self._inertia_point)
 
     @inertia.setter
@@ -120,6 +124,12 @@ class RigidBody:
     def central_inertia(self):
         """The body's central inertia dyadic."""
         return self._central_inertia
+
+    @central_inertia.setter
+    def central_inertia(self, I):
+        if not isinstance(I, Dyadic):
+            raise TypeError("RigidBody inertia must be a Dyadic object.")
+        self.inertia = (I, self.masscenter)
 
     def linear_momentum(self, frame):
         """ Linear momentum of the rigid body.

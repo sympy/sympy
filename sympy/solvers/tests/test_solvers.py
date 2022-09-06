@@ -2535,7 +2535,8 @@ def test_issue_21852():
 def test_issue_21942():
     eq = -d + (a*c**(1 - e) + b**(1 - e)*(1 - a))**(1/(1 - e))
     sol = solve(eq, c, simplify=False, check=False)
-    assert sol == [(b/b**e - b/(a*b**e) + d**(1 - e)/a)**(1/(1 - e))]
+    assert sol == [((a*b**(1 - e) - b**(1 - e) +
+        d**(1 - e))/a)**(1/(1 - e))]
 
 
 def test_solver_flags():
