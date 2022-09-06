@@ -43,7 +43,7 @@ like the :class:`~.PinJoint`, :class:`~.PrismaticJoint` also require a
 ``joint_axis``, which consists of the same components in the
 ``parent_interframe`` and ``child_interframe``. This means that if for example
 the joint axis is defined in the ``parent_interframe`` as $2\hat{p}_x +
-4\hat{p}_y + 3\hat{p}_z$, than this will also be $2\hat{c}_x + 4\hat{c}_y +
+4\hat{p}_y + 3\hat{p}_z$, then this will also be $2\hat{c}_x + 4\hat{c}_y +
 3\hat{c}_z$ in the ``child_interframe``. Practically this means that in the case
 of the :class:`~.PinJoint`, also shown below, that the ``joint_axis`` is the
 axis of rotation. With the generalized coordinate :math:`\theta` as the angle of

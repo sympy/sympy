@@ -47,12 +47,12 @@ class Joint(ABC):
         Generalized speeds of joint.
     parent_point : Point or Vector, optional
         Attachment point where the joint is fixed to the parent body. If a
-        vector is provided, than the attachment point is computed by adding the
+        vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the parent's mass
         center.
     child_point : Point or Vector, optional
         Attachment point where the joint is fixed to the child body. If a
-        vector is provided, than the attachment point is computed by adding the
+        vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the child's mass
         center.
     parent_axis : Vector, optional
@@ -68,15 +68,15 @@ class Joint(ABC):
             For more information on this deprecation, see
             :ref:`deprecated-mechanics-joint-axis`.
     parent_interframe : ReferenceFrame, optional
-        Interframe of the joint fixed to the parent body, i.e. frame in the of
-        parent body with respect to which the joint is formulated.  If a Vector
-        is provided then an interframe is created which aligns its X axis with
-        the given vector. The default value is the parent's own frame.
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the parent's own frame.
     child_interframe : ReferenceFrame, optional
-        Interframe of the joint fixed to the child body, i.e. frame in the of
-        child body with respect to which the joint is formulated. If a Vector
-        is provided then an interframe is created which aligns its X axis with
-        the given vector. The default value is the child's own frame.
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the child's own frame.
     parent_joint_pos : Point or Vector, optional
         .. deprecated:: 1.12
             This argument is replaced by parent_point and will be removed in a
@@ -110,23 +110,23 @@ class Joint(ABC):
     child_axis : Vector
         The axis fixed in the child frame that represents the joint.
     parent_interframe : ReferenceFrame
-        Interframe of the joint fixed to the parent body, i.e. frame in the of
-        parent body with respect to which the joint is formulated.
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated.
     child_interframe : ReferenceFrame
-        Interframe of the joint fixed to the child body, i.e. frame in the of
-        child body with respect to which the joint is formulated.
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated.
     kdes : list
         Kinematical differential equations of the joint.
 
     Notes
     =====
 
-    When providing a vector as intermediate frame, a new intermediate frame is
-    created which aligns its X axis with the provided vector. This is done by
+    When providing a vector as the intermediate frame, a new intermediate frame
+    is created which aligns its X axis with the provided vector. This is done
     with a single fixed rotation around a rotation axis. This rotation axis is
     determined by taking the cross product of the ``body.x`` axis with the
-    provided vector. In case of the provided vector being in the ``-body.x``
-    direction, than the rotation is done around the ``body.y`` axis.
+    provided vector. In the case where the provided vector is in the ``-body.x``
+    direction, the rotation is done around the ``body.y`` axis.
 
     """
 
@@ -569,12 +569,12 @@ class PinJoint(Joint, _JointAxisMixin):
         Generalized speeds of joint.
     parent_point : Point or Vector, optional
         Attachment point where the joint is fixed to the parent body. If a
-        vector is provided, than the attachment point is computed by adding the
+        vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the parent's mass
         center.
     child_point : Point or Vector, optional
         Attachment point where the joint is fixed to the child body. If a
-        vector is provided, than the attachment point is computed by adding the
+        vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the child's mass
         center.
     parent_axis : Vector, optional
@@ -590,15 +590,15 @@ class PinJoint(Joint, _JointAxisMixin):
             For more information on this deprecation, see
             :ref:`deprecated-mechanics-joint-axis`.
     parent_interframe : ReferenceFrame, optional
-        Interframe of the joint fixed to the parent body, i.e. frame in the of
-        parent body with respect to which the joint is formulated.  If a Vector
-        is provided then an interframe is created which aligns its X axis with
-        the given vector. The default value is the parent's own frame.
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the parent's own frame.
     child_interframe : ReferenceFrame, optional
-        Interframe of the joint fixed to the child body, i.e. frame in the of
-        child body with respect to which the joint is formulated. If a Vector
-        is provided then an interframe is created which aligns its X axis with
-        the given vector. The default value is the child's own frame.
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the child's own frame.
     joint_axis : Vector
         The axis around which the rotation occurs. Note that the components
         of this axis are the same in the parent_interframe and child_interframe.
@@ -634,12 +634,12 @@ class PinJoint(Joint, _JointAxisMixin):
         The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
         The axis fixed in the child frame that represents the joint.
-    parent_interframe : ReferenceFrame, optional
-        Interframe of the joint fixed to the parent body, i.e. frame in the of
-        parent body with respect to which the joint is formulated.
-    child_interframe : ReferenceFrame, optional
-        Interframe of the joint fixed to the child body, i.e. frame in the of
-        child body with respect to which the joint is formulated.
+    parent_interframe : ReferenceFrame
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated.
+    child_interframe : ReferenceFrame
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated.
     joint_axis : Vector
         The axis around which the rotation occurs. Note that the components of
         this axis are the same in the parent_interframe and child_interframe.
@@ -845,12 +845,12 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         Generalized speeds of joint.
     parent_point : Point or Vector, optional
         Attachment point where the joint is fixed to the parent body. If a
-        vector is provided, than the attachment point is computed by adding the
+        vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the parent's mass
         center.
     child_point : Point or Vector, optional
         Attachment point where the joint is fixed to the child body. If a
-        vector is provided, than the attachment point is computed by adding the
+        vector is provided, then the attachment point is computed by adding the
         vector to the body's mass center. The default value is the child's mass
         center.
     parent_axis : Vector, optional
@@ -866,15 +866,15 @@ class PrismaticJoint(Joint, _JointAxisMixin):
             For more information on this deprecation, see
             :ref:`deprecated-mechanics-joint-axis`.
     parent_interframe : ReferenceFrame, optional
-        Interframe of the joint fixed to the parent body, i.e. frame in the of
-        parent body with respect to which the joint is formulated.  If a Vector
-        is provided then an interframe is created which aligns its X axis with
-        the given vector. The default value is the parent's own frame.
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the parent's own frame.
     child_interframe : ReferenceFrame, optional
-        Interframe of the joint fixed to the child body, i.e. frame in the of
-        child body with respect to which the joint is formulated. If a Vector
-        is provided then an interframe is created which aligns its X axis with
-        the given vector. The default value is the child's own frame.
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the child's own frame.
     joint_axis : Vector
         The axis across which the translation occurs. Note that the components
         of this axis are the same in the parent_interframe and child_interframe.
@@ -910,12 +910,12 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
         The axis fixed in the child frame that represents the joint.
-    parent_interframe : ReferenceFrame, optional
-        Interframe of the joint fixed to the parent body, i.e. frame in the of
-        parent body with respect to which the joint is formulated.
-    child_interframe : ReferenceFrame, optional
-        Interframe of the joint fixed to the child body, i.e. frame in the of
-        child body with respect to which the joint is formulated.
+    parent_interframe : ReferenceFrame
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated.
+    child_interframe : ReferenceFrame
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated.
     kdes : list
         Kinematical differential equations of the joint.
 

@@ -85,14 +85,15 @@ automatically determine the joint axis and an intermediate reference frame. The
 joints now use an intermediate frame argument for both the parent and the child
 body, i.e. ``parent_interframe`` and ``child_interframe``. This means that you
 can now fully define the joint attachment, consisting of a point and frame, for
-both bodies. And if a joint like the ``PinJoint`` has a specific joint axis,
-e.g. the axis around which the rotation occurs, than this axis can be specified
-using the ``joint_axis`` argument. A big advantage of this setup is that you can
-be more accurately define the transformation from parent body to child body.
+both bodies. Furthermore, if a joint like the ``PinJoint`` has a specific joint
+axis, e.g. the axis around which the rotation occurs, then this axis can be
+specified using the ``joint_axis`` argument. An advantage of this setup is that
+one can more accurately define the transformation from the parent body to the
+child body.
 
-For example, suppose you want a ``PinJoint`` rotates the child body around the
-``parent.z`` axis and ``-child.z`` axis. The previous way to specify this joint
-was:
+For example, suppose you want a ``PinJoint`` that rotates the child body around
+the ``parent.z`` axis and ``-child.z`` axis. The previous way to specify this
+joint was:
 
 ```py
 >>> from sympy.physics.mechanics import Body, PinJoint
@@ -127,10 +128,10 @@ Matrix([
 ```
 
 However if you liked the fact that the deprecated arguments aligned the frames
-for you, than you can still make use of this feature by providing vectors to
-``parent_interframe`` and ``child_interframe``, which are than oriented such
+for you, then you can still make use of this feature by providing vectors to
+``parent_interframe`` and ``child_interframe``, which are then oriented such
 that the joint axis expressed in the intermediate frame is aligned with the
-given vector.
+given vector:
 
 ```py
 >>> from sympy.physics.mechanics import Body, PinJoint
@@ -149,9 +150,9 @@ Matrix([
 
 The argument names for specifying the attachment points of a joint in
 ``sympy.physics.mechanics`` , i.e. ``parent_joint_pos`` and ``child_joint_pos``,
-has been changed to ``parent_point`` and ``child_point``. Since these arguments
-can now also be ``Point`` objects, so they can be exactly the same as the
-``parent_point`` and ``child_point`` attributes.
+have been changed to ``parent_point`` and ``child_point``. This is because these
+arguments can now also be ``Point`` objects, so they can be exactly the same as
+the ``parent_point`` and ``child_point`` attributes.
 
 For example, suppose you want a ``PinJoint`` in the parent to be positioned at
 ``parent.frame.x`` with respect to the mass center, and in the child at
