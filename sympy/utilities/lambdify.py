@@ -13,9 +13,9 @@ import linecache
 
 # Required despite static analysis claiming it is not used
 from sympy.external import import_module # noqa:F401
-from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.utilities.exceptions import sympy_deprecation_warning, SymPyDeprecationWarning
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.iterables import (is_sequence, iterable,
+from sympy.utilities.iterables import (iterable,
     NotIterable, flatten)
 from sympy.utilities.misc import filldedent
 
@@ -953,7 +953,10 @@ def _recursive_to_string(doprint, arg):
     elif isinstance(arg, str):
         return arg
     else:
-        return doprint(arg)
+        try:
+            return doprint(arg)
+        except SymPyDeprecationWarning:
+            raise TypeError
 
 
 def lambdastr(args, expr, printer=None, dummify=None):
@@ -1272,7 +1275,7 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
 
         return ['[{}] = [{}]'.format(', '.join(flatten(lvalues)), indexed)]
 
-def _imp_namespace(expr, namespace=None):
+def _imp_namespace(expr, namespace=None, saw=None):
     """ Return namespace dict with function implementations
 
     We need to search for functions in anything that can be thrown at
@@ -1308,22 +1311,37 @@ def _imp_namespace(expr, namespace=None):
     ['f', 'g']
     """
     # Delayed import to avoid circular imports
+    from sympy.core.basic import Basic
     from sympy.core.function import FunctionClass
+    from sympy.core.sympify import _sympify, SympifyError
     if namespace is None:
         namespace = {}
+        saw = set()
+    elif expr in saw:
+        return namespace
     # tuples, lists, dicts are valid expressions
-    if is_sequence(expr):
+    if not hasattr(expr, 'args') and iterable(expr):
         for arg in expr:
-            _imp_namespace(arg, namespace)
+            _imp_namespace(arg, namespace, saw)
         return namespace
     elif isinstance(expr, dict):
         for key, val in expr.items():
             # functions can be in dictionary keys
-            _imp_namespace(key, namespace)
-            _imp_namespace(val, namespace)
+            _imp_namespace(key, namespace, saw)
+            _imp_namespace(val, namespace, saw)
         return namespace
+    elif type(expr) is str:
+        return namespace
+    elif not hasattr(expr, 'args'):
+        try:
+            expr = _sympify(expr)
+        except (SympifyError, SymPyDeprecationWarning):
+            pass
+        if not hasattr(expr, 'args'):
+            raise TypeError('expr must be iterable, dict or SymPy object; got: %s' % expr)
     # SymPy expressions may be Functions themselves
-    func = getattr(expr, 'func', None)
+    saw.add(expr)
+    func = expr.func
     if isinstance(func, FunctionClass):
         imp = getattr(func, '_imp_', None)
         if imp is not None:
@@ -1336,7 +1354,7 @@ def _imp_namespace(expr, namespace=None):
     # and / or they may take Functions as arguments
     if hasattr(expr, 'args'):
         for arg in expr.args:
-            _imp_namespace(arg, namespace)
+            _imp_namespace(arg, namespace, saw)
     return namespace
 
 

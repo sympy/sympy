@@ -1665,3 +1665,10 @@ def test_23536_lambdify_cse_dummy():
     eval_expr = lambdify(((f, g), z), expr, cse=True)
     ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
     assert ans == 300.0  # not a list and value is 300
+
+
+def test_issue_23692():
+    import sympy.physics.mechanics as me
+    a = symbols('a')
+    r = me.ReferenceFrame('r')
+    raises(TypeError, lambda: lambdify(a, a*r.x))
