@@ -474,6 +474,7 @@ class Joint(ABC):
         if not interframe.ang_vel_in(body.frame) == 0:
             raise ValueError(f'Interframe {interframe} is not fixed to body '
                              f'{body}.')
+        body.masscenter.set_vel(interframe, 0)  # Fixate interframe to body
         return interframe
 
     def _alignment_rotation(self, parent, child):

@@ -205,6 +205,8 @@ def test_pin_joint_interframe():
     assert A.ang_vel_in(N) == u * Pint.x
     assert C.masscenter.pos_from(P.masscenter) == N.x + A.y
     assert C.masscenter.vel(N) == u * A.z
+    assert P.masscenter.vel(Pint) == Vector(0)
+    assert C.masscenter.vel(Pint) == u * A.z
     # Check only child_interframe
     N, A, P, C = _generate_body()
     Cint = ReferenceFrame('Cint')
@@ -225,6 +227,7 @@ def test_pin_joint_interframe():
     assert C.masscenter.vel(N).simplify() == (
         -sqrt(6) - sqrt(2)) * u / 4 * A.y + (
                -sqrt(2) + sqrt(6)) * u / 4 * A.z
+    assert C.masscenter.vel(Cint) == Vector(0)
     # Check combination
     N, A, P, C = _generate_body()
     Pint, Cint = ReferenceFrame('Pint'), ReferenceFrame('Cint')
@@ -245,7 +248,10 @@ def test_pin_joint_interframe():
     assert A.ang_vel_in(N) == sqrt(2) * u / 2 * Pint.x + sqrt(
         2) * u / 2 * Pint.z
     assert C.masscenter.pos_from(P.masscenter) == N.x - N.y + A.z
-    assert C.masscenter.vel(N).simplify() == (-sqrt(2) + sqrt(6)) * u / 4 * A.x
+    N_v_C = (-sqrt(2) + sqrt(6)) * u / 4 * A.x
+    assert C.masscenter.vel(N).simplify() == N_v_C
+    assert C.masscenter.vel(Pint).simplify() == N_v_C
+    assert C.masscenter.vel(Cint) == Vector(0)
 
 
 def test_pin_joint_joint_axis():
@@ -586,6 +592,7 @@ def test_sliding_joint():
     assert S.parent_point.pos_from(S.child_point) == - x * P.frame.z
     assert P.masscenter.pos_from(C.masscenter) == - l*N.x - x*N.z + m*A.y
     assert C.masscenter.vel(P.frame) == v * P.frame.z
+    assert P.masscenter.vel(Pint) == Vector(0)
     assert C.ang_vel_in(P) == 0
     assert P.ang_vel_in(C) == 0
 
@@ -603,7 +610,7 @@ def test_sliding_joint():
     assert C.masscenter.vel(P.frame) == v * P.frame.z
     assert C.ang_vel_in(P) == 0
     assert P.ang_vel_in(C) == 0
-
+test_sliding_joint()
 
 def test_sliding_joint_arbitrary_axis():
     x, v = dynamicsymbols('x_S, v_S')
