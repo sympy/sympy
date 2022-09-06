@@ -11,7 +11,7 @@ from sympy.functions.combinatorial.numbers import carmichael
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.integers import floor
 from sympy.polys.polytools import cancel
-from sympy.series.limits import limit
+from sympy.series.limits import limit, Limit
 from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
@@ -336,6 +336,8 @@ def test_harmonic_rewrite():
     from sympy.functions.elementary.piecewise import Piecewise
     n = Symbol("n")
     m = Symbol("m", integer=True, positive=True)
+    x1 = Symbol("x1", positive=True)
+    x2 = Symbol("x2", negative=True)
 
     assert harmonic(n).rewrite(digamma) == polygamma(0, n + 1) + EulerGamma
     assert harmonic(n).rewrite(trigamma) == polygamma(0, n + 1) + EulerGamma
@@ -348,7 +350,9 @@ def test_harmonic_rewrite():
     assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
     assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
-    assert harmonic(n, x).rewrite("tractable") == zeta(x) - zeta(x, n+1)
+    assert harmonic(n, x1).rewrite("tractable") == harmonic(n, x1)
+    assert harmonic(n, x1 + 1).rewrite("tractable") == zeta(x1 + 1) - zeta(x1 + 1, n + 1)
+    assert harmonic(n, x2).rewrite("tractable") == zeta(x2) - zeta(x2, n + 1)
 
     _k = Dummy("k")
     assert harmonic(n).rewrite(Sum).dummy_eq(Sum(1/_k, (_k, 1, n)))
@@ -357,12 +361,18 @@ def test_harmonic_rewrite():
 
 def test_harmonic_calculus():
     y = Symbol("y", positive=True)
+    z = Symbol("z", negative=True)
     assert harmonic(x, 1).limit(x, 0) == 0
     assert harmonic(x, y).limit(x, 0) == 0
     assert harmonic(x, 1).series(x, y, 2) == \
             harmonic(y) + (x - y)*zeta(2, y + 1) + O((x - y)**2, (x, y))
     assert limit(harmonic(x, y), x, oo) == harmonic(oo, y)
-    assert limit(harmonic(x, y+1), x, oo) == zeta(y+1)
+    assert limit(harmonic(x, y + 1), x, oo) == zeta(y + 1)
+    assert limit(harmonic(x, y - 1), x, oo) == harmonic(oo, y - 1)
+    assert limit(harmonic(x, z), x, oo) == Limit(harmonic(x, z), x, oo, dir='-')
+    assert limit(harmonic(x, z + 1), x, oo) == oo
+    assert limit(harmonic(x, z + 2), x, oo) == harmonic(oo, z + 2)
+    assert limit(harmonic(x, z - 1), x, oo) == Limit(harmonic(x, z - 1), x, oo, dir='-')
 
 
 def test_euler():

@@ -987,7 +987,9 @@ class harmonic(Function):
         pg = self.rewrite(polygamma)
         if not isinstance(pg, harmonic):
             return pg.rewrite("tractable", deep=True)
-        return (zeta(m) - zeta(m, n+1)).rewrite("tractable", deep=True)
+        arg = m - S.One
+        if arg.is_nonzero:
+            return (zeta(m) - zeta(m, n+1)).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
         if not all(x.is_number for x in self.args):

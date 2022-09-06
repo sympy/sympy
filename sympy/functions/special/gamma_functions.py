@@ -792,7 +792,8 @@ class polygamma(Function):
         n, z = [a.as_leading_term(x) for a in self.args]
         o = Order(z, x)
         if n == 0 and o.contains(1/x):
-            return o.getn() * log(x)
+            logx = log(x) if logx is None else logx
+            return o.getn() * logx
         else:
             return self.func(n, z)
 
