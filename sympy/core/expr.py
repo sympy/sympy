@@ -2695,22 +2695,19 @@ class Expr(Basic, EvalfMixin):
         See also is_algebraic_expr().
 
         """
-        if self in _illegal:
-            return False
-
         if syms:
             syms = set(map(sympify, syms))
         else:
             syms = self.free_symbols
             if not syms:
-                return True
+                return self not in _illegal
 
         return self._eval_is_rational_function(syms)
 
     def _eval_is_rational_function(self, syms):
         if self in syms:
             return True
-        if not self.has_free(*syms):
+        if not self.has_xfree(syms):
             return True
         # subclasses should return True or False
 
@@ -3985,7 +3982,7 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_rational_function(self, syms):
-        return True
+        return self not in _illegal
 
     def _eval_is_meromorphic(self, x, a):
         from sympy.calculus.accumulationbounds import AccumBounds

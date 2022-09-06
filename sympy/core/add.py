@@ -747,6 +747,22 @@ class Add(Expr, AssocOp):
                 return
         return False
 
+    def _all_nonneg_or_nonppos(self):
+        nn = np = 0
+        for a in self.args:
+            if a.is_nonnegative:
+                if np:
+                    return False
+                nn = 1
+            elif a.is_nonpositive:
+                if nn:
+                    return False
+                np = 1
+            else:
+                break
+        else:
+            return True
+
     def _eval_is_extended_positive(self):
         if self.is_number:
             return super()._eval_is_extended_positive()

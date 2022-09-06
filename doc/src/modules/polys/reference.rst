@@ -165,6 +165,17 @@ Orthogonal polynomials
 .. autofunction:: laguerre_poly
 .. autofunction:: spherical_bessel_fn
 
+Appell sequences
+================
+
+.. currentmodule:: sympy.polys.appellseqs
+
+.. autofunction:: bernoulli_poly
+.. autofunction:: bernoulli_c_poly
+.. autofunction:: genocchi_poly
+.. autofunction:: euler_poly
+.. autofunction:: andre_poly
+
 Manipulation of rational functions
 ==================================
 

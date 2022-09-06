@@ -742,7 +742,7 @@ def test_issue_20913():
 def test_issue_22768():
     e = Rational(1, 3)
     r = (-1/a)**e*(a + 1)**(5*e)
-    assert roots(Poly(a*x**3 + (a+1)**5, x)) == {
+    assert roots(Poly(a*x**3 + (a + 1)**5, x)) == {
         r: 1,
         -r*(1 + sqrt(3)*I)/2: 1,
         r*(-1 + sqrt(3)*I)/2: 1}

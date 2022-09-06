@@ -27,6 +27,7 @@ except ImportError:
 del mpmath
 
 from sympy.release import __version__
+from sympy.core.cache import lazy_function
 
 if 'dev' in __version__:
     def enable_warnings():
@@ -118,11 +119,11 @@ from .functions import (factorial, factorial2, rf, ff, binomial,
         asin, acos, atan, asec, acsc, acot, atan2, exp_polar, exp, ln, log,
         LambertW, sinh, cosh, tanh, coth, sech, csch, asinh, acosh, atanh,
         acoth, asech, acsch, floor, ceiling, frac, Piecewise, piecewise_fold,
-        erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv, Ei, expint, E1, li,
-        Li, Si, Ci, Shi, Chi, fresnels, fresnelc, gamma, lowergamma,
-        uppergamma, polygamma, loggamma, digamma, trigamma, multigamma,
-        dirichlet_eta, zeta, lerchphi, polylog, stieltjes, Eijk, LeviCivita,
-        KroneckerDelta, SingularityFunction, DiracDelta, Heaviside,
+        piecewise_exclusive, erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
+        Ei, expint, E1, li, Li, Si, Ci, Shi, Chi, fresnels, fresnelc, gamma,
+        lowergamma, uppergamma, polygamma, loggamma, digamma, trigamma,
+        multigamma, dirichlet_eta, zeta, lerchphi, polylog, stieltjes, Eijk,
+        LeviCivita, KroneckerDelta, SingularityFunction, DiracDelta, Heaviside,
         bspline_basis, bspline_basis_set, interpolating_spline, besselj,
         bessely, besseli, besselk, hankel1, hankel2, jn, yn, jn_zeros, hn1,
         hn2, airyai, airybi, airyaiprime, airybiprime, marcumq, hyper,
@@ -234,13 +235,14 @@ from .algebras import Quaternion
 from .printing import (pager_print, pretty, pretty_print, pprint,
         pprint_use_unicode, pprint_try_use_unicode, latex, print_latex,
         multiline_latex, mathml, print_mathml, python, print_python, pycode,
-        ccode, print_ccode, glsl_code, print_glsl, cxxcode, fcode,
+        ccode, print_ccode, smtlib_code, glsl_code, print_glsl, cxxcode, fcode,
         print_fcode, rcode, print_rcode, jscode, print_jscode, julia_code,
         mathematica_code, octave_code, rust_code, print_gtk, preview, srepr,
         print_tree, StrPrinter, sstr, sstrrepr, TableForm, dotprint,
         maple_code, print_maple_code)
 
-from .testing import test, doctest
+test = lazy_function('sympy.testing.runtests', 'test')
+doctest = lazy_function('sympy.testing.runtests', 'doctest')
 
 # This module causes conflicts with other modules:
 # from .stats import *
@@ -338,11 +340,11 @@ __all__ = [
     'acot', 'atan2', 'exp_polar', 'exp', 'ln', 'log', 'LambertW', 'sinh',
     'cosh', 'tanh', 'coth', 'sech', 'csch', 'asinh', 'acosh', 'atanh',
     'acoth', 'asech', 'acsch', 'floor', 'ceiling', 'frac', 'Piecewise',
-    'piecewise_fold', 'erf', 'erfc', 'erfi', 'erf2', 'erfinv', 'erfcinv',
-    'erf2inv', 'Ei', 'expint', 'E1', 'li', 'Li', 'Si', 'Ci', 'Shi', 'Chi',
-    'fresnels', 'fresnelc', 'gamma', 'lowergamma', 'uppergamma', 'polygamma',
-    'loggamma', 'digamma', 'trigamma', 'multigamma', 'dirichlet_eta', 'zeta',
-    'lerchphi', 'polylog', 'stieltjes', 'Eijk', 'LeviCivita',
+    'piecewise_fold', 'piecewise_exclusive', 'erf', 'erfc', 'erfi', 'erf2',
+    'erfinv', 'erfcinv', 'erf2inv', 'Ei', 'expint', 'E1', 'li', 'Li', 'Si',
+    'Ci', 'Shi', 'Chi', 'fresnels', 'fresnelc', 'gamma', 'lowergamma',
+    'uppergamma', 'polygamma', 'loggamma', 'digamma', 'trigamma', 'multigamma',
+    'dirichlet_eta', 'zeta', 'lerchphi', 'polylog', 'stieltjes', 'Eijk', 'LeviCivita',
     'KroneckerDelta', 'SingularityFunction', 'DiracDelta', 'Heaviside',
     'bspline_basis', 'bspline_basis_set', 'interpolating_spline', 'besselj',
     'bessely', 'besseli', 'besselk', 'hankel1', 'hankel2', 'jn', 'yn',
@@ -477,7 +479,7 @@ __all__ = [
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',
     'pprint_try_use_unicode', 'latex', 'print_latex', 'multiline_latex',
     'mathml', 'print_mathml', 'python', 'print_python', 'pycode', 'ccode',
-    'print_ccode', 'glsl_code', 'print_glsl', 'cxxcode', 'fcode',
+    'print_ccode', 'smtlib_code', 'glsl_code', 'print_glsl', 'cxxcode', 'fcode',
     'print_fcode', 'rcode', 'print_rcode', 'jscode', 'print_jscode',
     'julia_code', 'mathematica_code', 'octave_code', 'rust_code', 'print_gtk',
     'preview', 'srepr', 'print_tree', 'StrPrinter', 'sstr', 'sstrrepr',

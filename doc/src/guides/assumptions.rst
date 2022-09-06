@@ -852,6 +852,8 @@ We are left with very little that we can say about what such an expression
 *does* represent.
 
 
+.. _assumptions-guide-other-is-properties:
+
 Other is_* properties
 =====================
 

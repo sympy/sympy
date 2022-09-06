@@ -1450,7 +1450,7 @@ class InnerProduct(Basic):
         if not isinstance(bra, FockStateBra):
             raise TypeError("must be a bra")
         if not isinstance(ket, FockStateKet):
-            raise TypeError("must be a key")
+            raise TypeError("must be a ket")
         return cls.eval(bra, ket)
 
     @classmethod

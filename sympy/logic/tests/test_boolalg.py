@@ -576,7 +576,6 @@ def test_to_CNF():
     assert CNF.CNF_to_cnf(CNF.to_CNF(A & B)) == to_cnf(A & B)
 
 
-
 def test_to_dnf():
     assert to_dnf(~(B | C)) == And(Not(B), Not(C))
     assert to_dnf(A & (B | C)) == Or(And(A, B), And(A, C))
@@ -1111,7 +1110,9 @@ def test_relational_simplification():
     assert And(x > 1, x < -1, Eq(x, y)).simplify() == S.false
     # From #16690
     assert And(x >= y, Eq(y, 0)).simplify() == And(x >= 0, Eq(y, 0))
-
+    assert Or(Ne(x, 1), Ne(x, 2)).simplify() == S.true
+    assert And(Eq(x, 1), Ne(2, x)).simplify() == Eq(x, 1)
+    assert Or(Eq(x, 1), Ne(2, x)).simplify() == Ne(x, 2)
 
 def test_issue_8373():
     x = symbols('x', real=True)

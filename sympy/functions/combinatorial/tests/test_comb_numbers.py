@@ -16,14 +16,13 @@ from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
-    trigamma, polygamma, factorial, sin, cos, cot, zeta)
+    trigamma, polygamma, factorial, sin, cos, cot, zeta, dirichlet_eta)
 from sympy.functions.combinatorial.numbers import _nT
 
 from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
 
-from sympy.testing.pytest import (XFAIL, raises, nocache_fail,
-                                  warns_deprecated_sympy)
+from sympy.testing.pytest import raises, nocache_fail, warns_deprecated_sympy
 from sympy.abc import x
 
 
@@ -42,7 +41,7 @@ def test_carmichael():
 
 def test_bernoulli():
     assert bernoulli(0) == 1
-    assert bernoulli(1) == Rational(-1, 2)
+    assert bernoulli(1) == Rational(1, 2)
     assert bernoulli(2) == Rational(1, 6)
     assert bernoulli(3) == 0
     assert bernoulli(4) == Rational(-1, 30)
@@ -73,7 +72,30 @@ def test_bernoulli():
     assert isinstance(bernoulli(2 * l + 1), bernoulli)
     assert isinstance(bernoulli(2 * m + 1), bernoulli)
     assert bernoulli(2 * n + 1) == 0
-    raises(ValueError, lambda: bernoulli(-2))
+
+    assert bernoulli(x, 1) == bernoulli(x)
+
+    assert str(bernoulli(0.0, 2.3).evalf(n=10)) == '1.000000000'
+    assert str(bernoulli(1.0).evalf(n=10)) == '0.5000000000'
+    assert str(bernoulli(1.2).evalf(n=10)) == '0.4195995367'
+    assert str(bernoulli(1.2, 0.8).evalf(n=10)) == '0.2144830348'
+    assert str(bernoulli(1.2, -0.8).evalf(n=10)) == '-1.158865646 - 0.6745558744*I'
+    assert str(bernoulli(3.0, 1j).evalf(n=10)) == '1.5 - 0.5*I'
+    assert str(bernoulli(I).evalf(n=10)) == '0.9268485643 - 0.5821580598*I'
+    assert str(bernoulli(I, I).evalf(n=10)) == '0.1267792071 + 0.01947413152*I'
+    assert bernoulli(x).evalf() == bernoulli(x)
+
+
+def test_bernoulli_rewrite():
+    from sympy.functions.elementary.piecewise import Piecewise
+    n = Symbol('n', integer=True, nonnegative=True)
+
+    assert bernoulli(-1).rewrite(zeta) == pi**2/6
+    assert bernoulli(-2).rewrite(zeta) == 2*zeta(3)
+    assert not bernoulli(n, -3).rewrite(zeta).has(harmonic)
+    assert bernoulli(-4, x).rewrite(zeta) == 4*zeta(5, x)
+    assert isinstance(bernoulli(n, x).rewrite(zeta), Piecewise)
+    assert bernoulli(n+1, x).rewrite(zeta) == -(n+1) * zeta(-n, x)
 
 
 def test_fibonacci():
@@ -224,6 +246,12 @@ def test_harmonic():
     assert harmonic(oo, 1 + ip) is zeta(1 + ip)
 
     assert harmonic(0, m) == 0
+    assert harmonic(-1, -1) == 0
+    assert harmonic(-1, 0) == -1
+    assert harmonic(-1, 1) is S.ComplexInfinity
+    assert harmonic(-1, 2) is S.NaN
+    assert harmonic(-3, -2) == -5
+    assert harmonic(-3, -3) == 9
 
 
 def test_harmonic_rational():
@@ -293,7 +321,16 @@ def test_harmonic_rational():
 def test_harmonic_evalf():
     assert str(harmonic(1.5).evalf(n=10)) == '1.280372306'
     assert str(harmonic(1.5, 2).evalf(n=10)) == '1.154576311'  # issue 7443
+    assert str(harmonic(4.0, -3).evalf(n=10)) == '100.0000000'
+    assert str(harmonic(7.0, 1.0).evalf(n=10)) == '2.592857143'
+    assert str(harmonic(1, pi).evalf(n=10)) == '1.000000000'
+    assert str(harmonic(2, pi).evalf(n=10)) == '1.113314732'
+    assert str(harmonic(1000.0, pi).evalf(n=10)) == '1.176241563'
+    assert str(harmonic(I).evalf(n=10)) == '0.6718659855 + 1.076674047*I'
+    assert str(harmonic(I, I).evalf(n=10)) == '-0.3970915266 + 1.9629689*I'
 
+    assert harmonic(-1.0, 1).evalf() is S.NaN
+    assert harmonic(-2.0, 2.0).evalf() is S.NaN
 
 def test_harmonic_rewrite():
     n = Symbol("n")
@@ -315,6 +352,10 @@ def test_harmonic_rewrite():
     assert harmonic(n, x1).rewrite("tractable") == harmonic(n, x1)
     assert harmonic(n, x1 + 1).rewrite("tractable") == zeta(x1 + 1) - zeta(x1 + 1, n + 1)
     assert harmonic(n, x2).rewrite("tractable") == zeta(x2) - zeta(x2, n + 1)
+
+    _k = Dummy("k")
+    assert harmonic(n).rewrite(Sum).dummy_eq(Sum(1/_k, (_k, 1, n)))
+    assert harmonic(n, m).rewrite(Sum).dummy_eq(Sum(_k**(-m), (_k, 1, n)))
 
 
 def test_harmonic_calculus():
@@ -348,9 +389,14 @@ def test_euler():
     assert euler(n) != -1
     assert euler(n).subs(n, 2) == -1
 
-    raises(ValueError, lambda: euler(-2))
-    raises(ValueError, lambda: euler(-3))
-    raises(ValueError, lambda: euler(2.3))
+    assert euler(-1) == S.Pi / 2
+    assert euler(-1, 1) == 2*log(2)
+    assert euler(-2).evalf() == (2*S.Catalan).evalf()
+    assert euler(-3).evalf() == (S.Pi**3 / 16).evalf()
+    assert str(euler(2.3).evalf(n=10)) == '-1.052850274'
+    assert str(euler(1.2, 3.4).evalf(n=10)) == '3.575613489'
+    assert str(euler(I).evalf(n=10)) == '1.248446443 - 0.7675445124*I'
+    assert str(euler(I, I).evalf(n=10)) == '0.04812930469 + 0.01052411008*I'
 
     assert euler(20).evalf() == 370371188237525.0
     assert euler(20, evaluate=False).evalf() == 370371188237525.0
@@ -381,10 +427,8 @@ def test_euler_polynomials():
     assert isinstance(euler(m, x), euler)
     from sympy.core.numbers import Float
     A = Float('-0.46237208575048694923364757452876131e8')  # from Maple
-    B = euler(19, S.Pi.evalf(32))
-    assert abs((A - B)/A) < 1e-31  # expect low relative error
-    C = euler(19, S.Pi, evaluate=False).evalf(32)
-    assert abs((A - C)/A) < 1e-31
+    B = euler(19, S.Pi).evalf(32)
+    assert abs((A - B)/A) < 1e-31
 
 
 def test_euler_polynomial_rewrite():
@@ -435,15 +479,18 @@ def test_catalan():
 
 
 def test_genocchi():
-    genocchis = [1, -1, 0, 1, 0, -3, 0, 17]
+    genocchis = [0, -1, -1, 0, 1, 0, -3, 0, 17]
     for n, g in enumerate(genocchis):
-        assert genocchi(n + 1) == g
+        assert genocchi(n) == g
 
     m = Symbol('m', integer=True)
     n = Symbol('n', integer=True, positive=True)
     assert unchanged(genocchi, m)
     assert genocchi(2*n + 1) == 0
-    assert genocchi(n).rewrite(bernoulli) == (1 - 2 ** n) * bernoulli(n) * 2
+    gn = 2 * (1 - 2**n) * bernoulli(n)
+    assert genocchi(n).rewrite(bernoulli).factor() == gn.factor()
+    gnx = 2 * (bernoulli(n, x) - 2**n * bernoulli(n, (x+1) / 2))
+    assert genocchi(n, x).rewrite(bernoulli).factor() == gnx.factor()
     assert genocchi(2 * n).is_odd
     assert genocchi(2 * n).is_even is False
     assert genocchi(2 * n + 1).is_even
@@ -455,8 +502,29 @@ def test_genocchi():
     assert genocchi(4 * n + 2).is_negative
     assert genocchi(4 * n + 1).is_negative is False
     assert genocchi(4 * n - 2).is_negative
-    raises(ValueError, lambda: genocchi(Rational(5, 4)))
-    raises(ValueError, lambda: genocchi(-2))
+
+    g0 = genocchi(0, evaluate=False)
+    assert g0.is_positive is False
+    assert g0.is_negative is False
+    assert g0.is_even is True
+    assert g0.is_odd is False
+
+    assert genocchi(0, x) == 0
+    assert genocchi(1, x) == -1
+    assert genocchi(2, x) == 1 - 2*x
+    assert genocchi(3, x) == 3*x - 3*x**2
+    assert genocchi(4, x) == -1 + 6*x**2 - 4*x**3
+    y = Symbol("y")
+    assert genocchi(5, (x+y)**100) == -5*(x+y)**400 + 10*(x+y)**300 - 5*(x+y)**100
+
+    assert str(genocchi(5.0, 4.0).evalf(n=10)) == '-660.0000000'
+    assert str(genocchi(Rational(5, 4)).evalf(n=10)) == '-1.104286457'
+    assert str(genocchi(-2).evalf(n=10)) == '3.606170709'
+    assert str(genocchi(1.3, 3.7).evalf(n=10)) == '-1.847375373'
+    assert str(genocchi(I, 1.0).evalf(n=10)) == '-0.3161917278 - 1.45311955*I'
+
+    n = Symbol('n')
+    assert genocchi(n, x).rewrite(dirichlet_eta) == -2*n * dirichlet_eta(1-n, x)
 
 
 @nocache_fail

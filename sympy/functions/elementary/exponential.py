@@ -506,7 +506,8 @@ class exp(ExpBase, metaclass=ExpMeta):
             nterms = ceiling(n/cf)
         exp_series = exp(t)._taylor(t, nterms)
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
-        if r.subs(logx, log(x)) == self:
+        rep = {logx: log(x)} if logx is not None else {}
+        if r.subs(rep) == self:
             return r
         if cf and cf > 1:
             r += Order((arg_series - arg0)**n, x)/x**((cf-1)*n)
