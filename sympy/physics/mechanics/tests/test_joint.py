@@ -9,9 +9,7 @@ from sympy.core.symbol import symbols
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint, PrismaticJoint
 from sympy.physics.mechanics.joint import Joint
 from sympy.physics.vector import Vector, ReferenceFrame, Point
-from sympy.testing.pytest import (raises, ignore_warnings, XFAIL,
-                                  SymPyDeprecationWarning,
-                                  warns_deprecated_sympy)
+from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 t = dynamicsymbols._t # type: ignore
 
@@ -313,8 +311,7 @@ def test_pinjoint_arbitrary_axis():
 
     # When the bodies are attached though masscenters but axess are opposite.
     N, A, P, C = _generate_body()
-    with warns_deprecated_sympy():
-        PinJoint('J', P, C, child_axis=-A.x)
+    PinJoint('J', P, C, child_interframe=-A.x)
 
     assert (-A.x).angle_between(N.x) == 0
     assert -A.x.express(N) == N.x
@@ -330,8 +327,7 @@ def test_pinjoint_arbitrary_axis():
     # When axes are different and parent joint is at masscenter but child joint
     # is at a unit vector from child masscenter.
     N, A, P, C = _generate_body()
-    with warns_deprecated_sympy():
-        PinJoint('J', P, C, child_axis=A.y, child_point=A.x)
+    PinJoint('J', P, C, child_interframe=A.y, child_point=A.x)
 
     assert A.y.angle_between(N.x) == 0  # Axis are aligned
     assert A.y.express(N) == N.x
@@ -350,8 +346,7 @@ def test_pinjoint_arbitrary_axis():
 
     # Similar to previous case but wrt parent body
     N, A, P, C = _generate_body()
-    with warns_deprecated_sympy():
-        PinJoint('J', P, C, parent_axis=N.y, parent_point=N.x)
+    PinJoint('J', P, C, parent_interframe=N.y, parent_point=N.x)
 
     assert N.y.angle_between(A.x) == 0  # Axis are aligned
     assert N.y.express(A) == A.x
@@ -368,9 +363,8 @@ def test_pinjoint_arbitrary_axis():
 
     # Both joint pos id defined but different axes
     N, A, P, C = _generate_body()
-    with warns_deprecated_sympy():
-        PinJoint('J', P, C, parent_point=N.x, child_point=A.x,
-                 child_axis=A.x+A.y)
+    PinJoint('J', P, C, parent_point=N.x, child_point=A.x,
+             child_interframe=A.x + A.y)
     assert expand_mul(N.x.angle_between(A.x + A.y)) == 0  # Axis are aligned
     assert (A.x + A.y).express(N).simplify() == sqrt(2)*N.x
     assert _simplify_matrix(A.dcm(N)) == Matrix([
@@ -393,9 +387,8 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
     N, A, P, C = _generate_body()
-    with warns_deprecated_sympy():
-        PinJoint('J', P, C, parent_point=N.x, child_point=A.x,
-                 child_axis=A.x+A.y-A.z)
+    PinJoint('J', P, C, parent_point=N.x, child_point=A.x,
+             child_interframe=A.x + A.y - A.z)
     assert expand_mul(N.x.angle_between(A.x + A.y - A.z)) == 0  # Axis aligned
     assert (A.x + A.y - A.z).express(N).simplify() == sqrt(3)*N.x
     assert _simplify_matrix(A.dcm(N)) == Matrix([
@@ -423,10 +416,10 @@ def test_pinjoint_arbitrary_axis():
 
     N, A, P, C = _generate_body()
     m, n = symbols('m n')
-    with warns_deprecated_sympy():
-        PinJoint('J', P, C, parent_point=m*N.x, child_point=n*A.x,
-                 child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
-    angle = (N.x-N.y+N.z).angle_between(A.x+A.y-A.z)
+    PinJoint('J', P, C, parent_point=m * N.x, child_point=n * A.x,
+             child_interframe=A.x + A.y - A.z,
+             parent_interframe=N.x - N.y + N.z)
+    angle = (N.x - N.y + N.z).angle_between(A.x + A.y - A.z)
     assert expand_mul(angle) == 0  # Axis are aligned
     assert ((A.x-A.y+A.z).express(N).simplify() ==
             (-4*cos(theta)/3 - S(1)/3)*N.x + (S(1)/3 - 4*sin(theta + pi/6)/3)*N.y +
@@ -456,39 +449,22 @@ def test_pinjoint_arbitrary_axis():
     assert C.masscenter.vel(N).dot(N.x - N.y + N.z).simplify() == 0
 
 
-def test_pinjoint_pi():
-    _, _, P, C = _generate_body()
-    with ignore_warnings(SymPyDeprecationWarning):
-        J = PinJoint('J', P, C, child_axis=-C.frame.x)
-        assert J._generate_vector() == P.frame.z
-
-        _, _, P, C = _generate_body()
-        J = PinJoint('J', P, C, parent_axis=P.frame.y, child_axis=-C.frame.y)
-        assert J._generate_vector() == P.frame.x
-
-        _, _, P, C = _generate_body()
-        J = PinJoint('J', P, C, parent_axis=P.frame.z, child_axis=-C.frame.z)
-        assert J._generate_vector() == P.frame.y
-
-        _, _, P, C = _generate_body()
-        J = PinJoint('J', P, C, parent_axis=P.frame.x+P.frame.y,
-                     child_axis=-C.frame.y-C.frame.x)
-        assert J._generate_vector() == P.frame.z
-
-        _, _, P, C = _generate_body()
-        J = PinJoint('J', P, C, parent_axis=P.frame.y+P.frame.z,
-                     child_axis=-C.frame.y-C.frame.z)
-        assert J._generate_vector() == P.frame.x
-
-        _, _, P, C = _generate_body()
-        J = PinJoint('J', P, C, parent_axis=P.frame.x+P.frame.z,
-                     child_axis=-C.frame.z-C.frame.x)
-        assert J._generate_vector() == P.frame.y
-
-        _, _, P, C = _generate_body()
-        J = PinJoint('J', P, C, parent_axis=P.frame.x+P.frame.y+P.frame.z,
-                     child_axis=-C.frame.x-C.frame.y-C.frame.z)
-        assert J._generate_vector() == P.frame.y - P.frame.z
+def test_create_aligned_frame_pi():
+    N, A, P, C = _generate_body()
+    f = Joint._create_aligned_interframe(P, -P.x, P.x)
+    assert f.z == P.z
+    f = Joint._create_aligned_interframe(P, -P.y, P.y)
+    assert f.x == P.x
+    f = Joint._create_aligned_interframe(P, -P.z, P.z)
+    assert f.y == P.y
+    f = Joint._create_aligned_interframe(P, -P.x - P.y, P.x + P.y)
+    assert f.z == P.z
+    f = Joint._create_aligned_interframe(P, -P.y - P.z, P.y + P.z)
+    assert f.x == P.x
+    f = Joint._create_aligned_interframe(P, -P.x - P.z, P.x + P.z)
+    assert f.y == P.y
+    f = Joint._create_aligned_interframe(P, -P.x - P.y - P.z, P.x + P.y + P.z)
+    assert f.y - f.z == P.y - P.z
 
 
 def test_pinjoint_axis():
@@ -636,8 +612,7 @@ def test_slidingjoint_arbitrary_axis():
     x, v = dynamicsymbols('x_S, v_S')
 
     N, A, P, C = _generate_body()
-    with warns_deprecated_sympy():
-        PrismaticJoint('S', P, C, child_axis=-A.x)
+    PrismaticJoint('S', P, C, child_interframe=-A.x)
 
     assert (-A.x).angle_between(N.x) == 0
     assert -A.x.express(N) == N.x
@@ -652,8 +627,7 @@ def test_slidingjoint_arbitrary_axis():
     #When axes are different and parent joint is at masscenter but child joint is at a unit vector from
     #child masscenter.
     N, A, P, C = _generate_body()
-    with warns_deprecated_sympy():
-        PrismaticJoint('S', P, C, child_axis=A.y, child_point=A.x)
+    PrismaticJoint('S', P, C, child_interframe=A.y, child_point=A.x)
 
     assert A.y.angle_between(N.x) == 0 #Axis are aligned
     assert A.y.express(N) == N.x
@@ -667,8 +641,7 @@ def test_slidingjoint_arbitrary_axis():
 
     #Similar to previous case but wrt parent body
     N, A, P, C = _generate_body()
-    with warns_deprecated_sympy():
-        PrismaticJoint('S', P, C, parent_axis=N.y, parent_point=N.x)
+    PrismaticJoint('S', P, C, parent_interframe=N.y, parent_point=N.x)
 
     assert N.y.angle_between(A.x) == 0 #Axis are aligned
     assert N.y.express(A) ==  A.x
@@ -681,9 +654,8 @@ def test_slidingjoint_arbitrary_axis():
 
     #Both joint pos is defined but different axes
     N, A, P, C = _generate_body()
-    with warns_deprecated_sympy():
-        PrismaticJoint('S', P, C, parent_point=N.x, child_point=A.x,
-                       child_axis=A.x+A.y)
+    PrismaticJoint('S', P, C, parent_point=N.x, child_point=A.x,
+                   child_interframe=A.x + A.y)
     assert N.x.angle_between(A.x + A.y) == 0 #Axis are aligned
     assert (A.x + A.y).express(N) == sqrt(2)*N.x
     assert A.dcm(N) == Matrix([[sqrt(2)/2, -sqrt(2)/2, 0], [sqrt(2)/2, sqrt(2)/2, 0], [0, 0, 1]])
@@ -695,9 +667,8 @@ def test_slidingjoint_arbitrary_axis():
     assert N.ang_vel_in(A) == 0
 
     N, A, P, C = _generate_body()
-    with warns_deprecated_sympy():
-        PrismaticJoint('S', P, C, parent_point=N.x, child_point=A.x,
-                       child_axis=A.x+A.y-A.z)
+    PrismaticJoint('S', P, C, parent_point=N.x, child_point=A.x,
+                   child_interframe=A.x + A.y - A.z)
     assert N.x.angle_between(A.x + A.y - A.z) == 0 #Axis are aligned
     assert (A.x + A.y - A.z).express(N) == sqrt(3)*N.x
     assert _simplify_matrix(A.dcm(N)) == Matrix([[sqrt(3)/3, -sqrt(3)/3, sqrt(3)/3],
@@ -713,10 +684,11 @@ def test_slidingjoint_arbitrary_axis():
 
     N, A, P, C = _generate_body()
     m, n = symbols('m n')
-    with warns_deprecated_sympy():
-        PrismaticJoint('S', P, C, parent_point=m*N.x, child_point=n*A.x,
-                       child_axis=A.x+A.y-A.z, parent_axis=N.x-N.y+N.z)
-    assert (N.x-N.y+N.z).angle_between(A.x+A.y-A.z) == 0 #Axis are aligned
+    PrismaticJoint('S', P, C, parent_point=m*N.x, child_point=n*A.x,
+                   child_interframe=A.x + A.y - A.z,
+                   parent_interframe=N.x - N.y + N.z)
+    # 0 angle means that the axis are aligned
+    assert (N.x-N.y+N.z).angle_between(A.x+A.y-A.z).simplify() == 0
     assert (A.x+A.y-A.z).express(N) == N.x - N.y + N.z
     assert _simplify_matrix(A.dcm(N)) == Matrix([[-S(1)/3, -S(2)/3, S(2)/3],
                                                  [S(2)/3, S(1)/3, S(2)/3],
@@ -729,6 +701,29 @@ def test_slidingjoint_arbitrary_axis():
     assert C.masscenter.vel(N).express(A) == sqrt(3)*v/3*A.x + sqrt(3)*v/3*A.y - sqrt(3)*v/3*A.z
     assert A.ang_vel_in(N) == 0
     assert N.ang_vel_in(A) == 0
+
+
+def test_deprecated_parent_child_axis():
+    theta, omega = dynamicsymbols('theta_J, omega_J')
+    N, A, P, C = _generate_body()
+    with warns_deprecated_sympy():
+        PinJoint('J', P, C, child_axis=-A.x)
+    assert (-A.x).angle_between(N.x) == 0
+    assert -A.x.express(N) == N.x
+    assert A.dcm(N) == Matrix([[-1, 0, 0],
+                               [0, -cos(theta), -sin(theta)],
+                               [0, -sin(theta), cos(theta)]])
+    assert A.ang_vel_in(N) == omega * N.x
+    assert A.ang_vel_in(N).magnitude() == sqrt(omega ** 2)
+
+    N, A, P, C = _generate_body()
+    with warns_deprecated_sympy():
+        PrismaticJoint('J', P, C, parent_axis=P.x + P.y)
+    assert (A.x).angle_between(N.x + N.y) == 0
+    assert A.x.express(N) == (N.x + N.y) / sqrt(2)
+    assert A.dcm(N) == Matrix([[sqrt(2) / 2, sqrt(2) / 2, 0],
+                               [-sqrt(2) / 2, sqrt(2) / 2, 0], [0, 0, 1]])
+    assert A.ang_vel_in(N) == Vector(0)
 
 
 def test_deprecated_joint_pos():

@@ -10,7 +10,7 @@ from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
 from sympy.utilities.exceptions import sympy_deprecation_warning
 import warnings
 
-__all__ = ['Joint', 'JointAxisMixin', 'PinJoint', 'PrismaticJoint']
+__all__ = ['Joint', 'PinJoint', 'PrismaticJoint']
 
 
 class Joint(ABC):
@@ -69,12 +69,14 @@ class Joint(ABC):
             :ref:`deprecated-mechanics-joint-axis`.
     parent_interframe : ReferenceFrame, optional
         Interframe of the joint fixed to the parent body, i.e. frame in the of
-        parent body with respect to which the joint is formulated. The default
-        value is the parent's own frame.
+        parent body with respect to which the joint is formulated.  If a Vector
+        is provided then an interframe is created which aligns its X axis with
+        the given vector. The default value is the parent's own frame.
     child_interframe : ReferenceFrame, optional
         Interframe of the joint fixed to the child body, i.e. frame in the of
-        child body with respect to which the joint is formulated. The default
-        value is the child's own frame.
+        child body with respect to which the joint is formulated. If a Vector
+        is provided then an interframe is created which aligns its X axis with
+        the given vector. The default value is the child's own frame.
     parent_joint_pos : Point or Vector, optional
         .. deprecated:: 1.12
             This argument is replaced by parent_point and will be removed in a
@@ -107,10 +109,10 @@ class Joint(ABC):
         The axis fixed in the parent frame that represents the joint.
     child_axis : Vector
         The axis fixed in the child frame that represents the joint.
-    parent_interframe : ReferenceFrame, optional
+    parent_interframe : ReferenceFrame
         Interframe of the joint fixed to the parent body, i.e. frame in the of
         parent body with respect to which the joint is formulated.
-    child_interframe : ReferenceFrame, optional
+    child_interframe : ReferenceFrame
         Interframe of the joint fixed to the child body, i.e. frame in the of
         child body with respect to which the joint is formulated.
     kdes : list
@@ -119,46 +121,12 @@ class Joint(ABC):
     Notes
     =====
 
-     .. deprecated:: 1.12
-        The below discussed ``parent_axis`` and ``child_axis`` are deprecated,
-        see :ref:`deprecated-mechanics-joint-axis` for more information.
-
-        The direction cosine matrix between the child and parent is formed using
-        a simple rotation about an axis that is normal to both ``child_axis``
-        and ``parent_axis``. In general, the normal axis is formed by crossing
-        the ``child_axis`` into the ``parent_axis`` except if the child and
-        parent axes are in exactly opposite directions. In that case the
-        rotation vector is chosen using the rules in the following table where
-        ``C`` is the child reference frame and ``P`` is the parent reference
-        frame:
-
-        .. list-table::
-           :header-rows: 1
-
-           * - ``child_axis``
-             - ``parent_axis``
-             - ``rotation_axis``
-           * - ``-C.x``
-             - ``P.x``
-             - ``P.z``
-           * - ``-C.y``
-             - ``P.y``
-             - ``P.x``
-           * - ``-C.z``
-             - ``P.z``
-             - ``P.y``
-           * - ``-C.x-C.y``
-             - ``P.x+P.y``
-             - ``P.z``
-           * - ``-C.y-C.z``
-             - ``P.y+P.z``
-             - ``P.x``
-           * - ``-C.x-C.z``
-             - ``P.x+P.z``
-             - ``P.y``
-           * - ``-C.x-C.y-C.z``
-             - ``P.x+P.y+P.z``
-             - ``(P.x+P.y+P.z) × P.x``
+    When providing a vector as intermediate frame, a new intermediate frame is
+    created which aligns its X axis with the provided vector. This is done by
+    with a single fixed rotation around a rotation axis. This rotation axis is
+    determined by taking the cross product of the ``body.x`` axis with the
+    provided vector. In case of the provided vector being in the ``-body.x``
+    direction, than the rotation is done around the ``body.y`` axis.
 
     """
 
@@ -206,15 +174,16 @@ class Joint(ABC):
             sympy_deprecation_warning(
                 """
                 The parent_axis and child_axis arguments for the Joint classes
-                are deprecated. Instead use the combination of the arguments:
-                parent_interframe, child_interframe and possibly joint_axis.
+                are deprecated. Instead use parent_interframe, child_interframe.
                 """,
                 deprecated_since_version="1.12",
                 active_deprecations_target="deprecated-mechanics-joint-axis",
                 stacklevel=4
             )
-            parent_interframe = self._set_orientation()
-            child_interframe = child.frame
+            if parent_interframe is None:
+                parent_interframe = parent_axis
+            if child_interframe is None:
+                child_interframe = child_axis
         self._parent_interframe = self._locate_joint_frame(parent,
                                                            parent_interframe)
         self._child_interframe = self._locate_joint_frame(child,
@@ -344,6 +313,132 @@ class Joint(ABC):
                              'associated body.')
         return ax
 
+    @staticmethod
+    def _choose_rotation_axis(frame, axis):
+        components = axis.to_matrix(frame)
+        x, y, z = components[0], components[1], components[2]
+
+        if x != 0:
+            if y != 0:
+                if z != 0:
+                    return cross(axis, frame.x)
+            if z != 0:
+                return frame.y
+            return frame.z
+
+        if x == 0:
+            if y != 0:
+                if z != 0:
+                    return frame.x
+                return frame.x
+            return frame.y
+
+    @staticmethod
+    def _create_aligned_interframe(frame, align_axis, frame_axis=None,
+                                   frame_name=None):
+        """
+        Returns an intermediate frame, where the ``frame_axis`` defined in
+        ``frame`` is aligned with ``axis``. By default this means that the X
+        axis will be aligned with ``axis``.
+
+        Parameters
+        ==========
+
+        frame: Body or ReferenceFrame
+            The body or reference frame with respect to which the intermediate
+            frame is oriented
+        align_axis: Vector
+            The vector with respect to which the intermediate frame will be
+            aligned.
+        frame_axis: Vector
+            The vector of the frame which should get aligned with ``axis``. The
+            default is the X axis of the frame.
+        frame_name: string
+            Name of the to be created intermediate frame. The default adds
+            "_int_frame" to the name of ``frame``.
+
+        Example
+        =======
+
+        An intermediate frame, where the X axis of the parent becomes aligned
+        with ``parent.y + parent.z`` can be created as follows:
+
+        >>> from sympy.physics.mechanics.joint import Joint
+        >>> from sympy.physics.mechanics import Body
+        >>> parent = Body('parent')
+        >>> parent_interframe = Joint._create_aligned_interframe(
+        ...     parent, parent.y + parent.z)
+        >>> parent_interframe
+        parent_int_frame
+        >>> parent.dcm(parent_interframe)
+        Matrix([
+        [        0, -sqrt(2)/2, -sqrt(2)/2],
+        [sqrt(2)/2,        1/2,       -1/2],
+        [sqrt(2)/2,       -1/2,        1/2]])
+        >>> (parent.y + parent.z).express(parent_interframe)
+        sqrt(2)*parent_int_frame.x
+
+        Notes
+        =====
+
+        The direction cosine matrix between the given frame and intermediate
+        frame is formed using a simple rotation about an axis that is normal to
+        both ``align_axis`` and ``frame_axis``. In general, the normal axis is
+        formed by crossing the ``frame_axis`` with the ``align_axis`` except if
+        the axes are in exactly the opposite direction. In that case the
+        rotation vector is chosen using the rules in the following table with
+        the vectors expressed in the given frame:
+
+        .. list-table::
+           :header-rows: 1
+
+           * - ``align_axis``
+             - ``frame_axis``
+             - ``rotation_axis``
+           * - ``-x``
+             - ``x``
+             - ``z``
+           * - ``-y``
+             - ``y``
+             - ``x``
+           * - ``-z``
+             - ``z``
+             - ``y``
+           * - ``-x-y``
+             - ``x+y``
+             - ``z``
+           * - ``-y-z``
+             - ``y+z``
+             - ``x``
+           * - ``-x-z``
+             - ``x+z``
+             - ``y``
+           * - ``-x-y-z``
+             - ``x+y+z``
+             - ``(x+y+z) × x``
+
+        """
+        if isinstance(frame, Body):
+            frame = frame.frame
+        if frame_axis is None:
+            frame_axis = frame.x
+        if frame_name is None:
+            if frame.name[-6:] == '_frame':
+                frame_name = f'{frame.name[:-6]}_int_frame'
+            else:
+                frame_name = f'{frame.name}_int_frame'
+        angle = frame_axis.angle_between(align_axis)
+        rotation_axis = cross(frame_axis, align_axis)
+        if rotation_axis != Vector(0) or angle == pi:
+            if angle == pi:
+                rotation_axis = Joint._choose_rotation_axis(frame, align_axis)
+
+            int_frame = ReferenceFrame(frame_name)
+            int_frame.orient_axis(frame, rotation_axis, angle)
+            int_frame.set_ang_vel(frame, 0 * rotation_axis)
+            return int_frame
+        return frame
+
     def _generate_kdes(self):
         """Generate kinematical differential equations."""
         kdes = []
@@ -370,7 +465,11 @@ class Joint(ABC):
         """Returns the attachment frame of a body."""
         if interframe is None:
             return body.frame
-        if not isinstance(interframe, ReferenceFrame):
+        if isinstance(interframe, Vector):
+            interframe = Joint._create_aligned_interframe(
+                body, interframe,
+                frame_name=f'{self.name}_{body.name}_int_frame')
+        elif not isinstance(interframe, ReferenceFrame):
             raise TypeError('Interframe must be a ReferenceFrame.')
         if not interframe.ang_vel_in(body.frame) == 0:
             raise ValueError(f'Interframe {interframe} is not fixed to body '
@@ -389,24 +488,7 @@ class Joint(ABC):
 
     def _generate_vector(self):
         # Will be removed with `deprecated-mechanics-joint-axis`
-        parent_frame = self.parent.frame
-        components = self.parent_axis.to_matrix(parent_frame)
-        x, y, z = components[0], components[1], components[2]
-
-        if x != 0:
-            if y != 0:
-                if z != 0:
-                    return cross(self.parent_axis, parent_frame.x)
-            if z != 0:
-                return parent_frame.y
-            return parent_frame.z
-
-        if x == 0:
-            if y != 0:
-                if z != 0:
-                    return parent_frame.x
-                return parent_frame.x
-            return parent_frame.y
+        return self._choose_rotation_axis(self.parent.frame, self.parent_axis)
 
     def _set_orientation(self):
         # Helper method to determine parent_interframe based on parent_axis and
@@ -429,8 +511,16 @@ class Joint(ABC):
         return self.parent.frame
 
 
-class JointAxisMixin:
-    """Mixin class, which provides joint axis support methods."""
+class _JointAxisMixin:
+    """Mixin class, which provides joint axis support methods.
+
+    This class is strictly only to be inherited by joint types that have a joint
+    axis. This is because the methods of this class assume that the object has
+    a joint_axis attribute.
+    """
+
+    __slots__ = ()
+
     def _express_joint_axis(self, frame):
         """Helper method to express the joint axis in a specified frame."""
         try:
@@ -440,13 +530,14 @@ class JointAxisMixin:
         try:
             self.parent_interframe.dcm(frame)  # Check if connected
         except ValueError:
+            self.child_interframe.dcm(frame)  # Should be connected
             int_frame = self.child_interframe
         else:
             int_frame = self.parent_interframe
         return self._to_vector(ax_mat, int_frame).express(frame)
 
 
-class PinJoint(JointAxisMixin, Joint):
+class PinJoint(Joint, _JointAxisMixin):
     """Pin (Revolute) Joint.
 
     .. image:: PinJoint.svg
@@ -500,12 +591,14 @@ class PinJoint(JointAxisMixin, Joint):
             :ref:`deprecated-mechanics-joint-axis`.
     parent_interframe : ReferenceFrame, optional
         Interframe of the joint fixed to the parent body, i.e. frame in the of
-        parent body with respect to which the joint is formulated. The default
-        value is the parent's own frame.
+        parent body with respect to which the joint is formulated.  If a Vector
+        is provided then an interframe is created which aligns its X axis with
+        the given vector. The default value is the parent's own frame.
     child_interframe : ReferenceFrame, optional
         Interframe of the joint fixed to the child body, i.e. frame in the of
-        child body with respect to which the joint is formulated. The default
-        value is the child's own frame.
+        child body with respect to which the joint is formulated. If a Vector
+        is provided then an interframe is created which aligns its X axis with
+        the given vector. The default value is the child's own frame.
     joint_axis : Vector
         The axis around which the rotation occurs. Note that the components
         of this axis are the same in the parent_interframe and child_interframe.
@@ -669,8 +762,6 @@ class PinJoint(JointAxisMixin, Joint):
                  child_axis=None, parent_interframe=None, child_interframe=None,
                  joint_axis=None, parent_joint_pos=None, child_joint_pos=None):
 
-        if parent_axis is not None or child_axis is not None:
-            joint_axis = self._axis(parent_axis, parent.frame)
         self._joint_axis = joint_axis
         super().__init__(name, parent, child, coordinates, speeds, parent_point,
                          child_point, parent_axis, child_axis,
@@ -721,7 +812,7 @@ class PinJoint(JointAxisMixin, Joint):
                                           self.parent.frame, self.child.frame)
 
 
-class PrismaticJoint(JointAxisMixin, Joint):
+class PrismaticJoint(Joint, _JointAxisMixin):
     """Prismatic (Sliding) Joint.
 
     .. image:: PrismaticJoint.svg
@@ -776,12 +867,14 @@ class PrismaticJoint(JointAxisMixin, Joint):
             :ref:`deprecated-mechanics-joint-axis`.
     parent_interframe : ReferenceFrame, optional
         Interframe of the joint fixed to the parent body, i.e. frame in the of
-        parent body with respect to which the joint is formulated. The default
-        value is the parent's own frame.
+        parent body with respect to which the joint is formulated.  If a Vector
+        is provided then an interframe is created which aligns its X axis with
+        the given vector. The default value is the parent's own frame.
     child_interframe : ReferenceFrame, optional
         Interframe of the joint fixed to the child body, i.e. frame in the of
-        child body with respect to which the joint is formulated. The default
-        value is the child's own frame.
+        child body with respect to which the joint is formulated. If a Vector
+        is provided then an interframe is created which aligns its X axis with
+        the given vector. The default value is the child's own frame.
     joint_axis : Vector
         The axis across which the translation occurs. Note that the components
         of this axis are the same in the parent_interframe and child_interframe.
@@ -943,8 +1036,6 @@ class PrismaticJoint(JointAxisMixin, Joint):
                  child_axis=None, parent_interframe=None, child_interframe=None,
                  joint_axis=None, parent_joint_pos=None, child_joint_pos=None):
 
-        if parent_axis is not None or child_axis is not None:
-            joint_axis = self._axis(parent_axis, parent.frame)
         self._joint_axis = joint_axis
         super().__init__(name, parent, child, coordinates, speeds, parent_point,
                          child_point, parent_axis, child_axis,

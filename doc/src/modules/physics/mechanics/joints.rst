@@ -26,10 +26,16 @@ described as shown in the image below.
 
 As can be seen in this image, each joint needs several objects in order to
 define the relationships. First off it needs two bodies: the parent body (shown
-in green) and the child body (shown in blue). The attachment of the joint to the
-body consists of a point and a frame. In the parent body the point is called
-``parent_point`` and the frame ``parent_interframe``. For the child body these
-are called ``child_point`` and ``child_interframe``.
+in green) and the child body (shown in blue). The transformation made by the
+joint is defined between the joint attachments of both bodies. A joint
+attachment of a body consists of a point and a body fixed frame. In the parent
+body the point is called ``parent_point`` and the frame ``parent_interframe``.
+For the child body these are called ``child_point`` and ``child_interframe``.
+For most joints it is the case that when the generalized coordinates are zero,
+that there is no rotation or translation between the parent and child joint
+attachments. So the ``child_point`` is at the same location as the
+``parent_point`` and the ``child_interframe`` is in the same orientation as the
+``parent_interframe``.
 
 For describing the joint transformation the joint generally needs
 :func:`~.dynamicsymbols` for the generalized coordinates and speeds. Some joints

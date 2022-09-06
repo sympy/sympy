@@ -107,9 +107,9 @@ Matrix([
 ```
 
 When inspecting this matrix you will notice that for ``theta_pin = 0`` the child
-body is rotated $\pi$ rad around the ``parent.y`` axis and it is possible to
-specify this differently. In the new definition you can see that we get the same
-result, but this time we have also specified this exact rotation:
+body is rotated $\pi$ rad around the ``parent.y`` axis. In the new definition
+you can see that we get the same result, but this time we have also specified
+this exact rotation:
 
 ```py
 >>> from sympy import pi
@@ -119,6 +119,24 @@ result, but this time we have also specified this exact rotation:
 >>> int_frame.orient_axis(child.frame, child.y, pi)
 >>> pin = PinJoint('pin', parent, child, joint_axis=parent.z,
 ...                child_interframe=int_frame)
+>>> parent.dcm(child)
+Matrix([
+[-cos(theta_pin(t)), -sin(theta_pin(t)),  0],
+[-sin(theta_pin(t)),  cos(theta_pin(t)),  0],
+[                 0,                  0, -1]])
+```
+
+However if you liked the fact that the deprecated arguments aligned the frames
+for you, than you can still make use of this feature by providing vectors to
+``parent_interframe`` and ``child_interframe``, which are than oriented such
+that the joint axis expressed in the intermediate frame is aligned with the
+given vector.
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> pin = PinJoint('pin', parent, child, parent_interframe=parent.z,
+...                child_interframe=-child.z)
 >>> parent.dcm(child)
 Matrix([
 [-cos(theta_pin(t)), -sin(theta_pin(t)),  0],
