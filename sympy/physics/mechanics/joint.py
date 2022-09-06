@@ -123,10 +123,10 @@ class Joint(ABC):
 
     When providing a vector as the intermediate frame, a new intermediate frame
     is created which aligns its X axis with the provided vector. This is done
-    with a single fixed rotation around a rotation axis. This rotation axis is
+    with a single fixed rotation about a rotation axis. This rotation axis is
     determined by taking the cross product of the ``body.x`` axis with the
     provided vector. In the case where the provided vector is in the ``-body.x``
-    direction, the rotation is done around the ``body.y`` axis.
+    direction, the rotation is done about the ``body.y`` axis.
 
     """
 
@@ -301,10 +301,11 @@ class Joint(ABC):
         for frame in frames:
             try:
                 ax.to_matrix(frame)
-                ref_frame = frame
-                break
             except ValueError:
                 pass
+            else:
+                ref_frame = frame
+                break
         if ref_frame is None:
             raise ValueError("Axis cannot be expressed in one of the body's "
                              "frames.")
@@ -325,11 +326,8 @@ class Joint(ABC):
             if z != 0:
                 return frame.y
             return frame.z
-
-        if x == 0:
+        else:
             if y != 0:
-                if z != 0:
-                    return frame.x
                 return frame.x
             return frame.y
 
@@ -346,7 +344,7 @@ class Joint(ABC):
 
         frame: Body or ReferenceFrame
             The body or reference frame with respect to which the intermediate
-            frame is oriented
+            frame is oriented.
         align_axis: Vector
             The vector with respect to which the intermediate frame will be
             aligned.
@@ -384,10 +382,10 @@ class Joint(ABC):
         The direction cosine matrix between the given frame and intermediate
         frame is formed using a simple rotation about an axis that is normal to
         both ``align_axis`` and ``frame_axis``. In general, the normal axis is
-        formed by crossing the ``frame_axis`` with the ``align_axis`` except if
-        the axes are in exactly the opposite direction. In that case the
-        rotation vector is chosen using the rules in the following table with
-        the vectors expressed in the given frame:
+        formed by crossing the ``frame_axis`` with the ``align_axis``. The
+        exception is if the axes are parallel with opposite directions, in which
+        case the rotation vector is chosen using the rules in the following
+        table with the vectors expressed in the given frame:
 
         .. list-table::
            :header-rows: 1
@@ -429,15 +427,15 @@ class Joint(ABC):
                 frame_name = f'{frame.name}_int_frame'
         angle = frame_axis.angle_between(align_axis)
         rotation_axis = cross(frame_axis, align_axis)
-        if rotation_axis != Vector(0) or angle == pi:
-            if angle == pi:
-                rotation_axis = Joint._choose_rotation_axis(frame, align_axis)
+        if rotation_axis == Vector(0) and angle == 0:
+            return frame
+        if angle == pi:
+            rotation_axis = Joint._choose_rotation_axis(frame, align_axis)
 
-            int_frame = ReferenceFrame(frame_name)
-            int_frame.orient_axis(frame, rotation_axis, angle)
-            int_frame.set_ang_vel(frame, 0 * rotation_axis)
-            return int_frame
-        return frame
+        int_frame = ReferenceFrame(frame_name)
+        int_frame.orient_axis(frame, rotation_axis, angle)
+        int_frame.set_ang_vel(frame, 0 * rotation_axis)
+        return int_frame
 
     def _generate_kdes(self):
         """Generate kinematical differential equations."""
@@ -454,7 +452,7 @@ class Joint(ABC):
         if not isinstance(joint_pos, (Point, Vector)):
             raise TypeError('Attachment point must be a Point or Vector.')
         if isinstance(joint_pos, Vector):
-            point_name = self._name + '_' + body.name + '_joint'
+            point_name = f'{self.name}_{body.name}_joint'
             joint_pos = body.masscenter.locatenew(point_name, joint_pos)
         if not joint_pos.pos_from(body.masscenter).dt(body.frame) == 0:
             raise ValueError('Attachment point must be fixed to the associated '
@@ -550,9 +548,9 @@ class PinJoint(Joint, _JointAxisMixin):
     the child and parent and the location of the joint is relative to the mass
     center of each body. The child rotates an angle, θ, from the parent about
     the rotation axis and has a simple angular speed, ω, relative to the
-    parent. The direction cosine matrix between the childinterframe and
-    parentinterframe is formed using a simple rotation about the joint axis.
-    The page on the joints framework gives a more detailed explanation on the
+    parent. The direction cosine matrix between the child interframe and
+    parent interframe is formed using a simple rotation about the joint axis.
+    The page on the joints framework gives a more detailed explanation of the
     intermediate frames.
 
     Parameters
@@ -601,7 +599,7 @@ class PinJoint(Joint, _JointAxisMixin):
         is created which aligns its X axis with the given vector. The default
         value is the child's own frame.
     joint_axis : Vector
-        The axis around which the rotation occurs. Note that the components
+        The axis about which the rotation occurs. Note that the components
         of this axis are the same in the parent_interframe and child_interframe.
     parent_joint_pos : Point or Vector, optional
         .. deprecated:: 1.12
@@ -642,7 +640,7 @@ class PinJoint(Joint, _JointAxisMixin):
         Intermediate frame of the child body with respect to which the joint
         transformation is formulated.
     joint_axis : Vector
-        The axis around which the rotation occurs. Note that the components of
+        The axis about which the rotation occurs. Note that the components of
         this axis are the same in the parent_interframe and child_interframe.
     kdes : list
         Kinematical differential equations of the joint.
@@ -775,7 +773,7 @@ class PinJoint(Joint, _JointAxisMixin):
 
     @property
     def joint_axis(self):
-        """Axis along which the child rotates with respect to the parent."""
+        """Axis about which the child rotates with respect to the parent."""
         return self._joint_axis
 
     def _generate_coordinates(self, coordinate):
@@ -822,14 +820,13 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     ===========
 
     It is defined such that the child body translates with respect to the parent
-    body along the body fixed joint axis. The location of the joint is defined
-    by two points, one in each body, which coincides when the generalized
+    body along the body-fixed joint axis. The location of the joint is defined
+    by two points, one in each body, which coincide when the generalized
     coordinate is zero. The direction cosine matrix between the
-    parent_interframe and child_interframe is the identity matrix. So the
-    direction cosine matrix between the parent and child frames, is fully
-    defined by the definition of the intermediate frames. For a detailed
-    explanation on the intermediate frames, see the page on the joints
-    framework.
+    parent_interframe and child_interframe is the identity matrix. Therefore,
+    the direction cosine matrix between the parent and child frames is fully
+    defined by the definition of the intermediate frames. The page on the joints
+    framework gives a more detailed explanation of the intermediate frames.
 
     Parameters
     ==========
@@ -877,7 +874,7 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         is created which aligns its X axis with the given vector. The default
         value is the child's own frame.
     joint_axis : Vector
-        The axis across which the translation occurs. Note that the components
+        The axis along which the translation occurs. Note that the components
         of this axis are the same in the parent_interframe and child_interframe.
     parent_joint_pos : Point or Vector, optional
         .. deprecated:: 1.12
@@ -1078,11 +1075,9 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         self.child_interframe.set_ang_vel(self.parent_interframe, 0)
 
     def _set_linear_velocity(self):
-        self.child_point.set_pos(self.parent_point, self.coordinates[
-            0] * self.joint_axis.normalize())
+        axis = self.joint_axis.normalize()
+        self.child_point.set_pos(self.parent_point, self.coordinates[0] * axis)
         self.parent_point.set_vel(self.parent.frame, 0)
         self.child_point.set_vel(self.child.frame, 0)
-        self.child_point.set_vel(self.parent.frame, self.speeds[
-            0] * self.joint_axis.normalize())
-        self.child.masscenter.set_vel(self.parent.frame, self.speeds[
-            0] * self.joint_axis.normalize())
+        self.child_point.set_vel(self.parent.frame, self.speeds[0] * axis)
+        self.child.masscenter.set_vel(self.parent.frame, self.speeds[0] * axis)

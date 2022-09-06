@@ -28,7 +28,7 @@ As can be seen in this image, each joint needs several objects in order to
 define the relationships. First off it needs two bodies: the parent body (shown
 in green) and the child body (shown in blue). The transformation made by the
 joint is defined between the joint attachments of both bodies. A joint
-attachment of a body consists of a point and a body fixed frame. In the parent
+attachment of a body consists of a point and a body-fixed frame. In the parent
 body the point is called ``parent_point`` and the frame ``parent_interframe``.
 For the child body these are called ``child_point`` and ``child_interframe``.
 For most joints it is the case that when the generalized coordinates are zero,
@@ -45,8 +45,8 @@ like the :class:`~.PinJoint`, :class:`~.PrismaticJoint` also require a
 the joint axis is defined in the ``parent_interframe`` as $2\hat{p}_x +
 4\hat{p}_y + 3\hat{p}_z$, then this will also be $2\hat{c}_x + 4\hat{c}_y +
 3\hat{c}_z$ in the ``child_interframe``. Practically this means that in the case
-of the :class:`~.PinJoint`, also shown below, that the ``joint_axis`` is the
-axis of rotation. With the generalized coordinate :math:`\theta` as the angle of
+of the :class:`~.PinJoint`, also shown below, the ``joint_axis`` is the axis of
+rotation, with the generalized coordinate :math:`\theta` as the angle of
 rotation and the generalized speed :math:`\omega` as the angular velocity.
 
 .. image:: api/PinJoint.svg

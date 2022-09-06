@@ -81,17 +81,17 @@ SymPy deprecation warnings.
 
 The definition of the joint axis in the ``sympy.physics.mechanics`` has changed.
 Instead of using the arguments ``parent_axis`` and ``child_axis`` to
-automatically determine the joint axis and an intermediate reference frame. The
+automatically determine the joint axis and an intermediate reference frame, the
 joints now use an intermediate frame argument for both the parent and the child
 body, i.e. ``parent_interframe`` and ``child_interframe``. This means that you
 can now fully define the joint attachment, consisting of a point and frame, for
 both bodies. Furthermore, if a joint like the ``PinJoint`` has a specific joint
-axis, e.g. the axis around which the rotation occurs, then this axis can be
+axis, e.g. the axis about which the rotation occurs, then this axis can be
 specified using the ``joint_axis`` argument. An advantage of this setup is that
 one can more accurately define the transformation from the parent body to the
 child body.
 
-For example, suppose you want a ``PinJoint`` that rotates the child body around
+For example, suppose you want a ``PinJoint`` that rotates the child body about
 the ``parent.z`` axis and ``-child.z`` axis. The previous way to specify this
 joint was:
 
@@ -108,7 +108,7 @@ Matrix([
 ```
 
 When inspecting this matrix you will notice that for ``theta_pin = 0`` the child
-body is rotated $\pi$ rad around the ``parent.y`` axis. In the new definition
+body is rotated $\pi$ rad about the ``parent.y`` axis. In the new definition
 you can see that we get the same result, but this time we have also specified
 this exact rotation:
 
