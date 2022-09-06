@@ -537,9 +537,6 @@ def test_locate_joint_frame():
     assert joint.parent_interframe == parent_interframe
     assert joint.parent_interframe.ang_vel_in(N) == 0
     assert joint.child_interframe == A
-    # Test invalid type
-    N, A, P, C = _generate_body()
-    raises(TypeError, lambda: PinJoint('J', P, C, parent_interframe=N.x))
     # Test time varying orientations
     q = dynamicsymbols('q')
     N, A, P, C = _generate_body()
