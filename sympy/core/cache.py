@@ -1,6 +1,6 @@
 """ Caching facility for SymPy """
 from importlib import import_module
-from typing import Callable, List, Union
+from typing import Callable, List
 
 class _cache(list):
     """ List of cached functions """
