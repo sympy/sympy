@@ -33,7 +33,7 @@ def test_Joint():
     raises(TypeError, lambda: Joint('J', parent, child))
 
 
-def test_pinjoint():
+def test_pin_joint():
     P = Body('P')
     C = Body('C')
     l, m = symbols('l m')
@@ -178,7 +178,7 @@ def test_pin_joint_chaos_pendulum():
 
 
 @XFAIL
-def test_pinjoint_interframe():
+def test_pin_joint_interframe():
     q, u = dynamicsymbols('q, u')
     # Check not connected
     N, A, P, C = _generate_body()
@@ -248,7 +248,7 @@ def test_pinjoint_interframe():
     assert C.masscenter.vel(N).simplify() == (-sqrt(2) + sqrt(6)) * u / 4 * A.x
 
 
-def test_pinjoint_joint_axis():
+def test_pin_joint_joint_axis():
     q, u = dynamicsymbols('q, u')
     # Check parent as reference
     N, A, P, C, Pint, Cint = _generate_body(True)
@@ -306,7 +306,7 @@ def test_pinjoint_joint_axis():
         joint_axis=C.z - Cint.x))
 
 
-def test_pinjoint_arbitrary_axis():
+def test_pin_joint_arbitrary_axis():
     theta, omega = dynamicsymbols('theta_J, omega_J')
 
     # When the bodies are attached though masscenters but axess are opposite.
@@ -467,7 +467,7 @@ def test_create_aligned_frame_pi():
     assert f.y - f.z == P.y - P.z
 
 
-def test_pinjoint_axis():
+def test_pin_joint_axis():
     q, u = dynamicsymbols('q u')
     # Test default joint axis
     N, A, P, C, Pint, Cint = _generate_body(True)
@@ -552,7 +552,7 @@ def test_locate_joint_frame():
            lambda: PinJoint('J', P, C, child_interframe=child_interframe))
 
 
-def test_slidingjoint():
+def test_sliding_joint():
     _, _, P, C = _generate_body()
     x, v = dynamicsymbols('x_S, v_S')
     S = PrismaticJoint('S', P, C)
@@ -605,7 +605,7 @@ def test_slidingjoint():
     assert P.ang_vel_in(C) == 0
 
 
-def test_slidingjoint_arbitrary_axis():
+def test_sliding_joint_arbitrary_axis():
     x, v = dynamicsymbols('x_S, v_S')
 
     N, A, P, C = _generate_body()
