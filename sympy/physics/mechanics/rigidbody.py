@@ -362,5 +362,5 @@ method is deprecated. Instead use
         from sympy.physics.mechanics.functions import inertia_of_point_mass
         if frame is None:
             frame = self.frame
-        return self.central_inertia.express(frame) + inertia_of_point_mass(
+        return self.central_inertia + inertia_of_point_mass(
             self.mass, self.masscenter.pos_from(point), frame)
