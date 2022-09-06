@@ -69,13 +69,12 @@ Refer to [](solve-equation-algebraically.md) for more about using
 
 ### Algebraic Solution With Root Multiplicities
 
-#### {func}`~.roots`
+#### `roots`
 
-{func}`~.roots` is the most rigorous function because it can give explicit
-expressions for the roots of polynomials that have symbolic coefficients (that
-is, if there are symbols in the coefficients) if {func}`~.factor` does not
-reveal them. However, it may fail for some polynomials. Here are examples of
-{func}`~.roots`:
+{func}`~.roots` can give explicit expressions for the roots of polynomials that
+have symbolic coefficients (that is, if there are symbols in the coefficients)
+if {func}`~.factor` does not reveal them. However, it may fail for some
+polynomials. Here are examples of {func}`~.roots`:
 
 ```py
 >>> roots(expression, x)
@@ -144,8 +143,9 @@ that only real (not complex or imaginary) roots will be returned.
 [-2, -2, 3]
 ```
 
-{func}`~.real_roots` calls {func}`~sympy.polys.rootoftools.RootOf`, so you can
-get the same results by iterating over the number of roots of your equation:
+{func}`~.real_roots` calls {func}`~sympy.polys.rootoftools.RootOf`, so for
+equations whose roots are all real, you can get the same results by iterating
+over the number of roots of your equation:
 
 ```py
 >>> [RootOf(expression, n) for n in range(0,3)]
@@ -165,9 +165,20 @@ example a (negligible) imaginary component in what should be a real root:
 [3.0, -2.0 - 4.18482169793536e-14*I, -2.0 + 4.55872552179222e-14*I]
 ```
 
-{func}`~.nroots`  is analogous to NumPy's {external:func}`~numpy.roots`
-function. Usually the difference between these two is that {func}`~.nroots` is
-more accurate but slower.
+If you want numeric approximations of the real roots, but you want to know
+exactly which roots are real, then the best method is {func}`~.real_roots` with
+{func}`~sympy.core.evalf`:
+
+```py
+>>> [r.n(2) for r in real_roots(expression)]
+[-2.0, -2.0, 3.0]
+>>> [r.is_real for r in real_roots(expression)]
+[True, True, True]
+```
+
+{func}`~.nroots` is analogous to NumPy's {external:func}`~numpy.roots` function.
+Usually the difference between these two is that {func}`~.nroots` is more
+accurate but slower.
 
 A major advantage of {func}`~.nroots` is that it can compute numerical
 approximations of the roots of any polynomial whose coefficients can be
@@ -178,7 +189,21 @@ theorem](https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem). Even if
 closed-form solutions are available, they may have so many terms that they are
 not useful in practice. You may therefore want to use {func}`~.nroots` to find
 approximate numeric solutions even if closed-form symbolic solutions are
-available.
+available. For example, the closed-form roots of a fourth-order (quartic)
+polynomial may be rather complicated:
+
+```py
+>>> rq0, rq1, rq2, rq3 = roots(x**4 + 3*x**2 + 2*x + 1)
+>>> rq0
+sqrt(-4 - 2*(-1/8 + sqrt(237)*I/36)**(1/3) + 4/sqrt(-2 + 7/(6*(-1/8 + sqrt(237)*I/36)**(1/3)) + 2*(-1/8 + sqrt(237)*I/36)**(1/3)) - 7/(6*(-1/8 + sqrt(237)*I/36)**(1/3)))/2 - sqrt(-2 + 7/(6*(-1/8 + sqrt(237)*I/36)**(1/3)) + 2*(-1/8 + sqrt(237)*I/36)**(1/3))/2
+```
+
+so you may prefer an approximate numerical solution:
+
+```py
+rq0.n()
+-0.349745826211722 - 0.438990337475312⋅I
+```
 
 {func}`~.nroots` can fail sometimes for polynomials that are numerically ill
 conditioned, for example [Wilkinson's
@@ -222,14 +247,16 @@ positive leads to imaginary roots:
 [3, -2*I, -2*I]
 ```
 
-{func}`~.real_roots` will only return the real roots and give no indication that
-there are complex roots, so use it with caution if your equation could have
-complex roots:
+{func}`~.real_roots` will return only the real roots.
 
 ```py
 >>> real_roots(expression_complex)
 [3]
 ```
+
+An advantage of {func}`~.real_roots` is that it can be more efficient than
+generating all the roots: {func}`~sympy.polys.rootoftools.RootOf` can be slow
+for complex roots.
 
 If you make the expression into a polynomial class {class}`~.Poly`, you can use
 its {meth}`~sympy.polys.polytools.Poly.all_roots` method to find the roots:
@@ -250,15 +277,159 @@ its {meth}`~sympy.polys.polytools.Poly.all_roots` method to find the roots:
 
 *Usage method 2 content*
 
-## *Tradeoffs (speed vs. accuracy, etc.) for function*
+## Tradeoffs
 
-### *Tradeoff 1*
+### Mathematical Exactness, Completeness of List of Roots, and Speed
 
-*Tradeoff 1 content*
+Consider the high-order polynomial $x^5 - x + 1 = 0$. {func}`~.nroots` returns
+numerical approximations to all five roots:
 
-### *Tradeoff 2*
+```py
+>>> from sympy import roots, solve, real_roots, nroots
+>>> from sympy.abc import x
+>>> fifth_order = x**5 - x + 1
+>>> nroots(fifth_order)
+[-1.16730397826142,
+ -0.181232444469875 - 1.08395410131771*I,
+ -0.181232444469875 + 1.08395410131771*I,
+ 0.764884433600585 - 0.352471546031726*I,
+ 0.764884433600585 + 0.352471546031726*I]
+```
 
-*Tradeoff 2 content*
+{func}`~.roots` can sometimes return only a subset of the roots or nothing if it
+can't express any roots in radicals. In this case, it returns no roots (an empty
+set):
+
+```py
+roots(fifth_order, x)
+{}
+```
+
+But if you set the flag `strict=True`, {func}`~.roots` will inform you that all
+roots cannot be returned:
+
+```py
+>>> roots(x**5 - x + 1, x, strict=True)
+Traceback (most recent call last):
+...
+sympy.polys.polyerrors.UnsolvableFactorError: 
+Strict mode: some factors cannot be solved in radicals, so a complete
+list of solutions cannot be returned. Call roots with strict=False to
+get solutions expressible in radicals (if there are any).
+```
+
+{func}`~.solve` will return all five roots as `CRootOf`
+({func}`~sympy.polys.rootoftools.ComplexRootOf`) class members:
+
+```py
+>>> fifth_order_solved = solve(fifth_order, x, dict=True)
+>>> fifth_order_solved
+[{x: CRootOf(x**5 - x + 1, 0)},
+{x: CRootOf(x**5 - x + 1, 1)},
+{x: CRootOf(x**5 - x + 1, 2)},
+{x: CRootOf(x**5 - x + 1, 3)},
+{x: CRootOf(x**5 - x + 1, 4)}]
+```
+
+where the second argument in each `CRootOf` is the index of the root. You can
+then evaluate those roots numerically using `n` from {func}`~sympy.core.evalf`:
+
+```py
+>>> roots_solved = []
+>>> for root in fifth_order_solved:
+...     roots_solved.append(root[x].n(10))
+>>> roots_solved
+[-1.167303978,
+ -0.1812324445 - 1.083954101*I,
+ -0.1812324445 + 1.083954101*I,
+ 0.7648844336 - 0.352471546*I,
+ 0.7648844336 + 0.352471546*I]
+```
+
+If you are only interested in the sole real root, it is faster to use
+{func}`~.real_roots` because it will not attempt to find the complex roots:
+
+```py
+>>> real_root = real_roots(fifth_order, x)
+>>> real_root
+[CRootOf(x**5 - x + 1, 0)]
+>>> real_root[0].n(10)
+-1.167303978
+```
+
+### Representing Roots
+
+{func}`~sympy.polys.rootoftools.RootOf`, {func}`~.real_roots`, and
+{meth}`~sympy.polys.polytools.Poly.all_roots` can find all the roots exactly of
+a polynomial of arbitrarily large degree despite the [Abel-Ruffini
+theorem](https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem). Those
+functions allow the roots to be categorized precisely and manipulated
+symbolically.
+
+```py
+>>> from sympy import init_printing
+>>> init_printing()
+>>> real_roots(fifth_order)
+        / 5           \ 
+[CRootOf\x  - x + 1, 0/]
+>>> Poly(fifth_order, x).all_roots()
+        / 5           \         / 5           \         / 5           \       
+[CRootOf\x  - x + 1, 0/, CRootOf\x  - x + 1, 1/, CRootOf\x  - x + 1, 2/, CRoot
+<BLANKLINE>
+    / 5           \         / 5           \ 
+Of\x  - x + 1, 3/, CRootOf\x  - x + 1, 4/]
+>>> r0, r1, r2, r3, r4 = Poly(fifth_order, x).all_roots()
+>>> r0
+        / 5           \
+CRootOf\x  - x + 1, 0/
+```
+
+Now that the roots have been found exactly, their properties can be determined
+free of numerical noise. For example, we can tell whether roots are real or not.
+If we request the {meth}`~.conjugate` (same real part and imaginary part with
+opposite sign) of a root, for example `r1`, and that is exactly equal to another
+root `r2`, that root `r2` will be returned:
+
+```py
+>>> r0.n()
+-1.16730397826142
+>>> r0.is_real
+True
+>>> r1.n()
+-0.181232444469875 - 1.08395410131771*I
+>>> r2.n()
+-0.181232444469875 + 1.08395410131771*I
+>>> r1
+        / 5           \
+CRootOf\x  - x + 1, 1/
+>>> r1.conjugate()
+        / 5           \
+CRootOf\x  - x + 1, 2/
+>>> r1.is_real
+False
+```
+
+{func}`~.solve` will also give the complex roots where possible but it is less
+efficient than using {meth}`~sympy.polys.polytools.Poly.all_roots` directly.
+
+{func}`~sympy.polys.rootoftools.RootOf` exactly represents the root in a way
+that can be manipulated symbolically, and computed to arbitrary precision. The
+{func}`~sympy.polys.rootoftools.RootOf` representation makes it possible to
+precisely:
+
+- Compute all roots of a polynomial with exact rational coefficients.
+- Decide exactly the multiplicity of every root.
+- Determine exactly whether roots are real or not.
+- Order the real and complex roots precisely.
+- Know which roots are complex conjugate pairs of each other.
+- Determine precisely which roots are rational vs irrational.
+- Represent every possible algebraic number exactly.
+
+The other numerical methods such NumPy's {external:func}`~numpy.roots`,
+{func}`~.nroots`, and {func}`~.nsolve` cannot do any of these things robustly,
+if at all. Similarly, when numerically evaluated using
+{func}`~sympy.core.evalf`, the radical expressions returned by {func}`~.solve`
+or {func}`~.roots` cannot do these things robustly.
 
 ## Not All Equations Can Be Solved
 
@@ -269,10 +440,11 @@ its {meth}`~sympy.polys.polytools.Poly.all_roots` method to find the roots:
 ### Equations With No Closed-Form Solution
 
 As mentioned above, higher-order polynomials (fifth or greater) are unlikely to
-have closed-form solutions, so you may have to use a numerical method such as
-[`nroots` as described above](#nroots).
+have closed-form solutions, so you may have to represent them using, for
+example, [`RootOf` as described above](#representing-roots), or use a numerical
+method such as [`nroots` as described above](#nroots).
 
-Please post the problem on the [mailing
-list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
-page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-can *workaround*.
+If you encounter a problem with these commands, please post the problem on the
+[mailing list](https://groups.google.com/g/sympy), or open an issue on [SymPy's
+GitHub page](https://github.com/sympy/sympy/issues). Until the issue is
+resolved, you can *workaround*.
