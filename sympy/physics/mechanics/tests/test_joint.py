@@ -610,7 +610,7 @@ def test_sliding_joint():
     assert C.masscenter.vel(P.frame) == v * P.frame.z
     assert C.ang_vel_in(P) == 0
     assert P.ang_vel_in(C) == 0
-test_sliding_joint()
+
 
 def test_sliding_joint_arbitrary_axis():
     x, v = dynamicsymbols('x_S, v_S')
