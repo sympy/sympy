@@ -550,6 +550,7 @@ def test_andre():
     assert str(andre(-1, evaluate=False).evalf(n=10)) == '-0.6931471806'
     assert str(andre(-2, evaluate=False).evalf(n=10)) == '-1.831931188'
     assert str(andre(-4, evaluate=False).evalf(n=10)) == '1.977889103'
+    assert str(andre(I, evaluate=False).evalf(n=10)) == '2.378417833 + 0.6343322845*I'
 
     assert andre(x).rewrite(polylog) == \
             (-I)**(x+1) * polylog(-x, I) + I**(x+1) * polylog(-x, -I)

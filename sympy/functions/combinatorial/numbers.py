@@ -1157,17 +1157,23 @@ class euler(Function):
     def _eval_evalf(self, prec):
         if not all(i.is_number for i in self.args):
             return
+        from mpmath import mp
         m, x = (self.args[0], None) if len(self.args) == 1 else self.args
-        if m.is_Integer and m.is_nonnegative:
-            from mpmath import mp
-            with workprec(prec):
-                if x is None:
-                    res = mp.eulernum(m)
+        m = m._to_mpmath(prec)
+        if x is not None:
+            x = x._to_mpmath(prec)
+        with workprec(prec):
+            if mp.isint(m) and m >= 0:
+                res = mp.eulernum(m) if x is None else mp.eulerpoly(m, x)
+            else:
+                if m == -1:
+                    res = mp.pi if x is None else mp.digamma((x+1)/2) - mp.digamma(x/2)
                 else:
-                    x = x._to_mpmath(prec)
-                    res = mp.eulerpoly(m, x)
-            return Expr._from_mpmath(res, prec)
-        return self.rewrite(genocchi)._eval_evalf(prec)
+                    y = 0.5 if x is None else x
+                    res = 2 * (mp.zeta(-m, y) - 2**(m+1) * mp.zeta(-m, (y+1)/2))
+                if x is None:
+                    res *= 2**m
+        return Expr._from_mpmath(res, prec)
 
 
 #----------------------------------------------------------------------------#
@@ -1562,8 +1568,13 @@ class andre(Function):
             return True
 
     def _eval_evalf(self, prec):
-        from sympy.functions.special.zeta_functions import polylog
-        return self.rewrite(polylog)._eval_evalf(prec)
+        if not self.args[0].is_number:
+            return
+        s = self.args[0]._to_mpmath(prec+12)
+        with workprec(prec+12):
+            sp, cp = mp.sinpi(s/2), mp.cospi(s/2)
+            res = 2*mp.dirichlet(-s, (-sp, cp, sp, -cp))
+        return Expr._from_mpmath(res, prec)
 
 
 #----------------------------------------------------------------------------#
