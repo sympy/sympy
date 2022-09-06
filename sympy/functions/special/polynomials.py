@@ -199,6 +199,11 @@ class jacobi(OrthogonalPolynomial):
                 factorial(k) * ((1 - x)/2)**k)
         return 1 / factorial(n) * Sum(kern, (k, 0, n))
 
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
+
     def _eval_conjugate(self):
         n, a, b, x = self.args
         return self.func(n, a.conjugate(), b.conjugate(), x.conjugate())
@@ -421,6 +426,11 @@ class gegenbauer(OrthogonalPolynomial):
                 (factorial(k) * factorial(n - 2*k)))
         return Sum(kern, (k, 0, floor(n/2)))
 
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
+
     def _eval_conjugate(self):
         n, a, x = self.args
         return self.func(n, a.conjugate(), x.conjugate())
@@ -542,6 +552,11 @@ class chebyshevt(OrthogonalPolynomial):
         kern = binomial(n, 2*k) * (x**2 - 1)**k * x**(n - 2*k)
         return Sum(kern, (k, 0, floor(n/2)))
 
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
+
 
 class chebyshevu(OrthogonalPolynomial):
     r"""
@@ -662,6 +677,11 @@ class chebyshevu(OrthogonalPolynomial):
         kern = S.NegativeOne**k * factorial(
             n - k) * (2*x)**(n - 2*k) / (factorial(k) * factorial(n - 2*k))
         return Sum(kern, (k, 0, floor(n/2)))
+
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
 
 
 class chebyshevt_root(Function):
@@ -860,6 +880,11 @@ class legendre(OrthogonalPolynomial):
         kern = S.NegativeOne**k*binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
         return Sum(kern, (k, 0, n))
 
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
+
 
 class assoc_legendre(Function):
     r"""
@@ -964,6 +989,11 @@ class assoc_legendre(Function):
             k)*factorial(n - 2*k - m))*S.NegativeOne**k*x**(n - m - 2*k)
         return (1 - x**2)**(m/2) * Sum(kern, (k, 0, floor((n - m)*S.Half)))
 
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
+
     def _eval_conjugate(self):
         n, m, x = self.args
         return self.func(n, m.conjugate(), x.conjugate())
@@ -1065,6 +1095,11 @@ class hermite(OrthogonalPolynomial):
         kern = S.NegativeOne**k / (factorial(k)*factorial(n - 2*k)) * (2*x)**(n - 2*k)
         return factorial(n)*Sum(kern, (k, 0, floor(n/2)))
 
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
+
     def _eval_rewrite_as_hermite_prob(self, n, x, **kwargs):
         return sqrt(2)**n * hermite_prob(n, x*sqrt(2))
 
@@ -1155,6 +1190,11 @@ class hermite_prob(OrthogonalPolynomial):
         k = Dummy("k")
         kern = (-S.Half)**k * x**(n-2*k) / (factorial(k) * factorial(n-2*k))
         return factorial(n)*Sum(kern, (k, 0, floor(n/2)))
+
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
 
     def _eval_rewrite_as_hermite(self, n, x, **kwargs):
         return sqrt(2)**(-n) * hermite(n, x/sqrt(2))
@@ -1268,6 +1308,11 @@ class laguerre(OrthogonalPolynomial):
         k = Dummy("k")
         kern = RisingFactorial(-n, k) / factorial(k)**2 * x**k
         return Sum(kern, (k, 0, n))
+
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
 
 
 class assoc_laguerre(OrthogonalPolynomial):
@@ -1389,6 +1434,11 @@ class assoc_laguerre(OrthogonalPolynomial):
         kern = RisingFactorial(
             -n, k) / (gamma(k + alpha + 1) * factorial(k)) * x**k
         return gamma(n + alpha + 1) / factorial(n) * Sum(kern, (k, 0, n))
+
+    def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
+        # This function is just kept for backwards compatibility
+        # but should not be used
+        return self._eval_rewrite_as_Sum(n, x, **kwargs)
 
     def _eval_conjugate(self):
         n, alpha, x = self.args
