@@ -101,9 +101,9 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         QQ_gmpy, GF, FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, EXRAW,
         construct_domain, swinnerton_dyer_poly, cyclotomic_poly,
         symmetric_poly, random_poly, interpolating_poly, jacobi_poly,
-        chebyshevt_poly, chebyshevu_poly, hermite_poly, legendre_poly,
-        laguerre_poly, apart, apart_list, assemble_partfrac_list, Options,
-        ring, xring, vring, sring, field, xfield, vfield, sfield)
+        chebyshevt_poly, chebyshevu_poly, hermite_poly, hermite_prob_poly,
+        legendre_poly, laguerre_poly, apart, apart_list, assemble_partfrac_list,
+        Options, ring, xring, vring, sring, field, xfield, vfield, sfield)
 
 from .series import (Order, O, limit, Limit, gruntz, series, approximants,
         residue, EmptySequence, SeqPer, SeqFormula, sequence, SeqAdd, SeqMul,
@@ -318,8 +318,8 @@ __all__ = [
     'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX', 'EXRAW',
     'construct_domain', 'swinnerton_dyer_poly', 'cyclotomic_poly',
     'symmetric_poly', 'random_poly', 'interpolating_poly', 'jacobi_poly',
-    'chebyshevt_poly', 'chebyshevu_poly', 'hermite_poly', 'legendre_poly',
-    'laguerre_poly', 'apart', 'apart_list', 'assemble_partfrac_list',
+    'chebyshevt_poly', 'chebyshevu_poly', 'hermite_poly', 'hermite_prob_poly',
+    'legendre_poly', 'laguerre_poly', 'apart', 'apart_list', 'assemble_partfrac_list',
     'Options', 'ring', 'xring', 'vring', 'sring', 'field', 'xfield', 'vfield',
     'sfield',
 
