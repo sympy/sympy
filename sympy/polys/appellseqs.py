@@ -87,6 +87,11 @@ def bernoulli_poly(n, x=None, polys=False):
     polys : bool, optional
         If True, return a Poly, otherwise (default) return an expression.
 
+    See Also
+    ========
+
+    sympy.functions.combinatorial.numbers.bernoulli
+
     References
     ==========
 
@@ -157,6 +162,11 @@ def genocchi_poly(n, x=None, polys=False):
     x : optional
     polys : bool, optional
         If True, return a Poly, otherwise (default) return an expression.
+
+    See Also
+    ========
+
+    sympy.functions.combinatorial.numbers.genocchi
     """
     return named_poly(n, dup_genocchi, ZZ, "Genocchi polynomial", (x,), polys)
 
@@ -180,6 +190,11 @@ def euler_poly(n, x=None, polys=False):
     x : optional
     polys : bool, optional
         If True, return a Poly, otherwise (default) return an expression.
+
+    See Also
+    ========
+
+    sympy.functions.combinatorial.numbers.euler
     """
     return named_poly(n, dup_euler, QQ, "Euler polynomial", (x,), polys)
 
@@ -239,6 +254,11 @@ def andre_poly(n, x=None, polys=False):
     x : optional
     polys : bool, optional
         If True, return a Poly, otherwise (default) return an expression.
+
+    See Also
+    ========
+
+    sympy.functions.combinatorial.numbers.andre
 
     References
     ==========
