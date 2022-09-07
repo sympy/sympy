@@ -251,6 +251,7 @@ def smtlib_code(
     Examples
     ========
     >>> import warnings
+    >>> default_showwarning = warnings.showwarning
     >>> warnings.showwarning = (lambda m, *_: print(repr(m)))
 
     >>> from sympy import smtlib_code, symbols, sin, Eq
@@ -294,6 +295,8 @@ def smtlib_code(
     >>> smtlib_code(f(x) + g(x), symbol_table=user_def_funcs, known_functions=smt_builtin_funcs)
     UserWarning('Non-Boolean expression `f(x) + g(x)` will not be asserted. Converting to SMTLib verbatim.')
     '(declare-const x Int)\n(declare-fun g (Int) Real)\n(sum (existing_smtlib_fcn x) (g x))'
+
+    >>> warnings.showwarning = default_showwarning
     """
     if not isinstance(expr, list): expr = [expr]
     expr = [
