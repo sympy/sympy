@@ -23,14 +23,9 @@ formula](https://en.wikipedia.org/wiki/Quadratic_formula).
 
 ## Guidance
 
-### *Guidance 1*
-
-*Guidance 1 content*
-
-### *Guidance 2*
-
-*Guidance 2 content*
-
+Refer to
+[](solving-guidance.md#include-the-variable-to-be-solved-for-in-the-function-call)
+and [](solving-guidance.md#use-exact-values).
 
 ## Solve (Find the Roots of) a Polynomial
 
@@ -268,6 +263,8 @@ its {meth}`~sympy.polys.polytools.Poly.all_roots` method to find the roots:
 ```
 
 ## Use the Solution Result
+
+
 
 ### *Usage Method 1*
 
