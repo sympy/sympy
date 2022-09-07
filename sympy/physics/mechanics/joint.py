@@ -8,7 +8,6 @@ from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
                                   ReferenceFrame)
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
-import warnings
 
 __all__ = ['Joint', 'PinJoint', 'PrismaticJoint']
 
@@ -474,40 +473,6 @@ class Joint(ABC):
                              f'{body}.')
         body.masscenter.set_vel(interframe, 0)  # Fixate interframe to body
         return interframe
-
-    def _alignment_rotation(self, parent, child):
-        # Returns the axis and angle between two axis(vectors), as if the parent
-        # and child body are not rotated with respect to each other.
-        # Will be removed with `deprecated-mechanics-joint-axis`
-        child = self._to_vector(child.to_matrix(self.child.frame),
-                                self.parent.frame)
-        angle = parent.angle_between(child)
-        axis = cross(child, parent).normalize()
-        return angle, axis
-
-    def _generate_vector(self):
-        # Will be removed with `deprecated-mechanics-joint-axis`
-        return self._choose_rotation_axis(self.parent.frame, self.parent_axis)
-
-    def _set_orientation(self):
-        # Helper method to determine parent_interframe based on parent_axis and
-        # child_axis.
-        # Will be removed with `deprecated-mechanics-joint-axis`
-        angle, axis = self._alignment_rotation(self.parent_axis,
-                                               self.child_axis)
-
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=UserWarning)
-
-            if axis != Vector(0) or angle == pi:
-
-                if angle == pi:
-                    axis = self._generate_vector()
-
-                int_frame = ReferenceFrame('int_frame')
-                int_frame.orient_axis(self.parent.frame, axis, angle)
-                return int_frame
-        return self.parent.frame
 
 
 class _JointAxisMixin:
