@@ -284,6 +284,19 @@ def test_pin_joint_joint_axis():
     assert pin.joint_axis == C.y
     assert N.dcm(A) == Matrix([[-sin(q), 0, cos(q)], [0, -1, 0],
                                [cos(q), 0, sin(q)]])
+    # Check combination of joint_axis with interframes supplied as vectors (2x)
+    N, A, P, C = _generate_body()
+    pin = PinJoint('J', P, C, q, u, parent_interframe=N.z,
+                   child_interframe=-C.z, joint_axis=N.z)
+    assert pin.joint_axis == N.z
+    assert N.dcm(A) == Matrix([[-cos(q), -sin(q), 0], [-sin(q), cos(q), 0],
+                               [0, 0, -1]])
+    N, A, P, C = _generate_body()
+    pin = PinJoint('J', P, C, q, u, parent_interframe=N.z,
+                   child_interframe=-C.z, joint_axis=N.x)
+    assert pin.joint_axis == N.x
+    assert N.dcm(A) == Matrix([[-1, 0, 0], [0, cos(q), sin(q)],
+                               [0, sin(q), -cos(q)]])
     # Check time varying axis
     N, A, P, C, Pint, Cint = _generate_body(True)
     raises(ValueError, lambda: PinJoint('J', P, C,
