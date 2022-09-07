@@ -201,8 +201,8 @@ sqrt(-4 - 2*(-1/8 + sqrt(237)*I/36)**(1/3) + 4/sqrt(-2 + 7/(6*(-1/8 + sqrt(237)*
 so you may prefer an approximate numerical solution:
 
 ```py
-rq0.n()
--0.349745826211722 - 0.438990337475312⋅I
+>>> rq0.n()
+-0.349745826211722 - 0.438990337475312*I
 ```
 
 {func}`~.nroots` can fail sometimes for polynomials that are numerically ill
@@ -301,7 +301,7 @@ can't express any roots in radicals. In this case, it returns no roots (an empty
 set):
 
 ```py
-roots(fifth_order, x)
+>>> roots(fifth_order, x)
 {}
 ```
 
@@ -312,8 +312,7 @@ roots cannot be returned:
 >>> roots(x**5 - x + 1, x, strict=True)
 Traceback (most recent call last):
 ...
-sympy.polys.polyerrors.UnsolvableFactorError: 
-Strict mode: some factors cannot be solved in radicals, so a complete
+sympy.polys.polyerrors.UnsolvableFactorError: Strict mode: some factors cannot be solved in radicals, so a complete
 list of solutions cannot be returned. Call roots with strict=False to
 get solutions expressible in radicals (if there are any).
 ```
@@ -386,9 +385,9 @@ CRootOf\x  - x + 1, 0/
 
 Now that the roots have been found exactly, their properties can be determined
 free of numerical noise. For example, we can tell whether roots are real or not.
-If we request the {meth}`~.conjugate` (same real part and imaginary part with
-opposite sign) of a root, for example `r1`, and that is exactly equal to another
-root `r2`, that root `r2` will be returned:
+If we request the {meth}`~sympy.core.expr.Expr.conjugate` (same real part and
+imaginary part with opposite sign) of a root, for example `r1`, and that is
+exactly equal to another root `r2`, that root `r2` will be returned:
 
 ```py
 >>> r0.n()
