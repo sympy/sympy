@@ -129,6 +129,17 @@ def dup_hermite(n, K):
         m2, m1 = m1, dup_mul_ground(dup_sub(a, b, K), K(2), K)
     return m1
 
+def dup_hermite_prob(n, K):
+    """Low-level implementation of probabilist's Hermite polynomials."""
+    if n < 1:
+        return [K.one]
+    m2, m1 = [K.one], [K.one, K.zero]
+    for i in range(2, n+1):
+        a = dup_lshift(m1, 1, K)
+        b = dup_mul_ground(m2, K(i-1), K)
+        m2, m1 = m1, dup_sub(a, b, K)
+    return m1
+
 @public
 def hermite_poly(n, x=None, polys=False):
     r"""Generates the Hermite polynomial `H_n(x)`.
@@ -143,6 +154,22 @@ def hermite_poly(n, x=None, polys=False):
         If True, return a Poly, otherwise (default) return an expression.
     """
     return named_poly(n, dup_hermite, ZZ, "Hermite polynomial", (x,), polys)
+
+@public
+def hermite_prob_poly(n, x=None, polys=False):
+    r"""Generates the probabilist's Hermite polynomial `He_n(x)`.
+
+    Parameters
+    ==========
+
+    n : int
+        Degree of the polynomial.
+    x : optional
+    polys : bool, optional
+        If True, return a Poly, otherwise (default) return an expression.
+    """
+    return named_poly(n, dup_hermite_prob, ZZ,
+            "probabilist's Hermite polynomial", (x,), polys)
 
 def dup_legendre(n, K):
     """Low-level implementation of Legendre polynomials."""

@@ -39,8 +39,8 @@ from sympy.functions.special.bessel import (besselj, bessely, besseli, besselk,
         hankel1, hankel2, jn, yn, jn_zeros, hn1, hn2, airyai, airybi, airyaiprime, airybiprime, marcumq)
 from sympy.functions.special.hyper import hyper, meijerg, appellf1
 from sympy.functions.special.polynomials import (legendre, assoc_legendre,
-        hermite, chebyshevt, chebyshevu, chebyshevu_root, chebyshevt_root,
-        laguerre, assoc_laguerre, gegenbauer, jacobi, jacobi_normalized)
+        hermite, hermite_prob, chebyshevt, chebyshevu, chebyshevu_root,
+        chebyshevt_root, laguerre, assoc_laguerre, gegenbauer, jacobi, jacobi_normalized)
 from sympy.functions.special.spherical_harmonics import Ynm, Ynm_c, Znm
 from sympy.functions.special.elliptic_integrals import (elliptic_k,
         elliptic_f, elliptic_e, elliptic_pi)
@@ -97,9 +97,9 @@ __all__ = [
 
     'hyper', 'meijerg', 'appellf1',
 
-    'legendre', 'assoc_legendre', 'hermite', 'chebyshevt', 'chebyshevu',
-    'chebyshevu_root', 'chebyshevt_root', 'laguerre', 'assoc_laguerre',
-    'gegenbauer', 'jacobi', 'jacobi_normalized',
+    'legendre', 'assoc_legendre', 'hermite', 'hermite_prob', 'chebyshevt',
+    'chebyshevu', 'chebyshevu_root', 'chebyshevt_root', 'laguerre',
+    'assoc_laguerre', 'gegenbauer', 'jacobi', 'jacobi_normalized',
 
     'Ynm', 'Ynm_c', 'Znm',
 
