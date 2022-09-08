@@ -510,7 +510,7 @@ class zeta(Function):
             return S.One
         elif a is S.Infinity:
             return S.Zero
-
+        # Luschny's dream has been realised
         sint = s.is_Integer
         if a is None:
             a = S.One
