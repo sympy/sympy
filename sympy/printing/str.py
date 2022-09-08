@@ -54,7 +54,7 @@ class StrPrinter(Printer):
         l = []
         for term in terms:
             t = self._print(term)
-            if t.startswith('-'):
+            if t.startswith('-') and not term.is_Add:
                 sign = "-"
                 t = t[1:]
             else:
