@@ -48,9 +48,9 @@ tuple):
 
 ### Use a Dictionary of Solutions
 
-You can then extract solutions by specifying in brackets ("slicing") the
-solution number, and then the symbol. For example `solutions[0][x]` gives the
-result for `x` in the first solution:
+You can then extract solutions by indexing (specifying in brackets) the solution
+number, and then the symbol. For example `solutions[0][x]` gives the result for
+`x` in the first solution:
 
 ```py
 >>> solutions[0][x]
@@ -80,7 +80,21 @@ Refer to [](solving-guidance.md#options-that-can-speed-up).
 ### Systems of Equations With no Solution
 
 Some systems of equations have no solution. For example, the following system
-reduces to $z = 2z$, which has no general solution:
+reduces to $z = z + 1$, which has no solution:
+
+```py
+from sympy import solve
+from sympy.abc import x, y, z
+solve([x + y - z, x + y - (z + 1)], [x, y], dict=True)
+[]
+```
+
+The following system reduces to $z = 2z$, so it has no general solution, but it
+could be satisfied if $z=0$. Note that {func}`~.solve` will not assume that
+$z=0$ even though that is the only value of $z$ that makes the system of
+equations consistent because $z$ is a parameter rather than an unknown. That is,
+{func}`~.solve` does not treat $z$ as an unknown because it is not in the list
+of symbols to be solved for `[x, y]`.
 
 ```py
 >>> from sympy import solve
@@ -97,7 +111,7 @@ and $y$), and has no solution:
 ```py
 >>> from sympy import solve
 >>> from sympy.abc import x, y, z
->>> solve([x + y - z, x - 2*z, 2*x - y], [x, y], dict=True)
+>>> solve([x + y - z, x - (z + 1), 2*x - y], [x, y], dict=True)
 []
 ```
 
