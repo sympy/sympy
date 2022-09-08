@@ -1,8 +1,8 @@
 # Solve (Find the Roots of) a Polynomial Algebraically or Numerically 
 
-Use SymPy to solve (find the roots of) a polynomial algebraically. For example,
-solving $ax^2 + bx + c = 0$ for $x$ yields $x = \frac{-b\pm\sqrt{b^2 -
-4ac}}{2a}$.
+Use SymPy to solve (find the roots of) a univariate polynomial algebraically.
+For example, solving $ax^2 + bx + c = 0$ for $x$ yields $x =
+\frac{-b\pm\sqrt{b^2 - 4ac}}{2a}$.
 
 ## Alternatives to Consider
 
