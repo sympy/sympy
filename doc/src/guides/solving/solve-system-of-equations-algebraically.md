@@ -80,7 +80,7 @@ Refer to [](solving-guidance.md#options-that-can-speed-up).
 ### Systems of Equations With no Solution
 
 Some systems of equations have no solution. For example, the following system
-reduces to $1 = 2$, which has no solution:
+has no solution because it reduces to $1 = 2$:
 
 ```py
 >>> from sympy import solve
