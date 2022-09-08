@@ -1,25 +1,52 @@
-# Solve (Find the Roots of) a Polynomial Algebraically 
+# Solve (Find the Roots of) a Polynomial Algebraically or Numerically 
 
 Use SymPy to solve (find the roots of) a polynomial algebraically. For example,
 solving $ax^2 + bx + c = 0$ for $x$ yields $x = \frac{-b\pm\sqrt{b^2 -
 4ac}}{2a}$.
 
-Alternatives to consider:
+## Alternatives to Consider
+
 - If you need a numeric (rather than algebraic) solution, you can use either
     - NumPy's {external:func}`~numpy.roots`
     - SciPy's {external:func}`~scipy.optimize.root`
 
+## Example of Finding the Roots of a Polynomial Algebraically
+
 Here is an example of solving a polynomial algebraically:
 
 ```py
->>> from sympy import solve
+>>> from sympy import roots
 >>> from sympy.abc import x, a, b, c
->>> solve(a*x**2 + b*x + c, x, dict=True)
-[{x: (-b - sqrt(-4*a*c + b**2))/(2*a)}, {x: (-b + sqrt(-4*a*c + b**2))/(2*a)}]
+>>> roots(a*x**2 + b*x + c, x)
+{-b/(2*a) - sqrt(-4*a*c + b**2)/(2*a): 1,
+ -b/(2*a) + sqrt(-4*a*c + b**2)/(2*a): 1}
 ```
 
 This example reproduces the [quadratic
 formula](https://en.wikipedia.org/wiki/Quadratic_formula).
+
+## Functions to Find the Roots of a Polynomial
+
+There are several functions that you can use to find the roots of a polynomial:
+- {func}`~.solve` is a general solving function which can find roots, though is
+  less efficient than {meth}`~sympy.polys.polytools.Poly.all_roots` and is the
+  only function in this list that does not convey the multiplicity of roots
+  return root multiplicities
+- {func}`~.roots` computes the symbolic roots of a univariate polynomial; will
+fail for most high-degree polynomials (five or greater)
+- {func}`~.nroots` computes numerical approximations of the roots of any
+polynomial whose coefficients can be numerically evaluated
+- {func}`~sympy.polys.rootoftools.RootOf` can find all the roots exactly of a
+polynomial of arbitrarily large degree
+- {func}`~.real_roots` can find all the real roots exactly of a polynomial of
+arbitrarily large degree; because it finds only the real roots, it can be more
+  efficient than functions that find all roots
+- {meth}`~sympy.polys.polytools.Poly.all_roots` can find all the roots exactly
+of a polynomial of arbitrarily large degree
+- {func}`~.factor` factors a polynomial into irreducibles and can reveal that
+  roots lie in the coefficient ring
+
+Each will be used on this page.
 
 ## Guidance
 
@@ -42,7 +69,6 @@ on whether you
 ```py
 >>> from sympy import solve, roots, real_roots, factor, nroots, RootOf, expand
 >>> from sympy import Poly
->>> from sympy.abc import x, a, b
 >>> expression = (x+2)**2 * (x-3)
 >>> symbolic = (x+a)**2 * (x-b)
 ```
@@ -264,15 +290,60 @@ its {meth}`~sympy.polys.polytools.Poly.all_roots` method to find the roots:
 
 ## Use the Solution Result
 
+The way to extract solutions from the result depends on the form of the result.
 
+### List (`all_roots`, `real_roots`, `nroots`)
 
-### *Usage Method 1*
+You can use standard Python list traversal techniques such as looping. Here, we
+substitute each root into the expression to verify that the result is $0$:
 
-*Usage method 1 content*
+```py
+>>> expression = (x+2)**2 * (x-3)
+>>> my_real_roots = real_roots(expression)
+>>> my_real_roots
+[-2, -2, 3]
+>>> for root in my_real_roots:
+...         print(f"expression({root}) = {expression.subs(x, root)}")
+expression(-2) = 0
+expression(-2) = 0
+expression(3) = 0
+```
 
-### *Usage Method 2*
+### List of dictionaries (`solve`)
 
-*Usage method 2 content*
+Refer to [](solve-equation-algebraically.md#use-the-solution-result).
+
+### Dictionary (`roots`)
+
+You can use standard Python list traversal techniques such as looping through
+the keys and values in a dictionary. Here we print the value and multiplicity of
+each root:
+
+```py
+>>> my_roots = roots(expression)
+>>> my_roots
+{-2: 2, 3: 1}
+>>> for root, multiplicity in my_roots.items():
+...     print(f"Root {root} has multiplicity of {multiplicity}")
+Root 3 has multiplicity of 1
+Root -2 has multiplicity of 2
+```
+
+### Expression (`factor`)
+
+You can manipulate an algebraic expression using various SymPy techniques, for
+example substituting in a symbolic or numeric value for $x$:
+
+```py
+>>> from sympy.abc import y
+>>> factored = factor(expression_expanded)
+>>> factored
+(x - 3)*(x + 2)**2
+>>> factored.subs(x, 2*y)
+(2*y - 3)*(2*y + 2)**2
+>>> factored.subs(x, 7)
+324
+```
 
 ## Tradeoffs
 
@@ -331,15 +402,13 @@ where the second argument in each `CRootOf` is the index of the root. You can
 then evaluate those roots numerically using `n` from {func}`~sympy.core.evalf`:
 
 ```py
->>> roots_solved = []
 >>> for root in fifth_order_solved:
-...     roots_solved.append(root[x].n(10))
->>> roots_solved
-[-1.167303978,
- -0.1812324445 - 1.083954101*I,
- -0.1812324445 + 1.083954101*I,
- 0.7648844336 - 0.352471546*I,
- 0.7648844336 + 0.352471546*I]
+...     print(root[x].n(10))
+-1.167303978
+-0.1812324445 - 1.083954101*I
+-0.1812324445 + 1.083954101*I
+0.7648844336 - 0.352471546*I
+0.7648844336 + 0.352471546*I
 ```
 
 If you are only interested in the sole real root, it is faster to use
@@ -429,10 +498,6 @@ or {func}`~.roots` cannot do these things robustly.
 
 ## Not All Equations Can Be Solved
 
-### Equations With No Solution
-
-*Equations with no solution content*
-
 ### Equations With No Closed-Form Solution
 
 As mentioned above, higher-order polynomials (fifth or greater) are unlikely to
@@ -443,4 +508,6 @@ method such as [`nroots` as described above](#nroots).
 If you encounter a problem with these commands, please post the problem on the
 [mailing list](https://groups.google.com/g/sympy), or open an issue on [SymPy's
 GitHub page](https://github.com/sympy/sympy/issues). Until the issue is
-resolved, you can *workaround*.
+resolved, you can use another of the
+[](#functions-to-find-the-roots-of-a-polynomial) or try one of the
+[](#alternatives-to-consider).
