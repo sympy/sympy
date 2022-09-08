@@ -16,11 +16,12 @@ from sympy.core.expr import Expr
 from sympy.core.function import ArgumentIndexError, Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import E, pi, oo, Rational, Integer
+from sympy.core.numbers import E, I, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
+from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.ntheory.primetest import isprime, is_square
 from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
@@ -501,7 +502,8 @@ class bernoulli(Function):
     See Also
     ========
 
-    bell, catalan, euler, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
+    andre, bell, catalan, euler, fibonacci, harmonic, lucas, genocchi,
+    partition, tribonacci, sympy.polys.appellseqs.bernoulli_poly
 
     References
     ==========
@@ -842,10 +844,11 @@ class harmonic(Function):
     polygamma(0, n + 1) + EulerGamma
 
     >>> harmonic(n,3).rewrite(polygamma)
-    polygamma(2, n + 1)/2 - polygamma(2, 1)/2
+    polygamma(2, n + 1)/2 + zeta(3)
 
-    >>> harmonic(n,m).rewrite(polygamma)
-    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/gamma(m)
+    >>> simplify(harmonic(n,m).rewrite(polygamma))
+    Piecewise((polygamma(0, n + 1) + EulerGamma, Eq(m, 1)),
+    (-(-1)**m*polygamma(m - 1, n + 1)/factorial(m - 1) + zeta(m), True))
 
     Integer offsets in the argument can be pulled out:
 
@@ -868,7 +871,7 @@ class harmonic(Function):
     pi**2/6
 
     >>> limit(harmonic(n, 3), n, oo)
-    -polygamma(2, 1)/2
+    zeta(3)
 
     For `m > 1`, `H_{n,m}` tends to `\zeta(m)` in the limit of infinite `n`:
 
@@ -919,7 +922,9 @@ class harmonic(Function):
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
         if m.is_integer and m.is_positive:
-            return S.NegativeOne**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) / gamma(m)
+            return Piecewise((polygamma(0, n+1) + S.EulerGamma, Eq(m, 1)),
+                    (S.NegativeOne**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) /
+                    gamma(m), True))
 
     def _eval_rewrite_as_digamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
@@ -984,7 +989,9 @@ class harmonic(Function):
         pg = self.rewrite(polygamma)
         if not isinstance(pg, harmonic):
             return pg.rewrite("tractable", deep=True)
-        return (zeta(m) - zeta(m, n+1)).rewrite("tractable", deep=True)
+        arg = m - S.One
+        if arg.is_nonzero:
+            return (zeta(m) - zeta(m, n+1)).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
         if not all(x.is_number for x in self.args):
@@ -1088,7 +1095,8 @@ class euler(Function):
     See Also
     ========
 
-    bell, bernoulli, catalan, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
+    andre, bell, bernoulli, catalan, fibonacci, harmonic, lucas, genocchi,
+    partition, tribonacci, sympy.polys.appellseqs.euler_poly
 
     References
     ==========
@@ -1149,17 +1157,23 @@ class euler(Function):
     def _eval_evalf(self, prec):
         if not all(i.is_number for i in self.args):
             return
+        from mpmath import mp
         m, x = (self.args[0], None) if len(self.args) == 1 else self.args
-        if m.is_Integer and m.is_nonnegative:
-            from mpmath import mp
-            with workprec(prec):
-                if x is None:
-                    res = mp.eulernum(m)
+        m = m._to_mpmath(prec)
+        if x is not None:
+            x = x._to_mpmath(prec)
+        with workprec(prec):
+            if mp.isint(m) and m >= 0:
+                res = mp.eulernum(m) if x is None else mp.eulerpoly(m, x)
+            else:
+                if m == -1:
+                    res = mp.pi if x is None else mp.digamma((x+1)/2) - mp.digamma(x/2)
                 else:
-                    x = x._to_mpmath(prec)
-                    res = mp.eulerpoly(m, x)
-            return Expr._from_mpmath(res, prec)
-        return self.rewrite(genocchi)._eval_evalf(prec)
+                    y = 0.5 if x is None else x
+                    res = 2 * (mp.zeta(-m, y) - 2**(m+1) * mp.zeta(-m, (y+1)/2))
+                if x is None:
+                    res *= 2**m
+        return Expr._from_mpmath(res, prec)
 
 
 #----------------------------------------------------------------------------#
@@ -1236,8 +1250,8 @@ class catalan(Function):
     See Also
     ========
 
-    bell, bernoulli, euler, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
-    sympy.functions.combinatorial.factorials.binomial
+    andre, bell, bernoulli, euler, fibonacci, harmonic, lucas, genocchi,
+    partition, tribonacci, sympy.functions.combinatorial.factorials.binomial
 
     References
     ==========
@@ -1308,7 +1322,6 @@ class catalan(Function):
             return self.rewrite(gamma)._eval_evalf(prec)
 
 
-
 #----------------------------------------------------------------------------#
 #                                                                            #
 #                           Genocchi numbers                                 #
@@ -1355,6 +1368,7 @@ class genocchi(Function):
     ========
 
     bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, partition, tribonacci
+    sympy.polys.appellseqs.genocchi_poly
 
     References
     ==========
@@ -1446,6 +1460,121 @@ class genocchi(Function):
     def _eval_evalf(self, prec):
         if all(i.is_number for i in self.args):
             return self.rewrite(bernoulli)._eval_evalf(prec)
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                              Andre numbers                                 #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class andre(Function):
+    r"""
+    Andre numbers / Andre function
+
+    The Andre number `\mathcal{A}_n` is Luschny's name for half the number of
+    *alternating permutations* on `n` elements, where a permutation is alternating
+    if adjacent elements alternately compare "greater" and "smaller" going from
+    left to right. For example, `2 < 3 > 1 < 4` is an alternating permutation.
+
+    This sequence is A000111 in the OEIS, which assigns the names *up/down numbers*
+    and *Euler zigzag numbers*. It satisfies a recurrence relation similar to that
+    for the Catalan numbers, with `\mathcal{A}_0 = 1` and
+
+    .. math:: 2 \mathcal{A}_{n+1} = \sum_{k=0}^n \binom{n}{k} \mathcal{A}_k \mathcal{A}_{n-k}
+
+    The Bernoulli and Euler numbers are signed transformations of the odd- and
+    even-indexed elements of this sequence respectively:
+
+    .. math :: \operatorname{B}_{2k} = \frac{2k \mathcal{A}_{2k-1}}{(-4)^k - (-16)^k}
+
+    .. math :: \operatorname{E}_{2k} = (-1)^k \mathcal{A}_{2k}
+
+    Like the Bernoulli and Euler numbers, the Andre numbers are interpolated by the
+    entire Andre function:
+
+    .. math :: \mathcal{A}(s) = (-i)^{s+1} \operatorname{Li}_{-s}(i) +
+            i^{s+1} \operatorname{Li}_{-s}(-i) = \\ \frac{2 \Gamma(s+1)}{(2\pi)^{s+1}}
+            (\zeta(s+1, 1/4) - \zeta(s+1, 3/4) \cos{\pi s})
+
+    Examples
+    ========
+
+    >>> from sympy import andre, euler, bernoulli
+    >>> [andre(n) for n in range(11)]
+    [1, 1, 1, 2, 5, 16, 61, 272, 1385, 7936, 50521]
+    >>> [(-1)**k * andre(2*k) for k in range(7)]
+    [1, -1, 5, -61, 1385, -50521, 2702765]
+    >>> [euler(2*k) for k in range(7)]
+    [1, -1, 5, -61, 1385, -50521, 2702765]
+    >>> [andre(2*k-1) * (2*k) / ((-4)**k - (-16)**k) for k in range(1, 8)]
+    [1/6, -1/30, 1/42, -1/30, 5/66, -691/2730, 7/6]
+    >>> [bernoulli(2*k) for k in range(1, 8)]
+    [1/6, -1/30, 1/42, -1/30, 5/66, -691/2730, 7/6]
+
+    See Also
+    ========
+
+    bernoulli, catalan, euler, sympy.polys.appellseqs.andre_poly
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Alternating_permutation
+    .. [2] https://mathworld.wolfram.com/EulerZigzagNumber.html
+    .. [3] Peter Luschny, "An introduction to the Bernoulli function",
+           https://arxiv.org/abs/2009.06743
+    """
+
+    @classmethod
+    def eval(cls, n):
+        if n is S.NaN:
+            return S.NaN
+        elif n is S.Infinity:
+            return S.Infinity
+        if n.is_zero:
+            return S.One
+        elif n == -1:
+            return -log(2)
+        elif n == -2:
+            return -2*S.Catalan
+        elif n.is_Integer:
+            if n.is_nonnegative and n.is_even:
+                return abs(euler(n))
+            elif n.is_odd:
+                from sympy.functions.special.zeta_functions import zeta
+                m = -n-1
+                return I**m * Rational(1-2**m, 4**m) * zeta(-n)
+
+    def _eval_rewrite_as_zeta(self, s, **kwargs):
+        from sympy.functions.elementary.trigonometric import cos
+        from sympy.functions.special.gamma_functions import gamma
+        from sympy.functions.special.zeta_functions import zeta
+        return 2 * gamma(s+1) / (2*pi)**(s+1) * \
+                (zeta(s+1, S.One/4) - cos(pi*s) * zeta(s+1, S(3)/4))
+
+    def _eval_rewrite_as_polylog(self, s, **kwargs):
+        from sympy.functions.special.zeta_functions import polylog
+        return (-I)**(s+1) * polylog(-s, I) + I**(s+1) * polylog(-s, -I)
+
+    def _eval_is_integer(self):
+        n = self.args[0]
+        if n.is_integer and n.is_nonnegative:
+            return True
+
+    def _eval_is_positive(self):
+        if self.args[0].is_nonnegative:
+            return True
+
+    def _eval_evalf(self, prec):
+        if not self.args[0].is_number:
+            return
+        s = self.args[0]._to_mpmath(prec+12)
+        with workprec(prec+12):
+            sp, cp = mp.sinpi(s/2), mp.cospi(s/2)
+            res = 2*mp.dirichlet(-s, (-sp, cp, sp, -cp))
+        return Expr._from_mpmath(res, prec)
 
 
 #----------------------------------------------------------------------------#

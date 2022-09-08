@@ -565,6 +565,22 @@ class zeta(Function):
         else:
             raise ArgumentIndexError
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        if len(self.args) == 2:
+            s, a = self.args
+        else:
+            s, a = self.args + (S.One,)
+
+        try:
+            c, e = a.leadterm(x)
+        except NotImplementedError:
+            return self
+
+        if e.is_negative and not s.is_positive:
+            raise NotImplementedError
+
+        return super(zeta, self)._eval_as_leading_term(x, logx, cdir)
+
 
 class dirichlet_eta(Function):
     r"""
