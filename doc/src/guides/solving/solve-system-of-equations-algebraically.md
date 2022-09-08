@@ -30,7 +30,7 @@ extract solutions using code, we recommend the dictionary approach.
 
 ## Solve and Use Results in a Dictionary
 
-### Solve Into a Dictionary of Solutions
+### Solve Into a Solution Given as a Dictionary
 
 You can solve a system of equations for some variables (for example, $x$ and
 $y$) leaving another symbol as a variable (for example, $z$). You can specify
@@ -46,7 +46,7 @@ tuple):
 [{x: -sqrt(6)*sqrt(z), y: -4*z}, {x: sqrt(6)*sqrt(z), y: -4*z}]
 ```
 
-### Use a Dictionary of Solutions
+### Use a Solution Given as a Dictionary
 
 You can then extract solutions by indexing (specifying in brackets) the solution
 number, and then the symbol. For example `solutions[0][x]` gives the result for
@@ -80,7 +80,16 @@ Refer to [](solving-guidance.md#options-that-can-speed-up).
 ### Systems of Equations With no Solution
 
 Some systems of equations have no solution. For example, the following system
-reduces to $z = z + 1$, which has no solution:
+reduces to $1 = 2$, which has no solution:
+
+```py
+>>> from sympy import solve
+>>> from sympy.abc import x, y
+>>> solve([x + y - 1, x + y - 2], [x, y], dict=True)
+[]
+```
+
+The following system reduces to $z = z + 1$, which also has no solution:
 
 ```py
 from sympy import solve
@@ -94,7 +103,10 @@ could be satisfied if $z=0$. Note that {func}`~.solve` will not assume that
 $z=0$ even though that is the only value of $z$ that makes the system of
 equations consistent because $z$ is a parameter rather than an unknown. That is,
 {func}`~.solve` does not treat $z$ as an unknown because it is not in the list
-of symbols to be solved for `[x, y]`.
+of symbols to be solved for `[x, y]`. (Note that you define a symbol the same
+way, for example `from sympy.abc import x, y, z`, whether it is an unknown or a
+parameter; whether a symbol is treated as an unknown to be solved for hinges on
+whether that symbol is in the list of unknowns passed to `solve`.)
 
 ```py
 >>> from sympy import solve
