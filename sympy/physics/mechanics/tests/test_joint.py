@@ -41,25 +41,26 @@ def test_coordinate_generation():
     # Using PinJoint to access Joint's coordinate generation method
     J = PinJoint('J', P, C)
     # Test single given
-    assert J._fill_coordinate_list(q, 1) == [q]
-    assert J._fill_coordinate_list([u], 1) == [u]
-    assert J._fill_coordinate_list([u], 1, offset=2) == [u]
+    assert J._fill_coordinate_list(q, 1) == Matrix([q])
+    assert J._fill_coordinate_list([u], 1) == Matrix([u])
+    assert J._fill_coordinate_list([u], 1, offset=2) == Matrix([u])
     # Test None
-    assert J._fill_coordinate_list(None, 1) == [qj]
-    assert J._fill_coordinate_list([None], 1) == [qj]
-    assert J._fill_coordinate_list([q0, None], 3) == [q0, q1j, q2j]
+    assert J._fill_coordinate_list(None, 1) == Matrix([qj])
+    assert J._fill_coordinate_list([None], 1) == Matrix([qj])
+    assert J._fill_coordinate_list([q0, None], 3) == Matrix([q0, q1j, q2j])
     # Test autofill
-    assert J._fill_coordinate_list(None, 3) == [q0j, q1j, q2j]
-    assert J._fill_coordinate_list([], 3) == [q0j, q1j, q2j]
+    assert J._fill_coordinate_list(None, 3) == Matrix([q0j, q1j, q2j])
+    assert J._fill_coordinate_list([], 3) == Matrix([q0j, q1j, q2j])
     # Test offset
-    assert J._fill_coordinate_list([], 3, offset=1) == [q1j, q2j, q3j]
-    assert J._fill_coordinate_list(q1, 3, offset=1) == [q1, q2j, q3j]
-    assert J._fill_coordinate_list([q1, None, q3], 3, offset=1) == [q1, q2j, q3]
-    assert J._fill_coordinate_list(None, 2, offset=2) == [q2j, q3j]
+    assert J._fill_coordinate_list([], 3, offset=1) == Matrix([q1j, q2j, q3j])
+    assert J._fill_coordinate_list(q1, 3, offset=1) == Matrix([q1, q2j, q3j])
+    assert J._fill_coordinate_list([q1, None, q3], 3, offset=1) == Matrix(
+        [q1, q2j, q3])
+    assert J._fill_coordinate_list(None, 2, offset=2) == Matrix([q2j, q3j])
     # Test label
-    assert J._fill_coordinate_list(None, 1, 'u') == [uj]
-    assert J._fill_coordinate_list([], 3, 'u') == [u0j, u1j, u2j]
-    assert J._fill_coordinate_list([u0], 3, 'u', 1) == [u0, u2j, u3j]
+    assert J._fill_coordinate_list(None, 1, 'u') == Matrix([uj])
+    assert J._fill_coordinate_list([], 3, 'u') == Matrix([u0j, u1j, u2j])
+    assert J._fill_coordinate_list([u0], 3, 'u', 1) == Matrix([u0, u2j, u3j])
 
 
 def test_pin_joint():
@@ -71,9 +72,9 @@ def test_pin_joint():
     assert Pj.name == 'J'
     assert Pj.parent == P
     assert Pj.child == C
-    assert Pj.coordinates == [q]
-    assert Pj.speeds == [u]
-    assert Pj.kdes == [u - q.diff(t)]
+    assert Pj.coordinates == Matrix([q])
+    assert Pj.speeds == Matrix([u])
+    assert Pj.kdes == Matrix([u - q.diff(t)])
     assert Pj.joint_axis == P.frame.x
     assert Pj.child_point.pos_from(C.masscenter) == Vector(0)
     assert Pj.parent_point.pos_from(P.masscenter) == Vector(0)
@@ -150,8 +151,8 @@ def test_pin_joint_double_pendulum():
     assert B.ang_vel_in(N) == u1 * N.z + u2 * A.z
 
     # Check kde
-    assert J1.kdes == [u1 - q1.diff(t)]
-    assert J2.kdes == [u2 - q2.diff(t)]
+    assert J1.kdes == Matrix([u1 - q1.diff(t)])
+    assert J2.kdes == Matrix([u2 - q2.diff(t)])
 
     # Check Linear Velocity
     assert PartP.masscenter.vel(N) == l*u1*A.y
@@ -193,8 +194,8 @@ def test_pin_joint_chaos_pendulum():
     assert N.ang_vel_in(B) == -omega*N.y - alpha*A.z
 
     # Check kde
-    assert J1.kdes == [omega - theta.diff(t)]
-    assert J2.kdes == [alpha - phi.diff(t)]
+    assert J1.kdes == Matrix([omega - theta.diff(t)])
+    assert J2.kdes == Matrix([alpha - phi.diff(t)])
 
     # Check pos of masscenters
     assert C.masscenter.pos_from(rod.masscenter) == lA*A.z
@@ -607,9 +608,9 @@ def test_sliding_joint():
     assert S.name == 'S'
     assert S.parent == P
     assert S.child == C
-    assert S.coordinates == [q]
-    assert S.speeds == [u]
-    assert S.kdes == [u - q.diff(t)]
+    assert S.coordinates == Matrix([q])
+    assert S.speeds == Matrix([u])
+    assert S.kdes == Matrix([u - q.diff(t)])
     assert S.joint_axis == P.frame.x
     assert S.child_point.pos_from(C.masscenter) == Vector(0)
     assert S.parent_point.pos_from(P.masscenter) == Vector(0)

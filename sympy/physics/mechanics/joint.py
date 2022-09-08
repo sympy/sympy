@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy.core.backend import pi, AppliedUndef, Derivative
+from sympy.core.backend import pi, AppliedUndef, Derivative, Matrix
 from sympy.physics.mechanics.body import Body
 from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
                                   ReferenceFrame)
@@ -442,7 +442,7 @@ class Joint(ABC):
         t = dynamicsymbols._t
         for i in range(len(self.coordinates)):
             kdes.append(-self.coordinates[i].diff(t) + self.speeds[i])
-        return kdes
+        return Matrix(kdes)
 
     def _locate_joint_pos(self, body, joint_pos):
         """Returns the attachment point of a body."""
@@ -516,7 +516,7 @@ class Joint(ABC):
         if len(coords) != n_coords:
             raise ValueError(f'{len(coordinates)} {name}s have been provided. '
                              f'The maximum number of {name}s is {n_coords}.')
-        return coords
+        return Matrix(coords)
 
 
 class _JointAxisMixin:
@@ -685,9 +685,9 @@ class PinJoint(Joint, _JointAxisMixin):
     >>> joint.child_axis
     C_frame.x
     >>> joint.coordinates
-    [q_PC(t)]
+    Matrix([[q_PC(t)]])
     >>> joint.speeds
-    [u_PC(t)]
+    Matrix([[u_PC(t)]])
     >>> joint.child.frame.ang_vel_in(joint.parent.frame)
     u_PC(t)*P_frame.x
     >>> joint.child.frame.dcm(joint.parent.frame)
@@ -947,9 +947,9 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     >>> joint.child_axis
     C_frame.x
     >>> joint.coordinates
-    [q_PC(t)]
+    Matrix([[q_PC(t)]])
     >>> joint.speeds
-    [u_PC(t)]
+    Matrix([[u_PC(t)]])
     >>> joint.child.frame.ang_vel_in(joint.parent.frame)
     0
     >>> joint.child.frame.dcm(joint.parent.frame)

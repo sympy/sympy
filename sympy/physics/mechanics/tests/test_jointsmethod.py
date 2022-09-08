@@ -26,15 +26,15 @@ def test_jointsmethod():
     assert method.frame == P.frame
     assert method.bodies == [C, P]
     assert method.loads == [(P.masscenter, g*P.frame.y)]
-    assert method.q == [q]
-    assert method.u == [u]
-    assert method.kdes == [u - q.diff()]
+    assert method.q == Matrix([q])
+    assert method.u == Matrix([u])
+    assert method.kdes == Matrix([u - q.diff()])
     soln = method.form_eoms()
     assert soln == Matrix([[-C_ixx*u.diff()]])
     assert method.forcing_full == Matrix([[u], [0]])
     assert method.mass_matrix_full == Matrix([[1, 0], [0, C_ixx]])
     assert isinstance(method.method, KanesMethod)
-
+test_jointsmethod()
 def test_jointmethod_duplicate_coordinates_speeds():
     P = Body('P')
     C = Body('C')
