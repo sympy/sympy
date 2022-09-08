@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy.core.numbers import pi
+from sympy.core.backend import pi, AppliedUndef, Derivative
 from sympy.physics.mechanics.body import Body
 from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
                                   ReferenceFrame)
@@ -474,6 +474,50 @@ class Joint(ABC):
         body.masscenter.set_vel(interframe, 0)  # Fixate interframe to body
         return interframe
 
+    def _fill_coordinate_list(self, coordinates, n_coords, label='q', offset=0):
+        """Helper method for _generate_coordinates and _generate_speeds.
+
+        Parameters
+        ==========
+
+        coordinates : List
+            List of coordinates or speeds that have been provided.
+        n_coords : Integer
+            Number of coordinates that should be returned.
+        label : String, optional
+            Coordinate type either 'q' (coordinates) or 'u' (speeds).
+        offset : Integer
+            Count offset when creating new dynamicsymbols.
+
+        """
+        name = 'generalized coordinate' if label == 'q' else 'generalized speed'
+
+        def create_symbol(number):
+            if n_coords == 1:
+                return dynamicsymbols(f'{label}_{self.name}')
+            return dynamicsymbols(f'{label}{number}_{self.name}')
+
+        coords = []
+        if coordinates is None:
+            coordinates = []
+        elif isinstance(coordinates, (AppliedUndef, Derivative)):
+            coordinates = [coordinates]
+        # Supports more iterables, also Matrix
+        for i, coord in enumerate(coordinates):
+            if coord is None:
+                coords.append(create_symbol(i + offset))
+            elif isinstance(coord, (AppliedUndef, Derivative)):
+                coords.append(coord)
+            else:
+                raise TypeError(f'The {name} {coord} should have been a '
+                                f'dynamicsymbol.')
+        for i in range(len(coordinates) + offset, n_coords + offset):
+            coords.append(create_symbol(i))
+        if len(coords) != n_coords:
+            raise ValueError(f'{len(coordinates)} {name}s have been provided. '
+                             f'The maximum number of {name}s is {n_coords}.')
+        return coords
+
 
 class _JointAxisMixin:
     """Mixin class, which provides joint axis support methods.
@@ -641,16 +685,16 @@ class PinJoint(Joint, _JointAxisMixin):
     >>> joint.child_axis
     C_frame.x
     >>> joint.coordinates
-    [theta_PC(t)]
+    [q_PC(t)]
     >>> joint.speeds
-    [omega_PC(t)]
+    [u_PC(t)]
     >>> joint.child.frame.ang_vel_in(joint.parent.frame)
-    omega_PC(t)*P_frame.x
+    u_PC(t)*P_frame.x
     >>> joint.child.frame.dcm(joint.parent.frame)
     Matrix([
-    [1,                 0,                0],
-    [0,  cos(theta_PC(t)), sin(theta_PC(t))],
-    [0, -sin(theta_PC(t)), cos(theta_PC(t))]])
+    [1,             0,            0],
+    [0,  cos(q_PC(t)), sin(q_PC(t))],
+    [0, -sin(q_PC(t)), cos(q_PC(t))]])
     >>> joint.child_point.pos_from(joint.parent_point)
     0
 
@@ -689,14 +733,14 @@ class PinJoint(Joint, _JointAxisMixin):
 
     >>> upper_bob.frame.dcm(ceiling.frame)
     Matrix([
-    [ cos(theta_P1(t)), sin(theta_P1(t)), 0],
-    [-sin(theta_P1(t)), cos(theta_P1(t)), 0],
-    [                0,                0, 1]])
+    [ cos(q_P1(t)), sin(q_P1(t)), 0],
+    [-sin(q_P1(t)), cos(q_P1(t)), 0],
+    [            0,            0, 1]])
     >>> trigsimp(lower_bob.frame.dcm(ceiling.frame))
     Matrix([
-    [ cos(theta_P1(t) + theta_P2(t)), sin(theta_P1(t) + theta_P2(t)), 0],
-    [-sin(theta_P1(t) + theta_P2(t)), cos(theta_P1(t) + theta_P2(t)), 0],
-    [                              0,                              0, 1]])
+    [ cos(q_P1(t) + q_P2(t)), sin(q_P1(t) + q_P2(t)), 0],
+    [-sin(q_P1(t) + q_P2(t)), cos(q_P1(t) + q_P2(t)), 0],
+    [                      0,                      0, 1]])
 
     The position of the lower bob's masscenter is found with:
 
@@ -707,17 +751,17 @@ class PinJoint(Joint, _JointAxisMixin):
     respect to the ceiling.
 
     >>> upper_bob.frame.ang_vel_in(ceiling.frame)
-    omega_P1(t)*C_frame.z
+    u_P1(t)*C_frame.z
     >>> lower_bob.frame.ang_vel_in(ceiling.frame)
-    omega_P1(t)*C_frame.z + omega_P2(t)*U_frame.z
+    u_P1(t)*C_frame.z + u_P2(t)*U_frame.z
 
     And finally, the linear velocities of the two pendulum bobs can be computed
     with respect to the ceiling.
 
     >>> upper_bob.masscenter.vel(ceiling.frame)
-    l1*omega_P1(t)*U_frame.y
+    l1*u_P1(t)*U_frame.y
     >>> lower_bob.masscenter.vel(ceiling.frame)
-    l1*omega_P1(t)*U_frame.y + l2*(omega_P1(t) + omega_P2(t))*L_frame.y
+    l1*u_P1(t)*U_frame.y + l2*(u_P1(t) + u_P2(t))*L_frame.y
 
     """
 
@@ -742,20 +786,10 @@ class PinJoint(Joint, _JointAxisMixin):
         return self._joint_axis
 
     def _generate_coordinates(self, coordinate):
-        coordinates = []
-        if coordinate is None:
-            theta = dynamicsymbols('theta' + '_' + self._name)
-            coordinate = theta
-        coordinates.append(coordinate)
-        return coordinates
+        return self._fill_coordinate_list(coordinate, 1, 'q')
 
     def _generate_speeds(self, speed):
-        speeds = []
-        if speed is None:
-            omega = dynamicsymbols('omega' + '_' + self._name)
-            speed = omega
-        speeds.append(speed)
-        return speeds
+        return self._fill_coordinate_list(speed, 1, 'u')
 
     def _orient_frames(self):
         self._joint_axis = self._axis(
@@ -913,9 +947,9 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     >>> joint.child_axis
     C_frame.x
     >>> joint.coordinates
-    [x_PC(t)]
+    [q_PC(t)]
     >>> joint.speeds
-    [v_PC(t)]
+    [u_PC(t)]
     >>> joint.child.frame.ang_vel_in(joint.parent.frame)
     0
     >>> joint.child.frame.dcm(joint.parent.frame)
@@ -924,7 +958,7 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     [0, 1, 0],
     [0, 0, 1]])
     >>> joint.child_point.pos_from(joint.parent_point)
-    x_PC(t)*P_frame.x
+    q_PC(t)*P_frame.x
 
     To further demonstrate the use of the prismatic joint, the kinematics of two
     masses sliding, one moving relative to a fixed body and the other relative
@@ -969,10 +1003,10 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     The position of the particles' masscenter is found with:
 
     >>> Part1.masscenter.pos_from(wall.masscenter)
-    x_J1(t)*W_frame.x
+    q_J1(t)*W_frame.x
 
     >>> Part2.masscenter.pos_from(wall.masscenter)
-    x_J1(t)*W_frame.x + x_J2(t)*P1_frame.x
+    q_J1(t)*W_frame.x + q_J2(t)*P1_frame.x
 
     The angular velocities of the two particle links can be computed with
     respect to the ceiling.
@@ -987,10 +1021,10 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     with respect to the ceiling.
 
     >>> Part1.masscenter_vel(wall)
-    v_J1(t)*W_frame.x
+    u_J1(t)*W_frame.x
 
     >>> Part2.masscenter.vel(wall.frame)
-    v_J1(t)*W_frame.x + Derivative(x_J2(t), t)*P1_frame.x
+    u_J1(t)*W_frame.x + Derivative(q_J2(t), t)*P1_frame.x
 
     """
 
@@ -1015,20 +1049,10 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         return self._joint_axis
 
     def _generate_coordinates(self, coordinate):
-        coordinates = []
-        if coordinate is None:
-            x = dynamicsymbols('x' + '_' + self._name)
-            coordinate = x
-        coordinates.append(coordinate)
-        return coordinates
+        return self._fill_coordinate_list(coordinate, 1, 'q')
 
     def _generate_speeds(self, speed):
-        speeds = []
-        if speed is None:
-            y = dynamicsymbols('v' + '_' + self._name)
-            speed = y
-        speeds.append(speed)
-        return speeds
+        return self._fill_coordinate_list(speed, 1, 'u')
 
     def _orient_frames(self):
         self._joint_axis = self._axis(
