@@ -34,7 +34,7 @@ def test_jointsmethod():
     assert method.forcing_full == Matrix([[u], [0]])
     assert method.mass_matrix_full == Matrix([[1, 0], [0, C_ixx]])
     assert isinstance(method.method, KanesMethod)
-test_jointsmethod()
+
 def test_jointmethod_duplicate_coordinates_speeds():
     P = Body('P')
     C = Body('C')

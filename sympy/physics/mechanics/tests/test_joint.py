@@ -366,8 +366,8 @@ def test_pin_joint_arbitrary_axis():
     assert (-A.x).angle_between(N.x) == 0
     assert -A.x.express(N) == N.x
     assert A.dcm(N) == Matrix([[-1, 0, 0],
-                            [0, -cos(q), -sin(q)],
-                            [0, -sin(q), cos(q)]])
+                               [0, -cos(q), -sin(q)],
+                               [0, -sin(q), cos(q)]])
     assert A.ang_vel_in(N) == u*N.x
     assert A.ang_vel_in(N).magnitude() == sqrt(u**2)
     assert C.masscenter.pos_from(P.masscenter) == 0

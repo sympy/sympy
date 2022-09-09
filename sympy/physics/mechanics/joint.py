@@ -490,13 +490,13 @@ class Joint(ABC):
             Count offset when creating new dynamicsymbols.
 
         """
-        name = 'generalized coordinate' if label == 'q' else 'generalized speed'
 
         def create_symbol(number):
             if n_coords == 1:
                 return dynamicsymbols(f'{label}_{self.name}')
             return dynamicsymbols(f'{label}{number}_{self.name}')
 
+        name = 'generalized coordinate' if label == 'q' else 'generalized speed'
         coords = []
         if coordinates is None:
             coordinates = []
@@ -514,7 +514,7 @@ class Joint(ABC):
         for i in range(len(coordinates) + offset, n_coords + offset):
             coords.append(create_symbol(i))
         if len(coords) != n_coords:
-            raise ValueError(f'{len(coordinates)} {name}s have been provided. '
+            raise ValueError(f'{len(coordinates)} {name} have been provided. '
                              f'The maximum number of {name}s is {n_coords}.')
         return Matrix(coords)
 

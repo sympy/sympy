@@ -78,13 +78,14 @@ SymPy deprecation warnings.
 
 (deprecated-mechanics-joint-coordinate-format)=
 ### New Joint coordinate format
-The format of the generalized coordinates and generalized speeds of the joints
-in the ``sympy.physics.mechanics`` module has changed. The data type of has
-changed to from ``list`` to ``Matrix``, which is the same as the type for the
-generalized coordinates within the ``KanesMethod``. The auto naming of the
-generalized coordinates and generalized speeds of the ``PinJoint`` and
-``PrismaticJoint`` have also changed to ``q_<joint.name>`` and
-``u_<joint.name>``. Before this was unique for each of the joint types.
+The format, i.e. type and auto generated name, of the generalized coordinates
+and generalized speeds of the joints in the ``sympy.physics.mechanics`` module
+has changed. The data type has changed from ``list`` to ``Matrix``, which is the
+same as the type for the generalized coordinates within the ``KanesMethod``.
+The auto naming of the generalized coordinates and generalized speeds of the
+``PinJoint`` and ``PrismaticJoint`` have also changed to ``q_<joint.name>`` and
+``u_<joint.name>``. Previously each of those joints had an unique template for
+auto generating these names.
 
 (deprecated-mechanics-joint-axis)=
 ### New Joint intermediate frames
