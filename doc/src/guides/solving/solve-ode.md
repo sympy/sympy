@@ -308,11 +308,27 @@ NotImplementedError: solve: Cannot solve -y(x)**2 + Derivative(y(x), (x, 3))
 
 Some systems of differential equations have no closed-form solution because they
 are chaotic, for example the [Lorenz
-system](https://en.wikipedia.org/wiki/Lorenz_system#Overview). For such cases,
-you can solve the equations numerically as mentioned in
+system](https://en.wikipedia.org/wiki/Lorenz_system#Overview) or a double
+pendulum:
+
+```py
+>>> from sympy import symbols, Function, cos, sin, dsolve
+>>> theta1, theta2 = symbols('theta1 theta2', cls=Function)
+>>> g, t = symbols('g t')
+>>> eq1 = 2*theta1(t).diff(t, t) + theta2(t).diff(t, t)*cos(theta1(t) - theta2(t)) + theta2(t).diff(t)**2*sin(theta1(t) - theta2(t)) + 2*g*sin(theta1(t))
+>>> eq2 = theta2(t).diff(t, t) + theta1(t).diff(t, t)*cos(theta1(t) - theta2(t)) - theta1(t).diff(t)**2*sin(theta1(t) - theta2(t)) + g*sin(theta2(t))
+>>> dsolve([eq1, eq2], [theta1(t), theta2(t)])
+Traceback (most recent call last):
+...
+NotImplementedError
+```
+
+For such cases, you can solve the equations numerically as mentioned in
 [](#alternatives-to-consider).
 
-Please post the problem on the [mailing
-list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
-page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-can try one of the [](#alternatives-to-consider).
+## If You Encounter a Problem With SymPy ODE Solving
+
+If you know your ODE has a solution, and SymPy cannot find it, please post the
+problem on the [mailing list](https://groups.google.com/g/sympy), or open an
+issue on [SymPy's GitHub page](https://github.com/sympy/sympy/issues). Until the
+issue is resolved, you can try one of the [](#alternatives-to-consider).
