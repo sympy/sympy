@@ -22,10 +22,17 @@ its dependency [mpmath](https://mpmath.org/)) for numerical calculations are:
 - if you need the arbitrary precision capabilities to get more digits of
   precision than you would get from float64.
 
-Alternatives to consider:
-- NumPy's {external:func}`numpy.linalg.solve` and SciPy's
-  {external:func}`scipy.linalg.solve` can each solve a system of linear scalar
-  equations
+## Alternatives to Consider
+
+- SciPy's {external:func}`scipy.optimize.fsolve` can solve a system of
+  (non-linear) equations
+- NumPy's {external:func}`numpy.linalg.solve` can solve a system of linear
+  scalar equations
+- mpmath's {external:func}`~mpmath.findroot`, which {func}`~.nsolve` calls and
+  can pass parameters to
+
+
+## Example of Numerically Solving an Equation
 
 Here is an example of numerically solving one equation:
 
@@ -36,12 +43,9 @@ Here is an example of numerically solving one equation:
 0.739085133215161
 ```
 
-{func}`~.nsolve` calls, and can pass parameters to, mpmath's
-{external:func}`~mpmath.findroot`.
+## Guidance
 
 Overdetermined systems of equations are supported.
-
-## Guidance
 
 ### Find Complex Roots of a Real Function
 
@@ -209,5 +213,4 @@ Try another starting point or tweak arguments.
 If you find a problem with {func}`~.nsolve`, please post it on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-can use NumPy's {external:func}`numpy.linalg.solve` or SciPy's
-{external:func}`scipy.linalg.solve`.
+can use a different method listed in [](#alternatives-to-consider).
