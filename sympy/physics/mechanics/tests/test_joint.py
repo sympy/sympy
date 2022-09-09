@@ -3,14 +3,15 @@ from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
-from sympy.matrices.dense import Matrix
-from sympy.core.backend import _simplify_matrix
+from sympy.core.backend import Matrix, _simplify_matrix
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import dynamicsymbols, Body, PinJoint, PrismaticJoint
 from sympy.physics.mechanics.joint import Joint
 from sympy.physics.vector import Vector, ReferenceFrame, Point
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
+
+Vector.simp = True
 t = dynamicsymbols._t # type: ignore
 
 
