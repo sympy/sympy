@@ -174,7 +174,7 @@ class JointsMethod(_Methods):
         return Matrix(u_ind)
 
     def _generate_kdes(self):
-        kd_ind = Matrix([])
+        kd_ind = Matrix(1, 0, []).T
         for joint in self._joints:
             kd_ind = kd_ind.col_join(joint.kdes)
         return kd_ind
