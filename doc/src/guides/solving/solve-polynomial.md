@@ -11,8 +11,8 @@ For example, solving $ax^2 + bx + c = 0$ for $x$ yields $x =
     - SciPy's {external:func}`~scipy.optimize.root`
 - If you need to solve a multivariate polynomial algebraically,
     - for simple polynomials, use {func}`~.solve`
-    - for more complex polynomials, try {func}`~.groebner` or
-      {meth}`~sympy.polys.polytools.GroebnerBasis.fglm`
+    - for more complex polynomials, try {func}`~sympy.polys.polytools.groebner`
+      or {meth}`~sympy.polys.polytools.GroebnerBasis.fglm`
 
 ## Example of Finding the Roots of a Polynomial Algebraically
 
