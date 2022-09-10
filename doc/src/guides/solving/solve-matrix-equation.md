@@ -189,7 +189,16 @@ symbolic matrix has 24 terms with four elements in each term:
 
 ```py
 >>> from sympy import MatrixSymbol
->>> MatrixSymbol('A', 4, 4).as_explicit().det()
+>>> A = MatrixSymbol('A', 4, 4).as_explicit()
+>>> A
+⎡A₀₀  A₀₁  A₀₂  A₀₃⎤
+⎢                  ⎥
+⎢A₁₀  A₁₁  A₁₂  A₁₃⎥
+⎢                  ⎥
+⎢A₂₀  A₂₁  A₂₂  A₂₃⎥
+⎢                  ⎥
+⎣A₃₀  A₃₁  A₃₂  A₃₃⎦
+>>> A.det()
     A₀₀⋅A₁₁⋅A₂₂⋅A₃₃ - A₀₀⋅A₁₁⋅A₂₃⋅A₃₂ - A₀₀⋅A₁₂⋅A₂₁⋅A₃₃ + A₀₀⋅A₁₂⋅A₂₃⋅A₃₁ + A₀₀⋅A₁
     ₃⋅A₂₁⋅A₃₂ - A₀₀⋅A₁₃⋅A₂₂⋅A₃₁ - A₀₁⋅A₁₀⋅A₂₂⋅A₃₃ + A₀₁⋅A₁₀⋅A₂₃⋅A₃₂ + A₀₁⋅A₁₂⋅A₂₀⋅
     A₃₃ - A₀₁⋅A₁₂⋅A₂₃⋅A₃₀ - A₀₁⋅A₁₃⋅A₂₀⋅A₃₂ + A₀₁⋅A₁₃⋅A₂₂⋅A₃₀ + A₀₂⋅A₁₀⋅A₂₁⋅A₃₃ - 
@@ -199,10 +208,13 @@ symbolic matrix has 24 terms with four elements in each term:
 ```
 
 and solving a matrix equation of it takes about a minute, whereas the analogous
-3x3 matrix takes less than one second.
+3x3 matrix takes less than one second. The more unrelated, symbolic entries in a
+matrix, the more likely it is to be slow to manipulate.
 
-The more unrelated, symbolic entries in a matrix, the more likely it is to be
-slow to manipulate.
+It is often much faster to solve as a system of linear
+[](solvers-algebraic-equations) rather than as a symbolic matrix equation for
+large matrix dimensions, so you may want to convert your matrix equation into a
+system of linear symbolic equations.
 
 One way to speed up matrix operations is by using the {class}`~.DomainMatrix`
 class, which can be faster to operate on because it limits the domain of matrix
