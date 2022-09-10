@@ -178,26 +178,35 @@ or compute the inverse matrix using
     ⎣c⋅e + d⎦
 ```
 
-## Working With Symbolic Matrices
+### Work With Symbolic Matrices
 
 The computational complexity of manipulating symbolic matrices can increase
-rapidly with matrix size. For example, the size of the determinant of a symbolic
-matrix increases with the factorial of the matrix dimension. As a result, the
-maximum dimensionality of matrices that can be solved is more limited than for
-numerical matrices.
+rapidly with matrix size. For example, the number of terms in the determinant of
+a symbolic matrix increases with the factorial of the matrix dimension. As a
+result, the maximum dimensionality of matrices that can be solved is more
+limited than for numerical matrices. For example, the determinant of this 4x4
+symbolic matrix has 24 terms with four elements in each term:
 
 ```py
->>> from sympy import MatrixSymbol, init_printing
->>> init_printing()
+>>> from sympy import MatrixSymbol
 >>> MatrixSymbol('A', 4, 4).as_explicit().det()
-A_00*A_11*A_22*A_33 - A_00*A_11*A_23*A_32 - A_00*A_12*A_21*A_33 + A_00*A_12*A_
-23*A_31 + A_00*A_13*A_21*A_32 - A_00*A_13*A_22*A_31 - A_01*A_10*A_22*A_33 + A_
-01*A_10*A_23*A_32 + A_01*A_12*A_20*A_33 - A_01*A_12*A_23*A_30 - A_01*A_13*A_20
-*A_32 + A_01*A_13*A_22*A_30 + A_02*A_10*A_21*A_33 - A_02*A_10*A_23*A_31 - A_02
-*A_11*A_20*A_33 + A_02*A_11*A_23*A_30 + A_02*A_13*A_20*A_31 - A_02*A_13*A_21*A
-_30 - A_03*A_10*A_21*A_32 + A_03*A_10*A_22*A_31 + A_03*A_11*A_20*A_32 - A_03*A
-_11*A_22*A_30 - A_03*A_12*A_20*A_31 + A_03*A_12*A_21*A_30
+    A₀₀⋅A₁₁⋅A₂₂⋅A₃₃ - A₀₀⋅A₁₁⋅A₂₃⋅A₃₂ - A₀₀⋅A₁₂⋅A₂₁⋅A₃₃ + A₀₀⋅A₁₂⋅A₂₃⋅A₃₁ + A₀₀⋅A₁
+    ₃⋅A₂₁⋅A₃₂ - A₀₀⋅A₁₃⋅A₂₂⋅A₃₁ - A₀₁⋅A₁₀⋅A₂₂⋅A₃₃ + A₀₁⋅A₁₀⋅A₂₃⋅A₃₂ + A₀₁⋅A₁₂⋅A₂₀⋅
+    A₃₃ - A₀₁⋅A₁₂⋅A₂₃⋅A₃₀ - A₀₁⋅A₁₃⋅A₂₀⋅A₃₂ + A₀₁⋅A₁₃⋅A₂₂⋅A₃₀ + A₀₂⋅A₁₀⋅A₂₁⋅A₃₃ - 
+    A₀₂⋅A₁₀⋅A₂₃⋅A₃₁ - A₀₂⋅A₁₁⋅A₂₀⋅A₃₃ + A₀₂⋅A₁₁⋅A₂₃⋅A₃₀ + A₀₂⋅A₁₃⋅A₂₀⋅A₃₁ - A₀₂⋅A₁
+    ₃⋅A₂₁⋅A₃₀ - A₀₃⋅A₁₀⋅A₂₁⋅A₃₂ + A₀₃⋅A₁₀⋅A₂₂⋅A₃₁ + A₀₃⋅A₁₁⋅A₂₀⋅A₃₂ - A₀₃⋅A₁₁⋅A₂₂⋅
+    A₃₀ - A₀₃⋅A₁₂⋅A₂₀⋅A₃₁ + A₀₃⋅A₁₂⋅A₂₁⋅A₃₀
 ```
+
+and solving a matrix equation of it takes about a minute, whereas the analogous
+3x3 matrix takes less than one second.
+
+The more unrelated, symbolic entries in a matrix, the more likely it is to be
+slow to manipulate.
+
+One way to speed up matrix operations is by using the {class}`~.DomainMatrix`
+class, which can be faster to operate on because it limits the domain of matrix
+elements.
 
 ## Use the Solution Result
 
@@ -215,23 +224,24 @@ produces the constants vector $b$:
 >>> b = Matrix([2, 0])
 >>> solution = A.solve(b)
 >>> solution
-[  2*e  ]
-[-------]
-[c*e + d]
-[       ]
-[   2   ]
-[-------]
-[c*e + d]
+    ⎡  2⋅e  ⎤
+    ⎢───────⎥
+    ⎢c⋅e + d⎥
+    ⎢       ⎥
+    ⎢   2   ⎥
+    ⎢───────⎥
+    ⎣c⋅e + d⎦
+
 >>> (A * solution) - b # Not immediately obvious whether this result is a zeroes vector
-    [ 2*c*e      2*d      ]
-    [------- + ------- - 2]
-    [c*e + d   c*e + d    ]
-    [                     ]
-    [          0          ]
+    ⎡ 2⋅c⋅e      2⋅d      ⎤
+    ⎢─────── + ─────── - 2⎥
+    ⎢c⋅e + d   c⋅e + d    ⎥
+    ⎢                     ⎥
+    ⎣          0          ⎦
 >>> simplify((A * solution) - b) # simplify reveals that this result is a zeroes vector
-    [0]
-    [ ]
-    [0]
+    ⎡0⎤
+    ⎢ ⎥
+    ⎣0⎦
 ```
 
 Note that we had to use {func}`~sympy.simplify.simplify.simplify` to make SymPy
@@ -246,18 +256,18 @@ list of the elements using list comprehension
 
 ```py
 >>> [element for element in solution]
-       2*e       2    
-    [-------, -------]
-     c*e + d  c*e + d 
+    ⎡  2⋅e       2   ⎤
+    ⎢───────, ───────⎥
+    ⎣c⋅e + d  c⋅e + d⎦
 ```
 
 or you can extract individual elements by subscripting ("slicing")
 
 ```py
 >>> solution[0]
-      2*e  
-    -------
-    c*e + d
+      2⋅e  
+    ───────
+    c⋅e + d
 ```
 
 ## Equations With No Solution
@@ -271,10 +281,10 @@ solution:
 >>> c, d, e = symbols("c, d, e")
 >>> A = Matrix([[c*e**2, d*e], [c*e, d]])
 >>> A
-    [   2     ]
-    [c*e   d*e]
-    [         ]
-    [c*e    d ]
+    ⎡   2     ⎤
+    ⎢c⋅e   d⋅e⎥
+    ⎢         ⎥
+    ⎣c⋅e    d ⎦
 >>> b = Matrix([2, 0])
 >>> A.LUsolve(b)
 Traceback (most recent call last):
@@ -282,7 +292,7 @@ Traceback (most recent call last):
 NonInvertibleMatrixError: Matrix det == 0; not invertible.
 ```
 
-## If You Encounter a Problem With SymPy Matrix Equation Solving
+## Report a Problem
 
 If you know your matrix equation has a solution, and SymPy cannot find it,
 please post the problem on the [mailing
