@@ -799,10 +799,25 @@ class polygamma(Function):
 
     def fdiff(self, argindex=2):
         if argindex == 2:
-            n, z = self.args[:2]
+            n, z = self.args
             return polygamma(n + 1, z)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+        s, z = self.args
+        d = z.subs(x, 0) # expansion point
+        e = (z-d).as_leading_term(x).as_coeff_exponent(x)[1]
+        if s.is_integer and s.is_nonnegative and \
+                d.is_integer and d.is_nonpositive and e.is_positive:
+            terms = [(-1)**(s+1) * factorial(s) / (z-d)**(s+1)]
+            for k in range(ceiling(n/e)):
+                h = harmonic(-d, s+k+1) * factorial(s+k)
+                terms.append((polygamma(s+k, 1) + h) * (z-d)**k / factorial(k))
+            o = Order(x**n, x)
+            return Add(*terms)._eval_nseries(x, n, logx, cdir) + o
+        return super(polygamma, self)._eval_nseries(x, n, logx, cdir)
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
