@@ -16,7 +16,6 @@ $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc}
     - SciPy's {external:func}`scipy.linalg.solve`
     - mpmath's
       [lu_solve()](https://mpmath.org/doc/current/matrices.html#linear-equations)
-      *Example of mpmath object that does work: {external:func}`mpmath.isinf`*
 - Solving a matrix equation is equivalent to solving a system of linear
   equations, so if you prefer you can use *link to solve a system of equations
   once published*
@@ -35,23 +34,32 @@ equation formulation $Ax=b$ where
   equation
 
 ```py
+>>> from sympy import init_printing
+>>> init_printing(use_unicode=True)
+```
+
+```py
 >>> from sympy import symbols
 >>> from sympy.matrices import Matrix
 >>> c, d, e = symbols("c, d, e")
 >>> A = Matrix([[c,d], [1, -e]])
 >>> A
-Matrix([
-[c,  d],
-[1, -e]])
+⎡c  d ⎤
+⎢     ⎥
+⎣1  -e⎦
 >>> b = Matrix([2, 0])
 >>> b
-Matrix([
-[2],
-[0]])
+⎡2⎤
+⎢ ⎥
+⎣0⎦
 >>> A.solve(b)
-Matrix([
-[2*e/(c*e + d)],
-[  2/(c*e + d)]])
+⎡  2⋅e  ⎤
+⎢───────⎥
+⎢c⋅e + d⎥
+⎢       ⎥
+⎢   2   ⎥
+⎢───────⎥
+⎣c⋅e + d⎦
 ```
 
 ## Guidance
@@ -74,52 +82,64 @@ via {meth}`~sympy.matrices.matrices.MatrixBase.LUdecomposition`
 >>> c, d, e = symbols("c, d, e")
 >>> A = Matrix([[c,d], [1, -e]])
 >>> A
-Matrix([
-[c,  d],
-[1, -e]])
+⎡c  d ⎤
+⎢     ⎥
+⎣1  -e⎦
 >>> L, U, perm = A.LUdecomposition()
 >>> L
-Matrix([
-[1, 0],
-[c, 1]])
+    ⎡1  0⎤
+    ⎢    ⎥
+    ⎣c  1⎦
 >>> U
-Matrix([
-[1,      -e],
-[0, c*e + d]])
+    ⎡1    -e   ⎤
+    ⎢          ⎥
+    ⎣0  c⋅e + d⎦
 >>> perm
 [[0, 1]]
 >>> b = Matrix([2, 0])
 >>> b
-Matrix([
-[2],
-[0]])
+    ⎡2⎤
+    ⎢ ⎥
+    ⎣0⎦
 >>> b2 = Matrix([4, 0])
 >>> b2
-Matrix([
-[4],
-[0]])
+    ⎡4⎤
+    ⎢ ⎥
+    ⎣0⎦
 >>> P = eye(A.rows).permuteFwd(perm)
 >>> P
-Matrix([
-[0, 1],
-[1, 0]])
+    ⎡0  1⎤
+    ⎢    ⎥
+    ⎣1  0⎦
 >>> y = L.solve(P*b) # Step-by-step approach, step 1
 >>> y
-Matrix([
-[0],
-[2]])
+    ⎡0⎤
+    ⎢ ⎥
+    ⎣2⎦
 >>> U.solve(y) # Step-by-step approach, step 2
-Matrix([
-[2*e/(c*e + d)],
-[  2/(c*e + d)]])
+    ⎡  2⋅e  ⎤
+    ⎢───────⎥
+    ⎢c⋅e + d⎥
+    ⎢       ⎥
+    ⎢   2   ⎥
+    ⎢───────⎥
+    ⎣c⋅e + d⎦
 >>> U.solve(L.solve(P*b)) # One-line approach
-Matrix([
-[2*e/(c*e + d)],
-[  2/(c*e + d)]])
+    ⎡  2⋅e  ⎤
+    ⎢───────⎥
+    ⎢c⋅e + d⎥
+    ⎢       ⎥
+    ⎢   2   ⎥
+    ⎢───────⎥
+    ⎣c⋅e + d⎦
 >>> U.solve(L.solve(P*b2)) # Repeating one-line approach for b2
-Matrix([
-[4*e/(c*e + d)],
-[  4/(c*e + d)]])
+    ⎡  4⋅e  ⎤
+    ⎢───────⎥
+    ⎢c⋅e + d⎥
+    ⎢       ⎥
+    ⎢   4   ⎥
+    ⎢───────⎥
+    ⎣c⋅e + d⎦
 ```
 
 or compute the inverse matrix using
@@ -133,22 +153,51 @@ or compute the inverse matrix using
 >>> b2 = Matrix([4, 0])
 >>> inv = A.inv()
 >>> inv
-Matrix([
-[e/(c*e + d),  d/(c*e + d)],
-[1/(c*e + d), -c/(c*e + d)]])
+    ⎡   e        d   ⎤
+    ⎢───────  ───────⎥
+    ⎢c⋅e + d  c⋅e + d⎥
+    ⎢                ⎥
+    ⎢   1       -c   ⎥
+    ⎢───────  ───────⎥
+    ⎣c⋅e + d  c⋅e + d⎦
 >>> inv * b # Solves to Ax = b for x
-Matrix([
-[2*e/(c*e + d)],
-[  2/(c*e + d)]])
+    ⎡  2⋅e  ⎤
+    ⎢───────⎥
+    ⎢c⋅e + d⎥
+    ⎢       ⎥
+    ⎢   2   ⎥
+    ⎢───────⎥
+    ⎣c⋅e + d⎦
 >>> inv * b2 # Solves to Ax = b2 for x
-Matrix([
-[4*e/(c*e + d)],
-[  4/(c*e + d)]])
+    ⎡  4⋅e  ⎤
+    ⎢───────⎥
+    ⎢c⋅e + d⎥
+    ⎢       ⎥
+    ⎢   4   ⎥
+    ⎢───────⎥
+    ⎣c⋅e + d⎦
 ```
 
 ## Working With Symbolic Matrices
 
-*Awaiting content tips*
+The computational complexity of manipulating symbolic matrices can increase
+rapidly with matrix size. For example, the size of the determinant of a symbolic
+matrix increases with the factorial of the matrix dimension. As a result, the
+maximum dimensionality of matrices that can be solved is more limited than for
+numerical matrices.
+
+```py
+>>> from sympy import MatrixSymbol, init_printing
+>>> init_printing()
+>>> MatrixSymbol('A', 4, 4).as_explicit().det()
+A_00*A_11*A_22*A_33 - A_00*A_11*A_23*A_32 - A_00*A_12*A_21*A_33 + A_00*A_12*A_
+23*A_31 + A_00*A_13*A_21*A_32 - A_00*A_13*A_22*A_31 - A_01*A_10*A_22*A_33 + A_
+01*A_10*A_23*A_32 + A_01*A_12*A_20*A_33 - A_01*A_12*A_23*A_30 - A_01*A_13*A_20
+*A_32 + A_01*A_13*A_22*A_30 + A_02*A_10*A_21*A_33 - A_02*A_10*A_23*A_31 - A_02
+*A_11*A_20*A_33 + A_02*A_11*A_23*A_30 + A_02*A_13*A_20*A_31 - A_02*A_13*A_21*A
+_30 - A_03*A_10*A_21*A_32 + A_03*A_10*A_22*A_31 + A_03*A_11*A_20*A_32 - A_03*A
+_11*A_22*A_30 - A_03*A_12*A_20*A_31 + A_03*A_12*A_21*A_30
+```
 
 ## Use the Solution Result
 
@@ -166,17 +215,23 @@ produces the constants vector $b$:
 >>> b = Matrix([2, 0])
 >>> solution = A.solve(b)
 >>> solution
-Matrix([
-[2*e/(c*e + d)],
-[  2/(c*e + d)]])
+[  2*e  ]
+[-------]
+[c*e + d]
+[       ]
+[   2   ]
+[-------]
+[c*e + d]
 >>> (A * solution) - b # Not immediately obvious whether this result is a zeroes vector
-Matrix([
-[2*c*e/(c*e + d) + 2*d/(c*e + d) - 2],
-[                                  0]])
+    [ 2*c*e      2*d      ]
+    [------- + ------- - 2]
+    [c*e + d   c*e + d    ]
+    [                     ]
+    [          0          ]
 >>> simplify((A * solution) - b) # simplify reveals that this result is a zeroes vector
-Matrix([
-[0],
-[0]])
+    [0]
+    [ ]
+    [0]
 ```
 
 Note that we had to use {func}`~sympy.simplify.simplify.simplify` to make SymPy
@@ -191,14 +246,18 @@ list of the elements using list comprehension
 
 ```py
 >>> [element for element in solution]
-[2*e/(c*e + d), 2/(c*e + d)]
+       2*e       2    
+    [-------, -------]
+     c*e + d  c*e + d 
 ```
 
 or you can extract individual elements by subscripting ("slicing")
 
 ```py
 >>> solution[0]
-2*e/(c*e + d)
+      2*e  
+    -------
+    c*e + d
 ```
 
 ## Equations With No Solution
@@ -212,9 +271,10 @@ solution:
 >>> c, d, e = symbols("c, d, e")
 >>> A = Matrix([[c*e**2, d*e], [c*e, d]])
 >>> A
-Matrix([
-[c*e**2, d*e],
-[   c*e,   d]])
+    [   2     ]
+    [c*e   d*e]
+    [         ]
+    [c*e    d ]
 >>> b = Matrix([2, 0])
 >>> A.LUsolve(b)
 Traceback (most recent call last):
