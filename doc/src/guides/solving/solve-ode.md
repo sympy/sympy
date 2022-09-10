@@ -309,7 +309,14 @@ NotImplementedError: solve: Cannot solve -y(x)**2 + Derivative(y(x), (x, 3))
 Some systems of differential equations have no closed-form solution because they
 are chaotic, for example the [Lorenz
 system](https://en.wikipedia.org/wiki/Lorenz_system#Overview) or a double
-pendulum:
+pendulum described by these two differential equations (simplified from
+[ScienceWorld](https://scienceworld.wolfram.com/physics/DoublePendulum.html)):
+
+$$ 2 \theta_1''(t) + \theta_2''(t) \cos(\theta_1-\theta_2) + \theta_2'^2(t)
+\sin(\theta_1 - \theta_2) + 2g \sin(\theta_1) = 0 $$
+
+$$ \theta_2''(t) + \theta_1''(t) \cos(\theta_1-\theta_2) - \theta_1'^2(t)
+\sin(\theta_1 - \theta_2) + g \sin(\theta_2) = 0 $$
 
 ```py
 >>> from sympy import symbols, Function, cos, sin, dsolve
@@ -326,7 +333,7 @@ NotImplementedError
 For such cases, you can solve the equations numerically as mentioned in
 [](#alternatives-to-consider).
 
-## If You Encounter a Problem With SymPy ODE Solving
+## Report a Problem
 
 If you know your ODE has a solution, and SymPy cannot find it, please post the
 problem on the [mailing list](https://groups.google.com/g/sympy), or open an
