@@ -1,13 +1,15 @@
 # Solve a Diophantine Equation Algebraically
 
 Use SymPy to solve a Diophantine equation (find integer solutions to a
-polynomial equation) algebraically. For example, solving $a^2 + b^2 = c^2$
-yields $(a=2pq, b=p^2-q^2, c=p^2-q^2)$.
+polynomial equation) algebraically, returning a parameterized general solution
+if possible. For example, solving $a^2 + b^2 = c^2$ yields $(a=2pq, b=p^2-q^2,
+c=p^2-q^2)$.
 
 ## Alternatives to Consider
 
-- *alternative 1*
-- *alternative 2*
+- *solve() but not very useful, e.g. solve(a**2 + b**2 - c**2, [a, b, c])
+  returns  [(-sqrt(-b**2 + c**2), b, c), (sqrt(-b**2 + c**2), b, c)]*
+- *numerical method--numpy or scipy?*
 
 Here is an example of solving a Diophantine equation, specifically the
 [Pythagorean theorem](https://en.wikipedia.org/wiki/Pythagorean_theorem) $a^2 +
@@ -23,9 +25,19 @@ b^2 = c^2$, using {func}`~.diophantine`:
 
 ## Guidance
 
-### *Guidance 1*
+### Limitations
 
-*Guidance 1 content*
+Currently, following five types of Diophantine equations can be solved using
+{meth}`~sympy.solvers.diophantine.diophantine.diophantine` and other helper
+functions of the Diophantine module.
+
+- Linear Diophantine equations: $a_1x_1 + a_2x_2 + \ldots + a_nx_n = b$
+- General binary quadratic equation: $ax^2 + bxy + cy^2 + dx + ey + f = 0$
+- Homogeneous ternary quadratic equation: $ax^2 + by^2 + cz^2 + dxy + eyz + fzx
+  = 0$
+- Extended Pythagorean equation: $a_{1}x_{1}^2 + a_{2}x_{2}^2 + \ldots +
+  a_{n}x_{n}^2 = a_{n+1}x_{n+1}^2$
+- General sum of squares: $x_{1}^2 + x_{2}^2 + \ldots + x_{n}^2 = k$
 
 ### *Guidance 2*
 
