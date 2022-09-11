@@ -305,7 +305,9 @@ by the function `rhs` (right-hand side) for input values `y`, `kf`, and `kb`. We
 use {func}`~.lambdify` to convert the SymPy symbolic expression for `ydot` into
 a form that SciPy can evaluate numerically, `f`. Finally, we call SciPy's
 `solve_ivp` by passing it the function `f`, the interval of integration, the
-initial state, and the arguments to pass to the function `f`.
+initial state, and the arguments to pass to the function `f`. SciPy's
+`solve_ivp` returns a result containing `t` (time) points and corresponding `y`
+(numerical function result) values for each initial point in `y0`.
 
 ## Ordinary Differential Equation Solving Hints
 
