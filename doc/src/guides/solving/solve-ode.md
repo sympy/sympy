@@ -7,7 +7,9 @@ example, solving $y''(x) + 9y(x)=0 $ yields $ y(x)=C_{1} \sin(3x)+ C_{2}
 ## Alternatives to Consider
 - To numerically solve a system of ODEs, use a [SciPy ODE
   solver](https://docs.scipy.org/doc/scipy/reference/integrate.html#solving-initial-value-problems-for-ode-systems)
-  such as `solve_ivp`.
+  such as `solve_ivp`. You can also use SymPy to create and then
+  {func}`~.lambdify` an ODE to be solved numerically using SciPy's as
+  `solve_ivp` as described below in [](#numerically-solve-an-ode-in-scipy).
 
 ## Solve an Ordinary Differential Equation (ODE)
 
@@ -256,6 +258,54 @@ C1*sin(3*x) + C2*cos(3*x)
 >>> result.subs({C1: 7, C2: pi})
 7*sin(3*x) + pi*cos(3*x)
 ```
+
+### Numerically Solve an ODE in SciPy
+
+A common workflow which leverages
+[SciPy's](https://docs.scipy.org/doc/scipy/index.html) fast numerical ODE
+solving is
+1. set up an ODE in SymPy
+2. convert it to a lambda function using {func}`~.lambdify`
+3. solve it numerically using SciPy's `solve_ivp`.
+
+```{warning}
+{func}`~.lambdify` uses {external:func}`~.exec` to dynamically execute Python code, and thus should not be used on unsanitized input.
+```
+
+Here is an example from the field of [chemical
+kinetics](https://www.sympy.org/scipy-2017-codegen-tutorial/notebooks/25-chemical-kinetics-intro.html):
+
+```py
+>>> from sympy import symbols, lambdify
+>>> import numpy as np
+>>> import scipy.integrate
+>>> def rhs(t, y, kf, kb):
+...     rf = kf * y[0]**2 * y[1]
+...     rb = kb * y[2]**2
+...     return [2*(rb - rf), rb - rf, 2*(rf - rb)]
+>>> y, (kf, kb) = symbols('y:3'), symbols('kf kb')
+>>> ydot = rhs(None, y, kf, kb)
+>>> t = symbols('t') # not used in this case
+>>> f = lambdify((t, y, kf, kb), ydot)
+>>> k_vals = np.array([0.42, 0.17]) # arbitrary in this case
+>>> y0 = [1, 1, 0]
+>>> scipy.integrate.solve_ivp(f, (0, 10), y0, args=k_vals)
+    {'message': 'The solver successfully reached the end of the integration interval.', 'nfev': 68, 'njev': 0, 'nlu': 0, 'sol': None, 'status': 0, 'success': True, 't': [0.00000000e+00 1.68190462e-03 1.85009508e-02 1.86691413e-01
+     6.37253319e-01 1.27438822e+00 2.15637690e+00 3.28555351e+00
+     4.69240977e+00 6.45455786e+00 8.73068099e+00 1.00000000e+01], 't_events': None, 'y': [[1.         0.99858969 0.98475531 0.86889862 0.68120238 0.55390608
+      0.47951256 0.44569558 0.43354565 0.43020361 0.42955182 0.4294468 ]
+     [1.         0.99929485 0.99237766 0.93444931 0.84060119 0.77695304
+      0.73975628 0.72284779 0.71677282 0.71510181 0.71477591 0.7147234 ]
+     [0.         0.00141031 0.01524469 0.13110138 0.31879762 0.44609392
+      0.52048744 0.55430442 0.56645435 0.56979639 0.57044818 0.5705532 ]], 'y_events': None}
+```
+
+`ydot` is the derivative of the function `y`, and the value of `ydot` is given
+by the function `rhs` (right-hand side) for input values `y`, `kf`, and `kb`. We
+use {func}`~.lambdify` to convert the SymPy symbolic expression for `ydot` into
+a form that SciPy can evaluate numerically, `f`. Finally, we call SciPy's
+`solve_ivp` by passing it the function `f`, the interval of integration, the
+initial state, and the arguments to pass to the function `f`.
 
 ## Ordinary Differential Equation Solving Hints
 
