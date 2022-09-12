@@ -2,18 +2,29 @@
 
 Use SymPy to solve a Diophantine equation (find integer solutions to a
 polynomial equation) algebraically, returning a parameterized general solution
-if possible. For example, solving $a^2 + b^2 = c^2$ yields $(a=2pq, b=p^2-q^2,
-c=p^2-q^2)$.
+if possible. For example, solving the [Pythagorean
+theorem](https://en.wikipedia.org/wiki/Pythagorean_theorem) $a^2 + b^2 = c^2$
+yields $(a=2pq, b=p^2-q^2, c=p^2-q^2)$.
 
 ## Alternatives to Consider
 
-- *solve() but not very useful, e.g. solve(a**2 + b**2 - c**2, [a, b, c])
-  returns  [(-sqrt(-b**2 + c**2), b, c), (sqrt(-b**2 + c**2), b, c)]*
-- *numerical method--numpy or scipy?*
+There are few alternatives for finding a parameterized general solution a
+Diophantine equation. {func}`~.solve` simply solves for one variable in terms of
+the others. For example, attempting to solve $a^2 + b^2 = c^2$ for $a$, $b$, and
+$c$ can only reveal that $a = \pm \sqrt{c^2-b^2}$:
 
-Here is an example of solving a Diophantine equation, specifically the
-[Pythagorean theorem](https://en.wikipedia.org/wiki/Pythagorean_theorem) $a^2 +
-b^2 = c^2$, using {func}`~.diophantine`:
+```py
+>>> from sympy import solve
+>>> from sympy import symbols
+>>> a, b, c = symbols("a, b, c", integer=True)
+>>> solve(a**2 + b**2 - c**2, [a, b, c], dict=True)
+[{a: -sqrt(-b**2 + c**2)}, {a: sqrt(-b**2 + c**2)}]
+```
+
+## Example of Solving a Diophantine Equation
+
+Here is an example of solving a Diophantine equation, specifically $a^2 + b^2 =
+c^2$, using {func}`~.diophantine`:
 
 ```py
 >>> from sympy.solvers.diophantine import diophantine
