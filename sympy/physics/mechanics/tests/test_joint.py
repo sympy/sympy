@@ -62,6 +62,10 @@ def test_coordinate_generation():
     assert J._fill_coordinate_list(None, 1, 'u') == Matrix([uj])
     assert J._fill_coordinate_list([], 3, 'u') == Matrix([u0j, u1j, u2j])
     assert J._fill_coordinate_list([u0], 3, 'u', 1) == Matrix([u0, u2j, u3j])
+    # Test single numbering
+    assert J._fill_coordinate_list(None, 1, number_single=True) == Matrix([q0j])
+    assert J._fill_coordinate_list([], 1, 'u', 2, True) == Matrix([u2j])
+    assert J._fill_coordinate_list([], 3, 'q') == Matrix([q0j, q1j, q2j])
 
 
 def test_pin_joint():
@@ -359,7 +363,7 @@ def test_pin_joint_joint_axis():
 def test_pin_joint_arbitrary_axis():
     q, u = dynamicsymbols('q_J, u_J')
 
-    # When the bodies are attached though masscenters but axess are opposite.
+    # When the bodies are attached though masscenters but axes are opposite.
     N, A, P, C = _generate_body()
     PinJoint('J', P, C, child_interframe=-A.x)
 

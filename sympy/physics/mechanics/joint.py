@@ -40,9 +40,9 @@ class Joint(ABC):
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: List of dynamicsymbols, optional
+    coordinates: iterable of dynamicsymbols, optional
         Generalized coordinates of the joint.
-    speeds : List of dynamicsymbols, optional
+    speeds : iterable of dynamicsymbols, optional
         Generalized speeds of joint.
     parent_point : Point or Vector, optional
         Attachment point where the joint is fixed to the parent body. If a
@@ -96,10 +96,10 @@ class Joint(ABC):
         The joint's parent body.
     child : Body
         The joint's child body.
-    coordinates : list
-        List of the joint's generalized coordinates.
-    speeds : list
-        List of the joint's generalized speeds.
+    coordinates : Matrix
+        Matrix of the joint's generalized coordinates.
+    speeds : Matrix
+        Matrix of the joint's generalized speeds.
     parent_point : Point
         Attachment point where the joint is fixed to the parent body.
     child_point : Point
@@ -114,7 +114,7 @@ class Joint(ABC):
     child_interframe : ReferenceFrame
         Intermediate frame of the child body with respect to which the joint
         transformation is formulated.
-    kdes : list
+    kdes : Matrix
         Kinematical differential equations of the joint.
 
     Notes
@@ -215,12 +215,12 @@ class Joint(ABC):
 
     @property
     def coordinates(self):
-        """List generalized coordinates of the joint."""
+        """Matrix of the joint's generalized coordinates."""
         return self._coordinates
 
     @property
     def speeds(self):
-        """List generalized coordinates of the joint.."""
+        """Matrix of the joint's generalized speeds."""
         return self._speeds
 
     @property
@@ -260,12 +260,12 @@ class Joint(ABC):
 
     @abstractmethod
     def _generate_coordinates(self, coordinates):
-        """Generate list generalized coordinates of the joint."""
+        """Generate Matrix of the joint's generalized coordinates."""
         pass
 
     @abstractmethod
     def _generate_speeds(self, speeds):
-        """Generate list generalized speeds of the joint."""
+        """Generate Matrix of the joint's generalized speeds."""
         pass
 
     @abstractmethod
@@ -474,25 +474,30 @@ class Joint(ABC):
         body.masscenter.set_vel(interframe, 0)  # Fixate interframe to body
         return interframe
 
-    def _fill_coordinate_list(self, coordinates, n_coords, label='q', offset=0):
+    def _fill_coordinate_list(self, coordinates, n_coords, label='q', offset=0,
+                              number_single=False):
         """Helper method for _generate_coordinates and _generate_speeds.
 
         Parameters
         ==========
 
-        coordinates : List
-            List of coordinates or speeds that have been provided.
+        coordinates : iterable
+            Iterable of coordinates or speeds that have been provided.
         n_coords : Integer
             Number of coordinates that should be returned.
         label : String, optional
-            Coordinate type either 'q' (coordinates) or 'u' (speeds).
+            Coordinate type either 'q' (coordinates) or 'u' (speeds). The
+            Default is 'q'.
         offset : Integer
-            Count offset when creating new dynamicsymbols.
+            Count offset when creating new dynamicsymbols. The default is 0.
+        number_single : Boolean
+            Boolean whether if n_coords == 1, number should still be used. The
+            default is False.
 
         """
 
         def create_symbol(number):
-            if n_coords == 1:
+            if n_coords == 1 and not number_single:
                 return dynamicsymbols(f'{label}_{self.name}')
             return dynamicsymbols(f'{label}{number}_{self.name}')
 
@@ -514,7 +519,7 @@ class Joint(ABC):
         for i in range(len(coordinates) + offset, n_coords + offset):
             coords.append(create_symbol(i))
         if len(coords) != n_coords:
-            raise ValueError(f'{len(coordinates)} {name} have been provided. '
+            raise ValueError(f'{len(coordinates)} {name}s have been provided. '
                              f'The maximum number of {name}s is {n_coords}.')
         return Matrix(coords)
 
@@ -630,10 +635,12 @@ class PinJoint(Joint, _JointAxisMixin):
         The joint's parent body.
     child : Body
         The joint's child body.
-    coordinates : list
-        List of the joint's generalized coordinates.
-    speeds : list
-        List of the joint's generalized speeds.
+    coordinates : Matrix
+        Matrix of the joint's generalized coordinates. The default value is
+        ``dynamicsymbols(f'q_{joint.name}')``.
+    speeds : Matrix
+        Matrix of the joint's generalized speeds. The default value is
+        ``dynamicsymbols(f'u_{joint.name}')``.
     parent_point : Point
         Attachment point where the joint is fixed to the parent body.
     child_point : Point
@@ -651,7 +658,7 @@ class PinJoint(Joint, _JointAxisMixin):
     joint_axis : Vector
         The axis about which the rotation occurs. Note that the components of
         this axis are the same in the parent_interframe and child_interframe.
-    kdes : list
+    kdes : Matrix
         Kinematical differential equations of the joint.
 
     Examples
@@ -837,9 +844,11 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     child : Body
         The child body of joint.
     coordinates: dynamicsymbol, optional
-        Generalized coordinates of the joint.
+        Generalized coordinates of the joint. The default value is
+        ``dynamicsymbols(f'q_{joint.name}')``.
     speeds : dynamicsymbol, optional
-        Generalized speeds of joint.
+        Generalized speeds of joint. The default value is
+        ``dynamicsymbols(f'u_{joint.name}')``.
     parent_point : Point or Vector, optional
         Attachment point where the joint is fixed to the parent body. If a
         vector is provided, then the attachment point is computed by adding the
@@ -895,10 +904,10 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         The joint's parent body.
     child : Body
         The joint's child body.
-    coordinates : list
-        List of the joint's generalized coordinates.
-    speeds : list
-        List of the joint's generalized speeds.
+    coordinates : Matrix
+        Matrix of the joint's generalized coordinates.
+    speeds : Matrix
+        Matrix of the joint's generalized speeds.
     parent_point : Point
         Attachment point where the joint is fixed to the parent body.
     child_point : Point
@@ -913,7 +922,7 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     child_interframe : ReferenceFrame
         Intermediate frame of the child body with respect to which the joint
         transformation is formulated.
-    kdes : list
+    kdes : Matrix
         Kinematical differential equations of the joint.
 
     Examples
