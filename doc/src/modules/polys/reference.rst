@@ -160,6 +160,7 @@ Orthogonal polynomials
 .. autofunction:: chebyshevu_poly
 .. autofunction:: gegenbauer_poly
 .. autofunction:: hermite_poly
+.. autofunction:: hermite_prob_poly
 .. autofunction:: jacobi_poly
 .. autofunction:: legendre_poly
 .. autofunction:: laguerre_poly

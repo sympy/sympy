@@ -248,6 +248,9 @@ Hermite Polynomials
 .. autoclass:: sympy.functions.special.polynomials.hermite
    :members:
 
+.. autoclass:: sympy.functions.special.polynomials.hermite_prob
+   :members:
+
 Laguerre Polynomials
 ++++++++++++++++++++
 

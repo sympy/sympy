@@ -51,6 +51,9 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.numbers.genocchi
    :members:
 
+.. autoclass:: sympy.functions.combinatorial.numbers.andre
+   :members:
+
 .. autoclass:: sympy.functions.combinatorial.numbers.partition
    :members:
 
