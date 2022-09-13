@@ -30,6 +30,7 @@ We calculate a generic Jones vector:
 ⎣ⅈ⋅sin(χ)⋅cos(ψ) + sin(ψ)⋅cos(χ) ⎦
 
 And the more general Stokes vector:
+
 >>> s0 = stokes_vector(psi, chi, p, I0)
 >>> pprint(s0, use_unicode=True)
 ⎡          I₀          ⎤
@@ -41,6 +42,7 @@ And the more general Stokes vector:
 ⎣    I₀⋅p⋅sin(2⋅χ)     ⎦
 
 We calculate how the Jones vector is modified by a half-wave plate:
+
 >>> alpha = symbols("alpha", real=True)
 >>> HWP = half_wave_retarder(alpha)
 >>> x1 = simplify(HWP*x0)
