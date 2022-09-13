@@ -30,7 +30,7 @@ c^2$, using {func}`~.diophantine`:
 >>> from sympy.solvers.diophantine import diophantine
 >>> from sympy import symbols
 >>> a, b, c = symbols("a, b, c", integer=True)
->>> diophantine(a**2 + b**2 - c**2)
+>>> diophantine(a**2 + b**2 - c**2, syms=(a, b, c))
 {(2*p*q, p**2 - q**2, p**2 + q**2)}
 ```
 
@@ -38,6 +38,12 @@ Refer to the [Diophantine API reference](../../modules/solvers/diophantine.rst)
 for more examples of solving various types of Diophantine equations.
 
 ## Guidance
+
+### Specify the Order of Symbols in the Result
+
+We recommend you specify the order of symbols in the result to avoid confusion.
+Use the `syms` parameter and pass it a tuple or list of symbols to ensure the
+result will be in that order.
 
 ### Limitations
 
@@ -64,7 +70,7 @@ a tuple is an expression for a variable in your equation. For example, in
 >>> from sympy.solvers.diophantine import diophantine
 >>> from sympy import symbols
 >>> a, b, c, p, q = symbols("a, b, c, p, q", integer=True)
->>> d = diophantine(a**2 + b**2 - c**2)
+>>> d = diophantine(a**2 + b**2 - c**2, syms=(a, b, c))
 >>> d
 {(2*p*q, p**2 - q**2, p**2 + q**2)}
 ```
@@ -83,6 +89,24 @@ the set, you can convert the set to a list, and then subscript the list:
 >>> solution_list[0] # Extract a tuple corresponding to a solution
 (2*p*q, p**2 - q**2, p**2 + q**2)
 >>> solution_list[0][0] # Extract an expression for one variable, here a
+2*p*q
+```
+
+You can also create a dictionary of symbol-expression pairs to extract an
+expression by its symbol:
+
+```py
+>>> from sympy.solvers.diophantine import diophantine
+>>> from sympy import symbols
+>>> a, b, c = symbols("a, b, c", integer=True)
+>>> my_syms = (a, b, c)
+>>> solution, = diophantine(a**2 + b**2 - c**2, syms=(a, b, c))
+>>> solution
+(2*p*q, p**2 - q**2, p**2 + q**2)
+>>> solution_dict = dict(zip(my_syms, solution))
+>>> solution_dict
+{a: 2*p*q, b: p**2 - q**2, c: p**2 + q**2}
+>>> solution_dict[a]
 2*p*q
 ```
 
@@ -107,7 +131,7 @@ If you want to programmatically obtain the set of auto-generated parameters for
 one solution, you can use the following code:
 
 ```py
->>> solution, = diophantine(a**2 + b**2 - c**2)
+>>> solution, = diophantine(a**2 + b**2 - c**2, syms=(a, b, c))
 >>> solution
 (2*p*q, p**2 - q**2, p**2 + q**2)
 >>> set().union(*(s.free_symbols for s in solution))
@@ -116,7 +140,7 @@ one solution, you can use the following code:
 
 ## *Tradeoffs (speed vs. accuracy, etc.) for function*
 
-### *Are there any tradeoffs to mention?*
+### *Are there any tradeoffs to mention--permute parameter?*
 
 *Tradeoff 1 content*
 
@@ -133,7 +157,7 @@ can only be even. However, the constant $3$ is odd, so there is no solution.
 >>> from sympy.solvers.diophantine import diophantine
 >>> from sympy import symbols
 >>> x, y = symbols("x, y", integer=True)
->>> diophantine(2*x + 4*y - 3)
+>>> diophantine(2*x + 4*y - 3, syms=(x, y))
 set()
 ```
 
