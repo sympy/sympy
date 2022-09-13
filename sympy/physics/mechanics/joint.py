@@ -502,7 +502,7 @@ class Joint(ABC):
             return dynamicsymbols(f'{label}{number}_{self.name}')
 
         name = 'generalized coordinate' if label == 'q' else 'generalized speed'
-        coords = []
+        generated_coordinates = []
         if coordinates is None:
             coordinates = []
         elif isinstance(coordinates, (AppliedUndef, Derivative)):
@@ -510,18 +510,18 @@ class Joint(ABC):
         # Supports more iterables, also Matrix
         for i, coord in enumerate(coordinates):
             if coord is None:
-                coords.append(create_symbol(i + offset))
+                generated_coordinates.append(create_symbol(i + offset))
             elif isinstance(coord, (AppliedUndef, Derivative)):
-                coords.append(coord)
+                generated_coordinates.append(coord)
             else:
                 raise TypeError(f'The {name} {coord} should have been a '
                                 f'dynamicsymbol.')
         for i in range(len(coordinates) + offset, n_coords + offset):
-            coords.append(create_symbol(i))
-        if len(coords) != n_coords:
+            generated_coordinates.append(create_symbol(i))
+        if len(generated_coordinates) != n_coords:
             raise ValueError(f'{len(coordinates)} {name}s have been provided. '
                              f'The maximum number of {name}s is {n_coords}.')
-        return Matrix(coords)
+        return Matrix(generated_coordinates)
 
 
 class _JointAxisMixin:
