@@ -124,11 +124,18 @@ one solution, you can use the following code:
 
 ### Equations With No Solution
 
-*Equations with no solution content*
+Some Diophantine equations have no solution, in which case {func}`~.diophantine`
+will return an empty set, `set()`. For example, in this equation, the
+coefficients are both even ($2$ and $4$), so the sum of the terms ($2x + 4y$)
+can only be even. However, the constant $3$ is odd, so there is no solution.
 
-### Equations With No Closed-Form Solution
-
-*Equations with no analytical solution content*
+```py
+>>> from sympy.solvers.diophantine import diophantine
+>>> from sympy import symbols
+>>> x, y = symbols("x, y", integer=True)
+>>> diophantine(2*x + 4*y - 3)
+set()
+```
 
 ## Report a Problem
 
