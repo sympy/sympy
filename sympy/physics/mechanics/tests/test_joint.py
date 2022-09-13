@@ -66,6 +66,12 @@ def test_coordinate_generation():
     assert J._fill_coordinate_list(None, 1, number_single=True) == Matrix([q0j])
     assert J._fill_coordinate_list([], 1, 'u', 2, True) == Matrix([u2j])
     assert J._fill_coordinate_list([], 3, 'q') == Matrix([q0j, q1j, q2j])
+    # Test too many coordinates supplied
+    raises(ValueError, lambda: J._fill_coordinate_list([q0, q1], 1))
+    raises(ValueError, lambda: J._fill_coordinate_list([u0, u1, None], 2, 'u'))
+    # Test incorrect coordinate type
+    raises(TypeError, lambda: J._fill_coordinate_list([q0, symbols('q1')], 2))
+    raises(TypeError, lambda: J._fill_coordinate_list([q0 + q1, q1], 2))
 
 
 def test_pin_joint():
