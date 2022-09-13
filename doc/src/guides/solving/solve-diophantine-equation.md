@@ -31,7 +31,7 @@ c^2$, using {func}`~.diophantine`:
 >>> from sympy import symbols
 >>> a, b, c = symbols("a, b, c", integer=True)
 >>> diophantine(a**2 + b**2 - c**2)
->>> {(2*p*q, p**2 - q**2, p**2 + q**2)}
+{(2*p*q, p**2 - q**2, p**2 + q**2)}
 ```
 
 ## Guidance
@@ -50,32 +50,66 @@ functions of the Diophantine module.
   a_{n}x_{n}^2 = a_{n+1}x_{n+1}^2$
 - General sum of squares: $x_{1}^2 + x_{2}^2 + \ldots + x_{n}^2 = k$
 
-### *Guidance 2*
-
-*Guidance 2 content*
-
-
-## *Title*
-
-You can *title* in several ways. 
-
-### *Method 1*
-
-*Method 1 content*
-
-### *Method 2*
-
-*Method 2 content*
-
 ## Use the Solution Result
 
-### *Usage Method 1*
+### Extract Expressions From the Result
 
-*Usage method 1 content*
+{func}`~.diophantine` returns results as a set of tuples, where each element in
+a tuple is an expression for a variable in your equation. For example, in
 
-### *Usage Method 2*
+```py
+>>> from sympy.solvers.diophantine import diophantine
+>>> from sympy import symbols
+>>> a, b, c, p, q = symbols("a, b, c, p, q", integer=True)
+>>> d = diophantine(a**2 + b**2 - c**2)
+>>> d
+{(2*p*q, p**2 - q**2, p**2 + q**2)}
+```
 
-*Usage method 2 content*
+the result is a set containing one tuple where the expressions correspond to (a,
+b, c). That is, the tuple represents `a = 2*p*q, b = p**2 - q**2, c =
+p**2-q**2`.
+
+Because you cannot extract an element (here, a tuple) from a set by subscripting
+the set, you can convert the set to a list, and then subscript the list:
+
+```py
+>>> solution_list = list(d)
+>>> solution_list
+[(2*p*q, p**2 - q**2, p**2 + q**2)]
+>>> solution_list[0] # Extract a tuple corresponding to a solution
+(2*p*q, p**2 - q**2, p**2 + q**2)
+>>> solution_list[0][0] # Extract an expression for one variable, here a
+2*p*q
+```
+
+### Work With Parameters
+
+You can manipulate parameters such as `p` and `q`, which are generated
+automatically by {func}`~.diophantine`, by creating them as symbols. For
+example, to find a particular set of values that satisfies the Diophantine
+equation, you can substitute in values for the parameters by
+1. creating the parameters as symbols
+2. substituting in their values using {meth}`~sympy.core.basic.Basic.subs`.
+
+```py
+>>> p, q = symbols("p, q", integer=True)
+>>> [var.subs({p:4, q:3}) for var in solution_list[0]]
+[24, 7, 25]
+```
+
+### Programmatically Extract Parameter Symbols
+
+If you want to programmatically obtain the set of auto-generated parameters for
+one solution, you can use the following code:
+
+```py
+>>> solution, = diophantine(a**2 + b**2 - c**2)
+>>> solution
+(2*p*q, p**2 - q**2, p**2 + q**2)
+>>> set().union(*(s.free_symbols for s in solution))
+{p, q}
+```
 
 ## *Tradeoffs (speed vs. accuracy, etc.) for function*
 
