@@ -76,11 +76,22 @@ SymPy deprecation warnings.
 
 ## Version 1.12
 
+(deprecated-mechanics-joint-coordinate-format)=
+### New Joint coordinate format
+The format, i.e. type and auto generated name, of the generalized coordinates
+and generalized speeds of the joints in the ``sympy.physics.mechanics`` module
+has changed. The data type has changed from ``list`` to ``Matrix``, which is the
+same as the type for the generalized coordinates within the ``KanesMethod``.
+The auto naming of the generalized coordinates and generalized speeds of the
+``PinJoint`` and ``PrismaticJoint`` have also changed to ``q_<joint.name>`` and
+``u_<joint.name>``. Previously each of those joints had an unique template for
+auto generating these names.
+
 (deprecated-mechanics-joint-axis)=
 ### New Joint intermediate frames
 
-The definition of the joint axis in the ``sympy.physics.mechanics`` has changed.
-Instead of using the arguments ``parent_axis`` and ``child_axis`` to
+The definition of the joint axis in the ``sympy.physics.mechanics`` module has
+changed. Instead of using the arguments ``parent_axis`` and ``child_axis`` to
 automatically determine the joint axis and an intermediate reference frame, the
 joints now use an intermediate frame argument for both the parent and the child
 body, i.e. ``parent_interframe`` and ``child_interframe``. This means that you
@@ -102,9 +113,9 @@ joint was:
 ...                child_axis=-child.z)   # doctest: +SKIP
 >>> parent.dcm(child)   # doctest: +SKIP
 Matrix([
-[-cos(theta_pin(t)), -sin(theta_pin(t)),  0],
-[-sin(theta_pin(t)),  cos(theta_pin(t)),  0],
-[                 0,                  0, -1]])
+[-cos(q_pin(t)), -sin(q_pin(t)),  0],
+[-sin(q_pin(t)),  cos(q_pin(t)),  0],
+[             0,              0, -1]])
 ```
 
 When inspecting this matrix you will notice that for ``theta_pin = 0`` the child
@@ -122,9 +133,9 @@ this exact rotation:
 ...                child_interframe=int_frame)
 >>> parent.dcm(child)
 Matrix([
-[-cos(theta_pin(t)), -sin(theta_pin(t)),  0],
-[-sin(theta_pin(t)),  cos(theta_pin(t)),  0],
-[                 0,                  0, -1]])
+[-cos(q_pin(t)), -sin(q_pin(t)),  0],
+[-sin(q_pin(t)),  cos(q_pin(t)),  0],
+[             0,              0, -1]])
 ```
 
 However if you liked the fact that the deprecated arguments aligned the frames
@@ -140,9 +151,9 @@ given vector:
 ...                child_interframe=-child.z)
 >>> parent.dcm(child)
 Matrix([
-[-cos(theta_pin(t)), -sin(theta_pin(t)),  0],
-[-sin(theta_pin(t)),  cos(theta_pin(t)),  0],
-[                 0,                  0, -1]])
+[-cos(q_pin(t)), -sin(q_pin(t)),  0],
+[-sin(q_pin(t)),  cos(q_pin(t)),  0],
+[             0,              0, -1]])
 ```
 
 (deprecated-mechanics-joint-pos)=
