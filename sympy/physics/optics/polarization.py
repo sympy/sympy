@@ -124,24 +124,28 @@ def jones_vector(psi, chi):
     >>> psi, chi = symbols("psi, chi", real=True)
 
     A general Jones vector.
+
     >>> pprint(jones_vector(psi, chi), use_unicode=True)
     ⎡-ⅈ⋅sin(χ)⋅sin(ψ) + cos(χ)⋅cos(ψ)⎤
     ⎢                                ⎥
     ⎣ⅈ⋅sin(χ)⋅cos(ψ) + sin(ψ)⋅cos(χ) ⎦
 
     Horizontal polarization.
+
     >>> pprint(jones_vector(0, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
     ⎣0⎦
 
     Vertical polarization.
+
     >>> pprint(jones_vector(pi/2, 0), use_unicode=True)
     ⎡0⎤
     ⎢ ⎥
     ⎣1⎦
 
     Diagonal polarization.
+
     >>> pprint(jones_vector(pi/4, 0), use_unicode=True)
     ⎡√2⎤
     ⎢──⎥
@@ -152,6 +156,7 @@ def jones_vector(psi, chi):
     ⎣2 ⎦
 
     Anti-diagonal polarization.
+
     >>> pprint(jones_vector(-pi/4, 0), use_unicode=True)
     ⎡ √2 ⎤
     ⎢ ── ⎥
@@ -162,6 +167,7 @@ def jones_vector(psi, chi):
     ⎣ 2  ⎦
 
     Right-hand circular polarization.
+
     >>> pprint(jones_vector(0, pi/4), use_unicode=True)
     ⎡ √2 ⎤
     ⎢ ── ⎥
@@ -172,6 +178,7 @@ def jones_vector(psi, chi):
     ⎣ 2  ⎦
 
     Left-hand circular polarization.
+
     >>> pprint(jones_vector(0, -pi/4), use_unicode=True)
     ⎡  √2  ⎤
     ⎢  ──  ⎥
@@ -228,6 +235,7 @@ def stokes_vector(psi, chi, p=1, I=1):
 
 
     Horizontal polarization
+
     >>> pprint(stokes_vector(0, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -238,6 +246,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0⎦
 
     Vertical polarization
+
     >>> pprint(stokes_vector(pi/2, 0), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
@@ -248,6 +257,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0 ⎦
 
     Diagonal polarization
+
     >>> pprint(stokes_vector(pi/4, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -258,6 +268,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0⎦
 
     Anti-diagonal polarization
+
     >>> pprint(stokes_vector(-pi/4, 0), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
@@ -268,6 +279,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0 ⎦
 
     Right-hand circular polarization
+
     >>> pprint(stokes_vector(0, pi/4), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -278,6 +290,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣1⎦
 
     Left-hand circular polarization
+
     >>> pprint(stokes_vector(0, -pi/4), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
@@ -288,6 +301,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣-1⎦
 
     Unpolarized light
+
     >>> pprint(stokes_vector(0, 0, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -602,6 +616,7 @@ def mueller_matrix(J):
     >>> theta = symbols("theta", real=True)
 
     A linear_polarizer
+
     >>> pprint(mueller_matrix(linear_polarizer(theta)), use_unicode=True)
     ⎡            cos(2⋅θ)      sin(2⋅θ)     ⎤
     ⎢  1/2       ────────      ────────    0⎥
@@ -618,6 +633,7 @@ def mueller_matrix(J):
     ⎣   0           0             0        0⎦
 
     A half-wave plate
+
     >>> pprint(mueller_matrix(half_wave_retarder(theta)), use_unicode=True)
     ⎡1              0                           0               0 ⎤
     ⎢                                                             ⎥
@@ -630,6 +646,7 @@ def mueller_matrix(J):
     ⎣0              0                           0               -1⎦
 
     A quarter-wave plate
+
     >>> pprint(mueller_matrix(quarter_wave_retarder(theta)), use_unicode=True)
     ⎡1       0             0            0    ⎤
     ⎢                                        ⎥
