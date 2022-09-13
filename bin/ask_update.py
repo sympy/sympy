@@ -106,16 +106,14 @@ with open('sympy/assumptions/ask_generated.py', 'w') as f:
 with open('sympy/core/assumptions_generated.py', 'w') as f:
     representation = _generate_assumption_rules()._to_python()
 
-    representation_string = pprint.pformat(representation, compact = True)
-
     code_string = dedent('''\
     """
     Do NOT manually edit this file.
     Instead, run ./bin/ask_update.py.
     """
 
-    _pre_calculated_assumptions = %s
+    %s
     ''')
 
-    code = code_string % (representation_string,)
+    code = code_string % (representation,)
     f.write(code)

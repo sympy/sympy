@@ -215,15 +215,14 @@ from .core import BasicMeta
 from .sympify import sympify
 
 from sympy.core.random import shuffle
-from sympy.core.assumptions_generated import _pre_calculated_assumptions
-
+from sympy.core.assumptions_generated import generated_assumptions as _assumptions
 
 def _load_pre_generated_assumption_rules():
     """ Load the assumption rules from pre-generated data
 
     To update the pre-generated data, see :method::`_generate_assumption_rules`
     """
-    _assume_rules=FactRules._from_python(_pre_calculated_assumptions)
+    _assume_rules=FactRules._from_python(_assumptions)
     return _assume_rules
 
 def _generate_assumption_rules():
@@ -232,7 +231,6 @@ def _generate_assumption_rules():
     This method should only be called to update the pre-generated
     assumption rules.
 
-    These are stored in the variable `_pre_calculated_assumptions`
     To update the pre-generated assumptions run: bin/ask_update.py
 
     """
@@ -297,7 +295,8 @@ def _generate_assumption_rules():
     return _assume_rules
 
 
-_assume_rules = _load_pre_generated_assumption_rules()
+#_assume_rules = _load_pre_generated_assumption_rules()
+_assume_rules =_generate_assumption_rules()
 _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
