@@ -34,6 +34,9 @@ c^2$, using {func}`~.diophantine`:
 {(2*p*q, p**2 - q**2, p**2 + q**2)}
 ```
 
+Refer to the [Diophantine API reference](../../modules/solvers/diophantine.rst)
+for more examples of solving various types of Diophantine equations.
+
 ## Guidance
 
 ### Limitations
@@ -113,13 +116,9 @@ one solution, you can use the following code:
 
 ## *Tradeoffs (speed vs. accuracy, etc.) for function*
 
-### *Tradeoff 1*
+### *Are there any tradeoffs to mention?*
 
 *Tradeoff 1 content*
-
-### *Tradeoff 2*
-
-*Tradeoff 2 content*
 
 ## Not All Equations Can Be Solved
 
@@ -133,7 +132,8 @@ one solution, you can use the following code:
 
 ## Report a Problem
 
-If you find a problem with *function*, please post the problem on the [mailing
-list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
-page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-can use a different method listed in [](#alternatives-to-consider).
+If you find a problem with {func}`~.diophantine`, please post the problem on the
+[mailing list](https://groups.google.com/g/sympy), or open an issue on [SymPy's
+GitHub page](https://github.com/sympy/sympy/issues). Until the issue is
+resolved, you can use a different method listed in
+[](#alternatives-to-consider).
