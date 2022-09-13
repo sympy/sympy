@@ -474,17 +474,13 @@ class FactRules:
     @classmethod
     def _from_python(cls, data : dict):
         """ Generate an instance from the plain python representation """
-        self=cls('')
+        self = cls('')
         for key in ['full_implications', 'beta_triggers', 'prereq']:
             d=defaultdict(set)
             d.update(data[key])
             setattr(self, key, d)
-        for key in ['beta_rules']:
-            d= sorted(list(data[key]))
-            setattr(self, key, d)
-        for key in ['defined_facts']:
-            d= set(data[key])
-            setattr(self, key, d)
+        self.beta_rules = data['beta_rules']
+        self.defined_facts = set(data['defined_facts'])
 
         return self
 
