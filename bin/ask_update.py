@@ -99,8 +99,8 @@ def generate_code():
     return code_string % (p, m)
 
 with open('sympy/assumptions/ask_generated.py', 'w') as f:
-     code = generate_code()
-     f.write(code)
+    code = generate_code()
+    f.write(code)
 
 
 with open('sympy/core/assumptions_generated.py', 'w') as f:

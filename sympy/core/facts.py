@@ -534,13 +534,13 @@ class FactRules:
             yield f'    # Rules implying {fact} = {value}'
             for pre, n in reverse_implications[implied]:
                 indices[n] = m
-                m += 1                
+                m += 1
                 setstr = ", ".join(map(str, sorted(pre)))
                 yield f'    ({{{setstr}}},'
                 yield f'        {implied!r}),'
             yield ''
         yield '] # beta_rules'
-    
+
         yield 'beta_triggers = {'
         for query in sorted(self.beta_triggers):
             fact, value = query
@@ -564,8 +564,6 @@ class FactRules:
         yield ''
         yield "generated_assumptions = {'defined_facts': defined_facts, 'full_implications': full_implications,"
         yield "               'prereq': prereq, 'beta_rules': beta_rules, 'beta_triggers': beta_triggers}"
-        yield ''
-        yield ''
 
 
 class InconsistentAssumptions(ValueError):

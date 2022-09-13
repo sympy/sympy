@@ -1613,5 +1613,3 @@ beta_triggers = {
 
 generated_assumptions = {'defined_facts': defined_facts, 'full_implications': full_implications,
                'prereq': prereq, 'beta_rules': beta_rules, 'beta_triggers': beta_triggers}
-
-
