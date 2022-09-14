@@ -508,7 +508,7 @@ class MatrixCalculus(MatrixCommon):
         Parameters
         ==========
 
-        ``self`` : vector of expressions representing functions f_i(x_1, ..., x_n).
+        self : vector of expressions representing functions f_i(x_1, ..., x_n).
         X : set of x_i's in order, it can be a list or a Matrix
 
         Both ``self`` and X can be a row or a column matrix in any order

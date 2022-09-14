@@ -320,7 +320,7 @@ def stokes_vector(psi, chi, p=1, I=1):
 
 
 def jones_2_stokes(e):
-    """Return the Stokes vector for a Jones vector `e`.
+    """Return the Stokes vector for a Jones vector ``e``.
 
     Parameters
     ==========
@@ -406,7 +406,7 @@ def linear_polarizer(theta=0):
 
 
 def phase_retarder(theta=0, delta=0):
-    """A phase retarder Jones matrix with retardance `delta` at angle `theta`.
+    """A phase retarder Jones matrix with retardance ``delta`` at angle ``theta``.
 
     Parameters
     ==========
@@ -452,7 +452,7 @@ def phase_retarder(theta=0, delta=0):
 
 
 def half_wave_retarder(theta):
-    """A half-wave retarder Jones matrix at angle `theta`.
+    """A half-wave retarder Jones matrix at angle ``theta``.
 
     Parameters
     ==========
@@ -487,7 +487,7 @@ def half_wave_retarder(theta):
 
 
 def quarter_wave_retarder(theta):
-    """A quarter-wave retarder Jones matrix at angle `theta`.
+    """A quarter-wave retarder Jones matrix at angle ``theta``.
 
     Parameters
     ==========
@@ -526,7 +526,7 @@ def quarter_wave_retarder(theta):
 
 
 def transmissive_filter(T):
-    """An attenuator Jones matrix with transmittance `T`.
+    """An attenuator Jones matrix with transmittance ``T``.
 
     Parameters
     ==========
@@ -559,7 +559,7 @@ def transmissive_filter(T):
 
 
 def reflective_filter(R):
-    """A reflective filter Jones matrix with reflectance `R`.
+    """A reflective filter Jones matrix with reflectance ``R``.
 
     Parameters
     ==========
