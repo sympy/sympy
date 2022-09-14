@@ -31,6 +31,12 @@ CylindricalJoint
 .. autoclass:: CylindricalJoint
    :members:
 
+PlanarJoint
+-----------
+
+.. autoclass:: PlanarJoint
+   :members:
+
 JointsMethod (Docstring)
 ========================
 
