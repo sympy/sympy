@@ -101,10 +101,10 @@ def jones_vector(psi, chi):
     Parameters
     ==========
 
-    ``psi`` : numeric type or SymPy Symbol
+    psi : numeric type or SymPy Symbol
         The tilt of the polarization relative to the `x` axis.
 
-    ``chi`` : numeric type or SymPy Symbol
+    chi : numeric type or SymPy Symbol
         The angle adjacent to the mayor axis of the polarization ellipse.
 
 
@@ -200,13 +200,13 @@ def stokes_vector(psi, chi, p=1, I=1):
     Parameters
     ==========
 
-    ``psi`` : numeric type or SymPy Symbol
+    psi : numeric type or SymPy Symbol
         The tilt of the polarization relative to the ``x`` axis.
-    ``chi`` : numeric type or SymPy Symbol
+    chi : numeric type or SymPy Symbol
         The angle adjacent to the mayor axis of the polarization ellipse.
-    ``p`` : numeric type or SymPy Symbol
+    p : numeric type or SymPy Symbol
         The degree of polarization.
-    ``I`` : numeric type or SymPy Symbol
+    I : numeric type or SymPy Symbol
         The intensity of the field.
 
 
@@ -325,7 +325,7 @@ def jones_2_stokes(e):
     Parameters
     ==========
 
-    ``e`` : SymPy Matrix
+    e : SymPy Matrix
         A Jones vector.
 
     Returns
@@ -373,7 +373,7 @@ def linear_polarizer(theta=0):
     Parameters
     ==========
 
-    ``theta`` : numeric type or SymPy Symbol
+    theta : numeric type or SymPy Symbol
         The angle of the transmission axis relative to the horizontal plane.
 
     Returns
@@ -411,9 +411,9 @@ def phase_retarder(theta=0, delta=0):
     Parameters
     ==========
 
-    ``theta`` : numeric type or SymPy Symbol
+    theta : numeric type or SymPy Symbol
         The angle of the fast axis relative to the horizontal plane.
-    ``delta`` : numeric type or SymPy Symbol
+    delta : numeric type or SymPy Symbol
         The phase difference between the fast and slow axes of the
         transmitted light.
 
@@ -457,7 +457,7 @@ def half_wave_retarder(theta):
     Parameters
     ==========
 
-    ``theta`` : numeric type or SymPy Symbol
+    theta : numeric type or SymPy Symbol
         The angle of the fast axis relative to the horizontal plane.
 
     Returns
@@ -492,7 +492,7 @@ def quarter_wave_retarder(theta):
     Parameters
     ==========
 
-    ``theta`` : numeric type or SymPy Symbol
+    theta : numeric type or SymPy Symbol
         The angle of the fast axis relative to the horizontal plane.
 
     Returns
@@ -531,7 +531,7 @@ def transmissive_filter(T):
     Parameters
     ==========
 
-    ``T`` : numeric type or SymPy Symbol
+    T : numeric type or SymPy Symbol
         The transmittance of the attenuator.
 
     Returns
@@ -564,7 +564,7 @@ def reflective_filter(R):
     Parameters
     ==========
 
-    ``R`` : numeric type or SymPy Symbol
+    R : numeric type or SymPy Symbol
         The reflectance of the filter.
 
     Returns
@@ -596,7 +596,7 @@ def mueller_matrix(J):
     Parameters
     ==========
 
-    ``J`` : SymPy Matrix
+    J : SymPy Matrix
         A Jones matrix.
 
     Returns
@@ -675,20 +675,20 @@ def polarizing_beam_splitter(Tp=1, Rs=1, Ts=0, Rp=0, phia=0, phib=0):
     Parameters
     ==========
 
-    ``J`` : SymPy Matrix
+    J : SymPy Matrix
         A Jones matrix.
-    ``Tp`` : numeric type or SymPy Symbol
+    Tp : numeric type or SymPy Symbol
         The transmissivity of the P-polarized component.
-    ``Rs`` : numeric type or SymPy Symbol
+    Rs : numeric type or SymPy Symbol
         The reflectivity of the S-polarized component.
-    ``Ts`` : numeric type or SymPy Symbol
+    Ts : numeric type or SymPy Symbol
         The transmissivity of the S-polarized component.
-    ``Rp`` : numeric type or SymPy Symbol
+    Rp : numeric type or SymPy Symbol
         The reflectivity of the P-polarized component.
-    ``phia`` : numeric type or SymPy Symbol
+    phia : numeric type or SymPy Symbol
         The phase difference between transmitted and reflected component for
         output mode a.
-    ``phib`` : numeric type or SymPy Symbol
+    phib : numeric type or SymPy Symbol
         The phase difference between transmitted and reflected component for
         output mode b.
 
