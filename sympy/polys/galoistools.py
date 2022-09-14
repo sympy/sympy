@@ -2099,9 +2099,9 @@ def gf_shoup(f, p, K):
     return _sort_factors(factors, multiple=False)
 
 _factor_methods = {
-    'berlekamp': gf_berlekamp,  # p : small
-    'zassenhaus': gf_zassenhaus,  # p : medium
-    'shoup': gf_shoup,      # p : large
+    'berlekamp': gf_berlekamp,  # ``p`` : small
+    'zassenhaus': gf_zassenhaus,  # ``p`` : medium
+    'shoup': gf_shoup,      # ``p`` : large
 }
 
 
