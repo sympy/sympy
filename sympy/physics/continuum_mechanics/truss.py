@@ -16,6 +16,7 @@ from sympy.matrices.dense import zeros
 import math
 from sympy.plotting import plot
 from sympy.utilities.decorator import doctest_depends_on
+from sympy import sin, cos
 
 numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
@@ -51,7 +52,7 @@ class Truss:
     >>> t.add_member("member_4", "node_2", "node_3")
     >>> t.add_member("member_5", "node_3", "node_4")
     >>> t.apply_load("node_4", magnitude=10, direction=270)
-    >>> t.apply_support("node_1", type="fixed")
+    >>> t.apply_support("node_1", type="pinned")
     >>> t.apply_support("node_2", type="roller")
     """
 
@@ -68,6 +69,7 @@ class Truss:
         self._node_position_x = []
         self._node_position_y = []
         self._nodes_occupied = {}
+        self._member_lengths = {}
         self._reaction_loads = {}
         self._internal_forces = {}
         self._node_coordinates = {}
@@ -101,11 +103,11 @@ class Truss:
         return self._members
 
     @property
-    def member_labels(self):
+    def member_lengths(self):
         """
-        Returns the members of the truss along with the start and end points.
+        Returns the length of each member of the truss.
         """
-        return self._member_labels
+        return self._member_lengths
 
     @property
     def supports(self):
@@ -267,6 +269,7 @@ class Truss:
 
         else:
             self._members[label] = [start, end]
+            self._member_lengths[label] = sqrt((self._node_coordinates[end][0]-self._node_coordinates[start][0])**2 + (self._node_coordinates[end][1]-self._node_coordinates[start][1])**2)
             self._nodes_occupied[start, end] = True
             self._nodes_occupied[end, start] = True
             self._internal_forces[label] = 0
@@ -304,6 +307,7 @@ class Truss:
             self._nodes_occupied.pop(tuple([self._members[label][0], self._members[label][1]]))
             self._nodes_occupied.pop(tuple([self._members[label][1], self._members[label][0]]))
             self._members.pop(label)
+            self._member_lengths.pop(label)
             self._internal_forces.pop(label)
 
     def change_node_label(self, label, new_label):
@@ -438,6 +442,8 @@ class Truss:
                 if member == label:
                     self._members[new_label] = [self._members[member][0], self._members[member][1]]
                     self._members.pop(label)
+                    self._member_lengths[new_label] = self._member_lengths[label]
+                    self._member_lengths.pop(label)
                     self._internal_forces[new_label] = self._internal_forces[label]
                     self._internal_forces.pop(label)
 
@@ -661,9 +667,9 @@ class Truss:
         >>> t.apply_support("node_2", type="roller")
         >>> t.solve()
         >>> t.reaction_loads
-        {'R_node_1_x': 0, 'R_node_1_y': 6.66666666666667, 'R_node_2_y': 3.33333333333333}
+        {'R_node_1_x': 0, 'R_node_1_y': 20/3, 'R_node_2_y': 10/3}
         >>> t.internal_forces
-        {'member_1': 6.66666666666666, 'member_2': 6.66666666666667, 'member_3': -6.66666666666667*sqrt(2), 'member_4': -3.33333333333333*sqrt(5), 'member_5': 10.0}
+        {'member_1': 20/3, 'member_2': 20/3, 'member_3': -20*sqrt(2)/3, 'member_4': -10*sqrt(5)/3, 'member_5': 10}
         """
         count_reaction_loads = 0
         for node in self._nodes:
@@ -681,8 +687,8 @@ class Truss:
             if node[0] in list(self._loads):
                 for load in self._loads[node[0]]:
                     if load[0]!=Symbol('R_'+str(node[0])+'_x') and load[0]!=Symbol('R_'+str(node[0])+'_y'):
-                        load_matrix[load_matrix_row] -= load[0]*math.cos(pi*load[1]/180)
-                        load_matrix[load_matrix_row + 1] -= load[0]*math.sin(pi*load[1]/180)
+                        load_matrix[load_matrix_row] -= load[0]*cos(pi*load[1]/180)
+                        load_matrix[load_matrix_row + 1] -= load[0]*sin(pi*load[1]/180)
             load_matrix_row += 2
         cols = 0
         row = 0
