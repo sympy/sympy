@@ -69,9 +69,9 @@ Try another starting point or tweak arguments.
 
 ### Ensure the Root Found is in a Given Interval
 
-It is not guaranteed that nsolve will find the root closest to the initial
-point. Here, even though the root `-1` is closer to the initial point of `-0.1`,
-nsolve finds the root `1`:
+It is not guaranteed that {func}`~.nsolve` will find the root closest to the
+initial point. Here, even though the root `-1` is closer to the initial point of
+`-0.1`, {func}`~.nsolve` finds the root `1`:
 
 ```py
 >>> from sympy import nsolve
@@ -91,11 +91,9 @@ the interval `(-10, 0)` ensures that the root `-1` is found:
 -1.00000000000000
 ```
 
-## Solve a System of Equations Numerically
+### Solve a System of Equations Numerically
 
-### Solve Multidimensional Functions
-
-To solve multidimensional functions, supply a tuple of
+To solve a system of multidimensional functions, supply a tuple of
 - functions `(f1, f2)`
 - variables to solve for `(x1, x2)`
 - starting values `(-1, 1)`
@@ -127,24 +125,23 @@ Matrix([[-1.192873099352460791205211], [1.278444111699106966687122]])
 ### Create a Function That Can Be Solved With SciPy
 
 As noted above, SymPy focuses on symbolic computation and is not optimized for
-numerical calculations. A recommend use case for SymPy in a workflow is as given
-below:
-- use SymPy to generate (by symbolically simplifying or solving an equation) the
-  mathematical expression
-- use a numerical library such as SciPy to generate numerical solutions
+numerical calculations. If you need to make many calls to a numerical solver, it
+can be much faster to use a solver optimized for numerical calculations such as
+SciPy's {external:func}`~scipy.optimize.root_scalar`. A recommended workflow is:
+1. use SymPy to generate (by symbolically simplifying or solving an equation)
+  the mathematical expression
+2. convert it to a lambda function using {func}`~.lambdify`
+3. use a numerical library such as SciPy to generate numerical solutions
 
 ```py
->>> from sympy import simplify, cos, sin
+>>> from sympy import simplify, cos, sin, lambdify
 >>> from sympy.abc import x, y
+>>> from scipy.optimize import root_scalar
 >>> expr = cos(x * (x + x**2)/(x*sin(y)**2 + x*cos(y)**2 + x))
->>> simplify(expr)
+>>> simplify(expr) # 1. symbolically simplify expression 
 cos(x*(x + 1)/2)
->>> from sympy.utilities.lambdify import implemented_function
->>> from sympy import lambdify
->>> f = implemented_function('f', lambda x: cos(x*(x + 1)/2))
->>> lam_f = lambdify(x, f(x))
->>> from scipy import optimize
->>> sol = optimize.root_scalar(lam_f, bracket=[0, 2], method='brentq')
+>>> lam_f = lambdify(x, cos(x*(x + 1)/2)) # 2. lambdify
+>>> sol = root_scalar(lam_f, bracket=[0, 2]) # 3. numerically solve using SciPy
 >>> sol.root
 1.3416277185114782
 ```
