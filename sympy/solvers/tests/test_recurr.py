@@ -186,7 +186,7 @@ def test_rsolve():
 
     assert rsolve(y(n) - a*y(n-2),y(n), \
             {y(1): sqrt(a)*(a + b), y(2): a*(a - b)}).simplify() == \
-            a**(n/2)*(-(-1)**n*b + a)
+            a**(n/2 + 1) - b*(-sqrt(a))**n
 
     f = (-16*n**2 + 32*n - 12)*y(n - 1) + (4*n**2 - 12*n + 9)*y(n)
 
@@ -195,8 +195,7 @@ def test_rsolve():
     assert factor(expand(yn, func=True)) == sol
 
     sol = rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n))
-    Y = lambda i: sol.subs(n, i)
-    assert (Y(n) + a*(Y(n + 1) + Y(n - 1))/2).expand().cancel() == 0
+    assert str(sol) == 'C0*((-sqrt(1 - a**2) - 1)/a)**n + C1*((sqrt(1 - a**2) - 1)/a)**n'
 
     assert rsolve((k + 1)*y(k), y(k)) is None
     assert (rsolve((k + 1)*y(k) + (k + 3)*y(k + 1) + (k + 5)*y(k + 2), y(k))
