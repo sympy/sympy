@@ -25,6 +25,12 @@ PrismaticJoint
 .. autoclass:: PrismaticJoint
    :members:
 
+CylindricalJoint
+----------------
+
+.. autoclass:: CylindricalJoint
+   :members:
+
 JointsMethod (Docstring)
 ========================
 

@@ -434,9 +434,11 @@ class AssignmentBase(CodegenAST):
         from sympy.matrices.expressions.matexpr import (
             MatrixElement, MatrixSymbol)
         from sympy.tensor.indexed import Indexed
+        from sympy.tensor.array.expressions import ArrayElement
 
         # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable)
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable,
+                ArrayElement)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
 

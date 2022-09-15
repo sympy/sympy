@@ -431,7 +431,7 @@ class FCodePrinter(CodePrinter):
         body = self._print(expr.body)
         return ('do {target} = {start}, {stop}, {step}\n'
                 '{body}\n'
-                'end do').format(target=target, start=start, stop=stop,
+                'end do').format(target=target, start=start, stop=stop - 1,
                         step=step, body=body)
 
     def _print_Type(self, type_):
@@ -773,3 +773,9 @@ class FCodePrinter(CodePrinter):
     def _print_ArrayConstructor(self, ac):
         fmtstr = "[%s]" if self._settings["standard"] >= 2003 else '(/%s/)'
         return fmtstr % ', '.join(map(lambda arg: self._print(arg), ac.elements))
+
+    def _print_ArrayElement(self, elem):
+        return '{symbol}({idxs})'.format(
+            symbol=self._print(elem.name),
+            idxs=', '.join(map(lambda arg: self._print(arg), elem.indices))
+        )
