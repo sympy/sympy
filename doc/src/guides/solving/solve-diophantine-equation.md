@@ -39,6 +39,8 @@ for more examples of solving various types of Diophantine equations.
 
 ## Guidance
 
+### *expr = 0*
+
 ### Specify the Order of Symbols in the Result
 
 We recommend you specify the order of symbols in the result to avoid confusion.
