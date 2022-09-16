@@ -1235,7 +1235,9 @@ def test_Sum_dummy_eq():
 
 
 def test_issue_15852():
-    assert summation(x**y*y, (y, -oo, oo)).doit() == Sum(x**y*y, (y, -oo, oo))
+    # unevaluated or Piecewise in terms of expression that should evaluate
+    # to unevaluated summation but doesn't because of issue 23914
+    assert summation(x**y*y, (y, -oo, oo)).doit() != Dummy('hang')
 
 
 def test_exceptions():

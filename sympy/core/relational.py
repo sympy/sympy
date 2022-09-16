@@ -511,12 +511,14 @@ class Relational(Boolean, EvalfMixin):
         raise TypeError("cannot determine truth value of Relational")
 
     def _eval_as_set(self):
-        # self is univariate and periodicity(self, x) in (0, None)
+        # self is univariate in Symbol x and
+        # periodicity(self, x) in (0, None); if this is not so, caller
+        # must make it so
         from sympy.solvers.inequalities import solve_univariate_inequality
         from sympy.sets.conditionset import ConditionSet
         syms = self.free_symbols
-        assert len(syms) == 1
         x = syms.pop()
+        assert not syms and x.is_Symbol
         try:
             xset = solve_univariate_inequality(self, x, relational=False)
         except NotImplementedError:

@@ -9,8 +9,9 @@ from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.decorators import sympify_method_args, sympify_return
-from sympy.core.function import Application, Derivative
-from sympy.core.kind import BooleanKind, NumberKind
+from sympy.core.function import (Application, Derivative,
+    AppliedUndef, Function)
+from sympy.core.kind import BooleanKind, NumberKind, UndefinedKind
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
@@ -149,37 +150,58 @@ class Boolean(Basic):
         Interval.open(-2, 2)
         >>> Or(x < -2, 2 < x).as_set()
         Union(Interval.open(-oo, -2), Interval.open(2, oo))
-
         """
+        from sympy.functions.elementary.complexes import Abs
         from sympy.calculus.util import periodicity
+        from sympy.core.expr import generators
         from sympy.core.relational import Relational
-
-        free = self.free_symbols
+        from sympy.core.symbol import Dummy
+        free = generators(self)
+        abs_args = [i for i in free if isinstance(i, Abs)]
+        if abs_args:
+            reps = {a: Dummy() for a in abs_args}
+            sym_abs = [self.xreplace(reps)]
+            sym_abs.extend([v >= 0 for v in reps.values()])
+            try:
+                return And(*sym_abs).as_set().xreplace(
+                    {v: k for k, v in reps.items()})
+            except NotImplementedError:
+                pass
+        if len(free) != 1:
+            # e.g. (x < 1) & (exp(x) < 1)
+            free = self.free_symbols
         if len(free) == 1:
+            f = list(free)[0]
+            if isinstance(f, Function) and not isinstance(
+                    f, AppliedUndef):
+                free = f.free_symbols
+        if len(free) == 1:  # contains Symbol or other undefined gen
             x = free.pop()
-            if x.kind is NumberKind:
-                reps = {}
-                for r in self.atoms(Relational):
-                    if periodicity(r, x) not in (0, None):
-                        s = r._eval_as_set()
-                        if s in (S.EmptySet, S.UniversalSet, S.Reals):
-                            reps[r] = s.as_relational(x)
-                            continue
-                        raise NotImplementedError(filldedent('''
-                            as_set is not implemented for relationals
-                            with periodic solutions
-                            '''))
-                new = self.subs(reps)
-                if new.func != self.func:
-                    return new.as_set()  # restart with new obj
-                else:
-                    return new._eval_as_set()
-
-            return self._eval_as_set()
+            if x.kind is UndefinedKind:
+                d = Dummy()
+                expr = self.xreplace({x: d})
+                x = d
+            elif x.kind is NumberKind:
+                expr = self
+            else:
+                raise NotImplementedError('unrecognized kind: %s' % x.kind)
+            reps = {}
+            for r in expr.atoms(Relational):
+                if periodicity(r, x) not in (0, None):
+                    s = r._eval_as_set()
+                    if s in (S.EmptySet, S.UniversalSet, S.Reals):
+                        reps[r] = s.as_relational(x)
+                        continue
+                    raise NotImplementedError(filldedent('''
+                        as_set is not implemented for relationals
+                        with periodic solutions
+                        '''))
+            return expr.subs(reps)._eval_as_set()
         else:
-            raise NotImplementedError("Sorry, as_set has not yet been"
-                                      " implemented for multivariate"
-                                      " expressions")
+            raise NotImplementedError(filldedent('''
+                as_set is not implemented for multivariate
+                relationals
+                '''))
 
     @property
     def binary_symbols(self):
@@ -373,6 +395,8 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
         """
         return S.UniversalSet
 
+    _eval_as_set = as_set
+
 
 class BooleanFalse(BooleanAtom, metaclass=Singleton):
     """
@@ -446,6 +470,8 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
         EmptySet
         """
         return S.EmptySet
+
+    _eval_as_set = as_set
 
 
 true = BooleanTrue()
@@ -3455,6 +3481,7 @@ def simplify_univariate(expr):
     """return a simplified version of univariate boolean expression, else ``expr``"""
     from sympy.functions.elementary.piecewise import Piecewise
     from sympy.core.relational import Eq, Ne
+    from sympy.core.symbol import Dummy
     if not isinstance(expr, BooleanFunction):
         return expr
     if expr.atoms(Eq, Ne):
@@ -3464,6 +3491,16 @@ def simplify_univariate(expr):
     if len(free) != 1:
         return c
     x = free.pop()
+    r = Dummy(real=True)
+    try:
+        c = c.as_set().as_relational(r).xreplace({r: x})
+    except NotImplementedError:
+        pass
+    else:
+        if c != expr and c.atoms(Eq, Ne):
+            return c
+    if c in (True, False):
+        return c
     ok, i = Piecewise((0, c), evaluate=False
             )._intervals(x, err_on_Eq=True)
     if not ok:

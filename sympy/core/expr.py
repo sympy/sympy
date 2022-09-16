@@ -7,15 +7,15 @@ import re
 
 from .sympify import sympify, _sympify
 from .basic import Basic, Atom
-from .singleton import S
+from .cache import cacheit
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
-from .cache import cacheit
-from .sorting import default_sort_key
 from .kind import NumberKind
+from .singleton import S
+from .sorting import default_sort_key
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
-from sympy.utilities.iterables import has_variety, sift
+from sympy.utilities.iterables import has_variety, sift, iterable
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
@@ -2590,6 +2590,7 @@ class Expr(Basic, EvalfMixin):
         False
         >>> (2**x + 1).is_polynomial(2**x)
         True
+
         >>> f = Function('f')
         >>> (f(x) + 1).is_polynomial(x)
         False
@@ -4147,10 +4148,110 @@ class ExprBuilder:
         return None
 
 
+def generators(self, all=False):
+    """return a set of expressions which would appear in the expanded
+    version of self as 1) the bases of powers with Integer exponents
+    or else as 2) powers with non-Integer exponents (but with numerator
+    free of leading Integer). Only expressions with free symbols are
+    returned.  If ``all=True`` then the set will include free symbols
+    of the generators, too.
+
+    EXAMPLES
+    ========
+
+    >>> from sympy.core.expr import generators
+    >>> from sympy.abc import x, y
+    >>> from sympy import Function, exp, cos
+    >>> f = Function('f')
+    >>> generators(1 + x + f(x))
+    {x, f(x)}
+
+    If an expression is a number, even symbolically, it will have no
+    generators:
+
+    >>> from sympy import Integral
+    >>> generators(Integral(f(x), (f(x), 1, 2)))
+    set()
+
+    If a Symbol does not appear independent of a generator, it will
+    not be included:
+
+    >>> generators(cos(1 + f(x)))
+    {cos(f(x) + 1)}
+
+    But generators embedded within defined functions can be included
+    by using ``all=True``:
+
+    >>> generators(cos(1 + f(x)), all=True)
+    {f(x), cos(f(x) + 1)}
+
+    When powers or exponential functions are returned, the leading
+    Integer of the numerator of the exponent/argument will not be
+    included
+    >>> generators(exp(2*x) + y**(-x/2) + y**(2*x))
+    {y**(x/2), y**x, exp(x)}
+    >>> generators(x/y**2)
+    {x, y}
+
+    Nor the coefficient of the base:
+
+    >>> generators((2*x/3)**(2 + y/3))
+    {2**(y/3), 3**(y/3), x, x**(y/3)}
+
+        Note, in the above, that the sign of the exponent is not
+        included. This is the primary difference between the
+        generators returned from here and those from Poly:
+
+        >>> from sympy import Poly
+        >>> Poly(x/y**2).gens
+        (x, 1/y)
+
+    Structurally bound symbols are not included as generators, only
+    free expressions:
+
+    >>> generators(Integral(f(x), (f(x), 1, y)))
+    {Integral(f(x), (f(x), 1, y))}
+    >>> generators(Integral(f(x), (f(x), 1, y)), all=True)
+    {y, Integral(f(x), (f(x), 1, y))}
+    """
+    from sympy.polys.polytools import Poly
+    from sympy.core.exprtools import decompose_power_rat
+    R = lambda x: generators(x, all)
+    if not isinstance(self, Basic):
+        if iterable(self):
+            return reduce(set.union, map(R, self), set())
+        return set()
+    if self.is_number:
+        return set()
+    if not isinstance(self, Expr):
+        return reduce(set.union, map(R, self.args), set())
+    rv = set()
+    for i in (g for v in self.as_coefficients_dict().keys()
+            if not v.is_number for g in Poly(v).gens):
+        b, e = decompose_power_rat(i)
+        rv.add(b)  # or add(b if (e > 0) else 1/b)
+    if all:
+        args = set(rv)
+        while args:
+            g = args.pop()
+            if isinstance(g, AppliedUndef):
+                pass
+            elif g in rv:
+                args.update(g.args)
+            elif not isinstance(g, Expr):
+                # might be Tuple
+                args.update(g.args)
+            else:
+                for gi in generators(g):
+                    rv.add(gi)
+                    args.add(gi)
+    return rv
+
+
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Function, _derivative_dispatch
+from .function import Function, _derivative_dispatch, AppliedUndef
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Float, Integer, Rational, _illegal

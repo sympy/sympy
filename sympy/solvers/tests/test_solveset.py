@@ -1731,7 +1731,7 @@ def test_nonlinsolve_using_substitution():
     syms = [y, x, z]
     soln = FiniteSet(soln_real_1, soln_complex_1, soln_complex_2,\
         soln_real_2, soln_real_3)
-    assert nonlinsolve(system,syms) == soln
+    assert nonlinsolve(system, syms) == soln
 
 
 def test_nonlinsolve_complex():

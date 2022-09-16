@@ -1477,15 +1477,18 @@ def test_issue_7370():
     assert str(v) == '252.400000000000000000000000000'
 
 
-def test_issue_14933():
+def test_issue_14933_22175():
     x = Symbol('x')
     y = Symbol('y')
 
-    inp = MatrixSymbol('inp', 1, 1)
-    rep_dict = {y: inp[0, 0], x: inp[0, 0]}
+    M = MatrixSymbol('M', 1, 1)
+    m = M[0, 0]
+    reps = {y: m, x: m}
 
     p = Piecewise((1, ITE(y > 0, x < 0, True)))
-    assert p.xreplace(rep_dict) == Piecewise((1, ITE(inp[0, 0] > 0, inp[0, 0] < 0, True)))
+    assert p.xreplace(reps) == Piecewise((1, ITE(m > 0, m < 0, True)))
+    assert Piecewise((1, (x < 1) & (x > 0)), (2, True)).subs(reps
+        ) == Piecewise((1, (m > 0) & (m < 1)), (2, True))
 
 
 def test_issue_16715():
@@ -1548,3 +1551,14 @@ def test_issue_22533():
     x = Symbol('x', real=True)
     f = Piecewise((-1 / x, x <= 0), (1 / x, True))
     assert integrate(f, x) == Piecewise((-log(x), x <= 0), (log(x), True))
+    # as_set() is expressed in terms of generator so
+    # if this is not handled properly, infinite recursion
+    # will occur
+    assert Piecewise((x, (Abs(arg(a)) <= 1) | (Abs(arg(a)) < 1))
+        ).simplify().args[0].cond == (Abs(arg(a)) <= 1)
+    # this needs to reduce to True for test_MultivariateTDist to work
+    # so we test it here with a more targeted expression
+    c1, c2 = [(Abs(arg(y**2/2 + 1)) < pi) |
+        ((Abs(arg(y**2/2 + 1)) < pi) & Ne(Abs(arg(y**2/2 + 1)), pi)
+        & Ne(1/(2*(y**2/2 + 1)), 0)), True]
+    assert Piecewise((1, c1), (2, c2)).simplify() == 1

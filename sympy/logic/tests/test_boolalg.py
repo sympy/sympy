@@ -880,6 +880,13 @@ def test_bool_as_set():
     # watch for object morph in as_set
     assert Eq(-1, cos(2*x)**2/sin(2*x)**2).as_set() is S.EmptySet
 
+    from sympy import IndexedBase, Function, MatrixSymbol
+    X = IndexedBase("X")
+    M = MatrixSymbol("M", 1, 1)
+    f = Function('f')
+    for i in [a, X[a], f(a, b), M[0, 0]]:
+        assert And(i >= 0, i <= 1).as_set() == Interval(0, 1), i
+
 
 @XFAIL
 def test_multivariate_bool_as_set():
