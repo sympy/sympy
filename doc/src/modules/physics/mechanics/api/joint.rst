@@ -16,5 +16,8 @@ Joint (Docstrings)
 .. autoclass:: PrismaticJoint
    :members:
 
+.. autoclass:: CylindricalJoint
+   :members:
+
 .. automodule:: sympy.physics.mechanics.jointsmethod
    :members:
