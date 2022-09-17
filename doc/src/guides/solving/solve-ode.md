@@ -272,7 +272,7 @@ solving is
 {func}`~.lambdify` uses {external:func}`~.exec` to dynamically execute Python code, and thus should not be used on unsanitized input.
 ```
 
-Here is an example from the field of [chemical
+Here is an [example from the field of chemical
 kinetics](https://www.sympy.org/scipy-2017-codegen-tutorial/notebooks/25-chemical-kinetics-intro.html):
 
 ```py
