@@ -150,9 +150,10 @@ cos(x*(x + 1)/2)
 
 ### Substitute the Result Into an Expression
 
-The best practice is to use {func}`~sympy.core.evalf` to to substitute numerical
-values into expressions. Using [`subs`](sympy.core.basic.Basic.subs) can give
-incorrect result due to precision errors:
+The best practice is to use {func}`~sympy.core.evalf` to substitute numerical
+values into expressions. The following code demonstrates that the numerical
+value is not an exact root because substituting it back into the expression
+produces a result slightly different from zero:
 
 ```py
 >>> from sympy import cos, nsolve, Symbol
@@ -160,16 +161,19 @@ incorrect result due to precision errors:
 >>> f = cos(x) - x
 >>> x_value = nsolve(f, x, 1); x_value
 0.739085133215161
->>> y = Symbol('y')
->>> z = Symbol('z')
->>> values = {x: x_value, y: 1e16, z: 1e16}
->>> (x + y - z).evalf(subs=values) # Gives correct result
-0.739085133215161
->>> (x + y - z).subs(values) # Gives incorrect result due to precision errors
+>>> f.evalf(subs={x: x_value})
+-5.12757857962640e-17
+```
+
+Using [`subs`](sympy.core.basic.Basic.subs) can give an incorrect result due to
+precision errors, here effectively rounding `-5.12757857962640e-17` to zero:
+
+```py
+>>> f.subs(x, x_value)
 0
 ```
 
-You can also leave some symbols as variables:
+When substituting in values, you can also leave some symbols as variables:
 
 ```py
 >>> from sympy import cos, nsolve, Symbol
