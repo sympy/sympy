@@ -1,5 +1,10 @@
-from sympy.core.numbers import nan
+from .add import Add
+from .exprtools import gcd_terms
 from .function import Function
+from .kind import NumberKind
+from .logic import fuzzy_and, fuzzy_not
+from .mul import Mul
+from .singleton import S
 
 
 class Mod(Function):
@@ -31,24 +36,20 @@ class Mod(Function):
 
     """
 
+    kind = NumberKind
+
     @classmethod
     def eval(cls, p, q):
-        from sympy.core.add import Add
-        from sympy.core.mul import Mul
-        from sympy.core.singleton import S
-        from sympy.core.exprtools import gcd_terms
-        from sympy.polys.polytools import gcd
-
-        def doit(p, q):
+        def number_eval(p, q):
             """Try to return p % q if both are numbers or +/-p is known
             to be less than or equal q.
             """
 
             if q.is_zero:
                 raise ZeroDivisionError("Modulo by zero")
-            if p.is_finite is False or q.is_finite is False or p is nan or q is nan:
-                return nan
-            if p is S.Zero or p == q or p == -q or (p.is_integer and q == 1):
+            if p is S.NaN or q is S.NaN or p.is_finite is False or q.is_finite is False:
+                return S.NaN
+            if p is S.Zero or p in (q, -q) or (p.is_integer and q == 1):
                 return S.Zero
 
             if q.is_Number:
@@ -98,7 +99,7 @@ class Mod(Function):
                             return -d + q
                     break
 
-        rv = doit(p, q)
+        rv = number_eval(p, q)
         if rv is not None:
             return rv
 
@@ -150,23 +151,24 @@ class Mod(Function):
                 return prod_non_mod*cls(net, q)
 
             if q.is_Integer and q is not S.One:
-                _ = []
-                for i in non_mod_l:
-                    if i.is_Integer and (i % q is not S.Zero):
-                        _.append(i%q)
-                    else:
-                        _.append(i)
-                non_mod_l = _
+                non_mod_l = [i % q if i.is_Integer and (i % q is not S.Zero) else i for
+                             i in non_mod_l]
 
             p = Mul(*(non_mod_l + mod_l))
 
         # XXX other possibilities?
 
+        from sympy.polys.polyerrors import PolynomialError
+        from sympy.polys.polytools import gcd
+
         # extract gcd; any further simplification should be done by the user
-        G = gcd(p, q)
-        if G != 1:
-            p, q = [
-                gcd_terms(i/G, clear=False, fraction=False) for i in (p, q)]
+        try:
+            G = gcd(p, q)
+            if G != 1:
+                p, q = [gcd_terms(i/G, clear=False, fraction=False)
+                        for i in (p, q)]
+        except PolynomialError:  # issue 21373
+            G = S.One
         pwas, qwas = p, q
 
         # simplify terms
@@ -204,7 +206,7 @@ class Mod(Function):
             G, p, q = [-i for i in (G, p, q)]
 
         # check again to see if p and q can now be handled as numbers
-        rv = doit(p, q)
+        rv = number_eval(p, q)
         if rv is not None:
             return rv*G
 
@@ -218,7 +220,6 @@ class Mod(Function):
         return G*cls(p, q, evaluate=(p, q) != (pwas, qwas))
 
     def _eval_is_integer(self):
-        from sympy.core.logic import fuzzy_and, fuzzy_not
         p, q = self.args
         if fuzzy_and([p.is_integer, q.is_integer, fuzzy_not(q.is_zero)]):
             return True

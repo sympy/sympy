@@ -4,7 +4,6 @@
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S
-from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import nextprime
 from sympy.polys.densearith import (
     dmp_add_term, dmp_neg, dmp_mul, dmp_sqr
@@ -34,10 +33,9 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         ``polys=True`` returns an expression, otherwise
         (default) returns an expression.
     """
-    from .numberfields import minimal_polynomial
     if n <= 0:
         raise ValueError(
-            "can't generate Swinnerton-Dyer polynomial of order %s" % n)
+            "Cannot generate Swinnerton-Dyer polynomial of order %s" % n)
 
     if x is not None:
         sympify(x)
@@ -45,6 +43,8 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         x = Dummy('x')
 
     if n > 3:
+        from sympy.functions.elementary.miscellaneous import sqrt
+        from .numberfields import minimal_polynomial
         p = 2
         a = [sqrt(2)]
         for i in range(2, n + 1):
@@ -77,7 +77,7 @@ def cyclotomic_poly(n, x=None, polys=False):
     """
     if n <= 0:
         raise ValueError(
-            "can't generate cyclotomic polynomial of order %s" % n)
+            "Cannot generate cyclotomic polynomial of order %s" % n)
 
     poly = DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ)
 
@@ -96,11 +96,11 @@ def symmetric_poly(n, *gens, **args):
     Returns a Poly object when ``polys=True``, otherwise
     (default) returns an expression.
     """
-    # TODO: use an explicit keyword argument when Python 2 support is dropped
+    # TODO: use an explicit keyword argument
     gens = _analyze_gens(gens)
 
     if n < 0 or n > len(gens) or not gens:
-        raise ValueError("can't generate symmetric polynomial of order %s for %s" % (n, gens))
+        raise ValueError("Cannot generate symmetric polynomial of order %s for %s" % (n, gens))
     elif not n:
         poly = S.One
     else:

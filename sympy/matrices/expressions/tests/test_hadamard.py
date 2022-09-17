@@ -1,6 +1,8 @@
-from sympy import Identity, OneMatrix, ZeroMatrix, Matrix, MatAdd
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matadd import MatAdd
+from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
 from sympy.core import symbols
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from sympy.matrices import ShapeError, MatrixSymbol
 from sympy.matrices.expressions import (HadamardProduct, hadamard_product, HadamardPower, hadamard_power)
@@ -44,7 +46,8 @@ def test_mixed_indexing():
 def test_canonicalize():
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    expr = HadamardProduct(X, check=False)
+    with warns_deprecated_sympy():
+        expr = HadamardProduct(X, check=False)
     assert isinstance(expr, HadamardProduct)
     expr2 = expr.doit() # unpack is called
     assert isinstance(expr2, MatrixSymbol)
@@ -54,7 +57,6 @@ def test_canonicalize():
     assert HadamardProduct(U, X, X, U).doit() == HadamardPower(X, 2)
     assert HadamardProduct(X, U, Y).doit() == HadamardProduct(X, Y)
     assert HadamardProduct(X, Z, U, Y).doit() == Z
-
 
 
 def test_hadamard():
@@ -105,7 +107,6 @@ def test_hadamard_power():
 
 
 def test_hadamard_power_explicit():
-    from sympy.matrices import Matrix
     A = MatrixSymbol('A', 2, 2)
     B = MatrixSymbol('B', 2, 2)
     a, b = symbols('a b')

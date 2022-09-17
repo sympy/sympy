@@ -9,8 +9,8 @@ computation of the digits of pi.
 from mpmath import libmp, pi
 
 import math
-from sympy.core.compatibility import clock
 import sys
+from time import perf_counter
 
 
 def display_fraction(digits, *, skip=0, colwidth=10, columns=5):
@@ -45,14 +45,14 @@ def calculateit(func, base, n, tofile):
         skip = len(intpart)
     print("Step 1 of 2: calculating binary value...")
     prec = int(n*math.log(base, 2)) + 10
-    t = clock()
+    t = perf_counter()
     a = func(prec)
-    step1_time = clock() - t
+    step1_time = perf_counter() - t
     print("Step 2 of 2: converting to specified base...")
-    t = clock()
+    t = perf_counter()
     d = libmp.bin_to_radix(a.man, -a.exp, base, n)
     d = libmp.numeral(d, base, n)
-    step2_time = clock() - t
+    step2_time = perf_counter() - t
     print("\nWriting output...\n")
     if tofile:
         out_ = sys.stdout

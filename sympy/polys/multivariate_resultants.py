@@ -8,15 +8,19 @@ are:
 Multivariate resultants are used to identify whether a multivariate
 system has common roots. That is when the resultant is equal to zero.
 """
+from math import prod
 
-from sympy import IndexedBase, Matrix, Mul, Poly
-from sympy import rem, prod, degree_list, diag, simplify
+from sympy.core.mul import Mul
+from sympy.matrices.dense import (Matrix, diag)
+from sympy.polys.polytools import (Poly, degree_list, rem)
+from sympy.simplify.simplify import simplify
+from sympy.tensor.indexed import IndexedBase
 from sympy.polys.monomials import itermonomials, monomial_deg
 from sympy.polys.orderings import monomial_key
 from sympy.polys.polytools import poly_from_expr, total_degree
 from sympy.functions.combinatorial.factorials import binomial
 from itertools import combinations_with_replacement
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 class DixonResultant():
     """
@@ -26,7 +30,7 @@ class DixonResultant():
     Examples
     ========
 
-    >>> from sympy.core import symbols
+    >>> from sympy import symbols
 
     >>> from sympy.polys.multivariate_resultants import DixonResultant
     >>> x, y = symbols('x, y')
@@ -89,9 +93,13 @@ class DixonResultant():
 
     @property
     def max_degrees(self):
-        SymPyDeprecationWarning(feature="max_degrees",
-                        issue=17763,
-                        deprecated_since_version="1.5").warn()
+        sympy_deprecation_warning(
+            """
+            The max_degrees property of DixonResultant is deprecated.
+            """,
+            deprecated_since_version="1.5",
+            active_deprecations_target="deprecated-dixonresultant-properties",
+        )
         return self._max_degrees
 
     def get_dixon_polynomial(self):
@@ -131,11 +139,14 @@ class DixonResultant():
         return poly_from_expr(dixon_polynomial, self.dummy_variables)[0]
 
     def get_upper_degree(self):
-        SymPyDeprecationWarning(feature="get_upper_degree",
-                        useinstead="get_max_degrees",
-                        issue=17763,
-                        deprecated_since_version="1.5").warn()
-
+        sympy_deprecation_warning(
+            """
+            The get_upper_degree() method of DixonResultant is deprecated. Use
+            get_max_degrees() instead.
+            """,
+            deprecated_since_version="1.5",
+            active_deprecations_target="deprecated-dixonresultant-properties"
+        )
         list_of_products = [self.variables[i] ** self._max_degrees[i]
                             for i in range(self.n)]
         product = prod(list_of_products)
@@ -147,7 +158,7 @@ class DixonResultant():
         r"""
         Returns a list of the maximum degree of each variable appearing
         in the coefficients of the Dixon polynomial. The coefficients are
-        viewed as polys in x_1, ... , x_n.
+        viewed as polys in $x_1, x_2, \dots, x_n$.
         """
         deg_lists = [degree_list(Poly(poly, self.variables))
                      for poly in polynomial.coeffs()]
@@ -177,8 +188,8 @@ class DixonResultant():
         # remove columns if needed
         if dixon_matrix.shape[0] != dixon_matrix.shape[1]:
             keep = [column for column in range(dixon_matrix.shape[-1])
-                    if any([element != 0 for element
-                        in dixon_matrix[:, column]])]
+                    if any(element != 0 for element
+                        in dixon_matrix[:, column])]
 
             dixon_matrix = dixon_matrix[:, keep]
 
@@ -190,7 +201,7 @@ class DixonResultant():
 
         The precondition requires that the column corresponding to the
         monomial 1 = x_1 ^ 0 * x_2 ^ 0 * ... * x_n ^ 0 is not a linear
-        combination of the remaining ones. In sympy notation this is
+        combination of the remaining ones. In SymPy notation this is
         the last column. For the precondition to hold the last non-zero
         row of the rref matrix should be of the form [0, 0, ..., 1].
         """
@@ -247,7 +258,7 @@ class MacaulayResultant():
     Examples
     ========
 
-    >>> from sympy.core import symbols
+    >>> from sympy import symbols
 
     >>> from sympy.polys.multivariate_resultants import MacaulayResultant
     >>> x, y, z = symbols('x, y, z')
@@ -292,7 +303,7 @@ class MacaulayResultant():
 
         variables: list
             A list of all n variables
-        polynomials : list of sympy polynomials
+        polynomials : list of SymPy polynomials
             A  list of m n-degree polynomials
         """
         self.polynomials = polynomials
@@ -449,8 +460,8 @@ class MacaulayResultant():
         reduction_set = [v ** self.degrees[i] for i, v
                          in enumerate(self.variables)]
 
-        ais = list([self.polynomials[i].coeff(reduction_set[i])
-                    for i in range(self.n)])
+        ais = [self.polynomials[i].coeff(reduction_set[i])
+               for i in range(self.n)]
 
         reduced_matrix = matrix[:, reduced]
         keep = []

@@ -52,7 +52,7 @@ class EPath:
             index = 0
 
             for c in selector:
-                if c.isalnum() or c == '_' or c == '|' or c == '?':
+                if c.isalnum() or c in ('_', '|', '?'):
                     index += 1
                 else:
                     break
@@ -195,7 +195,7 @@ class EPath:
                 args = list(args)
 
                 if span is not None:
-                    if type(span) == slice:
+                    if isinstance(span, slice):
                         indices = range(*span.indices(len(args)))
                     else:
                         indices = [span]
@@ -262,7 +262,7 @@ class EPath:
                     return
 
                 if span is not None:
-                    if type(span) == slice:
+                    if isinstance(span, slice):
                         args = args[span]
                     else:
                         try:

@@ -1,5 +1,5 @@
 import math
-from sympy import Interval
+from sympy.sets.sets import Interval
 from sympy.calculus.singularities import is_increasing, is_decreasing
 from sympy.codegen.rewriting import Optimization
 from sympy.core.function import UndefinedFunction
@@ -12,7 +12,11 @@ methods).
 """
 
 class SumApprox(Optimization):
-    """ Approximates sum by neglecting small terms
+    """
+    Approximates sum by neglecting small terms.
+
+    Explanation
+    ===========
 
     If terms are expressions which can be determined to be monotonic, then
     bounds for those expressions are added.
@@ -97,7 +101,7 @@ class SumApprox(Optimization):
 
 
 class SeriesApprox(Optimization):
-    """ Approximates functions by expanding them as a series
+    """ Approximates functions by expanding them as a series.
 
     Parameters
     ==========

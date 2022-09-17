@@ -40,7 +40,7 @@ class DotProduct(Expr):
 
         return Basic.__new__(cls, arg1, arg2)
 
-    def doit(self, expand=False):
+    def doit(self, expand=False, **hints):
         if self.args[0].shape == self.args[1].shape:
             if self.args[0].shape[0] == 1:
                 mul = self.args[0]*transpose(self.args[1])

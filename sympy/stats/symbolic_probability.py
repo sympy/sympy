@@ -1,9 +1,17 @@
 import itertools
 
-from sympy import (Expr, Add, Mul, S, Integral, Eq, Sum, Symbol,
-                    expand as _expand, Not)
-from sympy.core.compatibility import default_sort_key
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.function import expand as _expand
+from sympy.core.mul import Mul
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import Not
 from sympy.core.parameters import global_parameters
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
@@ -20,7 +28,7 @@ def _(x):
     atoms = x.free_symbols
     if len(atoms) == 1 and next(iter(atoms)) == x:
         return False
-    return any([is_random(i) for i in atoms])
+    return any(is_random(i) for i in atoms)
 
 @is_random.register(RandomSymbol)  # type: ignore
 def _(x):
@@ -73,14 +81,14 @@ class Probability(Expr):
 
         if condition.has(RandomIndexedSymbol):
             return pspace(condition).probability(condition, given_condition,
-                                evaluate=for_rewrite)
+                                             evaluate=for_rewrite)
 
         if isinstance(given_condition, RandomSymbol):
             condrv = random_symbols(condition)
             if len(condrv) == 1 and condrv[0] == given_condition:
                 from sympy.stats.frv_types import BernoulliDistribution
                 return BernoulliDistribution(self.func(condition).doit(**hints), 0, 1)
-            if any([dependent(rv, given_condition) for rv in condrv]):
+            if any(dependent(rv, given_condition) for rv in condrv):
                 return Probability(condition, given_condition)
             else:
                 return Probability(condition).doit()
@@ -573,7 +581,7 @@ class Moment(Expr):
     >>> from sympy import Symbol, Integral
     >>> from sympy.stats import Normal, Expectation, Probability, Moment
     >>> mu = Symbol('mu', real=True)
-    >>> sigma = Symbol('sigma', real=True, positive=True)
+    >>> sigma = Symbol('sigma', positive=True)
     >>> X = Normal('X', mu, sigma)
     >>> M = Moment(X, 3, 1)
 
@@ -604,11 +612,11 @@ class Moment(Expr):
         c = _sympify(c)
         if condition is not None:
             condition = _sympify(condition)
-        return Expr.__new__(cls, X, n, c, condition)
+            return super().__new__(cls, X, n, c, condition)
+        else:
+            return super().__new__(cls, X, n, c)
 
     def doit(self, **hints):
-        if not is_random(self.args[0]):
-            return self.args[0]
         return self.rewrite(Expectation).doit(**hints)
 
     def _eval_rewrite_as_Expectation(self, X, n, c=0, condition=None, **kwargs):
@@ -631,7 +639,7 @@ class CentralMoment(Expr):
     >>> from sympy import Symbol, Integral
     >>> from sympy.stats import Normal, Expectation, Probability, CentralMoment
     >>> mu = Symbol('mu', real=True)
-    >>> sigma = Symbol('sigma', real=True, positive=True)
+    >>> sigma = Symbol('sigma', positive=True)
     >>> X = Normal('X', mu, sigma)
     >>> CM = CentralMoment(X, 4)
 
@@ -661,11 +669,11 @@ class CentralMoment(Expr):
         n = _sympify(n)
         if condition is not None:
             condition = _sympify(condition)
-        return Expr.__new__(cls, X, n, condition)
+            return super().__new__(cls, X, n, condition)
+        else:
+            return super().__new__(cls, X, n)
 
     def doit(self, **hints):
-        if not is_random(self.args[0]):
-            return self.args[0]
         return self.rewrite(Expectation).doit(**hints)
 
     def _eval_rewrite_as_Expectation(self, X, n, condition=None, **kwargs):

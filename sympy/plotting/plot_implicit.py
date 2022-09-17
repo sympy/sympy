@@ -34,7 +34,10 @@ from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
-from sympy import Eq, Tuple, sympify, Symbol, Dummy
+from sympy.core.containers import Tuple
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
 from sympy.external import import_module
 from sympy.logic.boolalg import BooleanFunction
 from sympy.polys.polyutils import _sort_gens
@@ -52,6 +55,7 @@ class ImplicitSeries(BaseSeries):
             line_color):
         super().__init__()
         self.expr = sympify(expr)
+        self.label = self.expr
         self.var_x = sympify(var_start_end_x[0])
         self.start_x = float(var_start_end_x[1])
         self.end_x = float(var_start_end_x[2])
@@ -88,7 +92,7 @@ class ImplicitSeries(BaseSeries):
             # AttributeError here.
             if self.use_interval_math:
                 warnings.warn("Adaptive meshing could not be applied to the"
-                            " expression. Using uniform meshing.")
+                            " expression. Using uniform meshing.", stacklevel=7)
             self.use_interval_math = False
 
         if self.use_interval_math:
@@ -420,8 +424,8 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
     kwargs['xlim'] = tuple(float(x) for x in var_start_end_x[1:])
     kwargs['ylim'] = tuple(float(y) for y in var_start_end_y[1:])
     # set the x and y labels
-    kwargs.setdefault('xlabel', var_start_end_x[0].name)
-    kwargs.setdefault('ylabel', var_start_end_y[0].name)
+    kwargs.setdefault('xlabel', var_start_end_x[0])
+    kwargs.setdefault('ylabel', var_start_end_y[0])
     p = Plot(series_argument, **kwargs)
     if show:
         p.show()

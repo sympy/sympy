@@ -4,11 +4,12 @@ Covering Product, Intersecting Product
 """
 
 from sympy.core import S, sympify
-from sympy.core.compatibility import as_int, iterable
 from sympy.core.function import expand_mul
 from sympy.discrete.transforms import (
     fft, ifft, ntt, intt, fwht, ifwht,
     mobius_transform, inverse_mobius_transform)
+from sympy.utilities.iterables import iterable
+from sympy.utilities.misc import as_int
 
 
 def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):

@@ -1,5 +1,5 @@
 '''
-Use llvmlite to create executable functions from Sympy expressions
+Use llvmlite to create executable functions from SymPy expressions
 
 This module requires llvmlite (https://github.com/numba/llvmlite).
 '''
@@ -8,7 +8,8 @@ import ctypes
 
 from sympy.external import import_module
 from sympy.printing.printer import Printer
-from sympy import S, IndexedBase
+from sympy.core.singleton import S
+from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.decorator import doctest_depends_on
 
 llvmlite = import_module('llvmlite')
@@ -339,7 +340,7 @@ class CodeSignature:
 
 
 def _llvm_jit_code(args, expr, signature, callback_type):
-    """Create a native code function from a Sympy expression"""
+    """Create a native code function from a SymPy expression"""
     if callback_type is None:
         jit = LLVMJitCode(signature)
     else:
@@ -358,7 +359,7 @@ def _llvm_jit_code(args, expr, signature, callback_type):
 
 @doctest_depends_on(modules=('llvmlite', 'scipy'))
 def llvm_callable(args, expr, callback_type=None):
-    '''Compile function from a Sympy expression
+    '''Compile function from a SymPy expression
 
     Expressions are evaluated using double precision arithmetic.
     Some single argument math functions (exp, sin, cos, etc.) are supported
@@ -449,7 +450,7 @@ def llvm_callable(args, expr, callback_type=None):
         for _ in args:
             arg_ctype = ctypes.c_double
             arg_ctypes.append(arg_ctype)
-    elif callback_type == 'scipy.integrate' or callback_type == 'scipy.integrate.test':
+    elif callback_type in ('scipy.integrate', 'scipy.integrate.test'):
         signature.ret_type = ctypes.c_double
         arg_ctypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_double)]
         arg_ctypes_formal = [ctypes.c_int, ctypes.c_double]
@@ -474,5 +475,15 @@ def llvm_callable(args, expr, callback_type=None):
     if callback_type and callback_type == 'scipy.integrate':
         arg_ctypes = arg_ctypes_formal
 
-    cfunc = ctypes.CFUNCTYPE(signature.ret_type, *arg_ctypes)(fptr)
+    # PYFUNCTYPE holds the GIL which is needed to prevent a segfault when
+    # calling PyFloat_FromDouble on Python 3.10. Probably it is better to use
+    # ctypes.c_double when returning a float rather than using ctypes.py_object
+    # and returning a PyFloat from inside the jitted function (i.e. let ctypes
+    # handle the conversion from double to PyFloat).
+    if signature.ret_type == ctypes.py_object:
+        FUNCTYPE = ctypes.PYFUNCTYPE
+    else:
+        FUNCTYPE = ctypes.CFUNCTYPE
+
+    cfunc = FUNCTYPE(signature.ret_type, *arg_ctypes)(fptr)
     return cfunc

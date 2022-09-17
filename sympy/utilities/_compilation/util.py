@@ -22,6 +22,10 @@ class CompilerNotFoundError(FileNotFoundError):
     pass
 
 
+class CompileError (Exception):
+    """Failure to compile one or more C/C++ source files."""
+
+
 def get_abspath(path, cwd='.'):
     """ Returns the aboslute path.
 
@@ -113,7 +117,6 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         dst = os.path.join(dest_dir, dest_fname)
     else:
         dest_dir = os.path.dirname(dst)
-        dest_fname = os.path.basename(dst)
 
     if not os.path.exists(dest_dir):
         if create_dest_dirs:
@@ -189,19 +192,20 @@ def pyx_is_cplus(path):
 
     Returns True if such a file is present in the file, else False.
     """
-    for line in open(path):
-        if line.startswith('#') and '=' in line:
-            splitted = line.split('=')
-            if len(splitted) != 2:
-                continue
-            lhs, rhs = splitted
-            if lhs.strip().split()[-1].lower() == 'language' and \
-               rhs.strip().split()[0].lower() == 'c++':
-                    return True
+    with open(path) as fh:
+        for line in fh:
+            if line.startswith('#') and '=' in line:
+                splitted = line.split('=')
+                if len(splitted) != 2:
+                    continue
+                lhs, rhs = splitted
+                if lhs.strip().split()[-1].lower() == 'language' and \
+                       rhs.strip().split()[0].lower() == 'c++':
+                            return True
     return False
 
 def import_module_from_file(filename, only_if_newer_than=None):
-    """ Imports python extension (from shared object file)
+    """ Imports Python extension (from shared object file)
 
     Provide a list of paths in `only_if_newer_than` to check
     timestamps of dependencies. import_ raises an ImportError
@@ -251,7 +255,7 @@ def import_module_from_file(filename, only_if_newer_than=None):
 def find_binary_of_command(candidates):
     """ Finds binary first matching name among candidates.
 
-    Calls `find_executable` from distuils for provided candidates and returns
+    Calls ``which`` from shutils for provided candidates and returns
     first hit.
 
     Parameters
@@ -265,11 +269,12 @@ def find_binary_of_command(candidates):
 
     CompilerNotFoundError if no candidates match.
     """
-    from distutils.spawn import find_executable
+    from shutil import which
     for c in candidates:
-        binary_path = find_executable(c)
+        binary_path = which(c)
         if c and binary_path:
             return c, binary_path
+
     raise CompilerNotFoundError('No binary located for candidates: {}'.format(candidates))
 
 

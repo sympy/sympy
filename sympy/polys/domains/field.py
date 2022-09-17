@@ -98,3 +98,7 @@ class Field(Ring):
             return 1/a
         else:
             raise NotReversible('zero is not reversible')
+
+    def is_unit(self, a):
+        """Return true if ``a`` is a invertible"""
+        return bool(a)

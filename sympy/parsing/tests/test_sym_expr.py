@@ -9,7 +9,7 @@ if lfortran and cin:
     from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
                                    Declaration, FloatType)
     from sympy.core import Integer, Float
-    from sympy import Symbol
+    from sympy.core.symbol import Symbol
 
     expr1 = SymPyExpression()
     src = """\
@@ -123,7 +123,6 @@ if lfortran and cin:
                 value=Float('0.0', precision=53)
             )
         )
-
 
 
     def test_convert_py():

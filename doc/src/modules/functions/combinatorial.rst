@@ -1,3 +1,5 @@
+.. _combinatorial-functions:
+
 Combinatorial
 =============
 
@@ -89,6 +91,12 @@ genocchi
 --------
 
 .. autoclass:: sympy.functions.combinatorial.numbers.genocchi
+   :members:
+
+andre
+-----
+
+.. autoclass:: sympy.functions.combinatorial.numbers.andre
    :members:
 
 partition

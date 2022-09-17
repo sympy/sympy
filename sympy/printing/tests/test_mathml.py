@@ -1,38 +1,63 @@
-from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
-    tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, \
-    S, MatrixSymbol, Function, Derivative, log, true, false, Range, Min, Max, \
-    Lambda, IndexedBase, symbols, zoo, elliptic_f, elliptic_e, elliptic_pi, Ei, \
-    expint, jacobi, gegenbauer, chebyshevt, chebyshevu, legendre, assoc_legendre, \
-    laguerre, assoc_laguerre, hermite, euler, stieltjes, mathieuc, mathieus, \
-    mathieucprime, mathieusprime, TribonacciConstant, Contains, LambertW, \
-    cot, coth, acot, acoth, csc, acsc, csch, acsch, sec, asec, sech, asech
-
-from sympy import elliptic_k, totient, reduced_totient, primenu, primeomega, \
-    fresnelc, fresnels, Heaviside
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.functions.combinatorial.factorials import factorial, factorial2, \
-    binomial
-from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
-    fibonacci, tribonacci, catalan
-from sympy.functions.elementary.complexes import re, im, Abs, conjugate
-from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.integers import floor, ceiling
-from sympy.functions.special.gamma_functions import gamma, lowergamma, uppergamma
+from sympy.core.function import Derivative, Lambda, diff, Function
+from sympy.core.numbers import (zoo, Float, Integer, I, oo, pi, E,
+    Rational)
+from sympy.core.relational import Lt, Ge, Ne, Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols, Symbol
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (factorial2,
+    binomial, factorial)
+from sympy.functions.combinatorial.numbers import (lucas, bell,
+    catalan, euler, tribonacci, fibonacci, bernoulli)
+from sympy.functions.elementary.complexes import re, im, conjugate, Abs
+from sympy.functions.elementary.exponential import exp, LambertW, log
+from sympy.functions.elementary.hyperbolic import (tanh, acoth, atanh,
+    coth, asinh, acsch, asech, acosh, csch, sinh, cosh, sech)
+from sympy.functions.elementary.integers import ceiling, floor
+from sympy.functions.elementary.miscellaneous import Max, Min
+from sympy.functions.elementary.trigonometric import (csc, sec, tan,
+    atan, sin, asec, cot, cos, acot, acsc, asin, acos)
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.elliptic_integrals import (elliptic_pi,
+    elliptic_f, elliptic_k, elliptic_e)
+from sympy.functions.special.error_functions import (fresnelc,
+    fresnels, Ei, expint)
+from sympy.functions.special.gamma_functions import (gamma, uppergamma,
+    lowergamma)
+from sympy.functions.special.mathieu_functions import (mathieusprime,
+    mathieus, mathieucprime, mathieuc)
+from sympy.functions.special.polynomials import (jacobi, chebyshevu,
+    chebyshevt, hermite, assoc_legendre, gegenbauer, assoc_laguerre,
+    legendre, laguerre)
 from sympy.functions.special.singularity_functions import SingularityFunction
-from sympy.functions.special.zeta_functions import polylog, lerchphi, zeta, dirichlet_eta
-from sympy.logic.boolalg import And, Or, Implies, Equivalent, Xor, Not
+from sympy.functions.special.zeta_functions import (polylog, stieltjes,
+    lerchphi, dirichlet_eta, zeta)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (Xor, Or, false, true, And, Equivalent,
+    Implies, Not)
+from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.determinant import Determinant
-from sympy.physics.quantum import ComplexSpace, HilbertSpace, FockSpace, hbar, Dagger
-from sympy.printing.mathml import mathml, MathMLContentPrinter, \
-    MathMLPresentationPrinter, MathMLPrinter
-from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, \
-    SymmetricDifference, Interval, EmptySet, ProductSet
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.ntheory.factor_ import (totient, reduced_totient, primenu,
+    primeomega)
+from sympy.physics.quantum import (ComplexSpace, FockSpace, hbar,
+    HilbertSpace, Dagger)
+from sympy.printing.mathml import (MathMLPresentationPrinter,
+    MathMLPrinter, MathMLContentPrinter, mathml)
+from sympy.series.limits import Limit
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import (Interval, Union, SymmetricDifference,
+    Complement, FiniteSet, Intersection, ProductSet)
 from sympy.stats.rv import RandomSymbol
+from sympy.tensor.indexed import IndexedBase
+from sympy.vector import (Divergence, CoordSys3D, Cross, Curl, Dot,
+    Laplacian, Gradient)
 from sympy.testing.pytest import raises
-from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
-from sympy import sympify
 
 x, y, z, a, b, c, d, e, n = symbols('x:z a:e n')
 mp = MathMLContentPrinter()
@@ -215,12 +240,13 @@ def test_content_mathml_constants():
     mml = mp._print(pi)
     assert mml.nodeName == 'pi'
 
-    assert mathml(GoldenRatio) == '<cn>&#966;</cn>'
-
-    mml = mathml(EulerGamma)
+    assert mathml(hbar) == '<hbar/>'
+    assert mathml(S.TribonacciConstant) == '<tribonacciconstant/>'
+    assert mathml(S.GoldenRatio) == '<cn>&#966;</cn>'
+    mml = mathml(S.EulerGamma)
     assert mml == '<eulergamma/>'
 
-    mml = mathml(EmptySet())
+    mml = mathml(S.EmptySet)
     assert mml == '<emptyset/>'
 
     mml = mathml(S.true)
@@ -861,7 +887,13 @@ def test_presentation_mathml_constants():
     mml = mpp._print(pi)
     assert mml.childNodes[0].nodeValue == '&pi;'
 
-    assert mathml(GoldenRatio, printer='presentation') == '<mi>&#x3A6;</mi>'
+    assert mathml(hbar, printer='presentation') == '<mi>&#x210F;</mi>'
+    assert mathml(S.TribonacciConstant, printer='presentation'
+        ) == '<mi>TribonacciConstant</mi>'
+    assert mathml(S.EulerGamma, printer='presentation'
+        ) == '<mi>&#x3B3;</mi>'
+    assert mathml(S.GoldenRatio, printer='presentation'
+        ) == '<mi>&#x3A6;</mi>'
 
     assert mathml(zoo, printer='presentation') == \
         '<mover><mo>&#x221E;</mo><mo>~</mo></mover>'
@@ -1192,7 +1224,7 @@ def test_toprettyxml_hooking():
 
 
 def test_print_domains():
-    from sympy import Complexes, Integers, Naturals, Naturals0, Reals
+    from sympy.sets import Integers, Naturals, Naturals0, Reals, Complexes
 
     assert mpp.doprint(Complexes) == '<mi mathvariant="normal">&#x2102;</mi>'
     assert mpp.doprint(Integers) == '<mi mathvariant="normal">&#x2124;</mi>'
@@ -1217,12 +1249,12 @@ def test_print_AssocOp():
         identity = 0
 
     expr = TestAssocOp(1, 2)
-    mpp.doprint(expr) == \
-        '<mrow><mi>testassocop</mi><mn>2</mn><mn>1</mn></mrow>'
+    assert mpp.doprint(expr) == \
+        '<mrow><mi>testassocop</mi><mn>1</mn><mn>2</mn></mrow>'
 
 
 def test_print_basic():
-    expr = Basic(1, 2)
+    expr = Basic(S(1), S(2))
     assert mpp.doprint(expr) == \
         '<mrow><mi>basic</mi><mfenced><mn>1</mn><mn>2</mn></mfenced></mrow>'
     assert mp.doprint(expr) == '<basic><cn>1</cn><cn>2</cn></basic>'
@@ -1299,7 +1331,7 @@ def test_print_LambertW():
 
 
 def test_print_EmptySet():
-    assert mpp.doprint(EmptySet()) == '<mo>&#x2205;</mo>'
+    assert mpp.doprint(S.EmptySet) == '<mo>&#x2205;</mo>'
 
 
 def test_print_UniversalSet():
@@ -1314,8 +1346,9 @@ def test_print_spaces():
 
 def test_print_constants():
     assert mpp.doprint(hbar) == '<mi>&#x210F;</mi>'
-    assert mpp.doprint(TribonacciConstant) == '<mi>TribonacciConstant</mi>'
-    assert mpp.doprint(EulerGamma) == '<mi>&#x3B3;</mi>'
+    assert mpp.doprint(S.TribonacciConstant) == '<mi>TribonacciConstant</mi>'
+    assert mpp.doprint(S.GoldenRatio) == '<mi>&#x3A6;</mi>'
+    assert mpp.doprint(S.EulerGamma) == '<mi>&#x3B3;</mi>'
 
 
 def test_print_Contains():
@@ -1428,7 +1461,7 @@ def test_root_notation_print():
     assert mathml(x**(S.One/3), printer='presentation', root_notation=False) ==\
         '<msup><mi>x</mi><mfrac><mn>1</mn><mn>3</mn></mfrac></msup>'
     assert mathml(x**(S.One/3), printer='content') == \
-        '<apply><root/><degree><ci>3</ci></degree><ci>x</ci></apply>'
+        '<apply><root/><degree><cn>3</cn></degree><ci>x</ci></apply>'
     assert mathml(x**(S.One/3), printer='content', root_notation=False) == \
         '<apply><power/><ci>x</ci><apply><divide/><cn>1</cn><cn>3</cn></apply></apply>'
     assert mathml(x**(Rational(-1, 3)), printer='presentation') == \
@@ -1530,7 +1563,7 @@ def test_print_different_functions():
     assert mpp.doprint(primeomega(x)) == '<mrow><mi>&#x3A9;</mi><mfenced><mi>x</mi></mfenced></mrow>'
     assert mpp.doprint(fresnels(x)) == '<mrow><mi>S</mi><mfenced><mi>x</mi></mfenced></mrow>'
     assert mpp.doprint(fresnelc(x)) ==  '<mrow><mi>C</mi><mfenced><mi>x</mi></mfenced></mrow>'
-    assert mpp.doprint(Heaviside(x)) == '<mrow><mi>&#x398;</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(Heaviside(x)) == '<mrow><mi>&#x398;</mi><mfenced><mi>x</mi><mfrac><mn>1</mn><mn>2</mn></mfrac></mfenced></mrow>'
 
 
 def test_mathml_builtins():
@@ -1948,7 +1981,7 @@ def test_mathml_SingularityFunction():
 
 
 def test_mathml_matrix_functions():
-    from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
+    from sympy.matrices import Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert mathml(Adjoint(X), printer='presentation') == \
@@ -1992,7 +2025,7 @@ def test_mathml_special_matrices():
     assert mathml(OneMatrix(2, 2), printer='presentation') == '<mn>&#x1D7D9</mn>'
 
 def test_mathml_piecewise():
-    from sympy import Piecewise
+    from sympy.functions.elementary.piecewise import Piecewise
     # Content MathML
     assert mathml(Piecewise((x, x <= 1), (x**2, True))) == \
         '<piecewise><piece><ci>x</ci><apply><leq/><ci>x</ci><cn>1</cn></apply></piece><otherwise><apply><power/><ci>x</ci><cn>2</cn></apply></otherwise></piecewise>'

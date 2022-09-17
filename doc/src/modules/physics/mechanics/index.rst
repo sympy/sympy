@@ -66,8 +66,8 @@ the user must provide a complete representation of the free
 body diagrams that themselves represent the system, with which this code can
 provide equations of motion in a form amenable to numerical integration. Step
 5 above amounts to arduous algebra for even fairly simple multi-body systems.
-Thus, it is desirable to use a symbolic math package, such as Sympy, to
-perform this step. It is for this reason that this module is a part of Sympy.
+Thus, it is desirable to use a symbolic math package, such as SymPy, to
+perform this step. It is for this reason that this module is a part of SymPy.
 Step 4 amounts to this specific module, sympy.physics.mechanics.
 
 
@@ -80,6 +80,7 @@ Guide to Mechanics
     masses.rst
     kane.rst
     lagrange.rst
+    joints.rst
     symsystem.rst
     linearize.rst
     examples.rst
@@ -95,9 +96,10 @@ Mechanics API
     :maxdepth: 2
 
     api/part_bod.rst
+    api/body.rst
     api/kane_lagrange.rst
+    api/joint.rst
     api/system.rst
     api/linearize.rst
     api/expr_manip.rst
     api/printing.rst
-    api/body.rst

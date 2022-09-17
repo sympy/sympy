@@ -1,9 +1,11 @@
-from sympy.core.compatibility import as_int, reduce
-from sympy.core.mul import prod
+from functools import reduce
+from math import prod
+
 from sympy.core.numbers import igcdex, igcd
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
+from sympy.utilities.misc import as_int
 
 
 def symmetric_residue(a, m):
@@ -190,7 +192,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         References
         ==========
 
-        - https://en.wikipedia.org/wiki/Method_of_successive_substitution
+        .. [1] https://en.wikipedia.org/wiki/Method_of_successive_substitution
         """
         a1, m1 = c1
         a2, m2 = c2

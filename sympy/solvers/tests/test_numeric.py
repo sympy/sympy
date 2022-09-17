@@ -1,5 +1,11 @@
-from sympy import (Eq, Matrix, pi, sin, sqrt, Symbol, Integral, Piecewise,
-    symbols, Float, I, Rational)
+from sympy.core.numbers import (Float, I, Rational, pi)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import Integral
+from sympy.matrices.dense import Matrix
 from mpmath import mnorm, mpf
 from sympy.solvers import nsolve
 from sympy.utilities.lambdify import lambdify
@@ -62,7 +68,6 @@ def test_nsolve():
     a = Symbol('a')
     assert abs(nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3) -
         mpf('0.31883011387318591')) < 1e-15
-
 
 
 def test_issue_6408():

@@ -1,11 +1,11 @@
 """Sparse rational function fields. """
 
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
+from functools import reduce
 
 from operator import add, mul, lt, le, gt, ge
 
-from sympy.core.compatibility import is_sequence, reduce
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.numbers import Exp1
@@ -24,6 +24,7 @@ from sympy.polys.polyutils import _parallel_dict_from_expr
 from sympy.polys.rings import PolyElement
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
+from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
 
 @public
@@ -53,16 +54,16 @@ def sfield(exprs, *symbols, **options):
     Parameters
     ==========
 
-    exprs : :class:`Expr` or sequence of :class:`Expr` (sympifiable)
-    symbols : sequence of :class:`Symbol`/:class:`Expr`
-    options : keyword arguments understood by :class:`Options`
+    exprs   : py:class:`~.Expr` or sequence of :py:class:`~.Expr` (sympifiable)
+
+    symbols : sequence of :py:class:`~.Symbol`/:py:class:`~.Expr`
+
+    options : keyword arguments understood by :py:class:`~.Options`
 
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.functions import exp, log
-    >>> from sympy.polys.fields import sfield
+    >>> from sympy import exp, log, symbols, sfield
 
     >>> x = symbols("x")
     >>> K, f = sfield((x*log(x) + 4*x**2)*exp(1/x + log(x)/3)/x**2)
@@ -98,7 +99,7 @@ def sfield(exprs, *symbols, **options):
     else:
         return (_field, fracs)
 
-_field_cache = {}  # type: Dict[Any, Any]
+_field_cache = {}  # type: tDict[Any, Any]
 
 class FracField(DefaultPrinting):
     """Multivariate distributed rational function field. """
@@ -150,6 +151,12 @@ class FracField(DefaultPrinting):
 
     def __hash__(self):
         return self._hash
+
+    def index(self, gen):
+        if isinstance(gen, self.dtype):
+            return self.ring.index(gen.to_poly())
+        else:
+            raise ValueError("expected a %s, got %s instead" % (self.dtype,gen))
 
     def __eq__(self, other):
         return isinstance(other, FracField) and \
@@ -246,6 +253,8 @@ class FracField(DefaultPrinting):
                         return mapping.get(gen)**int(e/eg)
                 if e.is_Integer and e is not S.One:
                     return _rebuild(b)**int(e)
+            elif mapping.get(1/expr) is not None:
+                return 1/mapping.get(1/expr)
 
             try:
                 return domain.convert(expr)
@@ -255,13 +264,13 @@ class FracField(DefaultPrinting):
                 else:
                     raise
 
-        return _rebuild(sympify(expr))
+        return _rebuild(expr)
 
     def from_expr(self, expr):
         mapping = dict(list(zip(self.symbols, self.gens)))
 
         try:
-            frac = self._rebuild_expr(expr, mapping)
+            frac = self._rebuild_expr(sympify(expr), mapping)
         except CoercionFailed:
             raise ValueError("expected an expression convertible to a rational function in %s, got %s" % (self, expr))
         else:

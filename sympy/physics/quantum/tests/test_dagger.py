@@ -1,4 +1,9 @@
-from sympy import I, Matrix, symbols, conjugate, Expr, Integer, Mul
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer)
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import conjugate
+from sympy.matrices.dense import Matrix
 
 from sympy.physics.quantum.dagger import adjoint, Dagger
 from sympy.external import import_module
@@ -57,7 +62,7 @@ def test_numpy_dagger():
     if not np:
         skip("numpy not installed.")
 
-    a = np.matrix([[1.0, 2.0j], [-1.0j, 2.0]])
+    a = np.array([[1.0, 2.0j], [-1.0j, 2.0]])
     adag = a.copy().transpose().conjugate()
     assert (Dagger(a) == adag).all()
 

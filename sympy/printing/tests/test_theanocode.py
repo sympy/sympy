@@ -10,7 +10,7 @@ cache instead.
 import logging
 
 from sympy.external import import_module
-from sympy.testing.pytest import raises, SKIP
+from sympy.testing.pytest import raises, SKIP, warns_deprecated_sympy
 
 theanologger = logging.getLogger('theano.configdefaults')
 theanologger.setLevel(logging.CRITICAL)
@@ -29,7 +29,7 @@ else:
     disabled = True
 
 import sympy as sy
-from sympy import S
+from sympy.core.singleton import S
 from sympy.abc import x, y, z, t
 from sympy.printing.theanocode import (theano_code, dim_handling,
         theano_function)
@@ -46,12 +46,14 @@ f_t = sy.Function('f')(t)
 def theano_code_(expr, **kwargs):
     """ Wrapper for theano_code that uses a new, empty cache by default. """
     kwargs.setdefault('cache', {})
-    return theano_code(expr, **kwargs)
+    with warns_deprecated_sympy():
+        return theano_code(expr, **kwargs)
 
 def theano_function_(inputs, outputs, **kwargs):
     """ Wrapper for theano_function that uses a new, empty cache by default. """
     kwargs.setdefault('cache', {})
-    return theano_function(inputs, outputs, **kwargs)
+    with warns_deprecated_sympy():
+        return theano_function(inputs, outputs, **kwargs)
 
 
 def fgraph_of(*exprs):
@@ -60,7 +62,7 @@ def fgraph_of(*exprs):
     Parameters
     ==========
     exprs
-        Sympy expressions
+        SymPy expressions
 
     Returns
     =======
@@ -503,8 +505,9 @@ def test_global_cache():
         global_cache.clear()
 
         for s in [x, X, f_t]:
-            st = theano_code(s)
-            assert theano_code(s) is st
+            with warns_deprecated_sympy():
+                st = theano_code(s)
+                assert theano_code(s) is st
 
     finally:
         # Restore global cache
@@ -531,7 +534,8 @@ def test_cache_types_distinct():
 
     # Check retrieving
     for s, st in printed.items():
-        assert theano_code(s, cache=cache) is st
+        with warns_deprecated_sympy():
+            assert theano_code(s, cache=cache) is st
 
 def test_symbols_are_created_once():
     """
@@ -600,14 +604,36 @@ def test_Relationals():
 
 
 def test_complexfunctions():
-    xt, yt = theano_code(x, dtypes={x:'complex128'}), theano_code(y, dtypes={y: 'complex128'})
-    from sympy import conjugate
+    with warns_deprecated_sympy():
+        xt, yt = theano_code_(x, dtypes={x:'complex128'}), theano_code_(y, dtypes={y: 'complex128'})
+    from sympy.functions.elementary.complexes import conjugate
     from theano.tensor import as_tensor_variable as atv
     from theano.tensor import complex as cplx
-    assert theq(theano_code(y*conjugate(x)), yt*(xt.conj()))
-    assert theq(theano_code((1+2j)*x), xt*(atv(1.0)+atv(2.0)*cplx(0,1)))
+    with warns_deprecated_sympy():
+        assert theq(theano_code_(y*conjugate(x)), yt*(xt.conj()))
+        assert theq(theano_code_((1+2j)*x), xt*(atv(1.0)+atv(2.0)*cplx(0,1)))
 
 
 def test_constantfunctions():
-    tf = theano_function([],[1+1j])
+    with warns_deprecated_sympy():
+        tf = theano_function_([],[1+1j])
     assert(tf()==1+1j)
+
+
+def test_Exp1():
+    """
+    Test that exp(1) prints without error and evaluates close to SymPy's E
+    """
+    # sy.exp(1) should yield same instance of E as sy.E (singleton), but extra
+    # check added for sanity
+    e_a = sy.exp(1)
+    e_b = sy.E
+
+    np.testing.assert_allclose(float(e_a), np.e)
+    np.testing.assert_allclose(float(e_b), np.e)
+
+    e = theano_code_(e_a)
+    np.testing.assert_allclose(float(e_a), e.eval())
+
+    e = theano_code_(e_b)
+    np.testing.assert_allclose(float(e_b), e.eval())

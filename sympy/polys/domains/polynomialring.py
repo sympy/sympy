@@ -67,6 +67,17 @@ class PolynomialRing(Ring, CompositeDomain):
             (self.dtype.ring, self.domain, self.symbols) == \
             (other.dtype.ring, other.domain, other.symbols)
 
+    def is_unit(self, a):
+        """Returns ``True`` if ``a`` is a unit of ``self``"""
+        if not a.is_ground:
+            return False
+        K = self.domain
+        return K.is_unit(K.convert_from(a, self))
+
+    def canonical_unit(self, a):
+        u = self.domain.canonical_unit(a.LC)
+        return self.ring.ground_new(u)
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         return a.as_expr()
@@ -75,8 +86,16 @@ class PolynomialRing(Ring, CompositeDomain):
         """Convert SymPy's expression to `dtype`. """
         return self.ring.from_expr(a)
 
+    def from_ZZ(K1, a, K0):
+        """Convert a Python `int` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
+    def from_QQ(K1, a, K0):
+        """Convert a Python `Fraction` object to `dtype`. """
         return K1(K1.domain.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
@@ -103,9 +122,15 @@ class PolynomialRing(Ring, CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.domain.convert(a, K0))
 
+    def from_ComplexField(K1, a, K0):
+        """Convert a mpmath `mpf` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
     def from_AlgebraicField(K1, a, K0):
         """Convert an algebraic number to ``dtype``. """
-        if K1.domain == K0:
+        if K1.domain != K0:
+            a = K1.domain.convert_from(a, K0)
+        if a is not None:
             return K1.new(a)
 
     def from_PolynomialRing(K1, a, K0):
@@ -117,12 +142,25 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_FractionField(K1, a, K0):
         """Convert a rational function to ``dtype``. """
+        if K1.domain == K0:
+            return K1.ring.from_list([a])
+
         q, r = K0.numer(a).div(K0.denom(a))
 
         if r.is_zero:
             return K1.from_PolynomialRing(q, K0.field.ring.to_domain())
         else:
             return None
+
+    def from_GlobalPolynomialRing(K1, a, K0):
+        """Convert from old poly ring to ``dtype``. """
+        if K1.symbols == K0.gens:
+            ad = a.to_dict()
+            if K1.domain != K0.domain:
+                ad = {m: K1.domain.convert(c) for m, c in ad.items()}
+            return K1(ad)
+        elif a.is_ground and K0.domain == K1:
+            return K1.convert_from(a.to_list()[0], K0.domain)
 
     def get_field(self):
         """Returns a field associated with `self`. """

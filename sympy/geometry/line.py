@@ -17,28 +17,32 @@ Segment3D
 
 """
 
-from sympy import Expr
-from sympy.core import S, sympify
-from sympy.core.compatibility import ordered
 from sympy.core.containers import Tuple
-from sympy.core.decorators import deprecated
-from sympy.core.numbers import Rational, oo
+from sympy.core.evalf import N
+from sympy.core.expr import Expr
+from sympy.core.numbers import Rational, oo, Float
 from sympy.core.relational import Eq
-from sympy.core.symbol import _symbol, Dummy
+from sympy.core.singleton import S
+from sympy.core.sorting import ordered
+from sympy.core.symbol import _symbol, Dummy, uniquely_named_symbol
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
-from sympy.geometry.exceptions import GeometryError
-from sympy.geometry.util import intersection
+from sympy.functions.elementary.trigonometric import (_pi_coeff, acos, tan, atan2)
+from .entity import GeometryEntity, GeometrySet
+from .exceptions import GeometryError
+from .point import Point, Point3D
+from .util import find, intersection
 from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
-from sympy.sets import Intersection
+from sympy.sets.sets import Intersection
 from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import Undecidable, filldedent
 
-from .entity import GeometryEntity, GeometrySet
-from .point import Point, Point3D
+
+import random
 
 
 class LinearEntity(GeometrySet):
@@ -88,7 +92,7 @@ class LinearEntity(GeometrySet):
             return result
         else:
             raise Undecidable(
-                "can't decide whether '%s' contains '%s'" % (self, other))
+                "Cannot decide whether '%s' contains '%s'" % (self, other))
 
     def _span_test(self, other):
         """Test whether the point `other` lies in the positive span of `self`.
@@ -364,7 +368,7 @@ class LinearEntity(GeometrySet):
         Examples
         ========
 
-        >>> from sympy.geometry import Line
+        >>> from sympy import Line
         >>> a, b = (1, 1), (1, 3)
         >>> Line(a, b).direction
         Point2D(0, 2)
@@ -455,7 +459,7 @@ class LinearEntity(GeometrySet):
                 return [seg]
             elif st1 >= 0:  # st2 < 0:
                 return [Segment(ray.p1, seg.p1)]
-            elif st2 >= 0:  # st1 < 0:
+            else:  # st1 < 0 and st2 >= 0:
                 return [Segment(ray.p1, seg.p2)]
 
         def intersect_parallel_segments(seg1, seg2):
@@ -526,13 +530,38 @@ class LinearEntity(GeometrySet):
                 coeff = m_rref[0, 2]
                 line_intersection = l1.direction*coeff + self.p1
 
-                # if we're both lines, we can skip a containment check
+                # if both are lines, skip a containment check
                 if isinstance(self, Line) and isinstance(other, Line):
                     return [line_intersection]
 
                 if ((isinstance(self, Line) or
                      self.contains(line_intersection)) and
                         other.contains(line_intersection)):
+                    return [line_intersection]
+                if not self.atoms(Float) and not other.atoms(Float):
+                    # if it can fail when there are no Floats then
+                    # maybe the following parametric check should be
+                    # done
+                    return []
+                # floats may fail exact containment so check that the
+                # arbitrary points, when  equal, both give a
+                # non-negative parameter when the arbitrary point
+                # coordinates are equated
+                t, u = [Dummy(i) for i in 'tu']
+                tu = solve(self.arbitrary_point(t) - other.arbitrary_point(u),
+                    t, u, dict=True)[0]
+                def ok(p, l):
+                    if isinstance(l, Line):
+                        # p > -oo
+                        return True
+                    if isinstance(l, Ray):
+                        # p >= 0
+                        return p.is_nonnegative
+                    if isinstance(l, Segment):
+                        # 0 <= p <= 1
+                        return p.is_nonnegative and (1 - p).is_nonnegative
+                    raise ValueError("unexpected line type")
+                if ok(tu[t], self) and ok(tu[u], other):
                     return [line_intersection]
                 return []
             else:
@@ -779,23 +808,20 @@ class LinearEntity(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Line
-        >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
-        >>> l1 = Line(p1, p2)
-        >>> l2 = l1.perpendicular_line(p3)
-        >>> p3 in l2
-        True
-        >>> l1.is_perpendicular(l2)
-        True
         >>> from sympy import Point3D, Line3D
         >>> p1, p2, p3 = Point3D(0, 0, 0), Point3D(2, 3, 4), Point3D(-2, 2, 0)
-        >>> l1 = Line3D(p1, p2)
-        >>> l2 = l1.perpendicular_line(p3)
-        >>> p3 in l2
-        True
-        >>> l1.is_perpendicular(l2)
+        >>> L = Line3D(p1, p2)
+        >>> P = L.perpendicular_line(p3); P
+        Line3D(Point3D(-2, 2, 0), Point3D(4/29, 6/29, 8/29))
+        >>> L.is_perpendicular(P)
         True
 
+        In 3D the, the first point used to define the line is the point
+        through which the perpendicular was required to pass; the
+        second point is (arbitrarily) contained in the given line:
+
+        >>> P.p2 in L
+        True
         """
         p = Point(p, dim=self.ambient_dimension)
         if p in self:
@@ -962,6 +988,8 @@ class LinearEntity(GeometrySet):
                 return p1
             projected = other.__class__(p1, p2)
             projected = Intersection(self, projected)
+            if projected.is_empty:
+                return projected
             # if we happen to have intersected in only a point, return that
             if projected.is_FiniteSet and len(projected) == 1:
                 # projected is a set of size 1, so unpack it in `a`
@@ -1006,8 +1034,6 @@ class LinearEntity(GeometrySet):
         Point2D(3.2, 1.92)
 
         """
-        import random
-
         if seed is not None:
             rng = random.Random(seed)
         else:
@@ -1041,7 +1067,7 @@ class LinearEntity(GeometrySet):
         Examples
         ========
 
-        >>> from sympy.geometry import Point3D, Line3D
+        >>> from sympy import Point3D, Line3D
         >>> r1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
         >>> r2 = Line3D(Point3D(0, 0, 0), Point3D(0, 1, 0))
         >>> r1.bisectors(r2)
@@ -1094,7 +1120,7 @@ class Line(LinearEntity):
 
     p1 : Point
     p2 : Point
-    slope : sympy expression
+    slope : SymPy expression
     direction_ratio : list
     equation : equation of a line
 
@@ -1106,6 +1132,9 @@ class Line(LinearEntity):
     for `Line2D` and the `direction_ratio` argument is only relevant
     for `Line3D`.
 
+    The order of the points will define the direction of the line
+    which is used when calculating the angle between lines.
+
     See Also
     ========
 
@@ -1116,8 +1145,7 @@ class Line(LinearEntity):
     Examples
     ========
 
-    >>> from sympy import Point, Eq
-    >>> from sympy.geometry import Line, Segment
+    >>> from sympy import Line, Segment, Point, Eq
     >>> from sympy.abc import x, y, a, b
 
     >>> L = Line(Point(2,3), Point(3,5))
@@ -1154,17 +1182,28 @@ class Line(LinearEntity):
     Line2D(Point2D(0, -18), Point2D(1, -21))
     """
     def __new__(cls, *args, **kwargs):
-        from sympy.geometry.util import find
-
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
-            x = kwargs.get('x', 'x')
-            y = kwargs.get('y', 'y')
+            missing = uniquely_named_symbol('?', args)
+            if not kwargs:
+                x = 'x'
+                y = 'y'
+            else:
+                x = kwargs.pop('x', missing)
+                y = kwargs.pop('y', missing)
+            if kwargs:
+                raise ValueError('expecting only x and y as keywords')
+
             equation = args[0]
             if isinstance(equation, Eq):
                 equation = equation.lhs - equation.rhs
-            xin, yin = x, y
-            x = find(x, equation) or Dummy()
-            y = find(y, equation) or Dummy()
+
+            def find_or_missing(x):
+                try:
+                    return find(x, equation)
+                except ValueError:
+                    return missing
+            x = find_or_missing(x)
+            y = find_or_missing(y)
 
             a, b, c = linear_coeffs(equation, x, y)
 
@@ -1172,7 +1211,8 @@ class Line(LinearEntity):
                 return Line((0, -c/b), slope=-a/b)
             if a:
                 return Line((-c/a, 0), slope=oo)
-            raise ValueError('neither %s nor %s were found in the equation' % (xin, yin))
+
+            raise ValueError('not found in equation: %s' % (set('xy') - {x, y}))
 
         else:
             if len(args) > 0:
@@ -1266,10 +1306,6 @@ class Line(LinearEntity):
             return S.Zero
         return self.perpendicular_segment(other).length
 
-    @deprecated(useinstead="equals", issue=12860, deprecated_since_version="1.0")
-    def equal(self, other):
-        return self.equals(other)
-
     def equals(self, other):
         """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Line):
@@ -1342,8 +1378,7 @@ class Ray(LinearEntity):
     Examples
     ========
 
-    >>> from sympy import Point, pi
-    >>> from sympy.geometry import Ray
+    >>> from sympy import Ray, Point, pi
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r
     Ray2D(Point2D(2, 3), Point2D(3, 5))
@@ -1384,8 +1419,6 @@ class Ray(LinearEntity):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-        from sympy.core.evalf import N
-
         verts = (N(self.p1), N(self.p2))
         coords = ["{},{}".format(p.x, p.y) for p in verts]
         path = "M {} L {}".format(coords[0], " L ".join(coords[1:]))
@@ -1557,7 +1590,7 @@ class Segment(LinearEntity):
     Attributes
     ==========
 
-    length : number or sympy expression
+    length : number or SymPy expression
     midpoint : Point
 
     See Also
@@ -1577,8 +1610,7 @@ class Segment(LinearEntity):
     Examples
     ========
 
-    >>> from sympy import Point
-    >>> from sympy.geometry import Segment
+    >>> from sympy import Point, Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
     Segment2D(Point2D(1, 0), Point2D(1, 1))
     >>> s = Segment(Point(4, 3), Point(1, 1))
@@ -1653,7 +1685,7 @@ class Segment(LinearEntity):
                 # use the triangle inequality
                 d1, d2 = other - self.p1, other - self.p2
                 d = self.p2 - self.p1
-                # without the call to simplify, sympy cannot tell that an expression
+                # without the call to simplify, SymPy cannot tell that an expression
                 # like (a+b)*(a/2+b/2) is always non-negative.  If it cannot be
                 # determined, raise an Undecidable error
                 try:
@@ -1879,6 +1911,18 @@ class LinearEntity2D(LinearEntity):
         """Create a new Line perpendicular to this linear entity which passes
         through the point `p`.
 
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
+        >>> l1 = Line(p1, p2)
+        >>> l2 = l1.perpendicular_line(p3)
+        >>> p3 in l2
+        True
+        >>> l1.is_perpendicular(l2)
+        True
+
         Parameters
         ==========
 
@@ -1899,17 +1943,25 @@ class LinearEntity2D(LinearEntity):
 
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
-        >>> l1 = Line(p1, p2)
-        >>> l2 = l1.perpendicular_line(p3)
-        >>> p3 in l2
-        True
-        >>> l1.is_perpendicular(l2)
+        >>> L = Line(p1, p2)
+        >>> P = L.perpendicular_line(p3); P
+        Line2D(Point2D(-2, 2), Point2D(-5, 4))
+        >>> L.is_perpendicular(P)
         True
 
+        In 2D, the first point of the perpendicular line is the
+        point through which was required to pass; the second
+        point is arbitrarily chosen. To get a line that explicitly
+        uses a point in the line, create a line from the perpendicular
+        segment from the line to the point:
+
+        >>> Line(L.perpendicular_segment(p3))
+        Line2D(Point2D(-2, 2), Point2D(4/13, 6/13))
         """
         p = Point(p, dim=self.ambient_dimension)
         # any two lines in R^2 intersect, so blindly making
         # a line through p in an orthogonal direction will work
+        # and is faster than finding the projection point as in 3D
         return Line(p, p + self.direction.orthogonal_direction)
 
     @property
@@ -1919,7 +1971,7 @@ class LinearEntity2D(LinearEntity):
         Returns
         =======
 
-        slope : number or sympy expression
+        slope : number or SymPy expression
 
         See Also
         ========
@@ -1958,7 +2010,7 @@ class Line2D(LinearEntity2D, Line):
 
     p1 : Point
     pt : Point
-    slope : sympy expression
+    slope : SymPy expression
 
     See Also
     ========
@@ -1968,8 +2020,7 @@ class Line2D(LinearEntity2D, Line):
     Examples
     ========
 
-    >>> from sympy import Point
-    >>> from sympy.geometry import Line, Segment
+    >>> from sympy import Line, Segment, Point
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
     Line2D(Point2D(2, 3), Point2D(3, 5))
@@ -2033,8 +2084,6 @@ class Line2D(LinearEntity2D, Line):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-        from sympy.core.evalf import N
-
         verts = (N(self.p1), N(self.p2))
         coords = ["{},{}".format(p.x, p.y) for p in verts]
         path = "M {} L {}".format(coords[0], " L ".join(coords[1:]))
@@ -2094,7 +2143,7 @@ class Line2D(LinearEntity2D, Line):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         See Also
         ========
@@ -2152,8 +2201,7 @@ class Ray2D(LinearEntity2D, Ray):
     Examples
     ========
 
-    >>> from sympy import Point, pi
-    >>> from sympy.geometry import Ray
+    >>> from sympy import Point, pi, Ray
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r
     Ray2D(Point2D(2, 3), Point2D(3, 5))
@@ -2177,7 +2225,6 @@ class Ray2D(LinearEntity2D, Ray):
             try:
                 p2 = Point(pt, dim=2)
             except (NotImplementedError, TypeError, ValueError):
-                from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
                     The 2nd argument was not a valid Point; if
                     it was meant to be an angle it should be
@@ -2186,7 +2233,8 @@ class Ray2D(LinearEntity2D, Ray):
                 raise ValueError('A Ray requires two distinct points.')
         elif angle is not None and pt is None:
             # we need to know if the angle is an odd multiple of pi/2
-            c = pi_coeff(sympify(angle))
+            angle = sympify(angle)
+            c = _pi_coeff(angle)
             p2 = None
             if c is not None:
                 if c.is_Rational:
@@ -2338,7 +2386,7 @@ class Segment2D(LinearEntity2D, Segment):
     Attributes
     ==========
 
-    length : number or sympy expression
+    length : number or SymPy expression
     midpoint : Point
     area  :  0
 
@@ -2350,8 +2398,7 @@ class Segment2D(LinearEntity2D, Segment):
     Examples
     ========
 
-    >>> from sympy import Point
-    >>> from sympy.geometry import Segment
+    >>> from sympy import Point, Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
     Segment2D(Point2D(1, 0), Point2D(1, 1))
     >>> s = Segment(Point(4, 3), Point(1, 1)); s
@@ -2388,8 +2435,6 @@ class Segment2D(LinearEntity2D, Segment):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-        from sympy.core.evalf import N
-
         verts = (N(self.p1), N(self.p2))
         coords = ["{},{}".format(p.x, p.y) for p in verts]
         path = "M {} L {}".format(coords[0], " L ".join(coords[1:]))
@@ -2497,15 +2542,14 @@ class Line3D(LinearEntity3D, Line):
     Examples
     ========
 
-    >>> from sympy import Point3D
-    >>> from sympy.geometry import Line3D
+    >>> from sympy import Line3D, Point3D
     >>> L = Line3D(Point3D(2, 3, 4), Point3D(3, 5, 1))
     >>> L
     Line3D(Point3D(2, 3, 4), Point3D(3, 5, 1))
     >>> L.points
     (Point3D(2, 3, 4), Point3D(3, 5, 1))
     """
-    def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
+    def __new__(cls, p1, pt=None, direction_ratio=(), **kwargs):
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
                 raise ValueError('if p1 is a LinearEntity, pt must be None.')
@@ -2535,6 +2579,9 @@ class Line3D(LinearEntity3D, Line):
             The name to use for the y-axis, default value is 'y'.
         z : str, optional
             The name to use for the z-axis, default value is 'z'.
+        k : str, optional
+            .. deprecated:: 1.2
+               The ``k`` flag is deprecated. It does nothing.
 
         Returns
         =======
@@ -2555,11 +2602,14 @@ class Line3D(LinearEntity3D, Line):
 
         """
         if k is not None:
-            SymPyDeprecationWarning(
-                feature="equation() no longer needs 'k'",
-                issue=13742,
-                deprecated_since_version="1.2").warn()
-        from sympy import solve
+            sympy_deprecation_warning(
+                """
+                The 'k' argument to Line3D.equation() is deprecated. Is
+                currently has no effect, so it may be omitted.
+                """,
+                deprecated_since_version="1.2",
+                active_deprecations_target='deprecated-line3d-equation-k',
+            )
         x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, 'k')]
         p1, p2 = self.points
         d1, d2, d3 = p1.direction_ratio(p2)
@@ -2604,8 +2654,7 @@ class Ray3D(LinearEntity3D, Ray):
     Examples
     ========
 
-    >>> from sympy import Point3D
-    >>> from sympy.geometry import Ray3D
+    >>> from sympy import Point3D, Ray3D
     >>> r = Ray3D(Point3D(2, 3, 4), Point3D(3, 5, 0))
     >>> r
     Ray3D(Point3D(2, 3, 4), Point3D(3, 5, 0))
@@ -2621,8 +2670,7 @@ class Ray3D(LinearEntity3D, Ray):
     [1, 2, -4]
 
     """
-    def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
-        from sympy.utilities.misc import filldedent
+    def __new__(cls, p1, pt=None, direction_ratio=(), **kwargs):
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
                 raise ValueError('If p1 is a LinearEntity, pt must be None')
@@ -2752,7 +2800,7 @@ class Segment3D(LinearEntity3D, Segment):
     Attributes
     ==========
 
-    length : number or sympy expression
+    length : number or SymPy expression
     midpoint : Point3D
 
     See Also
@@ -2763,8 +2811,7 @@ class Segment3D(LinearEntity3D, Segment):
     Examples
     ========
 
-    >>> from sympy import Point3D
-    >>> from sympy.geometry import Segment3D
+    >>> from sympy import Point3D, Segment3D
     >>> Segment3D((1, 0, 0), (1, 1, 1)) # tuples are interpreted as pts
     Segment3D(Point3D(1, 0, 0), Point3D(1, 1, 1))
     >>> s = Segment3D(Point3D(4, 3, 9), Point3D(1, 1, 7)); s

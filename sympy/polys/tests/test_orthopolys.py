@@ -1,6 +1,9 @@
 """Tests for efficient functions for generating orthogonal polynomials. """
 
-from sympy import Poly, S, Rational as Q
+from sympy.core.numbers import Rational as Q
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.polys.polytools import Poly
 from sympy.testing.pytest import raises
 
 from sympy.polys.orthopolys import (
@@ -9,8 +12,10 @@ from sympy.polys.orthopolys import (
     chebyshevt_poly,
     chebyshevu_poly,
     hermite_poly,
+    hermite_prob_poly,
     legendre_poly,
     laguerre_poly,
+    spherical_bessel_fn,
 )
 
 from sympy.abc import x, a, b
@@ -100,6 +105,23 @@ def test_hermite_poly():
     assert hermite_poly(1, polys=True) == Poly(2*x)
 
 
+def test_hermite_prob_poly():
+    raises(ValueError, lambda: hermite_prob_poly(-1, x))
+
+    assert hermite_prob_poly(1, x, polys=True) == Poly(x)
+
+    assert hermite_prob_poly(0, x) == 1
+    assert hermite_prob_poly(1, x) == x
+    assert hermite_prob_poly(2, x) == x**2 - 1
+    assert hermite_prob_poly(3, x) == x**3 - 3*x
+    assert hermite_prob_poly(4, x) == x**4 - 6*x**2 + 3
+    assert hermite_prob_poly(5, x) == x**5 - 10*x**3 + 15*x
+    assert hermite_prob_poly(6, x) == x**6 - 15*x**4 + 45*x**2 - 15
+
+    assert hermite_prob_poly(1).dummy_eq(x)
+    assert hermite_prob_poly(1, polys=True) == Poly(x)
+
+
 def test_legendre_poly():
     raises(ValueError, lambda: legendre_poly(-1, x))
 
@@ -141,3 +163,11 @@ def test_laguerre_poly():
 
     assert laguerre_poly(1).dummy_eq(-x + 1)
     assert laguerre_poly(1, polys=True) == Poly(-x + 1)
+
+
+def test_spherical_bessel_fn():
+    x, z = symbols("x z")
+    assert spherical_bessel_fn(1, z) == 1/z**2
+    assert spherical_bessel_fn(2, z) == -1/z + 3/z**3
+    assert spherical_bessel_fn(3, z) == -6/z**2 + 15/z**4
+    assert spherical_bessel_fn(4, z) == 1/z - 45/z**3 + 105/z**5

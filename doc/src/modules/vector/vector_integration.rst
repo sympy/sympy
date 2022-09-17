@@ -18,7 +18,7 @@ We define a coordinate system and make necesssary imports for examples.
 >>> from sympy.vector import CoordSys3D, ParametricRegion, ImplicitRegion, vector_integrate
 >>> from sympy.abc import r, x, y, z, theta, phi
 >>> C = CoordSys3D('C')
-    
+
 Calculation of Perimeter, Surface Area, and Volume
 ==================================================
 
@@ -30,16 +30,16 @@ We can also define a circle using its implicit equation.
 
 >>> implicit_circle = ImplicitRegion((x, y), x**2 + y**2 - 4)
 
-The perimeter of a figure is equal to the absolute value of its integral over a unit scalar field. 
+The perimeter of a figure is equal to the absolute value of its integral over a unit scalar field.
 
 >>> vector_integrate(1, param_circle)
 8*pi
 >>> vector_integrate(1, implicit_circle)
-8*pi
+4*pi
 
 Suppose a user wants to calculate the perimeter of a triangle. Determining the parametric representation of a triangle can be difficult. Instead, the user can use an object of :class:`~sympy.geometry.polygon.Polygon` class in the geometry module.
 
->>> from sympy.geometry import Point, Polygon 
+>>> from sympy.geometry import Point, Polygon
 >>> triangle = Polygon(Point(1, 2), (3, 5), (1,6))
 >>> vector_integrate(1, triangle)
 sqrt(5) + sqrt(13) + 4
@@ -70,8 +70,8 @@ pi*a**4*h/2
 
 Calculation of Flux
 ===================
-                   
-1. Consider a region of space in which there is a constant vectorfield 
+
+1. Consider a region of space in which there is a constant vectorfield
 :math:`E(x, y, z) = a\mathbf{\hat{k}}`.
 A  hemisphere of radius r  lies on the x-y plane. What is the flux of the field through the sphere?
 
@@ -81,15 +81,15 @@ A  hemisphere of radius r  lies on the x-y plane. What is the flux of the field 
 >>> flux
 pi*a*r**2
 
-2. Consider  a  region  of  space  in  which  there  is  a  vector  field 
-:math:`E(x, y, z) = x^2 \mathbf{\hat{k}}` above the x-y plane, and a field 
+2. Consider  a  region  of  space  in  which  there  is  a  vector  field
+:math:`E(x, y, z) = x^2 \mathbf{\hat{k}}` above the x-y plane, and a field
 :math:`E(x, y, z) = y^2 \mathbf{\hat{k}}` below the x-y plane. What is the flux of that vector field through a cube of side length L with its center at the origin?”
 
 The field is parallel to the z-axis so only the top and bottom face of the box will contribute to flux.
 
 >>> L = symbols('L', positive=True)
->>> top_face = ParametricRegion((x, y, L/2), (x, -L/2, L/2), (y, -L/2, L/2)) 
->>> bottom_face = ParametricRegion((x, y, -L/2), (x, -L/2, L/2), (y, -L/2, L/2)) 
+>>> top_face = ParametricRegion((x, y, L/2), (x, -L/2, L/2), (y, -L/2, L/2))
+>>> bottom_face = ParametricRegion((x, y, -L/2), (x, -L/2, L/2), (y, -L/2, L/2))
 >>> flux = vector_integrate(C.x**2*C.k, top_face) + vector_integrate(C.y**2*C.k, bottom_face)
 >>> flux
 L**4/6

@@ -13,7 +13,7 @@ TODO:
 """
 
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 class stringPict:
     """An ASCII picture.
@@ -377,18 +377,24 @@ class prettyForm(stringPict):
         stringPict.__init__(self, s, baseline)
         self.binding = binding
         if unicode is not None:
-            SymPyDeprecationWarning(
-                feature="``unicode`` argument to ``prettyForm``",
-                useinstead="the ``s`` argument",
-                deprecated_since_version="1.7").warn()
+            sympy_deprecation_warning(
+                """
+                The unicode argument to prettyForm is deprecated. Only the s
+                argument (the first positional argument) should be passed.
+                """,
+                deprecated_since_version="1.7",
+                active_deprecations_target="deprecated-pretty-printing-functions")
         self._unicode = unicode or s
 
     @property
     def unicode(self):
-        SymPyDeprecationWarning(
-            feature="``prettyForm.unicode`` attribute",
-            useinstead="``stringPrict.s`` attribute",
-            deprecated_since_version="1.7").warn()
+        sympy_deprecation_warning(
+            """
+            The prettyForm.unicode attribute is deprecated. Use the
+            prettyForm.s attribute instead.
+            """,
+            deprecated_since_version="1.7",
+            active_deprecations_target="deprecated-pretty-printing-functions")
         return self._unicode
 
     # Note: code to handle subtraction is in _print_Add
@@ -439,18 +445,21 @@ class prettyForm(stringPict):
         }
 
         if len(others) == 0:
-            return self # We aren't actually multiplying... So nothing to do here.
-        args = self
-        if args.binding > prettyForm.MUL:
-            arg = stringPict(*args.parens())
-        result = [args]
+            return self  # We aren't actually multiplying... So nothing to do here.
+
+        # add parens on args that need them
+        arg = self
+        if arg.binding > prettyForm.MUL and arg.binding != prettyForm.NEG:
+            arg = stringPict(*arg.parens())
+        result = [arg]
         for arg in others:
             if arg.picture[0] not in quantity.values():
                 result.append(xsym('*'))
             #add parentheses for weak binders
-            if arg.binding > prettyForm.MUL:
+            if arg.binding > prettyForm.MUL and arg.binding != prettyForm.NEG:
                 arg = stringPict(*arg.parens())
             result.append(arg)
+
         len_res = len(result)
         for i in range(len_res):
             if i < len_res - 1 and result[i] == '-1' and result[i + 1] == xsym('*'):

@@ -1,3 +1,5 @@
+.. _simplify-docs:
+
 ========
 Simplify
 ========
@@ -145,14 +147,6 @@ Hypergeometric Function Expansion
 hyperexpand
 ^^^^^^^^^^^
 .. autofunction:: hyperexpand
-
-Traversal Tools
----------------
-.. module:: sympy.simplify.traversaltools
-
-use
-^^^
-.. autofunction:: use
 
 EPath Tools
 -----------

@@ -1,8 +1,13 @@
 """Primitive circuit operations on quantum circuits."""
 
-from sympy import Symbol, Tuple, Mul, sympify, default_sort_key
+from functools import reduce
+
+from sympy.core.sorting import default_sort_key
+from sympy.core.containers import Tuple
+from sympy.core.mul import Mul
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.utilities import numbered_symbols
-from sympy.core.compatibility import reduce
 from sympy.physics.quantum.gate import Gate
 
 __all__ = [
@@ -145,7 +150,7 @@ def replace_subcircuit(circuit, subcircuit, replace=None, pos=0):
 
     If multiple instances of subcircuit exists, the first instance is
     replaced.  The position to being searching from (if different from
-    0) may be optionally given.  If subcircuit can't be found, circuit
+    0) may be optionally given.  If subcircuit cannot be found, circuit
     is returned.
 
     Parameters
@@ -299,7 +304,7 @@ def convert_to_symbolic_indices(seq, start=None, gen=None, qubit_map=None):
             ndx_map.update(new_map)
             inv_map = create_inverse_map(ndx_map)
 
-        elif isinstance(item, tuple) or isinstance(item, Tuple):
+        elif isinstance(item, (tuple, Tuple)):
             result = convert_to_symbolic_indices(item,
                                                  qubit_map=ndx_map,
                                                  start=cur_ndx,
@@ -364,7 +369,7 @@ def convert_to_real_indices(seq, qubit_map):
         if isinstance(item, Gate):
             real_item = convert_to_real_indices(item.args, qubit_map)
 
-        elif isinstance(item, tuple) or isinstance(item, Tuple):
+        elif isinstance(item, (tuple, Tuple)):
             real_item = convert_to_real_indices(item, qubit_map)
 
         else:
@@ -401,7 +406,7 @@ def random_reduce(circuit, gate_ids, seed=None):
         given by the list
 
     """
-    from sympy.testing.randtest import _randrange
+    from sympy.core.random import _randrange
 
     if not gate_ids:
         return circuit
@@ -455,7 +460,7 @@ def random_insert(circuit, choices, seed=None):
     Indices for insertion should be [0, n] if n is the length of the
     circuit.
     """
-    from sympy.testing.randtest import _randrange
+    from sympy.core.random import _randrange
 
     if not choices:
         return circuit

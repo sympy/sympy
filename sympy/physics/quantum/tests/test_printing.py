@@ -3,7 +3,7 @@
 TODO:
 * Address Issue 2251, printing of spin states
 """
-from typing import Dict, Any
+from typing import Dict as tDict, Any
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.cg import CG, Wigner3j, Wigner6j, Wigner9j
@@ -21,8 +21,13 @@ from sympy.physics.quantum.state import Bra, Ket, TimeDepBra, TimeDepKet
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.sho1d import RaisingOp
 
-from sympy import Derivative, Function, Interval, Matrix, Pow, S, symbols, Symbol, oo
-from sympy.core.compatibility import exec_
+from sympy.core.function import (Derivative, Function)
+from sympy.core.numbers import oo
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.matrices.dense import Matrix
+from sympy.sets.sets import Interval
 from sympy.testing.pytest import XFAIL
 
 # Imports used in srepr strings
@@ -35,16 +40,16 @@ from sympy.printing.latex import latex
 MutableDenseMatrix = Matrix
 
 
-ENV = {}  # type: Dict[str, Any]
-exec_('from sympy import *', ENV)
-exec_('from sympy.physics.quantum import *', ENV)
-exec_('from sympy.physics.quantum.cg import *', ENV)
-exec_('from sympy.physics.quantum.spin import *', ENV)
-exec_('from sympy.physics.quantum.hilbert import *', ENV)
-exec_('from sympy.physics.quantum.qubit import *', ENV)
-exec_('from sympy.physics.quantum.qexpr import *', ENV)
-exec_('from sympy.physics.quantum.gate import *', ENV)
-exec_('from sympy.physics.quantum.constants import *', ENV)
+ENV = {}  # type: tDict[str, Any]
+exec('from sympy import *', ENV)
+exec('from sympy.physics.quantum import *', ENV)
+exec('from sympy.physics.quantum.cg import *', ENV)
+exec('from sympy.physics.quantum.spin import *', ENV)
+exec('from sympy.physics.quantum.hilbert import *', ENV)
+exec('from sympy.physics.quantum.qubit import *', ENV)
+exec('from sympy.physics.quantum.qexpr import *', ENV)
+exec('from sympy.physics.quantum.gate import *', ENV)
+exec('from sympy.physics.quantum.constants import *', ENV)
 
 
 def sT(expr, string):
@@ -115,7 +120,8 @@ C       \n\
 """
     assert pretty(cg) == ascii_str
     assert upretty(cg) == ucode_str
-    assert latex(cg) == r'C^{5,6}_{1,2,3,4}'
+    assert latex(cg) == 'C^{5,6}_{1,2,3,4}'
+    assert latex(cg ** 2) == R'\left(C^{5,6}_{1,2,3,4}\right)^{2}'
     sT(cg, "CG(Integer(1), Integer(2), Integer(3), Integer(4), Integer(5), Integer(6))")
     assert str(wigner3j) == 'Wigner3j(1, 2, 3, 4, 5, 6)'
     ascii_str = \
@@ -296,7 +302,7 @@ CNOT   \n\
 """
     assert pretty(g3) == ascii_str
     assert upretty(g3) == ucode_str
-    assert latex(g3) == r'CNOT_{1,0}'
+    assert latex(g3) == r'\text{CNOT}_{1,0}'
     sT(g3, "CNotGate(Integer(1),Integer(0))")
     ascii_str = \
 """\
@@ -317,7 +323,7 @@ U((0,),Matrix([\n\
     assert pretty(g4) == ascii_str
     assert upretty(g4) == ucode_str
     assert latex(g4) == r'U_{0}'
-    sT(g4, "UGate(Tuple(Integer(0)),MutableDenseMatrix([[Symbol('a'), Symbol('b')], [Symbol('c'), Symbol('d')]]))")
+    sT(g4, "UGate(Tuple(Integer(0)),ImmutableDenseMatrix([[Symbol('a'), Symbol('b')], [Symbol('c'), Symbol('d')]]))")
 
 
 def test_hilbert():

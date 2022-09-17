@@ -11,12 +11,16 @@ Methods for computing and manipulating Formal Power Series.
 .. autofunction:: sympy.series.formal::compute_fps
 
 .. autoclass:: sympy.series.formal::FormalPowerSeriesCompose
+   :members:
 
 .. autoclass:: sympy.series.formal::FormalPowerSeriesInverse
+   :members:
 
 .. autoclass:: sympy.series.formal::FormalPowerSeriesProduct
+   :members:
 
 .. autoclass:: sympy.series.formal::FiniteFormalPowerSeries
+   :members:
 
 
 Rational Algorithm

@@ -2,17 +2,6 @@
 Iterables
 =========
 
-cartes
-------
-
-Returns the cartesian product of sequences as a generator.
-
-Examples::
-    >>> from sympy.utilities.iterables import cartes
-    >>> list(cartes([1,2,3], 'ab'))
-    [(1, 'a'), (1, 'b'), (2, 'a'), (2, 'b'), (3, 'a'), (3, 'b')]
-
-
 
 variations
 ----------
@@ -40,7 +29,15 @@ functions to generate partitions that can be used as low-level tools for
 routines:  ``partitions`` and ``multiset_partitions``. The former gives
 integer partitions, and the latter gives enumerated partitions of elements.
 There is also a routine ``kbins`` that will give a variety of permutations
-of partions.
+of partions. And to obtain partitions as a list instead of a dictionary, there
+is the ``ordered_partition`` function which is quite fast. Finally, to simply
+obtain a count of the number of partitions without enumerating them, there
+is the ``nT`` function.
+
+See Also
+========
+
+sympy.utilities.iterables.ordered_partitions, sympy.functions.combinatorial.numbers.nT
 
 partitions::
 

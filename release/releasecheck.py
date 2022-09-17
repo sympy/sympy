@@ -3,18 +3,16 @@
 from os.path import join, basename, normpath
 from subprocess import check_call
 
-def main(version, outdir):
+def main(version, prevversion, outdir):
     check_version(version, outdir)
-    run_stage(['bin/mailmap_update.py'])
-    run_stage(['bin/authors_update.py'])
+    run_stage(['bin/mailmap_check.py', '--update-authors'])
     run_stage(['mkdir', '-p', outdir])
     build_release_files('bdist_wheel', 'sympy-%s-py3-none-any.whl', outdir, version)
     build_release_files('sdist', 'sympy-%s.tar.gz', outdir, version)
     run_stage(['release/compare_tar_against_git.py', join(outdir, 'sympy-%s.tar.gz' % (version,)), '.'])
-    run_stage(['release/test_install.py', version, outdir])
     run_stage(['release/build_docs.py', version, outdir])
     run_stage(['release/sha256.py', version, outdir])
-    run_stage(['release/authors.py', version, outdir])
+    run_stage(['release/authors.py', version, prevversion, outdir])
 
 
 def green(text):

@@ -8,16 +8,19 @@ from .util import new
 # Functions that create rules
 
 def rm_id(isid, new=new):
-    """ Create a rule to remove identities
+    """ Create a rule to remove identities.
 
-    isid - fn :: x -> Bool  --- whether or not this element is an identity
+    isid - fn :: x -> Bool  --- whether or not this element is an identity.
+
+    Examples
+    ========
 
     >>> from sympy.strategies import rm_id
-    >>> from sympy import Basic
+    >>> from sympy import Basic, S
     >>> remove_zeros = rm_id(lambda x: x==0)
-    >>> remove_zeros(Basic(1, 0, 2))
+    >>> remove_zeros(Basic(S(1), S(0), S(2)))
     Basic(1, 2)
-    >>> remove_zeros(Basic(0, 0)) # If only identites then we keep one
+    >>> remove_zeros(Basic(S(0), S(0))) # If only identites then we keep one
     Basic(0)
 
     See Also:
@@ -37,7 +40,10 @@ def rm_id(isid, new=new):
     return ident_remove
 
 def glom(key, count, combine):
-    """ Create a rule to conglomerate identical args
+    """ Create a rule to conglomerate identical args.
+
+    Examples
+    ========
 
     >>> from sympy.strategies import glom
     >>> from sympy import Add
@@ -73,12 +79,15 @@ def glom(key, count, combine):
     return conglomerate
 
 def sort(key, new=new):
-    """ Create a rule to sort by a key function
+    """ Create a rule to sort by a key function.
+
+    Examples
+    ========
 
     >>> from sympy.strategies import sort
-    >>> from sympy import Basic
+    >>> from sympy import Basic, S
     >>> sort_rl = sort(str)
-    >>> sort_rl(Basic(3, 1, 2))
+    >>> sort_rl(Basic(S(3), S(1), S(2)))
     Basic(1, 2, 3)
     """
 
@@ -125,8 +134,8 @@ def unpack(expr):
     """ Rule to unpack singleton args
 
     >>> from sympy.strategies import unpack
-    >>> from sympy import Basic
-    >>> unpack(Basic(2))
+    >>> from sympy import Basic, S
+    >>> unpack(Basic(S(2)))
     2
     """
     if len(expr.args) == 1:
@@ -146,7 +155,10 @@ def flatten(expr, new=new):
     return new(expr.__class__, *args)
 
 def rebuild(expr):
-    """ Rebuild a SymPy tree
+    """ Rebuild a SymPy tree.
+
+    Explanation
+    ===========
 
     This function recursively calls constructors in the expression tree.
     This forces canonicalization and removes ugliness introduced by the use of

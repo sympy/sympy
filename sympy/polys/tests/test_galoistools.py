@@ -33,7 +33,8 @@ from sympy.polys.polyerrors import (
 from sympy.polys import polyconfig as config
 
 from sympy.polys.domains import ZZ
-from sympy import pi, nextprime
+from sympy.core.numbers import pi
+from sympy.ntheory.generate import nextprime
 from sympy.testing.pytest import raises
 
 
@@ -617,6 +618,13 @@ def test_gf_edf():
 
     assert gf_edf_zassenhaus(f, 2, 3, ZZ) == g
     assert gf_edf_shoup(f, 2, 3, ZZ) == g
+
+
+def test_issue_23174():
+    f = ZZ.map([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    g = ZZ.map([[1, 0, 0, 1, 1, 1, 0, 0, 1], [1, 1, 1, 0, 1, 0, 1, 1, 1]])
+
+    assert gf_edf_zassenhaus(f, 8, 2, ZZ) == g
 
 
 def test_gf_factor():

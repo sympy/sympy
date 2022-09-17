@@ -9,8 +9,6 @@ import timeit
 
 from inspect import getsource
 
-from sympy.core.compatibility import exec_
-
 
 # from IPython.Magic.magic_timeit
 units = ["s", "ms", "us", "ns"]
@@ -50,8 +48,8 @@ class Timer(timeit.Timer):
         self.src = src  # Save for traceback display
         code = compile(src, timeit.dummy_src_name, "exec")
         ns = {}
-        #exec code in globals(), ns      -- original timeit code
-        exec_(code, globals, ns)  # -- we use caller-provided globals instead
+        #exec(code, globals(), ns)      -- original timeit code
+        exec(code, globals, ns)  # -- we use caller-provided globals instead
         self.inner = ns["inner"]
 
 

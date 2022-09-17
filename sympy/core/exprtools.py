@@ -1,22 +1,25 @@
 """Tools for manipulating of large commutative expressions. """
 
-from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
-from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.power import Pow
-from sympy.core.basic import Basic, preorder_traversal
-from sympy.core.expr import Expr
-from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, Integer, Number, I
-from sympy.core.singleton import S
-from sympy.core.symbol import Dummy
-from sympy.core.coreerrors import NonCommutativeExpression
-from sympy.core.containers import Tuple, Dict
-from sympy.utilities import default_sort_key
+from .add import Add
+from .mul import Mul, _keep_coeff
+from .power import Pow
+from .basic import Basic
+from .expr import Expr
+from .function import expand_power_exp
+from .sympify import sympify
+from .numbers import Rational, Integer, Number, I
+from .singleton import S
+from .sorting import default_sort_key, ordered
+from .symbol import Dummy
+from .traversal import preorder_traversal
+from .coreerrors import NonCommutativeExpression
+from .containers import Tuple, Dict
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, ordered)
+        variations, iterable, is_sequence)
 
 from collections import defaultdict
+from typing import Tuple as tTuple
 
 
 _eps = Dummy(positive=True)
@@ -74,27 +77,27 @@ def _monotonic_sign(self):
         s = self
         if s.is_prime:
             if s.is_odd:
-                return S(3)
+                return Integer(3)
             else:
-                return S(2)
+                return Integer(2)
         elif s.is_composite:
             if s.is_odd:
-                return S(9)
+                return Integer(9)
             else:
-                return S(4)
+                return Integer(4)
         elif s.is_positive:
             if s.is_even:
                 if s.is_prime is False:
-                    return S(4)
+                    return Integer(4)
                 else:
-                    return S(2)
+                    return Integer(2)
             elif s.is_integer:
                 return S.One
             else:
                 return _eps
         elif s.is_extended_negative:
             if s.is_even:
-                return S(-2)
+                return Integer(-2)
             elif s.is_integer:
                 return S.NegativeOne
             else:
@@ -112,7 +115,7 @@ def _monotonic_sign(self):
             from sympy.polys.polyerrors import PolynomialError
             x = free.pop()
             x0 = _monotonic_sign(x)
-            if x0 == _eps or x0 == -_eps:
+            if x0 in (_eps, -_eps):
                 x0 = S.Zero
             if x0 is not None:
                 d = self.diff(x)
@@ -124,7 +127,8 @@ def _monotonic_sign(self):
                     except (PolynomialError, NotImplementedError):
                         currentroots = [r for r in roots(d, x) if r.is_extended_real]
                 y = self.subs(x, x0)
-                if x.is_nonnegative and all(r <= x0 for r in currentroots):
+                if x.is_nonnegative and all(
+                        (r - x0).is_nonpositive for r in currentroots):
                     if y.is_nonnegative and d.is_positive:
                         if y:
                             return y if y.is_positive else Dummy('pos', positive=True)
@@ -135,7 +139,8 @@ def _monotonic_sign(self):
                             return y if y.is_negative else Dummy('neg', negative=True)
                         else:
                             return Dummy('npos', nonpositive=True)
-                elif x.is_nonpositive and all(r >= x0 for r in currentroots):
+                elif x.is_nonpositive and all(
+                        (r - x0).is_nonnegative for r in currentroots):
                     if y.is_nonnegative and d.is_negative:
                         if y:
                             return Dummy('pos', positive=True)
@@ -209,32 +214,23 @@ def _monotonic_sign(self):
             return rv.subs(_eps, 0)
 
 
-def decompose_power(expr):
+def decompose_power(expr: Expr) -> tTuple[Expr, int]:
     """
     Decompose power into symbolic base and integer exponent.
-
-    Explanation
-    ===========
-
-    This is strictly only valid if the exponent from which
-    the integer is extracted is itself an integer or the
-    base is positive. These conditions are assumed and not
-    checked here.
 
     Examples
     ========
 
     >>> from sympy.core.exprtools import decompose_power
     >>> from sympy.abc import x, y
+    >>> from sympy import exp
 
     >>> decompose_power(x)
     (x, 1)
     >>> decompose_power(x**2)
     (x, 2)
-    >>> decompose_power(x**(2*y))
-    (x**y, 2)
-    >>> decompose_power(x**(2*y/3))
-    (x**(y/3), 2)
+    >>> decompose_power(exp(2*y/3))
+    (exp(y/3), 2)
 
     """
     base, exp = expr.as_base_exp()
@@ -242,47 +238,47 @@ def decompose_power(expr):
     if exp.is_Number:
         if exp.is_Rational:
             if not exp.is_Integer:
-                base = Pow(base, Rational(1, exp.q))
-
-            exp = exp.p
+                base = Pow(base, Rational(1, exp.q))  # type: ignore
+            e = exp.p  # type: ignore
         else:
-            base, exp = expr, 1
+            base, e = expr, 1
     else:
         exp, tail = exp.as_coeff_Mul(rational=True)
 
         if exp is S.NegativeOne:
-            base, exp = Pow(base, tail), -1
+            base, e = Pow(base, tail), -1
         elif exp is not S.One:
-            tail = _keep_coeff(Rational(1, exp.q), tail)
-            base, exp = Pow(base, tail), exp.p
+            # todo: after dropping python 3.7 support, use overload and Literal
+            #  in as_coeff_Mul to make exp Rational, and remove these 2 ignores
+            tail = _keep_coeff(Rational(1, exp.q), tail)  # type: ignore
+            base, e = Pow(base, tail), exp.p  # type: ignore
         else:
-            base, exp = expr, 1
+            base, e = expr, 1
 
-    return base, exp
+    return base, e
 
 
-def decompose_power_rat(expr):
+def decompose_power_rat(expr: Expr) -> tTuple[Expr, Rational]:
     """
-    Decompose power into symbolic base and rational exponent.
+    Decompose power into symbolic base and rational exponent;
+    if the exponent is not a Rational, then separate only the
+    integer coefficient.
+
+    Examples
+    ========
+
+    >>> from sympy.core.exprtools import decompose_power_rat
+    >>> from sympy.abc import x
+    >>> from sympy import sqrt, exp
+
+    >>> decompose_power_rat(sqrt(x))
+    (x, 1/2)
+    >>> decompose_power_rat(exp(-3*x/2))
+    (exp(x/2), -3)
 
     """
-    base, exp = expr.as_base_exp()
-
-    if exp.is_Number:
-        if not exp.is_Rational:
-            base, exp = expr, 1
-    else:
-        exp, tail = exp.as_coeff_Mul(rational=True)
-
-        if exp is S.NegativeOne:
-            base, exp = Pow(base, tail), -1
-        elif exp is not S.One:
-            tail = _keep_coeff(Rational(1, exp.q), tail)
-            base, exp = Pow(base, tail), exp.p
-        else:
-            base, exp = expr, 1
-
-    return base, exp
+    _ = base, exp = expr.as_base_exp()
+    return _ if exp.is_Rational else decompose_power(expr)
 
 
 class Factors:
@@ -325,7 +321,7 @@ class Factors:
             factors = S(factors)
         if isinstance(factors, Factors):
             factors = factors.factors.copy()
-        elif factors is None or factors is S.One:
+        elif factors in (None, S.One):
             factors = {}
         elif factors is S.Zero or factors == 0:
             factors = {S.Zero: S.One}
@@ -363,7 +359,7 @@ class Factors:
                     factors[q] = (factors[q] if q in factors else S.Zero) - factors[f]
                     factors.pop(f)
             if i:
-                factors[I] = S.One*i
+                factors[I] = factors.get(I, S.Zero) + i
             if nc:
                 factors[Mul(*nc, evaluate=False)] = S.One
         else:
@@ -371,10 +367,7 @@ class Factors:
 
             # tidy up -/+1 and I exponents if Rational
 
-            handle = []
-            for k in factors:
-                if k is I or k in (-1, 1):
-                    handle.append(k)
+            handle = [k for k in factors if k is I or k in (-1, 1)]
             if handle:
                 i1 = S.One
                 for k in handle:
@@ -388,9 +381,7 @@ class Factors:
                         elif a is I:
                             factors[I] = S.One
                         elif a.is_Pow:
-                            if S.NegativeOne not in factors:
-                                factors[S.NegativeOne] = S.Zero
-                            factors[S.NegativeOne] += a.exp
+                            factors[a.base] = factors.get(a.base, S.Zero) + a.exp
                         elif a == 1:
                             factors[a] = S.One
                         elif a == -1:
@@ -600,7 +591,7 @@ class Factors:
 
         factor_terms can clean up such Rational-bases powers:
 
-        >>> from sympy.core.exprtools import factor_terms
+        >>> from sympy import factor_terms
         >>> n, d = Factors(2**(2*x + 2)).div(S(8))
         >>> n.as_expr()/d.as_expr()
         2**(2*x + 2)/8
@@ -1013,7 +1004,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     Examples
     ========
 
-    >>> from sympy.core import gcd_terms
+    >>> from sympy import gcd_terms
     >>> from sympy.abc import x, y
 
     >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
@@ -1103,6 +1094,8 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         # don't treat internal args like terms of an Add
         if not isinstance(a, Expr):
             if isinstance(a, Basic):
+                if not a.args:
+                    return a
                 return a.func(*[handle(i) for i in a.args])
             return type(a)([handle(i) for i in a])
         return gcd_terms(a, isprimitive, clear, fraction)
@@ -1248,8 +1241,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
         if p.is_Add:
             list_args = [do(a) for a in Add.make_args(p)]
             # get a common negative (if there) which gcd_terms does not remove
-            if all(a.as_coeff_Mul()[0].extract_multiplicatively(-1) is not None
-                   for a in list_args):
+            if not any(a.as_coeff_Mul()[0].extract_multiplicatively(-1) is None
+                       for a in list_args):
                 cont = -cont
                 list_args = [-a for a in list_args]
             # watch out for exp(-(x+2)) which gcd_terms will change to exp(-x-2)
@@ -1354,7 +1347,7 @@ def _mask_nc(eq, name=None):
     names = numbered_names()
 
     def Dummy(*args, **kwargs):
-        from sympy import Dummy
+        from .symbol import Dummy
         return Dummy(next(names), *args, **kwargs)
 
     expr = eq
@@ -1405,8 +1398,7 @@ def factor_nc(expr):
     Examples
     ========
 
-    >>> from sympy.core.exprtools import factor_nc
-    >>> from sympy import Symbol
+    >>> from sympy import factor_nc, Symbol
     >>> from sympy.abc import x
     >>> A = Symbol('A', commutative=False)
     >>> B = Symbol('B', commutative=False)
@@ -1415,21 +1407,16 @@ def factor_nc(expr):
     >>> factor_nc(((x + A)*(x + B)).expand())
     (x + A)*(x + B)
     """
-    from sympy.simplify.simplify import powsimp
-    from sympy.polys import gcd, factor
-
-    def _pemexpand(expr):
-        "Expand with the minimal set of hints necessary to check the result."
-        return expr.expand(deep=True, mul=True, power_exp=True,
-            power_base=False, basic=False, multinomial=True, log=False)
-
     expr = sympify(expr)
     if not isinstance(expr, Expr) or not expr.args:
         return expr
     if not expr.is_Add:
         return expr.func(*[factor_nc(a) for a in expr.args])
+    expr = expr.func(*[expand_power_exp(i) for i in expr.args])
 
+    from sympy.polys.polytools import gcd, factor
     expr, rep, nc_symbols = _mask_nc(expr)
+
     if rep:
         return factor(expr).subs(rep)
     else:
@@ -1452,7 +1439,10 @@ def factor_nc(expr):
                     cc = list(Mul.make_args(Mul._from_args(list(cc))/g))
                     args[i][0] = cc
             for i, (cc, _) in enumerate(args):
-                cc[0] = cc[0]/c
+                if cc:
+                    cc[0] = cc[0]/c
+                else:
+                    cc = [1/c]
                 args[i][0] = cc
         # find any noncommutative common prefix
         for i, a in enumerate(args):
@@ -1531,6 +1521,8 @@ def factor_nc(expr):
         else:
             mid = expr
 
+        from sympy.simplify.powsimp import powsimp
+
         # sort the symbols so the Dummys would appear in the same
         # order as the original symbols, otherwise you may introduce
         # a factor of -1, e.g. A**2 - B**2) -- {A:y, B:x} --> y**2 - x**2
@@ -1548,6 +1540,10 @@ def factor_nc(expr):
             return _keep_coeff(c, g*l*new_mid*r)
 
         if new_mid.is_Mul:
+            def _pemexpand(expr):
+                "Expand with the minimal set of hints necessary to check the result."
+                return expr.expand(deep=True, mul=True, power_exp=True,
+                    power_base=False, basic=False, multinomial=True, log=False)
             # XXX TODO there should be a way to inspect what order the terms
             # must be in and just select the plausible ordering without
             # checking permutations

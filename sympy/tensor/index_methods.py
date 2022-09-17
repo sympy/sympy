@@ -10,7 +10,8 @@
     refactoring.
 """
 
-from sympy.core.compatibility import reduce
+from functools import reduce
+
 from sympy.core.function import Function
 from sympy.functions import exp, Piecewise
 from sympy.tensor.indexed import Idx, Indexed
@@ -187,7 +188,7 @@ def _get_indices_Add(expr):
     if not non_scalars:
         return set(), {}
 
-    if not all([x == non_scalars[0] for x in non_scalars[1:]]):
+    if not all(x == non_scalars[0] for x in non_scalars[1:]):
         raise IndexConformanceException("Indices are not consistent: %s" % expr)
     if not reduce(lambda x, y: x != y or y, syms):
         symmetries = syms[0]

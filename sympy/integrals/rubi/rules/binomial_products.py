@@ -118,14 +118,24 @@ if matchpy:
         Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, rubi_exp as exp, rubi_log as log, Discriminant,
         Negative, Quotient
     )
-    from sympy import (Integral, S, sqrt, And, Or, Integer, Float, Mod, I, Abs, simplify, Mul,
-    Add, Pow, sign, EulerGamma)
+    from sympy.core.add import Add
+    from sympy.core.mod import Mod
+    from sympy.core.mul import Mul
+    from sympy.core import EulerGamma
+    from sympy.core.numbers import (Float, I, Integer)
+    from sympy.core.power import Pow
+    from sympy.core.singleton import S
+    from sympy.functions.elementary.complexes import (Abs, sign)
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.integrals.integrals import Integral
+    from sympy.logic.boolalg import (And, Or)
+    from sympy.simplify.simplify import simplify
     from sympy.integrals.rubi.symbol import WC
     from sympy.core.symbol import symbols, Symbol
     from sympy.functions import (sin, cos, tan, cot, csc, sec, sqrt, erf)
     from sympy.functions.elementary.hyperbolic import (acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch)
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec, atan2)
-    from sympy import pi as Pi
+    from sympy.core.numbers import pi as Pi
 
     A_, B_, C_, F_, G_, H_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, n_, p_, q_, r_, t_, u_, v_, s_, w_, x_, y_, z_ = [WC(i) for i in 'ABCFGHabcdefghijklmnpqrtuvswxyz']
     a1_, a2_, b1_, b2_, c1_, c2_, d1_, d2_, n1_, n2_, e1_, e2_, f1_, f2_, g1_, g2_, n1_, n2_, n3_, Pq_, Pm_, Px_, Qm_, Qr_, Qx_, jn_, mn_, non2_, RFx_, RGx_ = [WC(i) for i in ['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'd1', 'd2', 'n1', 'n2', 'e1', 'e2', 'f1', 'f2', 'g1', 'g2', 'n1', 'n2', 'n3', 'Pq', 'Pm', 'Px', 'Qm', 'Qr', 'Qx', 'jn', 'mn', 'non2', 'RFx', 'RGx']]

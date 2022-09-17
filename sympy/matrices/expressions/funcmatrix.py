@@ -22,7 +22,7 @@ class FunctionMatrix(MatrixExpr):
         it should be able to accept two arguments which represents the
         matrix coordinates.
 
-        If it is a pure string containing python ``lambda`` semantics,
+        If it is a pure string containing Python ``lambda`` semantics,
         it is interpreted by the SymPy parser and casted into a SymPy
         ``Lambda`` instance.
 
@@ -36,9 +36,9 @@ class FunctionMatrix(MatrixExpr):
     >>> FunctionMatrix(n, m, Lambda((i, j), i + j))
     FunctionMatrix(n, m, Lambda((i, j), i + j))
 
-    Creating a ``FunctionMatrix`` from a sympy function:
+    Creating a ``FunctionMatrix`` from a SymPy function:
 
-    >>> from sympy.functions import KroneckerDelta
+    >>> from sympy import KroneckerDelta
     >>> X = FunctionMatrix(3, 3, KroneckerDelta)
     >>> X.as_explicit()
     Matrix([
@@ -46,9 +46,9 @@ class FunctionMatrix(MatrixExpr):
     [0, 1, 0],
     [0, 0, 1]])
 
-    Creating a ``FunctionMatrix`` from a sympy undefined function:
+    Creating a ``FunctionMatrix`` from a SymPy undefined function:
 
-    >>> from sympy.core.function import Function
+    >>> from sympy import Function
     >>> f = Function('f')
     >>> X = FunctionMatrix(3, 3, f)
     >>> X.as_explicit()
@@ -57,7 +57,7 @@ class FunctionMatrix(MatrixExpr):
     [f(1, 0), f(1, 1), f(1, 2)],
     [f(2, 0), f(2, 1), f(2, 2)]])
 
-    Creating a ``FunctionMatrix`` from python ``lambda``:
+    Creating a ``FunctionMatrix`` from Python ``lambda``:
 
     >>> FunctionMatrix(n, m, 'lambda i, j: i + j')
     FunctionMatrix(n, m, Lambda((i, j), i + j))
@@ -111,8 +111,8 @@ class FunctionMatrix(MatrixExpr):
 
     def _eval_trace(self):
         from sympy.matrices.expressions.trace import Trace
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         return Trace(self).rewrite(Sum).doit()
 
-    def as_real_imag(self):
+    def _eval_as_real_imag(self):
         return (re(Matrix(self)), im(Matrix(self)))

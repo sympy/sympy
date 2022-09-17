@@ -1,6 +1,13 @@
 from sympy.sets import FiniteSet
-from sympy import (sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy,
-                piecewise_fold, solveset, Integral)
+from sympy.core.numbers import Rational
+from sympy.core.relational import Eq
+from sympy.core.symbol import Dummy
+from sympy.functions.combinatorial.factorials import FallingFactorial
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.integrals.integrals import Integral
+from sympy.solvers.solveset import solveset
 from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile, is_random,
@@ -45,7 +52,7 @@ def moment(X, n, c=0, condition=None, *, evaluate=True, **kwargs):
 
 def variance(X, condition=None, **kwargs):
     """
-    Variance of a random expression
+    Variance of a random expression.
 
     .. math::
         variance(X) = E((X-E(X))^{2})
@@ -97,7 +104,7 @@ std = standard_deviation
 
 def entropy(expr, condition=None, **kwargs):
     """
-    Calculuates entropy of a probability distribution
+    Calculuates entropy of a probability distribution.
 
     Parameters
     ==========
@@ -133,13 +140,16 @@ def entropy(expr, condition=None, **kwargs):
     """
     pdf = density(expr, condition, **kwargs)
     base = kwargs.get('b', exp(1))
-    if hasattr(pdf, 'dict'):
-            return sum([-prob*log(prob, base) for prob in pdf.dict.values()])
+    if isinstance(pdf, dict):
+            return sum([-prob*log(prob, base) for prob in pdf.values()])
     return expectation(-log(pdf(expr), base))
 
 def covariance(X, Y, condition=None, **kwargs):
     """
-    Covariance of two random expressions
+    Covariance of two random expressions.
+
+    Explanation
+    ===========
 
     The expectation that the two variables will rise and fall together
 
@@ -152,7 +162,7 @@ def covariance(X, Y, condition=None, **kwargs):
     >>> from sympy.stats import Exponential, covariance
     >>> from sympy import Symbol
 
-    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
+    >>> rate = Symbol('lambda', positive=True, real=True)
     >>> X = Exponential('X', rate)
     >>> Y = Exponential('Y', rate)
 
@@ -176,7 +186,10 @@ def covariance(X, Y, condition=None, **kwargs):
 def correlation(X, Y, condition=None, **kwargs):
     r"""
     Correlation of two random expressions, also known as correlation
-    coefficient or Pearson's correlation
+    coefficient or Pearson's correlation.
+
+    Explanation
+    ===========
 
     The normalized expectation that the two variables will rise
     and fall together
@@ -190,7 +203,7 @@ def correlation(X, Y, condition=None, **kwargs):
     >>> from sympy.stats import Exponential, correlation
     >>> from sympy import Symbol
 
-    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
+    >>> rate = Symbol('lambda', positive=True, real=True)
     >>> X = Exponential('X', rate)
     >>> Y = Exponential('Y', rate)
 
@@ -242,7 +255,7 @@ def smoment(X, n, condition=None, **kwargs):
 
     >>> from sympy.stats import skewness, Exponential, smoment
     >>> from sympy import Symbol
-    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
+    >>> rate = Symbol('lambda', positive=True, real=True)
     >>> Y = Exponential('Y', rate)
     >>> smoment(Y, 4)
     9
@@ -257,6 +270,9 @@ def smoment(X, n, condition=None, **kwargs):
 def skewness(X, condition=None, **kwargs):
     r"""
     Measure of the asymmetry of the probability distribution.
+
+    Explanation
+    ===========
 
     Positive skew indicates that most of the values lie to the right of
     the mean.
@@ -281,7 +297,7 @@ def skewness(X, condition=None, **kwargs):
     >>> skewness(X, X > 0) # find skewness given X > 0
     (-sqrt(2)/sqrt(pi) + 4*sqrt(2)/pi**(3/2))/(1 - 2/pi)**(3/2)
 
-    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
+    >>> rate = Symbol('lambda', positive=True, real=True)
     >>> Y = Exponential('Y', rate)
     >>> skewness(Y)
     2
@@ -291,6 +307,9 @@ def skewness(X, condition=None, **kwargs):
 def kurtosis(X, condition=None, **kwargs):
     r"""
     Characterizes the tails/outliers of a probability distribution.
+
+    Explanation
+    ===========
 
     Kurtosis of any univariate normal distribution is 3. Kurtosis less than
     3 means that the distribution produces fewer and less extreme outliers
@@ -316,7 +335,7 @@ def kurtosis(X, condition=None, **kwargs):
     >>> kurtosis(X, X > 0) # find kurtosis given X > 0
     (-4/pi - 12/pi**2 + 3)/(1 - 2/pi)**2
 
-    >>> rate = Symbol('lamda', positive=True, real=True, finite=True)
+    >>> rate = Symbol('lamda', positive=True, real=True)
     >>> Y = Exponential('Y', rate)
     >>> kurtosis(Y)
     9
@@ -372,6 +391,10 @@ def factorial_moment(X, n, condition=None, **kwargs):
 def median(X, evaluate=True, **kwargs):
     r"""
     Calculuates the median of the probability distribution.
+
+    Explanation
+    ===========
+
     Mathematically, median of Probability distribution is defined as all those
     values of `m` for which the following condition is satisfied
 
@@ -395,10 +418,10 @@ def median(X, evaluate=True, **kwargs):
     >>> from sympy.stats import Normal, Die, median
     >>> N = Normal('N', 3, 1)
     >>> median(N)
-    FiniteSet(3)
+    {3}
     >>> D = Die('D')
     >>> median(D)
-    FiniteSet(3, 4)
+    {3, 4}
 
     References
     ==========
@@ -406,6 +429,9 @@ def median(X, evaluate=True, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Median#Probability_distributions
 
     """
+    if not is_random(X):
+        return X
+
     from sympy.stats.crv import ContinuousPSpace
     from sympy.stats.drv import DiscretePSpace
     from sympy.stats.frv import FinitePSpace
@@ -418,7 +444,7 @@ def median(X, evaluate=True, **kwargs):
             pspace(X).probability(Eq(X, key)) >= Rational(1, 2):
                 result.append(key)
         return FiniteSet(*result)
-    if isinstance(pspace(X), ContinuousPSpace) or isinstance(pspace(X), DiscretePSpace):
+    if isinstance(pspace(X), (ContinuousPSpace, DiscretePSpace)):
         cdf = pspace(X).compute_cdf(X)
         x = Dummy('x')
         result = solveset(piecewise_fold(cdf(x) - Rational(1, 2)), x, pspace(X).set)
@@ -429,6 +455,10 @@ def median(X, evaluate=True, **kwargs):
 def coskewness(X, Y, Z, condition=None, **kwargs):
     r"""
     Calculates the co-skewness of three random variables.
+
+    Explanation
+    ===========
+
     Mathematically Coskewness is defined as
 
     .. math::

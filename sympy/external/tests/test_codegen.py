@@ -22,6 +22,7 @@
 # is somewhere in the path and that it can compile ANSI C code.
 
 from sympy.abc import x, y, z
+from sympy.external import import_module
 from sympy.testing.pytest import skip
 from sympy.utilities.codegen import codegen, make_routine, get_code_generator
 import sys
@@ -29,6 +30,8 @@ import os
 import tempfile
 import subprocess
 
+
+pyodide_js = import_module('pyodide_js')
 
 # templates for the main program that will test the generated code.
 
@@ -115,12 +118,14 @@ combinations_lang_compiler = [
 
 def try_run(commands):
     """Run a series of commands and only return True if all ran fine."""
-    null = open(os.devnull, 'w')
-    for command in commands:
-        retcode = subprocess.call(command, stdout=null, shell=True,
-                stderr=subprocess.STDOUT)
-        if retcode != 0:
-            return False
+    if pyodide_js:
+        return False
+    with open(os.devnull, 'w') as null:
+        for command in commands:
+            retcode = subprocess.call(command, stdout=null, shell=True,
+                    stderr=subprocess.STDOUT)
+            if retcode != 0:
+                return False
     return True
 
 
@@ -304,8 +309,13 @@ def test_basic_codegen():
 
 def test_intrinsic_math1_codegen():
     # not included: log10
-    from sympy import acos, asin, atan, ceiling, cos, cosh, floor, log, ln, \
-        sin, sinh, sqrt, tan, tanh, N
+    from sympy.core.evalf import N
+    from sympy.functions import ln
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.hyperbolic import (cosh, sinh, tanh)
+    from sympy.functions.elementary.integers import (ceiling, floor)
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, tan)
     name_expr = [
         ("test_fabs", abs(x)),
         ("test_acos", acos(x)),
@@ -337,7 +347,8 @@ def test_intrinsic_math1_codegen():
 
 def test_instrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
-    from sympy import atan2, N
+    from sympy.core.evalf import N
+    from sympy.functions.elementary.trigonometric import atan2
     name_expr = [
         ("test_atan2", atan2(x, y)),
         ("test_pow", x**y),
@@ -352,7 +363,8 @@ def test_instrinsic_math2_codegen():
 
 
 def test_complicated_codegen():
-    from sympy import sin, cos, tan, N
+    from sympy.core.evalf import N
+    from sympy.functions.elementary.trigonometric import (cos, sin, tan)
     name_expr = [
         ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
         ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))),

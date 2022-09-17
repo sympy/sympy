@@ -1,10 +1,9 @@
 from sympy.core.backend import sympify
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['RigidBody']
-
 
 
 class RigidBody:
@@ -70,6 +69,7 @@ class RigidBody:
 
     @property
     def frame(self):
+        """The ReferenceFrame fixed to the body."""
         return self._frame
 
     @frame.setter
@@ -80,6 +80,7 @@ class RigidBody:
 
     @property
     def masscenter(self):
+        """The body's center of mass."""
         return self._masscenter
 
     @masscenter.setter
@@ -90,6 +91,7 @@ class RigidBody:
 
     @property
     def mass(self):
+        """The body's mass."""
         return self._mass
 
     @mass.setter
@@ -98,6 +100,7 @@ class RigidBody:
 
     @property
     def inertia(self):
+        """The body's inertia about a point; stored as (Dyadic, Point)."""
         return (self._inertia, self._inertia_point)
 
     @inertia.setter
@@ -121,6 +124,12 @@ class RigidBody:
     def central_inertia(self):
         """The body's central inertia dyadic."""
         return self._central_inertia
+
+    @central_inertia.setter
+    def central_inertia(self, I):
+        if not isinstance(I, Dyadic):
+            raise TypeError("RigidBody inertia must be a Dyadic object.")
+        self.inertia = (I, self.masscenter)
 
     def linear_momentum(self, frame):
         """ Linear momentum of the rigid body.
@@ -317,17 +326,19 @@ class RigidBody:
         self._pe = sympify(scalar)
 
     def set_potential_energy(self, scalar):
-        SymPyDeprecationWarning(
-                feature="Method sympy.physics.mechanics." +
-                    "RigidBody.set_potential_energy(self, scalar)",
-                useinstead="property sympy.physics.mechanics." +
-                    "RigidBody.potential_energy",
-                deprecated_since_version="1.5", issue=9800).warn()
+        sympy_deprecation_warning(
+            """
+The sympy.physics.mechanics.RigidBody.set_potential_energy()
+method is deprecated. Instead use
+
+    B.potential_energy = scalar
+            """,
+        deprecated_since_version="1.5",
+        active_deprecations_target="deprecated-set-potential-energy",
+        )
         self.potential_energy = scalar
 
-    # XXX: To be consistent with the parallel_axis method in Particle this
-    # should have a frame argument...
-    def parallel_axis(self, point):
+    def parallel_axis(self, point, frame=None):
         """Returns the inertia dyadic of the body with respect to another
         point.
 
@@ -336,6 +347,8 @@ class RigidBody:
 
         point : sympy.physics.vector.Point
             The point to express the inertia dyadic about.
+        frame : sympy.physics.vector.ReferenceFrame
+            The reference frame used to construct the dyadic.
 
         Returns
         =======
@@ -346,8 +359,8 @@ class RigidBody:
 
         """
         # circular import issue
-        from sympy.physics.mechanics.functions import inertia
-        a, b, c = self.masscenter.pos_from(point).to_matrix(self.frame)
-        I = self.mass * inertia(self.frame, b**2 + c**2, c**2 + a**2, a**2 +
-                                b**2, -a * b, -b * c, -a * c)
-        return self.central_inertia + I
+        from sympy.physics.mechanics.functions import inertia_of_point_mass
+        if frame is None:
+            frame = self.frame
+        return self.central_inertia + inertia_of_point_mass(
+            self.mass, self.masscenter.pos_from(point), frame)

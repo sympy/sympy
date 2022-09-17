@@ -1,12 +1,15 @@
 from collections import defaultdict
+from functools import reduce
+from math import prod
 
-from sympy.core.function import expand_log, count_ops
+from sympy.core.function import expand_log, count_ops, _coeff_isneg
 from sympy.core import sympify, Basic, Dummy, S, Add, Mul, Pow, expand_mul, factor_terms
-from sympy.core.compatibility import ordered, default_sort_key, reduce
+from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.numbers import Integer, Rational
-from sympy.core.mul import prod, _keep_coeff
+from sympy.core.mul import _keep_coeff
 from sympy.core.rules import Transform
 from sympy.functions import exp_polar, exp, log, root, polarify, unpolarify
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys import lcm, gcd
 from sympy.ntheory.factor_ import multiplicity
 
@@ -97,8 +100,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     x*y*sqrt(x*sqrt(y))
 
     """
-    from sympy.matrices.expressions.matexpr import MatrixSymbol
-
     def recurse(arg, **kwargs):
         _deep = kwargs.get('deep', deep)
         _combine = kwargs.get('combine', combine)
@@ -401,6 +402,11 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         for b, e in c_powers:
             if deep:
                 e = recurse(e)
+            if e.is_Add and (b.is_positive or e.is_integer):
+                e = factor_terms(e)
+                if _coeff_isneg(e):
+                    e = -e
+                    b = 1/b
             c_exp[e].append(b)
         del c_powers
 
@@ -578,14 +584,26 @@ def powdenest(eq, force=False, polar=False):
     from sympy.simplify.simplify import posify
 
     if force:
-        eq, rep = posify(eq)
-        return powdenest(eq, force=False).xreplace(rep)
+        def _denest(b, e):
+            if not isinstance(b, (Pow, exp)):
+                return b.is_positive, Pow(b, e, evaluate=False)
+            return _denest(b.base, b.exp*e)
+        reps = []
+        for p in eq.atoms(Pow, exp):
+            if isinstance(p.base, (Pow, exp)):
+                ok, dp = _denest(*p.args)
+                if ok is not False:
+                    reps.append((p, dp))
+        if reps:
+            eq = eq.subs(reps)
+        eq, reps = posify(eq)
+        return powdenest(eq, force=False, polar=polar).xreplace(reps)
 
     if polar:
         eq, rep = polarify(eq)
         return unpolarify(powdenest(unpolarify(eq, exponents_only=True)), rep)
 
-    new = powsimp(sympify(eq))
+    new = powsimp(eq)
     return new.xreplace(Transform(
         _denest_pow, filter=lambda m: m.is_Pow or isinstance(m, exp)))
 
@@ -602,7 +620,7 @@ def _denest_pow(eq):
     from sympy.simplify.simplify import logcombine
 
     b, e = eq.as_base_exp()
-    if b.is_Pow or isinstance(b.func, exp) and e != 1:
+    if b.is_Pow or isinstance(b, exp) and e != 1:
         new = b._eval_power(e)
         if new is not None:
             eq = new

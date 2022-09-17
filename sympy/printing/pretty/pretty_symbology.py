@@ -3,32 +3,26 @@
 import sys
 import warnings
 from string import ascii_lowercase, ascii_uppercase
+import unicodedata
 
 unicode_warnings = ''
 
-# first, setup unicodedate environment
-try:
-    import unicodedata
+def U(name):
+    """
+    Get a unicode character by name or, None if not found.
 
-    def U(name):
-        """unicode character by name or None if not found"""
-        try:
-            u = unicodedata.lookup(name)
-        except KeyError:
-            u = None
-
-            global unicode_warnings
-            unicode_warnings += 'No \'%s\' in unicodedata\n' % name
-
-        return u
-
-except ImportError:
-    unicode_warnings += 'No unicodedata available\n'
-    U = lambda name: None
+    This exists because older versions of Python use older unicode databases.
+    """
+    try:
+        return unicodedata.lookup(name)
+    except KeyError:
+        global unicode_warnings
+        unicode_warnings += 'No \'%s\' in unicodedata\n' % name
+        return None
 
 from sympy.printing.conventions import split_super_sub
 from sympy.core.alphabets import greeks
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 # prefix conventions when constructing tables
 # L   - LATIN     i
@@ -51,15 +45,6 @@ def pretty_use_unicode(flag=None):
     if flag is None:
         return _use_unicode
 
-    # we know that some letters are not supported in Python 2.X so
-    # ignore those warnings. Remove this when 2.X support is dropped.
-    if unicode_warnings:
-        known = ['LATIN SUBSCRIPT SMALL LETTER %s' % i for i in 'HKLMNPST']
-        unicode_warnings = '\n'.join([
-            l for l in unicode_warnings.splitlines() if not any(
-            i in l for i in known)])
-    # ------------ end of 2.X warning filtering
-
     if flag and unicode_warnings:
         # print warnings (if any) on first unicode usage
         warnings.warn(unicode_warnings)
@@ -73,40 +58,43 @@ def pretty_use_unicode(flag=None):
 def pretty_try_use_unicode():
     """See if unicode output is available and leverage it if possible"""
 
-    try:
-        symbols = []
+    encoding = getattr(sys.stdout, 'encoding', None)
 
-        # see, if we can represent greek alphabet
-        symbols.extend(greek_unicode.values())
+    # this happens when e.g. stdout is redirected through a pipe, or is
+    # e.g. a cStringIO.StringO
+    if encoding is None:
+        return  # sys.stdout has no encoding
 
-        # and atoms
-        symbols += atoms_table.values()
+    symbols = []
 
-        for s in symbols:
-            if s is None:
-                return  # common symbols not present!
+    # see if we can represent greek alphabet
+    symbols += greek_unicode.values()
 
-            encoding = getattr(sys.stdout, 'encoding', None)
+    # and atoms
+    symbols += atoms_table.values()
 
-            # this happens when e.g. stdout is redirected through a pipe, or is
-            # e.g. a cStringIO.StringO
-            if encoding is None:
-                return  # sys.stdout has no encoding
+    for s in symbols:
+        if s is None:
+            return  # common symbols not present!
 
-            # try to encode
+        try:
             s.encode(encoding)
+        except UnicodeEncodeError:
+            return
 
-    except UnicodeEncodeError:
-        pass
-    else:
-        pretty_use_unicode(True)
+    # all the characters were present and encodable
+    pretty_use_unicode(True)
 
 
 def xstr(*args):
-    SymPyDeprecationWarning(
-        feature="``xstr`` function",
-        useinstead="``str``",
-        deprecated_since_version="1.7").warn()
+    sympy_deprecation_warning(
+        """
+        The sympy.printing.pretty.pretty_symbology.xstr() function is
+        deprecated. Use str() instead.
+        """,
+        deprecated_since_version="1.7",
+        active_deprecations_target="deprecated-pretty-printing-functions"
+    )
     return str(*args)
 
 # GREEK
@@ -650,6 +638,6 @@ def center_accent(string, accent):
 
 def line_width(line):
     """Unicode combining symbols (modifiers) are not ever displayed as
-    separate symbols and thus shouldn't be counted
+    separate symbols and thus should not be counted
     """
     return len(line.translate(_remove_combining))
