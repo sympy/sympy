@@ -14,7 +14,7 @@ Learn how to use SymPy computer algebra system to:
 |--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|--------------|
 | [ Solve an equation algebraically ](solve-equation-algebraically.md)                        | $x^2 = y$ | $x \in \{-\sqrt{y},\sqrt{y}\}$                                                                                                |
 | [ Solve a system of equations algebraically ](solvers-algebraic-equations)              | $x^2 + y = 2, x - y = 4$ | $\{(x = -3, y = -7), (x = 2, y = 2)\}$                                                                                        |
-|  {func}`Solve an equation numerically <sympy.solvers.solvers.nsolve>`                           | $\cos(x) = x $ | $ x \approx 0.739085133215161$                                                                                           |
+|  [Solve one or a system of equations numerically](solve-numerically.md)                           | $\cos(x) = x $ | $ x \approx 0.739085133215161$                                                                                           |
 |  {func}`Solve an ordinary differential equation algebraically <sympy.solvers.ode.dsolve>`   | $y''(x) + 9y(x)=0 $ | $ y(x)=C_{1} \sin(3x)+ C_{2} \cos(3x)$                                                    |
 |  [ Solve a system of linear equations algebraically ](../../modules/solvers/solvers.rst)        | $x + y = 2, x - y = 0 $ | $ x = 1, y = 1$                                                                                           |
 |  [ Solve a system of nonlinear equations algebraically ](../../modules/solvers/solvers.rst)     | $x^2 + y^3 = 1, x^3 - y^2 = 0 $ | $ x = 1, y = 0$                                                                                       |
@@ -28,7 +28,7 @@ Note: SymPy has a function called {func}`~.solve`
 which is designed to find the roots of an equation or system of equations.
 SymPy {func}`~.solve` may or may not be what you need for a particular problem,
 so we recommend you use the links on this page to learn how to "solve" your problem.
-And while a common, colloquial expression is, for example, ["solve an integral"](../../modules/integrals/integrals.rst),
+And while a common, colloquial expression is, for example, ["solve an integral"](../../modules/integrals/integrals.rst), 
 in SymPy's terminology it would be ["evaluate an integral."](../../modules/integrals/integrals.rst)
 
 ```{toctree}
@@ -36,4 +36,4 @@ in SymPy's terminology it would be ["evaluate an integral."](../../modules/integ
 
 solving-guidance.md
 solve-equation-algebraically.md
-```
+solve-numerically.md
