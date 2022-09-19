@@ -3,7 +3,7 @@ from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
-from sympy.core.backend import Matrix, _simplify_matrix
+from sympy.core.backend import Matrix, _simplify_matrix, eye, zeros
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import (dynamicsymbols, Body, PinJoint,
                                      PrismaticJoint, CylindricalJoint,
@@ -828,15 +828,15 @@ def test_planar_joint():
     assert Cj.planar_speeds == Matrix([u1_def, u2_def])
     assert Cj.kdes == Matrix([u0_def - q0_def.diff(t), u1_def - q1_def.diff(t),
                               u2_def - q2_def.diff(t)])
-    assert Cj.rotation_axis == N.z
-    assert Cj.planar_vectors == [N.x, N.y]
+    assert Cj.rotation_axis == N.x
+    assert Cj.planar_vectors == [N.y, N.z]
     assert Cj.child_point.pos_from(C.masscenter) == Vector(0)
     assert Cj.parent_point.pos_from(P.masscenter) == Vector(0)
-    r_P_C = q1_def * N.x + q2_def * N.y
+    r_P_C = q1_def * N.y + q2_def * N.z
     assert Cj.parent_point.pos_from(Cj.child_point) == -r_P_C
     assert C.masscenter.pos_from(P.masscenter) == r_P_C
-    assert Cj.child_point.vel(N) == u1_def * N.x + u2_def * N.y
-    assert A.ang_vel_in(N) == u0_def * N.z
+    assert Cj.child_point.vel(N) == u1_def * N.y + u2_def * N.z
+    assert A.ang_vel_in(N) == u0_def * N.x
     assert Cj.parent_interframe == N
     assert Cj.child_interframe == A
     assert Cj.__str__() == 'PlanarJoint: J  parent: P  child: C'
@@ -856,15 +856,15 @@ def test_planar_joint():
     assert Cj.planar_speeds == Matrix([u1, u2])
     assert Cj.kdes == Matrix([u0_def - q0.diff(t), u1 - q1.diff(t),
                               u2 - q2_def.diff(t)])
-    assert Cj.rotation_axis == Pint.z
-    assert Cj.planar_vectors == [Pint.x, Pint.y]
+    assert Cj.rotation_axis == Pint.x
+    assert Cj.planar_vectors == [Pint.y, Pint.z]
     assert Cj.child_point.pos_from(C.masscenter) == l * A.y
     assert Cj.parent_point.pos_from(P.masscenter) == m * N.x
-    assert Cj.parent_point.pos_from(Cj.child_point) == -q1 * N.x + q2_def * N.y
+    assert Cj.parent_point.pos_from(Cj.child_point) == q1 * N.y + q2_def * N.z
     assert C.masscenter.pos_from(
-        P.masscenter) == m * N.x + q1 * N.x - q2_def * N.y - l * A.y
-    assert C.masscenter.vel(N) == u1 * N.x - u2 * N.y + u0_def * l * A.z
-    assert A.ang_vel_in(N) == -u0_def * N.z
+        P.masscenter) == m * N.x - q1 * N.y - q2_def * N.z - l * A.y
+    assert C.masscenter.vel(N) == -u1 * N.y - u2 * N.z + u0_def * l * A.x
+    assert A.ang_vel_in(N) == u0_def * N.x
 
 
 def test_planar_joint_set_vectors():
@@ -874,30 +874,8 @@ def test_planar_joint_set_vectors():
     J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
                     rotation_axis=None,
                     planar_vectors=None)
-    assert J.rotation_axis == N.z
-    assert J.planar_vectors == [N.x, N.y]
-    # Test no rotation axis single planar vector parallel to x
-    N, A, P, C = _generate_body()
-    J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
-                    rotation_axis=None,
-                    planar_vectors=N.x)  # Positive direction
-    assert J.rotation_axis == N.z
-    assert J.planar_vectors == [N.x, N.y]
-    N, A, P, C = _generate_body()
-    J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
-                    rotation_axis=None,
-                    planar_vectors=-N.x)  # Negative direction
-    assert J.rotation_axis == -N.z
-    assert J.planar_vectors == [-N.x, N.y]
-    # Test no rotation axis single planar vector nonparallel to x
-    N, A, P, C = _generate_body()
-    J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
-                    rotation_axis=None,
-                    planar_vectors=[N.x + N.y])
-    assert J.rotation_axis == N.z
-    assert J.planar_vectors == [N.x + N.y, -N.x + N.y]
-    assert C.masscenter.pos_from(
-        P.masscenter) == (q1 - q2) / sqrt(2) * N.x + (q1 + q2) / sqrt(2) * N.y
+    assert J.rotation_axis == N.x
+    assert J.planar_vectors == [N.y, N.z]
     # Test no rotation axis two planar vectors
     N, A, P, C = _generate_body()
     J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
@@ -907,25 +885,35 @@ def test_planar_joint_set_vectors():
     assert J.planar_vectors == [N.x, N.y + N.z]
     assert C.masscenter.pos_from(
         P.masscenter) == q1 * N.x + q2 / sqrt(2) * N.y + q2 / sqrt(2) * N.z
-    # Test rotation axis parallel to y no planar vectors
+    # Test rotation axis parallel to z no planar vectors
     N, A, P, C = _generate_body()
     J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
-                    rotation_axis=N.y,  # Positive direction
+                    rotation_axis=N.z,  # Positive direction
                     planar_vectors=None)
-    assert J.rotation_axis == N.y
-    assert J.planar_vectors == [N.x, -N.z]
+    assert J.rotation_axis == N.z
+    assert J.planar_vectors == [N.x, N.y]
     N, A, P, C = _generate_body()
     J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
-                    rotation_axis=-N.y,  # Negative direction
+                    rotation_axis=-N.z,  # Negative direction
                     planar_vectors=None)
-    assert J.rotation_axis == -N.y
-    assert J.planar_vectors == [-N.x, -N.z]
+    assert J.rotation_axis == -N.z
+    assert J.planar_vectors == [-N.x, N.y]
+    # Test rotation axis not parallel to z with no planar vectors
+    N, A, P, C = _generate_body()
+    J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
+                    rotation_axis=N.x + N.y,
+                    planar_vectors=None)
+    assert J.rotation_axis == N.x + N.y
+    assert J.planar_vectors == [-N.x + N.y, 2 * N.z]
 
     # Test error messages
     N, A, P, C = _generate_body()
     plan = lambda rotation_axis, planar_vectors: PlanarJoint(
         'J', P, C, q0, [q1, q2], u0, [u1, u2], rotation_axis=rotation_axis,
         planar_vectors=planar_vectors)
+    # Test no rotation axis single planar vector
+    N, A, P, C = _generate_body()
+    raises(ValueError, lambda: plan(None, [N.y]))
     # Test too many planar vectors
     raises(ValueError, lambda: plan(None, [N.x, N.y, N.z]))
     # Test wrong planar vector type
@@ -939,6 +927,33 @@ def test_planar_joint_set_vectors():
     # Test non perpendicular rotation axis
     raises(ValueError, lambda: plan(N.x + N.y, N.x))
     raises(ValueError, lambda: plan(N.x + N.y, [N.z, N.y]))
+
+
+def test_planar_joint_advanced():
+    # Tests whether someone is able to just specify two normals, which will form
+    # the rotation axis seen from the parent and child body.
+    # This specific example is a block on a slope, which has that same slope of
+    # 30 degrees, so in the zero configuration the frames of the parent and
+    # child are actually aligned.
+    q0, q1, q2, u0, u1, u2 = dynamicsymbols('q0:3, u0:3')
+    l1, l2 = symbols('l1:3')
+    N, A, P, C = _generate_body()
+    J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
+                    parent_point=l1 * N.z,
+                    child_point=-l2 * C.z,
+                    parent_interframe=N.z + N.y / sqrt(3),
+                    child_interframe=A.z + A.y / sqrt(3))
+    assert J.rotation_axis.express(N) == (N.z + N.y / sqrt(3)).normalize()
+    assert J.rotation_axis.express(A) == (A.z + A.y / sqrt(3)).normalize()
+    assert J.rotation_axis.angle_between(N.z) == pi / 6
+    assert N.dcm(A).xreplace({q0: 0, q1: 0, q2: 0}) == eye(3)
+    N_R_A = Matrix([
+        [cos(q0), -sqrt(3) * sin(q0) / 2, sin(q0) / 2],
+        [sqrt(3) * sin(q0) / 2, 3 * cos(q0) / 4 + 1 / 4,
+         sqrt(3) * (1 - cos(q0)) / 4],
+        [-sin(q0) / 2, sqrt(3) * (1 - cos(q0)) / 4, cos(q0) / 4 + 3 / 4]])
+    # N.dcm(A) == N_R_A did not work
+    assert _simplify_matrix(N.dcm(A) - N_R_A) == zeros(3)
 
 
 def test_deprecated_parent_child_axis():

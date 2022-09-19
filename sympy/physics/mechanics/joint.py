@@ -41,7 +41,7 @@ class Joint(ABC):
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinate : iterable of dynamicsymbols, optional
+    coordinates : iterable of dynamicsymbols, optional
         Generalized coordinates of the joint.
     speeds : iterable of dynamicsymbols, optional
         Generalized speeds of joint.
@@ -1516,9 +1516,9 @@ class PlanarJoint(Joint):
     >>> joint.child_point
     C_masscenter
     >>> joint.rotation_axis
-    P_frame.z
+    P_frame.x
     >>> joint.planar_vectors
-    [P_frame.x, P_frame.y]
+    [P_frame.y, P_frame.z]
     >>> joint.rotation_coordinate
     q0_PC(t)
     >>> joint.planar_coordinates
@@ -1542,16 +1542,16 @@ class PlanarJoint(Joint):
     [u1_PC(t)],
     [u2_PC(t)]])
     >>> joint.child.frame.ang_vel_in(joint.parent.frame)
-    u0_PC(t)*P_frame.z
+    u0_PC(t)*P_frame.x
     >>> joint.child.frame.dcm(joint.parent.frame)
     Matrix([
-    [ cos(q0_PC(t)), sin(q0_PC(t)), 0],
-    [-sin(q0_PC(t)), cos(q0_PC(t)), 0],
-    [             0,             0, 1]])
+    [1,              0,             0],
+    [0,  cos(q0_PC(t)), sin(q0_PC(t))],
+    [0, -sin(q0_PC(t)), cos(q0_PC(t))]])
     >>> joint.child_point.pos_from(joint.parent_point)
-    q1_PC(t)*P_frame.x + q2_PC(t)*P_frame.y
+    q1_PC(t)*P_frame.y + q2_PC(t)*P_frame.z
     >>> child.masscenter.vel(parent.frame)
-    u1_PC(t)*P_frame.x + u2_PC(t)*P_frame.y
+    u1_PC(t)*P_frame.y + u2_PC(t)*P_frame.z
 
     To further demonstrate the use of the planar joint, the kinematics of a
     block sliding on a slope, can be created as follows.
@@ -1576,10 +1576,12 @@ class PlanarJoint(Joint):
     The planar joint can be created using these bodies and intermediate frame.
     We can specify the origin of the slope to be ``d`` above the slope's center
     of mass and the block's center of mass to be a distance ``h`` above the
-    slope's surface.
+    slope's surface. Note that we can specify the normal of the plane using the
+    rotation axis argument.
 
     >>> joint = PlanarJoint('PC', ground, block, parent_point=d * ground.z,
-    ...                     child_point=-h * block.z, parent_interframe=slope)
+    ...                     child_point=-h * block.z, parent_interframe=slope,
+    ...                     rotation_axis=slope.z)
 
     Once the joint is established the kinematics of the bodies can be accessed.
     First the ``rotation_axis``, which is normal to the plane and the
@@ -1620,7 +1622,7 @@ class PlanarJoint(Joint):
     =====
 
     In the method of parsing the rotation axis and planar vectors the overall
-    aim is for ``z`` to be the rotation axis and ``x`` and ``y`` to be the
+    aim is for ``x`` to be the rotation axis and ``y`` and ``z`` to be the
     planar vectors. This is also the default. However users are free to specify
     differently and in those cases the vectors are parsed as following. All
     directions metioned here, i.e. ``x``, ``y`` and ``z``, are the basis vectors
@@ -1636,11 +1638,9 @@ class PlanarJoint(Joint):
         * - Provided ``planar_vectors``
           - Computed ``rotation_axis``
         * - ``None``
-          - ``z``
-        * - 1 planar vector parallel to ``x``
-          - ``planar_vectors[0] × y``
-        * - 1 planar vector nonparallel to ``x``
-          - ``x × planar_vectors[0]``
+          - ``x``
+        * - 1 planar vector
+          - Not allowed raises a ``ValueError``
         * - 2 arbritrary planar vectors
           - ``planar_vectors[0] × planar_vectors[1]``
 
@@ -1653,10 +1653,10 @@ class PlanarJoint(Joint):
 
         * - Determined ``rotation_axis``
           - Computed ``planar_vectors[0]``
-        * - parallel to ``y``
-          - ``rotation_axis × z``
-        * - nonparallel to ``y``
+        * - parallel to ``z``
           - ``y × rotation_axis``
+        * - nonparallel to ``z``
+          - ``z × rotation_axis``
 
     The second planar vector is determined as follows (if not provided):
 
@@ -1672,7 +1672,7 @@ class PlanarJoint(Joint):
                  planar_coordinates=None, rotation_speed=None,
                  planar_speeds=None, parent_point=None, child_point=None,
                  parent_interframe=None, child_interframe=None,
-                 planar_vectors=None, rotation_axis=None):
+                 rotation_axis=None, planar_vectors=None):
         self._rotation_axis = rotation_axis
         self._planar_vectors = planar_vectors
         coordinates = (rotation_coordinate, planar_coordinates)
@@ -1744,15 +1744,12 @@ class PlanarJoint(Joint):
         rotation_axis = self._rotation_axis
         if rotation_axis is None:
             if len(planar_vectors) == 0:
-                rotation_axis = self.parent_interframe.z
+                rotation_axis = self.parent_interframe.x
             elif len(planar_vectors) == 2:
                 rotation_axis = cross(planar_vectors[0], planar_vectors[1])
             elif len(planar_vectors) == 1:
-                rotation_axis = cross(self.parent_interframe.x,
-                                      planar_vectors[0])
-                if rotation_axis == Vector(0):  # parallel with x
-                    rotation_axis = cross(planar_vectors[0],
-                                          self.parent_interframe.y)
+                raise ValueError('Underdefined plane. At least 2 vectors should'
+                                 ' be supplied.')
         elif isinstance(rotation_axis, Vector):
             rotation_axis = self._axis(rotation_axis, self.parent_interframe)
             for planar_vector in planar_vectors:
@@ -1764,9 +1761,9 @@ class PlanarJoint(Joint):
 
         # Determine missing planar vectors
         if len(planar_vectors) == 0:
-            planar_vector = cross(self.parent_interframe.y, rotation_axis)
-            if planar_vector == Vector(0):  # parallel with y
-                planar_vector = cross(rotation_axis, self.parent_interframe.z)
+            planar_vector = cross(self.parent_interframe.z, rotation_axis)
+            if planar_vector == Vector(0):  # parallel with z
+                planar_vector = cross(self.parent_interframe.y, rotation_axis)
             planar_vectors.append(planar_vector)
         if len(planar_vectors) == 1:
             planar_vectors.append(cross(rotation_axis, planar_vectors[0]))
