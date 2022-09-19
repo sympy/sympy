@@ -273,7 +273,27 @@ solving is
 ```
 
 Here is an [example from the field of chemical
-kinetics](https://www.sympy.org/scipy-2017-codegen-tutorial/notebooks/25-chemical-kinetics-intro.html):
+kinetics](https://www.sympy.org/scipy-2017-codegen-tutorial/notebooks/25-chemical-kinetics-intro.html) 
+where the nonlinear ordinary differential equations take this form:
+
+$$
+r_f = & k_f y_0(t)^2  y_1(t) \\
+r_b = & k_b y_2(t)^2 \\
+\frac{d y_0(t)}{dt} = & 2(r_b - r_f) \\
+\frac{d y_1(t)}{dt} = & r_b - r_f \\
+\frac{d y_2(t)}{dt} = & 2(r_f - r_b)
+$$
+
+and
+
+$$
+
+\vec{y}(t) = \begin{bmatrix}
+y_0(t) \\
+y_1(t) \\
+y_2(t)
+\end{bmatrix}
+$$
 
 ```py
 >>> from sympy import symbols, lambdify
