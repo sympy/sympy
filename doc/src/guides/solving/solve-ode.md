@@ -266,7 +266,7 @@ A common workflow which leverages
 solving is
 1. set up an ODE in SymPy
 2. convert it to a numerical function using {func}`~.lambdify`
-3. solve it numerically using SciPy's `solve_ivp`.
+3. solve the initial value problem by numerically integrating the ODE using SciPy's `solve_ivp`.
 
 ```{warning}
 {func}`~.lambdify` uses {external:func}`~.exec` to dynamically execute Python code, and thus should not be used on unsanitized input.
