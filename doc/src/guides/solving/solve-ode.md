@@ -265,7 +265,7 @@ A common workflow which leverages
 [SciPy's](https://docs.scipy.org/doc/scipy/index.html) fast numerical ODE
 solving is
 1. set up an ODE in SymPy
-2. convert it to a lambda function using {func}`~.lambdify`
+2. convert it to a numerical function using {func}`~.lambdify`
 3. solve it numerically using SciPy's `solve_ivp`.
 
 ```{warning}
