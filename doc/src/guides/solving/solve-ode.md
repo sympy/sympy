@@ -305,6 +305,7 @@ $$
 ...     return [2*(rb - rf), rb - rf, 2*(rf - rb)]
 >>> y, (kf, kb) = symbols('y:3'), symbols('kf kb')
 >>> ydot = rhs(None, y, kf, kb)
+>>> ydot
 >>> t = symbols('t') # not used in this case
 >>> f = lambdify((t, y, kf, kb), ydot)
 >>> k_vals = np.array([0.42, 0.17]) # arbitrary in this case
