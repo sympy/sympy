@@ -739,6 +739,7 @@ def _get_doctest_blacklist():
         # throws ModuleNotFoundError when scipy not installed
         blacklist.extend(
             ["doc/src/guides/solving/solve-ode.md",]
+            ["doc/src/guides/solving/solve-numerically.md",]
         )
 
     # disabled because of doctest failures in asmeurer's bot

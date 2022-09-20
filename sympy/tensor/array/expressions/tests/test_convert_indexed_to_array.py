@@ -10,8 +10,8 @@ from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ArrayContraction, ArrayTensorProduct, \
     ArrayDiagonal, ArrayAdd, PermuteDims, ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, \
     _array_add, _permute_dims, ArraySymbol, OneArray
-from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
-from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array, _convert_indexed_to_array
+from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
+from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array, _convert_indexed_to_array
 from sympy.testing.pytest import raises
 
 
