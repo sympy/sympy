@@ -29,7 +29,7 @@ References
 .. [Homeier96] 'Some Properties of the Coupling Coefficients of Real
   Spherical Harmonics and Their Relation to Gaunt Coefficients',
   H. H. H. Homeier and E. O. Steinborn J. Mol. Struct., Volume 368,
-  pp. 31-37 (1996)  
+  pp. 31-37 (1996)
 
 Credits and Copyright
 =====================
@@ -707,40 +707,32 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     Jens Rasch (2009-03-24): initial version for Sage.
     """
-    if int(l_1) != l_1 or int(l_2) != l_2 or int(l_3) != l_3:
-        raise ValueError("l values must be integer")
-    if int(m_1) != m_1 or int(m_2) != m_2 or int(m_3) != m_3:
-        raise ValueError("m values must be integer")
+    l_1, l_2, l_3, m_1, m_2, m_3 = [
+        as_int(i) for i in (l_1, l_2, l_3, m_1, m_2, m_3)]
 
-    sumL = l_1 + l_2 + l_3
-    bigL = sumL // 2
-    a1 = l_1 + l_2 - l_3
-    if a1 < 0:
+    if l_1 + l_2 - l_3 < 0:
         return S.Zero
-    a2 = l_1 - l_2 + l_3
-    if a2 < 0:
+    if l_1 - l_2 + l_3 < 0:
         return S.Zero
-    a3 = -l_1 + l_2 + l_3
-    if a3 < 0:
-        return S.Zero
-    if sumL % 2:
+    if -l_1 + l_2 + l_3 < 0:
         return S.Zero
     if (m_1 + m_2 + m_3) != 0:
         return S.Zero
     if (abs(m_1) > l_1) or (abs(m_2) > l_2) or (abs(m_3) > l_3):
         return S.Zero
+    bigL, remL = divmod(l_1 + l_2 + l_3, 2)
+    if remL % 2:
+        return S.Zero
 
     imin = max(-l_3 + l_1 + m_2, -l_3 + l_2 - m_1, 0)
     imax = min(l_2 + m_2, l_1 - m_1, l_1 + l_2 - l_3)
 
-    maxfact = max(l_1 + l_2 + l_3 + 1, imax + 1)
-    _calc_factlist(maxfact)
+    _calc_factlist(max(l_1 + l_2 + l_3 + 1, imax + 1))
 
-    argsqrt = (2 * l_1 + 1) * (2 * l_2 + 1) * (2 * l_3 + 1) * \
+    ressqrt = sqrt((2 * l_1 + 1) * (2 * l_2 + 1) * (2 * l_3 + 1) * \
         _Factlist[l_1 - m_1] * _Factlist[l_1 + m_1] * _Factlist[l_2 - m_2] * \
         _Factlist[l_2 + m_2] * _Factlist[l_3 - m_3] * _Factlist[l_3 + m_3] / \
-        (4*pi)
-    ressqrt = sqrt(argsqrt)
+        (4*pi))
 
     prefac = Integer(_Factlist[bigL] * _Factlist[l_2 - l_1 + l_3] *
                      _Factlist[l_1 - l_2 + l_3] * _Factlist[l_1 + l_2 - l_3])/ \
@@ -767,9 +759,10 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     Explanation
     ===========
+
     The real Gaunt coefficient is defined as the integral over three
     real spherical harmonics:
-    
+
     .. math::
         \begin{aligned}
         \operatorname{RealGaunt}(l_1,l_2,l_3,m_1,m_2,m_3)
@@ -811,24 +804,28 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     Parameters
     ==========
+
     l_1, l_2, l_3, m_1, m_2, m_3 :
         Integer.
+
     prec - precision, default: ``None``.
         Providing a precision can
         drastically speed up the calculation.
 
     Returns
     =======
+
     Rational number times the square root of a rational number.
 
     Examples
     ========
+
     >>> from sympy.physics.wigner import real_gaunt
     >>> real_gaunt(2,2,4,-1,-1,0)
     -2/(7*sqrt(pi))
     >>> real_gaunt(10,10,20,-9,-9,0).n(64)
     -0.00002480019791932209313156167...
-    
+
     It is an error to use non-integer values for `l` and `m`::
         real_gaunt(2.8,0.5,1.3,0,0,0)
         Traceback (most recent call last):
@@ -841,6 +838,7 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     Notes
     =====
+
     The real Gaunt coefficient inherits from the standard Gaunt coefficient,
     the invariance under any permutation of the pairs `(l_i, m_i)` and the
     requirement that the sum of the `l_i` be even to yield a non-zero value.
@@ -849,7 +847,7 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     - zero for `l_1`, `l_2`, `l_3` not fulfiling the condition
       `l_1 \in \{l_{\text{max}}, l_{\text{max}}-2, \ldots, l_{\text{min}}\}`,
       where `l_{\text{max}} = l_2+l_3`,
-      
+
       .. math::
           \begin{aligned}
           l_{\text{min}} = \begin{cases} \kappa(l_2, l_3, m_2, m_3) & \text{if}\,
@@ -860,11 +858,12 @@ def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
       and `\kappa(l_2, l_3, m_2, m_3) = \max{\big(|l_2-l_3|, \min{\big(|m_2+m_3|,
       |m_2-m_3|\big)}\big)}`
-      
+
     - zero for an odd number of negative `m_i`
-    
+
     Algorithms
     ==========
+
     This function uses the algorithms of [Homeier96]_ and [Rasch03]_ to
     calculate the value of the real Gaunt coefficient exactly. Note that
     the formula used in [Rasch03]_ contains alternating sums over large
