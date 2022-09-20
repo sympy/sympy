@@ -1,4 +1,4 @@
-from sympy.core.numbers import (I, pi)
+from sympy.core.numbers import (I, pi, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import exp
@@ -9,7 +9,6 @@ from sympy.matrices.dense import Matrix
 from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
         real_gaunt, racah, dot_rot_grad_Ynm, wigner_3j, wigner_d_small, wigner_d)
 from sympy.testing.pytest import raises
-from sympy.core.numbers import Rational
 
 # for test cases, refer : https://en.wikipedia.org/wiki/Table_of_Clebsch%E2%80%93Gordan_coefficients
 
@@ -113,6 +112,7 @@ def test_gaunt():
                                 assert abs(g) < threshold
                             if (l1 + l2 + l3) % 2:
                                 assert abs(g) < threshold
+    assert gaunt(1, 1, 0, 0, 2, -2) is S.Zero
 
 
 def test_realgaunt():
@@ -145,7 +145,7 @@ def test_realgaunt():
     for i in range(len(v)):
         v[i] = x  # non literal ints fail
         raises(ValueError, lambda: real_gaunt(*v))
-        v[i] = 0                                
+        v[i] = 0
 
 
 def test_racah():
