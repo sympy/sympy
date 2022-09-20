@@ -266,34 +266,30 @@ A common workflow which leverages
 solving is
 1. set up an ODE in SymPy
 2. convert it to a numerical function using {func}`~.lambdify`
-3. solve the initial value problem by numerically integrating the ODE using SciPy's `solve_ivp`.
+3. solve the initial value problem by numerically integrating the ODE using
+   SciPy's `solve_ivp`.
 
 ```{warning}
 {func}`~.lambdify` uses {external:func}`~.exec` to dynamically execute Python code, and thus should not be used on unsanitized input.
 ```
 
 Here is an [example from the field of chemical
-kinetics](https://www.sympy.org/scipy-2017-codegen-tutorial/notebooks/25-chemical-kinetics-intro.html) 
+kinetics](https://www.sympy.org/scipy-2017-codegen-tutorial/notebooks/25-chemical-kinetics-intro.html)
 where the nonlinear ordinary differential equations take this form:
 
-$$
-r_f = & k_f y_0(t)^2  y_1(t) \\
+$$ r_f = & k_f y_0(t)^2  y_1(t) \\
 r_b = & k_b y_2(t)^2 \\
 \frac{d y_0(t)}{dt} = & 2(r_b - r_f) \\
 \frac{d y_1(t)}{dt} = & r_b - r_f \\
-\frac{d y_2(t)}{dt} = & 2(r_f - r_b)
-$$
+\frac{d y_2(t)}{dt} = & 2(r_f - r_b) $$
 
 and
 
 $$
 
-\vec{y}(t) = \begin{bmatrix}
-y_0(t) \\
+\vec{y}(t) = \begin{bmatrix} y_0(t) \\
 y_1(t) \\
-y_2(t)
-\end{bmatrix}
-$$
+y_2(t) \end{bmatrix} $$
 
 ```py
 >>> from sympy import symbols, lambdify
@@ -304,13 +300,14 @@ $$
 ...     rb = kb * y[2]**2
 ...     return [2*(rb - rf), rb - rf, 2*(rf - rb)]
 >>> y, (kf, kb) = symbols('y:3'), symbols('kf kb')
->>> ydot = rhs(None, y, kf, kb)
+>>> ydot = rhs(None, y, kf, kb) # derivative of the function y(t); value given by function rhs (right-hand side) for input values y, kf, and kb
 >>> ydot
+[2*kb*y2**2 - 2*kf*y0**2*y1, kb*y2**2 - kf*y0**2*y1, -2*kb*y2**2 + 2*kf*y0**2*y1]
 >>> t = symbols('t') # not used in this case
->>> f = lambdify((t, y, kf, kb), ydot)
+>>> f = lambdify((t, y, kf, kb), ydot) # convert the SymPy symbolic expression for ydot into a form that SciPy can evaluate numerically, f
 >>> k_vals = np.array([0.42, 0.17]) # arbitrary in this case
->>> y0 = [1, 1, 0]
->>> scipy.integrate.solve_ivp(f, (0, 10), y0, args=k_vals)
+>>> y0 = [1, 1, 0] # initial condition (initial values)
+>>> scipy.integrate.solve_ivp(f, (0, 10), y0, args=k_vals) # call SciPy's solve_ivp by passing it the function f, the interval of integration, the initial state, and the arguments to pass to the function f
     {'message': 'The solver successfully reached the end of the integration interval.', 'nfev': 68, 'njev': 0, 'nlu': 0, 'sol': None, 'status': 0, 'success': True, 't': [0.00000000e+00 1.68190462e-03 1.85009508e-02 1.86691413e-01
      6.37253319e-01 1.27438822e+00 2.15637690e+00 3.28555351e+00
      4.69240977e+00 6.45455786e+00 8.73068099e+00 1.00000000e+01], 't_events': None, 'y': [[1.         0.99858969 0.98475531 0.86889862 0.68120238 0.55390608
@@ -321,14 +318,9 @@ $$
       0.52048744 0.55430442 0.56645435 0.56979639 0.57044818 0.5705532 ]], 'y_events': None}
 ```
 
-`ydot` is the derivative of the function `y`, and the value of `ydot` is given
-by the function `rhs` (right-hand side) for input values `y`, `kf`, and `kb`. We
-use {func}`~.lambdify` to convert the SymPy symbolic expression for `ydot` into
-a form that SciPy can evaluate numerically, `f`. Finally, we call SciPy's
-`solve_ivp` by passing it the function `f`, the interval of integration, the
-initial state, and the arguments to pass to the function `f`. SciPy's
-`solve_ivp` returns a result containing `t` (time) points and corresponding `y`
-(numerical function result) values for each initial point in `y0`.
+SciPy's `solve_ivp` returns a result containing `t` (time) points and
+corresponding `y` (numerical function result) values for each initial point in
+`y0`.
 
 ## Ordinary Differential Equation Solving Hints
 
