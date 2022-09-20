@@ -3,12 +3,14 @@
 from sympy.core.add import Add
 from sympy.core import Function, S, sympify, pi, I
 from sympy.core.function import ArgumentIndexError, expand_mul
+from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
-from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+from sympy.functions.combinatorial.numbers import bernoulli, factorial, genocchi, harmonic
 from sympy.functions.elementary.complexes import re, unpolarify, Abs, polar_lift
 from sympy.functions.elementary.exponential import log, exp_polar, exp
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys.polytools import Poly
 
 ###############################################################################
@@ -402,12 +404,9 @@ class zeta(Function):
     .. math:: \zeta(s, a) = \sum_{n=0}^\infty \frac{1}{(n + a)^s},
 
     where the standard choice of argument for $n + a$ is used. For fixed
-    $a$ with $\operatorname{Re}(a) > 0$ the Hurwitz zeta function admits a
-    meromorphic continuation to all of $\mathbb{C}$, it is an unbranched
+    $a$ not a nonpositive integer the Hurwitz zeta function admits a
+    meromorphic continuation to all of $\mathbb{C}$; it is an unbranched
     function with a simple pole at $s = 1$.
-
-    Analytic continuation to other $a$ is possible under some circumstances,
-    but this is not typically done.
 
     The Hurwitz zeta function is a special case of the Lerch transcendent:
 
@@ -417,8 +416,8 @@ class zeta(Function):
     $s$ and $a$ (also $\operatorname{Re}(a) < 0$), see the documentation of
     :class:`lerchphi` for a description of the branching behavior.
 
-    If no value is passed for $a$, by this function assumes a default value
-    of $a = 1$, yielding the Riemann zeta function.
+    If no value is passed for $a$ a default value of $a = 1$ is assumed,
+    yielding the Riemann zeta function.
 
     Examples
     ========
@@ -442,25 +441,24 @@ class zeta(Function):
     >>> zeta(s).rewrite(dirichlet_eta)
     dirichlet_eta(s)/(1 - 2**(1 - s))
 
-    The Riemann zeta function at positive even integer and negative odd integer
-    values is related to the Bernoulli numbers:
+    The Riemann zeta function at nonnegative even and negative integer
+    values is related to the Bernoulli numbers and polynomials:
 
     >>> zeta(2)
     pi**2/6
     >>> zeta(4)
     pi**4/90
+    >>> zeta(0)
+    -1/2
     >>> zeta(-1)
     -1/12
+    >>> zeta(-4)
+    0
 
     The specific formulae are:
 
-    .. math:: \zeta(2n) = (-1)^{n+1} \frac{B_{2n} (2\pi)^{2n}}{2(2n)!}
-    .. math:: \zeta(-n) = -\frac{B_{n+1}}{n+1}
-
-    At negative even integers the Riemann zeta function is zero:
-
-    >>> zeta(-4)
-    0
+    .. math:: \zeta(2n) = -\frac{(2\pi i)^{2n} B_{2n}}{2(2n)!}
+    .. math:: \zeta(-n,a) = -\frac{B_{n+1}(a)}{n+1}
 
     No closed-form expressions are known at positive odd integers, but
     numerical evaluation is possible:
@@ -501,44 +499,36 @@ class zeta(Function):
     """
 
     @classmethod
-    def eval(cls, z, a_=None):
-        if a_ is None:
-            z, a = list(map(sympify, (z, 1)))
-        else:
-            z, a = list(map(sympify, (z, a_)))
+    def eval(cls, s, a=None):
+        if a is S.One:
+            return cls(s)
+        elif s is S.NaN or a is S.NaN:
+            return S.NaN
+        elif s is S.One:
+            return S.ComplexInfinity
+        elif s is S.Infinity:
+            return S.One
+        elif a is S.Infinity:
+            return S.Zero
 
-        if a.is_Number:
-            if a is S.NaN:
-                return S.NaN
-            elif a is S.One and a_ is not None:
-                return cls(z)
-            # TODO Should a == 0 return S.NaN as well?
+        sint = s.is_Integer
+        if a is None:
+            a = S.One
+        if sint and s.is_nonpositive:
+            return bernoulli(1-s, a) / (s-1)
+        elif a is S.One:
+            if sint and s.is_even:
+                return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
+        elif sint and a.is_Integer and a.is_positive:
+            return cls(s) - harmonic(a-1, s)
+        elif a.is_Integer and a.is_nonpositive and \
+                (s.is_integer is False or s.is_nonpositive is False):
+            return S.NaN
 
-        if z.is_Number:
-            if z is S.NaN:
-                return S.NaN
-            elif z is S.Infinity:
-                return S.One
-            elif z.is_zero:
-                return S.Half - a
-            elif z is S.One:
-                return S.ComplexInfinity
-        if z.is_integer:
-            if a.is_Integer:
-                if z.is_negative:
-                    zeta = S.NegativeOne**z * bernoulli(-z + 1)/(-z + 1)
-                elif z.is_even and z.is_positive:
-                    B, F = bernoulli(z), factorial(z)
-                    zeta = (S.NegativeOne**(z/2+1) * 2**(z - 1) * B * pi**z) / F
-                else:
-                    return
-
-                if a.is_negative:
-                    return zeta + harmonic(abs(a), z)
-                else:
-                    return zeta - harmonic(a - 1, z)
-        if z.is_zero:
-            return S.Half - a
+    def _eval_rewrite_as_bernoulli(self, s, a=1, **kwargs):
+        if a == 1 and s.is_integer and s.is_nonnegative and s.is_even:
+            return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
+        return bernoulli(1-s, a) / (s-1)
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1, **kwargs):
         if a != 1:
@@ -554,6 +544,17 @@ class zeta(Function):
         if arg_is_one is not None:
             return not arg_is_one
 
+    def _eval_expand_func(self, **hints):
+        s = self.args[0]
+        a = self.args[1] if len(self.args) > 1 else S.One
+        if a.is_integer:
+            if a.is_positive:
+                return zeta(s) - harmonic(a-1, s)
+            if a.is_nonpositive and (s.is_integer is False or
+                    s.is_nonpositive is False):
+                return S.NaN
+        return self
+
     def fdiff(self, argindex=1):
         if len(self.args) == 2:
             s, a = self.args
@@ -564,6 +565,22 @@ class zeta(Function):
         else:
             raise ArgumentIndexError
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        if len(self.args) == 2:
+            s, a = self.args
+        else:
+            s, a = self.args + (S.One,)
+
+        try:
+            c, e = a.leadterm(x)
+        except NotImplementedError:
+            return self
+
+        if e.is_negative and not s.is_positive:
+            raise NotImplementedError
+
+        return super(zeta, self)._eval_as_leading_term(x, logx, cdir)
+
 
 class dirichlet_eta(Function):
     r"""
@@ -572,22 +589,31 @@ class dirichlet_eta(Function):
     Explanation
     ===========
 
-    For $\operatorname{Re}(s) > 0$, this function is defined as
+    For $\operatorname{Re}(s) > 0$ and $0 < x \le 1$, this function is defined as
 
-    .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^{n-1}}{n^s}.
+    .. math:: \eta(s, a) = \sum_{n=0}^\infty \frac{(-1)^n}{(n+a)^s}.
 
-    It admits a unique analytic continuation to all of $\mathbb{C}$.
-    It is an entire, unbranched function.
+    It admits a unique analytic continuation to all of $\mathbb{C}$ for any
+    fixed $a$ not a nonpositive integer. It is an entire, unbranched function.
+
+    It can be expressed using the Hurwitz zeta function as
+
+    .. math:: \eta(s, a) = \zeta(s,a) - 2^{1-s} \zeta\left(s, \frac{a+1}{2}\right)
+
+    and using the generalized Genocchi function as
+
+    .. math:: \eta(s, a) = \frac{G(1-s, a)}{2(s-1)}.
+
+    In both cases the limiting value of $\log2 - \psi(a) + \psi\left(\frac{a+1}{2}\right)$
+    is used when $s = 1$.
 
     Examples
     ========
 
-    The Dirichlet eta function is closely related to the Riemann zeta function:
-
     >>> from sympy import dirichlet_eta, zeta
     >>> from sympy.abc import s
     >>> dirichlet_eta(s).rewrite(zeta)
-    (1 - 2**(1 - s))*zeta(s)
+    Piecewise((log(2), Eq(s, 1)), ((1 - 2**(1 - s))*zeta(s), True))
 
     See Also
     ========
@@ -598,19 +624,45 @@ class dirichlet_eta(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Dirichlet_eta_function
+    .. [2] Peter Luschny, "An introduction to the Bernoulli function",
+           https://arxiv.org/abs/2009.06743
 
     """
 
     @classmethod
-    def eval(cls, s):
-        if s == 1:
-            return log(2)
-        z = zeta(s)
-        if not z.has(zeta):
-            return (1 - 2**(1 - s))*z
+    def eval(cls, s, a=None):
+        if a is S.One:
+            return cls(s)
+        if a is None:
+            if s == 1:
+                return log(2)
+            z = zeta(s)
+            if not z.has(zeta):
+                return (1 - 2**(1-s)) * z
+            return
+        elif s == 1:
+            from sympy.functions.special.gamma_functions import digamma
+            return log(2) - digamma(a) + digamma((a+1)/2)
+        z1 = zeta(s, a)
+        z2 = zeta(s, (a+1)/2)
+        if not z1.has(zeta) and not z2.has(zeta):
+            return z1 - 2**(1-s) * z2
 
-    def _eval_rewrite_as_zeta(self, s, **kwargs):
-        return (1 - 2**(1 - s)) * zeta(s)
+    def _eval_rewrite_as_zeta(self, s, a=1, **kwargs):
+        from sympy.functions.special.gamma_functions import digamma
+        if a == 1:
+            return Piecewise((log(2), Eq(s, 1)), ((1 - 2**(1-s)) * zeta(s), True))
+        return Piecewise((log(2) - digamma(a) + digamma((a+1)/2), Eq(s, 1)),
+                (zeta(s, a) - 2**(1-s) * zeta(s, (a+1)/2), True))
+
+    def _eval_rewrite_as_genocchi(self, s, a=S.One, **kwargs):
+        from sympy.functions.special.gamma_functions import digamma
+        return Piecewise((log(2) - digamma(a) + digamma((a+1)/2), Eq(s, 1)),
+                (genocchi(1-s, a) / (2 * (s-1)), True))
+
+    def _eval_evalf(self, prec):
+        if all(i.is_number for i in self.args):
+            return self.rewrite(zeta)._eval_evalf(prec)
 
 
 class riemann_xi(Function):

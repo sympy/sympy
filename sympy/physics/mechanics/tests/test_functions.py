@@ -8,10 +8,9 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      find_dynamicsymbols, Lagrangian)
 
 from sympy.physics.mechanics.functions import gravity, center_of_mass
-from sympy.physics.vector.vector import Vector
 from sympy.testing.pytest import raises
 
-Vector.simp = True
+
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
 N = ReferenceFrame('N')
 A = N.orientnew('A', 'Axis', [q1, N.z])

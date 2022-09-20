@@ -2021,7 +2021,9 @@ class Ci(TrigonometricIntegral):
         if arg0 is S.NaN:
             arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if arg0.is_zero:
-            return S.EulerGamma
+            c, e = arg.as_coeff_exponent(x)
+            logx = log(x) if logx is None else logx
+            return log(c) + e*logx + S.EulerGamma
         elif arg0.is_finite:
             return self.func(arg0)
         else:
@@ -2146,8 +2148,6 @@ class Shi(TrigonometricIntegral):
             return arg
         elif not arg0.is_infinite:
             return self.func(arg0)
-        elif arg0.is_infinite:
-            return -pi*S.ImaginaryUnit/2
         else:
             return self
 

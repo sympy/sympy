@@ -396,6 +396,9 @@ graphviz_output_format = 'svg'
 intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'python': ('https://docs.python.org', None),
+    'mpmath': ('https://mpmath.org/doc/current/', None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
 }
 # Require :external: to reference intersphinx. Prevents accidentally linking
 # to something from matplotlib.

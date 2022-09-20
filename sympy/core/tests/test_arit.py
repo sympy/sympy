@@ -120,7 +120,7 @@ def test_div():
     assert e == (1 + -b)*((-1) + b)**(-1)
 
 
-def test_pow():
+def test_pow_arit():
     n1 = Rational(1)
     n2 = Rational(2)
     n5 = Rational(5)
@@ -174,10 +174,12 @@ def test_pow():
     assert (x**5*(-3*x)**(-3)).expand() == x**2 * Rational(-1, 27)
 
     # expand_power_exp
-    assert (x**(y**(x + exp(x + y)) + z)).expand(deep=False) == \
-        x**z*x**(y**(x + exp(x + y)))
-    assert (x**(y**(x + exp(x + y)) + z)).expand() == \
-        x**z*x**(y**x*y**(exp(x)*exp(y)))
+    _x = Symbol('x', zero=False)
+    _y = Symbol('y', zero=False)
+    assert (_x**(y**(x + exp(x + y)) + z)).expand(deep=False) == \
+        _x**z*_x**(y**(x + exp(x + y)))
+    assert (_x**(_y**(x + exp(x + y)) + z)).expand() == \
+        _x**z*_x**(_y**x*_y**(exp(x)*exp(y)))
 
     n = Symbol('n', even=False)
     k = Symbol('k', even=True)
