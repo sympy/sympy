@@ -347,6 +347,33 @@ y_2(t) \end{bmatrix} $$
       0.57043329 0.57045455 0.57048041 0.5705016  0.57051879 0.57053265
       0.57054389 0.5705532 ]], 'y_events': None}
 >>> y = solution.y # Extract the y (concentration) values from SciPy solution result
+```
+
+```{eval-rst}
+.. plot:: 
+  :format: doctest 
+  :include-source: True
+
+  >>> plt.plot(t_eval, y.T) # doctest: +SKIP
+```
+
+```{eval-rst}
+.. plot:: 
+  :format: doctest 
+  :include-source: True
+
+  >>> plt.plot([1, 2, 3], [4, 5, 6]) # doctest: +SKIP
+```
+
+```{eval-rst}
+.. plot:: 
+  :format: doctest 
+  :include-source: True
+
+  >>> plt.plot([11, 12, 13], [14, 15, 16]) # doctest: +SKIP
+```
+
+```{plot}
 >>> plt.plot(t_eval, y.T) # doctest: +SKIP
 >>> plt.xlabel('t') # doctest: +SKIP
 >>> plt.ylabel('Concentration') # doctest: +SKIP
