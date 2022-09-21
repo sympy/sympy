@@ -1983,6 +1983,11 @@ def test_sympy__functions__combinatorial__numbers__euler():
     assert _test_args(euler(x))
 
 
+def test_sympy__functions__combinatorial__numbers__andre():
+    from sympy.functions.combinatorial.numbers import andre
+    assert _test_args(andre(x))
+
+
 def test_sympy__functions__combinatorial__numbers__carmichael():
     from sympy.functions.combinatorial.numbers import carmichael
     assert _test_args(carmichael(x))
@@ -2728,6 +2733,11 @@ def test_sympy__functions__special__polynomials__chebyshevu_root():
 def test_sympy__functions__special__polynomials__hermite():
     from sympy.functions.special.polynomials import hermite
     assert _test_args(hermite(x, 2))
+
+
+def test_sympy__functions__special__polynomials__hermite_prob():
+    from sympy.functions.special.polynomials import hermite_prob
+    assert _test_args(hermite_prob(x, 2))
 
 
 def test_sympy__functions__special__polynomials__legendre():
