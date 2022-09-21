@@ -1618,6 +1618,31 @@ class PlanarJoint(Joint):
     >>> block.masscenter.vel(ground.frame)
     u1_PC(t)*A.x + u2_PC(t)*A.y
 
+    In some cases it could be your preference to only define the normals of the
+    plane with respect to both bodies. This can most easily be done by supplying
+    vectors to the ``interframe`` arguments. What will happen in this case is
+    that an interframe will be created with its ``x`` axis aligned with the
+    provided vector. For a further explanation of how this is done see the notes
+    of the ``Joint`` class. In the code below the above example with the block
+    on the slope is recreated by supplying vectors to the interframe arguments.
+    Note that the previously described option is however more computationally
+    efficient.
+
+    >>> from sympy import symbols, cos, sin
+    >>> from sympy.physics.mechanics import PlanarJoint, Body
+    >>> a, d, h = symbols('a d h')
+    >>> ground = Body('G')
+    >>> block = Body('B')
+    >>> joint = PlanarJoint(
+    ...     'PC', ground, block, parent_point=d * ground.z,
+    ...     child_point=-h * block.z, child_interframe=block.z,
+    ...     parent_interframe=cos(a) * ground.z + sin(a) * ground.x)
+    >>> block.dcm(ground).simplify()
+    Matrix([
+    [ cos(a)*cos(q0_PC(t)), sin(q0_PC(t)), -sin(a)*cos(q0_PC(t))],
+    [-sin(q0_PC(t))*cos(a), cos(q0_PC(t)),  sin(a)*sin(q0_PC(t))],
+    [               sin(a),             0,                cos(a)]])
+
     Notes
     =====
 
