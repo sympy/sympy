@@ -6,6 +6,7 @@ to 2D Trusses.
 
 from cmath import atan, inf
 from sympy.core.add import Add
+from sympy.core.evalf import INF
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -14,6 +15,7 @@ from sympy.external.importtools import import_module
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import zeros
 import math
+from sympy.physics.units.quantities import Quantity
 from sympy.plotting import plot
 from sympy.utilities.decorator import doctest_depends_on
 from sympy import sin, cos
@@ -745,7 +747,7 @@ class Truss:
         return
 
     @doctest_depends_on(modules=('numpy',))
-    def draw(self):
+    def draw(self, subs_dict=None):
         """
         Returns a plot object of the Truss with all its nodes, members,
         supports and loads.
@@ -815,7 +817,7 @@ class Truss:
         annotations = []
         rectangles = []
 
-        node_markers = self._draw_nodes()
+        node_markers = self._draw_nodes(subs_dict)
         markers += node_markers
 
         member_rectangles = self._draw_members()
@@ -827,10 +829,16 @@ class Truss:
         load_annotations = self._draw_loads()
         annotations += load_annotations
 
-        xmax = max(self._node_position_x)
-        xmin = min(self._node_position_x)
-        ymax = max(self._node_position_y)
-        ymin = min(self._node_position_y)
+        xmax = -INF
+        xmin = INF
+        ymax = -INF
+        ymin = INF
+
+        for node in list(self._node_coordinates):
+            xmax = max(xmax, self._node_coordinates[node][0])
+            xmin = min(xmin, self._node_coordinates[node][0])
+            ymax = max(ymax, self._node_coordinates[node][1])
+            ymin = min(ymin, self._node_coordinates[node][1])
 
         lim = max(xmax*1.1-xmin*0.8+1, ymax*1.1-ymin*0.8+1)
 
@@ -842,29 +850,66 @@ class Truss:
         return sing_plot
 
 
-    def _draw_nodes(self):
+    def _draw_nodes(self, subs_dict):
         node_markers = []
+        # nodes = self._node_coordinates
 
-        for node in self._nodes:
+        for node in list(self._node_coordinates):
+            if (type(self._node_coordinates[node][0]) in (Symbol, Quantity)):
+                if self._node_coordinates[node][0] in list(subs_dict):
+                    self._node_coordinates[node][0] = subs_dict[self._node_coordinates[node][0]]
+                else:
+                    raise ValueError("provided substituted dictionary is not adequate")
+            elif (type(self._node_coordinates[node][0]) == Mul):
+                objects = self._node_coordinates[node][0].as_coeff_Mul()
+                for object in objects:
+                    if type(object) in (Symbol, Quantity):
+                        if subs_dict==None or object not in list(subs_dict):
+                            raise ValueError("provided substituted dictionary is not adequate")
+                        else:
+                            self._node_coordinates[node][0] /= object
+                            self._node_coordinates[node][0] *= subs_dict[object]
+
+            if (type(self._node_coordinates[node][1]) in (Symbol, Quantity)):
+                if self._node_coordinates[node][1] in list(subs_dict):
+                    self._node_coordinates[node][1] = subs_dict[self._node_coordinates[node][1]]
+                else:
+                    raise ValueError("provided substituted dictionary is not adequate")
+            elif (type(self._node_coordinates[node][1]) == Mul):
+                objects = self._node_coordinates[node][1].as_coeff_Mul()
+                for object in objects:
+                    if type(object) in (Symbol, Quantity):
+                        if subs_dict==None or object not in list(subs_dict):
+                            raise ValueError("provided substituted dictionary is not adequate")
+                        else:
+                            self._node_coordinates[node][1] /= object
+                            self._node_coordinates[node][1] *= subs_dict[object]
+
+        for node in list(self._node_coordinates):
             node_markers.append(
                 {
-                    'args':[[node[1]], [node[2]]],
+                    'args':[[self._node_coordinates[node][0]], [self._node_coordinates[node][1]]],
                     'marker':'o',
                     'markersize':5,
                     'color':'black'
                 }
             )
-
         return node_markers
 
     def _draw_members(self):
 
         member_rectangles = []
 
-        xmax = max(self._node_position_x)
-        xmin = min(self._node_position_x)
-        ymax = max(self._node_position_y)
-        ymin = min(self._node_position_y)
+        xmax = -INF
+        xmin = INF
+        ymax = -INF
+        ymin = INF
+
+        for node in list(self._node_coordinates):
+            xmax = max(xmax, self._node_coordinates[node][0])
+            xmin = min(xmin, self._node_coordinates[node][0])
+            ymax = max(ymax, self._node_coordinates[node][1])
+            ymin = min(ymin, self._node_coordinates[node][1])
 
         if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
             max_diff = 1.1*xmax-0.8*xmin
@@ -923,11 +968,16 @@ class Truss:
     def _draw_supports(self):
         support_markers = []
 
-        xmax = max(self._node_position_x)
-        xmin = min(self._node_position_x)
-        ymax = max(self._node_position_y)
-        ymin = min(self._node_position_y)
+        xmax = -INF
+        xmin = INF
+        ymax = -INF
+        ymin = INF
 
+        for node in list(self._node_coordinates):
+            xmax = max(xmax, self._node_coordinates[node][0])
+            xmin = min(xmin, self._node_coordinates[node][0])
+            ymax = max(ymax, self._node_coordinates[node][1])
+            ymin = min(ymin, self._node_coordinates[node][1])
         if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
             max_diff = 1.1*xmax-0.8*xmin
         else:
@@ -983,16 +1033,21 @@ class Truss:
                         'color':'black'
                     }
                 )
-
         return support_markers
 
     def _draw_loads(self):
         load_annotations = []
 
-        xmax = max(self._node_position_x)
-        xmin = min(self._node_position_x)
-        ymax = max(self._node_position_y)
-        ymin = min(self._node_position_y)
+        xmax = -INF
+        xmin = INF
+        ymax = -INF
+        ymin = INF
+
+        for node in list(self._node_coordinates):
+            xmax = max(xmax, self._node_coordinates[node][0])
+            xmin = min(xmin, self._node_coordinates[node][0])
+            ymax = max(ymax, self._node_coordinates[node][1])
+            ymin = min(ymin, self._node_coordinates[node][1])
 
         if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
             max_diff = 1.1*xmax-0.8*xmin+5
@@ -1019,5 +1074,4 @@ class Truss:
                         'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')
                     }
                 )
-
         return load_annotations
