@@ -7,7 +7,7 @@ from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.sets.contains import Contains
-from sympy.functions.elementary.complexes import (conjugate, polar_lift, re)
+from sympy.functions.elementary.complexes import (conjugate, polar_lift, re, im)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -228,17 +228,29 @@ def test_expand():
         )
 
     assert besselsimp(besseli(S.Half, z)) == Piecewise(
-        ((-1)**(S(1)/4)*sqrt(2)*exp_polar(-I*pi/4)*sinh(z)
-            /(sqrt(pi)*sqrt(z)), (z > 0) | (z < 0)),
-        (0, True)
+        (Piecewise((-(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z),
+        (z > 0) | (z < 0)), (0, True)), (re(z) >= 0) | (im(z) < 0)),
+        (Piecewise(((-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z),
+        (z > 0) | (z < 0)), (0, True)), True)
         )
     assert besselsimp(besseli(Rational(-1, 2), z)) == Piecewise(
-        ((-1)**(S(1)/4)*sqrt(2)*exp_polar(-I*pi/4)*cosh(z)/(sqrt(pi)*sqrt(z)),
-            (z > 0) | (z < 0)),
-        (zoo, True)
+        (Piecewise((-(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*cosh(z)/(sqrt(pi)*z),
+        (z > 0) | (z < 0)), (zoo, True)), (re(z) >= 0) | (im(z) < 0)),
+        (Piecewise(((-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*cosh(z)/(sqrt(pi)*z),
+        (z > 0) | (z < 0)), (zoo, True)), True)
         )
-    assert besselsimp(besseli(Rational(5, 2), z)) == \
-        sqrt(2)*(z**2*sinh(z) - 3*z*cosh(z) + 3*sinh(z))/(sqrt(pi)*z**Rational(5, 2))
+    assert besselsimp(besseli(Rational(5, 2), z)) == Piecewise(
+        (Piecewise((-(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z)
+            + 3*(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*cosh(z)/(sqrt(pi)*z**2) -
+            3*(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z**3), (z > 0) |
+            (z < 0)), (0, True)), (re(z) >= 0) | (im(z) < 0)),
+        (Piecewise(((-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z) -
+                3*(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*cosh(z)/(sqrt(pi)*z**2) +
+                3*(-1)**(S(3)/4)*sqrt(2)*sqrt(I*z)*sinh(z)/(sqrt(pi)*z**3), (z >
+                    0) | (z < 0)), (0, True)), True)
+        )
+    # sqrt(2)*(z**2*sinh(z) - 3*z*cosh(z) + 3*sinh(z))/(sqrt(pi)*z**Rational(5, 2))
+
     assert besselsimp(besseli(Rational(-5, 2), z)) == \
         sqrt(2)*(z**2*cosh(z) - 3*z*sinh(z) + 3*cosh(z))/(sqrt(pi)*z**Rational(5, 2))
 

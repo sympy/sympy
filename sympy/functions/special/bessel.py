@@ -218,8 +218,7 @@ class besselj(BesselBase):
     def _eval_rewrite_as_besseli(self, nu, z, **kwargs):
         #return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
         # 9.6.3 in Abramovitz and Stegun
-        argz = arg(z)
-        not_lower_left = ((-pi/2 < argz) & (argz <= pi))
+        not_lower_left = (re(z) > 0) | (im(z) >= 0)
         return Piecewise(
             (exp(+1*I*pi*nu/2)*besseli(nu, z*exp(-1*pi*I/2)), not_lower_left),
             (exp(-3*I*pi*nu/2)*besseli(nu, z*exp(+3*pi*I/2)), True),
@@ -507,8 +506,7 @@ class besseli(BesselBase):
 
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
         # 9.6.3 in Abramovitz and Stegun
-        argz = arg(z)
-        not_upper_left = ((-pi < argz) & (argz <= pi/2))
+        not_upper_left = (re(z) >= 0) | (im(z) < 0)
         return Piecewise(
             (exp( -I*pi*nu/2)*besselj(nu, z*exp(   pi*I/2)), not_upper_left),
             (exp(3*I*pi*nu/2)*besselj(nu, z*exp(-3*pi*I/2)), True),
