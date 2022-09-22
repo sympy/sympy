@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy.core.backend import pi, AppliedUndef, Derivative, Matrix, zeros
+from sympy.core.backend import pi, AppliedUndef, Derivative, Matrix
 from sympy.physics.mechanics.body import Body
 from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
                                   ReferenceFrame)
@@ -1399,9 +1399,26 @@ class PlanarJoint(Joint):
     ($\\vec{v}_1$, $\\vec{v}_2$) and generalized coordinates ($q_1$, $q_2$),
     i.e. $\\vec{r} = q_1 \\hat{v}_1 + q_2 \\hat{v}_2$. The direction cosine
     matrix between the ``child_interframe`` and ``parent_interframe`` is formed
-    using a simple rotation ($q_0$) about the rotation axis. The page on the
-    joints framework provides a more detailed explanation of the intermediate
-    frames.
+    using a simple rotation ($q_0$) about the rotation axis.
+    In order to simplify the definition of the ``PlanarJoint`` the
+    ``rotation_axis`` and ``planar_vectors`` are set to be the unit vectors of
+    the ``parent_interframe`` according to the table below. This ensures that
+    you can only define these vectors by creating a separate frame and supplying
+    that as interframe. If you however would only like to supply the normals of
+    te plane with respect to the parent and child body, then you can also supply
+    those to the ``parent_interframe`` and ``child_interframe`` arguments. An
+    example of both of these cases is in the examples section below and the page
+    on the joints framework provides a more detailed explanation of the
+    intermediate frames.
+
+    .. list-table::
+
+        * - ``rotation_axis``
+          - ``parent_interframe.x``
+        * - ``planar_vectors[0]``
+          - ``parent_interframe.y``
+        * - ``planar_vectors[1]``
+          - ``parent_interframe.z``
 
     Parameters
     ==========
@@ -1444,12 +1461,6 @@ class PlanarJoint(Joint):
         transformation is formulated. If a Vector is provided then an interframe
         is created which aligns its X axis with the given vector. The default
         value is the child's own frame.
-    rotation_axis : Vector, optional
-        The axis about which the rotation occurs. For more details on the
-        default value see the notes.
-    planar_vectors : List of Vectors, optional
-        The vectors that describe the planar translation directions. For more
-        details on the default values see the notes.
 
     Attributes
     ==========
@@ -1579,44 +1590,43 @@ class PlanarJoint(Joint):
     slope's surface. Note that we can specify the normal of the plane using the
     rotation axis argument.
 
-    >>> joint = PlanarJoint('PC', ground, block, parent_point=d * ground.z,
-    ...                     child_point=-h * block.z, parent_interframe=slope,
-    ...                     rotation_axis=slope.z)
+    >>> joint = PlanarJoint('PC', ground, block, parent_point=d * ground.x,
+    ...                     child_point=-h * block.x, parent_interframe=slope)
 
     Once the joint is established the kinematics of the bodies can be accessed.
     First the ``rotation_axis``, which is normal to the plane and the
     ``plane_vectors``, can be found.
 
     >>> joint.rotation_axis
-    A.z
+    A.x
     >>> joint.planar_vectors
-    [A.x, A.y]
+    [A.y, A.z]
 
     The direction cosine matrix of the block with respect to the ground can be
     found with:
 
     >>> block.dcm(ground)
     Matrix([
-    [ cos(a)*cos(q0_PC(t)), sin(q0_PC(t)), -sin(a)*cos(q0_PC(t))],
-    [-sin(q0_PC(t))*cos(a), cos(q0_PC(t)),  sin(a)*sin(q0_PC(t))],
-    [               sin(a),             0,               cos(a)]])
+    [              cos(a),              0,              -sin(a)],
+    [sin(a)*sin(q0_PC(t)),  cos(q0_PC(t)), sin(q0_PC(t))*cos(a)],
+    [sin(a)*cos(q0_PC(t)), -sin(q0_PC(t)), cos(a)*cos(q0_PC(t))]])
 
     The angular velocity of the block can be computed with respect to the
     ground.
 
     >>> block.ang_vel_in(ground)
-    u0_PC(t)*A.z
+    u0_PC(t)*A.x
 
     The position of the block's center of mass can be found with:
 
     >>> block.masscenter.pos_from(ground.masscenter)
-    d*G_frame.z + h*B_frame.z + q1_PC(t)*A.x + q2_PC(t)*A.y
+    d*G_frame.x + h*B_frame.x + q1_PC(t)*A.y + q2_PC(t)*A.z
 
     Finally, the linear velocity of the block's center of mass can be
     computed with respect to the ground.
 
     >>> block.masscenter.vel(ground.frame)
-    u1_PC(t)*A.x + u2_PC(t)*A.y
+    u1_PC(t)*A.y + u2_PC(t)*A.z
 
     In some cases it could be your preference to only define the normals of the
     plane with respect to both bodies. This can most easily be done by supplying
@@ -1634,72 +1644,23 @@ class PlanarJoint(Joint):
     >>> ground = Body('G')
     >>> block = Body('B')
     >>> joint = PlanarJoint(
-    ...     'PC', ground, block, parent_point=d * ground.z,
-    ...     child_point=-h * block.z, child_interframe=block.z,
-    ...     parent_interframe=cos(a) * ground.z + sin(a) * ground.x)
+    ...     'PC', ground, block, parent_point=d * ground.x,
+    ...     child_point=-h * block.x, child_interframe=block.x,
+    ...     parent_interframe=cos(a) * ground.x + sin(a) * ground.z)
     >>> block.dcm(ground).simplify()
     Matrix([
-    [ cos(a)*cos(q0_PC(t)), sin(q0_PC(t)), -sin(a)*cos(q0_PC(t))],
-    [-sin(q0_PC(t))*cos(a), cos(q0_PC(t)),  sin(a)*sin(q0_PC(t))],
-    [               sin(a),             0,                cos(a)]])
-
-    Notes
-    =====
-
-    In the method of parsing the rotation axis and planar vectors the overall
-    aim is for ``x`` to be the rotation axis and ``y`` and ``z`` to be the
-    planar vectors. This is also the default. However users are free to specify
-    differently and in those cases the vectors are parsed as following. All
-    directions metioned here, i.e. ``x``, ``y`` and ``z``, are the basis vectors
-    of the ``parent_interframe``.
-
-    After analyzing the planar vectors, the rotation axis is created if it is
-    not provided. The method to create the rotation axis is dependent on the
-    provided planar vectors according to the following rules:
-
-    .. list-table::
-        :header-rows: 1
-
-        * - Provided ``planar_vectors``
-          - Computed ``rotation_axis``
-        * - ``None``
-          - ``x``
-        * - 1 planar vector
-          - Not allowed raises a ``ValueError``
-        * - 2 arbritrary planar vectors
-          - ``planar_vectors[0] × planar_vectors[1]``
-
-    Now the rotation axis is known the missing planar vectors are determined. If
-    no planar vectors are provided, the first planar vector is determined as
-    follows:
-
-    .. list-table::
-        :header-rows: 1
-
-        * - Determined ``rotation_axis``
-          - Computed ``planar_vectors[0]``
-        * - parallel to ``z``
-          - ``y × rotation_axis``
-        * - nonparallel to ``z``
-          - ``z × rotation_axis``
-
-    The second planar vector is determined as follows (if not provided):
-
-    .. list-table::
-        :header-rows: 1
-
-        * - Computed ``planar_vectors[1]``
-        * - ``rotation_axis × planar_vectors[0]``
+    [               cos(a),              0,               sin(a)],
+    [-sin(a)*sin(q0_PC(t)),  cos(q0_PC(t)), sin(q0_PC(t))*cos(a)],
+    [-sin(a)*cos(q0_PC(t)), -sin(q0_PC(t)), cos(a)*cos(q0_PC(t))]])
 
     """
 
     def __init__(self, name, parent, child, rotation_coordinate=None,
                  planar_coordinates=None, rotation_speed=None,
                  planar_speeds=None, parent_point=None, child_point=None,
-                 parent_interframe=None, child_interframe=None,
-                 rotation_axis=None, planar_vectors=None):
-        self._rotation_axis = rotation_axis
-        self._planar_vectors = planar_vectors
+                 parent_interframe=None, child_interframe=None):
+        # A ready to merge implementation of setting the planar_vectors and
+        # rotation_axis was added and removed in PR #24046
         coordinates = (rotation_coordinate, planar_coordinates)
         speeds = (rotation_speed, planar_speeds)
         super().__init__(name, parent, child, coordinates, speeds,
@@ -1734,67 +1695,12 @@ class PlanarJoint(Joint):
     @property
     def rotation_axis(self):
         """The axis about which the rotation occurs."""
-        return self._rotation_axis
+        return self.parent_interframe.x
 
     @property
     def planar_vectors(self):
         """The vectors that describe the planar translation directions."""
-        return self._planar_vectors
-
-    def _set_vectors(self):
-        # Create list of planar_vectors based on the given planar_vectors
-        planar_vectors = []
-        if isinstance(self._planar_vectors, (tuple, list)):
-            if len(self._planar_vectors) > 2:  # Too many planar vectors
-                raise ValueError(
-                    f'{len(self._planar_vectors)} planar vectors have been '
-                    f'provided, a maximum of 2 is allowed.')
-            for planar_vector in self._planar_vectors:
-                planar_vectors.append(self._axis(planar_vector,
-                                                 self.parent_interframe))
-        elif isinstance(self._planar_vectors, Vector):
-            planar_vectors.append(self._axis(self._planar_vectors,
-                                             self.parent_interframe))
-        elif self._planar_vectors is not None:
-            raise TypeError('planar_vectors should be a tuple or a Vector.')
-
-        # Check if the planar_vectors are not parallel
-        if len(planar_vectors) == 2:
-            n = cross(planar_vectors[0], planar_vectors[1])
-            if n.to_matrix(self.parent_interframe) == zeros(3, 1):
-                raise ValueError('The provided planar vectors should not be '
-                                 'parallel to each other.')
-
-        # Determine rotation axis
-        rotation_axis = self._rotation_axis
-        if rotation_axis is None:
-            if len(planar_vectors) == 0:
-                rotation_axis = self.parent_interframe.x
-            elif len(planar_vectors) == 2:
-                rotation_axis = cross(planar_vectors[0], planar_vectors[1])
-            elif len(planar_vectors) == 1:
-                raise ValueError('Underdefined plane. At least 2 vectors should'
-                                 ' be supplied.')
-        elif isinstance(rotation_axis, Vector):
-            rotation_axis = self._axis(rotation_axis, self.parent_interframe)
-            for planar_vector in planar_vectors:
-                if rotation_axis.dot(planar_vector) != 0:
-                    raise ValueError('Planar vectors should be perpendicular to'
-                                     ' the rotation axis.')
-        else:
-            raise TypeError('Rotation axis should be a Vector.')
-
-        # Determine missing planar vectors
-        if len(planar_vectors) == 0:
-            planar_vector = cross(self.parent_interframe.z, rotation_axis)
-            if planar_vector == Vector(0):  # parallel with z
-                planar_vector = cross(self.parent_interframe.y, rotation_axis)
-            planar_vectors.append(planar_vector)
-        if len(planar_vectors) == 1:
-            planar_vectors.append(cross(rotation_axis, planar_vectors[0]))
-
-        self._rotation_axis = rotation_axis
-        self._planar_vectors = planar_vectors
+        return [self.parent_interframe.y, self.parent_interframe.z]
 
     def _generate_coordinates(self, coordinates):
         rotation_speed = self._fill_coordinate_list(coordinates[0], 1, 'q',
@@ -1809,7 +1715,6 @@ class PlanarJoint(Joint):
         return rotation_speed.col_join(planar_speeds)
 
     def _orient_frames(self):
-        self._set_vectors()
         self.child_interframe.orient_axis(
             self.parent_interframe, self.rotation_axis,
             self.rotation_coordinate)
@@ -1817,18 +1722,17 @@ class PlanarJoint(Joint):
     def _set_angular_velocity(self):
         self.child_interframe.set_ang_vel(
             self.parent_interframe,
-            self.rotation_speed * self.rotation_axis.normalize())
+            self.rotation_speed * self.rotation_axis)
 
     def _set_linear_velocity(self):
         self.child_point.set_pos(
             self.parent_point,
-            self.planar_coordinates[0] * self.planar_vectors[0].normalize() +
-            self.planar_coordinates[1] * self.planar_vectors[1].normalize())
+            self.planar_coordinates[0] * self.planar_vectors[0] +
+            self.planar_coordinates[1] * self.planar_vectors[1])
         self.parent_point.set_vel(self.parent_interframe, 0)
         self.child_point.set_vel(self.child_interframe, 0)
         self.child_point.set_vel(
-            self.parent.frame,
-            self.planar_speeds[0] * self.planar_vectors[0].normalize() +
-            self.planar_speeds[1] * self.planar_vectors[1].normalize())
+            self.parent.frame, self.planar_speeds[0] * self.planar_vectors[0] +
+            self.planar_speeds[1] * self.planar_vectors[1])
         self.child.masscenter.v2pt_theory(self.child_point, self.parent.frame,
                                           self.child.frame)

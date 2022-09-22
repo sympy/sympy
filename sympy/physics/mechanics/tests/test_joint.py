@@ -867,68 +867,6 @@ def test_planar_joint():
     assert A.ang_vel_in(N) == u0_def * N.x
 
 
-def test_planar_joint_set_vectors():
-    q0, q1, q2, u0, u1, u2 = dynamicsymbols('q0:3, u0:3')
-    # Test no rotation axis and no planar vectors (default)
-    N, A, P, C = _generate_body()
-    J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
-                    rotation_axis=None,
-                    planar_vectors=None)
-    assert J.rotation_axis == N.x
-    assert J.planar_vectors == [N.y, N.z]
-    # Test no rotation axis two planar vectors
-    N, A, P, C = _generate_body()
-    J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
-                    rotation_axis=None,
-                    planar_vectors=[N.x, N.y + N.z])
-    assert J.rotation_axis == -N.y + N.z
-    assert J.planar_vectors == [N.x, N.y + N.z]
-    assert C.masscenter.pos_from(
-        P.masscenter) == q1 * N.x + q2 / sqrt(2) * N.y + q2 / sqrt(2) * N.z
-    # Test rotation axis parallel to z no planar vectors
-    N, A, P, C = _generate_body()
-    J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
-                    rotation_axis=N.z,  # Positive direction
-                    planar_vectors=None)
-    assert J.rotation_axis == N.z
-    assert J.planar_vectors == [N.x, N.y]
-    N, A, P, C = _generate_body()
-    J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
-                    rotation_axis=-N.z,  # Negative direction
-                    planar_vectors=None)
-    assert J.rotation_axis == -N.z
-    assert J.planar_vectors == [-N.x, N.y]
-    # Test rotation axis not parallel to z with no planar vectors
-    N, A, P, C = _generate_body()
-    J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
-                    rotation_axis=N.x + N.y,
-                    planar_vectors=None)
-    assert J.rotation_axis == N.x + N.y
-    assert J.planar_vectors == [-N.x + N.y, 2 * N.z]
-
-    # Test error messages
-    N, A, P, C = _generate_body()
-    plan = lambda rotation_axis, planar_vectors: PlanarJoint(
-        'J', P, C, q0, [q1, q2], u0, [u1, u2], rotation_axis=rotation_axis,
-        planar_vectors=planar_vectors)
-    # Test no rotation axis single planar vector
-    N, A, P, C = _generate_body()
-    raises(ValueError, lambda: plan(None, [N.y]))
-    # Test too many planar vectors
-    raises(ValueError, lambda: plan(None, [N.x, N.y, N.z]))
-    # Test wrong planar vector type
-    raises(TypeError, lambda: plan(None, N.x.to_matrix(N)))
-    # Test parallel planar vectors
-    raises(ValueError, lambda: plan(None, [-symbols('a') * N.x, 2 * N.x]))
-    # Test planar vectors expressed in child frame
-    raises(ValueError, lambda: plan(None, [A.x, A.y]))
-    # Test too many rotation axes
-    raises(TypeError, lambda: plan([N.x, N.y], None))
-    # Test non perpendicular rotation axis
-    raises(ValueError, lambda: plan(N.x + N.y, N.x))
-    raises(ValueError, lambda: plan(N.x + N.y, [N.z, N.y]))
-
-
 def test_planar_joint_advanced():
     # Tests whether someone is able to just specify two normals, which will form
     # the rotation axis seen from the parent and child body.
