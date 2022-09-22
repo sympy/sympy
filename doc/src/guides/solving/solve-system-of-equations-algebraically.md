@@ -79,22 +79,20 @@ Refer to [](solving-guidance.md#options-that-can-speed-up).
 
 ### Systems of Equations With no Solution
 
-Some systems of equations have no solution. For example, the following system
-has no solution because it reduces to $1 = 2$:
+Some systems of equations have no solution. For example, the following two
+systems have no solution because they reduce to `1 == 0`:
 
 ```py
 >>> from sympy import solve
 >>> from sympy.abc import x, y
->>> solve([x + y - 1, x + y - 2], [x, y], dict=True)
+>>> solve([x + y - 1, x + y], [x, y], dict=True)
 []
 ```
-
-The following system reduces to $z = z + 1$, which also has no solution:
 
 ```py
 from sympy import solve
 from sympy.abc import x, y, z
-solve([x + y - z, x + y - (z + 1)], [x, y], dict=True)
+solve([x + y - (z + 1), x + y - z)], [x, y], dict=True)
 []
 ```
 
@@ -103,10 +101,9 @@ could be satisfied if $z=0$. Note that {func}`~.solve` will not assume that
 $z=0$ even though that is the only value of $z$ that makes the system of
 equations consistent because $z$ is a parameter rather than an unknown. That is,
 {func}`~.solve` does not treat $z$ as an unknown because it is not in the list
-of symbols to be solved for `[x, y]`. (Note that you define a symbol the same
-way, for example `from sympy.abc import x, y, z`, whether it is an unknown or a
-parameter; whether a symbol is treated as an unknown to be solved for hinges on
-whether that symbol is in the list of unknowns passed to `solve`.)
+of symbols specified as unknowns (`[x, y]`) and all such symbols are treated
+like parameters with arbitrary value. This is a semantic definition and has
+nothing to do with a symbol's creation (or import from {mod}`~.abc`).
 
 ```py
 >>> from sympy import solve
