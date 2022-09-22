@@ -524,33 +524,7 @@ class Joint(ABC):
         return Matrix(generated_coordinates)
 
 
-class _JointAxisMixin:
-    """Mixin class, which provides joint axis support methods.
-
-    This class is strictly only to be inherited by joint types that have a joint
-    axis. This is because the methods of this class assume that the object has
-    a joint_axis attribute.
-    """
-
-    __slots__ = ()
-
-    def _express_joint_axis(self, frame):
-        """Helper method to express the joint axis in a specified frame."""
-        try:
-            ax_mat = self.joint_axis.to_matrix(self.parent_interframe)
-        except ValueError:
-            ax_mat = self.joint_axis.to_matrix(self.child_interframe)
-        try:
-            self.parent_interframe.dcm(frame)  # Check if connected
-        except ValueError:
-            self.child_interframe.dcm(frame)  # Should be connected
-            int_frame = self.child_interframe
-        else:
-            int_frame = self.parent_interframe
-        return self._to_vector(ax_mat, int_frame).express(frame)
-
-
-class PinJoint(Joint, _JointAxisMixin):
+class PinJoint(Joint):
     """Pin (Revolute) Joint.
 
     .. image:: PinJoint.svg
@@ -799,11 +773,9 @@ class PinJoint(Joint, _JointAxisMixin):
         return self._fill_coordinate_list(speed, 1, 'u')
 
     def _orient_frames(self):
-        self._joint_axis = self._axis(
-            self.joint_axis, self.parent_interframe, self.child_interframe)
-        axis = self._express_joint_axis(self.parent_interframe)
+        self._joint_axis = self._axis(self.joint_axis, self.parent_interframe)
         self.child_interframe.orient_axis(
-            self.parent_interframe, axis, self.coordinates[0])
+            self.parent_interframe, self.joint_axis, self.coordinates[0])
 
     def _set_angular_velocity(self):
         self.child_interframe.set_ang_vel(self.parent_interframe, self.speeds[
@@ -817,7 +789,7 @@ class PinJoint(Joint, _JointAxisMixin):
                                           self.parent.frame, self.child.frame)
 
 
-class PrismaticJoint(Joint, _JointAxisMixin):
+class PrismaticJoint(Joint):
     """Prismatic (Sliding) Joint.
 
     .. image:: PrismaticJoint.svg
@@ -1064,10 +1036,9 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         return self._fill_coordinate_list(speed, 1, 'u')
 
     def _orient_frames(self):
-        self._joint_axis = self._axis(
-            self.joint_axis, self.parent_interframe, self.child_interframe)
-        axis = self._express_joint_axis(self.parent_interframe)
-        self.child_interframe.orient_axis(self.parent_interframe, axis, 0)
+        self._joint_axis = self._axis(self.joint_axis, self.parent_interframe)
+        self.child_interframe.orient_axis(
+            self.parent_interframe, self.joint_axis, 0)
 
     def _set_angular_velocity(self):
         self.child_interframe.set_ang_vel(self.parent_interframe, 0)
@@ -1081,7 +1052,7 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         self.child.masscenter.set_vel(self.parent.frame, self.speeds[0] * axis)
 
 
-class CylindricalJoint(_JointAxisMixin, Joint):
+class CylindricalJoint(Joint):
     """Cylindrical Joint.
 
     .. image:: CylindricalJoint.svg
@@ -1356,11 +1327,9 @@ class CylindricalJoint(_JointAxisMixin, Joint):
         return self._fill_coordinate_list(speeds, 2, 'u')
 
     def _orient_frames(self):
-        self._joint_axis = self._axis(
-            self.joint_axis, self.parent_interframe, self.child_interframe)
-        axis = self._express_joint_axis(self.parent_interframe)
+        self._joint_axis = self._axis(self.joint_axis, self.parent_interframe)
         self.child_interframe.orient_axis(
-            self.parent_interframe, axis, self.rotation_coordinate)
+            self.parent_interframe, self.joint_axis, self.rotation_coordinate)
 
     def _set_angular_velocity(self):
         self.child_interframe.set_ang_vel(

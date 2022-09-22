@@ -237,7 +237,7 @@ def test_pin_joint_interframe():
     Pint = ReferenceFrame('Pint')
     Pint.orient_body_fixed(N, (pi / 4, pi, pi / 3), 'xyz')
     PinJoint('J', P, C, q, u, parent_point=N.x, child_point=-C.y,
-             parent_interframe=Pint, joint_axis=C.x)
+             parent_interframe=Pint, joint_axis=Pint.x)
     assert _simplify_matrix(N.dcm(A)) == Matrix([
         [-1 / 2, sqrt(3) * cos(q) / 2, -sqrt(3) * sin(q) / 2],
         [sqrt(6) / 4, sqrt(2) * (2 * sin(q) + cos(q)) / 4,
@@ -277,7 +277,7 @@ def test_pin_joint_interframe():
     Cint.orient_body_fixed(A, (2 * pi / 3, -pi, pi / 2), 'xyz')
     PinJoint('J', P, C, q, u, parent_point=N.x - N.y, child_point=-C.z,
              parent_interframe=Pint, child_interframe=Cint,
-             joint_axis=Cint.x + Cint.z)
+             joint_axis=Pint.x + Pint.z)
     assert _simplify_matrix(N.dcm(A)) == Matrix([
         [cos(q), (sqrt(2) + sqrt(6)) * -sin(q) / 4,
          (-sqrt(2) + sqrt(6)) * sin(q) / 4],
@@ -312,20 +312,6 @@ def test_pin_joint_joint_axis():
     assert pin.joint_axis == Pint.y
     assert N.dcm(A) == Matrix([[-sin(q), 0, cos(q)], [0, -1, 0],
                                [cos(q), 0, sin(q)]])
-    # Check child_interframe as reference
-    N, A, P, C, Pint, Cint = _generate_body(True)
-    pin = PinJoint('J', P, C, q, u, parent_interframe=Pint,
-                   child_interframe=Cint, joint_axis=Cint.y)
-    assert pin.joint_axis == Cint.y
-    assert N.dcm(A) == Matrix([[-sin(q), 0, cos(q)], [0, -1, 0],
-                               [cos(q), 0, sin(q)]])
-    # Check child as reference
-    N, A, P, C, Pint, Cint = _generate_body(True)
-    pin = PinJoint('J', P, C, q, u, parent_interframe=Pint,
-                   child_interframe=Cint, joint_axis=C.y)
-    assert pin.joint_axis == C.y
-    assert N.dcm(A) == Matrix([[-sin(q), 0, cos(q)], [0, -1, 0],
-                               [cos(q), 0, sin(q)]])
     # Check combination of joint_axis with interframes supplied as vectors (2x)
     N, A, P, C = _generate_body()
     pin = PinJoint('J', P, C, q, u, parent_interframe=N.z,
@@ -343,6 +329,8 @@ def test_pin_joint_joint_axis():
     N, A, P, C, Pint, Cint = _generate_body(True)
     raises(ValueError, lambda: PinJoint('J', P, C,
                                         joint_axis=cos(q) * N.x + sin(q) * N.y))
+    # Check joint_axis provided in child frame
+    raises(ValueError, lambda: PinJoint('J', P, C, joint_axis=C.x))
     # Check some invalid combinations
     raises(ValueError, lambda: PinJoint('J', P, C, joint_axis=P.x + C.y))
     raises(ValueError, lambda: PinJoint(
@@ -355,16 +343,13 @@ def test_pin_joint_joint_axis():
     N, A, P, C, Pint, Cint = _generate_body(True)
     PinJoint('J', P, C, parent_interframe=Pint, child_interframe=Cint,
              joint_axis=Pint.x + P.y)
-    N, A, P, C, Pint, Cint = _generate_body(True)
-    PinJoint('J', P, C, parent_interframe=Pint, child_interframe=Cint,
-             joint_axis=Cint.x + C.y)
     # Check invalid zero vector
     raises(Exception, lambda: PinJoint(
         'J', P, C, parent_interframe=Pint, child_interframe=Cint,
         joint_axis=Vector(0)))
-    raises(ValueError, lambda: PinJoint(
+    raises(Exception, lambda: PinJoint(
         'J', P, C, parent_interframe=Pint, child_interframe=Cint,
-        joint_axis=C.z - Cint.x))
+        joint_axis=P.y + Pint.y))
 
 
 def test_pin_joint_arbitrary_axis():
@@ -545,14 +530,6 @@ def test_pin_joint_axis():
     N, A, P, C, Pint, Cint = _generate_body(True)
     PinJoint('J', P, C, q, u, parent_interframe=Pint, child_interframe=Cint,
              joint_axis=-Pint.z)
-    assert N.dcm(A) == N_R_A
-    N, A, P, C, Pint, Cint = _generate_body(True)
-    PinJoint('J', P, C, q, u, parent_interframe=Pint, child_interframe=Cint,
-             joint_axis=-Cint.z)
-    assert N.dcm(A) == N_R_A
-    N, A, P, C, Pint, Cint = _generate_body(True)
-    PinJoint('J', P, C, q, u, parent_interframe=Pint, child_interframe=Cint,
-             joint_axis=A.x)
     assert N.dcm(A) == N_R_A
     # Test time varying joint axis
     N, A, P, C, Pint, Cint = _generate_body(True)
