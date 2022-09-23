@@ -1400,16 +1400,17 @@ class PlanarJoint(Joint):
     i.e. $\\vec{r} = q_1 \\hat{v}_1 + q_2 \\hat{v}_2$. The direction cosine
     matrix between the ``child_interframe`` and ``parent_interframe`` is formed
     using a simple rotation ($q_0$) about the rotation axis.
-    In order to simplify the definition of the ``PlanarJoint`` the
+
+    In order to simplify the definition of the ``PlanarJoint``, the
     ``rotation_axis`` and ``planar_vectors`` are set to be the unit vectors of
     the ``parent_interframe`` according to the table below. This ensures that
     you can only define these vectors by creating a separate frame and supplying
-    that as interframe. If you however would only like to supply the normals of
-    te plane with respect to the parent and child body, then you can also supply
-    those to the ``parent_interframe`` and ``child_interframe`` arguments. An
-    example of both of these cases is in the examples section below and the page
-    on the joints framework provides a more detailed explanation of the
-    intermediate frames.
+    that as the interframe. If you however would only like to supply the normals
+    of the plane with respect to the parent and child bodies, then you can also
+    supply those to the ``parent_interframe`` and ``child_interframe``
+    arguments. An example of both of these cases is in the examples section
+    below and the page on the joints framework provides a more detailed
+    explanation of the intermediate frames.
 
     .. list-table::
 
@@ -1633,10 +1634,11 @@ class PlanarJoint(Joint):
     vectors to the ``interframe`` arguments. What will happen in this case is
     that an interframe will be created with its ``x`` axis aligned with the
     provided vector. For a further explanation of how this is done see the notes
-    of the ``Joint`` class. In the code below the above example with the block
-    on the slope is recreated by supplying vectors to the interframe arguments.
+    of the ``Joint`` class. In the code below, the above example (with the block
+    on the slope) is recreated by supplying vectors to the interframe arguments.
     Note that the previously described option is however more computationally
-    efficient.
+    efficient, because the algorithm now has to compute the rotation angle
+    between the provided vector and the 'x' axis.
 
     >>> from sympy import symbols, cos, sin
     >>> from sympy.physics.mechanics import PlanarJoint, Body
