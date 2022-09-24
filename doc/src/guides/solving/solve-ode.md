@@ -296,7 +296,9 @@ y_2(t) \end{bmatrix} $$
   >>> import numpy as np
   >>> #import scipy.integrate
   >>> import matplotlib.pyplot as plt
-  >>> y, (kf, kb) = symbols('y:3'), symbols('kf kb')
+  >>> # Create symbols y0, y1, and y2
+  >>> y = symbols('y:3')
+  >>> kf, kb = symbols('kf kb')
   >>> rf = kf * y[0]**2 * y[1]
   >>> rb = kb * y[2]**2
   >>> # Derivative of the function y(t); values for the three chemical species
