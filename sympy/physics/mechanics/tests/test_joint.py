@@ -3,10 +3,11 @@ from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
-from sympy.core.backend import Matrix, _simplify_matrix
+from sympy.core.backend import Matrix, _simplify_matrix, eye, zeros
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import (dynamicsymbols, Body, PinJoint,
-                                     PrismaticJoint, CylindricalJoint)
+                                     PrismaticJoint, CylindricalJoint,
+                                     PlanarJoint)
 from sympy.physics.mechanics.joint import Joint
 from sympy.physics.vector import Vector, ReferenceFrame, Point
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
@@ -237,7 +238,7 @@ def test_pin_joint_interframe():
     Pint = ReferenceFrame('Pint')
     Pint.orient_body_fixed(N, (pi / 4, pi, pi / 3), 'xyz')
     PinJoint('J', P, C, q, u, parent_point=N.x, child_point=-C.y,
-             parent_interframe=Pint, joint_axis=C.x)
+             parent_interframe=Pint, joint_axis=Pint.x)
     assert _simplify_matrix(N.dcm(A)) == Matrix([
         [-1 / 2, sqrt(3) * cos(q) / 2, -sqrt(3) * sin(q) / 2],
         [sqrt(6) / 4, sqrt(2) * (2 * sin(q) + cos(q)) / 4,
@@ -277,7 +278,7 @@ def test_pin_joint_interframe():
     Cint.orient_body_fixed(A, (2 * pi / 3, -pi, pi / 2), 'xyz')
     PinJoint('J', P, C, q, u, parent_point=N.x - N.y, child_point=-C.z,
              parent_interframe=Pint, child_interframe=Cint,
-             joint_axis=Cint.x + Cint.z)
+             joint_axis=Pint.x + Pint.z)
     assert _simplify_matrix(N.dcm(A)) == Matrix([
         [cos(q), (sqrt(2) + sqrt(6)) * -sin(q) / 4,
          (-sqrt(2) + sqrt(6)) * sin(q) / 4],
@@ -312,20 +313,6 @@ def test_pin_joint_joint_axis():
     assert pin.joint_axis == Pint.y
     assert N.dcm(A) == Matrix([[-sin(q), 0, cos(q)], [0, -1, 0],
                                [cos(q), 0, sin(q)]])
-    # Check child_interframe as reference
-    N, A, P, C, Pint, Cint = _generate_body(True)
-    pin = PinJoint('J', P, C, q, u, parent_interframe=Pint,
-                   child_interframe=Cint, joint_axis=Cint.y)
-    assert pin.joint_axis == Cint.y
-    assert N.dcm(A) == Matrix([[-sin(q), 0, cos(q)], [0, -1, 0],
-                               [cos(q), 0, sin(q)]])
-    # Check child as reference
-    N, A, P, C, Pint, Cint = _generate_body(True)
-    pin = PinJoint('J', P, C, q, u, parent_interframe=Pint,
-                   child_interframe=Cint, joint_axis=C.y)
-    assert pin.joint_axis == C.y
-    assert N.dcm(A) == Matrix([[-sin(q), 0, cos(q)], [0, -1, 0],
-                               [cos(q), 0, sin(q)]])
     # Check combination of joint_axis with interframes supplied as vectors (2x)
     N, A, P, C = _generate_body()
     pin = PinJoint('J', P, C, q, u, parent_interframe=N.z,
@@ -343,6 +330,8 @@ def test_pin_joint_joint_axis():
     N, A, P, C, Pint, Cint = _generate_body(True)
     raises(ValueError, lambda: PinJoint('J', P, C,
                                         joint_axis=cos(q) * N.x + sin(q) * N.y))
+    # Check joint_axis provided in child frame
+    raises(ValueError, lambda: PinJoint('J', P, C, joint_axis=C.x))
     # Check some invalid combinations
     raises(ValueError, lambda: PinJoint('J', P, C, joint_axis=P.x + C.y))
     raises(ValueError, lambda: PinJoint(
@@ -355,16 +344,13 @@ def test_pin_joint_joint_axis():
     N, A, P, C, Pint, Cint = _generate_body(True)
     PinJoint('J', P, C, parent_interframe=Pint, child_interframe=Cint,
              joint_axis=Pint.x + P.y)
-    N, A, P, C, Pint, Cint = _generate_body(True)
-    PinJoint('J', P, C, parent_interframe=Pint, child_interframe=Cint,
-             joint_axis=Cint.x + C.y)
     # Check invalid zero vector
     raises(Exception, lambda: PinJoint(
         'J', P, C, parent_interframe=Pint, child_interframe=Cint,
         joint_axis=Vector(0)))
-    raises(ValueError, lambda: PinJoint(
+    raises(Exception, lambda: PinJoint(
         'J', P, C, parent_interframe=Pint, child_interframe=Cint,
-        joint_axis=C.z - Cint.x))
+        joint_axis=P.y + Pint.y))
 
 
 def test_pin_joint_arbitrary_axis():
@@ -545,14 +531,6 @@ def test_pin_joint_axis():
     N, A, P, C, Pint, Cint = _generate_body(True)
     PinJoint('J', P, C, q, u, parent_interframe=Pint, child_interframe=Cint,
              joint_axis=-Pint.z)
-    assert N.dcm(A) == N_R_A
-    N, A, P, C, Pint, Cint = _generate_body(True)
-    PinJoint('J', P, C, q, u, parent_interframe=Pint, child_interframe=Cint,
-             joint_axis=-Cint.z)
-    assert N.dcm(A) == N_R_A
-    N, A, P, C, Pint, Cint = _generate_body(True)
-    PinJoint('J', P, C, q, u, parent_interframe=Pint, child_interframe=Cint,
-             joint_axis=A.x)
     assert N.dcm(A) == N_R_A
     # Test time varying joint axis
     N, A, P, C, Pint, Cint = _generate_body(True)
@@ -809,6 +787,88 @@ def test_cylindrical_joint():
         P.masscenter) == m * N.x + q1_def * N.z - l * A.y
     assert C.masscenter.vel(N) == u1 * N.z - u0 * l * A.z
     assert A.ang_vel_in(N) == u0 * N.z
+
+
+def test_planar_joint():
+    N, A, P, C = _generate_body()
+    q0_def, q1_def, q2_def = dynamicsymbols('q0:3_J')
+    u0_def, u1_def, u2_def = dynamicsymbols('u0:3_J')
+    Cj = PlanarJoint('J', P, C)
+    assert Cj.name == 'J'
+    assert Cj.parent == P
+    assert Cj.child == C
+    assert Cj.coordinates == Matrix([q0_def, q1_def, q2_def])
+    assert Cj.speeds == Matrix([u0_def, u1_def, u2_def])
+    assert Cj.rotation_coordinate == q0_def
+    assert Cj.planar_coordinates == Matrix([q1_def, q2_def])
+    assert Cj.rotation_speed == u0_def
+    assert Cj.planar_speeds == Matrix([u1_def, u2_def])
+    assert Cj.kdes == Matrix([u0_def - q0_def.diff(t), u1_def - q1_def.diff(t),
+                              u2_def - q2_def.diff(t)])
+    assert Cj.rotation_axis == N.x
+    assert Cj.planar_vectors == [N.y, N.z]
+    assert Cj.child_point.pos_from(C.masscenter) == Vector(0)
+    assert Cj.parent_point.pos_from(P.masscenter) == Vector(0)
+    r_P_C = q1_def * N.y + q2_def * N.z
+    assert Cj.parent_point.pos_from(Cj.child_point) == -r_P_C
+    assert C.masscenter.pos_from(P.masscenter) == r_P_C
+    assert Cj.child_point.vel(N) == u1_def * N.y + u2_def * N.z
+    assert A.ang_vel_in(N) == u0_def * N.x
+    assert Cj.parent_interframe == N
+    assert Cj.child_interframe == A
+    assert Cj.__str__() == 'PlanarJoint: J  parent: P  child: C'
+
+    q0, q1, q2, u0, u1, u2 = dynamicsymbols('q0:3, u0:3')
+    l, m = symbols('l, m')
+    N, A, P, C, Pint, Cint = _generate_body(True)
+    Cj = PlanarJoint('J', P, C, rotation_coordinate=q0, planar_coordinates=q1,
+                     planar_speeds=[u1, u2], parent_point=m * N.x,
+                     child_point=l * A.y, parent_interframe=Pint,
+                     child_interframe=Cint)
+    assert Cj.coordinates == Matrix([q0, q1, q2_def])
+    assert Cj.speeds == Matrix([u0_def, u1, u2])
+    assert Cj.rotation_coordinate == q0
+    assert Cj.planar_coordinates == Matrix([q1, q2_def])
+    assert Cj.rotation_speed == u0_def
+    assert Cj.planar_speeds == Matrix([u1, u2])
+    assert Cj.kdes == Matrix([u0_def - q0.diff(t), u1 - q1.diff(t),
+                              u2 - q2_def.diff(t)])
+    assert Cj.rotation_axis == Pint.x
+    assert Cj.planar_vectors == [Pint.y, Pint.z]
+    assert Cj.child_point.pos_from(C.masscenter) == l * A.y
+    assert Cj.parent_point.pos_from(P.masscenter) == m * N.x
+    assert Cj.parent_point.pos_from(Cj.child_point) == q1 * N.y + q2_def * N.z
+    assert C.masscenter.pos_from(
+        P.masscenter) == m * N.x - q1 * N.y - q2_def * N.z - l * A.y
+    assert C.masscenter.vel(N) == -u1 * N.y - u2 * N.z + u0_def * l * A.x
+    assert A.ang_vel_in(N) == u0_def * N.x
+
+
+def test_planar_joint_advanced():
+    # Tests whether someone is able to just specify two normals, which will form
+    # the rotation axis seen from the parent and child body.
+    # This specific example is a block on a slope, which has that same slope of
+    # 30 degrees, so in the zero configuration the frames of the parent and
+    # child are actually aligned.
+    q0, q1, q2, u0, u1, u2 = dynamicsymbols('q0:3, u0:3')
+    l1, l2 = symbols('l1:3')
+    N, A, P, C = _generate_body()
+    J = PlanarJoint('J', P, C, q0, [q1, q2], u0, [u1, u2],
+                    parent_point=l1 * N.z,
+                    child_point=-l2 * C.z,
+                    parent_interframe=N.z + N.y / sqrt(3),
+                    child_interframe=A.z + A.y / sqrt(3))
+    assert J.rotation_axis.express(N) == (N.z + N.y / sqrt(3)).normalize()
+    assert J.rotation_axis.express(A) == (A.z + A.y / sqrt(3)).normalize()
+    assert J.rotation_axis.angle_between(N.z) == pi / 6
+    assert N.dcm(A).xreplace({q0: 0, q1: 0, q2: 0}) == eye(3)
+    N_R_A = Matrix([
+        [cos(q0), -sqrt(3) * sin(q0) / 2, sin(q0) / 2],
+        [sqrt(3) * sin(q0) / 2, 3 * cos(q0) / 4 + 1 / 4,
+         sqrt(3) * (1 - cos(q0)) / 4],
+        [-sin(q0) / 2, sqrt(3) * (1 - cos(q0)) / 4, cos(q0) / 4 + 3 / 4]])
+    # N.dcm(A) == N_R_A did not work
+    assert _simplify_matrix(N.dcm(A) - N_R_A) == zeros(3)
 
 
 def test_deprecated_parent_child_axis():

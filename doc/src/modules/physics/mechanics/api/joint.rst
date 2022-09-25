@@ -19,5 +19,8 @@ Joint (Docstrings)
 .. autoclass:: CylindricalJoint
    :members:
 
+.. autoclass:: PlanarJoint
+   :members:
+
 .. automodule:: sympy.physics.mechanics.jointsmethod
    :members:
