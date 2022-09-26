@@ -144,6 +144,7 @@ class Relational(Boolean, EvalfMixin):
     ValidRelationOperator = {}  # type: tDict[tUnion[str, None], Type[Relational]]
 
     is_Relational = True
+    is_Boolean = True
 
     # ValidRelationOperator - Defined below, because the necessary classes
     #   have not yet been defined
