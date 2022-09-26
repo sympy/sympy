@@ -10,7 +10,7 @@ from sympy.physics.mechanics import (dynamicsymbols, Body, PinJoint,
                                      PlanarJoint)
 from sympy.physics.mechanics.joint import Joint
 from sympy.physics.vector import Vector, ReferenceFrame, Point
-from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 Vector.simp = True
@@ -220,7 +220,6 @@ def test_pin_joint_chaos_pendulum():
                                        (h/4 + lB/2)*omega)*A.x
 
 
-@XFAIL
 def test_pin_joint_interframe():
     q, u = dynamicsymbols('q, u')
     # Check not connected
