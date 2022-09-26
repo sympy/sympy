@@ -777,6 +777,48 @@ class ReferenceFrame:
                            [sin(angle), cos(angle), 0],
                            [0, 0, 1]])
 
+    def _parse_consecutive_rotations(self, angles, rotation_order):
+        """Helper for orient_body_fixed and orient_space_fixed.
+
+        Parameters
+        ==========
+        angles : 3-tuple of sympifiable
+            Three angles in radians used for the successive rotations.
+        rotation_order : 3 character string or 3 digit integer
+            Order of the rotations. The order can be specified by the strings
+            ``'XZX'``, ``'131'``, or the integer ``131``. There are 12 unique
+            valid rotation orders.
+
+        Returns
+        =======
+
+        amounts : list
+            List of sympifiables corresponding to the rotation angles.
+        rot_order : list
+            List of integers corresponding to the axis of rotation.
+        rot_matrices : list
+            List of DCM around the given axis with corresponding magnitude.
+
+        """
+        amounts = list(angles)
+        for i, v in enumerate(amounts):
+            if not isinstance(v, Vector):
+                amounts[i] = sympify(v)
+
+        approved_orders = ('123', '231', '312', '132', '213', '321', '121',
+                           '131', '212', '232', '313', '323', '')
+        # make sure XYZ => 123
+        rot_order = translate(str(rotation_order), 'XYZxyz', '123123')
+        if rot_order not in approved_orders:
+            raise TypeError('The rotation order is not a valid order.')
+
+        rot_order = [int(r) for r in rot_order]
+        if not (len(amounts) == 3 & len(rot_order) == 3):
+            raise TypeError('Body orientation takes 3 values & 3 orders')
+        rot_matrices = [self._rot(order, amount)
+                        for (order, amount) in zip(rot_order, amounts)]
+        return amounts, rot_order, rot_matrices
+
     def orient_body_fixed(self, parent, angles, rotation_order):
         """Rotates this reference frame relative to the parent reference frame
         by right hand rotating through three successive body fixed simple axis
@@ -855,38 +897,17 @@ class ReferenceFrame:
         >>> B.orient_body_fixed(N, (q1, q2, q3), 123)
 
         """
+        from sympy.physics.vector.functions import dynamicsymbols
 
         _check_frame(parent)
 
-        amounts = list(angles)
-        for i, v in enumerate(amounts):
-            if not isinstance(v, Vector):
-                amounts[i] = sympify(v)
-
-        approved_orders = ('123', '231', '312', '132', '213', '321', '121',
-                           '131', '212', '232', '313', '323', '')
-        # make sure XYZ => 123
-        rot_order = translate(str(rotation_order), 'XYZxyz', '123123')
-        if rot_order not in approved_orders:
-            raise TypeError('The rotation order is not a valid order.')
-
-        if not (len(amounts) == 3 & len(rot_order) == 3):
-            raise TypeError('Body orientation takes 3 values & 3 orders')
-        rot_matrices = (self._rot(int(rot_order[0]), amounts[0]),
-                        self._rot(int(rot_order[1]), amounts[1]),
-                        self._rot(int(rot_order[2]), amounts[2]))
+        amounts, rot_order, rot_matrices = self._parse_consecutive_rotations(
+            angles, rotation_order)
         self._dcm(parent, rot_matrices[0] * rot_matrices[1] * rot_matrices[2])
-
-        from sympy.physics.vector.functions import dynamicsymbols
 
         rot_vecs = [zeros(3, 1) for _ in range(3)]
         for i, order in enumerate(rot_order):
-            rot_vecs[i][int(order) - 1] = amounts[i].diff(dynamicsymbols._t)
-        # Express in parent frame
-        # u1, u2, u3 = rot_vecs[0] + rot_matrices[0] * (
-        #     rot_vecs[1] + rot_matrices[1] * rot_vecs[2])
-        # wvec = u1 * parent.x + u2 * parent.y + u3 * parent.z
-        # Express in child frame
+            rot_vecs[i][order - 1] = amounts[i].diff(dynamicsymbols._t)
         u1, u2, u3 = rot_vecs[2] + rot_matrices[2].T * (
             rot_vecs[1] + rot_matrices[1].T * rot_vecs[0])
         wvec = u1 * self.x + u2 * self.y + u3 * self.z  # There is a double -
@@ -970,37 +991,17 @@ class ReferenceFrame:
         [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
 
         """
+        from sympy.physics.vector.functions import dynamicsymbols
 
         _check_frame(parent)
 
-        amounts = list(angles)
-        for i, v in enumerate(amounts):
-            if not isinstance(v, Vector):
-                amounts[i] = sympify(v)
-
-        approved_orders = ('123', '231', '312', '132', '213', '321', '121',
-                           '131', '212', '232', '313', '323', '')
-        # make sure XYZ => 123
-        rot_order = translate(str(rotation_order), 'XYZxyz', '123123')
-        if rot_order not in approved_orders:
-            raise TypeError('The supplied order is not an approved type')
-
-        if not (len(amounts) == 3 & len(rot_order) == 3):
-            raise TypeError('Space orientation takes 3 values & 3 orders')
-        rot_matrices = (self._rot(int(rot_order[0]), amounts[0]),
-                        self._rot(int(rot_order[1]), amounts[1]),
-                        self._rot(int(rot_order[2]), amounts[2]))
+        amounts, rot_order, rot_matrices = self._parse_consecutive_rotations(
+            angles, rotation_order)
         self._dcm(parent, rot_matrices[2] * rot_matrices[1] * rot_matrices[0])
 
-        from sympy.physics.vector.functions import dynamicsymbols
         rot_vecs = [zeros(3, 1) for _ in range(3)]
         for i, order in enumerate(rot_order):
-            rot_vecs[i][int(order) - 1] = amounts[i].diff(dynamicsymbols._t)
-        # Express in parent frame
-        # u1, u2, u3 = rot_vecs[2] + rot_matrices[2] * (
-        #     rot_vecs[1] + rot_matrices[1] * rot_vecs[0])
-        # wvec = u1 * parent.x + u2 * parent.y + u3 * parent.z
-        # Express in child frame
+            rot_vecs[i][order - 1] = amounts[i].diff(dynamicsymbols._t)
         u1, u2, u3 = rot_vecs[0] + rot_matrices[0].T * (
             rot_vecs[1] + rot_matrices[1].T * rot_vecs[2])
         wvec = u1 * self.x + u2 * self.y + u3 * self.z  # There is a double -

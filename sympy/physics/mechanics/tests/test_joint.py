@@ -238,12 +238,12 @@ def test_pin_joint_interframe():
     Pint.orient_body_fixed(N, (pi / 4, pi, pi / 3), 'xyz')
     PinJoint('J', P, C, q, u, parent_point=N.x, child_point=-C.y,
              parent_interframe=Pint, joint_axis=Pint.x)
-    assert _simplify_matrix(N.dcm(A)) == Matrix([
+    assert _simplify_matrix(N.dcm(A)) - Matrix([
         [-1 / 2, sqrt(3) * cos(q) / 2, -sqrt(3) * sin(q) / 2],
         [sqrt(6) / 4, sqrt(2) * (2 * sin(q) + cos(q)) / 4,
          sqrt(2) * (-sin(q) + 2 * cos(q)) / 4],
         [sqrt(6) / 4, sqrt(2) * (-2 * sin(q) + cos(q)) / 4,
-         -sqrt(2) * (sin(q) + 2 * cos(q)) / 4]])
+         -sqrt(2) * (sin(q) + 2 * cos(q)) / 4]]) == zeros(3)
     assert A.ang_vel_in(N) == u * Pint.x
     assert C.masscenter.pos_from(P.masscenter) == N.x + A.y
     assert C.masscenter.vel(N) == u * A.z
