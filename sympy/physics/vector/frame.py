@@ -829,6 +829,10 @@ class ReferenceFrame:
 
         .. _Euler and Tait-Bryan Angles: https://en.wikipedia.org/wiki/Euler_angles
 
+        The computed angular velocity in this method is by default expressed in
+        the child's frame, so it is most preferable to use ``u1 * child.x + u2 *
+        child.y + u3 * child.z`` as generalized speeds.
+
         Parameters
         ==========
 
@@ -920,6 +924,10 @@ class ReferenceFrame:
         by right hand rotating through three successive space fixed simple axis
         rotations. Each subsequent axis of rotation is about the "space fixed"
         unit vectors of the parent reference frame.
+
+        The computed angular velocity in this method is by default expressed in
+        the child's frame, so it is most preferable to use ``u1 * child.x + u2 *
+        child.y + u3 * child.z`` as generalized speeds.
 
         Parameters
         ==========
