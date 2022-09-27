@@ -35,25 +35,32 @@ class KanesMethod(_Methods):
     loads : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
-    auxiliary : Matrix
+    auxiliary_eqs : Matrix
         If applicable, the set of auxiliary Kane's
         equations used to solve for non-contributing
         forces.
     mass_matrix : Matrix
-        The system's mass matrix
+        The system's dynamics mass matrix: [k_d; k_dnh]
     forcing : Matrix
-        The system's forcing vector
+        The system's dynamics forcing vector: -[f_d; f_dnh]
     mass_matrix_kin : Matrix
-        The "mass matrix" for kinematic differential equations
+        The "mass matrix" for kinematic differential equations: k_kqdot
     forcing_kin : Matrix
-        The forcing vector for kinematic differential equations
+        The forcing vector for kinematic differential equations: -(k_ku*u + f_k)
     mass_matrix_full : Matrix
-        The "mass matrix" for the u's and q's with explicit kinematics
+        The "mass matrix" for the u's and q's with dynamics and explicit kinematics
     forcing_full : Matrix
-        The "forcing vector" for the u's and q's with explicit kinematics
+        The "forcing vector" for the u's and q's with dynamics and explicit kinematics
 
-    By default, the kinematic and "full" mass matrix and forcing vector are given
-    with the kinematic equations in explicit form. The method also provides an `_implicit` version for those matrices/vectors where the kinematics are left in implicit form
+    Notes
+    =====
+
+    The mass matrices and forcing vectors which involve kinematic equations are given in explicit form.
+    In other words, mass_matrix_kin = k_kqdot = identity
+
+    The Kane object also provides an ``_implicit`` version for those matrices/vectors where the kinematics
+    are left in implicit form, e.g. with mass_matrix_kin_implicit is not necessarily an identity
+    This can provide more compact equations for non-simple kinematics (see https://github.com/sympy/sympy/issues/22626)
 
     Examples
     ========
@@ -559,7 +566,7 @@ class KanesMethod(_Methods):
         constraints) the length of the returned vectors will be o - m + s in
         length. The first o - m equations will be the constrained Kane's
         equations, then the s auxiliary Kane's equations. These auxiliary
-        equations can be accessed with the auxiliary_eqs().
+        equations can be accessed with the auxiliary_eqs property.
 
         Parameters
         ==========
@@ -672,19 +679,22 @@ class KanesMethod(_Methods):
             raise ValueError('Need to compute Fr, Fr* first.')
         return -Matrix([self._f_d, self._f_dnh])
 
+
     def _mass_matrix_kin(self, explicit=True):
         """
-        Returns the "mass matrix" Y_q for the kinematic differential equations
-        Y_q*q' = f_q = Y_u*u + f(q, t)
-        If explicit=True, Y_q = identity
+        Returns the "mass matrix" k_qqdot for the kinematic differential equations
+
+        k_qqdot * q' = f_q = -k_ku * u - f_k(q, t)
+        If explicit=True (default behavior), k_qqdot = identity
         """
         return self._k_kqdot if explicit else self._k_kqdot_implicit
 
     def _forcing_kin(self, explicit=True):
         """
         Returns the "forcing vector" for the kinematic differential equation
-        Y_q*q' = f_q = Y_u*u + f(q, t)
-        If explicit=True (default behavior), assumes Y_q = identity
+
+        k_qqdot * q' = f_q = -k_ku * u - f_k(q, t)
+        If explicit=True (default behavior), implies k_qqdot = identity
         """
         if explicit:
             return -(self._k_ku * Matrix(self.u) + self._f_k)
@@ -693,22 +703,22 @@ class KanesMethod(_Methods):
 
     @property
     def mass_matrix_kin(self):
-        """The mass matrix of the the kinematic differential equations in explicit form."""
+        """The mass matrix of the the kinematic differential equations k_qqdot (explicit form, i.e. k_qqdot=identity)."""
         return self._mass_matrix_kin(True)
 
     @property
     def mass_matrix_kin_implicit(self):
-        """The mass matrix of the the kinematic differential equations in implicit form."""
+        """The mass matrix of the the kinematic differential equations k_qqdot (implicit form)."""
         return self._mass_matrix_kin(False)
 
     @property
     def forcing_kin(self):
-        """The focing vector  the the kinematic differential equations in explicit form."""
+        """The focing vector  the the kinematic differential equations -k_ku * u - f_k (explicit form)."""
         return self._forcing_kin(True)
 
     @property
     def forcing_kin_implicit(self):
-        """The focing vector  the the kinematic differential equations in implicit form."""
+        """The focing vector  the the kinematic differential equations -k_ku * u - f_k (implicit form)."""
         return self._forcing_kin(False)
 
     def _mass_matrix_full(self, explicit=True):

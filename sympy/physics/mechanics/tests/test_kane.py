@@ -1,3 +1,4 @@
+from sympy import solve
 from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros)
 from sympy.simplify.simplify import simplify
@@ -463,3 +464,37 @@ def test_implicit_kinematics():
         [x.count_ops() for x in KM.mass_matrix_full_implicit]
     )
     assert n_ops_implicit / n_ops_explicit < .05
+
+    # Ideally we would check that implicit and explicit equations give the same result as done in test_one_dof
+    # But the whole raison-d'etre of the implicit equations is to deal with problems such
+    # as this one where the explicit form is too complicated to handle, especially the angular part
+    # (i.e. tests would be too slow)
+    # Instead, we check that the kinematic equations are correct using more fundamental tests:
+    #
+    # (1) that we recover the kinematic equations we have provided
+    assert (KM.mass_matrix_kin_implicit * KM.q.diff() - KM.forcing_kin_implicit) == Matrix(kinematic_eqs)
+
+    # (2) that rate of quaternions matches what 'textbook' solutions give
+    # Note that we just use the explicit kinematics for the linear velocities
+    # as they are not as complicated as the angular ones
+    qdot_candidate = KM.forcing_kin
+
+    quat_dot_textbook = Matrix([
+        [0, -P, -Q, -R],
+        [P,  0,  R, -Q],
+        [Q, -R,  0,  P],
+        [R,  Q, -P,  0],
+    ]) * q_att_vec / 2
+
+    # Again, if we don't use this "textbook" solution
+    # sympy will struggle to deal with the terms related to quaternion rates
+    # due to the number of operations involved
+    qdot_candidate[-1] = quat_dot_textbook[0] # lambda_0, note the [-1] as sympy's Kane puts the dependent coordinate last
+    qdot_candidate[0]  = quat_dot_textbook[1] # lambda_1
+    qdot_candidate[1]  = quat_dot_textbook[2] # lambda_2
+    qdot_candidate[2]  = quat_dot_textbook[3] # lambda_3
+
+    # sub the config constraint in the candidate solution and compare to the implicit rhs
+    lambda_0_sol = solve(config_cons[0], q_att_vec[0])[1]
+    lhs_candidate = simplify(KM.mass_matrix_kin_implicit * qdot_candidate).subs({q_att_vec[0]: lambda_0_sol})
+    assert lhs_candidate == KM.forcing_kin_implicit
