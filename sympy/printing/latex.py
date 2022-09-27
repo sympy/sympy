@@ -532,7 +532,7 @@ class LatexPrinter(Printer):
                 units, nonunits = sift(args, lambda x: (hasattr(x, "_scale_factor") or hasattr(x, "is_physical_constant")) or
                               (isinstance(x, Pow) and
                                hasattr(x.base, "is_physical_constant")), binary=True)
-                prefixes, units = sift(units, lambda x: hasattr(x, "is_physical_constant"), binary=True)
+                prefixes, units = sift(units, lambda x: hasattr(x, "_scale_factor"), binary=True)
                 return convert_args(nonunits + prefixes + units)
 
         def convert_args(args) -> str:
@@ -540,7 +540,6 @@ class LatexPrinter(Printer):
 
             for i, term in enumerate(args):
                 term_tex = self._print(term)
-                
                 if not (hasattr(term, "_scale_factor") or hasattr(term, "is_physical_constant")):
                     if self._needs_mul_brackets(term, first=(i == 0),
                                                 last=(i == len(args) - 1)):
