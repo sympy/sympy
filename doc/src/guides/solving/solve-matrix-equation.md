@@ -74,11 +74,11 @@ same number of unknowns as equations. If not, SymPy will give the error
 
 If you need to repeatedly solve matrix equations with the same matrix $A$ but
 different constant vectors $b$, it is more efficient to use one of the following
-methods: use [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition)
-via {meth}`~sympy.matrices.matrices.MatrixBase.LUdecomposition`
+methods: [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition) via
+{meth}`~sympy.matrices.matrices.MatrixBase.LUdecomposition`
 
 ```py
->>> from sympy import symbols, Matrix, eye
+>>> from sympy import symbols, Matrix, eye, simplify
 >>> c, d, e = symbols("c, d, e")
 >>> A = Matrix([[c,d], [1, -e]])
 >>> A
@@ -124,7 +124,8 @@ via {meth}`~sympy.matrices.matrices.MatrixBase.LUdecomposition`
     ⎢   2   ⎥
     ⎢───────⎥
     ⎣c⋅e + d⎦
->>> U.solve(L.solve(P*b)) # One-line approach
+>>> solution = U.solve(L.solve(P*b)) # One-line approach
+>>> solution
     ⎡  2⋅e  ⎤
     ⎢───────⎥
     ⎢c⋅e + d⎥
@@ -132,7 +133,12 @@ via {meth}`~sympy.matrices.matrices.MatrixBase.LUdecomposition`
     ⎢   2   ⎥
     ⎢───────⎥
     ⎣c⋅e + d⎦
->>> U.solve(L.solve(P*b2)) # Repeating one-line approach for b2
+>>> simplify(A * solution) # Demonstrate that solution is correct
+    ⎡2⎤
+    ⎢ ⎥
+    ⎣0⎦
+>>> solution2 = U.solve(L.solve(P*b2)) # Repeating one-line approach for b2
+>>> solution2
     ⎡  4⋅e  ⎤
     ⎢───────⎥
     ⎢c⋅e + d⎥
@@ -140,9 +146,13 @@ via {meth}`~sympy.matrices.matrices.MatrixBase.LUdecomposition`
     ⎢   4   ⎥
     ⎢───────⎥
     ⎣c⋅e + d⎦
+>>> simplify(A * solution2) # Demonstrate that solution2 is correct
+    ⎡4⎤
+    ⎢ ⎥
+    ⎣0⎦
 ```
 
-or compute the inverse matrix using
+or, likely slower, compute the inverse matrix using
 {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
 
 ```py
@@ -177,6 +187,9 @@ or compute the inverse matrix using
     ⎢───────⎥
     ⎣c⋅e + d⎦
 ```
+
+Determining the inverse of a large symbolic matrix may not be computationally
+tractable.
 
 ### Work With Symbolic Matrices
 
