@@ -533,12 +533,10 @@ def roots_quintic(f):
     # Eqn standardized. Algo for solving starts here
     if not f.is_irreducible:
         return result
-        
     f20 = quintic.f20
     # Check if f20 has linear factors over domain Z
     if f20.is_irreducible:
         return result
-        
     # Now, we know that f is solvable
     for _factor in f20.factor_list()[1]:
         if _factor[0].is_linear:
