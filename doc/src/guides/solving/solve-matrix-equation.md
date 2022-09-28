@@ -209,12 +209,9 @@ symbolic matrix has 24 terms with four elements in each term:
 
 and solving a matrix equation of it takes about a minute, whereas the analogous
 3x3 matrix takes less than one second. The more unrelated, symbolic entries in a
-matrix, the more likely it is to be slow to manipulate.
-
-It is often much faster to solve as a system of linear
-[](solvers-algebraic-equations) rather than as a symbolic matrix equation for
-large matrix dimensions, so you may want to convert your matrix equation into a
-system of linear symbolic equations.
+matrix, the more likely it is to be slow to manipulate. This example, finding a
+general solution to a matrix where all elements are independent symbols, is the
+extreme case and thus the slowest for a matrix of its size.
 
 One way to speed up matrix operations is by using the {class}`~.DomainMatrix`
 class, which can be faster to operate on because it limits the domain of matrix
