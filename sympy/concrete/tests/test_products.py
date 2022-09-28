@@ -275,8 +275,9 @@ def test_conjugate_transpose():
     assert p.conjugate().doit() == p.doit().conjugate()
     assert p.transpose().doit() == p.doit().transpose()
 
+
 def test_simplify_prod():
-    y, t, b, c = symbols('y, t, b, c', integer = True)
+    y, t, b, c, v, d = symbols('y, t, b, c, v, d', integer = True)
 
     _simplify = lambda e: simplify(e, doit=False)
     assert _simplify(Product(x*y, (x, n, m), (y, a, k)) * \
@@ -294,6 +295,12 @@ def test_simplify_prod():
     assert _simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
         Product(y, (t, a, b))) == Product(x*y, (t, a, b)) * \
             Product(x, (t, b+1, c))
+    assert _simplify(Product(sin(t)**2 + cos(t)**2 + 1, (t, a, b))) == \
+        Product(2, (t, a, b))
+    assert _simplify(Product(sin(t)**2 + cos(t)**2 - 1, (t, a, b))) == \
+           Product(0, (t, a, b))
+    assert _simplify(Product(v*Product(sin(t)**2 + cos(t)**2, (t, a, b)),
+                             (v, c, d))) == Product(v*Product(1, (t, a, b)), (v, c, d))
 
 
 def test_change_index():
@@ -392,11 +399,12 @@ def test_KroneckerDelta_Product():
     y = Symbol('y')
     assert Product(x*KroneckerDelta(x, y), (x, 0, 1)).doit() == 0
 
+
 def test_issue_20848():
     _i = Dummy('i')
     t, y, z = symbols('t y z')
     assert diff(Product(x, (y, 1, z)), x).as_dummy() == Sum(Product(x, (y, 1, _i - 1))*Product(x, (y, _i + 1, z)), (_i, 1, z)).as_dummy()
-    assert diff(Product(x, (y, 1, z)), x).doit() == x**z*z/x
+    assert diff(Product(x, (y, 1, z)), x).doit() == x**(z - 1)*z
     assert diff(Product(x, (y, x, z)), x) == Derivative(Product(x, (y, x, z)), x)
     assert diff(Product(t, (x, 1, z)), x) == S(0)
     assert Product(sin(n*x), (n, -1, 1)).diff(x).doit() == S(0)

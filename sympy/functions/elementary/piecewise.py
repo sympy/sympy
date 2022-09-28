@@ -185,98 +185,7 @@ class Piecewise(Function):
         if len(_args) == 1 and _args[0][-1] == True:
             return _args[0][0]
 
-        newargs = []  # the unevaluated conditions
-        current_cond = set()  # the conditions up to a given e, c pair
-        for expr, cond in _args:
-            cond = cond.replace(
-                lambda _: _.is_Relational, _canonical_coeff)
-            # Check here if expr is a Piecewise and collapse if one of
-            # the conds in expr matches cond. This allows the collapsing
-            # of Piecewise((Piecewise((x,x<0)),x<0)) to Piecewise((x,x<0)).
-            # This is important when using piecewise_fold to simplify
-            # multiple Piecewise instances having the same conds.
-            # Eventually, this code should be able to collapse Piecewise's
-            # having different intervals, but this will probably require
-            # using the new assumptions.
-            if isinstance(expr, Piecewise):
-                unmatching = []
-                for i, (e, c) in enumerate(expr.args):
-                    if c in current_cond:
-                        # this would already have triggered
-                        continue
-                    if c == cond:
-                        if c != True:
-                            # nothing past this condition will ever
-                            # trigger and only those args before this
-                            # that didn't match a previous condition
-                            # could possibly trigger
-                            if unmatching:
-                                expr = Piecewise(*(
-                                    unmatching + [(e, c)]))
-                            else:
-                                expr = e
-                        break
-                    else:
-                        unmatching.append((e, c))
-
-            # check for condition repeats
-            got = False
-            # -- if an And contains a condition that was
-            #    already encountered, then the And will be
-            #    False: if the previous condition was False
-            #    then the And will be False and if the previous
-            #    condition is True then then we wouldn't get to
-            #    this point. In either case, we can skip this condition.
-            for i in ([cond] +
-                    (list(cond.args) if isinstance(cond, And) else
-                    [])):
-                if i in current_cond:
-                    got = True
-                    break
-            if got:
-                continue
-
-            # -- if not(c) is already in current_cond then c is
-            #    a redundant condition in an And. This does not
-            #    apply to Or, however: (e1, c), (e2, Or(~c, d))
-            #    is not (e1, c), (e2, d) because if c and d are
-            #    both False this would give no results when the
-            #    true answer should be (e2, True)
-            if isinstance(cond, And):
-                nonredundant = []
-                for c in cond.args:
-                    if isinstance(c, Relational):
-                        if c.negated.canonical in current_cond:
-                            continue
-                        # if a strict inequality appears after
-                        # a non-strict one, then the condition is
-                        # redundant
-                        if isinstance(c, (Lt, Gt)) and (
-                                c.weak in current_cond):
-                            cond = False
-                            break
-                    nonredundant.append(c)
-                else:
-                    cond = cond.func(*nonredundant)
-            elif isinstance(cond, Relational):
-                if cond.negated.canonical in current_cond:
-                    cond = S.true
-
-            current_cond.add(cond)
-
-            # collect successive e,c pairs when exprs or cond match
-            if newargs:
-                if newargs[-1].expr == expr:
-                    orcond = Or(cond, newargs[-1].cond)
-                    if isinstance(orcond, (And, Or)):
-                        orcond = distribute_and_over_or(orcond)
-                    newargs[-1] = ExprCondPair(expr, orcond)
-                    continue
-                elif newargs[-1].cond == cond:
-                    newargs[-1] = ExprCondPair(expr, cond)
-                    continue
-
-            newargs.append(ExprCondPair(expr, cond))
+        newargs = _piecewise_collapse_arguments(_args)
 
         # some conditions may have been redundant
         missing = len(newargs) != len(_args)
@@ -1162,6 +1071,8 @@ def piecewise_fold(expr, evaluate=True):
     rv = Piecewise(*new_args, evaluate=evaluate)
     if evaluate is None and len(rv.args) == 1 and rv.args[0].cond == True:
         return rv.args[0].expr
+    if any(s.expr.has(Piecewise) for p in rv.atoms(Piecewise) for s in p.args):
+        return piecewise_fold(rv)
     return rv
 
 
@@ -1300,47 +1211,128 @@ def piecewise_simplify_arguments(expr, **kwargs):
     return Piecewise(*args)
 
 
+def _piecewise_collapse_arguments(_args):
+    newargs = []  # the unevaluated conditions
+    current_cond = set()  # the conditions up to a given e, c pair
+    for expr, cond in _args:
+        cond = cond.replace(
+            lambda _: _.is_Relational, _canonical_coeff)
+        # Check here if expr is a Piecewise and collapse if one of
+        # the conds in expr matches cond. This allows the collapsing
+        # of Piecewise((Piecewise((x,x<0)),x<0)) to Piecewise((x,x<0)).
+        # This is important when using piecewise_fold to simplify
+        # multiple Piecewise instances having the same conds.
+        # Eventually, this code should be able to collapse Piecewise's
+        # having different intervals, but this will probably require
+        # using the new assumptions.
+        if isinstance(expr, Piecewise):
+            unmatching = []
+            for i, (e, c) in enumerate(expr.args):
+                if c in current_cond:
+                    # this would already have triggered
+                    continue
+                if c == cond:
+                    if c != True:
+                        # nothing past this condition will ever
+                        # trigger and only those args before this
+                        # that didn't match a previous condition
+                        # could possibly trigger
+                        if unmatching:
+                            expr = Piecewise(*(
+                                unmatching + [(e, c)]))
+                        else:
+                            expr = e
+                    break
+                else:
+                    unmatching.append((e, c))
+
+        # check for condition repeats
+        got = False
+        # -- if an And contains a condition that was
+        #    already encountered, then the And will be
+        #    False: if the previous condition was False
+        #    then the And will be False and if the previous
+        #    condition is True then then we wouldn't get to
+        #    this point. In either case, we can skip this condition.
+        for i in ([cond] +
+                  (list(cond.args) if isinstance(cond, And) else
+                  [])):
+            if i in current_cond:
+                got = True
+                break
+        if got:
+            continue
+
+        # -- if not(c) is already in current_cond then c is
+        #    a redundant condition in an And. This does not
+        #    apply to Or, however: (e1, c), (e2, Or(~c, d))
+        #    is not (e1, c), (e2, d) because if c and d are
+        #    both False this would give no results when the
+        #    true answer should be (e2, True)
+        if isinstance(cond, And):
+            nonredundant = []
+            for c in cond.args:
+                if isinstance(c, Relational):
+                    if c.negated.canonical in current_cond:
+                        continue
+                    # if a strict inequality appears after
+                    # a non-strict one, then the condition is
+                    # redundant
+                    if isinstance(c, (Lt, Gt)) and (
+                        c.weak in current_cond):
+                        cond = False
+                        break
+                nonredundant.append(c)
+            else:
+                cond = cond.func(*nonredundant)
+        elif isinstance(cond, Relational):
+            if cond.negated.canonical in current_cond:
+                cond = S.true
+
+        current_cond.add(cond)
+
+        # collect successive e,c pairs when exprs or cond match
+        if newargs:
+            if newargs[-1].expr == expr:
+                orcond = Or(cond, newargs[-1].cond)
+                if isinstance(orcond, (And, Or)):
+                    orcond = distribute_and_over_or(orcond)
+                newargs[-1] = ExprCondPair(expr, orcond)
+                continue
+            elif newargs[-1].cond == cond:
+                continue
+        newargs.append(ExprCondPair(expr, cond))
+    return newargs
+
+
+_blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (
+    getattr(e.rhs, '_diff_wrt', None) or
+    isinstance(e.rhs, (Rational, NumberSymbol)))
+
+
 def piecewise_simplify(expr, **kwargs):
     expr = piecewise_simplify_arguments(expr, **kwargs)
     if not isinstance(expr, Piecewise):
         return expr
     args = list(expr.args)
 
-    _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (
-        getattr(e.rhs, '_diff_wrt', None) or
-        isinstance(e.rhs, (Rational, NumberSymbol)))
-    for i, (expr, cond) in enumerate(args):
-        # try to simplify conditions and the expression for
-        # equalities that are part of the condition, e.g.
-        # Piecewise((n, And(Eq(n,0), Eq(n + m, 0))), (1, True))
-        # -> Piecewise((0, And(Eq(n, 0), Eq(m, 0))), (1, True))
-        if isinstance(cond, And):
-            eqs, other = sift(cond.args,
-                lambda i: isinstance(i, Eq), binary=True)
-        elif isinstance(cond, Eq):
-            eqs, other = [cond], []
-        else:
-            eqs = other = []
-        if eqs:
-            eqs = list(ordered(eqs))
-            for j, e in enumerate(eqs):
-                # these blessed lhs objects behave like Symbols
-                # and the rhs are simple replacements for the "symbols"
-                if _blessed(e):
-                    expr = expr.subs(*e.args)
-                    eqs[j + 1:] = [ei.subs(*e.args) for ei in eqs[j + 1:]]
-                    other = [ei.subs(*e.args) for ei in other]
-            cond = And(*(eqs + other))
-            args[i] = args[i].func(expr, cond)
-    # See if expressions valid for an Equal expression happens to evaluate
-    # to the same function as in the next piecewise segment, see:
-    # https://github.com/sympy/sympy/issues/8458
+    args = _piecewise_simplify_eq_and(args)
+    args = _piecewise_simplify_equal_to_next_segment(args)
+    return Piecewise(*args)
+
+
+def _piecewise_simplify_equal_to_next_segment(args):
+    """
+    See if expressions valid for an Equal expression happens to evaluate
+    to the same function as in the next piecewise segment, see:
+    https://github.com/sympy/sympy/issues/8458
+    """
     prevexpr = None
     for i, (expr, cond) in reversed(list(enumerate(args))):
         if prevexpr is not None:
             if isinstance(cond, And):
                 eqs, other = sift(cond.args,
-                    lambda i: isinstance(i, Eq), binary=True)
+                                  lambda i: isinstance(i, Eq), binary=True)
             elif isinstance(cond, Eq):
                 eqs, other = [cond], []
             else:
@@ -1361,13 +1353,42 @@ def piecewise_simplify(expr, **kwargs):
                 # Set the expression for the Not equal section to the same
                 # as the next. These will be merged when creating the new
                 # Piecewise
-                args[i] = args[i].func(args[i+1][0], cond)
+                args[i] = args[i].func(args[i + 1][0], cond)
             else:
                 # Update the expression that we compare against
                 prevexpr = expr
         else:
             prevexpr = expr
-    return Piecewise(*args)
+    return args
+
+
+def _piecewise_simplify_eq_and(args):
+    """
+    Try to simplify conditions and the expression for
+    equalities that are part of the condition, e.g.
+    Piecewise((n, And(Eq(n,0), Eq(n + m, 0))), (1, True))
+    -> Piecewise((0, And(Eq(n, 0), Eq(m, 0))), (1, True))
+    """
+    for i, (expr, cond) in enumerate(args):
+        if isinstance(cond, And):
+            eqs, other = sift(cond.args,
+                              lambda i: isinstance(i, Eq), binary=True)
+        elif isinstance(cond, Eq):
+            eqs, other = [cond], []
+        else:
+            eqs = other = []
+        if eqs:
+            eqs = list(ordered(eqs))
+            for j, e in enumerate(eqs):
+                # these blessed lhs objects behave like Symbols
+                # and the rhs are simple replacements for the "symbols"
+                if _blessed(e):
+                    expr = expr.subs(*e.args)
+                    eqs[j + 1:] = [ei.subs(*e.args) for ei in eqs[j + 1:]]
+                    other = [ei.subs(*e.args) for ei in other]
+            cond = And(*(eqs + other))
+            args[i] = args[i].func(expr, cond)
+    return args
 
 
 def piecewise_exclusive(expr, *, skip_nan=False, deep=True):

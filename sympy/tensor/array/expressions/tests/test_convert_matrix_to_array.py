@@ -9,8 +9,8 @@ from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayContraction, \
     PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, _array_contraction, _array_tensor_product, Reshape
-from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
-from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
 i, j, k, l, m, n = symbols("i j k l m n")
 

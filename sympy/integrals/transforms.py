@@ -1889,7 +1889,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> laplace_transform(t**4, t, s)
     (24/s**5, 0, True)
     >>> laplace_transform(t**a, t, s)
-    (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
+    (s**(-a - 1)*gamma(a + 1), 0, re(a) > -1)
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t),t,s)
     (s/(a + s), Max(0, -a), True)
 

@@ -24,8 +24,8 @@ computations were done using the following setup::
 
     >>> init_printing(use_unicode=True, wrap_line=False)
 
-    >>> var('x,y,z,s,c,n')
-    (x, y, z, s, c, n)
+    >>> var('x,y,z,s,c')
+    (x, y, z, s, c)
 
 Simple univariate polynomial factorization
 ------------------------------------------
@@ -117,7 +117,18 @@ Polynomial manipulation functions provided by :mod:`sympy.polys` are mostly
 used with integer exponents. However, it's perfectly valid to compute with
 symbolic exponents, e.g.::
 
-    >>> gcd(2*x**(n + 4) - x**(n + 2), 4*x**(n + 1) + 3*x**n)
+    >>> n = var('n')
+    >>> gcd(x**n - x**(2*n), x**n)
+     n
+    x
+
+    Results may depend on powers being expanded (which will depend on
+    assumptions of the base):
+
+    >>> gcd(x**(n + 4), x**(n + 1) + 3*x**n)
+    1
+    >>> x = var('x', positive=True)
+    >>> gcd(x**(n + 4), x**(n + 1) + 3*x**n)
      n
     x
 
@@ -128,6 +139,7 @@ To test if two polynomials have a root in common we can use :func:`~.resultant`
 function. The theory says that the resultant of two polynomials vanishes if
 there is a common zero of those polynomials. For example::
 
+    >>> x = var('x')
     >>> resultant(3*x**4 + 3*x**3 + x**2 - x - 2, x**3 - 3*x**2 + x + 5)
     0
 
