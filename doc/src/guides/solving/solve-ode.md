@@ -336,7 +336,7 @@ y_2(t) \end{bmatrix} $$
 
 SciPy's `solve_ivp` returns a result containing `y` (numerical function result,
 here, concentration) values for each of the three chemical species,
-corresponding to the time points t_eval.
+corresponding to the time points `t_eval`.
 
 ## Ordinary Differential Equation Solving Hints
 
