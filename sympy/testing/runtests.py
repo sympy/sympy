@@ -729,6 +729,12 @@ def _get_doctest_blacklist():
             "sympy/parsing/sym_expr.py",
         ])
 
+    if import_module("scipy") is None:
+        # throws ModuleNotFoundError when scipy not installed
+        blacklist.extend(
+            ["doc/src/guides/solving/solve-numerically.md",]
+        )
+
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
         "sympy/utilities/autowrap.py",

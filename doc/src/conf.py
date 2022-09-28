@@ -113,7 +113,7 @@ mathjax3_config = {
 # Myst configuration (for .md files). See
 # https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
 myst_enable_extensions = ["dollarmath", "linkify"]
-myst_heading_anchors = 2
+myst_heading_anchors = 6
 # myst_update_mathjax = False
 
 # Add any paths that contain templates here, relative to this directory.

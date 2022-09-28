@@ -1,7 +1,9 @@
-from sympy.core.backend import Symbol, symbols, sin, cos, Matrix
-from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+from sympy.core.backend import (Symbol, symbols, sin, cos, Matrix, zeros,
+                                _simplify_matrix)
+from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols, Dyadic
 from sympy.physics.mechanics import inertia, Body
 from sympy.testing.pytest import raises
+
 
 def test_default():
     body = Body('body')
@@ -62,8 +64,22 @@ def test_particle_body():
     assert hasattr(particle_body, 'frame')
     assert hasattr(particle_body, 'masscenter')
     assert hasattr(particle_body, 'mass')
-
+    assert particle_body.inertia == (Dyadic(0), particle_body.masscenter)
+    assert particle_body.central_inertia == Dyadic(0)
     assert not particle_body.is_rigidbody
+
+    particle_body.central_inertia = inertia(particle_frame, 1, 1, 1)
+    assert particle_body.central_inertia == inertia(particle_frame, 1, 1, 1)
+    assert particle_body.is_rigidbody
+
+    particle_body = Body('particle_body', mass=particle_mass)
+    assert not particle_body.is_rigidbody
+    point = particle_body.masscenter.locatenew('point', particle_body.x)
+    point_inertia = particle_mass * inertia(particle_body.frame, 0, 1, 1)
+    particle_body.inertia = (point_inertia, point)
+    assert particle_body.inertia == (point_inertia, point)
+    assert particle_body.central_inertia == Dyadic(0)
+    assert particle_body.is_rigidbody
 
 
 def test_particle_body_add_force():
@@ -273,3 +289,31 @@ def test_apply_loads_on_multi_degree_freedom_holonomic_system():
     assert P.loads == [(P.masscenter, P.mass*g*W.y), (P.frame, (T + kT*q2)*W.z)]
     assert b.loads == [(b.masscenter, b.mass*g*W.y), (b.frame, -kT*q2*W.z)]
     assert W.loads == [(W.masscenter, (c*q1.diff() + k*q1)*W.x)]
+
+
+def test_parallel_axis():
+    N = ReferenceFrame('N')
+    m, Ix, Iy, Iz, a, b = symbols('m, I_x, I_y, I_z, a, b')
+    Io = inertia(N, Ix, Iy, Iz)
+    # Test RigidBody
+    o = Point('o')
+    p = o.locatenew('p', a * N.x + b * N.y)
+    R = Body('R', masscenter=o, frame=N, mass=m, central_inertia=Io)
+    Ip = R.parallel_axis(p)
+    Ip_expected = inertia(N, Ix + m * b**2, Iy + m * a**2,
+                          Iz + m * (a**2 + b**2), ixy=-m * a * b)
+    assert Ip == Ip_expected
+    # Reference frame from which the parallel axis is viewed should not matter
+    A = ReferenceFrame('A')
+    A.orient_axis(N, N.z, 1)
+    assert _simplify_matrix(
+        (R.parallel_axis(p, A) - Ip_expected).to_matrix(A)) == zeros(3, 3)
+    # Test Particle
+    o = Point('o')
+    p = o.locatenew('p', a * N.x + b * N.y)
+    P = Body('P', masscenter=o, mass=m, frame=N)
+    Ip = P.parallel_axis(p, N)
+    Ip_expected = inertia(N, m * b ** 2, m * a ** 2, m * (a ** 2 + b ** 2),
+                          ixy=-m * a * b)
+    assert not P.is_rigidbody
+    assert Ip == Ip_expected
