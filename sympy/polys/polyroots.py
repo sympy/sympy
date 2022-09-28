@@ -504,7 +504,7 @@ def roots_cyclotomic(f, factor=False):
 
 def roots_quintic(f):
     """
-    Calculate exact roots of a solvable irreducible quintic with rational coefficients. 
+    Calculate exact roots of a solvable irreducible quintic with rational coefficients.
     Return an empty list if the quintic is reducible or not solvable.
     """
     result = []
