@@ -4,6 +4,7 @@ matplotlib
 matplotlib-inline
 mpmath
 myst-parser
+scipy
 Sphinx
 sphinx-autobuild
 sphinx-copybutton

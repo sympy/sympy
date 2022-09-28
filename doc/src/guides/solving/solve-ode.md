@@ -266,8 +266,9 @@ A common workflow which leverages
 solving is
 1. set up an ODE in SymPy
 2. convert it to a numerical function using {func}`~.lambdify`
-3. solve the initial value problem by numerically integrating the ODE using
-   SciPy's `solve_ivp`.
+3. solve the initial value problem by [numerically integrating the ODE using
+   SciPy's
+   `solve_ivp`](https://docs.scipy.org/doc/scipy/reference/integrate.html#solving-initial-value-problems-for-ode-systems).
 
 Here is an [example from the field of chemical
 kinetics](https://www.sympy.org/scipy-2017-codegen-tutorial/notebooks/25-chemical-kinetics-intro.html)
@@ -291,10 +292,11 @@ y_2(t) \end{bmatrix} $$
 .. plot::
   :format: doctest
   :include-source: True
+  :context: close-figs
 
   >>> from sympy import symbols, lambdify
   >>> import numpy as np
-  >>> #import scipy.integrate
+  >>> import scipy.integrate
   >>> import matplotlib.pyplot as plt
   >>> # Create symbols y0, y1, and y2
   >>> y = symbols('y:3')
@@ -313,18 +315,23 @@ y_2(t) \end{bmatrix} $$
   >>> k_vals = np.array([0.42, 0.17]) # arbitrary in this case
   >>> y0 = [1, 1, 0] # initial condition (initial values)
   >>> t_eval = np.linspace(0, 10, 50) # evaluate integral from t = 0-10 for 50 points
-  >>> # Call SciPy's solve_ivp by passing it
+  >>> # Call SciPy's ODE initial value problem solver solve_ivp by passing it
   >>> #   the function f,
   >>> #   the interval of integration,
   >>> #   the initial state, and
   >>> #   the arguments to pass to the function f
-  >>> # solution = scipy.integrate.solve_ivp(f, (0, 10), y0, t_eval=t_eval, args=k_vals)
+  >>> solution = scipy.integrate.solve_ivp(f, (0, 10), y0, t_eval=t_eval, args=k_vals)
   >>> # Extract the y (concentration) values from SciPy solution result
-  >>> #y = solution.y
-  >>> #plt.plot(t_eval, y.T)  doctest: +SKIP
-  >>> #plt.plot([11, 12, 13], [16, 15, 12]) doctest: +SKIP
-  >>> #plt.plot(y0, y0)  doctest: +SKIP
-  >>> plt.plot(t_eval, t_eval) # doctest: +SKIP
+  >>> y = solution.y
+  >>> # Plot the result graphically using matplotlib
+  >>> plt.plot(t_eval, y.T) # doctest: +SKIP
+  >>> # Add title, legend, and axis labels to the plot
+  >>> plt.title('Chemical Kinetics') # doctest: +SKIP
+  >>> plt.legend(['NO', 'Br$_2$', 'NOBr'], shadow=True) # doctest: +SKIP
+  >>> plt.xlabel('time') # doctest: +SKIP
+  >>> plt.ylabel('concentration') # doctest: +SKIP
+  >>> # Finally, display the annotated plot
+  >>> plt.show()
   ```
 
 SciPy's `solve_ivp` returns a result containing `t` (time) points and
