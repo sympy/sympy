@@ -156,11 +156,19 @@ or, likely slower, compute the inverse matrix using
 {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
 
 ```py
->>> from sympy import symbols, Matrix
+>>> from sympy import symbols, Matrix, simplify
 >>> c, d, e = symbols("c, d, e")
 >>> A = Matrix([[c,d], [1, -e]])
 >>> b = Matrix([2, 0])
+>>> b
+    ⎡2⎤
+    ⎢ ⎥
+    ⎣0⎦
 >>> b2 = Matrix([4, 0])
+>>> b2
+    ⎡4⎤
+    ⎢ ⎥
+    ⎣0⎦
 >>> inv = A.inv()
 >>> inv
     ⎡   e        d   ⎤
@@ -170,7 +178,8 @@ or, likely slower, compute the inverse matrix using
     ⎢   1       -c   ⎥
     ⎢───────  ───────⎥
     ⎣c⋅e + d  c⋅e + d⎦
->>> inv * b # Solves to Ax = b for x
+>>> solution = inv * b # Solves Ax = b for x
+>>> solution
     ⎡  2⋅e  ⎤
     ⎢───────⎥
     ⎢c⋅e + d⎥
@@ -178,7 +187,12 @@ or, likely slower, compute the inverse matrix using
     ⎢   2   ⎥
     ⎢───────⎥
     ⎣c⋅e + d⎦
->>> inv * b2 # Solves to Ax = b2 for x
+>>> simplify(A * solution) # Demonstrate that solution is correct
+    ⎡2⎤
+    ⎢ ⎥
+    ⎣0⎦
+>>> solution2 = inv * b2 # Solves Ax = b2 for x
+>>> solution2
     ⎡  4⋅e  ⎤
     ⎢───────⎥
     ⎢c⋅e + d⎥
@@ -186,6 +200,10 @@ or, likely slower, compute the inverse matrix using
     ⎢   4   ⎥
     ⎢───────⎥
     ⎣c⋅e + d⎦
+>>> simplify(A * solution2) # Demonstrate that solution2 is correct
+    ⎡4⎤
+    ⎢ ⎥
+    ⎣0⎦
 ```
 
 Determining the inverse of a large symbolic matrix may not be computationally
