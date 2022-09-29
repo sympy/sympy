@@ -1,15 +1,15 @@
 # Solve a System of Equations Algebraically
 
-Use SymPy to solve a system of equations algebraically. For example, $x^2 + y =
-2z, y = -4z$ yields $\{(x = -\sqrt{6z}, y = -4z),$ ${(x = \sqrt{6z}, y =
--4z)\}}$.
+Use SymPy to solve a system of equations algebraically. For example, solving
+$x^2 + y = 2z, y = -4z$ for x and y (assuming z is a constant or parameter)
+yields $\{(x = -\sqrt{6z}, y = -4z),$ ${(x = \sqrt{6z}, y = -4z)\}}$.
 
-Alternatives to consider:
+## Alternatives to Consider
 - Some systems of equations cannot be solved algebraically (either at all or by
-SymPy), so you may have to {func}`solve your system of equations numerically
-using nsolve() <sympy.solvers.solvers.nsolve>` instead.
+SymPy), so you may have to [solve your system of equations
+numerically](solve-numerically.md) using {func}`~.nsolve` instead.
 
-Here is an example of solving a system of equations algebraically:
+## Example of Solving a System of Equations Algebraically
 
 ```py
 >>> from sympy import solve
@@ -24,18 +24,20 @@ Refer to
 [](solving-guidance.md#include-the-variable-to-be-solved-for-in-the-function-call)
 and [](solving-guidance.md#ensure-consistent-formatting-from).
 
-There are two methods below for containing solution results: dictionary or set.
-A dictionary is easier to interrogate programmatically, so if you need to
-extract solutions using code, we recommend the dictionary approach.
+There are two methods below for containing solution results:
+[dictionary](#solve-and-use-results-in-a-dictionary) or
+[set](#solve-results-in-a-set). A dictionary is easier to interrogate
+programmatically, so if you need to extract solutions using code, we recommend
+the dictionary approach.
 
 ## Solve and Use Results in a Dictionary
 
 ### Solve Into a Solution Given as a Dictionary
 
 You can solve a system of equations for some variables (for example, $x$ and
-$y$) leaving another symbol as a variable (for example, $z$). You can specify
-the variables to solve for as multiple separate arguments, or as a list (or
-tuple):
+$y$) leaving another symbol as a constant or parameter (for example, $z$). You
+can specify the variables to solve for as multiple separate arguments, or as a
+list (or tuple):
 
 ```py
 >>> from sympy import solve
@@ -80,7 +82,8 @@ Refer to [](solving-guidance.md#options-that-can-speed-up).
 ### Systems of Equations With no Solution
 
 Some systems of equations have no solution. For example, the following two
-systems have no solution because they reduce to `1 == 0`:
+systems have no solution because they reduce to `1 == 0`, so SymPy returns an
+empty list:
 
 ```py
 >>> from sympy import solve
@@ -98,12 +101,14 @@ solve([x + y - (z + 1), x + y - z)], [x, y], dict=True)
 
 The following system reduces to $z = 2z$, so it has no general solution, but it
 could be satisfied if $z=0$. Note that {func}`~.solve` will not assume that
-$z=0$ even though that is the only value of $z$ that makes the system of
-equations consistent because $z$ is a parameter rather than an unknown. That is,
-{func}`~.solve` does not treat $z$ as an unknown because it is not in the list
-of symbols specified as unknowns (`[x, y]`) and all such symbols are treated
-like parameters with arbitrary value. This is a semantic definition and has
-nothing to do with a symbol's creation (or import from {mod}`~.abc`).
+$z=0$, even though that is the only value of $z$ that makes the system of
+equations consistent, because $z$ is a parameter rather than an unknown. That
+is, {func}`~.solve` does not treat $z$ as an unknown because it is not in the
+list of symbols specified as unknowns (`[x, y]`) and all such symbols are
+treated like parameters with arbitrary value. Whether a symbol is treated as a
+variable or a parameter is determined only by whether it is specified as a
+symbol to solve for in {func}`~.solve`. There is no such distinction made when
+creating the symbol using {func}`~.symbols` (or importing from {mod}`~.abc`).
 
 ```py
 >>> from sympy import solve
@@ -115,7 +120,7 @@ nothing to do with a symbol's creation (or import from {mod}`~.abc`).
 The following system is
 [overconstrained](https://en.wikipedia.org/wiki/Overdetermined_system), meaning
 there are more equations (three) than unknowns to be solved for (two, namely $x$
-and $y$), and has no solution:
+and $y$). It has no solution:
 
 ```py
 >>> from sympy import solve
@@ -123,6 +128,10 @@ and $y$), and has no solution:
 >>> solve([x + y - z, x - (z + 1), 2*x - y], [x, y], dict=True)
 []
 ```
+
+Note that some overconstrained systems do have solutions (for example, if an
+equation is a linear combination of the others), in which case SymPy can solve
+the overconstrained system.
 
 ### Systems of Equations With no Closed-Form Solution
 
@@ -139,7 +148,17 @@ Traceback (most recent call last):
 NotImplementedError: could not solve -y + cos(y)
 ```
 
-So you can use {func}`~.nsolve` to find a numerical solution.
+So you can use {func}`~.nsolve` to [find a numerical
+solution](solve-numerically.md):
+
+```py
+>>> from sympy import cos, nsolve
+>>> from sympy.abc import x, y, z
+>>> nsolve([x - y, cos(x) - y], [x, y], [1,1])
+    Matrix([
+    [0.739085133215161],
+    [0.739085133215161]])
+```
 
 ### Equations Which Have a Closed-Form Solution, and SymPy Cannot Solve
 
@@ -149,5 +168,4 @@ set or list when you know there is a closed-form solution (indicating a bug in
 SymPy), please post it on the [mailing list](https://groups.google.com/g/sympy),
 or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-can {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>`
-instead.
+can use a different method listed in [](#alternatives-to-consider).
