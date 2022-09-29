@@ -675,7 +675,7 @@ class KanesMethod(_Methods):
     @property
     def mass_matrix_kin(self):
         r"""The kinematic "mass matrix" $\mathbf{k_{k\dot{q}}}$ of the system."""
-        return self._k_kqdot.copy() if self.explicit_kinematics else self._k_kqdot_implicit.copy()
+        return self._k_kqdot if self.explicit_kinematics else self._k_kqdot_implicit
 
     @property
     def forcing_kin(self):
