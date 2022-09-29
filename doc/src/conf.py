@@ -114,7 +114,7 @@ mathjax3_config = {
 # Myst configuration (for .md files). See
 # https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
 myst_enable_extensions = ["dollarmath", "linkify"]
-myst_heading_anchors = 2
+myst_heading_anchors = 6
 # myst_update_mathjax = False
 
 # Add any paths that contain templates here, relative to this directory.
@@ -395,7 +395,10 @@ graphviz_output_format = 'svg'
 
 # Enable links to other packages
 intersphinx_mapping = {
-    'matplotlib': ('https://matplotlib.org/stable/', None)
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'mpmath': ('https://mpmath.org/doc/current/', None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
 }
 # Require :external: to reference intersphinx. Prevents accidentally linking
 # to something from matplotlib.

@@ -2,14 +2,15 @@
 
 from abc import ABC, abstractmethod
 
-from sympy.core.numbers import pi
+from sympy.core.backend import pi, AppliedUndef, Derivative, Matrix
 from sympy.physics.mechanics.body import Body
 from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
                                   ReferenceFrame)
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
-__all__ = ['Joint', 'PinJoint', 'PrismaticJoint']
+__all__ = ['Joint', 'PinJoint', 'PrismaticJoint', 'CylindricalJoint',
+           'PlanarJoint']
 
 
 class Joint(ABC):
@@ -40,9 +41,9 @@ class Joint(ABC):
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: List of dynamicsymbols, optional
+    coordinates : iterable of dynamicsymbols, optional
         Generalized coordinates of the joint.
-    speeds : List of dynamicsymbols, optional
+    speeds : iterable of dynamicsymbols, optional
         Generalized speeds of joint.
     parent_point : Point or Vector, optional
         Attachment point where the joint is fixed to the parent body. If a
@@ -96,10 +97,10 @@ class Joint(ABC):
         The joint's parent body.
     child : Body
         The joint's child body.
-    coordinates : list
-        List of the joint's generalized coordinates.
-    speeds : list
-        List of the joint's generalized speeds.
+    coordinates : Matrix
+        Matrix of the joint's generalized coordinates.
+    speeds : Matrix
+        Matrix of the joint's generalized speeds.
     parent_point : Point
         Attachment point where the joint is fixed to the parent body.
     child_point : Point
@@ -114,7 +115,7 @@ class Joint(ABC):
     child_interframe : ReferenceFrame
         Intermediate frame of the child body with respect to which the joint
         transformation is formulated.
-    kdes : list
+    kdes : Matrix
         Kinematical differential equations of the joint.
 
     Notes
@@ -215,12 +216,12 @@ class Joint(ABC):
 
     @property
     def coordinates(self):
-        """List generalized coordinates of the joint."""
+        """Matrix of the joint's generalized coordinates."""
         return self._coordinates
 
     @property
     def speeds(self):
-        """List generalized coordinates of the joint.."""
+        """Matrix of the joint's generalized speeds."""
         return self._speeds
 
     @property
@@ -260,12 +261,12 @@ class Joint(ABC):
 
     @abstractmethod
     def _generate_coordinates(self, coordinates):
-        """Generate list generalized coordinates of the joint."""
+        """Generate Matrix of the joint's generalized coordinates."""
         pass
 
     @abstractmethod
     def _generate_speeds(self, speeds):
-        """Generate list generalized speeds of the joint."""
+        """Generate Matrix of the joint's generalized speeds."""
         pass
 
     @abstractmethod
@@ -341,16 +342,16 @@ class Joint(ABC):
         Parameters
         ==========
 
-        frame: Body or ReferenceFrame
+        frame : Body or ReferenceFrame
             The body or reference frame with respect to which the intermediate
             frame is oriented.
-        align_axis: Vector
+        align_axis : Vector
             The vector with respect to which the intermediate frame will be
             aligned.
-        frame_axis: Vector
+        frame_axis : Vector
             The vector of the frame which should get aligned with ``axis``. The
             default is the X axis of the frame.
-        frame_name: string
+        frame_name : string
             Name of the to be created intermediate frame. The default adds
             "_int_frame" to the name of ``frame``.
 
@@ -442,7 +443,7 @@ class Joint(ABC):
         t = dynamicsymbols._t
         for i in range(len(self.coordinates)):
             kdes.append(-self.coordinates[i].diff(t) + self.speeds[i])
-        return kdes
+        return Matrix(kdes)
 
     def _locate_joint_pos(self, body, joint_pos):
         """Returns the attachment point of a body."""
@@ -474,34 +475,57 @@ class Joint(ABC):
         body.masscenter.set_vel(interframe, 0)  # Fixate interframe to body
         return interframe
 
+    def _fill_coordinate_list(self, coordinates, n_coords, label='q', offset=0,
+                              number_single=False):
+        """Helper method for _generate_coordinates and _generate_speeds.
 
-class _JointAxisMixin:
-    """Mixin class, which provides joint axis support methods.
+        Parameters
+        ==========
 
-    This class is strictly only to be inherited by joint types that have a joint
-    axis. This is because the methods of this class assume that the object has
-    a joint_axis attribute.
-    """
+        coordinates : iterable
+            Iterable of coordinates or speeds that have been provided.
+        n_coords : Integer
+            Number of coordinates that should be returned.
+        label : String, optional
+            Coordinate type either 'q' (coordinates) or 'u' (speeds). The
+            Default is 'q'.
+        offset : Integer
+            Count offset when creating new dynamicsymbols. The default is 0.
+        number_single : Boolean
+            Boolean whether if n_coords == 1, number should still be used. The
+            default is False.
 
-    __slots__ = ()
+        """
 
-    def _express_joint_axis(self, frame):
-        """Helper method to express the joint axis in a specified frame."""
-        try:
-            ax_mat = self.joint_axis.to_matrix(self.parent_interframe)
-        except ValueError:
-            ax_mat = self.joint_axis.to_matrix(self.child_interframe)
-        try:
-            self.parent_interframe.dcm(frame)  # Check if connected
-        except ValueError:
-            self.child_interframe.dcm(frame)  # Should be connected
-            int_frame = self.child_interframe
-        else:
-            int_frame = self.parent_interframe
-        return self._to_vector(ax_mat, int_frame).express(frame)
+        def create_symbol(number):
+            if n_coords == 1 and not number_single:
+                return dynamicsymbols(f'{label}_{self.name}')
+            return dynamicsymbols(f'{label}{number}_{self.name}')
+
+        name = 'generalized coordinate' if label == 'q' else 'generalized speed'
+        generated_coordinates = []
+        if coordinates is None:
+            coordinates = []
+        elif isinstance(coordinates, (AppliedUndef, Derivative)):
+            coordinates = [coordinates]
+        # Supports more iterables, also Matrix
+        for i, coord in enumerate(coordinates):
+            if coord is None:
+                generated_coordinates.append(create_symbol(i + offset))
+            elif isinstance(coord, (AppliedUndef, Derivative)):
+                generated_coordinates.append(coord)
+            else:
+                raise TypeError(f'The {name} {coord} should have been a '
+                                f'dynamicsymbol.')
+        for i in range(len(coordinates) + offset, n_coords + offset):
+            generated_coordinates.append(create_symbol(i))
+        if len(generated_coordinates) != n_coords:
+            raise ValueError(f'{len(coordinates)} {name}s have been provided. '
+                             f'The maximum number of {name}s is {n_coords}.')
+        return Matrix(generated_coordinates)
 
 
-class PinJoint(Joint, _JointAxisMixin):
+class PinJoint(Joint):
     """Pin (Revolute) Joint.
 
     .. image:: PinJoint.svg
@@ -527,7 +551,7 @@ class PinJoint(Joint, _JointAxisMixin):
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: dynamicsymbol, optional
+    coordinates : dynamicsymbol, optional
         Generalized coordinates of the joint.
     speeds : dynamicsymbol, optional
         Generalized speeds of joint.
@@ -586,10 +610,12 @@ class PinJoint(Joint, _JointAxisMixin):
         The joint's parent body.
     child : Body
         The joint's child body.
-    coordinates : list
-        List of the joint's generalized coordinates.
-    speeds : list
-        List of the joint's generalized speeds.
+    coordinates : Matrix
+        Matrix of the joint's generalized coordinates. The default value is
+        ``dynamicsymbols(f'q_{joint.name}')``.
+    speeds : Matrix
+        Matrix of the joint's generalized speeds. The default value is
+        ``dynamicsymbols(f'u_{joint.name}')``.
     parent_point : Point
         Attachment point where the joint is fixed to the parent body.
     child_point : Point
@@ -607,7 +633,7 @@ class PinJoint(Joint, _JointAxisMixin):
     joint_axis : Vector
         The axis about which the rotation occurs. Note that the components of
         this axis are the same in the parent_interframe and child_interframe.
-    kdes : list
+    kdes : Matrix
         Kinematical differential equations of the joint.
 
     Examples
@@ -641,16 +667,16 @@ class PinJoint(Joint, _JointAxisMixin):
     >>> joint.child_axis
     C_frame.x
     >>> joint.coordinates
-    [theta_PC(t)]
+    Matrix([[q_PC(t)]])
     >>> joint.speeds
-    [omega_PC(t)]
+    Matrix([[u_PC(t)]])
     >>> joint.child.frame.ang_vel_in(joint.parent.frame)
-    omega_PC(t)*P_frame.x
+    u_PC(t)*P_frame.x
     >>> joint.child.frame.dcm(joint.parent.frame)
     Matrix([
-    [1,                 0,                0],
-    [0,  cos(theta_PC(t)), sin(theta_PC(t))],
-    [0, -sin(theta_PC(t)), cos(theta_PC(t))]])
+    [1,             0,            0],
+    [0,  cos(q_PC(t)), sin(q_PC(t))],
+    [0, -sin(q_PC(t)), cos(q_PC(t))]])
     >>> joint.child_point.pos_from(joint.parent_point)
     0
 
@@ -689,14 +715,14 @@ class PinJoint(Joint, _JointAxisMixin):
 
     >>> upper_bob.frame.dcm(ceiling.frame)
     Matrix([
-    [ cos(theta_P1(t)), sin(theta_P1(t)), 0],
-    [-sin(theta_P1(t)), cos(theta_P1(t)), 0],
-    [                0,                0, 1]])
+    [ cos(q_P1(t)), sin(q_P1(t)), 0],
+    [-sin(q_P1(t)), cos(q_P1(t)), 0],
+    [            0,            0, 1]])
     >>> trigsimp(lower_bob.frame.dcm(ceiling.frame))
     Matrix([
-    [ cos(theta_P1(t) + theta_P2(t)), sin(theta_P1(t) + theta_P2(t)), 0],
-    [-sin(theta_P1(t) + theta_P2(t)), cos(theta_P1(t) + theta_P2(t)), 0],
-    [                              0,                              0, 1]])
+    [ cos(q_P1(t) + q_P2(t)), sin(q_P1(t) + q_P2(t)), 0],
+    [-sin(q_P1(t) + q_P2(t)), cos(q_P1(t) + q_P2(t)), 0],
+    [                      0,                      0, 1]])
 
     The position of the lower bob's masscenter is found with:
 
@@ -707,17 +733,17 @@ class PinJoint(Joint, _JointAxisMixin):
     respect to the ceiling.
 
     >>> upper_bob.frame.ang_vel_in(ceiling.frame)
-    omega_P1(t)*C_frame.z
+    u_P1(t)*C_frame.z
     >>> lower_bob.frame.ang_vel_in(ceiling.frame)
-    omega_P1(t)*C_frame.z + omega_P2(t)*U_frame.z
+    u_P1(t)*C_frame.z + u_P2(t)*U_frame.z
 
     And finally, the linear velocities of the two pendulum bobs can be computed
     with respect to the ceiling.
 
     >>> upper_bob.masscenter.vel(ceiling.frame)
-    l1*omega_P1(t)*U_frame.y
+    l1*u_P1(t)*U_frame.y
     >>> lower_bob.masscenter.vel(ceiling.frame)
-    l1*omega_P1(t)*U_frame.y + l2*(omega_P1(t) + omega_P2(t))*L_frame.y
+    l1*u_P1(t)*U_frame.y + l2*(u_P1(t) + u_P2(t))*L_frame.y
 
     """
 
@@ -742,27 +768,15 @@ class PinJoint(Joint, _JointAxisMixin):
         return self._joint_axis
 
     def _generate_coordinates(self, coordinate):
-        coordinates = []
-        if coordinate is None:
-            theta = dynamicsymbols('theta' + '_' + self._name)
-            coordinate = theta
-        coordinates.append(coordinate)
-        return coordinates
+        return self._fill_coordinate_list(coordinate, 1, 'q')
 
     def _generate_speeds(self, speed):
-        speeds = []
-        if speed is None:
-            omega = dynamicsymbols('omega' + '_' + self._name)
-            speed = omega
-        speeds.append(speed)
-        return speeds
+        return self._fill_coordinate_list(speed, 1, 'u')
 
     def _orient_frames(self):
-        self._joint_axis = self._axis(
-            self.joint_axis, self.parent_interframe, self.child_interframe)
-        axis = self._express_joint_axis(self.parent_interframe)
+        self._joint_axis = self._axis(self.joint_axis, self.parent_interframe)
         self.child_interframe.orient_axis(
-            self.parent_interframe, axis, self.coordinates[0])
+            self.parent_interframe, self.joint_axis, self.coordinates[0])
 
     def _set_angular_velocity(self):
         self.child_interframe.set_ang_vel(self.parent_interframe, self.speeds[
@@ -776,7 +790,7 @@ class PinJoint(Joint, _JointAxisMixin):
                                           self.parent.frame, self.child.frame)
 
 
-class PrismaticJoint(Joint, _JointAxisMixin):
+class PrismaticJoint(Joint):
     """Prismatic (Sliding) Joint.
 
     .. image:: PrismaticJoint.svg
@@ -802,10 +816,12 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         The parent body of joint.
     child : Body
         The child body of joint.
-    coordinates: dynamicsymbol, optional
-        Generalized coordinates of the joint.
+    coordinates : dynamicsymbol, optional
+        Generalized coordinates of the joint. The default value is
+        ``dynamicsymbols(f'q_{joint.name}')``.
     speeds : dynamicsymbol, optional
-        Generalized speeds of joint.
+        Generalized speeds of joint. The default value is
+        ``dynamicsymbols(f'u_{joint.name}')``.
     parent_point : Point or Vector, optional
         Attachment point where the joint is fixed to the parent body. If a
         vector is provided, then the attachment point is computed by adding the
@@ -861,10 +877,10 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         The joint's parent body.
     child : Body
         The joint's child body.
-    coordinates : list
-        List of the joint's generalized coordinates.
-    speeds : list
-        List of the joint's generalized speeds.
+    coordinates : Matrix
+        Matrix of the joint's generalized coordinates.
+    speeds : Matrix
+        Matrix of the joint's generalized speeds.
     parent_point : Point
         Attachment point where the joint is fixed to the parent body.
     child_point : Point
@@ -879,7 +895,7 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     child_interframe : ReferenceFrame
         Intermediate frame of the child body with respect to which the joint
         transformation is formulated.
-    kdes : list
+    kdes : Matrix
         Kinematical differential equations of the joint.
 
     Examples
@@ -913,9 +929,9 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     >>> joint.child_axis
     C_frame.x
     >>> joint.coordinates
-    [x_PC(t)]
+    Matrix([[q_PC(t)]])
     >>> joint.speeds
-    [v_PC(t)]
+    Matrix([[u_PC(t)]])
     >>> joint.child.frame.ang_vel_in(joint.parent.frame)
     0
     >>> joint.child.frame.dcm(joint.parent.frame)
@@ -924,7 +940,7 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     [0, 1, 0],
     [0, 0, 1]])
     >>> joint.child_point.pos_from(joint.parent_point)
-    x_PC(t)*P_frame.x
+    q_PC(t)*P_frame.x
 
     To further demonstrate the use of the prismatic joint, the kinematics of two
     masses sliding, one moving relative to a fixed body and the other relative
@@ -969,10 +985,10 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     The position of the particles' masscenter is found with:
 
     >>> Part1.masscenter.pos_from(wall.masscenter)
-    x_J1(t)*W_frame.x
+    q_J1(t)*W_frame.x
 
     >>> Part2.masscenter.pos_from(wall.masscenter)
-    x_J1(t)*W_frame.x + x_J2(t)*P1_frame.x
+    q_J1(t)*W_frame.x + q_J2(t)*P1_frame.x
 
     The angular velocities of the two particle links can be computed with
     respect to the ceiling.
@@ -987,10 +1003,10 @@ class PrismaticJoint(Joint, _JointAxisMixin):
     with respect to the ceiling.
 
     >>> Part1.masscenter_vel(wall)
-    v_J1(t)*W_frame.x
+    u_J1(t)*W_frame.x
 
     >>> Part2.masscenter.vel(wall.frame)
-    v_J1(t)*W_frame.x + Derivative(x_J2(t), t)*P1_frame.x
+    u_J1(t)*W_frame.x + Derivative(q_J2(t), t)*P1_frame.x
 
     """
 
@@ -1015,26 +1031,15 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         return self._joint_axis
 
     def _generate_coordinates(self, coordinate):
-        coordinates = []
-        if coordinate is None:
-            x = dynamicsymbols('x' + '_' + self._name)
-            coordinate = x
-        coordinates.append(coordinate)
-        return coordinates
+        return self._fill_coordinate_list(coordinate, 1, 'q')
 
     def _generate_speeds(self, speed):
-        speeds = []
-        if speed is None:
-            y = dynamicsymbols('v' + '_' + self._name)
-            speed = y
-        speeds.append(speed)
-        return speeds
+        return self._fill_coordinate_list(speed, 1, 'u')
 
     def _orient_frames(self):
-        self._joint_axis = self._axis(
-            self.joint_axis, self.parent_interframe, self.child_interframe)
-        axis = self._express_joint_axis(self.parent_interframe)
-        self.child_interframe.orient_axis(self.parent_interframe, axis, 0)
+        self._joint_axis = self._axis(self.joint_axis, self.parent_interframe)
+        self.child_interframe.orient_axis(
+            self.parent_interframe, self.joint_axis, 0)
 
     def _set_angular_velocity(self):
         self.child_interframe.set_ang_vel(self.parent_interframe, 0)
@@ -1046,3 +1051,659 @@ class PrismaticJoint(Joint, _JointAxisMixin):
         self.child_point.set_vel(self.child.frame, 0)
         self.child_point.set_vel(self.parent.frame, self.speeds[0] * axis)
         self.child.masscenter.set_vel(self.parent.frame, self.speeds[0] * axis)
+
+
+class CylindricalJoint(Joint):
+    """Cylindrical Joint.
+
+    .. image:: CylindricalJoint.svg
+        :align: center
+        :width: 600
+
+    Explanation
+    ===========
+
+    A cylindrical joint is defined such that the child body both rotates about
+    and translates along the body-fixed joint axis with respect to the parent
+    body. The joint axis is both the rotation axis and translation axis. The
+    location of the joint is defined by two points, one in each body, which
+    coincide when the generalized coordinate corresponding to the translation is
+    zero. The direction cosine matrix between the child interframe and parent
+    interframe is formed using a simple rotation about the joint axis. The page
+    on the joints framework gives a more detailed explanation of the
+    intermediate frames.
+
+    Parameters
+    ==========
+
+    name : string
+        A unique name for the joint.
+    parent : Body
+        The parent body of joint.
+    child : Body
+        The child body of joint.
+    rotation_coordinate : dynamicsymbol, optional
+        Generalized coordinate corresponding to the rotation angle. The default
+        value is ``dynamicsymbols(f'q0_{joint.name}')``.
+    translation_coordinate : dynamicsymbol, optional
+        Generalized coordinate corresponding to the translation distance. The
+        default value is ``dynamicsymbols(f'q1_{joint.name}')``.
+    rotation_speed : dynamicsymbol, optional
+        Generalized speed corresponding to the angular velocity. The default
+        value is ``dynamicsymbols(f'u0_{joint.name}')``.
+    translation_speed : dynamicsymbol, optional
+        Generalized speed corresponding to the translation velocity. The default
+        value is ``dynamicsymbols(f'u1_{joint.name}')``.
+    parent_point : Point or Vector, optional
+        Attachment point where the joint is fixed to the parent body. If a
+        vector is provided, then the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the parent's mass
+        center.
+    child_point : Point or Vector, optional
+        Attachment point where the joint is fixed to the child body. If a
+        vector is provided, then the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the child's mass
+        center.
+    parent_interframe : ReferenceFrame, optional
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the parent's own frame.
+    child_interframe : ReferenceFrame, optional
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the child's own frame.
+    joint_axis : Vector, optional
+        The rotation as well as translation axis. Note that the components of
+        this axis are the same in the parent_interframe and child_interframe.
+
+    Attributes
+    ==========
+
+    name : string
+        The joint's name.
+    parent : Body
+        The joint's parent body.
+    child : Body
+        The joint's child body.
+    rotation_coordinate : dynamicsymbol
+        Generalized coordinate corresponding to the rotation angle.
+    translation_coordinate : dynamicsymbol
+        Generalized coordinate corresponding to the translation distance.
+    rotation_speed : dynamicsymbol
+        Generalized speed corresponding to the angular velocity.
+    translation_speed : dynamicsymbol
+        Generalized speed corresponding to the translation velocity.
+    coordinates : Matrix
+        Matrix of the joint's generalized coordinates.
+    speeds : Matrix
+        Matrix of the joint's generalized speeds.
+    parent_point : Point
+        Attachment point where the joint is fixed to the parent body.
+    child_point : Point
+        Attachment point where the joint is fixed to the child body.
+    parent_interframe : ReferenceFrame
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated.
+    child_interframe : ReferenceFrame
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated.
+    kdes : Matrix
+        Kinematical differential equations of the joint.
+    joint_axis : Vector
+        The axis of rotation and translation.
+
+    Examples
+    =========
+
+    A single cylindrical joint is created between two bodies and has the
+    following basic attributes:
+
+    >>> from sympy.physics.mechanics import Body, CylindricalJoint
+    >>> parent = Body('P')
+    >>> parent
+    P
+    >>> child = Body('C')
+    >>> child
+    C
+    >>> joint = CylindricalJoint('PC', parent, child)
+    >>> joint
+    CylindricalJoint: PC  parent: P  child: C
+    >>> joint.name
+    'PC'
+    >>> joint.parent
+    P
+    >>> joint.child
+    C
+    >>> joint.parent_point
+    P_masscenter
+    >>> joint.child_point
+    C_masscenter
+    >>> joint.parent_axis
+    P_frame.x
+    >>> joint.child_axis
+    C_frame.x
+    >>> joint.coordinates
+    Matrix([
+    [q0_PC(t)],
+    [q1_PC(t)]])
+    >>> joint.speeds
+    Matrix([
+    [u0_PC(t)],
+    [u1_PC(t)]])
+    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    u0_PC(t)*P_frame.x
+    >>> joint.child.frame.dcm(joint.parent.frame)
+    Matrix([
+    [1,              0,             0],
+    [0,  cos(q0_PC(t)), sin(q0_PC(t))],
+    [0, -sin(q0_PC(t)), cos(q0_PC(t))]])
+    >>> joint.child_point.pos_from(joint.parent_point)
+    q1_PC(t)*P_frame.x
+    >>> child.masscenter.vel(parent.frame)
+    u1_PC(t)*P_frame.x
+
+    To further demonstrate the use of the cylindrical joint, the kinematics of
+    two cylindral joints perpendicular to each other can be created as follows.
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import Body, CylindricalJoint
+    >>> r, l, w = symbols('r l w')
+
+    First create bodies to represent the fixed floor with a fixed pole on it.
+    The second body represents a freely moving tube around that pole. The third
+    body represents a solid flag freely translating along and rotating around
+    the Y axis of the tube.
+
+    >>> floor = Body('floor')
+    >>> tube = Body('tube')
+    >>> flag = Body('flag')
+
+    The first joint will connect the first tube to the floor with it translating
+    along and rotating around the Z axis of both bodies.
+
+    >>> floor_joint = CylindricalJoint('C1', floor, tube, joint_axis=floor.z)
+
+    The second joint will connect the tube perpendicular to the flag along the Y
+    axis of both the tube and the flag, with the joint located at a distance
+    ``r`` from the tube's center of mass and a combination of the distances
+    ``l`` and ``w`` from the flag's center of mass.
+
+    >>> flag_joint = CylindricalJoint('C2', tube, flag,
+    ...                               parent_point=r * tube.y,
+    ...                               child_point=-w * flag.y + l * flag.z,
+    ...                               joint_axis=tube.y)
+
+    Once the joints are established the kinematics of the connected bodies can
+    be accessed. First the direction cosine matrices of both the body and the
+    flag relative to the floor are found:
+
+    >>> tube.dcm(floor)
+    Matrix([
+    [ cos(q0_C1(t)), sin(q0_C1(t)), 0],
+    [-sin(q0_C1(t)), cos(q0_C1(t)), 0],
+    [             0,             0, 1]])
+    >>> flag.dcm(floor)
+    Matrix([
+    [cos(q0_C1(t))*cos(q0_C2(t)), sin(q0_C1(t))*cos(q0_C2(t)), -sin(q0_C2(t))],
+    [             -sin(q0_C1(t)),               cos(q0_C1(t)),              0],
+    [sin(q0_C2(t))*cos(q0_C1(t)), sin(q0_C1(t))*sin(q0_C2(t)),  cos(q0_C2(t))]])
+
+    The position of the flag's center of mass is found with:
+
+    >>> flag.masscenter.pos_from(floor.masscenter)
+    q1_C1(t)*floor_frame.z + (r + q1_C2(t))*tube_frame.y + w*flag_frame.y - l*flag_frame.z
+
+    The angular velocities of the two tubes can be computed with respect to the
+    floor.
+
+    >>> tube.ang_vel_in(floor)
+    u0_C1(t)*floor_frame.z
+    >>> flag.ang_vel_in(floor)
+    u0_C1(t)*floor_frame.z + u0_C2(t)*tube_frame.y
+
+    Finally, the linear velocities of the two tube centers of mass can be
+    computed with respect to the floor, while expressed in the tube's frame.
+
+    >>> tube.masscenter.vel(floor.frame).to_matrix(tube.frame)
+    Matrix([
+    [       0],
+    [       0],
+    [u1_C1(t)]])
+    >>> flag.masscenter.vel(floor.frame).to_matrix(tube.frame).simplify()
+    Matrix([
+    [-l*u0_C2(t)*cos(q0_C2(t)) - r*u0_C1(t) - w*u0_C1(t) - q1_C2(t)*u0_C1(t)],
+    [                    -l*u0_C1(t)*sin(q0_C2(t)) + Derivative(q1_C2(t), t)],
+    [                                    l*u0_C2(t)*sin(q0_C2(t)) + u1_C1(t)]])
+
+    """
+
+    def __init__(self, name, parent, child, rotation_coordinate=None,
+                 translation_coordinate=None, rotation_speed=None,
+                 translation_speed=None, parent_point=None, child_point=None,
+                 parent_interframe=None, child_interframe=None,
+                 joint_axis=None):
+        self._joint_axis = joint_axis
+        coordinates = (rotation_coordinate, translation_coordinate)
+        speeds = (rotation_speed, translation_speed)
+        super().__init__(name, parent, child, coordinates, speeds,
+                         parent_point, child_point,
+                         parent_interframe=parent_interframe,
+                         child_interframe=child_interframe)
+
+    def __str__(self):
+        return (f'CylindricalJoint: {self.name}  parent: {self.parent}  '
+                f'child: {self.child}')
+
+    @property
+    def joint_axis(self):
+        """Axis about and along which the rotation and translation occurs."""
+        return self._joint_axis
+
+    @property
+    def rotation_coordinate(self):
+        """Generalized coordinate corresponding to the rotation angle."""
+        return self.coordinates[0]
+
+    @property
+    def translation_coordinate(self):
+        """Generalized coordinate corresponding to the translation distance."""
+        return self.coordinates[1]
+
+    @property
+    def rotation_speed(self):
+        """Generalized speed corresponding to the angular velocity."""
+        return self.speeds[0]
+
+    @property
+    def translation_speed(self):
+        """Generalized speed corresponding to the translation velocity."""
+        return self.speeds[1]
+
+    def _generate_coordinates(self, coordinates):
+        return self._fill_coordinate_list(coordinates, 2, 'q')
+
+    def _generate_speeds(self, speeds):
+        return self._fill_coordinate_list(speeds, 2, 'u')
+
+    def _orient_frames(self):
+        self._joint_axis = self._axis(self.joint_axis, self.parent_interframe)
+        self.child_interframe.orient_axis(
+            self.parent_interframe, self.joint_axis, self.rotation_coordinate)
+
+    def _set_angular_velocity(self):
+        self.child_interframe.set_ang_vel(
+            self.parent_interframe,
+            self.rotation_speed * self.joint_axis.normalize())
+
+    def _set_linear_velocity(self):
+        self.child_point.set_pos(
+            self.parent_point,
+            self.translation_coordinate * self.joint_axis.normalize())
+        self.parent_point.set_vel(self.parent.frame, 0)
+        self.child_point.set_vel(self.child.frame, 0)
+        self.child_point.set_vel(
+            self.parent.frame,
+            self.translation_speed * self.joint_axis.normalize())
+        self.child.masscenter.v2pt_theory(self.child_point, self.parent.frame,
+                                          self.child_interframe)
+
+
+class PlanarJoint(Joint):
+    """Planar Joint.
+
+    .. image:: PlanarJoint.svg
+        :align: center
+        :width: 800
+
+    Explanation
+    ===========
+
+    A planar joint is defined such that the child body translates over a fixed
+    plane of the parent body as well as rotate about the rotation axis, which
+    is perpendicular to that plane. The origin of this plane is the
+    ``parent_point`` and the plane is spanned by two nonparallel planar vectors.
+    The location of the ``child_point`` is based on the planar vectors
+    ($\\vec{v}_1$, $\\vec{v}_2$) and generalized coordinates ($q_1$, $q_2$),
+    i.e. $\\vec{r} = q_1 \\hat{v}_1 + q_2 \\hat{v}_2$. The direction cosine
+    matrix between the ``child_interframe`` and ``parent_interframe`` is formed
+    using a simple rotation ($q_0$) about the rotation axis.
+
+    In order to simplify the definition of the ``PlanarJoint``, the
+    ``rotation_axis`` and ``planar_vectors`` are set to be the unit vectors of
+    the ``parent_interframe`` according to the table below. This ensures that
+    you can only define these vectors by creating a separate frame and supplying
+    that as the interframe. If you however would only like to supply the normals
+    of the plane with respect to the parent and child bodies, then you can also
+    supply those to the ``parent_interframe`` and ``child_interframe``
+    arguments. An example of both of these cases is in the examples section
+    below and the page on the joints framework provides a more detailed
+    explanation of the intermediate frames.
+
+    .. list-table::
+
+        * - ``rotation_axis``
+          - ``parent_interframe.x``
+        * - ``planar_vectors[0]``
+          - ``parent_interframe.y``
+        * - ``planar_vectors[1]``
+          - ``parent_interframe.z``
+
+    Parameters
+    ==========
+
+    name : string
+        A unique name for the joint.
+    parent : Body
+        The parent body of joint.
+    child : Body
+        The child body of joint.
+    rotation_coordinate : dynamicsymbol, optional
+        Generalized coordinate corresponding to the rotation angle. The default
+        value is ``dynamicsymbols(f'q0_{joint.name}')``.
+    planar_coordinates : iterable of dynamicsymbols, optional
+        Two generalized coordinates used for the planar translation. The default
+        value is ``dynamicsymbols(f'q1_{joint.name} q2_{joint.name}')``.
+    rotation_speed : dynamicsymbol, optional
+        Generalized speed corresponding to the angular velocity. The default
+        value is ``dynamicsymbols(f'u0_{joint.name}')``.
+    planar_speeds : dynamicsymbols, optional
+        Two generalized speeds used for the planar translation velocity. The
+        default value is ``dynamicsymbols(f'u1_{joint.name} u2_{joint.name}')``.
+    parent_point : Point or Vector, optional
+        Attachment point where the joint is fixed to the parent body. If a
+        vector is provided, then the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the parent's mass
+        center.
+    child_point : Point or Vector, optional
+        Attachment point where the joint is fixed to the child body. If a
+        vector is provided, then the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the child's mass
+        center.
+    parent_interframe : ReferenceFrame, optional
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the parent's own frame.
+    child_interframe : ReferenceFrame, optional
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the child's own frame.
+
+    Attributes
+    ==========
+
+    name : string
+        The joint's name.
+    parent : Body
+        The joint's parent body.
+    child : Body
+        The joint's child body.
+    rotation_coordinate : dynamicsymbol
+        Generalized coordinate corresponding to the rotation angle.
+    planar_coordinates : Matrix
+        Two generalized coordinates used for the planar translation.
+    rotation_speed : dynamicsymbol
+        Generalized speed corresponding to the angular velocity.
+    planar_speeds : Matrix
+        Two generalized speeds used for the planar translation velocity.
+    coordinates : Matrix
+        Matrix of the joint's generalized coordinates.
+    speeds : Matrix
+        Matrix of the joint's generalized speeds.
+    parent_point : Point
+        Attachment point where the joint is fixed to the parent body.
+    child_point : Point
+        Attachment point where the joint is fixed to the child body.
+    parent_interframe : ReferenceFrame
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated.
+    child_interframe : ReferenceFrame
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated.
+    kdes : Matrix
+        Kinematical differential equations of the joint.
+    rotation_axis : Vector
+        The axis about which the rotation occurs.
+    planar_vectors : list
+        The vectors that describe the planar translation directions.
+
+    Examples
+    =========
+
+    A single planar joint is created between two bodies and has the following
+    basic attributes:
+
+    >>> from sympy.physics.mechanics import Body, PlanarJoint
+    >>> parent = Body('P')
+    >>> parent
+    P
+    >>> child = Body('C')
+    >>> child
+    C
+    >>> joint = PlanarJoint('PC', parent, child)
+    >>> joint
+    PlanarJoint: PC  parent: P  child: C
+    >>> joint.name
+    'PC'
+    >>> joint.parent
+    P
+    >>> joint.child
+    C
+    >>> joint.parent_point
+    P_masscenter
+    >>> joint.child_point
+    C_masscenter
+    >>> joint.rotation_axis
+    P_frame.x
+    >>> joint.planar_vectors
+    [P_frame.y, P_frame.z]
+    >>> joint.rotation_coordinate
+    q0_PC(t)
+    >>> joint.planar_coordinates
+    Matrix([
+    [q1_PC(t)],
+    [q2_PC(t)]])
+    >>> joint.coordinates
+    Matrix([
+    [q0_PC(t)],
+    [q1_PC(t)],
+    [q2_PC(t)]])
+    >>> joint.rotation_speed
+    u0_PC(t)
+    >>> joint.planar_speeds
+    Matrix([
+    [u1_PC(t)],
+    [u2_PC(t)]])
+    >>> joint.speeds
+    Matrix([
+    [u0_PC(t)],
+    [u1_PC(t)],
+    [u2_PC(t)]])
+    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    u0_PC(t)*P_frame.x
+    >>> joint.child.frame.dcm(joint.parent.frame)
+    Matrix([
+    [1,              0,             0],
+    [0,  cos(q0_PC(t)), sin(q0_PC(t))],
+    [0, -sin(q0_PC(t)), cos(q0_PC(t))]])
+    >>> joint.child_point.pos_from(joint.parent_point)
+    q1_PC(t)*P_frame.y + q2_PC(t)*P_frame.z
+    >>> child.masscenter.vel(parent.frame)
+    u1_PC(t)*P_frame.y + u2_PC(t)*P_frame.z
+
+    To further demonstrate the use of the planar joint, the kinematics of a
+    block sliding on a slope, can be created as follows.
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import PlanarJoint, Body, ReferenceFrame
+    >>> a, d, h = symbols('a d h')
+
+    First create bodies to represent the slope and the block.
+
+    >>> ground = Body('G')
+    >>> block = Body('B')
+
+    To define the slope you can either define the plane by specifying the
+    ``planar_vectors`` or/and the ``rotation_axis``. However it is advisable to
+    create a rotated intermediate frame, so that the ``parent_vectors`` and
+    ``rotation_axis`` will be the unit vectors of this intermediate frame.
+
+    >>> slope = ReferenceFrame('A')
+    >>> slope.orient_axis(ground.frame, ground.y, a)
+
+    The planar joint can be created using these bodies and intermediate frame.
+    We can specify the origin of the slope to be ``d`` above the slope's center
+    of mass and the block's center of mass to be a distance ``h`` above the
+    slope's surface. Note that we can specify the normal of the plane using the
+    rotation axis argument.
+
+    >>> joint = PlanarJoint('PC', ground, block, parent_point=d * ground.x,
+    ...                     child_point=-h * block.x, parent_interframe=slope)
+
+    Once the joint is established the kinematics of the bodies can be accessed.
+    First the ``rotation_axis``, which is normal to the plane and the
+    ``plane_vectors``, can be found.
+
+    >>> joint.rotation_axis
+    A.x
+    >>> joint.planar_vectors
+    [A.y, A.z]
+
+    The direction cosine matrix of the block with respect to the ground can be
+    found with:
+
+    >>> block.dcm(ground)
+    Matrix([
+    [              cos(a),              0,              -sin(a)],
+    [sin(a)*sin(q0_PC(t)),  cos(q0_PC(t)), sin(q0_PC(t))*cos(a)],
+    [sin(a)*cos(q0_PC(t)), -sin(q0_PC(t)), cos(a)*cos(q0_PC(t))]])
+
+    The angular velocity of the block can be computed with respect to the
+    ground.
+
+    >>> block.ang_vel_in(ground)
+    u0_PC(t)*A.x
+
+    The position of the block's center of mass can be found with:
+
+    >>> block.masscenter.pos_from(ground.masscenter)
+    d*G_frame.x + h*B_frame.x + q1_PC(t)*A.y + q2_PC(t)*A.z
+
+    Finally, the linear velocity of the block's center of mass can be
+    computed with respect to the ground.
+
+    >>> block.masscenter.vel(ground.frame)
+    u1_PC(t)*A.y + u2_PC(t)*A.z
+
+    In some cases it could be your preference to only define the normals of the
+    plane with respect to both bodies. This can most easily be done by supplying
+    vectors to the ``interframe`` arguments. What will happen in this case is
+    that an interframe will be created with its ``x`` axis aligned with the
+    provided vector. For a further explanation of how this is done see the notes
+    of the ``Joint`` class. In the code below, the above example (with the block
+    on the slope) is recreated by supplying vectors to the interframe arguments.
+    Note that the previously described option is however more computationally
+    efficient, because the algorithm now has to compute the rotation angle
+    between the provided vector and the 'x' axis.
+
+    >>> from sympy import symbols, cos, sin
+    >>> from sympy.physics.mechanics import PlanarJoint, Body
+    >>> a, d, h = symbols('a d h')
+    >>> ground = Body('G')
+    >>> block = Body('B')
+    >>> joint = PlanarJoint(
+    ...     'PC', ground, block, parent_point=d * ground.x,
+    ...     child_point=-h * block.x, child_interframe=block.x,
+    ...     parent_interframe=cos(a) * ground.x + sin(a) * ground.z)
+    >>> block.dcm(ground).simplify()
+    Matrix([
+    [               cos(a),              0,               sin(a)],
+    [-sin(a)*sin(q0_PC(t)),  cos(q0_PC(t)), sin(q0_PC(t))*cos(a)],
+    [-sin(a)*cos(q0_PC(t)), -sin(q0_PC(t)), cos(a)*cos(q0_PC(t))]])
+
+    """
+
+    def __init__(self, name, parent, child, rotation_coordinate=None,
+                 planar_coordinates=None, rotation_speed=None,
+                 planar_speeds=None, parent_point=None, child_point=None,
+                 parent_interframe=None, child_interframe=None):
+        # A ready to merge implementation of setting the planar_vectors and
+        # rotation_axis was added and removed in PR #24046
+        coordinates = (rotation_coordinate, planar_coordinates)
+        speeds = (rotation_speed, planar_speeds)
+        super().__init__(name, parent, child, coordinates, speeds,
+                         parent_point, child_point,
+                         parent_interframe=parent_interframe,
+                         child_interframe=child_interframe)
+
+    def __str__(self):
+        return (f'PlanarJoint: {self.name}  parent: {self.parent}  '
+                f'child: {self.child}')
+
+    @property
+    def rotation_coordinate(self):
+        """Generalized coordinate corresponding to the rotation angle."""
+        return self.coordinates[0]
+
+    @property
+    def planar_coordinates(self):
+        """Two generalized coordinates used for the planar translation."""
+        return self.coordinates[1:, 0]
+
+    @property
+    def rotation_speed(self):
+        """Generalized speed corresponding to the angular velocity."""
+        return self.speeds[0]
+
+    @property
+    def planar_speeds(self):
+        """Two generalized speeds used for the planar translation velocity."""
+        return self.speeds[1:, 0]
+
+    @property
+    def rotation_axis(self):
+        """The axis about which the rotation occurs."""
+        return self.parent_interframe.x
+
+    @property
+    def planar_vectors(self):
+        """The vectors that describe the planar translation directions."""
+        return [self.parent_interframe.y, self.parent_interframe.z]
+
+    def _generate_coordinates(self, coordinates):
+        rotation_speed = self._fill_coordinate_list(coordinates[0], 1, 'q',
+                                                    number_single=True)
+        planar_speeds = self._fill_coordinate_list(coordinates[1], 2, 'q', 1)
+        return rotation_speed.col_join(planar_speeds)
+
+    def _generate_speeds(self, speeds):
+        rotation_speed = self._fill_coordinate_list(speeds[0], 1, 'u',
+                                                    number_single=True)
+        planar_speeds = self._fill_coordinate_list(speeds[1], 2, 'u', 1)
+        return rotation_speed.col_join(planar_speeds)
+
+    def _orient_frames(self):
+        self.child_interframe.orient_axis(
+            self.parent_interframe, self.rotation_axis,
+            self.rotation_coordinate)
+
+    def _set_angular_velocity(self):
+        self.child_interframe.set_ang_vel(
+            self.parent_interframe,
+            self.rotation_speed * self.rotation_axis)
+
+    def _set_linear_velocity(self):
+        self.child_point.set_pos(
+            self.parent_point,
+            self.planar_coordinates[0] * self.planar_vectors[0] +
+            self.planar_coordinates[1] * self.planar_vectors[1])
+        self.parent_point.set_vel(self.parent_interframe, 0)
+        self.child_point.set_vel(self.child_interframe, 0)
+        self.child_point.set_vel(
+            self.parent.frame, self.planar_speeds[0] * self.planar_vectors[0] +
+            self.planar_speeds[1] * self.planar_vectors[1])
+        self.child.masscenter.v2pt_theory(self.child_point, self.parent.frame,
+                                          self.child.frame)
