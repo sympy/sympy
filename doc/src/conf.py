@@ -69,6 +69,7 @@ redirects = {
 
     "tutorial/preliminaries": "../tutorials/intro-tutorial/preliminaries.html",
     "tutorial/intro": "../tutorials/intro-tutorial/intro.html",
+    "tutorial/index": "../tutorials/intro-tutorial/index.html",
     "tutorial/gotchas": "../tutorials/intro-tutorial/gotchas.html",
     "tutorial/features": "../tutorials/intro-tutorial/features.html",
     "tutorial/next": "../tutorials/intro-tutorial/next.html",
