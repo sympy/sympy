@@ -149,15 +149,15 @@ if you plan to work on this feature, you will need the `antlr4`
 command-line tool (and you must ensure that it is in your `PATH`).
 One way to get it is:
 
-    $ conda install -c conda-forge antlr=4.10.1
+    $ conda install -c conda-forge antlr=4.11.1
 
 Alternatively, follow the instructions on the ANTLR website and download
-the `antlr-4.10.1-complete.jar`. Then export the `CLASSPATH` as instructed
+the `antlr-4.11.1-complete.jar`. Then export the `CLASSPATH` as instructed
 and instead of creating `antlr4` as an alias, make it an executable file
 with the following contents:
 ``` bash
 #!/bin/bash
-java -jar /usr/local/lib/antlr-4.10.1-complete.jar "$@"
+java -jar /usr/local/lib/antlr-4.11.1-complete.jar "$@"
 ```
 
 After making changes to `sympy/parsing/latex/LaTeX.g4`, run:
