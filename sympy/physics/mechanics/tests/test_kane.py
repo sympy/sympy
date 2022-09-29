@@ -1,6 +1,6 @@
 from sympy import solve
 from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
-                                zeros)
+                                zeros, eye)
 from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
@@ -54,7 +54,9 @@ def test_two_dof():
     P2 = Point('P2')
     P1.set_vel(N, u1 * N.x)
     P2.set_vel(N, (u1 + u2) * N.x)
-    kd = [q1d - u1, q2d - u2]
+    # Note we multiply the kinematic equation by an arbitrary factor
+    # to test the implicit vs explicit kinematics attribute
+    kd = [q1d/2 - u1/2, 2*q2d - 2*u2]
 
     # Now we create the list of forces, then assign properties to each
     # particle, then create a list of all particles.
@@ -76,12 +78,31 @@ def test_two_dof():
     assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
                                     c2 * u2) / m)
 
-    assert simplify(KM.rhs() -
-                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(4, 1)
+    # Check that the explicit form is the default and kinematic mass matrix is identity
+    assert KM.explicit_kinematics
+    assert KM.mass_matrix_kin == eye(2)
 
-    # Check that the implicit form also gives the same result
-    assert simplify(KM.rhs() -
-                    KM.mass_matrix_full_implicit.LUsolve(KM.forcing_full_implicit)) == zeros(4, 1)
+    # Check that the implicit and explicit matrices are different when involving kinematics
+    mf_keys = ['mass_matrix', 'mass_matrix_kin', 'mass_matrix_full',
+               'forcing', 'forcing_kin', 'forcing_full']
+    KM_matrices = {}
+    for explicit_kinematics in [False, True]:
+        KM.explicit_kinematics = explicit_kinematics
+        KM_matrices['explicit' if explicit_kinematics else 'implicit'] = {k:KM.__getattribute__(k) for k in mf_keys}
+
+    for k in mf_keys:
+        if k in ['mass_matrix', 'forcing']:
+            # dynamic matrix/vector are unchanged whether we use explicit or implicit kinematics
+            assert KM_matrices['explicit'][k] == KM_matrices['implicit'][k]
+        else:
+            # but matrix/vector involving kinematics are expected to be different
+            assert KM_matrices['explicit'][k] != KM_matrices['implicit'][k]
+
+    # Check that whether using implicit or explicit kinematics the RHS equations are consisten with the matrix form
+    for explicit_kinematics in [False, True]:
+        KM.explicit_kinematics = explicit_kinematics
+        assert simplify(KM.rhs() -
+                        KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(4, 1)
 
     # Make sure an error is raised if nonlinear kinematic differential
     # equations are supplied.
@@ -426,7 +447,8 @@ def test_implicit_kinematics():
           configuration_constraints = config_cons,
           velocity_constraints= [],
           u_dependent= [], #no dependent speeds
-          u_auxiliary = [] # No auxiliary speeds
+          u_auxiliary = [], # No auxiliary speeds
+          explicit_kinematics = False # implicit kinematics
         )
     except Exception as e:
         # symengine struggles with these kinematic equations
@@ -455,14 +477,21 @@ def test_implicit_kinematics():
     KM.kanes_equations(rigid_bodies, force_list)
 
     # Expecting implicit form to be less than 5% of the flops
+    n_ops_implicit = sum(
+        [x.count_ops() for x in KM.forcing_full] +
+        [x.count_ops() for x in KM.mass_matrix_full]
+    )
+    # Save implicit kinematic matrices to use later
+    mass_matrix_kin_implicit = KM.mass_matrix_kin
+    forcing_kin_implicit = KM.forcing_kin
+
+    KM.explicit_kinematics = True
     n_ops_explicit = sum(
         [x.count_ops() for x in KM.forcing_full] +
         [x.count_ops() for x in KM.mass_matrix_full]
     )
-    n_ops_implicit = sum(
-        [x.count_ops() for x in KM.forcing_full_implicit] +
-        [x.count_ops() for x in KM.mass_matrix_full_implicit]
-    )
+    forcing_kin_explicit = KM.forcing_kin
+
     assert n_ops_implicit / n_ops_explicit < .05
 
     # Ideally we would check that implicit and explicit equations give the same result as done in test_one_dof
@@ -472,12 +501,12 @@ def test_implicit_kinematics():
     # Instead, we check that the kinematic equations are correct using more fundamental tests:
     #
     # (1) that we recover the kinematic equations we have provided
-    assert (KM.mass_matrix_kin_implicit * KM.q.diff() - KM.forcing_kin_implicit) == Matrix(kinematic_eqs)
+    assert (mass_matrix_kin_implicit * KM.q.diff() - forcing_kin_implicit) == Matrix(kinematic_eqs)
 
     # (2) that rate of quaternions matches what 'textbook' solutions give
     # Note that we just use the explicit kinematics for the linear velocities
     # as they are not as complicated as the angular ones
-    qdot_candidate = KM.forcing_kin
+    qdot_candidate = forcing_kin_explicit
 
     quat_dot_textbook = Matrix([
         [0, -P, -Q, -R],
@@ -496,5 +525,5 @@ def test_implicit_kinematics():
 
     # sub the config constraint in the candidate solution and compare to the implicit rhs
     lambda_0_sol = solve(config_cons[0], q_att_vec[0])[1]
-    lhs_candidate = simplify(KM.mass_matrix_kin_implicit * qdot_candidate).subs({q_att_vec[0]: lambda_0_sol})
-    assert lhs_candidate == KM.forcing_kin_implicit
+    lhs_candidate = simplify(mass_matrix_kin_implicit * qdot_candidate).subs({q_att_vec[0]: lambda_0_sol})
+    assert lhs_candidate == forcing_kin_implicit
