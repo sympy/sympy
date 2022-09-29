@@ -527,7 +527,7 @@ def roots_quintic(f):
 
     if not all(coeff.is_Rational for coeff in (p, q, r, s)):
         return result
-        
+
     quintic = PolyQuintic(f)
 
     # Eqn standardized. Algo for solving starts here
@@ -664,7 +664,7 @@ def roots_quintic(f):
             # and fall back to usual solve
             return []
         saw.add(r)
-    
+
     # Restore to original equation where coeff_4 is nonzero
     if coeff_4:
         result = [x - coeff_4 / 5 for x in result]
