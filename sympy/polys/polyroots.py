@@ -508,6 +508,9 @@ def roots_quintic(f):
     Return an empty list if the quintic is reducible or not solvable.
     """
     result = []
+    if not f.is_univariate:
+        return result
+
     coeff_5, coeff_4, p_, q_, r_, s_ = f.all_coeffs()
 
     if coeff_5 != 1:
