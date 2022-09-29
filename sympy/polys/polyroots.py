@@ -514,7 +514,7 @@ def roots_quintic(f):
     coeff_5, coeff_4, p_, q_, r_, s_ = f.all_coeffs()
 
     if coeff_5 != 1:
-        f = Poly(f/coeff_5)
+        f = Poly(f / coeff_5, extension = True)
         _, coeff_4, p_, q_, r_, s_ = f.all_coeffs()
 
     # Cancel coeff_4 to form x^5 + px^3 + qx^2 + rx + s
