@@ -14,7 +14,7 @@ __all__ = ['KanesMethod']
 
 
 class KanesMethod(_Methods):
-    """Kane's method object.
+    r"""Kane's method object.
 
     Explanation
     ===========
@@ -674,7 +674,7 @@ class KanesMethod(_Methods):
 
     @property
     def mass_matrix_kin(self):
-        """The kinematic "mass matrix" $\mathbf{k_{k\dot{q}}}$ of the system."""
+        r"""The kinematic "mass matrix" $\mathbf{k_{k\dot{q}}}$ of the system."""
         return self._k_kqdot.copy() if self.explicit_kinematics else self._k_kqdot_implicit.copy()
 
     @property
