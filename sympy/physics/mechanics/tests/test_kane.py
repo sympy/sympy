@@ -82,23 +82,12 @@ def test_two_dof():
     assert KM.explicit_kinematics
     assert KM.mass_matrix_kin == eye(2)
 
-    # Check that the implicit and explicit matrices are different when involving kinematics
-    mf_keys = ['mass_matrix', 'mass_matrix_kin', 'mass_matrix_full',
-               'forcing', 'forcing_kin', 'forcing_full']
-    KM_matrices = {}
-    for explicit_kinematics in [False, True]:
-        KM.explicit_kinematics = explicit_kinematics
-        KM_matrices['explicit' if explicit_kinematics else 'implicit'] = {k:KM.__getattribute__(k) for k in mf_keys}
+    # Check that for the implicit form the mass matrix is not identity
+    KM.explicit_kinematics = False
+    assert KM.mass_matrix_kin == Matrix([[1/2, 0], [0, 2]])
 
-    for k in mf_keys:
-        if k in ['mass_matrix', 'forcing']:
-            # dynamic matrix/vector are unchanged whether we use explicit or implicit kinematics
-            assert KM_matrices['explicit'][k] == KM_matrices['implicit'][k]
-        else:
-            # but matrix/vector involving kinematics are expected to be different
-            assert KM_matrices['explicit'][k] != KM_matrices['implicit'][k]
-
-    # Check that whether using implicit or explicit kinematics the RHS equations are consisten with the matrix form
+    # Check that whether using implicit or explicit kinematics the RHS
+    # equations are consisten with the matrix form
     for explicit_kinematics in [False, True]:
         KM.explicit_kinematics = explicit_kinematics
         assert simplify(KM.rhs() -
