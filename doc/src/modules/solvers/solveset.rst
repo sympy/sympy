@@ -558,26 +558,15 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solveset::solvify
 
-linear_eq_to_matrix
--------------------
-
 .. autofunction:: sympy.solvers.solveset::linear_eq_to_matrix
 
-
-linsolve
---------
-
 .. autofunction:: sympy.solvers.solveset::linsolve
-
-
-nonlinsolve
------------
 
 .. autofunction:: sympy.solvers.solveset::nonlinsolve
 
 
 transolve
----------
+^^^^^^^^^
 
 .. autofunction:: sympy.solvers.solveset::_transolve
 
