@@ -1721,14 +1721,15 @@ class SphericalJoint(Joint):
 
     A spherical joint is defined such that the child body is free to rotate in
     any direction, without allowing a translation of the ``child_point``. As can
-    also be seen in the image the ``parent_point`` and ``child_point`` are fixed
-    on top of each other, i.e. the joint_point. This rotation is defined using
-    :func:`parent_interframe.orient(child_interframe, rot_type, amounts,
-    rot_order)<sympy.physics.vector.frame.ReferenceFrame.orient>` method. The
-    default rotation consists of three relative rotations, i.e. body fixed
-    rotations. Based on the direction cosine matrix following from these
-    rotations the angular velocity is computed based on the generalized
-    coordinates and generalized speeds.
+    also be seen in the image, the ``parent_point`` and ``child_point`` are
+    fixed on top of each other, i.e. the ``joint_point``. This rotation is
+    defined using the :func:`parent_interframe.orient(child_interframe,
+    rot_type, amounts, rot_order)
+    <sympy.physics.vector.frame.ReferenceFrame.orient>` method. The default
+    rotation consists of three relative rotations, i.e. body-fixed rotations.
+    Based on the direction cosine matrix following from these rotations, the
+    angular velocity is computed based on the generalized coordinates and
+    generalized speeds.
 
     Parameters
     ==========
@@ -1867,7 +1868,7 @@ class SphericalJoint(Joint):
     0
 
     To further demonstrate the use of the spherical joint, the kinematics of a
-    spherical joint with a ZXZ rotation, can be created as follows.
+    spherical joint with a ZXZ rotation can be created as follows.
 
     >>> from sympy import symbols
     >>> from sympy.physics.mechanics import Body, SphericalJoint
@@ -1878,14 +1879,14 @@ class SphericalJoint(Joint):
     >>> floor = Body('F')
     >>> bob = Body('B')
 
-    The joint will connect the bob to the floor. Where the joint is located at
-    a distance of ``l1`` from the child's center of mass and the rotation is set
-    to a body fixed ZXZ rotation.
+    The joint will connect the bob to the floor, with the joint located at a
+    distance of ``l1`` from the child's center of mass and the rotation set to a
+    body-fixed ZXZ rotation.
 
     >>> joint = SphericalJoint('S', floor, bob, child_point=l1 * bob.y,
     ...                        rot_type='body', rot_order='ZXZ')
 
-    Now that the joint is established the kinematics of the connected body can
+    Now that the joint is established, the kinematics of the connected body can
     be accessed.
 
     The position of the bob's masscenter is found with:
@@ -1903,8 +1904,7 @@ class SphericalJoint(Joint):
     [u1_S(t)*sin(q0_S(t)) - u2_S(t)*sin(q1_S(t))*cos(q0_S(t))],
     [                          u0_S(t) + u2_S(t)*cos(q1_S(t))]])
 
-    And finally, the linear velocity of the bob's center of mass can be
-    computed.
+    Finally, the linear velocity of the bob's center of mass can be computed.
 
     >>> bob.masscenter.vel(floor.frame).to_matrix(bob.frame)
     Matrix([
@@ -1913,12 +1913,10 @@ class SphericalJoint(Joint):
     [-l1*(u0_S(t)*sin(q1_S(t))*sin(q2_S(t)) + u1_S(t)*cos(q2_S(t)))]])
 
     """
-
     def __init__(self, name, parent, child, coordinates=None, speeds=None,
                  parent_point=None, child_point=None, parent_interframe=None,
-                 child_interframe=None, rot_type='Body', amounts=None,
+                 child_interframe=None, rot_type='BODY', amounts=None,
                  rot_order=123):
-        self._supported_rot_types = ('BODY', 'SPACE')
         self._rot_type = rot_type
         self._amounts = amounts
         self._rot_order = rot_order
@@ -1938,10 +1936,11 @@ class SphericalJoint(Joint):
         return self._fill_coordinate_list(speeds, len(self.coordinates), 'u')
 
     def _orient_frames(self):
-        if self._rot_type.upper() not in self._supported_rot_types:
+        supported_rot_types = ('BODY', 'SPACE')
+        if self._rot_type.upper() not in supported_rot_types:
             raise NotImplementedError(
                 f'Rotation type "{self._rot_type}" is not implemented. '
-                f'Implemented rotation types are: {self._supported_rot_types}')
+                f'Implemented rotation types are: {supported_rot_types}')
         amounts = self.coordinates if self._amounts is None else self._amounts
         self.child_interframe.orient(self.parent_interframe, self._rot_type,
                                      amounts, self._rot_order)

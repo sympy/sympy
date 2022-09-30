@@ -892,7 +892,7 @@ def test_spherical_joint():
             -u0 * sin(q2) * cos(q1) + u1 * cos(q2)) * A.y + (
                    u0 * sin(q1) + u2) * A.z
     assert S.__str__() == 'SphericalJoint: S  parent: P  child: C'
-    assert S._rot_type == 'Body'
+    assert S._rot_type == 'BODY'
     assert S._rot_order == 123
     assert S._amounts is None
 
