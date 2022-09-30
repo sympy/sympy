@@ -10,7 +10,7 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    about.rst
    represent.rst
