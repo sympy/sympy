@@ -37,6 +37,12 @@ PlanarJoint
 .. autoclass:: PlanarJoint
    :members:
 
+SphericalJoint
+--------------
+
+.. autoclass:: SphericalJoint
+   :members:
+
 JointsMethod (Docstring)
 ========================
 
