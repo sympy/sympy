@@ -22,5 +22,8 @@ Joint (Docstrings)
 .. autoclass:: PlanarJoint
    :members:
 
+.. autoclass:: SphericalJoint
+   :members:
+
 .. automodule:: sympy.physics.mechanics.jointsmethod
    :members:
