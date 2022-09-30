@@ -511,8 +511,11 @@ def roots_quintic(f):
 
     coeff_5, coeff_4, p_, q_, r_, s_ = f.all_coeffs()
 
+    if not all(coeff.is_Rational for coeff in (coeff_5, coeff_4, p_, q_, r_, s_)):
+        return result
+
     if coeff_5 != 1:
-        f = Poly(f / coeff_5, extension = True)
+        f = Poly(f / coeff_5)
         _, coeff_4, p_, q_, r_, s_ = f.all_coeffs()
 
     # Cancel coeff_4 to form x^5 + px^3 + qx^2 + rx + s
@@ -525,9 +528,6 @@ def roots_quintic(f):
         f = Poly(x**5 + p*x**3 + q*x**2 + r*x + s)
     else:
         p, q, r, s = p_, q_, r_, s_
-
-    if not all(coeff.is_Rational for coeff in (p, q, r, s)):
-        return result
 
     quintic = PolyQuintic(f)
 
