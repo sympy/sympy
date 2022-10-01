@@ -4,7 +4,7 @@ A Printer for generating readable representation of most SymPy classes.
 
 from typing import Any, Dict as tDict
 
-from sympy.core import S, Rational, Pow, Basic, Mul, Number, Add
+from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
