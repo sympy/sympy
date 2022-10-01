@@ -32,13 +32,16 @@ reveal that $a = \pm \sqrt{c^2-b^2}$:
 ## Example of Solving a Diophantine Equation
 
 Here is an example of solving a Diophantine equation, specifically $a^2 + b^2 =
-c^2$, using {func}`~.diophantine`:
+c^2$ transformed to ***, using {func}`~.diophantine`:
 
 ```py
 >>> from sympy.solvers.diophantine import diophantine
 >>> from sympy import symbols
 >>> a, b, c = symbols("a, b, c", integer=True)
->>> diophantine(a**2 + b**2 - c**2, syms=(a, b, c))
+>>> my_syms = (a, b, c)
+>>> pythag = a**2 + b**2 - c**2
+>>> d = diophantine(pythag, syms=my_syms)
+>>> d
 {(2*p*q, p**2 - q**2, p**2 + q**2)}
 ```
 
@@ -85,7 +88,8 @@ a tuple is an expression for a variable in your equation. For example, in
 >>> from sympy.solvers.diophantine import diophantine
 >>> from sympy import symbols
 >>> a, b, c, p, q = symbols("a, b, c, p, q", integer=True)
->>> d = diophantine(a**2 + b**2 - c**2, syms=(a, b, c))
+>>> my_syms = (a, b, c)
+>>> d = diophantine(pythag, syms=my_syms)
 >>> d
 {(2*p*q, p**2 - q**2, p**2 + q**2)}
 ```
@@ -115,7 +119,7 @@ expression by its symbol:
 >>> from sympy import symbols
 >>> a, b, c = symbols("a, b, c", integer=True)
 >>> my_syms = (a, b, c)
->>> solution, = diophantine(a**2 + b**2 - c**2, syms=(a, b, c))
+>>> solution, = diophantine(pythag, syms=my_syms)
 >>> solution
 (2*p*q, p**2 - q**2, p**2 + q**2)
 >>> solution_dict = dict(zip(my_syms, solution))
@@ -134,10 +138,33 @@ equation, you can substitute in values for the parameters by
 1. creating the parameters as symbols
 2. substituting in their values using {meth}`~sympy.core.basic.Basic.subs`.
 
+Here, we express the set of values as a dictionary to associate each variable
+($a, b, c$) with its example value:
+
 ```py
 >>> p, q = symbols("p, q", integer=True)
->>> [var.subs({p:4, q:3}) for var in solution_list[0]]
-[24, 7, 25]
+>>> solution_p4q3 = dict(zip(my_syms, [var.subs({p:4, q:3}) for var in solution_list[0]]))
+>>> solution_p4q3
+{a: 24, b: 7, c: 25}
+```
+
+### Verify a Solution
+
+You can verify a solution is correct by substituting its integer values back
+into the original equation (expression which equals zero) and checking that the
+result is zero, either by using the dictionary approach from
+[](#work-with-parameters):
+
+```py
+>>> pythag.subs({a: solution_p4q3[a], b: solution_p4q3[b], c: solution_p4q3[c]})
+0
+```
+
+or by manually substituting in values determined by any procedure:
+
+```py
+>>> pythag.subs({a: 24, b: 7, c: 25})
+0
 ```
 
 ### Programmatically Extract Parameter Symbols
@@ -146,7 +173,7 @@ If you want to programmatically obtain the set of auto-generated parameters for
 one solution, you can use the following code:
 
 ```py
->>> solution, = diophantine(a**2 + b**2 - c**2, syms=(a, b, c))
+>>> solution, = diophantine(pythag, syms=my_syms)
 >>> solution
 (2*p*q, p**2 - q**2, p**2 + q**2)
 >>> set().union(*(s.free_symbols for s in solution))
