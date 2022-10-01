@@ -1,4 +1,4 @@
-# Solve a Matrix Equation
+# Solve a Matrix Equation Algebraically
 
 Use SymPy to solve a matrix (linear) equation. For example, solving $
 \left[\begin{array}{cc} c & d\\1 & -e\end{array}\right] \left[\begin{array}{cc}
@@ -17,8 +17,8 @@ $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc}
     - mpmath's
       [lu_solve()](https://mpmath.org/doc/current/matrices.html#linear-equations)
 - Solving a matrix equation is equivalent to solving a system of linear
-  equations, so if you prefer you can use *link to solve a system of equations
-  once published*
+  equations, so if you prefer you can
+  [](solve-system-of-equations-algebraically.md)
 - If you formulated your problem as a system of linear equations, and want to
   convert it to matrix form, you can use {func}`~.linear_eq_to_matrix` and then
   follow the procedures in this guide.
