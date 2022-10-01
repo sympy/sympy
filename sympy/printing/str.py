@@ -59,7 +59,7 @@ class StrPrinter(Printer):
                 t = t[1:]
             else:
                 sign = "+"
-            if precedence(term) < PREC or isinstance(term, Add):
+            if precedence(term) < PREC or term.is_Add:
                 l.extend([sign, "(%s)" % t])
             else:
                 l.extend([sign, t])
