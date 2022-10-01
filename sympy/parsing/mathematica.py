@@ -663,7 +663,7 @@ class MathematicaParser:
         # Remove newlines at the end
         while tokens and tokens[-1] == "\n":
             tokens.pop(-1)
-            
+
         return tokens
 
     def _is_op(self, token: tUnion[str, list]) -> bool:
