@@ -111,11 +111,11 @@ but to use the parser, you only need the ``antlr4`` Python package available.
 Depending on your package manager, you can install the right package with, for
 example, ``pip``::
 
-    $ pip install antlr4-python3-runtime==4.10
+    $ pip install antlr4-python3-runtime==4.11
 
 or ``conda``::
 
-    $ conda install -c conda-forge antlr-python-runtime==4.10
+    $ conda install -c conda-forge antlr-python-runtime==4.11
 
 The C parser depends on ``clang`` and the Fortran parser depends on ``LFortran``.
 You can install these packages using::

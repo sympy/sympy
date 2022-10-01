@@ -754,8 +754,7 @@ def test_issue_6462():
 
 def test_indefinite_1_bug():
     assert integrate((b + t)**(-a), t, meijerg=True
-        ) == -b/(b**a*(1 + t/b)**a*(a - 1)
-        ) - t/(b**a*(1 + t/b)**a*(a - 1))
+        ) == -b**(1 - a)*(1 + t/b)**(1 - a)/(a - 1)
 
 
 def test_pr_23583():

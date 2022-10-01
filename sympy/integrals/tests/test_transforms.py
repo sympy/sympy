@@ -383,8 +383,8 @@ def test_inverse_mellin_transform():
         (1 + sqrt(x + 1))**c
     assert simplify(IMT(2**(a + 2*s)*b**(a + 2*s - 1)*gamma(s)*gamma(1 - a - 2*s)
                         /gamma(1 - a - s), s, x, (0, (-re(a) + 1)/2))) == \
-        b**(a - 1)*(sqrt(1 + x/b**2) + 1)**(a - 1)*(b**2*sqrt(1 + x/b**2) +
-        b**2 + x)/(b**2 + x)
+        b**(a - 1)*(b**2*(sqrt(1 + x/b**2) + 1)**a + x*(sqrt(1 + x/b**2) + 1
+        )**(a - 1))/(b**2 + x)
     assert simplify(IMT(-2**(c + 2*s)*c*b**(c + 2*s)*gamma(s)*gamma(-c - 2*s)
                         / gamma(-c - s + 1), s, x, (0, -re(c)/2))) == \
         b**c*(sqrt(1 + x/b**2) + 1)**c
