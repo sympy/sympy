@@ -9,9 +9,17 @@ yields $(a=2pq, b=p^2-q^2, c=p^2-q^2)$.
 ## Alternatives to Consider
 
 There are few alternatives for finding a parameterized general solution a
-Diophantine equation. {func}`~.solve` simply solves for one variable in terms of
-the others. For example, attempting to solve $a^2 + b^2 = c^2$ for $a$, $b$, and
-$c$ can only reveal that $a = \pm \sqrt{c^2-b^2}$:
+Diophantine equation.
+- Numerical alternatives:
+    - [Sage's EllipticCurve
+  command](https://doc.sagemath.org/html/en/constructions/elliptic_curves.html)
+  may be able to find a set of relative numerical values for each variable
+    - You can test explicit integer values, for example using a nested for loop
+  of ranges of values. This is inefficient, but fine if you are only interested
+  in solutions that are relatively small.
+- {func}`~.solve` simply solves for one variable in terms of the others. For
+example, attempting to solve $a^2 + b^2 = c^2$ for $a$, $b$, and $c$ can only
+reveal that $a = \pm \sqrt{c^2-b^2}$:
 
 ```py
 >>> from sympy import solve
@@ -39,12 +47,17 @@ for more examples of solving various types of Diophantine equations.
 
 ## Guidance
 
-### *expr = 0*
+### Expression to Solve Must Equal Zero
+
+{func}`~.diophantine` requires that the expression to be solved equals zero, so
+you must transform an equation into such an expression. For example, $a^2 + b^2
+= c^2$ must be expressed as $a^2 + b^2 - c^2$ as in
+[](#example-of-solving-a-diophantine-equation).
 
 ### Specify the Order of Symbols in the Result
 
 We recommend you specify the order of symbols in the result to avoid confusion.
-Use the `syms` parameter and pass it a tuple or list of symbols to ensure the
+Use the `syms` parameter and pass it a tuple (or list) of symbols to ensure the
 result will be in that order.
 
 ### Limitations
@@ -140,19 +153,14 @@ one solution, you can use the following code:
 {p, q}
 ```
 
-## *Tradeoffs (speed vs. accuracy, etc.) for function*
-
-### *Are there any tradeoffs to mention--permute parameter?*
-
-*Tradeoff 1 content*
-
 ## Not All Equations Can Be Solved
 
 ### Equations With No Solution
 
 Some Diophantine equations have no solution, in which case {func}`~.diophantine`
-will return an empty set, `set()`. For example, in this equation, the
-coefficients are both even ($2$ and $4$), so the sum of the terms ($2x + 4y$)
+will return an empty set, `set()`. For example, in the expression $2x + 4y - 3$
+(remembering that the [](#expression-to-solve-must-equal-zero)), the
+coefficients are both even ($2$ and $4$), so the sum of the terms $(2x + 4y)$
 can only be even. However, the constant $3$ is odd, so there is no solution.
 
 ```py
