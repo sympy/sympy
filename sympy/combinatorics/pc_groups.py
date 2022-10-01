@@ -393,11 +393,11 @@ class Collector(DefaultPrinting):
         There are two types of relations used in polycyclic
         presentation.
 
-        * ``Power relations`` : Power relators are of the form `x_i^{re_i}`,
+        * Power relations : Power relators are of the form `x_i^{re_i}`,
           where `i \in \{0, \ldots, \mathrm{len(pcgs)}\}`, ``x`` represents polycyclic
           generator and ``re`` is the corresponding relative order.
 
-        * ``Conjugate relations`` : Conjugate relators are of the form `x_j^-1x_ix_j`,
+        * Conjugate relations : Conjugate relators are of the form `x_j^-1x_ix_j`,
           where `j < i \in \{0, \ldots, \mathrm{len(pcgs)}\}`.
 
         Returns

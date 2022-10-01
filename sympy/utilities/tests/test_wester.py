@@ -485,6 +485,7 @@ def test_H8():
 
 
 def test_H9():
+    x = Symbol('x', zero=False)
     p1 = 2*x**(n + 4) - x**(n + 2)
     p2 = 4*x**(n + 1) + 3*x**n
     assert gcd(p1, p2) == x**n
@@ -2628,7 +2629,6 @@ def test_W25():
         (x, 0, pi/2))
     i2 = integrate(i1, (y, 0, pi/2))
     assert (i2 - pi*a/2).simplify() == 0
-
 
 
 def test_W26():

@@ -5,6 +5,9 @@
 This must be run each time ``known_facts()`` in ``assumptions.facts`` module
 is changed.
 
+This must be run each time ``_generate_assumption_rules()`` in
+``sympy.core.assumptions`` module is changed.
+
 Should be run from sympy root directory.
 
 $ python bin/ask_update.py
@@ -13,6 +16,7 @@ $ python bin/ask_update.py
 # hook in-tree SymPy into Python path, if possible
 import os
 import sys
+import pprint
 
 isympy_path = os.path.abspath(__file__)
 isympy_dir = os.path.dirname(isympy_path)
@@ -22,13 +26,14 @@ sympy_dir = os.path.join(sympy_top, 'sympy')
 if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
 
+from sympy.core.assumptions import _generate_assumption_rules
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.facts import (get_known_facts,
     generate_known_facts_dict, get_known_facts_keys)
 from sympy.core import Symbol
+from textwrap import dedent, wrap
 
 def generate_code():
-    from textwrap import dedent, wrap
 
     LINE = ",\n        "
     HANG = ' '*8
@@ -95,4 +100,20 @@ def generate_code():
 
 with open('sympy/assumptions/ask_generated.py', 'w') as f:
     code = generate_code()
+    f.write(code)
+
+
+with open('sympy/core/assumptions_generated.py', 'w') as f:
+    representation = _generate_assumption_rules()._to_python()
+
+    code_string = dedent('''\
+    """
+    Do NOT manually edit this file.
+    Instead, run ./bin/ask_update.py.
+    """
+
+    %s
+    ''')
+
+    code = code_string % (representation,)
     f.write(code)

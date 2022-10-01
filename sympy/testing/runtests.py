@@ -614,8 +614,9 @@ def doctest(*paths, subprocess=True, rerun=0, **kwargs):
     >>> sympy.doctest(split='1/2')  # doctest: +SKIP
 
     The ``subprocess`` and ``verbose`` options are the same as with the function
-    ``test()``.  See the docstring of that function for more information.
-
+    ``test()`` (see the docstring of that function for more information) except
+    that ``verbose`` may also be set equal to ``2`` in order to print
+    individual doctest lines, as they are being tested.
     """
     # count up from 0, do not print 0
     print_counter = lambda i : (print("rerun %d" % (rerun-i))
@@ -728,6 +729,12 @@ def _get_doctest_blacklist():
         blacklist.extend([
             "sympy/parsing/sym_expr.py",
         ])
+
+    if import_module("scipy") is None:
+        # throws ModuleNotFoundError when scipy not installed
+        blacklist.extend(
+            ["doc/src/guides/solving/solve-numerically.md",]
+        )
 
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
@@ -1433,12 +1440,13 @@ class SymPyDocTests:
                     self._reporter.test_skip(v=str(e))
                     continue
 
-            runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
+            runner = SymPyDocTestRunner(verbose=self._reporter._verbose==2,
+                    optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
                     pdoctest.IGNORE_EXCEPTION_DETAIL)
             runner._checker = SymPyOutputChecker()
             old = sys.stdout
-            new = StringIO()
+            new = old if self._reporter._verbose==2 else StringIO()
             sys.stdout = new
             # If the testing is normal, the doctests get importing magic to
             # provide the global namespace. If not normal (the default) then

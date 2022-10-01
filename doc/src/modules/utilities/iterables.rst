@@ -3,6 +3,10 @@ Iterables
 =========
 
 
+.. automodule:: sympy.utilities.iterables
+   :members:
+
+
 variations
 ----------
 
@@ -80,9 +84,3 @@ kbins::
     ['A,BC', 'A,CB', 'AB,C', 'AC,B',
      'B,AC', 'B,CA', 'BA,C', 'BC,A',
      'C,AB', 'C,BA', 'CA,B', 'CB,A']
-
-Docstring
-=========
-
-.. automodule:: sympy.utilities.iterables
-   :members:

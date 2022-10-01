@@ -1,349 +1,249 @@
-"""Efficient functions for generating orthogonal polynomials. """
-
-
+"""Efficient functions for generating orthogonal polynomials."""
 from sympy.core.symbol import Dummy
-from sympy.polys.constructor import construct_domain
-from sympy.polys.densearith import (
-    dup_mul, dup_mul_ground, dup_lshift, dup_sub, dup_add
-)
+from sympy.polys.densearith import (dup_mul, dup_mul_ground,
+    dup_lshift, dup_sub, dup_add)
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.polyclasses import DMP
-from sympy.polys.polytools import Poly, PurePoly
+from sympy.polys.polytools import named_poly
 from sympy.utilities import public
 
-
 def dup_jacobi(n, a, b, K):
-    """Low-level implementation of Jacobi polynomials. """
-    seq = [[K.one], [(a + b + K(2))/K(2), (a - b)/K(2)]]
-
-    for i in range(2, n + 1):
+    """Low-level implementation of Jacobi polynomials."""
+    if n < 1:
+        return [K.one]
+    m2, m1 = [K.one], [(a+b)/K(2) + K.one, (a-b)/K(2)]
+    for i in range(2, n+1):
         den = K(i)*(a + b + i)*(a + b + K(2)*i - K(2))
         f0 = (a + b + K(2)*i - K.one) * (a*a - b*b) / (K(2)*den)
         f1 = (a + b + K(2)*i - K.one) * (a + b + K(2)*i - K(2)) * (a + b + K(2)*i) / (K(2)*den)
         f2 = (a + i - K.one)*(b + i - K.one)*(a + b + K(2)*i) / den
-        p0 = dup_mul_ground(seq[-1], f0, K)
-        p1 = dup_mul_ground(dup_lshift(seq[-1], 1, K), f1, K)
-        p2 = dup_mul_ground(seq[-2], f2, K)
-        seq.append(dup_sub(dup_add(p0, p1, K), p2, K))
-
-    return seq[n]
-
+        p0 = dup_mul_ground(m1, f0, K)
+        p1 = dup_mul_ground(dup_lshift(m1, 1, K), f1, K)
+        p2 = dup_mul_ground(m2, f2, K)
+        m2, m1 = m1, dup_sub(dup_add(p0, p1, K), p2, K)
+    return m1
 
 @public
 def jacobi_poly(n, a, b, x=None, polys=False):
-    """Generates Jacobi polynomial of degree `n` in `x`.
+    r"""Generates the Jacobi polynomial `P_n^{(a,b)}(x)`.
 
     Parameters
     ==========
 
     n : int
-        `n` decides the degree of polynomial
+        Degree of the polynomial.
     a
-        Lower limit of minimal domain for the list of
-        coefficients.
+        Lower limit of minimal domain for the list of coefficients.
     b
-        Upper limit of minimal domain for the list of
-        coefficients.
+        Upper limit of minimal domain for the list of coefficients.
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
-    if n < 0:
-        raise ValueError("Cannot generate Jacobi polynomial of degree %s" % n)
-
-    K, v = construct_domain([a, b], field=True)
-    poly = DMP(dup_jacobi(int(n), v[0], v[1], K), K)
-
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
-
-    return poly if polys else poly.as_expr()
-
+    return named_poly(n, dup_jacobi, None, "Jacobi polynomial", (x, a, b), polys)
 
 def dup_gegenbauer(n, a, K):
-    """Low-level implementation of Gegenbauer polynomials. """
-    seq = [[K.one], [K(2)*a, K.zero]]
-
-    for i in range(2, n + 1):
-        f1 = K(2) * (i + a - K.one) / i
-        f2 = (i + K(2)*a - K(2)) / i
-        p1 = dup_mul_ground(dup_lshift(seq[-1], 1, K), f1, K)
-        p2 = dup_mul_ground(seq[-2], f2, K)
-        seq.append(dup_sub(p1, p2, K))
-
-    return seq[n]
-
+    """Low-level implementation of Gegenbauer polynomials."""
+    if n < 1:
+        return [K.one]
+    m2, m1 = [K.one], [K(2)*a, K.zero]
+    for i in range(2, n+1):
+        p1 = dup_mul_ground(dup_lshift(m1, 1, K), K(2)*(a-K.one)/K(i) + K(2), K)
+        p2 = dup_mul_ground(m2, K(2)*(a-K.one)/K(i) + K.one, K)
+        m2, m1 = m1, dup_sub(p1, p2, K)
+    return m1
 
 def gegenbauer_poly(n, a, x=None, polys=False):
-    """Generates Gegenbauer polynomial of degree `n` in `x`.
+    r"""Generates the Gegenbauer polynomial `C_n^{(a)}(x)`.
 
     Parameters
     ==========
 
     n : int
-        `n` decides the degree of polynomial
+        Degree of the polynomial.
     x : optional
     a
-        Decides minimal domain for the list of
-        coefficients.
+        Decides minimal domain for the list of coefficients.
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
-    if n < 0:
-        raise ValueError(
-            "Cannot generate Gegenbauer polynomial of degree %s" % n)
-
-    K, a = construct_domain(a, field=True)
-    poly = DMP(dup_gegenbauer(int(n), a, K), K)
-
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
-
-    return poly if polys else poly.as_expr()
-
+    return named_poly(n, dup_gegenbauer, None, "Gegenbauer polynomial", (x, a), polys)
 
 def dup_chebyshevt(n, K):
-    """Low-level implementation of Chebyshev polynomials of the 1st kind. """
-    seq = [[K.one], [K.one, K.zero]]
+    """Low-level implementation of Chebyshev polynomials of the first kind."""
+    if n < 1:
+        return [K.one]
+    m2, m1 = [K.one], [K.one, K.zero]
+    for i in range(2, n+1):
+        m2, m1 = m1, dup_sub(dup_mul_ground(dup_lshift(m1, 1, K), K(2), K), m2, K)
+    return m1
 
-    for i in range(2, n + 1):
-        a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(2), K)
-        seq.append(dup_sub(a, seq[-2], K))
-
-    return seq[n]
-
+def dup_chebyshevu(n, K):
+    """Low-level implementation of Chebyshev polynomials of the second kind."""
+    if n < 1:
+        return [K.one]
+    m2, m1 = [K.one], [K(2), K.zero]
+    for i in range(2, n+1):
+        m2, m1 = m1, dup_sub(dup_mul_ground(dup_lshift(m1, 1, K), K(2), K), m2, K)
+    return m1
 
 @public
 def chebyshevt_poly(n, x=None, polys=False):
-    """Generates Chebyshev polynomial of the first kind of degree `n` in `x`.
+    r"""Generates the Chebyshev polynomial of the first kind `T_n(x)`.
 
     Parameters
     ==========
 
     n : int
-        `n` decides the degree of polynomial
+        Degree of the polynomial.
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
-    if n < 0:
-        raise ValueError(
-            "Cannot generate 1st kind Chebyshev polynomial of degree %s" % n)
-
-    poly = DMP(dup_chebyshevt(int(n), ZZ), ZZ)
-
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
-
-    return poly if polys else poly.as_expr()
-
-
-def dup_chebyshevu(n, K):
-    """Low-level implementation of Chebyshev polynomials of the 2nd kind. """
-    seq = [[K.one], [K(2), K.zero]]
-
-    for i in range(2, n + 1):
-        a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(2), K)
-        seq.append(dup_sub(a, seq[-2], K))
-
-    return seq[n]
-
+    return named_poly(n, dup_chebyshevt, ZZ,
+            "Chebyshev polynomial of the first kind", (x,), polys)
 
 @public
 def chebyshevu_poly(n, x=None, polys=False):
-    """Generates Chebyshev polynomial of the second kind of degree `n` in `x`.
+    r"""Generates the Chebyshev polynomial of the second kind `U_n(x)`.
 
     Parameters
     ==========
 
     n : int
-        `n` decides the degree of polynomial
+        Degree of the polynomial.
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
-    if n < 0:
-        raise ValueError(
-            "Cannot generate 2nd kind Chebyshev polynomial of degree %s" % n)
-
-    poly = DMP(dup_chebyshevu(int(n), ZZ), ZZ)
-
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
-
-    return poly if polys else poly.as_expr()
-
+    return named_poly(n, dup_chebyshevu, ZZ,
+            "Chebyshev polynomial of the second kind", (x,), polys)
 
 def dup_hermite(n, K):
-    """Low-level implementation of Hermite polynomials. """
-    seq = [[K.one], [K(2), K.zero]]
+    """Low-level implementation of Hermite polynomials."""
+    if n < 1:
+        return [K.one]
+    m2, m1 = [K.one], [K(2), K.zero]
+    for i in range(2, n+1):
+        a = dup_lshift(m1, 1, K)
+        b = dup_mul_ground(m2, K(i-1), K)
+        m2, m1 = m1, dup_mul_ground(dup_sub(a, b, K), K(2), K)
+    return m1
 
-    for i in range(2, n + 1):
-        a = dup_lshift(seq[-1], 1, K)
-        b = dup_mul_ground(seq[-2], K(i - 1), K)
-
-        c = dup_mul_ground(dup_sub(a, b, K), K(2), K)
-
-        seq.append(c)
-
-    return seq[n]
-
+def dup_hermite_prob(n, K):
+    """Low-level implementation of probabilist's Hermite polynomials."""
+    if n < 1:
+        return [K.one]
+    m2, m1 = [K.one], [K.one, K.zero]
+    for i in range(2, n+1):
+        a = dup_lshift(m1, 1, K)
+        b = dup_mul_ground(m2, K(i-1), K)
+        m2, m1 = m1, dup_sub(a, b, K)
+    return m1
 
 @public
 def hermite_poly(n, x=None, polys=False):
-    """Generates Hermite polynomial of degree `n` in `x`.
+    r"""Generates the Hermite polynomial `H_n(x)`.
 
     Parameters
     ==========
 
     n : int
-        `n` decides the degree of polynomial
+        Degree of the polynomial.
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
-    if n < 0:
-        raise ValueError("Cannot generate Hermite polynomial of degree %s" % n)
+    return named_poly(n, dup_hermite, ZZ, "Hermite polynomial", (x,), polys)
 
-    poly = DMP(dup_hermite(int(n), ZZ), ZZ)
+@public
+def hermite_prob_poly(n, x=None, polys=False):
+    r"""Generates the probabilist's Hermite polynomial `He_n(x)`.
 
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
+    Parameters
+    ==========
 
-    return poly if polys else poly.as_expr()
-
+    n : int
+        Degree of the polynomial.
+    x : optional
+    polys : bool, optional
+        If True, return a Poly, otherwise (default) return an expression.
+    """
+    return named_poly(n, dup_hermite_prob, ZZ,
+            "probabilist's Hermite polynomial", (x,), polys)
 
 def dup_legendre(n, K):
-    """Low-level implementation of Legendre polynomials. """
-    seq = [[K.one], [K.one, K.zero]]
-
-    for i in range(2, n + 1):
-        a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(2*i - 1, i), K)
-        b = dup_mul_ground(seq[-2], K(i - 1, i), K)
-
-        seq.append(dup_sub(a, b, K))
-
-    return seq[n]
-
+    """Low-level implementation of Legendre polynomials."""
+    if n < 1:
+        return [K.one]
+    m2, m1 = [K.one], [K.one, K.zero]
+    for i in range(2, n+1):
+        a = dup_mul_ground(dup_lshift(m1, 1, K), K(2*i-1, i), K)
+        b = dup_mul_ground(m2, K(i-1, i), K)
+        m2, m1 = m1, dup_sub(a, b, K)
+    return m1
 
 @public
 def legendre_poly(n, x=None, polys=False):
-    """Generates Legendre polynomial of degree `n` in `x`.
+    r"""Generates the Legendre polynomial `P_n(x)`.
 
     Parameters
     ==========
 
     n : int
-        `n` decides the degree of polynomial
+        Degree of the polynomial.
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
-    if n < 0:
-        raise ValueError("Cannot generate Legendre polynomial of degree %s" % n)
-
-    poly = DMP(dup_legendre(int(n), QQ), QQ)
-
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
-
-    return poly if polys else poly.as_expr()
-
+    return named_poly(n, dup_legendre, QQ, "Legendre polynomial", (x,), polys)
 
 def dup_laguerre(n, alpha, K):
-    """Low-level implementation of Laguerre polynomials. """
-    seq = [[K.zero], [K.one]]
-
-    for i in range(1, n + 1):
-        a = dup_mul(seq[-1], [-K.one/i, alpha/i + K(2*i - 1)/i], K)
-        b = dup_mul_ground(seq[-2], alpha/i + K(i - 1)/i, K)
-
-        seq.append(dup_sub(a, b, K))
-
-    return seq[-1]
-
+    """Low-level implementation of Laguerre polynomials."""
+    m2, m1 = [K.zero], [K.one]
+    for i in range(1, n+1):
+        a = dup_mul(m1, [-K.one/K(i), (alpha-K.one)/K(i) + K(2)], K)
+        b = dup_mul_ground(m2, (alpha-K.one)/K(i) + K.one, K)
+        m2, m1 = m1, dup_sub(a, b, K)
+    return m1
 
 @public
-def laguerre_poly(n, x=None, alpha=None, polys=False):
-    """Generates Laguerre polynomial of degree `n` in `x`.
+def laguerre_poly(n, x=None, alpha=0, polys=False):
+    r"""Generates the Laguerre polynomial `L_n^{(\alpha)}(x)`.
 
     Parameters
     ==========
 
     n : int
-        `n` decides the degree of polynomial
+        Degree of the polynomial.
     x : optional
-    alpha
-        Decides minimal domain for the list
-        of coefficients.
+    alpha : optional
+        Decides minimal domain for the list of coefficients.
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
     """
-    if n < 0:
-        raise ValueError("Cannot generate Laguerre polynomial of degree %s" % n)
-
-    if alpha is not None:
-        K, alpha = construct_domain(
-            alpha, field=True)  # XXX: ground_field=True
-    else:
-        K, alpha = QQ, QQ(0)
-
-    poly = DMP(dup_laguerre(int(n), alpha, K), K)
-
-    if x is not None:
-        poly = Poly.new(poly, x)
-    else:
-        poly = PurePoly.new(poly, Dummy('x'))
-
-    return poly if polys else poly.as_expr()
-
+    return named_poly(n, dup_laguerre, None, "Laguerre polynomial", (x, alpha), polys)
 
 def dup_spherical_bessel_fn(n, K):
-    """ Low-level implementation of fn(n, x) """
-    seq = [[K.one], [K.one, K.zero]]
-
-    for i in range(2, n + 1):
-        a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(2*i - 1), K)
-        seq.append(dup_sub(a, seq[-2], K))
-
-    return dup_lshift(seq[n], 1, K)
-
+    """Low-level implementation of fn(n, x)."""
+    if n < 1:
+        return [K.one, K.zero]
+    m2, m1 = [K.one], [K.one, K.zero]
+    for i in range(2, n+1):
+        m2, m1 = m1, dup_sub(dup_mul_ground(dup_lshift(m1, 1, K), K(2*i-1), K), m2, K)
+    return dup_lshift(m1, 1, K)
 
 def dup_spherical_bessel_fn_minus(n, K):
-    """ Low-level implementation of fn(-n, x) """
-    seq = [[K.one, K.zero], [K.zero]]
-
-    for i in range(2, n + 1):
-        a = dup_mul_ground(dup_lshift(seq[-1], 1, K), K(3 - 2*i), K)
-        seq.append(dup_sub(a, seq[-2], K))
-
-    return seq[n]
-
+    """Low-level implementation of fn(-n, x)."""
+    m2, m1 = [K.one, K.zero], [K.zero]
+    for i in range(2, n+1):
+        m2, m1 = m1, dup_sub(dup_mul_ground(dup_lshift(m1, 1, K), K(3-2*i), K), m2, K)
+    return m1
 
 def spherical_bessel_fn(n, x=None, polys=False):
     """
     Coefficients for the spherical Bessel functions.
 
-    Those are only needed in the jn() function.
+    These are only needed in the jn() function.
 
     The coefficients are calculated from:
 
@@ -355,11 +255,10 @@ def spherical_bessel_fn(n, x=None, polys=False):
     ==========
 
     n : int
-        `n` decides the degree of polynomial
+        Degree of the polynomial.
     x : optional
     polys : bool, optional
-        ``polys=True`` returns an expression, otherwise
-        (default) returns an expression.
+        If True, return a Poly, otherwise (default) return an expression.
 
     Examples
     ========
@@ -377,17 +276,7 @@ def spherical_bessel_fn(n, x=None, polys=False):
     1/z - 45/z**3 + 105/z**5
 
     """
-
-    if n < 0:
-        dup = dup_spherical_bessel_fn_minus(-int(n), ZZ)
-    else:
-        dup = dup_spherical_bessel_fn(int(n), ZZ)
-
-    poly = DMP(dup, ZZ)
-
-    if x is not None:
-        poly = Poly.new(poly, 1/x)
-    else:
-        poly = PurePoly.new(poly, 1/Dummy('x'))
-
-    return poly if polys else poly.as_expr()
+    if x is None:
+        x = Dummy("x")
+    f = dup_spherical_bessel_fn_minus if n < 0 else dup_spherical_bessel_fn
+    return named_poly(abs(n), f, ZZ, "", (QQ(1)/x,), polys)

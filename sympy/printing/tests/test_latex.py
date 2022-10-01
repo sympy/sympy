@@ -15,7 +15,7 @@ from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
 from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
-from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, lucas, fibonacci, tribonacci
+from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, genocchi, lucas, fibonacci, tribonacci
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, coth)
@@ -1783,6 +1783,10 @@ def test_latex_numbers():
     assert latex(bernoulli(n, x)) == r"B_{n}\left(x\right)"
     assert latex(bernoulli(n)**2) == r"B_{n}^{2}"
     assert latex(bernoulli(n, x)**2) == r"B_{n}^{2}\left(x\right)"
+    assert latex(genocchi(n)) == r"G_{n}"
+    assert latex(genocchi(n, x)) == r"G_{n}\left(x\right)"
+    assert latex(genocchi(n)**2) == r"G_{n}^{2}"
+    assert latex(genocchi(n, x)**2) == r"G_{n}^{2}\left(x\right)"
     assert latex(bell(n)) == r"B_{n}"
     assert latex(bell(n, x)) == r"B_{n}\left(x\right)"
     assert latex(bell(n, m, (x, y))) == r"B_{n, m}\left(x, y\right)"
@@ -2925,7 +2929,6 @@ def test_PermutationMatrix():
     p = Permutation(0, 3)(1, 2)
     assert latex(PermutationMatrix(p)) == \
         r'P_{\left( 0\; 3\right)\left( 1\; 2\right)}'
-
 
 
 def test_issue_21758():

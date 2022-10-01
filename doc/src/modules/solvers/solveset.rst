@@ -222,10 +222,10 @@ three arguments:
 
 ``solveset(equation, variable=None, domain=S.Complexes)``
 
-Equation(s)
-   The equation(s) to solve.
-Variable(s)
-   The variable(s) for which the equation is to be solved.
+Equation
+   The equation to solve.
+Variable
+   The variable for which the equation is to be solved.
 Domain
    The domain in which the equation is to be solved.
 
@@ -558,26 +558,15 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solveset::solvify
 
-linear_eq_to_matrix
--------------------
-
 .. autofunction:: sympy.solvers.solveset::linear_eq_to_matrix
 
-
-linsolve
---------
-
 .. autofunction:: sympy.solvers.solveset::linsolve
-
-
-nonlinsolve
------------
 
 .. autofunction:: sympy.solvers.solveset::nonlinsolve
 
 
 transolve
----------
+^^^^^^^^^
 
 .. autofunction:: sympy.solvers.solveset::_transolve
 
