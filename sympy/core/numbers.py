@@ -3088,9 +3088,12 @@ class Zero(IntegerConstant, metaclass=Singleton):
             return S.ComplexInfinity
         if expt.is_extended_real is False:
             return S.NaN
+        if expt.is_zero:
+            return S.One
+
         # infinities are already handled with pos and neg
         # tests above; now throw away leading numbers on Mul
-        # exponent
+        # exponent since 0**-x = zoo**x even when x == 0
         coeff, terms = expt.as_coeff_Mul()
         if coeff.is_negative:
             return S.ComplexInfinity**terms

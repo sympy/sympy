@@ -11,6 +11,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial)
+from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import acosh
@@ -1467,6 +1468,24 @@ def test_scipy_special_math():
     assert abs(cm1(1e-20) + 5e-41) < 1e-200
 
 
+def test_scipy_bernoulli():
+    if not scipy:
+        skip("scipy not installed")
+
+    bern = lambdify((x,), bernoulli(x), modules='scipy')
+    assert bern(1) == 0.5
+
+
+def test_scipy_harmonic():
+    if not scipy:
+        skip("scipy not installed")
+
+    hn = lambdify((x,), harmonic(x), modules='scipy')
+    assert hn(2) == 1.5
+    hnm = lambdify((x, y), harmonic(x, y), modules='scipy')
+    assert hnm(2, 2) == 1.25
+
+
 def test_cupy_array_arg():
     if not cupy:
         skip("CuPy not installed")
@@ -1636,6 +1655,7 @@ def test_deprecated_set():
     with warns_deprecated_sympy():
         lambdify({x, y}, x + y)
 
+
 def test_23536_lambdify_cse_dummy():
 
     f = Function('x')(y)
@@ -1643,4 +1663,5 @@ def test_23536_lambdify_cse_dummy():
     expr = z + (f**4 + g**5)*(f**3 + (g*f)**3)
     expr = expr.expand()
     eval_expr = lambdify(((f, g), z), expr, cse=True)
-    eval_expr((1.0, 2.0), 3.0)
+    ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
+    assert ans == 300.0  # not a list and value is 300

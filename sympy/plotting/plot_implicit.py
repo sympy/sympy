@@ -218,10 +218,10 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
     Arguments
     =========
 
-    - ``expr`` : The equation / inequality that is to be plotted.
-    - ``x_var`` (optional) : symbol to plot on x-axis or tuple giving symbol
+    - expr : The equation / inequality that is to be plotted.
+    - x_var (optional) : symbol to plot on x-axis or tuple giving symbol
       and range as ``(symbol, xmin, xmax)``
-    - ``y_var`` (optional) : symbol to plot on y-axis or tuple giving symbol
+    - y_var (optional) : symbol to plot on y-axis or tuple giving symbol
       and range as ``(symbol, ymin, ymax)``
 
     If neither ``x_var`` nor ``y_var`` are given then the free symbols in the

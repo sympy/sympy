@@ -5,6 +5,7 @@ from .mul import Mul, _keep_coeff
 from .power import Pow
 from .basic import Basic
 from .expr import Expr
+from .function import expand_power_exp
 from .sympify import sympify
 from .numbers import Rational, Integer, Number, I
 from .singleton import S
@@ -1411,9 +1412,11 @@ def factor_nc(expr):
         return expr
     if not expr.is_Add:
         return expr.func(*[factor_nc(a) for a in expr.args])
+    expr = expr.func(*[expand_power_exp(i) for i in expr.args])
 
     from sympy.polys.polytools import gcd, factor
     expr, rep, nc_symbols = _mask_nc(expr)
+
     if rep:
         return factor(expr).subs(rep)
     else:
