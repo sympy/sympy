@@ -84,7 +84,7 @@ def test_two_dof():
 
     # Check that for the implicit form the mass matrix is not identity
     KM.explicit_kinematics = False
-    assert KM.mass_matrix_kin == Matrix([[1/2, 0], [0, 2]])
+    assert KM.mass_matrix_kin == Matrix([[S(1)/2, 0], [0, 2]])
 
     # Check that whether using implicit or explicit kinematics the RHS
     # equations are consisten with the matrix form
