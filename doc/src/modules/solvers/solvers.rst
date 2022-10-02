@@ -11,7 +11,7 @@ The *solvers* module in SymPy implements methods for solving equations.
 
    For a beginner-friendly guide focused on solving common types of equations,
    refer to :ref:`solving-guide`.
-   
+
 .. note::
 
    :func:`~sympy.solvers.solvers.solve` is an older more mature general function

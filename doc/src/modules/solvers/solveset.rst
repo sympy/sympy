@@ -7,7 +7,7 @@ Solveset
 
    For a beginner-friendly guide focused on solving common types of equations,
    refer to :ref:`solving-guide`.
-   
+
 .. module:: sympy.solvers.solveset
 
 This is the official documentation of the ``solveset`` module in solvers. It
