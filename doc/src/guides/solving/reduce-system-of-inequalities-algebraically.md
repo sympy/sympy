@@ -11,12 +11,13 @@ SymPy can currently reduce for only one symbol (variable) in an inequality.
 SymPy can reduce a system containing more than one symbol, if there is only one
 symbol per inequality.
 
-Alternatives to consider:
+## Alternatives to Consider
 - To reduce for more than one symbol in an inequality, try SciPy's
   {external:func}`~scipy.optimize.linprog`
 - To reduce Boolean expressions, use {func}`as_set
   <sympy.logic.boolalg.Boolean.as_set>`
 
+## Example of Reducing a System of Inequalities for a Single Variable Algebraically
 Here is an example of reducing a system of inequalities for a single variable
 algebraically. {func}`~.reduce_inequalities` accepts a list or tuple of
 inequalities to be reduced as a system:
@@ -236,13 +237,11 @@ so you may have to reduce your inequalities numerically instead using SciPy's
 {external:func}`~scipy.optimize.linprog`.
 
 ### Inequalities Which Can Be Reduced Analytically, and SymPy Cannot Reduce
-Refer to [Limitations of Inequality Reduction Using
-SymPy](#limitations-of-inequality-reduction-using-sympy) above.
+Refer to [](#limitations-of-inequality-reduction-using-sympy) above.
 
-### Report a Problem With SymPy
+### Report a Problem
 
 If you encounter a problem with SymPy, please post the problem on the [mailing
 list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-may be able to use SciPy's {external:func}`~scipy.optimize.linprog` to reduce
-the system of inequalities.
+can use a different method listed in [](#alternatives-to-consider).
