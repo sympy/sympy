@@ -2,9 +2,14 @@
  Solvers
 =========
 
-    >>> from sympy import *
-    >>> x, y, z = symbols('x y z')
-    >>> init_printing(use_unicode=True)
+.. note::
+
+   For a beginner-friendly guide focused on solving common types of equations,
+   refer to :ref:`solving-guide`.
+
+>>> from sympy import *
+>>> x, y, z = symbols('x y z')
+>>> init_printing(use_unicode=True)
 
 A Note about Equations
 ======================
@@ -18,10 +23,10 @@ tutorial that symbolic equations in SymPy are not represented by ``=`` or
     x = y
 
 
-However, there is an even easier way.  In SymPy, any expression not in an
-``Eq`` is automatically assumed to equal 0 by the solving functions.  Since `a
-= b` if and only if `a - b = 0`, this means that instead of using ``x == y``,
-you can just use ``x - y``.  For example
+However, there is an even easier way.  In SymPy, any expression not in an ``Eq``
+is automatically assumed to equal 0 by the solving functions.  Since `a = b` if
+and only if `a - b = 0`, this means that instead of using ``x == y``, you can
+just use ``x - y``.  For example
 
     >>> solveset(Eq(x**2, 1), x)
     {-1, 1}
@@ -37,14 +42,14 @@ to 0. Instead of typing ``solveset(Eq(expr, 0), x)``, you can just use
 Solving Equations Algebraically
 ===============================
 
-The main function for solving algebraic equations is ``solveset``.
-The syntax for ``solveset`` is ``solveset(equation, variable=None, domain=S.Complexes)``
-Where ``equations`` may be in the form of ``Eq`` instances or expressions
-that are assumed to be equal to zero.
+The main function for solving algebraic equations is ``solveset``. The syntax
+for ``solveset`` is ``solveset(equation, variable=None, domain=S.Complexes)``
+Where ``equations`` may be in the form of ``Eq`` instances or expressions that
+are assumed to be equal to zero.
 
-Please note that there is another function called ``solve`` which
-can also be used to solve equations. The syntax is ``solve(equations, variables)``
-However, it is recommended to use ``solveset`` instead.
+Please note that there is another function called ``solve`` which can also be
+used to solve equations. The syntax is ``solve(equations, variables)`` However,
+it is recommended to use ``solveset`` instead.
 
 When solving a single equation, the output of ``solveset`` is a ``FiniteSet`` or
 an ``Interval`` or ``ImageSet`` of the solutions.
@@ -59,8 +64,8 @@ an ``Interval`` or ``ImageSet`` of the solutions.
     ⎩        2 │      ⎭
 
 
-If there are no solutions, an ``EmptySet`` is returned and if it
-is not able to find solutions then a ``ConditionSet`` is returned.
+If there are no solutions, an ``EmptySet`` is returned and if it is not able to
+find solutions then a ``ConditionSet`` is returned.
 
     >>> solveset(exp(x), x)     # No solution exists
     ∅
@@ -68,9 +73,9 @@ is not able to find solutions then a ``ConditionSet`` is returned.
     {x │ x ∊ ℂ ∧ (-x + cos(x) = 0)}
 
 
-In the ``solveset`` module, the linear system of equations is solved using ``linsolve``.
-In future we would be able to use linsolve directly from ``solveset``. Following
-is an example of the syntax of ``linsolve``.
+In the ``solveset`` module, the linear system of equations is solved using
+``linsolve``. In future we would be able to use linsolve directly from
+``solveset``. Following is an example of the syntax of ``linsolve``.
 
 * List of Equations Form:
 
@@ -122,7 +127,8 @@ In the ``solveset`` module, the non linear system of equations is solved using
     >>> nonlinsolve(system, vars)
     {({2⋅n⋅ⅈ⋅π + log(sin(1/3)) │ n ∊ ℤ}, 1/3)}
 
-4. When the system is positive-dimensional system (has infinitely many solutions):
+4. When the system is positive-dimensional system (has infinitely many
+   solutions):
 
     >>> nonlinsolve([x*y, x*y - x], [x, y])
     {(0, y)}
@@ -136,7 +142,8 @@ In the ``solveset`` module, the non linear system of equations is solved using
 
    1. The order of solution corresponds the order of given symbols.
 
-   2. Currently ``nonlinsolve`` doesn't return solution in form of ``LambertW`` (if there
+   2. Currently ``nonlinsolve`` doesn't return solution in form of ``LambertW``
+      (if there
    is solution present in the form of ``LambertW``).
 
    ``solve`` can be used for such cases:
@@ -150,7 +157,8 @@ In the ``solveset`` module, the non linear system of equations is solved using
    ⎢⎨x: 2⋅W⎜───⎟⎬, ⎨x: 2⋅W⎜─⎟⎬⎥
    ⎣⎩      ⎝ 2 ⎠⎭  ⎩      ⎝2⎠⎭⎦
 
-   3. Currently ``nonlinsolve`` is not properly capable of solving the system of equations
+   3. Currently ``nonlinsolve`` is not properly capable of solving the system of
+      equations
    having trigonometric functions.
 
    ``solve`` can be used for such cases (but does not give all solution):
@@ -176,7 +184,8 @@ multiplicity 1 and ``3`` is a root of multiplicity 2.
 
 .. note::
 
-   Currently ``solveset`` is not capable of solving the following types of equations:
+   Currently ``solveset`` is not capable of solving the following types of
+   equations:
 
    * Equations solvable by LambertW (Transcendental equation solver).
 
@@ -197,8 +206,8 @@ function by passing ``cls=Function`` to the ``symbols`` function.
 
     >>> f, g = symbols('f g', cls=Function)
 
-``f`` and ``g`` are now undefined functions.  We can call ``f(x)``, and it
-will represent an unknown function.
+``f`` and ``g`` are now undefined functions.  We can call ``f(x)``, and it will
+represent an unknown function.
 
     >>> f(x)
     f(x)

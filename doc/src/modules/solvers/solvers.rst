@@ -9,22 +9,27 @@ The *solvers* module in SymPy implements methods for solving equations.
 
 .. note::
 
-   :func:`~sympy.solvers.solvers.solve` is an older more mature general
-   function for solving many types of equations.
-   :func:`~sympy.solvers.solvers.solve` has many options and uses different
-   methods internally to determine what type of equations you pass it, so if
-   you know what type of equation you are dealing with you may want to use the
-   newer :func:`solveset` which solves univariate equations, :func:`~.linsolve`
-   which solves system of linear equations, and :func:`~.nonlinsolve` which
-   solves systems of non linear equations.
+   For a beginner-friendly guide focused on solving common types of equations,
+   refer to :ref:`solving-guide`.
+   
+.. note::
+
+   :func:`~sympy.solvers.solvers.solve` is an older more mature general function
+   for solving many types of equations. :func:`~sympy.solvers.solvers.solve` has
+   many options and uses different methods internally to determine what type of
+   equations you pass it, so if you know what type of equation you are dealing
+   with you may want to use the newer :func:`solveset` which solves univariate
+   equations, :func:`~.linsolve` which solves system of linear equations, and
+   :func:`~.nonlinsolve` which solves systems of non linear equations.
 
 .. _solvers-algebraic-equations:
 
 Algebraic equations
 --------------------
 
-Use :func:`~sympy.solvers.solvers.solve` to solve algebraic equations. We suppose all equations are equaled to 0,
-so solving x**2 == 1 translates into the following code::
+Use :func:`~sympy.solvers.solvers.solve` to solve algebraic equations. We
+suppose all equations are equaled to 0, so solving x**2 == 1 translates into the
+following code::
 
     >>> from sympy.solvers import solve
     >>> from sympy import Symbol
@@ -32,8 +37,9 @@ so solving x**2 == 1 translates into the following code::
     >>> solve(x**2 - 1, x)
     [-1, 1]
 
-The first argument for :func:`~sympy.solvers.solvers.solve` is an equation (equaled to zero) and the second argument
-is the symbol that we want to solve the equation for.
+The first argument for :func:`~sympy.solvers.solvers.solve` is an equation
+(equaled to zero) and the second argument is the symbol that we want to solve
+the equation for.
 
 .. autofunction:: sympy.solvers.solvers::solve
 
