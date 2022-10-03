@@ -175,14 +175,14 @@ Configure git settings
 Git tracks who makes each commit by checking the user’s name and email.
 In addition, we use this info to associate your commits with your GitHub account.
 
-To set these, enter the code below, replacing the name and email with your own (`--global` is optional).::
+To set these, enter the code below, replacing the name and email with your own (``--global`` is optional).::
 
     $ git config --global user.name "Firstname Lastname"
     $ git config --global user.email "your_email@youremail.com"
 
 The name should be your actual name, not your GitHub username.
 
-These global options (i.e. applying to all repositories) are placed in `~/.gitconfig`.
+These global options (i.e. applying to all repositories) are placed in ``~/.gitconfig``.
 You can edit this file to add setup colors and some handy shortcuts: ::
 
     [user]
@@ -212,8 +212,8 @@ The easiest way to do it, is to add the snippet below to your .bashrc or .bash_p
 
     PS1="[\u@\h \W\$(git branch 2> /dev/null | grep -e '\* ' | sed 's/^..\(.*\)/{\1}/')]\$ "
 
-But better is to use `git-completion` from the `git` source. This also has the advantage of adding tab completion to just about every git command. It also includes many other useful features, for example,
-promptings. To use `git-completion`, first download the `git` source code (about 27 MiB), then copy
+But better is to use ``git-completion`` from the ``git`` source. This also has the advantage of adding tab completion to just about every git command. It also includes many other useful features, for example,
+promptings. To use ``git-completion``, first download the ``git`` source code (about 27 MiB), then copy
 the file to your profile directory::
 
     $ git clone git://git.kernel.org/pub/scm/git/git.git
@@ -221,7 +221,7 @@ the file to your profile directory::
 
 Read instructions in '~/.git-completion.sh'
 
-Note that if you install git from the package manager in many Linux distros, this file is already installed for you.  You can check if it is installed by seeing if tab completion works on git commands (try, e.g., `git commi<TAB>`, or `git log --st<TAB>`). You can also check if the PS1 commands work by doing something like::
+Note that if you install git from the package manager in many Linux distros, this file is already installed for you.  You can check if it is installed by seeing if tab completion works on git commands (try, e.g., ``git commi<TAB>``, or ``git log --st<TAB>``). You can also check if the PS1 commands work by doing something like::
 
     $ PS1='\W $(__git_ps1 "%s")\$ '
 
@@ -256,7 +256,7 @@ and click the “Fork” button.
 
     !https://drive.google.com/uc?export=view&id=12YA2RWfZiqbzbpmgF_MvcjRG8eFhVJhn!
 
-Now you have your own repository for the SymPy project. If your username in GitHub is `Uttam-Singhh` then the address of the forked project will look something like:
+Now you have your own repository for the SymPy project. If your username in GitHub is ``Uttam-Singhh`` then the address of the forked project will look something like:
 
     - https://github.com/Uttam-Singhh/sympy
 
@@ -340,9 +340,9 @@ See the next section for naming branches.
 
 Remember, **never begin your work in master**.
 While it is technically possible to make your git workflow regardless of the name of branch, it would be the best to avoid because it would be too difficult to manage your workflow.
-However, if you had only made your changes in your working directory (by modifying or creating new files in your computer), but not in your staging area or repository (by `git add` or `git commit`), you may patiently follow the process as below and your master branch will remain clean.
+However, if you had only made your changes in your working directory (by modifying or creating new files in your computer), but not in your staging area or repository (by ``git add`` or ``git commit``), you may patiently follow the process as below and your master branch will remain clean.
 
-To create and checkout (that is, make it the working branch) a new branch, say `fix-solve-bug` ::
+To create and checkout (that is, make it the working branch) a new branch, say ``fix-solve-bug`` ::
 
     $ git branch fix-solve-bug
     $ git checkout fix-solve-bug
@@ -355,13 +355,13 @@ To view all branches, with your current branch highlighted, type::
 
     $ git branch
 
-And remember, **never type the following commands in master**: `git merge`, `git add`, `git commit`, `git rebase`.
+And remember, **never type the following commands in master**: ``git merge``, ``git add``, ``git commit``, ``git rebase``.
 If you had made some commits to your local master by accident, you would either have to hard reset or rebase to drop the commits.
 
 Branch names
 ~~~~~~~~~~~~
 
-Use a short, easy to type branch name that somehow relates to the changes, e.g., `fix-solve-bug`.
+Use a short, easy to type branch name that somehow relates to the changes, e.g., ``fix-solve-bug``.
 
 Modify code
 -----------
@@ -443,16 +443,16 @@ Add new files to the index if necessary::
 
     $ git add new_file.py
 
-You are ready to commit changes locally. A commit also contains a `commit
-message` which describes it.  See the next section for guidelines on writing
+You are ready to commit changes locally. A commit also contains a ``commit
+message`` which describes it.  See the next section for guidelines on writing
 good commit messages. Type::
 
     $ git commit
 
 An editor window will appear automatically in this case. In Linux, this is vim by default. You
-can change what editor pops up by changing the `$EDITOR` shell variable.
+can change what editor pops up by changing the ``$EDITOR`` shell variable.
 
-Also with the help of option `-a` you can tell the command `commit` to automatically stage files
+Also with the help of option ``-a`` you can tell the command ``commit`` to automatically stage files
 that have been modified and deleted, but new files you have not told git about will not be
 affected, e.g.,::
 
@@ -594,11 +594,11 @@ Then navigate to your repository with the changes you want someone else to pull:
 
     https://github.com/mynick/sympy
 
-Select branch, and press the `Pull Request` button.
+Select branch, and press the ``Pull Request`` button.
 
     [[img/dev-guide-pull-1-2.png]]
 
-After pressing the `Pull Request` button, you are presented with a preview page containing
+After pressing the ``Pull Request`` button, you are presented with a preview page containing
 * a textbox for the **title**
 * a textbox for the **description**, also referred to as the opening paragraph (OP)
 * the commits that are included
@@ -613,10 +613,10 @@ can embed images or use preformatted text blocks.
     [[img/dev-guide-pull-3.png]]
 
 You can double check that you are committing the right changes by
-* switching to the `Commits` tab to see which commits are included (sometimes unintended commits can be caught this way)
-* switching to the `Files Changed` tab to review the diff of all changes
+* switching to the ``Commits`` tab to see which commits are included (sometimes unintended commits can be caught this way)
+* switching to the ``Files Changed`` tab to review the diff of all changes
 
-When you are ready, press the `Send pull request` button. The pull request is sent immediately and
+When you are ready, press the ``Send pull request`` button. The pull request is sent immediately and
 you’re taken to the main pull request discussion and review page. Additionally, all repository collaborators and followers will see an event in their dashboard.
 
 If there isn't an issue that the pull request addresses, one should be created so even if the
@@ -653,7 +653,7 @@ This name and email should exactly match the name and email that you have config
    The following authors will be added to the AUTHORS file at the
    time of the next SymPy release.
 
-This means that you should add your name and email address to the .mailmap file. If you add this at the end of the file then `git diff` will show:
+This means that you should add your name and email address to the .mailmap file. If you add this at the end of the file then ``git diff`` will show:
 
 .. code-block:: bash
 
@@ -668,7 +668,7 @@ This means that you should add your name and email address to the .mailmap file.
     彭于斌 <1931127624@qq.com>
    +Joe Bloggs <joe@bloggs.com>
 
-Now you can rerun the `bin/mailmap_check.py` script and you should see:
+Now you can rerun the ``bin/mailmap_check.py`` script and you should see:
 
 .. code-block:: bash
 
@@ -744,7 +744,7 @@ But a good title and description will help in the review process.
 
 The title should be brief but descriptive.
 
-* Give your pull request a helpful title that summarises what your contribution does. In some cases `Fix <ISSUE TITLE>` is enough `Fix #<ISSUE NUMBER>` is not enough. Example, **don't** write "fixes #1234" there; such references are more useful in the description section.
+* Give your pull request a helpful title that summarises what your contribution does. In some cases ``Fix <ISSUE TITLE>`` is enough ``Fix #<ISSUE NUMBER>`` is not enough. Example, **don't** write "fixes #1234" there; such references are more useful in the description section.
 
 * **do** include the prefix "[WIP]" if you aren't ready to have the pull request merged and remove the prefix when you *are* ready
 
@@ -775,13 +775,13 @@ and simply repeat push command::
     $ git push github fix-solve-bug
 
 Note that if you do any rebasing or in any way edit your commit history, you will have to add
-the `-f` (force) option to the push command for it to work::
+the ``-f`` (force) option to the push command for it to work::
 
     $ git push -f github
 
 You don't need to do this if you merge, which is the recommended way.
 
-Synchronize with master `sympy/sympy`
+Synchronize with master ``sympy/sympy``
 -------------------------------------
 
 Sometimes, you may need to merge your branch with the upstream master. Usually
@@ -794,9 +794,9 @@ you don't need to do this, but you may need to if
 
 - You need some change from master that was made after you started your branch.
 
-Note, that after cloning a repository, it has a default remote called `origin`
-that points to the `sympy/sympy` repository.  And your fork remote named as
-`github`. You can observe the remotes names with the help of this command::
+Note, that after cloning a repository, it has a default remote called ``origin``
+that points to the ``sympy/sympy`` repository.  And your fork remote named as
+``github``. You can observe the remotes names with the help of this command::
 
     $ git remote -v
     github  git@github.com:mynick/sympy.git (fetch)
@@ -810,14 +810,14 @@ local git repository::
 
     A---B---C        master
 
-Then we have divergent branch `fix-solve-bug`::
+Then we have divergent branch ``fix-solve-bug``::
 
 
     A---B---C           master
              \
               a---b     fix-solve-bug
 
-In the meantime the remote `sympy/sympy` master repository was updated too::
+In the meantime the remote ``sympy/sympy`` master repository was updated too::
 
     A---B---C---D       origin/master
     A---B---C           master
@@ -889,7 +889,7 @@ This results in::
              \
               a---b     fix-solve-bug
 
-Then merge your `fix-solve-bug` branch from `fix-solve-bug`::
+Then merge your ``fix-solve-bug`` branch from ``fix-solve-bug``::
 
     $ git checkout fix-solve-bug
     $ git merge master
@@ -909,7 +909,7 @@ and commit::
 
     $ git commit
 
-So the result will be like that (automatic merging `c`)::
+So the result will be like that (automatic merging ``c``)::
 
     A---B---C-------D     master
              \       \
@@ -926,7 +926,7 @@ The final aim, that we want to obtain is::
                  \
                   a---b     fix-solve-bug
 
-The way to do it is first of all to merge local repository with the remote `sympy/sympy`::
+The way to do it is first of all to merge local repository with the remote ``sympy/sympy``::
 
     $ git checkout master
     $ git pull
@@ -1020,10 +1020,10 @@ Then run *rebase* command in interactive mode::
 
     $ git rebase --interactive 925d88fx
 
-Or you can use other ways to point to commits, e.g. *`git rebase --interactive HEAD^^`*
-or *`git rebase --interactive HEAD~2`*.
+Or you can use other ways to point to commits, e.g. ``git rebase --interactive HEAD^^``
+or ``git rebase --interactive HEAD~2``.
 
-A new editor window will appear (note that order is reversed with respect to the `git log` command)::
+A new editor window will appear (note that order is reversed with respect to the ``git log`` command)::
 
     pick 4d6137b Some additional corrections
     pick 7bbbc06 More bug fixes
