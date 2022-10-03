@@ -1,6 +1,6 @@
-# Reduce a System of Inequalities for a Single Variable Algebraically
+# Reduce One or a System of Inequalities for a Single Variable Algebraically
 
-Use SymPy to reduce a system of inequalities for a single variable
+Use SymPy to reduce one or a system of inequalities for a single variable
 algebraically. For example, reducing $x^2 < \pi$, $x > 0$ yields $0 < x <
 \sqrt{\pi}$.
 
@@ -17,10 +17,11 @@ symbol per inequality.
 - To reduce Boolean expressions, use {func}`as_set
   <sympy.logic.boolalg.Boolean.as_set>`
 
-## Example of Reducing a System of Inequalities for a Single Variable Algebraically
-Here is an example of reducing a system of inequalities for a single variable
-algebraically. {func}`~.reduce_inequalities` accepts a list or tuple of
-inequalities to be reduced as a system:
+## Examples
+
+### Reducing a System of Inequalities for a Single Variable Algebraically
+{func}`~.reduce_inequalities` accepts a list or tuple of inequalities to be
+reduced as a system:
 
 ```py
 >>> from sympy import symbols, reduce_inequalities, pi
@@ -39,6 +40,17 @@ deprecated or removed from {func}`~.solve`. We thus recommend using
 {func}`~.reduce_inequalities` is the top-level inequality-reducing function
 which will internally call any other lower-level [inequality-reducing
 functions](../../modules/solvers/inequalities.rst) as needed.
+
+### Reducing One Inequality for a Single Variable Algebraically
+If you have only one inequality, you can optionally exclude the list construct
+and simply pass {func}`~.reduce_inequalities` the inequality as an expression:
+
+```py
+>>> from sympy import symbols, reduce_inequalities, pi
+>>> x = symbols('x')
+>>> reduce_inequalities(x**2 <= pi, x)
+(x <= sqrt(pi)) & (-sqrt(pi) <= x)
+```
 
 ## Guidance
 

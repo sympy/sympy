@@ -19,8 +19,7 @@ Learn how to use SymPy computer algebra system to:
 |  [ Solve a system of linear equations algebraically ](../../modules/solvers/solvers.rst)        | $x + y = 2, x - y = 0 $ | $ x = 1, y = 1$                                                                                           |
 |  [ Solve a system of nonlinear equations algebraically ](../../modules/solvers/solvers.rst)     | $x^2 + y^3 = 1, x^3 - y^2 = 0 $ | $ x = 1, y = 0$                                                                                       |
 |  {func}`Solve a matrix problem algebraically <sympy.matrices.matrices.MatrixBase.solve>`                    | $ \left[\begin{array}{cc} 1 & 1\\1 & -1\end{array}\right] \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} 2\\0\end{array}\right] $ | $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} 1\\1\end{array}\right]$  |
-|  [ Solve an inequality algebraically ](../../modules/solvers/inequalities.rst)                      | $ x^2 < 4 $ | $ -2 < x < 2 $                                                                                                        |
-|  [ Reduce a system of inequalities for a single variable algebraically ](reduce-system-of-inequalities-algebraically.md)           | $ x^2 < \pi, x > 0 $ | $ 0 < x < \sqrt{pi} $                                                                                                  |
+|  [ Reduce one or a system of inequalities for a single variable algebraically ](reduce-inequalities-algebraically.md)           | $ x^2 < \pi, x > 0 $ | $ 0 < x < \sqrt{\pi} $                                                                                                  |
 | [ Solve (find the roots of) a polynomial algebraically ](../../modules/polys/basics.rst)                       | $ x^2 - x = 0 $ | $ x \in \{0, 1\} $                                                                                                |
 |  [ Solve a Diophantine equation (find integer solutions to a polynomial equation) algebraically ](../../modules/solvers/diophantine.rst)             | $x^2 - 4xy + 8y^2 - 3x + 7y - 5 = 0 $ | $ \{(x = 2, y = 1), (x = 5, y = 1)\}$                                                                                  |
 
@@ -39,5 +38,5 @@ solving-guidance.md
 solve-equation-algebraically.md
 solve-system-of-equations-algebraically.md
 solve-numerically.md
-reduce-system-of-inequalities-algebraically.md
+reduce-inequalities-algebraically.md
 ```
