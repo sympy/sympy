@@ -1,7 +1,7 @@
 """Tools for manipulation of rational expressions. """
 
 
-from sympy.core import Basic, Add, sympify
+from sympy.core import Basic, Add, sympify, symbols
 from sympy.core.exprtools import gcd_terms
 from sympy.utilities import public
 from sympy.utilities.iterables import iterable
@@ -83,3 +83,52 @@ def together(expr, deep=False, fraction=True):
         return expr
 
     return _together(sympify(expr))
+
+
+def thiele_interpolation(u, v, var=symbols('x'), simplify=True):
+    """
+    Build a rational function from a finite set of inputs in vector u
+    and their function values in vector v (both vectors must be of equal
+    lengths).
+
+    The interpolation algorithm works well with approximate floating point
+    inputs; it may also work with exact values but it is known to yield some
+    division by zero when values are equally spaced.
+
+    Examples
+    ========
+
+    >>> from sympypolys.rationaltools import thiele_interpolation as thiele
+
+    >>> thiele([1, 2, 5, 6], [10, 12, 11, 13])
+    (9*x**2 + 29*x - 238)/(8*x - 28)
+
+    >>> from sympy import cos
+    >>> from sympy.abc import x
+    >>> a = [ 0.05*i for i in range(32) ]
+    >>> b = [ cos(x) for x in a ]
+    >>> f = thiele(a, b, simplify=False)
+    >>> f.subs(x, 0.5) * 3
+    3.14159265358979
+
+    >>> thiele([1, 2, 3, 4], [10, 12, 14, 16])
+    nan
+
+    """
+    n = len(u)
+    assert len(v) == n
+    u = [ sympify(e) for e in u ]
+    v = [ sympify(e) for e in v ]
+    rho = [v, [(u[i]-u[i+1])/(v[i]-v[i+1]) for i in range(n-1)]]
+    for i in range(n-2):
+        r = []
+        for j in range(n-i-2):
+            r.append((u[j]-u[j+i+2])/(rho[-1][j]-rho[-1][j+1])+rho[-2][j+1])
+        rho.append(r)
+    a = sympify(0)
+    for i in range(n-1, 1, -1):
+        a = (var - u[i-1]) / (rho[i][0] - rho[i-2][0] + a)
+        if simplify: a = a.cancel()
+    a = v[0] + (var - u[0]) / (rho[1][0] + a)
+    if simplify: a = a.cancel()
+    return a
