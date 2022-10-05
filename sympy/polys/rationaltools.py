@@ -98,7 +98,7 @@ def thiele_interpolation(u, v, var=symbols('x'), simplify=True):
     Examples
     ========
 
-    >>> from sympypolys.rationaltools import thiele_interpolation as thiele
+    >>> from sympy.polys.rationaltools import thiele_interpolation as thiele
 
     >>> thiele([1, 2, 5, 6], [10, 12, 11, 13])
     (9*x**2 + 29*x - 238)/(8*x - 28)
