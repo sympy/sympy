@@ -94,7 +94,7 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
 
     The interpolation algorithm is known to yield some division by zero
     when values are equally spaced.
-    
+
     An arbitrary symbol can optionally be provided as var
     (default being 'x').
 
