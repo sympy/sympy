@@ -1,7 +1,7 @@
 """Tools for manipulation of rational expressions. """
 
 
-from sympy.core import Basic, Add, sympify, symbols
+from sympy.core import Basic, Add, sympify, symbols, nan, zoo
 from sympy.core.exprtools import gcd_terms
 from sympy.core.numbers import seterr
 from sympy.utilities import public
@@ -92,9 +92,14 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
     and their function values in vector v (both vectors must be of equal
     lengths).
 
-    The interpolation algorithm works well with approximate floating point
-    inputs; it may also work with exact values but it is known to yield some
-    division by zero when values are equally spaced.
+    The interpolation algorithm is known to yield some division by zero
+    when values are equally spaced.
+    
+    An arbitrary symbol can optionally be provided as var
+    (default being 'x').
+
+    At each step of the algorithm, some simplification is done, which can
+    optionally be prevented by setting simplify as False.
 
     Examples
     ========
@@ -125,6 +130,8 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
     for i in range(n-1, 1, -1):
         a = (var - u[i-1]) / (rho[i][0] - rho[i-2][0] + a)
         if simplify: a = a.cancel()
+        if a.has(zoo, nan): raise ZeroDivisionError("division by zero")
     a = v[0] + (var - u[0]) / (rho[1][0] + a)
     if simplify: a = a.cancel()
+    if a.has(zoo, nan): raise ZeroDivisionError("division by zero")
     return a
