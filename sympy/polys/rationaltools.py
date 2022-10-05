@@ -104,17 +104,6 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
     >>> thiele([1, 2, 5, 6], [10, 12, 11, 13])
     (9*x**2 + 29*x - 238)/(8*x - 28)
 
-    >>> from sympy import cos
-    >>> from sympy.abc import x
-    >>> a = [ 0.05*i for i in range(32) ]
-    >>> b = [ cos(x) for x in a ]
-    >>> f = thiele(a, b, simplify=False)
-    >>> f.subs(x, 0.5) * 3
-    3.14159265358979
-
-    >>> thiele([1, 2, 3, 4], [10, 12, 14, 16])
-    nan
-
     See Also
     ========
 
