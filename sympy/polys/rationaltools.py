@@ -3,6 +3,7 @@
 
 from sympy.core import Basic, Add, sympify, symbols
 from sympy.core.exprtools import gcd_terms
+from sympy.core.numbers import seterr
 from sympy.utilities import public
 from sympy.utilities.iterables import iterable
 
@@ -85,7 +86,7 @@ def together(expr, deep=False, fraction=True):
     return _together(sympify(expr))
 
 
-def thiele_interpolation(u, v, var=symbols('x'), simplify=True):
+def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
     """
     Build a rational function from a finite set of inputs in vector u
     and their function values in vector v (both vectors must be of equal
@@ -98,7 +99,7 @@ def thiele_interpolation(u, v, var=symbols('x'), simplify=True):
     Examples
     ========
 
-    >>> from sympy.polys.rationaltools import thiele_interpolation as thiele
+    >>> from sympy.polys.rationaltools import thiele_interpolate as thiele
 
     >>> thiele([1, 2, 5, 6], [10, 12, 11, 13])
     (9*x**2 + 29*x - 238)/(8*x - 28)
@@ -114,9 +115,15 @@ def thiele_interpolation(u, v, var=symbols('x'), simplify=True):
     >>> thiele([1, 2, 3, 4], [10, 12, 14, 16])
     nan
 
+    See Also
+    ========
+
+    sympy.polys.polyfuncs.rational_interpolate : another algorithm
+
     """
     n = len(u)
     assert len(v) == n
+    seterr(divide=True)
     u = [ sympify(e) for e in u ]
     v = [ sympify(e) for e in v ]
     rho = [v, [(u[i]-u[i+1])/(v[i]-v[i+1]) for i in range(n-1)]]
