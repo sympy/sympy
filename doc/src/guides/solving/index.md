@@ -13,7 +13,7 @@ Learn how to use SymPy computer algebra system to:
 | Description                                                  | Example                                                                                                                     | Solution |
 |--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|--------------|
 | [ Solve an equation algebraically ](solve-equation-algebraically.md)                        | $x^2 = y$ | $x \in \{-\sqrt{y},\sqrt{y}\}$                                                                                                |
-| [ Solve a system of equations algebraically ](solvers-algebraic-equations)              | $x^2 + y = 2, x - y = 4$ | $\{(x = -3, y = -7), (x = 2, y = 2)\}$                                                                                        |
+| [ Solve a system of equations algebraically ](solve-system-of-equations-algebraically.md)              | $x^2 + y = 2z, y = -4z$ | $\{(x = -\sqrt{6z}, y = -4z),$ ${(x = \sqrt{6z}, y = -4z)\}}$                                                                                        |
 |  [Solve one or a system of equations numerically](solve-numerically.md)                           | $\cos(x) = x $ | $ x \approx 0.739085133215161$                                                                                           |
 |  {func}`Solve an ordinary differential equation algebraically <sympy.solvers.ode.dsolve>`   | $y''(x) + 9y(x)=0 $ | $ y(x)=C_{1} \sin(3x)+ C_{2} \cos(3x)$                                                    |
 |  [ Solve a system of linear equations algebraically ](../../modules/solvers/solvers.rst)        | $x + y = 2, x - y = 0 $ | $ x = 1, y = 1$                                                                                           |
@@ -36,4 +36,5 @@ in SymPy's terminology it would be ["evaluate an integral."](../../modules/integ
 
 solving-guidance.md
 solve-equation-algebraically.md
+solve-system-of-equations-algebraically.md
 solve-numerically.md

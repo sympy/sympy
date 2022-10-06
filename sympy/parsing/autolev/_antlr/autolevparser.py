@@ -294,7 +294,7 @@ class AutolevParser ( Parser ):
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.10")
+        self.checkVersion("4.11.1")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
@@ -345,7 +345,7 @@ class AutolevParser ( Parser ):
                 self.state = 59
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << AutolevParser.T__21) | (1 << AutolevParser.T__22) | (1 << AutolevParser.Mass) | (1 << AutolevParser.Inertia) | (1 << AutolevParser.Input) | (1 << AutolevParser.Output) | (1 << AutolevParser.Save) | (1 << AutolevParser.UnitSystem) | (1 << AutolevParser.Encode) | (1 << AutolevParser.Newtonian) | (1 << AutolevParser.Frames) | (1 << AutolevParser.Bodies) | (1 << AutolevParser.Particles) | (1 << AutolevParser.Points) | (1 << AutolevParser.Constants) | (1 << AutolevParser.Specifieds) | (1 << AutolevParser.Imaginary) | (1 << AutolevParser.Variables) | (1 << AutolevParser.MotionVariables) | (1 << AutolevParser.ID))) != 0)):
+                if not (((_la) & ~0x3f) == 0 and ((1 << _la) & 299067041120256) != 0):
                     break
 
         except RecognitionException as re:
@@ -608,7 +608,7 @@ class AutolevParser ( Parser ):
                 self.state = 83
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==AutolevParser.T__10:
+                if _la==11:
                     self.state = 82
                     self.diff()
 
@@ -660,7 +660,7 @@ class AutolevParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 90
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << AutolevParser.T__2) | (1 << AutolevParser.T__3) | (1 << AutolevParser.T__4) | (1 << AutolevParser.T__5) | (1 << AutolevParser.T__6) | (1 << AutolevParser.T__7) | (1 << AutolevParser.T__8))) != 0)):
+            if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 1016) != 0):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -714,7 +714,7 @@ class AutolevParser ( Parser ):
             self.state = 97
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==AutolevParser.T__9:
+            while _la==10:
                 self.state = 93
                 self.match(AutolevParser.T__9)
                 self.state = 94
@@ -770,7 +770,7 @@ class AutolevParser ( Parser ):
                 self.state = 103
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==AutolevParser.T__10):
+                if not (_la==11):
                     break
 
         except RecognitionException as re:
@@ -831,7 +831,7 @@ class AutolevParser ( Parser ):
             self.state = 131
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [AutolevParser.ID]:
+            if token in [48]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 105
                 self.match(AutolevParser.ID)
@@ -840,13 +840,13 @@ class AutolevParser ( Parser ):
                 self.state = 115
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << AutolevParser.T__0) | (1 << AutolevParser.T__11) | (1 << AutolevParser.T__13) | (1 << AutolevParser.T__17) | (1 << AutolevParser.T__21) | (1 << AutolevParser.T__22) | (1 << AutolevParser.Mass) | (1 << AutolevParser.Inertia) | (1 << AutolevParser.INT) | (1 << AutolevParser.FLOAT) | (1 << AutolevParser.EXP) | (1 << AutolevParser.ID))) != 0):
+                if ((_la) & ~0x3f) == 0 and ((1 << _la) & 404620694540290) != 0:
                     self.state = 107
                     self.expr(0)
                     self.state = 112
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    while _la==AutolevParser.T__9:
+                    while _la==10:
                         self.state = 108
                         self.match(AutolevParser.T__9)
                         self.state = 109
@@ -860,11 +860,11 @@ class AutolevParser ( Parser ):
                 self.state = 117
                 self.match(AutolevParser.T__12)
                 pass
-            elif token in [AutolevParser.Mass, AutolevParser.Inertia]:
+            elif token in [27, 28]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 118
                 _la = self._input.LA(1)
-                if not(_la==AutolevParser.Mass or _la==AutolevParser.Inertia):
+                if not(_la==27 or _la==28):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -874,13 +874,13 @@ class AutolevParser ( Parser ):
                 self.state = 128
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==AutolevParser.ID:
+                if _la==48:
                     self.state = 120
                     self.match(AutolevParser.ID)
                     self.state = 125
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    while _la==AutolevParser.T__9:
+                    while _la==10:
                         self.state = 121
                         self.match(AutolevParser.T__9)
                         self.state = 122
@@ -952,7 +952,7 @@ class AutolevParser ( Parser ):
             self.state = 139
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==AutolevParser.T__9:
+            while _la==10:
                 self.state = 135
                 self.match(AutolevParser.T__9)
                 self.state = 136
@@ -1030,54 +1030,54 @@ class AutolevParser ( Parser ):
             self.state = 164
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [AutolevParser.Newtonian]:
+            if token in [34]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 142
                 self.match(AutolevParser.Newtonian)
                 pass
-            elif token in [AutolevParser.Frames]:
+            elif token in [35]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 143
                 self.match(AutolevParser.Frames)
                 pass
-            elif token in [AutolevParser.Bodies]:
+            elif token in [36]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 144
                 self.match(AutolevParser.Bodies)
                 pass
-            elif token in [AutolevParser.Particles]:
+            elif token in [37]:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 145
                 self.match(AutolevParser.Particles)
                 pass
-            elif token in [AutolevParser.Points]:
+            elif token in [38]:
                 self.enterOuterAlt(localctx, 5)
                 self.state = 146
                 self.match(AutolevParser.Points)
                 pass
-            elif token in [AutolevParser.Constants]:
+            elif token in [39]:
                 self.enterOuterAlt(localctx, 6)
                 self.state = 147
                 self.match(AutolevParser.Constants)
                 pass
-            elif token in [AutolevParser.Specifieds]:
+            elif token in [40]:
                 self.enterOuterAlt(localctx, 7)
                 self.state = 148
                 self.match(AutolevParser.Specifieds)
                 pass
-            elif token in [AutolevParser.Imaginary]:
+            elif token in [41]:
                 self.enterOuterAlt(localctx, 8)
                 self.state = 149
                 self.match(AutolevParser.Imaginary)
                 pass
-            elif token in [AutolevParser.Variables]:
+            elif token in [42]:
                 self.enterOuterAlt(localctx, 9)
                 self.state = 150
                 self.match(AutolevParser.Variables)
                 self.state = 154
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la==AutolevParser.T__10:
+                while _la==11:
                     self.state = 151
                     self.match(AutolevParser.T__10)
                     self.state = 156
@@ -1085,14 +1085,14 @@ class AutolevParser ( Parser ):
                     _la = self._input.LA(1)
 
                 pass
-            elif token in [AutolevParser.MotionVariables]:
+            elif token in [43]:
                 self.enterOuterAlt(localctx, 10)
                 self.state = 157
                 self.match(AutolevParser.MotionVariables)
                 self.state = 161
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la==AutolevParser.T__10:
+                while _la==11:
                     self.state = 158
                     self.match(AutolevParser.T__10)
                     self.state = 163
@@ -1186,7 +1186,7 @@ class AutolevParser ( Parser ):
                 self.state = 184
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la==AutolevParser.T__9:
+                while _la==10:
                     self.state = 178
                     self.match(AutolevParser.T__9)
                     self.state = 179
@@ -1206,7 +1206,7 @@ class AutolevParser ( Parser ):
             self.state = 193
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==AutolevParser.T__13:
+            if _la==14:
                 self.state = 190
                 self.match(AutolevParser.T__13)
                 self.state = 191
@@ -1218,10 +1218,10 @@ class AutolevParser ( Parser ):
             self.state = 196
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==AutolevParser.T__16 or _la==AutolevParser.T__17:
+            if _la==17 or _la==18:
                 self.state = 195
                 _la = self._input.LA(1)
-                if not(_la==AutolevParser.T__16 or _la==AutolevParser.T__17):
+                if not(_la==17 or _la==18):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -1231,7 +1231,7 @@ class AutolevParser ( Parser ):
             self.state = 201
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==AutolevParser.T__10:
+            while _la==11:
                 self.state = 198
                 self.match(AutolevParser.T__10)
                 self.state = 203
@@ -1241,7 +1241,7 @@ class AutolevParser ( Parser ):
             self.state = 206
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==AutolevParser.T__2:
+            if _la==3:
                 self.state = 204
                 self.match(AutolevParser.T__2)
                 self.state = 205
@@ -1302,7 +1302,7 @@ class AutolevParser ( Parser ):
             self.state = 218
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==AutolevParser.T__9:
+            while _la==10:
                 self.state = 212
                 self.match(AutolevParser.T__9)
                 self.state = 213
@@ -1371,7 +1371,7 @@ class AutolevParser ( Parser ):
             self.state = 229
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==AutolevParser.T__9:
+            while _la==10:
                 self.state = 225
                 self.match(AutolevParser.T__9)
                 self.state = 226
@@ -1489,7 +1489,7 @@ class AutolevParser ( Parser ):
             self.state = 241
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==AutolevParser.T__11:
+            if _la==12:
                 self.state = 238
                 self.match(AutolevParser.T__11)
                 self.state = 239
@@ -1509,7 +1509,7 @@ class AutolevParser ( Parser ):
                 self.state = 247
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not (_la==AutolevParser.T__9):
+                if not (_la==10):
                     break
 
         except RecognitionException as re:
@@ -1563,10 +1563,10 @@ class AutolevParser ( Parser ):
             self.state = 255
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==AutolevParser.T__9 or _la==AutolevParser.T__18:
+            while _la==10 or _la==19:
                 self.state = 251
                 _la = self._input.LA(1)
-                if not(_la==AutolevParser.T__9 or _la==AutolevParser.T__18):
+                if not(_la==10 or _la==19):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -1630,7 +1630,7 @@ class AutolevParser ( Parser ):
             self.state = 268
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [AutolevParser.ID]:
+            if token in [48]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 260
                 self.match(AutolevParser.ID)
@@ -1642,10 +1642,10 @@ class AutolevParser ( Parser ):
                 self.state = 264
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==AutolevParser.INT or _la==AutolevParser.FLOAT:
+                if _la==44 or _la==45:
                     self.state = 263
                     _la = self._input.LA(1)
-                    if not(_la==AutolevParser.INT or _la==AutolevParser.FLOAT):
+                    if not(_la==44 or _la==45):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -1653,12 +1653,12 @@ class AutolevParser ( Parser ):
 
 
                 pass
-            elif token in [AutolevParser.FLOAT]:
+            elif token in [45]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 266
                 self.match(AutolevParser.FLOAT)
                 pass
-            elif token in [AutolevParser.INT]:
+            elif token in [44]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 267
                 self.match(AutolevParser.INT)
@@ -1724,27 +1724,27 @@ class AutolevParser ( Parser ):
             self.state = 275
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [AutolevParser.UnitSystem]:
+            if token in [32]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 270
                 self.units()
                 pass
-            elif token in [AutolevParser.Input]:
+            elif token in [29]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 271
                 self.inputs()
                 pass
-            elif token in [AutolevParser.Output]:
+            elif token in [30]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 272
                 self.outputs()
                 pass
-            elif token in [AutolevParser.ID]:
+            elif token in [48]:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 273
                 self.codegen()
                 pass
-            elif token in [AutolevParser.Save, AutolevParser.Encode]:
+            elif token in [31, 33]:
                 self.enterOuterAlt(localctx, 5)
                 self.state = 274
                 self.commands()
@@ -1812,7 +1812,7 @@ class AutolevParser ( Parser ):
             if la_ == 1:
                 self.state = 278
                 _la = self._input.LA(1)
-                if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << AutolevParser.INT) | (1 << AutolevParser.FLOAT) | (1 << AutolevParser.EXP) | (1 << AutolevParser.ID))) != 0)):
+                if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 404620279021568) != 0):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -1872,7 +1872,7 @@ class AutolevParser ( Parser ):
             self.state = 287
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==AutolevParser.T__9:
+            while _la==10:
                 self.state = 283
                 self.match(AutolevParser.T__9)
                 self.state = 284
@@ -1935,7 +1935,7 @@ class AutolevParser ( Parser ):
             self.state = 296
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==AutolevParser.T__9:
+            while _la==10:
                 self.state = 292
                 self.match(AutolevParser.T__9)
                 self.state = 293
@@ -1993,7 +1993,7 @@ class AutolevParser ( Parser ):
             self.state = 301
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==AutolevParser.T__10:
+            if _la==11:
                 self.state = 300
                 self.diff()
 
@@ -2113,7 +2113,7 @@ class AutolevParser ( Parser ):
             self.state = 315
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==AutolevParser.T__9:
+            while _la==10:
                 self.state = 311
                 self.match(AutolevParser.T__9)
                 self.state = 312
@@ -2236,7 +2236,7 @@ class AutolevParser ( Parser ):
             self.state = 335
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==AutolevParser.T__0:
+            if _la==1:
                 self.state = 324
                 self.match(AutolevParser.T__0)
                 self.state = 325
@@ -2244,7 +2244,7 @@ class AutolevParser ( Parser ):
                 self.state = 330
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la==AutolevParser.T__9:
+                while _la==10:
                     self.state = 326
                     self.match(AutolevParser.T__9)
                     self.state = 327
@@ -2314,7 +2314,7 @@ class AutolevParser ( Parser ):
             self.state = 354
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [AutolevParser.Save]:
+            if token in [31]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 341
                 self.match(AutolevParser.Save)
@@ -2325,7 +2325,7 @@ class AutolevParser ( Parser ):
                 self.state = 344
                 self.match(AutolevParser.ID)
                 pass
-            elif token in [AutolevParser.Encode]:
+            elif token in [33]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 345
                 self.match(AutolevParser.Encode)
@@ -2334,7 +2334,7 @@ class AutolevParser ( Parser ):
                 self.state = 351
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la==AutolevParser.T__9:
+                while _la==10:
                     self.state = 347
                     self.match(AutolevParser.T__9)
                     self.state = 348
@@ -2388,7 +2388,7 @@ class AutolevParser ( Parser ):
             self.state = 364
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [AutolevParser.ID]:
+            if token in [48]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 356
                 self.match(AutolevParser.ID)
@@ -2407,12 +2407,12 @@ class AutolevParser ( Parser ):
                     _alt = self._interp.adaptivePredict(self._input,41,self._ctx)
 
                 pass
-            elif token in [AutolevParser.T__21]:
+            elif token in [22]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 362
                 self.match(AutolevParser.T__21)
                 pass
-            elif token in [AutolevParser.T__22]:
+            elif token in [23]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 363
                 self.match(AutolevParser.T__22)
@@ -2856,7 +2856,7 @@ class AutolevParser ( Parser ):
                 self.state = 387
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la==AutolevParser.T__9:
+                while _la==10:
                     self.state = 383
                     self.match(AutolevParser.T__9)
                     self.state = 384
@@ -2904,7 +2904,7 @@ class AutolevParser ( Parser ):
                 self.state = 399
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==AutolevParser.ID:
+                if _la==48:
                     self.state = 398
                     self.match(AutolevParser.ID)
 
@@ -2959,7 +2959,7 @@ class AutolevParser ( Parser ):
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 15)")
                         self.state = 414
                         _la = self._input.LA(1)
-                        if not(_la==AutolevParser.T__24 or _la==AutolevParser.T__25):
+                        if not(_la==25 or _la==26):
                             self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
@@ -2977,7 +2977,7 @@ class AutolevParser ( Parser ):
                             raise FailedPredicateException(self, "self.precpred(self._ctx, 14)")
                         self.state = 417
                         _la = self._input.LA(1)
-                        if not(_la==AutolevParser.T__16 or _la==AutolevParser.T__17):
+                        if not(_la==17 or _la==18):
                             self._errHandler.recoverInline(self)
                         else:
                             self._errHandler.reportMatch(self)
