@@ -286,6 +286,10 @@ def test_Mul():
     # issue 21537
     assert str(Mul(x, Pow(1/y, -1, evaluate=False), evaluate=False)) == 'x/(1/y)'
 
+    # Issue 24108
+    from sympy.core.parameters import evaluate
+    with evaluate(False):
+        assert str(Mul(Pow(Integer(2), Integer(-1)), Add(Integer(-1), Mul(Integer(-1), Integer(1))))) == "(-1 - 1*1)/2"
 
     class CustomClass1(Expr):
         is_commutative = True

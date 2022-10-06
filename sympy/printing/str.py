@@ -287,8 +287,8 @@ class StrPrinter(Printer):
 
             pre = []
             # don't parenthesize first factor if negative
-            if n and n[0].could_extract_minus_sign():
-                pre = [str(n.pop(0))]
+            if n and not n[0].is_Add and n[0].could_extract_minus_sign():
+                pre = [self._print(n.pop(0))]
 
             nfactors = pre + [self.parenthesize(a, prec, strict=False)
                 for a in n]
@@ -297,7 +297,7 @@ class StrPrinter(Printer):
 
             # don't parenthesize first of denominator unless singleton
             if len(d) > 1 and d[0].could_extract_minus_sign():
-                pre = [str(d.pop(0))]
+                pre = [self._print(d.pop(0))]
             else:
                 pre = []
             dfactors = pre + [self.parenthesize(a, prec, strict=False)
