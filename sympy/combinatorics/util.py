@@ -18,8 +18,8 @@ def _base_ordering(base, degree):
     Parameters
     ==========
 
-    ``base`` : the base
-    ``degree`` : the degree of the associated permutation group
+    base : the base
+    degree : the degree of the associated permutation group
 
     Returns
     =======
@@ -129,8 +129,8 @@ def _distribute_gens_by_base(base, gens):
     Parameters
     ==========
 
-    ``base`` : a sequence of points in `\{0, 1, \dots, n-1\}`
-    ``gens`` : a list of elements of a permutation group of degree `n`.
+    base : a sequence of points in `\{0, 1, \dots, n-1\}`
+    gens : a list of elements of a permutation group of degree `n`.
 
     Returns
     =======

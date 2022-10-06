@@ -11,7 +11,7 @@ you may have to {func}`solve your equation numerically
 <sympy.solvers.solvers.nsolve>` instead.
 
 There are two high-level functions to solve equations, {func}`~.solve` and
-{func}`~.solveset`. Here is a simple example of each:
+{func}`~.solveset`. Here is an example of each:
 
 {func}`~.solve`
 
@@ -51,6 +51,7 @@ Here are recommendations on when to use:
     set: solution sets cannot necessarily be interrogated programmatically.
 
 ## Guidance
+
 
 Refer to
 [](solving-guidance.md#include-the-variable-to-be-solved-for-in-the-function-call)
