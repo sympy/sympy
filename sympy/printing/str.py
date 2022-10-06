@@ -50,7 +50,7 @@ class StrPrinter(Printer):
     def _print_Add(self, expr, order=None):
         terms = self._as_ordered_terms(expr, order=order)
 
-        PREC = precedence(expr)
+        prec = precedence(expr)
         l = []
         for term in terms:
             t = self._print(term)
@@ -59,7 +59,7 @@ class StrPrinter(Printer):
                 t = t[1:]
             else:
                 sign = "+"
-            if precedence(term) < PREC or term.is_Add:
+            if precedence(term) < prec or term.is_Add:
                 l.extend([sign, "(%s)" % t])
             else:
                 l.extend([sign, t])
