@@ -32,7 +32,7 @@ class Order(Expr):
         \sin(x) = x - x^3/3! + O(x^5)
 
     where in this case `O(x^5) = x^5/5! - x^7/7! + \cdots`. By the definition
-    of `O`, for any `\delta > 0` there is an `M` such that:
+    of `O`, there is a `\delta > 0` and an `M` such that:
 
     .. math ::
         |x^5/5! - x^7/7! + ....| <= M|x^5| \text{ for } |x| < \delta
