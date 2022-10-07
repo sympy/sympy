@@ -1,3 +1,4 @@
+(solving-guide-inequalities)=
 # Reduce One or a System of Inequalities for a Single Variable Algebraically
 
 Use SymPy to reduce one or a system of inequalities for a single variable
