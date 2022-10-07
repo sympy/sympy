@@ -9,6 +9,11 @@ This is the official documentation of the ``solveset`` module in solvers.
 It contains the frequently asked questions about our new module to solve
 equations.
 
+.. note::
+
+   For a beginner-friendly guide focused on solving common types of equations,
+   refer to :ref:`solving-guide`.
+
 What's wrong with solve():
 --------------------------
 

@@ -91,7 +91,7 @@ Now activate the environment:
 Run the Tests
 --------------
 
-There are several ways of running SymPy tests but the easiest is to use the ``bin/test`` script, consult 'the wiki details on running tests <https://github.com/sympy/sympy/wiki/Running-tests>`_.
+There are several ways of running SymPy tests but the easiest is to use the ``bin/test`` script, consult `the wiki details on running tests <https://github.com/sympy/sympy/wiki/Running-tests>`_.
 
 The script takes a number of options and arguments and then passes them to ``sympy.test(*paths, **kwargs)``. Run ``bin/test --help`` for all supported arguments.
 

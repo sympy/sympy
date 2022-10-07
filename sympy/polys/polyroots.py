@@ -504,33 +504,40 @@ def roots_cyclotomic(f, factor=False):
 
 def roots_quintic(f):
     """
-    Calculate exact roots of a solvable quintic
+    Calculate exact roots of a solvable irreducible quintic with rational coefficients.
+    Return an empty list if the quintic is reducible or not solvable.
     """
     result = []
-    coeff_5, coeff_4, p, q, r, s = f.all_coeffs()
 
-    # Eqn must be of the form x^5 + px^3 + qx^2 + rx + s
-    if coeff_4:
+    coeff_5, coeff_4, p_, q_, r_, s_ = f.all_coeffs()
+
+    if not all(coeff.is_Rational for coeff in (coeff_5, coeff_4, p_, q_, r_, s_)):
         return result
 
     if coeff_5 != 1:
-        l = [p/coeff_5, q/coeff_5, r/coeff_5, s/coeff_5]
-        if not all(coeff.is_Rational for coeff in l):
-            return result
-        f = Poly(f/coeff_5)
-    elif not all(coeff.is_Rational for coeff in (p, q, r, s)):
-        return result
+        f = Poly(f / coeff_5)
+        _, coeff_4, p_, q_, r_, s_ = f.all_coeffs()
+
+    # Cancel coeff_4 to form x^5 + px^3 + qx^2 + rx + s
+    if coeff_4:
+        p = p_ - 2*coeff_4*coeff_4/5
+        q = q_ - 3*coeff_4*p_/5 + 4*coeff_4**3/25
+        r = r_ - 2*coeff_4*q_/5 + 3*coeff_4**2*p_/25 - 3*coeff_4**4/125
+        s = s_ - coeff_4*r_/5 + coeff_4**2*q_/25 - coeff_4**3*p_/125 + 4*coeff_4**5/3125
+        x = f.gen
+        f = Poly(x**5 + p*x**3 + q*x**2 + r*x + s)
+    else:
+        p, q, r, s = p_, q_, r_, s_
+
     quintic = PolyQuintic(f)
 
     # Eqn standardized. Algo for solving starts here
     if not f.is_irreducible:
         return result
-
     f20 = quintic.f20
     # Check if f20 has linear factors over domain Z
     if f20.is_irreducible:
         return result
-
     # Now, we know that f is solvable
     for _factor in f20.factor_list()[1]:
         if _factor[0].is_linear:
@@ -635,7 +642,7 @@ def roots_quintic(f):
                 r2 = Res[2][i]
                 r3 = Res[3][j]
                 break
-        if r2:
+        if r2 is not None:
             break
     else:
         return []  # fall back to normal solve
@@ -658,6 +665,10 @@ def roots_quintic(f):
             # and fall back to usual solve
             return []
         saw.add(r)
+
+    # Restore to original equation where coeff_4 is nonzero
+    if coeff_4:
+        result = [x - coeff_4 / 5 for x in result]
     return result
 
 
