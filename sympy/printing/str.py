@@ -4,7 +4,7 @@ A Printer for generating readable representation of most SymPy classes.
 
 from typing import Any, Dict as tDict
 
-from sympy.core import S, Rational, Pow, Basic, Mul, Number, Add
+from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
@@ -50,16 +50,16 @@ class StrPrinter(Printer):
     def _print_Add(self, expr, order=None):
         terms = self._as_ordered_terms(expr, order=order)
 
-        PREC = precedence(expr)
+        prec = precedence(expr)
         l = []
         for term in terms:
             t = self._print(term)
-            if t.startswith('-'):
+            if t.startswith('-') and not term.is_Add:
                 sign = "-"
                 t = t[1:]
             else:
                 sign = "+"
-            if precedence(term) < PREC or isinstance(term, Add):
+            if precedence(term) < prec or term.is_Add:
                 l.extend([sign, "(%s)" % t])
             else:
                 l.extend([sign, t])
