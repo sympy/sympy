@@ -9,7 +9,7 @@ from sympy.core.function import (Function, expand, WildFunction,
     AppliedUndef, Derivative, diff, Subs)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (NumberSymbol, E, zoo, oo, Float, I,
-    Rational, nan, Integer, Number, pi)
+    Rational, nan, Integer, Number, pi, _illegal)
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Lt, Gt, Le
 from sympy.core.singleton import S
@@ -654,10 +654,10 @@ def test_is_rational_function():
     assert (sin(y)/x).is_rational_function(x) is True
     assert (sin(y)/x).is_rational_function(x, y) is False
 
-    assert (S.NaN).is_rational_function() is False
-    assert (S.Infinity).is_rational_function() is False
-    assert (S.NegativeInfinity).is_rational_function() is False
-    assert (S.ComplexInfinity).is_rational_function() is False
+    for i in _illegal:
+        assert not i.is_rational_function()
+        for d in (1, x):
+            assert not (i/d).is_rational_function()
 
 
 def test_is_meromorphic():

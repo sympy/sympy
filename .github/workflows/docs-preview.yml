@@ -2,7 +2,7 @@ name: Docs Preview
 on: [status]
 jobs:
   circleci_artifacts_redirector_job:
-    if: "github.event.context == 'ci/circleci: Build Docs Preview'"
+    if: "${{ github.event.context == 'ci/circleci: Build Docs Preview' }}"
     runs-on: ubuntu-latest
     name: Run CircleCI artifacts redirector
     steps:
@@ -15,5 +15,6 @@ jobs:
           circleci-jobs: Build Docs Preview
           job-title: Click here to see a preview of the documentation.
       - name: Check the URL
+        if: github.event.status != 'pending'
         run: |
           curl --fail ${{ steps.step1.outputs.url }} | grep $GITHUB_SHA

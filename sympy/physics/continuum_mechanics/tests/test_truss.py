@@ -1,5 +1,6 @@
 from sympy.core.symbol import Symbol, symbols
 from sympy.physics.continuum_mechanics.truss import Truss
+from sympy import sqrt
 
 
 def test_truss():
@@ -99,10 +100,9 @@ def test_truss():
 
     # testing the solve method
     t.solve()
-    assert t.reaction_loads['R_A_x']/P - (-1.4142135623731) < 1e-10
-    assert t.reaction_loads['R_A_y']/P - (-2.41421356237309) < 1e-10
-    assert t.reaction_loads['R_D_y']/P - (-0.5) < 1e-10
-    assert t.internal_forces[AB]/P < 1e-10
-    assert t.internal_forces[CD] < 1e-10
-    assert t.internal_forces[AC] < 1e-10
-    # assert t.internal_forces == {AB: 3.06161699786838e-17*P, CD: 0, AC: 0}
+    assert t.reaction_loads['R_A_x'] == -sqrt(2)*P
+    assert t.reaction_loads['R_A_y'] == -sqrt(2)*P - P
+    assert t.reaction_loads['R_D_y'] == -P/2
+    assert t.internal_forces[AB]/P == 0
+    assert t.internal_forces[CD] == 0
+    assert t.internal_forces[AC] == 0

@@ -557,7 +557,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     expression. You can avoid this behavior by passing ``doit=False`` as
     an argument.
 
-    Also, it should be noted that simplifying the boolian expression is not
+    Also, it should be noted that simplifying a boolean expression is not
     well defined. If the expression prefers automatic evaluation (such as
     :obj:`~.Eq()` or :obj:`~.Or()`), simplification will return ``True`` or
     ``False`` if truth value can be determined. If the expression is not
@@ -714,7 +714,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
             i: factor_terms(i) for i in expr.atoms(Integral)})
 
     if expr.has(Product):
-        expr = product_simplify(expr)
+        expr = product_simplify(expr, **kwargs)
 
     from sympy.physics.units import Quantity
 
@@ -883,15 +883,20 @@ def sum_add(self, other, method=0):
     return Add(self, other)
 
 
-def product_simplify(s):
+def product_simplify(s, **kwargs):
     """Main function for Product simplification"""
     terms = Mul.make_args(s)
     p_t = [] # Product Terms
     o_t = [] # Other Terms
 
+    deep = kwargs.get('deep', True)
     for term in terms:
         if isinstance(term, Product):
-            p_t.append(term)
+            if deep:
+                p_t.append(Product(term.function.simplify(**kwargs),
+                                   *term.limits))
+            else:
+                p_t.append(term)
         else:
             o_t.append(term)
 
@@ -902,8 +907,9 @@ def product_simplify(s):
             if not used[i]:
                 for j, p_term2 in enumerate(p_t):
                     if not used[j] and i != j:
-                        if isinstance(product_mul(p_term1, p_term2, method), Product):
-                            p_t[i] = product_mul(p_term1, p_term2, method)
+                        tmp_prod = product_mul(p_term1, p_term2, method)
+                        if isinstance(tmp_prod, Product):
+                            p_t[i] = tmp_prod
                             used[j] = True
 
     result = Mul(*o_t)

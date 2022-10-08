@@ -10,12 +10,13 @@ from sympy.core.function import (Derivative, Function, Lambda, Subs, diff)
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (AlgebraicNumber, Float, I, Integer, Rational, oo, pi)
+from sympy.core.parameters import evaluate
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
 from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
-from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, lucas, fibonacci, tribonacci
+from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, genocchi, lucas, fibonacci, tribonacci
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, coth)
@@ -1783,6 +1784,10 @@ def test_latex_numbers():
     assert latex(bernoulli(n, x)) == r"B_{n}\left(x\right)"
     assert latex(bernoulli(n)**2) == r"B_{n}^{2}"
     assert latex(bernoulli(n, x)**2) == r"B_{n}^{2}\left(x\right)"
+    assert latex(genocchi(n)) == r"G_{n}"
+    assert latex(genocchi(n, x)) == r"G_{n}\left(x\right)"
+    assert latex(genocchi(n)**2) == r"G_{n}^{2}"
+    assert latex(genocchi(n, x)**2) == r"G_{n}^{2}\left(x\right)"
     assert latex(bell(n)) == r"B_{n}"
     assert latex(bell(n, x)) == r"B_{n}\left(x\right)"
     assert latex(bell(n, m, (x, y))) == r"B_{n, m}\left(x, y\right)"
@@ -3111,3 +3116,7 @@ def test_Array():
     arr = Array(range(11))
     # added empty arguments {}
     assert latex(arr) == r'\left[\begin{array}{}0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\end{array}\right]'
+
+def test_latex_with_unevaluated():
+    with evaluate(False):
+        assert latex(a * a) == r"a a"

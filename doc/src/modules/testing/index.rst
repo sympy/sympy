@@ -11,7 +11,7 @@ Testing
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    pytest.rst
    randtest.rst
