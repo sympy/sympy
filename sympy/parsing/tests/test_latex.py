@@ -273,6 +273,7 @@ GOOD_PAIRS = [
     (r"\log_2 x", _log(x, 2)),
     (r"\log_a x", _log(x, a)),
     (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
+    (r"3x - 1", _Add(_Mul(3, x), -1))
 ]
 
 

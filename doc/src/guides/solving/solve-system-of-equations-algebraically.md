@@ -1,15 +1,29 @@
 # Solve a System of Equations Algebraically
 
-Use SymPy to solve a system of equations algebraically. For example, solving
-$x^2 + y = 2z, y = -4z$ for x and y (assuming z is a constant or parameter)
-yields $\{(x = -\sqrt{6z}, y = -4z),$ ${(x = \sqrt{6z}, y = -4z)\}}$.
+Use SymPy to algebraically solve a system of equations, whether linear or
+nonlinear. For example, solving $x^2 + y = 2z, y = -4z$ for x and y (assuming z
+is a constant or parameter) yields $\{(x = -\sqrt{6z}, y = -4z),$ ${(x =
+\sqrt{6z}, y = -4z)\}}$.
 
 ## Alternatives to Consider
 - Some systems of equations cannot be solved algebraically (either at all or by
 SymPy), so you may have to [solve your system of equations
 numerically](solve-numerically.md) using {func}`~.nsolve` instead.
 
-## Example of Solving a System of Equations Algebraically
+## Examples of Solving a System of Equations Algebraically
+
+Whether your equations are linear or nonlinear, you can use {func}`~.solve`:
+
+### Solve a System of Linear Equations Algebraically
+
+```py
+>>> from sympy import solve
+>>> from sympy.abc import x, y, z
+>>> solve([x + y - 2*z, y + 4*z], [x, y], dict=True)
+[{x: 6*z, y: -4*z}]
+```
+
+### Solve a System of Nonlinear Equations Algebraically
 
 ```py
 >>> from sympy import solve
