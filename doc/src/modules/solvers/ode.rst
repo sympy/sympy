@@ -3,9 +3,15 @@
 ODE
 ===
 
+.. note::
+
+   For a beginner-friendly guide focused on solving ODEs, refer to
+   :ref:`solving-guide-inequalities`.
+
 .. module::sympy.solvers.ode
 
 .. automodule:: sympy.solvers.ode
+
 
 User Functions
 --------------
