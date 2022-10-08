@@ -11,7 +11,7 @@ Contents
 ========
 
 .. toctree::
-    :maxdepth: 2
+   :titlesonly:
 
-    g-functions.rst
-    integrals.rst
+   g-functions.rst
+   integrals.rst

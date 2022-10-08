@@ -11,10 +11,10 @@ Contents
 ========
 
 .. toctree::
-    :maxdepth: 2
+   :titlesonly:
 
-    series.rst
-    sequences.rst
-    fourier.rst
-    formal.rst
-    limitseq.rst
+   series.rst
+   sequences.rst
+   fourier.rst
+   formal.rst
+   limitseq.rst

@@ -7,10 +7,10 @@ Utilities
 **Contents**
 
 .. toctree::
-    :maxdepth: 2
+   :titlesonly:
 
-    ../../../modules/testing/index.rst
-    ../../../modules/utilities/index.rst
-    ../../../modules/interactive.rst
-    ../../../modules/parsing.rst
-    ../../../modules/printing.rst
+   ../../../modules/testing/index.rst
+   ../../../modules/utilities/index.rst
+   ../../../modules/interactive.rst
+   ../../../modules/parsing.rst
+   ../../../modules/printing.rst

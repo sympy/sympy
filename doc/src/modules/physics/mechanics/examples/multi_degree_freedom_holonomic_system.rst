@@ -40,9 +40,9 @@ kinematics. ::
 
     >>> slider = PrismaticJoint('J1', wall, block, coordinates=q1, speeds=u1)
     >>> rev1 = PinJoint('J2', block, compound_pend, coordinates=q2, speeds=u2,
-    ...                 joint_axis=compound_pend.z, child_point=l*2/3*compound_pend.y)
+    ...                 joint_axis=block.z, child_point=l*2/3*compound_pend.y)
     >>> rev2 = PinJoint('J3', compound_pend, simple_pend, coordinates=q3, speeds=u3,
-    ...                 joint_axis=simple_pend.z, parent_point=-l/3*compound_pend.y,
+    ...                 joint_axis=compound_pend.z, parent_point=-l/3*compound_pend.y,
     ...                 child_point=l*simple_pend.y)
 
     >>> joints = (slider, rev1, rev2)

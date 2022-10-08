@@ -10,14 +10,14 @@ def psi_n(n, x, m, omega):
     Parameters
     ==========
 
-    ``n`` :
+    n :
         the "nodal" quantum number.  Corresponds to the number of nodes in the
         wavefunction.  ``n >= 0``
-    ``x`` :
+    x :
         x coordinate.
-    ``m`` :
+    m :
         Mass of the particle.
-    ``omega`` :
+    omega :
         Angular frequency of the oscillator.
 
     Examples
@@ -46,9 +46,9 @@ def E_n(n, omega):
     Parameters
     ==========
 
-    ``n`` :
+    n :
         The "nodal" quantum number.
-    ``omega`` :
+    omega :
         The harmonic oscillator angular frequency.
 
     Notes
@@ -79,9 +79,9 @@ def coherent_state(n, alpha):
     Parameters
     ==========
 
-    ``n`` :
+    n :
         The "nodal" quantum number.
-    ``alpha`` :
+    alpha :
         The eigen value of annihilation operator.
     """
 
