@@ -9,10 +9,8 @@ For example, solving $ax^2 + bx + c = 0$ for $x$ yields $x =
 - If you need a numeric (rather than algebraic) solution, you can use either
     - NumPy's {external:func}`~numpy.roots`
     - SciPy's {external:func}`~scipy.optimize.root`
-- If you need to solve a multivariate polynomial algebraically,
-    - for simple polynomials, use {func}`~.solve`
-    - for more complex polynomials, try {func}`~sympy.polys.polytools.groebner`
-      or {meth}`~sympy.polys.polytools.GroebnerBasis.fglm`
+- If you need to solve systems of polynomial equations algebraically, use
+  {func}`~.solve`
 
 ## Example of Finding the Roots of a Polynomial Algebraically
 
