@@ -1,10 +1,15 @@
 # Solve a Diophantine Equation Algebraically
 
-Use SymPy to solve a Diophantine equation (find integer solutions to a
-polynomial equation) algebraically, returning a parameterized general solution
-if possible. For example, solving the [Pythagorean
-theorem](https://en.wikipedia.org/wiki/Pythagorean_theorem) $a^2 + b^2 = c^2$
-yields $(a=2pq, b=p^2-q^2, c=p^2-q^2)$.
+Use SymPy to solve a [Diophantine
+equation](https://en.wikipedia.org/wiki/Diophantine_equation) (find integer
+solutions to a polynomial equation) algebraically, returning a parameterized
+general solution if possible. For example, solving the [Pythagorean
+equation](https://en.wikipedia.org/wiki/Pythagorean_theorem) $a^2 + b^2 = c^2$
+yields $(a=2pq, b=p^2-q^2, c=p^2-q^2)$. Here, $p$ and $q$ are new parameters
+introduced in the solution. $p$ and $q$ can take on any integer value to
+parameterize the full set of solutions. More formally, $p,q \in \mathbb{Z}$
+parameterize the infinite set of [Pythagorean
+triples](https://en.wikipedia.org/wiki/Pythagorean_triple).
 
 ## Alternatives to Consider
 
@@ -17,30 +22,23 @@ Diophantine equation.
     - You can test explicit integer values, for example using a nested for loop
   of ranges of values. This is inefficient, but fine if you are only interested
   in solutions that are relatively small.
-- {func}`~.solve` simply solves for one variable in terms of the others. For
-example, attempting to solve $a^2 + b^2 = c^2$ for $a$, $b$, and $c$ can only
-reveal that $a = \pm \sqrt{c^2-b^2}$:
-
-```py
->>> from sympy import solve
->>> from sympy import symbols
->>> a, b, c = symbols("a, b, c", integer=True)
->>> solve(a**2 + b**2 - c**2, [a, b, c], dict=True)
-[{a: -sqrt(-b**2 + c**2)}, {a: sqrt(-b**2 + c**2)}]
-```
+- {func}`~.solve` treats the variables as real or complex numbers, and simply
+  solves for one variable in terms of the others, which produces a different
+type of solution. For example, attempting to solve $a^2 + b^2 = c^2$ for $a$,
+$b$, and $c$ can only reveal that $a = \pm \sqrt{c^2-b^2}$.
 
 ## Example of Solving a Diophantine Equation
 
 Here is an example of solving a Diophantine equation, specifically $a^2 + b^2 =
-c^2$ transformed to ***, using {func}`~.diophantine`:
+c^2$, using {func}`~.diophantine`:
 
 ```py
 >>> from sympy.solvers.diophantine import diophantine
->>> from sympy import symbols
+>>> from sympy import symbols, Eq
 >>> a, b, c = symbols("a, b, c", integer=True)
 >>> my_syms = (a, b, c)
->>> pythag = a**2 + b**2 - c**2
->>> d = diophantine(pythag, syms=my_syms)
+>>> pythag_eq = Eq(a**2 + b**2, c**2)
+>>> d = diophantine(pythag_eq, syms=my_syms)
 >>> d
 {(2*p*q, p**2 - q**2, p**2 + q**2)}
 ```
@@ -50,12 +48,21 @@ for more examples of solving various types of Diophantine equations.
 
 ## Guidance
 
-### Expression to Solve Must Equal Zero
+### Diophantine Equation Can be Expressed as Expression That Equals Zero
 
-{func}`~.diophantine` requires that the expression to be solved equals zero, so
-you must transform an equation into such an expression. For example, $a^2 + b^2
-= c^2$ must be expressed as $a^2 + b^2 - c^2$ as in
-[](#example-of-solving-a-diophantine-equation).
+If you already have an expression that equals zero, you can solve that
+expression. For example, expressing the Pythagorean equation as $a^2 + b^2 -
+c^2$ is also valid:
+
+```py
+>>> from sympy.solvers.diophantine import diophantine
+>>> from sympy import symbols
+>>> a, b, c = symbols("a, b, c", integer=True)
+>>> my_syms = (a, b, c)
+>>> pythag = a**2 + b**2 - c**2
+>>> diophantine(pythag, syms=my_syms)
+{(2*p*q, p**2 - q**2, p**2 + q**2)}
+```
 
 ### Specify the Order of Symbols in the Result
 
@@ -89,6 +96,7 @@ a tuple is an expression for a variable in your equation. For example, in
 >>> from sympy import symbols
 >>> a, b, c, p, q = symbols("a, b, c, p, q", integer=True)
 >>> my_syms = (a, b, c)
+>>> pythag = a**2 + b**2 - c**2
 >>> d = diophantine(pythag, syms=my_syms)
 >>> d
 {(2*p*q, p**2 - q**2, p**2 + q**2)}
@@ -119,6 +127,7 @@ expression by its symbol:
 >>> from sympy import symbols
 >>> a, b, c = symbols("a, b, c", integer=True)
 >>> my_syms = (a, b, c)
+>>> pythag = a**2 + b**2 - c**2
 >>> solution, = diophantine(pythag, syms=my_syms)
 >>> solution
 (2*p*q, p**2 - q**2, p**2 + q**2)
@@ -146,6 +155,30 @@ Here, we express the set of values as a dictionary to associate each variable
 >>> solution_p4q3 = dict(zip(my_syms, [var.subs({p:4, q:3}) for var in solution_list[0]]))
 >>> solution_p4q3
 {a: 24, b: 7, c: 25}
+```
+
+Note that you need to include the `integer=True` assumption for the generated
+parameters (`p` and `q`) to substitute numerical values for them. Conversely,
+you do not need to include the `integer=True` assumption for the symbols in the
+original equation (`a`, `b`, and `c`), although it is a good practice.
+
+To iterate the set of solutions, you can iterate over value of the parameters
+(`p` and `q`) in a nested loop:
+
+```py
+>>> for p_val in range(-1,2):
+...     for q_val in range(-1,2):
+...         pythag_vals = dict(zip(my_syms, [var.subs({p:p_val, q:q_val}) for var in solution_list[0]]))
+...         print(f"p: {p_val}, q: {q_val} -> {pythag_vals}")
+p: -1, q: -1 -> {a: 2, b: 0, c: 2}
+p: -1, q: 0 -> {a: 0, b: 1, c: 1}
+p: -1, q: 1 -> {a: -2, b: 0, c: 2}
+p: 0, q: -1 -> {a: 0, b: -1, c: 1}
+p: 0, q: 0 -> {a: 0, b: 0, c: 0}
+p: 0, q: 1 -> {a: 0, b: -1, c: 1}
+p: 1, q: -1 -> {a: -2, b: 0, c: 2}
+p: 1, q: 0 -> {a: 0, b: 1, c: 1}
+p: 1, q: 1 -> {a: 2, b: 0, c: 2}
 ```
 
 ### Verify a Solution
@@ -186,9 +219,9 @@ one solution, you can use the following code:
 
 Some Diophantine equations have no solution, in which case {func}`~.diophantine`
 will return an empty set, `set()`. For example, in the expression $2x + 4y - 3$
-(remembering that the [](#expression-to-solve-must-equal-zero)), the
-coefficients are both even ($2$ and $4$), so the sum of the terms $(2x + 4y)$
-can only be even. However, the constant $3$ is odd, so there is no solution.
+(which we will try to set to zero), the coefficients are both even ($2$ and
+$4$), so the sum of the terms $(2x + 4y)$ can only be even. However, the
+constant $3$ is odd, so there is no solution.
 
 ```py
 >>> from sympy.solvers.diophantine import diophantine
