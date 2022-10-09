@@ -360,7 +360,7 @@ def test__classify_linear_system():
     assert _classify_linear_system(eq4, funcs, t) == sol4
 
 
-    # Multiple matchs
+    # Multiple matches
 
     f, g = symbols("f g", cls=Function)
     y, t_ = symbols("y t_")

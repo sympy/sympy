@@ -42,7 +42,7 @@ from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
 IS_WINDOWS = (os.name == 'nt')
 ON_CI = os.getenv('CI', None)
 
-# emperically generated list of the proportion of time spent running
+# empirically generated list of the proportion of time spent running
 # an even split of tests.  This should periodically be regenerated.
 # A list of [.6, .1, .3] would mean that if the tests are evenly split
 # into '1/3', '2/3', '3/3', the first split would take 60% of the time,

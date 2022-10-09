@@ -24,7 +24,7 @@ from sympy.external import import_module
 
 # Unlike NumPy which will aggressively promote operands to double precision,
 # jax always uses single precision. Double precision in jax can be
-# configured before the call to `import jax`, however this must be explicity
+# configured before the call to `import jax`, however this must be explicitly
 # configured and is not fully supported. Thus, the tests here have been modified
 # from the tests in test_numpy.py, only in the fact that they assert lambdify
 # function accuracy to only single precision accuracy.

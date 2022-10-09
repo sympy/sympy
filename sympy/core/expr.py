@@ -158,7 +158,7 @@ class Expr(Basic, EvalfMixin):
     # ***************
     # * Arithmetics *
     # ***************
-    # Expr and its sublcasses use _op_priority to determine which object
+    # Expr and its subclasses use _op_priority to determine which object
     # passed to a binary special method (__mul__, etc.) will handle the
     # operation. In general, the 'call_highest_priority' decorator will choose
     # the object with the highest _op_priority to handle the call.

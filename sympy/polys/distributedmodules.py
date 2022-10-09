@@ -149,7 +149,7 @@ def sdm_monomial_divides(A, B):
 # The actual distributed modules code.
 
 def sdm_LC(f, K):
-    """Returns the leading coeffcient of ``f``. """
+    """Returns the leading coefficient of ``f``. """
     if not f:
         return K.zero
     else:

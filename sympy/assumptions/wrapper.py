@@ -4,7 +4,7 @@ query with same syntax.
 
 In SymPy, there are two assumption systems. Old assumption system is
 defined in sympy/core/assumptions, and it can be accessed by attribute
-such as ``x.is_even``. New assumption system is definded in
+such as ``x.is_even``. New assumption system is defined in
 sympy/assumptions, and it can be accessed by predicates such as
 ``Q.even(x)``.
 

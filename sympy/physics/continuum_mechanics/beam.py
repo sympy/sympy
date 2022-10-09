@@ -2121,8 +2121,8 @@ class Beam:
             for plotting loads.
             Given a right handed coordinate system with XYZ coordinates,
             the beam's length is assumed to be along the positive X axis.
-            The draw function recognizes positve loads(with n>-2) as loads
-            acting along negative Y direction and positve moments acting
+            The draw function recognizes positive loads(with n>-2) as loads
+            acting along negative Y direction and positive moments acting
             along positive Z direction.
 
         Parameters
@@ -2236,7 +2236,7 @@ class Beam:
             elif load[2] >= 0:
                 # `fill` will be assigned only when higher order loads are present
                 value, start, order, end = load
-                # Positive loads have their seperate equations
+                # Positive loads have their separate equations
                 if(value>0):
                     plus = 1
                 # if pictorial is True we remake the load equation again with

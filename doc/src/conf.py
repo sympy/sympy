@@ -404,7 +404,7 @@ intersphinx_mapping = {
 # to something from matplotlib.
 intersphinx_disabled_reftypes = ['*']
 
-# Requried for linkcode extension.
+# Required for linkcode extension.
 # Get commit hash from the external file.
 commit_hash_filepath = '../commit_hash.txt'
 commit_hash = None

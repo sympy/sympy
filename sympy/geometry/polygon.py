@@ -1026,7 +1026,7 @@ class Polygon(GeometrySet):
             if compare > 0:
                 if not prev:
                     # if previous point lies below the line, the intersection
-                    # point of the polygon egde and the line has to be included
+                    # point of the polygon edge and the line has to be included
                     edge = Line(point, prev_point)
                     new_point = edge.intersection(line)
                     upper_vertices.append(new_point[0])

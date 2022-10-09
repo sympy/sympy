@@ -2009,7 +2009,7 @@ def decipher_rsa(i, key, factors=None):
         very large cases (Like 2048-bit RSA keys) since the
         overhead of using pure Python implementation of
         :meth:`sympy.ntheory.modular.crt` may overcompensate the
-        theoritical speed advantage.
+        theoretical speed advantage.
 
     Notes
     =====
@@ -2544,7 +2544,7 @@ def elgamal_private_key(digit=10, seed=None):
     Explanation
     ===========
 
-    Elgamal encryption is based on the mathmatical problem
+    Elgamal encryption is based on the mathematical problem
     called the Discrete Logarithm Problem (DLP). For example,
 
     `a^{b} \equiv c \pmod p`

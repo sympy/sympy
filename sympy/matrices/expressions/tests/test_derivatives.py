@@ -409,7 +409,7 @@ def test_derivatives_elementwise_applyfunc():
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 
     expr = x.applyfunc(sin).T*y
-    # TODO: restore (currently returning the traspose):
+    # TODO: restore (currently returning the transpose):
     #  assert expr.diff(x).dummy_eq(DiagMatrix(x.applyfunc(cos))*y)
     _check_derivative_with_explicit_matrix(expr, x, expr.diff(x))
 

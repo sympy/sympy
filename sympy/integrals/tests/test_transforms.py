@@ -759,7 +759,7 @@ def test_laplace_transform():
     Ms = Matrix([[    1/(s - 1), (s + 1)**(-2)],
                  [(s + 1)**(-2),     1/(s - 1)]])
 
-    # The default behaviour for Laplace tranform of a Matrix returns a Matrix
+    # The default behaviour for Laplace transform of a Matrix returns a Matrix
     # of Tuples and is deprecated:
     with warns_deprecated_sympy():
         Ms_conds = Matrix([[(1/(s - 1), 1, True), ((s + 1)**(-2),

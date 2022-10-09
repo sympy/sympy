@@ -2149,7 +2149,7 @@ def _convert_to_varsANF(term, variables):
     Parameters
     ==========
 
-    term : list of 1's and 0's (complementation patter)
+    term : list of 1's and 0's (complementation pattern)
     variables : list of variables
 
     """
@@ -2517,7 +2517,7 @@ def ANFform(variables, truthvalues):
 
     The variables must be given as the first argument.
 
-    Return True, False, logical :py:class:`~.And` funciton (i.e., the
+    Return True, False, logical :py:class:`~.And` function (i.e., the
     "Zhegalkin monomial") or logical :py:class:`~.Xor` function (i.e.,
     the "Zhegalkin polynomial"). When True and False
     are represented by 1 and 0, respectively, then
@@ -2638,7 +2638,7 @@ def bool_minterm(k, variables):
     Parameters
     ==========
 
-    k : int or list of 1's and 0's (complementation patter)
+    k : int or list of 1's and 0's (complementation pattern)
     variables : list of variables
 
     Examples
@@ -2710,7 +2710,7 @@ def bool_monomial(k, variables):
     Each boolean function can be uniquely represented by a
     Zhegalkin Polynomial (Algebraic Normal Form). The Zhegalkin
     Polynomial of the boolean function with `n` variables can contain
-    up to `2^n` monomials. We can enumarate all the monomials.
+    up to `2^n` monomials. We can enumerate all the monomials.
     Each monomial is fully specified by the presence or absence
     of each variable.
 
@@ -2784,7 +2784,7 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         Optimize expression under the assumption that inputs where this
         expression is true are don't care. This is useful in e.g. Piecewise
         conditions, where later conditions do not need to consider inputs that
-        are convered by previous conditions. For example, if a previous
+        are converted by previous conditions. For example, if a previous
         condition is ``And(A, B)``, the simplification of expr can be made
         with don't cares for ``And(A, B)``.
 

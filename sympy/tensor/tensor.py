@@ -4178,7 +4178,7 @@ def get_lines(ex, index_type):
     Returns ``(lines, traces, rest)`` for an index type,
     where ``lines`` is the list of list of positions of a matrix line,
     ``traces`` is the list of list of traced matrix lines,
-    ``rest`` is the rest of the elements ot the tensor.
+    ``rest`` is the rest of the elements of the tensor.
     """
     def _join_lines(a):
         i = 0

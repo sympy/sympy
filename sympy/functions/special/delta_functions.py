@@ -592,7 +592,7 @@ class Heaviside(Function):
         Explanation
         ===========
 
-        The value of Heaviside(0) must be 1/2 for rewritting as sign to be
+        The value of Heaviside(0) must be 1/2 for rewriting as sign to be
         strictly equivalent. For easier usage, we also allow this rewriting
         when Heaviside(0) is undefined.
 

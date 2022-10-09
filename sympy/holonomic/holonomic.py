@@ -666,7 +666,7 @@ class HolonomicFunction:
                 return HolonomicFunction(sol, self.x, self.x0, y0)
 
             else:
-                # change the intiial conditions to a same point
+                # change the initial conditions to a same point
                 selfat0 = self.annihilator.is_singular(0)
                 otherat0 = other.annihilator.is_singular(0)
 

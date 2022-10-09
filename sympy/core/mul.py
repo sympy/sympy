@@ -1361,7 +1361,7 @@ class Mul(Expr, AssocOp):
                     assert not e.is_zero
                     return # sign of e unknown -> self.is_integer unknown
                 else:
-                    # x**2, 2**x, or x**y with x and y int-unknown -> unknonwn
+                    # x**2, 2**x, or x**y with x and y int-unknown -> unknown
                     return
             else:
                 return

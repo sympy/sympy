@@ -450,7 +450,7 @@ def trigsimp(expr, **opts):
         algorithm. If ``'fu'``, run the collection of trigonometric
         transformations described by Fu, et al. (see the
         :py:func:`~sympy.simplify.fu.fu` docstring). If ``'old'``, the original
-        SymPy trig simplication function is run.
+        SymPy trig simplification function is run.
     opts :
         Optional keyword arguments passed to the method. See each method's
         function docstring for details.

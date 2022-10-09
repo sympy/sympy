@@ -28,7 +28,7 @@ class, such as {class}`~.Boolean`, {class}`~.MatrixExpr`, {class}`~.Expr`, or
 Before digging into the more advanced functionality for custom functions, we
 should mention two common cases, the case where the function is fully
 symbolic, and the case where the function is fully evaluated. Both of these
-cases have much simpler alternatives than the full mechanisms described in ths
+cases have much simpler alternatives than the full mechanisms described in this
 guide.
 
 (custom-functions-fully-symbolic)=

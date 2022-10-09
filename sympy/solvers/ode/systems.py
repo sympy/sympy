@@ -690,7 +690,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     Explanation
     ===========
 
-    This solver solves the system of ODEs of the follwing form:
+    This solver solves the system of ODEs of the following form:
 
     .. math::
         X'(t) = A(t) X(t) +  b(t)
@@ -2090,7 +2090,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
 
     if t is not None and not isinstance(t, Symbol):
         raise ValueError(filldedent('''
-            The indepedent variable must be of type Symbol
+            The independent variable must be of type Symbol
         '''))
 
     if t is None:

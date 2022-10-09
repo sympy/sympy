@@ -337,7 +337,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         to work with SymPy should be handled directly in the __eq__ methods
         of the `Basic` classes it could equate to and not be converted. Note
         that after conversion, `==`  is used again since it is not
-        neccesarily clear whether `self` or `other`'s __eq__ method needs
+        necessarily clear whether `self` or `other`'s __eq__ method needs
         to be used."""
         for superclass in type(other).__mro__:
             conv = _external_converter.get(superclass)

@@ -199,7 +199,7 @@ class Token(CodegenAST):
     @classmethod
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
-        # arg may be ``NoneToken()``, so comparation is done using == instead of ``is`` operator
+        # arg may be ``NoneToken()``, so comparison is done using == instead of ``is`` operator
         if arg == None:
             return cls.defaults.get(attr, none)
         else:
@@ -1792,7 +1792,7 @@ class FunctionPrototype(Node):
     @classmethod
     def from_FunctionDefinition(cls, func_def):
         if not isinstance(func_def, FunctionDefinition):
-            raise TypeError("func_def is not an instance of FunctionDefiniton")
+            raise TypeError("func_def is not an instance of FunctionDefinition")
         return cls(**func_def.kwargs(exclude=('body',)))
 
 
