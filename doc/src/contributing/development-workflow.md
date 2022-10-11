@@ -4,39 +4,32 @@
 
 In [SymPy] we encourage collaborative work.
 
-Everyone is welcome to join and to implement new feature, fix some bug, give
+Everyone is welcome to join and to implement new features, fix bugs, give
 general advice, etc. Also, we try to discuss everything and to review each
 other's work so that many eyes can see more thus raising the quality.
 
-General discussion takes place on [sympy@googlegroups.com] mailing list and
-in the [issues]. Some discussion also takes place on Gitter (our channel is
-[gitter sympy/sympy]).
+General discussion takes place on the [sympy@googlegroups.com] mailing list and
+in the [issue tracker]. Some discussion also takes place on Gitter (our channel is
+[Gitter sympy/sympy]).
 
 As some of you already know, software development is not just coding. Many
 non-coding tasks have to be done in order to produce *good* code. For
 example: setting up infrastructure, designing, testing, documenting,
 assisting new developers (we are doing it here), and of course programming.
 
-But even programming is not all about writing the code, it is about writing the
-code *and* preparing it so that the code can be included in the project.
+As already said above, we review changes. In short, each change is first
+reviewed by other developers and only when it is approved is the code pushed
+in. This is important to produce the highest quality code, and to ensure the
+functions in SymPy are correct.
 
-Both producing the code and bringing it to the project are important parts of
-the game -- without the code there is nothing to bring in, and having the code
-outside is a no-win for anyone.
-
-As already said above, we review changes. This idea was borrowed from
-successful projects like Linux, Python, SAGE and many more. In short, each
-change is first reviewed by other developers and only when it is approved
-is the code pushed in.
-
-Like it takes effort to write good and clear code, reviewing other's work needs
-effort too. There are good practices how to do this so that reviewing is fun
-for both the author and the reviewer. We try to follow these good practices, and
-we'll try to show you how to follow them too.
+And just as it takes effort to write good and clear code, reviewing other's
+work needs effort too. There are good practices how to do this so that
+reviewing is fun for both the author and the reviewer. We try to follow these
+good practices, and we'll try to show you how to follow them too.
 
 When reviewing other's patches you *learn* a lot, so why not participate
 as a reviewer too? Anyone regardless of technical skill can help review code,
-and it's an excellent way for newcomers to learn about Sympy's development
+and it's an excellent way for newcomers to learn about SymPy's development
 process and community.
 
 ## How to contribute to the code base
@@ -49,44 +42,36 @@ There are a few ways to create and send a patch.
 The best way is to send a GitHub pull request against the [sympy/sympy] repository. We'll review it and push it in.
 The GitHub pull request is the preferred method, because it makes it easy for us to review and push the code in.
 
-More quickly, but not convenient for reviewing and merging, is to create a patch-file using git alone.
-This way can be used if the patch has a high-priority or is significant, only one or two files are
-involved, or you don't have enough time to use the preferred method.
+The basic workflow is as follows:
 
-Although we are grateful for any improvements of Sympy, we strongly recommend you submit your patches as
-pull requests: this will greatly speed up the processing of the patch and ensure that it doesn't get
-forgotten due to inactivity.
-
-The basic work-flow for both variants is a follows:
-
-1. [Create your environment], if it was not created earlier.
-2. [Pick an issue to fix]
-3. [Create a new branch].
-4. [Modify code] and/or create tests of it.
-5. [Be sure that all tests of SymPy pass].
-6. Only then [commit the changes].
-7. [Create a patch file or pull request for GitHub].
+1. [Create your environment](#create-your-environment), if it was not created earlier.
+2. Pick an issue to fix.
+3. Create a new branch.
+4. Modify code and/or create tests of it.
+5. Be sure that all tests of SymPy pass.
+6. Only then commit the changes.
+7. Create a patch file or pull request for GitHub.
 
 After you've submitted your patch, it will be reviewed by reviewers.
 They may request you to make changes, in which case you may need to:
 
-- [Update your pull request]
-- [Synchronize with master sympy/sympy]
+- Update your pull request
+- Synchronize with master sympy/sympy
 
-All those are described in [Workflow process], but before
+All these are described in [Workflow process](#workflow-process), but before
 you read that, it would be useful to acquaint yourself with [Coding
-conventions in Sympy][coding conventions in sympy].
+conventions in SymPy](#coding-conventions-in-sympy).
 
 If you have any questions you can ask them on the [mailing list].
 
-## Coding conventions in Sympy
+## Coding conventions in SymPy
 
 ### Standard Python coding conventions
 
 Follow the standard Style Guide for Python Code when writing code for SymPy, as explained at the following URLs:
 
-> - <http://www.python.org/dev/peps/pep-0008>
-> - <http://www.python.org/dev/peps/pep-0257>
+> - <https://www.python.org/dev/peps/pep-0008>
+> - <https://www.python.org/dev/peps/pep-0257>
 
 In particular,
 
@@ -1204,22 +1189,22 @@ A pull request or patch must meet the following requirements during review
 before being considered as ready for release.
 
 - All tests must pass.
-  : - Rationale: We need to make sure we're not releasing buggy code.
-    - If new features are being implemented and/or bug fixes are added,
-      tests should be added for them as well.
+  - Rationale: We need to make sure we're not releasing buggy code.
+  - If new features are being implemented and/or bug fixes are added,
+    tests should be added for them as well.
 - The reviews (at least 1) must all be positive.
-  : - Rationale: We'd like everyone to agree on the merits of the patch.
-    - If there are conflicting opinions, the reviewers should reach a consensus.
+  - Rationale: We'd like everyone to agree on the merits of the patch.
+  - If there are conflicting opinions, the reviewers should reach a consensus.
 - The patch must have been posted for at least 24 hours.
-  : - Rationale: This gives a chance for everyone to look at the patch.
+  - Rationale: This gives a chance for everyone to look at the patch.
 
 ## FAQ
 
-1.Where can I find Sympy video tutorials  to get familiar using the software.
+1.Where can I find SymPy video tutorials  to get familiar using the software.
 
 Ans: Visit [wiki/introduction-to-contributing](https://github.com/sympy/sympy/wiki/introduction-to-contributing#get-familiar-using-the-software) .You can use any python debuggers like : PuDB, winpdb , pdb or any other, according to your convenience.
 
-2.How can I use Sympy git version directly ?
+2.How can I use SymPy git version directly ?
 
 Ans : Open your terminal:
 
@@ -1284,15 +1269,14 @@ by Sage guide \[10\]:
 
 [^id19]: <https://help.github.com/en/articles/creating-a-commit-with-multiple-authors>
 
-[#sympy at freenode]: irc://irc.freenode.net/sympy
 [doctests]: https://docs.python.org/3/library/doctest.html
 [easy to fix issues]: https://github.com/sympy/sympy/issues?q=is%3Aopen+is%3Aissue+label%3A%22Easy+to+Fix%22
-[github]: https://github.com/
-[gitter sympy/sympy]: https://gitter.im/sympy/sympy
-[issues]: https://github.com/sympy/sympy/issues
+[GitHub]: https://github.com/
+[Gitter sympy/sympy]: https://gitter.im/sympy/sympy
+[issue tracker]: https://github.com/sympy/sympy/issues
 [license]: https://github.com/sympy/sympy/blob/master/LICENSE
-[mailing list]: mailto:sympy@googlegroups.com
+[mailing list]: https://groups.google.com/group/sympy
 [new bsd license]: http://en.wikipedia.org/wiki/BSD_licenses#3-clause_license_.28.22New_BSD_License.22_or_.22Modified_BSD_License.22.29
 [sympy]: https://sympy.org/
 [sympy/sympy]: https://github.com/sympy/sympy
-[sympy@googlegroups.com]: http://groups.google.com/group/sympy
+[sympy@googlegroups.com]: https://groups.google.com/group/sympy
