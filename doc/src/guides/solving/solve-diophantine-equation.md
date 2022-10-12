@@ -39,6 +39,7 @@ c^2$, using {func}`~.diophantine`:
 >>> a, b, c = symbols("a, b, c", integer=True)
 >>> my_syms = (a, b, c)
 >>> pythag_eq = Eq(a**2 + b**2, c**2)
+>>> # Solve Diophantine equation
 >>> d = diophantine(pythag_eq, syms=my_syms)
 >>> d
 {(2*p*q, p**2 - q**2, p**2 + q**2)}
@@ -68,8 +69,9 @@ c^2$ is also valid:
 ### Specify the Order of Symbols in the Result
 
 We recommend you specify the order of symbols in the result to avoid confusion.
-Use the `syms` parameter and pass it a tuple (or list) of symbols to ensure the
-result will be in that order.
+Use the `syms` parameter and pass it a tuple or list of symbols to ensure the
+result will be in that order, for example `syms=my_syms`, as in the examples on
+this page.
 
 ### Limitations
 
@@ -94,30 +96,8 @@ a tuple is an expression for a variable in your equation. For example, for the
 Pythogorean equation, the result is a set containing one tuple where the
 expressions correspond to (a, b, c). That is, the tuple represents `a = 2*p*q, b
 = p**2 - q**2, c = p**2-q**2`. Because you cannot extract an element (here, a
-tuple) from a set by subscripting the set, you can convert the set to a list,
-and then subscript the list:
-
-
-```py
->>> from sympy.solvers.diophantine import diophantine
->>> from sympy import symbols
->>> a, b, c, p, q = symbols("a, b, c, p, q", integer=True)
->>> my_syms = (a, b, c)
->>> pythag = a**2 + b**2 - c**2
->>> d = diophantine(pythag, syms=my_syms)
->>> d
-{(2*p*q, p**2 - q**2, p**2 + q**2)}
->>> solution_list = list(d)
->>> solution_list
-[(2*p*q, p**2 - q**2, p**2 + q**2)]
->>> solution_list[0] # Extract a tuple corresponding to a solution
-(2*p*q, p**2 - q**2, p**2 + q**2)
->>> solution_list[0][0] # Extract an expression for one variable, here a
-2*p*q
-```
-
-You can also create a dictionary of symbol-expression pairs to extract an
-expression by its symbol:
+tuple) from a set by subscripting the set, you can create a dictionary of
+symbol-expression pairs to extract an expression by its symbol:
 
 ```py
 >>> from sympy.solvers.diophantine import diophantine
@@ -128,12 +108,42 @@ expression by its symbol:
 >>> solution, = diophantine(pythag, syms=my_syms)
 >>> solution
 (2*p*q, p**2 - q**2, p**2 + q**2)
+>>> # Convert set to list
 >>> solution_dict = dict(zip(my_syms, solution))
 >>> solution_dict
 {a: 2*p*q, b: p**2 - q**2, c: p**2 + q**2}
+>>> # Extract an expression for one variable using its symbol, here a
 >>> solution_dict[a]
 2*p*q
 ```
+
+Less elegantly, you can convert the set to a list, and then subscript the list.
+It is a common mistake to forget the order of parameters, so this method is more
+prone to errors:
+
+```py
+>>> from sympy.solvers.diophantine import diophantine
+>>> from sympy import symbols
+>>> a, b, c, p, q = symbols("a, b, c, p, q", integer=True)
+>>> my_syms = (a, b, c)
+>>> pythag = a**2 + b**2 - c**2
+>>> d = diophantine(pythag, syms=my_syms)
+>>> d
+{(2*p*q, p**2 - q**2, p**2 + q**2)}
+>>> # Convert set to list
+>>> solution_list = list(d)
+>>> solution_list
+[(2*p*q, p**2 - q**2, p**2 + q**2)]
+>>> # Extract a tuple corresponding to a solution
+>>> solution_first = solution_list[0]
+>>> solution_first
+(2*p*q, p**2 - q**2, p**2 + q**2)
+>>> # Extract an expression for one variable using its order, here a is element number zero
+>>> solution_first[0]
+2*p*q
+```
+
+You can also 
 
 ### Work With Parameters
 
@@ -157,6 +167,7 @@ Here, we express the set of values as a dictionary to associate each variable
 >>> solution_list
 [(2*p*q, p**2 - q**2, p**2 + q**2)]
 >>> p, q = symbols("p, q", integer=True)
+>>> # Substitute in values as the dictionary is created
 >>> solution_p4q3 = dict(zip(my_syms, [var.subs({p:4, q:3}) for var in solution_list[0]]))
 >>> solution_p4q3
 {a: 24, b: 7, c: 25}
@@ -178,9 +189,12 @@ To iterate the set of solutions, you can iterate over value of the parameters
 >>> pythag = a**2 + b**2 - c**2
 >>> d = diophantine(pythag, syms=my_syms)
 >>> solution_list = list(d)
+>>> # Iterate over the value of parameters p and q
 >>> for p_val in range(-1,2):
 ...     for q_val in range(-1,2):
+...         # Substitute in the values of p and q
 ...         pythag_vals = dict(zip(my_syms, [var.subs({p:p_val, q:q_val}) for var in solution_list[0]]))
+...         # Print out the values of the generated parameters, and the Pythagorean triple a, b, c
 ...         print(f"p: {p_val}, q: {q_val} -> {pythag_vals}")
 p: -1, q: -1 -> {a: 2, b: 0, c: 2}
 p: -1, q: 0 -> {a: 0, b: 1, c: 1}
@@ -210,9 +224,11 @@ any procedure:
 >>> d = diophantine(pythag, syms=my_syms)
 >>> solution_list = list(d)
 >>> solution_p4q3 = dict(zip(my_syms, [var.subs({p:4, q:3}) for var in solution_list[0]]))
+>>> # Substitute values in using a dictionary
 >>> pythag.subs({a: solution_p4q3[a], b: solution_p4q3[b], c: solution_p4q3[c]})
 0
->>> pythag.subs({a: 24, b: 7, c: 25}) # manually substitute in values
+>>> # Manually substitute in values
+>>> pythag.subs({a: 24, b: 7, c: 25})
 0
 ```
 
@@ -227,9 +243,11 @@ one solution, you can use the following code:
 >>> a, b, c, p, q = symbols("a, b, c, p, q", integer=True)
 >>> my_syms = (a, b, c)
 >>> pythag = a**2 + b**2 - c**2
+>>> # Solve Diophantine equation
 >>> solution, = diophantine(pythag, syms=my_syms)
 >>> solution
 (2*p*q, p**2 - q**2, p**2 + q**2)
+>>> # Extract parameter symbols
 >>> set().union(*(s.free_symbols for s in solution))
 {p, q}
 ```
