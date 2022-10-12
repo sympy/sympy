@@ -852,7 +852,6 @@ class Truss:
 
     def _draw_nodes(self, subs_dict):
         node_markers = []
-        # nodes = self._node_coordinates
 
         for node in list(self._node_coordinates):
             if (type(self._node_coordinates[node][0]) in (Symbol, Quantity)):
@@ -925,8 +924,8 @@ class Truss:
                 if x2>x1:
                     member_rectangles.append(
                         {
-                            'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
-                            'width':sqrt((x1-x2)**2+(y1-y2)**2),
+                            'xy':(x1-0.005*max_diff*cos(pi/4+atan((y2-y1)/(x2-x1)))/2, y1-0.005*max_diff*sin(pi/4+atan((y2-y1)/(x2-x1)))/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2)+0.005*max_diff/math.sqrt(2),
                             'height':0.005*max_diff,
                             'angle':180*atan((y2-y1)/(x2-x1))/pi,
                             'color':'brown'
@@ -935,33 +934,55 @@ class Truss:
                 else:
                     member_rectangles.append(
                         {
-                            'xy':(x2-0.005*max_diff/2, y2-0.005*max_diff/2),
-                            'width':sqrt((x1-x2)**2+(y1-y2)**2),
+                            'xy':(x2-0.005*max_diff*cos(pi/4+atan((y2-y1)/(x2-x1)))/2, y2-0.005*max_diff*sin(pi/4+atan((y2-y1)/(x2-x1)))/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2)+0.005*max_diff/math.sqrt(2),
                             'height':0.005*max_diff,
                             'angle':180*atan((y2-y1)/(x2-x1))/pi,
                             'color':'brown'
                         }
                     )
             elif y2==y1:
-                member_rectangles.append(
-                    {
-                        'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
-                        'width':sqrt((x1-x2)**2+(y1-y2)**2),
-                        'height':0.005*max_diff,
-                        'angle':90*(1-math.copysign(1, x2-x1)),
-                        'color':'brown'
-                    }
-                )
+                if x2>x1:
+                    member_rectangles.append(
+                        {
+                            'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2),
+                            'height':0.005*max_diff,
+                            'angle':90*(1-math.copysign(1, x2-x1)),
+                            'color':'brown'
+                        }
+                    )
+                else:
+                    member_rectangles.append(
+                        {
+                            'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2),
+                            'height':-0.005*max_diff,
+                            'angle':90*(1-math.copysign(1, x2-x1)),
+                            'color':'brown'
+                        }
+                    )
             else:
-                member_rectangles.append(
-                    {
-                        'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
-                        'width':sqrt((x1-x2)**2+(y1-y2)**2),
-                        'height':0.005*max_diff,
-                        'angle':90*math.copysign(1, y2-y1),
-                        'color':'brown'
-                    }
-                )
+                if y1<y2:
+                    member_rectangles.append(
+                        {
+                            'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2)+0.005*max_diff/2,
+                            'height':0.005*max_diff,
+                            'angle':90*math.copysign(1, y2-y1),
+                            'color':'brown'
+                        }
+                    )
+                else:
+                    member_rectangles.append(
+                        {
+                            'xy':(x2-0.005*max_diff/2, y2-0.005*max_diff/2),
+                            'width':-(sqrt((x1-x2)**2+(y1-y2)**2)+0.005*max_diff/2),
+                            'height':0.005*max_diff,
+                            'angle':90*math.copysign(1, y2-y1),
+                            'color':'brown'
+                        }
+                    )
 
         return member_rectangles
 
