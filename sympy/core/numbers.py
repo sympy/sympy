@@ -855,6 +855,7 @@ class Number(AtomicExpr):
 
 class Float(Number):
     """Represent a floating-point number of arbitrary precision.
+    Zero in Float only has a single value. Values are not seperate for positive and neghative zeroes.
 
     Examples
     ========
