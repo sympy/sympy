@@ -855,7 +855,6 @@ class Number(AtomicExpr):
 
 class Float(Number):
     """Represent a floating-point number of arbitrary precision.
-    Zero in Float only has a single value. Values are not seperate for positive and neghative zeroes.
 
     Examples
     ========
@@ -926,6 +925,7 @@ class Float(Number):
 
     Floats are inexact by their nature unless their value is a binary-exact
     value.
+    Zero in Float only has a single value. Values are not seperate for positive and neghative zeroes.
 
     >>> approx, exact = Float(.1, 1), Float(.125, 1)
 
