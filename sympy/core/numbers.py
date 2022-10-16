@@ -925,7 +925,6 @@ class Float(Number):
 
     Floats are inexact by their nature unless their value is a binary-exact
     value.
-    Zero in Float only has a single value. Values are not seperate for positive and neghative zeroes.
 
     >>> approx, exact = Float(.1, 1), Float(.125, 1)
 
@@ -1016,6 +1015,8 @@ class Float(Number):
     -oo
     >>> _.is_Float
     False
+    
+    Zero in Float only has a single value. Values are not seperate for positive and neghative zeroes.
     """
     __slots__ = ('_mpf_', '_prec')
 
