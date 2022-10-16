@@ -1015,7 +1015,7 @@ class Float(Number):
     -oo
     >>> _.is_Float
     False
-    
+
     Zero in Float only has a single value. Values are not seperate for positive and neghative zeroes.
     """
     __slots__ = ('_mpf_', '_prec')
