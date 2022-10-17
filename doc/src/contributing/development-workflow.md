@@ -103,7 +103,7 @@ lowercase.
 
 ### Documentation strings
 
-For information on writing and formatting docstrings, please see the [SymPy Documentation Style Guide](https://docs.sympy.org/dev/documentation-style-guide.html).
+For information on writing and formatting docstrings, please see the [SymPy Documentation Style Guide](documentation-style-guide).
 
 ### Python 3
 
