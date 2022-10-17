@@ -14,6 +14,7 @@ SymPy wiki.
 .. toctree::
    :maxdepth: 2
 
+   introduction-to-contributing.md
    dev-setup.rst
    development-workflow.md
    dependencies.md
