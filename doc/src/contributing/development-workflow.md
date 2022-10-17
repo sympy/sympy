@@ -259,10 +259,11 @@ As you are going to use [GitHub]  you should have a GitHub account. If you have 
 
 #### Set up SSH keys
 
-To establish a secure connection between your computer and GitHub see detailed instructions in [^id17] or at <https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account>.
+To establish a secure connection between your computer and GitHub see detailed instructions in <https://help.github.com/en/articles/set-up-git> or at <https://help.github.com/en/articles/adding-a-new-ssh-key-to-your-github-account>.
 
 If you have any problems with SSH access to GitHub, read the troubleshooting
-instructions at [^id18], or ask us on the [mailing list].
+instructions at <https://help.github.com/en/articles/troubleshooting-ssh>, or
+ask us on the [mailing list].
 
 #### Fork SymPy project
 
@@ -295,7 +296,9 @@ Then assign your read-and-write repo to a remote called "github" (replace
 git remote add github git@github.com:<your-github-username>/sympy.git
 ```
 
-For more information about GitHub forking and tuning see: [^id14], [^id15] and [^id17].
+For more information about GitHub forking and tuning see:
+<https://help.github.com/en/articles/about-pull-requests>, <https://help.github.com/en/articles/fork-a-repo>, and <https://help.github.com/en/articles/set-up-git>
+
 
 ### Set up virtual environments
 
@@ -1331,75 +1334,6 @@ before being considered as ready for release.
   - If there are conflicting opinions, the reviewers should reach a consensus.
 - The patch must have been posted for at least 24 hours.
   - Rationale: This gives a chance for everyone to look at the patch.
-
-## FAQ
-
-1.Where can I find SymPy video tutorials  to get familiar using the software.
-
-Ans: Visit [wiki/introduction-to-contributing](https://github.com/sympy/sympy/wiki/introduction-to-contributing#get-familiar-using-the-software) .You can use any python debuggers like : PuDB, winpdb , pdb or any other, according to your convenience.
-
-2.How can I use SymPy git version directly ?
-
-Ans : Open your terminal:
-
-```
-$ git clone https://github.com/sympy/sympy.git
-$ cd sympy
-$ bin/isympy
-   (or)
-$ python setupegg.py develop
-   (or)
-$ python
->>> import sympy
-```
-
-3.How can I test sympy locally?
-
-Ans:
-
-- To test whole codebase use this, in side the folder:
-
-  ```
-  $ bin/test
-  ```
-
-- To test specific test file run:
-
-  ```
-  $ bin/test sympy/module_name/tests/test_file_name
-  ```
-
-## References
-
-```{rubric} Footnotes
-```
-
-This page is based upon present [SymPy] pages \[2-6\], GitHub help \[8-9\], \[11-12\] and inspired
-by Sage guide \[10\]:
-
-[^id7]: <https://lkml.org/lkml/2000/8/25/132>
-
-[^id8]: <https://docs.sympy.org/latest/guide.html?highlight=patches%20tutorial>
-
-[^id9]: <https://www.sympy.org/en/development.html>
-
-[^id10]: <https://github.com/sympy/sympy/wiki>
-
-[^id11]: <https://github.com/sympy/sympy/wiki/Pushing-patches>
-
-[^id12]: <https://github.com/sympy/sympy/wiki/Getting-the-bleeding-edge>
-
-[^id13]: <https://github.com/sympy/sympy/wiki/Git-hg-rosetta-stone>
-
-[^id14]: <https://help.github.com/en/articles/about-pull-requests>
-
-[^id15]: <https://help.github.com/en/articles/fork-a-repo>
-
-[^id16]: <http://doc.sagemath.org/html/en/developer/index.html>
-
-[^id17]: <https://help.github.com/en/articles/set-up-git>
-
-[^id18]: <https://help.github.com/en/articles/troubleshooting-ssh>
 
 [doctests]: https://docs.python.org/3/library/doctest.html
 [easy to fix issues]: https://github.com/sympy/sympy/issues?q=is%3Aopen+is%3Aissue+label%3A%22Easy+to+Fix%22
