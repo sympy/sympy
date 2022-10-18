@@ -116,7 +116,7 @@ This is done only once.
 
 ### Install Anaconda
 
-The easiest way to install Python is to install Anaconda. <https://www.anaconda.com/products/individual>. This will also install most of the dependencies you need to use SymPy.
+The easiest way to install Python is to install Anaconda. <https://www.anaconda.com/products/distribution>. This will also install most of the dependencies you need to use SymPy.
 
 ### Install mpmath
 
@@ -1233,7 +1233,8 @@ Multiple lines like this can be added to the .mailmap file. They should record a
 
 If your pull request is merged and you have not previously been added to the AUTHORS file then your name will be added at the time of the next release of SymPy.
 
-## Reviewing patches
+(development-workflow-reviewing)=
+## Reviewing Pull Requests
 
 Coding's only half the battle in software development: our code also has to be
 thoroughly reviewed before release. Reviewers thus are an integral part of the
@@ -1281,6 +1282,11 @@ Some tips for reviewing:
   harder to get merged, and leads to an endless review cycle where there are
   constantly new changes being requested. This also applies to new features
   that are not necessary for a pull request to be functional.
+
+  [This blog
+  post](https://matthewrocklin.com/blog/work/2022/03/26/fast-review) by
+  Matthew Rocklin goes over why it's important to avoid scope creep when
+  reviewing pull requests.
 
 - If you have push access, you can use the feature that lets you push directly
   to someone's branch. This is useful if there is only a small change or two
