@@ -44,7 +44,7 @@ def test_tensor_product_abstract():
 def test_tensor_product_expand():
     assert TP(A + B, B + C).expand(tensorproduct=True) == \
         TP(A, B) + TP(A, C) + TP(B, B) + TP(B, C)
-    # Tests for issue #24142 summands with scalar factors 
+    # Tests for issue #24142 summands with scalar factors
     assert TP(A - B, B - A).expand(tensorproduct=True) == \
          TP(A, B) - TP(A, A) - TP(B, B) + TP(B, A)
     assert TP(2 * A + B, A + B).expand(tensorproduct=True) == \
