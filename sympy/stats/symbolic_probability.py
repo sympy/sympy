@@ -385,6 +385,9 @@ class Variance(Expr):
         obj._condition = condition
         return obj
 
+    def _eval_is_commutative(self):
+        return self.args[0].is_commutative
+
     def expand(self, **hints):
         arg = self.args[0]
         condition = self._condition
