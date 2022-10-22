@@ -37,7 +37,7 @@ the solution is correct.
 
 ## Guidance
 
-### Input Format
+### Defining Derivatives
 
 There are many ways to express derivatives of functions. For an undefined
 function, both {class}`~.Derivative` and {func}`~.diff` represent the undefined
@@ -52,7 +52,7 @@ ypp = diff(y(x), x, x)
 ypp = diff(y(x), x, 2)
 ypp = Derivative(y(x), x, x)
 ypp = Derivative(y(x), x, 2)
-ypp = Derivative(Derivative(y(y(x), x), x)
+ypp = Derivative(Derivative(y(x), x), x)
 ypp = diff(diff(y(x), x), x)
 yp = y(x).diff(x)
 ypp = yp.diff(x)
@@ -72,10 +72,12 @@ ValueError: dsolve() and classify_ode() only work with functions of one variable
 
 Similarly, you must specify the argument of the function: $f(x)$, not just $f$.
 
+## Options to Define an ODE
+
 You can define the function to be solved for in two ways. The subsequent syntax
 for specifying initial conditions depends on your choice.
 
-## Option 1: Define a Function Without Including Its Independent Variable
+### Option 1: Define a Function Without Including Its Independent Variable
 
 As in the example above, you can define a function without including its
 independent variable:
@@ -92,7 +94,7 @@ independent variable:
 Note that you supply the functions to be solved for as a list as the second
 argument of {func}`~.dsolve`, here `[f(x), g(x)]`.
 
-### Specify Initial Conditions or Boundary Conditions
+#### Specify Initial Conditions or Boundary Conditions
 
 If your differential equation(s) have initial or boundary conditions, specify
 them with the {func}`~.dsolve` optional argument `ics`. Initial and boundary
@@ -124,7 +126,7 @@ function, namely $f'(1) = 2$:
 [Eq(f(x), C2*exp(x) + (C2*exp(2) - 2*E)*exp(-x)), Eq(g(x), C2*exp(x) - (C2*exp(2) - 2*E)*exp(-x))]
 ```
 
-## Option 2: Define a Function of an Independent Variable
+### Option 2: Define a Function of an Independent Variable
 
 You may prefer to specify a function (for example $x$) of its independent
 variable (for example $t$), so that `x`, represents `x(t)`:
@@ -147,7 +149,7 @@ Eq(x(t), (C1 + C2*t)*exp(-t))
 Using this convention, the second argument of {func}`~.dsolve`, `x`, represents
 `x(t)`, so SymPy recognizes it as a valid function to solve for.
 
-### Specify Initial Conditions or Boundary Conditions
+#### Specify Initial Conditions or Boundary Conditions
 
 Using that syntax, you specify initialor boundary conditions by substituting in
 values of the independent variable using {func}`~sympy.core.basic.Basic.subs`
@@ -159,7 +161,7 @@ $t$:
 Eq(x(t), C2*t*exp(-t))
 ```
 
-### Beware Copying and Pasting Results
+#### Beware Copying and Pasting Results
 
 If you choose to define a function of an independent variable, note that copying
 a result and pasting it into subsequent code may cause an error because `x` is
@@ -202,6 +204,33 @@ Eq(y(x), C1*sin(3*x) + C2*cos(3*x))
 >>> result.rhs
 C1*sin(3*x) + C2*cos(3*x)
 ```
+
+#### Some ODEs Cannot Be Solved Explicitly, Only Implicitly
+
+The above ODE can be solved explicitly, specifically $y(x)$ can be expressed in
+terms of functions of $x$. However, some ODEs cannot be solved explicitly, for
+example:
+
+```py
+>>> from sympy import dsolve, exp, symbols, Function
+>>> f = symbols("f", cls=Function)
+>>> x = symbols("x")
+>>> dsolve(f(x).diff(x) + exp(-f(x))*f(x))
+Eq(Ei(f(x)), C1 - x)
+```
+
+This gives no direct expression for $f(x)$. Instead, {func}`~.dsolve` expresses
+a solution as $g(f(x))$ where $g$ is {class}`~.Ei`, the classical exponential
+integral function. `Ei` does not have a known closed-form inverse, so a solution
+cannot be explicitly expressed as $f(x)$ equaling a function of $x$. Instead,
+`dsolve` returns an [implicit
+solution](https://en.wikipedia.org/wiki/Implicit_function).
+
+When `dsolve` returns an implicit solution, extracting the right-hand side of
+the returned equality will not give an explicity expression for the function to
+be solved for, here $f(x)$. So before extracting an expression for the function
+to be solved for, check that `dsolve` was able to solve for the function
+explicitly.
 
 ### Extract the Result for Multiple Function-Solution Pairs
 
@@ -384,8 +413,10 @@ NotImplementedError: solve: Cannot solve -y(x)**2 + Derivative(y(x), (x, 3))
 
 ### Equations With No Closed-Form Solution
 
-Some systems of differential equations have no closed-form solution because they
-are chaotic, for example the [Lorenz
+As noted above, [](#some-odes-cannot-be-solved-explicitly-only-implicitly).
+
+Also, some systems of differential equations have no closed-form solution
+because they are chaotic, for example the [Lorenz
 system](https://en.wikipedia.org/wiki/Lorenz_system#Overview) or a double
 pendulum described by these two differential equations (simplified from
 [ScienceWorld](https://scienceworld.wolfram.com/physics/DoublePendulum.html)):
