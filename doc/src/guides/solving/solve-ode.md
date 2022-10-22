@@ -122,8 +122,9 @@ Here is an example of setting the initial value for the derivative of a
 function, namely $f'(1) = 2$:
 
 ```py
->>> dsolve(eqs, [f(x), g(x)], ics={f(x).diff(x).subs(x, 1): 2})
-[Eq(f(x), C2*exp(x) + (C2*exp(2) - 2*E)*exp(-x)), Eq(g(x), C2*exp(x) - (C2*exp(2) - 2*E)*exp(-x))]
+>>> eqn = Eq(f(x).diff(x), f(x))
+>>> dsolve(eqn, f(x), ics={f(x).diff(x).subs(x, 1): 2})
+Eq(f(x), 2*exp(-1)*exp(x))
 ```
 
 ### Option 2: Define a Function of an Independent Variable
