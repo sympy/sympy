@@ -14,26 +14,20 @@ example, solving $y''(x) + 9y(x)=0 $ yields $ y(x)=C_{1} \sin(3x)+ C_{2}
 
 ## Solve an Ordinary Differential Equation (ODE)
 
-Here is an example of solving an ordinary differential equation algebraically
-using {func}`~.dsolve`:
+Here is an example of solving the above ordinary differential equation
+algebraically using {func}`~.dsolve`. You can then use SymPy to verify that the
+solution is correct.
 
 ```py
->>> from sympy import Function, dsolve, Derivative
+>>> from sympy import Function, dsolve, Derivative, checkodesol
 >>> from sympy.abc import x
 >>> y = Function('y')
+>>> # Solve the ODE
 >>> result = dsolve(Derivative(y(x), x, x) + 9*y(x), y(x))
 >>> result
 Eq(y(x), C1*sin(3*x) + C2*cos(3*x))
-```
-
-You can then use SymPy to verify that the solution is correct:
-
-```py
->>> from sympy import checkodesol
->>> solution = result.rhs
->>> solution
-C1*sin(3*x) + C2*cos(3*x)
->>> checkodesol(Derivative(y(x), x, x) + 9*y(x), solution)
+>>> # Check that the solution is correct
+>>> checkodesol(Derivative(y(x), x, x) + 9*y(x), result)
 (True, 0)
 ```
 
@@ -81,7 +75,7 @@ Similarly, you must specify the argument of the function: $f(x)$, not just $f$.
 You can define the function to be solved for in two ways. The subsequent syntax
 for specifying initial conditions depends on your choice.
 
-## Define a Function Without Including Its Independent Variable
+## Option 1: Define a Function Without Including Its Independent Variable
 
 As in the example above, you can define a function without including its
 independent variable:
@@ -98,14 +92,15 @@ independent variable:
 Note that you supply the functions to be solved for as a list as the second
 argument of {func}`~.dsolve`, here `[f(x), g(x)]`.
 
-### Specify Initial (Boundary) Conditions
+### Specify Initial Conditions or Boundary Conditions
 
 If your differential equation(s) have initial or boundary conditions, specify
-them with the {func}`~.dsolve` optional argument `ics`. It should be given in
-the form of `{f(x0): y0, f(x).diff(x).subs(x, x1): y1}` and so on where, for
-example, the value of `f(x)` at $x = $ `x0` is `y0`. For power series solutions,
-if no initial conditions are specified `f(0)` is assumed to be `C0` and the
-power series solution is calculated about $0$.
+them with the {func}`~.dsolve` optional argument `ics`. Initial and boundary
+conditions are treated the same way (even though the argument is called `ics`).
+It should be given in the form of `{f(x0): y0, f(x).diff(x).subs(x, x1): y1}`
+and so on where, for example, the value of $f(x)$ at $x = x_{0}$ is $y_{0}$. For
+power series solutions, if no initial conditions are specified $f(0)$ is assumed
+to be $C_{0}$ and the power series solution is calculated about $0$.
 
 Here is an example of setting the initial values for functions, namely namely
 $f(0) = 1$ and $g(2) = 3$:
@@ -129,7 +124,7 @@ function, namely $f'(1) = 2$:
 [Eq(f(x), C2*exp(x) + (C2*exp(2) - 2*E)*exp(-x)), Eq(g(x), C2*exp(x) - (C2*exp(2) - 2*E)*exp(-x))]
 ```
 
-## Define a Function of an Independent Variable
+## Option 2: Define a Function of an Independent Variable
 
 You may prefer to specify a function (for example $x$) of its independent
 variable (for example $t$), so that `x`, represents `x(t)`:
@@ -140,8 +135,8 @@ variable (for example $t$), so that `x`, represents `x(t)`:
 >>> x = Function('x')(t)
 >>> x
 x(t)
->>> xp = x.diff()
->>> xpp = xp.diff()
+>>> xp = x.diff(t)
+>>> xpp = xp.diff(t)
 >>> eq = xpp + 2*xp + x
 >>> eq
 x(t) + 2*Derivative(x(t), t) + Derivative(x(t), (t, 2))
@@ -152,11 +147,12 @@ Eq(x(t), (C1 + C2*t)*exp(-t))
 Using this convention, the second argument of {func}`~.dsolve`, `x`, represents
 `x(t)`, so SymPy recognizes it as a valid function to solve for.
 
-### Specify Initial (Boundary) Conditions
+### Specify Initial Conditions or Boundary Conditions
 
-Using that syntax, you specify initial conditions by substituting in values of
-the independent variable using {func}`~sympy.core.basic.Basic.subs` because the
-function $x$ already has its independent variable as an argument $t$:
+Using that syntax, you specify initialor boundary conditions by substituting in
+values of the independent variable using {func}`~sympy.core.basic.Basic.subs`
+because the function $x$ already has its independent variable as an argument
+$t$:
 
 ```py
 >>> dsolve(eq, x, ics={x.subs(t, 0): 0})
@@ -171,7 +167,7 @@ already defined as `x(t)`, so if you paste in `x(t)` it is interpreted as
 `x(t)(t)`:
 
 ```py
->>> dsolve(x(t).diff(), x)
+>>> dsolve(x(t).diff(x), x)
 Traceback (most recent call last):
     ...
 TypeError: 'x' object is not callable
@@ -180,7 +176,7 @@ TypeError: 'x' object is not callable
 So remember to exclude the independent variable call `(t)`:
 
 ```py
->>> dsolve(x.diff(), x)
+>>> dsolve(x.diff(t), x)
 Eq(x(t), C1)
 ```
 
