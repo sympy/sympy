@@ -234,14 +234,50 @@ explicitly.
 
 ### Extract the Result for Multiple Function-Solution Pairs
 
-If you are solving a system of equations with multiple unknown functions,
-{func}`~.dsolve` will return a nested list of equalities, the outer list
-representing each solution and the inner list representing each function. While
-you can extract results by specifying the index of each function ("slicing" each
-solution), we recommend an approach which is robust with respect to function
+If you are solving a system of equations with multiple unknown functions, the
+form of the output of {func}`~.dsolve` depends on whether there is one or
+multiple solutions.
+
+#### If There is One Solution Set
+
+If there is only one solution set to a system of equations with multiple unknown
+functions, {func}`~.dsolve` will return a non-nested list containing an
+equality. You can extract the solution expression using a single loop or
+comprehension:
+
+```py
+>>> from sympy import symbols, Eq, Function, dsolve
+>>> y, z = symbols("y z", cls=Function)
+>>> x = symbols("x")
+>>> eqs_one_soln_set = [Eq(y(x).diff(x), z(x)**2), Eq(z(x).diff(x), z(x))]
+>>> solutions_one_soln_set = dsolve(eqs_one_soln_set, [y(x), z(x)])
+>>> solutions_one_soln_set
+[Eq(y(x), C1 + C2**2*exp(2*x)/2), Eq(z(x), C2*exp(x))]
+>>> # Loop through list approach
+>>> solution_one_soln_set_dict = {}
+>>> for fn in solutions_one_soln_set:
+...         solution_one_soln_set_dict.update({fn.lhs: fn.rhs})
+>>> solution_one_soln_set_dict
+{y(x): C1 + C2**2*exp(2*x)/2, z(x): C2*exp(x)}
+>>> # List comprehension approach
+>>> solution_one_soln_set_dict = {fn.lhs:fn.rhs for fn in solutions_one_soln_set}
+>>> solution_one_soln_set_dict
+{y(x): C1 + C2**2*exp(2*x)/2, z(x): C2*exp(x)}
+>>> # Extract expression for y(x)
+>>> solution_one_soln_set_dict[y(x)]
+C1 + C2**2*exp(2*x)/2
+```
+
+#### If There are Multiple Solution Sets
+
+If there are multiple solution sets to a system of equations with multiple
+unknown functions, {func}`~.dsolve` will return a nested list of equalities, the
+outer list representing each solution and the inner list representing each
+function. While you can extract results by specifying the index of each
+function, we recommend an approach which is robust with respect to function
 ordering. The following converts each solution into a dictionary so you can
 easily extract the result for the desired function. It uses standard Python
-techniques such as a loops or comprehensions, in a nested fashion.
+techniques such as loops or comprehensions, in a nested fashion.
 
 ```py
 >>> from sympy import symbols, Eq, Function, dsolve
@@ -251,7 +287,8 @@ techniques such as a loops or comprehensions, in a nested fashion.
 >>> solutions = dsolve(eqs, [y(x), z(x)])
 >>> solutions
 [[Eq(y(x), C1 - C2*exp(x)), Eq(z(x), C2*exp(x))], [Eq(y(x), C1 + C2*exp(x)), Eq(z(x), C2*exp(x))]]
->>> solutions_list = [] # nested list approach
+>>> # Nested list approach
+>>> solutions_list = []
 >>> for solution in solutions:
 ...     solution_dict = {}
 ...     for fn in solution:
@@ -259,9 +296,11 @@ techniques such as a loops or comprehensions, in a nested fashion.
 ...     solutions_list.append(solution_dict)
 >>> solutions_list
 [{y(x): C1 - C2*exp(x), z(x): C2*exp(x)}, {y(x): C1 + C2*exp(x), z(x): C2*exp(x)}]
+>>> # Nested comprehension approach
 >>> solutions_list = [{fn.lhs:fn.rhs for fn in solution} for solution in solutions]
->>> solutions_list # nested comprehension approach
+>>> solutions_list
 [{y(x): C1 - C2*exp(x), z(x): C2*exp(x)}, {y(x): C1 + C2*exp(x), z(x): C2*exp(x)}]
+>>> # Extract expression for y(x)
 >>> solutions_list[0][y(x)]
 C1 - C2*exp(x)
 ```
