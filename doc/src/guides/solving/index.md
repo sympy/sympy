@@ -17,8 +17,7 @@ Learn how to use SymPy computer algebra system to:
 |  [Solve one or a system of equations numerically](solve-numerically.md)                           | $\cos(x) = x $ | $ x \approx 0.739085133215161$                                                                                           |
 |  {func}`Solve an ordinary differential equation algebraically <sympy.solvers.ode.dsolve>`   | $y''(x) + 9y(x)=0 $ | $ y(x)=C_{1} \sin(3x)+ C_{2} \cos(3x)$                                                    |
 |  {func}`Solve a matrix problem algebraically <sympy.matrices.matrices.MatrixBase.solve>`                    | $ \left[\begin{array}{cc} 1 & 1\\1 & -1\end{array}\right] \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} 2\\0\end{array}\right] $ | $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} 1\\1\end{array}\right]$  |
-|  [ Solve an inequality algebraically ](../../modules/solvers/inequalities.rst)                      | $ x^2 < 4 $ | $ -2 < x < 2 $                                                                                                        |
-|  [ Solve a system of inequalities algebraically ](../../modules/solvers/inequalities.rst)           | $ x^2 < 4, x > 0 $ | $ 0 < x < 2 $                                                                                                  |
+|  [ Reduce one or a system of inequalities for a single variable algebraically ](reduce-inequalities-algebraically.md)           | $ x^2 < \pi, x > 0 $ | $ 0 < x < \sqrt{\pi} $                                                                                                  |
 | [ Solve (find the roots of) a polynomial algebraically ](../../modules/polys/basics.rst)                       | $ x^2 - x = 0 $ | $ x \in \{0, 1\} $                                                                                                |
 |  [ Solve a Diophantine equation (find integer solutions to a polynomial equation) algebraically ](solve-diophantine-equation.md)             | $a^2 + b^2 = c^2$ | $(a=2pq, b=p^2-q^2, c=p^2-q^2)$                                                                                  |
 
@@ -37,5 +36,6 @@ solving-guidance.md
 solve-equation-algebraically.md
 solve-system-of-equations-algebraically.md
 solve-numerically.md
+reduce-inequalities-algebraically.md
 solve-diophantine-equation.md
 ```
