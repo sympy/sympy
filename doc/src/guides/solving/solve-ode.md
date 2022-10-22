@@ -79,8 +79,7 @@ for specifying initial conditions depends on your choice.
 
 ### Option 1: Define a Function Without Including Its Independent Variable
 
-As in the example above, you can define a function without including its
-independent variable:
+You can define a function without including its independent variable:
 
 ```py
 >>> from sympy import symbols, Eq, Function, dsolve
