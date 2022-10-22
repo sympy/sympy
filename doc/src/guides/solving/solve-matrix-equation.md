@@ -64,11 +64,15 @@ equation formulation $Ax=b$ where
 
 ## Guidance
 
-### Matrix Must Be Square
+### Matrix Usually Must Be Square
 
-The matrix $A$ must be square to represent a system of linear equations with the
-same number of unknowns as equations. If not, SymPy will give the error
+The matrix $A$ usually must be square to represent a system of linear equations
+with the same number of unknowns as equations. If not, SymPy will give the error
 ``ShapeError: `self` and `rhs` must have the same number of rows.``
+
+The exception to the requirement that a matrix be square comes from SymPy's use
+of the {any}`Moore-Penrose pseudoinverse
+<sympy.matrices.matrices.MatrixBase.pinv>`.
 
 ### Solving Several Matrix Equations With the Same Matrix
 
@@ -152,8 +156,9 @@ methods: [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition) via
     ⎣0⎦
 ```
 
-or, likely slower, compute the inverse matrix using
-{meth}`~sympy.matrices.matrices.MatrixBase.inv`:
+Another approach is to compute the inverse matrix, but this is almost always
+slower, and significantly slower for larger matrices. If efficient computation
+is not a priority, you can use {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
 
 ```py
 >>> from sympy import symbols, Matrix, simplify
