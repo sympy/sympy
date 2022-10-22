@@ -70,7 +70,7 @@ Traceback (most recent call last):
 ValueError: dsolve() and classify_ode() only work with functions of one variable, not x
 ```
 
-Similarly, you must specify the argument of the function: $f(x)$, not just $f$.
+Similarly, you must specify the argument of the function: $y(x)$, not just $y$.
 
 ## Options to Define an ODE
 
@@ -128,58 +128,58 @@ Eq(f(x), 2*exp(-1)*exp(x))
 
 ### Option 2: Define a Function of an Independent Variable
 
-You may prefer to specify a function (for example $x$) of its independent
-variable (for example $t$), so that `x`, represents `x(t)`:
+You may prefer to specify a function (for example $y$) of its independent
+variable (for example $t$), so that `y` represents `y(t)`:
 
 ```py
 >>> from sympy import symbols, Function, dsolve
 >>> t = symbols('t')
->>> x = Function('x')(t)
->>> x
-x(t)
->>> xp = x.diff(t)
->>> xpp = xp.diff(t)
->>> eq = xpp + 2*xp + x
+>>> y = Function('y')(t)
+>>> y
+y(t)
+>>> yp = y.diff(t)
+>>> ypp = yp.diff(t)
+>>> eq = ypp + 2*yp + y
 >>> eq
-x(t) + 2*Derivative(x(t), t) + Derivative(x(t), (t, 2))
->>> dsolve(eq, x)
-Eq(x(t), (C1 + C2*t)*exp(-t))
+y(t) + 2*Derivative(y(t), t) + Derivative(y(t), (t, 2))
+>>> dsolve(eq, y)
+Eq(y(t), (C1 + C2*t)*exp(-t))
 ```
 
-Using this convention, the second argument of {func}`~.dsolve`, `x`, represents
-`x(t)`, so SymPy recognizes it as a valid function to solve for.
+Using this convention, the second argument of {func}`~.dsolve`, `y`, represents
+`y(t)`, so SymPy recognizes it as a valid function to solve for.
 
 #### Specify Initial Conditions or Boundary Conditions
 
 Using that syntax, you specify initialor boundary conditions by substituting in
 values of the independent variable using {func}`~sympy.core.basic.Basic.subs`
-because the function $x$ already has its independent variable as an argument
+because the function $y$ already has its independent variable as an argument
 $t$:
 
 ```py
->>> dsolve(eq, x, ics={x.subs(t, 0): 0})
-Eq(x(t), C2*t*exp(-t))
+>>> dsolve(eq, y, ics={y.subs(t, 0): 0})
+Eq(y(t), C2*t*exp(-t))
 ```
 
 #### Beware Copying and Pasting Results
 
 If you choose to define a function of an independent variable, note that copying
 a result and pasting it into subsequent code may cause an error because `x` is
-already defined as `x(t)`, so if you paste in `x(t)` it is interpreted as
-`x(t)(t)`:
+already defined as `y(t)`, so if you paste in `y(t)` it is interpreted as
+`y(t)(t)`:
 
 ```py
->>> dsolve(x(t).diff(x), x)
+>>> dsolve(y(t).diff(y), y)
 Traceback (most recent call last):
     ...
-TypeError: 'x' object is not callable
+TypeError: 'y' object is not callable
 ```
 
 So remember to exclude the independent variable call `(t)`:
 
 ```py
->>> dsolve(x.diff(t), x)
-Eq(x(t), C1)
+>>> dsolve(y.diff(t), y)
+Eq(y(t), C1)
 ```
 
 ## Use the Solution Result
@@ -315,8 +315,8 @@ them as symbols and then substitute in their values using
 
 ```py
 >>> from sympy import Function, dsolve, Derivative, symbols, pi
->>> x, C1, C2 = symbols("x, C1, C2")
 >>> y = Function('y')
+>>> x, C1, C2 = symbols("x, C1, C2")
 >>> result = dsolve(Derivative(y(x), x, x) + 9*y(x), y(x)).rhs
 >>> result
 C1*sin(3*x) + C2*cos(3*x)
@@ -442,8 +442,8 @@ Not all differential equations can be solved, for example:
 
 ```py
 >>> from sympy import Function, dsolve, Derivative, symbols
->>> x, C1, C2 = symbols("x, C1, C2")
 >>> y = Function('y')
+>>> x, C1, C2 = symbols("x, C1, C2")
 >>> dsolve(Derivative(y(x), x, 3) - (y(x)**2), y(x)).rhs
 Traceback (most recent call last):
     ...
