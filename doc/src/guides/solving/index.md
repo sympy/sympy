@@ -17,8 +17,7 @@ Learn how to use SymPy computer algebra system to:
 |  [Solve one or a system of equations numerically](solve-numerically.md)                           | $\cos(x) = x $ | $ x \approx 0.739085133215161$                                                                                           |
 |  {func}`Solve an ordinary differential equation algebraically <sympy.solvers.ode.dsolve>`   | $y''(x) + 9y(x)=0 $ | $ y(x)=C_{1} \sin(3x)+ C_{2} \cos(3x)$                                                    |
 |  [ Solve a matrix equation algebraically ](solve-matrix-equation.md)                    | $ \left[\begin{array}{cc} c & d\\1 & -e\end{array}\right] \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} 2\\0\end{array}\right] $ | $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} \frac{2e}{ce+d}\\\frac{2}{ce+d}\end{array}\right]$  |
-|  [ Solve an inequality algebraically ](../../modules/solvers/inequalities.rst)                      | $ x^2 < 4 $ | $ -2 < x < 2 $                                                                                                        |
-|  [ Solve a system of inequalities algebraically ](../../modules/solvers/inequalities.rst)           | $ x^2 < 4, x > 0 $ | $ 0 < x < 2 $                                                                                                  |
+|  [ Reduce one or a system of inequalities for a single variable algebraically ](reduce-inequalities-algebraically.md)           | $ x^2 < \pi, x > 0 $ | $ 0 < x < \sqrt{\pi} $                                                                                                  |
 | [ Solve (find the roots of) a polynomial algebraically ](../../modules/polys/basics.rst)                       | $ x^2 - x = 0 $ | $ x \in \{0, 1\} $                                                                                                |
 |  [ Solve a Diophantine equation (find integer solutions to a polynomial equation) algebraically ](../../modules/solvers/diophantine.rst)             | $x^2 - 4xy + 8y^2 - 3x + 7y - 5 = 0 $ | $ \{(x = 2, y = 1), (x = 5, y = 1)\}$                                                                                  |
 
@@ -38,4 +37,5 @@ solve-equation-algebraically.md
 solve-system-of-equations-algebraically.md
 solve-numerically.md
 solve-matrix-equation.md
+reduce-inequalities-algebraically.md
 ```
