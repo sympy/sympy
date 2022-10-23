@@ -451,6 +451,7 @@ def test_latex_functions():
     # not to be confused with the beta function
     assert latex(mybeta(x, y, z)) == r"\beta{\left(x,y,z \right)}"
     assert latex(beta(x, y)) == r'\operatorname{B}\left(x, y\right)'
+    assert latex(beta(x, evaluate=False)) == r'\operatorname{B}\left(x, x\right)'
     assert latex(beta(x, y)**2) == r'\operatorname{B}^{2}\left(x, y\right)'
     assert latex(mybeta(x)) == r"\beta{\left(x \right)}"
     assert latex(mybeta) == r"\beta"
