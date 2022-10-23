@@ -247,7 +247,7 @@ class TensorProduct(Expr):
                 for aa in args[i].args:
                     tp = TensorProduct(*args[:i] + (aa,) + args[i + 1:])
                     c_part, nc_part = tp.args_cnc()
-                    #Check for TensorProduct object: is the one object in nc_part, if any:
+                    # Check for TensorProduct object: is the one object in nc_part, if any:
                     #(Note: any other object type to be expanded must be added here)
                     if len(nc_part)==1 and isinstance(nc_part[0], TensorProduct):
                         nc_part = (nc_part[0]._eval_expand_tensorproduct(), )
