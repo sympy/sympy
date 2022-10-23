@@ -1,3 +1,4 @@
+(solving-guide-ode)=
 # Solve an Ordinary Differential Equation (ODE) Algebraically
 
 Use SymPy to solve an ordinary differential equation (ODE) algebraically. For

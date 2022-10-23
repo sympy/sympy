@@ -6,7 +6,7 @@ ODE
 .. note::
 
    For a beginner-friendly guide focused on solving ODEs, refer to
-   :ref:`solving-guide-inequalities`.
+   :ref:`solving-guide-ode`.
 
 .. module::sympy.solvers.ode
 
