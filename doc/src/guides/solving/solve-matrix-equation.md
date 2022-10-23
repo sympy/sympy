@@ -249,9 +249,15 @@ matrix, the more likely it is to be slow to manipulate. This example, finding a
 general solution to a matrix where all elements are independent symbols, is the
 extreme case and thus the slowest for a matrix of its size.
 
-One way to speed up matrix operations is by using the {class}`~.DomainMatrix`
-class, which can be faster to operate on because it limits the domain of matrix
-elements.
+### Speed up Solving Matrix Equations
+Here are some suggestions:
+- If matrix elements are zero, ensure that they are recognized as zero. You can
+  do this by either making them zero or by applying
+  [assumptions](assumptions_module).
+- Selecting a solve method suited to the properties of the matrix, for example
+  hermitian, symmetric, or triangular.
+- Use the {class}`~.DomainMatrix` class, which can be faster to operate on
+because it limits the domain of matrix elements.
 
 ## Use the Solution Result
 
