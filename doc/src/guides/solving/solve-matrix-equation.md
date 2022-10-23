@@ -74,12 +74,26 @@ The exception to the requirement that a matrix be square comes from SymPy's use
 of the {any}`Moore-Penrose pseudoinverse
 <sympy.matrices.matrices.MatrixBase.pinv>`.
 
+### Methods for Solving Matrix Equations
+
+SymPy's matrix solving method, {meth}`sympy.matrices.matrices.MatrixBase.solve`,
+can use several different methods, which are listed at that API reference link.
+Depending on the nature of the matrix, a given method may be more efficient. By
+default, [Gauss-Jordan
+elimination](https://en.wikipedia.org/wiki/Gaussian_elimination) will be used.
+
+Specifying a method in solve is equivalent to using a specialized solving
+function. For example, using `solve` with `method='LU'` calls
+{meth}`~sympy.matrices.matrices.MatrixBase.LUsolve`.
+
 ### Solving Several Matrix Equations With the Same Matrix
 
 If you need to repeatedly solve matrix equations with the same matrix $A$ but
 different constant vectors $b$, it is more efficient to use one of the following
-methods: [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition) via
-{meth}`~sympy.matrices.matrices.MatrixBase.LUdecomposition`
+methods.
+
+You can use [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition)
+via {meth}`~sympy.matrices.matrices.MatrixBase.LUsolve`:
 
 ```py
 >>> from sympy import symbols, Matrix, eye, simplify
@@ -89,46 +103,12 @@ methods: [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition) via
 ⎡c  d ⎤
 ⎢     ⎥
 ⎣1  -e⎦
->>> L, U, perm = A.LUdecomposition()
->>> L
-    ⎡1  0⎤
-    ⎢    ⎥
-    ⎣c  1⎦
->>> U
-    ⎡1    -e   ⎤
-    ⎢          ⎥
-    ⎣0  c⋅e + d⎦
->>> perm
-[[0, 1]]
 >>> b = Matrix([2, 0])
 >>> b
     ⎡2⎤
     ⎢ ⎥
     ⎣0⎦
->>> b2 = Matrix([4, 0])
->>> b2
-    ⎡4⎤
-    ⎢ ⎥
-    ⎣0⎦
->>> P = eye(A.rows).permuteFwd(perm)
->>> P
-    ⎡0  1⎤
-    ⎢    ⎥
-    ⎣1  0⎦
->>> y = L.solve(P*b) # Step-by-step approach, step 1
->>> y
-    ⎡0⎤
-    ⎢ ⎥
-    ⎣2⎦
->>> U.solve(y) # Step-by-step approach, step 2
-    ⎡  2⋅e  ⎤
-    ⎢───────⎥
-    ⎢c⋅e + d⎥
-    ⎢       ⎥
-    ⎢   2   ⎥
-    ⎢───────⎥
-    ⎣c⋅e + d⎦
->>> solution = U.solve(L.solve(P*b)) # One-line approach
+>>> solution = A.LUsolve(b)
 >>> solution
     ⎡  2⋅e  ⎤
     ⎢───────⎥
@@ -137,11 +117,17 @@ methods: [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition) via
     ⎢   2   ⎥
     ⎢───────⎥
     ⎣c⋅e + d⎦
->>> simplify(A * solution) # Demonstrate that solution is correct
+>>> # Demonstrate that solution is correct
+>>> simplify(A * solution)
     ⎡2⎤
     ⎢ ⎥
     ⎣0⎦
->>> solution2 = U.solve(L.solve(P*b2)) # Repeating one-line approach for b2
+>>> b2 = Matrix([4, 0])
+>>> b2
+    ⎡4⎤
+    ⎢ ⎥
+    ⎣0⎦
+>>> solution2 = A.LUsolve(b2)
 >>> solution2
     ⎡  4⋅e  ⎤
     ⎢───────⎥
@@ -150,7 +136,8 @@ methods: [LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition) via
     ⎢   4   ⎥
     ⎢───────⎥
     ⎣c⋅e + d⎦
->>> simplify(A * solution2) # Demonstrate that solution2 is correct
+>>> # Demonstrate that solution2 is correct
+>>> simplify(A * solution2)
     ⎡4⎤
     ⎢ ⎥
     ⎣0⎦
@@ -183,7 +170,8 @@ is not a priority, you can use {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
     ⎢   1       -c   ⎥
     ⎢───────  ───────⎥
     ⎣c⋅e + d  c⋅e + d⎦
->>> solution = inv * b # Solves Ax = b for x
+>>> # Solves Ax = b for x
+>>> solution = inv * b
 >>> solution
     ⎡  2⋅e  ⎤
     ⎢───────⎥
@@ -192,11 +180,13 @@ is not a priority, you can use {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
     ⎢   2   ⎥
     ⎢───────⎥
     ⎣c⋅e + d⎦
->>> simplify(A * solution) # Demonstrate that solution is correct
+>>> # Demonstrate that solution is correct
+>>> simplify(A * solution)
     ⎡2⎤
     ⎢ ⎥
     ⎣0⎦
->>> solution2 = inv * b2 # Solves Ax = b2 for x
+>>> # Solves Ax = b2 for x
+>>> solution2 = inv * b2
 >>> solution2
     ⎡  4⋅e  ⎤
     ⎢───────⎥
@@ -205,7 +195,8 @@ is not a priority, you can use {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
     ⎢   4   ⎥
     ⎢───────⎥
     ⎣c⋅e + d⎦
->>> simplify(A * solution2) # Demonstrate that solution2 is correct
+>>> # Demonstrate that solution2 is correct
+>>> simplify(A * solution2)
     ⎡4⎤
     ⎢ ⎥
     ⎣0⎦
@@ -255,7 +246,8 @@ Here are some suggestions:
   do this by either making them zero or by applying
   [assumptions](assumptions_module).
 - Selecting a solve method suited to the properties of the matrix, for example
-  hermitian, symmetric, or triangular.
+  hermitian, symmetric, or triangular. Refer to
+  [](#methods-for-solving-matrix-equations).
 - Use the {class}`~.DomainMatrix` class, which can be faster to operate on
 because it limits the domain of matrix elements.
 
@@ -282,14 +274,15 @@ produces the constants vector $b$:
     ⎢   2   ⎥
     ⎢───────⎥
     ⎣c⋅e + d⎦
-
->>> (A * solution) - b # Not immediately obvious whether this result is a zeroes vector
+>>> # Not immediately obvious whether this result is a zeroes vector
+>>> (A * solution) - b
     ⎡ 2⋅c⋅e      2⋅d      ⎤
     ⎢─────── + ─────── - 2⎥
     ⎢c⋅e + d   c⋅e + d    ⎥
     ⎢                     ⎥
     ⎣          0          ⎦
->>> simplify((A * solution) - b) # simplify reveals that this result is a zeroes vector
+>>> # simplify reveals that this result is a zeroes vector
+>>> simplify((A * solution) - b)
     ⎡0⎤
     ⎢ ⎥
     ⎣0⎦
@@ -312,7 +305,7 @@ list of the elements using list comprehension
     ⎣c⋅e + d  c⋅e + d⎦
 ```
 
-or you can extract individual elements by subscripting ("slicing")
+or you can extract individual elements by subscripting
 
 ```py
 >>> solution[0]
