@@ -7,7 +7,7 @@ from sympy.core.backend import Matrix, _simplify_matrix, eye, zeros
 from sympy.core.symbol import symbols
 from sympy.physics.mechanics import (dynamicsymbols, Body, PinJoint,
                                      PrismaticJoint, CylindricalJoint,
-                                     PlanarJoint)
+                                     PlanarJoint, SphericalJoint)
 from sympy.physics.mechanics.joint import Joint
 from sympy.physics.vector import Vector, ReferenceFrame, Point
 from sympy.testing.pytest import raises, warns_deprecated_sympy
@@ -868,6 +868,197 @@ def test_planar_joint_advanced():
         [-sin(q0) / 2, sqrt(3) * (1 - cos(q0)) / 4, cos(q0) / 4 + 3 / 4]])
     # N.dcm(A) == N_R_A did not work
     assert _simplify_matrix(N.dcm(A) - N_R_A) == zeros(3)
+
+
+def test_spherical_joint():
+    N, A, P, C = _generate_body()
+    q0, q1, q2, u0, u1, u2 = dynamicsymbols('q0:3_S, u0:3_S')
+    S = SphericalJoint('S', P, C)
+    assert S.name == 'S'
+    assert S.parent == P
+    assert S.child == C
+    assert S.coordinates == Matrix([q0, q1, q2])
+    assert S.speeds == Matrix([u0, u1, u2])
+    assert S.kdes == Matrix([u0 - q0.diff(t), u1 - q1.diff(t), u2 - q2.diff(t)])
+    assert S.child_point.pos_from(C.masscenter) == Vector(0)
+    assert S.parent_point.pos_from(P.masscenter) == Vector(0)
+    assert S.parent_point.pos_from(S.child_point) == Vector(0)
+    assert P.masscenter.pos_from(C.masscenter) == Vector(0)
+    assert C.masscenter.vel(N) == Vector(0)
+    assert P.ang_vel_in(C) == (-u0 * cos(q1) * cos(q2) - u1 * sin(q2)) * A.x + (
+            u0 * sin(q2) * cos(q1) - u1 * cos(q2)) * A.y + (
+                   -u0 * sin(q1) - u2) * A.z
+    assert C.ang_vel_in(P) == (u0 * cos(q1) * cos(q2) + u1 * sin(q2)) * A.x + (
+            -u0 * sin(q2) * cos(q1) + u1 * cos(q2)) * A.y + (
+                   u0 * sin(q1) + u2) * A.z
+    assert S.__str__() == 'SphericalJoint: S  parent: P  child: C'
+    assert S._rot_type == 'BODY'
+    assert S._rot_order == 123
+    assert S._amounts is None
+
+
+def test_spherical_joint_speeds_as_derivative_terms():
+    # This tests checks whether the system remains valid if the user chooses to
+    # pass the derivative of the generalized coordinates as generalized speeds
+    q0, q1, q2 = dynamicsymbols('q0:3')
+    u0, u1, u2 = dynamicsymbols('q0:3', 1)
+    N, A, P, C = _generate_body()
+    S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2])
+    assert S.coordinates == Matrix([q0, q1, q2])
+    assert S.speeds == Matrix([u0, u1, u2])
+    assert S.kdes == Matrix([0, 0, 0])
+    assert P.ang_vel_in(C) == (-u0 * cos(q1) * cos(q2) - u1 * sin(q2)) * A.x + (
+        u0 * sin(q2) * cos(q1) - u1 * cos(q2)) * A.y + (
+               -u0 * sin(q1) - u2) * A.z
+
+
+def test_spherical_joint_coords():
+    q0s, q1s, q2s, u0s, u1s, u2s = dynamicsymbols('q0:3_S, u0:3_S')
+    q0, q1, q2, q3, u0, u1, u2, u4 = dynamicsymbols('q0:4, u0:4')
+    # Test coordinates as list
+    N, A, P, C = _generate_body()
+    S = SphericalJoint('S', P, C, [q0, q1, q2], [u0, u1, u2])
+    assert S.coordinates == Matrix([q0, q1, q2])
+    assert S.speeds == Matrix([u0, u1, u2])
+    # Test coordinates as Matrix
+    N, A, P, C = _generate_body()
+    S = SphericalJoint('S', P, C, Matrix([q0, q1, q2]),
+                       Matrix([u0, u1, u2]))
+    assert S.coordinates == Matrix([q0, q1, q2])
+    assert S.speeds == Matrix([u0, u1, u2])
+    # Test too few generalized coordinates
+    N, A, P, C = _generate_body()
+    S = SphericalJoint('S', P, C, Matrix([q0, q1]), Matrix([u0]))
+    assert S.coordinates == Matrix([q0, q1, q2s])
+    assert S.speeds == Matrix([u0, u1s, u2s])
+    # Test too many generalized coordinates
+    N, A, P, C = _generate_body()
+    raises(ValueError, lambda: SphericalJoint(
+        'S', P, C, Matrix([q0, q1, q2, q3]), Matrix([u0, u1, u2])))
+    raises(ValueError, lambda: SphericalJoint(
+        'S', P, C, Matrix([q0, q1, q2]), Matrix([u0, u1, u2, u4])))
+
+
+def test_spherical_joint_orient_body():
+    q0, q1, q2, u0, u1, u2 = dynamicsymbols('q0:3, u0:3')
+    N_R_A = Matrix([
+        [-sin(q1), -sin(q2) * cos(q1), cos(q1) * cos(q2)],
+        [-sin(q0) * cos(q1), sin(q0) * sin(q1) * sin(q2) - cos(q0) * cos(q2),
+         -sin(q0) * sin(q1) * cos(q2) - sin(q2) * cos(q0)],
+        [cos(q0) * cos(q1), -sin(q0) * cos(q2) - sin(q1) * sin(q2) * cos(q0),
+         -sin(q0) * sin(q2) + sin(q1) * cos(q0) * cos(q2)]])
+    N_w_A = Matrix([[-u0 * sin(q1) - u2],
+                    [-u0 * sin(q2) * cos(q1) + u1 * cos(q2)],
+                    [u0 * cos(q1) * cos(q2) + u1 * sin(q2)]])
+    N_v_Co = Matrix([
+        [-sqrt(2) * (u0 * cos(q2 + pi / 4) * cos(q1) + u1 * sin(q2 + pi / 4))],
+        [-u0 * sin(q1) - u2], [-u0 * sin(q1) - u2]])
+    # Test default rot_type='BODY', rot_order=123
+    N, A, P, C, Pint, Cint = _generate_body(True)
+    S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
+                       parent_point=N.x + N.y, child_point=-A.y + A.z,
+                       parent_interframe=Pint, child_interframe=Cint,
+                       rot_type='body', rot_order=123)
+    assert S._rot_type.upper() == 'BODY'
+    assert S._rot_order == 123
+    assert _simplify_matrix(N.dcm(A) - N_R_A) == zeros(3)
+    assert A.ang_vel_in(N).to_matrix(A) == N_w_A
+    assert C.masscenter.vel(N).to_matrix(A) == N_v_Co
+    # Test change of amounts
+    N, A, P, C, Pint, Cint = _generate_body(True)
+    S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
+                       parent_point=N.x + N.y, child_point=-A.y + A.z,
+                       parent_interframe=Pint, child_interframe=Cint,
+                       rot_type='BODY', amounts=(q1, q0, q2), rot_order=123)
+    switch_order = lambda expr: expr.xreplace(
+        {q0: q1, q1: q0, q2: q2, u0: u1, u1: u0, u2: u2})
+    assert S._rot_type.upper() == 'BODY'
+    assert S._rot_order == 123
+    assert _simplify_matrix(N.dcm(A) - switch_order(N_R_A)) == zeros(3)
+    assert A.ang_vel_in(N).to_matrix(A) == switch_order(N_w_A)
+    assert C.masscenter.vel(N).to_matrix(A) == switch_order(N_v_Co)
+    # Test different rot_order
+    N, A, P, C, Pint, Cint = _generate_body(True)
+    S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
+                       parent_point=N.x + N.y, child_point=-A.y + A.z,
+                       parent_interframe=Pint, child_interframe=Cint,
+                       rot_type='BodY', rot_order='yxz')
+    assert S._rot_type.upper() == 'BODY'
+    assert S._rot_order == 'yxz'
+    assert _simplify_matrix(N.dcm(A) - Matrix([
+        [-sin(q0) * cos(q1), sin(q0) * sin(q1) * cos(q2) - sin(q2) * cos(q0),
+         sin(q0) * sin(q1) * sin(q2) + cos(q0) * cos(q2)],
+        [-sin(q1), -cos(q1) * cos(q2), -sin(q2) * cos(q1)],
+        [cos(q0) * cos(q1), -sin(q0) * sin(q2) - sin(q1) * cos(q0) * cos(q2),
+         sin(q0) * cos(q2) - sin(q1) * sin(q2) * cos(q0)]])) == zeros(3)
+    assert A.ang_vel_in(N).to_matrix(A) == Matrix([
+        [u0 * sin(q1) - u2], [u0 * cos(q1) * cos(q2) - u1 * sin(q2)],
+        [u0 * sin(q2) * cos(q1) + u1 * cos(q2)]])
+    assert C.masscenter.vel(N).to_matrix(A) == Matrix([
+        [-sqrt(2) * (u0 * sin(q2 + pi / 4) * cos(q1) + u1 * cos(q2 + pi / 4))],
+        [u0 * sin(q1) - u2], [u0 * sin(q1) - u2]])
+
+
+def test_spherical_joint_orient_space():
+    q0, q1, q2, u0, u1, u2 = dynamicsymbols('q0:3, u0:3')
+    N_R_A = Matrix([
+        [-sin(q0) * sin(q2) - sin(q1) * cos(q0) * cos(q2),
+         sin(q0) * sin(q1) * cos(q2) - sin(q2) * cos(q0), cos(q1) * cos(q2)],
+        [-sin(q0) * cos(q2) + sin(q1) * sin(q2) * cos(q0),
+         -sin(q0) * sin(q1) * sin(q2) - cos(q0) * cos(q2), -sin(q2) * cos(q1)],
+        [cos(q0) * cos(q1), -sin(q0) * cos(q1), sin(q1)]])
+    N_w_A = Matrix([
+        [u1 * sin(q0) - u2 * cos(q0) * cos(q1)],
+        [u1 * cos(q0) + u2 * sin(q0) * cos(q1)], [u0 - u2 * sin(q1)]])
+    N_v_Co = Matrix([
+        [u0 - u2 * sin(q1)], [u0 - u2 * sin(q1)],
+        [sqrt(2) * (-u1 * sin(q0 + pi / 4) + u2 * cos(q0 + pi / 4) * cos(q1))]])
+    # Test default rot_type='BODY', rot_order=123
+    N, A, P, C, Pint, Cint = _generate_body(True)
+    S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
+                       parent_point=N.x + N.z, child_point=-A.x + A.y,
+                       parent_interframe=Pint, child_interframe=Cint,
+                       rot_type='space', rot_order=123)
+    assert S._rot_type.upper() == 'SPACE'
+    assert S._rot_order == 123
+    assert _simplify_matrix(N.dcm(A) - N_R_A) == zeros(3)
+    assert _simplify_matrix(A.ang_vel_in(N).to_matrix(A)) == N_w_A
+    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A)) == N_v_Co
+    # Test change of amounts
+    switch_order = lambda expr: expr.xreplace(
+        {q0: q1, q1: q0, q2: q2, u0: u1, u1: u0, u2: u2})
+    N, A, P, C, Pint, Cint = _generate_body(True)
+    S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
+                       parent_point=N.x + N.z, child_point=-A.x + A.y,
+                       parent_interframe=Pint, child_interframe=Cint,
+                       rot_type='SPACE', amounts=(q1, q0, q2), rot_order=123)
+    assert S._rot_type.upper() == 'SPACE'
+    assert S._rot_order == 123
+    assert _simplify_matrix(N.dcm(A) - switch_order(N_R_A)) == zeros(3)
+    assert _simplify_matrix(A.ang_vel_in(N).to_matrix(A)) == switch_order(N_w_A)
+    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A)) == switch_order(N_v_Co)
+    # Test different rot_order
+    N, A, P, C, Pint, Cint = _generate_body(True)
+    S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
+                       parent_point=N.x + N.z, child_point=-A.x + A.y,
+                       parent_interframe=Pint, child_interframe=Cint,
+                       rot_type='SPaCe', rot_order='zxy')
+    assert S._rot_type.upper() == 'SPACE'
+    assert S._rot_order == 'zxy'
+    assert _simplify_matrix(N.dcm(A) - Matrix([
+        [-sin(q2) * cos(q1), -sin(q0) * cos(q2) + sin(q1) * sin(q2) * cos(q0),
+         sin(q0) * sin(q1) * sin(q2) + cos(q0) * cos(q2)],
+        [-sin(q1), -cos(q0) * cos(q1), -sin(q0) * cos(q1)],
+        [cos(q1) * cos(q2), -sin(q0) * sin(q2) - sin(q1) * cos(q0) * cos(q2),
+         -sin(q0) * sin(q1) * cos(q2) + sin(q2) * cos(q0)]]))
+    assert _simplify_matrix(A.ang_vel_in(N).to_matrix(A) - Matrix([
+        [-u0 + u2 * sin(q1)], [-u1 * sin(q0) + u2 * cos(q0) * cos(q1)],
+        [u1 * cos(q0) + u2 * sin(q0) * cos(q1)]])) == zeros(3, 1)
+    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A) - Matrix([
+        [u1 * cos(q0) + u2 * sin(q0) * cos(q1)],
+        [u1 * cos(q0) + u2 * sin(q0) * cos(q1)],
+        [u0 + u1 * sin(q0) - u2 * sin(q1) -
+         u2 * cos(q0) * cos(q1)]])) == zeros(3, 1)
 
 
 def test_deprecated_parent_child_axis():

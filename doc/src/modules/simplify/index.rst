@@ -3,7 +3,7 @@ Simplify
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    simplify.rst
    hyperexpand.rst
