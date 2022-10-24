@@ -1,0 +1,268 @@
+\documentclass{article}
+\usepackage[landscape]{geometry}
+\usepackage{url}
+\usepackage{multicol}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\advance\topmargin-.8in
+\advance\textheight2in
+\advance\textwidth3in
+\advance\oddsidemargin-1.5in
+\advance\evensidemargin-1.5in
+\parindent0pt
+\parskip2pt
+\newcommand{\hr}{\centerline{\rule{3.5in}{1pt}}}
+\usepackage{tikz}
+\usetikzlibrary{shapes,snakes}
+\usepackage{amsmath,amssymb}
+\begin{document}
+\begin{center}\huge{\textbf{SymPy Cheatsheet (https://sympy.org)}}\end{center}
+\begin{multicols*}{3}
+
+
+\tikzstyle{mybox} = [draw=black, fill=white, very thick,
+    rectangle, rounded corners, inner sep=10pt, inner ysep=10pt]
+\tikzstyle{fancytitle} =[fill=black, text=white, font=\bfseries]
+
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.3\textwidth}
+	\begin{center}\small{\begin{tabular}{l r}
+    		%SymPy packages:& \verb|from sympy import some_package |\\
+		SymPy help: & \verb|help(function)|\\
+		Declare symbol:& \verb|x = Symbol('x')|\\
+		Substitution:& \verb|expr.subs(old, new)|\\
+		Numerical evaluation:& \verb|expr.evalf()|\\
+		Expanding:& \verb|expr.expand()|\\
+		Common denominator:& \verb|ratsimp(expr)|\\
+		Simplify expression:&\verb|simplify(expr)|\\
+	\end{tabular}}\end{center}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Basics};
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.075\textwidth}
+	\begin{center}\small{\begin{tabular}{l r}
+		$\pi$: &\verb|pi|\\
+		$e$: &\verb|E|\\
+		$\infty$:&\verb|oo|\\
+		$i$:&\verb|I|
+	\end{tabular}}\end{center}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Constants};
+\end{tikzpicture}
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.195\textwidth}
+	\begin{center}\small{\begin{tabular}{l r}
+    		Integers ($\mathbb{Z}$): &\verb|Integer(x)|\\
+    		Rationals ($\mathbb{Q}$): &\verb|Rational(p, q)|\\
+    		Reals ($\mathbb{R}$): &\verb|Float(x)|\\
+    		\\
+	\end{tabular}}\end{center}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Numbers types};
+\end{tikzpicture}
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.3\textwidth}
+	\begin{center}\small{\begin{tabular}{l r}
+		Trigonometric: &\verb|sin cos tan cot|\\
+		Cyclometric: &\verb|asin acos atan acot|\\
+		Hyperbolic: &\verb|sinh cosh tanh coth|\\
+		Area hyperbolic: &\verb|asinh acosh atanh acoth|\\
+		Exponential: &\verb|exp(x)|\\
+		Square root: &\verb|sqrt(x)|\\
+		Logarithm ($\log_ba$): &\verb|log(a, b)|\\
+		Natural logarithm: &\verb|log(a)|\\
+		Gamma ($\Gamma(x)$): &\verb|gamma(x)|\\
+		Absolute value: &\verb|abs(x)|\\
+	\end{tabular}}\end{center}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Basic functions};
+\end{tikzpicture}
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.3\textwidth}
+	\begin{center}\small{\begin{tabular}{l r}
+		$\displaystyle\lim_{x\to a} f(x)$: &\verb|limit(f, x, a)|\\
+		$\displaystyle\lim_{x\to a_-} f(x)$: &\verb|limit(f, x, a, dir='-')|\\
+		$\displaystyle\lim_{x\to a_+} f(x)$: &\verb|limit(f, x, a, dir='+')|\\
+		$\frac{d}{dx}f(x)$: &\verb|diff(f, x)|\\
+		$\frac{\partial}{\partial x} f(x,y)$: &\verb|diff(f, x)|\\
+		$\int f(x) \, dx:$& \verb|integrate(f, x)|\\
+		$\int_a^b f(x) \, dx:$& \verb|integrate(f, (x, a, b))|\\
+		Taylor series (at $a$, deg $n$)& \verb|f.series(x, a, n)|\\
+	\end{tabular}}\end{center}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Calculus};
+\end{tikzpicture}
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.3\textwidth}
+	\begin{center}\small{\begin{tabular}{l r}
+		Equation $f(x)=0$: &\verb|solve(f, x)|\\
+		System of equations: &\verb|solve([f, g], [x, y])|\\
+		Differential equation: &\verb|dsolve(equation, f(x))|\\
+	\end{tabular}}\end{center}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Equations};
+\end{tikzpicture}
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.3\textwidth}
+	\begin{center}\small{\begin{tabular}{l r}
+		Points: & \verb|a = Point(xcoord, ycoord)|\\
+		Lines: &\verb|l = Line(pointA, pointB)|\\
+		Circles: &\verb|c = Circle(center, radius)|\\
+		Triangles: &\verb|t = Triangle(a, b, c)|\\
+		Area: &\verb|object.area|\\
+		Intersection: &\verb|intersection(a, b)|\\
+		Checking tangency: &\verb|c.is_tangent(l)|\\
+	\end{tabular}}\end{center}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Geometry};
+\end{tikzpicture}
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.3\textwidth}
+	\begin{center}\small{\begin{tabular}{l r}
+		Plot: &\verb|Plot(f, [a, b])|\\
+		Zoom: $+/-$: &\verb|R/F or PgUp/PgDn or Numpad +/-|\\
+		Rotate X,Y axis: &\verb|Arrow Keys or WASD|\\
+		Rotate Z axis: &\verb| Q and E or Numpad 7 and 9|\\
+		View XY: &\verb|F1|\\
+		View XZ: &\verb|F2|\\
+		View YZ: &\verb|F3|\\
+		View Perspective: &\verb|F4|\\
+		Axes Visibility: &\verb|F5|\\
+		Axes Colors: &\verb|F6|\\
+		Screenshot: &\verb|F8|\\
+		Exit plot: &\verb|ESC|\\
+	\end{tabular}}\end{center}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Plotting};
+\end{tikzpicture}
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.3\textwidth}
+	\begin{center}\small{\begin{tabular}{l r}
+		Factorial ($n!$): &\verb|factorial(n)|\\
+		Binomial coefficient $n\choose k$: &\verb|binomial(n, k)|\\
+		Sum ($\sum_{n=a}^b expr$): &\verb|summation(expr, (n, a, b))|\\
+		Product ($\prod_{n=a}^b expr$): &\verb|product(expr, (n, a, b))|\\
+	\end{tabular}}\end{center}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Discrete math};
+\end{tikzpicture}
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.3\textwidth}
+	\begin{center}\small{\begin{tabular}{l r}
+		Matrix definition: &\verb|m = Matrix([[a, b], [c, d]])|\\
+		Determinant: &\verb|m.det()|\\
+		Inverse: &\verb|m.inv()|\\
+		Identity matrix $n\times n$: &\verb|eye(n)|\\
+		Zero matrix $n\times n$: &\verb|zeros(n)|\\
+		Ones matrix $n\times n$: &\verb|ones(n)|\\
+	\end{tabular}}\end{center}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Linear algebra};
+\end{tikzpicture}
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.3\textwidth}
+	\begin{center}\small{\begin{tabular}{l r}
+		\LaTeX{} print: &\verb|print(latex())|\\
+		Python print: &\verb|print(python())|\\
+		Pretty print: &\verb|pprint()|\\
+	\end{tabular}}\end{center}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Printing};
+\end{tikzpicture}
+\begin{tikzpicture}
+\node [mybox] (box){%
+    \begin{minipage}{0.3\textwidth}
+	\small{
+		Find 100 digits of $\pi^e$:\\
+		\verb|(pi**E).n(100)|\\
+		\\
+		Expand $(x+y)^2(x-y)(x^2+y)$:\\
+		\verb|((x + y)**2 * (x - y) * (x**2 + y)).expand()|\\
+		\\
+		Simplify $\displaystyle\frac{1}{x} + \frac{x\sin x -1}{x^2-1}$:\\
+		\verb|simplify((1/x) + (x * sin(x) - 1)/(x**2 - 1))|\\
+		\\
+		Check if line passing through points $(0,1)$ and $(1,1)$\\
+		is tangent to circle with center at $(5,5)$ and radius $3$:\\
+		\verb|Circle(Point(5,5), 3).is_tangent(|\\\verb|Line(Point(0,1), Point(1,1)))|\\
+		\\
+		Find roots of $x^4-4x^3+2x^2-x=0$:\\
+		\verb|solve(x**4 - 4*x**3 + 2*x**2 - x, x)|\\
+		\\
+		Solve the equations system: $x+y=4$, $xy=3$:\\
+		\verb|solve([x + y - 4, x*y - 3], [x, y])|\\
+		\\
+		Calculate limit of the sequence $\sqrt[n]{n}$:\\
+		\verb|limit(n**(1/n), n, oo)|\\
+		\\
+		Calculate left-sided limit of the function $\frac{|x|}{x}$ in 0:\\
+		\verb|limit(abs(x)/x, x, 0, dir='-')|\\
+		\\
+		Calculate the sum $\sum_{n=0}^{100} n^2$:\\
+		\verb|summation(n**2, (n, 0, 100))|\\
+		\\
+		Calculate the sum $\sum_{n=0}^{\infty} \frac{1}{n^2}$:\\
+		\verb|summation(1/n**2, (n, 0, oo))|\\
+		\\
+		Calculate the integral $\int \cos^3 x \, dx$:\\
+		\verb|integrate(cos(x)**3, x)|\\
+		\\
+		Calculate the integral $\int_1^{\infty} \frac{dx}{x^2}$:\\
+		\verb|integrate(1/x**2, (x, 1, oo))|\\
+		\\
+		Find 10 terms of series expansion of $\frac{1}{1-2x}$ at $0$:\\
+		\verb|(1/(1 - 2*x)).series(x, 0, 10)|\\
+		\\
+		Solve the differential equation $f^{''}(x)+9f(x)=1$:\\
+		\verb|dsolve(f(x).diff(x, x) + 9*f(x) - 1, f(x))|\\
+	}
+    \end{minipage}
+};
+\node[fancytitle, right=10pt] at (box.north west) {Examples};
+\end{tikzpicture}
+%\begin{tikzpicture}
+%\node [mybox] (box){%
+%    \begin{minipage}{0.3\textwidth}
+%	\begin{center}\small{\begin{tabular}{l r}
+%
+%	\end{tabular}}\end{center}
+%    \end{minipage}
+%};
+%\node[fancytitle, right=10pt] at (box.north west) {Numbers types};
+%\end{tikzpicture}
+%\begin{tikzpicture}
+%\node [mybox] (box){%
+%    \begin{minipage}{0.3\textwidth}
+%	\begin{center}\small{\begin{tabular}{l r}
+%
+%	\end{tabular}}\end{center}
+%    \end{minipage}
+%};
+%\node[fancytitle, right=10pt] at (box.north west) {Numbers types};
+%\end{tikzpicture}
+\end{multicols*}
+\end{document}
