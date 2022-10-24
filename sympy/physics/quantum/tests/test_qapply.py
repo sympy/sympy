@@ -143,4 +143,3 @@ def test_issue24158_ket_times_op():
     assert qapply(P1, dagger = True) == QubitBra(1) # qapply(P1, dagger=True) -> 0 before fix
     P2 = QubitBra(0) * QubitBra(0) * Qubit(0) * XGate(0) # 'forgot' to set brackets
     assert qapply(P2, dagger = True) == QubitBra(1) # qapply(P1) -> 0 before fix
-
