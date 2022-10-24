@@ -1,5 +1,11 @@
-from sympy import exp, integrate, oo, S, simplify, sqrt, symbols, pi, sin, \
-    cos, I, Rational
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import integrate
+from sympy.simplify.simplify import simplify
 from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac, Psi_nlm
 from sympy.testing.pytest import raises
 

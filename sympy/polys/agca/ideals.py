@@ -1,11 +1,10 @@
 """Computations with ideals of polynomial rings."""
 
-
-from sympy.core.compatibility import reduce
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyutils import IntegerPowerable
 
 
-class Ideal:
+class Ideal(IntegerPowerable):
     """
     Abstract base class for ideals.
 
@@ -263,11 +262,13 @@ class Ideal:
 
     __rmul__ = __mul__
 
-    def __pow__(self, exp):
-        if exp < 0:
-            raise NotImplementedError
-        # TODO exponentiate by squaring
-        return reduce(lambda x, y: x*y, [self]*exp, self.ring.ideal(1))
+    def _zeroth_power(self):
+        return self.ring.ideal(1)
+
+    def _first_power(self):
+        # Raising to any power but 1 returns a new instance. So we mult by 1
+        # here so that the first power is no exception.
+        return self * 1
 
     def __eq__(self, e):
         if not isinstance(e, Ideal) or e.ring != self.ring:
@@ -364,7 +365,7 @@ class ModuleImplementedIdeal(Ideal):
         return self._module.is_full_module()
 
     def __repr__(self):
-        from sympy import sstr
+        from sympy.printing.str import sstr
         return '<' + ','.join(sstr(x) for [x] in self._module.gens) + '>'
 
     # NOTE this is the only method using the fact that the module is a SubModule

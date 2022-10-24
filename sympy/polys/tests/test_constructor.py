@@ -5,7 +5,12 @@ from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 
-from sympy import S, sqrt, sin, Float, E, I, GoldenRatio, pi, Catalan, Rational
+from sympy.core import (Catalan, GoldenRatio)
+from sympy.core.numbers import (E, Float, I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
 from sympy.abc import x, y
 
 
@@ -25,6 +30,9 @@ def test_construct_domain():
     result = construct_domain([3.14, I, S.Half])
     assert isinstance(result[0], ComplexField)
     assert result[1] == [CC(3.14), CC(1.0j), CC(0.5)]
+
+    assert construct_domain([1.0+I]) == (CC, [CC(1.0, 1.0)])
+    assert construct_domain([2.0+3.0*I]) == (CC, [CC(2.0, 3.0)])
 
     assert construct_domain([1, I]) == (ZZ_I, [ZZ_I(1, 0), ZZ_I(0, 1)])
     assert construct_domain([1, I/2]) == (QQ_I, [QQ_I(1, 0), QQ_I(0, S.Half)])
@@ -147,6 +155,17 @@ def test_construct_domain():
     assert construct_domain(Rational(2, 3)) == (QQ, QQ(2, 3))
 
     assert construct_domain({}) == (ZZ, {})
+
+
+def test_complex_exponential():
+    w = exp(-I*2*pi/3, evaluate=False)
+    alg = QQ.algebraic_field(w)
+    assert construct_domain([w**2, w, 1], extension=True) == (
+        alg,
+        [alg.convert(w**2),
+         alg.convert(w),
+         alg.convert(1)]
+    )
 
 
 def test_composite_option():

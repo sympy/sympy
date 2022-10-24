@@ -4,8 +4,7 @@
 # Always write regular SymPy tests for anything, that can be tested in pure
 # Python (without numpy). Here we test everything, that a user may need when
 # using SymPy with NumPy
-from distutils.version import LooseVersion
-
+from sympy.external.importtools import version_tuple
 from sympy.external import import_module
 
 numpy = import_module('numpy')
@@ -16,13 +15,17 @@ else:
     disabled = True
 
 
-from sympy import (Rational, Symbol, list2numpy, matrix2numpy, sin, Float,
-        Matrix, lambdify, symarray, symbols, Integer)
+from sympy.core.numbers import (Float, Integer, Rational)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.trigonometric import sin
+from sympy.matrices.dense import (Matrix, list2numpy, matrix2numpy, symarray)
+from sympy.utilities.lambdify import lambdify
 import sympy
 
 import mpmath
 from sympy.abc import x, y, z
 from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.exceptions import ignore_warnings
 from sympy.testing.pytest import raises
 
 
@@ -32,16 +35,16 @@ from sympy.testing.pytest import raises
 
 def test_systematic_basic():
     def s(sympy_object, numpy_array):
-        sympy_object + numpy_array
-        numpy_array + sympy_object
-        sympy_object - numpy_array
-        numpy_array - sympy_object
-        sympy_object * numpy_array
-        numpy_array * sympy_object
-        sympy_object / numpy_array
-        numpy_array / sympy_object
-        sympy_object ** numpy_array
-        numpy_array ** sympy_object
+        _ = [sympy_object + numpy_array,
+        numpy_array + sympy_object,
+        sympy_object - numpy_array,
+        numpy_array - sympy_object,
+        sympy_object * numpy_array,
+        numpy_array * sympy_object,
+        sympy_object / numpy_array,
+        numpy_array / sympy_object,
+        sympy_object ** numpy_array,
+        numpy_array ** sympy_object]
     x = Symbol("x")
     y = Symbol("y")
     sympy_objs = [
@@ -136,9 +139,11 @@ def test_Matrix1():
 
 def test_Matrix2():
     m = Matrix([[x, x**2], [5, 2/x]])
-    assert (matrix(m.subs(x, 2)) == matrix([[2, 4], [5, 1]])).all()
+    with ignore_warnings(PendingDeprecationWarning):
+        assert (matrix(m.subs(x, 2)) == matrix([[2, 4], [5, 1]])).all()
     m = Matrix([[sin(x), x**2], [5, 2/x]])
-    assert (matrix(m.subs(x, 2)) == matrix([[sin(2), 4], [5, 1]])).all()
+    with ignore_warnings(PendingDeprecationWarning):
+        assert (matrix(m.subs(x, 2)) == matrix([[sin(2), 4], [5, 1]])).all()
 
 
 def test_Matrix3():
@@ -151,17 +156,20 @@ def test_Matrix3():
 
 
 def test_Matrix4():
-    a = matrix([[2, 4], [5, 1]])
+    with ignore_warnings(PendingDeprecationWarning):
+        a = matrix([[2, 4], [5, 1]])
     assert Matrix(a) == Matrix([[2, 4], [5, 1]])
     assert Matrix(a) != Matrix([[2, 4], [5, 2]])
-    a = matrix([[sin(2), 4], [5, 1]])
+    with ignore_warnings(PendingDeprecationWarning):
+        a = matrix([[sin(2), 4], [5, 1]])
     assert Matrix(a) == Matrix([[sin(2), 4], [5, 1]])
     assert Matrix(a) != Matrix([[sin(0), 4], [5, 1]])
 
 
 def test_Matrix_sum():
     M = Matrix([[1, 2, 3], [x, y, x], [2*y, -50, z*x]])
-    m = matrix([[2, 3, 4], [x, 5, 6], [x, y, z**2]])
+    with ignore_warnings(PendingDeprecationWarning):
+        m = matrix([[2, 3, 4], [x, 5, 6], [x, y, z**2]])
     assert M + m == Matrix([[3, 5, 7], [2*x, y + 5, x + 6], [2*y + x, y - 50, z*x + z**2]])
     assert m + M == Matrix([[3, 5, 7], [2*x, y + 5, x + 6], [2*y + x, y - 50, z*x + z**2]])
     assert M + m == M.add(m)
@@ -169,7 +177,8 @@ def test_Matrix_sum():
 
 def test_Matrix_mul():
     M = Matrix([[1, 2, 3], [x, y, x]])
-    m = matrix([[2, 4], [x, 6], [x, z**2]])
+    with ignore_warnings(PendingDeprecationWarning):
+        m = matrix([[2, 4], [x, 6], [x, z**2]])
     assert M*m == Matrix([
         [         2 + 5*x,        16 + 3*z**2],
         [2*x + x*y + x**2, 4*x + 6*y + x*z**2],
@@ -235,7 +244,7 @@ def test_lambdify():
 
     # if this succeeds, it can't be a numpy function
 
-    if LooseVersion(numpy.__version__) >= LooseVersion('1.17'):
+    if version_tuple(numpy.__version__) >= version_tuple('1.17'):
         with raises(TypeError):
             f(x)
     else:
@@ -286,7 +295,7 @@ def test_lambdify_transl():
 
 
 def test_symarray():
-    """Test creation of numpy arrays of sympy symbols."""
+    """Test creation of numpy arrays of SymPy symbols."""
 
     import numpy as np
     import numpy.testing as npt

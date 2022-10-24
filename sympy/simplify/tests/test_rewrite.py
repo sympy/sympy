@@ -1,8 +1,13 @@
-from sympy import sin, cos, exp, cot, I, symbols
+from sympy.core.numbers import I
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import (cos, cot, sin)
+from sympy.testing.pytest import _both_exp_pow
 
 x, y, z, n = symbols('x,y,z,n')
 
 
+@_both_exp_pow
 def test_has():
     assert cot(x).has(x)
     assert cot(x).has(cot)
@@ -10,8 +15,10 @@ def test_has():
     assert sin(x).has(x)
     assert sin(x).has(sin)
     assert not sin(x).has(cot)
+    assert exp(x).has(exp)
 
 
+@_both_exp_pow
 def test_sin_exp_rewrite():
     assert sin(x).rewrite(sin, exp) == -I/2*(exp(I*x) - exp(-I*x))
     assert sin(x).rewrite(sin, exp).rewrite(exp, sin) == sin(x)

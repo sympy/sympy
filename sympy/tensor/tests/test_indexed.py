@@ -1,12 +1,20 @@
 from sympy.core import symbols, Symbol, Tuple, oo, Dummy
-from sympy.core.compatibility import iterable
 from sympy.tensor.indexed import IndexException
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
+from sympy.utilities.iterables import iterable
 
 # import test:
-from sympy import (IndexedBase, Idx, Indexed, S, sin, cos, exp, log, Sum,
-        Order, LessThan, StrictGreaterThan, GreaterThan, StrictLessThan,
-        Range, Subs, Function, KroneckerDelta, Derivative)
+from sympy.concrete.summations import Sum
+from sympy.core.function import Function, Subs, Derivative
+from sympy.core.relational import (StrictLessThan, GreaterThan,
+    StrictGreaterThan, LessThan)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.series.order import Order
+from sympy.sets.fancysets import Range
+from sympy.tensor.indexed import IndexedBase, Idx, Indexed
 
 
 def test_Idx_construction():
@@ -136,7 +144,6 @@ def test_Idx_inequalities():
     assert isinstance(iNone1 >= iNone2, GreaterThan)
 
 
-@XFAIL
 def test_Idx_inequalities_current_fails():
     i14 = Idx("i14", (1, 4))
 
@@ -303,7 +310,7 @@ def test_Indexed_shape_precedence():
         a, Idx(i, m), Idx(j, n)).ranges == [Tuple(0, m - 1), Tuple(0, n - 1)]
     assert Indexed(a, Idx(i, m), Idx(j, n)).shape == Tuple(o, p)
     assert Indexed(
-        a, Idx(i, m), Idx(j)).ranges == [Tuple(0, m - 1), Tuple(None, None)]
+        a, Idx(i, m), Idx(j)).ranges == [Tuple(0, m - 1), (None, None)]
     assert Indexed(a, Idx(i, m), Idx(j)).shape == Tuple(o, p)
 
 

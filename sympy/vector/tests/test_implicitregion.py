@@ -1,4 +1,5 @@
-from sympy import Eq, S, sqrt
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
 from sympy.abc import x, y, z, s, t
 from sympy.sets import FiniteSet, EmptySet
 from sympy.geometry import Point
@@ -19,27 +20,24 @@ def test_ImplicitRegion():
 
 def test_regular_point():
     r1 = ImplicitRegion((x,), x**2 - 16)
-    r1.regular_point() == (-4,)
+    assert r1.regular_point() == (-4,)
     c1 = ImplicitRegion((x, y), x**2 + y**2 - 4)
-    c1.regular_point() == (2, 0)
+    assert c1.regular_point() == (0, -2)
     c2 = ImplicitRegion((x, y), (x - S(5)/2)**2 + y**2 - (S(1)/4)**2)
-    c2.regular_point() == (11/4, 0)
+    assert c2.regular_point() == (S(5)/2, -S(1)/4)
     c3 = ImplicitRegion((x, y), (y - 5)**2  - 16*(x - 5))
-    c3.regular_point() == (5, 5)
+    assert c3.regular_point() == (5, 5)
     r2 = ImplicitRegion((x, y), x**2 - 4*x*y - 3*y**2 + 4*x + 8*y - 5)
-    r2.regular_point == (4/7, 13/21)
+    assert r2.regular_point() == (S(4)/7, S(9)/7)
     r3 = ImplicitRegion((x, y), x**2 - 2*x*y + 3*y**2 - 2*x - 5*y + 3/2)
     raises(ValueError, lambda: r3.regular_point())
 
 
 def test_singular_points_and_multiplicty():
     r1 = ImplicitRegion((x, y, z), Eq(x + y + z, 0))
-    assert r1.singular_points() == FiniteSet((-y - z, y, z))
-    assert r1.multiplicity((0, 0, 0)) == 1
-    assert r1.multiplicity((-y - z, y, z)) == 1
+    assert r1.singular_points() == EmptySet
     r2 = ImplicitRegion((x, y, z), x*y*z + y**4 -x**2*z**2)
-    assert r2.singular_points() == FiniteSet((0, 0, z), ((-y*sqrt(4*y**2 + 1)/2 + y/2)/z, y, z),\
-                            ((y*sqrt(4*y**2 + 1)/2 + y/2)/z, y, z))
+    assert r2.singular_points() == FiniteSet((0, 0, z), (x, 0, 0))
     assert r2.multiplicity((0, 0, 0)) == 3
     assert r2.multiplicity((0, 0, 6)) == 2
     r3 = ImplicitRegion((x, y, z), z**2 - x**2 - y**2)
@@ -83,7 +81,8 @@ def test_rational_parametrization():
     assert sphere.rational_parametrization(parameters=(s, t)) == (2/(s**2 + t**2 + 1), 2*t/(s**2 + t**2 + 1), 2*s/(s**2 + t**2 + 1))
 
     conic = ImplicitRegion((x, y), Eq(x**2 + 4*x*y + 3*y**2 + x - y + 10, 0))
-    conic.rational_parametrization(t) == (17/2 + 4/(3*t**2 + 4*t + 1), 4*t/(3*t**2 + 4*t + 1) - 11/2)
+    assert conic.rational_parametrization(t) == (
+        S(17)/2 + 4/(3*t**2 + 4*t + 1), 4*t/(3*t**2 + 4*t + 1) - S(11)/2)
 
     r1 = ImplicitRegion((x, y), y**2 - x**3 + x)
     raises(NotImplementedError, lambda: r1.rational_parametrization())

@@ -1,11 +1,15 @@
-from sympy import (
-    sqrt, root, Symbol, sqrtdenest, Integral, cos, Rational, I, Integer)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer, Rational)
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import cos
+from sympy.integrals.integrals import Integral
+from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.sqrtdenest import (
     _subsets as subsets, _sqrt_numeric_denest)
-from sympy.testing.pytest import slow
 
-r2, r3, r5, r6, r7, r10, r15, r29 = [sqrt(x) for x in [2, 3, 5, 6, 7, 10,
-                                          15, 29]]
+r2, r3, r5, r6, r7, r10, r15, r29 = [sqrt(x) for x in (2, 3, 5, 6, 7, 10,
+                                          15, 29)]
 
 
 def test_sqrtdenest():
@@ -107,16 +111,11 @@ def test_sqrtdenest3():
     r = sqrt(-2*r29 + 11)
     assert sqrtdenest(z) == sqrt(r2*r + r3*r + r10 + r15 + 5)
 
-
-@slow
-def test_sqrtdenest3_slow():
-    # Slow because of the equals, not the sqrtdenest
-    # Using == does not work as 7*(sqrt(-2*r29 + 11) + r5) is expanded
-    # automatically
     n = sqrt(2*r6/7 + 2*r7/7 + 2*sqrt(42)/7 + 2)
     d = sqrt(16 - 2*r29 + 2*sqrt(55 - 10*r29))
-    assert sqrtdenest(n/d).equals(
-        r7*(1 + r6 + r7)/(7*(sqrt(-2*r29 + 11) + r5)))
+    assert sqrtdenest(n/d) == r7*(1 + r6 + r7)/(Mul(7, (sqrt(-2*r29 + 11) + r5),
+                                                    evaluate=False))
+
 
 def test_sqrtdenest4():
     # see Denest_en.pdf in https://github.com/sympy/sympy/issues/3192

@@ -1,5 +1,15 @@
-from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
-    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer, Ei, EulerGamma
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, I, Integer, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acot, atan, cos, sin)
+from sympy.functions.elementary.complexes import sign as _sign
+from sympy.functions.special.error_functions import (Ei, erf)
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
+from sympy.functions.special.zeta_functions import zeta
+from sympy.polys.polytools import cancel
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
@@ -129,12 +139,12 @@ def test_grunts_eval_special_slow_sometimes_fail():
     assert gruntz(exp(gamma(x - exp(-x))*exp(1/x)) - exp(gamma(x)), x, oo) is oo
 
 
+def test_gruntz_Ei():
+    assert gruntz((Ei(x - exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x, x, oo) == -1
+
+
 @XFAIL
 def test_gruntz_eval_special_fail():
-    # TODO exponential integral Ei
-    assert gruntz(
-        (Ei(x - exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x, x, oo) == -1
-
     # TODO zeta function series
     assert gruntz(
         exp((log(2) + 1)*x) * (zeta(x + exp(-x)) - zeta(x)), x, oo) == -log(2)
@@ -386,18 +396,15 @@ def test_limit4():
 def test_MrvTestCase_page47_ex3_21():
     h = exp(-x/(1 + exp(-x)))
     expr = exp(h)*exp(-x/(1 + h))*exp(exp(-x + h))/h**2 - exp(x) + x
-    expected = {1/h, exp(x), exp(x - h), exp(x/(1 + h))}
-    # XXX Incorrect result
-    assert mrv(expr, x).difference(expected) == set()
+    assert mmrv(expr, x) == {1/h, exp(-x), exp(x), exp(x - h), exp(x/(1 + h))}
 
 
-def test_I():
-    from sympy import sign
+def test_gruntz_I():
     y = Symbol("y")
     assert gruntz(I*x, x, oo) == I*oo
     assert gruntz(y*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*I*x, x, oo) == y*I*oo
-    assert gruntz(y*3*sin(I)*x, x, oo).simplify().rewrite(sign) == sign(y)*I*oo
+    assert gruntz(y*3*sin(I)*x, x, oo).simplify().rewrite(_sign) == _sign(y)*I*oo
 
 
 def test_issue_4814():

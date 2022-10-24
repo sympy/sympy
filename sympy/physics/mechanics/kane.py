@@ -1,8 +1,8 @@
 from sympy.core.backend import zeros, Matrix, diff, eye
-from sympy import solve_linear_system_LU
-from sympy.utilities import default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
+from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
@@ -13,8 +13,8 @@ from sympy.utilities.iterables import iterable
 __all__ = ['KanesMethod']
 
 
-class KanesMethod:
-    """Kane's method object.
+class KanesMethod(_Methods):
+    r"""Kane's method object.
 
     Explanation
     ===========
@@ -30,23 +30,42 @@ class KanesMethod:
 
     q, u : Matrix
         Matrices of the generalized coordinates and speeds
-    bodylist : iterable
+    bodies : iterable
         Iterable of Point and RigidBody objects in the system.
-    forcelist : iterable
+    loads : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
-    auxiliary : Matrix
+    auxiliary_eqs : Matrix
         If applicable, the set of auxiliary Kane's
         equations used to solve for non-contributing
         forces.
     mass_matrix : Matrix
-        The system's mass matrix
+        The system's dynamics mass matrix: [k_d; k_dnh]
     forcing : Matrix
-        The system's forcing vector
+        The system's dynamics forcing vector: -[f_d; f_dnh]
+    mass_matrix_kin : Matrix
+        The "mass matrix" for kinematic differential equations: k_kqdot
+    forcing_kin : Matrix
+        The forcing vector for kinematic differential equations: -(k_ku*u + f_k)
     mass_matrix_full : Matrix
-        The "mass matrix" for the u's and q's
+        The "mass matrix" for the u's and q's with dynamics and kinematics
     forcing_full : Matrix
-        The "forcing vector" for the u's and q's
+        The "forcing vector" for the u's and q's with dynamics and kinematics
+    explicit_kinematics : bool
+        Boolean whether the mass matrices and forcing vectors should use the
+        explicit form (default) or implicit form for kinematics.
+        See the notes for more details.
+
+    Notes
+    =====
+
+    The mass matrices and forcing vectors related to kinematic equations
+    are given in the explicit form by default. In other words, the kinematic
+    mass matrix is $\mathbf{k_{k\dot{q}}} = \mathbf{I}$.
+    In order to get the implicit form of those matrices/vectors, you can set the
+    ``explicit_kinematics`` attribute to ``False``. So $\mathbf{k_{k\dot{q}}}$ is not
+    necessarily an identity matrix. This can provide more compact equations for
+    non-simple kinematics (see #22626).
 
     Examples
     ========
@@ -117,7 +136,7 @@ class KanesMethod:
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=None,
             configuration_constraints=None, u_dependent=None,
             velocity_constraints=None, acceleration_constraints=None,
-            u_auxiliary=None):
+            u_auxiliary=None, bodies=None, forcelist=None, explicit_kinematics=True):
 
         """Please read the online documentation. """
         if not q_ind:
@@ -131,8 +150,10 @@ class KanesMethod:
         self._fr = None
         self._frstar = None
 
-        self._forcelist = None
-        self._bodylist = None
+        self._forcelist = forcelist
+        self._bodylist = bodies
+
+        self.explicit_kinematics = explicit_kinematics
 
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
@@ -236,40 +257,76 @@ class KanesMethod:
             self._Ars = Matrix()
 
     def _initialize_kindiffeq_matrices(self, kdeqs):
-        """Initialize the kinematic differential equation matrices."""
+        """Initialize the kinematic differential equation matrices.
+
+        Parameters
+        ==========
+        kdeqs : sequence of sympy expressions
+            Kinematic differential equations in the form of f(u,q',q,t) where
+            f() = 0. The equations have to be linear in the generalized
+            coordinates and generalized speeds.
+
+        """
 
         if kdeqs:
             if len(self.q) != len(kdeqs):
                 raise ValueError('There must be an equal number of kinematic '
                                  'differential equations and coordinates.')
-            kdeqs = Matrix(kdeqs)
 
             u = self.u
             qdot = self._qdot
-            # Dictionaries setting things to zero
-            u_zero = {i: 0 for i in u}
-            uaux_zero = {i: 0 for i in self._uaux}
-            qdot_zero = {i: 0 for i in qdot}
 
-            f_k = msubs(kdeqs, u_zero, qdot_zero)
-            k_ku = (msubs(kdeqs, qdot_zero) - f_k).jacobian(u)
-            k_kqdot = (msubs(kdeqs, u_zero) - f_k).jacobian(qdot)
+            kdeqs = Matrix(kdeqs)
 
-            f_k = k_kqdot.LUsolve(f_k)
-            k_ku = k_kqdot.LUsolve(k_ku)
-            k_kqdot = eye(len(qdot))
+            u_zero = {ui: 0 for ui in u}
+            uaux_zero = {uai: 0 for uai in self._uaux}
+            qdot_zero = {qdi: 0 for qdi in qdot}
 
-            self._qdot_u_map = solve_linear_system_LU(
-                    Matrix([k_kqdot.T, -(k_ku * u + f_k).T]).T, qdot)
+            # Extract the linear coefficient matrices as per the following
+            # equation:
+            #
+            # k_ku(q,t)*u(t) + k_kqdot(q,t)*q'(t) + f_k(q,t) = 0
+            #
+            k_ku = kdeqs.jacobian(u)
+            k_kqdot = kdeqs.jacobian(qdot)
+            f_k = kdeqs.xreplace(u_zero).xreplace(qdot_zero)
 
-            self._f_k = msubs(f_k, uaux_zero)
-            self._k_ku = msubs(k_ku, uaux_zero)
-            self._k_kqdot = k_kqdot
+            # The kinematic differential equations should be linear in both q'
+            # and u, so check for u and q' in the components.
+            dy_syms = find_dynamicsymbols(k_ku.row_join(k_kqdot).row_join(f_k))
+            nonlin_vars = [vari for vari in u[:] + qdot[:] if vari in dy_syms]
+            if nonlin_vars:
+                msg = ('The provided kinematic differential equations are '
+                       'nonlinear in {}. They must be linear in the '
+                       'generalized speeds and derivatives of the generalized '
+                       'coordinates.')
+                raise ValueError(msg.format(nonlin_vars))
+
+            self._f_k_implicit = f_k.xreplace(uaux_zero)
+            self._k_ku_implicit = k_ku.xreplace(uaux_zero)
+            self._k_kqdot_implicit = k_kqdot
+
+            # Solve for q'(t) such that the coefficient matrices are now in
+            # this form:
+            #
+            # k_kqdot^-1*k_ku*u(t) + I*q'(t) + k_kqdot^-1*f_k = 0
+            #
+            # NOTE : Solving the kinematic differential equations here is not
+            # necessary and prevents the equations from being provided in fully
+            # implicit form.
+            f_k_explicit = k_kqdot.LUsolve(f_k)
+            k_ku_explicit = k_kqdot.LUsolve(k_ku)
+            self._qdot_u_map = dict(zip(qdot, -(k_ku_explicit*u + f_k_explicit)))
+
+            self._f_k = f_k_explicit.xreplace(uaux_zero)
+            self._k_ku = k_ku_explicit.xreplace(uaux_zero)
+            self._k_kqdot = eye(len(qdot))
+
         else:
             self._qdot_u_map = None
-            self._f_k = Matrix()
-            self._k_ku = Matrix()
-            self._k_kqdot = Matrix()
+            self._f_k_implicit = self._f_k = Matrix()
+            self._k_ku_implicit = self._k_ku = Matrix()
+            self._k_kqdot_implicit = self._k_kqdot = Matrix()
 
     def _form_fr(self, fl):
         """Form the generalized active force."""
@@ -505,7 +562,7 @@ class KanesMethod:
         result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)
 
-    def kanes_equations(self, bodies, loads=None):
+    def kanes_equations(self, bodies=None, loads=None):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
         Explanation
@@ -516,7 +573,7 @@ class KanesMethod:
         constraints) the length of the returned vectors will be o - m + s in
         length. The first o - m equations will be the constrained Kane's
         equations, then the s auxiliary Kane's equations. These auxiliary
-        equations can be accessed with the auxiliary_eqs().
+        equations can be accessed with the auxiliary_eqs property.
 
         Parameters
         ==========
@@ -530,6 +587,12 @@ class KanesMethod:
             Must be either a non-empty iterable of tuples or None which corresponds
             to a system with no constraints.
         """
+        if bodies is None:
+            bodies = self.bodies
+        if  loads is None and self._forcelist is not None:
+            loads = self._forcelist
+        if loads == []:
+            loads = None
         if not self._k_kqdot:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
@@ -543,7 +606,10 @@ class KanesMethod:
                 km = KanesMethod(self._inertial, self.q, self._uaux,
                         u_auxiliary=self._uaux, u_dependent=self._udep,
                         velocity_constraints=(self._k_nh * self.u +
-                        self._f_nh))
+                        self._f_nh),
+                        acceleration_constraints=(self._k_dnh * self._udot +
+                        self._f_dnh)
+                        )
             km._qdot_u_map = self._qdot_u_map
             self._km = km
             fraux = km._form_fr(loads)
@@ -552,6 +618,10 @@ class KanesMethod:
             self._fr = fr.col_join(fraux)
             self._frstar = frstar.col_join(frstaraux)
         return (self._fr, self._frstar)
+
+    def _form_eoms(self):
+        fr, frstar = self.kanes_equations(self.bodylist, self.forcelist)
+        return fr + frstar
 
     def rhs(self, inv_method=None):
         """Returns the system's equations of motion in first order form. The
@@ -603,22 +673,24 @@ class KanesMethod:
         return self._aux_eq
 
     @property
+    def mass_matrix_kin(self):
+        r"""The kinematic "mass matrix" $\mathbf{k_{k\dot{q}}}$ of the system."""
+        return self._k_kqdot if self.explicit_kinematics else self._k_kqdot_implicit
+
+    @property
+    def forcing_kin(self):
+        """The kinematic "forcing vector" of the system."""
+        if self.explicit_kinematics:
+            return -(self._k_ku * Matrix(self.u) + self._f_k)
+        else:
+            return -(self._k_ku_implicit * Matrix(self.u) + self._f_k_implicit)
+
+    @property
     def mass_matrix(self):
         """The mass matrix of the system."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         return Matrix([self._k_d, self._k_dnh])
-
-    @property
-    def mass_matrix_full(self):
-        """The mass matrix of the system, augmented by the kinematic
-        differential equations."""
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
-        o = len(self.u)
-        n = len(self.q)
-        return ((self._k_kqdot).row_join(zeros(n, o))).col_join((zeros(o,
-                n)).row_join(self.mass_matrix))
 
     @property
     def forcing(self):
@@ -628,13 +700,20 @@ class KanesMethod:
         return -Matrix([self._f_d, self._f_dnh])
 
     @property
-    def forcing_full(self):
-        """The forcing vector of the system, augmented by the kinematic
-        differential equations."""
+    def mass_matrix_full(self):
+        """The mass matrix of the system, augmented by the kinematic
+        differential equations in explicit or implicit form."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
-        f1 = self._k_ku * Matrix(self.u) + self._f_k
-        return -Matrix([f1, self._f_d, self._f_dnh])
+        o, n = len(self.u), len(self.q)
+        return (self.mass_matrix_kin.row_join(zeros(n, o))).col_join(
+            zeros(o, n).row_join(self.mass_matrix))
+
+    @property
+    def forcing_full(self):
+        """The forcing vector of the system, augmented by the kinematic
+        differential equations in explicit or implicit form."""
+        return Matrix([self.forcing_kin, self.forcing])
 
     @property
     def q(self):
@@ -650,4 +729,12 @@ class KanesMethod:
 
     @property
     def forcelist(self):
+        return self._forcelist
+
+    @property
+    def bodies(self):
+        return self._bodylist
+
+    @property
+    def loads(self):
         return self._forcelist

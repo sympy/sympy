@@ -1,17 +1,32 @@
-from sympy import (FiniteSet, S, Symbol, sqrt, nan, beta, Rational, symbols,
-                   simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-                   cancel, exp, I, Piecewise, Sum, Dummy)
-from sympy.external import import_module
+from sympy.concrete.summations import Sum
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.function import Function
+from sympy.core.numbers import (I, Rational, nan)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.combinatorial.numbers import harmonic
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import cos
+from sympy.functions.special.beta_functions import beta
+from sympy.logic.boolalg import (And, Or)
+from sympy.polys.polytools import cancel
+from sympy.sets.sets import FiniteSet
+from sympy.simplify.simplify import simplify
 from sympy.matrices import Matrix
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial, BetaBinomial,
-                         Hypergeometric, Rademacher, P, E, variance, covariance, skewness,
-                         sample, density, where, FiniteRV, pspace, cdf, correlation, moment,
-                         cmoment, smoment, characteristic_function, moment_generating_function,
-                         quantile,  kurtosis, median, coskewness)
+                         Hypergeometric, Rademacher, IdealSoliton, RobustSoliton, P, E, variance,
+                         covariance, skewness, density, where, FiniteRV, pspace, cdf,
+                         correlation, moment, cmoment, smoment, characteristic_function,
+                         moment_generating_function, quantile,  kurtosis, median, coskewness)
 from sympy.stats.frv_types import DieDistribution, BinomialDistribution, \
     HypergeometricDistribution
 from sympy.stats.rv import Density
-from sympy.testing.pytest import raises, skip, ignore_warnings
+from sympy.testing.pytest import raises
 
 
 def BayesTest(A, B):
@@ -146,11 +161,6 @@ def test_given():
     X = Die('X', 6)
     assert density(X, X > 5) == {S(6): S.One}
     assert where(X > 2, X > 5).as_boolean() == Eq(X.symbol, 6)
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert next(sample(X, X > 5)) == 6
 
 
 def test_domains():
@@ -381,6 +391,56 @@ def test_rademacher():
     assert characteristic_function(X)(t) == exp(I*t)/2 + exp(-I*t)/2
     assert moment_generating_function(X)(t) == exp(t) / 2 + exp(-t) / 2
 
+def test_ideal_soliton():
+    raises(ValueError, lambda : IdealSoliton('sol', -12))
+    raises(ValueError, lambda : IdealSoliton('sol', 13.2))
+    raises(ValueError, lambda : IdealSoliton('sol', 0))
+    f = Function('f')
+    raises(ValueError, lambda : density(IdealSoliton('sol', 10)).pmf(f))
+
+    k = Symbol('k', integer=True, positive=True)
+    x = Symbol('x', integer=True, positive=True)
+    t = Symbol('t')
+    sol = IdealSoliton('sol', k)
+    assert density(sol).low == S.One
+    assert density(sol).high == k
+    assert density(sol).dict == Density(density(sol))
+    assert density(sol).pmf(x) == Piecewise((1/k, Eq(x, 1)), (1/(x*(x - 1)), k >= x), (0, True))
+
+    k_vals = [5, 20, 50, 100, 1000]
+    for i in k_vals:
+        assert E(sol.subs(k, i)) == harmonic(i) == moment(sol.subs(k, i), 1)
+        assert variance(sol.subs(k, i)) == (i - 1) + harmonic(i) - harmonic(i)**2 == cmoment(sol.subs(k, i),2)
+        assert skewness(sol.subs(k, i)) == smoment(sol.subs(k, i), 3)
+        assert kurtosis(sol.subs(k, i)) == smoment(sol.subs(k, i), 4)
+
+    assert exp(I*t)/10 + Sum(exp(I*t*x)/(x*x - x), (x, 2, k)).subs(k, 10).doit() == characteristic_function(sol.subs(k, 10))(t)
+    assert exp(t)/10 + Sum(exp(t*x)/(x*x - x), (x, 2, k)).subs(k, 10).doit() == moment_generating_function(sol.subs(k, 10))(t)
+
+def test_robust_soliton():
+    raises(ValueError, lambda : RobustSoliton('robSol', -12, 0.1, 0.02))
+    raises(ValueError, lambda : RobustSoliton('robSol', 13, 1.89, 0.1))
+    raises(ValueError, lambda : RobustSoliton('robSol', 15, 0.6, -2.31))
+    f = Function('f')
+    raises(ValueError, lambda : density(RobustSoliton('robSol', 15, 0.6, 0.1)).pmf(f))
+
+    k = Symbol('k', integer=True, positive=True)
+    delta = Symbol('delta', positive=True)
+    c = Symbol('c', positive=True)
+    robSol = RobustSoliton('robSol', k, delta, c)
+    assert density(robSol).low == 1
+    assert density(robSol).high == k
+
+    k_vals = [10, 20, 50]
+    delta_vals = [0.2, 0.4, 0.6]
+    c_vals = [0.01, 0.03, 0.05]
+    for x in k_vals:
+        for y in delta_vals:
+            for z in c_vals:
+                assert E(robSol.subs({k: x, delta: y, c: z})) == moment(robSol.subs({k: x, delta: y, c: z}), 1)
+                assert variance(robSol.subs({k: x, delta: y, c: z})) == cmoment(robSol.subs({k: x, delta: y, c: z}), 2)
+                assert skewness(robSol.subs({k: x, delta: y, c: z})) == smoment(robSol.subs({k: x, delta: y, c: z}), 3)
+                assert kurtosis(robSol.subs({k: x, delta: y, c: z})) == smoment(robSol.subs({k: x, delta: y, c: z}), 4)
 
 def test_FiniteRV():
     F = FiniteRV('F', {1: S.Half, 2: Rational(1, 4), 3: Rational(1, 4)}, check=True)
@@ -447,72 +507,3 @@ def test_symbolic_conditions():
     assert Z == \
     Piecewise((Rational(1, 4), n < 1), (0, True)) + Piecewise((S.Half, n < 2), (0, True)) + \
     Piecewise((Rational(3, 4), n < 3), (0, True)) + Piecewise((S.One, n < 4), (0, True))
-
-
-def test_sample_numpy():
-    distribs_numpy = [
-        Binomial("B", 5, 0.4),
-    ]
-    size = 3
-    numpy = import_module('numpy')
-    if not numpy:
-        skip('Numpy is not installed. Abort tests for _sample_numpy.')
-    else:
-        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            for X in distribs_numpy:
-                samps = next(sample(X, size=size, library='numpy'))
-                for sam in samps:
-                    assert sam in X.pspace.domain.set
-            raises(NotImplementedError,
-                lambda: next(sample(Die("D"), library='numpy')))
-    raises(NotImplementedError,
-            lambda: Die("D").pspace.sample(library='tensorflow'))
-
-def test_sample_scipy():
-    distribs_scipy = [
-        FiniteRV('F', {1: S.Half, 2: Rational(1, 4), 3: Rational(1, 4)}),
-        DiscreteUniform("Y", list(range(5))),
-        Die("D"),
-        Bernoulli("Be", 0.3),
-        Binomial("Bi", 5, 0.4),
-        BetaBinomial("Bb", 2, 1, 1),
-        Hypergeometric("H", 1, 1, 1),
-        Rademacher("R")
-    ]
-
-    size = 3
-    numsamples = 5
-    scipy = import_module('scipy')
-    if not scipy:
-        skip('Scipy not installed. Abort tests for _sample_scipy.')
-    else:
-        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            h_sample = list(sample(Hypergeometric("H", 1, 1, 1), size=size, numsamples=numsamples))
-            assert len(h_sample) == numsamples
-            for X in distribs_scipy:
-                samps = next(sample(X, size=size))
-                samps2 = next(sample(X, size=(2, 2)))
-                for sam in samps:
-                    assert sam in X.pspace.domain.set
-                for i in range(2):
-                    for j in range(2):
-                        assert samps2[i][j] in X.pspace.domain.set
-
-
-def test_sample_pymc3():
-    distribs_pymc3 = [
-        Bernoulli('B', 0.2),
-        Binomial('N', 5, 0.4)
-    ]
-    size = 3
-    pymc3 = import_module('pymc3')
-    if not pymc3:
-        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
-    else:
-        with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-            for X in distribs_pymc3:
-                samps = next(sample(X, size=size, library='pymc3'))
-                for sam in samps:
-                    assert sam in X.pspace.domain.set
-            raises(NotImplementedError,
-                lambda: next(sample(Die("D"), library='pymc3')))

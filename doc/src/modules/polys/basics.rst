@@ -365,7 +365,7 @@ we get the following criterion:
 
     i. `f` is divisible by `g` in `\mathbb{Q}[x]`, and
     ii. the content of `f` is divisible by the content of `g` in
-	`\mathbb{Z}`.
+        `\mathbb{Z}`.
 
 If `f = cp` is irreducible in `\mathbb{Z}[x]`, then either `c` or `p`
 must be a unit. If `p` is not a unit, it must be irreducible also in
@@ -405,7 +405,7 @@ Division
 
 The function :func:`~.div` provides division of polynomials with remainder.
 That is, for polynomials ``f`` and ``g``, it computes ``q`` and ``r``, such
-that `f = g \cdot q + r` and `\deg(r) < q`. For polynomials in one variables
+that `f = g \cdot q + r` and `\deg(r) < \deg(q)`. For polynomials in one variables
 with coefficients in a field, say, the rational numbers, ``q`` and ``r`` are
 uniquely defined this way::
 

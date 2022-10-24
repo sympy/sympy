@@ -4,7 +4,7 @@ Provides functionality for multidimensional usage of scalar-functions.
 Read the vectorize docstring for more details.
 """
 
-from sympy.core.decorators import wraps
+from functools import wraps
 
 
 def apply_on_element(f, args, kwargs, n):
@@ -41,13 +41,7 @@ def iter_copy(structure):
     """
     Returns a copy of an iterable object (also copying all embedded iterables).
     """
-    l = []
-    for i in structure:
-        if hasattr(i, "__iter__"):
-            l.append(iter_copy(i))
-        else:
-            l.append(i)
-    return l
+    return [iter_copy(i) if hasattr(i, "__iter__") else i for i in structure]
 
 
 def structure_copy(structure):
@@ -66,8 +60,7 @@ class vectorize:
     Examples
     ========
 
-    >>> from sympy import diff, sin, symbols, Function
-    >>> from sympy.core.multidimensional import vectorize
+    >>> from sympy import vectorize, diff, sin, symbols, Function
     >>> x, y, z = symbols('x y z')
     >>> f, g, h = list(map(Function, 'fgh'))
 

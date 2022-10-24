@@ -1,13 +1,24 @@
-from sympy import (
-    Symbol, Dummy, gamma, I, oo, nan, zoo, factorial, sqrt, Rational,
-    multigamma, log, polygamma, digamma, trigamma, EulerGamma, pi, uppergamma, S, expand_func,
-    loggamma, sin, cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic,
-    zeta, conjugate, Ei, im, re, tanh, Abs)
+from sympy.core.function import expand_func, Subs
+from sympy.core import EulerGamma
+from sympy.core.numbers import (I, Rational, nan, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.combinatorial.numbers import harmonic
+from sympy.functions.elementary.complexes import (Abs, conjugate, im, re)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import tanh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin, atan)
+from sympy.functions.special.error_functions import (Ei, erf, erfc)
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, lowergamma, multigamma, polygamma, trigamma, uppergamma)
+from sympy.functions.special.zeta_functions import zeta
+from sympy.series.order import O
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.testing.pytest import raises
-from sympy.testing.randtest import (test_derivative_numerically as td,
+from sympy.core.random import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       verify_numerically as tn)
 
@@ -98,8 +109,7 @@ def test_gamma_series():
 
 
 def tn_branch(s, func):
-    from sympy import I, pi, exp_polar
-    from random import uniform
+    from sympy.core.random import uniform
     c = uniform(1, 5)
     expr = func(s, c*exp_polar(I*pi)) - func(s, c*exp_polar(-I*pi))
     eps = 1e-15
@@ -108,7 +118,8 @@ def tn_branch(s, func):
 
 
 def test_lowergamma():
-    from sympy import meijerg, exp_polar, I, expint
+    from sympy.functions.special.error_functions import expint
+    from sympy.functions.special.hyper import meijerg
     assert lowergamma(x, 0) == 0
     assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
@@ -177,7 +188,8 @@ def test_lowergamma():
 
 
 def test_uppergamma():
-    from sympy import meijerg, exp_polar, I, expint
+    from sympy.functions.special.error_functions import expint
+    from sympy.functions.special.hyper import meijerg
     assert uppergamma(4, 0) == 6
     assert uppergamma(x, y).diff(y) == -y**(x - 1)*exp(-y)
     assert td(uppergamma(randcplx(), y), y)
@@ -225,8 +237,6 @@ def test_uppergamma():
 
 
 def test_polygamma():
-    from sympy import I
-
     assert polygamma(n, nan) is nan
 
     assert polygamma(0, oo) is oo
@@ -240,6 +250,7 @@ def test_polygamma():
 
     assert polygamma(0, -9) is zoo
     assert polygamma(0, -1) is zoo
+    assert polygamma(Rational(3, 2), -1) is zoo
 
     assert polygamma(0, 0) is zoo
 
@@ -298,7 +309,6 @@ def test_polygamma():
                                                                  + zeta(ni + 1))*factorial(ni)
 
     # Polygamma of non-negative integer order is unbranched:
-    from sympy import exp_polar
     k = Symbol('n', integer=True, nonnegative=True)
     assert polygamma(k, exp_polar(2*I*pi)*x) == polygamma(k, x)
 
@@ -307,7 +317,7 @@ def test_polygamma():
     assert polygamma(k, exp_polar(2*I*pi)*x).args == (k, exp_polar(2*I*pi)*x)
 
     # Polygamma of order -1 is loggamma:
-    assert polygamma(-1, x) == loggamma(x)
+    assert polygamma(-1, x) == loggamma(x) - log(2*pi) / 2
 
     # But smaller orders are iterated integrals and don't have a special name
     assert polygamma(-2, x).func is polygamma
@@ -333,20 +343,24 @@ def test_polygamma():
     assert polygamma(I, 3).is_negative is None
 
     # issue 17350
-    assert polygamma(pi, 3).evalf() == polygamma(pi, 3)
     assert (I*polygamma(I, pi)).as_real_imag() == \
            (-im(polygamma(I, pi)), re(polygamma(I, pi)))
     assert (tanh(polygamma(I, 1))).rewrite(exp) == \
            (exp(polygamma(I, 1)) - exp(-polygamma(I, 1)))/(exp(polygamma(I, 1)) + exp(-polygamma(I, 1)))
     assert (I / polygamma(I, 4)).rewrite(exp) == \
-           I*sqrt(re(polygamma(I, 4))**2 + im(polygamma(I, 4))**2)\
-           /((re(polygamma(I, 4)) + I*im(polygamma(I, 4)))*Abs(polygamma(I, 4)))
-    assert unchanged(polygamma, 2.3, 1.0)
+           I*exp(-I*atan(im(polygamma(I, 4))/re(polygamma(I, 4))))/Abs(polygamma(I, 4))
 
     # issue 12569
     assert unchanged(im, polygamma(0, I))
     assert polygamma(Symbol('a', positive=True), Symbol('b', positive=True)).is_real is True
     assert polygamma(0, I).is_real is None
+
+    assert str(polygamma(pi, 3).evalf(n=10)) == "0.1169314564"
+    assert str(polygamma(2.3, 1.0).evalf(n=10)) == "-3.003302909"
+    assert str(polygamma(-1, 1).evalf(n=10)) == "-0.9189385332" # not zero
+    assert str(polygamma(I, 1).evalf(n=10)) == "-3.109856569 + 1.89089016*I"
+    assert str(polygamma(1, I).evalf(n=10)) == "-0.5369999034 - 0.7942335428*I"
+    assert str(polygamma(I, I).evalf(n=10)) == "6.332362889 + 45.92828268*I"
 
 
 def test_polygamma_expand_func():
@@ -393,9 +407,14 @@ def test_polygamma_expand_func():
     e = polygamma(3, x + y + Rational(3, 4))
     assert e.expand(func=True, basic=False) == e
 
-def test_digamma():
-    from sympy import I
+    assert polygamma(-1, x, evaluate=False).expand(func=True) == \
+        loggamma(x) - log(pi)/2 - log(2)/2
+    p2 = polygamma(-2, x).expand(func=True) + x**2/2 - x/2 + S(1)/12
+    assert isinstance(p2, Subs)
+    assert p2.point == (-1,)
 
+
+def test_digamma():
     assert digamma(nan) == nan
 
     assert digamma(oo) == oo
@@ -522,8 +541,6 @@ def test_loggamma():
     assert loggamma(-n) is oo
     assert loggamma(n/2) == log(2**(-n + 1)*sqrt(pi)*gamma(n)/gamma(n/2 + S.Half))
 
-    from sympy import I
-
     assert loggamma(oo) is oo
     assert loggamma(-oo) is zoo
     assert loggamma(I*oo) is zoo
@@ -613,6 +630,11 @@ def test_polygamma_expansion():
         2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
 
 
+def test_polygamma_leading_term():
+     expr = -log(1/x) + polygamma(0, 1 + 1/x) + S.EulerGamma
+     assert expr.as_leading_term(x, logx=-y) == S.EulerGamma
+
+
 def test_issue_8657():
     n = Symbol('n', negative=True, integer=True)
     m = Symbol('m', integer=True)
@@ -654,7 +676,7 @@ def test_issue_14528():
     assert isinstance(gamma(k), gamma)
 
 def test_multigamma():
-    from sympy import Product
+    from sympy.concrete.products import Product
     p = Symbol('p')
     _k = Dummy('_k')
 

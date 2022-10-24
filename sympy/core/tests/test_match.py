@@ -1,7 +1,18 @@
-from sympy import (abc, Add, cos, collect, Derivative, diff, exp, Float, Function,
-    I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
-    Wild, pi, meijerg, Sum
-)
+from sympy import abc
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.hyper import meijerg
+from sympy.polys.polytools import Poly
+from sympy.simplify.radsimp import collect
+from sympy.simplify.simplify import signsimp
 
 from sympy.testing.pytest import XFAIL
 
@@ -473,6 +484,7 @@ def test__combine_inverse():
     assert Mul._combine_inverse(oo*I*y, oo*I) == y
     assert Mul._combine_inverse(oo*y, -oo) == -y
     assert Mul._combine_inverse(-oo*y, oo) == -y
+    assert Mul._combine_inverse((1-exp(x/y)),(exp(x/y)-1)) == -1
     assert Add._combine_inverse(oo, oo) is S.Zero
     assert Add._combine_inverse(oo*I, oo*I) is S.Zero
     assert Add._combine_inverse(x*oo, x*oo) is S.Zero
@@ -508,7 +520,7 @@ def test_issue_3883():
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
 
     assert f.match(a * log(gamma) + b * gamma + c) == \
-        {a: Rational(-1, 2), b: -(mu - x)**2/2, c: log(2*pi)/2}
+        {a: Rational(-1, 2), b: -(-mu + x)**2/2, c: log(2*pi)/2}
     assert f.expand().collect(gamma).match(a * log(gamma) + b * gamma + c) == \
         {a: Rational(-1, 2), b: (-(x - mu)**2/2).expand(), c: (log(2*pi)/2).expand()}
     g1 = Wild('g1', exclude=[gamma])
@@ -690,6 +702,14 @@ def test_gh_issue_2711():
         {meijerg(((), ()), ((S.Zero,), ()), x), x, S.Zero}
     assert f.find(a**2) == {meijerg(((), ()), ((S.Zero,), ()), x), x}
 
+
+def test_issue_17354():
+    from sympy.core.symbol import (Wild, symbols)
+    x, y = symbols("x y", real=True)
+    a, b = symbols("a b", cls=Wild)
+    assert ((0 <= x).reversed | (y <= x)).match((1/a <= b) | (a <= b)) is None
+
+
 def test_match_issue_17397():
     f = Function("f")
     x = Symbol("x")
@@ -708,12 +728,26 @@ def test_match_issue_17397():
     assert r == {a3: x - 4 + 4/x, b3: 1 - 2/x, c3: x - 4}
 
 
+def test_match_issue_21942():
+    a, r, w = symbols('a, r, w', nonnegative=True)
+    p = symbols('p', positive=True)
+    g_ = Wild('g')
+    pattern = g_ ** (1 / (1 - p))
+    eq = (a * r ** (1 - p) + w ** (1 - p) * (1 - a)) ** (1 / (1 - p))
+    m = {g_: a * r ** (1 - p) + w ** (1 - p) * (1 - a)}
+    assert pattern.matches(eq) == m
+    assert (-pattern).matches(-eq) == m
+    assert pattern.matches(signsimp(eq)) is None
+
+
 def test_match_terms():
     X, Y = map(Wild, "XY")
     x, y, z = symbols('x y z')
     assert (5*y - x).match(5*X - Y) == {X: y, Y: x}
     # 15907
     assert (x + (y - 1)*z).match(x + X*z) == {X: y - 1}
+    # 20747
+    assert (x - log(x/y)*(1-exp(x/y))).match(x - log(X/y)*(1-exp(x/y))) == {X: x}
 
 
 def test_match_bound():
@@ -722,3 +756,11 @@ def test_match_bound():
     assert Sum(x, (x, 1, 2)).match(Sum(y, (y, 1, W))) == {W: 2}
     assert Sum(x, (x, 1, 2)).match(Sum(V, (V, 1, W))) == {W: 2, V:x}
     assert Sum(x, (x, 1, 2)).match(Sum(V, (V, 1, 2))) == {V:x}
+
+
+def test_issue_22462():
+    x, f = symbols('x'), Function('f')
+    n, Q = symbols('n Q', cls=Wild)
+    pattern = -Q*f(x)**n
+    eq = 5*f(x)**2
+    assert pattern.matches(eq) == {n: 2, Q: -5}

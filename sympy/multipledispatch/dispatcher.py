@@ -1,4 +1,4 @@
-from typing import Set
+from typing import Set as tSet
 
 from warnings import warn
 import inspect
@@ -71,7 +71,7 @@ def ambiguity_register_error_ignore_dup(dispatcher, ambiguities):
 ###
 
 
-_unresolved_dispatchers = set() # type: Set[Dispatcher]
+_unresolved_dispatchers = set() # type: tSet[Dispatcher]
 _resolve = [True]
 
 
@@ -112,8 +112,8 @@ class Dispatcher:
 
     def __init__(self, name, doc=None):
         self.name = self.__name__ = name
-        self.funcs = dict()
-        self._cache = dict()
+        self.funcs = {}
+        self._cache = {}
         self.ordering = []
         self.doc = doc
 
@@ -172,7 +172,7 @@ class Dispatcher:
                 param.annotation
                 for param in params)
 
-            if all(ann is not Parameter.empty for ann in annotations):
+            if not any(ann is Parameter.empty for ann in annotations):
                 return annotations
 
     def add(self, signature, func, on_ambiguity=ambiguity_warn):
@@ -314,7 +314,7 @@ class Dispatcher:
         self.name = d['name']
         self.funcs = d['funcs']
         self.ordering = ordering(self.funcs)
-        self._cache = dict()
+        self._cache = {}
 
     @property
     def __doc__(self):

@@ -1,8 +1,17 @@
-from sympy import (symbols, Symbol, product, combsimp, factorial, rf, sqrt, cos,
-                   Function, Product, Rational, Sum, oo, exp, log, S, pi,
-                   KroneckerDelta)
+from sympy.concrete.products import (Product, product)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.numbers import (Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.combinatorial.factorials import (rf, factorial)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.simplify import simplify
 from sympy.testing.pytest import raises
-from sympy import simplify
 
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
 f = Function('f')
@@ -22,7 +31,7 @@ def test_karr_convention():
     #
     # It is important to note that he defines all products with
     # the upper limit being *exclusive*.
-    # In contrast, sympy and the usual mathematical notation has:
+    # In contrast, SymPy and the usual mathematical notation has:
     #
     # prod_{i = a}^b f(i) = f(a) * f(a+1) * ... * f(b-1) * f(b)
     #
@@ -229,7 +238,7 @@ def test__eval_product():
     a = Function('a')
     assert product(2*a(i), (i, 1, n)) == 2**n * Product(a(i), (i, 1, n))
     # issue 4810
-    assert product(2**i, (i, 1, n)) == 2**(n/2 + n**2/2)
+    assert product(2**i, (i, 1, n)) == 2**(n*(n + 1)/2)
     k, m = symbols('k m', integer=True)
     assert product(2**i, (i, k, m)) == 2**(-k**2/2 + k/2 + m**2/2 + m/2)
     n = Symbol('n', negative=True, integer=True)
@@ -266,8 +275,9 @@ def test_conjugate_transpose():
     assert p.conjugate().doit() == p.doit().conjugate()
     assert p.transpose().doit() == p.doit().transpose()
 
+
 def test_simplify_prod():
-    y, t, b, c = symbols('y, t, b, c', integer = True)
+    y, t, b, c, v, d = symbols('y, t, b, c, v, d', integer = True)
 
     _simplify = lambda e: simplify(e, doit=False)
     assert _simplify(Product(x*y, (x, n, m), (y, a, k)) * \
@@ -285,6 +295,12 @@ def test_simplify_prod():
     assert _simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
         Product(y, (t, a, b))) == Product(x*y, (t, a, b)) * \
             Product(x, (t, b+1, c))
+    assert _simplify(Product(sin(t)**2 + cos(t)**2 + 1, (t, a, b))) == \
+        Product(2, (t, a, b))
+    assert _simplify(Product(sin(t)**2 + cos(t)**2 - 1, (t, a, b))) == \
+           Product(0, (t, a, b))
+    assert _simplify(Product(v*Product(sin(t)**2 + cos(t)**2, (t, a, b)),
+                             (v, c, d))) == Product(v*Product(1, (t, a, b)), (v, c, d))
 
 
 def test_change_index():
@@ -382,3 +398,13 @@ def test_rewrite_Sum():
 def test_KroneckerDelta_Product():
     y = Symbol('y')
     assert Product(x*KroneckerDelta(x, y), (x, 0, 1)).doit() == 0
+
+
+def test_issue_20848():
+    _i = Dummy('i')
+    t, y, z = symbols('t y z')
+    assert diff(Product(x, (y, 1, z)), x).as_dummy() == Sum(Product(x, (y, 1, _i - 1))*Product(x, (y, _i + 1, z)), (_i, 1, z)).as_dummy()
+    assert diff(Product(x, (y, 1, z)), x).doit() == x**(z - 1)*z
+    assert diff(Product(x, (y, x, z)), x) == Derivative(Product(x, (y, x, z)), x)
+    assert diff(Product(t, (x, 1, z)), x) == S(0)
+    assert Product(sin(n*x), (n, -1, 1)).diff(x).doit() == S(0)

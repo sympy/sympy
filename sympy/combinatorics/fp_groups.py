@@ -1,6 +1,7 @@
 """Finitely Presented Groups and its algorithms. """
 
-from sympy import S
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
 from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
                                                 free_group)
 from sympy.combinatorics.rewritingsystem import RewritingSystem
@@ -8,21 +9,23 @@ from sympy.combinatorics.coset_table import (CosetTable,
                                              coset_enumeration_r,
                                              coset_enumeration_c)
 from sympy.combinatorics import PermutationGroup
+from sympy.matrices.normalforms import invariant_factors
+from sympy.matrices import Matrix
+from sympy.polys.polytools import gcd
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
-from sympy import symbols
 
 from itertools import product
 
 
 @public
-def fp_group(fr_grp, relators=[]):
+def fp_group(fr_grp, relators=()):
     _fp_group = FpGroup(fr_grp, relators)
     return (_fp_group,) + tuple(_fp_group._generators)
 
 @public
-def xfp_group(fr_grp, relators=[]):
+def xfp_group(fr_grp, relators=()):
     _fp_group = FpGroup(fr_grp, relators)
     return (_fp_group, _fp_group._generators)
 
@@ -100,7 +103,7 @@ class FpGroup(DefaultPrinting):
         Compare `word1` and `word2` for equality in the group
         using the group's rewriting system. If the system is
         confluent, the returned answer is necessarily correct.
-        (If it isn't, `False` could be returned in some cases
+        (If it is not, `False` could be returned in some cases
         where in fact `word1 == word2`)
 
         '''
@@ -128,7 +131,7 @@ class FpGroup(DefaultPrinting):
         ========
 
         >>> from sympy.combinatorics.fp_groups import FpGroup
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**3, y**5, (x*y)**2])
         >>> H = [x*y, x**-1*y**-1*x*y*x]
@@ -138,9 +141,9 @@ class FpGroup(DefaultPrinting):
 
         '''
 
-        if not all([isinstance(g, FreeGroupElement) for g in gens]):
+        if not all(isinstance(g, FreeGroupElement) for g in gens):
             raise ValueError("Generators must be `FreeGroupElement`s")
-        if not all([g.group == self.free_group for g in gens]):
+        if not all(g.group == self.free_group for g in gens):
                 raise ValueError("Given generators are not members of the group")
         if homomorphism:
             g, rels, _gens = reidemeister_presentation(self, gens, C=C, homomorphism=True)
@@ -222,7 +225,7 @@ class FpGroup(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x, y**2])
@@ -230,7 +233,6 @@ class FpGroup(DefaultPrinting):
         2
 
         """
-        from sympy import S, gcd
         if self._order is not None:
             return self._order
         if self._coset_table is not None:
@@ -259,24 +261,20 @@ class FpGroup(DefaultPrinting):
         used_gens = set()
         for r in self.relators:
             used_gens.update(r.contains_generators())
-        if any([g not in used_gens for g in self.generators]):
+        if not set(self.generators) <= used_gens:
             return True
         # Abelianisation test: check is the abelianisation is infinite
         abelian_rels = []
-        from sympy.polys.solvers import RawMatrix as Matrix
-        from sympy.polys.domains import ZZ
-        from sympy.matrices.normalforms import invariant_factors
         for rel in self.relators:
             abelian_rels.append([rel.exponent_sum(g) for g in self.generators])
-        m = Matrix(abelian_rels)
-        setattr(m, "ring", ZZ)
+        m = Matrix(Matrix(abelian_rels))
         if 0 in invariant_factors(m):
             return True
         else:
             return None
 
 
-    def _finite_index_subgroup(self, s=[]):
+    def _finite_index_subgroup(self, s=None):
         '''
         Find the elements of `self` that generate a finite index subgroup
         and, if found, return the list of elements and the coset table of `self` by
@@ -344,7 +342,7 @@ class FpGroup(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**5, y**4, y*x*y**3*x**3])
@@ -381,7 +379,7 @@ class FpGroup(DefaultPrinting):
         will only terminate for finite groups.
 
         '''
-        from sympy.combinatorics import Permutation, PermutationGroup
+        from sympy.combinatorics import Permutation
         from sympy.combinatorics.homomorphisms import homomorphism
         if self.order() is S.Infinity:
             raise NotImplementedError("Permutation presentation of infinite "
@@ -629,12 +627,12 @@ class FpSubgroup(DefaultPrinting):
                         # add the product of the words to the list is necessary
                         if r1**-1 == s2 and not (p1*p2).is_identity:
                             new = _process(p1*p2)
-                            if not new in gens:
+                            if new not in gens:
                                 gens.extend(new)
 
                         if r2**-1 == s1 and not (p2*p1).is_identity:
                             new = _process(p2*p1)
-                            if not new in gens:
+                            if new not in gens:
                                 gens.extend(new)
 
                 self._min_words = gens
@@ -688,9 +686,8 @@ class FpSubgroup(DefaultPrinting):
             return i == 0
 
     def order(self):
-        from sympy import S
         if not self.generators:
-            return 1
+            return S.One
         if isinstance(self.parent, FreeGroup):
             return S.Infinity
         if self.C is None:
@@ -720,7 +717,7 @@ class FpSubgroup(DefaultPrinting):
 #                           LOW INDEX SUBGROUPS                               #
 ###############################################################################
 
-def low_index_subgroups(G, N, Y=[]):
+def low_index_subgroups(G, N, Y=()):
     """
     Implements the Low Index Subgroups algorithm, i.e find all subgroups of
     ``G`` upto a given index ``N``. This implements the method described in
@@ -738,7 +735,7 @@ def low_index_subgroups(G, N, Y=[]):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, low_index_subgroups
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
@@ -828,7 +825,7 @@ def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta, Y):
         descendant_subgroups(S, D, R1_c_list, x, R2, N, Y)
 
 
-def first_in_class(C, Y=[]):
+def first_in_class(C, Y=()):
     """
     Checks whether the subgroup ``H=G1`` corresponding to the Coset Table
     could possibly be the canonical representative of its conjugacy class.
@@ -851,7 +848,7 @@ def first_in_class(C, Y=[]):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, first_in_class
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**4])
@@ -1032,7 +1029,7 @@ def elimination_technique_1(gens, rels, identity):
         # don't look for a redundant generator in a relator which
         # depends on previously found ones
         contained_gens = rel.contains_generators()
-        if any([g in contained_gens for g in redundant_gens]):
+        if any(g in contained_gens for g in redundant_gens):
             continue
         contained_gens = list(contained_gens)
         contained_gens.sort(reverse = True)
@@ -1067,7 +1064,7 @@ def _simplification_technique_1(rels):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics import free_group
     >>> from sympy.combinatorics.fp_groups import _simplification_technique_1
     >>> F, x, y = free_group("x, y")
     >>> w1 = [x**2*y**4, x**3]
@@ -1083,8 +1080,6 @@ def _simplification_technique_1(rels):
     [x**2*y**4, x**4]
 
     """
-    from sympy import gcd
-
     rels = rels[:]
     # dictionary with "gen: n" where gen^n is one of the relators
     exps = {}
@@ -1228,8 +1223,8 @@ def rewrite(C, alpha, w):
     ========
 
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, define_schreier_generators, rewrite
-    >>> from sympy.combinatorics.free_groups import free_group
-    >>> F, x, y = free_group("x ,y")
+    >>> from sympy.combinatorics import free_group
+    >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**6])
     >>> C = CosetTable(f, [])
     >>> C.table = [[1, 1, 2, 3], [0, 0, 4, 5], [4, 4, 3, 0], [5, 5, 0, 2], [2, 2, 5, 1], [3, 3, 1, 4]]
@@ -1253,7 +1248,7 @@ def elimination_technique_2(C):
     seems superior in that we may select for elimination the generator with
     shortest equivalent string at each stage.
 
-    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r, \
             reidemeister_relators, define_schreier_generators, elimination_technique_2
     >>> F, x, y = free_group("x, y")
@@ -1301,7 +1296,7 @@ def reidemeister_presentation(fp_grp, H, C=None, homomorphism=False):
     Examples
     ========
 
-    >>> from sympy.combinatorics.free_groups import free_group
+    >>> from sympy.combinatorics import free_group
     >>> from sympy.combinatorics.fp_groups import FpGroup, reidemeister_presentation
     >>> F, x, y = free_group("x, y")
 

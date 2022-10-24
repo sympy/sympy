@@ -1,8 +1,13 @@
 import math
-from sympy import (
-    Float, Idx, IndexedBase, Integer, Matrix, MatrixSymbol, Range, sin,
-    symbols, Symbol, Tuple, Lt, nan, oo
-)
+from sympy.core.containers import Tuple
+from sympy.core.numbers import nan, oo, Float, Integer
+from sympy.core.relational import Lt
+from sympy.core.symbol import symbols, Symbol
+from sympy.functions.elementary.trigonometric import sin
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.sets.fancysets import Range
+from sympy.tensor.indexed import Idx, IndexedBase
 from sympy.testing.pytest import raises
 
 
@@ -262,6 +267,7 @@ def test_String():
     assert st == String('foobar')
     assert st.text == 'foobar'
     assert st.func(**st.kwargs()) == st
+    assert st.func(*st.args) == st
 
 
     class Signifier(String):
@@ -381,7 +387,6 @@ def test_Variable():
     assert Variable.deduced(z, value=3.0+1j).type == complex_
 
 
-
 def test_Pointer():
     p = Pointer(x)
     assert p.symbol == x
@@ -436,7 +441,6 @@ def test_Declaration():
     assert decl3.variable.value == 3.0
 
     raises(ValueError, lambda: Declaration(vi, 42))
-
 
 
 def test_IntBaseType():
@@ -548,7 +552,6 @@ def test_While():
     whl2 = While(x < 2, cblk)
     assert whl1 == whl2
     assert whl1 != While(x < 3, [xpp])
-
 
 
 def test_Scope():

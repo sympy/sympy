@@ -1,9 +1,20 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
-from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
-                   Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs,
-                   Piecewise, Rational)
+from sympy.concrete.summations import Sum
+from sympy.core.function import Function
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Or)
+from sympy.polys.polytools import (Poly, PurePoly)
+from sympy.sets.sets import (FiniteSet, Interval, Union)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
@@ -14,6 +25,8 @@ from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.abc import x, y
+
+from sympy.core.mod import Mod
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -296,7 +309,7 @@ def test_solve_univariate_inequality():
     assert isolve(1/(x - 2) > 0, x) == And(S(2) < x, x < oo)
     den = ((x - 1)*(x - 2)).expand()
     assert isolve((x - 1)/den <= 0, x) == \
-        Or(And(-oo < x, x < 1), And(S.One < x, x < 2))
+        (x > -oo) & (x < 2) & Ne(x, 1)
 
     n = Dummy('n')
     raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
@@ -376,9 +389,8 @@ def test_issue_8974():
 
 def test_issue_10198():
     assert reduce_inequalities(
-        -1 + 1/abs(1/x - 1) < 0) == Or(
-        And(-oo < x, x < 0), And(S.Zero < x, x < S.Half)
-        )
+        -1 + 1/abs(1/x - 1) < 0) == (x > -oo) & (x < S(1)/2) & Ne(x, 0)
+
     assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
         Or(And(-oo < x, x < 0),
@@ -407,6 +419,24 @@ def test_isolve_Sets():
     n = Dummy('n')
     assert isolve(Abs(x) <= n, x, relational=False) == \
         Piecewise((S.EmptySet, n < 0), (Interval(-n, n), True))
+
+
+def test_integer_domain_relational_isolve():
+
+    dom = FiniteSet(0, 3)
+    x = Symbol('x',zero=False)
+    assert isolve((x - 1)*(x - 2)*(x - 4) < 0, x, domain=dom) == Eq(x, 3)
+
+    x = Symbol('x')
+    assert isolve(x + 2 < 0, x, domain=S.Integers) == \
+           (x <= -3) & (x > -oo) & Eq(Mod(x, 1), 0)
+    assert isolve(2 * x + 3 > 0, x, domain=S.Integers) == \
+           (x >= -1) & (x < oo)  & Eq(Mod(x, 1), 0)
+    assert isolve((x ** 2 + 3 * x - 2) < 0, x, domain=S.Integers) == \
+           (x >= -3) & (x <= 0)  & Eq(Mod(x, 1), 0)
+    assert isolve((x ** 2 + 3 * x - 2) > 0, x, domain=S.Integers) == \
+           ((x >= 1) & (x < oo)  & Eq(Mod(x, 1), 0)) | (
+               (x <= -4) & (x > -oo)  & Eq(Mod(x, 1), 0))
 
 
 def test_issue_10671_12466():

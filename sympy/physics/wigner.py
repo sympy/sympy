@@ -11,7 +11,7 @@ Please see the description of the individual functions for further
 details and examples.
 
 References
-~~~~~~~~~~
+==========
 
 .. [Regge58] 'Symmetry Properties of Clebsch-Gordan Coefficients',
   T. Regge, Nuovo Cimento, Volume 10, pp. 544 (1958)
@@ -26,15 +26,20 @@ References
 .. [Liberatodebrito82] 'FORTRAN program for the integral of three
   spherical harmonics', A. Liberato de Brito,
   Comput. Phys. Commun., Volume 25, pp. 81-85 (1982)
+.. [Homeier96] 'Some Properties of the Coupling Coefficients of Real
+  Spherical Harmonics and Their Relation to Gaunt Coefficients',
+  H. H. H. Homeier and E. O. Steinborn J. Mol. Struct., Volume 368,
+  pp. 31-37 (1996)
 
 Credits and Copyright
-~~~~~~~~~~~~~~~~~~~~~
+=====================
 
 This code was taken from Sage with the permission of all authors:
 
 https://groups.google.com/forum/#!topic/sage-devel/M4NZdu-7O38
 
-AUTHORS:
+Authors
+=======
 
 - Jens Rasch (2009-03-24): initial version for Sage
 
@@ -42,12 +47,27 @@ AUTHORS:
 
 - Oscar Gerardo Lazo Arjona (2017-06-18): added Wigner D matrices
 
+- Phil Adam LeMaitre (2022-09-19): added real Gaunt coefficient
+
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 
 """
-from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm, zeros,
-                   Function, sin, cos, exp, I, factorial, binomial,
-                   Add, ImmutableMatrix)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import Function
+from sympy.core.numbers import (I, Integer, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.complexes import re
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.spherical_harmonics import Ynm
+from sympy.matrices.dense import zeros
+from sympy.matrices.immutable import ImmutableMatrix
+from sympy.utilities.misc import as_int
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients
@@ -60,15 +80,20 @@ def _calc_factlist(nn):
     massively accelerate future calculations of the various
     coefficients.
 
-    INPUT:
+    Parameters
+    ==========
 
-    -  ``nn`` -  integer, highest factorial to be computed
+    nn : integer
+        Highest factorial to be computed.
 
-    OUTPUT:
+    Returns
+    =======
 
-    list of integers -- the list of precomputed factorials
+    list of integers :
+        The list of precomputed factorials.
 
-    EXAMPLES:
+    Examples
+    ========
 
     Calculate list of factorials::
 
@@ -86,11 +111,14 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
     Calculate the Wigner 3j symbol `\operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,m_3)`.
 
-    INPUT:
+    Parameters
+    ==========
 
-    -  ``j_1``, ``j_2``, ``j_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer
+    j_1, j_2, j_3, m_1, m_2, m_3 :
+        Integer or half integer.
 
-    OUTPUT:
+    Returns
+    =======
 
     Rational number times the square root of a rational number.
 
@@ -115,7 +143,8 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
         ...
         ValueError: m values must be integer or half integer
 
-    NOTES:
+    Notes
+    =====
 
     The Wigner 3j symbol obeys the following symmetry rules:
 
@@ -150,7 +179,8 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - zero for violating any one of the conditions
       `j_1 \ge |m_1|`,  `j_2 \ge |m_2|`,  `j_3 \ge |m_3|`
 
-    ALGORITHM:
+    Algorithm
+    =========
 
     This function uses the algorithm of [Edmonds74]_ to calculate the
     value of the 3j symbol exactly. Note that the formula contains
@@ -158,7 +188,8 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
 
-    AUTHORS:
+    Authors
+    =======
 
     - Jens Rasch (2009-03-24): initial version
     """
@@ -169,20 +200,20 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
             int(m_3 * 2) != m_3 * 2:
         raise ValueError("m values must be integer or half integer")
     if m_1 + m_2 + m_3 != 0:
-        return 0
+        return S.Zero
     prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
     m_3 = -m_3
     a1 = j_1 + j_2 - j_3
     if a1 < 0:
-        return 0
+        return S.Zero
     a2 = j_1 - j_2 + j_3
     if a2 < 0:
-        return 0
+        return S.Zero
     a3 = -j_1 + j_2 + j_3
     if a3 < 0:
-        return 0
+        return S.Zero
     if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
-        return 0
+        return S.Zero
 
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),
                   j_3 + abs(m_3))
@@ -221,31 +252,36 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
 def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
-    Calculates the Clebsch-Gordan coefficient
+    Calculates the Clebsch-Gordan coefficient.
     `\left\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \right\rangle`.
 
     The reference for this function is [Edmonds74]_.
 
-    INPUT:
+    Parameters
+    ==========
 
-    -  ``j_1``, ``j_2``, ``j_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer
+    j_1, j_2, j_3, m_1, m_2, m_3 :
+        Integer or half integer.
 
-    OUTPUT:
+    Returns
+    =======
 
     Rational number times the square root of a rational number.
 
-    EXAMPLES::
+    Examples
+    ========
 
-        >>> from sympy import S
-        >>> from sympy.physics.wigner import clebsch_gordan
-        >>> clebsch_gordan(S(3)/2, S(1)/2, 2, S(3)/2, S(1)/2, 2)
-        1
-        >>> clebsch_gordan(S(3)/2, S(1)/2, 1, S(3)/2, -S(1)/2, 1)
-        sqrt(3)/2
-        >>> clebsch_gordan(S(3)/2, S(1)/2, 1, -S(1)/2, S(1)/2, 0)
-        -sqrt(2)/2
+    >>> from sympy import S
+    >>> from sympy.physics.wigner import clebsch_gordan
+    >>> clebsch_gordan(S(3)/2, S(1)/2, 2, S(3)/2, S(1)/2, 2)
+    1
+    >>> clebsch_gordan(S(3)/2, S(1)/2, 1, S(3)/2, -S(1)/2, 1)
+    sqrt(3)/2
+    >>> clebsch_gordan(S(3)/2, S(1)/2, 1, -S(1)/2, S(1)/2, 0)
+    -sqrt(2)/2
 
-    NOTES:
+    Notes
+    =====
 
     The Clebsch-Gordan coefficient will be evaluated via its relation
     to Wigner 3j symbols:
@@ -259,7 +295,8 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
     See also the documentation on Wigner 3j symbols which exhibit much
     higher symmetry relations than the Clebsch-Gordan coefficient.
 
-    AUTHORS:
+    Authors
+    =======
 
     - Jens Rasch (2009-03-24): initial version
     """
@@ -274,21 +311,25 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
     Racah symbols. Also checks that the differences are of integer
     value.
 
-    INPUT:
+    Parameters
+    ==========
 
-    -  ``aa`` - first angular momentum, integer or half integer
+    aa :
+        First angular momentum, integer or half integer.
+    bb :
+        Second angular momentum, integer or half integer.
+    cc :
+        Third angular momentum, integer or half integer.
+    prec :
+        Precision of the ``sqrt()`` calculation.
 
-    -  ``bb`` - second angular momentum, integer or half integer
+    Returns
+    =======
 
-    -  ``cc`` - third angular momentum, integer or half integer
+    double : Value of the Delta coefficient.
 
-    -  ``prec`` - precision of the ``sqrt()`` calculation
-
-    OUTPUT:
-
-    double - Value of the Delta coefficient
-
-    EXAMPLES::
+    Examples
+    ========
 
         sage: from sage.functions.wigner import _big_delta_coeff
         sage: _big_delta_coeff(1,1,1)
@@ -302,11 +343,11 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
     if int(bb + cc - aa) != (bb + cc - aa):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
     if (aa + bb - cc) < 0:
-        return 0
+        return S.Zero
     if (aa + cc - bb) < 0:
-        return 0
+        return S.Zero
     if (bb + cc - aa) < 0:
-        return 0
+        return S.Zero
 
     maxfact = max(aa + bb - cc, aa + cc - bb, bb + cc - aa, aa + bb + cc + 1)
     _calc_factlist(maxfact)
@@ -326,14 +367,17 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     r"""
     Calculate the Racah symbol `W(a,b,c,d;e,f)`.
 
-    INPUT:
+    Parameters
+    ==========
 
-    -  ``a``, ..., ``f`` - integer or half integer
+    a, ..., f :
+        Integer or half integer.
+    prec :
+        Precision, default: ``None``. Providing a precision can
+        drastically speed up the calculation.
 
-    -  ``prec`` - precision, default: ``None``. Providing a precision can
-       drastically speed up the calculation.
-
-    OUTPUT:
+    Returns
+    =======
 
     Rational number times the square root of a rational number
     (if ``prec=None``), or real number if a precision is given.
@@ -345,7 +389,8 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     >>> racah(3,3,3,3,3,3)
     -1/14
 
-    NOTES:
+    Notes
+    =====
 
     The Racah symbol is related to the Wigner 6j symbol:
 
@@ -357,7 +402,8 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     Please see the 6j symbol for its much richer symmetries and for
     additional properties.
 
-    ALGORITHM:
+    Algorithm
+    =========
 
     This function uses the algorithm of [Edmonds74]_ to calculate the
     value of the 6j symbol exactly. Note that the formula contains
@@ -365,7 +411,8 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
 
-    AUTHORS:
+    Authors
+    =======
 
     - Jens Rasch (2009-03-24): initial version
     """
@@ -374,7 +421,7 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
         _big_delta_coeff(aa, cc, ff, prec) * \
         _big_delta_coeff(bb, dd, ff, prec)
     if prefac == 0:
-        return 0
+        return S.Zero
     imin = max(aa + bb + ee, cc + dd + ee, aa + cc + ff, bb + dd + ff)
     imax = min(aa + bb + cc + dd, aa + dd + ee + ff, bb + cc + ee + ff)
 
@@ -401,14 +448,17 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     r"""
     Calculate the Wigner 6j symbol `\operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)`.
 
-    INPUT:
+    Parameters
+    ==========
 
-    -  ``j_1``, ..., ``j_6`` - integer or half integer
+    j_1, ..., j_6 :
+        Integer or half integer.
+    prec :
+        Precision, default: ``None``. Providing a precision can
+        drastically speed up the calculation.
 
-    -  ``prec`` - precision, default: ``None``. Providing a precision can
-       drastically speed up the calculation.
-
-    OUTPUT:
+    Returns
+    =======
 
     Rational number times the square root of a rational number
     (if ``prec=None``), or real number if a precision is given.
@@ -434,7 +484,8 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
         ...
         ValueError: j values must be integer or half integer and fulfill the triangle relation
 
-    NOTES:
+    Notes
+    =====
 
     The Wigner 6j symbol is related to the Racah symbol but exhibits
     more symmetries as detailed below.
@@ -475,7 +526,8 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
 
     - only non-zero if any triple of `j`'s fulfill a triangle relation
 
-    ALGORITHM:
+    Algorithm
+    =========
 
     This function uses the algorithm of [Edmonds74]_ to calculate the
     value of the 6j symbol exactly. Note that the formula contains
@@ -494,14 +546,17 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     Calculate the Wigner 9j symbol
     `\operatorname{Wigner9j}(j_1,j_2,j_3,j_4,j_5,j_6,j_7,j_8,j_9)`.
 
-    INPUT:
+    Parameters
+    ==========
 
-    -  ``j_1``, ..., ``j_9`` - integer or half integer
+    j_1, ..., j_9 :
+        Integer or half integer.
+    prec : precision, default
+        ``None``. Providing a precision can
+        drastically speed up the calculation.
 
-    -  ``prec`` - precision, default: ``None``. Providing a precision can
-       drastically speed up the calculation.
-
-    OUTPUT:
+    Returns
+    =======
 
     Rational number times the square root of a rational number
     (if ``prec=None``), or real number if a precision is given.
@@ -510,10 +565,10 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     ========
 
     >>> from sympy.physics.wigner import wigner_9j
-    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0 ,prec=64) # ==1/18
+    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0, prec=64) # ==1/18
     0.05555555...
 
-    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1 ,prec=64) # ==1/6
+    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1, prec=64) # ==1/6
     0.1666666...
 
     It is an error to have arguments that are not integer or half
@@ -528,7 +583,8 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
         ...
         ValueError: j values must be integer or half integer and fulfill the triangle relation
 
-    ALGORITHM:
+    Algorithm
+    =========
 
     This function uses the algorithm of [Edmonds74]_ to calculate the
     value of the 3j symbol exactly. Note that the formula contains
@@ -551,6 +607,9 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     r"""
     Calculate the Gaunt coefficient.
 
+    Explanation
+    ===========
+
     The Gaunt coefficient is defined as the integral over three
     spherical harmonics:
 
@@ -565,14 +624,17 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
          \operatorname{Wigner3j}(l_1,l_2,l_3,m_1,m_2,m_3)
         \end{aligned}
 
-    INPUT:
+    Parameters
+    ==========
 
-    -  ``l_1``, ``l_2``, ``l_3``, ``m_1``, ``m_2``, ``m_3`` - integer
+    l_1, l_2, l_3, m_1, m_2, m_3 :
+        Integer.
+    prec - precision, default: ``None``.
+        Providing a precision can
+        drastically speed up the calculation.
 
-    -  ``prec`` - precision, default: ``None``. Providing a precision can
-       drastically speed up the calculation.
-
-    OUTPUT:
+    Returns
+    =======
 
     Rational number times the square root of a rational number
     (if ``prec=None``), or real number if a precision is given.
@@ -597,7 +659,8 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
         ...
         ValueError: m values must be integer
 
-    NOTES:
+    Notes
+    =====
 
     The Gaunt coefficient obeys the following symmetry rules:
 
@@ -630,7 +693,8 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     - non-zero only for an even sum of the `l_i`, i.e.
       `L = l_1 + l_2 + l_3 = 2n` for `n` in `\mathbb{N}`
 
-    ALGORITHM:
+    Algorithms
+    ==========
 
     This function uses the algorithm of [Liberatodebrito82]_ to
     calculate the value of the Gaunt coefficient exactly. Note that
@@ -638,44 +702,37 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     therefore unsuitable for finite precision arithmetic and only
     useful for a computer algebra system [Rasch03]_.
 
-    AUTHORS:
+    Authors
+    =======
 
-    - Jens Rasch (2009-03-24): initial version for Sage
+    Jens Rasch (2009-03-24): initial version for Sage.
     """
-    if int(l_1) != l_1 or int(l_2) != l_2 or int(l_3) != l_3:
-        raise ValueError("l values must be integer")
-    if int(m_1) != m_1 or int(m_2) != m_2 or int(m_3) != m_3:
-        raise ValueError("m values must be integer")
+    l_1, l_2, l_3, m_1, m_2, m_3 = [
+        as_int(i) for i in (l_1, l_2, l_3, m_1, m_2, m_3)]
 
-    sumL = l_1 + l_2 + l_3
-    bigL = sumL // 2
-    a1 = l_1 + l_2 - l_3
-    if a1 < 0:
-        return 0
-    a2 = l_1 - l_2 + l_3
-    if a2 < 0:
-        return 0
-    a3 = -l_1 + l_2 + l_3
-    if a3 < 0:
-        return 0
-    if sumL % 2:
-        return 0
+    if l_1 + l_2 - l_3 < 0:
+        return S.Zero
+    if l_1 - l_2 + l_3 < 0:
+        return S.Zero
+    if -l_1 + l_2 + l_3 < 0:
+        return S.Zero
     if (m_1 + m_2 + m_3) != 0:
-        return 0
+        return S.Zero
     if (abs(m_1) > l_1) or (abs(m_2) > l_2) or (abs(m_3) > l_3):
-        return 0
+        return S.Zero
+    bigL, remL = divmod(l_1 + l_2 + l_3, 2)
+    if remL % 2:
+        return S.Zero
 
     imin = max(-l_3 + l_1 + m_2, -l_3 + l_2 - m_1, 0)
     imax = min(l_2 + m_2, l_1 - m_1, l_1 + l_2 - l_3)
 
-    maxfact = max(l_1 + l_2 + l_3 + 1, imax + 1)
-    _calc_factlist(maxfact)
+    _calc_factlist(max(l_1 + l_2 + l_3 + 1, imax + 1))
 
-    argsqrt = (2 * l_1 + 1) * (2 * l_2 + 1) * (2 * l_3 + 1) * \
+    ressqrt = sqrt((2 * l_1 + 1) * (2 * l_2 + 1) * (2 * l_3 + 1) * \
         _Factlist[l_1 - m_1] * _Factlist[l_1 + m_1] * _Factlist[l_2 - m_2] * \
         _Factlist[l_2 + m_2] * _Factlist[l_3 - m_3] * _Factlist[l_3 + m_3] / \
-        (4*pi)
-    ressqrt = sqrt(argsqrt)
+        (4*pi))
 
     prefac = Integer(_Factlist[bigL] * _Factlist[l_2 - l_1 + l_3] *
                      _Factlist[l_1 - l_2 + l_3] * _Factlist[l_1 + l_2 - l_3])/ \
@@ -696,6 +753,160 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     return res
 
 
+def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
+    r"""
+    Calculate the real Gaunt coefficient.
+
+    Explanation
+    ===========
+
+    The real Gaunt coefficient is defined as the integral over three
+    real spherical harmonics:
+
+    .. math::
+        \begin{aligned}
+        \operatorname{RealGaunt}(l_1,l_2,l_3,m_1,m_2,m_3)
+        &=\int Z^{m_1}_{l_1}(\Omega)
+         Z^{m_2}_{l_2}(\Omega) Z^{m_3}_{l_3}(\Omega) \,d\Omega \\
+        \end{aligned}
+
+    Alternatively, it can be defined in terms of the standard Gaunt
+    coefficient by relating the real spherical harmonics to the standard
+    spherical harmonics via a unitary transformation `U`, i.e.
+    `Z^{m}_{l}(\Omega)=\sum_{m'}U^{m}_{m'}Y^{m'}_{l}(\Omega)` [Homeier96]_.
+    The real Gaunt coefficient is then defined as
+
+    .. math::
+        \begin{aligned}
+        \operatorname{RealGaunt}(l_1,l_2,l_3,m_1,m_2,m_3)
+        &=\int Z^{m_1}_{l_1}(\Omega)
+         Z^{m_2}_{l_2}(\Omega) Z^{m_3}_{l_3}(\Omega) \,d\Omega \\
+        &=\sum_{m'_1 m'_2 m'_3} U^{m_1}_{m'_1}U^{m_2}_{m'_2}U^{m_3}_{m'_3}
+         \operatorname{Gaunt}(l_1,l_2,l_3,m'_1,m'_2,m'_3)
+        \end{aligned}
+
+    The unitary matrix `U` has components
+
+    .. math::
+        \begin{aligned}
+        U^m_{m'} = \delta_{|m||m'|}*(\delta_{m'0}\delta_{m0} + \frac{1}{\sqrt{2}}\big[\Theta(m)
+        \big(\delta_{m'm}+(-1)^{m'}\delta_{m'-m}\big)+i\Theta(-m)\big((-1)^{-m}
+        \delta_{m'-m}-\delta_{m'm}*(-1)^{m'-m}\big)\big])
+        \end{aligned}
+
+    where `\delta_{ij}` is the Kronecker delta symbol and `\Theta` is a step
+    function defined as
+
+    .. math::
+        \begin{aligned}
+        \Theta(x) = \begin{cases} 1 \,\text{for}\, x > 0 \\ 0 \,\text{for}\, x \leq 0 \end{cases}
+        \end{aligned}
+
+    Parameters
+    ==========
+
+    l_1, l_2, l_3, m_1, m_2, m_3 :
+        Integer.
+
+    prec - precision, default: ``None``.
+        Providing a precision can
+        drastically speed up the calculation.
+
+    Returns
+    =======
+
+    Rational number times the square root of a rational number.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.wigner import real_gaunt
+    >>> real_gaunt(2,2,4,-1,-1,0)
+    -2/(7*sqrt(pi))
+    >>> real_gaunt(10,10,20,-9,-9,0).n(64)
+    -0.00002480019791932209313156167...
+
+    It is an error to use non-integer values for `l` and `m`::
+        real_gaunt(2.8,0.5,1.3,0,0,0)
+        Traceback (most recent call last):
+        ...
+        ValueError: l values must be integer
+        real_gaunt(2,2,4,0.7,1,-3.4)
+        Traceback (most recent call last):
+        ...
+        ValueError: m values must be integer
+
+    Notes
+    =====
+
+    The real Gaunt coefficient inherits from the standard Gaunt coefficient,
+    the invariance under any permutation of the pairs `(l_i, m_i)` and the
+    requirement that the sum of the `l_i` be even to yield a non-zero value.
+    It also obeys the following symmetry rules:
+
+    - zero for `l_1`, `l_2`, `l_3` not fulfiling the condition
+      `l_1 \in \{l_{\text{max}}, l_{\text{max}}-2, \ldots, l_{\text{min}}\}`,
+      where `l_{\text{max}} = l_2+l_3`,
+
+      .. math::
+          \begin{aligned}
+          l_{\text{min}} = \begin{cases} \kappa(l_2, l_3, m_2, m_3) & \text{if}\,
+          \kappa(l_2, l_3, m_2, m_3) + l_{\text{max}}\, \text{is even} \\
+          \kappa(l_2, l_3, m_2, m_3)+1 & \text{if}\, \kappa(l_2, l_3, m_2, m_3) +
+          l_{\text{max}}\, \text{is odd}\end{cases}
+          \end{aligned}
+
+      and `\kappa(l_2, l_3, m_2, m_3) = \max{\big(|l_2-l_3|, \min{\big(|m_2+m_3|,
+      |m_2-m_3|\big)}\big)}`
+
+    - zero for an odd number of negative `m_i`
+
+    Algorithms
+    ==========
+
+    This function uses the algorithms of [Homeier96]_ and [Rasch03]_ to
+    calculate the value of the real Gaunt coefficient exactly. Note that
+    the formula used in [Rasch03]_ contains alternating sums over large
+    factorials and is therefore unsuitable for finite precision arithmetic
+    and only useful for a computer algebra system [Rasch03]_. However, this
+    function can in principle use any algorithm that computes the Gaunt
+    coefficient, so it is suitable for finite precision arithmetic in so far
+    as the algorithm which computes the Gaunt coefficient is.
+    """
+    l_1, l_2, l_3, m_1, m_2, m_3 = [
+        as_int(i) for i in (l_1, l_2, l_3, m_1, m_2, m_3)]
+
+    # check for quick exits
+    if sum(1 for i in (m_1, m_2, m_3) if i < 0) % 2:
+        return S.Zero  # odd number of negative m
+    if (l_1 + l_2 + l_3) % 2:
+        return S.Zero  # sum of l is odd
+    lmax = l_2 + l_3
+    lmin = max(abs(l_2 - l_3), min(abs(m_2 + m_3), abs(m_2 - m_3)))
+    if (lmin + lmax) % 2:
+        lmin += 1
+    if lmin not in range(lmax, lmin - 2, -2):
+        return S.Zero
+
+    kron_del = lambda i, j: 1 if i == j else 0
+    s = lambda e: -1 if e % 2 else 1  #  (-1)**e to give +/-1, avoiding float when e<0
+    A = lambda a, b: (-kron_del(a, b)*s(a-b) + kron_del(a, -b)*
+                      s(b)) if b < 0 else 0
+    B = lambda a, b: (kron_del(a, b) + kron_del(a, -b)*s(a)) if b > 0 else 0
+    C = lambda a, b: kron_del(abs(a), abs(b))*(kron_del(a, 0)*kron_del(b, 0) +
+                                          (B(a, b) + I*A(a, b))/sqrt(2))
+    ugnt = 0
+    for i in range(-l_1, l_1+1):
+        U1 = C(i, m_1)
+        for j in range(-l_2, l_2+1):
+            U2 = C(j, m_2)
+            U3 = C(-i-j, m_3)
+            ugnt = ugnt + re(U1*U2*U3)*gaunt(l_1, l_2, l_3, i, j, -i-j)
+
+    if prec is not None:
+        ugnt = ugnt.n(prec)
+    return ugnt
+
 
 class Wigner3j(Function):
 
@@ -708,6 +919,9 @@ class Wigner3j(Function):
 def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
     r"""
     Returns dot product of rotational gradients of spherical harmonics.
+
+    Explanation
+    ===========
 
     This function returns the right hand side of the following expression:
 
@@ -753,15 +967,16 @@ def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
 def wigner_d_small(J, beta):
     """Return the small Wigner d matrix for angular momentum J.
 
-    INPUT:
+    Explanation
+    ===========
 
-    -  ``J`` - An integer, half-integer, or sympy symbol for the total angular
+    J : An integer, half-integer, or SymPy symbol for the total angular
         momentum of the angular momentum space being rotated.
-
-    -  ``beta`` - A real number representing the Euler angle of rotation about
+    beta : A real number representing the Euler angle of rotation about
         the so-called line of nodes. See [Edmonds74]_.
 
-    OUTPUT:
+    Returns
+    =======
 
     A matrix representing the corresponding Euler angle rotation( in the basis
     of eigenvectors of `J_z`).
@@ -889,16 +1104,18 @@ def wigner_d_small(J, beta):
 def wigner_d(J, alpha, beta, gamma):
     """Return the Wigner D matrix for angular momentum J.
 
-    INPUT:
+    Explanation
+    ===========
 
-    -  ``J`` - An integer, half-integer, or sympy symbol for the total angular
+    J :
+        An integer, half-integer, or SymPy symbol for the total angular
         momentum of the angular momentum space being rotated.
-
-    -  ``alpha``, ``beta``, ``gamma`` - Real numbers representing the Euler
-        angles of rotation about the so-called vertical, line of nodes, and
+    alpha, beta, gamma - Real numbers representing the Euler.
+        Angles of rotation about the so-called vertical, line of nodes, and
         figure axes. See [Edmonds74]_.
 
-    OUTPUT:
+    Returns
+    =======
 
     A matrix representing the corresponding Euler angle rotation( in the basis
     of eigenvectors of `J_z`).

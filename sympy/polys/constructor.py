@@ -1,8 +1,9 @@
 """Tools for constructing domains for expressions. """
-
+from math import prod
 
 from sympy.core import sympify
 from sympy.core.evalf import pure_complex
+from sympy.core.sorting import ordered
 from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, EX
 from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.domains.realfield import RealField
@@ -47,7 +48,7 @@ def _construct_simple(coeffs, opt):
                         float_numbers.append(x)
                     if y.is_Float:
                         float_numbers.append(y)
-            if is_algebraic(coeff):
+            elif is_algebraic(coeff):
                 if floats:
                     # there are both algebraics and reals -> EX
                     return False
@@ -81,41 +82,48 @@ def _construct_algebraic(coeffs, opt):
     """We know that coefficients are algebraic so construct the extension. """
     from sympy.polys.numberfields import primitive_element
 
-    result, exts = [], set()
+    exts = set()
 
-    for coeff in coeffs:
-        if coeff.is_Rational:
-            coeff = (None, 0, QQ.from_sympy(coeff))
-        else:
-            a = coeff.as_coeff_add()[0]
-            coeff -= a
+    def build_trees(args):
+        trees = []
+        for a in args:
+            if a.is_Rational:
+                tree = ('Q', QQ.from_sympy(a))
+            elif a.is_Add:
+                tree = ('+', build_trees(a.args))
+            elif a.is_Mul:
+                tree = ('*', build_trees(a.args))
+            else:
+                tree = ('e', a)
+                exts.add(a)
+            trees.append(tree)
+        return trees
 
-            b = coeff.as_coeff_mul()[0]
-            coeff /= b
-
-            exts.add(coeff)
-
-            a = QQ.from_sympy(a)
-            b = QQ.from_sympy(b)
-
-            coeff = (coeff, b, a)
-
-        result.append(coeff)
-
-    exts = list(exts)
+    trees = build_trees(coeffs)
+    exts = list(ordered(exts))
 
     g, span, H = primitive_element(exts, ex=True, polys=True)
     root = sum([ s*ext for s, ext in zip(span, exts) ])
 
     domain, g = QQ.algebraic_field((g, root)), g.rep.rep
 
-    for i, (coeff, a, b) in enumerate(result):
-        if coeff is not None:
-            coeff = a*domain.dtype.from_list(H[exts.index(coeff)], g, QQ) + b
-        else:
-            coeff = domain.dtype.from_list([b], g, QQ)
+    exts_dom = [domain.dtype.from_list(h, g, QQ) for h in H]
+    exts_map = dict(zip(exts, exts_dom))
 
-        result[i] = coeff
+    def convert_tree(tree):
+        op, args = tree
+        if op == 'Q':
+            return domain.dtype.from_list([args], g, QQ)
+        elif op == '+':
+            return sum((convert_tree(a) for a in args), domain.zero)
+        elif op == '*':
+            return prod(convert_tree(a) for a in args)
+        elif op == 'e':
+            return exts_map[args]
+        else:
+            raise RuntimeError
+
+    result = [convert_tree(tree) for tree in trees]
 
     return domain, result
 
@@ -257,7 +265,87 @@ def _construct_expression(coeffs, opt):
 
 @public
 def construct_domain(obj, **args):
-    """Construct a minimal domain for the list of coefficients. """
+    """Construct a minimal domain for a list of expressions.
+
+    Explanation
+    ===========
+
+    Given a list of normal SymPy expressions (of type :py:class:`~.Expr`)
+    ``construct_domain`` will find a minimal :py:class:`~.Domain` that can
+    represent those expressions. The expressions will be converted to elements
+    of the domain and both the domain and the domain elements are returned.
+
+    Parameters
+    ==========
+
+    obj: list or dict
+        The expressions to build a domain for.
+
+    **args: keyword arguments
+        Options that affect the choice of domain.
+
+    Returns
+    =======
+
+    (K, elements): Domain and list of domain elements
+        The domain K that can represent the expressions and the list or dict
+        of domain elements representing the same expressions as elements of K.
+
+    Examples
+    ========
+
+    Given a list of :py:class:`~.Integer` ``construct_domain`` will return the
+    domain :ref:`ZZ` and a list of integers as elements of :ref:`ZZ`.
+
+    >>> from sympy import construct_domain, S
+    >>> expressions = [S(2), S(3), S(4)]
+    >>> K, elements = construct_domain(expressions)
+    >>> K
+    ZZ
+    >>> elements
+    [2, 3, 4]
+    >>> type(elements[0])  # doctest: +SKIP
+    <class 'int'>
+    >>> type(expressions[0])
+    <class 'sympy.core.numbers.Integer'>
+
+    If there are any :py:class:`~.Rational` then :ref:`QQ` is returned
+    instead.
+
+    >>> construct_domain([S(1)/2, S(3)/4])
+    (QQ, [1/2, 3/4])
+
+    If there are symbols then a polynomial ring :ref:`K[x]` is returned.
+
+    >>> from sympy import symbols
+    >>> x, y = symbols('x, y')
+    >>> construct_domain([2*x + 1, S(3)/4])
+    (QQ[x], [2*x + 1, 3/4])
+    >>> construct_domain([2*x + 1, y])
+    (ZZ[x,y], [2*x + 1, y])
+
+    If any symbols appear with negative powers then a rational function field
+    :ref:`K(x)` will be returned.
+
+    >>> construct_domain([y/x, x/(1 - y)])
+    (ZZ(x,y), [y/x, -x/(y - 1)])
+
+    Irrational algebraic numbers will result in the :ref:`EX` domain by
+    default. The keyword argument ``extension=True`` leads to the construction
+    of an algebraic number field :ref:`QQ(a)`.
+
+    >>> from sympy import sqrt
+    >>> construct_domain([sqrt(2)])
+    (EX, [EX(sqrt(2))])
+    >>> construct_domain([sqrt(2)], extension=True)  # doctest: +SKIP
+    (QQ<sqrt(2)>, [ANP([1, 0], [1, 0, -2], QQ)])
+
+    See also
+    ========
+
+    Domain
+    Expr
+    """
     opt = build_options(args)
 
     if hasattr(obj, '__iter__'):

@@ -1,5 +1,6 @@
 from functools import singledispatch
-from sympy import pi, tan
+from sympy.core.numbers import pi
+from sympy.functions.elementary.trigonometric import tan
 from sympy.simplify import trigsimp
 from sympy.core import Basic, Tuple
 from sympy.core.symbol import _symbol
@@ -58,7 +59,7 @@ class ParametricRegion(Basic):
             bounds = Tuple(*bounds)
 
         for bound in bounds:
-            if  isinstance(bound, tuple) or isinstance(bound, Tuple):
+            if isinstance(bound, (tuple, Tuple)):
                 if len(bound) != 3:
                     raise ValueError("Tuple should be in the form (parameter, lowerbound, upperbound)")
                 parameters += (bound[0],)
@@ -66,7 +67,7 @@ class ParametricRegion(Basic):
             else:
                 parameters += (bound,)
 
-        if not (isinstance(definition, tuple) or isinstance(definition, Tuple)):
+        if not isinstance(definition, (tuple, Tuple)):
             definition = (definition,)
 
         obj = super().__new__(cls, Tuple(*definition), *bounds)
@@ -181,7 +182,7 @@ def _(obj, parameters=('t', 's')):
     for i in range(len(obj.variables) - 1):
         # Each parameter is replaced by its tangent to simplify intergation
         parameter = _symbol(parameters[i], real=True)
-        definition = [trigsimp(elem.subs(parameter, tan(parameter))) for elem in definition]
+        definition = [trigsimp(elem.subs(parameter, tan(parameter/2))) for elem in definition]
         bounds.append((parameter, 0, 2*pi),)
 
     definition = Tuple(*definition)

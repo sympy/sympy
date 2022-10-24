@@ -64,23 +64,23 @@ def construct(t):
         return t.op(*map(construct, t.args))
 
 def rebuild(s):
-    """ Rebuild a SymPy expression
+    """ Rebuild a SymPy expression.
 
-    This removes harm caused by Expr-Rules interactions
+    This removes harm caused by Expr-Rules interactions.
     """
     return construct(deconstruct(s))
 
 def unify(x, y, s=None, variables=(), **kwargs):
-    """ Structural unification of two expressions/patterns
+    """ Structural unification of two expressions/patterns.
 
     Examples
     ========
 
     >>> from sympy.unify.usympy import unify
-    >>> from sympy import Basic
+    >>> from sympy import Basic, S
     >>> from sympy.abc import x, y, z, p, q
 
-    >>> next(unify(Basic(1, 2), Basic(1, x), variables=[x]))
+    >>> next(unify(Basic(S(1), S(2)), Basic(S(1), x), variables=[x]))
     {x: 2}
 
     >>> expr = 2*x + y + z

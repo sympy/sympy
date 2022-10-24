@@ -1,3 +1,5 @@
+.. _module-printing:
+
 ========
 Printing
 ========
@@ -17,9 +19,9 @@ The main class responsible for printing is ``Printer`` (see also its
 `source code <https://github.com/sympy/sympy/blob/master/sympy/printing/printer.py>`_):
 
 .. autoclass:: Printer
-    :members: doprint, _print, set_global_settings, order
+   :members: doprint, _print, set_global_settings, order
 
-    .. autoattribute:: Printer.printmethod
+   .. autoattribute:: Printer.printmethod
 
 
 PrettyPrinter Class
@@ -289,6 +291,20 @@ translated in pure Fortran and (iii) a string of Fortran code. A few examples:
     >>> fcode(x - pi**2, human=False)
     ({(pi, '3.1415926535897932d0')}, set(), '      x - pi**2')
 
+SMT-Lib printing
+---------------------------------
+
+.. module:: sympy.printing.smtlib
+
+.. autoclass:: sympy.printing.smtlib.SMTLibPrinter
+   :members:
+
+   .. autoattribute:: SMTLibPrinter.printmethod
+
+   .. autoattribute:: SMTLibPrinter._default_settings
+
+.. autofunction:: sympy.printing.smtlib.smtlib_code
+
 Mathematica code printing
 -------------------------
 
@@ -377,21 +393,21 @@ Rust code printing
 
 .. autofunction:: sympy.printing.rust.rust_code
 
-Theano Code printing
+Aesara Code printing
 --------------------
 
-.. module:: sympy.printing.theanocode
+.. module:: sympy.printing.aesaracode
 
-.. autoclass:: sympy.printing.theanocode.TheanoPrinter
+.. autoclass:: sympy.printing.aesaracode.AesaraPrinter
    :members:
 
-   .. autoattribute:: TheanoPrinter.printmethod
+   .. autoattribute:: AesaraPrinter.printmethod
 
-.. autofunction:: sympy.printing.theanocode.theano_code
+.. autofunction:: sympy.printing.aesaracode.aesara_code
 
-.. autofunction:: sympy.printing.theanocode.theano_function
+.. autofunction:: sympy.printing.aesaracode.aesara_function
 
-.. autofunction:: sympy.printing.theanocode.dim_handling
+.. autofunction:: sympy.printing.aesaracode.dim_handling
 
 Gtk
 ---
@@ -421,6 +437,7 @@ This classes implements printing to strings that can be used by the
 :py:func:`sympy.utilities.lambdify.lambdify` function.
 
 .. autoclass:: LambdaPrinter
+   :members:
 
    .. autoattribute:: LambdaPrinter.printmethod
 
@@ -455,6 +472,7 @@ This class is responsible for MathML printing. See ``sympy.printing.mathml``.
 More info on mathml : http://www.w3.org/TR/MathML2
 
 .. autoclass:: MathMLPrinterBase
+   :members:
 
 .. autoclass:: MathMLContentPrinter
    :members:
@@ -512,7 +530,7 @@ Example::
 but for SymPy we don’t actually use ``srepr()`` for ``__repr__`` because it’s
 is so verbose, it is unlikely that anyone would want it called by default.
 Another reason is that lists call repr on their elements, like ``print([a, b, c])``
-calls ``repr(a)``, ``repr(b)``, ``repr(c)``. So if we used srepr for `` __repr__`` any list with
+calls ``repr(a)``, ``repr(b)``, ``repr(c)``. So if we used srepr for ``__repr__`` any list with
 SymPy objects would include the srepr form, even if we used ``str()`` or ``print()``.
 
 
@@ -581,6 +599,7 @@ functionality, and additionally lists a number of functions that cannot be
 easily translated to C or Fortran.
 
 .. autoclass:: sympy.printing.codeprinter.CodePrinter
+   :members:
 
    .. autoattribute:: CodePrinter.printmethod
 

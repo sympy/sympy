@@ -1,12 +1,86 @@
-from sympy import Basic
-from sympy import S
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
 from sympy.core.expr import Expr
+from sympy.core.kind import Kind, NumberKind, UndefinedKind
 from sympy.core.numbers import Integer
+from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import SYMPY_INTS, Iterable
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.printing.defaults import Printable
 
 import itertools
+from collections.abc import Iterable
+
+
+class ArrayKind(Kind):
+    """
+    Kind for N-dimensional array in SymPy.
+
+    This kind represents the multidimensional array that algebraic
+    operations are defined. Basic class for this kind is ``NDimArray``,
+    but any expression representing the array can have this.
+
+    Parameters
+    ==========
+
+    element_kind : Kind
+        Kind of the element. Default is :obj:NumberKind `<sympy.core.kind.NumberKind>`,
+        which means that the array contains only numbers.
+
+    Examples
+    ========
+
+    Any instance of array class has ``ArrayKind``.
+
+    >>> from sympy import NDimArray
+    >>> NDimArray([1,2,3]).kind
+    ArrayKind(NumberKind)
+
+    Although expressions representing an array may be not instance of
+    array class, it will have ``ArrayKind`` as well.
+
+    >>> from sympy import Integral
+    >>> from sympy.tensor.array import NDimArray
+    >>> from sympy.abc import x
+    >>> intA = Integral(NDimArray([1,2,3]), x)
+    >>> isinstance(intA, NDimArray)
+    False
+    >>> intA.kind
+    ArrayKind(NumberKind)
+
+    Use ``isinstance()`` to check for ``ArrayKind` without specifying
+    the element kind. Use ``is`` with specifying the element kind.
+
+    >>> from sympy.tensor.array import ArrayKind
+    >>> from sympy.core import NumberKind
+    >>> boolA = NDimArray([True, False])
+    >>> isinstance(boolA.kind, ArrayKind)
+    True
+    >>> boolA.kind is ArrayKind(NumberKind)
+    False
+
+    See Also
+    ========
+
+    shape : Function to return the shape of objects with ``MatrixKind``.
+
+    """
+    def __new__(cls, element_kind=NumberKind):
+        obj = super().__new__(cls, element_kind)
+        obj.element_kind = element_kind
+        return obj
+
+    def __repr__(self):
+        return "ArrayKind(%s)" % self.element_kind
+
+    @classmethod
+    def _union(cls, kinds) -> 'ArrayKind':
+        elem_kinds = set(e.kind for e in kinds)
+        if len(elem_kinds) == 1:
+            elemkind, = elem_kinds
+        else:
+            elemkind = UndefinedKind
+        return ArrayKind(elemkind)
 
 
 class NDimArray(Printable):
@@ -69,12 +143,17 @@ class NDimArray(Printable):
         from sympy.tensor.array import ImmutableDenseNDimArray
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
 
+    def __getitem__(self, index):
+        raise NotImplementedError("A subclass of NDimArray should implement __getitem__")
+
     def _parse_index(self, index):
         if isinstance(index, (SYMPY_INTS, Integer)):
-            raise ValueError("Only a tuple index is accepted")
+            if index >= self._loop_size:
+                raise ValueError("Only a tuple index is accepted")
+            return index
 
         if self._loop_size == 0:
-            raise ValueError("Index not valide with an empty array")
+            raise ValueError("Index not valid with an empty array")
 
         if len(index) != self._rank:
             raise ValueError('Wrong number of array axes')
@@ -101,7 +180,7 @@ class NDimArray(Printable):
     def _check_symbolic_index(self, index):
         # Check if any index is symbolic:
         tuple_index = (index if isinstance(index, tuple) else (index,))
-        if any([(isinstance(i, Expr) and (not i.is_number)) for i in tuple_index]):
+        if any((isinstance(i, Expr) and (not i.is_number)) for i in tuple_index):
             for i, nth_dim in zip(tuple_index, self.shape):
                 if ((i < 0) == True) or ((i >= nth_dim) == True):
                     raise ValueError("index out of range")
@@ -120,6 +199,9 @@ class NDimArray(Printable):
             if not isinstance(pointer, Iterable):
                 return [pointer], ()
 
+            if len(pointer) == 0:
+                return [], (0,)
+
             result = []
             elems, shapes = zip(*[f(i) for i in pointer])
             if len(set(shapes)) != 1:
@@ -134,7 +216,6 @@ class NDimArray(Printable):
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import SparseNDimArray
-        from sympy import Dict, Tuple
 
         if shape is None:
             if iterable is None:
@@ -144,16 +225,16 @@ class NDimArray(Printable):
             elif isinstance(iterable, SparseNDimArray):
                 return iterable._shape, iterable._sparse_array
 
+            # Construct N-dim array from another N-dim array:
+            elif isinstance(iterable, NDimArray):
+                shape = iterable.shape
+
             # Construct N-dim array from an iterable (numpy arrays included):
             elif isinstance(iterable, Iterable):
                 iterable, shape = cls._scan_iterable_shape(iterable)
 
             # Construct N-dim array from a Matrix:
             elif isinstance(iterable, MatrixBase):
-                shape = iterable.shape
-
-            # Construct N-dim array from another N-dim array:
-            elif isinstance(iterable, NDimArray):
                 shape = iterable.shape
 
             else:
@@ -173,7 +254,7 @@ class NDimArray(Printable):
         if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
 
-        if any([not isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape]):
+        if not all(isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape):
             raise TypeError("Shape should contain integers only.")
 
         return tuple(shape), iterable
@@ -494,11 +575,11 @@ class NDimArray(Printable):
 
     def _check_index_for_getitem(self, index):
         if isinstance(index, (SYMPY_INTS, Integer, slice)):
-            index = (index, )
+            index = (index,)
 
         if len(index) < self.rank():
-            index = tuple([i for i in index] + \
-                          [slice(None) for i in range(len(index), self.rank())])
+            index = tuple(index) + \
+                          tuple(slice(None) for i in range(len(index), self.rank()))
 
         if len(index) > self.rank():
             raise ValueError('Dimension of index greater than rank of array')

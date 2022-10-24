@@ -1,9 +1,18 @@
-from sympy import Eq, Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, Abs, sec
+from sympy.core import expand
+from sympy.core.numbers import (Rational, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sec
+from sympy.geometry.line import Segment2D
+from sympy.geometry.point import Point2D
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
 from sympy.testing.pytest import raises, slow
-from sympy import integrate
+from sympy.integrals.integrals import integrate
 from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.functions.elementary.miscellaneous import Max
 
@@ -22,9 +31,8 @@ def test_ellipse_equation_using_slope():
 
 
 def test_object_from_equation():
-    from sympy.abc import x, y, a, b
-    assert Circle(x**2 + y**2 + 3*x + 4*y - 8) == Circle(Point2D(S(-3) / 2, -2),
-                                                                                      sqrt(57) / 2)
+    from sympy.abc import x, y, a, b, c, d, e
+    assert Circle(x**2 + y**2 + 3*x + 4*y - 8) == Circle(Point2D(S(-3) / 2, -2), sqrt(57) / 2)
     assert Circle(x**2 + y**2 + 6*x + 8*y + 25) == Circle(Point2D(-3, -4), 0)
     assert Circle(a**2 + b**2 + 6*a + 8*b + 25, x='a', y='b') == Circle(Point2D(-3, -4), 0)
     assert Circle(x**2 + y**2 - 25) == Circle(Point2D(0, 0), 5)
@@ -32,7 +40,8 @@ def test_object_from_equation():
     assert Circle(a**2 + b**2, x='a', y='b') == Circle(Point2D(0, 0), 0)
     assert Circle(x**2 + y**2 + 6*x + 8) == Circle(Point2D(-3, 0), 1)
     assert Circle(x**2 + y**2 + 6*y + 8) == Circle(Point2D(0, -3), 1)
-    assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(Rational(-1, 2), Rational(-2, 3)), 5*sqrt(37)/6)
+    assert Circle((x - 1)**2 + y**2 - 9) == Circle(Point2D(1, 0), 3)
+    assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(Rational(-1, 2), Rational(-2, 3)), 5*sqrt(7)/6)
     assert Circle(Eq(a**2 + b**2, 25), x='a', y=b) == Circle(Point2D(0, 0), 5)
     raises(GeometryError, lambda: Circle(x**2 + y**2 + 3*x + 4*y + 26))
     raises(GeometryError, lambda: Circle(x**2 + y**2 + 25))
@@ -40,6 +49,10 @@ def test_object_from_equation():
     raises(GeometryError, lambda: Circle(x**2 + 6*y + 8))
     raises(GeometryError, lambda: Circle(6*(x ** 2) + 4*(y**2) + 6*x + 8*y + 25))
     raises(ValueError, lambda: Circle(a**2 + b**2 + 3*a + 4*b - 8))
+    # .equation() adds 'real=True' assumption; '==' would fail if assumptions differed
+    x, y = symbols('x y', real=True)
+    eq = a*x**2 + a*y**2 + c*x + d*y + e
+    assert expand(Circle(eq).equation()*a) == eq
 
 
 @slow
@@ -157,6 +170,12 @@ def test_ellipse_geom():
     assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
         [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
      Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))), ]
+    assert Circle(Point(5, 5), 5).tangent_lines(Point(4, 0)) == \
+        [Line(Point(4, 0), Point(Rational(40, 13), Rational(5, 13))),
+     Line(Point(4, 0), Point(5, 0))]
+    assert Circle(Point(5, 5), 5).tangent_lines(Point(0, 6)) == \
+        [Line(Point(0, 6), Point(0, 7)),
+        Line(Point(0, 6), Point(Rational(5, 13), Rational(90, 13)))]
 
     # for numerical calculations, we shouldn't demand exact equality,
     # so only test up to the desired precision

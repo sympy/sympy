@@ -30,6 +30,7 @@ We calculate a generic Jones vector:
 ⎣ⅈ⋅sin(χ)⋅cos(ψ) + sin(ψ)⋅cos(χ) ⎦
 
 And the more general Stokes vector:
+
 >>> s0 = stokes_vector(psi, chi, p, I0)
 >>> pprint(s0, use_unicode=True)
 ⎡          I₀          ⎤
@@ -41,6 +42,7 @@ And the more general Stokes vector:
 ⎣    I₀⋅p⋅sin(2⋅χ)     ⎦
 
 We calculate how the Jones vector is modified by a half-wave plate:
+
 >>> alpha = symbols("alpha", real=True)
 >>> HWP = half_wave_retarder(alpha)
 >>> x1 = simplify(HWP*x0)
@@ -82,7 +84,13 @@ References
 
 """
 
-from sympy import sin, cos, exp, I, pi, sqrt, Matrix, Abs, re, im, simplify
+from sympy.core.numbers import (I, pi)
+from sympy.functions.elementary.complexes import (Abs, im, re)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.dense import Matrix
+from sympy.simplify.simplify import simplify
 from sympy.physics.quantum import TensorProduct
 
 
@@ -93,10 +101,10 @@ def jones_vector(psi, chi):
     Parameters
     ==========
 
-    ``psi`` : numeric type or sympy Symbol
+    psi : numeric type or SymPy Symbol
         The tilt of the polarization relative to the `x` axis.
 
-    ``chi`` : numeric type or sympy Symbol
+    chi : numeric type or SymPy Symbol
         The angle adjacent to the mayor axis of the polarization ellipse.
 
 
@@ -116,24 +124,28 @@ def jones_vector(psi, chi):
     >>> psi, chi = symbols("psi, chi", real=True)
 
     A general Jones vector.
+
     >>> pprint(jones_vector(psi, chi), use_unicode=True)
     ⎡-ⅈ⋅sin(χ)⋅sin(ψ) + cos(χ)⋅cos(ψ)⎤
     ⎢                                ⎥
     ⎣ⅈ⋅sin(χ)⋅cos(ψ) + sin(ψ)⋅cos(χ) ⎦
 
     Horizontal polarization.
+
     >>> pprint(jones_vector(0, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
     ⎣0⎦
 
     Vertical polarization.
+
     >>> pprint(jones_vector(pi/2, 0), use_unicode=True)
     ⎡0⎤
     ⎢ ⎥
     ⎣1⎦
 
     Diagonal polarization.
+
     >>> pprint(jones_vector(pi/4, 0), use_unicode=True)
     ⎡√2⎤
     ⎢──⎥
@@ -144,6 +156,7 @@ def jones_vector(psi, chi):
     ⎣2 ⎦
 
     Anti-diagonal polarization.
+
     >>> pprint(jones_vector(-pi/4, 0), use_unicode=True)
     ⎡ √2 ⎤
     ⎢ ── ⎥
@@ -154,6 +167,7 @@ def jones_vector(psi, chi):
     ⎣ 2  ⎦
 
     Right-hand circular polarization.
+
     >>> pprint(jones_vector(0, pi/4), use_unicode=True)
     ⎡ √2 ⎤
     ⎢ ── ⎥
@@ -164,6 +178,7 @@ def jones_vector(psi, chi):
     ⎣ 2  ⎦
 
     Left-hand circular polarization.
+
     >>> pprint(jones_vector(0, -pi/4), use_unicode=True)
     ⎡  √2  ⎤
     ⎢  ──  ⎥
@@ -185,13 +200,13 @@ def stokes_vector(psi, chi, p=1, I=1):
     Parameters
     ==========
 
-    ``psi`` : numeric type or sympy Symbol
+    psi : numeric type or SymPy Symbol
         The tilt of the polarization relative to the ``x`` axis.
-    ``chi`` : numeric type or sympy Symbol
+    chi : numeric type or SymPy Symbol
         The angle adjacent to the mayor axis of the polarization ellipse.
-    ``p`` : numeric type or sympy Symbol
+    p : numeric type or SymPy Symbol
         The degree of polarization.
-    ``I`` : numeric type or sympy Symbol
+    I : numeric type or SymPy Symbol
         The intensity of the field.
 
 
@@ -220,6 +235,7 @@ def stokes_vector(psi, chi, p=1, I=1):
 
 
     Horizontal polarization
+
     >>> pprint(stokes_vector(0, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -230,6 +246,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0⎦
 
     Vertical polarization
+
     >>> pprint(stokes_vector(pi/2, 0), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
@@ -240,6 +257,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0 ⎦
 
     Diagonal polarization
+
     >>> pprint(stokes_vector(pi/4, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -250,6 +268,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0⎦
 
     Anti-diagonal polarization
+
     >>> pprint(stokes_vector(-pi/4, 0), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
@@ -260,6 +279,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣0 ⎦
 
     Right-hand circular polarization
+
     >>> pprint(stokes_vector(0, pi/4), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -270,6 +290,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣1⎦
 
     Left-hand circular polarization
+
     >>> pprint(stokes_vector(0, -pi/4), use_unicode=True)
     ⎡1 ⎤
     ⎢  ⎥
@@ -280,6 +301,7 @@ def stokes_vector(psi, chi, p=1, I=1):
     ⎣-1⎦
 
     Unpolarized light
+
     >>> pprint(stokes_vector(0, 0, 0), use_unicode=True)
     ⎡1⎤
     ⎢ ⎥
@@ -298,18 +320,18 @@ def stokes_vector(psi, chi, p=1, I=1):
 
 
 def jones_2_stokes(e):
-    """Return the Stokes vector for a Jones vector `e`.
+    """Return the Stokes vector for a Jones vector ``e``.
 
     Parameters
     ==========
 
-    ``e`` : sympy Matrix
+    e : SymPy Matrix
         A Jones vector.
 
     Returns
     =======
 
-    sympy Matrix
+    SymPy Matrix
         A Jones vector.
 
     Examples
@@ -351,13 +373,13 @@ def linear_polarizer(theta=0):
     Parameters
     ==========
 
-    ``theta`` : numeric type or sympy Symbol
+    theta : numeric type or SymPy Symbol
         The angle of the transmission axis relative to the horizontal plane.
 
     Returns
     =======
 
-    sympy Matrix
+    SymPy Matrix
         A Jones matrix representing the polarizer.
 
     Examples
@@ -384,21 +406,21 @@ def linear_polarizer(theta=0):
 
 
 def phase_retarder(theta=0, delta=0):
-    """A phase retarder Jones matrix with retardance `delta` at angle `theta`.
+    """A phase retarder Jones matrix with retardance ``delta`` at angle ``theta``.
 
     Parameters
     ==========
 
-    ``theta`` : numeric type or sympy Symbol
+    theta : numeric type or SymPy Symbol
         The angle of the fast axis relative to the horizontal plane.
-    ``delta`` : numeric type or sympy Symbol
+    delta : numeric type or SymPy Symbol
         The phase difference between the fast and slow axes of the
         transmitted light.
 
     Returns
     =======
 
-    sympy Matrix :
+    SymPy Matrix :
         A Jones matrix representing the retarder.
 
     Examples
@@ -430,18 +452,18 @@ def phase_retarder(theta=0, delta=0):
 
 
 def half_wave_retarder(theta):
-    """A half-wave retarder Jones matrix at angle `theta`.
+    """A half-wave retarder Jones matrix at angle ``theta``.
 
     Parameters
     ==========
 
-    ``theta`` : numeric type or sympy Symbol
+    theta : numeric type or SymPy Symbol
         The angle of the fast axis relative to the horizontal plane.
 
     Returns
     =======
 
-    sympy Matrix
+    SymPy Matrix
         A Jones matrix representing the retarder.
 
     Examples
@@ -465,18 +487,18 @@ def half_wave_retarder(theta):
 
 
 def quarter_wave_retarder(theta):
-    """A quarter-wave retarder Jones matrix at angle `theta`.
+    """A quarter-wave retarder Jones matrix at angle ``theta``.
 
     Parameters
     ==========
 
-    ``theta`` : numeric type or sympy Symbol
+    theta : numeric type or SymPy Symbol
         The angle of the fast axis relative to the horizontal plane.
 
     Returns
     =======
 
-    sympy Matrix
+    SymPy Matrix
         A Jones matrix representing the retarder.
 
     Examples
@@ -504,18 +526,18 @@ def quarter_wave_retarder(theta):
 
 
 def transmissive_filter(T):
-    """An attenuator Jones matrix with transmittance `T`.
+    """An attenuator Jones matrix with transmittance ``T``.
 
     Parameters
     ==========
 
-    ``T`` : numeric type or sympy Symbol
+    T : numeric type or SymPy Symbol
         The transmittance of the attenuator.
 
     Returns
     =======
 
-    sympy Matrix
+    SymPy Matrix
         A Jones matrix representing the filter.
 
     Examples
@@ -537,18 +559,18 @@ def transmissive_filter(T):
 
 
 def reflective_filter(R):
-    """A reflective filter Jones matrix with reflectance `R`.
+    """A reflective filter Jones matrix with reflectance ``R``.
 
     Parameters
     ==========
 
-    ``R`` : numeric type or sympy Symbol
+    R : numeric type or SymPy Symbol
         The reflectance of the filter.
 
     Returns
     =======
 
-    sympy Matrix
+    SymPy Matrix
         A Jones matrix representing the filter.
 
     Examples
@@ -574,13 +596,13 @@ def mueller_matrix(J):
     Parameters
     ==========
 
-    ``J`` : sympy Matrix
+    J : SymPy Matrix
         A Jones matrix.
 
     Returns
     =======
 
-    sympy Matrix
+    SymPy Matrix
         The corresponding Mueller matrix.
 
     Examples
@@ -594,6 +616,7 @@ def mueller_matrix(J):
     >>> theta = symbols("theta", real=True)
 
     A linear_polarizer
+
     >>> pprint(mueller_matrix(linear_polarizer(theta)), use_unicode=True)
     ⎡            cos(2⋅θ)      sin(2⋅θ)     ⎤
     ⎢  1/2       ────────      ────────    0⎥
@@ -610,6 +633,7 @@ def mueller_matrix(J):
     ⎣   0           0             0        0⎦
 
     A half-wave plate
+
     >>> pprint(mueller_matrix(half_wave_retarder(theta)), use_unicode=True)
     ⎡1              0                           0               0 ⎤
     ⎢                                                             ⎥
@@ -622,6 +646,7 @@ def mueller_matrix(J):
     ⎣0              0                           0               -1⎦
 
     A quarter-wave plate
+
     >>> pprint(mueller_matrix(quarter_wave_retarder(theta)), use_unicode=True)
     ⎡1       0             0            0    ⎤
     ⎢                                        ⎥
@@ -650,20 +675,20 @@ def polarizing_beam_splitter(Tp=1, Rs=1, Ts=0, Rp=0, phia=0, phib=0):
     Parameters
     ==========
 
-    ``J`` : sympy Matrix
+    J : SymPy Matrix
         A Jones matrix.
-    ``Tp`` : numeric type or sympy Symbol
+    Tp : numeric type or SymPy Symbol
         The transmissivity of the P-polarized component.
-    ``Rs`` : numeric type or sympy Symbol
+    Rs : numeric type or SymPy Symbol
         The reflectivity of the S-polarized component.
-    ``Ts`` : numeric type or sympy Symbol
+    Ts : numeric type or SymPy Symbol
         The transmissivity of the S-polarized component.
-    ``Rp`` : numeric type or sympy Symbol
+    Rp : numeric type or SymPy Symbol
         The reflectivity of the P-polarized component.
-    ``phia`` : numeric type or sympy Symbol
+    phia : numeric type or SymPy Symbol
         The phase difference between transmitted and reflected component for
         output mode a.
-    ``phib`` : numeric type or sympy Symbol
+    phib : numeric type or SymPy Symbol
         The phase difference between transmitted and reflected component for
         output mode b.
 
@@ -671,7 +696,7 @@ def polarizing_beam_splitter(Tp=1, Rs=1, Ts=0, Rp=0, phia=0, phib=0):
     Returns
     =======
 
-    sympy Matrix
+    SymPy Matrix
         A 4x4 matrix representing the PBS. This matrix acts on a 4x1 vector
         whose first two entries are the Jones vector on one of the PBS ports,
         and the last two entries the Jones vector on the other port.

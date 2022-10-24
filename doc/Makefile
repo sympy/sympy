@@ -6,19 +6,29 @@ RST2HTML     = rst2html
 # You can set these variables from the command line.
 SPHINXOPTS   =
 SPHINXVER    = 0.5
-SPHINXBUILD  = PYTHONPATH=..:$(PYTHONPATH) sphinx-build
+SPHINXBUILD  = sphinx-build
 PAPER        =
+BUILDDIR     = _build
+SOURCEDIR    = src
+LIVEHOST     = localhost
+LIVEPORT     = 0
 
 SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg) $(wildcard src/modules/vector/*.svg)
 PDFFILES = $(SVGFILES:%.svg=%.pdf)
 
-ALLSPHINXOPTS = -d _build/doctrees $(SPHINXOPTS) src
-ALLSPHINXOPTSapi = -d _build/doctrees-api $(SPHINXOPTS) api
-ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_paper_size=$(PAPER) \
+# This must be set for the recursive make pdf build to work in make latexpdf
+export LATEXMKOPTS = -halt-on-error -xelatex
+
+
+ALLSPHINXOPTS = -d $(BUILDDIR)/doctrees $(SPHINXOPTS)
+WARNINGSFILE = $(BUILDDIR)/.sphinx-warnings
+SPHINXSAVEWARNINGS = -w $(WARNINGSFILE)
+ALLSPHINXOPTSapi = -d $(BUILDDIR)/doctrees-api $(SPHINXOPTS) api
+ALLSPHINXOPTSlatex = -d $(BUILDDIR)/doctrees-latex -D latex_element.papersize=$(PAPER)paper \
                 $(SPHINXOPTS) src
 
-.PHONY: changes cheatsheet clean help html htmlapi htmlhelp info latex \
-        linkcheck livehtml texinfo web logo man
+.PHONY: changes cheatsheet clean help html _html htmlapi htmlhelp info latex \
+        pdflatex latexpdf pdf linkcheck livehtml texinfo web logo man printwarnings
 
 .SUFFIXES: .pdf .svg
 
@@ -40,107 +50,123 @@ help:
 	@echo "  man         build manpage"
 
 clean:
-	-rm -rf _build
+	-rm -rf $(BUILDDIR)
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
 
-html: SPHINXOPTS += -W --keep-going
-html: _build/logo/sympy-notailtext-favicon.ico
-	mkdir -p src/.static
-	mkdir -p _build/html
-	mkdir -p _build/doctrees
-	mkdir -p src/modules
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) _build/html
-	cp -r src/pics _build/html/
+html:
+	$(MAKE) -s _html || $(MAKE) -s printwarnings
+
+# Force colors on CI. Set NO_COLOR=1 on the command line to disable this.
+_html: export FORCE_COLOR = 1
+_html: $(BUILDDIR)/html/pics/*.png
+_html: SPHINXOPTS += -W --keep-going
+_html: $(BUILDDIR)/logo/sympy-notailtext-favicon.ico
+	mkdir -p $(SOURCEDIR)/.static
+	mkdir -p $(BUILDDIR)/html
+	mkdir -p $(BUILDDIR)/doctrees
+	mkdir -p $(SOURCEDIR)/modules
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(SPHINXSAVEWARNINGS) $(SOURCEDIR) $(BUILDDIR)/html
 	@echo
-	@echo "Build finished. The HTML pages are in _build/html."
+	@echo "Docs build finished. The HTML pages are in $(BUILDDIR)/html."
+
+# Print the warnings again at the end of the build, to make them easier to find
+printwarnings:
+	@printf "\033[0;31mThe docs build failed with the following errors:\033[0m\n"
+	@cat $(WARNINGSFILE)
+	exit 1
+
+$(BUILDDIR)/html/pics/*.png: $(SOURCEDIR)/pics/*.png
+	mkdir -p $(BUILDDIR)/html
+	cp -r $(SOURCEDIR)/pics $(BUILDDIR)/html/
 
 htmlapi:
 	mkdir -p api/.static
 	mkdir -p api/modules
-	mkdir -p _build/api _build/doctreesapi
+	mkdir -p $(BUILDDIR)/api $(BUILDDIR)/doctreesapi
 	rm -f api/modules/sympy*.rst
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTSapi) _build/api
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTSapi) $(BUILDDIR)/api
 	@echo
-	@echo "Build finished. The API docs pages are in _build/api."
+	@echo "Build finished. The API docs pages are in $(BUILDDIR)/api."
 
 web:
-	mkdir -p _build/web _build/doctrees
-	$(SPHINXBUILD) -b web $(ALLSPHINXOPTS) _build/web
+	mkdir -p $(BUILDDIR)/web $(BUILDDIR)/doctrees
+	$(SPHINXBUILD) -b web $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/web
 	@echo
 	@echo "Build finished; now you can run"
-	@echo "  python -m sphinx.web _build/web"
+	@echo "  python -m sphinx.web $(BUILDDIR)/web"
 	@echo "to start the server."
 
 htmlhelp:
-	mkdir -p _build/htmlhelp _build/doctrees
-	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) _build/htmlhelp
+	mkdir -p $(BUILDDIR)/htmlhelp $(BUILDDIR)/doctrees
+	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) %(SOURCEDIR) $(BUILDDIR)/htmlhelp
 	@echo
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
-	      ".hhp project file in _build/htmlhelp."
+	      ".hhp project file in $(BUILDDIR)/htmlhelp."
 
-latex: $(PDFFILES)
-	mkdir -p _build/latex _build/doctrees
-	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTSlatex) _build/latex
+latex:
+	mkdir -p $(BUILDDIR)/latex $(BUILDDIR)/doctrees
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTSlatex) $(BUILDDIR)/latex
 	@echo
-	@echo "Build finished; the LaTeX files are in _build/latex."
+	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
 	@echo "Set the environment variable LATEXMKOPTS='-xelatex -silent'"
 	@echo "And run \`make all' in that directory to run these through xelatex."
 
-.svg.pdf:
-	inkscape --file=$< --export-area-drawing --without-gui --export-pdf=$@
+pdf pdflatex latexpdf: latex
+	$(MAKE) -C $(BUILDDIR)/latex
 
 changes:
-	mkdir -p _build/changes _build/doctrees
-	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) _build/changes
+	mkdir -p $(BUILDDIR)/changes $(BUILDDIR)/doctrees
+	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/changes
 	@echo
-	@echo "The overview file is in _build/changes."
+	@echo "The overview file is in $(BUILDDIR)/changes."
 
 linkcheck:
-	mkdir -p _build/linkcheck _build/doctrees
-	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) _build/linkcheck
+	mkdir -p $(BUILDDIR)/linkcheck $(BUILDDIR)/doctrees
+	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/linkcheck
 	@echo
 	@echo "Link check complete; look for any errors in the above output " \
-	      "or in _build/linkcheck/output.txt."
+	      "or in $(BUILDDIR)/linkcheck/output.txt."
 
-livehtml:
-	livereload _build/html
+livehtml: _html
+	sphinx-autobuild --open-browser --watch .. --host $(LIVEHOST) --port $(LIVEPORT) -b html $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
 
-cheatsheet: _build/cheatsheet/cheatsheet.pdf _build/cheatsheet/combinatoric_cheatsheet.pdf
+cheatsheet: $(BUILDDIR)/cheatsheet/cheatsheet.pdf $(BUILDDIR)/cheatsheet/combinatoric_cheatsheet.pdf
 
-_build/cheatsheet/cheatsheet.pdf: cheatsheet/cheatsheet.tex
-	mkdir -p _build/cheatsheet
-	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
-	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
+$(BUILDDIR)/cheatsheet/cheatsheet.pdf: cheatsheet/cheatsheet.tex
+	mkdir -p $(BUILDDIR)/cheatsheet
+	pdflatex -output-directory=$(BUILDDIR)/cheatsheet cheatsheet/cheatsheet.tex
+	pdflatex -output-directory=$(BUILDDIR)/cheatsheet cheatsheet/cheatsheet.tex
 
-_build/cheatsheet/combinatoric_cheatsheet.pdf: cheatsheet/combinatoric_cheatsheet.tex
-	mkdir -p _build/cheatsheet
-	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
-	pdflatex -output-directory=_build/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
+$(BUILDDIR)/cheatsheet/combinatoric_cheatsheet.pdf: cheatsheet/combinatoric_cheatsheet.tex
+	mkdir -p $(BUILDDIR)/cheatsheet
+	pdflatex -output-directory=$(BUILDDIR)/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
+	pdflatex -output-directory=$(BUILDDIR)/cheatsheet cheatsheet/combinatoric_cheatsheet.tex
 
 texinfo:
-	mkdir -p _build/texinfo
-	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) _build/texinfo
+	mkdir -p $(BUILDDIR)/texinfo
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/texinfo
 	@echo
-	@echo "Build finished. The Texinfo files are in _build/texinfo."
+	@echo "Build finished. The Texinfo files are in $(BUILDDIR)/texinfo."
 	@echo "Run \`make' in that directory to run these through makeinfo" \
 	      "(use \`make info' here to do that automatically)."
 
 info:
-	mkdir -p _build/texinfo
-	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) _build/texinfo
+	mkdir -p $(BUILDDIR)/texinfo
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/texinfo
 	@echo "Running Texinfo files through makeinfo..."
-	make -C _build/texinfo info
-	@echo "makeinfo finished; the Info files are in _build/texinfo."
+	make -C $(BUILDDIR)/texinfo info
+	@echo "makeinfo finished; the Info files are in $(BUILDDIR)/texinfo."
 
 man: man/isympy.xml
 	docbook2x-man --to-stdout $< > man/isympy.1
 
-_build/logo/sympy-notailtext-favicon.ico: logo
+logo: $(BUILDDIR)/logo/*.png
 
-logo: src/logo/sympy.svg
-	rm -rf _build/logo
-	mkdir -p _build/logo
+$(BUILDDIR)/logo/sympy-notailtext-favicon.ico: logo
+
+$(BUILDDIR)/logo/*.png: $(SOURCEDIR)/logo/sympy.svg
+	mkdir -p $(BUILDDIR)/logo
 	$(PYTHON) ./generate_logos.py -d
 	@echo
 	@echo "Logo generated."

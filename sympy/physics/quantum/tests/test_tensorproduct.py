@@ -1,4 +1,5 @@
-from sympy import I, symbols
+from sympy.core.numbers import I
+from sympy.core.symbol import symbols
 from sympy.core.expr import unchanged
 from sympy.matrices import Matrix, SparseMatrix
 
@@ -10,7 +11,7 @@ from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qubit import Qubit, QubitBra
 from sympy.physics.quantum.operator import OuterProduct
 from sympy.physics.quantum.density import Density
-from sympy.core.trace import Tr
+from sympy.physics.quantum.trace import Tr
 
 A, B, C, D = symbols('A,B,C,D', commutative=False)
 x = symbols('x')
@@ -43,6 +44,13 @@ def test_tensor_product_abstract():
 def test_tensor_product_expand():
     assert TP(A + B, B + C).expand(tensorproduct=True) == \
         TP(A, B) + TP(A, C) + TP(B, B) + TP(B, C)
+    #Tests for fix of issue #24142
+    assert TP(A-B, B-A).expand(tensorproduct=True) == \
+        TP(A, B) - TP(A, A) - TP(B, B) + TP(B, A)
+    assert TP(2*A + B, A + B).expand(tensorproduct=True) == \
+        2 * TP(A, A) + 2 * TP(A, B) + TP(B, A) + TP(B, B)
+    assert TP(2 * A * B + A, A + B).expand(tensorproduct=True) == \
+        2 * TP(A*B, A) + 2 * TP(A*B, B) + TP(A, A) + TP(A, B)
 
 
 def test_tensor_product_commutator():

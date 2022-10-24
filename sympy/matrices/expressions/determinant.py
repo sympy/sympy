@@ -1,4 +1,7 @@
-from sympy import Basic, Expr, S, sympify
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 from sympy.matrices.common import NonSquareMatrixError
 
 
@@ -33,7 +36,11 @@ class Determinant(Expr):
     def arg(self):
         return self.args[0]
 
-    def doit(self, expand=False):
+    @property
+    def kind(self):
+        return self.arg.kind.element_kind
+
+    def doit(self, expand=False, **hints):
         try:
             return self.arg._eval_determinant()
         except (AttributeError, NotImplementedError):
@@ -82,7 +89,7 @@ class Permanent(Expr):
     def arg(self):
         return self.args[0]
 
-    def doit(self, expand=False):
+    def doit(self, expand=False, **hints):
         try:
             return self.arg.per()
         except (AttributeError, NotImplementedError):

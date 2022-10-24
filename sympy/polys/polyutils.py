@@ -4,6 +4,7 @@
 from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
     expand_mul, expand_multinomial)
 from sympy.core.exprtools import decompose_power, decompose_power_rat
+from sympy.core.numbers import _illegal
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
@@ -21,7 +22,7 @@ _gens_order = {
 }
 
 _max_order = 1000
-_re_gen = re.compile(r"^(.+?)(\d*)$")
+_re_gen = re.compile(r"^(.*?)(\d*)$", re.MULTILINE)
 
 
 def _nsort(roots, separated=False):
@@ -165,13 +166,13 @@ def _sort_factors(factors, **args):
     else:
         return sorted(factors, key=order_no_multiple_key)
 
-illegal = [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]
-finf = [float(i) for i in illegal[1:3]]
+illegal_types = [type(obj) for obj in _illegal]
+finf = [float(i) for i in _illegal[1:3]]
 def _not_a_coeff(expr):
     """Do not treat NaN and infinities as valid polynomial coefficients. """
-    if expr in illegal or expr in finf:
+    if type(expr) in illegal_types or expr in finf:
         return True
-    if type(expr) is float and float(expr) != expr:
+    if isinstance(expr, float) and float(expr) != expr:
         return True  # nan
     return  # could be
 
@@ -209,7 +210,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
 
                         monom[indices[base]] = exp
                     except KeyError:
-                        if not factor.free_symbols.intersection(opt.gens):
+                        if not factor.has_free(*opt.gens):
                             coeff.append(factor)
                         else:
                             raise PolynomialError("%s contains an element of "
@@ -439,7 +440,7 @@ class PicklableWithSlots:
 
     To make :mod:`pickle` happy in doctest we have to use these hacks::
 
-        >>> from sympy.core.compatibility import builtins
+        >>> import builtins
         >>> builtins.Some = Some
         >>> from sympy.polys import polyutils
         >>> polyutils.Some = Some
@@ -469,8 +470,15 @@ class PicklableWithSlots:
 
         # Get all data that should be stored from super classes
         for c in cls.__bases__:
-            if hasattr(c, "__getstate__"):
-                d.update(c.__getstate__(self, c))
+            # XXX: Python 3.11 defines object.__getstate__ and it does not
+            # accept any arguments so we need to make sure not to call it with
+            # an argument here. To be compatible with Python < 3.11 we need to
+            # be careful not to assume that c or object has a __getstate__
+            # method though.
+            getstate = getattr(c, "__getstate__", None)
+            objstate = getattr(object, "__getstate__", None)
+            if getstate is not None and getstate is not objstate:
+                d.update(getstate(self, c))
 
         # Get all information that should be stored from cls and return the dict
         for name in cls.__slots__:
@@ -486,3 +494,62 @@ class PicklableWithSlots:
                 setattr(self, name, value)
             except AttributeError:    # This is needed in cases like Rational :> Half
                 pass
+
+
+class IntegerPowerable:
+    r"""
+    Mixin class for classes that define a `__mul__` method, and want to be
+    raised to integer powers in the natural way that follows. Implements
+    powering via binary expansion, for efficiency.
+
+    By default, only integer powers $\geq 2$ are supported. To support the
+    first, zeroth, or negative powers, override the corresponding methods,
+    `_first_power`, `_zeroth_power`, `_negative_power`, below.
+    """
+
+    def __pow__(self, e, modulo=None):
+        if e < 2:
+            try:
+                if e == 1:
+                    return self._first_power()
+                elif e == 0:
+                    return self._zeroth_power()
+                else:
+                    return self._negative_power(e, modulo=modulo)
+            except NotImplementedError:
+                return NotImplemented
+        else:
+            bits = [int(d) for d in reversed(bin(e)[2:])]
+            n = len(bits)
+            p = self
+            first = True
+            for i in range(n):
+                if bits[i]:
+                    if first:
+                        r = p
+                        first = False
+                    else:
+                        r *= p
+                        if modulo is not None:
+                            r %= modulo
+                if i < n - 1:
+                    p *= p
+                    if modulo is not None:
+                        p %= modulo
+            return r
+
+    def _negative_power(self, e, modulo=None):
+        """
+        Compute inverse of self, then raise that to the abs(e) power.
+        For example, if the class has an `inv()` method,
+            return self.inv() ** abs(e) % modulo
+        """
+        raise NotImplementedError
+
+    def _zeroth_power(self):
+        """Return unity element of algebraic struct to which self belongs."""
+        raise NotImplementedError
+
+    def _first_power(self):
+        """Return a copy of self."""
+        raise NotImplementedError

@@ -1,4 +1,4 @@
-from sympy import isprime
+from sympy.ntheory.primetest import isprime
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 from sympy.combinatorics.free_groups import free_group
@@ -103,7 +103,7 @@ class Collector(DefaultPrinting):
         ========
 
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> G = SymmetricGroup(4)
         >>> PcGroup = G.polycyclic_group()
         >>> collector = PcGroup.collector
@@ -202,7 +202,7 @@ class Collector(DefaultPrinting):
         ========
 
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> G = SymmetricGroup(4)
         >>> PcGroup = G.polycyclic_group()
         >>> collector = PcGroup.collector
@@ -243,7 +243,7 @@ class Collector(DefaultPrinting):
         ========
 
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> G = SymmetricGroup(3)
         >>> PcGroup = G.polycyclic_group()
         >>> collector = PcGroup.collector
@@ -298,7 +298,7 @@ class Collector(DefaultPrinting):
 
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> G = SymmetricGroup(4)
         >>> PcGroup = G.polycyclic_group()
         >>> collector = PcGroup.collector
@@ -319,8 +319,11 @@ class Collector(DefaultPrinting):
         ...     sym = w[0]
         ...     perm = free_to_perm[sym]
         ...     G2 = PermutationGroup([perm] + G2.generators)
-        >>> G1 == G2
-        True
+
+        The two are not identical, but they are equivalent:
+
+        >>> G1.equals(G2), G1 == G2
+        (True, False)
 
         See Also
         ========
@@ -390,11 +393,11 @@ class Collector(DefaultPrinting):
         There are two types of relations used in polycyclic
         presentation.
 
-        * ``Power relations`` : Power relators are of the form `x_i^{re_i}`,
+        * Power relations : Power relators are of the form `x_i^{re_i}`,
           where `i \in \{0, \ldots, \mathrm{len(pcgs)}\}`, ``x`` represents polycyclic
           generator and ``re`` is the corresponding relative order.
 
-        * ``Conjugate relations`` : Conjugate relators are of the form `x_j^-1x_ix_j`,
+        * Conjugate relations : Conjugate relators are of the form `x_j^-1x_ix_j`,
           where `j < i \in \{0, \ldots, \mathrm{len(pcgs)}\}`.
 
         Returns

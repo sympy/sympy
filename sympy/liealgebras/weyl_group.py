@@ -2,9 +2,10 @@
 
 from .cartan_type import CartanType
 from mpmath import fac
-from sympy.core.backend import Matrix, eye, Rational, Basic, igcd
+from sympy.core.backend import Matrix, eye, Rational, igcd
+from sympy.core.basic import Atom
 
-class WeylGroup(Basic):
+class WeylGroup(Atom):
 
     """
     For each semisimple Lie group, we have a Weyl group.  It is a subgroup of
@@ -16,7 +17,7 @@ class WeylGroup(Basic):
     """
 
     def __new__(cls, cartantype):
-        obj = Basic.__new__(cls, cartantype)
+        obj = Atom.__new__(cls)
         obj.cartan_type = CartanType(cartantype)
         return obj
 
@@ -61,7 +62,7 @@ class WeylGroup(Basic):
         if self.cartan_type.series == "A":
             return fac(n+1)
 
-        if self.cartan_type.series == "B" or self.cartan_type.series ==  "C":
+        if self.cartan_type.series in ("B", "C"):
             return fac(n)*(2**n)
 
         if self.cartan_type.series == "D":
@@ -90,7 +91,7 @@ class WeylGroup(Basic):
         if self.cartan_type.series == "A":
             return "S"+str(n+1) + ": the symmetric group acting on " + str(n+1) + " elements."
 
-        if self.cartan_type.series == "B" or self.cartan_type.series ==  "C":
+        if self.cartan_type.series in ("B", "C"):
             return "The hyperoctahedral group acting on " + str(2*n) + " elements."
 
         if self.cartan_type.series == "D":
@@ -187,7 +188,7 @@ class WeylGroup(Basic):
             return order
 
 
-        if self.cartan_type.series == "B" or self.cartan_type.series == "C":
+        if self.cartan_type.series in ("B", "C"):
             a = self.matrix_form(weylelt)
             order = 1
             while a != eye(n):
@@ -345,7 +346,7 @@ class WeylGroup(Basic):
             return matrixform
 
 
-        if self.cartan_type.series == 'B' or self.cartan_type.series == 'C':
+        if self.cartan_type.series in ("B", "C"):
             matrixform = eye(n)
             for elt in reflections:
                 a = int(elt)
@@ -369,10 +370,10 @@ class WeylGroup(Basic):
         The Coxeter diagram can be obtained from a Lie algebra's Dynkin diagram
         by deleting all arrows; the Coxeter diagram is the undirected graph.
         The vertices of the Coxeter diagram represent the generating reflections
-        of the Weyl group, , s_i.  An edge is drawn between s_i and s_j if the order
-        m(i, j) of s_i*s_j is greater than two.  If there is one edge, the order
-        m(i, j) is 3.  If there are two edges, the order m(i, j) is 4, and if there
-        are three edges, the order m(i, j) is 6.
+        of the Weyl group, $s_i$.  An edge is drawn between $s_i$ and $s_j$ if the order
+        $m(i, j)$ of $s_is_j$ is greater than two.  If there is one edge, the order
+        $m(i, j)$ is 3.  If there are two edges, the order $m(i, j)$ is 4, and if there
+        are three edges, the order $m(i, j)$ is 6.
 
         Examples
         ========
@@ -384,10 +385,10 @@ class WeylGroup(Basic):
         1   2   3
         """
         n = self.cartan_type.rank()
-        if self.cartan_type.series == "A" or self.cartan_type.series == "D" or self.cartan_type.series == "E":
+        if self.cartan_type.series in ("A", "D", "E"):
             return self.cartan_type.dynkin_diagram()
 
-        if self.cartan_type.series == "B" or self.cartan_type.series ==  "C":
+        if self.cartan_type.series in ("B", "C"):
             diag = "---".join("0" for i in range(1, n)) + "===0\n"
             diag += "   ".join(str(i) for i in range(1, n+1))
             return diag

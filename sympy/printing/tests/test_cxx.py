@@ -1,11 +1,10 @@
-from sympy import symbols
-from sympy.functions import beta, Ei, zeta, Max, Min, sqrt
+from sympy.core.symbol import symbols
+from sympy.functions import beta, Ei, zeta, Max, Min, sqrt, riemann_xi, frac
 from sympy.printing.cxx import CXX98CodePrinter, CXX11CodePrinter, CXX17CodePrinter, cxxcode
 from sympy.codegen.cfunctions import log1p
 
-from sympy.testing.pytest import warns_deprecated_sympy
 
-x, y = symbols('x y')
+x, y, u, v = symbols('x y u v')
 
 
 def test_CXX98CodePrinter():
@@ -53,11 +52,16 @@ def test_CXX17CodePrinter():
     assert CXX17CodePrinter().doprint(Ei(x)) == 'std::expint(x)'
     assert CXX17CodePrinter().doprint(zeta(x)) == 'std::riemann_zeta(x)'
 
+    # Automatic rewrite
+    assert CXX17CodePrinter().doprint(frac(x)) == 'x - std::floor(x)'
+    assert CXX17CodePrinter().doprint(riemann_xi(x)) == '(1.0/2.0)*std::pow(M_PI, -1.0/2.0*x)*x*(x - 1)*std::tgamma((1.0/2.0)*x)*std::riemann_zeta(x)'
+
 
 def test_cxxcode():
     assert sorted(cxxcode(sqrt(x)*.5).split('*')) == sorted(['0.5', 'std::sqrt(x)'])
 
-def test_cxxcode_submodule():
-    # Test the compatibility sympy.printing.cxxcode module imports
-    with warns_deprecated_sympy():
-        import sympy.printing.cxxcode # noqa:F401
+def test_cxxcode_nested_minmax():
+    assert cxxcode(Max(Min(x, y), Min(u, v))) \
+        == 'std::max(std::min(u, v), std::min(x, y))'
+    assert cxxcode(Min(Max(x, y), Max(u, v))) \
+        == 'std::min(std::max(u, v), std::max(x, y))'

@@ -1,16 +1,16 @@
-from sympy import Trace
+from sympy.matrices.expressions.trace import Trace
 from sympy.testing.pytest import raises, slow
 from sympy.matrices.expressions.blockmatrix import (
     block_collapse, bc_matmul, bc_block_plus_ident, BlockDiagMatrix,
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
     blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (MatrixSymbol, Identity,
-        Inverse, trace, Transpose, det, ZeroMatrix)
+        Inverse, trace, Transpose, det, ZeroMatrix, OneMatrix)
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import (
     Matrix, ImmutableMatrix, ImmutableSparseMatrix)
-from sympy.core import Tuple, symbols, Expr
-from sympy.functions import transpose
+from sympy.core import Tuple, symbols, Expr, S
+from sympy.functions import transpose, im, re
 
 i, j, k, l, m, n, p = symbols('i:n, p', integer=True)
 A = MatrixSymbol('A', n, n)
@@ -127,9 +127,10 @@ def test_BlockMatrix_trace():
 def test_BlockMatrix_Determinant():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
     X = BlockMatrix([[A, B], [C, D]])
-    from sympy import assuming, Q
+    from sympy.assumptions.ask import Q
+    from sympy.assumptions.assume import assuming
     with assuming(Q.invertible(A)):
-        assert det(X) == det(A) * det(D - C*A.I*B)
+        assert det(X) == det(A) * det(X.schur('A'))
 
     assert isinstance(det(X), Expr)
     assert det(BlockMatrix([A])) == det(A)
@@ -178,8 +179,8 @@ def test_BlockMatrix_2x2_inverse_symbolic():
     D = ZeroMatrix(m, m)
     X = BlockMatrix([[A, B], [C, D]])
     assert block_collapse(X.inverse()) == BlockMatrix([
-        [A.I + A.I * B * (D - C * A.I * B).I * C * A.I, -A.I * B * (D - C * A.I * B).I],
-        [-(D - C * A.I * B).I * C * A.I, (D - C * A.I * B).I],
+        [A.I + A.I * B * X.schur('A').I * C * A.I, -A.I * B * X.schur('A').I],
+        [-X.schur('A').I * C * A.I, X.schur('A').I],
     ])
 
     # test code path where only B is invertible
@@ -189,8 +190,8 @@ def test_BlockMatrix_2x2_inverse_symbolic():
     D = MatrixSymbol('D', m, n)
     X = BlockMatrix([[A, B], [C, D]])
     assert block_collapse(X.inverse()) == BlockMatrix([
-        [-(C - D * B.I * A).I * D * B.I, (C - D * B.I * A).I],
-        [B.I + B.I * A * (C - D * B.I * A).I * D * B.I, -B.I * A * (C - D * B.I * A).I],
+        [-X.schur('B').I * D * B.I, X.schur('B').I],
+        [B.I + B.I * A * X.schur('B').I * D * B.I, -B.I * A * X.schur('B').I],
     ])
 
     # test code path where only C is invertible
@@ -200,8 +201,8 @@ def test_BlockMatrix_2x2_inverse_symbolic():
     D = MatrixSymbol('D', m, n)
     X = BlockMatrix([[A, B], [C, D]])
     assert block_collapse(X.inverse()) == BlockMatrix([
-        [-C.I * D * (B - A * C.I * D).I, C.I + C.I * D * (B - A * C.I * D).I * A * C.I],
-        [(B - A * C.I * D).I, -(B - A * C.I * D).I * A * C.I],
+        [-C.I * D * X.schur('C').I, C.I + C.I * D * X.schur('C').I * A * C.I],
+        [X.schur('C').I, -X.schur('C').I * A * C.I],
     ])
 
     # test code path where only D is invertible
@@ -211,8 +212,8 @@ def test_BlockMatrix_2x2_inverse_symbolic():
     D = MatrixSymbol('D', m, m)
     X = BlockMatrix([[A, B], [C, D]])
     assert block_collapse(X.inverse()) == BlockMatrix([
-        [(A - B * D.I * C).I, -(A - B * D.I * C).I * B * D.I],
-        [-D.I * C * (A - B * D.I * C).I, D.I + D.I * C * (A - B * D.I * C).I * B * D.I],
+        [X.schur('D').I, -X.schur('D').I * B * D.I],
+        [-D.I * C * X.schur('D').I, D.I + D.I * C * X.schur('D').I * B * D.I],
     ])
 
 
@@ -395,3 +396,50 @@ def test_invalid_block_matrix():
         [ZeroMatrix(n - 1, n), ZeroMatrix(n, n)],
         [ZeroMatrix(n + 1, n), ZeroMatrix(n, n)],
     ]))
+
+def test_block_lu_decomposition():
+    A = MatrixSymbol('A', n, n)
+    B = MatrixSymbol('B', n, m)
+    C = MatrixSymbol('C', m, n)
+    D = MatrixSymbol('D', m, m)
+    X = BlockMatrix([[A, B], [C, D]])
+
+    #LDU decomposition
+    L, D, U = X.LDUdecomposition()
+    assert block_collapse(L*D*U) == X
+
+    #UDL decomposition
+    U, D, L = X.UDLdecomposition()
+    assert block_collapse(U*D*L) == X
+
+    #LU decomposition
+    L, U = X.LUdecomposition()
+    assert block_collapse(L*U) == X
+
+def test_issue_21866():
+    n  = 10
+    I  = Identity(n)
+    O  = ZeroMatrix(n, n)
+    A  = BlockMatrix([[  I,  O,  O,  O ],
+                      [  O,  I,  O,  O ],
+                      [  O,  O,  I,  O ],
+                      [  I,  O,  O,  I ]])
+    Ainv = block_collapse(A.inv())
+    AinvT = BlockMatrix([[  I,  O,  O,  O ],
+                      [  O,  I,  O,  O ],
+                      [  O,  O,  I,  O ],
+                      [  -I,  O,  O,  I ]])
+    assert Ainv == AinvT
+
+
+def test_adjoint_and_special_matrices():
+    A = Identity(3)
+    B = OneMatrix(3, 2)
+    C = ZeroMatrix(2, 3)
+    D = Identity(2)
+    X = BlockMatrix([[A, B], [C, D]])
+    X2 = BlockMatrix([[A, S.ImaginaryUnit*B], [C, D]])
+    assert X.adjoint() == BlockMatrix([[A, ZeroMatrix(3, 2)], [OneMatrix(2, 3), D]])
+    assert re(X) == X
+    assert X2.adjoint() == BlockMatrix([[A, ZeroMatrix(3, 2)], [-S.ImaginaryUnit*OneMatrix(2, 3), D]])
+    assert im(X2) == BlockMatrix([[ZeroMatrix(3, 3), OneMatrix(3, 2)], [ZeroMatrix(2, 3), ZeroMatrix(2, 2)]])

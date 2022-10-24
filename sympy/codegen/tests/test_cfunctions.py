@@ -1,4 +1,7 @@
-from sympy import symbols, Symbol, exp, log, pi, Rational, S
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
 from sympy.codegen.cfunctions import (
     expm1, log1p, exp2, log2, fma, log10, Sqrt, Cbrt, hypot
 )
@@ -9,7 +12,7 @@ def test_expm1():
     # Eval
     assert expm1(0) == 0
 
-    x = Symbol('x', real=True, finite=True)
+    x = Symbol('x', real=True)
 
     # Expand and rewrite
     assert expm1(x).expand(func=True) - exp(x) == -1
@@ -35,7 +38,7 @@ def test_log1p():
     d = S(10)
     assert expand_log(log1p(d**-1000) - log(d**1000 + 1) + log(d**1000)) == 0
 
-    x = Symbol('x', real=True, finite=True)
+    x = Symbol('x', real=True)
 
     # Expand and rewrite
     assert log1p(x).expand(func=True) - log(x + 1) == 0
@@ -70,7 +73,7 @@ def test_exp2():
     # Eval
     assert exp2(2) == 4
 
-    x = Symbol('x', real=True, finite=True)
+    x = Symbol('x', real=True)
 
     # Expand
     assert exp2(x).expand(func=True) - 2**x == 0
@@ -85,7 +88,7 @@ def test_log2():
     assert log2(8) == 3
     assert log2(pi) != log(pi)/log(2)  # log2 should *save* (CPU) instructions
 
-    x = Symbol('x', real=True, finite=True)
+    x = Symbol('x', real=True)
     assert log2(x) != log(x)/log(2)
     assert log2(2**x) == x
 

@@ -1,4 +1,6 @@
 """ Caching facility for SymPy """
+from importlib import import_module
+from typing import Callable
 
 class _cache(list):
     """ List of cached functions """
@@ -38,7 +40,7 @@ CACHE = _cache()
 print_cache = CACHE.print_cache
 clear_cache = CACHE.clear_cache
 
-from functools import lru_cache
+from functools import lru_cache, wraps
 
 def __cacheit(maxsize):
     """caching decorator.
@@ -49,7 +51,7 @@ def __cacheit(maxsize):
         Examples
         ========
 
-        >>> from sympy.core.cache import cacheit
+        >>> from sympy import cacheit
         >>> @cacheit
         ... def f(a, b):
         ...    return a+b
@@ -62,15 +64,15 @@ def __cacheit(maxsize):
         set environment variable SYMPY_USE_CACHE to 'debug'
     """
     def func_wrapper(func):
-        from .decorators import wraps
-
         cfunc = lru_cache(maxsize, typed=True)(func)
 
         @wraps(func)
         def wrapper(*args, **kwargs):
             try:
                 retval = cfunc(*args, **kwargs)
-            except TypeError:
+            except TypeError as e:
+                if not e.args or not e.args[0].startswith('unhashable type:'):
+                    raise
                 retval = func(*args, **kwargs)
             return retval
 
@@ -91,8 +93,6 @@ def __cacheit_nocache(func):
 def __cacheit_debug(maxsize):
     """cacheit + code to check cache consistency"""
     def func_wrapper(func):
-        from .decorators import wraps
-
         cfunc = __cacheit(maxsize)(func)
 
         @wraps(func)
@@ -150,3 +150,61 @@ elif USE_CACHE == 'debug':
 else:
     raise RuntimeError(
         'unrecognized value for SYMPY_USE_CACHE: %s' % USE_CACHE)
+
+
+def cached_property(func):
+    '''Decorator to cache property method'''
+    attrname = '__' + func.__name__
+    _cached_property_sentinel = object()
+    def propfunc(self):
+        val = getattr(self, attrname, _cached_property_sentinel)
+        if val is _cached_property_sentinel:
+            val = func(self)
+            setattr(self, attrname, val)
+        return val
+    return property(propfunc)
+
+
+def lazy_function(module : str, name : str) -> Callable:
+    """ Create a lazy proxy for a function in a module
+
+    The module containing the function is not imported until the function is used.
+
+    """
+    func = None
+
+    def _get_function():
+        nonlocal func
+        if func is None:
+            func = getattr(import_module(module), name)
+        return func
+
+    # The metaclass is needed so that help() shows the docstring
+    class LazyFunctionMeta(type):
+        @property
+        def __doc__(self):
+            docstring = _get_function().__doc__
+            docstring += f"\n\nNote: this is a {self.__class__.__name__} wrapper of '{module}.{name}'"
+            return docstring
+
+    class LazyFunction(metaclass=LazyFunctionMeta):
+        def __call__(self, *args, **kwargs):
+            # inline get of function for performance gh-23832
+            nonlocal func
+            if func is None:
+                func = getattr(import_module(module), name)
+            return func(*args, **kwargs)
+
+        @property
+        def __doc__(self):
+            docstring = _get_function().__doc__
+            docstring += f"\n\nNote: this is a {self.__class__.__name__} wrapper of '{module}.{name}'"
+            return docstring
+
+        def __str__(self):
+            return _get_function().__str__()
+
+        def __repr__(self):
+            return f"<{__class__.__name__} object at 0x{id(self):x}>: wrapping '{module}.{name}'"
+
+    return LazyFunction()

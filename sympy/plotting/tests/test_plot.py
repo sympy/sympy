@@ -1,9 +1,17 @@
 import os
 from tempfile import TemporaryDirectory
 
-from sympy import (
-    pi, sin, cos, Symbol, Integral, Sum, sqrt, log, exp, Ne, oo, LambertW, I,
-    meijerg, exp_polar, Piecewise, And, real_root)
+from sympy.concrete.summations import Sum
+from sympy.core.numbers import (I, oo, pi)
+from sympy.core.relational import Ne
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
+from sympy.functions.elementary.miscellaneous import (real_root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.hyper import meijerg
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import And
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.external import import_module
@@ -13,8 +21,9 @@ from sympy.plotting.plot import (
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
     TextBackend, BaseBackend)
-from sympy.testing.pytest import skip, raises, warns
+from sympy.testing.pytest import skip, raises, warns, warns_deprecated_sympy
 from sympy.utilities import lambdify as lambdify_
+from sympy.utilities.exceptions import ignore_warnings
 
 
 unset_show()
@@ -347,7 +356,9 @@ def test_plot_and_save_4():
     with TemporaryDirectory(prefix='sympy_') as tmpdir:
         with warns(
             UserWarning,
-            match="The evaluation of the expression is problematic"):
+            match="The evaluation of the expression is problematic",
+            test_stacklevel=False,
+        ):
             i = Integral(log((sin(x)**2 + 1)*sqrt(x**2 + 1)), (x, 0, y))
             p = plot(i, (y, 1, 5))
             filename = 'test_advanced_integral.png'
@@ -373,7 +384,17 @@ def test_plot_and_save_5():
         p[0].only_integers = True
         p[0].steps = True
         filename = 'test_advanced_fin_sum.png'
-        p.save(os.path.join(tmpdir, filename))
+
+        # XXX: This should be fixed in experimental_lambdify or by using
+        # ordinary lambdify so that it doesn't warn. The error results from
+        # passing an array of values as the integration limit.
+        #
+        # UserWarning: The evaluation of the expression is problematic. We are
+        # trying a failback method that may still work. Please report this as a
+        # bug.
+        with ignore_warnings(UserWarning):
+            p.save(os.path.join(tmpdir, filename))
+
         p._backend.close()
 
 
@@ -391,8 +412,11 @@ def test_plot_and_save_6():
         ###
         p = plot(sin(x) + I*cos(x))
         p.save(os.path.join(tmpdir, filename))
-        p = plot(sqrt(sqrt(-x)))
-        p.save(os.path.join(tmpdir, filename))
+
+        with ignore_warnings(RuntimeWarning):
+            p = plot(sqrt(sqrt(-x)))
+            p.save(os.path.join(tmpdir, filename))
+
         p = plot(LambertW(x))
         p.save(os.path.join(tmpdir, filename))
         p = plot(sqrt(LambertW(x)))
@@ -517,7 +541,10 @@ def test_issue_17405():
     p = plot(f, (x, -10, 10), show=False)
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
-    assert len(p[0].get_segments()) >= 30
+
+    # RuntimeWarning: invalid value encountered in double_scalars
+    with ignore_warnings(RuntimeWarning):
+        assert len(p[0].get_data()[0]) >= 30
 
 
 def test_logplot_PR_16796():
@@ -528,7 +555,7 @@ def test_logplot_PR_16796():
     p = plot(x, (x, .001, 100), xscale='log', show=False)
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
     assert p[0].end == 100.0
     assert p[0].start == .001
 
@@ -541,7 +568,7 @@ def test_issue_16572():
     p = plot(LambertW(x), show=False)
     # Random number of segments, probably more than 50, but we want to see
     # that there are segments generated, as opposed to when the bug was present
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
 
 
 def test_issue_11865():
@@ -554,7 +581,7 @@ def test_issue_11865():
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
     # and that there are no exceptions.
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
 
 
 def test_issue_11461():
@@ -566,7 +593,7 @@ def test_issue_11461():
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
     # and that there are no exceptions.
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
 
 
 def test_issue_11764():
@@ -575,10 +602,10 @@ def test_issue_11764():
 
     x = Symbol('x')
     p = plot_parametric(cos(x), sin(x), (x, 0, 2 * pi), aspect_ratio=(1,1), show=False)
-    p.aspect_ratio == (1, 1)
+    assert p.aspect_ratio == (1, 1)
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
 
 
 def test_issue_13516():
@@ -589,19 +616,19 @@ def test_issue_13516():
 
     pm = plot(sin(x), backend="matplotlib", show=False)
     assert pm.backend == MatplotlibBackend
-    assert len(pm[0].get_segments()) >= 30
+    assert len(pm[0].get_data()[0]) >= 30
 
     pt = plot(sin(x), backend="text", show=False)
     assert pt.backend == TextBackend
-    assert len(pt[0].get_segments()) >= 30
+    assert len(pt[0].get_data()[0]) >= 30
 
     pd = plot(sin(x), backend="default", show=False)
     assert pd.backend == DefaultBackend
-    assert len(pd[0].get_segments()) >= 30
+    assert len(pd[0].get_data()[0]) >= 30
 
     p = plot(sin(x), show=False)
     assert p.backend == DefaultBackend
-    assert len(p[0].get_segments()) >= 30
+    assert len(p[0].get_data()[0]) >= 30
 
 
 def test_plot_limits():
@@ -684,18 +711,54 @@ def test_issue_20113():
         plot(sin(x), backend=Plot, show=False)
     p2 = plot(sin(x), backend=MatplotlibBackend, show=False)
     assert p2.backend == MatplotlibBackend
-    assert len(p2[0].get_segments()) >= 30
+    assert len(p2[0].get_data()[0]) >= 30
     p3 = plot(sin(x), backend=DummyBackendOk, show=False)
     assert p3.backend == DummyBackendOk
-    assert len(p3[0].get_segments()) >= 30
+    assert len(p3[0].get_data()[0]) >= 30
 
     # test for an improper coded backend
     p4 = plot(sin(x), backend=DummyBackendNotOk, show=False)
     assert p4.backend == DummyBackendNotOk
-    assert len(p4[0].get_segments()) >= 30
+    assert len(p4[0].get_data()[0]) >= 30
     with raises(NotImplementedError):
         p4.show()
     with raises(NotImplementedError):
         p4.save("test/path")
     with raises(NotImplementedError):
         p4._backend.close()
+
+def test_custom_coloring():
+    x = Symbol('x')
+    y = Symbol('y')
+    plot(cos(x), line_color=lambda a: a)
+    plot(cos(x), line_color=1)
+    plot(cos(x), line_color="r")
+    plot_parametric(cos(x), sin(x), line_color=lambda a: a)
+    plot_parametric(cos(x), sin(x), line_color=1)
+    plot_parametric(cos(x), sin(x), line_color="r")
+    plot3d_parametric_line(cos(x), sin(x), x, line_color=lambda a: a)
+    plot3d_parametric_line(cos(x), sin(x), x, line_color=1)
+    plot3d_parametric_line(cos(x), sin(x), x, line_color="r")
+    plot3d_parametric_surface(cos(x + y), sin(x - y), x - y,
+            (x, -5, 5), (y, -5, 5),
+            surface_color=lambda a, b: a**2 + b**2)
+    plot3d_parametric_surface(cos(x + y), sin(x - y), x - y,
+            (x, -5, 5), (y, -5, 5),
+            surface_color=1)
+    plot3d_parametric_surface(cos(x + y), sin(x - y), x - y,
+            (x, -5, 5), (y, -5, 5),
+            surface_color="r")
+    plot3d(x*y, (x, -5, 5), (y, -5, 5),
+            surface_color=lambda a, b: a**2 + b**2)
+    plot3d(x*y, (x, -5, 5), (y, -5, 5), surface_color=1)
+    plot3d(x*y, (x, -5, 5), (y, -5, 5), surface_color="r")
+
+def test_deprecated_get_segments():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+    f = sin(x)
+    p = plot(f, (x, -10, 10), show=False)
+    with warns_deprecated_sympy():
+        p[0].get_segments()

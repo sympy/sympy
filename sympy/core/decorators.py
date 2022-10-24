@@ -7,37 +7,6 @@ dependencies, so that they can be easily imported anywhere in sympy/core.
 
 from functools import wraps
 from .sympify import SympifyError, sympify
-from sympy.core.compatibility import get_function_code
-
-
-def deprecated(**decorator_kwargs):
-    """This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emitted
-    when the function is used."""
-    from sympy.utilities.exceptions import SymPyDeprecationWarning
-
-    def _warn_deprecation(wrapped, stacklevel):
-        decorator_kwargs.setdefault('feature', wrapped.__name__)
-        SymPyDeprecationWarning(**decorator_kwargs).warn(stacklevel=stacklevel)
-
-    def deprecated_decorator(wrapped):
-        if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
-            class wrapper(wrapped):
-                __doc__ = wrapped.__doc__
-                __name__ = wrapped.__name__
-                __module__ = wrapped.__module__
-                _sympy_deprecated_func = wrapped
-                def __init__(self, *args, **kwargs):
-                    _warn_deprecation(wrapped, 4)
-                    super().__init__(*args, **kwargs)
-        else:
-            @wraps(wrapped)
-            def wrapper(*args, **kwargs):
-                _warn_deprecation(wrapped, 3)
-                return wrapped(*args, **kwargs)
-            wrapper._sympy_deprecated_func = wrapped
-        return wrapper
-    return deprecated_decorator
 
 
 def _sympifyit(arg, retval=None):
@@ -70,16 +39,16 @@ def _sympifyit(arg, retval=None):
 
 
 def __sympifyit(func, arg, retval=None):
-    """decorator to _sympify `arg` argument for function `func`
+    """Decorator to _sympify `arg` argument for function `func`.
 
-       don't use directly -- use _sympifyit instead
+       Do not use directly -- use _sympifyit instead.
     """
 
     # we support f(a,b) only
-    if not get_function_code(func).co_argcount:
+    if not func.__code__.co_argcount:
         raise LookupError("func not found")
     # only b is _sympified
-    assert get_function_code(func).co_varnames[1] == arg
+    assert func.__code__.co_varnames[1] == arg
     if retval is None:
         @wraps(func)
         def __sympifyit_wrapper(a, b):
@@ -90,7 +59,7 @@ def __sympifyit(func, arg, retval=None):
         def __sympifyit_wrapper(a, b):
             try:
                 # If an external class has _op_priority, it knows how to deal
-                # with sympy objects. Otherwise, it must be converted.
+                # with SymPy objects. Otherwise, it must be converted.
                 if not hasattr(b, '_op_priority'):
                     b = sympify(b, strict=True)
                 return func(a, b)
@@ -152,8 +121,8 @@ def sympify_method_args(cls):
     Examples
     ========
 
-    >>> from sympy.core.basic import Basic
-    >>> from sympy.core.sympify import _sympify, SympifyError
+    >>> from sympy import Basic, SympifyError, S
+    >>> from sympy.core.sympify import _sympify
 
     >>> class MyTuple(Basic):
     ...     def __add__(self, other):
@@ -165,7 +134,7 @@ def sympify_method_args(cls):
     ...             return NotImplemented
     ...         return MyTuple(*(self.args + other.args))
 
-    >>> MyTuple(1, 2) + MyTuple(3, 4)
+    >>> MyTuple(S(1), S(2)) + MyTuple(S(3), S(4))
     MyTuple(1, 2, 3, 4)
 
     In the above it is important that we return NotImplemented when other is
@@ -184,7 +153,7 @@ def sympify_method_args(cls):
     ...     def __add__(self, other):
     ...          return MyTuple(*(self.args + other.args))
 
-    >>> MyTuple(1, 2) + MyTuple(3, 4)
+    >>> MyTuple(S(1), S(2)) + MyTuple(S(3), S(4))
     MyTuple(1, 2, 3, 4)
 
     The idea here is that the decorators take care of the boiler-plate code
@@ -243,12 +212,12 @@ class _SympifyWrapper:
 
         # Raise RuntimeError since this is a failure at import time and should
         # not be recoverable.
-        nargs = get_function_code(func).co_argcount
+        nargs = func.__code__.co_argcount
         # we support f(a, b) only
         if nargs != 2:
             raise RuntimeError('sympify_return can only be used with 2 argument functions')
         # only b is _sympified
-        if get_function_code(func).co_varnames[1] != parameter:
+        if func.__code__.co_varnames[1] != parameter:
             raise RuntimeError('parameter name mismatch "%s" in %s' %
                     (parameter, func.__name__))
 
