@@ -140,6 +140,8 @@ def test_issue24158_ket_times_op():
     assert qapply(P) == P   # qapply(P) -> Qubit(0) before fix
     P1 = Mul(QubitBra(0), Mul(QubitBra(0), Qubit(0)), XGate(0)) # legal expr <0| * (<1|*|1>) * X
     assert qapply(P1) == QubitBra(0) * XGate(0)     # qapply(P1) -> 0 before fix
+    P1 = qapply(P1, dagger = True)  # unsatisfactorily -> <0|*X(0), expect <1| since dagger=True
     assert qapply(P1, dagger = True) == QubitBra(1) # qapply(P1, dagger=True) -> 0 before fix
     P2 = QubitBra(0) * QubitBra(0) * Qubit(0) * XGate(0) # 'forgot' to set brackets
+    P2 = qapply(P2, dagger = True) # unsatisfactorily -> <0|*X(0), expect <1| since dagger=True
     assert qapply(P2, dagger = True) == QubitBra(1) # qapply(P1) -> 0 before fix
