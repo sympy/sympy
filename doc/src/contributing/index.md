@@ -13,7 +13,7 @@ If you are new to contributing to SymPy, start with the
 :titlesonly: true
 
 introduction-to-contributing.md
-dev-setup.rst
+new-contributors-guide/index.md
 development-workflow.md
 dependencies.md
 build-docs.rst
