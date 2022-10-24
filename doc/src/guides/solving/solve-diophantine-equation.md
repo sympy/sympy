@@ -143,8 +143,6 @@ prone to errors:
 2*p*q
 ```
 
-You can also 
-
 ### Work With Parameters
 
 You can manipulate parameters such as `p` and `q`, which are generated
