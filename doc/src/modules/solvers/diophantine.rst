@@ -3,6 +3,11 @@
 Diophantine
 ===========
 
+.. note::
+
+   For a beginner-friendly guide focused on solving Diophantine equations, refer to
+   :ref:`solving-guide-diophantine`.
+
 Diophantine equations
 ---------------------
 

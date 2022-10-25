@@ -182,7 +182,7 @@ def qapply_Mul(e, **options):
         result = lhs._apply_operator(rhs, **options)
     except (NotImplementedError, AttributeError):
         try:
-            result = rhs._apply_operator(lhs, **options)
+            result = rhs._apply_from_right_to(lhs, **options)
         except (NotImplementedError, AttributeError):
             if isinstance(lhs, BraBase) and isinstance(rhs, KetBase):
                 result = InnerProduct(lhs, rhs)

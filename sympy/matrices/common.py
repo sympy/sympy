@@ -252,7 +252,8 @@ class MatrixShaping(MatrixRequired):
 
         if self.rows != other.rows:
             raise ShapeError(
-                "`self` and `other` must have the same number of rows.")
+                "The matrices have incompatible number of rows ({} and {})"
+                .format(self.rows, other.rows))
 
         return self._eval_col_insert(pos, other)
 
@@ -284,7 +285,8 @@ class MatrixShaping(MatrixRequired):
 
         if self.cols != other.cols:
             raise ShapeError(
-                "`self` and `other` must have the same number of columns.")
+                "The matrices have incompatible number of columns ({} and {})"
+                .format(self.cols, other.cols))
         return self._eval_col_join(other)
 
     def col(self, j):
@@ -488,7 +490,8 @@ class MatrixShaping(MatrixRequired):
 
         if self.cols != other.cols:
             raise ShapeError(
-                "`self` and `other` must have the same number of columns.")
+                "The matrices have incompatible number of columns ({} and {})"
+                .format(self.cols, other.cols))
 
         return self._eval_row_insert(pos, other)
 
@@ -519,7 +522,8 @@ class MatrixShaping(MatrixRequired):
 
         if self.rows != other.rows:
             raise ShapeError(
-                "`self` and `rhs` must have the same number of rows.")
+                "The matrices have incompatible number of rows ({} and {})"
+                .format(self.rows, other.rows))
         return self._eval_row_join(other)
 
     def diagonal(self, k=0):
