@@ -1158,8 +1158,8 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     """
     if generator:
-        return ((k,v) for k,v in factorint(n, limit=limit, use_trial=use_trial, 
-            use_rho=use_rho, use_pm1=use_pm1, use_ecm=use_ecm, verbose=verbose, 
+        return ((k,v) for k,v in factorint(n, limit=limit, use_trial=use_trial,
+            use_rho=use_rho, use_pm1=use_pm1, use_ecm=use_ecm, verbose=verbose,
             visual=visual, multiple=multiple, generator=False).items())
 
     if isinstance(n, Dict):
