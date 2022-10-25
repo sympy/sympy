@@ -204,10 +204,11 @@ class Operator(QExpr):
     #    unmodified.
 
     def _pow(self, exponent):
+        from sympy.core.singleton import S
         if exponent == 0 or exponent == S.Zero:
             return IdentityOperator()     # Operator class has no dimension, so return dimensionless IdentityOperator()
         else:
-            return super()._pow(self, exponent) # maintains classic behaviour for exp != 0
+            return super()._pow(exponent) # maintains classic behaviour for exp != 0
 
 
 class HermitianOperator(Operator):
