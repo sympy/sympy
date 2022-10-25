@@ -2266,6 +2266,10 @@ def test_zeros_eye():
         assert z == zeros(2, cls=cls)
         assert type(m) == cls
 
+def test_issue_16997():
+    z = Matrix([[0, 0], [0, 0]])
+    assert z == z
+    assert I == I
 
 def test_is_zero():
     assert Matrix().is_zero_matrix
