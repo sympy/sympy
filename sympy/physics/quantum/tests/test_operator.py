@@ -1,5 +1,6 @@
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
+from sympy.core import Pow
 from sympy.core.numbers import (Integer, pi)
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.trigonometric import sin
@@ -10,12 +11,13 @@ from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
                                             HermitianOperator, OuterProduct,
                                             DifferentialOperator,
                                             IdentityOperator)
-from sympy.physics.quantum.gate import (XGate, TGate, PhaseGate)
+from sympy.physics.quantum.gate import (XGate, TGate)
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.spin import JzKet, JzBra
 from sympy.physics.quantum.trace import Tr
+from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.matrices import eye
 
 
