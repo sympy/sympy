@@ -1,10 +1,10 @@
 from sympy.matrices.dense import Matrix, eye
 from sympy.matrices.expressions.matadd import MatAdd
-from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
+from sympy.matrices.expressions.special import Identity, OneMatrix, ZeroMatrix
 from sympy.core import symbols
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
-from sympy.matrices import ShapeError, MatrixSymbol
+from sympy.matrices import MatrixSymbol
 from sympy.matrices.expressions import (HadamardProduct, hadamard_product, HadamardPower, hadamard_power)
 
 n, m, k = symbols('n,m,k')
@@ -17,7 +17,6 @@ C = MatrixSymbol('C', m, k)
 def test_HadamardProduct():
     assert HadamardProduct(A, B, A).shape == A.shape
 
-    raises(ShapeError, lambda: HadamardProduct(A, B.T))
     raises(TypeError,  lambda: HadamardProduct(A, n))
     raises(TypeError,  lambda: HadamardProduct(A, 1))
 
@@ -63,17 +62,13 @@ def test_hadamard():
     m, n, p = symbols('m, n, p', integer=True)
     A = MatrixSymbol('A', m, n)
     B = MatrixSymbol('B', m, n)
-    C = MatrixSymbol('C', m, p)
     X = MatrixSymbol('X', m, m)
     I = Identity(m)
-    with raises(TypeError):
-        hadamard_product()
+
+    raises(TypeError, lambda: hadamard_product())
     assert hadamard_product(A) == A
     assert isinstance(hadamard_product(A, B), HadamardProduct)
     assert hadamard_product(A, B).doit() == hadamard_product(A, B)
-    with raises(ShapeError):
-        hadamard_product(A, C)
-        hadamard_product(A, I)
     assert hadamard_product(X, I) == HadamardProduct(I, X)
     assert isinstance(hadamard_product(X, I), HadamardProduct)
 
@@ -83,6 +78,7 @@ def test_hadamard():
     assert expr.doit() == a
 
     raises(ValueError, lambda: HadamardProduct())
+
 
 
 def test_hadamard_product_with_explicit_mat():

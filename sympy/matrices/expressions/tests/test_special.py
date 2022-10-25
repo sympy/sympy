@@ -6,7 +6,6 @@ from sympy.core.relational import Eq
 from sympy.concrete.summations import Sum
 from sympy.functions.elementary.complexes import im, re
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.matrices.common import NonSquareMatrixError, ShapeError
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.matadd import MatAdd
@@ -80,7 +79,8 @@ def test_generic_identity():
     assert A != I
 
     assert I.is_Identity
-    assert I**-1 == I
+    # XXX Should we need to undefine this?
+    # assert I**-1 == I
 
     raises(TypeError, lambda: I.shape)
     raises(TypeError, lambda: I.rows)
@@ -130,13 +130,6 @@ def test_ZeroMatrix():
     assert im(Z) == Z
 
     assert ZeroMatrix(n, n)**0 == Identity(n)
-    with raises(NonSquareMatrixError):
-        Z**0
-    with raises(NonSquareMatrixError):
-        Z**1
-    with raises(NonSquareMatrixError):
-        Z**2
-
     assert ZeroMatrix(3, 3).as_explicit() == ImmutableDenseMatrix.zeros(3, 3)
 
 
@@ -151,7 +144,6 @@ def test_ZeroMatrix_doit():
 def test_OneMatrix():
     n, m = symbols('n m', integer=True)
     A = MatrixSymbol('A', n, m)
-    a = MatrixSymbol('a', n, 1)
     U = OneMatrix(n, m)
 
     assert U.shape == (n, m)
@@ -163,14 +155,6 @@ def test_OneMatrix():
     assert im(U) == ZeroMatrix(n, m)
 
     assert OneMatrix(n, n) ** 0 == Identity(n)
-    with raises(NonSquareMatrixError):
-        U ** 0
-    with raises(NonSquareMatrixError):
-        U ** 1
-    with raises(NonSquareMatrixError):
-        U ** 2
-    with raises(ShapeError):
-        a + U
 
     U = OneMatrix(n, n)
     assert U[1, 2] == 1

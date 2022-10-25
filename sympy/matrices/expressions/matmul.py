@@ -5,6 +5,7 @@ from sympy.core.mul import mul, Mul
 from sympy.core.numbers import Number, Integer
 from sympy.core.symbol import Dummy
 from sympy.functions import adjoint
+from sympy.matrices.expressions.shape import is_matmul_valid, is_square
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
@@ -56,9 +57,9 @@ class MatMul(MatrixExpr, Mul):
                 deprecated_since_version="1.11",
                 active_deprecations_target='remove-check-argument-from-matrix-operations')
 
-        if check in (True, None):
+        if check:
             validate(*matrices)
-        else:
+        elif check is False:
             sympy_deprecation_warning(
                 "Passing check=False to MatMul is deprecated and the check argument will be removed in a future version.",
                 deprecated_since_version="1.11",
@@ -184,19 +185,23 @@ class MatMul(MatrixExpr, Mul):
         return factor**self.rows * Mul(*list(map(Determinant, square_matrices)))
 
     def _eval_inverse(self):
-        try:
-            return MatMul(*[
+        if all(is_square(arg).doit() == S.true for arg in self.args if isinstance(arg, MatrixExpr)):
+            return MatMul(*(
                 arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1
-                    for arg in self.args[::-1]]).doit()
-        except ShapeError:
-            return Inverse(self)
+                    for arg in self.args[::-1]
+                )
+            ).doit()
+        return Inverse(self)
 
     def doit(self, **hints):
         deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**hints) for arg in self.args]
+            args = tuple(arg.doit(**hints) for arg in self.args)
         else:
             args = self.args
+
+        if is_matmul_valid(*args).doit() is S.false:
+            raise ShapeError
 
         # treat scalar*MatrixSymbol or scalar*MatPow separately
         expr = canonicalize(MatMul(*args))

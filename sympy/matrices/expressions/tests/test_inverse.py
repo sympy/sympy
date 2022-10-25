@@ -1,6 +1,6 @@
 from sympy.core import symbols, S
 from sympy.matrices.expressions import MatrixSymbol, Inverse, MatPow, ZeroMatrix, OneMatrix
-from sympy.matrices.common import NonSquareMatrixError, NonInvertibleMatrixError
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import eye, Identity
 from sympy.testing.pytest import raises
 from sympy.assumptions.ask import Q
@@ -45,11 +45,7 @@ def test_inverse():
     assert isinstance(OneMatrix(n, n).I, Inverse)
 
 def test_inverse_non_invertible():
-    raises(NonSquareMatrixError, lambda: Inverse(A))
-    raises(NonSquareMatrixError, lambda: Inverse(A*B))
-    raises(NonSquareMatrixError, lambda: ZeroMatrix(n, m).I)
     raises(NonInvertibleMatrixError, lambda: ZeroMatrix(n, n).I)
-    raises(NonSquareMatrixError, lambda: OneMatrix(n, m).I)
     raises(NonInvertibleMatrixError, lambda: OneMatrix(2, 2).I)
 
 def test_refine():

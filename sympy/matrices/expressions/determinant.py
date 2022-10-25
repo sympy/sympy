@@ -27,7 +27,7 @@ class Determinant(Expr):
         if not mat.is_Matrix:
             raise TypeError("Input to Determinant, %s, not a matrix" % str(mat))
 
-        if not mat.is_square:
+        if mat.is_square is False:
             raise NonSquareMatrixError("Det of a non-square matrix")
 
         return Basic.__new__(cls, mat)

@@ -171,8 +171,11 @@ class MatrixExpr(Expr):
         return self.shape[1]
 
     @property
-    def is_square(self):
-        return self.rows == self.cols
+    def is_square(self) -> bool | None:
+        diff = self.rows - self.cols
+        if isinstance(diff, Basic):
+            return diff.is_zero
+        return diff == 0
 
     def _eval_conjugate(self):
         from sympy.matrices.expressions.adjoint import Adjoint
@@ -258,7 +261,7 @@ class MatrixExpr(Expr):
         return self.transpose()
 
     def inverse(self):
-        if not self.is_square:
+        if self.is_square is False:
             raise NonSquareMatrixError('Inverse of non-square matrix')
         return self._eval_inverse()
 

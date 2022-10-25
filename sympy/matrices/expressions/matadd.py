@@ -4,8 +4,10 @@ import operator
 from sympy.core import Basic, sympify
 from sympy.core.add import add, Add, _could_extract_minus_sign
 from sympy.core.sorting import default_sort_key
+from sympy.core.singleton import S
 from sympy.functions import adjoint
 from sympy.matrices.common import ShapeError
+from sympy.matrices.expressions.shape import is_matadd_valid
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
@@ -45,6 +47,9 @@ class MatAdd(MatrixExpr, Add):
         if _sympify:
             args = list(map(sympify, args))
 
+        if not all(isinstance(arg, MatrixExpr) for arg in args):
+            raise TypeError("Mix of Matrix and Scalar symbols")
+
         obj = Basic.__new__(cls, *args)
 
         if check is not None:
@@ -52,11 +57,11 @@ class MatAdd(MatrixExpr, Add):
                 "Passing check to MatAdd is deprecated and the check argument will be removed in a future version.",
                 deprecated_since_version="1.11",
                 active_deprecations_target='remove-check-argument-from-matrix-operations')
-        if check in (True, None):
+        if check:
             if not any(isinstance(i, MatrixExpr) for i in args):
                 return Add.fromiter(args)
             validate(*args)
-        else:
+        elif check is False:
             sympy_deprecation_warning(
                 "Passing check=False to MatAdd is deprecated and the check argument will be removed in a future version.",
                 deprecated_since_version="1.11",
@@ -98,9 +103,13 @@ class MatAdd(MatrixExpr, Add):
     def doit(self, **hints):
         deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**hints) for arg in self.args]
+            args = tuple(arg.doit(**hints) for arg in self.args)
         else:
             args = self.args
+
+        if is_matadd_valid(*args).doit() is S.false:
+            raise ShapeError
+
         return canonicalize(MatAdd(*args))
 
     def _eval_derivative_matrix_lines(self, x):
@@ -110,9 +119,6 @@ class MatAdd(MatrixExpr, Add):
 add.register_handlerclass((Add, MatAdd), MatAdd)
 
 def validate(*args):
-    if not all(arg.is_Matrix for arg in args):
-        raise TypeError("Mix of Matrix and Scalar symbols")
-
     A = args[0]
     for B in args[1:]:
         if A.shape != B.shape:

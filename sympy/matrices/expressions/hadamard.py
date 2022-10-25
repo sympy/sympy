@@ -4,9 +4,11 @@ from sympy.core import Mul, sympify
 from sympy.core.add import Add
 from sympy.core.expr import ExprBuilder
 from sympy.core.sorting import default_sort_key
+from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import log
 from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.shape import is_matadd_valid
 from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort
@@ -33,11 +35,9 @@ def hadamard_product(*matrices):
     """
     if not matrices:
         raise TypeError("Empty Hadamard product is undefined")
-    validate(*matrices)
     if len(matrices) == 1:
         return matrices[0]
-    else:
-        return HadamardProduct(*matrices).doit()
+    return HadamardProduct(*matrices).doit()
 
 
 class HadamardProduct(MatrixExpr):
@@ -69,15 +69,19 @@ class HadamardProduct(MatrixExpr):
         if len(args) == 0:
             # We currently don't have a way to support one-matrices of generic dimensions:
             raise ValueError("HadamardProduct needs at least one argument")
+
+        if not all(isinstance(arg, MatrixExpr) for arg in args):
+            raise TypeError("Mix of Matrix and Scalar symbols")
+
         if check is not None:
             sympy_deprecation_warning(
                 "Passing check to HadamardProduct is deprecated and the check argument will be removed in a future version.",
                 deprecated_since_version="1.11",
                 active_deprecations_target='remove-check-argument-from-matrix-operations')
 
-        if check in (True, None):
+        if check:
             validate(*args)
-        else:
+        elif check is False:
             sympy_deprecation_warning(
                 "Passing check=False to HadamardProduct is deprecated and the check argument will be removed in a future version.",
                 deprecated_since_version="1.11",
@@ -100,10 +104,14 @@ class HadamardProduct(MatrixExpr):
         return HadamardProduct(*list(map(transpose, self.args)))
 
     def doit(self, **hints):
-        expr = self.func(*[i.doit(**hints) for i in self.args])
+        expr = self.func(*(i.doit(**hints) for i in self.args))
         # Check for explicit matrices:
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.immutable import ImmutableMatrix
+
+        if is_matadd_valid(*expr.args).doit() is S.false:
+            raise ShapeError
+
         explicit = [i for i in expr.args if isinstance(i, MatrixBase)]
         if explicit:
             remainder = [i for i in expr.args if i not in explicit]
@@ -165,8 +173,6 @@ class HadamardProduct(MatrixExpr):
 
 
 def validate(*args):
-    if not all(arg.is_Matrix for arg in args):
-        raise TypeError("Mix of Matrix and Scalar symbols")
     A = args[0]
     for B in args[1:]:
         if A.shape != B.shape:
