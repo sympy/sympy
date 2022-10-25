@@ -92,7 +92,7 @@ class Operator(QExpr):
         >>> A.inv()
         A**(-1)
         >>> A*A.inv()
-        1
+        I
 
     References
     ==========
@@ -185,6 +185,29 @@ class Operator(QExpr):
             return self
 
         return Mul(self, other)
+
+    # Issue #24153: Change the result Operator**0 to IdentityOperator() instead of 1
+    # Remarks:
+    # 1. Operators who know how to compute self**exp should override ._eval_power(exp),
+    #    since ._eval_power(exp) will be called from both Pow(op, exp) and op**exp.
+    #    In case self**exp == IdentityOperator(), ._eval_power(exp) should return
+    #    IdentityOperator() instead of 1.
+    # 2. Hooking into ._pow() instead would not give same effect as Pow.__new__()
+    #    doesn't call ._pow().
+    # 2. Limitation: Pow filters on base,exp pairs that it will compute by itself, and
+    #    will for almost all type of base return 1 if exp == 0 instead of returning
+    #    the neutral element of the multiplicative half group base belongs to.
+    # 3. This behavior of Pow can only be fixed by a modification of Pow itself.
+    # 4. But it can be modified for ** and pow(), by either overriding .__pow__() (which
+    #    however is considered bad practice) or better ._pow() for the Operator class,
+    #    handling exponent == 0 and passing on all other to the original super()._pow()
+    #    unmodified.
+
+    def Operator__pow(self, exponent):
+        if exponent == 0 or exponent == S.Zero:
+            return IdentityOperator()     #Operator class has no dimension, so return dimensionless IdentityOperator()
+        else:
+            return super()._pow(exponent) #maintains classic behaviour for exp != 0
 
 
 class HermitianOperator(Operator):
