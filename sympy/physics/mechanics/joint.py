@@ -1964,6 +1964,8 @@ class WeldJoint(Joint):
     """Weld Joint.
 
     .. image:: WeldJoint.svg
+        :align: center
+        :width: 500
 
     Explanation
     ===========
@@ -2073,9 +2075,8 @@ class WeldJoint(Joint):
     >>> joint.child_point.pos_from(joint.parent_point)
     0
 
-    To further demonstrate the use of the weld joint, two bodies rotated with by
-    a quarter turn about the Y axis are fixed to each other can be created as
-    follows:
+    To further demonstrate the use of the weld joint, two relatively-fixed
+    bodies rotated by a quarter turn about the Y axis can be created as follows:
 
     >>> from sympy import symbols, pi
     >>> from sympy.physics.mechanics import ReferenceFrame, Body, WeldJoint
@@ -2087,7 +2088,7 @@ class WeldJoint(Joint):
     >>> child = Body('C')
 
     Next the intermediate frame specifying the fixed rotation with respect to
-    the parent is created.
+    the parent can be created.
 
     >>> rotated_frame = ReferenceFrame('Pr')
     >>> rotated_frame.orient_axis(parent.frame, parent.y, pi / 2)
@@ -2100,8 +2101,8 @@ class WeldJoint(Joint):
     ...                  child_point=-l2 * child.x,
     ...                  parent_interframe=rotated_frame)
 
-    Now the joint is established the kinematics of the bodies can be accessed.
-    First the direction cosine matrix of the child body with respect to the
+    Now that the joint has been established, the kinematics of the bodies can be
+    accessed. The direction cosine matrix of the child body with respect to the
     parent can be found:
 
     >>> child.dcm(parent)
