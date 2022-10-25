@@ -203,11 +203,11 @@ class Operator(QExpr):
     #    handling exponent == 0 and passing on all other to the original super()._pow()
     #    unmodified.
 
-    def Operator__pow(self, exponent):
+    def _pow(self, exponent):
         if exponent == 0 or exponent == S.Zero:
-            return IdentityOperator()     #Operator class has no dimension, so return dimensionless IdentityOperator()
+            return IdentityOperator()     # Operator class has no dimension, so return dimensionless IdentityOperator()
         else:
-            return super()._pow(exponent) #maintains classic behaviour for exp != 0
+            return super()._pow(self, exponent) # maintains classic behaviour for exp != 0
 
 
 class HermitianOperator(Operator):
