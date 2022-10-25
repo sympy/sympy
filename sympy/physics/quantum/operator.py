@@ -92,7 +92,7 @@ class Operator(QExpr):
         >>> A.inv()
         A**(-1)
         >>> A*A.inv()
-        I
+        IdentityOperator()
 
     References
     ==========
