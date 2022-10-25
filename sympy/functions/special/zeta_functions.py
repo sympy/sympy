@@ -1,10 +1,11 @@
 """ Riemann zeta and related function. """
 
-from sympy.core import Function, S, pi, I, Integer
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import ArgumentIndexError, expand_mul
+from sympy.core.function import ArgumentIndexError, expand_mul, Function
+from sympy.core.numbers import pi, I, Integer
 from sympy.core.relational import Eq
+from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, genocchi, harmonic

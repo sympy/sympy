@@ -174,7 +174,7 @@ class SingularityFunction(Function):
             if shift.is_negative or shift.is_extended_positive:
                 return S.Zero
             if shift.is_zero:
-                return S.Infinity
+                return oo
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         '''
