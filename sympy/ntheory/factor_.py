@@ -1009,7 +1009,7 @@ def _factorint_small(factors, n, limit, fail_max):
 
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-              use_ecm=True, verbose=False, visual=None, multiple=False):
+              use_ecm=True, verbose=False, visual=None, multiple=False, generator=False):
     r"""
     Given a positive integer ``n``, ``factorint(n)`` returns a dict containing
     the prime factors of ``n`` as keys and their respective multiplicities
@@ -1157,6 +1157,11 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     smoothness, smoothness_p, divisors
 
     """
+    if generator:
+        return ((k,v) for k,v in factorint(n, limit=limit, use_trial=use_trial, 
+            use_rho=use_rho, use_pm1=use_pm1, use_ecm=use_ecm, verbose=verbose, 
+            visual=visual, multiple=multiple, generator=False).items())
+
     if isinstance(n, Dict):
         n = dict(n)
     if multiple:
