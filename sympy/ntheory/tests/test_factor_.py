@@ -163,6 +163,13 @@ def test_perfect_power():
     assert perfect_power(Rational(1, 2)**3) == (S.Half, 3)
     assert perfect_power(Rational(-3, 2)**3) == (-3*S.Half, 3)
 
+def testfactorint_generator():
+    x = factorint(2305567963945518424753102147331756070, generator = True)
+    x1 = factorint(2305567963945518424753102147331756070)
+    unique_factors = set(x1.keys())
+    for f,n in x:
+        assert n == 1
+        assert f in unique_factors
 
 @slow
 def test_factorint():
