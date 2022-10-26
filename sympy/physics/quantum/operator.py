@@ -206,9 +206,13 @@ class Operator(QExpr):
     def _pow(self, exponent):
         from sympy.core.singleton import S
         if exponent == 0 or exponent == S.Zero:
-            return IdentityOperator()     # Operator class has no dimension, so return dimensionless IdentityOperator()
+            try:
+                dim = self.hilbert_space.dimension # will raise "Not Implemented" for std Operator class!
+                return IdentityOperator(dim)
+            except NotImplementedError:
+                return IdentityOperator()  # if self has no dimension, so return dimensionless IdentityOperator()
         else:
-            return super()._pow(exponent) # maintains classic behaviour for exp != 0
+            return super()._pow(exponent)  # maintains classic behaviour for exp != 0
 
 
 class HermitianOperator(Operator):
@@ -339,17 +343,14 @@ class IdentityOperator(Operator):
 
         return Mul(self, other)
 
+
     def _represent_default_basis(self, **options):
         if not self.N or self.N == oo:
             raise NotImplementedError('Cannot represent infinite dimensional' +
                                       ' identity operator as a matrix')
-
+        
         format = options.get('format', 'sympy')
-        if format != 'sympy':
-            raise NotImplementedError('Representation in format ' +
-                                      '%s not implemented.' % format)
-
-        return eye(self.N)
+        return self._format_represent(eye(self.N), format)    
 
 
 class OuterProduct(Operator):
