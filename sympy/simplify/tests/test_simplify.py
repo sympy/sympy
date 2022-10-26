@@ -1046,3 +1046,13 @@ def test_issue_22210():
     d = Symbol('d', integer=True)
     expr = 2*Derivative(sin(x), (x, d))
     assert expr.simplify() == expr
+
+@XFAIL
+def test_issue_23518():
+    # currently fails becasue simplify method is not running properly.
+    M = Symbol("M", positive=True, integer=True)
+    N = Symbol("N", positive=True, integer=True)
+
+    expr = M*N >= N
+    expr = expr.simplify()
+    assert expr == True
