@@ -348,7 +348,7 @@ class IdentityOperator(Operator):
         if not self.N or self.N == oo:
             raise NotImplementedError('Cannot represent infinite dimensional' +
                                       ' identity operator as a matrix')
-        
+                                      
         format = options.get('format', 'sympy')
         return self._format_represent(eye(self.N), format)    
 
