@@ -1446,7 +1446,7 @@ class WedgeProduct(TensorProduct):
         mul = 1/Mul(*(factorial(o) for o in orders))
         perms = permutations(fields)
         perms_par = (Permutation(
-            p).signature() for p in permutations(list(range(len(fields)))))
+            p).signature() for p in permutations(range(len(fields))))
         tensor_prod = TensorProduct(*self.args)
         return mul*Add(*[tensor_prod(*p[0])*p[1] for p in zip(perms, perms_par)])
 
