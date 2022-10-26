@@ -2218,7 +2218,7 @@ def minsolve_linear_system(system, *symbols, **flags):
         for n in range(n0 - 1, 1, -1):
             debug('minsolve: %s' % n)
             thissol = None
-            for nonzeros in combinations(list(range(N)), n):
+            for nonzeros in combinations(range(N), n):
                 subm = Matrix([system.col(i).T for i in nonzeros] + [system.col(-1).T]).T
                 s = solve_linear_system(subm, *[symbols[i] for i in nonzeros])
                 if s and not all(v == 0 for v in s.values()):
@@ -3429,7 +3429,7 @@ def unrad(eq, *syms, **flags):
     if newsyms != syms:
         syms = newsyms
     # get terms together that have common generators
-    drad = dict(list(zip(rads, list(range(len(rads))))))
+    drad = dict(zip(rads, range(len(rads))))
     rterms = {(): []}
     args = Add.make_args(poly.as_expr())
     for t in args:
