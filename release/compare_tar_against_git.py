@@ -39,6 +39,7 @@ git_whitelist = {
     '.github/workflows/comment-on-pr.yml',
     '.github/workflows/release.yml',
     '.github/workflows/docs-preview.yml',
+    '.github/workflows/checkconflict.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',

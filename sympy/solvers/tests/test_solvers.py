@@ -1374,6 +1374,9 @@ def test_checksol():
     assert checksol(y, x, 2) is False
     assert checksol(x+1e-10, x, 0, numerical=True) is True
     assert checksol(x+1e-10, x, 0, numerical=False) is False
+    assert checksol(exp(92*x), {x: log(sqrt(2)/2)}) is False
+    assert checksol(exp(92*x), {x: log(sqrt(2)/2) + I*pi}) is False
+    assert checksol(1/x**5, x, 1000) is False
     raises(ValueError, lambda: checksol(x, 1))
     raises(ValueError, lambda: checksol([], x, 1))
 

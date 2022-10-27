@@ -190,10 +190,9 @@ class UnitSystem(_QuantityMapper):
                 dim /= idim**count
             return factor, dim
         elif isinstance(expr, Function):
-            fds = [self._collect_factor_and_dimension(
-                arg) for arg in expr.args]
-            return (expr.func(*(f[0] for f in fds)),
-                    *(d[1] for d in fds))
+            fds = [self._collect_factor_and_dimension(arg) for arg in expr.args]
+            dims = [Dimension(1) if self.get_dimension_system().is_dimensionless(d[1]) else d[1] for d in fds]
+            return (expr.func(*(f[0] for f in fds)), *dims)
         elif isinstance(expr, Dimension):
             return S.One, expr
         else:
