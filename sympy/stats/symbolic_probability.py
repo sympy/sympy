@@ -61,6 +61,7 @@ class Probability(Expr):
     """
     def __new__(cls, prob, condition=None, **kwargs):
         prob = _sympify(prob)
+        is_commutative = True
         if condition is None:
             obj = Expr.__new__(cls, prob)
         else:
@@ -215,6 +216,9 @@ class Expectation(Expr):
             obj = Expr.__new__(cls, expr, condition)
         obj._condition = condition
         return obj
+
+    def _eval_is_commutative(self):
+        return self.args[0].is_commutative
 
     def expand(self, **hints):
         expr = self.args[0]
@@ -501,6 +505,9 @@ class Covariance(Expr):
             obj = Expr.__new__(cls, arg1, arg2, condition)
         obj._condition = condition
         return obj
+
+    def _eval_is_commutative(self):
+        return self.args[0].is_commutative
 
     def expand(self, **hints):
         arg1 = self.args[0]
