@@ -6,7 +6,7 @@ from sympy.core.backend import pi, AppliedUndef, Derivative, Matrix
 from sympy.physics.mechanics.body import Body
 from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
                                   ReferenceFrame)
-
+from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['Joint', 'PinJoint', 'PrismaticJoint', 'CylindricalJoint',
@@ -506,8 +506,11 @@ class Joint(ABC):
         generated_coordinates = []
         if coordinates is None:
             coordinates = []
-        elif isinstance(coordinates, (AppliedUndef, Derivative)):
+        elif not iterable(coordinates):
             coordinates = [coordinates]
+        if not (len(coordinates) == 0 or len(coordinates) == n_coords):
+            raise ValueError(f'Expected {n_coords} {name}s, instead got '
+                             f'{len(coordinates)} {name}s.')
         # Supports more iterables, also Matrix
         for i, coord in enumerate(coordinates):
             if coord is None:
@@ -519,9 +522,6 @@ class Joint(ABC):
                                 f'dynamicsymbol.')
         for i in range(len(coordinates) + offset, n_coords + offset):
             generated_coordinates.append(create_symbol(i))
-        if len(generated_coordinates) != n_coords:
-            raise ValueError(f'{len(coordinates)} {name}s have been provided. '
-                             f'The maximum number of {name}s is {n_coords}.')
         return Matrix(generated_coordinates)
 
 

@@ -50,27 +50,27 @@ def test_coordinate_generation():
     # Test None
     assert J._fill_coordinate_list(None, 1) == Matrix([qj])
     assert J._fill_coordinate_list([None], 1) == Matrix([qj])
-    assert J._fill_coordinate_list([q0, None], 3) == Matrix([q0, q1j, q2j])
+    assert J._fill_coordinate_list([q0, None, None], 3) == Matrix(
+        [q0, q1j, q2j])
     # Test autofill
     assert J._fill_coordinate_list(None, 3) == Matrix([q0j, q1j, q2j])
     assert J._fill_coordinate_list([], 3) == Matrix([q0j, q1j, q2j])
     # Test offset
     assert J._fill_coordinate_list([], 3, offset=1) == Matrix([q1j, q2j, q3j])
-    assert J._fill_coordinate_list(q1, 3, offset=1) == Matrix([q1, q2j, q3j])
     assert J._fill_coordinate_list([q1, None, q3], 3, offset=1) == Matrix(
         [q1, q2j, q3])
     assert J._fill_coordinate_list(None, 2, offset=2) == Matrix([q2j, q3j])
     # Test label
     assert J._fill_coordinate_list(None, 1, 'u') == Matrix([uj])
     assert J._fill_coordinate_list([], 3, 'u') == Matrix([u0j, u1j, u2j])
-    assert J._fill_coordinate_list([u0], 3, 'u', 1) == Matrix([u0, u2j, u3j])
     # Test single numbering
     assert J._fill_coordinate_list(None, 1, number_single=True) == Matrix([q0j])
     assert J._fill_coordinate_list([], 1, 'u', 2, True) == Matrix([u2j])
     assert J._fill_coordinate_list([], 3, 'q') == Matrix([q0j, q1j, q2j])
-    # Test too many coordinates supplied
+    # Test invalid number of coordinates supplied
     raises(ValueError, lambda: J._fill_coordinate_list([q0, q1], 1))
     raises(ValueError, lambda: J._fill_coordinate_list([u0, u1, None], 2, 'u'))
+    raises(ValueError, lambda: J._fill_coordinate_list([q0, q1], 3))
     # Test incorrect coordinate type
     raises(TypeError, lambda: J._fill_coordinate_list([q0, symbols('q1')], 2))
     raises(TypeError, lambda: J._fill_coordinate_list([q0 + q1, q1], 2))
@@ -820,25 +820,25 @@ def test_planar_joint():
     q0, q1, q2, u0, u1, u2 = dynamicsymbols('q0:3, u0:3')
     l, m = symbols('l, m')
     N, A, P, C, Pint, Cint = _generate_body(True)
-    Cj = PlanarJoint('J', P, C, rotation_coordinate=q0, planar_coordinates=q1,
-                     planar_speeds=[u1, u2], parent_point=m * N.x,
-                     child_point=l * A.y, parent_interframe=Pint,
-                     child_interframe=Cint)
-    assert Cj.coordinates == Matrix([q0, q1, q2_def])
+    Cj = PlanarJoint('J', P, C, rotation_coordinate=q0,
+                     planar_coordinates=[q1, q2], planar_speeds=[u1, u2],
+                     parent_point=m * N.x, child_point=l * A.y,
+                     parent_interframe=Pint, child_interframe=Cint)
+    assert Cj.coordinates == Matrix([q0, q1, q2])
     assert Cj.speeds == Matrix([u0_def, u1, u2])
     assert Cj.rotation_coordinate == q0
-    assert Cj.planar_coordinates == Matrix([q1, q2_def])
+    assert Cj.planar_coordinates == Matrix([q1, q2])
     assert Cj.rotation_speed == u0_def
     assert Cj.planar_speeds == Matrix([u1, u2])
     assert Cj.kdes == Matrix([u0_def - q0.diff(t), u1 - q1.diff(t),
-                              u2 - q2_def.diff(t)])
+                              u2 - q2.diff(t)])
     assert Cj.rotation_axis == Pint.x
     assert Cj.planar_vectors == [Pint.y, Pint.z]
     assert Cj.child_point.pos_from(C.masscenter) == l * A.y
     assert Cj.parent_point.pos_from(P.masscenter) == m * N.x
-    assert Cj.parent_point.pos_from(Cj.child_point) == q1 * N.y + q2_def * N.z
+    assert Cj.parent_point.pos_from(Cj.child_point) == q1 * N.y + q2 * N.z
     assert C.masscenter.pos_from(
-        P.masscenter) == m * N.x - q1 * N.y - q2_def * N.z - l * A.y
+        P.masscenter) == m * N.x - q1 * N.y - q2 * N.z - l * A.y
     assert C.masscenter.vel(N) == -u1 * N.y - u2 * N.z + u0_def * l * A.x
     assert A.ang_vel_in(N) == u0_def * N.x
 
@@ -928,11 +928,9 @@ def test_spherical_joint_coords():
     assert S.speeds == Matrix([u0, u1, u2])
     # Test too few generalized coordinates
     N, A, P, C = _generate_body()
-    S = SphericalJoint('S', P, C, Matrix([q0, q1]), Matrix([u0]))
-    assert S.coordinates == Matrix([q0, q1, q2s])
-    assert S.speeds == Matrix([u0, u1s, u2s])
+    raises(ValueError,
+           lambda: SphericalJoint('S', P, C, Matrix([q0, q1]), Matrix([u0])))
     # Test too many generalized coordinates
-    N, A, P, C = _generate_body()
     raises(ValueError, lambda: SphericalJoint(
         'S', P, C, Matrix([q0, q1, q2, q3]), Matrix([u0, u1, u2])))
     raises(ValueError, lambda: SphericalJoint(
