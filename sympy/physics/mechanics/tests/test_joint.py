@@ -74,6 +74,13 @@ def test_coordinate_generation():
     # Test incorrect coordinate type
     raises(TypeError, lambda: J._fill_coordinate_list([q0, symbols('q1')], 2))
     raises(TypeError, lambda: J._fill_coordinate_list([q0 + q1, q1], 2))
+    # Test if derivative as generalized speed is allowed
+    _, _, P, C = _generate_body()
+    PinJoint('J', P, C, q1, q1.diff(t))
+    # Test duplicate coordinates
+    _, _, P, C = _generate_body()
+    raises(ValueError, lambda: SphericalJoint('J', P, C, [q1j, None, None]))
+    raises(ValueError, lambda: SphericalJoint('J', P, C, speeds=[u0, u0, u1]))
 
 
 def test_pin_joint():

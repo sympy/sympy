@@ -2,8 +2,8 @@ from sympy.core.backend import diff, zeros, Matrix, eye, sympify
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.physics.mechanics.method import _Methods
-from sympy.physics.mechanics.functions import (find_dynamicsymbols, msubs,
-                                               _f_list_parser)
+from sympy.physics.mechanics.functions import (
+    find_dynamicsymbols, msubs, _f_list_parser, _validate_coordinates)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
 
@@ -162,6 +162,7 @@ class LagrangesMethod(_Methods):
         self._q = Matrix(qs)
         self._qdots = self.q.diff(dynamicsymbols._t)
         self._qdoubledots = self._qdots.diff(dynamicsymbols._t)
+        _validate_coordinates(self.q)
 
         mat_build = lambda x: Matrix(x) if x else Matrix()
         hol_coneqs = mat_build(hol_coneqs)
