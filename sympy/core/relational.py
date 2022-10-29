@@ -23,6 +23,7 @@ from .expr import Expr
 from sympy.multipledispatch import dispatch
 from .containers import Tuple
 from .symbol import Symbol
+from sympy.core.add import Add
 
 
 def _nontrivBool(side):
@@ -498,18 +499,18 @@ class Relational(Boolean, EvalfMixin):
         if r.is_Relational:
             attempts = []
 
+            # Try difference between both sides,
+            # provided that neither side is 0.
+            if r.lhs != 0 and r.rhs != 0:
+                dif = r.lhs - r.rhs
+                new_expr = Rel(dif, 0, rop=r.rel_op)
+                new_expr = new_expr.simplify()
+                attempts.append((measure(new_expr), new_expr))
+
             # Try simplifying the expression as-is.
             r = self._eval_simplification(r)
             r = r.canonical
             attempts.append((measure(r), r))
-
-            # Try again, but this time using the difference between both sides.
-            # Provided that either side is not zero.
-            if r.lhs != 0 and r.rhs != 0:
-                dif = r.lhs - r.rhs
-                new_expr = Rel(dif, 0, rop = r.rel_op)
-                new_expr = new_expr.simplify()
-                attempts.append((measure(new_expr), new_expr))
 
             best_measure, best_expr = min(attempts)
 
