@@ -205,10 +205,47 @@ _uniquely_named_symbol = uniquely_named_symbol
 
 class Symbol(AtomicExpr, Boolean):
     """
+    A Symbol is a representation of a mathematical variable using a
+    name. It supports subscripts and Greek and Latin characters.
+    Symbols can be combined to form SymPy expressions. A single
+    Symbol can be created using the Symbol() constructor but to create
+    multiple symbols in one statement use the symbols() function.
+
     Assumptions:
        commutative = True
+       algebraic = None
+       antihermitian = None
+       complex = None
+       composite = None
+       even = None
+       extended_negative = None
+       extended_nonnegative = None
+       extended_nonzero = None
+       extended_positive = None
+       extended_real = None
+       finite = None
+       hermition = None
+       imaginary = None
+       infinite = None
+       integer = None
+       irrational = None
+       negative = None
+       noninteger = None
+       nonnegative = None
+       nonpositive = None
+       nonzero = None
+       odd = None
+       polar = None
+       positive = None
+       prime = None
+       rational = None
+       real = None
+       transcendental = None
+       zero = None
 
     You can override the default assumptions in the constructor.
+    However, it is important to note that the value of ``commutative``
+    cannot be set to None.
 
     Examples
     ========
@@ -219,6 +256,48 @@ class Symbol(AtomicExpr, Boolean):
     True
     >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
     True
+
+    Note that Symbol objects are compared based on their name and assumptions.
+    Two symbols with same name but different assumptions are not equal and shall
+    not be treated as the same in an expression
+
+    >>> from sympy import Symbol
+    >>> Symbol('x') != Symbol('x', real = True)
+    True
+    >>> Symbol('x') + Symbol('x', real = True)
+    x + x
+
+    This ambiguity is naming can be removed using the ``disambiguate`` function.
+
+    >>> from sympy.core.symbol import disambiguate
+    >>> eq = Symbol('x') + Symbol('x', real = True)
+    >>> disambiguate(eq)
+    (x + x₁,)
+
+
+    Sympy will automatically pretty print Greek letters.
+
+    >>> from sympy import symbols
+    >>> alpha, beta, gamma = symbols('alpha beta gamma')
+    >>> alpha + 2 * beta + 3 * gamma
+    α + 2⋅β + 3⋅γ
+
+    Numbers can be added as subscripts to a Symbol by simply suffixing it after
+    the Symbol name.
+
+    >>> from sympy import Symbol
+    >>> alpha1 = Symbol('alpha1')
+    >>> beta2 = Symbol('beta2')
+    >>> alpha1 + beta2
+    α₁ + β₂
+
+    Other types of subscripts can be added to a Symbol by following a general
+    format of ``<var_name> = Symbol('<symbol_name>_<subscript>')``
+
+    >>> from sympy import Symbol
+    >>> alpha_i = Symbol('alpha_i')
+    >>> alpha_i
+    αᵢ
 
     """
 
