@@ -24,6 +24,7 @@ from sympy.multipledispatch import dispatch
 from .containers import Tuple
 from .symbol import Symbol
 from .add import Add
+from sympy.core.kind import NumberKind
 
 
 def _nontrivBool(side):
@@ -499,7 +500,7 @@ class Relational(Boolean, EvalfMixin):
 
             # Try difference between both sides,
             # provided that neither side is 0.
-            if r.lhs != 0 and r.rhs != 0:
+            if type(r.lhs) == NumberKind and r.lhs != 0 and r.rhs != 0:
                 dif = r.lhs - r.rhs
                 new_expr = Rel(dif, 0, rop=r.rel_op)
                 new_expr = new_expr.simplify()
