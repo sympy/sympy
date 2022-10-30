@@ -213,7 +213,7 @@ class Symbol(AtomicExpr, Boolean):
 
     Assumptions:
        commutative = True
-    
+
     There are more assumptions for a Symbol whose default value is set to
     ``None``. To read more about them see
     [https://docs.sympy.org/latest/guides/assumptions.html#predicates](url)
