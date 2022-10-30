@@ -512,7 +512,7 @@ class Relational(Boolean, EvalfMixin):
             r = r.canonical
             attempts.append((measure(r), r))
 
-            best_measure, best_expr = min(attempts)
+            best_measure, best_expr = min(attempts, key=lambda attempt: attempt[0])
 
             if best_measure < kwargs['ratio'] * measure(self):
                 return best_expr
