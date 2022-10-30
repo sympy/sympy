@@ -215,8 +215,8 @@ class Symbol(AtomicExpr, Boolean):
        commutative = True
 
     There are more assumptions for a Symbol whose default value is set to
-    ``None``. To read more about them see
-    [https://docs.sympy.org/latest/guides/assumptions.html#predicates](url)
+    ``None``. To read more about them see :ref: `assumptions
+    <https://docs.sympy.org/latest/guides/assumptions.html#predicates>`_.
 
     You can override the default assumptions in the constructor.
     However, it is important to note that the value of ``commutative``
