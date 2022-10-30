@@ -1067,4 +1067,3 @@ def test_issue_23518():
     assert And(x < y, y <= x).simplify() == False
     assert Or(x <= y, y <= x).simplify() == True
     assert (N < 1).simplify() == False
-
