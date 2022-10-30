@@ -23,7 +23,7 @@ from .expr import Expr
 from sympy.multipledispatch import dispatch
 from .containers import Tuple
 from .symbol import Symbol
-from sympy.core.add import Add
+from .add import Add
 
 
 def _nontrivBool(side):
@@ -491,8 +491,6 @@ class Relational(Boolean, EvalfMixin):
         return r
 
     def _eval_simplify(self, **kwargs):
-        from .add import Add
-        from .expr import Expr
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
         measure = kwargs['measure']
@@ -684,7 +682,7 @@ class Equality(Relational):
         >>> eq.rewrite(Add, evaluate=False).args
         (b, x, b, -x)
         """
-        from .add import _unevaluated_Add, Add
+        from .add import _unevaluated_Add
         L, R = args
         if L == 0:
             return R
@@ -715,13 +713,11 @@ class Equality(Relational):
         e = super()._eval_simplify(**kwargs)
         if not isinstance(e, Equality):
             return e
-        from .expr import Expr
         if not isinstance(e.lhs, Expr) or not isinstance(e.rhs, Expr):
             return e
         free = self.free_symbols
         if len(free) == 1:
             try:
-                from .add import Add
                 from sympy.solvers.solveset import linear_coeffs
                 x = free.pop()
                 m, b = linear_coeffs(
@@ -1540,7 +1536,6 @@ def is_eq(lhs, rhs, assumptions=None):
 
     from sympy.assumptions.wrapper import (AssumptionsWrapper,
         is_infinite, is_extended_real)
-    from .add import Add
 
     _lhs = AssumptionsWrapper(lhs, assumptions)
     _rhs = AssumptionsWrapper(rhs, assumptions)
