@@ -256,7 +256,7 @@ class Symbol(AtomicExpr, Boolean):
     >>> from sympy import symbols, init_printing
     >>> init_printing()
     >>> alpha, beta, gamma = symbols('alpha beta gamma')
-    >>> alpha + 2 * beta + 3 * gamma
+    >>> alpha + 2 * beta + 3 * gamma #doctest: +SKIP
     α + 2⋅β + 3⋅γ
 
     Numbers can be added as subscripts to a Symbol by simply suffixing it after
@@ -266,7 +266,7 @@ class Symbol(AtomicExpr, Boolean):
     >>> init_printing()
     >>> alpha1 = Symbol('alpha1')
     >>> beta2 = Symbol('beta2')
-    >>> alpha1 + beta2
+    >>> alpha1 + beta2 #doctest: +SKIP
     α₁ + β₂
 
     Other types of subscripts can be added to a Symbol by following a general
@@ -275,7 +275,7 @@ class Symbol(AtomicExpr, Boolean):
     >>> from sympy import Symbol, init_printing
     >>> init_printing()
     >>> alpha_i = Symbol('alpha_i')
-    >>> alpha_i
+    >>> alpha_i #doctest: +SKIP
     αᵢ
 
     """
