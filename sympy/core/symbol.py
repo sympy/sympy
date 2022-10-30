@@ -213,35 +213,10 @@ class Symbol(AtomicExpr, Boolean):
 
     Assumptions:
        commutative = True
-       algebraic = None
-       antihermitian = None
-       complex = None
-       composite = None
-       even = None
-       extended_negative = None
-       extended_nonnegative = None
-       extended_nonzero = None
-       extended_positive = None
-       extended_real = None
-       finite = None
-       hermition = None
-       imaginary = None
-       infinite = None
-       integer = None
-       irrational = None
-       negative = None
-       noninteger = None
-       nonnegative = None
-       nonpositive = None
-       nonzero = None
-       odd = None
-       polar = None
-       positive = None
-       prime = None
-       rational = None
-       real = None
-       transcendental = None
-       zero = None
+    
+    There are more assumptions for a Symbol whose default value is set to
+    ``None``. To read more about them see
+    [https://docs.sympy.org/latest/guides/assumptions.html#predicates](url)
 
     You can override the default assumptions in the constructor.
     However, it is important to note that the value of ``commutative``
@@ -272,12 +247,14 @@ class Symbol(AtomicExpr, Boolean):
     >>> from sympy.core.symbol import disambiguate
     >>> eq = Symbol('x') + Symbol('x', real = True)
     >>> disambiguate(eq)
-    (x + x₁,)
+    (x + x_1,)
 
 
-    Sympy will automatically pretty print Greek letters.
+    By running init_printing() SymPy will automatically pretty print Greek
+    letters and subscripts.
 
-    >>> from sympy import symbols
+    >>> from sympy import symbols, init_printing
+    >>> init_printing()
     >>> alpha, beta, gamma = symbols('alpha beta gamma')
     >>> alpha + 2 * beta + 3 * gamma
     α + 2⋅β + 3⋅γ
@@ -285,7 +262,8 @@ class Symbol(AtomicExpr, Boolean):
     Numbers can be added as subscripts to a Symbol by simply suffixing it after
     the Symbol name.
 
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, init_printing
+    >>> init_printing()
     >>> alpha1 = Symbol('alpha1')
     >>> beta2 = Symbol('beta2')
     >>> alpha1 + beta2
@@ -294,7 +272,8 @@ class Symbol(AtomicExpr, Boolean):
     Other types of subscripts can be added to a Symbol by following a general
     format of ``<var_name> = Symbol('<symbol_name>_<subscript>')``
 
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, init_printing
+    >>> init_printing()
     >>> alpha_i = Symbol('alpha_i')
     >>> alpha_i
     αᵢ
