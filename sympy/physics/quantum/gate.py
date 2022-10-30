@@ -117,7 +117,7 @@ def _validate_targets_controls(tandc):
         if not bit.is_Integer and not bit.is_Symbol:
             raise TypeError('Integer expected, got: %r' % tandc[bit])
     # Detect duplicates
-    if len(list(set(tandc))) != len(tandc):
+    if len(set(tandc)) != len(tandc):
         raise QuantumError(
             'Target/control qubits in a gate cannot be duplicated'
         )

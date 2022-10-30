@@ -334,9 +334,9 @@ class bessely(BesselBase):
                 return S.NaN
         if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
-        if z == S.ImaginaryUnit*S.Infinity:
+        if z == I*S.Infinity:
             return exp(I*pi*(nu + 1)/2) * S.Infinity
-        if z == S.ImaginaryUnit*S.NegativeInfinity:
+        if z == I*S.NegativeInfinity:
             return exp(-I*pi*(nu + 1)/2) * S.Infinity
 
         if nu.is_integer:
@@ -1310,7 +1310,7 @@ class AiryBase(Function):
 
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
+        return re_part + im_part*I
 
 
 class airyai(AiryBase):
