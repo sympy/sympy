@@ -33,7 +33,6 @@ There are several functions that you can use to find the roots of a polynomial:
 - {func}`~.solve` is a general solving function which can find roots, though is
   less efficient than {meth}`~sympy.polys.polytools.Poly.all_roots` and is the
   only function in this list that does not convey the multiplicity of roots
-  return root multiplicities
 - {func}`~.roots` computes the symbolic roots of a univariate polynomial; will
 fail for most high-degree polynomials (five or greater)
 - {func}`~.nroots` computes numerical approximations of the roots of any
