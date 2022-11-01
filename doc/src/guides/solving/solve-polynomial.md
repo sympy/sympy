@@ -32,18 +32,24 @@ formula](https://en.wikipedia.org/wiki/Quadratic_formula).
 There are several functions that you can use to find the roots of a polynomial:
 - {func}`~.solve` is a general solving function which can find roots, though is
   less efficient than {meth}`~sympy.polys.polytools.Poly.all_roots` and is the
-  only function in this list that does not convey the multiplicity of roots
+  only function in this list that does not convey the multiplicity of roots;
+  {func}`~.solve` also works on [non-polynomial
+  equations](solve-equation-algebraically.md) and [systems of non-polynomial
+  equations](solve-system-of-equations-algebraically.md)
 - {func}`~.roots` computes the symbolic roots of a univariate polynomial; will
 fail for most high-degree polynomials (five or greater)
 - {func}`~.nroots` computes numerical approximations of the roots of any
-polynomial whose coefficients can be numerically evaluated
-- {func}`~sympy.polys.rootoftools.RootOf` can find all the roots exactly of a
-polynomial of arbitrarily large degree
-- {func}`~.real_roots` can find all the real roots exactly of a polynomial of
-arbitrarily large degree; because it finds only the real roots, it can be more
-  efficient than functions that find all roots
-- {meth}`~sympy.polys.polytools.Poly.all_roots` can find all the roots exactly
-of a polynomial of arbitrarily large degree
+polynomial whose coefficients can be numerically evaluated, whether the
+coefficients are rational or irrational
+- {func}`~sympy.polys.rootoftools.RootOf` can represent all the roots exactly of
+a polynomial of arbitrarily large degree, as long as the coefficients are
+rational numbers. The following two functions use
+  {func}`~sympy.polys.rootoftools.RootOf` so they have the same properties:
+    - {func}`~.real_roots` can find all the real roots exactly of a polynomial
+of arbitrarily large degree; because it finds only the real roots, it can be
+  more efficient than functions that find all roots.
+    - {meth}`~sympy.polys.polytools.Poly.all_roots` can find all the roots
+exactly of a polynomial of arbitrarily large degree
 - {func}`~.factor` factors a polynomial into irreducibles and can reveal that
   roots lie in the coefficient ring
 
@@ -84,6 +90,31 @@ the multiplicity of roots:
 [{x: -2}, {x: 3}]
 >>> solve(symbolic, x, dict=True)
 [{x: -a}, {x: b}]
+```
+
+{func}`~.solve` will first try using {func}`~.roots`; if that doesn't work, it
+will try using {meth}`~sympy.polys.polytools.Poly.all_roots`. For cubics
+(third-degree polynomials) and quartics (fourth-degree polynomials), that means
+that {func}`~.solve` will use radical formulae from roots rather than
+{func}`~sympy.polys.rootoftools.RootOf` even if RootOf is possible. However, you
+can set the {func}`~.solve` parameter `cubics` or `quartics` to `False` to
+return {func}`~sympy.polys.rootoftools.RootOf` results:
+
+```py
+>>> from sympy import solve
+>>> from sympy.abc import x
+>>> # By default, solve() uses the radical formula
+>>> solve(x**4 - x + 1, x)
+[-sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3))/2 - sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) - 2/sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3)) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2,
+ sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3))/2 - sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3)) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2,
+ sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) - 2/sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3)) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2 - sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3))/2,
+ sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3)) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2 + sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3))/2]
+>>> # If you set quartics=False, solve() uses RootOf()
+>>> solve(x**4 - x + 1, x, quartics=False)
+[CRootOf(x**4 - x + 1, 0),
+ CRootOf(x**4 - x + 1, 1),
+ CRootOf(x**4 - x + 1, 2),
+ CRootOf(x**4 - x + 1, 3)]
 ```
 
 Refer to [](solve-equation-algebraically.md) for more about using
@@ -161,8 +192,15 @@ If the roots to your polynomial are real, using {func}`~.real_roots` ensures
 that only real (not complex or imaginary) roots will be returned.
 
 ```py
->>> real_roots(expression)
-[-2, -2, 3]
+>>> from sympy import real_roots
+>>> from sympy.abc import x
+>>> cubed = x**3 - 1
+>>> # roots() returns real and complex roots
+>>> roots(cubed)
+{1: 1, -1/2 - sqrt(3)*I/2: 1, -1/2 + sqrt(3)*I/2: 1}
+>>> # real_roots() returns only real roots
+>>> real_roots(cubed)
+[1]
 ```
 
 {func}`~.real_roots` calls {func}`~sympy.polys.rootoftools.RootOf`, so for
@@ -170,7 +208,7 @@ equations whose roots are all real, you can get the same results by iterating
 over the number of roots of your equation:
 
 ```py
->>> [RootOf(expression, n) for n in range(0,3)]
+>>> [RootOf(expression, n) for n in range(3)]
 [-2, -2, 3]
 ```
 
@@ -229,7 +267,11 @@ so you may prefer an approximate numerical solution:
 
 {func}`~.nroots` can fail sometimes for polynomials that are numerically ill
 conditioned, for example [Wilkinson's
-polynomial](https://en.wikipedia.org/wiki/Wilkinson%27s_polynomial).
+polynomial](https://en.wikipedia.org/wiki/Wilkinson%27s_polynomial). Using
+{func}`~sympy.polys.rootoftools.RootOf` and {func}`~sympy.core.evalf` as
+described in [](#numerically-evaluate-crootof-roots) can avoid both
+ill-conditioning and returning spurious complex parts because it uses a more
+exact, but much slower, numerical algorithm based on isolating intervals.
 
 ## Complex Roots
 
@@ -386,6 +428,7 @@ list of solutions cannot be returned. Call roots with strict=False to
 get solutions expressible in radicals (if there are any).
 ```
 
+#### Get All Roots, Perhaps Implicitly
 {func}`~.solve` will return all five roots as `CRootOf`
 ({func}`~sympy.polys.rootoftools.ComplexRootOf`) class members:
 
@@ -399,8 +442,11 @@ get solutions expressible in radicals (if there are any).
 {x: CRootOf(x**5 - x + 1, 4)}]
 ```
 
-where the second argument in each `CRootOf` is the index of the root. You can
-then evaluate those roots numerically using `n` from {func}`~sympy.core.evalf`:
+where the second argument in each `CRootOf` is the index of the root.
+
+#### Numerically Evaluate `CRootOf` Roots
+You can then numerically evaluate those `CRootOf` roots using `n` from
+{func}`~sympy.core.evalf`:
 
 ```py
 >>> for root in fifth_order_solved:
@@ -506,7 +552,9 @@ have closed-form solutions, so you may have to represent them using, for
 example, [`RootOf` as described above](#representing-roots), or use a numerical
 method such as [`nroots` as described above](#nroots).
 
-If you encounter a problem with these commands, please post the problem on the
+## Report a Bug
+
+If you encounter a bug with these commands, please post the problem on the
 [mailing list](https://groups.google.com/g/sympy), or open an issue on [SymPy's
 GitHub page](https://github.com/sympy/sympy/issues). Until the issue is
 resolved, you can use another of the
