@@ -96,14 +96,16 @@ the multiplicity of roots:
 will try using {meth}`~sympy.polys.polytools.Poly.all_roots`. For cubics
 (third-degree polynomials) and quartics (fourth-degree polynomials), that means
 that {func}`~.solve` will use radical formulae from roots rather than
-{func}`~sympy.polys.rootoftools.RootOf` even if RootOf is possible. However, you
-can set the {func}`~.solve` parameter `cubics` or `quartics` to `False` to
-return {func}`~sympy.polys.rootoftools.RootOf` results:
+{func}`~sympy.polys.rootoftools.RootOf` even if RootOf is possible. The cubic
+and quartic formulae often give very complex expressions that are not useful in
+practice. As a result, you may want to set the {func}`~.solve` parameter
+`cubics` or `quartics` to `False` to return
+{func}`~sympy.polys.rootoftools.RootOf` results:
 
 ```py
 >>> from sympy import solve
 >>> from sympy.abc import x
->>> # By default, solve() uses the radical formula
+>>> # By default, solve() uses the radical formula, yielding very complex terms
 >>> solve(x**4 - x + 1, x)
 [-sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3))/2 - sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) - 2/sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3)) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2,
  sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3))/2 - sqrt(-2*(1/16 + sqrt(687)*I/144)**(1/3) + 2/sqrt(2/(3*(1/16 + sqrt(687)*I/144)**(1/3)) + 2*(1/16 + sqrt(687)*I/144)**(1/3)) - 2/(3*(1/16 + sqrt(687)*I/144)**(1/3)))/2,
@@ -116,6 +118,10 @@ return {func}`~sympy.polys.rootoftools.RootOf` results:
  CRootOf(x**4 - x + 1, 2),
  CRootOf(x**4 - x + 1, 3)]
 ```
+
+There is no general radical formula for quintics (fifth degree) or higher
+polynomials, so their {func}`~sympy.polys.rootoftools.RootOf` representations
+may be the best option.
 
 Refer to [](solve-equation-algebraically.md) for more about using
 {func}`~.solve`.
