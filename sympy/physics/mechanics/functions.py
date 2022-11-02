@@ -729,3 +729,33 @@ def _f_list_parser(fl, ref_frame):
         unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
         vel_list, f_list = unzip(list(flist_iter()))
     return vel_list, f_list
+
+
+def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
+                          is_dynamicsymbols=True):
+    # Convert input to iterables
+    if coordinates is None:
+        coordinates = []
+    elif not iterable(coordinates):
+        coordinates = [coordinates]
+    if speeds is None:
+        speeds = []
+    elif not iterable(speeds):
+        speeds = [speeds]
+
+    if check_duplicates:  # Check for duplicates
+        if len(coordinates) != len(set(coordinates)):
+            raise ValueError('Duplicate generalized coordinates found, all '
+                             'generalized coordinates should be unique.')
+        if len(speeds) != len(set(speeds)):
+            raise ValueError('Duplicate generalized speeds found, all '
+                             'generalized speeds should be unique.')
+    if is_dynamicsymbols:  # Check whether all coordinates are dynamicsymbols
+        for coordinate in coordinates:
+            if not isinstance(coordinate, (AppliedUndef, Derivative)):
+                raise ValueError(f'Generalized coordinate "{coordinate}" is not'
+                                 f' a dynamicsymbol.')
+        for speed in speeds:
+            if not isinstance(speed, (AppliedUndef, Derivative)):
+                raise ValueError(f'Generalized speed "{speed}" is not a '
+                                 f'dynamicsymbol.')

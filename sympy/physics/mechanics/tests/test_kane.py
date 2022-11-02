@@ -9,6 +9,20 @@ from sympy.testing.pytest import raises
 from sympy.core.backend import USE_SYMENGINE
 
 
+def test_invalid_coordinates():
+    # Simple pendulum, but use symbols instead of dynamicsymbols
+    l, m, g = symbols('l m g')
+    q, u = symbols('q u')  # Generalized coordinate
+    kd = [q.diff(dynamicsymbols._t) - u]
+    N, O = ReferenceFrame('N'), Point('O')
+    O.set_vel(N, 0)
+    P = Particle('P', Point('P'), m)
+    P.point.set_pos(O, l * (sin(q) * N.x - cos(q) * N.y))
+    F = (P.point, -m * g * N.y)
+    raises(ValueError, lambda: KanesMethod(N, [q], [u], kd, bodies=[P],
+                                           forcelist=[F]))
+
+
 def test_one_dof():
     # This is for a 1 dof spring-mass-damper case.
     # It is described in more detail in the KanesMethod docstring.
