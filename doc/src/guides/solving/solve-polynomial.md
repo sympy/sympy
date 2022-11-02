@@ -122,12 +122,12 @@ practice. As a result, you may want to set the {func}`~.solve` parameter
 Writing the first root from {func}`~.solve` in standard mathematical notation
 emphasizes how complex it is:
 
-$- \frac{\sqrt{\frac{2}{3 \sqrt[3]{\frac{1}{16} + \frac{\sqrt{687} i}{144}}} + 2
-\sqrt[3]{\frac{1}{16} + \frac{\sqrt{687} i}{144}}}}{2} - \frac{\sqrt{- 2
+$$- \frac{\sqrt{\frac{2}{3 \sqrt[3]{\frac{1}{16} + \frac{\sqrt{687} i}{144}}} +
+2 \sqrt[3]{\frac{1}{16} + \frac{\sqrt{687} i}{144}}}}{2}\\- \frac{\sqrt{- 2
 \sqrt[3]{\frac{1}{16} + \frac{\sqrt{687} i}{144}} - \frac{2}{\sqrt{\frac{2}{3
 \sqrt[3]{\frac{1}{16} + \frac{\sqrt{687} i}{144}}} + 2 \sqrt[3]{\frac{1}{16} +
 \frac{\sqrt{687} i}{144}}}} - \frac{2}{3 \sqrt[3]{\frac{1}{16} +
-\frac{\sqrt{687} i}{144}}}}}{2}$
+\frac{\sqrt{687} i}{144}}}}}{2}$$
 
 Further, there is no general radical formula for quintics (fifth degree) or
 higher polynomials, so their {func}`~sympy.polys.rootoftools.RootOf`
