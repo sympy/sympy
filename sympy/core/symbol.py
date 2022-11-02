@@ -205,7 +205,7 @@ _uniquely_named_symbol = uniquely_named_symbol
 
 class Symbol(AtomicExpr, Boolean):
     """
-    A Symbol is a representation of a mathematical variable using a
+    A Symbol is an expression of a mathematical variable using a
     name. It supports subscripts and Greek and Latin characters.
     Symbols can be combined to form SymPy expressions. A single
     Symbol can be created using the Symbol() constructor but to create
@@ -215,7 +215,8 @@ class Symbol(AtomicExpr, Boolean):
        commutative = True
 
     There are more assumptions for a Symbol whose default value is set to
-    ``None``. To read more about them see :ref: `predicates`_.
+    ``None``. To read more about them see :ref: `assumptions
+    <https://docs.sympy.org/latest/guides/assumptions.html#predicates>`_.
 
     You can override the default assumptions in the constructor.
     However, it is important to note that the value of ``commutative``
@@ -232,24 +233,23 @@ class Symbol(AtomicExpr, Boolean):
     True
 
     Note that Symbol objects are compared based on their name and assumptions.
-    Two symbols with same name but different assumptions are not equal and shall
-    not be treated as the same in an expression
+    Two symbols with same name but different assumptions are not equal and
+    treated as distinct in an expression.
 
     >>> from sympy import Symbol
-    >>> Symbol('x') != Symbol('x', real = True)
+    >>> Symbol('x') != Symbol('x', real=True)
     True
-    >>> Symbol('x') + Symbol('x', real = True)
+    >>> eq = Symbol('x') + Symbol('x', real=True); eq
     x + x
 
-    This ambiguity is naming can be removed using the ``disambiguate`` function.
+    This ambiguity in naming can be removed using the ``disambiguate`` function.
 
     >>> from sympy.core.symbol import disambiguate
-    >>> eq = Symbol('x') + Symbol('x', real = True)
     >>> disambiguate(eq)
     (x + x_1,)
 
 
-    By running init_printing() SymPy will automatically pretty print Greek
+    By running `init_printing()` SymPy will automatically pretty-print Greek
     letters and subscripts.
 
     >>> from sympy import symbols, init_printing
@@ -258,14 +258,14 @@ class Symbol(AtomicExpr, Boolean):
     >>> alpha + 2 * beta + 3 * gamma #doctest: +SKIP
     α + 2⋅β + 3⋅γ
 
-    Numbers can be added as subscripts to a Symbol by simply suffixing it after
-    the Symbol name.
+    Trailing digits are automatically treated like subscripts of what precedes
+    them in the name:
 
     >>> from sympy import Symbol, init_printing
     >>> init_printing()
-    >>> alpha1 = Symbol('alpha1')
-    >>> beta2 = Symbol('beta2')
-    >>> alpha1 + beta2 #doctest: +SKIP
+    >>> a = Symbol('alpha1')
+    >>> b = Symbol('beta2')
+    >>> a + b #doctest: +SKIP
     α₁ + β₂
 
     Other types of subscripts can be added to a Symbol by following a general
