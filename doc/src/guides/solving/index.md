@@ -19,7 +19,7 @@ Learn how to use SymPy computer algebra system to:
 | [ Solve (find the roots of) a polynomial algebraically or numerically ](solve-polynomial.md)                       | $ ax^2 + bx + c = 0 $ | $ x = \frac{-b\pm\sqrt{b^2 - 4ac}}{2a} $                                                                                                |
 |  [ Solve a matrix equation algebraically ](solve-matrix-equation.md)                    | $ \left[\begin{array}{cc} c & d\\1 & -e\end{array}\right] \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} 2\\0\end{array}\right] $ | $ \left[\begin{array}{cc} x\\y\end{array}\right] = \left[\begin{array}{cc} \frac{2e}{ce+d}\\\frac{2}{ce+d}\end{array}\right]$  |
 |  [ Reduce one or a system of inequalities for a single variable algebraically ](reduce-inequalities-algebraically.md)           | $ x^2 < \pi, x > 0 $ | $ 0 < x < \sqrt{\pi} $                                                                                                  |
-|  [ Solve a Diophantine equation (find integer solutions to a polynomial equation) algebraically ](solve-diophantine-equation.md)             | $a^2 + b^2 = c^2$ | $(a=2pq, b=p^2-q^2, c=p^2-q^2)$                                                                                  |
+|  [ Solve a Diophantine equation (find integer solutions to a polynomial equation) algebraically ](solve-diophantine-equation.md)             | $a^2 + b^2 = c^2$ | $(a=2pq, b=p^2-q^2, c=p^2+q^2)$                                                                                  |
 
 Note: SymPy has a function called {func}`~.solve` which is designed to find the
 solutions of an equation or system of equations, or the roots of a function.
