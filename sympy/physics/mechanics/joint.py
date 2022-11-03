@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 from sympy.core.backend import pi, AppliedUndef, Derivative, Matrix
 from sympy.physics.mechanics.body import Body
+from sympy.physics.mechanics.functions import _validate_coordinates
 from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
                                   ReferenceFrame)
 from sympy.utilities.iterables import iterable
@@ -149,6 +150,7 @@ class Joint(ABC):
 
         self._coordinates = self._generate_coordinates(coordinates)
         self._speeds = self._generate_speeds(speeds)
+        _validate_coordinates(self.coordinates, self.speeds)
         self._kdes = self._generate_kdes()
 
         self._parent_axis = self._axis(parent_axis, parent.frame)
