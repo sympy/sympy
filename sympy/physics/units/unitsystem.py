@@ -175,7 +175,7 @@ class UnitSystem(_QuantityMapper):
             for addend in expr.args[1:]:
                 addend_factor, addend_dim = \
                     self._collect_factor_and_dimension(addend)
-                if dim != addend_dim:
+                if not self.get_dimension_system().equivalent_dims(dim, addend_dim):
                     raise ValueError(
                         'Dimension of "{}" is {}, '
                         'but it should be {}'.format(
