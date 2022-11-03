@@ -1,3 +1,4 @@
+import warnings
 from typing import Callable
 
 import sympy
@@ -13,11 +14,16 @@ x, y, z = symbols('x,y,z')
 
 
 def test_Integer():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     assert smtlib_code(Integer(67)) == "67"
     assert smtlib_code(Integer(-1)) == "-1"
+    warnings.filters = warning_filters
 
 
 def test_Rational():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     assert smtlib_code(Rational(3, 7)) == "(/ 3 7)"
     assert smtlib_code(Rational(18, 9)) == "2"
     assert smtlib_code(Rational(3, -7)) == "(/ -3 7)"
@@ -25,18 +31,24 @@ def test_Rational():
     assert smtlib_code(x + Rational(3, 7), auto_declare=False) == "(+ (/ 3 7) x)"
     assert smtlib_code(Rational(3, 7) * x) == "(declare-const x Real)\n" \
                                               "(* (/ 3 7) x)"
+    warnings.filters = warning_filters
 
 
 def test_Relational():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     assert smtlib_code(Eq(x, y), auto_declare=False) == "(assert (= x y))"
     assert smtlib_code(Ne(x, y), auto_declare=False) == "(assert (not (= x y)))"
     assert smtlib_code(Le(x, y), auto_declare=False) == "(assert (<= x y))"
     assert smtlib_code(Lt(x, y), auto_declare=False) == "(assert (< x y))"
     assert smtlib_code(Gt(x, y), auto_declare=False) == "(assert (> x y))"
     assert smtlib_code(Ge(x, y), auto_declare=False) == "(assert (>= x y))"
+    warnings.filters = warning_filters
 
 
 def test_Function():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     assert smtlib_code(sin(x) ** cos(x), auto_declare=False) == "(pow (sin x) (cos x))"
 
     assert smtlib_code(
@@ -87,9 +99,12 @@ def test_Function():
          "(declare-const y Real)\n" \
          "(declare-const z Real)\n" \
          "(assert (== (MY_KNOWN_FUN x z) y))"
+    warnings.filters = warning_filters
 
 
 def test_Pow():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     assert smtlib_code(x ** 3, auto_declare=False) == "(pow x 3)"
     assert smtlib_code(x ** (y ** 3), auto_declare=False) == "(pow x (pow y 3))"
     assert smtlib_code(x ** Rational(2, 3), auto_declare=False) == '(pow x (/ 2 3))'
@@ -124,17 +139,23 @@ def test_Pow():
     ) == '(declare-const b Real)\n' \
          '(declare-const c Real)\n' \
          '(* -2 c (pow (* b b) -1))'
+    warnings.filters = warning_filters
 
 
 def test_basic_ops():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     assert smtlib_code(x * y, auto_declare=False) == "(* x y)"
     assert smtlib_code(x + y, auto_declare=False) == "(+ x y)"
     # todo: implement re-write, currently does '(+ x (* -1 y))' instead
     # assert smtlib_code(x - y, auto_declare=False) == "(- x y)"
     assert smtlib_code(-x, auto_declare=False) == "(* -1 x)"
+    warnings.filters = warning_filters
 
 
 def test_quantifier_extensions():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     from sympy.logic.boolalg import Boolean
     from sympy import Interval, Tuple, sympify
 
@@ -214,9 +235,12 @@ def test_quantifier_extensions():
          '(assert (forall ( (a Int [2, 100]) (b Real [2, 100])) ' \
          '(or c (=> (< a b) (< (pow a (/ 1 2)) b)))' \
          '))'
+    warnings.filters = warning_filters
 
 
 def test_mix_number_mult_symbols():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     assert smtlib_code(
         1 / pi,
         known_constants={pi: "MY_PI"}
@@ -272,9 +296,12 @@ def test_mix_number_mult_symbols():
         known_functions={Add: 'plus'},
         precision=3
     ) == '(plus 0 1 -1 (/ 1 2) e 3.14 1.62)'
+    warnings.filters = warning_filters
 
 
 def test_boolean():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     assert smtlib_code(x & y) == '(declare-const x Bool)\n' \
                                  '(declare-const y Bool)\n' \
                                  '(assert (and x y))'
@@ -340,6 +367,7 @@ def test_boolean():
          '(assert (= (f x) y))\n' \
          '(assert (= (g (f x)) z))\n' \
          '(assert (= (h (g (f x))) x))'
+    warnings.filters = warning_filters
 
 
 # todo: make smtlib_code support arrays
@@ -356,6 +384,8 @@ def test_boolean():
 
 
 def test_smtlib_piecewise():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     assert smtlib_code(
         Piecewise((x, x < 1),
                   (x ** 2, True)),
@@ -376,14 +406,18 @@ def test_smtlib_piecewise():
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x ** 2, x > 1), (sin(x), x > 0))
     raises(AssertionError, lambda: smtlib_code(expr))
+    warnings.filters = warning_filters
 
 
 def test_smtlib_piecewise_times_const():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     pw = Piecewise((x, x < 1), (x ** 2, True))
     assert smtlib_code(2 * pw) == '(declare-const x Real)\n(* 2 (ite (< x 1) x (pow x 2)))'
     assert smtlib_code(pw / x) == '(declare-const x Real)\n(* (pow x -1) (ite (< x 1) x (pow x 2)))'
     assert smtlib_code(pw / (x * y)) == '(declare-const x Real)\n(declare-const y Real)\n(* (pow x -1) (pow y -1) (ite (< x 1) x (pow x 2)))'
     assert smtlib_code(pw / 3) == '(declare-const x Real)\n(* (/ 1 3) (ite (< x 1) x (pow x 2)))'
+    warnings.filters = warning_filters
 
 
 # todo: make smtlib_code support arrays / matrices ?
@@ -412,15 +446,21 @@ def test_smtlib_piecewise_times_const():
 
 
 def test_smtlib_boolean():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     assert smtlib_code(True, auto_assert=False) == 'true'
     assert smtlib_code(True) == '(assert true)'
     assert smtlib_code(S.true) == '(assert true)'
     assert smtlib_code(S.false) == '(assert false)'
     assert smtlib_code(False) == '(assert false)'
     assert smtlib_code(False, auto_assert=False) == 'false'
+    warnings.filters = warning_filters
 
 
 def test_not_supported():
+    warning_filters = list(warnings.filters)
+    warnings.simplefilter('ignore')
     f = Function('f')
     raises(KeyError, lambda: smtlib_code(f(x).diff(x), symbol_table={f: Callable[[float], float]}))
     raises(KeyError, lambda: smtlib_code(S.ComplexInfinity))
+    warnings.filters = warning_filters
