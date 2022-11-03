@@ -15,8 +15,8 @@ example, solving $y''(x) + 9y(x)=0 $ yields $ y(x)=C_{1} \sin(3x)+ C_{2}
 ## Solve an Ordinary Differential Equation (ODE)
 
 Here is an example of solving the above ordinary differential equation
-algebraically using {func}`~.dsolve`. You can then use SymPy to verify that the
-solution is correct.
+algebraically using {func}`~.dsolve`. You can then use {func}`~.checkodesol` to
+verify that the solution is correct.
 
 ```py
 >>> from sympy import Function, dsolve, Derivative, checkodesol
