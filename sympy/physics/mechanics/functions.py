@@ -385,6 +385,7 @@ def gravity(acceleration, *bodies):
     >>> forceList.extend(gravity(g*N.y, pa, B))
     >>> forceList
     [(po, F1), (P, F2), (po, g*m*N.y), (P, M*g*N.y)]
+
     """
 
     gravity_force = []
@@ -432,6 +433,7 @@ def center_of_mass(point, *bodies):
     >>> expr = 5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
     >>> point_o.pos_from(p1.point)
     5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
+
     """
     if not bodies:
         raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
@@ -658,7 +660,9 @@ def _smart_subs(expr, sub_dict):
     - Second traverse:
         If node is a fraction, check if the denominator evaluates to 0.
         If so, attempt to simplify it out. Then if node is in sub_dict,
-        sub in the corresponding value."""
+        sub in the corresponding value.
+
+    """
     expr = _crawl(expr, _tan_repl_func)
 
     def _recurser(expr, sub_dict):
@@ -685,7 +689,7 @@ def _smart_subs(expr, sub_dict):
 
 
 def _fraction_decomp(expr):
-    """Return num, den such that expr = num/den"""
+    """Return num, den such that expr = num/den."""
     if not isinstance(expr, Mul):
         return expr, 1
     num = []
@@ -711,6 +715,7 @@ def _f_list_parser(fl, ref_frame):
         f_list: The forces.
 
     Used internally in the KanesMethod and LagrangesMethod classes.
+
     """
     def flist_iter():
         for pair in fl:
