@@ -1006,7 +1006,7 @@ class cos(TrigonometricFunction):
         if pi_mult:
             return fuzzy_and([(pi_mult - S.Half).is_integer, rest.is_zero])
         else:
-            return rest.is_zero
+            return (rest - S.Half).is_zero
 
 
 class tan(TrigonometricFunction):
