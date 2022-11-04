@@ -391,7 +391,6 @@ def test_cos():
     assert cos(0, evaluate=False).simplify() == 1
     assert cos(Rational(1, 2)).is_zero is False
     assert cos(asin(-1, evaluate=False), evaluate=False).simplify() == 0
-    
     for d in list(range(1, 22)) + [60, 85]:
         for n in range(2*d + 1):
             x = n*pi/d
