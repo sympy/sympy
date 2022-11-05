@@ -25,7 +25,6 @@ from sympy.multipledispatch import dispatch
 from .containers import Tuple
 from .symbol import Symbol
 from .add import Add
-from .kind import NumberKind
 
 
 
