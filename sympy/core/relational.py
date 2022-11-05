@@ -12,6 +12,7 @@ from sympy.logic.boolalg import Boolean, BooleanAtom
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
+from sympy.core.mul import Mul
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -24,7 +25,8 @@ from sympy.multipledispatch import dispatch
 from .containers import Tuple
 from .symbol import Symbol
 from .add import Add
-from sympy.core.kind import NumberKind
+from .kind import NumberKind
+
 
 
 def _nontrivBool(side):
@@ -461,33 +463,24 @@ class Relational(Boolean, EvalfMixin):
                 except PolynomialError:
                     pass
         elif len(free) >= 2:
-            try:
-                from sympy.solvers.solveset import linear_coeffs
-                from sympy.polys.polytools import gcd
-                free = list(ordered(free))
-                dif = r.lhs - r.rhs
-                m = linear_coeffs(dif, *free)
-                constant = m[-1]
-                del m[-1]
-                scale = gcd(m)
-                m = [mtmp / scale for mtmp in m]
-                nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
-                if scale.is_zero is False:
-                    if constant != 0:
-                        # lhs: expression, rhs: constant
-                        newexpr = Add(*[i * j for i, j in nzm])
-                        r = r.func(newexpr, -constant / scale)
-                    else:
-                        # keep first term on lhs
-                        lhsterm = nzm[0][0] * nzm[0][1]
-                        del nzm[0]
-                        newexpr = Add(*[i * j for i, j in nzm])
-                        r = r.func(lhsterm, -newexpr)
+            from sympy import factor_terms
+            dif = r.lhs - r.rhs
 
-                else:
-                    r = r.func(constant, S.Zero)
-            except ValueError:
-                pass
+            factored = Mul.make_args(factor_terms(dif))
+            if len(factored) == 1:
+                scale = S.One
+                inside = factored[0]
+            else:
+                scale = factored[0]
+                inside = factored[1]
+
+            constant = Add(*[i for i in Add.make_args(inside) if len(i.free_symbols) == 0])
+
+            # lhs: expression, rhs: constant
+            if scale.is_positive is True:
+                r = r.func(inside - constant, -constant)
+            elif scale.is_negative is True:
+                r = r.func(-constant, inside - constant)
 
         return r
 
@@ -498,15 +491,6 @@ class Relational(Boolean, EvalfMixin):
         if r.is_Relational:
             attempts = []
 
-            # Try difference between both sides,
-            # provided that neither side is 0.
-            if (r.lhs.kind == NumberKind) and r.lhs != 0 and r.rhs != 0:
-                dif = r.lhs - r.rhs
-                new_expr = Rel(dif, 0, rop=r.rel_op)
-                new_expr = new_expr.simplify()
-                attempts.append((measure(new_expr), new_expr))
-
-            # Try simplifying the expression as-is.
             r = self._eval_simplification(r)
             r = r.canonical
             attempts.append((measure(r), r))
