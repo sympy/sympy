@@ -415,35 +415,54 @@ class Relational(Boolean, EvalfMixin):
                     return right
                 return left
 
+    def _eval_simplify_loop(self, r):
+        if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
+            return r
+
+        r = r.canonical
+        from sympy import factor_terms
+        dif = r.lhs - r.rhs
+
+        factored = Mul.make_args(factor_terms(dif))
+        if len(factored) == 1:
+            scale = S.One
+            inside = factored[0]
+        else:
+            scale = factored[0]
+            inside = factored[1]
+
+        #scale_constant = Mul(*[c for c in Mul.make_args(scale) if len(c.free_symbols) == 0])
+        constant = Add(*[i for i in Add.make_args(inside) if len(i.free_symbols) == 0])
+
+        # lhs: expression, rhs: constant
+        if scale.is_positive is True:
+            r_new = r.func((inside - constant).simplify(), -constant)
+            if r_new.lhs != r.lhs or r_new.rhs != r.rhs:
+                r_new = self._eval_simplify_loop(r_new)
+            r = r_new
+        elif scale.is_negative is True:
+            r_new = r.func(-constant, (inside - constant).simplify())
+            if r_new.lhs != r.rhs or r_new.rhs != r.lhs:
+                r_new = self._eval_simplify_loop(r_new)
+            r = r_new
+
+        # Lastly take all elements with a minus sign and move it to the opposite side.
+        # Constants stay where they are.
+        r_lhs_neg = Add(*[x for x in Add.make_args(r.lhs) if Mul.make_args(x)[0] == -1])
+        r_rhs_neg = Add(*[x for x in Add.make_args(r.rhs) if Mul.make_args(x)[0] == -1])
+        r = r.func(r.lhs - r_lhs_neg - r_rhs_neg, r.rhs - r_lhs_neg - r_rhs_neg)
+
+        return r
+
     def _eval_simplify(self, **kwargs):
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
         measure = kwargs['measure']
+
         if r.is_Relational:
-            if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
-                return r
-
-            r = r.canonical
-            from sympy import factor_terms
-            dif = r.lhs - r.rhs
-
-            factored = Mul.make_args(factor_terms(dif))
-            if len(factored) == 1:
-                scale = S.One
-                inside = factored[0]
-            else:
-                scale = factored[0]
-                inside = factored[1]
-
-            constant = Add(*[i for i in Add.make_args(inside) if len(i.free_symbols) == 0])
-
-            # lhs: expression, rhs: constant
-            if scale.is_positive is True:
-                r = r.func(inside - constant, -constant)
-            elif scale.is_negative is True:
-                r = r.func(-constant, inside - constant)
-
+            r = self._eval_simplify_loop(r)
         r = r.canonical
+
         if measure(r) < kwargs['ratio'] * measure(self):
             return r
         return self
