@@ -1,7 +1,7 @@
 ## Contributing
 
 We welcome contributions from anyone, even if you are new to open
-source. Please read our [introduction to contributing](
+source. Please read our [Introduction to Contributing](
 https://github.com/sympy/sympy/wiki/Introduction-to-contributing). If you are new and
 looking for some way to contribute a good place to start is to look at the
 issues tagged [Easy to Fix](
