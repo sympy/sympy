@@ -423,6 +423,19 @@ class Relational(Boolean, EvalfMixin):
         from sympy import factor_terms
         dif = r.lhs - r.rhs
 
+        # replace dif with a valid Number that will
+        # allow a definitive comparison with 0
+        v = None
+        if dif.is_comparable:
+            v = dif.n(2)
+        elif dif.equals(0):  # XXX this is expensive
+            v = S.Zero
+        if v is not None:
+            r = r.func._eval_relation(v, S.Zero)
+
+        if not r.is_Relational:
+            return r
+
         factored = Mul.make_args(factor_terms(dif))
         if len(factored) == 1:
             scale = S.One
