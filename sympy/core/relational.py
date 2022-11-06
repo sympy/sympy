@@ -436,34 +436,54 @@ class Relational(Boolean, EvalfMixin):
         if not r.is_Relational:
             return r
 
+        rhs_const = 0
+        const_scale = S.One
+        scale = S.One
+
+        # Imagine this as
+        # (constant or free var term, free, free, ..., inside)
+        # or just (inside,) if no factoring was done.
         factored = Mul.make_args(factor_terms(dif))
-        if len(factored) == 1:
-            scale = S.One
+        if len(factored) == 1:  # No common terms factored out in diff.
             inside = factored[0]
         else:
-            scale = factored[0]
-            inside = factored[1]
+            scale_args = factored[:-1]
+            inside = factored[-1]
+            if len(scale_args[0].free_symbols) == 0:
+                # have constant factor at front.
+                const_scale = scale_args[0]
+                scale = Mul(*scale_args[1:])
+            else:
+                scale = Mul(*scale_args)
+        rhs_const = rhs_const / const_scale
+        dif = scale * inside
 
-        #scale_constant = Mul(*[c for c in Mul.make_args(scale) if len(c.free_symbols) == 0])
-        constant = Add(*[i for i in Add.make_args(inside) if len(i.free_symbols) == 0])
+        if scale.equals(S.One):
+            rhs_const = Add(*[-x for x in Add.make_args(dif) if len(x.free_symbols) == 0])
+            dif = dif + rhs_const
 
-        # lhs: expression, rhs: constant
-        if scale.is_positive is True:
-            r_new = r.func((inside - constant).simplify(), -constant)
-            if r_new.lhs != r.lhs or r_new.rhs != r.rhs:
-                r_new = self._eval_simplify_loop(r_new)
-            r = r_new
-        elif scale.is_negative is True:
-            r_new = r.func(-constant, (inside - constant).simplify())
-            if r_new.lhs != r.rhs or r_new.rhs != r.lhs:
-                r_new = self._eval_simplify_loop(r_new)
-            r = r_new
+            # Try factoring again.
+            factored = Mul.make_args(factor_terms(dif))
+            if len(factored) == 1:  # No common terms factored out in diff.
+                inside = factored[0]
+            else:
+                scale_args = factored[:-1]
+                inside = factored[-1]
+                if len(scale_args[0].free_symbols) == 0:
+                    # have constant factor at front.
+                    const_scale = scale_args[0]
+                    scale = Mul(*scale_args[1:])
+            rhs_const = rhs_const / const_scale
+            dif = scale * inside
 
-        # Lastly take all elements with a minus sign and move it to the opposite side.
-        # Constants stay where they are.
-        r_lhs_neg = Add(*[x for x in Add.make_args(r.lhs) if Mul.make_args(x)[0] == -1])
-        r_rhs_neg = Add(*[x for x in Add.make_args(r.rhs) if Mul.make_args(x)[0] == -1])
-        r = r.func(r.lhs - r_lhs_neg - r_rhs_neg, r.rhs - r_lhs_neg - r_rhs_neg)
+        r = r.func(dif, rhs_const)
+
+        if r.is_Relational:
+            # Lastly take all elements with a minus sign and move it to the opposite side.
+            # Constants stay where they are.
+            r_lhs_neg = Add(*[x for x in Add.make_args(r.lhs) if Mul.make_args(x)[0] == -1])
+            r_rhs_neg = Add(*[x for x in Add.make_args(r.rhs) if Mul.make_args(x)[0] == -1])
+            r = r.func(r.lhs - r_lhs_neg - r_rhs_neg, r.rhs - r_lhs_neg - r_rhs_neg)
 
         return r
 
