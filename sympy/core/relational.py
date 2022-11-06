@@ -415,53 +415,15 @@ class Relational(Boolean, EvalfMixin):
                     return right
                 return left
 
-    def _eval_simplification(self, r):
-        if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
-            return r
-        dif = r.lhs - r.rhs
-        # replace dif with a valid Number that will
-        # allow a definitive comparison with 0
-        v = None
-        if dif.is_comparable:
-            v = dif.n(2)
-        elif dif.equals(0):  # XXX this is expensive
-            v = S.Zero
-        if v is not None:
-            r = r.func._eval_relation(v, S.Zero)
-        r = r.canonical
-        # If there is only one symbol in the expression,
-        # try to write it on a simplified form
-        free = list(filter(lambda x: x.is_real is not False, r.free_symbols))
-        if len(free) == 1:
-            try:
-                from sympy.solvers.solveset import linear_coeffs
-                x = free.pop()
-                dif = r.lhs - r.rhs
-                m, b = linear_coeffs(dif, x)
-                if m.is_zero is False:
-                    if m.is_negative:
-                        # Dividing with a negative number, so change order of arguments
-                        # canonical will put the symbol back on the lhs later
-                        r = r.func(-b / m, x)
-                    else:
-                        r = r.func(x, -b / m)
-                else:
-                    r = r.func(b, S.Zero)
-            except ValueError:
-                # maybe not a linear function, try polynomial
-                from sympy.polys.polyerrors import PolynomialError
-                from sympy.polys.polytools import gcd, Poly, poly
-                try:
-                    p = poly(dif, x)
-                    c = p.all_coeffs()
-                    constant = c[-1]
-                    c[-1] = 0
-                    scale = gcd(c)
-                    c = [ctmp / scale for ctmp in c]
-                    r = r.func(Poly.from_list(c, x).as_expr(), -constant / scale)
-                except PolynomialError:
-                    pass
-        elif len(free) >= 2:
+    def _eval_simplify(self, **kwargs):
+        r = self
+        r = r.func(*[i.simplify(**kwargs) for i in r.args])
+        measure = kwargs['measure']
+        if r.is_Relational:
+            if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
+                return r
+
+            r = r.canonical
             from sympy import factor_terms
             dif = r.lhs - r.rhs
 
@@ -480,24 +442,6 @@ class Relational(Boolean, EvalfMixin):
                 r = r.func(inside - constant, -constant)
             elif scale.is_negative is True:
                 r = r.func(-constant, inside - constant)
-
-        return r
-
-    def _eval_simplify(self, **kwargs):
-        r = self
-        r = r.func(*[i.simplify(**kwargs) for i in r.args])
-        measure = kwargs['measure']
-        if r.is_Relational:
-            attempts = []
-
-            r = self._eval_simplification(r)
-            r = r.canonical
-            attempts.append((measure(r), r))
-
-            best_measure, best_expr = min(attempts, key=lambda attempt: attempt[0])
-
-            if best_measure < kwargs['ratio'] * measure(self):
-                return best_expr
 
         r = r.canonical
         if measure(r) < kwargs['ratio'] * measure(self):
