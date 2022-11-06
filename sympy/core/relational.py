@@ -12,7 +12,6 @@ from sympy.logic.boolalg import Boolean, BooleanAtom
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
-from sympy.core.mul import Mul
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -415,14 +414,20 @@ class Relational(Boolean, EvalfMixin):
                     return right
                 return left
 
-    def _eval_simplify_loop(self, r):
+    def _eval_simplification(self, r):
+        from sympy import factor_terms, Mul
+        def get_scale_constant(expr):
+            factorised = Mul.make_args(factor_terms(expr))
+            scale = S.One
+            if len(factorised[0].free_symbols) == 0:
+                scale = factorised[0]
+
+            constant = Add(*[x for x in Add.make_args(expr) if len(x.free_symbols) == 0])
+            return scale, constant
+
         if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
             return r
-
-        r = r.canonical
-        from sympy import factor_terms
         dif = r.lhs - r.rhs
-
         # replace dif with a valid Number that will
         # allow a definitive comparison with 0
         v = None
@@ -432,70 +437,76 @@ class Relational(Boolean, EvalfMixin):
             v = S.Zero
         if v is not None:
             r = r.func._eval_relation(v, S.Zero)
-
-        if not r.is_Relational:
-            return r
-
-        rhs_const = 0
-        const_scale = S.One
-        scale = S.One
-
-        # Imagine this as
-        # (constant or free var term, free, free, ..., inside)
-        # or just (inside,) if no factoring was done.
-        factored = Mul.make_args(factor_terms(dif))
-        if len(factored) == 1:  # No common terms factored out in diff.
-            inside = factored[0]
-        else:
-            scale_args = factored[:-1]
-            inside = factored[-1]
-            if len(scale_args[0].free_symbols) == 0:
-                # have constant factor at front.
-                const_scale = scale_args[0]
-                scale = Mul(*scale_args[1:])
+        r = r.canonical
+        # If there is only one symbol in the expression,
+        # try to write it on a simplified form
+        free = list(filter(lambda x: x.is_real is not False, r.free_symbols))
+        if len(free) == 1:
+            dif = r.lhs - r.rhs
+            scale, constant = get_scale_constant(dif)
+            if scale.is_negative:
+                r = r.func((dif - constant) / scale, -constant / scale)
             else:
-                scale = Mul(*scale_args)
-        rhs_const = rhs_const / const_scale
-        dif = scale * inside
+                r = r.func(constant / scale, (dif - constant) / scale)
+        elif len(free) >= 2:
+            try:
+                from sympy.solvers.solveset import linear_coeffs
+                from sympy.polys.polytools import gcd
+                free = list(ordered(free))
+                dif = r.lhs - r.rhs
+                m = linear_coeffs(dif, *free)
+                constant = m[-1]
+                del m[-1]
+                scale = gcd(m)
+                m = [mtmp / scale for mtmp in m]
+                nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
+                if scale.is_zero is False:
+                    if constant != 0:
+                        # lhs: expression, rhs: constant
+                        newexpr = Add(*[i * j for i, j in nzm])
+                        r = r.func(newexpr, -constant / scale)
+                    else:
+                        # keep first term on lhs
+                        lhsterm = nzm[0][0] * nzm[0][1]
+                        del nzm[0]
+                        newexpr = Add(*[i * j for i, j in nzm])
+                        r = r.func(lhsterm, -newexpr)
 
-        if scale.equals(S.One):
-            rhs_const = Add(*[-x for x in Add.make_args(dif) if len(x.free_symbols) == 0])
-            dif = dif + rhs_const
-
-            # Try factoring again.
-            factored = Mul.make_args(factor_terms(dif))
-            if len(factored) == 1:  # No common terms factored out in diff.
-                inside = factored[0]
-            else:
-                scale_args = factored[:-1]
-                inside = factored[-1]
-                if len(scale_args[0].free_symbols) == 0:
-                    # have constant factor at front.
-                    const_scale = scale_args[0]
-                    scale = Mul(*scale_args[1:])
-            rhs_const = rhs_const / const_scale
-            dif = scale * inside
-
-        r = r.func(dif, rhs_const)
-
-        if r.is_Relational:
-            # Lastly take all elements with a minus sign and move it to the opposite side.
-            # Constants stay where they are.
-            r_lhs_neg = Add(*[x for x in Add.make_args(r.lhs) if Mul.make_args(x)[0] == -1])
-            r_rhs_neg = Add(*[x for x in Add.make_args(r.rhs) if Mul.make_args(x)[0] == -1])
-            r = r.func(r.lhs - r_lhs_neg - r_rhs_neg, r.rhs - r_lhs_neg - r_rhs_neg)
+                else:
+                    r = r.func(constant, S.Zero)
+            except ValueError:
+                pass
 
         return r
 
     def _eval_simplify(self, **kwargs):
+        from sympy.core import NumberKind
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
         measure = kwargs['measure']
-
         if r.is_Relational:
-            r = self._eval_simplify_loop(r)
-        r = r.canonical
+            attempts = []
 
+            # Try difference between both sides,
+            # provided that neither side is 0.
+
+            if (r.lhs.kind == NumberKind) and r.lhs != 0 and r.rhs != 0:
+                dif = r.lhs - r.rhs
+                new_expr = Rel(dif, 0, rop=r.rel_op)
+                new_expr = new_expr.simplify()
+                attempts.append((measure(new_expr), new_expr))
+
+            # Try simplifying the expression as-is.
+            r = self._eval_simplification(r)
+            r = r.canonical
+            attempts.append((measure(r), r))
+
+            best_measure, best_expr = min(attempts, key=lambda attempt: attempt[0])
+
+            if best_measure < kwargs['ratio'] * measure(self):
+                return best_expr
+
+        r = r.canonical
         if measure(r) < kwargs['ratio'] * measure(self):
             return r
         return self

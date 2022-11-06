@@ -1067,8 +1067,3 @@ def test_issue_23518():
     assert And(x < y, y <= x).simplify() == False
     assert Or(x <= y, y <= x).simplify() == True
     assert (N < 1).simplify() == False
-
-#test_issue_19484()
-e = x + sign(x + x**3)
-expr = simplify(Abs(x + x**3)*e)
-print(x**3 + x*Abs(x**3 + x) + x)
