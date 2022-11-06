@@ -445,9 +445,9 @@ class Relational(Boolean, EvalfMixin):
             dif = r.lhs - r.rhs
             scale, constant = get_scale_constant(dif)
             if scale.is_negative:
-                r = r.func((dif - constant) / scale, -constant / scale)
+                r = r.func(-constant / scale, (dif - constant) / scale)
             else:
-                r = r.func(constant / scale, (dif - constant) / scale)
+                r = r.func((dif - constant) / scale, -constant / scale)
         elif len(free) >= 2:
             try:
                 from sympy.solvers.solveset import linear_coeffs
