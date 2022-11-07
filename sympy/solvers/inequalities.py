@@ -964,6 +964,9 @@ def reduce_inequalities(inequalities, symbols=[]):
     for i in inequalities:
         if isinstance(i, Relational):
             i = i.func(i.lhs.as_expr() - i.rhs.as_expr(), 0)
+        elif (type(i)==And or type(i)==Or or type(i)==Not):
+            raise NotImplementedError(
+                "reduce_inequalities only supports inequalities, not booleans")
         elif i not in (True, False):
             i = Eq(i, 0)
         if i == True:
