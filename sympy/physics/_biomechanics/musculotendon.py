@@ -167,7 +167,7 @@ class MusculotendonABC(abc.ABC):
         fiber_damping_coefficient: SympifiableNumericSymbol = None,
     ) -> None:
         """Initializer for a musculotendon's instance attributes.
-        
+
         Parameters
         ==========
         name : str
@@ -271,7 +271,7 @@ class MusculotendonABC(abc.ABC):
         if not isinstance(name, str):
             msg = (
                 f'Name {repr(name)} passed to `name` was of type '
-                f'{type(name)}, must be {str}.' 
+                f'{type(name)}, must be {str}.'
             )
             raise TypeError(msg)
         if name in {''}:
@@ -452,7 +452,7 @@ class MusculotendonABC(abc.ABC):
         See Also
         ========
 
-        `optimal_fiber_length`: Primary attribute for optimal fiber length 
+        `optimal_fiber_length`: Primary attribute for optimal fiber length
             including its setter.
 
         """
@@ -678,7 +678,7 @@ class MusculotendonABC(abc.ABC):
 
 class Brockie2021Musculotendon(MusculotendonABC):
     """Musculotendon model with curves based on Brockie, 2021 [1].
-    
+
     References
     ==========
 
