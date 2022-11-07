@@ -1,8 +1,8 @@
-# Solve (Find the Roots of) a Polynomial Algebraically or Numerically 
+# Find the Roots of a Polynomial Algebraically or Numerically 
 
-Use SymPy to solve (find the roots of) a univariate polynomial algebraically.
-For example, solving $ax^2 + bx + c = 0$ for $x$ yields $x =
-\frac{-b\pm\sqrt{b^2 - 4ac}}{2a}$.
+Use SymPy to solve find the roots of a univariate polynomial algebraically. For
+example, solving $ax^2 + bx + c = 0$ for $x$ yields $x = \frac{-b\pm\sqrt{b^2 -
+4ac}}{2a}$.
 
 ## Alternatives to Consider
 
@@ -43,8 +43,11 @@ polynomial whose coefficients can be numerically evaluated, whether the
 coefficients are rational or irrational
 - {func}`~sympy.polys.rootoftools.RootOf` can represent all the roots exactly of
 a polynomial of arbitrarily large degree, as long as the coefficients are
-rational numbers. The following two functions use
-  {func}`~sympy.polys.rootoftools.RootOf` so they have the same properties:
+rational numbers. {func}`~sympy.polys.rootoftools.RootOf` can avoid both
+ill-conditioning and returning spurious complex parts because it uses a more
+exact, but much slower, numerical algorithm based on isolating intervals. The
+  following two functions use {func}`~sympy.polys.rootoftools.RootOf` so they
+  have the same properties:
     - {func}`~.real_roots` can find all the real roots exactly of a polynomial
 of arbitrarily large degree; because it finds only the real roots, it can be
   more efficient than functions that find all roots.
@@ -123,7 +126,7 @@ Writing the first root from {func}`~.solve` in standard mathematical notation
 emphasizes how complex it is:
 
 $$- \frac{\sqrt{\frac{2}{3 \sqrt[3]{\frac{1}{16} + \frac{\sqrt{687} i}{144}}} +
-2 \sqrt[3]{\frac{1}{16} + \frac{\sqrt{687} i}{144}}}}{2}\\- \frac{\sqrt{- 2
+2 \sqrt[3]{\frac{1}{16} + \frac{\sqrt{687} i}{144}}}}{2} - \frac{\sqrt{- 2
 \sqrt[3]{\frac{1}{16} + \frac{\sqrt{687} i}{144}} - \frac{2}{\sqrt{\frac{2}{3
 \sqrt[3]{\frac{1}{16} + \frac{\sqrt{687} i}{144}}} + 2 \sqrt[3]{\frac{1}{16} +
 \frac{\sqrt{687} i}{144}}}} - \frac{2}{3 \sqrt[3]{\frac{1}{16} +
