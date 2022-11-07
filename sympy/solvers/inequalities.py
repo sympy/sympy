@@ -985,3 +985,17 @@ def reduce_inequalities(inequalities, symbols=[]):
 
     # restore original symbols and return
     return rv.xreplace({v: k for k, v in recast.items()})
+
+
+def reduce_boolean_expr(boolean_expr,symbols=[]):
+    list_of_expr=[]
+    str_of_expr=str(boolean_expr)
+    ind_init=0
+    for ind,j in enumerate(str_of_expr):
+        if j=="&":
+            indx=ind
+            list_of_expr.append(sympify(str_of_expr[ind_init:indx]))
+            ind_init=ind+1
+        if ind==len(str_of_expr)-1:
+            list_of_expr.append(sympify(str_of_expr[ind_init:]))
+    return(reduce_inequalities(list_of_expr,symbols))
