@@ -12,7 +12,7 @@ from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import im, re
-from sympy.multipledispatch import dispatch
+from multipledispatch import dispatch
 
 ###############################################################################
 ######################### FLOOR and CEILING FUNCTIONS #########################

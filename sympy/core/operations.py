@@ -11,9 +11,10 @@ from .sorting import ordered
 from .logic import fuzzy_and
 from .parameters import global_parameters
 from sympy.utilities.iterables import sift
-from sympy.multipledispatch.dispatcher import (Dispatcher,
-    ambiguity_register_error_ignore_dup,
-    str_signature, RaiseNotImplementedError)
+from multipledispatch.dispatcher import str_signature
+from .kind import _Dispatcher
+from sympy.multipledispatch.dispatcher import (ambiguity_register_error_ignore_dup,
+    RaiseNotImplementedError)
 
 
 class AssocOp(Basic):
@@ -595,7 +596,7 @@ class AssocOpDispatcher:
         self.doc = doc
         self.handlerattr = "_%s_handler" % name
         self._handlergetter = attrgetter(self.handlerattr)
-        self._dispatcher = Dispatcher(name)
+        self._dispatcher = _Dispatcher(name)
 
     def __repr__(self):
         return "<dispatched %s>" % self.name

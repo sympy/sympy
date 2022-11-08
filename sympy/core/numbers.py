@@ -20,7 +20,7 @@ from .decorators import _sympifyit
 from .logic import fuzzy_not
 from .kind import NumberKind
 from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
-from sympy.multipledispatch import dispatch
+from multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp import bitcount, round_nearest as rnd

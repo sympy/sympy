@@ -7,7 +7,7 @@ from sympy.functions.elementary.miscellaneous import (Max, Min)
 from sympy.sets.fancysets import ImageSet
 from sympy.sets.setexpr import set_div
 from sympy.sets.sets import Set, Interval, FiniteSet, Union
-from sympy.multipledispatch import Dispatcher
+from multipledispatch import Dispatcher
 
 
 _x, _y = symbols("x y")

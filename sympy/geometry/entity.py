@@ -29,7 +29,7 @@ from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin, atan
 from sympy.matrices import eye
-from sympy.multipledispatch import dispatch
+from multipledispatch import dispatch
 from sympy.printing import sstr
 from sympy.sets import Set, Union, FiniteSet
 from sympy.sets.handlers.intersection import intersection_sets

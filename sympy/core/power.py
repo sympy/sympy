@@ -18,7 +18,7 @@ from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
-from sympy.multipledispatch import Dispatcher
+from multipledispatch import Dispatcher
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 

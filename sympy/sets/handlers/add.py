@@ -1,7 +1,7 @@
 from sympy.core.numbers import oo, Infinity, NegativeInfinity
 from sympy.core.singleton import S
 from sympy.core import Basic, Expr
-from sympy.multipledispatch import Dispatcher
+from multipledispatch import Dispatcher
 from sympy.sets import Interval, FiniteSet
 
 

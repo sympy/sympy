@@ -26,7 +26,7 @@ from sympy.utilities import lambdify, public, sift, numbered_symbols
 
 from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
-from sympy.multipledispatch import dispatch
+from multipledispatch import dispatch
 from itertools import chain
 
 

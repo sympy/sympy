@@ -8,7 +8,7 @@ from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import true
-from sympy.multipledispatch import Dispatcher
+from multipledispatch import Dispatcher
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
     Intersection, Range, Complement)
 from sympy.sets.sets import EmptySet, is_function_invertible_in_set

@@ -5,7 +5,7 @@ from sympy.sets.sets import (EmptySet, FiniteSet, Intersection,
     Interval, ProductSet, Set, Union, UniversalSet)
 from sympy.sets.fancysets import (ComplexRegion, Naturals, Naturals0,
     Integers, Rationals, Reals)
-from sympy.multipledispatch import Dispatcher
+from multipledispatch import Dispatcher
 
 
 union_sets = Dispatcher('union_sets')

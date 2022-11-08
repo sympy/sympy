@@ -20,7 +20,7 @@ https://stackoverflow.com/questions/22195382/how-to-check-if-a-module-library-pa
 """
 
 # These libraries will always be imported with SymPy
-hard_dependencies = ['mpmath']
+hard_dependencies = ['mpmath', 'six', 'multipledispatch']
 
 # These libraries are optional, but are always imported at SymPy import time
 # when they are installed. External libraries should only be added to this

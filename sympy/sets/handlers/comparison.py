@@ -2,7 +2,7 @@ from sympy.core.relational import Eq, is_eq
 from sympy.core.basic import Basic
 from sympy.core.logic import fuzzy_and, fuzzy_bool
 from sympy.logic.boolalg import And
-from sympy.multipledispatch import dispatch
+from multipledispatch import dispatch
 from sympy.sets.sets import tfn, ProductSet, Interval, FiniteSet, Set
 
 

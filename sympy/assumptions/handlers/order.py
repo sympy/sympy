@@ -10,7 +10,7 @@ from sympy.functions import Abs, acos, acot, asin, atan, exp, factorial, log
 from sympy.matrices import Determinant, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
 
-from sympy.multipledispatch import MDNotImplementedError
+from multipledispatch import MDNotImplementedError
 
 from ..predicates.order import (NegativePredicate, NonNegativePredicate,
     NonZeroPredicate, ZeroPredicate, NonPositivePredicate, PositivePredicate,

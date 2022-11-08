@@ -15,7 +15,7 @@ from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs, is_sequence)
 from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import ifac
-from sympy.multipledispatch import dispatch
+from multipledispatch import dispatch
 
 def _af_rmul(a, b):
     """
