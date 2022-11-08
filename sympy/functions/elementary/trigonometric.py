@@ -506,7 +506,7 @@ class sin(TrigonometricFunction):
         return cos(arg - pi/2, evaluate=False)
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
-        tan_half = tan(S.Half*arg)
+        tan_half = tan(S.Half*arg, evaluate=False)
         return 2*tan_half/(1 + tan_half**2)
 
     def _eval_rewrite_as_sincos(self, arg, **kwargs):

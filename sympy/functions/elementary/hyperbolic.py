@@ -298,20 +298,23 @@ class sinh(HyperbolicFunction):
         return (exp(arg) - exp(-arg)) / 2
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
-        return -I * sin(I * arg)
+        return -I * sin(I * arg, evaluate=False)
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
-        return -I / csc(I * arg)
+        return -I / csc(I * arg, evaluate=False)
 
     def _eval_rewrite_as_cosh(self, arg, **kwargs):
-        return -I*cosh(arg + pi*I/2)
+        return -I*cosh(arg + pi*I/2, evaluate=False)
+
+    def _eval_rewrite_as_cos(self, arg, **kwargs):
+        return -I*cos(pi/2 - I*arg, evaluate=False)
 
     def _eval_rewrite_as_tanh(self, arg, **kwargs):
-        tanh_half = tanh(S.Half*arg)
+        tanh_half = tanh(S.Half*arg, evaluate=False)
         return 2*tanh_half/(1 - tanh_half**2)
 
     def _eval_rewrite_as_coth(self, arg, **kwargs):
-        coth_half = coth(S.Half*arg)
+        coth_half = coth(S.Half*arg, evaluate=False)
         return 2*coth_half/(coth_half**2 - 1)
 
     def _eval_rewrite_as_csch(self, arg, **kwargs):
@@ -495,20 +498,23 @@ class cosh(HyperbolicFunction):
         return (exp(arg) + exp(-arg)) / 2
 
     def _eval_rewrite_as_cos(self, arg, **kwargs):
-        return cos(I * arg)
+        return cos(I * arg, evaluate=False)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
-        return 1 / sec(I * arg)
+        return 1 / sec(I * arg, evaluate=False)
 
     def _eval_rewrite_as_sinh(self, arg, **kwargs):
-        return -I*sinh(arg + pi*I/2)
+        return -I*sinh(arg + pi*I/2, evaluate=False)
+
+    def _eval_rewrite_as_sin(self, arg, **kwargs):
+        return sin(pi/2 - I*arg, evaluate=False)
 
     def _eval_rewrite_as_tanh(self, arg, **kwargs):
-        tanh_half = tanh(S.Half*arg)**2
+        tanh_half = tanh(S.Half*arg, evaluate=False)**2
         return (1 + tanh_half)/(1 - tanh_half)
 
     def _eval_rewrite_as_coth(self, arg, **kwargs):
-        coth_half = coth(S.Half*arg)**2
+        coth_half = coth(S.Half*arg, evaluate=False)**2
         return (coth_half + 1)/(coth_half - 1)
 
     def _eval_rewrite_as_sech(self, arg, **kwargs):
@@ -753,16 +759,22 @@ class tanh(HyperbolicFunction):
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
-        return -I * tan(I * arg)
+        return -I * tan(I * arg, evaluate=False)
 
     def _eval_rewrite_as_cot(self, arg, **kwargs):
-        return -I / cot(I * arg)
+        return -I / cot(I * arg, evaluate=False)
 
     def _eval_rewrite_as_sinh(self, arg, **kwargs):
         return I*sinh(arg)/sinh(pi*I/2 - arg)
 
+    def _eval_rewrite_as_sin(self, arg, **kwargs):
+        return -I*sin(I*arg, evaluate=False)/sin(pi/2 - I*arg, evaluate=False)
+
     def _eval_rewrite_as_cosh(self, arg, **kwargs):
-        return I*cosh(pi*I/2 - arg)/cosh(arg)
+        return I*cosh(pi*I/2 - arg, evaluate=False)/cosh(arg, evaluate=False)
+
+    def _eval_rewrite_as_cos(self, arg, **kwargs):
+        return -I*cos(pi/2 -I*arg, evaluate=False)/cos(I*arg, evaluate=False)
 
     def _eval_rewrite_as_coth(self, arg, **kwargs):
         return 1/coth(arg)
@@ -948,13 +960,19 @@ class coth(HyperbolicFunction):
         return (pos_exp + neg_exp)/(pos_exp - neg_exp)
 
     def _eval_rewrite_as_sinh(self, arg, **kwargs):
-        return -I*sinh(pi*I/2 - arg)/sinh(arg)
+        return -I*sinh(pi*I/2 - arg, evaluate=False)/sinh(arg)
 
     def _eval_rewrite_as_cosh(self, arg, **kwargs):
-        return -I*cosh(arg)/cosh(pi*I/2 - arg)
+        return -I*cosh(arg)/cosh(pi*I/2 - arg, evaluate=False)
 
     def _eval_rewrite_as_tanh(self, arg, **kwargs):
         return 1/tanh(arg)
+
+    def _eval_rewrite_as_cot(self, arg, **kwargs):
+        return I*cot(I*arg, evaluate=False)
+
+    def _eval_rewrite_as_tan(self, arg, **kwargs):
+        return 1/I*tan(I*arg, evaluate=False)
 
     def _eval_is_positive(self):
         if self.args[0].is_extended_real:
