@@ -380,6 +380,17 @@ jobs:
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
 
+      # When run against master, deploy to docs.sympy.org/dev. This requires
+      # having an SSH deploy key set up. See
+      # https://github.com/marketplace/actions/deploy-to-github-pages#using-an-ssh-deploy-key-
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        if: ${{ github.ref == 'refs/heads/master' }}
+        with:
+          folder: doc/_build/html
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          repository-name: sympy/sympy_doc
+          target-folder: dev
 
   # -------------------- Check the error message under py2 --------- #
 
