@@ -112,185 +112,321 @@ class TestMusculotendonArguments:
                 insertion=insertion,
             )
 
-    def test_none_optimal_fiber_length_instantiates_default_symbol(
-        self,
-        musculotendon_class,
-    ):
-        """Passing `None` to `optimal_fiber_length` creates `Symbol`."""
+    def test_parametrized_symbols_default_to_none(self, musculotendon_class):
+        """All parametrized symbol attributes default to `None`."""
+        muscle = musculotendon_class(
+            self.name,
+            origin=self.origin,
+            insertion=self.insertion,
+        )
+        assert muscle.optimal_fiber_length is None
+        assert muscle.maximal_fiber_velocity is None
+        assert muscle.peak_isometric_force is None
+        assert muscle.tendon_slack_length is None
+        assert muscle.optimal_pennation_angle is None
+        assert muscle.fiber_damping_coefficient is None
+
+    def test_optimal_fiber_length_is_optional(self, musculotendon_class):
+        """`None` is valid value for `optimal_fiber_length`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
             optimal_fiber_length=None,
         )
-        assert isinstance(muscle.optimal_fiber_length, sm.Symbol)
-        assert muscle.optimal_fiber_length == sm.Symbol('l_M_opt_muscle')
+        assert muscle.optimal_fiber_length is None
 
-    @pytest.mark.parametrize('optimal_fiber_length', [(0.25), (sm.Float(0.25))])
-    def test_numeric_optimal_fiber_length_instantiates_number_symbol(
+    @pytest.mark.parametrize(
+        'optimal_fiber_length_value, optimal_fiber_length_expected',
+        [
+            (0.25, 0.25),
+            (1, 1.0),
+            ('0.25', 0.25),
+            (sm.Float(0.25), 0.25),
+        ]
+    )
+    def test_optimal_fiber_length_attribute_returns_float(
         self,
         musculotendon_class,
-        optimal_fiber_length,
+        optimal_fiber_length_value,
+        optimal_fiber_length_expected,
     ):
-        """Passing a numeric value to `optimal_fiber_length` creates `Number`."""
+        """`optimal_fiber_length` arguments are cast to `float`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
-            optimal_fiber_length=optimal_fiber_length,
+            optimal_fiber_length=optimal_fiber_length_value,
         )
-        assert isinstance(muscle.optimal_fiber_length, sm.Number)
-        assert muscle.optimal_fiber_length == sm.Number(optimal_fiber_length)
+        assert isinstance(muscle.optimal_fiber_length, float)
+        assert muscle.optimal_fiber_length == optimal_fiber_length_expected
 
-    def test_none_maximal_fiber_velocity_instantiates_default_symbol(
+    @pytest.mark.parametrize('optimal_fiber_length', [0.0, -0.25])
+    def test_nonpositive_optimal_fiber_length_raises_value_error(
         self,
         musculotendon_class,
+        optimal_fiber_length,
     ):
-        """Passing `None` to `maximal_fiber_velocity` creates `Symbol`."""
+        """`ValueError` is raised for nonpositive `optimal_fiber_length`."""
+        with pytest.raises(ValueError):
+            _ = musculotendon_class(
+                self.name,
+                origin=self.origin,
+                insertion=self.insertion,
+                optimal_fiber_length=optimal_fiber_length,
+            )
+
+    def test_maximal_fiber_velocity_is_optional(self, musculotendon_class):
+        """`None` is valid value for `maximal_fiber_velocity`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
             maximal_fiber_velocity=None,
         )
-        assert isinstance(muscle.maximal_fiber_velocity, sm.Symbol)
-        assert muscle.maximal_fiber_velocity == sm.Symbol('v_M_max_muscle')
+        assert muscle.maximal_fiber_velocity is None
 
-    @pytest.mark.parametrize('maximal_fiber_velocity', [(10.0), (sm.Float(10.0))])
-    def test_numeric_maximal_fiber_velocity_instantiates_number_symbol(
+    @pytest.mark.parametrize(
+        'maximal_fiber_velocity_value, maximal_fiber_velocity_expected',
+        [
+            (10.0, 10.0),
+            (10, 10.0),
+            ('10.0', 10.0),
+            (sm.Float(10.0), 10.0),
+            (sm.Integer(10), 10.0),
+        ]
+    )
+    def test_maximal_fiber_velocity_attribute_returns_float(
         self,
         musculotendon_class,
-        maximal_fiber_velocity,
+        maximal_fiber_velocity_value,
+        maximal_fiber_velocity_expected,
     ):
-        """Passing a numeric value to `maximal_fiber_velocity` creates `Number`."""
+        """`maximal_fiber_velocity` arguments are cast to `float`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
-            maximal_fiber_velocity=maximal_fiber_velocity,
+            maximal_fiber_velocity=maximal_fiber_velocity_value,
         )
-        assert isinstance(muscle.maximal_fiber_velocity, sm.Number)
-        assert muscle.maximal_fiber_velocity == sm.Number(maximal_fiber_velocity)
+        assert isinstance(muscle.maximal_fiber_velocity, float)
+        assert muscle.maximal_fiber_velocity == maximal_fiber_velocity_expected
 
-    def test_none_peak_isometric_force_instantiates_default_symbol(
+    @pytest.mark.parametrize('maximal_fiber_velocity', [0.0, -10.0])
+    def test_nonpositive_maximal_fiber_velocity_raises_value_error(
         self,
         musculotendon_class,
+        maximal_fiber_velocity,
     ):
-        """Passing `None` to `peak_isometric_force` creates `Symbol`."""
+        """`ValueError` is raised for nonpositive `maximal_fiber_velocity`."""
+        with pytest.raises(ValueError):
+            _ = musculotendon_class(
+                self.name,
+                origin=self.origin,
+                insertion=self.insertion,
+                maximal_fiber_velocity=maximal_fiber_velocity,
+            )
+
+    def test_peak_isometric_force_is_optional(self, musculotendon_class):
+        """`None` is valid value for `peak_isometric_force`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
             peak_isometric_force=None,
         )
-        assert isinstance(muscle.peak_isometric_force, sm.Symbol)
-        assert muscle.peak_isometric_force == sm.Symbol('F_M_max_muscle')
+        assert muscle.peak_isometric_force is None
 
-    @pytest.mark.parametrize('peak_isometric_force', [(1000.0), (sm.Float(1000.0))])
-    def test_numeric_peak_isometric_force_instantiates_number_symbol(
+    @pytest.mark.parametrize(
+        'peak_isometric_force_value, peak_isometric_force_expected',
+        [
+            (1000.0, 1000.0),
+            (1000, 1000.0),
+            ('1000.0', 1000.0),
+            (sm.Float(1000.0), 1000.0),
+            (sm.Integer(1000), 1000.0)
+        ]
+    )
+    def test_peak_isometric_force_attribute_returns_float(
         self,
         musculotendon_class,
-        peak_isometric_force,
+        peak_isometric_force_value,
+        peak_isometric_force_expected,
     ):
-        """Passing a numeric value to `peak_isometric_force` creates `Number`."""
+        """`peak_isometric_force` arguments are cast to `float`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
-            peak_isometric_force=peak_isometric_force,
+            peak_isometric_force=peak_isometric_force_value,
         )
-        assert isinstance(muscle.peak_isometric_force, sm.Number)
-        assert muscle.peak_isometric_force == sm.Number(peak_isometric_force)
+        assert isinstance(muscle.peak_isometric_force, float)
+        assert muscle.peak_isometric_force == peak_isometric_force_expected
 
-    def test_none_tendon_slack_length_instantiates_default_symbol(
+    @pytest.mark.parametrize('peak_isometric_force', [0.0, -1000.0])
+    def test_nonpositive_peak_isometric_force_raises_value_error(
         self,
         musculotendon_class,
+        peak_isometric_force,
     ):
-        """Passing `None` to `tendon_slack_length` creates `Symbol`."""
+        """`ValueError` is raised for nonpositive `peak_isometric_force`."""
+        with pytest.raises(ValueError):
+            _ = musculotendon_class(
+                self.name,
+                origin=self.origin,
+                insertion=self.insertion,
+                peak_isometric_force=peak_isometric_force,
+            )
+
+    def test_tendon_slack_length_is_optional(self, musculotendon_class):
+        """`None` is valid value for `tendon_slack_length`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
             tendon_slack_length=None,
         )
-        assert isinstance(muscle.tendon_slack_length, sm.Symbol)
-        assert muscle.tendon_slack_length == sm.Symbol('l_T_slack_muscle')
+        assert muscle.tendon_slack_length is None
 
-    @pytest.mark.parametrize('tendon_slack_length', [(0.05), (sm.Float(0.05))])
-    def test_numeric_tendon_slack_length_instantiates_number_symbol(
+    @pytest.mark.parametrize(
+        'tendon_slack_length_value, tendon_slack_length_expected',
+        [
+            (0.05, 0.05),
+            (1, 1.0),
+            ('0.05', 0.05),
+            (sm.Float(0.05), 0.05),
+        ]
+    )
+    def test_tendon_slack_length_attribute_returns_float(
         self,
         musculotendon_class,
-        tendon_slack_length,
+        tendon_slack_length_value,
+        tendon_slack_length_expected,
     ):
-        """Passing a numeric value to `tendon_slack_length` creates `Number`."""
+        """`tendon_slack_length` arguments are cast to `float`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
-            tendon_slack_length=tendon_slack_length,
+            tendon_slack_length=tendon_slack_length_value,
         )
-        assert isinstance(muscle.tendon_slack_length, sm.Number)
-        assert muscle.tendon_slack_length == sm.Number(tendon_slack_length)
+        assert isinstance(muscle.tendon_slack_length, float)
+        assert muscle.tendon_slack_length == tendon_slack_length_expected
 
-    def test_none_optimal_pennation_angle_instantiates_default_symbol(
+    @pytest.mark.parametrize('tendon_slack_length', [0.0, -0.05])
+    def test_nonpositive_tendon_slack_length_raises_value_error(
         self,
         musculotendon_class,
+        tendon_slack_length,
     ):
-        """Passing `None` to `optimal_pennation_angle` creates `Symbol`."""
+        """`ValueError` is raised for nonpositive `tendon_slack_length`."""
+        with pytest.raises(ValueError):
+            _ = musculotendon_class(
+                self.name,
+                origin=self.origin,
+                insertion=self.insertion,
+                tendon_slack_length=tendon_slack_length,
+            )
+
+    def test_optimal_pennation_angle_is_optional(self, musculotendon_class):
+        """`None` is valid value for `optimal_pennation_angle`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
             optimal_pennation_angle=None,
         )
-        assert isinstance(muscle.optimal_pennation_angle, sm.Symbol)
-        assert muscle.optimal_pennation_angle == sm.Symbol('alpha_opt_muscle')
+        assert muscle.optimal_pennation_angle is None
 
-    @pytest.mark.parametrize('optimal_pennation_angle', [(0.0), (sm.Float(0.0))])
-    def test_numeric_optimal_pennation_angle_instantiates_number_symbol(
+    @pytest.mark.parametrize(
+        'optimal_pennation_angle_value, optimal_pennation_angle_expected',
+        [
+            (0.25, 0.25),
+            (1, 1.0),
+            ('0.25', 0.25),
+            (sm.Float(0.25), 0.25),
+        ]
+    )
+    def test_optimal_pennation_angle_attribute_returns_float(
         self,
         musculotendon_class,
-        optimal_pennation_angle,
+        optimal_pennation_angle_value,
+        optimal_pennation_angle_expected,
     ):
-        """Passing a numeric value to `optimal_pennation_angle` creates `Number`."""
+        """`optimal_pennation_angle` arguments are cast to `float`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
-            optimal_pennation_angle=optimal_pennation_angle,
+            optimal_pennation_angle=optimal_pennation_angle_value,
         )
-        assert isinstance(muscle.optimal_pennation_angle, sm.Number)
-        assert muscle.optimal_pennation_angle == sm.Number(optimal_pennation_angle)
+        assert isinstance(muscle.optimal_pennation_angle, float)
+        assert muscle.optimal_pennation_angle == optimal_pennation_angle_expected
 
-    def test_none_fiber_damping_coefficient_instantiates_default_symbol(
+    @pytest.mark.parametrize('optimal_pennation_angle', [0.0, -0.25])
+    def test_nonpositive_optimal_pennation_angle_raises_value_error(
         self,
         musculotendon_class,
+        optimal_pennation_angle,
     ):
-        """Passing `None` to `fiber_damping_coefficient` creates `Symbol`."""
+        """`ValueError` is raised for nonpositive `optimal_pennation_angle`."""
+        with pytest.raises(ValueError):
+            _ = musculotendon_class(
+                self.name,
+                origin=self.origin,
+                insertion=self.insertion,
+                optimal_pennation_angle=optimal_pennation_angle,
+            )
+
+    def test_fiber_damping_coefficient_is_optional(self, musculotendon_class):
+        """`None` is valid value for `fiber_damping_coefficient`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
             fiber_damping_coefficient=None,
         )
-        assert isinstance(muscle.fiber_damping_coefficient, sm.Symbol)
-        assert muscle.fiber_damping_coefficient == sm.Symbol('beta_muscle')
+        assert muscle.fiber_damping_coefficient is None
 
-    @pytest.mark.parametrize('fiber_damping_coefficient', [(0.1), (sm.Float(0.1))])
-    def test_numeric_fiber_damping_coefficient_instantiates_number_symbol(
+    @pytest.mark.parametrize(
+        'fiber_damping_coefficient_value, fiber_damping_coefficient_expected',
+        [
+            (0.1, 0.1),
+            (1, 1.0),
+            ('0.1', 0.1),
+            (sm.Float(0.1), 0.1),
+        ]
+    )
+    def test_fiber_damping_coefficient_attribute_returns_float(
         self,
         musculotendon_class,
-        fiber_damping_coefficient,
+        fiber_damping_coefficient_value,
+        fiber_damping_coefficient_expected,
     ):
-        """Passing a numeric value to `fiber_damping_coefficient` creates `Number`."""
+        """`fiber_damping_coefficient` arguments are numbers and cast to `float`."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
-            fiber_damping_coefficient=fiber_damping_coefficient,
+            fiber_damping_coefficient=fiber_damping_coefficient_value,
         )
-        assert isinstance(muscle.fiber_damping_coefficient, sm.Number)
-        assert muscle.fiber_damping_coefficient == sm.Number(fiber_damping_coefficient)
+        assert isinstance(muscle.fiber_damping_coefficient, float)
+        assert muscle.fiber_damping_coefficient == fiber_damping_coefficient_expected
+
+    @pytest.mark.parametrize('fiber_damping_coefficient', [0.0, -0.1])
+    def test_nonpositive_fiber_damping_coefficient_raises_value_error(
+        self,
+        musculotendon_class,
+        fiber_damping_coefficient,
+    ):
+        """`ValueError` is raised for nonpositive `fiber_damping_coefficient`."""
+        with pytest.raises(ValueError):
+            _ = musculotendon_class(
+                self.name,
+                origin=self.origin,
+                insertion=self.insertion,
+                fiber_damping_coefficient=fiber_damping_coefficient,
+            )
 
 
 @pytest.mark.parametrize(

@@ -12,7 +12,7 @@ and are specific to a given musculotendon model.
 
 
 import abc
-from typing import Optional, Union
+from typing import Optional
 
 import sympy as sm
 import sympy.physics.mechanics as me
@@ -24,9 +24,6 @@ __all__ = [
     'Millard2013Musculotendon',
     'Musculotendon',
 ]
-
-
-SympifiableNumericSymbol = Optional[Union[sm.Symbol, sm.Number, float, int]]
 
 
 class MusculotendonABC(abc.ABC):
@@ -84,18 +81,18 @@ class MusculotendonABC(abc.ABC):
         musculotendon dynamics. For undamped fibers, this value is zero. This
         value maps to the symbol attribute `beta`.
         @property
-    l_M_opt : Union[sm.Symbol, sm.Number]
-        Shorthand accessor for the optimal fiber length parameter.
-    v_M_max : Union[sm.Symbol, sm.Number]
-        Shorthand accessor for the maximal fiber velocity parameter.
-    F_M_max : Union[sm.Symbol, sm.Number]
-        Shorthand accessor for the peak isometric force parameter.
-    l_T_slack : Union[sm.Symbol, sm.Number]
-        Shorthand accessor for the tendon slack length parameter.
-    alpha_opt : Union[sm.Symbol, sm.Number]
-        Shorthand accessor for the optimal pennation angle parameter.
-    beta : Union[sm.Symbol, sm.Number]
-        Shorthand accessor for the fiber damping coefficient parameter.
+    l_M_opt : `sympy.Symbol`
+        Accessor for the optimal fiber length symbol.
+    v_M_max : `sympy.Symbol`
+        Accessor for the maximal fiber velocity symbol.
+    F_M_max : `sympy.Symbol`
+        Accessor for the peak isometric force symbol.
+    l_T_slack : `sympy.Symbol`
+        Accessor for the tendon slack length symbol.
+    alpha_opt : `sympy.Symbol`
+        Accessor for the optimal pennation angle symbol.
+    beta : `sympy.Symbol`
+        Accessor for the fiber damping coefficient symbol.
     l_MT : dynamic symbol
         Accessor for the musculotendon length dynamic symbol.
     v_MT : dynamic symbol
@@ -159,12 +156,12 @@ class MusculotendonABC(abc.ABC):
         *,
         origin: me.Point,
         insertion: me.Point,
-        optimal_fiber_length: SympifiableNumericSymbol = None,
-        maximal_fiber_velocity: SympifiableNumericSymbol = None,
-        peak_isometric_force: SympifiableNumericSymbol = None,
-        tendon_slack_length: SympifiableNumericSymbol = None,
-        optimal_pennation_angle: SympifiableNumericSymbol = None,
-        fiber_damping_coefficient: SympifiableNumericSymbol = None,
+        optimal_fiber_length: Optional[float] = None,
+        maximal_fiber_velocity: Optional[float] = None,
+        peak_isometric_force: Optional[float] = None,
+        tendon_slack_length: Optional[float] = None,
+        optimal_pennation_angle: Optional[float] = None,
+        fiber_damping_coefficient: Optional[float] = None,
     ) -> None:
         """Initializer for a musculotendon's instance attributes.
 
@@ -219,12 +216,12 @@ class MusculotendonABC(abc.ABC):
         self.insertion = insertion
 
         # Constants
-        self.optimal_fiber_length = optimal_fiber_length  # type: ignore
-        self.maximal_fiber_velocity = maximal_fiber_velocity  # type: ignore
-        self.peak_isometric_force = peak_isometric_force  # type: ignore
-        self.tendon_slack_length = tendon_slack_length  # type: ignore
-        self.optimal_pennation_angle = optimal_pennation_angle  # type: ignore
-        self.fiber_damping_coefficient = fiber_damping_coefficient  # type: ignore
+        self.optimal_fiber_length = optimal_fiber_length
+        self.maximal_fiber_velocity = maximal_fiber_velocity
+        self.peak_isometric_force = peak_isometric_force
+        self.tendon_slack_length = tendon_slack_length
+        self.optimal_pennation_angle = optimal_pennation_angle
+        self.fiber_damping_coefficient = fiber_damping_coefficient
 
         # Symbols
         self._l_MT = me.dynamicsymbols(f"l_MT_{self.name}")
@@ -313,52 +310,74 @@ class MusculotendonABC(abc.ABC):
         self._insertion = insertion
 
     @property
-    def optimal_fiber_length(self) -> Union[sm.Symbol, sm.Number]:
-        """Symbol or value representing the optimal fiber length parameter.
+    def optimal_fiber_length(self) -> Optional[float]:
+        """Numeric value representing the optimal fiber length parameter.
 
         The value by which the musculotendon's fiber force-length relationships
         are normalized. It corresponds to the fiber length at which the
         musculotendon can produce its maximal force. This value maps to the
         symbol attribute `l_M_opt`.
 
+        See Also
+        ========
+        `l_M_opt`: The symbol to which this numeric value maps.
+
         """
-        return self._l_M_opt
+        return self._optimal_fiber_length
 
     @optimal_fiber_length.setter
     def optimal_fiber_length(
         self,
-        optimal_fiber_length: SympifiableNumericSymbol,
+        optimal_fiber_length: Optional[float],
     ) -> None:
         if optimal_fiber_length is None:
-            self._l_M_opt = sm.Symbol(f'l_M_opt_{self.name}')
+            self._optimal_fiber_length = optimal_fiber_length
         else:
-            self._l_M_opt = sm.sympify(optimal_fiber_length)
+            optimal_fiber_length = float(optimal_fiber_length)
+            if optimal_fiber_length <= 0.0:
+                msg = (
+                    f'`optimal_fiber_length` of {optimal_fiber_length} must be '
+                    f'greater than {0.0}.'
+                )
+                raise ValueError(msg)
+            self._optimal_fiber_length = optimal_fiber_length
 
     @property
-    def maximal_fiber_velocity(self) -> Union[sm.Symbol, sm.Number]:
-        """Symbol or value representing the maximal fiber velocity parameter.
+    def maximal_fiber_velocity(self) -> Optional[float]:
+        """Numeric value representing the maximal fiber velocity parameter.
 
         The value by which the musculotendon's fiber force-velcoity relationship
         is normalized. It corresponds to the fiber shortening velocity at which
         the musculotendon is unable to produce any force whatsoever. This value
         maps to the symbol attribute `v_M_max`.
 
+        See Also
+        ========
+        `v_M_max`: The symbol to which this numeric value maps.
+
         """
-        return self._v_M_max
+        return self._maximal_fiber_velocity
 
     @maximal_fiber_velocity.setter
     def maximal_fiber_velocity(
         self,
-        maximal_fiber_velocity: SympifiableNumericSymbol,
+        maximal_fiber_velocity: Optional[float],
     ) -> None:
         if maximal_fiber_velocity is None:
-            self._v_M_max = sm.Symbol(f'v_M_max_{self.name}')
+            self._maximal_fiber_velocity = maximal_fiber_velocity
         else:
-            self._v_M_max = sm.sympify(maximal_fiber_velocity)
+            maximal_fiber_velocity = float(maximal_fiber_velocity)
+            if maximal_fiber_velocity <= 0.0:
+                msg = (
+                    f'`maximal_fiber_velocity` of {maximal_fiber_velocity} '
+                    f'must be greater than {0.0}.'
+                )
+                raise ValueError(msg)
+            self._maximal_fiber_velocity = maximal_fiber_velocity
 
     @property
-    def peak_isometric_force(self) -> Union[sm.Symbol, sm.Number]:
-        """Symbol or value representing the peak isometric force parameter.
+    def peak_isometric_force(self) -> Optional[float]:
+        """Numeric value representing the peak isometric force parameter.
 
         The force the musculotendon can produce when the fiber length is equal
         to the optimal fiber length, the shortening velocity is zero, and at
@@ -366,22 +385,33 @@ class MusculotendonABC(abc.ABC):
         is undergoing an isometric contraction (i.e. maintaining length) at this
         magnitude of force. This value maps to the symbol attribute `F_M_max`.
 
+        See Also
+        ========
+        `F_M_max`: The symbol to which this numeric value maps.
+
         """
-        return self._F_M_max
+        return self._peak_isometric_force
 
     @peak_isometric_force.setter
     def peak_isometric_force(
         self,
-        peak_isometric_force: SympifiableNumericSymbol,
+        peak_isometric_force: Optional[float],
     ) -> None:
         if peak_isometric_force is None:
-            self._F_M_max = sm.Symbol(f'F_M_max_{self.name}')
+            self._peak_isometric_force = peak_isometric_force
         else:
-            self._F_M_max = sm.sympify(peak_isometric_force)
+            peak_isometric_force = float(peak_isometric_force)
+            if peak_isometric_force <= 0.0:
+                msg = (
+                    f'`peak_isometric_force` of {peak_isometric_force} must be '
+                    f'greater than {0.0}.'
+                )
+                raise ValueError(msg)
+            self._peak_isometric_force = peak_isometric_force
 
     @property
-    def tendon_slack_length(self) -> Union[sm.Symbol, sm.Number]:
-        """Symbol or value representing the tendon slack length parameter.
+    def tendon_slack_length(self) -> Optional[float]:
+        """Numeric value representing the tendon slack length parameter.
 
         The value by which the musculotendon's tendon force-length relationship
         is normalized. It corresponds to the tendon length at which the tendon
@@ -389,136 +419,169 @@ class MusculotendonABC(abc.ABC):
         rigid tendon model, this value is exactly equal to the tendon length.
         This value maps to the symbol attribute `l_T_slack`.
 
+        See Also
+        ========
+        `l_T_slack`: The symbol to which this numeric value maps.
+
         """
-        return self._l_T_slack
+        return self._tendon_slack_length
 
     @tendon_slack_length.setter
     def tendon_slack_length(
         self,
-        tendon_slack_length: SympifiableNumericSymbol,
+        tendon_slack_length: Optional[float],
     ) -> None:
         if tendon_slack_length is None:
-            self._l_T_slack = sm.Symbol(f'l_T_slack_{self.name}')
+            self._tendon_slack_length = tendon_slack_length
         else:
-            self._l_T_slack = sm.sympify(tendon_slack_length)
+            tendon_slack_length = float(tendon_slack_length)
+            if tendon_slack_length <= 0.0:
+                msg = (
+                    f'`tendon_slack_length` of {tendon_slack_length} must be '
+                    f'greater than {0.0}.'
+                )
+                raise ValueError(msg)
+            self._tendon_slack_length = tendon_slack_length
 
     @property
-    def optimal_pennation_angle(self) -> Union[sm.Symbol, sm.Number]:
-        """Symbol or value representing the optimal pennation angle parameter.
+    def optimal_pennation_angle(self) -> Optional[float]:
+        """Numeric value representing the optimal pennation angle parameter.
 
         The value of pennation angle when the musculotendon's fiber has length
         equal to the optimal fiber length. For unpennated fibers, this value is
         zero. This value maps to the symbol attribute `alpha_opt`.
 
+        See Also
+        ========
+        `alpha_opt`: The symbol to which this numeric value maps.
+
         """
-        return self._alpha_opt
+        return self._optimal_pennation_angle
 
     @optimal_pennation_angle.setter
     def optimal_pennation_angle(
         self,
-        optimal_pennation_angle: SympifiableNumericSymbol,
+        optimal_pennation_angle: Optional[float],
     ) -> None:
         if optimal_pennation_angle is None:
-            self._alpha_opt = sm.Symbol(f'alpha_opt_{self.name}')
+            self._optimal_pennation_angle = optimal_pennation_angle
         else:
-            self._alpha_opt = sm.sympify(optimal_pennation_angle)
+            optimal_pennation_angle = float(optimal_pennation_angle)
+            if optimal_pennation_angle <= 0.0:
+                msg = (
+                    f'`optimal_pennation_angle` of {optimal_pennation_angle} '
+                    f'must be greater than {0.0}.'
+                )
+                raise ValueError(msg)
+            self._optimal_pennation_angle = optimal_pennation_angle
 
     @property
-    def fiber_damping_coefficient(self) -> Union[sm.Symbol, sm.Number]:
-        """Symbol or value representing the fiber damping coefficient parameter.
+    def fiber_damping_coefficient(self) -> Optional[float]:
+        """Numeric value representing the fiber damping coefficient parameter.
 
         The value of damping in the musculotendon's fiber. While not strictly
         physical, this parameter is important for producing numerically stable
         musculotendon dynamics. For undamped fibers, this value is zero. This
         value maps to the symbol attribute `beta`.
 
+        See Also
+        ========
+        `beta`: The symbol to which this numeric value maps.
+
         """
-        return self._beta
+        return self._fiber_damping_coefficient
 
     @fiber_damping_coefficient.setter
     def fiber_damping_coefficient(
         self,
-        fiber_damping_coefficient: SympifiableNumericSymbol,
+        fiber_damping_coefficient: Optional[float],
     ) -> None:
         if fiber_damping_coefficient is None:
-            self._beta = sm.Symbol(f'beta_{self.name}')
+            self._fiber_damping_coefficient = fiber_damping_coefficient
         else:
-            self._beta = sm.sympify(fiber_damping_coefficient)
+            fiber_damping_coefficient = float(fiber_damping_coefficient)
+            if fiber_damping_coefficient <= 0.0:
+                msg = (
+                    f'`fiber_damping_coefficient` of '
+                    f'{fiber_damping_coefficient} must be greater than {0.0}.'
+                )
+                raise ValueError(msg)
+            self._fiber_damping_coefficient = fiber_damping_coefficient
 
     @property
-    def l_M_opt(self) -> Union[sm.Symbol, sm.Number]:
-        """Shorthand accessor for the optimal fiber length parameter.
+    def l_M_opt(self) -> sm.Symbol:
+        """Accessor for the optimal fiber length symbol.
 
         See Also
         ========
 
-        `optimal_fiber_length`: Primary attribute for optimal fiber length
-            including its setter.
+        `optimal_fiber_length`: The optional numeric value to which this symbol
+            maps.
 
         """
         return self._l_M_opt
 
     @property
-    def v_M_max(self) -> Union[sm.Symbol, sm.Number]:
-        """Shorthand accessor for the maximal fiber velocity parameter.
+    def v_M_max(self) -> sm.Symbol:
+        """Accessor for the maximal fiber velocity symbol.
 
         See Also
         ========
 
-        `maximal_fiber_velocity`: Primary attribute for maximal fiber velocity
-            including its setter.
+        `maximal_fiber_velocity`: The optional numeric value to which this
+            symbol maps.
 
         """
         return self._v_M_max
 
     @property
-    def F_M_max(self) -> Union[sm.Symbol, sm.Number]:
-        """Shorthand accessor for the peak isometric force parameter.
+    def F_M_max(self) -> sm.Symbol:
+        """Accessor for the peak isometric force symbol.
 
         See Also
         ========
 
-        `peak_isometric_force`: Primary attribute for peak isometric force
-            including its setter.
+        `peak_isometric_force`: The optional numeric value to which this symbol
+            maps.
 
         """
         return self._F_M_max
 
     @property
-    def l_T_slack(self) -> Union[sm.Symbol, sm.Number]:
-        """Shorthand accessor for the tendon slack length parameter.
+    def l_T_slack(self) -> sm.Symbol:
+        """Accessor for the tendon slack length symbol.
 
         See Also
         ========
 
-        `tendon_slack_length`: Primary attribute for tendon slack length
-            including its setter.
+        `tendon_slack_length`: The optional numeric value to which this symbol
+            maps.
 
         """
         return self._l_T_slack
 
     @property
-    def alpha_opt(self) -> Union[sm.Symbol, sm.Number]:
-        """Shorthand accessor for the optimal pennation angle parameter.
+    def alpha_opt(self) -> sm.Symbol:
+        """Accessor for the optimal pennation angle symbol.
 
         See Also
         ========
 
-        `optimal_pennation_angle`: Primary attribute for optimal pennation angle
-            including its setter.
+        `optimal_pennation_angle`: The optional numeric value to which this
+            symbol maps.
 
         """
         return self._alpha_opt
 
     @property
-    def beta(self) -> Union[sm.Symbol, sm.Number]:
-        """Shorthand accessor for the fiber damping coefficient parameter.
+    def beta(self) -> sm.Symbol:
+        """Accessor for the fiber damping coefficient symbol.
 
         See Also
         ========
 
-        `fiber_damping_coefficient`: Primary attribute for fiber damping
-            coefficient including its setter.
+        `fiber_damping_coefficient`: The optional numeric value to which this
+            symbol maps.
 
         """
         return self._beta
