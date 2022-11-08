@@ -117,18 +117,19 @@ class RigidBody(_Body):
         self.inertia = (I, self.masscenter)
 
     def linear_momentum(self, frame):
-        """ Linear momentum of the rigid body.
+        r"""Linear momentum of the rigid body.
 
         Explanation
         ===========
 
-        The linear momentum L, of a rigid body B, with respect to frame N is
-        given by
+        The linear momentum $L$, of a rigid body ``B``, with respect to frame
+        ``N`` is given by
 
-        L = M * v*
+        .. math::
+            L = m v
 
-        where M is the mass of the rigid body and v* is the velocity of
-        the mass center of B in the frame, N.
+        where $m$ is the mass of the rigid body and $v$ is the velocity of
+        the mass center of ``B`` in the frame, ``N``.
 
         Parameters
         ==========
@@ -158,21 +159,22 @@ class RigidBody(_Body):
         return self.mass * self.masscenter.vel(frame)
 
     def angular_momentum(self, point, frame):
-        """Returns the angular momentum of the rigid body about a point in the
+        r"""Returns the angular momentum of the rigid body about a point in the
         given frame.
 
         Explanation
         ===========
 
-        The angular momentum H of a rigid body B about some point O in a frame
-        N is given by:
+        The angular momentum $H$ of a rigid body ``B`` about some point ``O`` in
+        a frame ``N`` is given by:
 
-            H = I . w + r x Mv
+        .. math::
+            H = I \cdot \omega + r \times m v
 
-        where I is the central inertia dyadic of B, w is the angular velocity
-        of body B in the frame, N, r is the position vector from point O to the
-        mass center of B, and v is the velocity of the mass center in the
-        frame, N.
+        where $I$ and $m$ are the central inertia dyadic and mass of rigid body
+        ``B``, $\omega$ is the angular velocity of body ``B`` in the frame,
+        ``N``, $r$ is the position vector from point ``O`` to the mass center of
+        ``B``, and $v$ is the velocity of the mass center in the frame, ``N``.
 
         Parameters
         ==========
@@ -210,18 +212,19 @@ class RigidBody(_Body):
         return I.dot(w) + r.cross(m * v)
 
     def kinetic_energy(self, frame):
-        """Kinetic energy of the rigid body.
+        r"""Kinetic energy of the rigid body.
 
         Explanation
         ===========
 
-        The kinetic energy, T, of a rigid body, B, is given by
+        The kinetic energy, $T$, of a rigid body, ``B``, is given by
 
-        'T = 1/2 (I omega^2 + m v^2)'
+        .. math::
+            T = \frac{1}{2} (I \omega^2 + m v^2)
 
-        where I and m are the central inertia dyadic and mass of rigid body B,
-        respectively, omega is the body's angular velocity and v is the
-        velocity of the body's mass center in the supplied ReferenceFrame.
+        where $I$ and $m$ are the central inertia dyadic and mass of rigid body
+        ``B``, respectively, omega is the body's angular velocity and $v$ is the
+        velocity of the body's mass center in the supplied ``ReferenceFrame``.
 
         Parameters
         ==========
@@ -229,7 +232,8 @@ class RigidBody(_Body):
         frame : ReferenceFrame
             The RigidBody's angular velocity and the velocity of it's mass
             center are typically defined with respect to an inertial frame but
-            any relevant frame in which the velocities are known can be supplied.
+            any relevant frame in which the velocities are known can be
+            supplied.
 
         Examples
         ========
