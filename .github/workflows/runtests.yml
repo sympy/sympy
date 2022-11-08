@@ -385,7 +385,7 @@ jobs:
       # https://github.com/marketplace/actions/deploy-to-github-pages#using-an-ssh-deploy-key-
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
-        # if: ${{ github.ref == 'refs/heads/master' }}
+        if: ${{ github.ref == 'refs/heads/master' }}
         with:
           folder: doc/_build/html
           ssh-key: ${{ secrets.DEPLOY_KEY }}
