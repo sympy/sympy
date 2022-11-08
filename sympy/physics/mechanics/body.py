@@ -99,7 +99,6 @@ class Body(RigidBody, Particle):  # type: ignore
     def __init__(self, name, masscenter=None, mass=None, frame=None,
                  central_inertia=None):
 
-        self.name = name
         self._loads = []
 
         if frame is None:
@@ -130,9 +129,8 @@ class Body(RigidBody, Particle):  # type: ignore
         # If user passes masscenter and mass then a particle is created
         # otherwise a rigidbody. As a result a body may or may not have inertia.
         if central_inertia is None and mass is not None:
-            self.frame = frame
-            self.masscenter = masscenter
             Particle.__init__(self, name, masscenter, _mass)
+            self.frame = frame
             self._central_inertia = Dyadic(0)
         else:
             RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)

@@ -1,14 +1,23 @@
-from sympy.core.symbol import symbols
+from sympy.core.backend import symbols, Symbol
+from sympy.physics.vector import Vector
 from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
-
+from sympy.physics.mechanics.abstract_body import _Body
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_particle():
+    # Test default
+    p = Particle('P')
+    assert p.name == 'P'
+    assert p.mass == Symbol('P_mass')
+    assert p.masscenter.name == 'P_masscenter'
+    raises(AttributeError, lambda: p.frame)
+    # Test initializing with parameters
     m, m2, v1, v2, v3, r, g, h = symbols('m m2 v1 v2 v3 r g h')
     P = Point('P')
     P2 = Point('P2')
     p = Particle('pa', P, m)
+    assert isinstance(p, _Body)
     assert p.__str__() == 'pa'
     assert p.mass == m
     assert p.point == P
@@ -42,6 +51,28 @@ def test_particle():
     assert p.kinetic_energy(
         N) in [m2*(v1**2 + v2**2 + v3**2)/2,
         m2 * v1**2 / 2 + m2 * v2**2 / 2 + m2 * v3**2 / 2]
+
+
+def test_particle_frame():
+    # Test default
+    p = Particle('P')
+    raises(AttributeError, lambda: p.frame)
+    # Test adding frames in various ways
+    p.add_frame()
+    frame = p.frame
+    assert frame.name == 'P_frame'
+    assert p.point.vel(frame) == Vector(0)
+    N = ReferenceFrame('N')
+    p.frame = N
+    assert p.frame == N
+    assert p.point.vel(N) == Vector(0)
+    p.add_frame()  # Should not overwrite the frame
+    assert p.frame == N
+    p.add_frame(frame)  # Should overwrite the frame
+    assert p.frame == frame
+    # Remove frame
+    p.frame = None
+    raises(AttributeError, lambda: p.frame)
 
 
 def test_parallel_axis():
