@@ -1,5 +1,5 @@
-from sympy.core.backend import sympify
-from sympy.physics.vector import ReferenceFrame, cross
+from sympy.core.backend import S
+from sympy.physics.vector import ReferenceFrame, cross, dot
 from sympy.physics.mechanics.abstract_body import _Body
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
@@ -41,9 +41,8 @@ class Particle(_Body):
     >>> # Or you could change these later
     >>> pa.mass = m
     >>> pa.point = po
-    >>> # If preferred you can also attach a frame to a Particle
+    >>> # It is possible to attach a frame to a Particle if desired
     >>> pa.add_frame()
-    >>> pa.frame
     pa_frame
 
     """
@@ -74,9 +73,10 @@ class Particle(_Body):
         """Method to attach a frame to the particle."""
         if frame is None:
             if self._frame is not None:
-                return
+                return self.frame
             frame = ReferenceFrame(f'{self.name}_frame')
         self.frame = frame
+        return self.frame
 
     def linear_momentum(self, frame):
         r"""Linear momentum of the particle.
@@ -132,7 +132,7 @@ class Particle(_Body):
 
         where $r$ is the position vector from point ``O`` to the particle ``P``,
         $m$ is the mass of the particle, and $v$ is the velocity of the particle
-        in the inertial frame, ``N``.
+        in the inertial frame ``N``.
 
         Parameters
         ==========
@@ -162,7 +162,7 @@ class Particle(_Body):
         """
 
         return cross(self.point.pos_from(point),
-                     (self.mass * self.point.vel(frame)))
+                     self.mass * self.point.vel(frame))
 
     def kinetic_energy(self, frame):
         r"""Kinetic energy of the particle.
@@ -170,7 +170,7 @@ class Particle(_Body):
         Explanation
         ===========
 
-        The kinetic energy, $T$, of a particle, ``P``, is given by
+        The kinetic energy $T$, of a particle ``P``, is given by
 
         .. math::
             T = \frac{1}{2} m v^2
@@ -201,8 +201,8 @@ class Particle(_Body):
 
         """
 
-        return (self.mass / sympify(2) * self.point.vel(frame) &
-                self.point.vel(frame))
+        return S.Half * self.mass * dot(self.point.vel(frame),
+                                        self.point.vel(frame))
 
     def set_potential_energy(self, scalar):
         sympy_deprecation_warning(

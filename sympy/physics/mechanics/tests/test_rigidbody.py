@@ -6,7 +6,7 @@ from sympy.core.backend import expand, zeros, _simplify_matrix, symbols, Symbol
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
-def test_rigidbody():
+def test_rigidbody_default():
     # Test default
     b = RigidBody('B')
     I = inertia(b.frame, *symbols('B_ixx B_iyy B_izz B_ixy B_iyz B_izx'))
@@ -17,6 +17,8 @@ def test_rigidbody():
     assert b.central_inertia == I
     assert b.frame.name == 'B_frame'
 
+
+def test_rigidbody():
     m, m2, v1, v2, v3, omega = symbols('m m2 v1 v2 v3 omega')
     A = ReferenceFrame('A')
     A2 = ReferenceFrame('A2')

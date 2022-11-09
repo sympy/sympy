@@ -1,4 +1,4 @@
-from sympy.core.backend import sympify, Symbol
+from sympy.core.backend import Symbol, S
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic, dot
 from sympy.physics.mechanics.abstract_body import _Body
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -79,7 +79,7 @@ class RigidBody(_Body):
     @frame.setter
     def frame(self, F):
         if not isinstance(F, ReferenceFrame):
-            raise TypeError("RigdBody frame must be a ReferenceFrame object.")
+            raise TypeError("RigidBody frame must be a ReferenceFrame object.")
         self._frame = F
 
     @property
@@ -127,8 +127,8 @@ class RigidBody(_Body):
         .. math::
             L = m v
 
-        where $m$ is the mass of the rigid body and $v$ is the velocity of
-        the mass center of ``B`` in the frame, ``N``.
+        where $m$ is the mass of the rigid body, and $v$ is the velocity of
+        the mass center of ``B`` in the frame ``N``.
 
         Parameters
         ==========
@@ -171,9 +171,9 @@ class RigidBody(_Body):
             H = I \cdot \omega + r \times m v
 
         where $I$ and $m$ are the central inertia dyadic and mass of rigid body
-        ``B``, $\omega$ is the angular velocity of body ``B`` in the frame,
+        ``B``, $\omega$ is the angular velocity of body ``B`` in the frame
         ``N``, $r$ is the position vector from point ``O`` to the mass center of
-        ``B``, and $v$ is the velocity of the mass center in the frame, ``N``.
+        ``B``, and $v$ is the velocity of the mass center in the frame ``N``.
 
         Parameters
         ==========
@@ -216,14 +216,15 @@ class RigidBody(_Body):
         Explanation
         ===========
 
-        The kinetic energy, $T$, of a rigid body, ``B``, is given by
+        The kinetic energy $T$, of a rigid body ``B``, is given by
 
         .. math::
             T = \frac{1}{2} (I \omega^2 + m v^2)
 
         where $I$ and $m$ are the central inertia dyadic and mass of rigid body
-        ``B``, respectively, omega is the body's angular velocity and $v$ is the
-        velocity of the body's mass center in the supplied ``ReferenceFrame``.
+        ``B`` respectively, $\omega$ is the body's angular velocity, and $v$ is
+        the velocity of the body's mass center in the supplied
+        ``ReferenceFrame``.
 
         Parameters
         ==========
@@ -254,11 +255,11 @@ class RigidBody(_Body):
 
         """
 
-        rotational_KE = dot(self.frame.ang_vel_in(frame), dot(
-            self.central_inertia, self.frame.ang_vel_in(frame)) / sympify(2))
-        translational_KE = (self.mass * dot(
-            self.masscenter.vel(frame), self.masscenter.vel(frame)) / sympify(2)
-                            )
+        rotational_KE = S.Half * dot(
+            self.frame.ang_vel_in(frame),
+            dot(self.central_inertia, self.frame.ang_vel_in(frame)))
+        translational_KE = S.Half * self.mass * dot(self.masscenter.vel(frame),
+                                                    self.masscenter.vel(frame))
         return rotational_KE + translational_KE
 
     def set_potential_energy(self, scalar):
