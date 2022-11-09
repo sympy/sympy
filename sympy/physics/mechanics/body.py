@@ -138,6 +138,11 @@ class Body(RigidBody, Particle):  # type: ignore
             _Body.__init__(self, name, masscenter, frame, _mass)
             self.inertia = _inertia
 
+    def __repr__(self):
+        if self.is_rigidbody:
+            return RigidBody.__repr__(self)
+        return Particle.__repr__(self)
+
     @property
     def loads(self):
         return self._loads

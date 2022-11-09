@@ -71,6 +71,11 @@ class RigidBody(_Body):
                        self.masscenter)
         self.inertia = inertia
 
+    def __repr__(self):
+        return (f'{self.__class__.__name__}({repr(self.name)}, masscenter='
+                f'{repr(self.masscenter)}, frame={repr(self.frame)}, mass='
+                f'{repr(self.mass)}), inertia={repr(self.inertia)}))')
+
     @property
     def frame(self):
         """The ReferenceFrame fixed to the body."""

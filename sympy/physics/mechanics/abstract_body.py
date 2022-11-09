@@ -28,7 +28,9 @@ class _Body(ABC):
         return self.name
 
     def __repr__(self):
-        return self.__str__()
+        return (f'{self.__class__.__name__}({repr(self.name)}, masscenter='
+                f'{repr(self.masscenter)}, frame={repr(self.frame)}, mass='
+                f'{repr(self.mass)})')
 
     @property
     def name(self):
