@@ -1,6 +1,7 @@
 from sympy.core.backend import Symbol
 from sympy.physics.vector import Point, Vector, ReferenceFrame, Dyadic
 from sympy.physics.mechanics import RigidBody, Particle, inertia
+from sympy.physics.mechanics.abstract_body import _Body
 
 __all__ = ['Body']
 
@@ -128,12 +129,14 @@ class Body(RigidBody, Particle):  # type: ignore
 
         # If user passes masscenter and mass then a particle is created
         # otherwise a rigidbody. As a result a body may or may not have inertia.
+        # Note: _Body.__init__ is used to prevent problems with super() calls in
+        # Particle and Rigidbody.
         if central_inertia is None and mass is not None:
-            Particle.__init__(self, name, masscenter, _mass)
-            self.frame = frame
+            _Body.__init__(self, name, masscenter, frame, _mass)
             self._central_inertia = Dyadic(0)
         else:
-            RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)
+            _Body.__init__(self, name, masscenter, frame, _mass)
+            self.inertia = _inertia
 
     @property
     def loads(self):

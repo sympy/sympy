@@ -8,7 +8,9 @@ __all__ = ['_Body']
 
 class _Body(ABC):
     """Abstract class for body type objects."""
-    def __init__(self, name, masscenter=None, mass=None):
+    def __init__(self, name, masscenter=None, frame=None, mass=None):
+        # Note: If frame=None, no auto-generated frame is created, because a
+        # Particle does not need to have a frame by default.
         if not isinstance(name, str):
             raise TypeError('Supply a valid name.')
         self._name = name
@@ -16,6 +18,7 @@ class _Body(ABC):
             mass = Symbol(f'{name}_mass')
         if masscenter is None:
             masscenter = Point(f'{name}_masscenter')
+        self.frame = frame
         self.mass = mass
         self.masscenter = masscenter
         self.potential_energy = 0

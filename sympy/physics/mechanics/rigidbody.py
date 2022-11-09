@@ -57,10 +57,9 @@ class RigidBody(_Body):
                  inertia=None):
         # This import will be removed with the introduction of InertiaTuple
         from sympy.physics.mechanics.functions import inertia as f_inertia
-        super().__init__(name, masscenter, mass)
         if frame is None:
             frame = ReferenceFrame(f'{name}_frame')
-        self.frame = frame
+        super().__init__(name, masscenter, frame, mass)
         if inertia is None:
             ixx = Symbol(f'{name}_ixx')
             iyy = Symbol(f'{name}_iyy')

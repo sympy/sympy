@@ -49,9 +49,8 @@ class Particle(_Body):
     """
     point = _Body.masscenter
 
-    def __init__(self, name, point=None, mass=None):
-        super().__init__(name, point, mass)
-        self._frame = None
+    def __init__(self, name, point=None, mass=None, frame=None):
+        super().__init__(name, point, frame, mass)
 
     @property
     def frame(self):
@@ -68,7 +67,7 @@ class Particle(_Body):
         elif isinstance(frame, ReferenceFrame):
             self._frame = frame
         else:
-            self._frame = ReferenceFrame(frame)
+            raise ValueError('Frame must be an instance of ReferenceFrame.')
         self.point.set_vel(frame, 0)
 
     def add_frame(self, frame=None):
