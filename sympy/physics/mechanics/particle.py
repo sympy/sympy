@@ -51,6 +51,11 @@ class Particle(_Body):
     def __init__(self, name, point=None, mass=None, frame=None):
         super().__init__(name, point, frame, mass)
 
+    def __repr__(self):
+        return (f'{self.__class__.__name__}({repr(self.name)}, masscenter='
+                f'{repr(self.masscenter)}, frame={repr(self._frame)}, mass='
+                f'{repr(self.mass)})')
+
     @property
     def frame(self):
         """The optional ReferenceFrame fixed to the Particle."""

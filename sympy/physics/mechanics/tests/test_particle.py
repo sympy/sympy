@@ -12,6 +12,9 @@ def test_particle_default():
     assert p.mass == Symbol('P_mass')
     assert p.masscenter.name == 'P_masscenter'
     assert p.potential_energy == 0
+    assert p.__str__() == 'P'
+    assert p.__repr__() == ("Particle('P', masscenter=P_masscenter, frame=None,"
+                            " mass=P_mass)")
     raises(AttributeError, lambda: p.frame)
 
 
@@ -22,7 +25,6 @@ def test_particle():
     P2 = Point('P2')
     p = Particle('pa', P, m)
     assert isinstance(p, _Body)
-    assert p.__str__() == 'pa'
     assert p.mass == m
     assert p.point == P
     # Test the mass setter
