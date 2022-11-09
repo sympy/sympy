@@ -73,6 +73,9 @@ def test_particle_frame():
     # Remove frame
     p.frame = None
     raises(AttributeError, lambda: p.frame)
+    # Test invalid frame type
+    with raises(ValueError):
+        p.frame = 'a'
 
 
 def test_parallel_axis():
