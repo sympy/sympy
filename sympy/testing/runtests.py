@@ -40,7 +40,7 @@ from sympy.external import import_module
 from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
 
 IS_WINDOWS = (os.name == 'nt')
-ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
+ON_CI = os.getenv('CI', None)
 
 # emperically generated list of the proportion of time spent running
 # an even split of tests.  This should periodically be regenerated.
@@ -53,7 +53,7 @@ ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 #     from time import time
 #     import sympy
 #     import os
-#     os.environ["TRAVIS_BUILD_NUMBER"] = '2' # Mock travis to get more correct densities
+#     os.environ["CI"] = 'true' # Mock CI to get more correct densities
 #     delays, num_splits = [], 30
 #     for i in range(1, num_splits + 1):
 #         tic = time()
@@ -522,12 +522,10 @@ def _test(*paths,
     post_mortem = pdb
     if seed is None:
         seed = random.randrange(100000000)
-    if ON_TRAVIS and timeout is False:
-        # Travis times out if no activity is seen for 10 minutes.
+    if ON_CI and timeout is False:
         timeout = 595
         fail_on_timeout = True
-    if ON_TRAVIS:
-        # pyglet does not work on Travis
+    if ON_CI:
         blacklist = list(blacklist) + ['sympy/plotting/pygletplot/tests']
     blacklist = convert_to_native_paths(blacklist)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
@@ -695,11 +693,11 @@ def _get_doctest_blacklist():
                 "examples/intermediate/mplot3d.py"
             ])
         else:
-            # Use a non-windowed backend, so that the tests work on Travis
+            # Use a non-windowed backend, so that the tests work on CI
             import matplotlib
             matplotlib.use('Agg')
 
-    if ON_TRAVIS or import_module('pyglet') is None:
+    if ON_CI or import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
     if import_module('aesara') is None:
@@ -784,7 +782,7 @@ def _doctest(*paths, **kwargs):
 
     blacklist.extend(_get_doctest_blacklist())
 
-    # Use a non-windowed backend, so that the tests work on Travis
+    # Use a non-windowed backend, so that the tests work on CI
     if import_module('matplotlib') is not None:
         import matplotlib
         matplotlib.use('Agg')
