@@ -6,9 +6,11 @@ Masses, Inertias & Particles, RigidBodys (Docstrings)
 
 .. automodule:: sympy.physics.mechanics.particle
    :members:
+   :inherited-members:
 
 .. automodule:: sympy.physics.mechanics.rigidbody
    :members:
+   :inherited-members:
 
 .. autofunction:: sympy.physics.mechanics.functions.inertia
 

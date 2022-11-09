@@ -68,22 +68,22 @@ class _Body(ABC):
 
     @property
     def x(self):
-        """The basis Vector for the Body, in the x direction. """
+        """The basis Vector for the body, in the x direction. """
         return self.frame.x
 
     @property
     def y(self):
-        """The basis Vector for the Body, in the y direction. """
+        """The basis Vector for the body, in the y direction. """
         return self.frame.y
 
     @property
     def z(self):
-        """The basis Vector for the Body, in the z direction. """
+        """The basis Vector for the body, in the z direction. """
         return self.frame.z
 
     @property
     def potential_energy(self):
-        """The potential energy of the Particle.
+        """The potential energy of the body.
 
         Examples
         ========
@@ -102,25 +102,6 @@ class _Body(ABC):
 
     @potential_energy.setter
     def potential_energy(self, scalar):
-        """Used to set the potential energy of the Particle.
-
-        Parameters
-        ==========
-
-        scalar : Sympifyable
-            The potential energy (a scalar) of the Particle.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import Particle, Point
-        >>> from sympy import symbols
-        >>> m, g, h = symbols('m g h')
-        >>> O = Point('O')
-        >>> P = Particle('P', O, m)
-        >>> P.potential_energy = m * g * h
-
-        """
         self._potential_energy = sympify(scalar)
 
     @abstractmethod
