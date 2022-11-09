@@ -32,6 +32,7 @@ class _Body(ABC):
 
     @property
     def name(self):
+        """The name of the body."""
         return self._name
 
     @property
