@@ -2219,3 +2219,4 @@ class acsch(InverseHyperbolicFunction):
 
     def _eval_is_zero(self):
         return self.args[0].is_infinite
+ 
