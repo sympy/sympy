@@ -130,7 +130,7 @@ class Body(RigidBody, Particle):  # type: ignore
         # If user passes masscenter and mass then a particle is created
         # otherwise a rigidbody. As a result a body may or may not have inertia.
         # Note: _Body.__init__ is used to prevent problems with super() calls in
-        # Particle and Rigidbody.
+        # Particle and RigidBody arising due to multiple inheritance.
         if central_inertia is None and mass is not None:
             _Body.__init__(self, name, masscenter, frame, _mass)
             self._central_inertia = Dyadic(0)
