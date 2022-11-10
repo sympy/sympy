@@ -2,7 +2,19 @@
 
 # Development Environment Setup
 
+```{note}
+This guide is intended for people have never contributed to any open source
+project before. If you are already familiar with how to contribute to an open
+source project on GitHub, go to the [](./workflow-process.md) guide
+```
+
 The first step to contributing to the code base is creating your development environment.
+
+```{important}
+Each of the steps in this guide only need to be done once. Once you have
+completed them, you do not need to repeat them, even if you are making a
+second contribution.
+```
 
 ## Git Setup
 
@@ -11,12 +23,12 @@ SymPy is available on [GitHub](https://github.com/sympy/sympy) and uses
 code is pulled and pushed to and from the main repository. Install the respective version
 of Git for your operating system to start development.
 
-:::{note}
+```{note}
 Refer to the installation instructions in
 the [Git installation instructions](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
 Learn about the basic git commands in this [Git Handbook](https://guides.github.com/introduction/git-handbook/)
 or any other sources on the internet.
-:::
+```
 
 ## Get the SymPy Code
 
@@ -26,7 +38,7 @@ It is recommended practice to create a fork of the SymPy project for your develo
 https://github.com/sympy/sympy
 ```
 
-You will now have a fork at \<<https://github.com>/\<your-user-name>/sympy>.
+You will now have a fork at `https://github.com/<your-user-name>/sympy`.
 
 Then, nn your machine browse to where you would like to store SymPy, and clone (download) the latest code from SymPy's original repository (about 77 MiB):
 
