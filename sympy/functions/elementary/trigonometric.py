@@ -1003,10 +1003,8 @@ class cos(TrigonometricFunction):
 
     def _eval_is_zero(self):
         rest, pi_mult = _peeloff_pi(self.args[0])
-        if pi_mult:
-            return fuzzy_and([(pi_mult - S.Half).is_integer, rest.is_zero])
-        else:
-            return rest.is_zero
+        if rest.is_zero and pi_mult:
+            return (pi_mult - S.Half).is_integer
 
 
 class tan(TrigonometricFunction):

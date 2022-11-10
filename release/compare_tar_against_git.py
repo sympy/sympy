@@ -32,8 +32,7 @@ git_whitelist = {
     '.gitattributes',
     '.gitignore',
     '.mailmap',
-    # Travis and CI
-    '.travis.yml',
+    # CI
     '.github/workflows/runtests.yml',
     '.github/workflows/ci-sage.yml',
     '.github/workflows/comment-on-pr.yml',
@@ -51,8 +50,6 @@ git_whitelist = {
     '.coveragerc',
     'CODEOWNERS',
     'asv.conf.actions.json',
-    'asv.conf.travis.json',
-    'coveragerc_travis',
     'codecov.yml',
     'pytest.ini',
     'MANIFEST.in',
@@ -93,7 +90,6 @@ git_whitelist = {
     'bin/test_py2_import.py',
     'bin/test_setup.py',
     'bin/test_submodule_imports.py',
-    'bin/test_travis.sh',
     'bin/test_optional_dependencies.py',
     'bin/test_sphinx.sh',
     'bin/mailmap_check.py',
@@ -140,8 +136,6 @@ git_whitelist = {
     'setupegg.py',
     # pytest stuff
     'conftest.py',
-    # Encrypted deploy key for deploying dev docs to GitHub
-    'github_deploy_key.enc',
     }
 
 # Files that should be in the tarball should not be in git

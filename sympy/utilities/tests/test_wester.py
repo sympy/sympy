@@ -76,7 +76,7 @@ from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
-from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_TRAVIS,
+from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_CI,
     raises)
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
@@ -2609,8 +2609,8 @@ def test_W23b():
 @XFAIL
 @slow
 def test_W24():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     # Not that slow, but does not fully evaluate so simplify is slow.
     # Maybe also require doit()
     x, y = symbols('x y', real=True)
@@ -2621,8 +2621,8 @@ def test_W24():
 @XFAIL
 @slow
 def test_W25():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     a, x, y = symbols('a x y', real=True)
     i1 = integrate(
         sin(a)*sin(y)/sqrt(1 - sin(a)**2*sin(x)**2*sin(y)**2),
