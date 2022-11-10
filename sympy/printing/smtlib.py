@@ -71,7 +71,8 @@ class SMTLibPrinter(Printer):
 
     symbol_table: dict
 
-    def __init__(self, settings: dict = None, symbol_table=None):
+    def __init__(self, settings: typing.Optional[dict] = None,
+                 symbol_table=None):
         settings = settings or {}
         self.symbol_table = symbol_table or {}
         Printer.__init__(self, settings)
@@ -431,7 +432,7 @@ def _auto_assert_smtlib(e: Expr, p: SMTLibPrinter, log_warn=print):
 
 def _auto_infer_smtlib_types(
     *exprs: Basic,
-    symbol_table: dict = None
+    symbol_table: typing.Optional[dict] = None
 ) -> dict:
     # [TYPE INFERENCE RULES]
     # X is alone in an expr => X is bool

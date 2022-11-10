@@ -93,7 +93,7 @@ def _parse_symbols(symbols):
         return tuple()
     if isinstance(symbols, str):
         return _symbols(symbols, seq=True)
-    elif isinstance(symbols, Expr or FreeGroupElement):
+    elif isinstance(symbols, (Expr, FreeGroupElement)):
         return (symbols,)
     elif is_sequence(symbols):
         if all(isinstance(s, str) for s in symbols):
