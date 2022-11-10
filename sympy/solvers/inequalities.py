@@ -10,7 +10,7 @@ from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.complexes import im, Abs
-from sympy.logic import And
+from sympy.logic import And, Or, Not
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset
