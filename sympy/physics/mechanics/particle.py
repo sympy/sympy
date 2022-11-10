@@ -1,12 +1,12 @@
 from sympy.core.backend import S
 from sympy.physics.vector import ReferenceFrame, cross, dot
-from sympy.physics.mechanics.abstract_body import _Body
+from sympy.physics.mechanics.body_base import BodyBase
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['Particle']
 
 
-class Particle(_Body):
+class Particle(BodyBase):
     """A particle.
 
     Explanation
@@ -46,7 +46,7 @@ class Particle(_Body):
     pa_frame
 
     """
-    point = _Body.masscenter
+    point = BodyBase.masscenter
 
     def __init__(self, name, point=None, mass=None, frame=None):
         super().__init__(name, point, frame, mass)

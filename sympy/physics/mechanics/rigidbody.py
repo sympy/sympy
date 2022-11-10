@@ -1,12 +1,12 @@
 from sympy.core.backend import Symbol, S
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic, dot
-from sympy.physics.mechanics.abstract_body import _Body
+from sympy.physics.mechanics.body_base import BodyBase
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['RigidBody']
 
 
-class RigidBody(_Body):
+class RigidBody(BodyBase):
     """An idealized rigid body.
 
     Explanation

@@ -3,10 +3,10 @@ from abc import ABC, abstractmethod
 from sympy.core.backend import Symbol, sympify
 from sympy.physics.vector import Point
 
-__all__ = ['_Body']
+__all__ = ['BodyBase']
 
 
-class _Body(ABC):
+class BodyBase(ABC):
     """Abstract class for body type objects."""
     def __init__(self, name, masscenter=None, frame=None, mass=None):
         # Note: If frame=None, no auto-generated frame is created, because a

@@ -1,7 +1,7 @@
 from sympy.core.backend import symbols, Symbol
 from sympy.physics.vector import Vector
 from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
-from sympy.physics.mechanics.abstract_body import _Body
+from sympy.physics.mechanics.body_base import BodyBase
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
@@ -24,7 +24,7 @@ def test_particle():
     P = Point('P')
     P2 = Point('P2')
     p = Particle('pa', P, m)
-    assert isinstance(p, _Body)
+    assert isinstance(p, BodyBase)
     assert p.mass == m
     assert p.point == P
     # Test the mass setter
