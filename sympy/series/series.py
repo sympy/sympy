@@ -109,40 +109,24 @@ def inversion_series(f, x, a=0, n=3):
     Examples
     ========
 
-    >>> from sympy.series.series import lagrange_inversion_theorem
-    >>> from sympy import exp, tan
+    >>> from sympy.series.series import inversion_series
+    >>> from sympy import exp
     >>> from sympy.abc import x
 
     Let the equation whose inverse's expansion is to be found be y = f(x)
     then the first argument to be supplied must be f(x).
-    Like here, the equation whose inverse's expansion to be found is y = exp(x)
 
-    >>> eq = (x**2)*exp(x)
+    >>> f = exp(x)
 
-    Here the number of terms required in the expansion is provided.
+    In this case, the inverse series is that of the logarithmic function:
 
-    >>> lagrange_inversion_theorem(eq, x, 1, 4)
-    2*(x**2*exp(x) - E)**3*exp(-3)/27 - 7*(x**2*exp(x) - E)**2*exp(-2)/54 + (x**2*exp(x) - E)*exp(-1)/3 + 1
+    >>> inversion_series(f,x,0,4)
+    x + (x-1)**3/3 - (x-1)**2/2 - 1
 
-    Here the number of terms required is, by default, 3.
-
-    >>> lagrange_inversion_theorem(eq, x, 1)
-    -7*(x**2*exp(x) - E)**2*exp(-2)/54 + (x**2*exp(x) - E)*exp(-1)/3 + 1
-
-    Here the point with respect to which the expansion is found is changed from x=1 to x=2.
-
-    >>> lagrange_inversion_theorem(eq, x, 2)
-    -7*(x**2*exp(x) - 4*exp(2))**2*exp(-4)/512 + (x**2*exp(x) - 4*exp(2))*exp(-2)/8 + 2
-
-    >>> eq = exp(x)
-    >>> lagrange_inversion_theorem(eq, x, 2)
-    -(exp(x) - exp(2))**2*exp(-4)/2 + (exp(x) - exp(2))*exp(-2) + 2
-
-    Here the number of terms and the point with respect to which the inverse expansion will be calculated are both
-    not provided explicitly.
-
-    >>> lagrange_inversion_theorem(eq, x)
-    -(exp(x) - 1)**2/2 + exp(x) - 1
+    Functions with vanishing derivative cannot be inverted with this method
+    >>>  f = x**2
+    >>> inversion_series(f,x,0,2)
+    ValueError: The inversion formula requires non-zero derivative.
 
     Note
     ====
