@@ -1,4 +1,5 @@
 from sympy.core.sympify import sympify
+from sympy import symbols
 
 from sympy.functions.combinatorial.factorials import factorial
 
@@ -137,6 +138,8 @@ def inversion_series(f, x, a=0, n=3):
     function theory enters only in a formal way in this proof, in that what is really needed is
     some property of the formal residue, and a more direct formal proof is available.
 
+    The implementation uses a quasi-newton method, iterating x:=(f(x)-y)/f'(a)
+
     References
     ==========
 
@@ -149,10 +152,18 @@ def inversion_series(f, x, a=0, n=3):
     if f.diff(x,1).subs({x:a}) == 0:
         raise ValueError("The inversion formula requires non-zero derivative.")
 
+    # solve using quasi-newton method
     fa = f.subs({x:a})
-    w = (x-a)/(f-fa)
-    ks = range(1,n)
-    coeffs = [(w**k).diff(x,k-1).limit(x,a) for k in ks ]
-    poly = a+sum(c/factorial(k)*(x-fa)**k for c,k in zip(coeffs,ks))
+    f = f.series(x,a,n).removeO()
+    dfa = f.diff(x,1).subs({x:a})
 
-    return poly
+    y = symbols('y')
+    x_series = a + (y-fa)/dfa
+
+    for i in range(2,n):
+        step = f.subs({x:x_series}).series(y,fa,i+1).coeff(y-fa,i)
+        x_series = x_series-step*(y-fa)**i/dfa
+
+    x_series = x_series.subs({y:x})
+
+    return x_series
