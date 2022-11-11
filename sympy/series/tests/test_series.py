@@ -5,7 +5,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, cos, sin)
+from sympy.functions.elementary.trigonometric import (atan, cos, sin, tan)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import Integral, integrate
 from sympy.series.order import O
@@ -380,35 +380,20 @@ def test_issue_23727():
     assert res.is_Add == True
 
 
-def test_lagrange_inversion_theorem():
-    from sympy.series.series import lagrange_inversion_theorem
-    from sympy.abc import x, y
-    from sympy import exp
-
-    eq = 2 * y
-    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
-
-    eq = 2
-    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
-
-    eq = x ** 2
-    raises(ValueError, lambda: lagrange_inversion_theorem(eq, y, 1, 1))
-    assert lagrange_inversion_theorem(eq, x, 1, 3) == x**2/2 - (x**2 - 1)**2/8 + 1/2
-    assert lagrange_inversion_theorem(eq, x, 1, 1) == 1
-    assert lagrange_inversion_theorem(eq, x, 1, 2) == x**2/2 + 1/2
-    assert lagrange_inversion_theorem(eq, x, 1, 4) == x**2/2 + (x**2 - 1)**3/16 - (x**2 - 1)**2/8 + 1/2
-
-    eq = (x ** 3) * exp(x)
-    assert lagrange_inversion_theorem(eq, x, 1, 2) == (x**3*exp(x) - E)*exp(-1)/4 + 1
-    assert lagrange_inversion_theorem(eq, x, 1, 3) == -13*(x**3*exp(x) - E)**2*exp(-2)/128 + (x**3*exp(x) - E)*exp(-1)/4\
-           + 1
-
-    eq = (x ** 3) * exp(x) * y
-    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
-
-    eq = sin(x)
-    assert lagrange_inversion_theorem(eq, x, 1, 2) == (sin(x) - sin(1))/cos(1) + 1
-
-    eq = cos(y)
-    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
-
+def test_series_inversion():
+    from sympy.series.series import inversion_series
+    # inverting exp
+    f = exp(x)
+    calculated = inversion_series(f,x,0,4)
+    expected = (x-1) - (x-1)**2/2 + (x-1)**3/3
+    assert expected == calculated
+    # inverting log
+    f = log(x)
+    calculated = inversion_series(f,x,a=1,n=4)
+    expected = 1 + x + x**2/2 + x**3/6
+    assert expected == calculated
+    # inverting tan
+    f = tan(x)
+    calculated = inversion_series(f,x,a=0,n=4)
+    expected = x - x**3/3
+    assert expected == calculated
