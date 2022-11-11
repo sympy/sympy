@@ -264,6 +264,7 @@ def test_issue_15539():
         + O(x**(-6), (x, oo)))
 
 
+<<<<<<< HEAD
 def test_issue_7259():
     assert series(LambertW(x), x) == x - x**2 + 3*x**3/2 - 8*x**4/3 + 125*x**5/24 + O(x**6)
     assert series(LambertW(x**2), x, n=8) == x**2 - x**4 + 3*x**6/2 + O(x**8)
@@ -377,3 +378,37 @@ def test_issue_23432():
 def test_issue_23727():
     res = series(sqrt(1 - x**2), x, 0.1)
     assert res.is_Add == True
+
+
+def test_lagrange_inversion_theorem():
+    from sympy.series.series import lagrange_inversion_theorem
+    from sympy.abc import x, y
+    from sympy import exp
+
+    eq = 2 * y
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
+
+    eq = 2
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
+
+    eq = x ** 2
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, y, 1, 1))
+    assert lagrange_inversion_theorem(eq, x, 1, 3) == x**2/2 - (x**2 - 1)**2/8 + 1/2
+    assert lagrange_inversion_theorem(eq, x, 1, 1) == 1
+    assert lagrange_inversion_theorem(eq, x, 1, 2) == x**2/2 + 1/2
+    assert lagrange_inversion_theorem(eq, x, 1, 4) == x**2/2 + (x**2 - 1)**3/16 - (x**2 - 1)**2/8 + 1/2
+
+    eq = (x ** 3) * exp(x)
+    assert lagrange_inversion_theorem(eq, x, 1, 2) == (x**3*exp(x) - E)*exp(-1)/4 + 1
+    assert lagrange_inversion_theorem(eq, x, 1, 3) == -13*(x**3*exp(x) - E)**2*exp(-2)/128 + (x**3*exp(x) - E)*exp(-1)/4\
+           + 1
+
+    eq = (x ** 3) * exp(x) * y
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
+
+    eq = sin(x)
+    assert lagrange_inversion_theorem(eq, x, 1, 2) == (sin(x) - sin(1))/cos(1) + 1
+
+    eq = cos(y)
+    raises(ValueError, lambda: lagrange_inversion_theorem(eq, x, 1, 1))
+
