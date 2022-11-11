@@ -16,6 +16,7 @@ from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset
 from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
+from sympy.solvers import solve
 
 
 def solve_poly_inequality(poly, rel):
@@ -996,11 +997,11 @@ def reduce_boolean_expr(boolean_expr,symbols=[]):
               new_expr=[]
               if i.has(Or):
                   for j in i.args:
-                      new_expr.append(sympy.solve((common,j)).args)
+                      new_expr.append(solve((common,j)).args)
                   for j in new_expr:
                       for k in j:
                           if ("oo" not in str(k)):
                               new_args.append(k)
-                  return(sympy.solve(new_args))
+                  return(solve(new_args))
               else:
                   common=i
