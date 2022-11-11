@@ -990,3 +990,17 @@ def reduce_inequalities(inequalities, symbols=[]):
 def reduce_boolean_expr(boolean_expr,symbols=[]):
     if boolean_expr.has(And) and not(boolean_expr.has(Or)):
           return(reduce_inequalities(boolean_expr.args,symbols))
+    elif boolean_expr.has(Or):
+          for i in boolean_expr.args:
+              new_args=[]
+              new_expr=[]
+              if i.has(Or):
+                  for j in i.args:
+                      new_expr.append(sympy.solve((common,j)).args)
+                  for j in new_expr:
+                      for k in j:
+                          if ("oo" not in str(k)):
+                              new_args.append(k)
+                  return(sympy.solve(new_args))
+              else:
+                  common=i
