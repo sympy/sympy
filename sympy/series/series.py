@@ -124,7 +124,7 @@ def inversion_series(f, x, a=0, n=3):
     x + (x-1)**3/3 - (x-1)**2/2 - 1
 
     Functions with vanishing derivative cannot be inverted with this method
-    >>>  f = x**2
+    >>> f = x**2
     >>> inversion_series(f,x,0,2)
     ValueError: The inversion formula requires non-zero derivative.
 
