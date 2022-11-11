@@ -44,6 +44,8 @@ unicode_whitelist = [
 
     # joint.py uses some unicode for variable names in the docstrings
     r'*/sympy/physics/mechanics/joint.py',
+    # series.py uses unicode characters in its docstrings
+    r'*/sympy/series/series.py',
 ]
 
 unicode_strict_whitelist = [
