@@ -995,6 +995,7 @@ def reduce_boolean_expr(boolean_expr,symbols=[]):
           for i in boolean_expr.args:
               new_args=[]
               new_expr=[]
+              common=None
               if i.has(Or):
                   for j in i.args:
                       new_expr.append(solve((common,j)).args)
