@@ -1,5 +1,6 @@
 from sympy.core.sympify import sympify
 from sympy import symbols
+from sympy import Dummy
 from sympy.polys.ring_series import rs_subs
 
 
@@ -66,33 +67,6 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
 
 
 def inversion_series(f,x,a,n):
-    # reduce to the canonical case a=0,y=0,f'(a)=1
-    f = f.subs({x:x+a})
-    fa =f.subs({x:0})
-    f = f.series(x,0,n).removeO()
-    dfa = f.coeff(x)
-    y = symbols('y')
-    # embed into poly ring
-    R = f.as_poly(x).domain.inject(1/dfa)
-    Rxy = R[x,y]
-    f = Rxy.from_sympy(f)
-    xr = Rxy.from_sympy(x)
-    yr = Rxy.from_sympy(y)
-    dfar_inv = Rxy.from_sympy(1/dfa)
-    # compute Lagrange Inversion
-    x_series = yr*dfar_inv
-    for i in range(2,n):
-        step = rs_subs(f,{xr:x_series},yr,i+1).coeff(yr**i)
-        x_series = x_series-step*yr**i
-    x_series = x_series
-    # back from the canonical case
-    x_series = x_series.as_expr()
-    x_series = a+x_series
-    x_series = x_series.subs({y:x-fa})
-    return x_series
-
-
-def inversion_series_old(f, x, a=0, n=3):
     r"""
     Computes the Taylor series of the inverse function.
 
@@ -130,6 +104,8 @@ def inversion_series_old(f, x, a=0, n=3):
     a : point on x-axis in the neighbourhood of which, the inverse expansion is to be found.
 
     n : no of terms required in the expansion; default value is 3 terms.
+
+    y : variable, 
 
     Examples
     ========
@@ -170,22 +146,27 @@ def inversion_series_old(f, x, a=0, n=3):
     .. [3] http://www.cfm.brown.edu/people/dobrush/am33/Mathematica/lit.html
        [4] Abramowitz, M. and Stegun, I.A., 1964. "Handbook of Mathematical Functions", Eq. 3.6.6
     """
-
-    if f.diff(x,1).subs({x:a}) == 0:
-        raise ValueError("The inversion formula requires non-zero derivative.")
-
-    # solve using quasi-newton method
-    fa = f.subs({x:a})
-    f = f.series(x,a,n).removeO()
-    dfa = f.diff(x,1).subs({x:a})
-
-    y = symbols('y')
-    x_series = a + (y-fa)/dfa
-
+    # reduce to the canonical case a=0,y=0,f'(a)=1
+    f = f.subs({x:x+a})
+    fa =f.subs({x:0})
+    f = f.series(x,0,n).removeO()
+    dfa = f.coeff(x)
+    # embed into poly ring
+    y = Dummy('y')
+    R = f.as_poly(x).domain.inject(1/dfa)
+    Rxy = R[x,y]
+    f = Rxy.from_sympy(f)
+    xr = Rxy.from_sympy(x)
+    yr = Rxy.from_sympy(y)
+    dfar_inv = Rxy.from_sympy(1/dfa)
+    # compute Lagrange Inversion
+    x_series = yr*dfar_inv
     for i in range(2,n):
-        step = f.subs({x:x_series}).series(y,fa,i+1).coeff(y-fa,i)
-        x_series = x_series-step*(y-fa)**i/dfa
-
-    x_series = x_series.subs({y:x})
-
+        step = rs_subs(f,{xr:x_series},yr,i+1).coeff(yr**i)
+        x_series = x_series-step*yr**i
+    x_series = x_series
+    # back from the canonical case
+    x_series = x_series.as_expr()
+    x_series = a+x_series
+    x_series = x_series.subs({y:x-fa})
     return x_series

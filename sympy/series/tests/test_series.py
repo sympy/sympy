@@ -398,8 +398,8 @@ def test_inversion_series():
     expected = x - x**3/3
     assert expected == calculated
     # inverting linear function with param
-    f = x*k
+    f = x*y
     calculated = inversion_series(f,x,a=0,n=2)
-    expected = x/k
+    expected = x/y
     assert expected == calculated
 
