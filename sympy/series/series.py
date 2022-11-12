@@ -140,7 +140,7 @@ def inversion_series(f, x, a=0, n=3):
     function theory enters only in a formal way in this proof, in that what is really needed is
     some property of the formal residue, and a more direct formal proof is available.
 
-    The implementation uses a quasi-newton method, iterating x:=(f(x)-y)/f'(a)
+    The implementation uses a quasi-newton method to solve an implicit equation.
 
     References
     ==========
