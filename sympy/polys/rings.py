@@ -805,7 +805,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             else:
                 if negative:
                     coeff = -coeff
-                if coeff != self.ring.one:
+                if coeff != self.ring.domain.one:
                     scoeff = printer.parenthesize(coeff, prec_mul, strict=True)
                 else:
                     scoeff = ''
