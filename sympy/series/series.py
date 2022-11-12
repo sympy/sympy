@@ -146,8 +146,12 @@ def inversion_series(f,x,a,n):
     # reduce to the canonical case a=0,y=0,f'(a)=1
     f = f.subs({x:x+a})
     fa =f.subs({x:0})
+    dfa = f.diff(x).subs({x:0})
+    try:
+        dfa.is_extended_nonzero
+    except:
+        raise ValueError('The inversion formula requires non-zero derivative.')
     f = f.series(x,0,n).removeO()
-    dfa = f.coeff(x)
     # embed into poly ring
     y = Dummy('y')
     R = f.as_poly(x).domain.inject(1/dfa)
