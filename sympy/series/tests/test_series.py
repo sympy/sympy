@@ -402,4 +402,3 @@ def test_inversion_series():
     calculated = inversion_series(f,x,a=0,n=2)
     expected = x/y
     assert expected == calculated
-
