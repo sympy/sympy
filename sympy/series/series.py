@@ -126,9 +126,9 @@ def inversion_series(f, x, a=0, n=3):
     Functions with vanishing derivative cannot be inverted with this method
     >>> f = x**2
     >>> try:
-    >>>     inversion_series(f,x,0,2)
-    >>> except ValueError as ex:
-    >>>     print(repr(ex))
+    ...    inversion_series(f,x,0,2)
+    ... except ValueError as ex:
+    ...     print(repr(ex))
     ValueError('The inversion formula requires non-zero derivative.')
 
     Note
