@@ -66,12 +66,9 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
 
 def inversion_series(f, x, a=0, n=3):
     r"""
-    The Lagrange inversion theorem (or Lagrange inversion formula, which we abbreviate
-    as LIT), also known as the Lagrange--Bürmann formula, gives the Taylor series
-    expansion of the inverse function of an analytic function.
-    It finds important applications in combinatorics and calculus.
+    Computes the Taylor series of the inverse function.
 
-    The theorem was proved by Lagrange (1736--1813) and generalized by the German
+    The formula was proved by Lagrange (1736--1813) and generalized by the German
     mathematician and teacher Hans Heinrich Bürmann ( --1817), both in the late 18th
     century.
 
@@ -133,12 +130,6 @@ def inversion_series(f, x, a=0, n=3):
 
     Note
     ====
-
-    There is a straightforward derivation using complex analysis and contour integration;
-    the complex formal power series version is a consequence of knowing the formula for polynomials,
-    so the theory of analytic functions may be applied. Actually, the machinery from analytic
-    function theory enters only in a formal way in this proof, in that what is really needed is
-    some property of the formal residue, and a more direct formal proof is available.
 
     The implementation uses a quasi-newton method to solve an implicit equation.
 
