@@ -118,10 +118,10 @@ def inversion_series(f, x, a=0, n=3):
 
     >>> f = exp(x)
 
-    In this case, the inverse series is that of the logarithmic function:
+    In this case, the inverse series is that of the logarithmic function around 1 = f(0):
 
     >>> inversion_series(f,x,0,4)
-    x + (x-1)**3/3 - (x-1)**2/2 - 1
+    x + (x - 1)**3/3 - (x - 1)**2/2 - 1
 
     Functions with vanishing derivative cannot be inverted with this method
     >>> f = x**2
