@@ -1,5 +1,6 @@
 from sympy.core.sympify import sympify
 from sympy import symbols
+from sympy.polys.ring_series import rs_subs
 
 
 def series(expr, x=None, x0=0, n=6, dir="+"):
@@ -64,7 +65,34 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
     return expr.series(x, x0, n, dir)
 
 
-def inversion_series(f, x, a=0, n=3):
+def inversion_series(f,x,a,n):
+    # reduce to the canonical case a=0,y=0,f'(a)=1
+    f = f.subs({x:x+a})
+    fa =f.subs({x:0})
+    f = f.series(x,0,n).removeO()
+    dfa = f.coeff(x)
+    y = symbols('y')
+    # embed into poly ring
+    R = f.as_poly(x).domain.inject(1/dfa)
+    Rxy = R[x,y]
+    f = Rxy.from_sympy(f)
+    xr = Rxy.from_sympy(x)
+    yr = Rxy.from_sympy(y)
+    dfar_inv = Rxy.from_sympy(1/dfa)
+    # compute Lagrange Inversion
+    x_series = yr*dfar_inv
+    for i in range(2,n):
+        step = rs_subs(f,{xr:x_series},yr,i+1).coeff(yr**i)
+        x_series = x_series-step*yr**i
+    x_series = x_series
+    # back from the canonical case
+    x_series = x_series.as_expr()
+    x_series = a+x_series
+    x_series = x_series.subs({y:x-fa})
+    return x_series
+
+
+def inversion_series_old(f, x, a=0, n=3):
     r"""
     Computes the Taylor series of the inverse function.
 
