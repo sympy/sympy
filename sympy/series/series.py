@@ -1,5 +1,4 @@
 from sympy.core.sympify import sympify
-from sympy import symbols
 from sympy import Dummy
 from sympy.polys.ring_series import rs_subs
 
