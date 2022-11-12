@@ -160,6 +160,18 @@ Reference
 .. autoclass:: sympy.series.order::Order
    :members:
 
+
+Series Inversion
+----------------
+
+The module implements Lagrange Inversion.
+
+Reference
+~~~~~~~~~
+
+.. autofunction:: sympy.series.series::inversion_series
+
+
 Series Acceleration
 -------------------
 
