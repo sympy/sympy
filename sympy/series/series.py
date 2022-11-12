@@ -105,8 +105,6 @@ def inversion_series(f,x,a,n):
 
     n : no of terms required in the expansion; default value is 3 terms.
 
-    y : variable, 
-
     Examples
     ========
 
