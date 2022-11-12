@@ -147,9 +147,7 @@ def inversion_series(f,x,a,n):
     f = f.subs({x:x+a})
     fa =f.subs({x:0})
     dfa = f.diff(x).subs({x:0})
-    try:
-        dfa.is_extended_nonzero
-    except:
+    if not (dfa.equals(0) or dfa.is_finite):
         raise ValueError('The inversion formula requires non-zero derivative.')
     f = f.series(x,0,n).removeO()
     # embed into poly ring
