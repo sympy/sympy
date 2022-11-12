@@ -10,7 +10,7 @@ from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.complexes import im, Abs
-from sympy.logic import And, Or, Not
+from sympy.logic import And, Or, Not, to_cnf
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset
@@ -989,20 +989,21 @@ def reduce_inequalities(inequalities, symbols=[]):
 
 
 def reduce_boolean_expr(boolean_expr,symbols=[]):
+    boolean_expr=to_cnf(boolean_expr)
     if boolean_expr.has(And) and not(boolean_expr.has(Or)):
           return(reduce_inequalities(boolean_expr.args,symbols))
     elif boolean_expr.has(Or):
-          for i in boolean_expr.args:
-              new_args=[]
-              new_expr=[]
-              common=None
-              if i.has(Or):
-                  for j in i.args:
-                      new_expr.append(solve((common,j)).args)
-                  for j in new_expr:
-                      for k in j:
-                          if ("oo" not in str(k)):
-                              new_args.append(k)
-                  return(solve(new_args))
-              else:
-                  common=i
+        common=None
+        for i in boolean_expr.args:
+            new_args=[]
+            new_expr=[]
+            if i.has(Or):
+                for j in i.args:
+                    new_expr.append(solve((common,j)).args)
+                for j in new_expr:
+                    for k in j:
+                        if ("oo" not in str(k)):
+                            new_args.append(k)
+                return(solve(new_args))
+            else:
+                common=i
