@@ -584,9 +584,6 @@ def rs_fast_series_reversion(f,x,n):
 
     The series should be of form $f(x) = a_1 x + a_2 x^2 + $ where $a_1$ is invertible.
 
-    Parameters
-    ==========
-
     Examples
     ========
 
