@@ -5,9 +5,9 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.core.backend import Matrix, _simplify_matrix, eye, zeros
 from sympy.core.symbol import symbols
-from sympy.physics.mechanics import (dynamicsymbols, Body, PinJoint,
-                                     PrismaticJoint, CylindricalJoint,
-                                     PlanarJoint, SphericalJoint)
+from sympy.physics.mechanics import (dynamicsymbols, Body, JointsMethod,
+                                     PinJoint, PrismaticJoint, CylindricalJoint,
+                                     PlanarJoint, SphericalJoint, WeldJoint)
 from sympy.physics.mechanics.joint import Joint
 from sympy.physics.vector import Vector, ReferenceFrame, Point
 from sympy.testing.pytest import raises, warns_deprecated_sympy
@@ -50,30 +50,37 @@ def test_coordinate_generation():
     # Test None
     assert J._fill_coordinate_list(None, 1) == Matrix([qj])
     assert J._fill_coordinate_list([None], 1) == Matrix([qj])
-    assert J._fill_coordinate_list([q0, None], 3) == Matrix([q0, q1j, q2j])
+    assert J._fill_coordinate_list([q0, None, None], 3) == Matrix(
+        [q0, q1j, q2j])
     # Test autofill
     assert J._fill_coordinate_list(None, 3) == Matrix([q0j, q1j, q2j])
     assert J._fill_coordinate_list([], 3) == Matrix([q0j, q1j, q2j])
     # Test offset
     assert J._fill_coordinate_list([], 3, offset=1) == Matrix([q1j, q2j, q3j])
-    assert J._fill_coordinate_list(q1, 3, offset=1) == Matrix([q1, q2j, q3j])
     assert J._fill_coordinate_list([q1, None, q3], 3, offset=1) == Matrix(
         [q1, q2j, q3])
     assert J._fill_coordinate_list(None, 2, offset=2) == Matrix([q2j, q3j])
     # Test label
     assert J._fill_coordinate_list(None, 1, 'u') == Matrix([uj])
     assert J._fill_coordinate_list([], 3, 'u') == Matrix([u0j, u1j, u2j])
-    assert J._fill_coordinate_list([u0], 3, 'u', 1) == Matrix([u0, u2j, u3j])
     # Test single numbering
     assert J._fill_coordinate_list(None, 1, number_single=True) == Matrix([q0j])
     assert J._fill_coordinate_list([], 1, 'u', 2, True) == Matrix([u2j])
     assert J._fill_coordinate_list([], 3, 'q') == Matrix([q0j, q1j, q2j])
-    # Test too many coordinates supplied
+    # Test invalid number of coordinates supplied
     raises(ValueError, lambda: J._fill_coordinate_list([q0, q1], 1))
     raises(ValueError, lambda: J._fill_coordinate_list([u0, u1, None], 2, 'u'))
+    raises(ValueError, lambda: J._fill_coordinate_list([q0, q1], 3))
     # Test incorrect coordinate type
     raises(TypeError, lambda: J._fill_coordinate_list([q0, symbols('q1')], 2))
     raises(TypeError, lambda: J._fill_coordinate_list([q0 + q1, q1], 2))
+    # Test if derivative as generalized speed is allowed
+    _, _, P, C = _generate_body()
+    PinJoint('J', P, C, q1, q1.diff(t))
+    # Test duplicate coordinates
+    _, _, P, C = _generate_body()
+    raises(ValueError, lambda: SphericalJoint('J', P, C, [q1j, None, None]))
+    raises(ValueError, lambda: SphericalJoint('J', P, C, speeds=[u0, u0, u1]))
 
 
 def test_pin_joint():
@@ -820,25 +827,25 @@ def test_planar_joint():
     q0, q1, q2, u0, u1, u2 = dynamicsymbols('q0:3, u0:3')
     l, m = symbols('l, m')
     N, A, P, C, Pint, Cint = _generate_body(True)
-    Cj = PlanarJoint('J', P, C, rotation_coordinate=q0, planar_coordinates=q1,
-                     planar_speeds=[u1, u2], parent_point=m * N.x,
-                     child_point=l * A.y, parent_interframe=Pint,
-                     child_interframe=Cint)
-    assert Cj.coordinates == Matrix([q0, q1, q2_def])
+    Cj = PlanarJoint('J', P, C, rotation_coordinate=q0,
+                     planar_coordinates=[q1, q2], planar_speeds=[u1, u2],
+                     parent_point=m * N.x, child_point=l * A.y,
+                     parent_interframe=Pint, child_interframe=Cint)
+    assert Cj.coordinates == Matrix([q0, q1, q2])
     assert Cj.speeds == Matrix([u0_def, u1, u2])
     assert Cj.rotation_coordinate == q0
-    assert Cj.planar_coordinates == Matrix([q1, q2_def])
+    assert Cj.planar_coordinates == Matrix([q1, q2])
     assert Cj.rotation_speed == u0_def
     assert Cj.planar_speeds == Matrix([u1, u2])
     assert Cj.kdes == Matrix([u0_def - q0.diff(t), u1 - q1.diff(t),
-                              u2 - q2_def.diff(t)])
+                              u2 - q2.diff(t)])
     assert Cj.rotation_axis == Pint.x
     assert Cj.planar_vectors == [Pint.y, Pint.z]
     assert Cj.child_point.pos_from(C.masscenter) == l * A.y
     assert Cj.parent_point.pos_from(P.masscenter) == m * N.x
-    assert Cj.parent_point.pos_from(Cj.child_point) == q1 * N.y + q2_def * N.z
+    assert Cj.parent_point.pos_from(Cj.child_point) == q1 * N.y + q2 * N.z
     assert C.masscenter.pos_from(
-        P.masscenter) == m * N.x - q1 * N.y - q2_def * N.z - l * A.y
+        P.masscenter) == m * N.x - q1 * N.y - q2 * N.z - l * A.y
     assert C.masscenter.vel(N) == -u1 * N.y - u2 * N.z + u0_def * l * A.x
     assert A.ang_vel_in(N) == u0_def * N.x
 
@@ -928,11 +935,9 @@ def test_spherical_joint_coords():
     assert S.speeds == Matrix([u0, u1, u2])
     # Test too few generalized coordinates
     N, A, P, C = _generate_body()
-    S = SphericalJoint('S', P, C, Matrix([q0, q1]), Matrix([u0]))
-    assert S.coordinates == Matrix([q0, q1, q2s])
-    assert S.speeds == Matrix([u0, u1s, u2s])
+    raises(ValueError,
+           lambda: SphericalJoint('S', P, C, Matrix([q0, q1]), Matrix([u0])))
     # Test too many generalized coordinates
-    N, A, P, C = _generate_body()
     raises(ValueError, lambda: SphericalJoint(
         'S', P, C, Matrix([q0, q1, q2, q3]), Matrix([u0, u1, u2])))
     raises(ValueError, lambda: SphericalJoint(
@@ -1059,6 +1064,45 @@ def test_spherical_joint_orient_space():
         [u1 * cos(q0) + u2 * sin(q0) * cos(q1)],
         [u0 + u1 * sin(q0) - u2 * sin(q1) -
          u2 * cos(q0) * cos(q1)]])) == zeros(3, 1)
+
+
+def test_weld_joint():
+    _, _, P, C = _generate_body()
+    W = WeldJoint('W', P, C)
+    assert W.name == 'W'
+    assert W.parent == P
+    assert W.child == C
+    assert W.coordinates == Matrix()
+    assert W.speeds == Matrix()
+    assert W.kdes == Matrix(1, 0, []).T
+    assert P.dcm(C) == eye(3)
+    assert W.child_point.pos_from(C.masscenter) == Vector(0)
+    assert W.parent_point.pos_from(P.masscenter) == Vector(0)
+    assert W.parent_point.pos_from(W.child_point) == Vector(0)
+    assert P.masscenter.pos_from(C.masscenter) == Vector(0)
+    assert C.masscenter.vel(P.frame) == Vector(0)
+    assert P.ang_vel_in(C) == 0
+    assert C.ang_vel_in(P) == 0
+    assert W.__str__() == 'WeldJoint: W  parent: P  child: C'
+
+    N, A, P, C = _generate_body()
+    l, m = symbols('l m')
+    Pint = ReferenceFrame('P_int')
+    Pint.orient_axis(P.frame, P.y, pi / 2)
+    W = WeldJoint('W', P, C, parent_point=l * P.frame.x,
+                  child_point=m * C.frame.y, parent_interframe=Pint)
+
+    assert W.child_point.pos_from(C.masscenter) == m * C.frame.y
+    assert W.parent_point.pos_from(P.masscenter) == l * P.frame.x
+    assert W.parent_point.pos_from(W.child_point) == Vector(0)
+    assert P.masscenter.pos_from(C.masscenter) == - l * N.x + m * A.y
+    assert C.masscenter.vel(P.frame) == Vector(0)
+    assert P.masscenter.vel(Pint) == Vector(0)
+    assert C.ang_vel_in(P) == 0
+    assert P.ang_vel_in(C) == 0
+    assert P.x == A.z
+
+    JointsMethod(P, W)  # Tests #10770
 
 
 def test_deprecated_parent_child_axis():

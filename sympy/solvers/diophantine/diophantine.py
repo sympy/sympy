@@ -3218,7 +3218,7 @@ def ldescent(A, B):
            Press, Cambridge, 1998.
     .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
            [online], Available:
-           http://eprints.nottingham.ac.uk/60/1/kvxefz87.pdf
+           https://nottingham-repository.worktribe.com/output/1023265/efficient-solution-of-rational-conics
     """
     if abs(A) > abs(B):
         w, y, x = ldescent(B, A)

@@ -1233,7 +1233,7 @@ class _T():
             if type(ti) is int:
                 i.append(range(self.N)[ti])
             elif type(ti) is slice:
-                i.extend(list(range(*ti.indices(self.N))))
+                i.extend(range(*ti.indices(self.N)))
             else:
                 raise TypeError('unexpected slice arg')
         return tuple([_transformation[_] for _ in i])

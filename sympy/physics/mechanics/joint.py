@@ -4,13 +4,14 @@ from abc import ABC, abstractmethod
 
 from sympy.core.backend import pi, AppliedUndef, Derivative, Matrix
 from sympy.physics.mechanics.body import Body
+from sympy.physics.mechanics.functions import _validate_coordinates
 from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
                                   ReferenceFrame)
-
+from sympy.utilities.iterables import iterable
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['Joint', 'PinJoint', 'PrismaticJoint', 'CylindricalJoint',
-           'PlanarJoint', 'SphericalJoint']
+           'PlanarJoint', 'SphericalJoint', 'WeldJoint']
 
 
 class Joint(ABC):
@@ -149,6 +150,7 @@ class Joint(ABC):
 
         self._coordinates = self._generate_coordinates(coordinates)
         self._speeds = self._generate_speeds(speeds)
+        _validate_coordinates(self.coordinates, self.speeds)
         self._kdes = self._generate_kdes()
 
         self._parent_axis = self._axis(parent_axis, parent.frame)
@@ -506,8 +508,11 @@ class Joint(ABC):
         generated_coordinates = []
         if coordinates is None:
             coordinates = []
-        elif isinstance(coordinates, (AppliedUndef, Derivative)):
+        elif not iterable(coordinates):
             coordinates = [coordinates]
+        if not (len(coordinates) == 0 or len(coordinates) == n_coords):
+            raise ValueError(f'Expected {n_coords} {name}s, instead got '
+                             f'{len(coordinates)} {name}s.')
         # Supports more iterables, also Matrix
         for i, coord in enumerate(coordinates):
             if coord is None:
@@ -519,9 +524,6 @@ class Joint(ABC):
                                 f'dynamicsymbol.')
         for i in range(len(coordinates) + offset, n_coords + offset):
             generated_coordinates.append(create_symbol(i))
-        if len(generated_coordinates) != n_coords:
-            raise ValueError(f'{len(coordinates)} {name}s have been provided. '
-                             f'The maximum number of {name}s is {n_coords}.')
         return Matrix(generated_coordinates)
 
 
@@ -1958,3 +1960,204 @@ class SphericalJoint(Joint):
         self.child_point.set_vel(self.child.frame, 0)
         self.child.masscenter.v2pt_theory(self.parent_point, self.parent.frame,
                                           self.child.frame)
+
+
+class WeldJoint(Joint):
+    """Weld Joint.
+
+    .. image:: WeldJoint.svg
+        :align: center
+        :width: 500
+
+    Explanation
+    ===========
+
+    A weld joint is defined such that there is no relative motion between the
+    child and parent bodies. The direction cosine matrix between the attachment
+    frame (``parent_interframe`` and ``child_interframe``) is the identity
+    matrix and the attachment points (``parent_point`` and ``child_point``) are
+    coincident. The page on the joints framework gives a more detailed
+    explanation of the intermediate frames.
+
+    Parameters
+    ==========
+
+    name : string
+        A unique name for the joint.
+    parent : Body
+        The parent body of joint.
+    child : Body
+        The child body of joint.
+    parent_point : Point or Vector, optional
+        Attachment point where the joint is fixed to the parent body. If a
+        vector is provided, then the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the parent's mass
+        center.
+    child_point : Point or Vector, optional
+        Attachment point where the joint is fixed to the child body. If a
+        vector is provided, then the attachment point is computed by adding the
+        vector to the body's mass center. The default value is the child's mass
+        center.
+    parent_interframe : ReferenceFrame, optional
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the parent's own frame.
+    child_interframe : ReferenceFrame, optional
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated. If a Vector is provided then an interframe
+        is created which aligns its X axis with the given vector. The default
+        value is the child's own frame.
+
+    Attributes
+    ==========
+
+    name : string
+        The joint's name.
+    parent : Body
+        The joint's parent body.
+    child : Body
+        The joint's child body.
+    coordinates : Matrix
+        Matrix of the joint's generalized coordinates. The default value is
+        ``dynamicsymbols(f'q_{joint.name}')``.
+    speeds : Matrix
+        Matrix of the joint's generalized speeds. The default value is
+        ``dynamicsymbols(f'u_{joint.name}')``.
+    parent_point : Point
+        Attachment point where the joint is fixed to the parent body.
+    child_point : Point
+        Attachment point where the joint is fixed to the child body.
+    parent_interframe : ReferenceFrame
+        Intermediate frame of the parent body with respect to which the joint
+        transformation is formulated.
+    child_interframe : ReferenceFrame
+        Intermediate frame of the child body with respect to which the joint
+        transformation is formulated.
+    kdes : Matrix
+        Kinematical differential equations of the joint.
+
+    Examples
+    =========
+
+    A single weld joint is created from two bodies and has the following basic
+    attributes:
+
+    >>> from sympy.physics.mechanics import Body, WeldJoint
+    >>> parent = Body('P')
+    >>> parent
+    P
+    >>> child = Body('C')
+    >>> child
+    C
+    >>> joint = WeldJoint('PC', parent, child)
+    >>> joint
+    WeldJoint: PC  parent: P  child: C
+    >>> joint.name
+    'PC'
+    >>> joint.parent
+    P
+    >>> joint.child
+    C
+    >>> joint.parent_point
+    P_masscenter
+    >>> joint.child_point
+    C_masscenter
+    >>> joint.coordinates
+    Matrix(0, 0, [])
+    >>> joint.speeds
+    Matrix(0, 0, [])
+    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    0
+    >>> joint.child.frame.dcm(joint.parent.frame)
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+    >>> joint.child_point.pos_from(joint.parent_point)
+    0
+
+    To further demonstrate the use of the weld joint, two relatively-fixed
+    bodies rotated by a quarter turn about the Y axis can be created as follows:
+
+    >>> from sympy import symbols, pi
+    >>> from sympy.physics.mechanics import ReferenceFrame, Body, WeldJoint
+    >>> l1, l2 = symbols('l1 l2')
+
+    First create the bodies to represent the parent and rotated child body.
+
+    >>> parent = Body('P')
+    >>> child = Body('C')
+
+    Next the intermediate frame specifying the fixed rotation with respect to
+    the parent can be created.
+
+    >>> rotated_frame = ReferenceFrame('Pr')
+    >>> rotated_frame.orient_axis(parent.frame, parent.y, pi / 2)
+
+    The weld between the parent body and child body is located at a distance
+    ``l1`` from the parent's center of mass in the X direction and ``l2`` from
+    the child's center of mass in the child's negative X direction.
+
+    >>> weld = WeldJoint('weld', parent, child, parent_point=l1 * parent.x,
+    ...                  child_point=-l2 * child.x,
+    ...                  parent_interframe=rotated_frame)
+
+    Now that the joint has been established, the kinematics of the bodies can be
+    accessed. The direction cosine matrix of the child body with respect to the
+    parent can be found:
+
+    >>> child.dcm(parent)
+    Matrix([
+    [0, 0, -1],
+    [0, 1,  0],
+    [1, 0,  0]])
+
+    As can also been seen from the direction cosine matrix, the parent X axis is
+    aligned with the child's Z axis:
+    >>> parent.x == child.z
+    True
+
+    The position of the child's center of mass with respect to the parent's
+    center of mass can be found with:
+
+    >>> child.masscenter.pos_from(parent.masscenter)
+    l1*P_frame.x + l2*C_frame.x
+
+    The angular velocity of the child with respect to the parent is 0 as one
+    would expect.
+
+    >>> child.ang_vel_in(parent)
+    0
+
+    """
+
+    def __init__(self, name, parent, child, parent_point=None, child_point=None,
+                 parent_interframe=None, child_interframe=None):
+        super().__init__(name, parent, child, [], [], parent_point,
+                         child_point, parent_interframe=parent_interframe,
+                         child_interframe=child_interframe)
+        self._kdes = Matrix(1, 0, []).T  # Removes stackability problems #10770
+
+    def __str__(self):
+        return (f'WeldJoint: {self.name}  parent: {self.parent}  '
+                f'child: {self.child}')
+
+    def _generate_coordinates(self, coordinate):
+        return Matrix()
+
+    def _generate_speeds(self, speed):
+        return Matrix()
+
+    def _orient_frames(self):
+        self.child_interframe.orient_axis(self.parent_interframe,
+                                          self.parent_interframe.x, 0)
+
+    def _set_angular_velocity(self):
+        self.child_interframe.set_ang_vel(self.parent_interframe, 0)
+
+    def _set_linear_velocity(self):
+        self.child_point.set_pos(self.parent_point, 0)
+        self.parent_point.set_vel(self.parent.frame, 0)
+        self.child_point.set_vel(self.child.frame, 0)
+        self.child.masscenter.set_vel(self.parent.frame, 0)

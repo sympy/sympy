@@ -27,7 +27,7 @@ __all__ = [
     'SymbolicSystem',
 
     'PinJoint', 'PrismaticJoint', 'CylindricalJoint', 'PlanarJoint',
-    'SphericalJoint',
+    'SphericalJoint', 'WeldJoint',
 
     'JointsMethod'
 ]
@@ -63,4 +63,4 @@ from .system import SymbolicSystem
 from .jointsmethod import JointsMethod
 
 from .joint import (PinJoint, PrismaticJoint, CylindricalJoint, PlanarJoint,
-                    SphericalJoint)
+                    SphericalJoint, WeldJoint)

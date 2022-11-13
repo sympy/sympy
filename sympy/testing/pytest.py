@@ -16,7 +16,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 # pytest integration).
 from sympy.utilities.exceptions import ignore_warnings # noqa:F401
 
-ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
+ON_CI = os.getenv('CI', None) == "true"
 
 try:
     import pytest

@@ -6,7 +6,7 @@ equation](https://en.wikipedia.org/wiki/Diophantine_equation) (find integer
 solutions to a polynomial equation) algebraically, returning a parameterized
 general solution if possible. For example, solving the [Pythagorean
 equation](https://en.wikipedia.org/wiki/Pythagorean_theorem) $a^2 + b^2 = c^2$
-yields $(a=2pq, b=p^2-q^2, c=p^2-q^2)$. Here, $p$ and $q$ are new parameters
+yields $(a=2pq, b=p^2-q^2, c=p^2+q^2)$. Here, $p$ and $q$ are new parameters
 introduced in the solution. $p$ and $q$ can take on any integer value to
 parameterize the full set of solutions. More formally, $p,q \in \mathbb{Z}$
 parameterize the infinite set of [Pythagorean

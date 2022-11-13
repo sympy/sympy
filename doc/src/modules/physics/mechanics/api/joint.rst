@@ -25,5 +25,8 @@ Joint (Docstrings)
 .. autoclass:: SphericalJoint
    :members:
 
+.. autoclass:: WeldJoint
+   :members:
+
 .. automodule:: sympy.physics.mechanics.jointsmethod
    :members:

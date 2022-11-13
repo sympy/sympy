@@ -5,8 +5,8 @@ from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
 from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
-                                               _f_list_parser)
+from sympy.physics.mechanics.functions import (
+    msubs, find_dynamicsymbols, _f_list_parser, _validate_coordinates)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
 
@@ -157,6 +157,7 @@ class KanesMethod(_Methods):
 
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
+        _validate_coordinates(self.q, self.u)
         self._initialize_kindiffeq_matrices(kd_eqs)
         self._initialize_constraint_matrices(configuration_constraints,
                 velocity_constraints, acceleration_constraints)

@@ -1963,8 +1963,9 @@ def test_Mod():
     #issue 13543
     assert Mod(Mod(x + 1, 2) + 1, 2) == Mod(x, 2)
 
-    assert Mod(Mod(x + 2, 4)*(x + 4), 4) == Mod(x*(x + 2), 4)
-    assert Mod(Mod(x + 2, 4)*4, 4) == 0
+    x1 = Symbol('x1', integer=True)
+    assert Mod(Mod(x1 + 2, 4)*(x1 + 4), 4) == Mod(x1*(x1 + 2), 4)
+    assert Mod(Mod(x1 + 2, 4)*4, 4) == 0
 
     # issue 15493
     i, j = symbols('i j', integer=True, positive=True)
@@ -1985,6 +1986,10 @@ def test_Mod():
     expr = exp(sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) / z))
     expr.subs({1: 1.0})
     sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) * z ** -1.0).is_zero
+
+    # issue 24215
+    from sympy.abc import phi
+    assert Mod(4.0*Mod(phi, 1) , 2) == 2.0*(Mod(2*(Mod(phi, 1)), 1))
 
 
 def test_Mod_Pow():

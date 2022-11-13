@@ -390,7 +390,7 @@ def ibin(n, bits=None, str=False):
         if bits >= 0:
             return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
         else:
-            return variations(list(range(2)), n, repetition=True)
+            return variations(range(2), n, repetition=True)
     else:
         if bits >= 0:
             return bin(n)[2:].rjust(bits, "0")

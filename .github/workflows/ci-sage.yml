@@ -124,7 +124,7 @@ jobs:
           git config --global user.name "ci-sage workflow"
           if [ ! -d .git ]; then git init; fi; git remote add trac ${{ env.SAGE_TRAC_GIT }} && x=1 && while [ $x -le 5 ]; do x=$(( $x + 1 )); sleep $(( $RANDOM % 60 + 1 )); if git-trac-command/git-trac fetch $SAGE_TICKET; then git merge FETCH_HEAD || echo "(ignored)"; exit 0; fi; sleep 40; done; exit 1
         if: env.SAGE_TRAC_GIT != ''
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v2
         with:
           path: upstream
           name: upstream
