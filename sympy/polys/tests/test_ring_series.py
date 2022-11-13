@@ -110,16 +110,18 @@ def test_inversion():
 
 def test_rs_fast_series_reversion():
     x,a = symbols('x,a')
-    f = exp(x/a)-1
+    # exponential function with parameter
+    f = exp(x*a)-1
     n = 4
     f = f.series(x,0,n).removeO()
-    Rx = f.as_poly(x).domain[x]
+    Rx = f.as_poly(x,field=True).domain[x]
     fr = Rx.from_sympy(f)
     xr = Rx.from_sympy(x)
-    ar = Rx.from_sympy(a)
+    ar = Rx.domain.from_sympy(a)
     calculated = rs_fast_series_reversion(fr,xr,n)
-    expected = ar/3*xr**3 - ar/2*xr**2 + ar*xr
+    expected = 1/ar/3*xr**3 - 1/ar/2*xr**2 + 1/ar*xr
     assert calculated == expected
+    # linear function with parameter
     f = x*a
     n = 2
     f = f.series(x,0,n).removeO()
