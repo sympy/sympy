@@ -594,10 +594,8 @@ def rs_fast_series_reversion(fr,xr,n):
     yr = Rxy.from_sympy(y)
 
     # check if inversion exists
-    if not Rx.is_zero(fr.coeff(xr**0)):
-        raise ValueError('The zeroth coefficent should be zero.')
-    if not Rx.is_unit( fr.coeff(xr) ):
-        raise ValueError('The first coefficient should be invertible.')
+    assert Rx.domain.is_zero(fr.coeff(xr**0))
+    assert Rx.domain.is_unit(fr.coeff(xr))
 
     # do Newton updates
     fn_update = xr-(fr-yr)* dfr_inv
