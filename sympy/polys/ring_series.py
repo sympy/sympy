@@ -587,7 +587,7 @@ def rs_fast_series_reversion(f,x,n):
     Examples
     ========
 
-    The following example shows how to invert the expresion $f=\mathrm{e}^{x}-1$ around $x=0$.
+    The example below shows how to invert the expresion $f=\mathrm{e}^{x}-1$ around $x=0$.
     First we truncate the series of $f$, then convert it to fit the polynomial ring - in this case $Q[x]$, and finally call the method:
 
     >>> from sympy import exp
@@ -602,11 +602,25 @@ def rs_fast_series_reversion(f,x,n):
     >>> rs_fast_series_reversion(fr,xr,n)
     1/3*x**3 - 1/2*x**2 + x
 
+    The example below show few first explicit coefficients of the inversion expansion:
+
+    >>> import sympy as sm
+    >>> from sympy.polys.ring_series import rs_fast_series_reversion
+    >>> a = sm.IndexedBase('a')
+    >>> x = sm.symbols('x')
+    >>> f = sum(a[k]*x**k for k in range(1,4))
+    >>> R = f.as_poly(x,field=True).domain
+    >>> Rx = R[x]
+    >>> fr = Rx.from_sympy(f)
+    >>> xr = Rx.from_sympy(x)
+    >>> rs_fast_series_reversion(fr,xr,n).as_expr()
+    x**3*(-a[3]/a[1]**4 + 2*a[2]**2/a[1]**5) - x**2*a[2]/a[1]**3 + x/a[1]
 
     References
     ==========
 
     .. [1] Brent, Richard P., and Hsiang T. Kung. „Fast algorithms for manipulating formal power series.” Journal of the ACM (JACM) 25, no. 4 (1978): 581-595.
+    .. [2] Weisstein, Eric W. "Series Reversion." From MathWorld--A Wolfram Web Resource. https://mathworld.wolfram.com/SeriesReversion.html
     """
 
     Rx = f.ring
