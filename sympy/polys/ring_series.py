@@ -579,20 +579,37 @@ def rs_fast_series_reversion(f,x,n):
     r"""
     Fast series reversion using Newton-like updates.
 
+    Given a ring series $f$ in variable $x$, this function constructs a ring series $g$ in $x$ such that
+    $f(g(x)) = x + O(x^n)$. 
+
+    Parameters
+    ==========
+
     Examples
     ========
 
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
-    >>> from sympy.polys.ring_series import rs_series_inversion
-    >>> R, x, y = ring('x, y', QQ)
-    >>> rs_series_inversion(1 + x*y**2, x, 4)
-    -x**3*y**6 + x**2*y**4 - x*y**2 + 1
-    >>> rs_series_inversion(1 + x*y**2, y, 4)
-    -x*y**2 + 1
-    >>> rs_series_inversion(x + x**2, x, 4)
-    x**3 - x**2 + x - 1 + x**(-1)
+    The following example shows how to invert the expresion $f=\mathrm{e}^{x}-1$ around $x=0$.
 
+    First we truncate the series of $f$:
+    >>> from sympy import exp
+    >>> from sympy.abc import x
+    >>> from sympy.polys.ring_series import rs_fast_series_reversion
+    >>> f = exp(x)-1
+    >>> n = 4
+    >>> f = f.series(x,0,n).removeO()
+    Then, we convert it to fit the polynomial ring:
+    >>> Rx = f.as_poly(x,field=True).domain[x]
+    >>> fr = Rx.from_sympy(f)
+    >>> xr = Rx.from_sympy(x)
+    Finally, we call the method:
+    >>> rs_fast_series_reversion(fr,xr,n)
+    1/3*xr**3 - 1/2*xr**2 + xr
+
+
+    References
+    ==========
+
+    .. [1] Brent, Richard P., and Hsiang T. Kung. „Fast algorithms for manipulating formal power series.” Journal of the ACM (JACM) 25, no. 4 (1978): 581-595.
     """
 
     Rx = f.ring
@@ -604,22 +621,26 @@ def rs_fast_series_reversion(f,x,n):
     Rx = Rx.to_domain()
     Rxy = Rx.inject(y)
     df_inv = Rxy.convert(df_inv)
-    x = Rxy.convert(x)
+    xr = Rxy.convert(x)
     f = Rxy.convert(f)
     yr = Rxy.from_sympy(y)
 
     # check if inversion exists
-    assert Rx.domain.is_zero(f.coeff(x**0))
-    assert Rx.domain.is_unit(f.coeff(x))
+    assert Rx.domain.is_zero(f.coeff(xr**0))
+    assert Rx.domain.is_unit(f.coeff(xr))
 
     # do Newton updates
-    fn_update = x-(f-yr)* df_inv
+    fn_update = xr-(f-yr)* df_inv
     x_series = Rxy.from_sympy(0)
     k = 0
     while k < n:
-        x_series = rs_subs(fn_update, {x:x_series},yr,min(2*k+2,n))
+        x_series = rs_subs(fn_update, {xr:x_series},yr,min(2*k+2,n))
         k = 2*k+1
-    
+
+    # change variable
+    x_series = rs_subs(x_series, {yr:xr}, yr, n)
+    x_series = Rx.convert(x_series,Rxy)
+
     return x_series
 
 def rs_series_reversion(p, x, n, y):
