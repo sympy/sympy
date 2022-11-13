@@ -50,7 +50,7 @@ unicode_strict_whitelist = [
     r'*/sympy/parsing/latex/_antlr/__init__.py',
     # test_mathematica.py uses some unicode for testing Greek characters are working #24055
     r'*/sympy/parsing/tests/test_mathematica.py',
-    r'/sympy/polys/ring_series.py',
+    r'*/sympy/polys/ring_series.py',
 ]
 
 
