@@ -581,12 +581,10 @@ def rs_fast_series_reversion(fr,xr,n):
     """
 
     Rx = fr.ring
-    assert Rx.gens == (xr,)
-
     dfr = fr.diff(xr)
     dfr_inv = rs_series_inversion(dfr,xr,n)
 
-    # inject auxiliary variable y
+    # inject the auxiliary variable y
     y = Dummy('y')
     Rx = Rx.to_domain()
     Rxy = Rx.inject(y)
@@ -595,7 +593,7 @@ def rs_fast_series_reversion(fr,xr,n):
     fr = Rxy.convert(fr)
     yr = Rxy.from_sympy(y)
 
-    # check assumptions
+    # check if inversion exists
     if not Rx.is_zero(fr.coeff(xr**0)):
         raise ValueError('The zeroth coefficent should be zero.')
     if not Rx.is_unit( fr.coeff(xr) ):
@@ -609,6 +607,7 @@ def rs_fast_series_reversion(fr,xr,n):
         x_series = rs_subs(fn_update, {xr:x_series},yr,min(2*k+2,n))
         k = 2*k+1
     
+    # change variable
     x_series = rs_subs(x_series, {yr:xr}, yr, n)
     x_series = Rx.from_PolynomialRing(x_series,Rxy)
 
@@ -680,8 +679,6 @@ def rs_series_reversion(p, x, n, y):
     assert zm in a and len(a) == 1
     a = a[zm]
     r = y/a
-    import pdb
-    pdb.set_trace()
     for i in range(2, n):
         sp = rs_subs(p, {x: r}, y, i + 1)
         sp = _coefficient_t(sp, (ny, i))*y**i
