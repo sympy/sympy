@@ -577,9 +577,9 @@ def _coefficient_t(p, t):
 def rs_fast_series_reversion(f,x,n):
 
     r"""
-    Fast series reversion using Newton-like updates.
+    Fast series reversion (aka Lagrange Inversion) using Newton-like updates.
 
-    Given a ring series $f$ in variable $x$, this function constructs a ring series $g$ in $x$ such that
+    Given a ring series $f$ in variable $x$, this method computes a ring series $g$ in $x$ such that
     $f(g(x)) = x + O(x^n)$. 
 
     Parameters
@@ -590,18 +590,17 @@ def rs_fast_series_reversion(f,x,n):
 
     The following example shows how to invert the expresion $f=\mathrm{e}^{x}-1$ around $x=0$.
 
-    First we truncate the series of $f$:
+    First we truncate the series of $f$, then convert it to fit the polynomial ring - in this case $Q[x]$, and finally call the method:
+
     >>> from sympy import exp
     >>> from sympy.abc import x
     >>> from sympy.polys.ring_series import rs_fast_series_reversion
     >>> f = exp(x)-1
     >>> n = 4
     >>> f = f.series(x,0,n).removeO()
-    Then, we convert it to fit the polynomial ring:
     >>> Rx = f.as_poly(x,field=True).domain[x]
     >>> fr = Rx.from_sympy(f)
     >>> xr = Rx.from_sympy(x)
-    Finally, we call the method:
     >>> rs_fast_series_reversion(fr,xr,n)
     1/3*xr**3 - 1/2*xr**2 + xr
 
