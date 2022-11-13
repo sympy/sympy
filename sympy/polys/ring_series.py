@@ -600,7 +600,7 @@ def rs_fast_series_reversion(f,x,n):
     >>> fr = Rx.from_sympy(f)
     >>> xr = Rx.from_sympy(x)
     >>> rs_fast_series_reversion(fr,xr,n)
-    1/3*xr**3 - 1/2*xr**2 + xr
+    1/3*x**3 - 1/2*x**2 + x
 
 
     References
