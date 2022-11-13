@@ -577,7 +577,7 @@ def _coefficient_t(p, t):
 def rs_fast_series_reversion(fr,xr,n):
 
     r"""
-    Fast series reversion using full Newton updates.
+    Fast series reversion using Newton-like updates.
     """
 
     Rx = fr.ring
@@ -586,14 +586,20 @@ def rs_fast_series_reversion(fr,xr,n):
     dfr = fr.diff(xr)
     dfr_inv = rs_series_inversion(dfr,xr,n)
 
-    # inject auxiliary y
+    # inject auxiliary variable y
     y = Dummy('y')
     Rx = Rx.to_domain()
     Rxy = Rx.inject(y)
-    dfr_inv = Rxy.from_PolynomialRing(dfr_inv,Rx)
-    xr = Rxy.from_PolynomialRing(xr,Rx)
-    fr = Rxy.from_PolynomialRing(fr,Rx)
+    dfr_inv = Rxy.convert(dfr_inv)
+    xr = Rxy.convert(xr)
+    fr = Rxy.convert(fr)
     yr = Rxy.from_sympy(y)
+
+    # check assumptions
+    if not Rx.is_zero(fr.coeff(xr**0)):
+        raise ValueError('The zeroth coefficent should be zero.')
+    if not Rx.is_unit( fr.coeff(xr) ):
+        raise ValueError('The first coefficient should be invertible.')
 
     # do Newton updates
     fn_update = xr-(fr-yr)* dfr_inv
@@ -674,6 +680,8 @@ def rs_series_reversion(p, x, n, y):
     assert zm in a and len(a) == 1
     a = a[zm]
     r = y/a
+    import pdb
+    pdb.set_trace()
     for i in range(2, n):
         sp = rs_subs(p, {x: r}, y, i + 1)
         sp = _coefficient_t(sp, (ny, i))*y**i
