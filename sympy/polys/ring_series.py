@@ -578,6 +578,21 @@ def rs_fast_series_reversion(f,x,n):
 
     r"""
     Fast series reversion using Newton-like updates.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_series_inversion
+    >>> R, x, y = ring('x, y', QQ)
+    >>> rs_series_inversion(1 + x*y**2, x, 4)
+    -x**3*y**6 + x**2*y**4 - x*y**2 + 1
+    >>> rs_series_inversion(1 + x*y**2, y, 4)
+    -x*y**2 + 1
+    >>> rs_series_inversion(x + x**2, x, 4)
+    x**3 - x**2 + x - 1 + x**(-1)
+
     """
 
     Rx = f.ring
@@ -591,7 +606,7 @@ def rs_fast_series_reversion(f,x,n):
     df_inv = Rxy.convert(df_inv)
     x = Rxy.convert(x)
     f = Rxy.convert(f)
-    yr = Rxy.fom_sympy(y)
+    yr = Rxy.from_sympy(y)
 
     # check if inversion exists
     assert Rx.domain.is_zero(f.coeff(x**0))
@@ -599,11 +614,13 @@ def rs_fast_series_reversion(f,x,n):
 
     # do Newton updates
     fn_update = x-(f-yr)* df_inv
-    x_series = Rxy.fom_sympy(0)
+    x_series = Rxy.from_sympy(0)
     k = 0
     while k < n:
         x_series = rs_subs(fn_update, {x:x_series},yr,min(2*k+2,n))
         k = 2*k+1
+    
+    return x_series
 
 def rs_series_reversion(p, x, n, y):
     r"""
