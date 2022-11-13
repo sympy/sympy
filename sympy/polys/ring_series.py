@@ -588,7 +588,8 @@ def rs_fast_series_reversion(fr,xr,n):
 
     # inject auxiliary y
     y = Dummy('y')
-    Rxy = Rx.to_domain().inject(y)
+    Rx = Rx.to_domain()
+    Rxy = Rx.inject(y)
     dfr_inv = Rxy.from_PolynomialRing(dfr_inv,Rx)
     xr = Rxy.from_PolynomialRing(xr,Rx)
     fr = Rxy.from_PolynomialRing(fr,Rx)
@@ -601,6 +602,9 @@ def rs_fast_series_reversion(fr,xr,n):
     while k < n:
         x_series = rs_subs(fn_update, {xr:x_series},yr,min(2*k+2,n))
         k = 2*k+1
+    
+    x_series = rs_subs(x_series, {yr:xr}, yr, n)
+    x_series = Rx.from_PolynomialRing(x_series,Rxy)
 
     return x_series
 

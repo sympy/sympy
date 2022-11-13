@@ -5,7 +5,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
     rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
+    rs_LambertW, rs_series_reversion, rs_fast_series_reversion, rs_is_puiseux, rs_series)
 from sympy.testing.pytest import raises, slow
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, atan, atanh,
@@ -106,6 +106,24 @@ def test_inversion():
     raises(NotImplementedError, lambda: rs_series_inversion(p, x, 4))
     p = R.zero
     raises(ZeroDivisionError, lambda: rs_series_inversion(p, x, 3))
+
+
+def test_rs_fast_series_reversion():
+
+    x,a = symbols('x,a')
+    f = exp(x/a)-1
+
+    n = 4
+    f = f.series(x,0,n).removeO()
+    Rx = f.as_poly(x).domain[x]
+    fr = Rx.from_sympy(f)
+    xr = Rx.from_sympy(x)
+    ar = Rx.from_sympy(a)
+
+    calculated = rs_fast_series_reversion(fr,xr,n)
+    expected = ar/3*xr**3 - ar/2*xr**2 + ar*xr
+
+    assert calculated == expected
 
 
 def test_series_reversion():
