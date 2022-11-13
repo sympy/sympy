@@ -574,42 +574,36 @@ def _coefficient_t(p, t):
             p1[monomial_div(expv, expv1)] = p[expv]
     return p1
 
-def rs_fast_series_reversion(fr,xr,n):
+def rs_fast_series_reversion(f,x,n):
 
     r"""
     Fast series reversion using Newton-like updates.
     """
 
-    Rx = fr.ring
-    dfr = fr.diff(xr)
-    dfr_inv = rs_series_inversion(dfr,xr,n)
+    Rx = f.ring
+    df = f.diff(x)
+    df_inv = rs_series_inversion(df,x,n)
 
     # inject the auxiliary variable y
     y = Dummy('y')
     Rx = Rx.to_domain()
     Rxy = Rx.inject(y)
-    dfr_inv = Rxy.convert(dfr_inv)
-    xr = Rxy.convert(xr)
-    fr = Rxy.convert(fr)
-    yr = Rxy.from_sympy(y)
+    df_inv = Rxy.convert(df_inv)
+    x = Rxy.convert(x)
+    f = Rxy.convert(f)
+    yr = Rxy.fom_sympy(y)
 
     # check if inversion exists
-    assert Rx.domain.is_zero(fr.coeff(xr**0))
-    assert Rx.domain.is_unit(fr.coeff(xr))
+    assert Rx.domain.is_zero(f.coeff(x**0))
+    assert Rx.domain.is_unit(f.coeff(x))
 
     # do Newton updates
-    fn_update = xr-(fr-yr)* dfr_inv
-    x_series = Rxy.from_sympy(0)
+    fn_update = x-(f-yr)* df_inv
+    x_series = Rxy.fom_sympy(0)
     k = 0
     while k < n:
-        x_series = rs_subs(fn_update, {xr:x_series},yr,min(2*k+2,n))
+        x_series = rs_subs(fn_update, {x:x_series},yr,min(2*k+2,n))
         k = 2*k+1
-
-    # change variable
-    x_series = rs_subs(x_series, {yr:xr}, yr, n)
-    x_series = Rx.from_PolynomialRing(x_series,Rxy)
-
-    return x_series
 
 def rs_series_reversion(p, x, n, y):
     r"""
