@@ -990,7 +990,7 @@ def reduce_inequalities(inequalities, symbols=[]):
 
 def reduce_boolean_expr(boolean_expr,symbols=[]):
     boolean_expr=to_cnf(boolean_expr)
-    if boolean_expr.has(And) and not(boolean_expr.has(Or)):
+    if isinstance(boolean_expr, And) and not(boolean_expr.has(Or)):
           return(reduce_inequalities(boolean_expr.args,symbols))
     elif boolean_expr.has(Or):
         common=None
