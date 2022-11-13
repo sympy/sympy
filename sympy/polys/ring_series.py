@@ -53,6 +53,7 @@ from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import giant_steps
 import math
+from sympy import Dummy
 
 
 def _invert_monoms(p1):
@@ -475,6 +476,7 @@ def _check_series_var(p, x, name):
                         "implemented." % name)
     return index, m
 
+
 def _series_inversion1(p, x, prec):
     """
     Univariate series inversion ``1/p`` modulo ``O(x**prec)``.
@@ -571,6 +573,36 @@ def _coefficient_t(p, t):
         if expv[i] == j:
             p1[monomial_div(expv, expv1)] = p[expv]
     return p1
+
+def rs_fast_series_reversion(fr,xr,n):
+
+    r"""
+    Fast series reversion using full Newton updates.
+    """
+
+    Rx = fr.ring
+    assert Rx.gens == (xr,)
+
+    dfr = fr.diff(xr)
+    dfr_inv = rs_series_inversion(dfr,xr,n)
+
+    # inject auxiliary y
+    y = Dummy('y')
+    Rxy = Rx.to_domain().inject(y)
+    dfr_inv = Rxy.from_PolynomialRing(dfr_inv,Rx)
+    xr = Rxy.from_PolynomialRing(xr,Rx)
+    fr = Rxy.from_PolynomialRing(fr,Rx)
+    yr = Rxy.from_sympy(y)
+
+    # do Newton updates
+    fn_update = xr-(fr-yr)* dfr_inv
+    x_series = Rxy.from_sympy(0)
+    k = 0
+    while k < n:
+        x_series = rs_subs(fn_update, {xr:x_series},yr,min(2*k+2,n))
+        k = 2*k+1
+
+    return x_series
 
 def rs_series_reversion(p, x, n, y):
     r"""
