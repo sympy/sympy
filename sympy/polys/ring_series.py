@@ -579,8 +579,10 @@ def rs_fast_series_reversion(f,x,n):
     r"""
     Fast series reversion (aka Lagrange Inversion) using Newton-like updates.
 
-    Given a ring series $f$ in variable $x$, this method computes a ring series $g$ in $x$ such that
-    $f(g(x)) = x + O(x^n)$. 
+    Given a ring polynomial $f$ in variable $x$, this method computes a ring polynomial $g$ in $x$ such that
+    $f(g(x)) = x + O(x^n)$.
+
+    The series should be of form $f(x) = a_1 x + a_2 x^2 + $ where $a_1$ is invertible.
 
     Parameters
     ==========
@@ -589,7 +591,6 @@ def rs_fast_series_reversion(f,x,n):
     ========
 
     The following example shows how to invert the expresion $f=\mathrm{e}^{x}-1$ around $x=0$.
-
     First we truncate the series of $f$, then convert it to fit the polynomial ring - in this case $Q[x]$, and finally call the method:
 
     >>> from sympy import exp
