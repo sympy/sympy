@@ -579,7 +579,7 @@ def rs_fast_series_reversion(p,x,n):
     r"""
     Fast series reversion (aka Lagrange Inversion) using Newton-like updates.
 
-    Given a ring polynomial $p$ in variable $x$, this method computes a ring polynomial 
+    Given a ring polynomial $p$ in variable $x$, this method computes a ring polynomial
     $q$ in $x$ such that $q(p(x)) = x + O(x^n)$.
 
     The series should be of form $p(x) = a_1 x + a_2 x^2 + ...$ where $a_1$ is invertible.
