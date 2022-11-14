@@ -4387,12 +4387,15 @@ class WildTensor(Tensor):
         obj._index_structure = _IndexStructure.from_indices(*indices)
         return obj
 
+    def _get_index_updown_structure(self, expr):
+        return [ i.is_up for i in expr.get_free_indices() ]
+
     def matches(self, expr, repl_dict=None, old=False):
         if not isinstance(expr, TensExpr):
             return None
         if len(expr.get_indices()) not in self.ninds:
             return None
-        if expr.get_free_indices() != list(self.indices):
+        if self._get_index_updown_structure(expr) != self._get_index_updown_structure(self):
             return None
 
         if repl_dict is None:
