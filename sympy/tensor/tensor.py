@@ -4369,11 +4369,20 @@ class WildTensorHead(TensorHead, AtomicExpr):
         tensor = WildTensor(self, indices, **kw_args)
         return tensor.doit()
 
+    @property
+    def index_types(self):
+        if len(self.args) > 1:
+            return list(self.args[1])
+        else:
+            return []
+
 class WildTensor(Tensor, AtomicExpr):
     def __new__(cls, tensor_head, indices, *args, **kw_args):
         indices = cls._parse_indices(tensor_head, indices)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
         obj.ninds = FiniteSet(len(indices))
+        obj.name = tensor_head.name
+        obj.kw_args = kw_args
         return obj
 
     def matches(self, expr, repl_dict=None, old=False):
@@ -4389,3 +4398,11 @@ class WildTensor(Tensor, AtomicExpr):
 
         repl_dict[self] = expr
         return repl_dict
+
+    @property
+    def index_types(self):
+        return [ind.tensor_index_type for ind in self.args[1]]
+
+    @property
+    def component(self):
+        return WildTensorHead(self.name, self.index_types, **self.kw_args)
