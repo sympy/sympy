@@ -4095,6 +4095,48 @@ class TensMul(TensExpr, AssocOp):
                 terms.append(TensMul.fromiter(self.args[:i] + (d,) + self.args[i + 1:]))
         return TensAdd.fromiter(terms)
 
+    def _matches_commutative(self, expr, repl_dict=None, old=False):
+
+        if isinstance(self, TensExpr) and not isinstance(expr, TensExpr):
+            return None
+
+        if repl_dict is None:
+            repl_dict = {}
+
+        # handle simple patterns
+        if self == expr:
+            return repl_dict
+
+        # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
+        from sympy import WildFunction, Wild, ordered #TODO: relative or absolute imports?
+        from sympy.utilities.iterables import sift
+
+        wild_part, exact_part = sift(self.args, lambda p:
+            p.has(Wild, WildFunction, WildTensor) and not expr.has(p),
+            binary=True)
+
+        # now to real work ;)
+        i = 0
+        saw = set()
+        while expr not in saw:
+            saw.add(expr)
+            args = tuple(ordered(self.make_args(expr)))
+            expr_list = (self.identity,) + args
+            for last_op in reversed(expr_list):
+                for w in reversed(wild_part):
+                    d1 = w.matches(last_op, repl_dict)
+                    if d1 is not None:
+                        print(f"{d1 = }")
+                        d2 = self.xreplace(d1).matches(expr, d1)
+                        if d2 is not None:
+                            return d2
+        return
+
+    def matches(self, expr, repl_dict=None, old=False):
+        print(f"({self})._matches({expr}) called") #debug
+        expr = sympify(expr)
+
+        return self._matches_commutative(expr, repl_dict, old)
 
 class TensorElement(TensExpr):
     """
