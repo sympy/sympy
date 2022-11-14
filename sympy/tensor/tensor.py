@@ -4126,7 +4126,6 @@ class TensMul(TensExpr, AssocOp):
                 for w in reversed(wild_part):
                     d1 = w.matches(last_op, repl_dict)
                     if d1 is not None:
-                        print(f"{d1 = }")
                         d2 = self.xreplace(d1).matches(expr, d1)
                         if d2 is not None:
                             return d2
