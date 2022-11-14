@@ -4392,6 +4392,8 @@ class WildTensor(Tensor):
             return None
         if len(expr.get_indices()) not in self.ninds:
             return None
+        if expr.get_free_indices() != list(self.indices):
+            return None
 
         if repl_dict is None:
             repl_dict = {}
