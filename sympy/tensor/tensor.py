@@ -4371,8 +4371,8 @@ class WildTensorHead(TensorHead, AtomicExpr):
 
     @property
     def index_types(self):
-        if len(self.args) > 1:
-            return list(self.args[1])
+        if len(self.args) > 0:
+            return list(self.args[0])
         else:
             return []
 
