@@ -4133,7 +4133,6 @@ class TensMul(TensExpr, AssocOp):
         return
 
     def matches(self, expr, repl_dict=None, old=False):
-        print(f"({self})._matches({expr}) called") #debug
         expr = sympify(expr)
 
         return self._matches_commutative(expr, repl_dict, old)
