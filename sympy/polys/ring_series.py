@@ -591,6 +591,23 @@ def rs_fast_series_reversion(p,x,n):
     x : :class:`~.PolyElement` with respect to which ``p`` is inverted.
     n : number of expansion terms to be computed.
 
+    Note
+    ====
+
+    The algorithm adapts the Newton method to solve a general equation
+    $$
+    f(x)=y.
+    $$
+    By Taylor's expansion:
+    $$
+    f(x+h) = f(x) + f'(x) h + O(h^2).
+    $$
+    If $f(x) = y + O(y^{k+1})$ then with $h = -\frac{f(x)-y}{f'(x)} = O(y^{k+1})$ we obtain:
+    $$
+    f(x+h)-y = O(h^2) = O(y^{2k+2}).
+    $$
+    Thus, updating $x\gets x-h$ increases the accuracy from $k$ to $2k+1$ terms.
+
     Examples
     ========
 
