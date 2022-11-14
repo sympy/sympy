@@ -42,7 +42,7 @@ from sympy.core.numbers import (Integer, Rational)
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
-from sympy.core import Basic, Expr, sympify, Add, Mul, S
+from sympy.core import Basic, Expr, sympify, Add, Mul, S, AtomicExpr
 from sympy.core.assumptions import ManagedProperties
 from sympy.core.containers import Tuple, Dict
 from sympy.core.sorting import default_sort_key
@@ -51,6 +51,7 @@ from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.matrices import eye
+from sympy.sets import Set, FiniteSet
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         SymPyDeprecationWarning,
                                         ignore_warnings)
@@ -4343,3 +4344,48 @@ def _expand(expr, **kwargs):
         return expr._expand(**kwargs)
     else:
         return expr.expand(**kwargs)
+
+class WildTensorHead(TensorHead, AtomicExpr):
+    def __new__(self, *args, **kw_args):
+        obj = Basic.__new__(self, *args, **kw_args)
+        self.name = None
+        self.args = None
+        return obj
+
+    def __init__(self, name, *args, **kwargs):
+        self.name = name
+        self.args = args
+        ninds = kwargs.pop('ninds', S.Naturals0) #Number of indices allowed for the tensor.
+        if not isinstance(ninds, Set):
+            # Canonicalize ninds here.
+            if is_sequence(ninds):
+                ninds = tuple(ordered(set(ninds)))
+            elif ninds is not None:
+                ninds = (as_int(ninds),)
+            ninds = FiniteSet(*ninds)
+        self.ninds = ninds
+
+    def __call__(self, *indices, **kw_args):
+        tensor = WildTensor(self, indices, **kw_args)
+        return tensor.doit()
+
+class WildTensor(Tensor, AtomicExpr):
+    def __new__(cls, tensor_head, indices, *args, **kw_args):
+        indices = cls._parse_indices(tensor_head, indices)
+        obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
+        obj.ninds = FiniteSet(len(indices))
+        return obj
+
+    def matches(self, expr, repl_dict=None, old=False):
+        if not isinstance(expr, Tensor):
+            return None
+        if len(expr.get_indices()) not in self.ninds:
+            return None
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        repl_dict[self] = expr
+        return repl_dict
