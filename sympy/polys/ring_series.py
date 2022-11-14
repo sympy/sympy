@@ -574,15 +574,22 @@ def _coefficient_t(p, t):
             p1[monomial_div(expv, expv1)] = p[expv]
     return p1
 
-def rs_fast_series_reversion(f,x,n):
+def rs_fast_series_reversion(p,x,n):
 
     r"""
     Fast series reversion (aka Lagrange Inversion) using Newton-like updates.
 
-    Given a ring polynomial $f$ in variable $x$, this method computes a ring polynomial $g$ in $x$ such that
-    $f(g(x)) = x + O(x^n)$.
+    Given a ring polynomial $p$ in variable $x$, this method computes a ring polynomial $q$ in $x$ such that
+    $q(p(x)) = x + O(x^n)$.
 
-    The series should be of form $f(x) = a_1 x + a_2 x^2 + $ where $a_1$ is invertible.
+    The series should be of form $p(x) = a_1 x + a_2 x^2 + $ where $a_1$ is invertible.
+
+    Parameters
+    ==========
+
+    p : :class:`~.PolyElement` to be inverted.
+    x : :class:`~.PolyElement` with respect to which ``p`` is inverted.
+    n : number of expansion terms to be computed.
 
     Examples
     ========
@@ -602,7 +609,7 @@ def rs_fast_series_reversion(f,x,n):
     >>> rs_fast_series_reversion(fr,xr,n)
     1/3*x**3 - 1/2*x**2 + x
 
-    The example below show few first explicit coefficients of the inversion expansion:
+    The example below show few first explicit coefficients of the inversion expansion, namely:
 
     >>> import sympy as sm
     >>> from sympy.polys.ring_series import rs_fast_series_reversion
@@ -623,6 +630,7 @@ def rs_fast_series_reversion(f,x,n):
     .. [2] Weisstein, Eric W. "Series Reversion." From MathWorld--A Wolfram Web Resource. https://mathworld.wolfram.com/SeriesReversion.html
     """
 
+    f = p
     Rx = f.ring
     df = f.diff(x)
     df_inv = rs_series_inversion(df,x,n)
@@ -637,8 +645,14 @@ def rs_fast_series_reversion(f,x,n):
     yr = Rxy.from_sympy(y)
 
     # check if inversion exists
-    assert Rx.domain.is_zero(f.coeff(xr**0))
-    assert Rx.domain.is_unit(f.coeff(xr))
+    try:
+        assert Rx.domain.is_zero(f.coeff(xr**0))
+    except:
+        raise ValueError('The series should have no constant term.')
+    try:
+        assert Rx.domain.is_unit(f.coeff(xr))
+    except:
+        raise ValueError('The first coefficient of the series should be invertable.')
 
     # do Newton updates
     fn_update = xr-(f-yr)* df_inv
