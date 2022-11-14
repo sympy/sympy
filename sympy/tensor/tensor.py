@@ -4384,6 +4384,7 @@ class WildTensor(Tensor):
         obj.ninds = FiniteSet(len(indices))
         obj.name = tensor_head.name
         obj.kw_args = kw_args
+        obj._index_structure = _IndexStructure.from_indices(*indices)
         return obj
 
     def matches(self, expr, repl_dict=None, old=False):
