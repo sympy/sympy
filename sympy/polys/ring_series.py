@@ -579,8 +579,8 @@ def rs_fast_series_reversion(p,x,n):
     r"""
     Fast series reversion (aka Lagrange Inversion) using Newton-like updates.
 
-    Given a ring polynomial $p$ in variable $x$, this method computes a ring polynomial $q$ in $x$ such that
-    $q(p(x)) = x + O(x^n)$.
+    Given a ring polynomial $p$ in variable $x$, this method computes a ring polynomial 
+    $q$ in $x$ such that $q(p(x)) = x + O(x^n)$.
 
     The series should be of form $p(x) = a_1 x + a_2 x^2 + ...$ where $a_1$ is invertible.
 
@@ -643,7 +643,7 @@ def rs_fast_series_reversion(p,x,n):
     References
     ==========
 
-    .. [1] Brent, Richard P., and Hsiang T. Kung. „Fast algorithms for manipulating formal power series.” Journal of the ACM (JACM) 25, no. 4 (1978): 581-595.
+    .. [1] Brent, Richard P., and Hsiang T. Kung. "Fast algorithms for manipulating formal power series.” Journal of the ACM (JACM) 25, no. 4 (1978): 581-595.
     .. [2] Weisstein, Eric W. "Series Reversion." From MathWorld--A Wolfram Web Resource. https://mathworld.wolfram.com/SeriesReversion.html
     """
 
@@ -656,9 +656,9 @@ def rs_fast_series_reversion(p,x,n):
     y = Dummy('y')
     Rx = Rx.to_domain()
     Rxy = Rx.inject(y)
-    df_inv = Rxy.convert(df_inv)
-    xr = Rxy.convert(x)
-    f = Rxy.convert(f)
+    df_inv = Rxy.convert_from(df_inv,Rx)
+    xr = Rxy.convert_from(x,Rx)
+    f = Rxy.convert_from(f,Rx)
     yr = Rxy.from_sympy(y)
 
     # check if inversion exists
@@ -667,7 +667,7 @@ def rs_fast_series_reversion(p,x,n):
 
     # do Newton updates
     fn_update = xr-(f-yr)* df_inv
-    x_series = Rxy.from_sympy(0)
+    x_series = Rxy.zero
     k = 0
     while k < n:
         x_series = rs_subs(fn_update, {xr:x_series},yr,min(2*k+2,n))
