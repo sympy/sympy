@@ -662,14 +662,8 @@ def rs_fast_series_reversion(p,x,n):
     yr = Rxy.from_sympy(y)
 
     # check if inversion exists
-    try:
-        assert Rx.domain.is_zero(f.coeff(xr**0))
-    except:
-        raise ValueError('The series should have no constant term.')
-    try:
-        assert Rx.domain.is_unit(f.coeff(xr))
-    except:
-        raise ValueError('The first coefficient of the series should be invertable.')
+    assert Rx.domain.is_zero(f.coeff(xr**0)) # no constant term
+    assert Rx.domain.is_unit(f.coeff(xr)) # the first coeff is unit
 
     # do Newton updates
     fn_update = xr-(f-yr)* df_inv
