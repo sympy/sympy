@@ -310,14 +310,15 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self,
         optimal_fiber_length: Optional[float],
     ) -> None:
+        MINIMUM = 0.0
         if optimal_fiber_length is None:
             self._optimal_fiber_length = optimal_fiber_length
         else:
             optimal_fiber_length = float(optimal_fiber_length)
-            if optimal_fiber_length <= 0.0:
+            if optimal_fiber_length <= MINIMUM:
                 msg = (
                     f'`optimal_fiber_length` of {optimal_fiber_length} must be '
-                    f'greater than {0.0}.'
+                    f'greater than {MINIMUM}.'
                 )
                 raise ValueError(msg)
             self._optimal_fiber_length = optimal_fiber_length
@@ -343,11 +344,12 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self,
         maximal_fiber_velocity: Optional[float],
     ) -> None:
+        MINIMUM = 0.0
         maximal_fiber_velocity = float(maximal_fiber_velocity)
-        if maximal_fiber_velocity <= 0.0:
+        if maximal_fiber_velocity <= MINIMUM:
             msg = (
                 f'`maximal_fiber_velocity` of {maximal_fiber_velocity} '
-                f'must be greater than {0.0}.'
+                f'must be greater than {MINIMUM}.'
             )
             raise ValueError(msg)
         self._maximal_fiber_velocity = maximal_fiber_velocity
@@ -374,14 +376,15 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self,
         peak_isometric_force: Optional[float],
     ) -> None:
+        MINIMUM = 0.0
         if peak_isometric_force is None:
             self._peak_isometric_force = peak_isometric_force
         else:
             peak_isometric_force = float(peak_isometric_force)
-            if peak_isometric_force <= 0.0:
+            if peak_isometric_force <= MINIMUM:
                 msg = (
                     f'`peak_isometric_force` of {peak_isometric_force} must be '
-                    f'greater than {0.0}.'
+                    f'greater than {MINIMUM}.'
                 )
                 raise ValueError(msg)
             self._peak_isometric_force = peak_isometric_force
@@ -408,14 +411,15 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self,
         tendon_slack_length: Optional[float],
     ) -> None:
+        MINIMUM = 0.0
         if tendon_slack_length is None:
             self._tendon_slack_length = tendon_slack_length
         else:
             tendon_slack_length = float(tendon_slack_length)
-            if tendon_slack_length <= 0.0:
+            if tendon_slack_length <= MINIMUM:
                 msg = (
                     f'`tendon_slack_length` of {tendon_slack_length} must be '
-                    f'greater than {0.0}.'
+                    f'greater than {MINIMUM}.'
                 )
                 raise ValueError(msg)
             self._tendon_slack_length = tendon_slack_length
@@ -440,11 +444,12 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self,
         optimal_pennation_angle: Optional[float],
     ) -> None:
+        MINIMUM = 0.0
         optimal_pennation_angle = float(optimal_pennation_angle)
-        if optimal_pennation_angle < 0.0:
+        if optimal_pennation_angle < MINIMUM:
             msg = (
                 f'`optimal_pennation_angle` of {optimal_pennation_angle} must '
-                f'be greater than or equal to {0.0}.'
+                f'be greater than or equal to {MINIMUM}.'
             )
             raise ValueError(msg)
         self._optimal_pennation_angle = optimal_pennation_angle
@@ -470,11 +475,12 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self,
         fiber_damping_coefficient: float,
     ) -> None:
+        MINIMUM = 0.0
         fiber_damping_coefficient = float(fiber_damping_coefficient)
-        if fiber_damping_coefficient < 0.0:
+        if fiber_damping_coefficient < MINIMUM:
             msg = (
                 f'`fiber_damping_coefficient` of {fiber_damping_coefficient} '
-                f'must be greater than or equal to {0.0}.'
+                f'must be greater than or equal to {MINIMUM}.'
             )
             raise ValueError(msg)
         self._fiber_damping_coefficient = fiber_damping_coefficient
