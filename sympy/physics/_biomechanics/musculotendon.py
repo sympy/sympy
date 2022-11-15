@@ -350,7 +350,7 @@ class MusculotendonBase(ABC, _NamedMixin):
     @maximal_fiber_velocity.setter
     def maximal_fiber_velocity(
         self,
-        maximal_fiber_velocity: Optional[float],
+        maximal_fiber_velocity: float,
     ) -> None:
         MINIMUM = 0.0
         maximal_fiber_velocity = float(maximal_fiber_velocity)
@@ -450,7 +450,7 @@ class MusculotendonBase(ABC, _NamedMixin):
     @optimal_pennation_angle.setter
     def optimal_pennation_angle(
         self,
-        optimal_pennation_angle: Optional[float],
+        optimal_pennation_angle: float,
     ) -> None:
         MINIMUM = 0.0
         optimal_pennation_angle = float(optimal_pennation_angle)

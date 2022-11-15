@@ -73,7 +73,7 @@ class ActivationDynamicsBase(ABC, _NamedMixin):
         """Order of the ODEs governing the activation dynamics."""
         return self._ORDER
 
-    def symbol_to_constant_mapping(self) -> dict[Symbol, Optional[float]]:
+    def symbol_to_constant_mapping(self) -> dict[Symbol, float]:
         """Mapping between symbolic attributes and associated constants."""
         return {}
 
@@ -245,7 +245,7 @@ class DeGroote2016ActivationDynamics(ActivationDynamicsBase):
         """
         return self._tau_d
 
-    def symbol_to_constant_mapping(self) -> dict[Symbol, Optional[float]]:
+    def symbol_to_constant_mapping(self) -> dict[Symbol, float]:
         """Mapping between symbolic attributes and associated constants."""
         mapping = {
             self.tau_a: self.activation_time_constant,
@@ -323,7 +323,8 @@ def ActivationDynamics(
         `identifier`.
 
     """
-    identifier = {0: "zeroth", 1: "degroote"}.get(identifier, identifier)
+    ORDER_DEFAULTS: dict[Union[int, str], str] = {0: "zeroth", 1: "degroote"}
+    identifier = ORDER_DEFAULTS.get(identifier, identifier)
     if str(identifier).lower() in {"zero", "zeroth"}:
         return ZerothOrderActivationDynamics(name)
     elif str(identifier).lower() in {"degroote", "degroote2016"}:
