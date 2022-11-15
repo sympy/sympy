@@ -733,6 +733,12 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
             f'{self.__class__.__name__}({repr(self.name)}, '
             f'origin={repr(self.origin)}, insertion={repr(self.insertion)}), '
             f'optimal_fiber_length={repr(self.optimal_fiber_length)}, '
+            f'maximal_fiber_length={repr(self.maximal_fiber_length)}, '
+            f'peak_isometric_force={repr(self.peak_isometric_force)}, '
+            f'tendon_slack_length={repr(self.tendon_slack_length)}, '
+            f'optimal_pennation_angle={repr(self.optimal_pennation_angle)}, '
+            f'fiber_damping_coefficient={repr(self.fiber_damping_coefficient)}'
+            f')'
         )
 
 
