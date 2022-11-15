@@ -761,7 +761,7 @@ class Millard2013Musculotendon(MusculotendonBase):
 
 def Musculotendon(
     name: str,
-    musculotendon_model: str,
+    identifier: str,
     *args,
     **kwargs,
 ) -> MusculotendonBase:
@@ -774,8 +774,8 @@ def Musculotendon(
     Sometimes it can be easier to use a factory function to instantiate a
     specific subclass of a parent class. This function lets users easily change
     which musculotendon model they are instantiating simply by changing the
-    string identifier passed to the `musculotendon_model` argument. This is
-    useful in instances where a user wants to be able to change the type of all
+    string identifier passed to the `identifier` argument. This is useful in
+    instances where a user wants to be able to change the type of all
     musculotendon models in their system simply by changing one variable in
     their code.
 
@@ -797,7 +797,7 @@ def Musculotendon(
         The name identifier associated with the musculotendon. This name is used
         as a suffix when automatically generated symbols are instantiated. It
         must be a string of nonzero length.
-    musculotendon_model : str
+    identifier : str
         Identifier used to choose which musculotendon class to instantiate. Must
         be one of 'Brockie', 'DeGroote', or 'Millard'.
     *args
@@ -817,15 +817,15 @@ def Musculotendon(
 
     ValueError
         If an invalid musculotendon model identifier is passed to
-        `musculotendon_model`.
+        `identifier`.
 
     """
-    if musculotendon_model.lower() in {'brockie', 'brockie2021'}:
+    if identifier.lower() in {'brockie', 'brockie2021'}:
         return Brockie2021Musculotendon(name, *args, **kwargs)
-    elif musculotendon_model.lower() in {'degroote', 'degroote2016'}:
+    elif identifier.lower() in {'degroote', 'degroote2016'}:
         return DeGroote2016Musculotendon(name, *args, **kwargs)
-    elif musculotendon_model.lower() in {'millard', 'millard2013'}:
+    elif identifier.lower() in {'millard', 'millard2013'}:
         return Millard2013Musculotendon(name, *args, **kwargs)
-    msg = (f'{name} is an invalid musculotendon model, must be one of: '
-           '"Brockie", "DeGroote", or "Millard".')
+    msg = (f'{name} is an invalid musculotendon model identifier, must be one '
+           'of: "Brockie", "DeGroote", or "Millard".')
     raise ValueError(msg)
