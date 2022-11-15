@@ -240,8 +240,8 @@ class ArrayComprehension(Basic):
             if any((not isinstance(i, Expr)) or i.atoms(Symbol, Integer) != i.atoms()
                                                                 for i in [inf, sup]):
                 raise TypeError('Bounds should be an Expression(combination of Integer and Symbol)')
-            if (inf > sup) == True:
-                raise ValueError('Lower bound should be inferior to upper bound')
+            if (inf > sup):
+                raise ValueError('Lower bound should be inferior or equal to upper bound')
             if var in inf.free_symbols or var in sup.free_symbols:
                 raise ValueError('Variable should not be part of its bounds')
         return new_limits
