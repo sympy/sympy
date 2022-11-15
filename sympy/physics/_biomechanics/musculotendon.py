@@ -11,11 +11,11 @@ and are specific to a given musculotendon model.
 """
 
 
-import abc
+from abc import ABC
 from typing import Optional
 
-import sympy as sm
-import sympy.physics.mechanics as me
+from sympy.core.backend import AppliedUndef, Symbol
+from sympy.physics.mechanics import Point, dynamicsymbols
 from sympy.physics._biomechanics.mixin import _NamedMixin
 
 
@@ -27,7 +27,7 @@ __all__ = [
 ]
 
 
-class MusculotendonBase(abc.ABC, _NamedMixin):
+class MusculotendonBase(ABC, _NamedMixin):
     """Abstract base class for all musculotendon classes to inherit from.
 
     Explanation
@@ -155,8 +155,8 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self,
         name: str,
         *,
-        origin: me.Point,
-        insertion: me.Point,
+        origin: Point,
+        insertion: Point,
         optimal_fiber_length: Optional[float] = None,
         maximal_fiber_velocity: float = 10.0,
         peak_isometric_force: Optional[float] = None,
@@ -225,74 +225,74 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self.fiber_damping_coefficient = fiber_damping_coefficient
 
         # Symbols
-        self._l_M_opt = sm.Symbol(f'l_M_opt_{self.name}')
-        self._v_M_max = sm.Symbol(f'v_M_max_{self.name}')
-        self._F_M_max = sm.Symbol(f'F_M_max_{self.name}')
-        self._l_T_slack = sm.Symbol(f'l_T_slack_{self.name}')
-        self._alpha_opt = sm.Symbol(f'alpha_opt_{self.name}')
-        self._beta = sm.Symbol(f'beta_{self.name}')
+        self._l_M_opt = Symbol(f'l_M_opt_{self.name}')
+        self._v_M_max = Symbol(f'v_M_max_{self.name}')
+        self._F_M_max = Symbol(f'F_M_max_{self.name}')
+        self._l_T_slack = Symbol(f'l_T_slack_{self.name}')
+        self._alpha_opt = Symbol(f'alpha_opt_{self.name}')
+        self._beta = Symbol(f'beta_{self.name}')
 
         # Dynamic symbols
-        self._l_MT = me.dynamicsymbols(f"l_MT_{self.name}")
-        self._v_MT = me.dynamicsymbols(f"v_MT_{self.name}")
-        self._l_T = me.dynamicsymbols(f"l_T_{self.name}")
-        self._v_T = me.dynamicsymbols(f"v_T_{self.name}")
-        self._l_M = me.dynamicsymbols(f"l_M_{self.name}")
-        self._v_M = me.dynamicsymbols(f"v_M_{self.name}")
+        self._l_MT = dynamicsymbols(f"l_MT_{self.name}")
+        self._v_MT = dynamicsymbols(f"v_MT_{self.name}")
+        self._l_T = dynamicsymbols(f"l_T_{self.name}")
+        self._v_T = dynamicsymbols(f"v_T_{self.name}")
+        self._l_M = dynamicsymbols(f"l_M_{self.name}")
+        self._v_M = dynamicsymbols(f"v_M_{self.name}")
 
-        self._l_T_tilde = me.dynamicsymbols(f"l_T_tilde_{self.name}")
-        self._v_T_tilde = me.dynamicsymbols(f"v_T_tilde_{self.name}")
-        self._l_M_tilde = me.dynamicsymbols(f"l_M_tilde_{self.name}")
-        self._v_M_tilde = me.dynamicsymbols(f"v_M_tilde_{self.name}")
+        self._l_T_tilde = dynamicsymbols(f"l_T_tilde_{self.name}")
+        self._v_T_tilde = dynamicsymbols(f"v_T_tilde_{self.name}")
+        self._l_M_tilde = dynamicsymbols(f"l_M_tilde_{self.name}")
+        self._v_M_tilde = dynamicsymbols(f"v_M_tilde_{self.name}")
 
-        self._F_T = me.dynamicsymbols(f"F_T_{self.name}")
-        self._F_M = me.dynamicsymbols(f"F_M_{self.name}")
+        self._F_T = dynamicsymbols(f"F_T_{self.name}")
+        self._F_M = dynamicsymbols(f"F_M_{self.name}")
 
-        self._F_T_tilde = me.dynamicsymbols(f"F_T_tilde_{self.name}")
-        self._F_M_tilde = me.dynamicsymbols(f"F_M_tilde_{self.name}")
+        self._F_T_tilde = dynamicsymbols(f"F_T_tilde_{self.name}")
+        self._F_M_tilde = dynamicsymbols(f"F_M_tilde_{self.name}")
 
-        self._fl_T = me.dynamicsymbols(f"fl_T_{self.name}")
-        self._fl_M_pas = me.dynamicsymbols(f"fl_M_pas_{self.name}")
-        self._fl_M_act = me.dynamicsymbols(f"fl_M_act_{self.name}")
-        self._fv_M = me.dynamicsymbols(f"fv_M_{self.name}")
+        self._fl_T = dynamicsymbols(f"fl_T_{self.name}")
+        self._fl_M_pas = dynamicsymbols(f"fl_M_pas_{self.name}")
+        self._fl_M_act = dynamicsymbols(f"fl_M_act_{self.name}")
+        self._fv_M = dynamicsymbols(f"fv_M_{self.name}")
 
-        self._cos_alpha = me.dynamicsymbols(f"cos_alpha_{self.name}")
-        self._dF_T_tilde_dt = me.dynamicsymbols(f"dF_T_tilde_dt_{self.name}")
-        self._dl_M_tilde_dt = me.dynamicsymbols(f"dl_M_tilde_dt_{self.name}")
+        self._cos_alpha = dynamicsymbols(f"cos_alpha_{self.name}")
+        self._dF_T_tilde_dt = dynamicsymbols(f"dF_T_tilde_dt_{self.name}")
+        self._dl_M_tilde_dt = dynamicsymbols(f"dl_M_tilde_dt_{self.name}")
 
-        self._F_orig_x = me.dynamicsymbols(f"F_orig_x_{self.name}")
-        self._F_orig_y = me.dynamicsymbols(f"F_orig_y_{self.name}")
-        self._F_orig_z = me.dynamicsymbols(f"F_orig_z_{self.name}")
-        self._F_insr_x = me.dynamicsymbols(f"F_insr_x_{self.name}")
-        self._F_insr_y = me.dynamicsymbols(f"F_insr_y_{self.name}")
-        self._F_insr_z = me.dynamicsymbols(f"F_insr_z_{self.name}")
+        self._F_orig_x = dynamicsymbols(f"F_orig_x_{self.name}")
+        self._F_orig_y = dynamicsymbols(f"F_orig_y_{self.name}")
+        self._F_orig_z = dynamicsymbols(f"F_orig_z_{self.name}")
+        self._F_insr_x = dynamicsymbols(f"F_insr_x_{self.name}")
+        self._F_insr_y = dynamicsymbols(f"F_insr_y_{self.name}")
+        self._F_insr_z = dynamicsymbols(f"F_insr_z_{self.name}")
 
     @property
-    def origin(self) -> me.Point:
+    def origin(self) -> Point:
         """The `Point` from which the musculotendon originates."""
         return self._origin
 
     @origin.setter
-    def origin(self, origin: me.Point) -> None:
-        if not isinstance(origin, me.Point):
+    def origin(self, origin: Point) -> None:
+        if not isinstance(origin, Point):
             msg = (
                 f'Value {repr(origin)} passed to `origin` was of type '
-                f'{type(origin)}, must be {type(me.Point)}.'
+                f'{type(origin)}, must be {type(Point)}.'
             )
             raise TypeError(msg)
         self._origin = origin
 
     @property
-    def insertion(self) -> me.Point:
+    def insertion(self) -> Point:
         """The `Point` to which the musculotendon inserts."""
         return self._insertion
 
     @insertion.setter
-    def insertion(self, insertion: me.Point) -> None:
-        if not isinstance(insertion, me.Point):
+    def insertion(self, insertion: Point) -> None:
+        if not isinstance(insertion, Point):
             msg = (
                 f'Value {repr(insertion)} passed to `insertion` was of type '
-                f'{type(insertion)}, must be {type(me.Point)}.'
+                f'{type(insertion)}, must be {type(Point)}.'
             )
             raise TypeError(msg)
         self._insertion = insertion
@@ -494,7 +494,7 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self._fiber_damping_coefficient = fiber_damping_coefficient
 
     @property
-    def l_M_opt(self) -> sm.Symbol:
+    def l_M_opt(self) -> Symbol:
         """Accessor for the optimal fiber length symbol.
 
         See Also
@@ -507,7 +507,7 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         return self._l_M_opt
 
     @property
-    def v_M_max(self) -> sm.Symbol:
+    def v_M_max(self) -> Symbol:
         """Accessor for the maximal fiber velocity symbol.
 
         See Also
@@ -520,7 +520,7 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         return self._v_M_max
 
     @property
-    def F_M_max(self) -> sm.Symbol:
+    def F_M_max(self) -> Symbol:
         """Accessor for the peak isometric force symbol.
 
         See Also
@@ -533,7 +533,7 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         return self._F_M_max
 
     @property
-    def l_T_slack(self) -> sm.Symbol:
+    def l_T_slack(self) -> Symbol:
         """Accessor for the tendon slack length symbol.
 
         See Also
@@ -546,7 +546,7 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         return self._l_T_slack
 
     @property
-    def alpha_opt(self) -> sm.Symbol:
+    def alpha_opt(self) -> Symbol:
         """Accessor for the optimal pennation angle symbol.
 
         See Also
@@ -559,7 +559,7 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         return self._alpha_opt
 
     @property
-    def beta(self) -> sm.Symbol:
+    def beta(self) -> Symbol:
         """Accessor for the fiber damping coefficient symbol.
 
         See Also
@@ -572,42 +572,42 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         return self._beta
 
     @property
-    def l_MT(self) -> sm.core.backend.AppliedUndef:
+    def l_MT(self) -> AppliedUndef:
         """Accessor for the musculotendon length dynamic symbol."""
         return self._l_MT
 
     @property
-    def v_MT(self) -> sm.core.backend.AppliedUndef:
+    def v_MT(self) -> AppliedUndef:
         """Accessor for the musculotendon shortening velocity dynamic symbol."""
         return self._v_MT
 
     @property
-    def l_T(self) -> sm.core.backend.AppliedUndef:
+    def l_T(self) -> AppliedUndef:
         """Accessor for the tendon length dynamic symbol."""
         return self._l_T
 
     @property
-    def v_T(self) -> sm.core.backend.AppliedUndef:
+    def v_T(self) -> AppliedUndef:
         """Accessor for the tendon shortening velocity dynamic symbol."""
         return self._v_T
 
     @property
-    def l_M(self) -> sm.core.backend.AppliedUndef:
+    def l_M(self) -> AppliedUndef:
         """Accessor for the fiber length dynamic symbol."""
         return self._l_M
 
     @property
-    def v_M(self) -> sm.core.backend.AppliedUndef:
+    def v_M(self) -> AppliedUndef:
         """Accessor for the fiber shortening velocity dynamic symbol."""
         return self._v_M
 
     @property
-    def l_T_tilde(self) -> sm.core.backend.AppliedUndef:
+    def l_T_tilde(self) -> AppliedUndef:
         """Accessor for the normalized tendon length dynamic symbol."""
         return self._l_T_tilde
 
     @property
-    def v_T_tilde(self) -> sm.core.backend.AppliedUndef:
+    def v_T_tilde(self) -> AppliedUndef:
         """Accessor for the normalized tendon shortening velocity dynamic
         symbol.
 
@@ -615,103 +615,103 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         return self._v_T_tilde
 
     @property
-    def l_M_tilde(self) -> sm.core.backend.AppliedUndef:
+    def l_M_tilde(self) -> AppliedUndef:
         """Accessor for the normalized fiber length dynamic symbol."""
         return self._l_M_tilde
 
     @property
-    def v_M_tilde(self) -> sm.core.backend.AppliedUndef:
+    def v_M_tilde(self) -> AppliedUndef:
         """Accessor for the normalized fiber shortening velocity dynamic symbol.
 
         """
         return self._v_M_tilde
 
     @property
-    def F_T(self) -> sm.core.backend.AppliedUndef:
+    def F_T(self) -> AppliedUndef:
         """Accessor for the tendon force dynamic symbol."""
         return self._F_T
 
     @property
-    def F_M(self) -> sm.core.backend.AppliedUndef:
+    def F_M(self) -> AppliedUndef:
         """Accessor for the fiber force dynamic symbol."""
         return self._F_M
 
     @property
-    def F_T_tilde(self) -> sm.core.backend.AppliedUndef:
+    def F_T_tilde(self) -> AppliedUndef:
         """Accessor for the normalized tendon force dynamic symbol."""
         return self._F_T_tilde
 
     @property
-    def F_M_tilde(self) -> sm.core.backend.AppliedUndef:
+    def F_M_tilde(self) -> AppliedUndef:
         """Accessor for the normalized fiber force dynamic symbol."""
         return self._F_M_tilde
 
     @property
-    def fl_T(self) -> sm.core.backend.AppliedUndef:
+    def fl_T(self) -> AppliedUndef:
         """Accessor for the tendon force-length dynamic symbol."""
         return self._fl_T
 
     @property
-    def fl_M_pas(self) -> sm.core.backend.AppliedUndef:
+    def fl_M_pas(self) -> AppliedUndef:
         """Accessor for the passive fiber force-length dynamic symbol."""
         return self._fl_M_pas
 
     @property
-    def fl_M_act(self) -> sm.core.backend.AppliedUndef:
+    def fl_M_act(self) -> AppliedUndef:
         """Accessor for the active fiber force-length dynamic symbol."""
         return self._fl_M_act
 
     @property
-    def fv_M(self) -> sm.core.backend.AppliedUndef:
+    def fv_M(self) -> AppliedUndef:
         """Accessor for the fiber force-velocity dynamic symbol."""
         return self._fv_M
 
     @property
-    def cos_alpha(self) -> sm.core.backend.AppliedUndef:
+    def cos_alpha(self) -> AppliedUndef:
         """Accessor for the cosine of the pennation angle dynamic symbol."""
         return self._cos_alpha
 
     @property
-    def dF_T_tilde_dt(self) -> sm.core.backend.AppliedUndef:
+    def dF_T_tilde_dt(self) -> AppliedUndef:
         """Accessor for the rate of change in tendon force dynamic symbol."""
         return self._dF_T_tilde_dt
 
     @property
-    def dl_M_tilde_dt(self) -> sm.core.backend.AppliedUndef:
+    def dl_M_tilde_dt(self) -> AppliedUndef:
         """Accessor for the rate of change in fiber length dynamic symbol."""
         return self._dl_M_tilde_dt
 
     @property
-    def F_orig_x(self) -> sm.core.backend.AppliedUndef:
+    def F_orig_x(self) -> AppliedUndef:
         """Accessor for the x-axis origin force dynamic symbol."""
         return self._F_orig_x
 
     @property
-    def F_orig_y(self) -> sm.core.backend.AppliedUndef:
+    def F_orig_y(self) -> AppliedUndef:
         """Accessor for the y-axis origin force dynamic symbol."""
         return self._F_orig_y
 
     @property
-    def F_orig_z(self) -> sm.core.backend.AppliedUndef:
+    def F_orig_z(self) -> AppliedUndef:
         """Accessor for the z-axis origin force dynamic symbol."""
         return self._F_orig_z
 
     @property
-    def F_insr_x(self) -> sm.core.backend.AppliedUndef:
+    def F_insr_x(self) -> AppliedUndef:
         """Accessor for the x-axis insertion force dynamic symbol."""
         return self._F_insr_x
 
     @property
-    def F_insr_y(self) -> sm.core.backend.AppliedUndef:
+    def F_insr_y(self) -> AppliedUndef:
         """Accessor for the y-axis insertion force dynamic symbol."""
         return self._F_insr_y
 
     @property
-    def F_insr_z(self) -> sm.core.backend.AppliedUndef:
+    def F_insr_z(self) -> AppliedUndef:
         """Accessor for the z-axis insertion force dynamic symbol."""
         return self._F_insr_z
 
-    def symbol_to_constant_mapping(self) -> dict[sm.Symbol, Optional[float]]:
+    def symbol_to_constant_mapping(self) -> dict[Symbol, Optional[float]]:
         """Mapping between symbolic attributes and associated constants."""
         mapping = {
             self.l_M_opt: self.optimal_fiber_length,

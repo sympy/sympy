@@ -3,17 +3,23 @@
 
 import pytest
 
-import sympy as sm
-import sympy.physics.mechanics as me
-import sympy.physics._biomechanics as bme
+from sympy.core.backend import Symbol
+from sympy.core.numbers import Float, Integer
+from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
+from sympy.physics._biomechanics import (
+    Brockie2021Musculotendon,
+    DeGroote2016Musculotendon,
+    Millard2013Musculotendon,
+    Musculotendon,
+) 
 
 
 @pytest.mark.parametrize(
     'musculotendon_class',
     [
-        bme.Brockie2021Musculotendon,
-        bme.DeGroote2016Musculotendon,
-        bme.Millard2013Musculotendon,
+        Brockie2021Musculotendon,
+        DeGroote2016Musculotendon,
+        Millard2013Musculotendon,
     ]
 )
 class TestMusculotendonArguments:
@@ -23,8 +29,8 @@ class TestMusculotendonArguments:
     def setup(self):
         """Instantiate name, and origin and insertion point fixtures."""
         self.name = 'muscle'
-        self.origin = me.Point('origin')
-        self.insertion = me.Point('insertion')
+        self.origin = Point('origin')
+        self.insertion = Point('insertion')
 
     @pytest.mark.parametrize('name', ['muscle', 'musculotendon'])
     def test_nonzero_length_strings_are_valid_names(
@@ -41,7 +47,7 @@ class TestMusculotendonArguments:
         assert muscle.name == name
         assert isinstance(muscle.name, str)
 
-    @pytest.mark.parametrize('name', [0, sm.Symbol('name')])
+    @pytest.mark.parametrize('name', [0, Symbol('name')])
     def test_non_string_name_raises_type_error(
         self,
         musculotendon_class,
@@ -79,12 +85,12 @@ class TestMusculotendonArguments:
             origin=self.origin,
             insertion=self.insertion,
         )
-        assert isinstance(muscle.origin, me.Point)
+        assert isinstance(muscle.origin, Point)
         assert muscle.origin == self.origin
-        assert isinstance(muscle.insertion, me.Point)
+        assert isinstance(muscle.insertion, Point)
         assert muscle.insertion == self.insertion
 
-    @pytest.mark.parametrize('origin', ['origin', me.ReferenceFrame('N')])
+    @pytest.mark.parametrize('origin', ['origin', ReferenceFrame('N')])
     def test_origin_not_point_object_raises_type_error(
         self,
         musculotendon_class,
@@ -98,7 +104,7 @@ class TestMusculotendonArguments:
                 insertion=self.insertion,
             )
 
-    @pytest.mark.parametrize('insertion', ['insertion', me.ReferenceFrame('N')])
+    @pytest.mark.parametrize('insertion', ['insertion', ReferenceFrame('N')])
     def test_insertion_not_point_object_raises_type_error(
         self,
         musculotendon_class,
@@ -142,7 +148,7 @@ class TestMusculotendonArguments:
             (0.25, 0.25),
             (1, 1.0),
             ('0.25', 0.25),
-            (sm.Float(0.25), 0.25),
+            (Float(0.25), 0.25),
         ]
     )
     def test_optimal_fiber_length_attribute_returns_float(
@@ -195,8 +201,8 @@ class TestMusculotendonArguments:
             (10.0, 10.0),
             (10, 10.0),
             ('10.0', 10.0),
-            (sm.Float(10.0), 10.0),
-            (sm.Integer(10), 10.0),
+            (Float(10.0), 10.0),
+            (Integer(10), 10.0),
         ]
     )
     def test_maximal_fiber_velocity_attribute_returns_float(
@@ -246,8 +252,8 @@ class TestMusculotendonArguments:
             (1000.0, 1000.0),
             (1000, 1000.0),
             ('1000.0', 1000.0),
-            (sm.Float(1000.0), 1000.0),
-            (sm.Integer(1000), 1000.0)
+            (Float(1000.0), 1000.0),
+            (Integer(1000), 1000.0)
         ]
     )
     def test_peak_isometric_force_attribute_returns_float(
@@ -297,7 +303,7 @@ class TestMusculotendonArguments:
             (0.05, 0.05),
             (1, 1.0),
             ('0.05', 0.05),
-            (sm.Float(0.05), 0.05),
+            (Float(0.05), 0.05),
         ]
     )
     def test_tendon_slack_length_attribute_returns_float(
@@ -350,7 +356,7 @@ class TestMusculotendonArguments:
             (0.25, 0.25),
             (1, 1.0),
             ('0.25', 0.25),
-            (sm.Float(0.25), 0.25),
+            (Float(0.25), 0.25),
         ]
     )
     def test_optimal_pennation_angle_attribute_returns_float(
@@ -403,7 +409,7 @@ class TestMusculotendonArguments:
             (0.1, 0.1),
             (1, 1.0),
             ('0.1', 0.1),
-            (sm.Float(0.1), 0.1),
+            (Float(0.1), 0.1),
         ]
     )
     def test_fiber_damping_coefficient_attribute_returns_float(
@@ -441,9 +447,9 @@ class TestMusculotendonArguments:
 @pytest.mark.parametrize(
     'musculotendon_class',
     [
-        bme.Brockie2021Musculotendon,
-        bme.DeGroote2016Musculotendon,
-        bme.Millard2013Musculotendon,
+        Brockie2021Musculotendon,
+        DeGroote2016Musculotendon,
+        Millard2013Musculotendon,
     ]
 )
 class TestMusculotendonAttributes:
@@ -453,18 +459,18 @@ class TestMusculotendonAttributes:
     def setup(self):
         """Instantiate name, and origin and insertion point fixtures."""
         self.name = 'muscle'
-        self.origin = me.Point('origin')
-        self.insertion = me.Point('insertion')
+        self.origin = Point('origin')
+        self.insertion = Point('insertion')
 
     @pytest.mark.parametrize(
         'attribute_name, attribute_symbol',
         [
-            ('l_M_opt', sm.Symbol('l_M_opt_muscle')),
-            ('v_M_max', sm.Symbol('v_M_max_muscle')),
-            ('F_M_max', sm.Symbol('F_M_max_muscle')),
-            ('l_T_slack', sm.Symbol('l_T_slack_muscle')),
-            ('alpha_opt', sm.Symbol('alpha_opt_muscle')),
-            ('beta', sm.Symbol('beta_muscle')),
+            ('l_M_opt', Symbol('l_M_opt_muscle')),
+            ('v_M_max', Symbol('v_M_max_muscle')),
+            ('F_M_max', Symbol('F_M_max_muscle')),
+            ('l_T_slack', Symbol('l_T_slack_muscle')),
+            ('alpha_opt', Symbol('alpha_opt_muscle')),
+            ('beta', Symbol('beta_muscle')),
         ]
     )
     def test_has_symbol_as_attribute(
@@ -493,33 +499,33 @@ class TestMusculotendonAttributes:
     @pytest.mark.parametrize(
         'attribute_name, attribute_symbol',
         [
-            ('l_MT', me.dynamicsymbols('l_MT_muscle')),
-            ('v_MT', me.dynamicsymbols('v_MT_muscle')),
-            ('l_T', me.dynamicsymbols('l_T_muscle')),
-            ('v_T', me.dynamicsymbols('v_T_muscle')),
-            ('l_M', me.dynamicsymbols('l_M_muscle')),
-            ('v_M', me.dynamicsymbols('v_M_muscle')),
-            ('l_T_tilde', me.dynamicsymbols('l_T_tilde_muscle')),
-            ('v_T_tilde', me.dynamicsymbols('v_T_tilde_muscle')),
-            ('l_M_tilde', me.dynamicsymbols('l_M_tilde_muscle')),
-            ('v_M_tilde', me.dynamicsymbols('v_M_tilde_muscle')),
-            ('F_T', me.dynamicsymbols('F_T_muscle')),
-            ('F_M', me.dynamicsymbols('F_M_muscle')),
-            ('F_T_tilde', me.dynamicsymbols('F_T_tilde_muscle')),
-            ('F_M_tilde', me.dynamicsymbols('F_M_tilde_muscle')),
-            ('fl_T', me.dynamicsymbols('fl_T_muscle')),
-            ('fl_M_pas', me.dynamicsymbols('fl_M_pas_muscle')),
-            ('fl_M_act', me.dynamicsymbols('fl_M_act_muscle')),
-            ('fv_M', me.dynamicsymbols('fv_M_muscle')),
-            ('cos_alpha', me.dynamicsymbols('cos_alpha_muscle')),
-            ('dF_T_tilde_dt', me.dynamicsymbols('dF_T_tilde_dt_muscle')),
-            ('dl_M_tilde_dt', me.dynamicsymbols('dl_M_tilde_dt_muscle')),
-            ('F_orig_x', me.dynamicsymbols('F_orig_x_muscle')),
-            ('F_orig_y', me.dynamicsymbols('F_orig_y_muscle')),
-            ('F_orig_z', me.dynamicsymbols('F_orig_z_muscle')),
-            ('F_insr_x', me.dynamicsymbols('F_insr_x_muscle')),
-            ('F_insr_y', me.dynamicsymbols('F_insr_y_muscle')),
-            ('F_insr_z', me.dynamicsymbols('F_insr_z_muscle')),
+            ('l_MT', dynamicsymbols('l_MT_muscle')),
+            ('v_MT', dynamicsymbols('v_MT_muscle')),
+            ('l_T', dynamicsymbols('l_T_muscle')),
+            ('v_T', dynamicsymbols('v_T_muscle')),
+            ('l_M', dynamicsymbols('l_M_muscle')),
+            ('v_M', dynamicsymbols('v_M_muscle')),
+            ('l_T_tilde', dynamicsymbols('l_T_tilde_muscle')),
+            ('v_T_tilde', dynamicsymbols('v_T_tilde_muscle')),
+            ('l_M_tilde', dynamicsymbols('l_M_tilde_muscle')),
+            ('v_M_tilde', dynamicsymbols('v_M_tilde_muscle')),
+            ('F_T', dynamicsymbols('F_T_muscle')),
+            ('F_M', dynamicsymbols('F_M_muscle')),
+            ('F_T_tilde', dynamicsymbols('F_T_tilde_muscle')),
+            ('F_M_tilde', dynamicsymbols('F_M_tilde_muscle')),
+            ('fl_T', dynamicsymbols('fl_T_muscle')),
+            ('fl_M_pas', dynamicsymbols('fl_M_pas_muscle')),
+            ('fl_M_act', dynamicsymbols('fl_M_act_muscle')),
+            ('fv_M', dynamicsymbols('fv_M_muscle')),
+            ('cos_alpha', dynamicsymbols('cos_alpha_muscle')),
+            ('dF_T_tilde_dt', dynamicsymbols('dF_T_tilde_dt_muscle')),
+            ('dl_M_tilde_dt', dynamicsymbols('dl_M_tilde_dt_muscle')),
+            ('F_orig_x', dynamicsymbols('F_orig_x_muscle')),
+            ('F_orig_y', dynamicsymbols('F_orig_y_muscle')),
+            ('F_orig_z', dynamicsymbols('F_orig_z_muscle')),
+            ('F_insr_x', dynamicsymbols('F_insr_x_muscle')),
+            ('F_insr_y', dynamicsymbols('F_insr_y_muscle')),
+            ('F_insr_z', dynamicsymbols('F_insr_z_muscle')),
         ]
     )
     def test_has_dynamic_symbol_as_attribute(
@@ -565,12 +571,12 @@ class TestMusculotendonAttributes:
             fiber_damping_coefficient=FIBER_DAMPING_COEFFICIENT,
         )
         expected = {
-            sm.Symbol('l_M_opt_muscle'): OPTIMAL_FIBER_LENGTH,
-            sm.Symbol('v_M_max_muscle'): MAXIMAL_FIBER_VELOCITY,
-            sm.Symbol('F_M_max_muscle'): PEAK_ISOMETRIC_FORCE,
-            sm.Symbol('l_T_slack_muscle'): TENDON_SLACK_LENGTH,
-            sm.Symbol('alpha_opt_muscle'): OPTIMAL_PENNATION_ANGLE,
-            sm.Symbol('beta_muscle'): FIBER_DAMPING_COEFFICIENT,
+            Symbol('l_M_opt_muscle'): OPTIMAL_FIBER_LENGTH,
+            Symbol('v_M_max_muscle'): MAXIMAL_FIBER_VELOCITY,
+            Symbol('F_M_max_muscle'): PEAK_ISOMETRIC_FORCE,
+            Symbol('l_T_slack_muscle'): TENDON_SLACK_LENGTH,
+            Symbol('alpha_opt_muscle'): OPTIMAL_PENNATION_ANGLE,
+            Symbol('beta_muscle'): FIBER_DAMPING_COEFFICIENT,
         }
         assert hasattr(muscle, 'symbol_to_constant_mapping')
         assert muscle.symbol_to_constant_mapping() == expected
@@ -582,18 +588,18 @@ class TestMusculotendonFactoryFunction:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Instantiate origin and insertion point fixtures."""
-        self.origin = me.Point('origin')
-        self.insertion = me.Point('insertion')
+        self.origin = Point('origin')
+        self.insertion = Point('insertion')
 
     @pytest.mark.parametrize(
         'model_identifier, musculotendon_class',
         [
-            ('Brockie', bme.Brockie2021Musculotendon),
-            ('Brockie2021', bme.Brockie2021Musculotendon),
-            ('DeGroote', bme.DeGroote2016Musculotendon),
-            ('DeGroote2016', bme.DeGroote2016Musculotendon),
-            ('Millard', bme.Millard2013Musculotendon),
-            ('Millard2013', bme.Millard2013Musculotendon),
+            ('Brockie', Brockie2021Musculotendon),
+            ('Brockie2021', Brockie2021Musculotendon),
+            ('DeGroote', DeGroote2016Musculotendon),
+            ('DeGroote2016', DeGroote2016Musculotendon),
+            ('Millard', Millard2013Musculotendon),
+            ('Millard2013', Millard2013Musculotendon),
         ]
     )
     def test_valid_identifier_returns_musclotendon_instance(
@@ -602,7 +608,7 @@ class TestMusculotendonFactoryFunction:
         musculotendon_class,
     ):
         """A correct identifier will successfully return an instance."""
-        muscle = bme.Musculotendon(
+        muscle = Musculotendon(
             'muscle',
             model_identifier,
             origin=self.origin,
@@ -617,7 +623,7 @@ class TestMusculotendonFactoryFunction:
     ):
         """An invalid identifier will cause a `ValueError` to be raised."""
         with pytest.raises(ValueError):
-            _ = bme.Musculotendon(
+            _ = Musculotendon(
                 'muscle',
                 model_identifier,
                 origin=self.origin,

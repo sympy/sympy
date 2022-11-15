@@ -3,9 +3,14 @@
 
 import pytest
 
-import sympy as sm
-import sympy.physics.mechanics as me
-import sympy.physics._biomechanics as bme
+from sympy.core.backend import Symbol
+from sympy.core.numbers import Float
+from sympy.physics.mechanics import dynamicsymbols
+from sympy.physics._biomechanics import (
+    ActivationDynamics,
+    DeGroote2016ActivationDynamics,
+    ZerothOrderActivationDynamics,
+)
 
 
 EXPECTED_ATTRIBUTE_MISSING_SENTINEL = object()
@@ -14,8 +19,8 @@ EXPECTED_ATTRIBUTE_MISSING_SENTINEL = object()
 @pytest.mark.parametrize(
     'activation_dynamics_class',
     [
-        bme.DeGroote2016ActivationDynamics,
-        bme.ZerothOrderActivationDynamics,
+        DeGroote2016ActivationDynamics,
+        ZerothOrderActivationDynamics,
     ]
 )
 class TestActivationDynamicsArguments:
@@ -37,7 +42,7 @@ class TestActivationDynamicsArguments:
         assert activation.name == name
         assert isinstance(activation.name, str)
 
-    @pytest.mark.parametrize('name', [0, sm.Symbol('name')])
+    @pytest.mark.parametrize('name', [0, Symbol('name')])
     def test_non_string_name_raises_type_error(
         self,
         activation_dynamics_class,
@@ -62,13 +67,13 @@ class TestActivationDynamicsArguments:
     'activation_dynamics_class, attributes',
     [
         (
-            bme.DeGroote2016ActivationDynamics,
+            DeGroote2016ActivationDynamics,
             {
                 "order": 1,
             },
         ),
         (
-            bme.ZerothOrderActivationDynamics,
+            ZerothOrderActivationDynamics,
             {
                 "order": 0,
             },
@@ -96,8 +101,8 @@ class TestActivationDynamicsAttributes:
     @pytest.mark.parametrize(
         'attribute_name, attribute_symbol',
         [
-            ('e', me.dynamicsymbols('e_activation')),
-            ('a', me.dynamicsymbols('a_activation')),
+            ('e', dynamicsymbols('e_activation')),
+            ('a', dynamicsymbols('a_activation')),
         ]
     )
     def test_has_symbol_as_attribute(
@@ -126,7 +131,7 @@ class TestZerothOrderActivationDynamics:
 
     def test_has_symbol_to_constant_mapping(self):
         """Has attribute that maps symbol attributes to constant attributes."""
-        activation = bme.ZerothOrderActivationDynamics('activation')
+        activation = ZerothOrderActivationDynamics('activation')
         expected = {}
         assert hasattr(activation, 'symbol_to_constant_mapping')
         assert activation.symbol_to_constant_mapping() == expected
@@ -139,11 +144,11 @@ class TestDeGroote2016ActivationDynamics:
     def setup(self):
         """Create basic instance."""
         self.name = 'activation'
-        self.instance = bme.DeGroote2016ActivationDynamics(self.name)
+        self.instance = DeGroote2016ActivationDynamics(self.name)
 
     def test_optional_keyword_argument_default_values(self):
         """All optional keyword arguments default to expected values."""
-        instance = bme.DeGroote2016ActivationDynamics('activation')
+        instance = DeGroote2016ActivationDynamics('activation')
         assert instance.activation_time_constant == 0.015
         assert instance.deactivation_time_constant == 0.060
 
@@ -153,7 +158,7 @@ class TestDeGroote2016ActivationDynamics:
             (0.020, 0.020),
             (1, 1.0),
             ('0.020', 0.020),
-            (sm.Float(0.020), 0.020),
+            (Float(0.020), 0.020),
         ]
     )
     def test_activation_time_constant_attribute_returns_float(
@@ -162,7 +167,7 @@ class TestDeGroote2016ActivationDynamics:
         activation_time_constant_expected,
     ):
         """`activation_time_constant` arguments are cast to `float`."""
-        instance = bme.DeGroote2016ActivationDynamics(
+        instance = DeGroote2016ActivationDynamics(
             self.name,
             activation_time_constant=activation_time_constant_value,
         )
@@ -176,7 +181,7 @@ class TestDeGroote2016ActivationDynamics:
     ):
         """`ValueError` is raised for nonpositive `activation_time_constant`."""
         with pytest.raises(ValueError):
-            _ = bme.DeGroote2016ActivationDynamics(
+            _ = DeGroote2016ActivationDynamics(
                 self.name,
                 activation_time_constant=activation_time_constant,
             )
@@ -184,8 +189,8 @@ class TestDeGroote2016ActivationDynamics:
     @pytest.mark.parametrize(
         'attribute_name, attribute_symbol',
         [
-            ('tau_a', sm.Symbol('tau_a_activation')),
-            ('tau_d', sm.Symbol('tau_d_activation')),
+            ('tau_a', Symbol('tau_a_activation')),
+            ('tau_d', Symbol('tau_d_activation')),
         ]
     )
     def test_has_symbol_as_attribute(
@@ -209,14 +214,14 @@ class TestDeGroote2016ActivationDynamics:
         """Has attribute that maps symbol attributes to constant attributes."""
         ACTIVATION_TIME_CONSTANT = 0.025
         DEACTIVATION_TIME_CONSTANT = 0.070
-        activation = bme.DeGroote2016ActivationDynamics(
+        activation = DeGroote2016ActivationDynamics(
             'activation',
             activation_time_constant=ACTIVATION_TIME_CONSTANT,
             deactivation_time_constant=DEACTIVATION_TIME_CONSTANT,
         )
         expected = {
-            sm.Symbol('tau_a_activation'): ACTIVATION_TIME_CONSTANT,
-            sm.Symbol('tau_d_activation'): DEACTIVATION_TIME_CONSTANT,
+            Symbol('tau_a_activation'): ACTIVATION_TIME_CONSTANT,
+            Symbol('tau_d_activation'): DEACTIVATION_TIME_CONSTANT,
         }
         assert hasattr(activation, 'symbol_to_constant_mapping')
         assert activation.symbol_to_constant_mapping() == expected
@@ -228,12 +233,12 @@ class TestActivationDynamicsFactoryFunction:
     @pytest.mark.parametrize(
         'model_identifier, activation_dynamics_class',
         [
-            (0, bme.ZerothOrderActivationDynamics),
-            ('Zero', bme.ZerothOrderActivationDynamics),
-            ('Zeroth', bme.ZerothOrderActivationDynamics),
-            (1, bme.DeGroote2016ActivationDynamics),
-            ('DeGroote', bme.DeGroote2016ActivationDynamics),
-            ('DeGroote2016', bme.DeGroote2016ActivationDynamics),
+            (0, ZerothOrderActivationDynamics),
+            ('Zero', ZerothOrderActivationDynamics),
+            ('Zeroth', ZerothOrderActivationDynamics),
+            (1, DeGroote2016ActivationDynamics),
+            ('DeGroote', DeGroote2016ActivationDynamics),
+            ('DeGroote2016', DeGroote2016ActivationDynamics),
         ]
     )
     def test_valid_identifier_returns_activation_dynamics_instance(
@@ -242,7 +247,7 @@ class TestActivationDynamicsFactoryFunction:
         activation_dynamics_class,
     ):
         """A correct identifier will successfully return an instance."""
-        activation = bme.ActivationDynamics(
+        activation = ActivationDynamics(
             'activation',
             model_identifier,
         )
@@ -255,7 +260,7 @@ class TestActivationDynamicsFactoryFunction:
     ):
         """An invalid identifier will cause a `ValueError` to be raised."""
         with pytest.raises(ValueError):
-            _ = bme.ActivationDynamics(
+            _ = ActivationDynamics(
                 'activation',
                 model_identifier,
             )

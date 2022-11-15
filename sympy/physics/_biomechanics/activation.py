@@ -11,11 +11,11 @@ be modelled by the models present in this module.
 """
 
 
-import abc
+from abc import ABC
 from typing import Optional, Union
 
-import sympy as sm
-import sympy.physics.mechanics as me
+from sympy.core.backend import Symbol
+from sympy.physics.mechanics import dynamicsymbols
 from sympy.physics._biomechanics.mixin import _NamedMixin
 
 
@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-class ActivationDynamicsBase(abc.ABC, _NamedMixin):
+class ActivationDynamicsBase(ABC, _NamedMixin):
     """Abstract base class for all musculotendon classes to inherit from.
 
     Explanation
@@ -65,15 +65,15 @@ class ActivationDynamicsBase(abc.ABC, _NamedMixin):
         self.name = name
 
         # Symbols
-        self.a = me.dynamicsymbols(f"a_{name}")
-        self.e = me.dynamicsymbols(f"e_{name}")
+        self.a = dynamicsymbols(f"a_{name}")
+        self.e = dynamicsymbols(f"e_{name}")
 
     @property
     def order(self):
         """Order of the ODEs governing the activation dynamics."""
         return self._ORDER
 
-    def symbol_to_constant_mapping(self) -> dict[sm.Symbol, Optional[float]]:
+    def symbol_to_constant_mapping(self) -> dict[Symbol, Optional[float]]:
         """Mapping between symbolic attributes and associated constants."""
         return {}
 
@@ -157,8 +157,8 @@ class DeGroote2016ActivationDynamics(ActivationDynamicsBase):
         self.deactivation_time_constant = deactivation_time_constant
 
         # Symbols
-        self._tau_a = sm.Symbol(f'tau_a_{self.name}')
-        self._tau_d = sm.Symbol(f'tau_d_{self.name}')
+        self._tau_a = Symbol(f'tau_a_{self.name}')
+        self._tau_d = Symbol(f'tau_d_{self.name}')
 
     @property
     def activation_time_constant(self) -> float:
@@ -221,7 +221,7 @@ class DeGroote2016ActivationDynamics(ActivationDynamicsBase):
         self._deactivation_time_constant = deactivation_time_constant
 
     @property
-    def tau_a(self) -> sm.Symbol:
+    def tau_a(self) -> Symbol:
         """Accessor for the activation time constant symbol.
 
         See Also
@@ -233,7 +233,7 @@ class DeGroote2016ActivationDynamics(ActivationDynamicsBase):
         return self._tau_a
 
     @property
-    def tau_d(self) -> sm.Symbol:
+    def tau_d(self) -> Symbol:
         """Accessor for the deactivation time constant symbol.
 
         See Also
@@ -245,7 +245,7 @@ class DeGroote2016ActivationDynamics(ActivationDynamicsBase):
         """
         return self._tau_d
 
-    def symbol_to_constant_mapping(self) -> dict[sm.Symbol, Optional[float]]:
+    def symbol_to_constant_mapping(self) -> dict[Symbol, Optional[float]]:
         """Mapping between symbolic attributes and associated constants."""
         mapping = {
             self.tau_a: self.activation_time_constant,
