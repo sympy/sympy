@@ -711,6 +711,18 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         """Accessor for the z-axis insertion force dynamic symbol."""
         return self._F_insr_z
 
+    def symbol_to_constant_mapping(self) -> dict[sm.Symbol, Optional[float]]:
+        """Mapping between symbolic attributes and associated constants."""
+        mapping = {
+            self.l_M_opt: self.optimal_fiber_length,
+            self.v_M_max: self.maximal_fiber_velocity,
+            self.F_M_max: self.peak_isometric_force,
+            self.l_T_slack: self.tendon_slack_length,
+            self.alpha_opt: self.optimal_pennation_angle,
+            self.beta: self.fiber_damping_coefficient
+        }
+        return mapping
+
     def __str__(self):
         """String representation of the musculotendon model instance."""
         return f'{self.__class__.__name__}({repr(self.name)})'

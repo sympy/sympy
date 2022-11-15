@@ -545,6 +545,36 @@ class TestMusculotendonAttributes:
         assert hasattr(muscle, attribute_name)
         assert getattr(muscle, attribute_name) == attribute_symbol
 
+    def test_has_symbol_to_constant_mapping(self, musculotendon_class):
+        """Has attribute that maps symbol attributes to constant attributes."""
+        OPTIMAL_FIBER_LENGTH = 0.25
+        MAXIMAL_FIBER_VELOCITY = 9.0
+        PEAK_ISOMETRIC_FORCE = 1000.0
+        TENDON_SLACK_LENGTH = 0.05
+        OPTIMAL_PENNATION_ANGLE = 0.05
+        FIBER_DAMPING_COEFFICIENT = 0.2
+        muscle = musculotendon_class(
+            'muscle',
+            origin=self.origin,
+            insertion=self.insertion,
+            optimal_fiber_length=OPTIMAL_FIBER_LENGTH,
+            maximal_fiber_velocity=MAXIMAL_FIBER_VELOCITY,
+            peak_isometric_force=PEAK_ISOMETRIC_FORCE,
+            tendon_slack_length=TENDON_SLACK_LENGTH,
+            optimal_pennation_angle=OPTIMAL_PENNATION_ANGLE,
+            fiber_damping_coefficient=FIBER_DAMPING_COEFFICIENT,
+        )
+        expected = {
+            sm.Symbol('l_M_opt_muscle') :OPTIMAL_FIBER_LENGTH,
+            sm.Symbol('v_M_max_muscle') :MAXIMAL_FIBER_VELOCITY,
+            sm.Symbol('F_M_max_muscle') :PEAK_ISOMETRIC_FORCE,
+            sm.Symbol('l_T_slack_muscle') :TENDON_SLACK_LENGTH,
+            sm.Symbol('alpha_opt_muscle') :OPTIMAL_PENNATION_ANGLE,
+            sm.Symbol('beta_muscle') :FIBER_DAMPING_COEFFICIENT,
+        }
+        assert hasattr(muscle, 'symbol_to_constant_mapping')
+        assert muscle.symbol_to_constant_mapping() == expected
+
 
 class TestMusculotendonFactoryFunction:
     """Tests for the `Musculotendon` factory function."""
