@@ -16,6 +16,7 @@ from typing import Optional
 
 import sympy as sm
 import sympy.physics.mechanics as me
+from sympy.physics._biomechanics.mixin import _NamedMixin
 
 
 __all__ = [
@@ -26,7 +27,7 @@ __all__ = [
 ]
 
 
-class MusculotendonABC(abc.ABC):
+class MusculotendonABC(abc.ABC, _NamedMixin):
     """Abstract base class for all musculotendon classes to inherit from.
 
     Explanation
@@ -257,27 +258,6 @@ class MusculotendonABC(abc.ABC):
         self._F_insr_x = me.dynamicsymbols(f"F_insr_x_{self.name}")
         self._F_insr_y = me.dynamicsymbols(f"F_insr_y_{self.name}")
         self._F_insr_z = me.dynamicsymbols(f"F_insr_z_{self.name}")
-
-    @property
-    def name(self) -> str:
-        """The name associated with the musculotendon."""
-        return self._name
-
-    @name.setter
-    def name(self, name: str) -> None:
-        if not isinstance(name, str):
-            msg = (
-                f'Name {repr(name)} passed to `name` was of type '
-                f'{type(name)}, must be {str}.'
-            )
-            raise TypeError(msg)
-        if name in {''}:
-            msg = (
-                f'Name {repr(name)} is invalid, must be a nonzero length '
-                f'{type(str)}.'
-            )
-            raise ValueError(msg)
-        self._name = name
 
     @property
     def origin(self) -> me.Point:
