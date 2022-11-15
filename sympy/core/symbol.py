@@ -207,7 +207,7 @@ class Symbol(AtomicExpr, Boolean):
     """
     A Symbol is an expression of a mathematical variable using a
     name.
-    
+
     Symbols support subscripts and Greek and Latin characters.
     Symbols can be combined to form SymPy expressions. A single Symbol
     can be created using the Symbol() constructor but to create
@@ -252,8 +252,7 @@ class Symbol(AtomicExpr, Boolean):
     (x + x_1,)
 
 
-    By running `init_printing()` SymPy will automatically pretty-print Greek
-    letters and subscripts.
+    SymPy will automatically pretty-print Greek letters and subscripts.
 
     >>> from sympy import symbols
     >>> alpha, beta, gamma = symbols('alpha beta gamma')
