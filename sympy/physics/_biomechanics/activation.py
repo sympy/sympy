@@ -12,7 +12,6 @@ be modelled by the models present in this module.
 
 
 import abc
-import functools
 from typing import Optional, Union
 
 import sympy as sm
