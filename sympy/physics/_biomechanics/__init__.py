@@ -7,6 +7,11 @@ musculoskeletal models involding musculotendons and activation dynamics.
 """
 
 
+from .activation import (
+    ActivationDynamics,
+    DeGroote2016ActivationDynamics,
+    ZerothOrderActivationDynamics,
+)
 from .musculotendon import (
     Brockie2021Musculotendon,
     DeGroote2016Musculotendon,
@@ -16,6 +21,12 @@ from .musculotendon import (
 
 
 __all__ = [
+    # Activation dynamics models and functions
+    'ActivationDynamics',
+    'DeGroote2016ActivationDynamics',
+    'ZerothOrderActivationDynamics',
+
+    # Musculotendon models and functions
     'Brockie2021Musculotendon',
     'DeGroote2016Musculotendon',
     'Millard2013Musculotendon',
