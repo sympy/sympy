@@ -11,7 +11,7 @@ from sympy.physics._biomechanics import (
     DeGroote2016Musculotendon,
     Millard2013Musculotendon,
     Musculotendon,
-) 
+)
 
 
 @pytest.mark.parametrize(
