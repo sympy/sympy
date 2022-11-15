@@ -27,7 +27,7 @@ __all__ = [
 ]
 
 
-class MusculotendonABC(abc.ABC, _NamedMixin):
+class MusculotendonBase(abc.ABC, _NamedMixin):
     """Abstract base class for all musculotendon classes to inherit from.
 
     Explanation
@@ -719,7 +719,7 @@ class MusculotendonABC(abc.ABC, _NamedMixin):
         )
 
 
-class Brockie2021Musculotendon(MusculotendonABC):
+class Brockie2021Musculotendon(MusculotendonBase):
     """Musculotendon model with curves based on Brockie, 2021 [1].
 
     References
@@ -732,7 +732,7 @@ class Brockie2021Musculotendon(MusculotendonABC):
     """
 
 
-class DeGroote2016Musculotendon(MusculotendonABC):
+class DeGroote2016Musculotendon(MusculotendonBase):
     """Musculotendon model with curves based on De Groote et al., 2016 [1].
 
     References
@@ -746,7 +746,7 @@ class DeGroote2016Musculotendon(MusculotendonABC):
     """
 
 
-class Millard2013Musculotendon(MusculotendonABC):
+class Millard2013Musculotendon(MusculotendonBase):
     """Musculotendon model with curves based on Millard et al., 2013 [1].
 
     References
@@ -764,8 +764,8 @@ def Musculotendon(
     musculotendon_model: str,
     *args,
     **kwargs,
-) -> MusculotendonABC:
-    """Factory function for instantiating a specific musculotendon models by its
+) -> MusculotendonBase:
+    """Factory function for instantiating a specific musculotendon model by its
     name as an identifier.
 
     Explanation

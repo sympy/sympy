@@ -17,7 +17,7 @@ import sympy.physics._biomechanics as bme
     ]
 )
 class TestMusculotendonArguments:
-    """Test correct handling of arguments for `MusculotendonABC`."""
+    """Test correct handling of arguments for `MusculotendonBase`."""
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -438,7 +438,7 @@ class TestMusculotendonArguments:
     ]
 )
 class TestMusculotendonSymbolicAttributes:
-    """Tests for the symbolic attributes of `MusculotendonABC`."""
+    """Tests for the symbolic attributes of `MusculotendonBase`."""
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -529,7 +529,7 @@ class TestMusculotendonFactoryFunction:
         )
         assert isinstance(muscle, musculotendon_class)
 
-    @pytest.mark.parametrize('model_identifier', ['invalid_name'])
+    @pytest.mark.parametrize('model_identifier', ['invalid_identifier'])
     def test_invalid_identifier_raises_value_error(
         self,
         model_identifier,
