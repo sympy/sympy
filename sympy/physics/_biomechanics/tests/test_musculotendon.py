@@ -446,8 +446,8 @@ class TestMusculotendonArguments:
         bme.Millard2013Musculotendon,
     ]
 )
-class TestMusculotendonSymbolicAttributes:
-    """Tests for the symbolic attributes of `MusculotendonBase`."""
+class TestMusculotendonAttributes:
+    """Tests for the attributes of `MusculotendonBase`."""
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -494,7 +494,18 @@ class TestMusculotendonSymbolicAttributes:
         attribute_name,
         attribute_symbol,
     ):
-        """Attributes with `Symbol` instances exist for all expected names."""
+        """Attributes with `Symbol` instances exist for all expected names.
+
+        These symbol instances are actually `dynamicsymbols` as they need to be
+        functions of time.
+
+        Notes
+        =====
+        The dynamic symbols created are suffixed with the `name` associated with
+        the activation dynamics, which is `activation` in this instance,
+        separated from the symbol identifier by an underscore.
+
+        """
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
