@@ -206,10 +206,13 @@ _uniquely_named_symbol = uniquely_named_symbol
 class Symbol(AtomicExpr, Boolean):
     """
     A Symbol is an expression of a mathematical variable using a
-    name. It supports subscripts and Greek and Latin characters.
-    Symbols can be combined to form SymPy expressions. A single
-    Symbol can be created using the Symbol() constructor but to create
+    name.
+    
+    Symbols support subscripts and Greek and Latin characters.
+    Symbols can be combined to form SymPy expressions. A single Symbol
+    can be created using the Symbol() constructor but to create
     multiple symbols in one statement use the symbols() function.
+
 
     Assumptions:
        commutative = True
@@ -252,8 +255,7 @@ class Symbol(AtomicExpr, Boolean):
     By running `init_printing()` SymPy will automatically pretty-print Greek
     letters and subscripts.
 
-    >>> from sympy import symbols, init_printing
-    >>> init_printing()
+    >>> from sympy import symbols
     >>> alpha, beta, gamma = symbols('alpha beta gamma')
     >>> alpha + 2 * beta + 3 * gamma #doctest: +SKIP
     α + 2⋅β + 3⋅γ
@@ -261,8 +263,7 @@ class Symbol(AtomicExpr, Boolean):
     Trailing digits are automatically treated like subscripts of what precedes
     them in the name:
 
-    >>> from sympy import Symbol, init_printing
-    >>> init_printing()
+    >>> from sympy import Symbol
     >>> a = Symbol('alpha1')
     >>> b = Symbol('beta2')
     >>> a + b #doctest: +SKIP
@@ -271,8 +272,7 @@ class Symbol(AtomicExpr, Boolean):
     Other types of subscripts can be added to a Symbol by following a general
     format of ``<var_name> = Symbol('<symbol_name>_<subscript>')``
 
-    >>> from sympy import Symbol, init_printing
-    >>> init_printing()
+    >>> from sympy import Symbol
     >>> alpha_i = Symbol('alpha_i')
     >>> alpha_i #doctest: +SKIP
     αᵢ
