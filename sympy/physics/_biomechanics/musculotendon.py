@@ -805,13 +805,15 @@ def Musculotendon(
     Examples
     ========
 
-    Instantiate a `DeGroote2016Musculotendon object` given origin and insertion
+    Instantiate a `DeGroote2016Musculotendon` object given origin and insertion
     points:
 
-    >>> origin = me.Point('origin')
-    >>> insertion = me.Insertion('insertion')
+    >>> from sympy.physics.mechanics import Point
+    >>> from sympy.physics._biomechanics import Musculotendon
+    >>> origin = Point('origin')
+    >>> insertion = Point('insertion')
     >>> Musculotendon('muscle', 'DeGroote', origin=origin, insertion=insertion)
-    DeGroote2016Musculotendon('muscle', origin=origin, insertion=insertion)
+    DeGroote2016Musculotendon('muscle')
 
     Parameters
     ==========
