@@ -263,7 +263,7 @@ class FunctionClass(ManagedProperties):
         return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
 
     def _valid_nargs(self, n : int) -> bool:
-        """ Return True if the specified interger is a valid number of arguments
+        """ Return True if the specified integer is a valid number of arguments
 
         The number of arguments n is guaranteed to be an integer and positive
 

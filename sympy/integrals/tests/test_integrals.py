@@ -361,7 +361,7 @@ def test_issue_3679():
     assert NS(Integral(1/(x**2 - 8*x + 17), (x, 2, 4))) == '1.10714871779409'
 
 
-def test_issue_3686():  # remove this when fresnel itegrals are implemented
+def test_issue_3686():  # remove this when fresnel integrals are implemented
     from sympy.core.function import expand_func
     from sympy.functions.special.error_functions import fresnels
     assert expand_func(integrate(sin(x**2), x)) == \

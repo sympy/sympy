@@ -1498,7 +1498,7 @@ def test_cupy_array_arg():
 
 def test_cupy_array_arg_using_numpy():
     # numpy functions can be run on cupy arrays
-    # unclear if we can "officialy" support this,
+    # unclear if we can "officially" support this,
     # depends on numpy __array_function__ support
     if not cupy:
         skip("CuPy not installed")

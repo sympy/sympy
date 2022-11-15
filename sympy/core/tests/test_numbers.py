@@ -246,7 +246,7 @@ def test_igcd_lehmer():
     assert igcd_lehmer(a*c, b*c) == c
     # big divisor
     assert igcd_lehmer(a, 10**1000) == 1
-    # swapping argmument
+    # swapping argument
     assert igcd_lehmer(1, 2) == igcd_lehmer(2, 1)
 
 

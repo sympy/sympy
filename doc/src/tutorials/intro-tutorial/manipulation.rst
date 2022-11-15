@@ -545,7 +545,7 @@ evaluations:
     >>> UnevaluatedExpr(sympify("x + x", evaluate=False)) + y
     y + (x + x)
 
-``UnevalutedExpr`` is supported by SymPy printers and can be used to print the
+``UnevaluatedExpr`` is supported by SymPy printers and can be used to print the
 result in different output forms. For example
 
     >>> from sympy import latex

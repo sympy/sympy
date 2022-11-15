@@ -1185,7 +1185,7 @@ def _laplace_deep_collect(f, t):
 def _laplace_build_rules(t, s):
     """
     This is an internal helper function that returns the table of Laplace
-    transfrom rules in terms of the time variable `t` and the frequency
+    transform rules in terms of the time variable `t` and the frequency
     variable `s`.  It is used by `_laplace_apply_rules`.
     """
     a = Wild('a', exclude=[t])
@@ -1854,7 +1854,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     auxiliary convergence conditions.
 
     The implementation is rule-based, and if you are interested in which
-    rules are applied, and whether integration is attemped, you can switch
+    rules are applied, and whether integration is attempted, you can switch
     debug information on by setting ``sympy.SYMPY_DEBUG=True``.
 
     The lower bound is `0-`, meaning that this bound should be approached

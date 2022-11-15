@@ -174,7 +174,7 @@ class CoordSystem(Basic):
     assumptions of coordinate symbols of the coordinate system. If not passed,
     these symbols are generated automatically and are assumed to be real valued.
 
-    By passing *relations* parameter, user can define the tranform relations of
+    By passing *relations* parameter, user can define the transform relations of
     coordinate systems. Inverse transformation and indirect transformation can
     be found automatically. If this parameter is not passed, coordinate
     transformation cannot be done.
@@ -1653,7 +1653,7 @@ class CovarDerivativeOp(Expr):
                              'was not a vector field.')
         christoffel = ImmutableDenseNDimArray(christoffel)
         obj = super().__new__(cls, wrt, christoffel)
-        # deprecated assigments
+        # deprecated assignments
         obj._wrt = wrt
         obj._christoffel = christoffel
         return obj

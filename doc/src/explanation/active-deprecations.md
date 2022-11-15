@@ -748,7 +748,7 @@ Several parts of {mod}`sympy.diffgeom` have been updated to no longer be
 mutable, which better matches the immutable design used in the rest of SymPy.
 
 - Passing strings for symbol names in {class}`~.CoordSystem` is deprecated.
-  Instead you should be explicit and pass symbols with the appropiate
+  Instead you should be explicit and pass symbols with the appropriate
   assumptions, for instance, instead of
 
   ```py

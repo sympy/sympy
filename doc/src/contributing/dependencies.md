@@ -178,7 +178,7 @@ into an evaluable numeric function.
 In principle, `lambdify` can interface with any external library if the user
 passes in an appropriate namespace dictionary as the third argument, but by
 default, `lambdify` is aware of several popular numeric Python libraries.
-These libraries are enabled as backends in `lambdify` with build-in
+These libraries are enabled as backends in `lambdify` with built-in
 translations to convert SymPy expressions into the appropriate functions for
 those libraries.
 

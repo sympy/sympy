@@ -853,7 +853,7 @@ class cos(TrigonometricFunction):
         from sympy.functions.special.polynomials import chebyshevt
 
         def migcdex(x):
-            # recursive calcuation of gcd and linear combination
+            # recursive calculation of gcd and linear combination
             # for a sequence of integers.
             # Given  (x1, x2, x3)
             # Returns (y1, y1, y3, g)

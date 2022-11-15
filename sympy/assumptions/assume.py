@@ -142,7 +142,7 @@ class AppliedPredicate(Boolean):
         """
         Return the predicate.
         """
-        # Will be changed to self.args[0] after args overridding is removed
+        # Will be changed to self.args[0] after args overriding is removed
         return self._args[0]
 
     @property
@@ -150,7 +150,7 @@ class AppliedPredicate(Boolean):
         """
         Return the arguments which are applied to the predicate.
         """
-        # Will be changed to self.args[1:] after args overridding is removed
+        # Will be changed to self.args[1:] after args overriding is removed
         return self._args[1:]
 
     def _eval_ask(self, assumptions):

@@ -449,7 +449,7 @@ def median(X, evaluate=True, **kwargs):
         x = Dummy('x')
         result = solveset(piecewise_fold(cdf(x) - Rational(1, 2)), x, pspace(X).set)
         return result
-    raise NotImplementedError("The median of %s is not implemeted."%str(pspace(X)))
+    raise NotImplementedError("The median of %s is not implemented."%str(pspace(X)))
 
 
 def coskewness(X, Y, Z, condition=None, **kwargs):
