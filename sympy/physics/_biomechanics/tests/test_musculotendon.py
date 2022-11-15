@@ -565,12 +565,12 @@ class TestMusculotendonAttributes:
             fiber_damping_coefficient=FIBER_DAMPING_COEFFICIENT,
         )
         expected = {
-            sm.Symbol('l_M_opt_muscle') :OPTIMAL_FIBER_LENGTH,
-            sm.Symbol('v_M_max_muscle') :MAXIMAL_FIBER_VELOCITY,
-            sm.Symbol('F_M_max_muscle') :PEAK_ISOMETRIC_FORCE,
-            sm.Symbol('l_T_slack_muscle') :TENDON_SLACK_LENGTH,
-            sm.Symbol('alpha_opt_muscle') :OPTIMAL_PENNATION_ANGLE,
-            sm.Symbol('beta_muscle') :FIBER_DAMPING_COEFFICIENT,
+            sm.Symbol('l_M_opt_muscle'): OPTIMAL_FIBER_LENGTH,
+            sm.Symbol('v_M_max_muscle'): MAXIMAL_FIBER_VELOCITY,
+            sm.Symbol('F_M_max_muscle'): PEAK_ISOMETRIC_FORCE,
+            sm.Symbol('l_T_slack_muscle'): TENDON_SLACK_LENGTH,
+            sm.Symbol('alpha_opt_muscle'): OPTIMAL_PENNATION_ANGLE,
+            sm.Symbol('beta_muscle'): FIBER_DAMPING_COEFFICIENT,
         }
         assert hasattr(muscle, 'symbol_to_constant_mapping')
         assert muscle.symbol_to_constant_mapping() == expected
