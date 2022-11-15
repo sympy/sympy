@@ -459,6 +459,40 @@ class TestMusculotendonAttributes:
     @pytest.mark.parametrize(
         'attribute_name, attribute_symbol',
         [
+            ('l_M_opt', sm.Symbol('l_M_opt_muscle')),
+            ('v_M_max', sm.Symbol('v_M_max_muscle')),
+            ('F_M_max', sm.Symbol('F_M_max_muscle')),
+            ('l_T_slack', sm.Symbol('l_T_slack_muscle')),
+            ('alpha_opt', sm.Symbol('alpha_opt_muscle')),
+            ('beta', sm.Symbol('beta_muscle')),
+        ]
+    )
+    def test_has_symbol_as_attribute(
+        self,
+        musculotendon_class,
+        attribute_name,
+        attribute_symbol,
+    ):
+        """Attributes with `Symbol` instances exist for all expected names.
+
+        Notes
+        =====
+        The symbols created are suffixed with the `name` associated with the
+        musculotendon, which is `muscle` in this instance, separated from the
+        symbol identifier by an underscore.
+
+        """
+        muscle = musculotendon_class(
+            self.name,
+            origin=self.origin,
+            insertion=self.insertion,
+        )
+        assert hasattr(muscle, attribute_name)
+        assert getattr(muscle, attribute_name) == attribute_symbol
+
+    @pytest.mark.parametrize(
+        'attribute_name, attribute_symbol',
+        [
             ('l_MT', me.dynamicsymbols('l_MT_muscle')),
             ('v_MT', me.dynamicsymbols('v_MT_muscle')),
             ('l_T', me.dynamicsymbols('l_T_muscle')),
@@ -488,7 +522,7 @@ class TestMusculotendonAttributes:
             ('F_insr_z', me.dynamicsymbols('F_insr_z_muscle')),
         ]
     )
-    def test_has_symbol_as_attribute(
+    def test_has_dynamic_symbol_as_attribute(
         self,
         musculotendon_class,
         attribute_name,
@@ -496,14 +530,11 @@ class TestMusculotendonAttributes:
     ):
         """Attributes with `Symbol` instances exist for all expected names.
 
-        These symbol instances are actually `dynamicsymbols` as they need to be
-        functions of time.
-
         Notes
         =====
-        The dynamic symbols created are suffixed with the `name` associated with
-        the activation dynamics, which is `activation` in this instance,
-        separated from the symbol identifier by an underscore.
+        The symbols created are suffixed with the `name` associated with the
+        musculotendon, which is `muscle` in this instance, separated from the
+        symbol identifier by an underscore.
 
         """
         muscle = musculotendon_class(

@@ -225,6 +225,14 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self.fiber_damping_coefficient = fiber_damping_coefficient
 
         # Symbols
+        self._l_M_opt = sm.Symbol(f'l_M_opt_{self.name}')
+        self._v_M_max = sm.Symbol(f'v_M_max_{self.name}')
+        self._F_M_max = sm.Symbol(f'F_M_max_{self.name}')
+        self._l_T_slack = sm.Symbol(f'l_T_slack_{self.name}')
+        self._alpha_opt = sm.Symbol(f'alpha_opt_{self.name}')
+        self._beta = sm.Symbol(f'beta_{self.name}')
+
+        # Dynamic symbols
         self._l_MT = me.dynamicsymbols(f"l_MT_{self.name}")
         self._v_MT = me.dynamicsymbols(f"v_MT_{self.name}")
         self._l_T = me.dynamicsymbols(f"l_T_{self.name}")
