@@ -112,19 +112,19 @@ class TestMusculotendonArguments:
                 insertion=insertion,
             )
 
-    def test_parametrized_symbols_default_to_none(self, musculotendon_class):
-        """All parametrized symbol attributes default to `None`."""
+    def test_optional_keyword_argument_defaults(self, musculotendon_class):
+        """All parametrized symbol attributes default to `None` or value."""
         muscle = musculotendon_class(
             self.name,
             origin=self.origin,
             insertion=self.insertion,
         )
         assert muscle.optimal_fiber_length is None
-        assert muscle.maximal_fiber_velocity is None
+        assert muscle.maximal_fiber_velocity == 10.0
         assert muscle.peak_isometric_force is None
         assert muscle.tendon_slack_length is None
-        assert muscle.optimal_pennation_angle is None
-        assert muscle.fiber_damping_coefficient is None
+        assert muscle.optimal_pennation_angle == 0.0
+        assert muscle.fiber_damping_coefficient == 0.1
 
     def test_optimal_fiber_length_is_optional(self, musculotendon_class):
         """`None` is valid value for `optimal_fiber_length`."""
@@ -176,15 +176,18 @@ class TestMusculotendonArguments:
                 optimal_fiber_length=optimal_fiber_length,
             )
 
-    def test_maximal_fiber_velocity_is_optional(self, musculotendon_class):
-        """`None` is valid value for `maximal_fiber_velocity`."""
-        muscle = musculotendon_class(
-            self.name,
-            origin=self.origin,
-            insertion=self.insertion,
-            maximal_fiber_velocity=None,
-        )
-        assert muscle.maximal_fiber_velocity is None
+    def test_none_maximal_fiber_velocity_raises_type_error(
+        self,
+        musculotendon_class,
+    ):
+        """Passing `None` to `maximal_fiber_velocity` raises `TypeError`."""
+        with pytest.raises(TypeError):
+            _ = musculotendon_class(
+                self.name,
+                origin=self.origin,
+                insertion=self.insertion,
+                maximal_fiber_velocity=None,
+            )
 
     @pytest.mark.parametrize(
         'maximal_fiber_velocity_value, maximal_fiber_velocity_expected',
@@ -328,15 +331,18 @@ class TestMusculotendonArguments:
                 tendon_slack_length=tendon_slack_length,
             )
 
-    def test_optimal_pennation_angle_is_optional(self, musculotendon_class):
-        """`None` is valid value for `optimal_pennation_angle`."""
-        muscle = musculotendon_class(
-            self.name,
-            origin=self.origin,
-            insertion=self.insertion,
-            optimal_pennation_angle=None,
-        )
-        assert muscle.optimal_pennation_angle is None
+    def test_none_optimal_pennation_angle_raises_type_error(
+        self,
+        musculotendon_class,
+    ):
+        """Passing `None` to `optimal_pennation_angle` raises `TypeError`."""
+        with pytest.raises(TypeError):
+            _ = musculotendon_class(
+                self.name,
+                origin=self.origin,
+                insertion=self.insertion,
+                optimal_pennation_angle=None,
+            )
 
     @pytest.mark.parametrize(
         'optimal_pennation_angle_value, optimal_pennation_angle_expected',
@@ -363,7 +369,7 @@ class TestMusculotendonArguments:
         assert isinstance(muscle.optimal_pennation_angle, float)
         assert muscle.optimal_pennation_angle == optimal_pennation_angle_expected
 
-    @pytest.mark.parametrize('optimal_pennation_angle', [0.0, -0.25])
+    @pytest.mark.parametrize('optimal_pennation_angle', [-0.25])
     def test_nonpositive_optimal_pennation_angle_raises_value_error(
         self,
         musculotendon_class,
@@ -378,15 +384,18 @@ class TestMusculotendonArguments:
                 optimal_pennation_angle=optimal_pennation_angle,
             )
 
-    def test_fiber_damping_coefficient_is_optional(self, musculotendon_class):
-        """`None` is valid value for `fiber_damping_coefficient`."""
-        muscle = musculotendon_class(
-            self.name,
-            origin=self.origin,
-            insertion=self.insertion,
-            fiber_damping_coefficient=None,
-        )
-        assert muscle.fiber_damping_coefficient is None
+    def test_none_fiber_damping_coefficient_raises_type_error(
+        self,
+        musculotendon_class,
+    ):
+        """Passing `None` to `fiber_damping_coefficient` raises `TypeError`."""
+        with pytest.raises(TypeError):
+            _ = musculotendon_class(
+                self.name,
+                origin=self.origin,
+                insertion=self.insertion,
+                fiber_damping_coefficient=None,
+            )
 
     @pytest.mark.parametrize(
         'fiber_damping_coefficient_value, fiber_damping_coefficient_expected',
@@ -413,7 +422,7 @@ class TestMusculotendonArguments:
         assert isinstance(muscle.fiber_damping_coefficient, float)
         assert muscle.fiber_damping_coefficient == fiber_damping_coefficient_expected
 
-    @pytest.mark.parametrize('fiber_damping_coefficient', [0.0, -0.1])
+    @pytest.mark.parametrize('fiber_damping_coefficient', [-0.1])
     def test_nonpositive_fiber_damping_coefficient_raises_value_error(
         self,
         musculotendon_class,

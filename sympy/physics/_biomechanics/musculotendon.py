@@ -50,33 +50,33 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         The point from which the musculotendon originates.
     insertion : `sympy.physics.mechanics.Point`
         The point to which the musculotendon inserts.
-    optimal_fiber_length : float
+    optimal_fiber_length : Optional[float]
         The value by which the musculotendon's fiber force-length relationships
         are normalized. It corresponds to the fiber length at which the
         musculotendon can produce its maximal force. This value maps to the
         symbol attribute `l_M_opt`.
-    maximal_fiber_velocity : float
+    maximal_fiber_velocity : float, default is 10.0
         The value by which the musculotendon's fiber force-velcoity relationship
         is normalized. It corresponds to the fiber shortening velocity at which
         the musculotendon is unable to produce any force whatsoever. This value
         maps to the symbol attribute `v_M_max`.
-    peak_isometric_force : float
+    peak_isometric_force : Optional[float]
         The force the musculotendon can produce when the fiber length is equal
         to the optimal fiber length, the shortening velocity is zero, and at
         full activation. "Isometric" refers to the fact that the musculotendon
         is undergoing an isometric contraction (i.e. maintaining length) at this
         magnitude of force. This value maps to the symbol attribute `F_M_max`.
-    tendon_slack_length : float
+    tendon_slack_length : Optional[float]
         The value by which the musculotendon's tendon force-length relationship
         is normalized. It corresponds to the tendon length at which the tendon
         is unable to produce any tensile force due to becoming slack. For a
         rigid tendon model, this value is exactly equal to the tendon length.
         This value maps to the symbol attribute `l_T_slack`.
-    optimal_pennation_angle : float
+    optimal_pennation_angle : float, default is 0.0
         The value of pennation angle when the musculotendon's fiber has length
         equal to the optimal fiber length. For unpennated fibers, this value is
         zero. This value maps to the symbol attribute `alpha_opt`.
-    fiber_damping_coefficient : float
+    fiber_damping_coefficient : float, default is 0.1
         The value of damping in the musculotendon's fiber. While not strictly
         physical, this parameter is important for producing numerically stable
         musculotendon dynamics. For undamped fibers, this value is zero. This
@@ -158,11 +158,11 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         origin: me.Point,
         insertion: me.Point,
         optimal_fiber_length: Optional[float] = None,
-        maximal_fiber_velocity: Optional[float] = None,
+        maximal_fiber_velocity: float = 10.0,
         peak_isometric_force: Optional[float] = None,
         tendon_slack_length: Optional[float] = None,
-        optimal_pennation_angle: Optional[float] = None,
-        fiber_damping_coefficient: Optional[float] = None,
+        optimal_pennation_angle: float = 0.0,
+        fiber_damping_coefficient: float = 0.1,
     ) -> None:
         """Initializer for a musculotendon's instance attributes.
 
@@ -176,36 +176,36 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
             The point from which the musculotendon originates.
         insertion : `sympy.physics.mechanics.Point`
             The point to which the musculotendon inserts.
-        optimal_fiber_length : float
+        optimal_fiber_length : Optional[float]
             The value by which the musculotendon's fiber force-length
             relationships are normalized. It corresponds to the fiber length at
             which the musculotendon can produce its maximal force. This value
             maps to the symbol attribute `l_M_opt`.
-        maximal_fiber_velocity : float
+        maximal_fiber_velocity : float, default is 10.0
             The value by which the musculotendon's fiber force-velcoity
             relationship is normalized. It corresponds to the fiber shortening
             velocity at which the musculotendon is unable to produce any force
             whatsoever. This value maps to the symbol attribute `v_M_max`.
-        peak_isometric_force : float
+        peak_isometric_force : Optional[float]
             The force the musculotendon can produce when the fiber length is
             equal to the optimal fiber length, the shortening velocity is zero,
             and at full activation. "Isometric" refers to the fact that the
             musculotendon is undergoing an isometric contraction (i.e.
             maintaining length) at this magnitude of force. This value maps to
             the symbol attribute `F_M_max`.
-        tendon_slack_length : float
+        tendon_slack_length : Optional[float]
             The value by which the musculotendon's tendon force-length
             relationship is normalized. It corresponds to the tendon length at
             which the tendon is unable to produce any tensile force due to
             becoming slack. For a rigid tendon model, this value is exactly
             equal to the tendon length. This value maps to the symbol attribute
             `l_T_slack`.
-        optimal_pennation_angle : float
+        optimal_pennation_angle : float, default is 0.0
             The value of pennation angle when the musculotendon's fiber has
             length equal to the optimal fiber length. For unpennated fibers,
             this value is zero. This value maps to the symbol attribute
             `alpha_opt`.
-        fiber_damping_coefficient : float
+        fiber_damping_coefficient : float, default is 0.1
             The value of damping in the musculotendon's fiber. While not
             strictly physical, this parameter is important for producing
             numerically stable musculotendon dynamics. For undamped fibers, this
@@ -323,7 +323,7 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
             self._optimal_fiber_length = optimal_fiber_length
 
     @property
-    def maximal_fiber_velocity(self) -> Optional[float]:
+    def maximal_fiber_velocity(self) -> float:
         """Numeric value representing the maximal fiber velocity parameter.
 
         The value by which the musculotendon's fiber force-velcoity relationship
@@ -343,17 +343,14 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self,
         maximal_fiber_velocity: Optional[float],
     ) -> None:
-        if maximal_fiber_velocity is None:
-            self._maximal_fiber_velocity = maximal_fiber_velocity
-        else:
-            maximal_fiber_velocity = float(maximal_fiber_velocity)
-            if maximal_fiber_velocity <= 0.0:
-                msg = (
-                    f'`maximal_fiber_velocity` of {maximal_fiber_velocity} '
-                    f'must be greater than {0.0}.'
-                )
-                raise ValueError(msg)
-            self._maximal_fiber_velocity = maximal_fiber_velocity
+        maximal_fiber_velocity = float(maximal_fiber_velocity)
+        if maximal_fiber_velocity <= 0.0:
+            msg = (
+                f'`maximal_fiber_velocity` of {maximal_fiber_velocity} '
+                f'must be greater than {0.0}.'
+            )
+            raise ValueError(msg)
+        self._maximal_fiber_velocity = maximal_fiber_velocity
 
     @property
     def peak_isometric_force(self) -> Optional[float]:
@@ -424,7 +421,7 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
             self._tendon_slack_length = tendon_slack_length
 
     @property
-    def optimal_pennation_angle(self) -> Optional[float]:
+    def optimal_pennation_angle(self) -> float:
         """Numeric value representing the optimal pennation angle parameter.
 
         The value of pennation angle when the musculotendon's fiber has length
@@ -443,20 +440,17 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
         self,
         optimal_pennation_angle: Optional[float],
     ) -> None:
-        if optimal_pennation_angle is None:
-            self._optimal_pennation_angle = optimal_pennation_angle
-        else:
-            optimal_pennation_angle = float(optimal_pennation_angle)
-            if optimal_pennation_angle <= 0.0:
-                msg = (
-                    f'`optimal_pennation_angle` of {optimal_pennation_angle} '
-                    f'must be greater than {0.0}.'
-                )
-                raise ValueError(msg)
-            self._optimal_pennation_angle = optimal_pennation_angle
+        optimal_pennation_angle = float(optimal_pennation_angle)
+        if optimal_pennation_angle < 0.0:
+            msg = (
+                f'`optimal_pennation_angle` of {optimal_pennation_angle} must '
+                f'be greater than or equal to {0.0}.'
+            )
+            raise ValueError(msg)
+        self._optimal_pennation_angle = optimal_pennation_angle
 
     @property
-    def fiber_damping_coefficient(self) -> Optional[float]:
+    def fiber_damping_coefficient(self) -> float:
         """Numeric value representing the fiber damping coefficient parameter.
 
         The value of damping in the musculotendon's fiber. While not strictly
@@ -474,19 +468,16 @@ class MusculotendonBase(abc.ABC, _NamedMixin):
     @fiber_damping_coefficient.setter
     def fiber_damping_coefficient(
         self,
-        fiber_damping_coefficient: Optional[float],
+        fiber_damping_coefficient: float,
     ) -> None:
-        if fiber_damping_coefficient is None:
-            self._fiber_damping_coefficient = fiber_damping_coefficient
-        else:
-            fiber_damping_coefficient = float(fiber_damping_coefficient)
-            if fiber_damping_coefficient <= 0.0:
-                msg = (
-                    f'`fiber_damping_coefficient` of '
-                    f'{fiber_damping_coefficient} must be greater than {0.0}.'
-                )
-                raise ValueError(msg)
-            self._fiber_damping_coefficient = fiber_damping_coefficient
+        fiber_damping_coefficient = float(fiber_damping_coefficient)
+        if fiber_damping_coefficient < 0.0:
+            msg = (
+                f'`fiber_damping_coefficient` of {fiber_damping_coefficient} '
+                f'must be greater than or equal to {0.0}.'
+            )
+            raise ValueError(msg)
+        self._fiber_damping_coefficient = fiber_damping_coefficient
 
     @property
     def l_M_opt(self) -> sm.Symbol:
