@@ -229,8 +229,10 @@ def rs_mul(p1, p2, x, prec):
     """
     R = p1.ring
     p = R.zero
-    if R.__class__ != p2.ring.__class__ or R != p2.ring:
-        raise ValueError('p1 and p2 must have the same ring')
+    if R.__class__ != p2.ring.__class__:
+        raise TypeError("p1 and p2 must have the same ring class")
+    if R != p2.ring:
+        raise ValueError('p1 and p2 must have the same ring value')
     iv = R.gens.index(x)
     if not isinstance(p2, PolyElement):
         raise ValueError('p2 must be a polynomial')
