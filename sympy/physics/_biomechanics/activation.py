@@ -12,7 +12,7 @@ be modelled by the models present in this module.
 
 
 from abc import ABC
-from typing import Optional, Union
+from typing import Union
 
 from sympy.core.backend import Symbol
 from sympy.physics.mechanics import dynamicsymbols
