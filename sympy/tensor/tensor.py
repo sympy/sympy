@@ -55,6 +55,7 @@ from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         ignore_warnings)
 from sympy.utilities.decorator import memoize_property, deprecated
 from sympy.utilities.iterables import sift
+import itertools
 
 
 def deprecate_data():
@@ -4136,7 +4137,7 @@ class TensMul(TensExpr, AssocOp):
                         temp_repl[q_tensor] = e_tensor
                 if q_tensor not in temp_repl.keys():
                     return None
-        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in temp_repl.items()]
+        remaining_e_tensors = [t for t in itertools.chain(*expr_sifted["Tensor"].values()) if t not in temp_repl.values()]
         indexless_wilds, wilds = sift(query_sifted["WildTensor"], lambda x: len(x.get_free_indices()) == 0, binary=True)
         for w in wilds:
             free_this_wild = set(w.get_free_indices()).intersection(free)
@@ -4147,7 +4148,7 @@ class TensMul(TensExpr, AssocOp):
             else:
                 temp_repl.update(m)
 
-        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in temp_repl.items()]
+        remaining_e_tensors = [t for t in itertools.chain(*expr_sifted["Tensor"].values()) if t not in temp_repl.values()]
         if len(indexless_wilds) > 0:
             #If there are any remaining tensors, match them with the indexless WildTensor
             temp_repl[indexless_wilds[0]] = TensMul(*remaining_e_tensors)
