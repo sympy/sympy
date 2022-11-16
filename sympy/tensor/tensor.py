@@ -4096,6 +4096,9 @@ class TensMul(TensExpr, AssocOp):
         return TensAdd.fromiter(terms)
 
     def _matches_commutative(self, expr, repl_dict=None, old=False):
+        """
+        Match assuming all tensors commute.
+        """
 
         if isinstance(self, TensExpr) and not isinstance(expr, TensExpr):
             return None
@@ -4107,29 +4110,56 @@ class TensMul(TensExpr, AssocOp):
         if self == expr:
             return repl_dict
 
-        # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
-        from sympy import WildFunction, Wild, ordered #TODO: relative or absolute imports?
-        from sympy.utilities.iterables import sift
+        def siftkey(arg):
+            if isinstance(arg, WildTensor):
+                return "WildTensor"
+            elif isinstance(arg, Tensor):
+                return "Tensor"
+            else:
+                return "coeff"
 
-        wild_part, exact_part = sift(self.args, lambda p:
-            p.has(Wild, WildFunction, WildTensor) and not expr.has(p),
-            binary=True)
+        free = set(self.get_free_indices())
+        query_sifted = sift(self.args, siftkey)
+        expr_sifted = sift(self.args, siftkey)
 
-        # now to real work ;)
-        i = 0
-        saw = set()
-        while expr not in saw:
-            saw.add(expr)
-            args = tuple(ordered(self.make_args(expr)))
-            expr_list = (self.identity,) + args
-            for last_op in reversed(expr_list):
-                for w in reversed(wild_part):
-                    d1 = w.matches(last_op, repl_dict)
-                    if d1 is not None:
-                        d2 = self.xreplace(d1).matches(expr, d1)
-                        if d2 is not None:
-                            return d2
-        return
+        query_sifted["Tensor"] = sift(query_sifted["Tensor"], lambda x: x.component)
+        expr_sifted["Tensor"] = sift(expr_sifted["Tensor"], lambda x: x.component)
+
+        temp_repl = {}
+        for head in query_sifted["Tensor"].keys():
+            if head not in expr_sifted["Tensor"].keys():
+                return None
+            for q_tensor in query_sifted["Tensor"][head]:
+                free_this = set(q_tensor.get_free_indices()).intersection(free)
+                for e_tensor in expr_sifted["Tensor"][head]:
+                    if set(e_tensor.get_free_indices()).intersection(free) == free_this:
+                        temp_repl[q_tensor] = e_tensor
+                if q_tensor not in temp_repl.keys():
+                    return None
+        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in temp_repl.items()]
+        indexless_wilds, wilds = sift(query_sifted["WildTensor"], lambda x: len(x.get_free_indices()) == 0, binary=True)
+        for w in wilds:
+            free_this_wild = set(w.get_free_indices()).intersection(free)
+
+            m = w.matches(TensMul(*[e for e in remaining_e_tensors if len( set(e.get_free_indices()).intersection(free_this_wild) ) != 0]))
+            if m is None:
+                return None
+            else:
+                temp_repl.update(m)
+
+        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in temp_repl.items()]
+        if len(indexless_wilds) > 0:
+            #If there are any remaining tensors, match them with the indexless WildTensor
+            temp_repl[indexless_wilds[0]] = TensMul(*remaining_e_tensors)
+        else:
+            return None
+
+        m = self.coeff.matches(expr.coeff)
+        if m is not None:
+            temp_repl.update(m)
+
+        repl_dict.update(temp_repl)
+        return repl_dict
 
     def matches(self, expr, repl_dict=None, old=False):
         expr = sympify(expr)
