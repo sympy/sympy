@@ -4144,13 +4144,14 @@ class TensMul(TensExpr, AssocOp):
         for w in wilds:
             free_this_wild = set(w.get_free_indices()).intersection(free)
 
-            m = w.matches(TensMul(*[e for e in remaining_e_tensors if len(free_this_wild) == 0 or len( set(e.get_free_indices()).intersection(free_this_wild) ) != 0]).doit() )
+            m = w.matches(TensMul(*remaining_e_tensors).doit() )
             if m is None:
                 return None
             else:
                 temp_repl.update(m)
 
-        remaining_e_tensors = [t for t in itertools.chain(*expr_sifted["Tensor"].values()) if t not in temp_repl.values()]
+        tensors_matched = TensMul(*temp_repl.values()).atoms(Tensor)
+        remaining_e_tensors = [t for t in itertools.chain(*expr_sifted["Tensor"].values()) if t not in tensors_matched]
         if len(remaining_e_tensors) > 0:
             if len(indexless_wilds) > 0:
                 #If there are any remaining tensors, match them with the indexless WildTensor
