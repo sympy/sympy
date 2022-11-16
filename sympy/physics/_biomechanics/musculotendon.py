@@ -216,14 +216,6 @@ class MusculotendonBase(ABC, _NamedMixin):
         self.origin = origin
         self.insertion = insertion
 
-        # Constants
-        self.optimal_fiber_length = optimal_fiber_length
-        self.maximal_fiber_velocity = maximal_fiber_velocity
-        self.peak_isometric_force = peak_isometric_force
-        self.tendon_slack_length = tendon_slack_length
-        self.optimal_pennation_angle = optimal_pennation_angle
-        self.fiber_damping_coefficient = fiber_damping_coefficient
-
         # Symbols
         self._l_M_opt = Symbol(f'l_M_opt_{self.name}')
         self._v_M_max = Symbol(f'v_M_max_{self.name}')
@@ -266,6 +258,14 @@ class MusculotendonBase(ABC, _NamedMixin):
         self._F_insr_x = dynamicsymbols(f"F_insr_x_{self.name}")
         self._F_insr_y = dynamicsymbols(f"F_insr_y_{self.name}")
         self._F_insr_z = dynamicsymbols(f"F_insr_z_{self.name}")
+
+        # Constants
+        self.optimal_fiber_length = optimal_fiber_length
+        self.maximal_fiber_velocity = maximal_fiber_velocity
+        self.peak_isometric_force = peak_isometric_force
+        self.tendon_slack_length = tendon_slack_length
+        self.optimal_pennation_angle = optimal_pennation_angle
+        self.fiber_damping_coefficient = fiber_damping_coefficient
 
     @property
     def origin(self) -> Point:

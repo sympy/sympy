@@ -152,13 +152,13 @@ class DeGroote2016ActivationDynamics(ActivationDynamicsBase):
         """
         super().__init__(name)
 
-        # Constants
-        self.activation_time_constant = activation_time_constant
-        self.deactivation_time_constant = deactivation_time_constant
-
         # Symbols
         self._tau_a = Symbol(f'tau_a_{self.name}')
         self._tau_d = Symbol(f'tau_d_{self.name}')
+
+        # Constants
+        self.activation_time_constant = activation_time_constant
+        self.deactivation_time_constant = deactivation_time_constant
 
     @property
     def activation_time_constant(self) -> float:
