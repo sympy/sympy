@@ -4149,11 +4149,12 @@ class TensMul(TensExpr, AssocOp):
                 temp_repl.update(m)
 
         remaining_e_tensors = [t for t in itertools.chain(*expr_sifted["Tensor"].values()) if t not in temp_repl.values()]
-        if len(indexless_wilds) > 0:
-            #If there are any remaining tensors, match them with the indexless WildTensor
-            temp_repl[indexless_wilds[0]] = TensMul(*remaining_e_tensors)
-        else:
-            return None
+        if len(remaining_e_tensors) > 0:
+            if len(indexless_wilds) > 0:
+                #If there are any remaining tensors, match them with the indexless WildTensor
+                temp_repl[indexless_wilds[0]] = TensMul(*remaining_e_tensors)
+            else:
+                return None
 
         m = self.coeff.matches(expr.coeff)
         if m is not None:
