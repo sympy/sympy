@@ -4121,7 +4121,7 @@ class TensMul(TensExpr, AssocOp):
 
         free = set(self.get_free_indices())
         query_sifted = sift(self.args, siftkey)
-        expr_sifted = sift(self.args, siftkey)
+        expr_sifted = sift(expr.args, siftkey)
 
         query_sifted["Tensor"] = sift(query_sifted["Tensor"], lambda x: x.component)
         expr_sifted["Tensor"] = sift(expr_sifted["Tensor"], lambda x: x.component)
