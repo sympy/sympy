@@ -75,6 +75,16 @@ class TestMusculotendonArguments:
                 insertion=self.insertion,
             )
 
+    def test_name_is_immutable(self, musculotendon_class):
+        """An `AttributeError` is raised if mutating `name` is attempted."""
+        muscle = musculotendon_class(
+            self.name,
+            origin=self.origin,
+            insertion=self.insertion,
+        )
+        with pytest.raises(AttributeError):
+            muscle.name = 'new_name'
+
     def test_point_objects_are_valid_origin_and_insertion(
         self,
         musculotendon_class,

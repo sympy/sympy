@@ -25,6 +25,12 @@ class _NamedMixin:
 
     @name.setter
     def name(self, name: str) -> None:
+        if hasattr(self, '_name'):
+            msg = (
+                f'Can\'t set attribute `name` to {repr(name)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
         if not isinstance(name, str):
             msg = (
                 f'Name {repr(name)} passed to `name` was of type '

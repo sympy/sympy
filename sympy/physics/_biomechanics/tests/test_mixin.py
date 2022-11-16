@@ -36,3 +36,9 @@ class TestNamedMixin:
         """A `TypeError` is raised if `name` is not a `str`."""
         with pytest.raises(TypeError):
             _ = self.NamedMixinClass(name)
+
+    def test_name_immutable_after_initialization(self):
+        """An `AttributeError` is raised if mutating `name` is attempted."""
+        instance = self.NamedMixinClass('name')
+        with pytest.raises(AttributeError):
+            instance.name = 'new_name'

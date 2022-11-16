@@ -62,6 +62,12 @@ class TestActivationDynamicsArguments:
         with pytest.raises(ValueError):
             _ = activation_dynamics_class(name)
 
+    def test_name_is_immutable(self, activation_dynamics_class):
+        """An `AttributeError` is raised if mutating `name` is attempted."""
+        activation = activation_dynamics_class(self.name)
+        with pytest.raises(AttributeError):
+            activation.name = 'new_name'
+
 
 @pytest.mark.parametrize(
     'activation_dynamics_class, attributes',
