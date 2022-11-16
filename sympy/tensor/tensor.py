@@ -4142,7 +4142,7 @@ class TensMul(TensExpr, AssocOp):
         for w in wilds:
             free_this_wild = set(w.get_free_indices()).intersection(free)
 
-            m = w.matches(TensMul(*[e for e in remaining_e_tensors if len( set(e.get_free_indices()).intersection(free_this_wild) ) != 0]))
+            m = w.matches(TensMul(*[e for e in remaining_e_tensors if len(free_this_wild) == 0 or len( set(e.get_free_indices()).intersection(free_this_wild) ) != 0]).doit() )
             if m is None:
                 return None
             else:
