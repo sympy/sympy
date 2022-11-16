@@ -4162,6 +4162,7 @@ class TensMul(TensExpr, AssocOp):
         if m is not None:
             temp_repl.update(m)
 
+        temp_repl = dict([(k,v) for k,v in temp_repl.items() if isinstance(k, WildTensor)])
         repl_dict.update(temp_repl)
         return repl_dict
 
