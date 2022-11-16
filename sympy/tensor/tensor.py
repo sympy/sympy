@@ -4393,10 +4393,11 @@ class WildTensor(Tensor):
     def matches(self, expr, repl_dict=None, old=False):
         if not isinstance(expr, TensExpr):
             return None
-        if len(expr.get_indices()) not in self.ninds:
-            return None
-        if self._get_index_updown_structure(expr) != self._get_index_updown_structure(self):
-            return None
+        if len(self.indices) > 0: #If no indices were passed to the WildTensor, it may match tensors with any number of indices.
+            if len(expr.get_free_indices()) != len(self.indices):
+                return None
+            if self._get_index_updown_structure(expr) != self._get_index_updown_structure(self):
+                return None
 
         if repl_dict is None:
             repl_dict = {}
