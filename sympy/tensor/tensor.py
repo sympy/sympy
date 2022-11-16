@@ -4106,6 +4106,8 @@ class TensMul(TensExpr, AssocOp):
 
         if repl_dict is None:
             repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
 
         # handle simple patterns
         if self == expr:
