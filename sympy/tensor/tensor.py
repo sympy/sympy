@@ -4120,7 +4120,7 @@ class TensMul(TensExpr, AssocOp):
             """
             Replaces all internally contracted indices in tensmul by WildTensorIndex instances.
             """
-            dummy = [i for i in tensmul.get_indices() if i not in tensmul.get_free_indices() and isinstance(i,TensorIndex) and not isinstance(i,WildTensorIndex)]
+            dummy = [i for i in tensmul.get_indices() if i not in tensmul.get_free_indices() and not isinstance(i,WildTensorIndex)]
             dummies_to_wilds = {}
             for i in dummy:
                 if -i not in dummies_to_wilds.keys():
