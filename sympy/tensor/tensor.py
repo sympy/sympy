@@ -4387,22 +4387,26 @@ class WildTensor(Tensor):
         obj._index_structure = _IndexStructure.from_indices(*indices)
         return obj
 
-    def _get_index_updown_structure(self, expr):
-        return [ i.is_up for i in expr.get_free_indices() ]
 
     def matches(self, expr, repl_dict=None, old=False):
         if not isinstance(expr, TensExpr):
             return None
-        if len(self.indices) > 0: #If no indices were passed to the WildTensor, it may match tensors with any number of indices.
-            if len(expr.get_free_indices()) != len(self.indices):
-                return None
-            if self._get_index_updown_structure(expr) != self._get_index_updown_structure(self):
-                return None
 
         if repl_dict is None:
             repl_dict = {}
         else:
             repl_dict = repl_dict.copy()
+
+        if len(self.indices) > 0: #If no indices were passed to the WildTensor, it may match tensors with any number of indices.
+            expr_indices = expr.get_free_indices()
+            if len(expr_indices) != len(self.indices):
+                return None
+            for i in range(len(expr_indices)):
+                m = self.indices[i].matches(expr_indices[i])
+                if m is None:
+                    return None
+                else:
+                    repl_dict.update(m)
 
         repl_dict[self] = expr
         return repl_dict
