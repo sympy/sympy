@@ -4160,7 +4160,9 @@ class TensMul(TensExpr, AssocOp):
                 return None
 
         m = self.coeff.matches(expr.coeff)
-        if m is not None:
+        if m is None:
+            return None
+        else:
             temp_repl.update(m)
 
         temp_repl = dict([(k,v) for k,v in temp_repl.items() if isinstance(k, WildTensor)])
