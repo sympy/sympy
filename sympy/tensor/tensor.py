@@ -4113,6 +4113,21 @@ class TensMul(TensExpr, AssocOp):
         if self == expr:
             return repl_dict
 
+        query_wild_tensor_indices = self.atoms(WildTensorIndex)
+        free = set(self.get_free_indices())
+
+        #Now replace all internally contracted indices in the query by WildTensorIndex instances.
+        dummy = [i for i in self.get_indices() if i not in free]
+        dummies_to_wilds = {}
+        for i in dummy:
+            if -i not in dummies_to_wilds.keys():
+                dummies_to_wilds[i] = WildTensorIndex(True, i.tensor_index_type, is_up=i.is_up, ignore_updown=True)
+            else:
+                #Preserve the fact that this index is contracted with another one.
+                dummies_to_wilds[i] = -dummies_to_wilds[-i]
+
+        self = self.subs(dummies_to_wilds)
+
         def siftkey(arg):
             if isinstance(arg, WildTensor):
                 return "WildTensor"
@@ -4121,7 +4136,6 @@ class TensMul(TensExpr, AssocOp):
             else:
                 return "coeff"
 
-        free = set(self.get_free_indices())
         query_sifted = sift(self.args, siftkey)
         expr_sifted = sift(expr.args, siftkey)
 
@@ -4133,10 +4147,22 @@ class TensMul(TensExpr, AssocOp):
             if head not in expr_tens_sift_heads.keys():
                 return None
             for q_tensor in query_tens_sift_heads[head]:
-                free_this = set(q_tensor.get_free_indices()).intersection(free)
                 for e_tensor in expr_tens_sift_heads[head]:
-                    if set(e_tensor.get_free_indices()).intersection(free) == free_this:
+                    if len(q_tensor.indices) != len(e_tensor.indices):
+                        continue
+                    all_indices_match=True
+                    d = {}
+                    for i in range(len(q_tensor.indices)):
+                        m = q_tensor.indices[i].matches(e_tensor.indices[i])
+                        if m is None:
+                            all_indices_match = False
+                            break
+                        else:
+                            d.update(m)
+
+                    if all_indices_match:
                         temp_repl[q_tensor] = e_tensor
+                        temp_repl.update(d)
                 if q_tensor not in temp_repl.keys():
                     return None
         remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in temp_repl.values()]
@@ -4165,7 +4191,8 @@ class TensMul(TensExpr, AssocOp):
         else:
             temp_repl.update(m)
 
-        temp_repl = dict([(k,v) for k,v in temp_repl.items() if isinstance(k, WildTensor)])
+        wilds_to_dummies = {v:k for k,v in dummies_to_wilds.items()}
+        temp_repl = dict([(k.subs(wilds_to_dummies),v) for k,v in temp_repl.items() if isinstance(k, WildTensor) or k in query_wild_tensor_indices])
         repl_dict.update(temp_repl)
         return repl_dict
 
