@@ -4116,17 +4116,26 @@ class TensMul(TensExpr, AssocOp):
         query_wild_tensor_indices = self.atoms(WildTensorIndex)
         free = set(self.get_free_indices())
 
-        #Now replace all internally contracted indices in the query by WildTensorIndex instances.
-        dummy = [i for i in self.get_indices() if i not in free]
-        dummies_to_wilds = {}
-        for i in dummy:
-            if -i not in dummies_to_wilds.keys():
-                dummies_to_wilds[i] = WildTensorIndex(True, i.tensor_index_type, is_up=i.is_up, ignore_updown=True)
-            else:
-                #Preserve the fact that this index is contracted with another one.
-                dummies_to_wilds[i] = -dummies_to_wilds[-i]
+        def wildify_dummies(tensmul, map=False):
+            """
+            Replaces all internally contracted indices in tensmul by WildTensorIndex instances.
+            """
+            dummy = [i for i in tensmul.get_indices() if i not in tensmul.get_free_indices()]
+            dummies_to_wilds = {}
+            for i in dummy:
+                if -i not in dummies_to_wilds.keys():
+                    dummies_to_wilds[i] = WildTensorIndex(True, i.tensor_index_type, is_up=i.is_up, ignore_updown=True)
+                else:
+                    #Preserve the fact that this index is contracted with another one.
+                    dummies_to_wilds[i] = -dummies_to_wilds[-i]
 
-        self = self.subs(dummies_to_wilds)
+            ret = tensmul.subs(dummies_to_wilds)
+            if map:
+                return ret, dummies_to_wilds
+            else:
+                return ret
+
+        self, dummies_to_wilds = wildify_dummies(self, map=True)
 
         def siftkey(arg):
             if isinstance(arg, WildTensor):
