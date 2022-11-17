@@ -4125,21 +4125,21 @@ class TensMul(TensExpr, AssocOp):
         query_sifted = sift(self.args, siftkey)
         expr_sifted = sift(expr.args, siftkey)
 
-        query_sifted["Tensor"] = sift(query_sifted["Tensor"], lambda x: x.component)
-        expr_sifted["Tensor"] = sift(expr_sifted["Tensor"], lambda x: x.component)
+        query_tens_sift_heads = sift(query_sifted["Tensor"], lambda x: x.component)
+        expr_tens_sift_heads = sift(expr_sifted["Tensor"], lambda x: x.component)
 
         temp_repl = {}
-        for head in query_sifted["Tensor"].keys():
-            if head not in expr_sifted["Tensor"].keys():
+        for head in query_tens_sift_heads.keys():
+            if head not in expr_tens_sift_heads.keys():
                 return None
-            for q_tensor in query_sifted["Tensor"][head]:
+            for q_tensor in query_tens_sift_heads[head]:
                 free_this = set(q_tensor.get_free_indices()).intersection(free)
-                for e_tensor in expr_sifted["Tensor"][head]:
+                for e_tensor in expr_tens_sift_heads[head]:
                     if set(e_tensor.get_free_indices()).intersection(free) == free_this:
                         temp_repl[q_tensor] = e_tensor
                 if q_tensor not in temp_repl.keys():
                     return None
-        remaining_e_tensors = [t for t in itertools.chain(*expr_sifted["Tensor"].values()) if t not in temp_repl.values()]
+        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in temp_repl.values()]
         indexless_wilds, wilds = sift(query_sifted["WildTensor"], lambda x: len(x.get_free_indices()) == 0, binary=True)
         for w in wilds:
             free_this_wild = set(w.get_free_indices()).intersection(free)
@@ -4151,7 +4151,7 @@ class TensMul(TensExpr, AssocOp):
                 temp_repl.update(m)
 
         tensors_matched = TensMul(*temp_repl.values()).atoms(Tensor)
-        remaining_e_tensors = [t for t in itertools.chain(*expr_sifted["Tensor"].values()) if t not in tensors_matched]
+        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in tensors_matched]
         if len(remaining_e_tensors) > 0:
             if len(indexless_wilds) > 0:
                 #If there are any remaining tensors, match them with the indexless WildTensor
