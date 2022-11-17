@@ -4136,8 +4136,11 @@ class TensMul(TensExpr, AssocOp):
         for head in query_tens_sift_heads.keys():
             if head not in expr_tens_sift_heads.keys():
                 return None
+            matched_e_tensors = [] #Used to make sure that the same tensor in expr is not matched with more than one tensor in the query.
             for q_tensor in query_tens_sift_heads[head]:
                 for e_tensor in expr_tens_sift_heads[head]:
+                    if e_tensor in matched_e_tensors:
+                        continue
                     if len(q_tensor.indices) != len(e_tensor.indices):
                         continue
                     all_indices_match=True
@@ -4153,6 +4156,8 @@ class TensMul(TensExpr, AssocOp):
                     if all_indices_match:
                         temp_repl[q_tensor] = e_tensor
                         temp_repl.update(d)
+                        matched_e_tensors.append(e_tensor)
+                        break
                 if q_tensor not in temp_repl.keys():
                     return None
         remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in temp_repl.values()]
