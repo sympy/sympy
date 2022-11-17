@@ -4443,6 +4443,11 @@ class WildTensorIndex(TensorIndex):
     def ignore_updown(self):
         return self.args[3]
 
+    def __neg__(self):
+        t1 = WildTensorIndex(self.name, self.tensor_index_type,
+                (not self.is_up), self.ignore_updown)
+        return t1
+
     def matches(self, expr, repl_dict=None, old=False):
         if not isinstance(expr, TensorIndex):
             return None
