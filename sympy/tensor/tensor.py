@@ -4442,6 +4442,8 @@ class WildTensorIndex(TensorIndex):
     def matches(self, expr, repl_dict=None, old=False):
         if not isinstance(expr, TensorIndex):
             return None
+        if self.tensor_index_type != expr.tensor_index_type:
+            return None
         if not self.ignore_updown:
             if self.is_up != expr.is_up:
                 return None
