@@ -4117,26 +4117,6 @@ class TensMul(TensExpr, AssocOp):
         query_wild_tensor_indices = self.atoms(WildTensorIndex)
         free = set(self.get_free_indices())
 
-        def wildify_dummies(tensmul, map=False):
-            """
-            Replaces all internally contracted indices in tensmul by WildTensorIndex instances.
-            """
-            dummy = [i for i in tensmul.get_indices() if i not in tensmul.get_free_indices() and not isinstance(i,WildTensorIndex)]
-            dummies_to_wilds = {}
-            for i in dummy:
-                if -i not in dummies_to_wilds.keys():
-                    dummies_to_wilds[i] = WildTensorIndex(True, i.tensor_index_type, is_up=i.is_up, ignore_updown=True)
-                else:
-                    #Preserve the fact that this index is contracted with another one.
-                    dummies_to_wilds[i] = -dummies_to_wilds[-i]
-
-            ret = tensmul.subs(dummies_to_wilds)
-            if map:
-                return ret, dummies_to_wilds
-            else:
-                return ret
-
-        self, dummies_to_wilds = wildify_dummies(self, map=True)
 
         def siftkey(arg):
             if isinstance(arg, WildTensor):
@@ -4201,8 +4181,7 @@ class TensMul(TensExpr, AssocOp):
         else:
             temp_repl.update(m)
 
-        wilds_to_dummies = {v:k for k,v in dummies_to_wilds.items()}
-        temp_repl = dict([(k.subs(wilds_to_dummies),v) for k,v in temp_repl.items() if isinstance(k, WildTensor) or k in query_wild_tensor_indices])
+        temp_repl = dict([(k,v) for k,v in temp_repl.items() if isinstance(k, (WildTensor, WildTensorIndex))])
         repl_dict.update(temp_repl)
         return repl_dict
 
