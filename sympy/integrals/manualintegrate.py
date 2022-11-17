@@ -496,6 +496,9 @@ def nested_pow_rule(integral: IntegralInfo):
     pattern = a_+b_*x
     generic_cond = S.true
 
+    class NoMatch(Exception):
+        pass
+
     def _get_base_exp(expr: Expr) -> tuple[Expr, Expr]:
         if not expr.has_free(x):
             return S.One, S.Zero
@@ -508,11 +511,11 @@ def nested_pow_rule(integral: IntegralInfo):
             bases.discard(S.One)
             if len(bases) == 1:
                 return bases.pop(), Add(*(e for _, e in results))
-            raise ValueError()
+            raise NoMatch
         if expr.is_Pow:
             b, e = expr.base, expr.exp  # type: ignore
             if e.has_free(x):
-                raise ValueError()
+                raise NoMatch
             base_, sub_exp = _get_base_exp(b)
             return base_, sub_exp * e
         match = expr.match(pattern)
@@ -522,11 +525,11 @@ def nested_pow_rule(integral: IntegralInfo):
             nonlocal generic_cond
             generic_cond = Ne(b, 0)
             return base_, S.One
-        raise ValueError()
+        raise NoMatch
 
     try:
         base, exp_ = _get_base_exp(integrand)
-    except ValueError:
+    except NoMatch:
         return
     if generic_cond is S.true:
         degenerate_step = None
