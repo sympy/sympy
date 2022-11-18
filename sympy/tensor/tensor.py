@@ -4346,7 +4346,6 @@ def _expand(expr, **kwargs):
         return expr.expand(**kwargs)
 
 class WildTensorHead(TensorHead):
-    #TODO: Should this be class WildTensorHead(TensorHead, AtomicExpr)? Doing that seems to break printing (would need to define a _print_WildTensorHead method for StrPrinter to fix that). Similar issue with the WildTensor class.
     def __new__(cls, name, index_types=None, comm=0, symmetry=None):
         if isinstance(name, str):
             name_symbol = Symbol(name)
