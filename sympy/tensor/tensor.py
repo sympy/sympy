@@ -4347,7 +4347,7 @@ def _expand(expr, **kwargs):
 
 class WildTensorHead(TensorHead):
     #TODO: Should this be class WildTensorHead(TensorHead, AtomicExpr)? Doing that seems to break printing (would need to define a _print_WildTensorHead method for StrPrinter to fix that). Similar issue with the WildTensor class.
-    def __new__(cls, name, index_types=None, comm=0, symmetry=None, ninds=S.Naturals0):
+    def __new__(cls, name, index_types=None, comm=0, symmetry=None):
         if isinstance(name, str):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
@@ -4366,15 +4366,6 @@ class WildTensorHead(TensorHead):
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry)
         obj.comm = TensorManager.comm_symbols2i(comm)
 
-        if not isinstance(ninds, Set):
-            # Canonicalize ninds here.
-            if is_sequence(ninds):
-                ninds = tuple(ordered(set(ninds)))
-            elif ninds is not None:
-                ninds = (as_int(ninds),)
-            ninds = FiniteSet(*ninds)
-        obj.ninds = ninds
-
         return obj
 
     def __call__(self, *indices, symmetry=None):
@@ -4391,7 +4382,6 @@ class WildTensor(Tensor):
 
         indices = cls._parse_indices(tensor_head, indices)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices))
-        obj.ninds = FiniteSet(len(indices))
         obj.name = tensor_head.name
         obj.kw_args = kw_args
         obj._index_structure = _IndexStructure.from_indices(*indices)
