@@ -4397,6 +4397,8 @@ class WildTensor(Tensor):
             repl_dict = repl_dict.copy()
 
         if len(self.indices) > 0: #If no indices were passed to the WildTensor, it may match tensors with any number of indices.
+            if not hasattr(expr, "get_free_indices"):
+                return None
             expr_indices = expr.get_free_indices()
             if len(expr_indices) != len(self.indices):
                 return None
