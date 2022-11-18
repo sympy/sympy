@@ -4347,16 +4347,25 @@ def _expand(expr, **kwargs):
 
 class WildTensorHead(TensorHead):
     #TODO: Should this be class WildTensorHead(TensorHead, AtomicExpr)? Doing that seems to break printing (would need to define a _print_WildTensorHead method for StrPrinter to fix that). Similar issue with the WildTensor class.
-    def __new__(self, *args, **kw_args):
-        obj = Basic.__new__(self, *args, **kw_args)
-        self.name = None
-        self.args = None
-        return obj
+    def __new__(cls, name, index_types=None, comm=0, symmetry=None, ninds=S.Naturals0):
+        if isinstance(name, str):
+            name_symbol = Symbol(name)
+        elif isinstance(name, Symbol):
+            name_symbol = name
+        else:
+            raise ValueError("invalid name")
 
-    def __init__(self, name, *args, **kwargs):
-        self.name = name
-        self.args = args
-        ninds = kwargs.pop('ninds', S.Naturals0) #Number of indices allowed for the tensor.
+        if index_types is None:
+            index_types = []
+
+        if symmetry is None:
+            symmetry = TensorSymmetry.no_symmetry(len(index_types))
+        else:
+            assert symmetry.rank == len(index_types)
+
+        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry)
+        obj.comm = TensorManager.comm_symbols2i(comm)
+
         if not isinstance(ninds, Set):
             # Canonicalize ninds here.
             if is_sequence(ninds):
@@ -4364,23 +4373,24 @@ class WildTensorHead(TensorHead):
             elif ninds is not None:
                 ninds = (as_int(ninds),)
             ninds = FiniteSet(*ninds)
-        self.ninds = ninds
+        obj.ninds = ninds
 
-    def __call__(self, *indices, **kw_args):
-        tensor = WildTensor(self, indices, **kw_args)
+        return obj
+
+    def __call__(self, *indices, symmetry=None):
+        if symmetry is None:
+            symmetry = TensorSymmetry.no_symmetry(len(indices))
+        else:
+            assert symmetry.rank == len(indices)
+
+        tensor = WildTensor(self, indices, symmetry=symmetry, comm=self.comm)
         return tensor.doit()
 
-    @property
-    def index_types(self):
-        if len(self.args) > 0:
-            return list(self.args[0])
-        else:
-            return []
-
 class WildTensor(Tensor):
-    def __new__(cls, tensor_head, indices, *args, **kw_args):
+    def __new__(cls, tensor_head, indices, **kw_args):
+
         indices = cls._parse_indices(tensor_head, indices)
-        obj = Basic.__new__(cls, tensor_head, Tuple(*indices), **kw_args)
+        obj = Basic.__new__(cls, tensor_head, Tuple(*indices))
         obj.ninds = FiniteSet(len(indices))
         obj.name = tensor_head.name
         obj.kw_args = kw_args
