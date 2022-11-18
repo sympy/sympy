@@ -4114,6 +4114,13 @@ class TensMul(TensExpr, AssocOp):
         if self == expr:
             return repl_dict
 
+        #Take care of the various possible types for expr.
+        if isinstance(expr, Tensor):
+            expr = TensMul(expr)
+        elif isinstance(expr, TensAdd):
+            return None
+        #The code that follows assumes expr is a TensMul
+
         query_wild_tensor_indices = self.atoms(WildTensorIndex)
         free = set(self.get_free_indices())
 
