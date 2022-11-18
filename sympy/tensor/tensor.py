@@ -4146,8 +4146,12 @@ class TensMul(TensExpr, AssocOp):
                     all_indices_match=True
                     d = {}
                     for i in range(len(q_tensor.indices)):
-                        m = q_tensor.indices[i].matches(e_tensor.indices[i])
-                        if m is None:
+                        q_ind = q_tensor.indices[i]
+                        m = q_ind.matches(e_tensor.indices[i])
+                        if (
+                            (m is None)
+                            or (-q_ind in temp_repl.keys() and -temp_repl[-q_ind] != m[q_ind])
+                            ):
                             all_indices_match = False
                             break
                         else:
