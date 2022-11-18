@@ -4099,7 +4099,7 @@ class TensMul(TensExpr, AssocOp):
 
     def _matches_commutative(self, expr, repl_dict=None, old=False):
         """
-        Match assuming all tensors commute.
+        Match assuming all tensors commute. But note that we are not assuming anything about their symmetry under index permutations.
         """
 
         if isinstance(self, TensExpr) and not isinstance(expr, TensExpr):
