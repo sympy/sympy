@@ -4167,9 +4167,10 @@ class TensMul(TensExpr, AssocOp):
         remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in temp_repl.values()]
         indexless_wilds, wilds = sift(query_sifted["WildTensor"], lambda x: len(x.get_free_indices()) == 0, binary=True)
         for w in wilds:
-            free_this_wild = set(w.get_free_indices()).intersection(free)
+            free_this_wild = set(w.get_free_indices())
+            tensors_to_try = [t for t in remaining_e_tensors if set(t.get_free_indices()).issubset(free_this_wild) ]
 
-            m = w.matches(TensMul(*remaining_e_tensors).doit() )
+            m = w.matches(TensMul(*tensors_to_try).doit() )
             if m is None:
                 return None
             else:
