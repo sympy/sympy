@@ -4202,7 +4202,8 @@ class TensMul(TensExpr, AssocOp):
         else:
             temp_repl.update(m)
 
-        temp_repl = dict([(k,v) for k,v in temp_repl.items() if isinstance(k, (WildTensor, WildTensorIndex))])
+        from sympy import Wild, WildFunction
+        temp_repl = dict([(k,v) for k,v in temp_repl.items() if isinstance(k, (WildTensor, WildTensorIndex, Wild, WildFunction))])
         repl_dict.update(temp_repl)
         return repl_dict
 
