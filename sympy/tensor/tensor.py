@@ -4181,7 +4181,11 @@ class TensMul(TensExpr, AssocOp):
         if len(remaining_e_tensors) > 0:
             if len(indexless_wilds) > 0:
                 #If there are any remaining tensors, match them with the indexless WildTensor
-                temp_repl[indexless_wilds[0]] = TensMul(*remaining_e_tensors).doit()
+                m =  indexless_wilds[0].matches( TensMul(*remaining_e_tensors).doit() )
+                if m is None:
+                    return None
+                else:
+                    temp_repl.update(m)
             else:
                 return None
 
