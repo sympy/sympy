@@ -4509,4 +4509,4 @@ class _WildTensExpr(Basic):
         self.expr = expr
 
     def __call__(self, *indices):
-        return self.expr.subs(dict(zip(self.expr.get_free_indices(), indices)))
+        return self.expr._replace_indices(dict(zip(self.expr.get_free_indices(), indices)))
