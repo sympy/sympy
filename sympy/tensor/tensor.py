@@ -4433,10 +4433,12 @@ class WildTensor(Tensor):
                 else:
                     repl_dict.update(m)
 
-        if hasattr(expr, "components"):
+        if hasattr(expr, "get_free_indices"):
             repl_dict[self.component] = _WildTensExpr(expr)
+        else:
+            #This handles the trivial case, where this particular WildTensor is matched to just 1.
+            repl_dict[self] = expr
 
-        repl_dict[self] = expr
         return repl_dict
 
 
