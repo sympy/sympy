@@ -4378,12 +4378,19 @@ class WildTensorHead(TensorHead):
 
 class WildTensor(Tensor):
     def __new__(cls, tensor_head, indices, **kw_args):
+        is_canon_bp = kw_args.pop("is_canon_bp", False)
+        if tensor_head.func == TensorHead:
+            """
+            If someone tried to call WildTensor by supplying a TensorHead (not a WildTensorHead), return a normal tensor instead. This is helpful when using subs on an expression to replace occurrences of a WildTensorHead with a TensorHead.
+            """
+            return Tensor(tensor_head, indices, is_canon_bp=is_canon_bp, **kw_args)
 
         indices = cls._parse_indices(tensor_head, indices)
         index_types = [ind.tensor_index_type for ind in indices]
         symmetry = kw_args.pop("symmetry", None)
         comm = kw_args.pop("comm", 0)
-        tensor_head = WildTensorHead(tensor_head.name, index_types, comm=comm, symmetry=symmetry)
+        tensor_head = tensor_head.func(tensor_head.name, index_types, comm=comm, symmetry=symmetry)
+
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices))
         obj.name = tensor_head.name
         obj._index_structure = _IndexStructure.from_indices(*indices)
@@ -4396,7 +4403,7 @@ class WildTensor(Tensor):
         obj._components = [tensor_head]
         if tensor_head.rank != len(indices):
         	raise ValueError("wrong number of indices")
-        obj.is_canon_bp = kw_args.pop("is_canon_bp", False)
+        obj.is_canon_bp = is_canon_bp
         obj._index_map = obj._build_index_map(indices, obj._index_structure)
 
         return obj
