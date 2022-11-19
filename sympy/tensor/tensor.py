@@ -4102,6 +4102,11 @@ class TensMul(TensExpr, AssocOp):
         Match assuming all tensors commute. But note that we are not assuming anything about their symmetry under index permutations.
         """
 
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
         if isinstance(self, TensExpr) and not isinstance(expr, TensExpr):
             return None
 
