@@ -4380,10 +4380,23 @@ class WildTensor(Tensor):
     def __new__(cls, tensor_head, indices, **kw_args):
 
         indices = cls._parse_indices(tensor_head, indices)
+        index_types = [ind.tensor_index_type for ind in indices]
+        tensor_head = WildTensorHead(tensor_head.name, index_types, **kw_args)
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices))
         obj.name = tensor_head.name
         obj.kw_args = kw_args
         obj._index_structure = _IndexStructure.from_indices(*indices)
+        obj._free = obj._index_structure.free[:]
+        obj._dum = obj._index_structure.dum[:]
+        obj._ext_rank = obj._index_structure._ext_rank
+        obj._coeff = S.One
+        obj._nocoeff = obj
+        obj._component = tensor_head
+        obj._components = [tensor_head]
+        if tensor_head.rank != len(indices):
+        	raise ValueError("wrong number of indices")
+        obj._index_map = obj._build_index_map(indices, obj._index_structure)
+
         return obj
 
 
@@ -4412,13 +4425,7 @@ class WildTensor(Tensor):
         repl_dict[self] = expr
         return repl_dict
 
-    @property
-    def index_types(self):
-        return [ind.tensor_index_type for ind in self.args[1]]
 
-    @property
-    def component(self):
-        return WildTensorHead(self.name, self.index_types, **self.kw_args)
 
 class WildTensorIndex(TensorIndex):
     """
