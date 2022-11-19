@@ -4379,7 +4379,7 @@ class WildTensorHead(TensorHead):
 class WildTensor(Tensor):
     def __new__(cls, tensor_head, indices, **kw_args):
         is_canon_bp = kw_args.pop("is_canon_bp", False)
-        if tensor_head.func == TensorHead:
+        if ( not isinstance(tensor_head, WildTensorHead) ) and isinstance(tensor_head, TensorHead):
             """
             If someone tried to call WildTensor by supplying a TensorHead (not a WildTensorHead), return a normal tensor instead. This is helpful when using subs on an expression to replace occurrences of a WildTensorHead with a TensorHead.
             """
