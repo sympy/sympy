@@ -4139,12 +4139,12 @@ class TensMul(TensExpr, AssocOp):
         query_tens_sift_heads = sift(query_sifted["Tensor"], lambda x: x.component)
         expr_tens_sift_heads = sift(expr_sifted["Tensor"], lambda x: x.component)
 
-        temp_repl = {}
+        matched_e_tensors = [] #Used to make sure that the same tensor in expr is not matched with more than one tensor in the query.
         for head in query_tens_sift_heads.keys():
             if head not in expr_tens_sift_heads.keys():
                 return None
-            matched_e_tensors = [] #Used to make sure that the same tensor in expr is not matched with more than one tensor in the query.
             for q_tensor in query_tens_sift_heads[head]:
+                matched_this_q = False
                 for e_tensor in expr_tens_sift_heads[head]:
                     if e_tensor in matched_e_tensors:
                         continue
@@ -4157,7 +4157,7 @@ class TensMul(TensExpr, AssocOp):
                         m = q_ind.matches(e_tensor.indices[i])
                         if (
                             (m is None)
-                            or (-q_ind in temp_repl.keys() and -temp_repl[-q_ind] != m[q_ind])
+                            or (-q_ind in repl_dict.keys() and -repl_dict[-q_ind] != m[q_ind])
                             ):
                             all_indices_match = False
                             break
@@ -4165,13 +4165,14 @@ class TensMul(TensExpr, AssocOp):
                             d.update(m)
 
                     if all_indices_match:
-                        temp_repl[q_tensor] = e_tensor
-                        temp_repl.update(d)
+                        matched_this_q = True
+                        repl_dict.update(d)
                         matched_e_tensors.append(e_tensor)
                         break
-                if q_tensor not in temp_repl.keys():
+                if not matched_this_q:
                     return None
-        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in temp_repl.values()]
+
+        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in matched_e_tensors]
         indexless_wilds, wilds = sift(query_sifted["WildTensor"], lambda x: len(x.get_free_indices()) == 0, binary=True)
         for w in wilds:
             free_this_wild = set(w.get_free_indices())
@@ -4181,9 +4182,9 @@ class TensMul(TensExpr, AssocOp):
             if m is None:
                 return None
             else:
-                temp_repl.update(m)
+                repl_dict.update(m)
 
-        tensors_matched = TensMul(*temp_repl.values()).atoms(Tensor)
+        tensors_matched = TensMul(*[repl_dict[w.component] for w in wilds], *matched_e_tensors).atoms(Tensor)
         remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in tensors_matched]
         if len(indexless_wilds) > 0:
             #If there are any remaining tensors, match them with the indexless WildTensor
@@ -4191,7 +4192,7 @@ class TensMul(TensExpr, AssocOp):
             if m is None:
                 return None
             else:
-                temp_repl.update(m)
+                repl_dict.update(m)
         elif len(remaining_e_tensors) > 0:
             return None
 
@@ -4199,11 +4200,8 @@ class TensMul(TensExpr, AssocOp):
         if m is None:
             return None
         else:
-            temp_repl.update(m)
+            repl_dict.update(m)
 
-        from sympy import Wild, WildFunction
-        temp_repl = dict([(k,v) for k,v in temp_repl.items() if isinstance(k, (WildTensor, WildTensorIndex, Wild, WildFunction, WildTensorHead))])
-        repl_dict.update(temp_repl)
         return repl_dict
 
     def matches(self, expr, repl_dict=None, old=False):
