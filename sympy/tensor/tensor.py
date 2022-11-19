@@ -4433,10 +4433,7 @@ class WildTensor(Tensor):
                 else:
                     repl_dict.update(m)
 
-        if hasattr(expr, "component"):
-            #Make sure the corresponding WildTensorHead is also added to the replacement rules
-            repl_dict[self.component] = expr.component
-        elif hasattr(expr, "components"):
+        if hasattr(expr, "components"):
             repl_dict[self.component] = _WildTensExpr(expr)
 
         repl_dict[self] = expr
