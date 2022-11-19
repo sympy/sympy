@@ -481,9 +481,8 @@ NotImplementedError
 For such cases, you can solve the equations numerically as mentioned in
 [](#alternatives-to-consider).
 
-## Report a Problem
+## Report a Bug
 
-If you know your ODE has a solution, and SymPy cannot find it, please post the
-problem on the [mailing list](https://groups.google.com/g/sympy), or open an
-issue on [SymPy's GitHub page](https://github.com/sympy/sympy/issues). Until the
-issue is resolved, you can try one of the [](#alternatives-to-consider).
+If you find a bug with {func}`~.dsolve`, please post the problem on the [SymPy mailing
+list](https://groups.google.com/g/sympy). Until the issue is resolved, you can
+use a different method listed in [](#alternatives-to-consider).

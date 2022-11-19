@@ -574,8 +574,6 @@ method such as [`nroots` as described above](#nroots).
 ## Report a Bug
 
 If you encounter a bug with these commands, please post the problem on the
-[mailing list](https://groups.google.com/g/sympy), or open an issue on [SymPy's
-GitHub page](https://github.com/sympy/sympy/issues). Until the issue is
-resolved, you can use another of the
-[](#functions-to-find-the-roots-of-a-polynomial) or try one of the
-[](#alternatives-to-consider).
+[SymPy mailing list](https://groups.google.com/g/sympy). Until the issue is resolved,
+you can use another of the [](#functions-to-find-the-roots-of-a-polynomial) or
+try one of the [](#alternatives-to-consider).
