@@ -4105,11 +4105,6 @@ class TensMul(TensExpr, AssocOp):
         if isinstance(self, TensExpr) and not isinstance(expr, TensExpr):
             return None
 
-        if repl_dict is None:
-            repl_dict = {}
-        else:
-            repl_dict = repl_dict.copy()
-
         # handle simple patterns
         if self == expr:
             return repl_dict
@@ -4206,6 +4201,11 @@ class TensMul(TensExpr, AssocOp):
 
     def matches(self, expr, repl_dict=None, old=False):
         expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
 
         commute = all([arg.component.comm == 0 for arg in expr.args if isinstance(arg, Tensor)])
         if commute:
