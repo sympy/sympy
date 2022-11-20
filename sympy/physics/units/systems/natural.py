@@ -24,4 +24,4 @@ _natural_dim = DimensionSystem(
 units = prefix_unit(eV, PREFIXES)
 
 # unit system
-natural = UnitSystem(base_units=(hbar, eV, c), units=units, name="Natural system")
+natural = UnitSystem(base_units=(hbar, eV, c), units=units, name="Natural system", dimension_system=_natural_dim)
