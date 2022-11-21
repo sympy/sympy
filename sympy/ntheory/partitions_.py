@@ -52,7 +52,6 @@ def _a(n, k, prec):
     k2 = k//k1 # k2 = p^e
     v = 1 - 24*n
     pi = mpf_pi(prec)
-
     if k1 == 1:
         # k  = p^e
         if p == 2:
@@ -172,7 +171,7 @@ def npartitions(n, verbose=False):
         math.log(10, 2)
     prec = p = int(pbits*1.1 + 100)
     s = fzero
-    M = max(6, int(0.24*n**0.5 + 4))
+    M = math.ceil(n**0.5)
     if M > 10**5:
         raise ValueError("Input too big") # Corresponds to n > 1.7e11
     sq23pi = mpf_mul(mpf_sqrt(from_rational(2, 3, p), p), mpf_pi(p), p)
