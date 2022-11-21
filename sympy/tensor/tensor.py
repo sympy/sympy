@@ -4154,7 +4154,7 @@ class TensMul(TensExpr, AssocOp):
             #Some tensorheads in self are not present in the expr
             return None
 
-        #Try to match all non-wild tensors of the query with tensors that compose the expression
+        #Try to match all non-wild tensors of self with tensors that compose expr
         matched_e_tensors = [] #Used to make sure that the same tensor in expr is not matched with more than one tensor in the query.
         for q_tensor in query_sifted["Tensor"]:
             matched_this_q = False
