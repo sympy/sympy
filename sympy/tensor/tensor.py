@@ -4135,7 +4135,7 @@ class TensMul(TensExpr, AssocOp):
         query_tens_sift_heads = sift(query_sifted["Tensor"], lambda x: x.component)
         expr_tens_sift_heads = sift(expr_sifted["Tensor"], lambda x: x.component)
 
-        #First check which tensors are the same in both query and expression
+        #Try to match all non-wild tensors of the query with tensors that compose the expression
         matched_e_tensors = [] #Used to make sure that the same tensor in expr is not matched with more than one tensor in the query.
         for head in query_tens_sift_heads.keys():
             if head not in expr_tens_sift_heads.keys():
