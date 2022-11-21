@@ -4155,7 +4155,7 @@ class TensMul(TensExpr, AssocOp):
             return None
 
         #Try to match all non-wild tensors of self with tensors that compose expr
-        matched_e_tensors = [] #Used to make sure that the same tensor in expr is not matched with more than one tensor in the query.
+        matched_e_tensors = [] #Used to make sure that the same tensor in expr is not matched with more than one tensor in self.
         for q_tensor in query_sifted["Tensor"]:
             matched_this_q = False
             for e_tensor in expr_sifted["Tensor"]:
