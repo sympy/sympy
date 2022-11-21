@@ -4111,10 +4111,6 @@ class TensMul(TensExpr, AssocOp):
         if isinstance(self, TensExpr) and not isinstance(expr, TensExpr):
             return None
 
-        # handle simple patterns
-        if self == expr:
-            return repl_dict
-
         #Take care of the various possible types for expr.
         if isinstance(expr, Tensor):
             expr = TensMul(expr)
@@ -4122,15 +4118,20 @@ class TensMul(TensExpr, AssocOp):
             return None
         #The code that follows assumes expr is a TensMul
 
-        #If there are no Wilds in self, we can depend on canon_bp to tell us whether self and expr are equivalent.
         def get_nondummy_wilds(expr):
             dummy_indices = set(expr.get_indices()) - set(expr.get_free_indices())
             return [ a for a in expr.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead) if a not in dummy_indices ]
+
+        # handle simple patterns
+        if self == expr:
+            return repl_dict
 
         if len(get_nondummy_wilds(self)) == 0:
             if set(self.get_free_indices()) != set(expr.get_free_indices()):
                 #If there are no wilds and the free indices are not the same, they cannot match.
                 return None
+
+            #If there are no Wilds in self, we can depend on canon_bp to tell us whether self and expr are equivalent.
             diff = self.as_dummy() - expr.as_dummy()
             if diff == 0 or diff.canon_bp() == 0:
                 return repl_dict
