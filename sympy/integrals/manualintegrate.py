@@ -224,16 +224,20 @@ class Csc2Rule(TrigRule):
 
 
 @dataclass
-class HyperbolicRule(Rule):
-    func: Literal['sinh', 'cosh']
-    arg: Expr
+class HyperbolicRule(Rule, ABC):
+    pass
 
+
+@dataclass
+class SinhRule(HyperbolicRule):
     def eval(self) -> Expr:
-        func, arg = self.func, self.arg
-        if func == 'sinh':
-            return cosh(arg)
-        if func == 'cosh':
-            return sinh(arg)
+        return cosh(self.variable)
+
+
+@dataclass
+class CoshRule(HyperbolicRule):
+    def eval(self):
+        return sinh(self.variable)
 
 
 @dataclass
@@ -1540,9 +1544,9 @@ def hyperbolic_rule(integral: tuple[Expr, Symbol]):
     integrand, symbol = integral
     if isinstance(integrand, HyperbolicFunction) and integrand.args[0] == symbol:
         if integrand.func == sinh:
-            return HyperbolicRule(integrand, symbol, 'sinh', symbol)
+            return SinhRule(integrand, symbol)
         if integrand.func == cosh:
-            return HyperbolicRule(integrand, symbol, 'cosh', symbol)
+            return CoshRule(integrand, symbol)
         u = Dummy('u')
         if integrand.func == tanh:
             rewritten = sinh(symbol)/cosh(symbol)
