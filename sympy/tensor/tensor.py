@@ -4121,10 +4121,6 @@ class TensMul(TensExpr, AssocOp):
             return None
         #The code that follows assumes expr is a TensMul
 
-        query_wild_tensor_indices = self.atoms(WildTensorIndex)
-        free = set(self.get_free_indices())
-
-
         def siftkey(arg):
             if isinstance(arg, WildTensor):
                 return "WildTensor"
