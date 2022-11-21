@@ -182,27 +182,45 @@ class CyclicPartsRule(Rule):
         return any(substep.contains_dont_know() for substep in self.parts_rules)
 
 
-TRIG_FUNC = Literal['sin', 'cos', 'sec*tan', 'csc*cot', 'sec**2', 'csc**2']
+@dataclass
+class TrigRule(Rule, ABC):
+    pass
+
 
 @dataclass
-class TrigRule(Rule):
-    func: TRIG_FUNC
-    arg: Expr
-
+class SinRule(TrigRule):
     def eval(self) -> Expr:
-        func, arg = self.func, self.arg
-        if func == 'sin':
-            return -cos(arg)
-        if func == 'cos':
-            return sin(arg)
-        if func == 'sec*tan':
-            return sec(arg)
-        if func == 'csc*cot':
-            return csc(arg)
-        if func == 'sec**2':
-            return tan(arg)
-        if func == 'csc**2':
-            return -cot(arg)
+        return -cos(self.variable)
+
+
+@dataclass
+class CosRule(TrigRule):
+    def eval(self) -> Expr:
+        return sin(self.variable)
+
+
+@dataclass
+class SecTanRule(TrigRule):
+    def eval(self) -> Expr:
+        return sec(self.variable)
+
+
+@dataclass
+class CscCotRule(TrigRule):
+    def eval(self) -> Expr:
+        return -csc(self.variable)
+
+
+@dataclass
+class Sec2Rule(TrigRule):
+    def eval(self) -> Expr:
+        return tan(self.variable)
+
+
+@dataclass
+class Csc2Rule(TrigRule):
+    def eval(self) -> Expr:
+        return -cot(self.variable)
 
 
 @dataclass
@@ -1301,23 +1319,14 @@ def parts_rule(integral):
 
 def trig_rule(integral):
     integrand, symbol = integral
-    if isinstance(integrand, (sin, cos)):
-        arg = integrand.args[0]
-
-        if not isinstance(arg, Symbol):
-            return  # perhaps a substitution can deal with it
-
-        if isinstance(integrand, sin):
-            func: TRIG_FUNC = 'sin'
-        else:
-            func = 'cos'
-
-        return TrigRule(integrand, symbol, func, arg)
-
+    if integrand == sin(symbol):
+        return SinRule(integrand, symbol)
+    if integrand == cos(symbol):
+        return CosRule(integrand, symbol)
     if integrand == sec(symbol)**2:
-        return TrigRule(integrand, symbol, 'sec**2', symbol)
-    elif integrand == csc(symbol)**2:
-        return TrigRule(integrand, symbol, 'csc**2', symbol)
+        return Sec2Rule(integrand, symbol)
+    if integrand == csc(symbol)**2:
+        return Csc2Rule(integrand, symbol)
 
     if isinstance(integrand, tan):
         rewritten = sin(*integrand.args) / cos(*integrand.args)
@@ -1336,28 +1345,12 @@ def trig_rule(integral):
 
     return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
 
-def trig_product_rule(integral):
+def trig_product_rule(integral: IntegralInfo):
     integrand, symbol = integral
-
-    sectan = sec(symbol) * tan(symbol)
-    q = integrand / sectan
-
-    if symbol not in q.free_symbols:
-        rule = TrigRule(sectan, symbol, 'sec*tan', symbol)
-        if q != 1 and rule:
-            rule = ConstantTimesRule(integrand, symbol, q, sectan, rule)
-
-        return rule
-
-    csccot = -csc(symbol) * cot(symbol)
-    q = integrand / csccot
-
-    if symbol not in q.free_symbols:
-        rule = TrigRule(csccot, symbol, 'csc*cot', symbol)
-        if q != 1 and rule:
-            rule = ConstantTimesRule(integrand, symbol, q, csccot, rule)
-
-        return rule
+    if integrand == sec(symbol) * tan(symbol):
+        return SecTanRule(integrand, symbol)
+    if integrand == csc(symbol) * cot(symbol):
+        return CscCotRule(integrand, symbol)
 
 
 def quadratic_denom_rule(integral):
@@ -1969,7 +1962,7 @@ def integral_steps(integrand, symbol, **options):
     substep=ArctanRule(integrand=1/(_u**2 + 1), variable=_u, a=1, b=1, c=1))
     >>> print(repr(integral_steps(sin(x), x))) \
     # doctest: +NORMALIZE_WHITESPACE
-    TrigRule(integrand=sin(x), variable=x, func='sin', arg=x)
+    SinRule(integrand=sin(x), variable=x)
     >>> print(repr(integral_steps((x**2 + 3)**2, x))) \
     # doctest: +NORMALIZE_WHITESPACE
     RewriteRule(integrand=(x**2 + 3)**2, variable=x, rewritten=x**4 + 6*x**2 + 9,
