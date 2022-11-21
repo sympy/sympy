@@ -4109,7 +4109,7 @@ class TensMul(TensExpr, AssocOp):
             repl_dict = repl_dict.copy()
 
         #Take care of the various possible types for expr.
-        if not not isinstance(expr, TensExpr):
+        if not isinstance(expr, TensExpr):
             return None
         elif isinstance(expr, Tensor):
             expr = TensMul(expr)
