@@ -38,6 +38,7 @@ from abc import abstractmethod, ABC
 from collections import defaultdict
 import operator
 import itertools
+from sympy.core import Wild, WildFunction
 from sympy.core.numbers import (Integer, Rational)
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
@@ -4120,6 +4121,21 @@ class TensMul(TensExpr, AssocOp):
         elif isinstance(expr, TensAdd):
             return None
         #The code that follows assumes expr is a TensMul
+
+        #If there are no Wilds in self, we can depend on canon_bp to tell us whether self and expr are equivalent.
+        def get_nondummy_wilds(expr):
+            dummy_indices = set(expr.get_indices()) - set(expr.get_free_indices())
+            return [ a for a in expr.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead) if a not in dummy_indices ]
+
+        if len(get_nondummy_wilds(self)) == 0:
+            if set(self.get_free_indices()) != set(expr.get_free_indices()):
+                #If there are no wilds and the free indices are not the same, they cannot match.
+                return None
+            diff = self.as_dummy() - expr.as_dummy()
+            if diff == 0 or diff.canon_bp() == 0:
+                return repl_dict
+            else:
+                return None
 
         def siftkey(arg):
             if isinstance(arg, WildTensor):
