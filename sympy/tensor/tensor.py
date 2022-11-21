@@ -4148,42 +4148,45 @@ class TensMul(TensExpr, AssocOp):
         query_sifted = sift(self.args, siftkey)
         expr_sifted = sift(expr.args, siftkey)
 
-        query_tens_sift_heads = sift(query_sifted["Tensor"], lambda x: x.component)
-        expr_tens_sift_heads = sift(expr_sifted["Tensor"], lambda x: x.component)
+        query_tens_heads = set(x.head for x in query_sifted["Tensor"])
+        expr_tens_heads = set(x.head for x in expr_sifted["Tensor"])
+        if not query_tens_heads.issubset(expr_tens_heads):
+            #Some tensorheads in self are not present in the expr
+            return None
 
         #Try to match all non-wild tensors of the query with tensors that compose the expression
         matched_e_tensors = [] #Used to make sure that the same tensor in expr is not matched with more than one tensor in the query.
-        for head in query_tens_sift_heads.keys():
-            if head not in expr_tens_sift_heads.keys():
-                return None
-            for q_tensor in query_tens_sift_heads[head]:
-                matched_this_q = False
-                for e_tensor in expr_tens_sift_heads[head]:
-                    if e_tensor in matched_e_tensors:
-                        continue
-                    if len(q_tensor.indices) != len(e_tensor.indices):
-                        continue
-                    all_indices_match=True
-                    d = {}
-                    for i in range(len(q_tensor.indices)):
-                        q_ind = q_tensor.indices[i]
-                        m = q_ind.matches(e_tensor.indices[i])
-                        if (
-                            (m is None)
-                            or (-q_ind in repl_dict.keys() and -repl_dict[-q_ind] != m[q_ind])
-                            ):
-                            all_indices_match = False
-                            break
-                        else:
-                            d.update(m)
+        for q_tensor in query_sifted["Tensor"]:
+            matched_this_q = False
+            for e_tensor in expr_sifted["Tensor"]:
+                if q_tensor.head != e_tensor.head:
+                    continue
+                if e_tensor in matched_e_tensors:
+                    continue
+                if len(q_tensor.indices) != len(e_tensor.indices):
+                    continue
 
-                    if all_indices_match:
-                        matched_this_q = True
-                        repl_dict.update(d)
-                        matched_e_tensors.append(e_tensor)
+                all_indices_match=True
+                d = {}
+                for i in range(len(q_tensor.indices)):
+                    q_ind = q_tensor.indices[i]
+                    m = q_ind.matches(e_tensor.indices[i])
+                    if (
+                        (m is None)
+                        or (-q_ind in repl_dict.keys() and -repl_dict[-q_ind] != m[q_ind])
+                        ):
+                        all_indices_match = False
                         break
-                if not matched_this_q:
-                    return None
+                    else:
+                        d.update(m)
+
+                if all_indices_match:
+                    matched_this_q = True
+                    repl_dict.update(d)
+                    matched_e_tensors.append(e_tensor)
+                    break
+            if not matched_this_q:
+                return None
 
         #Try to match WildTensor instances which have indices
         remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in matched_e_tensors]
