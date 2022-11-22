@@ -4142,8 +4142,6 @@ class TensMul(TensExpr, AssocOp):
                 return "WildTensor"
             elif isinstance(arg, Tensor):
                 return "Tensor"
-            elif isinstance(arg, TensExpr):
-                return "TensExpr"
             else:
                 return "coeff"
 
@@ -4151,10 +4149,12 @@ class TensMul(TensExpr, AssocOp):
         expr_sifted = sift(expr.args, siftkey)
 
         #Sanity checks
-        if "TensExpr" in query_sifted.keys():
-            raise NotImplementedError(f"Found a TensExpr that we do not know to handle: {query_sifted['TensExpr']}")
-        if "TensExpr" in expr_sifted.keys():
-            raise NotImplementedError(f"Found a TensExpr that we do not know to handle: {expr_sifted['TensExpr']}")
+        if "coeff" in query_sifted.keys():
+            if TensMul(*query_sifted["coeff"]).doit() != self.coeff:
+                raise NotImplementedError(f"Found something that we do not know to handle: {query_sifted['coeff']}")
+        if "coeff" in expr_sifted.keys():
+            if TensMul(*expr_sifted["coeff"]).doit() != expr.coeff:
+                raise NotImplementedError(f"Found something that we do not know to handle: {expr_sifted['coeff']}")
 
         query_tens_heads = set(x.head for x in query_sifted["Tensor"])
         expr_tens_heads = set(x.head for x in expr_sifted["Tensor"])
