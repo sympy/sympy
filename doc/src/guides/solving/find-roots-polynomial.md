@@ -1,8 +1,8 @@
 # Find the Roots of a Polynomial Algebraically or Numerically 
 
-Use SymPy to solve find the roots of a univariate polynomial algebraically. For
-example, solving $ax^2 + bx + c = 0$ for $x$ yields $x = \frac{-b\pm\sqrt{b^2 -
-4ac}}{2a}$.
+Use SymPy to find the roots of a univariate polynomial algebraically. For
+example, finding the roots of $ax^2 + bx + c$ for $x$ yields $x =
+\frac{-b\pm\sqrt{b^2 - 4ac}}{2a}$.
 
 ## Alternatives to Consider
 
@@ -14,7 +14,7 @@ example, solving $ax^2 + bx + c = 0$ for $x$ yields $x = \frac{-b\pm\sqrt{b^2 -
 
 ## Example of Finding the Roots of a Polynomial Algebraically
 
-Here is an example of solving a polynomial algebraically:
+Here is an example of finding the roots of a polynomial algebraically:
 
 ```py
 >>> from sympy import roots
@@ -64,10 +64,10 @@ Refer to
 [](solving-guidance.md#include-the-variable-to-be-solved-for-in-the-function-call)
 and [](solving-guidance.md#use-exact-values).
 
-## Solve (Find the Roots of) a Polynomial
+## Find the Roots of a Polynomial
 
-You can solve a polynomial algebraically in several ways. The one to use depends
-on whether you
+You can find the roots of a polynomial algebraically in several ways. The one to
+use depends on whether you
 - want an algebraic or numeric answer
 - want the multiplicity of each root (how many times each root is a solution).
   In the `expression` below representing $(x+2)^2(x-3)$, the root -2 has a
@@ -574,8 +574,7 @@ method such as [`nroots` as described above](#nroots).
 ## Report a Bug
 
 If you encounter a bug with these commands, please post the problem on the
-[mailing list](https://groups.google.com/g/sympy), or open an issue on [SymPy's
-GitHub page](https://github.com/sympy/sympy/issues). Until the issue is
+[SymPy mailing list](https://groups.google.com/g/sympy). Until the issue is
 resolved, you can use another of the
 [](#functions-to-find-the-roots-of-a-polynomial) or try one of the
 [](#alternatives-to-consider).
