@@ -4201,35 +4201,25 @@ class TensMul(TensExpr, AssocOp):
         for q_tensor in query_sifted["Tensor"]:
             matched_this_q = False
             for e_tensor in expr_sifted["Tensor"]:
-                if q_tensor.components != e_tensor.components:
-                    continue
                 if e_tensor in matched_e_tensors:
                     continue
 
-                q_indices = q_tensor.get_indices()
-                e_indices = e_tensor.get_indices()
-                if len(q_indices) != len(e_indices):
+                m = q_tensor.matches(e_tensor, repl_dict=repl_dict, old=old)
+                if m is None:
                     continue
 
-                all_indices_match=True
-                d = {}
-                for i in range(len(q_indices)):
-                    q_ind = q_indices[i]
-                    m = q_ind.matches(e_indices[i])
-                    if (
-                        (m is None)
-                        or (-q_ind in repl_dict.keys() and -repl_dict[-q_ind] != m[q_ind])
-                        ):
-                        all_indices_match = False
+                #Check that contracted indices are not mapped to different indices.
+                internally_consistent = True
+                for k in m.keys():
+                    if -k in m.keys() and m[-k] != -m[k]:
+                        internally_consistent = False
                         break
-                    else:
-                        d.update(m)
-
-                if all_indices_match:
+                if internally_consistent:
                     matched_this_q = True
-                    repl_dict.update(d)
+                    repl_dict.update(m)
                     matched_e_tensors.append(e_tensor)
                     break
+
             if not matched_this_q:
                 return None
 
