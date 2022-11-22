@@ -1598,7 +1598,7 @@ def _laplace_rule_timescale(f, t, s, doit=True, **hints):
                 L = _laplace_apply_rules(ma1[g].func(t), t, s/ma2[b],
                                          doit=doit, **hints)
                 noconds = hints.get('noconds', False)
-                if noconds:
+                if not noconds and type(L) is tuple:
                     r, p, c = L
                     return (1/ma2[b]*r, p, c)
                 else:
