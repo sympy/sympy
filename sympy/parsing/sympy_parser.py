@@ -1109,6 +1109,12 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.BitOr: 'Or',
         ast.BitAnd: 'And',
         ast.BitXor: 'Not',
+        ast.Equality:'Eq', 
+        ast.Unequality:'Ne',
+        ast.StrictLessThan:'Lt',
+        ast.LessThan:'Le',
+        ast.StrictGreaterThan:'Gt',
+        ast.GreaterThan:'Ge',
     }
     functions = (
         'Abs', 'im', 're', 'sign', 'arg', 'conjugate',
