@@ -2985,6 +2985,41 @@ class Tensor(TensExpr):
                 indices.append(index)
         return self.head(*indices)
 
+    def matches(self, expr, repl_dict=None, old=False):
+        expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        #simple checks
+        if self == expr:
+            return repl_dict
+        if not isinstance(expr, Tensor):
+            return None
+        if self.head != expr.head:
+            return None
+
+        s_indices = self.get_indices()
+        e_indices = expr.get_indices()
+
+        if len(s_indices) != len(e_indices):
+            return None
+
+        for i in range(len(s_indices)):
+            s_ind = s_indices[i]
+            m = s_ind.matches(e_indices[i])
+            if (
+                (m is None)
+                or (-s_ind in repl_dict.keys() and -repl_dict[-s_ind] != m[s_ind])
+                ):
+                return None
+            else:
+                repl_dict.update(m)
+
+        return repl_dict
+
     def __call__(self, *indices):
         deprecate_call()
         free_args = self.free_args
