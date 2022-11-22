@@ -4187,7 +4187,7 @@ class TensMul(TensExpr, AssocOp):
         def siftkey(arg):
             if isinstance(arg, WildTensor):
                 return "WildTensor"
-            elif isinstance(arg, (Tensor, TensMul)):
+            elif isinstance(arg, (Tensor, TensExpr)):
                 return "Tensor"
             else:
                 return "coeff"
@@ -4203,8 +4203,8 @@ class TensMul(TensExpr, AssocOp):
             if TensMul(*expr_sifted["coeff"]).doit() != expr.coeff:
                 raise NotImplementedError(f"Found something that we do not know to handle: {expr_sifted['coeff']}")
 
-        query_tens_heads = set(tuple(x.components) for x in query_sifted["Tensor"])
-        expr_tens_heads = set(tuple(x.components) for x in expr_sifted["Tensor"])
+        query_tens_heads = set(tuple(getattr(x, "components", [])) for x in query_sifted["Tensor"]) #We use getattr because, e.g. TensAdd does not have the 'components' attribute.
+        expr_tens_heads = set(tuple(getattr(x, "components", [])) for x in expr_sifted["Tensor"])
         if not query_tens_heads.issubset(expr_tens_heads):
             #Some tensorheads in self are not present in the expr
             return None
