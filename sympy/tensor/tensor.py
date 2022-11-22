@@ -3010,10 +3010,9 @@ class Tensor(TensExpr):
         for i in range(len(s_indices)):
             s_ind = s_indices[i]
             m = s_ind.matches(e_indices[i])
-            if (
-                (m is None)
-                or (-s_ind in repl_dict.keys() and -repl_dict[-s_ind] != m[s_ind])
-                ):
+            if m is None:
+                return None
+            elif -s_ind in repl_dict.keys() and -repl_dict[-s_ind] != m[s_ind]:
                 return None
             else:
                 repl_dict.update(m)
