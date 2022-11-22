@@ -4165,7 +4165,7 @@ class TensMul(TensExpr, AssocOp):
                 return None
 
             #If there are no Wilds in self, we can depend on canon_bp to tell us whether self and expr are equivalent.
-            diff = self.as_dummy() - expr.as_dummy()
+            diff = self.doit() - expr.doit()
             if diff == 0 or diff.canon_bp() == 0:
                 return repl_dict
             else:
