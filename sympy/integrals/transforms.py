@@ -1654,9 +1654,9 @@ def _laplace_rule_exp(f, t, s, doit=True, **hints):
             L = _laplace_apply_rules(ma1[z], t, s-ma2[a], doit=doit, **hints)
             try:
                 r, p, c = L
-                return (r, p+ma2[a], c)
+                return (k*r, p+ma2[a], c)
             except TypeError:
-                return L
+                return k*L
     return None
 
 def _laplace_rule_trig(f, t, s, doit=True, **hints):
@@ -1700,15 +1700,15 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                         cp_shift = Abs(ma2[a])
                     else:
                         cp_shift = 0
-                    return ((s1*(r.subs(s, s-sd*ma2[a])+\
+                    return (k*(s1*(r.subs(s, s-sd*ma2[a])+\
                                     s2*r.subs(s, s+sd*ma2[a]))).simplify()/2,
                             p+cp_shift, c)
                 except TypeError:
                     if doit==True and _simplify==True:
-                        return (s1*(L.subs(s, s-sd*ma2[a])+\
+                        return k*(s1*(L.subs(s, s-sd*ma2[a])+\
                                     s2*L.subs(s, s+sd*ma2[a]))).simplify()/2
                     else:
-                        return (s1*(L.subs(s, s-sd*ma2[a])+\
+                        return k*(s1*(L.subs(s, s-sd*ma2[a])+\
                                     s2*L.subs(s, s+sd*ma2[a])))/2
     return None
 
