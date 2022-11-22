@@ -4140,7 +4140,7 @@ class TensMul(TensExpr, AssocOp):
         def siftkey(arg):
             if isinstance(arg, WildTensor):
                 return "WildTensor"
-            elif isinstance(arg, Tensor):
+            elif isinstance(arg, (Tensor, TensMul)):
                 return "Tensor"
             else:
                 return "coeff"
@@ -4156,8 +4156,8 @@ class TensMul(TensExpr, AssocOp):
             if TensMul(*expr_sifted["coeff"]).doit() != expr.coeff:
                 raise NotImplementedError(f"Found something that we do not know to handle: {expr_sifted['coeff']}")
 
-        query_tens_heads = set(x.head for x in query_sifted["Tensor"])
-        expr_tens_heads = set(x.head for x in expr_sifted["Tensor"])
+        query_tens_heads = set(tuple(x.components) for x in query_sifted["Tensor"])
+        expr_tens_heads = set(tuple(x.components) for x in expr_sifted["Tensor"])
         if not query_tens_heads.issubset(expr_tens_heads):
             #Some tensorheads in self are not present in the expr
             return None
@@ -4167,18 +4167,21 @@ class TensMul(TensExpr, AssocOp):
         for q_tensor in query_sifted["Tensor"]:
             matched_this_q = False
             for e_tensor in expr_sifted["Tensor"]:
-                if q_tensor.head != e_tensor.head:
+                if q_tensor.components != e_tensor.components:
                     continue
                 if e_tensor in matched_e_tensors:
                     continue
-                if len(q_tensor.indices) != len(e_tensor.indices):
+
+                q_indices = q_tensor.get_indices()
+                e_indices = e_tensor.get_indices()
+                if len(q_indices) != len(e_indices):
                     continue
 
                 all_indices_match=True
                 d = {}
-                for i in range(len(q_tensor.indices)):
-                    q_ind = q_tensor.indices[i]
-                    m = q_ind.matches(e_tensor.indices[i])
+                for i in range(len(q_indices)):
+                    q_ind = q_indices[i]
+                    m = q_ind.matches(e_indices[i])
                     if (
                         (m is None)
                         or (-q_ind in repl_dict.keys() and -repl_dict[-q_ind] != m[q_ind])
@@ -4207,11 +4210,12 @@ class TensMul(TensExpr, AssocOp):
             if m is None:
                 return None
             else:
+                for tens in tensors_to_try:
+                    matched_e_tensors.append(tens)
                 repl_dict.update(m)
 
         #Try to match indexless WildTensor instances
-        tensors_matched = TensMul(*[repl_dict[w.component] for w in wilds], *matched_e_tensors).atoms(Tensor)
-        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in tensors_matched]
+        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in matched_e_tensors]
         if len(indexless_wilds) > 0:
             #If there are any remaining tensors, match them with the indexless WildTensor
             m =  indexless_wilds[0].matches( TensMul(1,*remaining_e_tensors).doit() )
