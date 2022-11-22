@@ -4132,6 +4132,28 @@ class TensMul(TensExpr, AssocOp):
                 terms.append(TensMul.fromiter(self.args[:i] + (d,) + self.args[i + 1:]))
         return TensAdd.fromiter(terms)
 
+
+    def _matches_simple(self, expr, repl_dict=None, old=False):
+        """
+        Matches assuming there are no wild objects in self.
+        """
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        if set(self.get_free_indices()) != set(expr.get_free_indices()):
+            #If there are no wilds and the free indices are not the same, they cannot match.
+            return None
+
+        #If there are no Wilds in self, we can depend on canon_bp to tell us whether self and expr are equivalent.
+        diff = self.doit().canon_bp() - expr.doit().canon_bp()
+        if diff == 0 or diff.canon_bp() == 0:
+            return repl_dict
+        else:
+            return None
+
+
     def _matches_commutative(self, expr, repl_dict=None, old=False):
         """
         Match assuming all tensors commute. But note that we are not assuming anything about their symmetry under index permutations.
@@ -4160,16 +4182,7 @@ class TensMul(TensExpr, AssocOp):
             return repl_dict
 
         if len(get_nondummy_wilds(self)) == 0:
-            if set(self.get_free_indices()) != set(expr.get_free_indices()):
-                #If there are no wilds and the free indices are not the same, they cannot match.
-                return None
-
-            #If there are no Wilds in self, we can depend on canon_bp to tell us whether self and expr are equivalent.
-            diff = self.doit().canon_bp() - expr.doit().canon_bp()
-            if diff == 0 or diff.canon_bp() == 0:
-                return repl_dict
-            else:
-                return None
+            return self._matches_simple(expr, repl_dict, old)
 
         def siftkey(arg):
             if isinstance(arg, WildTensor):
