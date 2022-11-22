@@ -2,9 +2,15 @@
 
 This module also provides functionality to get the steps used to evaluate a
 particular integral, in the ``integral_steps`` function. This will return
-nested ``Rule``s representing the integration rules used. The
-``manualintegrate`` function computes the integral using those steps given
-an integrand; given the steps, ``eval`` method will evaluate them.
+nested ``Rule`` s representing the integration rules used.
+
+Each ``Rule`` class represents a (maybe parametrized) integration rule, e.g.
+``SinRule`` for integrating ``sin(x)`` and ``ReciprocalSqrtQuadraticRule``
+for integrating ``1/sqrt(a+b*x+c*x**2)``. The ``eval`` method returns the
+integration result.
+
+The ``manualintegrate`` function computes the integral by calling ``eval``
+on the rule returned by ``integral_steps``.
 
 The integrator can be extended with new heuristics and evaluation
 techniques. To do so, extend the ``Rule`` class, implement ``eval`` method,
