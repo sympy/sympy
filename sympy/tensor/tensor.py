@@ -2766,7 +2766,7 @@ class TensAdd(TensExpr, AssocOp):
             wildatom_types = sift(wildatoms, type)
             if len(wildatoms) == 0:
                 return "nonwild"
-            elif "WildTensor" in wildatom_types.keys():
+            elif WildTensor in wildatom_types.keys():
                 for w in wildatom_types["WildTensor"]:
                     if len(w.get_indices()) == 0:
                         return "indexless_wildtensor"
