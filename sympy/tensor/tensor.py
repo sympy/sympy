@@ -4259,6 +4259,46 @@ class _WildTensExpr(Basic):
     def __call__(self, *indices):
         return self.expr._replace_indices(dict(zip(self.expr.get_free_indices(), indices)))
 
+    def __neg__(self):
+        return self.func(self.expr*S.NegativeOne)
+
+    def __abs__(self):
+        raise NotImplementedError
+
+    def __add__(self, other):
+        if other.func != self.func:
+            raise TypeError(f"Cannot add {self.func} to {other.func}")
+        return self.func(TensAdd(self.expr, other.expr).doit())
+
+    def __radd__(self, other):
+        if other.func != self.func:
+            raise TypeError(f"Cannot add {self.func} to {other.func}")
+        return self.func(TensAdd(self.other, other.self).doit())
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __rsub__(self, other):
+        return other + (-self)
+
+    def __mul__(self, other):
+        raise NotImplementedError
+
+    def __rmul__(self, other):
+        raise NotImplementedError
+
+    def __truediv__(self, other):
+        raise NotImplementedError
+
+    def __rtruediv__(self, other):
+        raise NotImplementedError
+
+    def __pow__(self, other):
+        raise NotImplementedError
+
+    def __rpow__(self, other):
+        raise NotImplementedError
+
 
 def canon_bp(p):
     """
