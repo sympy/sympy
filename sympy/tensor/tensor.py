@@ -4093,7 +4093,10 @@ class TensorElement(TensExpr):
 
 
 class WildTensorHead(TensorHead):
-    def __new__(cls, name, index_types=None, comm=0, symmetry=None):
+    """
+    unordered_indices: whether the order of the indices matters for matching purposes (default: False)
+    """
+    def __new__(cls, name, index_types=None, comm=0, symmetry=None, unordered_indices=False):
         if isinstance(name, str):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
@@ -4111,6 +4114,7 @@ class WildTensorHead(TensorHead):
 
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry)
         obj.comm = TensorManager.comm_symbols2i(comm)
+        obj.unordered_indices = unordered_indices
 
         return obj
 
@@ -4120,7 +4124,7 @@ class WildTensorHead(TensorHead):
         else:
             assert symmetry.rank == len(indices)
 
-        tensor = WildTensor(self, indices, symmetry=symmetry, comm=self.comm)
+        tensor = WildTensor(self, indices, symmetry=symmetry, comm=self.comm, unordered_indices=self.unordered_indices)
         return tensor.doit()
 
 
@@ -4139,6 +4143,7 @@ class WildTensor(Tensor):
         index_types = [ind.tensor_index_type for ind in indices]
         symmetry = kw_args.pop("symmetry", None)
         comm = kw_args.pop("comm", 0)
+        unordered_indices = kw_args.pop("unordered_indices", False) #TODO: Change this default to True
         tensor_head = tensor_head.func(tensor_head.name, index_types, comm=comm, symmetry=symmetry)
 
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices))
@@ -4155,6 +4160,7 @@ class WildTensor(Tensor):
             raise ValueError("wrong number of indices")
         obj.is_canon_bp = is_canon_bp
         obj._index_map = obj._build_index_map(indices, obj._index_structure)
+        obj.unordered_indices = unordered_indices
 
         return obj
 
@@ -4174,14 +4180,73 @@ class WildTensor(Tensor):
             expr_indices = expr.get_free_indices()
             if len(expr_indices) != len(self.indices):
                 return None
-            for i in range(len(expr_indices)):
-                m = self.indices[i].matches(expr_indices[i])
-                if m is None:
-                    return None
-                else:
-                    repl_dict.update(m)
+            if self.unordered_indices:
+                def siftkey(ind):
+                    if isinstance(ind, WildTensorIndex):
+                        if ind.ignore_updown:
+                            return "wild, updown"
+                        else:
+                            return "wild"
+                    else:
+                        return "nonwild"
 
-            repl_dict[self.component] = _WildTensExpr(expr)
+                indices_sifted = sift(self.indices, siftkey)
+
+                matched_indices = []
+                expr_indices_remaining = expr.get_indices()
+                for ind in indices_sifted["nonwild"]:
+                    matched_this_ind = False
+                    for e_ind in expr_indices_remaining.copy():
+                        if e_ind in matched_indices:
+                            continue
+                        m = ind.matches(e_ind)
+                        if m is not None:
+                            matched_this_ind = True
+                            repl_dict.update(m)
+                            matched_indices.append(e_ind)
+                            break
+                    if not matched_this_ind:
+                        return None
+
+                for ind in indices_sifted["wild"]:
+                    matched_this_ind = False
+                    for e_ind in expr_indices_remaining.copy():
+                        m = ind.matches(e_ind)
+                        if m is not None:
+                            if -ind in repl_dict.keys() and -repl_dict[-ind] != m[ind]:
+                                return None
+                            matched_this_ind = True
+                            repl_dict.update(m)
+                            break
+                    if not matched_this_ind:
+                        return None
+
+                for ind in indices_sifted["wild, updown"]:
+                    matched_this_ind = False
+                    for e_ind in expr_indices_remaining.copy():
+                        m = ind.matches(e_ind)
+                        if m is not None:
+                            if -ind in repl_dict.keys() and -repl_dict[-ind] != m[ind]:
+                                return None
+                            matched_this_ind = True
+                            repl_dict.update(m)
+                            break
+                    if not matched_this_ind:
+                        return None
+
+                if len(matched_indices) < len(self.indices):
+                    return None
+
+                repl_dict[self.component] = _WildTensExpr(expr)
+            else:
+                for i in range(len(expr_indices)):
+                    m = self.indices[i].matches(expr_indices[i])
+                    if m is None:
+                        return None
+                    else:
+                        repl_dict.update(m)
+
+                repl_dict[self.component] = _WildTensExpr(expr)
         else:
             #If no indices were passed to the WildTensor, it may match tensors with any number of indices.
             repl_dict[self] = expr
