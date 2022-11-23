@@ -43,7 +43,7 @@ from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.power import Pow
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
-from sympy.codegen.scipy_nodes import cosm1
+from sympy.codegen.scipy_nodes import cosm1, powm1
 from sympy.core.mul import Mul
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.utilities.iterables import sift
@@ -274,6 +274,7 @@ class FuncMinusOneOptim(ReplaceOptim):
 
 expm1_opt = FuncMinusOneOptim(exp, expm1)
 cosm1_opt = FuncMinusOneOptim(cos, cosm1)
+powm1_opt = FuncMinusOneOptim(Pow, powm1)
 
 log1p_opt = ReplaceOptim(
     lambda e: isinstance(e, log),
@@ -353,4 +354,4 @@ optims_c99 = (expm1_opt, log1p_opt, exp2_opt, log2_opt, log2const_opt)
 
 optims_numpy = optims_c99 + (logaddexp_opt, logaddexp2_opt,) + sinc_opts
 
-optims_scipy = (cosm1_opt,)
+optims_scipy = (cosm1_opt, powm1_opt)
