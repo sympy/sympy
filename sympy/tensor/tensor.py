@@ -2747,6 +2747,94 @@ class TensAdd(TensExpr, AssocOp):
 
         return self.func(*list_addends)
 
+    def matches(self, expr, repl_dict=None, old=False):
+        expr = sympify(expr)
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        if not isinstance(expr, TensAdd):
+            return None
+
+        if len(_get_nondummy_wilds(self)) == 0:
+            return self._matches_simple(expr, repl_dict, old)
+
+        def siftkey(arg):
+            wildatoms = _get_nondummy_wilds(arg)
+            wildatom_types = sift(wildatoms, type)
+            if len(wildatoms) == 0:
+                return "nonwild"
+            elif "WildTensor" in wildatom_types.keys():
+                for w in wildatom_types["WildTensor"]:
+                    if len(w.get_indices()) == 0:
+                        return "indexless_wildtensor"
+                return "wildtensor"
+            else:
+                return "otherwild"
+
+        query_sifted = sift(self.args, siftkey)
+        expr_sifted = sift(expr.args, siftkey)
+
+        #First try to match the terms without WildTensors
+        matched_e_tensors = [] #Used to make sure that the same tensor in expr is not matched with more than one tensor in self.
+        for q_tensor in query_sifted["nonwild"]:
+            matched_this_q = False
+            for e_tensor in expr_sifted["nonwild"]:
+                if e_tensor in matched_e_tensors:
+                    continue
+
+                m = q_tensor.matches(e_tensor, repl_dict=repl_dict, old=old)
+                if m is None:
+                    continue
+                else:
+                    matched_this_q = True
+                    repl_dict.update(m)
+                    matched_e_tensors.append(e_tensor)
+                    break
+
+            if not matched_this_q:
+                return None
+
+        remaining_e_tensors = [t for t in expr_sifted["nonwild"] if t not in matched_e_tensors]
+        for w in query_sifted["otherwild"]:
+            for e in remaining_e_tensors:
+                m = w.matches(e)
+                if m is not None:
+                    matched_e_tensors.append(e)
+                    if w in repl_dict.keys():
+                        repl_dict[w] += m.pop(w)
+                    repl_dict.update(m)
+
+        remaining_e_tensors = [t for t in expr_sifted["nonwild"] if t not in matched_e_tensors]
+        for w in query_sifted["wildtensor"]:
+            for e in remaining_e_tensors:
+                m = w.matches(e)
+                if m is not None:
+                    matched_e_tensors.append(e)
+                    if w in repl_dict.keys():
+                        repl_dict[w] += m.pop(w)
+                    repl_dict.update(m)
+                    break
+
+        remaining_e_tensors = [t for t in expr_sifted["nonwild"] if t not in matched_e_tensors]
+        for w in query_sifted["indexless_wildtensor"]:
+            for e in remaining_e_tensors:
+                m = w.matches(e)
+                if m is not None:
+                    matched_e_tensors.append(e)
+                    if w in repl_dict.keys():
+                        repl_dict[w] += m.pop(w)
+                    repl_dict.update(m)
+                    break
+
+        remaining_e_tensors = [t for t in expr_sifted["nonwild"] if t not in matched_e_tensors]
+        if len(remaining_e_tensors) > 0:
+            return None
+        else:
+            return repl_dict
+
 
 class Tensor(TensExpr):
     """
