@@ -2813,10 +2813,9 @@ class TensAdd(TensExpr, AssocOp):
                 m = w.matches(e)
                 if m is not None:
                     matched_e_tensors.append(e)
-                    if w in repl_dict.keys():
-                        repl_dict[w] += m.pop(w)
+                    if w.component in repl_dict.keys():
+                        repl_dict[w.component] += m.pop(w.component)
                     repl_dict.update(m)
-                    break
 
         remaining_e_tensors = [t for t in expr_sifted["nonwild"] if t not in matched_e_tensors]
         for w in query_sifted["indexless_wildtensor"]:
@@ -2824,10 +2823,9 @@ class TensAdd(TensExpr, AssocOp):
                 m = w.matches(e)
                 if m is not None:
                     matched_e_tensors.append(e)
-                    if w in repl_dict.keys():
-                        repl_dict[w] += m.pop(w)
+                    if w.component in repl_dict.keys():
+                        repl_dict[w.component] += m.pop(w.component)
                     repl_dict.update(m)
-                    break
 
         remaining_e_tensors = [t for t in expr_sifted["nonwild"] if t not in matched_e_tensors]
         if len(remaining_e_tensors) > 0:
