@@ -22,7 +22,7 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 
 from __future__ import annotations
-from typing import NamedTuple, Type, Callable, Literal, Sequence
+from typing import NamedTuple, Type, Callable, Sequence
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from collections import defaultdict
@@ -78,18 +78,28 @@ class Rule(ABC):
     def eval(self) -> Expr:
         pass
 
+    @abstractmethod
+    def contains_dont_know(self) -> bool:
+        pass
+
+
+@dataclass
+class AtomicRule(Rule, ABC):
+    """A simple rule that does not depend on other rules"""
     def contains_dont_know(self) -> bool:
         return False
 
 
 @dataclass
-class ConstantRule(Rule):
+class ConstantRule(AtomicRule):
+    """integrate(a, x)  ->  a*x"""
     def eval(self) -> Expr:
         return self.integrand * self.variable
 
 
 @dataclass
 class ConstantTimesRule(Rule):
+    """integrate(a*f(x), x)  ->  a*integrate(f(x), x)"""
     constant: Expr
     other: Expr
     substep: Rule
@@ -102,7 +112,8 @@ class ConstantTimesRule(Rule):
 
 
 @dataclass
-class PowerRule(Rule):
+class PowerRule(AtomicRule):
+    """integrate(x**a, x)"""
     base: Expr
     exp: Expr
 
@@ -114,7 +125,8 @@ class PowerRule(Rule):
 
 
 @dataclass
-class NestedPowRule(Rule):
+class NestedPowRule(AtomicRule):
+    """integrate((x**a)**b, x)"""
     base: Expr
     exp: Expr
 
@@ -126,6 +138,7 @@ class NestedPowRule(Rule):
 
 @dataclass
 class AddRule(Rule):
+    """integrate(f(x) + g(x), x) -> integrate(f(x), x) + integrate(g(x), x)"""
     substeps: list[Rule]
 
     def eval(self) -> Expr:
@@ -137,6 +150,7 @@ class AddRule(Rule):
 
 @dataclass
 class URule(Rule):
+    """integrate(f(g(x))*g'(x), x) -> integrate(f(u), u), u = g(x)"""
     u_var: Symbol
     u_func: Expr
     substep: Rule
@@ -156,6 +170,7 @@ class URule(Rule):
 
 @dataclass
 class PartsRule(Rule):
+    """integrate(u(x)*v'(x), x) -> u(x)*v(x) - integrate(u'(x)*v(x), x)"""
     u: Symbol
     dv: Expr
     v_step: Rule
@@ -173,6 +188,7 @@ class PartsRule(Rule):
 
 @dataclass
 class CyclicPartsRule(Rule):
+    """Apply PartsRule multiple times to integrate exp(x)*sin(x)"""
     parts_rules: list[PartsRule]
     coefficient: Expr
 
@@ -189,65 +205,74 @@ class CyclicPartsRule(Rule):
 
 
 @dataclass
-class TrigRule(Rule, ABC):
+class TrigRule(AtomicRule, ABC):
     pass
 
 
 @dataclass
 class SinRule(TrigRule):
+    """integrate(sin(x), x) -> -cos(x)"""
     def eval(self) -> Expr:
         return -cos(self.variable)
 
 
 @dataclass
 class CosRule(TrigRule):
+    """integrate(cos(x), x) -> sin(x)"""
     def eval(self) -> Expr:
         return sin(self.variable)
 
 
 @dataclass
 class SecTanRule(TrigRule):
+    """integrate(sec(x)*tan(x), x) -> sec(x)"""
     def eval(self) -> Expr:
         return sec(self.variable)
 
 
 @dataclass
 class CscCotRule(TrigRule):
+    """integrate(csc(x)*cot(x), x) -> -csc(x)"""
     def eval(self) -> Expr:
         return -csc(self.variable)
 
 
 @dataclass
 class Sec2Rule(TrigRule):
+    """integrate(sec(x)**2, x) -> tan(x)"""
     def eval(self) -> Expr:
         return tan(self.variable)
 
 
 @dataclass
 class Csc2Rule(TrigRule):
+    """integrate(csc(x)**2, x) -> -cot(x)"""
     def eval(self) -> Expr:
         return -cot(self.variable)
 
 
 @dataclass
-class HyperbolicRule(Rule, ABC):
+class HyperbolicRule(AtomicRule, ABC):
     pass
 
 
 @dataclass
 class SinhRule(HyperbolicRule):
+    """integrate(sinh(x), x) -> cosh(x)"""
     def eval(self) -> Expr:
         return cosh(self.variable)
 
 
 @dataclass
 class CoshRule(HyperbolicRule):
+    """integrate(cosh(x), x) -> sinh(x)"""
     def eval(self):
         return sinh(self.variable)
 
 
 @dataclass
-class ExpRule(Rule):
+class ExpRule(AtomicRule):
+    """integrate(a**x, x) -> a**x/ln(a)"""
     base: Expr
     exp: Expr
 
@@ -256,7 +281,8 @@ class ExpRule(Rule):
 
 
 @dataclass
-class ReciprocalRule(Rule):
+class ReciprocalRule(AtomicRule):
+    """integrate(1/x, x) -> ln(x)"""
     base: Expr
 
     def eval(self) -> Expr:
@@ -264,19 +290,22 @@ class ReciprocalRule(Rule):
 
 
 @dataclass
-class ArcsinRule(Rule):
+class ArcsinRule(AtomicRule):
+    """integrate(1/sqrt(1-x**2), x) -> asin(x)"""
     def eval(self) -> Expr:
         return asin(self.variable)
 
 
 @dataclass
-class ArcsinhRule(Rule):
+class ArcsinhRule(AtomicRule):
+    """integrate(1/sqrt(1+x**2), x) -> asin(x)"""
     def eval(self) -> Expr:
         return asinh(self.variable)
 
 
 @dataclass
-class ReciprocalSqrtQuadraticRule(Rule):
+class ReciprocalSqrtQuadraticRule(AtomicRule):
+    """integrate(1/sqrt(a+b*x+c*x**2), x) -> log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)"""
     a: Expr
     b: Expr
     c: Expr
@@ -287,7 +316,8 @@ class ReciprocalSqrtQuadraticRule(Rule):
 
 
 @dataclass
-class SqrtQuadraticDenomRule(Rule):
+class SqrtQuadraticDenomRule(AtomicRule):
+    """integrate(poly(x)/sqrt(a+b*x+c*x**2), x)"""
     a: Expr
     b: Expr
     c: Expr
@@ -322,7 +352,8 @@ class SqrtQuadraticDenomRule(Rule):
 
 
 @dataclass
-class SqrtQuadraticRule(Rule):
+class SqrtQuadraticRule(AtomicRule):
+    """integrate(sqrt(a+b*x+c*x**2), x)"""
     a: Expr
     b: Expr
     c: Expr
@@ -334,6 +365,7 @@ class SqrtQuadraticRule(Rule):
 
 @dataclass
 class AlternativeRule(Rule):
+    """Multiple ways to do integration."""
     alternatives: list[Rule]
 
     def eval(self) -> Expr:
@@ -345,6 +377,7 @@ class AlternativeRule(Rule):
 
 @dataclass
 class DontKnowRule(Rule):
+    """Leave the integral as is."""
     def eval(self) -> Expr:
         return Integral(self.integrand, self.variable)
 
@@ -353,7 +386,8 @@ class DontKnowRule(Rule):
 
 
 @dataclass
-class DerivativeRule(Rule):
+class DerivativeRule(AtomicRule):
+    """integrate(f'(x), x) -> f(x)"""
     def eval(self) -> Expr:
         assert isinstance(self.integrand, Derivative)
         variable_count = list(self.integrand.variable_count)
@@ -366,6 +400,7 @@ class DerivativeRule(Rule):
 
 @dataclass
 class RewriteRule(Rule):
+    """Rewrite integrand to another form that is easier to handle."""
     rewritten: Expr
     substep: Rule
 
@@ -378,6 +413,7 @@ class RewriteRule(Rule):
 
 @dataclass
 class CompleteSquareRule(RewriteRule):
+    """Rewrite a+b*x+c*x**2 to a-b**2/(4*c) + c*(x+b/(2*c))**2"""
     pass
 
 
@@ -412,7 +448,7 @@ class HeavisideRule(Rule):
 
 
 @dataclass
-class DiracDeltaRule(Rule):
+class DiracDeltaRule(AtomicRule):
     n: Expr
     a: Expr
     b: Expr
@@ -476,7 +512,8 @@ class TrigSubstitutionRule(Rule):
 
 
 @dataclass
-class ArctanRule(Rule):
+class ArctanRule(AtomicRule):
+    """integrate(a/(b*x**2+c), x) -> a/b / sqrt(c/b) * atan(x/sqrt(c/b))"""
     a: Expr
     b: Expr
     c: Expr
@@ -487,7 +524,7 @@ class ArctanRule(Rule):
 
 
 @dataclass
-class OrthogonalPolyRule(Rule, ABC):
+class OrthogonalPolyRule(AtomicRule, ABC):
     n: Expr
 
 
@@ -565,7 +602,7 @@ class AssocLaguerreRule(OrthogonalPolyRule):
 
 
 @dataclass
-class IRule(Rule, ABC):
+class IRule(AtomicRule, ABC):
     a: Expr
     b: Expr
 
@@ -613,7 +650,7 @@ class LiRule(IRule):
 
 
 @dataclass
-class ErfRule(Rule):
+class ErfRule(AtomicRule):
     a: Expr
     b: Expr
     c: Expr
@@ -631,7 +668,7 @@ class ErfRule(Rule):
 
 
 @dataclass
-class FresnelCRule(Rule):
+class FresnelCRule(AtomicRule):
     a: Expr
     b: Expr
     c: Expr
@@ -644,7 +681,7 @@ class FresnelCRule(Rule):
 
 
 @dataclass
-class FresnelSRule(Rule):
+class FresnelSRule(AtomicRule):
     a: Expr
     b: Expr
     c: Expr
@@ -657,7 +694,7 @@ class FresnelSRule(Rule):
 
 
 @dataclass
-class PolylogRule(Rule):
+class PolylogRule(AtomicRule):
     a: Expr
     b: Expr
 
@@ -666,7 +703,7 @@ class PolylogRule(Rule):
 
 
 @dataclass
-class UpperGammaRule(Rule):
+class UpperGammaRule(AtomicRule):
     a: Expr
     e: Expr
 
@@ -676,7 +713,7 @@ class UpperGammaRule(Rule):
 
 
 @dataclass
-class EllipticFRule(Rule):
+class EllipticFRule(AtomicRule):
     a: Expr
     d: Expr
 
@@ -685,7 +722,7 @@ class EllipticFRule(Rule):
 
 
 @dataclass
-class EllipticERule(Rule):
+class EllipticERule(AtomicRule):
     a: Expr
     d: Expr
 
