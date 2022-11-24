@@ -286,6 +286,7 @@ _known_functions_scipy_special = {
     'besseli': 'iv',
     'besselk': 'kv',
     'cosm1': 'cosm1',
+    'powm1': 'powm1',
     'factorial': 'factorial',
     'gamma': 'gamma',
     'loggamma': 'gammaln',

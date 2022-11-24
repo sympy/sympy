@@ -496,6 +496,12 @@ def test_sympy__codegen__scipy_nodes__cosm1():
     from sympy.codegen.scipy_nodes import cosm1
     assert _test_args(cosm1(x))
 
+
+def test_sympy__codegen__scipy_nodes__powm1():
+    from sympy.codegen.scipy_nodes import powm1
+    assert _test_args(powm1(x, y))
+
+
 def test_sympy__codegen__abstract_nodes__List():
     from sympy.codegen.abstract_nodes import List
     assert _test_args(List(1, 2, 3))
