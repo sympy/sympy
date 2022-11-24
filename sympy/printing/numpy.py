@@ -291,6 +291,7 @@ _known_functions_scipy_special = {
     'gamma': 'gamma',
     'loggamma': 'gammaln',
     'digamma': 'psi',
+    'polygamma': 'polygamma',
     'RisingFactorial': 'poch',
     'jacobi': 'eval_jacobi',
     'gegenbauer': 'eval_gegenbauer',
