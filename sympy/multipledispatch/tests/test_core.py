@@ -1,11 +1,12 @@
-from typing import Dict as tDict, Any
+from __future__ import annotations
+from typing import Any
 
 from sympy.multipledispatch import dispatch
 from sympy.multipledispatch.conflict import AmbiguityWarning
 from sympy.testing.pytest import raises, warns
 from functools import partial
 
-test_namespace = dict()  # type: tDict[str, Any]
+test_namespace: dict[str, Any] = dict()
 
 orig_dispatch = dispatch
 dispatch = partial(dispatch, namespace=test_namespace)

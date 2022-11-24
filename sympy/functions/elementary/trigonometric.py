@@ -1667,8 +1667,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     # trigonometric functions eval() like even/odd, func(x+2*k*pi), etc.
 
     # optional, to be defined in subclasses:
-    _is_even = None  # type: FuzzyBool
-    _is_odd = None  # type: FuzzyBool
+    _is_even: FuzzyBool = None
+    _is_odd: FuzzyBool = None
 
     @classmethod
     def eval(cls, arg):

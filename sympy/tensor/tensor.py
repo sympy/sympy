@@ -29,7 +29,8 @@ If there is a (anti)symmetric metric, the indices can be raised and
 lowered when the tensor is put in canonical form.
 """
 
-from typing import Any, Dict as tDict, List, Set as tSet, Tuple as tTuple
+from __future__ import annotations
+from typing import Any
 from functools import reduce
 from math import prod
 
@@ -257,7 +258,7 @@ class _IndexStructure(CantSympify):
             new_indices[ipos2] = TensorIndex(indname, typ1, False)
         return new_indices
 
-    def get_free_indices(self):  # type: () -> List[TensorIndex]
+    def get_free_indices(self) -> list[TensorIndex]:
         """
         Get a list of free indices.
         """
@@ -427,8 +428,8 @@ class _TensorDataLazyEvaluator(CantSympify):
     computed until they are accessed by reading the ``.data`` property
     associated to the tensor expression.
     """
-    _substitutions_dict = {}  # type: tDict[Any, Any]
-    _substitutions_dict_tensmul = {}  # type: tDict[Any, Any]
+    _substitutions_dict: dict[Any, Any] = {}
+    _substitutions_dict_tensmul: dict[Any, Any] = {}
 
     def __getitem__(self, key):
         dat = self._get(key)
@@ -2086,11 +2087,11 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         raise NotImplementedError("abstract method")
 
     @abstractmethod
-    def get_free_indices(self):  # type: () -> List[TensorIndex]
+    def get_free_indices(self) -> list[TensorIndex]:
         raise NotImplementedError("abstract method")
 
     @abstractmethod
-    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         raise NotImplementedError("abstract method")
 
     def fun_eval(self, *index_tuples):
@@ -2445,10 +2446,10 @@ class TensAdd(TensExpr, AssocOp):
     def nocoeff(self):
         return self
 
-    def get_free_indices(self):  # type: () -> List[TensorIndex]
+    def get_free_indices(self) -> list[TensorIndex]:
         return self.free_indices
 
-    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         newargs = [arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args]
         return self.func(*newargs)
 
@@ -2542,13 +2543,13 @@ class TensAdd(TensExpr, AssocOp):
     def _tensAdd_check(args):
         # check that all addends have the same free indices
 
-        def get_indices_set(x):  # type: (Expr) -> tSet[TensorIndex]
+        def get_indices_set(x: Expr) -> set[TensorIndex]:
             if isinstance(x, TensExpr):
                 return set(x.get_free_indices())
             return set()
 
-        indices0 = get_indices_set(args[0])  # type: tSet[TensorIndex]
-        list_indices = [get_indices_set(arg) for arg in args[1:]]  # type: List[tSet[TensorIndex]]
+        indices0: set[TensorIndex] = get_indices_set(args[0])
+        list_indices: list[set[TensorIndex]] = [get_indices_set(arg) for arg in args[1:]]
         if not all(x == indices0 for x in list_indices):
             raise ValueError('all tensors must have the same indices')
 
@@ -2777,7 +2778,7 @@ class Tensor(TensExpr):
     is_commutative = False
 
     _index_structure = None  # type: _IndexStructure
-    args: tTuple[TensorHead, Tuple]
+    args: tuple[TensorHead, Tuple]
 
     def __new__(cls, tensor_head, indices, *, is_canon_bp=False, **kw_args):
         indices = cls._parse_indices(tensor_head, indices)
@@ -2947,19 +2948,19 @@ class Tensor(TensExpr):
     def sorted_components(self):
         return self
 
-    def get_indices(self):  # type: () -> List[TensorIndex]
+    def get_indices(self) -> list[TensorIndex]:
         """
         Get a list of indices, corresponding to those of the tensor.
         """
         return list(self.args[1])
 
-    def get_free_indices(self):  # type: () -> List[TensorIndex]
+    def get_free_indices(self) -> list[TensorIndex]:
         """
         Get a list of free indices, corresponding to those of the tensor.
         """
         return self._index_structure.get_free_indices()
 
-    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> Tensor
+    def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         # TODO: this could be optimized by only swapping the indices
         # instead of visiting the whole expression tree:
         return self.xreplace(repl)
@@ -3543,7 +3544,7 @@ class TensMul(TensExpr, AssocOp):
         """
         return self._indices
 
-    def get_free_indices(self):  # type: () -> List[TensorIndex]
+    def get_free_indices(self) -> list[TensorIndex]:
         """
         Returns the list of free indices of the tensor.
 
@@ -3570,7 +3571,7 @@ class TensMul(TensExpr, AssocOp):
         """
         return self._index_structure.get_free_indices()
 
-    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         return self.func(*[arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args])
 
     def split(self):
@@ -4087,7 +4088,7 @@ class TensorElement(TensExpr):
     def get_free_indices(self):
         return self._free_indices
 
-    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         # TODO: can be improved:
         return self.xreplace(repl)
 

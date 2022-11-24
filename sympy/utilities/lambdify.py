@@ -3,7 +3,8 @@ This module provides convenient functions to transform SymPy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 import builtins
 import inspect
@@ -23,15 +24,15 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
-MATH_DEFAULT = {}  # type: tDict[str, Any]
-MPMATH_DEFAULT = {}  # type: tDict[str, Any]
-NUMPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-SCIPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-CUPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-JAX_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-TENSORFLOW_DEFAULT = {}  # type: tDict[str, Any]
-SYMPY_DEFAULT = {}  # type: tDict[str, Any]
-NUMEXPR_DEFAULT = {}  # type: tDict[str, Any]
+MATH_DEFAULT: dict[str, Any] = {}
+MPMATH_DEFAULT: dict[str, Any] = {}
+NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
+SCIPY_DEFAULT: dict[str, Any] = {"I": 1j}
+CUPY_DEFAULT: dict[str, Any] = {"I": 1j}
+JAX_DEFAULT: dict[str, Any] = {"I": 1j}
+TENSORFLOW_DEFAULT: dict[str, Any] = {}
+SYMPY_DEFAULT: dict[str, Any] = {}
+NUMEXPR_DEFAULT: dict[str, Any] = {}
 
 # These are the namespaces the lambda functions will use.
 # These are separate from the names above because they are modified
@@ -87,16 +88,16 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
-NUMPY_TRANSLATIONS = {
+NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
-    }  # type: tDict[str, str]
-SCIPY_TRANSLATIONS = {}  # type: tDict[str, str]
-CUPY_TRANSLATIONS = {}  # type: tDict[str, str]
-JAX_TRANSLATIONS = {}  # type: tDict[str, str]
+}
+SCIPY_TRANSLATIONS: dict[str, str] = {}
+CUPY_TRANSLATIONS: dict[str, str] = {}
+JAX_TRANSLATIONS: dict[str, str] = {}
 
-TENSORFLOW_TRANSLATIONS = {}  # type: tDict[str, str]
+TENSORFLOW_TRANSLATIONS: dict[str, str] = {}
 
-NUMEXPR_TRANSLATIONS = {}  # type: tDict[str, str]
+NUMEXPR_TRANSLATIONS: dict[str, str] = {}
 
 # Available modules:
 MODULES = {
