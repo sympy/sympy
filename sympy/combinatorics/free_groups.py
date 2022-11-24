@@ -1,4 +1,4 @@
-from typing import Dict as tDict, List
+from __future__ import annotations
 
 from sympy.core import S
 from sympy.core.expr import Expr
@@ -109,7 +109,7 @@ def _parse_symbols(symbols):
 #                          FREE GROUP                                        #
 ##############################################################################
 
-_free_group_cache = {}  # type: tDict[int, FreeGroup]
+_free_group_cache: dict[int, FreeGroup] = {}
 
 class FreeGroup(DefaultPrinting):
     """
@@ -134,7 +134,7 @@ class FreeGroup(DefaultPrinting):
     is_group = True
     is_FreeGroup = True
     is_PermutationGroup = False
-    relators = []  # type: List[Expr]
+    relators: list[Expr] = []
 
     def __new__(cls, symbols):
         symbols = tuple(_parse_symbols(symbols))

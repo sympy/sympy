@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 from functools import wraps
 
 from sympy.core import S, Integer, Basic, Mul, Add
@@ -52,7 +52,7 @@ class MatrixExpr(Expr):
 
     MatrixSymbol, MatAdd, MatMul, Transpose, Inverse
     """
-    __slots__ = ()  # type: tTuple[str, ...]
+    __slots__: tuple[str, ...] = ()
 
     # Should not be considered iterable by the
     # sympy.utilities.iterables.iterable function. Subclass that actually are
@@ -61,9 +61,9 @@ class MatrixExpr(Expr):
 
     _op_priority = 11.0
 
-    is_Matrix = True  # type: bool
-    is_MatrixExpr = True  # type: bool
-    is_Identity = None  # type: FuzzyBool
+    is_Matrix: bool = True
+    is_MatrixExpr: bool = True
+    is_Identity: FuzzyBool = None
     is_Inverse = False
     is_Transpose = False
     is_ZeroMatrix = False
@@ -84,7 +84,7 @@ class MatrixExpr(Expr):
     # The following is adapted from the core Expr object
 
     @property
-    def shape(self) -> tTuple[Expr, Expr]:
+    def shape(self) -> tuple[Expr, Expr]:
         raise NotImplementedError
 
     @property

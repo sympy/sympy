@@ -208,8 +208,9 @@ an expression when customizing a printer. Mistakes include:
 
 """
 
+from __future__ import annotations
 import sys
-from typing import Any, Dict as tDict, Type
+from typing import Any, Type
 import inspect
 from contextlib import contextmanager
 from functools import cmp_to_key, update_wrapper
@@ -241,9 +242,9 @@ class Printer:
     for your custom class then see the example above: printer_example_ .
     """
 
-    _global_settings = {}  # type: tDict[str, Any]
+    _global_settings: dict[str, Any] = {}
 
-    _default_settings = {}  # type: tDict[str, Any]
+    _default_settings: dict[str, Any] = {}
 
     printmethod = None  # type: str
 

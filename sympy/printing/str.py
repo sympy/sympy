@@ -2,7 +2,8 @@
 A Printer for generating readable representation of most SymPy classes.
 """
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
@@ -18,7 +19,7 @@ from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
 class StrPrinter(Printer):
     printmethod = "_sympystr"
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         "order": None,
         "full_prec": "auto",
         "sympy_integers": False,
@@ -26,9 +27,9 @@ class StrPrinter(Printer):
         "perm_cyclic": True,
         "min": None,
         "max": None,
-    }  # type: tDict[str, Any]
+    }
 
-    _relationals = {}  # type: tDict[str, str]
+    _relationals: dict[str, str] = {}
 
     def parenthesize(self, item, level, strict=False):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
