@@ -4335,9 +4335,14 @@ class WildTensorIndex(TensorIndex):
 
 class _WildTensExpr(Basic):
     """
-    This is an object that helps with replacement of WildTensors in expressions. When this object is set as the tensor_head of a WildTensor, it replaces the WildTensor by a TensExpr (passed when initializing this object).
+    INTERNAL USE ONLY
 
-    Example:
+    This is an object that helps with replacement of WildTensors in expressions.
+    When this object is set as the tensor_head of a WildTensor, it replaces the
+    WildTensor by a TensExpr (passed when initializing this object).
+
+    Examples
+    ========
     >>> from sympy.tensor.tensor import WildTensorHead, TensorIndex, TensorHead, TensorIndexType, _WildTensExpr
     >>> W = WildTensorHead("W")
     >>> R3 = TensorIndexType('R3', dim=3)
@@ -4346,7 +4351,10 @@ class _WildTensExpr(Basic):
     >>> ( W(p) ).subs({W(p).component: _WildTensExpr(2*K(p))})
     2*K(p)
 
-    Of course, the example above could've been accomplished by other means, but we internally use this function in order to handle more complicated cases that arise in replace()
+    Of course, the example above could've been accomplished by other means, but
+    we internally use this function in order to handle more complicated cases
+    that arise in replace()
+
     """
     def __init__(self, expr):
         if not isinstance(expr, TensExpr):
