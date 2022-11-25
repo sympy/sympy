@@ -3517,6 +3517,13 @@ class TensMul(TensExpr, AssocOp):
                 arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg
                 for arg, repl in zip(args, replacements)]
 
+            """
+            The order of indices might've changed due to the replacements (e.g. if one of the args is a TensAdd, replacing an index can change the sort order of the terms, thus changing the order of indices returned by its get_indices() method).
+            To stay on the safe side, we calculate these quantities again.
+            """
+            args_indices = [get_indices(arg) for arg in args]
+            indices, free, free_names, dummy_data = TensMul._indices_to_free_dum(args_indices)
+
         dum = TensMul._dummy_data_to_dum(dummy_data)
         return args, indices, free, dum
 
