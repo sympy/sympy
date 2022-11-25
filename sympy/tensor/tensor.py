@@ -2382,6 +2382,30 @@ class TensExpr(Expr, ABC):
                     if isinstance(a, TensExpr) else a
                     for a in self.args])
 
+    def _matches_simple(self, expr, repl_dict=None, old=False):
+        """
+        Matches assuming there are no wild objects in self.
+        """
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+        if not isinstance(expr, TensExpr):
+            if len(self.get_free_indices()) > 0:
+                return None
+        else:
+            if set(self.get_free_indices()) != set(expr.get_free_indices()):
+                #If there are no wilds and the free indices are not the same, they cannot match.
+                return None
+
+        #If there are no Wilds in self, we can depend on canon_bp to tell us whether self and expr are equivalent.
+        diff = self.doit().canon_bp() - expr.doit().canon_bp()
+        if diff == 0 or diff.canon_bp() == 0:
+            return repl_dict
+        else:
+            return None
+
 
 class TensAdd(TensExpr, AssocOp):
     """
@@ -4131,27 +4155,6 @@ class TensMul(TensExpr, AssocOp):
             if d:
                 terms.append(TensMul.fromiter(self.args[:i] + (d,) + self.args[i + 1:]))
         return TensAdd.fromiter(terms)
-
-
-    def _matches_simple(self, expr, repl_dict=None, old=False):
-        """
-        Matches assuming there are no wild objects in self.
-        """
-        if repl_dict is None:
-            repl_dict = {}
-        else:
-            repl_dict = repl_dict.copy()
-
-        if set(self.get_free_indices()) != set(expr.get_free_indices()):
-            #If there are no wilds and the free indices are not the same, they cannot match.
-            return None
-
-        #If there are no Wilds in self, we can depend on canon_bp to tell us whether self and expr are equivalent.
-        diff = self.doit().canon_bp() - expr.doit().canon_bp()
-        if diff == 0 or diff.canon_bp() == 0:
-            return repl_dict
-        else:
-            return None
 
 
     def _matches_commutative(self, expr, repl_dict=None, old=False):
