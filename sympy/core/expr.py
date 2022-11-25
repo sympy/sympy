@@ -5,6 +5,7 @@ from collections.abc import Iterable
 from functools import reduce
 import re
 
+from .assumptions import ExprManagedProperties
 from .sympify import sympify, _sympify
 from .basic import Basic, Atom
 from .singleton import S
@@ -40,7 +41,7 @@ def _corem(eq, c):  # helper for extract_additively
 
 
 @sympify_method_args
-class Expr(Basic, EvalfMixin):
+class Expr(Basic, EvalfMixin, metaclass=ExprManagedProperties):
     """
     Base class for algebraic expressions.
 

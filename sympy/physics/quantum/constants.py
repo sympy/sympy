@@ -1,7 +1,7 @@
 """Constants (like hbar) related to quantum mechanics."""
 
 from sympy.core.numbers import NumberSymbol
-from sympy.core.singleton import Singleton
+from sympy.core.singleton import ExprSingleton
 from sympy.printing.pretty.stringpict import prettyForm
 import mpmath.libmp as mlib
 
@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 
-class HBar(NumberSymbol, metaclass=Singleton):
+class HBar(NumberSymbol, metaclass=ExprSingleton):
     """Reduced Plank's constant in numerical and symbolic form [1]_.
 
     Examples

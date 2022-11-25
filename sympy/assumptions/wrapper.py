@@ -45,11 +45,11 @@ False
 
 from sympy.assumptions import ask, Q
 from sympy.core.assumptions import (_assume_defined, as_property,
-    ManagedProperties)
+    ExprManagedProperties)
 from sympy.core.expr import Expr
 from sympy.core.sympify import _sympify
 
-class AssumptionsWrapperMeta(ManagedProperties):
+class AssumptionsWrapperMeta(ExprManagedProperties):
     """
     Metaclass to give _eval_is_[...] attributes to AssumptionsWrapper
     """

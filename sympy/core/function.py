@@ -35,7 +35,7 @@ from typing import Any
 from collections.abc import Iterable
 
 from .add import Add
-from .assumptions import ManagedProperties
+from .assumptions import ManagedProperties, ExprManagedProperties
 from .basic import Basic, _atomic
 from .cache import cacheit
 from .containers import Tuple, Dict
@@ -150,6 +150,7 @@ def arity(cls):
     no, yes = map(len, sift(p_or_k,
         lambda p:p.default == p.empty, binary=True))
     return no if not yes else tuple(range(no, no + yes + 1))
+
 
 class FunctionClass(ManagedProperties):
     """
@@ -279,6 +280,10 @@ class FunctionClass(ManagedProperties):
         return cls.__name__
 
 
+class ExprFunctionClass(FunctionClass, ExprManagedProperties):
+    pass
+
+
 class Application(Basic, metaclass=FunctionClass):
     """
     Base class for applied functions.
@@ -381,7 +386,7 @@ class Application(Basic, metaclass=FunctionClass):
             return new(*[i._subs(old, new) for i in self.args])
 
 
-class Function(Application, Expr):
+class Function(Application, Expr, metaclass=ExprFunctionClass):
     r"""
     Base class for applied mathematical functions.
 
@@ -880,9 +885,11 @@ class UndefSageHelper:
             args = [arg._sage_() for arg in ins.args]
             return lambda : sage.function(ins.__class__.__name__)(*args)
 
+
 _undef_sage_helper = UndefSageHelper()
 
-class UndefinedFunction(FunctionClass):
+
+class UndefinedFunction(ExprFunctionClass):
     """
     The (meta)class of undefined functions.
     """

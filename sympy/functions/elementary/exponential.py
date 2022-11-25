@@ -5,7 +5,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, ArgumentIndexError, expand_log,
-    expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
+    expand_mul, ExprFunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Rational, pi, I, ImaginaryUnit
@@ -207,7 +207,7 @@ class exp_polar(ExpBase):
         return ExpBase.as_base_exp(self)
 
 
-class ExpMeta(FunctionClass):
+class ExpMeta(ExprFunctionClass):
     def __instancecheck__(cls, instance):
         if exp in instance.__class__.__mro__:
             return True

@@ -639,6 +639,10 @@ def _ask(fact, obj):
 
 class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
+
+    _FACTKB = EmptyKB
+    _assume_defined = ()
+
     def __init__(cls, *args, **kws):
         BasicMeta.__init__(cls, *args, **kws)
 
@@ -659,12 +663,7 @@ class ManagedProperties(BasicMeta):
         defs.update(local_defs)
 
         cls._explicit_class_assumptions = defs
-        if 'Expr' not in [c.__name__ for c in cls.mro()]:
-            cls.default_assumptions = EmptyKB(defs)
-            is_expr = False
-        else:
-            cls.default_assumptions = StdFactKB(defs)
-            is_expr = True
+        cls.default_assumptions = cls._FACTKB(defs)
 
         cls._prop_handler = {}
         for k in _assume_defined:
@@ -690,8 +689,13 @@ class ManagedProperties(BasicMeta):
                 setattr(cls, pname, make_property(fact))
 
         # Finally, add any missing automagic property (e.g. for Basic)
-        if is_expr:
-            for fact in _assume_defined:
-                pname = as_property(fact)
-                if not hasattr(cls, pname):
-                    setattr(cls, pname, make_property(fact))
+        for fact in cls._assume_defined:
+            pname = as_property(fact)
+            if not hasattr(cls, pname):
+                setattr(cls, pname, make_property(fact))
+
+
+class ExprManagedProperties(ManagedProperties):
+    """Metaclass for Expr subclasses with old-style assumptions"""
+    _FACTKB = StdFactKB
+    _assume_defined = _assume_defined

@@ -11,7 +11,7 @@ from functools import lru_cache
 from .containers import Tuple
 from .sympify import (SympifyError, _sympy_converter, sympify, _convert_numpy_types,
               _sympify, _is_numpy_instance)
-from .singleton import S, Singleton
+from .singleton import S, ExprSingleton
 from .basic import Basic
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
@@ -3045,7 +3045,7 @@ class IntegerConstant(Integer):
         return AtomicExpr.__new__(cls)
 
 
-class Zero(IntegerConstant, metaclass=Singleton):
+class Zero(IntegerConstant, metaclass=ExprSingleton):
     """The number zero.
 
     Zero is a singleton, and can be accessed by ``S.Zero``
@@ -3113,7 +3113,7 @@ class Zero(IntegerConstant, metaclass=Singleton):
         return False
 
 
-class One(IntegerConstant, metaclass=Singleton):
+class One(IntegerConstant, metaclass=ExprSingleton):
     """The number one.
 
     One is a singleton, and can be accessed by ``S.One``.
@@ -3164,7 +3164,7 @@ class One(IntegerConstant, metaclass=Singleton):
             return {}
 
 
-class NegativeOne(IntegerConstant, metaclass=Singleton):
+class NegativeOne(IntegerConstant, metaclass=ExprSingleton):
     """The number negative one.
 
     NegativeOne is a singleton, and can be accessed by ``S.NegativeOne``.
@@ -3228,7 +3228,7 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
         return
 
 
-class Half(RationalConstant, metaclass=Singleton):
+class Half(RationalConstant, metaclass=ExprSingleton):
     """The rational number 1/2.
 
     Half is a singleton, and can be accessed by ``S.Half``.
@@ -3260,7 +3260,7 @@ class Half(RationalConstant, metaclass=Singleton):
         return S.Half
 
 
-class Infinity(Number, metaclass=Singleton):
+class Infinity(Number, metaclass=ExprSingleton):
     r"""Positive infinite quantity.
 
     Explanation
@@ -3450,7 +3450,7 @@ class Infinity(Number, metaclass=Singleton):
 oo = S.Infinity
 
 
-class NegativeInfinity(Number, metaclass=Singleton):
+class NegativeInfinity(Number, metaclass=ExprSingleton):
     """Negative infinite quantity.
 
     NegativeInfinity is a singleton, and can be accessed
@@ -3617,7 +3617,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
         return {S.NegativeOne: 1, S.Infinity: 1}
 
 
-class NaN(Number, metaclass=Singleton):
+class NaN(Number, metaclass=ExprSingleton):
     """
     Not a Number.
 
@@ -3739,7 +3739,7 @@ def _eval_is_eq(a, b): # noqa:F811
     return False
 
 
-class ComplexInfinity(AtomicExpr, metaclass=Singleton):
+class ComplexInfinity(AtomicExpr, metaclass=ExprSingleton):
     r"""Complex infinity.
 
     Explanation
@@ -3876,7 +3876,7 @@ class NumberSymbol(AtomicExpr):
         return super().__hash__()
 
 
-class Exp1(NumberSymbol, metaclass=Singleton):
+class Exp1(NumberSymbol, metaclass=ExprSingleton):
     r"""The `e` constant.
 
     Explanation
@@ -4031,7 +4031,7 @@ class Exp1(NumberSymbol, metaclass=Singleton):
 E = S.Exp1
 
 
-class Pi(NumberSymbol, metaclass=Singleton):
+class Pi(NumberSymbol, metaclass=ExprSingleton):
     r"""The `\pi` constant.
 
     Explanation
@@ -4099,7 +4099,7 @@ class Pi(NumberSymbol, metaclass=Singleton):
 pi = S.Pi
 
 
-class GoldenRatio(NumberSymbol, metaclass=Singleton):
+class GoldenRatio(NumberSymbol, metaclass=ExprSingleton):
     r"""The golden ratio, `\phi`.
 
     Explanation
@@ -4162,7 +4162,7 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
     _eval_rewrite_as_sqrt = _eval_expand_func
 
 
-class TribonacciConstant(NumberSymbol, metaclass=Singleton):
+class TribonacciConstant(NumberSymbol, metaclass=ExprSingleton):
     r"""The tribonacci constant.
 
     Explanation
@@ -4232,7 +4232,7 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
     _eval_rewrite_as_sqrt = _eval_expand_func
 
 
-class EulerGamma(NumberSymbol, metaclass=Singleton):
+class EulerGamma(NumberSymbol, metaclass=ExprSingleton):
     r"""The Euler-Mascheroni constant.
 
     Explanation
@@ -4291,7 +4291,7 @@ class EulerGamma(NumberSymbol, metaclass=Singleton):
             return (S.Half, Rational(3, 5, 1))
 
 
-class Catalan(NumberSymbol, metaclass=Singleton):
+class Catalan(NumberSymbol, metaclass=ExprSingleton):
     r"""Catalan's constant.
 
     Explanation
@@ -4354,7 +4354,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         return "G"
 
 
-class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
+class ImaginaryUnit(AtomicExpr, metaclass=ExprSingleton):
     r"""The imaginary unit, `i = \sqrt{-1}`.
 
     I is a singleton, and can be accessed by ``S.I``, or can be
