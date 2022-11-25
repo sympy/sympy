@@ -4094,7 +4094,53 @@ class TensorElement(TensExpr):
 
 class WildTensorHead(TensorHead):
     """
-    unordered_indices: whether the order of the indices matters for matching purposes (default: False)
+    A wild object that is used to create ``WildTensor`` instances
+
+    Explanation
+    ===========
+
+    Examples
+    ========
+    >>> from sympy.tensor.tensor import Tensor, TensorHead, TensorIndex, WildTensorHead, WildTensor, TensorIndexType
+    >>> R3 = TensorIndexType('R3', dim=3)
+    >>> p = TensorIndex('p', R3)
+    >>> q = TensorIndex('q', R3)
+
+    A WildTensorHead can be created without specifying a ``TensorIndexType``
+
+    >>> W = WildTensorHead("W")
+
+    TODO: Should the stuff below be in the docstring of the __call__ function?
+    Calling it with a ``TensorIndex`` creates a ``WildTensor`` instance.
+
+    >>> type(W(p))
+    <class 'sympy.tensor.tensor.WildTensor'>
+
+    The ``TensorIndexType`` is automatically detected from the index that is passed
+
+    >>> W(p).component
+    W(R3)
+
+    Calling it with no indices returns an object that can match tensors with any number of indices.
+
+    >>> K = TensorHead('K', [R3])
+    >>> Q = TensorHead('Q', [R3, R3])
+    >>> W().matches(K(p))
+    {W: K(p)}
+    >>> W().matches(Q(p,q))
+    {W: Q(p, q)}
+
+    Parameters
+    ==========
+    name : name of the tensor
+    unordered_indices : whether the order of the indices matters for matching
+        (default: False)
+
+    See also
+    ========
+    ``WildTensor``
+    ``TensorHead``
+
     """
     def __new__(cls, name, index_types=None, comm=0, symmetry=None, unordered_indices=False):
         if isinstance(name, str):
