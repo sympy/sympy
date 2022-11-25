@@ -2,7 +2,7 @@ from sympy.concrete.tests.test_sums_products import NS
 
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.physics.units import convert_to, coulomb_constant, elementary_charge, gravitational_constant, planck
+from sympy.physics.units import convert_to, coulomb_constant, elementary_charge, gravitational_constant, planck,ohm
 from sympy.physics.units.definitions.unit_definitions import statcoulomb, coulomb, second, gram, centimeter, erg, \
     newton, joule, dyne, speed_of_light, meter
 from sympy.physics.units.systems import SI
@@ -46,3 +46,9 @@ def test_cgs_gauss_convert_constants():
     assert convert_to(elementary_charge, statcoulomb, cgs_gauss)
     assert convert_to(gravitational_constant, dyne*centimeter**2/gram**2, cgs_gauss)
     assert NS(convert_to(planck, erg*second, cgs_gauss)) == '6.62607015e-27*erg*second'
+def test_cgs_gauss_ohm_cgs():
+    assert convert_to(ohm,second/centimeter,cgs_gauss) == 25000*second/(22468879468420441*centimeter)
+    assert convert_to(1*ohm,second/centimeter,cgs_gauss) == 25000*second/(22468879468420441*centimeter)
+    assert convert_to(2*ohm,second/centimeter,cgs_gauss) == 50000*second/(22468879468420441*centimeter)
+    assert NS(convert_to(ohm,second/centimeter,cgs_gauss)) == '1.11265005605362e-12*second/centimeter'
+    assert NS(convert_to(2*ohm,second/centimeter,cgs_gauss)) == '2.22530011210724e-12*second/centimeter'
