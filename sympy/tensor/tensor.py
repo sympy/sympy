@@ -4185,16 +4185,15 @@ class TensMul(TensExpr, AssocOp):
 
         tensors_matched = TensMul(*temp_repl.values()).atoms(Tensor)
         remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in tensors_matched]
-        if len(remaining_e_tensors) > 0:
-            if len(indexless_wilds) > 0:
-                #If there are any remaining tensors, match them with the indexless WildTensor
-                m =  indexless_wilds[0].matches( TensMul(*remaining_e_tensors).doit() )
-                if m is None:
-                    return None
-                else:
-                    temp_repl.update(m)
-            else:
+        if len(indexless_wilds) > 0:
+            #If there are any remaining tensors, match them with the indexless WildTensor
+            m =  indexless_wilds[0].matches( TensMul(1,*remaining_e_tensors).doit() )
+            if m is None:
                 return None
+            else:
+                temp_repl.update(m)
+        elif len(remaining_e_tensors) > 0:
+            return None
 
         m = self.coeff.matches(expr.coeff)
         if m is None:
