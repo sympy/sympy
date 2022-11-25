@@ -4256,7 +4256,39 @@ class WildTensor(Tensor):
 
 class WildTensorIndex(TensorIndex):
     """
-    ignore_updown: bool, whether this should match both co- and contra-variant indices
+    A wild object that matches TensorIndex instances.
+
+    Examples
+    ========
+    >>> from sympy.tensor.tensor import TensorIndex, TensorIndexType, WildTensorIndex
+    >>> R3 = TensorIndexType('R3', dim=3)
+    >>> p = TensorIndex("p", R3)
+
+    By default, covariant indices only match with covariant indices (and
+    similarly for contravariant)
+
+    >>> q = WildTensorIndex("q", R3)
+    >>> (q).matches(p)
+    {q: p}
+    >>> (q).matches(-p)
+
+    If you want matching to ignore whether the index is co/contra-variant, set
+    ignore_updown=True
+
+    >>> r = WildTensorIndex("r", R3, ignore_updown=True)
+    >>> (r).matches(-p)
+    {r: -p}
+    >>> (r).matches(p)
+    {r: p}
+
+    Parameters
+    ==========
+    name : name of the index (string), or ``True`` if you want it to be
+        automatically assigned
+    tensor_index_type : ``TensorIndexType`` of the index
+    is_up :  flag for contravariant index (is_up=True by default)
+    ignore_updown : bool, Whether this should match both co- and contra-variant
+        indices (default:False)
     """
     def __new__(cls, name, tensor_index_type, is_up=True, ignore_updown=False):
         if isinstance(name, str):
