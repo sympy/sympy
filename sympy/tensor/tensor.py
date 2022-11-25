@@ -4379,11 +4379,13 @@ class WildTensorHead(TensorHead):
 class WildTensor(Tensor):
     def __new__(cls, tensor_head, indices, **kw_args):
         is_canon_bp = kw_args.pop("is_canon_bp", False)
-        if ( not isinstance(tensor_head, WildTensorHead) ) and isinstance(tensor_head, TensorHead):
+        if tensor_head.func == TensorHead:
             """
             If someone tried to call WildTensor by supplying a TensorHead (not a WildTensorHead), return a normal tensor instead. This is helpful when using subs on an expression to replace occurrences of a WildTensorHead with a TensorHead.
             """
             return Tensor(tensor_head, indices, is_canon_bp=is_canon_bp, **kw_args)
+        elif tensor_head.func == _WildTensExpr:
+            return tensor_head(*indices)
 
         indices = cls._parse_indices(tensor_head, indices)
         index_types = [ind.tensor_index_type for ind in indices]
@@ -4430,6 +4432,12 @@ class WildTensor(Tensor):
                     return None
                 else:
                     repl_dict.update(m)
+
+        if hasattr(expr, "component"):
+            #Make sure the corresponding WildTensorHead is also added to the replacement rules
+            repl_dict[self.component] = expr.component
+        elif hasattr(expr, "components"):
+            repl_dict[self.component] = _WildTensExpr(expr)
 
         repl_dict[self] = expr
         return repl_dict
@@ -4481,3 +4489,12 @@ class WildTensorIndex(TensorIndex):
 
         repl_dict[self] = expr
         return repl_dict
+
+class _WildTensExpr(Basic):
+    def __init__(self, expr):
+        if not isinstance(expr, TensExpr):
+            raise TypeError("WildTensExpr expects a TensExpr as argument")
+        self.expr = expr
+
+    def __call__(self, *indices):
+        return self.expr.subs(dict(zip(self.expr.get_free_indices(), indices)))
