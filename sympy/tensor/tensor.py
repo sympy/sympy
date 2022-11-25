@@ -4215,7 +4215,7 @@ class TensMul(TensExpr, AssocOp):
             return None
 
         #Try to match the non-tensorial coefficient
-        m = self.coeff.matches(expr.coeff)
+        m = self.coeff.matches(expr.coeff, old=old)
         if m is None:
             return None
         else:
