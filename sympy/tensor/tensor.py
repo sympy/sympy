@@ -4410,7 +4410,7 @@ class WildTensor(Tensor):
 
 
     def matches(self, expr, repl_dict=None, old=False):
-        if not isinstance(expr, TensExpr):
+        if not isinstance(expr, TensExpr) and expr != S(1):
             return None
 
         if repl_dict is None:
