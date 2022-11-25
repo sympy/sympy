@@ -4175,6 +4175,41 @@ class WildTensorHead(TensorHead):
 
 
 class WildTensor(Tensor):
+    """
+    A wild object which matches ``Tensor`` instances
+
+    Explanation
+    ===========
+    This is instantiated by attaching indices to a ``WildTensorHead`` instance.
+
+    Examples
+    ========
+    >>> from sympy.tensor.tensor import Tensor, TensorHead, TensorIndex, WildTensorHead, WildTensor, TensorIndexType
+    >>> W = WildTensorHead("W")
+    >>> R3 = TensorIndexType('R3', dim=3)
+    >>> p = TensorIndex('p', R3)
+    >>> q = TensorIndex('q', R3)
+    >>> K = TensorHead('K', [R3])
+    >>> Q = TensorHead('Q', [R3, R3])
+
+    Matching also takes the indices into account
+    >>> W(p).matches(K(p))
+    {W(R3): _WildTensExpr(K(p))}
+    >>> W(p).matches(K(q))
+    >>> W(p).matches(K(-p))
+
+    If you want to match objects with any number of indices, just use a ``WildTensor`` with no indices.
+    >>> W().matches(K(p))
+    {W: K(p)}
+    >>> W().matches(Q(p,q))
+    {W: Q(p, q)}
+
+    See Also
+    ========
+    ``WildTensorHead``
+    ``Tensor``
+
+    """
     def __new__(cls, tensor_head, indices, **kw_args):
         is_canon_bp = kw_args.pop("is_canon_bp", False)
         if tensor_head.func == TensorHead:
