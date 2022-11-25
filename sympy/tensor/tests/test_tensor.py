@@ -1987,6 +1987,7 @@ def test_tensor_matching():
 
     K = TensorHead("K", [R3])
     V = TensorHead("V", [R3])
+    A = TensorHead("A", [R3, R3])
     W = WildTensorHead('W', unordered_indices=True)
     U = WildTensorHead('U')
 
@@ -2002,6 +2003,16 @@ def test_tensor_matching():
         == {
             W(p,q).head: _WildTensExpr(K(p)*V(q))
             }
+        )
+    assert (
+        W(p,q).matches( A(q,p) )
+        == {
+            W(p,q).head: _WildTensExpr(A(q, p))
+            }
+        )
+    assert (
+        U(p,q).matches( A(q,p) )
+        == None
         )
     assert (
         a.matches(q)
