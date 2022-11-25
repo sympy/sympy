@@ -4130,6 +4130,13 @@ class WildTensorHead(TensorHead):
     >>> W().matches(Q(p,q))
     {W: Q(p, q)}
 
+    If you want to ignore the order of indices while matching, pass ``unordered_indices=True``.
+
+    >>> U = WildTensorHead("U", unordered_indices=True)
+    >>> W(p,q).matches(Q(q,p))
+    >>> U(p,q).matches(Q(q,p))
+    {U(R3,R3): _WildTensExpr(Q(q, p))}
+
     Parameters
     ==========
     name : name of the tensor
