@@ -209,6 +209,7 @@ References
 .. [13] https://en.wikipedia.org/wiki/Complex_number
 
 """
+from typing import Type
 
 from .facts import FactRules, FactKB
 from .core import BasicMeta
@@ -640,7 +641,7 @@ def _ask(fact, obj):
 class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
 
-    _FACTKB = EmptyKB
+    _FACTKB: Type[FactKB] = EmptyKB
     _assume_defined = ()
 
     def __init__(cls, *args, **kws):
