@@ -3507,8 +3507,7 @@ class TensMul(TensExpr, AssocOp):
                     dummy_name = dummy_name_gen(index_type)
                     if dummy_name not in free_names:
                         break
-                #We use WildTensorIndex below so that, e.g. K(p)*V(-p) will match V(-p)*K(p). Otherwise, a lot of hackery is needed in TensMul.matches().
-                dummy = WildTensorIndex(dummy_name, index_type, is_up=True, ignore_updown=True)
+                dummy = old_index.func(dummy_name, index_type, *old_index.args[2:])
                 replacements[pos1cov][old_index] = dummy
                 replacements[pos1contra][-old_index] = -dummy
                 indices[pos2cov] = dummy
