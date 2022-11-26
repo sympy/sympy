@@ -33,6 +33,7 @@ from sympy.matrices.matrices import MatrixBase
 from sympy.polys.matrices.linsolve import _lin_eq2dict, PolyNonlinearError
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import factor, Poly
+from sympy.polys.polytools import PolynomialError
 from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import CRootOf, RootSum
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
@@ -1939,7 +1940,15 @@ behavior.
 def _facorize_num_den(f, s):
     from sympy.simplify.radsimp import fraction
     [n, d] = fraction(f)
-    return (n.factor(s))/(d.factor(s))
+    try:
+        nf = n.factor(s)
+    except PolynomialError:
+        nf = n
+    try:
+        df = d.factor(s)
+    except PolynomialError:
+        df = d
+    return nf/df
 
 def _inverse_laplace_build_rules(s, t):
     """
