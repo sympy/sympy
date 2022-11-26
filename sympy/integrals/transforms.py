@@ -1939,6 +1939,46 @@ behavior.
 
 
 @_noconds_(True)
+
+def _inverse_laplace_build_rules(s, t):
+    """
+    This is an internal helper function that returns the table of Laplace
+    transform rules in terms of the time variable `t` and the frequency
+    variable `s`.  It is used by `_laplace_apply_rules`.
+    """
+    a = Wild('a', exclude=[t])
+    #b = Wild('b', exclude=[t])
+    #n = Wild('n', exclude=[t])
+    #tau = Wild('tau', exclude=[t])
+    #omega = Wild('omega', exclude=[t])
+    dco = lambda f: _laplace_deep_collect(f,t)
+    inverse_laplace_transform_rules = [
+        (1/s, 1, dco),
+        (1/(s+a), exp(-a*t), dco),
+        (1/s**2, t, dco)
+    ]
+    debug('***********', inverse_laplace_transform_rules)
+    return inverse_laplace_transform_rules
+
+def _inverse_laplace_apply_rules(F, s, t):
+    """
+    Helper function for the class InverseLaplaceTransform.
+
+    This function does an inverse Laplace transform based on rules.
+    """
+    k, func = F.as_independent(t, as_Add=False)
+    simple_rules = _inverse_laplace_build_rules(s, t)
+    debug('-----------', simple_rules)
+
+    for s_dom, t_dom, prep in simple_rules:
+        ma =prep(func).match(s_dom)
+        if ma:
+            debug('_inverse_laplace_apply_rules match:')
+            debug('      f:    %s'%(func,))
+            debug('      rule: %s o---o %s'%(s_dom, t_dom))
+            return Heaviside(t)*k*t_dom.xreplace(ma)
+    return None
+
 def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     """ The backend function for inverse Laplace transforms. """
     from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
@@ -1967,6 +2007,11 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         f = Add(*[_inverse_laplace_transform(X, s, t, plane, simplify)\
                      for X in F.args])
         return _simplify(f.subs(t, t_), simplify), True
+
+    # Before the inverse Mellin Transform, try to apply rules:
+    f = _inverse_laplace_apply_rules(F, s, t_)
+    if not f is None:
+        return f, S.true
 
     try:
         f, cond = inverse_mellin_transform(F, s, exp(-t), (None, S.Infinity),
