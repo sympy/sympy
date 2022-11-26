@@ -1950,6 +1950,17 @@ def _facorize_num_den(f, s):
         df = d
     return nf/df
 
+def _complete_the_square_in_denom(f, s):
+    from sympy.simplify.radsimp import fraction
+    [n, d] = fraction(f)
+    if d.is_polynomial(s):
+        cf = d.as_poly(s).all_coeffs()
+        debug(cf)
+        if len(cf)==3:
+            a, b, c = cf
+            d = a*(s+b/(2*a))**2+c/a-(b/(2*a))**2
+    return n/d
+
 def _inverse_laplace_build_rules(s, t):
     """
     This is an internal helper function that returns the table of inverse
@@ -1958,29 +1969,35 @@ def _inverse_laplace_build_rules(s, t):
     """
     a = Wild('a', exclude=[s])
     b = Wild('b', exclude=[s])
-    c = Wild('b', exclude=[s])
+    c = Wild('c', exclude=[s])
     #n = Wild('n', exclude=[t])
     #tau = Wild('tau', exclude=[t])
     #omega = Wild('omega', exclude=[t])
 
     same = lambda f: f
     frac = lambda f: _facorize_num_den(f, s)
+    ctsd = lambda f: _complete_the_square_in_denom(f, s)
     # This list is sorted according to the prep function needed.
     # Implemented up to rule 12.
     inverse_laplace_transform_rules = [
-        (a/s, a, same),
-        (b/(s+a), b*exp(-a*t), same),
-        (a/s**2, a*t, same),
-        (b/(s**2-a**2), b*sinh(a*t)/a, same),
-        (b/(s**2+a**2), b*sin(a*t)/a, same),
-        (b*s/(s**2-a**2), b*cosh(a*t), same),
-        (b*s/(s**2+a**2), b*cos(a*t), same),
+        (a/s, a, same, None),
+        (b/(s+a), b*exp(-a*t), same, None),
+        (a/s**2, a*t, same, None),
+        (b/(s**2+a**2), b*sin(a*t)/a, same, None),
+        (b/(s**2-a**2), b*sinh(a*t)/a, same, None),
+        (b*s/(s**2+a**2), b*cos(a*t), same, None),
+        (b*s/(s**2-a**2), b*cosh(a*t), same, None),
         #
-        (b/(s*(s+a)), b*(1-exp(-a*t))/a, frac),
-        (b/(s+a)**2, b*t*exp(-a*t), frac),
-        (b*s/(s+a)**2, b*(1-a*t)*exp(-a*t), frac),
-        (c/((s+a)*(s+b)), c/(a-b)*(exp(-b*t)-exp(-a*t)), frac),
-        (c*s/((s+a)*(s+b)), c/(a-b)*(a*exp(-a*t)-b*exp(-b*t)), frac),
+        (b/(s*(s+a)), b*(1-exp(-a*t))/a, frac, None),
+        (b/(s+a)**2, b*t*exp(-a*t), frac, None),
+        (b*s/(s+a)**2, b*(1-a*t)*exp(-a*t), frac, None),
+        (c/((s+a)*(s+b)), c/(a-b)*(exp(-b*t)-exp(-a*t)), frac, None),
+        (c*s/((s+a)*(s+b)), c/(a-b)*(a*exp(-a*t)-b*exp(-b*t)), frac, None),
+        #
+        (c/((s+a)**2+b**2), c*exp(-a*t)*sin(b*t)/b, ctsd, None),
+        (c/((s+a)**2+b**2),
+         c*exp(-a*t)*(b*cos(b*t)-a*sin(b*t))/b,
+         ctsd, s),
     ]
     return inverse_laplace_transform_rules
 
@@ -1992,17 +2009,20 @@ def _inverse_laplace_apply_rules(F, s, t):
     """
     k, func = F.as_independent(s, as_Add=False)
     simple_rules = _inverse_laplace_build_rules(s, t)
-    debug('-----------', func)
 
     _prep = ''
 
-    for s_dom, t_dom, prep in simple_rules:
+    for s_dom, t_dom, prep, fac in simple_rules:
         if not _prep is prep:
             _F = prep(func)
             _prep = prep
+            debug('--- prepped new _F=', _F)
         else:
             _F = func
-        ma = _F.match(s_dom)
+        if fac:
+            ma = prep(_F/fac).match(s_dom)
+        else:
+            ma = _F.match(s_dom)
         if ma:
             debug('_inverse_laplace_apply_rules match:')
             debug('      f:    %s'%(func,))
@@ -2041,9 +2061,11 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         return _simplify(f.subs(t, t_), simplify), True
 
     # Before the inverse Mellin Transform, try to apply rules:
+    debug('---> _inverse_laplace_transform will now try to apply rules')
     f = _inverse_laplace_apply_rules(F, s, t_)
     if not f is None:
         return f, S.true
+    debug('---> _inverse_laplace_transform could not apply rules successfully.')
 
     try:
         f, cond = inverse_mellin_transform(F, s, exp(-t), (None, S.Infinity),

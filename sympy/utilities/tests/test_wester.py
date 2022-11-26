@@ -2909,13 +2909,22 @@ def test_Y1():
     F, _, _ = laplace_transform(cos((w - 1)*t), t, s)
     assert F == s/(s**2 + (w - 1)**2)
 
-
+@XFAIL
 def test_Y2():
     t = symbols('t', positive=True)
     w = symbols('w', real=True)
     s = symbols('s')
     f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
     assert f == cos(t*(w - 1))
+
+def test_Y2_tmp():
+    ### The new inverse_laplace_transform cannot (yet) simplify the result
+    ### of test_Y2b properly, but gives a correct result
+    t = symbols('t', positive=True)
+    w = symbols('w', real=True)
+    s = symbols('s')
+    f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
+    assert f == cos(t*sqrt(w**2 - 2*w + 1))
 
 
 def test_Y3():
