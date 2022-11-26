@@ -4297,6 +4297,7 @@ class WildTensor(Tensor):
                     if not matched_this_ind:
                         return None
 
+                expr_indices_remaining = [i for i in expr_indices_remaining if i not in matched_indices]
                 for ind in indices_sifted["wild"]:
                     matched_this_ind = False
                     for e_ind in expr_indices_remaining:
@@ -4306,10 +4307,12 @@ class WildTensor(Tensor):
                                 return None
                             matched_this_ind = True
                             repl_dict.update(m)
+                            matched_indices.append(e_ind)
                             break
                     if not matched_this_ind:
                         return None
 
+                expr_indices_remaining = [i for i in expr_indices_remaining if i not in matched_indices]
                 for ind in indices_sifted["wild, updown"]:
                     matched_this_ind = False
                     for e_ind in expr_indices_remaining:
@@ -4319,6 +4322,7 @@ class WildTensor(Tensor):
                                 return None
                             matched_this_ind = True
                             repl_dict.update(m)
+                            matched_indices.append(e_ind)
                             break
                     if not matched_this_ind:
                         return None
