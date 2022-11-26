@@ -2546,8 +2546,25 @@ def necklaces(n, k, free=False):
     .. [1] http://mathworld.wolfram.com/Necklace.html
 
     """
-    return uniq(minlex(i, directed=not free) for i in
-        variations(list(range(k)), n, repetition=True))
+    # The FKM algorithm
+    if k == 0 and n > 0:
+        return
+    a = [0]*n
+    yield tuple(a)
+    if n == 0:
+        return
+    while 1:
+        i = n - 1
+        while a[i] == k - 1:
+            i -= 1
+            if i == -1:
+                return
+        a[i] += 1
+        for j in range(n - i - 1):
+            a[j + i + 1] = a[j]
+        if n % (i + 1) == 0 and (not free or all(a <= a[j::-1] + a[-1:j:-1] for j in range(n - 1))):
+            # No need to test j = n - 1.
+            yield tuple(a)
 
 
 def bracelets(n, k):
