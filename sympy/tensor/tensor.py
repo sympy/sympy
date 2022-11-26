@@ -3401,6 +3401,17 @@ class TensMul(TensExpr, AssocOp):
         deep = hints.get('deep', True)
         if deep:
             args = [arg.doit(**hints) for arg in self.args]
+
+            """
+            There may now be conflicts between dummy indices of different args
+            (each arg's doit method does not have any information about which
+            dummy indices are already used in the other args), so we
+            deduplicate them.
+            """
+            rule = dict(zip(self.args, args))
+            rule = self._dedupe_indices_in_rule(rule)
+            args = [rule[a] for a in self.args]
+
         else:
             args = self.args
 
@@ -3988,6 +3999,111 @@ class TensMul(TensExpr, AssocOp):
                 raise ValueError("No iteration on abstract tensors")
             return self.data.__iter__()
 
+    def _dedupe_indices(self, new, exclude):
+        """
+        exclude: set
+        new: TensExpr
+
+        If ``new`` has any dummy indices that are in ``exclude``, return a version
+        of new with those indices replaced. If no replacements are needed,
+        return None
+        """
+        inds_self = set(exclude)
+        dums_new = set(get_dummy_indices(new))
+
+        conflicts = dums_new.intersection(inds_self)
+        if len(conflicts) == 0:
+            return None
+
+        """
+        ``self_args_free`` is to be passed to ``_IndexStructure._get_generator_for_dummy_indices()``.
+        Since the latter does not use the index position for anything, we just
+        set it as ``None`` here.
+        """
+        inds_self.update(dums_new)
+        self_args_free = [(i, None) for i in inds_self]
+        gen = self._index_structure._get_generator_for_dummy_indices(self_args_free)
+        repl = {}
+        for d in conflicts:
+            if -d in repl.keys():
+                continue
+            newname = gen(d.tensor_index_type)
+            new_d = d.func(newname, *d.args[1:])
+            repl[d] = new_d
+            repl[-d] = -new_d
+
+        if len(repl) == 0:
+            return None
+
+        new_renamed = new._replace_indices(repl)
+        return new_renamed
+
+    def _dedupe_indices_in_rule(self, rule):
+        """
+        rule: dict
+
+        This applies self._dedupe_indices on all values of rule.
+        """
+        index_rules = {k:v for k,v in rule.items() if isinstance(k, TensorIndex)}
+        other_rules = {k:v for k,v in rule.items() if k not in index_rules.keys()}
+        exclude = set(self.get_indices())
+
+        newrule = {}
+        newrule.update(index_rules)
+        exclude.update(index_rules.keys())
+        exclude.update(index_rules.values())
+        for old, new in other_rules.items():
+            new_renamed = self._dedupe_indices(new, exclude)
+            if old == new or new_renamed is None:
+                newrule[old] = new
+            else:
+                newrule[old] = new_renamed
+                exclude.update(get_indices(new_renamed))
+        return newrule
+
+    def _eval_subs(self, old, new):
+        """
+        This handles the fact that if a dummy index in new is the same as an
+        index in self (which is not present in old), the dummy index in new
+        must be renamed.
+        """
+
+        if not isinstance(new, TensExpr):
+            return None
+
+        new_renamed = self._dedupe_indices(new, self.get_indices())
+        if new_renamed is None:
+            return None
+        else:
+            return self.subs({old: new_renamed})
+
+    def _xreplace(self, rule):
+        """
+        Helper for xreplace. Tracks whether a replacement actually occurred.
+
+        Given that the rule has entries {old:new, ...}, this handles the fact
+        that if a dummy index in new is the same as an index in self, the
+        dummy index in new must be renamed.
+        """
+        if self in rule:
+            return rule[self], True
+        elif rule:
+            rule = self._dedupe_indices_in_rule(rule)
+            args = []
+            changed = False
+            for a in self.args:
+                _xreplace = getattr(a, '_xreplace', None)
+                if _xreplace is not None:
+                    a_xr = _xreplace(rule)
+                    args.append(a_xr[0])
+                    changed |= a_xr[1]
+                else:
+                    args.append(a)
+            args = tuple(args)
+            if changed:
+                return self.func(*args), True
+        return self, False
+
     def _eval_rewrite_as_Indexed(self, *args):
         from sympy.concrete.summations import Sum
         index_symbols = [i.args[0] for i in self.get_indices()]
@@ -4305,6 +4421,12 @@ def get_indices(t):
         return ()
     return t.get_indices()
 
+def get_dummy_indices(t):
+    if not isinstance(t, TensExpr):
+        return ()
+    inds = t.get_indices()
+    free = t.get_free_indices()
+    return [i for i in inds if i not in free]
 
 def get_index_structure(t):
     if isinstance(t, TensExpr):

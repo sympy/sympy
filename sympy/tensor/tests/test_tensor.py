@@ -1961,6 +1961,21 @@ def test_rewrite_tensor_to_Indexed():
     assert b2.rewrite(Indexed) == Sum(Indexed(Symbol("B"), L_1)*Indexed(Symbol("A"), L_0, L_0, i2, L_1), (L_0, 0, 3), (L_1, 0, 3))
 
 
+def test_TensMul_subs():
+    """
+    Test subs and xreplace in TensMul
+    """
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r = tensor_indices("p q r", R3)
+    K = TensorHead("K", [R3])
+    V = TensorHead("V", [R3])
+    C0 = TensorIndex(R3.dummy_name + "_0", R3, True)
+
+    assert ( K(p)*V(r)*K(-p) ).subs({V(r): K(q)*K(-q)}) == K(p)*K(q)*K(-q)*K(-p)
+    assert ( K(p)*V(r)*K(-p) ).xreplace({V(r): K(q)*K(-q)}) == K(p)*K(q)*K(-q)*K(-p)
+    assert ( K(p)*V(r) ).xreplace({p: C0, V(r): K(q)*K(-q)}) == K(C0)*K(q)*K(-q)
+
+
 def test_tensorsymmetry():
     with warns_deprecated_sympy():
         tensorsymmetry([1]*2)
