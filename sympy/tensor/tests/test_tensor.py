@@ -1999,6 +1999,12 @@ def test_tensor_matching():
             }
         )
     assert (
+        W(a).matches( K(p) )
+        == {
+            W(a).head: _WildTensExpr(K(p))
+            }
+        )
+    assert (
         W(p,q).matches( K(p)*V(q) )
         == {
             W(p,q).head: _WildTensExpr(K(p)*V(q))
