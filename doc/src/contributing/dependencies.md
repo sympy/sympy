@@ -330,13 +330,6 @@ is required to use the sampling functionality of `sympy.stats`.
   SymEngine backend support is still experimental, so certain SymPy functions
   may not work correctly when it is enabled.
 
-### Experimental Rubi Integrator
-
-- **MatchPy**: [MatchPy](https://matchpy.readthedocs.io/en/latest/) is a
-  library for doing pattern matching. It is used in the experimental
-  sympy.integrals.rubi module, but presently, it is not used anywhere else in
-  SymPy. SymPy and MatchPy are able to interface with each other.
-
 ### Sage
 
 [Sage](https://www.sagemath.org/) is an open source mathematics software that

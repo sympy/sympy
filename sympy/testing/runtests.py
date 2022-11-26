@@ -504,7 +504,7 @@ def _test(*paths,
         verbose=False, tb="short", kw=None, pdb=False, colors=True,
         force_colors=False, sort=True, seed=None, timeout=False,
         fail_on_timeout=False, slow=False, enhance_asserts=False, split=None,
-        time_balance=True, blacklist=('sympy/integrals/rubi/rubi_tests/tests',),
+        time_balance=True, blacklist=(),
         fast_threshold=None, slow_threshold=None):
     """
     Internal function that actually runs the tests.
@@ -652,7 +652,6 @@ def _get_doctest_blacklist():
         "sympy/core/compatibility.py", # backwards compatibility shim, importing it triggers a deprecation warning
         "sympy/core/trace.py", # backwards compatibility shim, importing it triggers a deprecation warning
         "sympy/galgebra.py", # no longer part of SymPy
-        "sympy/integrals/rubi/rubi.py",
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
