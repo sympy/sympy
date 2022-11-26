@@ -4436,13 +4436,10 @@ class _WildTensExpr(Basic):
     >>> W = WildTensorHead("W")
     >>> R3 = TensorIndexType('R3', dim=3)
     >>> p = TensorIndex('p', R3)
+    >>> q = TensorIndex('q', R3)
     >>> K = TensorHead('K', [R3])
-    >>> ( W(p) ).subs({W(p).component: _WildTensExpr(2*K(p))})
-    2*K(p)
-
-    Of course, the example above could've been accomplished by other means, but
-    we internally use this function in order to handle more complicated cases
-    that arise in replace()
+    >>> print( ( K(p) ).replace( W(p), W(q)*W(-q)*W(p) ) )
+    K(R_0)*K(-R_0)*K(p)
 
     """
     def __init__(self, expr):
