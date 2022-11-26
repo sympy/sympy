@@ -41,7 +41,6 @@ from sympy.utilities.exceptions import (sympy_deprecation_warning,
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
-
 ##########################################################################
 # Helpers / Utilities
 ##########################################################################
@@ -1937,27 +1936,43 @@ behavior.
 
     return LaplaceTransform(f, t, s).doit(**hints)
 
-
-@_noconds_(True)
+def _facorize_num_den(f, s):
+    from sympy.simplify.radsimp import fraction
+    [n, d] = fraction(f)
+    return (n.factor(s))/(d.factor(s))
 
 def _inverse_laplace_build_rules(s, t):
     """
-    This is an internal helper function that returns the table of Laplace
-    transform rules in terms of the time variable `t` and the frequency
-    variable `s`.  It is used by `_laplace_apply_rules`.
+    This is an internal helper function that returns the table of inverse
+    Laplace transform rules in terms of the time variable `t` and the
+    frequency variable `s`.  It is used by `_inverse_laplace_apply_rules`.
     """
-    a = Wild('a', exclude=[t])
-    #b = Wild('b', exclude=[t])
+    a = Wild('a', exclude=[s])
+    b = Wild('b', exclude=[s])
+    c = Wild('b', exclude=[s])
     #n = Wild('n', exclude=[t])
     #tau = Wild('tau', exclude=[t])
     #omega = Wild('omega', exclude=[t])
-    dco = lambda f: _laplace_deep_collect(f,t)
+
+    same = lambda f: f
+    frac = lambda f: _facorize_num_den(f, s)
+    # This list is sorted according to the prep function needed.
+    # Implemented up to rule 12.
     inverse_laplace_transform_rules = [
-        (1/s, 1, dco),
-        (1/(s+a), exp(-a*t), dco),
-        (1/s**2, t, dco)
+        (a/s, a, same),
+        (b/(s+a), b*exp(-a*t), same),
+        (a/s**2, a*t, same),
+        (b/(s**2-a**2), b*sinh(a*t)/a, same),
+        (b/(s**2+a**2), b*sin(a*t)/a, same),
+        (b*s/(s**2-a**2), b*cosh(a*t), same),
+        (b*s/(s**2+a**2), b*cos(a*t), same),
+        #
+        (b/(s*(s+a)), b*(1-exp(-a*t))/a, frac),
+        (b/(s+a)**2, b*t*exp(-a*t), frac),
+        (b*s/(s+a)**2, b*(1-a*t)*exp(-a*t), frac),
+        (c/((s+a)*(s+b)), c/(a-b)*(exp(-b*t)-exp(-a*t)), frac),
+        (c*s/((s+a)*(s+b)), c/(a-b)*(a*exp(-a*t)-b*exp(-b*t)), frac),
     ]
-    debug('***********', inverse_laplace_transform_rules)
     return inverse_laplace_transform_rules
 
 def _inverse_laplace_apply_rules(F, s, t):
@@ -1966,12 +1981,19 @@ def _inverse_laplace_apply_rules(F, s, t):
 
     This function does an inverse Laplace transform based on rules.
     """
-    k, func = F.as_independent(t, as_Add=False)
+    k, func = F.as_independent(s, as_Add=False)
     simple_rules = _inverse_laplace_build_rules(s, t)
-    debug('-----------', simple_rules)
+    debug('-----------', func)
+
+    _prep = ''
 
     for s_dom, t_dom, prep in simple_rules:
-        ma =prep(func).match(s_dom)
+        if not _prep is prep:
+            _F = prep(func)
+            _prep = prep
+        else:
+            _F = func
+        ma = _F.match(s_dom)
         if ma:
             debug('_inverse_laplace_apply_rules match:')
             debug('      f:    %s'%(func,))
@@ -1979,6 +2001,7 @@ def _inverse_laplace_apply_rules(F, s, t):
             return Heaviside(t)*k*t_dom.xreplace(ma)
     return None
 
+@_noconds_(True)
 def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     """ The backend function for inverse Laplace transforms. """
     from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
