@@ -4334,9 +4334,41 @@ class TensMul(TensExpr, AssocOp):
         #Try to match WildTensor instances which have indices
         remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in matched_e_tensors]
         indexless_wilds, wilds = sift(query_sifted["WildTensor"], lambda x: len(x.get_free_indices()) == 0, binary=True)
+
+        def _eq(ind1, ind2):
+            """
+            ind1, ind2: either WildTensorIndex or TensorIndex
+
+            Check for equality of name and tensor_index_type. If neither of the two have ignore_updown=True, equality of is_up is also checked
+            """
+            if ind1.name != ind2.name:
+                return False
+            if ind1.tensor_index_type != ind2.tensor_index_type:
+                return False
+            if hasattr(ind2, "ignore_updown") and not hasattr(ind1, "ignore_updown"):
+                #Swap so that if only one index has this attribute, it is ind1
+                tmp = ind1
+                ind1 = ind2
+                ind2 = tmp
+            if hasattr(ind1, "ignore_updown"):
+                return True
+            if ind1.is_up == ind2.is_up:
+                return True
+            else:
+                return False
+
         for w in wilds:
             free_this_wild = set(w.get_free_indices())
-            tensors_to_try = [t for t in remaining_e_tensors if set(t.get_free_indices()).issubset(free_this_wild) ]
+            tensors_to_try = []
+            for t in remaining_e_tensors:
+                free = t.get_free_indices()
+                shares_indices_with_wild = True
+                for i in free:
+                    if not any([_eq(i, j) for j in free_this_wild]):
+                        #The index i matches none of the indices in free_this_wild
+                        shares_indices_with_wild = False
+                if shares_indices_with_wild:
+                    tensors_to_try.append(t)
 
             m = w.matches(TensMul(*tensors_to_try).doit() )
             if m is None:
