@@ -18,7 +18,7 @@ from sympy.functions.elementary.complexes import (Abs, re, unpolarify)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, sinh, coth, asinh)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
+from sympy.functions.elementary.trigonometric import (atan, cos, sin, tan)
 from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import (erf, erfc, expint, Ei)
