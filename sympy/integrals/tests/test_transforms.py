@@ -1056,22 +1056,13 @@ def test_issue_8882():
         inverse_mellin_transform(F, s, x, (-1, oo),
         **{'as_meijerg': True, 'needeval': True}))
 
-
 def test_issue_8514():
     from sympy.simplify.simplify import simplify
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t', positive=True)
     ft = simplify(inverse_laplace_transform(1/(a*s**2+b*s+c),s, t))
-    assert ft == (I*exp(t*cos(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
-                  b**2))/a)*sin(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(
-                  4*a*c - b**2))/(2*a)) + exp(t*cos(atan2(0, -4*a*c + b**2)
-                  /2)*sqrt(Abs(4*a*c - b**2))/a)*cos(t*sin(atan2(0, -4*a*c
-                  + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a)) + I*sin(t*sin(
-                  atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a))
-                  - cos(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
-                  b**2))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(Abs(4*a*c - b**2)))/(2*a))/sqrt(-4*a*c + b**2)
-
+    assert ft == 2*exp(-b*t/(2*a))*sin(t*sqrt(4*a*c - b**2)/(2*a))/\
+        sqrt(4*a*c - b**2)
 
 def test_issue_12591():
     x, y = symbols("x y", real=True)

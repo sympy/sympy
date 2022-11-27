@@ -1944,7 +1944,7 @@ def _complete_the_square_in_denom(f, s):
         cf = d.as_poly(s).all_coeffs()
         if len(cf)==3:
             a, b, c = cf
-            d = a*(s+b/(2*a))**2+c/a-(b/(2*a))**2
+            d = a*((s+b/(2*a))**2+c/a-(b/(2*a))**2)
     return n/d
 
 def _inverse_laplace_build_rules(s, t):
@@ -1986,8 +1986,8 @@ def _inverse_laplace_build_rules(s, t):
         (c/((s+a)*(s+b)), c/(a-b)*(exp(-b*t)-exp(-a*t)), frac, None),
         (c*s/((s+a)*(s+b)), c/(a-b)*(a*exp(-a*t)-b*exp(-b*t)), frac, None),
         #
-        (c/(d**2*(s+a)**2+b**2),
-         c/d*exp(-a*t)*sin(b/d*t)/b, ctsd, None),
+        (c/(d*(s+b)**2+a**2),
+         c*exp(-b*t)*sin(a*t/sqrt(d))/(a*sqrt(d)), ctsd, None),
         (c/(d**2*(s+a)**2+b**2),
          c/d*exp(-a*t)*(b*cos(b/d*t)/d-a*sin(b/d*t))/b,
          ctsd, s),
@@ -2021,6 +2021,7 @@ def _inverse_laplace_apply_rules(F, s, t):
             debug('_inverse_laplace_apply_rules match:')
             debug('      f:    %s'%(func,))
             debug('      rule: %s o---o %s'%(s_dom, t_dom))
+            debug('      ma:   %s'%(ma,))
             return Heaviside(t)*k*t_dom.xreplace(ma)
     return None
 
