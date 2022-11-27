@@ -390,7 +390,7 @@ def ibin(n, bits=None, str=False):
         if bits >= 0:
             return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
         else:
-            return variations(list(range(2)), n, repetition=True)
+            return variations(range(2), n, repetition=True)
     else:
         if bits >= 0:
             return bin(n)[2:].rjust(bits, "0")
@@ -1366,7 +1366,7 @@ def _partition(seq, vector, m=None):
 
 
 def _set_partitions(n):
-    """Cycle through all partions of n elements, yielding the
+    """Cycle through all partitions of n elements, yielding the
     current number of partitions, ``m``, and a mutable list, ``q``
     such that ``element[i]`` is in part ``q[i]`` of the partition.
 
@@ -2290,7 +2290,7 @@ def multiset_derangements(s):
         b = take[0][0]  # last element to be placed
         b_ct = take[0][1]
 
-        # split the indexes of the not-already-assigned elemements of rv into
+        # split the indexes of the not-already-assigned elements of rv into
         # three categories
         forced_a = []  # positions which must have an a
         forced_b = []  # positions which must have a b

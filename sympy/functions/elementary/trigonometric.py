@@ -1,7 +1,7 @@
 from typing import Tuple as tTuple
 
 from sympy.core.add import Add
-from sympy.core.basic import sympify, cacheit
+from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
@@ -10,6 +10,7 @@ from sympy.core.numbers import igcdex, Rational, pi, Integer, Float
 from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.combinatorial.numbers import bernoulli, euler
 from sympy.functions.elementary.complexes import arg as arg_f, im, re
@@ -106,6 +107,24 @@ class TrigonometricFunction(Function):
                     return general_period/abs(g)
 
         raise NotImplementedError("Use the periodicity function instead.")
+
+
+@cacheit
+def _table2():
+    # If nested sqrt's are worse than un-evaluation
+    # you can require q to be in (1, 2, 3, 4, 6, 12)
+    # q <= 12, q=15, q=20, q=24, q=30, q=40, q=60, q=120 return
+    # expressions with 2 or fewer sqrt nestings.
+    return {
+        12: (3, 4),
+        20: (4, 5),
+        30: (5, 6),
+        15: (6, 10),
+        24: (6, 8),
+        40: (8, 10),
+        60: (20, 30),
+        120: (40, 60)
+    }
 
 
 def _peeloff_pi(arg):
@@ -217,6 +236,61 @@ def _pi_coeff(arg, cycles=1):
             return cx
     elif arg.is_zero:
         return S.Zero
+
+
+@cacheit
+def _cospi257():
+    """ Express cos(pi/257) explicitly as a function of radicals
+        Based upon the equations in
+        http://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
+        See also https://r-knott.surrey.ac.uk/Fibonacci/simpleTrig.html
+    """
+    def f1(a, b):
+        return (a + sqrt(a**2 + b))/2, (a - sqrt(a**2 + b))/2
+
+    def f2(a, b):
+        return (a - sqrt(a**2 + b))/2
+
+    t1, t2 = f1(-1, 256)
+    z1, z3 = f1(t1, 64)
+    z2, z4 = f1(t2, 64)
+    y1, y5 = f1(z1, 4*(5 + t1 + 2*z1))
+    y6, y2 = f1(z2, 4*(5 + t2 + 2*z2))
+    y3, y7 = f1(z3, 4*(5 + t1 + 2*z3))
+    y8, y4 = f1(z4, 4*(5 + t2 + 2*z4))
+    x1, x9 = f1(y1, -4*(t1 + y1 + y3 + 2*y6))
+    x2, x10 = f1(y2, -4*(t2 + y2 + y4 + 2*y7))
+    x3, x11 = f1(y3, -4*(t1 + y3 + y5 + 2*y8))
+    x4, x12 = f1(y4, -4*(t2 + y4 + y6 + 2*y1))
+    x5, x13 = f1(y5, -4*(t1 + y5 + y7 + 2*y2))
+    x6, x14 = f1(y6, -4*(t2 + y6 + y8 + 2*y3))
+    x15, x7 = f1(y7, -4*(t1 + y7 + y1 + 2*y4))
+    x8, x16 = f1(y8, -4*(t2 + y8 + y2 + 2*y5))
+    v1 = f2(x1, -4*(x1 + x2 + x3 + x6))
+    v2 = f2(x2, -4*(x2 + x3 + x4 + x7))
+    v3 = f2(x8, -4*(x8 + x9 + x10 + x13))
+    v4 = f2(x9, -4*(x9 + x10 + x11 + x14))
+    v5 = f2(x10, -4*(x10 + x11 + x12 + x15))
+    v6 = f2(x16, -4*(x16 + x1 + x2 + x5))
+    u1 = -f2(-v1, -4*(v2 + v3))
+    u2 = -f2(-v4, -4*(v5 + v6))
+    w1 = -2*f2(-u1, -4*u2)
+    return sqrt(sqrt(2)*sqrt(w1 + 4)/8 + S.Half)
+
+
+@cacheit
+def _cos_sqrt_cst_table_some():
+    return {
+        3: S.Half,
+        5: (sqrt(5) + 1) / 4,
+        17: sqrt((15 + sqrt(17)) / 32 + sqrt(2) * (sqrt(17 - sqrt(17)) +
+            sqrt(sqrt(2) * (-8 * sqrt(17 + sqrt(17)) - (1 - sqrt(17))
+            * sqrt(17 - sqrt(17))) + 6 * sqrt(17) + 34)) / 32),
+        257: _cospi257()
+        # 65537 is the only other known Fermat prime and the very
+        # large expression is intentionally omitted from SymPy; see
+        # https://r-knott.surrey.ac.uk/Fibonacci/simpleTrig.html
+    }
 
 
 class sin(TrigonometricFunction):
@@ -642,10 +716,6 @@ class cos(TrigonometricFunction):
             # Some other exact values like cos(k pi/240) can be
             # calculated using a partial-fraction decomposition
             # by calling cos( X ).rewrite(sqrt)
-            cst_table_some = {
-                3: S.Half,
-                5: (sqrt(5) + 1)/4,
-            }
             if pi_coeff.is_Rational:
                 q = pi_coeff.q
                 p = pi_coeff.p % (2*q)
@@ -660,18 +730,10 @@ class cos(TrigonometricFunction):
                 # you can require q to be in (1, 2, 3, 4, 6, 12)
                 # q <= 12, q=15, q=20, q=24, q=30, q=40, q=60, q=120 return
                 # expressions with 2 or fewer sqrt nestings.
-                table2 = {
-                    12: (3, 4),
-                    20: (4, 5),
-                    30: (5, 6),
-                    15: (6, 10),
-                    24: (6, 8),
-                    40: (8, 10),
-                    60: (20, 30),
-                    120: (40, 60)
-                    }
+                table2 = _table2()
                 if q in table2:
-                    a, b = p*pi/table2[q][0], p*pi/table2[q][1]
+                    a, b = table2[q]
+                    a, b = p*pi/a, p*pi/b
                     nvala, nvalb = cls(a), cls(b)
                     if None in (nvala, nvalb):
                         return None
@@ -680,6 +742,10 @@ class cos(TrigonometricFunction):
                 if q > 12:
                     return None
 
+                cst_table_some = {
+                    3: S.Half,
+                    5: (sqrt(5) + 1) / 4,
+                }
                 if q in cst_table_some:
                     cts = cst_table_some[pi_coeff.q]
                     return chebyshevt(pi_coeff.p, cts).expand()
@@ -787,7 +853,7 @@ class cos(TrigonometricFunction):
         from sympy.functions.special.polynomials import chebyshevt
 
         def migcdex(x):
-            # recursive calcuation of gcd and linear combination
+            # recursive calculation of gcd and linear combination
             # for a sequence of integers.
             # Given  (x1, x2, x3)
             # Returns (y1, y1, y3, g)
@@ -831,69 +897,7 @@ class cos(TrigonometricFunction):
         if not pi_coeff.is_Rational:
             return None
 
-        def _cospi257():
-            """ Express cos(pi/257) explicitly as a function of radicals
-                Based upon the equations in
-                http://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
-                See also http://www.susqu.edu/brakke/constructions/257-gon.m.txt
-            """
-            def f1(a, b):
-                return (a + sqrt(a**2 + b))/2, (a - sqrt(a**2 + b))/2
-
-            def f2(a, b):
-                return (a - sqrt(a**2 + b))/2
-
-            t1, t2 = f1(-1, 256)
-            z1, z3 = f1(t1, 64)
-            z2, z4 = f1(t2, 64)
-            y1, y5 = f1(z1, 4*(5 + t1 + 2*z1))
-            y6, y2 = f1(z2, 4*(5 + t2 + 2*z2))
-            y3, y7 = f1(z3, 4*(5 + t1 + 2*z3))
-            y8, y4 = f1(z4, 4*(5 + t2 + 2*z4))
-            x1, x9 = f1(y1, -4*(t1 + y1 + y3 + 2*y6))
-            x2, x10 = f1(y2, -4*(t2 + y2 + y4 + 2*y7))
-            x3, x11 = f1(y3, -4*(t1 + y3 + y5 + 2*y8))
-            x4, x12 = f1(y4, -4*(t2 + y4 + y6 + 2*y1))
-            x5, x13 = f1(y5, -4*(t1 + y5 + y7 + 2*y2))
-            x6, x14 = f1(y6, -4*(t2 + y6 + y8 + 2*y3))
-            x15, x7 = f1(y7, -4*(t1 + y7 + y1 + 2*y4))
-            x8, x16 = f1(y8, -4*(t2 + y8 + y2 + 2*y5))
-            v1 = f2(x1, -4*(x1 + x2 + x3 + x6))
-            v2 = f2(x2, -4*(x2 + x3 + x4 + x7))
-            v3 = f2(x8, -4*(x8 + x9 + x10 + x13))
-            v4 = f2(x9, -4*(x9 + x10 + x11 + x14))
-            v5 = f2(x10, -4*(x10 + x11 + x12 + x15))
-            v6 = f2(x16, -4*(x16 + x1 + x2 + x5))
-            u1 = -f2(-v1, -4*(v2 + v3))
-            u2 = -f2(-v4, -4*(v5 + v6))
-            w1 = -2*f2(-u1, -4*u2)
-            return sqrt(sqrt(2)*sqrt(w1 + 4)/8 + S.Half)
-
-        cst_table_some = {
-            3: S.Half,
-            5: (sqrt(5) + 1)/4,
-            17: sqrt((15 + sqrt(17))/32 + sqrt(2)*(sqrt(17 - sqrt(17)) +
-                sqrt(sqrt(2)*(-8*sqrt(17 + sqrt(17)) - (1 - sqrt(17))
-                *sqrt(17 - sqrt(17))) + 6*sqrt(17) + 34))/32),
-            257: _cospi257()
-            # 65537 is the only other known Fermat prime and the very
-            # large expression is intentionally omitted from SymPy; see
-            # http://www.susqu.edu/brakke/constructions/65537-gon.m.txt
-        }
-
-        def _fermatCoords(n):
-            # if n can be factored in terms of Fermat primes with
-            # multiplicity of each being 1, return those primes, else
-            # False
-            primes = []
-            for p_i in cst_table_some:
-                quotient, remainder = divmod(n, p_i)
-                if remainder == 0:
-                    n = quotient
-                    primes.append(p_i)
-                    if n == 1:
-                        return tuple(primes)
-            return False
+        cst_table_some = _cos_sqrt_cst_table_some()
 
         if pi_coeff.q in cst_table_some:
             rv = chebyshevt(pi_coeff.p, cst_table_some[pi_coeff.q])
@@ -908,6 +912,19 @@ class cos(TrigonometricFunction):
             sign_cos = -1 if int(x) % 2 else 1
             return sign_cos*sqrt( (1 + nval)/2 )
 
+        def _fermatCoords(n):
+            # if n can be factored in terms of Fermat primes with
+            # multiplicity of each being 1, return those primes, else
+            # False
+            primes = []
+            for p_i in cst_table_some:
+                quotient, remainder = divmod(n, p_i)
+                if remainder == 0:
+                    n = quotient
+                    primes.append(p_i)
+                    if n == 1:
+                        return tuple(primes)
+            return False
         FC = _fermatCoords(pi_coeff.q)
         if FC:
             decomp = ipartfrac(pi_coeff, FC)
@@ -986,10 +1003,8 @@ class cos(TrigonometricFunction):
 
     def _eval_is_zero(self):
         rest, pi_mult = _peeloff_pi(self.args[0])
-        if pi_mult:
-            return fuzzy_and([(pi_mult - S.Half).is_integer, rest.is_zero])
-        else:
-            return rest.is_zero
+        if rest.is_zero and pi_mult:
+            return (pi_mult - S.Half).is_integer
 
 
 class tan(TrigonometricFunction):
@@ -1116,18 +1131,11 @@ class tan(TrigonometricFunction):
                         if sresult == 0:
                             return S.ComplexInfinity
                         return 1/sresult - cresult/sresult
-                table2 = {
-                    12: (3, 4),
-                    20: (4, 5),
-                    30: (5, 6),
-                    15: (6, 10),
-                    24: (6, 8),
-                    40: (8, 10),
-                    60: (20, 30),
-                    120: (40, 60)
-                    }
+
+                table2 = _table2()
                 if q in table2:
-                    nvala, nvalb = cls(p*pi/table2[q][0]), cls(p*pi/table2[q][1])
+                    a, b = table2[q]
+                    nvala, nvalb = cls(p*pi/a), cls(p*pi/b)
                     if None in (nvala, nvalb):
                         return None
                     return (nvala - nvalb)/(1 + nvala*nvalb)
@@ -1433,20 +1441,12 @@ class cot(TrigonometricFunction):
                     if not isinstance(cresult, cos) \
                             and not isinstance(sresult, cos):
                         return 1/sresult + cresult/sresult
-                table2 = {
-                    12: (3, 4),
-                    20: (4, 5),
-                    30: (5, 6),
-                    15: (6, 10),
-                    24: (6, 8),
-                    40: (8, 10),
-                    60: (20, 30),
-                    120: (40, 60)
-                    }
                 q = pi_coeff.q
                 p = pi_coeff.p % q
+                table2 = _table2()
                 if q in table2:
-                    nvala, nvalb = cls(p*pi/table2[q][0]), cls(p*pi/table2[q][1])
+                    a, b = table2[q]
+                    nvala, nvalb = cls(p*pi/a), cls(p*pi/b)
                     if None in (nvala, nvalb):
                         return None
                     return (1 + nvala*nvalb)/(nvalb - nvala)
@@ -1667,8 +1667,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     # trigonometric functions eval() like even/odd, func(x+2*k*pi), etc.
 
     # optional, to be defined in subclasses:
-    _is_even = None  # type: FuzzyBool
-    _is_odd = None  # type: FuzzyBool
+    _is_even: FuzzyBool = None
+    _is_odd: FuzzyBool = None
 
     @classmethod
     def eval(cls, arg):
@@ -3154,7 +3154,7 @@ class asec(InverseTrigonometricFunction):
                 return pi/2 + acsc_table[-arg]
 
         if arg.is_infinite:
-            return S.Pi/2
+            return pi/2
 
         if isinstance(arg, sec):
             ang = arg.args[0]

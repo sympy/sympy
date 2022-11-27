@@ -1300,9 +1300,7 @@ def _piecewise_collapse_arguments(_args):
                 newargs[-1] = ExprCondPair(expr, orcond)
                 continue
             elif newargs[-1].cond == cond:
-                newargs[-1] = ExprCondPair(expr, cond)
                 continue
-
         newargs.append(ExprCondPair(expr, cond))
     return newargs
 

@@ -1947,7 +1947,7 @@ class PermutationGroup(Basic):
             The criterion for the incorrect ``False`` return.
 
         perms : list[Permutation], optional
-            If explicitly given, it tests over the given candidats
+            If explicitly given, it tests over the given candidates
             for testing.
 
             If ``None``, it randomly computes ``N_eps`` and chooses
@@ -4908,15 +4908,15 @@ class PermutationGroup(Basic):
         Explanation
         ===========
 
-        * ``pc_sequence`` : Polycyclic sequence is formed by collecting all
+        * pc_sequence : Polycyclic sequence is formed by collecting all
           the missing generators between the adjacent groups in the
           derived series of given permutation group.
 
-        * ``pc_series`` : Polycyclic series is formed by adding all the missing
+        * pc_series : Polycyclic series is formed by adding all the missing
           generators of ``der[i+1]`` in ``der[i]``, where ``der`` represents
           the derived series.
 
-        * ``relative_order`` : A list, computed by the ratio of adjacent groups in
+        * relative_order : A list, computed by the ratio of adjacent groups in
           pc_series.
 
         """

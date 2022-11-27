@@ -1185,7 +1185,7 @@ def _laplace_deep_collect(f, t):
 def _laplace_build_rules(t, s):
     """
     This is an internal helper function that returns the table of Laplace
-    transfrom rules in terms of the time variable `t` and the frequency
+    transform rules in terms of the time variable `t` and the frequency
     variable `s`.  It is used by `_laplace_apply_rules`.
     """
     a = Wild('a', exclude=[t])
@@ -1579,8 +1579,7 @@ def _laplace_rule_timescale(f, t, s, doit=True, **hints):
     _simplify = hints.pop('simplify', True)
     b = Wild('b', exclude=[t])
     g = WildFunction('g', nargs=1)
-    k, func = f.as_independent(t, as_Add=False)
-    ma1 = func.match(g)
+    ma1 = f.match(g)
     if ma1:
         arg = ma1[g].args[0].collect(t)
         ma2 = arg.match(b*t)
@@ -1591,18 +1590,19 @@ def _laplace_rule_timescale(f, t, s, doit=True, **hints):
             if ma2[b]==1:
                 if doit==True and not any(func.has(t) for func
                                           in ma1[g].atoms(AppliedUndef)):
-                    return k*_laplace_transform(ma1[g].func(t), t, s,
+                    return _laplace_transform(ma1[g].func(t), t, s,
                                                 simplify=_simplify)
                 else:
-                    return k*LaplaceTransform(ma1[g].func(t), t, s, **hints)
+                    return LaplaceTransform(ma1[g].func(t), t, s, **hints)
             else:
                 L = _laplace_apply_rules(ma1[g].func(t), t, s/ma2[b],
                                          doit=doit, **hints)
-                try:
+                noconds = hints.get('noconds', False)
+                if not noconds and type(L) is tuple:
                     r, p, c = L
-                    return (k/ma2[b]*r, p, c)
-                except TypeError:
-                    return k/ma2[b]*L
+                    return (1/ma2[b]*r, p, c)
+                else:
+                    return 1/ma2[b]*L
     return None
 
 def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
@@ -1615,8 +1615,7 @@ def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
     b = Wild('b', exclude=[t])
     y = Wild('y')
     g = WildFunction('g', nargs=1)
-    k, func = f.as_independent(t, as_Add=False)
-    ma1 = func.match(Heaviside(y)*g)
+    ma1 = f.match(Heaviside(y)*g)
     if ma1:
         ma2 = ma1[y].match(t-a)
         ma3 = ma1[g].args[0].collect(t).match(t-b)
@@ -1625,11 +1624,12 @@ def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
             debug('      f:    %s ( %s, %s, %s )'%(f, ma1, ma2, ma3))
             debug('      rule: time shift (1.3)')
             L = _laplace_apply_rules(ma1[g].func(t), t, s, doit=doit, **hints)
-            try:
+            noconds = hints.get('noconds', False)
+            if not noconds and type(L) is tuple:
                 r, p, c = L
-                return (k*exp(-ma2[a]*s)*r, p, c)
-            except TypeError:
-                return k*exp(-ma2[a]*s)*L
+                return (exp(-ma2[a]*s)*r, p, c)
+            else:
+                return exp(-ma2[a]*s)*L
     return None
 
 
@@ -1643,8 +1643,7 @@ def _laplace_rule_exp(f, t, s, doit=True, **hints):
 
     y = Wild('y')
     z = Wild('z')
-    k, func = f.as_independent(t, as_Add=False)
-    ma1 = func.match(exp(y)*z)
+    ma1 = f.match(exp(y)*z)
     if ma1:
         ma2 = ma1[y].collect(t).match(a*t)
         if ma2:
@@ -1652,10 +1651,11 @@ def _laplace_rule_exp(f, t, s, doit=True, **hints):
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: multiply with exp (1.5)')
             L = _laplace_apply_rules(ma1[z], t, s-ma2[a], doit=doit, **hints)
-            try:
+            noconds = hints.get('noconds', False)
+            if not noconds and type(L) is tuple:
                 r, p, c = L
                 return (r, p+ma2[a], c)
-            except TypeError:
+            else:
                 return L
     return None
 
@@ -1669,7 +1669,6 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
     a = Wild('a', exclude=[t])
     y = Wild('y')
     z = Wild('z')
-    k, func = f.as_independent(t, as_Add=False)
     # All of the rules have a very similar form: trig(y)*z is matched, and then
     # two copies of the Laplace transform of z are shifted in the s Domain
     # and added with a weight; see rules 1.6 to 1.9 in
@@ -1684,7 +1683,7 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                  (sin(y),  '1.8', -I, -1, I), (cos(y),  '1.9', 1, 1, I)]
     for trigrule in trigrules:
         fm, nu, s1, s2, sd = trigrule
-        ma1 = func.match(fm*z)
+        ma1 = f.match(fm*z)
         if ma1:
             ma2 = ma1[y].collect(t).match(a*t)
             if ma2:
@@ -1692,7 +1691,8 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                 debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
                 debug('      rule: multiply with %s (%s)'%(fm.func, nu))
                 L = _laplace_apply_rules(ma1[z], t, s, doit=doit, **hints)
-                try:
+                noconds = hints.get('noconds', False)
+                if not noconds and type(L) is tuple:
                     r, p, c = L
                     # The convergence plane changes only if the shift has been
                     # done along the real axis:
@@ -1703,7 +1703,7 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                     return ((s1*(r.subs(s, s-sd*ma2[a])+\
                                     s2*r.subs(s, s+sd*ma2[a]))).simplify()/2,
                             p+cp_shift, c)
-                except TypeError:
+                else:
                     if doit==True and _simplify==True:
                         return (s1*(L.subs(s, s-sd*ma2[a])+\
                                     s2*L.subs(s, s+sd*ma2[a]))).simplify()/2
@@ -1777,9 +1777,14 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
     prog_rules = [_laplace_rule_timescale, _laplace_rule_heaviside,
                   _laplace_rule_exp, _laplace_rule_trig, _laplace_rule_diff]
     for p_rule in prog_rules:
-        LT = p_rule(f, t, s, doit=doit, **hints)
-        if LT is not None:
-            return LT
+        L = p_rule(func, t, s, doit=doit, **hints)
+        if L is not None:
+            noconds = hints.get('noconds', False)
+            if not noconds and type(L) is tuple:
+                r, p, c = L
+                return (k*r, p, c)
+            else:
+                return k*L
     return None
 
 class LaplaceTransform(IntegralTransform):
@@ -1854,7 +1859,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     auxiliary convergence conditions.
 
     The implementation is rule-based, and if you are interested in which
-    rules are applied, and whether integration is attemped, you can switch
+    rules are applied, and whether integration is attempted, you can switch
     debug information on by setting ``sympy.SYMPY_DEBUG=True``.
 
     The lower bound is `0-`, meaning that this bound should be approached

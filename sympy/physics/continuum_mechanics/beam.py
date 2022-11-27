@@ -84,6 +84,43 @@ class Beam:
     (7*x - Piecewise((x**3, x > 0), (0, True))/2
          - 3*Piecewise(((x - 4)**3, x > 4), (0, True))/2
          + Piecewise(((x - 2)**4, x > 2), (0, True))/4)/(E*I)
+
+    Calculate the support reactions for a fully symbolic beam of length L.
+    There are two simple supports below the beam, one at the starting point
+    and another at the ending point of the beam. The deflection of the beam
+    at the end is restricted. The beam is loaded with:
+
+    * a downward point load P1 applied at L/4
+    * an upward point load P2 applied at L/8
+    * a counterclockwise moment M1 applied at L/2
+    * a clockwise moment M2 applied at 3*L/4
+    * a distributed constant load q1, applied downward, starting from L/2
+      up to 3*L/4
+    * a distributed constant load q2, applied upward, starting from 3*L/4
+      up to L
+
+    No assumptions are needed for symbolic loads. However, defining a positive
+    length will help the algorithm to compute the solution.
+
+    >>> E, I = symbols('E, I')
+    >>> L = symbols("L", positive=True)
+    >>> P1, P2, M1, M2, q1, q2 = symbols("P1, P2, M1, M2, q1, q2")
+    >>> R1, R2 = symbols('R1, R2')
+    >>> b = Beam(L, E, I)
+    >>> b.apply_load(R1, 0, -1)
+    >>> b.apply_load(R2, L, -1)
+    >>> b.apply_load(P1, L/4, -1)
+    >>> b.apply_load(-P2, L/8, -1)
+    >>> b.apply_load(M1, L/2, -2)
+    >>> b.apply_load(-M2, 3*L/4, -2)
+    >>> b.apply_load(q1, L/2, 0, 3*L/4)
+    >>> b.apply_load(-q2, 3*L/4, 0, L)
+    >>> b.bc_deflection = [(0, 0), (L, 0)]
+    >>> b.solve_for_reaction_loads(R1, R2)
+    >>> print(b.reaction_loads[R1])
+    (-3*L**2*q1 + L**2*q2 - 24*L*P1 + 28*L*P2 - 32*M1 + 32*M2)/(32*L)
+    >>> print(b.reaction_loads[R2])
+    (-5*L**2*q1 + 7*L**2*q2 - 8*L*P1 + 4*L*P2 + 32*M1 - 32*M2)/(32*L)
     """
 
     def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'), base_char='C'):
@@ -2084,8 +2121,8 @@ class Beam:
             for plotting loads.
             Given a right handed coordinate system with XYZ coordinates,
             the beam's length is assumed to be along the positive X axis.
-            The draw function recognizes positve loads(with n>-2) as loads
-            acting along negative Y direction and positve moments acting
+            The draw function recognizes positive loads(with n>-2) as loads
+            acting along negative Y direction and positive moments acting
             along positive Z direction.
 
         Parameters
@@ -2199,7 +2236,7 @@ class Beam:
             elif load[2] >= 0:
                 # `fill` will be assigned only when higher order loads are present
                 value, start, order, end = load
-                # Positive loads have their seperate equations
+                # Positive loads have their separate equations
                 if(value>0):
                     plus = 1
                 # if pictorial is True we remake the load equation again with

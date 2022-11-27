@@ -657,7 +657,7 @@ def test_rational_laurent_series():
     4. mul - Multiplicity of x0 if x0 is a pole of
        the rational function (0 otherwise).
     5. n - Number of terms upto which the series
-       is to be calcuated.
+       is to be calculated.
     """
     tests = [
     # Laurent series about simple pole (Multiplicity = 1)
@@ -667,7 +667,7 @@ def test_rational_laurent_series():
         S(1), 1, 6,
         {1: 7, 0: -8, -1: 9, -2: -9, -3: 9, -4: -9}
     ),
-    # Laurent series about multiple pole (Multiplicty > 1)
+    # Laurent series about multiple pole (Multiplicity > 1)
     (
         Poly(64*x**3 - 1728*x + 1216, x, extension=True),
         Poly(64*x**4 - 80*x**3 - 831*x**2 + 1809*x - 972, x, extension=True),

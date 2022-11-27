@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 from functools import reduce
 from collections import defaultdict
 import inspect
@@ -67,13 +67,13 @@ class Set(Basic, EvalfMixin):
     is_Interval = False
     is_ProductSet = False
     is_Union = False
-    is_Intersection = None  # type: Optional[bool]
-    is_UniversalSet = None  # type: Optional[bool]
-    is_Complement = None  # type: Optional[bool]
+    is_Intersection: FuzzyBool = None
+    is_UniversalSet: FuzzyBool = None
+    is_Complement: FuzzyBool = None
     is_ComplexRegion = False
 
-    is_empty = None  # type: FuzzyBool
-    is_finite_set = None  # type: FuzzyBool
+    is_empty: FuzzyBool = None
+    is_finite_set: FuzzyBool = None
 
     @property  # type: ignore
     @deprecated(

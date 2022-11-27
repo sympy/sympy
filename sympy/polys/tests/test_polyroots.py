@@ -15,8 +15,8 @@ from sympy.simplify.powsimp import powsimp
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
-    roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
-    roots_binomial, preprocess_roots, roots)
+    roots_quadratic, roots_cubic, roots_quartic, roots_quintic,
+    roots_cyclotomic, roots_binomial, preprocess_roots, roots)
 
 from sympy.polys.orthopolys import legendre_poly
 from sympy.polys.polyerrors import PolynomialError, \
@@ -248,6 +248,16 @@ def test_roots_quartic():
 def test_issue_21287():
     assert not any(isinstance(i, Piecewise) for i in roots_quartic(
         Poly(x**4 - x**2*(3 + 5*I) + 2*x*(-1 + I) - 1 + 3*I, x)))
+
+
+def test_roots_quintic():
+    eqs = (x**5 - 2,
+            (x/2 + 1)**5 - 5*(x/2 + 1) + 12,
+            x**5 - 110*x**3 - 55*x**2 + 2310*x + 979)
+    for eq in eqs:
+        roots = roots_quintic(Poly(eq))
+        assert len(roots) == 5
+        assert all(eq.subs(x, r.n(10)).n(chop = 1e-5) == 0 for r in roots)
 
 
 def test_roots_cyclotomic():

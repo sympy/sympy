@@ -17,7 +17,8 @@ SymPy is case sensitive. So, fcode adds underscores to variable names when
 it is necessary to make them different for Fortran.
 """
 
-from typing import Dict as tDict, Any
+from __future__ import annotations
+from typing import Any
 
 from collections import defaultdict
 from itertools import chain
@@ -94,7 +95,7 @@ class FCodePrinter(CodePrinter):
         intc: {'iso_c_binding': 'c_int'}
     }
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         'order': None,
         'full_prec': 'auto',
         'precision': 17,
@@ -104,8 +105,8 @@ class FCodePrinter(CodePrinter):
         'source_format': 'fixed',
         'contract': True,
         'standard': 77,
-        'name_mangling' : True,
-    }  # type: tDict[str, Any]
+        'name_mangling': True,
+    }
 
     _operators = {
         'and': '.and.',
@@ -431,7 +432,7 @@ class FCodePrinter(CodePrinter):
         body = self._print(expr.body)
         return ('do {target} = {start}, {stop}, {step}\n'
                 '{body}\n'
-                'end do').format(target=target, start=start, stop=stop,
+                'end do').format(target=target, start=start, stop=stop - 1,
                         step=step, body=body)
 
     def _print_Type(self, type_):
@@ -773,3 +774,9 @@ class FCodePrinter(CodePrinter):
     def _print_ArrayConstructor(self, ac):
         fmtstr = "[%s]" if self._settings["standard"] >= 2003 else '(/%s/)'
         return fmtstr % ', '.join(map(lambda arg: self._print(arg), ac.elements))
+
+    def _print_ArrayElement(self, elem):
+        return '{symbol}({idxs})'.format(
+            symbol=self._print(elem.name),
+            idxs=', '.join(map(lambda arg: self._print(arg), elem.indices))
+        )

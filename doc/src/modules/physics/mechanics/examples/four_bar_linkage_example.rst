@@ -40,14 +40,14 @@ With all symbols defined, we can now define the bodies. ::
 Next, we also define the first three joints. ::
 
    >>> joint1 = PinJoint('J1', link1, link2, coordinates=q1, speeds=u1,
-   ...                   parent_axis=link1.z, parent_joint_pos=l1 / 2 * link1.x,
-   ...                   child_axis=link2.z, child_joint_pos=-l2 / 2 * link2.x)
+   ...                   parent_point=l1 / 2 * link1.x,
+   ...                   child_point=-l2 / 2 * link2.x, joint_axis=link1.z)
    >>> joint2 = PinJoint('J2', link2, link3, coordinates=q2, speeds=u2,
-   ...                   parent_axis=link2.z, parent_joint_pos=l2 / 2 * link2.x,
-   ...                   child_axis=link3.z, child_joint_pos=-l3 / 2 * link3.x)
+   ...                   parent_point=l2 / 2 * link2.x,
+   ...                   child_point=-l3 / 2 * link3.x, joint_axis=link2.z)
    >>> joint3 = PinJoint('J3', link3, link4, coordinates=q3, speeds=u3,
-   ...                   parent_axis=link3.z, parent_joint_pos=l3 / 2 * link3.x,
-   ...                   child_axis=link4.z, child_joint_pos=-l4 / 2 * link4.x)
+   ...                   parent_point=l3 / 2 * link3.x,
+   ...                   child_point=-l4 / 2 * link4.x, joint_axis=link3.z)
 
 Now we can formulate the holonomic constraint that will close the kinematic
 loop. ::

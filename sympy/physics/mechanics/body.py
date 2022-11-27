@@ -143,17 +143,17 @@ class Body(RigidBody, Particle):  # type: ignore
 
     @property
     def x(self):
-        """The basis Vector for the Body, in the x direction. """
+        """The basis Vector for the Body, in the x direction."""
         return self.frame.x
 
     @property
     def y(self):
-        """The basis Vector for the Body, in the y direction. """
+        """The basis Vector for the Body, in the y direction."""
         return self.frame.y
 
     @property
     def z(self):
-        """The basis Vector for the Body, in the z direction. """
+        """The basis Vector for the Body, in the z direction."""
         return self.frame.z
 
     @property

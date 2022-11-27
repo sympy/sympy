@@ -11,7 +11,7 @@ from sympy.core.sympify import sympify
 from sympy import Matrix, pi
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import zeros
-import math
+from sympy import sin, cos
 
 
 
@@ -657,9 +657,9 @@ class Truss:
         >>> t.apply_support("node_2", type="roller")
         >>> t.solve()
         >>> t.reaction_loads
-        {'R_node_1_x': 0, 'R_node_1_y': 6.66666666666667, 'R_node_2_y': 3.33333333333333}
+        {'R_node_1_x': 0, 'R_node_1_y': 20/3, 'R_node_2_y': 10/3}
         >>> t.internal_forces
-        {'member_1': 6.66666666666666, 'member_2': 6.66666666666667, 'member_3': -6.66666666666667*sqrt(2), 'member_4': -3.33333333333333*sqrt(5), 'member_5': 10.0}
+        {'member_1': 20/3, 'member_2': 20/3, 'member_3': -20*sqrt(2)/3, 'member_4': -10*sqrt(5)/3, 'member_5': 10}
         """
         count_reaction_loads = 0
         for node in self._nodes:
@@ -677,8 +677,8 @@ class Truss:
             if node[0] in list(self._loads):
                 for load in self._loads[node[0]]:
                     if load[0]!=Symbol('R_'+str(node[0])+'_x') and load[0]!=Symbol('R_'+str(node[0])+'_y'):
-                        load_matrix[load_matrix_row] -= load[0]*math.cos(pi*load[1]/180)
-                        load_matrix[load_matrix_row + 1] -= load[0]*math.sin(pi*load[1]/180)
+                        load_matrix[load_matrix_row] -= load[0]*cos(pi*load[1]/180)
+                        load_matrix[load_matrix_row + 1] -= load[0]*sin(pi*load[1]/180)
             load_matrix_row += 2
         cols = 0
         row = 0

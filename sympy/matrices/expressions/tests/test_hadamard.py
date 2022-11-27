@@ -1,4 +1,4 @@
-from sympy.matrices.dense import Matrix
+from sympy.matrices.dense import Matrix, eye
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
 from sympy.core import symbols
@@ -74,13 +74,15 @@ def test_hadamard():
     with raises(ShapeError):
         hadamard_product(A, C)
         hadamard_product(A, I)
-    assert hadamard_product(X, I) == X
-    assert isinstance(hadamard_product(X, I), MatrixSymbol)
+    assert hadamard_product(X, I) == HadamardProduct(I, X)
+    assert isinstance(hadamard_product(X, I), HadamardProduct)
 
     a = MatrixSymbol("a", k, 1)
     expr = MatAdd(ZeroMatrix(k, 1), OneMatrix(k, 1))
     expr = HadamardProduct(expr, a)
     assert expr.doit() == a
+
+    raises(ValueError, lambda: HadamardProduct())
 
 
 def test_hadamard_product_with_explicit_mat():
@@ -92,6 +94,10 @@ def test_hadamard_product_with_explicit_mat():
     assert expr == ret
     expr = hadamard_product(A, X, B)
     assert expr == HadamardProduct(ret, X)
+    expr = hadamard_product(eye(3), A)
+    assert expr == Matrix([[A[0, 0], 0, 0], [0, A[1, 1], 0], [0, 0, A[2, 2]]])
+    expr = hadamard_product(eye(3), eye(3))
+    assert expr == eye(3)
 
 
 def test_hadamard_power():

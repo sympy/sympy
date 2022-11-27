@@ -24,14 +24,14 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import exp_polar
 from sympy.functions.special.hyper import hyper
 from sympy.simplify.simplify import simplify
-from sympy.testing.pytest import slow, skip, ON_TRAVIS
+from sympy.testing.pytest import slow, skip, ON_CI
 
 A, B, C, D, a, b, c, d, e, f, m, n, p, x, u = symbols('A B C D a b c d e f m n p x u', real=True, imaginary=False)
 
 @slow
 def test_1():
-    if ON_TRAVIS:
-        skip('Too slow for travis.')
+    if ON_CI:
+        skip('Too slow for CI.')
 
     test = [
         [x**S(2)*(a + b*x)*(a*c - b*c*x)**S(3), x, S(2), S(1)/S(3)*a**S(4)*c**S(3)*x**S(3) - S(1)/S(2)*a**S(3)*b*c**S(3)*x**S(4) + S(1)/S(3)*a*b**S(3)*c**S(3)*x**S(6) - S(1)/S(7)*b**S(4)*c**S(3)*x**S(7)],

@@ -281,7 +281,6 @@ def checksol(f, symbol, sol=None, **flags):
     if any(sympify(v).atoms() & illegal for k, v in sol.items()):
         return False
 
-    was = f
     attempt = -1
     numerical = flags.get('numerical', True)
     while 1:
@@ -354,14 +353,10 @@ def checksol(f, symbol, sol=None, **flags):
                 # the nz value is correct
                 return not nz
             break
-
+        if val.is_Rational:
+            return val == 0
         if numerical and val.is_number:
             return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
-        if val == was:
-            continue
-        elif val.is_Rational:
-            return val == 0
-        was = val
 
     if flags.get('warn', False):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
@@ -1408,7 +1403,7 @@ def _solve(f, *symbols, **flags):
                     v = cond.subs(symbol, candidate)
                     _eval_simplify = getattr(v, '_eval_simplify', None)
                     if _eval_simplify is not None:
-                        # unconditionally take the simpification of v
+                        # unconditionally take the simplification of v
                         v = _eval_simplify(ratio=2, measure=lambda x: 1)
                 except TypeError:
                     # incompatible type with condition(s)
@@ -2223,7 +2218,7 @@ def minsolve_linear_system(system, *symbols, **flags):
         for n in range(n0 - 1, 1, -1):
             debug('minsolve: %s' % n)
             thissol = None
-            for nonzeros in combinations(list(range(N)), n):
+            for nonzeros in combinations(range(N), n):
                 subm = Matrix([system.col(i).T for i in nonzeros] + [system.col(-1).T]).T
                 s = solve_linear_system(subm, *[symbols[i] for i in nonzeros])
                 if s and not all(v == 0 for v in s.values()):
@@ -3434,7 +3429,7 @@ def unrad(eq, *syms, **flags):
     if newsyms != syms:
         syms = newsyms
     # get terms together that have common generators
-    drad = dict(list(zip(rads, list(range(len(rads))))))
+    drad = dict(zip(rads, range(len(rads))))
     rterms = {(): []}
     args = Add.make_args(poly.as_expr())
     for t in args:

@@ -24,7 +24,7 @@ from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels)
-from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, polygamma)
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
@@ -1081,7 +1081,7 @@ def test_scipy_fns():
     single_arg_sympy_fns = [Ei, erf, erfc, factorial, gamma, loggamma, digamma]
     single_arg_scipy_fns = [scipy.special.expi, scipy.special.erf, scipy.special.erfc,
         scipy.special.factorial, scipy.special.gamma, scipy.special.gammaln,
-        scipy.special.psi]
+                            scipy.special.psi]
     numpy.random.seed(0)
     for (sympy_fn, scipy_fn) in zip(single_arg_sympy_fns, single_arg_scipy_fns):
         f = lambdify(x, sympy_fn(x), modules="scipy")
@@ -1105,18 +1105,20 @@ def test_scipy_fns():
             assert abs(f(tv) - scipy_fn(tv)) < 1e-13*(1 + abs(sympy_result))
 
     double_arg_sympy_fns = [RisingFactorial, besselj, bessely, besseli,
-        besselk]
+                            besselk, polygamma]
     double_arg_scipy_fns = [scipy.special.poch, scipy.special.jv,
-        scipy.special.yv, scipy.special.iv, scipy.special.kv]
+                            scipy.special.yv, scipy.special.iv, scipy.special.kv, scipy.special.polygamma]
     for (sympy_fn, scipy_fn) in zip(double_arg_sympy_fns, double_arg_scipy_fns):
         f = lambdify((x, y), sympy_fn(x, y), modules="scipy")
         for i in range(20):
             # SciPy supports only real orders of Bessel functions
             tv1 = numpy.random.uniform(-10, 10)
             tv2 = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
-            # SciPy supports poch for real arguments only
-            if sympy_fn == RisingFactorial:
+            # SciPy requires a real valued 2nd argument for: poch, polygamma
+            if sympy_fn in (RisingFactorial, polygamma):
                 tv2 = numpy.real(tv2)
+            if sympy_fn == polygamma:
+                tv1 = abs(int(tv1))  # first argument to polygamma must be a non-negative integral.
             sympy_result = sympy_fn(tv1, tv2).evalf()
             assert abs(f(tv1, tv2) - sympy_result) < 1e-13*(1 + abs(sympy_result))
             assert abs(f(tv1, tv2) - scipy_fn(tv1, tv2)) < 1e-13*(1 + abs(sympy_result))
@@ -1498,7 +1500,7 @@ def test_cupy_array_arg():
 
 def test_cupy_array_arg_using_numpy():
     # numpy functions can be run on cupy arrays
-    # unclear if we can "officialy" support this,
+    # unclear if we can "officially" support this,
     # depends on numpy __array_function__ support
     if not cupy:
         skip("CuPy not installed")

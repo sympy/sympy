@@ -122,7 +122,7 @@ class Trace(Expr):
     def _normalize(self):
         # Normalization of trace of matrix products. Use transposition and
         # cyclic properties of traces to make sure the arguments of the matrix
-        # product are sorted and the first argument is not a trasposition.
+        # product are sorted and the first argument is not a transposition.
         from sympy.matrices.expressions.matmul import MatMul
         from sympy.matrices.expressions.transpose import Transpose
         trace_arg = self.arg

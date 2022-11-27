@@ -8,7 +8,7 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    partitions.rst
    permutations.rst

@@ -30,7 +30,8 @@ There are three types of functions implemented in SymPy:
 
 """
 
-from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union as tUnion
+from __future__ import annotations
+from typing import Any
 from collections.abc import Iterable
 
 from .add import Add
@@ -263,7 +264,7 @@ class FunctionClass(ManagedProperties):
         return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
 
     def _valid_nargs(self, n : int) -> bool:
-        """ Return True if the specified interger is a valid number of arguments
+        """ Return True if the specified integer is a valid number of arguments
 
         The number of arguments n is guaranteed to be an integer and positive
 
@@ -625,7 +626,7 @@ class Function(Application, Expr):
 
         return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
 
-    _singularities = None  # type: tUnion[FuzzyBool, tTuple[Expr, ...]]
+    _singularities: FuzzyBool | tuple[Expr, ...] = None
 
     @classmethod
     def is_singular(cls, a):
@@ -911,7 +912,7 @@ class UndefinedFunction(FunctionClass):
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-    _kwargs = {}  # type: tDict[str, Optional[bool]]
+    _kwargs: dict[str, bool | None] = {}
 
     def __hash__(self):
         return hash((self.class_key(), frozenset(self._kwargs.items())))
@@ -987,7 +988,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
     """
 
     # XXX: What is this class attribute used for?
-    include = set()  # type: tSet[Any]
+    include: set[Any] = set()
 
     def __init__(cls, name, **assumptions):
         from sympy.sets.sets import Set, FiniteSet

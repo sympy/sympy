@@ -340,8 +340,8 @@ class IntegerPartition(Basic):
         """
         Generates a new IntegerPartition object from a list or dictionary.
 
-        Explantion
-        ==========
+        Explanation
+        ===========
 
         The partition can be given as a list of positive integers or a
         dictionary of (integer, multiplicity) items. If the partition is
