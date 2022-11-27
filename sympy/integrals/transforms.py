@@ -1937,19 +1937,6 @@ behavior.
 
     return LaplaceTransform(f, t, s).doit(**hints)
 
-def _facorize_num_den(f, s):
-    from sympy.simplify.radsimp import fraction
-    [n, d] = fraction(f)
-    try:
-        nf = n.factor(s)
-    except PolynomialError:
-        nf = n
-    try:
-        df = d.factor(s)
-    except PolynomialError:
-        df = d
-    return nf/df
-
 def _complete_the_square_in_denom(f, s):
     from sympy.simplify.radsimp import fraction
     [n, d] = fraction(f)
@@ -1974,8 +1961,13 @@ def _inverse_laplace_build_rules(s, t):
     #tau = Wild('tau', exclude=[t])
     #omega = Wild('omega', exclude=[t])
 
+    def _frac(f, s):
+        try:
+            return f.factor(s)
+        except PolynomialError:
+            return f
     same = lambda f: f
-    frac = lambda f: _facorize_num_den(f, s)
+    frac = lambda f: _frac(f, s)
     ctsd = lambda f: _complete_the_square_in_denom(f, s)
     # This list is sorted according to the prep function needed.
     # Implemented up to rule 12.
@@ -2034,12 +2026,11 @@ def _inverse_laplace_apply_rules(F, s, t):
 def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     """ The backend function for inverse Laplace transforms. """
     from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
-    # There are two strategies we can try:
-    # 1) Use inverse mellin transforms - related by a simple change of variables.
-    # 2) Use the inversion integral.
-
+    # There are three strategies we can try:
+    # 1) Apply known rules
+    # 2) Use inverse mellin transforms - related by a simple change of variables.
+    # 3) Use the inversion integral.
     t = Dummy('t', real=True)
-
     def pw_simp(*args):
         """ Simplify a piecewise expression from hyperexpand. """
         # XXX we break modularity here!
@@ -2052,6 +2043,12 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         return Heaviside(1/Abs(coeff) - t**exponent)*e1 \
             + Heaviside(t**exponent - 1/Abs(coeff))*e2
 
+    debug('---> _inverse_laplace_transform will now try to apply rules')
+    f = _inverse_laplace_apply_rules(F, s, t_)
+    if not f is None:
+        return f, S.true
+    debug('---> _inverse_laplace_transform could not apply any rules.')
+
     if F.is_rational_function(s):
         F = F.apart(s)
 
@@ -2059,13 +2056,6 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         f = Add(*[_inverse_laplace_transform(X, s, t, plane, simplify)\
                      for X in F.args])
         return _simplify(f.subs(t, t_), simplify), True
-
-    # Before the inverse Mellin Transform, try to apply rules:
-    debug('---> _inverse_laplace_transform will now try to apply rules')
-    f = _inverse_laplace_apply_rules(F, s, t_)
-    if not f is None:
-        return f, S.true
-    debug('---> _inverse_laplace_transform could not apply rules successfully.')
 
     try:
         f, cond = inverse_mellin_transform(F, s, exp(-t), (None, S.Infinity),
