@@ -1942,7 +1942,6 @@ def _complete_the_square_in_denom(f, s):
     [n, d] = fraction(f)
     if d.is_polynomial(s):
         cf = d.as_poly(s).all_coeffs()
-        debug(cf)
         if len(cf)==3:
             a, b, c = cf
             d = a*(s+b/(2*a))**2+c/a-(b/(2*a))**2
@@ -1957,6 +1956,7 @@ def _inverse_laplace_build_rules(s, t):
     a = Wild('a', exclude=[s])
     b = Wild('b', exclude=[s])
     c = Wild('c', exclude=[s])
+    d = Wild('d', exclude=[s])
     #n = Wild('n', exclude=[t])
     #tau = Wild('tau', exclude=[t])
     #omega = Wild('omega', exclude=[t])
@@ -1986,9 +1986,10 @@ def _inverse_laplace_build_rules(s, t):
         (c/((s+a)*(s+b)), c/(a-b)*(exp(-b*t)-exp(-a*t)), frac, None),
         (c*s/((s+a)*(s+b)), c/(a-b)*(a*exp(-a*t)-b*exp(-b*t)), frac, None),
         #
-        (c/((s+a)**2+b**2), c*exp(-a*t)*sin(b*t)/b, ctsd, None),
-        (c/((s+a)**2+b**2),
-         c*exp(-a*t)*(b*cos(b*t)-a*sin(b*t))/b,
+        (c/(d**2*(s+a)**2+b**2),
+         c/d*exp(-a*t)*sin(b/d*t)/b, ctsd, None),
+        (c/(d**2*(s+a)**2+b**2),
+         c/d*exp(-a*t)*(b*cos(b/d*t)/d-a*sin(b/d*t))/b,
          ctsd, s),
     ]
     return inverse_laplace_transform_rules
@@ -2004,6 +2005,7 @@ def _inverse_laplace_apply_rules(F, s, t):
 
     _prep = ''
 
+    debug('*** Applying rules on ', F)
     for s_dom, t_dom, prep, fac in simple_rules:
         if not _prep is prep:
             _F = prep(func)
@@ -2051,6 +2053,8 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
 
     if F.is_rational_function(s):
         F = F.apart(s)
+        if not F.is_Add:
+            F = F.expand()
 
     if F.is_Add:
         f = Add(*[_inverse_laplace_transform(X, s, t, plane, simplify)\
