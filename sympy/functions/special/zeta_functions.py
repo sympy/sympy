@@ -7,7 +7,6 @@ from sympy.core.numbers import pi, I, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
-from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, binomial, genocchi, harmonic
 from sympy.functions.elementary.complexes import re, unpolarify, Abs, polar_lift
 from sympy.functions.elementary.exponential import log, exp_polar, exp
