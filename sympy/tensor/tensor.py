@@ -4447,7 +4447,7 @@ class _WildTensExpr(Basic):
     """
     def __init__(self, expr):
         if not isinstance(expr, TensExpr):
-            raise TypeError("WildTensExpr expects a TensExpr as argument")
+            raise TypeError("_WildTensExpr expects a TensExpr as argument")
         self.expr = expr
 
     def __call__(self, *indices):
