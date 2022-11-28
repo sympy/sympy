@@ -4272,8 +4272,6 @@ class WildTensor(Tensor):
                     return None
                 else:
                     repl_dict.update(m)
-
-                repl_dict[self.component] = _WildTensExpr(expr)
             else:
                 for i in range(len(expr_indices)):
                     m = self.indices[i].matches(expr_indices[i])
@@ -4282,7 +4280,7 @@ class WildTensor(Tensor):
                     else:
                         repl_dict.update(m)
 
-                repl_dict[self.component] = _WildTensExpr(expr)
+            repl_dict[self.component] = _WildTensExpr(expr)
         else:
             #If no indices were passed to the WildTensor, it may match tensors with any number of indices.
             repl_dict[self] = expr
