@@ -839,6 +839,25 @@ def test_inverse_laplace_transform():
     assert ILT( (s * eye(2) - Matrix([[1, 0], [0, 2]])).inv(), s, t) ==\
         Matrix([[exp(t)*Heaviside(t), 0], [0, exp(2*t)*Heaviside(t)]])
 
+
+def test_laplace_inverse_laplace_transform():
+    # These tests covers inverse_laplace engine rules by calculating
+    # in both directions
+    a, b, c, d = symbols('a b c d', positive=True)
+    t = symbols('t')
+    def bothways(F):
+        f = inverse_laplace_transform(F, s, t)
+        F2 = laplace_transform(f, t, s, noconds=True)
+        return F==F2
+    assert bothways(b/(s**2-a**2))
+    assert bothways(b*s/(s**2-a**2))
+    assert bothways(b/(s*(s+a)))
+    assert bothways(b*s/(s+a)**2)
+    # assert bothways(c/((s+a)*(s+b)))
+    # assert bothways(c*s/((s+a)*(s+b)))
+    assert bothways(c*s/(d**2*(s+a)**2+b**2))
+
+
 def test_inverse_laplace_transform_delta():
     from sympy.functions.special.delta_functions import DiracDelta
     ILT = inverse_laplace_transform

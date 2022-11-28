@@ -1039,14 +1039,12 @@ def expand_dirac_delta(expr):
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms.
-
-    This backend assumes that the frontend has already split sums
-    such that `f` is to an addition anymore.
     """
     s = Dummy('s')
     a = Wild('a', exclude=[t])
     deltazero = []
     deltanonzero = []
+
     try:
         integratable, deltadict = expand_dirac_delta(f)
     except PolyNonlinearError:
@@ -1753,6 +1751,10 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
     `LaplaceTransform` objects.
     """
 
+    noconds = hints.get('noconds', False)
+
+    debug('----> Applying rules on: ', f)
+
     k, func = f.as_independent(t, as_Add=False)
 
     simple_rules = _laplace_build_rules(t, s)
@@ -1779,7 +1781,6 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
     for p_rule in prog_rules:
         L = p_rule(func, t, s, doit=doit, **hints)
         if L is not None:
-            noconds = hints.get('noconds', False)
             if not noconds and type(L) is tuple:
                 r, p, c = L
                 return (k*r, p, c)
@@ -1827,7 +1828,6 @@ class LaplaceTransform(IntegralTransform):
 
     def _try_directly(self, **hints):
         fn = self.function
-        debug('----> _try_directly: %s'%(fn, ))
         t_ = self.function_variable
         s_ = self.transform_variable
         LT = None
@@ -1838,7 +1838,6 @@ class LaplaceTransform(IntegralTransform):
             except IntegralTransformError:
                 LT = None
         return fn, LT
-
 
 def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
@@ -1906,8 +1905,6 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     """
 
-    debug('\n***** laplace_transform(%s, %s, %s)'%(f, t, s))
-
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
 
         conds = not hints.get('noconds', False)
@@ -1934,6 +1931,17 @@ behavior.
                 return f_laplace, Max(*avals), And(*conditions)
             else:
                 return type(f)(*f.shape, elements_trans)
+
+    # First remove a common factor Heaviside(t) if there is one.
+    g = f.collect(Heaviside(t))
+    if g.is_Mul:
+        factors = g.args
+        if Heaviside(t) in factors:
+            f = Mul(*[ i for i in factors if not i is Heaviside(t) ])
+
+    f = f.expand(deep=False)
+
+    debug('\n***** LaplaceTransform(%s, %s, %s)'%(f, t, s))
 
     return LaplaceTransform(f, t, s).doit(**hints)
 
@@ -2005,12 +2013,10 @@ def _inverse_laplace_apply_rules(F, s, t):
 
     _prep = ''
 
-    debug('*** Applying rules on ', F)
     for s_dom, t_dom, prep, fac in simple_rules:
         if not _prep is prep:
             _F = prep(func)
             _prep = prep
-            debug('--- prepped new _F=', _F)
         else:
             _F = func
         if fac:
@@ -2046,11 +2052,11 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         return Heaviside(1/Abs(coeff) - t**exponent)*e1 \
             + Heaviside(t**exponent - 1/Abs(coeff))*e2
 
-    debug('---> _inverse_laplace_transform will now try to apply rules')
+    debug('----> _inverse_laplace_transform will now try to apply rules')
     f = _inverse_laplace_apply_rules(F, s, t_)
     if not f is None:
         return f, S.true
-    debug('---> _inverse_laplace_transform could not apply any rules.')
+    debug('----> _inverse_laplace_transform could not apply any rules.')
 
     if F.is_rational_function(s):
         F = F.apart(s)
@@ -2191,6 +2197,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     laplace_transform, _fast_inverse_laplace
     hankel_transform, inverse_hankel_transform
     """
+    debug('\n***** inverse_laplace_transform(%s, %s, %s)'%(F, s, t))
     if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
         return F.applyfunc(lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
