@@ -574,6 +574,10 @@ class zeta(Function):
         else:
             s, a = self.args + (S.One,)
         d = s.subs(x, 0) # expansion point
+        if d is S.NaN:
+            return S.NaN
+        if d.is_infinite:
+            return super(zeta, self)._eval_nseries(x, n, logx, cdir)
         e = (s-d).as_leading_term(x).as_coeff_exponent(x)[1]
         if d == 1 and e.is_positive:
             terms = [1/(s-1)]
