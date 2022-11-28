@@ -1979,15 +1979,6 @@ def test_tensor_matching():
     """
     Test match and replace with the pattern being a WildTensor or a WildTensorIndex
     """
-    def check_tens_eq(expr1, expr2):
-        """
-        Canonicalizes the two given tensor expressions and checks equality.
-        """
-        diff = expr1 - expr2
-        if diff != 0:
-            diff = diff.canon_bp().simplify()
-        assert diff == 0
-
     R3 = TensorIndexType('R3', dim=3)
     p, q, r = tensor_indices("p q r", R3)
     a,b,c = symbols("a b c", cls = WildTensorIndex, tensor_index_type=R3, ignore_updown=True)
@@ -2015,7 +2006,57 @@ def test_tensor_matching():
     assert U(p,q).matches( A(q,p) ) == None
     assert ( K(q)*K(p) ).replace( W(q,p), 1) == 1
 
-    #With TensMul as query
+def test_TensAdd_matching():
+    """
+    Test match and replace with the pattern being a TensAdd
+    """
+    def check_tens_eq(expr1, expr2):
+        """
+        Canonicalizes the two given tensor expressions and checks equality.
+        """
+        diff = expr1 - expr2
+        if diff != 0:
+            diff = diff.canon_bp().simplify()
+        assert diff == 0
+
+    R3 = TensorIndexType('R3', dim=3)
+    p, q = tensor_indices("p q", R3)
+    K = TensorHead("K", [R3])
+    V = TensorHead("V", [R3])
+    W = WildTensorHead('W', unordered_indices=True)
+
+    check_tens_eq(
+        ( K(p)*K(q) + V(p)*V(q) + K(p)*V(q) + K(q)*V(p) ).replace(
+            W(p,q) + K(p)*K(q) + V(p)*V(q),
+            W(p,q) + 3*K(p)*V(q)
+            ),
+        K(p)*V(q) + K(q)*V(p) + 3*K(p)*V(q)
+        )
+
+def test_TensMul_matching():
+    """
+    Test match and replace with the pattern being a TensMul
+    """
+    def check_tens_eq(expr1, expr2):
+        """
+        Canonicalizes the two given tensor expressions and checks equality.
+        """
+        diff = expr1 - expr2
+        if diff != 0:
+            diff = diff.canon_bp().simplify()
+        assert diff == 0
+
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r, s, t = tensor_indices("p q r s t", R3)
+    wi = Wild("wi")
+    a,b,c,d,e,f = symbols("a b c d e f", cls = WildTensorIndex, tensor_index_type=R3, ignore_updown=True)
+    delta = R3.delta
+    eps = R3.epsilon
+    K = TensorHead("K", [R3])
+    V = TensorHead("V", [R3])
+    W = WildTensorHead('W', unordered_indices=True)
+    U = WildTensorHead('U')
+
     assert(
         ( wi*K(p) ).matches( K(p) )
         == {wi: 1}
@@ -2058,15 +2099,6 @@ def test_tensor_matching():
         6,
         )
 
-    #With TensAdd as query
-    check_tens_eq(
-        ( K(p)*K(q) + V(p)*V(q) + K(p)*V(q) + K(q)*V(p) ).replace(
-            W(p,q) + K(p)*K(q) + V(p)*V(q),
-            W(p,q) + 3*K(p)*V(q)
-            ),
-        K(p)*V(q) + K(q)*V(p) + 3*K(p)*V(q)
-        )
-
     #Multiple occurrence of WildTensor in value
     check_tens_eq(
         ( K(p)*V(q) ).replace(W(q)*K(p), W(p)*W(q)),
@@ -2076,7 +2108,6 @@ def test_tensor_matching():
         ( K(p)*V(q)*V(r) ).replace(W(q,r)*K(p), W(p,r)*W(q,s)*V(-s) ),
         V(p)*V(r)*V(q)*V(s)*V(-s)
         )
-
 
 def test_TensMul_subs():
     """
