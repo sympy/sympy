@@ -4447,7 +4447,7 @@ class _WildTensExpr(Basic):
 
     Examples
     ========
-    >>> from sympy.tensor.tensor import WildTensorHead, TensorIndex, TensorHead, TensorIndexType, _WildTensExpr
+    >>> from sympy.tensor.tensor import WildTensorHead, TensorIndex, TensorHead, TensorIndexType
     >>> W = WildTensorHead("W")
     >>> R3 = TensorIndexType('R3', dim=3)
     >>> p = TensorIndex('p', R3)
