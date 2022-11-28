@@ -4248,7 +4248,6 @@ class WildTensor(Tensor):
             raise ValueError("wrong number of indices")
         obj.is_canon_bp = is_canon_bp
         obj._index_map = obj._build_index_map(indices, obj._index_structure)
-        obj.unordered_indices = tensor_head.unordered_indices
 
         return obj
 
@@ -4268,7 +4267,7 @@ class WildTensor(Tensor):
             expr_indices = expr.get_free_indices()
             if len(expr_indices) != len(self.indices):
                 return None
-            if self.unordered_indices:
+            if self._component.unordered_indices:
                 m = self._match_indices_ignoring_order(expr)
                 if m is None:
                     return None
