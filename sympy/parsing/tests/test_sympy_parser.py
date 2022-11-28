@@ -9,6 +9,7 @@ from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
 from sympy.functions import exp, factorial, factorial2, sin, Min, Max
 from sympy.logic import And
+from sympy.core.relational import Eq, Lt, Le, Gt, Ge, Ne
 from sympy.series import Limit
 from sympy.testing.pytest import raises, skip
 
