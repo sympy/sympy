@@ -2009,28 +2009,16 @@ def test_TensAdd_matching():
     """
     Test match and replace with the pattern being a TensAdd
     """
-    def check_tens_eq(expr1, expr2):
-        """
-        Canonicalizes the two given tensor expressions and checks equality.
-        """
-        diff = expr1 - expr2
-        if diff != 0:
-            diff = diff.canon_bp().simplify()
-        assert diff == 0
-
     R3 = TensorIndexType('R3', dim=3)
     p, q = tensor_indices("p q", R3)
     K = TensorHead("K", [R3])
     V = TensorHead("V", [R3])
     W = WildTensorHead('W', unordered_indices=True)
 
-    check_tens_eq(
-        ( K(p)*K(q) + V(p)*V(q) + K(p)*V(q) + K(q)*V(p) ).replace(
+    assert ( K(p)*K(q) + V(p)*V(q) + K(p)*V(q) + K(q)*V(p) ).replace(
             W(p,q) + K(p)*K(q) + V(p)*V(q),
             W(p,q) + 3*K(p)*V(q)
-            ),
-        K(p)*V(q) + K(q)*V(p) + 3*K(p)*V(q)
-        )
+            ) == K(p)*V(q) + K(q)*V(p) + 3*K(p)*V(q)
 
 def test_TensMul_matching():
     """
