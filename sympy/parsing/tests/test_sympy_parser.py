@@ -7,8 +7,7 @@ import types
 
 from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
-from sympy.core.relational import (Relational, Equality, Unequality,GreaterThan, LessThan, StrictGreaterThan,StrictLessThan, Rel, Eq, Lt, Le,
-Gt, Ge, Ne, is_le, is_gt, is_ge, is_lt, is_eq, is_neq)
+from sympy.core.relational import Eq, Lt, Le, Gt, Ge, Ne
 from sympy.functions import exp, factorial, factorial2, sin, Min, Max
 from sympy.logic import And
 from sympy.series import Limit
