@@ -4219,6 +4219,10 @@ class WildTensor(Tensor):
     """
     def __new__(cls, tensor_head, indices, **kw_args):
         is_canon_bp = kw_args.pop("is_canon_bp", False)
+        symmetry = kw_args.pop("symmetry", None)
+        comm = kw_args.pop("comm", 0)
+        unordered_indices = kw_args.pop("unordered_indices", False) #TODO: Change this default to True
+
         if tensor_head.func == TensorHead:
             """
             If someone tried to call WildTensor by supplying a TensorHead (not a WildTensorHead), return a normal tensor instead. This is helpful when using subs on an expression to replace occurrences of a WildTensorHead with a TensorHead.
@@ -4229,9 +4233,6 @@ class WildTensor(Tensor):
 
         indices = cls._parse_indices(tensor_head, indices)
         index_types = [ind.tensor_index_type for ind in indices]
-        symmetry = kw_args.pop("symmetry", None)
-        comm = kw_args.pop("comm", 0)
-        unordered_indices = kw_args.pop("unordered_indices", False) #TODO: Change this default to True
         tensor_head = tensor_head.func(tensor_head.name, index_types, comm=comm, symmetry=symmetry)
 
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices))
