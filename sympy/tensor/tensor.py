@@ -4231,6 +4231,9 @@ class WildTensor(Tensor):
         elif tensor_head.func == _WildTensExpr:
             return tensor_head(*indices)
 
+        if symmetry is not None:
+            raise NotImplementedError("Matching based on symmetry is not implemented.")
+
         indices = cls._parse_indices(tensor_head, indices)
         index_types = [ind.tensor_index_type for ind in indices]
         tensor_head = tensor_head.func(tensor_head.name, index_types, comm=comm, symmetry=symmetry)
