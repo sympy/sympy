@@ -4221,8 +4221,6 @@ class WildTensor(Tensor):
     def __new__(cls, tensor_head, indices, **kw_args):
         is_canon_bp = kw_args.pop("is_canon_bp", False)
         symmetry = kw_args.pop("symmetry", None)
-        comm = kw_args.pop("comm", 0)
-        unordered_indices = kw_args.pop("unordered_indices", False) #TODO: Change this default to True
 
         if tensor_head.func == TensorHead:
             """
@@ -4237,7 +4235,7 @@ class WildTensor(Tensor):
 
         indices = cls._parse_indices(tensor_head, indices)
         index_types = [ind.tensor_index_type for ind in indices]
-        tensor_head = tensor_head.func(tensor_head.name, index_types, comm=comm, symmetry=symmetry)
+        tensor_head = tensor_head.func(tensor_head.name, index_types, comm=tensor_head.comm, symmetry=tensor_head.symmetry)
 
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices))
         obj.name = tensor_head.name
@@ -4253,7 +4251,7 @@ class WildTensor(Tensor):
             raise ValueError("wrong number of indices")
         obj.is_canon_bp = is_canon_bp
         obj._index_map = obj._build_index_map(indices, obj._index_structure)
-        obj.unordered_indices = unordered_indices
+        obj.unordered_indices = tensor_head.unordered_indices
 
         return obj
 
