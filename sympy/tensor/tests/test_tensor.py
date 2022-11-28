@@ -2036,15 +2036,6 @@ def test_TensMul_matching():
     """
     Test match and replace with the pattern being a TensMul
     """
-    def check_tens_eq(expr1, expr2):
-        """
-        Canonicalizes the two given tensor expressions and checks equality.
-        """
-        diff = expr1 - expr2
-        if diff != 0:
-            diff = diff.canon_bp().simplify()
-        assert diff == 0
-
     R3 = TensorIndexType('R3', dim=3)
     p, q, r, s, t = tensor_indices("p q r s t", R3)
     wi = Wild("wi")
@@ -2057,52 +2048,37 @@ def test_TensMul_matching():
     U = WildTensorHead('U')
 
     assert ( wi*K(p) ).matches( K(p) ) == {wi: 1}
-    check_tens_eq(
-        (K(p) * V(-p)).replace( W(a) * V(-a), 1),
-        1
+    assert (K(p) * V(-p)).replace( W(a) * V(-a), 1) == 1
+    assert ( K(q) * K(p) * V(-p) ).replace( W(q,a) * V(-a), 1) == 1
+    assert ( K(p) * V(-p) ).replace( K(-a)* V(a), 1 ) == 1
+    assert ( K(q) * K(p) * V(-p) ).replace( W(q)* U(p) * V(-p), 1) == 1
+    assert (
+        (K(p)*V(q)).replace(W()*K(p)*V(q), W()*V(p)*V(q)).doit()
+        == V(p)*V(q)
         )
-    check_tens_eq(
-        ( K(q) * K(p) * V(-p) ).replace( W(q,a) * V(-a), 1),
-        1
+    assert (
+        ( eps(r,p,q)*eps(-r,-s,-t) ).replace(
+            eps(e,a,b)*eps(-e,c,d),
+            delta(a,c)*delta(b,d) - delta(a,d)*delta(b,c),
+            ).doit()
+        == delta(p,-s)*delta(q,-t) - delta(p,-t)*delta(q,-s)
         )
-    check_tens_eq(
-        ( K(p) * V(-p) ).replace( K(-a)* V(a), 1 ),
-        1
-        )
-    check_tens_eq(
-        ( K(q) * K(p) * V(-p) ).replace( W(q)* U(p) * V(-p), 1),
-        1
-        )
-    check_tens_eq(
-        (K(p)*V(q)).replace(
-            W()*K(p)*V(q),
-            W()*V(p)*V(q),
-            ),
-        V(p)*V(q)
-        )
-    check_tens_eq(
-        ( eps(r,p,q) * eps(-r, -s, -t) ).replace(
-            eps(e, a, b) * eps(-e, c, d),
-            delta(a, c)*delta(b, d) - delta(a, d)*delta(b, c),
-            ),
-        delta(p,-s)*delta(q,-t) - delta(p,-t)*delta(q,-s)
-        )
-    check_tens_eq(
-        ( eps(r,p,q) * eps(-r, -p, -q) ).replace(
-            eps(c, a, b) * eps(-c, d, f),
-            delta(a, d)*delta(b, f) - delta(a, f)*delta(b, d),
-            ).contract_delta(delta),
-        6,
+    assert (
+        ( eps(r,p,q)*eps(-r,-p,-q) ).replace(
+            eps(c,a,b)*eps(-c,d,f),
+            delta(a,d)*delta(b,f) - delta(a,f)*delta(b,d),
+            ).contract_delta(delta).doit()
+        == 6
         )
 
     #Multiple occurrence of WildTensor in value
-    check_tens_eq(
-        ( K(p)*V(q) ).replace(W(q)*K(p), W(p)*W(q)),
-        V(p)*V(q)
+    assert (
+        ( K(p)*V(q) ).replace(W(q)*K(p), W(p)*W(q))
+        == V(p)*V(q)
         )
-    check_tens_eq(
-        ( K(p)*V(q)*V(r) ).replace(W(q,r)*K(p), W(p,r)*W(q,s)*V(-s) ),
-        V(p)*V(r)*V(q)*V(s)*V(-s)
+    assert (
+        ( K(p)*V(q)*V(r) ).replace(W(q,r)*K(p), W(p,r)*W(q,s)*V(-s) )
+        == V(p)*V(r)*V(q)*V(s)*V(-s)
         )
 
 def test_TensMul_subs():
