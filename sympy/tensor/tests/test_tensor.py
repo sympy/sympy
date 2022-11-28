@@ -2058,6 +2058,15 @@ def test_tensor_matching():
         6,
         )
 
+    #With TensAdd as query
+    check_tens_eq(
+        ( K(p)*K(q) + V(p)*V(q) + K(p)*V(q) + K(q)*V(p) ).replace(
+            W(p,q) + K(p)*K(q) + V(p)*V(q),
+            W(p,q) + 3*K(p)*V(q)
+            ),
+        K(p)*V(q) + K(q)*V(p) + 3*K(p)*V(q)
+        )
+
     #Multiple occurrence of WildTensor in value
     check_tens_eq(
         ( K(p)*V(q) ).replace(W(q)*K(p), W(p)*W(q)),
