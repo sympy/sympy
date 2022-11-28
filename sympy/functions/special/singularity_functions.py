@@ -1,4 +1,4 @@
-from sympy.core import S, sympify, oo, diff
+from sympy.core import S, oo, diff
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq
@@ -102,9 +102,7 @@ class SingularityFunction(Function):
         """
 
         if argindex == 1:
-            x = sympify(self.args[0])
-            a = sympify(self.args[1])
-            n = sympify(self.args[2])
+            x, a, n = self.args
             if n in (S.Zero, S.NegativeOne):
                 return self.func(x, a, n-1)
             elif n.is_positive:
@@ -141,9 +139,7 @@ class SingularityFunction(Function):
         nan
         >>> SingularityFunction(x, 3, 0).subs(x, 3)
         1
-        >>> SingularityFunction(x, a, n).eval(3, 5, 1)
-        0
-        >>> SingularityFunction(x, a, n).eval(4, 1, 5)
+        >>> SingularityFunction(4, 1, 5)
         243
         >>> x = Symbol('x', positive = True)
         >>> a = Symbol('a', negative = True)
@@ -157,9 +153,9 @@ class SingularityFunction(Function):
 
         """
 
-        x = sympify(variable)
-        a = sympify(offset)
-        n = sympify(exponent)
+        x = variable
+        a = offset
+        n = exponent
         shift = (x - a)
 
         if fuzzy_not(im(shift).is_zero):
@@ -178,18 +174,16 @@ class SingularityFunction(Function):
             if shift.is_negative or shift.is_extended_positive:
                 return S.Zero
             if shift.is_zero:
-                return S.Infinity
+                return oo
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         '''
         Converts a Singularity Function expression into its Piecewise form.
 
         '''
-        x = self.args[0]
-        a = self.args[1]
-        n = sympify(self.args[2])
+        x, a, n = self.args
 
-        if n in (S.NegativeOne, -2):
+        if n in (S.NegativeOne, S(-2)):
             return Piecewise((oo, Eq((x - a), 0)), (0, True))
         elif n.is_nonnegative:
             return Piecewise(((x - a)**n, (x - a) > 0), (0, True))
@@ -199,9 +193,7 @@ class SingularityFunction(Function):
         Rewrites a Singularity Function expression using Heavisides and DiracDeltas.
 
         '''
-        x = self.args[0]
-        a = self.args[1]
-        n = sympify(self.args[2])
+        x, a, n = self.args
 
         if n == -2:
             return diff(Heaviside(x - a), x.free_symbols.pop(), 2)

@@ -620,6 +620,13 @@ def test_gf_edf():
     assert gf_edf_shoup(f, 2, 3, ZZ) == g
 
 
+def test_issue_23174():
+    f = ZZ.map([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+    g = ZZ.map([[1, 0, 0, 1, 1, 1, 0, 0, 1], [1, 1, 1, 0, 1, 0, 1, 1, 1]])
+
+    assert gf_edf_zassenhaus(f, 8, 2, ZZ) == g
+
+
 def test_gf_factor():
     assert gf_factor([], 11, ZZ) == (0, [])
     assert gf_factor([1], 11, ZZ) == (1, [])

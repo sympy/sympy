@@ -4,7 +4,8 @@ from sympy.functions.elementary.exponential import exp
 from sympy.sets.sets import Interval
 from sympy.external import import_module
 from sympy.stats import Beta, Chi, Normal, Gamma, Exponential, LogNormal, Pareto, ChiSquared, Uniform, sample, \
-    BetaPrime, Cauchy, GammaInverse, GaussianInverse, StudentT, Weibull, density, ContinuousRV
+    BetaPrime, Cauchy, GammaInverse, GaussianInverse, StudentT, Weibull, density, ContinuousRV, FDistribution, \
+    Gumbel, Laplace, Logistic, Rayleigh, Triangular
 from sympy.testing.pytest import skip, raises
 
 
@@ -17,7 +18,13 @@ def test_sample_numpy():
         LogNormal("LN", 0, 1),
         Pareto("P", 1, 1),
         ChiSquared("CS", 2),
-        Uniform("U", 0, 1)
+        Uniform("U", 0, 1),
+        FDistribution("FD", 1, 2),
+        Gumbel("GB", 1, 2),
+        Laplace("L", 1, 2),
+        Logistic("LO", 1, 2),
+        Rayleigh("R", 1),
+        Triangular("T", 1, 2, 2),
     ]
     size = 3
     numpy = import_module('numpy')
@@ -66,8 +73,8 @@ def test_sample_scipy():
                     assert samps2[i][j] in X.pspace.domain.set
 
 
-def test_sample_pymc3():
-    distribs_pymc3 = [
+def test_sample_pymc():
+    distribs_pymc = [
         Beta("B", 1, 1),
         Cauchy("C", 1, 1),
         Normal("N", 0, 1),
@@ -80,16 +87,16 @@ def test_sample_pymc3():
         Uniform("U", 0, 1)
     ]
     size = 3
-    pymc3 = import_module('pymc3')
-    if not pymc3:
-        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    pymc = import_module('pymc')
+    if not pymc:
+        skip('PyMC is not installed. Abort tests for _sample_pymc.')
     else:
-        for X in distribs_pymc3:
-            samps = sample(X, size=size, library='pymc3')
+        for X in distribs_pymc:
+            samps = sample(X, size=size, library='pymc')
             for sam in samps:
                 assert sam in X.pspace.domain.set
         raises(NotImplementedError,
-               lambda: sample(Chi("C", 1), library='pymc3'))
+               lambda: sample(Chi("C", 1), library='pymc'))
 
 
 def test_sampling_gamma_inverse():
@@ -159,7 +166,7 @@ def test_sample_continuous():
     sym, val = list(Z.pspace.sample().items())[0]
     assert sym == Z and val in Interval(0, oo)
 
-    libraries = ['scipy', 'numpy', 'pymc3']
+    libraries = ['scipy', 'numpy', 'pymc']
     for lib in libraries:
         try:
             imported_lib = import_module(lib)

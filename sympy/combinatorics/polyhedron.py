@@ -606,7 +606,7 @@ def _pgroup_calcs():
     Explanation
     ===========
 
-    (This author didn't find and didn't know of a better way to do it though
+    (This author did not find and did not know of a better way to do it though
     there likely is such a way.)
 
     Although only 2 permutations are needed for a polyhedron in order to

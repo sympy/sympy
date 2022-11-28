@@ -14,7 +14,7 @@ def _diagonal_solve(M, rhs):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, eye
+    >>> from sympy import Matrix, eye
     >>> A = eye(2)*2
     >>> B = Matrix([[1, 2], [3, 4]])
     >>> A.diagonal_solve(B) == B/2
@@ -36,7 +36,7 @@ def _diagonal_solve(M, rhs):
     if not M.is_diagonal():
         raise TypeError("Matrix should be diagonal")
     if rhs.rows != M.rows:
-        raise TypeError("Size mis-match")
+        raise TypeError("Size mismatch")
 
     return M._new(
         rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / M[i, i])
@@ -258,7 +258,7 @@ def _LDLsolve(M, rhs):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, eye
+    >>> from sympy import Matrix, eye
     >>> A = eye(2)*2
     >>> B = Matrix([[1, 2], [3, 4]])
     >>> A.LDLsolve(B) == B/2
@@ -804,7 +804,7 @@ def _solve_least_squares(M, rhs, method='CH'):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, ones
+    >>> from sympy import Matrix, ones
     >>> A = Matrix([1, 2, 3])
     >>> B = Matrix([2, 3, 4])
     >>> S = Matrix(A.row_join(B))

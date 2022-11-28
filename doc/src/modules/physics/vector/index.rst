@@ -28,21 +28,10 @@ Guide to Vector
 ===============
 
 .. toctree::
-    :maxdepth: 2
+   :titlesonly:
 
-    vectors.rst
-    kinematics.rst
-    advanced.rst
-    fields.rst
-
-Vector API
-==========
-
-.. toctree::
-    :maxdepth: 2
-
-    api/classes.rst
-    api/kinematics.rst
-    api/printing.rst
-    api/functions.rst
-    api/fieldfunctions.rst
+   vectors.rst
+   kinematics.rst
+   advanced.rst
+   fields.rst
+   api/index.rst

@@ -9,13 +9,13 @@ Gotchas and Pitfalls
 Introduction
 ============
 
-SymPy runs under the `Python Programming Language
-<https://www.python.org/>`_, so there are some things that may behave
-differently than they do in other, independent computer algebra systems
-like Maple or Mathematica.  These are some of the gotchas and pitfalls
-that you may encounter when using SymPy.  See also the `FAQ
-<https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`Tutorial<tutorial>`, the
-remainder of the SymPy Docs, and the `official Python Tutorial <https://docs.python.org/3/tutorial/>`_.
+SymPy runs under the `Python Programming Language <https://www.python.org/>`_,
+so there are some things that may behave differently than they do in other,
+independent computer algebra systems like Maple or Mathematica. These are some
+of the gotchas and pitfalls that you may encounter when using SymPy. See also
+the `FAQ <https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`introductory
+tutorial<intro-tutorial>`, the remainder of the SymPy Docs, and the `official
+Python Tutorial <https://docs.python.org/3/tutorial/>`_.
 
 
 If you are already familiar with C or Java, you might also want to look

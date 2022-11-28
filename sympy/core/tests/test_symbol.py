@@ -1,3 +1,4 @@
+from sympy.core.function import Function, UndefinedFunction
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.relational import (GreaterThan, LessThan, StrictGreaterThan, StrictLessThan)
 from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
@@ -294,6 +295,7 @@ def test_symbols():
     assert symbols('aa:d,x:z') == (aa, ab, ac, ad, x, y, z)
     assert symbols(('aa:d','x:z')) == ((aa, ab, ac, ad), (x, y, z))
 
+    assert type(symbols(('q:2', 'u:2'), cls=Function)[0][0]) == UndefinedFunction  # issue 23532
 
     # issue 6675
     def sym(s):
@@ -344,7 +346,7 @@ def test_unicode():
     raises(TypeError, lambda: Symbol(1))
 
 
-def testuniquely_named_symbol_and__symbol():
+def test_uniquely_named_symbol_and_Symbol():
     F = uniquely_named_symbol
     x = Symbol('x')
     assert F(x) == x
@@ -361,7 +363,7 @@ def testuniquely_named_symbol_and__symbol():
     assert F(('x', r)).is_real
     assert F(('x', r), real=False).is_real
     assert F('x1', Symbol('x1'),
-        compare=lambda i: str(i).rstrip('1')).name == 'x1'
+        compare=lambda i: str(i).rstrip('1')).name == 'x0'
     assert F('x1', Symbol('x1'),
         modify=lambda i: i + '_').name == 'x1_'
     assert _symbol(x, _x) == x

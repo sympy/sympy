@@ -177,17 +177,12 @@ def test_cse_multiple():
     raises(NotImplementedError,
            lambda: g.llvm_callable([a, b], e3, callback_type='scipy.integrate'))
 
-    # XXX: The commented lines below lead to a segfault in Python 3.9 although
-    # they work fine in Python 3.8. It is not sufficient to mark the test as
-    # XFAIL because it crashes the test runner.
-
-    #f = g.llvm_callable([a, b], e3)
-
-    #jit_res = f(0.1, 1.5)
-    #assert len(jit_res) == 2
-    #res = eval_cse(e3, {a: 0.1, b: 1.5})
-    #assert isclose(res[0], jit_res[0])
-    #assert isclose(res[1], jit_res[1])
+    f = g.llvm_callable([a, b], e3)
+    jit_res = f(0.1, 1.5)
+    assert len(jit_res) == 2
+    res = eval_cse(e3, {a: 0.1, b: 1.5})
+    assert isclose(res[0], jit_res[0])
+    assert isclose(res[1], jit_res[1])
 
 
 def test_callback_cubature_multiple():

@@ -9,9 +9,9 @@ def subs(d, **kwargs):
     ========
 
     >>> from sympy.strategies.tools import subs
-    >>> from sympy import Basic
-    >>> mapping = {1: 4, 4: 1, Basic(5): Basic(6, 7)}
-    >>> expr = Basic(1, Basic(2, 3), Basic(4, Basic(5)))
+    >>> from sympy import Basic, S
+    >>> mapping = {S(1): S(4), S(4): S(1), Basic(S(5)): Basic(S(6), S(7))}
+    >>> expr = Basic(S(1), Basic(S(2), S(3)), Basic(S(4), Basic(S(5))))
     >>> subs(mapping)(expr)
     Basic(4, Basic(2, 3), Basic(1, Basic(6, 7)))
     """

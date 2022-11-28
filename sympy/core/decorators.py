@@ -121,7 +121,7 @@ def sympify_method_args(cls):
     Examples
     ========
 
-    >>> from sympy import Basic, SympifyError
+    >>> from sympy import Basic, SympifyError, S
     >>> from sympy.core.sympify import _sympify
 
     >>> class MyTuple(Basic):
@@ -134,7 +134,7 @@ def sympify_method_args(cls):
     ...             return NotImplemented
     ...         return MyTuple(*(self.args + other.args))
 
-    >>> MyTuple(1, 2) + MyTuple(3, 4)
+    >>> MyTuple(S(1), S(2)) + MyTuple(S(3), S(4))
     MyTuple(1, 2, 3, 4)
 
     In the above it is important that we return NotImplemented when other is
@@ -153,7 +153,7 @@ def sympify_method_args(cls):
     ...     def __add__(self, other):
     ...          return MyTuple(*(self.args + other.args))
 
-    >>> MyTuple(1, 2) + MyTuple(3, 4)
+    >>> MyTuple(S(1), S(2)) + MyTuple(S(3), S(4))
     MyTuple(1, 2, 3, 4)
 
     The idea here is that the decorators take care of the boiler-plate code

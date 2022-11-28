@@ -45,10 +45,10 @@ def test_rcode_Pow():
     assert rcode(x**3.2, user_functions={'Pow': _cond_cfunc}) == 'pow(x, 3.2)'
 
 
-
 def test_rcode_Max():
     # Test for gh-11926
     assert rcode(Max(x,x*x),user_functions={"Max":"my_max", "Pow":"my_pow"}) == 'my_max(x, my_pow(x, 2))'
+
 
 def test_rcode_constants_mathh():
     assert rcode(exp(1)) == "exp(1)"
@@ -436,8 +436,6 @@ def test_Matrix_printing():
         "M[8] = 0;")
 
 
-
-
 def test_rcode_sgn():
 
     expr = sign(x) * y
@@ -460,7 +458,7 @@ def test_rcode_Assignment():
 def test_rcode_For():
     f = For(x, Range(0, 10, 2), [aug_assign(y, '*', x)])
     sol = rcode(f)
-    assert sol == ("for (x = 0; x < 10; x += 2) {\n"
+    assert sol == ("for(x in seq(from=0, to=9, by=2){\n"
                    "   y *= x;\n"
                    "}")
 

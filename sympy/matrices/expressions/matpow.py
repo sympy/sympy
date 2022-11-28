@@ -57,9 +57,9 @@ class MatPow(MatrixExpr):
                 return MatrixElement(self, i, j)
         return A[i, j]
 
-    def doit(self, **kwargs):
-        if kwargs.get('deep', True):
-            base, exp = [arg.doit(**kwargs) for arg in self.args]
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            base, exp = [arg.doit(**hints) for arg in self.args]
         else:
             base, exp = self.args
 
@@ -79,7 +79,7 @@ class MatPow(MatrixExpr):
             return Identity(base.rows)
         if exp == S.NegativeOne:
             from sympy.matrices.expressions import Inverse
-            return Inverse(base).doit(**kwargs)
+            return Inverse(base).doit(**hints)
 
         eval_power = getattr(base, '_eval_power', None)
         if eval_power is not None:

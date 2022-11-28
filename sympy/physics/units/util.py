@@ -3,7 +3,9 @@ Several methods to simplify expressions involving unit objects.
 """
 from functools import reduce
 from collections.abc import Iterable
+from typing import Optional
 
+from sympy import default_sort_key
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
@@ -11,9 +13,10 @@ from sympy.core.power import Pow
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.matrices.common import NonInvertibleMatrixError
-from sympy.physics.units.dimensions import Dimension
+from sympy.physics.units.dimensions import Dimension, DimensionSystem
 from sympy.physics.units.prefixes import Prefix
 from sympy.physics.units.quantities import Quantity
+from sympy.physics.units.unitsystem import UnitSystem
 from sympy.utilities.iterables import sift
 
 
@@ -96,16 +99,20 @@ def convert_to(expr, target_units, unit_system="SI"):
         target_units = [target_units]
 
     if isinstance(expr, Add):
-        return Add.fromiter(convert_to(i, target_units, unit_system) for i in expr.args)
+        return Add.fromiter(convert_to(i, target_units, unit_system)
+            for i in expr.args)
 
     expr = sympify(expr)
+    target_units = sympify(target_units)
 
     if not isinstance(expr, Quantity) and expr.has(Quantity):
-        expr = expr.replace(lambda x: isinstance(x, Quantity), lambda x: x.convert_to(target_units, unit_system))
+        expr = expr.replace(lambda x: isinstance(x, Quantity),
+            lambda x: x.convert_to(target_units, unit_system))
 
     def get_total_scale_factor(expr):
         if isinstance(expr, Mul):
-            return reduce(lambda x, y: x * y, [get_total_scale_factor(i) for i in expr.args])
+            return reduce(lambda x, y: x * y,
+                [get_total_scale_factor(i) for i in expr.args])
         elif isinstance(expr, Pow):
             return get_total_scale_factor(expr.base) ** expr.exp
         elif isinstance(expr, Quantity):
@@ -117,24 +124,31 @@ def convert_to(expr, target_units, unit_system="SI"):
         return expr
 
     expr_scale_factor = get_total_scale_factor(expr)
-    return expr_scale_factor * Mul.fromiter((1/get_total_scale_factor(u) * u) ** p for u, p in zip(target_units, depmat))
+    return expr_scale_factor * Mul.fromiter(
+        (1/get_total_scale_factor(u)*u)**p for u, p in
+        zip(target_units, depmat))
 
 
-def quantity_simplify(expr):
+def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):
     """Return an equivalent expression in which prefixes are replaced
     with numerical values and all units of a given dimension are the
-    unified in a canonical manner.
+    unified in a canonical manner by default. `across_dimensions` allows
+    for units of different dimensions to be simplified together.
+
+    `unit_system` must be specified if `across_dimensions` is True.
 
     Examples
     ========
 
     >>> from sympy.physics.units.util import quantity_simplify
     >>> from sympy.physics.units.prefixes import kilo
-    >>> from sympy.physics.units import foot, inch
+    >>> from sympy.physics.units import foot, inch, joule, coulomb
     >>> quantity_simplify(kilo*foot*inch)
     250*foot**2/3
     >>> quantity_simplify(foot - 6*inch)
     foot/2
+    >>> quantity_simplify(5*joule/coulomb, across_dimensions=True, unit_system="SI")
+    5*volt
     """
 
     if expr.is_Atom or not expr.has(Prefix, Quantity):
@@ -153,6 +167,32 @@ def quantity_simplify(expr):
         v = list(ordered(d[k]))
         ref = v[0]/v[0].scale_factor
         expr = expr.xreplace({vi: ref*vi.scale_factor for vi in v[1:]})
+
+    if across_dimensions:
+        # combine quantities of different dimensions into a single
+        # quantity that is equivalent to the original expression
+
+        if unit_system is None:
+            raise ValueError("unit_system must be specified if across_dimensions is True")
+
+        unit_system = UnitSystem.get_unit_system(unit_system)
+        dimension_system: DimensionSystem = unit_system.get_dimension_system()
+        dim_expr = unit_system.get_dimensional_expr(expr)
+        dim_deps = dimension_system.get_dimensional_dependencies(dim_expr, mark_dimensionless=True)
+
+        target_dimension: Optional[Dimension] = None
+        for ds_dim, ds_dim_deps in dimension_system.dimensional_dependencies.items():
+            if ds_dim_deps == dim_deps:
+                target_dimension = ds_dim
+                break
+
+        if target_dimension is None:
+            # if we can't find a target dimension, we can't do anything. unsure how to handle this case.
+            return expr
+
+        target_unit = unit_system.derived_units.get(target_dimension)
+        if target_unit:
+            expr = convert_to(expr, target_unit, unit_system)
 
     return expr
 
@@ -200,7 +240,7 @@ def check_dimensions(expr, unit_system="SI"):
                     break
             dims.extend(dimdict.items())
             if not skip:
-                deset.add(tuple(sorted(dims)))
+                deset.add(tuple(sorted(dims, key=default_sort_key)))
                 if len(deset) > 1:
                     raise ValueError(
                         "addends have incompatible dimensions: {}".format(deset))

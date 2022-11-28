@@ -1,5 +1,5 @@
 """
-A module that helps solving problems in physics
+A module that helps solving problems in physics.
 """
 
 from . import units

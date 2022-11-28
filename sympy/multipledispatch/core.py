@@ -1,4 +1,5 @@
-from typing import Dict as tDict, Any
+from __future__ import annotations
+from typing import Any
 
 import inspect
 
@@ -6,7 +7,7 @@ from .dispatcher import Dispatcher, MethodDispatcher, ambiguity_warn
 
 # XXX: This parameter to dispatch isn't documented and isn't used anywhere in
 # sympy. Maybe it should just be removed.
-global_namespace = dict()  # type: tDict[str, Any]
+global_namespace: dict[str, Any] = {}
 
 
 def dispatch(*types, namespace=global_namespace, on_ambiguity=ambiguity_warn):

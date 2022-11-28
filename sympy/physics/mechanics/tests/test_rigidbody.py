@@ -2,9 +2,9 @@ from sympy.core.symbol import symbols
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer, inertia
 from sympy.physics.mechanics import inertia_of_point_mass
-from sympy.core.backend import expand
+from sympy.core.backend import expand, zeros, _simplify_matrix
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_rigidbody():
@@ -114,6 +114,25 @@ def test_pendulum_angular_momentum():
             S.angular_momentum(O, R).express(R)) == 0
 
 
+def test_rigidbody_inertia():
+    N = ReferenceFrame('N')
+    m, Ix, Iy, Iz, a, b = symbols('m, I_x, I_y, I_z, a, b')
+    Io = inertia(N, Ix, Iy, Iz)
+    o = Point('o')
+    p = o.locatenew('p', a * N.x + b * N.y)
+    R = RigidBody('R', o, N, m, (Io, p))
+    I_check = inertia(N, Ix - b ** 2 * m, Iy - a ** 2 * m,
+                      Iz - m * (a ** 2 + b ** 2), m * a * b)
+    assert R.inertia == (Io, p)
+    assert R.central_inertia == I_check
+    R.central_inertia = Io
+    assert R.inertia == (Io, o)
+    assert R.central_inertia == Io
+    R.inertia = (Io, p)
+    assert R.inertia == (Io, p)
+    assert R.central_inertia == I_check
+
+
 def test_parallel_axis():
     N = ReferenceFrame('N')
     m, Ix, Iy, Iz, a, b = symbols('m, I_x, I_y, I_z, a, b')
@@ -125,3 +144,18 @@ def test_parallel_axis():
     Ip_expected = inertia(N, Ix + m * b**2, Iy + m * a**2,
                           Iz + m * (a**2 + b**2), ixy=-m * a * b)
     assert Ip == Ip_expected
+    # Reference frame from which the parallel axis is viewed should not matter
+    A = ReferenceFrame('A')
+    A.orient_axis(N, N.z, 1)
+    assert _simplify_matrix(
+        (R.parallel_axis(p, A) - Ip_expected).to_matrix(A)) == zeros(3, 3)
+
+
+def test_deprecated_set_potential_energy():
+    m, g, h = symbols('m g h')
+    A = ReferenceFrame('A')
+    P = Point('P')
+    I = Dyadic(0)
+    B = RigidBody('B', P, A, m, (I, P))
+    with warns_deprecated_sympy():
+        B.set_potential_energy(m*g*h)

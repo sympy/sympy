@@ -1,4 +1,4 @@
-from typing import Type
+from __future__ import annotations
 
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
@@ -23,12 +23,12 @@ class Dyadic(BasisDependent):
 
     _op_priority = 13.0
 
-    _expr_type = None  # type: Type[Dyadic]
-    _mul_func = None  # type: Type[Dyadic]
-    _add_func = None  # type: Type[Dyadic]
-    _zero_func = None  # type: Type[Dyadic]
-    _base_func = None  # type: Type[Dyadic]
-    zero = None  # type: DyadicZero
+    _expr_type: type[Dyadic]
+    _mul_func: type[Dyadic]
+    _add_func: type[Dyadic]
+    _zero_func: type[Dyadic]
+    _base_func: type[Dyadic]
+    zero: DyadicZero
 
     @property
     def components(self):
@@ -216,13 +216,17 @@ class BaseDyadic(Dyadic, AtomicExpr):
         obj._sys = vector1._sys
         obj._pretty_form = ('(' + vector1._pretty_form + '|' +
                              vector2._pretty_form + ')')
-        obj._latex_form = ('(' + vector1._latex_form + "{|}" +
-                           vector2._latex_form + ')')
+        obj._latex_form = (r'\left(' + vector1._latex_form + r"{\middle|}" +
+                           vector2._latex_form + r'\right)')
 
         return obj
 
     def _sympystr(self, printer):
         return "({}|{})".format(
+            printer._print(self.args[0]), printer._print(self.args[1]))
+
+    def _sympyrepr(self, printer):
+        return "BaseDyadic({}, {})".format(
             printer._print(self.args[0]), printer._print(self.args[1]))
 
 

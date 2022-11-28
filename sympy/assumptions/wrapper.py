@@ -4,7 +4,7 @@ query with same syntax.
 
 In SymPy, there are two assumption systems. Old assumption system is
 defined in sympy/core/assumptions, and it can be accessed by attribute
-such as ``x.is_even``. New assumption system is definded in
+such as ``x.is_even``. New assumption system is defined in
 sympy/assumptions, and it can be accessed by predicates such as
 ``Q.even(x)``.
 
@@ -47,7 +47,7 @@ from sympy.assumptions import ask, Q
 from sympy.core.assumptions import (_assume_defined, as_property,
     ManagedProperties)
 from sympy.core.basic import Basic
-
+from sympy.core.sympify import _sympify
 
 class AssumptionsWrapperMeta(ManagedProperties):
     """
@@ -121,7 +121,7 @@ class AssumptionsWrapper(Basic, metaclass=AssumptionsWrapperMeta):
     def __new__(cls, expr, assumptions=None):
         if assumptions is None:
             return expr
-        obj = super().__new__(cls, expr, assumptions)
+        obj = super().__new__(cls, expr, _sympify(assumptions))
         obj.expr = expr
         obj.assumptions = assumptions
         return obj

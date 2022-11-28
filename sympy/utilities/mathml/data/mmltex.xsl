@@ -1920,7 +1920,7 @@ priority="2">
 			<xsl:text>}</xsl:text>
 		</xsl:when>
 		<xsl:otherwise>
-		<!-- number of argumnets is not 2 - code 25 -->
+		<!-- number of arguments is not 2 - code 25 -->
 			<xsl:message>exception 25:</xsl:message>
 			<xsl:text>\text{exception 25:}</xsl:text>
 		</xsl:otherwise>

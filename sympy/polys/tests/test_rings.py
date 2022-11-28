@@ -228,6 +228,17 @@ def test_PolyElement__lt_le_gt_ge__():
     assert x**3 > x**2 > x > R(1)
     assert x**3 >= x**2 >= x >= R(1)
 
+def test_PolyElement__str__():
+    x, y = symbols('x, y')
+
+    for dom in [ZZ, QQ, ZZ[x], ZZ[x,y], ZZ[x][y]]:
+        R, t = ring('t', dom)
+        assert str(2*t**2 + 1) == '2*t**2 + 1'
+
+    for dom in [EX, EX[x]]:
+        R, t = ring('t', dom)
+        assert str(2*t**2 + 1) == 'EX(2)*t**2 + EX(1)'
+
 def test_PolyElement_copy():
     R, x, y, z = ring("x,y,z", ZZ)
 

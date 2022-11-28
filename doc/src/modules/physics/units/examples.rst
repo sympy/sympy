@@ -38,9 +38,9 @@ should be :math:`L^3 M^{-1} T^{-2}`.
     >>> F
     Dimension(acceleration*mass)
     >>> dimsys_SI.get_dimensional_dependencies(F)
-    {'length': 1, 'mass': 1, 'time': -2}
+    {Dimension(length): 1, Dimension(mass, M): 1, Dimension(time): -2}
     >>> dimsys_SI.get_dimensional_dependencies(force)
-    {'length': 1, 'mass': 1, 'time': -2}
+    {Dimension(length): 1, Dimension(mass): 1, Dimension(time): -2}
 
     Dimensions cannot compared directly, even if in the SI convention they are
     the same:

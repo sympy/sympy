@@ -3,6 +3,7 @@
 
 from functools import wraps, reduce
 from operator import mul
+from typing import Optional
 
 from sympy.core import (
     S, Expr, Add, Tuple
@@ -10,7 +11,8 @@ from sympy.core import (
 from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
 from sympy.core.exprtools import Factors, factor_nc, factor_terms
-from sympy.core.evalf import pure_complex
+from sympy.core.evalf import (
+    pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.numbers import ilcm, I, Integer
@@ -50,7 +52,7 @@ from sympy.polys.polyutils import (
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, public, filldedent
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
 
 
@@ -77,11 +79,16 @@ def _polifyit(func):
                 expr_method = getattr(f.as_expr(), func.__name__)
                 result = expr_method(g)
                 if result is not NotImplemented:
-                    SymPyDeprecationWarning(
-                        feature="Mixing Poly with non-polynomial expressions in binary operations",
-                        issue=18613,
+                    sympy_deprecation_warning(
+                        """
+                        Mixing Poly with non-polynomial expressions in binary
+                        operations is deprecated. Either explicitly convert
+                        the non-Poly operand to a Poly with as_poly() or
+                        convert the Poly to an Expr with as_expr().
+                        """,
                         deprecated_since_version="1.6",
-                        useinstead="the as_expr or as_poly method to convert types").warn()
+                        active_deprecations_target="deprecated-poly-nonpoly-binary-operations",
+                    )
                 return result
             else:
                 return func(f, g)
@@ -100,6 +107,12 @@ class Poly(Basic):
 
     Poly is a subclass of Basic rather than Expr but instances can be
     converted to Expr with the :py:meth:`~.Poly.as_expr` method.
+
+    .. deprecated:: 1.6
+
+       Combining Poly with non-Poly objects in binary operations is
+       deprecated. Explicitly convert both objects to either Poly or Expr
+       first. See :ref:`deprecated-poly-nonpoly-binary-operations`.
 
     Examples
     ========
@@ -610,11 +623,7 @@ class Poly(Basic):
 
         """
         J, new = f.rep.exclude()
-        gens = []
-
-        for j in range(len(f.gens)):
-            if j not in J:
-                gens.append(f.gens[j])
+        gens = [gen for j, gen in enumerate(f.gens) if j not in J]
 
         return f.per(new, gens=gens)
 
@@ -2348,7 +2357,7 @@ class Poly(Basic):
             rep = f.rep
 
             for spec in specs:
-                if type(spec) is tuple:
+                if isinstance(spec, tuple):
                     gen, m = spec
                 else:
                     gen, m = spec, 1
@@ -2386,7 +2395,7 @@ class Poly(Basic):
             rep = f.rep
 
             for spec in specs:
-                if type(spec) is tuple:
+                if isinstance(spec, tuple):
                     gen, m = spec
                 else:
                     gen, m = spec, 1
@@ -3651,7 +3660,6 @@ class Poly(Basic):
         [-1.73205080756887729352744634151, 1.73205080756887729352744634151]
 
         """
-        from sympy.functions.elementary.complexes import sign
         if f.is_multivariate:
             raise MultivariatePolynomialError(
                 "Cannot compute numerical roots of %s" % f)
@@ -3680,6 +3688,7 @@ class Poly(Basic):
         dps = mpmath.mp.dps
         mpmath.mp.dps = n
 
+        from sympy.functions.elementary.complexes import sign
         try:
             # We need to add extra precision to guard against losing accuracy.
             # 10 times the degree of the polynomial seems to work well.
@@ -3772,6 +3781,57 @@ class Poly(Basic):
         r = f.resultant(f.__class__.from_expr(x**n - t, x, t))
 
         return r.replace(t, x)
+
+    def same_root(f, a, b):
+        """
+        Decide whether two roots of this polynomial are equal.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, cyclotomic_poly, exp, I, pi
+        >>> f = Poly(cyclotomic_poly(5))
+        >>> r0 = exp(2*I*pi/5)
+        >>> indices = [i for i, r in enumerate(f.all_roots()) if f.same_root(r, r0)]
+        >>> print(indices)
+        [3]
+
+        Raises
+        ======
+
+        DomainError
+            If the domain of the polynomial is not :ref:`ZZ`, :ref:`QQ`,
+            :ref:`RR`, or :ref:`CC`.
+        MultivariatePolynomialError
+            If the polynomial is not univariate.
+        PolynomialError
+            If the polynomial is of degree < 2.
+
+        """
+        if f.is_multivariate:
+            raise MultivariatePolynomialError(
+                "Must be a univariate polynomial")
+
+        dom_delta_sq = f.rep.mignotte_sep_bound_squared()
+        delta_sq = f.domain.get_field().to_sympy(dom_delta_sq)
+        # We have delta_sq = delta**2, where delta is a lower bound on the
+        # minimum separation between any two roots of this polynomial.
+        # Let eps = delta/3, and define eps_sq = eps**2 = delta**2/9.
+        eps_sq = delta_sq / 9
+
+        r, _, _, _ = evalf(1/eps_sq, 1, {})
+        n = fastlog(r)
+        # Then 2^n > 1/eps**2.
+        m = (n // 2) + (n % 2)
+        # Then 2^(-m) < eps.
+        ev = lambda x: quad_to_mpmath(_evalf_with_bounded_error(x, m=m))
+
+        # Then for any complex numbers a, b we will have
+        # |a - ev(a)| < eps and |b - ev(b)| < eps.
+        # So if |ev(a) - ev(b)|**2 < eps**2, then
+        # |ev(a) - ev(b)| < eps, hence |a - b| < 3*eps = delta.
+        A, B = ev(a), ev(b)
+        return (A.real - B.real)**2 + (A.imag - B.imag)**2 < eps_sq
 
     def cancel(f, g, include=False):
         """
@@ -4353,8 +4413,6 @@ def parallel_poly_from_expr(exprs, *gens, **args):
 
 def _parallel_poly_from_expr(exprs, opt):
     """Construct polynomials from expressions. """
-    from sympy.functions.elementary.piecewise import Piecewise
-
     if len(exprs) == 2:
         f, g = exprs
 
@@ -4405,6 +4463,7 @@ def _parallel_poly_from_expr(exprs, opt):
     if not opt.gens:
         raise PolificationFailed(opt, origs, exprs, True)
 
+    from sympy.functions.elementary.piecewise import Piecewise
     for k in opt.gens:
         if isinstance(k, Piecewise):
             raise PolynomialError("Piecewise generators do not make sense")
@@ -5356,12 +5415,12 @@ def lcm_list(seq, *gens, **args):
     """
     seq = sympify(seq)
 
-    def try_non_polynomial_lcm(seq):
+    def try_non_polynomial_lcm(seq) -> Optional[Expr]:
         if not gens and not args:
             domain, numbers = construct_domain(seq)
 
             if not numbers:
-                return domain.one
+                return domain.to_sympy(domain.one)
             elif domain.is_Numerical:
                 result, numbers = numbers[0], numbers[1:]
 
@@ -5930,12 +5989,12 @@ def _sorted_factors(factors, method):
         def key(obj):
             poly, exp = obj
             rep = poly.rep.rep
-            return (exp, len(rep), len(poly.gens), rep)
+            return (exp, len(rep), len(poly.gens), str(poly.domain), rep)
     else:
         def key(obj):
             poly, exp = obj
             rep = poly.rep.rep
-            return (len(rep), len(poly.gens), exp, rep)
+            return (len(rep), len(poly.gens), exp, str(poly.domain), rep)
 
     return sorted(factors, key=key)
 
@@ -6647,7 +6706,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
 
 
 @public
-def cancel(f, *gens, **args):
+def cancel(f, *gens, _signsimp=True, **args):
     """
     Cancel common factors in a rational function ``f``.
 
@@ -6671,11 +6730,13 @@ def cancel(f, *gens, **args):
     >>> together(_)
     (x + 2)/2
     """
-    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.simplify.simplify import signsimp
     from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
+    if _signsimp:
+        f = signsimp(f)
     opt = {}
     if 'polys' in args:
         opt['polys'] = args['polys']
@@ -6698,6 +6759,7 @@ def cancel(f, *gens, **args):
     else:
         raise ValueError('unexpected argument: %s' % f)
 
+    from sympy.functions.elementary.piecewise import Piecewise
     try:
         if f.has(Piecewise):
             raise PolynomialError()
@@ -6733,7 +6795,7 @@ def cancel(f, *gens, **args):
             return f.xreplace(dict(reps))
 
     c, (P, Q) = 1, F.cancel(G)
-    if opt.get('polys', False) and not 'gens' in opt:
+    if opt.get('polys', False) and 'gens' not in opt:
         opt['gens'] = R.symbols
 
     if not isinstance(f, (tuple, Tuple)):
@@ -7231,3 +7293,40 @@ def poly(expr, *gens, **args):
     opt = options.build_options(gens, args)
 
     return _poly(expr, opt)
+
+
+def named_poly(n, f, K, name, x, polys):
+    r"""Common interface to the low-level polynomial generating functions
+    in orthopolys and appellseqs.
+
+    Parameters
+    ==========
+
+    n : int
+        Index of the polynomial, which may or may not equal its degree.
+    f : callable
+        Low-level generating function to use.
+    K : Domain or None
+        Domain in which to perform the computations. If None, use the smallest
+        field containing the rationals and the extra parameters of x (see below).
+    name : str
+        Name of an arbitrary individual polynomial in the sequence generated
+        by f, only used in the error message for invalid n.
+    x : seq
+        The first element of this argument is the main variable of all
+        polynomials in this sequence. Any further elements are extra
+        parameters required by f.
+    polys : bool, optional
+        If True, return a Poly, otherwise (default) return an expression.
+    """
+    if n < 0:
+        raise ValueError("Cannot generate %s of index %s" % (name, n))
+    head, tail = x[0], x[1:]
+    if K is None:
+        K, tail = construct_domain(tail, field=True)
+    poly = DMP(f(int(n), *tail, K), K)
+    if head is None:
+        poly = PurePoly.new(poly, Dummy('x'))
+    else:
+        poly = Poly.new(poly, head)
+    return poly if polys else poly.as_expr()

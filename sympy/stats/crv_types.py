@@ -75,7 +75,7 @@ from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import asin
 from sympy.functions.special.error_functions import (erf, erfc, erfi, erfinv, expint)
@@ -516,7 +516,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
 
     alpha : Real number, `\alpha > 0`, a shape
     beta : Real number, `\beta > 0`, a shape
-    lamda: Real number, `\lambda >= 0`, noncentrality parameter
+    lamda : Real number, `\lambda \geq 0`, noncentrality parameter
 
     Returns
     =======
@@ -551,7 +551,8 @@ def BetaNoncentral(name, alpha, beta, lamda):
     /____,
     k = 0
 
-    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
+    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows:
+
     >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
     2*exp(1/2)
 
@@ -671,7 +672,7 @@ def BoundedPareto(name, alpha, left, right):
     Parameters
     ==========
 
-    alpha : Real Number, `alpha > 0`
+    alpha : Real Number, `\alpha > 0`
         Shape parameter
     left : Real Number, `left > 0`
         Location parameter
@@ -1066,11 +1067,11 @@ def Dagum(name, p, a, b):
     ==========
 
     p : Real number
-        ``p > 0``, a shape.
+        `p > 0`, a shape.
     a : Real number
-        ``a > 0``, a shape.
+        `a > 0`, a shape.
     b : Real number
-        ``b > 0``, a scale.
+        `b > 0`, a scale.
 
     Returns
     =======
@@ -1243,10 +1244,11 @@ def ExGaussian(name, mean, std, rate):
     Parameters
     ==========
 
-    mu : A Real number, the mean of Gaussian component
-    std: A positive Real number,
+    name : A string giving a name for this distribution
+    mean : A Real number, the mean of Gaussian component
+    std : A positive Real number,
         :math: `\sigma^2 > 0` the variance of Gaussian component
-    lambda: A positive Real number,
+    rate : A positive Real number,
         :math: `\lambda > 0` the rate of Exponential component
 
     Returns
@@ -1454,9 +1456,9 @@ def ExponentialPower(name, mu, alpha, beta):
 
     mu : Real number
         A location.
-    alpha : Real number,``alpha > 0``
+    alpha : Real number,`\alpha > 0`
         A  scale.
-    beta : Real number, ``beta > 0``
+    beta : Real number, `\beta > 0`
         A shape.
 
     Returns
@@ -1541,8 +1543,8 @@ def FDistribution(name, d1, d2):
     Parameters
     ==========
 
-    d1 : `d_1 > 0`, where d_1 is the degrees of freedom (n_1 - 1)
-    d2 : `d_2 > 0`, where d_2 is the degrees of freedom (n_2 - 1)
+    d1 : `d_1 > 0`, where `d_1` is the degrees of freedom (`n_1 - 1`)
+    d2 : `d_2 > 0`, where `d_2` is the degrees of freedom (`n_2 - 1`)
 
     Returns
     =======
@@ -1619,9 +1621,9 @@ def FisherZ(name, d1, d2):
     Parameters
     ==========
 
-    d1 : ``d_1 > 0``
+    d1 : `d_1 > 0`
         Degree of freedom.
-    d2 : ``d_2 > 0``
+    d2 : `d_2 > 0`
         Degree of freedom.
 
     Returns
@@ -1792,7 +1794,7 @@ def Gamma(name, k, theta):
     Parameters
     ==========
 
-    k : Real number, ``k > 0``, a shape
+    k : Real number, `k > 0`, a shape
     theta : Real number, `\theta > 0`, a scale
 
     Returns
@@ -1899,8 +1901,8 @@ def GammaInverse(name, a, b):
     Parameters
     ==========
 
-    a : Real number, `a > 0` a shape
-    b : Real number, `b > 0` a scale
+    a : Real number, `a > 0`, a shape
+    b : Real number, `b > 0`, a scale
 
     Returns
     =======
@@ -2006,9 +2008,9 @@ def Gumbel(name, beta, mu, minimum=False):
     Parameters
     ==========
 
-    mu : Real number, 'mu' is a location
-    beta : Real number, 'beta > 0' is a scale
-    minimum : Boolean, by default, False, set to True for enabling minimum distribution
+    mu : Real number, `\mu`, a location
+    beta : Real number, `\beta > 0`, a scale
+    minimum : Boolean, by default ``False``, set to ``True`` for enabling minimum distribution
 
     Returns
     =======
@@ -2077,13 +2079,13 @@ def Gompertz(name, b, eta):
     .. math::
         f(x) := b \eta e^{b x} e^{\eta} \exp \left(-\eta e^{bx} \right)
 
-    with :math: 'x \in [0, \inf)'.
+    with :math:`x \in [0, \infty)`.
 
     Parameters
     ==========
 
-    b: Real number, 'b > 0' a scale
-    eta: Real number, 'eta > 0' a shape
+    b : Real number, `b > 0`, a scale
+    eta : Real number, `\eta > 0`, a shape
 
     Returns
     =======
@@ -2155,8 +2157,8 @@ def Kumaraswamy(name, a, b):
     Parameters
     ==========
 
-    a : Real number, ``a > 0`` a shape
-    b : Real number, ``b > 0`` a shape
+    a : Real number, `a > 0`, a shape
+    b : Real number, `b > 0`, a shape
 
     Returns
     =======
@@ -2303,7 +2305,7 @@ class LevyDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(mu, c):
         _value_check(c > 0, "c (scale parameter) must be positive")
-        _value_check(mu.is_real, "mu (location paramater) must be real")
+        _value_check(mu.is_real, "mu (location parameter) must be real")
 
     def pdf(self, x):
         mu, c = self.mu, self.c
@@ -2334,7 +2336,7 @@ def Levy(name, mu, c):
 
     mu : Real number
         The location parameter.
-    c : Real number, ``c > 0``
+    c : Real number, `c > 0`
         A scale parameter.
 
     Returns
@@ -2491,7 +2493,7 @@ def Logistic(name, mu, s):
     ==========
 
     mu : Real number, the location (mean)
-    s : Real number, `s > 0` a scale
+    s : Real number, `s > 0`, a scale
 
     Returns
     =======
@@ -2574,7 +2576,7 @@ def LogLogistic(name, alpha, beta):
     ==========
 
     alpha : Real number, `\alpha > 0`, scale parameter and median of distribution
-    beta : Real number, `\beta > 0` a shape parameter
+    beta : Real number, `\beta > 0`, a shape parameter
 
     Returns
     =======
@@ -2659,7 +2661,7 @@ def LogitNormal(name, mu, s):
     ==========
 
     mu : Real number, the location (mean)
-    s : Real number, `s > 0` a scale
+    s : Real number, `s > 0`, a scale
 
     Returns
     =======
@@ -2836,9 +2838,9 @@ def Lomax(name, alpha, lamda):
     Parameters
     ==========
 
-    alpha : Real Number, `alpha > 0`
+    alpha : Real Number, `\alpha > 0`
         Shape parameter
-    lamda : Real Number, `lamda > 0`
+    lamda : Real Number, `\lambda > 0`
         Scale parameter
 
     Examples
@@ -3070,7 +3072,7 @@ def Nakagami(name, mu, omega):
     Parameters
     ==========
 
-    mu : Real number, `\mu \geq \frac{1}{2}` a shape
+    mu : Real number, `\mu \geq \frac{1}{2}`, a shape
     omega : Real number, `\omega > 0`, the spread
 
     Returns
@@ -3172,7 +3174,7 @@ def Normal(name, mean, std):
 
     mu : Real number or a list representing the mean or the mean vector
     sigma : Real number or a positive definite square matrix,
-         :math:`\sigma^2 > 0` the variance
+         :math:`\sigma^2 > 0`, the variance
 
     Returns
     =======
@@ -3485,9 +3487,9 @@ def PowerFunction(name, alpha, a, b):
     Parameters
     ==========
 
-    alpha: Positive number, `0 < alpha` the shape paramater
-    a : Real number, :math:`-\infty < a` the left boundary
-    b : Real number, :math:`a < b < \infty` the right boundary
+    alpha : Positive number, `0 < \alpha`, the shape parameter
+    a : Real number, :math:`-\infty < a`, the left boundary
+    b : Real number, :math:`a < b < \infty`, the right boundary
 
     Returns
     =======
@@ -3883,13 +3885,13 @@ def ShiftedGompertz(name, b, eta):
     .. math::
         f(x) := b e^{-b x} e^{-\eta \exp(-b x)} \left[1 + \eta(1 - e^(-bx)) \right]
 
-    with :math: 'x \in [0, \inf)'.
+    with :math:`x \in [0, \infty)`.
 
     Parameters
     ==========
 
-    b: Real number, 'b > 0' a scale
-    eta: Real number, 'eta > 0' a shape
+    b : Real number, `b > 0`, a scale
+    eta : Real number, `\eta > 0`, a shape
 
     Returns
     =======
@@ -4058,8 +4060,8 @@ def Trapezoidal(name, a, b, c, d):
     ==========
 
     a : Real number, :math:`a < d`
-    b : Real number, :math:`a <= b < c`
-    c : Real number, :math:`b < c <= d`
+    b : Real number, :math:`a \le b < c`
+    c : Real number, :math:`b < c \le d`
     d : Real number
 
     Returns
@@ -4248,7 +4250,6 @@ class UniformDistribution(SingleContinuousDistribution):
                          (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
-        from sympy.functions.elementary.miscellaneous import (Max, Min)
         kwargs['evaluate'] = True
         result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
         result = result.subs({Max(self.left, self.right): self.right,
@@ -4276,8 +4277,8 @@ def Uniform(name, left, right):
     Parameters
     ==========
 
-    a : Real number, :math:`-\infty < a` the left boundary
-    b : Real number, :math:`a < b < \infty` the right boundary
+    a : Real number, :math:`-\infty < a`, the left boundary
+    b : Real number, :math:`a < b < \infty`, the right boundary
 
     Returns
     =======
@@ -4373,7 +4374,7 @@ def UniformSum(name, n):
     Parameters
     ==========
 
-    n : A positive Integer, `n > 0`
+    n : A positive integer, `n > 0`
 
     Returns
     =======
@@ -4538,8 +4539,8 @@ def Weibull(name, alpha, beta):
     Parameters
     ==========
 
-    lambda : Real number, :math:`\lambda > 0` a scale
-    k : Real number, ``k > 0`` a shape
+    lambda : Real number, $\lambda > 0$, a scale
+    k : Real number, $k > 0$, a shape
 
     Returns
     =======
@@ -4626,7 +4627,7 @@ def WignerSemicircle(name, R):
     Returns
     =======
 
-    A `RandomSymbol`.
+    A RandomSymbol.
 
     Examples
     ========

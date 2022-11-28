@@ -4,12 +4,12 @@ only and should not be used anywhere else as these do not possess the
 signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
-from itertools import combinations, product
-from sympy.core.singleton import S
-from sympy.logic.boolalg import (Equivalent, ITE, Implies, Nand, Nor, Xor)
+from itertools import combinations, product, zip_longest
+from sympy.assumptions.assume import AppliedPredicate, Predicate
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+from sympy.core.singleton import S
 from sympy.logic.boolalg import Or, And, Not, Xnor
-from itertools import zip_longest
+from sympy.logic.boolalg import (Equivalent, ITE, Implies, Nand, Nor, Xor)
 
 
 class Literal:
@@ -171,10 +171,9 @@ def to_NNF(expr, composite_map=None):
     (Literal(Q.negative(x), False) | Literal(Q.zero(x), False))
     """
     from sympy.assumptions.ask import Q
-    from sympy.assumptions.assume import AppliedPredicate, Predicate
 
     if composite_map is None:
-        composite_map = dict()
+        composite_map = {}
 
 
     binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
@@ -406,8 +405,8 @@ class EncodedCNF:
     """
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
-            data = list()
-            encoding = dict()
+            data = []
+            encoding = {}
         self.data = data
         self.encoding = encoding
         self._symbols = list(encoding.keys())
@@ -415,7 +414,7 @@ class EncodedCNF:
     def from_cnf(self, cnf):
         self._symbols = list(cnf.all_predicates())
         n = len(self._symbols)
-        self.encoding = dict(list(zip(self._symbols, list(range(1, n + 1)))))
+        self.encoding = dict(zip(self._symbols, range(1, n + 1)))
         self.data = [self.encode(clause) for clause in cnf.clauses]
 
     @property

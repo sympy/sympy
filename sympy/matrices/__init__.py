@@ -12,7 +12,8 @@ from .dense import (
 from .dense import MutableDenseMatrix
 from .matrices import DeferredVector, MatrixBase
 
-Matrix = MutableMatrix = MutableDenseMatrix
+MutableMatrix = MutableDenseMatrix
+Matrix = MutableMatrix
 
 from .sparse import MutableSparseMatrix
 from .sparsetools import banded

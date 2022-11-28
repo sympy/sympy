@@ -3,7 +3,6 @@ from sympy.core.expr import Expr
 from sympy.core import sympify, S, preorder_traversal
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -17,24 +16,6 @@ def _get_coord_systems(expr):
             ret.add(i)
             g.skip()
     return frozenset(ret)
-
-
-def _get_coord_sys_from_expr(expr, coord_sys=None):
-    """
-    expr : expression
-        The coordinate system is extracted from this parameter.
-    """
-
-    # TODO: Remove this line when warning from issue #12884 will be removed
-    if coord_sys is not None:
-        SymPyDeprecationWarning(
-            feature="coord_sys parameter",
-            useinstead="do not use it",
-            deprecated_since_version="1.1",
-            issue=12884,
-        ).warn()
-
-    return _get_coord_systems(expr)
 
 
 def _split_mul_args_wrt_coordsys(expr):
@@ -65,7 +46,7 @@ class Gradient(Expr):
         obj._expr = expr
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return gradient(self._expr, doit=True)
 
 
@@ -90,7 +71,7 @@ class Divergence(Expr):
         obj._expr = expr
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return divergence(self._expr, doit=True)
 
 
@@ -115,11 +96,11 @@ class Curl(Expr):
         obj._expr = expr
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return curl(self._expr, doit=True)
 
 
-def curl(vect, coord_sys=None, doit=True):
+def curl(vect, doit=True):
     """
     Returns the curl of a vector field computed wrt the base scalars
     of the given coordinate system.
@@ -129,10 +110,6 @@ def curl(vect, coord_sys=None, doit=True):
 
     vect : Vector
         The vector operand
-
-    coord_sys : CoordSys3D
-        The coordinate system to calculate the gradient in.
-        Deprecated since version 1.1
 
     doit : bool
         If True, the result is returned after calling .doit() on
@@ -153,7 +130,7 @@ def curl(vect, coord_sys=None, doit=True):
 
     """
 
-    coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
+    coord_sys = _get_coord_systems(vect)
 
     if len(coord_sys) == 0:
         return Vector.zero
@@ -198,7 +175,7 @@ def curl(vect, coord_sys=None, doit=True):
             raise Curl(vect)
 
 
-def divergence(vect, coord_sys=None, doit=True):
+def divergence(vect, doit=True):
     """
     Returns the divergence of a vector field computed wrt the base
     scalars of the given coordinate system.
@@ -208,10 +185,6 @@ def divergence(vect, coord_sys=None, doit=True):
 
     vector : Vector
         The vector operand
-
-    coord_sys : CoordSys3D
-        The coordinate system to calculate the gradient in
-        Deprecated since version 1.1
 
     doit : bool
         If True, the result is returned after calling .doit() on
@@ -232,7 +205,7 @@ def divergence(vect, coord_sys=None, doit=True):
     2*R.z
 
     """
-    coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
+    coord_sys = _get_coord_systems(vect)
     if len(coord_sys) == 0:
         return S.Zero
     elif len(coord_sys) == 1:
@@ -269,7 +242,7 @@ def divergence(vect, coord_sys=None, doit=True):
             raise Divergence(vect)
 
 
-def gradient(scalar_field, coord_sys=None, doit=True):
+def gradient(scalar_field, doit=True):
     """
     Returns the vector gradient of a scalar field computed wrt the
     base scalars of the given coordinate system.
@@ -279,10 +252,6 @@ def gradient(scalar_field, coord_sys=None, doit=True):
 
     scalar_field : SymPy Expr
         The scalar field to compute the gradient of
-
-    coord_sys : CoordSys3D
-        The coordinate system to calculate the gradient in
-        Deprecated since version 1.1
 
     doit : bool
         If True, the result is returned after calling .doit() on
@@ -302,7 +271,7 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     10*R.x*R.z*R.i + 5*R.x**2*R.k
 
     """
-    coord_sys = _get_coord_sys_from_expr(scalar_field, coord_sys)
+    coord_sys = _get_coord_systems(scalar_field)
 
     if len(coord_sys) == 0:
         return Vector.zero
@@ -348,7 +317,7 @@ class Laplacian(Expr):
         obj._expr = expr
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         from sympy.vector.functions import laplacian
         return laplacian(self._expr)
 

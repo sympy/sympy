@@ -1,4 +1,4 @@
-.. _booleans:
+.. _booleans-guide:
 
 =============================
  Symbolic and fuzzy booleans
@@ -209,7 +209,7 @@ the statement "``a`` and ``b`` are both positive" is true, false or unknown:
     >>> print(both_positive_better(S(1), y))
     True
 
-Another case that we need to careful of when using fuzzy-bools is negation
+Another case that we need to be careful of when using fuzzy-bools is negation
 with Python's ``not`` operator e.g.:
 
     >>> x = Symbol('x')

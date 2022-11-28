@@ -1,0 +1,44 @@
+# This builds a preview of the docs which can be seen on pull requests. It
+# also uses the .github/workflows/docs-preview.yml GitHub Actions workflow.
+
+# This is separate from the GitHub Actions build that builds the docs, which
+# also builds the docs PDF.
+version: 2
+
+# Aliases to reuse
+_defaults: &defaults
+  docker:
+    # CircleCI maintains a library of pre-built images
+    # documented at https://circleci.com/docs/2.0/circleci-images/
+    - image: cimg/python:3.10.2
+  working_directory: ~/repo
+
+jobs:
+  Build Docs Preview:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          no_output_timeout: 25m
+          command: |
+            sudo apt update
+            sudo apt install imagemagick graphviz librsvg2-bin
+            cd doc
+            pip install -r requirements.txt
+      - run:
+          name: Build docs
+          no_output_timeout: 25m
+          command: |
+            cd doc
+            make html
+      - store_artifacts:
+          path: doc/_build/html
+
+workflows:
+  version: 2
+  default:
+    jobs:
+      - Build Docs Preview

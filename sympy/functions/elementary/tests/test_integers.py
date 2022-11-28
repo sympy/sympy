@@ -7,7 +7,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.elementary.trigonometric import sin, cos, tan
 
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import XFAIL
@@ -546,6 +546,54 @@ def test_series():
     assert ceiling(x).nseries(x, 0, 100) == 1
     assert floor(-x).nseries(x, 0, 100) == -1
     assert ceiling(-x).nseries(x, 0, 100) == 0
+
+
+def test_issue_14355():
+    # This test checks the leading term and series for the floor and ceil
+    # function when arg0 evaluates to S.NaN.
+    assert floor((x**3 + x)/(x**2 - x)).as_leading_term(x, cdir = 1) == -2
+    assert floor((x**3 + x)/(x**2 - x)).as_leading_term(x, cdir = -1) == -1
+    assert floor((cos(x) - 1)/x).as_leading_term(x, cdir = 1) == -1
+    assert floor((cos(x) - 1)/x).as_leading_term(x, cdir = -1) == 0
+    assert floor(sin(x)/x).as_leading_term(x, cdir = 1) == 0
+    assert floor(sin(x)/x).as_leading_term(x, cdir = -1) == 0
+    assert floor(-tan(x)/x).as_leading_term(x, cdir = 1) == -2
+    assert floor(-tan(x)/x).as_leading_term(x, cdir = -1) == -2
+    assert floor(sin(x)/x/3).as_leading_term(x, cdir = 1) == 0
+    assert floor(sin(x)/x/3).as_leading_term(x, cdir = -1) == 0
+    assert ceiling((x**3 + x)/(x**2 - x)).as_leading_term(x, cdir = 1) == -1
+    assert ceiling((x**3 + x)/(x**2 - x)).as_leading_term(x, cdir = -1) == 0
+    assert ceiling((cos(x) - 1)/x).as_leading_term(x, cdir = 1) == 0
+    assert ceiling((cos(x) - 1)/x).as_leading_term(x, cdir = -1) == 1
+    assert ceiling(sin(x)/x).as_leading_term(x, cdir = 1) == 1
+    assert ceiling(sin(x)/x).as_leading_term(x, cdir = -1) == 1
+    assert ceiling(-tan(x)/x).as_leading_term(x, cdir = 1) == -1
+    assert ceiling(-tan(x)/x).as_leading_term(x, cdir = 1) == -1
+    assert ceiling(sin(x)/x/3).as_leading_term(x, cdir = 1) == 1
+    assert ceiling(sin(x)/x/3).as_leading_term(x, cdir = -1) == 1
+    # test for series
+    assert floor(sin(x)/x).series(x, 0, 100, cdir = 1) == 0
+    assert floor(sin(x)/x).series(x, 0, 100, cdir = 1) == 0
+    assert floor((x**3 + x)/(x**2 - x)).series(x, 0, 100, cdir = 1) == -2
+    assert floor((x**3 + x)/(x**2 - x)).series(x, 0, 100, cdir = -1) == -1
+    assert ceiling(sin(x)/x).series(x, 0, 100, cdir = 1) == 1
+    assert ceiling(sin(x)/x).series(x, 0, 100, cdir = -1) == 1
+    assert ceiling((x**3 + x)/(x**2 - x)).series(x, 0, 100, cdir = 1) == -1
+    assert ceiling((x**3 + x)/(x**2 - x)).series(x, 0, 100, cdir = -1) == 0
+
+
+def test_frac_leading_term():
+    assert frac(x).as_leading_term(x) == x
+    assert frac(x).as_leading_term(x, cdir = 1) == x
+    assert frac(x).as_leading_term(x, cdir = -1) == 1
+    assert frac(x + S.Half).as_leading_term(x, cdir = 1) == S.Half
+    assert frac(x + S.Half).as_leading_term(x, cdir = -1) == S.Half
+    assert frac(-2*x + 1).as_leading_term(x, cdir = 1) == S.One
+    assert frac(-2*x + 1).as_leading_term(x, cdir = -1) == -2*x
+    assert frac(sin(x) + 5).as_leading_term(x, cdir = 1) == x
+    assert frac(sin(x) + 5).as_leading_term(x, cdir = -1) == S.One
+    assert frac(sin(x**2) + 5).as_leading_term(x, cdir = 1) == x**2
+    assert frac(sin(x**2) + 5).as_leading_term(x, cdir = -1) == x**2
 
 
 @XFAIL

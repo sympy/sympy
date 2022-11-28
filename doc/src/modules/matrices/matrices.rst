@@ -523,38 +523,37 @@ So there is quite a bit that can be done with the module including eigenvalues,
 eigenvectors, nullspace calculation, cofactor expansion tools, and so on. From
 here one might want to look over the ``matrices.py`` file for all functionality.
 
-MatrixDeterminant Class Reference
----------------------------------
+Reference
+---------
+
+Matrix Base Classes
+^^^^^^^^^^^^^^^^^^^
+
+The Matrix classes are built from functionality in various base classes. Every
+methods and attribute of ``Matrix`` is implemented on one of these base
+classes. See also :doc:`/modules/matrices/common`,
+:doc:`/modules/matrices/dense`, and :doc:`/modules/matrices/sparse`.
+
 .. autoclass:: MatrixDeterminant
    :members:
 
-MatrixReductions Class Reference
---------------------------------
 .. autoclass:: MatrixReductions
    :members:
 
-MatrixSubspaces Class Reference
--------------------------------
 .. autoclass:: MatrixSubspaces
    :members:
 
-MatrixEigen Class Reference
----------------------------
 .. autoclass:: MatrixEigen
    :members:
 
-MatrixCalculus Class Reference
-------------------------------
 .. autoclass:: MatrixCalculus
    :members:
 
-MatrixBase Class Reference
---------------------------
 .. autoclass:: MatrixBase
    :members:
 
-Matrix Exceptions Reference
----------------------------
+Matrix Exceptions
+^^^^^^^^^^^^^^^^^
 
 .. autoclass:: MatrixError
    :members:
@@ -566,8 +565,8 @@ Matrix Exceptions Reference
    :members:
 
 
-Matrix Functions Reference
---------------------------
+Matrix Functions
+^^^^^^^^^^^^^^^^
 
 .. autofunction:: sympy.matrices.dense::matrix_multiply_elementwise
 
@@ -591,8 +590,8 @@ Matrix Functions Reference
 
 .. autofunction:: sympy.matrices.dense::randMatrix
 
-Numpy Utility Functions Reference
----------------------------------
+Numpy Utility Functions
+^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: sympy.matrices.dense::list2numpy
 

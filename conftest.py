@@ -36,7 +36,7 @@ else:
 
 if os.path.exists(blacklist_path):
     with open(blacklist_path, 'rt') as stream:
-        blacklist_group = _mk_group(json.loads(stream.read()))
+        blacklist_group = _mk_group(json.load(stream))
 else:
     warnings.warn("conftest.py:28: Could not find %s, no tests will be skipped due to blacklisting\n" % blacklist_path)
     blacklist_group = []

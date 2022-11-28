@@ -95,7 +95,7 @@ class BinaryRelation(Predicate):
     def _compare_reflexive(self, lhs, rhs):
         # quick exit for structurally same arguments
         # do not check != here because it cannot catch the
-        # equivalent arguements with different structures.
+        # equivalent arguments with different structures.
 
         # reflexivity does not hold to NaN
         if lhs is S.NaN or rhs is S.NaN:
@@ -183,7 +183,7 @@ class AppliedBinaryRelation(AppliedPredicate):
         binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
         for a in conjuncts(assumptions):
             if a.func in binrelpreds:
-                conj_assumps.add(binrelpreds[a.func](*a.args))
+                conj_assumps.add(binrelpreds[type(a)](*a.args))
             else:
                 conj_assumps.add(a)
 

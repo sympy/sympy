@@ -149,7 +149,7 @@ def sdm_monomial_divides(A, B):
 # The actual distributed modules code.
 
 def sdm_LC(f, K):
-    """Returns the leading coeffcient of ``f``. """
+    """Returns the leading coefficient of ``f``. """
     if not f:
         return K.zero
     else:
@@ -681,7 +681,7 @@ def sdm_groebner(G, NF, O, K, extended=False):
                     remove.add(j)
 
         # TODO mergesort?
-        P.extend(reversed([p for i, p in enumerate(N) if not i in remove]))
+        P.extend(reversed([p for i, p in enumerate(N) if i not in remove]))
         P.sort(key=ourkey, reverse=True)
         # NOTE reverse-sort, because we want to pop from the end
         return P

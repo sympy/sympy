@@ -160,8 +160,7 @@ def FlorySchulz(name, a):
     Parameters
     ==========
 
-    a
-        A real number between 0 and 1
+    a : A real number between 0 and 1
 
     Returns
     =======
@@ -180,7 +179,7 @@ def FlorySchulz(name, a):
     >>> X = FlorySchulz("x", a)
 
     >>> density(X)(z)
-    (4/5)**(z - 1)*z/25
+    (5/4)**(1 - z)*z/25
 
     >>> E(X)
     9
@@ -234,7 +233,7 @@ def Geometric(name, p):
     Parameters
     ==========
 
-    p: A probability between 0 and 1
+    p : A probability between 0 and 1
 
     Returns
     =======
@@ -253,7 +252,7 @@ def Geometric(name, p):
     >>> X = Geometric("x", p)
 
     >>> density(X)(z)
-    (4/5)**(z - 1)/5
+    (5/4)**(1 - z)/5
 
     >>> E(X)
     5
@@ -320,8 +319,8 @@ def Hermite(name, a1, a2):
     Parameters
     ==========
 
-    a1: A Positive number greater than equal to 0.
-    a2: A Positive number greater than equal to 0.
+    a1 : A Positive number greater than equal to 0.
+    a2 : A Positive number greater than equal to 0.
 
     Returns
     =======
@@ -399,7 +398,7 @@ def Logarithmic(name, p):
     Parameters
     ==========
 
-    p: A value between 0 and 1
+    p : A value between 0 and 1
 
     Returns
     =======
@@ -481,8 +480,8 @@ def NegativeBinomial(name, r, p):
     Parameters
     ==========
 
-    r: A positive value
-    p: A value between 0 and 1
+    r : A positive value
+    p : A value between 0 and 1
 
     Returns
     =======
@@ -557,7 +556,7 @@ def Poisson(name, lamda):
     Parameters
     ==========
 
-    lamda: Positive number, a rate
+    lamda : Positive number, a rate
 
     Returns
     =======
@@ -645,8 +644,8 @@ def Skellam(name, mu1, mu2):
     Parameters
     ==========
 
-    mu1: A non-negative value
-    mu2: A non-negative value
+    mu1 : A non-negative value
+    mu2 : A non-negative value
 
     Returns
     =======
@@ -727,7 +726,7 @@ def YuleSimon(name, rho):
     Parameters
     ==========
 
-    rho: A positive value
+    rho : A positive value
 
     Returns
     =======
@@ -800,7 +799,7 @@ def Zeta(name, s):
     Parameters
     ==========
 
-    s: A value greater than 1
+    s : A value greater than 1
 
     Returns
     =======

@@ -48,6 +48,7 @@ For the sake of completeness, `f(n)` can be:
 """
 from collections import defaultdict
 
+from sympy.concrete import product
 from sympy.core.singleton import S
 from sympy.core.numbers import Rational, I
 from sympy.core.symbol import Symbol, Wild, Dummy
@@ -81,11 +82,11 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
     There are two methods for computing the polynomial solutions.
     If the degree bound is relatively small, i.e. it's smaller than
     or equal to the order of the recurrence, then naive method of
-    undetermined coefficients is being used. This gives system
+    undetermined coefficients is being used. This gives a system
     of algebraic equations with `N+1` unknowns.
 
     In the other case, the algorithm performs transformation of the
-    initial equation to an equivalent one, for which the system of
+    initial equation to an equivalent one for which the system of
     algebraic equations has only `r` indeterminates. This method is
     quite sophisticated (in comparison with the naive one) and was
     invented together by Abramov, Bronstein and Petkovsek.
@@ -196,6 +197,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
         solutions = solve_undetermined_coeffs(E - f, C, n)
 
         if solutions is not None:
+            _C = C
             C = [c for c in C if (c not in solutions)]
             result = y.subs(solutions)
         else:
@@ -328,6 +330,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
         else:
             result = h
 
+        _C = C[:]
         for c, q in list(zip(C, Q)):
             if c in solutions:
                 s = solutions[c]*q
@@ -336,6 +339,11 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
                 s = c*q
 
             result += s.expand()
+
+    if C != _C:
+        # renumber so they are contiguous
+        result = result.xreplace(dict(zip(C, _C)))
+        C = _C[:len(C)]
 
     if hints.get('symbols', False):
         return (result, C)
@@ -365,14 +373,14 @@ def rsolve_ratio(coeffs, f, n, **hints):
             `y(n) = u(n)/v(n)` and solve it for `u(n)` finding all its
             polynomial solutions. Return ``None`` if none were found.
 
-    Algorithm implemented here is a revised version of the original
+    The algorithm implemented here is a revised version of the original
     Abramov's algorithm, developed in 1989. The new approach is much
     simpler to implement and has better overall efficiency. This
-    method can be easily adapted to q-difference equations case.
+    method can be easily adapted to the q-difference equations case.
 
     Besides finding rational solutions alone, this functions is
-    an important part of Hyper algorithm were it is used to find
-    particular solution of inhomogeneous part of a recurrence.
+    an important part of Hyper algorithm where it is used to find
+    a particular solution for the inhomogeneous part of a recurrence.
 
     Examples
     ========
@@ -381,7 +389,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
     >>> from sympy.solvers.recurr import rsolve_ratio
     >>> rsolve_ratio([-2*x**3 + x**2 + 2*x - 1, 2*x**3 + x**2 - 6*x,
     ... - 2*x**3 - 11*x**2 - 18*x - 9, 2*x**3 + 13*x**2 + 22*x + 8], 0, x)
-    C2*(2*x - 3)/(2*(x**2 - 1))
+    C0*(2*x - 3)/(2*(x**2 - 1))
 
     References
     ==========
@@ -509,8 +517,6 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     .. [2] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.
     """
-    from sympy.concrete import product
-
     coeffs = list(map(sympify, coeffs))
 
     f = sympify(f)
@@ -532,10 +538,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 else:
                     similar[g] = S.Zero
 
-            inhomogeneous = []
-
-            for g, h in similar.items():
-                inhomogeneous.append(g + h)
+            inhomogeneous = [g + h for g, h in similar.items()]
         elif f.is_hypergeometric(n):
             inhomogeneous = [f]
         else:
@@ -558,14 +561,24 @@ def rsolve_hyper(coeffs, f, n, **hints):
             for j in range(r + 1):
                 polys[j] *= Mul(*(denoms[:j] + denoms[j + 1:]))
 
-            R = rsolve_poly(polys, Mul(*denoms), n)
+            # FIXME: The call to rsolve_ratio below should suffice (rsolve_poly
+            # call can be removed) but the XFAIL test_rsolve_ratio_missed must
+            # be fixed first.
+            R = rsolve_ratio(polys, Mul(*denoms), n, symbols=True)
+            if R is not None:
+                R, syms = R
+                if syms:
+                    R = R.subs(zip(syms, [0]*len(syms)))
+            else:
+                R = rsolve_poly(polys, Mul(*denoms), n)
 
-            if not (R is None or R is S.Zero):
+            if R:
                 inhomogeneous[i] *= R
             else:
                 return None
 
             result = Add(*inhomogeneous)
+            result = simplify(result)
     else:
         result = S.Zero
 
@@ -623,14 +636,13 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if d == 0 and 0 != Add(*[recurr_coeffs[j]*j for j in range(1, r + 1)]):
                 # faster inline check (than calling rsolve_poly) for a
                 # constant solution to a constant coefficient recurrence.
-                C = Symbol("C" + str(len(symbols)))
-                s = [C]
+                sol = [Symbol("C" + str(len(symbols)))]
             else:
-                C, s = rsolve_poly(recurr_coeffs, 0, n, len(symbols), symbols=True)
+                sol, syms = rsolve_poly(recurr_coeffs, 0, n, len(symbols), symbols=True)
+                sol = sol.collect(syms)
+                sol = [sol.coeff(s) for s in syms]
 
-            if C is not None and C is not S.Zero:
-                symbols |= set(s)
-
+            for C in sol:
                 ratio = z * A * C.subs(n, n + 1) / B / C
                 ratio = simplify(ratio)
                 # If there is a nonnegative root in the denominator of the ratio,
@@ -652,11 +664,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
     kernel.sort(key=default_sort_key)
     sk = list(zip(numbered_symbols('C'), kernel))
 
-    if sk:
-        for C, ker in sk:
-            result += C * ker
-    else:
-        return None
+    for C, ker in sk:
+        result += C * ker
 
     if hints.get('symbols', False):
         # XXX: This returns the symbols in a non-deterministic order

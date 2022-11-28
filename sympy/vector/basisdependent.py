@@ -1,6 +1,7 @@
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-from sympy.simplify import simplify as simp, trigsimp as tsimp
+from sympy.simplify import simplify as simp, trigsimp as tsimp  # type: ignore
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.assumptions import StdFactKB
 from sympy.core.function import diff as df
@@ -8,6 +9,9 @@ from sympy.integrals.integrals import Integral
 from sympy.polys.polytools import factor as fctr
 from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
+
+if TYPE_CHECKING:
+    from sympy.vector.vector import BaseVector
 
 
 class BasisDependent(Expr):
@@ -17,6 +21,8 @@ class BasisDependent(Expr):
     Named so because the representation of these quantities in
     sympy.vector is dependent on the basis they are expressed in.
     """
+
+    zero: BasisDependentZero
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
@@ -299,9 +305,8 @@ class BasisDependentZero(BasisDependent):
     """
     Class to denote a zero basis dependent instance.
     """
-    # XXX: Can't type the keys as BaseVector because of cyclic import
-    # problems.
-    components = {}  # type: tDict[Any, Expr]
+    components: dict['BaseVector', Expr] = {}
+    _latex_form: str
 
     def __new__(cls):
         obj = super().__new__(cls)

@@ -98,7 +98,7 @@ class MapleCodePrinter(CodePrinter):
 
     def __init__(self, settings=None):
         if settings is None:
-            settings = dict()
+            settings = {}
         super().__init__(settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
@@ -303,8 +303,7 @@ def print_maple_code(expr, **settings):
     Examples
     ========
 
-    >>> from sympy.printing.maple import print_maple_code
-    >>> from sympy import symbols
+    >>> from sympy import print_maple_code, symbols
     >>> x, y = symbols('x y')
     >>> print_maple_code(x, assign_to=y)
     y := x

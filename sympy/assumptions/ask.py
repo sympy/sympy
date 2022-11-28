@@ -8,7 +8,9 @@ from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.inference import satisfiable
 from sympy.utilities.decorator import memoize_property
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import (sympy_deprecation_warning,
+                                        SymPyDeprecationWarning,
+                                        ignore_warnings)
 
 
 # Memoization is necessary for the properties of AssumptionKeys to
@@ -458,7 +460,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
     elif proposition.func in binrelpreds:
-        key, args = binrelpreds[proposition.func], proposition.args
+        key, args = binrelpreds[type(proposition)], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
 
@@ -586,12 +588,14 @@ def register_handler(key, handler):
         Use multipledispatch handler instead. See :obj:`~.Predicate`.
 
     """
-    SymPyDeprecationWarning(
-        feature="register_handler() function",
-        useinstead="multipledispatch handler of Predicate",
-        issue=20873,
-        deprecated_since_version="1.8"
-    ).warn()
+    sympy_deprecation_warning(
+        """
+        The AskHandler system is deprecated. The register_handler() function
+        should be replaced with the multipledispatch handler of Predicate.
+        """,
+        deprecated_since_version="1.8",
+        active_deprecations_target='deprecated-askhandler',
+    )
     if isinstance(key, Predicate):
         key = key.name.name
     Qkey = getattr(Q, key, None)
@@ -609,15 +613,19 @@ def remove_handler(key, handler):
         Use multipledispatch handler instead. See :obj:`~.Predicate`.
 
     """
-    SymPyDeprecationWarning(
-        feature="remove_handler() function",
-        useinstead="multipledispatch handler of Predicate",
-        issue=20873,
-        deprecated_since_version="1.8"
-    ).warn()
+    sympy_deprecation_warning(
+        """
+        The AskHandler system is deprecated. The remove_handler() function
+        should be replaced with the multipledispatch handler of Predicate.
+        """,
+        deprecated_since_version="1.8",
+        active_deprecations_target='deprecated-askhandler',
+    )
     if isinstance(key, Predicate):
         key = key.name.name
-    getattr(Q, key).remove_handler(handler)
+    # Don't show the same warning again recursively
+    with ignore_warnings(SymPyDeprecationWarning):
+        getattr(Q, key).remove_handler(handler)
 
 
 from sympy.assumptions.ask_generated import (get_all_known_facts,

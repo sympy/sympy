@@ -2,10 +2,12 @@ from sympy.core.function import expand_func
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
+from sympy.functions.elementary.complexes import Abs, arg, re, unpolarify
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
-from sympy.functions.elementary.hyperbolic import cosh
+from sympy.functions.elementary.hyperbolic import cosh, acosh
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
+from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
+from sympy.functions.elementary.trigonometric import (cos, sin, sinc, asin)
 from sympy.functions.special.error_functions import (erf, erfc)
 from sympy.functions.special.gamma_functions import (gamma, polygamma)
 from sympy.functions.special.hyper import (hyper, meijerg)
@@ -129,7 +131,6 @@ def test_recursive():
 def test_meijerint():
     from sympy.core.function import expand
     from sympy.core.symbol import symbols
-    from sympy.functions.elementary.complexes import arg
     s, t, mu = symbols('s t mu', real=True)
     assert integrate(meijerg([], [], [0], [], s*t)
                      *meijerg([], [], [mu/2], [-mu/2], t**2/4),
@@ -199,7 +200,6 @@ def test_meijerint():
     # (This is besselj*besselj in disguise, to stop the product from being
     #  recognised in the tables.)
     a, b, s = symbols('a b s')
-    from sympy.functions.elementary.complexes import re
     assert meijerint_definite(meijerg([], [], [a/2], [-a/2], x/4)
                   *meijerg([], [], [b/2], [-b/2], x/4)*x**(s - 1), x, 0, oo
         ) == (
@@ -283,7 +283,6 @@ def test_bessel():
 
 
 def test_inversion():
-    from sympy.functions.elementary.piecewise import piecewise_fold
     from sympy.functions.special.bessel import besselj
     from sympy.functions.special.delta_functions import Heaviside
 
@@ -391,7 +390,6 @@ def test_probability():
     # various integrals from probability theory
     from sympy.core.function import expand_mul
     from sympy.core.symbol import (Symbol, symbols)
-    from sympy.functions.elementary.complexes import Abs
     from sympy.simplify.gammasimp import gammasimp
     from sympy.simplify.powsimp import powsimp
     mu1, mu2 = symbols('mu1 mu2', nonzero=True)
@@ -590,7 +588,6 @@ def test_probability():
 def test_expint():
     """ Test various exponential integrals. """
     from sympy.core.symbol import Symbol
-    from sympy.functions.elementary.complexes import unpolarify
     from sympy.functions.elementary.hyperbolic import sinh
     from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, expint)
     assert simplify(unpolarify(integrate(exp(-z*x)/x**y, (x, 1, oo),
@@ -643,9 +640,7 @@ def test_expint():
 
 
 def test_messy():
-    from sympy.functions.elementary.complexes import re
     from sympy.functions.elementary.hyperbolic import (acosh, acoth)
-    from sympy.functions.elementary.piecewise import Piecewise
     from sympy.functions.elementary.trigonometric import (asin, atan)
     from sympy.functions.special.bessel import besselj
     from sympy.functions.special.error_functions import (Chi, E1, Shi, Si)
@@ -759,5 +754,10 @@ def test_issue_6462():
 
 def test_indefinite_1_bug():
     assert integrate((b + t)**(-a), t, meijerg=True
-        ) == -b/(b**a*(1 + t/b)**a*(a - 1)
-        ) - t/(b**a*(1 + t/b)**a*(a - 1))
+        ) == -b**(1 - a)*(1 + t/b)**(1 - a)/(a - 1)
+
+
+def test_pr_23583():
+    # This result is wrong. Check whether new result is correct when this test fail.
+    assert integrate(1/sqrt((x - I)**2-1), meijerg=True) == \
+           Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))

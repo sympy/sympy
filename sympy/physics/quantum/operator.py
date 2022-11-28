@@ -296,6 +296,9 @@ class IdentityOperator(Operator):
     def _apply_operator(self, ket, **options):
         return ket
 
+    def _apply_from_right_to(self, bra, **options):
+        return bra
+
     def _eval_power(self, exp):
         return self
 

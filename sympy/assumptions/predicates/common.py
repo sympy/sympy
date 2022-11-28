@@ -76,6 +76,6 @@ class IsTruePredicate(Predicate):
             return arg
         # Convert relational predicates instead of wrapping them
         if getattr(arg, "is_Relational", False):
-            pred = binrelpreds[arg.func]
+            pred = binrelpreds[type(arg)]
             return pred(*arg.args)
         return super().__call__(arg)
