@@ -4294,7 +4294,8 @@ class WildTensor(Tensor):
 
     def _match_indices_ignoring_order(self, expr, repl_dict=None, old=False):
         """
-        Helper method for matches
+        Helper method for matches. Checks if the indices of self and expr
+        match disregarding index ordering.
         """
         if repl_dict is None:
             repl_dict = {}
