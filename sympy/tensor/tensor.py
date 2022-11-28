@@ -2758,11 +2758,11 @@ class TensAdd(TensExpr, AssocOp):
         if not isinstance(expr, TensAdd):
             return None
 
-        if len(_get_nondummy_wilds(self)) == 0:
+        if len(_get_wilds(self)) == 0:
             return self._matches_simple(expr, repl_dict, old)
 
         def siftkey(arg):
-            wildatoms = _get_nondummy_wilds(arg)
+            wildatoms = _get_wilds(arg)
             wildatom_types = sift(wildatoms, type)
             if len(wildatoms) == 0:
                 return "nonwild"
