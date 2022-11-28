@@ -2,8 +2,9 @@ from random import Random
 
 from ..core import I as _i
 from ..core.mul import Mul as _multiply
-# from ..core.random import rng as rand
+from ..core.random import rng as rand
 from ..core.sympify import _sympify
+from ..simplify import simplify
 from ..functions import sqrt as _sqrt, re as _re, im as _im, \
     transpose as _t, adjoint as _c
 from ..tensor import shape as _shape
@@ -26,6 +27,7 @@ _EPS = 1e-15
 
 # === random number generator functions ===
 
+simplify(-_i)  # hack to avoid https://github.com/sympy/sympy/issues/22592
 
 rand = Random()
 r""" default random number generator
