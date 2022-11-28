@@ -4215,7 +4215,6 @@ class WildTensor(Tensor):
     """
     def __new__(cls, tensor_head, indices, **kw_args):
         is_canon_bp = kw_args.pop("is_canon_bp", False)
-        symmetry = kw_args.pop("symmetry", None)
 
         if tensor_head.func == TensorHead:
             """
@@ -4224,9 +4223,6 @@ class WildTensor(Tensor):
             return Tensor(tensor_head, indices, is_canon_bp=is_canon_bp, **kw_args)
         elif tensor_head.func == _WildTensExpr:
             return tensor_head(*indices)
-
-        if symmetry is not None:
-            raise NotImplementedError("Matching based on symmetry is not implemented.")
 
         indices = cls._parse_indices(tensor_head, indices)
         index_types = [ind.tensor_index_type for ind in indices]
