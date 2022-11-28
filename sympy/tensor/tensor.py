@@ -4268,14 +4268,11 @@ class TensMul(TensExpr, AssocOp):
             return None
         #The code that follows assumes expr is a TensMul
 
-        def get_wilds(expr):
-            return [ a for a in expr.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead) ]
-
         # handle simple patterns
         if self == expr:
             return repl_dict
 
-        if len(get_wilds(self)) == 0:
+        if len(_get_wilds(self)) == 0:
             return self._matches_simple(expr, repl_dict, old)
 
         def siftkey(arg):
@@ -5155,6 +5152,10 @@ def _expand(expr, **kwargs):
         return expr._expand(**kwargs)
     else:
         return expr.expand(**kwargs)
+
+
+def _get_wilds(expr):
+    return [ a for a in expr.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead) ]
 
 
 def get_postprocessor(cls):
