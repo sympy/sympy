@@ -4230,7 +4230,8 @@ class WildTensor(Tensor):
             tensor_head.name,
             index_types,
             comm=tensor_head.comm,
-            symmetry=tensor_head.symmetry, unordered_indices=tensor_head.unordered_indices,
+            symmetry=None, #TODO: Specifying symmetry for WildTensorHead is currently unsupported. Once that is implemented, this can be changed to `symmetry=tensor_head.symmetry`.
+            unordered_indices=tensor_head.unordered_indices,
             )
 
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices))
