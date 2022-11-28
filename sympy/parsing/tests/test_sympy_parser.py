@@ -7,7 +7,6 @@ import types
 
 from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
-from sympy.core.relational import  Lt, Le, Gt, Ge, Ne
 from sympy.functions import exp, factorial, factorial2, sin, Min, Max
 from sympy.logic import And
 from sympy.series import Limit
@@ -21,8 +20,6 @@ from sympy.parsing.sympy_parser import (
     auto_number, factorial_notation, implicit_application,
     _transformation, T
     )
-
-
 def test_sympy_parser():
     x = Symbol('x')
     inputs = {
@@ -55,14 +52,6 @@ def test_sympy_parser():
             evaluate=False),
         'Limit(sin(x), x, 0, dir="-")': Limit(sin(x), x, 0, dir='-'),
         'Q.even(x)': Q.even(x),
-        '1 == 2' : Eq(1 , 2,evaluate = False),
-        '1 != 2' : Ne(1 ,2,evaluate = False),
-        '1 < 2' : Lt(1 ,2,evaluate = False),
-        '1 <= 2' : Le(1 ,2,evaluate = False),
-        '1 > 2' : Gt(1 ,2,evaluate = False),
-        '1 >= 2' : Ge(1 ,2,evaluate = False),
-
-
     }
     for text, result in inputs.items():
         assert parse_expr(text) == result
@@ -196,6 +185,11 @@ def test_recursive_evaluate_false_10560():
         "-2*x*y": '(-2)*x*y',
         "x*-4*x": "x*(-4)*x"
     }
+    for text, result in inputs.items():
+        assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
+
+def test_issue__evaluateFalse_24288():
+    inputs = {'1==2': "1==2",'1!=2': "1!=2",'1<2': "1<2", '1<=2':"1<=2",'1>2': "1>2",'1>=2':"1>=2",}
     for text, result in inputs.items():
         assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
 
