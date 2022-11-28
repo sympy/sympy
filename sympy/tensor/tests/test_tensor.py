@@ -4,7 +4,7 @@ from sympy.core.numbers import Integer
 from sympy.matrices.dense import (Matrix, eye)
 from sympy.tensor.indexed import Indexed
 from sympy.combinatorics import Permutation
-from sympy.core import S, Rational, Symbol, Basic, Add
+from sympy.core import S, Rational, Symbol, Basic, Add, Wild
 from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
