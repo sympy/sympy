@@ -188,6 +188,7 @@ def test_recursive_evaluate_false_10560():
     for text, result in inputs.items():
         assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
 
+
 def test_issue__evaluateFalse_24288():
     inputs = {'1==2': "1==2",'1!=2': "1!=2",'1<2': "1<2", '1<=2':"1<=2",'1>2': "1>2",'1>=2':"1>=2",}
     for text, result in inputs.items():
