@@ -1827,9 +1827,23 @@ class LaplaceTransform(IntegralTransform):
         return plane, cond
 
     def _try_directly(self, **hints):
+        noconds = hints.get('noconds', False)
         fn = self.function
         t_ = self.function_variable
         s_ = self.transform_variable
+        r = expand(fn, deep=False)
+        if r.is_Add and noconds:
+            # Try apply rules to all sum terms; if it does not work, use
+            # a combined way
+            st = [S.Zero]
+            for f in r.args:
+                LT = _laplace_apply_rules(f, t_, s_, **hints)
+                if LT is None:
+                    st = None
+                    break
+                st.append(LT)
+            if not st is None:
+                return fn, Add(*st)
         LT = None
         if not fn.is_Add:
             fn = expand_mul(fn)
