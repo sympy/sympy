@@ -2056,10 +2056,7 @@ def test_TensMul_matching():
     W = WildTensorHead('W', unordered_indices=True)
     U = WildTensorHead('U')
 
-    assert(
-        ( wi*K(p) ).matches( K(p) )
-        == {wi: 1}
-        )
+    assert ( wi*K(p) ).matches( K(p) ) == {wi: 1}
     check_tens_eq(
         (K(p) * V(-p)).replace( W(a) * V(-a), 1),
         1
