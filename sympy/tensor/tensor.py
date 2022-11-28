@@ -4165,7 +4165,7 @@ class WildTensorHead(TensorHead):
         else:
             raise NotImplementedError("Wild matching based on symmetry is not implemented.")
 
-        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry)
+        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry, sympify(unordered_indices))
         obj.comm = TensorManager.comm_symbols2i(comm)
         obj.unordered_indices = unordered_indices
 
