@@ -1109,7 +1109,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.BitOr: 'Or',
         ast.BitAnd: 'And',
         ast.BitXor: 'Not',
-        ast.Eq : 'Eq',
+        ast.Eq: 'Eq',
         ast.NotEq: 'Ne',
         ast.Lt: 'Lt',
         ast.LtE: 'Le',
