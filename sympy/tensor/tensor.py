@@ -4268,15 +4268,14 @@ class TensMul(TensExpr, AssocOp):
             return None
         #The code that follows assumes expr is a TensMul
 
-        def get_nondummy_wilds(expr):
-            dummy_indices = set(expr.get_indices()) - set(expr.get_free_indices())
-            return [ a for a in expr.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead) if a not in dummy_indices ]
+        def get_wilds(expr):
+            return [ a for a in expr.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead) ]
 
         # handle simple patterns
         if self == expr:
             return repl_dict
 
-        if len(get_nondummy_wilds(self)) == 0:
+        if len(get_wilds(self)) == 0:
             return self._matches_simple(expr, repl_dict, old)
 
         def siftkey(arg):
