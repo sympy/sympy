@@ -15,7 +15,7 @@ There are a few things to be kept in mind when adding a new function here::
 
       Strictly speaking, a generator of a ring should not be considered a
       constant. However, for series expansion both the cases need similar
-      treatment (as the user doesn't care about inner details), i.e, use an
+      treatment (as the user does not care about inner details), i.e, use an
       addition formula to separate the constant part and the variable part (see
       rs_sin for reference).
 
@@ -82,8 +82,8 @@ def _invert_monoms(p1):
     p = R.zero
     cv = p1.listcoeffs()
     mv = p1.listmonoms()
-    for i in range(len(mv)):
-        p[(deg - mv[i][0],)] = cv[i]
+    for mvi, cvi in zip(mv, cv):
+        p[(deg - mvi[0],)] = cvi
     return p
 
 def _giant_steps(target):
@@ -233,7 +233,7 @@ def rs_mul(p1, p2, x, prec):
         raise ValueError('p1 and p2 must have the same ring')
     iv = R.gens.index(x)
     if not isinstance(p2, PolyElement):
-        raise ValueError('p1 and p2 must have the same ring')
+        raise ValueError('p2 must be a polynomial')
     if R == p2.ring:
         get = p.get
         items2 = list(p2.items())

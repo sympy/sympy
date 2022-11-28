@@ -58,11 +58,10 @@ class DomainMatrix:
     ===========
 
     DomainMatrix uses :py:class:`~.Domain` for its internal representation
-    which makes it more faster for many common operations
-    than current SymPy Matrix class, but this advantage makes it not
-    entirely compatible with Matrix.
-    DomainMatrix could be found analogous to numpy arrays with "dtype".
-    In the DomainMatrix, each matrix has a domain such as :ref:`ZZ`
+    which makes it faster than the SymPy Matrix class (currently) for many
+    common operations, but this advantage makes it not entirely compatible
+    with Matrix. DomainMatrix are analogous to numpy arrays with "dtype".
+    In the DomainMatrix, each element has a domain such as :ref:`ZZ`
     or  :ref:`QQ(a)`.
 
 
@@ -80,7 +79,7 @@ class DomainMatrix:
     >>> A
     DomainMatrix({0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}, (2, 2), ZZ)
 
-    Driectly forming a DomainMatrix:
+    Directly forming a DomainMatrix:
 
     >>> from sympy import ZZ
     >>> from sympy.polys.matrices import DomainMatrix
@@ -443,7 +442,9 @@ class DomainMatrix:
         Parameters
         ==========
 
-        K : Represents the desired domain or field
+        K : Represents the desired domain or field.
+            Alternatively, ``None`` may be passed, in which case this method
+            just returns a copy of this DomainMatrix.
 
         Returns
         =======
@@ -464,6 +465,8 @@ class DomainMatrix:
         DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ_I)
 
         """
+        if K is None:
+            return self.copy()
         return self.from_rep(self.rep.convert_to(K))
 
     def to_sympy(self):
@@ -1080,8 +1083,8 @@ class DomainMatrix:
         return A.from_rep(A.rep.mul_elementwise(B.rep))
 
     def __truediv__(A, lamda):
-        """ Method for Scalar Divison"""
-        if isinstance(lamda, int):
+        """ Method for Scalar Division"""
+        if isinstance(lamda, int) or ZZ.of_type(lamda):
             lamda = DomainScalar(ZZ(lamda), ZZ)
 
         if not isinstance(lamda, DomainScalar):

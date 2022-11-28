@@ -627,7 +627,8 @@ def test_si():
     t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
 
-    assert limit(Shi(x), x, S.NegativeInfinity) == -I*pi/2
+    assert limit(Shi(x), x, S.Infinity) == S.Infinity
+    assert limit(Shi(x), x, S.NegativeInfinity) == S.NegativeInfinity
 
 
 def test_ci():

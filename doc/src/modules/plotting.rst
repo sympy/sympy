@@ -8,21 +8,21 @@ Introduction
 ------------
 
 The plotting module allows you to make 2-dimensional and 3-dimensional plots.
-Presently the plots are rendered using ``matplotlib`` as a backend. It is
-also possible to plot 2-dimensional plots using a ``TextBackend`` if you don't
-have ``matplotlib``.
+Presently the plots are rendered using :external:mod:`matplotlib` as a
+backend. It is also possible to plot 2-dimensional plots using a
+:class:`~.TextBackend` if you do not have :external:mod:`matplotlib`.
 
 The plotting module has the following functions:
 
-* plot: Plots 2D line plots.
-* plot_parametric: Plots 2D parametric plots.
-* plot_implicit: Plots 2D implicit and region plots.
-* plot3d: Plots 3D plots of functions in two variables.
-* plot3d_parametric_line: Plots 3D line plots, defined by a parameter.
-* plot3d_parametric_surface: Plots 3D parametric surface plots.
+* :func:`~.plot`: Plots 2D line plots.
+* :func:`~.plot_parametric`: Plots 2D parametric plots.
+* :func:`~.plot_implicit`: Plots 2D implicit and region plots.
+* :func:`~.plot3d`: Plots 3D plots of functions in two variables.
+* :func:`~.plot3d_parametric_line`: Plots 3D line plots, defined by a parameter.
+* :func:`~.plot3d_parametric_surface`: Plots 3D parametric surface plots.
 
 The above functions are only for convenience and ease of use. It is possible to
-plot any plot by passing the corresponding ``Series`` class to ``Plot`` as
+plot any plot by passing the corresponding ``Series`` class to :class:`~.Plot` as
 argument.
 
 Plot Class
@@ -108,7 +108,7 @@ For an alternative you can look at the new plotting module.
 
 The pyglet plotting module can do nice 2D and 3D plots that can be
 controlled by console commands as well as keyboard and mouse, with
-the only dependency being ``pyglet``.
+the only dependency being `pyglet <http://pyglet.org/>`_.
 
 Here is the simplest usage:
 
@@ -118,7 +118,7 @@ Here is the simplest usage:
     >>> Plot(x*y**3-y*x**3)
 
 To see lots of plotting examples, see ``examples/pyglet_plotting.py`` and try running
-it in interactive mode (python -i plotting.py)::
+it in interactive mode (``python -i plotting.py``)::
 
     $ python -i examples/pyglet_plotting.py
 
@@ -189,7 +189,7 @@ Supported mode names by number of variables:
     >>> Plot(1, 'mode=spherical; color=zfade4')
 
 Note that function parameters are given as option strings of the form
-"key1=value1; key2 = value2" (spaces are truncated). Keyword arguments given
+``"key1=value1; key2 = value2"`` (spaces are truncated). Keyword arguments given
 directly to plot apply to the plot itself.
 
 Specifying Intervals for Variables
@@ -250,7 +250,7 @@ The coloring algorithm works like this:
 #. Scale each component to the color gradient.
 
 When not specified explicitly, the default color gradient is
-f(0.0)=(0.4,0.4,0.4) -> f(1.0)=(0.9,0.9,0.9). In our case, everything is
+$f(0.0)=(0.4,0.4,0.4) \rightarrow f(1.0)=(0.9,0.9,0.9)$. In our case, everything is
 gray-scale because we have applied the default color gradient uniformly for
 each color component. When defining a color scheme in this way, you might want
 to supply a color gradient as well:
@@ -289,7 +289,7 @@ origin and of radius 2 units.
     >>> x,y = symbols('x y')
     >>> plot_implicit(Eq(x**2+y**2, 4))
 
-Similarly, ``plot_implicit()`` may be used to plot any 2-D geometric structure from
+Similarly, :func:`~.plot_implicit()` may be used to plot any 2-D geometric structure from
 its implicit equation.
 
 Plotting polygons (Polygon, RegularPolygon, Triangle) are not supported

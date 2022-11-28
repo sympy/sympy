@@ -1,6 +1,7 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi)
+from sympy.core.numbers import (AlgebraicNumber, E, Float, I, Integer,
+    Rational, oo, pi, _illegal)
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -17,7 +18,9 @@ from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.realfield import RealField
 
+from sympy.polys.numberfields.subfield import field_isomorphism
 from sympy.polys.rings import ring
+from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.fields import field
 
 from sympy.polys.agca.extensions import FiniteExtension
@@ -28,7 +31,6 @@ from sympy.polys.polyerrors import (
     CoercionFailed,
     NotInvertible,
     DomainError)
-from sympy.polys.polyutils import illegal
 
 from sympy.testing.pytest import raises
 
@@ -488,6 +490,14 @@ def test_Domain__contains__():
     assert (Rational(3, 2)*x/(y + 1) - z in QQ[x, y, z]) is False
 
 
+def test_issue_14433():
+    assert (Rational(2, 3)*x in QQ.frac_field(1/x)) is True
+    assert (1/x in QQ.frac_field(x)) is True
+    assert ((x**2 + y**2) in QQ.frac_field(1/x, 1/y)) is True
+    assert ((x + y) in QQ.frac_field(1/x, y)) is True
+    assert ((x - y) in QQ.frac_field(x, 1/y)) is True
+
+
 def test_Domain_get_ring():
     assert ZZ.has_assoc_Ring is True
     assert QQ.has_assoc_Ring is True
@@ -725,6 +735,38 @@ def test_Domain__algebraic_field():
     assert alg.dom == QQ
 
 
+def test_Domain_alg_field_from_poly():
+    f = Poly(x**2 - 2)
+    g = Poly(x**2 - 3)
+    h = Poly(x**4 - 10*x**2 + 1)
+
+    alg = ZZ.alg_field_from_poly(f)
+    assert alg.ext.minpoly == f
+    assert alg.dom == QQ
+
+    alg = QQ.alg_field_from_poly(f)
+    assert alg.ext.minpoly == f
+    assert alg.dom == QQ
+
+    alg = alg.alg_field_from_poly(g)
+    assert alg.ext.minpoly == h
+    assert alg.dom == QQ
+
+
+def test_Domain_cyclotomic_field():
+    K = ZZ.cyclotomic_field(12)
+    assert K.ext.minpoly == Poly(cyclotomic_poly(12))
+    assert K.dom == QQ
+
+    F = QQ.cyclotomic_field(3)
+    assert F.ext.minpoly == Poly(cyclotomic_poly(3))
+    assert F.dom == QQ
+
+    E = F.cyclotomic_field(4)
+    assert field_isomorphism(E.ext, K.ext) is not None
+    assert E.dom == QQ
+
+
 def test_PolynomialRing_from_FractionField():
     F, x,y = field("x,y", ZZ)
     R, X,Y = ring("x,y", ZZ)
@@ -778,8 +820,8 @@ def test_RealField_from_sympy():
 
 
 def test_not_in_any_domain():
-    check = illegal + [x] + [
-        float(i) for i in illegal if i != S.ComplexInfinity]
+    check = list(_illegal) + [x] + [
+        float(i) for i in _illegal[:3]]
     for dom in (ZZ, QQ, RR, CC, EX):
         for i in check:
             if i == x and dom == EX:
@@ -1193,3 +1235,36 @@ def test_exponential_domain():
     eK = K.from_sympy(E)
     assert K.from_sympy(exp(3)) == eK ** 3
     assert K.convert(exp(3)) == eK ** 3
+
+
+def test_AlgebraicField_alias():
+    # No default alias:
+    k = QQ.algebraic_field(sqrt(2))
+    assert k.ext.alias is None
+
+    # For a single extension, its alias is used:
+    alpha = AlgebraicNumber(sqrt(2), alias='alpha')
+    k = QQ.algebraic_field(alpha)
+    assert k.ext.alias.name == 'alpha'
+
+    # Can override the alias of a single extension:
+    k = QQ.algebraic_field(alpha, alias='theta')
+    assert k.ext.alias.name == 'theta'
+
+    # With multiple extensions, no default alias:
+    k = QQ.algebraic_field(sqrt(2), sqrt(3))
+    assert k.ext.alias is None
+
+    # With multiple extensions, no default alias, even if one of
+    # the extensions has one:
+    k = QQ.algebraic_field(alpha, sqrt(3))
+    assert k.ext.alias is None
+
+    # With multiple extensions, may set an alias:
+    k = QQ.algebraic_field(sqrt(2), sqrt(3), alias='theta')
+    assert k.ext.alias.name == 'theta'
+
+    # Alias is passed to constructed field elements:
+    k = QQ.algebraic_field(alpha)
+    beta = k.to_alg_num(k([1, 2, 3]))
+    assert beta.alias is alpha.alias

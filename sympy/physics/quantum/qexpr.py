@@ -90,7 +90,7 @@ class QExpr(Expr):
     # derive from args.
 
     # The Hilbert space a quantum Object belongs to.
-    __slots__ = ('hilbert_space')
+    __slots__ = ('hilbert_space', )
 
     is_commutative = False
 
@@ -315,13 +315,6 @@ class QExpr(Expr):
 
     def _latex(self, printer, *args):
         return self._print_contents_latex(printer, *args)
-
-    #-------------------------------------------------------------------------
-    # Methods from Basic and Expr
-    #-------------------------------------------------------------------------
-
-    def doit(self, **kw_args):
-        return self
 
     #-------------------------------------------------------------------------
     # Represent

@@ -8,9 +8,9 @@ from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import And, as_Boolean
 from sympy.utilities.iterables import sift, flatten, has_dups
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from .contains import Contains
-from .sets import Set, Union, FiniteSet
+from .sets import Set, Union, FiniteSet, SetKind
 
 
 adummy = Dummy('conditionset')
@@ -100,12 +100,22 @@ class ConditionSet(Set):
             condition_orig = condition
             temp = (Eq(lhs, 0) for lhs in condition)
             condition = And(*temp)
-            SymPyDeprecationWarning(
-                feature="Using {} for condition".format(condition_orig),
-                issue=17651,
+            sympy_deprecation_warning(
+                f"""
+Using a set for the condition in ConditionSet is deprecated. Use a boolean
+instead.
+
+In this case, replace
+
+    {condition_orig}
+
+with
+
+    {condition}
+""",
                 deprecated_since_version='1.5',
-                useinstead="{} for condition".format(condition)
-                ).warn()
+                active_deprecations_target="deprecated-conditionset-set",
+                )
 
         condition = as_Boolean(condition)
 
@@ -231,3 +241,6 @@ class ConditionSet(Set):
         else:
             pass  # let error about the symbol raise from __new__
         return self.func(sym, cond, base)
+
+    def _kind(self):
+        return SetKind(self.sym.kind)

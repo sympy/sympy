@@ -133,37 +133,16 @@ class PythonMPQ:
         else:
             return NotImplemented
 
-    # The hashing algorithm for Fraction changed in Python 3.8
-
-    if sys.version_info >= (3, 8):
-        #
-        # Hash for Python 3.8 onwards
-        #
-        def __hash__(self):
-            """hash - same as mpq/Fraction"""
-            try:
-                dinv = pow(self.denominator, -1, _PyHASH_MODULUS)
-            except ValueError:
-                hash_ = _PyHASH_INF
-            else:
-                hash_ = hash(hash(abs(self.numerator)) * dinv)
-            result = hash_ if self.numerator >= 0 else -hash_
-            return -2 if result == -1 else result
-
-    else:
-        #
-        # Hash for Python < 3.7
-        #
-        def __hash__(self):
-            """hash - same as mpq/Fraction"""
-            # This is from fractions.py in the stdlib.
-            dinv = pow(self.denominator, _PyHASH_MODULUS - 2, _PyHASH_MODULUS)
-            if not dinv:
-                hash_ = _PyHASH_INF
-            else:
-                hash_ = abs(self.numerator) * dinv % _PyHASH_MODULUS
-            result = hash_ if self >= 0 else -hash_
-            return -2 if result == -1 else result
+    def __hash__(self):
+        """hash - same as mpq/Fraction"""
+        try:
+            dinv = pow(self.denominator, -1, _PyHASH_MODULUS)
+        except ValueError:
+            hash_ = _PyHASH_INF
+        else:
+            hash_ = hash(hash(abs(self.numerator)) * dinv)
+        result = hash_ if self.numerator >= 0 else -hash_
+        return -2 if result == -1 else result
 
     def __reduce__(self):
         """Deconstruct for pickling"""

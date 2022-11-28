@@ -3,6 +3,7 @@ Integer factorization
 """
 
 from collections import defaultdict
+from functools import reduce
 import random
 import math
 
@@ -12,7 +13,7 @@ from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
-from sympy.core.mul import Mul, prod
+from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm, Rational, Integer
 from sympy.core.power import integer_nthroot, Pow, integer_log
 from sympy.core.singleton import S
@@ -272,11 +273,10 @@ def multiplicity(p, n):
     True
 
     """
-    from sympy.functions.combinatorial.factorials import factorial
-
     try:
         p, n = as_int(p), as_int(n)
     except ValueError:
+        from sympy.functions.combinatorial.factorials import factorial
         if all(isinstance(i, (SYMPY_INTS, Rational)) for i in (p, n)):
             p = Rational(p)
             n = Rational(n)
@@ -399,9 +399,9 @@ def multiplicity_in_factorial(p, n):
 
 def perfect_power(n, candidates=None, big=True, factor=True):
     """
-    Return ``(b, e)`` such that ``n`` == ``b**e`` if ``n`` is a
-    perfect power with ``e > 1``, else ``False``. A ValueError is
-    raised if ``n`` is not an integer or is not positive.
+    Return ``(b, e)`` such that ``n`` == ``b**e`` if ``n`` is a unique
+    perfect power with ``e > 1``, else ``False`` (e.g. 1 is not a
+    perfect power). A ValueError is raised if ``n`` is not Rational.
 
     By default, the base is recursively decomposed and the exponents
     collected so the largest possible ``e`` is sought. If ``big=False``
@@ -420,11 +420,25 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     Examples
     ========
 
-    >>> from sympy import perfect_power
+    >>> from sympy import perfect_power, Rational
     >>> perfect_power(16)
     (2, 4)
     >>> perfect_power(16, big=False)
     (4, 2)
+
+    Negative numbers can only have odd perfect powers:
+
+    >>> perfect_power(-4)
+    False
+    >>> perfect_power(-8)
+    (-2, 3)
+
+    Rationals are also recognized:
+
+    >>> perfect_power(Rational(1, 2)**3)
+    (1/2, 3)
+    >>> perfect_power(Rational(-3, 2)**3)
+    (-3/2, 3)
 
     Notes
     =====
@@ -452,10 +466,34 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     sympy.core.power.integer_nthroot
     sympy.ntheory.primetest.is_square
     """
+    if isinstance(n, Rational) and not n.is_Integer:
+        p, q = n.as_numer_denom()
+        if p is S.One:
+            pp = perfect_power(q)
+            if pp:
+                pp = (n.func(1, pp[0]), pp[1])
+        else:
+            pp = perfect_power(p)
+            if pp:
+                num, e = pp
+                pq = perfect_power(q, [e])
+                if pq:
+                    den, _ = pq
+                    pp = n.func(num, den), e
+        return pp
+
     n = as_int(n)
-    if n < 3:
-        if n < 1:
-            raise ValueError('expecting positive n')
+    if n < 0:
+        pp = perfect_power(-n)
+        if pp:
+            b, e = pp
+            if e % 2:
+                return -b, e
+        return False
+
+    if n <= 3:
+        # no unique exponent for 0, 1
+        # 2 and 3 have exponents of 1
         return False
     logn = math.log(n, 2)
     max_possible = int(logn) + 2  # only check values less than this
@@ -682,7 +720,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         >>> pollard_pm1(n, B=16, a=3)
         1009
 
-    If we attempt to increase B to 256 we find that it doesn't work:
+    If we attempt to increase B to 256 we find that it does not work:
 
         >>> pollard_pm1(n, B=256)
         >>>
@@ -693,7 +731,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         >>> pollard_pm1(n, B=256, a=257)
         1009
 
-    Checking different ``a`` values shows that all the ones that didn't
+    Checking different ``a`` values shows that all the ones that did not
     work had a gcd value not equal to ``n`` but equal to one of the
     factors:
 
@@ -884,7 +922,7 @@ def _factorint_small(factors, n, limit, fail_max):
     """
 
     def done(n, d):
-        """return n, d if the sqrt(n) wasn't reached yet, else
+        """return n, d if the sqrt(n) was not reached yet, else
            n, 0 indicating that factoring is done.
         """
         if d*d <= n:
@@ -1165,7 +1203,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         args.extend([Pow(*i, evaluate=False)
                      for i in sorted(factordict.items())])
         return Mul(*args, evaluate=False)
-    elif isinstance(n, dict) or isinstance(n, Mul):
+    elif isinstance(n, (dict, Mul)):
         return factordict
 
     assert use_trial or use_rho or use_pm1 or use_ecm
@@ -1901,7 +1939,6 @@ class totient(Function):
     """
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n < 1:
                 raise ValueError("n must be a positive integer")
@@ -1925,7 +1962,6 @@ class totient(Function):
         >>> totient._from_distinct_primes(5, 7)
         24
         """
-        from functools import reduce
         return reduce(lambda i, j: i * (j-1), args, 1)
 
     @classmethod
@@ -1977,7 +2013,6 @@ class reduced_totient(Function):
     """
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n < 1:
                 raise ValueError("n must be a positive integer")
@@ -2065,8 +2100,7 @@ class divisor_sigma(Function):
     """
 
     @classmethod
-    def eval(cls, n, k=1):
-        n = sympify(n)
+    def eval(cls, n, k=S.One):
         k = sympify(k)
 
         if n.is_prime:
@@ -2077,7 +2111,7 @@ class divisor_sigma(Function):
                 raise ValueError("n must be a positive integer")
             elif k.is_Integer:
                 k = int(k)
-                return Integer(prod(
+                return Integer(math.prod(
                     (p**(k*(e + 1)) - 1)//(p**k - 1) if k != 0
                     else e + 1 for p, e in factorint(n).items()))
             else:
@@ -2216,8 +2250,7 @@ class udivisor_sigma(Function):
     """
 
     @classmethod
-    def eval(cls, n, k=1):
-        n = sympify(n)
+    def eval(cls, n, k=S.One):
         k = sympify(k)
         if n.is_prime:
             return 1 + n**k
@@ -2265,7 +2298,6 @@ class primenu(Function):
 
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")
@@ -2311,7 +2343,6 @@ class primeomega(Function):
 
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
         if n.is_Integer:
             if n <= 0:
                 raise ValueError("n must be a positive integer")

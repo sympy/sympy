@@ -6,12 +6,12 @@ from sympy.core.singleton import S
 from sympy.codegen.cfunctions import Sqrt
 from sympy.external import import_module
 from sympy.printing.precedence import PRECEDENCE
-from sympy.printing.pycode import AbstractPythonCodePrinter
+from sympy.printing.pycode import AbstractPythonCodePrinter, ArrayPrinter
 import sympy
 
 tensorflow = import_module('tensorflow')
 
-class TensorflowPrinter(AbstractPythonCodePrinter):
+class TensorflowPrinter(ArrayPrinter, AbstractPythonCodePrinter):
     """
     Tensorflow printer which handles vectorized piecewise functions,
     logical operators, max/min, and relational operators.
@@ -196,13 +196,6 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
         return self._expand_fold_binary_op(
             "tensorflow.linalg.matmul", [expr.base]*expr.exp)
 
-    def _print_Assignment(self, expr):
-        # TODO: is this necessary?
-        return "%s = %s" % (
-            self._print(expr.lhs),
-            self._print(expr.rhs),
-        )
-
     def _print_CodeBlock(self, expr):
         # TODO: is this necessary?
         ret = []
@@ -210,73 +203,12 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
             ret.append(self._print(subexpr))
         return "\n".join(ret)
 
-    def _get_letter_generator_for_einsum(self):
-        for i in range(97, 123):
-            yield chr(i)
-        for i in range(65, 91):
-            yield chr(i)
-        raise ValueError("out of letters")
-
-    def _print_ArrayTensorProduct(self, expr):
-        letters = self._get_letter_generator_for_einsum()
-        contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.subranks])
-        return '%s("%s", %s)' % (
-                self._module_format('tensorflow.linalg.einsum'),
-                contraction_string,
-                ", ".join([self._print(arg) for arg in expr.args])
-        )
-
-    def _print_ArrayContraction(self, expr):
-        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
-        base = expr.expr
-        contraction_indices = expr.contraction_indices
-        contraction_string, letters_free, letters_dum = self._get_einsum_string(base.subranks, contraction_indices)
-
-        if not contraction_indices:
-            return self._print(base)
-        if isinstance(base, ArrayTensorProduct):
-            elems = ["%s" % (self._print(arg)) for arg in base.args]
-            return "%s(\"%s\", %s)" % (
-                self._module_format("tensorflow.linalg.einsum"),
-                contraction_string,
-                ", ".join(elems)
-            )
-        raise NotImplementedError()
-
-    def _print_ArrayDiagonal(self, expr):
-        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
-        diagonal_indices = list(expr.diagonal_indices)
-        if len(diagonal_indices) > 1:
-            # TODO: this should be handled in sympy.codegen.array_utils,
-            # possibly by creating the possibility of unfolding the
-            # ArrayDiagonal object into nested ones. Same reasoning for
-            # the array contraction.
-            raise NotImplementedError
-        if len(diagonal_indices[0]) != 2:
-            raise NotImplementedError
-        if isinstance(expr.expr, ArrayTensorProduct):
-            subranks = expr.expr.subranks
-            elems = expr.expr.args
-        else:
-            subranks = expr.subranks
-            elems = [expr.expr]
-        diagonal_string, letters_free, letters_dum = self._get_einsum_string(subranks, diagonal_indices)
-        elems = [self._print(i) for i in elems]
-        return '%s("%s", %s)' % (
-            self._module_format("tensorflow.linalg.einsum"),
-            "{}->{}{}".format(diagonal_string, "".join(letters_free), "".join(letters_dum)),
-            ", ".join(elems)
-        )
-
-    def _print_PermuteDims(self, expr):
-        return "%s(%s, %s)" % (
-            self._module_format("tensorflow.transpose"),
-            self._print(expr.expr),
-            self._print(expr.permutation.array_form),
-        )
-
-    def _print_ArrayAdd(self, expr):
-        return self._expand_fold_binary_op('tensorflow.math.add', expr.args)
+    _module = "tensorflow"
+    _einsum = "linalg.einsum"
+    _add = "math.add"
+    _transpose = "transpose"
+    _ones = "ones"
+    _zeros = "zeros"
 
 
 def tensorflow_code(expr, **settings):

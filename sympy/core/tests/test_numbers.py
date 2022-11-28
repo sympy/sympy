@@ -4,6 +4,7 @@ from sympy.concrete.summations import Sum
 from sympy.core import (EulerGamma, Catalan, TribonacciConstant,
     GoldenRatio)
 from sympy.core.containers import Tuple
+from sympy.core.expr import unchanged
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import (mpf_norm, mod_inverse, igcd, seterr,
@@ -245,7 +246,7 @@ def test_igcd_lehmer():
     assert igcd_lehmer(a*c, b*c) == c
     # big divisor
     assert igcd_lehmer(a, 10**1000) == 1
-    # swapping argmument
+    # swapping argument
     assert igcd_lehmer(1, 2) == igcd_lehmer(2, 1)
 
 
@@ -1684,8 +1685,8 @@ def test_zoo():
     n = Symbol('n', negative=True)
     im = Symbol('i', imaginary=True)
     c = Symbol('c', complex=True)
-    pb = Symbol('pb', positive=True, finite=True)
-    nb = Symbol('nb', negative=True, finite=True)
+    pb = Symbol('pb', positive=True)
+    nb = Symbol('nb', negative=True)
     imb = Symbol('ib', imaginary=True, finite=True)
     for i in [I, S.Infinity, S.NegativeInfinity, S.Zero, S.One, S.Pi, S.Half, S(3), log(3),
               b, nz, p, n, im, pb, nb, imb, c]:
@@ -2212,3 +2213,12 @@ def test_floordiv():
 def test_negation():
     assert -S.Zero is S.Zero
     assert -Float(0) is not S.Zero and -Float(0) == 0
+
+
+def test_exponentiation_of_0():
+    x = Symbol('x')
+    assert 0**-x == zoo**x
+    assert unchanged(Pow, 0, x)
+    x = Symbol('x', zero=True)
+    assert 0**-x == S.One
+    assert 0**x == S.One

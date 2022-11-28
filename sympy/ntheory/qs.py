@@ -102,7 +102,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     """This step is the initialization of the 1st sieve polynomial.
     Here `a` is selected as a product of several primes of the factor_base
     such that `a` is about to ``sqrt(2*N) / M``. Other initial values of
-    factor_base elem are also intialized which includes a_inv, b_ainv, soln1,
+    factor_base elem are also initialized which includes a_inv, b_ainv, soln1,
     soln2 which are used when the sieve polynomial is changed. The b_ainv
     is required for fast polynomial change as we do not have to calculate
     `2*b*mod_inverse(a, prime)` every time.
@@ -115,8 +115,8 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     N : Number to be factored
     M : sieve interval
     factor_base : factor_base primes
-    idx_1000 : index of prime numbe in the factor_base near 1000
-    idx_5000 : index of primenumber in the factor_base near to 5000
+    idx_1000 : index of prime number in the factor_base near 1000
+    idx_5000 : index of prime number in the factor_base near to 5000
     seed : Generate pseudoprime numbers
     """
     if seed is not None:
@@ -211,7 +211,7 @@ def _initialize_ith_poly(N, factor_base, i, g, B):
 
 def _gen_sieve_array(M, factor_base):
     """Sieve Stage of the Quadratic Sieve. For every prime in the factor_base
-    that doesn't divide the coefficient `a` we add log_p over the sieve_array
+    that does not divide the coefficient `a` we add log_p over the sieve_array
     such that ``-M <= soln1 + i*p <=  M`` and ``-M <= soln2 + i*p <=  M`` where `i`
     is an integer. When p = 2 then log_p is only added using
     ``-M <= soln1 + i*p <=  M``.
@@ -447,7 +447,7 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     these relations then we can form ``(t1*t2...ti)**2 = u1*u2...ui modN`` such that
     the right hand side is a square, thus we found a relation of ``X**2 = Y**2 modN``.
 
-    Here, several optimizations are done like using muliple polynomials for
+    Here, several optimizations are done like using multiple polynomials for
     sieving, fast changing between polynomials and using partial relations.
     The use of partial relations can speeds up the factoring by 2 times.
 

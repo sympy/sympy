@@ -97,6 +97,14 @@ def equivalence_hypergeometric(A, B, func):
     # computing I0 of the given equation
     I0 = powdenest(simplify(factor(((J1/k**2) - S(1)/4)/((x**k)**2))), force=True)
     I0 = factor(cancel(powdenest(I0.subs(x, x**(S(1)/k)), force=True)))
+
+    # Before this point I0, J1 might be functions of e.g. sqrt(x) but replacing
+    # x with x**(1/k) should result in I0 being a rational function of x or
+    # otherwise the hypergeometric solver cannot be used. Note that k can be a
+    # non-integer rational such as 2/7.
+    if not I0.is_rational_function(x):
+        return None
+
     num, dem = I0.as_numer_denom()
 
     max_num_pow = max(_power_counting((num, )))

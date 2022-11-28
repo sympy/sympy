@@ -123,18 +123,16 @@ class Ellipse(GeometrySet):
 
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None, **kwargs):
+
         hradius = sympify(hradius)
         vradius = sympify(vradius)
-
-        eccentricity = sympify(eccentricity)
 
         if center is None:
             center = Point(0, 0)
         else:
+            if len(center) != 2:
+                raise ValueError('The center of "{}" must be a two dimensional point'.format(cls))
             center = Point(center, dim=2)
-
-        if len(center) != 2:
-            raise ValueError('The center of "{}" must be a two dimensional point'.format(cls))
 
         if len(list(filter(lambda x: x is not None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError(filldedent('''
@@ -142,6 +140,7 @@ class Ellipse(GeometrySet):
                 "eccentricity" must not be None.'''))
 
         if eccentricity is not None:
+            eccentricity = sympify(eccentricity)
             if eccentricity.is_negative:
                 raise GeometryError("Eccentricity of ellipse/circle should lie between [0, 1)")
             elif hradius is None:
@@ -676,7 +675,9 @@ class Ellipse(GeometrySet):
 
         elif isinstance(o, (Segment2D, Ray2D)):
             ellipse_equation = self.equation(x, y)
-            result = solve([ellipse_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
+            result = solve([ellipse_equation, Line(
+                o.points[0], o.points[1]).equation(x, y)], [x, y],
+                set=True)[1]
             return list(ordered([Point(i) for i in result if i in o]))
 
         elif isinstance(o, Polygon):
@@ -687,7 +688,9 @@ class Ellipse(GeometrySet):
                 return self
             else:
                 ellipse_equation = self.equation(x, y)
-                return list(ordered([Point(i) for i in solve([ellipse_equation, o.equation(x, y)], [x, y])]))
+                return list(ordered([Point(i) for i in solve(
+                    [ellipse_equation, o.equation(x, y)], [x, y],
+                    set=True)[1]]))
         elif isinstance(o, LinearEntity3D):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
@@ -1524,8 +1527,7 @@ class Circle(Ellipse):
     Examples
     ========
 
-    >>> from sympy import Eq
-    >>> from sympy.geometry import Point, Circle
+    >>> from sympy import Point, Circle, Eq
     >>> from sympy.abc import x, y, a, b
 
     A circle constructed from a center and radius:
@@ -1558,7 +1560,7 @@ class Circle(Ellipse):
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
-            equation = args[0]
+            equation = args[0].expand()
             if isinstance(equation, Eq):
                 equation = equation.lhs - equation.rhs
             x = find(x, equation)
@@ -1574,7 +1576,7 @@ class Circle(Ellipse):
 
             center_x = -c/a/2
             center_y = -d/b/2
-            r2 = (center_x**2) + (center_y**2) - e
+            r2 = (center_x**2) + (center_y**2) - e/a
 
             return Circle((center_x, center_y), sqrt(r2), evaluate=evaluate)
 

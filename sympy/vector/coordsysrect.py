@@ -1,6 +1,5 @@
 from collections.abc import Callable
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core import S, Dummy, Lambda
@@ -21,16 +20,6 @@ from sympy.simplify.trigsimp import trigsimp
 import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-
-
-def CoordSysCartesian(*args, **kwargs):
-    SymPyDeprecationWarning(
-        feature="CoordSysCartesian",
-        useinstead="CoordSys3D",
-        issue=12865,
-        deprecated_since_version="1.1"
-    ).warn()
-    return CoordSys3D(*args, **kwargs)
 
 
 class CoordSys3D(Basic):
@@ -459,17 +448,6 @@ class CoordSys3D(Basic):
     def origin(self):
         return self._origin
 
-    @property
-    def delop(self):
-        SymPyDeprecationWarning(
-            feature="coord_system.delop has been replaced.",
-            useinstead="Use the Del() class",
-            deprecated_since_version="1.1",
-            issue=12866,
-        ).warn()
-        from sympy.vector.deloperator import Del
-        return Del()
-
     def base_vectors(self):
         return self._base_vectors
 
@@ -599,17 +577,14 @@ class CoordSys3D(Basic):
 
         """
 
-        relocated_scalars = []
         origin_coords = tuple(self.position_wrt(other).to_matrix(other))
-        for i, x in enumerate(other.base_scalars()):
-            relocated_scalars.append(x - origin_coords[i])
+        relocated_scalars = [x - origin_coords[i]
+                             for i, x in enumerate(other.base_scalars())]
 
         vars_matrix = (self.rotation_matrix(other) *
                        Matrix(relocated_scalars))
-        mapping = {}
-        for i, x in enumerate(self.base_scalars()):
-            mapping[x] = trigsimp(vars_matrix[i])
-        return mapping
+        return {x: trigsimp(vars_matrix[i])
+                for i, x in enumerate(self.base_scalars())}
 
     def locate_new(self, name, position, vector_names=None,
                    variable_names=None):

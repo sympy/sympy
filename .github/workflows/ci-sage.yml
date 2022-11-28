@@ -34,11 +34,11 @@ name: Run Sage CI
 on:
   push:
     branches:
-      master
+      - master
+      # match release branches - https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
+      - '[0-9]+.[0-9]+'
   workflow_dispatch:
     # Allow to run manually
-    branches:
-      - master
 
 env:
   # Ubuntu packages to install so that the project's "make dist" can succeed
@@ -47,7 +47,7 @@ env:
   SPKG:             sympy
   # Sage distribution packages to build
   TARGETS_PRE:      build/make/Makefile
-  TARGETS:          SAGE_CHECK=no SAGE_CHECK_PACKAGES=sympy build ptest
+  TARGETS:          SAGE_CHECK=no SAGE_CHECK_PACKAGES=sympy build SAGE_DOCTEST_RANDOM_SEED=0 ptest
   TARGETS_OPTIONAL: build/make/Makefile
   # Standard setting: Test the current beta release of Sage:
   SAGE_REPO:        sagemath/sage
@@ -55,8 +55,10 @@ env:
   # Uncomment to temporarily test with the branch from a sage ticket
   # (this is a no-op after that ticket is merged)
   SAGE_TRAC_GIT:    https://github.com/sagemath/sagetrac-mirror.git
-  SAGE_TICKET:      32420
+  SAGE_TICKET:      34489
   REMOVE_PATCHES:   "*"
+  # Until https://trac.sagemath.org/ticket/23712 is resolved
+  EXTRA_CONFIGURE_ARGS: "--without-system-tachyon"
 
 jobs:
 
@@ -65,7 +67,7 @@ jobs:
 
     steps:
       - name: Check out ${{ env.SPKG }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: build/pkgs/${{ env.SPKG }}/src
       - name: Install prerequisites
@@ -79,7 +81,7 @@ jobs:
           && echo "sage-package create ${{ env.SPKG }} --version git --tarball ${{ env.SPKG }}-git.tar.gz --type=standard" > upstream/update-pkgs.sh \
           && if [ -n "${{ env.REMOVE_PATCHES }}" ]; then echo "(cd ../build/pkgs/${{ env.SPKG }}/patches && rm -f ${{ env.REMOVE_PATCHES }}; :)" >> upstream/update-pkgs.sh; fi \
           && ls -l upstream/
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: upstream
           name: upstream
@@ -91,9 +93,19 @@ jobs:
       fail-fast: false
       max-parallel: 32
       matrix:
-        # debian-buster uses system python 3.7
+        # ubuntu-focal uses system python 3.8
         # archlinux-latest is at the cutting edge
-        tox_system_factor: [debian-buster, archlinux-latest]
+        #
+        # XXX: For now the archlinux job fails too often for reasons unrelated
+        # to SAGE's use of SymPy so we skip Arch and only test Ubuntu. The
+        # ubuntu-focal job also fails sometimes due to timeouts or network
+        # problems but it mostly succeeds and does correctly pick up where a
+        # change in SymPy affects SAGE. Mostly this is where there are printing
+        # changes in SymPy because SAGE does most of its testing in the form of
+        # doctests.
+        #
+        #tox_system_factor: [ubuntu-focal, archlinux-latest]
+        tox_system_factor: [ubuntu-focal]
         # "standard" installs lots of system packages, reducing the full build and test of the
         # Sage distribution to 3-4 hours
         tox_packages_factor: [standard]
@@ -103,14 +115,14 @@ jobs:
       DOCKER_TARGETS: configured with-targets with-targets-optional
     steps:
       - name: Check out SageMath
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ env.SAGE_REPO }}
           ref: ${{ env.SAGE_REF }}
           fetch-depth: 2000
         if: env.SAGE_REPO != ''
       - name: Check out git-trac-command
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: sagemath/git-trac-command
           path: git-trac-command
@@ -143,7 +155,7 @@ jobs:
           if [ -f .tox/$TOX_ENV/Dockertags ]; then CONTAINERS=$(docker create $(tail -1 .tox/$TOX_ENV/Dockertags) /bin/bash || true); fi
           if [ -n "$CONTAINERS" ]; then for CONTAINER in $CONTAINERS; do for ARTIFACT in /sage/logs; do docker cp $CONTAINER:$ARTIFACT artifacts/$LOGS_ARTIFACT_NAME && HAVE_LOG=1; done; if [ -n "$HAVE_LOG" ]; then break; fi; done; fi
         if: always()
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: artifacts
           name: ${{ env.LOGS_ARTIFACT_NAME }}

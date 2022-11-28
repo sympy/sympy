@@ -11,6 +11,7 @@ from sympy.core.numbers import Integer
 from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
+from sympy.functions.elementary.complexes import im, re
 from sympy.multipledispatch import dispatch
 
 ###############################################################################
@@ -19,13 +20,12 @@ from sympy.multipledispatch import dispatch
 
 
 class RoundFunction(Function):
-    """The base class for rounding functions."""
+    """Abstract base class for rounding functions."""
 
     args: tTuple[Expr]
 
     @classmethod
     def eval(cls, arg):
-        from sympy.functions.elementary.complexes import im
         v = cls._eval_number(arg)
         if v is not None:
             return v
@@ -77,6 +77,10 @@ class RoundFunction(Function):
             return ipart + spart
         else:
             return ipart + cls(spart, evaluate=False)
+
+    @classmethod
+    def _eval_number(cls, arg):
+        raise NotImplementedError()
 
     def _eval_is_finite(self):
         return self.args[0].is_finite
@@ -137,19 +141,16 @@ class floor(RoundFunction):
             return arg.approximation_interval(Integer)[0]
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
+        if arg0 is S.NaN or isinstance(arg0, AccumBounds):
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            r = floor(arg0)
         if arg0.is_finite:
             if arg0 == r:
-                if cdir == 0:
-                    ndirl = arg.dir(x, cdir=-1)
-                    ndir = arg.dir(x, cdir=1)
-                    if ndir != ndirl:
-                        raise ValueError("Two sided limit of %s around 0"
-                                    "does not exist" % self)
-                else:
-                    ndir = arg.dir(x, cdir=cdir)
+                ndir = arg.dir(x, cdir=cdir)
                 return r - 1 if ndir.is_negative else r
             else:
                 return r
@@ -158,13 +159,16 @@ class floor(RoundFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            r = floor(arg0)
         if arg0.is_infinite:
             from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
             s = arg._eval_nseries(x, n, logx, cdir)
             o = Order(1, (x, 0)) if n <= 0 else AccumBounds(-1, 0)
             return s + o
-        r = self.subs(x, 0)
         if arg0 == r:
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
             return r - 1 if ndir.is_negative else r
@@ -295,19 +299,16 @@ class ceiling(RoundFunction):
             return arg.approximation_interval(Integer)[1]
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         r = self.subs(x, 0)
+        if arg0 is S.NaN or isinstance(arg0, AccumBounds):
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            r = ceiling(arg0)
         if arg0.is_finite:
             if arg0 == r:
-                if cdir == 0:
-                    ndirl = arg.dir(x, cdir=-1)
-                    ndir = arg.dir(x, cdir=1)
-                    if ndir != ndirl:
-                        raise ValueError("Two sided limit of %s around 0"
-                                    "does not exist" % self)
-                else:
-                    ndir = arg.dir(x, cdir=cdir)
+                ndir = arg.dir(x, cdir=cdir)
                 return r if ndir.is_negative else r + 1
             else:
                 return r
@@ -316,13 +317,16 @@ class ceiling(RoundFunction):
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+            r = ceiling(arg0)
         if arg0.is_infinite:
             from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
             s = arg._eval_nseries(x, n, logx, cdir)
             o = Order(1, (x, 0)) if n <= 0 else AccumBounds(0, 1)
             return s + o
-        r = self.subs(x, 0)
         if arg0 == r:
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
             return r if ndir.is_negative else r + 1
@@ -455,7 +459,6 @@ class frac(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus.accumulationbounds import AccumBounds
-        from sympy.functions.elementary.complexes import im
 
         def _eval(arg):
             if arg in (S.Infinity, S.NegativeInfinity):
@@ -569,6 +572,43 @@ class frac(Function):
                     return S.true
             if other.is_integer and other.is_positive:
                 return S.true
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
+
+        if arg0.is_finite:
+            if r.is_zero:
+                ndir = arg.dir(x, cdir=cdir)
+                if ndir.is_negative:
+                    return S.One
+                return (arg - arg0).as_leading_term(x, logx=logx, cdir=cdir)
+            else:
+                return r
+        elif arg0 in (S.ComplexInfinity, S.Infinity, S.NegativeInfinity):
+            return AccumBounds(0, 1)
+        return arg.as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
+
+        if arg0.is_infinite:
+            from sympy.calculus.accumulationbounds import AccumBounds
+            o = Order(1, (x, 0)) if n <= 0 else AccumBounds(0, 1) + Order(x**n, (x, 0))
+            return o
+        else:
+            res = (arg - arg0)._eval_nseries(x, n, logx=logx, cdir=cdir)
+            if r.is_zero:
+                ndir = arg.dir(x, cdir=cdir)
+                res += S.One if ndir.is_negative else S.Zero
+            else:
+                res += r
+            return res
 
 
 @dispatch(frac, Basic)  # type:ignore

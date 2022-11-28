@@ -1,7 +1,7 @@
 """Sparse rational function fields. """
 
-
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 from functools import reduce
 
 from operator import add, mul, lt, le, gt, ge
@@ -99,7 +99,7 @@ def sfield(exprs, *symbols, **options):
     else:
         return (_field, fracs)
 
-_field_cache = {}  # type: tDict[Any, Any]
+_field_cache: dict[Any, Any] = {}
 
 class FracField(DefaultPrinting):
     """Multivariate distributed rational function field. """
@@ -253,6 +253,8 @@ class FracField(DefaultPrinting):
                         return mapping.get(gen)**int(e/eg)
                 if e.is_Integer and e is not S.One:
                     return _rebuild(b)**int(e)
+            elif mapping.get(1/expr) is not None:
+                return 1/mapping.get(1/expr)
 
             try:
                 return domain.convert(expr)
@@ -262,13 +264,13 @@ class FracField(DefaultPrinting):
                 else:
                     raise
 
-        return _rebuild(sympify(expr))
+        return _rebuild(expr)
 
     def from_expr(self, expr):
         mapping = dict(list(zip(self.symbols, self.gens)))
 
         try:
-            frac = self._rebuild_expr(expr, mapping)
+            frac = self._rebuild_expr(sympify(expr), mapping)
         except CoercionFailed:
             raise ValueError("expected an expression convertible to a rational function in %s, got %s" % (self, expr))
         else:

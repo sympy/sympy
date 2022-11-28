@@ -2,7 +2,8 @@
 A MathML printer.
 """
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -22,7 +23,7 @@ class MathMLPrinterBase(Printer):
     MathMLPresentationPrinter.
     """
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         "order": None,
         "encoding": "utf-8",
         "fold_frac_powers": False,
@@ -37,7 +38,7 @@ class MathMLPrinterBase(Printer):
         "root_notation": True,
         "symbol_names": {},
         "mul_symbol_mathml_numbers": '&#xB7;',
-    }  # type: tDict[str, Any]
+    }
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
@@ -2093,7 +2094,7 @@ def print_mathml(expr, printer='content', **settings):
     ========
 
     >>> ##
-    >>> from sympy.printing.mathml import print_mathml
+    >>> from sympy import print_mathml
     >>> from sympy.abc import x
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE
     <apply>

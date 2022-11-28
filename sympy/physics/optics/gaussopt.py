@@ -60,7 +60,7 @@ class RayTransferMatrix(MutableDenseMatrix):
     """
     Base class for a Ray Transfer Matrix.
 
-    It should be used if there isn't already a more specific subclass mentioned
+    It should be used if there is not already a more specific subclass mentioned
     in See Also.
 
     Parameters
@@ -487,6 +487,7 @@ class BeamParameter(Expr):
     z : the distance to waist, and
     w : the waist, or
     z_r : the rayleigh range.
+    n : the refractive index of medium.
 
     Examples
     ========
@@ -526,18 +527,19 @@ class BeamParameter(Expr):
     # subclass it. See:
     # https://groups.google.com/d/topic/sympy/7XkU07NRBEs/discussion
 
-    def __new__(cls, wavelen, z, z_r=None, w=None):
+    def __new__(cls, wavelen, z, z_r=None, w=None, n=1):
         wavelen = sympify(wavelen)
         z = sympify(z)
+        n = sympify(n)
 
         if z_r is not None and w is None:
             z_r = sympify(z_r)
         elif w is not None and z_r is None:
-            z_r = waist2rayleigh(sympify(w), wavelen)
-        else:
-            raise ValueError('Constructor expects exactly one named argument.')
+            z_r = waist2rayleigh(sympify(w), wavelen, n)
+        elif z_r is None and w is None:
+            raise ValueError('Must specify one of w and z_r.')
 
-        return Expr.__new__(cls, wavelen, z, z_r)
+        return Expr.__new__(cls, wavelen, z, z_r, n)
 
     @property
     def wavelen(self):
@@ -550,6 +552,10 @@ class BeamParameter(Expr):
     @property
     def z_r(self):
         return self.args[2]
+
+    @property
+    def n(self):
+        return self.args[3]
 
     @property
     def q(self):
@@ -584,7 +590,8 @@ class BeamParameter(Expr):
     @property
     def w(self):
         """
-        The beam radius at `1/e^2` intensity.
+        The radius of the beam w(z), at any position z along the beam.
+        The beam radius at `1/e^2` intensity (axial value).
 
         See Also
         ========
@@ -605,12 +612,12 @@ class BeamParameter(Expr):
     @property
     def w_0(self):
         """
-        The beam waist (minimal radius).
+         The minimal radius of beam at `1/e^2` intensity (peak value).
 
         See Also
         ========
 
-        w : the beam radius at `1/e^2` intensity
+        w : the beam radius at `1/e^2` intensity (axial value).
 
         Examples
         ========
@@ -620,7 +627,7 @@ class BeamParameter(Expr):
         >>> p.w_0
         0.00100000000000000
         """
-        return sqrt(self.z_r/pi*self.wavelen)
+        return sqrt(self.z_r/(pi*self.n)*self.wavelen)
 
     @property
     def divergence(self):
@@ -678,7 +685,7 @@ class BeamParameter(Expr):
 # Utilities
 ###
 
-def waist2rayleigh(w, wavelen):
+def waist2rayleigh(w, wavelen, n=1):
     """
     Calculate the rayleigh range from the waist of a gaussian beam.
 
@@ -697,7 +704,7 @@ def waist2rayleigh(w, wavelen):
     pi*w**2/wavelen
     """
     w, wavelen = map(sympify, (w, wavelen))
-    return w**2*pi/wavelen
+    return w**2*n*pi/wavelen
 
 
 def rayleigh2waist(z_r, wavelen):

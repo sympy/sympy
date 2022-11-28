@@ -1,3 +1,5 @@
+.. _module-printing:
+
 ========
 Printing
 ========
@@ -289,6 +291,20 @@ translated in pure Fortran and (iii) a string of Fortran code. A few examples:
     >>> fcode(x - pi**2, human=False)
     ({(pi, '3.1415926535897932d0')}, set(), '      x - pi**2')
 
+SMT-Lib printing
+---------------------------------
+
+.. module:: sympy.printing.smtlib
+
+.. autoclass:: sympy.printing.smtlib.SMTLibPrinter
+   :members:
+
+   .. autoattribute:: SMTLibPrinter.printmethod
+
+   .. autoattribute:: SMTLibPrinter._default_settings
+
+.. autofunction:: sympy.printing.smtlib.smtlib_code
+
 Mathematica code printing
 -------------------------
 
@@ -514,7 +530,7 @@ Example::
 but for SymPy we don’t actually use ``srepr()`` for ``__repr__`` because it’s
 is so verbose, it is unlikely that anyone would want it called by default.
 Another reason is that lists call repr on their elements, like ``print([a, b, c])``
-calls ``repr(a)``, ``repr(b)``, ``repr(c)``. So if we used srepr for `` __repr__`` any list with
+calls ``repr(a)``, ``repr(b)``, ``repr(c)``. So if we used srepr for ``__repr__`` any list with
 SymPy objects would include the srepr form, even if we used ``str()`` or ``print()``.
 
 

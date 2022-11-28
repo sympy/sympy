@@ -21,7 +21,6 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
 from sympy.series.order import Order
-from sympy.simplify.powsimp import powsimp
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
 from sympy.utilities.iterables import iterable
@@ -407,10 +406,8 @@ def _compute_formula(f, x, P, Q, k, m, k_max):
         c2 = q.subs(k, 1/k).leadterm(k)[0]
         res *= (-c1 / c2)**k
 
-        for r, mul in roots(p, k).items():
-            res *= rf(-r, k)**mul
-        for r, mul in roots(q, k).items():
-            res /= rf(-r, k)**mul
+        res *= Mul(*[rf(-r, k)**mul for r, mul in roots(p, k).items()])
+        res /= Mul(*[rf(-r, k)**mul for r, mul in roots(q, k).items()])
 
         sol.append((res, kterm))
 
@@ -862,9 +859,6 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     # Otherwise symb is being set to S.One
     syms = f.free_symbols.difference({x})
     (f, symb) = expand(f).as_independent(*syms)
-    if symb.is_zero:
-        symb = S.One
-    symb = powsimp(symb)
 
     result = None
 
@@ -879,6 +873,11 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
     if result is None:
         return None
 
+    from sympy.simplify.powsimp import powsimp
+    if symb.is_zero:
+        symb = S.One
+    else:
+        symb = powsimp(symb)
     ak = sequence(result[0], (k, result[2], oo))
     xk_formula = powsimp(x**k * symb)
     xk = sequence(xk_formula, (k, 0, oo))

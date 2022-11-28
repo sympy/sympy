@@ -1,10 +1,7 @@
-from __future__ import print_function, division
 import random
-
 import itertools
 from typing import (Sequence as tSequence, Union as tUnion, List as tList,
         Tuple as tTuple, Set as tSet)
-
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -38,7 +35,7 @@ from sympy.solvers.solveset import linsolve
 from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import strongly_connected_components
 from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
@@ -201,12 +198,18 @@ class StochasticProcess(Basic):
         return self.args[1]
 
     def _deprecation_warn_distribution(self):
-        SymPyDeprecationWarning(
-            feature="Calling distribution with RandomIndexedSymbol",
-            useinstead="distribution with just timestamp as argument",
-            issue=20078,
-            deprecated_since_version="1.7.1"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            Calling the distribution method with a RandomIndexedSymbol
+            argument, like X.distribution(X(t)) is deprecated. Instead, call
+            distribution() with the given timestamp, like
+
+            X.distribution(t)
+            """,
+            deprecated_since_version="1.7.1",
+            active_deprecations_target="deprecated-distribution-randomindexedsymbol",
+            stacklevel=4,
+        )
 
     def distribution(self, key=None):
         if key is None:
@@ -632,7 +635,7 @@ class MarkovProcess(StochasticProcess):
 
             rv = rv[0]
             states = condition.as_set()
-            prob, gstate = dict(), None
+            prob, gstate = {}, None
             for gc in gcs:
                 if gc.has(min_key_rv):
                     if gc.has(Probability):
@@ -903,8 +906,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     Symbolic probability queries are also supported
 
-    >>> from sympy import symbols, Matrix, Rational, Eq, Gt
-    >>> from sympy.stats import P, DiscreteMarkovChain
     >>> a, b, c, d = symbols('a b c d')
     >>> T = Matrix([[Rational(1, 10), Rational(4, 10), Rational(5, 10)], [Rational(3, 10), Rational(4, 10), Rational(3, 10)], [Rational(7, 10), Rational(2, 10), Rational(1, 10)]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
@@ -1091,9 +1092,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             # end breadth-first search
 
         # convert back to the user's state names
-        classes = [[self._state_index[i] for i in class_] for class_ in classes]
-
-        return sympify(list(zip(classes, recurrence, periods)))
+        classes = [[_sympify(self._state_index[i]) for i in class_] for class_ in classes]
+        return list(zip(classes, recurrence, map(Integer,periods)))
 
     def fundamental_matrix(self):
         """
@@ -1125,7 +1125,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     def absorbing_probabilities(self):
         """
-        Computes the absorbing probabilities, i.e.,
+        Computes the absorbing probabilities, i.e.
         the ij-th entry of the matrix denotes the
         probability of Markov chain being absorbed
         in state j starting from state i.
@@ -1137,12 +1137,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return N*R
 
     def absorbing_probabilites(self):
-        SymPyDeprecationWarning(
-            feature="absorbing_probabilites",
-            useinstead="absorbing_probabilities",
-            issue=20042,
-            deprecated_since_version="1.7"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            DiscreteMarkovChain.absorbing_probabilites() is deprecated. Use
+            absorbing_probabilities() instead (note the spelling difference).
+            """,
+            deprecated_since_version="1.7",
+            active_deprecations_target="deprecated-absorbing_probabilites",
+        )
         return self.absorbing_probabilities()
 
     def is_regular(self):
@@ -1501,10 +1503,10 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     Parameters
     ==========
 
-    sym: Symbol/str
-    state_space: Set
+    sym : Symbol/str
+    state_space : Set
         Optional, by default, S.Reals
-    gen_mat: Matrix/ImmutableMatrix/MatrixSymbol
+    gen_mat : Matrix/ImmutableMatrix/MatrixSymbol
         Optional, by default, None
 
     Examples
@@ -1548,8 +1550,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
 
     Symbolic probability queries are also supported
 
-    >>> from sympy import S, symbols, Matrix, Rational, Eq, Gt
-    >>> from sympy.stats import P, ContinuousMarkovChain
+    >>> from sympy import symbols
     >>> a,b,c,d = symbols('a b c d')
     >>> G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
     >>> C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
@@ -1620,18 +1621,18 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     independent Bernoulli process trials with the same parameter `p`.
     It's assumed that the probability `p` applies to every
     trial and that the outcomes of each trial
-    are independent of all the rest. Therefore Bernoulli Processs
+    are independent of all the rest. Therefore Bernoulli Process
     is Discrete State and Discrete Time Stochastic Process.
 
     Parameters
     ==========
 
-    sym: Symbol/str
-    success: Integer/str
-            The event which is considered to be success, by default is 1.
+    sym : Symbol/str
+    success : Integer/str
+            The event which is considered to be success. Default: 1.
     failure: Integer/str
-            The event which is considered to be failure, by default is 0.
-    p: Real Number between 0 and 1
+            The event which is considered to be failure. Default: 0.
+    p : Real Number between 0 and 1
             Represents the probability of getting success.
 
     Examples
@@ -1723,10 +1724,10 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         Parameters
         ==========
 
-        expr: RandomIndexedSymbol, Relational, Logic
+        expr : RandomIndexedSymbol, Relational, Logic
             Condition for which expectation has to be computed. Must
             contain a RandomIndexedSymbol of the process.
-        condition: Relational, Logic
+        condition : Relational, Logic
             The given conditions under which computations should be done.
 
         Returns
@@ -1745,10 +1746,10 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         Parameters
         ==========
 
-        condition: Relational
+        condition : Relational
                 Condition for which probability has to be computed. Must
                 contain a RandomIndexedSymbol of the process.
-        given_condition: Relational/And
+        given_condition : Relational, Logic
                 The given conditions under which computations should be done.
 
         Returns
@@ -2155,9 +2156,9 @@ class PoissonProcess(CountingProcess):
     Parameters
     ==========
 
-    sym: Symbol/str
-    lamda: Positive number
-        Rate of the process, ``lamda > 0``
+    sym : Symbol/str
+    lamda : Positive number
+        Rate of the process, ``lambda > 0``
 
     Examples
     ========
@@ -2250,13 +2251,14 @@ class PoissonProcess(CountingProcess):
 class WienerProcess(CountingProcess):
     """
     The Wiener process is a real valued continuous-time stochastic process.
-    In physics it is used to study Brownian motion and therefore also known as
-    Brownian Motion.
+    In physics it is used to study Brownian motion and it is often also called
+    Brownian motion due to its historical connection with physical process of the
+    same name originally observed by Scottish botanist Robert Brown.
 
     Parameters
     ==========
 
-    sym: Symbol/str
+    sym : Symbol/str
 
     Examples
     ========
@@ -2306,18 +2308,18 @@ class WienerProcess(CountingProcess):
 
 
 class GammaProcess(CountingProcess):
-    """
+    r"""
     A Gamma process is a random process with independent gamma distributed
-    increments.  It is a pure-jump increasing Levy process.
+    increments. It is a pure-jump increasing Levy process.
 
     Parameters
     ==========
 
-    sym: Symbol/str
-    lamda: Positive number
+    sym : Symbol/str
+    lamda : Positive number
         Jump size of the process, ``lamda > 0``
-    gamma: Positive number
-        Rate of jump arrivals, ``gamma > 0``
+    gamma : Positive number
+        Rate of jump arrivals, `\gamma > 0`
 
     Examples
     ========

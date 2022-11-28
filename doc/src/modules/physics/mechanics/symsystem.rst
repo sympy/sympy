@@ -141,10 +141,10 @@ equations of motion formats. ::
     ...                                    coord_idxs=coord_idxs,
     ...                                    speed_idxs=speed_idxs)
 
- Like coordinates and speeds, the bodies and loads attributes can only be
- accessed if they are specified during initialization of the `SymbolicSystem`
- class. Lastly here are some attributes accessible from the `SymbolicSystem`
- class. ::
+Like coordinates and speeds, the bodies and loads attributes can only be
+accessed if they are specified during initialization of the `SymbolicSystem`
+class. Lastly here are some attributes accessible from the `SymbolicSystem`
+class. ::
 
     >>> symsystem1.states
     Matrix([

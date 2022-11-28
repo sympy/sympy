@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
 from sympy.core.containers import Dict
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int
 
@@ -25,7 +25,7 @@ class SparseRepMatrix(RepMatrix):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix, ones
+    >>> from sympy import SparseMatrix, ones
     >>> SparseMatrix(2, 2, range(4))
     Matrix([
     [0, 1],
@@ -236,11 +236,14 @@ class SparseRepMatrix(RepMatrix):
     @property
     def _smat(self):
 
-        SymPyDeprecationWarning(
-            feature="The private _smat attribute of SparseMatrix",
-            useinstead="the .todok() method",
-            issue=21715,
-            deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning(
+            """
+            The private _smat attribute of SparseMatrix is deprecated. Use the
+            .todok() method instead.
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-private-matrix-attributes"
+        )
 
         return self.todok()
 
@@ -255,7 +258,7 @@ class SparseRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> m = SparseMatrix(2, 2, lambda i, j: i*2+j)
         >>> m
         Matrix([
@@ -309,7 +312,7 @@ class SparseRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> a=SparseMatrix(((1, 2), (3, 4)))
         >>> a
         Matrix([
@@ -335,7 +338,7 @@ class SparseRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a
         Matrix([
@@ -366,7 +369,7 @@ class SparseRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix, Matrix, ones
+        >>> from sympy import SparseMatrix, Matrix, ones
         >>> A = Matrix([1, 2, 3])
         >>> B = Matrix([2, 3, 4])
         >>> S = SparseMatrix(A.row_join(B))

@@ -112,6 +112,8 @@ Disjunctive, and Negated Normal forms:
 
 .. autofunction:: sympy.logic.boolalg::is_nnf
 
+.. autofunction:: sympy.logic.boolalg::gateinputcount
+
 Simplification and equivalence-testing
 --------------------------------------
 

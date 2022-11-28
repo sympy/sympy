@@ -40,7 +40,7 @@ class Mod(Function):
 
     @classmethod
     def eval(cls, p, q):
-        def doit(p, q):
+        def number_eval(p, q):
             """Try to return p % q if both are numbers or +/-p is known
             to be less than or equal q.
             """
@@ -99,7 +99,7 @@ class Mod(Function):
                             return -d + q
                     break
 
-        rv = doit(p, q)
+        rv = number_eval(p, q)
         if rv is not None:
             return rv
 
@@ -134,7 +134,7 @@ class Mod(Function):
             for arg in p.args:
                 both_l[isinstance(arg, cls)].append(arg)
 
-            if mod_l and all(inner.args[1] == q for inner in mod_l):
+            if mod_l and all(inner.args[1] == q for inner in mod_l) and all(t.is_integer for t in p.args) and q.is_integer:
                 # finding distributive term
                 non_mod_l = [cls(x, q) for x in non_mod_l]
                 mod = []
@@ -151,13 +151,8 @@ class Mod(Function):
                 return prod_non_mod*cls(net, q)
 
             if q.is_Integer and q is not S.One:
-                _ = []
-                for i in non_mod_l:
-                    if i.is_Integer and (i % q is not S.Zero):
-                        _.append(i%q)
-                    else:
-                        _.append(i)
-                non_mod_l = _
+                non_mod_l = [i % q if i.is_Integer and (i % q is not S.Zero) else i for
+                             i in non_mod_l]
 
             p = Mul(*(non_mod_l + mod_l))
 
@@ -211,7 +206,7 @@ class Mod(Function):
             G, p, q = [-i for i in (G, p, q)]
 
         # check again to see if p and q can now be handled as numbers
-        rv = doit(p, q)
+        rv = number_eval(p, q)
         if rv is not None:
             return rv*G
 

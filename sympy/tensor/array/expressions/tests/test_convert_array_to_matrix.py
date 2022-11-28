@@ -1,12 +1,12 @@
-from sympy import Lambda, S, Dummy
+from sympy import Lambda, S, Dummy, KroneckerProduct
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.expressions.hadamard import HadamardProduct, HadamardPower
 from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
-from sympy.tensor.array.expressions.conv_array_to_matrix import _support_function_tp1_recognize, \
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
+from sympy.tensor.array.expressions.from_array_to_matrix import _support_function_tp1_recognize, \
     _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix, \
     _combine_removed, identify_removable_identity_matrices, _array_contraction_to_diagonal_multiple_identity
 from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -15,7 +15,7 @@ from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices import Trace, MatMul, Transpose
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, \
     ArrayElement, ArraySymbol, ArrayElementwiseApplyFunc, _array_tensor_product, _array_contraction, \
-    _array_diagonal, _permute_dims, PermuteDims, ArrayAdd, ArrayDiagonal
+    _array_diagonal, _permute_dims, PermuteDims, ArrayAdd, ArrayDiagonal, ArrayContraction, ArrayTensorProduct
 from sympy.testing.pytest import raises
 
 
@@ -665,3 +665,25 @@ def test_convert_array_elementwise_function_to_matrix():
 
     expr = ArrayElementwiseApplyFunc(Lambda(d, 1 / (2 * sqrt(d))), x)
     assert convert_array_to_matrix(expr) == S.Half * HadamardPower(x, -S.Half)
+
+
+def test_array2matrix():
+    # See issue https://github.com/sympy/sympy/pull/22877
+    expr = PermuteDims(ArrayContraction(ArrayTensorProduct(x, I, I1, x), (0, 3), (1, 7)), Permutation(2, 3))
+    expected = PermuteDims(ArrayTensorProduct(x*x.T, I1), Permutation(3)(1, 2))
+    assert _array2matrix(expr) == expected
+
+
+def test_recognize_broadcasting():
+    expr = ArrayTensorProduct(x.T*x, A)
+    assert _remove_trivial_dims(expr) == (KroneckerProduct(x.T*x, A), [0, 1])
+
+    expr = ArrayTensorProduct(A, x.T*x)
+    assert _remove_trivial_dims(expr) == (KroneckerProduct(A, x.T*x), [2, 3])
+
+    expr = ArrayTensorProduct(A, B, x.T*x, C)
+    assert _remove_trivial_dims(expr) == (ArrayTensorProduct(A, KroneckerProduct(B, x.T*x), C), [4, 5])
+
+    # Always prefer matrix multiplication to Kronecker product, if possible:
+    expr = ArrayTensorProduct(a, b, x.T*x)
+    assert _remove_trivial_dims(expr) == (a*x.T*x*b.T, [1, 3, 4, 5])

@@ -25,7 +25,7 @@ class Dyadic(Printable, EvalfMixin):
 
     def __init__(self, inlist):
         """
-        Just like Vector's init, you shouldn't call this unless creating a
+        Just like Vector's init, you should not call this unless creating a
         zero dyadic.
 
         zd = Dyadic(0)
@@ -148,8 +148,9 @@ class Dyadic(Printable, EvalfMixin):
         """
 
         newlist = [v for v in self.args]
+        other = sympify(other)
         for i, v in enumerate(newlist):
-            newlist[i] = (sympify(other) * newlist[i][0], newlist[i][1],
+            newlist[i] = (other * newlist[i][0], newlist[i][1],
                           newlist[i][2])
         return Dyadic(newlist)
 
@@ -317,10 +318,12 @@ class Dyadic(Printable, EvalfMixin):
         for i, v in enumerate(ar):
             # if the coef of the dyadic is 1, we skip the 1
             if ar[i][0] == 1:
-                ol.append(' + (' + printer._print(ar[i][1]) + '|' + printer._print(ar[i][2]) + ')')
+                ol.append(' + (' + printer._print(ar[i][1]) + '|' +
+                          printer._print(ar[i][2]) + ')')
             # if the coef of the dyadic is -1, we skip the 1
             elif ar[i][0] == -1:
-                ol.append(' - (' + printer._print(ar[i][1]) + '|' + printer._print(ar[i][2]) + ')')
+                ol.append(' - (' + printer._print(ar[i][1]) + '|' +
+                          printer._print(ar[i][2]) + ')')
             # If the coefficient of the dyadic is not 1 or -1,
             # we might wrap it in parentheses, for readability.
             elif ar[i][0] != 0:
@@ -332,7 +335,8 @@ class Dyadic(Printable, EvalfMixin):
                     str_start = ' - '
                 else:
                     str_start = ' + '
-                ol.append(str_start + arg_str + '*(' + printer._print(ar[i][1]) +
+                ol.append(str_start + arg_str + '*(' +
+                          printer._print(ar[i][1]) +
                           '|' + printer._print(ar[i][2]) + ')')
         outstr = ''.join(ol)
         if outstr.startswith(' + '):
@@ -526,7 +530,7 @@ class Dyadic(Printable, EvalfMixin):
 
         out = Dyadic(0)
         for a, b, c in self.args:
-            out += f(a) * (b|c)
+            out += f(a) * (b | c)
         return out
 
     dot = __and__
@@ -545,7 +549,8 @@ class Dyadic(Printable, EvalfMixin):
 
     def xreplace(self, rule):
         """
-        Replace occurrences of objects within the measure numbers of the Dyadic.
+        Replace occurrences of objects within the measure numbers of the
+        Dyadic.
 
         Parameters
         ==========
@@ -588,6 +593,7 @@ class Dyadic(Printable, EvalfMixin):
             new_inlist[0] = new_inlist[0].xreplace(rule)
             new_args.append(tuple(new_inlist))
         return Dyadic(new_args)
+
 
 def _check_dyadic(other):
     if not isinstance(other, Dyadic):

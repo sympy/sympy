@@ -300,22 +300,6 @@ class AntiSymmetricTensor(TensorSymbol):
     def __str__(self):
         return "%s(%s,%s)" % self.args
 
-    def doit(self, **kw_args):
-        """
-        Returns self.
-
-        Examples
-        ========
-
-        >>> from sympy import symbols
-        >>> from sympy.physics.secondquant import AntiSymmetricTensor
-        >>> i, j = symbols('i,j', below_fermi=True)
-        >>> a, b = symbols('a,b', above_fermi=True)
-        >>> AntiSymmetricTensor('v', (a, i), (b, j)).doit()
-        AntiSymmetricTensor(v, (a, i), (b, j))
-        """
-        return self
-
 
 class SqOperator(Expr):
     """
@@ -374,12 +358,6 @@ class SqOperator(Expr):
             return False
         else:
             return True
-
-    def doit(self, **kw_args):
-        """
-        FIXME: hack to prevent crash further up...
-        """
-        return self
 
     def __repr__(self):
         return NotImplemented
@@ -451,8 +429,10 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
         return "AnnihilateBoson(%s)" % self.state
 
     def _latex(self, printer):
-        return "b_{%s}" % self.state.name
-
+        if self.state is S.Zero:
+            return "b_{0}"
+        else:
+            return "b_{%s}" % self.state.name
 
 class CreateBoson(BosonicOperator, Creator):
     """
@@ -490,7 +470,10 @@ class CreateBoson(BosonicOperator, Creator):
         return "CreateBoson(%s)" % self.state
 
     def _latex(self, printer):
-        return "{b^\\dagger_{%s}}" % self.state.name
+        if self.state is S.Zero:
+            return "{b^\\dagger_{0}}"
+        else:
+            return "{b^\\dagger_{%s}}" % self.state.name
 
 B = AnnihilateBoson
 Bd = CreateBoson
@@ -805,7 +788,10 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         return "AnnihilateFermion(%s)" % self.state
 
     def _latex(self, printer):
-        return "a_{%s}" % self.state.name
+        if self.state is S.Zero:
+            return "a_{0}"
+        else:
+            return "a_{%s}" % self.state.name
 
 
 class CreateFermion(FermionicOperator, Creator):
@@ -951,7 +937,10 @@ class CreateFermion(FermionicOperator, Creator):
         return "CreateFermion(%s)" % self.state
 
     def _latex(self, printer):
-        return "{a^\\dagger_{%s}}" % self.state.name
+        if self.state is S.Zero:
+            return "{a^\\dagger_{0}}"
+        else:
+            return "{a^\\dagger_{%s}}" % self.state.name
 
 Fd = CreateFermion
 F = AnnihilateFermion
@@ -991,13 +980,16 @@ class FockState(Expr):
         return ("FockState(%r)") % (self.args)
 
     def __str__(self):
-        return "%s%r%s" % (self.lbracket, self._labels(), self.rbracket)
+        return "%s%r%s" % (getattr(self, 'lbracket', ""), self._labels(), getattr(self, 'rbracket', ""))
 
     def _labels(self):
         return self.args[0]
 
     def __len__(self):
         return len(self.args[0])
+
+    def _latex(self, printer):
+        return "%s%s%s" % (getattr(self, 'lbracket_latex', ""), printer._print(self._labels()), getattr(self, 'rbracket_latex', ""))
 
 
 class BosonState(FockState):
@@ -1254,6 +1246,8 @@ class FockStateKet(FockState):
     """
     lbracket = '|'
     rbracket = '>'
+    lbracket_latex = r'\left|'
+    rbracket_latex = r'\right\rangle'
 
 
 class FockStateBra(FockState):
@@ -1262,6 +1256,8 @@ class FockStateBra(FockState):
     """
     lbracket = '<'
     rbracket = '|'
+    lbracket_latex = r'\left\langle'
+    rbracket_latex = r'\right|'
 
     def __mul__(self, other):
         if isinstance(other, FockStateKet):
@@ -1454,7 +1450,7 @@ class InnerProduct(Basic):
         if not isinstance(bra, FockStateBra):
             raise TypeError("must be a bra")
         if not isinstance(ket, FockStateKet):
-            raise TypeError("must be a key")
+            raise TypeError("must be a ket")
         return cls.eval(bra, ket)
 
     @classmethod
@@ -1972,7 +1968,7 @@ class NO(Expr):
         """
         return self.args[0].args[-1].is_q_annihilator
 
-    def doit(self, **kw_args):
+    def doit(self, **hints):
         """
         Either removes the brackets or enables complex computations
         in its arguments.
@@ -1992,10 +1988,10 @@ class NO(Expr):
         _p)*AnnihilateFermion(_a)*CreateFermion(_i) - KroneckerDelta(_i,
         _p)*KroneckerDelta(_i, _q)*AnnihilateFermion(_i)*CreateFermion(_i)
         """
-        if kw_args.get("remove_brackets", True):
+        if hints.get("remove_brackets", True):
             return self._remove_brackets()
         else:
-            return self.__new__(type(self), self.args[0].doit(**kw_args))
+            return self.__new__(type(self), self.args[0].doit(**hints))
 
     def _remove_brackets(self):
         """
@@ -2597,7 +2593,7 @@ def _get_ordered_dummies(mul, verbose=False):
     Strategy
     --------
 
-    The canoncial order is given by an arbitrary sorting rule.  A sort key
+    The canonical order is given by an arbitrary sorting rule.  A sort key
     is determined for each dummy as a tuple that depends on all factors where
     the index is present.  The dummies are thereby sorted according to the
     contraction structure of the term, instead of sorting based solely on the

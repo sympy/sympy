@@ -1,6 +1,6 @@
 from sympy.core import symbols, Symbol, Tuple, oo, Dummy
 from sympy.tensor.indexed import IndexException
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 from sympy.utilities.iterables import iterable
 
 # import test:
@@ -144,7 +144,6 @@ def test_Idx_inequalities():
     assert isinstance(iNone1 >= iNone2, GreaterThan)
 
 
-@XFAIL
 def test_Idx_inequalities_current_fails():
     i14 = Idx("i14", (1, 4))
 
@@ -311,7 +310,7 @@ def test_Indexed_shape_precedence():
         a, Idx(i, m), Idx(j, n)).ranges == [Tuple(0, m - 1), Tuple(0, n - 1)]
     assert Indexed(a, Idx(i, m), Idx(j, n)).shape == Tuple(o, p)
     assert Indexed(
-        a, Idx(i, m), Idx(j)).ranges == [Tuple(0, m - 1), Tuple(None, None)]
+        a, Idx(i, m), Idx(j)).ranges == [Tuple(0, m - 1), (None, None)]
     assert Indexed(a, Idx(i, m), Idx(j)).shape == Tuple(o, p)
 
 

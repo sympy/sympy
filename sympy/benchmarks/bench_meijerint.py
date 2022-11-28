@@ -27,7 +27,7 @@ negk = Symbol('k', negative=True)
 mu1, mu2 = symbols('mu1 mu2', real=True, nonzero=True, finite=True)
 sigma1, sigma2 = symbols('sigma1 sigma2', real=True, nonzero=True,
                          finite=True, positive=True)
-rate = Symbol('lambda', real=True, positive=True, finite=True)
+rate = Symbol('lambda', positive=True)
 
 
 def normal(x, mu, sigma):

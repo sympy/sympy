@@ -25,7 +25,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
 
     def _print_Function(self, expr):
         func = expr.func.__name__
-        if not hasattr(sympy, func) and not func in self.functions:
+        if not hasattr(sympy, func) and func not in self.functions:
             self.functions.append(func)
         return StrPrinter._print_Function(self, expr)
 

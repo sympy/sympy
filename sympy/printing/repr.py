@@ -5,7 +5,8 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
@@ -17,10 +18,10 @@ from .printer import Printer, print_function
 class ReprPrinter(Printer):
     printmethod = "_sympyrepr"
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         "order": None,
         "perm_cyclic" : True,
-    }  # type: tDict[str, Any]
+    }
 
     def reprify(self, args, sep):
         """
@@ -48,11 +49,8 @@ class ReprPrinter(Printer):
 
     def _print_Add(self, expr, order=None):
         args = self._as_ordered_terms(expr, order=order)
-        nargs = len(args)
         args = map(self._print, args)
         clsname = type(expr).__name__
-        if nargs > 255:  # Issue #10259, Python < 3.7
-            return clsname + "(*[%s])" % ", ".join(args)
         return clsname + "(%s)" % ", ".join(args)
 
     def _print_Cycle(self, expr):
@@ -60,16 +58,19 @@ class ReprPrinter(Printer):
 
     def _print_Permutation(self, expr):
         from sympy.combinatorics.permutations import Permutation, Cycle
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        from sympy.utilities.exceptions import sympy_deprecation_warning
 
         perm_cyclic = Permutation.print_cyclic
         if perm_cyclic is not None:
-            SymPyDeprecationWarning(
-                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
-                useinstead="init_printing(perm_cyclic={})"
-                .format(perm_cyclic),
-                issue=15201,
-                deprecated_since_version="1.6").warn()
+            sympy_deprecation_warning(
+                f"""
+                Setting Permutation.print_cyclic is deprecated. Instead use
+                init_printing(perm_cyclic={perm_cyclic}).
+                """,
+                deprecated_since_version="1.6",
+                active_deprecations_target="deprecated-permutation-print_cyclic",
+                stacklevel=7,
+            )
         else:
             perm_cyclic = self._settings.get("perm_cyclic", True)
 
@@ -198,11 +199,8 @@ class ReprPrinter(Printer):
             # use make_args in case expr was something like -x -> x
             args = Mul.make_args(expr)
 
-        nargs = len(args)
         args = map(self._print, args)
         clsname = type(expr).__name__
-        if nargs > 255:  # Issue #10259, Python < 3.7
-            return clsname + "(*[%s])" % ", ".join(args)
         return clsname + "(%s)" % ", ".join(args)
 
     def _print_Rational(self, expr):

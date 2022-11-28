@@ -1,7 +1,7 @@
 import itertools
 from collections.abc import Iterable
 
-from sympy.core.basic import Basic
+from sympy.core._print_helpers import Printable
 from sympy.core.containers import Tuple
 from sympy.core.function import diff
 from sympy.core.singleton import S
@@ -331,7 +331,7 @@ def derive_by_array(expr, dx):
             return diff(expr, dx)
 
 
-def permutedims(expr, perm):
+def permutedims(expr, perm=None, index_order_old=None, index_order_new=None):
     """
     Permutes the indices of an array.
 
@@ -363,6 +363,15 @@ def permutedims(expr, perm):
     >>> permutedims(b, (1, 2, 0))
     [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
 
+    An alternative way to specify the same permutations as in the previous
+    lines involves passing the *old* and *new* indices, either as a list or as
+    a string:
+
+    >>> permutedims(b, index_order_old="cba", index_order_new="abc")
+    [[[1, 5], [3, 7]], [[2, 6], [4, 8]]]
+    >>> permutedims(b, index_order_old="cab", index_order_new="abc")
+    [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
+
     ``Permutation`` objects are also allowed:
 
     >>> from sympy.combinatorics import Permutation
@@ -376,6 +385,9 @@ def permutedims(expr, perm):
     from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
     from sympy.tensor.array.expressions.array_expressions import _permute_dims
     from sympy.matrices.expressions.matexpr import MatrixSymbol
+    from sympy.tensor.array.expressions import PermuteDims
+    from sympy.tensor.array.expressions.array_expressions import get_rank
+    perm = PermuteDims._get_permutation_from_arguments(perm, index_order_old, index_order_new, get_rank(expr))
     if isinstance(expr, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
         return _permute_dims(expr, perm)
 
@@ -407,7 +419,7 @@ def permutedims(expr, perm):
     return type(expr)(new_array, new_shape)
 
 
-class Flatten(Basic):
+class Flatten(Printable):
     '''
     Flatten an iterable object to a list in a lazy-evaluation way.
 
@@ -475,3 +487,6 @@ class Flatten(Basic):
 
     def next(self):
         return self.__next__()
+
+    def _sympystr(self, printer):
+        return type(self).__name__ + '(' + printer._print(self._iter) + ')'

@@ -12,8 +12,6 @@ from sympy.functions.combinatorial.factorials import RisingFactorial
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import quo, roots
-from sympy.simplify.powsimp import powsimp
-from sympy.simplify.simplify import product_simplify
 
 
 class Product(ExprWithIntLimits):
@@ -191,7 +189,7 @@ class Product(ExprWithIntLimits):
     .. [3] https://en.wikipedia.org/wiki/Empty_product
     """
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ()
 
     limits: tTuple[tTuple[Symbol, Expr, Expr]]
 
@@ -267,6 +265,7 @@ class Product(ExprWithIntLimits):
                 did = did.xreplace(undo)
             return did
 
+        from sympy.simplify.powsimp import powsimp
         f = self.function
         for index, limit in enumerate(self.limits):
             i, a, b = limit
@@ -392,7 +391,8 @@ class Product(ExprWithIntLimits):
             return self._eval_product_direct(term, limits)
 
     def _eval_simplify(self, **kwargs):
-        rv = product_simplify(self)
+        from sympy.simplify.simplify import product_simplify
+        rv = product_simplify(self, **kwargs)
         return rv.doit() if kwargs['doit'] else rv
 
     def _eval_transpose(self):

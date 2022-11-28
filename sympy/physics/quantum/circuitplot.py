@@ -14,7 +14,7 @@ Todo:
 * Write some tests/examples!
 """
 
-from typing import List, Dict as tDict
+from __future__ import annotations
 
 from sympy.core.mul import Mul
 from sympy.external import import_module
@@ -55,8 +55,8 @@ class CircuitPlot:
     control_radius = 0.05
     not_radius = 0.15
     swap_delta = 0.05
-    labels = []  # type: List[str]
-    inits = {}  # type: tDict[str, str]
+    labels: list[str] = []
+    inits: dict[str, str] = {}
     label_buffer = 0.5
 
     def __init__(self, c, nqubits, **kwargs):
@@ -171,7 +171,7 @@ class CircuitPlot:
             gate.plot_gate(self, i)
 
     def _measurements(self):
-        """Return a dict {i:j} where i is the index of the wire that has
+        """Return a dict ``{i:j}`` where i is the index of the wire that has
         been measured, and j is the gate where the wire is measured.
         """
         ismeasured = {}
@@ -204,7 +204,7 @@ class CircuitPlot:
         )
 
     def two_qubit_box(self, t, gate_idx, wire_idx):
-        """Draw a box for a two qubit gate. Doesn't work yet.
+        """Draw a box for a two qubit gate. Does not work yet.
         """
         # x = self._gate_grid[gate_idx]
         # y = self._wire_grid[wire_idx]+0.5
@@ -297,7 +297,7 @@ def circuit_plot(c, nqubits, **kwargs):
         The circuit to plot. Should be a product of Gate instances.
     nqubits : int
         The number of qubits to include in the circuit. Must be at least
-        as big as the largest `min_qubits`` of the gates.
+        as big as the largest ``min_qubits`` of the gates.
     """
     return CircuitPlot(c, nqubits, **kwargs)
 

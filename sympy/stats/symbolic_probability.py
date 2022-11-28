@@ -581,7 +581,7 @@ class Moment(Expr):
     >>> from sympy import Symbol, Integral
     >>> from sympy.stats import Normal, Expectation, Probability, Moment
     >>> mu = Symbol('mu', real=True)
-    >>> sigma = Symbol('sigma', real=True, positive=True)
+    >>> sigma = Symbol('sigma', positive=True)
     >>> X = Normal('X', mu, sigma)
     >>> M = Moment(X, 3, 1)
 
@@ -639,7 +639,7 @@ class CentralMoment(Expr):
     >>> from sympy import Symbol, Integral
     >>> from sympy.stats import Normal, Expectation, Probability, CentralMoment
     >>> mu = Symbol('mu', real=True)
-    >>> sigma = Symbol('sigma', real=True, positive=True)
+    >>> sigma = Symbol('sigma', positive=True)
     >>> X = Normal('X', mu, sigma)
     >>> CM = CentralMoment(X, 4)
 

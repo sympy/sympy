@@ -40,7 +40,7 @@ class Linearizer:
         f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a : array_like
             System of equations holding the general system form.
             Supply empty array or Matrix if the parameter
-            doesn't exist.
+            does not exist.
         q : array_like
             The generalized coordinates.
         u : array_like

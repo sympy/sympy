@@ -21,8 +21,9 @@ from sympy.plotting.plot import (
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
     TextBackend, BaseBackend)
-from sympy.testing.pytest import skip, raises, warns
+from sympy.testing.pytest import skip, raises, warns, warns_deprecated_sympy
 from sympy.utilities import lambdify as lambdify_
+from sympy.utilities.exceptions import ignore_warnings
 
 
 unset_show()
@@ -355,7 +356,9 @@ def test_plot_and_save_4():
     with TemporaryDirectory(prefix='sympy_') as tmpdir:
         with warns(
             UserWarning,
-            match="The evaluation of the expression is problematic"):
+            match="The evaluation of the expression is problematic",
+            test_stacklevel=False,
+        ):
             i = Integral(log((sin(x)**2 + 1)*sqrt(x**2 + 1)), (x, 0, y))
             p = plot(i, (y, 1, 5))
             filename = 'test_advanced_integral.png'
@@ -381,7 +384,17 @@ def test_plot_and_save_5():
         p[0].only_integers = True
         p[0].steps = True
         filename = 'test_advanced_fin_sum.png'
-        p.save(os.path.join(tmpdir, filename))
+
+        # XXX: This should be fixed in experimental_lambdify or by using
+        # ordinary lambdify so that it doesn't warn. The error results from
+        # passing an array of values as the integration limit.
+        #
+        # UserWarning: The evaluation of the expression is problematic. We are
+        # trying a failback method that may still work. Please report this as a
+        # bug.
+        with ignore_warnings(UserWarning):
+            p.save(os.path.join(tmpdir, filename))
+
         p._backend.close()
 
 
@@ -399,8 +412,11 @@ def test_plot_and_save_6():
         ###
         p = plot(sin(x) + I*cos(x))
         p.save(os.path.join(tmpdir, filename))
-        p = plot(sqrt(sqrt(-x)))
-        p.save(os.path.join(tmpdir, filename))
+
+        with ignore_warnings(RuntimeWarning):
+            p = plot(sqrt(sqrt(-x)))
+            p.save(os.path.join(tmpdir, filename))
+
         p = plot(LambertW(x))
         p.save(os.path.join(tmpdir, filename))
         p = plot(sqrt(LambertW(x)))
@@ -525,7 +541,10 @@ def test_issue_17405():
     p = plot(f, (x, -10, 10), show=False)
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
-    assert len(p[0].get_data()[0]) >= 30
+
+    # RuntimeWarning: invalid value encountered in double_scalars
+    with ignore_warnings(RuntimeWarning):
+        assert len(p[0].get_data()[0]) >= 30
 
 
 def test_logplot_PR_16796():
@@ -733,3 +752,13 @@ def test_custom_coloring():
             surface_color=lambda a, b: a**2 + b**2)
     plot3d(x*y, (x, -5, 5), (y, -5, 5), surface_color=1)
     plot3d(x*y, (x, -5, 5), (y, -5, 5), surface_color="r")
+
+def test_deprecated_get_segments():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+    f = sin(x)
+    p = plot(f, (x, -10, 10), show=False)
+    with warns_deprecated_sympy():
+        p[0].get_segments()

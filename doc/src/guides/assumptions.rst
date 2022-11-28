@@ -1,4 +1,4 @@
-.. _assumptions:
+.. _assumptions-guide:
 
 =============
  Assumptions
@@ -113,7 +113,7 @@ interpreted as meaning that the result is *unknown*.
 
 .. note:: We need to use ``print`` in the above examples because the special
           value ``None`` does not display by default in the Python
-          interpretter.
+          interpreter.
 
 There are several reasons why an assumptions query might give ``None``. It is
 possible that the query is *unknowable* as in the case of ``x`` above. Since
@@ -352,6 +352,8 @@ infer that is should have ``rational=True`` because every integer is a
 rational number.
 
 A full table of the possible predicates and their definitions is given below.
+
+.. _assumptions-guide-predicates:
 
 .. list-table:: Assumptions predicates for the (old) assumptions
     :widths: 20, 45, 35
@@ -849,6 +851,8 @@ extended real or any of the standard infinities (even ``zoo`` is commutative).
 We are left with very little that we can say about what such an expression
 *does* represent.
 
+
+.. _assumptions-guide-other-is-properties:
 
 Other is_* properties
 =====================
@@ -1429,16 +1433,9 @@ assumptions can be specified. However the algorithms to make use of that
 information are not yet implemented and the exact API for specifying
 relational assumptions has not been decided upon.
 
-Dynamic changing assumptions
-----------------------------
-
-Selectively controlling evaluation
-----------------------------------
-
-Extensibility
--------------
-
-New assumptions
-===============
-
-ZZZ: Talk about the new assumptions here...
+..
+  Titles That can be added:
+  1. Dynamic changing assumptions
+  2. Selectively controlling evaluation
+  3. Extensibility
+  4. New assumptions

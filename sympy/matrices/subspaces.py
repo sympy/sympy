@@ -7,7 +7,7 @@ def _columnspace(M, simplify=False):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
     >>> M
     Matrix([
@@ -41,7 +41,7 @@ def _nullspace(M, simplify=False, iszerofunc=_iszero):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix(3, 3, [1, 3, 0, -2, -6, 0, 3, 9, 6])
     >>> M
     Matrix([

@@ -21,7 +21,7 @@ from sympy.abc import x, y, z
 from sympy.core import S, diff, Expr, Symbol
 from sympy.core.sympify import _sympify
 from sympy.geometry import Segment2D, Polygon, Point, Point2D
-from sympy.polys.polytools import LC, gcd_list, degree_list
+from sympy.polys.polytools import LC, gcd_list, degree_list, Poly
 from sympy.simplify.simplify import nsimplify
 
 
@@ -50,8 +50,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.geometry.polygon import Polygon
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point, Polygon
     >>> from sympy.integrals.intpoly import polytope_integrate
     >>> polygon = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
     >>> polys = [1, x, y, x*y, x**2*y, x*y**2]
@@ -83,7 +82,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
             lints = len(intersections)
             facets = [Segment2D(intersections[i],
                                 intersections[(i + 1) % lints])
-                      for i in range(0, lints)]
+                      for i in range(lints)]
         else:
             raise NotImplementedError("Integration for H-representation 3D"
                                       "case not implemented yet.")
@@ -95,12 +94,21 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
 
         if max_degree is None:
             if expr is None:
-                raise TypeError('Input expression be must'
-                                'be a valid SymPy expression')
+                raise TypeError('Input expression must be a valid SymPy expression')
             return main_integrate3d(expr, facets, vertices, hp_params)
 
     if max_degree is not None:
         result = {}
+        if expr is not None:
+            f_expr = []
+            for e in expr:
+                _ = decompose(e)
+                if len(_) == 1 and not _.popitem()[0]:
+                    f_expr.append(e)
+                elif Poly(e).total_degree() <= max_degree:
+                    f_expr.append(e)
+            expr = f_expr
+
         if not isinstance(expr, list) and expr is not None:
             raise TypeError('Input polynomials must be list of expressions')
 
@@ -129,8 +137,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
         return result
 
     if expr is None:
-        raise TypeError('Input expression be must'
-                        'be a valid SymPy expression')
+        raise TypeError('Input expression must be a valid SymPy expression')
 
     return main_integrate(expr, facets, hp_params)
 
@@ -143,6 +150,26 @@ def strip(monom):
     else:
         coeff = LC(monom)
         return coeff, monom / coeff
+
+def _polynomial_integrate(polynomials, facets, hp_params):
+    dims = (x, y)
+    dim_length = len(dims)
+    integral_value = S.Zero
+    for deg in polynomials:
+        poly_contribute = S.Zero
+        facet_count = 0
+        for hp in hp_params:
+            value_over_boundary = integration_reduction(facets,
+                                                        facet_count,
+                                                        hp[0], hp[1],
+                                                        polynomials[deg],
+                                                        dims, deg)
+            poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
+            facet_count += 1
+        poly_contribute /= (dim_length + deg)
+        integral_value += poly_contribute
+
+    return integral_value
 
 
 def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
@@ -252,8 +279,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import main_integrate,\
     hyperplane_parameters
-    >>> from sympy.geometry.polygon import Polygon
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point, Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
     >>> facets = triangle.sides
     >>> hp_params = hyperplane_parameters(triangle)
@@ -263,7 +289,6 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     dims = (x, y)
     dim_length = len(dims)
     result = {}
-    integral_value = S.Zero
 
     if max_degree:
         grad_terms = [[0, 0, 0, 0]] + gradient_terms(max_degree)
@@ -296,21 +321,11 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
                                 (b / norm(a)) / (dim_length + degree)
         return result
     else:
-        polynomials = decompose(expr)
-        for deg in polynomials:
-            poly_contribute = S.Zero
-            facet_count = 0
-            for hp in hp_params:
-                value_over_boundary = integration_reduction(facets,
-                                                            facet_count,
-                                                            hp[0], hp[1],
-                                                            polynomials[deg],
-                                                            dims, deg)
-                poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
-                facet_count += 1
-            poly_contribute /= (dim_length + deg)
-            integral_value += poly_contribute
-    return integral_value
+        if not isinstance(expr, list):
+            polynomials = decompose(expr)
+            return _polynomial_integrate(polynomials, facets, hp_params)
+        else:
+            return {e: _polynomial_integrate(decompose(e), facets, hp_params) for e in expr}
 
 
 def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
@@ -352,8 +367,9 @@ def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
         return S.Zero
     result = S.Zero
     x0 = vertices[facet[0]]
-    for i in range(len(facet)):
-        side = (vertices[facet[i]], vertices[facet[(i + 1) % len(facet)]])
+    facet_len = len(facet)
+    for i, fac in enumerate(facet):
+        side = (vertices[fac], vertices[facet[(i + 1) % facet_len]])
         result += distance_to_side(x0, side, hp_param[0]) *\
             lineseg_integrate(facet, i, side, expr, degree)
     if not expr.is_number:
@@ -468,8 +484,7 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import integration_reduction,\
     hyperplane_parameters
-    >>> from sympy.geometry.point import Point
-    >>> from sympy.geometry.polygon import Polygon
+    >>> from sympy import Point, Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
     >>> facets = triangle.sides
     >>> a, b = hyperplane_parameters(triangle)[0]
@@ -523,15 +538,14 @@ def left_integral2D(m, index, facets, x0, expr, gens):
 
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import left_integral2D
-    >>> from sympy.geometry.point import Point
-    >>> from sympy.geometry.polygon import Polygon
+    >>> from sympy import Point, Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
     >>> facets = triangle.sides
     >>> left_integral2D(3, 0, facets, facets[0].points[0], 1, (x, y))
     5
     """
     value = S.Zero
-    for j in range(0, m):
+    for j in range(m):
         intersect = ()
         if j in ((index - 1) % m, (index + 1) % m):
             intersect = intersection(facets[index], facets[j], "segment2D")
@@ -599,8 +613,7 @@ def integration_reduction_dynamic(facets, index, a, b, expr, degree, dims,
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import (integration_reduction_dynamic, \
             hyperplane_parameters)
-    >>> from sympy.geometry.point import Point
-    >>> from sympy.geometry.polygon import Polygon
+    >>> from sympy import Point, Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
     >>> facets = triangle.sides
     >>> a, b = hyperplane_parameters(triangle)[0]
@@ -692,8 +705,9 @@ def left_integral3D(facets, index, expr, vertices, hp_param, degree):
     value = S.Zero
     facet = facets[index]
     x0 = vertices[facet[0]]
-    for i in range(len(facet)):
-        side = (vertices[facet[i]], vertices[facet[(i + 1) % len(facet)]])
+    facet_len = len(facet)
+    for i, fac in enumerate(facet):
+        side = (vertices[fac], vertices[facet[(i + 1) % facet_len]])
         value += distance_to_side(x0, side, hp_param[0]) * \
             lineseg_integrate(facet, i, side, expr, degree)
     return value
@@ -760,8 +774,7 @@ def hyperplane_parameters(poly, vertices=None):
     Examples
     ========
 
-    >>> from sympy.geometry.point import Point
-    >>> from sympy.geometry.polygon import Polygon
+    >>> from sympy import Point, Polygon
     >>> from sympy.integrals.intpoly import hyperplane_parameters
     >>> hyperplane_parameters(Polygon(Point(0, 3), Point(5, 3), Point(1, 1)))
     [((0, 1), 3), ((1, -2), -1), ((-2, -1), -3)]
@@ -865,8 +878,7 @@ def best_origin(a, b, lineseg, expr):
 
     >>> from sympy.integrals.intpoly import best_origin
     >>> from sympy.abc import x, y
-    >>> from sympy.geometry.line import Segment2D
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point, Segment2D
     >>> l = Segment2D(Point(0, 3), Point(1, 1))
     >>> expr = x**3*y**7
     >>> best_origin((2, 1), 3, l, expr)
@@ -1076,7 +1088,7 @@ def point_sort(poly, normal=None, clockwise=True):
     ========
 
     >>> from sympy.integrals.intpoly import point_sort
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point
     >>> point_sort([Point(0, 0), Point(1, 0), Point(1, 1)])
     [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
     """
@@ -1142,7 +1154,7 @@ def norm(point):
     ========
 
     >>> from sympy.integrals.intpoly import norm
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point
     >>> norm(Point(2, 7))
     sqrt(53)
     """
@@ -1180,8 +1192,7 @@ def intersection(geom_1, geom_2, intersection_type):
     ========
 
     >>> from sympy.integrals.intpoly import intersection
-    >>> from sympy.geometry.point import Point
-    >>> from sympy.geometry.line import Segment2D
+    >>> from sympy import Point, Segment2D
     >>> l1 = Segment2D(Point(1, 1), Point(3, 5))
     >>> l2 = Segment2D(Point(2, 0), Point(2, 5))
     >>> intersection(l1, l2, "segment2D")
@@ -1233,7 +1244,7 @@ def is_vertex(ent):
     Examples
     ========
 
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point
     >>> from sympy.integrals.intpoly import is_vertex
     >>> is_vertex((2, 3))
     True

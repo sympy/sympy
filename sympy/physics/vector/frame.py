@@ -1,8 +1,7 @@
-from sympy.core.backend import (diff, expand, sin, cos, sympify, eye, symbols,
+from sympy.core.backend import (diff, expand, sin, cos, sympify, eye, zeros,
                                 ImmutableMatrix as Matrix, MatrixBase)
-from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.symbol import Symbol
 from sympy.simplify.trigsimp import trigsimp
-from sympy.solvers.solvers import solve
 from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
 
@@ -66,8 +65,8 @@ class CoordinateSym(Symbol):
         return self._id[0]
 
     def __eq__(self, other):
-        #Check if the other object is a CoordinateSym of the same frame
-        #and same index
+        # Check if the other object is a CoordinateSym of the same frame and
+        # same index
         if isinstance(other, CoordinateSym):
             if other._id == self._id:
                 return True
@@ -130,7 +129,8 @@ class ReferenceFrame:
         >>> vlatex(P.x)
         'A1'
 
-        symbols() can be used to create multiple Reference Frames in one step, for example:
+        ``symbols()`` can be used to create multiple Reference Frames in one
+        step, for example:
 
         >>> from sympy.physics.vector import ReferenceFrame
         >>> from sympy import symbols
@@ -167,10 +167,11 @@ class ReferenceFrame:
                                 (name.lower() + "_" + indices[1]),
                                 (name.lower() + "_" + indices[2])]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
-                               indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
-                               (name.lower(), indices[1])),
+                                                             indices[0])),
                                (r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
-                               indices[2]))]
+                                                             indices[1])),
+                               (r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
+                                                             indices[2]))]
             self.indices = indices
         # Second case, when no custom indices are supplied
         else:
@@ -194,9 +195,10 @@ class ReferenceFrame:
             self.latex_vecs = latexs
         self.name = name
         self._var_dict = {}
-        #The _dcm_dict dictionary will only store the dcms of adjacent parent-child
-        #relationships. The _dcm_cache dictionary will store calculated dcm along with
-        #all content of _dcm_dict for faster retrieval of dcms.
+        # The _dcm_dict dictionary will only store the dcms of adjacent
+        # parent-child relationships. The _dcm_cache dictionary will store
+        # calculated dcm along with all content of _dcm_dict for faster
+        # retrieval of dcms.
         self._dcm_dict = {}
         self._dcm_cache = {}
         self._ang_vel_dict = {}
@@ -206,7 +208,7 @@ class ReferenceFrame:
         self._x = Vector([(Matrix([1, 0, 0]), self)])
         self._y = Vector([(Matrix([0, 1, 0]), self)])
         self._z = Vector([(Matrix([0, 0, 1]), self)])
-        #Associate coordinate symbols wrt this frame
+        # Associate coordinate symbols wrt this frame
         if variables is not None:
             if not isinstance(variables, (tuple, list)):
                 raise TypeError('Supply the variable names as a list/tuple')
@@ -217,8 +219,8 @@ class ReferenceFrame:
                     raise TypeError('Variable names must be strings')
         else:
             variables = [name + '_x', name + '_y', name + '_z']
-        self.varlist = (CoordinateSym(variables[0], self, 0), \
-                        CoordinateSym(variables[1], self, 1), \
+        self.varlist = (CoordinateSym(variables[0], self, 0),
+                        CoordinateSym(variables[1], self, 1),
                         CoordinateSym(variables[2], self, 2))
         ReferenceFrame._count += 1
         self.index = ReferenceFrame._count
@@ -372,7 +374,8 @@ class ReferenceFrame:
             mapping = {}
             for i, x in enumerate(self):
                 if Vector.simp:
-                    mapping[self.varlist[i]] = trigsimp(vars_matrix[i], method='fu')
+                    mapping[self.varlist[i]] = trigsimp(vars_matrix[i],
+                                                        method='fu')
                 else:
                     mapping[self.varlist[i]] = vars_matrix[i]
             self._var_dict[(otherframe, Vector.simp)] = mapping
@@ -382,9 +385,11 @@ class ReferenceFrame:
         """Returns the angular acceleration Vector of the ReferenceFrame.
 
         Effectively returns the Vector:
-        ^N alpha ^B
-        which represent the angular acceleration of B in N, where B is self, and
-        N is otherframe.
+
+        ``N_alpha_B``
+
+        which represent the angular acceleration of B in N, where B is self,
+        and N is otherframe.
 
         Parameters
         ==========
@@ -448,8 +453,8 @@ class ReferenceFrame:
         return outvec
 
     def dcm(self, otherframe):
-        r"""Returns the direction cosine matrix relative to the provided
-        reference frame.
+        r"""Returns the direction cosine matrix of this reference frame
+        relative to the provided reference frame.
 
         The returned matrix can be used to express the orthogonal unit vectors
         of this frame in terms of the orthogonal unit vectors of
@@ -473,7 +478,8 @@ class ReferenceFrame:
         >>> from sympy.physics.vector import ReferenceFrame
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Axis', (q1, N.x))
+        >>> A = ReferenceFrame('A')
+        >>> A.orient_axis(N, q1, N.x)
         >>> N.dcm(A)
         Matrix([
         [1,       0,        0],
@@ -493,10 +499,10 @@ class ReferenceFrame:
         Notes
         =====
 
-        It is import to know what form of the direction cosine matrix is
+        It is important to know what form of the direction cosine matrix is
         returned. If ``B.dcm(A)`` is called, it means the "direction cosine
-        matrix of B relative to A". This is the matrix :math:`^{\mathbf{A}} \mathbf{R} ^{\mathbf{B}}`
-        shown in the following relationship:
+        matrix of B rotated relative to A". This is the matrix
+        :math:`{}^B\mathbf{C}^A` shown in the following relationship:
 
         .. math::
 
@@ -506,14 +512,14 @@ class ReferenceFrame:
              \hat{\mathbf{b}}_3
            \end{bmatrix}
            =
-           {}^A\mathbf{R}^B
+           {}^B\mathbf{C}^A
            \begin{bmatrix}
              \hat{\mathbf{a}}_1 \\
              \hat{\mathbf{a}}_2 \\
              \hat{\mathbf{a}}_3
            \end{bmatrix}.
 
-        :math:`{}^A\mathbf{R}^B` is the matrix that expresses the B unit
+        :math:`{}^B\mathbf{C}^A` is the matrix that expresses the B unit
         vectors in terms of the A unit vectors.
 
         """
@@ -548,8 +554,8 @@ class ReferenceFrame:
                     dcm_dict_del += [frame]
                 dcm_cache_del += [frame]
             # Reset the _dcm_cache of this frame, and remove it from the
-            # _dcm_caches of the frames it is linked to. Also remove it from the
-            # _dcm_dict of its parent
+            # _dcm_caches of the frames it is linked to. Also remove it from
+            # the _dcm_dict of its parent
             for frame in dcm_dict_del:
                 del frame._dcm_dict[self]
             for frame in dcm_cache_del:
@@ -560,10 +566,10 @@ class ReferenceFrame:
             self._dcm_cache = {}
 
         else:
-        #Check for loops and raise warning accordingly.
+            # Check for loops and raise warning accordingly.
             visited = []
             queue = list(frames)
-            cont = True #Flag to control queue loop.
+            cont = True  # Flag to control queue loop.
             while queue and cont:
                 node = queue.pop(0)
                 if node not in visited:
@@ -571,8 +577,9 @@ class ReferenceFrame:
                     neighbors = node._dcm_dict.keys()
                     for neighbor in neighbors:
                         if neighbor == parent:
-                            warn('Loops are defined among the orientation of frames.' + \
-                                ' This is likely not desired and may cause errors in your calculations.')
+                            warn('Loops are defined among the orientation of '
+                                 'frames. This is likely not desired and may '
+                                 'cause errors in your calculations.')
                             cont = False
                             break
                         queue.append(neighbor)
@@ -652,9 +659,7 @@ class ReferenceFrame:
             axis, angle = angle, axis
 
         axis = _check_vector(axis)
-        amount = sympify(angle)
-        theta = amount
-        parent_orient_axis = []
+        theta = sympify(angle)
 
         if not axis.dt(parent) == 0:
             raise ValueError('Axis cannot be time-varying.')
@@ -669,7 +674,7 @@ class ReferenceFrame:
 
         self._dcm(parent, parent_orient_axis)
 
-        thetad = (amount).diff(dynamicsymbols._t)
+        thetad = (theta).diff(dynamicsymbols._t)
         wvec = thetad*axis.express(parent).normalize()
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
@@ -748,7 +753,6 @@ class ReferenceFrame:
         if not isinstance(dcm, MatrixBase):
             raise TypeError("Amounts must be a SymPy Matrix type object.")
 
-        parent_orient_dcm = []
         parent_orient_dcm = dcm
 
         self._dcm(parent, parent_orient_dcm)
@@ -773,6 +777,48 @@ class ReferenceFrame:
                            [sin(angle), cos(angle), 0],
                            [0, 0, 1]])
 
+    def _parse_consecutive_rotations(self, angles, rotation_order):
+        """Helper for orient_body_fixed and orient_space_fixed.
+
+        Parameters
+        ==========
+        angles : 3-tuple of sympifiable
+            Three angles in radians used for the successive rotations.
+        rotation_order : 3 character string or 3 digit integer
+            Order of the rotations. The order can be specified by the strings
+            ``'XZX'``, ``'131'``, or the integer ``131``. There are 12 unique
+            valid rotation orders.
+
+        Returns
+        =======
+
+        amounts : list
+            List of sympifiables corresponding to the rotation angles.
+        rot_order : list
+            List of integers corresponding to the axis of rotation.
+        rot_matrices : list
+            List of DCM around the given axis with corresponding magnitude.
+
+        """
+        amounts = list(angles)
+        for i, v in enumerate(amounts):
+            if not isinstance(v, Vector):
+                amounts[i] = sympify(v)
+
+        approved_orders = ('123', '231', '312', '132', '213', '321', '121',
+                           '131', '212', '232', '313', '323', '')
+        # make sure XYZ => 123
+        rot_order = translate(str(rotation_order), 'XYZxyz', '123123')
+        if rot_order not in approved_orders:
+            raise TypeError('The rotation order is not a valid order.')
+
+        rot_order = [int(r) for r in rot_order]
+        if not (len(amounts) == 3 & len(rot_order) == 3):
+            raise TypeError('Body orientation takes 3 values & 3 orders')
+        rot_matrices = [self._rot(order, amount)
+                        for (order, amount) in zip(rot_order, amounts)]
+        return amounts, rot_order, rot_matrices
+
     def orient_body_fixed(self, parent, angles, rotation_order):
         """Rotates this reference frame relative to the parent reference frame
         by right hand rotating through three successive body fixed simple axis
@@ -782,6 +828,10 @@ class ReferenceFrame:
         Angles`_.
 
         .. _Euler and Tait-Bryan Angles: https://en.wikipedia.org/wiki/Euler_angles
+
+        The computed angular velocity in this method is by default expressed in
+        the child's frame, so it is most preferable to use ``u1 * child.x + u2 *
+        child.y + u3 * child.z`` as generalized speeds.
 
         Parameters
         ==========
@@ -851,48 +901,20 @@ class ReferenceFrame:
         >>> B.orient_body_fixed(N, (q1, q2, q3), 123)
 
         """
+        from sympy.physics.vector.functions import dynamicsymbols
 
         _check_frame(parent)
 
-        amounts = list(angles)
-        for i, v in enumerate(amounts):
-            if not isinstance(v, Vector):
-                amounts[i] = sympify(v)
+        amounts, rot_order, rot_matrices = self._parse_consecutive_rotations(
+            angles, rotation_order)
+        self._dcm(parent, rot_matrices[0] * rot_matrices[1] * rot_matrices[2])
 
-        approved_orders = ('123', '231', '312', '132', '213', '321', '121',
-                           '131', '212', '232', '313', '323', '')
-        # make sure XYZ => 123
-        rot_order = translate(str(rotation_order), 'XYZxyz', '123123')
-        if rot_order not in approved_orders:
-            raise TypeError('The rotation order is not a valid order.')
-
-        parent_orient_body = []
-        if not (len(amounts) == 3 & len(rot_order) == 3):
-            raise TypeError('Body orientation takes 3 values & 3 orders')
-        a1 = int(rot_order[0])
-        a2 = int(rot_order[1])
-        a3 = int(rot_order[2])
-        parent_orient_body = (self._rot(a1, amounts[0]) *
-                              self._rot(a2, amounts[1]) *
-                              self._rot(a3, amounts[2]))
-
-        self._dcm(parent, parent_orient_body)
-
-        try:
-            from sympy.polys.polyerrors import CoercionFailed
-            from sympy.physics.vector.functions import kinematic_equations
-            q1, q2, q3 = amounts
-            u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
-            templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
-                                           'body', rot_order)
-            templist = [expand(i) for i in templist]
-            td = solve(templist, [u1, u2, u3])
-            u1 = expand(td[u1])
-            u2 = expand(td[u2])
-            u3 = expand(td[u3])
-            wvec = u1 * self.x + u2 * self.y + u3 * self.z
-        except (CoercionFailed, AssertionError):
-            wvec = self._w_diff_dcm(parent)
+        rot_vecs = [zeros(3, 1) for _ in range(3)]
+        for i, order in enumerate(rot_order):
+            rot_vecs[i][order - 1] = amounts[i].diff(dynamicsymbols._t)
+        u1, u2, u3 = rot_vecs[2] + rot_matrices[2].T * (
+            rot_vecs[1] + rot_matrices[1].T * rot_vecs[0])
+        wvec = u1 * self.x + u2 * self.y + u3 * self.z  # There is a double -
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
@@ -902,6 +924,10 @@ class ReferenceFrame:
         by right hand rotating through three successive space fixed simple axis
         rotations. Each subsequent axis of rotation is about the "space fixed"
         unit vectors of the parent reference frame.
+
+        The computed angular velocity in this method is by default expressed in
+        the child's frame, so it is most preferable to use ``u1 * child.x + u2 *
+        child.y + u3 * child.z`` as generalized speeds.
 
         Parameters
         ==========
@@ -973,48 +999,20 @@ class ReferenceFrame:
         [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
 
         """
+        from sympy.physics.vector.functions import dynamicsymbols
 
         _check_frame(parent)
 
-        amounts = list(angles)
-        for i, v in enumerate(amounts):
-            if not isinstance(v, Vector):
-                amounts[i] = sympify(v)
+        amounts, rot_order, rot_matrices = self._parse_consecutive_rotations(
+            angles, rotation_order)
+        self._dcm(parent, rot_matrices[2] * rot_matrices[1] * rot_matrices[0])
 
-        approved_orders = ('123', '231', '312', '132', '213', '321', '121',
-                           '131', '212', '232', '313', '323', '')
-        # make sure XYZ => 123
-        rot_order = translate(str(rotation_order), 'XYZxyz', '123123')
-        if rot_order not in approved_orders:
-            raise TypeError('The supplied order is not an approved type')
-        parent_orient_space = []
-
-        if not (len(amounts) == 3 & len(rot_order) == 3):
-            raise TypeError('Space orientation takes 3 values & 3 orders')
-        a1 = int(rot_order[0])
-        a2 = int(rot_order[1])
-        a3 = int(rot_order[2])
-        parent_orient_space = (self._rot(a3, amounts[2]) *
-                               self._rot(a2, amounts[1]) *
-                               self._rot(a1, amounts[0]))
-
-        self._dcm(parent, parent_orient_space)
-
-        try:
-            from sympy.polys.polyerrors import CoercionFailed
-            from sympy.physics.vector.functions import kinematic_equations
-            q1, q2, q3 = amounts
-            u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
-            templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
-                                           'space', rot_order)
-            templist = [expand(i) for i in templist]
-            td = solve(templist, [u1, u2, u3])
-            u1 = expand(td[u1])
-            u2 = expand(td[u2])
-            u3 = expand(td[u3])
-            wvec = u1 * self.x + u2 * self.y + u3 * self.z
-        except (CoercionFailed, AssertionError):
-            wvec = self._w_diff_dcm(parent)
+        rot_vecs = [zeros(3, 1) for _ in range(3)]
+        for i, order in enumerate(rot_order):
+            rot_vecs[i][order - 1] = amounts[i].diff(dynamicsymbols._t)
+        u1, u2, u3 = rot_vecs[0] + rot_matrices[0].T * (
+            rot_vecs[1] + rot_matrices[1].T * rot_vecs[2])
+        wvec = u1 * self.x + u2 * self.y + u3 * self.z  # There is a double -
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
@@ -1080,7 +1078,6 @@ class ReferenceFrame:
             if not isinstance(v, Vector):
                 numbers[i] = sympify(v)
 
-        parent_orient_quaternion = []
         if not (isinstance(numbers, (list, tuple)) & (len(numbers) == 4)):
             raise TypeError('Amounts are a list or tuple of length 4')
         q0, q1, q2, q3 = numbers

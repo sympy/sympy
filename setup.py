@@ -69,8 +69,8 @@ except ImportError:
               % min_mpmath_version)
         sys.exit(-1)
 
-if sys.version_info < (3, 7):
-    print("SymPy requires Python 3.7 or newer. Python %d.%d detected"
+if sys.version_info < (3, 8):
+    print("SymPy requires Python 3.8 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
 
@@ -260,7 +260,7 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        from sympy.utilities import runtests
+        from sympy.testing import runtests
         runtests.run_all_tests()
 
 
@@ -308,8 +308,12 @@ class antlr(Command):
         pass
 
     def run(self):
-        from sympy.parsing.latex._build_latex_antlr import build_parser
-        if not build_parser():
+        from sympy.parsing.latex._build_latex_antlr import build_parser as build_latex_parser
+        if not build_latex_parser():
+            sys.exit(-1)
+
+        from sympy.parsing.autolev._build_autolev_antlr import build_parser as build_autolev_parser
+        if not build_autolev_parser():
             sys.exit(-1)
 
 
@@ -431,6 +435,9 @@ if __name__ == '__main__':
           license='BSD',
           keywords="Math CAS",
           url='https://sympy.org',
+          project_urls={
+              'Source': 'https://github.com/sympy/sympy',
+          },
           py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
           ext_modules=[],
@@ -446,6 +453,7 @@ if __name__ == '__main__':
               'sympy.parsing.latex': ['*.txt', '*.g4'],
               'sympy.integrals.rubi.parsetools': ['header.py.txt'],
               'sympy.plotting.tests': ['test_region_*.png'],
+              'sympy': ['py.typed']
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
@@ -455,7 +463,7 @@ if __name__ == '__main__':
                     'antlr': antlr,
                     'sdist': sdist_sympy,
                     },
-          python_requires='>=3.7',
+          python_requires='>=3.8',
           classifiers=[
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',
@@ -464,9 +472,10 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Mathematics',
             'Topic :: Scientific/Engineering :: Physics',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
+            'Programming Language :: Python :: 3.10',
+            'Programming Language :: Python :: 3.11',
             'Programming Language :: Python :: 3 :: Only',
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',

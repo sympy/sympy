@@ -24,6 +24,7 @@ from sympy.core.power import Pow
 from sympy.core.numbers import Number
 from sympy.core.singleton import S as _S
 from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
@@ -93,16 +94,16 @@ def _min(*args, **kwargs):
 
 
 def normalized(normalize):
-    """Set flag controlling normalization of Hadamard gates by 1/sqrt(2).
+    r"""Set flag controlling normalization of Hadamard gates by `1/\sqrt{2}`.
 
     This is a global setting that can be used to simplify the look of various
-    expressions, by leaving off the leading 1/sqrt(2) of the Hadamard gate.
+    expressions, by leaving off the leading `1/\sqrt{2}` of the Hadamard gate.
 
     Parameters
     ----------
     normalize : bool
-        Should the Hadamard gate include the 1/sqrt(2) normalization factor?
-        When True, the Hadamard gate will have the 1/sqrt(2). When False, the
+        Should the Hadamard gate include the `1/\sqrt{2}` normalization factor?
+        When True, the Hadamard gate will have the `1/\sqrt{2}`. When False, the
         Hadamard gate will not have this factor.
     """
     global _normalized
@@ -116,7 +117,7 @@ def _validate_targets_controls(tandc):
         if not bit.is_Integer and not bit.is_Symbol:
             raise TypeError('Integer expected, got: %r' % tandc[bit])
     # Detect duplicates
-    if len(list(set(tandc))) != len(tandc):
+    if len(set(tandc)) != len(tandc):
         raise QuantumError(
             'Target/control qubits in a gate cannot be duplicated'
         )
@@ -191,7 +192,7 @@ class Gate(UnitaryOperator):
     #-------------------------------------------------------------------------
 
     def get_target_matrix(self, format='sympy'):
-        """The matrix rep. of the target part of the gate.
+        """The matrix representation of the target part of the gate.
 
         Parameters
         ----------
@@ -244,9 +245,9 @@ class Gate(UnitaryOperator):
             # Make a copy of the incoming qubits.
             new_qubit = qubits.__class__(*qubits.args)
             # Flip the bits that need to be flipped.
-            for bit in range(len(targets)):
-                if new_qubit[targets[bit]] != (index >> bit) & 1:
-                    new_qubit = new_qubit.flip(targets[bit])
+            for bit, target in enumerate(targets):
+                if new_qubit[target] != (index >> bit) & 1:
+                    new_qubit = new_qubit.flip(target)
             # The value in that row and column times the flipped-bit qubit
             # is the result for that part.
             result += column[index]*new_qubit
@@ -520,6 +521,8 @@ class UGate(Gate):
         mat = args[1]
         if not isinstance(mat, MatrixBase):
             raise TypeError('Matrix expected, got: %r' % mat)
+        #make sure this matrix is of a Basic type
+        mat = _sympify(mat)
         dim = 2**len(targets)
         if not all(dim == shape for shape in mat.shape):
             raise IndexError(
@@ -624,6 +627,16 @@ class IdentityGate(OneQubitGate):
     """
     gate_name = '1'
     gate_name_latex = '1'
+
+    # Short cut version of gate._apply_operator_Qubit
+    def _apply_operator_Qubit(self, qubits, **options):
+        # Check number of qubits this gate acts on (see gate._apply_operator_Qubit)
+        if qubits.nqubits < self.min_qubits:
+            raise QuantumError(
+                'Gate needs a minimum of %r qubits to act on, got: %r' %
+                (self.min_qubits, qubits.nqubits)
+            )
+        return qubits # no computation required for IdentityGate
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('eye2', format)
@@ -871,7 +884,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
 
     """
     gate_name = 'CNOT'
-    gate_name_latex = 'CNOT'
+    gate_name_latex = r'\text{CNOT}'
     simplify_cgate = True
 
     #-------------------------------------------------------------------------
@@ -977,7 +990,7 @@ class SwapGate(TwoQubitGate):
 
     """
     gate_name = 'SWAP'
-    gate_name_latex = 'SWAP'
+    gate_name_latex = r'\text{SWAP}'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('SWAP', format)

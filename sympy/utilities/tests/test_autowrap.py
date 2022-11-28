@@ -99,7 +99,7 @@ except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
 from Cython.Build import cythonize
-cy_opts = {}
+cy_opts = {'compiler_directives': {'language_level': '3'}}
 
 ext_mods = [Extension(
     'wrapper_module_%(num)s', ['wrapper_module_%(num)s.pyx', 'wrapped_code_%(num)s.c'],
@@ -261,13 +261,16 @@ def test_autowrap_store_files():
 def test_autowrap_store_files_issue_gh12939():
     x, y = symbols('x y')
     tmp = './tmp'
+    saved_cwd = os.getcwd()
+    temp_cwd = tempfile.mkdtemp()
     try:
+        os.chdir(temp_cwd)
         f = autowrap(x + y, backend='dummy', tempdir=tmp)
         assert f() == str(x + y)
         assert os.access(tmp, os.F_OK)
     finally:
-        shutil.rmtree(tmp)
-
+        os.chdir(saved_cwd)
+        shutil.rmtree(temp_cwd)
 
 
 def test_binary_function():

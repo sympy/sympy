@@ -1,3 +1,4 @@
+from sympy import sin, cos
 from sympy.testing.pytest import raises
 
 from sympy.tensor.toperators import PartialDerivative
@@ -29,6 +30,13 @@ def test_invalid_partial_derivative_valence():
 
 def test_tensor_partial_deriv():
     # Test flatten:
+    expr = PartialDerivative(PartialDerivative(A(i), A(j)), A(k))
+    assert expr == PartialDerivative(A(i), A(j), A(k))
+    assert expr.expr == A(i)
+    assert expr.variables == (A(j), A(k))
+    assert expr.get_indices() == [i, -j, -k]
+    assert expr.get_free_indices() == [i, -j, -k]
+
     expr = PartialDerivative(PartialDerivative(A(i), A(j)), A(i))
     assert expr.expr == A(L_0)
     assert expr.variables == (A(j), A(L_0))
@@ -59,6 +67,12 @@ def test_tensor_partial_deriv():
 def test_replace_arrays_partial_derivative():
 
     x, y, z, t = symbols("x y z t")
+
+    expr = PartialDerivative(A(i), B(j))
+    repl = expr.replace_with_arrays({A(i): [sin(x)*cos(y), x**3*y**2], B(i): [x, y]})
+    assert repl == Array([[cos(x)*cos(y), -sin(x)*sin(y)], [3*x**2*y**2, 2*x**3*y]])
+    repl = expr.replace_with_arrays({A(i): [sin(x)*cos(y), x**3*y**2], B(i): [x, y]}, [-j, i])
+    assert repl == Array([[cos(x)*cos(y), 3*x**2*y**2], [-sin(x)*sin(y), 2*x**3*y]])
 
     # d(A^i)/d(A_j) = d(g^ik A_k)/d(A_j) = g^ik delta_jk
     expr = PartialDerivative(A(i), A(-j))
@@ -406,7 +420,6 @@ def test_eval_partial_derivative_divergence_type():
 
     assert (expr2a._perform_derivative()
             - expr2c._perform_derivative()).contract_delta(L.delta) == 0
-
 
 
 def test_eval_partial_derivative_expr1():

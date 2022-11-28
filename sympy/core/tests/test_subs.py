@@ -8,6 +8,7 @@ from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi, zoo)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.core.sympify import SympifyError
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
@@ -19,8 +20,9 @@ from sympy.polys.rootoftools import RootOf
 from sympy.simplify.cse_main import cse
 from sympy.simplify.simplify import nsimplify
 from sympy.core.basic import _aresame
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import a, x, y, z, t
+
 
 def test_subs():
     n3 = Rational(3)
@@ -47,6 +49,7 @@ def test_subs_Matrix():
     assert Mul(Matrix([[3]]), x).subs(x, 2.0) == Matrix([[6.0]])
     # Does not raise a TypeError, see comment on the MatAdd postprocessor
     assert Add(Matrix([[3]]), x).subs(x, 2.0) == Add(Matrix([[3]]), 2.0)
+
 
 def test_subs_AccumBounds():
     e = x
@@ -481,6 +484,7 @@ def test_add():
     assert Add(*[AccumBounds(-1, 1), oo]) == oo
     assert Add(*[oo, AccumBounds(-1, 1)]) == oo
 
+
 def test_subs_issue_4009():
     assert (I*Symbol('a')).subs(1, 2) == I*Symbol('a')
 
@@ -623,7 +627,7 @@ def test_issue_6079():
     assert _aresame((x + 2.0).subs(2, 3), x + 2.0)
     assert _aresame((x + 2.0).subs(2.0, 3), x + 3)
     assert not _aresame(x + 2, x + 2.0)
-    assert not _aresame(Basic(cos, 1), Basic(cos, 1.))
+    assert not _aresame(Basic(cos(x), S(1)), Basic(cos(x), S(1.)))
     assert _aresame(cos, cos)
     assert not _aresame(1, S.One)
     assert not _aresame(x, symbols('x', positive=True))
@@ -778,8 +782,8 @@ def test_issue_8886():
     # doesn't play well with SymPy and disallow the
     # substitution
     v = R('A').x
-    assert x.subs(x, v) == x
-    assert v.subs(v, x) == v
+    raises(SympifyError, lambda: x.subs(x, v))
+    raises(SympifyError, lambda: v.subs(v, x))
     assert v.__eq__(x) is False
 
 
@@ -879,9 +883,15 @@ def test_issue_19558():
     assert (sin(x) + cos(x)).subs(x, oo) == AccumBounds(-2, 2)
 
 
+def test_issue_22033():
+    xr = Symbol('xr', real=True)
+    e = (1/xr)
+    assert e.subs(xr**2, y) == e
+
+
 def test_guard_against_indeterminate_evaluation():
     eq = x**y
     assert eq.subs([(x, 1), (y, oo)]) == 1  # because 1**y == 1
     assert eq.subs([(y, oo), (x, 1)]) is S.NaN
     assert eq.subs({x: 1, y: oo}) is S.NaN
-    assert eq.subs([(x, 1), (y, oo)],simultaneous=True) is S.NaN
+    assert eq.subs([(x, 1), (y, oo)], simultaneous=True) is S.NaN

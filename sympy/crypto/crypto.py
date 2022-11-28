@@ -18,16 +18,19 @@ import warnings
 
 from itertools import cycle
 
-from sympy.ntheory.generate import nextprime
-from sympy.core import Rational, Symbol
-from sympy.core.numbers import igcdex, mod_inverse, igcd
+from sympy.core import Symbol
+from sympy.core.numbers import igcdex, mod_inverse, igcd, Rational
+from sympy.core.random import _randrange, _randint
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
+from sympy.ntheory import totient as _euler
+from sympy.ntheory import reduced_totient as _carmichael
+from sympy.ntheory.generate import nextprime
+from sympy.ntheory.modular import crt
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
-from sympy.core.random import _randrange, _randint
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -38,7 +41,7 @@ class NonInvertibleCipherWarning(RuntimeWarning):
     def __str__(self):
         return '\n\t' + self.fullMessage
 
-    def warn(self, stacklevel=2):
+    def warn(self, stacklevel=3):
         warnings.warn(self, stacklevel=stacklevel)
 
 
@@ -740,7 +743,7 @@ def encipher_vigenere(msg, key, symbols=None):
 
     .. [1] https://en.wikipedia.org/wiki/Vigenere_cipher
     .. [2] http://web.archive.org/web/20071116100808/
-    .. [3] http://filebox.vt.edu/users/batman/kryptos.html
+    .. [3] http://web.archive.org/web/20071116100808/http://filebox.vt.edu/users/batman/kryptos.html
        (short URL: https://goo.gl/ijr22d)
 
     """
@@ -1483,7 +1486,6 @@ def _decipher_rsa_crt(i, d, factors):
     >>> decrypted
     65
     """
-    from sympy.ntheory.modular import crt
     moduluses = [pow(i, d, p) for p in factors]
 
     result = crt(factors, moduluses)
@@ -1507,8 +1509,6 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
     multipower : bool, optional
         Flag to bypass warning for multipower RSA.
     """
-    from sympy.ntheory import totient as _euler
-    from sympy.ntheory import reduced_totient as _carmichael
 
     if len(args) < 2:
         return False
@@ -1557,7 +1557,9 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
                 'the flag multipower=True if you want to suppress this '
                 'warning.'
                 .format(primes, n, n)
-                ).warn()
+                # stacklevel=4 because most users will call a function that
+                # calls this function
+                ).warn(stacklevel=4)
         phi = _totient._from_factors(tally)
 
     if igcd(e, phi) == 1:
@@ -1675,7 +1677,7 @@ def rsa_public_key(*args, **kwargs):
     multipower : bool, optional
         Any pair of non-distinct primes found in the RSA specification
         will restrict the domain of the cryptosystem, as noted in the
-        explaination of the parameter ``args``.
+        explanation of the parameter ``args``.
 
         SymPy RSA key generator may give a warning before dispatching it
         as a multi-power RSA, however, you can disable the warning if
@@ -2007,7 +2009,7 @@ def decipher_rsa(i, key, factors=None):
         very large cases (Like 2048-bit RSA keys) since the
         overhead of using pure Python implementation of
         :meth:`sympy.ntheory.modular.crt` may overcompensate the
-        theoritical speed advantage.
+        theoretical speed advantage.
 
     Notes
     =====
@@ -2542,7 +2544,7 @@ def elgamal_private_key(digit=10, seed=None):
     Explanation
     ===========
 
-    Elgamal encryption is based on the mathmatical problem
+    Elgamal encryption is based on the mathematical problem
     called the Discrete Logarithm Problem (DLP). For example,
 
     `a^{b} \equiv c \pmod p`

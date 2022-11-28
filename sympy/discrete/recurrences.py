@@ -49,7 +49,7 @@ def linrec(coeffs, init, n):
 
     Computation of `x^n`,
     given `x^k = c_0 x^{k-1} + c_1 x^{k-2} + \cdots + c_{k-1}`
-    is performed using exponentiation by squaring (refer to [1]_) with
+    is performed using exponentiation by squaring (refer to [1_]) with
     an additional reduction step performed to retain only first `k` powers
     of `x` in the representation of `x^n`.
 

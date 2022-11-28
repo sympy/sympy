@@ -55,6 +55,7 @@ class ImplicitSeries(BaseSeries):
             line_color):
         super().__init__()
         self.expr = sympify(expr)
+        self.label = self.expr
         self.var_x = sympify(var_start_end_x[0])
         self.start_x = float(var_start_end_x[1])
         self.end_x = float(var_start_end_x[2])
@@ -91,7 +92,7 @@ class ImplicitSeries(BaseSeries):
             # AttributeError here.
             if self.use_interval_math:
                 warnings.warn("Adaptive meshing could not be applied to the"
-                            " expression. Using uniform meshing.")
+                            " expression. Using uniform meshing.", stacklevel=7)
             self.use_interval_math = False
 
         if self.use_interval_math:
@@ -217,10 +218,10 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
     Arguments
     =========
 
-    - ``expr`` : The equation / inequality that is to be plotted.
-    - ``x_var`` (optional) : symbol to plot on x-axis or tuple giving symbol
+    - expr : The equation / inequality that is to be plotted.
+    - x_var (optional) : symbol to plot on x-axis or tuple giving symbol
       and range as ``(symbol, xmin, xmax)``
-    - ``y_var`` (optional) : symbol to plot on y-axis or tuple giving symbol
+    - y_var (optional) : symbol to plot on y-axis or tuple giving symbol
       and range as ``(symbol, ymin, ymax)``
 
     If neither ``x_var`` nor ``y_var`` are given then the free symbols in the
@@ -423,8 +424,8 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
     kwargs['xlim'] = tuple(float(x) for x in var_start_end_x[1:])
     kwargs['ylim'] = tuple(float(y) for y in var_start_end_y[1:])
     # set the x and y labels
-    kwargs.setdefault('xlabel', var_start_end_x[0].name)
-    kwargs.setdefault('ylabel', var_start_end_y[0].name)
+    kwargs.setdefault('xlabel', var_start_end_x[0])
+    kwargs.setdefault('ylabel', var_start_end_y[0])
     p = Plot(series_argument, **kwargs)
     if show:
         p.show()

@@ -51,7 +51,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     Explanation
     ===========
 
-    If you don't know what a Dyadic is, just treat this like the inertia
+    If you do not know what a Dyadic is, just treat this like the inertia
     tensor. Then, do the easy thing and define it in a body-fixed frame.
 
     Parameters
@@ -84,15 +84,21 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
 
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Need to define the inertia in a frame')
-    ol = sympify(ixx) * (frame.x | frame.x)
-    ol += sympify(ixy) * (frame.x | frame.y)
-    ol += sympify(izx) * (frame.x | frame.z)
-    ol += sympify(ixy) * (frame.y | frame.x)
-    ol += sympify(iyy) * (frame.y | frame.y)
-    ol += sympify(iyz) * (frame.y | frame.z)
-    ol += sympify(izx) * (frame.z | frame.x)
-    ol += sympify(iyz) * (frame.z | frame.y)
-    ol += sympify(izz) * (frame.z | frame.z)
+    ixx = sympify(ixx)
+    ixy = sympify(ixy)
+    iyy = sympify(iyy)
+    iyz = sympify(iyz)
+    izx = sympify(izx)
+    izz = sympify(izz)
+    ol = ixx * (frame.x | frame.x)
+    ol += ixy * (frame.x | frame.y)
+    ol += izx * (frame.x | frame.z)
+    ol += ixy * (frame.y | frame.x)
+    ol += iyy * (frame.y | frame.y)
+    ol += iyz * (frame.y | frame.z)
+    ol += izx * (frame.z | frame.x)
+    ol += iyz * (frame.z | frame.y)
+    ol += izz * (frame.z | frame.z)
     return ol
 
 
@@ -379,6 +385,7 @@ def gravity(acceleration, *bodies):
     >>> forceList.extend(gravity(g*N.y, pa, B))
     >>> forceList
     [(po, F1), (P, F2), (po, g*m*N.y), (P, M*g*N.y)]
+
     """
 
     gravity_force = []
@@ -426,6 +433,7 @@ def center_of_mass(point, *bodies):
     >>> expr = 5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
     >>> point_o.pos_from(p1.point)
     5/(m + mb + 6)*a.x + (m + mb + 3)/(m + mb + 6)*a.y + mb/(m + mb + 6)*a.z
+
     """
     if not bodies:
         raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
@@ -652,7 +660,9 @@ def _smart_subs(expr, sub_dict):
     - Second traverse:
         If node is a fraction, check if the denominator evaluates to 0.
         If so, attempt to simplify it out. Then if node is in sub_dict,
-        sub in the corresponding value."""
+        sub in the corresponding value.
+
+    """
     expr = _crawl(expr, _tan_repl_func)
 
     def _recurser(expr, sub_dict):
@@ -679,7 +689,7 @@ def _smart_subs(expr, sub_dict):
 
 
 def _fraction_decomp(expr):
-    """Return num, den such that expr = num/den"""
+    """Return num, den such that expr = num/den."""
     if not isinstance(expr, Mul):
         return expr, 1
     num = []
@@ -705,6 +715,7 @@ def _f_list_parser(fl, ref_frame):
         f_list: The forces.
 
     Used internally in the KanesMethod and LagrangesMethod classes.
+
     """
     def flist_iter():
         for pair in fl:
@@ -723,3 +734,33 @@ def _f_list_parser(fl, ref_frame):
         unzip = lambda l: list(zip(*l)) if l[0] else [(), ()]
         vel_list, f_list = unzip(list(flist_iter()))
     return vel_list, f_list
+
+
+def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
+                          is_dynamicsymbols=True):
+    # Convert input to iterables
+    if coordinates is None:
+        coordinates = []
+    elif not iterable(coordinates):
+        coordinates = [coordinates]
+    if speeds is None:
+        speeds = []
+    elif not iterable(speeds):
+        speeds = [speeds]
+
+    if check_duplicates:  # Check for duplicates
+        if len(coordinates) != len(set(coordinates)):
+            raise ValueError('Duplicate generalized coordinates found, all '
+                             'generalized coordinates should be unique.')
+        if len(speeds) != len(set(speeds)):
+            raise ValueError('Duplicate generalized speeds found, all '
+                             'generalized speeds should be unique.')
+    if is_dynamicsymbols:  # Check whether all coordinates are dynamicsymbols
+        for coordinate in coordinates:
+            if not isinstance(coordinate, (AppliedUndef, Derivative)):
+                raise ValueError(f'Generalized coordinate "{coordinate}" is not'
+                                 f' a dynamicsymbol.')
+        for speed in speeds:
+            if not isinstance(speed, (AppliedUndef, Derivative)):
+                raise ValueError(f'Generalized speed "{speed}" is not a '
+                                 f'dynamicsymbol.')
