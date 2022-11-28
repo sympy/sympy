@@ -2016,9 +2016,9 @@ def test_TensAdd_matching():
     W = WildTensorHead('W', unordered_indices=True)
 
     assert ( K(p)*K(q) + V(p)*V(q) + K(p)*V(q) + K(q)*V(p) ).replace(
-            W(p,q) + K(p)*K(q) + V(p)*V(q),
-            W(p,q) + 3*K(p)*V(q)
-            ) == K(p)*V(q) + K(q)*V(p) + 3*K(p)*V(q)
+        W(p,q) + K(p)*K(q) + V(p)*V(q),
+        W(p,q) + 3*K(p)*V(q)
+        ).doit() == K(p)*V(q) + K(q)*V(p) + 3*K(p)*V(q)
 
 def test_TensMul_matching():
     """
