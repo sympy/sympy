@@ -1939,8 +1939,6 @@ behavior.
         if Heaviside(t) in factors:
             f = Mul(*[ i for i in factors if not i is Heaviside(t) ])
 
-    f = f.expand(deep=False)
-
     debug('\n***** LaplaceTransform(%s, %s, %s)'%(f, t, s))
 
     return LaplaceTransform(f, t, s).doit(**hints)

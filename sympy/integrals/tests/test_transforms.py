@@ -848,13 +848,14 @@ def test_laplace_inverse_laplace_transform():
     def bothways(F):
         f = inverse_laplace_transform(F, s, t)
         F2 = laplace_transform(f, t, s, noconds=True)
-        return F==F2
+        d = (F-F2).simplify()
+        return d==0
     assert bothways(b/(s**2-a**2))
     assert bothways(b*s/(s**2-a**2))
     assert bothways(b/(s*(s+a)))
     assert bothways(b*s/(s+a)**2)
-    # assert bothways(c/((s+a)*(s+b)))
-    # assert bothways(c*s/((s+a)*(s+b)))
+    assert bothways(c/((s+a)*(s+b)))
+    assert bothways(c*s/((s+a)*(s+b)))
     assert bothways(c*s/(d**2*(s+a)**2+b**2))
 
 
