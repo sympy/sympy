@@ -4185,7 +4185,7 @@ class WildTensor(Tensor):
 
     Examples
     ========
-    >>> from sympy.tensor.tensor import Tensor, TensorHead, TensorIndex, WildTensorHead, WildTensor, TensorIndexType
+    >>> from sympy.tensor.tensor import TensorHead, TensorIndex, WildTensorHead, TensorIndexType
     >>> W = WildTensorHead("W")
     >>> R3 = TensorIndexType('R3', dim=3)
     >>> p = TensorIndex('p', R3)
