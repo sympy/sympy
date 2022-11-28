@@ -4160,8 +4160,11 @@ class WildTensorHead(TensorHead):
         if index_types is None:
             index_types = []
 
-        if symmetry is not None:
+        if symmetry is None:
+            symmetry = TensorSymmetry.no_symmetry(len(index_types))
+        else:
             raise NotImplementedError("Wild matching based on symmetry is not implemented.")
+            assert symmetry.rank == len(index_types)
 
         obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry)
         obj.comm = TensorManager.comm_symbols2i(comm)
