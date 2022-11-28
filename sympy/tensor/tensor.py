@@ -4172,13 +4172,8 @@ class WildTensorHead(TensorHead):
 
         return obj
 
-    def __call__(self, *indices, symmetry=None):
-        if symmetry is None:
-            symmetry = TensorSymmetry.no_symmetry(len(indices))
-        else:
-            assert symmetry.rank == len(indices)
-
-        tensor = WildTensor(self, indices, symmetry=symmetry, comm=self.comm, unordered_indices=self.unordered_indices)
+    def __call__(self, *indices, **kwargs):
+        tensor = WildTensor(self, indices, **kwargs)
         return tensor.doit()
 
 
