@@ -190,9 +190,8 @@ def test_recursive_evaluate_false_10560():
 
 
 def test_issue__evaluateFalse_24288():
-    inputs = {'1==2': "1==2",'1!=2': "1!=2",'1<2': "1<2", '1<=2':"1<=2",'1>2': "1>2",'1>=2':"1>=2",}
-    for text, result in inputs.items():
-        assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
+    for u in [op(1, 2, evaluate=False) for op in [Eq, Ne, Lt, Le, Gt, Ge]]:
+        assert parse_expr(str(u), evaluate=False) == u
 
 
 def test_function_evaluate_false():
