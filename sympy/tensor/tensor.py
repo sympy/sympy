@@ -42,7 +42,7 @@ from sympy.core.numbers import (Integer, Rational)
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
-from sympy.core import Basic, Expr, sympify, Add, Mul, S, AtomicExpr
+from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
 from sympy.core.containers import Tuple, Dict
 from sympy.core.sorting import default_sort_key
