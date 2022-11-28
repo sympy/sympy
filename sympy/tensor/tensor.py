@@ -4223,7 +4223,12 @@ class WildTensor(Tensor):
 
         indices = cls._parse_indices(tensor_head, indices)
         index_types = [ind.tensor_index_type for ind in indices]
-        tensor_head = tensor_head.func(tensor_head.name, index_types, comm=tensor_head.comm, symmetry=tensor_head.symmetry)
+        tensor_head = tensor_head.func(
+            tensor_head.name,
+            index_types,
+            comm=tensor_head.comm,
+            symmetry=tensor_head.symmetry, unordered_indices=tensor_head.unordered_indices,
+            )
 
         obj = Basic.__new__(cls, tensor_head, Tuple(*indices))
         obj.name = tensor_head.name
