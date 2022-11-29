@@ -1,16 +1,17 @@
-import random
+import random as system_random
 
 from sympy import Matrix, diag, eye, zeros, cartes, \
     I, cos, simplify, symbols, sqrt, expand
-from sympy.matrices.random import super_elementary_matrix
-from sympy.matrices.random import jordan, jordan_normal, \
+from sympy.core.random import seed
+from sympy.matrices.random import super_elementary_matrix, \
     complex_to_real, invertible, regular_to_singular, diagonal_normal, \
     diagonalizable, transposition, triangular, trigonalizable, \
     isometry_normal, permutation, projection, elementary, rotation, \
     reflection, normal, nilpotent, idempotent, singular, orthogonal, unitary, \
-    hermite, symmetric, rand, square
+    hermite, symmetric, square, jordan, jordan_normal
 
 from sympy.matrices import random as _random
+
 from sympy.testing.pytest import raises
 
 TEST_DIMS = dict((d, tuple(cartes(range(d), range(d)))) for d in range(2, 6))
@@ -19,11 +20,18 @@ TEST_EPSILON = 1e-7
 
 phi, psi = symbols('phi psi')
 
-rand.seed(1)
+# set fixed sympy random seed for testing purposes
+sympy_seed = 12
+seed(sympy_seed)
+
+# set system random number generator with fixed seed for testing purposes
+system_seed = 111
+RANDOM = system_random.Random(system_seed)
 
 
 class Scalars(list):
-    rnd = random.Random(1)
+    """list class with build in sample method"""
+    rnd = system_random.Random(1)
 
     def sample(self, k):
         return self.rnd.sample(self, k)
@@ -159,7 +167,7 @@ def test_transposition():
 
 def test_permutation():
     for d in TEST_DIMS:
-        perm = random.sample(range(d), d)
+        perm = RANDOM.sample(range(d), d)
         m = permutation(d, perm)
         n = eye(d).permute(perm)
         assert m == n
@@ -256,7 +264,7 @@ def test_diagonal_normal():
     test = dict()
     specs = dict()
     for d in TEST_DIMS:
-        s = random.choices(spec, k=d + 4)
+        s = RANDOM.choices(spec, k=d + 4)
         specs[d] = s
         m = _random.diagonal_normal(d + 4, s)
         test[d] = m
@@ -300,7 +308,7 @@ def test_jordan_normal():
     test = dict()
     specs = dict()
     for d in TEST_DIMS:
-        s = random.choices(scalars, k=d + 4)
+        s = RANDOM.choices(scalars, k=d + 4)
         specs[d] = s
         m = _random.jordan_normal(d + 4, s)
         test[d] = m
@@ -547,24 +555,26 @@ def test_raise():
 
 
 def test_sample():
-    seed = 11
-    rnd = random.Random(seed)
     scalars = tuple(range(10, 25))
     for d in TEST_DIMS:
+        m = diagonal_normal(d, spec=scalars)
+        for i in range(d):
+            assert m[i, i] in scalars
+
         m = diagonal_normal(d, spec=Scalars(scalars))
         for i in range(d):
             assert m[i, i] in scalars
 
-        m = diagonal_normal(d, spec=scalars, seed=rnd)
+        m = diagonal_normal(d, spec=scalars, seed=RANDOM)
         for i in range(d):
             assert m[i, i] in scalars
 
-        m = diagonal_normal(d, spec=scalars, seed=seed)
+        m = diagonal_normal(d, spec=scalars, seed=314)
         for i in range(d):
             assert m[i, i] in scalars
 
 
-def test_seed():
+def _test_seed():
     _all_ = projection, jordan, transposition, \
           permutation, elementary, rotation, reflection, \
           diagonal_normal, jordan_normal, isometry_normal, \
@@ -585,17 +595,17 @@ def test_seed():
     _isometry_scalars_ = orthogonal, unitary, normal
 
     seed = 101
-    rnd = random.Random(seed)
+    rnd = system_random.Random(seed)
     seeds = rnd.sample(range(100), 3)
     for d in TEST_DIMS:
         for matrix in _all_:
-            # 1. standard rand
+            # 1. standard random
             first, second = list(), list()
             for s in seeds:
-                rand.seed(s)
+                seed(s)
                 first.append((s, expand(matrix(d))))
             for s in seeds:
-                rand.seed(s)
+                seed(s)
                 second.append((s, expand(matrix(d))))
             for (seed_a, a), (seed_b, b) in zip(first, second):
                 assert a == b,  str(seeds) + ' ' + str(seed_a) + ' ' + str(seed_b) + ' ' + matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
@@ -606,7 +616,7 @@ def test_seed():
             # 2. direct seed
             first, second = list(), list()
             for s in seeds:
-                rand.seed(s)
+                seed(s)
                 first.append(matrix(d, seed=s))
             for s in seeds:
                 second.append(matrix(d, seed=s))
@@ -616,7 +626,7 @@ def test_seed():
         for matrix in _all_:
             # 3. direct seed as random
             first, second = list(), list()
-            rnd = random.Random()
+            rnd = system_random.Random()
             for s in seeds:
                 rnd.seed(s)
                 first.append(matrix(d, seed=rnd))

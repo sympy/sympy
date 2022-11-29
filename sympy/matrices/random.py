@@ -1,8 +1,6 @@
-from random import Random
-
 from ..core import I as _i
 from ..core.mul import Mul as _multiply
-# from ..core.random import rng as rand
+from ..core.random import rng as rand, sample
 from ..core.sympify import _sympify
 from ..simplify import simplify
 from ..functions import sqrt as _sqrt, re as _re, im as _im, \
@@ -27,9 +25,6 @@ _EPS = 1e-15
 
 # === random number generator functions ===
 
-simplify(-_i)  # hack to avoid https://github.com/sympy/sympy/issues/22592
-
-rand = Random()
 r""" default random number generator
 
     Explanation
@@ -67,14 +62,16 @@ def _rand(seed=None):
 
 def _sample(scalars, k=None, rng=None):
     _k = k or 1
-    if hasattr(scalars, 'sample'):
-        smpl = scalars.sample(_k)
-    elif hasattr(rng, 'sample'):
-        smpl = rng.sample(scalars, _k)
-    elif rng:
-        smpl = rng(scalars, _k)
+    if rng:
+        if hasattr(rng, 'sample'):
+            smpl = rng.sample(scalars, _k)
+        else:
+            smpl = rng(scalars, _k)
     else:
-        smpl = rand.sample(scalars, _k)
+        if hasattr(scalars, 'sample'):
+            smpl = scalars.sample(_k)
+        else:
+            smpl = sample(scalars, _k)
     return smpl if k else smpl[0]
 
 
