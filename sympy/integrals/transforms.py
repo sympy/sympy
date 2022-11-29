@@ -1846,27 +1846,47 @@ class LaplaceTransform(IntegralTransform):
         if recursive == 0:
             r = expand(fn, deep=False)
             if r.is_Add:
-                debug('#### \n#### ', fn)
-                debug('#### ', r.args)
-                by_rule = []
-                recursed = []
-                unevaluated = []
-                for f in r.args:
-                    LT = _laplace_apply_rules(f, t_, s_, **hints)
-                    if LT is None:
-                        LT = laplace_transform(f, t_, s_, **hints)
-                        if type(LT) is not tuple and LT.func is LaplaceTransform:
-                            unevaluated.append(LT)
-                        else:
-                            recursed.append(LT)
-                    else:
-                        by_rule.append(LT)
-                debug('####   ', by_rule)
-                debug('####   ', recursed)
-                debug('####   ', unevaluated)
+                terms = r.args
+            else:
+                terms = [fn]
         else:
-            LT = None
-        return None
+            terms = [fn]
+        
+        by_rule = []
+        recursed = []
+        unevaluated = []
+        for f in terms:
+            LT = _laplace_apply_rules(f, t_, s_, **hints)
+            if LT is None:
+                if recursive>1:
+                    return None
+                LT = laplace_transform(f, t_, s_, **hints)
+                if type(LT) is not tuple and LT.has(LaplaceTransform):
+                    unevaluated.append(LT)
+                else:
+                    recursed.append(LT)
+            else:
+                if type(LT) is not tuple and LT.has(LaplaceTransform):
+                    unevaluated.append(LT)
+                else:
+                    by_rule.append(LT)
+
+        # Now we have applied all the rules and can assemble the result.
+        if noconds:
+            LT = (Add(*by_rule)+Add(*recursed)).simplify()+Add(*unevaluated)
+        else:
+            F = [0]
+            a = [-S.Infinity]
+            c = [True]
+            debug('####>> ', by_rule + recursed)
+            for F_, a_, c_ in by_rule + recursed:
+                F.append(F_)
+                a.append(a_)
+                c.append(c_)
+            LT = (Add(*F).simplify()+Add(*unevaluated), Max(*a), And(*c))
+
+        debug('####>> ', LT)
+        return LT
 
     def _compute_transform(self, f, t, s, **hints):
         LT = _laplace_apply_rules(f, t, s, **hints)
@@ -1874,7 +1894,8 @@ class LaplaceTransform(IntegralTransform):
             _simplify = hints.pop('simplify', True)
             debug('_laplace_apply_rules could not match function %s'%(f,))
             debug('    hints: %s'%(hints,))
-            return _laplace_transform(f, t, s, simplify=_simplify)
+            hints.pop('recursive', 0)
+            return _laplace_transform(f, t, s, simplify=_simplify, **hints)
         else:
             return LT
 
@@ -1894,32 +1915,32 @@ class LaplaceTransform(IntegralTransform):
                 'Laplace', None, 'No combined convergence.')
         return plane, cond
 
-    def _try_directly(self, **hints):
-        noconds = hints.get('noconds', False)
-        fn = self.function
-        t_ = self.function_variable
-        s_ = self.transform_variable
-        r = expand(fn, deep=False)
-        if r.is_Add and noconds:
-            # Try apply rules to all sum terms; if it does not work, use
-            # a combined way
-            st = [S.Zero]
-            for f in r.args:
-                LT = _laplace_apply_rules(f, t_, s_, **hints)
-                if LT is None:
-                    st = None
-                    break
-                st.append(LT)
-            if not st is None:
-                return fn, Add(*st)
-        LT = None
-        if not fn.is_Add:
-            fn = expand_mul(fn)
-            try:
-                LT = self._compute_transform(fn, t_, s_, **hints)
-            except IntegralTransformError:
-                LT = None
-        return fn, LT
+    # def _try_directly(self, **hints):
+    #     noconds = hints.get('noconds', False)
+    #     fn = self.function
+    #     t_ = self.function_variable
+    #     s_ = self.transform_variable
+    #     r = expand(fn, deep=False)
+    #     if r.is_Add and noconds:
+    #         # Try apply rules to all sum terms; if it does not work, use
+    #         # a combined way
+    #         st = [S.Zero]
+    #         for f in r.args:
+    #             LT = _laplace_apply_rules(f, t_, s_, **hints)
+    #             if LT is None:
+    #                 st = None
+    #                 break
+    #             st.append(LT)
+    #         if not st is None:
+    #             return fn, Add(*st)
+    #     LT = None
+    #     if not fn.is_Add:
+    #         fn = expand_mul(fn)
+    #         try:
+    #             LT = self._compute_transform(fn, t_, s_, **hints)
+    #         except IntegralTransformError:
+    #             LT = None
+    #     return fn, LT
 
 def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
