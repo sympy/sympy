@@ -191,7 +191,7 @@ def test_recursive_evaluate_false_10560():
 
 
 def test_issue__evaluateFalse_24288():
-    for u in [op(1, 2, evaluate=False) for op in [Eq, Ne, Lt, Le, Gt, Ge]]:
+    for u in [op(1, 2, evaluate=False) for op in [Eq, Ne, Lt, Le, Gt, Ge,]]:
         assert parse_expr(str(u), evaluate=False) == u
 
 
