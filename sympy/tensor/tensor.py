@@ -4148,7 +4148,7 @@ class WildTensorHead(TensorHead):
     ``TensorHead``
 
     """
-    def __new__(cls, name, index_types=None, comm=0, symmetry=None, unordered_indices=False):
+    def __new__(cls, name, index_types=None, symmetry=None, comm=0,  unordered_indices=False):
         if isinstance(name, str):
             name_symbol = Symbol(name)
         elif isinstance(name, Symbol):
@@ -4162,9 +4162,12 @@ class WildTensorHead(TensorHead):
         if symmetry is None:
             symmetry = TensorSymmetry.no_symmetry(len(index_types))
         else:
+            assert symmetry.rank == len(index_types)
+
+        if symmetry != TensorSymmetry.no_symmetry(len(index_types)):
             raise NotImplementedError("Wild matching based on symmetry is not implemented.")
 
-        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry, sympify(unordered_indices))
+        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), sympify(symmetry), sympify(comm), sympify(unordered_indices))
         obj.comm = TensorManager.comm_symbols2i(comm)
         obj.unordered_indices = unordered_indices
 
@@ -4227,8 +4230,8 @@ class WildTensor(Tensor):
         tensor_head = tensor_head.func(
             tensor_head.name,
             index_types,
+            symmetry=None,
             comm=tensor_head.comm,
-            symmetry=None, #TODO: Specifying symmetry for WildTensorHead is currently unsupported. Once that is implemented, this can be changed to `symmetry=tensor_head.symmetry`.
             unordered_indices=tensor_head.unordered_indices,
             )
 
