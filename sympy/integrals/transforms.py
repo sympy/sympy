@@ -116,6 +116,13 @@ class IntegralTransform(Function):
         return self.function.free_symbols.union({self.transform_variable}) \
             - {self.function_variable}
 
+    def _use_rules(self, **hints):
+        # If an integral transform wants to use rule sets that go beyound
+        # applying linearity, then this method should be implemented to
+        # return a result if it can apply rules or return `None` if it
+        # obtains no result.
+        return None
+
     def _compute_transform(self, f, x, s, **hints):
         raise NotImplementedError
 
@@ -127,13 +134,6 @@ class IntegralTransform(Function):
         if cond == False:
             raise IntegralTransformError(self.__class__.name, None, '')
         return cond
-
-    def _use_rules(self, **hints):
-        # If an integral transform wants to use rule sets that go beyound
-        # applying linearity, then this method should be implemented to
-        # return a result if it can apply rules or return `None` if it
-        # obtains no result.
-        return None
 
     def _try_directly(self, **hints):
         T = None
@@ -177,6 +177,8 @@ class IntegralTransform(Function):
         needeval = hints.pop('needeval', False)
         simplify = hints.pop('simplify', True)
         hints['simplify'] = simplify
+        
+        debug('**##* ', hints)
 
         T = self._use_rules(**hints)
 
@@ -1579,6 +1581,17 @@ def _laplace_cr(f, a, c, **hints):
     else:
         return f
 
+def _laplace_tr(f, **hints):
+    """
+    Internal helper function that will return `(f, a, c)` unless `**hints`
+    contains `noconds=True`, in which case it will only return `f`.
+    """
+    noconds = hints.get('noconds', False)
+    if noconds and type(f) is tuple:
+        return f[0]
+    else:
+        return f
+
 def _laplace_rule_timescale(f, t, s, doit=True, **hints):
     r"""
     This internal helper function tries to apply the time-scaling rule of the
@@ -1589,7 +1602,9 @@ def _laplace_rule_timescale(f, t, s, doit=True, **hints):
     $\frac1a F(\frac{s}{a})$. This scaling will also affect the transform's
     convergence plane.
     """
-    _simplify = hints.pop('simplify', True)
+    _simplify = hints.get('simplify', True)
+    recursive = hints.get('recursive', 0)
+    hints['recursive'] = recursive + 1
     b = Wild('b', exclude=[t])
     g = WildFunction('g', nargs=1)
     ma1 = f.match(g)
@@ -1606,7 +1621,10 @@ def _laplace_rule_timescale(f, t, s, doit=True, **hints):
                     return _laplace_transform(ma1[g].func(t), t, s,
                                                 simplify=_simplify)
                 else:
-                    return LaplaceTransform(ma1[g].func(t), t, s, **hints)
+                    if recursive <2:
+                        return LaplaceTransform(ma1[g].func(t), t, s).doit(**hints)
+                    else:
+                        return LaplaceTransform(ma1[g].func(t), t, s)
             else:
                 L = _laplace_apply_rules(ma1[g].func(t), t, s/ma2[b],
                                          doit=doit, **hints)
@@ -1623,7 +1641,7 @@ def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
     This internal helper function tries to transform a product containing the
     `Heaviside` function and returns `None` if it cannot do it.
     """
-    hints.pop('simplify', True)
+    hints.get('simplify', True)
     a = Wild('a', exclude=[t])
     b = Wild('b', exclude=[t])
     y = Wild('y')
@@ -1815,13 +1833,48 @@ class LaplaceTransform(IntegralTransform):
 
     _name = 'Laplace'
 
+    def _use_rules(self, **hints):
+        noconds = hints.get('noconds', False)
+        recursive = hints.get('recursive', 0)
+        hints['recursive'] = recursive+1
+        fn = self.function
+        t_ = self.function_variable
+        s_ = self.transform_variable
+        LT = None
+        # Try to convert this into a sum and transform sum terms only on the
+        # first recursion level.
+        if recursive == 0:
+            r = expand(fn, deep=False)
+            if r.is_Add:
+                debug('#### \n#### ', fn)
+                debug('#### ', r.args)
+                by_rule = []
+                recursed = []
+                unevaluated = []
+                for f in r.args:
+                    LT = _laplace_apply_rules(f, t_, s_, **hints)
+                    if LT is None:
+                        LT = laplace_transform(f, t_, s_, **hints)
+                        if type(LT) is not tuple and LT.func is LaplaceTransform:
+                            unevaluated.append(LT)
+                        else:
+                            recursed.append(LT)
+                    else:
+                        by_rule.append(LT)
+                debug('####   ', by_rule)
+                debug('####   ', recursed)
+                debug('####   ', unevaluated)
+        else:
+            LT = None
+        return None
+
     def _compute_transform(self, f, t, s, **hints):
         LT = _laplace_apply_rules(f, t, s, **hints)
         if LT is None:
             _simplify = hints.pop('simplify', True)
             debug('_laplace_apply_rules could not match function %s'%(f,))
             debug('    hints: %s'%(hints,))
-            return _laplace_transform(f, t, s, simplify=_simplify, **hints)
+            return _laplace_transform(f, t, s, simplify=_simplify)
         else:
             return LT
 
