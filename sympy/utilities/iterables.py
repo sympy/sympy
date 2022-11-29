@@ -2546,7 +2546,7 @@ def necklaces(n, k, free=False):
     .. [1] http://mathworld.wolfram.com/Necklace.html
 
     .. [2] Frank Ruskey, Carla Savage, and Terry Min Yih Wang,
-        Generating necklaces, Journal of Algorithms 13 (1992), 414–430;
+        Generating necklaces, Journal of Algorithms 13 (1992), 414-430;
         https://doi.org/10.1016/0196-6774(92)90047-G
 
     """
