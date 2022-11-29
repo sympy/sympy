@@ -600,6 +600,8 @@ def test_add1():
     assert t1 != t2
     assert t2 != TensMul.from_data(0, [], [], [])
 
+    #Test whether doit chokes on subterms that are zero.
+    assert TensAdd(p(a), TensMul(0, p(a)) ).doit() == p(a)
 
 def test_special_eq_ne():
     # test special equality cases:
