@@ -29,14 +29,6 @@ system_seed = 111
 RANDOM = system_random.Random(system_seed)
 
 
-class Scalars(list):
-    """list class with build in sample method"""
-    rnd = system_random.Random(1)
-
-    def sample(self, k):
-        return self.rnd.sample(self, k)
-
-
 def _is_zeros(m, precision=None):
     if precision is None:
         return all(x == 0 for x in simplify(m))
@@ -538,43 +530,67 @@ def test_hermite():
         assert m.H == m
 
 
-# === other tests ===
-
-
-def test_raise():
-    with raises(ValueError):
-        rotation(3, scalar=4)
-    with raises(ValueError):
-        isometry_normal(3, spec=(4,))
-    with raises(ValueError):
-        orthogonal(3, spec=(4,))
-    with raises(ValueError):
-        unitary(3, spec=(complex(1, 1),))
-    with raises(ValueError):
-        jordan_normal(3, (None, 1, 2))
+# === seed and sample tests ===
 
 
 def test_sample():
+    class Scalars(list):
+        """list class with build in sample method"""
+        rnd = system_random.Random()
+
+        def sample(self, k):
+            return self.rnd.sample(self, k)
+
     scalars = tuple(range(10, 25))
+
     for d in TEST_DIMS:
         m = diagonal_normal(d, spec=scalars)
         for i in range(d):
             assert m[i, i] in scalars
 
-        m = diagonal_normal(d, spec=Scalars(scalars))
+        n = diagonal_normal(d, spec=Scalars(scalars))
         for i in range(d):
-            assert m[i, i] in scalars
+            assert n[i, i] in scalars
 
-        m = diagonal_normal(d, spec=scalars, seed=RANDOM)
-        for i in range(d):
-            assert m[i, i] in scalars
+    class CyclicPowers(list):
+        """list class with build in sample method"""
+        rnd = system_random.Random()
 
-        m = diagonal_normal(d, spec=scalars, seed=314)
+        def sample(self, k):
+            items = self.rnd.sample(self, k)
+            powers = self.rnd.choices(range(2, 6), k=k)
+            return [item**p for item, p in zip(items, powers)]
+
+    scalars = [2]
+
+    for d in TEST_DIMS:
+        n = diagonal_normal(d, spec=CyclicPowers(scalars))
         for i in range(d):
-            assert m[i, i] in scalars
+            assert n[i, i] not in scalars, n
+
+    class Rnd(object):
+        rng = system_random.Random()
+
+        def __len__(self):
+            return 1
+
+        def sample(self, k):
+            return [self.rng.random() for _ in range(k)]
+
+    for d in TEST_DIMS:
+        n = diagonal_normal(d, spec=Rnd())
+        for i in range(d):
+            assert 0 <= n[i, i] <= 1, repr(n)
 
 
 def _test_seed():
+    class Scalars(list):
+        """list class with build in sample method"""
+        rnd = system_random.Random()
+
+        def sample(self, k):
+            return self.rnd.sample(self, k)
+
     _all_ = projection, jordan, transposition, \
           permutation, elementary, rotation, reflection, \
           diagonal_normal, jordan_normal, isometry_normal, \
@@ -689,3 +705,21 @@ def _test_seed():
                 second.append(matrix(d, scalars=scalars, seed=scalars.rnd))
             for a, b in zip(first, second):
                 assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+
+
+# === other tests ===
+
+
+def test_raise():
+    with raises(ValueError):
+        rotation(3, scalar=4)
+    with raises(ValueError):
+        isometry_normal(3, spec=(4,))
+    with raises(ValueError):
+        orthogonal(3, spec=(4,))
+    with raises(ValueError):
+        unitary(3, spec=(complex(1, 1),))
+    with raises(ValueError):
+        jordan_normal(3, (None, 1, 2))
+
+

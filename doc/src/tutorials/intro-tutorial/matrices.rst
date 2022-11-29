@@ -240,11 +240,10 @@ the random matrix generation functions, e.g.
 ``invertible``, ``triangular``, ``orthogonal``.
 Find a :ref:`full list of random matrices <matrices-random>`.
 
-    >>> from sympy.matrices.random import rand
-    >>> rand.seed(0)
-
+    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import invertible, triangular, orthogonal
     >>> from sympy import simplify
+    >>> seed(0)
 
     >>> M = invertible(3)  # only integer entries
     >>> M
@@ -289,7 +288,8 @@ Find a :ref:`full list of random matrices <matrices-random>`.
     ⎢         ⎥
     ⎣0   0  -1⎦
 
-    >>> M = orthogonal(3, length=6, seed=1)
+    >>> seed(1)
+    >>> M = orthogonal(3, length=6)
     >>> M
     ⎡-1   0     0  ⎤
     ⎢              ⎥
@@ -309,10 +309,10 @@ Find a :ref:`full list of random matrices <matrices-random>`.
 
 And symbolic matrices work, too.
 
-    >>> from sympy.matrices.random import rand
-    >>> rand.seed(0)
-
+    >>> from sympy.core.random import seed
     >>> from sympy import symbols, cos, sin
+    >>> seed(0)
+
     >>> phi = symbols('phi')
     >>> scalars = cos(phi), sin(phi)
     >>> M = orthogonal(3, scalars=scalars, length=1)
@@ -336,10 +336,10 @@ And symbolic matrices work, too.
 Using matrices to construct a matrix with integer entries
 which has an inverse with integer entries, too.
 
-    >>> from sympy.matrices.random import rand
-    >>> rand.seed(0)
-
+    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import invertible
+    >>> seed(0)
+
     >>> A = invertible(4, scalars=(1,-1))
     >>> A
     ⎡1   0  0   0 ⎤
@@ -361,12 +361,13 @@ which has an inverse with integer entries, too.
 Using matrices to construct a quadric,
 a quadratic equation in multiple variables
 
-    >>> from sympy.matrices.random import rand
-    >>> rand.seed(8)
 
+    >>> from sympy.core.random import seed
     >>> from sympy import diag
     >>> from sympy.abc import x, y, z
     >>> from sympy.matrices.random import orthogonal
+    >>> seed(8)
+
     >>> xyz = Matrix([x, y, z])
     >>> D = diag(1, 2, 3)
     >>> S = orthogonal(3)
