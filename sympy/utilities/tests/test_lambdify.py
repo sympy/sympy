@@ -34,7 +34,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
-from sympy.codegen.scipy_nodes import cosm1
+from sympy.codegen.scipy_nodes import cosm1, powm1
 from sympy.functions.elementary.complexes import re, im, arg
 from sympy.functions.special.polynomials import \
     chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
@@ -189,6 +189,22 @@ def test_mpmath_lambda():
     assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
     raises(TypeError, lambda: f(x))
            # if this succeeds, it can't be a mpmath function
+
+    ref2 = (mpmath.mpf("1e-30")
+            - mpmath.mpf("1e-45")/2
+            + 5*mpmath.mpf("1e-60")/6
+            - 3*mpmath.mpf("1e-75")/4
+            + 33*mpmath.mpf("1e-90")/40
+            )
+    f2a = lambdify((x, y), x**y - 1, "mpmath")
+    f2b = lambdify((x, y), powm1(x, y), "mpmath")
+    f2c = lambdify((x,), expm1(x*log1p(x)), "mpmath")
+    ans2a = f2a(mpmath.mpf("1")+mpmath.mpf("1e-15"), mpmath.mpf("1e-15"))
+    ans2b = f2b(mpmath.mpf("1")+mpmath.mpf("1e-15"), mpmath.mpf("1e-15"))
+    ans2c = f2c(mpmath.mpf("1e-15"))
+    assert abs(ans2a - ref2) < 1e-51
+    assert abs(ans2b - ref2) < 1e-67
+    assert abs(ans2c - ref2) < 1e-80
 
 
 @conserve_mpmath_dps
@@ -1468,6 +1484,12 @@ def test_scipy_special_math():
 
     cm1 = lambdify((x,), cosm1(x), modules='scipy')
     assert abs(cm1(1e-20) + 5e-41) < 1e-200
+
+    have_scipy_1_10plus = tuple(map(int, scipy.version.version.split('.')[:2])) >= (1, 10)
+
+    if have_scipy_1_10plus:
+        cm2 = lambdify((x, y), powm1(x, y), modules='scipy')
+        assert abs(cm2(1.2, 1e-9) - 1.82321557e-10)  < 1e-17
 
 
 def test_scipy_bernoulli():
