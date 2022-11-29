@@ -4596,8 +4596,7 @@ def test_sympy__tensor__tensor__WildTensor():
     assert _test_args(p(a))
 
 def test_sympy__tensor__tensor__WildTensorHead():
-    from sympy.tensor.tensor import TensorIndexType, WildTensorHead
-    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
+    from sympy.tensor.tensor import WildTensorHead
     assert _test_args(WildTensorHead('p'))
 
 def test_sympy__tensor__tensor__WildTensorIndex():
