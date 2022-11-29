@@ -1,6 +1,7 @@
 from sympy.physics.mechanics import (Body, Lagrangian, KanesMethod, LagrangesMethod,
                                     RigidBody, Particle)
 from sympy.physics.mechanics.method import _Methods
+from sympy.core.backend import Matrix
 
 __all__ = ['JointsMethod']
 
@@ -161,7 +162,7 @@ class JointsMethod(_Methods):
                 if coordinate in q_ind:
                     raise ValueError('Coordinates of joints should be unique.')
                 q_ind.append(coordinate)
-        return q_ind
+        return Matrix(q_ind)
 
     def _generate_u(self):
         u_ind = []
@@ -170,12 +171,12 @@ class JointsMethod(_Methods):
                 if speed in u_ind:
                     raise ValueError('Speeds of joints should be unique.')
                 u_ind.append(speed)
-        return u_ind
+        return Matrix(u_ind)
 
     def _generate_kdes(self):
-        kd_ind = []
+        kd_ind = Matrix(1, 0, []).T
         for joint in self._joints:
-            kd_ind.extend(joint.kdes)
+            kd_ind = kd_ind.col_join(joint.kdes)
         return kd_ind
 
     def _convert_bodies(self):
@@ -268,9 +269,9 @@ class JointsMethod(_Methods):
         See Also
         ========
 
-        sympy.physics.mechanics.KanesMethod.rhs():
+        sympy.physics.mechanics.kane.KanesMethod.rhs():
             KanesMethod's rhs function.
-        sympy.physics.mechanics.LagrangesMethod.rhs():
+        sympy.physics.mechanics.lagrange.LagrangesMethod.rhs():
             LagrangesMethod's rhs function.
 
         """

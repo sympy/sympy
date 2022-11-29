@@ -24,7 +24,7 @@ from sympy.tensor.indexed import Indexed
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
 from sympy.core.parameters import _exp_is_pow
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, SympifyError
 from sympy.matrices import MutableMatrix, ImmutableMatrix
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
@@ -131,6 +131,8 @@ def test_diff_symbols():
     raises(TypeError, lambda: cos(x).diff((x, y)).variables)
     assert cos(x).diff((x, y))._wrt_variables == [x]
 
+    # issue 23222
+    assert sympify("a*x+b").diff("x") == sympify("a")
 
 def test_Function():
     class myfunc(Function):
@@ -777,6 +779,14 @@ def test_diff_wrt_not_allowed():
     assert diff(exp(x*y), x*y, 0) == exp(x*y)
 
 
+def test_diff_wrt_intlike():
+    class Two:
+        def __int__(self):
+            return 2
+
+    assert cos(x).diff(x, Two()) == -cos(x)
+
+
 def test_klein_gordon_lagrangian():
     m = Symbol('m')
     phi = f(x, t)
@@ -1418,3 +1428,33 @@ def test_issue_17382():
                "ImageSet(Lambda(_n, 6.28318530717959*_n + 5.79812359592087), Integers), " \
                "ImageSet(Lambda(_n, 6.28318530717959*_n + 0.485061711258717), Integers))"
     assert NS(expr) == expected
+
+def test_eval_sympified():
+    # Check both arguments and return types from eval are sympified
+
+    class F(Function):
+        @classmethod
+        def eval(cls, x):
+            assert x is S.One
+            return 1
+
+    assert F(1) is S.One
+
+    # String arguments are not allowed
+    class F2(Function):
+        @classmethod
+        def eval(cls, x):
+            if x == 0:
+                return '1'
+
+    raises(SympifyError, lambda: F2(0))
+    F2(1) # Doesn't raise
+
+    # TODO: Disable string inputs (https://github.com/sympy/sympy/issues/11003)
+    # raises(SympifyError, lambda: F2('2'))
+
+def test_eval_classmethod_check():
+    with raises(TypeError):
+        class F(Function):
+            def eval(self, x):
+                pass

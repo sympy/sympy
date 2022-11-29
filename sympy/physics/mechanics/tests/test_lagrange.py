@@ -7,6 +7,20 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.matrices.dense import Matrix
 from sympy.simplify.simplify import simplify
+from sympy.testing.pytest import raises
+
+
+def test_invalid_coordinates():
+    # Simple pendulum, but use symbol instead of dynamicsymbol
+    l, m, g = symbols('l m g')
+    q = symbols('q')  # Generalized coordinate
+    N, O = ReferenceFrame('N'), Point('O')
+    O.set_vel(N, 0)
+    P = Particle('P', Point('P'), m)
+    P.point.set_pos(O, l * (sin(q) * N.x - cos(q) * N.y))
+    P.potential_energy = m * g * P.point.pos_from(O).dot(N.y)
+    L = Lagrangian(N, P)
+    raises(ValueError, lambda: LagrangesMethod(L, [q], bodies=P))
 
 
 def test_disc_on_an_incline_plane():

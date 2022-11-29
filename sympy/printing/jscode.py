@@ -7,7 +7,8 @@ Math object where possible.
 
 """
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from sympy.core import S
 from sympy.printing.codeprinter import CodePrinter
@@ -47,7 +48,7 @@ class JavascriptCodePrinter(CodePrinter):
     printmethod = '_javascript'
     language = 'JavaScript'
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         'order': None,
         'full_prec': 'auto',
         'precision': 17,
@@ -55,7 +56,7 @@ class JavascriptCodePrinter(CodePrinter):
         'human': True,
         'allow_unknown_functions': False,
         'contract': True,
-    }  # type: tDict[str, Any]
+    }
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)

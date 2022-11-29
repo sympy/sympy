@@ -7,8 +7,12 @@ from sympy.functions.elementary.trigonometric import (asin, sin)
 from sympy.simplify.simplify import simplify
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.assumptions import (assumptions, check_assumptions,
-    failing_assumptions, common_assumptions)
+    failing_assumptions, common_assumptions, _generate_assumption_rules,
+    _load_pre_generated_assumption_rules)
 from sympy.core.facts import InconsistentAssumptions
+from sympy.core.random import seed
+from sympy.combinatorics import Permutation
+from sympy.combinatorics.perm_groups import PermutationGroup
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -1292,3 +1296,26 @@ def test_common_assumptions():
     assert common_assumptions([0, 1, 2], []) == {}
     assert common_assumptions([], ['integer']) == {}
     assert common_assumptions([0], ['integer']) == {'integer': True}
+
+def test_pre_generated_assumption_rules_are_valid():
+    # check the pre-generated assumptions match freshly generated assumptions
+    # if this check fails, consider updating the assumptions
+    # see sympy.core.assumptions._generate_assumption_rules
+    pre_generated_assumptions =_load_pre_generated_assumption_rules()
+    generated_assumptions =_generate_assumption_rules()
+    assert pre_generated_assumptions._to_python() == generated_assumptions._to_python(), "pre-generated assumptions are invalid, see sympy.core.assumptions._generate_assumption_rules"
+
+
+def test_ask_shuffle():
+    grp = PermutationGroup(Permutation(1, 0, 2), Permutation(2, 1, 3))
+
+    seed(123)
+    first = grp.random()
+    seed(123)
+    simplify(I)
+    second = grp.random()
+    seed(123)
+    simplify(-I)
+    third = grp.random()
+
+    assert first == second == third

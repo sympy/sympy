@@ -1,5 +1,4 @@
 from sympy.functions import SingularityFunction, DiracDelta
-from sympy.core import sympify
 from sympy.integrals import integrate
 
 
@@ -49,10 +48,8 @@ def singularityintegrate(f, x):
     if not f.has(SingularityFunction):
         return None
 
-    if f.func == SingularityFunction:
-        x = sympify(f.args[0])
-        a = sympify(f.args[1])
-        n = sympify(f.args[2])
+    if isinstance(f, SingularityFunction):
+        x, a, n = f.args
         if n.is_positive or n.is_zero:
             return SingularityFunction(x, a, n + 1)/(n + 1)
         elif n in (-1, -2):

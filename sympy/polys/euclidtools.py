@@ -1,7 +1,6 @@
 """Euclidean algorithms, GCDs, LCMs and polynomial remainder sequences. """
 
 
-from sympy.ntheory import nextprime
 from sympy.polys.densearith import (
     dup_sub_mul,
     dup_neg, dmp_neg,
@@ -702,6 +701,8 @@ def dmp_zz_collins_resultant(f, g, u, K):
 
     B = K(2)*K.factorial(K(n + m))*A**m*B**n
     r, p, P = dmp_zero(v), K.one, K.one
+
+    from sympy.ntheory import nextprime
 
     while P <= B:
         p = K(nextprime(p))

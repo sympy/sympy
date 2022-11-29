@@ -4,8 +4,8 @@ MKS unit system.
 MKS stands for "meter, kilogram, second".
 """
 
-from sympy.physics.units import UnitSystem, DimensionSystem
-from sympy.physics.units.definitions import G, Hz, J, N, Pa, W, c, g, kg, m, s
+from sympy.physics.units import UnitSystem
+from sympy.physics.units.definitions import gravitational_constant, hertz, joule, newton, pascal, watt, speed_of_light, gram, kilogram, meter, second
 from sympy.physics.units.definitions.dimension_definitions import (
     acceleration, action, energy, force, frequency, momentum,
     power, pressure, velocity, length, mass, time)
@@ -15,25 +15,32 @@ from sympy.physics.units.systems.length_weight_time import dimsys_length_weight_
 dims = (velocity, acceleration, momentum, force, energy, power, pressure,
         frequency, action)
 
-units = [m, g, s, J, N, W, Pa, Hz]
+units = [meter, gram, second, joule, newton, watt, pascal, hertz]
 all_units = []
 
-# Prefixes of units like g, J, N etc get added using `prefix_unit`
+# Prefixes of units like gram, joule, newton etc get added using `prefix_unit`
 # in the for loop, but the actual units have to be added manually.
-all_units.extend([g, J, N, W, Pa, Hz])
+all_units.extend([gram, joule, newton, watt, pascal, hertz])
 
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
-all_units.extend([G, c])
+all_units.extend([gravitational_constant, speed_of_light])
 
 # unit system
-MKS = UnitSystem(base_units=(m, kg, s), units=all_units, name="MKS", dimension_system=dimsys_length_weight_time)
+MKS = UnitSystem(base_units=(meter, kilogram, second), units=all_units, name="MKS", dimension_system=dimsys_length_weight_time, derived_units={
+    power: watt,
+    time: second,
+    pressure: pascal,
+    length: meter,
+    frequency: hertz,
+    mass: kilogram,
+    force: newton,
+    energy: joule,
+    velocity: meter/second,
+    acceleration: meter/(second**2),
+})
 
 
 __all__ = [
-    'force', 'DimensionSystem', 'energy', 'Pa', 'MKS',
-    'dimsys_length_weight_time', 'Hz', 'power', 's', 'UnitSystem', 'units',
-    'mass', 'momentum', 'acceleration', 'G', 'J', 'N', 'pressure', 'W',
-    'all_units', 'c', 'kg', 'g', 'dims', 'prefix_unit', 'm', 'PREFIXES',
-    'length', 'frequency', 'u', 'time', 'action', 'velocity',
+    'MKS', 'units', 'all_units', 'dims',
 ]

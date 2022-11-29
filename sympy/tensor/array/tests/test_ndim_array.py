@@ -10,6 +10,11 @@ from sympy.tensor.array.sparse_ndim_array import (
 
 from sympy.abc import x, y
 
+mutable_array_types = [
+    MutableDenseNDimArray,
+    MutableSparseNDimArray
+]
+
 array_types = [
     ImmutableDenseNDimArray,
     ImmutableSparseNDimArray,
@@ -46,7 +51,23 @@ def test_issue_18361():
     assert simplify(B) == Array([1, 0])
     assert simplify(C) == Array([x + 1, sin(2*x)])
 
+
 def test_issue_20222():
     A = Array([[1, 2], [3, 4]])
     B = Matrix([[1,2],[3,4]])
     raises(TypeError, lambda: A - B)
+
+
+def test_issue_17851():
+    for array_type in array_types:
+        A = array_type([])
+        assert isinstance(A, array_type)
+        assert A.shape == (0,)
+        assert list(A) == []
+
+
+def test_issue_and_18715():
+    for array_type in mutable_array_types:
+        A = array_type([0, 1, 2])
+        A[0] += 5
+        assert A[0] == 5

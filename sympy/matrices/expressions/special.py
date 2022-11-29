@@ -43,6 +43,9 @@ class ZeroMatrix(MatrixExpr):
     def _eval_transpose(self):
         return ZeroMatrix(self.cols, self.rows)
 
+    def _eval_adjoint(self):
+        return ZeroMatrix(self.cols, self.rows)
+
     def _eval_trace(self):
         return S.Zero
 
@@ -52,7 +55,10 @@ class ZeroMatrix(MatrixExpr):
     def _eval_inverse(self):
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-    def conjugate(self):
+    def _eval_as_real_imag(self):
+        return (self, self)
+
+    def _eval_conjugate(self):
         return self
 
     def _entry(self, i, j, **kwargs):
@@ -101,7 +107,7 @@ class Identity(MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.matrices import Identity, MatrixSymbol
+    >>> from sympy import Identity, MatrixSymbol
     >>> A = MatrixSymbol('A', 3, 5)
     >>> I = Identity(3)
     >>> I*A
@@ -141,7 +147,13 @@ class Identity(MatrixExpr):
     def _eval_inverse(self):
         return self
 
-    def conjugate(self):
+    def _eval_as_real_imag(self):
+        return (self, ZeroMatrix(*self.shape))
+
+    def _eval_conjugate(self):
+        return self
+
+    def _eval_adjoint(self):
         return self
 
     def _entry(self, i, j, **kwargs):
@@ -242,6 +254,9 @@ class OneMatrix(MatrixExpr):
     def _eval_transpose(self):
         return OneMatrix(self.cols, self.rows)
 
+    def _eval_adjoint(self):
+        return OneMatrix(self.cols, self.rows)
+
     def _eval_trace(self):
         return S.One*self.rows
 
@@ -270,7 +285,10 @@ class OneMatrix(MatrixExpr):
             from .inverse import Inverse
             return Inverse(self)
 
-    def conjugate(self):
+    def _eval_as_real_imag(self):
+        return (self, ZeroMatrix(*self.shape))
+
+    def _eval_conjugate(self):
         return self
 
     def _entry(self, i, j, **kwargs):

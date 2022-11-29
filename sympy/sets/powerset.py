@@ -4,7 +4,7 @@ from sympy.core.logic import fuzzy_bool
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 
-from .sets import Set, FiniteSet
+from .sets import Set, FiniteSet, SetKind
 
 
 class PowerSet(Set):
@@ -113,3 +113,7 @@ class PowerSet(Set):
                 yield new
                 temp.append(new)
             found.extend(temp)
+
+    @property
+    def kind(self):
+        return SetKind(self.arg.kind)

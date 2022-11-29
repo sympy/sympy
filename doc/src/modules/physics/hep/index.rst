@@ -9,8 +9,5 @@ High energy physics
 Gamma matrices
 ==============
 
-.. toctree::
-    :maxdepth: 3
-
 .. automodule:: sympy.physics.hep.gamma_matrices
     :members:

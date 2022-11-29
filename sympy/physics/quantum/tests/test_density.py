@@ -174,7 +174,7 @@ def test_entropy():
         #do this test only if 'numpy' is available on test machine
         np_mat = represent(d, format='numpy')
         ent = entropy(np_mat)
-        assert isinstance(np_mat, np.matrixlib.defmatrix.matrix)
+        assert isinstance(np_mat, np.ndarray)
         assert ent.real == 0.69314718055994529
         assert ent.imag == 0
 

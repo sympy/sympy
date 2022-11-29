@@ -503,7 +503,7 @@ def test_MIMOSeries_construction():
     # arg cannot contain SISO as well as MIMO systems.
     raises(TypeError, lambda: MIMOSeries(tfm_1, tf_1))
 
-    # for all the adjascent transfer function matrices:
+    # for all the adjacent transfer function matrices:
     # no. of inputs of first TFM must be equal to the no. of outputs of the second TFM.
     raises(ValueError, lambda: MIMOSeries(tfm_1, tfm_2, -tfm_1))
 
@@ -1077,7 +1077,7 @@ def test_MIMOFeedback_functions():
         (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
     assert F_2.doit() == \
         TransferFunctionMatrix(((TransferFunction(s*(-2*s**2 + s*(2*s - 1) + 1), s**2 - s + 1, s),
-        TransferFunction(2*s**3*(1 - s), s**2 - s + 1, s)), (TransferFunction(0, 1, s), TransferFunction(s*(1 - s), 1, s))))
+        TransferFunction(-2*s**3*(s - 1), s**2 - s + 1, s)), (TransferFunction(0, 1, s), TransferFunction(s*(1 - s), 1, s))))
     assert F_2.doit(expand=True) == \
         TransferFunctionMatrix(((TransferFunction(-s**2 + s, s**2 - s + 1, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
         (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))

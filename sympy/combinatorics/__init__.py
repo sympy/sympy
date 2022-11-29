@@ -12,6 +12,7 @@ from sympy.combinatorics.graycode import GrayCode
 from sympy.combinatorics.named_groups import (SymmetricGroup, DihedralGroup,
     CyclicGroup, AlternatingGroup, AbelianGroup, RubikGroup)
 from sympy.combinatorics.pc_groups import PolycyclicGroup, Collector
+from sympy.combinatorics.free_groups import free_group
 
 __all__ = [
     'Permutation', 'Cycle',
@@ -37,4 +38,6 @@ __all__ = [
     'AbelianGroup', 'RubikGroup',
 
     'PolycyclicGroup', 'Collector',
+
+    'free_group',
 ]

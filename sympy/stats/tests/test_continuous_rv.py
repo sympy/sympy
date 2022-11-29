@@ -101,7 +101,6 @@ def test_ContinuousDomain():
     assert Y.pspace.domain.set == Interval(0, oo)
 
 
-@slow
 def test_multiple_normal():
     X, Y = Normal('x', 0, 1), Normal('y', 0, 1)
     p = Symbol("p", positive=True)
@@ -127,6 +126,7 @@ def test_multiple_normal():
     assert E(X, Eq(X + Y, 0)) == 0
     assert variance(X, Eq(X + Y, 0)) == S.Half
     assert quantile(X)(p) == sqrt(2)*erfinv(2*p - S.One)
+
 
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True)
@@ -185,7 +185,7 @@ def test_characteristic_function():
     Z = Exponential('z', 5)
     cf = characteristic_function(Z)
     assert cf(0) == 1
-    assert cf(1).expand() == Rational(25, 26) + I*Rational(5, 26)
+    assert cf(1).expand() == Rational(25, 26) + I*5/26
 
     X = GaussianInverse('x', 1, 1)
     cf = characteristic_function(X)
@@ -631,6 +631,7 @@ def test_exgaussian():
                                       sqrt(s**2 + l**(-2)))
 
 
+@slow
 def test_exponential():
     rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
@@ -958,6 +959,8 @@ def test_maxwell():
     assert cdf(X)(x) == erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
     assert diff(cdf(X)(x), x) == density(X)(x)
 
+
+@slow
 def test_Moyal():
     mu = Symbol('mu',real=False)
     sigma = Symbol('sigma', positive=True)
@@ -1225,7 +1228,9 @@ def test_uniform():
     assert c(Rational(7, 2)) == Rational(1, 4)
     assert c(5) == 1 and c(6) == 1
 
+
 @XFAIL
+@slow
 def test_uniform_P():
     """ This stopped working because SingleContinuousPSpace.compute_density no
     longer calls integrate on a DiracDelta but rather just solves directly.
@@ -1414,7 +1419,6 @@ def test_issue_10003():
     assert P(G < -1) is S.Zero
 
 
-@slow
 def test_precomputed_cdf():
     x = symbols("x", real=True)
     mu = symbols("mu", real=True)
@@ -1550,8 +1554,8 @@ def test_ContinuousDistributionHandmade():
         (S.Half, (x>=2)&(x<3)), (0, True)))
     dens = ContinuousDistributionHandmade(dens, set=Interval(0, 3))
     space = SingleContinuousPSpace(z, dens)
-    assert dens.pdf == Lambda(x, Piecewise((1/2, (x >= 0) & (x < 1)),
-        (0, (x >= 1) & (x < 2)), (1/2, (x >= 2) & (x < 3)), (0, True)))
+    assert dens.pdf == Lambda(x, Piecewise((S(1)/2, (x >= 0) & (x < 1)),
+        (0, (x >= 1) & (x < 2)), (S(1)/2, (x >= 2) & (x < 3)), (0, True)))
     assert median(space.value) == Interval(1, 2)
     assert E(space.value) == Rational(3, 2)
     assert variance(space.value) == Rational(13, 12)

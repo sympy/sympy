@@ -2,7 +2,7 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
-
+from __future__ import annotations
 from typing import Tuple as tTuple, Optional, Union as tUnion, Callable, List, Dict as tDict, Type, TYPE_CHECKING, \
     Any, overload
 
@@ -21,7 +21,6 @@ from mpmath.libmp import bitcount as mpmath_bitcount
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp.libmpc import _infs_nan
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
-from mpmath.libmp.gammazeta import mpf_bernoulli
 
 from .sympify import sympify
 from .singleton import S
@@ -43,8 +42,7 @@ if TYPE_CHECKING:
     from sympy.functions.elementary.complexes import Abs, re, im
     from sympy.functions.elementary.integers import ceiling, floor
     from sympy.functions.elementary.trigonometric import atan
-    from sympy.functions.combinatorial.numbers import bernoulli
-    from .numbers import Float, Rational, Integer
+    from .numbers import Float, Rational, Integer, AlgebraicNumber, Number
 
 LG10 = math.log(10, 2)
 rnd = round_nearest
@@ -149,7 +147,7 @@ def fastlog(x: Optional[MPF_TUP]) -> tUnion[int, Any]:
     return x[2] + x[3]
 
 
-def pure_complex(v: 'Expr', or_real=False) -> Optional[tTuple['Expr', 'Expr']]:
+def pure_complex(v: 'Expr', or_real=False) -> tuple['Number', 'Number'] | None:
     """Return a and b if v matches a + I*b where b is not zero and
     a and b are Numbers, else None. If `or_real` is True then 0 will
     be returned for `b` if `v` is a real number.
@@ -175,7 +173,7 @@ def pure_complex(v: 'Expr', or_real=False) -> Optional[tTuple['Expr', 'Expr']]:
         if i is S.ImaginaryUnit:
             return h, c
     elif or_real:
-        return h, t
+        return h, S.Zero
     return None
 
 
@@ -710,9 +708,10 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
         man *= m
         exp += e
         bc += b
-        if bc > 3*working_prec:
+        while bc > 3*working_prec:
             man >>= working_prec
             exp += working_prec
+            bc -= working_prec
         acc = min(acc, w_acc)
     sign = (direction & 2) >> 1
     if not complex_factors:
@@ -1045,15 +1044,8 @@ def evalf_piecewise(expr: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     raise NotImplementedError
 
 
-def evalf_bernoulli(expr: 'bernoulli', prec: int, options: OPT_DICT) -> TMP_RES:
-    arg = expr.args[0]
-    if not arg.is_Integer:
-        raise ValueError("Bernoulli number index must be an integer")
-    n = int(arg)
-    b = mpf_bernoulli(n, prec, rnd)
-    if b == fzero:
-        return None, None, None, None
-    return b, None, prec, None
+def evalf_alg_num(a: 'AlgebraicNumber', prec: int, options: OPT_DICT) -> TMP_RES:
+    return evalf(a.to_root(), prec, options)
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -1072,10 +1064,8 @@ def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> tUnion[mpc, mpf]:
     if isinstance(x, NegativeInfinity):
         return mpf('-inf')
     # XXX
-    re, im, _, _ = evalf(x, prec, options)
-    if im:
-        return mpc(re or fzero, im)
-    return mpf(re)
+    result = evalf(x, prec, options)
+    return quad_to_mpmath(result)
 
 
 def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
@@ -1381,7 +1371,7 @@ def evalf_symbol(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
             return None, None, None, None
         return val._mpf_, None, prec, None
     else:
-        if not '_cache' in options:
+        if '_cache' not in options:
             options['_cache'] = {}
         cache = options['_cache']
         cached, cached_prec = cache.get(x, (None, MINUS_INF))
@@ -1397,13 +1387,12 @@ evalf_table: tDict[Type['Expr'], Callable[['Expr', int, OPT_DICT], TMP_RES]] = {
 
 def _create_evalf_table():
     global evalf_table
-    from sympy.functions.combinatorial.numbers import bernoulli
     from sympy.concrete.products import Product
     from sympy.concrete.summations import Sum
     from .add import Add
     from .mul import Mul
     from .numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, \
-        Zero, ComplexInfinity
+        Zero, ComplexInfinity, AlgebraicNumber
     from .power import Pow
     from .symbol import Dummy, Symbol
     from sympy.functions.elementary.complexes import Abs, im, re
@@ -1451,7 +1440,7 @@ def _create_evalf_table():
         Product: evalf_prod,
         Piecewise: evalf_piecewise,
 
-        bernoulli: evalf_bernoulli,
+        AlgebraicNumber: evalf_alg_num,
     }
 
 
@@ -1488,7 +1477,7 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     """
     from sympy.functions.elementary.complexes import re as re_, im as im_
     try:
-        rf = evalf_table[x.func]
+        rf = evalf_table[type(x)]
         r = rf(x, prec, options)
     except KeyError:
         # Fall back to ordinary evalf if possible
@@ -1541,6 +1530,21 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     if options.get("strict"):
         check_target(x, r, prec)
     return r
+
+
+def quad_to_mpmath(q):
+    """Turn the quad returned by ``evalf`` into an ``mpf`` or ``mpc``. """
+    if q is S.ComplexInfinity:
+        raise NotImplementedError
+    re, im, _, _ = q
+    if im:
+        if not re:
+            re = fzero
+        return make_mpc((re, im))
+    elif re:
+        return make_mpf(re)
+    else:
+        return make_mpf(fzero)
 
 
 class EvalfMixin:
@@ -1692,17 +1696,7 @@ class EvalfMixin:
             return make_mpf(self._as_mpf_val(prec))
         try:
             result = evalf(self, prec, {})
-            if result is S.ComplexInfinity:
-                raise NotImplementedError
-            re, im, _, _ = result
-            if im:
-                if not re:
-                    re = fzero
-                return make_mpc((re, im))
-            elif re:
-                return make_mpf(re)
-            else:
-                return make_mpf(fzero)
+            return quad_to_mpmath(result)
         except NotImplementedError:
             v = self._eval_evalf(prec)
             if v is None:
@@ -1750,3 +1744,55 @@ def N(x, n=15, **options):
     # by using rational=True, any evaluation of a string
     # will be done using exact values for the Floats
     return sympify(x, rational=True).evalf(n, **options)
+
+
+def _evalf_with_bounded_error(x: 'Expr', eps: 'Optional[Expr]' = None,
+                              m: int = 0,
+                              options: Optional[OPT_DICT] = None) -> TMP_RES:
+    """
+    Evaluate *x* to within a bounded absolute error.
+
+    Parameters
+    ==========
+
+    x : Expr
+        The quantity to be evaluated.
+    eps : Expr, None, optional (default=None)
+        Positive real upper bound on the acceptable error.
+    m : int, optional (default=0)
+        If *eps* is None, then use 2**(-m) as the upper bound on the error.
+    options: OPT_DICT
+        As in the ``evalf`` function.
+
+    Returns
+    =======
+
+    A tuple ``(re, im, re_acc, im_acc)``, as returned by ``evalf``.
+
+    See Also
+    ========
+
+    evalf
+
+    """
+    if eps is not None:
+        if not (eps.is_Rational or eps.is_Float) or not eps > 0:
+            raise ValueError("eps must be positive")
+        r, _, _, _ = evalf(1/eps, 1, {})
+        m = fastlog(r)
+
+    c, d, _, _ = evalf(x, 1, {})
+    # Note: If x = a + b*I, then |a| <= 2|c| and |b| <= 2|d|, with equality
+    # only in the zero case.
+    # If a is non-zero, then |c| = 2**nc for some integer nc, and c has
+    # bitcount 1. Therefore 2**fastlog(c) = 2**(nc+1) = 2|c| is an upper bound
+    # on |a|. Likewise for b and d.
+    nr, ni = fastlog(c), fastlog(d)
+    n = max(nr, ni) + 1
+    # If x is 0, then n is MINUS_INF, and p will be 1. Otherwise,
+    # n - 1 bits get us past the integer parts of a and b, and +1 accounts for
+    # the factor of <= sqrt(2) that is |x|/max(|a|, |b|).
+    p = max(1, m + n + 1)
+
+    options = options or {}
+    return evalf(x, p, options)

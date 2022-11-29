@@ -1184,8 +1184,25 @@ def test_rmul_pr19860():
     assert isinstance(c, Foo)
     assert c == Matrix([[7, 10], [15, 22]])
 
+
 def test_issue_18956():
     A = Array([[1, 2], [3, 4]])
     B = Matrix([[1,2],[3,4]])
     raises(TypeError, lambda: B + A)
     raises(TypeError, lambda: A + B)
+
+
+def test__eq__():
+    class My(object):
+        def __iter__(self):
+            yield 1
+            yield 2
+            return
+        def __getitem__(self, i):
+            return list(self)[i]
+    a = Matrix(2, 1, [1, 2])
+    assert a != My()
+    class My_sympy(My):
+        def _sympy_(self):
+            return Matrix(self)
+    assert a == My_sympy()

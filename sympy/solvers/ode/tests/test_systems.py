@@ -8,7 +8,7 @@ from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import Matrix
 from sympy.core.containers import Tuple
-from sympy.functions import exp, cos, sin, log, tan, Ci, Si, erf, erfi
+from sympy.functions import exp, cos, sin, log, Ci, Si, erf, erfi
 from sympy.matrices import dotprodsimp, NonSquareMatrixError
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.ode import constant_renumber
@@ -21,7 +21,7 @@ from sympy.solvers.ode.systems import (_classify_linear_system, linear_ode_to_ma
 from sympy.functions import airyai, airybi
 from sympy.integrals.integrals import Integral
 from sympy.simplify.ratsimp import ratsimp
-from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
+from sympy.testing.pytest import ON_CI, raises, slow, skip, XFAIL
 
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -360,7 +360,7 @@ def test__classify_linear_system():
     assert _classify_linear_system(eq4, funcs, t) == sol4
 
 
-    # Multiple matchs
+    # Multiple matches
 
     f, g = symbols("f g", cls=Function)
     y, t_ = symbols("y t_")
@@ -1071,8 +1071,8 @@ def test_sysode_linear_neq_order1_type2():
     eqs6 = [Eq(Derivative(f(x), x), -9*f(x) - 4*g(x)),
             Eq(Derivative(g(x), x), -4*g(x)),
             Eq(Derivative(h(x), x), h(x) + exp(x))]
-    sol6 = [Eq(f(x), C1*exp(-4*x)*Rational(-4, 5) + C2*exp(-9*x)),
-            Eq(g(x), C1*exp(-4*x)),
+    sol6 = [Eq(f(x), C2*exp(-4*x)*Rational(-4, 5) + C1*exp(-9*x)),
+            Eq(g(x), C2*exp(-4*x)),
             Eq(h(x), C3*exp(x) + x*exp(x))]
     assert dsolve(eqs6) == sol6
     assert checksysodesol(eqs6, sol6) == (True, [0, 0, 0])
@@ -1090,10 +1090,9 @@ def test_sysode_linear_neq_order1_type2():
     # https://github.com/sympy/sympy/issues/8567
     eqs8 = [Eq(Derivative(f(t), t), f(t) + 2*g(t)),
             Eq(Derivative(g(t), t), -2*f(t) + g(t) + 2*exp(t))]
-    sol8 = [Eq(f(t), C1*exp(t)*sin(2*t) + C2*exp(t)*cos(2*t) + exp(t)*cos(2*t)**2 +
-             2*exp(t)*sin(2*t)*tan(t)/(tan(t)**2 + 1)),
-            Eq(g(t), C1*exp(t)*cos(2*t) - C2*exp(t)*sin(2*t) - exp(t)*sin(2*t)*cos(2*t) +
-             2*exp(t)*cos(2*t)*tan(t)/(tan(t)**2 + 1))]
+    sol8 = [Eq(f(t), C1*exp(t)*sin(2*t) + C2*exp(t)*cos(2*t)
+                + exp(t)*sin(2*t)**2 + exp(t)*cos(2*t)**2),
+            Eq(g(t), C1*exp(t)*cos(2*t) - C2*exp(t)*sin(2*t))]
     assert dsolve(eqs8) == sol8
     assert checksysodesol(eqs8, sol8) == (True, [0, 0])
 
@@ -1174,14 +1173,11 @@ def test_sysode_linear_neq_order1_type2():
 
     eq14 = [Eq(Derivative(f(t), t), f(t) + g(t) + 81),
             Eq(Derivative(g(t), t), -2*f(t) + g(t) + 23)]
-    sol14 = [Eq(f(t), sqrt(2)*C1*exp(t)*sin(sqrt(2)*t)/2 + sqrt(2)*C2*exp(t)*cos(sqrt(2)*t)/2 +
-              sqrt(2)*exp(t)*sin(sqrt(2)*t)*Integral(-23*exp(-t)*sin(sqrt(2)*t)**2/cos(sqrt(2)*t) +
-              81*sqrt(2)*exp(-t)*sin(sqrt(2)*t) + 23*exp(-t)/cos(sqrt(2)*t), t)/2 +
-              185*sqrt(2)*sin(sqrt(2)*t)*cos(sqrt(2)*t)/6 - 58*cos(sqrt(2)*t)**2/3),
-             Eq(g(t), C1*exp(t)*cos(sqrt(2)*t) - C2*exp(t)*sin(sqrt(2)*t) +
-              exp(t)*cos(sqrt(2)*t)*Integral(-23*exp(-t)*sin(sqrt(2)*t)**2/cos(sqrt(2)*t) +
-              81*sqrt(2)*exp(-t)*sin(sqrt(2)*t) + 23*exp(-t)/cos(sqrt(2)*t), t) -
-              185*sin(sqrt(2)*t)**2/3 + 58*sqrt(2)*sin(sqrt(2)*t)*cos(sqrt(2)*t)/3)]
+    sol14 = [Eq(f(t), sqrt(2)*C1*exp(t)*sin(sqrt(2)*t)/2
+                    + sqrt(2)*C2*exp(t)*cos(sqrt(2)*t)/2
+                    - 58*sin(sqrt(2)*t)**2/3 - 58*cos(sqrt(2)*t)**2/3),
+             Eq(g(t), C1*exp(t)*cos(sqrt(2)*t) - C2*exp(t)*sin(sqrt(2)*t)
+                    - 185*sin(sqrt(2)*t)**2/3 - 185*cos(sqrt(2)*t)**2/3)]
     assert dsolve(eq14) == sol14
     assert checksysodesol(eq14, sol14) == (True, [0,0])
 
@@ -1273,6 +1269,17 @@ def test_sysode_linear_neq_order1_type2():
     assert dsolve(eq26) == sol26
     assert checksysodesol(eq26 , sol26) == (True , [0,0])
 
+    # Test Case added for issue #22715
+    # https://github.com/sympy/sympy/issues/22715
+
+    eq27 = [Eq(diff(x(t),t),-1*y(t)+10), Eq(diff(y(t),t),5*x(t)-2*y(t)+3)]
+    sol27 = [Eq(x(t), (C1/5 - 2*C2/5)*exp(-t)*cos(2*t)
+                    - (2*C1/5 + C2/5)*exp(-t)*sin(2*t)
+                    + 17*sin(2*t)**2/5 + 17*cos(2*t)**2/5),
+            Eq(y(t), C1*exp(-t)*cos(2*t) - C2*exp(-t)*sin(2*t)
+                    + 10*sin(2*t)**2 + 10*cos(2*t)**2)]
+    assert dsolve(eq27) == sol27
+    assert checksysodesol(eq27 , sol27) == (True , [0,0])
 
 
 def test_sysode_linear_neq_order1_type3():
@@ -1640,18 +1647,12 @@ def test_higher_order_to_first_order_9():
 
     eqs9 = [f(x) + g(x) - 2*exp(I*x) + 2*Derivative(f(x), x) + Derivative(f(x), (x, 2)),
             f(x) + g(x) - 2*exp(I*x) + 2*Derivative(g(x), x) + Derivative(g(x), (x, 2))]
-    sol9 = [Eq(f(x), -C1 + C2*exp(-2*x)/2 + (C3/2 + C4/2)*exp(-x)*sin(x) + (2 +
-             I)*exp(I*x)*sin(x)**2*Rational(-1, 5) + (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) + (4 -
-             3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) +
-             exp(x)*exp(I*x)*sin(x) + exp(x)*exp(I*x)/cos(x), x) -
-             exp(-x)*cos(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-             exp(x)*exp(I*x)/cos(x), x) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2))),
-            Eq(g(x), C1 + C2*exp(-2*x)*Rational(-1, 2) + (C3/2 + C4/2)*exp(-x)*sin(x) + (2 +
-             I)*exp(I*x)*sin(x)**2*Rational(-1, 5) + (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) + (4 -
-             3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) +
-             exp(x)*exp(I*x)*sin(x) + exp(x)*exp(I*x)/cos(x), x) -
-             exp(-x)*cos(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-             exp(x)*exp(I*x)/cos(x), x) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2)))]
+    sol9 =  [Eq(f(x), -C1 + C4*exp(-2*x)/2 - (C2/2 - C3/2)*exp(-x)*cos(x)
+                    + (C2/2 + C3/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
+                    + 2*((1 - 2*I)*exp(I*x)*cos(x)**2/5)),
+            Eq(g(x), C1 - C4*exp(-2*x)/2 - (C2/2 - C3/2)*exp(-x)*cos(x)
+                    + (C2/2 + C3/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
+                    + 2*((1 - 2*I)*exp(I*x)*cos(x)**2/5))]
     assert dsolve(eqs9) == sol9
     assert checksysodesol(eqs9, sol9) == (True, [0, 0])
 
@@ -1976,11 +1977,8 @@ def test_linodesolve():
 
     # non-homogeneous term assumed to be 0
     sol1 = [-C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 - sqrt(5)*C2*exp(-sqrt(5)*t/2
-                - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 - exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 +
-                sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2
-                - exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2,
-            C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)
-                + exp(-t/2 + sqrt(5)*t/2)*Integral(0, t) + exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)]
+                - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2,
+            C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)]
     assert constant_renumber(linodesolve(A, t, type="type2"), variables=[t]) == sol1
 
     # Testing the Errors
@@ -2105,8 +2103,8 @@ def test_linear_neq_order1_type2_slow1():
 # https://github.com/sympy/sympy/issues/9204
 @slow
 def test_linear_new_order1_type2_de_lorentz_slow_check():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
 
     m = Symbol("m", real=True)
     q = Symbol("q", real=True)
@@ -2250,8 +2248,8 @@ def test_neq_order1_type4_slow_check3():
 @XFAIL
 @slow
 def test_linear_3eq_order1_type4_long_dsolve_slow_xfail():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
 
     eq, sol = _linear_3eq_order1_type4_long()
 
@@ -2263,8 +2261,8 @@ def test_linear_3eq_order1_type4_long_dsolve_slow_xfail():
 
 @slow
 def test_linear_3eq_order1_type4_long_dsolve_dotprodsimp():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
 
     eq, sol = _linear_3eq_order1_type4_long()
 
@@ -2279,8 +2277,8 @@ def test_linear_3eq_order1_type4_long_dsolve_dotprodsimp():
 
 @slow
 def test_linear_3eq_order1_type4_long_check():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
 
     eq, sol = _linear_3eq_order1_type4_long()
     assert checksysodesol(eq, sol) == (True, [0, 0, 0])
@@ -2363,8 +2361,8 @@ def test_second_order_type2_slow1():
 @slow
 @XFAIL
 def test_nonlinear_3eq_order1_type1():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     a, b, c = symbols('a b c')
 
     eqs = [
@@ -2392,8 +2390,8 @@ def test_nonlinear_3eq_order1_type4():
 @slow
 @XFAIL
 def test_nonlinear_3eq_order1_type3():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     eqs = [
         Eq(f(x).diff(x), (2*f(x)**2 - 3        )),
         Eq(g(x).diff(x), (4         - 2*h(x)   )),

@@ -1,7 +1,8 @@
 """Implementation of the Kronecker product"""
+from functools import reduce
+from math import prod
 
-
-from sympy.core import Mul, prod, sympify
+from sympy.core import Mul, sympify
 from sympy.functions import adjoint
 from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
@@ -35,7 +36,7 @@ def kronecker_product(*matrices):
     with known dimension the explicit matrix can be obtained with
     ``.as_explicit()``
 
-    >>> from sympy.matrices import kronecker_product, MatrixSymbol
+    >>> from sympy import kronecker_product, MatrixSymbol
     >>> A = MatrixSymbol('A', 2, 2)
     >>> B = MatrixSymbol('B', 2, 2)
     >>> kronecker_product(A)
@@ -53,7 +54,7 @@ def kronecker_product(*matrices):
 
     For explicit matrices the Kronecker product is returned as a Matrix
 
-    >>> from sympy.matrices import Matrix, kronecker_product
+    >>> from sympy import Matrix, kronecker_product
     >>> sigma_x = Matrix([
     ... [0, 1],
     ... [1, 0]])
@@ -96,7 +97,7 @@ class KroneckerProduct(MatrixExpr):
     ``kronecker_product()`` or call the ``.doit()`` or  ``.as_explicit()``
     methods.
 
-    >>> from sympy.matrices import KroneckerProduct, MatrixSymbol
+    >>> from sympy import KroneckerProduct, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
     >>> isinstance(KroneckerProduct(A, B), KroneckerProduct)
@@ -144,7 +145,7 @@ class KroneckerProduct(MatrixExpr):
 
     def _eval_trace(self):
         from .trace import trace
-        return prod(trace(a) for a in self.args)
+        return Mul(*[trace(a) for a in self.args])
 
     def _eval_determinant(self):
         from .determinant import det, Determinant
@@ -152,7 +153,7 @@ class KroneckerProduct(MatrixExpr):
             return Determinant(self)
 
         m = self.rows
-        return prod(det(a)**(m/a.rows) for a in self.args)
+        return Mul(*[det(a)**(m/a.rows) for a in self.args])
 
     def _eval_inverse(self):
         try:
@@ -223,10 +224,10 @@ class KroneckerProduct(MatrixExpr):
         else:
             return self * other
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
         return canonicalize(KroneckerProduct(*args))
@@ -358,7 +359,6 @@ def _kronecker_dims_key(expr):
 
 
 def kronecker_mat_add(expr):
-    from functools import reduce
     args = sift(expr.args, _kronecker_dims_key)
     nonkrons = args.pop((0,), None)
     if not args:
@@ -405,8 +405,8 @@ def combine_kronecker(expr):
     Examples
     ========
 
-    >>> from sympy.matrices.expressions import MatrixSymbol, KroneckerProduct, combine_kronecker
-    >>> from sympy import symbols
+    >>> from sympy.matrices.expressions import combine_kronecker
+    >>> from sympy import MatrixSymbol, KroneckerProduct, symbols
     >>> m, n = symbols(r'm, n', integer=True)
     >>> A = MatrixSymbol('A', m, n)
     >>> B = MatrixSymbol('B', n, m)

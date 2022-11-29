@@ -164,7 +164,7 @@ def E_nl(n, Z=1):
     """
     Returns the energy of the state (n, l) in Hartree atomic units.
 
-    The energy doesn't depend on "l".
+    The energy does not depend on "l".
 
     Parameters
     ==========

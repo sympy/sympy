@@ -143,7 +143,7 @@ def npartitions(n, verbose=False):
     P(n) is computed using the Hardy-Ramanujan-Rademacher formula [1]_.
 
 
-    The correctness of this implementation has been tested through 10**10.
+    The correctness of this implementation has been tested through $10^{10}$.
 
     Examples
     ========

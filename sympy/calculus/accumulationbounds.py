@@ -1,6 +1,6 @@
 from sympy.core import Add, Mul, Pow, S
 from sympy.core.basic import Basic
-from sympy.core.expr import AtomicExpr, Expr
+from sympy.core.expr import Expr
 from sympy.core.numbers import _sympifyit, oo, zoo
 from sympy.core.relational import is_le, is_lt, is_ge, is_gt
 from sympy.core.sympify import _sympify
@@ -11,7 +11,7 @@ from sympy.series.order import Order
 from sympy.sets.sets import FiniteSet
 
 
-class AccumulationBounds(AtomicExpr):
+class AccumulationBounds(Expr):
     r"""
     # Note AccumulationBounds has an alias: AccumBounds
 
@@ -153,7 +153,7 @@ class AccumulationBounds(AtomicExpr):
     AccumBounds(0, 1)
 
     Some symbol in an expression can be substituted for a AccumulationBounds
-    object. But it doesn't necessarily evaluate the AccumulationBounds for
+    object. But it does not necessarily evaluate the AccumulationBounds for
     that expression.
 
     The same expression can be evaluated to different values depending upon
@@ -181,6 +181,7 @@ class AccumulationBounds(AtomicExpr):
     """
 
     is_extended_real = True
+    is_number = False
 
     def __new__(cls, min, max):
 
@@ -522,7 +523,7 @@ class AccumulationBounds(AtomicExpr):
                             return AccumBounds(self.max**other, oo)
                         if self.max.is_zero:
                             return AccumBounds(self.min**other, oo)
-                        return AccumBounds(0, oo)
+                        return (1/self)**(-other)
                     return AccumBounds(
                         S.Zero, Max(self.min**other, self.max**other))
                 elif other % 2 == 1:
@@ -531,7 +532,7 @@ class AccumulationBounds(AtomicExpr):
                             return AccumBounds(self.max**other, oo)
                         if self.max.is_zero:
                             return AccumBounds(-oo, self.min**other)
-                        return AccumBounds(-oo, oo)
+                        return (1/self)**(-other)
                     return AccumBounds(self.min**other, self.max**other)
 
             # non-integer exponent

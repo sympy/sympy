@@ -1034,6 +1034,9 @@ def test_Equality_rewrite_as_Add():
     assert eq.rewrite(Add) == 2*x
     assert eq.rewrite(Add, evaluate=None).args == (x, x, y, -y)
     assert eq.rewrite(Add, evaluate=False).args == (x, y, x, -y)
+    for e in (True, False, None):
+        assert Eq(x, 0, evaluate=e).rewrite(Add) == x
+        assert Eq(0, x, evaluate=e).rewrite(Add) == x
 
 
 def test_issue_15847():

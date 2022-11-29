@@ -1,6 +1,6 @@
 import random
 
-from sympy import tensordiagonal, eye, KroneckerDelta
+from sympy import tensordiagonal, eye, KroneckerDelta, Array
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.expressions.diagonal import DiagMatrix
@@ -12,7 +12,7 @@ from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement, \
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
     ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE, _array_tensor_product, \
-    _array_contraction, _array_diagonal, _array_add, _permute_dims
+    _array_contraction, _array_diagonal, _array_add, _permute_dims, Reshape
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -41,6 +41,8 @@ def test_array_symbol_and_element():
     A = ArraySymbol("A", (2,))
     A0 = ArrayElement(A, (0,))
     A1 = ArrayElement(A, (1,))
+    assert A[0] == A0
+    assert A[1] != A0
     assert A.as_explicit() == ImmutableDenseNDimArray([A0, A1])
 
     A2 = tensorproduct(A, A)
@@ -59,6 +61,23 @@ def test_array_symbol_and_element():
 
     p = _permute_dims(A, Permutation(0, 2, 1))
     assert isinstance(p, PermuteDims)
+
+    A = ArraySymbol("A", (2,))
+    raises(IndexError, lambda: A[()])
+    raises(IndexError, lambda: A[0, 1])
+    raises(ValueError, lambda: A[-1])
+    raises(ValueError, lambda: A[2])
+
+    O = OneArray(3, 4)
+    Z = ZeroArray(m, n)
+
+    raises(IndexError, lambda: O[()])
+    raises(IndexError, lambda: O[1, 2, 3])
+    raises(ValueError, lambda: O[3, 0])
+    raises(ValueError, lambda: O[0, 4])
+
+    assert O[1, 2] == 1
+    assert Z[1, 2] == 0
 
 
 def test_zero_array():
@@ -675,6 +694,12 @@ def test_array_expressions_no_canonicalization():
     assert expr.doit() == PermuteDims(M, [1, 0])
     assert expr._canonicalize() == expr.doit()
 
+    # Reshape
+
+    expr = Reshape(A, (k**2,))
+    assert expr.shape == (k**2,)
+    assert isinstance(expr, Reshape)
+
 
 def test_array_expr_construction_with_functions():
 
@@ -711,6 +736,14 @@ def test_array_expr_construction_with_functions():
     expr = permutedims(PermuteDims(tp, [1, 0, 2, 3]), [0, 1, 3, 2])
     assert expr == PermuteDims(tp, [1, 0, 3, 2])
 
+    expr = PermuteDims(tp, index_order_new=["a", "b", "c", "d"], index_order_old=["d", "c", "b", "a"])
+    assert expr == PermuteDims(tp, [3, 2, 1, 0])
+
+    arr = Array(range(32)).reshape(2, 2, 2, 2, 2)
+    expr = PermuteDims(arr, index_order_new=["a", "b", "c", "d", "e"], index_order_old=['b', 'e', 'a', 'd', 'c'])
+    assert expr == PermuteDims(arr, [2, 0, 4, 3, 1])
+    assert expr.as_explicit() == permutedims(arr, index_order_new=["a", "b", "c", "d", "e"], index_order_old=['b', 'e', 'a', 'd', 'c'])
+
 
 def test_array_element_expressions():
     # Check commutative property:
@@ -728,3 +761,48 @@ def test_array_element_expressions():
     assert K4[i, j, k, l].diff(K4[1, 2, 3, 4]) == (
         KroneckerDelta(i, 1)*KroneckerDelta(j, 2)*KroneckerDelta(k, 3)*KroneckerDelta(l, 4)
     )
+
+
+def test_array_expr_reshape():
+
+    A = MatrixSymbol("A", 2, 2)
+    B = ArraySymbol("B", (2, 2, 2))
+    C = Array([1, 2, 3, 4])
+
+    expr = Reshape(A, (4,))
+    assert expr.expr == A
+    assert expr.shape == (4,)
+    assert expr.as_explicit() == Array([A[0, 0], A[0, 1], A[1, 0], A[1, 1]])
+
+    expr = Reshape(B, (2, 4))
+    assert expr.expr == B
+    assert expr.shape == (2, 4)
+    ee = expr.as_explicit()
+    assert isinstance(ee, ImmutableDenseNDimArray)
+    assert ee.shape == (2, 4)
+    assert ee == Array([[B[0, 0, 0], B[0, 0, 1], B[0, 1, 0], B[0, 1, 1]], [B[1, 0, 0], B[1, 0, 1], B[1, 1, 0], B[1, 1, 1]]])
+
+    expr = Reshape(A, (k, 2))
+    assert expr.shape == (k, 2)
+
+    raises(ValueError, lambda: Reshape(A, (2, 3)))
+    raises(ValueError, lambda: Reshape(A, (3,)))
+
+    expr = Reshape(C, (2, 2))
+    assert expr.expr == C
+    assert expr.shape == (2, 2)
+    assert expr.doit() == Array([[1, 2], [3, 4]])
+
+
+def test_array_expr_as_explicit_with_explicit_component_arrays():
+    # Test if .as_explicit() works with explicit-component arrays
+    # nested in array expressions:
+    from sympy.abc import x, y, z, t
+    A = Array([[x, y], [z, t]])
+    assert ArrayTensorProduct(A, A).as_explicit() == tensorproduct(A, A)
+    assert ArrayDiagonal(A, (0, 1)).as_explicit() == tensordiagonal(A, (0, 1))
+    assert ArrayContraction(A, (0, 1)).as_explicit() == tensorcontraction(A, (0, 1))
+    assert ArrayAdd(A, A).as_explicit() == A + A
+    assert ArrayElementwiseApplyFunc(sin, A).as_explicit() == A.applyfunc(sin)
+    assert PermuteDims(A, [1, 0]).as_explicit() == permutedims(A, [1, 0])
+    assert Reshape(A, [4]).as_explicit() == A.reshape(4)

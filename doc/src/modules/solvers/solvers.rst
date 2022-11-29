@@ -1,4 +1,4 @@
-.. _solvers:
+.. _solvers-docs:
 
 Solvers
 =======
@@ -9,12 +9,21 @@ The *solvers* module in SymPy implements methods for solving equations.
 
 .. note::
 
-   It is recommended to use :func:`solveset` to solve univariate equations,
-   :func:`~.linsolve` to solve system of linear equations
-   instead of :func:`~sympy.solvers.solvers.solve` and :func:`~.nonlinsolve` to
-   solve system of non linear equations since sooner or later the :func:`~.solveset`
-   will take over :func:`~sympy.solvers.solvers.solve` either internally or externally.
+   For a beginner-friendly guide focused on solving common types of equations,
+   refer to :ref:`solving-guide`.
 
+.. note::
+
+   :func:`~sympy.solvers.solvers.solve` is an older more mature general
+   function for solving many types of equations.
+   :func:`~sympy.solvers.solvers.solve` has many options and uses different
+   methods internally to determine what type of equations you pass it, so if
+   you know what type of equation you are dealing with you may want to use the
+   newer :func:`solveset` which solves univariate equations, :func:`~.linsolve`
+   which solves system of linear equations, and :func:`~.nonlinsolve` which
+   solves systems of non linear equations.
+
+.. _solvers-algebraic-equations:
 
 Algebraic equations
 --------------------

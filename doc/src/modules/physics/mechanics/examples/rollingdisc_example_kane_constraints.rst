@@ -36,7 +36,7 @@ zero. They are normal to the ground, along the path which the disc is rolling,
 and along the ground in a perpendicular direction. ::
 
   >>> C = Point('C')
-  >>> C.set_vel(N, u4 * L.x + u5 * (Y.z ^ L.x) + u6 * Y.z)
+  >>> C.set_vel(N, u4 * L.x + u5 * cross(Y.z, L.x) + u6 * Y.z)
   >>> Dmc = C.locatenew('Dmc', r * L.z)
   >>> vel = Dmc.v2pt_theory(C, N, R)
   >>> I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
@@ -46,7 +46,7 @@ Just as we previously introduced three speeds as part of this process, we also
 introduce three forces; they are in the same direction as the speeds, and
 represent the constraint forces in those directions. ::
 
-  >>> ForceList = [(Dmc, - m * g * Y.z), (C, f1 * L.x + f2 * (Y.z ^ L.x) + f3 * Y.z)]
+  >>> ForceList = [(Dmc, - m * g * Y.z), (C, f1 * L.x + f2 * cross(Y.z, L.x) + f3 * Y.z)]
   >>> BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
   >>> BodyList = [BodyD]
 

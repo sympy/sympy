@@ -1,8 +1,8 @@
-from sympy.matrices.dense import Matrix
+from sympy.matrices.dense import Matrix, eye
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
 from sympy.core import symbols
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from sympy.matrices import ShapeError, MatrixSymbol
 from sympy.matrices.expressions import (HadamardProduct, hadamard_product, HadamardPower, hadamard_power)
@@ -46,7 +46,8 @@ def test_mixed_indexing():
 def test_canonicalize():
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    expr = HadamardProduct(X, check=False)
+    with warns_deprecated_sympy():
+        expr = HadamardProduct(X, check=False)
     assert isinstance(expr, HadamardProduct)
     expr2 = expr.doit() # unpack is called
     assert isinstance(expr2, MatrixSymbol)
@@ -56,7 +57,6 @@ def test_canonicalize():
     assert HadamardProduct(U, X, X, U).doit() == HadamardPower(X, 2)
     assert HadamardProduct(X, U, Y).doit() == HadamardProduct(X, Y)
     assert HadamardProduct(X, Z, U, Y).doit() == Z
-
 
 
 def test_hadamard():
@@ -74,13 +74,15 @@ def test_hadamard():
     with raises(ShapeError):
         hadamard_product(A, C)
         hadamard_product(A, I)
-    assert hadamard_product(X, I) == X
-    assert isinstance(hadamard_product(X, I), MatrixSymbol)
+    assert hadamard_product(X, I) == HadamardProduct(I, X)
+    assert isinstance(hadamard_product(X, I), HadamardProduct)
 
     a = MatrixSymbol("a", k, 1)
     expr = MatAdd(ZeroMatrix(k, 1), OneMatrix(k, 1))
     expr = HadamardProduct(expr, a)
     assert expr.doit() == a
+
+    raises(ValueError, lambda: HadamardProduct())
 
 
 def test_hadamard_product_with_explicit_mat():
@@ -92,6 +94,10 @@ def test_hadamard_product_with_explicit_mat():
     assert expr == ret
     expr = hadamard_product(A, X, B)
     assert expr == HadamardProduct(ret, X)
+    expr = hadamard_product(eye(3), A)
+    assert expr == Matrix([[A[0, 0], 0, 0], [0, A[1, 1], 0], [0, 0, A[2, 2]]])
+    expr = hadamard_product(eye(3), eye(3))
+    assert expr == eye(3)
 
 
 def test_hadamard_power():

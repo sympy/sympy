@@ -15,11 +15,12 @@ from sympy.simplify.powsimp import powsimp
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
-    roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
-    roots_binomial, preprocess_roots, roots)
+    roots_quadratic, roots_cubic, roots_quartic, roots_quintic,
+    roots_cyclotomic, roots_binomial, preprocess_roots, roots)
 
 from sympy.polys.orthopolys import legendre_poly
-from sympy.polys.polyerrors import PolynomialError
+from sympy.polys.polyerrors import PolynomialError, \
+    UnsolvableFactorError
 from sympy.polys.polyutils import _nsort
 
 from sympy.testing.pytest import raises, slow
@@ -96,7 +97,7 @@ def test_issue_7724():
 def test_issue_8438():
     p = Poly([1, y, -2, -3], x).as_expr()
     roots = roots_cubic(Poly(p, x), x)
-    z = Rational(-3, 2) - I*Rational(7, 2)  # this will fail in code given in commit msg
+    z = Rational(-3, 2) - I*7/2  # this will fail in code given in commit msg
     post = [r.subs(y, z) for r in roots]
     assert set(post) == \
     set(roots_cubic(Poly(p.subs(y, z), x)))
@@ -247,6 +248,16 @@ def test_roots_quartic():
 def test_issue_21287():
     assert not any(isinstance(i, Piecewise) for i in roots_quartic(
         Poly(x**4 - x**2*(3 + 5*I) + 2*x*(-1 + I) - 1 + 3*I, x)))
+
+
+def test_roots_quintic():
+    eqs = (x**5 - 2,
+            (x/2 + 1)**5 - 5*(x/2 + 1) + 12,
+            x**5 - 110*x**3 - 55*x**2 + 2310*x + 979)
+    for eq in eqs:
+        roots = roots_quintic(Poly(eq))
+        assert len(roots) == 5
+        assert all(eq.subs(x, r.n(10)).n(chop = 1e-5) == 0 for r in roots)
 
 
 def test_roots_cyclotomic():
@@ -632,6 +643,14 @@ def test_roots_preprocessed():
         assert match is not None and abs(match[w] - r2) < 1e-10
 
 
+def test_roots_strict():
+    assert roots(x**2 - 2*x + 1, strict=False) == {1: 2}
+    assert roots(x**2 - 2*x + 1, strict=True) == {1: 2}
+
+    assert roots(x**6 - 2*x**5 - x**2 + 3*x - 2, strict=False) == {2: 1}
+    raises(UnsolvableFactorError, lambda: roots(x**6 - 2*x**5 - x**2 + 3*x - 2, strict=True))
+
+
 def test_roots_mixed():
     f = -1936 - 5056*x - 7592*x**2 + 2704*x**3 - 49*x**4
 
@@ -728,3 +747,12 @@ def test_issue_17454():
 def test_issue_20913():
     assert Poly(x + 9671406556917067856609794, x).real_roots() == [-9671406556917067856609794]
     assert Poly(x**3 + 4, x).real_roots() == [-2**(S(2)/3)]
+
+
+def test_issue_22768():
+    e = Rational(1, 3)
+    r = (-1/a)**e*(a + 1)**(5*e)
+    assert roots(Poly(a*x**3 + (a + 1)**5, x)) == {
+        r: 1,
+        -r*(1 + sqrt(3)*I)/2: 1,
+        r*(-1 + sqrt(3)*I)/2: 1}

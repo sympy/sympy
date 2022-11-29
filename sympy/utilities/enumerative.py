@@ -538,7 +538,7 @@ class MultisetPartitionTraverser():
         decision is made to fail, it must be accurate, otherwise the
         enumeration will miss some partitions.  But, it is OK not to
         capture all the possible failures -- if a part is passed that
-        shouldn't be, the resulting too-large partitions are filtered
+        should not be, the resulting too-large partitions are filtered
         by the enumeration one level up.  However, as is usual in
         constrained enumerations, failing early is advantageous.
 
@@ -842,18 +842,15 @@ class MultisetPartitionTraverser():
             return
         self._initialize_enumeration(multiplicities)
         while True:
-            good_partition = True
             while self.spread_part_multiplicity():
-                self.db_trace("spread 1")
+                self.db_trace('spread 1')
                 if self.lpart >= ub:
                     self.discarded += 1
-                    good_partition = False
-                    self.db_trace("  Discarding")
+                    self.db_trace('  Discarding')
                     self.lpart = ub - 2
                     break
-
-            # M4  Visit a partition
-            if good_partition:
+            else:
+                # M4  Visit a partition
                 state = [self.f, self.lpart, self.pstack]
                 yield state
 

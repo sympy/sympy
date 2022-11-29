@@ -24,7 +24,7 @@ Examples
 ========
 
 >>> from sympy.stats import P, E, variance, Die, Normal
->>> from sympy import Eq, simplify
+>>> from sympy import simplify
 >>> X, Y = Die('X', 6), Die('Y', 6) # Define two six sided dice
 >>> Z = Normal('Z', 0, 1) # Declare a Normal random variable with mean 0, std 1
 >>> P(X>3) # Probability X is greater than 3
@@ -84,7 +84,7 @@ exp(-x)
 3. If you want to create a Finite Random Variable:
 
 >>> from sympy.stats import FiniteRV, P, E
->>> from sympy import Rational
+>>> from sympy import Rational, Eq
 >>> pmf = {1: Rational(1, 3), 2: Rational(1, 6), 3: Rational(1, 4), 4: Rational(1, 4)}
 >>> X = FiniteRV('X', pmf)
 >>> E(X)

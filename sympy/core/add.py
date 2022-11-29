@@ -90,6 +90,12 @@ class Add(Expr, AssocOp):
     """
     Expression representing addition operation for algebraic group.
 
+    .. deprecated:: 1.7
+
+       Using arguments that aren't subclasses of :class:`~.Expr` in core
+       operators (:class:`~.Mul`, :class:`~.Add`, and :class:`~.Pow`) is
+       deprecated. See :ref:`non-expr-args-deprecated` for details.
+
     Every argument of ``Add()`` must be ``Expr``. Infix operator ``+``
     on most scalar objects in SymPy calls this class.
 
@@ -409,37 +415,6 @@ class Add(Expr, AssocOp):
     def could_extract_minus_sign(self):
         return _could_extract_minus_sign(self)
 
-    def as_coefficients_dict(a):
-        """Return a dictionary mapping terms to their Rational coefficient.
-        Since the dictionary is a defaultdict, inquiries about terms which
-        were not present will return a coefficient of 0. If an expression is
-        not an Add it is considered to have a single term.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import a, x
-        >>> (3*x + a*x + 4).as_coefficients_dict()
-        {1: 4, x: 3, a*x: 1}
-        >>> _[a]
-        0
-        >>> (3*a*x).as_coefficients_dict()
-        {a*x: 3}
-        """
-
-        d = defaultdict(list)
-        for ai in a.args:
-            c, m = ai.as_coeff_Mul()
-            d[m].append(c)
-        for k, v in d.items():
-            if len(v) == 1:
-                d[k] = v[0]
-            else:
-                d[k] = Add(*v)
-        di = defaultdict(int)
-        di.update(d)
-        return di
-
     @cacheit
     def as_coeff_add(self, *deps):
         """
@@ -456,7 +431,7 @@ class Add(Expr, AssocOp):
         (0, (7*x,))
         """
         if deps:
-            l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
+            l1, l2 = sift(self.args, lambda x: x.has_free(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
         coeff, notrat = self.args[0].as_coeff_add()
         if coeff is not S.Zero:
@@ -478,8 +453,22 @@ class Add(Expr, AssocOp):
     # issue 5524.
 
     def _eval_power(self, e):
+        from .evalf import pure_complex
+        from .relational import is_eq
+        if len(self.args) == 2 and any(_.is_infinite for _ in self.args):
+            if e.is_zero is False and is_eq(e, S.One) is False:
+                # looking for literal a + I*b
+                a, b = self.args
+                if a.coeff(S.ImaginaryUnit):
+                    a, b = b, a
+                ico = b.coeff(S.ImaginaryUnit)
+                if ico and ico.is_extended_real and a.is_extended_real:
+                    if e.is_extended_negative:
+                        return S.Zero
+                    if e.is_extended_positive:
+                        return S.ComplexInfinity
+            return
         if e.is_Rational and self.is_number:
-            from .evalf import pure_complex
             ri = pure_complex(self)
             if ri:
                 r, i = ri
@@ -599,6 +588,8 @@ class Add(Expr, AssocOp):
         """
         # clear rational denominator
         content, expr = self.primitive()
+        if not isinstance(expr, Add):
+            return Mul(content, expr, evaluate=False).as_numer_denom()
         ncon, dcon = content.as_numer_denom()
 
         # collect numerators and denominators of the terms
@@ -693,10 +684,11 @@ class Add(Expr, AssocOp):
             else:
                 return
         b = self.func(*nz)
-        if b.is_zero:
-            return fuzzy_not(self.func(*im_I).is_zero)
-        elif b.is_zero is False:
-            return False
+        if b != self:
+            if b.is_zero:
+                return fuzzy_not(self.func(*im_I).is_zero)
+            elif b.is_zero is False:
+                return False
 
     def _eval_is_zero(self):
         if self.is_commutative is False:
@@ -754,6 +746,22 @@ class Add(Expr, AssocOp):
             if a is None:
                 return
         return False
+
+    def _all_nonneg_or_nonppos(self):
+        nn = np = 0
+        for a in self.args:
+            if a.is_nonnegative:
+                if np:
+                    return False
+                nn = 1
+            elif a.is_nonpositive:
+                if nn:
+                    return False
+                np = 1
+            else:
+                break
+        else:
+            return True
 
     def _eval_is_extended_positive(self):
         if self.is_number:
@@ -1001,12 +1009,16 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.core.symbol import Dummy, Symbol
         from sympy.series.order import Order
         from sympy.functions.elementary.exponential import log
         from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
         from .function import expand_mul
 
-        old = self
+        o = self.getO()
+        if o is None:
+            o = Order(0)
+        old = self.removeO()
 
         if old.has(Piecewise):
             old = piecewise_fold(old)
@@ -1025,7 +1037,8 @@ class Add(Expr, AssocOp):
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        leading_terms = [t.as_leading_term(x, logx=logx, cdir=cdir) for t in expr.args]
+        _logx = Dummy('logx') if logx is None else logx
+        leading_terms = [t.as_leading_term(x, logx=_logx, cdir=cdir) for t in expr.args]
 
         min, new_expr = Order(0), 0
 
@@ -1041,6 +1054,9 @@ class Add(Expr, AssocOp):
         except TypeError:
             return expr
 
+        if logx is None:
+            new_expr = new_expr.subs(_logx, log(x))
+
         is_zero = new_expr.is_zero
         if is_zero is None:
             new_expr = new_expr.trigsimp().cancel()
@@ -1048,16 +1064,21 @@ class Add(Expr, AssocOp):
         if is_zero is True:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
-            n0 = min.getn()
+            try:
+                n0 = min.getn()
+            except NotImplementedError:
+                n0 = S.One
+            if n0.has(Symbol):
+                n0 = S.One
             res = Order(1)
             incr = S.One
             while res.is_Order:
-                res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
+                res = old._eval_nseries(x, n=n0+incr, logx=logx, cdir=cdir).cancel().powsimp().trigsimp()
                 incr *= 2
             return res.as_leading_term(x, logx=logx, cdir=cdir)
 
         elif new_expr is S.NaN:
-            return old.func._from_args(infinite)
+            return old.func._from_args(infinite) + o
 
         else:
             return new_expr
@@ -1209,7 +1230,7 @@ class Add(Expr, AssocOp):
                         if q not in common_q:
                             r.pop(q)
                     for q in r:
-                        r[q] = prod(r[q])
+                        r[q] = Mul(*r[q])
                 # find the gcd of bases for each q
                 G = []
                 for q in common_q:
@@ -1251,9 +1272,9 @@ class Add(Expr, AssocOp):
     def __neg__(self):
         if not global_parameters.distribute:
             return super().__neg__()
-        return Add(*[-i for i in self.args])
+        return Mul(S.NegativeOne, self)
 
 add = AssocOpDispatcher('add')
 
-from .mul import Mul, _keep_coeff, prod, _unevaluated_Mul
+from .mul import Mul, _keep_coeff, _unevaluated_Mul
 from .numbers import Rational

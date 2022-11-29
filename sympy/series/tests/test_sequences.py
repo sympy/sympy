@@ -29,7 +29,10 @@ def test_EmptySequence():
 
 
 def test_SeqExpr():
-    s = SeqExpr((1, n, y), (x, 0, 10))
+    #SeqExpr is a baseclass and does not take care of
+    #ensuring all arguments are Basics hence the use of
+    #Tuple(...) here.
+    s = SeqExpr(Tuple(1, n, y), Tuple(x, 0, 10))
 
     assert isinstance(s, SeqExpr)
     assert s.gen == (1, n, y)
@@ -39,7 +42,7 @@ def test_SeqExpr():
     assert s.length == 11
     assert s.variables == (x,)
 
-    assert SeqExpr((1, 2, 3), (x, 0, oo)).length is oo
+    assert SeqExpr(Tuple(1, 2, 3), Tuple(x, 0, oo)).length is oo
 
 
 def test_SeqPer():

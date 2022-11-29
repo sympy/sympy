@@ -1,4 +1,4 @@
-from typing import Dict as tDict, Union as tUnion, Type
+from __future__ import annotations
 
 from .basic import Atom, Basic
 from .sorting import ordered
@@ -9,7 +9,7 @@ from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
 from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 
@@ -82,10 +82,66 @@ class Relational(Boolean, EvalfMixin):
     >>> Rel(y, x + x**2, '==')
     Eq(y, x**2 + x)
 
+    A relation's type can be defined upon creation using ``rop``.
+    The relation type of an existing expression can be obtained
+    using its ``rel_op`` property.
+    Here is a table of all the relation types, along with their
+    ``rop`` and ``rel_op`` values:
+
+    +---------------------+----------------------------+------------+
+    |Relation             |``rop``                     |``rel_op``  |
+    +=====================+============================+============+
+    |``Equality``         |``==`` or ``eq`` or ``None``|``==``      |
+    +---------------------+----------------------------+------------+
+    |``Unequality``       |``!=`` or ``ne``            |``!=``      |
+    +---------------------+----------------------------+------------+
+    |``GreaterThan``      |``>=`` or ``ge``            |``>=``      |
+    +---------------------+----------------------------+------------+
+    |``LessThan``         |``<=`` or ``le``            |``<=``      |
+    +---------------------+----------------------------+------------+
+    |``StrictGreaterThan``|``>`` or ``gt``             |``>``       |
+    +---------------------+----------------------------+------------+
+    |``StrictLessThan``   |``<`` or ``lt``             |``<``       |
+    +---------------------+----------------------------+------------+
+
+    For example, setting ``rop`` to ``==`` produces an
+    ``Equality`` relation, ``Eq()``.
+    So does setting ``rop`` to ``eq``, or leaving ``rop`` unspecified.
+    That is, the first three ``Rel()`` below all produce the same result.
+    Using a ``rop`` from a different row in the table produces a
+    different relation type.
+    For example, the fourth ``Rel()`` below using ``lt`` for ``rop``
+    produces a ``StrictLessThan`` inequality:
+
+    >>> from sympy import Rel
+    >>> from sympy.abc import x, y
+    >>> Rel(y, x + x**2, '==')
+        Eq(y, x**2 + x)
+    >>> Rel(y, x + x**2, 'eq')
+        Eq(y, x**2 + x)
+    >>> Rel(y, x + x**2)
+        Eq(y, x**2 + x)
+    >>> Rel(y, x + x**2, 'lt')
+        y < x**2 + x
+
+    To obtain the relation type of an existing expression,
+    get its ``rel_op`` property.
+    For example, ``rel_op`` is ``==`` for the ``Equality`` relation above,
+    and ``<`` for the strict less than inequality above:
+
+    >>> from sympy import Rel
+    >>> from sympy.abc import x, y
+    >>> my_equality = Rel(y, x + x**2, '==')
+    >>> my_equality.rel_op
+        '=='
+    >>> my_inequality = Rel(y, x + x**2, 'lt')
+    >>> my_inequality.rel_op
+        '<'
+
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  # type: tDict[tUnion[str, None], Type[Relational]]
+    ValidRelationOperator: dict[str | None, type[Relational]] = {}
 
     is_Relational = True
 
@@ -479,7 +535,8 @@ Rel = Relational
 
 
 class Equality(Relational):
-    """An equal relation between two objects.
+    """
+    An equal relation between two objects.
 
     Explanation
     ===========
@@ -539,6 +596,13 @@ class Equality(Relational):
     Since this object is already an expression, it does not respond to
     the method ``as_expr`` if one tries to create `x - y` from ``Eq(x, y)``.
     This can be done with the ``rewrite(Add)`` method.
+
+    .. deprecated:: 1.5
+
+       ``Eq(expr)`` with a single argument is a shorthand for ``Eq(expr, 0)``,
+       but this behavior is deprecated and will be removed in a future version
+       of SymPy.
+
     """
     rel_op = '=='
 
@@ -549,12 +613,14 @@ class Equality(Relational):
     def __new__(cls, lhs, rhs=None, **options):
 
         if rhs is None:
-            SymPyDeprecationWarning(
-                feature="Eq(expr) with rhs default to 0",
-                useinstead="Eq(expr, 0)",
-                issue=16587,
-                deprecated_since_version="1.5"
-            ).warn()
+            sympy_deprecation_warning(
+                """
+                Eq(expr) with a single argument with the right-hand side
+                defaulting to 0 is deprecated. Use Eq(expr, 0) instead.
+                """,
+                deprecated_since_version="1.5",
+                active_deprecations_target="deprecated-eq-expr",
+            )
             rhs = 0
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         lhs = _sympify(lhs)
@@ -578,7 +644,8 @@ class Equality(Relational):
         the result set pass `evaluate=True` to give L - R;
         if `evaluate=None` then terms in L and R will not cancel
         but they will be listed in canonical order; otherwise
-        non-canonical args will be returned.
+        non-canonical args will be returned. If one side is 0, the
+        non-zero side will be returned.
 
         Examples
         ========
@@ -595,6 +662,10 @@ class Equality(Relational):
         """
         from .add import _unevaluated_Add, Add
         L, R = args
+        if L == 0:
+            return R
+        if R == 0:
+            return L
         evaluate = kwargs.get('evaluate', True)
         if evaluate:
             # allow cancellation of args
@@ -822,7 +893,7 @@ class _Less(_Inequality):
 
 
 class GreaterThan(_Greater):
-    """Class representations of inequalities.
+    r"""Class representations of inequalities.
 
     Explanation
     ===========
@@ -833,7 +904,7 @@ class GreaterThan(_Greater):
     left-hand side is at least as big as the right side, if not bigger.  In
     mathematical notation:
 
-    lhs >= rhs
+    lhs $\ge$ rhs
 
     In total, there are four ``*Than`` classes, to represent the four
     inequalities:
@@ -841,27 +912,27 @@ class GreaterThan(_Greater):
     +-----------------+--------+
     |Class Name       | Symbol |
     +=================+========+
-    |GreaterThan      | (>=)   |
+    |GreaterThan      | ``>=`` |
     +-----------------+--------+
-    |LessThan         | (<=)   |
+    |LessThan         | ``<=`` |
     +-----------------+--------+
-    |StrictGreaterThan| (>)    |
+    |StrictGreaterThan| ``>``  |
     +-----------------+--------+
-    |StrictLessThan   | (<)    |
+    |StrictLessThan   | ``<``  |
     +-----------------+--------+
 
     All classes take two arguments, lhs and rhs.
 
     +----------------------------+-----------------+
-    |Signature Example           | Math equivalent |
+    |Signature Example           | Math Equivalent |
     +============================+=================+
-    |GreaterThan(lhs, rhs)       |   lhs >= rhs    |
+    |GreaterThan(lhs, rhs)       |   lhs $\ge$ rhs |
     +----------------------------+-----------------+
-    |LessThan(lhs, rhs)          |   lhs <= rhs    |
+    |LessThan(lhs, rhs)          |   lhs $\le$ rhs |
     +----------------------------+-----------------+
-    |StrictGreaterThan(lhs, rhs) |   lhs >  rhs    |
+    |StrictGreaterThan(lhs, rhs) |   lhs $>$ rhs   |
     +----------------------------+-----------------+
-    |StrictLessThan(lhs, rhs)    |   lhs <  rhs    |
+    |StrictLessThan(lhs, rhs)    |   lhs $<$ rhs   |
     +----------------------------+-----------------+
 
     In addition to the normal .lhs and .rhs of Relations, ``*Than`` inequality
@@ -896,11 +967,12 @@ class GreaterThan(_Greater):
     x <= 2
     x < 2
 
-    Another option is to use the Python inequality operators (>=, >, <=, <)
-    directly.  Their main advantage over the Ge, Gt, Le, and Lt counterparts,
-    is that one can write a more "mathematical looking" statement rather than
-    littering the math with oddball function calls.  However there are certain
-    (minor) caveats of which to be aware (search for 'gotcha', below).
+    Another option is to use the Python inequality operators (``>=``, ``>``,
+    ``<=``, ``<``) directly.  Their main advantage over the ``Ge``, ``Gt``,
+    ``Le``, and ``Lt`` counterparts, is that one can write a more
+    "mathematical looking" statement rather than littering the math with
+    oddball function calls.  However there are certain (minor) caveats of
+    which to be aware (search for 'gotcha', below).
 
     >>> x >= 2
     x >= 2
@@ -936,11 +1008,11 @@ class GreaterThan(_Greater):
         x > 1
 
         Due to the order that Python parses a statement, it may
-        not immediately find two objects comparable.  When "1 < x"
+        not immediately find two objects comparable.  When ``1 < x``
         is evaluated, Python recognizes that the number 1 is a native
         number and that x is *not*.  Because a native Python number does
         not know how to compare itself with a SymPy object
-        Python will try the reflective operation, "x > 1" and that is the
+        Python will try the reflective operation, ``x > 1`` and that is the
         form that gets evaluated, hence returned.
 
         If the order of the statement is important (for visual output to
@@ -987,7 +1059,7 @@ class GreaterThan(_Greater):
         False
 
     The third gotcha involves chained inequalities not involving
-    '==' or '!='. Occasionally, one may be tempted to write:
+    ``==`` or ``!=``. Occasionally, one may be tempted to write:
 
         >>> e = x < y < z
         Traceback (most recent call last):
@@ -1036,8 +1108,8 @@ class GreaterThan(_Greater):
         (4) (GreaterThanObject.__bool__()) and (y > z)
         (5) TypeError
 
-       Because of the "and" added at step 2, the statement gets turned into a
-       weak ternary statement, and the first object's __bool__ method will
+       Because of the ``and`` added at step 2, the statement gets turned into a
+       weak ternary statement, and the first object's ``__bool__`` method will
        raise TypeError.  Thus, creating a chained inequality is not possible.
 
            In Python, there is no way to override the ``and`` operator, or to

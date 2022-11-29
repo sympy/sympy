@@ -97,7 +97,10 @@ def dominant(expr, n):
     term0 = terms[-1]
     comp = [term0]  # comparable terms
     for t in terms[:-1]:
-        e = (term0 / t).gammasimp()
+        r = term0/t
+        e = r.gammasimp()
+        if e == r:
+            e = r.factor()
         l = limit_seq(e, n)
         if l is None:
             return None

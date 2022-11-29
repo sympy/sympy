@@ -32,7 +32,8 @@ class Point:
     >>> O.acc(N)
     u1'*N.x + u2'*N.y + u3'*N.z
 
-    symbols() can be used to create multiple Points in a single step, for example:
+    ``symbols()`` can be used to create multiple Points in a single step, for
+    example:
 
     >>> from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
     >>> from sympy.physics.vector import init_vprinting
@@ -89,9 +90,9 @@ class Point:
         Notes
         =====
 
-        It isn't clear if num = 1 or num = 2 actually works because the keys to
-        ``_vel_dict`` and ``_acc_dict`` are :class:`ReferenceFrame` objects which
-        do not have the ``_pdlist`` attribute.
+        It is not clear if num = 1 or num = 2 actually works because the keys
+        to ``_vel_dict`` and ``_acc_dict`` are :class:`ReferenceFrame` objects
+        which do not have the ``_pdlist`` attribute.
 
         """
         outlist = [[self]]
@@ -168,7 +169,7 @@ class Point:
         omega = interframe.ang_vel_in(outframe)
         alpha = interframe.ang_acc_in(outframe)
         self.set_acc(outframe, a2 + 2 * (omega ^ v) + a1 + (alpha ^ dist) +
-                (omega ^ (omega ^ dist)))
+                     (omega ^ (omega ^ dist)))
         return self.acc(outframe)
 
     def a2pt_theory(self, otherpoint, outframe, fixedframe):
@@ -226,7 +227,8 @@ class Point:
         ==========
 
         frame : ReferenceFrame
-            The frame in which the returned acceleration vector will be defined in
+            The frame in which the returned acceleration vector will be defined
+            in.
 
         Examples
         ========
@@ -242,7 +244,7 @@ class Point:
 
         _check_frame(frame)
         if not (frame in self._acc_dict):
-            if self._vel_dict[frame] != 0:
+            if self.vel(frame) != 0:
                 return (self._vel_dict[frame]).dt(frame)
             else:
                 return Vector(0)
@@ -515,7 +517,13 @@ class Point:
         >>> p1.vel(N)
         10*N.x
 
-        Velocities will be automatically calculated if possible, otherwise a ``ValueError`` will be returned. If it is possible to calculate multiple different velocities from the relative points, the points defined most directly relative to this point will be used. In the case of inconsistent relative positions of points, incorrect velocities may be returned. It is up to the user to define prior relative positions and velocities of points in a self-consistent way.
+        Velocities will be automatically calculated if possible, otherwise a
+        ``ValueError`` will be returned. If it is possible to calculate
+        multiple different velocities from the relative points, the points
+        defined most directly relative to this point will be used. In the case
+        of inconsistent relative positions of points, incorrect velocities may
+        be returned. It is up to the user to define prior relative positions
+        and velocities of points in a self-consistent way.
 
         >>> p = Point('p')
         >>> q = dynamicsymbols('q')
@@ -534,7 +542,7 @@ class Point:
             visited = []
             queue = [self]
             candidate_neighbor = []
-            while queue: #BFS to find nearest point
+            while queue:  # BFS to find nearest point
                 node = queue.pop(0)
                 if node not in visited:
                     visited.append(node)
@@ -542,39 +550,39 @@ class Point:
                         if neighbor in visited:
                             continue
                         try:
-                            neighbor_pos.express(frame) #Checks if pos vector is valid
+                            # Checks if pos vector is valid
+                            neighbor_pos.express(frame)
                         except ValueError:
                             continue
                         if neighbor in queue:
                             is_cyclic = True
-                        try :
-                            neighbor_velocity = neighbor._vel_dict[frame] #Checks if point has its vel defined in req frame
+                        try:
+                            # Checks if point has its vel defined in req frame
+                            neighbor_velocity = neighbor._vel_dict[frame]
                         except KeyError:
                             queue.append(neighbor)
                             continue
                         candidate_neighbor.append(neighbor)
                         if not valid_neighbor_found:
-                            vel = None
-                            for f in self.pos_from(neighbor).args:
-                                if f[1] in self._vel_dict.keys():
-                                    if self._vel_dict[f[1]] != 0:
-                                        vel = self._vel_dict[f[1]]
-                                        break
-                            if vel is None:
-                                vel = self.pos_from(neighbor).dt(frame)
-                            self.set_vel(frame, vel + neighbor_velocity)
+                            self.set_vel(frame, self.pos_from(neighbor).dt(frame) + neighbor_velocity)
                             valid_neighbor_found = True
             if is_cyclic:
-                warn('Kinematic loops are defined among the positions of points. This is likely not desired and may cause errors in your calculations.')
+                warn('Kinematic loops are defined among the positions of '
+                     'points. This is likely not desired and may cause errors '
+                     'in your calculations.')
             if len(candidate_neighbor) > 1:
                 warn('Velocity automatically calculated based on point ' +
-                    candidate_neighbor[0].name + ' but it is also possible from points(s):' +
-                    str(candidate_neighbor[1:]) + '. Velocities from these points are not necessarily the same. This may cause errors in your calculations.')
+                     candidate_neighbor[0].name +
+                     ' but it is also possible from points(s):' +
+                     str(candidate_neighbor[1:]) +
+                     '. Velocities from these points are not necessarily the '
+                     'same. This may cause errors in your calculations.')
             if valid_neighbor_found:
                 return self._vel_dict[frame]
             else:
-                raise ValueError('Velocity of point ' + self.name + ' has not been'
-                             ' defined in ReferenceFrame ' + frame.name)
+                raise ValueError('Velocity of point ' + self.name +
+                                 ' has not been'
+                                 ' defined in ReferenceFrame ' + frame.name)
 
         return self._vel_dict[frame]
 

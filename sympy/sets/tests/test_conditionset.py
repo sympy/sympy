@@ -1,8 +1,10 @@
 from sympy.core.expr import unchanged
 from sympy.sets import (ConditionSet, Intersection, FiniteSet,
     EmptySet, Union, Contains, ImageSet)
+from sympy.sets.sets import SetKind
 from sympy.core.function import (Function, Lambda)
 from sympy.core.mod import Mod
+from sympy.core.kind import NumberKind
 from sympy.core.numbers import (oo, pi)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
@@ -264,6 +266,7 @@ def test_as_relational():
     assert ConditionSet(x, x > 1, S.Integers).as_relational(x
         ) == Contains(x, S.Integers) & (x > 1)
 
+
 def test_flatten():
     """Tests whether there is basic denesting functionality"""
     inner = ConditionSet(x, sin(x) + x > 0)
@@ -278,8 +281,14 @@ def test_flatten():
     outer = ConditionSet(x, Contains(x, inner), S.Reals)
     assert outer == ConditionSet(x, sin(x) + x > 0, Interval(-1, 1))
 
+
 def test_duplicate():
     from sympy.core.function import BadSignatureError
     # test coverage for line 95 in conditionset.py, check for duplicates in symbols
     dup = symbols('a,a')
     raises(BadSignatureError, lambda: ConditionSet(dup, x < 0))
+
+
+def test_SetKind_ConditionSet():
+    assert ConditionSet(x, Eq(sin(x), 0), Interval(0, 2*pi)).kind is SetKind(NumberKind)
+    assert ConditionSet(x, x < 0).kind is SetKind(NumberKind)

@@ -15,8 +15,7 @@ class Adjoint(MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.matrices import MatrixSymbol, Adjoint
-    >>> from sympy.functions import adjoint
+    >>> from sympy import MatrixSymbol, Adjoint, adjoint
     >>> A = MatrixSymbol('A', 3, 5)
     >>> B = MatrixSymbol('B', 5, 3)
     >>> Adjoint(A*B)

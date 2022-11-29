@@ -389,7 +389,7 @@ def test_issue_8974():
 
 def test_issue_10198():
     assert reduce_inequalities(
-        -1 + 1/abs(1/x - 1) < 0) == (x > -oo) & (x < 1/2) & Ne(x, 0)
+        -1 + 1/abs(1/x - 1) < 0) == (x > -oo) & (x < S(1)/2) & Ne(x, 0)
 
     assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \

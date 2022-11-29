@@ -71,9 +71,6 @@ class Parabola(GeometrySet):
 
         directrix = Line(directrix)
 
-        if (directrix.slope != 0 and directrix.slope != S.Infinity):
-            raise NotImplementedError('The directrix must be a horizontal'
-                                      ' or vertical line')
         if directrix.contains(focus):
             raise ValueError('The focus must not be a point of directrix')
 
@@ -102,7 +99,8 @@ class Parabola(GeometrySet):
 
     @property
     def axis_of_symmetry(self):
-        """The axis of symmetry of the parabola.
+        """Return the axis of symmetry of the parabola: a line
+        perpendicular to the directrix passing through the focus.
 
         Returns
         =======
@@ -216,13 +214,18 @@ class Parabola(GeometrySet):
         x = _symbol(x, real=True)
         y = _symbol(y, real=True)
 
-        if (self.axis_of_symmetry.slope == 0):
+        m = self.directrix.slope
+        if m is S.Infinity:
             t1 = 4 * (self.p_parameter) * (x - self.vertex.x)
             t2 = (y - self.vertex.y)**2
-        else:
+        elif m == 0:
             t1 = 4 * (self.p_parameter) * (y - self.vertex.y)
             t2 = (x - self.vertex.x)**2
-
+        else:
+            a, b = self.focus
+            c, d = self.directrix.coefficients[:2]
+            t1 = (x - a)**2 + (y - b)**2
+            t2 = self.directrix.equation(x, y)**2/(c**2 + d**2)
         return t1 - t2
 
     @property
@@ -320,17 +323,21 @@ class Parabola(GeometrySet):
             if o in self:
                 return [o]
             else:
-                return list(ordered([Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
+                return list(ordered([Point(i) for i in solve(
+                    [parabola_eq, o.equation()], [x, y], set=True)[1]]))
         elif isinstance(o, Point2D):
             if simplify(parabola_eq.subs([(x, o._args[0]), (y, o._args[1])])) == 0:
                 return [o]
             else:
                 return []
         elif isinstance(o, (Segment2D, Ray2D)):
-            result = solve([parabola_eq, Line2D(o.points[0], o.points[1]).equation()], [x, y])
+            result = solve([parabola_eq,
+                Line2D(o.points[0], o.points[1]).equation()],
+                [x, y], set=True)[1]
             return list(ordered([Point2D(i) for i in result if i in o]))
         elif isinstance(o, (Line2D, Ellipse)):
-            return list(ordered([Point2D(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
+            return list(ordered([Point2D(i) for i in solve(
+                [parabola_eq, o.equation()], [x, y], set=True)[1]]))
         elif isinstance(o, LinearEntity3D):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
@@ -369,12 +376,16 @@ class Parabola(GeometrySet):
         -4
 
         """
-        if self.axis_of_symmetry.slope == 0:
+        m = self.directrix.slope
+        if m is S.Infinity:
             x = self.directrix.coefficients[2]
             p = sign(self.focus.args[0] + x)
-        else:
+        elif m == 0:
             y = self.directrix.coefficients[2]
             p = sign(self.focus.args[1] + y)
+        else:
+            d = self.directrix.projection(self.focus)
+            p = sign(self.focus.x - d.x)
         return p * self.focal_length
 
     @property
@@ -401,9 +412,11 @@ class Parabola(GeometrySet):
 
         """
         focus = self.focus
-        if (self.axis_of_symmetry.slope == 0):
+        m = self.directrix.slope
+        if m is S.Infinity:
             vertex = Point(focus.args[0] - self.p_parameter, focus.args[1])
-        else:
+        elif m == 0:
             vertex = Point(focus.args[0], focus.args[1] - self.p_parameter)
-
+        else:
+            vertex = self.axis_of_symmetry.intersection(self)[0]
         return vertex

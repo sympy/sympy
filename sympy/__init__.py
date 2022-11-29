@@ -13,8 +13,8 @@ See the webpage for more information and documentation:
 
 
 import sys
-if sys.version_info < (3, 7):
-    raise ImportError("Python version 3.7 or above is required for SymPy.")
+if sys.version_info < (3, 8):
+    raise ImportError("Python version 3.8 or above is required for SymPy.")
 del sys
 
 
@@ -27,6 +27,7 @@ except ImportError:
 del mpmath
 
 from sympy.release import __version__
+from sympy.core.cache import lazy_function
 
 if 'dev' in __version__:
     def enable_warnings():
@@ -100,9 +101,9 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         QQ_gmpy, GF, FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, EXRAW,
         construct_domain, swinnerton_dyer_poly, cyclotomic_poly,
         symmetric_poly, random_poly, interpolating_poly, jacobi_poly,
-        chebyshevt_poly, chebyshevu_poly, hermite_poly, legendre_poly,
-        laguerre_poly, apart, apart_list, assemble_partfrac_list, Options,
-        ring, xring, vring, sring, field, xfield, vfield, sfield)
+        chebyshevt_poly, chebyshevu_poly, hermite_poly, hermite_prob_poly,
+        legendre_poly, laguerre_poly, apart, apart_list, assemble_partfrac_list,
+        Options, ring, xring, vring, sring, field, xfield, vfield, sfield)
 
 from .series import (Order, O, limit, Limit, gruntz, series, approximants,
         residue, EmptySequence, SeqPer, SeqFormula, sequence, SeqAdd, SeqMul,
@@ -111,23 +112,23 @@ from .series import (Order, O, limit, Limit, gruntz, series, approximants,
 from .functions import (factorial, factorial2, rf, ff, binomial,
         RisingFactorial, FallingFactorial, subfactorial, carmichael,
         fibonacci, lucas, motzkin, tribonacci, harmonic, bernoulli, bell, euler,
-        catalan, genocchi, partition, sqrt, root, Min, Max, Id, real_root, Rem,
-        cbrt, re, im, sign, Abs, conjugate, arg, polar_lift,
+        catalan, genocchi, andre, partition, sqrt, root, Min, Max, Id,
+        real_root, Rem, cbrt, re, im, sign, Abs, conjugate, arg, polar_lift,
         periodic_argument, unbranched_argument, principal_branch, transpose,
         adjoint, polarify, unpolarify, sin, cos, tan, sec, csc, cot, sinc,
         asin, acos, atan, asec, acsc, acot, atan2, exp_polar, exp, ln, log,
         LambertW, sinh, cosh, tanh, coth, sech, csch, asinh, acosh, atanh,
         acoth, asech, acsch, floor, ceiling, frac, Piecewise, piecewise_fold,
-        erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv, Ei, expint, E1, li,
-        Li, Si, Ci, Shi, Chi, fresnels, fresnelc, gamma, lowergamma,
-        uppergamma, polygamma, loggamma, digamma, trigamma, multigamma,
-        dirichlet_eta, zeta, lerchphi, polylog, stieltjes, Eijk, LeviCivita,
-        KroneckerDelta, SingularityFunction, DiracDelta, Heaviside,
+        piecewise_exclusive, erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
+        Ei, expint, E1, li, Li, Si, Ci, Shi, Chi, fresnels, fresnelc, gamma,
+        lowergamma, uppergamma, polygamma, loggamma, digamma, trigamma,
+        multigamma, dirichlet_eta, zeta, lerchphi, polylog, stieltjes, Eijk,
+        LeviCivita, KroneckerDelta, SingularityFunction, DiracDelta, Heaviside,
         bspline_basis, bspline_basis_set, interpolating_spline, besselj,
         bessely, besseli, besselk, hankel1, hankel2, jn, yn, jn_zeros, hn1,
         hn2, airyai, airybi, airyaiprime, airybiprime, marcumq, hyper,
-        meijerg, appellf1, legendre, assoc_legendre, hermite, chebyshevt,
-        chebyshevu, chebyshevu_root, chebyshevt_root, laguerre,
+        meijerg, appellf1, legendre, assoc_legendre, hermite, hermite_prob,
+        chebyshevt, chebyshevu, chebyshevu_root, chebyshevt_root, laguerre,
         assoc_laguerre, gegenbauer, jacobi, jacobi_normalized, Ynm, Ynm_c,
         Znm, elliptic_k, elliptic_f, elliptic_e, elliptic_pi, beta, mathieus,
         mathieuc, mathieusprime, mathieucprime, riemann_xi, betainc, betainc_regularized)
@@ -225,7 +226,7 @@ from .parsing import parse_expr
 
 from .calculus import (euler_equations, singularities, is_increasing,
         is_strictly_increasing, is_decreasing, is_strictly_decreasing,
-        is_monotonic, finite_diff_weights, apply_finite_diff, as_finite_diff,
+        is_monotonic, finite_diff_weights, apply_finite_diff,
         differentiate_finite, periodicity, not_empty_in, AccumBounds,
         is_convex, stationary_points, minimum, maximum)
 
@@ -234,13 +235,14 @@ from .algebras import Quaternion
 from .printing import (pager_print, pretty, pretty_print, pprint,
         pprint_use_unicode, pprint_try_use_unicode, latex, print_latex,
         multiline_latex, mathml, print_mathml, python, print_python, pycode,
-        ccode, print_ccode, glsl_code, print_glsl, cxxcode, fcode,
+        ccode, print_ccode, smtlib_code, glsl_code, print_glsl, cxxcode, fcode,
         print_fcode, rcode, print_rcode, jscode, print_jscode, julia_code,
         mathematica_code, octave_code, rust_code, print_gtk, preview, srepr,
         print_tree, StrPrinter, sstr, sstrrepr, TableForm, dotprint,
         maple_code, print_maple_code)
 
-from .testing import test, doctest
+test = lazy_function('sympy.testing.runtests', 'test')
+doctest = lazy_function('sympy.testing.runtests', 'doctest')
 
 # This module causes conflicts with other modules:
 # from .stats import *
@@ -254,6 +256,8 @@ from .interactive import init_session, init_printing, interactive_traversal
 evalf._create_evalf_table()
 
 __all__ = [
+    '__version__',
+
     # sympy.core
     'sympify', 'SympifyError', 'cacheit', 'Basic', 'Atom',
     'preorder_traversal', 'S', 'Expr', 'AtomicExpr', 'UnevaluatedExpr',
@@ -314,8 +318,8 @@ __all__ = [
     'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX', 'EXRAW',
     'construct_domain', 'swinnerton_dyer_poly', 'cyclotomic_poly',
     'symmetric_poly', 'random_poly', 'interpolating_poly', 'jacobi_poly',
-    'chebyshevt_poly', 'chebyshevu_poly', 'hermite_poly', 'legendre_poly',
-    'laguerre_poly', 'apart', 'apart_list', 'assemble_partfrac_list',
+    'chebyshevt_poly', 'chebyshevu_poly', 'hermite_poly', 'hermite_prob_poly',
+    'legendre_poly', 'laguerre_poly', 'apart', 'apart_list', 'assemble_partfrac_list',
     'Options', 'ring', 'xring', 'vring', 'sring', 'field', 'xfield', 'vfield',
     'sfield',
 
@@ -328,25 +332,25 @@ __all__ = [
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
     'FallingFactorial', 'subfactorial', 'carmichael', 'fibonacci', 'lucas',
     'motzkin', 'tribonacci', 'harmonic', 'bernoulli', 'bell', 'euler', 'catalan',
-    'genocchi', 'partition', 'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root', 'Rem',
-    'cbrt', 're', 'im', 'sign', 'Abs', 'conjugate', 'arg', 'polar_lift',
+    'genocchi', 'andre', 'partition', 'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root',
+    'Rem', 'cbrt', 're', 'im', 'sign', 'Abs', 'conjugate', 'arg', 'polar_lift',
     'periodic_argument', 'unbranched_argument', 'principal_branch',
     'transpose', 'adjoint', 'polarify', 'unpolarify', 'sin', 'cos', 'tan',
     'sec', 'csc', 'cot', 'sinc', 'asin', 'acos', 'atan', 'asec', 'acsc',
     'acot', 'atan2', 'exp_polar', 'exp', 'ln', 'log', 'LambertW', 'sinh',
     'cosh', 'tanh', 'coth', 'sech', 'csch', 'asinh', 'acosh', 'atanh',
     'acoth', 'asech', 'acsch', 'floor', 'ceiling', 'frac', 'Piecewise',
-    'piecewise_fold', 'erf', 'erfc', 'erfi', 'erf2', 'erfinv', 'erfcinv',
-    'erf2inv', 'Ei', 'expint', 'E1', 'li', 'Li', 'Si', 'Ci', 'Shi', 'Chi',
-    'fresnels', 'fresnelc', 'gamma', 'lowergamma', 'uppergamma', 'polygamma',
-    'loggamma', 'digamma', 'trigamma', 'multigamma', 'dirichlet_eta', 'zeta',
-    'lerchphi', 'polylog', 'stieltjes', 'Eijk', 'LeviCivita',
+    'piecewise_fold', 'piecewise_exclusive', 'erf', 'erfc', 'erfi', 'erf2',
+    'erfinv', 'erfcinv', 'erf2inv', 'Ei', 'expint', 'E1', 'li', 'Li', 'Si',
+    'Ci', 'Shi', 'Chi', 'fresnels', 'fresnelc', 'gamma', 'lowergamma',
+    'uppergamma', 'polygamma', 'loggamma', 'digamma', 'trigamma', 'multigamma',
+    'dirichlet_eta', 'zeta', 'lerchphi', 'polylog', 'stieltjes', 'Eijk', 'LeviCivita',
     'KroneckerDelta', 'SingularityFunction', 'DiracDelta', 'Heaviside',
     'bspline_basis', 'bspline_basis_set', 'interpolating_spline', 'besselj',
     'bessely', 'besseli', 'besselk', 'hankel1', 'hankel2', 'jn', 'yn',
     'jn_zeros', 'hn1', 'hn2', 'airyai', 'airybi', 'airyaiprime',
     'airybiprime', 'marcumq', 'hyper', 'meijerg', 'appellf1', 'legendre',
-    'assoc_legendre', 'hermite', 'chebyshevt', 'chebyshevu',
+    'assoc_legendre', 'hermite', 'hermite_prob', 'chebyshevt', 'chebyshevu',
     'chebyshevu_root', 'chebyshevt_root', 'laguerre', 'assoc_laguerre',
     'gegenbauer', 'jacobi', 'jacobi_normalized', 'Ynm', 'Ynm_c', 'Znm',
     'elliptic_k', 'elliptic_f', 'elliptic_e', 'elliptic_pi', 'beta',
@@ -465,7 +469,7 @@ __all__ = [
     'euler_equations', 'singularities', 'is_increasing',
     'is_strictly_increasing', 'is_decreasing', 'is_strictly_decreasing',
     'is_monotonic', 'finite_diff_weights', 'apply_finite_diff',
-    'as_finite_diff', 'differentiate_finite', 'periodicity', 'not_empty_in',
+    'differentiate_finite', 'periodicity', 'not_empty_in',
     'AccumBounds', 'is_convex', 'stationary_points', 'minimum', 'maximum',
 
     # sympy.algebras
@@ -475,7 +479,7 @@ __all__ = [
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',
     'pprint_try_use_unicode', 'latex', 'print_latex', 'multiline_latex',
     'mathml', 'print_mathml', 'python', 'print_python', 'pycode', 'ccode',
-    'print_ccode', 'glsl_code', 'print_glsl', 'cxxcode', 'fcode',
+    'print_ccode', 'smtlib_code', 'glsl_code', 'print_glsl', 'cxxcode', 'fcode',
     'print_fcode', 'rcode', 'print_rcode', 'jscode', 'print_jscode',
     'julia_code', 'mathematica_code', 'octave_code', 'rust_code', 'print_gtk',
     'preview', 'srepr', 'print_tree', 'StrPrinter', 'sstr', 'sstrrepr',

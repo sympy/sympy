@@ -84,6 +84,43 @@ class Beam:
     (7*x - Piecewise((x**3, x > 0), (0, True))/2
          - 3*Piecewise(((x - 4)**3, x > 4), (0, True))/2
          + Piecewise(((x - 2)**4, x > 2), (0, True))/4)/(E*I)
+
+    Calculate the support reactions for a fully symbolic beam of length L.
+    There are two simple supports below the beam, one at the starting point
+    and another at the ending point of the beam. The deflection of the beam
+    at the end is restricted. The beam is loaded with:
+
+    * a downward point load P1 applied at L/4
+    * an upward point load P2 applied at L/8
+    * a counterclockwise moment M1 applied at L/2
+    * a clockwise moment M2 applied at 3*L/4
+    * a distributed constant load q1, applied downward, starting from L/2
+      up to 3*L/4
+    * a distributed constant load q2, applied upward, starting from 3*L/4
+      up to L
+
+    No assumptions are needed for symbolic loads. However, defining a positive
+    length will help the algorithm to compute the solution.
+
+    >>> E, I = symbols('E, I')
+    >>> L = symbols("L", positive=True)
+    >>> P1, P2, M1, M2, q1, q2 = symbols("P1, P2, M1, M2, q1, q2")
+    >>> R1, R2 = symbols('R1, R2')
+    >>> b = Beam(L, E, I)
+    >>> b.apply_load(R1, 0, -1)
+    >>> b.apply_load(R2, L, -1)
+    >>> b.apply_load(P1, L/4, -1)
+    >>> b.apply_load(-P2, L/8, -1)
+    >>> b.apply_load(M1, L/2, -2)
+    >>> b.apply_load(-M2, 3*L/4, -2)
+    >>> b.apply_load(q1, L/2, 0, 3*L/4)
+    >>> b.apply_load(-q2, 3*L/4, 0, L)
+    >>> b.bc_deflection = [(0, 0), (L, 0)]
+    >>> b.solve_for_reaction_loads(R1, R2)
+    >>> print(b.reaction_loads[R1])
+    (-3*L**2*q1 + L**2*q2 - 24*L*P1 + 28*L*P2 - 32*M1 + 32*M2)/(32*L)
+    >>> print(b.reaction_loads[R2])
+    (-5*L**2*q1 + 7*L**2*q2 - 8*L*P1 + 4*L*P2 + 32*M1 - 32*M2)/(32*L)
     """
 
     def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'), base_char='C'):
@@ -136,7 +173,7 @@ class Beam:
         self._base_char = base_char
         self._boundary_conditions = {'deflection': [], 'slope': []}
         self._load = 0
-        self._area = area
+        self.area = area
         self._applied_supports = []
         self._support_as_loads = []
         self._applied_loads = []
@@ -2084,8 +2121,8 @@ class Beam:
             for plotting loads.
             Given a right handed coordinate system with XYZ coordinates,
             the beam's length is assumed to be along the positive X axis.
-            The draw function recognizes positve loads(with n>-2) as loads
-            acting along negative Y direction and positve moments acting
+            The draw function recognizes positive loads(with n>-2) as loads
+            acting along negative Y direction and positive moments acting
             along positive Z direction.
 
         Parameters
@@ -2199,7 +2236,7 @@ class Beam:
             elif load[2] >= 0:
                 # `fill` will be assigned only when higher order loads are present
                 value, start, order, end = load
-                # Positive loads have their seperate equations
+                # Positive loads have their separate equations
                 if(value>0):
                     plus = 1
                 # if pictorial is True we remake the load equation again with
@@ -2386,12 +2423,14 @@ class Beam3D(Beam):
         """
         super().__init__(length, elastic_modulus, second_moment, variable)
         self.shear_modulus = shear_modulus
-        self._area = area
+        self.area = area
         self._load_vector = [0, 0, 0]
         self._moment_load_vector = [0, 0, 0]
+        self._torsion_moment = {}
         self._load_Singularity = [0, 0, 0]
         self._slope = [0, 0, 0]
         self._deflection = [0, 0, 0]
+        self._angular_deflection = 0
 
     @property
     def shear_modulus(self):
@@ -2556,6 +2595,11 @@ class Beam3D(Beam):
         if dir == "x":
             if not order == -2:
                 self._moment_load_vector[0] += value
+            else:
+                if start in list(self._torsion_moment):
+                    self._torsion_moment[start] += value
+                else:
+                    self._torsion_moment[start] = value
             self._load_Singularity[0] += value*SingularityFunction(x, start, order)
         elif dir == "y":
             if not order == -2:
@@ -2672,6 +2716,42 @@ class Beam3D(Beam):
         """
         return self.bending_moment()[0]
 
+    def solve_for_torsion(self):
+        """
+        Solves for the angular deflection due to the torsional effects of
+        moments being applied in the x-direction i.e. out of or into the beam.
+
+        Here, a positive torque means the direction of the torque is positive
+        i.e. out of the beam along the beam-axis. Likewise, a negative torque
+        signifies a torque into the beam cross-section.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam3D
+        >>> from sympy import symbols
+        >>> l, E, G, I, A, x = symbols('l, E, G, I, A, x')
+        >>> b = Beam3D(20, E, G, I, A, x)
+        >>> b.apply_moment_load(4, 4, -2, dir='x')
+        >>> b.apply_moment_load(4, 8, -2, dir='x')
+        >>> b.apply_moment_load(4, 8, -2, dir='x')
+        >>> b.solve_for_torsion()
+        >>> b.angular_deflection().subs(x, 3)
+        18/(G*I)
+        """
+        x = self.variable
+        sum_moments = 0
+        for point in list(self._torsion_moment):
+            sum_moments += self._torsion_moment[point]
+        list(self._torsion_moment).sort()
+        pointsList = list(self._torsion_moment)
+        torque_diagram = Piecewise((sum_moments, x<=pointsList[0]), (0, x>=pointsList[0]))
+        for i in range(len(pointsList))[1:]:
+            sum_moments -= self._torsion_moment[pointsList[i-1]]
+            torque_diagram += Piecewise((0, x<=pointsList[i-1]), (sum_moments, x<=pointsList[i]), (0, x>=pointsList[i]))
+        integrated_torque_diagram = integrate(torque_diagram)
+        self._angular_deflection =  integrated_torque_diagram/(self.shear_modulus*self.polar_moment())
+
     def solve_slope_deflection(self):
         x = self.variable
         l = self.length
@@ -2753,6 +2833,13 @@ class Beam3D(Beam):
         the three axes.
         """
         return self._deflection
+
+    def angular_deflection(self):
+        """
+        Returns a function in x depicting how the angular deflection, due to moments
+        in the x-axis on the beam, varies with x.
+        """
+        return self._angular_deflection
 
     def _plot_shear_force(self, dir, subs=None):
 

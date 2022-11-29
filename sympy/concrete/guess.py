@@ -1,19 +1,20 @@
 """Various algorithms for helping identifying numbers and sequences."""
 
-from sympy.utilities import public
 
-from sympy.core import Function, Symbol, S
-from sympy.core.numbers import Zero
 from sympy.concrete.products import (Product, product)
-from sympy.core.numbers import (Integer, Rational)
-from sympy.core.symbol import symbols
+from sympy.core import Function, S
+from sympy.core.add import Add
+from sympy.core.numbers import Integer, Rational
+from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import integrate
+from sympy.polys.polyfuncs import rational_interpolate as rinterp
 from sympy.polys.polytools import lcm
 from sympy.simplify.radsimp import denom
-from sympy.polys.polyfuncs import rational_interpolate as rinterp
+from sympy.utilities import public
+
 
 @public
 def find_simple_recurrence_vector(l):
@@ -54,7 +55,7 @@ def find_simple_recurrence_vector(l):
 
     """
     q1 = [0]
-    q2 = [Integer(1)]
+    q2 = [1]
     b, z = 0, len(l) >> 1
     while len(q2) <= z:
         while l[b]==0:
@@ -67,15 +68,15 @@ def find_simple_recurrence_vector(l):
                 for k in range(len(q2)):
                     q2[k] = int(q2[k]*c)
                 return q2
-        a = Integer(1)/l[b]
+        a = S.One/l[b]
         m = [a]
         for k in range(b+1, len(l)):
             m.append(-sum(l[j+1]*m[b-j-1] for j in range(b, k))*a)
         l, m = m, [0] * max(len(q2), b+len(q1))
-        for k in range(len(q2)):
-            m[k] = a*q2[k]
-        for k in range(b, b+len(q1)):
-            m[k] += q1[k-b]
+        for k, q in enumerate(q2):
+            m[k] = a*q
+        for k, q in enumerate(q1):
+            m[k+b] += q
         while m[-1]==0: m.pop() # because trailing zeros can occur
         q1, q2, b = q2, m, 1
     return [0]
@@ -105,13 +106,9 @@ def find_simple_recurrence(v, A=Function('a'), N=Symbol('n')):
     """
     p = find_simple_recurrence_vector(v)
     n = len(p)
-    if n <= 1: return Zero()
+    if n <= 1: return S.Zero
 
-    rel = Zero()
-    for k in range(n):
-        rel += A(N+n-1-k)*p[k]
-
-    return rel
+    return Add(*[A(N+n-1-k)*p[k] for k in range(n)])
 
 
 @public
@@ -285,14 +282,14 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     """
     # List of all types of all g.f. known by the algorithm
     if 'all' in types:
-        types = ['ogf', 'egf', 'lgf', 'hlgf', 'lgdogf', 'lgdegf']
+        types = ('ogf', 'egf', 'lgf', 'hlgf', 'lgdogf', 'lgdegf')
 
     result = {}
 
     # Ordinary Generating Function (ogf)
     if 'ogf' in types:
         # Perform some convolutions of the sequence with itself
-        t = [1 if k==0 else 0 for k in range(len(v))]
+        t = [1] + [0]*(len(v) - 1)
         for d in range(max(1, maxsqrtn)):
             t = [sum(t[n-i]*v[i] for i in range(n+1)) for n in range(len(v))]
             g = guess_generating_function_rational(t, X=X)
@@ -308,7 +305,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             f *= i if i else 1
             w.append(k/f)
         # Perform some convolutions of the sequence with itself
-        t = [1 if k==0 else 0 for k in range(len(w))]
+        t = [1] + [0]*(len(w) - 1)
         for d in range(max(1, maxsqrtn)):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
             g = guess_generating_function_rational(t, X=X)
@@ -324,7 +321,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             f = -f
             w.append(f*k/Integer(i+1))
         # Perform some convolutions of the sequence with itself
-        t = [1 if k==0 else 0 for k in range(len(w))]
+        t = [1] + [0]*(len(w) - 1)
         for d in range(max(1, maxsqrtn)):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
             g = guess_generating_function_rational(t, X=X)
@@ -339,7 +336,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
         for i, k in enumerate(v):
             w.append(k/Integer(i+1))
         # Perform some convolutions of the sequence with itself
-        t = [1 if k==0 else 0 for k in range(len(w))]
+        t = [1] + [0]*(len(w) - 1)
         for d in range(max(1, maxsqrtn)):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
             g = guess_generating_function_rational(t, X=X)
@@ -357,7 +354,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             w.append(
                (v[n+1]*(n+1) - sum(w[-i-1]*v[i+1] for i in range(n)))/a)
         # Perform some convolutions of the sequence with itself
-        t = [1 if k==0 else 0 for k in range(len(w))]
+        t = [1] + [0]*(len(w) - 1)
         for d in range(max(1, maxsqrtn)):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
             g = guess_generating_function_rational(t, X=X)
@@ -371,7 +368,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     if v[0] != 0 and ('lgdegf' in types
                        or ('egf' in types and 'egf' not in result)):
         # Transform sequence / step 1 (division by factorial)
-        z, f = [], Integer(1)
+        z, f = [], S.One
         for i, k in enumerate(v):
             f *= i if i else 1
             z.append(k/f)
@@ -382,7 +379,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
             w.append(
                (z[n+1]*(n+1) - sum(w[-i-1]*z[i+1] for i in range(n)))/a)
         # Perform some convolutions of the sequence with itself
-        t = [1 if k==0 else 0 for k in range(len(w))]
+        t = [1] + [0]*(len(w) - 1)
         for d in range(max(1, maxsqrtn)):
             t = [sum(t[n-i]*w[i] for i in range(n+1)) for n in range(len(w))]
             g = guess_generating_function_rational(t, X=X)

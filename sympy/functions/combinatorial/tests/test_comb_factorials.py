@@ -535,7 +535,6 @@ def test_binomial_Mod():
     assert Mod(binomial(253, 113, evaluate=False), r) == Mod(binomial(253, 113), r)
 
 
-
 @slow
 def test_binomial_Mod_slow():
     p, q = 10**5 + 3, 10**9 + 33 # prime modulo

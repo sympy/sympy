@@ -1,4 +1,5 @@
 from sympy.core.add import Add
+from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda, diff)
 from sympy.core.mod import Mod
 from sympy.core import (Catalan, EulerGamma, GoldenRatio)
@@ -19,15 +20,16 @@ from sympy.sets.fancysets import Range
 from sympy.codegen import For, Assignment, aug_assign
 from sympy.codegen.ast import Declaration, Variable, float32, float64, \
         value_const, real, bool_, While, FunctionPrototype, FunctionDefinition, \
-        integer, Return
+        integer, Return, Element
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.printing.fortran import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
+from sympy.tensor.array.expressions import ArraySymbol, ArrayElement
 from sympy.utilities.lambdify import implemented_function
-from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises
 
 
 def test_UnevaluatedExpr():
@@ -628,6 +630,7 @@ def test_dummy_loops():
     code = fcode(x[i], assign_to=y[i], source_format='free')
     assert code == expected
 
+
 def test_fcode_Indexed_without_looking_for_contraction():
     len_y = 5
     y = IndexedBase('y', shape=(len_y,))
@@ -636,6 +639,25 @@ def test_fcode_Indexed_without_looking_for_contraction():
     i = Idx('i', len_y-1)
     e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
     code0 = fcode(e.rhs, assign_to=e.lhs, contract=False)
+    assert code0.endswith('Dy(i) = (y(i + 1) - y(i))/(x(i + 1) - x(i))')
+
+
+def test_element_like_objects():
+    len_y = 5
+    y = ArraySymbol('y', shape=(len_y,))
+    x = ArraySymbol('x', shape=(len_y,))
+    Dy = ArraySymbol('Dy', shape=(len_y-1,))
+    i = Idx('i', len_y-1)
+    e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
+    code0 = fcode(Assignment(e.lhs, e.rhs))
+    assert code0.endswith('Dy(i) = (y(i + 1) - y(i))/(x(i + 1) - x(i))')
+
+    class ElementExpr(Element, Expr):
+        pass
+
+    e = e.subs((a, ElementExpr(a.name, a.indices)) for a in e.atoms(ArrayElement)  )
+    e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
+    code0 = fcode(Assignment(e.lhs, e.rhs))
     assert code0.endswith('Dy(i) = (y(i + 1) - y(i))/(x(i + 1) - x(i))')
 
 
@@ -751,7 +773,7 @@ def test_fcode_For():
 
     f = For(x, Range(0, 10, 2), [Assignment(y, x * y)])
     sol = fcode(f)
-    assert sol == ("      do x = 0, 10, 2\n"
+    assert sol == ("      do x = 0, 9, 2\n"
                    "         y = x*y\n"
                    "      end do")
 
@@ -829,8 +851,3 @@ def test_FunctionDefinition_print():
     # Should be changed to proper test once multi-line generation is working
     # see https://github.com/sympy/sympy/issues/15824
     raises(NotImplementedError, lambda: fcode(fd1))
-
-def test_fcode_submodule():
-    # Test the compatibility sympy.printing.fcode module imports
-    with warns_deprecated_sympy():
-        import sympy.printing.fcode # noqa:F401

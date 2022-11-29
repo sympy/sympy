@@ -131,7 +131,8 @@ class DiophantineSolutionSet(set):
     def __call__(self, *args):
         if len(args) > len(self.parameters):
             raise ValueError("Evaluation should have at most %s values, not %s" % (len(self.parameters), len(args)))
-        return self.subs(list(zip(self.parameters, args)))
+        rep = {p: v for p, v in zip(self.parameters, args) if v is not None}
+        return self.subs(rep)
 
 
 class DiophantineEquationType:
@@ -407,7 +408,7 @@ class Linear(DiophantineEquationType):
 
         '''
         solutions = []
-        for i in range(len(B)):
+        for Ai, Bi in zip(A, B):
             tot_x, tot_y = [], []
 
             for j, arg in enumerate(Add.make_args(c)):
@@ -421,7 +422,7 @@ class Linear(DiophantineEquationType):
                     k, p = arg.as_coeff_Mul()
                     pnew = params[params.index(p) + 1]
 
-                sol = sol_x, sol_y = base_solution_linear(k, A[i], B[i], pnew)
+                sol = sol_x, sol_y = base_solution_linear(k, Ai, Bi, pnew)
 
                 if p is S.One:
                     if None in sol:
@@ -550,7 +551,7 @@ class BinaryQuadratic(DiophantineEquationType):
                 sqc = isqrt(c)
                 _c = e*sqc*D - sqa*E
                 if not _c:
-                    z = symbols("z", real=True)
+                    z = Symbol("z", real=True)
                     eq = sqa*g*z**2 + D*z + sqa*F
                     roots = solveset_real(eq, z).intersect(S.Integers)
                     for root in roots:
@@ -869,7 +870,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
                 E = coeff[y*z]
                 F = coeff[z**2]
 
-                _coeff = dict()
+                _coeff = {}
 
                 _coeff[x**2] = 4*A**2
                 _coeff[y**2] = 4*A*D - B**2
@@ -1309,7 +1310,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diophantine
+    >>> from sympy import diophantine
     >>> from sympy.abc import a, b
     >>> eq = a**4 + b**4 - (2**4 + 3**4)
     >>> diophantine(eq)
@@ -1647,7 +1648,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
 
     if eq_type is not None and eq_type not in diop_known:
             raise ValueError(filldedent('''
-    Alhough this type of equation was identified, it is not yet
+    Although this type of equation was identified, it is not yet
     handled. It should, however, be listed in `diop_known` at the
     top of this file. Developers should see comments at the end of
     `classify_diop`.
@@ -2542,7 +2543,7 @@ def length(P, Q, D):
     """
     from sympy.ntheory.continued_fraction import continued_fraction_periodic
     v = continued_fraction_periodic(P, Q, D)
-    if type(v[-1]) is list:
+    if isinstance(v[-1], list):
         rpt = len(v[-1])
         nonrpt = len(v) - 1
     else:
@@ -2561,7 +2562,7 @@ def transformation_to_DN(eq):
     ===========
 
     This is used to solve the general quadratic equation by transforming it to
-    the latter form. Refer [1]_ for more detailed information on the
+    the latter form. Refer to [1]_ for more detailed information on the
     transformation. This function returns a tuple (A, B) where A is a 2 X 2
     matrix and B is a 2 X 1 matrix such that,
 
@@ -2894,7 +2895,7 @@ def _transformation_to_normal(var, coeff):
         E = coeff[y*z]
         F = coeff[z**2]
 
-        _coeff = dict()
+        _coeff = {}
 
         _coeff[x**2] = 4*A**2
         _coeff[y**2] = 4*A*D - B**2
@@ -3217,7 +3218,7 @@ def ldescent(A, B):
            Press, Cambridge, 1998.
     .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
            [online], Available:
-           http://eprints.nottingham.ac.uk/60/1/kvxefz87.pdf
+           https://nottingham-repository.worktribe.com/output/1023265/efficient-solution-of-rational-conics
     """
     if abs(A) > abs(B):
         w, y, x = ldescent(B, A)
@@ -3485,7 +3486,7 @@ def diop_general_sum_of_squares(eq, limit=1):
     =======
 
     When `n = 3` if `k = 4^a(8m + 7)` for some `a, m \in Z` then there will be
-    no solutions. Refer [1]_ for more details.
+    no solutions. Refer to [1]_ for more details.
 
     Examples
     ========
@@ -3647,10 +3648,10 @@ def prime_as_sum_of_two_squares(p):
 
 def sum_of_three_squares(n):
     r"""
-    Returns a 3-tuple `(a, b, c)` such that `a^2 + b^2 + c^2 = n` and
-    `a, b, c \geq 0`.
+    Returns a 3-tuple $(a, b, c)$ such that $a^2 + b^2 + c^2 = n$ and
+    $a, b, c \geq 0$.
 
-    Returns None if `n = 4^a(8m + 7)` for some `a, m \in Z`. See
+    Returns None if $n = 4^a(8m + 7)$ for some `a, m \in \mathbb{Z}`. See
     [1]_ for more details.
 
     Usage
@@ -3891,15 +3892,34 @@ sum_of_powers = power_representation
 
 
 def pow_rep_recursive(n_i, k, n_remaining, terms, p):
+    # Invalid arguments
+    if n_i <= 0 or k <= 0:
+        return
+
+    # No solutions may exist
+    if n_remaining < k:
+        return
+    if k * pow(n_i, p) < n_remaining:
+        return
 
     if k == 0 and n_remaining == 0:
         yield tuple(terms)
+
+    elif k == 1:
+        # next_term^p must equal to n_remaining
+        next_term, exact = integer_nthroot(n_remaining, p)
+        if exact and next_term <= n_i:
+            yield tuple(terms + [next_term])
+        return
+
     else:
+        # TODO: Fall back to diop_DN when k = 2
         if n_i >= 1 and k > 0:
-            yield from pow_rep_recursive(n_i - 1, k, n_remaining, terms, p)
-            residual = n_remaining - pow(n_i, p)
-            if residual >= 0:
-                yield from pow_rep_recursive(n_i, k - 1, residual, terms + [n_i], p)
+            for next_term in range(1, n_i + 1):
+                residual = n_remaining - pow(next_term, p)
+                if residual < 0:
+                    break
+                yield from pow_rep_recursive(next_term, k - 1, residual, terms + [next_term], p)
 
 
 def sum_of_squares(n, k, zeros=False):

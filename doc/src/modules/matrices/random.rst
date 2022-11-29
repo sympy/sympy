@@ -193,116 +193,29 @@ gives an *invertible* matrix $\mathbf{M}$
 Seeding Random Number Generators
 --------------------------------
 
-There are Three different ways to generate randomly matrix entries.
+By default the module uses the global sympy random number generator
+function ``sample()`` which is a methode of an instance of ``random.Random()``.
+The random state can be set by invoking ``seed()``.
 
-1. By default the module uses its own random generator ``rand`` which is a instance of ``random.Random()``.
-Hence, the state can be set by invoking ``rand.seed()``.
-
-    >>> from sympy.matrices.random import rand, orthogonal
-
-    >>> rand.seed(1)
-    >>> orthogonal(3)
-    Matrix([
-    [-1,          0,          0],
-    [ 0,  sqrt(2)/2, -sqrt(2)/2],
-    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
-
-    >>> rand.seed(2)
-    >>> orthogonal(3)
-    Matrix([
-    [0, -1,  0],
-    [0,  0, -1],
-    [1,  0,  0]])
-
-    >>> rand.seed(1)
-    >>> orthogonal(3)
-    Matrix([
-    [-1,          0,          0],
-    [ 0,  sqrt(2)/2, -sqrt(2)/2],
-    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
-
-2. Provide a custom seed
-as in ``random.Random().seed()``
-
+    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import orthogonal
-    >>> orthogonal(3, seed=1)
+
+    >>> seed(1)
+    >>> orthogonal(3)
     Matrix([
     [-1,          0,          0],
     [ 0,  sqrt(2)/2, -sqrt(2)/2],
     [ 0, -sqrt(2)/2, -sqrt(2)/2]])
 
-    >>> orthogonal(3, seed=2)
+    >>> seed(2)
+    >>> orthogonal(3)
     Matrix([
     [0, -1,  0],
     [0,  0, -1],
     [1,  0,  0]])
 
-    >>> orthogonal(3, seed=1)
-    Matrix([
-    [-1,          0,          0],
-    [ 0,  sqrt(2)/2, -sqrt(2)/2],
-    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
-
-3. Provide a custom *random number generator* which must implement the same instance method ``sample``
-as ``random.Random()`` does.
-
-    >>> from random import Random
-    >>> from sympy.matrices.random import orthogonal
-    >>> rng = Random()
-
-    >>> rng.seed(1)
-    >>> orthogonal(3, seed=rng)
-    Matrix([
-    [-1,          0,          0],
-    [ 0,  sqrt(2)/2, -sqrt(2)/2],
-    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
-
-    >>> rng.seed(2)
-    >>> orthogonal(3, seed=rng)
-    Matrix([
-    [0, -1,  0],
-    [0,  0, -1],
-    [1,  0,  0]])
-
-    >>> rng.seed(1)
-    >>> orthogonal(3, seed=rng)
-    Matrix([
-    [-1,          0,          0],
-    [ 0,  sqrt(2)/2, -sqrt(2)/2],
-    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
-
-4. For sampling matrix entries from ``spec``, ``scalars`` or ``units`` arguments
-all these can be *random number generator*, too.
-At least they should provide some method ``sample``
-drawing a list of **k** random items (*without putting back*) via ``sample(k)``.
-
-    >>> class Scalars(list):
-    ...     rng = Random()
-    ...     def sample(self, k):
-    ...         return self.rng.sample(self, k)
-
-    >>> from sympy import sqrt
-    >>> from sympy.matrices.random import rand, orthogonal
-    >>> scalars = Scalars([(sqrt(2) / 2, sqrt(2) / 2), (0, -1)])
-
-    >>> # to obtain the same result, seed must use the same random number generator
-    >>> # since seed is used for drawing indices, too.
-    >>> scalars.rng.seed(1)
-    >>> orthogonal(3, scalars=scalars, seed=scalars.rng)
-    Matrix([
-    [-1,          0,          0],
-    [ 0,  sqrt(2)/2, -sqrt(2)/2],
-    [ 0, -sqrt(2)/2, -sqrt(2)/2]])
-
-    >>> scalars.rng.seed(2)
-    >>> orthogonal(3, scalars=scalars, seed=scalars.rng)
-    Matrix([
-    [0, -1,  0],
-    [0,  0, -1],
-    [1,  0,  0]])
-
-    >>> scalars.rng.seed(1)
-    >>> orthogonal(3, scalars=scalars, seed=scalars.rng)
+    >>> seed(1)
+    >>> orthogonal(3)
     Matrix([
     [-1,          0,          0],
     [ 0,  sqrt(2)/2, -sqrt(2)/2],
