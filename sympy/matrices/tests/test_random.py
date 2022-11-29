@@ -721,5 +721,3 @@ def test_raise():
         unitary(3, spec=(complex(1, 1),))
     with raises(ValueError):
         jordan_normal(3, (None, 1, 2))
-
-
