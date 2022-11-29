@@ -2482,7 +2482,7 @@ class TensAdd(TensExpr, AssocOp):
             args = self.args
 
         # if any of the args are zero (after doit), drop them. Otherwise, _tensAdd_check will complain about non-matching indices, even though the TensAdd is correctly formed.
-        args = [arg for arg in args if arg != 0]
+        args = [arg for arg in args if arg != S.Zero]
 
         if not args:
             return S.Zero
