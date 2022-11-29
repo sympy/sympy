@@ -1,4 +1,6 @@
 """ Integral Transforms """
+# The following line intentionally fails the code quality checks
+    
 from functools import reduce, wraps
 from itertools import repeat
 from sympy.core import S, pi, I
@@ -126,6 +128,13 @@ class IntegralTransform(Function):
             raise IntegralTransformError(self.__class__.name, None, '')
         return cond
 
+    def _use_rules(self, **hints):
+        # If an integral transform wants to use rule sets that go beyound
+        # applying linearity, then this method should be implemented to
+        # return a result if it can apply rules or return `None` if it
+        # obtains no result.
+        return None
+
     def _try_directly(self, **hints):
         T = None
         try_directly = not any(func.has(self.function_variable)
@@ -150,8 +159,9 @@ class IntegralTransform(Function):
         Explanation
         ===========
 
-        This general function handles linearity, but apart from that leaves
-        pretty much everything to _compute_transform.
+        This general function attempts to use rules through `_use_rules`; if
+        the rules do not provide a result, then it handles linearity, and
+        finally uses `_compute_transform` through `_try_directly`.
 
         Standard hints are the following:
 
@@ -167,6 +177,11 @@ class IntegralTransform(Function):
         needeval = hints.pop('needeval', False)
         simplify = hints.pop('simplify', True)
         hints['simplify'] = simplify
+
+        T = self._use_rules(**hints)
+
+        if T is not None:
+            return T
 
         fn, T = self._try_directly(**hints)
 
