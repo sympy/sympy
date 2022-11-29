@@ -11,7 +11,6 @@ from sympy.physics.units.systems.cgs import cgs_gauss
 
 def test_conversion_to_from_si():
     try:
-    
         assert convert_to(statcoulomb, coulomb, cgs_gauss) == coulomb/2997924580
         assert convert_to(coulomb, statcoulomb, cgs_gauss) == 2997924580*statcoulomb
         assert convert_to(statcoulomb, sqrt(gram*centimeter**3)/second, cgs_gauss) == centimeter**(S(3)/2)*sqrt(gram)/second
