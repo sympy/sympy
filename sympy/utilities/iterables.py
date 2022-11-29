@@ -2557,7 +2557,7 @@ def necklaces(n, k, free=False):
     yield tuple(a)
     if n == 0:
         return
-    while 1:
+    while True:
         i = n - 1
         while a[i] == k - 1:
             i -= 1
