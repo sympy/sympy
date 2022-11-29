@@ -2487,26 +2487,11 @@ class TensAdd(TensExpr, AssocOp):
         if not args:
             return S.Zero
 
-        if len(args) == 1 and not isinstance(args[0], TensExpr):
+        if len(args) == 1:
             return args[0]
 
         # now check that all addends have the same indices:
         TensAdd._tensAdd_check(args)
-
-        # if TensAdd has only 1 element in its `args`:
-        if len(args) == 1:  # and isinstance(args[0], TensMul):
-            return args[0]
-
-        # Remove zeros:
-        args = [x for x in args if x]
-
-        # if there are no more args (i.e. have cancelled out),
-        # just return zero:
-        if not args:
-            return S.Zero
-
-        if len(args) == 1:
-            return args[0]
 
         # Collect terms appearing more than once, differing by their coefficients:
         args = TensAdd._tensAdd_collect_terms(args)
