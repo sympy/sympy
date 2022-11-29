@@ -2487,6 +2487,9 @@ class TensAdd(TensExpr, AssocOp):
         if len(args) == 1 and not isinstance(args[0], TensExpr):
             return args[0]
 
+        # if any of the args are zero (after doit), drop them. Otherwise, the next step will complain about non-matching indices, even though the TensAdd is correctly formed.
+        args = [arg for arg in args if arg != 0]
+
         # now check that all addends have the same indices:
         TensAdd._tensAdd_check(args)
 
