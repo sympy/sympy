@@ -144,6 +144,7 @@ class IntegralTransform(Function):
                 T = self._compute_transform(self.function,
                     self.function_variable, self.transform_variable, **hints)
             except IntegralTransformError:
+                debug('[IT _try ] Caught IntegralTransformError, returns None')
                 T = None
 
         fn = self.function
@@ -184,11 +185,18 @@ class IntegralTransform(Function):
 
         if T is not None:
             return T
+        
+        debug('[IT doit ] tries directly with (%s)'%(self.args, ))
+        debug('[IT doit ]           and hints %s'%(hints, ))      
 
         fn, T = self._try_directly(**hints)
 
         if T is not None:
             return T
+
+        debug('[IT doit ] further looks into %s'%(fn, ))
+        debug('[IT doit ]         with hints %s'%(hints, ))      
+
 
         if fn.is_Add:
             hints['needeval'] = needeval
@@ -229,6 +237,7 @@ class IntegralTransform(Function):
 
         # pull out constant coefficients
         coeff, rest = fn.as_coeff_mul(self.function_variable)
+        debug('[IT doit ]     now returns: %s'%(coeff*self.__class__(*([Mul(*rest)] + list(self.args[1:]))), ))
         return coeff*self.__class__(*([Mul(*rest)] + list(self.args[1:])))
 
     @property
@@ -1594,7 +1603,7 @@ def _laplace_cr(f, **hints):
         return f
 
 def _laplace_rule_timescale(f, t, s, doit=True, **hints):
-    r"""
+    r"""()
     This internal helper function tries to apply the time-scaling rule of the
     Laplace transform and returns `None` if it cannot do it.
 
@@ -1868,11 +1877,18 @@ class LaplaceTransform(IntegralTransform):
             if LT is None:
                 if recursive>9:
                     return None
-                LT = laplace_transform(f, t_, s_, **hints)
-                if type(LT) is not tuple and LT.has(LaplaceTransform):
-                    unevaluated.append(LT)
+                LT = LaplaceTransform(f, t_, s_).doit(**hints)
+                #LT = laplace_transform(f, t_, s_, **hints)
+                if type(LT) is not tuple:
+                    if LT.has(LaplaceTransform):
+                        unevaluated.append(LT)
+                    else:
+                        recursed.append(LT)
                 else:
-                    recursed.append(LT)
+                    if LT[0].has(LaplaceTransform):
+                        unevaluated.append(LT[0])
+                    else:
+                        recursed.append(LT)
             else:
                 if type(LT) is not tuple and LT.has(LaplaceTransform):
                     unevaluated.append(LT)
@@ -1886,11 +1902,15 @@ class LaplaceTransform(IntegralTransform):
             F = [0]
             a = [S.NegativeInfinity]
             c = [True]
-            for F_, a_, c_ in by_rule + recursed:
-                F.append(F_)
-                a.append(a_)
-                c.append(c_)
-            LT = (Add(*F).simplify()+Add(*unevaluated), Max(*a), And(*c))
+            if len(by_rule)==0 and len(recursed)==0:
+                LT = Add(*unevaluated)
+            else:
+                for F_, a_, c_ in by_rule + recursed:
+                    F.append(F_)
+                    a.append(a_)
+                    c.append(c_)
+                    LT = (Add(*F).simplify()+Add(*unevaluated),
+                          Max(*a), And(*c))
 
         return LT
 
@@ -1900,10 +1920,12 @@ class LaplaceTransform(IntegralTransform):
         #LT = _laplace_apply_rules(f, t, s, **hints)
         #if LT is None:
         _simplify = hints.get('simplify', True)
-
-        return _laplace_cr(
-            _laplace_transform(f, t, s, simplify=_simplify),
-            **hints)
+        
+        LT = _laplace_transform(f, t, s, simplify=_simplify)
+        debug('[LT _c_t ]     --> %s'%(LT, ))
+        debug('[LT _c_t ]         %s'%(_laplace_cr(LT, **hints), ))
+       
+        return _laplace_cr(LT, **hints)
 
     def _as_integral(self, f, t, s):
         return Integral(f*exp(-s*t), (t, S.Zero, S.Infinity))
@@ -2026,8 +2048,12 @@ behavior.
             f = Mul(*[ i for i in factors if not i is Heaviside(t) ])
 
     debug('[LT l_t  ]   executes LaplaceTransform(%s, %s, %s)'%(f, t, s))
-
-    return LaplaceTransform(f, t, s).doit(**hints)
+    
+    LT = LaplaceTransform(f, t, s).doit(**hints)
+    
+    debug('[LT l_t  ]   --> %s'%(LT, ))
+    debug('[LT l_t  ]   ------')
+    return LT
 
 def _complete_the_square_in_denom(f, s):
     from sympy.simplify.radsimp import fraction
