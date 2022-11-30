@@ -1610,13 +1610,13 @@ def NonfreeFactors(u, x):
 
     """
     if ProductQ(u):
-        result = 1
+        result = S(1)
         for i in u.args:
             if not FreeQ(i, x):
                 result *= i
         return result
     elif FreeQ(u, x):
-        return 1
+        return S(1)
     else:
         return u
 
@@ -6792,6 +6792,288 @@ def Negative(x):
 def Quotient(m, n):
     return Floor(m/n)
 
+
+'''
+Below this, all the utility functions are for version >= 4.15
+=============================
+'''
+
+def EveryQ(func, lst):
+    for i in lst:
+        if not func(i):
+            return False
+
+    return True
+
+def HalfIntegerQ(*args):
+    for i in args:
+        fraction = S(i).as_numer_denom()
+        if not (RationalQ(fraction[0]) and fraction[1] == S(2)):
+            return False
+    return True
+
+def StopFunctionQ(u):
+    if not u.is_Atom:
+        u = Head(u)
+    return u in [Pattern, If, Int, Integral]
+
+def CalculusFreeQ(u, x):
+    if AtomQ(u):
+        return True
+    elif CalculusQ(u) and u.args[1] == x:
+        return False
+    else:
+        for i in u.args:
+            if not CalculusFreeQ(i, x):
+                return False
+        return True
+
+def NeQ(u, v):
+    return not EqQ(u, v)
+
+def IGtQ(u, n):
+    return IntegerQ(u) and u > n
+
+def ILtQ(u, n):
+    return IntegerQ(u) and u < n
+
+def IGeQ(u, n):
+    return IntegerQ(u) and u >= n
+
+def ILeQ(u, n):
+    return IntegerQ[u] and u <= n
+
+def RealNumberQ(u):
+    return S(u).is_real
+
+def GtQ(u, v, w=None):
+    if w == None:
+        if RealNumberQ(u):
+            if RealNumberQ(v):
+                return u > v
+            else:
+                vn = N(Together(v))
+                return Head(vn).is_real and u > vn
+        else:
+            un = N(Together(u))
+            if Head(un).is_real:
+                if RealNumberQ(v):
+                    return un > v
+                else:
+                    vn = N(Together(v))
+                    return Head(vn).is_real and un > vn
+        return False
+    else:
+        return GtQ(u, v) and GtQ(v, w)
+
+def LtQ(u, v, w=None):
+    if w == None:
+        if RealNumberQ(u):
+            if RealNumberQ(v):
+                return u < v
+            else:
+                vn = N(Together(v))
+                return Head(vn).is_real and u < vn
+        else:
+            un = N(Together(u))
+            if Head(un).is_real:
+                if RealNumberQ(v):
+                    return un < v
+                else:
+                    vn = N(Together(v))
+                    return Head(vn).is_real and un < vn
+        return False
+    else:
+        return LtQ(u, v) and LtQ(v, w)
+
+def GeQ(u, v, w=None):
+    if w == None:
+        if RealNumberQ(u):
+            if RealNumberQ(v):
+                return u >= v
+            else:
+                vn = N(Together(v))
+                return Head(vn).is_real and u >= vn
+        else:
+            un = N(Together(u))
+            if Head(un).is_real:
+                if RealNumberQ(v):
+                    return un >= v
+                else:
+                    vn = N(Together(v))
+                    return Head(vn).is_real and un >= vn
+        return False
+    else:
+        return GeQ(u, v) and GeQ(v, w)
+
+
+def LeQ(u, v, w=None):
+    if w == None:
+        if RealNumberQ(u):
+            if RealNumberQ(v):
+                return u <= v
+            else:
+                vn = N(Together(v))
+                return Head(vn).is_real and u <= vn
+        else:
+            un = N(Together(u))
+            if Head(un).is_real:
+                if RealNumberQ(v):
+                    return un <= v
+                else:
+                    vn = N(Together(v))
+                    return Head(vn).is_real and un <= vn
+        return False
+    else:
+        return LeQ(u, v) and LeQ(v, w)
+
+def ProperPolyQ(u, x):
+    return PolyQ(u, x) and NeQ(Coeff(u, x, 0), 0)
+
+def QuadraticProductQ(u, x):
+    def _cons_f(A, m, x):
+        return PolyQ(A, x) and Expon(A, x) <= 2 and IntegerQ(m)
+    cons = CustomConstraint(_cons_f)
+    pattern = Pattern(UtilityOperator(Pow(A_, WC('m', S(1))), x_), cons)
+    for i in NonfreeFactors(u, x).args:
+        if not is_match(UtilityOperator(i, x), pattern):
+            return False
+    return ProductQ(NonfreeFactors(u, x))
+
+def InverseFunctionOfQuotientOfLinears(u, x):
+    if AtomQ(u) or CalculusQ(u) or FreeQ(u, x):
+        return False
+    elif InverseFunctionQ(u) and QuotientOfLinearsQ(u.args[0], x):
+        return u
+    else:
+        for i in u.args:
+            tmp = InverseFunctionOfQuotientOfLinears(i, x)
+            if not AtomQ(tmp):
+                return tmp
+    return False
+
+def NormalizeTrig(func, expr, b, x):
+    from matchpy import match
+    pattern = Pattern(UtilityOperator((pi*WC('n', S(1)) + WC('r', S(0)))*WC('m', S(1)) + WC('s', S(0))))
+    if is_match(UtilityOperator(expr), pattern):
+        mt =  next(match(UtilityOperator(expr), pattern))
+        m = mt['m']
+        n = mt['n']
+        r = mt['r']
+        s = mt['s']
+        if m*n == S(1)/4 and NegQ(b):
+            if func == sin:
+                return cos(pi/S(4) - m*r - s - b*x)
+            elif func == cos:
+                return sin(pi/S(4) - m*r - s - b*x)
+            elif func == tan:
+                return cot(pi/S(4) - m*r - s - b*x)
+            elif func == cot:
+                return tan(pi/S(4) - m*r - s - b*x)
+            elif func == sec:
+                return csc(pi/S(4) - m*r - s - b*x)
+            elif func == csc:
+                return sec(pi/S(4) - m*r - s - b*x)
+
+        elif m*n == S(-1)/4:
+            if PosQ(b):
+                if func == sin:
+                    return -cos(pi/S(4) + m*r + s + b*x)
+                elif func == cos:
+                    return sin(pi/S(4) + m*r + s + b*x)
+                elif func == tan:
+                    return -cot(pi/S(4) + m*r + s + b*x)
+                elif func == cot:
+                    return -tan(pi/S(4) + m*r + s + b*x)
+                elif func == sec:
+                    return csc(pi/S(4) + m*r + s + b*x)
+                elif func == csc:
+                    return -sec(pi/S(4) + m*r + s + b*x)
+
+            else:
+                if func == sin:
+                    return -sin(pi/S(4) - m*r - s - b*x)
+                elif func == cos:
+                    return cos(pi/S(4) - m*r - s - b*x)
+                elif func == tan:
+                    return -tan(pi/S(4) - m*r - s - b*x)
+                elif func == cot:
+                    return -cot(pi/S(4) - m*r - s - b*x)
+                elif func == sec:
+                    return sec(pi/S(4) - m*r - s - b*x)
+                elif func == csc:
+                    return -csc(pi/S(4) - m*r - s - b*x)
+        return func(m*n*pi+ m*r + s + b*x)
+    return Function('NormalizeTrig')(func, expr, b, x)
+
+def NormalizeHyperbolic(func, expr, b, x):
+    from matchpy import match
+    pattern = Pattern(UtilityOperator((pi*WC('n', S(1))*Complex(0, z_) + WC('r', S(0)))*WC('m', S(1)) + WC('s', S(0))))
+    if is_match(UtilityOperator(expr), pattern):
+        mt =  next(match(UtilityOperator(expr), pattern))
+        m = mt['m']
+        n = mt['n']
+        r = mt['r']
+        s = mt['s']
+        z = mt['z']
+        if m*n*z == S(1)/4 and NegQ(b):
+            if func == sinh:
+                return I*cosh(I*pi/S(4) - m*r - s - b*x)
+            elif func == cosh:
+                return -I*sinh(I*pi/S(4) - m*r - s - b*x)
+            elif func == tanh:
+                return -coth(I*pi/S(4) - m*r - s - b*x)
+            elif func == coth:
+                return -tanh(I*pi/S(4) - m*r - s - b*x)
+            elif func == sech:
+                return I*csch(I*pi/S(4) - m*r - s - b*x)
+            elif func == csch:
+                return -I*sech(I*pi/S(4) - m*r - s - b*x)
+        elif m*n*z == S(-1)/4:
+            if PosQ(b):
+                if func == sinh:
+                    return -I*cosh(I*pi/S(4) + m*r + s + b*x)
+                elif func == cosh:
+                    return -I*sinh(I*pi/S(4) + m*r + s + b*x)
+                elif func == tanh:
+                    return coth(I*pi/S(4) + m*r + s + b*x)
+                elif func == coth:
+                    return tanh(I*pi/S(4) + m*r + s + b*x)
+                elif func == sech:
+                    return I*csch(I*pi/S(4) + m*r + s + b*x)
+                elif func == csch:
+                    return I*sech(I*pi/S(4) + m*r + s + b*x)
+            else:
+                if func == sinh:
+                    return -sinh(I*pi/S(4) - m*r - s - b*x)
+                elif func == cosh:
+                    return cosh(I*pi/S(4) - m*r - s - b*x)
+                elif func == tanh:
+                    return -tanh(I*pi/S(4) - m*r - s - b*x)
+                elif func == coth:
+                    return -coth(I*pi/S(4) - m*r - s - b*x)
+                elif func == sech:
+                    return sech(I*pi/S(4) - m*r - s - b*x)
+                elif func == csch:
+                    return -csch(I*pi/S(4) - m*r - s - b*x)
+        else:
+            return func(m*n*z*I*pi + m*r + s + b*x)
+    return Function('NormalizeHyperbolic')(func, expr, b, x)
+
+def UnifyNegativeBaseFactors(u):
+    pattern = Pattern(UtilityOperator(v_**WC('n', S(1))*(-v_)**m_*WC('u', S(1))))
+    if is_match(UtilityOperator(u), pattern):
+        mt =  next(match(UtilityOperator(u), pattern))
+        v = mt['v']
+        n = mt['n']
+        u = mt['u']
+        m = mt['m']
+        if IntegerQ(n):
+            return UnifyNegativeBaseFactors((-1)**n*u*(-v)**(m + n))
+    return u
+
+# ===========================
+
 def process_trig(expr):
     """
     This function processes trigonometric expressions such that all `cot` is
@@ -7326,6 +7608,7 @@ def _RemoveContentAux():
 IntHide = Int
 Log = rubi_log
 Null = None
+
 if matchpy:
     RemoveContentAux_replacer = ManyToOneReplacer(* _RemoveContentAux())
     ExpandIntegrand_rules = _ExpandIntegrand()
