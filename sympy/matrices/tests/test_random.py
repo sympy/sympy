@@ -2,7 +2,7 @@ import random as system_random
 
 from sympy import Matrix, diag, eye, zeros, cartes, \
     I, cos, simplify, symbols, sqrt, expand
-from sympy.core.random import seed
+from sympy.core.random import seed, sample
 from sympy.matrices.random import super_elementary_matrix, \
     complex_to_real, invertible, regular_to_singular, diagonal_normal, \
     diagonalizable, transposition, triangular, trigonalizable, \
@@ -583,13 +583,15 @@ def test_sample():
             assert 0 <= n[i, i] <= 1, repr(n)
 
 
-def _test_seed():
+def test_seed():
+
     class Scalars(list):
         """list class with build in sample method"""
         rnd = system_random.Random()
 
         def sample(self, k):
             return self.rnd.sample(self, k)
+
 
     _all_ = projection, jordan, transposition, \
           permutation, elementary, rotation, reflection, \
@@ -610,60 +612,21 @@ def _test_seed():
 
     _isometry_scalars_ = orthogonal, unitary, normal
 
-    seed = 101
-    rnd = system_random.Random(seed)
-    seeds = rnd.sample(range(100), 3)
+    seed(101)
+    seeds = sample(range(100), 3)
     for d in TEST_DIMS:
         for matrix in _all_:
-            # 1. standard random
             first, second = list(), list()
             for s in seeds:
-                seed(s)
+                seed(s-1)
                 first.append((s, expand(matrix(d))))
             for s in seeds:
-                seed(s)
+                seed(s-1)
                 second.append((s, expand(matrix(d))))
             for (seed_a, a), (seed_b, b) in zip(first, second):
-                assert a == b,  str(seeds) + ' ' + str(seed_a) + ' ' + str(seed_b) + ' ' + matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
-            # for a, b in zip(first, reversed(second)):
-            #     assert a != b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
-
-        for matrix in _all_:
-            # 2. direct seed
-            first, second = list(), list()
-            for s in seeds:
-                seed(s)
-                first.append(matrix(d, seed=s))
-            for s in seeds:
-                second.append(matrix(d, seed=s))
-            for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
-
-        for matrix in _all_:
-            # 3. direct seed as random
-            first, second = list(), list()
-            rnd = system_random.Random()
-            for s in seeds:
-                rnd.seed(s)
-                first.append(matrix(d, seed=rnd))
-            for s in seeds:
-                rnd.seed(s)
-                second.append(matrix(d, seed=rnd))
-            for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
-
-        for matrix in _spec_:
-            # 4. spec as random
-            first, second = list(), list()
-            spec = Scalars(range(100))
-            for s in seeds:
-                spec.rnd.seed(s)
-                first.append(matrix(d, spec=spec, seed=spec.rnd))
-            for s in seeds:
-                spec.rnd.seed(s)
-                second.append(matrix(d, spec=spec, seed=spec.rnd))
-            for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+                assert a == b,  \
+                    str(seeds) + ' ' + str(seed_a) + ' ' + str(seed_b) + ' ' \
+                    + matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
         for matrix in _isometry_spec_:
             # 4. scalars/units as random
@@ -671,13 +634,16 @@ def _test_seed():
             z = sqrt(2)/2 + sqrt(2)/2 * I
             spec = Scalars((z, -1, z*z))
             for s in seeds:
+                seed(s-1)
                 spec.rnd.seed(s)
-                first.append(matrix(d, spec=spec, seed=spec.rnd))
+                first.append(matrix(d, spec=spec))
             for s in seeds:
+                seed(s-1)
                 spec.rnd.seed(s)
-                second.append(matrix(d, spec=spec, seed=spec.rnd))
+                second.append(matrix(d, spec=spec))
             for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+                assert a == b, \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
         for matrix in _elementary_scalars_:
             # 4. scalars/units as random
@@ -685,26 +651,32 @@ def _test_seed():
             scalars = Scalars(range(10))
             units = Scalars(range(-5, 5))
             for s in seeds:
+                seed(s-1)
                 scalars.rnd.seed(s)
-                first.append(matrix(d, scalars=scalars, units=units, seed=scalars.rnd))
+                first.append(matrix(d, scalars=scalars, units=units))
             for s in seeds:
+                seed(s-1)
                 scalars.rnd.seed(s)
-                second.append(matrix(d, scalars=scalars, units=units, seed=scalars.rnd))
+                second.append(matrix(d, scalars=scalars, units=units))
             for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+                assert a == b, \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
         for matrix in _isometry_scalars_:
             # 4. scalars/units as random
             first, second = list(), list()
             scalars = Scalars((sqrt(2)/2, 0))
             for s in seeds:
+                seed(s-1)
                 scalars.rnd.seed(s)
-                first.append(matrix(d, scalars=scalars, seed=scalars.rnd))
+                first.append(matrix(d, scalars=scalars))
             for s in seeds:
+                seed(s-1)
                 scalars.rnd.seed(s)
-                second.append(matrix(d, scalars=scalars, seed=scalars.rnd))
+                second.append(matrix(d, scalars=scalars))
             for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+                assert a == b, \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
 
 # === other tests ===
