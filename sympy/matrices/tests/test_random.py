@@ -625,8 +625,23 @@ def test_seed():
                 second.append((s, expand(matrix(d))))
             for (seed_a, a), (seed_b, b) in zip(first, second):
                 assert a == b,  \
-                    str(seeds) + ' ' + str(seed_a) + ' ' + str(seed_b) + ' ' \
-                    + matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+
+        for matrix in _spec_:
+            # 4. spec as random
+            first, second = list(), list()
+            spec = Scalars(range(100))
+            for s in seeds:
+                seed(s-1)
+                spec.rnd.seed(s)
+                first.append(matrix(d, spec=spec))
+            for s in seeds:
+                seed(s-1)
+                spec.rnd.seed(s)
+                second.append(matrix(d, spec=spec))
+            for a, b in zip(first, second):
+                assert a == b, \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
         for matrix in _isometry_spec_:
             # 4. scalars/units as random
