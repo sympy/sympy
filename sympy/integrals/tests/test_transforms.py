@@ -715,7 +715,7 @@ def test_laplace_transform():
 
     # additional basic tests from wikipedia
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
-        ((s + c)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True)
+        ((c + s)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True)
     assert LT((exp(2*t) - 1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
         == exp(-b)/(s**2 - 1)
 

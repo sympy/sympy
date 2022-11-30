@@ -887,7 +887,7 @@ class InverseMellinTransform(IntegralTransform):
     def _compute_transform(self, F, s, x, **hints):
         # IntegralTransform's doit will cause this hint to exist, but
         # InverseMellinTransform should ignore it
-        hints.get('simplify', True)
+        hints.pop('simplify', True)
         global _allowed
         if _allowed is None:
             _allowed = {
@@ -1911,7 +1911,7 @@ class LaplaceTransform(IntegralTransform):
                     c.append(c_)
                     LT = (Add(*F).simplify()+Add(*unevaluated),
                           Max(*a), And(*c))
-
+        debug('[LT _u_r ]     returns %s'%(LT, ))        
         return LT
 
     def _compute_transform(self, f, t, s, **hints):
