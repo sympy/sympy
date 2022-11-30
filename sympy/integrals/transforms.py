@@ -151,7 +151,6 @@ class IntegralTransform(Function):
             fn = expand_mul(fn)
         return fn, T
 
-
     def doit(self, **hints):
         """
         Try to evaluate the transform in closed form.
@@ -177,8 +176,9 @@ class IntegralTransform(Function):
         needeval = hints.pop('needeval', False)
         simplify = hints.pop('simplify', True)
         hints['simplify'] = simplify
-        
-        debug('**##* ', hints)
+
+        debug('[IT doit ] started with (%s)'%(self.args, ))
+        debug('[IT doit ]     and hints %s'%(hints, ))
 
         T = self._use_rules(**hints)
 
@@ -878,7 +878,7 @@ class InverseMellinTransform(IntegralTransform):
     def _compute_transform(self, F, s, x, **hints):
         # IntegralTransform's doit will cause this hint to exist, but
         # InverseMellinTransform should ignore it
-        hints.pop('simplify', True)
+        hints.get('simplify', True)
         global _allowed
         if _allowed is None:
             _allowed = {
@@ -1062,6 +1062,9 @@ def _laplace_transform(f, t, s_, simplify=True):
     deltazero = []
     deltanonzero = []
 
+    debug('[LT _l_t ] started with (%s, %s, %s)'%(f, t, s))
+    debug('[LT _l_t ]     and simplify=%s'%(simplify, ))
+
     try:
         integratable, deltadict = expand_dirac_delta(f)
     except PolyNonlinearError:
@@ -1077,18 +1080,27 @@ def _laplace_transform(f, t, s_, simplify=True):
                                              'not implemented yet.')
             else:
                 deltanonzero.append(dirac_func*dirac_coeff)
+
+    debug('[LT _l_t ]     integrable:   %s'%(integratable, ))
+    debug('[LT _l_t ]     deltanonzero: %s'%(deltanonzero, ))
+    debug('[LT _l_t ]     deltanzero  : %s'%(deltazero, ))
+
     F = Add(integrate(exp(-s*t) * Add(integratable, *deltanonzero),
                       (t, S.Zero, S.Infinity)),
             Add(*deltazero))
+    
+    debug('[LT _l_t ]     integrated  : %s'%(F, ))
 
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), S.NegativeInfinity, S.true
 
     if not F.is_Piecewise:
+        debug('[LT _l_t ]     not piecewise : %s'%(F, ))
         raise IntegralTransformError(
             'Laplace', f, 'could not compute integral')
 
-    F, cond = F.args[0]
+    F, cond = F.args[0]   
+
     if F.has(Integral):
         raise IntegralTransformError(
             'Laplace', f, 'integral in unexpected form')
@@ -1208,7 +1220,7 @@ def _laplace_build_rules(t, s):
     n = Wild('n', exclude=[t])
     tau = Wild('tau', exclude=[t])
     omega = Wild('omega', exclude=[t])
-    dco = lambda f: _laplace_deep_collect(f,t)
+    dco = lambda f: _laplace_deep_collect(f, t)
     laplace_transform_rules = [
     # ( time domain,
     #   laplace domain,
@@ -1570,18 +1582,7 @@ def _laplace_build_rules(t, s):
     ]
     return laplace_transform_rules
 
-def _laplace_cr(f, a, c, **hints):
-    """
-    Internal helper function that will return `(f, a, c)` unless `**hints`
-    contains `noconds=True`, in which case it will only return `f`.
-    """
-    conds = not hints.get('noconds', False)
-    if conds:
-        return f, a, c
-    else:
-        return f
-
-def _laplace_tr(f, **hints):
+def _laplace_cr(f, **hints):
     """
     Internal helper function that will return `(f, a, c)` unless `**hints`
     contains `noconds=True`, in which case it will only return `f`.
@@ -1669,7 +1670,7 @@ def _laplace_rule_exp(f, t, s, doit=True, **hints):
     This internal helper function tries to transform a product containing the
     `exp` function and returns `None` if it cannot do it.
     """
-    hints.pop('simplify', True)
+    hints.get('simplify', True)
     a = Wild('a', exclude=[t])
 
     y = Wild('y')
@@ -1696,7 +1697,7 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
     trigonometric function (`sin`, `cos`, `sinh`, `cosh`, ) and returns
     `None` if it cannot do it.
     """
-    _simplify = hints.pop('simplify', True)
+    _simplify = hints.get('simplify', True)
     a = Wild('a', exclude=[t])
     y = Wild('y')
     z = Wild('z')
@@ -1749,7 +1750,7 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     a derivative of an undefined function and returns `None` if it cannot
     do it.
     """
-    hints.pop('simplify', True)
+    hints.get('simplify', True)
     a = Wild('a', exclude=[t])
     y = Wild('y')
     n = Wild('n', exclude=[t])
@@ -1786,26 +1787,27 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
 
     noconds = hints.get('noconds', False)
 
-    debug('----> Applying rules on: ', f)
+    debug('[LT _lar ] started with (%s, %s, %s)'%(f, t, s))
+    debug('[LT _lar ]     and hints %s'%(hints, ))
 
     k, func = f.as_independent(t, as_Add=False)
+    debug('[LT _lar ]     deep collect: %s'%(_laplace_deep_collect(func, t),))
 
     simple_rules = _laplace_build_rules(t, s)
-    for t_dom, s_dom, check, plane, prep in simple_rules:
+    for t_dom, s_dom, check, plane, prep in simple_rules:   
         ma = prep(func).match(t_dom)
         if ma:
             debug('_laplace_apply_rules match:')
             debug('      f:    %s'%(func,))
             debug('      rule: %s o---o %s'%(t_dom, s_dom))
-            try:
-                debug('      try   %s'%(check,))
-                c = check.xreplace(ma)
-                debug('      check %s -> %s'%(check, c))
-                if c==True:
-                    return _laplace_cr(k*s_dom.xreplace(ma),
-                                plane.xreplace(ma), S.true, **hints)
-            except Exception:
-                debug('_laplace_apply_rules did not match.')
+            debug('      match: %s'%(ma, ))
+            debug('      try   %s'%(check,))
+            c = check.xreplace(ma)
+            debug('      check %s -> %s'%(check, c))
+            if c==True:
+                return _laplace_cr((k*s_dom.xreplace(ma),
+                                   plane.xreplace(ma), S.true), **hints)
+
     if f.has(DiracDelta):
         return None
 
@@ -1840,17 +1842,23 @@ class LaplaceTransform(IntegralTransform):
         fn = self.function
         t_ = self.function_variable
         s_ = self.transform_variable
+        debug('[LT _u_r ] started with (%s, %s, %s)'%(fn, t_, s_))
+        debug('[LT _u_r ]     and hints %s'%(hints, ))
         LT = None
-        # Try to convert this into a sum and transform sum terms only on the
-        # first recursion level.
-        if recursive == 0:
-            r = expand(fn, deep=False)
-            if r.is_Add:
-                terms = r.args
+
+        # Try once without expanding
+        if recursive>0:
+            if recursive<=4:
+                r = expand(fn, deep=False)
             else:
-                terms = [fn]
+                r = expand(fn)
         else:
-            terms = [fn]
+            r = fn
+        
+        if r.is_Add:
+            terms = r.args
+        else:
+            terms = [r]
         
         by_rule = []
         recursed = []
@@ -1858,7 +1866,7 @@ class LaplaceTransform(IntegralTransform):
         for f in terms:
             LT = _laplace_apply_rules(f, t_, s_, **hints)
             if LT is None:
-                if recursive>1:
+                if recursive>9:
                     return None
                 LT = laplace_transform(f, t_, s_, **hints)
                 if type(LT) is not tuple and LT.has(LaplaceTransform):
@@ -1876,28 +1884,26 @@ class LaplaceTransform(IntegralTransform):
             LT = (Add(*by_rule)+Add(*recursed)).simplify()+Add(*unevaluated)
         else:
             F = [0]
-            a = [-S.Infinity]
+            a = [S.NegativeInfinity]
             c = [True]
-            debug('####>> ', by_rule + recursed)
             for F_, a_, c_ in by_rule + recursed:
                 F.append(F_)
                 a.append(a_)
                 c.append(c_)
             LT = (Add(*F).simplify()+Add(*unevaluated), Max(*a), And(*c))
 
-        debug('####>> ', LT)
         return LT
 
     def _compute_transform(self, f, t, s, **hints):
-        LT = _laplace_apply_rules(f, t, s, **hints)
-        if LT is None:
-            _simplify = hints.pop('simplify', True)
-            debug('_laplace_apply_rules could not match function %s'%(f,))
-            debug('    hints: %s'%(hints,))
-            hints.pop('recursive', 0)
-            return _laplace_transform(f, t, s, simplify=_simplify, **hints)
-        else:
-            return LT
+        debug('[LT _c_t ] started with (%s, %s, %s)'%(f, t, s))
+        debug('[LT _c_t ]     and hints %s'%(hints, ))
+        #LT = _laplace_apply_rules(f, t, s, **hints)
+        #if LT is None:
+        _simplify = hints.get('simplify', True)
+
+        return _laplace_cr(
+            _laplace_transform(f, t, s, simplify=_simplify),
+            **hints)
 
     def _as_integral(self, f, t, s):
         return Integral(f*exp(-s*t), (t, S.Zero, S.Infinity))
@@ -1914,33 +1920,6 @@ class LaplaceTransform(IntegralTransform):
             raise IntegralTransformError(
                 'Laplace', None, 'No combined convergence.')
         return plane, cond
-
-    # def _try_directly(self, **hints):
-    #     noconds = hints.get('noconds', False)
-    #     fn = self.function
-    #     t_ = self.function_variable
-    #     s_ = self.transform_variable
-    #     r = expand(fn, deep=False)
-    #     if r.is_Add and noconds:
-    #         # Try apply rules to all sum terms; if it does not work, use
-    #         # a combined way
-    #         st = [S.Zero]
-    #         for f in r.args:
-    #             LT = _laplace_apply_rules(f, t_, s_, **hints)
-    #             if LT is None:
-    #                 st = None
-    #                 break
-    #             st.append(LT)
-    #         if not st is None:
-    #             return fn, Add(*st)
-    #     LT = None
-    #     if not fn.is_Add:
-    #         fn = expand_mul(fn)
-    #         try:
-    #             LT = self._compute_transform(fn, t_, s_, **hints)
-    #         except IntegralTransformError:
-    #             LT = None
-    #     return fn, LT
 
 def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
@@ -2008,6 +1987,10 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     """
 
+    debug('[LT l_t  ] ************* %s'%(f,))
+    debug('[LT l_t  ] started with (%s, %s, %s)'%(f, t, s))
+    debug('[LT l_t  ]     and hints %s'%(hints, ))
+
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
 
         conds = not hints.get('noconds', False)
@@ -2042,7 +2025,7 @@ behavior.
         if Heaviside(t) in factors:
             f = Mul(*[ i for i in factors if not i is Heaviside(t) ])
 
-    debug('\n***** LaplaceTransform(%s, %s, %s)'%(f, t, s))
+    debug('[LT l_t  ]   executes LaplaceTransform(%s, %s, %s)'%(f, t, s))
 
     return LaplaceTransform(f, t, s).doit(**hints)
 
