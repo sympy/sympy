@@ -1,7 +1,7 @@
 from itertools import product
 
 from sympy.concrete.summations import Sum
-from sympy.core.function import (Function, diff)
+from sympy.core.function import (Function, Lambda, diff)
 from sympy.core import EulerGamma
 from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
@@ -9,7 +9,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
 from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, atanh, sinh)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, atanh, sinh, tanh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
@@ -1295,3 +1295,11 @@ def test_issue_23752():
     assert limit(expr1, x, 0, '-') == -sqrt(3)*I
     assert limit(expr2, x, 0, '+') == sqrt(3)*I
     assert limit(expr2, x, 0, '-') == -sqrt(3)*I
+
+def test_issue_24276():
+    f=Lambda((x), log(tan(pi/2*tanh(x))).diff(x)) ; f(x)
+    assert f(x).limit(x, oo) == 2
+    assert f(x).simplify().limit(x, oo) == 2
+    assert f(x).rewrite(sin).limit(x, oo) == 2
+    assert f(x).rewrite(sin).simplify().limit(x, oo) == 2
+
