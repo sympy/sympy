@@ -747,17 +747,16 @@ def test_laplace_transform():
     assert LT(Heaviside(t - a), t, s) == (exp(-a*s)/s, 0, True)
     assert LT(Heaviside(t-1), t, s) == (exp(-s)/s, 0, True)
     assert LT(Heaviside(2*t-4), t, s) == (exp(-2*s)/s, 0, True)
-    assert LT(Heaviside(-2*t+4), t, s) == ((1 - exp(-2*s))/s, 0, True)
     assert LT(Heaviside(2*t+4), t, s) == (1/s, 0, True)
-    assert LT(Heaviside(-2*t+4), t, s) == ((1 - exp(-2*s))/s, 0, True)
+    assert LT(Heaviside(-2*t+4), t, s) == (1/s - exp(-2*s)/s, 0, True)
 
     # Fresnel functions
     assert laplace_transform(fresnels(t), t, s) == \
-        ((-sin(s**2/(2*pi))*fresnels(s/pi) + sin(s**2/(2*pi))/2 -
-            cos(s**2/(2*pi))*fresnelc(s/pi) + cos(s**2/(2*pi))/2)/s, 0, True)
-    assert laplace_transform(fresnelc(t), t, s) == (
-        ((2*sin(s**2/(2*pi))*fresnelc(s/pi) - 2*cos(s**2/(2*pi))*fresnels(s/pi)
-        + sqrt(2)*cos(s**2/(2*pi) + pi/4))/(2*s), 0, True))
+        ((-sin(s**2/(2*pi))*fresnels(s/pi) + sqrt(2)*sin(s**2/(2*pi) + pi/4)/2\
+          - cos(s**2/(2*pi))*fresnelc(s/pi))/s, 0, True)
+    assert laplace_transform(fresnelc(t), t, s) == \
+        ((sin(s**2/(2*pi))*fresnelc(s/pi) - cos(s**2/(2*pi))*fresnels(s/pi) +\
+          sqrt(2)*cos(s**2/(2*pi) + pi/4)/2)/s, 0, True)
 
     # Matrix tests
     Mt = Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]])
@@ -1088,7 +1087,6 @@ def test_issue_8514():
 def test_issue_12591():
     x, y = symbols("x y", real=True)
     assert fourier_transform(exp(x), x, y) == FourierTransform(exp(x), x, y)
-
 
 def test_issue_14692():
     b = Symbol('b', negative=True)

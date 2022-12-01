@@ -1,6 +1,4 @@
 """ Integral Transforms """
-# The following line intentionally fails the code quality checks
-    
 from functools import reduce, wraps
 from itertools import repeat
 from sympy.core import S, pi, I
@@ -185,9 +183,9 @@ class IntegralTransform(Function):
 
         if T is not None:
             return T
-        
+
         debug('[IT doit ] tries directly with (%s)'%(self.args, ))
-        debug('[IT doit ]           and hints %s'%(hints, ))      
+        debug('[IT doit ]           and hints %s'%(hints, ))
 
         fn, T = self._try_directly(**hints)
 
@@ -195,7 +193,7 @@ class IntegralTransform(Function):
             return T
 
         debug('[IT doit ] further looks into %s'%(fn, ))
-        debug('[IT doit ]         with hints %s'%(hints, ))      
+        debug('[IT doit ]         with hints %s'%(hints, ))
 
 
         if fn.is_Add:
@@ -1097,7 +1095,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     F = Add(integrate(exp(-s*t) * Add(integratable, *deltanonzero),
                       (t, S.Zero, S.Infinity)),
             Add(*deltazero))
-    
+
     debug('[LT _l_t ]     integrated  : %s'%(F, ))
 
     if not F.has(Integral):
@@ -1108,7 +1106,7 @@ def _laplace_transform(f, t, s_, simplify=True):
         raise IntegralTransformError(
             'Laplace', f, 'could not compute integral')
 
-    F, cond = F.args[0]   
+    F, cond = F.args[0]
 
     if F.has(Integral):
         raise IntegralTransformError(
@@ -1603,7 +1601,7 @@ def _laplace_cr(f, **hints):
         return f
 
 def _laplace_rule_timescale(f, t, s, doit=True, **hints):
-    r"""()
+    r"""
     This internal helper function tries to apply the time-scaling rule of the
     Laplace transform and returns `None` if it cannot do it.
 
@@ -1651,7 +1649,6 @@ def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
     This internal helper function tries to transform a product containing the
     `Heaviside` function and returns `None` if it cannot do it.
     """
-    hints.get('simplify', True)
     a = Wild('a', exclude=[t])
     b = Wild('b', exclude=[t])
     y = Wild('y')
@@ -1679,7 +1676,6 @@ def _laplace_rule_exp(f, t, s, doit=True, **hints):
     This internal helper function tries to transform a product containing the
     `exp` function and returns `None` if it cannot do it.
     """
-    hints.get('simplify', True)
     a = Wild('a', exclude=[t])
 
     y = Wild('y')
@@ -1759,7 +1755,6 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     a derivative of an undefined function and returns `None` if it cannot
     do it.
     """
-    hints.get('simplify', True)
     a = Wild('a', exclude=[t])
     y = Wild('y')
     n = Wild('n', exclude=[t])
@@ -1803,7 +1798,7 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
     debug('[LT _lar ]     deep collect: %s'%(_laplace_deep_collect(func, t),))
 
     simple_rules = _laplace_build_rules(t, s)
-    for t_dom, s_dom, check, plane, prep in simple_rules:   
+    for t_dom, s_dom, check, plane, prep in simple_rules:
         ma = prep(func).match(t_dom)
         if ma:
             debug('_laplace_apply_rules match:')
@@ -1811,7 +1806,12 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
             debug('      rule: %s o---o %s'%(t_dom, s_dom))
             debug('      match: %s'%(ma, ))
             debug('      try   %s'%(check,))
-            c = check.xreplace(ma)
+            try:
+                c = check.xreplace(ma)
+            except TypeError:
+                # This may happen if the tiem function has imagianary
+                # numbers in it. Then we give up.
+                return None
             debug('      check %s -> %s'%(check, c))
             if c==True:
                 return _laplace_cr((k*s_dom.xreplace(ma),
@@ -1855,6 +1855,17 @@ class LaplaceTransform(IntegralTransform):
         debug('[LT _u_r ]     and hints %s'%(hints, ))
         LT = None
 
+        def _is_uneval(LT):
+            decision = True
+            if LT.is_Add:
+                t = LT.args
+            else:
+                t = [LT]
+            for f in t:
+                if not f.has(LaplaceTransform):
+                    decision = False
+            return decision
+
         # Try once without expanding
         if recursive>0:
             if recursive<=4:
@@ -1863,12 +1874,12 @@ class LaplaceTransform(IntegralTransform):
                 r = expand(fn)
         else:
             r = fn
-        
+
         if r.is_Add:
             terms = r.args
         else:
             terms = [r]
-        
+
         by_rule = []
         recursed = []
         unevaluated = []
@@ -1878,24 +1889,36 @@ class LaplaceTransform(IntegralTransform):
                 if recursive>9:
                     return None
                 LT = LaplaceTransform(f, t_, s_).doit(**hints)
-                #LT = laplace_transform(f, t_, s_, **hints)
                 if type(LT) is not tuple:
-                    if LT.has(LaplaceTransform):
+                    if _is_uneval(LT):
                         unevaluated.append(LT)
                     else:
                         recursed.append(LT)
                 else:
-                    if LT[0].has(LaplaceTransform):
+                    if _is_uneval(LT[0]):
                         unevaluated.append(LT[0])
                     else:
                         recursed.append(LT)
             else:
-                if type(LT) is not tuple and LT.has(LaplaceTransform):
-                    unevaluated.append(LT)
+                if type(LT) is not tuple:
+                    if _is_uneval(LT):
+                        unevaluated.append(LT)
+                    else:
+                        if not noconds:
+                            unevaluated.append(LT)
+                        else:
+                            by_rule.append(LT)
                 else:
-                    by_rule.append(LT)
+                    if _is_uneval(LT[0]):
+                        unevaluated.append(LT[0])
+                    else:
+                        by_rule.append(LT)
 
-        # Now we have applied all the rules and can assemble the result.
+        debug('[LT _u_r ] Assembling result using:')
+        debug('[LT _u_r ]     rules: %s, rec: %s, uneval: %s'%(by_rule,
+                                                               recursed,
+                                                               unevaluated))
+
         if noconds:
             LT = (Add(*by_rule)+Add(*recursed)).simplify()+Add(*unevaluated)
         else:
@@ -1909,9 +1932,8 @@ class LaplaceTransform(IntegralTransform):
                     F.append(F_)
                     a.append(a_)
                     c.append(c_)
-                    LT = (Add(*F).simplify()+Add(*unevaluated),
-                          Max(*a), And(*c))
-        debug('[LT _u_r ]     returns %s'%(LT, ))        
+                LT = (Add(*F).simplify()+Add(*unevaluated), Max(*a), And(*c))
+        debug('[LT _u_r ]     returns %s'%(LT, ))
         return LT
 
     def _compute_transform(self, f, t, s, **hints):
@@ -1920,11 +1942,11 @@ class LaplaceTransform(IntegralTransform):
         #LT = _laplace_apply_rules(f, t, s, **hints)
         #if LT is None:
         _simplify = hints.get('simplify', True)
-        
+
         LT = _laplace_transform(f, t, s, simplify=_simplify)
         debug('[LT _c_t ]     --> %s'%(LT, ))
         debug('[LT _c_t ]         %s'%(_laplace_cr(LT, **hints), ))
-       
+
         return _laplace_cr(LT, **hints)
 
     def _as_integral(self, f, t, s):
@@ -2048,9 +2070,9 @@ behavior.
             f = Mul(*[ i for i in factors if not i is Heaviside(t) ])
 
     debug('[LT l_t  ]   executes LaplaceTransform(%s, %s, %s)'%(f, t, s))
-    
+
     LT = LaplaceTransform(f, t, s).doit(**hints)
-    
+
     debug('[LT l_t  ]   --> %s'%(LT, ))
     debug('[LT l_t  ]   ------')
     return LT
