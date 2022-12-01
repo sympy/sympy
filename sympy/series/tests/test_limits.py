@@ -1302,4 +1302,3 @@ def test_issue_24276():
     assert f(x).simplify().limit(x, oo) == 2
     assert f(x).rewrite(sin).limit(x, oo) == 2
     assert f(x).rewrite(sin).simplify().limit(x, oo) == 2
-
