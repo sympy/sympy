@@ -1811,7 +1811,7 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
             except TypeError:
                 # This may happen if the tiem function has imagianary
                 # numbers in it. Then we give up.
-                return None
+                continue
             debug('      check %s -> %s'%(check, c))
             if c==True:
                 return _laplace_cr((k*s_dom.xreplace(ma),
