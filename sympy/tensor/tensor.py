@@ -3401,6 +3401,17 @@ class TensMul(TensExpr, AssocOp):
         deep = hints.get('deep', True)
         if deep:
             args = [arg.doit(**hints) for arg in self.args]
+
+            """
+            There may now be conflicts between dummy indices of different args
+            (each arg's doit method does not have any information about which
+            dummy indices are already used in the other args), so we
+            deduplicate them.
+            """
+            rule = dict(zip(self.args, args))
+            rule = self._dedupe_indices_in_rule(rule)
+            args = [rule[a] for a in self.args]
+
         else:
             args = self.args
 
