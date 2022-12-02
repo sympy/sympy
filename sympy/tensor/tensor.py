@@ -4305,6 +4305,12 @@ def get_indices(t):
         return ()
     return t.get_indices()
 
+def get_dummy_indices(t):
+    if not isinstance(t, TensExpr):
+        return ()
+    inds = t.get_indices()
+    free = t.get_free_indices()
+    return [i for i in inds if i not in free]
 
 def get_index_structure(t):
     if isinstance(t, TensExpr):
