@@ -3988,6 +3988,45 @@ class TensMul(TensExpr, AssocOp):
                 raise ValueError("No iteration on abstract tensors")
             return self.data.__iter__()
 
+    def _dedupe_indices(self, new, exclude):
+        """
+        exclude: set
+        new: TensExpr
+
+        If ``new`` has any dummy indices that are in ``exclude``, return a version
+        of new with those indices replaced. If no replacements are needed,
+        return None
+        """
+        inds_self = set(exclude)
+        dums_new = set(get_dummy_indices(new))
+
+        conflicts = dums_new.intersection(inds_self)
+        if len(conflicts) == 0:
+            return None
+
+        """
+        ``self_args_free`` is to be passed to ``_IndexStructure._get_generator_for_dummy_indices()``.
+        Since the latter does not use the index position for anything, we just
+        set it as ``None`` here.
+        """
+        inds_self.update(dums_new)
+        self_args_free = [(i, None) for i in inds_self]
+        gen = self._index_structure._get_generator_for_dummy_indices(self_args_free)
+        repl = {}
+        for d in conflicts:
+            if -d in repl.keys():
+                continue
+            newname = gen(d.tensor_index_type)
+            new_d = d.func(newname, *d.args[1:])
+            repl[d] = new_d
+            repl[-d] = -new_d
+
+        if len(repl) == 0:
+            return None
+
+        new_renamed = new._replace_indices(repl)
+        return new_renamed
+
     def _eval_rewrite_as_Indexed(self, *args):
         from sympy.concrete.summations import Sum
         index_symbols = [i.args[0] for i in self.get_indices()]
