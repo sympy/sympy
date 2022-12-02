@@ -4030,6 +4030,7 @@ class TensMul(TensExpr, AssocOp):
         If ``new`` has any dummy indices that are in ``exclude``, return a version
         of new with those indices replaced. If no replacements are needed,
         return None
+
         """
         exclude = set(exclude)
         dums_new = set(get_dummy_indices(new))
