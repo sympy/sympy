@@ -3254,6 +3254,26 @@ class TensMul(TensExpr, AssocOp):
         is_canon_bp = kw_args.get('is_canon_bp', False)
         args = list(map(_sympify, args))
 
+        """
+        If the internal dummy indices in one arg conflict with the free indices of the remaining args, we need to rename those internal dummy indices.
+        """
+        free = [get_free_indices(arg) for arg in args]
+        free = set(itertools.chain(*free)) #flatten free
+        newargs = []
+        for arg in args:
+            dum_this = set(get_dummy_indices(arg))
+            dum_other = [get_dummy_indices(a) for a in newargs]
+            dum_other = set(itertools.chain(*dum_other)) #flatten dum_other
+            free_this = set(get_free_indices(arg))
+            if len(dum_this.intersection(free)) > 0:
+                exclude = free_this.union(free, dum_other)
+                newarg = TensMul._dedupe_indices(arg, exclude, arg._index_structure)
+            else:
+                newarg = arg
+            newargs.append(newarg)
+
+        args = newargs
+
         # Flatten:
         args = [i for arg in args for i in (arg.args if isinstance(arg, (TensMul, Mul)) else [arg])]
 
@@ -4062,49 +4082,6 @@ class TensMul(TensExpr, AssocOp):
                 newrule[old] = new_renamed
                 exclude.update(get_indices(new_renamed))
         return newrule
-
-    def _eval_subs(self, old, new):
-        """
-        This handles the fact that if a dummy index in new is the same as an
-        index in self (which is not present in old), the dummy index in new
-        must be renamed.
-        """
-
-        if not isinstance(new, TensExpr):
-            return None
-
-        new_renamed = TensMul._dedupe_indices(new, self.get_indices(), self._index_structure)
-        if new_renamed is None:
-            return None
-        else:
-            return self.subs({old: new_renamed})
-
-    def _xreplace(self, rule):
-        """
-        Helper for xreplace. Tracks whether a replacement actually occurred.
-
-        Given that the rule has entries {old:new, ...}, this handles the fact
-        that if a dummy index in new is the same as an index in self, the
-        dummy index in new must be renamed.
-        """
-        if self in rule:
-            return rule[self], True
-        elif rule:
-            rule = self._dedupe_indices_in_rule(rule)
-            args = []
-            changed = False
-            for a in self.args:
-                _xreplace = getattr(a, '_xreplace', None)
-                if _xreplace is not None:
-                    a_xr = _xreplace(rule)
-                    args.append(a_xr[0])
-                    changed |= a_xr[1]
-                else:
-                    args.append(a)
-            args = tuple(args)
-            if changed:
-                return self.func(*args), True
-        return self, False
 
     def _eval_rewrite_as_Indexed(self, *args):
         from sympy.concrete.summations import Sum
