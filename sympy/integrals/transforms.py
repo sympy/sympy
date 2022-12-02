@@ -176,6 +176,7 @@ class IntegralTransform(Function):
         simplify = hints.pop('simplify', True)
         hints['simplify'] = simplify
 
+        debug('[IT doit ] %s'%('*'*65, ))
         debug('[IT doit ] started with (%s)'%(self.args, ))
         debug('[IT doit ]     and hints %s'%(hints, ))
 
@@ -1791,6 +1792,7 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
 
     noconds = hints.get('noconds', False)
 
+    debug('[LT _lar ] %s'%('-'*65, ))
     debug('[LT _lar ] started with (%s, %s, %s)'%(f, t, s))
     debug('[LT _lar ]     and hints %s'%(hints, ))
 
@@ -1845,12 +1847,43 @@ class LaplaceTransform(IntegralTransform):
     _name = 'Laplace'
 
     def _use_rules(self, **hints):
+        """
+        This rule-based engine works in a recursive way. If this function
+        manages to split anything into a sum of terms, it will apply the
+        `LaplaceTransform` on the terms of that sum.
+
+        Some rules in `_laplace_apply_rules` can also make it such that
+        part of the result is another `LaplaceTransform` or another
+        application of rules.
+
+        To keep track of this, the algorithm has a hint called `recursive`
+        that keeps track of the depth of the recursion.
+
+        Setting `sympy.SYMPY_DEBUG=True` will produce debug messages that
+        make it easier to follow the recursion.
+
+        The top function `_use_rules` will try to expand the incoming
+        function only from recursion level 1 upwards.  On recursion levels 1
+        to 3 it will expand with `deep=False`, above it will attempt an
+        expansion with `deep=True`. If the recursion level reaches 8, it
+        will give up.
+
+        The algorithm is written such that all rules return `None` if they
+        cannot apply any rules.  If the recursion leads to an integration
+        attempt that fails, the result will be an unevaluated
+        `LaplaceTransform` which is treated as a result within `_use_rules`.
+        Therefore it is not possible that this algorithm attempts to
+        integrate the same expression twice, so if a recursion reaches level 8,
+        it will do so without wasting a lot of computation power.
+        """
+
         noconds = hints.get('noconds', False)
         recursive = hints.get('recursive', 0)
         hints['recursive'] = recursive+1
         fn = self.function
         t_ = self.function_variable
         s_ = self.transform_variable
+        debug('[LT _u_r ] %s'%('='*65, ))
         debug('[LT _u_r ] started with (%s, %s, %s)'%(fn, t_, s_))
         debug('[LT _u_r ]     and hints %s'%(hints, ))
         LT = None
@@ -1886,7 +1919,7 @@ class LaplaceTransform(IntegralTransform):
         for f in terms:
             LT = _laplace_apply_rules(f, t_, s_, **hints)
             if LT is None:
-                if recursive>9:
+                if recursive>7:
                     return None
                 LT = LaplaceTransform(f, t_, s_).doit(**hints)
                 if type(LT) is not tuple:
@@ -2031,7 +2064,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     """
 
-    debug('[LT l_t  ] ************* %s'%(f,))
+    debug('[LT l_t  ] %s'%('*'*65, ))
     debug('[LT l_t  ] started with (%s, %s, %s)'%(f, t, s))
     debug('[LT l_t  ]     and hints %s'%(hints, ))
 
