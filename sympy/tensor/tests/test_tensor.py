@@ -1963,7 +1963,7 @@ def test_rewrite_tensor_to_Indexed():
 
 def test_TensMul_subs():
     """
-    Test subs and xreplace in TensMul
+    Test subs and xreplace in TensMul. See bug #24337
     """
     R3 = TensorIndexType('R3', dim=3)
     p, q, r = tensor_indices("p q r", R3)
