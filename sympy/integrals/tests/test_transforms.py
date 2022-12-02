@@ -673,9 +673,9 @@ def test_laplace_transform():
         a*LaplaceTransform(f(t), t, s)*exp(-s)
     assert LT(b*f(t/a), t, s) == a*b*LaplaceTransform(f(t), t, a*s)
     assert LT(exp(-f(x)*t), t, s) == (1/(s + f(x)), -f(x), True)
-    assert LT(exp(-a*t)*f(t), t, s) == LaplaceTransform(f(t), t, a + s)
+    assert LT(exp(-a*t)*f(t), t, s, noconds=True) == LaplaceTransform(f(t), t, a + s)
     assert LT(exp(-a*t)*erfc(sqrt(b/t)/2), t, s) ==\
-        (exp(-sqrt(b)*sqrt(a + s))/(a + s), -a, True)
+        (exp(-sqrt(b)*sqrt(a + s))/(a + s), 0, True)
     assert LT(sinh(a*t)*f(t), t, s) ==\
         LaplaceTransform(f(t), t, -a+s)/2 - LaplaceTransform(f(t), t, a+s)/2
     assert LT(sinh(a*t)*t, t, s) == (2*a*s/(a**4 - 2*a**2*s**2 + s**4),
@@ -685,8 +685,8 @@ def test_laplace_transform():
     assert LT(cosh(a*t)*t, t, s) == (1/(2*(a + s)**2) + 1/(2*(a - s)**2),
                                      a, True)
     assert LT(sin(a*t)*f(t), t, s) ==\
-        I*(-LaplaceTransform(f(t), t, -I*a + s) +\
-           LaplaceTransform(f(t), t, I*a + s))/2
+        -I*(LaplaceTransform(f(t), t, -I*a + s) -\
+            LaplaceTransform(f(t), t, I*a + s))/2
     assert LT(sin(a*t)*t, t, s) ==\
         (2*a*s/(a**4 + 2*a**2*s**2 + s**4), 0, True)
     assert LT(cos(a*t)*f(t), t, s) ==\

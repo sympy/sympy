@@ -196,7 +196,6 @@ class IntegralTransform(Function):
         debug('[IT doit ] further looks into %s'%(fn, ))
         debug('[IT doit ]         with hints %s'%(hints, ))
 
-
         if fn.is_Add:
             hints['needeval'] = needeval
             res = [self.__class__(*([x] + list(self.args[1:]))).doit(**hints)
@@ -1601,6 +1600,17 @@ def _laplace_cr(f, **hints):
     else:
         return f
 
+def _laplace_ct(f):
+    """
+    Internal helper function that completes the tuple as follows:
+    if f is a tuple, it is just returned as is.  If it is not a tuple,
+    then `(f, S.NegativeInfinity, True)` is returned.
+    """
+    if type(f) is tuple:
+        return f
+    else:
+        return f, S.NegativeInfinity, True
+
 def _laplace_rule_timescale(f, t, s, doit=True, **hints):
     r"""
     This internal helper function tries to apply the time-scaling rule of the
@@ -1611,38 +1621,34 @@ def _laplace_rule_timescale(f, t, s, doit=True, **hints):
     $\frac1a F(\frac{s}{a})$. This scaling will also affect the transform's
     convergence plane.
     """
-    _simplify = hints.get('simplify', True)
     recursive = hints.get('recursive', 0)
     hints['recursive'] = recursive + 1
-    b = Wild('b', exclude=[t])
+    a = Wild('a', exclude=[t])
     g = WildFunction('g', nargs=1)
     ma1 = f.match(g)
     if ma1:
         arg = ma1[g].args[0].collect(t)
-        ma2 = arg.match(b*t)
-        if ma2 and ma2[b]>0:
+        ma2 = arg.match(a*t)
+        if ma2 and ma2[a]>0:
             debug('_laplace_apply_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: amplitude and time scaling (1.1, 1.2)')
-            if ma2[b]==1:
+            if ma2[a]==1:
                 if doit==True and not any(func.has(t) for func
                                           in ma1[g].atoms(AppliedUndef)):
-                    return _laplace_transform(ma1[g].func(t), t, s,
-                                                simplify=_simplify)
+                    return _laplace_ct(
+                        LaplaceTransform(1/ma2[a]*ma1[g].func(t),
+                                         t, s).doit(**hints))
                 else:
-                    if recursive <2:
-                        return LaplaceTransform(ma1[g].func(t), t, s).doit(**hints)
+                    if recursive <2 and doit==True:
+                        L = LaplaceTransform(1/ma2[a]*ma1[g].func(t),
+                                             t, s).doit(**hints)
                     else:
-                        return LaplaceTransform(ma1[g].func(t), t, s)
+                        L = LaplaceTransform(1/ma2[a]*ma1[g].func(t), t, s)
+                return _laplace_ct(L)
             else:
-                L = _laplace_apply_rules(ma1[g].func(t), t, s/ma2[b],
-                                         doit=doit, **hints)
-                noconds = hints.get('noconds', False)
-                if not noconds and type(L) is tuple:
-                    r, p, c = L
-                    return (1/ma2[b]*r, p, c)
-                else:
-                    return 1/ma2[b]*L
+                return _laplace_apply_rules(1/ma2[a]*ma1[g].func(t), t, s/ma2[a],
+                                            doit=doit, **hints)
     return None
 
 def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
@@ -1663,14 +1669,10 @@ def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
             debug('      f:    %s ( %s, %s, %s )'%(f, ma1, ma2, ma3))
             debug('      rule: time shift (1.3)')
             L = _laplace_apply_rules(ma1[g].func(t), t, s, doit=doit, **hints)
-            noconds = hints.get('noconds', False)
-            if not noconds and type(L) is tuple:
+            if not L is None:
                 r, p, c = L
-                return (exp(-ma2[a]*s)*r, p, c)
-            else:
-                return exp(-ma2[a]*s)*L
+                return exp(-ma2[a]*s)*r, p, c
     return None
-
 
 def _laplace_rule_exp(f, t, s, doit=True, **hints):
     """
@@ -1689,12 +1691,9 @@ def _laplace_rule_exp(f, t, s, doit=True, **hints):
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: multiply with exp (1.5)')
             L = _laplace_apply_rules(ma1[z], t, s-ma2[a], doit=doit, **hints)
-            noconds = hints.get('noconds', False)
-            if not noconds and type(L) is tuple:
+            if not L is None:
                 r, p, c = L
-                return (r, p+ma2[a], c)
-            else:
-                return L
+                return r, Max(ma2[a], p), c
     return None
 
 def _laplace_rule_trig(f, t, s, doit=True, **hints):
@@ -1703,7 +1702,6 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
     trigonometric function (`sin`, `cos`, `sinh`, `cosh`, ) and returns
     `None` if it cannot do it.
     """
-    _simplify = hints.get('simplify', True)
     a = Wild('a', exclude=[t])
     y = Wild('y')
     z = Wild('z')
@@ -1728,26 +1726,17 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                 debug('_laplace_apply_rules match:')
                 debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
                 debug('      rule: multiply with %s (%s)'%(fm.func, nu))
-                L = _laplace_apply_rules(ma1[z], t, s, doit=doit, **hints)
-                noconds = hints.get('noconds', False)
-                if not noconds and type(L) is tuple:
-                    r, p, c = L
-                    # The convergence plane changes only if the shift has been
-                    # done along the real axis:
-                    if sd==1:
-                        cp_shift = Abs(ma2[a])
-                    else:
-                        cp_shift = 0
-                    return ((s1*(r.subs(s, s-sd*ma2[a])+\
-                                    s2*r.subs(s, s+sd*ma2[a]))).simplify()/2,
-                            p+cp_shift, c)
+                r, p, c = _laplace_apply_rules(ma1[z], t, s, doit=doit, **hints)
+                # The convergence plane changes only if the shift has been
+                # done along the real axis:
+                if sd==1:
+                    cp_shift = Abs(ma2[a])
                 else:
-                    if doit==True and _simplify==True:
-                        return (s1*(L.subs(s, s-sd*ma2[a])+\
-                                    s2*L.subs(s, s+sd*ma2[a]))).simplify()/2
-                    else:
-                        return (s1*(L.subs(s, s-sd*ma2[a])+\
-                                    s2*L.subs(s, s+sd*ma2[a])))/2
+                    cp_shift = 0
+                debug('************* ', r, p, c)
+                return ((s1*(r.subs(s, s-sd*ma2[a])+\
+                             s2*r.subs(s, s+sd*ma2[a])))/2,
+                        p+cp_shift, c)
     return None
 
 def _laplace_rule_diff(f, t, s, doit=True, **hints):
@@ -1772,11 +1761,11 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
             else:
                 y = Derivative(ma1[g].func(t), (t, k)).subs(t, 0)
             d.append(s**(ma1[n]-k-1)*y)
-        r = s**ma1[n]*_laplace_apply_rules(ma1[g].func(t), t, s, doit=doit,
-                                           **hints)
-        return ma1[a]*(r - Add(*d))
+#        r, p, c = _laplace_apply_rules(ma1[g].func(t), t, s, doit=doit, **hints)
+        r, p, c = LaplaceTransform(ma1[g].func(t), t, s).doit(**hints)
+        return ((ma1[a]*s**ma1[n]*r - Add(*d)), Max(S.NegativeInfinity, p),
+                And(True))
     return None
-
 
 def _laplace_apply_rules(f, t, s, doit=True, **hints):
     """
@@ -1788,9 +1777,12 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
 
     If it is called with `doit=False`, then it will instead return
     `LaplaceTransform` objects.
-    """
 
-    noconds = hints.get('noconds', False)
+    `_laplace_apply_rules` will always `None` if no rules could be applied
+    or a tuple `(f, p, c)` with a function `f`, a convergence plane `p`, and
+    a condition `c`.  If the rules did not derive any planes or conditions,
+    the latter two are `S.NegativeInfinity, S.true`.
+    """
 
     debug('[LT _lar ] %s'%('-'*65, ))
     debug('[LT _lar ] started with (%s, %s, %s)'%(f, t, s))
@@ -1811,13 +1803,12 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
             try:
                 c = check.xreplace(ma)
             except TypeError:
-                # This may happen if the tiem function has imagianary
+                # This may happen if the time function has imaginary
                 # numbers in it. Then we give up.
                 continue
             debug('      check %s -> %s'%(check, c))
             if c==True:
-                return _laplace_cr((k*s_dom.xreplace(ma),
-                                   plane.xreplace(ma), S.true), **hints)
+                return k*s_dom.xreplace(ma), plane.xreplace(ma), S.true
 
     if f.has(DiracDelta):
         return None
@@ -1826,13 +1817,18 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
                   _laplace_rule_exp, _laplace_rule_trig, _laplace_rule_diff]
     for p_rule in prog_rules:
         L = p_rule(func, t, s, doit=doit, **hints)
-        if L is not None:
-            if not noconds and type(L) is tuple:
-                r, p, c = L
-                return (k*r, p, c)
-            else:
-                return k*L
+        if not L is None:
+            r, p, c = L
+            return k*r, p, c
     return None
+
+def _laplace_is_uneval(LT):
+    decision = True
+    t = Add.make_args(LT)
+    for f in t:
+        if not f.has(LaplaceTransform):
+            decision = False
+    return decision
 
 class LaplaceTransform(IntegralTransform):
     """
@@ -1877,7 +1873,6 @@ class LaplaceTransform(IntegralTransform):
         it will do so without wasting a lot of computation power.
         """
 
-        noconds = hints.get('noconds', False)
         recursive = hints.get('recursive', 0)
         hints['recursive'] = recursive+1
         fn = self.function
@@ -1888,30 +1883,18 @@ class LaplaceTransform(IntegralTransform):
         debug('[LT _u_r ]     and hints %s'%(hints, ))
         LT = None
 
-        def _is_uneval(LT):
-            decision = True
-            if LT.is_Add:
-                t = LT.args
-            else:
-                t = [LT]
-            for f in t:
-                if not f.has(LaplaceTransform):
-                    decision = False
-            return decision
-
-        # Try once without expanding
+        if recursive>7:
+            return None
         if recursive>0:
             if recursive<=4:
                 r = expand(fn, deep=False)
             else:
                 r = expand(fn)
         else:
+            # Try once without expanding
             r = fn
 
-        if r.is_Add:
-            terms = r.args
-        else:
-            terms = [r]
+        terms = Add.make_args(r)
 
         by_rule = []
         recursed = []
@@ -1919,61 +1902,43 @@ class LaplaceTransform(IntegralTransform):
         for f in terms:
             LT = _laplace_apply_rules(f, t_, s_, **hints)
             if LT is None:
-                if recursive>7:
-                    return None
-                LT = LaplaceTransform(f, t_, s_).doit(**hints)
-                if type(LT) is not tuple:
-                    if _is_uneval(LT):
-                        unevaluated.append(LT)
-                    else:
-                        recursed.append(LT)
+                LT = _laplace_ct(LaplaceTransform(f, t_, s_).doit(**hints))
+                if _laplace_is_uneval(LT[0]):
+                    unevaluated.append(LT)
                 else:
-                    if _is_uneval(LT[0]):
-                        unevaluated.append(LT[0])
-                    else:
-                        recursed.append(LT)
+                    recursed.append(LT)
             else:
-                if type(LT) is not tuple:
-                    if _is_uneval(LT):
-                        unevaluated.append(LT)
-                    else:
-                        if not noconds:
-                            unevaluated.append(LT)
-                        else:
-                            by_rule.append(LT)
+                if _laplace_is_uneval(LT[0]):
+                    unevaluated.append(LT)
                 else:
-                    if _is_uneval(LT[0]):
-                        unevaluated.append(LT[0])
-                    else:
-                        by_rule.append(LT)
+                    by_rule.append(LT)
 
         debug('[LT _u_r ] Assembling result using:')
         debug('[LT _u_r ]     rules: %s, rec: %s, uneval: %s'%(by_rule,
                                                                recursed,
                                                                unevaluated))
-
-        if noconds:
-            LT = (Add(*by_rule)+Add(*recursed)).simplify()+Add(*unevaluated)
-        else:
-            F = [0]
-            a = [S.NegativeInfinity]
-            c = [True]
-            if len(by_rule)==0 and len(recursed)==0:
-                LT = Add(*unevaluated)
+        debug('[LT _u_r ]     recursion: %s'%(recursive, ))
+        F = [0]
+        U = [0]
+        a = [S.NegativeInfinity]
+        c = [True]
+        for F_, a_, c_ in by_rule + recursed + unevaluated:
+            # It is possible that unevaluated transforms return with
+            # conditions included
+            if F_.has(LaplaceTransform):
+                U.append(F_)
             else:
-                for F_, a_, c_ in by_rule + recursed:
-                    F.append(F_)
-                    a.append(a_)
-                    c.append(c_)
-                LT = (Add(*F).simplify()+Add(*unevaluated), Max(*a), And(*c))
-        debug('[LT _u_r ]     returns %s'%(LT, ))
+                F.append(F_)
+            a.append(a_)
+            c.append(c_)
+        debug('[LT _u_r ]     collected: ', F, a, c, U)
+        LT = (Add(*F).simplify()+Add(*U), Max(*a), And(*c))
+        debug('[LT _u_r ]     returns: ', LT)
         return LT
 
     def _compute_transform(self, f, t, s, **hints):
         debug('[LT _c_t ] started with (%s, %s, %s)'%(f, t, s))
         debug('[LT _c_t ]     and hints %s'%(hints, ))
-        #LT = _laplace_apply_rules(f, t, s, **hints)
-        #if LT is None:
         _simplify = hints.get('simplify', True)
 
         LT = _laplace_transform(f, t, s, simplify=_simplify)
@@ -2065,12 +2030,12 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     """
 
     debug('[LT l_t  ] %s'%('*'*65, ))
+    debug('           %s'%('*'*65, ))
     debug('[LT l_t  ] started with (%s, %s, %s)'%(f, t, s))
     debug('[LT l_t  ]     and hints %s'%(hints, ))
+    conds = not hints.get('noconds', False)
 
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
-
-        conds = not hints.get('noconds', False)
 
         if conds and legacy_matrix:
             sympy_deprecation_warning(
@@ -2106,8 +2071,17 @@ behavior.
 
     LT = LaplaceTransform(f, t, s).doit(**hints)
 
-    debug('[LT l_t  ]   --> %s'%(LT, ))
-    debug('[LT l_t  ]   ------')
+    debug('[LT l_t  ]   received: ', LT)
+
+    # For backwards compatibility: even if noconds=False, do not return
+    # a tuple if F is unevaluated
+    F, p, c = LT
+    if _laplace_is_uneval(F) or not conds:
+        LT = F
+    if F.has(LaplaceTransform) and p is S.NegativeInfinity and c:
+        LT = F
+
+    debug('[LT l_t  ]   returns: ', LT)
     return LT
 
 def _complete_the_square_in_denom(f, s):
