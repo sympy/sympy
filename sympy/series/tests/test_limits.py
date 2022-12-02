@@ -1296,8 +1296,9 @@ def test_issue_23752():
     assert limit(expr2, x, 0, '+') == sqrt(3)*I
     assert limit(expr2, x, 0, '-') == -sqrt(3)*I
 
+
 def test_issue_24276():
-    f=Lambda((x), log(tan(pi/2*tanh(x))).diff(x)) ; f(x)
+    f=Lambda(x, log(tan(pi/2*tanh(x))).diff(x))
     assert f(x).limit(x, oo) == 2
     assert f(x).simplify().limit(x, oo) == 2
     assert f(x).rewrite(sin).limit(x, oo) == 2
