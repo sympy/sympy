@@ -4039,13 +4039,13 @@ class TensMul(TensExpr, AssocOp):
             return None
 
         """
-        ``self_args_free`` is to be passed to ``_IndexStructure._get_generator_for_dummy_indices()``.
+        ``exclude_for_gen`` is to be passed to ``_IndexStructure._get_generator_for_dummy_indices()``.
         Since the latter does not use the index position for anything, we just
         set it as ``None`` here.
         """
         exclude.update(dums_new)
-        self_args_free = [(i, None) for i in exclude]
-        gen = _IndexStructure._get_generator_for_dummy_indices(self_args_free)
+        exclude_for_gen = [(i, None) for i in exclude]
+        gen = _IndexStructure._get_generator_for_dummy_indices(exclude_for_gen)
         repl = {}
         for d in conflicts:
             if -d in repl.keys():
