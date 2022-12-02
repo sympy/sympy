@@ -1,7 +1,7 @@
 from itertools import product
 
 from sympy.concrete.summations import Sum
-from sympy.core.function import (Function, Lambda, diff)
+from sympy.core.function import (Function, diff)
 from sympy.core import EulerGamma
 from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
@@ -1298,8 +1298,8 @@ def test_issue_23752():
 
 
 def test_issue_24276():
-    f=Lambda(x, log(tan(pi/2*tanh(x))).diff(x))
-    assert f(x).limit(x, oo) == 2
-    assert f(x).simplify().limit(x, oo) == 2
-    assert f(x).rewrite(sin).limit(x, oo) == 2
-    assert f(x).rewrite(sin).simplify().limit(x, oo) == 2
+    fx = log(tan(pi/2*tanh(x))).diff(x)
+    assert fx.limit(x, oo) == 2
+    assert fx.simplify().limit(x, oo) == 2
+    assert fx.rewrite(sin).limit(x, oo) == 2
+    assert fx.rewrite(sin).simplify().limit(x, oo) == 2
