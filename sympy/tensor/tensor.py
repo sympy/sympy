@@ -3999,10 +3999,12 @@ class TensMul(TensExpr, AssocOp):
                 raise ValueError("No iteration on abstract tensors")
             return self.data.__iter__()
 
-    def _dedupe_indices(self, new, exclude):
+    @staticmethod
+    def _dedupe_indices(new, exclude, index_structure):
         """
         exclude: set
         new: TensExpr
+        index_structure: _IndexStructure (required to generate new dummy indices)
 
         If ``new`` has any dummy indices that are in ``exclude``, return a version
         of new with those indices replaced. If no replacements are needed,
@@ -4022,7 +4024,7 @@ class TensMul(TensExpr, AssocOp):
         """
         inds_self.update(dums_new)
         self_args_free = [(i, None) for i in inds_self]
-        gen = self._index_structure._get_generator_for_dummy_indices(self_args_free)
+        gen = index_structure._get_generator_for_dummy_indices(self_args_free)
         repl = {}
         for d in conflicts:
             if -d in repl.keys():
@@ -4053,7 +4055,7 @@ class TensMul(TensExpr, AssocOp):
         exclude.update(index_rules.keys())
         exclude.update(index_rules.values())
         for old, new in other_rules.items():
-            new_renamed = self._dedupe_indices(new, exclude)
+            new_renamed = TensMul._dedupe_indices(new, exclude, self._index_structure)
             if old == new or new_renamed is None:
                 newrule[old] = new
             else:
@@ -4071,7 +4073,7 @@ class TensMul(TensExpr, AssocOp):
         if not isinstance(new, TensExpr):
             return None
 
-        new_renamed = self._dedupe_indices(new, self.get_indices())
+        new_renamed = TensMul._dedupe_indices(new, self.get_indices(), self._index_structure)
         if new_renamed is None:
             return None
         else:
