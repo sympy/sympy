@@ -3255,7 +3255,8 @@ class TensMul(TensExpr, AssocOp):
         args = list(map(_sympify, args))
 
         """
-        If the internal dummy indices in one arg conflict with the free indices of the remaining args, we need to rename those internal dummy indices.
+        If the internal dummy indices in one arg conflict with the free indices
+        of the remaining args, we need to rename those internal dummy indices.
         """
         free = [get_free_indices(arg) for arg in args]
         free = set(itertools.chain(*free)) #flatten free
