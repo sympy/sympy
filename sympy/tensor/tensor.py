@@ -4064,7 +4064,8 @@ class TensMul(TensExpr, AssocOp):
         """
         rule: dict
 
-        This applies self._dedupe_indices on all values of rule.
+        This applies TensMul._dedupe_indices on all values of rule.
+
         """
         index_rules = {k:v for k,v in rule.items() if isinstance(k, TensorIndex)}
         other_rules = {k:v for k,v in rule.items() if k not in index_rules.keys()}
