@@ -4050,29 +4050,6 @@ class TensMul(TensExpr, AssocOp):
         new_renamed = new._replace_indices(repl)
         return new_renamed
 
-    def _dedupe_indices_in_rule(self, rule):
-        """
-        rule: dict
-
-        This applies TensMul._dedupe_indices on all values of rule.
-
-        """
-        index_rules = {k:v for k,v in rule.items() if isinstance(k, TensorIndex)}
-        other_rules = {k:v for k,v in rule.items() if k not in index_rules.keys()}
-        exclude = set(self.get_indices())
-
-        newrule = {}
-        newrule.update(index_rules)
-        exclude.update(index_rules.keys())
-        exclude.update(index_rules.values())
-        for old, new in other_rules.items():
-            new_renamed = TensMul._dedupe_indices(new, exclude)
-            if old == new or new_renamed is None:
-                newrule[old] = new
-            else:
-                newrule[old] = new_renamed
-                exclude.update(get_indices(new_renamed))
-        return newrule
 
     def _eval_rewrite_as_Indexed(self, *args):
         from sympy.concrete.summations import Sum
