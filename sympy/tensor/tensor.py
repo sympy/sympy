@@ -3268,7 +3268,7 @@ class TensMul(TensExpr, AssocOp):
             free_this = set(get_free_indices(arg))
             if len(dum_this.intersection(free)) > 0:
                 exclude = free_this.union(free, dum_other)
-                newarg = TensMul._dedupe_indices(arg, exclude, arg._index_structure)
+                newarg = TensMul._dedupe_indices(arg, exclude)
             else:
                 newarg = arg
             newargs.append(newarg)
@@ -4021,11 +4021,10 @@ class TensMul(TensExpr, AssocOp):
             return self.data.__iter__()
 
     @staticmethod
-    def _dedupe_indices(new, exclude, index_structure):
+    def _dedupe_indices(new, exclude):
         """
         exclude: set
         new: TensExpr
-        index_structure: _IndexStructure (required to generate new dummy indices)
 
         If ``new`` has any dummy indices that are in ``exclude``, return a version
         of new with those indices replaced. If no replacements are needed,
@@ -4046,7 +4045,7 @@ class TensMul(TensExpr, AssocOp):
         """
         exclude.update(dums_new)
         self_args_free = [(i, None) for i in exclude]
-        gen = index_structure._get_generator_for_dummy_indices(self_args_free)
+        gen = _IndexStructure._get_generator_for_dummy_indices(self_args_free)
         repl = {}
         for d in conflicts:
             if -d in repl.keys():
@@ -4078,7 +4077,7 @@ class TensMul(TensExpr, AssocOp):
         exclude.update(index_rules.keys())
         exclude.update(index_rules.values())
         for old, new in other_rules.items():
-            new_renamed = TensMul._dedupe_indices(new, exclude, self._index_structure)
+            new_renamed = TensMul._dedupe_indices(new, exclude)
             if old == new or new_renamed is None:
                 newrule[old] = new
             else:
