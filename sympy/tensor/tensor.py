@@ -4077,6 +4077,33 @@ class TensMul(TensExpr, AssocOp):
         else:
             return self.subs({old: new_renamed})
 
+    def _xreplace(self, rule):
+        """
+        Helper for xreplace. Tracks whether a replacement actually occurred.
+
+        Given that the rule has entries {old:new, ...}, this handles the fact
+        that if a dummy index in new is the same as an index in self, the
+        dummy index in new must be renamed.
+        """
+        if self in rule:
+            return rule[self], True
+        elif rule:
+            rule = self._dedupe_indices_in_rule(rule)
+            args = []
+            changed = False
+            for a in self.args:
+                _xreplace = getattr(a, '_xreplace', None)
+                if _xreplace is not None:
+                    a_xr = _xreplace(rule)
+                    args.append(a_xr[0])
+                    changed |= a_xr[1]
+                else:
+                    args.append(a)
+            args = tuple(args)
+            if changed:
+                return self.func(*args), True
+        return self, False
+
     def _eval_rewrite_as_Indexed(self, *args):
         from sympy.concrete.summations import Sum
         index_symbols = [i.args[0] for i in self.get_indices()]
