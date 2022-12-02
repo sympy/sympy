@@ -4030,10 +4030,10 @@ class TensMul(TensExpr, AssocOp):
         of new with those indices replaced. If no replacements are needed,
         return None
         """
-        inds_self = set(exclude)
+        exclude = set(exclude)
         dums_new = set(get_dummy_indices(new))
 
-        conflicts = dums_new.intersection(inds_self)
+        conflicts = dums_new.intersection(exclude)
         if len(conflicts) == 0:
             return None
 
@@ -4042,8 +4042,8 @@ class TensMul(TensExpr, AssocOp):
         Since the latter does not use the index position for anything, we just
         set it as ``None`` here.
         """
-        inds_self.update(dums_new)
-        self_args_free = [(i, None) for i in inds_self]
+        exclude.update(dums_new)
+        self_args_free = [(i, None) for i in exclude]
         gen = index_structure._get_generator_for_dummy_indices(self_args_free)
         repl = {}
         for d in conflicts:
