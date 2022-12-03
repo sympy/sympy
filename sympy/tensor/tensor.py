@@ -4299,34 +4299,28 @@ class TensMul(TensExpr, AssocOp):
             return None
 
         #Try to match all non-wild tensors of self with tensors that compose expr
-        matched_e_tensors = [] #Used to make sure that the same tensor in expr is not matched with more than one tensor in self.
-        for q_tensor in query_sifted["Tensor"]:
-            matched_this_q = False
-            for e_tensor in expr_sifted["Tensor"]:
-                if e_tensor in matched_e_tensors:
-                    continue
+        if len(query_sifted["Tensor"]) > 0:
+            q_tensor = query_sifted["Tensor"][0]
+            matched_this = []
+            for e in expr_sifted["Tensor"]:
+                m = q_tensor.matches(e)
+                if m is not None:
+                    matched_this.append((e,m))
 
-                m = q_tensor.matches(e_tensor, repl_dict=repl_dict, old=old)
-                if m is None:
-                    continue
-
-                #Check that contracted indices are not mapped to different indices.
-                internally_consistent = True
-                for k in m.keys():
-                    if -k in m.keys() and m[-k] != -m[k]:
-                        internally_consistent = False
-                        break
-                if internally_consistent:
-                    matched_this_q = True
+            for e,m in matched_this:
+                rem_query = self.func(*[a for a in self.args if a != q_tensor]).doit()
+                rem_expr = expr.func(*[a for a in expr.args if a != e]).doit()
+                rem_m = rem_query.matches(rem_expr)
+                if rem_m is not None:
                     repl_dict.update(m)
-                    matched_e_tensors.append(e_tensor)
-                    break
+                    repl_dict.update(rem_m)
+                    return repl_dict
 
-            if not matched_this_q:
-                return None
+            return None
 
         #Try to match WildTensor instances which have indices
-        remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in matched_e_tensors]
+        matched_e_tensors = []
+        remaining_e_tensors = expr_sifted["Tensor"]
         indexless_wilds, wilds = sift(query_sifted["WildTensor"], lambda x: len(x.get_free_indices()) == 0, binary=True)
 
         for w in wilds:
