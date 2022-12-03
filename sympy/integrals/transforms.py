@@ -67,6 +67,17 @@ class IntegralTransformError(NotImplementedError):
         self.function = function
 
 
+def _tree(f, name, **hints):
+    """
+    Helper function creating debug messages that will show the recursion
+    tree if `sympy.SYMPY_DEBUG=True` the stderr is subjected to
+    `grep '[tree]'`.
+    """
+    r = hints.get('recursive', 0)
+    s = '[tree] ' + '  '*r + '|-- ' + name + ': %s'%(f, )
+    debug(s)
+    return
+
 class IntegralTransform(Function):
     """
     Base class for integral transforms.
@@ -175,6 +186,9 @@ class IntegralTransform(Function):
         needeval = hints.pop('needeval', False)
         simplify = hints.pop('simplify', True)
         hints['simplify'] = simplify
+        recursive = hints.get('recursive', False)
+        if recursive:
+            _tree(self.args[0:3], 'IT doit', **hints)
 
         debug('[IT doit ] %s'%('*'*65, ))
         debug('[IT doit ] started with (%s)'%(self.args, ))
@@ -1622,6 +1636,7 @@ def _laplace_rule_timescale(f, t, s, doit=True, **hints):
     convergence plane.
     """
     recursive = hints.get('recursive', 0)
+    _tree(f, ': LT timescale', **hints)
     hints['recursive'] = recursive + 1
     a = Wild('a', exclude=[t])
     g = WildFunction('g', nargs=1)
@@ -1761,7 +1776,6 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
             else:
                 y = Derivative(ma1[g].func(t), (t, k)).subs(t, 0)
             d.append(s**(ma1[n]-k-1)*y)
-#        r, p, c = _laplace_apply_rules(ma1[g].func(t), t, s, doit=doit, **hints)
         r, p, c = LaplaceTransform(ma1[g].func(t), t, s).doit(**hints)
         return ((ma1[a]*s**ma1[n]*r - Add(*d)), Max(S.NegativeInfinity, p),
                 And(True))
@@ -1787,7 +1801,9 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
     debug('[LT _lar ] %s'%('-'*65, ))
     debug('[LT _lar ] started with (%s, %s, %s)'%(f, t, s))
     debug('[LT _lar ]     and hints %s'%(hints, ))
-
+    
+    _tree((f, t, s), ':: LT apply rules', **hints)
+        
     k, func = f.as_independent(t, as_Add=False)
     debug('[LT _lar ]     deep collect: %s'%(_laplace_deep_collect(func, t),))
 
@@ -1873,15 +1889,22 @@ class LaplaceTransform(IntegralTransform):
         it will do so without wasting a lot of computation power.
         """
 
-        recursive = hints.get('recursive', 0)
-        hints['recursive'] = recursive+1
         fn = self.function
         t_ = self.function_variable
         s_ = self.transform_variable
+        recursive = hints.get('recursive', 0)
+        _tree((fn, t_, s_), ': LT use rules', **hints)
+        hints['recursive'] = recursive+1
         debug('[LT _u_r ] %s'%('='*65, ))
         debug('[LT _u_r ] started with (%s, %s, %s)'%(fn, t_, s_))
         debug('[LT _u_r ]     and hints %s'%(hints, ))
         LT = None
+        
+        started_with = '%s | %s | %s'
+        last_command = hints.get('last_command', '')
+        if started_with==last_command and recursive>5:
+            return None
+        hints['last_command'] = started_with
 
         if recursive>7:
             return None
