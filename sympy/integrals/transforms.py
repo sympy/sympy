@@ -1655,7 +1655,7 @@ def _laplace_rule_timescale(f, t, s, doit=True, **hints):
                         LaplaceTransform(1/ma2[a]*ma1[g].func(t),
                                          t, s).doit(**hints))
                 else:
-                    if recursive <2 and doit==True:
+                    if doit==True:
                         L = LaplaceTransform(1/ma2[a]*ma1[g].func(t),
                                              t, s).doit(**hints)
                     else:
@@ -1801,9 +1801,8 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
     debug('[LT _lar ] %s'%('-'*65, ))
     debug('[LT _lar ] started with (%s, %s, %s)'%(f, t, s))
     debug('[LT _lar ]     and hints %s'%(hints, ))
-    
     _tree((f, t, s), ':: LT apply rules', **hints)
-        
+
     k, func = f.as_independent(t, as_Add=False)
     debug('[LT _lar ]     deep collect: %s'%(_laplace_deep_collect(func, t),))
 
@@ -1893,17 +1892,17 @@ class LaplaceTransform(IntegralTransform):
         t_ = self.function_variable
         s_ = self.transform_variable
         recursive = hints.get('recursive', 0)
-        _tree((fn, t_, s_), ': LT use rules', **hints)
+        last_command = hints.get('last_command', '')
         _expand = hints.get('LT _u_r', 'no')
+        _tree((fn, t_, s_), ': LT use rules [%s]'%(_expand, ), **hints)
         hints['recursive'] = recursive+1
         debug('[LT _u_r ] %s'%('='*65, ))
         debug('[LT _u_r ] started with (%s, %s, %s)'%(fn, t_, s_))
         debug('[LT _u_r ]     and hints %s'%(hints, ))
         LT = None
-        
+
         started_with = '%s | %s | %s'
-        last_command = hints.get('last_command', '')
-        if started_with==last_command and recursive>5:
+        if started_with==last_command and (recursive>5 or _expand=='deeper'):
             return None
         hints['last_command'] = started_with
 
@@ -1916,7 +1915,8 @@ class LaplaceTransform(IntegralTransform):
         if _expand=='not deep':
             r = expand(fn, deep=False)
             hints['LT _u_r'] = 'deep'
-        if _expand=='deep':
+        if _expand=='deep' or _expand=='deeper':
+            hints['LT _u_r'] = 'deeper'
             r = expand(fn)
 
         terms = Add.make_args(r)
