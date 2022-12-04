@@ -1894,6 +1894,7 @@ class LaplaceTransform(IntegralTransform):
         s_ = self.transform_variable
         recursive = hints.get('recursive', 0)
         _tree((fn, t_, s_), ': LT use rules', **hints)
+        _expand = hints.get('LT _u_r', 'no')
         hints['recursive'] = recursive+1
         debug('[LT _u_r ] %s'%('='*65, ))
         debug('[LT _u_r ] started with (%s, %s, %s)'%(fn, t_, s_))
@@ -1906,16 +1907,17 @@ class LaplaceTransform(IntegralTransform):
             return None
         hints['last_command'] = started_with
 
-        if recursive>7:
-            return None
-        if recursive>0:
-            if recursive<=4:
-                r = expand(fn, deep=False)
-            else:
-                r = expand(fn)
-        else:
-            # Try once without expanding
-            r = fn
+        # Expanding too much too early may prevent rules from matching, so
+        # we do it in three layers
+
+        r = fn
+        if _expand=='no':
+            hints['LT _u_r'] = 'not deep'
+        if _expand=='not deep':
+            r = expand(fn, deep=False)
+            hints['LT _u_r'] = 'deep'
+        if _expand=='deep':
+            r = expand(fn)
 
         terms = Add.make_args(r)
 
