@@ -2037,6 +2037,7 @@ def test_TensMul_matching():
     U = WildTensorHead('U')
 
     assert ( wi*K(p) ).matches( K(p) ) == {wi: 1}
+    assert ( wi * eps(p,q,r) ).matches(eps(p,r,q)) == {wi:-1}
     assert ( K(p)*V(-p) ).replace( W(a)*V(-a), 1) == 1
     assert ( K(q)*K(p)*V(-p) ).replace( W(q,a)*V(-a), 1) == 1
     assert ( K(p)*V(-p) ).replace( K(-a)*V(a), 1 ) == 1
