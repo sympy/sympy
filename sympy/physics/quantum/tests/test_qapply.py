@@ -154,9 +154,9 @@ def test_issue24158_ket_times_op():
     assert qapply(QubitBra(1)*IdentityOperator()) == QubitBra(1)
     assert qapply(IdentityGate(0)*(Qubit(0) + Qubit(1))) == Qubit(0) + Qubit(1)
 
-#=====================================
+#==========================
 #= Additional test cases for re-write
-#=====================================
+#==========================
 
 def test_suite2022_10():
     qb0 = QubitBra(0) # <0|
@@ -168,13 +168,13 @@ def test_suite2022_10():
     dyad10 = q1*qb0   # |1><0|
 
     assert qapply(qb1*q0) == 0          # honor ip_doit=True and evaluate InnerProduct
-    assert qapply(dyad11**2 * dyad01**2) == 0       # evaluate dyads in powers 
+    assert qapply(dyad11**2 * dyad01**2) == 0       # evaluate dyads in powers
     assert qapply(qb1 * qb1 * q1 * q1 * q1) == q1   # deal with missing brackets, right
     assert qapply(qb1 * qb1 * qb1 * q1 * q1) == qb1 # deal with missing brackets, left
     assert qapply(qb1**2 * q1**3) == q1      # deal with missing brackets that Mul simplifies to Pow objects
     assert qapply(qb1**3 * q1**2) == qb1     # deal with missing brackets that Mul simplifies to Pow objects
     P1 = Mul(QubitBra(0), Mul(QubitBra(0), Qubit(0)), XGate(0)) # legal expr <0| * (<1|*|1>) * X
-    assert qapply(P1, dagger = True) == qb1  # honor dagger=True classic: was 0 before fix, then <0|*X(0). 
+    assert qapply(P1, dagger = True) == qb1  # honor dagger=True classic: was 0 before fix, then <0|*X(0).
 
 
     assert qapply(TensorProduct(dyad11,dyad11) * TensorProduct(dyad11,dyad01)) == TensorProduct(dyad11, 0)
@@ -199,7 +199,7 @@ def test_suite2022_10():
     assert qapply(P, dagger = True) == 1
 
     P = dyad11 * dyad01 # 0
-    assert qapply(P, ip_doit = False) == InnerProduct(qb1, q0)*dyad11  
+    assert qapply(P, ip_doit = False) == InnerProduct(qb1, q0)*dyad11
     assert qapply(P) == 0
     assert qapply(P, dagger = True) == 0
 
@@ -214,10 +214,10 @@ def test_suite2022_10():
     assert qapply(P, dagger = True) == dyad11
 
     dyadphipsi = Ket('phi') * Bra('psi')
-    P = qapply(dyadphipsi * dyadphipsi * dyadphipsi) 
+    P = qapply(dyadphipsi * dyadphipsi * dyadphipsi)
     assert qapply(P, ip_doit = False) == InnerProduct(Bra('psi'), Ket('phi'))**2 * dyadphipsi
     assert qapply(P) == InnerProduct(Bra('psi'), Ket('phi'))**2 * dyadphipsi
-    assert qapply(P, dagger = True) == InnerProduct(Bra('psi'), Ket('phi'))**2 * dyadphipsi 
+    assert qapply(P, dagger = True) == InnerProduct(Bra('psi'), Ket('phi'))**2 * dyadphipsi
 
     P = (TGate(0) ** 8) * Qubit(1) # Expect |1>
     assert qapply(P) == Qubit(1)   # classic qapply: -i*i*|1>
@@ -294,18 +294,18 @@ def test_issue19540():  # Issue #19540  https://github.com/sympy/sympy/issues/19
     rh = TensorProduct(k1 + k2, k1 - k2) # |1>|1> - |1>|2> + |2>|1> - |2>|2>
 
     # InnerProduct(Dagger(lh), rh) throws a TypeError (as described in issue #19540)
-    # Workaround: Just use Dagger(lh)*rh. It's a completely legal product 
+    # Workaround: Just use Dagger(lh)*rh. It's a completely legal product
     # and qapply(Dagger(lh)*rh) computes it. What is missing is that a TensorProduct
     # of all scalars is reduced to a scalar (could that be added to TensorProduct.doit()?)
-    assert qapply(Dagger(lh)*rh) == -TensorProduct(1,1) 
+    assert qapply(Dagger(lh)*rh) == -TensorProduct(1,1)
 
 
 def test_suite2022_11():
 
     # Handle negative powers sensibly, if the operator knows its inverse better that just op.inv()==Pow(op,-1)
     assert qapply(TGate(0)**(8) * Qubit(1))  == Qubit(1)  # classic: -I*I*|1>
-    assert qapply(TGate(0)**(-8) * Qubit(1)) == TGate(0)**(-8) * Qubit(1)  # classic: recurses to -infinite powers 
-    assert qapply(TGate(0)**(-1) * Qubit(1)) == TGate(0)**(-1) * Qubit(1)  # classic: recurses to -infinite powers 
+    assert qapply(TGate(0)**(-8) * Qubit(1)) == TGate(0)**(-8) * Qubit(1)  # classic: recurses to -infinite powers
+    assert qapply(TGate(0)**(-1) * Qubit(1)) == TGate(0)**(-1) * Qubit(1)  # classic: recurses to -infinite powers
     assert qapply(XGate(0)**(-1) * Qubit(1)) == Qubit(0)  # classic: recurses to -infinite powers
 
     In = IdentityOperator()
@@ -346,7 +346,7 @@ def test_suite2022_11():
     assert qapply(U ** m) == U ** m # qapply relies on Pow, pow etc. to compute powers!
     assert qapply(U ** m * Qubit(0)) == E ** (m * 2 * I * pi / n) * Qubit(0)
 
-    # simple addition of exponents 
+    # simple addition of exponents
     assert qapply(TGate(0) ** (m - n) * IdentityOperator(2) * TGate(0) ** n) == \
         TGate(0) ** m # qapply relies on Pow for powers!
     assert qapply(TGate(0) ** (m - n) * IdentityOperator(2) * TGate(0) ** n * Qubit(1)) == \
@@ -436,7 +436,7 @@ def test_powers2022_11():
         3**(7/2) * (XGate(0) * U71 * XGate(0))**(1/2) * XGate(0) * U71p3 * XGate(0)
 
     # restore the previous operator _apply_operator_UGate, if any
-    if prev_op: 
+    if prev_op:
         setattr(UGate, "_apply_operator_UGate", prev_op)
     else:
-        delattr(UGate, "_apply_operator_UGate")        
+        delattr(UGate, "_apply_operator_UGate")
