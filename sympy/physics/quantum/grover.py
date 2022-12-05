@@ -341,5 +341,7 @@ def apply_grover(oracle, nqubits, iterations=None):
     for iter in range(iterations):
         iterated = grover_iteration(iterated, v)
         iterated = qapply(iterated)
+        # do .expand() to simplify iterated, otherwise terms might grow very large
+        iterated = iterated.expand(tensorproduct=True)
 
     return iterated
