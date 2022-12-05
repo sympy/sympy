@@ -65,7 +65,8 @@ from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.operator import OuterProduct
 from sympy.physics.quantum.tensorproduct import TensorProduct
-from sympy.physics.quantum.density import Density
+#from sympy.physics.quantum.density import Density # moved to qapply body
+#otherwise generates circular import reference qapply->Density->represent->qapply
 
 
 
@@ -135,6 +136,9 @@ def qapply(e, **options):
         <b|k>**(n+1)*|k><b|
 
     """
+    # moved import here to avoid circular reference qapply->Density->represent->qapply
+    from sympy.physics.quantum.density import Density
+
     # Note: The variables EmptyMul, options, dagger, ip_doit, op_join
     # are assigned and in read-only scope: see bottom of file for body of qapply()
 
