@@ -3138,11 +3138,11 @@ class Tensor(TensExpr):
         #Now consider all index symmetries of expr, and see if any of them allow a match.
         for new_expr in expr._get_symmetrized_forms():
             m = self._matches(new_expr, repl_dict, old=old)
-            if m is None:
-                return None
-            else:
+            if m is not None:
                 repl_dict.update(m)
                 return repl_dict
+
+        return None
 
     def _matches(self, expr, repl_dict=None, old=False):
         """
