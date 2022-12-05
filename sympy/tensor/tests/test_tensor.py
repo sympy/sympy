@@ -2050,7 +2050,7 @@ def test_TensMul_matching():
         ( eps(r,p,q)*eps(-r,-s,-t) ).replace(
             eps(e,a,b)*eps(-e,c,d),
             delta(a,c)*delta(b,d) - delta(a,d)*delta(b,c),
-            ).doit()
+            ).doit().canon_bp()
         == delta(p,-s)*delta(q,-t) - delta(p,-t)*delta(q,-s)
         )
     assert (
