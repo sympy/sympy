@@ -4358,29 +4358,41 @@ class TensMul(TensExpr, AssocOp):
         #Try to match all non-wild tensors of self with tensors that compose expr
         if len(query_sifted["Tensor"]) > 0:
             q_tensor = query_sifted["Tensor"][0]
-            matched_this = []
-            for e in expr_sifted["Tensor"]:
-                m = q_tensor.matches(e)
-                if m is None:
-                    continue
+            """
+            We need to iterate over all possible symmetrized forms of q_tensor since the matches given by some of them may map dummy indices to free indices; the information about which indices are dummy/free will only be available later, when we are doing rem_q.matches(rem_e)
+            """
+            for q_tens in q_tensor._get_symmetrized_forms():
+                for e in expr_sifted["Tensor"]:
+                    if isinstance(q_tens, TensMul):
+                        #q_tensor got a minus sign due to this permutation.
+                        sign = -1
+                    else:
+                        sign = 1
 
-                rem_query = self.func(*[a for a in self.args if a != q_tensor]).doit()
-                rem_expr = expr.func(*[a for a in expr.args if a != e]).doit()
-                tmp_repl = dict()
-                tmp_repl.update(repl_dict)
-                tmp_repl.update(m)
-                rem_m = rem_query.matches(rem_expr, repl_dict=tmp_repl)
-                if rem_m is not None:
-                    #Check that contracted indices are not mapped to different indices.
-                    internally_consistent = True
-                    for k in rem_m.keys():
-                        if isinstance(k,TensorIndex):
-                            if -k in rem_m.keys() and rem_m[-k] != -rem_m[k]:
-                                internally_consistent = False
-                                break
-                    if internally_consistent:
-                        repl_dict.update(rem_m)
-                        return repl_dict
+                    """
+                    _matches is used here since we are already iterating over index permutations of q_tensor. Also note that the sign is removed from q_tensor, and will later be put into rem_q.
+                    """
+                    m = (sign*q_tens)._matches(e)
+                    if m is None:
+                        continue
+
+                    rem_query = sign*self.func(*[a for a in self.args if a != q_tensor]).doit()
+                    rem_expr = expr.func(*[a for a in expr.args if a != e]).doit()
+                    tmp_repl = dict()
+                    tmp_repl.update(repl_dict)
+                    tmp_repl.update(m)
+                    rem_m = rem_query.matches(rem_expr, repl_dict=tmp_repl)
+                    if rem_m is not None:
+                        #Check that contracted indices are not mapped to different indices.
+                        internally_consistent = True
+                        for k in rem_m.keys():
+                            if isinstance(k,TensorIndex):
+                                if -k in rem_m.keys() and rem_m[-k] != -rem_m[k]:
+                                    internally_consistent = False
+                                    break
+                        if internally_consistent:
+                            repl_dict.update(rem_m)
+                            return repl_dict
 
             return None
 
