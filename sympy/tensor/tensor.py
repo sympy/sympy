@@ -4342,10 +4342,10 @@ class TensMul(TensExpr, AssocOp):
 
         #Sanity checks
         if "coeff" in query_sifted.keys():
-            if TensMul(*query_sifted["coeff"]).doit() != self.coeff:
+            if TensMul(*query_sifted["coeff"]).doit(deep=False) != self.coeff:
                 raise NotImplementedError(f"Found something that we do not know to handle: {query_sifted['coeff']}")
         if "coeff" in expr_sifted.keys():
-            if TensMul(*expr_sifted["coeff"]).doit() != expr_coeff:
+            if TensMul(*expr_sifted["coeff"]).doit(deep=False) != expr_coeff:
                 raise NotImplementedError(f"Found something that we do not know to handle: {expr_sifted['coeff']}")
 
         query_tens_heads = set(tuple(getattr(x, "components", [])) for x in query_sifted["Tensor"]) #We use getattr because, e.g. TensAdd does not have the 'components' attribute.
@@ -4375,8 +4375,8 @@ class TensMul(TensExpr, AssocOp):
                     if m is None:
                         continue
 
-                    rem_query = sign*self.func(*[a for a in self.args if a != q_tensor]).doit()
-                    rem_expr = expr.func(*[a for a in expr.args if a != e]).doit()
+                    rem_query = sign*self.func(*[a for a in self.args if a != q_tensor]).doit(deep=False)
+                    rem_expr = expr.func(*[a for a in expr.args if a != e]).doit(deep=False)
                     tmp_repl = dict()
                     tmp_repl.update(repl_dict)
                     tmp_repl.update(m)
@@ -4413,7 +4413,7 @@ class TensMul(TensExpr, AssocOp):
                 if shares_indices_with_wild:
                     tensors_to_try.append(t)
 
-            m = w.matches(TensMul(*tensors_to_try).doit() )
+            m = w.matches(TensMul(*tensors_to_try).doit(deep=False) )
             if m is None:
                 return None
             else:
@@ -4425,7 +4425,7 @@ class TensMul(TensExpr, AssocOp):
         remaining_e_tensors = [t for t in expr_sifted["Tensor"] if t not in matched_e_tensors]
         if len(indexless_wilds) > 0:
             #If there are any remaining tensors, match them with the indexless WildTensor
-            m =  indexless_wilds[0].matches( TensMul(1,*remaining_e_tensors).doit() )
+            m =  indexless_wilds[0].matches( TensMul(1,*remaining_e_tensors).doit(deep=False) )
             if m is None:
                 return None
             else:
