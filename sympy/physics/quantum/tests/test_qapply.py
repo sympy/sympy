@@ -385,8 +385,8 @@ def test_powers2022_11():
     U71p6 = UGate(0, ImmutableMatrix([[1*exp(-2*pi*I/n), 0], [0, 1*exp(2*pi*I/n)]])) # == U71 ** 6
     U72   = UGate(0, ImmutableMatrix([[2*exp(2*pi*I/n), 0], [0, 2*exp(-2*pi*I/n)]]))
     U72p2 = UGate(0, ImmutableMatrix([[4*exp(4*pi*I/n), 0], [0, 4*exp(-4*pi*I/n)]])) # == U72 ** 2
-    U73   = UGate(0, ImmutableMatrix([[3*exp(2*pi*I/n), 0], [0, 3*exp(-2*pi*I/n)]]))
-    U11 = UGate(0, ImmutableMatrix([[1, 0], [0, 1]]))
+    #U73   = UGate(0, ImmutableMatrix([[3*exp(2*pi*I/n), 0], [0, 3*exp(-2*pi*I/n)]]))
+    #U11 = UGate(0, ImmutableMatrix([[1, 0], [0, 1]]))
     U12 = UGate(0, ImmutableMatrix([[2, 0], [0, 2]]))
     U13 = UGate(0, ImmutableMatrix([[3, 0], [0, 3]]))
 

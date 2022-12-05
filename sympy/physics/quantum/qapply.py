@@ -48,7 +48,7 @@
 The expressions are expanded as far as required to apply factors to summands.
 """
 
-from pydoc import doc
+#from pydoc import doc
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -115,7 +115,8 @@ def qapply(e, **options):
     Examples
     ========
 
-        >>> from sympy.physics.quantum import qapply, Ket, Bra
+        >>> from sympy.physics.quantum import qapply, Ket, Bra, QubitBra, XGate
+        >>> from sympy.core.symbol import symbols
         >>> b = Bra('b')
         >>> k = Ket('k')
         >>> A = k * b
@@ -129,7 +130,7 @@ def qapply(e, **options):
         <0|
         >>> qapply(A * k * b * A, op_join = False)
         <b|k>**2*|k>*<b|
-        >>> n = symbols("n", integer=true, nonnegative=true)
+        >>> n = symbols("n", integer=True, nonnegative=True)
         >>> qapply(A ** (n + 2))
         <b|k>**(n+1)*|k><b|
 
