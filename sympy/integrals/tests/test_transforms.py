@@ -778,6 +778,7 @@ def test_laplace_transform():
     assert LT(Mt, t, s, noconds=True) == Ms
     assert LT(Mt, t, s, legacy_matrix=False, noconds=True) == Ms
 
+
 @slow
 def test_inverse_laplace_transform():
     from sympy.core.exprtools import factor_terms
@@ -892,6 +893,7 @@ def test_inverse_laplace_transform_delta_cond():
     # issue 15043
     assert ILT(1/s + exp(r*s)/s, s, t, noconds=False) == (
         Heaviside(t) + Heaviside(r + t), True)
+
 
 def test_fourier_transform():
     from sympy.core.function import (expand, expand_complex, expand_trig)
@@ -1076,6 +1078,7 @@ def test_issue_8882():
         inverse_mellin_transform(F, s, x, (-1, oo),
         **{'as_meijerg': True, 'needeval': True}))
 
+        
 def test_issue_8514():
     from sympy.simplify.simplify import simplify
     a, b, c, = symbols('a b c', positive=True)
@@ -1084,9 +1087,11 @@ def test_issue_8514():
     assert ft == 2*exp(-b*t/(2*a))*sin(t*sqrt(4*a*c - b**2)/(2*a))/\
         sqrt(4*a*c - b**2)
 
+
 def test_issue_12591():
     x, y = symbols("x y", real=True)
     assert fourier_transform(exp(x), x, y) == FourierTransform(exp(x), x, y)
+
 
 def test_issue_14692():
     b = Symbol('b', negative=True)

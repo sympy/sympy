@@ -78,6 +78,7 @@ def _tree(f, name, **hints):
     debug(s)
     return
 
+
 class IntegralTransform(Function):
     """
     Base class for integral transforms.
@@ -302,6 +303,7 @@ _noconds = _noconds_(False)
 ##########################################################################
 # Mellin Transform
 ##########################################################################
+
 
 def _default_integrator(f, x):
     return integrate(f, (x, S.Zero, S.Infinity))
@@ -978,6 +980,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 # Laplace Transform
 ##########################################################################
 
+
 def _simplifyconds(expr, s, a):
     r"""
     Naively simplify some conditions occurring in ``expr``, given that `\operatorname{Re}(s) > a`.
@@ -1065,6 +1068,7 @@ def _simplifyconds(expr, s, a):
     expr = repl(expr, Gt, lambda x, y: replie(y, x))
     expr = repl(expr, Unequality, replue)
     return S(expr)
+
 
 def expand_dirac_delta(expr):
     """
@@ -1212,6 +1216,7 @@ def _laplace_transform(f, t, s_, simplify=True):
         aux = _simplifyconds(aux, s, a)
     return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
 
+
 def _laplace_deep_collect(f, t):
     """
     This is an internal helper function that traverses through the epression
@@ -1229,6 +1234,7 @@ def _laplace_deep_collect(f, t):
             return func(*args).collect(t)
         else:
             return func(*args)
+
 
 def _laplace_build_rules(t, s):
     """
@@ -1603,6 +1609,7 @@ def _laplace_build_rules(t, s):
     ]
     return laplace_transform_rules
 
+
 def _laplace_cr(f, **hints):
     """
     Internal helper function that will return `(f, a, c)` unless `**hints`
@@ -1614,6 +1621,7 @@ def _laplace_cr(f, **hints):
     else:
         return f
 
+
 def _laplace_ct(f):
     """
     Internal helper function that completes the tuple as follows:
@@ -1624,6 +1632,7 @@ def _laplace_ct(f):
         return f
     else:
         return f, S.NegativeInfinity, True
+
 
 def _laplace_rule_timescale(f, t, s, doit=True, **hints):
     r"""
@@ -1666,6 +1675,7 @@ def _laplace_rule_timescale(f, t, s, doit=True, **hints):
                                             doit=doit, **hints)
     return None
 
+
 def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
     """
     This internal helper function tries to transform a product containing the
@@ -1689,6 +1699,7 @@ def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
                 return exp(-ma2[a]*s)*r, p, c
     return None
 
+
 def _laplace_rule_exp(f, t, s, doit=True, **hints):
     """
     This internal helper function tries to transform a product containing the
@@ -1710,6 +1721,7 @@ def _laplace_rule_exp(f, t, s, doit=True, **hints):
                 r, p, c = L
                 return r, Max(ma2[a], p), c
     return None
+
 
 def _laplace_rule_trig(f, t, s, doit=True, **hints):
     """
@@ -1754,6 +1766,7 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                         p+cp_shift, c)
     return None
 
+
 def _laplace_rule_diff(f, t, s, doit=True, **hints):
     """
     This internal helper function tries to transform an expression containing
@@ -1780,6 +1793,7 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
         return ((ma1[a]*s**ma1[n]*r - Add(*d)), Max(S.NegativeInfinity, p),
                 And(True))
     return None
+
 
 def _laplace_apply_rules(f, t, s, doit=True, **hints):
     """
@@ -1837,6 +1851,7 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
             return k*r, p, c
     return None
 
+
 def _laplace_is_uneval(LT):
     decision = True
     t = Add.make_args(LT)
@@ -1844,6 +1859,7 @@ def _laplace_is_uneval(LT):
         if not f.has(LaplaceTransform):
             decision = False
     return decision
+
 
 class LaplaceTransform(IntegralTransform):
     """
@@ -1988,6 +2004,7 @@ class LaplaceTransform(IntegralTransform):
                 'Laplace', None, 'No combined convergence.')
         return plane, cond
 
+
 def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
@@ -2109,6 +2126,7 @@ behavior.
     debug('[LT l_t  ]   returns: ', LT)
     return LT
 
+
 def _complete_the_square_in_denom(f, s):
     from sympy.simplify.radsimp import fraction
     [n, d] = fraction(f)
@@ -2118,6 +2136,7 @@ def _complete_the_square_in_denom(f, s):
             a, b, c = cf
             d = a*((s+b/(2*a))**2+c/a-(b/(2*a))**2)
     return n/d
+
 
 def _inverse_laplace_build_rules(s, t):
     """
@@ -2166,6 +2185,7 @@ def _inverse_laplace_build_rules(s, t):
     ]
     return inverse_laplace_transform_rules
 
+
 def _inverse_laplace_apply_rules(F, s, t):
     """
     Helper function for the class InverseLaplaceTransform.
@@ -2194,6 +2214,7 @@ def _inverse_laplace_apply_rules(F, s, t):
             debug('      ma:   %s'%(ma,))
             return Heaviside(t)*k*t_dom.xreplace(ma)
     return None
+
 
 @_noconds_(True)
 def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
@@ -2416,6 +2437,7 @@ def _fast_inverse_laplace(e, s, t):
 # Fourier Transform
 ##########################################################################
 
+
 @_noconds_(True)
 def _fourier_transform(f, x, k, a, b, name, simplify=True):
     r"""
@@ -2594,6 +2616,7 @@ def inverse_fourier_transform(F, k, x, **hints):
 ##########################################################################
 # Fourier Sine and Cosine Transform
 ##########################################################################
+
 
 @_noconds_(True)
 def _sine_cosine_transform(f, x, k, a, b, K, name, simplify=True):
@@ -2888,6 +2911,7 @@ def inverse_cosine_transform(F, k, x, **hints):
 ##########################################################################
 # Hankel Transform
 ##########################################################################
+
 
 @_noconds_(True)
 def _hankel_transform(f, r, k, nu, name, simplify=True):
