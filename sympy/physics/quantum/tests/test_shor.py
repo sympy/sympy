@@ -4,7 +4,9 @@ from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.shor import CMod, getr
 
-
+#CMod has not been completed yet and raises "not implemented".
+#This is prevented from breaking the acceptance tests by wrapping it into @XFAIL.
+#Thus qapply is currently not called in this test at all.
 @XFAIL
 def test_CMod():
     assert qapply(CMod(4, 2, 2)*Qubit(0, 0, 1, 0, 0, 0, 0, 0)) == \
