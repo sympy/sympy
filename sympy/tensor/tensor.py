@@ -4310,14 +4310,18 @@ class TensMul(TensExpr, AssocOp):
             for e,m in matched_this:
                 rem_query = self.func(*[a for a in self.args if a != q_tensor]).doit()
                 rem_expr = expr.func(*[a for a in expr.args if a != e]).doit()
-                rem_m = rem_query.matches(rem_expr, repl_dict=m)
+                tmp_repl = dict()
+                tmp_repl.update(repl_dict)
+                tmp_repl.update(m)
+                rem_m = rem_query.matches(rem_expr, repl_dict=tmp_repl)
                 if rem_m is not None:
                     #Check that contracted indices are not mapped to different indices.
                     internally_consistent = True
                     for k in rem_m.keys():
-                        if isinstance(k,TensorIndex) and -k in rem_m.keys() and rem_m[-k] != -rem_m[k]:
-                            internally_consistent = False
-                            break
+                        if isinstance(k,TensorIndex):
+                            if -k in rem_m.keys() and rem_m[-k] != -rem_m[k]:
+                                internally_consistent = False
+                                break
                     if internally_consistent:
                         repl_dict.update(rem_m)
                         return repl_dict
