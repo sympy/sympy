@@ -1078,7 +1078,7 @@ def test_issue_8882():
         inverse_mellin_transform(F, s, x, (-1, oo),
         **{'as_meijerg': True, 'needeval': True}))
 
-        
+
 def test_issue_8514():
     from sympy.simplify.simplify import simplify
     a, b, c, = symbols('a b c', positive=True)
