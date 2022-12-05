@@ -225,11 +225,8 @@ class StrPrinter(Printer):
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
-        if str(dir) == "+":
-            return "Limit(%s, %s, %s)" % tuple(map(self._print, (e, z, z0)))
-        else:
-            return "Limit(%s, %s, %s, dir='%s')" % tuple(map(self._print,
-                                                            (e, z, z0, dir)))
+        return "Limit(%s, %s, %s, dir='%s')" % tuple(map(self._print, (e, z, z0, dir)))
+
 
     def _print_list(self, expr):
         return "[%s]" % self.stringify(expr, ", ")
