@@ -3120,6 +3120,9 @@ class Tensor(TensExpr):
         return new_perms
 
     def matches(self, expr, repl_dict=None, old=False):
+        """
+        TODO: A problem with moving the symmetry matching here is that TensMul._matches_commutative now sometimes fails if q_tensor is initially matched in such a way that dummies are broken.
+        """
         expr = sympify(expr)
 
         if repl_dict is None:
@@ -3131,6 +3134,7 @@ class Tensor(TensExpr):
         if self == expr:
             return repl_dict
         if not isinstance(expr, Tensor):
+            #TODO: This might be a problem if the tensor gained a minus sign due to a symmetry. But I guess that should be handled in TensMul.matches.
             return None
         if self.head != expr.head:
             return None
@@ -3175,6 +3179,7 @@ class Tensor(TensExpr):
             if m is None:
                 return None
             elif -s_ind in repl_dict.keys() and -repl_dict[-s_ind] != m[s_ind]:
+                #TODO: Might move all such dummy breakage tests to TensorIndex.matches.
                 return None
             else:
                 repl_dict.update(m)
