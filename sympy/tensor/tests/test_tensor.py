@@ -2035,6 +2035,7 @@ def test_TensMul_matching():
     V = TensorHead("V", [R3])
     W = WildTensorHead('W', unordered_indices=True)
     U = WildTensorHead('U')
+    k = Symbol("K")
 
     assert ( wi*K(p) ).matches( K(p) ) == {wi: 1}
     assert ( wi * eps(p,q,r) ).matches(eps(p,r,q)) == {wi:-1}
@@ -2061,6 +2062,7 @@ def test_TensMul_matching():
         == 6
         )
     assert ( V(-p)*V(q)*V(-q) ).replace( wi*W()*V(a)*V(-a), wi*W() ).doit() == V(-p)
+    assert ( k**4*K(r)*K(-r) ).replace( wi*W()*K(a)*K(-a), wi*W()*k**2 ).doit() == k**6
 
     #Multiple occurrence of WildTensor in value
     assert (
