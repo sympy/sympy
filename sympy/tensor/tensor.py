@@ -4312,10 +4312,11 @@ class TensMul(TensExpr, AssocOp):
             repl_dict = repl_dict.copy()
 
         #Take care of the various possible types for expr.
-        if isinstance(expr, Tensor):
-            expr = TensMul(expr)
-        elif not isinstance(expr, TensMul):
-            return None
+        if not isinstance(expr, TensMul):
+            if isinstance(expr, (TensExpr, Expr)):
+                expr = TensMul(expr)
+            else:
+                return None
         #The code that follows assumes expr is a TensMul
 
         #Find the non-tensor part of expr. This need not be the same as expr.coeff when expr.doit() has not been called.
