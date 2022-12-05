@@ -1997,6 +1997,7 @@ def test_tensor_matching():
     assert eps(p,-a,a).matches( eps(p,q,r) ) == None
     assert eps(p,-b,a).matches( eps(p,q,r) ) == {a: r, -b: q}
     assert eps(p,-q,r).replace(eps(a,b,c), 1) == 1
+    assert eps(p,q,r).matches(eps(q,r,p)) == dict()
     assert W().matches( K(p)*V(q) ) == {W(): K(p)*V(q)}
     assert W(a).matches( K(p) ) == {a:p, W(a).head: _WildTensExpr(K(p))}
     assert W(a,p).matches( K(p)*V(q) ) == {a:q, W(a,p).head: _WildTensExpr(K(p)*V(q))}
