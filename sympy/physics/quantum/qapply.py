@@ -22,7 +22,7 @@
 #     in one place (split_c_nc_atom)
 #  4. have all inbuilt rules how to multiply two object types made explicit and grouped in one place
 #     (qapply_Mul2Atoms)
-# 
+#
 # Moreover:
 #  5. do not use .expand(), only do an expansion of Add if required to apply operators, so
 #     keeping expansion to the bare minimum: it can be done afterwards using .expand(tensorproduct=True)
@@ -39,7 +39,7 @@
 # Note: The types OuterProduct resp. InnerProduct are sympy.physics.quantum.operator.OuterProduct/InnerProduct
 #       and by definition are restricted to hold subclasses of KetBase and BraBase. Not to be confused
 #       with other implementations of same or similar mathematical concepts elsewhere in SymPy (e.g.
-#       .matrices or .physics.vector deal with vectors/matrices described by coefficients. 
+#       .matrices or .physics.vector deal with vectors/matrices described by coefficients.
 #       Classical outer/inner product is implemented by sympy.physics.vector.functions.outer resp.
 #       sympy.matrices.dot/sympy.physics.vector.functions.dot).
 
@@ -54,7 +54,7 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.numbers import Number 
+from sympy.core.numbers import Number
 from sympy.functions.elementary.integers import floor
 
 from sympy.physics.quantum.dagger import Dagger
@@ -89,8 +89,8 @@ def qapply(e, **options):
         will be walked to find operators acting on operators and states symbolically.
     options : dict
         A dict of key/value pairs that determine how the operator actions
-        are carried out. The options are passed on to invocations ot operator methods 
-        <lhs>._apply_operator_<rhs>() and <rhs>._apply_from_right_to_<lhs>(). 
+        are carried out. The options are passed on to invocations ot operator methods
+        <lhs>._apply_operator_<rhs>() and <rhs>._apply_from_right_to_<lhs>().
 
         The following options are defined for qapply itself:
 
@@ -98,10 +98,10 @@ def qapply(e, **options):
           (default: False).
         * ``ip_doit``: call ``.doit()`` in inner products when they are
           encountered (default: True).
-        * ``op_join``: rewrite products |k> * <b| as outer products |k><b| 
+        * ``op_join``: rewrite products |k> * <b| as outer products |k><b|
           and avoid breaking them up to |k> * <b| (default: True).
 
-        
+
 
     Returns
     =======
@@ -143,9 +143,9 @@ def qapply(e, **options):
     InnerProduct, OuterProduct, TensorProduct, Pow etc do: Extraction of commutative factors, contracting
     of same factors to Powers etc, so these constructors may return their type, Mul or even other types.
 
-    2.) Mul(a,b) != a * b: 
+    2.) Mul(a,b) != a * b:
     Mul(a, b, c) processes the arguments a, b, c (e.g. factoring out scalars, grouping same factors to powers)
-    but does not try to actually multiply the arguments, i.e. is not trying (a*(b*c)), (a*b) etc. 
+    but does not try to actually multiply the arguments, i.e. is not trying (a*(b*c)), (a*b) etc.
     On the other hand a*b is executed using *-operator __mul__ for type(a), type(b):
     E.g. for Kets and Bras, __mul__ is overloaded to form InnerProducts resp. OuterProducts types, and
     e.g. IdentityOperator()*Ket(1)-> Ket(1)
@@ -170,7 +170,7 @@ def qapply(e, **options):
     # qapply_Mul2
     # -----------
     # Multiply all factors from fL to fR from the left
-    # - fL is typically derived by list(Mul.args), but may contain any expression incl. Mul, Add and c arguments 
+    # - fL is typically derived by list(Mul.args), but may contain any expression incl. Mul, Add and c arguments
     # - fR may not contain Add, Mul or factors Mul should multiply, may only contain "atomic" factors (see below)
     # - Important: fL, fR are modified during execution!
 
@@ -290,7 +290,7 @@ def qapply(e, **options):
        as Identity.is_commutative==False and IdentityOperator.is_commutative==False.
        But if this quirks should vanish, a better filter is required.
 
-    2. Is the factor a compound type (e.g. OuterProduct, Commutator) that is actually 
+    2. Is the factor a compound type (e.g. OuterProduct, Commutator) that is actually
        an expression that should be evaluated and broken up into its components to be
        multiplied one by one, or is it 'elementary'?
        So qapply implements rules which compound types to break up ((Anti-)Commutator,
@@ -511,11 +511,11 @@ def qapply(e, **options):
                             # Case 5a: expi >= 2, base atomic + "involutoric"
                             # simplify: base**e.exp = base**expf * cl**e.expi * ar**e.expi-1 * ar
                             c_list = [c ** e.expi for c in cl] + [c ** (expi // 2) for c in ar2c]
-                            return (c_list, pfl, ar) if (expi % 2 == 1) else (c_list, [], Mul(*pfl)) 
-                        if ar2ar == ar and ar2ncl == []: # Case 5b: expi >= 2, base atomic + "idempotent" 
+                            return (c_list, pfl, ar) if (expi % 2 == 1) else (c_list, [], Mul(*pfl))
+                        if ar2ar == ar and ar2ncl == []: # Case 5b: expi >= 2, base atomic + "idempotent"
                             # kind of idempotency: a*a = c*a -> a**expi = c**(expi-1) * a
                             return [c ** e.exp for c in cl] + [c ** (expi - 1) for c in ar2c], pfl, ar
-                        # else: Case 6: base atomic but not "idempotent" 
+                        # else: Case 6: base atomic but not "idempotent"
                         # return base**(exp-2) * ar * ar = base**(exp-2)*ar2c*ar2ncl*ar2ar
                         return [c ** e.exp for c in cl] + ar2c, [p.copy_exp_atomic(e.exp - 2, False)] + ar2ncl, ar2ar
             else: # Case 7: exponent is non-integer or < 2
@@ -525,10 +525,10 @@ def qapply(e, **options):
             return split_c_nc_atom(e, split_left)
 
 
-    #------------------- 
+    #-------------------
     # Factor Helper functions for qaaply_Mul2 - variables ip_doit, dagger, options are in scope
     #-------------------
-    # 
+    #
     # Code relies on the sympy convention that all commutative factors have been pulled out
     # from objects like OuterProduct, TensorProduct, InnerProduct, Pow etc by their constructors,
     # so if an an expression e is an instance of those objects e does not contain such factors
@@ -627,7 +627,7 @@ def qapply(e, **options):
             def dagger_sp(b_sp):
                 return ( [Dagger(f) for f in b_sp[0] ], [Dagger(f) for f in reversed(b_sp[1])], Dagger(b_sp[2]) )
             return PowHold(Dagger(self.base), self.exp, self.atomic, dagger_sp(self._b_sp_l), dagger_sp(self._b_sp_r))
-        
+
         def add_exp(self, exp2): # return PowHold with exponent incremented by exp2
             return PowHold(self.base, self.exp + exp2, self.atomic, self._b_sp_l, self._b_sp_r)
         def copy_exp_atomic(self, exp, atomic):
@@ -660,12 +660,12 @@ def qapply(e, **options):
     # if e is no sympy expression, return it unmodified (e.g. Numbers)
     if not isinstance(e, Expr):
         return e
-    
+
     # set options for qapply_* and helper functions:
     dagger = options.get('dagger', False)   # if a*b doesn't compute, try Dagger(Dagger(b)*Dagger(a))
     ip_doit = options.get('ip_doit', True)  # evaluate ip.doit() on all InnerProduct objects
     op_join = options.get('op_join', True)  # try to join Ket*Bra to OuterProduct, avoid breaking OuterProduct
-    
+
     # some constants for convenience
     EmptyMul = Mul() # is Integer(1), is S.One, but more intuitive in this context
     to_the_left  = True  # option for split_c_nc_atom: split atomic factor to the left
@@ -676,7 +676,7 @@ def qapply(e, **options):
 
     # clean up the result, if necessary
     if hasattr(res, 'replace'):
-        res = res.replace(PowHold, Pow)  
+        res = res.replace(PowHold, Pow)
 
     """ # debugging aid: show various representations and expansion of result
     from sympy.printing import srepr
@@ -690,4 +690,3 @@ def qapply(e, **options):
         print(f"    3.qapply({ep},{options}).expand(TP=True) = {res.expand(tensorproduct=True)}")
     """
     return res
-
