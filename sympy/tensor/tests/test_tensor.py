@@ -2058,6 +2058,7 @@ def test_TensMul_matching():
             ).contract_delta(delta).doit()
         == 6
         )
+    assert ( V(-p)*V(q)*V(-q) ).replace( wi*W()*V(a)*V(-a), wi*W() ).doit() == V(-p)
 
     #Multiple occurrence of WildTensor in value
     assert (
