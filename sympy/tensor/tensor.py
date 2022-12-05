@@ -4318,6 +4318,9 @@ class TensMul(TensExpr, AssocOp):
             return None
         #The code that follows assumes expr is a TensMul
 
+        #Find the non-tensor part of expr. This need not be the same as expr.coeff when expr.doit() has not been called.
+        expr_coeff = reduce(lambda a, b: a*b, [arg for arg in expr.args if not isinstance(arg, TensExpr)], S.One)
+
         # handle simple patterns
         if self == expr:
             return repl_dict
@@ -4341,7 +4344,7 @@ class TensMul(TensExpr, AssocOp):
             if TensMul(*query_sifted["coeff"]).doit() != self.coeff:
                 raise NotImplementedError(f"Found something that we do not know to handle: {query_sifted['coeff']}")
         if "coeff" in expr_sifted.keys():
-            if TensMul(*expr_sifted["coeff"]).doit() != expr.coeff:
+            if TensMul(*expr_sifted["coeff"]).doit() != expr_coeff:
                 raise NotImplementedError(f"Found something that we do not know to handle: {expr_sifted['coeff']}")
 
         query_tens_heads = set(tuple(getattr(x, "components", [])) for x in query_sifted["Tensor"]) #We use getattr because, e.g. TensAdd does not have the 'components' attribute.
@@ -4430,7 +4433,7 @@ class TensMul(TensExpr, AssocOp):
             return None
 
         #Try to match the non-tensorial coefficient
-        m = self.coeff.matches(expr.coeff, old=old)
+        m = self.coeff.matches(expr_coeff, old=old)
         if m is None:
             return None
         else:
