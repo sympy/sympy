@@ -4304,10 +4304,9 @@ class TensMul(TensExpr, AssocOp):
             matched_this = []
             for e in expr_sifted["Tensor"]:
                 m = q_tensor.matches(e)
-                if m is not None:
-                    matched_this.append((e,m))
+                if m is None:
+                    continue
 
-            for e,m in matched_this:
                 rem_query = self.func(*[a for a in self.args if a != q_tensor]).doit()
                 rem_expr = expr.func(*[a for a in expr.args if a != e]).doit()
                 tmp_repl = dict()
