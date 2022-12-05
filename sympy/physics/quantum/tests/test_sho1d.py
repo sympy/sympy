@@ -1,6 +1,6 @@
 """Tests for sho1d.py"""
 
-from sympy.core.numbers import (I, Integer)
+from sympy.core.numbers import (I, Integer, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -103,7 +103,7 @@ def test_NumberOp():
 
 def test_Hamiltonian():
     assert Commutator(H, N).doit() == Integer(0)
-    assert qapply(H*k) == ((hbar*omega*(k.n + Integer(1)/Integer(2)))*k).expand()
+    assert qapply(H*k) == ((hbar*omega*(k.n + Rational(1, 2)))*k) # removed .expand() on rhs
     assert H.rewrite('a').doit() == hbar*omega*(ad*a + Integer(1)/Integer(2))
     assert H.rewrite('xp').doit() == \
         (Integer(1)/(Integer(2)*m))*(Px**2 + (m*omega*X)**2)
