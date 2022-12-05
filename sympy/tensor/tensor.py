@@ -3175,7 +3175,6 @@ class Tensor(TensExpr):
             if m is None:
                 return None
             elif -s_ind in repl_dict.keys() and -repl_dict[-s_ind] != m[s_ind]:
-                #TODO: Might move all such dummy breakage tests to TensorIndex.matches.
                 return None
             else:
                 repl_dict.update(m)
