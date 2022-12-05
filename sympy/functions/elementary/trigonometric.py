@@ -943,6 +943,10 @@ class cos(TrigonometricFunction):
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return 1/sec(arg).rewrite(csc)
 
+    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+        from sympy.functions.special.hyper import hyper
+        return hyper([], (1,), ((-arg**2)/4,))
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
