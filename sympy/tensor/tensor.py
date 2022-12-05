@@ -3097,6 +3097,28 @@ class Tensor(TensExpr):
                 indices.append(index)
         return self.head(*indices)
 
+    def _get_symmetrized_forms(self):
+        """
+        Return a list giving all possible permutations of self that are allowed by its symmetries.
+        """
+        comp = self.component
+        gens = comp.symmetry.generators
+        rank = comp.rank
+
+        old_perms = None
+        new_perms = set([self])
+        while new_perms != old_perms:
+            old_perms = new_perms.copy()
+            for tens in old_perms:
+                for gen in gens:
+                    inds = tens.get_indices()
+                    per = [gen.apply(i) for i in range(0,rank)]
+                    sign = (-1)**(gen.apply(rank) - rank)
+                    ind_map = { k:v for k,v in zip(inds, [inds[i] for i in per]) }
+                    new_perms.add( sign * tens._replace_indices(ind_map) )
+
+        return new_perms
+
     def matches(self, expr, repl_dict=None, old=False):
         expr = sympify(expr)
 
