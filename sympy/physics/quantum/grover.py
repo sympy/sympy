@@ -287,11 +287,12 @@ def grover_iteration(qstate, oracle):
         >>> from sympy.physics.quantum.grover import OracleGate
         >>> from sympy.physics.quantum.grover import superposition_basis
         >>> from sympy.physics.quantum.grover import grover_iteration
+        >>> from sympy import expand
         >>> numqubits = 2
         >>> basis_states = superposition_basis(numqubits)
         >>> f = lambda qubits: qubits == IntQubit(2)
         >>> v = OracleGate(numqubits, f)
-        >>> qapply(grover_iteration(basis_states, v))
+        >>> qapply(grover_iteration(basis_states, v)).expand()
         |2>
 
     """

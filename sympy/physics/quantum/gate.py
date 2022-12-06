@@ -659,7 +659,7 @@ class HadamardGate(HermitianOperator, OneQubitGate):
     Examples
     ========
 
-    >>> from sympy import sqrt
+    >>> from sympy import sqrt, expand
     >>> from sympy.physics.quantum.qubit import Qubit
     >>> from sympy.physics.quantum.gate import HadamardGate
     >>> from sympy.physics.quantum.qapply import qapply
@@ -667,7 +667,7 @@ class HadamardGate(HermitianOperator, OneQubitGate):
     sqrt(2)*|0>/2 - sqrt(2)*|1>/2
     >>> # Hadamard on bell state, applied on 2 qubits.
     >>> psi = 1/sqrt(2)*(Qubit('00')+Qubit('11'))
-    >>> qapply(HadamardGate(0)*HadamardGate(1)*psi)
+    >>> qapply(HadamardGate(0)*HadamardGate(1)*psi).expand()
     sqrt(2)*|00>/2 + sqrt(2)*|11>/2
 
     """

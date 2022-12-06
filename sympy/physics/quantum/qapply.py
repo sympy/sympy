@@ -116,7 +116,9 @@ def qapply(e, **options):
     Examples
     ========
 
-        >>> from sympy.physics.quantum import qapply, Ket, Bra, QubitBra, XGate
+        >>> from sympy.physics.quantum import qapply, Ket, Bra
+        >>> from sympy.physics.quantum.gate import XGate
+        >>> from sympy.physics.quantum.qubit import QubitBra
         >>> from sympy.core.symbol import symbols
         >>> b = Bra('b')
         >>> k = Ket('k')
@@ -133,7 +135,7 @@ def qapply(e, **options):
         <b|k>**2*|k>*<b|
         >>> n = symbols("n", integer=True, nonnegative=True)
         >>> qapply(A ** (n + 2))
-        <b|k>**(n+1)*|k><b|
+        <b|k>**(n + 1)*|k><b|
 
     """
     # moved import here to avoid circular reference qapply->Density->represent->qapply
