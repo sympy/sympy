@@ -1723,6 +1723,28 @@ def _laplace_rule_exp(f, t, s, doit=True, **hints):
     return None
 
 
+def _laplace_rule_delta(f, t, s, doit=True, **hints):
+    """
+    This internal helper function tries to transform a product containing the
+    `DiracDelta` function with another function and returns `None` if it
+    cannot do it.
+    """
+    a = Wild('a', exclude=[t])
+
+    y = Wild('y')
+    z = Wild('z')
+    ma1 = f.match(DiracDelta(y)*z)
+    if ma1 and not ma1[z].has(DiracDelta):
+        ma2 = ma1[y].collect(t).match(t-a)
+        if ma2 and ma2[a]>=0:
+            debug('_laplace_apply_rules match:')
+            debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
+            debug('      rule: multiply with DiracDelta')
+            r = exp(-ma2[a]*s)*ma1[z].subs(t, ma2[a]).simplify()
+            return _laplace_ct(r)
+    return None
+
+
 def _laplace_rule_trig(f, t, s, doit=True, **hints):
     """
     This internal helper function tries to transform a product containing a
@@ -1839,11 +1861,9 @@ def _laplace_apply_rules(f, t, s, doit=True, **hints):
             if c==True:
                 return k*s_dom.xreplace(ma), plane.xreplace(ma), S.true
 
-    if f.has(DiracDelta):
-        return None
-
     prog_rules = [_laplace_rule_timescale, _laplace_rule_heaviside,
-                  _laplace_rule_exp, _laplace_rule_trig, _laplace_rule_diff]
+                  _laplace_rule_exp, _laplace_rule_trig,
+                  _laplace_rule_delta, _laplace_rule_diff]
     for p_rule in prog_rules:
         L = p_rule(func, t, s, doit=doit, **hints)
         if not L is None:
