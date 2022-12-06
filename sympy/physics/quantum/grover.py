@@ -287,7 +287,6 @@ def grover_iteration(qstate, oracle):
         >>> from sympy.physics.quantum.grover import OracleGate
         >>> from sympy.physics.quantum.grover import superposition_basis
         >>> from sympy.physics.quantum.grover import grover_iteration
-        >>> from sympy import expand
         >>> numqubits = 2
         >>> basis_states = superposition_basis(numqubits)
         >>> f = lambda qubits: qubits == IntQubit(2)

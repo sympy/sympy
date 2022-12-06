@@ -659,7 +659,7 @@ class HadamardGate(HermitianOperator, OneQubitGate):
     Examples
     ========
 
-    >>> from sympy import sqrt, expand
+    >>> from sympy import sqrt
     >>> from sympy.physics.quantum.qubit import Qubit
     >>> from sympy.physics.quantum.gate import HadamardGate
     >>> from sympy.physics.quantum.qapply import qapply
