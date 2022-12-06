@@ -48,7 +48,7 @@
 The expressions are expanded as far as required to apply factors to summands.
 """
 
-#from pydoc import doc
+from typing import cast, Any, List, Tuple # keep compatibility with Python 3.8
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -117,8 +117,8 @@ def qapply(e, **options):
     ========
 
         >>> from sympy.physics.quantum import qapply, Ket, Bra
-        >>> from sympy.physics.quantum.gate import XGate
         >>> from sympy.physics.quantum.qubit import QubitBra
+        >>> from sympy.physics.quantum.gate import XGate
         >>> from sympy.core.symbol import symbols
         >>> b = Bra('b')
         >>> k = Ket('k')
@@ -181,7 +181,7 @@ def qapply(e, **options):
     # - fR may not contain Add, Mul or factors Mul should multiply, may only contain "atomic" factors (see below)
     # - Important: fL, fR are modified during execution!
 
-    def qapply_Mul2(fL:list, fR:list) -> Expr:
+    def qapply_Mul2(fL:List, fR:List) -> Expr:
         """Multiplies the left hand list of factors into the right hand list of factors"""
 
         # define shorthand to distribute eadd: fL*(eadd.args[0]+eadd.args[1]+..)*fR
@@ -189,7 +189,7 @@ def qapply(e, **options):
                                      # TBD: implement a cache to avoid frequent evaluation of fL?
             return eadd.func(*map((lambda arg: qapply_Mul2(fL+[arg], fR.copy())), eadd.args))
 
-        cl = [] #gathers factors for Mul. Avoids calling Mul for any new factor.
+        cl : List[Expr] = [] #gathers factors for Mul. Avoids calling Mul for any new factor.
 
         lhsR = EmptyMul # init leftmost  left  hand side factor
         rhsL = EmptyMul # init rightmost right hand side factor
@@ -336,9 +336,9 @@ def qapply(e, **options):
         # But joining powers on same bases is always safe and shortens the overall expression tree.
         # As PowHold is our artificial type we cannot use the logic in Pow() here, so mimic it here.
         # Note that this type generic rules cannot be expressed using _apply_operator / _apply_from_right_to:
-        if lhs.func == PowHold:
+        if isinstance(lhs, PowHold):
             cl, ncl, al = lhs.split_c_nc_atom(to_the_right) # extract factors of base to the right
-            if rhs.func == PowHold:
+            if isinstance(rhs, PowHold):
                 if lhs.base == rhs.base:
                     return lhs.add_exp(rhs.exp)    # Note PowHold does A**0->1, A**1->A
                 elif (lhs.exp - 1).is_positive and (rhs.exp - 1).is_positive:  # both powers can extract one base factor
@@ -358,7 +358,7 @@ def qapply(e, **options):
                     pass # maybe further down rhs can act on lhs, e.g. if rhs==Id
                 else:
                     return Mul(*(cl + ncl + [alrhs]))
-        elif rhs.func == PowHold:
+        elif isinstance(rhs, PowHold):
             if lhs == rhs.base: # catch special case lhs == rhs.base = PowHold(rhs.base,1)
                 return rhs.add_exp(1)
             elif (rhs.exp - 1).is_positive:
@@ -373,7 +373,7 @@ def qapply(e, **options):
         if isinstance(lhs, TensorProduct) and isinstance(rhs, TensorProduct) and len(lhs.args) == len(rhs.args):
             # Do the *-operator for TensorProduct*TensorProduct. If there are
             # c-factors in the tensor factors these will be pulled up front automatically, making it Mul
-            result = TensorProduct(*[ lf * rf for (lf, rf) in zip(lhs.args, rhs.args)])
+            result = TensorProduct(*[ cast(Expr, lf) * cast(Expr, rf) for (lf, rf) in zip(lhs.args, rhs.args)])
             #return qapply_Mul2([result], []) #qapply'ies to the tensor product factors
             return result # the tensor factors will be qapply'ed in slit_c_nc_atom_factor
 
@@ -382,12 +382,12 @@ def qapply(e, **options):
 
         # Now try to apply the _apply_operator and _apply_from_right_to methods, so
         # these take precedence over the built-in methods below.
-        result = None
+        result = cast(Any, None)
         try:
-            result = lhs._apply_operator(rhs, **options)
+            result = cast(Any, lhs)._apply_operator(rhs, **options)
         except (NotImplementedError, AttributeError):
             try:
-                result = rhs._apply_from_right_to(lhs, **options)
+                result = cast(Any, rhs)._apply_from_right_to(lhs, **options)
             except (NotImplementedError, AttributeError):
                 pass
         if result is not None:
@@ -435,7 +435,7 @@ def qapply(e, **options):
     # split_pow_c_nc_atom
     #--------------------
 
-    def split_pow_c_nc_atom(e:Pow, split_left:bool) -> tuple[list, list, Expr]:
+    def split_pow_c_nc_atom(e:Pow, split_left:bool) -> Tuple[List, List, Expr]:
         """Prepare expression Pow(base, exp) for further application; return (c-factor list if known, nc-list, atomR)"""
 
         # TensorProduct doesn't provide .__pow__ or ._pow. We don't use tensor_product_simp_Pow(e).
@@ -461,7 +461,7 @@ def qapply(e, **options):
 
         # if no methods has given a result so far, at least recurse into e.base
         base = qapply_Mul2([e.base], [])
-        e = base ** e.exp      # let Pow do all it can do using class methods ._pow, ._eval_power etc.
+        e : Expr = base ** e.exp  # let Pow do all it can do using class methods ._pow, ._eval_power etc.
         if isinstance(e, Pow): # if it's still a Pow, try some more
             # check for commutative elements in base
             base = e.base
@@ -527,7 +527,7 @@ def qapply(e, **options):
                         return [c ** e.exp for c in cl] + ar2c, [p.copy_exp_atomic(e.exp - 2, False)] + ar2ncl, ar2ar
             else: # Case 7: exponent is non-integer or < 2
                 return [c ** e.exp for c in cl], [], \
-                    PowHold(base, e.exp, atomic = True, b_sp_l = None, b_sp_r = ([], ncl, ar))
+                    PowHold(base, e.exp, atomic = True, b_sp_l=tuple(), b_sp_r = ([], ncl, ar))
         else: # Case 8: e is no longer a power
             return split_c_nc_atom(e, split_left)
 
@@ -540,7 +540,7 @@ def qapply(e, **options):
     # from objects like OuterProduct, TensorProduct, InnerProduct, Pow etc by their constructors,
     # so if an an expression e is an instance of those objects e does not contain such factors
 
-    def split_c_nc_atom(e:Expr, split_left:bool) -> tuple[list, list, Expr]:
+    def split_c_nc_atom(e:Expr, split_left:bool) -> Tuple[List, List, Expr]:
         """returns (c_factors list of e, e/(c_factors*nc_atomic_factor) list, nc_atomic_factor)"""
         if  e == EmptyMul or e == S.Zero:  # speed up for special cases
             return [], [], e
@@ -567,8 +567,8 @@ def qapply(e, **options):
             # Do simplification of Powers, incl. ip_doit, and wraps Powers in PowHold class
             return split_pow_c_nc_atom(e, split_left)
         elif isinstance(e, PowHold):
-            if e.atomic: # PowHold won't roll off factors in split
-                return [], [], e
+            if getattr(e, "atomic"): # so MyPy won't complain about e.atomic
+                return [], [], e  # PowHold won't roll off factors in split
             else: # PowHold rolls itself off providing factors
                 return e.split_c_nc_atom(split_left)
 
@@ -582,7 +582,7 @@ def qapply(e, **options):
                 return ([], [e.bra], e.ket) if split_left else ([], [e.ket], e.bra)
 
         elif isinstance(e, Density):    # For a Density need to call qapply on its state vectors
-            new_args = [(qapply_Mul2([state],[]), prob) for (state, prob) in e.args]
+            new_args = [(qapply_Mul2([cast(Expr, state)],[]), cast(Expr, prob)) for (state, prob) in cast(Tuple, e.args)]
             res = Density(*new_args)
             if isinstance(res, Density):
                 return ([], [], res)  # Density is considered atomic
@@ -590,7 +590,7 @@ def qapply(e, **options):
                 return split_c_nc_atom(res, split_left)
 
         elif isinstance(e, TensorProduct): # For a raw TensorProduct, call qapply on its args first
-            res = TensorProduct(*[qapply_Mul2([t], []) for t in e.args]) # may return Mul
+            res : Expr = TensorProduct(*[qapply_Mul2([t], []) for t in e.args]) # may return Mul
             if isinstance(res, TensorProduct):
                 return ([], [], res)  # Tensorproduct itself is atomic
             else: # e.g. Mul, scalar, ..
@@ -617,7 +617,7 @@ def qapply(e, **options):
         # see definition of class Pow: this permits modification of obj.is_commutative
         __slots__ = ('is_commutative', '_b_sp_l', '_b_sp_r', 'atomic')
 
-        def __new__(cls, base:Expr, exp:Expr, atomic:bool, b_sp_l:tuple, b_sp_r:tuple):
+        def __new__(cls, base:Expr, exp:Expr, atomic:bool, b_sp_l:Tuple, b_sp_r:Tuple):
             if exp is S.Zero:  return S.One    # by sympy convention, see Pow.
             elif exp is S.One: return base
             obj = Expr.__new__(cls, base, exp) # sets up self.func, self.args
@@ -643,12 +643,12 @@ def qapply(e, **options):
             # split up by split_left; ignores .atomic, hands factor out as long as possible
             if (self.exp - 1).is_nonnegative:
                 if split_to_left:    # extract base to the left:
-                    if self._b_sp_l is None:
+                    if self._b_sp_l == tuple():
                         self._b_sp_l = split_c_nc_atom(self.base, to_the_left)
                     res = self._b_sp_l[0], self._b_sp_l[1] + [self.add_exp(-1)], self._b_sp_l[2]
                     return res
                 else:          # extract base to the right:
-                    if self._b_sp_r is None:
+                    if self._b_sp_r == tuple():
                         self._b_sp_r = split_c_nc_atom(self.base, to_the_right)
                     res = self._b_sp_r[0], [self.add_exp(-1)] + self._b_sp_r[1], self._b_sp_r[2]
                     return res
@@ -685,7 +685,7 @@ def qapply(e, **options):
     if hasattr(res, 'replace'):
         res = res.replace(PowHold, Pow)
 
-    """ # debugging aid: show various representations and expansion of result
+    """ debugging aid: show various representations and expansion of result
     from sympy.printing import srepr
     try:    # in case e contains objects (e.g. functions) that crash print()
         ep = str(e)

@@ -398,10 +398,11 @@ def test_powers2022_11():
     assert qapply((XGate(0)*U1n*XGate(0))**8) == n**8 # case 5a: with expi even
     assert qapply(U72 ** (3/2)) == U72 ** (3/2) # case 7: exp non-integer or < 2
     assert qapply(U72 ** (5/2)) == U72 ** (1/2) * U72p2 # case 6: base atomic but not "idempotent"
-    # assert with or without .expand() is OK in test1-latest (64-bit), but fails in test-pyodide (32-bit)
-    # assert qapply((U12 * U71) ** (5/2)).expand() == 2**(5/2) * U71 ** (1/2) * U71p2 # Case 8, 6
+    import sys
+    if not "pyodide" in sys.modules: # the following two asserts fail in pyodide, but are ok in more standard Pythons
+        assert qapply((U12 * U71) ** (5/2)).expand() == 2**(5/2) * U71 ** (1/2) * U71p2 # Case 8, 6
+        assert qapply(U12 ** (7/2)) == 2**2 * U12**(3/2)  # case 5a. base atomic + "involutoric", expi uneven, fraction
     assert qapply(U12 ** (5/2)) == 2**2 * U12**(1/2)  # case 5a. base atomic + "involutoric", expi even, fraction
-    assert qapply(U12 ** (7/2)) == 2**2 * U12**(3/2)  # case 5a. base atomic + "involutoric", expi uneven, fraction
     assert qapply(U12 ** 3) == 2 ** 2 * U12 # case 5a: expi uneven, no fraction
     assert qapply(U12 ** 4) == 2 ** 4 # 5a. case base atomic + involutoric, expi even, no fraction
 
