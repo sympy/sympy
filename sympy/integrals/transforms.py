@@ -1875,33 +1875,44 @@ class LaplaceTransform(IntegralTransform):
 
     def _use_rules(self, **hints):
         """
-        This rule-based engine works in a recursive way. If this function
-        manages to split anything into a sum of terms, it will apply the
-        `LaplaceTransform` on the terms of that sum.
+        This rule-based engine works in a recursive way. The rationale of this
+        particular implementation is that many Laplace and inverse Laplace
+        transforms will be made because people solve linear differential
+        equation systems by Laplace transform.
 
-        Some rules in `_laplace_apply_rules` can also make it such that
-        part of the result is another `LaplaceTransform` or another
-        application of rules.
+        Many time signals that come from single-forward-path systems will
+        already be in a form available in the transform table, so the first
+        time a function passes through `_use_rules` will be without any attempt
+        to expand.
 
-        To keep track of this, the algorithm has a hint called `recursive`
-        that keeps track of the depth of the recursion.
+        Many time signals from physical or electrical multi-path systems are
+        a linear combination of expressions in the transform table, maybe with
+        some constants factored out, and will be seperated nicely by the
+        command `expand(f, deep=False)` that is applied to the function the
+        second time it passes through `_use_rules`.
+
+        Then there may be time signals coming from much more complicated
+        systems, on which `expand(f)` may work, this is applied from the
+        third time onwards.
+
+        To keep track of this, the algorithm has a hint called `LT _u_r` that
+        can have the values `no`, `not deep`, `deep`, and `deeper`.  It also
+        uses the hint `recursive` to keep track of the depth of the recursion,
+        for debugging purposes.
 
         Setting `sympy.SYMPY_DEBUG=True` will produce debug messages that
-        make it easier to follow the recursion.
-
-        The top function `_use_rules` will try to expand the incoming
-        function only from recursion level 1 upwards.  On recursion levels 1
-        to 3 it will expand with `deep=False`, above it will attempt an
-        expansion with `deep=True`. If the recursion level reaches 8, it
-        will give up.
+        make it easier to follow the recursion.  If `grep [tree]` is applied
+        to the stderr, then the result will show the recursion tree
+        graphucally.
 
         The algorithm is written such that all rules return `None` if they
-        cannot apply any rules.  If the recursion leads to an integration
+        cannot apply any rules. If the recursion leads to an integration
         attempt that fails, the result will be an unevaluated
-        `LaplaceTransform` which is treated as a result within `_use_rules`.
-        Therefore it is not possible that this algorithm attempts to
-        integrate the same expression twice, so if a recursion reaches level 8,
-        it will do so without wasting a lot of computation power.
+        `LaplaceTransform` which will be returned as such.  To prevent any
+        infinite recursion loops, `_use_rules` will also return `None` if it
+        has reached the level `deeper` and if it was started with the same
+        arguments as on the previous recursion level (saved in the hint
+        `last_command`).
         """
 
         fn = self.function
@@ -1917,8 +1928,9 @@ class LaplaceTransform(IntegralTransform):
         debug('[LT _u_r ]     and hints %s'%(hints, ))
         LT = None
 
-        started_with = '%s | %s | %s'
-        if started_with==last_command and (recursive>5 or _expand=='deeper'):
+        started_with = '%s | %s | %s'%(fn, t_, s_)
+        ####if started_with==last_command and (recursive>5 or _expand=='deeper'):
+        if started_with==last_command and _expand=='deeper':
             return None
         hints['last_command'] = started_with
 
