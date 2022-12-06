@@ -949,7 +949,10 @@ class cos(TrigonometricFunction):
         return [hyper([], (1/2,), -(arg**2)/4),
             -(arg - (pi/2))*hyper([], (3/2,), -(1/4)*(arg - (pi/2))**2),
             sqrt((1/2) + (1/2)*hyper([], (1/2,), -arg**2)),
-            cbrt((3/4)*hyper([], (1/2,), -(arg**2)/4) + (1/4)*hyper([], (1/2,), -(9*arg**2)/4))]
+            cbrt((3/4)*hyper([], (1/2,), -(arg**2)/4) + (1/4)*hyper([], (1/2,), -(9*arg**2)/4)),
+            ((pi/2) - arg)*hyper(((arg/pi) - (1/2), (arg/pi) - (1/2), (arg/pi) - (1/2)), (1, 1), -1)
+                - (2/pi**2)*(((pi/2) - arg)**3)*hyper(((arg/pi) + (1/2), (arg/pi) + (1/2), (arg/pi) + (1/2)), (2, 2), -1),
+            sqrt(((arg - (pi/2))**2)*hyper((1,), (2, (3/2)), -((arg - (pi/2))**2)))]
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
