@@ -3708,12 +3708,12 @@ def test_jplus():
         Sum(hbar * sqrt(-mi**2 - mi + j**2 + j) * WignerD(j, mi, m, 0, pi/2, 0) *
         Sum(WignerD(j, mi1, mi + 1, 0, pi*Rational(3, 2), 0) * JxKet(j, mi1),
         (mi1, -j, j)), (mi, -j, j)) # .expand()
-    assert qapply(Jplus*JyKet(j, m)) == \
+    assert qapply(Jplus*JyKet(j, m)).expand() == \
         Sum(hbar * sqrt(j**2 + j - mi**2 - mi) * WignerD(j, mi, m, pi*Rational(3, 2), -pi/2, pi/2) *
         Sum(WignerD(j, mi1, mi + 1, pi*Rational(3, 2), pi/2, pi/2) * JyKet(j, mi1),
-        (mi1, -j, j)), (mi, -j, j))
-    assert qapply(Jplus*JzKet(j, m)) == \
-        hbar*sqrt(j*(j + 1) - m*(m + 1))*JzKet(j, m + 1) # sqrt(arg)
+        (mi1, -j, j)), (mi, -j, j)) # .expand()
+    assert qapply(Jplus*JzKet(j, m)).expand() == \
+        hbar*sqrt(j*(j + 1) - m*(m + 1))*JzKet(j, m + 1) # sqrt(arg), .expand()
     # Normal operators, coupled states
     # Numerical
     assert qapply(Jplus*JxKetCoupled(1, 1, (1, 1))).expand() == -hbar*sqrt(2)* \
@@ -3794,12 +3794,12 @@ def test_jminus():
         Sum(hbar*sqrt(j**2 + j - mi**2 + mi)*WignerD(j, mi, m, 0, pi/2, 0) *
         Sum(WignerD(j, mi1, mi - 1, 0, pi*Rational(3, 2), 0)*JxKet(j, mi1),
         (mi1, -j, j)), (mi, -j, j)) # .expand()
-    assert qapply(Jminus*JyKet(j, m)) == \
+    assert qapply(Jminus*JyKet(j, m)).expand() == \
         Sum(hbar*sqrt(j**2 + j - mi**2 + mi)*WignerD(j, mi, m, pi*Rational(3, 2), -pi/2, pi/2) *
         Sum(WignerD(j, mi1, mi - 1, pi*Rational(3, 2), pi/2, pi/2)*JyKet(j, mi1),
-        (mi1, -j, j)), (mi, -j, j))
-    assert qapply(Jminus*JzKet(j, m)) == \
-        hbar*sqrt(j*(j + 1) - m*(m - 1))*JzKet(j, m - 1) # sqrt(arg)
+        (mi1, -j, j)), (mi, -j, j)) # .expand()
+    assert qapply(Jminus*JzKet(j, m)).expand() == \
+        hbar*sqrt(j*(j + 1) - m*(m - 1))*JzKet(j, m - 1) # sqrt(arg), .expand()
     # Normal operators, coupled states
     # Numerical
     assert qapply(Jminus*JxKetCoupled(1, 1, (1, 1))).expand() == \
