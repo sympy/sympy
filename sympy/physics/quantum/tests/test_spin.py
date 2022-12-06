@@ -3704,10 +3704,10 @@ def test_jplus():
         hbar*sqrt(2)*JyKet(1, 0)/2 + I*hbar*JyKet(1, 1) # .expand()
     assert qapply(Jplus*JzKet(1, 1)) == 0
     # Symbolic
-    assert qapply(Jplus*JxKet(j, m)) == \
+    assert qapply(Jplus*JxKet(j, m)).expand() == \
         Sum(hbar * sqrt(-mi**2 - mi + j**2 + j) * WignerD(j, mi, m, 0, pi/2, 0) *
         Sum(WignerD(j, mi1, mi + 1, 0, pi*Rational(3, 2), 0) * JxKet(j, mi1),
-        (mi1, -j, j)), (mi, -j, j))
+        (mi1, -j, j)), (mi, -j, j)) # .expand()
     assert qapply(Jplus*JyKet(j, m)) == \
         Sum(hbar * sqrt(j**2 + j - mi**2 - mi) * WignerD(j, mi, m, pi*Rational(3, 2), -pi/2, pi/2) *
         Sum(WignerD(j, mi1, mi + 1, pi*Rational(3, 2), pi/2, pi/2) * JyKet(j, mi1),
@@ -3790,10 +3790,10 @@ def test_jminus():
         hbar*sqrt(2)*JyKet(1, 0)/2 - hbar*I*JyKet(1, 1)
     assert qapply(Jminus*JzKet(1, 1)) == sqrt(2)*hbar*JzKet(1, 0)
     # Symbolic
-    assert qapply(Jminus*JxKet(j, m)) == \
+    assert qapply(Jminus*JxKet(j, m)).expand() == \
         Sum(hbar*sqrt(j**2 + j - mi**2 + mi)*WignerD(j, mi, m, 0, pi/2, 0) *
         Sum(WignerD(j, mi1, mi - 1, 0, pi*Rational(3, 2), 0)*JxKet(j, mi1),
-        (mi1, -j, j)), (mi, -j, j))
+        (mi1, -j, j)), (mi, -j, j)) # .expand()
     assert qapply(Jminus*JyKet(j, m)) == \
         Sum(hbar*sqrt(j**2 + j - mi**2 + mi)*WignerD(j, mi, m, pi*Rational(3, 2), -pi/2, pi/2) *
         Sum(WignerD(j, mi1, mi - 1, pi*Rational(3, 2), pi/2, pi/2)*JyKet(j, mi1),
