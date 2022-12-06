@@ -3713,7 +3713,7 @@ def test_jplus():
         Sum(WignerD(j, mi1, mi + 1, pi*Rational(3, 2), pi/2, pi/2) * JyKet(j, mi1),
         (mi1, -j, j)), (mi, -j, j)) # expand()
     assert qapply(Jplus*JzKet(j, m)).expand() == \
-        hbar*sqrt(j*(j + 1) - m*(m + 1))*JzKet(j, m + 1) # sqrt(arg), expand()
+        hbar*sqrt(j**2 + j - m**2 - m)*JzKet(j, m + 1) # sqrt(arg), expand()
     # Normal operators, coupled states
     # Numerical
     assert qapply(Jplus*JxKetCoupled(1, 1, (1, 1))).expand() == -hbar*sqrt(2)* \
@@ -3799,7 +3799,7 @@ def test_jminus():
         Sum(WignerD(j, mi1, mi - 1, pi*Rational(3, 2), pi/2, pi/2)*JyKet(j, mi1),
         (mi1, -j, j)), (mi, -j, j)) # .expand()
     assert qapply(Jminus*JzKet(j, m)).expand() == \
-        hbar*sqrt(j*(j + 1) - m*(m - 1))*JzKet(j, m - 1) # sqrt(arg), .expand()
+        hbar*sqrt(j**2 + j - m**2 + m)*JzKet(j, m - 1) # sqrt(arg), .expand()
     # Normal operators, coupled states
     # Numerical
     assert qapply(Jminus*JxKetCoupled(1, 1, (1, 1))).expand() == \
