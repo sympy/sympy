@@ -945,7 +945,11 @@ class cos(TrigonometricFunction):
 
     def _eval_rewrite_as_hyper(self, arg, **kwargs):
         from sympy.functions.special.hyper import hyper
-        return hyper([], (1,), ((-arg**2)/4,))
+        from sympy import cbrt
+        return [hyper([], (1/2,), -(arg**2)/4),
+            -(arg - (pi/2))*hyper([], (3/2,), -(1/4)*(arg - (pi/2))**2),
+            sqrt((1/2) + (1/2)*hyper([], (1/2,), -arg**2)),
+            cbrt((3/4)*hyper([], (1/2,), -(arg**2)/4) + (1/4)*hyper([], (1/2,), -(9*arg**2)/4))]
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
