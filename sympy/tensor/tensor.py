@@ -2143,12 +2143,6 @@ class TensExpr(Expr, ABC):
     def _get_indices_permutation(indices1, indices2):
         return [indices1.index(i) for i in indices2]
 
-    def expand(self, **hints):
-        return _expand(self, **hints).doit()
-
-    def _expand(self, **kwargs):
-        return self
-
     def _get_free_indices_set(self):
         indset = set()
         for arg in self.args:
@@ -2610,8 +2604,6 @@ class TensAdd(TensExpr, AssocOp):
             indices.extend([i for i in get_indices(arg) if i not in indices])
         return indices
 
-    def _expand(self, **hints):
-        return TensAdd(*[_expand(i, **hints) for i in self.args])
 
     def __call__(self, *indices):
         deprecate_call()
@@ -3052,9 +3044,6 @@ class Tensor(TensExpr):
 
     def split(self):
         return [self]
-
-    def _expand(self, **kwargs):
-        return self
 
     def sorted_components(self):
         return self
@@ -3843,15 +3832,6 @@ class TensMul(TensExpr, AssocOp):
             else:
                 res *= arg
         return splitp
-
-    def _expand(self, **hints):
-        # TODO: temporary solution, in the future this should be linked to
-        # `Expr.expand`.
-        args = [_expand(arg, **hints) for arg in self.args]
-        args1 = [arg.args if isinstance(arg, (Add, TensAdd)) else (arg,) for arg in args]
-        return TensAdd(*[
-            TensMul(*i) for i in itertools.product(*args1)]
-        )
 
     def _eval_expand_mul(self, **hints):
         args1 = [arg.args if isinstance(arg, (Add, TensAdd)) else (arg,) for arg in self.args]
@@ -5263,13 +5243,6 @@ def substitute_indices(t, *index_tuples):
     if not isinstance(t, TensExpr):
         return t
     return t.substitute_indices(*index_tuples)
-
-
-def _expand(expr, **kwargs):
-    if isinstance(expr, TensExpr):
-        return expr._expand(**kwargs)
-    else:
-        return expr.expand(**kwargs)
 
 
 def _get_wilds(expr):
