@@ -532,6 +532,17 @@ class sin(TrigonometricFunction):
     def _eval_rewrite_as_sinc(self, arg, **kwargs):
         return arg*sinc(arg)
 
+    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+        from sympy.functions.special.hyper import hyper
+        from sympy import cbrt
+        return [arg*hyper([], (3/2,), -(arg**2)/4),
+            hyper([], (1/2,), -(1/4)*(arg - (pi/2))**2),
+            sqrt((1/2)*hyper([], (1/2,), -(arg - (pi/2))**2) + (1/2)),
+            cbrt((3/4)*hyper([], (1/2,), -(1/4)*(arg - (pi/2))) + (1/4)*hyper([], (1/2,), -(9/4)*(arg - pi/2)**2)),
+            arg * hyper((arg/pi, arg/pi, arg/pi), (1, 1), -1)
+                - ((2*(arg**3))/(pi**2))*hyper(((arg/pi) + 1, (arg/pi) + 1, (arg/pi) + 1), (2, 2), -1),
+            sqrt((arg**2)*hyper((1,), (2, (3/2)), -(arg**2)))]
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -1308,6 +1319,10 @@ class tan(TrigonometricFunction):
         if y.has(cos):
             return None
         return y
+
+    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+        from sympy.functions.special.hyper import hyper
+        return (8*arg)/((pi**2) - (4 * (arg**2)))*hyper((1, (1/2) - (arg/pi), (arg/pi) + (1/2)), ((3/2) - (arg/pi), (arg/pi) + (3/2)), 1)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.calculus.accumulationbounds import AccumBounds
