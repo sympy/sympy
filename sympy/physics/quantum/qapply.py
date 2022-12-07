@@ -99,8 +99,8 @@ def qapply(e, **options):
           (default: False).
         * ``ip_doit``: call ``.doit()`` in inner products when they are
           encountered (default: True).
-        * ``op_join``: rewrite products \|k> * <b\| as outer products \|k><b\|
-          and avoid breaking them up to \|k> * <b\| (default: True).
+        * ``op_join``: rewrite products |k> * <b| as outer products |k><b|
+          and avoid breaking them up to |k> * <b| (default: True).
 
 
 
