@@ -992,6 +992,18 @@ def test_metric_contract3():
     assert _is_equal(t1, B(-a2,a1)*psi(-a1))
 
 
+def test_contract_metric4():
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r = tensor_indices("p q r", R3)
+    delta = R3.delta
+    eps = R3.epsilon
+    K = TensorHead("K", [R3])
+
+    #Check whether contract_metric chokes on an expandable expression which becomes zero on canonicalization.
+    expr = eps(p,q,r)*( K(-p)*K(-q) + delta(-p,-q) )
+    assert expr.contract_metric(delta) == 0
+
+
 def test_epsilon():
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_name='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
