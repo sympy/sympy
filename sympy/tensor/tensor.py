@@ -3772,7 +3772,10 @@ class TensMul(TensExpr, AssocOp):
         expr = self.expand()
         if self != expr:
             expr = expr.canon_bp()
-            return expr.contract_metric(g)
+            if expr == S.Zero:
+                return expr
+            else:
+                return expr.contract_metric(g)
         pos_map = self._get_indices_to_args_pos()
         args = list(self.args)
 
