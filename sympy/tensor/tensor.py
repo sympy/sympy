@@ -2399,9 +2399,12 @@ class TensExpr(Expr, ABC):
                 #If there are no wilds and the free indices are not the same, they cannot match.
                 return None
 
-        #If there are no Wilds in self, we can depend on canon_bp to tell us whether self and expr are equivalent.
-        diff = self.doit().canon_bp() - expr.doit().canon_bp()
-        if diff == 0 or diff.canon_bp() == 0:
+        #Below, we try some cheaper things before trying doit, since the latter may be quite expensive.
+        diff = self - expr
+        if (diff == 0 or
+            diff.canon_bp() == 0 or
+            diff.doit().canon_bp() == 0
+            ):
             return repl_dict
         else:
             return None
