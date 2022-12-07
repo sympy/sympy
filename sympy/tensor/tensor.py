@@ -2403,6 +2403,7 @@ class TensExpr(Expr, ABC):
         diff = self - expr
         if (diff == 0 or
             diff.canon_bp() == 0 or
+            #TODO: We should try to avoid an indiscriminate doit, as it can slow things down a lot when, e.g., there is an Integral in diff.
             diff.doit().canon_bp() == 0
             ):
             return repl_dict
