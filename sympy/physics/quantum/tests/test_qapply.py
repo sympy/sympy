@@ -410,8 +410,8 @@ def test_powers2022_11():
     if not "pyodide" in sys.modules: # the following asserts fail in pyodide, but are ok in more standard Pythons
         assert qapply((U12 * OuterProduct(Qubit(1), QubitBra(1))) ** (7/2)) == \
             2 ** (7/2) * InnerProduct(QubitBra(1), Qubit(1)).doit() ** 2 * OuterProduct(Qubit(1), QubitBra(1)) ** (3/2)
-    assert qapply((U12 * OuterProduct(Qubit(1), QubitBra(1))) ** (7/2), ip_doit = False) == \
-        2 ** (7/2) * InnerProduct(QubitBra(1), Qubit(1)) ** 2 * OuterProduct(Qubit(1), QubitBra(1)) ** (3/2)
+        assert qapply((U12 * OuterProduct(Qubit(1), QubitBra(1))) ** (7/2), ip_doit = False) == \
+            2 ** (7/2) * InnerProduct(QubitBra(1), Qubit(1)) ** 2 * OuterProduct(Qubit(1), QubitBra(1)) ** (3/2)
     assert qapply((U12 * OuterProduct(Qubit(1), QubitBra(1))) ** 10) == 2**10 * OuterProduct(Qubit(1), QubitBra(1))
     assert qapply((U1n * OuterProduct(Qubit(1), QubitBra(1))) ** 10) == n**10 * OuterProduct(Qubit(1), QubitBra(1))
     assert qapply((U1n * OuterProduct(Qubit(1), QubitBra(1))) ** (m+2)) == n**(m+2) * OuterProduct(Qubit(1), QubitBra(1))
