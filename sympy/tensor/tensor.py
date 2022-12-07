@@ -4477,12 +4477,12 @@ class _WildTensExpr(Basic):
     def __add__(self, other):
         if other.func != self.func:
             raise TypeError(f"Cannot add {self.func} to {other.func}")
-        return self.func(TensAdd(self.expr, other.expr).doit())
+        return self.func(self.expr+other.expr)
 
     def __radd__(self, other):
         if other.func != self.func:
             raise TypeError(f"Cannot add {self.func} to {other.func}")
-        return self.func(TensAdd(other.expr, self.expr).doit())
+        return self.func(other.expr+self.expr)
 
     def __sub__(self, other):
         return self + (-other)
