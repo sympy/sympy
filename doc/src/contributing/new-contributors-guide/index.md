@@ -18,4 +18,5 @@ you have never contributed to SymPy before, start with
 
 dev-setup.md
 workflow-process.md
+writing-tests.md
 ```
