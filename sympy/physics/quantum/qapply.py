@@ -90,7 +90,7 @@ def qapply(e, **options):
         will be walked to find operators acting on operators and states symbolically.
     options : dict
         A dict of key/value pairs that determine how the operator actions
-        are carried out. The options are passed on to invocations ot operator methods
+        are carried out. The options are passed on to invocations of operator methods
         <lhs>._apply_operator_<rhs>() and <rhs>._apply_from_right_to_<lhs>().
 
         The following options are defined for qapply itself:
@@ -99,9 +99,8 @@ def qapply(e, **options):
           (default: False).
         * ``ip_doit``: call ``.doit()`` in inner products when they are
           encountered (default: True).
-        * ``op_join``: rewrite products |k> * <b| as outer products |k><b|
-          and avoid breaking them up to |k> * <b| (default: True).
-
+        * ``op_join``: rewrite ket * bra as outer product OuterProduct(ket, bra)
+          and avoid breaking them up to ket * bra (default: True).
 
 
     Returns

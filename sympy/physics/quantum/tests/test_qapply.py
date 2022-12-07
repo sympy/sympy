@@ -423,8 +423,9 @@ def test_powers2022_11():
         InnerProduct(Bra(1), Ket(1))**(m+1) * OuterProduct(Ket(1), Bra(1))**(3/2)
 
     # Cases 7, 8, 6:
-    assert qapply((U13*U71) ** (11/2) * (U12*U71) ** (3/2)) == \
-        2**(3/2) * 3**(11/2) * U71**(1/2) * U71p6 * U71**(1/2) # 7.Case expi non-integer or < 2
+    if not "pyodide" in sys.modules: # the following asserts fail in pyodide, but are ok in more standard Pythons
+        assert qapply((U13*U71) ** (11/2) * (U12*U71) ** (3/2)) == \
+            2**(3/2) * 3**(11/2) * U71**(1/2) * U71p6 * U71**(1/2) # 7.Case expi non-integer or < 2
     assert qapply((U13*U71) ** 5 * (U12*U71) ** 2) == 2 ** 2 * 3 ** 5 # Case 8, 6
     # case 3: component base with interaction in base*base
     #print(qapply((U71*XGate(0)*U71*U13)))
