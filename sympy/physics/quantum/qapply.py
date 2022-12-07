@@ -99,8 +99,8 @@ def qapply(e, **options):
           (default: False).
         * ``ip_doit``: call ``.doit()`` in inner products when they are
           encountered (default: True).
-        * ``op_join``: rewrite products |k> * <b| as outer products |k><b|
-          and avoid breaking them up to |k> * <b| (default: True).
+        * ``op_join``: rewrite products \|k> * <b\| as outer products \|k><b\|
+          and avoid breaking them up to \|k> * <b\| (default: True).
 
 
 
@@ -461,8 +461,9 @@ def qapply(e, **options):
 
         # if no methods has given a result so far, at least recurse into e.base
         base = qapply_Mul2([e.base], [])
-        e : Expr = base ** e.exp  # let Pow do all it can do using class methods ._pow, ._eval_power etc.
-        if isinstance(e, Pow): # if it's still a Pow, try some more
+        # let Pow do all it can do using class methods ._pow, ._eval_power etc.
+        e = cast(Pow, base ** e.exp)  # may return any Expr; cast() is for MyPy
+        if isinstance(e, Pow): # if it's still a Pow, try some
             # check for commutative elements in base
             base = e.base
             cl, ncl, ar = split_c_nc_atom(base, to_the_right) # cl*ncl*ar == base
@@ -583,14 +584,14 @@ def qapply(e, **options):
 
         elif isinstance(e, Density):    # For a Density need to call qapply on its state vectors
             new_args = [(qapply_Mul2([cast(Expr, state)],[]), cast(Expr, prob)) for (state, prob) in cast(Tuple, e.args)]
-            res = Density(*new_args)
+            res = cast(Expr, Density(*new_args)) # might return Mul or Density (for MyPy)
             if isinstance(res, Density):
                 return ([], [], res)  # Density is considered atomic
             else: # e.g. Mul, OuterProduct, Add of OuterProduct etc..
                 return split_c_nc_atom(res, split_left)
 
         elif isinstance(e, TensorProduct): # For a raw TensorProduct, call qapply on its args first
-            res : Expr = TensorProduct(*[qapply_Mul2([t], []) for t in e.args]) # may return Mul
+            res = cast(Expr, TensorProduct(*[qapply_Mul2([t], []) for t in e.args])) # may return Mul or TP (for MyPy)
             if isinstance(res, TensorProduct):
                 return ([], [], res)  # Tensorproduct itself is atomic
             else: # e.g. Mul, scalar, ..
