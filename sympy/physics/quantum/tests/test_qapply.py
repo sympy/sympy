@@ -398,20 +398,17 @@ def test_powers2022_11():
     assert qapply((XGate(0)*U1n*XGate(0))**8) == n**8 # case 5a: with expi even
     assert qapply(U72 ** (3/2)) == U72 ** (3/2) # case 7: exp non-integer or < 2
     assert qapply(U72 ** (5/2)) == U72 ** (1/2) * U72p2 # case 6: base atomic but not "idempotent"
-    import sys
-    if not "pyodide" in sys.modules: # the following asserts fail in pyodide, but are ok in more standard Pythons
-        assert qapply((U12 * U71) ** (5/2)).expand() == 2**(5/2) * U71 ** (1/2) * U71p2 # Case 8, 6
-        assert qapply(U12 ** (7/2)) == 2**2 * U12**(3/2)  # case 5a. base atomic + "involutoric", expi uneven, fraction
-    assert qapply(U12 ** (5/2)) == 2**2 * U12**(1/2)  # case 5a. base atomic + "involutoric", expi even, fraction
+    assert qapply((U12 * U71) ** Rational(5/2)).expand() == 2**Rational(5/2) * U71 ** Rational(1/2) * U71p2 # Case 8, 6
+    assert qapply(U12 ** Rational(7/2)) == 2**2 * U12**Rational(3/2)  # case 5a. base atomic + "involutoric", expi uneven, fraction
+    assert qapply(U12 ** Rational(5/2)) == 2**2 * U12**Rational(1/2)  # case 5a. base atomic + "involutoric", expi even, fraction
     assert qapply(U12 ** 3) == 2 ** 2 * U12 # case 5a: expi uneven, no fraction
     assert qapply(U12 ** 4) == 2 ** 4 # 5a. case base atomic + involutoric, expi even, no fraction
 
     # case 5b: base atomic + "idempotent"
-    if not "pyodide" in sys.modules: # the following asserts fail in pyodide, but are ok in more standard Pythons
-        assert qapply((U12 * OuterProduct(Qubit(1), QubitBra(1))) ** (7/2)) == \
-            2 ** (7/2) * InnerProduct(QubitBra(1), Qubit(1)).doit() ** 2 * OuterProduct(Qubit(1), QubitBra(1)) ** (3/2)
-        assert qapply((U12 * OuterProduct(Qubit(1), QubitBra(1))) ** (7/2), ip_doit = False) == \
-            2 ** (7/2) * InnerProduct(QubitBra(1), Qubit(1)) ** 2 * OuterProduct(Qubit(1), QubitBra(1)) ** (3/2)
+    assert qapply((U12 * OuterProduct(Qubit(1), QubitBra(1))) ** Rational(7/2)) == \
+        2 ** Rational(7/2) * InnerProduct(QubitBra(1), Qubit(1)).doit() ** 2 * OuterProduct(Qubit(1), QubitBra(1)) ** Rational(3/2)
+    assert qapply((U12 * OuterProduct(Qubit(1), QubitBra(1))) ** Rational(7/2), ip_doit = False) == \
+        2 ** Rational(7/2) * InnerProduct(QubitBra(1), Qubit(1)) ** 2 * OuterProduct(Qubit(1), QubitBra(1)) ** Rational(3/2)
     assert qapply((U12 * OuterProduct(Qubit(1), QubitBra(1))) ** 10) == 2**10 * OuterProduct(Qubit(1), QubitBra(1))
     assert qapply((U1n * OuterProduct(Qubit(1), QubitBra(1))) ** 10) == n**10 * OuterProduct(Qubit(1), QubitBra(1))
     assert qapply((U1n * OuterProduct(Qubit(1), QubitBra(1))) ** (m+2)) == n**(m+2) * OuterProduct(Qubit(1), QubitBra(1))
@@ -423,9 +420,8 @@ def test_powers2022_11():
         InnerProduct(Bra(1), Ket(1))**(m+1) * OuterProduct(Ket(1), Bra(1))**(3/2)
 
     # Cases 7, 8, 6:
-    if not "pyodide" in sys.modules: # the following asserts fail in pyodide, but are ok in more standard Pythons
-        assert qapply((U13*U71) ** (11/2) * (U12*U71) ** (3/2)) == \
-            2**(3/2) * 3**(11/2) * U71**(1/2) * U71p6 * U71**(1/2) # 7.Case expi non-integer or < 2
+    assert qapply((U13*U71) ** Rational(11/2) * (U12*U71) ** Rational(3/2)) == \
+        2**Rational(3/2) * 3**Rational(11/2) * U71**Rational(1/2) * U71p6 * U71**Rational(1/2) # 7.Case expi non-integer or < 2
     assert qapply((U13*U71) ** 5 * (U12*U71) ** 2) == 2 ** 2 * 3 ** 5 # Case 8, 6
     # case 3: component base with interaction in base*base
     #print(qapply((U71*XGate(0)*U71*U13)))
@@ -436,8 +432,8 @@ def test_powers2022_11():
     assert qapply((U71*XGate(0))**3 * Qubit(0)) == exp(-2*I*pi/7) * Qubit(1)
     # case 2: component base, with interaction in base*base, commutative
     assert qapply((XGate(0)*U71*U13*XGate(0))**3) == 3**3 * XGate(0) * U71p3 * XGate(0)
-    assert qapply((XGate(0)*U71*U13*XGate(0))**(7/2)) == \
-        3**(7/2) * (XGate(0) * U71 * XGate(0))**(1/2) * XGate(0) * U71p3 * XGate(0)
+    assert qapply((XGate(0)*U71*U13*XGate(0))**Rational(7/2)) == \
+        3**Rational(7/2) * (XGate(0) * U71 * XGate(0))**Rational(1/2) * XGate(0) * U71p3 * XGate(0)
 
     # restore the previous operator _apply_operator_UGate, if any
     if prev_op:
