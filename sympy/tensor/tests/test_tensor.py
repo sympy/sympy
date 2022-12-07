@@ -999,7 +999,7 @@ def test_contract_metric4():
     eps = R3.epsilon
     K = TensorHead("K", [R3])
 
-    #Check whether contract_metric chokes on an expandable expression which becomes zero on canonicalization.
+    #Check whether contract_metric chokes on an expandable expression which becomes zero on canonicalization (issue #24354)
     expr = eps(p,q,r)*( K(-p)*K(-q) + delta(-p,-q) )
     assert expr.contract_metric(delta) == 0
 
