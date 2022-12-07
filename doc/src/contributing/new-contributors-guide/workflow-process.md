@@ -121,8 +121,8 @@ test case, although it is also OK to simplify such examples or to write your
 own, so long as it tests the issue in question.
 
 Tests are located alongside the code in `tests/` directories, in files named
-`test_<thing>.py`. I most cases, if you modified `sympy/<submodule>/<file>.py`
-then the test for the functionality will go in
+`test_<thing>.py`. In most cases, if you modified
+`sympy/<submodule>/<file>.py` then the test for the functionality will go in
 `sympy/<submodule>/tests/test_<file>.py`. For example, the tests for the
 functions in `sympy/simplify/sqrtdenest.py` are in
 `sympy/simplify/tests/test_sqrtdenest.py`. There are some exceptions to this
