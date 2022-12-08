@@ -59,6 +59,39 @@ def test_cos_series():
 New test cases can be added to an existing test function if it is relevant, or
 you can create a new test function.
 
+## Running Tests
+
+The basic way to run the tests is to use
+
+```
+./bin/test
+```
+
+to run the tests, and
+
+```
+./bin/doctest
+```
+
+to run the doctests. Note that the full test suite can take some time to run,
+so you may prefer to just run a subset of the tests, e.g., corresponding to
+the module you modified. You can do this by passing the name of the submodules
+or tests files to the test command. For example,
+
+```
+./bin/test solvers
+```
+
+will run only the tests for the solvers.
+
+If you want, you can also use `pytest` to run the tests instead of the
+`./bin/test` tool.
+
+Another option is to just push your code up to GitHub and let the tests run on
+the CI. The GitHub Actions CI will run all the tests. However, it can take
+some time to finish, so it is usually advisable to run at least the basic
+tests before committing to avoid having to wait.
+
 (writing-tests-regression-tests)=
 ## Regression Tests
 
