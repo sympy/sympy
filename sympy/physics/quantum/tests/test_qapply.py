@@ -436,7 +436,7 @@ def test_powers2022_11():
         3**Rational(7/2) * (XGate(0) * U71 * XGate(0))**Rational(1/2) * XGate(0) * U71p3 * XGate(0)
 
     # restore the previous operator _apply_operator_UGate, if any
-    if prev_op:
+    if prev_op: # restore previous operator
         setattr(UGate, "_apply_operator_UGate", prev_op)
     else:
         delattr(UGate, "_apply_operator_UGate")
