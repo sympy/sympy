@@ -323,13 +323,211 @@ def test_sin_1_unevaluated():
 This test now actually checks the correct thing. If `sin(1)` were made to
 return some value, the test would fail.
 
-### Random Testing
+### Consistency Checks
 
+Checking a set of known inputs and outputs can only get you so far. A test
+like
+
+```
+assert function(input) == expression
+```
+
+will check that `function(input)` returns `expression`, but it doesn't check
+that `expression` itself is actually mathematically correct.
+
+However, depending on what `function` is, sometimes a consistency check can be
+done to check that `expression` itself is correct. This typically boils down
+to "computing `expression` in two different ways". If both ways agree, there
+is a pretty high chance it is correct, as it is unlikely that two completely
+different methods will produce the same wrong answer.
+
+For example, the inverse of indefinite integration is differentiation. The
+tests for integrals can be checked for consistency by seeing if the derivative
+of the result produces the original integrand:
+
+```
+expr = sin(x)*exp(x)
+expected == exp(x)*sin(x)/2 - exp(x)*cos(x)/2
+
+# The test for integrate()
+assert integrate(expr, x) == expected
+# The consistency check that the test itself is correct
+assert diff(expected, x) == expr
+```
+
+The implementation for `diff` is very simple compared to `integrate`, and it
+is tested separately, so this confirms the answer is correct.
+
+Of course, one could also just confirm the answer by hand, and this is what
+most tests in SymPy do. But a consistency check does not hurt, especially when
+it is easy to do.
+
+The use of consistency checks in the SymPy test suite is not, itself,
+consistent. Some modules make heavy use of them, e.g., every test in the ODE
+module checks itself using [`checkodesol()`](sympy.solvers.ode.checkodesol),
+for instance.
+
+When making heavy use of consistency checks, it's often a good idea to factor
+out the logic into a helper function in the test file to avoid duplication.
+Helper functions should start with an underscore so they aren't mistaken for
+test functions by the test runner.
+
+### Random Tests
+
+Another way that tests can check themselves for consistency is to check the
+expressions on random numerical inputs. The helper functions in
+`sympy.core.random` can be used for this. See the tests in
+`sympy/functions/special/` which make heavy use of this functionality.
+
+If you add a random test, be sure to run the test multiple times to ensure
+that it always passes. Random tests can be reproduced by using the random seed
+printed at the top of the tests. For example
+
+```
+$./bin/test
+========================================================================== test process starts ==========================================================================
+executable:         /Users/aaronmeurer/anaconda3/bin/python  (3.9.13-final-0) [CPython]
+architecture:       64-bit
+cache:              yes
+ground types:       gmpy 2.1.2
+numpy:              1.22.4
+random seed:        7357232
+hash randomization: on (PYTHONHASHSEED=3923913114)
+```
+
+Here the random seed is `7357232`. It can be reproduced with
+
+```
+./bin/test --seed 7357232
+```
+
+In general you may need to use the same Python version and architecture as
+shown in the test header to reproduce a random test failure. You may also in
+some situations, need to run the tests using the exact same input
+arguments (i.e., running the full test suite or running only a subset) in
+order to reproduce a test that fails randomly.
+
+(writing-tests-skip)=
 ### Skipping Tests
 
+Tests can be skipped using the `sympy.testing.pytest.SKIP` decorator or using
+the `sympy.testing.pytest.skip()` function. Note that tests that are skipped
+because they are expected to fail should use the `@XFAIL` decorator instead
+(see [below](writing-tests-xfail)). Test that are skipped because they are
+too slow should use the [`@slow` decorator instead](writing-tests-slow).
+
+Tests that are skipped unconditionally should be avoided. Such a test is
+almost completely useless, as it will never be actually run. The only reason
+to skip a test unconditionally is if it would otherwise be `@XFAIL` or `@slow`
+but cannot use one of those decorators for some reason.
+
+Both `@SKIP()` and `skip()` should include a message that explains why the
+test is being skipped, like `skip('numpy not installed')`.
+
+The typical usage of skipping a test is when a test depends on an [optional
+dependency](optional-dependencies).
+
+Such tests are generally written like
+
+```
+from sympy.external import import_module
+
+# numpy will be None if NumPy is not installed
+numpy = import_module('numpy')
+
+def test_func():
+    if not numpy:
+       skip('numpy is not installed')
+
+    assert func(...) == ...
+```
+
+When the test is written in this way, the test will not fail when NumPy is not
+installed, which is important since NumPy is not a hard dependency of SymPy.
+See also [](writing-tests-external-dependencies) below.
+
+(writing-tests-xfail)=
 ### Marking Tests as Expected to Fail
 
+Some tests in SymPy are expected to fail. They are written so that when the
+functionality the check is finally implemented, a test is already written for
+it.
+
+Tests that are expected to fail are called XFAIL tests. They show up as `f`
+in the test runner when they fail as expected and `X` when they pass (or
+"XPASS"). A test that XPASSes should have its `@XFAIL` decorator removed so
+that it becomes a normal test.
+
+To XFAIL a test, add the `sympy.testing.pytest.XFAIL` decorator to it
+
+```
+from sympy.testing.pytest import XFAIL
+
+@XFAIL
+def test_failing_integral():
+    assert integrate(sqrt(x**2 + 1/x**2), x) == x*sqrt(x**2 + x**(-2))*(sqrt(x**4 + 1) - atanh(sqrt(x**4 + 1)))/(2*sqrt(x**4 + 1))
+```
+
+Care should be taken when writing an XFAIL test so that it actually passes
+when the functionality starts working. If you mistype the output, for
+example, the test may never pass. For example, the integral in the above test
+might start working, but return a result in a slightly different form than the
+one being checked. A more robust test would be
+
+```
+from sympy.testing.pytest import XFAIL
+
+@XFAIL
+def test_failing_integral():
+    # Should be x*sqrt(x**2 + x**(-2))*(sqrt(x**4 + 1) - atanh(sqrt(x**4 + 1)))/(2*sqrt(x**4 + 1))
+    assert not integrate(sqrt(x**2 + 1/x**2), x).has(Integral)
+```
+
+This will cause the test to XPASS once the integral starts working, at which
+time the test can be updated with the actual output of `integrate()` (which
+can be compared against the expected output).
+
+(writing-tests-slow)=
 ### Marking Tests as Slow
+
+A test that is slow to run should be marked with the `@slow` decorator from
+`sympy.testing.pytest.slow`. The `@slow` decorator should be used for tests
+that take more than a minute to run. Tests that hang should use `@SKIP`
+instead of `@slow`. The slow tests will be run automatically in a separate CI
+job, but are skipped by default. You can manually run the slow tests with
+
+```
+./bin/test --slow
+```
+
+(writing-tests-external-dependencies)=
+### Writing Tests with External Dependencies
+
+When writing a test for a function that uses one of SymPy's [optional
+dependencies](optional-dependencies), the test should be written in a way that
+makes it so that the test does not fail when the module is not installed.
+
+The way to do this is to use `sympy.external.import_module()`.
+This will import the module if it is installed and return `None` otherwise.
+
+`sympy.testing.pytest.skip` should be used to skip tests when the module in
+question is not installed (see [](writing-tests-skip) above). This can be done
+at the module level if the entire test file should be skippped, or in each
+individual function.
+
+You should also make sure the test is run in the "Optional Dependencies" CI
+run. To do this, edit `bin/test_optional_dependencies.py` and make sure the
+test is included (most SymPy submodules that test optional dependencies are
+already included automatically).
+
+If the optional dependency is new, add it to the list of packages that are
+installed in the optional dependencies build in
+`.github/workflows/runtests.yml`, and add it to the optional dependencies
+document at `doc/src/contributing/dependencies.md`.
+
+Note that it is not necessary to do any of this when using `mpmath`, as it is
+already a [hard dependency](hard-dependencies) of SymPy and will always be
+installed.
 
 (writing-tests-doctests)=
 ## Doctests
