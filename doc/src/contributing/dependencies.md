@@ -20,6 +20,7 @@ found on
 [GitHub](https://github.com/sympy/sympy/network/dependents?dependent_type=PACKAGE)
 or [libraries.io](https://libraries.io/pypi/sympy/dependents).
 
+(hard-dependencies)=
 ## Hard Dependencies
 
 SymPy only has one hard dependency, which is required for it to work: mpmath.
@@ -47,6 +48,7 @@ SymPy only has one hard dependency, which is required for it to work: mpmath.
   install SymPy, e.g., if you are developing directly on SymPy in the git
   repository.
 
+(optional-dependencies)=
 ## Optional Dependencies
 
 These dependencies are not required to use SymPy. The vast majority of SymPy
