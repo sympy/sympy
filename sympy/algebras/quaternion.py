@@ -184,7 +184,7 @@ class Quaternion(Expr):
 
     def to_euler(self, seq):
         """Returns Euler angles representing same in the sequence given by
-        `seq`.
+        `seq`. This implements the method described in [1]_.
 
         Parameters
         ==========
@@ -212,6 +212,11 @@ class Quaternion(Expr):
         Matrix([[-atan2(-b, c) + atan2(d, a)],
                 [2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2))],
                 [atan2(-b, c) + atan2(d, a)]])
+
+        References
+        ==========
+
+        .. [1] https://doi.org/10.1371/journal.pone.0276302
 
         """
         extrinsic = _check_sequence(seq)
