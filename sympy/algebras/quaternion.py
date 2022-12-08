@@ -10,8 +10,48 @@ from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.core.numbers import pi
 
 from mpmath.libmp.libmpf import prec_to_dps
+
+
+def _elementary_axis(axis):
+    if axis == 'x':
+        return [1, 0, 0]
+    if axis == 'y':
+        return [0, 1, 0]
+    if axis == 'z':
+        return [0, 0, 1]
+
+def _elementary_axis_index(axis):
+    if axis == 'x': return 1
+    if axis == 'y': return 2
+    if axis == 'z': return 3
+
+def _check_sequence(seq):
+    if len(seq) != 3:
+        raise ValueError("Expected 3 axes, got `{}`.".format(seq))
+    if type(seq) != str:
+        raise ValueError('Expected seq to be a string.')
+
+    intrinsic = seq.isupper()
+    extrinsic = seq.islower()
+    if not (intrinsic or extrinsic):
+        raise ValueError("seq must either be fully uppercase (for extrinsic "
+                         "rotations), or fully lowercase, for intrinsic "
+                         "rotations).")
+
+    i, j, k = seq.lower()
+    if (i == j) or (j == k):
+        raise ValueError("Consecutive axes must be different")
+
+    axes = set(['x', 'y', 'z'])
+    if not (i in axes and j in axes and k in axes):
+        raise ValueError("Expected axes from `seq` to be from "
+                         "['x', 'y', 'z'] or ['X', 'Y', 'Z'], "
+                         "got {}".format(seq))
+
+    return extrinsic
 
 
 class Quaternion(Expr):
@@ -83,6 +123,148 @@ class Quaternion(Expr):
     @property
     def real_field(self):
         return self._real_field
+
+    @classmethod
+    def from_euler(cls, angles, seq):
+        """Returns quaternion equivalent to Euler angles represented same in
+        the sequence defined by `seq`.
+
+        Parameters
+        ==========
+
+        angles : list, tuple or Matrix of 3 numbers
+            The Euler angles (in radians).
+        seq : string of length 3
+            Represents the sequence of rotations.
+            For intrinsic rotations, seq but be all lowercase and its elements
+            must be from the set `['x', 'y', 'z']`
+            For extrinsic rotations, seq but be all uppercase and its elements
+            must be from the set `['X', 'Y', 'Z']`
+
+        Returns
+        =======
+
+        Quaternion
+            The normalized rotation quaternion calculated from the Euler angles
+            in the given sequence.
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy import pi
+        >>> q = Quaternion.from_euler([pi/2, 0, 0], 'xyz')
+        >>> q
+        sqrt(2)/2 + sqrt(2)/2*i + 0*j + 0*k
+
+        >>> q = Quaternion.from_euler([0, pi/2, pi] , 'zyz')
+        >>> q
+        0 + (-sqrt(2)/2)*i + 0*j + sqrt(2)/2*k
+
+        >>> q = Quaternion.from_euler([0, pi/2, pi] , 'ZYZ')
+        >>> q
+        0 + sqrt(2)/2*i + 0*j + sqrt(2)/2*k
+
+        """
+
+        if len(angles) != 3:
+            raise ValueError("3 angles must be given.")
+
+        extrinsic = _check_sequence(seq)
+        i, j, k = seq.lower()
+
+        q1 = cls.from_axis_angle(_elementary_axis(i), angles[0])
+        q2 = cls.from_axis_angle(_elementary_axis(j), angles[1])
+        q3 = cls.from_axis_angle(_elementary_axis(k), angles[2])
+
+        if extrinsic:
+            return trigsimp(q3 * q2 * q1)
+        else:
+            return trigsimp(q1 * q2 * q3)
+
+    def to_euler(self, seq):
+        """Returns Euler angles representing same in the sequence given by
+        `seq`.
+
+        Parameters
+        ==========
+
+        seq : string of length 3
+            Represents the sequence of rotations.
+            For intrinsic rotations, seq but be all lowercase and its elements
+            must be from the set `['x', 'y', 'z']`
+            For extrinsic rotations, seq but be all uppercase and its elements
+            must be from the set `['X', 'Y', 'Z']`
+
+        Returns
+        =======
+
+        Matrix
+            The Euler angles calculated from the quaternion
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> euler = Quaternion(a, b, c, d).to_euler('zyz')
+        >>> euler
+        Matrix([[-atan2(-b, c) + atan2(d, a)],
+                [2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2))],
+                [atan2(-b, c) + atan2(d, a)]])
+
+        """
+        extrinsic = _check_sequence(seq)
+        i, j, k = seq.lower()
+        i = _elementary_axis_index(i)
+        j = _elementary_axis_index(j)
+        k = _elementary_axis_index(k)
+
+        if not extrinsic:
+            i, k = k, i
+
+        # check if sequence is symmetric
+        symmetric = i == k
+        if symmetric:
+            k = 6 - i - j
+
+        # parity of the permutation
+        sign = (i - j) * (j - k) * (k - i) // 2
+
+        # permutate elements
+        elements = [self.a, self.b, self.c, self.d]
+        a = elements[0]
+        b = elements[i]
+        c = elements[j]
+        d = elements[k] * sign
+
+        if not symmetric:
+            a, b, c, d = a - c, b + d, c + a, d - b
+
+        # calculate angles
+        half_sum = atan2(b, a)
+        half_diff = atan2(d, c)
+
+        angle_2 = 2*atan2(sqrt(c*c + d*d), sqrt(a*a + b*b))
+        # alternatively, we can use this to avoid the square root:
+        # angle_2 = acos(2*(a*a + b*b)/(a*a + b*b + c*c + d*d) - 1)
+
+        angle_1 = half_sum + half_diff
+        angle_3 = half_sum - half_diff
+
+        if extrinsic:
+            angle_1, angle_3 = angle_3, angle_1
+
+        # for Tait-Bryan angles
+        if not symmetric:
+            angle_2 -= pi / 2
+            if extrinsic:
+                angle_3 *= sign
+            else:
+                angle_1 *= sign
+
+        return Matrix([angle_1, angle_2, angle_3])
+
 
     @classmethod
     def from_axis_angle(cls, vector, angle):

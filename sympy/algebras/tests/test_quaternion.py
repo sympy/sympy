@@ -8,9 +8,11 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import Matrix
+from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
+from itertools import permutations
 
 w, x, y, z = symbols('w:z')
 phi = symbols('phi')
@@ -279,3 +281,40 @@ def test_issue_16318():
     axis = (-sqrt(3)/3, -sqrt(3)/3, -sqrt(3)/3)
     angle = 2*pi/3
     assert (axis, angle) == q.to_axis_angle()
+
+
+def test_to_euler():
+    q = Quaternion(w, x, y, z)
+    norm_of_q = Quaternion(q.norm())
+
+    # Extrinsic rotations
+    for seq_tuple in permutations('xyz'):
+        # asymmetric sequences
+        seq = ''.join(seq_tuple)
+        euler_from_q = q.to_euler(seq)
+        q_back = Quaternion.from_euler(euler_from_q, seq)
+        q_diff = simplify(q * q_back.conjugate())
+        assert q_diff == norm_of_q
+
+        # symmetric sequences
+        seq = ''.join([seq_tuple[0], seq_tuple[1], seq_tuple[0]])
+        euler_from_q = q.to_euler(seq)
+        q_back = Quaternion.from_euler(euler_from_q, seq)
+        q_diff = simplify(q * q_back.conjugate())
+        assert q_diff == norm_of_q
+
+    # Intrinsic rotations
+    for seq_tuple in permutations('XYZ'):
+        # asymmetric sequences
+        seq = ''.join(seq_tuple)
+        euler_from_q = q.to_euler(seq)
+        q_back = Quaternion.from_euler(euler_from_q, seq)
+        q_diff = simplify(q * q_back.conjugate())
+        assert q_diff == norm_of_q
+
+        # symmetric sequences
+        seq = ''.join([seq_tuple[0], seq_tuple[1], seq_tuple[0]])
+        euler_from_q = q.to_euler(seq)
+        q_back = Quaternion.from_euler(euler_from_q, seq)
+        q_diff = simplify(q * q_back.conjugate())
+        assert q_diff == norm_of_q
