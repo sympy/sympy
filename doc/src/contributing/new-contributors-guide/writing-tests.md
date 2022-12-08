@@ -160,6 +160,177 @@ Regression tests aren't just for bug fixes. They should also be used for new
 features, to make sure the newly implemented functionality remains implemented
 and correct.
 
+
+## Special Types of Tests
+
+Most tests will be of the form `assert function(input) == output`. However,
+there are other types of things that you might want to test that should be
+tested in certain ways.
+
+### Testing Exceptions
+
+To test that a function raises a given exception, use
+`sympy.testing.pytest.raises`. `raises()` takes an exception class and a
+lambda. For example
+
+```py
+from sympy.testing.pytest.raises
+raises(TypeError, lambda: cos(x, y)
+```
+
+Remember to include the `lambda`. Otherwise, the code will be executed
+immediately and will raise the exception, causing the test to fail.
+
+```
+# BAD
+raises(TypeError, cos(x, y)) # This test will fail
+```
+
+`raises` can also be used as a context manager, like
+
+```
+with raises(TypeError):
+    cos(x, y)
+```
+
+However, be careful using this form, as it can only check one expression at a
+time. If the code under context manager raises multiple exceptions, only the
+first one will actually be tested
+
+```
+# BAD
+with raises(TypeError):
+   cos(x, y)
+   sin(x, y) # THIS WILL NEVER BE TESTED
+```
+
+The `lambda` form is generally better because it avoids this problem, although
+if you are testing something that cannot be represented in a `lambda` you will
+need to use the context manager form.
+
+(writing-tests-testing-warnings)=
+### Testing Warnings
+
+[Warnings](https://docs.python.org/3/library/warnings.html) can be tested with
+the [`sympy.testing.pytest.warns()`](warns) context manager. Note that
+`SymPyDeprecationWarning` is special and should be tested with
+`warns_deprecated_sympy()` instead (see
+[below](writing-tests-test-deprecated-functionality)).
+
+The context manager should take a warning class (`warnings.warn()` uses
+`UserWarning` by default), and, optionally, a regular expression that the
+warning message should match as the `match` keyword argument.
+
+```
+from sympy.testing.pytest import warns
+with warns(UserWarning):
+    function_that_emits_a_warning()
+
+with warns(UserWarning, match=r'warning'):
+    function_that_emits_a_warning()
+
+```
+
+**Any test functionality that emits a warning should use `warns()`.** That
+way, no warnings are actually emitted during the tests themselves. This
+includes warnings coming from external libraries.
+
+Warnings within SymPy itself should be used very sparingly. Aside from
+[deprecation warnings](deprecation-policy), warnings are generally not used in
+SymPy, as they may be too annoying for users, especially those who use SymPy
+as a library, to be warranted.
+
+When you do use them, you must set the `stacklevel` parameter in the warning
+so that it shows the user code that called the function that emitted the
+warning. If the `stacklevel` parameter is impossible to set correctly, use
+`warns(test_stacklevel=False)` to disable the check in `warns` that
+`stacklevel` is used properly. `warns(SymPyDeprecationWarning,
+test_stacklevel=False)` must be used in place of `warns_deprecated_sympy()` if
+this applies to a `SymPyDeprecationWarning`
+
+(writing-tests-test-deprecated-functionality)=
+### Test Deprecated Functionality
+
+Deprecated functionality should be tested with the
+[`sympy.testing.pytest.warns_deprecated_sympy()`](warns_deprecated_sympy)
+context manager.
+
+The only purpose of this context manager is to test that the deprecation
+warning itself is functioning correctly. This should be the only place in the
+test suite where deprecated functionality is called. All other tests should
+use non-deprecated functionality. If it is impossible to avoid deprecated
+functionality, this may be a sign that the functionality should not actually
+be deprecated.
+
+The [deprecation policy](deprecation-policy) page goes into detail about how
+to add a deprecation to a function.
+
+For example,
+
+```
+from sympy.testing.pytest import warns_deprecated_sympy
+x = symbols('x')
+
+# expr_free_symbols is deprecated
+def test_deprecated_expr_free_symbols():
+    with warns_deprecated_sympy():
+        assert x.expr_free_symbols == {x}
+```
+
+If code is using deprecated functionality from another library, this code
+should be updated. Until then, the normal
+[`warns()`](writing-tests-testing-warnings) context manager should be used in
+the corresponding tests to prevent the warning from being emitted.
+
+### Testing that Something is Unchanged
+
+The normal test style of
+
+```py
+assert function(input) == output
+```
+
+works for most types of tests. However, it doesn't work in the case where a
+SymPy object should remain unchanged. Consider the following example:
+
+```py
+assert sin(pi) == 0
+assert sin(pi/2) == 1
+assert sin(1) == sin(1)
+```
+
+The first two tests here are fine. The test that `sin` returns the
+corresponding special value for the inputs `pi` and `pi/2`. However, the last
+test nominally checks that `sin(1)` doesn't return anything. But upon closer
+inspection, we see that it doesn't do that at all. `sin(1)` could in fact
+return anything. It could return complete nonsense or even a wrong answer like
+`0`. The test would still pass, because all it is doing is checking that the
+result of `sin(1)` equals the result of `sin(1)`, which it always will so long
+as it always returns the same thing.
+
+We really want to check that `sin(1)` remains unevaluated. The
+`sympy.core.expr.unchanged` helper will do this.
+
+Use it like
+
+```
+from sympy.core.expr import unchanged
+
+def test_sin_1_unevaluated():
+    assert unchanged(sin, 1)
+```
+
+This test now actually checks the correct thing. If `sin(1)` were made to
+return some value, the test would fail.
+
+### Random Testing
+
+### Skipping Tests
+
+### Marking Tests as Expected to Fail
+
+### Marking Tests as Slow
+
 (writing-tests-doctests)=
 ## Doctests
 
