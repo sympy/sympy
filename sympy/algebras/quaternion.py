@@ -265,7 +265,6 @@ class Quaternion(Expr):
 
         return Matrix([angle_1, angle_2, angle_3])
 
-
     @classmethod
     def from_axis_angle(cls, vector, angle):
         """Returns a rotation quaternion given the axis and the angle of rotation.
