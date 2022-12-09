@@ -202,9 +202,11 @@ class Quaternion(Expr):
         >>> from sympy.abc import a, b, c, d
         >>> euler = Quaternion(a, b, c, d).to_euler('zyz')
         >>> euler
-        Matrix([[-atan2(-b, c) + atan2(d, a)],
-                [2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2))],
-                [atan2(-b, c) + atan2(d, a)]])
+        Matrix([
+            [                  -atan2(-b, c) + atan2(d, a)],
+            [2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2))],
+            [                   atan2(-b, c) + atan2(d, a)]])
+
 
         References
         ==========
