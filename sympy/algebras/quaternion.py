@@ -32,11 +32,11 @@ def _check_sequence(seq):
     if (i == j) or (j == k):
         raise ValueError("Consecutive axes must be different")
 
-    axes = set(['x', 'y', 'z'])
-    if not (i in axes and j in axes and k in axes):
+    bad = set(seq) - set('xyzXYZ')
+    if bad:
         raise ValueError("Expected axes from `seq` to be from "
                          "['x', 'y', 'z'] or ['X', 'Y', 'Z'], "
-                         "got {}".format(seq))
+                         "got {}".format(''.join(bad)))
 
     return extrinsic
 
