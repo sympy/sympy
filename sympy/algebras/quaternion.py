@@ -15,19 +15,6 @@ from sympy.core.numbers import pi
 from mpmath.libmp.libmpf import prec_to_dps
 
 
-def _elementary_axis(axis):
-    if axis == 'x':
-        return [1, 0, 0]
-    if axis == 'y':
-        return [0, 1, 0]
-    if axis == 'z':
-        return [0, 0, 1]
-
-def _elementary_axis_index(axis):
-    if axis == 'x': return 1
-    if axis == 'y': return 2
-    if axis == 'z': return 3
-
 def _check_sequence(seq):
     if len(seq) != 3:
         raise ValueError("Expected 3 axes, got `{}`.".format(seq))
@@ -173,9 +160,15 @@ class Quaternion(Expr):
         extrinsic = _check_sequence(seq)
         i, j, k = seq.lower()
 
-        q1 = cls.from_axis_angle(_elementary_axis(i), angles[0])
-        q2 = cls.from_axis_angle(_elementary_axis(j), angles[1])
-        q3 = cls.from_axis_angle(_elementary_axis(k), angles[2])
+        # get elementary basis vectors
+        e1 = [1 if n == i else 0 for n in 'xyz']
+        e2 = [1 if n == j else 0 for n in 'xyz']
+        e3 = [1 if n == k else 0 for n in 'xyz']
+
+        # calculate distinct quaternions
+        q1 = cls.from_axis_angle(e1, angles[0])
+        q2 = cls.from_axis_angle(e2, angles[1])
+        q3 = cls.from_axis_angle(e3, angles[2])
 
         if extrinsic:
             return trigsimp(q3 * q2 * q1)
@@ -221,9 +214,11 @@ class Quaternion(Expr):
         """
         extrinsic = _check_sequence(seq)
         i, j, k = seq.lower()
-        i = _elementary_axis_index(i)
-        j = _elementary_axis_index(j)
-        k = _elementary_axis_index(k)
+
+        # get index corresponding to elementary basis vectors
+        i = 'xyz'.index(i) + 1
+        j = 'xyz'.index(j) + 1
+        k = 'xyz'.index(k) + 1
 
         if not extrinsic:
             i, k = k, i
