@@ -748,15 +748,12 @@ def _get_doctest_blacklist():
         "examples/advanced/autowrap_ufuncify.py"
         ])
 
-    # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
         "sympy/conftest.py", # Depends on pytest
-        "sympy/testing/benchmarking.py",
     ])
 
     # These are deprecated stubs to be removed:
     blacklist.extend([
-        "sympy/utilities/benchmarking.py",
         "sympy/utilities/tmpfiles.py",
         "sympy/utilities/pytest.py",
         "sympy/utilities/runtests.py",

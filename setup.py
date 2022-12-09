@@ -16,10 +16,7 @@ how to customize the install procedure read the output of:
 
 In addition, there are some other commands:
 
-    python setup.py clean -> will clean all trash (*.pyc and stuff)
     python setup.py test  -> will run the complete test suite
-    python setup.py bench -> will run the complete benchmark suite
-    python setup.py audit -> will run pyflakes checker on source code
 
 To get a full list of available commands, read the output of:
 
@@ -168,75 +165,6 @@ modules = [
     'sympy.vector',
 ]
 
-class audit(Command):
-    """Audits SymPy's source code for following issues:
-        - Names which are used but not defined or used before they are defined.
-        - Names which are redefined without having been used.
-    """
-
-    description = "Audit SymPy source with PyFlakes"
-    user_options = []
-
-    def initialize_options(self):
-        self.all = None
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        try:
-            import pyflakes.scripts.pyflakes as flakes
-        except ImportError:
-            print("In order to run the audit, you need to have PyFlakes installed.")
-            sys.exit(-1)
-        dirs = (os.path.join(*d) for d in (m.split('.') for m in modules))
-        warns = 0
-        for dir in dirs:
-            for filename in os.listdir(dir):
-                if filename.endswith('.py') and filename != '__init__.py':
-                    warns += flakes.checkPath(os.path.join(dir, filename))
-        if warns > 0:
-            print("Audit finished with total %d warnings" % warns)
-
-
-class clean(Command):
-    """Cleans *.pyc and debian trashs, so you should get the same copy as
-    is in the VCS.
-    """
-
-    description = "remove build files"
-    user_options = [("all", "a", "the same")]
-
-    def initialize_options(self):
-        self.all = None
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        curr_dir = os.getcwd()
-        for root, dirs, files in os.walk(dir_setup):
-            for file in files:
-                if file.endswith('.pyc') and os.path.isfile:
-                    os.remove(os.path.join(root, file))
-
-        os.chdir(dir_setup)
-        names = ["python-build-stamp-2.4", "MANIFEST", "build",
-                 "dist", "doc/_build", "sample.tex"]
-
-        for f in names:
-            if os.path.isfile(f):
-                os.remove(f)
-            elif os.path.isdir(f):
-                shutil.rmtree(f)
-
-        for name in glob.glob(os.path.join(dir_setup, "doc", "src", "modules",
-                                           "physics", "vector", "*.pdf")):
-            if os.path.isfile(name):
-                os.remove(name)
-
-        os.chdir(curr_dir)
-
 
 class test_sympy(Command):
     """Runs all tests under the sympy/ folder
@@ -258,34 +186,6 @@ class test_sympy(Command):
     def run(self):
         from sympy.testing import runtests
         runtests.run_all_tests()
-
-
-class run_benchmarks(Command):
-    """Runs all SymPy benchmarks"""
-
-    description = "run all benchmarks"
-    user_options = []  # distutils complains if this is not here.
-
-    def __init__(self, *args):
-        self.args = args[0]  # so we can pass it to other classes
-        Command.__init__(self, *args)
-
-    def initialize_options(self):  # distutils wants this
-        pass
-
-    def finalize_options(self):    # this too
-        pass
-
-    # we use py.test like architecture:
-    #
-    # o collector   -- collects benchmarks
-    # o runner      -- executes benchmarks
-    # o presenter   -- displays benchmarks results
-    #
-    # this is done in sympy.utilities.benchmarking on top of py.test
-    def run(self):
-        from sympy.utilities import benchmarking
-        benchmarking.main(['sympy'])
 
 
 class antlr(Command):
@@ -449,9 +349,6 @@ if __name__ == '__main__':
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
-                    'bench': run_benchmarks,
-                    'clean': clean,
-                    'audit': audit,
                     'antlr': antlr,
                     'sdist': sdist_sympy,
                     },
