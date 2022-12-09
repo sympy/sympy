@@ -161,19 +161,19 @@ class Quaternion(Expr):
         i, j, k = seq.lower()
 
         # get elementary basis vectors
-        e1 = [1 if n == i else 0 for n in 'xyz']
-        e2 = [1 if n == j else 0 for n in 'xyz']
-        e3 = [1 if n == k else 0 for n in 'xyz']
+        ei = [1 if n == i else 0 for n in 'xyz']
+        ej = [1 if n == j else 0 for n in 'xyz']
+        ek = [1 if n == k else 0 for n in 'xyz']
 
         # calculate distinct quaternions
-        q1 = cls.from_axis_angle(e1, angles[0])
-        q2 = cls.from_axis_angle(e2, angles[1])
-        q3 = cls.from_axis_angle(e3, angles[2])
+        qi = cls.from_axis_angle(ei, angles[0])
+        qj = cls.from_axis_angle(ej, angles[1])
+        qk = cls.from_axis_angle(ek, angles[2])
 
         if extrinsic:
-            return trigsimp(q3 * q2 * q1)
+            return trigsimp(qk * qj * qi)
         else:
-            return trigsimp(q1 * q2 * q3)
+            return trigsimp(qi * qj * qk)
 
     def to_euler(self, seq):
         """Returns Euler angles representing same in the sequence given by
@@ -247,25 +247,22 @@ class Quaternion(Expr):
         half_sum = atan2(b, a)
         half_diff = atan2(d, c)
 
-        angle_2 = 2*atan2(sqrt(c*c + d*d), sqrt(a*a + b*b))
+        angle_j = 2*atan2(sqrt(c*c + d*d), sqrt(a*a + b*b))
         # alternatively, we can use this to avoid the square root:
         # angle_2 = acos(2*(a*a + b*b)/(a*a + b*b + c*c + d*d) - 1)
 
-        angle_1 = half_sum + half_diff
-        angle_3 = half_sum - half_diff
-
-        if extrinsic:
-            angle_1, angle_3 = angle_3, angle_1
+        angle_i = half_sum + half_diff
+        angle_k = half_sum - half_diff
 
         # for Tait-Bryan angles
         if not symmetric:
-            angle_2 -= pi / 2
-            if extrinsic:
-                angle_3 *= sign
-            else:
-                angle_1 *= sign
+            angle_j -= pi / 2
+            angle_i *= sign
 
-        return Matrix([angle_1, angle_2, angle_3])
+        if extrinsic:
+            return Matrix([angle_k, angle_j, angle_i])
+        else:
+            return Matrix([angle_i, angle_j, angle_k])
 
     @classmethod
     def from_axis_angle(cls, vector, angle):
