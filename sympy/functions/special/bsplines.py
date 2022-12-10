@@ -287,10 +287,10 @@ def interpolating_spline(d, x, X, Y):
 
     x : symbol
 
-    X : list of strictly increasing integer values
+    X : list of strictly increasing real values
         list of X coordinates through which the spline passes
 
-    Y : list of strictly increasing integer values
+    Y : list of real values corresponding to X 
         list of Y coordinates through which the spline passes
 
     See Also
