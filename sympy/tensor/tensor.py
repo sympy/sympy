@@ -2632,9 +2632,12 @@ class TensAdd(TensExpr, AssocOp):
         under monoterm symmetries.
         """
         expr = self.expand()
-        args = [canon_bp(x) for x in expr.args]
-        res = TensAdd(*args).doit(deep=False)
-        return res
+        if isinstance(expr, self.func):
+            args = [canon_bp(x) for x in expr.args]
+            res = TensAdd(*args).doit(deep=False)
+            return res
+        else:
+            return canon_bp(expr)
 
     def equals(self, other):
         other = _sympify(other)
