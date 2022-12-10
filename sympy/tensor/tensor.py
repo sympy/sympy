@@ -2484,10 +2484,9 @@ class TensAdd(TensExpr, AssocOp):
         # if any of the args are zero (after doit), drop them. Otherwise, _tensAdd_check will complain about non-matching indices, even though the TensAdd is correctly formed.
         args = [arg for arg in args if arg != S.Zero]
 
-        if not args:
+        if len(args) == 0:
             return S.Zero
-
-        if len(args) == 1:
+        elif len(args) == 1:
             return args[0]
 
         # now check that all addends have the same indices:
