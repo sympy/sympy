@@ -785,20 +785,17 @@ ufunc${ind} = PyUFunc_FromFuncAndData(${funcname}_funcs, ${funcname}_data, ${fun
     Py_DECREF(ufunc${ind});""")
 
 _ufunc_setup = Template("""\
-def configuration(parent_package='', top_path=None):
-    import numpy
-    from numpy.distutils.misc_util import Configuration
+from setuptools.extension import Extension
+from setuptools import setup
 
-    config = Configuration('',
-                           parent_package,
-                           top_path)
-    config.add_extension('${module}', sources=['${module}.c', '${filename}.c'])
-
-    return config
+from numpy import get_include
 
 if __name__ == "__main__":
-    from numpy.distutils.core import setup
-    setup(configuration=configuration)""")
+    setup(ext_modules=[
+        Extension('${module}',
+                  sources=['${module}.c', '${filename}.c'],
+                  include_dirs=[get_include()])])
+""")
 
 
 class UfuncifyCodeWrapper(CodeWrapper):
