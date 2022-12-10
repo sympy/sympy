@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-"""Distutils based setup script for SymPy.
+"""Setup script for SymPy.
 
-This uses Distutils (https://python.org/sigs/distutils-sig/) the standard
-python mechanism for installing packages. Optionally, you can use
-Setuptools (https://setuptools.readthedocs.io/en/latest/)
-to automatically handle dependencies. For the easiest installation
-just type the command (you'll probably need root privileges for that):
+This uses Setuptools (https://setuptools.pypa.io/en/latest/) the standard
+python mechanism for installing packages.
+For the easiest installation just type the command (you'll probably need
+root privileges for that):
 
     python setup.py install
 
@@ -28,11 +27,10 @@ sympy@googlegroups.com and ask for help.
 
 import sys
 import os
-import shutil
-import glob
 import subprocess
 
-from distutils.command.sdist import sdist
+from setuptools import setup, Command
+from setuptools.command.sdist import sdist
 
 
 min_mpmath_version = '0.19'
@@ -40,31 +38,14 @@ min_mpmath_version = '0.19'
 # This directory
 dir_setup = os.path.dirname(os.path.realpath(__file__))
 
-extra_kwargs = {}
-
-try:
-    from setuptools import setup, Command
-    extra_kwargs['zip_safe'] = False
-    extra_kwargs['entry_points'] = {
+extra_kwargs = {
+    'zip_safe': False,
+    'entry_points': {
         'console_scripts': [
             'isympy = isympy:main',
         ]
     }
-except ImportError:
-    from distutils.core import setup, Command
-
-    extra_kwargs['scripts'] = ['bin/isympy']
-
-    # handle mpmath deps in the hard way:
-    from sympy.external.importtools import version_tuple
-    try:
-        import mpmath
-        if version_tuple(mpmath.__version__) < version_tuple(min_mpmath_version):
-            raise ImportError
-    except ImportError:
-        print("Please install the mpmath package with a version >= %s"
-              % min_mpmath_version)
-        sys.exit(-1)
+}
 
 if sys.version_info < (3, 8):
     print("SymPy requires Python 3.8 or newer. Python %d.%d detected"
@@ -171,13 +152,13 @@ class test_sympy(Command):
     """
 
     description = "run all tests and doctests; also see bin/test and bin/doctest"
-    user_options = []  # distutils complains if this is not here.
+    user_options = []  # setuptools complains if this is not here.
 
     def __init__(self, *args):
         self.args = args[0]  # so we can pass it to other classes
         Command.__init__(self, *args)
 
-    def initialize_options(self):  # distutils wants this
+    def initialize_options(self):  # setuptools wants this
         pass
 
     def finalize_options(self):    # this too
@@ -191,13 +172,13 @@ class test_sympy(Command):
 class antlr(Command):
     """Generate code with antlr4"""
     description = "generate parser code from antlr grammars"
-    user_options = []  # distutils complains if this is not here.
+    user_options = []  # setuptools complains if this is not here.
 
     def __init__(self, *args):
         self.args = args[0]  # so we can pass it to other classes
         Command.__init__(self, *args)
 
-    def initialize_options(self):  # distutils wants this
+    def initialize_options(self):  # setuptools wants this
         pass
 
     def finalize_options(self):    # this too
@@ -233,7 +214,7 @@ class sdist_sympy(sdist):
             with open(commit_hash_filepath, 'w') as f:
                 f.write(commit_hash)
 
-        super(sdist_sympy, self).run()
+        super().run()
 
         try:
             os.remove(commit_hash_filepath)

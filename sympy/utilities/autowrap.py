@@ -234,12 +234,8 @@ class CythonCodeWrapper(CodeWrapper):
     """Wrapper that uses Cython"""
 
     setup_template = """\
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import setup
+from setuptools import Extension
 from Cython.Build import cythonize
 cy_opts = {cythonize_options}
 {np_import}
@@ -275,7 +271,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     def __init__(self, *args, **kwargs):
         """Instantiates a Cython code wrapper.
 
-        The following optional parameters get passed to ``distutils.Extension``
+        The following optional parameters get passed to ``setuptools.Extension``
         for building the Python extension module. Read its documentation to
         learn more.
 
