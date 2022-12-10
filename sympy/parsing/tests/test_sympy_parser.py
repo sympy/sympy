@@ -191,12 +191,16 @@ def test_recursive_evaluate_false_10560():
 
 
 def test_issue__evaluateFalse_24288():
-    try:
-        for u in [op(1, 2, evaluate=False) for op in [Eq, Ne, Lt, Le, Gt, Ge,]]:
-            assert parse_expr(str(u), evaluate=False) == u
-    except AssertionError as msg:
-        return msg
-
+    inputs = {'1<2' : Lt(1,2),
+              '1<=2' : Le(1,2),
+              '1>2' : Gt(1,2),
+              '1>=2' : Ge(1,2),
+              '1=2' : Eq(1,2),
+              '1!=2' : Ne(1,2),
+        }
+    for case,results in inputs.items():
+        assert parse_expr(case, evaluate=False) == results
+    
 
 def test_function_evaluate_false():
     inputs = [
