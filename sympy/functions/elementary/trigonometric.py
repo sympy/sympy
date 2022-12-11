@@ -532,6 +532,14 @@ class sin(TrigonometricFunction):
     def _eval_rewrite_as_sinc(self, arg, **kwargs):
         return arg*sinc(arg)
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return sqrt(pi*arg/2)*besselj(1*S.Half,arg)
+
+    def _eval_rewrite_as_gamma(self, arg, **kwargs):
+        from sympy.functions.special.gamma_functions import gamma
+        return pi/(gamma(arg/pi)*gamma(1-arg/pi))
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -943,6 +951,14 @@ class cos(TrigonometricFunction):
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return 1/sec(arg).rewrite(csc)
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return sqrt(pi*arg/2)*besselj(-1*S.Half,arg)
+
+    def _eval_rewrite_as_gamma(self, arg, **kwargs):
+        from sympy.functions.special.gamma_functions import gamma
+        return (pi/(gamma(S.Half-arg/pi)*gamma(S.Half+arg/pi)))
+
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
@@ -1298,6 +1314,14 @@ class tan(TrigonometricFunction):
             return None
         return y
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return (sin(arg).rewrite(besselj)/cos(arg).rewrite(besselj))
+
+    def _eval_rewrite_as_gamma(self, arg, **kwargs):
+        from sympy.functions.special.gamma_functions import gamma
+        return (sin(arg).rewrite(gamma)/cos(arg).rewrite(gamma))
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import re
@@ -1582,6 +1606,14 @@ class cot(TrigonometricFunction):
             return None
         return y
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return (cos(arg).rewrite(besselj)/sin(arg).rewrite(besselj))
+
+    def _eval_rewrite_as_gamma(self, arg, **kwargs):
+        from sympy.functions.special.gamma_functions import gamma
+        return (cos(arg).rewrite(gamma)/sin(arg).rewrite(gamma))
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import re
@@ -1837,6 +1869,14 @@ class sec(ReciprocalTrigonometricFunction):
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return csc(pi/2 - arg, evaluate=False)
 
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return (1/cos(arg).rewrite(besselj))
+
+    def _eval_rewrite_as_gamma(self, arg, **kwargs):
+        from sympy.functions.special.gamma_functions import gamma
+        return (1/cos(arg).rewrite(gamma))
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return tan(self.args[0])*sec(self.args[0])
@@ -1937,6 +1977,14 @@ class csc(ReciprocalTrigonometricFunction):
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
         return (1/sin(arg).rewrite(tan))
+
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return (1/sin(arg).rewrite(besselj))
+
+    def _eval_rewrite_as_gamma(self, arg, **kwargs):
+        from sympy.functions.special.gamma_functions import gamma
+        return (1/sin(arg).rewrite(gamma))
 
     def fdiff(self, argindex=1):
         if argindex == 1:
