@@ -1608,6 +1608,10 @@ class cot(TrigonometricFunction):
             return None
         return y
 
+    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+        from sympy.functions.special.hyper import hyper
+        return (2/pi)*hyper((1, -(arg/pi), (arg/pi)), (1 - (arg/pi), (arg/pi) + 1), 1) - (1/arg)
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import re
@@ -1863,6 +1867,12 @@ class sec(ReciprocalTrigonometricFunction):
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return csc(pi/2 - arg, evaluate=False)
 
+    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+        from sympy.functions.special.hyper import hyper
+        return [((4*pi)/((pi**2) - 4*(arg**2)))
+            *hyper((1, 3/2, (1/2) - (arg/pi), (arg/pi) + (1/2)), (1/2, (3/2) - (arg/pi), (arg/pi) + (3/2)), -1),
+            1/hyper([], (1/2,), -(arg**2)/4)]
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return tan(self.args[0])*sec(self.args[0])
@@ -1963,6 +1973,11 @@ class csc(ReciprocalTrigonometricFunction):
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
         return (1/sin(arg).rewrite(tan))
+
+    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+        from sympy.functions.special.hyper import hyper
+        return [(2/arg)*hyper((1, -(arg/pi), arg/pi), (1 - (arg/pi), (arg/pi) + 1), -1) - (1/arg),
+            1/(arg*hyper([], (3/2,), -(arg**2)/4))]
 
     def fdiff(self, argindex=1):
         if argindex == 1:

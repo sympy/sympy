@@ -799,6 +799,7 @@ def test_cot_rewrite():
     assert cot(sin(x)).rewrite(Pow) == cot(sin(x))
     assert cot(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == (Rational(-1, 4) + sqrt(5)/4)/\
                                                         sqrt(sqrt(5)/8 + Rational(5, 8))
+    assert cot(x).rewrite(hyper) == (2/pi)*hyper((1, -(x/pi), (x/pi)), (1 - (x/pi), (x/pi) + 1), 1) - (1/x)
 
 
 def test_cot_subs():
@@ -1721,6 +1722,9 @@ def test_sec_rewrite():
     assert sec(x).rewrite(sin) == 1 / sin(x + pi / 2, evaluate=False)
     assert sec(x).rewrite(tan) == (tan(x / 2)**2 + 1) / (-tan(x / 2)**2 + 1)
     assert sec(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)
+    assert sec(x).rewrite(hyper) == [((4*pi)/((pi**2) - 4*(x**2)))
+        *hyper((1, 3/2, (1/2) - (x/pi), (x/pi) + (1/2)), (1/2, (3/2) - (x/pi), (x/pi) + (3/2)), -1),
+        1/hyper([], (1/2,), -(x**2)/4)]
 
 
 def test_sec_fdiff():
@@ -1908,6 +1912,8 @@ def test_csc_rewrite():
     assert csc(x).rewrite(cot) == (cot(x/2)**2 + 1)/(2*cot(x/2))
     assert csc(x).rewrite(cos) == 1/cos(x - pi/2, evaluate=False)
     assert csc(x).rewrite(sec) == sec(-x + pi/2, evaluate=False)
+    assert csc(x).rewrite(hyper) == [(2/x)*hyper((1, -(x/pi), x/pi), (1 - (x/pi), (x/pi) + 1), -1) - (1/x),
+        1/(x*hyper([], (3/2,), -(x**2)/4))]
 
     # issue 17349
     assert csc(1 - exp(-besselj(I, I))).rewrite(cos) == \
