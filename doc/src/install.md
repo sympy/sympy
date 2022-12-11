@@ -48,7 +48,7 @@ If you want to install SymPy, but still want to use the git version, you can run
 from your repository:
 
 ```
-python setupegg.py develop
+python -m pip install -e .
 ```
 
 This will cause the installed version to always point to the version in the git
