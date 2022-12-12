@@ -124,10 +124,10 @@ class Quaternion(Expr):
             The Euler angles (in radians).
         seq : string of length 3
             Represents the sequence of rotations.
-            For intrinsic rotations, seq but be all lowercase and its elements
-            must be from the set `['x', 'y', 'z']`
-            For extrinsic rotations, seq but be all uppercase and its elements
-            must be from the set `['X', 'Y', 'Z']`
+            For intrinsic rotations, seq must be all lowercase and its elements
+            must be from the set `{'x', 'y', 'z'}`
+            For extrinsic rotations, seq must be all uppercase and its elements
+            must be from the set `{'X', 'Y', 'Z'}`
 
         Returns
         =======
@@ -185,10 +185,10 @@ class Quaternion(Expr):
 
         seq : string of length 3
             Represents the sequence of rotations.
-            For intrinsic rotations, seq but be all lowercase and its elements
-            must be from the set `['x', 'y', 'z']`
-            For extrinsic rotations, seq but be all uppercase and its elements
-            must be from the set `['X', 'Y', 'Z']`
+            For intrinsic rotations, seq must be all lowercase and its elements
+            must be from the set `{'x', 'y', 'z'}`
+            For extrinsic rotations, seq must be all uppercase and its elements
+            must be from the set `{'X', 'Y', 'Z'}`
 
         Returns
         =======
