@@ -285,36 +285,15 @@ def test_issue_16318():
 
 def test_to_euler():
     q = Quaternion(w, x, y, z)
-    norm_of_q = Quaternion(q.norm())
+    q_normalized = q.normalize()
 
-    # Extrinsic rotations
-    for seq_tuple in permutations('xyz'):
-        # asymmetric sequences
-        seq = ''.join(seq_tuple)
-        euler_from_q = q.to_euler(seq)
-        q_back = Quaternion.from_euler(euler_from_q, seq)
-        q_diff = simplify(q * q_back.conjugate())
-        assert q_diff == norm_of_q
-
-        # symmetric sequences
-        seq = ''.join([seq_tuple[0], seq_tuple[1], seq_tuple[0]])
-        euler_from_q = q.to_euler(seq)
-        q_back = Quaternion.from_euler(euler_from_q, seq)
-        q_diff = simplify(q * q_back.conjugate())
-        assert q_diff == norm_of_q
-
-    # Intrinsic rotations
-    for seq_tuple in permutations('XYZ'):
-        # asymmetric sequences
-        seq = ''.join(seq_tuple)
-        euler_from_q = q.to_euler(seq)
-        q_back = Quaternion.from_euler(euler_from_q, seq)
-        q_diff = simplify(q * q_back.conjugate())
-        assert q_diff == norm_of_q
-
-        # symmetric sequences
-        seq = ''.join([seq_tuple[0], seq_tuple[1], seq_tuple[0]])
-        euler_from_q = q.to_euler(seq)
-        q_back = Quaternion.from_euler(euler_from_q, seq)
-        q_diff = simplify(q * q_back.conjugate())
-        assert q_diff == norm_of_q
+    for xyz in ('xyz', 'XYZ'):
+        for seq_tuple in permutations(xyz):
+            for symmetric in (True, False):
+                if symmetric:
+                    seq = ''.join([seq_tuple[0], seq_tuple[1], seq_tuple[0]])
+                else:
+                    seq = ''.join(seq_tuple)
+                euler_from_q = q.to_euler(seq)
+                q_back = simplify(Quaternion.from_euler(euler_from_q, seq))
+                assert q_back == q_normalized
