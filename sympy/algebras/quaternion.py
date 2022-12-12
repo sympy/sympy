@@ -17,10 +17,10 @@ from mpmath.libmp.libmpf import prec_to_dps
 
 def _is_extrinsic(seq):
     """validate seq and return True if seq is lowercase and False if uppercase"""
-    if len(seq) != 3:
-        raise ValueError("Expected 3 axes, got `{}`.".format(seq))
     if type(seq) != str:
         raise ValueError('Expected seq to be a string.')
+    if len(seq) != 3:
+        raise ValueError("Expected 3 axes, got `{}`.".format(seq))
 
     intrinsic = seq.isupper()
     extrinsic = seq.islower()
