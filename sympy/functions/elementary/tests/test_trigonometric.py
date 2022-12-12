@@ -13,7 +13,7 @@ from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh, co
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, atan2,
                                                       cos, cot, csc, sec, sin, sinc, tan)
-from sympy.functions.special.bessel import (besselj, jn)
+from sympy.functions.special.bessel import (besselj, besseli, besselk, bessely)
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.matrices.dense import Matrix
 from sympy.polys.polytools import (cancel, gcd)
@@ -2155,3 +2155,39 @@ def test_as_real_imag():
 def test_issue_18746():
     e3 = cos(S.Pi*(x/4 + 1/4))
     assert e3.period() == 8
+
+def test_trig_rewrite_hyper():
+    from sympy.functions.special.hyper import hyper
+    assert sin(x).rewrite(hyper) == x*hyper((), (1.5,), -x**2/4)
+    assert cos(x).rewrite(hyper) == hyper((), (0.5,), -x**2/4)
+    assert tan(x).rewrite(hyper) == 8*x*hyper((1, -x/pi + 0.5, x/pi + 0.5), (-x/pi + 1.5, x/pi + 1.5), 1)/(-4*x**2 + pi**2)
+    assert cot(x).rewrite(hyper) == 2*hyper((1, -x/pi, x/pi), (-x/pi + 1, x/pi + 1), 1)/x - 1/x
+    assert sec(x).rewrite(hyper) == 1/ cos(x).rewrite(hyper)
+    assert csc(x).rewrite(hyper) == 1/ sin(x).rewrite(hyper)
+    # More strong check: rewrite and evalute 
+    # Issue #24374
+    # assert cot(x).rewrite(hyper) == 1/tan(x).rewrite(hyper)
+
+def test_trig_rewrite_besselj():
+    assert sin(x).rewrite(besselj) == sqrt(pi*x/2) * besselj(1/2,x)
+    assert cos(x).rewrite(besselj) == sqrt(pi*x/2) * besselj(-1/2,x)
+    assert csc(x).rewrite(besselj) == 1 / sin(x).rewrite(besselj)
+    assert sec(x).rewrite(besselj) == 1 / cos(x).rewrite(besselj)
+
+def test_trig_rewrite_besseli():
+    assert sin(x).rewrite(besseli) == -I * sqrt(pi*I*x/2) * besseli(1/2,x*I)
+    assert cos(x).rewrite(besseli) == sqrt(pi*I*x/2) * besseli(-1/2,x*I)
+    assert csc(x).rewrite(besseli) == 1 / sin(x).rewrite(besseli)
+    assert sec(x).rewrite(besseli) == 1 / cos(x).rewrite(besseli)
+
+def test_trig_rewrite_bessely():
+    assert sin(x).rewrite(bessely) == sqrt(pi*x/2) * bessely(-1/2,x)
+    assert cos(x).rewrite(bessely) == sqrt(pi*x/2) * bessely(1/2,x)
+    assert csc(x).rewrite(bessely) == 1 / sin(x).rewrite(bessely)
+    assert sec(x).rewrite(bessely) == 1 / cos(x).rewrite(bessely)
+
+def test_trig_rewrite_besselk():
+    assert sin(x).rewrite(besselk) == I/sqrt(2*pi) * (sqrt(I*x)*besselk(-1/2,x*I) \
+        - sqrt(-I*x)*besselk(-1/2,-x*I))
+    assert cos(x).rewrite(besselk) == sqrt(-I*x / (2*pi)) * besselk(-1/2,-x*I) \
+        + sqrt(I*x / (2*pi)) * besselk(-1/2,x*I)

@@ -13,7 +13,7 @@ from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.combinatorial.numbers import bernoulli, euler
-from sympy.functions.elementary.complexes import arg as arg_f, im, re
+from sympy.functions.elementary.complexes import arg as arg_f, im, re, I
 from sympy.functions.elementary.exponential import log, exp
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
@@ -520,6 +520,26 @@ class sin(TrigonometricFunction):
     def _eval_rewrite_as_pow(self, arg, **kwargs):
         return self.rewrite(cos).rewrite(pow)
 
+    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+        from sympy.functions.special.hyper import hyper
+        return arg*hyper((), [3/2], -(arg**2)/4)
+
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return sqrt(pi*arg/2) * besselj(1/2,arg)
+
+    def _eval_rewrite_as_bessely(self, arg, **kwargs):
+        from sympy.functions.special.bessel import bessely
+        return sqrt(pi*arg/2) * bessely(-1/2,arg)
+
+    def _eval_rewrite_as_besseli(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besseli
+        return -I * sqrt(pi*I*arg/2) * besseli(1/2,arg*I)
+
+    def _eval_rewrite_as_besselk(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselk
+        return I/sqrt(2*pi) * (sqrt(I*arg)*besselk(-1/2,arg*I) - sqrt(-I*arg)*besselk(-1/2,-arg*I))
+
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         return self.rewrite(cos).rewrite(sqrt)
 
@@ -848,12 +868,32 @@ class cos(TrigonometricFunction):
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
         return self._eval_rewrite_as_sqrt(arg)
+    
+    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+        from sympy.functions.special.hyper import hyper
+        return hyper((), [1/2], -(arg**2)/4)
+
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselj
+        return sqrt(pi*arg/2) * besselj(-1/2,arg)
+
+    def _eval_rewrite_as_bessely(self, arg, **kwargs):
+        from sympy.functions.special.bessel import bessely
+        return sqrt(pi*arg/2) * bessely(1/2,arg)
+
+    def _eval_rewrite_as_besseli(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besseli
+        return sqrt(pi*I*arg/2) * besseli(-1/2,arg*I)
+
+    def _eval_rewrite_as_besselk(self, arg, **kwargs):
+        from sympy.functions.special.bessel import besselk
+        return sqrt(-I*arg / (2*pi)) * besselk(-1/2,-arg*I) + sqrt(I*arg / (2*pi)) * besselk(-1/2,arg*I)
 
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         from sympy.functions.special.polynomials import chebyshevt
 
         def migcdex(x):
-            # recursive calculation of gcd and linear combination
+            # recursive calcuation of gcd and linear combination
             # for a sequence of integers.
             # Given  (x1, x2, x3)
             # Returns (y1, y1, y3, g)
@@ -1292,6 +1332,11 @@ class tan(TrigonometricFunction):
             return None
         return y
 
+    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+        from sympy.functions.special.hyper import hyper
+        return (8 * arg) * \
+            hyper((1,1/2 - arg/pi, arg/pi + 1/2), [3/2 - arg/pi, arg/pi + 3/2], 1) / (pi**2 - 4*arg**2)
+    
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         y = self.rewrite(cos).rewrite(sqrt)
         if y.has(cos):
@@ -1576,6 +1621,10 @@ class cot(TrigonometricFunction):
             return None
         return y
 
+    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+        from sympy.functions.special.hyper import hyper
+        return (2 / arg) * hyper((1,- arg/pi, arg/pi), [1 - arg/pi, arg/pi + 1], 1) - 1/arg
+
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         y = self.rewrite(cos).rewrite(sqrt)
         if y.has(cos):
@@ -1667,8 +1716,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     # trigonometric functions eval() like even/odd, func(x+2*k*pi), etc.
 
     # optional, to be defined in subclasses:
-    _is_even: FuzzyBool = None
-    _is_odd: FuzzyBool = None
+    _is_even = None  # type: FuzzyBool
+    _is_odd = None  # type: FuzzyBool
 
     @classmethod
     def eval(cls, arg):
@@ -1737,6 +1786,18 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
 
     def _eval_rewrite_as_Pow(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_Pow", arg)
+    
+    def _eval_rewrite_as_hyper(self, arg, **kwargs):
+        return self._rewrite_reciprocal("_eval_rewrite_as_hyper", arg)
+    
+    def _eval_rewrite_as_besselj(self, arg, **kwargs):
+        return self._rewrite_reciprocal("_eval_rewrite_as_besselj", arg)
+    
+    def _eval_rewrite_as_besseli(self, arg, **kwargs):
+        return self._rewrite_reciprocal("_eval_rewrite_as_besseli", arg)
+    
+    def _eval_rewrite_as_bessely(self, arg, **kwargs):
+        return self._rewrite_reciprocal("_eval_rewrite_as_bessely", arg)
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
         return self._rewrite_reciprocal("_eval_rewrite_as_sin", arg)
