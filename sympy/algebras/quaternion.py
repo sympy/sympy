@@ -193,7 +193,7 @@ class Quaternion(Expr):
         Returns
         =======
 
-        Matrix
+        Tuple
             The Euler angles calculated from the quaternion
 
         Examples
@@ -203,10 +203,9 @@ class Quaternion(Expr):
         >>> from sympy.abc import a, b, c, d
         >>> euler = Quaternion(a, b, c, d).to_euler('zyz')
         >>> euler
-        Matrix([
-            [                  -atan2(-b, c) + atan2(d, a)],
-            [2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2))],
-            [                   atan2(-b, c) + atan2(d, a)]])
+        (-atan2(-b, c) + atan2(d, a),
+         2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)),
+         atan2(-b, c) + atan2(d, a))
 
 
         References
@@ -248,7 +247,7 @@ class Quaternion(Expr):
         half_sum = atan2(b, a)
         half_diff = atan2(d, c)
 
-        angle_j = 2*atan2(sqrt(c*c + d*d), sqrt(a*a + b*b))
+        angle_j = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
         # alternatively, we can use this to avoid the square root:
         # angle_2 = acos(2*(a*a + b*b)/(a*a + b*b + c*c + d*d) - 1)
 
@@ -261,9 +260,9 @@ class Quaternion(Expr):
             angle_i *= sign
 
         if extrinsic:
-            return Matrix([angle_k, angle_j, angle_i])
+            return angle_k, angle_j, angle_i
         else:
-            return Matrix([angle_i, angle_j, angle_k])
+            return angle_i, angle_j, angle_k
 
     @classmethod
     def from_axis_angle(cls, vector, angle):
