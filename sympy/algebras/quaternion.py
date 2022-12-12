@@ -81,6 +81,10 @@ class Quaternion(Expr):
         return self._d
 
     @property
+    def as_list(self):
+        return [self._a, self._b, self._c, self._d]
+
+    @property
     def real_field(self):
         return self._real_field
 
