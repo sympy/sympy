@@ -15,7 +15,8 @@ from sympy.core.numbers import pi
 from mpmath.libmp.libmpf import prec_to_dps
 
 
-def _check_sequence(seq):
+def _is_extrinsic(seq):
+    """validate seq and return True if seq is lowercase and False if uppercase"""
     if len(seq) != 3:
         raise ValueError("Expected 3 axes, got `{}`.".format(seq))
     if type(seq) != str:
@@ -157,7 +158,7 @@ class Quaternion(Expr):
         if len(angles) != 3:
             raise ValueError("3 angles must be given.")
 
-        extrinsic = _check_sequence(seq)
+        extrinsic = _is_extrinsic(seq)
         i, j, k = seq.lower()
 
         # get elementary basis vectors
@@ -214,7 +215,7 @@ class Quaternion(Expr):
         .. [1] https://doi.org/10.1371/journal.pone.0276302
 
         """
-        extrinsic = _check_sequence(seq)
+        extrinsic = _is_extrinsic(seq)
         i, j, k = seq.lower()
 
         # get index corresponding to elementary basis vectors
