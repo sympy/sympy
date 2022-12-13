@@ -50,8 +50,9 @@ class Quaternion(Expr):
 
     is_commutative = False
 
-    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True):
+    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True, norm=None):
         a, b, c, d = map(sympify, (a, b, c, d))
+        norm = sympify(norm)
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
@@ -62,6 +63,7 @@ class Quaternion(Expr):
             obj._c = c
             obj._d = d
             obj._real_field = real_field
+            obj._norm = norm
             return obj
 
     @property
@@ -376,10 +378,13 @@ class Quaternion(Expr):
 
     def norm(self):
         """Returns the norm of the quaternion."""
-        q = self
-        # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
-        # arise when from_axis_angle is used).
-        return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
+        if self._norm is not None:
+            return self._norm
+        else:
+            q = self
+            # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
+            # arise when from_axis_angle is used).
+            return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
 
     def normalize(self):
         """Returns the normalized form of the quaternion."""
@@ -675,7 +680,7 @@ class Quaternion(Expr):
 
         return t
 
-    def to_rotation_matrix(self, v=None):
+    def to_rotation_matrix(self, v=None, homogeneous=False):
         """Returns the equivalent rotation transformation matrix of the quaternion
         which represents rotation about the origin if v is not passed.
 
@@ -684,6 +689,8 @@ class Quaternion(Expr):
 
         v : tuple or None
             Default value: None
+        homogeneous : bool
+            Default value: False
 
         Returns
         =======
@@ -726,17 +733,26 @@ class Quaternion(Expr):
 
         q = self
         s = q.norm()**-2
-        m00 = 1 - 2*s*(q.c**2 + q.d**2)
+        if homogeneous:
+            m00 = 2*s*(q.a**2 + q.b**2 - q.c**2 - q.d**2)
+        else:
+            m00 = 1 - 2*s*(q.c**2 + q.d**2)
         m01 = 2*s*(q.b*q.c - q.d*q.a)
         m02 = 2*s*(q.b*q.d + q.c*q.a)
 
         m10 = 2*s*(q.b*q.c + q.d*q.a)
-        m11 = 1 - 2*s*(q.b**2 + q.d**2)
+        if homogeneous:
+            m00 = 2*s*(q.a**2 + q.b**2 - q.c**2 - q.d**2)
+        else:
+            m11 = 1 - 2*s*(q.b**2 + q.d**2)
         m12 = 2*s*(q.c*q.d - q.b*q.a)
 
         m20 = 2*s*(q.b*q.d - q.c*q.a)
         m21 = 2*s*(q.c*q.d + q.b*q.a)
-        m22 = 1 - 2*s*(q.b**2 + q.c**2)
+        if homogeneous:
+            m00 = 2*s*(q.a**2 + q.b**2 - q.c**2 - q.d**2)
+        else:
+            m22 = 1 - 2*s*(q.b**2 + q.c**2)
 
         if not v:
             return Matrix([[m00, m01, m02], [m10, m11, m12], [m20, m21, m22]])
