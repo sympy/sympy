@@ -359,6 +359,26 @@ def test_sin_1_unevaluated():
 This test now actually checks the correct thing. If `sin(1)` were made to
 return some value, the test would fail.
 
+### Testing Expressions with [`Dummy`](sympy.core.symbol.Dummy)
+
+Expressions that return [`Dummy`](sympy.core.symbol.Dummy) cannot be tested
+with `==` directly, due to the nature of `Dummy`. In such cases, use the
+[`dummy_eq()`](sympy.core.basic.Basic.dummy_eq) method. For example:
+
+```py
+# from
+sympy/functions/combinatorial/tests/test_comb_factorials.py
+
+def test_factorial_rewrite():
+    n = Symbol('n', integer=True)
+    k = Symbol('k', integer=True, nonnegative=True)
+
+    assert factorial(n).rewrite(gamma) == gamma(n + 1)
+    _i = Dummy('i')
+    assert factorial(k).rewrite(Product).dummy_eq(Product(_i, (_i, 1, k)))
+    assert factorial(n).rewrite(Product) == factorial(n)
+```
+
 ### Consistency Checks
 
 Checking a set of known inputs and outputs can only get you so far. A test
