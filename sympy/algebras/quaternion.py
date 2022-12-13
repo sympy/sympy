@@ -184,7 +184,10 @@ class Quaternion(Expr):
         return self._generic_mul(self, _sympify(other))
 
     def __rmul__(self, other):
-        return self._generic_mul(_sympify(other), self)
+        if type(other) == Matrix:
+            return self._matrix_mul(_sympify(other), self)
+        else:
+            return self._generic_mul(_sympify(other), self)
 
     def __pow__(self, p):
         return self.pow(p)
@@ -299,6 +302,66 @@ class Quaternion(Expr):
 
         """
         return self._generic_mul(self, _sympify(other))
+
+    @staticmethod
+    def _matrix_mul(M, q):
+        """Matrix x Quaternion multiplication.
+
+        If Matrix is of shape (4, 4), treats all elements of the quaternion as
+        a 4x1 vector, multiplies it new quaternion using terms of
+        multiplied vector.
+
+        If Matrix is of shape (3, 3), treats imaginary elements of quaternion
+        as a 3x1 vector and multiply them by matrix.
+
+        Parameters
+        ==========
+
+        M : Matrix of shape (3, 3) or (4, 4)
+        q : Quaternion or symbol
+
+        Returns
+        =======
+
+        Quaternion
+            The resultant quaternion after multiplying M and q.
+
+        Examples
+        ========
+
+        Multiplying 4x4 matrix with quaternion :
+
+        >>> from sympy import Quaternion
+        >>> from sympy import Matrix
+        >>> from sympy.abc import a, b, c, d
+        >>> M = Matrix([[1,0,0,0], [0,2,0,0], [0,0,1,0], [0,0,0,1]])
+        >>> q = Quaternion(a, b, c, d)
+        >>> q_transformed = M * q
+        >>> q_transformed
+        a + 2*b*i + c*j + d*k
+
+        Multiplying 3x3 matrix with quaternion :
+
+        >>> M = Matrix([[0,2,0,0], [0,0,1,0], [0,0,0,1]])
+        >>> q_transformed = M * q
+        >>> q_transformed
+        a + 2*b*i + c*j + d*k
+
+        """
+        # None is a Quaternion:
+        if not isinstance(M, Matrix) and not isinstance(q, Quaternion):
+            return M * q
+
+        if M.shape == (3, 3):
+            qv = M * Matrix(q.args[1:])
+            return Quaternion(q.a, *qv)
+
+        elif M.shape == (4, 4):
+            qv = M * Matrix(q.args)
+            return Quaternion(*qv)
+
+        else:
+            raise ValueError("Matrix has to be of shape (4, 4) or (3, 3).")
 
     @staticmethod
     def _generic_mul(q1, q2):
