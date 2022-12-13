@@ -114,8 +114,8 @@ class Quaternion(Expr):
 
     @classmethod
     def from_euler(cls, angles, seq):
-        """Returns quaternion equivalent to Euler angles represented same in
-        the sequence defined by `seq`.
+        """Returns quaternion equivalent to rotation represented by the Euler
+        angles, in the sequence defined by `seq`.
 
         Parameters
         ==========
@@ -177,8 +177,9 @@ class Quaternion(Expr):
             return trigsimp(qi * qj * qk)
 
     def to_euler(self, seq):
-        """Returns Euler angles representing same in the sequence given by
-        `seq`. This implements the method described in [1]_.
+        """Returns Euler angles representing same rotation as the quaternion,
+        in the sequence given by `seq`. This implements the method described
+        in [1]_.
 
         Parameters
         ==========
