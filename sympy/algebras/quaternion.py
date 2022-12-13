@@ -361,7 +361,8 @@ class Quaternion(Expr):
             return Quaternion(*qv)
 
         else:
-            raise ValueError("Matrix has to be of shape (4, 4) or (3, 3).")
+            raise ValueError("Expected Matrix shape to be (4, 4) or (3, 3), "
+                             "got {}".format(M.shape))
 
     @staticmethod
     def _generic_mul(q1, q2):
