@@ -866,6 +866,9 @@ class Quaternion(Expr):
         v : tuple or None
             Default value: None
         homogeneous : bool
+            When True, gives uses a slightly different formula for the rotation
+            matrix. For numerical values, the matrix is the same. For symbolic
+            values, this formula can be slightly simpler.
             Default value: False
 
         Returns
