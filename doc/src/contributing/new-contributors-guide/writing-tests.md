@@ -893,3 +893,106 @@ def funcname(arg1, arg2): # noqa: F811
 ```
 
 to avoid warnings about redefining the same function multiple times.
+
+## Tests Style Guide
+
+In most cases, tests should be written in a way that matches the surrounding
+tests in the same test file.
+
+A few important stylistic points should be followed when writing tests:
+
+- Test functions should start with `test_`. If they do not, the test runner
+  will not test them. Any helper functions which are not test functions should
+  not start with `test_`. Usually it is best to start test helper functions
+  with an underscore. If you find yourself reusing the same helper function
+  for many test files, consider whether it should be moved to somewhere like
+  `sympy.testing`.
+
+- Format expressions using the same whitespace that would be produced by
+  `str()` (e.g., spaces around binary `+` and `-`, no spaces around `*` and
+  `**`, space after comma, no redundant parentheses, etc.)
+
+- Avoid the use of Float values in test cases. Unless the test is explicitly
+  testing the result of a function on floating-point inputs, test expressions
+  should use exact values.
+
+  In particular, avoid using integer division like `1/2` that will create a
+  float value (see [the gotchas section of the
+  tutorial](tutorial-gotchas-final-notes)). For example:
+
+  ```py
+  # BAD
+  assert expand((x + 1/2)**2) == x**2 + x + 1/4
+  ```
+
+  ```py
+  # GOOD
+  assert expand((x + S(1)/2)**2) == x**2 + x + S(1)/4
+  ```
+
+  If you do actually intend to explicitly test an expression with a
+  floating-point value, use a float (like `0.5` instead of `1/2`) so that it
+  is clear this is intentional and not accidental.
+
+- Symbols may be defined at the top of the test file or within each test
+  function. Symbols with assumptions that are defined at the top of the test
+  file should be named in a way that makes it clear they have an assumption
+  (e.g., `xp = Symbol('x', positive=True)`). It is often best to define
+  symbols that have assumptions inside each test function so that they are not
+  accidentally reused in another test that doesn't expect them to have the
+  assumption defined (which can often change the behavior of the test).
+
+- Test files are typically named corresponding to the code file they test
+  (e.g., `sympy/core/tests/test_symbol.py` has the tests for
+  `sympy/core/symbol.py`). However, this rule can be broken if there are tests
+  that don't exactly correspond to a specific code file.
+
+- Avoid using string forms of expressions in tests (obviously strings should
+  be used in the printing tests; this rule applies to other types of tests).
+  This makes the test depend on the exact printing output, rather than just
+  the expression output. This makes the test harder to read, and if the
+  printer is ever changed in some way, the test would have be updated.
+
+  For example:
+
+  ```py
+  # BAD
+  assert str(expand((x + 2)**3)) == 'x**3 + 6*x**2 + 12*x + 8'
+  ```
+
+  ```py
+  # GOOD
+  assert expand((x + 2)**3) == x**3 + 6*x**2 + 12*x + 8
+  ```
+
+  Similarly, do not parse the string form of an expression for input (unless
+  the test is explicitly testing parsing strings). Just create the expression
+  directly. Even if this requires creating many symbols or extensive use of
+  `S()` to wrap rationals, this is still cleaner.
+
+  ```py
+  # BAD
+  expr = sympify('a*b*c*d*e')
+  assert expr.count_ops() == 4
+  ```
+
+  ```py
+  # GOOD
+  a, b, c, d, e = symbols('a b c d e')
+  expr = a*b*c*d*e
+  assert expr.count_ops() == 4
+  ```
+
+- Use `is True`, `is False` and `is None` when testing assumptions. Don't rely
+  on truthiness, as it's easy to forget that `None` is considered false by
+  Python.
+
+  ```py
+  # BAD
+  assert not x.is_real
+  ```
+
+  ```
+  # GOOD
+  assert x.is_real is False
+  ```
