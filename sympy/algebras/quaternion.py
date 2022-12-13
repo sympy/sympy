@@ -78,7 +78,7 @@ class Quaternion(Expr):
 
     is_commutative = False
 
-    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True):
+    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True, norm=None):
         a, b, c, d = map(sympify, (a, b, c, d))
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
@@ -90,6 +90,7 @@ class Quaternion(Expr):
             obj._c = c
             obj._d = d
             obj._real_field = real_field
+            obj._norm = norm
             return obj
 
     @property
@@ -557,6 +558,9 @@ class Quaternion(Expr):
 
     def norm(self):
         """Returns the norm of the quaternion."""
+        if self._norm is not None: # check if norm is pre-defined
+            return self._norm
+
         q = self
         # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
         # arise when from_axis_angle is used).
