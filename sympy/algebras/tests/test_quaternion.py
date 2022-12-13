@@ -8,6 +8,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import Matrix
+from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
@@ -229,6 +230,13 @@ def test_quaternion_conversions():
                [sin(theta),  cos(theta), 0, -sin(theta) - cos(theta) + 1],
                [0,           0,          1,  0],
                [0,           0,          0,  1]])
+
+
+def test_rotation_matrix_homogeneous():
+    q = Quaternion(w, x, y, z)
+    R1 = q.to_rotation_matrix(homogeneous=True) * q.norm()**2
+    R2 = simplify(q.to_rotation_matrix() * q.norm()**2)
+    assert R1 == R2
 
 
 def test_quaternion_rotation_iss1593():
