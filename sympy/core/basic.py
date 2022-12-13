@@ -916,7 +916,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         from .containers import Dict
         from .symbol import Dummy, Symbol
         from .numbers import _illegal
-
         unordered = False
         if len(args) == 1:
 
@@ -1079,12 +1078,13 @@ class Basic(Printable, metaclass=ManagedProperties):
               on any of its summation variables.
         """
 
-        def fallback(self, old, new):
+        def fallback(self, args, old, new):
             """
             Try to replace old with new in any of self's arguments.
             """
             hit = False
-            args = list(self.args)
+            if args is None:
+                args = list(self.args)
             for i, arg in enumerate(args):
                 if not hasattr(arg, '_eval_subs'):
                     continue
@@ -1113,11 +1113,95 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         if _aresame(self, old):
             return new
-
+        breakpoint()
         rv = self._eval_subs(old, new)
         if rv is None:
-            rv = fallback(self, old, new)
+            modi_args = self._check_div_error(old, new)
+            rv = fallback(self, modi_args, old, new)
         return rv
+
+    def _check_div_error(self, old, new):
+        """
+            Check if there's a 'zero div by zero' error for Trigonometric functions
+        """
+        if not self.is_Mul:
+            return None
+        args = list(self.args)
+        if len(args) > 1:
+            from sympy.abc import x
+            from sympy.core.function import Derivative
+            from sympy.core.numbers import oo, zoo
+            from sympy.functions.elementary.trigonometric import sin, cos, tan, cot, sec, csc
+
+            def is_trigonometric(arg):
+                return isinstance(arg, sin) or \
+                    isinstance(arg, cos) or \
+                    isinstance(arg, tan) or \
+                    isinstance(arg, cot) or \
+                    isinstance(arg, sec) or \
+                    isinstance(arg, csc)
+
+            def fallback(self, args, old, new):
+                """
+                Try to replace old with new in any of self's arguments.
+                """
+                hit = False
+                if args is None:
+                    args = list(self.args)
+                for i, arg in enumerate(args):
+                    if not hasattr(arg, '_eval_subs'):
+                        continue
+                    arg = arg._subs(old, new)
+                    if not _aresame(arg, args[i]):
+                        hit = True
+                        args[i] = arg
+                if hit:
+                    rv = self.func(*args)
+                    if self.is_Mul and not rv.is_Mul:  # 2-arg hack
+                        coeff = S.One
+                        nonnumber = []
+                        for i in args:
+                            if i.is_Number:
+                                coeff *= i
+                            else:
+                                nonnumber.append(i)
+                        nonnumber = self.func(*nonnumber)
+                        if coeff is S.One:
+                            return nonnumber
+                        else:
+                            return self.func(coeff, nonnumber, evaluate=False)
+                    return rv
+                return self
+
+            copy_args = args
+            INF_EXIST = False
+            ZERO_EXIST = False
+            zindex, iindex = -1, -1
+            for i, arg in enumerate(copy_args):
+                if arg._subs(old, new) == 0:
+                    ZERO_EXIST = True
+                    zindex = i
+                elif arg._subs(old, new) in [oo, zoo, -oo, -zoo]:
+                    INF_EXIST = True
+                    iindex = i
+            breakpoint()
+            if ZERO_EXIST and INF_EXIST:
+                """
+                Encounter a zero * inf problem
+                """
+                
+                """
+                Check for Trigonometric, applying L'Hospital Rule
+                """
+
+                #if is_trigonometric(copy_args[zindex]) and is_trigonometric(copy_args[iindex]):
+                copy_args[zindex] = Derivative(copy_args[zindex], x, evaluate=True)
+                copy_args[iindex] = Derivative(copy_args[iindex], x, evaluate=True)
+                args[zindex] = fallback(copy_args[zindex], None, old, new)
+                args[iindex] = fallback(copy_args[iindex], None, old, new)
+                breakpoint()
+        return args
+
 
     def _eval_subs(self, old, new):
         """Override this stub if you want to do anything more than
@@ -1128,7 +1212,6 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         _subs
         """
-        return None
 
     def xreplace(self, rule):
         """
