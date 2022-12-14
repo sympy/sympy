@@ -3292,11 +3292,11 @@ class PermutationGroup(Basic):
             if a < b:
                 x, y, a, b = y, x, b, a
             # Using Theorem 2.1 of [Di3]:
-            if {a, b} == {2}:
+            if a == 2 == b:
                 self._is_dihedral = True
                 return True
             # Using Theorem 1.1 of [Di3]:
-            if (a, b) == (n, 2) and y*x*y == ~x:
+            if a == n and b == 2 and y*x*y == ~x:
                 self._is_dihedral = True
                 return True
 
