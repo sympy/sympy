@@ -603,16 +603,23 @@ To run the doctests, use the
 command. This command can also take arguments to test a specific file or
 submodule, similar to `bin/test`.
 
-Doctests should be written in a self-contained manner, with each doctest acting like
-a Python session. This means that each doctest must manually import each
-function used in the doctest and define the symbols used. For example
+Doctests should be written in a self-contained manner, with each doctest
+acting like a fresh Python session. This means that each doctest must manually
+import each function used in the doctest and define the symbols used. This may
+seem verbose, but it is helpful to users who are new to SymPy or even to
+Python who may not know where different functions come from. It also makes it
+easy for a user to copy and paste an example into a Python session of their
+own (the HTML documentation includes a button in the top right of every code
+example that copies the whole example to the clipboard).
+
+For example
 
 ```
 >>> from sympy import Function, dsolve, cos, sin
 >>> from sympy.abc import x
 >>> f = Function('f')
 >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
-... f(x), hint='1st_exact')
+...        f(x), hint='1st_exact')
 Eq(x*cos(f(x)) + f(x)**3/3, C1)
 ```
 
@@ -628,8 +635,8 @@ thought of as tests. Rather, they are examples that happen to be tested.**
 
 Therefore, you should always think about what will make a good, readable
 example when writing doctests. Doctests do not need to extensively cover all
-possible inputs, and should not include corner cases unless they are
-important for users to be aware of.
+possible inputs, and should not include corner or extreme cases unless they
+are important for users to be aware of.
 
 Everything that is tested in a doctest should also be tested in a [normal
 test](writing-tests-basics). You should always be free to remove or change a
@@ -653,7 +660,7 @@ True
 ```
 
 This passes the doctest, and something along these lines would be fine a
-normal test. But in a docstring example, it is much clearer to just show the actual output
+normal test. But in a docstring example, it is much clearer to just show the actual outpu
 
 ```
 # BETTER
@@ -668,8 +675,9 @@ would make the example harder to read, so this sort of thing may be
 appropriate. Use your best judgment, keeping in mind that the
 understandability of the doctest as a *documentation example* is the most
 important thing. In some extreme instances, it may be preferable to just skip
-a doctest (see below) rather than writing it in a convoluted way that is
-difficult to read just to please the doctester.
+testing an example (see [below](writing-tests-doctest-skip)) rather than
+writing it in a convoluted way that is difficult to read just to please the
+doctester.
 
 Here are some additional tips for writing doctests:
 
@@ -677,8 +685,8 @@ Here are some additional tips for writing doctests:
   continuation prompt, as in the example above. The doctest runner also allows
   long outputs to be line wrapped (it ignores newlines in the output).
 
-- Common symbol names can be imported from `sympy.abc`. Uncommon symbol names,
-  or symbols that use assumptions, should be defined using `symbols`.
+- Common symbol names can be imported from `sympy.abc`. Uncommon symbol names
+  or symbols that use assumptions should be defined using `symbols`.
 
   ```py
   >>> from sympy.abc import x, y
@@ -723,8 +731,23 @@ Here are some additional tips for writing doctests:
   actually checking that part of the output. It also may not be clear to the
   reader of the documentation what it is meant. Note that it's fine if the
   output of a doctest is updated to something else in the future. `...` should
-  not be used in an attempt to "future-proof" doctest output.
+  not be used in an attempt to "future-proof" doctest output. Also note that
+  the doctester already automatically handles things like whitespace-only
+  differences in the output and floating-point values.
 
+- You can line break output lines. The doctester automatically ignores
+  whitespace-only differences in the output, which includes newlines. Long
+  lines should be broken so that they do not extend beyond the page in the
+  HTML documentation (and so that the source code does not have lines longer
+  than 80 characters). For example:
+
+  ```
+  >>> expand((x + 1)**10)
+  x**10 + 10*x**9 + 45*x**8 + 120*x**7 + 210*x**6 + 252*x**5 + 210*x**4 +
+  120*x**3 + 45*x**2 + 10*x + 1
+  ```
+
+(writing-tests-doctest-skip)=
 - Another option if a doctest cannot pass is to skip it, by adding `#
   doctest:+SKIP` to the end of the input line, like
 
@@ -738,13 +761,28 @@ Here are some additional tips for writing doctests:
 
   The `# doctest:+SKIP` part will be automatically hidden in the HTML
   documentation. When skipping a doctest, always be sure to test the output
-  manually, as the doctester will not check it for you. Doctests should only be
-  skipped when it is impossible to run them.
+  manually, as the doctester will not check it for you.
+
+  `# doctest:+SKIP` should be used sparingly. Ideally a doctest should only be
+  skipped when it is impossible to run it. A doctest that is skipped will
+  never be tested, meaning it may become outdated (i.e., incorrect), which
+  will be confusing to users.
 
 - Doctests that require a dependency to run should not be skipped with `#
   doctest: +SKIP`. Instead, use the
   [`@doctest_depends_on`](doctest_depends_on) decorator on the function to
   indicate which libraries should be installed for the doctest to run.
+
+- If the test output includes a blank line, use `<BLANKLINE>` in place of the
+  blank line. Otherwise the doctester will think that the output ends at the
+  blank line. `<BLANKLINE>` will be automatically hidden in the HTML
+  documentation. This is not common as most SymPy objects do not print with
+  blank lines.
+
+  <!-- TODO: I don't know how to actually show an example here without it
+      stripping BLANKLINE. The <pre> trick we used above doesn't work because
+      it thinks <BLANKLINE> is a HTML tag. An example would be dotprint() (see
+      the printing section of the tutorial). -->
 
 - Avoid using `pprint()` in doctest examples. If you need to show an
   expression in an easier to read way, you can include it inline as LaTeX math
@@ -772,8 +810,8 @@ Here are some additional tips for writing doctests:
 
 - Dictionaries and sets are automatically sorted by the doctester, and any
   expressions are automatically sorted so that the order of terms is always
-  printed in the same way. Usually you can just include the output as the
-  doctester says it "expects" it and it will always pass subsequently.
+  printed in the same way. Usually you can just include the output that the
+  doctester "expects" it and it will always pass subsequently.
 
   ```py
   >>> {'b': 1, 'a': 2}
