@@ -3255,10 +3255,10 @@ class PermutationGroup(Basic):
         References
         ==========
 
-        .. [1] https://math.stackexchange.com/a/827273
-        .. [2] https://kconrad.math.uconn.edu/blurbs/grouptheory/dihedral.pdf
-        .. [3] https://kconrad.math.uconn.edu/blurbs/grouptheory/dihedral2.pdf
-        .. [4] https://en.wikipedia.org/wiki/Dihedral_group
+        .. [Di1] https://math.stackexchange.com/a/827273
+        .. [Di2] https://kconrad.math.uconn.edu/blurbs/grouptheory/dihedral.pdf
+        .. [Di3] https://kconrad.math.uconn.edu/blurbs/grouptheory/dihedral2.pdf
+        .. [Di4] https://en.wikipedia.org/wiki/Dihedral_group
         """
         if self._is_dihedral is not None:
             return self._is_dihedral
@@ -3291,16 +3291,16 @@ class PermutationGroup(Basic):
             # Make a >= b
             if a < b:
                 x, y, a, b = y, x, b, a
-            # Using Theorem 2.1 of [3]:
+            # Using Theorem 2.1 of [Di3]:
             if {a, b} == {2}:
                 self._is_dihedral = True
                 return True
-            # Using Theorem 1.1 of [3]:
+            # Using Theorem 1.1 of [Di3]:
             if (a, b) == (n, 2) and y*x*y == ~x:
                 self._is_dihedral = True
                 return True
 
-        # Procede with algorithm of [1]
+        # Procede with algorithm of [Di1]
         # Find elements of orders 2 and n
         order_2, order_n = [], []
         for p in self.elements:
