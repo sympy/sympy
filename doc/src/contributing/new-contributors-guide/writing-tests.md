@@ -1034,3 +1034,45 @@ A few important stylistic points should be followed when writing tests:
   # GOOD
   assert x.is_real is False
   ```
+
+## Test Coverage
+
+To generate a test coverage report, first install
+[coverage.py](https://coverage.readthedocs.io/en/latest/) (e.g., with `pip
+install coverage`). Then run
+
+```
+./bin/coverage_report.py
+```
+
+This will run the test suite and analyze which lines of the codebase are
+covered by at least one test. Note that this will take longer than running the
+tests normally with `./bin/test` because the coverage tooling makes Python run
+a little bit slower. You can also run a subset of the tests, e.g.,
+`./bin/coverage_report.py sympy/solvers`.
+
+Once the tests are done, the coverage report will be in `covhtml`, which you
+can view by opening `covhtml/index.html`. Each file will show which lines were
+covered by a test (in green) and which were not covered by any test (in red).
+
+Lines that are not covered by any test should have a test added for them, if
+possible. Note that 100% coverage is generally impossible. There may be a line
+of defensive code that checks if something has gone wrong, but which would
+only be triggered if there is a bug. Or there may be some functionality that
+is simply too hard to test (e.g., some code that interfaces with [external
+dependencies](optional-dependencies)), or that is only triggered when a given
+optional dependency is installed. However, if a line of code can be tested, it
+should be. And, for instance, the test files themselves should have 100%
+coverage. If a line in a test file is not covered, that generally indicates a
+mistake (see https://nedbatchelder.com/blog/202008/you_should_include_your_tests_in_coverage.html).
+
+Also be aware that coverage is not the end of the story. While a line of code
+that is not tested has no guarantees of being correct, a line of code that is
+covered is not guaranteed to be correct either. Maybe it is only tested for
+general inputs, but not for corner cases. Sometimes code may have a
+conditional, like `if a or b`, and `a` is always true in every test, so that
+the `b` condition is never tested. And of course, just because a line of code
+is executed, doesn't mean that is correct. The test needs to actually check
+that the output of the function is what it is supposed to be. Test coverage is
+just one part of ensuring the correctness of a codebase. See
+https://nedbatchelder.com/blog/200710/flaws_in_coverage_measurement.html.
