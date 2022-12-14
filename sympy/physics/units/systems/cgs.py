@@ -58,7 +58,7 @@ cgs_gauss.set_quantity_scale_factor(maxwell, sqrt(centimeter**3*gram)/second)
 # SI units expressed in CGS-gaussian units:
 cgs_gauss.set_quantity_scale_factor(coulomb, speed_of_light*statcoulomb/10)
 cgs_gauss.set_quantity_scale_factor(ampere, speed_of_light*statcoulomb/second/10)
-cgs_gauss.set_quantity_scale_factor(volt, speed_of_light*statvolt/10**6)
+cgs_gauss.set_quantity_scale_factor(volt, (10**6)*statvolt/speed_of_light)
 cgs_gauss.set_quantity_scale_factor(weber, 10**8*maxwell)
 cgs_gauss.set_quantity_scale_factor(tesla, 10**4*gauss)
 cgs_gauss.set_quantity_scale_factor(debye, One/10**18*statcoulomb*centimeter)
