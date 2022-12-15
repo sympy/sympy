@@ -724,13 +724,7 @@ class Quaternion(Expr):
 
         """
         nprec = prec_to_dps(prec)
-        if self._norm is None:
-            norm = None
-        else:
-            norm = self._norm.evalf(n=nprec)
-
-        return Quaternion(
-                *[arg.evalf(n=nprec) for arg in self.args], norm=norm)
+        return Quaternion(*[arg.evalf(n=nprec) for arg in self.args])
 
     def pow_cos_sin(self, p):
         """Computes the pth power in the cos-sin form.
