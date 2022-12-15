@@ -95,15 +95,15 @@ class Quaternion(Expr):
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
-
-        obj = Expr.__new__(cls, a, b, c, d)
-        obj._a = a
-        obj._b = b
-        obj._c = c
-        obj._d = d
-        obj._real_field = real_field
-        obj._norm = norm
-        return obj
+        else:
+            obj = Expr.__new__(cls, a, b, c, d)
+            obj._a = a
+            obj._b = b
+            obj._c = c
+            obj._d = d
+            obj._real_field = real_field
+            obj._norm = norm
+            return obj
 
     @property
     def a(self):
