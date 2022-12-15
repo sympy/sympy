@@ -47,6 +47,13 @@ class Quaternion(Expr):
     Quaternion objects can be instantiated as Quaternion(a, b, c, d)
     as in (a + b*i + c*j + d*k).
 
+    Parameters
+    ==========
+
+    norm : None or number
+        Pre-defined quaternion norm. If a value is given, Quaternion.norm
+        returns this pre-defined value instead of calculating the norm
+
     Examples
     ========
 
@@ -79,19 +86,24 @@ class Quaternion(Expr):
     is_commutative = False
 
     def __new__(cls, a=0, b=0, c=0, d=0, real_field=True, norm=None):
-        a, b, c, d = map(sympify, (a, b, c, d))
+        a, b, c, d, norm = map(sympify, (a, b, c, d, norm))
+
+        if (norm is not None and
+                all(i.is_Number is True for i in [a, b, c, d]) and
+                norm**2 != a**2 + b**2 + c**2 + d**2):
+            raise ValueError("incompatible value for norm")
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
-        else:
-            obj = Expr.__new__(cls, a, b, c, d)
-            obj._a = a
-            obj._b = b
-            obj._c = c
-            obj._d = d
-            obj._real_field = real_field
-            obj._norm = norm
-            return obj
+
+        obj = Expr.__new__(cls, a, b, c, d)
+        obj._a = a
+        obj._b = b
+        obj._c = c
+        obj._d = d
+        obj._real_field = real_field
+        obj._norm = norm
+        return obj
 
     @property
     def a(self):
@@ -546,10 +558,17 @@ class Quaternion(Expr):
             else:
                 raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
+        # If any of the quaternions has a fixed norm, pre-compute norm
+        if q1.norm is None and q2.norm is None:
+            norm = None
+        else:
+            norm = q1.norm() * q2.norm()
+
         return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
                           q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
                           -q1.b*q2.d + q1.c*q2.a + q1.d*q2.b + q1.a*q2.c,
-                          q1.b*q2.c - q1.c*q2.b + q1.d*q2.a + q1.a * q2.d)
+                          q1.b*q2.c - q1.c*q2.b + q1.d*q2.a + q1.a * q2.d,
+                          norm=norm)
 
     def _eval_conjugate(self):
         """Returns the conjugate of the quaternion."""
@@ -705,7 +724,13 @@ class Quaternion(Expr):
 
         """
         nprec = prec_to_dps(prec)
-        return Quaternion(*[arg.evalf(n=nprec) for arg in self.args])
+        if self._norm is None:
+            norm = None
+        else:
+            norm = self._norm.evalf(n=nprec)
+
+        return Quaternion(
+                *[arg.evalf(n=nprec) for arg in self.args], norm=norm)
 
     def pow_cos_sin(self, p):
         """Computes the pth power in the cos-sin form.
