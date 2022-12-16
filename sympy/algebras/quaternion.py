@@ -88,10 +88,10 @@ class Quaternion(Expr):
     def __new__(cls, a=0, b=0, c=0, d=0, real_field=True, norm=None):
         a, b, c, d, norm = map(sympify, (a, b, c, d, norm))
 
-#        if (norm is not None and
-#                all(i.is_Number is True for i in [a, b, c, d]) and
-#                norm**2 != a**2 + b**2 + c**2 + d**2):
-#            raise ValueError("incompatible value for norm")
+        if (norm is not None and
+                all(i.is_Number is True for i in [a, b, c, d]) and
+                norm**2 != a**2 + b**2 + c**2 + d**2):
+            raise ValueError("incompatible value for norm")
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
@@ -559,7 +559,7 @@ class Quaternion(Expr):
                 raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
         # If any of the quaternions has a fixed norm, pre-compute norm
-        if q1.norm is None and q2.norm is None:
+        if q1._norm is None and q2._norm is None:
             norm = None
         else:
             norm = q1.norm() * q2.norm()
