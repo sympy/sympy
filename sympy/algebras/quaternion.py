@@ -177,10 +177,18 @@ class Quaternion(Expr):
         a + b*i + c*j + d*k
 
         >>> q.to_Matrix()
-        Matrix([[a], [b], [c], [d]])
+        Matrix([
+        [a],
+        [b],
+        [c],
+        [d]])
+
 
         >>> q.to_Matrix(vector_only=True)
-        Matrix([[x], [y], [z]])
+        Matrix([
+        [b],
+        [c],
+        [d]])
 
         """
         if vector_only:
