@@ -8,6 +8,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import Matrix
+from sympy.polys.polytools import factor
 from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
@@ -32,6 +33,18 @@ def test_quaternion_construction():
 
     nc = Symbol('nc', commutative=False)
     raises(ValueError, lambda: Quaternion(w, x, nc, z))
+
+
+def test_quaternion_construction_norm():
+    q1 = Quaternion(*symbols('a:d'))
+
+    q2 = Quaternion(w, x, y, z)
+    q = q1*q2
+    assert factor(q.norm()**2) == q1.norm()**2 * q2.norm()**2
+
+    q3 = Quaternion(w, x, y, z, norm=1)
+    q = q1 * q3
+    assert q.norm() == q1.norm()
 
 
 def test_quaternion_axis_angle():
