@@ -119,13 +119,12 @@ class Quaternion(Expr):
         vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
         are real numbers, the product matrix from the left is:
 
-        .. math::
-            \left[\begin{matrix}
-                a & - b & - c & - d \\
-                b & a & - d & c \\
-                c & d & a & - b \\
-                d & - c & b & a
-            \end{matrix}\right]
+        ::
+
+                  [a  -b  -c  -d]
+            M  =  [b   a  -d   c]
+                  [c   d   a  -b]
+                  [d  -c   b   a]
 
         Examples
         ========
@@ -170,13 +169,12 @@ class Quaternion(Expr):
         vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
         are real numbers, the product matrix from the left is:
 
-        .. math::
-            \left[\begin{matrix}
-                a & - b & - c & - d\\
-                b & a & d & - c\\
-                c & - d & a & b\\
-                d & c & - b & a
-            \end{matrix}\right]
+        ::
+
+                  [a  -b  -c  -d]
+            M  =  [b   a   d  -c]
+                  [c  -d   a   b]
+                  [d   c  -b   a]
 
         Examples
         ========
