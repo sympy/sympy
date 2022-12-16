@@ -74,6 +74,15 @@ class Quaternion(Expr):
     >>> q2
     (3 + 4*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
 
+    Defining symbolic unit quaternions:
+    >>> from sympy import Quaternion
+    >>> from sympy.abc import w, x, y, z
+    >>> q = Quaternion(w, x, y, z, norm=1)
+    >>> q
+    w + x*i + y*j + z*k
+    >>> q.norm()
+    1
+
     References
     ==========
 
