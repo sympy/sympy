@@ -25,12 +25,12 @@ class _W(Enum):
 
 @contextlib.contextmanager
 def _check_warns(expected: typing.Iterable[_W]):
-    warnings = []
-    log_warn = warnings.append
+    warns: typing.List[str] = []
+    log_warn = warns.append
     yield log_warn
 
     errors = []
-    for i, (w, e) in enumerate(itertools.zip_longest(warnings, expected)):
+    for i, (w, e) in enumerate(itertools.zip_longest(warns, expected)):
         if not e:
             errors += [f"[{i}] Received unexpected warning `{w}`."]
         elif not w:
