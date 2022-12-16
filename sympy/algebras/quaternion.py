@@ -116,11 +116,46 @@ class Quaternion(Expr):
     def product_matrix_left(self):
         """Returns 4 x 4 Matrix equivalent to a Hamilton product from the
         left. This can be useful when treating quaternion elements as column
-        vectors:
-            q1.product_matrix_left * q2.to_Matrix()
-        is equivalent to:
-            (q1 * q2).to_Matrix()
+        vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
+        are real numbers, the product matrix from the left is:
 
+        .. math::
+            \left[\begin{matrix}
+                a & - b & - c & - d \\
+                b & a & - d & c \\
+                c & d & a & - b \\
+                d & - c & b & a
+            \end{matrix}\right]
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q1 = Quaternion(1, 0, 0, 1)
+        >>> q2 = Quaternion(a, b, c, d)
+        >>> q1.product_matrix_left
+        Matrix([
+        [1, 0,  0, -1],
+        [0, 1, -1,  0],
+        [0, 1,  1,  0],
+        [1, 0,  0,  1]])
+
+        >>> q1.product_matrix_left * q2.to_Matrix()
+        Matrix([
+        [a - d],
+        [b - c],
+        [b + c],
+        [a + d]])
+
+        This is equivalent to:
+
+        >>> (q1 * q2).to_Matrix()
+        Matrix([
+        [a - d],
+        [b - c],
+        [b + c],
+        [a + d]])
         """
         return Matrix([
                 [self.a, -self.b, -self.c, -self.d],
@@ -132,14 +167,50 @@ class Quaternion(Expr):
     def product_matrix_right(self):
         """Returns 4 x 4 Matrix equivalent to a Hamilton product from the
         right. This can be useful when treating quaternion elements as column
-        vectors:
-            q2.product_matrix_right * q1.to_Matrix()
-        is equivalent to:
-            (q1 * q2).to_Matrix()
+        vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
+        are real numbers, the product matrix from the left is:
 
-        Note the switched arguments: this represents the quaternion on the
-        right, but still considered as a matrix multiplication from the left.
+        .. math::
+            \left[\begin{matrix}
+                a & - b & - c & - d\\
+                b & a & d & - c\\
+                c & - d & a & b\\
+                d & c & - b & a
+            \end{matrix}\right]
 
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q1 = Quaternion(a, b, c, d)
+        >>> q2 = Quaternion(1, 0, 0, 1)
+        >>> q2.product_matrix_right
+        Matrix([
+        [1, 0, 0, -1],
+        [0, 1, 1, 0],
+        [0, -1, 1, 0],
+        [1, 0, 0, 1]])
+
+        Note the switched arguments: the matrix represents the quaternion on
+        the right, but is still considered as a matrix multiplication from the
+        left.
+
+        >>> q2.product_matrix_right * q1.to_Matrix()
+        Matrix([
+        [ a - d],
+        [ b + c],
+        [-b + c],
+        [ a + d]])
+
+        This is equivalent to:
+
+        >>> (q1 * q2).to_Matrix()
+        Matrix([
+        [ a - d],
+        [ b + c],
+        [-b + c],
+        [ a + d]])
         """
         return Matrix([
                 [self.a, -self.b, -self.c, -self.d],
@@ -148,7 +219,7 @@ class Quaternion(Expr):
                 [self.d, self.c, -self.b, self.a]])
 
     def to_Matrix(self, vector_only=False):
-        """Returns elements of quaternion as a column vector`.
+        """Returns elements of quaternion as a column vector.
         By default, a Matrix of length 4 is returned, with the real part as the
         first element.
         If vector_only is True, returns only imaginary part as a Matrix of
@@ -206,16 +277,15 @@ class Quaternion(Expr):
         Parameters
         ==========
 
-        elements : Matrix of shape (4, 1) or (3, 1), or list/tuple of length 3
-            or 4.
-            If length is 3, assume real part is zero.
+        elements : Matrix, list or tuple of length 3 or 4. If length is 3,
+            assume real part is zero.
             Default : False
 
         Returns
         =======
 
         Quaternion
-            A quaternions created from the input elements.
+            A quaternion created from the input elements.
 
         Examples
         ========
