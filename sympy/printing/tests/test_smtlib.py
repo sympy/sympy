@@ -2,7 +2,6 @@ import contextlib
 import itertools
 import re
 import typing
-import warnings
 from enum import Enum
 from typing import Callable
 
@@ -25,84 +24,84 @@ class _W(Enum):
 
 
 @contextlib.contextmanager
-def _smtlib_warns(expected: typing.Iterable[_W]):
-    # based on sympy.testing.pytest.warns()
-
-    # Absorbs all warnings in warnrec
-    with warnings.catch_warnings(record=True) as warnrec:
-        # Any warning other than the one we are looking for is an error
-        warnings.simplefilter("error")
-        warnings.filterwarnings("always", category=UserWarning)
-        # Now run the test
-        yield warnrec
+def _check_warns(expected: typing.Iterable[_W]):
+    warnings = []
+    log_warn = warnings.append
+    yield log_warn
 
     errors = []
-    for i, (w, e) in enumerate(itertools.zip_longest(warnrec, expected)):
+    for i, (w, e) in enumerate(itertools.zip_longest(warnings, expected)):
         if not e:
-            errors += [f"[{i}] Received unexpected warning `{w.message}`."]
+            errors += [f"[{i}] Received unexpected warning `{w}`."]
         elif not w:
             errors += [f"[{i}] Did not receive expected warning `{e.name}`."]
-        elif not e.value.match(str(w.message)):
-            errors += [f"[{i}] Warning `{w.message}` does not match expected {e.name}."]
+        elif not e.value.match(w):
+            errors += [f"[{i}] Warning `{w}` does not match expected {e.name}."]
 
     if errors: raise Failed('\n'.join(errors))
 
 
 def test_Integer():
-    with _smtlib_warns([_W.WILL_NOT_ASSERT] * 2):
+    with _check_warns([_W.WILL_NOT_ASSERT] * 2) as w:
+        assert smtlib_code(Integer(67), log_warn=w) == "67"
+        assert smtlib_code(Integer(-1), log_warn=w) == "-1"
+    with _check_warns([]) as w:
         assert smtlib_code(Integer(67)) == "67"
         assert smtlib_code(Integer(-1)) == "-1"
 
 
 def test_Rational():
-    with _smtlib_warns([_W.WILL_NOT_ASSERT] * 4):
-        assert smtlib_code(Rational(3, 7)) == "(/ 3 7)"
-        assert smtlib_code(Rational(18, 9)) == "2"
-        assert smtlib_code(Rational(3, -7)) == "(/ -3 7)"
-        assert smtlib_code(Rational(-3, -7)) == "(/ 3 7)"
+    with _check_warns([_W.WILL_NOT_ASSERT] * 4) as w:
+        assert smtlib_code(Rational(3, 7), log_warn=w) == "(/ 3 7)"
+        assert smtlib_code(Rational(18, 9), log_warn=w) == "2"
+        assert smtlib_code(Rational(3, -7), log_warn=w) == "(/ -3 7)"
+        assert smtlib_code(Rational(-3, -7), log_warn=w) == "(/ 3 7)"
 
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT] * 2):
-        assert smtlib_code(x + Rational(3, 7), auto_declare=False) == "(+ (/ 3 7) x)"
-        assert smtlib_code(Rational(3, 7) * x) == "(declare-const x Real)\n" \
-                                                  "(* (/ 3 7) x)"
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT] * 2) as w:
+        assert smtlib_code(x + Rational(3, 7), auto_declare=False, log_warn=w) == "(+ (/ 3 7) x)"
+        assert smtlib_code(Rational(3, 7) * x, log_warn=w) == "(declare-const x Real)\n" \
+                                                              "(* (/ 3 7) x)"
 
 
 def test_Relational():
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT] * 12):
-        assert smtlib_code(Eq(x, y), auto_declare=False) == "(assert (= x y))"
-        assert smtlib_code(Ne(x, y), auto_declare=False) == "(assert (not (= x y)))"
-        assert smtlib_code(Le(x, y), auto_declare=False) == "(assert (<= x y))"
-        assert smtlib_code(Lt(x, y), auto_declare=False) == "(assert (< x y))"
-        assert smtlib_code(Gt(x, y), auto_declare=False) == "(assert (> x y))"
-        assert smtlib_code(Ge(x, y), auto_declare=False) == "(assert (>= x y))"
+    with _check_warns([_W.DEFAULTING_TO_FLOAT] * 12) as w:
+        assert smtlib_code(Eq(x, y), auto_declare=False, log_warn=w) == "(assert (= x y))"
+        assert smtlib_code(Ne(x, y), auto_declare=False, log_warn=w) == "(assert (not (= x y)))"
+        assert smtlib_code(Le(x, y), auto_declare=False, log_warn=w) == "(assert (<= x y))"
+        assert smtlib_code(Lt(x, y), auto_declare=False, log_warn=w) == "(assert (< x y))"
+        assert smtlib_code(Gt(x, y), auto_declare=False, log_warn=w) == "(assert (> x y))"
+        assert smtlib_code(Ge(x, y), auto_declare=False, log_warn=w) == "(assert (>= x y))"
 
 
 def test_Function():
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        assert smtlib_code(sin(x) ** cos(x), auto_declare=False) == "(pow (sin x) (cos x))"
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(sin(x) ** cos(x), auto_declare=False, log_warn=w) == "(pow (sin x) (cos x))"
 
-    with _smtlib_warns([_W.WILL_NOT_ASSERT]):
+    with _check_warns([_W.WILL_NOT_ASSERT]) as w:
         assert smtlib_code(
             abs(x),
             symbol_table={x: int, y: bool},
             known_types={int: "INTEGER_TYPE"},
-            known_functions={sympy.Abs: "ABSOLUTE_VALUE_OF"}
+            known_functions={sympy.Abs: "ABSOLUTE_VALUE_OF"},
+            log_warn=w
         ) == "(declare-const x INTEGER_TYPE)\n" \
              "(ABSOLUTE_VALUE_OF x)"
 
     my_fun1 = Function('f1')
-    with _smtlib_warns([_W.WILL_NOT_ASSERT]):
+    with _check_warns([_W.WILL_NOT_ASSERT]) as w:
         assert smtlib_code(
             my_fun1(x),
             symbol_table={my_fun1: Callable[[bool], float]},
+            log_warn=w
         ) == "(declare-const x Bool)\n" \
              "(declare-fun f1 (Bool) Real)\n" \
              "(f1 x)"
 
-    with _smtlib_warns([]):
+    with _check_warns([]) as w:
         assert smtlib_code(
             my_fun1(x),
             symbol_table={my_fun1: Callable[[bool], bool]},
+            log_warn=w
         ) == "(declare-const x Bool)\n" \
              "(declare-fun f1 (Bool) Bool)\n" \
              "(assert (f1 x))"
@@ -110,6 +109,7 @@ def test_Function():
         assert smtlib_code(
             Eq(my_fun1(x, z), y),
             symbol_table={my_fun1: Callable[[int, bool], bool]},
+            log_warn=w
         ) == "(declare-const x Int)\n" \
              "(declare-const y Bool)\n" \
              "(declare-const z Bool)\n" \
@@ -119,16 +119,18 @@ def test_Function():
         assert smtlib_code(
             Eq(my_fun1(x, z), y),
             symbol_table={my_fun1: Callable[[int, bool], bool]},
-            known_functions={my_fun1: "MY_KNOWN_FUN", Eq: '=='}
+            known_functions={my_fun1: "MY_KNOWN_FUN", Eq: '=='},
+            log_warn=w
         ) == "(declare-const x Int)\n" \
              "(declare-const y Bool)\n" \
              "(declare-const z Bool)\n" \
              "(assert (== (MY_KNOWN_FUN x z) y))"
 
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT] * 3):
+    with _check_warns([_W.DEFAULTING_TO_FLOAT] * 3) as w:
         assert smtlib_code(
             Eq(my_fun1(x, z), y),
-            known_functions={my_fun1: "MY_KNOWN_FUN", Eq: '=='}
+            known_functions={my_fun1: "MY_KNOWN_FUN", Eq: '=='},
+            log_warn=w
         ) == "(declare-const x Real)\n" \
              "(declare-const y Real)\n" \
              "(declare-const z Real)\n" \
@@ -136,12 +138,12 @@ def test_Function():
 
 
 def test_Pow():
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        assert smtlib_code(x ** 3, auto_declare=False) == "(pow x 3)"
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        assert smtlib_code(x ** (y ** 3), auto_declare=False) == "(pow x (pow y 3))"
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        assert smtlib_code(x ** Rational(2, 3), auto_declare=False) == '(pow x (/ 2 3))'
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(x ** 3, auto_declare=False, log_warn=w) == "(pow x 3)"
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(x ** (y ** 3), auto_declare=False, log_warn=w) == "(pow x (pow y 3))"
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(x ** Rational(2, 3), auto_declare=False, log_warn=w) == '(pow x (/ 2 3))'
 
         a = Symbol('a', integer=True)
         b = Symbol('b', real=True)
@@ -152,44 +154,48 @@ def test_Pow():
         # if x=1, y=2, then expr=2.333...
         expr = 1 / (g(a) * 3.5) ** (a - b ** a) / (a ** 2 + b)
 
-    with _smtlib_warns([]):
-        assert smtlib_code([
-            Eq(a < 2, c),
-            Eq(b > a, c),
-            c & True,
-            Eq(expr, 2 + Rational(1, 3))
-        ]) == '(declare-const a Int)\n' \
-              '(declare-const b Real)\n' \
-              '(declare-const c Bool)\n' \
-              '(assert (= (< a 2) c))\n' \
-              '(assert (= (> b a) c))\n' \
-              '(assert c)\n' \
-              '(assert (= ' \
-              '(* (pow (* 7. a) (+ (pow b a) (* -1 a))) (pow (+ b (pow a 2)) -1)) ' \
-              '(/ 7 3)' \
-              '))'
-
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
+    with _check_warns([]) as w:
         assert smtlib_code(
-            Mul(-2, c, Pow(Mul(b, b, evaluate=False), -1, evaluate=False), evaluate=False)
+            [
+                Eq(a < 2, c),
+                Eq(b > a, c),
+                c & True,
+                Eq(expr, 2 + Rational(1, 3))
+            ],
+            log_warn=w
+        ) == '(declare-const a Int)\n' \
+             '(declare-const b Real)\n' \
+             '(declare-const c Bool)\n' \
+             '(assert (= (< a 2) c))\n' \
+             '(assert (= (> b a) c))\n' \
+             '(assert c)\n' \
+             '(assert (= ' \
+             '(* (pow (* 7. a) (+ (pow b a) (* -1 a))) (pow (+ b (pow a 2)) -1)) ' \
+             '(/ 7 3)' \
+             '))'
+
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(
+            Mul(-2, c, Pow(Mul(b, b, evaluate=False), -1, evaluate=False), evaluate=False),
+            log_warn=w
         ) == '(declare-const b Real)\n' \
              '(declare-const c Real)\n' \
              '(* -2 c (pow (* b b) -1))'
 
 
 def test_basic_ops():
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        assert smtlib_code(x * y, auto_declare=False) == "(* x y)"
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(x * y, auto_declare=False, log_warn=w) == "(* x y)"
 
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        assert smtlib_code(x + y, auto_declare=False) == "(+ x y)"
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(x + y, auto_declare=False, log_warn=w) == "(+ x y)"
 
-    # with _smtlib_warns([_SmtlibWarnings.DEFAULTING_TO_FLOAT, _SmtlibWarnings.DEFAULTING_TO_FLOAT, _SmtlibWarnings.WILL_NOT_ASSERT]):
+    # with _check_warns([_SmtlibWarnings.DEFAULTING_TO_FLOAT, _SmtlibWarnings.DEFAULTING_TO_FLOAT, _SmtlibWarnings.WILL_NOT_ASSERT]) as w:
     # todo: implement re-write, currently does '(+ x (* -1 y))' instead
-    # assert smtlib_code(x - y, auto_declare=False) == "(- x y)"
+    # assert smtlib_code(x - y, auto_declare=False, log_warn=w) == "(- x y)"
 
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        assert smtlib_code(-x, auto_declare=False) == "(* -1 x)"
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(-x, auto_declare=False, log_warn=w) == "(* -1 x)"
 
 
 def test_quantifier_extensions():
@@ -241,19 +247,21 @@ def test_quantifier_extensions():
     # end For-All Quantifier class example
 
     f = Function('f')
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT]):
+    with _check_warns([_W.DEFAULTING_TO_FLOAT]) as w:
         assert smtlib_code(
             ForAll((x, -42, +21), Eq(f(x), f(x))),
-            symbol_table={f: Callable[[float], float]}
+            symbol_table={f: Callable[[float], float]},
+            log_warn=w
         ) == '(assert (forall ( (x Real [-42, 21])) true))'
 
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT] * 2):
+    with _check_warns([_W.DEFAULTING_TO_FLOAT] * 2) as w:
         assert smtlib_code(
             ForAll(
                 (x, -42, +21), (y, -100, 3),
                 Implies(Eq(x, y), Eq(f(x), f(y)))
             ),
-            symbol_table={f: Callable[[float], float]}
+            symbol_table={f: Callable[[float], float]},
+            log_warn=w
         ) == '(declare-fun f (Real) Real)\n' \
              '(assert (' \
              'forall ( (x Real [-42, 21]) (y Real [-100, 3])) ' \
@@ -264,13 +272,14 @@ def test_quantifier_extensions():
     b = Symbol('b', real=True)
     c = Symbol('c')
 
-    with _smtlib_warns([]):
+    with _check_warns([]) as w:
         assert smtlib_code(
             ForAll(
                 (a, 2, 100), ForAll(
                     (b, 2, 100),
                     Implies(a < b, sqrt(a) < b) | c
-                ))
+                )),
+            log_warn=w
         ) == '(declare-const c Bool)\n' \
              '(assert (forall ( (a Int [2, 100]) (b Real [2, 100])) ' \
              '(or c (=> (< a b) (< (pow a (/ 1 2)) b)))' \
@@ -278,23 +287,25 @@ def test_quantifier_extensions():
 
 
 def test_mix_number_mult_symbols():
-    with _smtlib_warns([_W.WILL_NOT_ASSERT]):
+    with _check_warns([_W.WILL_NOT_ASSERT]) as w:
         assert smtlib_code(
             1 / pi,
-            known_constants={pi: "MY_PI"}
+            known_constants={pi: "MY_PI"},
+            log_warn=w
         ) == '(pow MY_PI -1)'
 
-    with _smtlib_warns([_W.WILL_NOT_ASSERT]):
+    with _check_warns([_W.WILL_NOT_ASSERT]) as w:
         assert smtlib_code(
             [
                 Eq(pi, 3.14, evaluate=False),
                 1 / pi,
             ],
-            known_constants={pi: "MY_PI"}
+            known_constants={pi: "MY_PI"},
+            log_warn=w
         ) == '(assert (= MY_PI 3.14))\n' \
              '(pow MY_PI -1)'
 
-    with _smtlib_warns([_W.WILL_NOT_ASSERT]):
+    with _check_warns([_W.WILL_NOT_ASSERT]) as w:
         assert smtlib_code(
             Add(S.Zero, S.One, S.NegativeOne, S.Half,
                 S.Exp1, S.Pi, S.GoldenRatio, evaluate=False),
@@ -306,10 +317,11 @@ def test_mix_number_mult_symbols():
                 Add: 'plus',
                 exp: 'exp'
             },
-            precision=3
+            precision=3,
+            log_warn=w
         ) == '(plus 0 1 -1 (/ 1 2) (exp 1) p g)'
 
-    with _smtlib_warns([_W.WILL_NOT_ASSERT]):
+    with _check_warns([_W.WILL_NOT_ASSERT]) as w:
         assert smtlib_code(
             Add(S.Zero, S.One, S.NegativeOne, S.Half,
                 S.Exp1, S.Pi, S.GoldenRatio, evaluate=False),
@@ -320,80 +332,85 @@ def test_mix_number_mult_symbols():
                 Add: 'plus',
                 exp: 'exp'
             },
-            precision=3
+            precision=3,
+            log_warn=w
         ) == '(plus 0 1 -1 (/ 1 2) (exp 1) p 1.62)'
 
-    with _smtlib_warns([_W.WILL_NOT_ASSERT]):
+    with _check_warns([_W.WILL_NOT_ASSERT]) as w:
         assert smtlib_code(
             Add(S.Zero, S.One, S.NegativeOne, S.Half,
                 S.Exp1, S.Pi, S.GoldenRatio, evaluate=False),
             known_functions={Add: 'plus'},
-            precision=3
+            precision=3,
+            log_warn=w
         ) == '(plus 0 1 -1 (/ 1 2) 2.72 3.14 1.62)'
 
-    with _smtlib_warns([_W.WILL_NOT_ASSERT]):
+    with _check_warns([_W.WILL_NOT_ASSERT]) as w:
         assert smtlib_code(
             Add(S.Zero, S.One, S.NegativeOne, S.Half,
                 S.Exp1, S.Pi, S.GoldenRatio, evaluate=False),
             known_constants={S.Exp1: 'e'},
             known_functions={Add: 'plus'},
-            precision=3
+            precision=3,
+            log_warn=w
         ) == '(plus 0 1 -1 (/ 1 2) e 3.14 1.62)'
 
 
 def test_boolean():
-    with _smtlib_warns([]):
-        assert smtlib_code(x & y) == '(declare-const x Bool)\n' \
-                                     '(declare-const y Bool)\n' \
-                                     '(assert (and x y))'
-        assert smtlib_code(x | y) == '(declare-const x Bool)\n' \
-                                     '(declare-const y Bool)\n' \
-                                     '(assert (or x y))'
-        assert smtlib_code(~x) == '(declare-const x Bool)\n' \
-                                  '(assert (not x))'
-        assert smtlib_code(x & y & z) == '(declare-const x Bool)\n' \
-                                         '(declare-const y Bool)\n' \
-                                         '(declare-const z Bool)\n' \
-                                         '(assert (and x y z))'
+    with _check_warns([]) as w:
+        assert smtlib_code(x & y, log_warn=w) == '(declare-const x Bool)\n' \
+                                                 '(declare-const y Bool)\n' \
+                                                 '(assert (and x y))'
+        assert smtlib_code(x | y, log_warn=w) == '(declare-const x Bool)\n' \
+                                                 '(declare-const y Bool)\n' \
+                                                 '(assert (or x y))'
+        assert smtlib_code(~x, log_warn=w) == '(declare-const x Bool)\n' \
+                                              '(assert (not x))'
+        assert smtlib_code(x & y & z, log_warn=w) == '(declare-const x Bool)\n' \
+                                                     '(declare-const y Bool)\n' \
+                                                     '(declare-const z Bool)\n' \
+                                                     '(assert (and x y z))'
 
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT]):
-        assert smtlib_code((x & ~y) | (z > 3)) == '(declare-const x Bool)\n' \
-                                                  '(declare-const y Bool)\n' \
-                                                  '(declare-const z Real)\n' \
-                                                  '(assert (or (> z 3) (and x (not y))))'
+    with _check_warns([_W.DEFAULTING_TO_FLOAT]) as w:
+        assert smtlib_code((x & ~y) | (z > 3), log_warn=w) == '(declare-const x Bool)\n' \
+                                                              '(declare-const y Bool)\n' \
+                                                              '(declare-const z Real)\n' \
+                                                              '(assert (or (> z 3) (and x (not y))))'
 
     f = Function('f')
     g = Function('g')
     h = Function('h')
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT]):
-        assert smtlib_code([
-            Gt(f(x), y),
-            Lt(y, g(z))
-        ], symbol_table={
-            f: Callable[[bool], int], g: Callable[[bool], int],
-        }) == '(declare-const x Bool)\n' \
-              '(declare-const y Real)\n' \
-              '(declare-const z Bool)\n' \
-              '(declare-fun f (Bool) Int)\n' \
-              '(declare-fun g (Bool) Int)\n' \
-              '(assert (> (f x) y))\n' \
-              '(assert (< y (g z)))'
+    with _check_warns([_W.DEFAULTING_TO_FLOAT]) as w:
+        assert smtlib_code(
+            [Gt(f(x), y),
+             Lt(y, g(z))],
+            symbol_table={
+                f: Callable[[bool], int], g: Callable[[bool], int],
+            }, log_warn=w
+        ) == '(declare-const x Bool)\n' \
+             '(declare-const y Real)\n' \
+             '(declare-const z Bool)\n' \
+             '(declare-fun f (Bool) Int)\n' \
+             '(declare-fun g (Bool) Int)\n' \
+             '(assert (> (f x) y))\n' \
+             '(assert (< y (g z)))'
 
-    with _smtlib_warns([]):
-        assert smtlib_code([
-            Eq(f(x), y),
-            Lt(y, g(z))
-        ], symbol_table={
-            f: Callable[[bool], int], g: Callable[[bool], int],
-        }) == '(declare-const x Bool)\n' \
-              '(declare-const y Int)\n' \
-              '(declare-const z Bool)\n' \
-              '(declare-fun f (Bool) Int)\n' \
-              '(declare-fun g (Bool) Int)\n' \
-              '(assert (= (f x) y))\n' \
-              '(assert (< y (g z)))'
+    with _check_warns([]) as w:
+        assert smtlib_code(
+            [Eq(f(x), y),
+             Lt(y, g(z))],
+            symbol_table={
+                f: Callable[[bool], int], g: Callable[[bool], int],
+            }, log_warn=w
+        ) == '(declare-const x Bool)\n' \
+             '(declare-const y Int)\n' \
+             '(declare-const z Bool)\n' \
+             '(declare-fun f (Bool) Int)\n' \
+             '(declare-fun g (Bool) Int)\n' \
+             '(assert (= (f x) y))\n' \
+             '(assert (< y (g z)))'
 
-    with _smtlib_warns([]):
+    with _check_warns([]) as w:
         assert smtlib_code(
             [Eq(f(x), y),
              Eq(g(f(x)), z),
@@ -402,7 +419,8 @@ def test_boolean():
                 f: Callable[[float], int],
                 g: Callable[[int], bool],
                 h: Callable[[bool], float]
-            }
+            },
+            log_warn=w
         ) == '(declare-const x Real)\n' \
              '(declare-const y Int)\n' \
              '(declare-const z Bool)\n' \
@@ -427,20 +445,22 @@ def test_boolean():
 #     assert julia_code((1, eye(3), Matrix(0, 0, []), [])) == "(1, [1 0 0;\n0 1 0;\n0 0 1], zeros(0, 0), Any[])"
 
 def test_smtlib_piecewise():
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
         assert smtlib_code(
             Piecewise((x, x < 1),
                       (x ** 2, True)),
-            auto_declare=False
+            auto_declare=False,
+            log_warn=w
         ) == '(ite (< x 1) x (pow x 2))'
 
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
         assert smtlib_code(
             Piecewise((x ** 2, x < 1),
                       (x ** 3, x < 2),
                       (x ** 4, x < 3),
                       (x ** 5, True)),
-            auto_declare=False
+            auto_declare=False,
+            log_warn=w
         ) == '(ite (< x 1) (pow x 2) ' \
              '(ite (< x 2) (pow x 3) ' \
              '(ite (< x 3) (pow x 4) ' \
@@ -448,20 +468,20 @@ def test_smtlib_piecewise():
 
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x ** 2, x > 1), (sin(x), x > 0))
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        raises(AssertionError, lambda: smtlib_code(expr))
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        raises(AssertionError, lambda: smtlib_code(expr, log_warn=w))
 
 
 def test_smtlib_piecewise_times_const():
     pw = Piecewise((x, x < 1), (x ** 2, True))
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        assert smtlib_code(2 * pw) == '(declare-const x Real)\n(* 2 (ite (< x 1) x (pow x 2)))'
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        assert smtlib_code(pw / x) == '(declare-const x Real)\n(* (pow x -1) (ite (< x 1) x (pow x 2)))'
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        assert smtlib_code(pw / (x * y)) == '(declare-const x Real)\n(declare-const y Real)\n(* (pow x -1) (pow y -1) (ite (< x 1) x (pow x 2)))'
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        assert smtlib_code(pw / 3) == '(declare-const x Real)\n(* (/ 1 3) (ite (< x 1) x (pow x 2)))'
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(2 * pw, log_warn=w) == '(declare-const x Real)\n(* 2 (ite (< x 1) x (pow x 2)))'
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(pw / x, log_warn=w) == '(declare-const x Real)\n(* (pow x -1) (ite (< x 1) x (pow x 2)))'
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(pw / (x * y), log_warn=w) == '(declare-const x Real)\n(declare-const y Real)\n(* (pow x -1) (pow y -1) (ite (< x 1) x (pow x 2)))'
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(pw / 3, log_warn=w) == '(declare-const x Real)\n(* (/ 1 3) (ite (< x 1) x (pow x 2)))'
 
 
 # todo: make smtlib_code support arrays / matrices ?
@@ -488,18 +508,18 @@ def test_smtlib_piecewise_times_const():
 #     assert julia_code(sum(A)) == "AA[1,1] + AA[1,2] + AA[1,3]"
 
 def test_smtlib_boolean():
-    with _smtlib_warns([]):
-        assert smtlib_code(True, auto_assert=False) == 'true'
-        assert smtlib_code(True) == '(assert true)'
-        assert smtlib_code(S.true) == '(assert true)'
-        assert smtlib_code(S.false) == '(assert false)'
-        assert smtlib_code(False) == '(assert false)'
-        assert smtlib_code(False, auto_assert=False) == 'false'
+    with _check_warns([]) as w:
+        assert smtlib_code(True, auto_assert=False, log_warn=w) == 'true'
+        assert smtlib_code(True, log_warn=w) == '(assert true)'
+        assert smtlib_code(S.true, log_warn=w) == '(assert true)'
+        assert smtlib_code(S.false, log_warn=w) == '(assert false)'
+        assert smtlib_code(False, log_warn=w) == '(assert false)'
+        assert smtlib_code(False, auto_assert=False, log_warn=w) == 'false'
 
 
 def test_not_supported():
     f = Function('f')
-    with _smtlib_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]):
-        raises(KeyError, lambda: smtlib_code(f(x).diff(x), symbol_table={f: Callable[[float], float]}))
-    with _smtlib_warns([_W.WILL_NOT_ASSERT]):
-        raises(KeyError, lambda: smtlib_code(S.ComplexInfinity))
+    with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
+        raises(KeyError, lambda: smtlib_code(f(x).diff(x), symbol_table={f: Callable[[float], float]}, log_warn=w))
+    with _check_warns([_W.WILL_NOT_ASSERT]) as w:
+        raises(KeyError, lambda: smtlib_code(S.ComplexInfinity, log_warn=w))
