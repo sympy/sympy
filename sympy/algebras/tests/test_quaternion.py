@@ -52,6 +52,7 @@ def test_product_matrices():
     R2 = simplify(q1.to_rotation_matrix()*q1.norm()**2)
     assert R1 == R2
 
+
 def test_quaternion_axis_angle():
 
     test_data = [ # axis, angle, expected_quaternion
