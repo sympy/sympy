@@ -14,7 +14,6 @@ from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
 from itertools import permutations
 import random
-from numpy.testing import assert_allclose
 
 w, x, y, z = symbols('w:z')
 phi = symbols('phi')
