@@ -266,7 +266,7 @@ class Quaternion(Expr):
             a, b, c, d = a - c, b + d, c + a, d - b
 
         if avoid_square_root:
-            angle_j = acos((a*a + b*b - c*c - d*d) / self.norm()**2)
+            angle_j = acos((a*a + b*b - c*c - d*d) / (a*a + b*b + c*c + d*d))
         else:
             angle_j = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
 

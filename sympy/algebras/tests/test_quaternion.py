@@ -13,6 +13,8 @@ from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
 from itertools import permutations
+import random
+from numpy.testing import assert_allclose
 
 w, x, y, z = symbols('w:z')
 phi = symbols('phi')
@@ -297,3 +299,37 @@ def test_to_euler():
                 euler_from_q = q.to_euler(seq)
                 q_back = simplify(Quaternion.from_euler(euler_from_q, seq))
                 assert q_back == q_normalized
+
+
+def test_to_euler_options():
+    # numerical tests, hard to simplify symbolically
+    n = 20
+    eps = 10e-7
+    pi_ = float(pi)
+    for i in range(n):
+        # symmetric sequences
+        angles = [random.uniform(-pi_, pi_),
+                  random.uniform(0, pi_),
+                  random.uniform(-pi_, pi_)]
+
+        for xyz in ('xyz', 'XYZ'):
+            for seq_tuple in permutations(xyz):
+                seq = ''.join(seq_tuple)
+                q = Quaternion.from_euler(angles, seq=seq).evalf()
+                angles1 = q.to_euler(seq, False, False)
+                angles2 = q.to_euler(seq, True, True)
+                for i in range(3):
+                    err = abs(float((angles1[i] - angles2[i]))) % (2 * pi_)
+                    assert err < eps
+
+        # asymmetric sequences
+        angles[1] -= pi_/2
+        for xyz in ('xyz', 'XYZ'):
+            for seq_tuple in permutations(xyz):
+                seq = ''.join([seq_tuple[0], seq_tuple[1], seq_tuple[0]])
+                q = Quaternion.from_euler(angles, seq=seq).evalf()
+                angles1 = q.to_euler(seq, False, False)
+                angles2 = q.to_euler(seq, True, True)
+                for i in range(3):
+                    err = abs(float((angles1[i] - angles2[i]))) % (2 * pi_)
+                    assert err < eps
