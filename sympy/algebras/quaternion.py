@@ -176,7 +176,7 @@ class Quaternion(Expr):
         else:
             return trigsimp(qi * qj * qk)
 
-    def to_euler(self, seq):
+    def to_euler(self, seq, angle_addition=True, avoid_square_root=False):
         """Returns Euler angles representing same rotation as the quaternion,
         in the sequence given by `seq`. This implements the method described
         in [1]_.
@@ -190,6 +190,26 @@ class Quaternion(Expr):
             must be from the set `{'x', 'y', 'z'}`
             For extrinsic rotations, seq must be all uppercase and its elements
             must be from the set `{'X', 'Y', 'Z'}`
+
+        angle_addition : bool
+            Default : True
+            When True, first and third angles are given as an addition and
+            subtraction of two simpler `atan2` expressions. When False, the first
+            and third angles are each given by a single more complicated
+            `atan2` expression. This equivalent is given by:
+
+            --math::
+                \operatorname{atan_2} (b,a) \pm \operatorname{atan_2} (d,c) =
+                \operatorname{atan_2} (bc\pm ad, ac\mp bd)
+
+        avoid_square_root : bool
+            Default : False
+            When True, the second angle is calculated with an expression based on
+            `acos`, which is slightly more complicated but avoids a square
+            root. When False, second angle is calculated with `atan2`, which
+            is simpler and can be better for numerical reasons (some
+            numerical implementations of `acos` have problems near zero).
+
 
         Returns
         =======
@@ -244,16 +264,17 @@ class Quaternion(Expr):
         if not symmetric:
             a, b, c, d = a - c, b + d, c + a, d - b
 
-        # calculate angles
-        half_sum = atan2(b, a)
-        half_diff = atan2(d, c)
+        if avoid_square_root:
+            angle_j = acos((a*a + b*b - c*c - d*d) / self.norm()**2)
+        else:
+            angle_j = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
 
-        angle_j = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
-        # alternatively, we can use this to avoid the square root:
-        # angle_2 = acos(2*(a*a + b*b)/(a*a + b*b + c*c + d*d) - 1)
-
-        angle_i = half_sum + half_diff
-        angle_k = half_sum - half_diff
+        if angle_addition:
+            angle_i = atan2(b, a) + atan2(d, c)
+            angle_k = atan2(b, a) - atan2(d, c)
+        else:
+            angle_i = atan2(b*c + a*d, a*c - b*d)
+            angle_k = atan2(b*c - a*d, a*c + b*d)
 
         # for Tait-Bryan angles
         if not symmetric:
