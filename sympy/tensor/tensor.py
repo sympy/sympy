@@ -2399,12 +2399,10 @@ class TensExpr(Expr, ABC):
                 #If there are no wilds and the free indices are not the same, they cannot match.
                 return None
 
-        #Below, we try some cheaper things before trying doit, since the latter may be quite expensive.
+        #Since canon_bp may be expensive, we first check for exact equality.
         diff = self - expr
         if (diff == 0 or
-            diff.canon_bp() == 0 or
-            #TODO: We should try to avoid an indiscriminate doit, as it can slow things down a lot when, e.g., there is an Integral in diff. Currently we just exclude integrals, but that feels somewhat hacky. The reason we need doit is because TensExpr and subclasses require it for relabelling dummy indices, collecting terms with common coeffs, and flattening.
-            diff.doit(integrals=False).canon_bp() == 0
+            diff.canon_bp() == 0
             ):
             return repl_dict
         else:
