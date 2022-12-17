@@ -114,17 +114,17 @@ class Quaternion(Expr):
 
     @property
     def product_matrix_left(self):
-        """Returns 4 x 4 Matrix equivalent to a Hamilton product from the
+        r"""Returns 4 x 4 Matrix equivalent to a Hamilton product from the
         left. This can be useful when treating quaternion elements as column
         vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
         are real numbers, the product matrix from the left is:
 
-        ::
+        .. math::
 
-                  [a  -b  -c  -d]
-            M  =  [b   a  -d   c]
-                  [c   d   a  -b]
-                  [d  -c   b   a]
+            M  =  \begin{bmatrix} a  &-b  &-c  &-d \\
+                                  b  & a  &-d  & c \\
+                                  c  & d  & a  &-b \\
+                                  d  &-c  & b  & a \end{bmatrix}
 
         Examples
         ========
@@ -164,17 +164,18 @@ class Quaternion(Expr):
 
     @property
     def product_matrix_right(self):
-        """Returns 4 x 4 Matrix equivalent to a Hamilton product from the
+        r"""Returns 4 x 4 Matrix equivalent to a Hamilton product from the
         right. This can be useful when treating quaternion elements as column
         vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
         are real numbers, the product matrix from the left is:
 
-        ::
+        .. math::
 
-                  [a  -b  -c  -d]
-            M  =  [b   a   d  -c]
-                  [c  -d   a   b]
-                  [d   c  -b   a]
+            M  =  \begin{bmatrix} a  &-b  &-c  &-d \\
+                                  b  & a  & d  &-c \\
+                                  c  &-d  & a  & b \\
+                                  d  & c  &-b  & a \end{bmatrix}
+
 
         Examples
         ========
