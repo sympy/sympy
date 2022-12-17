@@ -34,6 +34,25 @@ def test_quaternion_construction():
     raises(ValueError, lambda: Quaternion(w, x, nc, z))
 
 
+def test_to_and_from_Matrix():
+    q = Quaternion(w, x, y, z)
+    q_full = Quaternion.from_Matrix(q.to_Matrix())
+    q_vect = Quaternion.from_Matrix(q.to_Matrix(True))
+    assert (q - q_full).is_zero_quaternion()
+    assert (q.vector_part() - q_vect).is_zero_quaternion()
+
+
+def test_product_matrices():
+    q1 = Quaternion(w, x, y, z)
+    q2 = Quaternion(*(symbols("a:d")))
+    assert (q1 * q2).to_Matrix() == q1.product_matrix_left * q2.to_Matrix()
+    assert (q1 * q2).to_Matrix() == q2.product_matrix_right * q1.to_Matrix()
+
+    R1 = (q1.product_matrix_left * q1.product_matrix_right.T)[1:, 1:]
+    R2 = simplify(q1.to_rotation_matrix()*q1.norm()**2)
+    assert R1 == R2
+
+
 def test_quaternion_axis_angle():
 
     test_data = [ # axis, angle, expected_quaternion

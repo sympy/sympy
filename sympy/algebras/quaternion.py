@@ -112,6 +112,203 @@ class Quaternion(Expr):
     def real_field(self):
         return self._real_field
 
+    @property
+    def product_matrix_left(self):
+        r"""Returns 4 x 4 Matrix equivalent to a Hamilton product from the
+        left. This can be useful when treating quaternion elements as column
+        vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
+        are real numbers, the product matrix from the left is:
+
+        .. math::
+
+            M  =  \begin{bmatrix} a  &-b  &-c  &-d \\
+                                  b  & a  &-d  & c \\
+                                  c  & d  & a  &-b \\
+                                  d  &-c  & b  & a \end{bmatrix}
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q1 = Quaternion(1, 0, 0, 1)
+        >>> q2 = Quaternion(a, b, c, d)
+        >>> q1.product_matrix_left
+        Matrix([
+        [1, 0,  0, -1],
+        [0, 1, -1,  0],
+        [0, 1,  1,  0],
+        [1, 0,  0,  1]])
+
+        >>> q1.product_matrix_left * q2.to_Matrix()
+        Matrix([
+        [a - d],
+        [b - c],
+        [b + c],
+        [a + d]])
+
+        This is equivalent to:
+
+        >>> (q1 * q2).to_Matrix()
+        Matrix([
+        [a - d],
+        [b - c],
+        [b + c],
+        [a + d]])
+        """
+        return Matrix([
+                [self.a, -self.b, -self.c, -self.d],
+                [self.b, self.a, -self.d, self.c],
+                [self.c, self.d, self.a, -self.b],
+                [self.d, -self.c, self.b, self.a]])
+
+    @property
+    def product_matrix_right(self):
+        r"""Returns 4 x 4 Matrix equivalent to a Hamilton product from the
+        right. This can be useful when treating quaternion elements as column
+        vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
+        are real numbers, the product matrix from the left is:
+
+        .. math::
+
+            M  =  \begin{bmatrix} a  &-b  &-c  &-d \\
+                                  b  & a  & d  &-c \\
+                                  c  &-d  & a  & b \\
+                                  d  & c  &-b  & a \end{bmatrix}
+
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q1 = Quaternion(a, b, c, d)
+        >>> q2 = Quaternion(1, 0, 0, 1)
+        >>> q2.product_matrix_right
+        Matrix([
+        [1, 0, 0, -1],
+        [0, 1, 1, 0],
+        [0, -1, 1, 0],
+        [1, 0, 0, 1]])
+
+        Note the switched arguments: the matrix represents the quaternion on
+        the right, but is still considered as a matrix multiplication from the
+        left.
+
+        >>> q2.product_matrix_right * q1.to_Matrix()
+        Matrix([
+        [ a - d],
+        [ b + c],
+        [-b + c],
+        [ a + d]])
+
+        This is equivalent to:
+
+        >>> (q1 * q2).to_Matrix()
+        Matrix([
+        [ a - d],
+        [ b + c],
+        [-b + c],
+        [ a + d]])
+        """
+        return Matrix([
+                [self.a, -self.b, -self.c, -self.d],
+                [self.b, self.a, self.d, -self.c],
+                [self.c, -self.d, self.a, self.b],
+                [self.d, self.c, -self.b, self.a]])
+
+    def to_Matrix(self, vector_only=False):
+        """Returns elements of quaternion as a column vector.
+        By default, a Matrix of length 4 is returned, with the real part as the
+        first element.
+        If vector_only is True, returns only imaginary part as a Matrix of
+        length 3.
+
+        Parameters
+        ==========
+
+        vector_only : bool
+            If True, only imaginary part is returned.
+            Default : False
+
+        Returns
+        =======
+
+        Matrix
+            A column vector constructed by the elements of the quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q = Quaternion(a, b, c, d)
+        >>> q
+        a + b*i + c*j + d*k
+
+        >>> q.to_Matrix()
+        Matrix([
+        [a],
+        [b],
+        [c],
+        [d]])
+
+
+        >>> q.to_Matrix(vector_only=True)
+        Matrix([
+        [b],
+        [c],
+        [d]])
+
+        """
+        if vector_only:
+            return Matrix(self.args[1:])
+        else:
+            return Matrix(self.args)
+
+    @classmethod
+    def from_Matrix(cls, elements):
+        """Returns quaternion from elements of a column vector`.
+        If vector_only is True, returns only imaginary part as a Matrix of
+        length 3.
+
+        Parameters
+        ==========
+
+        elements : Matrix, list or tuple of length 3 or 4. If length is 3,
+            assume real part is zero.
+            Default : False
+
+        Returns
+        =======
+
+        Quaternion
+            A quaternion created from the input elements.
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q = Quaternion.from_Matrix([a, b, c, d])
+        >>> q
+        a + b*i + c*j + d*k
+
+        >>> q = Quaternion.from_Matrix([b, c, d])
+        >>> q
+        0 + b*i + c*j + d*k
+
+        """
+        length = len(elements)
+        if length != 3 and length != 4:
+            raise ValueError("Input elements must have length 3 or 4, got {} "
+                             "elements".format(length))
+
+        if length == 3:
+            return Quaternion(0, *elements)
+        else:
+            return Quaternion(*elements)
+
     @classmethod
     def from_euler(cls, angles, seq):
         """Returns quaternion equivalent to rotation represented by the Euler
