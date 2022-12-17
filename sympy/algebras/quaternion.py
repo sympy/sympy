@@ -177,7 +177,7 @@ class Quaternion(Expr):
             return trigsimp(qi * qj * qk)
 
     def to_euler(self, seq, angle_addition=True, avoid_square_root=False):
-        """Returns Euler angles representing same rotation as the quaternion,
+        r"""Returns Euler angles representing same rotation as the quaternion,
         in the sequence given by `seq`. This implements the method described
         in [1]_.
 
@@ -194,18 +194,19 @@ class Quaternion(Expr):
         angle_addition : bool
             Default : True
             When True, first and third angles are given as an addition and
-            subtraction of two simpler `atan2` expressions. When False, the first
-            and third angles are each given by a single more complicated
+            subtraction of two simpler `atan2` expressions. When False, the
+            first and third angles are each given by a single more complicated
             `atan2` expression. This equivalent is given by:
 
             --math::
+
                 \operatorname{atan_2} (b,a) \pm \operatorname{atan_2} (d,c) =
                 \operatorname{atan_2} (bc\pm ad, ac\mp bd)
 
         avoid_square_root : bool
             Default : False
-            When True, the second angle is calculated with an expression based on
-            `acos`, which is slightly more complicated but avoids a square
+            When True, the second angle is calculated with an expression based
+            on acos`, which is slightly more complicated but avoids a square
             root. When False, second angle is calculated with `atan2`, which
             is simpler and can be better for numerical reasons (some
             numerical implementations of `acos` have problems near zero).
