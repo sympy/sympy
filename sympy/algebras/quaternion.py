@@ -586,13 +586,13 @@ class Quaternion(Expr):
 
     def norm(self):
         """Returns the norm of the quaternion."""
-        if self._norm is not None: # check if norm is pre-defined
-            return self._norm
+        if self._norm is None:  # check if norm is pre-defined
+            q = self
+            # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
+            # arise when from_axis_angle is used).
+            self._norm = sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
 
-        q = self
-        # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
-        # arise when from_axis_angle is used).
-        return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
+        return self._norm
 
     def normalize(self):
         """Returns the normalized form of the quaternion."""
