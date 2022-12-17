@@ -269,7 +269,6 @@ class Quaternion(Expr):
     @classmethod
     def from_Matrix(cls, elements):
         """Returns quaternion from elements of a column vector`.
-        If a
         If vector_only is True, returns only imaginary part as a Matrix of
         length 3.
 
