@@ -272,7 +272,8 @@ class Quaternion(Expr):
             a, b, c, d = a - c, b + d, c + a, d - b
 
         if avoid_square_root:
-            angles[1] = acos((a*a + b*b - c*c - d*d) / (a*a + b*b + c*c + d*d))
+            n2 = self.norm()**2 if symmetric else 2 * self.norm()**2
+            angles[1] = acos((a*a + b*b - c*c - d*d) / n2)
         else:
             angles[1] = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
 
