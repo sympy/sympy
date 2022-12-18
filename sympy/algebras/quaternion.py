@@ -236,6 +236,9 @@ class Quaternion(Expr):
         .. [1] https://doi.org/10.1371/journal.pone.0276302
 
         """
+        if self.is_zero_quaternion():
+            raise ValueError('Cannot convert a quaternion with norm 0.')
+
         extrinsic = _is_extrinsic(seq)
         i, j, k = seq.lower()
 
