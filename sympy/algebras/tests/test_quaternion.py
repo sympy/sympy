@@ -1,4 +1,3 @@
-import pytest
 from sympy.core.function import diff
 from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.singleton import S
@@ -12,7 +11,7 @@ from sympy.matrices.dense import Matrix
 from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns
 from itertools import permutations, product
 
 w, x, y, z = symbols('w:z')
@@ -304,7 +303,7 @@ def test_to_euler_numerical_singilarities():
 
     def test_one_case(angles, seq):
         q = Quaternion.from_euler(angles, seq)
-        with pytest.warns(UserWarning, match="Singularity"):
+        with warns(UserWarning, match='Singularity', test_stacklevel=False):
             assert q.to_euler(seq) == angles
 
     # symmetric
