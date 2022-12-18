@@ -1312,7 +1312,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     for i in R:
         R_map[i.degree()] = i
 
-    r = Poly(r, z)
+    r = Poly(r, z,field = True)
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
     for s, i in Sp:
