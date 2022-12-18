@@ -343,4 +343,3 @@ def test_to_euler_options():
                     q = Quaternion(*elements)
                     if not q.is_zero_quaternion():
                         test_one_case(q)
-
