@@ -1,3 +1,4 @@
+import warnings
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
@@ -239,6 +240,8 @@ class Quaternion(Expr):
         if self.is_zero_quaternion():
             raise ValueError('Cannot convert a quaternion with norm 0.')
 
+        angles = [0, 0, 0]
+
         extrinsic = _is_extrinsic(seq)
         i, j, k = seq.lower()
 
@@ -269,26 +272,59 @@ class Quaternion(Expr):
             a, b, c, d = a - c, b + d, c + a, d - b
 
         if avoid_square_root:
-            angle_j = acos((a*a + b*b - c*c - d*d) / (a*a + b*b + c*c + d*d))
+            angles[1] = acos((a*a + b*b - c*c - d*d) / (a*a + b*b + c*c + d*d))
         else:
-            angle_j = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
+            angles[1] = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
 
-        if angle_addition:
-            angle_i = atan2(b, a) + atan2(d, c)
-            angle_k = atan2(b, a) - atan2(d, c)
+        # Check for singularities in numerical cases
+        angle_test = angles[1].evalf()
+        case = 0
+        pi_f = pi.evalf()
+        if angle_test.is_Number:
+            eps = 10e-7
+            if abs(angle_test) <= eps:
+                case = 1
+            elif abs(angle_test - pi_f) <= eps:
+                case = 2
+
+        # if case1:
+
+        # elif case2:
+
+        if extrinsic:
+            angle_first = 0
+            angle_third = 2
         else:
-            angle_i = atan2(b*c + a*d, a*c - b*d)
-            angle_k = atan2(b*c - a*d, a*c + b*d)
+            seq = seq[::-1]
+            angle_first = 2
+            angle_third = 0
+
+        if case == 0:
+            if angle_addition:
+                angles[0] = atan2(b, a) + atan2(d, c)
+                angles[2] = atan2(b, a) - atan2(d, c)
+            else:
+                angles[0] = atan2(b*c + a*d, a*c - b*d)
+                angles[2] = atan2(b*c - a*d, a*c + b*d)
+
+        else:  # any degenerate case
+            warnings.warn('Singularity case, setting third angle to zero')
+            angles[2 * (not extrinsic)] = sympify(0)
+            if case == 1:
+                angles[2 * extrinsic] = 2 * atan2(b, a)
+            else:
+                angles[2 * extrinsic] = 2 * atan2(d, c)
+                angles[2 * extrinsic] *= (-1 if extrinsic else 1)
 
         # for Tait-Bryan angles
         if not symmetric:
-            angle_j -= pi / 2
-            angle_i *= sign
+            angles[1] -= pi / 2
+            angles[0] *= sign
 
         if extrinsic:
-            return angle_k, angle_j, angle_i
+            return tuple(angles[::-1])
         else:
-            return angle_i, angle_j, angle_k
+            return tuple(angles)
 
     @classmethod
     def from_axis_angle(cls, vector, angle):
