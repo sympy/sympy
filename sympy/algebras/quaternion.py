@@ -287,18 +287,6 @@ class Quaternion(Expr):
             elif abs(angle_test - pi_f) <= eps:
                 case = 2
 
-        # if case1:
-
-        # elif case2:
-
-        if extrinsic:
-            angle_first = 0
-            angle_third = 2
-        else:
-            seq = seq[::-1]
-            angle_first = 2
-            angle_third = 0
-
         if case == 0:
             if angle_addition:
                 angles[0] = atan2(b, a) + atan2(d, c)
