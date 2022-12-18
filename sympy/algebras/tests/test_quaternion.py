@@ -1,4 +1,3 @@
-import random
 import pytest
 from sympy.core.function import diff
 from sympy.core.numbers import (E, I, Rational, pi)
