@@ -14,7 +14,7 @@ from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
-from itertools import permutations
+from itertools import permutations, product
 
 w, x, y, z = symbols('w:z')
 phi = symbols('phi')
@@ -322,34 +322,25 @@ def test_to_euler_numerical_singilarities():
 
 
 def test_to_euler_options():
-    # numerical tests, hard to simplify symbolically
-    n = 20
-    eps = 10e-7
-    pi_ = float(pi)
-    for i in range(n):
-        # symmetric sequences
-        angles = [random.uniform(-pi_, pi_),
-                  random.uniform(0, pi_),
-                  random.uniform(-pi_, pi_)]
+    def test_one_case(q):
+        angles1 = Matrix(q.to_euler(seq, True, True))
+        angles2 = Matrix(q.to_euler(seq, False, False))
+        angle_errors = simplify(angles1-angles2).evalf()
+        for angle_error in angle_errors:
+            # forcing angles to set {-pi, pi}
+            angle_error = (angle_error + pi) % (2 * pi) - pi
+            assert angle_error < 10e-7
 
-        for xyz in ('xyz', 'XYZ'):
-            for seq_tuple in permutations(xyz):
-                seq = ''.join(seq_tuple)
-                q = Quaternion.from_euler(angles, seq=seq).evalf()
-                angles1 = q.to_euler(seq, False, False)
-                angles2 = q.to_euler(seq, True, True)
-                for i in range(3):
-                    err = abs(float((angles1[i] - angles2[i]))) % (2 * pi_)
-                    assert err < eps
+    for xyz in ('xyz', 'XYZ'):
+        for seq_tuple in permutations(xyz):
+            for symmetric in (True, False):
+                if symmetric:
+                    seq = ''.join([seq_tuple[0], seq_tuple[1], seq_tuple[0]])
+                else:
+                    seq = ''.join(seq_tuple)
 
-        # asymmetric sequences
-        angles[1] -= pi_/2
-        for xyz in ('xyz', 'XYZ'):
-            for seq_tuple in permutations(xyz):
-                seq = ''.join([seq_tuple[0], seq_tuple[1], seq_tuple[0]])
-                q = Quaternion.from_euler(angles, seq=seq).evalf()
-                angles1 = q.to_euler(seq, False, False)
-                angles2 = q.to_euler(seq, True, True)
-                for i in range(3):
-                    err = abs(float((angles1[i] - angles2[i]))) % (2 * pi_)
-                    assert err < eps
+                for elements in product([-1, 0, 1], repeat=4):
+                    q = Quaternion(*elements)
+                    if not q.is_zero_quaternion():
+                        test_one_case(q)
+
