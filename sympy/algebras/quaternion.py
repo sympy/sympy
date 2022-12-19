@@ -779,7 +779,7 @@ class Quaternion(Expr):
     def _eval_conjugate(self):
         """Returns the conjugate of the quaternion."""
         q = self
-        return Quaternion(q.a, -q.b, -q.c, -q.d)
+        return Quaternion(q.a, -q.b, -q.c, -q.d, norm=self._norm)
 
     def norm(self):
         """Returns the norm of the quaternion."""
