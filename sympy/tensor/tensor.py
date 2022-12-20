@@ -4033,6 +4033,7 @@ class TensMul(TensExpr, AssocOp):
         """
         exclude = set(exclude)
         dums_new = set(get_dummy_indices(new))
+        free_new = set(get_free_indices(new))
 
         conflicts = dums_new.intersection(exclude)
         if len(conflicts) == 0:
@@ -4044,6 +4045,7 @@ class TensMul(TensExpr, AssocOp):
         set it as ``None`` here.
         """
         exclude.update(dums_new)
+        exclude.update(free_new)
         exclude_for_gen = [(i, None) for i in exclude]
         gen = _IndexStructure._get_generator_for_dummy_indices(exclude_for_gen)
         repl = {}
