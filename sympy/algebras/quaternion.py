@@ -104,7 +104,7 @@ class Quaternion(Expr):
                 raise ValueError("incompatible value for norm")
 
             if not norm.is_positive:
-                raise ValueError("Input norm must be positive and non-zero")
+                raise ValueError("Input norm must be positive.")
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
