@@ -281,7 +281,7 @@ class Quaternion(Expr):
         angle_test = angles[1].evalf()
         case = 0
         pi_f = pi.evalf()
-        if angle_test.is_Number:
+        if angle_test.is_number:
             eps = 10e-7
             if abs(angle_test) <= eps:
                 case = 1
