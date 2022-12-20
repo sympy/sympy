@@ -666,7 +666,8 @@ def test_smtlib_random_variables():
 def test_smtlib_dreal_example():
     x, y, z = symbols('x y z', integer=True)
     minimize = Function('minimize')  # special solver-specific builtin
-    known_functions = SMTLibPrinter()._known_functions | {minimize: minimize.name}
+    known_functions = SMTLibPrinter()._known_functions
+    known_functions[minimize] = minimize.name
     exprs = [
         (-1 <= x) & (x < 10),
         y < z,

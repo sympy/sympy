@@ -360,13 +360,15 @@ def smtlib_code(
 
     declarations = []
     if auto_declare:
-        declarations = {
-                           sym.name: sym for e in expr for sym in e.free_symbols  # .free_symbols preserves random variables
-                           if sym not in p._known_constants
-                       } | {
-                           fnc.name: fnc for e in expr for fnc in e.atoms(Function)
-                           if type(fnc) not in p._known_functions and not fnc.is_Piecewise
-                       }
+        declarations = {}
+        declarations.update({
+            sym.name: sym for e in expr for sym in e.free_symbols  # .free_symbols preserves random variables
+            if sym not in p._known_constants
+        })
+        declarations.update({
+            fun.name: fun for e in expr for fun in e.atoms(Function)
+            if type(fun) not in p._known_functions and not fun.is_Piecewise
+        })
         declarations = [
             _auto_declare_smtlib(sym_or_func, p, log_warn) for sym_or_func in declarations.values()
         ]
@@ -413,7 +415,8 @@ def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, 
         type_signature = p._known_types[type_signature]
 
         from sympy.stats.rv import RandomSymbol
-        current_assumptions = assumptions(sym) | {'__is_random_symbol': isinstance(sym, RandomSymbol)}
+        current_assumptions = assumptions(sym)
+        current_assumptions['__is_random_symbol'] = isinstance(sym, RandomSymbol)
         unsupported_assumptions = {
             'infinite', 'antihermitian', 'transcendental', 'imaginary', 'irrational', 'noninteger', 'even', 'odd', 'prime', 'composite'
         }
