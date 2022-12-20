@@ -1,14 +1,19 @@
 """ Riemann zeta and related function. """
 
 from sympy.core.add import Add
-from sympy.core import Function, S, sympify, pi, I
-from sympy.core.function import ArgumentIndexError, expand_mul
+from sympy.core.cache import cacheit
+from sympy.core.function import ArgumentIndexError, expand_mul, Function
+from sympy.core.numbers import pi, I, Integer
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
-from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.numbers import bernoulli, factorial, genocchi, harmonic
 from sympy.functions.elementary.complexes import re, unpolarify, Abs, polar_lift
 from sympy.functions.elementary.exponential import log, exp_polar, exp
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys.polytools import Poly
 
 ###############################################################################
@@ -161,9 +166,14 @@ class lerchphi(Function):
             m, n = S([a.p, a.q])
             zet = exp_polar(2*pi*I/n)
             root = z**(1/n)
-            return add + mul*n**(s - 1)*Add(
-                *[polylog(s, zet**k*root)._eval_expand_func(**hints)
-                  / (unpolarify(zet)**k*root)**m for k in range(n)])
+            up_zet = unpolarify(zet)
+            addargs = []
+            for k in range(n):
+                p = polylog(s, zet**k*root)
+                if isinstance(p, polylog):
+                    p = p._eval_expand_func(**hints)
+                addargs.append(p/(up_zet**k*root)**m)
+            return add + mul*n**(s - 1)*Add(*addargs)
 
         # TODO use minpoly instead of ad-hoc methods when issue 5888 is fixed
         if isinstance(z, exp) and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
@@ -191,7 +201,7 @@ class lerchphi(Function):
         else:
             raise ArgumentIndexError
 
-    def _eval_rewrite_helper(self, z, s, a, target):
+    def _eval_rewrite_helper(self, target):
         res = self._eval_expand_func()
         if res.has(target):
             return res
@@ -199,10 +209,10 @@ class lerchphi(Function):
             return self
 
     def _eval_rewrite_as_zeta(self, z, s, a, **kwargs):
-        return self._eval_rewrite_helper(z, s, a, zeta)
+        return self._eval_rewrite_helper(zeta)
 
     def _eval_rewrite_as_polylog(self, z, s, a, **kwargs):
-        return self._eval_rewrite_helper(z, s, a, polylog)
+        return self._eval_rewrite_helper(polylog)
 
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
@@ -281,25 +291,17 @@ class polylog(Function):
 
     @classmethod
     def eval(cls, s, z):
-        if z is S.One:
-            return zeta(s)
-        elif z is S.NegativeOne:
-            return -dirichlet_eta(s)
-        elif z is S.Zero:
-            return S.Zero
-        elif s == 2:
-            if z == S.Half:
-                return pi**2/12 - log(2)**2/2
-            elif z == 2:
-                return pi**2/4 - I*pi*log(2)
-            elif z == -(sqrt(5) - 1)/2:
-                return -pi**2/15 + log((sqrt(5)-1)/2)**2/2
-            elif z == -(sqrt(5) + 1)/2:
-                return -pi**2/10 - log((sqrt(5)+1)/2)**2
-            elif z == (3 - sqrt(5))/2:
-                return pi**2/15 - log((sqrt(5)-1)/2)**2
-            elif z == (sqrt(5) - 1)/2:
-                return pi**2/10 - log((sqrt(5)-1)/2)**2
+        if z.is_number:
+            if z is S.One:
+                return zeta(s)
+            elif z is S.NegativeOne:
+                return -dirichlet_eta(s)
+            elif z is S.Zero:
+                return S.Zero
+            elif s == 2:
+                dilogtable = _dilogtable()
+                if z in dilogtable:
+                    return dilogtable[z]
 
         if z.is_zero:
             return S.Zero
@@ -517,9 +519,10 @@ class zeta(Function):
         elif a is S.One:
             if sint and s.is_even:
                 return -(2*pi*I)**s * bernoulli(s) / (2*factorial(s))
-        elif sint and a.is_Integer:
-            if a.is_positive:
-                return cls(s) - harmonic(a-1, s)
+        elif sint and a.is_Integer and a.is_positive:
+            return cls(s) - harmonic(a-1, s)
+        elif a.is_Integer and a.is_nonpositive and \
+                (s.is_integer is False or s.is_nonpositive is False):
             return S.NaN
 
     def _eval_rewrite_as_bernoulli(self, s, a=1, **kwargs):
@@ -562,6 +565,22 @@ class zeta(Function):
         else:
             raise ArgumentIndexError
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        if len(self.args) == 2:
+            s, a = self.args
+        else:
+            s, a = self.args + (S.One,)
+
+        try:
+            c, e = a.leadterm(x)
+        except NotImplementedError:
+            return self
+
+        if e.is_negative and not s.is_positive:
+            raise NotImplementedError
+
+        return super(zeta, self)._eval_as_leading_term(x, logx, cdir)
+
 
 class dirichlet_eta(Function):
     r"""
@@ -570,22 +589,31 @@ class dirichlet_eta(Function):
     Explanation
     ===========
 
-    For $\operatorname{Re}(s) > 0$, this function is defined as
+    For $\operatorname{Re}(s) > 0$ and $0 < x \le 1$, this function is defined as
 
-    .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^{n-1}}{n^s}.
+    .. math:: \eta(s, a) = \sum_{n=0}^\infty \frac{(-1)^n}{(n+a)^s}.
 
-    It admits a unique analytic continuation to all of $\mathbb{C}$.
-    It is an entire, unbranched function.
+    It admits a unique analytic continuation to all of $\mathbb{C}$ for any
+    fixed $a$ not a nonpositive integer. It is an entire, unbranched function.
+
+    It can be expressed using the Hurwitz zeta function as
+
+    .. math:: \eta(s, a) = \zeta(s,a) - 2^{1-s} \zeta\left(s, \frac{a+1}{2}\right)
+
+    and using the generalized Genocchi function as
+
+    .. math:: \eta(s, a) = \frac{G(1-s, a)}{2(s-1)}.
+
+    In both cases the limiting value of $\log2 - \psi(a) + \psi\left(\frac{a+1}{2}\right)$
+    is used when $s = 1$.
 
     Examples
     ========
 
-    The Dirichlet eta function is closely related to the Riemann zeta function:
-
     >>> from sympy import dirichlet_eta, zeta
     >>> from sympy.abc import s
     >>> dirichlet_eta(s).rewrite(zeta)
-    (1 - 2**(1 - s))*zeta(s)
+    Piecewise((log(2), Eq(s, 1)), ((1 - 2**(1 - s))*zeta(s), True))
 
     See Also
     ========
@@ -596,19 +624,45 @@ class dirichlet_eta(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Dirichlet_eta_function
+    .. [2] Peter Luschny, "An introduction to the Bernoulli function",
+           https://arxiv.org/abs/2009.06743
 
     """
 
     @classmethod
-    def eval(cls, s):
-        if s == 1:
-            return log(2)
-        z = zeta(s)
-        if not z.has(zeta):
-            return (1 - 2**(1 - s))*z
+    def eval(cls, s, a=None):
+        if a is S.One:
+            return cls(s)
+        if a is None:
+            if s == 1:
+                return log(2)
+            z = zeta(s)
+            if not z.has(zeta):
+                return (1 - 2**(1-s)) * z
+            return
+        elif s == 1:
+            from sympy.functions.special.gamma_functions import digamma
+            return log(2) - digamma(a) + digamma((a+1)/2)
+        z1 = zeta(s, a)
+        z2 = zeta(s, (a+1)/2)
+        if not z1.has(zeta) and not z2.has(zeta):
+            return z1 - 2**(1-s) * z2
 
-    def _eval_rewrite_as_zeta(self, s, **kwargs):
-        return (1 - 2**(1 - s)) * zeta(s)
+    def _eval_rewrite_as_zeta(self, s, a=1, **kwargs):
+        from sympy.functions.special.gamma_functions import digamma
+        if a == 1:
+            return Piecewise((log(2), Eq(s, 1)), ((1 - 2**(1-s)) * zeta(s), True))
+        return Piecewise((log(2) - digamma(a) + digamma((a+1)/2), Eq(s, 1)),
+                (zeta(s, a) - 2**(1-s) * zeta(s, (a+1)/2), True))
+
+    def _eval_rewrite_as_genocchi(self, s, a=S.One, **kwargs):
+        from sympy.functions.special.gamma_functions import digamma
+        return Piecewise((log(2) - digamma(a) + digamma((a+1)/2), Eq(s, 1)),
+                (genocchi(1-s, a) / (2 * (s-1)), True))
+
+    def _eval_evalf(self, prec):
+        if all(i.is_number for i in self.args):
+            return self.rewrite(zeta)._eval_evalf(prec)
 
 
 class riemann_xi(Function):
@@ -648,6 +702,7 @@ class riemann_xi(Function):
     def _eval_rewrite_as_zeta(self, s, **kwargs):
         from sympy.functions.special.gamma_functions import gamma
         return s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
+
 
 class stieltjes(Function):
     r"""
@@ -713,3 +768,20 @@ class stieltjes(Function):
 
         if n.is_integer == False:
             return S.ComplexInfinity
+
+
+@cacheit
+def _dilogtable():
+    return {
+        S.Half: pi**2/12 - log(2)**2/2,
+        Integer(2) : pi**2/4 - I*pi*log(2),
+        -(sqrt(5) - 1)/2 : -pi**2/15 + log((sqrt(5)-1)/2)**2/2,
+        -(sqrt(5) + 1)/2 : -pi**2/10 - log((sqrt(5)+1)/2)**2,
+        (3 - sqrt(5))/2 : pi**2/15 - log((sqrt(5)-1)/2)**2,
+        (sqrt(5) - 1)/2 : pi**2/10 - log((sqrt(5)-1)/2)**2,
+        I : I*S.Catalan - pi**2/48,
+        -I : -I*S.Catalan - pi**2/48,
+        1 - I : pi**2/16 - I*S.Catalan - pi*I/4*log(2),
+        1 + I : pi**2/16 + I*S.Catalan + pi*I/4*log(2),
+        (1 - I)/2 : -log(2)**2/8 + pi*I*log(2)/8 + 5*pi**2/96 - I*S.Catalan
+    }

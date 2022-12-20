@@ -714,8 +714,8 @@ class MpmathPrinter(PythonCodePrinter):
             self._module_format('mpmath.log'), self._print(e.args[0]))
 
     def _print_log1p(self, e):
-        return '{}({}+1)'.format(
-            self._module_format('mpmath.log'), self._print(e.args[0]))
+        return '{}({})'.format(
+            self._module_format('mpmath.log1p'), self._print(e.args[0]))
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='mpmath.sqrt')

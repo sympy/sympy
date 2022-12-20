@@ -1,5 +1,9 @@
 .. _codegen_prose:
 
+===============
+Code Generation
+===============
+
 Several submodules in SymPy allow one to generate directly compilable and
 executable code in a variety of different programming languages from SymPy
 expressions. In addition, there are functions that generate Python importable

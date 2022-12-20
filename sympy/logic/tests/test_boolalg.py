@@ -324,6 +324,9 @@ def test_simplification_boolalg():
     # This expression can be simplified to get rid of the j variables
     assert simplify_logic(expr) == expr
 
+    # Test dontcare
+    assert simplify_logic((a & b) | c | d, dontcare=(a & b)) == c | d
+
     # check input
     ans = SOPform([x, y], [[1, 0]])
     assert SOPform([x, y], [[1, 0]]) == ans

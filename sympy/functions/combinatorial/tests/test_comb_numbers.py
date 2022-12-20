@@ -11,12 +11,12 @@ from sympy.functions.combinatorial.numbers import carmichael
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.integers import floor
 from sympy.polys.polytools import cancel
-from sympy.series.limits import limit
+from sympy.series.limits import limit, Limit
 from sympy.series.order import O
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
-    trigamma, polygamma, factorial, sin, cos, cot, zeta)
+    genocchi, andre, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    trigamma, polygamma, factorial, sin, cos, cot, polylog, zeta, dirichlet_eta)
 from sympy.functions.combinatorial.numbers import _nT
 
 from sympy.core.expr import unchanged
@@ -246,8 +246,12 @@ def test_harmonic():
     assert harmonic(oo, 1 + ip) is zeta(1 + ip)
 
     assert harmonic(0, m) == 0
+    assert harmonic(-1, -1) == 0
+    assert harmonic(-1, 0) == -1
+    assert harmonic(-1, 1) is S.ComplexInfinity
     assert harmonic(-1, 2) is S.NaN
-    assert harmonic(-2, n) is S.NaN
+    assert harmonic(-3, -2) == -5
+    assert harmonic(-3, -3) == 9
 
 
 def test_harmonic_rational():
@@ -329,21 +333,26 @@ def test_harmonic_evalf():
     assert harmonic(-2.0, 2.0).evalf() is S.NaN
 
 def test_harmonic_rewrite():
+    from sympy.functions.elementary.piecewise import Piecewise
     n = Symbol("n")
     m = Symbol("m", integer=True, positive=True)
+    x1 = Symbol("x1", positive=True)
+    x2 = Symbol("x2", negative=True)
 
     assert harmonic(n).rewrite(digamma) == polygamma(0, n + 1) + EulerGamma
     assert harmonic(n).rewrite(trigamma) == polygamma(0, n + 1) + EulerGamma
     assert harmonic(n).rewrite(polygamma) == polygamma(0, n + 1) + EulerGamma
 
     assert harmonic(n,3).rewrite(polygamma) == polygamma(2, n + 1)/2 - polygamma(2, 1)/2
-    assert harmonic(n,m).rewrite(polygamma) == (-1)**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) / gamma(m)
+    assert isinstance(harmonic(n,m).rewrite(polygamma), Piecewise)
 
     assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
     assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
     assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
-    assert harmonic(n, x).rewrite("tractable") == zeta(x) - zeta(x, n+1)
+    assert harmonic(n, x1).rewrite("tractable") == harmonic(n, x1)
+    assert harmonic(n, x1 + 1).rewrite("tractable") == zeta(x1 + 1) - zeta(x1 + 1, n + 1)
+    assert harmonic(n, x2).rewrite("tractable") == zeta(x2) - zeta(x2, n + 1)
 
     _k = Dummy("k")
     assert harmonic(n).rewrite(Sum).dummy_eq(Sum(1/_k, (_k, 1, n)))
@@ -352,12 +361,18 @@ def test_harmonic_rewrite():
 
 def test_harmonic_calculus():
     y = Symbol("y", positive=True)
+    z = Symbol("z", negative=True)
     assert harmonic(x, 1).limit(x, 0) == 0
     assert harmonic(x, y).limit(x, 0) == 0
     assert harmonic(x, 1).series(x, y, 2) == \
             harmonic(y) + (x - y)*zeta(2, y + 1) + O((x - y)**2, (x, y))
     assert limit(harmonic(x, y), x, oo) == harmonic(oo, y)
-    assert limit(harmonic(x, y+1), x, oo) == zeta(y+1)
+    assert limit(harmonic(x, y + 1), x, oo) == zeta(y + 1)
+    assert limit(harmonic(x, y - 1), x, oo) == harmonic(oo, y - 1)
+    assert limit(harmonic(x, z), x, oo) == Limit(harmonic(x, z), x, oo, dir='-')
+    assert limit(harmonic(x, z + 1), x, oo) == oo
+    assert limit(harmonic(x, z + 2), x, oo) == harmonic(oo, z + 2)
+    assert limit(harmonic(x, z - 1), x, oo) == Limit(harmonic(x, z - 1), x, oo, dir='-')
 
 
 def test_euler():
@@ -508,6 +523,40 @@ def test_genocchi():
     assert str(genocchi(-2).evalf(n=10)) == '3.606170709'
     assert str(genocchi(1.3, 3.7).evalf(n=10)) == '-1.847375373'
     assert str(genocchi(I, 1.0).evalf(n=10)) == '-0.3161917278 - 1.45311955*I'
+
+    n = Symbol('n')
+    assert genocchi(n, x).rewrite(dirichlet_eta) == -2*n * dirichlet_eta(1-n, x)
+
+
+def test_andre():
+    nums = [1, 1, 1, 2, 5, 16, 61, 272, 1385, 7936, 50521]
+    for n, a in enumerate(nums):
+        assert andre(n) == a
+    assert andre(S.Infinity) == S.Infinity
+    assert andre(-1) == -log(2)
+    assert andre(-2) == -2*S.Catalan
+    assert andre(-3) == 3*zeta(3)/16
+    assert andre(-5) == -15*zeta(5)/256
+    # In fact andre(-2*n) is related to the Dirichlet *beta* function
+    # at 2*n, but SymPy doesn't implement that (or general L-functions)
+    assert unchanged(andre, -4)
+
+    n = Symbol('n', integer=True, nonnegative=True)
+    assert unchanged(andre, n)
+    assert andre(n).is_integer is True
+    assert andre(n).is_positive is True
+
+    assert str(andre(10, evaluate=False).evalf(n=10)) == '50521.00000'
+    assert str(andre(-1, evaluate=False).evalf(n=10)) == '-0.6931471806'
+    assert str(andre(-2, evaluate=False).evalf(n=10)) == '-1.831931188'
+    assert str(andre(-4, evaluate=False).evalf(n=10)) == '1.977889103'
+    assert str(andre(I, evaluate=False).evalf(n=10)) == '2.378417833 + 0.6343322845*I'
+
+    assert andre(x).rewrite(polylog) == \
+            (-I)**(x+1) * polylog(-x, I) + I**(x+1) * polylog(-x, -I)
+    assert andre(x).rewrite(zeta) == \
+            2 * gamma(x+1) / (2*pi)**(x+1) * \
+            (zeta(x+1, Rational(1,4)) - cos(pi*x) * zeta(x+1, Rational(3,4)))
 
 
 @nocache_fail

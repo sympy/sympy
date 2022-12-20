@@ -681,7 +681,7 @@ def test_evalf_with_bounded_error():
         (2 - 3 * I, Rational(1, 1000), None),
         # very large eps
         (2 - 3 * I, Rational(1000), None),
-        # case where x already small, hence some cancelation in p = m + n - 1
+        # case where x already small, hence some cancellation in p = m + n - 1
         (Rational(1234, 10**8), Rational(1, 10**12), None),
     ]
     for x0, eps, m in cases:

@@ -15,7 +15,7 @@ from sympy.integrals.integrals import Integral
 from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.simplify import simplify
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
-from sympy.testing.pytest import XFAIL, skip, slow, ON_TRAVIS
+from sympy.testing.pytest import XFAIL, skip, slow, ON_CI
 from sympy.integrals.integrals import integrate
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
@@ -270,9 +270,9 @@ def test_pmint_trig():
 
 @slow # 8 seconds on 3.4 GHz
 def test_pmint_logexp():
-    if ON_TRAVIS:
+    if ON_CI:
         # See https://github.com/sympy/sympy/pull/12795
-        skip("Too slow for travis.")
+        skip("Too slow for CI.")
 
     f = (1 + x + x*exp(x))*(x + log(x) + exp(x) - 1)/(x + log(x) + exp(x))**2/x
     g = log(x + exp(x) + log(x)) + 1/(x + exp(x) + log(x))
@@ -314,8 +314,8 @@ def test_pmint_besselj():
 def test_pmint_bessel_products():
     # Note: Derivatives of Bessel functions have many forms.
     # Recurrence relations are needed for comparisons.
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
 
     f = x*besselj(nu, x)*bessely(nu, 2*x)
     g = -2*x*besselj(nu, x)*bessely(nu - 1, 2*x)/3 + x*besselj(nu - 1, x)*bessely(nu, 2*x)/3
@@ -329,8 +329,8 @@ def test_pmint_bessel_products():
 
 @slow # 110 seconds on 3.4 GHz
 def test_pmint_WrightOmega():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     def omega(x):
         return LambertW(exp(x))
 

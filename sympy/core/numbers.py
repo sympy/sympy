@@ -1015,6 +1015,9 @@ class Float(Number):
     -oo
     >>> _.is_Float
     False
+
+    Zero in Float only has a single value. Values are not separate for
+    positive and negative zeroes.
     """
     __slots__ = ('_mpf_', '_prec')
 
@@ -2420,7 +2423,7 @@ class Integer(Rational):
             return NotImplemented
         if isinstance(other, Integer):
             return Integer(self.p // other)
-        return Integer(divmod(self, other)[0])
+        return divmod(self, other)[0]
 
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)

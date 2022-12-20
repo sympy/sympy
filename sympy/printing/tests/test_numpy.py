@@ -1,8 +1,10 @@
 from sympy.concrete.summations import Sum
 from sympy.core.mod import Mod
 from sympy.core.relational import (Equality, Unequality)
+from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.gamma_functions import polygamma
 from sympy.matrices.expressions.blockmatrix import BlockMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
@@ -341,3 +343,6 @@ def test_scipy_print_methods():
     assert hasattr(prntr, '_print_erf')
     assert hasattr(prntr, '_print_factorial')
     assert hasattr(prntr, '_print_chebyshevt')
+    k = Symbol('k', integer=True, nonnegative=True)
+    x = Symbol('x', real=True)
+    assert prntr.doprint(polygamma(k, x)) == "scipy.special.polygamma(k, x)"

@@ -3,7 +3,7 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Float, _illegal
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.elementary.complexes import (Abs, sign, arg)
+from sympy.functions.elementary.complexes import (Abs, sign, arg, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
@@ -73,8 +73,8 @@ def heuristics(e, z, z0, dir):
     """
 
     rv = None
-    if abs(z0) is S.Infinity:
-        rv = limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
+    if z0 is S.Infinity:
+        rv = limit(e.subs(z, 1/z), z, S.Zero, "+")
         if isinstance(rv, Limit):
             return
     elif e.is_Mul or e.is_Add or e.is_Pow or e.is_Function:
@@ -136,7 +136,7 @@ class Limit(Expr):
     >>> from sympy import Limit, sin
     >>> from sympy.abc import x
     >>> Limit(sin(x)/x, x, 0)
-    Limit(sin(x)/x, x, 0)
+    Limit(sin(x)/x, x, 0, dir='+')
     >>> Limit(1/x, x, 0, dir="-")
     Limit(1/x, x, 0, dir='-')
 
@@ -230,6 +230,13 @@ class Limit(Expr):
             raise NotImplementedError("Limits at complex "
                                     "infinity are not implemented")
 
+        if z0.is_infinite:
+            cdir = sign(z0)
+            cdir = cdir/abs(cdir)
+            e = e.subs(z, cdir*z)
+            dir = "-"
+            z0 = S.Infinity
+
         if hints.get('deep', True):
             e = e.doit(**hints)
             z = z.doit(**hints)
@@ -289,7 +296,7 @@ class Limit(Expr):
 
 
         if e.is_meromorphic(z, z0):
-            if abs(z0) is S.Infinity:
+            if z0 is S.Infinity:
                 newe = e.subs(z, 1/z)
                 # cdir changes sign as oo- should become 0+
                 cdir = -cdir
@@ -311,7 +318,7 @@ class Limit(Expr):
                 else:
                     return S.ComplexInfinity
 
-        if abs(z0) is S.Infinity:
+        if z0 is S.Infinity:
             if e.is_Mul:
                 e = factor_terms(e)
             newe = e.subs(z, 1/z)
@@ -329,6 +336,12 @@ class Limit(Expr):
                 r = self.pow_heuristics(e)
                 if r is not None:
                     return r
+            try:
+                coeff = newe.as_leading_term(z, cdir=cdir)
+                if coeff != newe and coeff.has(exp):
+                    return gruntz(coeff, z, 0, "-" if re(cdir).is_negative else "+")
+            except (ValueError, NotImplementedError, PoleError):
+                pass
         else:
             if isinstance(coeff, AccumBounds) and ex == S.Zero:
                 return coeff
@@ -354,6 +367,8 @@ class Limit(Expr):
                             return S.Infinity*sign(coeff)*S.NegativeOne**ex
                         else:
                             return S.ComplexInfinity
+                else:
+                    raise NotImplementedError("Not sure of sign of %s" % ex)
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.

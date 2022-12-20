@@ -158,7 +158,7 @@ class Expr(Basic, EvalfMixin):
     # ***************
     # * Arithmetics *
     # ***************
-    # Expr and its sublcasses use _op_priority to determine which object
+    # Expr and its subclasses use _op_priority to determine which object
     # passed to a binary special method (__mul__, etc.) will handle the
     # operation. In general, the 'call_highest_priority' decorator will choose
     # the object with the highest _op_priority to handle the call.
@@ -3425,6 +3425,14 @@ class Expr(Basic, EvalfMixin):
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
         """
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+        SymPyDeprecationWarning(
+            feature="compute_leading_term",
+            useinstead="as_leading_term",
+            issue=21843,
+            deprecated_since_version="1.12"
+        ).warn()
 
         from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
         if self.has(Piecewise):
@@ -3434,17 +3442,22 @@ class Expr(Basic, EvalfMixin):
         if self.removeO() == 0:
             return self
 
-        from sympy.series.gruntz import calculate_series
+        from .symbol import Dummy
+        from sympy.functions.elementary.exponential import log
+        from sympy.series.order import Order
 
-        if logx is None:
-            from .symbol import Dummy
-            from sympy.functions.elementary.exponential import log
-            d = Dummy('logx')
-            s = calculate_series(expr, x, d).subs(d, log(x))
-        else:
-            s = calculate_series(expr, x, logx)
+        _logx = logx
+        logx = Dummy('logx') if logx is None else logx
+        res = Order(1)
+        incr = S.One
+        while res.is_Order:
+            res = expr._eval_nseries(x, n=1+incr, logx=logx).cancel().powsimp().trigsimp()
+            incr *= 2
 
-        return s.as_leading_term(x)
+        if _logx is None:
+            res = res.subs(logx, log(x))
+
+        return res.as_leading_term(x)
 
     @cacheit
     def as_leading_term(self, *symbols, logx=None, cdir=0):

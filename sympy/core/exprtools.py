@@ -921,7 +921,7 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
     isprimitive : boolean, optional
         If ``isprimitive`` is True then the call to primitive
         for an Add will be skipped. This is useful when the
-        content has already been extrated.
+        content has already been extracted.
 
     fraction : boolean, optional
         If ``fraction`` is True then the expression will appear over a common

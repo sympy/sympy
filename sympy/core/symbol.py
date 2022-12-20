@@ -253,7 +253,7 @@ class Symbol(AtomicExpr, Boolean):
 
     @staticmethod
     def _sanitize(assumptions, obj=None):
-        """Remove None, covert values to bool, check commutativity *in place*.
+        """Remove None, convert values to bool, check commutativity *in place*.
         """
 
         # be strict about commutativity: cannot be None

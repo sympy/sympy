@@ -75,31 +75,17 @@ Guide to Mechanics
 ==================
 
 .. toctree::
-    :maxdepth: 2
+   :titlesonly:
 
-    masses.rst
-    kane.rst
-    lagrange.rst
-    joints.rst
-    symsystem.rst
-    linearize.rst
-    examples.rst
-    advanced.rst
-    reference.rst
-    autolev_parser.rst
-    sympy_mechanics_for_autolev_users.rst
-
-Mechanics API
-=============
-
-.. toctree::
-    :maxdepth: 2
-
-    api/part_bod.rst
-    api/body.rst
-    api/kane_lagrange.rst
-    api/joint.rst
-    api/system.rst
-    api/linearize.rst
-    api/expr_manip.rst
-    api/printing.rst
+   masses.rst
+   kane.rst
+   lagrange.rst
+   joints.rst
+   symsystem.rst
+   linearize.rst
+   examples.rst
+   advanced.rst
+   reference.rst
+   autolev_parser.rst
+   sympy_mechanics_for_autolev_users.rst
+   api/index.rst

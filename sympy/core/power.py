@@ -1633,6 +1633,7 @@ class Pow(Expr):
         from sympy.functions.elementary.exponential import exp, log
         from sympy.series.limits import limit
         from sympy.series.order import Order
+        from sympy.core.sympify import sympify
         if self.base is S.Exp1:
             e_series = self.exp.nseries(x, n=n, logx=logx)
             if e_series.is_Order:
@@ -1686,16 +1687,19 @@ class Pow(Expr):
             e = logcombine(e).cancel()
 
         if not (m.is_zero or e.is_number and e.is_real):
-            res = exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
-            if res is exp(e*log(b)):
-                return self
-            return res
+            if self == self._eval_as_leading_term(x, logx=logx, cdir=cdir):
+                res = exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+                if res == exp(e*log(b)):
+                    return self
+                return res
 
         f = b.as_leading_term(x, logx=logx)
         g = (b/f - S.One).cancel(expand=False)
         if not m.is_number:
             raise NotImplementedError()
         maxpow = n - m*e
+        if maxpow.has(Symbol):
+            maxpow = sympify(n)
 
         if maxpow.is_negative:
             return Order(x**(m*e), x)
@@ -1794,7 +1798,10 @@ class Pow(Expr):
 
         if not (e.is_integer and e.is_positive and (e*d - n).is_nonpositive and
                 res == _mexpand(self)):
-            res += Order(x**n, x)
+            try:
+                res += Order(x**n, x)
+            except NotImplementedError:
+                return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
         return res
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):

@@ -1009,7 +1009,7 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.core.symbol import Dummy
+        from sympy.core.symbol import Dummy, Symbol
         from sympy.series.order import Order
         from sympy.functions.elementary.exponential import log
         from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
@@ -1067,7 +1067,9 @@ class Add(Expr, AssocOp):
             try:
                 n0 = min.getn()
             except NotImplementedError:
-                n0 = 1
+                n0 = S.One
+            if n0.has(Symbol):
+                n0 = S.One
             res = Order(1)
             incr = S.One
             while res.is_Order:
@@ -1270,7 +1272,7 @@ class Add(Expr, AssocOp):
     def __neg__(self):
         if not global_parameters.distribute:
             return super().__neg__()
-        return Add(*[-i for i in self.args])
+        return Mul(S.NegativeOne, self)
 
 add = AssocOpDispatcher('add')
 

@@ -8,7 +8,7 @@ the separate 'factorials' module.
 """
 from math import prod
 from collections import defaultdict
-from typing import Callable, Dict as tDict, Tuple as tTuple
+from typing import Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
@@ -16,13 +16,15 @@ from sympy.core.expr import Expr
 from sympy.core.function import ArgumentIndexError, Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import E, pi, oo, Rational, Integer
+from sympy.core.numbers import E, I, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
+from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.ntheory.primetest import isprime, is_square
+from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
 from sympy.utilities.enumerative import MultisetPartitionTraverser
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import multiset, multiset_derangements, iterable
@@ -467,7 +469,7 @@ class bernoulli(Function):
 
     This formula is similar to the sum given in the definition, but
     cuts `\frac{2}{3}` of the terms. For Bernoulli polynomials, we use
-    the formula in the definition.
+    Appell sequences.
 
     For `n` a nonnegative integer and `s`, `a`, `x` arbitrary complex numbers,
 
@@ -500,7 +502,8 @@ class bernoulli(Function):
     See Also
     ========
 
-    bell, catalan, euler, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
+    andre, bell, catalan, euler, fibonacci, harmonic, lucas, genocchi,
+    partition, tribonacci, sympy.polys.appellseqs.bernoulli_poly
 
     References
     ==========
@@ -546,6 +549,8 @@ class bernoulli(Function):
         elif n.is_zero:
             return S.One
         elif n.is_integer is False or n.is_nonnegative is False:
+            if x is not None and x.is_Integer and x.is_nonpositive:
+                return S.NaN
             return
         # Bernoulli numbers
         elif x is None:
@@ -572,12 +577,8 @@ class bernoulli(Function):
                     cls._highest[case] = i
                 return b
         # Bernoulli polynomials
-        elif n is S.One:
-            return x - S.Half
         elif n.is_Number:
-            n = int(n)
-            result = [binomial(n,k) * cls(k) * x**(n-k) for k in range(0, n+1, 2)]
-            return Add(*result) - S.Half * n * x**(n-1)
+            return bernoulli_poly(n, x)
 
     def _eval_rewrite_as_zeta(self, n, x=1, **kwargs):
         from sympy.functions.special.zeta_functions import zeta
@@ -781,7 +782,7 @@ class harmonic(Function):
       ``harmonic(n) == harmonic(n, 1)``
 
     This function can be extended to complex `n` and `m` where `n` is not a
-    negative integer as
+    negative integer or `m` is a nonpositive integer as
 
     .. math:: \operatorname{H}_{n,m} = \begin{cases} \zeta(m) - \zeta(m, n+1)
             & m \ne 1 \\ \psi(n+1) + \gamma & m = 1 \end{cases}
@@ -843,10 +844,11 @@ class harmonic(Function):
     polygamma(0, n + 1) + EulerGamma
 
     >>> harmonic(n,3).rewrite(polygamma)
-    polygamma(2, n + 1)/2 - polygamma(2, 1)/2
+    polygamma(2, n + 1)/2 + zeta(3)
 
-    >>> harmonic(n,m).rewrite(polygamma)
-    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/gamma(m)
+    >>> simplify(harmonic(n,m).rewrite(polygamma))
+    Piecewise((polygamma(0, n + 1) + EulerGamma, Eq(m, 1)),
+    (-(-1)**m*polygamma(m - 1, n + 1)/factorial(m - 1) + zeta(m), True))
 
     Integer offsets in the argument can be pulled out:
 
@@ -869,9 +871,12 @@ class harmonic(Function):
     pi**2/6
 
     >>> limit(harmonic(n, 3), n, oo)
-    -polygamma(2, 1)/2
+    zeta(3)
 
-    >>> limit(harmonic(n, m+1), n, oo) # does not hold for m == 1
+    For `m > 1`, `H_{n,m}` tends to `\zeta(m)` in the limit of infinite `n`:
+
+    >>> m = Symbol("m", positive=True)
+    >>> limit(harmonic(n, m+1), n, oo)
     zeta(m + 1)
 
     See Also
@@ -887,10 +892,6 @@ class harmonic(Function):
     .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
 
     """
-
-    # Generate one memoized Harmonic number-generating function for each
-    # order and store it in a dictionary
-    _functions = {}  # type: tDict[Integer, Callable[[int], Rational]]
 
     @classmethod
     def eval(cls, n, m=None):
@@ -910,20 +911,20 @@ class harmonic(Function):
                 return S.Infinity
             elif is_gt(m, S.One):
                 return zeta(m)
+        elif m.is_Integer and m.is_nonpositive:
+            return (bernoulli(1-m, n+1) - bernoulli(1-m)) / (1-m)
         elif n.is_Integer:
-            if n.is_negative:
-                return S.NaN
-            elif m not in cls._functions:
-                @recurrence_memo([0])
-                def f(n, prev):
-                    return prev[-1] + S.One / n**m
-                cls._functions[m] = f
-            return cls._functions[m](int(n))
+            if n.is_negative and (m.is_integer is False or m.is_nonpositive is False):
+                return S.ComplexInfinity if m is S.One else S.NaN
+            if n.is_nonnegative:
+                return Add(*(k**(-m) for k in range(1, int(n)+1)))
 
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
         if m.is_integer and m.is_positive:
-            return S.NegativeOne**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) / gamma(m)
+            return Piecewise((polygamma(0, n+1) + S.EulerGamma, Eq(m, 1)),
+                    (S.NegativeOne**m * (polygamma(m-1, 1) - polygamma(m-1, n+1)) /
+                    gamma(m), True))
 
     def _eval_rewrite_as_digamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
@@ -988,7 +989,9 @@ class harmonic(Function):
         pg = self.rewrite(polygamma)
         if not isinstance(pg, harmonic):
             return pg.rewrite("tractable", deep=True)
-        return (zeta(m) - zeta(m, n+1)).rewrite("tractable", deep=True)
+        arg = m - S.One
+        if arg.is_nonzero:
+            return (zeta(m) - zeta(m, n+1)).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
         if not all(x.is_number for x in self.args):
@@ -1038,12 +1041,8 @@ class euler(Function):
 
     .. math:: E_n = 2^n E_n\left(\frac{1}{2}\right).
 
-    We compute symbolic Euler polynomials using [5]_
-
-    .. math:: E_n(x) = \sum_{k=0}^n \binom{n}{k} \frac{E_k}{2^k}
-                       \left(x - \frac{1}{2}\right)^{n-k}.
-
-    However, numerical evaluation of the Euler polynomial is computed
+    We compute symbolic Euler polynomials using Appell sequences,
+    but numerical evaluation of the Euler polynomial is computed
     more efficiently (and more accurately) using the mpmath library.
 
     The Euler polynomials are special cases of the generalized Euler function,
@@ -1096,7 +1095,8 @@ class euler(Function):
     See Also
     ========
 
-    bell, bernoulli, catalan, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
+    andre, bell, bernoulli, catalan, fibonacci, harmonic, lucas, genocchi,
+    partition, tribonacci, sympy.polys.appellseqs.euler_poly
 
     References
     ==========
@@ -1105,7 +1105,6 @@ class euler(Function):
     .. [2] http://mathworld.wolfram.com/EulerNumber.html
     .. [3] https://en.wikipedia.org/wiki/Alternating_permutation
     .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
-    .. [5] http://dlmf.nist.gov/24.2#ii
 
     """
 
@@ -1113,7 +1112,7 @@ class euler(Function):
     def eval(cls, n, x=None):
         if n.is_zero:
             return S.One
-        elif (n+1).is_zero:
+        elif n is S.NegativeOne:
             if x is None:
                 return S.Pi/2
             from sympy.functions.special.gamma_functions import digamma
@@ -1131,10 +1130,7 @@ class euler(Function):
                 return Integer(res)
         # Euler polynomials
         elif n.is_Number:
-            n = int(n)
-            x_ = Dummy("x")
-            result = [binomial(n,k) * cls(k)/(2**k) * (x_-S.Half)**(n-k) for k in range(0, n+1, 2)]
-            return Add(*result).expand().subs(x_, x)
+            return euler_poly(n, x)
 
     def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
         from sympy.concrete.summations import Sum
@@ -1161,17 +1157,23 @@ class euler(Function):
     def _eval_evalf(self, prec):
         if not all(i.is_number for i in self.args):
             return
+        from mpmath import mp
         m, x = (self.args[0], None) if len(self.args) == 1 else self.args
-        if m.is_Integer and m.is_nonnegative:
-            from mpmath import mp
-            with workprec(prec):
-                if x is None:
-                    res = mp.eulernum(m)
+        m = m._to_mpmath(prec)
+        if x is not None:
+            x = x._to_mpmath(prec)
+        with workprec(prec):
+            if mp.isint(m) and m >= 0:
+                res = mp.eulernum(m) if x is None else mp.eulerpoly(m, x)
+            else:
+                if m == -1:
+                    res = mp.pi if x is None else mp.digamma((x+1)/2) - mp.digamma(x/2)
                 else:
-                    x = x._to_mpmath(prec)
-                    res = mp.eulerpoly(m, x)
-            return Expr._from_mpmath(res, prec)
-        return self.rewrite(genocchi)._eval_evalf(prec)
+                    y = 0.5 if x is None else x
+                    res = 2 * (mp.zeta(-m, y) - 2**(m+1) * mp.zeta(-m, (y+1)/2))
+                if x is None:
+                    res *= 2**m
+        return Expr._from_mpmath(res, prec)
 
 
 #----------------------------------------------------------------------------#
@@ -1248,8 +1250,8 @@ class catalan(Function):
     See Also
     ========
 
-    bell, bernoulli, euler, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
-    sympy.functions.combinatorial.factorials.binomial
+    andre, bell, bernoulli, euler, fibonacci, harmonic, lucas, genocchi,
+    partition, tribonacci, sympy.functions.combinatorial.factorials.binomial
 
     References
     ==========
@@ -1320,7 +1322,6 @@ class catalan(Function):
             return self.rewrite(gamma)._eval_evalf(prec)
 
 
-
 #----------------------------------------------------------------------------#
 #                                                                            #
 #                           Genocchi numbers                                 #
@@ -1367,6 +1368,7 @@ class genocchi(Function):
     ========
 
     bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, partition, tribonacci
+    sympy.polys.appellseqs.genocchi_poly
 
     References
     ==========
@@ -1392,14 +1394,16 @@ class genocchi(Function):
                 return 2 * (1-S(2)**n) * bernoulli(n)
         # Genocchi polynomials
         elif n.is_Number:
-            x_ = Dummy("x")
-            res = 2 * (bernoulli(n, x_) - 2**n * bernoulli(n, (x_+1) / 2))
-            return res.expand().subs(x_, x)
+            return genocchi_poly(n, x)
 
     def _eval_rewrite_as_bernoulli(self, n, x=1, **kwargs):
         if x == 1 and n.is_integer and n.is_nonnegative:
             return 2 * (1-S(2)**n) * bernoulli(n)
         return 2 * (bernoulli(n, x) - 2**n * bernoulli(n, (x+1) / 2))
+
+    def _eval_rewrite_as_dirichlet_eta(self, n, x=1, **kwargs):
+        from sympy.functions.special.zeta_functions import dirichlet_eta
+        return -2*n * dirichlet_eta(1-n, x)
 
     def _eval_is_integer(self):
         if len(self.args) > 1 and self.args[1] != 1:
@@ -1456,6 +1460,121 @@ class genocchi(Function):
     def _eval_evalf(self, prec):
         if all(i.is_number for i in self.args):
             return self.rewrite(bernoulli)._eval_evalf(prec)
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                              Andre numbers                                 #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class andre(Function):
+    r"""
+    Andre numbers / Andre function
+
+    The Andre number `\mathcal{A}_n` is Luschny's name for half the number of
+    *alternating permutations* on `n` elements, where a permutation is alternating
+    if adjacent elements alternately compare "greater" and "smaller" going from
+    left to right. For example, `2 < 3 > 1 < 4` is an alternating permutation.
+
+    This sequence is A000111 in the OEIS, which assigns the names *up/down numbers*
+    and *Euler zigzag numbers*. It satisfies a recurrence relation similar to that
+    for the Catalan numbers, with `\mathcal{A}_0 = 1` and
+
+    .. math:: 2 \mathcal{A}_{n+1} = \sum_{k=0}^n \binom{n}{k} \mathcal{A}_k \mathcal{A}_{n-k}
+
+    The Bernoulli and Euler numbers are signed transformations of the odd- and
+    even-indexed elements of this sequence respectively:
+
+    .. math :: \operatorname{B}_{2k} = \frac{2k \mathcal{A}_{2k-1}}{(-4)^k - (-16)^k}
+
+    .. math :: \operatorname{E}_{2k} = (-1)^k \mathcal{A}_{2k}
+
+    Like the Bernoulli and Euler numbers, the Andre numbers are interpolated by the
+    entire Andre function:
+
+    .. math :: \mathcal{A}(s) = (-i)^{s+1} \operatorname{Li}_{-s}(i) +
+            i^{s+1} \operatorname{Li}_{-s}(-i) = \\ \frac{2 \Gamma(s+1)}{(2\pi)^{s+1}}
+            (\zeta(s+1, 1/4) - \zeta(s+1, 3/4) \cos{\pi s})
+
+    Examples
+    ========
+
+    >>> from sympy import andre, euler, bernoulli
+    >>> [andre(n) for n in range(11)]
+    [1, 1, 1, 2, 5, 16, 61, 272, 1385, 7936, 50521]
+    >>> [(-1)**k * andre(2*k) for k in range(7)]
+    [1, -1, 5, -61, 1385, -50521, 2702765]
+    >>> [euler(2*k) for k in range(7)]
+    [1, -1, 5, -61, 1385, -50521, 2702765]
+    >>> [andre(2*k-1) * (2*k) / ((-4)**k - (-16)**k) for k in range(1, 8)]
+    [1/6, -1/30, 1/42, -1/30, 5/66, -691/2730, 7/6]
+    >>> [bernoulli(2*k) for k in range(1, 8)]
+    [1/6, -1/30, 1/42, -1/30, 5/66, -691/2730, 7/6]
+
+    See Also
+    ========
+
+    bernoulli, catalan, euler, sympy.polys.appellseqs.andre_poly
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Alternating_permutation
+    .. [2] https://mathworld.wolfram.com/EulerZigzagNumber.html
+    .. [3] Peter Luschny, "An introduction to the Bernoulli function",
+           https://arxiv.org/abs/2009.06743
+    """
+
+    @classmethod
+    def eval(cls, n):
+        if n is S.NaN:
+            return S.NaN
+        elif n is S.Infinity:
+            return S.Infinity
+        if n.is_zero:
+            return S.One
+        elif n == -1:
+            return -log(2)
+        elif n == -2:
+            return -2*S.Catalan
+        elif n.is_Integer:
+            if n.is_nonnegative and n.is_even:
+                return abs(euler(n))
+            elif n.is_odd:
+                from sympy.functions.special.zeta_functions import zeta
+                m = -n-1
+                return I**m * Rational(1-2**m, 4**m) * zeta(-n)
+
+    def _eval_rewrite_as_zeta(self, s, **kwargs):
+        from sympy.functions.elementary.trigonometric import cos
+        from sympy.functions.special.gamma_functions import gamma
+        from sympy.functions.special.zeta_functions import zeta
+        return 2 * gamma(s+1) / (2*pi)**(s+1) * \
+                (zeta(s+1, S.One/4) - cos(pi*s) * zeta(s+1, S(3)/4))
+
+    def _eval_rewrite_as_polylog(self, s, **kwargs):
+        from sympy.functions.special.zeta_functions import polylog
+        return (-I)**(s+1) * polylog(-s, I) + I**(s+1) * polylog(-s, -I)
+
+    def _eval_is_integer(self):
+        n = self.args[0]
+        if n.is_integer and n.is_nonnegative:
+            return True
+
+    def _eval_is_positive(self):
+        if self.args[0].is_nonnegative:
+            return True
+
+    def _eval_evalf(self, prec):
+        if not self.args[0].is_number:
+            return
+        s = self.args[0]._to_mpmath(prec+12)
+        with workprec(prec+12):
+            sp, cp = mp.sinpi(s/2), mp.cospi(s/2)
+            res = 2*mp.dirichlet(-s, (-sp, cp, sp, -cp))
+        return Expr._from_mpmath(res, prec)
 
 
 #----------------------------------------------------------------------------#
@@ -2349,7 +2468,7 @@ def nD(i=None, brute=None, *, n=None, m=None):
 
     By default, a brute-force enumeration and count of multiset permutations
     is only done if there are fewer than 9 elements. There may be cases when
-    there is high multiplicty with few unique elements that will benefit
+    there is high multiplicity with few unique elements that will benefit
     from a brute-force enumeration, too. For this reason, the `brute`
     keyword (default None) is provided. When False, the brute-force
     enumeration will never be used. When True, it will always be used.

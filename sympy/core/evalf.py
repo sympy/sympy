@@ -1746,8 +1746,9 @@ def N(x, n=15, **options):
     return sympify(x, rational=True).evalf(n, **options)
 
 
-def _evalf_with_bounded_error(x: 'Expr', eps: 'Expr' = None, m: int = 0,
-                              options: OPT_DICT = None) -> TMP_RES:
+def _evalf_with_bounded_error(x: 'Expr', eps: 'Optional[Expr]' = None,
+                              m: int = 0,
+                              options: Optional[OPT_DICT] = None) -> TMP_RES:
     """
     Evaluate *x* to within a bounded absolute error.
 
