@@ -424,7 +424,8 @@ def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, 
             'nonnegative': lambda: GreaterThan(sym, 0, evaluate=False),
             'negative': lambda: StrictLessThan(sym, 0, evaluate=False),
             'nonpositive': lambda: LessThan(sym, 0, evaluate=False),
-            '__is_random_symbol': lambda: sym.pspace.domain.as_boolean().simplify()
+            # mypy isn't smart enough to understand this lambda is only invoked if `isinstance(sym, RandomSymbol)`
+            '__is_random_symbol': lambda: sym.pspace.domain.as_boolean().simplify()  # type: ignore[union-attr]
         }
         for a in unsupported_assumptions:
             if current_assumptions.get(a) and not current_assumptions.get('zero'):  # zero checks pretty much everything
