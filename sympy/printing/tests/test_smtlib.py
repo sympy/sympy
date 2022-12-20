@@ -11,7 +11,7 @@ from sympy.core import Mul, Pow
 from sympy.core import (S, pi, symbols, Function, Rational, Integer,
                         Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import Piecewise, exp, sin, cos
-from sympy.printing.smtlib import smtlib_code
+from sympy.printing.smtlib import smtlib_code, SMTLibPrinter
 from sympy.testing.pytest import Failed
 
 x, y, z = symbols('x,y,z')
@@ -20,13 +20,13 @@ x, y, z = symbols('x,y,z')
 class _E(Enum):
     CANNOT_ASSERT = re.compile(r"ValueError\(\"Cannot automatically assert '.+'-ness when declaring `.+`. Please assert explicitly.\"\)")
     COULD_NOT_INFER = re.compile(r"TypeError\(\"Could not infer type of `.+`. Apparently both `.+` and `.+`\?\"\)")
+    WILL_NOT_DECLARE = re.compile(r"ValueError\(\"Non-Symbol/Function `.+` will not be declared.\"\)")
     GENERAL_ASSERTION_ERROR = re.compile(r"AssertionError\(\)")
     GENERAL_KEY_ERROR = re.compile(r"KeyError\(.+\)")
 
 
 class _W(Enum):
     DEFAULTING_TO_FLOAT = re.compile(r"Could not infer type of `.+`. Defaulting to float.")
-    WILL_NOT_DECLARE = re.compile(r"Non-Symbol/Function `.+` will not be declared.")
     WILL_NOT_ASSERT = re.compile(r"Non-Boolean expression `.+` will not be asserted. Converting to SMTLib verbatim.")
 
 
@@ -655,3 +655,26 @@ def test_smtlib_random_variables():
              '(declare-const q Int)\n' \
              '(assert (or (= q 0) (= q 1)))\n' \
              '(+ o p q)'
+
+
+def test_smtlib_dreal_example():
+    x, y, z = symbols('x y z', integer=True)
+    minimize = Function('minimize')  # special solver-specific builtin
+    known_functions = SMTLibPrinter()._known_functions | {minimize: minimize.name}
+    with _check_warns([_W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(
+            [
+                (-1 <= x) & (x < 10),
+                y < z,
+                x ** 2 + y ** 2 + z ** 2 > 20,
+                minimize(z)
+            ],
+            known_functions=known_functions,
+            log_warn=w
+        ) == '(declare-const x Int)\n' \
+             '(declare-const y Int)\n' \
+             '(declare-const z Int)\n' \
+             '(assert (and (>= x -1) (< x 10)))\n' \
+             '(assert (< y z))\n' \
+             '(assert (> (+ (pow x 2) (pow y 2) (pow z 2)) 20))\n' \
+             '(minimize z)'
