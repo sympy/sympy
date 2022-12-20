@@ -11,7 +11,6 @@ from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not, fuzzy_or
-from sympy.core.numbers import pi
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -278,14 +277,12 @@ class Quaternion(Expr):
             angles[1] = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
 
         # Check for singularities in numerical cases
-        angle_test = angles[1].evalf()
+        angle_test = angles[1]
         case = 0
-        pi_f = pi.evalf()
         if angle_test.is_number:
-            eps = 10e-7
-            if abs(angle_test) <= eps:
+            if angle_test.equals(S.Zero):
                 case = 1
-            elif abs(angle_test - pi_f) <= eps:
+            if angle_test.equals(S.Pi):
                 case = 2
 
         if case == 0:
@@ -307,7 +304,7 @@ class Quaternion(Expr):
 
         # for Tait-Bryan angles
         if not symmetric:
-            angles[1] -= pi / 2
+            angles[1] -= S.Pi / 2
             angles[0] *= sign
 
         if extrinsic:
