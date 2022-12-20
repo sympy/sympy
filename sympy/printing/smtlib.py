@@ -383,7 +383,7 @@ def smtlib_code(
         ],
 
         # ';; DECLARATIONS',
-        *[line for block in sorted([_ for _ in declarations if _], key=lambda b: b[0]) for line in block],
+        *[line for block in sorted(declarations, key=lambda b: b[0]) for line in block],
 
         # ';; EXPRESSIONS',
         *[
