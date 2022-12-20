@@ -1,4 +1,3 @@
-import warnings
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
@@ -98,14 +97,14 @@ class Quaternion(Expr):
     def __new__(cls, a=0, b=0, c=0, d=0, real_field=True, norm=None):
         a, b, c, d, norm = map(sympify, (a, b, c, d, norm))
 
-        if (norm is not None):
+        if (norm is not None) and (norm.is_Number):
             # if all elements are numerical
             if (all(i.is_Number is True for i in [a, b, c, d]) and
                     norm**2 != a**2 + b**2 + c**2 + d**2):
                 raise ValueError("incompatible value for norm")
 
-            if norm.is_zero:
-                warnings.warn("Input norm is zero")
+            if not norm.is_positive:
+                raise ValueError("Input norm must be positive.")
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
