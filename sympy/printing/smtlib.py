@@ -80,14 +80,17 @@ class SMTLibPrinter(Printer):
         self._known_constants = dict(self._settings['known_constants'])
         self._known_functions = dict(self._settings['known_functions'])
 
-        for _ in self._known_types.values(): assert self._is_legal_name(_)
-        for _ in self._known_constants.values(): assert self._is_legal_name(_)
-        # for _ in self._known_functions.values(): assert self._is_legal_name(_)  # +, *, <, >, etc.
+        for _ in self._known_types.values(): self._check_is_legal_name(_)
+        for _ in self._known_constants.values(): self._check_is_legal_name(_)
+        # for _ in self._known_functions.values(): self._check_is_legal_name(_)  # +, *, <, >, etc.
 
     def _is_legal_name(self, s: str):
         if not s: return False
         if s[0].isnumeric(): return False
         return all(_.isalnum() or _ == '_' for _ in s)
+
+    def _check_is_legal_name(self, s: str):
+        assert self._is_legal_name(s), f"Name `{s}` may not be legal in SMT-Lib."
 
     def _s_expr(self, op: str, args: typing.Union[list, tuple]) -> str:
         args_str = ' '.join(
@@ -130,7 +133,7 @@ class SMTLibPrinter(Printer):
         def _print_Piecewise_recursive(args: typing.Union[list, tuple]):
             e, c = args[0]
             if len(args) == 1:
-                assert (c is True) or isinstance(c, BooleanTrue)
+                assert (c is True) or isinstance(c, BooleanTrue), "Piecewise expression must end in (expr, True) statement."
                 return self._print(e)
             else:
                 ite = self._known_functions[ITE]
@@ -185,11 +188,11 @@ class SMTLibPrinter(Printer):
         return str(x)
 
     def _print_Symbol(self, x: Symbol):
-        assert self._is_legal_name(x.name)
+        self._check_is_legal_name(x.name)
         return x.name
 
     def _print_RandomSymbol(self, x):
-        assert self._is_legal_name(x.name)
+        self._check_is_legal_name(x.name)
         return x.name
 
     def _print_NumberSymbol(self, x):
@@ -197,7 +200,7 @@ class SMTLibPrinter(Printer):
         return name if name else self._print_Float(x)
 
     def _print_UndefinedFunction(self, x):
-        assert self._is_legal_name(x.name)
+        self._check_is_legal_name(x.name)
         return x.name
 
     def _print_Exp1(self, x):

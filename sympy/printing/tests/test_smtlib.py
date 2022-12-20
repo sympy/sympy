@@ -18,10 +18,12 @@ x, y, z = symbols('x,y,z')
 
 
 class _E(Enum):
-    CANNOT_ASSERT = re.compile(r"ValueError\(\"Cannot automatically assert '.+'-ness when declaring `.+`. Please assert explicitly.\"\)")
-    COULD_NOT_INFER = re.compile(r"TypeError\(\"Could not infer type of `.+`. Apparently both `.+` and `.+`\?\"\)")
-    WILL_NOT_DECLARE = re.compile(r"ValueError\(\"Non-Symbol/Function `.+` will not be declared.\"\)")
-    GENERAL_ASSERTION_ERROR = re.compile(r"AssertionError\(\)")
+    CANNOT_ASSERT = re.compile(r"ValueError\([\"']Cannot automatically assert '.+'-ness when declaring `.+`. Please assert explicitly.[\"']\)")
+    COULD_NOT_INFER = re.compile(r"TypeError\([\"']Could not infer type of `.+`. Apparently both `.+` and `.+`\?[\"']\)")
+    UNKNOWN_TYPE = re.compile(r"TypeError\([\"']Unknown type of undefined function `.+`. Must be mapped to ``str`` in known_functions or mapped to ``Callable\[..]`` in symbol_table.[\"']\)")
+    WILL_NOT_DECLARE = re.compile(r"ValueError\([\"']Non-Symbol/Function `.+` will not be declared.[\"']\)")
+    PIECEWISE_ERROR = re.compile(r"AssertionError\([\"']Piecewise expression must end in \(expr, True\) statement.[\"']\)")
+    NAME_NOT_LEGAL = re.compile(r"AssertionError\([\"']Name `.+` may not be legal in SMT-Lib.[\"']\)")
     GENERAL_KEY_ERROR = re.compile(r"KeyError\(.+\)")
 
 
@@ -490,7 +492,7 @@ def test_smtlib_piecewise():
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x ** 2, x > 1), (sin(x), x > 0))
     with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
-        with _check_raises(_E.GENERAL_ASSERTION_ERROR):
+        with _check_raises(_E.PIECEWISE_ERROR):
             smtlib_code(expr, log_warn=w)
 
 
@@ -563,6 +565,10 @@ def test_not_supported():
                 smtlib_code(s, auto_assert=True, log_warn=w)
             with _check_raises(_E.CANNOT_ASSERT):
                 smtlib_code(s, auto_assert=False, log_warn=w)
+
+    with _check_warns([]) as w:
+        with _check_raises(_E.NAME_NOT_LEGAL):
+            smtlib_code(Symbol('bad name!'), log_warn=w)
 
 
 def test_smtlib_assumptions():
@@ -661,14 +667,16 @@ def test_smtlib_dreal_example():
     x, y, z = symbols('x y z', integer=True)
     minimize = Function('minimize')  # special solver-specific builtin
     known_functions = SMTLibPrinter()._known_functions | {minimize: minimize.name}
+    exprs = [
+        (-1 <= x) & (x < 10),
+        y < z,
+        x ** 2 + y ** 2 + z ** 2 > 20,
+        minimize(z)
+    ]
+
     with _check_warns([_W.WILL_NOT_ASSERT]) as w:
         assert smtlib_code(
-            [
-                (-1 <= x) & (x < 10),
-                y < z,
-                x ** 2 + y ** 2 + z ** 2 > 20,
-                minimize(z)
-            ],
+            exprs,
             known_functions=known_functions,
             log_warn=w
         ) == '(declare-const x Int)\n' \
@@ -678,3 +686,11 @@ def test_smtlib_dreal_example():
              '(assert (< y z))\n' \
              '(assert (> (+ (pow x 2) (pow y 2) (pow z 2)) 20))\n' \
              '(minimize z)'
+
+    with _check_warns([]) as w:
+        with _check_raises(_E.UNKNOWN_TYPE):
+            smtlib_code(
+                exprs,
+                # known_functions=known_functions,
+                log_warn=w
+            )
