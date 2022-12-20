@@ -444,8 +444,7 @@ def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, 
         return [p._s_expr('declare-fun', [type(sym), params_signature, return_signature])]
 
     else:
-        log_warn(f"Non-Symbol/Function `{sym}` will not be declared.")
-        return []
+        raise ValueError(f"Non-Symbol/Function `{sym}` will not be declared.")
 
 
 def _auto_assert_smtlib(e: Expr, p: SMTLibPrinter, log_warn: typing.Callable[[str], None]):
