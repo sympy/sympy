@@ -404,11 +404,35 @@ def _atoms_symbols_preserve_rv(expr):
 
 
 def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, log_warn: typing.Callable[[str], None]):
-    if sym.is_Symbol:
+    if sym.is_symbol:
         type_signature = p.symbol_table[sym]
         assert isinstance(type_signature, type)
         type_signature = p._known_types[type_signature]
-        return p._s_expr('declare-const', [sym, type_signature])
+
+        from sympy.stats.rv import RandomSymbol
+        current_assumptions = assumptions(sym) | {'__is_random_symbol': isinstance(sym, RandomSymbol)}
+        unsupported_assumptions = {
+            'infinite', 'antihermitian', 'transcendental', 'imaginary', 'irrational', 'noninteger', 'even', 'odd', 'prime', 'composite'
+        }
+        supported_assumptions = {
+            'zero': lambda: Equality(sym, 0, evaluate=False),
+            'nonzero': lambda: Unequality(sym, 0, evaluate=False),
+            'positive': lambda: StrictGreaterThan(sym, 0, evaluate=False),
+            'nonnegative': lambda: GreaterThan(sym, 0, evaluate=False),
+            'negative': lambda: StrictLessThan(sym, 0, evaluate=False),
+            'nonpositive': lambda: LessThan(sym, 0, evaluate=False),
+            '__is_random_symbol': lambda: sym.pspace.domain.as_boolean().simplify()
+        }
+        for a in unsupported_assumptions:
+            if current_assumptions.get(a) and not current_assumptions.get('zero'):  # zero checks pretty much everything
+                raise ValueError(f"Cannot automatically assert '{a}'-ness when declaring `{sym}`. Please assert explicitly.")
+        return [
+                   p._s_expr('declare-const', [sym, type_signature])
+               ] + [
+                   p._s_expr('assert', [predicate()])
+                   for a, predicate in supported_assumptions.items()
+                   if current_assumptions.get(a)
+               ]
 
     elif sym.is_Function:
         type_signature = p.symbol_table[type(sym)]
