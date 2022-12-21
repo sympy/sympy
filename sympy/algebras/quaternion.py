@@ -1,6 +1,7 @@
 import warnings
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
+from sympy.core.relational import is_eq
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -280,9 +281,9 @@ class Quaternion(Expr):
         angle_test = angles[1]
         case = 0
         if angle_test.is_number:
-            if angle_test.equals(S.Zero):
+            if is_eq(angle_test, S.Zero):
                 case = 1
-            if angle_test.equals(S.Pi):
+            if is_eq(angle_test, S.Pi):
                 case = 2
 
         if case == 0:
