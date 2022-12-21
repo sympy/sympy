@@ -23,7 +23,6 @@ from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
-from itertools import product
 
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                       polynomial=False):
