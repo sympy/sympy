@@ -287,16 +287,13 @@ def test_to_euler():
     q = Quaternion(w, x, y, z)
     q_normalized = q.normalize()
 
-    for xyz in ('xyz', 'XYZ'):
-        for seq_tuple in permutations(xyz):
-            for symmetric in (True, False):
-                if symmetric:
-                    seq = ''.join([seq_tuple[0], seq_tuple[1], seq_tuple[0]])
-                else:
-                    seq = ''.join(seq_tuple)
-                euler_from_q = q.to_euler(seq)
-                q_back = simplify(Quaternion.from_euler(euler_from_q, seq))
-                assert q_back == q_normalized
+    seqs = ['zxy', 'zyx', 'zyz', 'zxz']
+    seqs += [seq.upper() for seq in seqs]
+
+    for seq in seqs:
+        euler_from_q = q.to_euler(seq)
+        q_back = simplify(Quaternion.from_euler(euler_from_q, seq))
+        assert q_back == q_normalized
 
 
 def test_to_euler_numerical_singilarities():
