@@ -258,10 +258,10 @@ def decompose_power(expr: Expr) -> tTuple[Expr, int]:
                     base, _exp = pp
                     exp *= _exp
             else:
-                npp = perfect_power(base.p)
+                npp = perfect_power(base.p)  # type: ignore
                 if npp:
                     n, _exp = npp
-                    dpp = perfect_power(base.q, [_exp])
+                    dpp = perfect_power(base.q, [_exp])  # type: ignore
                     if dpp:
                         d, _ = dpp
                         base = Rational(n, d, gcd=1)
