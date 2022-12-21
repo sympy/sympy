@@ -11,6 +11,7 @@ from sympy.core.sorting import _nodes
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
+from sympy.functions import asin, acos, atan2
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.polys import Poly, factor, cancel, parallel_poly_from_expr
@@ -22,7 +23,7 @@ from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
-
+from itertools import product
 
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                       polynomial=False):
@@ -426,11 +427,51 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
 _trigs = (TrigonometricFunction, HyperbolicFunction)
 
 
-def trigsimp(expr, **opts):
+def _trigsimp_inverse(rv):
+
+    def check_args(x, y):
+        try:
+            return x.args[0] == y.args[0]
+        except IndexError:
+            return False
+
+    def f(rv):
+        if type(rv) is atan2:
+            y, x = rv.args
+            if y.is_Mul and y.args[0] == -1:
+                return -f(atan2(-y, x))
+            elif x.is_Mul and x.args[0] == -1:
+                return S.Pi - f(atan2(y, -x))
+            elif type(y) is sin and type(x) is cos and check_args(x, y):
+                return x.args[0]
+            elif type(y) is cos and type(x) is sin and check_args(x, y):
+                return S.Pi / 2 - x.args[0]
+
+        # acos(cos)
+        if type(rv) is acos and type(rv.args[0]) == cos:
+            return f(rv.args[0].args[0])
+
+        # asin(sin)
+        if type(rv) is asin and type(rv.args[0]) == sin:
+            return f(rv.args[0].args[0])
+
+        return rv
+
+    return bottom_up(rv, f)
+
+
+def trigsimp(expr, inverse=False, **opts):
     """Returns a reduced expression by using known trig identities.
 
     Parameters
     ==========
+
+    inverse : bool, optional
+        If ``inverse=True``, it will be assumed that a composition of inverse
+        functions, such as sin and asin, can be cancelled in any order.
+        For example, ``asin(sin(x))`` will yield ``x`` without checking whether
+        x belongs to the set where this relation is true. The default is False.
+        Default : True
 
     method : string, optional
         Specifies the method to use. Valid choices are:
@@ -520,7 +561,11 @@ def trigsimp(expr, **opts):
         'old': lambda x: trigsimp_old(x, **opts),
                    }[method]
 
-    return trigsimpfunc(expr)
+    expr_simplified = trigsimpfunc(expr)
+    if inverse:
+        expr_simplified = _trigsimp_inverse(expr_simplified)
+
+    return expr_simplified
 
 
 def exptrigsimp(expr):
