@@ -106,21 +106,51 @@ class Quaternion(Expr):
             obj._c = c
             obj._d = d
             obj._real_field = real_field
+            obj._norm = None
             obj.set_norm(norm)
             return obj
 
     def set_norm(self, norm):
-        a, b, c, d = self.args
+        """Sets norm of an already instantiated quaternion.:
+
+        Parameters
+        ==========
+
+        norm : None or number
+            Pre-defined quaternion norm. If a value is given, Quaternion.norm
+            returns this pre-defined value instead of calculating the norm
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q = Quaternion(a, b, c, d)
+        >>> q.norm()
+        sqrt(a**2 + b**2 + c**2 + d**2)
+
+        Setting the norm:
+
+        >>> q.set_norm(1)
+        >>> q.norm()
+        1
+
+        Removing set norm:
+
+        >>> q.set_norm(None)
+        >>> q.norm()
+        sqrt(a**2 + b**2 + c**2 + d**2)
+
+        """
         norm = sympify(norm)
 
-        if (norm is not None) and (norm.is_number):
-            # if all elements are numerical
-            if (all(i.is_number is True for i in [a, b, c, d]) and
-                    norm**2 != a**2 + b**2 + c**2 + d**2):
-                raise ValueError("incompatible value for norm")
-
+        if norm is not None and norm.is_number:
             if not norm.is_positive:
                 raise ValueError("Input norm must be positive.")
+
+            numerical = all(elem.is_number is True for elem in self.args)
+            if (numerical and norm**2 != self.norm()**2):
+                raise ValueError("Incompatible value for norm.")
 
         self._norm = norm
 
