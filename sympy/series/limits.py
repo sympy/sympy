@@ -136,7 +136,7 @@ class Limit(Expr):
     >>> from sympy import Limit, sin
     >>> from sympy.abc import x
     >>> Limit(sin(x)/x, x, 0)
-    Limit(sin(x)/x, x, 0)
+    Limit(sin(x)/x, x, 0, dir='+')
     >>> Limit(1/x, x, 0, dir="-")
     Limit(1/x, x, 0, dir='-')
 

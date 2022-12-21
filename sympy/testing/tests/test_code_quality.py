@@ -308,7 +308,6 @@ def test_files():
         "%(sep)sutilities%(sep)srandtest.py" % sepd,
         "%(sep)sutilities%(sep)stmpfiles.py" % sepd,
         "%(sep)sutilities%(sep)squality_unicode.py" % sepd,
-        "%(sep)sutilities%(sep)sbenchmarking.py" % sepd,
     }
     check_files(top_level_files, test)
     check_directory_tree(BIN_PATH, test, {"~", ".pyc", ".sh", ".mjs"}, "*")
