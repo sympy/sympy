@@ -342,7 +342,7 @@ def qapply(e, **options):
     def qapply_expand_powers(cl:List) -> List:
         """Expands commutative factors in cl according to options power_xxx"""
         if cl != []: # shortcut for frequent case
-            # else: Expand powers in cl according to options power_base and power_exp: 
+            # else: Expand powers in cl according to options power_base and power_exp:
             if expand_power_base:
                 cle = []      # apply _eval.expand_power_base() to all c-factors that are Pow's and pass other factors
                 for c in cl:  # If result is a Mul flatten it into the result list cle
