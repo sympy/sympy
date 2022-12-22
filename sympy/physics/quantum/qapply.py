@@ -227,7 +227,7 @@ def qapply(e, **options):
         """Returns True if lhs, rhs didn't interact so lhs*rhs just gave res=Mul(lhs,rhs)
            or Pow(lhs, 2) in case lhs == rhs""" # assumes lhs, rhs non-commutative!
         return ((res.is_Mul and res.args == (lhs, rhs)) or
-                (lhs == rhs and res.is_Pow and res.base == lhs))
+                (lhs == rhs and res.is_Pow and cast(Pow, res).base == lhs))
 
     # -----------
     # qapply_Mul2
@@ -278,7 +278,7 @@ def qapply(e, **options):
                 if lhsR.is_Add:      # do expansion of Add
                     if rhsL is not EmptyMul:
                         fR.insert(0, rhsL)  # push back rhsL factor if any
-                    return qapply_DoAddL(lhsR) # distribute factors over summands of lhsR
+                    return qapply_DoAddL(cast(Add, lhsR)) # distribute factors over summands of lhsR
 
             # Now lhsR is a non-trivial nc factor and no Add. Get rhsL:
             if rhsL is EmptyMul:
@@ -312,7 +312,7 @@ def qapply(e, **options):
                 # if resR is Add (implies resR != rhsL), distribute it
                 if resR.is_Add:
                     fL.extend(resL)  # push resL factors
-                    return qapply_DoAddL(resR) # distribute factors over summands of resR
+                    return qapply_DoAddL(cast(Add, resR)) # distribute factors over summands of resR
 
                 if resR == rhsL:
                     if resL == [lhsR]:  # implies we have broken up res0 into its original factors
@@ -512,7 +512,7 @@ def qapply(e, **options):
         base = qapply_Mul2([e.base], [])
         # let Pow do all it can do using class methods ._pow, ._eval_power etc.
         e = cast(Pow, base ** e.exp)  # may return any Expr; cast() is for MyPy
-        if e.is_Pow: # if it's still a Pow, try some
+        if isinstance(e, Pow) # e.is_Pow: # if it's still a Pow, try some
             # check for commutative elements in base
             base = e.base
             cl, ncl, ar = split_c_nc_atom(base, to_the_right) # cl*ncl*ar == base
@@ -566,8 +566,8 @@ def qapply(e, **options):
                         ar2c, ar2ncl, ar2ar = split_c_nc_atom(ar2, to_the_right)
                         if ar2ar == EmptyMul: # ar2 is commutative, and ncl==[], so base = cl*ar.
                             # Case 5a: expi >= 2, base atomic + "involutoric"
-                            # simplify: base**e.exp = base**expf * cl**e.expi * ar**e.expi-1 * ar
-                            c_list = [c ** e.expi for c in cl] + [c ** (expi // 2) for c in ar2c]
+                            # simplify: base**e.exp = base**expf * cl**expi * ar**(expi-1) * ar
+                            c_list = [c ** expi for c in cl] + [c ** (expi // 2) for c in ar2c]
                             return (c_list, pfl, ar) if (expi % 2 == 1) else (c_list, [], Mul(*pfl))
                         if ar2ar == ar and ar2ncl == []: # Case 5b: expi >= 2, base atomic + "idempotent"
                             # kind of idempotency: a*a = c*a -> a**expi = c**(expi-1) * a
@@ -615,7 +615,7 @@ def qapply(e, **options):
         elif e.is_Pow: # by definition represents at least 2 factors, except A**-1:
             # e.exp == 0 or e.exp == 1 will not occur since Pow(A,0)->1, Pow(A,1)->A
             # Do simplification of Powers, incl. ip_doit, and wraps Powers in PowHold class
-            return split_pow_c_nc_atom(e, split_left)
+            return split_pow_c_nc_atom(cast(Pow, e), split_left)
         elif isinstance(e, PowHold):
             if getattr(e, "atomic"): # so MyPy won't complain about e.atomic
                 return [], [], e  # PowHold won't roll off factors in split
