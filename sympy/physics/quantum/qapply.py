@@ -643,7 +643,7 @@ def qapply(e, **options):
             res = cast(Expr, TensorProduct(*[qapply_Mul2([t], []) for t in e.args])) # may return Mul or TP (for MyPy)
             if expand_tensorproduct and isinstance(res, TensorProduct):
                 res = res._eval_expand_tensorproduct() # no hints for expansion
-            if isinstance(res, TensorProduct):    
+            if isinstance(res, TensorProduct):
                 return ([], [], res)  # Tensorproduct itself is atomic
             else: # e.g. has become Mul, scalar, ..
                 return split_c_nc_atom(res, split_left)
