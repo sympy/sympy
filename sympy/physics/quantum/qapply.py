@@ -471,7 +471,7 @@ def qapply(e, **options):
        Some classes like OuterProduct and TensorProduct lack adequate methods .__pow__, ._pow
        or ._eval_power to apply powers that are required for qapply to work. I decided to add these
        here instead of in their classes. So if someone adds them to the classes, remove them here.
-    2) qapply will try some 'tricks' to simplify certain powers that Pow doesn't use, nor 
+    2) qapply will try some 'tricks' to simplify certain powers that Pow doesn't use, nor
        Pow._eval_expand_power_xxx, e.g. on idempotent operators like dyads.
     3) But the general approach is to unroll positive powers of an operator, i.e. apply it one by one.
        In order to make this more efficient, the base is evaluated by qapply only once and then cached
@@ -726,7 +726,7 @@ def qapply(e, **options):
     dagger               = options.get('dagger', False)       # if a*b doesn't compute, try Dagger(Dagger(b)*Dagger(a))
     ip_doit              = options.get('ip_doit', True)       # evaluate ip.doit() on all InnerProduct objects
     op_join              = options.get('op_join', True)       # try to join Ket*Bra to OuterProduct, avoid breaking OuterProduct
-    expand_mul           = options.get('mul', True)           # distribute commutative factors and apply hint 'mul' of expand() 
+    expand_mul           = options.get('mul', True)           # distribute commutative factors and apply hint 'mul' of expand()
     expand_power_base    = options.get('power_base', expand_mul) # for commutative factors: apply hint 'power_base' of expand() 
     expand_power_exp     = options.get('power_exp', expand_mul)  # for commutative factors: apply hint 'power_exp' of expand()
     expand_tensorproduct = options.get('tensorproduct', True) # expand sums in tensor product factors (= hint tensorproduct of expand())
