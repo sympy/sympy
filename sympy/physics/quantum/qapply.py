@@ -112,7 +112,7 @@ def qapply(e, **options):
           multiplied bases (same option as in ``expand``) (default: value of option ``mul``).
         * ``tensorproduct``: Expand sums in factors of ``TensorProducts`` into sums of
           ``TensorProducts`` (same option as in ``expand``) (default: True).
-        
+
 
 
     Returns
@@ -177,7 +177,7 @@ def qapply(e, **options):
     - instead of Mul(a,b)*Mul(c) use Mul(a,b,c)
     - results of Mul(a,b,c) are cached
 
-    
+
     Remarks on qapply vs. Mul and "atomic" factors:
     ----------------------------------------------
 
