@@ -340,8 +340,7 @@ def apply_grover(oracle, nqubits, iterations=None):
     iterated = superposition_basis(nqubits)
     for iter in range(iterations):
         iterated = grover_iteration(iterated, v)
-        iterated = qapply(iterated)
-        # do .expand() to simplify iterated, otherwise terms might grow very large
-        iterated = iterated.expand(tensorproduct=True)
+        iterated = qapply(iterated, mul=True, tensorproduct=True) # options are default values,
+        # but indicate that output must be simplified otherwise terms might grow very large
 
     return iterated

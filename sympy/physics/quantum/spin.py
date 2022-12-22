@@ -151,7 +151,7 @@ class SpinOpBase:
             arg.append(self._apply_operator(tp.args[n]))
             arg.extend(tp.args[n + 1:])
             result.append(tp.__class__(*arg))
-        return Add(*result).expand()
+        return Add(*result) # .expand() has little to no real effect here, but unwanted side effects
 
     # TODO: move this to qapply_Mul
     def _apply_operator_Sum(self, s, **options):

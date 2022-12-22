@@ -39,8 +39,8 @@ class Foo(Operator):
 
 def test_basic():
     assert qapply(Jz*po) == hbar*po
-    assert qapply(Jx*z).expand() == hbar*po/sqrt(2) + hbar*mo/sqrt(2) # .expand()
-    assert qapply((Jplus + Jminus)*z/sqrt(2)).expand() == hbar*po + hbar*mo # .expand()
+    assert qapply(Jx*z) == hbar*po/sqrt(2) + hbar*mo/sqrt(2) #2 no .expand()
+    assert qapply((Jplus + Jminus)*z/sqrt(2)) == hbar*po + hbar*mo #2 no .expand()
     assert qapply(Jz*(po + mo)) == hbar*po - hbar*mo
     assert qapply(Jz*po + Jz*mo) == hbar*po - hbar*mo
     assert qapply(Jminus*Jminus*po) == 2*hbar**2*mo
@@ -51,10 +51,10 @@ def test_basic():
 def test_extra():
     extra = z.dual*A*z
     assert qapply(Jz*po*extra, op_join=False) == hbar*po*extra # op_join
-    assert qapply(Jx*z*extra, op_join=False).expand() == \
-        ((hbar*po/sqrt(2) + hbar*mo/sqrt(2))*extra).expand() # op_join, both .expand()
+    assert qapply(Jx*z*extra, op_join=False) == \
+        hbar*po/sqrt(2)*extra + hbar*mo/sqrt(2)*extra #2 op_join, no .expand()
     assert qapply(
-        (Jplus + Jminus)*z/sqrt(2)*extra, op_join=False).expand() == hbar*po*extra + hbar*mo*extra # .expand(), op_join
+        (Jplus + Jminus)*z/sqrt(2)*extra, op_join=False) == hbar*po*extra + hbar*mo*extra #2 no .expand(), op_join
     assert qapply(Jz*(po + mo)*extra, op_join=False) == hbar*po*extra - hbar*mo*extra # op_join
     assert qapply(Jz*po*extra + Jz*mo*extra, op_join=False) == hbar*po*extra - hbar*mo*extra # op_join
     assert qapply(Jminus*Jminus*po*extra, op_join=False) == 2*hbar**2*mo*extra # op_join
@@ -181,7 +181,7 @@ def test_suite2022_10():
     assert qapply(TensorProduct(dyad11, Mul(q1, qb1)) * TensorProduct(dyad10, dyad10)) == TensorProduct(dyad10,dyad10)
     U = UnitaryOperator('U')
     assert qapply(TensorProduct(dyad11*dyad11, U)) == TensorProduct(dyad11, U)
-    assert qapply(TensorProduct((dyad11+dyad01)**2, U)) == TensorProduct(dyad11+dyad01, U)
+    assert qapply(TensorProduct((dyad11+dyad01)**2, U), tensorproduct=False) == TensorProduct(dyad11+dyad01, U)
 
     N = symbols("N", integer=True)
     IN = IdentityOperator(N) #N-dim Identity
@@ -261,9 +261,9 @@ def test_U2():
 
     # Compute the product c_Xd c_Ux d_Uy c_Xd
     P = c_Xd * c_Ux * d_Uy * c_Xd
-    R = qapply(P, dagger=True)
+    R = qapply(P, dagger=True) # option tensorproduct=True is on by default
     # Expected: IxIxIxI - IxIx|1><1|xI + IxIx|1><1|xU - |1><1|xIxIxI + |1><1|xIx|1><1|xI - |1><1|xIx|1><1|xU + |1><1|xUx|0><0|xU + |1><1|xUx|1><1|xI
-    assert R.expand(tensorproduct = True) == \
+    assert R == \
              TensorProduct(I1,     IN,     I1, IN) \
            - TensorProduct(I1,     IN, dyad11, IN) \
            + TensorProduct(I1,     IN, dyad11,  U) \
@@ -284,7 +284,7 @@ def test_doc_example(): # the example from qapply doc string
     assert qapply(A * k * b * A, op_join = False) == InnerProduct(b, k)**2 * k * b
     assert qapply(A * k * b * A) == InnerProduct(b, k)**2 * A
     n = symbols("n", integer=True, nonnegative=True)
-    assert qapply(A ** (n + 2)) == InnerProduct(b, k) ** (n + 1) * A
+    assert qapply(A ** (n + 2), power_exp=False) == InnerProduct(b, k) ** (n + 1) * A
 
 
 def test_issue19540():  # Issue #19540  https://github.com/sympy/sympy/issues/19540
@@ -320,10 +320,10 @@ def test_suite2022_11():
     assert qapply(U * Qubit(0)) == cos(2 * pi / n)*Qubit(0) + sin(2 * pi / n)*Qubit(1)
     assert qapply(U * IdentityOperator(2) * U) == Pow(U, 2)        # qapply relies on Pow(U,2) to compute U*U!
     assert qapply(U * IdentityOperator(2) * U ** -3) == Pow(U, -2) # qapply does addition of exponents
-    assert qapply((U ** 2 * Qubit(0))) == sin(2 * pi / n)*(-sin(2 * pi / n) * Qubit(0) + cos(2 * pi / n) * Qubit(1)) + \
-                                          cos(2 * pi / n)*( cos(2 * pi / n) * Qubit(0) + sin(2 * pi / n) * Qubit(1))
+    assert qapply((U ** 2 * Qubit(0))) == - sin(2 * pi / n)**2 * Qubit(0) + cos(2 * pi / n)**2 * Qubit(0) + \
+                                          2 * sin(2 * pi / n) * cos(2 * pi / n) * Qubit(1)
     m = 2
-    P2b = qapply(U ** m * Qubit(0))
+    P2b = qapply(U ** m * Qubit(0), mul=False) # non-expanded form can be handled by trigsimp()
     Ptsb = P2b.trigsimp() # fails to simplify to cos(m*2*pi/n)*|0>+sin(m*2*pi/n)*|1> for m >=3
     assert Ptsb == (cos(m * 2 * pi / n) * Qubit(0) + sin(m * 2 * pi / n) * Qubit(1)).trigsimp() # fails for m >= 3
 
@@ -333,11 +333,15 @@ def test_suite2022_11():
     assert qapply(Mul(U, IdentityOperator(2), U)) == Pow(U, 2)        # qapply relies on Pow(U,2) to compute U*U!
     assert qapply(Mul(U, IdentityOperator(2), U ** -3)) == Pow(U, -2) # qapply does addition of exponents
     assert qapply(Mul(U ** n, IdentityOperator(2), U ** (-n + 2))) == Pow(U, 2) # addition of symbolic exponents
-    assert qapply(Mul(U ** n, IdentityOperator(2), U ** (-n + 2), Qubit(0))) == \
+    assert qapply(Mul(U ** n, IdentityOperator(2), U ** (-n + 2), Qubit(0)), mul=False) == \
                             sin(2 * pi / n)*(-sin(2 * pi / n) * Qubit(0) + cos(2 * pi / n) * Qubit(1)) + \
                             cos(2 * pi / n)*( cos(2 * pi / n) * Qubit(0) + sin(2 * pi / n) * Qubit(1))
+    assert qapply(Mul(U ** n, IdentityOperator(2), U ** (-n + 2), Qubit(0))) == \
+                            -sin(2 * pi / n)**2 * Qubit(0) + 2 * sin(2 * pi / n) * cos(2 * pi / n) * Qubit(1) + \
+                            cos(2 * pi / n)**2 * Qubit(0)
+
     m = 1
-    P2b = qapply(U ** m * Qubit(0))
+    P2b = qapply(U ** m * Qubit(0), mul=False)
     Ptsb = P2b.trigsimp() # fails to simplify to cos(m*2*pi/n)*|0>+sin(m*2*pi/n)*|1> for m == 2
     assert Ptsb == (cos(m * 2 * pi / n) * Qubit(0) + sin(m * 2 * pi / n) * Qubit(1)).trigsimp() #fails for m >= 2
 
@@ -351,12 +355,21 @@ def test_suite2022_11():
         TGate(0) ** m # qapply relies on Pow for powers!
     assert qapply(TGate(0) ** (m - n) * IdentityOperator(2) * TGate(0) ** n * Qubit(1)) == \
         E ** -((8-m) * 2 * I * pi / 8) * Qubit(1)
+        
+    # Dagger of unitary matrices U is U**-1, test qapply behaviour      
+    U12 = UGate(0, ImmutableMatrix([[2, 0], [0, 2]]))
+    assert qapply(QubitBra(1)*U12) == QubitBra(1)*U12 # As long as there is no method defined for Bra*UGate
+    assert qapply(Dagger(U12)*Qubit(1), dagger=True) == U12**(-1) * Qubit(1) # (Dagger(UGate)==UGate**-1) which doesn't know about |1>
+    assert Dagger(Dagger(U12)) == U12
+    assert qapply(QubitBra(1)*Dagger(U12), dagger=True) == 2 * QubitBra(1) # with dagger=True it boils down to Dagger(U12*Qubit(1))
+    assert qapply(Dagger(Dagger(U12))*Dagger(QubitBra(1))) == 2 * Qubit(1)
+
 
 def test_powers2022_11():
     from sympy import exp, I, pi
     from sympy.matrices import ImmutableMatrix, eye
 
-    # Use a diversified definition of UGate*UGate in order
+    # Use an extend definition of UGate*UGate with diverse result types in order
     # to build test cases with commutative factors etc.
     def UGate_apply_operator_UGate(u1,u2, **options):
         if u1.args[0] != u2.args[0]: # This case is not implemented
@@ -398,7 +411,7 @@ def test_powers2022_11():
     assert qapply((XGate(0)*U1n*XGate(0))**8) == n**8 # case 5a: with expi even
     assert qapply(U72 ** (3/2)) == U72 ** (3/2) # case 7: exp non-integer or < 2
     assert qapply(U72 ** (5/2)) == U72 ** (1/2) * U72p2 # case 6: base atomic but not "idempotent"
-    assert qapply((U12 * U71) ** Rational(5/2)).expand() == 2**Rational(5/2) * U71 ** Rational(1/2) * U71p2 # Case 8, 6
+    assert qapply((U12 * U71) ** Rational(5/2)) == 2**Rational(5/2) * U71 ** Rational(1/2) * U71p2 # Case 8, 6
     assert qapply(U12 ** Rational(7/2)) == 2**2 * U12**Rational(3/2)  # case 5a. base atomic + "involutoric", expi uneven, fraction
     assert qapply(U12 ** Rational(5/2)) == 2**2 * U12**Rational(1/2)  # case 5a. base atomic + "involutoric", expi even, fraction
     assert qapply(U12 ** 3) == 2 ** 2 * U12 # case 5a: expi uneven, no fraction
@@ -411,12 +424,12 @@ def test_powers2022_11():
         2 ** Rational(7/2) * InnerProduct(QubitBra(1), Qubit(1)) ** 2 * OuterProduct(Qubit(1), QubitBra(1)) ** Rational(3/2)
     assert qapply((U12 * OuterProduct(Qubit(1), QubitBra(1))) ** 10) == 2**10 * OuterProduct(Qubit(1), QubitBra(1))
     assert qapply((U1n * OuterProduct(Qubit(1), QubitBra(1))) ** 10) == n**10 * OuterProduct(Qubit(1), QubitBra(1))
-    assert qapply((U1n * OuterProduct(Qubit(1), QubitBra(1))) ** (m+2)) == n**(m+2) * OuterProduct(Qubit(1), QubitBra(1))
-    assert qapply((U1n * OuterProduct(Qubit(1), QubitBra(1))) ** (m+2), ip_doit = False) == \
+    assert qapply((U1n * OuterProduct(Qubit(1), QubitBra(1))) ** (m+2), power_exp=False) == n**(m+2) * OuterProduct(Qubit(1), QubitBra(1))
+    assert qapply((U1n * OuterProduct(Qubit(1), QubitBra(1))) ** (m+2), ip_doit = False, power_exp=False) == \
         n**(m+2) * InnerProduct(QubitBra(1), Qubit(1))**(m+1) * OuterProduct(Qubit(1), QubitBra(1))
-    assert qapply(OuterProduct(Ket(1), Bra(1)) ** (m+2), ip_doit = False) == \
+    assert qapply(OuterProduct(Ket(1), Bra(1)) ** (m+2), ip_doit = False, power_exp=False) == \
         InnerProduct(Bra(1), Ket(1))**(m+1) * OuterProduct(Ket(1), Bra(1))
-    assert qapply(OuterProduct(Ket(1), Bra(1)) ** (m+(5/2)), ip_doit = False) == \
+    assert qapply(OuterProduct(Ket(1), Bra(1)) ** (m+(5/2)), ip_doit = False, power_exp=False) == \
         InnerProduct(Bra(1), Ket(1))**(m+1) * OuterProduct(Ket(1), Bra(1))**(3/2)
 
     # Cases 7, 8, 6:
@@ -440,3 +453,50 @@ def test_powers2022_11():
         setattr(UGate, "_apply_operator_UGate", prev_op)
     else:
         delattr(UGate, "_apply_operator_UGate")
+
+
+def test_expansion():
+    # check expansion behaviour on options mul and power_base, power_exp on commutative factors
+    # qapply() effectively applies hint functions for options  mul, power_base and power_exp of expand()
+    
+    A1 = Operator("A1"); A2 = Operator("A2"); A3 = Operator("A3")
+
+    p = (2*(A1 + A2) + 2*(A1 - A2))*A3
+    assert qapply(p, mul=False) == 2*(A1*A3 - A2*A3) + 2*(A1*A3 + A2*A3) # distribute factor A3 over sums
+    assert qapply(p, mul=True) == 4*A1*A3 # distribute commutative factors over sums, too  (default)
+    
+    u, v = symbols("u v", commutative=True)
+    w, z = symbols("w z", integer=True, positive=True)
+    
+    p = (u*(A1 + A2) + u*(A1 - A2))*A3
+    assert qapply(p, mul=False) == u*(A1*A3 - A2*A3) + u*(A1*A3 + A2*A3)
+    assert qapply(p, mul=True) == 2*u*A1*A3 # mul=True is default
+    
+    p = (u*(A1 + A2) + v*(A1 - A2))*A3
+    assert qapply(p, mul=False) == u*(A1*A3 + A2*A3) + v*(A1*A3 - A2*A3)
+    assert qapply(p, mul=True) == u*A1*A3 + u*A2*A3 + v*A1*A3 - v*A2*A3 # mul=True is default
+    
+    p = (u*(A1 + A2) + u*(A1 - A2))**2 * A3
+    qapply(p, mul=False) == u*(u*(A1**2*A3 - A2*A1*A3) + u*(A1**2*A3 + A2*A1*A3) - \
+        (u*(A1*A2*A3 - A2**2*A3) + u*(A1*A2*A3 + A2**2*A3))) + u*(u*(A1**2*A3 - A2*A1*A3) +\
+        u*(A1**2*A3 + A2*A1*A3) + u*(A1*A2*A3 - A2**2*A3) + u*(A1*A2*A3 + A2**2*A3))
+    assert qapply(p) == 4 * u**2 * A1**2 * A3 # mul=True is default
+
+    # Check  effects of expand options power_base and power_exp on communicative factors
+    # Note that sqrt(u*(u+1) + w*(w+1)) is never touched.
+    p = u*(w + sqrt(u*(u + 1) + w*(w + 1)))**(w + z) 
+    assert qapply(p, mul=False, power_base=False, power_exp=False) == p # commutative factors left untouched
+    assert qapply(p, mul=True, power_base=False, power_exp=False) == p  # mul/add expansion has no effect on p
+    assert qapply(p, mul=False, power_base=False, power_exp=True) ==\
+        u*(w + sqrt(u*(u + 1) + w*(w + 1)))**w*(w + sqrt(u*(u + 1) + w*(w + 1)))**z # but power_exp has
+    assert qapply(p, mul=True, power_base=False, power_exp=True) ==\
+        u*(w + sqrt(u*(u + 1) + w*(w + 1)))**w*(w + sqrt(u*(u + 1) + w*(w + 1)))**z
+        
+    p = (u*(w + sqrt(u*(u + 1) + w*(w + 1))))**(w + z)
+    assert qapply(p, mul=False, power_base=False, power_exp=False) == p # commutative factors left untouched
+    assert qapply(p, mul=False, power_base=True, power_exp=False) ==\
+        u**(w + z) * (w + sqrt(u*(u + 1) + w*(w + 1)))**(w + z) # power_base has effect
+    assert qapply(p, mul=True, power_base=False, power_exp=False) ==\
+        (u*w + u*sqrt(u*(u + 1) + w*(w + 1)))**(w + z) # mul has effect in basis
+    assert qapply(p, mul=False, power_base=True, power_exp=True) ==\
+        u**w * u**z * (w + sqrt(u*(u + 1) + w*(w + 1)))**w * (w + sqrt(u*(u + 1) + w*(w + 1)))**z # power_xxx has effect     
