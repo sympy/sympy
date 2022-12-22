@@ -484,7 +484,7 @@ def test_expansion():
 
     # Check  effects of expand options power_base and power_exp on communicative factors
     # Note that sqrt(u*(u+1) + w*(w+1)) is never touched.
-    p = u*(w + sqrt(u*(u + 1) + w*(w + 1)))**(w + z) 
+    p = u*(w + sqrt(u*(u + 1) + w*(w + 1)))**(w + z)
     assert qapply(p, mul=False, power_base=False, power_exp=False) == p # commutative factors left untouched
     assert qapply(p, mul=True, power_base=False, power_exp=False) == p  # mul/add expansion has no effect on p
     assert qapply(p, mul=False, power_base=False, power_exp=True) ==\
