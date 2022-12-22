@@ -686,7 +686,7 @@ def qapply(e, **options):
             def dagger_sp(b_sp:tuple) -> tuple:
                 return (b_sp if (b_sp == tuple()) else
                         ([Dagger(f) for f in b_sp[0] ], [Dagger(f) for f in reversed(b_sp[1])], Dagger(b_sp[2])))
-            (b, e) = (b.base, b.exp*self.exp) if ((b := Dagger(self.base)).is_Pow) else (b, self.exp) # e.g. if Dagger(Unitary) returns Unitary**-1            
+            (b, e) = (b.base, b.exp*self.exp) if ((b := Dagger(self.base)).is_Pow) else (b, self.exp) # e.g. if Dagger(Unitary) returns Unitary**-1
             return PowHold(b, e, self.atomic, dagger_sp(self._b_sp_l), dagger_sp(self._b_sp_r))
 
         def add_exp(self, exp2): # return PowHold with exponent incremented by exp2
@@ -727,7 +727,7 @@ def qapply(e, **options):
     ip_doit              = options.get('ip_doit', True)       # evaluate ip.doit() on all InnerProduct objects
     op_join              = options.get('op_join', True)       # try to join Ket*Bra to OuterProduct, avoid breaking OuterProduct
     expand_mul           = options.get('mul', True)           # distribute commutative factors and apply hint 'mul' of expand()
-    expand_power_base    = options.get('power_base', expand_mul) # for commutative factors: apply hint 'power_base' of expand() 
+    expand_power_base    = options.get('power_base', expand_mul) # for commutative factors: apply hint 'power_base' of expand()
     expand_power_exp     = options.get('power_exp', expand_mul)  # for commutative factors: apply hint 'power_exp' of expand()
     expand_tensorproduct = options.get('tensorproduct', True) # expand sums in tensor product factors (= hint tensorproduct of expand())
 
