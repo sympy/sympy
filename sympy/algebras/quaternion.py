@@ -947,6 +947,19 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
+    def _eval_subs(self, *args):
+        a, b, c, d = [i.subs(*args) for i in self.args]
+
+        if self.norm is not None and self.norm.is_number:
+            if not self.norm.is_positive:
+                raise ValueError("Input norm must be positive.")
+
+            numerical = all(elem.is_number is True for elem in self.args)
+            if (numerical and self.norm**2 != self.norm()**2):
+                raise ValueError("Incompatible value for norm.")
+        pass
+
+
     def _eval_evalf(self, prec):
         """Returns the floating point approximations (decimal numbers) of the quaternion.
 
