@@ -477,7 +477,7 @@ def test_expansion():
     assert qapply(p, mul=True) == u*A1*A3 + u*A2*A3 + v*A1*A3 - v*A2*A3 # mul=True is default
     
     p = (u*(A1 + A2) + u*(A1 - A2))**2 * A3
-    qapply(p, mul=False) == (u*(u*(A1**2*A3 - A2*A1*A3) + u*(A1**2*A3 + A2*A1*A3) -
+    assert qapply(p, mul=False) == (u*(u*(A1**2*A3 - A2*A1*A3) + u*(A1**2*A3 + A2*A1*A3) -
         (u*(A1*A2*A3 - A2**2*A3) + u*(A1*A2*A3 + A2**2*A3))) + u*(u*(A1**2*A3 - A2*A1*A3) +
         u*(A1**2*A3 + A2*A1*A3) + u*(A1*A2*A3 - A2**2*A3) + u*(A1*A2*A3 + A2**2*A3)))
     assert qapply(p) == 4 * u**2 * A1**2 * A3 # mul=True is default
