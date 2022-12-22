@@ -458,24 +458,24 @@ def test_powers2022_11():
 def test_expansion():
     # check expansion behaviour on options mul and power_base, power_exp on commutative factors
     # qapply() effectively applies hint functions for options  mul, power_base and power_exp of expand()
-    
+
     A1 = Operator("A1"); A2 = Operator("A2"); A3 = Operator("A3")
 
     p = (2*(A1 + A2) + 2*(A1 - A2))*A3
     assert qapply(p, mul=False) == 2*(A1*A3 - A2*A3) + 2*(A1*A3 + A2*A3) # distribute factor A3 over sums
     assert qapply(p, mul=True) == 4*A1*A3 # distribute commutative factors over sums, too  (default)
-    
+
     u, v = symbols("u v", commutative=True)
     w, z = symbols("w z", integer=True, positive=True)
-    
+
     p = (u*(A1 + A2) + u*(A1 - A2))*A3
     assert qapply(p, mul=False) == u*(A1*A3 - A2*A3) + u*(A1*A3 + A2*A3)
     assert qapply(p, mul=True) == 2*u*A1*A3 # mul=True is default
-    
+
     p = (u*(A1 + A2) + v*(A1 - A2))*A3
     assert qapply(p, mul=False) == u*(A1*A3 + A2*A3) + v*(A1*A3 - A2*A3)
     assert qapply(p, mul=True) == u*A1*A3 + u*A2*A3 + v*A1*A3 - v*A2*A3 # mul=True is default
-    
+
     p = (u*(A1 + A2) + u*(A1 - A2))**2 * A3
     assert qapply(p, mul=False) == (u*(u*(A1**2*A3 - A2*A1*A3) + u*(A1**2*A3 + A2*A1*A3) -
         (u*(A1*A2*A3 - A2**2*A3) + u*(A1*A2*A3 + A2**2*A3))) + u*(u*(A1**2*A3 - A2*A1*A3) +
@@ -491,12 +491,12 @@ def test_expansion():
         u*(w + sqrt(u*(u + 1) + w*(w + 1)))**w*(w + sqrt(u*(u + 1) + w*(w + 1)))**z # but power_exp has
     assert qapply(p, mul=True, power_base=False, power_exp=True) ==\
         u*(w + sqrt(u*(u + 1) + w*(w + 1)))**w*(w + sqrt(u*(u + 1) + w*(w + 1)))**z
-        
+
     p = (u*(w + sqrt(u*(u + 1) + w*(w + 1))))**(w + z)
     assert qapply(p, mul=False, power_base=False, power_exp=False) == p # commutative factors left untouched
-    assert qapply(p, mul=False, power_base=True, power_exp=False) ==\
+    assert qapply(p, mul=False, power_base=True, power_exp=False) == \
         u**(w + z) * (w + sqrt(u*(u + 1) + w*(w + 1)))**(w + z) # power_base has effect
-    assert qapply(p, mul=True, power_base=False, power_exp=False) ==\
+    assert qapply(p, mul=True, power_base=False, power_exp=False) == \
         (u*w + u*sqrt(u*(u + 1) + w*(w + 1)))**(w + z) # mul has effect in basis
-    assert qapply(p, mul=False, power_base=True, power_exp=True) ==\
-        u**w * u**z * (w + sqrt(u*(u + 1) + w*(w + 1)))**w * (w + sqrt(u*(u + 1) + w*(w + 1)))**z # power_xxx has effect     
+    assert qapply(p, mul=False, power_base=True, power_exp=True) == \
+        u**w * u**z * (w + sqrt(u*(u + 1) + w*(w + 1)))**w * (w + sqrt(u*(u + 1) + w*(w + 1)))**z # power_xxx has effect
