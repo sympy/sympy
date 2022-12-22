@@ -334,7 +334,7 @@ def qapply(e, **options):
     # to deeply expand and multiply out all commutative Add-factors to make
     # summands cancel out. Also expansion of powers via expand(power_base=True) or
     # expand(power_exp=True) is enabled by default, as it is in expand().
-    # On the other hand we do not want to call expand(deep=True), as this also 
+    # On the other hand we do not want to call expand(deep=True), as this also
     # aggressively expands function arguments like sqrt(j*(j+1)+m*(m+1)).
     # So we use the parts of expand that have greatest effect: the hint functions
     # Mul._eval_expand_mul and Pow._eval_expand_power_xxx:
