@@ -355,7 +355,7 @@ def test_suite2022_11():
         TGate(0) ** m # qapply relies on Pow for powers!
     assert qapply(TGate(0) ** (m - n) * IdentityOperator(2) * TGate(0) ** n * Qubit(1)) == \
         E ** -((8-m) * 2 * I * pi / 8) * Qubit(1)
-        
+
     # Dagger of unitary matrices U is U**-1, test qapply behaviour      
     U12 = UGate(0, ImmutableMatrix([[2, 0], [0, 2]]))
     assert qapply(QubitBra(1)*U12) == QubitBra(1)*U12 # As long as there is no method defined for Bra*UGate
