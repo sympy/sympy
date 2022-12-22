@@ -26,9 +26,9 @@
 # Moreover:
 #  5. do not use expand() indiscriminately: Only do an expansion of Add if required to apply operators, so
 #     keeping expansion to the bare minimum. As default, distribute commutative factors over sums as this allows
-#     terms to cancel out thus simplifying the expression. In order to simplify commutative factors qapply() 
+#     terms to cancel out thus simplifying the expression. In order to simplify commutative factors qapply()
 #     employs the three mayor hint functions of expand() Mul._eval_expand_mul(), Pow._eval_expand_power_base()
-#     and Pow._eval_expand_power_exp(). See options mul, power_base and power_exp. 
+#     and Pow._eval_expand_power_exp(). See options mul, power_base and power_exp.
 #  6. apply recursion along the structure of the expression but don't use recursion for iterations:
 #     this avoids hitting the Python recursion limit in very complex expressions or powers with
 #     large exponents
