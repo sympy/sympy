@@ -352,7 +352,7 @@ def qapply(e, **options):
                 cl = [(c._eval_expand_power_exp()  if c.is_Pow else c) for c in cl] # no hints applicable
                 # no need to flatten Muls in cl as cl may contain Muls
         return cl
-    
+
     def qapply_expand_mul(cl:List) -> Expr:
         """Expands list of commutative factors by key option 'mul' of expand(), i.e.
         does a deep distribution of factors over summands, and returns result"""
