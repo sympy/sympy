@@ -512,7 +512,7 @@ def qapply(e, **options):
         base = qapply_Mul2([e.base], [])
         # let Pow do all it can do using class methods ._pow, ._eval_power etc.
         e = cast(Pow, base ** e.exp)  # may return any Expr; cast() is for MyPy
-        if isinstance(e, Pow) # e.is_Pow: # if it's still a Pow, try some
+        if isinstance(e, Pow): # e.is_Pow: # if it's still a Pow, try some
             # check for commutative elements in base
             base = e.base
             cl, ncl, ar = split_c_nc_atom(base, to_the_right) # cl*ncl*ar == base
