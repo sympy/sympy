@@ -567,7 +567,7 @@ def qapply(e, **options):
                         if ar2ar == EmptyMul: # ar*ar=ar2 is even commutative. We have e.base = cl*ar, base=ar.
                             # Case 5a: expi >= 2, base = ar atomic + "involutoric"
                             # simplify: e.base**e.exp = (cl*ar)**e.exp = cl**e.exp * ar**expf * ar**expi.
-                            # ar**expf = pfl. ar**expi = (ar2**(expi//2)) * (ar if (expi % 2 == 1) else 1) 
+                            # ar**expf = pfl. ar**expi = (ar2**(expi//2)) * (ar if (expi % 2 == 1) else 1)
                             c_list = [c ** e.exp for c in cl] + [c ** (expi // 2) for c in ar2c]
                             return (c_list, pfl, ar) if (expi % 2 == 1) else (c_list, [], Mul(*pfl))
                         if ar2ar == ar and ar2ncl == []: # Case 5b: expi >= 2, base=ar atomic + "idempotent"
