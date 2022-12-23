@@ -1,3 +1,4 @@
+import warnings
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
@@ -13,6 +14,18 @@ from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi
 
 from mpmath.libmp.libmpf import prec_to_dps
+
+
+def _check_norm(elements, norm):
+    """validate if input norm is consistent"""
+    if norm is not None and norm.is_number:
+        if not norm.is_positive:
+            raise ValueError("Input norm must be positive.")
+
+        a, b, c, d = elements
+        numerical = all(elem.is_number is True for elem in [a, b, c, d])
+        if (numerical and norm**2 != a**2 + b**2 + c**2 + d**2):
+            raise ValueError("Incompatible value for norm.")
 
 
 def _is_extrinsic(seq):
@@ -106,7 +119,6 @@ class Quaternion(Expr):
             obj._c = c
             obj._d = d
             obj._real_field = real_field
-            obj._norm = None
             obj.set_norm(norm)
             return obj
 
@@ -143,15 +155,7 @@ class Quaternion(Expr):
 
         """
         norm = sympify(norm)
-
-        if norm is not None and norm.is_number:
-            if not norm.is_positive:
-                raise ValueError("Input norm must be positive.")
-
-            numerical = all(elem.is_number is True for elem in self.args)
-            if (numerical and norm**2 != self.norm()**2):
-                raise ValueError("Incompatible value for norm.")
-
+        _check_norm(self.args, norm)
         self._norm = norm
 
     @property
@@ -836,7 +840,6 @@ class Quaternion(Expr):
         q = self
         return q * (1/q.norm())
 
-
     def inverse(self):
         """Returns the inverse of the quaternion."""
         q = self
@@ -948,17 +951,16 @@ class Quaternion(Expr):
         return Quaternion(a, b, c, d)
 
     def _eval_subs(self, *args):
-        a, b, c, d = [i.subs(*args) for i in self.args]
+        elements = [i.subs(*args) for i in self.args]
+        norm = self._norm
+        try:
+            _check_norm(elements, norm)
+        except ValueError:
+            norm = None
+            warnings.warn("Substitution renders pre-computed norm value "
+                          "incompatible, resetting norm.")
 
-        if self.norm is not None and self.norm.is_number:
-            if not self.norm.is_positive:
-                raise ValueError("Input norm must be positive.")
-
-            numerical = all(elem.is_number is True for elem in self.args)
-            if (numerical and self.norm**2 != self.norm()**2):
-                raise ValueError("Incompatible value for norm.")
-        pass
-
+        return Quaternion(*elements, norm=norm)
 
     def _eval_evalf(self, prec):
         """Returns the floating point approximations (decimal numbers) of the quaternion.
