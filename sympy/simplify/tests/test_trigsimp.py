@@ -508,13 +508,8 @@ def test_trigsimp_inverse():
 
     funcs = [(sin, asin), (cos, acos), (sec, asec), (csc, acsc),
              (tan, atan), (cot, acot)]
-
     for func, funcinv in funcs:
         assert alpha == trigsimp(funcinv(func(alpha)), inverse=True)
-
-    # test asin(sin(alpha)) and acos(cos(alpha))
-    assert alpha == trigsimp(acos(c), inverse=True)
-    assert alpha == trigsimp(asin(s), inverse=True)
 
     # test atan2(cos, sin), atan2(sin, cos), etc...
     for a, b in [[c, s], [s, c]]:
