@@ -5,13 +5,13 @@ from sympy.core import (sympify, Basic, S, Expr, factor_terms,
                         Mul, Add, bottom_up)
 from sympy.core.cache import cacheit
 from sympy.core.function import (count_ops, _mexpand, FunctionClass, expand,
-                                 expand_mul, Derivative)
+                                 expand_mul, _coeff_isneg, Derivative)
 from sympy.core.numbers import I, Integer, igcd
 from sympy.core.sorting import _nodes
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
-from sympy.functions import asin, acos, atan2
+from sympy.functions import asin, acos, sec, asec, csc, acsc, acot, atan, atan2
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.polys import Poly, factor, cancel, parallel_poly_from_expr
@@ -428,6 +428,9 @@ _trigs = (TrigonometricFunction, HyperbolicFunction)
 
 def _trigsimp_inverse(rv):
 
+    funcs = [(sin, asin), (cos, acos), (sec, asec), (csc, acsc),
+             (tan, atan), (cot, acot)]
+
     def check_args(x, y):
         try:
             return x.args[0] == y.args[0]
@@ -435,24 +438,24 @@ def _trigsimp_inverse(rv):
             return False
 
     def f(rv):
+        # for simple functions
+        for func, funcinv in funcs:
+            if isinstance(rv, funcinv) and isinstance(rv.args[0], func):
+                return f(rv.args[0].args[0])
+
+        # for atan2 simplifications, harder because atan2 has 2 args
         if type(rv) is atan2:
             y, x = rv.args
-            if y.is_Mul and y.args[0] == -1:
+            if _coeff_isneg(y):
                 return -f(atan2(-y, x))
-            elif x.is_Mul and x.args[0] == -1:
+            elif _coeff_isneg(x):
                 return S.Pi - f(atan2(y, -x))
-            elif type(y) is sin and type(x) is cos and check_args(x, y):
-                return x.args[0]
-            elif type(y) is cos and type(x) is sin and check_args(x, y):
-                return S.Pi / 2 - x.args[0]
 
-        # acos(cos)
-        if type(rv) is acos and type(rv.args[0]) == cos:
-            return f(rv.args[0].args[0])
-
-        # asin(sin)
-        if type(rv) is asin and type(rv.args[0]) == sin:
-            return f(rv.args[0].args[0])
+            if check_args(x, y):
+                if isinstance(y, sin) and isinstance(x, cos):
+                    return x.args[0]
+                if isinstance(y, cos) and isinstance(x, sin):
+                    return S.Pi / 2 - x.args[0]
 
         return rv
 

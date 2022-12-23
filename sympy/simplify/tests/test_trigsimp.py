@@ -9,6 +9,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.functions.elementary.trigonometric import (acos, asin, atan2)
+from sympy.functions.elementary.trigonometric import (sec, asec, csc, acsc)
+from sympy.functions.elementary.trigonometric import (acot, atan)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import Matrix
 from sympy.simplify.simplify import simplify
@@ -503,6 +505,12 @@ def test_trigsimp_old():
 def test_trigsimp_inverse():
     alpha = symbols('alpha')
     s, c = sin(alpha), cos(alpha)
+
+    funcs = [(sin, asin), (cos, acos), (sec, asec), (csc, acsc),
+             (tan, atan), (cot, acot)]
+
+    for func, funcinv in funcs:
+        assert alpha == trigsimp(funcinv(func(alpha)), inverse=True)
 
     # test asin(sin(alpha)) and acos(cos(alpha))
     assert alpha == trigsimp(acos(c), inverse=True)
