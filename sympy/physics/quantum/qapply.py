@@ -106,12 +106,12 @@ def qapply(e, **options):
           and avoid breaking them up to ket * bra (default: True).
         * ``mul``: distribute commutative factors over sums. Corresponds to option ``mul``
           of ``expand``. ``mul=False`` will return application only (default: True).
+        * ``tensorproduct``: Expand sums in factors of ``TensorProduct``s into sums of
+          ``TensorProduct``s (same option as in ``expand``) (default: value of option ``mul``).
         * ``power_base``: for commutative factors, split powers of multiplied bases
           (same option as in ``expand``) (default: value of option ``mul``).
         * ``power_exp``: for cummutative factors, expand addition in exponents into
-          multiplied bases (same option as in ``expand``) (default: value of option ``mul``).
-        * ``tensorproduct``: Expand sums in factors of ``TensorProducts`` into sums of
-          ``TensorProducts`` (same option as in ``expand``) (default: True).
+          multiplied bases (same option as in ``expand``) (default: False).
 
 
 
@@ -143,7 +143,7 @@ def qapply(e, **options):
         >>> qapply(A * k * b * A, op_join = False)
         <b|k>**2*|k>*<b|
         >>> n = symbols("n", integer=True, nonnegative=True)
-        >>> qapply(A ** (n + 2), power_exp=False)
+        >>> qapply(A ** (n + 2))
         <b|k>**(n + 1)*|k><b|
 
     """
@@ -529,7 +529,7 @@ def qapply(e, **options):
 
             # if expi can be be determined to be integer exponent >= 2, we try harder:
             if expi.is_integer and 2 <= expi:  # Note: use .is_integer; .is_Integer checks for type Integer
-                if ncl != []: # base has two or more factors
+                if ncl != []: # base has two or more nc-factors
                     # if base=a*b*c and c*a is commutative, then base**expi=(c*a)**(expi-1) * a * b**expi * c.
                     # We don't check all possible factors, just the simplest case so that
                     # cases like (|k>*<b|)**exp or (A*B*A.inv)**exp are simplified
@@ -540,7 +540,7 @@ def qapply(e, **options):
                     pfl = [] if expf == 0 else [ p.copy_exp_atomic(expf, True) ] # fractional power
                     ia = qapply_Mul2([ar, al], [])  # note ar, al may by type Add
                     if no_interaction(ar, al, ia):  # factors didn't interact, so it makes
-                        # no sense for the power pi to unroll, as factors will just line up, so keep atomic
+                        # no sense for the power p to unroll, as factors will just line up, so keep atomic
                         # Case 1: expi>=2, component base, base*base no interaction
                         return [c ** e.exp for c in cl+c2], [], p
                     else: # factors did interact: check whether ia is commutative
@@ -553,26 +553,27 @@ def qapply(e, **options):
                         else: # it makes at least sense to permit the power to unroll itself
                             #Case 3: expi>=2, component base, base*base interacts, but non-c
                             return [c ** e.exp for c in cl+c2], [p.copy_exp_atomic(e.exp - 1, False)] + ncl, ar
-                else: # ncl == [], base is atomic, expi is Integer >= 2
+                else: # ncl == [], so: e.base = cl*base, and base = ar is atomic, expi is Integer >= 2
                     p   = PowHold(base, e.exp, atomic = True , b_sp_l = ([], [], ar), b_sp_r = ([], [], ar))
                     pfl = [] if expf == 0 else [ p.copy_exp_atomic(expf, True) ] # fractional power
-                    ar2 = qapply_Mul2([ar, ar], [])  # does the base interact with itself?
-                    if no_interaction(ar, ar, ar2):           # factors didn't interact, so it makes
+                    ar2 = qapply_Mul2([ar, ar], [])  # does the base = ar interact with itself?
+                    if no_interaction(ar, ar, ar2):  # factors didn't interact, so it makes
                         # no sense for the power to unroll, as factors will just line up, so make atomic
-                        # Case 4: expi>=2, base atomic and base*base no interaction
+                        # Case 4: expi>=2, base=ar atomic and base*base = ar*ar = ar2 no interaction
                         return ([c ** e.exp for c in cl], [], p)
-                    else: # Check for important simplifications if base is a dyad, "idempotent" or
+                    else: # Check for important simplifications if base=ar is a dyad, "idempotent" or
                         # "involutoric" operator and permit the power to unroll:
                         ar2c, ar2ncl, ar2ar = split_c_nc_atom(ar2, to_the_right)
-                        if ar2ar == EmptyMul: # ar2 is commutative, and ncl==[], so base = cl*ar.
-                            # Case 5a: expi >= 2, base atomic + "involutoric"
-                            # simplify: base**e.exp = base**expf * cl**expi * ar**(expi-1) * ar
-                            c_list = [c ** expi for c in cl] + [c ** (expi // 2) for c in ar2c]
+                        if ar2ar == EmptyMul: # ar*ar=ar2 is even commutative. We have e.base = cl*ar, base=ar.
+                            # Case 5a: expi >= 2, base = ar atomic + "involutoric"
+                            # simplify: e.base**e.exp = (cl*ar)**e.exp = cl**e.exp * ar**expf * ar**expi.
+                            # ar**expf = pfl. ar**expi = (ar2**(expi//2)) * (ar if (expi % 2 == 1) else 1) 
+                            c_list = [c ** e.exp for c in cl] + [c ** (expi // 2) for c in ar2c]
                             return (c_list, pfl, ar) if (expi % 2 == 1) else (c_list, [], Mul(*pfl))
-                        if ar2ar == ar and ar2ncl == []: # Case 5b: expi >= 2, base atomic + "idempotent"
-                            # kind of idempotency: a*a = c*a -> a**expi = c**(expi-1) * a
+                        if ar2ar == ar and ar2ncl == []: # Case 5b: expi >= 2, base=ar atomic + "idempotent"
+                            # kind of idempotency: ar*ar = c*ar -> ar**expi = c**(expi-1) * ar
                             return [c ** e.exp for c in cl] + [c ** (expi - 1) for c in ar2c], pfl, ar
-                        # else: Case 6: base atomic but not "idempotent"
+                        # else: Case 6: base=ar atomic but not "idempotent"
                         # return base**(exp-2) * ar * ar = base**(exp-2)*ar2c*ar2ncl*ar2ar
                         return [c ** e.exp for c in cl] + ar2c, [p.copy_exp_atomic(e.exp - 2, False)] + ar2ncl, ar2ar
             else: # Case 7: exponent is non-integer or < 2
@@ -727,9 +728,9 @@ def qapply(e, **options):
     ip_doit              = options.get('ip_doit', True)       # evaluate ip.doit() on all InnerProduct objects
     op_join              = options.get('op_join', True)       # try to join Ket*Bra to OuterProduct, avoid breaking OuterProduct
     expand_mul           = options.get('mul', True)           # distribute commutative factors and apply hint 'mul' of expand()
+    expand_tensorproduct = options.get('tensorproduct', expand_mul) # expand sums in tensor product factors (= hint tensorproduct of expand())
     expand_power_base    = options.get('power_base', expand_mul) # for commutative factors: apply hint 'power_base' of expand()
-    expand_power_exp     = options.get('power_exp', expand_mul)  # for commutative factors: apply hint 'power_exp' of expand()
-    expand_tensorproduct = options.get('tensorproduct', True) # expand sums in tensor product factors (= hint tensorproduct of expand())
+    expand_power_exp     = options.get('power_exp', False)    # for commutative factors: apply hint 'power_exp' of expand()
 
     # some constants for convenience
     EmptyMul = Mul() # is Integer(1), is S.One, but more intuitive in this context
