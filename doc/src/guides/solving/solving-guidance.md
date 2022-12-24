@@ -258,4 +258,9 @@ Eq(x**2, y)
 ```
 
 SymPy can also parse [LaTeX](https://www.latex-project.org/) into expressions
-using {func}`~.parse_latex`. 
+using {func}`~.parse_latex`.
+
+## Report a Bug
+
+If you find a bug with these commands, please post the problem on the [SymPy mailing
+list](https://groups.google.com/g/sympy).

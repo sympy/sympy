@@ -1,7 +1,7 @@
 """Sparse polynomial rings. """
 
-
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
@@ -191,7 +191,7 @@ def _parse_symbols(symbols):
 
     raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
-_ring_cache = {}  # type: tDict[Any, Any]
+_ring_cache: dict[Any, Any] = {}
 
 class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """
@@ -1172,7 +1172,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif len(self) == 1:
             monom, coeff = list(self.items())[0]
             p = ring.zero
-            if coeff == 1:
+            if coeff == ring.domain.one:
                 p[ring.monomial_pow(monom, n)] = coeff
             else:
                 p[ring.monomial_pow(monom, n)] = coeff**n

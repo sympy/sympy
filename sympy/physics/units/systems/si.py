@@ -5,7 +5,7 @@ Added kelvin, candela and mole.
 
 """
 
-from typing import List
+from __future__ import annotations
 
 from sympy.physics.units import DimensionSystem, Dimension, dHg0
 
@@ -52,7 +52,7 @@ units = [mol, cd, K, lux, hertz, newton, pascal, joule, watt, coulomb, volt,
         farad, ohm, siemens, weber, tesla, henry, candela, lux, becquerel,
         gray, katal]
 
-all_units = []  # type: List[Quantity]
+all_units: list[Quantity] = []
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 

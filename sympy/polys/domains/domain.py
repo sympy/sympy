@@ -1,7 +1,7 @@
 """Implementation of :class:`Domain` class. """
 
-
-from typing import Any, Optional, Type
+from __future__ import annotations
+from typing import Any
 
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, sympify
@@ -187,7 +187,7 @@ class Domain:
 
     """
 
-    dtype = None        # type: Optional[Type]
+    dtype: type | None = None
     """The type (class) of the elements of this :py:class:`~.Domain`:
 
     >>> from sympy import ZZ, QQ, Symbol
@@ -210,7 +210,7 @@ class Domain:
     of_type
     """
 
-    zero = None         # type: Optional[Any]
+    zero: Any = None
     """The zero element of the :py:class:`~.Domain`:
 
     >>> from sympy import QQ
@@ -226,7 +226,7 @@ class Domain:
     one
     """
 
-    one = None          # type: Optional[Any]
+    one: Any = None
     """The one element of the :py:class:`~.Domain`:
 
     >>> from sympy import QQ
@@ -353,8 +353,8 @@ class Domain:
 
     has_CharacteristicZero = False
 
-    rep = None  # type: Optional[str]
-    alias = None  # type: Optional[str]
+    rep: str | None = None
+    alias: str | None = None
 
     def __init__(self):
         raise NotImplementedError

@@ -242,8 +242,8 @@ class PartialDerivative(TensExpr):
             dim_after = len(array.shape)
             dim_increase = dim_after - dim_before
             array = permutedims(array, [i + dim_increase for i in range(dim_before)] + list(range(dim_increase)))
-            array = array.as_mutable()  # type: MutableDenseNDimArray
-            varindex = var_indices[0]  # type: TensorIndex
+            array: MutableDenseNDimArray = array.as_mutable()
+            varindex: TensorIndex = var_indices[0]
             # Remove coefficients of base vector:
             coeff_index = [0] + [slice(None) for i in range(len(indices))]
             for i, coeff in enumerate(coeff_array):
