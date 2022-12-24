@@ -1272,7 +1272,7 @@ class Add(Expr, AssocOp):
     def __neg__(self):
         if not global_parameters.distribute:
             return super().__neg__()
-        return Add(*[-i for i in self.args])
+        return Mul(S.NegativeOne, self)
 
 add = AssocOpDispatcher('add')
 

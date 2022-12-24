@@ -10,8 +10,36 @@ from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.core.numbers import pi
 
 from mpmath.libmp.libmpf import prec_to_dps
+
+
+def _is_extrinsic(seq):
+    """validate seq and return True if seq is lowercase and False if uppercase"""
+    if type(seq) != str:
+        raise ValueError('Expected seq to be a string.')
+    if len(seq) != 3:
+        raise ValueError("Expected 3 axes, got `{}`.".format(seq))
+
+    intrinsic = seq.isupper()
+    extrinsic = seq.islower()
+    if not (intrinsic or extrinsic):
+        raise ValueError("seq must either be fully uppercase (for extrinsic "
+                         "rotations), or fully lowercase, for intrinsic "
+                         "rotations).")
+
+    i, j, k = seq.lower()
+    if (i == j) or (j == k):
+        raise ValueError("Consecutive axes must be different")
+
+    bad = set(seq) - set('xyzXYZ')
+    if bad:
+        raise ValueError("Expected axes from `seq` to be from "
+                         "['x', 'y', 'z'] or ['X', 'Y', 'Z'], "
+                         "got {}".format(''.join(bad)))
+
+    return extrinsic
 
 
 class Quaternion(Expr):
@@ -83,6 +111,356 @@ class Quaternion(Expr):
     @property
     def real_field(self):
         return self._real_field
+
+    @property
+    def product_matrix_left(self):
+        r"""Returns 4 x 4 Matrix equivalent to a Hamilton product from the
+        left. This can be useful when treating quaternion elements as column
+        vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
+        are real numbers, the product matrix from the left is:
+
+        .. math::
+
+            M  =  \begin{bmatrix} a  &-b  &-c  &-d \\
+                                  b  & a  &-d  & c \\
+                                  c  & d  & a  &-b \\
+                                  d  &-c  & b  & a \end{bmatrix}
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q1 = Quaternion(1, 0, 0, 1)
+        >>> q2 = Quaternion(a, b, c, d)
+        >>> q1.product_matrix_left
+        Matrix([
+        [1, 0,  0, -1],
+        [0, 1, -1,  0],
+        [0, 1,  1,  0],
+        [1, 0,  0,  1]])
+
+        >>> q1.product_matrix_left * q2.to_Matrix()
+        Matrix([
+        [a - d],
+        [b - c],
+        [b + c],
+        [a + d]])
+
+        This is equivalent to:
+
+        >>> (q1 * q2).to_Matrix()
+        Matrix([
+        [a - d],
+        [b - c],
+        [b + c],
+        [a + d]])
+        """
+        return Matrix([
+                [self.a, -self.b, -self.c, -self.d],
+                [self.b, self.a, -self.d, self.c],
+                [self.c, self.d, self.a, -self.b],
+                [self.d, -self.c, self.b, self.a]])
+
+    @property
+    def product_matrix_right(self):
+        r"""Returns 4 x 4 Matrix equivalent to a Hamilton product from the
+        right. This can be useful when treating quaternion elements as column
+        vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
+        are real numbers, the product matrix from the left is:
+
+        .. math::
+
+            M  =  \begin{bmatrix} a  &-b  &-c  &-d \\
+                                  b  & a  & d  &-c \\
+                                  c  &-d  & a  & b \\
+                                  d  & c  &-b  & a \end{bmatrix}
+
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q1 = Quaternion(a, b, c, d)
+        >>> q2 = Quaternion(1, 0, 0, 1)
+        >>> q2.product_matrix_right
+        Matrix([
+        [1, 0, 0, -1],
+        [0, 1, 1, 0],
+        [0, -1, 1, 0],
+        [1, 0, 0, 1]])
+
+        Note the switched arguments: the matrix represents the quaternion on
+        the right, but is still considered as a matrix multiplication from the
+        left.
+
+        >>> q2.product_matrix_right * q1.to_Matrix()
+        Matrix([
+        [ a - d],
+        [ b + c],
+        [-b + c],
+        [ a + d]])
+
+        This is equivalent to:
+
+        >>> (q1 * q2).to_Matrix()
+        Matrix([
+        [ a - d],
+        [ b + c],
+        [-b + c],
+        [ a + d]])
+        """
+        return Matrix([
+                [self.a, -self.b, -self.c, -self.d],
+                [self.b, self.a, self.d, -self.c],
+                [self.c, -self.d, self.a, self.b],
+                [self.d, self.c, -self.b, self.a]])
+
+    def to_Matrix(self, vector_only=False):
+        """Returns elements of quaternion as a column vector.
+        By default, a Matrix of length 4 is returned, with the real part as the
+        first element.
+        If vector_only is True, returns only imaginary part as a Matrix of
+        length 3.
+
+        Parameters
+        ==========
+
+        vector_only : bool
+            If True, only imaginary part is returned.
+            Default : False
+
+        Returns
+        =======
+
+        Matrix
+            A column vector constructed by the elements of the quaternion.
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q = Quaternion(a, b, c, d)
+        >>> q
+        a + b*i + c*j + d*k
+
+        >>> q.to_Matrix()
+        Matrix([
+        [a],
+        [b],
+        [c],
+        [d]])
+
+
+        >>> q.to_Matrix(vector_only=True)
+        Matrix([
+        [b],
+        [c],
+        [d]])
+
+        """
+        if vector_only:
+            return Matrix(self.args[1:])
+        else:
+            return Matrix(self.args)
+
+    @classmethod
+    def from_Matrix(cls, elements):
+        """Returns quaternion from elements of a column vector`.
+        If vector_only is True, returns only imaginary part as a Matrix of
+        length 3.
+
+        Parameters
+        ==========
+
+        elements : Matrix, list or tuple of length 3 or 4. If length is 3,
+            assume real part is zero.
+            Default : False
+
+        Returns
+        =======
+
+        Quaternion
+            A quaternion created from the input elements.
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q = Quaternion.from_Matrix([a, b, c, d])
+        >>> q
+        a + b*i + c*j + d*k
+
+        >>> q = Quaternion.from_Matrix([b, c, d])
+        >>> q
+        0 + b*i + c*j + d*k
+
+        """
+        length = len(elements)
+        if length != 3 and length != 4:
+            raise ValueError("Input elements must have length 3 or 4, got {} "
+                             "elements".format(length))
+
+        if length == 3:
+            return Quaternion(0, *elements)
+        else:
+            return Quaternion(*elements)
+
+    @classmethod
+    def from_euler(cls, angles, seq):
+        """Returns quaternion equivalent to rotation represented by the Euler
+        angles, in the sequence defined by `seq`.
+
+        Parameters
+        ==========
+
+        angles : list, tuple or Matrix of 3 numbers
+            The Euler angles (in radians).
+        seq : string of length 3
+            Represents the sequence of rotations.
+            For intrinsic rotations, seq must be all lowercase and its elements
+            must be from the set `{'x', 'y', 'z'}`
+            For extrinsic rotations, seq must be all uppercase and its elements
+            must be from the set `{'X', 'Y', 'Z'}`
+
+        Returns
+        =======
+
+        Quaternion
+            The normalized rotation quaternion calculated from the Euler angles
+            in the given sequence.
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy import pi
+        >>> q = Quaternion.from_euler([pi/2, 0, 0], 'xyz')
+        >>> q
+        sqrt(2)/2 + sqrt(2)/2*i + 0*j + 0*k
+
+        >>> q = Quaternion.from_euler([0, pi/2, pi] , 'zyz')
+        >>> q
+        0 + (-sqrt(2)/2)*i + 0*j + sqrt(2)/2*k
+
+        >>> q = Quaternion.from_euler([0, pi/2, pi] , 'ZYZ')
+        >>> q
+        0 + sqrt(2)/2*i + 0*j + sqrt(2)/2*k
+
+        """
+
+        if len(angles) != 3:
+            raise ValueError("3 angles must be given.")
+
+        extrinsic = _is_extrinsic(seq)
+        i, j, k = seq.lower()
+
+        # get elementary basis vectors
+        ei = [1 if n == i else 0 for n in 'xyz']
+        ej = [1 if n == j else 0 for n in 'xyz']
+        ek = [1 if n == k else 0 for n in 'xyz']
+
+        # calculate distinct quaternions
+        qi = cls.from_axis_angle(ei, angles[0])
+        qj = cls.from_axis_angle(ej, angles[1])
+        qk = cls.from_axis_angle(ek, angles[2])
+
+        if extrinsic:
+            return trigsimp(qk * qj * qi)
+        else:
+            return trigsimp(qi * qj * qk)
+
+    def to_euler(self, seq):
+        """Returns Euler angles representing same rotation as the quaternion,
+        in the sequence given by `seq`. This implements the method described
+        in [1]_.
+
+        Parameters
+        ==========
+
+        seq : string of length 3
+            Represents the sequence of rotations.
+            For intrinsic rotations, seq must be all lowercase and its elements
+            must be from the set `{'x', 'y', 'z'}`
+            For extrinsic rotations, seq must be all uppercase and its elements
+            must be from the set `{'X', 'Y', 'Z'}`
+
+        Returns
+        =======
+
+        Tuple
+            The Euler angles calculated from the quaternion
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> euler = Quaternion(a, b, c, d).to_euler('zyz')
+        >>> euler
+        (-atan2(-b, c) + atan2(d, a),
+         2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)),
+         atan2(-b, c) + atan2(d, a))
+
+
+        References
+        ==========
+
+        .. [1] https://doi.org/10.1371/journal.pone.0276302
+
+        """
+        extrinsic = _is_extrinsic(seq)
+        i, j, k = seq.lower()
+
+        # get index corresponding to elementary basis vectors
+        i = 'xyz'.index(i) + 1
+        j = 'xyz'.index(j) + 1
+        k = 'xyz'.index(k) + 1
+
+        if not extrinsic:
+            i, k = k, i
+
+        # check if sequence is symmetric
+        symmetric = i == k
+        if symmetric:
+            k = 6 - i - j
+
+        # parity of the permutation
+        sign = (i - j) * (j - k) * (k - i) // 2
+
+        # permutate elements
+        elements = [self.a, self.b, self.c, self.d]
+        a = elements[0]
+        b = elements[i]
+        c = elements[j]
+        d = elements[k] * sign
+
+        if not symmetric:
+            a, b, c, d = a - c, b + d, c + a, d - b
+
+        # calculate angles
+        half_sum = atan2(b, a)
+        half_diff = atan2(d, c)
+
+        angle_j = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
+        # alternatively, we can use this to avoid the square root:
+        # angle_2 = acos(2*(a*a + b*b)/(a*a + b*b + c*c + d*d) - 1)
+
+        angle_i = half_sum + half_diff
+        angle_k = half_sum - half_diff
+
+        # for Tait-Bryan angles
+        if not symmetric:
+            angle_j -= pi / 2
+            angle_i *= sign
+
+        if extrinsic:
+            return angle_k, angle_j, angle_i
+        else:
+            return angle_i, angle_j, angle_k
 
     @classmethod
     def from_axis_angle(cls, vector, angle):

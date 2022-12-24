@@ -55,10 +55,10 @@ class XOp(HermitianOperator):
     def _eval_commutator_PxOp(self, other):
         return I*hbar
 
-    def _apply_operator_XKet(self, ket):
+    def _apply_operator_XKet(self, ket, **options):
         return ket.position*ket
 
-    def _apply_operator_PositionKet3D(self, ket):
+    def _apply_operator_PositionKet3D(self, ket, **options):
         return ket.position_x*ket
 
     def _represent_PxKet(self, basis, *, index=1, **options):
@@ -82,7 +82,7 @@ class YOp(HermitianOperator):
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
-    def _apply_operator_PositionKet3D(self, ket):
+    def _apply_operator_PositionKet3D(self, ket, **options):
         return ket.position_y*ket
 
 
@@ -97,7 +97,7 @@ class ZOp(HermitianOperator):
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
-    def _apply_operator_PositionKet3D(self, ket):
+    def _apply_operator_PositionKet3D(self, ket, **options):
         return ket.position_z*ket
 
 #-------------------------------------------------------------------------
@@ -116,7 +116,7 @@ class PxOp(HermitianOperator):
     def _eval_hilbert_space(self, args):
         return L2(Interval(S.NegativeInfinity, S.Infinity))
 
-    def _apply_operator_PxKet(self, ket):
+    def _apply_operator_PxKet(self, ket, **options):
         return ket.momentum*ket
 
     def _represent_XKet(self, basis, *, index=1, **options):

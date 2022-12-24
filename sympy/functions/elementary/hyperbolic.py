@@ -998,8 +998,8 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
 
     #To be defined in class
     _reciprocal_of = None
-    _is_even = None  # type: FuzzyBool
-    _is_odd = None  # type: FuzzyBool
+    _is_even: FuzzyBool = None
+    _is_odd: FuzzyBool = None
 
     @classmethod
     def eval(cls, arg):

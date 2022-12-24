@@ -707,6 +707,10 @@ def test_laplace_transform():
     assert inverse_laplace_transform(
         f(w), w, t, plane=0) == InverseLaplaceTransform(f(w), w, t, 0)
     assert LT(f(t)*g(t), t, s) == LaplaceTransform(f(t)*g(t), t, s)
+    # Issue #24294
+    assert LT(b*f(a*t), t, s) == b*LaplaceTransform(f(t), t, s/a)/a
+    assert LT(3*exp(t)*Heaviside(t), t, s) == (3/(s - 1), 1, True)
+    assert LT(2*sin(t)*Heaviside(t), t, s) == (2/(s**2 + 1), 0, True)
 
     # additional basic tests from wikipedia
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
