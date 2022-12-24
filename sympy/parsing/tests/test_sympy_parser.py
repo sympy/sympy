@@ -10,6 +10,7 @@ from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, 
 from sympy.functions import exp, factorial, factorial2, sin, Min, Max
 from sympy.core.relational import Lt, Le, Gt, Ge, Ne
 from sympy.logic import And
+from sympy.core.relational import Lt, Le, Gt, Ge, Ne
 from sympy.series import Limit
 from sympy.testing.pytest import raises, skip
 
@@ -21,8 +22,6 @@ from sympy.parsing.sympy_parser import (
     auto_number, factorial_notation, implicit_application,
     _transformation, T
     )
-
-
 def test_sympy_parser():
     x = Symbol('x')
     inputs = {
@@ -55,8 +54,6 @@ def test_sympy_parser():
             evaluate=False),
         'Limit(sin(x), x, 0, dir="-")': Limit(sin(x), x, 0, dir='-'),
         'Q.even(x)': Q.even(x),
-
-
     }
     for text, result in inputs.items():
         assert parse_expr(text) == result
@@ -204,6 +201,18 @@ def test_recursive_evaluate_false_10560():
     for text, result in inputs.items():
         assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
 
+
+def test_issue__evaluateFalse_24288():
+    inputs = {'1<2' : Lt(1,2),
+              '1<=2' : Le(1,2),
+              '1>2' : Gt(1,2),
+              '1>=2' : Ge(1,2),
+              '1=2' : Eq(1,2),
+              '1!=2' : Ne(1,2),
+        }
+    for case,results in inputs.items():
+        assert parse_expr(case, evaluate=False) == results
+    
 
 def test_function_evaluate_false():
     inputs = [
