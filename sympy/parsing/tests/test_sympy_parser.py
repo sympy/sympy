@@ -211,8 +211,8 @@ def test_issue__evaluateFalse_24288():
               '1!=2' : Ne(1,2),
         }
     for case,results in inputs.items():
-        assert parse_expr(case, evaluate=False) == results
-    
+        assert parse_expr(str(case), evaluate=False) == results
+
 
 def test_function_evaluate_false():
     inputs = [
