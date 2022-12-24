@@ -185,6 +185,7 @@
 #
 # See also: 'git shortlog --help' and 'git check-mailmap --help'.
 #
+
 *Chu-Ching Huang <cchuang@mail.cgu.edu.tw>
 *Dan <coolg49964@gmail.com>
 *Marc-Etienne M.Leveille <protonyc@gmail.com>
@@ -209,7 +210,11 @@ Abhinav Anand <abhinav.anand2807@gmail.com>
 Abhinav Chanda <abhinavchanda01@gmail.com>
 Abhishek <uchiha@pop-os.localdomain>
 Abhishek Garg <abhishekgarg119@gmail.com>
-Abhishek Patidar <1e9abhi1e10@gmail.com>
+Abhishek Patidar <1e9abhi1e10@gmail.com> 1e9abhi1e10 <1e9abhi1e10@gmaiil.com>
+Abhishek Patidar <1e9abhi1e10@gmail.com> <1e9abhi1e10@gmail.com>
+Abhishek Patidar <1e9abhi1e10@gmail.com> ABHISHEK PATIDAR <95904102+1e9abhi1e10@users.noreply.github.com>
+Abhishek Patidar <1e9abhi1e10@gmail.com> Abhishek Patidar <2311abhiptdr@gmail.com>
+Abhishek Patidar <1e9abhi1e10@gmail.com> abhi1e9-1e10 <1e9abhi1e10@gmail.com>
 Abhishek Verma <iamvermaabhishek@gmail.com>
 Achal Jain <2achaljain@gmail.com>
 Adam Bloomston <adam@glitterfram.es> <mail@adambloomston>

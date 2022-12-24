@@ -1108,13 +1108,16 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.Div: 'Mul',
         ast.BitOr: 'Or',
         ast.BitAnd: 'And',
-        ast.BitXor: 'Not',
-        ast.Eq :'Eq',
-        ast.NotEq:'Ne',
-        ast.Lt:'Lt',
-        ast.LtE:'Le',
-        ast.Gt:'Gt',
-        ast.GtE:'Ge',
+        ast.BitXor: 'Not'
+    }
+
+    cmpoperators = {
+        ast.Eq : 'Eq',
+        ast.NotEq: 'Ne',
+        ast.Lt: 'Lt',
+        ast.LtE: 'Le',
+        ast.Gt: 'Gt',
+        ast.GtE: 'Ge'
     }
     functions = (
         'Abs', 'im', 're', 'sign', 'arg', 'conjugate',
