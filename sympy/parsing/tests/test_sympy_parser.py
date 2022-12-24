@@ -8,6 +8,7 @@ import types
 from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
 from sympy.functions import exp, factorial, factorial2, sin, Min, Max
+from sympy.core.relational import Lt, Le, Gt, Ge, Ne
 from sympy.logic import And
 from sympy.series import Limit
 from sympy.testing.pytest import raises, skip
@@ -181,6 +182,17 @@ def test_issue_7663():
     e = '2*(x+1)'
     assert parse_expr(e, evaluate=0) == parse_expr(e, evaluate=False)
     assert parse_expr(e, evaluate=0).equals(2*(x+1))
+
+def test_issue_24288():
+    inputs = {'1<2' : Lt(1, 2),
+              '1<=2' : Le(1, 2),
+              '1>2' : Gt(1, 2),
+              '1>=2' : Ge(1, 2),
+              '1==2' : Eq(1, 2),
+              '1!=2' : Ne(1, 2),
+        }
+    for case,results in inputs.items():
+        assert parse_expr(case, evaluate=False) == results
 
 def test_recursive_evaluate_false_10560():
     inputs = {
