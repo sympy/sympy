@@ -73,9 +73,11 @@ def _tree(f, name, **hints):
     tree if `sympy.SYMPY_DEBUG=True` the stderr is subjected to
     `grep '[tree]'`.
     """
-    r = hints.get('recursive', 0)
-    s = '[tree] ' + '  '*r + '|-- ' + name + ': %s'%(f, )
-    debug(s)
+    from sympy import SYMPY_DEBUG
+    if SYMPY_DEBUG:
+        r = hints.get('recursive', 0)
+        s = '[tree] ' + '  '*r + '|-- ' + name + ': %s'%(f, )
+        debug(s)
     return
 
 
@@ -187,29 +189,16 @@ class IntegralTransform(Function):
         needeval = hints.pop('needeval', False)
         simplify = hints.pop('simplify', True)
         hints['simplify'] = simplify
-        recursive = hints.get('recursive', False)
-        if recursive:
-            _tree(self.args[0:3], 'IT doit', **hints)
-
-        debug('[IT doit ] %s'%('*'*65, ))
-        debug('[IT doit ] started with (%s)'%(self.args, ))
-        debug('[IT doit ]     and hints %s'%(hints, ))
 
         T = self._use_rules(**hints)
 
         if T is not None:
             return T
 
-        debug('[IT doit ] tries directly with (%s)'%(self.args, ))
-        debug('[IT doit ]           and hints %s'%(hints, ))
-
         fn, T = self._try_directly(**hints)
 
         if T is not None:
             return T
-
-        debug('[IT doit ] further looks into %s'%(fn, ))
-        debug('[IT doit ]         with hints %s'%(hints, ))
 
         if fn.is_Add:
             hints['needeval'] = needeval
@@ -1817,7 +1806,7 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     return None
 
 
-def _laplace_apply_rules(f, t, s, doit=True, **hints):
+def _laplace_apply_rules(f, t, s, doit=True, giveup=True, **hints):
     """
     Helper function for the class LaplaceTransform.
 
@@ -1894,130 +1883,49 @@ class LaplaceTransform(IntegralTransform):
     _name = 'Laplace'
 
     def _use_rules(self, **hints):
+        ### Now I see that _use_rules is not necessary
         """
-        This rule-based engine works in a recursive way. The rationale of this
-        particular implementation is that many Laplace and inverse Laplace
-        transforms will be made because people solve linear differential
-        equation systems by Laplace transform.
-
-        Many time signals that come from single-forward-path systems will
-        already be in a form available in the transform table, so the first
-        time a function passes through `_use_rules` will be without any attempt
-        to expand.
-
-        Many time signals from physical or electrical multi-path systems are
-        a linear combination of expressions in the transform table, maybe with
-        some constants factored out, and will be seperated nicely by the
-        command `expand(f, deep=False)` that is applied to the function the
-        second time it passes through `_use_rules`.
-
-        Then there may be time signals coming from much more complicated
-        systems, on which `expand(f)` may work, this is applied from the
-        third time onwards.
-
-        To keep track of this, the algorithm has a hint called `LT _u_r` that
-        can have the values `no`, `not deep`, `deep`, and `deeper`.  It also
-        uses the hint `recursive` to keep track of the depth of the recursion,
-        for debugging purposes.
-
-        Setting `sympy.SYMPY_DEBUG=True` will produce debug messages that
-        make it easier to follow the recursion.  If `grep [tree]` is applied
-        to the stderr, then the result will show the recursion tree
-        graphucally.
-
-        The algorithm is written such that all rules return `None` if they
-        cannot apply any rules. If the recursion leads to an integration
-        attempt that fails, the result will be an unevaluated
-        `LaplaceTransform` which will be returned as such.  To prevent any
-        infinite recursion loops, `_use_rules` will also return `None` if it
-        has reached the level `deeper` and if it was started with the same
-        arguments as on the previous recursion level (saved in the hint
-        `last_command`).
+        To be written ...
         """
 
         fn = self.function
         t_ = self.function_variable
         s_ = self.transform_variable
-        recursive = hints.get('recursive', 0)
-        last_command = hints.get('last_command', '')
-        _expand = hints.get('LT _u_r', 'no')
-        _tree((fn, t_, s_), ': LT use rules [%s]'%(_expand, ), **hints)
-        hints['recursive'] = recursive+1
-        debug('[LT _u_r ] %s'%('='*65, ))
-        debug('[LT _u_r ] started with (%s, %s, %s)'%(fn, t_, s_))
-        debug('[LT _u_r ]     and hints %s'%(hints, ))
         LT = None
-
-        started_with = '%s | %s | %s'%(fn, t_, s_)
-        ####if started_with==last_command and (recursive>5 or _expand=='deeper'):
-        if started_with==last_command and _expand=='deeper':
-            return None
-        hints['last_command'] = started_with
 
         # Expanding too much too early may prevent rules from matching, so
         # we do it in three layers
 
-        r = fn
-        if _expand=='no':
-            hints['LT _u_r'] = 'not deep'
-        if _expand=='not deep':
-            r = expand(fn, deep=False)
-            hints['LT _u_r'] = 'deep'
-        if _expand=='deep' or _expand=='deeper':
-            hints['LT _u_r'] = 'deeper'
-            r = expand(fn)
-
-        terms = Add.make_args(r)
-
-        by_rule = []
-        recursed = []
-        unevaluated = []
+        terms = Add.make_args(fn)
+        results = []
         for f in terms:
-            LT = _laplace_apply_rules(f, t_, s_, **hints)
-            if LT is None:
-                LT = _laplace_ct(LaplaceTransform(f, t_, s_).doit(**hints))
-                if _laplace_is_uneval(LT[0]):
-                    unevaluated.append(LT)
-                else:
-                    recursed.append(LT)
-            else:
-                if _laplace_is_uneval(LT[0]):
-                    unevaluated.append(LT)
-                else:
-                    by_rule.append(LT)
+            # The following just tries to apply the list of rules until
+            # one of the matches.
+            d, r = _laplace_apply_simple_rules(f, t_, s_)
+            if d:
+                results.append(f)
+                continue
+            # The following will try to apply all its rules and may 
+            # return a longer sum plus a set of convergence conditions
+            d, r = _laplace_apply_prog_rules(f, t_, s_)
+            if d:
+                for g in Add.make_args(r):
+                    # Conditions in r not yet covered
+                    d, r = _laplace_apply_simple_rules(f, t_, s_)
+                    results.append(r)
+                continue
+            results.append(_laplace_ct(LaplaceTransform(fn, t_, s_)))
 
-        debug('[LT _u_r ] Assembling result using:')
-        debug('[LT _u_r ]     rules: %s, rec: %s, uneval: %s'%(by_rule,
-                                                               recursed,
-                                                               unevaluated))
-        debug('[LT _u_r ]     recursion: %s'%(recursive, ))
-        F = [0]
-        U = [0]
-        a = [S.NegativeInfinity]
-        c = [True]
-        for F_, a_, c_ in by_rule + recursed + unevaluated:
-            # It is possible that unevaluated transforms return with
-            # conditions included
-            if F_.has(LaplaceTransform):
-                U.append(F_)
-            else:
-                F.append(F_)
-            a.append(a_)
-            c.append(c_)
-        debug('[LT _u_r ]     collected: ', F, a, c, U)
+#### Now we have a list of result tuples that may contain unevaluated
+#### LaplaceTransform objetcs, which we need to try and evaluate.
+        
+#### After that, we need to Add everything and resolve all conditions and planes
         LT = (Add(*F).simplify()+Add(*U), Max(*a), And(*c))
-        debug('[LT _u_r ]     returns: ', LT)
         return LT
 
     def _compute_transform(self, f, t, s, **hints):
-        debug('[LT _c_t ] started with (%s, %s, %s)'%(f, t, s))
-        debug('[LT _c_t ]     and hints %s'%(hints, ))
         _simplify = hints.get('simplify', True)
-
         LT = _laplace_transform(f, t, s, simplify=_simplify)
-        debug('[LT _c_t ]     --> %s'%(LT, ))
-        debug('[LT _c_t ]         %s'%(_laplace_cr(LT, **hints), ))
-
         return _laplace_cr(LT, **hints)
 
     def _as_integral(self, f, t, s):
@@ -2035,6 +1943,67 @@ class LaplaceTransform(IntegralTransform):
             raise IntegralTransformError(
                 'Laplace', None, 'No combined convergence.')
         return plane, cond
+
+    def _try_directly(self, **hints):
+        T = None
+        try_directly = not any(func.has(self.function_variable)
+                               for func in self.function.atoms(AppliedUndef))
+        if try_directly:
+            try:
+                T = self._compute_transform(self.function,
+                    self.function_variable, self.transform_variable, **hints)
+            except IntegralTransformError:
+                T = None
+
+        return self.function, T
+
+    def doit(self, **hints):
+        """
+        Try to evaluate the transform in closed form.
+
+        Explanation
+        ===========
+
+        Standard hints are the following:
+
+        - ``simplify``: whether or not to simplify the result
+        - ``noconds``:  if True, do not return convergence conditions
+        - ``needeval``: if True, raise IntegralTransformError instead of
+                        returning IntegralTransform objects
+        - ``norules``:  if True, do not apply rules      
+
+        The default values of these hints are
+        ``(simplify, noconds, needeval, norules) = (True, False, False, False)``.
+        """
+        needeval = hints.pop('needeval', False)
+        norules = hints.pop('norules', False)
+
+        debug('[LT doit] (%s, %s, %s)'%(self.function,
+                                        self.function_variable,
+                                        self.transform_variable))
+        if not norules:
+            T = self._use_rules(**hints)
+        else:
+            T = None
+
+        debug('[LT rules] --> %s'%(T,))
+
+        if T is not None:
+            return T
+
+        fn, T = self._try_directly(**hints)
+
+        debug('[LT direct] --> %s'%(T,))
+
+        if T is not None:
+            return T
+
+        if needeval:
+            raise IntegralTransformError(
+                self.__class__._name, self.function, 'needeval')
+
+        return LaplaceTransform(self.function, self.function_variable,
+                                self.transform_variable)
 
 
 def laplace_transform(f, t, s, legacy_matrix=True, **hints):
@@ -2103,10 +2072,6 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     """
 
-    debug('[LT l_t  ] %s'%('*'*65, ))
-    debug('           %s'%('*'*65, ))
-    debug('[LT l_t  ] started with (%s, %s, %s)'%(f, t, s))
-    debug('[LT l_t  ]     and hints %s'%(hints, ))
     conds = not hints.get('noconds', False)
 
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
@@ -2141,11 +2106,7 @@ behavior.
         if Heaviside(t) in factors:
             f = Mul(*[ i for i in factors if not i is Heaviside(t) ])
 
-    debug('[LT l_t  ]   executes LaplaceTransform(%s, %s, %s)'%(f, t, s))
-
     LT = LaplaceTransform(f, t, s).doit(**hints)
-
-    debug('[LT l_t  ]   received: ', LT)
 
     # For backwards compatibility: even if noconds=False, do not return
     # a tuple if F is unevaluated
@@ -2155,7 +2116,6 @@ behavior.
     if F.has(LaplaceTransform) and p is S.NegativeInfinity and c:
         LT = F
 
-    debug('[LT l_t  ]   returns: ', LT)
     return LT
 
 
