@@ -1904,12 +1904,15 @@ class LaplaceTransform(IntegralTransform):
             d, r = _laplace_apply_simple_rules(f, t_, s_)
             if d:
                 results.append(r)
+                debug('*************',results)
                 continue
             d, r = _laplace_apply_prog_rules(f, t_, s_)
             if d:
                 results.append(r)
                 continue
-            fn, T = self._try_directly(**hints)
+            # fn, T = self._try_directly(**hints)
+            debug('*************',results)
+            T = None
             if T is not None:
                 results.append(_laplace_ct(T))
             else:
