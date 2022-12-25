@@ -5,7 +5,7 @@ from sympy.core import S, pi, I
 from sympy.core.add import Add
 from sympy.core.function import (AppliedUndef, count_ops, Derivative, expand,
                                  expand_complex, expand_mul, Function, Lambda,
-                                 WildFunction)
+                                 UndefinedFunction, WildFunction)
 from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
@@ -1639,8 +1639,9 @@ def _laplace_rule_timescale(f, t, s):
             debug('_laplace_apply_prog rules match:')
             debug('      f:    %s _ %s, %s )'%(f, ma1, ma2))
             debug('      rule: amplitude and time scaling (1.1, 1.2)')
-            r = LaplaceTransform(1/ma2[a]*ma1[g].func(t), t, s/ma2[a])
-            return True, (k*r, p/ma2[a], c)
+            r, pr, cr = LaplaceTransform(1/ma2[a]*ma1[g].func(t),
+                                         t, s/ma2[a]).doit()
+            return True, (k*r, Max(p/ma2[a], pr), And(c, cr))
     return False, (fn, p, c)
 
 
@@ -1660,9 +1661,9 @@ def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: time shift (1.3)')
-            return True, (k*exp(-ma2[a]*s)*LaplaceTransform(ma1[g]\
-                                                .subs(t, t-ma2[a]), t, s),
-                          p, c)
+            r, pr, cr = LaplaceTransform(ma1[g].subs(t, t-ma2[a]), t, s).doit()
+            return True, (k*exp(-ma2[a]*s)*r,
+                          Max(p, pr), And(c, cr))
     return False, (fn, p, c)
 
 
@@ -1682,8 +1683,8 @@ def _laplace_rule_exp(f, t, s):
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: multiply with exp (1.5)')
-            return True, (k*LaplaceTransform(ma1[z], t, s-ma2[a]),
-                          p+ma2[a], c)
+            r, pr, cr = LaplaceTransform(ma1[z], t, s-ma2[a]).doit()
+            return True, (k*r, Max(p+ma2[a], pr), And(c, cr))
     return False, (fn, p, c)
 
 
@@ -1739,7 +1740,7 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                 debug('_laplace_apply_rules match:')
                 debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
                 debug('      rule: multiply with %s (%s)'%(fm.func, nu))
-                r = k*LaplaceTransform(ma1[z], t, s)
+                r, pr, cr = k*LaplaceTransform(ma1[z], t, s).doit()
                 # The convergence plane changes only if the shift has been
                 # done along the real axis:
                 if sd==1:
@@ -1748,7 +1749,7 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                     cp_shift = 0
                 return True, ((s1*(r.subs(s, s-sd*ma2[a])+\
                                s2*r.subs(s, s+sd*ma2[a])))/2,
-                              p+cp_shift, c)
+                              Max(p, pr+cp_shift), And(c, cr))
     return False, (fn, p, c)
 
 
@@ -1756,16 +1757,15 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     """
     """
     fn, p, c = _laplace_ct(f)
-    k, f = fn.as_independent(t, as_Add=False)
 
     a = Wild('a', exclude=[t])
     y = Wild('y')
     n = Wild('n', exclude=[t])
     g = WildFunction('g', nargs=1)
-    ma1 = f.match(a*Derivative(g, (t, n)))
+    ma1 = fn.match(a*Derivative(g, (t, n)))
     if ma1 and ma1[g].args[0] == t and ma1[n].is_integer:
         debug('_laplace_apply_rules match:')
-        debug('      f:    %s'%(f,))
+        debug('      f, n: %s, %s'%(f, ma1[n]))
         debug('      rule: time derivative (1.11, 1.12)')
         d = []
         for k in range(ma1[n]):
@@ -1774,8 +1774,8 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
             else:
                 y = Derivative(ma1[g].func(t), (t, k)).subs(t, 0)
             d.append(s**(ma1[n]-k-1)*y)
-        r = LaplaceTransform(ma1[g].func(t), t, s)
-        return True, (k*(ma1[a]*s**ma1[n]*r - Add(*d)), p, c)
+        r, pr, cr = LaplaceTransform(ma1[g].func(t), t, s).doit()
+        return True, (ma1[a]*(s**ma1[n]*r - Add(*d)),  Max(p, pr), And(c, cr))
     return False, (fn, p, c)
 
 
@@ -1784,19 +1784,17 @@ def _laplace_apply_prog_rules(f, t, s):
     Helper function for the class LaplaceTransform.
     """
     fn, p, c = _laplace_ct(f)
-    k, f = fn.as_independent(t, as_Add=False)
 
     prog_rules = [_laplace_rule_timescale, _laplace_rule_heaviside,
                   _laplace_rule_exp, _laplace_rule_trig,
                   _laplace_rule_delta, _laplace_rule_diff]
 
-    while True:
-        for p_rule in prog_rules:
-            L = p_rule(func, t, s)
-        if not L is None:
-            r, p, c = L
-            return k*r, p, c
-    return None
+    for p_rule in prog_rules:
+        d, L = p_rule((fn, p, c), t, s)
+    if d:
+        r, pr, cr = L
+        return True, (r, Max(p, pr), And(c, cr))
+    return False, (fn, p, c)
 
 
 def _laplace_apply_simple_rules(f, t, s):
@@ -1847,47 +1845,6 @@ class LaplaceTransform(IntegralTransform):
 
     _name = 'Laplace'
 
-    def _use_rules(self, **hints):
-        ### Now I see that _use_rules is not necessary
-        """
-        To be written ...
-        """
-
-        fn = self.function
-        t_ = self.function_variable
-        s_ = self.transform_variable
-        LT = None
-
-        # Expanding too much too early may prevent rules from matching, so
-        # we do it in three layers
-
-        terms = Add.make_args(fn)
-        results = []
-        for f in terms:
-            # The following just tries to apply the list of rules until
-            # one of the matches.
-            d, r = _laplace_apply_simple_rules(f, t_, s_)
-            if d:
-                results.append(f)
-                continue
-            # The following will try to apply all its rules and may 
-            # return a longer sum plus a set of convergence conditions
-            d, r = _laplace_apply_prog_rules(f, t_, s_)
-            if d:
-                for g in Add.make_args(r[0]):
-                    # Conditions in r not yet covered
-                    d, r = _laplace_apply_simple_rules(f, t_, s_)
-                    results.append(r)
-                continue
-            results.append(_laplace_ct(LaplaceTransform(fn, t_, s_)))
-
-#### Now we have a list of result tuples that may contain unevaluated
-#### LaplaceTransform objetcs, which we need to try and evaluate.
-        
-#### After that, we need to Add everything and resolve all conditions and planes
-        LT = (Add(*F).simplify()+Add(*U), Max(*a), And(*c))
-        return LT
-
     def _compute_transform(self, f, t, s, **hints):
         _simplify = hints.get('simplify', True)
         LT = _laplace_transform(f, t, s, simplify=_simplify)
@@ -1930,45 +1887,43 @@ class LaplaceTransform(IntegralTransform):
         ===========
 
         Standard hints are the following:
-
-        - ``simplify``: whether or not to simplify the result
         - ``noconds``:  if True, do not return convergence conditions
-        - ``needeval``: if True, raise IntegralTransformError instead of
-                        returning IntegralTransform objects
-        - ``norules``:  if True, do not apply rules      
-
-        The default values of these hints are
-        ``(simplify, noconds, needeval, norules) = (True, False, False, False)``.
         """
-        needeval = hints.pop('needeval', False)
-        norules = hints.pop('norules', False)
 
         debug('[LT doit] (%s, %s, %s)'%(self.function,
                                         self.function_variable,
                                         self.transform_variable))
-        if not norules:
-            T = self._use_rules(**hints)
-        else:
-            T = None
 
-        debug('[LT rules] --> %s'%(T,))
+        fn = self.function
+        t_ = self.function_variable
+        s_ = self.transform_variable
 
-        if T is not None:
-            return T
+        terms = Add.make_args(fn)
+        results = []
+        for f in terms:
+            d, r = _laplace_apply_simple_rules(f, t_, s_)
+            if d:
+                results.append(r)
+                continue
+            d, r = _laplace_apply_prog_rules(f, t_, s_)
+            if d:
+                results.append(r)
+                continue
+            fn, T = self._try_directly(**hints)
+            if T is not None:
+                results.append(_laplace_ct(T))
+            else:
+                results.append(_laplace_ct(LaplaceTransform(fn, t_, s_)))
 
-        fn, T = self._try_directly(**hints)
+        r = []
+        p = []
+        c = []
+        for res in results:
+            r.append(res[0])
+            p.append(res[1])
+            c.append(res[2])
 
-        debug('[LT direct] --> %s'%(T,))
-
-        if T is not None:
-            return T
-
-        if needeval:
-            raise IntegralTransformError(
-                self.__class__._name, self.function, 'needeval')
-
-        return LaplaceTransform(self.function, self.function_variable,
-                                self.transform_variable)
+        return Add(*r), Max(*p), And(*c)
 
 
 def laplace_transform(f, t, s, legacy_matrix=True, **hints):
@@ -2073,13 +2028,13 @@ behavior.
 
     LT = LaplaceTransform(f, t, s).doit(**hints)
 
-    # For backwards compatibility: even if noconds=False, do not return
-    # a tuple if F is unevaluated
-    F, p, c = LT
-    if _laplace_is_uneval(F) or not conds:
-        LT = F
-    if F.has(LaplaceTransform) and p is S.NegativeInfinity and c:
-        LT = F
+    # # For backwards compatibility: even if noconds=False, do not return
+    # # a tuple if F is unevaluated
+    # F, p, c = LT
+    # if _laplace_is_uneval(F) or not conds:
+    #     LT = F
+    # if F.has(LaplaceTransform) and p is S.NegativeInfinity and c:
+    #     LT = F
 
     return LT
 
