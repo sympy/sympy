@@ -15,7 +15,7 @@ from sympy.physics.units import (amount_of_substance, area, convert_to, find_uni
                                  vacuum_permittivity, elementary_charge, volt,
                                  ohm)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
-    day, foot, grams, hour, inch, kg, km, m, meter, millimeter, angstrom,
+    day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
     minute, quart, s, second, speed_of_light, bit,
     byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte,
     kilogram, gravitational_constant)
