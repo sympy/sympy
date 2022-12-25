@@ -15,7 +15,7 @@ from sympy.physics.units.prefixes import (
 )
 from sympy.physics.units.definitions import (
     cd, K, coulomb, volt, ohm, siemens, farad, henry, tesla, weber, dioptre,
-    lux, katal, gray, becquerel, inch, hectare, liter, julian_year,
+    lux, katal, gray, becquerel, inch, hectare, liter, julian_year, angstrom,
     gravitational_constant, speed_of_light, elementary_charge, planck, hbar,
     electronvolt, avogadro_number, avogadro_constant, boltzmann_constant,
     stefan_boltzmann_constant, atomic_mass_constant, molar_gas_constant,
@@ -137,7 +137,7 @@ __all__ = [
     'planck_power', 'degree', 'mebi', 'K', 'planck_volume',
     'quart', 'pressure', 'W', 'joule', 'boltzmann_constant', 'c', 'g',
     'planck_force', 'exbi', 's', 'watt', 'action', 'hbar', 'gibibyte',
-    'DimensionSystem', 'cd', 'volt', 'planck_charge',
+    'DimensionSystem', 'cd', 'volt', 'planck_charge', 'angstrom',
     'dimsys_length_weight_time', 'pebi', 'vacuum_impedance', 'planck',
     'farad', 'gravitational_constant', 'u0', 'hertz', 'tesla', 'steradian',
     'josephson_constant', 'planck_area', 'stefan_boltzmann_constant',

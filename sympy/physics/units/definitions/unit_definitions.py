@@ -159,6 +159,9 @@ yd.set_global_relative_scale_factor(3, feet)
 mi = mile = miles = Quantity("mile")
 mi.set_global_relative_scale_factor(5280, feet)
 
+A = angstrom = angstroms = Quantity("angstrom", abbrev="A", latex_repr=r'\r{A}')
+A.set_global_relative_scale_factor(Rational(1, 10**10), meter)
+
 nmi = nautical_mile = nautical_miles = Quantity("nautical_mile")
 nmi.set_global_relative_scale_factor(6076, feet)
 

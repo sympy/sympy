@@ -30,7 +30,7 @@ from sympy.physics.units.definitions import (
     faraday_constant, josephson_constant, von_klitzing_constant,
     acceleration_due_to_gravity, magnetic_constant, vacuum_permittivity,
     vacuum_impedance, coulomb_constant, atmosphere, bar, pound, psi, mmHg,
-    milli_mass_unit, quart, lightyear, astronomical_unit, planck_mass,
+    milli_mass_unit, quart, lightyear, astronomical_unit, angstrom, planck_mass,
     planck_time, planck_temperature, planck_length, planck_charge, planck_area,
     planck_volume, planck_momentum, planck_energy, planck_force, planck_power,
     planck_density, planck_energy_density, planck_intensity,
@@ -253,6 +253,10 @@ SI.set_quantity_scale_factor(lightyear, speed_of_light*julian_year)
 SI.set_quantity_dimension(astronomical_unit, length)
 SI.set_quantity_scale_factor(astronomical_unit, 149597870691*meter)
 
+SI.set_quantity_dimension(angstrom, length)
+SI.set_quantity_scale_factor(angstrom, 1/10**10*meter)
+
+
 # Fundamental Planck units:
 
 SI.set_quantity_dimension(planck_mass, mass)
@@ -358,7 +362,7 @@ __all__ = [
     'charge', 'gravitational_constant', 'temperature', 'u0', 'hertz',
     'capacitance', 'tesla', 'steradian', 'planck_mass', 'josephson_constant',
     'planck_area', 'stefan_boltzmann_constant', 'base_dims',
-    'astronomical_unit', 'radian', 'planck_voltage', 'impedance',
+    'astronomical_unit', 'radian', 'planck_voltage', 'impedance', 'angstrom',
     'planck_energy', 'Da', 'atomic_mass_constant', 'rutherford', 'second', 'inch',
     'elementary_charge', 'SI', 'electronvolt', 'dimsys_SI', 'henry',
     'planck_angular_frequency', 'ohm', 'pound', 'planck_pressure', 'G', 'psi',
