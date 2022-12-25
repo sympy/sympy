@@ -14,7 +14,7 @@ from sympy.physics.units import (amount_of_substance, area, convert_to, find_uni
                                  volume, kilometer, joule, molar_gas_constant,
                                  vacuum_permittivity, elementary_charge, volt,
                                  ohm)
-from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
+from sympy.physics.units.definitions import (amu, au, centimeter, coulomb, A,
     day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
     minute, quart, s, second, speed_of_light, bit,
     byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte,
@@ -288,14 +288,14 @@ def test_find_unit():
     assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     assert find_unit(charge) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     assert find_unit(inch) == [
-        'm', 'au', 'cm', 'dm', 'ft', 'km', 'ly', 'mi', 'mm', 'nm', 'pm', 'um',
+        'm', 'au', 'cm', 'dm', 'ft', 'km', 'ly', 'mi', 'mm', 'nm', 'pm', 'um', 'A'
         'yd', 'nmi', 'feet', 'foot', 'inch', 'mile', 'yard', 'meter', 'miles',
         'yards', 'inches', 'meters', 'micron', 'microns', 'decimeter',
         'kilometer', 'lightyear', 'nanometer', 'picometer', 'centimeter',
         'decimeters', 'kilometers', 'lightyears', 'micrometer', 'millimeter',
         'nanometers', 'picometers', 'centimeters', 'micrometers',
         'millimeters', 'nautical_mile', 'planck_length', 'nautical_miles', 'astronomical_unit',
-        'astronomical_units']
+        'astronomical_units', 'angstrom', 'angstroms']
     assert find_unit(inch**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(length**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(inch ** 2) == ['ha', 'hectare', 'planck_area']
