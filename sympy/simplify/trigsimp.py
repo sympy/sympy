@@ -11,7 +11,7 @@ from sympy.core.sorting import _nodes
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
-from sympy.functions import asin, acos, sec, asec, csc, acsc, acot, atan, atan2
+from sympy.functions import atan2
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.polys import Poly, factor, cancel, parallel_poly_from_expr
@@ -428,9 +428,6 @@ _trigs = (TrigonometricFunction, HyperbolicFunction)
 
 def _trigsimp_inverse(rv):
 
-    funcs = [(sin, asin), (cos, acos), (sec, asec), (csc, acsc),
-             (tan, atan), (cot, acot)]
-
     def check_args(x, y):
         try:
             return x.args[0] == y.args[0]
@@ -439,12 +436,13 @@ def _trigsimp_inverse(rv):
 
     def f(rv):
         # for simple functions
-        for func, funcinv in funcs:
-            if isinstance(rv, funcinv) and isinstance(rv.args[0], func):
-                return f(rv.args[0].args[0])
+        g = getattr(rv, 'inverse', None)
+        if (g is not None and isinstance(rv.args[0], g()) and
+                isinstance(g()(1), TrigonometricFunction)):
+            return rv.args[0].args[0]
 
         # for atan2 simplifications, harder because atan2 has 2 args
-        if type(rv) is atan2:
+        if isinstance(rv, atan2):
             y, x = rv.args
             if _coeff_isneg(y):
                 return -f(atan2(-y, x))

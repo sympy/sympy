@@ -9,7 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
 from sympy.functions.elementary.trigonometric import (acos, asin, atan2)
-from sympy.functions.elementary.trigonometric import (sec, asec, csc, acsc)
+from sympy.functions.elementary.trigonometric import (asec, acsc)
 from sympy.functions.elementary.trigonometric import (acot, atan)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import Matrix
@@ -506,10 +506,9 @@ def test_trigsimp_inverse():
     alpha = symbols('alpha')
     s, c = sin(alpha), cos(alpha)
 
-    funcs = [(sin, asin), (cos, acos), (sec, asec), (csc, acsc),
-             (tan, atan), (cot, acot)]
-    for func, funcinv in funcs:
-        assert alpha == trigsimp(funcinv(func(alpha)), inverse=True)
+    for finv in [asin, acos, asec, acsc, atan, acot]:
+        f = finv.inverse(None)
+        assert alpha == trigsimp(finv(f(alpha)), inverse=True)
 
     # test atan2(cos, sin), atan2(sin, cos), etc...
     for a, b in [[c, s], [s, c]]:
