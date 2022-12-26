@@ -11,8 +11,8 @@ from sympy.matrices.dense import Matrix
 from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
-from sympy.testing.pytest import raises
-from itertools import permutations
+from sympy.testing.pytest import raises, warns
+from itertools import permutations, product
 
 w, x, y, z = symbols('w:z')
 phi = symbols('phi')
@@ -306,6 +306,45 @@ def test_to_euler():
     q = Quaternion(w, x, y, z)
     q_normalized = q.normalize()
 
+    seqs = ['zxy', 'zyx', 'zyz', 'zxz']
+    seqs += [seq.upper() for seq in seqs]
+
+    for seq in seqs:
+        euler_from_q = q.to_euler(seq)
+        q_back = simplify(Quaternion.from_euler(euler_from_q, seq))
+        assert q_back == q_normalized
+
+
+def test_to_euler_numerical_singilarities():
+
+    def test_one_case(angles, seq):
+        q = Quaternion.from_euler(angles, seq)
+        with warns(UserWarning, match='Singularity', test_stacklevel=False):
+            assert q.to_euler(seq) == angles
+
+    # symmetric
+    test_one_case((pi/2,  0, 0), 'zyz')
+    test_one_case((pi/2,  0, 0), 'ZYZ')
+    test_one_case((pi/2,  pi, 0), 'zyz')
+    test_one_case((pi/2,  pi, 0), 'ZYZ')
+
+    # asymmetric
+    test_one_case((pi/2,  pi/2, 0), 'zyx')
+    test_one_case((pi/2,  -pi/2, 0), 'zyx')
+    test_one_case((pi/2,  pi/2, 0), 'ZYX')
+    test_one_case((pi/2,  -pi/2, 0), 'ZYX')
+
+
+def test_to_euler_options():
+    def test_one_case(q):
+        angles1 = Matrix(q.to_euler(seq, True, True))
+        angles2 = Matrix(q.to_euler(seq, False, False))
+        angle_errors = simplify(angles1-angles2).evalf()
+        for angle_error in angle_errors:
+            # forcing angles to set {-pi, pi}
+            angle_error = (angle_error + pi) % (2 * pi) - pi
+            assert angle_error < 10e-7
+
     for xyz in ('xyz', 'XYZ'):
         for seq_tuple in permutations(xyz):
             for symmetric in (True, False):
@@ -313,6 +352,8 @@ def test_to_euler():
                     seq = ''.join([seq_tuple[0], seq_tuple[1], seq_tuple[0]])
                 else:
                     seq = ''.join(seq_tuple)
-                euler_from_q = q.to_euler(seq)
-                q_back = simplify(Quaternion.from_euler(euler_from_q, seq))
-                assert q_back == q_normalized
+
+                for elements in product([-1, 0, 1], repeat=4):
+                    q = Quaternion(*elements)
+                    if not q.is_zero_quaternion():
+                        test_one_case(q)
