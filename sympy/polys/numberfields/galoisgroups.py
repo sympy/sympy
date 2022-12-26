@@ -5,9 +5,8 @@ import random
 from sympy.core.evalf import (
     evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath,
 )
-from sympy.core.numbers import Integer
 from sympy.core.symbol import Dummy, symbols
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.ntheory.primetest import is_square
 from sympy.polys.domains import ZZ
 from sympy.polys.densebasic import dup_random
 from sympy.polys.densetools import dup_eval
@@ -502,11 +501,6 @@ def G36minus(verbose=False):
         Permutation(5)(4, 5),
     )
     return G
-
-
-def is_square(n):
-    """Convenience to check if an Integer is a square. """
-    return isinstance(sqrt(n), Integer)
 
 
 def has_square_disc(T):
