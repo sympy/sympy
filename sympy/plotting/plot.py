@@ -180,7 +180,7 @@ class Plot:
         xlim=None, ylim=None, axis_center='auto', axis=True,
         xscale='linear', yscale='linear', legend=False, autoscale=True,
         margin=0, annotations=None, markers=None, rectangles=None,
-        fill=None, backend='default', size=None, **kwargs):
+        fill=None, backend='default', size=None, legend_loc='best', **kwargs):
         super().__init__()
 
         # Options for the graph as a whole.
@@ -202,6 +202,7 @@ class Plot:
         self.markers = markers
         self.rectangles = rectangles
         self.fill = fill
+        self.legend_loc = legend_loc
 
         # Contains the data objects to be plotted. The backend should be smart
         # enough to iterate over this list.
@@ -1490,6 +1491,10 @@ class MatplotlibBackend(BaseBackend):
         if parent.legend:
             if ax.legend():
                 ax.legend_.set_visible(parent.legend)
+        if parent.legend_loc:
+            if ax.legend():
+                _loc = self.matplotlib.legend.Legend.codes.get(parent.legend_loc, 'best')
+                ax.legend_._set_loc(_loc)
         if parent.margin:
             ax.set_xmargin(parent.margin)
             ax.set_ymargin(parent.margin)
@@ -1711,6 +1716,12 @@ def plot(*args, show=True, **kwargs):
         The label of the expression in the plot. It will be used when
         called with ``legend``. Default is the name of the expression.
         e.g. ``sin(x)``
+    
+    legend_loc : str, optional
+        The location of the legend. It will be used when called with 
+        ``legend``. Default is "best", the value should be equivalent
+        to the arguments of the :external:mod:`matplotlib`'s 
+        :external:meth:`~matplotlib.legend.Legend` class. 
 
     xlabel : str or expression, optional
         Label for the x-axis.
