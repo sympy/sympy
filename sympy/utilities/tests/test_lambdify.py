@@ -1689,3 +1689,16 @@ def test_23536_lambdify_cse_dummy():
     eval_expr = lambdify(((f, g), z), expr, cse=True)
     ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
     assert ans == 300.0  # not a list and value is 300
+
+def test_issue_13881:
+    from sympy import MatrixSymbol, lambdify
+    x = MatrixSymbol('x', 3, 1)
+    f = lambdify(x, x.T * x)
+    assert f(Matrix[1, 2, 3]) == Matrix([[14]])
+    assert f(Matrix[3, 2, 1]) == Matrix([[14]])
+    f = lambdify(x, x * x.T)
+    assert f(Matrix[1, 2, 3]) == Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
+    assert f(Matrix[3, 2, 1]) == Matrix([[9, 6, 3], [6, 4, 2], [3, 2, 1]])
+    f = lambdify(x, (x * x.T) * x)
+    assert f(Matrix[1, 2, 3]) == Matrix([[14], [28], [42]])
+    assert f(Matrix[3, 2, 1]) == Matrix([[42], [28], [14]])
