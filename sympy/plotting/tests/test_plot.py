@@ -135,6 +135,13 @@ def test_plot_and_save_1():
         p.save(os.path.join(tmpdir, filename))
         p._backend.close()
 
+        # test issue 24339
+        p = plot(1/(1+exp(-x)), exp(-x)/(1+exp(-x))**2, (x, -10, 10), \
+            show=False, legend=True, legend_loc="upper left")
+        filename = 'test_change_location.png'
+        p.save(os.path.join(tmpdir, filename))
+        p._backend.close()
+
 
 def test_plot_and_save_2():
     if not matplotlib:
