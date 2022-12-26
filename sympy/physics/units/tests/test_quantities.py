@@ -18,7 +18,7 @@ from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
     minute, quart, s, second, speed_of_light, bit,
     byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte,
-    kilogram, gravitational_constant, angstrom)
+    kilogram, gravitational_constant)
 
 from sympy.physics.units.definitions.dimension_definitions import (
     Dimension, charge, length, time, temperature, pressure,
