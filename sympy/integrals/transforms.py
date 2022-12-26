@@ -4,8 +4,8 @@ from itertools import repeat
 from sympy.core import S, pi, I
 from sympy.core.add import Add
 from sympy.core.function import (AppliedUndef, count_ops, Derivative, expand,
-                                 expand_complex, expand_mul, Function, Lambda,
-                                 UndefinedFunction, WildFunction)
+                                 expand_complex, expand_mul, expand_trig,
+                                 Function, Lambda, WildFunction)
 from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
@@ -1661,9 +1661,15 @@ def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: time shift (1.3)')
-            r, pr, cr = LaplaceTransform(ma1[g].subs(t, t-ma2[a]), t, s).doit()
+            r, pr, cr = LaplaceTransform(ma1[g].subs(t, t+ma2[a]), t, s).doit()
             return True, (k*exp(-ma2[a]*s)*r,
                           Max(p, pr), And(c, cr))
+        if ma2 and ma2[a]<0:
+            debug('_laplace_apply_prog_rules match:')
+            debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
+            debug('      rule: Heaviside factor with negative time shift')
+            r, pr, cr = LaplaceTransform(ma1[g], t, s).doit()
+            return True, (k*r, Max(p, pr), And(c, cr))
     return False, (fn, p, c)
 
 
@@ -1779,21 +1785,45 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     return False, (fn, p, c)
 
 
+def _laplace_expand(f, t, s, doit=True, **hints):
+    """
+    """
+    fn, p, c = _laplace_ct(f)
+
+    if fn.is_Add:
+        return False, (fn, p, c)
+    r = expand(fn, deep=False)
+    if r.is_Add:
+        return True, LaplaceTransform(r, t, s).doit()
+    r = expand_mul(fn)
+    if r.is_Add:
+        return True, LaplaceTransform(r, t, s).doit()
+    r = expand(fn)
+    if r.is_Add:
+        return True, LaplaceTransform(r, t, s).doit()
+    if not r==fn:
+        return True, LaplaceTransform(r, t, s).doit()
+    r = expand(expand_trig(fn))
+    if r.is_Add:
+        return True, LaplaceTransform(r, t, s).doit()
+    return False, (fn, p, c)
+
+
 def _laplace_apply_prog_rules(f, t, s):
     """
     Helper function for the class LaplaceTransform.
     """
     fn, p, c = _laplace_ct(f)
 
-    prog_rules = [_laplace_rule_timescale, _laplace_rule_heaviside,
-                  _laplace_rule_exp, _laplace_rule_trig,
-                  _laplace_rule_delta, _laplace_rule_diff]
+    prog_rules = [_laplace_rule_heaviside, _laplace_rule_delta,
+                  _laplace_rule_timescale, _laplace_rule_exp,
+                  _laplace_rule_trig, _laplace_rule_diff]
 
     for p_rule in prog_rules:
         d, L = p_rule((fn, p, c), t, s)
-    if d:
-        r, pr, cr = L
-        return True, (r, Max(p, pr), And(c, cr))
+        if d:
+            r, pr, cr = L
+            return True, (r, Max(p, pr), And(c, cr))
     return False, (fn, p, c)
 
 
@@ -1904,19 +1934,29 @@ class LaplaceTransform(IntegralTransform):
             d, r = _laplace_apply_simple_rules(f, t_, s_)
             if d:
                 results.append(r)
-                debug('*************',results)
                 continue
             d, r = _laplace_apply_prog_rules(f, t_, s_)
             if d:
                 results.append(r)
                 continue
-            # fn, T = self._try_directly(**hints)
-            debug('*************',results)
+            d, r = _laplace_expand(f, t_, s_)
+            if d:
+                results.append(r)
+                continue
             T = None
+            try_directly = not any(func.has(t_)
+                                   for func in f.atoms(AppliedUndef))
+            k_, f_ = f.as_independent(t_, as_Add=False)
+            if try_directly:
+                try:
+                    T = self._compute_transform(f_, t_, s_)
+                except IntegralTransformError:
+                    T = None
             if T is not None:
-                results.append(_laplace_ct(T))
+                r_, p_, c_ = _laplace_ct(T)
+                results.append((k_*r_, p_, c_))
             else:
-                results.append(_laplace_ct(LaplaceTransform(fn, t_, s_)))
+                results.append(_laplace_ct(k_*LaplaceTransform(f_, t_, s_)))
 
         r = []
         p = []
@@ -1926,7 +1966,7 @@ class LaplaceTransform(IntegralTransform):
             p.append(res[1])
             c.append(res[2])
 
-        return Add(*r), Max(*p), And(*c)
+        return Add(*r).simplify(doit=False), Max(*p), And(*c)
 
 
 def laplace_transform(f, t, s, legacy_matrix=True, **hints):
@@ -2038,8 +2078,10 @@ behavior.
     #     LT = F
     # if F.has(LaplaceTransform) and p is S.NegativeInfinity and c:
     #     LT = F
-
-    return LT
+    if conds:
+        return LT
+    else:
+        return LT[0]
 
 
 def _complete_the_square_in_denom(f, s):

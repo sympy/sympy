@@ -2949,7 +2949,7 @@ def test_Y5_Y6():
                                 t, s)
     D = (F - (s**2*LaplaceTransform(y(t), t, s) - s*y(0) +
             LaplaceTransform(y(t), t, s) - Subs(Derivative(y(t), t), t, 0) +
-            4*(1 - exp(s))*exp(-2*s)/s)).simplify()
+            4*(1 - exp(s))*exp(-2*s)/s)).simplify(doit=False)
     assert D == 0
 # TODO implement second part of test case
 # Now, solve for Y(s) and then take the inverse Laplace transform
