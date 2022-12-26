@@ -1716,12 +1716,12 @@ def plot(*args, show=True, **kwargs):
         The label of the expression in the plot. It will be used when
         called with ``legend``. Default is the name of the expression.
         e.g. ``sin(x)``
-    
+
     legend_loc : str, optional
-        The location of the legend. It will be used when called with 
+        The location of the legend. It will be used when called with
         ``legend``. Default is "best", the value should be equivalent
-        to the arguments of the :external:mod:`matplotlib`'s 
-        :external:meth:`~matplotlib.legend.Legend` class. 
+        to the arguments of the :external:mod:`matplotlib`'s
+        :external:class:`~matplotlib.legend.Legend` class.
 
     xlabel : str or expression, optional
         Label for the x-axis.
