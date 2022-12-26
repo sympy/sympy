@@ -254,7 +254,7 @@ SI.set_quantity_dimension(astronomical_unit, length)
 SI.set_quantity_scale_factor(astronomical_unit, 149597870691*meter)
 
 SI.set_quantity_dimension(angstrom, length)
-SI.set_quantity_scale_factor(angstrom, 1/10**10*meter)
+SI.set_quantity_scale_factor(angstrom, 1*meter/10**10)
 
 
 # Fundamental Planck units:
