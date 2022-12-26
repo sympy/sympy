@@ -1690,7 +1690,7 @@ def test_23536_lambdify_cse_dummy():
     ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
     assert ans == 300.0  # not a list and value is 300
 
-def test_issue_13881:
+def test_issue_13881():
     from sympy import MatrixSymbol, lambdify
     x = MatrixSymbol('x', 3, 1)
     f = lambdify(x, x.T * x)
