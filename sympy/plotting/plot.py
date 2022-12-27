@@ -180,7 +180,7 @@ class Plot:
         xlim=None, ylim=None, axis_center='auto', axis=True,
         xscale='linear', yscale='linear', legend=False, autoscale=True,
         margin=0, annotations=None, markers=None, rectangles=None,
-        fill=None, backend='default', size=None, legend_loc='best', **kwargs):
+        fill=None, backend='default', size=None, legend_loc=None, **kwargs):
         super().__init__()
 
         # Options for the graph as a whole.
@@ -1719,8 +1719,8 @@ def plot(*args, show=True, **kwargs):
 
     legend_loc : str, optional
         The location of the legend. It will be used when called with
-        ``legend``. Default is "best", the value should be equivalent
-        to the arguments of the :external:mod:`matplotlib`'s
+        ``legend``. The value should be equivalent to the arguments
+        of the :external:mod:`matplotlib`'s
         :external:class:`~matplotlib.legend.Legend` class.
 
     xlabel : str or expression, optional
