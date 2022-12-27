@@ -698,6 +698,12 @@ def test_laplace_transform():
          LaplaceTransform(f(t), t, I*a + s)/2, -oo, True)
     assert LT(cos(a*t)*t, t, s) ==\
         ((-a**2 + s**2)/(a**4 + 2*a**2*s**2 + s**4), 0, True)
+    assert LT(t**2*exp(-t**2), t, s) ==\
+        (-s/4 + sqrt(pi)*(s**2 + 2)*exp(s**2/4)*erfc(s/2)/8, 0, True)
+    assert LT((a*t**2 + b*t + c)*f(t), t, s) ==\
+        (a*Derivative(LaplaceTransform(f(t), t, s), (s, 2)) -\
+         b*Derivative(LaplaceTransform(f(t), t, s), s) +\
+             c*LaplaceTransform(f(t), t, s), -oo, True)
     # The following two lines test whether issues #5813 and #7176 are solved.
     assert LT(diff(f(t), (t, 1)), t, s, noconds=True) ==\
         s*LaplaceTransform(f(t), t, s) - f(0)

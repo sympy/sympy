@@ -6,7 +6,7 @@ from sympy.core.add import Add
 from sympy.core.function import (AppliedUndef, count_ops, Derivative, expand,
                                  expand_complex, expand_mul, expand_trig,
                                  Function, Lambda, WildFunction)
-from sympy.core.mul import Mul
+from sympy.core.mul import Mul, prod
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
 from sympy.core.sorting import default_sort_key, ordered
@@ -1785,6 +1785,34 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     return False, (fn, p, c)
 
 
+def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
+    """
+    """
+    fn, p, c = _laplace_ct(f)
+
+    if fn.is_Mul:
+        pfac = [fac for fac in Mul.make_args(fn) if fac.is_polynomial(t)]
+        if len(pfac)>0:
+            pex = prod(pfac)
+            pc = Poly(pex, t).all_coeffs()
+            N = len(pc)
+            if N>1:
+                debug('_laplace_apply_rules match:')
+                debug('      f, n: %s, %s'%(fn, pfac))
+                debug('      rule: frequency derivative')
+                rem = (fn/pex).simplify(doit=False)
+                r_, p_, c_ = LaplaceTransform(rem, t, s).doit()
+                if r_.has(LaplaceTransform):
+                    r = Add(*[ (-1)**n*pc[N-n-1]*Derivative(r_, s, n)
+                          for n in range(N) ]).simplify(doit=False)
+                else:
+                    r = Add(*[ (-1)**n*pc[N-n-1]*Derivative(r_, s, n).doit()
+                          for n in range(N) ]).simplify(doit=False)
+                return True, (r, Max(p, p_), And(c, c_))
+
+    return False, (fn, p, c)
+
+
 def _laplace_expand(f, t, s, doit=True, **hints):
     """
     """
@@ -1817,7 +1845,8 @@ def _laplace_apply_prog_rules(f, t, s):
 
     prog_rules = [_laplace_rule_heaviside, _laplace_rule_delta,
                   _laplace_rule_timescale, _laplace_rule_exp,
-                  _laplace_rule_trig, _laplace_rule_diff]
+                  _laplace_rule_trig,
+                  _laplace_rule_diff, _laplace_rule_sdiff ]
 
     for p_rule in prog_rules:
         d, L = p_rule((fn, p, c), t, s)
