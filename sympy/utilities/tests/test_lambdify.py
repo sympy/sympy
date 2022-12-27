@@ -61,6 +61,7 @@ tensorflow = import_module('tensorflow')
 cupy = import_module('cupy')
 jax = import_module('jax')
 numba = import_module('numba')
+flint = import_module('flint', import_kwargs={'fromlist': ['arb']})
 
 if tensorflow:
     # Hide Tensorflow warnings
@@ -1689,3 +1690,18 @@ def test_23536_lambdify_cse_dummy():
     eval_expr = lambdify(((f, g), z), expr, cse=True)
     ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
     assert ans == 300.0  # not a list and value is 300
+
+def test_lambdify_arb():
+    if not flint:
+        skip("flint not installed.")
+
+    f1 = lambdify([x, y], x**3-y**3, modules='arb')
+    a1 = f1(10**15, 10**15 - 1)
+    a1_lo = float(flint.arb.abs_lower(a1))
+    a1_hi = float(flint.arb.abs_upper(a1))
+    assert math.isclose(a1_lo, 2.8610732685849445e+30)
+    assert math.isclose(a1_hi, 3.160267082499145e+30)
+
+    f2 = lambdify([x], exp(x) - pi, modules='arb')
+    a2 = f2(flint.arb("0.1"))
+    assert math.isclose(float(a2), math.exp(0.1) - math.pi)

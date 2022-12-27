@@ -615,7 +615,7 @@ def pycode(expr, **settings):
     return PythonCodePrinter(settings).doprint(expr)
 
 
-_not_in_mpmath = 'log1p log2'.split()
+_not_in_mpmath = ['log2']
 _in_mpmath = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_mpmath]
 _known_functions_mpmath = dict(_in_mpmath, **{
     'beta': 'beta',
@@ -748,3 +748,66 @@ class SymPyPrinter(AbstractPythonCodePrinter):
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='sympy.sqrt')
+
+
+_not_in_arb = ['besseli', 'besselj', 'besselk', 'bessely', 'beta',
+               'factorial', 'frac', 'fresnelc', 'fresnels', 'hyper',
+               'hypot', 'log10', 'loggamma', 'meijerg', 'sign']
+
+_in_arb = [(k, v) for k, v in _known_functions_mpmath.items() if k not in _not_in_arb]
+
+_known_functions_arb = dict(_in_arb, **{
+    'besseli': 'bessel_i',
+    'besselj': 'bessel_j',
+    'besselk': 'bessel_k',
+    'bessely': 'bessel_y',
+    'sign': 'sgn',
+    'factorial': 'fac',
+    'fresnelc': 'fresnel_c',
+    'fresnels': 'fresnel_s',
+    'hyper': 'hypgeom',
+})
+
+_known_constants_arb = {
+    'Exp1': 'const_e',
+    'Pi': 'pi',
+    'EulerGamma': 'const_euler',
+    'Catalan': 'const_catalan',
+    'NaN': 'nan',
+    'Infinity': 'pos_inf',
+    'NegativeInfinity': 'neg_inf'
+}
+
+
+class ArbPrinter(PythonCodePrinter):
+    """
+    Code printer for arb (arbitrary precision ball arithmetic).
+    """
+    printmethod = "_arbcode"
+
+    language = "Python with flint.arb"
+
+    _kf = dict(chain(
+        _known_functions.items(),
+        [(k, 'arb.' + v) for k, v in _known_functions_arb.items()]
+    ))
+    _kc = {k: 'arb.'+v for k, v in _known_constants_arb.items()}
+
+    def _print_Integer(self, arg):
+        return "arb(%d)" % arg
+
+    def _print_Float(self, arg):
+        return 'arb("%s")' % str(arg)
+
+
+for k in ArbPrinter._kf:
+    setattr(ArbPrinter, '_print_%s' % k, _print_known_func)
+
+
+def _print_known_const_call(self, expr):
+    known = self.known_constants[expr.__class__.__name__]
+    return self._module_format(known) + '()'
+
+
+for k in ArbPrinter._kc:
+    setattr(ArbPrinter, '_print_%s' % k, _print_known_const_call)

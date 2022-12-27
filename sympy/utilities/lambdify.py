@@ -26,6 +26,7 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 # by simple variable maps, like I => 1j
 MATH_DEFAULT: dict[str, Any] = {}
 MPMATH_DEFAULT: dict[str, Any] = {}
+ARB_DEFAULT: dict[str, Any] = {}
 NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
 SCIPY_DEFAULT: dict[str, Any] = {"I": 1j}
 CUPY_DEFAULT: dict[str, Any] = {"I": 1j}
@@ -40,6 +41,7 @@ NUMEXPR_DEFAULT: dict[str, Any] = {}
 
 MATH = MATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
+ARB = ARB_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
 CUPY = CUPY_DEFAULT.copy()
@@ -88,6 +90,9 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
+ARB_TRANSLATIONS = {
+}
+
 NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
 }
@@ -103,6 +108,7 @@ NUMEXPR_TRANSLATIONS: dict[str, str] = {}
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
+    "arb": (ARB, ARB_DEFAULT, ARB_TRANSLATIONS, ("from flint import arb",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
@@ -122,7 +128,7 @@ def _import(module, reload=False):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy", "tensorflow", "jax".
+    "mpmath", "numpy", "sympy", "tensorflow", "jax", "arb".
     These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
@@ -804,6 +810,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
             from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
+        elif _module_present('arb', namespaces):
+            from sympy.printing.pycode import ArbPrinter as Printer # type: ignore
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer # type: ignore
         else:
