@@ -67,20 +67,6 @@ class IntegralTransformError(NotImplementedError):
         self.function = function
 
 
-def _tree(f, name, **hints):
-    """
-    Helper function creating debug messages that will show the recursion
-    tree if `sympy.SYMPY_DEBUG=True` the stderr is subjected to
-    `grep '[tree]'`.
-    """
-    from sympy import SYMPY_DEBUG
-    if SYMPY_DEBUG:
-        r = hints.get('recursive', 0)
-        s = '[tree] ' + '  '*r + '|-- ' + name + ': %s'%(f, )
-        debug(s)
-    return
-
-
 class IntegralTransform(Function):
     """
     Base class for integral transforms.
@@ -239,7 +225,6 @@ class IntegralTransform(Function):
 
         # pull out constant coefficients
         coeff, rest = fn.as_coeff_mul(self.function_variable)
-        debug('[IT doit ]     now returns: %s'%(coeff*self.__class__(*([Mul(*rest)] + list(self.args[1:]))), ))
         return coeff*self.__class__(*([Mul(*rest)] + list(self.args[1:])))
 
     @property
