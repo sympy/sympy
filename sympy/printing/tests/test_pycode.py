@@ -10,7 +10,7 @@ from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Ma
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
-    MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
+    ArbPrinter, MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
 )
 from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter
@@ -424,3 +424,16 @@ def test_array_printer():
     assert prntr.doprint(ArrayDiagonal(A, [0,1], [2,3])) == 'tensorflow.linalg.einsum("aabbc->cab", A)'
     assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'tensorflow.linalg.einsum("abcde->abe", A)'
     assert prntr.doprint(Assignment(I[i,j,k], I[i,j,k])) == 'I = I'
+
+
+class TestArbPrinter:
+
+    R = zero, one, half, third, fourth, fifth = [0] + [S.One/_ for _ in range(1, 6)]
+
+    def setup(self):
+        self.x = symbols('x:2')
+        self.p = ArbPrinter()
+
+    def test_Pow(self):
+        x0, x1 = self.x
+        assert self.p.doprint(x0**self.R[5]) == "x0**(arb(1)/arb(5))"

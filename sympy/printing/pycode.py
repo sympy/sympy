@@ -553,7 +553,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._hprint_Pow(expr, rational=rational)
 
     def _print_Rational(self, expr):
-        return '{}/{}'.format(expr.p, expr.q)
+        return '{}/{}'.format(self._print_Integer(expr.p), self._print_Integer(expr.q))
 
     def _print_Half(self, expr):
         return self._print_Rational(expr)
