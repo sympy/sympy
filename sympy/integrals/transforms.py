@@ -1993,7 +1993,7 @@ class LaplaceTransform(IntegralTransform):
 
         Standard hints are the following:
         - ``noconds``:  if True, do not return convergence conditions. This is
-                        the default behaviour.
+        the default behaviour.
         """
         _noconds = hints.get('noconds', True)
 
