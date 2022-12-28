@@ -5,7 +5,7 @@ from sympy.core import S, pi, I
 from sympy.core.add import Add
 from sympy.core.function import (AppliedUndef, count_ops, Derivative, expand,
                                  expand_complex, expand_mul, expand_trig,
-                                 Function, Lambda, WildFunction)
+                                 Function, Lambda, WildFunction, diff)
 from sympy.core.mul import Mul, prod
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
@@ -1776,8 +1776,14 @@ def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
     fn, p, c = _laplace_ct(f)
 
     if fn.is_Mul:
-        pfac = [fac for fac in Mul.make_args(fn) if fac.is_polynomial(t)]
-        if len(pfac)>0:
+        pfac = [1]
+        ofac = [1]
+        for fac in Mul.make_args(fn):
+            if fac.is_polynomial(t):
+                pfac.append(fac)
+            else:
+                ofac.append(fac)
+        if len(pfac)>1:
             pex = prod(pfac)
             pc = Poly(pex, t).all_coeffs()
             N = len(pc)
@@ -1785,14 +1791,16 @@ def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
                 debug('_laplace_apply_rules match:')
                 debug('      f, n: %s, %s'%(fn, pfac))
                 debug('      rule: frequency derivative')
-                rem = (fn/pex).simplify(doit=False)
-                r_, p_, c_ = LaplaceTransform(rem, t, s).doit()
+                oex = prod(ofac)
+                r_, p_, c_ = LaplaceTransform(oex, t, s).doit()
+                deri = [r_]
                 if r_.has(LaplaceTransform):
-                    r = Add(*[ (-1)**n*pc[N-n-1]*Derivative(r_, s, n)
-                          for n in range(N) ]).simplify(doit=False)
+                    for k in range(N-1):
+                        deri.append((-1)**(k+1)*Derivative(r_, s, k+1))
                 else:
-                    r = Add(*[ (-1)**n*pc[N-n-1]*Derivative(r_, s, n).doit()
-                          for n in range(N) ]).simplify(doit=False)
+                    for k in range(N-1):
+                        deri.append(-diff(deri[-1], s))
+                r = Add(*[ pc[N-n-1]*deri[n] for n in range(N) ])
                 return True, (r, Max(p, p_), And(c, c_))
 
     return False, (fn, p, c)
