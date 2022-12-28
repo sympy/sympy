@@ -1625,7 +1625,7 @@ def _laplace_rule_timescale(f, t, s):
             debug('      f:    %s _ %s, %s )'%(f, ma1, ma2))
             debug('      rule: amplitude and time scaling (1.1, 1.2)')
             r, pr, cr = LaplaceTransform(1/ma2[a]*ma1[g].func(t),
-                                         t, s/ma2[a]).doit()
+                                         t, s/ma2[a]).doit(noconds=False)
             return True, (k*r, Max(p/ma2[a], pr), And(c, cr))
     return False, (fn, p, c)
 
@@ -1646,14 +1646,14 @@ def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: time shift (1.3)')
-            r, pr, cr = LaplaceTransform(ma1[g].subs(t, t+ma2[a]), t, s).doit()
+            r, pr, cr = LaplaceTransform(ma1[g].subs(t, t+ma2[a]), t, s).doit(noconds=False)
             return True, (k*exp(-ma2[a]*s)*r,
                           Max(p, pr), And(c, cr))
         if ma2 and ma2[a]<0:
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: Heaviside factor with negative time shift')
-            r, pr, cr = LaplaceTransform(ma1[g], t, s).doit()
+            r, pr, cr = LaplaceTransform(ma1[g], t, s).doit(noconds=False)
             return True, (k*r, Max(p, pr), And(c, cr))
     return False, (fn, p, c)
 
@@ -1674,7 +1674,7 @@ def _laplace_rule_exp(f, t, s):
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: multiply with exp (1.5)')
-            r, pr, cr = LaplaceTransform(ma1[z], t, s-ma2[a]).doit()
+            r, pr, cr = LaplaceTransform(ma1[z], t, s-ma2[a]).doit(noconds=False)
             return True, (k*r, Max(p+ma2[a], pr), And(c, cr))
     return False, (fn, p, c)
 
@@ -1731,7 +1731,7 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                 debug('_laplace_apply_rules match:')
                 debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
                 debug('      rule: multiply with %s (%s)'%(fm.func, nu))
-                r, pr, cr = k*LaplaceTransform(ma1[z], t, s).doit()
+                r, pr, cr = k*LaplaceTransform(ma1[z], t, s).doit(noconds=False)
                 # The convergence plane changes only if the shift has been
                 # done along the real axis:
                 if sd==1:
@@ -1765,7 +1765,7 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
             else:
                 y = Derivative(ma1[g].func(t), (t, k)).subs(t, 0)
             d.append(s**(ma1[n]-k-1)*y)
-        r, pr, cr = LaplaceTransform(ma1[g].func(t), t, s).doit()
+        r, pr, cr = LaplaceTransform(ma1[g].func(t), t, s).doit(noconds=False)
         return True, (ma1[a]*(s**ma1[n]*r - Add(*d)),  Max(p, pr), And(c, cr))
     return False, (fn, p, c)
 
@@ -1792,7 +1792,7 @@ def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
                 debug('      f, n: %s, %s'%(fn, pfac))
                 debug('      rule: frequency derivative')
                 oex = prod(ofac)
-                r_, p_, c_ = LaplaceTransform(oex, t, s).doit()
+                r_, p_, c_ = LaplaceTransform(oex, t, s).doit(noconds=False)
                 deri = [r_]
                 if r_.has(LaplaceTransform):
                     for k in range(N-1):
@@ -1815,18 +1815,18 @@ def _laplace_expand(f, t, s, doit=True, **hints):
         return False, (fn, p, c)
     r = expand(fn, deep=False)
     if r.is_Add:
-        return True, LaplaceTransform(r, t, s).doit()
+        return True, LaplaceTransform(r, t, s).doit(noconds=False)
     r = expand_mul(fn)
     if r.is_Add:
-        return True, LaplaceTransform(r, t, s).doit()
+        return True, LaplaceTransform(r, t, s).doit(noconds=False)
     r = expand(fn)
     if r.is_Add:
-        return True, LaplaceTransform(r, t, s).doit()
+        return True, LaplaceTransform(r, t, s).doit(noconds=False)
     if not r==fn:
-        return True, LaplaceTransform(r, t, s).doit()
+        return True, LaplaceTransform(r, t, s).doit(noconds=False)
     r = expand(expand_trig(fn))
     if r.is_Add:
-        return True, LaplaceTransform(r, t, s).doit()
+        return True, LaplaceTransform(r, t, s).doit(noconds=False)
     return False, (fn, p, c)
 
 
@@ -1856,8 +1856,13 @@ def _laplace_apply_simple_rules(f, t, s):
     fn, p, c = _laplace_ct(f)
     k, func = fn.as_independent(t, as_Add=False)
     simple_rules = _laplace_build_rules(t, s)
+    prep_old = ''
+    prep_f = ''
     for t_dom, s_dom, check, plane, prep in simple_rules:
-        ma = prep(func).match(t_dom)
+        if not prep_old==prep:
+            prep_f = prep(func)
+            prep_old = prep
+        ma = prep_f.match(t_dom)
         if ma:
             try:
                 c = check.xreplace(ma)
@@ -1939,8 +1944,9 @@ class LaplaceTransform(IntegralTransform):
         ===========
 
         Standard hints are the following:
-        - ``noconds``:  if True, do not return convergence conditions
+        - ``noconds``:  if True, do not return convergence conditions.
         """
+        _noconds = hints.get('noconds', True)
 
         debug('[LT doit] (%s, %s, %s)'%(self.function,
                                         self.function_variable,
@@ -1988,7 +1994,10 @@ class LaplaceTransform(IntegralTransform):
             p.append(res[1])
             c.append(res[2])
 
-        return Add(*r).simplify(doit=False), Max(*p), And(*c)
+        if _noconds:
+            return Add(*r).simplify(doit=False)
+        else:
+            return Add(*r).simplify(doit=False), Max(*p), And(*c)
 
 
 def laplace_transform(f, t, s, legacy_matrix=True, **hints):
@@ -2057,11 +2066,11 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     """
 
-    conds = not hints.get('noconds', False)
+    _noconds = hints.get('noconds', False)
 
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
 
-        if conds and legacy_matrix:
+        if (not _noconds) and legacy_matrix:
             sympy_deprecation_warning(
                 """
 Calling laplace_transform() on a Matrix with noconds=False (the default) is
@@ -2077,7 +2086,7 @@ behavior.
                 return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
         else:
             elements_trans = [laplace_transform(fij, t, s, **hints) for fij in f]
-            if conds:
+            if not _noconds:
                 elements, avals, conditions = zip(*elements_trans)
                 f_laplace = type(f)(*f.shape, elements)
                 return f_laplace, Max(*avals), And(*conditions)
@@ -2091,7 +2100,7 @@ behavior.
         if Heaviside(t) in factors:
             f = Mul(*[ i for i in factors if not i is Heaviside(t) ])
 
-    LT = LaplaceTransform(f, t, s).doit(**hints)
+    LT = LaplaceTransform(f, t, s).doit(noconds=False)
 
     # # For backwards compatibility: even if noconds=False, do not return
     # # a tuple if F is unevaluated
@@ -2100,7 +2109,7 @@ behavior.
     #     LT = F
     # if F.has(LaplaceTransform) and p is S.NegativeInfinity and c:
     #     LT = F
-    if conds:
+    if not _noconds:
         return LT
     else:
         return LT[0]
