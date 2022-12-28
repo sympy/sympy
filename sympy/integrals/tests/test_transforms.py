@@ -744,6 +744,9 @@ def test_laplace_transform():
     assert LT(exp(-t)*(DiracDelta(t)+DiracDelta(t-42)), t, s) == \
         (exp(-42*s - 42) + 1, 0, True)
     assert LT(f(t)*DiracDelta(t-42), t, s) == (f(42)*exp(-42*s), -42, True)
+    assert LT(f(t)*DiracDelta(b*t-a), t, s) == (f(a/b)*exp(-a*s/b)/b,
+                                                -a/b, True)
+    assert LT(f(t)*DiracDelta(b*t+a), t, s) == (0, -oo, True)
 
     # Collection of cases that cannot be fully evaluated and/or would catch
     # some common implementation errors

@@ -957,7 +957,8 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
 def _simplifyconds(expr, s, a):
     r"""
-    Naively simplify some conditions occurring in ``expr``, given that `\operatorname{Re}(s) > a`.
+    Naively simplify some conditions occurring in ``expr``, given that
+    `\operatorname{Re}(s) > a`.
 
     Examples
     ========
@@ -1046,15 +1047,17 @@ def _simplifyconds(expr, s, a):
 
 def expand_dirac_delta(expr):
     """
-    Expand an expression involving DiractDelta to get it as a linear
-    combination of DiracDelta functions.
+    Expand an expression involving DiractDelta into a linear
+    combination of ``DiracDelta`` functions.
     """
     return _lin_eq2dict(expr, expr.atoms(DiracDelta))
 
 
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
-    """ The backend function for Laplace transforms.
+    """
+    The backend function for Laplace transforms. This tries to solve the
+    transform by integration.
     """
     s = Dummy('s')
     a = Wild('a', exclude=[t])
@@ -1194,9 +1197,9 @@ def _laplace_transform(f, t, s_, simplify=True):
 def _laplace_deep_collect(f, t):
     """
     This is an internal helper function that traverses through the epression
-    tree of `f(t)` and collects arguments. The purpose of it is that
-    anything like `f(w*t-1*t-c)` will be written as `f((w-1)*t-c)` such that
-    it can match `f(a*t+b)`.
+    tree of `f` and collects arguments. The purpose of it is that
+    anything like ``f(w*t-1*t-c)`` will be rewritten as ``f((w-1)*t-c)`` such
+    that it can match ``f(a*t+b)``.
     """
     func = f.func
     args = list(f.args)
@@ -1214,7 +1217,18 @@ def _laplace_build_rules(t, s):
     """
     This is an internal helper function that returns the table of Laplace
     transform rules in terms of the time variable `t` and the frequency
-    variable `s`.  It is used by `_laplace_apply_rules`.
+    variable `s`.  It is used by ``_laplace_apply_rules``.  Each entry is a
+    tuple containing:
+
+        (time domain pattern,
+         frequency-domain replacement,
+         condition for the rule to be applied,
+         convergence plane,
+         preparation function)
+
+    The preparation function is a function with one argument that is applied
+    to the expression before matching. For most rules it should be
+    ``_laplace_deep_collect``.
     """
     a = Wild('a', exclude=[t])
     b = Wild('b', exclude=[t])
@@ -1223,11 +1237,7 @@ def _laplace_build_rules(t, s):
     omega = Wild('omega', exclude=[t])
     dco = lambda f: _laplace_deep_collect(f, t)
     laplace_transform_rules = [
-    # ( time domain,
-    #   laplace domain,
-    #   condition, convergence plane, preparation function )
-    #
-    # Catch constant (would otherwise be treated by 2.12)
+    # Catch a constant
     (a, a/s, S.true, S.Zero, dco),
     # DiracDelta rules
     (DiracDelta(a*t-b),
@@ -1586,8 +1596,8 @@ def _laplace_build_rules(t, s):
 
 def _laplace_cr(f, **hints):
     """
-    Internal helper function that will return `(f, a, c)` unless `**hints`
-    contains `noconds=True`, in which case it will only return `f`.
+    Internal helper function that will return ``(f, a, c)`` unless ``**hints``
+    contains ``noconds=True``, in which case it will only return ``f``.
     """
     noconds = hints.get('noconds', False)
     if noconds and type(f) is tuple:
@@ -1600,7 +1610,7 @@ def _laplace_ct(f):
     """
     Internal helper function that completes the tuple as follows:
     if f is a tuple, it is just returned as is.  If it is not a tuple,
-    then `(f, S.NegativeInfinity, True)` is returned.
+    then ``(f, S.NegativeInfinity, True)`` is returned.
     """
     if type(f) is tuple:
         return f
@@ -1609,7 +1619,10 @@ def _laplace_ct(f):
 
 
 def _laplace_rule_timescale(f, t, s):
-    r"""
+    """
+    This function applies the time-scaling rule of the Laplace transform in
+    a straight-forward way. For example, if it gets ``(f(a*t), t, s)``, it will
+    compute ``LaplaceTransform(f(t)/a, t, s/a)`` if ``a>0``.
     """
     fn, p, c = _laplace_ct(f)
     k, f = fn.as_independent(t, as_Add=False)
@@ -1623,7 +1636,7 @@ def _laplace_rule_timescale(f, t, s):
         if ma2 and ma2[a]>0 and not ma2[a]==1:
             debug('_laplace_apply_prog rules match:')
             debug('      f:    %s _ %s, %s )'%(f, ma1, ma2))
-            debug('      rule: amplitude and time scaling (1.1, 1.2)')
+            debug('      rule: time scaling (1.1, 1.2)')
             r, pr, cr = LaplaceTransform(1/ma2[a]*ma1[g].func(t),
                                          t, s/ma2[a]).doit(noconds=False)
             return True, (k*r, Max(p/ma2[a], pr), And(c, cr))
@@ -1632,6 +1645,16 @@ def _laplace_rule_timescale(f, t, s):
 
 def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
     """
+    This function deals with time-shifted Heaviside step functions. If the time
+    shift is positive, it applies the time-shift rule of the Laplace transform.
+    For example, if it gets ``(Heaviside(t-a)*f(t), t, s)``, it will compute
+    ``exp(-a*s)*LaplaceTransform(f(t+a), t, s)``.
+
+    If the time shift is negative, the Heaviside function is simply removed
+    as it means nothing to the Laplace transform.
+
+    The function does not remove a factor ``Heaviside(t)``; this is already
+    done by the main function ``laplace_transform``.
     """
     fn, p, c = _laplace_ct(f)
     k, f = fn.as_independent(t, as_Add=False)
@@ -1660,6 +1683,10 @@ def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
 
 def _laplace_rule_exp(f, t, s):
     """
+    If this function finds a factor ``exp(a*t)``, it applies the
+    frequency-shift rule of the Laplace transform and adjusts the convergence
+    plane accordingly.  For example, if it gets ``(exp(-a*t)*f(t), t, s)``, it
+    will compute ``LaplaceTransform(f(t), t, s+a)``.
     """
     fn, p, c = _laplace_ct(f)
     k, f = fn.as_independent(t, as_Add=False)
@@ -1681,28 +1708,49 @@ def _laplace_rule_exp(f, t, s):
 
 def _laplace_rule_delta(f, t, s):
     """
+    If this function finds a factor ``DiracDelta(b*t-a)``, it applies the
+    masking property of the delta distribution.For example, if it gets
+    ``(DiracDelta(t-a)*f(t), t, s)``, it will return
+    ``(f(a)*exp(-a*s), -a, True)``.
     """
     fn, p, c = _laplace_ct(f)
     k, f = fn.as_independent(t, as_Add=False)
 
     a = Wild('a', exclude=[t])
+    b = Wild('b', exclude=[t])
 
     y = Wild('y')
     z = Wild('z')
     ma1 = f.match(DiracDelta(y)*z)
     if ma1 and not ma1[z].has(DiracDelta):
-        ma2 = ma1[y].collect(t).match(t-a)
-        if ma2 and ma2[a]>=0:
+        ma2 = ma1[y].collect(t).match(b*t-a)
+        if ma2:
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: multiply with DiracDelta')
-            r = exp(-ma2[a]*s)*ma1[z].subs(t, ma2[a]).simplify()
-            return True, (k*r, Max(p, -ma2[a]), c)
+            if ma2[a]*ma2[b]>=0:
+                r = exp(-ma2[a]/ma2[b]*s)*ma1[z].subs(t, ma2[a]/ma2[b])/ma2[b]
+                return True, (k*r, Max(p, -ma2[a]/ma2[b]), c)
+            else:
+                return True, _laplace_ct(0)
     return False, (fn, p, c)
 
 
 def _laplace_rule_trig(f, t, s, doit=True, **hints):
     """
+    This function covers trigonometric factors. All of the rules have a
+    similar form: ``trig(y)*z`` is matched, and then two copies of the Laplace
+    transform of `z` are shifted in the s Domain and added with a weight.
+
+    The parameters in the tuples are (fm, nu, s1, s2, sd):
+      fm: Function to match
+      nu: Number of the rule, for debug purposes
+      s1: weight of the sum, 'I' for sin and '1' for all others
+      s2: sign of the second copy of the Laplace transform of z
+      sd: shift direction; shift along real or imaginary axis if `1` or `I`
+
+    The convergence plane is changed only if the frequency shift is done along
+    the real axis.
     """
     fn, p, c = _laplace_ct(f)
     k, f = fn.as_independent(t, as_Add=False)
@@ -1710,16 +1758,6 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
     a = Wild('a', exclude=[t])
     y = Wild('y')
     z = Wild('z')
-    # All of the rules have a very similar form: trig(y)*z is matched, and then
-    # two copies of the Laplace transform of z are shifted in the s Domain
-    # and added with a weight; see rules 1.6 to 1.9 in
-    # http://eqworld.ipmnet.ru/en/auxiliary/inttrans/laplace1.pdf
-    # The parameters in the tuples are (fm, nu, s1, s2, sd):
-    #   fm: Function to match
-    #   nu: Number of the rule, for debug purposes
-    #   s1: weight of the sum, 'I' for sin and '1' for all others
-    #   s2: sign of the second copy of the Laplace transform of z
-    #   sd: shift direction; shift along real or imaginary axis if `1` or `I`
     trigrules = [(sinh(y), '1.6',  1, -1, 1), (cosh(y), '1.7', 1, 1, 1),
                  (sin(y),  '1.8', -I, -1, I), (cos(y),  '1.9', 1, 1, I)]
     for trigrule in trigrules:
@@ -1732,8 +1770,6 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                 debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
                 debug('      rule: multiply with %s (%s)'%(fm.func, nu))
                 r, pr, cr = k*LaplaceTransform(ma1[z], t, s).doit(noconds=False)
-                # The convergence plane changes only if the shift has been
-                # done along the real axis:
                 if sd==1:
                     cp_shift = Abs(ma2[a])
                 else:
@@ -1746,6 +1782,10 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
 
 def _laplace_rule_diff(f, t, s, doit=True, **hints):
     """
+    This function looks for derivatives in the time domain and replaces it
+    by factors of `s` and initial conditions in the frequency domain. For
+    example, if it gets ``(diff(f(t), t), t, s)``, it will compute
+    ``s*LaplaceTransform(f(t), t, s) - f(0)``.
     """
     fn, p, c = _laplace_ct(f)
 
@@ -1772,6 +1812,10 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
 
 def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
     """
+    This function looks for multiplications with polynoimials in `t` as they
+    correspond to differentiation in the frequency domain. For example, if it
+    gets ``(t*f(t), t, s)``, it will compute
+    ``-Derivative(LaplaceTransform(f(t), t, s), s)``.
     """
     fn, p, c = _laplace_ct(f)
 
@@ -1808,6 +1852,13 @@ def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
 
 def _laplace_expand(f, t, s, doit=True, **hints):
     """
+    This function tries to expand its argument with successively stronger
+    methods: first it will expand on the top level, then it will expand any
+    multiplications in depth, then it will try all avilable expansion methods,
+    and finally it will try to expand trigonometric functions.
+
+    If it can expand, it will then compute the Laplace transform of the
+    expanded term.
     """
     fn, p, c = _laplace_ct(f)
 
@@ -1832,7 +1883,8 @@ def _laplace_expand(f, t, s, doit=True, **hints):
 
 def _laplace_apply_prog_rules(f, t, s):
     """
-    Helper function for the class LaplaceTransform.
+    This function applies all program rules and returns the result if one
+    of them gives a result.
     """
     fn, p, c = _laplace_ct(f)
 
@@ -1851,7 +1903,8 @@ def _laplace_apply_prog_rules(f, t, s):
 
 def _laplace_apply_simple_rules(f, t, s):
     """
-    Helper function for the class LaplaceTransform.
+    This function applies all simple rules and returns the result if one
+    of them gives a result.
     """
     fn, p, c = _laplace_ct(f)
     k, func = fn.as_independent(t, as_Add=False)
@@ -1881,15 +1934,6 @@ def _laplace_apply_simple_rules(f, t, s):
     return False, (fn, p, c)
 
 
-def _laplace_is_uneval(LT):
-    decision = True
-    t = Add.make_args(LT)
-    for f in t:
-        if not f.has(LaplaceTransform):
-            decision = False
-    return decision
-
-
 class LaplaceTransform(IntegralTransform):
     """
     Class representing unevaluated Laplace transforms.
@@ -1898,6 +1942,10 @@ class LaplaceTransform(IntegralTransform):
 
     For how to compute Laplace transforms, see the :func:`laplace_transform`
     docstring.
+
+    If this is called with ``.doit()``, it returns the Laplace transform as an
+    expression. If it is called with ``.doit(noconds=False)``, it returns a
+    tuple containing the same expression, a convergence plane, and conditions.
     """
 
     _name = 'Laplace'
@@ -1944,7 +1992,8 @@ class LaplaceTransform(IntegralTransform):
         ===========
 
         Standard hints are the following:
-        - ``noconds``:  if True, do not return convergence conditions.
+        - ``noconds``:  if True, do not return convergence conditions. This is
+                        the default behaviour.
         """
         _noconds = hints.get('noconds', True)
 
@@ -2031,12 +2080,14 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     by applying rules.
 
-    If the integral cannot be fully computed in closed form, this function
-    returns an unevaluated :class:`LaplaceTransform` object.
+    If the Laplace transform cannot be fully computed in closed form, this
+    function returns expressions containing unevaluated
+    :class:`LaplaceTransform` objects.
 
     For a description of possible hints, refer to the docstring of
-    :func:`sympy.integrals.transforms.IntegralTransform.doit`. If ``noconds=True``,
-    only `F` will be returned (i.e. not ``cond``, and also not the plane ``a``).
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`. If
+    ``noconds=True``, only `F` will be returned (i.e. not ``cond``, and also
+    not the plane ``a``).
 
     .. deprecated:: 1.9
         Legacy behavior for matrices where ``laplace_transform`` with
@@ -2102,13 +2153,6 @@ behavior.
 
     LT = LaplaceTransform(f, t, s).doit(noconds=False)
 
-    # # For backwards compatibility: even if noconds=False, do not return
-    # # a tuple if F is unevaluated
-    # F, p, c = LT
-    # if _laplace_is_uneval(F) or not conds:
-    #     LT = F
-    # if F.has(LaplaceTransform) and p is S.NegativeInfinity and c:
-    #     LT = F
     if not _noconds:
         return LT
     else:
