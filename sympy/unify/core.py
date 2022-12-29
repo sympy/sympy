@@ -226,12 +226,14 @@ def unify(
     Notes
     =====
 
-    Also, this is not a standard approach of associative-commutative
-    unification, but rather of list unification, which has similar
-    search like Unger parsing method for context-free grammar.
+    This is not a standard approach of associative-commutative
+    unification, but rather of list-associative-commutative unification,
+    which has similar search algorithm like Unger parsing method for
+    context-free grammar.
 
     So if you don't flatten the expressions in priori, it won't
-    recognize the associativity across nested terms.
+    be able to recognize some associativity or commutativity across
+    nested terms.
     """
     s = s or {}
 
@@ -316,14 +318,14 @@ def subst(s: Dict[VariableBase, Any], x: Any):
     return x
 
 
-def occur_check(var: VariableBase, x, s):
-    """ var occurs in subtree owned by x? """
-    if var == x:
+def occur_check(v: VariableBase, x: Any, s: Dict[VariableBase, Any]) -> bool:
+    """Checks whether the variable $v$ occurs in the term $x$"""
+    if v == x:
         return True
     elif x in s:
-        return occur_check(var, s[x], s)
+        return occur_check(v, s[x], s)
     elif isinstance(x, Compound):
-        return any(occur_check(var, arg, s) for arg in x.args)
+        return any(occur_check(v, arg, s) for arg in x.args)
     return False
 
 
