@@ -6,8 +6,7 @@ http://aima.cs.berkeley.edu/python/logic.html
 We extended the original algorithm with the capability to
 
 - Handle associative-commutative unification capability.
-- Designed type system to make this work across almosst every objects of
-  python by composition.
+- Designed type system to make this work with almost all Python objects by composition.
 
 References
 ==========
