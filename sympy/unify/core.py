@@ -156,7 +156,7 @@ class Variable(VariableBase):
     Explanation
     ===========
 
-    It is similar as :class:`Symbol` in sympy, however, unlike sympy's
+    It is similar as :class:`Symbol` in SymPy, however, unlike SymPy's
     :class:`Symbol` has ambiguous semantics betweeen arbitrary
     mathematical constant and functional variable, it has clear semantics
     under the substitution operation.
