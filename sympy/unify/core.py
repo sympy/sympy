@@ -81,9 +81,9 @@ class Compound(Term):
     >>> Compound('Add', (1, 2))
     Add[1, 2]
 
-    However, the identity between the nullary compound term its head is
-    not preserved, so you need to be consistent in the way how to
-    encode constants into the term.
+    However, the identity between the nullary compound term and its head is
+    not preserved, so you need to be consistent in how constants are encoded
+    into the term.
 
     >>> 1 == Compound(1, ())
     False
