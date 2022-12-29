@@ -2754,7 +2754,6 @@ def sequence_partitions(l: Sequence[_T], n: int) -> Iterator[List[Sequence[_T]]]
 
     This is modified version of EnricoGiampieri's partition generator
     from https://stackoverflow.com/questions/13131491/
-    partition-n-items-into-k-bins-in-python-lazily
 
     See Also
     ========
