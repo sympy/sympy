@@ -227,7 +227,7 @@ def unify(
     =====
 
     Also, this is not a standard approach of associative-commutative
-    unification, but rather be list unification, which has similar
+    unification, but rather of list unification, which has similar
     search like Unger parsing method for context-free grammar.
 
     So if you don't flatten the expressions in priori, it won't
