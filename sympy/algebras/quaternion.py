@@ -1,6 +1,7 @@
 import warnings
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
+from sympy.core.relational import is_eq
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -19,12 +20,11 @@ from mpmath.libmp.libmpf import prec_to_dps
 def _check_norm(elements, norm):
     """validate if input norm is consistent"""
     if norm is not None and norm.is_number:
-        if not norm.is_positive:
+        if norm.is_positive is False:
             raise ValueError("Input norm must be positive.")
 
-        a, b, c, d = elements
-        numerical = all(elem.is_number is True for elem in [a, b, c, d])
-        if (numerical and norm**2 != a**2 + b**2 + c**2 + d**2):
+        numerical = all(i.is_number and i.is_real is True for i in elements)
+        if (numerical and not is_eq(norm**2, sum(i**2 for i in elements))):
             raise ValueError("Incompatible value for norm.")
 
 
