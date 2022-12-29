@@ -2706,10 +2706,10 @@ def runs(seq, op=gt):
     return cycles
 
 
-T = TypeVar('T')
+_T = TypeVar('_T')
 
 
-def sequence_partitions(l: Sequence[T], n: int) -> Iterator[List[Sequence[T]]]:
+def sequence_partitions(l: Sequence[_T], n: int) -> Iterator[List[Sequence[_T]]]:
     r"""Returns the partition of sequence $l$ into $n$ bins
 
     Explanation
@@ -2770,7 +2770,7 @@ def sequence_partitions(l: Sequence[T], n: int) -> Iterator[List[Sequence[T]]]:
             yield [l[:i]] + part
 
 
-def sequence_partitions_empty(l: Sequence[T], n: int) -> Iterator[List[Sequence[T]]]:
+def sequence_partitions_empty(l: Sequence[_T], n: int) -> Iterator[List[Sequence[_T]]]:
     r"""Returns the partition of sequence $l$ into $n$ bins with
     empty sequence
 
