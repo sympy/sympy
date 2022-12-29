@@ -2785,7 +2785,7 @@ def sequence_partitions_empty(l: Sequence[_T], n: int) -> Iterator[List[Sequence
         \{(s_1, \cdots, s_n) | s_1 \in V^*, \cdots, s_n \in V^*,
         s_1 \cdots s_n = l_1 \cdots l_m\}
 
-    There are more combinations than :func:`sequence_partition` because
+    There are more combinations than :func:`sequence_partitions` because
     empty sequence can fill everywhere, so we try to provide different
     utility for this.
 
