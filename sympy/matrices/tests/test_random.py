@@ -2,15 +2,15 @@ import random as system_random
 
 from sympy import Matrix, diag, eye, zeros, cartes, \
     I, cos, simplify, symbols, sqrt, expand
-from sympy.core.random import seed
+from sympy.core.random import seed, sample
 from sympy.matrices.random import super_elementary_matrix, \
     complex_to_real, invertible, regular_to_singular, diagonal_normal, \
     diagonalizable, transposition, triangular, trigonalizable, \
     isometry_normal, permutation, projection, elementary, rotation, \
     reflection, normal, nilpotent, idempotent, singular, orthogonal, unitary, \
     hermite, symmetric, square, jordan, jordan_normal
-
-from sympy.matrices import random as _random
+from sympy.matrices.random import _elementary_scalars, _rotation_scalars, \
+    _sample, _multiply, _is_abs_one, _cs
 
 from sympy.testing.pytest import raises
 
@@ -250,25 +250,37 @@ def test_diagonal_normal():
                 assert x in scalars
         assert rank == 0
 
+    def _alt_diagonal_normal(dim, spec=None):
+        """diagonal_normal via multiplying elementary matrices"""
+
+        spec = spec or _elementary_scalars
+
+        # choose spec randomly if dim and len(spec) does not meet
+        if not dim == len(spec):
+            spec = tuple(_sample(spec) for _ in range(dim))
+
+        # set diagonal entries
+        # multiplicative matrix construction (only for testing)
+        items = list()
+        for start, scalar in enumerate(spec):
+            items.append(elementary(dim, index=(start, start), scalar=scalar))
+        return _multiply(*items)
+
     spec = (1, 2, 3, 4)
-    _random._ALT = True
-    assert _random._ALT is True
     test = dict()
     specs = dict()
     for d in TEST_DIMS:
         s = RANDOM.choices(spec, k=d + 4)
         specs[d] = s
-        m = _random.diagonal_normal(d + 4, s)
+        m = _alt_diagonal_normal(d + 4, s)
         test[d] = m
         assert _is_triangular(m)
         assert _is_triangular(m.T)
         for ev in m.eigenvals(multiple=True):
             assert ev in spec
 
-    _random._ALT = False
-    assert _random._ALT is False
     for d in TEST_DIMS:
-        m = _random.diagonal_normal(d + 4, specs[d])
+        m = diagonal_normal(d + 4, specs[d])
         assert test[d] == m
 
 
@@ -295,20 +307,63 @@ def test_jordan_normal():
         with raises(AssertionError):
             assert _is_triangular(m.T)
 
-    _random._ALT = True
-    assert _random._ALT is True
+    def _alt_jordan_normal(dim, spec=None):
+        """jordan_normal via multiplying jordan matrices"""
+
+        spec = spec or _elementary_scalars
+
+        # make spec list of (scalar, size) tuples
+        if spec and spec[0] is None:
+            raise ValueError("spec argument must not start with None")
+
+        block_list = list()
+        val, cnt = None, 0
+        for s in spec:
+            if s == val:
+                cnt += 1
+                continue
+            elif s is None:
+                block_list.append((val, cnt))
+                val, cnt = None, 0
+                continue
+            elif cnt:
+                block_list.append((val, cnt))
+            if isinstance(s, (tuple, list)) and len(s) == 2:
+                block_list.append(s)
+                val, cnt = None, 0
+                continue
+            val, cnt = s, 1
+        if cnt:
+            block_list.append((val, cnt))
+        spec = block_list
+        del block_list
+
+        # choose block randomly if dim and len(spec) does not meet
+        if not dim == sum(cnt for val, cnt in spec):
+            spec = tuple(_sample(spec) for _ in range(dim))
+
+        # set entries of jordan blocks
+        # multiplicative matrix construction (only for testing)
+        items = list()
+        start = 0
+        for val, cnt in spec:
+            end = min(dim, start + cnt)
+            items.append(jordan(dim, index=(start, end), scalar=val))
+            if end == dim:
+                break
+            start = end
+        return _multiply(*items)
+
     test = dict()
     specs = dict()
     for d in TEST_DIMS:
         s = RANDOM.choices(scalars, k=d + 4)
         specs[d] = s
-        m = _random.jordan_normal(d + 4, s)
+        m = _alt_jordan_normal(d + 4, s)
         test[d] = m
 
-    _random._ALT = False
-    assert _random._ALT is False
     for d in TEST_DIMS:
-        m = _random.jordan_normal(d + 4, specs[d])
+        m = jordan_normal(d + 4, specs[d])
         assert test[d] == m
 
 
@@ -350,17 +405,53 @@ def test_isometry_normal():
         m = isometry_normal(d, spec=(z / abs(z),))
         assert abs(abs(m.det()) - 1) < TEST_EPSILON, m.det()
 
+    def _alt_isometry_normal(dim, spec=None, real=True):
+        """isometry_normal via multiplying rotation matrices"""
+
+        spec = spec or _rotation_scalars
+
+        # make spec list of (scalar,) or (scalar, +/-sqrt(1-scalar**2)) tuples
+        block_list = list()
+        for c in spec:
+            if isinstance(c, (tuple, list)):
+                block_list.append(c)
+            elif _is_abs_one(c):
+                block_list.append((c,))
+            else:
+                block_list.append(_cs(c, real))
+        spec = block_list
+        del block_list
+
+        # choose spec randomly if dim and len(spec) does not meet
+        if not dim == sum(len(s) for s in spec):
+            spec = tuple(_sample(spec) for _ in range(dim))
+
+        # set entries of rotation blocks
+        # multiplicative matrix construction (only for testing)
+        items = list()
+        start = 0
+        for s in spec:
+            end = start + len(s)
+            if dim < end:
+                # leave the last diagonal entry one
+                break
+            if len(s) == 1:
+                scalar, = s
+                items.append(
+                    elementary(dim, index=(start, start), scalar=scalar))
+            else:
+                c, s = s
+                items.append(rotation(dim, (start, start + 1), (c, s)))
+            start = end
+        return _multiply(*items)
+
     spec = (0, -1), (1,)
-    _random._ALT = True
-    assert _random._ALT is True
     test = dict()
     for d in TEST_DIMS:
-        test[d] = _random.isometry_normal(2 * d, spec * d)
+        test[d] = _alt_isometry_normal(2 * d, spec * d)
 
-    _random._ALT = False
-    assert _random._ALT is False
     for d in TEST_DIMS:
-        m = _random.isometry_normal(2 * d, spec * d)
+        m = isometry_normal(2 * d, spec * d)
 
         for x in (m - test[d]).evalf():
             assert abs(x) < TEST_PRECISION
@@ -460,7 +551,7 @@ def test_orthogonal():
         assert _is_eye(m.T * m, TEST_PRECISION)
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
 
-        m = orthogonal(d, spec=_random._rotation_scalars).evalf()
+        m = orthogonal(d, spec=_rotation_scalars).evalf()
         assert _is_eye(m.T * m, TEST_PRECISION)
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
 
@@ -583,13 +674,15 @@ def test_sample():
             assert 0 <= n[i, i] <= 1, repr(n)
 
 
-def _test_seed():
+def test_seed():
+
     class Scalars(list):
         """list class with build in sample method"""
         rnd = system_random.Random()
 
         def sample(self, k):
             return self.rnd.sample(self, k)
+
 
     _all_ = projection, jordan, transposition, \
           permutation, elementary, rotation, reflection, \
@@ -610,60 +703,36 @@ def _test_seed():
 
     _isometry_scalars_ = orthogonal, unitary, normal
 
-    seed = 101
-    rnd = system_random.Random(seed)
-    seeds = rnd.sample(range(100), 3)
+    seed(101)
+    seeds = sample(range(100), 3)
     for d in TEST_DIMS:
         for matrix in _all_:
-            # 1. standard random
             first, second = list(), list()
             for s in seeds:
-                seed(s)
+                seed(s-1)
                 first.append((s, expand(matrix(d))))
             for s in seeds:
-                seed(s)
+                seed(s-1)
                 second.append((s, expand(matrix(d))))
             for (seed_a, a), (seed_b, b) in zip(first, second):
-                assert a == b,  str(seeds) + ' ' + str(seed_a) + ' ' + str(seed_b) + ' ' + matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
-            # for a, b in zip(first, reversed(second)):
-            #     assert a != b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
-
-        for matrix in _all_:
-            # 2. direct seed
-            first, second = list(), list()
-            for s in seeds:
-                seed(s)
-                first.append(matrix(d, seed=s))
-            for s in seeds:
-                second.append(matrix(d, seed=s))
-            for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
-
-        for matrix in _all_:
-            # 3. direct seed as random
-            first, second = list(), list()
-            rnd = system_random.Random()
-            for s in seeds:
-                rnd.seed(s)
-                first.append(matrix(d, seed=rnd))
-            for s in seeds:
-                rnd.seed(s)
-                second.append(matrix(d, seed=rnd))
-            for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+                assert a == b,  \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
         for matrix in _spec_:
             # 4. spec as random
             first, second = list(), list()
             spec = Scalars(range(100))
             for s in seeds:
+                seed(s-1)
                 spec.rnd.seed(s)
-                first.append(matrix(d, spec=spec, seed=spec.rnd))
+                first.append(matrix(d, spec=spec))
             for s in seeds:
+                seed(s-1)
                 spec.rnd.seed(s)
-                second.append(matrix(d, spec=spec, seed=spec.rnd))
+                second.append(matrix(d, spec=spec))
             for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+                assert a == b, \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
         for matrix in _isometry_spec_:
             # 4. scalars/units as random
@@ -671,13 +740,16 @@ def _test_seed():
             z = sqrt(2)/2 + sqrt(2)/2 * I
             spec = Scalars((z, -1, z*z))
             for s in seeds:
+                seed(s-1)
                 spec.rnd.seed(s)
-                first.append(matrix(d, spec=spec, seed=spec.rnd))
+                first.append(matrix(d, spec=spec))
             for s in seeds:
+                seed(s-1)
                 spec.rnd.seed(s)
-                second.append(matrix(d, spec=spec, seed=spec.rnd))
+                second.append(matrix(d, spec=spec))
             for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+                assert a == b, \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
         for matrix in _elementary_scalars_:
             # 4. scalars/units as random
@@ -685,26 +757,32 @@ def _test_seed():
             scalars = Scalars(range(10))
             units = Scalars(range(-5, 5))
             for s in seeds:
+                seed(s-1)
                 scalars.rnd.seed(s)
-                first.append(matrix(d, scalars=scalars, units=units, seed=scalars.rnd))
+                first.append(matrix(d, scalars=scalars, units=units))
             for s in seeds:
+                seed(s-1)
                 scalars.rnd.seed(s)
-                second.append(matrix(d, scalars=scalars, units=units, seed=scalars.rnd))
+                second.append(matrix(d, scalars=scalars, units=units))
             for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+                assert a == b, \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
         for matrix in _isometry_scalars_:
             # 4. scalars/units as random
             first, second = list(), list()
             scalars = Scalars((sqrt(2)/2, 0))
             for s in seeds:
+                seed(s-1)
                 scalars.rnd.seed(s)
-                first.append(matrix(d, scalars=scalars, seed=scalars.rnd))
+                first.append(matrix(d, scalars=scalars))
             for s in seeds:
+                seed(s-1)
                 scalars.rnd.seed(s)
-                second.append(matrix(d, scalars=scalars, seed=scalars.rnd))
+                second.append(matrix(d, scalars=scalars))
             for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+                assert a == b, \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
 
 # === other tests ===
