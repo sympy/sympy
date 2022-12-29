@@ -21,8 +21,7 @@ from sympy.utilities.iterables import kbins
 from abc import ABC, abstractmethod
 from typing import (
     Sequence, Callable, Optional, Dict, Iterator, Union, Literal, Tuple,
-    TypeVar, List, Any, Hashable)
-from typing_extensions import TypeGuard
+    TypeVar, Any, Hashable)
 from itertools import permutations
 
 
@@ -273,7 +272,7 @@ def unify(
             else:
                 yield from unify_multi(*zip(x.args, y.args), subs=s, **fns)
 
-    elif is_args(x) and is_args(y):
+    elif isinstance(x, (list, tuple)) and isinstance(y, (list, tuple)):
         if len(x) == len(y):
             yield from unify_multi(*zip(x, y), subs=s, **fns)
 
@@ -335,11 +334,6 @@ def assoc(d, key, val):
     d = d.copy()
     d[key] = val
     return d
-
-
-def is_args(x) -> TypeGuard[Union[List, Tuple]]:
-    """ Is x a traditional iterable? """
-    return type(x) in (tuple, list)
 
 
 def unpack(x: Any):
