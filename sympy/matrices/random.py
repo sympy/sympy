@@ -18,7 +18,6 @@ __all__ = 'projection', 'jordan', 'transposition', \
           'regular_to_singular', 'complex_to_real'
 
 
-_ALT = False
 _EPS = 1e-15
 
 
@@ -987,18 +986,10 @@ def diagonal_normal(dim,
         spec = tuple(_sample(spec) for _ in range(dim))
 
     # set diagonal entries
-    if _ALT:
-        # multiplicative matrix construction (only for testing)
-        items = list()
-        for start, scalar in enumerate(spec):
-            items.append(elementary(dim, index=(start, start), scalar=scalar))
-        return _multiply(*items)
-
-    else:
-        obj = _eye(dim)
-        for start, scalar in enumerate(spec):
-            obj[start, start] = scalar
-        return obj  # eq. to gauss_jordan(dim, rank, eigenvalue_set, dim)
+    obj = _eye(dim)
+    for start, scalar in enumerate(spec):
+        obj[start, start] = scalar
+    return obj  # eq. to gauss_jordan(dim, rank, eigenvalue_set, dim)
 
 
 def jordan_normal(dim,
@@ -1148,31 +1139,18 @@ def jordan_normal(dim,
         spec = tuple(_sample(spec) for _ in range(dim))
 
     # set entries of jordan blocks
-    if _ALT:
-        # multiplicative matrix construction (only for testing)
-        items = list()
-        start = 0
-        for val, cnt in spec:
-            end = min(dim, start + cnt)
-            items.append(jordan(dim, index=(start, end), scalar=val))
-            if end == dim:
-                break
-            start = end
-        return _multiply(*items)
-
-    else:
-        obj = _eye(dim)
-        start = 0
-        for scalar, size in spec:
-            end = min(dim, start + size)
-            obj[start, start] = scalar
-            for i in range(start + 1, end):
-                obj[i - 1, i] = 1
-                obj[i, i] = scalar
-            if end == dim:
-                break
-            start = end
-        return obj
+    obj = _eye(dim)
+    start = 0
+    for scalar, size in spec:
+        end = min(dim, start + size)
+        obj[start, start] = scalar
+        for i in range(start + 1, end):
+            obj[i - 1, i] = 1
+            obj[i, i] = scalar
+        if end == dim:
+            break
+        start = end
+    return obj
 
 
 def isometry_normal(dim,
@@ -1318,45 +1296,24 @@ def isometry_normal(dim,
         spec = tuple(_sample(spec) for _ in range(dim))
 
     # set entries of rotation blocks
-
-    if _ALT:
-        # multiplicative matrix construction (only for testing)
-        items = list()
-        start = 0
-        for s in spec:
-            end = start + len(s)
-            if dim < end:
-                # leave the last diagonal entry one
-                break
-            if len(s) == 1:
-                scalar, = s
-                items.append(
-                    elementary(dim, index=(start, start), scalar=scalar))
-            else:
-                c, s = s
-                items.append(rotation(dim, (start, start + 1), (c, s)))
-            start = end
-        return _multiply(*items)
-
-    else:
-        obj = _eye(dim)
-        start = 0
-        for s in spec:
-            end = start + len(s)
-            if dim < end:
-                # leave the last diagonal entry one
-                break
-            if len(s) == 1:
-                scalar, = s
-                obj[start, start] = scalar
-            else:
-                c, s = s
-                obj[start, start] = c
-                obj[start, start + 1] = s
-                obj[start + 1, start] = -1 * s
-                obj[start + 1, start + 1] = c
-            start = end
-        return obj
+    obj = _eye(dim)
+    start = 0
+    for s in spec:
+        end = start + len(s)
+        if dim < end:
+            # leave the last diagonal entry one
+            break
+        if len(s) == 1:
+            scalar, = s
+            obj[start, start] = scalar
+        else:
+            c, s = s
+            obj[start, start] = c
+            obj[start, start + 1] = s
+            obj[start + 1, start] = -1 * s
+            obj[start + 1, start + 1] = c
+        start = end
+    return obj
 
 
 # === compound matrices, i.e. product of base matrices ===

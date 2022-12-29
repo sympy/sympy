@@ -9,8 +9,8 @@ from sympy.matrices.random import super_elementary_matrix, \
     isometry_normal, permutation, projection, elementary, rotation, \
     reflection, normal, nilpotent, idempotent, singular, orthogonal, unitary, \
     hermite, symmetric, square, jordan, jordan_normal
-
-from sympy.matrices import random as _random
+from sympy.matrices.random import _elementary_scalars, _rotation_scalars, \
+    _sample, _multiply, _is_abs_one, _cs
 
 from sympy.testing.pytest import raises
 
@@ -250,25 +250,37 @@ def test_diagonal_normal():
                 assert x in scalars
         assert rank == 0
 
+    def _alt_diagonal_normal(dim, spec=None):
+        """diagonal_normal via multiplying elementary matrices"""
+
+        spec = spec or _elementary_scalars
+
+        # choose spec randomly if dim and len(spec) does not meet
+        if not dim == len(spec):
+            spec = tuple(_sample(spec) for _ in range(dim))
+
+        # set diagonal entries
+        # multiplicative matrix construction (only for testing)
+        items = list()
+        for start, scalar in enumerate(spec):
+            items.append(elementary(dim, index=(start, start), scalar=scalar))
+        return _multiply(*items)
+
     spec = (1, 2, 3, 4)
-    _random._ALT = True
-    assert _random._ALT is True
     test = dict()
     specs = dict()
     for d in TEST_DIMS:
         s = RANDOM.choices(spec, k=d + 4)
         specs[d] = s
-        m = _random.diagonal_normal(d + 4, s)
+        m = _alt_diagonal_normal(d + 4, s)
         test[d] = m
         assert _is_triangular(m)
         assert _is_triangular(m.T)
         for ev in m.eigenvals(multiple=True):
             assert ev in spec
 
-    _random._ALT = False
-    assert _random._ALT is False
     for d in TEST_DIMS:
-        m = _random.diagonal_normal(d + 4, specs[d])
+        m = diagonal_normal(d + 4, specs[d])
         assert test[d] == m
 
 
@@ -295,20 +307,63 @@ def test_jordan_normal():
         with raises(AssertionError):
             assert _is_triangular(m.T)
 
-    _random._ALT = True
-    assert _random._ALT is True
+    def _alt_jordan_normal(dim, spec=None):
+        """jordan_normal via multiplying jordan matrices"""
+
+        spec = spec or _elementary_scalars
+
+        # make spec list of (scalar, size) tuples
+        if spec and spec[0] is None:
+            raise ValueError("spec argument must not start with None")
+
+        block_list = list()
+        val, cnt = None, 0
+        for s in spec:
+            if s == val:
+                cnt += 1
+                continue
+            elif s is None:
+                block_list.append((val, cnt))
+                val, cnt = None, 0
+                continue
+            elif cnt:
+                block_list.append((val, cnt))
+            if isinstance(s, (tuple, list)) and len(s) == 2:
+                block_list.append(s)
+                val, cnt = None, 0
+                continue
+            val, cnt = s, 1
+        if cnt:
+            block_list.append((val, cnt))
+        spec = block_list
+        del block_list
+
+        # choose block randomly if dim and len(spec) does not meet
+        if not dim == sum(cnt for val, cnt in spec):
+            spec = tuple(_sample(spec) for _ in range(dim))
+
+        # set entries of jordan blocks
+        # multiplicative matrix construction (only for testing)
+        items = list()
+        start = 0
+        for val, cnt in spec:
+            end = min(dim, start + cnt)
+            items.append(jordan(dim, index=(start, end), scalar=val))
+            if end == dim:
+                break
+            start = end
+        return _multiply(*items)
+
     test = dict()
     specs = dict()
     for d in TEST_DIMS:
         s = RANDOM.choices(scalars, k=d + 4)
         specs[d] = s
-        m = _random.jordan_normal(d + 4, s)
+        m = _alt_jordan_normal(d + 4, s)
         test[d] = m
 
-    _random._ALT = False
-    assert _random._ALT is False
     for d in TEST_DIMS:
-        m = _random.jordan_normal(d + 4, specs[d])
+        m = jordan_normal(d + 4, specs[d])
         assert test[d] == m
 
 
@@ -350,17 +405,53 @@ def test_isometry_normal():
         m = isometry_normal(d, spec=(z / abs(z),))
         assert abs(abs(m.det()) - 1) < TEST_EPSILON, m.det()
 
+    def _alt_isometry_normal(dim, spec=None, real=True):
+        """isometry_normal via multiplying rotation matrices"""
+
+        spec = spec or _rotation_scalars
+
+        # make spec list of (scalar,) or (scalar, +/-sqrt(1-scalar**2)) tuples
+        block_list = list()
+        for c in spec:
+            if isinstance(c, (tuple, list)):
+                block_list.append(c)
+            elif _is_abs_one(c):
+                block_list.append((c,))
+            else:
+                block_list.append(_cs(c, real))
+        spec = block_list
+        del block_list
+
+        # choose spec randomly if dim and len(spec) does not meet
+        if not dim == sum(len(s) for s in spec):
+            spec = tuple(_sample(spec) for _ in range(dim))
+
+        # set entries of rotation blocks
+        # multiplicative matrix construction (only for testing)
+        items = list()
+        start = 0
+        for s in spec:
+            end = start + len(s)
+            if dim < end:
+                # leave the last diagonal entry one
+                break
+            if len(s) == 1:
+                scalar, = s
+                items.append(
+                    elementary(dim, index=(start, start), scalar=scalar))
+            else:
+                c, s = s
+                items.append(rotation(dim, (start, start + 1), (c, s)))
+            start = end
+        return _multiply(*items)
+
     spec = (0, -1), (1,)
-    _random._ALT = True
-    assert _random._ALT is True
     test = dict()
     for d in TEST_DIMS:
-        test[d] = _random.isometry_normal(2 * d, spec * d)
+        test[d] = _alt_isometry_normal(2 * d, spec * d)
 
-    _random._ALT = False
-    assert _random._ALT is False
     for d in TEST_DIMS:
-        m = _random.isometry_normal(2 * d, spec * d)
+        m = isometry_normal(2 * d, spec * d)
 
         for x in (m - test[d]).evalf():
             assert abs(x) < TEST_PRECISION
@@ -460,7 +551,7 @@ def test_orthogonal():
         assert _is_eye(m.T * m, TEST_PRECISION)
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
 
-        m = orthogonal(d, spec=_random._rotation_scalars).evalf()
+        m = orthogonal(d, spec=_rotation_scalars).evalf()
         assert _is_eye(m.T * m, TEST_PRECISION)
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
 
