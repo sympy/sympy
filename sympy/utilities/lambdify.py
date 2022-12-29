@@ -90,7 +90,7 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
-ARB_TRANSLATIONS = {
+ARB_TRANSLATIONS: dict[str, str]  = {
 }
 
 NUMPY_TRANSLATIONS: dict[str, str] = {
