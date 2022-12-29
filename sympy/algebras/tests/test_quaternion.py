@@ -9,7 +9,6 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import Matrix
-from sympy.polys.polytools import factor
 from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
