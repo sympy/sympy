@@ -856,7 +856,7 @@ class Quaternion(Expr):
 
         return t
 
-    def to_rotation_matrix(self, v=None, normal=False):
+    def to_rotation_matrix(self, v=None, homogeneous=True):
         """Returns the equivalent rotation transformation matrix of the quaternion
         which represents rotation about the origin if v is not passed.
 
@@ -865,11 +865,11 @@ class Quaternion(Expr):
 
         v : tuple or None
             Default value: None
-        normal : bool
+        homogeneous : bool
             When True, gives an expression that may be more efficient for
             symbolic calculations but less so for direct evaluation. Both
             formulas are mathematically equivalent.
-            Default value: False
+            Default value: True
 
         Returns
         =======
@@ -914,7 +914,7 @@ class Quaternion(Expr):
         s = q.norm()**-2
 
         # diagonal elements are different according to parameter normal
-        if normal:
+        if homogeneous:
             m00 = s*(q.a**2 + q.b**2 - q.c**2 - q.d**2)
             m11 = s*(q.a**2 - q.b**2 + q.c**2 - q.d**2)
             m22 = s*(q.a**2 - q.b**2 - q.c**2 + q.d**2)
