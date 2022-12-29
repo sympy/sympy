@@ -1,6 +1,6 @@
 from ..core import I as _i
 from ..core.mul import Mul as _multiply
-from ..core.random import sample
+from ..core.random import sample as _smple
 from ..core.sympify import _sympify
 from ..functions import sqrt as _sqrt, re as _re, im as _im, \
     transpose as _t, adjoint as _c
@@ -29,7 +29,7 @@ def _sample(scalars, k=None):
     if hasattr(scalars, 'sample'):
         smpl = scalars.sample(_k)
     else:
-        smpl = sample(scalars, _k)
+        smpl = _smple(scalars, _k)
     return smpl if k else smpl[0]
 
 
@@ -2083,7 +2083,7 @@ def unitary(dim,
     isometry_normal
     orthogonal
 
-    """
+    """ # noqa E501
 
     if spec is None:
         if length == 0:
