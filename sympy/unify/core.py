@@ -20,7 +20,7 @@ from sympy.utilities.iterables import kbins
 from abc import ABC, abstractmethod
 from typing import (
     Sequence, Callable, Optional, Dict, Iterator, Union, Literal, Tuple,
-    TypeVar, Any, Hashable)
+    TypeVar, Any)
 from itertools import permutations
 
 
@@ -134,7 +134,7 @@ class CondVariable(VariableBase):
         The function to test whether the variable should with unify with
         the term or not.
     """
-    def __init__(self, arg: Hashable, valid: Callable[[Any], bool]):
+    def __init__(self, arg: Any, valid: Callable[[Any], bool]):
         self.arg = arg
         self.valid = valid
 
@@ -167,7 +167,7 @@ class Variable(VariableBase):
     arg
         The name of the variable
     """
-    def __init__(self, arg: Hashable):
+    def __init__(self, arg: Any):
         self.arg = arg
 
     def __eq__(self, other) -> bool:

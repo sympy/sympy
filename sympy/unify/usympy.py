@@ -10,6 +10,7 @@ from sympy.matrices import MatAdd, MatMul, MatrixExpr
 from sympy.sets.sets import Union, Intersection, FiniteSet
 from sympy.unify.core import Compound, Variable, CondVariable
 from sympy.unify import core
+from typing import Any
 
 
 basic_new_legal = [MatrixExpr]
@@ -47,7 +48,7 @@ def mk_matchtype(typ):
     return matchtype
 
 
-def deconstruct(s, variables=()):
+def deconstruct(s, variables=()) -> Any:
     """ Turn a SymPy object into a Compound """
     if s in variables:
         return Variable(s)
@@ -59,7 +60,7 @@ def deconstruct(s, variables=()):
                     tuple(deconstruct(arg, variables) for arg in s.args))
 
 
-def construct(t):
+def construct(t) -> Basic:
     """ Turn a Compound into a SymPy object """
     if isinstance(t, (Variable, CondVariable)):
         return t.arg
