@@ -69,8 +69,7 @@ class Compound(Term):
 
     How to represent constants?
 
-    The standard way of encoding 'constant' as term is defining
-    them as nullary compound term.
+    A 'constant' term is defined as a nullary compound term.
 
     >>> Compound(1, ())
     1[]
