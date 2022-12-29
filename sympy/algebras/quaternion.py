@@ -24,7 +24,7 @@ def _check_norm(elements, norm):
             raise ValueError("Input norm must be positive.")
 
         numerical = all(i.is_number and i.is_real is True for i in elements)
-        if (numerical and not is_eq(norm**2, sum(i**2 for i in elements))):
+        if numerical and is_eq(norm**2, sum(i**2 for i in elements)) is False:
             raise ValueError("Incompatible value for norm.")
 
 
@@ -952,14 +952,8 @@ class Quaternion(Expr):
 
     def _eval_subs(self, *args):
         elements = [i.subs(*args) for i in self.args]
-        norm = self._norm
-        try:
-            _check_norm(elements, norm)
-        except ValueError:
-            norm = None
-            warnings.warn("Substitution renders pre-computed norm value "
-                          "incompatible, resetting norm.")
-
+        norm = self._norm.subs(*args)
+        _check_norm(elements, norm)
         return Quaternion(*elements, norm=norm)
 
     def _eval_evalf(self, prec):

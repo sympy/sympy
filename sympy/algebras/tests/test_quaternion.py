@@ -1,4 +1,5 @@
 from sympy.core.function import diff
+from sympy.core.function import expand
 from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -39,7 +40,7 @@ def test_quaternion_construction_norm():
     q1 = Quaternion(*symbols('a:d'))
 
     q2 = Quaternion(w, x, y, z)
-    assert factor((q1*q2).norm()**2) == q1.norm()**2 * q2.norm()**2
+    assert expand((q1*q2).norm()**2 - (q1.norm()**2 * q2.norm()**2)) == 0
 
     q3 = Quaternion(w, x, y, z, norm=1)
     assert (q1 * q3).norm() == q1.norm()
