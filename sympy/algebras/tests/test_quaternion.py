@@ -252,6 +252,13 @@ def test_quaternion_conversions():
                [0,           0,          0,  1]])
 
 
+def test_rotation_matrix_homogeneous():
+    q = Quaternion(w, x, y, z)
+    R1 = q.to_rotation_matrix(homogeneous=True) * q.norm()**2
+    R2 = simplify(q.to_rotation_matrix() * q.norm()**2)
+    assert R1 == R2
+
+
 def test_quaternion_rotation_iss1593():
     """
     There was a sign mistake in the definition,

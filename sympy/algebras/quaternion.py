@@ -1101,7 +1101,7 @@ class Quaternion(Expr):
 
         return t
 
-    def to_rotation_matrix(self, v=None):
+    def to_rotation_matrix(self, v=None, homogeneous=True):
         """Returns the equivalent rotation transformation matrix of the quaternion
         which represents rotation about the origin if v is not passed.
 
@@ -1110,6 +1110,11 @@ class Quaternion(Expr):
 
         v : tuple or None
             Default value: None
+        homogeneous : bool
+            When True, gives an expression that may be more efficient for
+            symbolic calculations but less so for direct evaluation. Both
+            formulas are mathematically equivalent.
+            Default value: True
 
         Returns
         =======
@@ -1152,17 +1157,25 @@ class Quaternion(Expr):
 
         q = self
         s = q.norm()**-2
-        m00 = 1 - 2*s*(q.c**2 + q.d**2)
+
+        # diagonal elements are different according to parameter normal
+        if homogeneous:
+            m00 = s*(q.a**2 + q.b**2 - q.c**2 - q.d**2)
+            m11 = s*(q.a**2 - q.b**2 + q.c**2 - q.d**2)
+            m22 = s*(q.a**2 - q.b**2 - q.c**2 + q.d**2)
+        else:
+            m00 = 1 - 2*s*(q.c**2 + q.d**2)
+            m11 = 1 - 2*s*(q.b**2 + q.d**2)
+            m22 = 1 - 2*s*(q.b**2 + q.c**2)
+
         m01 = 2*s*(q.b*q.c - q.d*q.a)
         m02 = 2*s*(q.b*q.d + q.c*q.a)
 
         m10 = 2*s*(q.b*q.c + q.d*q.a)
-        m11 = 1 - 2*s*(q.b**2 + q.d**2)
         m12 = 2*s*(q.c*q.d - q.b*q.a)
 
         m20 = 2*s*(q.b*q.d - q.c*q.a)
         m21 = 2*s*(q.c*q.d + q.b*q.a)
-        m22 = 1 - 2*s*(q.b**2 + q.c**2)
 
         if not v:
             return Matrix([[m00, m01, m02], [m10, m11, m12], [m20, m21, m22]])
