@@ -12,7 +12,7 @@ from sympy.functions import cos, exp, log, sign, sin
 from sympy.logic.boolalg import conjuncts
 
 from ..predicates.calculus import (FinitePredicate, InfinitePredicate,
-    PositiveInfinitePredicate, NegativeInfinitePredicate)
+ PositiveInfinitePredicate, NegativeInfinitePredicate)
 
 
 # FinitePredicate

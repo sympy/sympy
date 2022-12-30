@@ -628,5 +628,7 @@ def remove_handler(key, handler):
         getattr(Q, key).remove_handler(handler)
 
 
-from sympy.assumptions.ask_generated import (get_all_known_facts,
-    get_known_facts_dict)
+from sympy.assumptions.ask_generated import (get_all_known_facts)
+from sympy.assumptions.ask_generated import ( get_known_facts_dict)
+
+   
