@@ -3,7 +3,6 @@ from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
     permutations, product
 )
-from typing import TypeVar, Sequence, List, Iterator
 # For backwards compatibility
 from itertools import product as cartes # noqa: F401
 from operator import gt
@@ -2706,10 +2705,7 @@ def runs(seq, op=gt):
     return cycles
 
 
-_T = TypeVar('_T')
-
-
-def sequence_partitions(l: Sequence[_T], n: int) -> Iterator[List[Sequence[_T]]]:
+def sequence_partitions(l, n):
     r"""Returns the partition of sequence $l$ into $n$ bins
 
     Explanation
@@ -2727,17 +2723,18 @@ def sequence_partitions(l: Sequence[_T], n: int) -> Iterator[List[Sequence[_T]]]
     Parameters
     ==========
 
-    l
+    l : Sequence[T]
         A nonempty sequence of any Python objects
 
-    n
+    n : int
         A positive integer
 
     Yields
     ======
 
-    out
-        A list of sequences with concatenation equals $l$
+    out : Sequence[T]
+        A list of sequences with concatenation equals $l$.
+        This should conform with the type of $l$.
 
     Examples
     ========
@@ -2769,7 +2766,7 @@ def sequence_partitions(l: Sequence[_T], n: int) -> Iterator[List[Sequence[_T]]]
             yield [l[:i]] + part
 
 
-def sequence_partitions_empty(l: Sequence[_T], n: int) -> Iterator[List[Sequence[_T]]]:
+def sequence_partitions_empty(l, n):
     r"""Returns the partition of sequence $l$ into $n$ bins with
     empty sequence
 
@@ -2792,17 +2789,18 @@ def sequence_partitions_empty(l: Sequence[_T], n: int) -> Iterator[List[Sequence
     Parameters
     ==========
 
-    l
+    l : Sequence[T]
         A sequence of any Python objects (can be possibly empty)
 
-    n
+    n : int
         A positive integer
 
     Yields
     ======
 
-    out
-        A list of sequences with concatenation equals $l$
+    out : Sequence[T]
+        A list of sequences with concatenation equals $l$.
+        This should conform with the type of $l$.
 
     Examples
     ========
