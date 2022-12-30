@@ -2732,7 +2732,7 @@ def sequence_partitions(l, n):
     Yields
     ======
 
-    out : Sequence[T]
+    out : list[Sequence[T]]
         A list of sequences with concatenation equals $l$.
         This should conform with the type of $l$.
 
@@ -2798,7 +2798,7 @@ def sequence_partitions_empty(l, n):
     Yields
     ======
 
-    out : Sequence[T]
+    out : list[Sequence[T]]
         A list of sequences with concatenation equals $l$.
         This should conform with the type of $l$.
 
