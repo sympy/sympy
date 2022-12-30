@@ -2356,7 +2356,7 @@ class InverseLaplaceTransform(IntegralTransform):
     _none_sentinel = Dummy('None')
     _c = Dummy('c')
 
-    def __new__(cls, F, s, x, plane, **opts):
+    def __new__(cls, F, s, x, plane=None, **opts):
         if plane is None:
             plane = InverseLaplaceTransform._none_sentinel
         return IntegralTransform.__new__(cls, F, s, x, plane, **opts)
@@ -2394,7 +2394,7 @@ class InverseLaplaceTransform(IntegralTransform):
         """
         Try to evaluate the transform in closed form.
         """
-
+        _noconds = hints.get('noconds', True)
         debug('[ILT doit] (%s, %s, %s)'%(self.function,
                                         self.function_variable,
                                         self.transform_variable))
@@ -2405,6 +2405,7 @@ class InverseLaplaceTransform(IntegralTransform):
 
         terms = Add.make_args(fn)
         results = []
+        conds = [True]
         for f in terms:
             d, r = _inverse_laplace_apply_simple_rules(f, s_, t_)
             if d:
@@ -2424,15 +2425,19 @@ class InverseLaplaceTransform(IntegralTransform):
             k_, f_ = f.as_independent(s_, as_Add=False)
             if try_directly:
                 try:
-                    T = self._compute_transform(f_, s_, t_)
+                    hints['noconds'] = False
+                    T, c = self._compute_transform(f_, s_, t_, **hints)
                 except IntegralTransformError:
                     T = None
             if T is not None:
                 results.append(k_*T)
+                conds.append(c)
             else:
                 results.append(k_*InverseLaplaceTransform(f_, s_, t_))
-
-        return Add(*results).simplify(doit=False)
+        if _noconds:
+            return Add(*results).simplify(doit=False)
+        else:
+            return Add(*results).simplify(doit=False), And(*conds)
 
 
 def inverse_laplace_transform(F, s, t, plane=None, **hints):

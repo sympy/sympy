@@ -890,7 +890,7 @@ def test_inverse_laplace_transform_delta():
     assert ILT(a*exp(-3*s), s, t) == a*DiracDelta(t - 3)
     assert ILT(exp(2*s), s, t) == DiracDelta(t + 2)
     r = Symbol('r', real=True)
-    assert ILT(exp(r*s), s, t) == DiracDelta(t + r)
+    assert ILT(exp(r*s), s, t) == DiracDelta(r + t)
 
 
 def test_inverse_laplace_transform_delta_cond():
