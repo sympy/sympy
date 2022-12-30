@@ -35,7 +35,6 @@ def _sample(scalars, k=None):
 
 # === helper ===
 
-
 def _cs(scalar, real=True):
     if isinstance(scalar, (tuple, list)) and len(scalar) == 2:
         c, s = scalar
@@ -69,6 +68,7 @@ _elementary_scalars = -1, 1
 _elementary_units = _elementary_scalars
 _rotation_scalars = (_sqrt(2) / 2, _sqrt(2) / 2), (0, -1),
 _unitary_scalars = tuple(c * 1 + s * _i for c, s in _rotation_scalars)
+
 
 # === fundamental constructor ===
 
@@ -173,7 +173,7 @@ def super_elementary_matrix(dim,
     if index is None:
         return obj
 
-    if not isinstance(index, (list, tuple, set)) or not len(index) == 2:
+    if not isinstance(index, (list, tuple)) or not len(index) == 2:
         raise ValueError(
             "index argument must be tuple of two matrix index integer.")
     row, col = index
