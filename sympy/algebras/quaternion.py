@@ -16,6 +16,17 @@ from sympy.core.logic import fuzzy_not, fuzzy_or
 from mpmath.libmp.libmpf import prec_to_dps
 
 
+def _check_norm(elements, norm):
+    """validate if input norm is consistent"""
+    if norm is not None and norm.is_number:
+        if norm.is_positive is False:
+            raise ValueError("Input norm must be positive.")
+
+        numerical = all(i.is_number and i.is_real is True for i in elements)
+        if numerical and is_eq(norm**2, sum(i**2 for i in elements)) is False:
+            raise ValueError("Incompatible value for norm.")
+
+
 def _is_extrinsic(seq):
     """validate seq and return True if seq is lowercase and False if uppercase"""
     if type(seq) != str:
@@ -48,6 +59,13 @@ class Quaternion(Expr):
     Quaternion objects can be instantiated as Quaternion(a, b, c, d)
     as in (a + b*i + c*j + d*k).
 
+    Parameters
+    ==========
+
+    norm : None or number
+        Pre-defined quaternion norm. If a value is given, Quaternion.norm
+        returns this pre-defined value instead of calculating the norm
+
     Examples
     ========
 
@@ -68,6 +86,15 @@ class Quaternion(Expr):
     >>> q2
     (3 + 4*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
 
+    Defining symbolic unit quaternions:
+    >>> from sympy import Quaternion
+    >>> from sympy.abc import w, x, y, z
+    >>> q = Quaternion(w, x, y, z, norm=1)
+    >>> q
+    w + x*i + y*j + z*k
+    >>> q.norm()
+    1
+
     References
     ==========
 
@@ -79,7 +106,7 @@ class Quaternion(Expr):
 
     is_commutative = False
 
-    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True):
+    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True, norm=None):
         a, b, c, d = map(sympify, (a, b, c, d))
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
@@ -91,7 +118,44 @@ class Quaternion(Expr):
             obj._c = c
             obj._d = d
             obj._real_field = real_field
+            obj.set_norm(norm)
             return obj
+
+    def set_norm(self, norm):
+        """Sets norm of an already instantiated quaternion.:
+
+        Parameters
+        ==========
+
+        norm : None or number
+            Pre-defined quaternion norm. If a value is given, Quaternion.norm
+            returns this pre-defined value instead of calculating the norm
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> q = Quaternion(a, b, c, d)
+        >>> q.norm()
+        sqrt(a**2 + b**2 + c**2 + d**2)
+
+        Setting the norm:
+
+        >>> q.set_norm(1)
+        >>> q.norm()
+        1
+
+        Removing set norm:
+
+        >>> q.set_norm(None)
+        >>> q.norm()
+        sqrt(a**2 + b**2 + c**2 + d**2)
+
+        """
+        norm = sympify(norm)
+        _check_norm(self.args, norm)
+        self._norm = norm
 
     @property
     def a(self):
@@ -790,28 +854,37 @@ class Quaternion(Expr):
             else:
                 raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
+        # If any of the quaternions has a fixed norm, pre-compute norm
+        if q1._norm is None and q2._norm is None:
+            norm = None
+        else:
+            norm = q1.norm() * q2.norm()
+
         return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
                           q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
                           -q1.b*q2.d + q1.c*q2.a + q1.d*q2.b + q1.a*q2.c,
-                          q1.b*q2.c - q1.c*q2.b + q1.d*q2.a + q1.a * q2.d)
+                          q1.b*q2.c - q1.c*q2.b + q1.d*q2.a + q1.a * q2.d,
+                          norm=norm)
 
     def _eval_conjugate(self):
         """Returns the conjugate of the quaternion."""
         q = self
-        return Quaternion(q.a, -q.b, -q.c, -q.d)
+        return Quaternion(q.a, -q.b, -q.c, -q.d, norm=q._norm)
 
     def norm(self):
         """Returns the norm of the quaternion."""
-        q = self
-        # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
-        # arise when from_axis_angle is used).
-        return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
+        if self._norm is None:  # check if norm is pre-defined
+            q = self
+            # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
+            # arise when from_axis_angle is used).
+            self._norm = sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
+
+        return self._norm
 
     def normalize(self):
         """Returns the normalized form of the quaternion."""
         q = self
         return q * (1/q.norm())
-
 
     def inverse(self):
         """Returns the inverse of the quaternion."""
@@ -922,6 +995,16 @@ class Quaternion(Expr):
         d = q.d * acos(q.a / q_norm) / vector_norm
 
         return Quaternion(a, b, c, d)
+
+    def _eval_subs(self, *args):
+        elements = [i.subs(*args) for i in self.args]
+        norm = self._norm
+        try:
+            norm = norm.subs(*args)
+        except AttributeError:
+            pass
+        _check_norm(elements, norm)
+        return Quaternion(*elements, norm=norm)
 
     def _eval_evalf(self, prec):
         """Returns the floating point approximations (decimal numbers) of the quaternion.
