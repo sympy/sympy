@@ -3,7 +3,6 @@ from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
     permutations, product
 )
-
 # For backwards compatibility
 from itertools import product as cartes # noqa: F401
 from operator import gt
@@ -2706,6 +2705,130 @@ def runs(seq, op=gt):
     return cycles
 
 
+def sequence_partitions(l, n, /):
+    r"""Returns the partition of sequence $l$ into $n$ bins
+
+    Explanation
+    ===========
+
+    Given the sequence $l_1 \cdots l_m \in V^+$ where
+    $V^+$ is the Kleene plus of $V$
+
+    The set of $n$ partitions of $l$ is defined as:
+
+    .. math::
+        \{(s_1, \cdots, s_n) | s_1 \in V^+, \cdots, s_n \in V^+,
+        s_1 \cdots s_n = l_1 \cdots l_m\}
+
+    Parameters
+    ==========
+
+    l : Sequence[T]
+        A nonempty sequence of any Python objects
+
+    n : int
+        A positive integer
+
+    Yields
+    ======
+
+    out : list[Sequence[T]]
+        A list of sequences with concatenation equals $l$.
+        This should conform with the type of $l$.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import sequence_partitions
+    >>> for out in sequence_partitions([1, 2, 3, 4], 2):
+    ...     print(out)
+    [[1], [2, 3, 4]]
+    [[1, 2], [3, 4]]
+    [[1, 2, 3], [4]]
+
+    Notes
+    =====
+
+    This is modified version of EnricoGiampieri's partition generator
+    from https://stackoverflow.com/questions/13131491/
+
+    See Also
+    ========
+
+    sequence_partitions_empty
+    """
+    # Asserting l is nonempty is done only for sanity check
+    if n == 1 and l:
+        yield [l]
+        return
+    for i in range(1, len(l)):
+        for part in sequence_partitions(l[i:], n - 1):
+            yield [l[:i]] + part
+
+
+def sequence_partitions_empty(l, n, /):
+    r"""Returns the partition of sequence $l$ into $n$ bins with
+    empty sequence
+
+    Explanation
+    ===========
+
+    Given the sequence $l_1 \cdots l_m \in V^*$ where
+    $V^*$ is the Kleene star of $V$
+
+    The set of $n$ partitions of $l$ is defined as:
+
+    .. math::
+        \{(s_1, \cdots, s_n) | s_1 \in V^*, \cdots, s_n \in V^*,
+        s_1 \cdots s_n = l_1 \cdots l_m\}
+
+    There are more combinations than :func:`sequence_partitions` because
+    empty sequence can fill everywhere, so we try to provide different
+    utility for this.
+
+    Parameters
+    ==========
+
+    l : Sequence[T]
+        A sequence of any Python objects (can be possibly empty)
+
+    n : int
+        A positive integer
+
+    Yields
+    ======
+
+    out : list[Sequence[T]]
+        A list of sequences with concatenation equals $l$.
+        This should conform with the type of $l$.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import sequence_partitions_empty
+    >>> for out in sequence_partitions_empty([1, 2, 3, 4], 2):
+    ...     print(out)
+    [[], [1, 2, 3, 4]]
+    [[1], [2, 3, 4]]
+    [[1, 2], [3, 4]]
+    [[1, 2, 3], [4]]
+    [[1, 2, 3, 4], []]
+
+    See Also
+    ========
+
+    sequence_partitions
+    """
+    if n < 1:
+        return
+    if n == 1:
+        yield [l]
+        return
+    for i in range(0, len(l) + 1):
+        for part in sequence_partitions_empty(l[i:], n - 1):
+            yield [l[:i]] + part
+
+
 def kbins(l, k, ordered=None):
     """
     Return sequence ``l`` partitioned into ``k`` bins.
@@ -2787,24 +2910,12 @@ def kbins(l, k, ordered=None):
     partitions, multiset_partitions
 
     """
-    def partition(lista, bins):
-        #  EnricoGiampieri's partition generator from
-        #  https://stackoverflow.com/questions/13131491/
-        #  partition-n-items-into-k-bins-in-python-lazily
-        if len(lista) == 1 or bins == 1:
-            yield [lista]
-        elif len(lista) > 1 and bins > 1:
-            for i in range(1, len(lista)):
-                for part in partition(lista[i:], bins - 1):
-                    if len([lista[:i]] + part) == bins:
-                        yield [lista[:i]] + part
-
     if ordered is None:
-        yield from partition(l, k)
+        yield from sequence_partitions(l, k)
     elif ordered == 11:
         for pl in multiset_permutations(l):
             pl = list(pl)
-            yield from partition(pl, k)
+            yield from sequence_partitions(pl, k)
     elif ordered == 00:
         yield from multiset_partitions(l, k)
     elif ordered == 10:
