@@ -8,7 +8,7 @@ from sympy.core import EulerGamma
 from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import (Abs, im, polar_lift, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
@@ -879,6 +879,20 @@ def test_as_sum_trapezoid():
     assert e.as_sum(n, method="trapezoid").expand() == \
         y**2 + y + Rational(1, 3) + 1/(6*n**2)
     assert Integral(sign(x), (x, 0, 1)).as_sum(1, 'trapezoid') == S.Half
+
+
+def test_as_sum_simpson():
+    e = Integral(sqrt(x), (x, 0, 2))
+    k = Dummy('k', integer=True, positive=True)
+    assert e.as_sum(2, method="simpson", evaluate=False).equals(
+            sqrt(2)/3 + \
+            4*Sum(sqrt(2*k - 1), (k, 1, 1))/3 + \
+            2*Sum(sqrt(2)*sqrt(k), (k, 1, 0))/3)
+    assert e.as_sum(4, method="simpson", evaluate=False).equals(
+            sqrt(2)/6 + \
+            Sum(sqrt(k), (k, 1, 1))/3 + \
+            2*Sum(sqrt(k - S.Half), (k, 1, 2))/3)
+    raises(ValueError, lambda: e.as_sum(3, method='simpson'))
 
 
 def test_as_sum_raises():

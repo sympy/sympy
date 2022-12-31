@@ -1202,7 +1202,7 @@ class Integral(AddWithLimits):
         n :
             The number of subintervals to use, optional.
         method :
-            One of: 'left', 'right', 'midpoint', 'trapezoid'.
+            One of: 'left', 'right', 'midpoint', 'trapezoid', 'simpson'.
         evaluate : bool
             If False, returns an unevaluated Sum expression. The default
             is True, evaluate the sum.
@@ -1210,7 +1210,7 @@ class Integral(AddWithLimits):
         Notes
         =====
 
-        These methods of approximate integration are described in [1].
+        These methods of approximate integration are described in [1], [2].
 
         Examples
         ========
@@ -1249,6 +1249,13 @@ class Integral(AddWithLimits):
         2*sin(5) + sin(3) + sin(7)
         >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == _
         True
+
+        The simpson 1/3 rule is a case of closed Newton-Cotes formulas.
+        These are a group of formulas based on evaluating the integrand
+        at equally spaced points.
+
+        >>> e.as_sum(2, 'simpson')
+        8*sin(5)/3 + 2*sin(3)/3 + 2*sin(7)/3
 
         Here, the discontinuity at x = 0 can be avoided by using the
         midpoint or right-hand method:
@@ -1294,6 +1301,7 @@ class Integral(AddWithLimits):
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
+        .. [2] https://en.wikipedia.org/wiki/Simpson's_rule
         """
 
         from sympy.concrete.summations import Sum
@@ -1314,6 +1322,8 @@ class Integral(AddWithLimits):
         if (n.is_positive is False or n.is_integer is False or
             n.is_finite is False):
             raise ValueError("n must be a positive integer, got %s" % n)
+        if (n.is_odd and method == "simpson"):
+            raise ValueError("n must be even for Simpson's rule")
         x, a, b = limit
         dx = (b - a)/n
         k = Dummy('k', integer=True, positive=True)
@@ -1328,9 +1338,15 @@ class Integral(AddWithLimits):
         elif method == "trapezoid":
             result = dx*((f.subs(x, a) + f.subs(x, b))/2 +
                 Sum(f.subs(x, a + k*dx), (k, 1, n - 1)))
+        elif method == "simpson":
+            result = dx*((f.subs(x, a) +
+                4 * Sum(f.subs(x, a + (2*k-1)*dx), (k, 1, n / 2)) +
+                2 * Sum(f.subs(x, a + 2*k*dx), (k, 1, (n / 2) - 1))) +
+                f.subs(x, b))/3
         else:
             raise ValueError("Unknown method %s" % method)
         return result.doit() if evaluate else result
+
 
     def principal_value(self, **kwargs):
         """
