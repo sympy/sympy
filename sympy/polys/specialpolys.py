@@ -94,10 +94,12 @@ def symmetric_poly(n, *gens, polys=False):
     """
     Generates symmetric polynomial of order `n`.
 
-    Parameters:
+    Parameters
+    ==========
+
     polys: bool, optional (default: False)
-    Returns a Poly object when ``polys=True``, otherwise
-    (default) returns an expression.
+        Returns a Poly object when ``polys=True``, otherwise
+        (default) returns an expression.
     """
     gens = _analyze_gens(gens)
 
