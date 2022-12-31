@@ -668,7 +668,7 @@ def hyperfocal_distance(f, N, c):
 
     return (1/(N * c))*(f**2)
 
-def transverse_magnification(si, so):
+def transverse_magnification_lens(si, so):
     """
 
     Calculates the transverse magnification, which is the ratio of the
@@ -686,8 +686,37 @@ def transverse_magnification(si, so):
     Example
     =======
 
-    >>> from sympy.physics.optics import transverse_magnification
-    >>> transverse_magnification(30, 15)
+    >>> from sympy.physics.optics import transverse_magnification_lens
+    >>> transverse_magnification_lens(30, 15)
+    2
+
+    """
+
+    si = sympify(si)
+    so = sympify(so)
+
+    return (si/so)
+
+def transverse_magnification_mirror(si, so):
+    """
+
+    Calculates the transverse magnification, which is the ratio of the
+    image size to the object size.
+
+    Parameters
+    ==========
+
+    so: sympifiable
+        Mirror-object distance.
+
+    si: sympifiable
+        Mirror-image distance.
+
+    Example
+    =======
+
+    >>> from sympy.physics.optics import transverse_magnification_mirror
+    >>> transverse_magnification_mirror(30, 15)
     -2
 
     """
