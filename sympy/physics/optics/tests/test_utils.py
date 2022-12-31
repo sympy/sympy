@@ -190,8 +190,6 @@ def test_transverse_magnification_lens():
     assert transverse_magnification_lens(si, so) == si/so
     assert transverse_magnification_lens(30, 15) == 2
 
-
-
 def test_lens_makers_formula_thick_lens():
     n1, n2 = symbols('n1, n2')
     m1 = Medium('m1', permittivity=e0, n=1)
