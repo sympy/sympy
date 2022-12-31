@@ -2705,7 +2705,7 @@ def runs(seq, op=gt):
     return cycles
 
 
-def sequence_partitions(l, n):
+def sequence_partitions(l, n, /):
     r"""Returns the partition of sequence $l$ into $n$ bins
 
     Explanation
@@ -2766,7 +2766,7 @@ def sequence_partitions(l, n):
             yield [l[:i]] + part
 
 
-def sequence_partitions_empty(l, n):
+def sequence_partitions_empty(l, n, /):
     r"""Returns the partition of sequence $l$ into $n$ bins with
     empty sequence
 
