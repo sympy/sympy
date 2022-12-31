@@ -116,6 +116,7 @@ class TensorProduct(Expr):
         (A + B)xC
         >>> tp.expand(tensorproduct=True)
         AxC + BxC
+        >>> from sympy.physics.quantum.qapply import qapply
         >>> qapply(tp)
         AxC + BxC
     """
