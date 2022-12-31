@@ -1,3 +1,6 @@
+"""Evaluates quantum expressions by applying operators to operators and states.
+"""
+
 # qapply - evaluate expressions of quantum expressions
 #
 # See e.g. https://github.com/sympy/sympy/issues/17665 for a discussion of qapply
@@ -46,10 +49,6 @@
 #       Classical outer/inner product is implemented by sympy.physics.vector.functions.outer resp.
 #       sympy.matrices.dot/sympy.physics.vector.functions.dot).
 
-
-"""Evaluates quantum expressions by applying operators to operators and states.
-The expressions are expanded as far as required to apply factors to summands.
-"""
 
 from typing import cast, Any, List, Tuple # keep compatibility with Python 3.8
 from sympy.core.expr import Expr
@@ -528,7 +527,7 @@ def qapply(e, **options):
             expf = e.exp - expi # fractional part, 0 if we couldn't identify a fractional part
 
             # if expi can be be determined to be integer exponent >= 2, we try harder:
-            if expi.is_integer and 2 <= expi:  # Note: use .is_integer; .is_Integer checks for type Integer
+            if expi.is_integer and (expi - 2).is_nonnegative: # Note: use .is_integer; .is_Integer checks for type Integer
                 if ncl != []: # base has two or more nc-factors
                     # if base=a*b*c and c*a is commutative, then base**expi=(c*a)**(expi-1) * a * b**expi * c.
                     # We don't check all possible factors, just the simplest case so that

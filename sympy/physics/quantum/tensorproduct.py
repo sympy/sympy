@@ -108,13 +108,15 @@ class TensorProduct(Expr):
         >>> Dagger(tp)
         Dagger(A)xDagger(B)
 
-    Expand can be used to distribute a tensor product across addition:
+    Expand or qapply can be used to distribute a tensor product across addition:
 
         >>> C = Symbol('C',commutative=False)
         >>> tp = TensorProduct(A+B,C)
         >>> tp
         (A + B)xC
         >>> tp.expand(tensorproduct=True)
+        AxC + BxC
+        >>> qapply(tp)
         AxC + BxC
     """
     is_commutative = False
