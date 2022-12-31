@@ -3219,17 +3219,15 @@ class PermutationGroup(Basic):
                 self._is_abelian = True
                 return True
 
-        for p in factors:
-            pgens = []
-            for g in self.generators:
-                pgens.append(g**p)
-            if self.index(self.subgroup(pgens)) != p:
-                self._is_cyclic = False
-                return False
+        if not self.is_abelian:
+            self._is_cyclic = False
+            return False
 
-        self._is_cyclic = True
-        self._is_abelian = True
-        return True
+        self._is_cyclic = all(
+            any(g**(order//p) != self.identity for g in self.generators)
+            for p in factors
+        )
+        return self._is_cyclic
 
     @property
     def is_dihedral(self):

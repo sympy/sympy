@@ -1046,6 +1046,9 @@ def test_cyclic():
     assert G.is_cyclic
     assert G._is_abelian
 
+    G = PermutationGroup(*SymmetricGroup(3).generators)
+    assert G.is_cyclic is False
+
 
 def test_dihedral():
     G = SymmetricGroup(2)
