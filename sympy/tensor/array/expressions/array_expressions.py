@@ -4,7 +4,7 @@ from collections import defaultdict, Counter
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Optional, List, Dict as tDict, Tuple as tTuple
+from typing import Optional, List, Tuple as tTuple
 
 import typing
 
@@ -779,7 +779,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
             rank2 = len(diagonal_indices)
             rank3 = rank1 - rank2
             inv_permutation = []
-            counter1: int = 0
+            counter1 = 0
             indices_down = ArrayDiagonal._push_indices_down(diagonal_indices_short, list(range(rank1)), get_rank(expr))
             for i in indices_down:
                 if i in trivial_pos:
@@ -1154,8 +1154,8 @@ class ArrayContraction(_CodegenArrayAbstract):
             # Also consider the case of diagonal matrices being contracted:
             current_dimension = self.expr.shape[links[0]]
 
-            not_vectors: tTuple[_ArgE, int] = []
-            vectors: tTuple[_ArgE, int] = []
+            not_vectors = []
+            vectors = []
             for arg_ind, rel_ind in positions:
                 arg = editor.args_with_ind[arg_ind]
                 mat = arg.element
@@ -1702,12 +1702,12 @@ class _EditArrayContraction:
         return self.number_of_contraction_indices - 1
 
     def refresh_indices(self):
-        updates: tDict[int, int] = {}
+        updates = {}
         for arg_with_ind in self.args_with_ind:
             updates.update({i: -1 for i in arg_with_ind.indices if i is not None})
         for i, e in enumerate(sorted(updates)):
             updates[e] = i
-        self.number_of_contraction_indices: int = len(updates)
+        self.number_of_contraction_indices = len(updates)
         for arg_with_ind in self.args_with_ind:
             arg_with_ind.indices = [updates.get(i, None) for i in arg_with_ind.indices]
 
@@ -1847,8 +1847,8 @@ class _EditArrayContraction:
     def track_permutation_start(self):
         permutation = []
         perm_diag = []
-        counter: int = 0
-        counter2: int = -1
+        counter = 0
+        counter2 = -1
         for arg_with_ind in self.args_with_ind:
             perm = []
             for i in arg_with_ind.indices:
