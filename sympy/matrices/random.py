@@ -2,7 +2,7 @@ from math import isclose
 
 from ..core import I
 from ..core.mul import Mul
-from ..core.numbers import Number, One
+from ..core.numbers import Number
 from ..core.random import sample
 from ..core.sympify import _sympify as sympify
 from ..functions import sqrt, re, im, conjugate
