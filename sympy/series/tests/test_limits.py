@@ -717,7 +717,7 @@ def test_issue_8462():
 def test_issue_8634():
     n = Symbol('n', integer=True, positive=True)
     x = Symbol('x')
-    assert limit(x**n, x, -oo) == -oo*(-1)**(1 - n)
+    assert limit(x**n, x, -oo) == oo*sign((-1)**n)
 
 
 def test_issue_8635_18176():
