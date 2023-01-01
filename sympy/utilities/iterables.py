@@ -785,7 +785,7 @@ def postfixes(seq):
         yield seq[n - i - 1:]
 
 
-def topological_sort(graph, key=None):
+def topological_sort(graph, key=lambda value : value):
     r"""
     Topological sort of graph's vertices.
 
@@ -796,7 +796,7 @@ def topological_sort(graph, key=None):
         A tuple consisting of a list of vertices and a list of edges of
         a graph to be sorted topologically.
 
-    key : callable[T] (optional)
+    key : callable[T], optional (default: lambda value : value)
         Ordering key for vertices on the same level. By default the natural
         (e.g. lexicographic) ordering is used (in this case the base type
         must implement ordering relations).
@@ -864,9 +864,6 @@ def topological_sort(graph, key=None):
 
     for v, u in E:
         S.discard(u)
-
-    if key is None:
-        key = lambda value: value
 
     S = sorted(S, key=key, reverse=True)
 
