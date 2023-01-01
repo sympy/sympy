@@ -296,6 +296,9 @@ class IdentityOperator(Operator):
     def _apply_operator(self, ket, **options):
         return ket
 
+    def _apply_from_right_to(self, bra, **options):
+        return bra
+
     def _eval_power(self, exp):
         return self
 
@@ -612,7 +615,7 @@ class DifferentialOperator(Operator):
 
         return self.expr.free_symbols
 
-    def _apply_operator_Wavefunction(self, func):
+    def _apply_operator_Wavefunction(self, func, **options):
         from sympy.physics.quantum.state import Wavefunction
         var = self.variables
         wf_vars = func.args[1:]

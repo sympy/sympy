@@ -660,7 +660,7 @@ def _det(M, method="bareiss", iszerofunc=None):
 
     dets = []
     for b in M.strongly_connected_components():
-        if method == "domain-ge": # uses DomainMatrix to evalute determinant
+        if method == "domain-ge": # uses DomainMatrix to evaluate determinant
             det = _det_DOM(M[b, b])
         elif method == "bareiss":
             det = M[b, b]._eval_det_bareiss(iszerofunc=iszerofunc)

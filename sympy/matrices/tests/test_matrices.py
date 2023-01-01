@@ -32,7 +32,7 @@ from sympy.matrices.utilities import _dotprodsimp_state
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture, iterable
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import ignore_warnings, SymPyDeprecationWarning
 from sympy.testing.pytest import (raises, XFAIL, slow, skip,
                                   warns_deprecated_sympy, warns)
 from sympy.assumptions import Q
@@ -2702,7 +2702,8 @@ def test_17522_numpy():
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 
-    m = _matrixify(matrix([[1, 2], [3, 4]]))
+    with ignore_warnings(PendingDeprecationWarning):
+        m = _matrixify(matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 

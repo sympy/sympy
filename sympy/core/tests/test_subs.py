@@ -8,6 +8,7 @@ from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi, zoo)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.core.sympify import SympifyError
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
@@ -19,7 +20,7 @@ from sympy.polys.rootoftools import RootOf
 from sympy.simplify.cse_main import cse
 from sympy.simplify.simplify import nsimplify
 from sympy.core.basic import _aresame
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import a, x, y, z, t
 
 
@@ -781,8 +782,8 @@ def test_issue_8886():
     # doesn't play well with SymPy and disallow the
     # substitution
     v = R('A').x
-    assert x.subs(x, v) == x
-    assert v.subs(v, x) == v
+    raises(SympifyError, lambda: x.subs(x, v))
+    raises(SympifyError, lambda: v.subs(v, x))
     assert v.__eq__(x) is False
 
 
@@ -880,7 +881,6 @@ def test_issue_19558():
 
     assert e.subs(x, oo) == AccumBounds(-oo, oo)
     assert (sin(x) + cos(x)).subs(x, oo) == AccumBounds(-2, 2)
-
 
 
 def test_issue_22033():

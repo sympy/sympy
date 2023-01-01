@@ -383,8 +383,8 @@ def test_inverse_mellin_transform():
         (1 + sqrt(x + 1))**c
     assert simplify(IMT(2**(a + 2*s)*b**(a + 2*s - 1)*gamma(s)*gamma(1 - a - 2*s)
                         /gamma(1 - a - s), s, x, (0, (-re(a) + 1)/2))) == \
-        b**(a - 1)*(sqrt(1 + x/b**2) + 1)**(a - 1)*(b**2*sqrt(1 + x/b**2) +
-        b**2 + x)/(b**2 + x)
+        b**(a - 1)*(b**2*(sqrt(1 + x/b**2) + 1)**a + x*(sqrt(1 + x/b**2) + 1
+        )**(a - 1))/(b**2 + x)
     assert simplify(IMT(-2**(c + 2*s)*c*b**(c + 2*s)*gamma(s)*gamma(-c - 2*s)
                         / gamma(-c - s + 1), s, x, (0, -re(c)/2))) == \
         b**c*(sqrt(1 + x/b**2) + 1)**c
@@ -707,6 +707,10 @@ def test_laplace_transform():
     assert inverse_laplace_transform(
         f(w), w, t, plane=0) == InverseLaplaceTransform(f(w), w, t, 0)
     assert LT(f(t)*g(t), t, s) == LaplaceTransform(f(t)*g(t), t, s)
+    # Issue #24294
+    assert LT(b*f(a*t), t, s) == b*LaplaceTransform(f(t), t, s/a)/a
+    assert LT(3*exp(t)*Heaviside(t), t, s) == (3/(s - 1), 1, True)
+    assert LT(2*sin(t)*Heaviside(t), t, s) == (2/(s**2 + 1), 0, True)
 
     # additional basic tests from wikipedia
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
@@ -759,7 +763,7 @@ def test_laplace_transform():
     Ms = Matrix([[    1/(s - 1), (s + 1)**(-2)],
                  [(s + 1)**(-2),     1/(s - 1)]])
 
-    # The default behaviour for Laplace tranform of a Matrix returns a Matrix
+    # The default behaviour for Laplace transform of a Matrix returns a Matrix
     # of Tuples and is deprecated:
     with warns_deprecated_sympy():
         Ms_conds = Matrix([[(1/(s - 1), 1, True), ((s + 1)**(-2),

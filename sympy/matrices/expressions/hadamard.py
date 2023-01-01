@@ -11,6 +11,7 @@ from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort
 )
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 def hadamard_product(*matrices):
@@ -36,7 +37,6 @@ def hadamard_product(*matrices):
     if len(matrices) == 1:
         return matrices[0]
     else:
-        matrices = [i for i in matrices if not i.is_Identity]
         return HadamardProduct(*matrices).doit()
 
 
@@ -64,10 +64,24 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, evaluate=False, check=True):
+    def __new__(cls, *args, evaluate=False, check=None):
         args = list(map(sympify, args))
-        if check:
+        if len(args) == 0:
+            # We currently don't have a way to support one-matrices of generic dimensions:
+            raise ValueError("HadamardProduct needs at least one argument")
+        if check is not None:
+            sympy_deprecation_warning(
+                "Passing check to HadamardProduct is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
+
+        if check in (True, None):
             validate(*args)
+        else:
+            sympy_deprecation_warning(
+                "Passing check=False to HadamardProduct is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
 
         obj = super().__new__(cls, *args)
         if evaluate:

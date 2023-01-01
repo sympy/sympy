@@ -61,7 +61,7 @@ class Point:
         Add two points self and Q where diff = self - Q. Moreover the assumption
         is self.x_cord*Q.x_cord*(self.x_cord - Q.x_cord) != 0. This algorithm
         requires 6 multiplications. Here the difference between the points
-        is already known and using this algorihtm speeds up the addition
+        is already known and using this algorithm speeds up the addition
         by reducing the number of multiplication required. Also in the
         mont_ladder algorithm is constructed in a way so that the difference
         between intermediate points is always equal to the initial point.

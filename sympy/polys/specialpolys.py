@@ -90,13 +90,17 @@ def cyclotomic_poly(n, x=None, polys=False):
 
 
 @public
-def symmetric_poly(n, *gens, **args):
-    """Generates symmetric polynomial of order `n`.
-
-    Returns a Poly object when ``polys=True``, otherwise
-    (default) returns an expression.
+def symmetric_poly(n, *gens, polys=False):
     """
-    # TODO: use an explicit keyword argument
+    Generates symmetric polynomial of order `n`.
+
+    Parameters
+    ==========
+
+    polys: bool, optional (default: False)
+        Returns a Poly object when ``polys=True``, otherwise
+        (default) returns an expression.
+    """
     gens = _analyze_gens(gens)
 
     if n < 0 or n > len(gens) or not gens:
@@ -106,10 +110,7 @@ def symmetric_poly(n, *gens, **args):
     else:
         poly = Add(*[Mul(*s) for s in subsets(gens, int(n))])
 
-    if not args.get('polys', False):
-        return poly
-    else:
-        return Poly(poly, *gens)
+    return Poly(poly, *gens) if polys else poly
 
 
 @public

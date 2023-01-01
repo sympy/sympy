@@ -17,7 +17,7 @@ else:
 
 def serializedATN():
     return [
-        4,1,91,518,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
+        4,1,91,522,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,
         6,2,7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,
         2,14,7,14,2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,
         7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,24,2,25,7,25,2,26,7,26,
@@ -57,105 +57,105 @@ def serializedATN():
         32,1,32,1,32,1,32,1,32,1,32,1,32,1,32,1,32,1,32,1,32,1,32,1,32,3,
         32,453,8,32,1,32,1,32,1,32,1,32,1,32,1,32,3,32,461,8,32,1,33,1,33,
         1,33,1,33,1,33,3,33,468,8,33,1,34,1,34,1,34,1,34,1,34,1,34,1,34,
-        1,34,1,34,3,34,479,8,34,1,34,1,34,1,35,1,35,1,35,1,35,1,35,3,35,
-        488,8,35,1,36,1,36,1,37,1,37,1,37,1,37,1,37,1,37,3,37,498,8,37,1,
-        38,1,38,1,38,1,38,1,38,1,38,3,38,506,8,38,1,39,1,39,1,39,1,39,1,
-        39,1,40,1,40,1,40,1,40,1,40,1,40,0,6,2,8,10,12,30,32,41,0,2,4,6,
-        8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,
-        52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,0,9,2,0,79,82,85,86,
-        1,0,15,16,3,0,17,18,65,67,75,75,2,0,77,77,91,91,1,0,27,28,2,0,27,
-        27,29,29,1,0,69,71,1,0,37,58,1,0,35,36,557,0,82,1,0,0,0,2,84,1,0,
-        0,0,4,95,1,0,0,0,6,99,1,0,0,0,8,101,1,0,0,0,10,112,1,0,0,0,12,123,
-        1,0,0,0,14,141,1,0,0,0,16,152,1,0,0,0,18,154,1,0,0,0,20,161,1,0,
-        0,0,22,170,1,0,0,0,24,172,1,0,0,0,26,180,1,0,0,0,28,188,1,0,0,0,
-        30,196,1,0,0,0,32,216,1,0,0,0,34,242,1,0,0,0,36,249,1,0,0,0,38,267,
-        1,0,0,0,40,269,1,0,0,0,42,274,1,0,0,0,44,317,1,0,0,0,46,319,1,0,
-        0,0,48,323,1,0,0,0,50,327,1,0,0,0,52,335,1,0,0,0,54,338,1,0,0,0,
-        56,353,1,0,0,0,58,361,1,0,0,0,60,365,1,0,0,0,62,369,1,0,0,0,64,460,
-        1,0,0,0,66,467,1,0,0,0,68,469,1,0,0,0,70,487,1,0,0,0,72,489,1,0,
-        0,0,74,491,1,0,0,0,76,499,1,0,0,0,78,507,1,0,0,0,80,512,1,0,0,0,
-        82,83,3,2,1,0,83,1,1,0,0,0,84,85,6,1,-1,0,85,86,3,6,3,0,86,92,1,
-        0,0,0,87,88,10,2,0,0,88,89,7,0,0,0,89,91,3,2,1,3,90,87,1,0,0,0,91,
-        94,1,0,0,0,92,90,1,0,0,0,92,93,1,0,0,0,93,3,1,0,0,0,94,92,1,0,0,
-        0,95,96,3,6,3,0,96,97,5,79,0,0,97,98,3,6,3,0,98,5,1,0,0,0,99,100,
-        3,8,4,0,100,7,1,0,0,0,101,102,6,4,-1,0,102,103,3,10,5,0,103,109,
-        1,0,0,0,104,105,10,2,0,0,105,106,7,1,0,0,106,108,3,8,4,3,107,104,
-        1,0,0,0,108,111,1,0,0,0,109,107,1,0,0,0,109,110,1,0,0,0,110,9,1,
-        0,0,0,111,109,1,0,0,0,112,113,6,5,-1,0,113,114,3,14,7,0,114,120,
-        1,0,0,0,115,116,10,2,0,0,116,117,7,2,0,0,117,119,3,10,5,3,118,115,
-        1,0,0,0,119,122,1,0,0,0,120,118,1,0,0,0,120,121,1,0,0,0,121,11,1,
-        0,0,0,122,120,1,0,0,0,123,124,6,6,-1,0,124,125,3,16,8,0,125,131,
-        1,0,0,0,126,127,10,2,0,0,127,128,7,2,0,0,128,130,3,12,6,3,129,126,
-        1,0,0,0,130,133,1,0,0,0,131,129,1,0,0,0,131,132,1,0,0,0,132,13,1,
-        0,0,0,133,131,1,0,0,0,134,135,7,1,0,0,135,142,3,14,7,0,136,138,3,
-        18,9,0,137,136,1,0,0,0,138,139,1,0,0,0,139,137,1,0,0,0,139,140,1,
-        0,0,0,140,142,1,0,0,0,141,134,1,0,0,0,141,137,1,0,0,0,142,15,1,0,
-        0,0,143,144,7,1,0,0,144,153,3,16,8,0,145,149,3,18,9,0,146,148,3,
-        20,10,0,147,146,1,0,0,0,148,151,1,0,0,0,149,147,1,0,0,0,149,150,
-        1,0,0,0,150,153,1,0,0,0,151,149,1,0,0,0,152,143,1,0,0,0,152,145,
-        1,0,0,0,153,17,1,0,0,0,154,158,3,30,15,0,155,157,3,22,11,0,156,155,
-        1,0,0,0,157,160,1,0,0,0,158,156,1,0,0,0,158,159,1,0,0,0,159,19,1,
-        0,0,0,160,158,1,0,0,0,161,165,3,32,16,0,162,164,3,22,11,0,163,162,
-        1,0,0,0,164,167,1,0,0,0,165,163,1,0,0,0,165,166,1,0,0,0,166,21,1,
-        0,0,0,167,165,1,0,0,0,168,171,5,89,0,0,169,171,3,24,12,0,170,168,
-        1,0,0,0,170,169,1,0,0,0,171,23,1,0,0,0,172,178,5,27,0,0,173,179,
-        3,28,14,0,174,179,3,26,13,0,175,176,3,28,14,0,176,177,3,26,13,0,
-        177,179,1,0,0,0,178,173,1,0,0,0,178,174,1,0,0,0,178,175,1,0,0,0,
-        179,25,1,0,0,0,180,181,5,73,0,0,181,184,5,21,0,0,182,185,3,6,3,0,
-        183,185,3,4,2,0,184,182,1,0,0,0,184,183,1,0,0,0,185,186,1,0,0,0,
-        186,187,5,22,0,0,187,27,1,0,0,0,188,189,5,74,0,0,189,192,5,21,0,
-        0,190,193,3,6,3,0,191,193,3,4,2,0,192,190,1,0,0,0,192,191,1,0,0,
-        0,193,194,1,0,0,0,194,195,5,22,0,0,195,29,1,0,0,0,196,197,6,15,-1,
-        0,197,198,3,34,17,0,198,213,1,0,0,0,199,200,10,2,0,0,200,206,5,74,
-        0,0,201,207,3,44,22,0,202,203,5,21,0,0,203,204,3,6,3,0,204,205,5,
-        22,0,0,205,207,1,0,0,0,206,201,1,0,0,0,206,202,1,0,0,0,207,209,1,
-        0,0,0,208,210,3,74,37,0,209,208,1,0,0,0,209,210,1,0,0,0,210,212,
-        1,0,0,0,211,199,1,0,0,0,212,215,1,0,0,0,213,211,1,0,0,0,213,214,
-        1,0,0,0,214,31,1,0,0,0,215,213,1,0,0,0,216,217,6,16,-1,0,217,218,
-        3,36,18,0,218,233,1,0,0,0,219,220,10,2,0,0,220,226,5,74,0,0,221,
-        227,3,44,22,0,222,223,5,21,0,0,223,224,3,6,3,0,224,225,5,22,0,0,
-        225,227,1,0,0,0,226,221,1,0,0,0,226,222,1,0,0,0,227,229,1,0,0,0,
-        228,230,3,74,37,0,229,228,1,0,0,0,229,230,1,0,0,0,230,232,1,0,0,
-        0,231,219,1,0,0,0,232,235,1,0,0,0,233,231,1,0,0,0,233,234,1,0,0,
-        0,234,33,1,0,0,0,235,233,1,0,0,0,236,243,3,38,19,0,237,243,3,40,
-        20,0,238,243,3,64,32,0,239,243,3,44,22,0,240,243,3,58,29,0,241,243,
-        3,60,30,0,242,236,1,0,0,0,242,237,1,0,0,0,242,238,1,0,0,0,242,239,
-        1,0,0,0,242,240,1,0,0,0,242,241,1,0,0,0,243,35,1,0,0,0,244,250,3,
-        38,19,0,245,250,3,40,20,0,246,250,3,44,22,0,247,250,3,58,29,0,248,
-        250,3,60,30,0,249,244,1,0,0,0,249,245,1,0,0,0,249,246,1,0,0,0,249,
-        247,1,0,0,0,249,248,1,0,0,0,250,37,1,0,0,0,251,252,5,19,0,0,252,
-        253,3,6,3,0,253,254,5,20,0,0,254,268,1,0,0,0,255,256,5,25,0,0,256,
-        257,3,6,3,0,257,258,5,26,0,0,258,268,1,0,0,0,259,260,5,21,0,0,260,
-        261,3,6,3,0,261,262,5,22,0,0,262,268,1,0,0,0,263,264,5,23,0,0,264,
-        265,3,6,3,0,265,266,5,24,0,0,266,268,1,0,0,0,267,251,1,0,0,0,267,
-        255,1,0,0,0,267,259,1,0,0,0,267,263,1,0,0,0,268,39,1,0,0,0,269,270,
-        5,27,0,0,270,271,3,6,3,0,271,272,5,27,0,0,272,41,1,0,0,0,273,275,
-        5,78,0,0,274,273,1,0,0,0,275,276,1,0,0,0,276,274,1,0,0,0,276,277,
-        1,0,0,0,277,284,1,0,0,0,278,279,5,1,0,0,279,280,5,78,0,0,280,281,
-        5,78,0,0,281,283,5,78,0,0,282,278,1,0,0,0,283,286,1,0,0,0,284,282,
-        1,0,0,0,284,285,1,0,0,0,285,293,1,0,0,0,286,284,1,0,0,0,287,289,
-        5,2,0,0,288,290,5,78,0,0,289,288,1,0,0,0,290,291,1,0,0,0,291,289,
-        1,0,0,0,291,292,1,0,0,0,292,294,1,0,0,0,293,287,1,0,0,0,293,294,
-        1,0,0,0,294,43,1,0,0,0,295,308,7,3,0,0,296,298,3,74,37,0,297,296,
-        1,0,0,0,297,298,1,0,0,0,298,300,1,0,0,0,299,301,5,90,0,0,300,299,
-        1,0,0,0,300,301,1,0,0,0,301,309,1,0,0,0,302,304,5,90,0,0,303,302,
-        1,0,0,0,303,304,1,0,0,0,304,306,1,0,0,0,305,307,3,74,37,0,306,305,
-        1,0,0,0,306,307,1,0,0,0,307,309,1,0,0,0,308,297,1,0,0,0,308,303,
-        1,0,0,0,309,318,1,0,0,0,310,318,3,42,21,0,311,318,5,76,0,0,312,318,
-        3,50,25,0,313,318,3,54,27,0,314,318,3,56,28,0,315,318,3,46,23,0,
-        316,318,3,48,24,0,317,295,1,0,0,0,317,310,1,0,0,0,317,311,1,0,0,
-        0,317,312,1,0,0,0,317,313,1,0,0,0,317,314,1,0,0,0,317,315,1,0,0,
-        0,317,316,1,0,0,0,318,45,1,0,0,0,319,320,5,30,0,0,320,321,3,6,3,
-        0,321,322,7,4,0,0,322,47,1,0,0,0,323,324,7,5,0,0,324,325,3,6,3,0,
-        325,326,5,31,0,0,326,49,1,0,0,0,327,328,5,72,0,0,328,329,5,21,0,
-        0,329,330,3,52,26,0,330,331,5,22,0,0,331,51,1,0,0,0,332,334,5,77,
-        0,0,333,332,1,0,0,0,334,337,1,0,0,0,335,333,1,0,0,0,335,336,1,0,
-        0,0,336,53,1,0,0,0,337,335,1,0,0,0,338,344,5,68,0,0,339,345,5,78,
-        0,0,340,341,5,21,0,0,341,342,3,6,3,0,342,343,5,22,0,0,343,345,1,
-        0,0,0,344,339,1,0,0,0,344,340,1,0,0,0,345,351,1,0,0,0,346,352,5,
-        78,0,0,347,348,5,21,0,0,348,349,3,6,3,0,349,350,5,22,0,0,350,352,
-        1,0,0,0,351,346,1,0,0,0,351,347,1,0,0,0,352,55,1,0,0,0,353,354,7,
-        6,0,0,354,355,5,21,0,0,355,356,3,6,3,0,356,357,5,22,0,0,357,358,
+        1,34,1,34,1,34,1,34,3,34,481,8,34,3,34,483,8,34,1,34,1,34,1,35,1,
+        35,1,35,1,35,1,35,3,35,492,8,35,1,36,1,36,1,37,1,37,1,37,1,37,1,
+        37,1,37,3,37,502,8,37,1,38,1,38,1,38,1,38,1,38,1,38,3,38,510,8,38,
+        1,39,1,39,1,39,1,39,1,39,1,40,1,40,1,40,1,40,1,40,1,40,0,6,2,8,10,
+        12,30,32,41,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,
+        38,40,42,44,46,48,50,52,54,56,58,60,62,64,66,68,70,72,74,76,78,80,
+        0,9,2,0,79,82,85,86,1,0,15,16,3,0,17,18,65,67,75,75,2,0,77,77,91,
+        91,1,0,27,28,2,0,27,27,29,29,1,0,69,71,1,0,37,58,1,0,35,36,563,0,
+        82,1,0,0,0,2,84,1,0,0,0,4,95,1,0,0,0,6,99,1,0,0,0,8,101,1,0,0,0,
+        10,112,1,0,0,0,12,123,1,0,0,0,14,141,1,0,0,0,16,152,1,0,0,0,18,154,
+        1,0,0,0,20,161,1,0,0,0,22,170,1,0,0,0,24,172,1,0,0,0,26,180,1,0,
+        0,0,28,188,1,0,0,0,30,196,1,0,0,0,32,216,1,0,0,0,34,242,1,0,0,0,
+        36,249,1,0,0,0,38,267,1,0,0,0,40,269,1,0,0,0,42,274,1,0,0,0,44,317,
+        1,0,0,0,46,319,1,0,0,0,48,323,1,0,0,0,50,327,1,0,0,0,52,335,1,0,
+        0,0,54,338,1,0,0,0,56,353,1,0,0,0,58,361,1,0,0,0,60,365,1,0,0,0,
+        62,369,1,0,0,0,64,460,1,0,0,0,66,467,1,0,0,0,68,469,1,0,0,0,70,491,
+        1,0,0,0,72,493,1,0,0,0,74,495,1,0,0,0,76,503,1,0,0,0,78,511,1,0,
+        0,0,80,516,1,0,0,0,82,83,3,2,1,0,83,1,1,0,0,0,84,85,6,1,-1,0,85,
+        86,3,6,3,0,86,92,1,0,0,0,87,88,10,2,0,0,88,89,7,0,0,0,89,91,3,2,
+        1,3,90,87,1,0,0,0,91,94,1,0,0,0,92,90,1,0,0,0,92,93,1,0,0,0,93,3,
+        1,0,0,0,94,92,1,0,0,0,95,96,3,6,3,0,96,97,5,79,0,0,97,98,3,6,3,0,
+        98,5,1,0,0,0,99,100,3,8,4,0,100,7,1,0,0,0,101,102,6,4,-1,0,102,103,
+        3,10,5,0,103,109,1,0,0,0,104,105,10,2,0,0,105,106,7,1,0,0,106,108,
+        3,8,4,3,107,104,1,0,0,0,108,111,1,0,0,0,109,107,1,0,0,0,109,110,
+        1,0,0,0,110,9,1,0,0,0,111,109,1,0,0,0,112,113,6,5,-1,0,113,114,3,
+        14,7,0,114,120,1,0,0,0,115,116,10,2,0,0,116,117,7,2,0,0,117,119,
+        3,10,5,3,118,115,1,0,0,0,119,122,1,0,0,0,120,118,1,0,0,0,120,121,
+        1,0,0,0,121,11,1,0,0,0,122,120,1,0,0,0,123,124,6,6,-1,0,124,125,
+        3,16,8,0,125,131,1,0,0,0,126,127,10,2,0,0,127,128,7,2,0,0,128,130,
+        3,12,6,3,129,126,1,0,0,0,130,133,1,0,0,0,131,129,1,0,0,0,131,132,
+        1,0,0,0,132,13,1,0,0,0,133,131,1,0,0,0,134,135,7,1,0,0,135,142,3,
+        14,7,0,136,138,3,18,9,0,137,136,1,0,0,0,138,139,1,0,0,0,139,137,
+        1,0,0,0,139,140,1,0,0,0,140,142,1,0,0,0,141,134,1,0,0,0,141,137,
+        1,0,0,0,142,15,1,0,0,0,143,144,7,1,0,0,144,153,3,16,8,0,145,149,
+        3,18,9,0,146,148,3,20,10,0,147,146,1,0,0,0,148,151,1,0,0,0,149,147,
+        1,0,0,0,149,150,1,0,0,0,150,153,1,0,0,0,151,149,1,0,0,0,152,143,
+        1,0,0,0,152,145,1,0,0,0,153,17,1,0,0,0,154,158,3,30,15,0,155,157,
+        3,22,11,0,156,155,1,0,0,0,157,160,1,0,0,0,158,156,1,0,0,0,158,159,
+        1,0,0,0,159,19,1,0,0,0,160,158,1,0,0,0,161,165,3,32,16,0,162,164,
+        3,22,11,0,163,162,1,0,0,0,164,167,1,0,0,0,165,163,1,0,0,0,165,166,
+        1,0,0,0,166,21,1,0,0,0,167,165,1,0,0,0,168,171,5,89,0,0,169,171,
+        3,24,12,0,170,168,1,0,0,0,170,169,1,0,0,0,171,23,1,0,0,0,172,178,
+        5,27,0,0,173,179,3,28,14,0,174,179,3,26,13,0,175,176,3,28,14,0,176,
+        177,3,26,13,0,177,179,1,0,0,0,178,173,1,0,0,0,178,174,1,0,0,0,178,
+        175,1,0,0,0,179,25,1,0,0,0,180,181,5,73,0,0,181,184,5,21,0,0,182,
+        185,3,6,3,0,183,185,3,4,2,0,184,182,1,0,0,0,184,183,1,0,0,0,185,
+        186,1,0,0,0,186,187,5,22,0,0,187,27,1,0,0,0,188,189,5,74,0,0,189,
+        192,5,21,0,0,190,193,3,6,3,0,191,193,3,4,2,0,192,190,1,0,0,0,192,
+        191,1,0,0,0,193,194,1,0,0,0,194,195,5,22,0,0,195,29,1,0,0,0,196,
+        197,6,15,-1,0,197,198,3,34,17,0,198,213,1,0,0,0,199,200,10,2,0,0,
+        200,206,5,74,0,0,201,207,3,44,22,0,202,203,5,21,0,0,203,204,3,6,
+        3,0,204,205,5,22,0,0,205,207,1,0,0,0,206,201,1,0,0,0,206,202,1,0,
+        0,0,207,209,1,0,0,0,208,210,3,74,37,0,209,208,1,0,0,0,209,210,1,
+        0,0,0,210,212,1,0,0,0,211,199,1,0,0,0,212,215,1,0,0,0,213,211,1,
+        0,0,0,213,214,1,0,0,0,214,31,1,0,0,0,215,213,1,0,0,0,216,217,6,16,
+        -1,0,217,218,3,36,18,0,218,233,1,0,0,0,219,220,10,2,0,0,220,226,
+        5,74,0,0,221,227,3,44,22,0,222,223,5,21,0,0,223,224,3,6,3,0,224,
+        225,5,22,0,0,225,227,1,0,0,0,226,221,1,0,0,0,226,222,1,0,0,0,227,
+        229,1,0,0,0,228,230,3,74,37,0,229,228,1,0,0,0,229,230,1,0,0,0,230,
+        232,1,0,0,0,231,219,1,0,0,0,232,235,1,0,0,0,233,231,1,0,0,0,233,
+        234,1,0,0,0,234,33,1,0,0,0,235,233,1,0,0,0,236,243,3,38,19,0,237,
+        243,3,40,20,0,238,243,3,64,32,0,239,243,3,44,22,0,240,243,3,58,29,
+        0,241,243,3,60,30,0,242,236,1,0,0,0,242,237,1,0,0,0,242,238,1,0,
+        0,0,242,239,1,0,0,0,242,240,1,0,0,0,242,241,1,0,0,0,243,35,1,0,0,
+        0,244,250,3,38,19,0,245,250,3,40,20,0,246,250,3,44,22,0,247,250,
+        3,58,29,0,248,250,3,60,30,0,249,244,1,0,0,0,249,245,1,0,0,0,249,
+        246,1,0,0,0,249,247,1,0,0,0,249,248,1,0,0,0,250,37,1,0,0,0,251,252,
+        5,19,0,0,252,253,3,6,3,0,253,254,5,20,0,0,254,268,1,0,0,0,255,256,
+        5,25,0,0,256,257,3,6,3,0,257,258,5,26,0,0,258,268,1,0,0,0,259,260,
+        5,21,0,0,260,261,3,6,3,0,261,262,5,22,0,0,262,268,1,0,0,0,263,264,
+        5,23,0,0,264,265,3,6,3,0,265,266,5,24,0,0,266,268,1,0,0,0,267,251,
+        1,0,0,0,267,255,1,0,0,0,267,259,1,0,0,0,267,263,1,0,0,0,268,39,1,
+        0,0,0,269,270,5,27,0,0,270,271,3,6,3,0,271,272,5,27,0,0,272,41,1,
+        0,0,0,273,275,5,78,0,0,274,273,1,0,0,0,275,276,1,0,0,0,276,274,1,
+        0,0,0,276,277,1,0,0,0,277,284,1,0,0,0,278,279,5,1,0,0,279,280,5,
+        78,0,0,280,281,5,78,0,0,281,283,5,78,0,0,282,278,1,0,0,0,283,286,
+        1,0,0,0,284,282,1,0,0,0,284,285,1,0,0,0,285,293,1,0,0,0,286,284,
+        1,0,0,0,287,289,5,2,0,0,288,290,5,78,0,0,289,288,1,0,0,0,290,291,
+        1,0,0,0,291,289,1,0,0,0,291,292,1,0,0,0,292,294,1,0,0,0,293,287,
+        1,0,0,0,293,294,1,0,0,0,294,43,1,0,0,0,295,308,7,3,0,0,296,298,3,
+        74,37,0,297,296,1,0,0,0,297,298,1,0,0,0,298,300,1,0,0,0,299,301,
+        5,90,0,0,300,299,1,0,0,0,300,301,1,0,0,0,301,309,1,0,0,0,302,304,
+        5,90,0,0,303,302,1,0,0,0,303,304,1,0,0,0,304,306,1,0,0,0,305,307,
+        3,74,37,0,306,305,1,0,0,0,306,307,1,0,0,0,307,309,1,0,0,0,308,297,
+        1,0,0,0,308,303,1,0,0,0,309,318,1,0,0,0,310,318,3,42,21,0,311,318,
+        5,76,0,0,312,318,3,50,25,0,313,318,3,54,27,0,314,318,3,56,28,0,315,
+        318,3,46,23,0,316,318,3,48,24,0,317,295,1,0,0,0,317,310,1,0,0,0,
+        317,311,1,0,0,0,317,312,1,0,0,0,317,313,1,0,0,0,317,314,1,0,0,0,
+        317,315,1,0,0,0,317,316,1,0,0,0,318,45,1,0,0,0,319,320,5,30,0,0,
+        320,321,3,6,3,0,321,322,7,4,0,0,322,47,1,0,0,0,323,324,7,5,0,0,324,
+        325,3,6,3,0,325,326,5,31,0,0,326,49,1,0,0,0,327,328,5,72,0,0,328,
+        329,5,21,0,0,329,330,3,52,26,0,330,331,5,22,0,0,331,51,1,0,0,0,332,
+        334,5,77,0,0,333,332,1,0,0,0,334,337,1,0,0,0,335,333,1,0,0,0,335,
+        336,1,0,0,0,336,53,1,0,0,0,337,335,1,0,0,0,338,344,5,68,0,0,339,
+        345,5,78,0,0,340,341,5,21,0,0,341,342,3,6,3,0,342,343,5,22,0,0,343,
+        345,1,0,0,0,344,339,1,0,0,0,344,340,1,0,0,0,345,351,1,0,0,0,346,
+        352,5,78,0,0,347,348,5,21,0,0,348,349,3,6,3,0,349,350,5,22,0,0,350,
+        352,1,0,0,0,351,346,1,0,0,0,351,347,1,0,0,0,352,55,1,0,0,0,353,354,
+        7,6,0,0,354,355,5,21,0,0,355,356,3,6,3,0,356,357,5,22,0,0,357,358,
         5,21,0,0,358,359,3,6,3,0,359,360,5,22,0,0,360,57,1,0,0,0,361,362,
         5,59,0,0,362,363,3,6,3,0,363,364,5,60,0,0,364,59,1,0,0,0,365,366,
         5,61,0,0,366,367,3,6,3,0,367,368,5,62,0,0,368,61,1,0,0,0,369,370,
@@ -191,22 +191,24 @@ def serializedATN():
         460,456,1,0,0,0,461,65,1,0,0,0,462,463,3,6,3,0,463,464,5,1,0,0,464,
         465,3,66,33,0,465,468,1,0,0,0,466,468,3,6,3,0,467,462,1,0,0,0,467,
         466,1,0,0,0,468,67,1,0,0,0,469,470,5,73,0,0,470,471,5,21,0,0,471,
-        472,7,3,0,0,472,473,5,33,0,0,473,478,3,6,3,0,474,475,5,74,0,0,475,
-        476,5,21,0,0,476,477,7,1,0,0,477,479,5,22,0,0,478,474,1,0,0,0,478,
-        479,1,0,0,0,479,480,1,0,0,0,480,481,5,22,0,0,481,69,1,0,0,0,482,
-        488,3,6,3,0,483,484,3,6,3,0,484,485,5,1,0,0,485,486,3,70,35,0,486,
-        488,1,0,0,0,487,482,1,0,0,0,487,483,1,0,0,0,488,71,1,0,0,0,489,490,
-        3,12,6,0,490,73,1,0,0,0,491,497,5,73,0,0,492,498,3,44,22,0,493,494,
-        5,21,0,0,494,495,3,6,3,0,495,496,5,22,0,0,496,498,1,0,0,0,497,492,
-        1,0,0,0,497,493,1,0,0,0,498,75,1,0,0,0,499,505,5,74,0,0,500,506,
-        3,44,22,0,501,502,5,21,0,0,502,503,3,6,3,0,503,504,5,22,0,0,504,
-        506,1,0,0,0,505,500,1,0,0,0,505,501,1,0,0,0,506,77,1,0,0,0,507,508,
-        5,73,0,0,508,509,5,21,0,0,509,510,3,4,2,0,510,511,5,22,0,0,511,79,
-        1,0,0,0,512,513,5,73,0,0,513,514,5,21,0,0,514,515,3,4,2,0,515,516,
-        5,22,0,0,516,81,1,0,0,0,58,92,109,120,131,139,141,149,152,158,165,
-        170,178,184,192,206,209,213,226,229,233,242,249,267,276,284,291,
-        293,297,300,303,306,308,317,335,344,351,373,376,379,382,384,391,
-        395,398,401,404,406,419,422,427,434,452,460,467,478,487,497,505
+        472,7,3,0,0,472,473,5,33,0,0,473,482,3,6,3,0,474,480,5,74,0,0,475,
+        476,5,21,0,0,476,477,7,1,0,0,477,481,5,22,0,0,478,481,5,15,0,0,479,
+        481,5,16,0,0,480,475,1,0,0,0,480,478,1,0,0,0,480,479,1,0,0,0,481,
+        483,1,0,0,0,482,474,1,0,0,0,482,483,1,0,0,0,483,484,1,0,0,0,484,
+        485,5,22,0,0,485,69,1,0,0,0,486,492,3,6,3,0,487,488,3,6,3,0,488,
+        489,5,1,0,0,489,490,3,70,35,0,490,492,1,0,0,0,491,486,1,0,0,0,491,
+        487,1,0,0,0,492,71,1,0,0,0,493,494,3,12,6,0,494,73,1,0,0,0,495,501,
+        5,73,0,0,496,502,3,44,22,0,497,498,5,21,0,0,498,499,3,6,3,0,499,
+        500,5,22,0,0,500,502,1,0,0,0,501,496,1,0,0,0,501,497,1,0,0,0,502,
+        75,1,0,0,0,503,509,5,74,0,0,504,510,3,44,22,0,505,506,5,21,0,0,506,
+        507,3,6,3,0,507,508,5,22,0,0,508,510,1,0,0,0,509,504,1,0,0,0,509,
+        505,1,0,0,0,510,77,1,0,0,0,511,512,5,73,0,0,512,513,5,21,0,0,513,
+        514,3,4,2,0,514,515,5,22,0,0,515,79,1,0,0,0,516,517,5,73,0,0,517,
+        518,5,21,0,0,518,519,3,4,2,0,519,520,5,22,0,0,520,81,1,0,0,0,59,
+        92,109,120,131,139,141,149,152,158,165,170,178,184,192,206,209,213,
+        226,229,233,242,249,267,276,284,291,293,297,300,303,306,308,317,
+        335,344,351,373,376,379,382,384,391,395,398,401,404,406,419,422,
+        427,434,452,460,467,480,482,491,501,509
     ]
 
 class LaTeXParser ( Parser ):
@@ -406,7 +408,7 @@ class LaTeXParser ( Parser ):
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.10")
+        self.checkVersion("4.11.1")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
@@ -517,7 +519,7 @@ class LaTeXParser ( Parser ):
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
                     self.state = 88
                     _la = self._input.LA(1)
-                    if not(((((_la - 79)) & ~0x3f) == 0 and ((1 << (_la - 79)) & ((1 << (LaTeXParser.EQUAL - 79)) | (1 << (LaTeXParser.NEQ - 79)) | (1 << (LaTeXParser.LT - 79)) | (1 << (LaTeXParser.LTE - 79)) | (1 << (LaTeXParser.GT - 79)) | (1 << (LaTeXParser.GTE - 79)))) != 0)):
+                    if not((((_la - 79)) & ~0x3f) == 0 and ((1 << (_la - 79)) & 207) != 0):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -673,7 +675,7 @@ class LaTeXParser ( Parser ):
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
                     self.state = 105
                     _la = self._input.LA(1)
-                    if not(_la==LaTeXParser.ADD or _la==LaTeXParser.SUB):
+                    if not(_la==15 or _la==16):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -763,7 +765,7 @@ class LaTeXParser ( Parser ):
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
                     self.state = 116
                     _la = self._input.LA(1)
-                    if not(((((_la - 17)) & ~0x3f) == 0 and ((1 << (_la - 17)) & ((1 << (LaTeXParser.MUL - 17)) | (1 << (LaTeXParser.DIV - 17)) | (1 << (LaTeXParser.CMD_TIMES - 17)) | (1 << (LaTeXParser.CMD_CDOT - 17)) | (1 << (LaTeXParser.CMD_DIV - 17)) | (1 << (LaTeXParser.COLON - 17)))) != 0)):
+                    if not((((_la - 17)) & ~0x3f) == 0 and ((1 << (_la - 17)) & 290200700988686339) != 0):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -853,7 +855,7 @@ class LaTeXParser ( Parser ):
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
                     self.state = 127
                     _la = self._input.LA(1)
-                    if not(((((_la - 17)) & ~0x3f) == 0 and ((1 << (_la - 17)) & ((1 << (LaTeXParser.MUL - 17)) | (1 << (LaTeXParser.DIV - 17)) | (1 << (LaTeXParser.CMD_TIMES - 17)) | (1 << (LaTeXParser.CMD_CDOT - 17)) | (1 << (LaTeXParser.CMD_DIV - 17)) | (1 << (LaTeXParser.COLON - 17)))) != 0)):
+                    if not((((_la - 17)) & ~0x3f) == 0 and ((1 << (_la - 17)) & 290200700988686339) != 0):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -912,11 +914,11 @@ class LaTeXParser ( Parser ):
             self.state = 141
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.ADD, LaTeXParser.SUB]:
+            if token in [15, 16]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 134
                 _la = self._input.LA(1)
-                if not(_la==LaTeXParser.ADD or _la==LaTeXParser.SUB):
+                if not(_la==15 or _la==16):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -924,7 +926,7 @@ class LaTeXParser ( Parser ):
                 self.state = 135
                 self.unary()
                 pass
-            elif token in [LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACE_LITERAL, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_EXP, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.L_FLOOR, LaTeXParser.L_CEIL, LaTeXParser.FUNC_SQRT, LaTeXParser.FUNC_OVERLINE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+            elif token in [19, 21, 23, 25, 27, 29, 30, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 61, 63, 64, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 137
                 self._errHandler.sync(self)
@@ -996,11 +998,11 @@ class LaTeXParser ( Parser ):
             self.state = 152
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.ADD, LaTeXParser.SUB]:
+            if token in [15, 16]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 143
                 _la = self._input.LA(1)
-                if not(_la==LaTeXParser.ADD or _la==LaTeXParser.SUB):
+                if not(_la==15 or _la==16):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -1008,7 +1010,7 @@ class LaTeXParser ( Parser ):
                 self.state = 144
                 self.unary_nofunc()
                 pass
-            elif token in [LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACE_LITERAL, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_EXP, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.L_FLOOR, LaTeXParser.L_CEIL, LaTeXParser.FUNC_SQRT, LaTeXParser.FUNC_OVERLINE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+            elif token in [19, 21, 23, 25, 27, 29, 30, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 61, 63, 64, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 145
                 self.postfix()
@@ -1168,12 +1170,12 @@ class LaTeXParser ( Parser ):
             self.state = 170
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.BANG]:
+            if token in [89]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 168
                 self.match(LaTeXParser.BANG)
                 pass
-            elif token in [LaTeXParser.BAR]:
+            elif token in [27]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 169
                 self.eval_at()
@@ -1454,11 +1456,11 @@ class LaTeXParser ( Parser ):
                     self.state = 206
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+                    if token in [27, 29, 30, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                         self.state = 201
                         self.atom()
                         pass
-                    elif token in [LaTeXParser.L_BRACE]:
+                    elif token in [21]:
                         self.state = 202
                         self.match(LaTeXParser.L_BRACE)
                         self.state = 203
@@ -1562,11 +1564,11 @@ class LaTeXParser ( Parser ):
                     self.state = 226
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+                    if token in [27, 29, 30, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                         self.state = 221
                         self.atom()
                         pass
-                    elif token in [LaTeXParser.L_BRACE]:
+                    elif token in [21]:
                         self.state = 222
                         self.match(LaTeXParser.L_BRACE)
                         self.state = 223
@@ -1819,7 +1821,7 @@ class LaTeXParser ( Parser ):
             self.state = 267
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.L_PAREN]:
+            if token in [19]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 251
                 self.match(LaTeXParser.L_PAREN)
@@ -1828,7 +1830,7 @@ class LaTeXParser ( Parser ):
                 self.state = 253
                 self.match(LaTeXParser.R_PAREN)
                 pass
-            elif token in [LaTeXParser.L_BRACKET]:
+            elif token in [25]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 255
                 self.match(LaTeXParser.L_BRACKET)
@@ -1837,7 +1839,7 @@ class LaTeXParser ( Parser ):
                 self.state = 257
                 self.match(LaTeXParser.R_BRACKET)
                 pass
-            elif token in [LaTeXParser.L_BRACE]:
+            elif token in [21]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 259
                 self.match(LaTeXParser.L_BRACE)
@@ -1846,7 +1848,7 @@ class LaTeXParser ( Parser ):
                 self.state = 261
                 self.match(LaTeXParser.R_BRACE)
                 pass
-            elif token in [LaTeXParser.L_BRACE_LITERAL]:
+            elif token in [23]:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 263
                 self.match(LaTeXParser.L_BRACE_LITERAL)
@@ -2060,11 +2062,11 @@ class LaTeXParser ( Parser ):
             self.state = 317
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.LETTER, LaTeXParser.SYMBOL]:
+            if token in [77, 91]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 295
                 _la = self._input.LA(1)
-                if not(_la==LaTeXParser.LETTER or _la==LaTeXParser.SYMBOL):
+                if not(_la==77 or _la==91):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -2112,37 +2114,37 @@ class LaTeXParser ( Parser ):
 
 
                 pass
-            elif token in [LaTeXParser.DIGIT]:
+            elif token in [78]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 310
                 self.number()
                 pass
-            elif token in [LaTeXParser.DIFFERENTIAL]:
+            elif token in [76]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 311
                 self.match(LaTeXParser.DIFFERENTIAL)
                 pass
-            elif token in [LaTeXParser.CMD_MATHIT]:
+            elif token in [72]:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 312
                 self.mathit()
                 pass
-            elif token in [LaTeXParser.CMD_FRAC]:
+            elif token in [68]:
                 self.enterOuterAlt(localctx, 5)
                 self.state = 313
                 self.frac()
                 pass
-            elif token in [LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM]:
+            elif token in [69, 70, 71]:
                 self.enterOuterAlt(localctx, 6)
                 self.state = 314
                 self.binom()
                 pass
-            elif token in [LaTeXParser.L_ANGLE]:
+            elif token in [30]:
                 self.enterOuterAlt(localctx, 7)
                 self.state = 315
                 self.bra()
                 pass
-            elif token in [LaTeXParser.BAR, LaTeXParser.L_BAR]:
+            elif token in [27, 29]:
                 self.enterOuterAlt(localctx, 8)
                 self.state = 316
                 self.ket()
@@ -2198,7 +2200,7 @@ class LaTeXParser ( Parser ):
             self.expr()
             self.state = 321
             _la = self._input.LA(1)
-            if not(_la==LaTeXParser.BAR or _la==LaTeXParser.R_BAR):
+            if not(_la==27 or _la==28):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2247,7 +2249,7 @@ class LaTeXParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 323
             _la = self._input.LA(1)
-            if not(_la==LaTeXParser.BAR or _la==LaTeXParser.L_BAR):
+            if not(_la==27 or _la==29):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2343,7 +2345,7 @@ class LaTeXParser ( Parser ):
             self.state = 335
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==LaTeXParser.LETTER:
+            while _la==77:
                 self.state = 332
                 self.match(LaTeXParser.LETTER)
                 self.state = 337
@@ -2415,11 +2417,11 @@ class LaTeXParser ( Parser ):
             self.state = 344
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.DIGIT]:
+            if token in [78]:
                 self.state = 339
                 localctx.upperd = self.match(LaTeXParser.DIGIT)
                 pass
-            elif token in [LaTeXParser.L_BRACE]:
+            elif token in [21]:
                 self.state = 340
                 self.match(LaTeXParser.L_BRACE)
                 self.state = 341
@@ -2433,11 +2435,11 @@ class LaTeXParser ( Parser ):
             self.state = 351
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.DIGIT]:
+            if token in [78]:
                 self.state = 346
                 localctx.lowerd = self.match(LaTeXParser.DIGIT)
                 pass
-            elif token in [LaTeXParser.L_BRACE]:
+            elif token in [21]:
                 self.state = 347
                 self.match(LaTeXParser.L_BRACE)
                 self.state = 348
@@ -2509,7 +2511,7 @@ class LaTeXParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 353
             _la = self._input.LA(1)
-            if not(((((_la - 69)) & ~0x3f) == 0 and ((1 << (_la - 69)) & ((1 << (LaTeXParser.CMD_BINOM - 69)) | (1 << (LaTeXParser.CMD_DBINOM - 69)) | (1 << (LaTeXParser.CMD_TBINOM - 69)))) != 0)):
+            if not((((_la - 69)) & ~0x3f) == 0 and ((1 << (_la - 69)) & 7) != 0):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2713,7 +2715,7 @@ class LaTeXParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 369
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << LaTeXParser.FUNC_EXP) | (1 << LaTeXParser.FUNC_LOG) | (1 << LaTeXParser.FUNC_LG) | (1 << LaTeXParser.FUNC_LN) | (1 << LaTeXParser.FUNC_SIN) | (1 << LaTeXParser.FUNC_COS) | (1 << LaTeXParser.FUNC_TAN) | (1 << LaTeXParser.FUNC_CSC) | (1 << LaTeXParser.FUNC_SEC) | (1 << LaTeXParser.FUNC_COT) | (1 << LaTeXParser.FUNC_ARCSIN) | (1 << LaTeXParser.FUNC_ARCCOS) | (1 << LaTeXParser.FUNC_ARCTAN) | (1 << LaTeXParser.FUNC_ARCCSC) | (1 << LaTeXParser.FUNC_ARCSEC) | (1 << LaTeXParser.FUNC_ARCCOT) | (1 << LaTeXParser.FUNC_SINH) | (1 << LaTeXParser.FUNC_COSH) | (1 << LaTeXParser.FUNC_TANH) | (1 << LaTeXParser.FUNC_ARSINH) | (1 << LaTeXParser.FUNC_ARCOSH) | (1 << LaTeXParser.FUNC_ARTANH))) != 0)):
+            if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 576460614864470016) != 0):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2850,7 +2852,7 @@ class LaTeXParser ( Parser ):
             self.state = 460
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.FUNC_EXP, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH]:
+            if token in [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 371
                 self.func_normal()
@@ -2861,7 +2863,7 @@ class LaTeXParser ( Parser ):
                     self.state = 373
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.UNDERSCORE:
+                    if _la==73:
                         self.state = 372
                         self.subexpr()
 
@@ -2869,7 +2871,7 @@ class LaTeXParser ( Parser ):
                     self.state = 376
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.CARET:
+                    if _la==74:
                         self.state = 375
                         self.supexpr()
 
@@ -2880,7 +2882,7 @@ class LaTeXParser ( Parser ):
                     self.state = 379
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.CARET:
+                    if _la==74:
                         self.state = 378
                         self.supexpr()
 
@@ -2888,7 +2890,7 @@ class LaTeXParser ( Parser ):
                     self.state = 382
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.UNDERSCORE:
+                    if _la==73:
                         self.state = 381
                         self.subexpr()
 
@@ -2915,11 +2917,11 @@ class LaTeXParser ( Parser ):
 
 
                 pass
-            elif token in [LaTeXParser.LETTER, LaTeXParser.SYMBOL]:
+            elif token in [77, 91]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 393
                 _la = self._input.LA(1)
-                if not(_la==LaTeXParser.LETTER or _la==LaTeXParser.SYMBOL):
+                if not(_la==77 or _la==91):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -2931,7 +2933,7 @@ class LaTeXParser ( Parser ):
                     self.state = 395
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.UNDERSCORE:
+                    if _la==73:
                         self.state = 394
                         self.subexpr()
 
@@ -2939,7 +2941,7 @@ class LaTeXParser ( Parser ):
                     self.state = 398
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.SINGLE_QUOTES:
+                    if _la==90:
                         self.state = 397
                         self.match(LaTeXParser.SINGLE_QUOTES)
 
@@ -2950,7 +2952,7 @@ class LaTeXParser ( Parser ):
                     self.state = 401
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.SINGLE_QUOTES:
+                    if _la==90:
                         self.state = 400
                         self.match(LaTeXParser.SINGLE_QUOTES)
 
@@ -2958,7 +2960,7 @@ class LaTeXParser ( Parser ):
                     self.state = 404
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.UNDERSCORE:
+                    if _la==73:
                         self.state = 403
                         self.subexpr()
 
@@ -2973,26 +2975,26 @@ class LaTeXParser ( Parser ):
                 self.state = 410
                 self.match(LaTeXParser.R_PAREN)
                 pass
-            elif token in [LaTeXParser.FUNC_INT]:
+            elif token in [34]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 412
                 self.match(LaTeXParser.FUNC_INT)
                 self.state = 419
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [LaTeXParser.UNDERSCORE]:
+                if token in [73]:
                     self.state = 413
                     self.subexpr()
                     self.state = 414
                     self.supexpr()
                     pass
-                elif token in [LaTeXParser.CARET]:
+                elif token in [74]:
                     self.state = 416
                     self.supexpr()
                     self.state = 417
                     self.subexpr()
                     pass
-                elif token in [LaTeXParser.ADD, LaTeXParser.SUB, LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACE_LITERAL, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_EXP, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.L_FLOOR, LaTeXParser.L_CEIL, LaTeXParser.FUNC_SQRT, LaTeXParser.FUNC_OVERLINE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+                elif token in [15, 16, 19, 21, 23, 25, 27, 29, 30, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 61, 63, 64, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                     pass
                 else:
                     pass
@@ -3024,14 +3026,14 @@ class LaTeXParser ( Parser ):
 
 
                 pass
-            elif token in [LaTeXParser.FUNC_SQRT]:
+            elif token in [63]:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 429
                 self.match(LaTeXParser.FUNC_SQRT)
                 self.state = 434
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==LaTeXParser.L_BRACKET:
+                if _la==25:
                     self.state = 430
                     self.match(LaTeXParser.L_BRACKET)
                     self.state = 431
@@ -3047,7 +3049,7 @@ class LaTeXParser ( Parser ):
                 self.state = 438
                 self.match(LaTeXParser.R_BRACE)
                 pass
-            elif token in [LaTeXParser.FUNC_OVERLINE]:
+            elif token in [64]:
                 self.enterOuterAlt(localctx, 5)
                 self.state = 440
                 self.match(LaTeXParser.FUNC_OVERLINE)
@@ -3058,11 +3060,11 @@ class LaTeXParser ( Parser ):
                 self.state = 443
                 self.match(LaTeXParser.R_BRACE)
                 pass
-            elif token in [LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD]:
+            elif token in [35, 36]:
                 self.enterOuterAlt(localctx, 6)
                 self.state = 445
                 _la = self._input.LA(1)
-                if not(_la==LaTeXParser.FUNC_SUM or _la==LaTeXParser.FUNC_PROD):
+                if not(_la==35 or _la==36):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -3070,13 +3072,13 @@ class LaTeXParser ( Parser ):
                 self.state = 452
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [LaTeXParser.UNDERSCORE]:
+                if token in [73]:
                     self.state = 446
                     self.subeq()
                     self.state = 447
                     self.supexpr()
                     pass
-                elif token in [LaTeXParser.CARET]:
+                elif token in [74]:
                     self.state = 449
                     self.supexpr()
                     self.state = 450
@@ -3088,7 +3090,7 @@ class LaTeXParser ( Parser ):
                 self.state = 454
                 self.mp(0)
                 pass
-            elif token in [LaTeXParser.FUNC_LIM]:
+            elif token in [32]:
                 self.enterOuterAlt(localctx, 7)
                 self.state = 456
                 self.match(LaTeXParser.FUNC_LIM)
@@ -3227,7 +3229,7 @@ class LaTeXParser ( Parser ):
             self.match(LaTeXParser.L_BRACE)
             self.state = 471
             _la = self._input.LA(1)
-            if not(_la==LaTeXParser.LETTER or _la==LaTeXParser.SYMBOL):
+            if not(_la==77 or _la==91):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -3236,26 +3238,42 @@ class LaTeXParser ( Parser ):
             self.match(LaTeXParser.LIM_APPROACH_SYM)
             self.state = 473
             self.expr()
-            self.state = 478
+            self.state = 482
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==LaTeXParser.CARET:
+            if _la==74:
                 self.state = 474
                 self.match(LaTeXParser.CARET)
-                self.state = 475
-                self.match(LaTeXParser.L_BRACE)
-                self.state = 476
-                _la = self._input.LA(1)
-                if not(_la==LaTeXParser.ADD or _la==LaTeXParser.SUB):
-                    self._errHandler.recoverInline(self)
+                self.state = 480
+                self._errHandler.sync(self)
+                token = self._input.LA(1)
+                if token in [21]:
+                    self.state = 475
+                    self.match(LaTeXParser.L_BRACE)
+                    self.state = 476
+                    _la = self._input.LA(1)
+                    if not(_la==15 or _la==16):
+                        self._errHandler.recoverInline(self)
+                    else:
+                        self._errHandler.reportMatch(self)
+                        self.consume()
+                    self.state = 477
+                    self.match(LaTeXParser.R_BRACE)
+                    pass
+                elif token in [15]:
+                    self.state = 478
+                    self.match(LaTeXParser.ADD)
+                    pass
+                elif token in [16]:
+                    self.state = 479
+                    self.match(LaTeXParser.SUB)
+                    pass
                 else:
-                    self._errHandler.reportMatch(self)
-                    self.consume()
-                self.state = 477
-                self.match(LaTeXParser.R_BRACE)
+                    raise NoViableAltException(self)
 
 
-            self.state = 480
+
+            self.state = 484
             self.match(LaTeXParser.R_BRACE)
         except RecognitionException as re:
             localctx.exception = re
@@ -3292,22 +3310,22 @@ class LaTeXParser ( Parser ):
         localctx = LaTeXParser.Func_argContext(self, self._ctx, self.state)
         self.enterRule(localctx, 70, self.RULE_func_arg)
         try:
-            self.state = 487
+            self.state = 491
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,55,self._ctx)
+            la_ = self._interp.adaptivePredict(self._input,56,self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 482
+                self.state = 486
                 self.expr()
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 483
+                self.state = 487
                 self.expr()
-                self.state = 484
+                self.state = 488
                 self.match(LaTeXParser.T__0)
-                self.state = 485
+                self.state = 489
                 self.func_arg()
                 pass
 
@@ -3344,7 +3362,7 @@ class LaTeXParser ( Parser ):
         self.enterRule(localctx, 72, self.RULE_func_arg_noparens)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 489
+            self.state = 493
             self.mp_nofunc(0)
         except RecognitionException as re:
             localctx.exception = re
@@ -3391,21 +3409,21 @@ class LaTeXParser ( Parser ):
         self.enterRule(localctx, 74, self.RULE_subexpr)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 491
+            self.state = 495
             self.match(LaTeXParser.UNDERSCORE)
-            self.state = 497
+            self.state = 501
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
-                self.state = 492
+            if token in [27, 29, 30, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
+                self.state = 496
                 self.atom()
                 pass
-            elif token in [LaTeXParser.L_BRACE]:
-                self.state = 493
+            elif token in [21]:
+                self.state = 497
                 self.match(LaTeXParser.L_BRACE)
-                self.state = 494
+                self.state = 498
                 self.expr()
-                self.state = 495
+                self.state = 499
                 self.match(LaTeXParser.R_BRACE)
                 pass
             else:
@@ -3456,21 +3474,21 @@ class LaTeXParser ( Parser ):
         self.enterRule(localctx, 76, self.RULE_supexpr)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 499
+            self.state = 503
             self.match(LaTeXParser.CARET)
-            self.state = 505
+            self.state = 509
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
-                self.state = 500
+            if token in [27, 29, 30, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
+                self.state = 504
                 self.atom()
                 pass
-            elif token in [LaTeXParser.L_BRACE]:
-                self.state = 501
+            elif token in [21]:
+                self.state = 505
                 self.match(LaTeXParser.L_BRACE)
-                self.state = 502
+                self.state = 506
                 self.expr()
-                self.state = 503
+                self.state = 507
                 self.match(LaTeXParser.R_BRACE)
                 pass
             else:
@@ -3517,13 +3535,13 @@ class LaTeXParser ( Parser ):
         self.enterRule(localctx, 78, self.RULE_subeq)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 507
+            self.state = 511
             self.match(LaTeXParser.UNDERSCORE)
-            self.state = 508
+            self.state = 512
             self.match(LaTeXParser.L_BRACE)
-            self.state = 509
+            self.state = 513
             self.equality()
-            self.state = 510
+            self.state = 514
             self.match(LaTeXParser.R_BRACE)
         except RecognitionException as re:
             localctx.exception = re
@@ -3566,13 +3584,13 @@ class LaTeXParser ( Parser ):
         self.enterRule(localctx, 80, self.RULE_supeq)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 512
+            self.state = 516
             self.match(LaTeXParser.UNDERSCORE)
-            self.state = 513
+            self.state = 517
             self.match(LaTeXParser.L_BRACE)
-            self.state = 514
+            self.state = 518
             self.equality()
-            self.state = 515
+            self.state = 519
             self.match(LaTeXParser.R_BRACE)
         except RecognitionException as re:
             localctx.exception = re

@@ -2,13 +2,12 @@
 # This is the module for ODE solver classes for single ODEs.
 #
 
-import typing
-if typing.TYPE_CHECKING:
-    from typing import ClassVar
-from typing import Dict as tDict, Type, Iterator, List, Optional
+from __future__ import annotations
+from typing import ClassVar, Iterator
 
 from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
+from sympy.core.cache import cached_property
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
@@ -38,18 +37,6 @@ from .lie_group import _ode_lie_group
 class ODEMatchError(NotImplementedError):
     """Raised if a SingleODESolver is asked to solve an ODE it does not match"""
     pass
-
-
-def cached_property(func):
-    '''Decorator to cache property method'''
-    attrname = '_' + func.__name__
-    def propfunc(self):
-        val = getattr(self, attrname, None)
-        if val is None:
-            val = func(self)
-            setattr(self, attrname, val)
-        return val
-    return property(propfunc)
 
 
 class SingleODEProblem:
@@ -140,7 +127,7 @@ class SingleODEProblem:
             process_eq = self.eq
         return process_eq
 
-    def get_numbered_constants(self, num=1, start=1, prefix='C') -> List[Symbol]:
+    def get_numbered_constants(self, num=1, start=1, prefix='C') -> list[Symbol]:
         """
         Returns a list of constants that do not occur
         in eq already.
@@ -261,21 +248,21 @@ class SingleODESolver:
 
     # Subclasses should store the hint name (the argument to dsolve) in this
     # attribute
-    hint = None  # type: ClassVar[str]
+    hint: ClassVar[str]
 
     # Subclasses should define this to indicate if they support an _Integral
     # hint.
-    has_integral = None  # type: ClassVar[bool]
+    has_integral: ClassVar[bool]
 
     # The ODE to be solved
     ode_problem = None  # type: SingleODEProblem
 
     # Cache whether or not the equation has matched the method
-    _matched = None  # type: Optional[bool]
+    _matched: bool | None = None
 
     # Subclasses should store in this attribute the list of order(s) of ODE
     # that subclass can solve or leave it to None if not specific to any order
-    order = None  # type: Optional[list]
+    order: list | None = None
 
     def __init__(self, ode_problem):
         self.ode_problem = ode_problem
@@ -289,7 +276,7 @@ class SingleODESolver:
             self._matched = self._matches()
         return self._matched
 
-    def get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
+    def get_general_solution(self, *, simplify: bool = True) -> list[Equality]:
         if not self.matches():
             msg = "%s solver cannot solve:\n%s"
             raise ODEMatchError(msg % (self.hint, self.ode_problem.eq))
@@ -299,7 +286,7 @@ class SingleODESolver:
         msg = "Subclasses of SingleODESolver should implement matches."
         raise NotImplementedError(msg)
 
-    def _get_general_solution(self, *, simplify_flag: bool = True) -> List[Equality]:
+    def _get_general_solution(self, *, simplify_flag: bool = True) -> list[Equality]:
         msg = "Subclasses of SingleODESolver should implement get_general_solution."
         raise NotImplementedError(msg)
 
@@ -433,7 +420,7 @@ class NthAlgebraic(SingleODESolver):
     # be stored in cached results we need to ensure that we always get the
     # same class back for each particular integration variable so we store these
     # classes in a global dict:
-    _diffx_stored = {}  # type: tDict[Symbol, Type[Function]]
+    _diffx_stored: dict[Symbol, type[Function]] = {}
 
     @staticmethod
     def _get_diffx(var):

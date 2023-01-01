@@ -523,7 +523,7 @@ class AccumulationBounds(Expr):
                             return AccumBounds(self.max**other, oo)
                         if self.max.is_zero:
                             return AccumBounds(self.min**other, oo)
-                        return AccumBounds(0, oo)
+                        return (1/self)**(-other)
                     return AccumBounds(
                         S.Zero, Max(self.min**other, self.max**other))
                 elif other % 2 == 1:
@@ -532,7 +532,7 @@ class AccumulationBounds(Expr):
                             return AccumBounds(self.max**other, oo)
                         if self.max.is_zero:
                             return AccumBounds(-oo, self.min**other)
-                        return AccumBounds(-oo, oo)
+                        return (1/self)**(-other)
                     return AccumBounds(self.min**other, self.max**other)
 
             # non-integer exponent

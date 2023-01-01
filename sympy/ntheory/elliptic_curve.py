@@ -250,7 +250,7 @@ class EllipticCurve:
         """
         if self.characteristic == 0:
             raise NotImplementedError("Still not implemented")
-        return len(list(self.points()))
+        return len(self.points())
 
     @property
     def rank(self):

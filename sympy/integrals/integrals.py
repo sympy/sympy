@@ -619,7 +619,7 @@ class Integral(AddWithLimits):
 
             final = hints.get('final', True)
             # dotit may be iterated but floor terms making atan and acot
-            # continous should only be added in the final round
+            # continuous should only be added in the final round
             if (final and not isinstance(antideriv, Integral) and
                 antideriv is not None):
                 for atan_term in antideriv.atoms(atan):

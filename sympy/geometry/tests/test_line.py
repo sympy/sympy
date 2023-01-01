@@ -72,7 +72,6 @@ def test_angle_between():
                                 Line3D(Point3D(5, 0, 0), z)) == acos(-sqrt(3) / 3)
 
 
-
 def test_closing_angle():
     a = Ray((0, 0), angle=0)
     b = Ray((1, 2), angle=pi/2)
@@ -796,11 +795,11 @@ def test_ray_generation():
     assert Ray3D((1, 1, 1), direction_ratio=[1, 1, 1]) == Ray3D(Point3D(1, 1, 1), Point3D(2, 2, 2))
 
 
-def test_symbolic_intersect():
-    # Issue 7814.
+def test_issue_7814():
     circle = Circle(Point(x, 0), y)
     line = Line(Point(k, z), slope=0)
-    assert line.intersection(circle) == [Point(x + sqrt((y - z) * (y + z)), z), Point(x - sqrt((y - z) * (y + z)), z)]
+    _s = sqrt((y - z)*(y + z))
+    assert line.intersection(circle) == [Point2D(x + _s, z), Point2D(x - _s, z)]
 
 
 def test_issue_2941():

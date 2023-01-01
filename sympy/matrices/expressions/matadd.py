@@ -12,7 +12,8 @@ from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
-from sympy.utilities import sift
+from sympy.utilities.iterables import sift
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 # XXX: MatAdd should perhaps not subclass directly from Add
 class MatAdd(MatrixExpr, Add):
@@ -34,7 +35,7 @@ class MatAdd(MatrixExpr, Add):
 
     identity = GenericZeroMatrix()
 
-    def __new__(cls, *args, evaluate=False, check=False, _sympify=True):
+    def __new__(cls, *args, evaluate=False, check=None, _sympify=True):
         if not args:
             return cls.identity
 
@@ -46,10 +47,20 @@ class MatAdd(MatrixExpr, Add):
 
         obj = Basic.__new__(cls, *args)
 
-        if check:
+        if check is not None:
+            sympy_deprecation_warning(
+                "Passing check to MatAdd is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
+        if check in (True, None):
             if not any(isinstance(i, MatrixExpr) for i in args):
                 return Add.fromiter(args)
             validate(*args)
+        else:
+            sympy_deprecation_warning(
+                "Passing check=False to MatAdd is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
 
         if evaluate:
             obj = cls._evaluate(obj)
@@ -58,9 +69,6 @@ class MatAdd(MatrixExpr, Add):
 
     @classmethod
     def _evaluate(cls, expr):
-        args = expr.args
-        if not any(isinstance(i, MatrixExpr) for i in args):
-            return Add(*args, evaluate=True)
         return canonicalize(expr)
 
     @property

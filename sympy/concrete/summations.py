@@ -332,8 +332,13 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     def _eval_simplify(self, **kwargs):
 
+        function = self.function
+
+        if kwargs.get('deep', True):
+            function = function.simplify(**kwargs)
+
         # split the function into adds
-        terms = Add.make_args(expand(self.function))
+        terms = Add.make_args(expand(function))
         s_t = [] # Sum Terms
         o_t = [] # Other Terms
 
@@ -348,7 +353,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     # go through each term
                     if isinstance(subterm, Sum):
                         # if it's a sum, simplify it
-                        out_terms.append(subterm._eval_simplify())
+                        out_terms.append(subterm._eval_simplify(**kwargs))
                     else:
                         # otherwise, add it as is
                         out_terms.append(subterm)

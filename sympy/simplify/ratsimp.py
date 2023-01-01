@@ -55,7 +55,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
     ==========
 
     .. [1] M. Monagan, R. Pearce, Rational Simplification Modulo a Polynomial
-        Ideal, http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.163.6984
+        Ideal, https://dl.acm.org/doi/pdf/10.1145/1145768.1145809
         (specifically, the second algorithm)
     """
     from sympy.solvers.solvers import solve
@@ -208,6 +208,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
         newsol = []
         for c_hat, d_hat, S, ng in allsol:
             sol = solve(S, ng, particular=True, quick=False)
+            # all values of sol should be numbers; if not, solve is broken
             newsol.append((c_hat.subs(sol), d_hat.subs(sol)))
         c, d = min(newsol, key=lambda x: len(x[0].terms()) + len(x[1].terms()))
 

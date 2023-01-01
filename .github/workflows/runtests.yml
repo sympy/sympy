@@ -16,9 +16,9 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
@@ -54,8 +54,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
@@ -71,8 +71,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
@@ -87,16 +87,16 @@ jobs:
     needs: code-quality
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # Clone full git history (needed for detecting authors)
           fetch-depth: 0
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
-      - run: bin/mailmap_check.py --skip-last-commit
+      - run: bin/mailmap_check.py
 
   # -------------------- Doctests latest Python -------------------- #
 
@@ -105,8 +105,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
@@ -121,8 +121,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
@@ -136,8 +136,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
@@ -154,8 +154,8 @@ jobs:
       matrix:
         split: ['1/2', '2/2']
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: 16.x
       - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.20.1a1/pyodide-build-0.20.1a1.tar.bz2 | tar xjf -
@@ -172,43 +172,46 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', 'pypy-3.8']
+        python-version: ['3.9', '3.10', '3.11', 'pypy-3.8']
         experimental: [false]
-        include:
-          - python-version: '3.11.0-alpha - 3.11'
-            experimental: true
+        # Maybe use this to add 3.12 when the time comes:
+        #include:
+        #  - python-version: '3.12.0-alpha - 3.12'
+        #    experimental: true
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
       # Install the non-Python dependencies
       - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev
-      - run: python -m pip install --upgrade pip wheel
+      - run: python -m pip install --upgrade pip wheel setuptools
 
       # Use various libs from git for Python 3.11
       - if: ${{ contains(matrix.python-version, '3.11') }}
         run: pip install git+https://github.com/cython/cython@master
       - if: ${{ contains(matrix.python-version, '3.11') }}
-        run: pip install git+https://github.com/numpy/numpy@main
-      - if: ${{ contains(matrix.python-version, '3.11') }}
         run: pip install git+https://github.com/scipy/scipy@main
-      - if: ${{ contains(matrix.python-version, '3.11') }}
-        run: pip install git+https://github.com/matplotlib/matplotlib@main
+
+      # SciPy 1.9.0 and 1.9.1 fail to compile under PyPy:
+      #
+      # https://github.com/FFY00/meson-python/issues/121
+      - if: ${{ matrix.python-version == 'pypy-3.8' }}
+        run: pip install 'scipy<1.9.0'
 
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
                          aesara wurlitzer autowrap                            \
-                         'antlr4-python3-runtime==4.10.*'
+                         'antlr4-python3-runtime==4.11.*'
 
-      # gmpy2 is not available for pypy
+      # These are not available for pypy
       - if: ${{ matrix.python-version != 'pypy-3.8' }}
-        run: pip install gmpy2
+        run: pip install gmpy2 jax jaxlib
 
       # These are not available for pypy and cannot be installed in 3.11 (yet)
       - if: ${{ matrix.python-version != 'pypy-3.8' && ! contains(matrix.python-version, '3.11') }}
-        run: pip install symengine llvmlite numba pymc jax jaxlib
+        run: pip install symengine llvmlite numba pymc
 
       # Test external imports
       - run: bin/test_external_imports.py
@@ -226,8 +229,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
@@ -242,8 +245,8 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
@@ -260,13 +263,13 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
-      - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=1/2
+      - run: bin/test --force-colors --slow --timeout=595 --split=1/2
 
   # -------------------- Slow test split 2/2 ----------------------- #
 
@@ -275,15 +278,15 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
-      - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
+      - run: bin/test --force-colors --slow --timeout=595 --split=2/2
 
-  # -------------------- Test split 1/2 older Python --------------- #
+  # -------------------- Test split 1/2 older (and newer) Python --------------- #
 
   tests1:
     needs: [doctests-latest, tests1-latest, tests2-latest]
@@ -293,22 +296,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.11', 'pypy-3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
-        #  - python-version: '3.11.0-alpha - 3.11'
+        #  - python-version: '3.12.0-alpha - 3.12'
         #    experimental: true
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=1/2
 
-  # -------------------- Test split 2/2 older Python --------------- #
+  # -------------------- Test split 2/2 older (and newer) Python --------------- #
 
   tests2:
     needs: [doctests-latest, tests1-latest, tests2-latest]
@@ -318,22 +321,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.11', 'pypy-3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
-        #  - python-version: '3.11.0-alpha - 3.11'
+        #  - python-version: '3.12.0-alpha - 3.12'
         #    experimental: true
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
 
-  # -------------------- Doctests older Python --------------------- #
+  # -------------------- Doctests older (and newer) Python --------------------- #
 
   doctests:
     needs: [doctests-latest, tests1-latest, tests2-latest]
@@ -343,15 +346,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.11', 'pypy-3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
-        #  - python-version: '3.11.0-alpha - 3.11'
+        #  - python-version: '3.12.0-alpha - 3.12'
         #    experimental: true
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
@@ -366,14 +369,25 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: doc/aptinstall.sh
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
 
+      # When run against master, deploy to docs.sympy.org/dev. This requires
+      # having an SSH deploy key set up. See
+      # https://github.com/marketplace/actions/deploy-to-github-pages#using-an-ssh-deploy-key-
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        if: ${{ github.ref == 'refs/heads/master' }}
+        with:
+          folder: doc/_build/html
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          repository-name: sympy/sympy_doc
+          target-folder: dev
 
   # -------------------- Check the error message under py2 --------- #
 
@@ -382,11 +396,25 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '2.7'
       - run: bin/test_py2_import.py
+
+  # -------------------- Check the list of files for sdist --------- #
+
+  sdist-check:
+    needs: [doctests-latest, tests1-latest, tests2-latest]
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: python setup.py sdist
+      - run: release/compare_tar_against_git.py dist/*.tar.gz .
 
   # -------- Run benchmarks against master and previous release ---- #
 
@@ -395,11 +423,11 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # Checkout repo with full history
           fetch-depth: 0
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: pip install asv virtualenv
@@ -414,7 +442,7 @@ jobs:
 
       - run: git remote add upstream https://github.com/sympy/sympy.git
       - run: git fetch upstream master
-      - run: git fetch upstream 1.10
+      - run: git fetch upstream 1.11
 
       - name: Configure benchmarks
         run: asv machine --yes --config asv.conf.actions.json
@@ -426,8 +454,8 @@ jobs:
         # Output benchmark results
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.10 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.10 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare upstream/1.11 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare upstream/1.11 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
         # This workflow does not have write permissions for the repository so
         # we save all outputs as artifacts that can be accessed by the
@@ -435,7 +463,7 @@ jobs:
         # this one completes.
 
       - name: Upload results as artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: benchmarks
           path: |
@@ -463,7 +491,7 @@ jobs:
         run: echo -n > pr_number.txt
 
       - name: Upload results as artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: pr_number
           path: pr_number.txt

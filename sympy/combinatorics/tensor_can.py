@@ -938,8 +938,8 @@ def get_symmetric_group_sgs(n, antisym=False):
     Parameters
     ==========
 
-    ``n``: rank of the tensor
-    ``antisym`` : bool
+    n : rank of the tensor
+    antisym : bool
         ``antisym = False`` symmetric tensor
         ``antisym = True``  antisymmetric tensor
 

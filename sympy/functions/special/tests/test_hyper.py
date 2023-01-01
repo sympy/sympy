@@ -355,8 +355,6 @@ def test_limits():
     k, x = symbols('k, x')
     assert hyper((1,), (Rational(4, 3), Rational(5, 3)), k**2).series(k) == \
            1 + 9*k**2/20 + 81*k**4/1120 + O(k**6) # issue 6350
-    assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
-            meijerg(((), ()), ((1,), (0,)), 0) # issue 6052
 
     # https://github.com/sympy/sympy/issues/11465
     assert limit(1/hyper((1, ), (1, ), x), x, 0) == 1

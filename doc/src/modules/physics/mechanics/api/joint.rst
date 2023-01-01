@@ -1,23 +1,32 @@
-==================
+=============================
+Joints Framework (Docstrings)
+=============================
+
 Joint (Docstrings)
 ==================
 
 .. module:: sympy.physics.mechanics.joint
 
-Joint
-=====
-
 .. autoclass:: Joint
    :members:
-
-PinJoint
-========
 
 .. autoclass:: PinJoint
    :members:
 
-PrismaticJoint
-==============
-
 .. autoclass:: PrismaticJoint
+   :members:
+
+.. autoclass:: CylindricalJoint
+   :members:
+
+.. autoclass:: PlanarJoint
+   :members:
+
+.. autoclass:: SphericalJoint
+   :members:
+
+.. autoclass:: WeldJoint
+   :members:
+
+.. automodule:: sympy.physics.mechanics.jointsmethod
    :members:

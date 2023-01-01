@@ -131,7 +131,8 @@ class DiophantineSolutionSet(set):
     def __call__(self, *args):
         if len(args) > len(self.parameters):
             raise ValueError("Evaluation should have at most %s values, not %s" % (len(self.parameters), len(args)))
-        return self.subs(list(zip(self.parameters, args)))
+        rep = {p: v for p, v in zip(self.parameters, args) if v is not None}
+        return self.subs(rep)
 
 
 class DiophantineEquationType:
@@ -1647,7 +1648,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
 
     if eq_type is not None and eq_type not in diop_known:
             raise ValueError(filldedent('''
-    Alhough this type of equation was identified, it is not yet
+    Although this type of equation was identified, it is not yet
     handled. It should, however, be listed in `diop_known` at the
     top of this file. Developers should see comments at the end of
     `classify_diop`.
@@ -3217,7 +3218,7 @@ def ldescent(A, B):
            Press, Cambridge, 1998.
     .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
            [online], Available:
-           http://eprints.nottingham.ac.uk/60/1/kvxefz87.pdf
+           https://nottingham-repository.worktribe.com/output/1023265/efficient-solution-of-rational-conics
     """
     if abs(A) > abs(B):
         w, y, x = ldescent(B, A)
@@ -3891,15 +3892,34 @@ sum_of_powers = power_representation
 
 
 def pow_rep_recursive(n_i, k, n_remaining, terms, p):
+    # Invalid arguments
+    if n_i <= 0 or k <= 0:
+        return
+
+    # No solutions may exist
+    if n_remaining < k:
+        return
+    if k * pow(n_i, p) < n_remaining:
+        return
 
     if k == 0 and n_remaining == 0:
         yield tuple(terms)
+
+    elif k == 1:
+        # next_term^p must equal to n_remaining
+        next_term, exact = integer_nthroot(n_remaining, p)
+        if exact and next_term <= n_i:
+            yield tuple(terms + [next_term])
+        return
+
     else:
+        # TODO: Fall back to diop_DN when k = 2
         if n_i >= 1 and k > 0:
-            yield from pow_rep_recursive(n_i - 1, k, n_remaining, terms, p)
-            residual = n_remaining - pow(n_i, p)
-            if residual >= 0:
-                yield from pow_rep_recursive(n_i, k - 1, residual, terms + [n_i], p)
+            for next_term in range(1, n_i + 1):
+                residual = n_remaining - pow(next_term, p)
+                if residual < 0:
+                    break
+                yield from pow_rep_recursive(next_term, k - 1, residual, terms + [next_term], p)
 
 
 def sum_of_squares(n, k, zeros=False):

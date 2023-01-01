@@ -30,8 +30,8 @@ A BibTeX entry for LaTeX users is
     }
 ```
 
-[SymPy is BSD licensed](https://github.com/sympy/sympy/blob/master/LICENSE), 
-so you are free to use it whatever you like, be it
+[SymPy is BSD licensed](https://github.com/sympy/sympy/blob/master/LICENSE),
+so you are free to use it however you like, be it
 academic, commercial, creating forks or derivatives, as long as you copy the
 BSD statement if you redistribute it (see the LICENSE file for details).  That
 said, although not required by the SymPy license, if it is convenient for you,

@@ -1015,6 +1015,9 @@ class Float(Number):
     -oo
     >>> _.is_Float
     False
+
+    Zero in Float only has a single value. Values are not separate for
+    positive and negative zeroes.
     """
     __slots__ = ('_mpf_', '_prec')
 
@@ -2420,7 +2423,7 @@ class Integer(Rational):
             return NotImplemented
         if isinstance(other, Integer):
             return Integer(self.p // other)
-        return Integer(divmod(self, other)[0])
+        return divmod(self, other)[0]
 
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
@@ -3088,9 +3091,12 @@ class Zero(IntegerConstant, metaclass=Singleton):
             return S.ComplexInfinity
         if expt.is_extended_real is False:
             return S.NaN
+        if expt.is_zero:
+            return S.One
+
         # infinities are already handled with pos and neg
         # tests above; now throw away leading numbers on Mul
-        # exponent
+        # exponent since 0**-x = zoo**x even when x == 0
         coeff, terms = expt.as_coeff_Mul()
         if coeff.is_negative:
             return S.ComplexInfinity**terms

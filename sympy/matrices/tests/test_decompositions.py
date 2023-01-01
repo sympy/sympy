@@ -131,7 +131,6 @@ def test_singular_value_decompositionD():
     assert simplify(U * S * V.T) == D
 
 
-
 def test_QR():
     A = Matrix([[1, 2], [2, 3]])
     Q, S = A.QRdecomposition()

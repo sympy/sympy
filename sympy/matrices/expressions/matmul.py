@@ -9,6 +9,7 @@ from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
 from sympy.matrices.matrices import MatrixBase
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from .inverse import Inverse
 from .matexpr import MatrixExpr
@@ -37,7 +38,7 @@ class MatMul(MatrixExpr, Mul):
 
     identity = GenericIdentity()
 
-    def __new__(cls, *args, evaluate=False, check=True, _sympify=True):
+    def __new__(cls, *args, evaluate=False, check=None, _sympify=True):
         if not args:
             return cls.identity
 
@@ -49,8 +50,19 @@ class MatMul(MatrixExpr, Mul):
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
 
-        if check:
+        if check is not None:
+            sympy_deprecation_warning(
+                "Passing check to MatMul is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
+
+        if check in (True, None):
             validate(*matrices)
+        else:
+            sympy_deprecation_warning(
+                "Passing check=False to MatMul is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
 
         if not matrices:
             # Should it be

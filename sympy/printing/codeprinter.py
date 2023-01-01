@@ -1,8 +1,9 @@
-from typing import Any, Dict as tDict, Set as tSet, Tuple as tTuple
+from __future__ import annotations
+from typing import Any
 
 from functools import wraps
 
-from sympy.core import Add, Expr, Mul, Pow, S, sympify, Float
+from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Lambda
@@ -55,7 +56,7 @@ class CodePrinter(StrPrinter):
         'not': '!',
     }
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         'order': None,
         'full_prec': 'auto',
         'error_on_reserved': False,
@@ -63,12 +64,24 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
-    }  # type: tDict[str, Any]
+    }
 
     # Functions which are "simple" to rewrite to other functions that
     # may be supported
     # function_to_rewrite : (function_to_rewrite_to, iterable_with_other_functions_required)
     _rewriteable_functions = {
+            'cot': ('tan', []),
+            'csc': ('sin', []),
+            'sec': ('cos', []),
+            'acot': ('atan', []),
+            'acsc': ('asin', []),
+            'asec': ('acos', []),
+            'coth': ('exp', []),
+            'csch': ('exp', []),
+            'sech': ('exp', []),
+            'acoth': ('log', []),
+            'acsch': ('log', []),
+            'asech': ('log', []),
             'catalan': ('gamma', []),
             'fibonacci': ('sqrt', []),
             'lucas': ('sqrt', []),
@@ -145,7 +158,7 @@ class CodePrinter(StrPrinter):
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
         self._not_supported = set()
-        self._number_symbols = set()  # type: tSet[tTuple[Expr, Float]]
+        self._number_symbols = set()
 
         lines = self._print(expr).splitlines()
 
@@ -415,18 +428,17 @@ class CodePrinter(StrPrinter):
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
-            func = None
             if isinstance(cond_func, str):
-                func = cond_func
+                return "%s(%s)" % (cond_func, self.stringify(expr.args, ", "))
             else:
                 for cond, func in cond_func:
                     if cond(*expr.args):
                         break
-            if func is not None:
-                try:
-                    return func(*[self.parenthesize(item, 0) for item in expr.args])
-                except TypeError:
-                    return "%s(%s)" % (func, self.stringify(expr.args, ", "))
+                if func is not None:
+                    try:
+                        return func(*[self.parenthesize(item, 0) for item in expr.args])
+                    except TypeError:
+                        return "%s(%s)" % (func, self.stringify(expr.args, ", "))
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))

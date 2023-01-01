@@ -112,8 +112,10 @@ def runtest_issue_10274(language, backend):
     assert f(1, 1, 1) == 1
 
     for file in os.listdir(tmp):
-        if file.startswith("wrapped_code_") and file.endswith(".c"):
-            fil = open(tmp + '/' + file)
+        if not (file.startswith("wrapped_code_") and file.endswith(".c")):
+            continue
+
+        with open(tmp + '/' + file) as fil:
             lines = fil.readlines()
             assert lines[0] == "/******************************************************************************\n"
             assert "Code generated with SymPy " + sympy.__version__ in lines[1]

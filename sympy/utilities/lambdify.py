@@ -3,7 +3,8 @@ This module provides convenient functions to transform SymPy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 import builtins
 import inspect
@@ -23,15 +24,15 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
-MATH_DEFAULT = {}  # type: tDict[str, Any]
-MPMATH_DEFAULT = {}  # type: tDict[str, Any]
-NUMPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-SCIPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-CUPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-JAX_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-TENSORFLOW_DEFAULT = {}  # type: tDict[str, Any]
-SYMPY_DEFAULT = {}  # type: tDict[str, Any]
-NUMEXPR_DEFAULT = {}  # type: tDict[str, Any]
+MATH_DEFAULT: dict[str, Any] = {}
+MPMATH_DEFAULT: dict[str, Any] = {}
+NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
+SCIPY_DEFAULT: dict[str, Any] = {"I": 1j}
+CUPY_DEFAULT: dict[str, Any] = {"I": 1j}
+JAX_DEFAULT: dict[str, Any] = {"I": 1j}
+TENSORFLOW_DEFAULT: dict[str, Any] = {}
+SYMPY_DEFAULT: dict[str, Any] = {}
+NUMEXPR_DEFAULT: dict[str, Any] = {}
 
 # These are the namespaces the lambda functions will use.
 # These are separate from the names above because they are modified
@@ -87,23 +88,23 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
-NUMPY_TRANSLATIONS = {
+NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
-    }  # type: tDict[str, str]
-SCIPY_TRANSLATIONS = {}  # type: tDict[str, str]
-CUPY_TRANSLATIONS = {}  # type: tDict[str, str]
-JAX_TRANSLATIONS = {}  # type: tDict[str, str]
+}
+SCIPY_TRANSLATIONS: dict[str, str] = {}
+CUPY_TRANSLATIONS: dict[str, str] = {}
+JAX_TRANSLATIONS: dict[str, str] = {}
 
-TENSORFLOW_TRANSLATIONS = {}  # type: tDict[str, str]
+TENSORFLOW_TRANSLATIONS: dict[str, str] = {}
 
-NUMEXPR_TRANSLATIONS = {}  # type: tDict[str, str]
+NUMEXPR_TRANSLATIONS: dict[str, str] = {}
 
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
-    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy import *; from scipy.special import *",)),
+    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "jax": (JAX, JAX_DEFAULT, JAX_TRANSLATIONS, ("import jax",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
@@ -470,25 +471,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       of numexpr functions can be found at:
       https://numexpr.readthedocs.io/en/latest/user_guide.html#supported-functions
 
-    - In previous versions of SymPy, ``lambdify`` replaced ``Matrix`` with
-      ``numpy.matrix`` by default. As of SymPy 1.0 ``numpy.array`` is the
-      default. To get the old default behavior you must pass in
-      ``[{'ImmutableDenseMatrix':  numpy.matrix}, 'numpy']`` to the
-      ``modules`` kwarg.
-
-      >>> from sympy import lambdify, Matrix
-      >>> from sympy.abc import x, y
-      >>> import numpy
-      >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
-      >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
-      >>> f(1, 2)
-      [[1]
-       [2]]
-
     - In the above examples, the generated functions can accept scalar
       values or numpy arrays as arguments.  However, in some cases
       the generated function relies on the input being a numpy array:
 
+      >>> import numpy
       >>> from sympy import Piecewise
       >>> from sympy.testing.pytest import ignore_warnings
       >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
@@ -790,7 +777,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
-    namespace = {} # type: tDict[str, Any]
+    namespace = {}
     for m in namespaces[::-1]:
         buf = _get_namespace(m)
         namespace.update(buf)
@@ -863,7 +850,7 @@ or tuple for the function arguments.
     # Create the function definition code and execute it
     funcname = '_lambdifygenerated'
     if _module_present('tensorflow', namespaces):
-        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
+        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
@@ -895,7 +882,7 @@ or tuple for the function arguments.
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
 
-    funclocals = {} # type: tDict[str, Any]
+    funclocals = {}
     global _lambdify_generated_counter
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1
@@ -1127,16 +1114,9 @@ class _EvaluatorPrinter:
 
         if cses:
             subvars, subexprs = zip(*cses)
-            try:
-                exprs = expr + list(subexprs)
-            except TypeError:
-                try:
-                    exprs = expr + tuple(subexprs)
-                except TypeError:
-                    expr = [expr]
-                    exprs = expr + list(subexprs)
+            exprs = [expr] + list(subexprs)
             argstrs, exprs = self._preprocess(args, exprs)
-            expr, subexprs = exprs[:len(expr)], exprs[len(expr):]
+            expr, subexprs = exprs[0], exprs[1:]
             cses = zip(subvars, subexprs)
         else:
             argstrs, expr = self._preprocess(args, expr)

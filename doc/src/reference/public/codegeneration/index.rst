@@ -7,6 +7,6 @@ Code Generation
 **Contents**
 
 .. toctree::
-    :maxdepth: 2
+   :titlesonly:
 
-    ../../../modules/codegen.rst
+   ../../../modules/codegen.rst

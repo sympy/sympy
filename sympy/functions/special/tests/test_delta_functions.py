@@ -120,17 +120,17 @@ def test_heaviside():
 def test_rewrite():
     x, y = Symbol('x', real=True), Symbol('y')
     assert Heaviside(x).rewrite(Piecewise) == (
-        Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, x > 0)))
+        Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, True)))
     assert Heaviside(y).rewrite(Piecewise) == (
-        Piecewise((0, y < 0), (Heaviside(0), Eq(y, 0)), (1, y > 0)))
+        Piecewise((0, y < 0), (Heaviside(0), Eq(y, 0)), (1, True)))
     assert Heaviside(x, y).rewrite(Piecewise) == (
-        Piecewise((0, x < 0), (y, Eq(x, 0)), (1, x > 0)))
+        Piecewise((0, x < 0), (y, Eq(x, 0)), (1, True)))
     assert Heaviside(x, 0).rewrite(Piecewise) == (
-        Piecewise((0, x <= 0), (1, x > 0)))
+        Piecewise((0, x <= 0), (1, True)))
     assert Heaviside(x, 1).rewrite(Piecewise) == (
-        Piecewise((0, x < 0), (1, x >= 0)))
+        Piecewise((0, x < 0), (1, True)))
     assert Heaviside(x, nan).rewrite(Piecewise) == (
-        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, x > 0)))
+        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, True)))
 
     assert Heaviside(x).rewrite(sign) == \
         Heaviside(x, H0=Heaviside(0)).rewrite(sign) == \

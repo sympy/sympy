@@ -6,7 +6,7 @@ from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max
+from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
@@ -19,7 +19,6 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayDiagonal, ArrayContraction, ZeroArray, OneArray
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
-from sympy.parsing.latex import parse_latex
 
 
 x, y, z = symbols('x y z')
@@ -48,6 +47,11 @@ def test_PythonCodePrinter():
     assert prntr.module_imports == {'math': {'pi', 'sqrt'}}
 
     assert prntr.doprint(acos(x)) == 'math.acos(x)'
+    assert prntr.doprint(cot(x)) == '1/math.tan(x)'
+    assert prntr.doprint(coth(x)) == '(math.exp(x) + math.exp(-x))/(math.exp(x) - math.exp(-x))'
+    assert prntr.doprint(asec(x)) == 'math.acos(1/x)'
+    assert prntr.doprint(acsch(x)) == 'math.log(math.sqrt(1 + x**(-2)) + 1/x)'
+
     assert prntr.doprint(Assignment(x, 2)) == 'x = 2'
     assert prntr.doprint(Piecewise((1, Eq(x, 0)),
                         (2, x>6))) == '((1) if (x == 0) else (2) if (x > 6) else None)'
@@ -182,13 +186,11 @@ def test_pycode_reserved_words():
 
 
 def test_issue_20762():
-    antlr4 = import_module("antlr4")
-    if not antlr4:
-        skip('antlr not installed.')
     # Make sure pycode removes curly braces from subscripted variables
-    expr = parse_latex(r'a_b \cdot b')
+    a_b, b, a_11 = symbols('a_{b} b a_{11}')
+    expr = a_b*b
     assert pycode(expr) == 'a_b*b'
-    expr = parse_latex(r'a_{11} \cdot b')
+    expr = a_11*b
     assert pycode(expr) == 'a_11*b'
 
 
