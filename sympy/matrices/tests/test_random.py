@@ -1,7 +1,7 @@
 import random as system_random
 
 from sympy import Matrix, diag, eye, zeros, cartes, \
-    I, cos, simplify, symbols, sqrt, expand
+    I, cos, simplify, symbols, sqrt, expand, Mul
 from sympy.core.random import seed, sample
 from sympy.matrices.random import super_elementary_matrix, \
     complex_to_real, invertible, regular_to_singular, diagonal_normal, \
@@ -10,7 +10,7 @@ from sympy.matrices.random import super_elementary_matrix, \
     reflection, normal, nilpotent, idempotent, singular, orthogonal, unitary, \
     hermite, symmetric, square, jordan, jordan_normal
 from sympy.matrices.random import _elementary_scalars, _rotation_scalars, \
-    _sample, _multiply, _is_abs_one, _cs
+    _sample, _is_abs_one
 
 from sympy.testing.pytest import raises
 
@@ -47,6 +47,14 @@ def _is_triangular(m, precision=None):
     else:
         n = m.evalf()
         return all(abs(n[i, j]) < precision for i in range(s) for j in range(i))
+
+
+def _cs(scalar):
+    if isinstance(scalar, (tuple, list)) and len(scalar) == 2:
+        c, s = scalar
+    else:
+        c, s = scalar, _sample((-1, 1)) * sqrt(1 - scalar ** 2)
+    return c, s
 
 
 # === fundamental constructor ===
@@ -264,7 +272,7 @@ def test_diagonal_normal():
         items = list()
         for start, scalar in enumerate(spec):
             items.append(elementary(dim, index=(start, start), scalar=scalar))
-        return _multiply(*items)
+        return Mul(*items)
 
     spec = (1, 2, 3, 4)
     test = dict()
@@ -352,7 +360,7 @@ def test_jordan_normal():
             if end == dim:
                 break
             start = end
-        return _multiply(*items)
+        return Mul(*items)
 
     test = dict()
     specs = dict()
@@ -386,7 +394,7 @@ def test_isometry_normal():
     for d in TEST_DIMS:
         m = isometry_normal(d, spec=(I,))
         assert abs(m.det()) == 1, m.det()
-        m = isometry_normal(d, spec=(I,), real=False)
+        m = isometry_normal(d, spec=(I,))
         assert m.det() == I ** d, repr(m)
 
         m = isometry_normal(d, spec=(sqrt(2) / 2,))
@@ -395,7 +403,7 @@ def test_isometry_normal():
         z = 2 + 3 * I
         m = isometry_normal(d, spec=(z / abs(z),))
         assert abs(m.det()) == 1, m.det()
-        m = isometry_normal(d, spec=(z / abs(z),), real=False)
+        m = isometry_normal(d, spec=(z / abs(z),))
         assert _is_zeros(m - diag(*(d * [z / abs(z)]))), repr(m)
 
         m = isometry_normal(d, spec=(complex(0, 1),))
@@ -405,7 +413,7 @@ def test_isometry_normal():
         m = isometry_normal(d, spec=(z / abs(z),))
         assert abs(abs(m.det()) - 1) < TEST_EPSILON, m.det()
 
-    def _alt_isometry_normal(dim, spec=None, real=True):
+    def _alt_isometry_normal(dim, spec=None):
         """isometry_normal via multiplying rotation matrices"""
 
         spec = spec or _rotation_scalars
@@ -418,7 +426,7 @@ def test_isometry_normal():
             elif _is_abs_one(c):
                 block_list.append((c,))
             else:
-                block_list.append(_cs(c, real))
+                block_list.append(_cs(c))
         spec = block_list
         del block_list
 
@@ -443,9 +451,9 @@ def test_isometry_normal():
                 c, s = s
                 items.append(rotation(dim, (start, start + 1), (c, s)))
             start = end
-        return _multiply(*items)
+        return Mul(*items)
 
-    spec = (0, -1), (1,)
+    spec = (0, -1), (1, 0)
     test = dict()
     for d in TEST_DIMS:
         test[d] = _alt_isometry_normal(2 * d, spec * d)
@@ -578,8 +586,8 @@ def test_unitary():
         m = expand(unitary(d, spec=(z / abs(z),), length=d))
         assert _is_eye(m.H * m), repr(simplify(m.H * m))
 
-        m = expand(unitary(d, spec=(sqrt(2) / 2,), length=d))
-        assert _is_eye(m.H * m), repr(simplify(m.H * m))
+        m = expand(unitary(d, spec=(complex(*_cs(sqrt(2) / 2)),), length=d))
+        assert _is_eye(m.H * m, TEST_PRECISION), repr(simplify(m.H * m))
 
 
 def test_normal():

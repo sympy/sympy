@@ -1,12 +1,13 @@
-from ..core import I as _i
-from ..core.mul import Mul as _multiply
-from ..core.random import sample as _smple
-from ..core.sympify import _sympify
-from ..functions import sqrt as _sqrt, re as _re, im as _im, \
-    transpose as _t, adjoint as _c
-from ..tensor import shape as _shape
-from .dense import eye as _eye
-from .inverse import _inv
+from math import isclose
+
+from ..core import I
+from ..core.mul import Mul
+from ..core.numbers import Number, One
+from ..core.random import sample
+from ..core.sympify import _sympify as sympify
+from ..functions import sqrt, re, im, conjugate
+from ..tensor import shape
+from .dense import eye, zeros, diag
 
 __all__ = 'projection', 'jordan', 'transposition', \
           'permutation', 'elementary', 'rotation', 'reflection', \
@@ -18,9 +19,6 @@ __all__ = 'projection', 'jordan', 'transposition', \
           'regular_to_singular', 'complex_to_real'
 
 
-_EPS = 1e-15
-
-
 # === random number generator functions ===
 
 
@@ -29,36 +27,19 @@ def _sample(scalars, k=None):
     if hasattr(scalars, 'sample'):
         smpl = scalars.sample(_k)
     else:
-        smpl = _smple(scalars, _k)
+        smpl = sample(scalars, _k)
     return smpl if k else smpl[0]
 
 
 # === helper ===
 
-def _cs(scalar, real=True):
-    if isinstance(scalar, (tuple, list)) and len(scalar) == 2:
-        c, s = scalar
-    elif _is_complex(scalar):
-        c, s = _re(scalar), _im(scalar)
-    else:
-        c, s = scalar, _sample((-1, 1)) * _sqrt(1 - scalar ** 2)
-    abs_cs = abs(c ** 2 + s ** 2 - 1)
-    if isinstance(scalar, (int, float, complex)):
-        if abs(scalar) > 1 or abs_cs > _EPS:
-            msg = "isometry scalar argument must have norm equal to 1"
-            msg += " or - if real - norm less than 1"
-            msg += " not abs%s=%s" % (str(scalar), str(abs_cs))
-            raise ValueError(msg)
-    return (c, s) if real else (c + s * _i,)
-
-
 def _is_complex(z):
-    z = _sympify(z)
+    z = sympify(z)
     return z.is_complex and not z.is_real
 
 
 def _is_abs_one(x):
-    return isinstance(abs(x), (int, float)) and abs(x) == 1
+    return isinstance(abs(x), (int, float, Number)) and isclose(abs(x), 1)
 
 
 # === default sets ===
@@ -66,8 +47,8 @@ def _is_abs_one(x):
 
 _elementary_scalars = -1, 1
 _elementary_units = _elementary_scalars
-_rotation_scalars = (_sqrt(2) / 2, _sqrt(2) / 2), (0, -1),
-_unitary_scalars = tuple(c * 1 + s * _i for c, s in _rotation_scalars)
+_rotation_scalars = (sqrt(2) / 2, sqrt(2) / 2), (0, -1),
+_unitary_scalars = tuple(c * 1 + s * I for c, s in _rotation_scalars)
 
 
 # === fundamental constructor ===
@@ -169,7 +150,7 @@ def super_elementary_matrix(dim,
     rotation
 
     """
-    obj = _eye(dim)
+    obj = eye(dim)
     if index is None:
         return obj
 
@@ -182,7 +163,7 @@ def super_elementary_matrix(dim,
             "index argument must be tuple of two matrix index integer.")
 
     if row == col:
-        # identity or _multiply by scalar
+        # identity or multiply by scalar
         obj[row, col] = value or 1
         if scalars:
             raise ValueError(
@@ -268,13 +249,13 @@ def complex_to_real(mat=None):
         a complex matrix
 
     """
-    dim = _shape(mat)[0]
-    mat = mat or _eye(dim)
+    dim = shape(mat)[0]
+    mat = mat or eye(dim)
     obj = super_elementary_matrix(2 * dim)
     for i in range(dim):
         for j in range(dim):
             z_value = mat[i, j]
-            a, b = _re(z_value), _im(z_value)
+            a, b = re(z_value), im(z_value)
             obj[2 * i, 2 * j] = a
             obj[2 * i, 2 * j + 1] = b
             obj[2 * i + 1, 2 * j] = -b
@@ -335,15 +316,14 @@ def regular_to_singular(mat, rank=None):
     """
     if rank is None:
         return mat
-    dim = _shape(mat)[0]
+    dim = shape(mat)[0]
     if rank == dim:
         return mat
-    i = _eye(dim)
+    i = eye(dim)
     p = permutation(dim)
     d = projection(dim, (0, rank))
-    d = _multiply(p.inv(), d, p)
-    md = _multiply(mat, d)
-    return md + _multiply(md, mat, i - d)
+    d = p.inv() * d * p
+    return mat * d * (i + mat * (i - d))
 
 
 # === base matrices ===
@@ -396,12 +376,10 @@ def projection(dim,
     """
 
     index = index or _sample(range(dim + 1), 2)
-    obj = _eye(dim)
     start, end = sorted(index)
-    for i in range(dim):
-        v = 1 if start <= i < end else 0
-        obj[i, i] = v
-    return obj
+    spec = [0] * dim
+    spec[start:end] = [1] * (end - start)
+    return diag(*spec)
 
 
 def jordan(dim,
@@ -472,8 +450,8 @@ def jordan(dim,
     index = index or _sample(range(dim), 2)
     scalar = _sample(_elementary_scalars) \
         if scalar is None else scalar
-    obj = _eye(dim)
     start, end = sorted(index)
+    obj = eye(dim)
     obj[start, start] = scalar
     for i in range(start + 1, end):
         obj[i - 1, i] = 1
@@ -584,11 +562,10 @@ def permutation(dim,
     """
 
     perm = perm or _sample(range(dim), dim)
-    obj = _eye(dim)
+    obj = zeros(dim)
     for i, j in enumerate(perm):
-        obj[i, i] = 0  # aka zeros(dim)
         obj[i, j] = 1
-    return obj  # aka _eye(dim).permute(perm)
+    return obj  # aka eye(dim).permute(perm)
 
 
 def elementary(dim,
@@ -688,7 +665,6 @@ def elementary(dim,
     """
 
     index = index or _sample(range(dim), 2)
-    # scalar = scalar or _sample(_elementary_scalars + (None,), 1)
     return super_elementary_matrix(dim, index, scalar)
 
 
@@ -829,9 +805,25 @@ def rotation(dim,
 
     index = index or _sample(range(dim), 2)
     scalar = scalar or _sample(_rotation_scalars)
-    c, s = _cs(scalar)
+
+    if isinstance(scalar, (tuple, list)) and len(scalar) == 2:
+        c, s = scalar
+    elif _is_complex(scalar):
+        c, s = re(scalar), im(scalar)
+    else:
+        c, s = scalar, _sample((-1, 1)) * sqrt(1 - scalar ** 2)
+
+    if isinstance(scalar, (int, float, complex)):
+        if abs(scalar) > 1:
+            abs_cs = abs(c ** 2 + s ** 2 - 1)
+            msg = "rotation scalar argument must have norm equal to 1"
+            msg += " or - if real - norm less than 1"
+            msg += " not abs%s=%s" % (str(scalar), str(abs_cs))
+            raise ValueError(msg)
+
     if _is_complex(c) or _is_complex(s):
-        return super_elementary_matrix(dim, index, c, s, _c(s), _c(c))
+        return super_elementary_matrix(
+            dim, index, c, s, conjugate(s), conjugate(c))
     else:
         return super_elementary_matrix(dim, index, c, s, s, c)
 
@@ -985,11 +977,7 @@ def diagonal_normal(dim,
     if not dim == len(spec):
         spec = tuple(_sample(spec) for _ in range(dim))
 
-    # set diagonal entries
-    obj = _eye(dim)
-    for start, scalar in enumerate(spec):
-        obj[start, start] = scalar
-    return obj  # eq. to gauss_jordan(dim, rank, eigenvalue_set, dim)
+    return diag(*spec)
 
 
 def jordan_normal(dim,
@@ -1094,9 +1082,9 @@ def jordan_normal(dim,
     spec : tuple or list of symbols (optional)
         set of values of which scalars (diagonal entries) are choosen.
 
-        * If **dim** meets the length of **spec**,
+        * If **dim** meets the sum of dimensions of **spec**,
           spec will be the eigenvalues (diagonal entries) as it is.
-        * If **dim** and the length of **spec** differs,
+        * If **dim** and the sum of dimensions of **spec** differs,
           the diagonal entries will be choosen randomly from **spec**.
         * If not given **spec** defaults to $\{ -1, 1 \}$.
 
@@ -1139,23 +1127,19 @@ def jordan_normal(dim,
         spec = tuple(_sample(spec) for _ in range(dim))
 
     # set entries of jordan blocks
-    obj = _eye(dim)
+    obj = eye(dim)
     start = 0
     for scalar, size in spec:
-        end = min(dim, start + size)
-        obj[start, start] = scalar
-        for i in range(start + 1, end):
-            obj[i - 1, i] = 1
-            obj[i, i] = scalar
-        if end == dim:
+        if dim < start + size:
+            # leave the last diagonal entries one
             break
-        start = end
+        obj[start, start] = jordan(size, [0, size], scalar)
+        start += size
     return obj
 
 
 def isometry_normal(dim,
-                    spec=None,
-                    real=True):
+                    spec=None):
     r""" isometry matrix n x n in normal form
 
     Explanation
@@ -1222,8 +1206,8 @@ def isometry_normal(dim,
 
     >>> isometry_normal(3, spec=(0.5, -0.5))
     Matrix([
-    [              -0.5, 0.866025403784439, 0],
-    [-0.866025403784439,              -0.5, 0],
+    [               0.5, 0.866025403784439, 0],
+    [-0.866025403784439,               0.5, 0],
     [                 0,                 0, 1]])
 
     >>> isometry_normal(3, spec=(-1, 1j, 1))  # no more random
@@ -1233,7 +1217,7 @@ def isometry_normal(dim,
     [ 0,     0, 1]])
 
     >>> z = 1+1j
-    >>> isometry_normal(3, spec=((-1,), (z/abs(z),), (1,)))  # no more random
+    >>> isometry_normal(3, spec=(-1, z/abs(z), 1))  # no more random
     Matrix([
     [-1,                                       0, 0],
     [ 0, 0.707106781186547 + 0.707106781186547*I, 0],
@@ -1255,18 +1239,12 @@ def isometry_normal(dim,
         * or just cosine value $c$ of rotation square (then, a corresponding
           sin value $s$ will be drawn randomly).
 
-        * If **dim** meets the length of **spec**,
+        * If **dim** meets the sum of dimensions of **spec**,
           spec will be the eigenvalues (diagonal entries) as it is.
-        * If **dim** and the length of **spec** differs,
+        * If **dim** and the sum of dimensions of **spec** differs,
           the diagonal entries will be choosen randomly from **spec**.
         * If not given **spec** defaults to
           $\{ (\frac{\sqrt(2)}{2}, \frac{\sqrt(2)}{2}), (0, -1) \}$.
-
-    real : bool (optional default **True**)
-        flag to force real valued isometry,
-        i.e. if **True** all complex units will give a rotation square,
-        if **False** even tuple of cosine value $c$ and sine value $s$
-        will be treated as complex unit $c + s\ i$.
 
     See Also
     ========
@@ -1279,40 +1257,28 @@ def isometry_normal(dim,
 
     spec = spec or _rotation_scalars
 
-    # make spec list of (scalar,) or (scalar, +/-sqrt(1-scalar**2)) tuples
-    block_list = list()
-    for c in spec:
-        if isinstance(c, (tuple, list)):
-            block_list.append(c)
-        elif _is_abs_one(c):
-            block_list.append((c,))
-        else:
-            block_list.append(_cs(c, real))
-    spec = block_list
-    del block_list
+    # sum of dim of spec
+    _sum = 0
+    for s in spec:
+        _sum += 2 if isinstance(s, (list, tuple)) or not _is_abs_one(s) else 1
+        if dim < _sum:
+            break
 
-    # choose spec randomly if dim and len(spec) does not meet
-    if not dim == sum(len(s) for s in spec):
-        spec = tuple(_sample(spec) for _ in range(dim))
+    # sample spec
+    if not _sum == dim:
+        spec = [_sample(spec) for _ in range(dim)]
 
     # set entries of rotation blocks
-    obj = _eye(dim)
+    obj = eye(dim)
     start = 0
     for s in spec:
-        end = start + len(s)
-        if dim < end:
-            # leave the last diagonal entry one
+        size, block = 1, s
+        if isinstance(s, (list, tuple)) or not _is_abs_one(s):
+            size, block = 2, rotation(2, (0, 1), s)
+        if dim < start + size:
             break
-        if len(s) == 1:
-            scalar, = s
-            obj[start, start] = scalar
-        else:
-            c, s = s
-            obj[start, start] = c
-            obj[start, start + 1] = s
-            obj[start + 1, start] = -1 * s
-            obj[start + 1, start + 1] = c
-        start = end
+        obj[start, start] = block
+        start += size
     return obj
 
 
@@ -1372,7 +1338,7 @@ def triangular(dim,
     """
 
     if length == 0:
-        return regular_to_singular(_eye(dim), rank)
+        return regular_to_singular(eye(dim), rank)
     scalars = scalars or (0,)
     units = units or (1,)
     length = length or 2 * dim
@@ -1381,7 +1347,7 @@ def triangular(dim,
     scalars = [_sample(units) if i == j
                else _sample(scalars) for i, j in indicies]
     items = [elementary(dim, ix, s) for ix, s in zip(indicies, scalars)]
-    return regular_to_singular(_multiply(*items), rank)
+    return regular_to_singular(Mul(*items), rank)
 
 
 def square(dim,
@@ -1445,14 +1411,14 @@ def square(dim,
     """
 
     if length == 0:
-        return regular_to_singular(_eye(dim), rank)
+        return regular_to_singular(eye(dim), rank)
 
     length = length or 2 * dim
     lwr = triangular(dim, None, scalars, units,
                      int(length / 2))
     upr = triangular(dim, rank, scalars, units,
                      length - int(length / 2))
-    return _multiply(_t(lwr), upr)
+    return lwr.T * upr
 
 
 def invertible(dim,
@@ -1634,7 +1600,7 @@ def idempotent(dim,
     rank = dim - 1 if rank is None else rank
     normal_form = projection(dim, (0, rank))
     s = invertible(dim, scalars, units, length)
-    return _multiply(_inv(s), normal_form, s)
+    return s.inv() * normal_form * s
 
 
 def nilpotent(dim,
@@ -1714,7 +1680,7 @@ def nilpotent(dim,
     spec = tuple((0, i) for i in index)
     normal_form = jordan_normal(dim, spec=spec)
     s = invertible(dim, scalars, units, length)
-    return _multiply(_inv(s), normal_form, s)
+    return s.inv() * normal_form * s
 
 
 def diagonalizable(dim,
@@ -1795,7 +1761,7 @@ def diagonalizable(dim,
 
     normal_form = diagonal_normal(dim, spec)
     s = invertible(dim, scalars, units, length)
-    return _multiply(_inv(s), normal_form, s)
+    return s.inv() * normal_form * s
 
 
 def trigonalizable(dim,
@@ -1870,7 +1836,7 @@ def trigonalizable(dim,
 
     normal_form = jordan_normal(dim, spec)
     s = invertible(dim, scalars, units, length)
-    return _multiply(_inv(s), normal_form, s)
+    return s.inv() * normal_form * s
 
 
 # === matrices conjugate by isometries ==
@@ -1963,14 +1929,14 @@ def orthogonal(dim,
 
     if spec is None:
         if length == 0:
-            return _eye(dim)
+            return eye(dim)
         length = length or 2 * dim
         scalars = [_sample(scalars) for _ in range(length)]
         items = [rotation(dim, scalar=s) for s in scalars]
-        return _multiply(*items)
+        return Mul(*items)
     normal_form = isometry_normal(dim, spec)
     s = orthogonal(dim, scalars=scalars, length=length)
-    return _multiply(_t(s), normal_form, s)
+    return s.T * normal_form * s
 
 
 def unitary(dim,
@@ -2034,9 +2000,9 @@ def unitary(dim,
     >>> spec_u = [-1, z, -z]
     >>> unitary(3, spec=spec_u, length=0)  # no more random
     Matrix([
-    [-1,                       0,                        0],
-    [ 0, sqrt(2)/2 + sqrt(2)*I/2,                        0],
-    [ 0,                       0, -sqrt(2)/2 - sqrt(2)*I/2]])
+    [-1,                 0,                  0],
+    [ 0, sqrt(2)*(1 + I)/2,                  0],
+    [ 0,                 0, -sqrt(2)*(1 + I)/2]])
 
     >>> u = simplify(unitary(3, spec=spec_u))
     >>> u
@@ -2065,10 +2031,6 @@ def unitary(dim,
 
         * either 1 or -1
         * or any complex unit $z$ (complex number with $|z|=1$)
-        * or a tuple of cosine value $c$ and sine value $s$
-          of a rotation square (the $z = c + s * I$)
-        * or just cosine value $c$ (then, a corresponding
-          sin value $s$ will be drawn randomly).
 
     scalars : tuple or list of symbols with norm 1 (optional),
         default values for random choosen scalar of
@@ -2087,20 +2049,23 @@ def unitary(dim,
 
     if spec is None:
         if length == 0:
-            return _eye(dim)
+            return eye(dim)
         length = length or 2 * dim
         # draw triples of complex units $(z,w,u)$ such that by
         # $c=z*\re(u)$ and $s=w*\im(u)$ each rotation
         # yields a complex rotation matrix
         if len(scalars) < 3:
             scalars = scalars + scalars + scalars
-        csc = (lambda z, w, u: (z * _re(u), w * _im(u)))
+        csc = (lambda z, w, u: (z * re(u), w * im(u)))
         scalars = [csc(*_sample(scalars, k=3)) for _ in range(length)]
         items = [rotation(dim, scalar=s) for s in scalars]
-        return _multiply(*items)
-    normal_form = isometry_normal(dim, spec, real=False)
+        return Mul(*items)
+    normal_form = isometry_normal(dim, spec)
+    if not all(_is_abs_one(normal_form[i, i]) for i in range(dim)):
+        raise ValueError('eigenvalues [items of spec] of unitary matrix '
+                         'must be of length one')
     s = unitary(dim, scalars=scalars, length=length)
-    return _multiply(_c(s), normal_form, s)
+    return s.H * normal_form * s
 
 
 def normal(dim,
@@ -2222,11 +2187,11 @@ def normal(dim,
     if any(_is_complex(c) for c in spec):
         scalars = scalars or _unitary_scalars
         s = unitary(dim, None, scalars, length)
-        return _multiply(_c(s), normal_form, s)
+        return s.H * normal_form * s
     else:
         scalars = scalars or _rotation_scalars
         s = orthogonal(dim, None, scalars, length)
-        return _multiply(_t(s), normal_form, s)
+        return s.T * normal_form * s
 
 
 # === symmetric or complex adjoined matrices ===
@@ -2303,7 +2268,7 @@ def symmetric(dim,
     """
 
     s = invertible(dim, scalars, units, length)
-    return _multiply(_t(s), s)
+    return s.T * s
 
 
 def hermite(dim,
@@ -2375,4 +2340,4 @@ def hermite(dim,
     """
 
     s = invertible(dim, scalars, units, length)
-    return _multiply(_c(s), s)
+    return s.H * s
