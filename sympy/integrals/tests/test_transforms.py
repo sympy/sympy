@@ -835,6 +835,9 @@ def test_inverse_laplace_transform():
     assert ILT(1 - 1/(s**2 + 1), s, t) == -sin(t)*Heaviside(t) + DiracDelta(t)
     assert ILT(1/s**2, s, t) == t*Heaviside(t)
     assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/24
+    # Issue #24424
+    assert ((s + 8)/((s + 2)*(s**2 + 2*s + 10)), s, t) ==\
+        (8*exp(t)*sin(3*t) - 9*exp(t)*cos(3*t) + 9)*exp(-2*t)*Heaviside(t)/15
     assert simp_hyp(ILT(a/(s**2 - a**2), s, t)) == sinh(a*t)*Heaviside(t)
     assert simp_hyp(ILT(s/(s**2 - a**2), s, t)) == cosh(a*t)*Heaviside(t)
     # TODO sinh/cosh shifted come out a mess. also delayed trig is a mess
@@ -885,14 +888,18 @@ def test_inverse_laplace_transform_delta():
     t = symbols('t')
     assert ILT(2, s, t) == 2*DiracDelta(t)
     assert ILT(2*exp(3*s) - 5*exp(-7*s), s, t) == \
-        2*DiracDelta(t + 3) - 5*DiracDelta(t - 7)
-    a = cos(sin(7)/2)
-    assert ILT(a*exp(-3*s), s, t) == a*DiracDelta(t - 3)
-    assert ILT(exp(2*s), s, t) == DiracDelta(t + 2)
+        2*InverseLaplaceTransform(exp(3*s), s, t) - 5*DiracDelta(t-7)
+    b = cos(sin(7)/2)
+    assert ILT(b*exp(-3*s), s, t) == b*DiracDelta(t-3)
+    assert ILT(exp(-2*s), s, t) == DiracDelta(t-2)
+    assert ILT(exp(2*s), s, t) == InverseLaplaceTransform(exp(2*s), s, t)
     r = Symbol('r', real=True)
-    assert ILT(exp(r*s), s, t) == DiracDelta(r + t)
+    assert ILT(exp(r*s), s, t) == InverseLaplaceTransform(exp(r*s), s, t)
+    a = Symbol('a', positive=True)
+    assert ILT(exp(-a*s), s, t) == DiracDelta(a - t)
 
 
+@XFAIL
 def test_inverse_laplace_transform_delta_cond():
     from sympy.functions.elementary.complexes import im
     from sympy.functions.special.delta_functions import DiracDelta

@@ -2238,20 +2238,76 @@ def _inverse_laplace_apply_simple_rules(F, s, t):
     return False, F
 
 
+def _inverse_laplace_time_shift(F, s, t):
+    """
+    """
+    a = Wild('a', exclude=[s])
+    b = Wild('b', exclude=[s])
+    g = Wild('g')
+
+    if not F.has(s):
+        return True, F*DiracDelta(t)
+
+    ma1 = F.match(b*exp(a*s))
+    if ma1:
+        try:
+            if ma1[a]<0:
+                return True, ma1[b]*DiracDelta(t+ma1[a])
+            else:
+                return True, ma1[b]*InverseLaplaceTransform(exp(ma1[a]*s),
+                                                            s, t, None)
+        except TypeError:
+            return True, ma1[b]*InverseLaplaceTransform(exp(ma1[a]*s),
+                                                        s, t, None)
+    ma1 = F.match(b*exp(a*s)*g)
+    if ma1:
+        try:
+            if ma1[a]<0:
+                return True, ma1[b]*InverseLaplaceTransform(ma1[g],
+                                                    s, t+ma1[a], None).doit()
+            else:
+                return True, ma1[b]*InverseLaplaceTransform(exp(ma1[a]*s)*ma1[g],
+                                                    s, t, None)
+        except TypeError:
+            return True, ma1[b]*InverseLaplaceTransform(exp(ma1[a]*s)*ma1[g],
+                                                s, t, None)
+    return False, F
+
+
 def _inverse_laplace_apply_prog_rules(F, s, t):
     """
     Helper function for the class InverseLaplaceTransform.
     """
+    prog_rules = [_inverse_laplace_time_shift]
+
+    for p_rule in prog_rules:
+        d, L = p_rule(F, s, t)
+        if d:
+            return True, L
 
     return False, F
 
 
-def _inverse_laplace_expand(F, s, t):
+def _inverse_laplace_expand(fn, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-
-    return False, F
+    if fn.is_Add:
+        return False, fn
+    r = expand(fn, deep=False)
+    if r.is_Add:
+        return True, InverseLaplaceTransform(r, s, t, plane).doit()
+    r = expand_mul(fn)
+    if r.is_Add:
+        return True, InverseLaplaceTransform(r, s, t, plane).doit()
+    r = expand(fn)
+    if r.is_Add:
+        return True, InverseLaplaceTransform(r, s, t, plane).doit()
+    if fn.is_rational_function(s):
+        r = fn.apart()
+    if r.is_Add:
+        return True, InverseLaplaceTransform(r, s, t, plane).doit()
+    return False, fn
 
 
 @_noconds_(True)
@@ -2356,7 +2412,7 @@ class InverseLaplaceTransform(IntegralTransform):
     _none_sentinel = Dummy('None')
     _c = Dummy('c')
 
-    def __new__(cls, F, s, x, plane=None, **opts):
+    def __new__(cls, F, s, x, plane, **opts):
         if plane is None:
             plane = InverseLaplaceTransform._none_sentinel
         return IntegralTransform.__new__(cls, F, s, x, plane, **opts)
@@ -2402,6 +2458,7 @@ class InverseLaplaceTransform(IntegralTransform):
         fn = self.function
         s_ = self.function_variable
         t_ = self.transform_variable
+        plane = self.fundamental_plane
 
         terms = Add.make_args(fn)
         results = []
@@ -2415,7 +2472,7 @@ class InverseLaplaceTransform(IntegralTransform):
             if d:
                 results.append(r)
                 continue
-            d, r = _inverse_laplace_expand(f, s_, t_)
+            d, r = _inverse_laplace_expand(f, s_, t_, plane)
             if d:
                 results.append(r)
                 continue
@@ -2433,7 +2490,7 @@ class InverseLaplaceTransform(IntegralTransform):
                 results.append(k_*T)
                 conds.append(c)
             else:
-                results.append(k_*InverseLaplaceTransform(f_, s_, t_))
+                results.append(k_*InverseLaplaceTransform(f_, s_, t_, None))
         if _noconds:
             return Add(*results).simplify(doit=False)
         else:
