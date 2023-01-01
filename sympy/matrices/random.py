@@ -195,7 +195,7 @@ def super_elementary_matrix(dim,
 # === fundamental matrix functions ===
 
 
-def complex_to_real(mat=None):
+def complex_to_real(mat):
     r""" returns real version 2n x 2n of a complex matrix n x n
 
     Explanation
@@ -249,18 +249,18 @@ def complex_to_real(mat=None):
         a complex matrix
 
     """
-    dim = shape(mat)[0]
-    mat = mat or eye(dim)
-    obj = super_elementary_matrix(2 * dim)
+    dim, _ = shape(mat)
+    a, b = mat.as_real_imag()
+    obj = zeros(2 * dim)
+    obj[0, 0] = a
+    obj[0, dim] = b
+    obj[dim, 0] = -b
+    obj[dim, dim] = a
+
+    p = list()
     for i in range(dim):
-        for j in range(dim):
-            z_value = mat[i, j]
-            a, b = re(z_value), im(z_value)
-            obj[2 * i, 2 * j] = a
-            obj[2 * i, 2 * j + 1] = b
-            obj[2 * i + 1, 2 * j] = -b
-            obj[2 * i + 1, 2 * j + 1] = a
-    return obj
+        p.extend([i, dim + i])
+    return obj.permute(p).T.permute(p).T
 
 
 def regular_to_singular(mat, rank=None):
