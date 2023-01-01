@@ -91,7 +91,7 @@ def test_basic1():
     assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(sqrt(x), x, 0, dir='-') == 0
-    assert limit(x**-pi, x, 0, dir='-') == oo/(-1)**pi
+    assert limit(x**-pi, x, 0, dir='-') == -oo*(-1)**(1 - pi)
     assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
 
     # test pull request 22491
@@ -641,6 +641,12 @@ def test_issue_8481():
     k = Symbol('k', integer=True, nonnegative=True)
     lamda = Symbol('lamda', positive=True)
     assert limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
+
+
+def test_issue_8634():
+    n = Symbol('n', integer=True, positive=True)
+    x = Symbol('x')
+    assert limit(x**n, x, -oo) == -oo*(-1)**(1 - n)
 
 
 def test_issue_8635_18176():

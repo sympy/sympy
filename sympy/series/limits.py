@@ -326,20 +326,12 @@ class Limit(Expr):
                 elif ex == 0:
                     return coeff
                 elif ex.is_negative:
-                    if ex.is_integer:
-                        if cdir == 1 or ex.is_even:
-                            return S.Infinity*sign(coeff)
-                        elif cdir == -1:
-                            return S.NegativeInfinity*sign(coeff)
-                        else:
-                            return S.ComplexInfinity
+                    if cdir == 1:
+                        return S.Infinity*sign(coeff)
+                    elif cdir == -1:
+                        return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
                     else:
-                        if cdir == 1:
-                            return S.Infinity*sign(coeff)
-                        elif cdir == -1:
-                            return S.Infinity*sign(coeff)*S.NegativeOne**ex
-                        else:
-                            return S.ComplexInfinity
+                        return S.ComplexInfinity
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
