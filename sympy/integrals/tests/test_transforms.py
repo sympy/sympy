@@ -814,6 +814,7 @@ def test_inverse_laplace_transform():
     assert ILT(1/s, s, t) == Heaviside(t)
     assert ILT(a/(a + s), s, t) == a*exp(-a*t)*Heaviside(t)
     assert ILT(s/(a + s), s, t) == -a*exp(-a*t)*Heaviside(t) + DiracDelta(t)
+    assert ILT((s-a)**(-b), s, t) == t**(b - 1)*exp(a*t)*Heaviside(t)/gamma(b)
     assert ILT((a + s)**(-2), s, t) == t*exp(-a*t)*Heaviside(t)
     assert ILT((a + s)**(-5), s, t) == t**4*exp(-a*t)*Heaviside(t)/24
     assert ILT(a/(a**2 + s**2), s, t) == sin(a*t)*Heaviside(t)

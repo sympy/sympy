@@ -2192,25 +2192,26 @@ def _inverse_laplace_build_rules(s, t):
     # This list is sorted according to the prep function needed.
     # Implemented up to rule 12.
     inverse_laplace_transform_rules = [
-        (a/s, a, same, 1),
-        (b/(s+a), b*exp(-a*t), same, 1),
-        (a/s**2, a*t, same, 1),
-        (b/(s**2+a**2), b*sin(a*t)/a, same, 1),
-        (b/(s**2-a**2), b*sinh(a*t)/a, same, 1),
-        (b*s/(s**2+a**2), b*cos(a*t), same, 1),
-        (b*s/(s**2-a**2), b*cosh(a*t), same, 1),
+        (a/s, a, same, 1, S.true),
+        (b/(s+a), b*exp(-a*t), same, 1, S.true),
+        (a/s**2, a*t, same, 1, S.true),
+        (b/(s**2+a**2), b*sin(a*t)/a, same, 1, S.true),
+        (b/(s**2-a**2), b*sinh(a*t)/a, same, 1, S.true),
+        (b*s/(s**2+a**2), b*cos(a*t), same, 1, S.true),
+        (b*s/(s**2-a**2), b*cosh(a*t), same, 1, S.true),
+        (b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c), same, 1, c>0),
         #
-        (b/(s*(s+a)), b*(1-exp(-a*t))/a, frac, 1),
-        (b/(s+a)**2, b*t*exp(-a*t), frac, 1),
-        (b*s/(s+a)**2, b*(1-a*t)*exp(-a*t), frac, 1),
-        (c/((s+a)*(s+b)), c/(a-b)*(exp(-b*t)-exp(-a*t)), frac, 1),
-        (c*s/((s+a)*(s+b)), c/(a-b)*(a*exp(-a*t)-b*exp(-b*t)), frac, 1),
+        (b/(s*(s+a)), b*(1-exp(-a*t))/a, frac, 1, S.true),
+        (b/(s+a)**2, b*t*exp(-a*t), frac, 1, S.true),
+        (b*s/(s+a)**2, b*(1-a*t)*exp(-a*t), frac, 1, S.true),
+        (c/((s+a)*(s+b)), c/(a-b)*(exp(-b*t)-exp(-a*t)), frac, 1, S.true),
+        (c*s/((s+a)*(s+b)), c/(a-b)*(a*exp(-a*t)-b*exp(-b*t)), frac, 1, S.true),
         #
         (c/(d*(s+b)**2+a**2),
-         c*exp(-b*t)*sin(a*t/sqrt(d))/(a*sqrt(d)), ctsd, 1),
+         c*exp(-b*t)*sin(a*t/sqrt(d))/(a*sqrt(d)), ctsd, 1, S.true),
         (c/(d**2*(s+a)**2+b**2),
          c/d*exp(-a*t)*(b*cos(b/d*t)/d-a*sin(b/d*t))/b,
-         ctsd, 1/s),
+         ctsd, 1/s, S.true),
     ]
     return inverse_laplace_transform_rules
 
@@ -2224,17 +2225,24 @@ def _inverse_laplace_apply_simple_rules(F, s, t):
 
     _prep = ''
 
-    for s_dom, t_dom, prep, fac in simple_rules:
+    for s_dom, t_dom, prep, fac, check in simple_rules:
         if not _prep is (prep, fac):
             _F = prep(func*fac)
             _prep = (prep, fac)
         ma = _F.match(s_dom)
         if ma:
-            debug('_inverse_laplace_apply_simple_rules match:')
-            debug('      f:    %s'%(func,))
-            debug('      rule: %s o---o %s'%(s_dom, t_dom))
-            debug('      ma:   %s'%(ma,))
-            return True, Heaviside(t)*k*t_dom.xreplace(ma)
+            try:
+                c = check.xreplace(ma)
+            except TypeError:
+                # This may happen if the time function has imaginary
+                # numbers in it. Then we give up.
+                continue
+            if c:
+                debug('_inverse_laplace_apply_simple_rules match:')
+                debug('      f:    %s'%(func,))
+                debug('      rule: %s o---o %s'%(s_dom, t_dom))
+                debug('      ma:   %s'%(ma,))
+                return True, Heaviside(t)*k*t_dom.xreplace(ma)
     return False, F
 
 
@@ -2252,6 +2260,10 @@ def _inverse_laplace_time_shift(F, s, t):
     if ma1:
         try:
             if ma1[a]<0:
+                debug('_inverse_laplace_time_shift match:')
+                debug('      f:    %s'%(F,))
+                debug('      rule: exp(-a*s) o---o DiracDelta(t-a)')
+                debug('      ma:   %s'%(ma1,))
                 return True, ma1[b]*DiracDelta(t+ma1[a])
             else:
                 return True, ma1[b]*InverseLaplaceTransform(exp(ma1[a]*s),
@@ -2263,6 +2275,10 @@ def _inverse_laplace_time_shift(F, s, t):
     if ma1:
         try:
             if ma1[a]<0:
+                debug('_inverse_laplace_time_shift match:')
+                debug('      f:    %s'%(F,))
+                debug('      rule: exp(-a*s)*F(s) o---o Heaviside(t-a)*f(t-a)')
+                debug('      ma:   %s'%(ma1,))
                 return True, ma1[b]*InverseLaplaceTransform(ma1[g],
                                                     s, t+ma1[a], None).doit()
             else:
