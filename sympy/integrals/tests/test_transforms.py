@@ -836,7 +836,7 @@ def test_inverse_laplace_transform():
     assert ILT(1/s**2, s, t) == t*Heaviside(t)
     assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/24
     # Issue #24424
-    assert ((s + 8)/((s + 2)*(s**2 + 2*s + 10)), s, t) ==\
+    assert ILT((s + 8)/((s + 2)*(s**2 + 2*s + 10)), s, t) ==\
         (8*exp(t)*sin(3*t) - 9*exp(t)*cos(3*t) + 9)*exp(-2*t)*Heaviside(t)/15
     assert simp_hyp(ILT(a/(s**2 - a**2), s, t)) == sinh(a*t)*Heaviside(t)
     assert simp_hyp(ILT(s/(s**2 - a**2), s, t)) == cosh(a*t)*Heaviside(t)

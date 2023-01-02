@@ -2304,7 +2304,7 @@ def _inverse_laplace_expand(fn, s, t, plane):
     if r.is_Add:
         return True, InverseLaplaceTransform(r, s, t, plane).doit()
     if fn.is_rational_function(s):
-        r = fn.apart()
+        r = fn.apart(s)
     if r.is_Add:
         return True, InverseLaplaceTransform(r, s, t, plane).doit()
     return False, fn
@@ -2412,7 +2412,7 @@ class InverseLaplaceTransform(IntegralTransform):
     _none_sentinel = Dummy('None')
     _c = Dummy('c')
 
-    def __new__(cls, F, s, x, plane, **opts):
+    def __new__(cls, F, s, x, plane=None, **opts):
         if plane is None:
             plane = InverseLaplaceTransform._none_sentinel
         return IntegralTransform.__new__(cls, F, s, x, plane, **opts)
@@ -2490,7 +2490,7 @@ class InverseLaplaceTransform(IntegralTransform):
                 results.append(k_*T)
                 conds.append(c)
             else:
-                results.append(k_*InverseLaplaceTransform(f_, s_, t_, None))
+                results.append(k_*InverseLaplaceTransform(f_, s_, t_, plane))
         if _noconds:
             return Add(*results).simplify(doit=False)
         else:
