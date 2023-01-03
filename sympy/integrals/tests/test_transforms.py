@@ -1119,8 +1119,5 @@ def test_issue_12591():
     x, y = symbols("x y", real=True)
     assert fourier_transform(exp(x), x, y) == FourierTransform(exp(x), x, y)
 
-
-def test_issue_14692():
-    b = Symbol('b', negative=True)
-    assert laplace_transform(1/(I*x - b), x, s) == \
-        (-I*exp(I*b*s)*expint(1, b*s*exp_polar(I*pi/2)), 0, True)
+# Issue 14692 cannot be tested here anymore since that kind of function
+# is now covered by rules and does not go throug meijerint anymore.
