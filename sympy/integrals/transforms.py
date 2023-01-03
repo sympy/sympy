@@ -1237,124 +1237,62 @@ def _laplace_build_rules(t, s):
     omega = Wild('omega', exclude=[t])
     dco = lambda f: _laplace_deep_collect(f, t)
     laplace_transform_rules = [
-    # Catch a constant
-    (a, a/s, S.true, S.Zero, dco),
-    # DiracDelta rules
-    (DiracDelta(a*t-b),
-     exp(-s*b/a)/Abs(a),
-     Or(And(a>0, b>=0), And(a<0, b<=0)), S.Zero, dco),
-    (DiracDelta(a*t-b),
-     S(0),
-     Or(And(a<0, b>=0), And(a>0, b<=0)), S.Zero, dco),
-    # Rules from http://eqworld.ipmnet.ru/en/auxiliary/inttrans/
-    # 2.1
-    (1,
-     1/s,
-     S.true, S.Zero, dco),
-    # 2.2 expressed in terms of Heaviside
-    (Heaviside(a*t-b),
-     exp(-s*b/a)/s,
-     And(a>0, b>0), S.Zero, dco),
-    (Heaviside(a*t-b),
-     (1-exp(-s*b/a))/s,
-     And(a<0, b<0), S.Zero, dco),
-    (Heaviside(a*t-b),
-     1/s,
-     And(a>0, b<=0), S.Zero, dco),
-    (Heaviside(a*t-b),
-     0,
-     And(a<0, b>0), S.Zero, dco),
-    # 2.3
-    (t,
-     1/s**2,
-     S.true, S.Zero, dco),
-    # 2.4
-    (1/(a*t+b),
-     -exp(-b/a*s)*Ei(-b/a*s)/a,
-     a>0, S.Zero, dco),
-    # 2.5 and 2.6 are covered by 2.11
-    # 2.7
-    (1/sqrt(a*t+b),
-     sqrt(a*pi/s)*exp(b/a*s)*erfc(sqrt(b/a*s))/a,
-     a>0, S.Zero, dco),
-    # 2.8
-    (sqrt(t)/(t+b),
-     sqrt(pi/s)-pi*sqrt(b)*exp(b*s)*erfc(sqrt(b*s)),
-     S.true, S.Zero, dco),
-    # 2.9
-    ((a*t+b)**(-S(3)/2),
-     2*b**(-S(1)/2)-2*(pi*s/a)**(S(1)/2)*exp(b/a*s)*erfc(sqrt(b/a*s))/a,
-     a>0, S.Zero, dco),
-    # 2.10
-    (t**(S(1)/2)*(t+a)**(-1),
-     (pi/s)**(S(1)/2)-pi*a**(S(1)/2)*exp(a*s)*erfc(sqrt(a*s)),
-     S.true, S.Zero, dco),
-    # 2.11
-    (1/(a*sqrt(t) + t**(3/2)),
-     pi*a**(S(1)/2)*exp(a*s)*erfc(sqrt(a*s)),
-     S.true, S.Zero, dco),
-    # 2.12
-    (t**n,
-     gamma(n+1)/s**(n+1),
-     n>-1, S.Zero, dco),
-    # 2.13
-    ((a*t+b)**n,
-     lowergamma(n+1, b/a*s)*exp(-b/a*s)/s**(n+1)/a,
-     And(n>-1, a>0), S.Zero, dco),
-    # 2.14
-    (t**n/(t+a),
-     a**n*gamma(n+1)*lowergamma(-n,a*s),
-     n>-1, S.Zero, dco),
-    # 3.1
-    (exp(a*t-tau),
-     exp(-tau)/(s-a),
-     S.true, a, dco),
-    # 3.2
-    (t*exp(a*t-tau),
-     exp(-tau)/(s-a)**2,
-     S.true, a, dco),
-    # 3.3
-    (t**n*exp(a*t),
-     gamma(n+1)/(s-a)**(n+1),
-     n>-1, a, dco),
-    # 3.4 and 3.5 cannot be covered here because they are
-    #     sums and only the individual sum terms will get here.
-    # 3.6
-    (exp(-a*t**2),
-     sqrt(pi/4/a)*exp(s**2/4/a)*erfc(s/sqrt(4*a)),
-     a>0, S.Zero, dco),
-    # 3.7
-    (t*exp(-a*t**2),
-     1/(2*a)-2/sqrt(pi)/(4*a)**(S(3)/2)*s*erfc(s/sqrt(4*a)),
-     S.true, S.Zero, dco),
-    # 3.8
-    (exp(-a/t),
-     2*sqrt(a/s)*besselk(1, 2*sqrt(a*s)),
-     a>=0, S.Zero, dco),
-    # 3.9
-    (sqrt(t)*exp(-a/t),
-     S(1)/2*sqrt(pi/s**3)*(1+2*sqrt(a*s))*exp(-2*sqrt(a*s)),
-     a>=0, S.Zero, dco),
-    # 3.10
-    (exp(-a/t)/sqrt(t),
-     sqrt(pi/s)*exp(-2*sqrt(a*s)),
-     a>=0, S.Zero, dco),
-    # 3.11
-    (exp(-a/t)/(t*sqrt(t)),
-     sqrt(pi/a)*exp(-2*sqrt(a*s)),
-     a>0, S.Zero, dco),
-    # 3.12
-    (t**n*exp(-a/t),
-     2*(a/s)**((n+1)/2)*besselk(n+1, 2*sqrt(a*s)),
-     a>0, S.Zero, dco),
-    # 3.13
-    (exp(-2*sqrt(a*t)),
-     s**(-1)-sqrt(pi*a)*s**(-S(3)/2)*exp(a/s)*erfc(sqrt(a/s)),
-     S.true, S.Zero, dco),
-    # 3.14
-    (exp(-2*sqrt(a*t))/sqrt(t),
-     (pi/s)**(S(1)/2)*exp(a/s)*erfc(sqrt(a/s)),
-     S.true, S.Zero, dco),
+    (a, a/s,
+     S.true, S.Zero, dco), # 4.2.1
+    (DiracDelta(a*t-b), exp(-s*b/a)/Abs(a),
+     Or(And(a>0, b>=0), And(a<0, b<=0)), S.Zero, dco), # Not in Bateman54
+    (DiracDelta(a*t-b), S(0),
+     Or(And(a<0, b>=0), And(a>0, b<=0)), S.Zero, dco), # Not in Bateman54
+    (Heaviside(a*t-b), exp(-s*b/a)/s,
+     And(a>0, b>0), S.Zero, dco), # 4.4.1
+    (Heaviside(a*t-b), (1-exp(-s*b/a))/s,
+     And(a<0, b<0), S.Zero, dco), # 4.4.1
+    (Heaviside(a*t-b), 1/s,
+     And(a>0, b<=0), S.Zero, dco), # 4.4.1
+    (Heaviside(a*t-b), 0,
+     And(a<0, b>0), S.Zero, dco), # 4.4.1
+    (t, 1/s**2,
+     S.true, S.Zero, dco), # 4.2.3
+    (1/(a*t+b), -exp(-b/a*s)*Ei(-b/a*s)/a,
+     Abs(arg(b/a))<pi, S.Zero, dco), # 4.2.6
+    (1/sqrt(a*t+b), sqrt(a*pi/s)*exp(b/a*s)*erfc(sqrt(b/a*s))/a,
+     Abs(arg(b/a))<pi, S.Zero, dco), # 4.2.18
+    (sqrt(t)/(t+b), sqrt(pi/s)-pi*sqrt(b)*exp(b*s)*erfc(sqrt(b*s)),
+     Abs(arg(b))<pi, S.Zero, dco), # 4.2.22
+    ((a*t+b)**(-S(3)/2), 2*b**(-S(1)/2)-2*(pi*s/a)**(S(1)/2)*exp(b/a*s)*erfc(sqrt(b/a*s))/a,
+     Abs(arg(b/a))<pi, S.Zero, dco), # 4.2.20
+    (1/(a*sqrt(t) + t**(3/2)), pi*a**(S(1)/2)*exp(a*s)*erfc(sqrt(a*s)),
+     S.true, S.Zero, dco), # Not in Bateman54
+    (t**n, gamma(n+1)/s**(n+1),
+     n>-1, S.Zero, dco), # 4.3.1
+    ((a*t+b)**n, lowergamma(n+1, b/a*s)*exp(-b/a*s)/s**(n+1)/a,
+     And(n>-1, Abs(arg(b/a))<pi), S.Zero, dco), # 4.3.4
+    (t**n/(t+a), a**n*gamma(n+1)*lowergamma(-n,a*s),
+     And(n>-1, Abs(arg(a))<pi), S.Zero, dco), # 4.3.7
+    (exp(a*t-tau), exp(-tau)/(s-a),
+     S.true, a, dco), # 4.5.1
+    (t*exp(a*t-tau), exp(-tau)/(s-a)**2,
+     S.true, a, dco), # 4.5.2
+    (t**n*exp(a*t), gamma(n+1)/(s-a)**(n+1),
+     n>-1, a, dco), # 4.5.3
+    (exp(-a*t**2), sqrt(pi/4/a)*exp(s**2/4/a)*erfc(s/sqrt(4*a)),
+     Abs(arg(a))<pi, S.Zero, dco), # 4.5.21
+    (t*exp(-a*t**2), 1/(2*a)-2/sqrt(pi)/(4*a)**(S(3)/2)*s*erfc(s/sqrt(4*a)),
+     Abs(arg(a))<pi, S.Zero, dco), # 4.5.22
+    (exp(-a/t), 2*sqrt(a/s)*besselk(1, 2*sqrt(a*s)),
+     Abs(arg(a))<=pi, S.Zero, dco), # 4.5.25
+    (sqrt(t)*exp(-a/t), S(1)/2*sqrt(pi/s**3)*(1+2*sqrt(a*s))*exp(-2*sqrt(a*s)),
+     Abs(arg(a))<=pi, S.Zero, dco), # 4.5.26
+    (exp(-a/t)/sqrt(t), sqrt(pi/s)*exp(-2*sqrt(a*s)),
+     Abs(arg(a))<=pi, S.Zero, dco), # 4.5.27
+    (exp(-a/t)/(t*sqrt(t)), sqrt(pi/a)*exp(-2*sqrt(a*s)),
+     Abs(arg(a))<pi, S.Zero, dco), # 4.5.28
+    (t**n*exp(-a/t), 2*(a/s)**((n+1)/2)*besselk(n+1, 2*sqrt(a*s)),
+     Abs(arg(a))<pi, S.Zero, dco), # 4.5.29
+    (exp(-2*sqrt(a*t)), s**(-1)-sqrt(pi*a)*s**(-S(3)/2)*exp(a/s)*erfc(sqrt(a/s)),
+     Abs(arg(a))<pi, S.Zero, dco), # 4.5.31
+    (exp(-2*sqrt(a*t))/sqrt(t), (pi/s)**(S(1)/2)*exp(a/s)*erfc(sqrt(a/s)),
+     Abs(arg(a))<pi, S.Zero, dco), # 4.5.33
     # 4.1
     (sinh(a*t),
      a/(s**2-a**2),
@@ -2069,7 +2007,10 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     The implementation is rule-based, and if you are interested in which
     rules are applied, and whether integration is attempted, you can switch
-    debug information on by setting ``sympy.SYMPY_DEBUG=True``.
+    debug information on by setting ``sympy.SYMPY_DEBUG=True``. The numbers
+    of the rules in the debug information (and the code) refer to Bateman's
+    Tables of Integral Transforms Vol. 1, McGraw-Hill 1954, available here:
+    https://resolver.caltech.edu/CaltechAUTHORS:20140123-101456353
 
     The lower bound is `0-`, meaning that this bound should be approached
     from the lower side. This is only necessary if distributions are involved.
@@ -2524,6 +2465,13 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
 
     Explanation
     ===========
+
+    The implementation is rule-based, and if you are interested in which
+    rules are applied, and whether integration is attempted, you can switch
+    debug information on by setting ``sympy.SYMPY_DEBUG=True``. The numbers
+    of the rules in the debug information (and the code) refer to Bateman's
+    Tables of Integral Transforms Vol. 1, McGraw-Hill 1954, available here:
+    https://resolver.caltech.edu/CaltechAUTHORS:20140123-101456353
 
     The plane can be specified by
     argument ``plane``, but will be inferred if passed as None.
