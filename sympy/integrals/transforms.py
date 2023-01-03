@@ -1274,21 +1274,21 @@ def _laplace_build_rules(t, s):
     (t*exp(a*t-tau), exp(-tau)/(s-a)**2,
      S.true, a, dco), # 4.5.2
     (t**n*exp(a*t), gamma(n+1)/(s-a)**(n+1),
-     n>-1, a, dco), # 4.5.3
+     re(n)>-1, a, dco), # 4.5.3
     (exp(-a*t**2), sqrt(pi/4/a)*exp(s**2/4/a)*erfc(s/sqrt(4*a)),
-     Abs(arg(a))<pi, S.Zero, dco), # 4.5.21
+     re(a)>0, S.Zero, dco), # 4.5.21
     (t*exp(-a*t**2), 1/(2*a)-2/sqrt(pi)/(4*a)**(S(3)/2)*s*erfc(s/sqrt(4*a)),
-     Abs(arg(a))<pi, S.Zero, dco), # 4.5.22
+     re(a)>0, S.Zero, dco), # 4.5.22
     (exp(-a/t), 2*sqrt(a/s)*besselk(1, 2*sqrt(a*s)),
-     Abs(arg(a))<=pi, S.Zero, dco), # 4.5.25
+     re(a)>=0, S.Zero, dco), # 4.5.25
     (sqrt(t)*exp(-a/t), S(1)/2*sqrt(pi/s**3)*(1+2*sqrt(a*s))*exp(-2*sqrt(a*s)),
-     Abs(arg(a))<=pi, S.Zero, dco), # 4.5.26
+     re(a)>=0, S.Zero, dco), # 4.5.26
     (exp(-a/t)/sqrt(t), sqrt(pi/s)*exp(-2*sqrt(a*s)),
-     Abs(arg(a))<=pi, S.Zero, dco), # 4.5.27
+     re(a)>=0, S.Zero, dco), # 4.5.27
     (exp(-a/t)/(t*sqrt(t)), sqrt(pi/a)*exp(-2*sqrt(a*s)),
-     Abs(arg(a))<pi, S.Zero, dco), # 4.5.28
+     re(a)>0, S.Zero, dco), # 4.5.28
     (t**n*exp(-a/t), 2*(a/s)**((n+1)/2)*besselk(n+1, 2*sqrt(a*s)),
-     Abs(arg(a))<pi, S.Zero, dco), # 4.5.29
+     re(a)>0, S.Zero, dco), # 4.5.29
     (exp(-2*sqrt(a*t)), s**(-1)-sqrt(pi*a)*s**(-S(3)/2)*exp(a/s)*erfc(sqrt(a/s)),
      Abs(arg(a))<pi, S.Zero, dco), # 4.5.31
     (exp(-2*sqrt(a*t))/sqrt(t), (pi/s)**(S(1)/2)*exp(a/s)*erfc(sqrt(a/s)),
