@@ -577,14 +577,14 @@ def qapply(e, **options):
                 efpcl    = pow_x(clnonneg, expf, (lambda c: c.base.is_nonnegative and c.exp.is_positive)) # [c**expf for c in clnonneg]
                 clelse   = [c for c in cl if not c in clnonneg]
                 efpl     = [PowHold(Mul(*(clelse+[base])), expf, True, tuple(), tuple())] # = (clelse*base)**expf, as list
-            
+
             # check for nested powers (see rule 3a, 3c and sympy.simplify.powsimp.powdenest):
             if expi.is_integer and (not expi is S.Zero) and isinstance(ar, PowHold) and ncl == []: # e.base = cl * ar, base = ar
                 # e.base**exp = e.base**expf * e.base**expi = cl**expi * e.base**expf * ar**expi
                 pcl, pncl, pr = split_pow_c_nc_atom(Pow(ar.base, qapply_expand_mul([ar.exp, expi])), to_the_right) # = ar**expi = (ar.base**(ar.exp*expi)
                 if pr == EmptyMul: # i.e. pr=1, pncl=[], so ar**expi is commutative = pcl
-                    return pow_i(cl, expi) + pcl + efpcl, [], (EmptyMul if efpl == [] else efpl[0]) 
-                else: 
+                    return pow_i(cl, expi) + pcl + efpcl, [], (EmptyMul if efpl == [] else efpl[0])
+                else:
                     return pow_i(cl, expi) + pcl + efpcl, efpl + pncl, pr
 
             # So if expi can be be determined to be integer exponent >= 2, we try harder:
@@ -628,7 +628,7 @@ def qapply(e, **options):
                         if ar2ar == EmptyMul: # ar*ar=ar2 is even commutative. We have e.base = cl*ar, base=ar.
                             # Case 5a: expi >= 2, base = ar atomic + "involutoric"
                             # simplify: e.base**e.exp = e.base**expf * (cl*ar)**expi = cl**expi * e.base*expf * ar**expi.
-                            # ar**expi = (ar2**(expi//2)) * (ar if (expi % 2 == 1) else 1) 
+                            # ar**expi = (ar2**(expi//2)) * (ar if (expi % 2 == 1) else 1)
                             c_list = pow_i(cl, expi) + pow_i(ar2c, expi // 2) + efpcl
                             return (c_list, efpl, ar) if (expi % 2 == 1) else (c_list, [], Mul(*efpl))
                         if ar2ar == ar and ar2ncl == []: # Case 5b: expi >= 2, base=ar atomic + "idempotent"
@@ -643,7 +643,7 @@ def qapply(e, **options):
                 elif expi is S.One : return cl + efpcl, efpl + ncl, ar
                 else:
                     return pow_i(cl, expi) + efpcl, efpl, \
-                        PowHold(base, expi, atomic = True, b_sp_l=tuple(), b_sp_r = ([], ncl, ar))         
+                        PowHold(base, expi, atomic = True, b_sp_l=tuple(), b_sp_r = ([], ncl, ar))        
             else: # case 8: no knowledge about e.exp. All we can do is apply rule 2b and pull out positive factors
                 clnonneg = [c for c in cl if c.is_nonnegative]
                 clelse   = [c for c in cl if not c in clnonneg]
@@ -846,7 +846,7 @@ def replace_type(expr:Expr, oldtype:Type, newtype:Type) -> Expr:
             if (repl_flag := any((replaced for (_, replaced) in walked_args))):
                 args = tuple((arg for (arg, _) in walked_args))
         if (e.func == oldtype):           # if e happens to be oldtype
-            return (newtype(*args), True) # do the replacement right here  
+            return (newtype(*args), True) # do the replacement right here
         else: # if there were replacements, re-built e, else return original e
             return ((e.func(*args) if repl_flag else e), repl_flag)
     return walk(expr)[0]
