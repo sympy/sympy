@@ -643,7 +643,7 @@ def qapply(e, **options):
                 elif expi is S.One : return cl + efpcl, efpl + ncl, ar
                 else:
                     return pow_i(cl, expi) + efpcl, efpl, \
-                        PowHold(base, expi, atomic = True, b_sp_l=tuple(), b_sp_r = ([], ncl, ar))        
+                        PowHold(base, expi, atomic = True, b_sp_l=tuple(), b_sp_r = ([], ncl, ar))
             else: # case 8: no knowledge about e.exp. All we can do is apply rule 2b and pull out positive factors
                 clnonneg = [c for c in cl if c.is_nonnegative]
                 clelse   = [c for c in cl if not c in clnonneg]
