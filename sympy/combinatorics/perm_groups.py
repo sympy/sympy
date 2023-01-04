@@ -3300,7 +3300,7 @@ class PermutationGroup(Basic):
                 self._is_dihedral = True
                 return True
 
-        # Procede with algorithm of [Di1]
+        # Proceed with algorithm of [Di1]
         # Find elements of orders 2 and n
         order_2, order_n = [], []
         for p in self.elements:
