@@ -409,21 +409,21 @@ def test_powers2022_11():
 
     assert qapply((m * XGate(0)*U1n*XGate(0))**7) == m**7 * n**6 * XGate(0) * U1n * XGate(0) # case 5a: with expi uneven
     assert qapply((m * XGate(0)*U1n*XGate(0))**8) == m**8 * n**8 # case 5a: with expi even
-    assert qapply((n * U72) ** Rational(3,2)) == n**Rational(3,2) * U72 ** Rational(3,2) # case 7: exp non-integer or < 2
-    assert qapply((n * U72) ** Rational(5,2)) == n**Rational(5,2) * U72 ** Rational(1,2) * U72p2 # case 6: base atomic but not "idempotent"
-    assert qapply((n * U12 * U71) ** Rational(5,2)) == n**Rational(5,2) * 2**Rational(5,2) * U71 ** Rational(1,2) * U71p2 # Case 8, 6
-    assert qapply((n * U12) ** Rational(7,2)) == n**Rational(7,2) * 2**2 * U12**Rational(3,2)  # case 5a. base atomic + "involutoric", expi uneven, fraction
-    assert qapply((n * U12) ** Rational(5,2)) == n**Rational(5,2) * 2**2 * U12**Rational(1,2)  # case 5a. base atomic + "involutoric", expi even, fraction
+    assert qapply((n * U72) ** Rational(3,2)) == n * sqrt(n * U72) * U72 # case 7: expi < 2
+    assert qapply((n * U72) ** Rational(5,2)) == n**2 * sqrt(n * U72) * U72p2 # case 6: base atomic but not "idempotent"
+    assert qapply((n * U12 * U71) ** Rational(5,2)) == n**2 * 2**Rational(5,2) * sqrt(n*U71) * U71p2 # Case 9, 6
+    assert qapply((n * U12) ** Rational(7,2)) == n**3 * 2**2 * sqrt(n * U12) * U12 # case 5a. base atomic + "involutoric", expi uneven, fraction
+    assert qapply((n * U12) ** Rational(5,2)) == n**2 * 2**2 * sqrt(n * U12) # case 5a. base atomic + "involutoric", expi even, fraction
     assert qapply((n * U12) ** 3) == n**3 * 2**2 * U12 # case 5a: expi uneven, no fraction
     assert qapply((n * U12) ** 4) == n**4 * 2**4 # 5a. case base atomic + involutoric, expi even, no fraction
 
     # case 5b: base atomic + "idempotent"
     assert qapply((n * U12 * OuterProduct(Qubit(1), QubitBra(1))) ** Rational(7/2)) == \
-        n**Rational(7,2) * 2 ** Rational(7/2) * InnerProduct(QubitBra(1), Qubit(1)).doit() ** 2 * \
-        OuterProduct(Qubit(1), QubitBra(1)) ** Rational(3/2)
+        n ** 3 * 2 ** Rational(7,2) * InnerProduct(QubitBra(1), Qubit(1)).doit() ** 2 * \
+        sqrt(n * OuterProduct(Qubit(1), QubitBra(1))) * OuterProduct(Qubit(1), QubitBra(1))
     assert qapply((n * U12 * OuterProduct(Qubit(1), QubitBra(1))) ** Rational(7/2), ip_doit = False) == \
-        n**Rational(7,2) * 2 ** Rational(7/2) * InnerProduct(QubitBra(1), Qubit(1)) ** 2 * \
-        OuterProduct(Qubit(1), QubitBra(1)) ** Rational(3/2)
+        n ** 3 * 2 ** Rational(7,2) * InnerProduct(QubitBra(1), Qubit(1)) ** 2 *\
+        sqrt(n * OuterProduct(Qubit(1), QubitBra(1))) * OuterProduct(Qubit(1), QubitBra(1))
     assert qapply((n * U12 * OuterProduct(Qubit(1), QubitBra(1))) ** 10) == n**10 * 2**10 * OuterProduct(Qubit(1), QubitBra(1))
     assert qapply((m * U1n * OuterProduct(Qubit(1), QubitBra(1))) ** 10) == m**10 * n**10 * OuterProduct(Qubit(1), QubitBra(1))
     assert qapply((m * U1n * OuterProduct(Qubit(1), QubitBra(1))) ** (m+2), power_exp=False) == \
@@ -433,13 +433,13 @@ def test_powers2022_11():
     assert qapply((n * OuterProduct(Ket(1), Bra(1))) ** (m+2), ip_doit = False, power_exp=False) == \
         n**(m+2) * InnerProduct(Bra(1), Ket(1))**(m+1) * OuterProduct(Ket(1), Bra(1))
     assert qapply((n * OuterProduct(Ket(1), Bra(1))) ** (m+Rational(5,2)), ip_doit = False, power_exp=False) == \
-        n**(m+Rational(5,2)) * InnerProduct(Bra(1), Ket(1))**(m+1) * OuterProduct(Ket(1), Bra(1))**Rational(3,2)
+        n**(m+2) * InnerProduct(Bra(1), Ket(1))**(m+1) * sqrt(n * OuterProduct(Ket(1), Bra(1))) * OuterProduct(Ket(1), Bra(1))
 
-    # Cases 7, 8, 6:
+    # Cases 7, 9, 6:
     assert qapply((n*U13*U71) ** Rational(11,2) * (m*U12*U71) ** Rational(3,2)) == \
-        n**Rational(11,2) * m**Rational(3,2) * \
-        2**Rational(3,2) * 3**Rational(11,2) * U71**Rational(1,2) * U71p6 * U71**Rational(1,2) # 7.Case expi non-integer or < 2
-    assert qapply((n * U13*U71) ** 5 * (m * U12*U71) ** 2) == n**5 * m**2 * 2 ** 2 * 3 ** 5 # Case 8, 6
+        n**5 * m**Rational(3,2) * 2**Rational(3,2) * 3**Rational(11,2) * sqrt(n*U71) * U71p6 * sqrt(U71) # 7.Case expi  < 2
+    assert qapply((n * U13*U71) ** 5 * (m * U12*U71) ** 2) == n**5 * m**2 * 2 ** 2 * 3 ** 5 # Case 9, 6
+
     # case 3: component base with interaction in base*base
     #print(qapply((U71*XGate(0)*U71*U13)))
     assert qapply((n*U71*XGate(0)*U71*U13)**3) == \
@@ -449,8 +449,8 @@ def test_powers2022_11():
     assert qapply((n * U71*XGate(0))**3 * Qubit(0)) == n**3 * exp(-2*I*pi/7) * Qubit(1)
     # case 2: component base, with interaction in base*base, commutative
     assert qapply((n * XGate(0)*U71*U13*XGate(0))**3) == n**3 * 3**3 * XGate(0) * U71p3 * XGate(0)
-    assert qapply((n * XGate(0)*U71*U13*XGate(0))**Rational(7,2)) == \
-        n**Rational(7,2) * 3**Rational(7,2) * (XGate(0) * U71 * XGate(0))**Rational(1,2) * XGate(0) * U71p3 * XGate(0)
+    assert qapply((m * XGate(0)*U71*U13*XGate(0))**Rational(7,2)) == \
+        m**Rational(7,2) * 3**Rational(7,2) * (XGate(0) * U71 * XGate(0))**Rational(1,2) * XGate(0) * U71p3 * XGate(0)
 
     # restore the previous operator _apply_operator_UGate, if any
     if prev_op: # restore previous operator
@@ -504,3 +504,65 @@ def test_expansion():
         (u*w + u*sqrt(u*(u + 1) + w*(w + 1)))**(w + z) # mul has effect in basis
     assert qapply(p, mul=False, power_base=True, power_exp=True) == \
         u**w * u**z * (w + sqrt(u*(u + 1) + w*(w + 1)))**w * (w + sqrt(u*(u + 1) + w*(w + 1)))**z # power_xxx has effect
+
+
+def test_powers2023_01():
+
+    A, B, C, D = symbols('A B C D',commutative=False)
+    c, d = symbols("c d", commutative=True)
+    f, g = symbols("f g", commutative=True, nonnegative=True)
+    n = symbols("n", integer=True)
+    m = symbols("m", integer=True, positive=True)
+    o = symbols("o", commutative=True, integer=True, positive=True)
+    r = symbols("r", real=True)
+    In = IdentityOperator()
+
+    # Results verified using Pow() resp. expand().
+    # Also shows that qapply essentially rebuilds expand() without deep=True plus quantum operator knowledge
+    p = Pow(c*d*f*In, c)  # all commutative, f positive, unknown exponent
+    assert qapply(p) == f**c*(c*d*In)**c  # IdentityOperator I remains because c, d are scalars. f is pulled out.
+    p = Pow(c*d*A*In, -o)  # negative integer exponent. Fully expands.
+    assert qapply(p) == c**(-o)*d**(-o)*A**(-o)
+    p = Pow(c*d*A*In, Rational(1/2))  # fractional exponent. No extraction of factors.
+    assert qapply(p) == sqrt(c*d*A)
+    p = Pow(c*d*f*A*In, Rational(1/2))  # fractional exponent, f non-negative. expands() extracts f
+    assert qapply(p) == sqrt(f)*sqrt(c*d*A)
+    p = Pow(c*d*f*A*In, c)  # arbitrary exponent. expand() extracts f
+    assert qapply(p) == f**c*(c*d*A)**c
+
+
+    p = Pow(c*d*f*A*In, 4)*Pow(d*g*A*In, 3)     # numeric positive integer exponents; Pow() extracts factors
+    assert qapply(p) == c**4*d**7*f**4*g**3*A**7
+    p = Pow(c*d*f*A*In, o+4)*Pow(d*g*In*A, o)   # symbolic positive integer exponents; expand() extracts factors
+    assert qapply(p) == c**(o + 4)*d**o*d**(o + 4)*f**(o + 4)*g**o*A**(2*o + 4)
+    p = Pow(c*d*f*A*In, o+4)*Pow(d*g*In*A, o-3) # symbolic positive and negative integer exponents; expand extracts factors
+    assert qapply(p) == c**(o + 4)*d**(o - 3)*d**(o + 4)*f**(o + 4)*g**(o - 3)*A**(2*o + 1)
+    p = Pow(d*f*A*In, o+r)*Pow(d*g*In*A, o-r)  # symbolic real exponents non-integer; expand extracts factors
+    assert qapply(p) == f**(o + r)*g**(o - r)*(d*A)**(2*o)
+    p = Pow(d*f*A*In, r)*Pow(d*g*A*In, -r)  # symbolic real exponents; expand extracts factors
+    assert qapply(p) == f**r*g**(-r)
+    p = Pow(c*A*In, 1+Rational(1,2))*Pow(d*A, Rational(1,2)) # numeric rational exp; expand extracts factors
+    assert qapply(p) == c*sqrt(c*A)*A*sqrt(d*A)
+
+    p = Pow(Pow(c*f*A*In, o+3)*Pow(d*g*B*In, 3), 7) # positive integer exponents, nested pos integer exp; expand extracts factors
+    assert qapply(p) == c**(7*o + 21)*d**21*f**(7*o + 21)*g**21*(A**(o + 3)*B**3)**7
+    p = Pow(Pow(c*f*A*In, o+3)*Pow(d*g*A, 3), 7) # positive integer exponents, nested pos integer exp
+    assert qapply(p) == c**(7*o + 21)*d**21*f**(7*o + 21)*g**21*A**(7*o + 42)
+    p = Pow(Pow(c*f*A*In, o+3)*Pow(d*g*A, 3-o), o+2) # pos int exp, unknown int exp, nested pos int exp: expand extracts factors
+    assert qapply(p) == c**(o**2 + 5*o + 6)*d**(-o**2 + o + 6)*f**(o**2 + 5*o + 6)*g**(-o**2 + o + 6)*A**(6*o + 12)
+    assert qapply(p, nestedexp=False) == c**((o + 2)*(o + 3))*d**((3 - o)*(o + 2))*f**((o + 2)*(o + 3))*g**((3 - o)*(o + 2))*A**(6*o + 12)
+
+    p = Pow(Pow(c*f*A*In, o+3)*Pow(d*g*A, r), o+2) # pos int exp, real exp, nested pos int exp: expand extracts factors
+    assert qapply(p) == c**(o**2 + 5*o + 6)*f**(o**2 + 5*o + 6)*g**(o*r + 2*r)*(A**(o + 3)*(d*A)**r)**(o + 2)
+    assert qapply(p, nestedexp=False) == c**((o + 2)*(o + 3))*f**((o + 2)*(o + 3))*g**(r*(o + 2))*(A**(o + 3)*(d*A)**r)**(o + 2)
+
+    p = Pow(Pow(c*f*A*In, o+3)*Pow(d*g*A, 3-o), r) # pos int exp, unknown int exp, nested real exp: expand extracts factors
+    assert qapply(p) == f**(o*r + 3*r)*(c**(o + 3)*d**(3 - o)*g**(3 - o)*A**6)**r
+    assert qapply(p, nestedexp=False) == f**(r*(o + 3))*(c**(o + 3)*d**(3 - o)*g**(3 - o)*A**6)**r
+
+    p = Pow(Pow(c*f*A*In, f)*Pow(d*g*A, 3-o), c) # pos exp, unknown int exp, nested unknown exp: expand extracts factors
+    assert qapply(p) == f**(c*f)*(d**(3 - o)*g**(3 - o)*(c*A)**f*A**(3 - o))**c
+    p = Pow(Pow(c*f*A*In, d)*Pow(d*g*A, 3-o), c) # unknown exp, unknown integer exp, nested unknown exp: no extraction
+    assert qapply(p) == (d**(3 - o)*f**d*g**(3 - o)*(c*A)**d*A**(3 - o))**c
+    p = Pow(c*f*A*In, f*(f+c)*(d-g)) # qapply won't expand the exponent, expand does
+    assert qapply(p) == f**(f*(c + f)*(d - g))*(c*A)**(f*(c + f)*(d - g))
