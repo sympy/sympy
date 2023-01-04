@@ -903,13 +903,13 @@ class DomainMatrix:
         ==========
 
         A, B: DomainMatrix
-            matrices to substract
+            matrices to subtract
 
         Returns
         =======
 
         DomainMatrix
-            DomainMatrix after Substraction
+            DomainMatrix after Subtraction
 
         Raises
         ======
