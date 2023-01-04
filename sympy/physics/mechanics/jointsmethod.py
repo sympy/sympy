@@ -264,7 +264,7 @@ class JointsMethod(_Methods):
         ========
 
         Matrix
-            Numerically solveable equations.
+            Numerically solvable equations.
 
         See Also
         ========
