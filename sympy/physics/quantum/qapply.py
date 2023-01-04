@@ -566,7 +566,7 @@ def qapply(e, **options):
                 if expand_nestedexp:  # if powers are nested, expand_mul the product of exponents if condition cond is met
                     return [(Pow(c.base, qapply_expand_mul([c.exp, expx])) if c.is_Pow and cond(c) else c**expx) for c in cl]
                 else: # else return c**exp unsimplified
-                    return [c**expx for c in cl] 
+                    return [c**expx for c in cl]
             def pow_i(cl:List, expi:Expr) -> List: # apply rule 3a to power with integer exponent expi to elements in cl
                 return pow_x(cl, expi, (lambda c: True))
 
