@@ -3225,7 +3225,7 @@ class PermutationGroup(Basic):
 
         self._is_cyclic = all(
             any(g**(order//p) != self.identity for g in self.generators)
-            for p in factors
+            for p, e in factors.items() if e > 1
         )
         return self._is_cyclic
 
