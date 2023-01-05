@@ -29,12 +29,16 @@ sys.path = ['ext'] + sys.path
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
-              'sphinx_math_dollar', 'sphinx.ext.mathjax', 'numpydoc',
-              'sphinx_reredirects', 'sphinx_copybutton',
-              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
-              'myst_parser', 'convert-svg-to-pdf', 'sphinx.ext.intersphinx',
-              ]
+extensions = [
+    'sphinx.ext.autodoc', 'sphinx.ext.linkcode',
+    'sphinx_math_dollar', 'sphinx.ext.mathjax', 'numpydoc',
+    'sphinx_reredirects', 'sphinx_copybutton',
+    'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
+    'myst_parser', 'convert-svg-to-pdf', 'sphinx.ext.intersphinx',
+    'jupyterlite_sphinx',
+]
+
+jupyterlite_contents = ["../examples"]
 
 # Add redirects here. This should be done whenever a page that is in the
 # existing release docs is moved somewhere else so that the URLs don't break.
