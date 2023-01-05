@@ -328,5 +328,5 @@ def test_rational_base_generator():
         assert sqf(b*a) == (B**3)**E
         assert factor(b + a) == a*(a + 1)
         assert cancel(b/a) == a
-        assert construct_domain(a + b), (ZZ[2*x], a**2 + a)
+        assert construct_domain(a + b) == (ZZ[2*x], a**2 + a)
         assert apart((b + a)/a) == a + 1
