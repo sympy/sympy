@@ -1943,6 +1943,9 @@ class LaplaceTransform(IntegralTransform):
         t_ = self.function_variable
         s_ = self.transform_variable
 
+        if fn.has(Heaviside(t_)):
+            fn = fn.replace(Heaviside(t_), 1)
+
         terms = Add.make_args(fn)
         results = []
         for f in terms:
@@ -2084,13 +2087,6 @@ behavior.
                 return f_laplace, Max(*avals), And(*conditions)
             else:
                 return type(f)(*f.shape, elements_trans)
-
-    # First remove a common factor Heaviside(t) if there is one.
-    g = f.collect(Heaviside(t))
-    if g.is_Mul:
-        factors = g.args
-        if Heaviside(t) in factors:
-            f = Mul(*[ i for i in factors if not i is Heaviside(t) ])
 
     LT = LaplaceTransform(f, t, s).doit(noconds=False)
 
@@ -2454,7 +2450,7 @@ class InverseLaplaceTransform(IntegralTransform):
             return Add(*results).simplify(doit=False), And(*conds)
 
 
-def inverse_laplace_transform(F, s, t, plane=None, **hints):
+def inverse_laplace_transform(F, s, t, plane=None, heaviside=True, **hints):
     r"""
     Compute the inverse Laplace transform of `F(s)`, defined as
 
