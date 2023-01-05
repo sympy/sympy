@@ -17,10 +17,3 @@ If you are new to SymPy, start here.
    :hidden:
 
    intro-tutorial/index.rst
-
-Jupyter Notebook
-================
-
-.. jupyterlite::
-   :width: 100%
-   :height: 600px

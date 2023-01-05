@@ -61,3 +61,12 @@ SymPy wiki.
    explanation/index.rst
    reference/index.rst
    contributing/index.rst
+
+Jupyterlite
+-----------
+
+.. jupyterlite::
+   :width: 100%
+   :height: 600px
+   :prompt: Try JupyterLite!
+   :prompt_color: #00aa42

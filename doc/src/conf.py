@@ -38,7 +38,8 @@ extensions = [
     'jupyterlite_sphinx',
 ]
 
-jupyterlite_contents = ["../examples"]
+jupyterlite_bind_ipynb_suffix = False
+jupyterlite_contents = os.path.join(os.path.dirname(__file__), "notebooks")
 
 # Add redirects here. This should be done whenever a page that is in the
 # existing release docs is moved somewhere else so that the URLs don't break.
