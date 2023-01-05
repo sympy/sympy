@@ -17,3 +17,12 @@ If you are new to SymPy, start here.
    :hidden:
 
    intro-tutorial/index.rst
+
+Jupyter Notebook
+================
+
+.. jupyterlite:: ../../../examples/notebooks/Bezout_Dixon_resultant.ipynb
+   :width: 100%
+   :height: 600px
+   :prompt: Try JupyterLite!
+   :prompt_color: #00aa42
