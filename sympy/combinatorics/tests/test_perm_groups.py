@@ -1046,7 +1046,23 @@ def test_cyclic():
     assert G.is_cyclic
     assert G._is_abelian
 
+    # Non-abelian and therefore not cyclic
     G = PermutationGroup(*SymmetricGroup(3).generators)
+    assert G.is_cyclic is False
+
+    # Abelian and cyclic
+    G = PermutationGroup(
+        Permutation(0, 1, 2, 3),
+        Permutation(4, 5, 6)
+    )
+    assert G.is_cyclic
+
+    # Abelian but not cyclic
+    G = PermutationGroup(
+        Permutation(0, 1),
+        Permutation(2, 3),
+        Permutation(4, 5, 6)
+    )
     assert G.is_cyclic is False
 
 
