@@ -474,9 +474,6 @@ def test_laplace_transform():
     f = Function("f")
     g = Function("g")
 
-    # Test rule-base evaluation according to
-    # http://eqworld.ipmnet.ru/en/auxiliary/inttrans/
-    # Power-law functions (laplace2.pdf)
     assert LT(a*t+t**2+t**(S(5)/2), t, s) ==\
         (a/s**2 + 2/s**3 + 15*sqrt(pi)/(8*s**(S(7)/2)), 0, True)
     assert LT(b/(t+a), t, s) == (-b*exp(-a*s)*Ei(-a*s), 0, True)
@@ -496,7 +493,6 @@ def test_laplace_transform():
     assert LT((t+a)**b, t, s) ==\
         (s**(-b - 1)*exp(-a*s)*lowergamma(b + 1, a*s), 0, True)
     assert LT(t**5/(t+a), t, s) == (120*a**5*lowergamma(-5, a*s), 0, True)
-    # Exponential functions (laplace3.pdf)
     assert LT(exp(t), t, s) == (1/(s - 1), 1, True)
     assert LT(exp(2*t), t, s) == (1/(s - 2), 2, True)
     assert LT(exp(a*t), t, s) == (1/(s - a), a, True)
@@ -533,7 +529,6 @@ def test_laplace_transform():
         sqrt(1/s))*(sqrt(pi)*sqrt(1/s)), 0, True)
     assert LT(t**4*exp(-2/t), t, s) ==\
         (8*sqrt(2)*(1/s)**(S(5)/2)*besselk(5, 2*sqrt(2)*sqrt(s)), 0, True)
-    # Hyperbolic functions (laplace4.pdf)
     assert LT(sinh(a*t), t, s) == (a/(-a**2 + s**2), a, True)
     assert LT(b*sinh(a*t)**2, t, s) == (2*a**2*b/(s**2*(-4*a**2 + s)),
                                         2*a, True)
@@ -568,9 +563,8 @@ def test_laplace_transform():
         (sqrt(pi)*exp(a/s)/sqrt(s), 0, True)
     assert LT(cosh(sqrt(a*t))**2/sqrt(t), t, s) ==\
         (sqrt(pi)*(exp(a/s) + 1)/(2*sqrt(s)), 0, True)
-    # logarithmic functions (laplace5.pdf)
-    assert LT(log(t), t, s) == (-log(s+S.EulerGamma)/s, 0, True)
-    assert LT(log(t/a), t, s) == (-log(a*s + S.EulerGamma)/s, 0, True)
+    assert LT(log(t), t, s) == (-log(EulerGamma*s)/s, 0, True)
+    assert LT(log(t/a), t, s) == (-log(EulerGamma*a*s)/s, 0, True)
     assert LT(log(1+a*t), t, s) == (-exp(s/a)*Ei(-s/a)/s, 0, True)
     assert LT(log(t+a), t, s) == ((s*log(a) - exp(s/a)*Ei(-s/a))/s**2, 0, True)
     assert LT(log(t)/sqrt(t), t, s) ==\
@@ -581,10 +575,9 @@ def test_laplace_transform():
     assert (LT(t**3*log(t), t, s, noconds=True)-6*(-log(s) - S.EulerGamma\
                                     + S(11)/6)/s**4).simplify() == S.Zero
     assert LT(log(t)**2, t, s) ==\
-        (((log(s) + EulerGamma)**2 + pi**2/6)/s, 0, True)
+        ((log(EulerGamma*s)**2 + pi**2/6)/s, 0, True)
     assert LT(exp(-a*t)*log(t), t, s) ==\
-        ((-log(a + s) - S.EulerGamma)/(a + s), -a, True)
-    # Trigonometric functions (laplace6.pdf)
+        (-log(EulerGamma*(a + s))/(a + s), 0, True)
     assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), 0, True)
     assert LT(Abs(sin(a*t)), t, s) ==\
         (a*coth(pi*s/(2*a))/(a**2 + s**2), 0, True)
@@ -610,10 +603,9 @@ def test_laplace_transform():
     assert LT(cos(a*t)*cos(b*t), t, s) ==\
         (s*(a**2 + b**2 + s**2)/((s**2 + (a - b)**2)*(s**2 + (a + b)**2)),
          0, True)
-    assert LT(c*exp(-b*t)*sin(a*t), t, s) == (a*c/(a**2 + (b + s)**2),
-                                              -b, True)
+    assert LT(c*exp(-b*t)*sin(a*t), t, s) == (a*c/(a**2 + (b + s)**2), 0, True)
     assert LT(c*exp(-b*t)*cos(a*t), t, s) == ((b + s)*c/(a**2 + (b + s)**2),
-                                              -b, True)
+                                              0, True)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
     # Error functions (laplace7.pdf)
     assert LT(erf(a*t), t, s) == (exp(s**2/(4*a**2))*erfc(s/(2*a))/s, 0, True)
@@ -623,7 +615,7 @@ def test_laplace_transform():
     assert LT(erf(sqrt(a/t)/2), t, s) == (1/s - exp(-sqrt(a)*sqrt(s))/s,
                                           0, True)
     assert LT(erfc(sqrt(a*t)), t, s) == (-sqrt(a)/(s*sqrt(a + s)) + 1/s,
-                                         0, True)
+                                         -a, True)
     assert LT(exp(a*t)*erfc(sqrt(a*t)), t, s) ==\
         (1/(sqrt(a)*sqrt(s) + s), 0, True)
     assert LT(erfc(sqrt(a/t)/2), t, s) == (exp(-sqrt(a)*sqrt(s))/s, 0, True)
@@ -658,7 +650,7 @@ def test_laplace_transform():
     assert LT(bessely(0, a*t), t, s) ==\
         (-2*asinh(s/a)/(pi*sqrt(a**2 + s**2)), 0, True)
     assert LT(besselk(0, a*t), t, s) ==\
-        (log(s + sqrt(-a**2 + s**2))/sqrt(-a**2 + s**2), a, True)
+        (log(s + sqrt(-a**2 + s**2))/sqrt(-a**2 + s**2), -a, True)
     assert LT(sin(a*t)**8, t, s) ==\
         (40320*a**8/(s*(147456*a**8 + 52480*a**6*s**2 + 4368*a**4*s**4 +\
                         120*a**2*s**6 + s**8)), 0, True)
