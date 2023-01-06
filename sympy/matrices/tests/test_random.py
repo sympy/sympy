@@ -1,7 +1,7 @@
 import random as system_random
 
 from sympy import Matrix, diag, eye, zeros, cartes, \
-    I, cos, simplify, symbols, sqrt, expand, Mul, sympify
+    I, cos, simplify, symbols, sqrt, expand, Mul
 from sympy.core.random import seed, sample
 from sympy.matrices.random import super_elementary_matrix, \
     complex_to_real, invertible, regular_to_singular, diagonal_normal, \
