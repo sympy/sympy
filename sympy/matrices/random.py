@@ -1165,7 +1165,7 @@ def isometry_normal(dim,
 
     .. math::
 
-        |z| = z * \bar{z} = 1
+        |z|^2 = z * \bar{z} = 1
 
     As - in normal form - real isometry (othogonal) matrices
     may have non diagonal entries but $2 \times 2$ rotation blocks
@@ -1182,7 +1182,7 @@ def isometry_normal(dim,
     scalars $z$ with $|z| = z * \bar{z} = 1$
     or
     pairs $(c,s)$ with $c^2 + s^2 = 1$
-    to form the above rotaion square.
+    to form the above rotation square.
 
     If a **spec** entry $c$ is neither such a pair nor $|c| = 1$
     a corresponding $s = \pm \sqrt{1-c^2}$ is choosen randomly.
@@ -1362,8 +1362,7 @@ def square(dim,
     If **rank** is less than **dim**,
     it is constructed from a full rank matrix $\mathbf{S}$
     by choosing randomly $r$ basis columns
-    and build $n-r$ columes as a linear combinations
-    of the basis colums.
+    and build $n-r$ columes as a linear combinations these.
 
     Such a square matrix $\mathbf{S}$ represents an endomorphism
     $$f_S:V \rightarrow V, v \mapsto \mathbf{S}\cdot v$$
@@ -1410,10 +1409,8 @@ def square(dim,
         return regular_to_singular(eye(dim), rank)
 
     length = length or 2 * dim
-    lwr = triangular(dim, None, scalars, units,
-                     int(length / 2))
-    upr = triangular(dim, rank, scalars, units,
-                     length - int(length / 2))
+    lwr = triangular(dim, None, scalars, units, length // 2)
+    upr = triangular(dim, rank, scalars, units, length - length // 2)
     return lwr.T * upr
 
 
@@ -1525,6 +1522,9 @@ def singular(dim,
 
     """
     rank = dim - 1 if rank is None else rank
+    if dim <= rank:
+        raise ValueError(
+            'rank of a singular matrix has to be less than dimension')
     return square(dim, rank, scalars, units, length)
 
 
@@ -1609,7 +1609,7 @@ def nilpotent(dim,
     Explanation
     ===========
     A *nilpotent* matrix is a matrix $\mathbf{A}$ such that there is
-    an integer $n$ with $\mathbf{A}^n = 0$.
+    an integer $k$ with $\mathbf{A}^k = 0$ and $\mathbf{A}^{k-1} != 0$.
     It is build as the product
 
     .. math::
@@ -1627,7 +1627,7 @@ def nilpotent(dim,
     >>> from sympy.matrices.random import nilpotent
     >>> seed(1)
 
-    >>> A = nilpotent(3, 2)
+    >>> A = nilpotent(3, rank=2)
     >>> A
     Matrix([
     [-2, -1, -2],
@@ -1672,6 +1672,9 @@ def nilpotent(dim,
         return [num] + numbers_with_sum(n - 1, k - num)
 
     rank = dim - 1 if rank is None else rank
+    if dim <= rank:
+        raise ValueError(
+            'rank of a nilpotent matrix has to be less than dimension')
     index = numbers_with_sum(dim - rank, dim)
     spec = tuple((0, i) for i in index)
     normal_form = jordan_normal(dim, spec=spec)
@@ -2275,7 +2278,7 @@ def hermite(dim,
 
     Explanation
     ===========
-    A *Hermintian* matrix is a matrix such that $\mathbf{A}^H = \mathbf{A}$,
+    A matrix such that $\mathbf{A}^H = \mathbf{A}$,
     where $\mathbf{A}^H$ means complex adjoint matrix,
     i.e. the transposed matrix with complex conjugate entries.
 

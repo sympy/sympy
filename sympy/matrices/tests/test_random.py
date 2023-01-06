@@ -814,3 +814,7 @@ def test_raise():
         unitary(3, spec=(complex(1, 1),))
     with raises(ValueError):
         jordan_normal(3, (None, 1, 2))
+    with raises(ValueError):
+        nilpotent(3, rank=3)
+    with raises(ValueError):
+        singular(3, rank=3)
