@@ -21,11 +21,8 @@ open. -->
 statements. The basic format is a bulleted list with the name of the subpackage
 and the release note for this PR. For example:
 
-* solvers
-  * Added a new solver for logarithmic equations.
-
-* functions
-  * Fixed a bug with log of integers. Formerly, `log(-x)` incorrectly gave `-log(x)`.
+* physics.units
+  * Corrected a numerical error in the conversion between volt and statvolt. Previously, 1 volt was converted to 299.792458 statvolts. Now the     correct formula is used and gives 1 volt = 0.00333564095198152 statvolts.
 
 or if no release note(s) should be included use:
 
