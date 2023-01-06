@@ -167,9 +167,16 @@ def test_transposition():
 
 def test_permutation():
     for d in TEST_DIMS:
+        def alt_permutation(dim, perm=None):
+            perm = perm or _sample(range(dim), dim)
+            obj = zeros(dim)
+            for i, j in enumerate(perm):
+                obj[i, j] = 1
+            return obj  # aka eye(dim).permute(perm)
+
         perm = RANDOM.sample(range(d), d)
         m = permutation(d, perm)
-        n = eye(d).permute(perm)
+        n = alt_permutation(d, perm)
         assert m == n
 
 

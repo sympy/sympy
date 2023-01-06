@@ -1,5 +1,4 @@
 from math import isclose
-
 from ..core import I
 from ..core.mul import Mul
 from ..core.numbers import Number
@@ -562,10 +561,7 @@ def permutation(dim,
     """
 
     perm = perm or _sample(range(dim), dim)
-    obj = zeros(dim)
-    for i, j in enumerate(perm):
-        obj[i, j] = 1
-    return obj  # aka eye(dim).permute(perm)
+    return eye(dim).permute(perm)
 
 
 def elementary(dim,
