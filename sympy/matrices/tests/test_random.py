@@ -1,7 +1,7 @@
 import random as system_random
 
 from sympy import Matrix, diag, eye, zeros, cartes, \
-    I, cos, simplify, symbols, sqrt, expand, Mul
+    I, cos, simplify, symbols, sqrt, expand, Mul, sympify
 from sympy.core.random import seed, sample
 from sympy.matrices.random import super_elementary_matrix, \
     complex_to_real, invertible, regular_to_singular, diagonal_normal, \
@@ -10,7 +10,7 @@ from sympy.matrices.random import super_elementary_matrix, \
     reflection, normal, nilpotent, idempotent, singular, orthogonal, unitary, \
     hermite, symmetric, square, jordan, jordan_normal
 from sympy.matrices.random import _elementary_scalars, _rotation_scalars, \
-    _sample, _is_abs_one
+    _sample
 
 from sympy.testing.pytest import raises
 
@@ -430,7 +430,7 @@ def test_isometry_normal():
         for c in spec:
             if isinstance(c, (tuple, list)):
                 block_list.append(c)
-            elif _is_abs_one(c):
+            elif abs(c) == 1:
                 block_list.append((c,))
             else:
                 block_list.append(_cs(c))
@@ -585,6 +585,9 @@ def test_unitary():
         assert abs(abs(m.det()) - 1) < TEST_EPSILON
 
         z = complex(1, 2)
+        # complex type doesn't give abs(z / abs(z)) == 1
+        # due to numerical errors
+        z = 1 + 2 * I
         m = expand(unitary(d, spec=(z / abs(z),), length=d))
         assert _is_eye(m.H * m, TEST_EPSILON), repr(simplify(m.H * m))
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION

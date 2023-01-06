@@ -1,7 +1,5 @@
-from math import isclose
 from ..core import I
 from ..core.mul import Mul
-from ..core.numbers import Number
 from ..core.random import sample
 from ..core.sympify import _sympify as sympify
 from ..functions import sqrt, re, im, conjugate
@@ -32,13 +30,9 @@ def _sample(scalars, k=None):
 
 # === helper ===
 
-def _is_complex(z):
+def _is_real(z):
     z = sympify(z)
-    return z.is_complex and not z.is_real
-
-
-def _is_abs_one(x):
-    return isinstance(abs(x), (int, float, Number)) and isclose(abs(x), 1)
+    return not bool(z.is_complex) or bool(z.is_real)
 
 
 # === default sets ===
@@ -804,7 +798,7 @@ def rotation(dim,
 
     if isinstance(scalar, (tuple, list)) and len(scalar) == 2:
         c, s = scalar
-    elif _is_complex(scalar):
+    elif not _is_real(scalar):
         c, s = re(scalar), im(scalar)
     else:
         c, s = scalar, _sample((-1, 1)) * sqrt(1 - scalar ** 2)
@@ -817,11 +811,11 @@ def rotation(dim,
             msg += " not abs%s=%s" % (str(scalar), str(abs_cs))
             raise ValueError(msg)
 
-    if _is_complex(c) or _is_complex(s):
+    if _is_real(c) and _is_real(s):
+        return super_elementary_matrix(dim, index, c, s, s, c)
+    else:
         return super_elementary_matrix(
             dim, index, c, s, conjugate(s), conjugate(c))
-    else:
-        return super_elementary_matrix(dim, index, c, s, s, c)
 
 
 def reflection(dim,
@@ -1189,7 +1183,7 @@ def isometry_normal(dim,
 
     Examples
     ========
-
+    >>> from sympy import I
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import isometry_normal
     >>> seed(1)
@@ -1212,12 +1206,12 @@ def isometry_normal(dim,
     [ 0, 1.0*I, 0],
     [ 0,     0, 1]])
 
-    >>> z = 1+1j
+    >>> z = 1+I
     >>> isometry_normal(3, spec=(-1, z/abs(z), 1))  # no more random
     Matrix([
-    [-1,                                       0, 0],
-    [ 0, 0.707106781186547 + 0.707106781186547*I, 0],
-    [ 0,                                       0, 1]])
+    [-1,                 0, 0],
+    [ 0, sqrt(2)*(1 + I)/2, 0],
+    [ 0,                 0, 1]])
 
     Parameters
     ==========
@@ -1256,7 +1250,7 @@ def isometry_normal(dim,
     # sum of dim of spec
     _sum = 0
     for s in spec:
-        _sum += 2 if isinstance(s, (list, tuple)) or not _is_abs_one(s) else 1
+        _sum += 2 if isinstance(s, (list, tuple)) or not abs(s) == 1 else 1
         if dim < _sum:
             break
 
@@ -1269,7 +1263,7 @@ def isometry_normal(dim,
     start = 0
     for s in spec:
         size, block = 1, s
-        if isinstance(s, (list, tuple)) or not _is_abs_one(s):
+        if isinstance(s, (list, tuple)) or not abs(s) == 1:
             size, block = 2, rotation(2, (0, 1), s)
         if dim < start + size:
             break
@@ -2060,7 +2054,7 @@ def unitary(dim,
         items = [rotation(dim, scalar=s) for s in scalars]
         return Mul(*items)
     normal_form = isometry_normal(dim, spec)
-    if not all(_is_abs_one(normal_form[i, i]) for i in range(dim)):
+    if not all(abs(normal_form[i, i]) == 1 for i in range(dim)):
         raise ValueError('eigenvalues [items of spec] of unitary matrix '
                          'must be of length one')
     s = unitary(dim, scalars=scalars, length=length)
@@ -2183,14 +2177,14 @@ def normal(dim,
     """
 
     normal_form = diagonal_normal(dim, spec)
-    if any(_is_complex(c) for c in spec):
-        scalars = scalars or _unitary_scalars
-        s = unitary(dim, None, scalars, length)
-        return s.H * normal_form * s
-    else:
+    if all(_is_real(c) for c in spec):
         scalars = scalars or _rotation_scalars
         s = orthogonal(dim, None, scalars, length)
         return s.T * normal_form * s
+    else:
+        scalars = scalars or _unitary_scalars
+        s = unitary(dim, None, scalars, length)
+        return s.H * normal_form * s
 
 
 # === symmetric or complex adjoined matrices ===
