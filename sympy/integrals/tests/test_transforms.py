@@ -563,8 +563,8 @@ def test_laplace_transform():
         (sqrt(pi)*exp(a/s)/sqrt(s), 0, True)
     assert LT(cosh(sqrt(a*t))**2/sqrt(t), t, s) ==\
         (sqrt(pi)*(exp(a/s) + 1)/(2*sqrt(s)), 0, True)
-    assert LT(log(t), t, s) == (-log(EulerGamma*s)/s, 0, True)
-    assert LT(log(t/a), t, s) == (-log(EulerGamma*a*s)/s, 0, True)
+    assert LT(log(t), t, s) == ((-log(s) - EulerGamma)/s, 0, True)
+    assert LT(-log(t/a), t, s) == ((log(a) + log(s) + EulerGamma)/s, 0, True)
     assert LT(log(1+a*t), t, s) == (-exp(s/a)*Ei(-s/a)/s, 0, True)
     assert LT(log(t+a), t, s) == ((s*log(a) - exp(s/a)*Ei(-s/a))/s**2, 0, True)
     assert LT(log(t)/sqrt(t), t, s) ==\
@@ -575,9 +575,9 @@ def test_laplace_transform():
     assert (LT(t**3*log(t), t, s, noconds=True)-6*(-log(s) - S.EulerGamma\
                                     + S(11)/6)/s**4).simplify() == S.Zero
     assert LT(log(t)**2, t, s) ==\
-        ((log(EulerGamma*s)**2 + pi**2/6)/s, 0, True)
+        (((log(s) + EulerGamma)**2 + pi**2/6)/s, 0, True)
     assert LT(exp(-a*t)*log(t), t, s) ==\
-        (-log(EulerGamma*(a + s))/(a + s), 0, True)
+        ((-log(a + s) - EulerGamma)/(a + s), 0, True)
     assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), 0, True)
     assert LT(Abs(sin(a*t)), t, s) ==\
         (a*coth(pi*s/(2*a))/(a**2 + s**2), 0, True)

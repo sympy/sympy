@@ -1293,17 +1293,17 @@ def _laplace_build_rules(t, s):
      Abs(arg(a))<pi, S.Zero, dco), # 4.5.31
     (exp(-2*sqrt(a*t))/sqrt(t), (pi/s)**(S(1)/2)*exp(a/s)*erfc(sqrt(a/s)),
      Abs(arg(a))<pi, S.Zero, dco), # 4.5.33
-    (log(a*t), -log(S.EulerGamma*s/a)/s,
+    (log(a*t), -log(exp(S.EulerGamma)*s/a)/s,
      a>0, S.Zero, dco), # 4.6.1
     (log(1+a*t), -exp(s/a)/s*Ei(-s/a),
      Abs(arg(a))<pi, S.Zero, dco), # 4.6.4
     (log(a*t+b), (log(b)-exp(s/b/a)/s*a*Ei(-s/b))/s*a,
      And(a>0,Abs(arg(b))<pi), S.Zero, dco), # 4.6.5
-    (log(t)/sqrt(t), -sqrt(pi/s)*log(4*s*S.EulerGamma),
+    (log(t)/sqrt(t), -sqrt(pi/s)*log(4*s*exp(S.EulerGamma)),
      S.true, S.Zero, dco),  # 4.6.9
     (t**n*log(t), gamma(n+1)*s**(-n-1)*(digamma(n+1)-log(s)),
      re(n)>-1, S.Zero, dco), # 4.6.11
-    (log(a*t)**2, (log(S.EulerGamma*s/a)**2+pi**2/6)/s,
+    (log(a*t)**2, (log(exp(S.EulerGamma)*s/a)**2+pi**2/6)/s,
      a>0, S.Zero, dco), # 4.6.13
     (sin(omega*t), omega/(s**2+omega**2),
      S.true, Abs(im(omega)), dco), # 4,7,1
