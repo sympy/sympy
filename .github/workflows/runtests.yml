@@ -377,7 +377,7 @@ jobs:
       - run: make --directory=doc html
       - uses: rossjrw/pr-preview-action@v1
         with:
-          source-dir: .
+          source-dir: doc/_build/html
           preview-branch: gh-pages
           umbrella-dir: pr-preview
           action: auto
