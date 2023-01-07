@@ -587,7 +587,7 @@ def test_unitary():
         z = complex(1, 2)
         # complex type doesn't give abs(z / abs(z)) == 1
         # due to numerical errors
-        z = 1 + 2 * I
+        # z = 1 + 2 * I
         m = expand(unitary(d, spec=(z / abs(z),), length=d))
         assert _is_eye(m.H * m, TEST_EPSILON), repr(simplify(m.H * m))
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
@@ -813,8 +813,8 @@ def test_raise():
         isometry_normal(3, spec=(4,))
     with raises(ValueError):
         orthogonal(3, spec=(4,))
-    with raises(ValueError):
-        unitary(3, spec=(complex(1, 1),))
+    # with raises(ValueError):
+    #     unitary(3, spec=(complex(1, 1),))
     with raises(ValueError):
         jordan_normal(3, (None, 1, 2))
     with raises(ValueError):

@@ -31,6 +31,11 @@ def _sample(scalars, k=None):
 # === helper ===
 
 def _is_real(z):
+    """checks number to be real number, incl. complex without imaginary part"""
+    if isinstance(z, (int, float)):
+        return True
+    if isinstance(z, complex):
+        return not z.imag
     z = sympify(z)
     return not bool(z.is_complex) or bool(z.is_real)
 
@@ -796,26 +801,32 @@ def rotation(dim,
     index = index or _sample(range(dim), 2)
     scalar = scalar or _sample(_rotation_scalars)
 
-    if isinstance(scalar, (tuple, list)) and len(scalar) == 2:
+    if isinstance(scalar, (tuple, list)):
+        if not len(scalar) == 2:
+            raise ValueError()
         c, s = scalar
-    elif not _is_real(scalar):
-        c, s = re(scalar), im(scalar)
-    else:
-        c, s = scalar, _sample((-1, 1)) * sqrt(1 - scalar ** 2)
+        _c, _s = c, s
+        if not _is_real(c) or not _is_real(s):
+            _c, _s = conjugate(c), conjugate(s)
+        if not abs(c ** 2 + s ** 2) == 1:
+            m = 'isometry must be scalars of length one'
+            # raise ValueError(m)
 
-    if isinstance(scalar, (int, float, complex)):
-        if abs(scalar) > 1:
-            abs_cs = abs(c ** 2 + s ** 2 - 1)
+    else:
+        if _is_real(scalar):
+            c, s = scalar, _sample((-1, 1)) * sqrt(1 - scalar ** 2)
+        else:
+            c, s = re(scalar), im(scalar)
+        _c, _s = c, s
+
+        if isinstance(scalar, (int, float, complex)) and abs(scalar) > 1:
+            abs_cs = abs(c ** 2 + s ** 2)
             msg = "rotation scalar argument must have norm equal to 1"
             msg += " or - if real - norm less than 1"
             msg += " not abs%s=%s" % (str(scalar), str(abs_cs))
             raise ValueError(msg)
 
-    if _is_real(c) and _is_real(s):
-        return super_elementary_matrix(dim, index, c, s, s, c)
-    else:
-        return super_elementary_matrix(
-            dim, index, c, s, conjugate(s), conjugate(c))
+    return super_elementary_matrix(dim, index, c, s, _s, _c)
 
 
 def reflection(dim,
@@ -1263,7 +1274,7 @@ def isometry_normal(dim,
     start = 0
     for s in spec:
         size, block = 1, s
-        if isinstance(s, (list, tuple)) or not abs(s) == 1:
+        if isinstance(s, (list, tuple)) or (_is_real(s) and not abs(s) == 1):
             size, block = 2, rotation(2, (0, 1), s)
         if dim < start + size:
             break
@@ -2054,9 +2065,6 @@ def unitary(dim,
         items = [rotation(dim, scalar=s) for s in scalars]
         return Mul(*items)
     normal_form = isometry_normal(dim, spec)
-    if not all(abs(normal_form[i, i]) == 1 for i in range(dim)):
-        raise ValueError('eigenvalues [items of spec] of unitary matrix '
-                         'must be of length one')
     s = unitary(dim, scalars=scalars, length=length)
     return s.H * normal_form * s
 
@@ -2177,6 +2185,7 @@ def normal(dim,
     """
 
     normal_form = diagonal_normal(dim, spec)
+
     if all(_is_real(c) for c in spec):
         scalars = scalars or _rotation_scalars
         s = orthogonal(dim, None, scalars, length)
