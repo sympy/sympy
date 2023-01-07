@@ -65,8 +65,7 @@ SymPy wiki.
 Jupyterlite
 -----------
 
-.. jupyterlite::
+.. retrolite::
    :width: 100%
    :height: 600px
-   :prompt: Try JupyterLite!
-   :prompt_color: #00aa42
+   :prompt: Try Retrolite!
