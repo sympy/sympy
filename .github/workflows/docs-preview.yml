@@ -1,20 +1,15 @@
 name: Docs Preview
 on: [status]
 jobs:
-  circleci_artifacts_redirector_job:
-    if: "${{ github.event.context == 'ci/circleci: Build Docs Preview' }}"
+  sphinx:
     runs-on: ubuntu-latest
-    name: Run CircleCI artifacts redirector
     steps:
-      - name: GitHub Action step
-        id: step1
-        uses: larsoner/circleci-artifacts-redirector-action@master
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          artifact-path: 0/doc/_build/html/index.html
-          circleci-jobs: Build Docs Preview
-          job-title: Click here to see a preview of the documentation.
-      - name: Check the URL
-        if: github.event.status != 'pending'
-        run: |
-          curl --fail ${{ steps.step1.outputs.url }} | grep $GITHUB_SHA
+          python-version: '3.10'
+      - run: doc/aptinstall.sh
+      - run: sudo apt update
+      - run: sudo apt install imagemagick graphviz librsvg2-bin
+      - run: pip install -r doc/requirements.txt
+      - run: make --directory=doc html

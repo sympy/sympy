@@ -61,11 +61,3 @@ SymPy wiki.
    explanation/index.rst
    reference/index.rst
    contributing/index.rst
-
-Jupyterlite
------------
-
-.. retrolite::
-   :width: 100%
-   :height: 600px
-   :prompt: Try Retrolite!
