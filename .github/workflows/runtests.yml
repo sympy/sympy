@@ -364,6 +364,25 @@ jobs:
 
   # -------------------- Build the html/latex docs ----------------- #
 
+  sphinx-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: doc/aptinstall.sh
+      - run: sudo apt update
+      - run: sudo apt install imagemagick graphviz librsvg2-bin
+      - run: pip install -r doc/requirements.txt
+      - run: make --directory=doc html
+      - uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: .
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto
+
   sphinx:
     needs: [doctests-latest, tests1-latest, tests2-latest]
 
