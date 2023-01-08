@@ -1784,13 +1784,17 @@ def trigonalizable(dim,
                    scalars=_elementary_scalars,
                    units=_elementary_units,
                    length=None):
-    r"""Creates a square matrix n x n of a given rank
+    r"""Creates a square matrix n x n of a given rank which has an echelon form
 
     Explanation
     ===========
     Creates a square matrix n x n of a given rank
     which is trigonalizable (has echelon form)
     and has eigenvalues from a given set.
+
+    The triangular (echelon) form can be obtained by elementary row and column
+    operations over the ring (or field) with elements given
+    by **scalars** and **units** arguments.
 
     The matrix will be a product
 
