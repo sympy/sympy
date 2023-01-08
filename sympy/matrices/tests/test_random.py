@@ -46,7 +46,8 @@ def _is_triangular(m, precision=None):
         return all(m[i, j] == 0 for i in range(s) for j in range(i))
     else:
         n = m.evalf()
-        return all(abs(n[i, j]) < precision for i in range(s) for j in range(i))
+        return all(
+            abs(n[i, j]) < precision for i in range(s) for j in range(i))
 
 
 def _cs(scalar):
@@ -702,23 +703,20 @@ def test_seed():
         def sample(self, k):
             return self.rnd.sample(self, k)
 
-
     _all_ = projection, jordan, transposition, \
-          permutation, elementary, rotation, reflection, \
-          diagonal_normal, jordan_normal, isometry_normal, \
-          triangular, invertible, singular, \
-          idempotent, nilpotent, diagonalizable, trigonalizable, \
-          orthogonal, normal, \
-          symmetric, hermite, square, unitary,
+        permutation, elementary, rotation, reflection, \
+        diagonal_normal, jordan_normal, isometry_normal, \
+        triangular, invertible, singular, \
+        idempotent, nilpotent, diagonalizable, trigonalizable, \
+        orthogonal, normal, symmetric, hermite, square, unitary,
 
     _spec_ = diagonal_normal, jordan_normal, \
-          diagonalizable, trigonalizable, normal
+        diagonalizable, trigonalizable, normal
 
     _isometry_spec_ = isometry_normal, orthogonal, unitary
 
-    _elementary_scalars_ = triangular, invertible, singular, \
-          idempotent, nilpotent, diagonalizable, trigonalizable, \
-          symmetric, hermite, square,
+    _elementary_scalars_ = triangular, invertible, singular, idempotent, \
+        nilpotent, diagonalizable, trigonalizable, symmetric, hermite, square
 
     _isometry_scalars_ = orthogonal, unitary, normal
 
