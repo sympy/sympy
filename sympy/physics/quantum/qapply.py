@@ -981,9 +981,9 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
     #################################################################
     # End of qapply internal functions and class definitions
     #################################################################
-    # 
+    #
     # qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
-    #                mul = True, tensorproduct = None, 
+    #                mul = True, tensorproduct = None,
     #                power_base = None, power_exp = False, nested_exp = None,
     #                apply_exp = False, **options ) -> Expr:
     #################################################################
@@ -1036,7 +1036,7 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
         res = replace_type(res, PowHold, Pow) # res.replace(PowHold, Pow)
 
     return res # return final result of qapply()
-               # ---------- End of QAPPLY FUNCTION BODY ---------------- 
+               # ---------- End of QAPPLY FUNCTION BODY ----------------
 
 # My version of .replace() for case 1.1 'replacement of oldtype by newtype'.
 # See SymPy issue #24460 of 2023-01-01: SymPy replace is an incremental
@@ -1055,7 +1055,7 @@ def replace_type(expr:Expr, oldtype:Type, newtype:Type) -> Expr:
         if (args := e.args):  # at least 1 argument present
             new_args = [walk(arg, repl) for arg in args]  # walk the arguments
             if (repl[0]): # repl[0] is the or'ed repl_ref of the args
-                args = new_args   # at least one arg has replacement in it 
+                args = new_args   # at least one arg has replacement in it
         if (e.func == oldtype):   # if e happens to be oldtype
             repl_ref[0] = True       # flag a replacement done here
             return newtype(*args)    # and do the replacement right here
