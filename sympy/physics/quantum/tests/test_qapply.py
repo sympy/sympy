@@ -523,8 +523,6 @@ def test_powers2023_01():
     A, B, C, D = symbols('A B C D',commutative=False)
     c, d = symbols("c d", commutative=True)
     f, g = symbols("f g", commutative=True, nonnegative=True)
-    n = symbols("n", integer=True)
-    m = symbols("m", integer=True, positive=True)
     o = symbols("o", commutative=True, integer=True, positive=True)
     r = symbols("r", real=True)
     In = IdentityOperator()
