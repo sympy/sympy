@@ -56,10 +56,10 @@ _unitary_scalars = tuple(c * 1 + s * I for c, s in _rotation_scalars)
 # === fundamental constructor ===
 
 
-def super_elementary_matrix(dim,
-                            index=None,
-                            value=None,
-                            *scalars):
+def super_elementary(dim,
+                     index=None,
+                     value=None,
+                     *scalars):
     r"""super elementary matrix n x n, i.e. identiy with a 2 x 2 block
 
     Explanation
@@ -107,27 +107,27 @@ def super_elementary_matrix(dim,
     Examples
     ========
 
-    >>> from sympy.matrices.random import super_elementary_matrix
+    >>> from sympy.matrices.random import super_elementary
 
-    >>> super_elementary_matrix(3, (0,1))
+    >>> super_elementary(3, (0,1))
     Matrix([
     [0, 1, 0],
     [1, 0, 0],
     [0, 0, 1]])
 
-    >>> super_elementary_matrix(3, (0,2), value=5)
+    >>> super_elementary(3, index=(0,2), value=5)
     Matrix([
     [1, 0, 5],
     [0, 1, 0],
     [0, 0, 1]])
 
-    >>> super_elementary_matrix(3, (2,2), value=5)
+    >>> super_elementary(3, index=(2,2), value=5)
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
     [0, 0, 5]])
 
-    >>> super_elementary_matrix(3, (1,2), 1,2,3,4)
+    >>> super_elementary(3, (1,2), 1,2,3,4)
     Matrix([
     [1, 0, 0],
     [0, 1, 2],
@@ -517,7 +517,7 @@ def transposition(dim,
     """
 
     index = index or _sample(range(dim), 2)
-    return super_elementary_matrix(dim, index)
+    return super_elementary(dim, index=index)
 
 
 def permutation(dim,
@@ -669,7 +669,7 @@ def elementary(dim,
     """
 
     index = index or _sample(range(dim), 2)
-    return super_elementary_matrix(dim, index, scalar)
+    return super_elementary(dim, index=index, value=scalar)
 
 
 def rotation(dim,
@@ -834,7 +834,7 @@ def rotation(dim,
                   f"not abs({scalar}) = {abs_cs}"
             raise ValueError(msg)
 
-    return super_elementary_matrix(dim, index, c, s, _s, _c)
+    return super_elementary(dim, index, c, s, _s, _c)
 
 
 def reflection(dim,

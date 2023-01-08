@@ -3,7 +3,7 @@ import random as system_random
 from sympy import Matrix, diag, eye, zeros, cartes, \
     I, cos, simplify, symbols, sqrt, expand, Mul
 from sympy.core.random import seed, sample
-from sympy.matrices.random import super_elementary_matrix, \
+from sympy.matrices.random import super_elementary, \
     complex_to_real, invertible, regular_to_singular, diagonal_normal, \
     diagonalizable, transposition, triangular, trigonalizable, \
     isometry_normal, permutation, projection, elementary, rotation, \
@@ -60,28 +60,28 @@ def _cs(scalar):
 # === fundamental constructor ===
 
 def test_super_elementary_matrix():
-    m = super_elementary_matrix(3, (0, 1))
+    m = super_elementary(3, (0, 1))
     n = Matrix([
         [0, 1, 0],
         [1, 0, 0],
         [0, 0, 1]])
     assert m == n
 
-    m = super_elementary_matrix(3, (0, 2), value=5)
+    m = super_elementary(3, (0, 2), value=5)
     n = Matrix([
         [1, 0, 5],
         [0, 1, 0],
         [0, 0, 1]])
     assert m == n
 
-    m = super_elementary_matrix(3, (2, 2), value=5)
+    m = super_elementary(3, (2, 2), value=5)
     n = Matrix([
         [1, 0, 0],
         [0, 1, 0],
         [0, 0, 5]])
     assert m == n
 
-    m = super_elementary_matrix(3, (1, 2), 1, 2, 3, 4)
+    m = super_elementary(3, (1, 2), 1, 2, 3, 4)
     n = Matrix([
         [1, 0, 0],
         [0, 1, 2],
@@ -90,18 +90,18 @@ def test_super_elementary_matrix():
 
     for d, coords in TEST_DIMS.items():
         for i, j in coords:
-            m = super_elementary_matrix(d, (i, j), value=d)
+            m = super_elementary(d, (i, j), value=d)
             assert m[i, j] == d
 
     # test ValueError
     with raises(ValueError):
-        super_elementary_matrix(3, (1, 2, 3))
+        super_elementary(3, (1, 2, 3))
     with raises(ValueError):
-        super_elementary_matrix(3, (1., 2.))
+        super_elementary(3, (1., 2.))
     with raises(ValueError):
-        super_elementary_matrix(3, (1, 1), 1, 3)
+        super_elementary(3, (1, 1), 1, 3)
     with raises(ValueError):
-        super_elementary_matrix(3, (1, 2), 1, 3)
+        super_elementary(3, (1, 2), 1, 3)
 
 
 # === fundamental functions ===
