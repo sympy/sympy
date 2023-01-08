@@ -1259,7 +1259,8 @@ def _laplace_build_rules(t, s):
      Abs(arg(b/a))<pi, S.Zero, dco), # 4.2.18
     (sqrt(t)/(t+b), sqrt(pi/s)-pi*sqrt(b)*exp(b*s)*erfc(sqrt(b*s)),
      Abs(arg(b))<pi, S.Zero, dco), # 4.2.22
-    ((a*t+b)**(-S(3)/2), 2*b**(-S(1)/2)-2*(pi*s/a)**(S(1)/2)*exp(b/a*s)*erfc(sqrt(b/a*s))/a,
+    ((a*t+b)**(-S(3)/2), 2*b**(-S(1)/2)-2*(pi*s/a)**(S(1)/2)*exp(b/a*s)*\
+     erfc(sqrt(b/a*s))/a,
      Abs(arg(b/a))<pi, S.Zero, dco), # 4.2.20
     (1/(a*sqrt(t) + t**(3/2)), pi*a**(S(1)/2)*exp(a*s)*erfc(sqrt(a*s)),
      S.true, S.Zero, dco), # Not in Bateman54
@@ -1289,7 +1290,8 @@ def _laplace_build_rules(t, s):
      re(a)>0, S.Zero, dco), # 4.5.28
     (t**n*exp(-a/t), 2*(a/s)**((n+1)/2)*besselk(n+1, 2*sqrt(a*s)),
      re(a)>0, S.Zero, dco), # 4.5.29
-    (exp(-2*sqrt(a*t)), s**(-1)-sqrt(pi*a)*s**(-S(3)/2)*exp(a/s)*erfc(sqrt(a/s)),
+    (exp(-2*sqrt(a*t)), s**(-1)-sqrt(pi*a)*s**(-S(3)/2)*exp(a/s)*\
+     erfc(sqrt(a/s)),
      Abs(arg(a))<pi, S.Zero, dco), # 4.5.31
     (exp(-2*sqrt(a*t))/sqrt(t), (pi/s)**(S(1)/2)*exp(a/s)*erfc(sqrt(a/s)),
      Abs(arg(a))<pi, S.Zero, dco), # 4.5.33
@@ -1356,7 +1358,8 @@ def _laplace_build_rules(t, s):
      S.true, S.Zero, dco), # 4.9.36
     (sqrt(t)*cosh(2*sqrt(a*t)), pi**(S(1)/2)*s**(-S(5)/2)*(s/2+a)*exp(a/s),
      S.true, S.Zero, dco), # 4.9.37
-    (sinh(2*sqrt(a*t))/sqrt(t), pi**(S(1)/2)*s**(-S(1)/2)*exp(a/s)*erf(sqrt(a/s)),
+    (sinh(2*sqrt(a*t))/sqrt(t), pi**(S(1)/2)*s**(-S(1)/2)*exp(a/s)*\
+     erf(sqrt(a/s)),
      S.true, S.Zero, dco), # 4.9.38
     (cosh(2*sqrt(a*t))/sqrt(t), pi**(S(1)/2)*s**(-S(1)/2)*exp(a/s),
      S.true, S.Zero, dco), # 4.9.39
@@ -1453,7 +1456,7 @@ def _laplace_rule_timescale(f, t, s):
         if ma2 and ma2[a]>0 and not ma2[a]==1:
             debug('_laplace_apply_prog rules match:')
             debug('      f:    %s _ %s, %s )'%(f, ma1, ma2))
-            debug('      rule: time scaling (1.1, 1.2)')
+            debug('      rule: time scaling (4.1.4)')
             r, pr, cr = LaplaceTransform(1/ma2[a]*ma1[g].func(t),
                                          t, s/ma2[a]).doit(noconds=False)
             return True, (k*r, Max(p/ma2[a], pr), And(c, cr))
@@ -1485,14 +1488,14 @@ def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
         if ma2 and ma2[a]>0:
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
-            debug('      rule: time shift (1.3)')
+            debug('      rule: time shift (4.1.4)')
             r, pr, cr = LaplaceTransform(ma1[g].subs(t, t+ma2[a]), t, s).doit(noconds=False)
             return True, (k*exp(-ma2[a]*s)*r,
                           Max(p, pr), And(c, cr))
         if ma2 and ma2[a]<0:
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
-            debug('      rule: Heaviside factor with negative time shift')
+            debug('      rule: Heaviside factor with negative time shift (4.1.4)')
             r, pr, cr = LaplaceTransform(ma1[g], t, s).doit(noconds=False)
             return True, (k*r, Max(p, pr), And(c, cr))
     return False, (fn, p, c)
@@ -1517,7 +1520,7 @@ def _laplace_rule_exp(f, t, s):
         if ma2:
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
-            debug('      rule: multiply with exp (1.5)')
+            debug('      rule: multiply with exp (4.1.5)')
             r, pr, cr = LaplaceTransform(ma1[z], t, s-ma2[a]).doit(noconds=False)
             return True, (k*r, Max(p+ma2[a], pr), And(c, cr))
     return False, (fn, p, c)
@@ -1526,10 +1529,11 @@ def _laplace_rule_exp(f, t, s):
 def _laplace_rule_delta(f, t, s):
     """
     If this function finds a factor ``DiracDelta(b*t-a)``, it applies the
-    masking property of the delta distribution.For example, if it gets
+    masking property of the delta distribution. For example, if it gets
     ``(DiracDelta(t-a)*f(t), t, s)``, it will return
     ``(f(a)*exp(-a*s), -a, True)``.
     """
+    # This rule is not in Bateman54
     fn, p, c = _laplace_ct(f)
     k, f = fn.as_independent(t, as_Add=False)
 
@@ -1567,8 +1571,9 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
       sd: shift direction; shift along real or imaginary axis if `1` or `I`
 
     The convergence plane is changed only if the frequency shift is done along
-    the real axis.
+    the real axis.2
     """
+    # These rules follow from Bateman54, 4.1.5 and Euler's formulas
     fn, p, c = _laplace_ct(f)
     k, f = fn.as_independent(t, as_Add=False)
 
@@ -1588,9 +1593,9 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                 debug('      rule: multiply with %s (%s)'%(fm.func, nu))
                 r, pr, cr = k*LaplaceTransform(ma1[z], t, s).doit(noconds=False)
                 if sd==1:
-                    cp_shift = Abs(ma2[a])
+                    cp_shift = Abs(re(ma2[a]))
                 else:
-                    cp_shift = 0
+                    cp_shift = Abs(im(ma2[a]))
                 return True, ((s1*(r.subs(s, s-sd*ma2[a])+\
                                s2*r.subs(s, s+sd*ma2[a])))/2,
                               Max(p, pr+cp_shift), And(c, cr))
@@ -1614,7 +1619,7 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     if ma1 and ma1[g].args[0] == t and ma1[n].is_integer:
         debug('_laplace_apply_rules match:')
         debug('      f, n: %s, %s'%(f, ma1[n]))
-        debug('      rule: time derivative (1.11, 1.12)')
+        debug('      rule: time derivative (4.1.8)')
         d = []
         for k in range(ma1[n]):
             if k==0:
@@ -1651,7 +1656,7 @@ def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
             if N>1:
                 debug('_laplace_apply_rules match:')
                 debug('      f, n: %s, %s'%(fn, pfac))
-                debug('      rule: frequency derivative')
+                debug('      rule: frequency derivative (4.1.6)')
                 oex = prod(ofac)
                 r_, p_, c_ = LaplaceTransform(oex, t, s).doit(noconds=False)
                 deri = [r_]
