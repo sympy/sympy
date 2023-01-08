@@ -1053,18 +1053,18 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
 # As in the original replace() the original expr is returned if no replacements
 # have been done. Uses Calling-by-ref for efficiency.
 from sympy import Basic   # make myPy happy, since .args == Tuple(Basic)
-def replace_type(expr:Basic, oldtype:Type, newtype:Type) -> Basic:
+def replace_type(expr:Expr, oldtype:Type, newtype:Type) -> Expr:
     # walk() very remotely inspired by walk() in sympy.core.basic.replace()
-    def walk(e:Basic, repl_ref) -> Basic:
+    def walk(e:Basic, repl_ref) -> Basic: # because .args== Tuple(Basic)
         repl = [False]        # will track if replacements done in args of e
         if (args := e.args):  # at least 1 argument present
             new_args = [walk(arg, repl) for arg in args]  # walk the arguments
             if (repl[0]): # repl[0] is the or'ed repl_ref of the args
-                args = new_args   # at least one arg has replacement in it
-        if (e.func == oldtype):   # if e happens to be oldtype
+                args = tuple(new_args) # min one arg has replacement in it
+        if (e.func == oldtype):   # if e happens to be oldtype:
             repl_ref[0] = True       # flag a replacement done here
             return newtype(*args)    # and do the replacement right here
         else: # if there were replacements, re-built e, else return original e
             repl_ref[0] |= repl[0]   # 'or' repl[0] onto repl_ref[0]
             return (e.func(*args) if repl[0] else e)
-    return expr if (oldtype is newtype) else walk(expr, [False])
+    return expr if (oldtype is newtype) else cast(Expr, walk(expr, [False]))
