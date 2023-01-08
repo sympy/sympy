@@ -1,55 +1,70 @@
-"""Evaluates quantum expressions by applying operators to operators and states.
 """
-# qapply - evaluate expressions of quantum expressions
-#
-# See e.g. https://github.com/sympy/sympy/issues/17665 for a discussion of qapply
-# See e.g. https://github.com/sympy/sympy/issues/19540 for a discussion of InnerProduct and TensorProduct
+Evaluates quantum expressions by applying operators to operators and states.
+"""
+# The following is internal documentation. Not part of the module docstring.
+"""
+qapply - evaluate expressions of quantum expressions
 
-# Design Principles of this implementation:
+See e.g. https://github.com/sympy/sympy/issues/24348,
+         https://github.com/sympy/sympy/issues/17665
+See also https://github.com/sympy/sympy/issues/19540 for a discussion of 
+InnerProduct and TensorProduct
 
-#  1. The objects and notation of quantum mechanics (Ket, Bra, ...) are just special cases of
-#     general objects (vector, linear operator,..) and the notation of standard Linear Algebra.
-#     So I built the algorithm work with generic/symbolic/abstract vectors, linear operators etc.
-#     from Linear Algebra in mind. It should be possible extended it to standard Linear Algebra
-#     with little effort just by providing object type specific rules in 3. and 4.
-#     As can be seen from the imports, the only knowledge required from quantum is about
-#     its composite types. No knowledge about states, operators, wavefunctions, qubits etc.
+Design Principles of this implementation:
 
-#  2. Centralize the algorithm that walks the expression tree and determines to pair factors a,b,c,d
-#     as (a*b)*(c*d) or a*((b*c)*d) etc. in one place (qapply_Mul2) with no object type specifics
-#     in it. I decided to implement (a*(b*(c*d))) in general.
-#
-# This requires to
-#  3. have all rules how to break up composite objects in factors made explicit and grouped
-#     in one place (split_c_nc_atom)
-#  4. have all inbuilt rules how to multiply two object types made explicit and grouped in one place
-#     (qapply_Mul2Atoms)
-#
-# Moreover:
-#  5. do not use expand() indiscriminately: Only do an expansion of Add if required to apply operators, so
-#     keeping expansion to the bare minimum. As default, distribute commutative factors over sums as this allows
-#     terms to cancel out thus simplifying the expression. In order to simplify commutative factors qapply()
-#     employs the three mayor hint functions of expand() Mul._eval_expand_mul(), Pow._eval_expand_power_base()
-#     and Pow._eval_expand_power_exp(). See options mul, power_base and power_exp.
-#  6. apply recursion along the structure of the expression but don't use recursion for iterations:
-#     this avoids hitting the Python recursion limit in very complex expressions or powers with
-#     large exponents
-#  7. No need to try to maintain subclass types of objects and expressions, as we simply cannot know whether
-#     a product is still in a subclass of Mul etc. So use the top types.
+1. The objects and notation of quantum mechanics (Ket, Bra, ...) are just
+   special cases of general objects (vector, linear operator,..) and the
+   notation of standard Linear Algebra. So I built the algorithm work with
+   generic/symbolic/abstract vectors, linear operators etc. from Linear
+   Algebra in mind. It should be possible extended it to standard Linear
+   Algebra with little effort just by providing object type specific rules
+   in 3. and 4. As can be seen from the imports, the only knowledge required
+   from quantum is about its composite types; no knowledge about states,
+   operators, wavefunctions, qubits etc. is required.
 
-# Most rules might at a later time be implemented as methods of the object classes, however I decided
-# to be minimally invasive into the existing code base and to implement each set of rules locally
-# in this file, so this file is a 1:1 replacement of the previous version of qapply.py
+2. Centralize the algorithm that walks the expression tree and determines to
+   pair factors a,b,c,d as (a*b)*(c*d) or a*((b*c)*d) etc. in one place
+   (qapply_Mul2) with no object type specifics in it. I decided to implement
+   (a*(b*(c*d))) association from the right in general but depending on
+   whether factors interacted to new factors and re-tries to the right side
+   in that case.
 
-# Note: The types OuterProduct resp. InnerProduct are sympy.physics.quantum.operator.OuterProduct/InnerProduct
-#       and by definition are restricted to hold subclasses of KetBase and BraBase. Not to be confused
-#       with other implementations of same or similar mathematical concepts elsewhere in SymPy (e.g.
-#       .matrices or .physics.vector deal with vectors/matrices described by coefficients.
-#       Classical outer/inner product is implemented by sympy.physics.vector.functions.outer resp.
-#       sympy.matrices.dot/sympy.physics.vector.functions.dot).
+This requires to
+3. have all rules how to break up composite objects in factors made explicit
+   and grouped in one place (split_c_nc_atom)
+4. have all inbuilt rules how to multiply two object types made explicit and
+   grouped in one place (qapply_Mul2Atoms)
 
+Moreover:
+5. do not use expand() indiscriminately: Only do an expansion of Add if
+   required to apply operators, so keeping expansion to the bare minimum. As
+   default, distribute commutative factors over sums as this allows terms to
+   cancel out thus simplifying the expression. In order to simplify commuta
+   -tive factors qapply() employs the three major hint functions of expand()
+   Mul._eval_expand_mul(), Pow._eval_expand_power_base() and
+   Pow._eval_expand_power_exp(). See options mul, power_base and power_exp.
+6. apply recursion along the structure of the expression but don't use
+   recursion for iterations: this avoids hitting the Python recursion limit
+   in very complex expressions or powers with exponents > 1200 or so.
+7. No need to try to maintain subclass types of objects and expressions, as
+   we simply cannot know whether a product is still in a subclass of Mul etc.
+   So use the top types.
 
-from typing import cast, Any, List, Tuple, Type # keep compatibility with Python 3.8
+Most rules might at a later time be implemented as methods of the object
+classes, however I decided to be minimally invasive into the existing code
+base and to implement each set of rules locally in this file, so this file
+is a 1:1 replacement of the previous version of qapply.py
+
+Note: The types OuterProduct resp. InnerProduct are quantum.operator.\
+OuterProduct/InnerProduct and by their definition are restricted to hold
+subclasses of KetBase and BraBase. Not to be confused with other implemen-
+tations of same or similar mathematical concepts elsewhere in SymPy (e.g.
+.matrices or .physics.vector deal with vectors/matrices described by
+coefficients). Classical outer/inner product is implemented by physics.\
+vector.functions.outer resp. physics.vector.functions.dot or matrices.dot.
+"""
+
+from typing import cast, Any, List, Tuple, Type, Callable # for Python 3.8 typing
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -67,9 +82,7 @@ from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.operator import OuterProduct
 from sympy.physics.quantum.tensorproduct import TensorProduct
 #from sympy.physics.quantum.density import Density # moved to qapply body
-#otherwise generates circular import reference qapply->Density->represent->qapply
-
-
+#otherwise circular import reference qapply->Density->represent->qapply
 
 __all__ = [
     'qapply'
@@ -77,21 +90,26 @@ __all__ = [
 
 
 #-----------------------------------------------------------------------------
-# Main code
+# qapply function header and doc string
+# 
+# Options taken from expand() have same names (mul, power_xxx, tensorproduct)
 #-----------------------------------------------------------------------------
 
-def qapply(e, **options):
+def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
+                   mul = True, tensorproduct = None, 
+                   power_base = None, power_exp = False, nested_exp = None,
+                   apply_exp = False, **options ) -> Expr:
     """Apply operators to operators and states in a quantum expression.
 
     Parameters
     ==========
 
     e : Expr
-        The expression containing operators and states. This expression tree
-        will be walked to find operators acting on operators and states symbolically.
+        The expression containing operators and states. This expression tree will
+        be walked to find operators acting on operators and states symbolically.
     options : dict
-        A dict of key/value pairs that determine how the operator actions
-        are carried out. The options are passed on to invocations of operator methods
+        A dict of key/value pairs that determine how the operator actions are
+        carried out. The options are passed on to invocations of operator methods
         <lhs>._apply_operator_<rhs>() and <rhs>._apply_from_right_to_<lhs>().
 
         The following options are defined for qapply itself:
@@ -110,10 +128,10 @@ def qapply(e, **options):
           (same option as in ``expand``) (default: value of option ``mul``).
         * ``power_exp``: for cummutative factors, expand addition in exponents into
           multiplied bases (same option as in ``expand``) (default: False).
-        * ``nestedexp``: if powers are nested and exponents may be multiplied, expand
+        * ``nested_exp``: if powers are nested and exponents may be multiplied, expand
           the product of the exponents (default: value of option ``mul``).
-
-
+        * ``apply_exp``: use qapply on exponents. Default is to process exponents "as
+          provided" (default: False).
 
 
     Returns
@@ -148,30 +166,45 @@ def qapply(e, **options):
         <b|k>**(n + 1)*|k><b|
 
     """
-    # moved import here to avoid circular reference on inport qapply->Density->represent->qapply
+    # moved import here to avoid circular reference on inport qapply->
+    # ->Density->represent->qapply
     from sympy.physics.quantum.density import Density
 
-    # Note: The variables EmptyMul, options, dagger, ip_doit, op_join
-    # are assigned and in read-only scope: see bottom of file for body of qapply()
-
+    #################################################################
+    #################################################################
+    # 
+    # The function body of qapply is at the BOTTOM of this file
+    # marked there as ----------- QAPPLY FUNCTION BODY --------------
+    #
+    # Between here and start of the function body of qapply 
+    # is a library of nested functions and a nested class definition.
+    #
+    # Interspersed block comments describe the broader context for
+    # library functions below them.
+    
+    #################################################################
+    # Begin of qapply internal functions and class definitions
+    #################################################################
     """
-    Remarks on quantum type constructors and Mul
-    --------------------------------------------
+    Internal Remarks on quantum type constructors and Mul
+    -----------------------------------------------------
 
-    1.) The code relies on the auto-simplifications that Mul and all the composite objects constructors like
-    InnerProduct, OuterProduct, TensorProduct, Pow etc do: Extraction of commutative factors, contracting
-    of same factors to Powers etc, so these constructors may return their type, Mul or even other types.
+    1.) The code relies on the auto-simplifications that Mul and the composite
+    objects constructors like InnerProduct, OuterProduct, TensorProduct, Pow etc
+    etc do: Extraction of commutative factors, contracting of same factors to
+    Powers etc, so these constructors may return their type, Mul or other types.
 
     2.) Mul(a,b) != a * b:
-    Mul(a, b, c) processes the arguments a, b, c (e.g. factoring out scalars, grouping same factors to powers)
-    but does not try to actually multiply the arguments, i.e. is not trying (a*(b*c)), (a*b) etc.
-    On the other hand a*b is executed using *-operator __mul__ for type(a), type(b):
-    E.g. for Kets and Bras, __mul__ is overloaded to form InnerProducts resp. OuterProducts types, and
-    e.g. IdentityOperator()*Ket(1)-> Ket(1)
-    (Examples: Mul(Bra(1), Ket(1)) returns unchanged. Bra(1)*Mul(Ket(1), Bra(1)) returns
-    Mul(Bra(1), Ket(1), Bra(1)), while Bra(1)*Ket(1)*Bra(1) returns Mul(InnerProduct(Bra(1),Ket(1)), Bra(1)).
-    So while the return type of Mul(a,b) will be Mul (or Zero) the return type of a*b completely depends
-    on the input types.
+    Mul(a, b, c) processes the arguments a, b, c (e.g. factoring out scalars,
+    grouping same factors to powers) but does not try to actually multiply the
+    arguments, i.e. is not trying (a*(b*c)), (a*b) etc.
+    On the other hand a*b is executed using *-operator __mul__ for type(a),
+    type(b): E.g. for Kets and Bras, __mul__ is overloaded to form InnerProducts
+    resp. OuterProducts types, and e.g. IdentityOperator()*Ket(1)-> Ket(1)
+    (Examples: Mul(Bra(1), Ket(1)) returns unchanged. Bra(1)*Mul(Ket(1), Bra(1))
+    returns Mul(Bra(1), Ket(1), Bra(1)), while Bra(1)*Ket(1)*Bra(1) returns Mul(
+    InnerProduct(Bra(1),Ket(1)), Bra(1)). So while the return type of Mul(a,b)
+    will be Mul (or Zero) the return type of a*b completely depends on the input.
 
     3.) Performance of Mul: refer to the remarks in code of Mul.flatten:
     - avoid a*b*c if you don't need the multiplication and use Mul(a,b,c) instead
@@ -182,95 +215,115 @@ def qapply(e, **options):
     Remarks on qapply vs. Mul and expand, and "atomic" factors:
     -----------------------------------------------------------
 
-    I will use the verbs 'to apply' and 'to multiply' equivalently as in this context they
-    mean the same and are both denoted by *.
+    I will use the verbs 'to apply' and 'to multiply' equivalently as in
+    this context they mean the same and are both denoted by *.
 
-    So the purpose of qapply is to multiply factors that Mul doesn't know how to multiply, and
-    leave those that Mul knows to Mul. This necessarily includes the distribution of factors
-    over Add summands as far as required, which forces qapply to be a kind of workalike of expand().
-    Since qapply also has to handle powers (which come in naturally as repetitions of operators),
-    nested powers (which come in as repetitions of repetitions of operators) and fractional powers
-    (which come in through fractional powers of operators), actually I see only one difference to
-    expand: qapply will do only expansions that are required: E.g. it won't expand arguments of
-    functions, and won't qapply exponents of powers (I can't think of an example where operator**operator
-    would make sense). Probably that behaviour makes the difference between an expand() and
-    a qapply(): expand expands terms, while qapply applies operators to operators and states.
-    However that difference is small in terms of code: If expand() had an option "expand Mul,
-    Add, Pow only" qapply() might be expressed by expand() using hint functions for the quantum
-    operators.
+    So the purpose of qapply is to multiply factors that Mul doesn't know
+    how to multiply, and leave those that Mul knows to Mul. This necessarily
+    includes the distribution of factors over Add summands as far as
+    required, which forces qapply to be a kind of workalike of expand().
+    Since qapply also has to handle powers (which come in naturally as
+    repetitions of operators), nested powers (which come in as repetitions of
+    repetitions of operators) and fractional powers (which come in through
+    fractional powers of operators), this is where I see the difference to
+    expand(): qapply will do only expansions that are required: E.g. it won't
+    expand arguments of functions, and won't qapply exponents of powers (I
+    can't think of an example where operator**operator would make sense).
+    Moreover expand's primary task is to form terms and products, and its
+    hints are on how to expand a given type, but not on how to multiply
+    two factors. qapply is trying hard to apply factors to each other and
+    get a result, and expansion is a byproduct.
 
-    Now, to draw the border between qapply and Mul, we have to classify all types of factors
-    in two ways:
+    Now, to draw the border between qapply and Mul, we have to classify all
+    types of factors in two ways:
 
-    1. Does Mul know how to multiply this type with all other types, or does it not?
+    1. Does Mul know how to multiply this type with other types, or doesn't it?
 
-       For efficiency, qapply would try to only handle those types that Mul doesn't
-       know how to multiply, and will leave all others to Mul. This also helps to avoid
-       contradicting results of Mul and qapply.
-       Of course passing factors to Mul makes only sense if there are more than one
-       to pass. So commutative factors are best. So it fits just nicely that in the
-       quantum context the only types Mul knows how to multiply are the scalars, i.e.
-       the complex numbers that may be pulled out.
+       For efficiency, qapply would try to only handle those types that Mul
+       doesn't know how to multiply, and will leave all others to Mul. This
+       also helps to avoid contradicting results of Mul and qapply.
+       Of course passing factors to Mul makes only sense if there are more
+       than one to pass. So commutative factors are best as they can be
+       grouped up front. So it fits just nicely that in the quantum context
+       the only types Mul knows how to multiply are the scalars, i.e. the
+       complex numbers that may be pulled up front.
 
-       So we would best use 'is_scalar' as predicate to send factors to Mul. Unfor-
-       tunately that doesn't exist, and the closest approximation 'is_complex' can
-       not be used: on most symbols, is_complex is undefined. The only predicate that
-       SymPy guarantees is 'is_commutative'!
+       So we would best use 'is_scalar' as predicate to send factors to Mul.
+       Unfortunately that doesn't exist, and the closest approximation
+       'is_complex' can not be used: on most symbols, is_complex is undefined.
+       The only predicate that SymPy guarantees is 'is_commutative'!
 
-       So we use 'is_commutative', and we can even profit from args_cnc(). Currently
-       there is no need to filter out commutative multiples of the identity operators,
-       as Identity.is_commutative==False and IdentityOperator.is_commutative==False.
-       But if this quirks should vanish, a better filter is required.
+       So we use 'is_commutative', and we can even profit from args_cnc().
+       Currently there is no need to filter out commutative multiples of the
+       identity operators, as Identity.is_commutative==False and
+       IdentityOperator.is_commutative==False. But when this quirks should
+       vanish a better filter is required.
 
-    2. Is the factor a compound type (e.g. OuterProduct, Commutator) that is actually
-       an expression that should be evaluated and broken up into its components to be
-       multiplied one by one, or is it 'elementary'?
-       So qapply implements rules which compound types to break up ((Anti-)Commutator,
-       Pow, Mul, Add) and which to break as an option (OuterProduct). Those that will
-       not be broken up are called "atomic" (note that this is similar in meaning but
-       not identical to the sympy definition of atom/atomic).
+    2. Is the factor a compound type (e.g. OuterProduct, Commutator) that is
+       actually an expression that should be evaluated and broken up into
+       its components to be multiplied one by one, or is it 'elementary'?
+       So qapply implements rules which compound types to break up ((Anti-)
+       Commutator, Pow, Mul) and which to break as an option (OuterProduct).
+       Those that will not be broken up are called "atomic" (note that this
+       is similar in meaning but not identical to the sympy definition of
+       atom/atomic).
 
-       Note that "atomic" refers to the general algorithm (qapply_Mul2) that handles
-       walking the expression tree and the association of factors. qapply still may in-
-       spect the inner contents of factors to do the multiplication (in qapply_Mul2Atoms).
+       Note that "atomic" refers to the general algorithm (qapply_Mul2) that
+       handles walking the expression tree and the association of factors.
+       qapply still may inspect the inner contents of factors to do the
+       multiplication (see qapply_Mul2Atoms).
     """
     def no_interaction(lhs:Expr, rhs:Expr, res:Expr) -> bool:
-        """Assumes lhs, rhs atomic and nc and res=qapply_Mul2([lhs, rhs], []). Returns True if lhs, rhs
-           didn't interact so lhs*rhs just gave res=Mul(lhs,rhs) or Pow(lhs, 2)."""
+        """
+        Assumes lhs, rhs atomic and nc and res=qapply_Mul2([lhs, rhs], []).
+        Returns True if lhs, rhs didn't interact so lhs*rhs just gave
+        res=Mul(lhs,rhs) or Pow(lhs, 2).
+        """
         return ((res.is_Mul and res.args == (lhs, rhs)) or
                 (lhs == rhs and res.is_Pow and cast(Pow, res).base == lhs)
-                # or (isinstance(res, PowHold)) # PowHold(A,x) can result from lhs, rhs in {PowHold(A,n), A} only
+                # or (isinstance(res, PowHold)) # as PowHold(A,x) can
+                # result from lhs, rhs in {PowHold(A,n), A} only)
                )
-        # Remark: On one hand, combining powers of same base is not considered an interaction because it doesn't contribute to
-        # application of operator to operator or state which is what qapply really is about. On the other hand, a result like
-        # A**4 * A**3 looks strange, as one would expect A**7. So I decided to accept it as an interaction, and also implemented
-        # additions of power exponents in qapply_Mul2Atoms()
-        # Along the same lines lhs=(AxB), rhs=(CxD) and res=(A*C)x(B*D) returns False ("interaction"), otherwise qapply
-        # wouldn't multiply tensor products per factor, quite unexpectedly (same action as tensor_product_simp_Mul())
-
+        # Remark: On one hand, combining powers of same base is not
+        # considered an interaction because it doesn't contribute to
+        # application of operator to operator or state which is what qapply
+        # really is about. On the other hand, a result like A**4 * A**3
+        # looks strange, as one would expect A**7. So I decided to accept
+        # it as an interaction, and also implemented additions of power
+        # exponents in qapply_Mul2Atoms().
+        # Along the same lines lhs=(AxB), rhs=(CxD) and res=(A*C)x(B*D)
+        # returns False ("interaction"), otherwise qapply wouldn't multiply
+        # tensor products per factor, quite unexpectedly (same action as
+        # tensor_product_simp_Mul())
 
     # -----------
     # qapply_Mul2
     # -----------
     # Multiply all factors from fL to fR from the left
-    # - fL is typically derived by list(Mul.args), but may contain any expression incl. Mul, Add and c arguments
-    # - fR may not contain Add, Mul or factors Mul should multiply, may only contain "atomic" factors (see above)
+    # - fL is typically derived by list(Mul.args), but may contain any
+    #      expression incl. Mul, Add and c arguments
+    # - fR may not contain Add, Mul or factors Mul should multiply, may
+    #      only contain "atomic" factors (see above)
     # - Important: fL, fR are modified during execution!
 
     def qapply_Mul2(fL:List, fR:List) -> Expr:
-        """Multiplies the left hand list of factors into the right hand list of factors"""
+        """
+        Multiplies the left hand list of factors into the right hand list of factors
+        """
+        # define shorthand to distribute cl*fL*(eadd.args[0]+eadd.args[1]+..)*fR
+        def qapply_DoAddL(eadd:Add):
+            # Important: arguments to qapply_Mul2 must be fresh copies
+            # TBD: implement a cache to avoid frequent evaluation of fL?
+            cle = qapply_expand_powers(cl)  # do expansion of power_base/_exp
+            if opt_mul: # distribute and multiply **each summand** with cl
+                c = qapply_expand_mul(cle)  # deeply distribute factors in cle
+                return Add(*[qapply_Mul2(fL + [c * arg],          fR.copy())
+                                                    for arg in eadd.args])
+            else: # distribute factors, but keep commutative factors up front
+                return Mul(*(cle + [Add(*[qapply_Mul2(fL + [arg], fR.copy())
+                                                    for arg in eadd.args])]))
 
-        # define shorthand to distribute eadd: cl*fL*(eadd.args[0]+eadd.args[1]+..)*fR
-        def qapply_DoAddL(eadd:Add): # Important: arguments to qapply_Mul2 must be fresh copies!
-                                     # TBD: implement a cache to avoid frequent evaluation of fL?
-            cle = qapply_expand_powers(cl)  # do expansion of power_base / power_exp
-            if expand_mul: # distribute factors over summands, but multiply each summand with cl
-                c = qapply_expand_mul(cle)  # deeply distribute factors over sums in cle
-                return Add(*[qapply_Mul2(fL + [c * arg], fR.copy()) for arg in eadd.args])
-            else: # distribute factors over summands, but keep commutative factors up front
-                return Mul(*(cle + [Add(*[qapply_Mul2(fL + [arg], fR.copy()) for arg in eadd.args])] ))
-
-        cl : List[Expr] = [] #gathers factors for Mul. Avoids calling Mul for any new factor.
+        cl : List[Expr] = [] # gathers factors for Mul to call Mul only once
 
         lhsR = EmptyMul # init leftmost  left  hand side factor
         rhsL = EmptyMul # init rightmost right hand side factor
@@ -281,101 +334,115 @@ def qapply(e, **options):
                 if fL == []:         # but there aren't any more
                     if rhsL is not EmptyMul:
                         fR.insert(0, rhsL) # push rhsL factor not yet in fR
-                    cl = qapply_expand_powers(cl) # do expansion of power_base / power_exp
-                    return Mul(*( ([qapply_expand_mul(cl)] if expand_mul else cl) + fR)) # return final result
+                    cl = qapply_expand_powers(cl) # expansion of power_base/_exp
+                    return Mul(*(([qapply_expand_mul(cl)] if opt_mul else cl) + fR))
                 # else
                 lhs0 = fL.pop()      # get right-most factor from fL
-                # split lhs0 into c factors list lhs_c, left factor list lhsL, right atom factor lhsR
-                # so that Mul(*lhsL)*lhsR == lhs  and  Mul(*lhs_c)*lhs == lhs0, also applying .doit()s!
+                # split lhs0 up into (also applying .doit()):
+                # c factors lhs_c, left factor list lhsL, right atom factor lhsR
+                # so that Mul(*lhsL)*lhsR == lhs  and  Mul(*lhs_c)*lhs == lhs0
                 lhs_c, lhsL, lhsR = split_c_nc_atom(lhs0, to_the_right)
                 cl.extend(lhs_c)     # save c factors, if any
-                if lhsR is EmptyMul: # lhs was all for Mul, so went into lhs_c and cl completely
+                if lhsR is EmptyMul: # lhs0 went into lhs_c and cl completely
                     continue         # so pick next factor
                 if lhsR is S.Zero:
                     return S.Zero
-                fL.extend(lhsL)      # push back lhsL factors, if any. A Mul is flattened into fL
+                fL.extend(lhsL)      # push back lhsL factors, if any
 
                 if lhsR.is_Add:      # do expansion of Add
                     if rhsL is not EmptyMul:
                         fR.insert(0, rhsL)  # push back rhsL factor if any
-                    return qapply_DoAddL(cast(Add, lhsR)) # distribute factors over summands of lhsR
+                    return qapply_DoAddL(cast(Add, lhsR)) # over cl,fL,fR
 
             # Now lhsR is a non-trivial nc factor and no Add. Get rhsL:
             if rhsL is EmptyMul:
-                if fR == []:        # no factors in fR
-                    rhsL = lhsR     # so shift lhsR over to become the rhsL, is atomic
+                if fR == []:    # if no factors in fR:
+                    rhsL = lhsR     # shift lhsR (atomic) over to rhsL
                     lhsR = EmptyMul # request new lhsR instead
                     continue
                 # else: get next left most factor from fR
                 # fR is built by atomic nc factors, no Add, Mul or c factors
                 rhsL = fR.pop(0)    # atomic, as only atoms are pushed to fR
 
-            # the heart: we multiply two atomic factors with no obvious scalar factors within
+            # the heart of qapply: we multiply two atomic factors with no
+            # obvious scalar factors within them:
             res0 = qapply_Mul2Atoms(lhsR, rhsL)  # this may return ANY type!
             # try dagger if the two factors have not interacted at all:
             nia = no_interaction(lhsR, rhsL, res0)
-            if nia and dagger: #Identity lhsR*rhsL = Dagger(Dagger(lhsR*rhsL)) = Dagger(Dagger(rhsL)*Dagger(lhsR))
-                res0 = Dagger(rud := qapply_Mul2Atoms(rd := Dagger(rhsL), ld := Dagger(lhsR)))
-                nia = no_interaction(rd, ld, rud) # check before un-dagger that may do transformations
+            if nia and opt_dagger:
+                # Try identity lhsR*rhsL = Dagger(Dagger(lhsR*rhsL))
+                #                        = Dagger(Dagger(rhsL)*Dagger(lhsR))
+                res0 = Dagger(rud := qapply_Mul2Atoms(rd := Dagger(rhsL),
+                                                      ld := Dagger(lhsR)))
+                 # check for interaction before un-dagger that may transfom
+                nia = no_interaction(rd, ld, rud)
 
-            if nia:  # the two factors lhsR*rhsL have not interacted
-                # so push rhsL to the right and continue with a fresh factor from the left: fL*lhsR
+            if nia: # the two factors lhsR*rhsL have not interacted
+                # push rhsL to fR & continue with a fresh fL factor: fL*lhsR
                 fR.insert(0, rhsL) # push rhsL (is atomic) to fR
-                rhsL = lhsR        # continue with previous lhsR as new rhsL (is atomic)
+                rhsL = lhsR        # continue with atomic lhsR as new rhsL
                 lhsR = EmptyMul    # request a new lhsR from fL
-            else: # Multiplication had interaction lhsR*rhsL->res0, so continue with res0*fR
-                res_c, resL, resR = split_c_nc_atom(res0, to_the_right) # incl. ip_doit, Commutator->Add, -> ANY type in resL
+            else: # since interaction lhsR*rhsL->res0, continue res0*fR
+                res_c, resL, resR = split_c_nc_atom(res0, to_the_right)
                 if resR is S.Zero: # the case resR==1 handled below
                     return S.Zero
                 cl.extend(res_c)   # save away any factors for Mul
 
                 # if resR is Add (implies resR != rhsL), distribute it
-                if resR.is_Add:
+                if resR.is_Add:      # distribute factors over resR
                     fL.extend(resL)  # push resL factors
-                    return qapply_DoAddL(cast(Add, resR)) # distribute factors over summands of resR
+                    return qapply_DoAddL(cast(Add, resR)) # over cl,fL,fR
 
-                if resR == rhsL:
-                    if resL == [lhsR]:  # implies we have broken up res0 into its original factors
+                if resR == rhsL: # the right factor of res0 == rhsL
+                    if resL == [lhsR]:  # we have regained lhsR*rhsL from res0!
                         # so push rhsL to fR and continue with fL*lhsR
                         fR.insert(0, rhsL) # = resR, push rhsL (is atomic) to fR
-                        rhsL = lhsR        # = resL, continue with previous lhsR as new rhsL (is atomic)
+                        rhsL = lhsR        # = resL = lhsR (atomic)
                         lhsR = EmptyMul    # request a new lhsR
-                    else: # resL must be equal to lhsR, but in different representation, so compute resL*rhsL
-                        fL.extend(resL)    # Note: if lhsR was an Identity, resL == 1 will be eliminated in push
+                    else: # resL == lhsR but in different representation,
+                          # so compute resL*rhsL 
+                        fL.extend(resL)    # resL == 1 will be eliminated in Mul
                         lhsR = EmptyMul    # get new factor from fL
                 else: # lhsR*rhsL -> res_c*resL*resR, so continue with resR*fR
                     fL.extend(resL)
-                    lhsR = resR            # atomic; if resR==1==EmptyMul, request new factor from fL
+                    lhsR = resR            # if resR==EmptyMul gets fL factor
                     rhsL = EmptyMul        # get new factor from fR
 
 
-    # qapply_expand_powers() and qapply_expand_mul() implement subsets of expand(), applied
-    # here to commutative factors only. In order to simplify some expressions qapply needs
-    # to deeply expand and multiply out all commutative Add-factors to make
-    # summands cancel out. Also expansion of powers via expand(power_base=True) or
-    # expand(power_exp=True) is enabled by default, as it is in expand().
-    # On the other hand we do not want to call expand(deep=True), as this also
-    # aggressively expands function arguments like sqrt(j*(j+1)+m*(m+1)).
-    # So we use the parts of expand that have greatest effect: the hint functions
-    # Mul._eval_expand_mul and Pow._eval_expand_power_xxx:
+    # qapply_expand_powers() and qapply_expand_mul() implement subsets of
+    # expand(), applied here to commutative factors only. In order to simplify
+    # some expressions qapply needs to deeply expand and multiply out all
+    # commutative Add-factors to make summands cancel out. Also expansion of
+    # powers via expand(power_base=True) or expand(power_exp=True) is enabled
+    # by default, as it is in expand(). On the other hand we do not want to
+    # call expand(deep=True), as this also aggressively expands function
+    # arguments like sqrt(j*(j+1)+m*(m+1)). So we use the parts of expand that
+    # have greatest effect: the hint functions Mul._eval_expand_mul and
+    # Pow._eval_expand_power_xxx:
 
     def qapply_expand_powers(cl:List) -> List:
         """Expands commutative factors in cl according to options power_xxx"""
         if cl != []: # shortcut for frequent case
-            # else: Expand powers in cl according to options power_base and power_exp:
-            if expand_power_base:
-                cle = []      # apply _eval.expand_power_base() to all c-factors that are Pow's and pass other factors
-                for c in cl:  # If result is a Mul flatten it into the result list cle
-                    cle.extend(c.args) if (c.is_Pow and (c := c._eval_expand_power_base()).is_Mul) else cle.append(c)
+            # else: Expand powers in cl according to options power_base/_exp:
+            if opt_power_base:
+                cle = []     # apply _eval.expand_power_base() to all c-factors
+                             # that are Pow's and pass on other factors. If the
+                for c in cl: # result is a Mul flatten it into the list cle:
+                    if (c.is_Pow and (c := c._eval_expand_power_base()).is_Mul):
+                        cle.extend(c.args) 
+                    else: cle.append(c)
                 cl = cle      # resulting list of c-factors, Muls flattened in
-            if expand_power_exp:
-                cl = [(c._eval_expand_power_exp()  if c.is_Pow else c) for c in cl] # no hints applicable
+            if opt_power_exp:
+                cl = [(c._eval_expand_power_exp() if c.is_Pow else c)
+                      for c in cl]
                 # no need to flatten Muls in cl as cl may contain Muls
         return cl
 
     def qapply_expand_mul(cl:List) -> Expr:
-        """Expands list of commutative factors by key option 'mul' of expand(), i.e.
-        does a deep distribution of factors over summands, and returns result"""
+        """
+        Expands list of commutative factors by key option 'mul' of expand(), i.e.
+        does a deep distribution of factors over summands, and returns result
+        """
         return mc._eval_expand_mul() if (mc := Mul(*cl)).is_Mul else mc
 
     #-----------------
@@ -383,13 +450,16 @@ def qapply(e, **options):
     #-----------------
 
     # qapply_Mul2Atoms applies a set of application rules that Mul doesn't:
-    # The main issue here is to deal with the plentitude of options that SymPy and the
-    # quantum package provide how und where such rules for
+    # The main issue here is to deal with the plentitude of options that SymPy
+    # and the quantum package provide how und where such rules for
     # 'lhs times rhs' may be defined and to predict the result that would have:
-    # 1. lhs*rhs invokes lhs.__mul__ and then rhs.__rmul__  if defined in class or parents
-    # 2. Mul(lhs, rhs) may behave differently from lhs*rhs (e.g. Bra(1)*Ket(1) vs. Mul(Bra(1),Ket(1)))
-    # 3. lhs._apply_operator_<type(rhs)>(rhs), rhs._apply_from_right_to_<type(lhs)>(lhs) if defined
-    # #  (but note: only for perfect fit of types; no searching up in parent classes)
+    # 1. lhs*rhs invokes lhs.__mul__ and then rhs.__rmul__  if defined in class
+    #    or parents
+    # 2. Mul(lhs, rhs) may behave differently from lhs*rhs (e.g. Bra(1)*Ket(1)
+    #    vs. Mul(Bra(1),Ket(1)))
+    # 3. lhs._apply_operator_<type(rhs)>(rhs) or
+    #    rhs._apply_from_right_to_<type(lhs)>(lhs) if defined
+    #    (but note: only for perfect fit of types; no searching up in parents)
     # 4. lhs.__pow__(rhs), lhs._pow(rhs) if defined in class or parents
     # Moreover:
     # 5. some classes provide xxx_simp or .flatten methods or other
@@ -399,331 +469,436 @@ def qapply(e, **options):
         """Applies atomic lhs and rhs to each other"""
 
         # Special case: lhs or rhs is PowHold type:
-        # PowHold objects come here only if we have declared them atomic, because we don't know how
-        # to safely extract factors from them, or base*base doesn't interact.
-        # But joining powers on same bases is always safe and shortens the overall expression tree.
-        # As PowHold is our artificial type we cannot use the logic in Pow() here, so mimic it here.
-        # Note that this type generic rules cannot be expressed using _apply_operator / _apply_from_right_to:
-        if isinstance(lhs, PowHold):
-            cl, ncl, al = lhs.split_c_nc_atom(to_the_right) # extract factors of base to the right
-            if isinstance(rhs, PowHold):
+        # PowHold objects come here only if we have declared them atomic,
+        # because we don't know how to safely extract factors from them, or
+        # base*base doesn't interact. But joining powers on same bases is safe
+        # if exponents are commutative (rule 1 in power rules below) and shortens
+        # the overall expression tree. As PowHold is our internal type we cannot
+        # use Pow() and its logic here, so mimic it. Note that this type of
+        # generic rules could also be expressed definint the ._apply_operator /
+        # _apply_from_right_to methods for PowHold.
+        if isinstance(lhs, PowHold) and lhs.exp.is_commutative:
+            cl, ncl, al = lhs.split_c_nc_atom(to_the_right) # factors PowHold
+            if isinstance(rhs, PowHold) and rhs.exp.is_commutative:
                 if lhs.base == rhs.base:
-                    return lhs.add_exp(rhs.exp)    # Note PowHold does A**0->1, A**1->A
-                elif (lhs.exp - 1).is_positive and (rhs.exp - 1).is_positive:  # both powers can extract one base factor
-                    cr, ncr, ar = rhs.split_c_nc_atom(to_the_left)  # extract factors of base to the left
+                    return lhs.add_exp(rhs.exp) # PowHold does A**0->1, A**1->A
+                elif (lhs.exp - 1).is_positive and (rhs.exp - 1).is_positive:
+                    # both powers lhs, rhs can each extract one base factor
+                    cr, ncr, ar = rhs.split_c_nc_atom(to_the_left)
                     alar = qapply_Mul2([al, ar], [])
                     if no_interaction(al, ar, alar):
-                        return Mul(lhs, rhs, evaluate = False) # return unevaluated
+                        return Mul(lhs, rhs, evaluate = False) # nothing done
                     else:
                         return Mul(*(cl + cr + ncl + [alar] + ncr))
-                else: # lhs or rhs have exponents <= 1, so we cannot extract factors
-                    return Mul(lhs, rhs, evaluate = False) # return unevaluated
-            elif lhs.base == rhs: # catch special case rhs == lhs.base == PowHold(lhs.base,1)
-                return lhs.add_exp(1)
-            elif (lhs.exp - 1).is_positive: # (PowHold with 1 < exp) * anything
+                else: # lhs or rhs have exp <=1, so we can't extract factors
+                    return Mul(lhs, rhs, evaluate = False) # nothing can be done
+            elif lhs.base == rhs: # special case rhs = lhs.base
+                return lhs.add_exp(1)       # just increment exponent
+            elif (lhs.exp - 1).is_positive: # (PowHold with 1 < exp)*anything
                 alrhs = qapply_Mul2([al, rhs], [])
                 if no_interaction(al, rhs, alrhs):
-                    pass # maybe further down rhs can act on lhs, e.g. if rhs==Id
+                    pass # maybe rhs can act on lhs below, e.g. if rhs==Id
                 else:
                     return Mul(*(cl + ncl + [alrhs]))
-        elif isinstance(rhs, PowHold):
-            if lhs == rhs.base: # catch special case lhs == rhs.base = PowHold(rhs.base,1)
-                return rhs.add_exp(1)
+        elif isinstance(rhs, PowHold) and rhs.exp.is_commutative:
+            if lhs == rhs.base: # catch special case lhs == rhs.base
+                return rhs.add_exp(1) # just increment exponent
             elif (rhs.exp - 1).is_positive:
-                cr, ncr, ar = rhs.split_c_nc_atom(to_the_left) # extract factors of base to the left
+                cr, ncr, ar = rhs.split_c_nc_atom(to_the_left)
                 lhsar = qapply_Mul2([lhs, ar], [])
                 if no_interaction(lhs, ar, lhsar):
-                    pass # maybe further down lhs can act on rhs, e.g. if lhs==Id
+                    pass # maybe lhs can act on rhs below, e.g. if lhs==Id
                 else:
                     return Mul(*(cr + [lhsar] + ncr))
 
-        # case TensorProduct * TensorProduct: no *-Operator, ie. no __mul__ defined
-        if isinstance(lhs, TensorProduct) and isinstance(rhs, TensorProduct) and len(lhs.args) == len(rhs.args):
+        # case TensorProduct*TensorProduct: no *-Operator, ie. no .__mul__
+        if isinstance(lhs, TensorProduct) and isinstance(rhs, TensorProduct) \
+            and len(lhs.args) == len(rhs.args): # we can't check factor dim's
             # Do the *-operator for TensorProduct*TensorProduct. If there are
-            # c-factors in the tensor factors these will be pulled up front automatically, making it Mul
-            result = TensorProduct(*[ cast(Expr, lf) * cast(Expr, rf) for (lf, rf) in zip(lhs.args, rhs.args)])
-            #return qapply_Mul2([result], []) #qapply'ies to the tensor product factors
-            return result # the tensor factors will be qapply'ed in split_c_nc_atom_factor
+            # c-factors in the tensor factors TensorProduct will pull them
+            # up front automatically and return a Mul:
+            res = TensorProduct(*[ cast(Expr, lf) * cast(Expr, rf)
+                                   for (lf, rf) in zip(lhs.args, rhs.args)])
+            return res # tensor factors are qapply'ed in split_c_nc_atom_factor
 
-        # add more cases type1 * type2 go here if they require recursive calls to qapply()
+        # add more cases type1 * type2 here if they require calls to qapply()
         # ...
 
-        # Now try to apply the _apply_operator and _apply_from_right_to methods, so
-        # these take precedence over the built-in methods below.
+        # Try to apply the _apply_operator and _apply_from_right_to methods,
+        # so these take precedence over the built-in methods below:
         result = cast(Any, None)
-        try:
-            result = cast(Any, lhs)._apply_operator(rhs, **options)
-        except (NotImplementedError, AttributeError):
+        if hasattr(lhs, '_apply_operator'):
+            try: # for historical reasons, _apply_operator is tried first
+                result = cast(Any, lhs._apply_operator(rhs, **options))
+            except (NotImplementedError): # action lhs on rhs not implemented
+                pass
+        if result is None and hasattr(rhs, '_apply_from_right_to'):
             try:
-                result = cast(Any, rhs)._apply_from_right_to(lhs, **options)
-            except (NotImplementedError, AttributeError):
+                result = cast(Any, rhs._apply_from_right_to(lhs, **options))
+            except (NotImplementedError): # action rhs on lhs not implemented
                 pass
         if result is not None:
             return result
 
         # If no succes so far: Try the following built-in rules.
-        # Unfortunately the dispatch function behind _apply_operator/_apply_from_right_to
-        # accepts perfect matches of types only and doesn't search up in class parents, so
-        # we put those general rules here:
-        if op_join:
-            if isinstance(lhs, OuterProduct): # provide generic OuterProduct._apply_operator_*(rhs)
+        # Unfortunately the dispatch function behind _apply_operator/
+        # _apply_from_right_to accepts perfect matches of types only and doesn't
+        # search up in class parents, so we put those general rules here:
+        if opt_op_join:
+            if isinstance(lhs, OuterProduct):
+                # provide generic OuterProduct._apply_operator_*(rhs)
                 res = qapply_Mul2Atoms(lhs.bra, rhs)
                 if no_interaction(lhs.bra, rhs, res):
                     return Mul(lhs, rhs, evaluate = False) # return unevaluated
                 else:
                     return lhs.ket * res
-            if isinstance(rhs, OuterProduct): # provide generic OuterProduct._apply_from_right_to_*(lhs)
+            if isinstance(rhs, OuterProduct):
+                # provide generic OuterProduct._apply_from_right_to_*(lhs)
                 res = qapply_Mul2Atoms(lhs, rhs.ket)
                 if no_interaction(lhs, rhs.ket, res):
                     return Mul(lhs, rhs, evaluate = False) # return unevaluated
                 else:
                     return res * rhs.bra
 
-        # Still no result, so return lhs*rhs using *-operator, which
-        # may be overloaded, so e.g. bra*ket->InnerProduct, ket*bra->OuterProduct etc.
+        # Still no result, so return lhs*rhs using *-operator, which may be
+        # overloaded, so e.g. bra*ket->InnerProduct, ket*bra->OuterProduct etc.
         return lhs*rhs
 
     """
-    Remark: qapply and powers Pow(base, power)
-    1) e as a Pow object is already result of the constructor Pow.__new__(base, power) that
-       contains at lot of logic to compute this power, including calling base._eval_power(power).
-       Pow also has pulled (recognizable) commutative factors from its base into a separate Pow object.
-       Some classes like OuterProduct and TensorProduct lack adequate methods .__pow__, ._pow
-       or ._eval_power to apply powers that are required for qapply to work. I decided to add these
-       here instead of in their classes. So if someone adds them to the classes, remove them here.
-    2) qapply will try some 'tricks' to simplify certain powers that Pow doesn't use, nor
-       Pow._eval_expand_power_xxx, e.g. on idempotent operators like dyads.
-    3) But the general approach is to unroll positive powers of an operator, i.e. apply it one by one.
-       In order to make this more efficient, the base is evaluated by qapply only once and then cached
-       (as a PowHold object). Nevertheless that may be costly.
-    4) But: If higher powers of an operator op occur, the **best approach** is to make sure
-       that Pow(op, exp) evaluates this, so the user should provide appropriate methods
-       in the class definition of the operator op.
+    Internal Remark: qapply and powers Pow(base, power)
+    ---------------------------------------------------
+
+    1) e as a Pow object is already result of the constructor Pow.__new__(base,
+       power) that contains at lot of logic to compute this power, including
+       calling base._eval_power(power). Pow also has pulled (recognizable)
+       commutative factors from its base into a separate Pow object.
+       Some classes like OuterProduct and TensorProduct lack adequate methods
+       .__pow__, ._pow or ._eval_power to apply powers that are required for
+       qapply to work. I decided to add these here instead of in their classes.
+       So if someone adds them to the classes, remove them here.
+    2) qapply will try some 'tricks' to simplify certain powers that Pow doesn't
+       use, nor Pow._eval_expand_power_xxx, e.g. on idempotent operators/dyads.
+    3) But the general approach is to unroll positive powers of an operator, i.e.
+       apply it one by one. In order to make this more efficient, the base is
+       evaluated by qapply only once and then cached (as a PowHold object).
+       Nevertheless unrolling of course may be costly.
+    4) But: If higher powers of an operator op occur, the **best approach** is to
+       make sure that Pow(op, exp) evaluates this, so the user should provide
+       appropriate methods in the class definition of the operator op.
     """
     #--------------------
     # split_pow_c_nc_atom
     #--------------------
 
     def split_pow_c_nc_atom(e:Pow, split_left:bool) -> Tuple[List, List, Expr]:
-        """Prepare expression Pow(base, exp) for further application; return (c-factor list if known, nc-list, atomR)"""
+        """Prepare expression Pow(base, exp) for further application.
+        Returns (c-factor list if known, nc-list, atomR)"""
 
-        # TensorProduct doesn't provide .__pow__ or ._pow. We don't use tensor_product_simp_Pow(e).
+        # TensorProduct doesn't provide .__pow__ or ._pow, and
+        # we don't use tensor_product_simp_Pow(e).
         if isinstance(e.base, TensorProduct):
-            # Note ** will pull out commutative factors and return Mul(Pow(c-factors, exp), Pow(nc-part, exp))
-            # And TensorProduct will also pull out all commutative factors from its elements, returning Mul in that case
+            # Note: ** will pull out commutative factors and return a
+            # Mul(Pow(c-factors, exp), Pow(nc-part, exp)).
+            # And TensorProduct will also pull out all commutative factors from
+            # its elements, returning Mul in that case
             return split_c_nc_atom(
-                TensorProduct(*[qapply_Mul2([b**e.exp], []) for b in e.base.args]), split_left)
+                TensorProduct(*[qapply_Mul2([b**e.exp], [])
+                                            for b in e.base.args]), split_left)
 
-        # try to turn a negative exponent positive, if base has an explicit inverse, so we may unroll the power
-        # Pow() doesn't try this on creation of a Pow object. Requires exp to be integer to be always correct mathematically.
-        if e.exp.is_negative and e.exp.is_Integer and hasattr(e.base, 'inv'): # < operator may be undecidable
+        # try to turn a neg exponent positive, if base has an explicit inverse,
+        # so we may unroll the power. Pow() doesn't try this on creation of a Pow
+        # object. Requires exp to be integer to be always correct mathematically.
+        if e.exp.is_negative and e.exp.is_Integer and hasattr(e.base, 'inv'):
             baseinv = e.base.inv()
-            if not (baseinv.is_Pow and baseinv.exp.is_negative): # explicit inverse, not e.base**-1 etc.
-                e = baseinv ** (-e.exp)    # rewrite e with a positive exponent (but may return anything, even neg. exp!)
+            # We require an explicit inverse, not e.base**-1 etc.
+            if not (baseinv.is_Pow and baseinv.exp.is_negative):
+                e = baseinv ** (-e.exp) # try rewrite e with a positive exponent
                 if not e.is_Pow: # if the power e was transformed into sth else
                     return split_c_nc_atom(e, split_left) # return it
                 # else continue with the new e with whatever exponent
 
-        # dispatch method depending on type of e.base, return or fall through with e as Power
+        # dispatch method depending on type of e.base, return or fall
+        # through with e as Power
         # ...
 
         # if no methods has given a result so far, at least recurse into e.base.
         base = qapply_Mul2([e.base], [])
-        # Note: we don't call qapply or expand on e.exp, as there seems no use for it in the context
-        # of qapply: Powers indicate repetitions of operators, and what sense would operators in exponents make?
-        # let Pow do all it can do using class methods ._pow, ._eval_power etc.
-        e = cast(Pow, base ** e.exp)  # may return any Expr; cast() is for MyPy
-        if isinstance(e, Pow): # (e.is_Pow won't work with MyPy) # if it's still a Pow, try some
-            # check for commutative elements in base. Pow() won't have pulled out factors if e.exp is symbolic or not suitable.
+        # Note: we don't call qapply or expand on e.exp by default, as there seems
+        # no use for it in the context of qapply: Powers indicate repetitions of
+        # operators, and what sense would operators in exponents make? Of course
+        # Hamiltonial evolution e**A is key in quantum mechanics, but in a
+        # quantum circuit only power series approximations would occur.
+        exp = qapply_Mul2([e.exp], []) if opt_apply_exp else e.exp
+            
+        # Let Pow do all it can do using class methods ._pow, ._eval_power etc.
+        e = cast(Pow, base ** exp)  # may return any Expr; cast() is for MyPy
+        if isinstance(e, Pow): # (e.is_Pow won't work with MyPy)
+            # e is still a Pow: so try some more simplifications:
+            
+            # Power simplification rules used, same as used by expand() with
+            # default options or by Pow() with numeric exponents:
+            # (Rules differ from https://docs.sympy.org/latest/tutorials/intro-tutorial/simplification.html#powers):
+            #  1.  for arbitrary A, and a, b commutative:
+            #      A**a * A**b == A**(a+b) == A**(b+a)
+            #  2a. for c commutative, A (non-)commutative, n integer (positive or
+            #      negative assuming A**-1, c**-1 exists):
+            #      (c*A)**n == c**n * A**n
+            #  2b. for c nonnegative, A (non-)commutative, a commutative:
+            #      (c*A)**a == c**a * A**a
+            #  2c. for 0<=r<1 (from 1 and 2a):
+            #      (c*A)**(n+r) == (c*A)**r * (c*A)**n == c**n * (c*A)**r * A**n
+            #  2d. for c and d nonnegative, a (non-)commutative:
+            #      (c*d)**a == c**a * d**a  (is commutative if a is)
+            #  3a. (A**b)**a = A**(a*b) if a integer, A,b arbitrary
+            #  3b. if c is nonnegative, b is nonnegative and a (non-)commutative:
+            #      (c**b)**a = c**(a*b)  (is commutative if a is) (see 2d)
+            #  3c. for 0<=r<1 and n integer (from 1 and 3a):
+            #      (A**a)**(n+r) == (A**a)**r * (A**(a*n))
+
+            if not e.exp.is_commutative: # so rules 2a, 2b don't apply
+                # and we cannot extract any factor from e.base**exp
+                return [], [], PowHold(e.base, e.exp, True, tuple(), tuple())
+            # else: e.exp is commutative, so we may apply 2b or even 2a. 
+            # check for commutative elements in base. Pow() won't have pulled
+            # out factors if e.exp is symbolic or otherwise not suitable:
             base = e.base
-            cl, ncl, ar = split_c_nc_atom(e.base, to_the_right) # cl*ncl*ar == e.base
-            if ar is EmptyMul: # implies ncl==[] and base is all commutative
-                return [e], [], EmptyMul
-            if split_left:     # in this code branch, only splits to_the_right will be returned!
-                raise NotImplementedError('Splitting Powers to the left should not occur and has not been implemented.')
+            cl, ncl, ar = split_c_nc_atom(e.base, to_the_right) #cl*ncl*ar==e.base
+            if ar is EmptyMul: # implies ncl==[] and e.base is commutative
+                return [e], [], EmptyMul # so e is comm., since e.exp is comm.
+            if split_left:     # this code branch can manage split_to_right only
+                raise NotImplementedError('Splitting Powers to the left should' +
+                                     ' not occur and has not been implemented.')
             if cl != []:       # strip off commutative factors from base
-                base = qapply_Mul2(ncl + [ar], [])  # ncl*ar == base. Note that ar may be of type Add.
+                base = qapply_Mul2(ncl + [ar], [])  # ncl*ar == base.
 
-            # Split exponent in part expi and "fractional" part: e.exp = expi + expf. Note: expi is not necessarily integer!
-            expi = floor(e.exp) if (e.exp.is_real) else e.exp # returns largest integer <= e.exp if e.exp is real, e.exp else
-            if expi.has(floor): expi = e.exp    # comment this out if you want symbolic calculation with floor(e.exp)
-            expf = e.exp - expi                 # fractional part 0<=expf<1. 0 if e.exp is integer or e.exp is not real
+            # Split exponent in part expi and "fractional" part:
+            # e.exp = expi + expf. Note: expi is not necessarily integer!
+            # expi = largest integer <= e.exp if e.exp is real, e.exp else:
+            expi = floor(e.exp) if (e.exp.is_real) else e.exp
+            # comment this if you want symbolic calculation with floor(e.exp):
+            if expi.has(floor): expi = e.exp
+            # fractional part 0<=expf<1. 0 if e.exp is int or e.exp is not real:
+            expf = e.exp - expi
 
-            # Power simplification rules used, same as used by expand() with default options or by Pow() with numeric exponents:
-            # (Rule 2a different from https://docs.sympy.org/latest/tutorials/intro-tutorial/simplification.html#powers):
-            #  1.  A**a * A**b == A**(a+b) == A**(b+a) for arbitrary A, a, b
-            #  2a. (c*A)**n == c**n * A**n for c commutative, A non-commutative, n integer (pos or negative assuming A**-1, c**-1 exists)
-            #  2b. (c*A)**a == c**a * A**a for c nonnegative, A non-commutative, a arbitrary
-            #  2c. (c*A)**(n+r) == (c*A)**r * (c*A)**n == c**n * (c*A)**r * A**n  for 0<=r<1 (from 1 and 2a)
-            #  3a. (A**a)**b = A**(a*b) if b integer
-            #  3b. (c**a)**b = c**(a*b) if c is nonnegative, a is positive and b arbitrary
-            #  3c. (A**a)**(n+r) == (A**a)**r * (A**(a*n)) for 0<=r<1 and n integer (from 1 and 3a)
-
-            # Raise elements c of a list cl to power exp: If c happens to be a Pow(c.base, c.exp) SymPy will automatically
-            # write c**exp as Pow(c.base, c.exp*exp) if that is feasible. However c.exp*exp won't be expanded, so doing that
-            # (e.g. in qapply_expand_power()) would require another check and another call of Pow. So do it here in one step.
-            def pow_x(cl:List, expx:Expr, cond:callable) -> List:  # cond checks feasibility for multiplication of exponents
-                if expand_nestedexp:  # if powers are nested, expand_mul the product of exponents if condition cond is met
-                    return [(Pow(c.base, qapply_expand_mul([c.exp, expx])) if c.is_Pow and cond(c) else c**expx) for c in cl]
+            # Raise elements c of a list cl to power exp: If c happens to be a
+            # Pow(c.base, c.exp) SymPy will automatically write c**exp as
+            # Pow(c.base, c.exp*exp) if that is feasible. However c.exp*exp won't
+            # be expanded, so doing that (e.g. in qapply_expand_power()) would
+            # require another check and another call of Pow. So done here:
+            def pow_x(cl:List, expx:Expr, cond:Callable) -> List:
+                # cond describes feasibility for multiplication with expx
+                if opt_nested_exp: # if powers are nested, expand the product
+                                   # of exponents if condition cond is met
+                    return [(Pow(c.base, qapply_expand_mul([c.exp, expx]))
+                             if c.is_Pow and cond(c) else c**expx)   for c in cl]
                 else: # else return c**exp unsimplified
                     return [c**expx for c in cl]
-            def pow_i(cl:List, expi:Expr) -> List: # apply rule 3a to power with integer exponent expi to elements in cl
+            def pow_i(cl:List, expi:Expr) -> List:
+                # apply rule 3a to power with int exponent expi to elements in cl
                 return pow_x(cl, expi, (lambda c: True))
 
             # Describe the fractional power part e.base**expf:
-            efpl = efpcl = []  # create efpl, efpcl so that e.base**expf == Mul(*efpcl) * Mul(*efpl)
-            if expf != 0:      # extract non-negative factors from cl to pull them up to front (rule 2b)
+            # create efpl, efpcl so that e.base**expf == Mul(*efpcl) * Mul(*efpl)
+            efpl = efpcl = []
+            if expf != 0:
+                # pull non-neg factors from cl up front (rule 2b)
                 clnonneg = [c for c in cl if c.is_nonnegative]
-                efpcl    = pow_x(clnonneg, expf, (lambda c: c.base.is_nonnegative and c.exp.is_positive)) # [c**expf for c in clnonneg]
+                efpcl    = pow_x(clnonneg, expf,    # [c**expf for c in clnonneg]
+                        (lambda c: c.base.is_nonnegative and c.exp.is_positive))
                 clelse   = [c for c in cl if not c in clnonneg]
-                efpl     = [PowHold(Mul(*(clelse+[base])), expf, True, tuple(), tuple())] # = (clelse*base)**expf, as list
+                efpl     = [PowHold(Mul(*(clelse+[base])), #=[(clelse*base)**expf]
+                                                expf, True, tuple(), tuple())]
 
-            # check for nested powers (see rule 3a, 3c and sympy.simplify.powsimp.powdenest):
-            if expi.is_integer and (not expi is S.Zero) and isinstance(ar, PowHold) and ncl == []: # e.base = cl * ar, base = ar
-                # e.base**exp = e.base**expf * e.base**expi = cl**expi * e.base**expf * ar**expi
-                pcl, pncl, pr = split_pow_c_nc_atom(Pow(ar.base, qapply_expand_mul([ar.exp, expi])), to_the_right) # = ar**expi = (ar.base**(ar.exp*expi)
-                if pr == EmptyMul: # i.e. pr=1, pncl=[], so ar**expi is commutative = pcl
-                    return pow_i(cl, expi) + pcl + efpcl, [], (EmptyMul if efpl == [] else efpl[0])
+            # check for nested powers (see rule 3a, 3c):
+            if expi.is_integer and (not expi is S.Zero) and \
+                isinstance(ar, PowHold) and ncl == []: # e.base=cl*ar, base=ar
+                # e.base**exp = e.base**expf * e.base**expi
+                #             = cl**expi * e.base**expf * ar**expi
+                # ar**expi = ar.base**(ar.exp*expi):
+                pcl, pncl, pr = split_pow_c_nc_atom(Pow(ar.base,
+                                 qapply_expand_mul([ar.exp, expi])), to_the_right)
+                if pr == EmptyMul: # pr=1, pncl=[], so ar**expi is comm = pcl
+                    return pow_i(cl, expi) + pcl + efpcl, [], Mul(*efpl)
                 else:
                     return pow_i(cl, expi) + pcl + efpcl, efpl + pncl, pr
 
-            # So if expi can be be determined to be integer exponent >= 2, we try harder:
-            if expi.is_integer and (expi - 2).is_nonnegative:  # Note: use .is_integer; .is_Integer checks for type Integer
+            # If expi can be determined to be int exponent >= 2, we try harder:
+            # Note: use .is_integer; .is_Integer checks for type Integer
+            if expi.is_integer and (expi - 2).is_nonnegative:
                 if ncl != []: # base has two or more nc-factors
-                    # if base=a*b*c and c*a is commutative, then base**expi=(c*a)**(expi-1) * a * b**expi * c.
-                    # We don't check all possible factors, just the simplest case so that
-                    # cases like (|k>*<b|)**exp or (A*B*A.inv)**exp are simplified
-                    c2, ncr2, al = split_c_nc_atom(Mul(*ncl), to_the_left) # al*ncr2*ar == base
-                    if c2 != []: # should not happen, since we split ncl. But done here for safety
-                        base = qapply_Mul2([al] + ncr2 + [ar], []) # so e.base = cl*ncl*ar = cl*(c2*al*ncr2)*ar = (cl*c2)*base
-                    p = PowHold(base, expi, True, ([], ncr2 + [ar], al), ([], [al] + ncr2, ar)) # base**expi
-                    ia = qapply_Mul2([ar, al], [])  # note ar, al may by type Add
-                    if no_interaction(ar, al, ia):  # factors didn't interact, so it makes
-                        # no sense for the power p to unroll, as factors will just line up, so keep atomic
-                        # Tbd: Also cases ar=CxD, al=AxB, ia=(C*A)x(D*B) and ar=(C1*C2)x(D1*D2),al=(A1*A2)x(B1*B2)
-                        # should go here! Needs a special nia rule here for tensor product factors in case of Pow.
-                        # Case 1: expi>=2, component base, base*base no interaction: e.base**exp == e.base**expf * e.base**expi
-                        return pow_i(cl+c2, expi) + efpcl, efpl, p  # e.base**expi == (cl*c2*base)**expi = (cl*c2)**expi * base**expi
+                    # if base=a*b*c and c*a is commutative, then
+                    # base**expi=(c*a)**(expi-1) * a * b**expi * c.
+                    # We don't check all possible factors, just the simplest ca-
+                    # ses like (|k>*<b|)**exp or (A*B*A.inv)**exp are simplified
+                    c2, ncr2, al = split_c_nc_atom(Mul(*ncl), to_the_left)
+                    # Note: al*ncr2*ar == base
+                    if c2 != []: # shouldn't happen, since ncl is nc. For safety:
+                        # e.base = cl*ncl*ar = cl*(c2*al*ncr2)*ar = (cl*c2)*base
+                        base = qapply_Mul2([al] + ncr2 + [ar], [])
+                    p = PowHold(base, expi, True, ([], ncr2 + [ar], al), #=base**
+                                                  ([], [al] + ncr2, ar)) #   expi
+                    ia = qapply_Mul2([ar, al], []) # note ar, al may by type Add
+                    if no_interaction(ar, al, ia): # factors didn't interact, so
+                        # it makes no sense for the power p to unroll, as factors
+                        # will just line up, so keep atomic.
+                        # Tbd: Also cases ar=CxD, al=AxB, ia=(C*A)x(D*B) and
+                        # ar=(C1*C2)x(D1*D2),al=(A1*A2)x(B1*B2) should go here!
+                        # That will need special nia rule here for tensor factors
+                        # Case 1: expi>=2, component base, base*base not interact
+                        # e.base**exp = e.base**expf * e.base**expi and 
+                        # e.base**expi=(cl*c2*base)**expi=(cl*c2)**expi*base**expi
+                        return pow_i(cl+c2, expi) + efpcl, efpl, p
                     else: # factors did interact: check whether ia is commutative
-                        if (getattr(ia, 'is_commutative', False) or isinstance(ia, Number)):
-                            # (No need to check instance(ia, IdentityOperator), as ia would be S.One instead)
-                            # base = a*b*c and c*a is commutative, so: base**expi = (c*a)**expi * a * b**expi * c
-                            # Case 2: expi>=2, component base, base*base interacts, and commutative
-                            return pow_i(cl+c2, expi) + [ia ** (expi - 1)] + efpcl, \
+                        if (getattr(ia, 'is_commutative', False) or
+                            isinstance(ia, Number)):
+                            # (No need to check instance(ia, IdentityOperator),
+                            # as ia would be S.One instead).
+                            # base = a*b*c and c*a is commutative, so:
+                            # base**expi = (c*a)**expi * a * b**expi * c
+                            # Case 2: expi>=2, comp. base, base*base interact/comm.
+                            return pow_i(cl+c2, expi) + [ia ** (expi-1)] + efpcl,\
                                     efpl + [al, Pow(Mul(*ncr2), expi)], ar
-                        else: # it makes at least sense to permit the power to unroll itself
-                            # Case 3: expi>=2, component base, base*base interacts, but non-c
-                            # e.base**expi = (cl*c2*base)**expi = (cl*c2)**expi * base**(expi-1) * (ncl * ar)
-                            return pow_i(cl+c2, expi) + efpcl, efpl + [p.copy_exp_atomic(expi - 1, False)] + ncl, ar
-                else: # ncl == [], so: e.base = cl*base, and base = ar is atomic, expi is Integer >= 2
-                    p   = PowHold(base, expi, atomic = True , b_sp_l = ([], [], ar), b_sp_r = ([], [], ar))
-                    ar2 = qapply_Mul2([ar, ar], [])  # does the base = ar interact with itself?
-                    if no_interaction(ar, ar, ar2):  # factors didn't interact, so it makes
-                        # no sense for the power to unroll, as factors will just line up, so make atomic
-                        # Case 4: expi>=2, base=ar atomic and base*base = ar*ar = ar2 no interaction
+                        else: # it makes sense to permit the power to unroll
+                            # Case 3: expi>=2, component base, base*base interacts
+                            # but is non-c. e.base**expi = (cl*c2*base)**expi =
+                            # (cl*c2)**expi * base**(expi-1) * (ncl * ar)
+                            return pow_i(cl+c2, expi) + efpcl, efpl + \
+                                [p.copy_exp_atomic(expi-1, False)] + ncl, ar
+                else: # ncl == [], e.base=cl*base, base=ar atomic, expi Int >= 2
+                    p   = PowHold(base, expi, atomic=True, b_sp_l = ([], [], ar),
+                                                           b_sp_r = ([], [], ar))
+                    ar2 = qapply_Mul2([ar, ar], []) # check if base*base interacts
+                    if no_interaction(ar, ar, ar2): # factors don't interact, so
+                        # unrolling makes no sense, as factors will just line up:
+                        # Case 4: expi>=2, base=ar atomic and no base*base
                         return (pow_i(cl, expi) + efpcl, efpl, p)
-                    else: # Check for important simplifications if base=ar is a dyad, "idempotent" or
+                    else: # Check if base=ar is a dyad,"idempotent" or
                         # "involutoric" operator and permit the power to unroll:
                         ar2c, ar2ncl, ar2ar = split_c_nc_atom(ar2, to_the_right)
-                        if ar2ar == EmptyMul: # ar*ar=ar2 is even commutative. We have e.base = cl*ar, base=ar.
-                            # Case 5a: expi >= 2, base = ar atomic + "involutoric"
-                            # simplify: e.base**e.exp = e.base**expf * (cl*ar)**expi = cl**expi * e.base*expf * ar**expi.
-                            # ar**expi = (ar2**(expi//2)) * (ar if (expi % 2 == 1) else 1)
-                            c_list = pow_i(cl, expi) + pow_i(ar2c, expi // 2) + efpcl
-                            return (c_list, efpl, ar) if (expi % 2 == 1) else (c_list, [], Mul(*efpl))
-                        if ar2ar == ar and ar2ncl == []: # Case 5b: expi >= 2, base=ar atomic + "idempotent"
-                            # kind of idempotency: ar*ar = c*ar -> ar**expi = c**(expi-1) * ar
-                            return pow_i(cl, expi) + pow_i(ar2c, expi - 1) + efpcl, efpl, ar
+                        if ar2ar == EmptyMul: # ar*ar=ar2 is even commutative!
+                            # Case 5a: expi >= 2, base=ar atomic + "involutoric"
+                            # We have e.base = cl*ar, base=ar. Simplify:
+                            # e.base**e.exp = e.base**expf * (cl*ar)**expi
+                            #               = cl**expi * e.base*expf * ar**expi.
+                            # ar**expi=(ar2**(expi//2)) * (ar ? (expi%2==1) : 1)
+                            c_list = pow_i(cl,expi) + pow_i(ar2c, expi//2) + efpcl
+                            return      (c_list, efpl, ar) if (expi % 2 == 1)\
+                                   else (c_list, [], Mul(*efpl))
+                        if ar2ar == ar and ar2ncl == []:
+                            # Case 5b: expi >= 2, base=ar atomic + "idempotent"
+                            # "idempotency": ar*ar=c*ar->ar**expi=c**(expi-1)*ar
+                            return pow_i(cl, expi) + pow_i(ar2c, expi-1) + efpcl,\
+                                   efpl, ar
                         # else: Case 6: base=ar atomic but not "idempotent"
-                        # return base**(exp-2) * ar * ar = base**(exp-2)*ar2c*ar2ncl*ar2ar
-                        return pow_i(cl, expi) + ar2c + efpcl, efpl + [p.copy_exp_atomic(expi - 2, False)] + ar2ncl, ar2ar
-            elif expi.is_integer: # Case 7: expi is integer but < 2. e.base = cl*ncl*ar, base = ncl*ar
-                # just do e.base**exp == e.base**expf * (e.base**expi = cl**expi * base**expi)
+                        # base**(exp-2) * ar*ar = base**(exp-2)*ar2c*ar2ncl*ar2ar
+                        return pow_i(cl, expi) + ar2c + efpcl, efpl + \
+                            [p.copy_exp_atomic(expi - 2, False)] + ar2ncl, ar2ar
+            elif expi.is_integer: # Case 7: expi is integer but not >= 2
+                # e.base = cl*ncl*ar, base = ncl*ar
+                # e.base**exp==e.base**expf*(e.base**expi=cl**expi * base**expi)
                 if   expi is S.Zero: return      efpcl, []        , Mul(*efpl)
                 elif expi is S.One : return cl + efpcl, efpl + ncl, ar
                 else:
                     return pow_i(cl, expi) + efpcl, efpl, \
-                        PowHold(base, expi, atomic = True, b_sp_l=tuple(), b_sp_r = ([], ncl, ar))
-            else: # case 8: no knowledge about e.exp. All we can do is apply rule 2b and pull out positive factors
+                        PowHold(base, expi, atomic = True, b_sp_l = tuple(), \
+                                                           b_sp_r = ([], ncl, ar))
+            else: # case 8: no knowledge about e.exp except that it is commutative
+                # so we may apply 2b and pull out c**e.exp for nonneg factors
                 clnonneg = [c for c in cl if c.is_nonnegative]
                 clelse   = [c for c in cl if not c in clnonneg]
-                ep       = PowHold(Mul(*(clelse+[base])), e.exp, True, tuple(), tuple()) # = (clelse*base)**e.exp
-                # Note we can only apply Rule 3b here and not 3a as exp is no integer:
-                return pow_x(clnonneg, e.exp, (lambda c: c.base.is_nonnegative and c.exp.is_positive)), [], ep
-        else: # Case 9: e is no longer a power. Most probably Mul(Pow(commutative factors pulled out), Pow(remaining, e.exp))
+                ep       = PowHold(Mul(*(clelse+[base])), e.exp,
+                            True, tuple(), tuple()) # = (clelse*base)**e.exp
+                # we can only apply Rule 3b here and not 3a as exp is no int:
+                return pow_x(clnonneg, e.exp, (lambda d:
+                        d.base.is_nonnegative and d.exp.is_nonnegative)), [], ep
+        else: # Case 9: e is no longer a power. Most probably is a
+            # Mul(Pow(commutative factors pulled out), Pow(remaining, e.exp))
             return split_c_nc_atom(e, split_left)
 
 
-    #-------------------
-    # Factor Helper functions for qaaply_Mul2 - variables ip_doit, dagger, options etc are in scope
-    #-------------------
+    #----------------------------------------
+    # Factor Helper functions for qaaply_Mul2
+    #----------------------------------------
     #
-    # Code relies on the sympy convention that all commutative factors have been pulled out
-    # from objects like OuterProduct, TensorProduct, InnerProduct, Pow etc by their constructors,
-    # so if an an expression e is an instance of those objects e does not contain such factors
+    # Code relies on the sympy convention that all commutative factors have been
+    # pulled out from objects like OuterProduct, TensorProduct, InnerProduct, Pow
+    # etc by their constructors, so if an an expression e is an instance of those
+    # objects e does not contain such factors.
 
     def split_c_nc_atom(e:Expr, split_left:bool) -> Tuple[List, List, Expr]:
-        """returns (c_factors list of e, e/(c_factors*nc_atomic_factor) list, nc_atomic_factor)"""
-        if  e == EmptyMul or e == S.Zero:  # speed up for special cases
+        """returns (c_factors list of e, e / (c_factors*nc_atomic_factor) list,
+           nc_atomic_factor)"""
+        if  e == EmptyMul or e == S.Zero:  # speed up for frequent cases
             return [], [], e
 
         elif e.is_Mul: # by definition of Mul has at least 2 factors in it
-            # Currently .is_commutative ensures 'Mul can handle it'. Should non-scalar factors
-            # with .is_commutative=True arrive, a filter like hasattr('_apply_operator') is required
+            # Currently .is_commutative ensures 'Mul can handle it'. Should
+            # non-scalar factors with .is_commutative=True arrive, a filter
+            # like hasattr('_apply_operator') is required.
+            # If the Mul is unevaluated, it may actually be 0, 1 etc., also
+            # args_cnc() may fail (Issue #24480), so do doit(deep=False) first:
+            if not (e := e.doit(deep=False)).is_Mul:
+                return split_c_nc_atom(e, split_left)
             c1, nc = e.args_cnc() # depends on .is_commutative
-            if ip_doit: # evaluate InnerProducts if ip_doit==True. As .is_commutative they are in c.
-                c1 = [(f.doit() if isinstance(f, InnerProduct) else f) for f in c1]
-            #extract atomic factor from nc:
+            if opt_ip_doit: # evaluate InnerProducts if opt_ip_doit==True.
+                # As InnerProduct.is_commutative==True they are in c1.
+                c1 = [(f.doit() if isinstance(f, InnerProduct) else f)
+                      for f in c1]
+            # extract atomic factor from nc:
             if  nc == []:   # if e was all commutative
                 return c1, nc, EmptyMul
             else: # nc is list with either 1 or more elements
                 # pick the left- resp. right most factor f from nc
                 nc1, f = (nc[1:], nc[0]) if split_left else (nc[:-1], nc[-1])
-                # break up f further. c2 has ip_doit done.
+                # break up f further. c2 has .doit() done.
                 c2, nc2, a = split_c_nc_atom(f, split_left)
-                # Note that x.extend(y) returns None, so can't use c1.extend(c2) etc.
+                # Note that x.extend(y) returns None, so don't use c1.extend(c2)
                 return (c1+c2, (nc2+nc1 if split_left else nc1+nc2), a)
 
-        elif e.is_Pow: # by definition represents at least 2 factors, except A**-1:
-            # e.exp == 0 or e.exp == 1 will not occur since Pow(A,0)->1, Pow(A,1)->A
-            # Do simplification of Powers, incl. ip_doit, and wraps Powers in PowHold class
+        elif e.is_Pow: # Pow represents at least 2 factors, except A**-1:
+            # e.exp==0 or e.exp==1 will not occur since Pow(A,0)->1, Pow(A,1)->A
+            # Simplify powers, incl. .doit(), and wrap powers in PowHold class:
             return split_pow_c_nc_atom(cast(Pow, e), split_left)
         elif isinstance(e, PowHold):
             if getattr(e, "atomic"): # so MyPy won't complain about e.atomic
-                return [], [], e  # PowHold won't roll off factors in split
-            else: # PowHold rolls itself off providing factors
+                return [], [], e     # atomic PowHold won't roll off factors
+            else: # non-atomic PowHold rolls itself off providing factors
                 return e.split_c_nc_atom(split_left)
 
-        elif isinstance(e, InnerProduct):
-            return [e.doit() if ip_doit else e], [], EmptyMul # is commutative in any case
+        elif isinstance(e, InnerProduct):  # is defined as is_commutative=True
+            return [e.doit() if opt_ip_doit else e], [], EmptyMul
 
         elif isinstance(e, OuterProduct):
-            if op_join:
+            if opt_op_join: # option to not break up OuterProducts
                 return ([], [], e)  # consider OuterProduct atomic
-            else:                   # break it up into ket * bra
-                return ([], [e.bra], e.ket) if split_left else ([], [e.ket], e.bra)
+            else:       # else break it up into ket * bra
+                return (     ([], [e.bra], e.ket) if split_left
+                        else ([], [e.ket], e.bra)               )
 
-        elif isinstance(e, Density):    # For a Density need to call qapply on its state vectors
-            new_args = [(qapply_Mul2([cast(Expr, state)],[]), cast(Expr, prob)) for (state, prob) in cast(Tuple, e.args)]
-            res = cast(Expr, Density(*new_args)) # might return Mul or Density (for MyPy)
+        elif isinstance(e, Density): # call qapply on state vectors of Density
+            new_args = [(qapply_Mul2([cast(Expr, state)],[]), cast(Expr, prob))
+                        for (state, prob) in cast(Tuple, e.args)]
+            res = cast(Expr, Density(*new_args)) # cast for MyPy
             if isinstance(res, Density):
                 return ([], [], res)  # Density is considered atomic
             else: # e.g. Mul, OuterProduct, Add of OuterProduct etc..
                 return split_c_nc_atom(res, split_left)
 
-        elif isinstance(e, TensorProduct): # For a raw TensorProduct, call qapply on its args first
-            res = cast(Expr, TensorProduct(*[qapply_Mul2([t], []) for t in e.args])) # may return Mul or TP (for MyPy)
-            if expand_tensorproduct and isinstance(res, TensorProduct):
+        elif isinstance(e, TensorProduct):
+            # call qapply on args of TensorProduct, may return TP or Mul
+            res = cast(Expr, TensorProduct(*[qapply_Mul2([t], [])
+                                             for t in e.args     ]))
+            if opt_tensorproduct and isinstance(res, TensorProduct):
                 res = res._eval_expand_tensorproduct() # no hints for expansion
-            if isinstance(res, TensorProduct): # TensorProduct is treated as atomic in spite
-                return ([], [], res)           # of (A*B)x(C*D) could be factored (AxC)*(BxD)
+            if isinstance(res, TensorProduct): # TensorProduct is treated as
+                return ([], [], res)  # atomic though (A*B)x(C*D) == (AxC)*(BxD)
             else: # e.g. has become Mul, scalar, ..
                 return split_c_nc_atom(res, split_left)
 
         elif isinstance(e, (Commutator, AntiCommutator)): #requires .doit() first
-            res = e.doit()            # may return any type including Add, S.Zero, unmodified,..
-            if type(res) is type(e):
-                return ([], [], res)  # recursion would be infinite, so nothing we can do with it
+            res = e.doit()           # may return any type including Add, S.Zero,
+            if type(res) is type(e): # recursion would be infinite, 
+                return ([], [], res) # so nothing we can do with it
             else:
                 return split_c_nc_atom(res, split_left)
 
@@ -731,54 +906,68 @@ def qapply(e, **options):
             if (getattr(e, 'is_commutative', False) or isinstance(e, Number)):
                 # remaining e is commutative and needs no .doit() etc.
                 return ([e], [], EmptyMul)
-            else: # e is nc, doesn't contain commuting factors, needs no .doit() etc., e.g. Ket, Bra, Add
+            else: # e is nc, doesn't contain commuting factors
+                # needs no .doit() etc., e.g. Ket, Bra, Add
                 return ([], [], e)
 
 
-    # Minimalistic wrapper for Pow to hold algorithm from iterated inspection of base in Pow(base,exp)
-    # Derived from Pow.__new__:
+    # Minimalistic wrapper for Powers to hold qapply from iterated inspection
+    # of base in Pow(base,exp). Derived from Pow.__new__:
     class PowHold(Expr): # formally make it an Expr, so it looks more SymPy
-        # see definition of class Pow: this permits modification of obj.is_commutative
+        # this permits modification of obj.is_commutative:
         __slots__ = ('is_commutative', '_b_sp_l', '_b_sp_r', 'atomic')
 
-        def __new__(cls, base:Expr, exp:Expr, atomic:bool, b_sp_l:Tuple, b_sp_r:Tuple):
+        def __new__(cls, base:Expr, exp:Expr, atomic:bool, b_sp_l:Tuple,
+                                                           b_sp_r:Tuple):
             if exp is S.Zero:  return S.One    # by sympy convention, see Pow.
             elif exp is S.One: return base
             obj = Expr.__new__(cls, base, exp) # sets up self.func, self.args
-            obj.is_commutative = (base.is_commutative and exp.is_commutative) # see Pow.__new__
+            # See Pow.__new__ for this definition of commutative (eg e**A):
+            obj.is_commutative = (base.is_commutative and exp.is_commutative)
             if base.is_commutative:
                 obj._b_sp_l = obj._b_sp_r = ([base], [], S.One)
             else:
-                obj._b_sp_l = b_sp_l # base split to left:  (c, ncr, al) with c*al*ncr = base
-                obj._b_sp_r = b_sp_r # base split to right: (c, ncl, ar) with c*ncl*ar = base
-            obj.atomic = atomic      # true if PowHold behaves like atomic
-            nonlocal used_PowHold
-            used_PowHold = True      # Flag proprietary type PowHold has been used
+                # base split to left:  (c, ncr, al) with c*al*ncr = base
+                obj._b_sp_l = b_sp_l
+                # base split to right: (c, ncl, ar) with c*ncl*ar = base
+                obj._b_sp_r = b_sp_r
+            obj.atomic = atomic    # true if PowHold behaves like atomic
+            nonlocal used_PowHold  # refer to qapply() namespace
+            used_PowHold = True    # Flag proprietary type PowHold has been used
             return obj
 
         def adjoint(self): # required to make Dagger(PowHold) work
             def dagger_sp(b_sp:tuple) -> tuple:
                 return (b_sp if (b_sp == tuple()) else
-                        ([Dagger(f) for f in b_sp[0] ], [Dagger(f) for f in reversed(b_sp[1])], Dagger(b_sp[2])))
-            (b, e) = (b.base, b.exp*self.exp) if ((b := Dagger(self.base)).is_Pow) else (b, self.exp) # e.g. if Dagger(Unitary) returns Unitary**-1
-            return PowHold(b, e, self.atomic, dagger_sp(self._b_sp_l), dagger_sp(self._b_sp_r))
+                    ([Dagger(f) for f in          b_sp[0] ],
+                     [Dagger(f) for f in reversed(b_sp[1])],   Dagger(b_sp[2])))
+            if ((b := Dagger(self.base)).is_Pow): # e.g. if Dagger(U) -> U**-1
+                (b, e) = (b.base, b.exp*self.exp) # then handle nested Powers
+            else:
+                (b, e) = (b, self.exp) 
+            return PowHold(b, e, self.atomic, dagger_sp(self._b_sp_l),
+                                              dagger_sp(self._b_sp_r) )
 
-        def add_exp(self, exp2): # return PowHold with exponent incremented by exp2
-            return PowHold(self.base, self.exp + exp2, self.atomic, self._b_sp_l, self._b_sp_r)
+        def add_exp(self, exp2): # return PowHold with exponent+exp2
+            return PowHold(self.base, self.exp + exp2, self.atomic, self._b_sp_l,
+                                                                    self._b_sp_r)
         def copy_exp_atomic(self, exp, atomic):
-            return PowHold(self.base,      exp,             atomic, self._b_sp_l, self._b_sp_r)
+            return PowHold(self.base,      exp,             atomic, self._b_sp_l,
+                                                                    self._b_sp_r)
         def split_c_nc_atom(self, split_to_left):
-            # split up by split_left; ignores .atomic, hands factor out as long as possible
+            # split up by split_left; ignores .atomic, gives factors if exp >=1
             if (self.exp - 1).is_nonnegative:
                 if split_to_left:    # extract base to the left:
                     if self._b_sp_l == tuple():
                         self._b_sp_l = split_c_nc_atom(self.base, to_the_left)
-                    res = self._b_sp_l[0], self._b_sp_l[1] + [self.add_exp(-1)], self._b_sp_l[2]
+                    res = self._b_sp_l[0], self._b_sp_l[1] + [self.add_exp(-1)],\
+                                           self._b_sp_l[2]
                     return res
                 else:          # extract base to the right:
                     if self._b_sp_r == tuple():
                         self._b_sp_r = split_c_nc_atom(self.base, to_the_right)
-                    res = self._b_sp_r[0], [self.add_exp(-1)] + self._b_sp_r[1], self._b_sp_r[2]
+                    res = self._b_sp_r[0], [self.add_exp(-1)] + self._b_sp_r[1],\
+                                           self._b_sp_r[2]
                     return res
             else:
                 return [], [], self.copy_exp_atomic(self.exp, True)
@@ -788,65 +977,89 @@ def qapply(e, **options):
         @property
         def exp(self) : return self._args[1]
 
-    #-----------------------------------
-    # qapply(e:Expr, **options) -> Expr:
-    #-----------------------------------
+
+    #################################################################
+    # End of qapply internal functions and class definitions
+    #################################################################
+    # 
+    # qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
+    #                mul = True, tensorproduct = None, 
+    #                power_base = None, power_exp = False, nested_exp = None,
+    #                apply_exp = False, **options ) -> Expr:
+    #################################################################
+    #
+    #       ----------- QAPPLY FUNCTION BODY ---------------
 
     # if e is no sympy expression, return it unmodified (e.g. Numbers)
     if not isinstance(e, Expr):
         return e
 
-    used_PowHold = False # Flag: proprietary type PowHold not used
-
     # set options for qapply_* and helper functions:
-    dagger               = options.get('dagger', False)       # if a*b doesn't compute, try Dagger(Dagger(b)*Dagger(a))
-    ip_doit              = options.get('ip_doit', True)       # evaluate ip.doit() on all InnerProduct objects
-    op_join              = options.get('op_join', True)       # try to join Ket*Bra to OuterProduct, avoid breaking OuterProduct
-    expand_mul           = options.get('mul', True)           # distribute commutative factors and apply hint 'mul' of expand()
-    expand_tensorproduct = options.get('tensorproduct', expand_mul) # expand sums in tensor product factors (= hint tensorproduct of expand())
-    expand_power_base    = options.get('power_base', expand_mul) # for commutative factors: apply hint 'power_base' of expand()
-    expand_power_exp     = options.get('power_exp', False)       # for commutative factors: apply hint 'power_exp' of expand()
-    expand_nestedexp     = options.get('nestedexp', expand_mul)  # if powers are nested, expand_mul the product of exponents
+    # if a*b doesn't compute, try Dagger(Dagger(b)*Dagger(a))
+    options['dagger'       ] = opt_dagger        = dagger
+    # evaluate ip.doit() on all InnerProduct objects
+    options['ip_doit'      ] = opt_ip_doit       = ip_doit
+    # try to join Ket*Bra to OuterProduct, avoid breaking OuterProduct
+    options['op_join'      ] = opt_op_join       = op_join
+    # distribute commutative factors and apply hint 'mul' of expand()
+    options['mul'          ] = opt_mul           = mul
+    # expand sums in tensor product factors (= hint tensorproduct of expand())
+    if tensorproduct is None: tensorproduct = opt_mul
+    options['tensorproduct'] = opt_tensorproduct = tensorproduct
+    # for commutative factors: apply hint 'power_base' of expand()
+    if power_base    is None: power_base    = opt_mul
+    options['power_base'   ] = opt_power_base    = power_base
+    # for commutative factors: apply hint 'power_exp' of expand()
+    options['power_exp'    ] = opt_power_exp     = power_exp
+    # if powers are nested, expand_mul() the product of exponents
+    if nested_exp     is None: nested_exp   = opt_mul
+    options['nested_exp'   ] = opt_nested_exp    = nested_exp
+    # apply qapply to exponents, otherwise exponents are used "as is"
+    options['apply_exp'    ] = opt_apply_exp     = apply_exp
+
+    # remove mnemonic option variables, enforce using clean opt_xxxx instead
+    del dagger, ip_doit, op_join, mul, tensorproduct, \
+        power_base, power_exp, nested_exp, apply_exp
 
     # some constants for convenience
-    EmptyMul = Mul() # is Integer(1), is S.One, but more intuitive in this context
-    to_the_left  = True  # option for split_c_nc_atom: split atomic factor to the left
-    to_the_right = False # option for split_c_nc_atom: split atomic factor to the right
+    EmptyMul = Mul() # is Integer(1), is S.One, but more intuitive here
+    to_the_left  = True  # option for split_x: split atomic factor to the left
+    to_the_right = False # option for split_x: split atomic factor to the right
 
-    # call the workhorse, with all variables from this namespace (dagger, ip_doit, ...) in scope
+    used_PowHold = False # indicator if proprietary type PowHold has been used
+
+    # call the workhorse, with all variables from this namespace in scope
     res = qapply_Mul2([e], [])
 
     # clean up the result, if necessary
     if used_PowHold and hasattr(res, 'replace'):
         res = replace_type(res, PowHold, Pow) # res.replace(PowHold, Pow)
 
-    """ debugging aid: show various representations and expansion of result
-    from sympy.printing import srepr
-    try:    # in case e contains objects (e.g. functions) that crash print()
-        ep = str(e)
-    except:
-        ep = f"{str(type(e))}({str(e.args)})" # strange enough, printing e.args works
-    print(f"    1.qapply({ep},{options}) -> {srepr(res)}")
-    print(f"    2.qapply({ep},{options}) -> {res}")
-    if hasattr(res, 'expand'):
-        print(f"    3.qapply({ep},{options}).expand(TP=True) = {res.expand(tensorproduct=True)}")
-    #"""
-    return res
-
+    return res # return final result of qapply()
+               # ---------- End of QAPPLY FUNCTION BODY ---------------- 
 
 # My version of .replace() for case 1.1 'replacement of oldtype by newtype'.
-# See SymPy issue #24460 of 2023-01-01: Original .replace creates superfluous
-# interim oldtype objects which is inefficient and may have unwanted side effects.
-# As in the original .replace() the original expr is returned if no replacements are done.
+# See SymPy issue #24460 of 2023-01-01: SymPy replace is an incremental
+# replace that interimistically creates oldtype objects. That has unwanted
+# side effects in qapply when used to replace PowHold by Pow.
+# This version does a simultaneous (or static) replace that creates the effect
+# that all replacements are done "at the same time" and no oldtype objects are
+# created.
+# As in the original replace() the original expr is returned if no replacements
+# have been done. Uses Calling-by-ref for efficiency.
 def replace_type(expr:Expr, oldtype:Type, newtype:Type) -> Expr:
-    def walk(e:Expr) -> Tuple[Expr, bool]: # very remotely inspired by walk() in sympy.core.basic.replace()
-        repl_flag = False     # replacements done in arguments of e?
+    # walk() very remotely inspired by walk() in sympy.core.basic.replace()
+    from sympy import Basic   # make myPy happy, since .args == Tuple(Basic)
+    def walk(e:Basic, repl_ref) -> Tuple[Expr, bool]: # [new_exp, flag by ref]
+        repl = [False]        # will track if replacements done in args of e
         if (args := e.args):  # at least 1 argument present
-            walked_args = [walk(arg) for arg in args]  # walk the arguments
-            if (repl_flag := any((replaced for (_, replaced) in walked_args))):
-                args = tuple((arg for (arg, _) in walked_args))
-        if (e.func == oldtype):           # if e happens to be oldtype
-            return (newtype(*args), True) # do the replacement right here
+            new_args = [walk(arg, repl) for arg in args]  # walk the arguments
+            if (repl[0]): # repl[0] is the or'ed repl_ref of the args
+                args = new_args   # at least one arg has replacement in it 
+        if (e.func == oldtype):   # if e happens to be oldtype
+            repl_ref[0] = True       # flag a replacement done here
+            return newtype(*args)    # and do the replacement right here
         else: # if there were replacements, re-built e, else return original e
-            return ((e.func(*args) if repl_flag else e), repl_flag)
-    return walk(expr)[0]
+            repl_ref[0] |= repl[0]   # 'or' repl[0] onto repl_ref[0]
+            return (e.func(*args) if repl[0] else e)
+    return expr if (oldtype is newtype) else walk(expr, [False])

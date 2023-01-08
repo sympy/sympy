@@ -369,9 +369,19 @@ def test_powers2022_11():
     from sympy import exp, I, pi
     from sympy.matrices import ImmutableMatrix, eye
 
-    # Use an extend definition of UGate*UGate with diverse result types in order
+    # The quantum package assumes that the user adds or modifies the methods
+    # _apply_operator_XXX / _apply_from_the_right_to_XXX of operators if not in source
+    # code then at runtime. In a single user environment the user themselves may handle
+    # concurrency issues that arise from modifying the global operator class at runtime.
+    # A safer approach is to clone the operator class and locally modify the clone.
+    # As SymPy objects are supposed to be non-mutable, class inheritance should suffice.
+    from sympy.physics.quantum.gate import UGate as UGate_Org
+    class UGate(UGate_Org):     # UGate is now a local clone of the global UGate
+        pass
+
+    # Use an extended definition of UGate*UGate with diverse result types in order
     # to build test cases with commutative factors etc.
-    def UGate_apply_operator_UGate(u1,u2, **options):
+    def UGate_apply_operator_UGate(u1, u2, **options):
         if u1.args[0] != u2.args[0]: # This case is not implemented
             raise NotImplementedError("UGate*UGate on different target qubits")
         u1id = (u1.args[1] == u1.args[1][0,0] * eye(u1.args[1].shape[0]))
@@ -388,8 +398,10 @@ def test_powers2022_11():
                 return res[0,0]  # scalar result
             else:
                 return UGate(u1.args[0], res)
-    prev_op = getattr(UGate, "_apply_operator_UGate", None)
-    setattr(UGate, "_apply_operator_UGate", UGate_apply_operator_UGate)
+
+    # Set the method on the local clone UGate of the global class UGate_Org
+    prev_op = getattr(UGate, "_apply_operator_UGate", None) # cannot fail
+    setattr(UGate, "_apply_operator_UGate", UGate_apply_operator_UGate) # cannot fail
 
     n = 7
     U71   = UGate(0, ImmutableMatrix([[1*exp(2*pi*I/n), 0], [0, 1*exp(-2*pi*I/n)]]))
@@ -452,7 +464,7 @@ def test_powers2022_11():
     assert qapply((m * XGate(0)*U71*U13*XGate(0))**Rational(7,2)) == \
         m**Rational(7,2) * 3**Rational(7,2) * (XGate(0) * U71 * XGate(0))**Rational(1,2) * XGate(0) * U71p3 * XGate(0)
 
-    # restore the previous operator _apply_operator_UGate, if any
+    # no need to restore the previous operator _apply_operator_UGate on the local clone UGate. Done as code demo.
     if prev_op: # restore previous operator
         setattr(UGate, "_apply_operator_UGate", prev_op)
     else:
@@ -511,6 +523,8 @@ def test_powers2023_01():
     A, B, C, D = symbols('A B C D',commutative=False)
     c, d = symbols("c d", commutative=True)
     f, g = symbols("f g", commutative=True, nonnegative=True)
+    n = symbols("n", integer=True)
+    m = symbols("m", integer=True, positive=True)
     o = symbols("o", commutative=True, integer=True, positive=True)
     r = symbols("r", real=True)
     In = IdentityOperator()
@@ -548,15 +562,15 @@ def test_powers2023_01():
     assert qapply(p) == c**(7*o + 21)*d**21*f**(7*o + 21)*g**21*A**(7*o + 42)
     p = Pow(Pow(c*f*A*In, o+3)*Pow(d*g*A, 3-o), o+2) # pos int exp, unknown int exp, nested pos int exp: expand extracts factors
     assert qapply(p) == c**(o**2 + 5*o + 6)*d**(-o**2 + o + 6)*f**(o**2 + 5*o + 6)*g**(-o**2 + o + 6)*A**(6*o + 12)
-    assert qapply(p, nestedexp=False) == c**((o + 2)*(o + 3))*d**((3 - o)*(o + 2))*f**((o + 2)*(o + 3))*g**((3 - o)*(o + 2))*A**(6*o + 12)
+    assert qapply(p, nested_exp=False) == c**((o + 2)*(o + 3))*d**((3 - o)*(o + 2))*f**((o + 2)*(o + 3))*g**((3 - o)*(o + 2))*A**(6*o + 12)
 
     p = Pow(Pow(c*f*A*In, o+3)*Pow(d*g*A, r), o+2) # pos int exp, real exp, nested pos int exp: expand extracts factors
     assert qapply(p) == c**(o**2 + 5*o + 6)*f**(o**2 + 5*o + 6)*g**(o*r + 2*r)*(A**(o + 3)*(d*A)**r)**(o + 2)
-    assert qapply(p, nestedexp=False) == c**((o + 2)*(o + 3))*f**((o + 2)*(o + 3))*g**(r*(o + 2))*(A**(o + 3)*(d*A)**r)**(o + 2)
+    assert qapply(p, nested_exp=False) == c**((o + 2)*(o + 3))*f**((o + 2)*(o + 3))*g**(r*(o + 2))*(A**(o + 3)*(d*A)**r)**(o + 2)
 
     p = Pow(Pow(c*f*A*In, o+3)*Pow(d*g*A, 3-o), r) # pos int exp, unknown int exp, nested real exp: expand extracts factors
     assert qapply(p) == f**(o*r + 3*r)*(c**(o + 3)*d**(3 - o)*g**(3 - o)*A**6)**r
-    assert qapply(p, nestedexp=False) == f**(r*(o + 3))*(c**(o + 3)*d**(3 - o)*g**(3 - o)*A**6)**r
+    assert qapply(p, nested_exp=False) == f**(r*(o + 3))*(c**(o + 3)*d**(3 - o)*g**(3 - o)*A**6)**r
 
     p = Pow(Pow(c*f*A*In, f)*Pow(d*g*A, 3-o), c) # pos exp, unknown int exp, nested unknown exp: expand extracts factors
     assert qapply(p) == f**(c*f)*(d**(3 - o)*g**(3 - o)*(c*A)**f*A**(3 - o))**c
@@ -564,3 +578,20 @@ def test_powers2023_01():
     assert qapply(p) == (d**(3 - o)*f**d*g**(3 - o)*(c*A)**d*A**(3 - o))**c
     p = Pow(c*f*A*In, f*(f+c)*(d-g)) # qapply won't expand the exponent, expand does
     assert qapply(p) == f**(f*(c + f)*(d - g))*(c*A)**(f*(c + f)*(d - g))
+
+    from sympy import evaluate, expand
+    with evaluate(False): # creates objects in non-canonical form
+        p0 = Pow(Pow(Pow(Pow(2*A, c), d), c), d)
+        p1 = c**A * c**B
+        p2 = c**A * c**d # c**A * c**d unsorted
+        p3 = Pow(p2, d*(A+B))
+        p4 = Pow(c, A*(A*c + d)*B)
+
+    # prove coincidence with expand()
+    assert qapply(p0) == expand(p0)
+    assert qapply(p1) == expand(p1) # c**A * c**B, not a**(A+B)
+    assert qapply(p2) == expand(p2.doit())
+    assert qapply(p3) == p3.doit()  # exponent d*(A+B) un-expanded
+    assert qapply(p3, apply_exp=True) == expand(p3.doit())
+    assert qapply(p4, apply_exp=True) == c**(c*A**2*B + d*A*B)
+
