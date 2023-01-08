@@ -594,4 +594,3 @@ def test_powers2023_01():
     assert qapply(p3) == p3.doit()  # exponent d*(A+B) un-expanded
     assert qapply(p3, apply_exp=True) == expand(p3.doit())
     assert qapply(p4, apply_exp=True) == c**(c*A**2*B + d*A*B)
-
