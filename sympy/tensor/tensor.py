@@ -3629,10 +3629,11 @@ class TensMul(TensExpr, AssocOp):
 
     def _get_args_for_traditional_printer(self):
         args = list(self.args)
-        if (self.coeff.is_real and self.coeff < 0) == True:
+        _coeff, _ = self.coeff.as_coeff_Mul()
+        if (_coeff < 0) == True:
             # expressions like "-A(a)"
             sign = "-"
-            if self.coeff == S.NegativeOne:
+            if _coeff == S.NegativeOne:
                 args = args[1:]
             else:
                 args[0] = -args[0]
