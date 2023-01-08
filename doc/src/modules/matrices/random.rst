@@ -153,21 +153,21 @@ The product of *elementary* matrices
 
     >>> from sympy.matrices.random import elementary
 
-    >>> A = elementary(3, (0, 2), -2)
+    >>> A = elementary(3, index=(0, 2), scalar=-2)
     >>> A
     Matrix([
     [1, 0, -2],
     [0, 1,  0],
     [0, 0,  1]])
 
-    >>> B = elementary(3, (1, 2), 1)
+    >>> B = elementary(3, index=(1, 2), scalar=1)
     >>> B
     Matrix([
     [1, 0, 0],
     [0, 1, 1],
     [0, 0, 1]])
 
-    >>> C = elementary(3, (1, 0), -1)
+    >>> C = elementary(3, index=(1, 0), scalar=-1)
     >>> C
     Matrix([
     [ 1, 0, 0],

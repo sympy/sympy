@@ -109,7 +109,7 @@ def test_super_elementary_matrix():
 def test_real_complex_matrix():
     z = 4 + 2 * I
     for d in TEST_DIMS:
-        c = jordan(d, (0, d - 1), scalar=z)
+        c = jordan(d, index=(0, d - 1), scalar=z)
         r = complex_to_real(c)
         for x in r:
             assert x.is_real
@@ -129,22 +129,22 @@ def test_singular_matrix():
 
 def test_diagonal():
     for d in TEST_DIMS:
-        m = diagonal_normal(d, (1,) * d)
+        m = diagonal_normal(d, spec=(1,) * d)
         assert _is_eye(m)
 
     for d in TEST_DIMS:
-        m = diagonal_normal(d, (0,) * d)
+        m = diagonal_normal(d, spec=(0,) * d)
         assert _is_zeros(m)
 
 
 def test_jordan():
     for d in TEST_DIMS:
-        m = jordan(d, (0, d), (1,))
+        m = jordan(d, index=(0, d), scalar=(1,))
         n = eye(d)
         assert m.diagonal() == n.diagonal()
 
     for d in TEST_DIMS:
-        m = jordan(d, (0, d), 0)
+        m = jordan(d, index=(0, d), scalar=0)
         n = zeros(d)
         assert m.diagonal() == n.diagonal()
 
@@ -157,7 +157,7 @@ def test_transposition():
 
     for d, coords in TEST_DIMS.items():
         for i, j in coords:
-            m = transposition(d, (i, j))
+            m = transposition(d, index=(i, j))
             assert m[j, i] == 1
             assert m[i, j] == 1
             if not i == j:
@@ -175,15 +175,15 @@ def test_permutation():
             return obj  # aka eye(dim).permute(perm)
 
         perm = RANDOM.sample(range(d), d)
-        m = permutation(d, perm)
-        n = alt_permutation(d, perm)
+        m = permutation(d, perm=perm)
+        n = alt_permutation(d, perm=perm)
         assert m == n
 
 
 def test_projection():
     for d in TEST_DIMS:
         for r in range(1, d):
-            m = projection(d, (0, r))
+            m = projection(d, index=(0, r))
             assert sum(m) == r
             assert m * m == m
             assert _is_triangular(m)
@@ -256,7 +256,7 @@ def test_diagonal_normal():
     for d in TEST_DIMS:
         rank = d - 1
         s = (0,) * (d - rank) + scalars[:rank]
-        m = diagonal_normal(d, s)
+        m = diagonal_normal(d, spec=s)
         assert _is_triangular(m)
         assert _is_triangular(m.T)
         for x in m.diagonal():
@@ -287,7 +287,7 @@ def test_diagonal_normal():
     for d in TEST_DIMS:
         s = RANDOM.choices(spec, k=d + 4)
         specs[d] = s
-        m = _alt_diagonal_normal(d + 4, s)
+        m = _alt_diagonal_normal(d + 4, spec=s)
         test[d] = m
         assert _is_triangular(m)
         assert _is_triangular(m.T)
@@ -295,7 +295,7 @@ def test_diagonal_normal():
             assert ev in spec
 
     for d in TEST_DIMS:
-        m = diagonal_normal(d + 4, specs[d])
+        m = diagonal_normal(d + 4, spec=specs[d])
         assert test[d] == m
 
 
@@ -304,19 +304,19 @@ def test_jordan_normal():
     for d in TEST_DIMS:
         rank = d - 1
         s = (0, None) * (d - rank) + scalars[:rank]
-        m = jordan_normal(d, s)
+        m = jordan_normal(d, spec=s)
         assert _is_triangular(m)
         assert m.rank() == rank
 
         for v in (0, 1, 2):
-            m = jordan_normal(d, ((v, d), (v, d)))
+            m = jordan_normal(d, spec=((v, d), (v, d)))
             assert m[0, 0] == v
             for i in range(1, d):
                 assert m[i, i] == v
                 assert m[i - 1, i] == 1
 
         s = ((3, 2), (3, 2))
-        m = jordan_normal(d, s)
+        m = jordan_normal(d, spec=s)
         assert _is_triangular(m)
 
         with raises(AssertionError):
@@ -374,11 +374,11 @@ def test_jordan_normal():
     for d in TEST_DIMS:
         s = RANDOM.choices(scalars, k=d + 4)
         specs[d] = s
-        m = _alt_jordan_normal(d + 4, s)
+        m = _alt_jordan_normal(d + 4, spec=s)
         test[d] = m
 
     for d in TEST_DIMS:
-        m = jordan_normal(d + 4, specs[d])
+        m = jordan_normal(d + 4, spec=specs[d])
         assert test[d] == m
 
 
@@ -456,17 +456,18 @@ def test_isometry_normal():
                     elementary(dim, index=(start, start), scalar=scalar))
             else:
                 c, s = s
-                items.append(rotation(dim, (start, start + 1), (c, s)))
+                items.append(
+                    rotation(dim, index=(start, start + 1), scalar=(c, s)))
             start = end
         return Mul(*items)
 
     spec = (0, -1), (1, 0)
     test = dict()
     for d in TEST_DIMS:
-        test[d] = _alt_isometry_normal(2 * d, spec * d)
+        test[d] = _alt_isometry_normal(2 * d, spec=spec * d)
 
     for d in TEST_DIMS:
-        m = isometry_normal(2 * d, spec * d)
+        m = isometry_normal(2 * d, spec=spec * d)
 
         for x in (m - test[d]).evalf():
             assert abs(x) < TEST_PRECISION
@@ -480,7 +481,7 @@ def test_invertible():
         i = invertible(d, length=0)
         assert _is_eye(i)
 
-        i = invertible(d, None, None)
+        i = invertible(d, scalars=None, units=None)
         assert _is_eye(i)
 
         m = invertible(d)
@@ -496,11 +497,11 @@ def test_invertible():
 def test_triangular():
     for d in TEST_DIMS:
         assert _is_triangular(triangular(d))
-        m = triangular(d, d)
+        m = triangular(d, rank=d)
         n = eye(d)
         assert m.inv() * m == n
         for r in range(1, d):
-            m = triangular(d, r)
+            m = triangular(d, rank=r)
             assert _is_triangular(m)
             assert m.rank() == r
 
@@ -508,7 +509,7 @@ def test_triangular():
 def test_singular():
     for d in TEST_DIMS:
         for r in range(1, d):
-            assert singular(d, r).rank() == r
+            assert singular(d, rank=r).rank() == r
 
 
 def test_diagonalizable():
@@ -541,7 +542,7 @@ def test_trigonalizable():
 def test_idempotent():
     for d in TEST_DIMS:
         for r in range(1, d):
-            m = idempotent(d, r)
+            m = idempotent(d, rank=r)
             assert m * m == m
             assert m.rank() == r
 
@@ -549,7 +550,7 @@ def test_idempotent():
 def test_nilpotent():
     for d in TEST_DIMS:
         for r in range(1, d):
-            m = nilpotent(d, r)
+            m = nilpotent(d, rank=r)
             assert m.rank() == r
             assert _is_zeros(m ** d)
 
@@ -559,7 +560,7 @@ def test_nilpotent():
 
 def test_orthogonal():
     for d in TEST_DIMS:
-        i = orthogonal(d, (1,), length=0)
+        i = orthogonal(d, spec=(1,), length=0)
         assert _is_eye(i), repr(i)
 
         m = orthogonal(d).evalf()
@@ -576,7 +577,7 @@ def test_orthogonal():
 
 def test_unitary():
     for d in list(TEST_DIMS)[1::3]:
-        i = expand(unitary(d, (1,), length=0))
+        i = expand(unitary(d, spec=(1,), length=0))
         assert _is_eye(i), repr(i)
 
         m = expand(unitary(d))
@@ -603,7 +604,7 @@ def test_unitary():
 def test_normal():
     for d in list(TEST_DIMS)[1::3]:
         spec = (2, 3, 4)
-        m = normal(d, spec, length=d)
+        m = normal(d, spec=spec, length=d)
         assert all(x.is_real for x in simplify(m)), repr(simplify(m))
         assert _is_zeros(m.T * m - m * m.T), \
             repr(simplify(m.T * m - m * m.T))
@@ -615,7 +616,7 @@ def test_normal():
             repr(simplify(m.H * m - m * m.H))
 
         z = complex(3, 1)
-        c = expand(normal(d, spec, scalars=(z/abs(z),), length=d))
+        c = expand(normal(d, spec=spec, scalars=(z/abs(z),), length=d))
         assert _is_zeros(c.H * c - c * c.H, TEST_EPSILON), \
             repr(simplify(m.H * m - m * m.H))
 
@@ -816,7 +817,7 @@ def test_raise():
     with raises(ValueError):
         unitary(3, spec=(complex(1, 1),))
     with raises(ValueError):
-        jordan_normal(3, (None, 1, 2))
+        jordan_normal(3, spec=(None, 1, 2))
     with raises(ValueError):
         nilpotent(3, rank=3)
     with raises(ValueError):

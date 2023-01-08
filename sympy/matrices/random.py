@@ -323,7 +323,7 @@ def regular_to_singular(mat, rank=None):
         return mat
     i = eye(dim)
     p = permutation(dim)
-    d = projection(dim, (0, rank))
+    d = projection(dim, index=(0, rank))
     d = p.inv() * d * p
     return mat * d * (i + mat * (i - d))
 
@@ -332,6 +332,7 @@ def regular_to_singular(mat, rank=None):
 
 
 def projection(dim,
+               *,
                index=None):
     r"""A randomly generated n x n projection matrix
 
@@ -385,6 +386,7 @@ def projection(dim,
 
 
 def jordan(dim,
+           *,
            index=None,
            scalar=None):
     r"""n x n matrix with a single Jordan block of given eigenvalue
@@ -462,6 +464,7 @@ def jordan(dim,
 
 
 def transposition(dim,
+                  *,
                   index=None):
     r"""n x n transposition matrix
 
@@ -494,7 +497,7 @@ def transposition(dim,
     [0, 1, 0, 0],
     [0, 0, 0, 1]])
 
-    >>> transposition(3, (0,1))  # no more random
+    >>> transposition(3, index=(0,1))  # no more random
     Matrix([
     [0, 1, 0],
     [1, 0, 0],
@@ -518,6 +521,7 @@ def transposition(dim,
 
 
 def permutation(dim,
+                *,
                 perm=None):
     r"""permutation matrix n x n
 
@@ -543,7 +547,7 @@ def permutation(dim,
     [0, 0, 1],
     [0, 1, 0]])
 
-    >>> permutation(3, (2,0,1))  # no more random
+    >>> permutation(3, perm=(2,0,1))  # no more random
     Matrix([
     [0, 0, 1],
     [1, 0, 0],
@@ -568,6 +572,7 @@ def permutation(dim,
 
 
 def elementary(dim,
+               *,
                index=None,
                scalar=None):
     r"""an elementary matrix n x n for Gauss elimination
@@ -618,25 +623,25 @@ def elementary(dim,
     [0, 1, 0],
     [1, 0, 0]])
 
-    >>> elementary(3, (0,2), scalar=5)  # no more random
+    >>> elementary(3, index=(0,2), scalar=5)  # no more random
     Matrix([
     [1, 0, 5],
     [0, 1, 0],
     [0, 0, 1]])
 
-    >>> elementary(3, (2,2), scalar=5)  # no more random
+    >>> elementary(3, index=(2,2), scalar=5)  # no more random
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
     [0, 0, 5]])
 
-    >>> elementary(3, (2,1), 4)  # no more random
+    >>> elementary(3, index=(2,1), scalar=4)  # no more random
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
     [0, 4, 1]])
 
-    >>> elementary(3, (0,1), None)  # no more random
+    >>> elementary(3, index=(0,1), scalar=None)  # no more random
     Matrix([
     [0, 1, 0],
     [1, 0, 0],
@@ -668,6 +673,7 @@ def elementary(dim,
 
 
 def rotation(dim,
+             *,
              index=None,
              scalar=None):
     r"""a square matrix n x n of a plane rotation
@@ -713,14 +719,14 @@ def rotation(dim,
     [-sqrt(2)/2, sqrt(2)/2, 0],
     [         0,         0, 1]])
 
-    >>> rotation(3, (1, 2), scalar=(cos_a, sin_a))  # no more random
+    >>> rotation(3, index=(1, 2), scalar=(cos_a, sin_a))  # no more random
     Matrix([
     [1,          0,         0],
     [0,  sqrt(2)/2, sqrt(2)/2],
     [0, -sqrt(2)/2, sqrt(2)/2]])
 
     >>> z = cos_a + sin_a * I
-    >>> rotation(3, (1, 2), scalar=z)  # no more random
+    >>> rotation(3, index=(1, 2), scalar=z)  # no more random
     Matrix([
     [1,          0,         0],
     [0,  sqrt(2)/2, sqrt(2)/2],
@@ -832,6 +838,7 @@ def rotation(dim,
 
 
 def reflection(dim,
+               *,
                index=None,
                scalar=None):
     r"""a square matrix n x n of a hyperplane reflection
@@ -880,7 +887,7 @@ def reflection(dim,
     True
 
     >>> z = cos_a + sin_a * I
-    >>> reflection(3, (1, 2), scalar=z)  # no more random
+    >>> reflection(3, index=(1, 2), scalar=z)  # no more random
     Matrix([
     [1,         0,          0],
     [0, sqrt(2)/2,  sqrt(2)/2],
@@ -909,14 +916,15 @@ def reflection(dim,
     """
 
     index = index or _sample(range(dim), 2)
-    item = transposition(dim, index)
-    return rotation(dim, index, scalar) * item
+    item = transposition(dim, index=index)
+    return rotation(dim, index=index, scalar=scalar) * item
 
 
 # === normal form matrices, i.e. defined by eigenvalues ===
 
 
 def diagonal_normal(dim,
+                    *,
                     spec=None):
     r"""n x n matrix with random values placed on the diagonal.
 
@@ -942,13 +950,13 @@ def diagonal_normal(dim,
     [ 0, -1, 0],
     [ 0,  0, 1]])
 
-    >>> diagonal_normal(3, (4,-3,2))  # no more random
+    >>> diagonal_normal(3, spec=(4,-3,2))  # no more random
     Matrix([
     [4,  0, 0],
     [0, -3, 0],
     [0,  0, 2]])
 
-    >>> diagonal_normal(3, (-2,2))
+    >>> diagonal_normal(3, spec=(-2,2))
     Matrix([
     [-2, 0, 0],
     [ 0, 2, 0],
@@ -984,6 +992,7 @@ def diagonal_normal(dim,
 
 
 def jordan_normal(dim,
+                  *,
                   spec=None):
     r"""n x n matrix in Jordan normal form
 
@@ -1136,12 +1145,13 @@ def jordan_normal(dim,
         if dim < start + size:
             # leave the last diagonal entries one
             break
-        obj[start, start] = jordan(size, [0, size], scalar)
+        obj[start, start] = jordan(size, index=[0, size], scalar=scalar)
         start += size
     return obj
 
 
 def isometry_normal(dim,
+                    *,
                     spec=None):
     r""" isometry matrix n x n in normal form
 
@@ -1277,7 +1287,7 @@ def isometry_normal(dim,
     for s in spec:
         size, block = 1, s
         if isinstance(s, (list, tuple)) or (_is_real(s) and not abs(s) == 1):
-            size, block = 2, rotation(2, (0, 1), s)
+            size, block = 2, rotation(2, index=(0, 1), scalar=s)
         else:
             if isinstance(s, (int, float, complex)):
                 if not abs(abs(s) - 1) < _EPS:
@@ -1298,6 +1308,7 @@ def isometry_normal(dim,
 
 
 def triangular(dim,
+               *,
                rank=None,
                scalars=_elementary_scalars,
                units=_elementary_units,
@@ -1358,11 +1369,13 @@ def triangular(dim,
     indicies = [(i, _sample(range(i, dim))) for i in row_indicies]
     scalars = [_sample(units) if i == j
                else _sample(scalars) for i, j in indicies]
-    items = [elementary(dim, ix, s) for ix, s in zip(indicies, scalars)]
+    items = [elementary(dim, index=ix, scalar=s)
+             for ix, s in zip(indicies, scalars)]
     return regular_to_singular(Mul(*items), rank)
 
 
 def square(dim,
+           *,
            rank=None,
            scalars=_elementary_scalars,
            units=_elementary_units,
@@ -1425,12 +1438,16 @@ def square(dim,
         return regular_to_singular(eye(dim), rank)
 
     length = length or 2 * dim
-    lwr = triangular(dim, None, scalars, units, length // 2)
-    upr = triangular(dim, rank, scalars, units, length - length // 2)
+    lwr = triangular(
+        dim, rank=None, scalars=scalars, units=units, length=length // 2)
+    upr = triangular(
+        dim,
+        rank=rank, scalars=scalars, units=units, length=length - length // 2)
     return lwr.T * upr
 
 
 def invertible(dim,
+               *,
                scalars=_elementary_scalars,
                units=_elementary_units,
                length=None):
@@ -1485,10 +1502,11 @@ def invertible(dim,
     [ 0, 0,   1]])
 
     """
-    return square(dim, None, scalars, units, length)
+    return square(dim, rank=None, scalars=scalars, units=units, length=length)
 
 
 def singular(dim,
+             *,
              rank=None,
              scalars=_elementary_scalars,
              units=_elementary_units,
@@ -1506,7 +1524,7 @@ def singular(dim,
     >>> from sympy.matrices.random import singular
     >>> seed(1)
 
-    >>> m = singular(3, 2)
+    >>> m = singular(3, rank=2)
     >>> m
     Matrix([
     [-1, 1, -1],
@@ -1541,13 +1559,14 @@ def singular(dim,
     if dim <= rank:
         raise ValueError(
             'rank of a singular matrix has to be less than dimension')
-    return square(dim, rank, scalars, units, length)
+    return square(dim, rank=rank, scalars=scalars, units=units, length=length)
 
 
 # === conjugate matrices, i.e. defined by similarity to a normal from ==
 
 
 def idempotent(dim,
+               *,
                rank=None,
                scalars=_elementary_scalars,
                units=_elementary_units,
@@ -1573,7 +1592,7 @@ def idempotent(dim,
     >>> from sympy.matrices.random import idempotent
     >>> seed(1)
 
-    >>> A = idempotent(3, 2)
+    >>> A = idempotent(3, rank=2)
     >>> A
     Matrix([
     [1, 0, 0],
@@ -1610,12 +1629,13 @@ def idempotent(dim,
 
     """
     rank = dim - 1 if rank is None else rank
-    normal_form = projection(dim, (0, rank))
-    s = invertible(dim, scalars, units, length)
+    normal_form = projection(dim, index=(0, rank))
+    s = invertible(dim, scalars=scalars, units=units, length=length)
     return s.inv() * normal_form * s
 
 
 def nilpotent(dim,
+              *,
               rank=None,
               scalars=_elementary_scalars,
               units=_elementary_units,
@@ -1694,11 +1714,12 @@ def nilpotent(dim,
     index = numbers_with_sum(dim - rank, dim)
     spec = tuple((0, i) for i in index)
     normal_form = jordan_normal(dim, spec=spec)
-    s = invertible(dim, scalars, units, length)
+    s = invertible(dim, scalars=scalars, units=units, length=length)
     return s.inv() * normal_form * s
 
 
 def diagonalizable(dim,
+                   *,
                    spec=_elementary_scalars,
                    scalars=_elementary_scalars,
                    units=_elementary_units,
@@ -1774,12 +1795,13 @@ def diagonalizable(dim,
 
     """
 
-    normal_form = diagonal_normal(dim, spec)
-    s = invertible(dim, scalars, units, length)
+    normal_form = diagonal_normal(dim, spec=spec)
+    s = invertible(dim, scalars=scalars, units=units, length=length)
     return s.inv() * normal_form * s
 
 
 def trigonalizable(dim,
+                   *,
                    spec=_elementary_scalars,
                    scalars=_elementary_scalars,
                    units=_elementary_units,
@@ -1853,8 +1875,8 @@ def trigonalizable(dim,
 
     """
 
-    normal_form = jordan_normal(dim, spec)
-    s = invertible(dim, scalars, units, length)
+    normal_form = jordan_normal(dim, spec=spec)
+    s = invertible(dim, scalars=scalars, units=units, length=length)
     return s.inv() * normal_form * s
 
 
@@ -1862,6 +1884,7 @@ def trigonalizable(dim,
 
 
 def orthogonal(dim,
+               *,
                spec=None,
                scalars=_rotation_scalars,
                length=None):
@@ -1953,12 +1976,13 @@ def orthogonal(dim,
         scalars = [_sample(scalars) for _ in range(length)]
         items = [rotation(dim, scalar=s) for s in scalars]
         return Mul(*items)
-    normal_form = isometry_normal(dim, spec)
+    normal_form = isometry_normal(dim, spec=spec)
     s = orthogonal(dim, scalars=scalars, length=length)
     return s.T * normal_form * s
 
 
 def unitary(dim,
+            *,
             spec=None,
             scalars=_unitary_scalars,
             length=None):
@@ -2079,12 +2103,13 @@ def unitary(dim,
         scalars = [csc(*_sample(scalars, k=3)) for _ in range(length)]
         items = [rotation(dim, scalar=s) for s in scalars]
         return Mul(*items)
-    normal_form = isometry_normal(dim, spec)
+    normal_form = isometry_normal(dim, spec=spec)
     s = unitary(dim, scalars=scalars, length=length)
     return s.H * normal_form * s
 
 
 def normal(dim,
+           *,
            spec=_elementary_scalars,
            scalars=None,
            length=None):
@@ -2199,15 +2224,15 @@ def normal(dim,
 
     """
 
-    normal_form = diagonal_normal(dim, spec)
+    normal_form = diagonal_normal(dim, spec=spec)
 
     if all(_is_real(c) for c in spec):
         scalars = scalars or _rotation_scalars
-        s = orthogonal(dim, None, scalars, length)
+        s = orthogonal(dim, spec=None, scalars=scalars, length=length)
         return s.T * normal_form * s
     else:
         scalars = scalars or _unitary_scalars
-        s = unitary(dim, None, scalars, length)
+        s = unitary(dim, spec=None, scalars=scalars, length=length)
         return s.H * normal_form * s
 
 
@@ -2215,6 +2240,7 @@ def normal(dim,
 
 
 def symmetric(dim,
+              *,
               scalars=_elementary_scalars,
               units=_elementary_units,
               length=None):
@@ -2284,11 +2310,12 @@ def symmetric(dim,
 
     """
 
-    s = invertible(dim, scalars, units, length)
+    s = invertible(dim, scalars=scalars, units=units, length=length)
     return s.T * s
 
 
 def hermite(dim,
+            *,
             scalars=_elementary_scalars,
             units=_elementary_units,
             length=None):
@@ -2331,7 +2358,7 @@ def hermite(dim,
     >>> seed(1)
 
     >>> z = complex(1,-1)
-    >>> hermite(3, (z, ), length=1)
+    >>> hermite(3, scalars=(z, ), length=1)
     Matrix([
     [          1, 0,                     1.0 - 1.0*I],
     [          0, 1,                               0],
@@ -2356,5 +2383,5 @@ def hermite(dim,
 
     """
 
-    s = invertible(dim, scalars, units, length)
+    s = invertible(dim, scalars=scalars, units=units, length=length)
     return s.H * s
