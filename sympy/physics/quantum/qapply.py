@@ -7,7 +7,7 @@ qapply - evaluate expressions of quantum expressions
 
 See e.g. https://github.com/sympy/sympy/issues/24348,
          https://github.com/sympy/sympy/issues/17665
-See also https://github.com/sympy/sympy/issues/19540 for a discussion of 
+See also https://github.com/sympy/sympy/issues/19540 for a discussion of
 InnerProduct and TensorProduct
 
 Design Principles of this implementation:
@@ -91,12 +91,12 @@ __all__ = [
 
 #-----------------------------------------------------------------------------
 # qapply function header and doc string
-# 
+#
 # Options taken from expand() have same names (mul, power_xxx, tensorproduct)
 #-----------------------------------------------------------------------------
 
 def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
-                   mul = True, tensorproduct = None, 
+                   mul = True, tensorproduct = None,
                    power_base = None, power_exp = False, nested_exp = None,
                    apply_exp = False, **options ) -> Expr:
     """Apply operators to operators and states in a quantum expression.
@@ -172,16 +172,16 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
 
     #################################################################
     #################################################################
-    # 
+    #
     # The function body of qapply is at the BOTTOM of this file
     # marked there as ----------- QAPPLY FUNCTION BODY --------------
     #
-    # Between here and start of the function body of qapply 
+    # Between here and start of the function body of qapply
     # is a library of nested functions and a nested class definition.
     #
     # Interspersed block comments describe the broader context for
     # library functions below them.
-    
+
     #################################################################
     # Begin of qapply internal functions and class definitions
     #################################################################
@@ -400,7 +400,7 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
                         rhsL = lhsR        # = resL = lhsR (atomic)
                         lhsR = EmptyMul    # request a new lhsR
                     else: # resL == lhsR but in different representation,
-                          # so compute resL*rhsL 
+                          # so compute resL*rhsL
                         fL.extend(resL)    # resL == 1 will be eliminated in Mul
                         lhsR = EmptyMul    # get new factor from fL
                 else: # lhsR*rhsL -> res_c*resL*resR, so continue with resR*fR
@@ -429,7 +429,7 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
                              # that are Pow's and pass on other factors. If the
                 for c in cl: # result is a Mul flatten it into the list cle:
                     if (c.is_Pow and (c := c._eval_expand_power_base()).is_Mul):
-                        cle.extend(c.args) 
+                        cle.extend(c.args)
                     else: cle.append(c)
                 cl = cle      # resulting list of c-factors, Muls flattened in
             if opt_power_exp:
@@ -629,12 +629,12 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
         # Hamiltonial evolution e**A is key in quantum mechanics, but in a
         # quantum circuit only power series approximations would occur.
         exp = qapply_Mul2([e.exp], []) if opt_apply_exp else e.exp
-            
+
         # Let Pow do all it can do using class methods ._pow, ._eval_power etc.
         e = cast(Pow, base ** exp)  # may return any Expr; cast() is for MyPy
         if isinstance(e, Pow): # (e.is_Pow won't work with MyPy)
             # e is still a Pow: so try some more simplifications:
-            
+
             # Power simplification rules used, same as used by expand() with
             # default options or by Pow() with numeric exponents:
             # (Rules differ from https://docs.sympy.org/latest/tutorials/intro-tutorial/simplification.html#powers):
@@ -658,7 +658,7 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
             if not e.exp.is_commutative: # so rules 2a, 2b don't apply
                 # and we cannot extract any factor from e.base**exp
                 return [], [], PowHold(e.base, e.exp, True, tuple(), tuple())
-            # else: e.exp is commutative, so we may apply 2b or even 2a. 
+            # else: e.exp is commutative, so we may apply 2b or even 2a.
             # check for commutative elements in base. Pow() won't have pulled
             # out factors if e.exp is symbolic or otherwise not suitable:
             base = e.base
@@ -745,7 +745,7 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
                         # ar=(C1*C2)x(D1*D2),al=(A1*A2)x(B1*B2) should go here!
                         # That will need special nia rule here for tensor factors
                         # Case 1: expi>=2, component base, base*base not interact
-                        # e.base**exp = e.base**expf * e.base**expi and 
+                        # e.base**exp = e.base**expf * e.base**expi and
                         # e.base**expi=(cl*c2*base)**expi=(cl*c2)**expi*base**expi
                         return pow_i(cl+c2, expi) + efpcl, efpl, p
                     else: # factors did interact: check whether ia is commutative
@@ -897,7 +897,7 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
 
         elif isinstance(e, (Commutator, AntiCommutator)): #requires .doit() first
             res = e.doit()           # may return any type including Add, S.Zero,
-            if type(res) is type(e): # recursion would be infinite, 
+            if type(res) is type(e): # recursion would be infinite,
                 return ([], [], res) # so nothing we can do with it
             else:
                 return split_c_nc_atom(res, split_left)
@@ -944,7 +944,7 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
             if ((b := Dagger(self.base)).is_Pow): # e.g. if Dagger(U) -> U**-1
                 (b, e) = (b.base, b.exp*self.exp) # then handle nested Powers
             else:
-                (b, e) = (b, self.exp) 
+                (b, e) = (b, self.exp)
             return PowHold(b, e, self.atomic, dagger_sp(self._b_sp_l),
                                               dagger_sp(self._b_sp_r) )
 
