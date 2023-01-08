@@ -170,21 +170,28 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
     # ->Density->represent->qapply
     from sympy.physics.quantum.density import Density
 
-    #################################################################
-    #################################################################
+    # Variable used_PowHold must be placed here instead in qapply function
+    # body for MyPy to find the binding for 'nonlocal used_PowHold' in
+    # class PowHold definition. This is a MyPy bug as Python itself had
+    # accessed it alright it in its previous location behind PowHold class.
+    used_PowHold = False # indicator if local class PowHold has been used
+
+    ##########################################################################
+    ##########################################################################
     #
     # The function body of qapply is at the BOTTOM of this file
     # marked there as ----------- QAPPLY FUNCTION BODY --------------
     #
-    # Between here and start of the function body of qapply
-    # is a library of nested functions and a nested class definition.
+    # Between here and start of the function body of qapply there is the
+    # qapply internal function library and the local class PowHold that
+    # is such explicitly nested into the namespace of function qapply().
     #
-    # Interspersed block comments describe the broader context for
-    # library functions below them.
+    # To describe the broader context of library functions block comments
+    # have been placed on top of them.
 
-    #################################################################
+    ##########################################################################
     # Begin of qapply internal functions and class definitions
-    #################################################################
+    ##########################################################################
     """
     Internal Remarks on quantum type constructors and Mul
     -----------------------------------------------------
@@ -526,19 +533,19 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
 
         # Try to apply the _apply_operator and _apply_from_right_to methods,
         # so these take precedence over the built-in methods below:
-        result = cast(Any, None)
+        res = cast(Any, None)
         if hasattr(lhs, '_apply_operator'):
             try: # for historical reasons, _apply_operator is tried first
-                result = cast(Any, lhs._apply_operator(rhs, **options))
+                res = cast(Any, lhs._apply_operator(rhs, **options))
             except (NotImplementedError): # action lhs on rhs not implemented
                 pass
-        if result is None and hasattr(rhs, '_apply_from_right_to'):
+        if res is None and hasattr(rhs, '_apply_from_right_to'):
             try:
-                result = cast(Any, rhs._apply_from_right_to(lhs, **options))
+                res = cast(Any, rhs._apply_from_right_to(lhs, **options))
             except (NotImplementedError): # action rhs on lhs not implemented
                 pass
-        if result is not None:
-            return result
+        if res is not None:
+            return res
 
         # If no succes so far: Try the following built-in rules.
         # Unfortunately the dispatch function behind _apply_operator/
@@ -1026,8 +1033,6 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
     to_the_left  = True  # option for split_x: split atomic factor to the left
     to_the_right = False # option for split_x: split atomic factor to the right
 
-    used_PowHold = False # indicator if proprietary type PowHold has been used
-
     # call the workhorse, with all variables from this namespace in scope
     res = qapply_Mul2([e], [])
 
@@ -1047,10 +1052,10 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
 # created.
 # As in the original replace() the original expr is returned if no replacements
 # have been done. Uses Calling-by-ref for efficiency.
-def replace_type(expr:Expr, oldtype:Type, newtype:Type) -> Expr:
+from sympy import Basic   # make myPy happy, since .args == Tuple(Basic)
+def replace_type(expr:Basic, oldtype:Type, newtype:Type) -> Basic:
     # walk() very remotely inspired by walk() in sympy.core.basic.replace()
-    from sympy import Basic   # make myPy happy, since .args == Tuple(Basic)
-    def walk(e:Basic, repl_ref) -> Tuple[Expr, bool]: # [new_exp, flag by ref]
+    def walk(e:Basic, repl_ref) -> Basic:
         repl = [False]        # will track if replacements done in args of e
         if (args := e.args):  # at least 1 argument present
             new_args = [walk(arg, repl) for arg in args]  # walk the arguments
