@@ -2542,6 +2542,7 @@ def test_issue_21276():
     eq = (2*x*(y - z) - y*erf(y - z) - y + z*erf(y - z) + z)**2
     assert solveset(eq.expand(), y) == FiniteSet(z, z + erfinv(2*x - 1))
 
+
 # exponential tests
 def test_exponential_real():
     from sympy.abc import y
@@ -2587,6 +2588,8 @@ def test_exponential_real():
     p = Symbol('p', positive=True)
     assert solveset_real((1/p + 1)**(p + 1), p).dummy_eq(
         ConditionSet(x, Eq((1 + 1/x)**(x + 1), 0), S.Reals))
+    assert solveset(2**x - 4**x + 12, x, S.Reals) == {2}
+    assert solveset(2**x - 2**(2*x) + 12, x, S.Reals) == {2}
 
 
 @XFAIL

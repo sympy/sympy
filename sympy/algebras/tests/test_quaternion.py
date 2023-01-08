@@ -1,4 +1,5 @@
 from sympy.core.function import diff
+from sympy.core.function import expand
 from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -11,8 +12,8 @@ from sympy.matrices.dense import Matrix
 from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
-from sympy.testing.pytest import raises
-from itertools import permutations
+from sympy.testing.pytest import raises, warns
+from itertools import permutations, product
 
 w, x, y, z = symbols('w:z')
 phi = symbols('phi')
@@ -32,6 +33,16 @@ def test_quaternion_construction():
 
     nc = Symbol('nc', commutative=False)
     raises(ValueError, lambda: Quaternion(w, x, nc, z))
+
+
+def test_quaternion_construction_norm():
+    q1 = Quaternion(*symbols('a:d'))
+
+    q2 = Quaternion(w, x, y, z)
+    assert expand((q1*q2).norm()**2 - (q1.norm()**2 * q2.norm()**2)) == 0
+
+    q3 = Quaternion(w, x, y, z, norm=1)
+    assert (q1 * q3).norm() == q1.norm()
 
 
 def test_to_and_from_Matrix():
@@ -252,6 +263,13 @@ def test_quaternion_conversions():
                [0,           0,          0,  1]])
 
 
+def test_rotation_matrix_homogeneous():
+    q = Quaternion(w, x, y, z)
+    R1 = q.to_rotation_matrix(homogeneous=True) * q.norm()**2
+    R2 = simplify(q.to_rotation_matrix(homogeneous=False) * q.norm()**2)
+    assert R1 == R2
+
+
 def test_quaternion_rotation_iss1593():
     """
     There was a sign mistake in the definition,
@@ -306,6 +324,45 @@ def test_to_euler():
     q = Quaternion(w, x, y, z)
     q_normalized = q.normalize()
 
+    seqs = ['zxy', 'zyx', 'zyz', 'zxz']
+    seqs += [seq.upper() for seq in seqs]
+
+    for seq in seqs:
+        euler_from_q = q.to_euler(seq)
+        q_back = simplify(Quaternion.from_euler(euler_from_q, seq))
+        assert q_back == q_normalized
+
+
+def test_to_euler_numerical_singilarities():
+
+    def test_one_case(angles, seq):
+        q = Quaternion.from_euler(angles, seq)
+        with warns(UserWarning, match='Singularity', test_stacklevel=False):
+            assert q.to_euler(seq) == angles
+
+    # symmetric
+    test_one_case((pi/2,  0, 0), 'zyz')
+    test_one_case((pi/2,  0, 0), 'ZYZ')
+    test_one_case((pi/2,  pi, 0), 'zyz')
+    test_one_case((pi/2,  pi, 0), 'ZYZ')
+
+    # asymmetric
+    test_one_case((pi/2,  pi/2, 0), 'zyx')
+    test_one_case((pi/2,  -pi/2, 0), 'zyx')
+    test_one_case((pi/2,  pi/2, 0), 'ZYX')
+    test_one_case((pi/2,  -pi/2, 0), 'ZYX')
+
+
+def test_to_euler_options():
+    def test_one_case(q):
+        angles1 = Matrix(q.to_euler(seq, True, True))
+        angles2 = Matrix(q.to_euler(seq, False, False))
+        angle_errors = simplify(angles1-angles2).evalf()
+        for angle_error in angle_errors:
+            # forcing angles to set {-pi, pi}
+            angle_error = (angle_error + pi) % (2 * pi) - pi
+            assert angle_error < 10e-7
+
     for xyz in ('xyz', 'XYZ'):
         for seq_tuple in permutations(xyz):
             for symmetric in (True, False):
@@ -313,6 +370,8 @@ def test_to_euler():
                     seq = ''.join([seq_tuple[0], seq_tuple[1], seq_tuple[0]])
                 else:
                     seq = ''.join(seq_tuple)
-                euler_from_q = q.to_euler(seq)
-                q_back = simplify(Quaternion.from_euler(euler_from_q, seq))
-                assert q_back == q_normalized
+
+                for elements in product([-1, 0, 1], repeat=4):
+                    q = Quaternion(*elements)
+                    if not q.is_zero_quaternion():
+                        test_one_case(q)
