@@ -813,8 +813,8 @@ def test_raise():
         isometry_normal(3, spec=(4,))
     with raises(ValueError):
         orthogonal(3, spec=(4,))
-    # with raises(ValueError):
-    #     unitary(3, spec=(complex(1, 1),))
+    with raises(ValueError):
+        unitary(3, spec=(complex(1, 1),))
     with raises(ValueError):
         jordan_normal(3, (None, 1, 2))
     with raises(ValueError):

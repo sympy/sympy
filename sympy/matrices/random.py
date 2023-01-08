@@ -30,6 +30,10 @@ def _sample(scalars, k=None):
 
 # === helper ===
 
+_EPS = 2 * abs(abs(complex(1, 1) / abs(complex(1, 1))) - 1)
+"""numerical tolerance for float and complex types"""
+
+
 def _is_real(z):
     """checks number to be real number, incl. complex without imaginary part"""
     if isinstance(z, (int, float)):
@@ -808,10 +812,6 @@ def rotation(dim,
         _c, _s = c, s
         if not _is_real(c) or not _is_real(s):
             _c, _s = conjugate(c), conjugate(s)
-        if not abs(c ** 2 + s ** 2) == 1:
-            m = 'isometry must be scalars of length one'
-            # raise ValueError(m)
-
     else:
         if _is_real(scalar):
             c, s = scalar, _sample((-1, 1)) * sqrt(1 - scalar ** 2)
@@ -819,11 +819,13 @@ def rotation(dim,
             c, s = re(scalar), im(scalar)
         _c, _s = c, s
 
-        if isinstance(scalar, (int, float, complex)) and abs(scalar) > 1:
-            abs_cs = abs(c ** 2 + s ** 2)
-            msg = "rotation scalar argument must have norm equal to 1"
-            msg += " or - if real - norm less than 1"
-            msg += " not abs%s=%s" % (str(scalar), str(abs_cs))
+    if isinstance(c, (int, float, complex)):
+        abs_cs = abs(c ** 2 + s ** 2)
+        abs_sc = abs(scalar) if not isinstance(scalar, (list, tuple)) else 1
+        if not abs(abs_cs - 1) < _EPS or not abs_sc < 1 + _EPS:
+            msg = "isometry scalar arguments must have norm equal to 1 " \
+                  "or - if real - norm between -1 and 1 " \
+                  f"not abs({scalar}) = {abs_cs}"
             raise ValueError(msg)
 
     return super_elementary_matrix(dim, index, c, s, _s, _c)
@@ -1276,6 +1278,15 @@ def isometry_normal(dim,
         size, block = 1, s
         if isinstance(s, (list, tuple)) or (_is_real(s) and not abs(s) == 1):
             size, block = 2, rotation(2, (0, 1), s)
+        else:
+            if isinstance(s, (int, float, complex)):
+                if not abs(abs(s) - 1) < _EPS:
+                    msg = "isometry scalar arguments must have " \
+                          "norm equal to 1 " \
+                          "or - if real - norm between -1 and 1 " \
+                          f"not abs({s}) = {abs(s)}"
+                    raise ValueError(msg)
+
         if dim < start + size:
             break
         obj[start, start] = block
