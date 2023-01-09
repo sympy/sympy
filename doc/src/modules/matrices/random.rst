@@ -197,6 +197,11 @@ By default the module uses the global sympy random number generator
 function ``sample()`` which is a methode of an instance of ``random.Random()``.
 The random state can be set by invoking ``seed()``.
 
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import orthogonal
 
@@ -221,6 +226,11 @@ The random state can be set by invoking ``seed()``.
     [ 0,  sqrt(2)/2, -sqrt(2)/2],
     [ 0, -sqrt(2)/2, -sqrt(2)/2]])
 
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
 Random Matrix Generation Functions Reference
 ============================================

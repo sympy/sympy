@@ -240,6 +240,11 @@ the random matrix generation functions, e.g.
 ``invertible``, ``triangular``, ``orthogonal``.
 Find a :ref:`full list of random matrices <matrices-random>`.
 
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import invertible, triangular, orthogonal
     >>> from sympy import simplify
@@ -387,6 +392,12 @@ a quadratic equation in multiple variables
     >>> q
        2               2               2
     2⋅x  - √2⋅x⋅z + 2⋅y  - √2⋅y⋅z + 2⋅z
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
 Advanced Methods
 ================
