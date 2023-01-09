@@ -5,7 +5,7 @@ from sympy import Matrix, diag, eye, zeros, cartes, \
 from sympy.core.random import seed, sample
 from sympy.matrices.random import super_elementary, \
     complex_to_real, invertible, regular_to_singular, diagonal_normal, \
-    diagonalizable, transposition, triangular, trigonalizable, \
+    diagonalizable, transposition, triangular, triangularizable, \
     isometry_normal, permutation, projection, elementary, rotation, \
     reflection, normal, nilpotent, idempotent, singular, orthogonal, unitary, \
     hermite, symmetric, square, jordan, jordan_normal
@@ -527,11 +527,11 @@ def test_diagonalizable():
 
 def test_trigonalizable():
     for d in TEST_DIMS:
-        m = trigonalizable(d, spec=(2,))
+        m = triangularizable(d, spec=(2,))
         assert m.eigenvals(multiple=True) == [2] * d
         for r in range(1, d):
             s = (0, None) * (d - r) + (2,) * r
-            m = trigonalizable(d, spec=s)
+            m = triangularizable(d, spec=s)
             assert m.rank() == r, (m.rank(), r)
             for ev in m.eigenvals(multiple=True):
                 assert ev in (0, 2), m.eigenvals(multiple=True)
@@ -704,19 +704,19 @@ def test_seed():
             return self.rnd.sample(self, k)
 
     _all_ = projection, jordan, transposition, \
-        permutation, elementary, rotation, reflection, \
-        diagonal_normal, jordan_normal, isometry_normal, \
-        triangular, invertible, singular, \
-        idempotent, nilpotent, diagonalizable, trigonalizable, \
-        orthogonal, normal, symmetric, hermite, square, unitary,
+            permutation, elementary, rotation, reflection, \
+            diagonal_normal, jordan_normal, isometry_normal, \
+            triangular, invertible, singular, \
+            idempotent, nilpotent, diagonalizable, triangularizable, \
+            orthogonal, normal, symmetric, hermite, square, unitary,
 
     _spec_ = diagonal_normal, jordan_normal, \
-        diagonalizable, trigonalizable, normal
+             diagonalizable, triangularizable, normal
 
     _isometry_spec_ = isometry_normal, orthogonal, unitary
 
     _elementary_scalars_ = triangular, invertible, singular, idempotent, \
-        nilpotent, diagonalizable, trigonalizable, symmetric, hermite, square
+                           nilpotent, diagonalizable, triangularizable, symmetric, hermite, square
 
     _isometry_scalars_ = orthogonal, unitary, normal
 

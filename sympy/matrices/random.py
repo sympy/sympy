@@ -10,7 +10,7 @@ __all__ = 'projection', 'jordan', 'transposition', \
           'permutation', 'elementary', 'rotation', 'reflection', \
           'diagonal_normal', 'jordan_normal', 'isometry_normal', \
           'triangular', 'invertible', 'singular', \
-          'idempotent', 'nilpotent', 'diagonalizable', 'trigonalizable', \
+          'idempotent', 'nilpotent', 'diagonalizable', 'triangularizable', \
           'orthogonal', 'unitary', 'normal', \
           'symmetric', 'hermite', 'square', \
           'regular_to_singular', 'complex_to_real'
@@ -1800,18 +1800,18 @@ def diagonalizable(dim,
     return s.inv() * normal_form * s
 
 
-def trigonalizable(dim,
-                   *,
-                   spec=_elementary_scalars,
-                   scalars=_elementary_scalars,
-                   units=_elementary_units,
-                   length=None):
+def triangularizable(dim,
+                     *,
+                     spec=_elementary_scalars,
+                     scalars=_elementary_scalars,
+                     units=_elementary_units,
+                     length=None):
     r"""Creates a square matrix n x n of a given rank which has an echelon form
 
     Explanation
     ===========
     Creates a square matrix n x n of a given rank
-    which is trigonalizable (has echelon form)
+    which is triangularizable (has echelon form)
     and has eigenvalues from a given set.
 
     The triangular (echelon) form can be obtained by elementary row and column
@@ -1831,16 +1831,16 @@ def trigonalizable(dim,
     ========
     >>> from sympy import sqrt
     >>> from sympy.core.random import seed
-    >>> from sympy.matrices.random import trigonalizable
+    >>> from sympy.matrices.random import triangularizable
     >>> seed(1)
 
-    >>> trigonalizable(3)
+    >>> triangularizable(3)
     Matrix([
     [-1,  0, 0],
     [-2, -3, 4],
     [-2, -2, 3]])
 
-    >>> m = trigonalizable(3, spec=(1, 1, 3), scalars=(1, sqrt(2), 2))
+    >>> m = triangularizable(3, spec=(1, 1, 3), scalars=(1, sqrt(2), 2))
     >>> m
     Matrix([
     [            1,           1, 0],
