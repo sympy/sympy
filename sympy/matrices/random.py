@@ -1578,6 +1578,12 @@ def square(dim,
     [-2, -1, -1],
     [ 0,  0,  1]])
 
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
+
     See Also
     ========
     triangular
