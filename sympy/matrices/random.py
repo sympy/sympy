@@ -219,6 +219,7 @@ def complex_to_real(mat):
 
     Examples
     ========
+
     >>> from sympy import Matrix, I
     >>> from sympy.abc import a, b
     >>> from sympy.matrices.random import complex_to_real
@@ -294,19 +295,34 @@ def regular_to_singular(mat, rank=None):
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy import Matrix
+    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import regular_to_singular
+    >>> seed(1)
+
     >>> m = Matrix([[1, 2, 3],[4, 5, 6], [7, 8 ,0]])
     >>> m.rank()
     3
     >>> n = regular_to_singular(m, 2)
     >>> n
     Matrix([
-    [1, 2, 15],
-    [4, 5, 42],
-    [7, 8, 69]])
+    [1, 26, 3],
+    [4, 56, 6],
+    [7, 14, 0]])
     >>> n.rank()
     2
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -345,6 +361,11 @@ def projection(dim,
     Examples
     ========
 
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import projection
     >>> seed(1)
@@ -360,6 +381,12 @@ def projection(dim,
     [0, 0, 0],
     [0, 1, 0],
     [0, 0, 1]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -411,6 +438,14 @@ def jordan(dim,
 
     Finally, each $\lambda$ of each Jordan block will be an eigenvalue.
 
+    Examples
+    ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import jordan
     >>> seed(1)
@@ -433,6 +468,12 @@ def jordan(dim,
     [0, 2, 1, 0],
     [0, 0, 2, 1],
     [0, 0, 0, 2]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -486,6 +527,11 @@ def transposition(dim,
     Examples
     ========
 
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import transposition
     >>> seed(1)
@@ -502,6 +548,12 @@ def transposition(dim,
     [0, 1, 0],
     [1, 0, 0],
     [0, 0, 1]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -537,6 +589,12 @@ def permutation(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import permutation
     >>> seed(1)
@@ -552,6 +610,12 @@ def permutation(dim,
     [0, 0, 1],
     [1, 0, 0],
     [0, 1, 0]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -613,6 +677,12 @@ def elementary(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import elementary
     >>> seed(1)
@@ -646,6 +716,12 @@ def elementary(dim,
     [0, 1, 0],
     [1, 0, 0],
     [0, 0, 1]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -701,6 +777,12 @@ def rotation(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy import sqrt, cos, symbols, eye, I, re, im, expand, simplify
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import rotation
@@ -776,6 +858,12 @@ def rotation(dim,
     [0, 1, 0],
     [0, 0, 1]])
 
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -855,6 +943,12 @@ def reflection(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy import sqrt, eye, I
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import reflection
@@ -892,6 +986,12 @@ def reflection(dim,
     [1,         0,          0],
     [0, sqrt(2)/2,  sqrt(2)/2],
     [0, sqrt(2)/2, -sqrt(2)/2]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -940,6 +1040,11 @@ def diagonal_normal(dim,
     Examples
     ========
 
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import diagonal_normal
     >>> seed(1)
@@ -961,6 +1066,12 @@ def diagonal_normal(dim,
     [-2, 0, 0],
     [ 0, 2, 0],
     [ 0, 0, 2]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -1052,6 +1163,11 @@ def jordan_normal(dim,
     Examples
     ========
 
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import jordan_normal
     >>> seed(1)
@@ -1086,6 +1202,12 @@ def jordan_normal(dim,
     [0, 0, 0, 2, 1, 0],
     [0, 0, 0, 0, 2, 0],
     [0, 0, 0, 0, 0, 0]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -1206,6 +1328,12 @@ def isometry_normal(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy import I
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import isometry_normal
@@ -1235,6 +1363,12 @@ def isometry_normal(dim,
     [-1,                 0, 0],
     [ 0, sqrt(2)*(1 + I)/2, 0],
     [ 0,                 0, 1]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -1327,6 +1461,12 @@ def triangular(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import triangular
     >>> seed(1)
@@ -1336,6 +1476,12 @@ def triangular(dim,
     [-1, -2,  2],
     [ 0,  1, -2],
     [ 0,  0, -1]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -1416,6 +1562,12 @@ def square(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import square
     >>> seed(1)
@@ -1475,6 +1627,12 @@ def invertible(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy import symbols
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import invertible
@@ -1501,6 +1659,12 @@ def invertible(dim,
     [-1, 1,   1],
     [ 0, 0,   1]])
 
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
+
     """
     return square(dim, rank=None, scalars=scalars, units=units, length=length)
 
@@ -1520,6 +1684,12 @@ def singular(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import singular
     >>> seed(1)
@@ -1532,6 +1702,12 @@ def singular(dim,
     [ 0, 0,  1]])
     >>> m.rank()
     2
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -1588,6 +1764,12 @@ def idempotent(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import idempotent
     >>> seed(1)
@@ -1602,6 +1784,12 @@ def idempotent(dim,
     2
     >>> A*A == A
     True
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -1658,6 +1846,12 @@ def nilpotent(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy import zeros
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import nilpotent
@@ -1673,6 +1867,12 @@ def nilpotent(dim,
     2
     >>> A*A*A == zeros(3)
     True
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -1755,6 +1955,12 @@ def diagonalizable(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import diagonalizable
     >>> seed(1)
@@ -1778,6 +1984,12 @@ def diagonalizable(dim,
     [1, 0, 0],
     [0, 2, 0],
     [0, 0, 2]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -1829,6 +2041,12 @@ def trigonalizable(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy import sqrt
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import trigonalizable
@@ -1853,6 +2071,12 @@ def trigonalizable(dim,
     [1, 1, 0],
     [0, 1, 0],
     [0, 0, 3]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -1913,6 +2137,12 @@ def orthogonal(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy import sqrt, eye, expand
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import orthogonal
@@ -1934,6 +2164,12 @@ def orthogonal(dim,
     >>> o = orthogonal(3, spec=(-1, (s, s)), scalars=(s,), length=2)
     >>> expand(o * o.T) == eye(3)
     True
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -2027,6 +2263,12 @@ def unitary(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy import sqrt, I, simplify, expand
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import unitary
@@ -2061,6 +2303,12 @@ def unitary(dim,
 
     >>> simplify(u.det())
     I
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -2162,6 +2410,11 @@ def normal(dim,
     Examples
     ========
 
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy import I, zeros, expand, simplify, sqrt
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import normal
@@ -2203,6 +2456,12 @@ def normal(dim,
     True
     >>> expand(n.H * n - n * n.H) == zeros(3)
     True
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -2270,6 +2529,12 @@ def symmetric(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import symmetric
     >>> seed(1)
@@ -2290,6 +2555,12 @@ def symmetric(dim,
     >>> n = normal(3, spec=(1,2,3))
     >>> sorted(n.eigenvals(multiple=True))
     [1, 2, 3]
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
@@ -2353,6 +2624,12 @@ def hermite(dim,
 
     Examples
     ========
+
+    .. testsetup::
+
+       >>> from sympy.core.random import rng
+       >>> _rng_state = rng.getstate()
+
     >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import hermite
     >>> seed(1)
@@ -2363,6 +2640,12 @@ def hermite(dim,
     [          1, 0,                     1.0 - 1.0*I],
     [          0, 1,                               0],
     [1.0 + 1.0*I, 0, 1 + (1.0 - 1.0*I)*(1.0 + 1.0*I)]])
+
+    .. testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
 
     Parameters
     ==========
