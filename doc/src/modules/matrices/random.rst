@@ -259,7 +259,7 @@ Conjugate Matrices
 .. autofunction:: sympy.matrices.random.idempotent
 .. autofunction:: sympy.matrices.random.nilpotent
 .. autofunction:: sympy.matrices.random.diagonalizable
-.. autofunction:: sympy.matrices.random.trigonalizable
+.. autofunction:: sympy.matrices.random.triangularizable
 
 
 Conjugate Matrices by Isometries
