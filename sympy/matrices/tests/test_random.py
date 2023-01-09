@@ -525,7 +525,7 @@ def test_diagonalizable():
                 assert ev in (0, 2), m.eigenvals(multiple=True)
 
 
-def test_trigonalizable():
+def test_triangularizable():
     for d in TEST_DIMS:
         m = triangularizable(d, spec=(2,))
         assert m.eigenvals(multiple=True) == [2] * d
