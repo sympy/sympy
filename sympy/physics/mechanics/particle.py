@@ -124,7 +124,7 @@ class Particle:
         The angular momentum H, about some point O of a particle, P, is given
         by:
 
-        `H = cross(r, m) * v`
+        `H = cross(r, m*v)`
 
         where r is the position vector from point O to the particle P, m is
         the mass of the particle, and v is the velocity of the particle in
