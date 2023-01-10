@@ -2141,7 +2141,7 @@ def _inverse_laplace_expand(fn, s, t, plane):
     if r.is_Add:
         return True, InverseLaplaceTransform(r, s, t, plane).doit()
     if fn.is_rational_function(s):
-        r = fn.apart(s)
+        r = fn.apart(s, full=True).doit()
     if r.is_Add:
         return True, InverseLaplaceTransform(r, s, t, plane).doit()
     return False, fn
