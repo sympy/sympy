@@ -18,7 +18,7 @@ from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
     minute, quart, s, second, speed_of_light, bit,
     byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte,
-    kilogram, gravitational_constant)
+    kilogram, gravitational_constant, electron_rest_mass)
 
 from sympy.physics.units.definitions.dimension_definitions import (
     Dimension, charge, length, time, temperature, pressure,
@@ -278,6 +278,9 @@ def test_issue_quart():
     assert convert_to(4 * quart / inch ** 3, meter) == 231
     assert convert_to(4 * quart / inch ** 3, millimeter) == 231
 
+def test_electron_rest_mass():
+    assert convert_to(electron_rest_mass, kilogram) == 9.1093837015e-31*kilogram
+    assert convert_to(electron_rest_mass, grams) == 9.1093837015e-28*grams
 
 def test_issue_5565():
     assert (m < s).is_Relational
@@ -304,11 +307,11 @@ def test_find_unit():
         'deciliter', 'centiliter', 'deciliters', 'milliliter',
         'centiliters', 'milliliters', 'planck_volume']
     assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'planck_voltage']
-    assert find_unit(grams) == ['g', 't', 'Da', 'kg', 'mg', 'ug', 'amu', 'mmu', 'amus',
-                                'gram', 'mmus', 'grams', 'pound', 'tonne', 'dalton',
-                                'pounds', 'kilogram', 'kilograms', 'microgram', 'milligram',
-                                'metric_ton', 'micrograms', 'milligrams', 'planck_mass',
-                                'milli_mass_unit', 'atomic_mass_unit', 'atomic_mass_constant']
+    assert find_unit(grams) == ['g', 't', 'Da', 'kg', 'me', 'mg', 'ug', 'amu', 'mmu', 'amus',
+                                'gram', 'mmus', 'grams', 'pound', 'tonne', 'dalton', 'pounds',
+                                'kilogram', 'kilograms', 'microgram', 'milligram', 'metric_ton',
+                                'micrograms', 'milligrams', 'planck_mass', 'milli_mass_unit', 'atomic_mass_unit',
+                                'electron_rest_mass', 'atomic_mass_constant']
 
 
 def test_Quantity_derivative():
