@@ -298,13 +298,12 @@ def regular_to_singular(mat, rank=None):
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
     >>> from sympy import Matrix
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import regular_to_singular
-    >>> seed(1)
 
     >>> m = Matrix([[1, 2, 3],[4, 5, 6], [7, 8 ,0]])
     >>> m.rank()
@@ -363,12 +362,11 @@ def projection(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import projection
-    >>> seed(1)
 
     >>> projection(3)
     Matrix([
@@ -443,12 +441,11 @@ def jordan(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import jordan
-    >>> seed(1)
 
     >>> jordan(3)
     Matrix([
@@ -529,12 +526,11 @@ def transposition(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import transposition
-    >>> seed(1)
 
     >>> transposition(4)
     Matrix([
@@ -592,12 +588,11 @@ def permutation(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import permutation
-    >>> seed(1)
 
     >>> permutation(3)
     Matrix([
@@ -680,12 +675,11 @@ def elementary(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import elementary
-    >>> seed(1)
 
     >>> elementary(3)
     Matrix([
@@ -780,13 +774,12 @@ def rotation(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
     >>> from sympy import sqrt, cos, symbols, eye, I, re, im, expand, simplify
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import rotation
-    >>> seed(1)
 
     >>> rotation(3)
     Matrix([
@@ -946,13 +939,12 @@ def reflection(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
     >>> from sympy import sqrt, eye, I
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import reflection
-    >>> seed(1)
 
     >>> reflection(3)
     Matrix([
@@ -1042,12 +1034,11 @@ def diagonal_normal(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import diagonal_normal
-    >>> seed(1)
 
     >>> diagonal_normal(3)
     Matrix([
@@ -1165,12 +1156,11 @@ def jordan_normal(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import jordan_normal
-    >>> seed(1)
 
     >>> jordan_normal(3, spec=(1,3))
     Matrix([
@@ -1331,13 +1321,12 @@ def isometry_normal(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
     >>> from sympy import I
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import isometry_normal
-    >>> seed(1)
 
     >>> isometry_normal(3)
     Matrix([
@@ -1464,12 +1453,11 @@ def triangular(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import triangular
-    >>> seed(1)
 
     >>> triangular(3, scalars=(2, -2, 0))
     Matrix([
@@ -1565,12 +1553,11 @@ def square(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import square
-    >>> seed(1)
 
     >>> square(3)
     Matrix([
@@ -1636,13 +1623,12 @@ def invertible(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
     >>> from sympy import symbols
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import invertible
-    >>> seed(1)
 
     >>> invertible(3)
     Matrix([
@@ -1693,12 +1679,11 @@ def singular(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import singular
-    >>> seed(1)
 
     >>> m = singular(3, rank=2)
     >>> m
@@ -1773,12 +1758,11 @@ def idempotent(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import idempotent
-    >>> seed(1)
 
     >>> A = idempotent(3, rank=2)
     >>> A
@@ -1855,13 +1839,12 @@ def nilpotent(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
     >>> from sympy import zeros
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import nilpotent
-    >>> seed(1)
 
     >>> A = nilpotent(3, rank=2)
     >>> A
@@ -1964,12 +1947,11 @@ def diagonalizable(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import diagonalizable
-    >>> seed(1)
 
     >>> diagonalizable(3)
     Matrix([
@@ -2050,13 +2032,12 @@ def trigonalizable(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
     >>> from sympy import sqrt
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import trigonalizable
-    >>> seed(1)
 
     >>> trigonalizable(3)
     Matrix([
@@ -2146,13 +2127,12 @@ def orthogonal(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
     >>> from sympy import sqrt, eye, expand
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import orthogonal
-    >>> seed(1)
 
     >>> orthogonal(3, scalars=(-1,1))
     Matrix([
@@ -2272,13 +2252,13 @@ def unitary(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
     >>> from sympy import sqrt, I, simplify, expand
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import unitary
-    >>> seed(1)
+
     >>> u = unitary(3)
     >>> expand(u)
     Matrix([
@@ -2418,13 +2398,12 @@ def normal(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(44)
 
     >>> from sympy import I, zeros, expand, simplify, sqrt
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import normal
-    >>> seed(44)
 
     >>> normal(3)
     Matrix([
@@ -2538,12 +2517,11 @@ def symmetric(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import symmetric
-    >>> seed(1)
 
     >>> symmetric(3)
     Matrix([
@@ -2554,9 +2532,7 @@ def symmetric(dim,
     For a symmetric matrix with given eigenvalues
     :func:`normal` works
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import normal
-    >>> seed(1)
 
     >>> n = normal(3, spec=(1,2,3))
     >>> sorted(n.eigenvals(multiple=True))
@@ -2633,12 +2609,11 @@ def hermite(dim,
 
     .. testsetup::
 
-       >>> from sympy.core.random import rng
+       >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
+       >>> seed(1)
 
-    >>> from sympy.core.random import seed
     >>> from sympy.matrices.random import hermite
-    >>> seed(1)
 
     >>> z = complex(1,-1)
     >>> hermite(3, scalars=(z, ), length=1)
