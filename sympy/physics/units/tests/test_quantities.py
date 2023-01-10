@@ -309,7 +309,7 @@ def test_find_unit():
     assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'planck_voltage']
     assert find_unit(grams) == ['g', 't', 'Da', 'kg', 'me', 'mg', 'ug', 'amu', 'mmu', 'amus',
                                 'gram', 'mmus', 'grams', 'pound', 'tonne', 'dalton', 'pounds',
-                                'kilogram', 'kilograms','microgram', 'milligram', 'metric_ton',
+                                'kilogram', 'kilograms', 'microgram', 'milligram', 'metric_ton',
                                 'micrograms', 'milligrams', 'planck_mass', 'milli_mass_unit', 'atomic_mass_unit',
                                 'electron_rest_mass', 'atomic_mass_constant']
 
