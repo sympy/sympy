@@ -421,18 +421,10 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         small_first = True
 
         for symbol in syms:
-            if SYMPY_DEBUG:
-                print("DEBUG: parsing of expression %s with symbol %s " % (
-                    str(terms), str(symbol))
-                )
-
             if isinstance(symbol, Derivative) and small_first:
                 terms = list(reversed(terms))
                 small_first = not small_first
             result = parse_expression(terms, symbol)
-
-            if SYMPY_DEBUG:
-                print("DEBUG: returned %s" % str(result))
 
             if result is not None:
                 if not symbol.is_commutative:
