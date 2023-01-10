@@ -18,9 +18,9 @@ class BodyBase(ABC):
             mass = Symbol(f'{name}_mass')
         if masscenter is None:
             masscenter = Point(f'{name}_masscenter')
-        self.frame = frame
         self.mass = mass
         self.masscenter = masscenter
+        self.frame = frame
         self.potential_energy = 0
         self.points = []
 

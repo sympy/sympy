@@ -80,6 +80,9 @@ def test_particle_frame():
     # Test invalid frame type
     with raises(ValueError):
         p.frame = 'a'
+    # Test parse frame in __init__
+    p = Particle('P', frame=N)
+    assert p.frame.name == 'N'
 
 
 def test_parallel_axis():
