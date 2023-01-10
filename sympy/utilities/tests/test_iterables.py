@@ -19,7 +19,8 @@ from sympy.utilities.iterables import (
     prefixes, reshape, rotate_left, rotate_right, runs, sift,
     strongly_connected_components, subsets, take, topological_sort, unflatten,
     uniq, variations, ordered_partitions, rotations, is_palindromic, iterable,
-    NotIterable, multiset_derangements)
+    NotIterable, multiset_derangements,
+    sequence_partitions, sequence_partitions_empty)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -885,3 +886,51 @@ def test_iterable():
         _iterable = False
 
     assert iterable(Test6()) is False
+
+
+def test_sequence_partitions():
+    assert list(sequence_partitions([1], 1)) == [[[1]]]
+    assert list(sequence_partitions([1, 2], 1)) == [[[1, 2]]]
+    assert list(sequence_partitions([1, 2], 2)) == [[[1], [2]]]
+    assert list(sequence_partitions([1, 2, 3], 1)) == [[[1, 2, 3]]]
+    assert list(sequence_partitions([1, 2, 3], 2)) == \
+        [[[1], [2, 3]], [[1, 2], [3]]]
+    assert list(sequence_partitions([1, 2, 3], 3)) == [[[1], [2], [3]]]
+
+    # Exceptional cases
+    assert list(sequence_partitions([], 0)) == []
+    assert list(sequence_partitions([], 1)) == []
+    assert list(sequence_partitions([1, 2], 0)) == []
+    assert list(sequence_partitions([1, 2], 3)) == []
+
+
+def test_sequence_partitions_empty():
+    assert list(sequence_partitions_empty([], 1)) == [[[]]]
+    assert list(sequence_partitions_empty([], 2)) == [[[], []]]
+    assert list(sequence_partitions_empty([], 3)) == [[[], [], []]]
+    assert list(sequence_partitions_empty([1], 1)) == [[[1]]]
+    assert list(sequence_partitions_empty([1], 2)) == [[[], [1]], [[1], []]]
+    assert list(sequence_partitions_empty([1], 3)) == \
+        [[[], [], [1]], [[], [1], []], [[1], [], []]]
+    assert list(sequence_partitions_empty([1, 2], 1)) == [[[1, 2]]]
+    assert list(sequence_partitions_empty([1, 2], 2)) == \
+        [[[], [1, 2]], [[1], [2]], [[1, 2], []]]
+    assert list(sequence_partitions_empty([1, 2], 3)) == [
+        [[], [], [1, 2]], [[], [1], [2]], [[], [1, 2], []],
+        [[1], [], [2]], [[1], [2], []], [[1, 2], [], []]
+    ]
+    assert list(sequence_partitions_empty([1, 2, 3], 1)) == [[[1, 2, 3]]]
+    assert list(sequence_partitions_empty([1, 2, 3], 2)) == \
+        [[[], [1, 2, 3]], [[1], [2, 3]], [[1, 2], [3]], [[1, 2, 3], []]]
+    assert list(sequence_partitions_empty([1, 2, 3], 3)) == [
+        [[], [], [1, 2, 3]], [[], [1], [2, 3]],
+        [[], [1, 2], [3]], [[], [1, 2, 3], []],
+        [[1], [], [2, 3]], [[1], [2], [3]],
+        [[1], [2, 3], []], [[1, 2], [], [3]],
+        [[1, 2], [3], []], [[1, 2, 3], [], []]
+    ]
+
+    # Exceptional cases
+    assert list(sequence_partitions([], 0)) == []
+    assert list(sequence_partitions([1], 0)) == []
+    assert list(sequence_partitions([1, 2], 0)) == []

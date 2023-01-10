@@ -24,7 +24,7 @@ from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels)
-from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, polygamma)
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
@@ -34,7 +34,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
-from sympy.codegen.scipy_nodes import cosm1
+from sympy.codegen.scipy_nodes import cosm1, powm1
 from sympy.functions.elementary.complexes import re, im, arg
 from sympy.functions.special.polynomials import \
     chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
@@ -189,6 +189,22 @@ def test_mpmath_lambda():
     assert -prec < f(mpmath.mpf("0.2")) - sin02 < prec
     raises(TypeError, lambda: f(x))
            # if this succeeds, it can't be a mpmath function
+
+    ref2 = (mpmath.mpf("1e-30")
+            - mpmath.mpf("1e-45")/2
+            + 5*mpmath.mpf("1e-60")/6
+            - 3*mpmath.mpf("1e-75")/4
+            + 33*mpmath.mpf("1e-90")/40
+            )
+    f2a = lambdify((x, y), x**y - 1, "mpmath")
+    f2b = lambdify((x, y), powm1(x, y), "mpmath")
+    f2c = lambdify((x,), expm1(x*log1p(x)), "mpmath")
+    ans2a = f2a(mpmath.mpf("1")+mpmath.mpf("1e-15"), mpmath.mpf("1e-15"))
+    ans2b = f2b(mpmath.mpf("1")+mpmath.mpf("1e-15"), mpmath.mpf("1e-15"))
+    ans2c = f2c(mpmath.mpf("1e-15"))
+    assert abs(ans2a - ref2) < 1e-51
+    assert abs(ans2b - ref2) < 1e-67
+    assert abs(ans2c - ref2) < 1e-80
 
 
 @conserve_mpmath_dps
@@ -1081,7 +1097,7 @@ def test_scipy_fns():
     single_arg_sympy_fns = [Ei, erf, erfc, factorial, gamma, loggamma, digamma]
     single_arg_scipy_fns = [scipy.special.expi, scipy.special.erf, scipy.special.erfc,
         scipy.special.factorial, scipy.special.gamma, scipy.special.gammaln,
-        scipy.special.psi]
+                            scipy.special.psi]
     numpy.random.seed(0)
     for (sympy_fn, scipy_fn) in zip(single_arg_sympy_fns, single_arg_scipy_fns):
         f = lambdify(x, sympy_fn(x), modules="scipy")
@@ -1105,18 +1121,20 @@ def test_scipy_fns():
             assert abs(f(tv) - scipy_fn(tv)) < 1e-13*(1 + abs(sympy_result))
 
     double_arg_sympy_fns = [RisingFactorial, besselj, bessely, besseli,
-        besselk]
+                            besselk, polygamma]
     double_arg_scipy_fns = [scipy.special.poch, scipy.special.jv,
-        scipy.special.yv, scipy.special.iv, scipy.special.kv]
+                            scipy.special.yv, scipy.special.iv, scipy.special.kv, scipy.special.polygamma]
     for (sympy_fn, scipy_fn) in zip(double_arg_sympy_fns, double_arg_scipy_fns):
         f = lambdify((x, y), sympy_fn(x, y), modules="scipy")
         for i in range(20):
             # SciPy supports only real orders of Bessel functions
             tv1 = numpy.random.uniform(-10, 10)
             tv2 = numpy.random.uniform(-10, 10) + 1j*numpy.random.uniform(-5, 5)
-            # SciPy supports poch for real arguments only
-            if sympy_fn == RisingFactorial:
+            # SciPy requires a real valued 2nd argument for: poch, polygamma
+            if sympy_fn in (RisingFactorial, polygamma):
                 tv2 = numpy.real(tv2)
+            if sympy_fn == polygamma:
+                tv1 = abs(int(tv1))  # first argument to polygamma must be a non-negative integral.
             sympy_result = sympy_fn(tv1, tv2).evalf()
             assert abs(f(tv1, tv2) - sympy_result) < 1e-13*(1 + abs(sympy_result))
             assert abs(f(tv1, tv2) - scipy_fn(tv1, tv2)) < 1e-13*(1 + abs(sympy_result))
@@ -1466,6 +1484,12 @@ def test_scipy_special_math():
 
     cm1 = lambdify((x,), cosm1(x), modules='scipy')
     assert abs(cm1(1e-20) + 5e-41) < 1e-200
+
+    have_scipy_1_10plus = tuple(map(int, scipy.version.version.split('.')[:2])) >= (1, 10)
+
+    if have_scipy_1_10plus:
+        cm2 = lambdify((x, y), powm1(x, y), modules='scipy')
+        assert abs(cm2(1.2, 1e-9) - 1.82321557e-10)  < 1e-17
 
 
 def test_scipy_bernoulli():

@@ -1,4 +1,5 @@
-from typing import Any, Set as tSet
+from __future__ import annotations
+from typing import Any
 
 from functools import reduce
 from itertools import permutations
@@ -991,7 +992,7 @@ class BaseScalarField(Expr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols = set()  # type: tSet[Any]
+    free_symbols: set[Any] = set()
 
 
 class BaseVectorField(Expr):

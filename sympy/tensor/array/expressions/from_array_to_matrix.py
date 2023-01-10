@@ -81,7 +81,7 @@ def _support_function_tp1_recognize(contraction_indices, args):
     editor.track_permutation_start()
 
     while True:
-        flag_stop: bool = True
+        flag_stop = True
         for i, arg_with_ind in enumerate(editor.args_with_ind):
             if not isinstance(arg_with_ind.element, MatrixExpr):
                 continue
@@ -808,7 +808,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
 def identify_removable_identity_matrices(expr):
     editor = _EditArrayContraction(expr)
 
-    flag: bool = True
+    flag = True
     while flag:
         flag = False
         for arg_with_ind in editor.args_with_ind:

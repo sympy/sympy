@@ -1,6 +1,6 @@
 """Miscellaneous stuff that does not really fit anywhere else."""
 
-from typing import List
+from __future__ import annotations
 
 import operator
 import sys
@@ -175,7 +175,7 @@ ARCH = str(struct.calcsize('P') * 8) + "-bit"
 # XXX: PyPy does not support hash randomization
 HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 
-_debug_tmp = []  # type: List[str]
+_debug_tmp: list[str] = []
 _debug_iter = 0
 
 def debug_decorator(func):

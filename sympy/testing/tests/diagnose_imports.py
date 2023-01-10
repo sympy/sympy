@@ -4,7 +4,7 @@
 Import diagnostics. Run bin/diagnose_imports.py --help for details.
 """
 
-from typing import Dict as tDict
+from __future__ import annotations
 
 if __name__ == "__main__":
 
@@ -108,7 +108,7 @@ if __name__ == "__main__":
                 repr(self.name), repr(self.definer))
 
     # Maps each function/variable to name of module to define it
-    symbol_definers = {}  # type: tDict[Definition, str]
+    symbol_definers: dict[Definition, str] = {}
 
     def in_module(a, b):
         """Is a the same module as or a submodule of b?"""

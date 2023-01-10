@@ -252,9 +252,9 @@ so you may have to reduce your inequalities numerically instead using SciPy's
 ### Inequalities Which Can Be Reduced Analytically, and SymPy Cannot Reduce
 Refer to [](#limitations-of-inequality-reduction-using-sympy) above.
 
-### Report a Problem
+## Report a Bug
 
-If you encounter a problem with SymPy, please post the problem on the [mailing
-list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
-page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
-can use a different method listed in [](#alternatives-to-consider).
+If you find a bug with {func}`~.diophantine`, please post the problem on the
+[SymPy mailing list](https://groups.google.com/g/sympy). Until the issue is
+resolved, you can use a different method listed in
+[](#alternatives-to-consider).
