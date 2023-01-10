@@ -4,16 +4,16 @@ from itertools import repeat
 from sympy.core import S, pi, I
 from sympy.core.add import Add
 from sympy.core.function import (AppliedUndef, count_ops, Derivative, expand,
-                                 expand_complex, expand_mul, Function, Lambda,
-                                 WildFunction)
-from sympy.core.mul import Mul
+                                 expand_complex, expand_mul, expand_trig,
+                                 Function, Lambda, WildFunction, diff)
+from sympy.core.mul import Mul, prod
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.core.traversal import postorder_traversal
 from sympy.functions.combinatorial.factorials import factorial, rf
-from sympy.functions.elementary.complexes import (re, arg, Abs, polar_lift,
+from sympy.functions.elementary.complexes import (re, im, arg, Abs, polar_lift,
                                                   periodic_argument)
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh, asinh
@@ -135,6 +135,7 @@ class IntegralTransform(Function):
                 T = self._compute_transform(self.function,
                     self.function_variable, self.transform_variable, **hints)
             except IntegralTransformError:
+                debug('[IT _try ] Caught IntegralTransformError, returns None')
                 T = None
 
         fn = self.function
@@ -1035,7 +1036,6 @@ def expand_dirac_delta(expr):
     """
     return _lin_eq2dict(expr, expr.atoms(DiracDelta))
 
-
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms.
@@ -1047,6 +1047,8 @@ def _laplace_transform(f, t, s_, simplify=True):
     a = Wild('a', exclude=[t])
     deltazero = []
     deltanonzero = []
+    debug('[LT _l_t ] started with (%s, %s, %s)'%(f, t, s))
+    debug('[LT _l_t ]     and simplify=%s'%(simplify, ))
     try:
         integratable, deltadict = expand_dirac_delta(f)
     except PolyNonlinearError:
@@ -1062,14 +1064,20 @@ def _laplace_transform(f, t, s_, simplify=True):
                                              'not implemented yet.')
             else:
                 deltanonzero.append(dirac_func*dirac_coeff)
+    debug('[LT _l_t ]     integrable:   %s'%(integratable, ))
+    debug('[LT _l_t ]     deltanonzero: %s'%(deltanonzero, ))
+    debug('[LT _l_t ]     deltanzero  : %s'%(deltazero, ))
+
     F = Add(integrate(exp(-s*t) * Add(integratable, *deltanonzero),
                       (t, S.Zero, S.Infinity)),
             Add(*deltazero))
+    debug('[LT _l_t ]     integrated  : %s'%(F, ))
 
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), S.NegativeInfinity, S.true
 
     if not F.is_Piecewise:
+        debug('[LT _l_t ]     not piecewise : %s'%(F, ))
         raise IntegralTransformError(
             'Laplace', f, 'could not compute integral')
 
@@ -1186,499 +1194,363 @@ def _laplace_build_rules(t, s):
     """
     This is an internal helper function that returns the table of Laplace
     transform rules in terms of the time variable `t` and the frequency
-    variable `s`.  It is used by `_laplace_apply_rules`.
+    variable `s`.  It is used by ``_laplace_apply_rules``.  Each entry is a
+    tuple containing:
+
+        (time domain pattern,
+         frequency-domain replacement,
+         condition for the rule to be applied,
+         convergence plane,
+         preparation function)
+
+    The preparation function is a function with one argument that is applied
+    to the expression before matching. For most rules it should be
+    ``_laplace_deep_collect``.
     """
     a = Wild('a', exclude=[t])
     b = Wild('b', exclude=[t])
     n = Wild('n', exclude=[t])
     tau = Wild('tau', exclude=[t])
     omega = Wild('omega', exclude=[t])
-    dco = lambda f: _laplace_deep_collect(f,t)
+    dco = lambda f: _laplace_deep_collect(f, t)
     laplace_transform_rules = [
-    # ( time domain,
-    #   laplace domain,
-    #   condition, convergence plane, preparation function )
-    #
-    # Catch constant (would otherwise be treated by 2.12)
-    (a, a/s, S.true, S.Zero, dco),
-    # DiracDelta rules
-    (DiracDelta(a*t-b),
-     exp(-s*b/a)/Abs(a),
-     Or(And(a>0, b>=0), And(a<0, b<=0)), S.Zero, dco),
-    (DiracDelta(a*t-b),
-     S(0),
-     Or(And(a<0, b>=0), And(a>0, b<=0)), S.Zero, dco),
-    # Rules from http://eqworld.ipmnet.ru/en/auxiliary/inttrans/
-    # 2.1
-    (1,
-     1/s,
-     S.true, S.Zero, dco),
-    # 2.2 expressed in terms of Heaviside
-    (Heaviside(a*t-b),
-     exp(-s*b/a)/s,
-     And(a>0, b>0), S.Zero, dco),
-    (Heaviside(a*t-b),
-     (1-exp(-s*b/a))/s,
-     And(a<0, b<0), S.Zero, dco),
-    (Heaviside(a*t-b),
-     1/s,
-     And(a>0, b<=0), S.Zero, dco),
-    (Heaviside(a*t-b),
-     0,
-     And(a<0, b>0), S.Zero, dco),
-    # 2.3
-    (t,
-     1/s**2,
-     S.true, S.Zero, dco),
-    # 2.4
-    (1/(a*t+b),
-     -exp(-b/a*s)*Ei(-b/a*s)/a,
-     a>0, S.Zero, dco),
-    # 2.5 and 2.6 are covered by 2.11
-    # 2.7
-    (1/sqrt(a*t+b),
-     sqrt(a*pi/s)*exp(b/a*s)*erfc(sqrt(b/a*s))/a,
-     a>0, S.Zero, dco),
-    # 2.8
-    (sqrt(t)/(t+b),
-     sqrt(pi/s)-pi*sqrt(b)*exp(b*s)*erfc(sqrt(b*s)),
-     S.true, S.Zero, dco),
-    # 2.9
-    ((a*t+b)**(-S(3)/2),
-     2*b**(-S(1)/2)-2*(pi*s/a)**(S(1)/2)*exp(b/a*s)*erfc(sqrt(b/a*s))/a,
-     a>0, S.Zero, dco),
-    # 2.10
-    (t**(S(1)/2)*(t+a)**(-1),
-     (pi/s)**(S(1)/2)-pi*a**(S(1)/2)*exp(a*s)*erfc(sqrt(a*s)),
-     S.true, S.Zero, dco),
-    # 2.11
-    (1/(a*sqrt(t) + t**(3/2)),
-     pi*a**(S(1)/2)*exp(a*s)*erfc(sqrt(a*s)),
-     S.true, S.Zero, dco),
-    # 2.12
-    (t**n,
-     gamma(n+1)/s**(n+1),
-     n>-1, S.Zero, dco),
-    # 2.13
-    ((a*t+b)**n,
-     lowergamma(n+1, b/a*s)*exp(-b/a*s)/s**(n+1)/a,
-     And(n>-1, a>0), S.Zero, dco),
-    # 2.14
-    (t**n/(t+a),
-     a**n*gamma(n+1)*lowergamma(-n,a*s),
-     n>-1, S.Zero, dco),
-    # 3.1
-    (exp(a*t-tau),
-     exp(-tau)/(s-a),
-     S.true, a, dco),
-    # 3.2
-    (t*exp(a*t-tau),
-     exp(-tau)/(s-a)**2,
-     S.true, a, dco),
-    # 3.3
-    (t**n*exp(a*t),
-     gamma(n+1)/(s-a)**(n+1),
-     n>-1, a, dco),
-    # 3.4 and 3.5 cannot be covered here because they are
-    #     sums and only the individual sum terms will get here.
-    # 3.6
-    (exp(-a*t**2),
-     sqrt(pi/4/a)*exp(s**2/4/a)*erfc(s/sqrt(4*a)),
-     a>0, S.Zero, dco),
-    # 3.7
-    (t*exp(-a*t**2),
-     1/(2*a)-2/sqrt(pi)/(4*a)**(S(3)/2)*s*erfc(s/sqrt(4*a)),
-     S.true, S.Zero, dco),
-    # 3.8
-    (exp(-a/t),
-     2*sqrt(a/s)*besselk(1, 2*sqrt(a*s)),
-     a>=0, S.Zero, dco),
-    # 3.9
-    (sqrt(t)*exp(-a/t),
-     S(1)/2*sqrt(pi/s**3)*(1+2*sqrt(a*s))*exp(-2*sqrt(a*s)),
-     a>=0, S.Zero, dco),
-    # 3.10
-    (exp(-a/t)/sqrt(t),
-     sqrt(pi/s)*exp(-2*sqrt(a*s)),
-     a>=0, S.Zero, dco),
-    # 3.11
-    (exp(-a/t)/(t*sqrt(t)),
-     sqrt(pi/a)*exp(-2*sqrt(a*s)),
-     a>0, S.Zero, dco),
-    # 3.12
-    (t**n*exp(-a/t),
-     2*(a/s)**((n+1)/2)*besselk(n+1, 2*sqrt(a*s)),
-     a>0, S.Zero, dco),
-    # 3.13
-    (exp(-2*sqrt(a*t)),
-     s**(-1)-sqrt(pi*a)*s**(-S(3)/2)*exp(a/s)*erfc(sqrt(a/s)),
-     S.true, S.Zero, dco),
-    # 3.14
-    (exp(-2*sqrt(a*t))/sqrt(t),
-     (pi/s)**(S(1)/2)*exp(a/s)*erfc(sqrt(a/s)),
-     S.true, S.Zero, dco),
-    # 4.1
-    (sinh(a*t),
-     a/(s**2-a**2),
-     S.true, Abs(a), dco),
-    # 4.2
-    (sinh(a*t)**2,
-     2*a**2/(s**3-4*a**2*s**2),
-     S.true, Abs(2*a), dco),
-    # 4.3
-    (sinh(a*t)/t,
-     log((s+a)/(s-a))/2,
-     S.true, a, dco),
-    # 4.4
-    (t**n*sinh(a*t),
-     gamma(n+1)/2*((s-a)**(-n-1)-(s+a)**(-n-1)),
-     n>-2, Abs(a), dco),
-    # 4.5
-    (sinh(2*sqrt(a*t)),
-     sqrt(pi*a)/s/sqrt(s)*exp(a/s),
-     S.true, S.Zero, dco),
-    # 4.6
-    (sqrt(t)*sinh(2*sqrt(a*t)),
-     pi**(S(1)/2)*s**(-S(5)/2)*(s/2+a)*exp(a/s)*erf(sqrt(a/s))-a**(S(1)/2)*s**(-2),
-     S.true, S.Zero, dco),
-    # 4.7
-    (sinh(2*sqrt(a*t))/sqrt(t),
-     pi**(S(1)/2)*s**(-S(1)/2)*exp(a/s)*erf(sqrt(a/s)),
-     S.true, S.Zero, dco),
-    # 4.8
-    (sinh(sqrt(a*t))**2/sqrt(t),
-     pi**(S(1)/2)/2*s**(-S(1)/2)*(exp(a/s)-1),
-     S.true, S.Zero, dco),
-    # 4.9
-    (cosh(a*t),
-     s/(s**2-a**2),
-     S.true, Abs(a), dco),
-    # 4.10
-    (cosh(a*t)**2,
-     (s**2-2*a**2)/(s**3-4*a**2*s**2),
-     S.true, Abs(2*a), dco),
-    # 4.11
-    (t**n*cosh(a*t),
-     gamma(n+1)/2*((s-a)**(-n-1)+(s+a)**(-n-1)),
-     n>-1, Abs(a), dco),
-    # 4.12
-    (cosh(2*sqrt(a*t)),
-     1/s+sqrt(pi*a)/s/sqrt(s)*exp(a/s)*erf(sqrt(a/s)),
-     S.true, S.Zero, dco),
-    # 4.13
-    (sqrt(t)*cosh(2*sqrt(a*t)),
-     pi**(S(1)/2)*s**(-S(5)/2)*(s/2+a)*exp(a/s),
-     S.true, S.Zero, dco),
-    # 4.14
-    (cosh(2*sqrt(a*t))/sqrt(t),
-     pi**(S(1)/2)*s**(-S(1)/2)*exp(a/s),
-     S.true, S.Zero, dco),
-    # 4.15
-    (cosh(sqrt(a*t))**2/sqrt(t),
-     pi**(S(1)/2)/2*s**(-S(1)/2)*(exp(a/s)+1),
-     S.true, S.Zero, dco),
-    # 5.1
-    (log(a*t),
-     -log(s/a+S.EulerGamma)/s,
-     a>0, S.Zero, dco),
-    # 5.2
-    (log(1+a*t),
-     -exp(s/a)/s*Ei(-s/a),
-     S.true, S.Zero, dco),
-    # 5.3
-    (log(a*t+b),
-     (log(b)-exp(s/b/a)/s*a*Ei(-s/b))/s*a,
-     a>0, S.Zero, dco),
-    # 5.4 is covered by 5.7
-    # 5.5
-    (log(t)/sqrt(t),
-     -sqrt(pi/s)*(log(4*s)+S.EulerGamma),
-     S.true, S.Zero, dco),
-    # 5.6 is covered by 5.7
-    # 5.7
-    (t**n*log(t),
-     gamma(n+1)*s**(-n-1)*(digamma(n+1)-log(s)),
-     n>-1, S.Zero, dco),
-    # 5.8
-    (log(a*t)**2,
-     ((log(s/a)+S.EulerGamma)**2+pi**2/6)/s,
-     a>0, S.Zero, dco),
-    # 5.9
-    (exp(-a*t)*log(t),
-     -(log(s+a)+S.EulerGamma)/(s+a),
-     S.true, -a, dco),
-    # 6.1
-    (sin(omega*t),
-     omega/(s**2+omega**2),
-     S.true, S.Zero, dco),
-    # 6.2
-    (Abs(sin(omega*t)),
-     omega/(s**2+omega**2)*coth(pi*s/2/omega),
-     omega>0, S.Zero, dco),
-    # 6.3 and 6.4 are covered by 1.8
-    # 6.5 is covered by 1.8 together with 2.5
-    # 6.6
-    (sin(omega*t)/t,
-     atan(omega/s),
-     S.true, S.Zero, dco),
-    # 6.7
-    (sin(omega*t)**2/t,
-     log(1+4*omega**2/s**2)/4,
-     S.true, S.Zero, dco),
-    # 6.8
-    (sin(omega*t)**2/t**2,
-     omega*atan(2*omega/s)-s*log(1+4*omega**2/s**2)/4,
-     S.true, S.Zero, dco),
-    # 6.9
-    (sin(2*sqrt(a*t)),
-      sqrt(pi*a)/s/sqrt(s)*exp(-a/s),
-      a>0, S.Zero, dco),
-    # 6.10
-    (sin(2*sqrt(a*t))/t,
-     pi*erf(sqrt(a/s)),
-     a>0, S.Zero, dco),
-    # 6.11
-    (cos(omega*t),
-     s/(s**2+omega**2),
-     S.true, S.Zero, dco),
-    # 6.12
-    (cos(omega*t)**2,
-     (s**2+2*omega**2)/(s**2+4*omega**2)/s,
-     S.true, S.Zero, dco),
-    # 6.13 is covered by 1.9 together with 2.5
-    # 6.14 and 6.15 cannot be done with this method, the respective sum
-    #       parts do not converge. Solve elsewhere if really needed.
-    # 6.16
-    (sqrt(t)*cos(2*sqrt(a*t)),
-     sqrt(pi)/2*s**(-S(5)/2)*(s-2*a)*exp(-a/s),
-     a>0, S.Zero, dco),
-    # 6.17
-    (cos(2*sqrt(a*t))/sqrt(t),
-     sqrt(pi/s)*exp(-a/s),
-     a>0, S.Zero, dco),
-    # 6.18
-    (sin(a*t)*sin(b*t),
-     2*a*b*s/(s**2+(a+b)**2)/(s**2+(a-b)**2),
-     S.true, S.Zero, dco),
-    # 6.19
-    (cos(a*t)*sin(b*t),
-     b*(s**2-a**2+b**2)/(s**2+(a+b)**2)/(s**2+(a-b)**2),
-     S.true, S.Zero, dco),
-    # 6.20
-    (cos(a*t)*cos(b*t),
-     s*(s**2+a**2+b**2)/(s**2+(a+b)**2)/(s**2+(a-b)**2),
-     S.true, S.Zero, dco),
-    # 6.21
-    (exp(b*t)*sin(a*t),
-     a/((s-b)**2+a**2),
-     S.true, b, dco),
-    # 6.22
-    (exp(b*t)*cos(a*t),
-     (s-b)/((s-b)**2+a**2),
-     S.true, b, dco),
-    # 7.1
-    (erf(a*t),
-     exp(s**2/(2*a)**2)*erfc(s/(2*a))/s,
-     a>0, S.Zero, dco),
-    # 7.2
-    (erf(sqrt(a*t)),
-     sqrt(a)/sqrt(s+a)/s,
-     a>0, S.Zero, dco),
-    # 7.3
-    (exp(a*t)*erf(sqrt(a*t)),
-     sqrt(a)/sqrt(s)/(s-a),
-     a>0, a, dco),
-    # 7.4
-    (erf(sqrt(a/t)/2),
-     (1-exp(-sqrt(a*s)))/s,
-     a>0, S.Zero, dco),
-    # 7.5
-    (erfc(sqrt(a*t)),
-     (sqrt(s+a)-sqrt(a))/sqrt(s+a)/s,
-     a>0, S.Zero, dco),
-    # 7.6
-    (exp(a*t)*erfc(sqrt(a*t)),
-     1/(s+sqrt(a*s)),
-     a>0, S.Zero, dco),
-    # 7.7
-    (erfc(sqrt(a/t)/2),
-     exp(-sqrt(a*s))/s,
-     a>0, S.Zero, dco),
-    # 8.1, 8.2
-    (besselj(n, a*t),
-     a**n/(sqrt(s**2+a**2)*(s+sqrt(s**2+a**2))**n),
-     And(a>0, n>-1), S.Zero, dco),
-    # 8.3, 8.4
+    (a, a/s,
+     S.true, S.Zero, dco), # 4.2.1
+    (DiracDelta(a*t-b), exp(-s*b/a)/Abs(a),
+     Or(And(a>0, b>=0), And(a<0, b<=0)), S.Zero, dco), # Not in Bateman54
+    (DiracDelta(a*t-b), S(0),
+     Or(And(a<0, b>=0), And(a>0, b<=0)), S.Zero, dco), # Not in Bateman54
+    (Heaviside(a*t-b), exp(-s*b/a)/s,
+     And(a>0, b>0), S.Zero, dco), # 4.4.1
+    (Heaviside(a*t-b), (1-exp(-s*b/a))/s,
+     And(a<0, b<0), S.Zero, dco), # 4.4.1
+    (Heaviside(a*t-b), 1/s,
+     And(a>0, b<=0), S.Zero, dco), # 4.4.1
+    (Heaviside(a*t-b), 0,
+     And(a<0, b>0), S.Zero, dco), # 4.4.1
+    (t, 1/s**2,
+     S.true, S.Zero, dco), # 4.2.3
+    (1/(a*t+b), -exp(-b/a*s)*Ei(-b/a*s)/a,
+     Abs(arg(b/a))<pi, S.Zero, dco), # 4.2.6
+    (1/sqrt(a*t+b), sqrt(a*pi/s)*exp(b/a*s)*erfc(sqrt(b/a*s))/a,
+     Abs(arg(b/a))<pi, S.Zero, dco), # 4.2.18
+    ((a*t+b)**(-S(3)/2), 2*b**(-S(1)/2)-2*(pi*s/a)**(S(1)/2)*exp(b/a*s)*\
+     erfc(sqrt(b/a*s))/a,
+     Abs(arg(b/a))<pi, S.Zero, dco), # 4.2.20
+    (sqrt(t)/(t+b), sqrt(pi/s)-pi*sqrt(b)*exp(b*s)*erfc(sqrt(b*s)),
+     Abs(arg(b))<pi, S.Zero, dco), # 4.2.22
+    (1/(a*sqrt(t) + t**(3/2)), pi*a**(S(1)/2)*exp(a*s)*erfc(sqrt(a*s)),
+     S.true, S.Zero, dco), # Not in Bateman54
+    (t**n, gamma(n+1)/s**(n+1),
+     n>-1, S.Zero, dco), # 4.3.1
+    ((a*t+b)**n, lowergamma(n+1, b/a*s)*exp(-b/a*s)/s**(n+1)/a,
+     And(n>-1, Abs(arg(b/a))<pi), S.Zero, dco), # 4.3.4
+    (t**n/(t+a), a**n*gamma(n+1)*lowergamma(-n,a*s),
+     And(n>-1, Abs(arg(a))<pi), S.Zero, dco), # 4.3.7
+    (exp(a*t-tau), exp(-tau)/(s-a),
+     S.true, a, dco), # 4.5.1
+    (t*exp(a*t-tau), exp(-tau)/(s-a)**2,
+     S.true, a, dco), # 4.5.2
+    (t**n*exp(a*t), gamma(n+1)/(s-a)**(n+1),
+     re(n)>-1, a, dco), # 4.5.3
+    (exp(-a*t**2), sqrt(pi/4/a)*exp(s**2/4/a)*erfc(s/sqrt(4*a)),
+     re(a)>0, S.Zero, dco), # 4.5.21
+    (t*exp(-a*t**2), 1/(2*a)-2/sqrt(pi)/(4*a)**(S(3)/2)*s*erfc(s/sqrt(4*a)),
+     re(a)>0, S.Zero, dco), # 4.5.22
+    (exp(-a/t), 2*sqrt(a/s)*besselk(1, 2*sqrt(a*s)),
+     re(a)>=0, S.Zero, dco), # 4.5.25
+    (sqrt(t)*exp(-a/t), S(1)/2*sqrt(pi/s**3)*(1+2*sqrt(a*s))*exp(-2*sqrt(a*s)),
+     re(a)>=0, S.Zero, dco), # 4.5.26
+    (exp(-a/t)/sqrt(t), sqrt(pi/s)*exp(-2*sqrt(a*s)),
+     re(a)>=0, S.Zero, dco), # 4.5.27
+    (exp(-a/t)/(t*sqrt(t)), sqrt(pi/a)*exp(-2*sqrt(a*s)),
+     re(a)>0, S.Zero, dco), # 4.5.28
+    (t**n*exp(-a/t), 2*(a/s)**((n+1)/2)*besselk(n+1, 2*sqrt(a*s)),
+     re(a)>0, S.Zero, dco), # 4.5.29
+    (exp(-2*sqrt(a*t)), s**(-1)-sqrt(pi*a)*s**(-S(3)/2)*exp(a/s)*\
+     erfc(sqrt(a/s)),
+     Abs(arg(a))<pi, S.Zero, dco), # 4.5.31
+    (exp(-2*sqrt(a*t))/sqrt(t), (pi/s)**(S(1)/2)*exp(a/s)*erfc(sqrt(a/s)),
+     Abs(arg(a))<pi, S.Zero, dco), # 4.5.33
+    (log(a*t), -log(exp(S.EulerGamma)*s/a)/s,
+     a>0, S.Zero, dco), # 4.6.1
+    (log(1+a*t), -exp(s/a)/s*Ei(-s/a),
+     Abs(arg(a))<pi, S.Zero, dco), # 4.6.4
+    (log(a*t+b), (log(b)-exp(s/b/a)/s*a*Ei(-s/b))/s*a,
+     And(a>0,Abs(arg(b))<pi), S.Zero, dco), # 4.6.5
+    (log(t)/sqrt(t), -sqrt(pi/s)*log(4*s*exp(S.EulerGamma)),
+     S.true, S.Zero, dco),  # 4.6.9
+    (t**n*log(t), gamma(n+1)*s**(-n-1)*(digamma(n+1)-log(s)),
+     re(n)>-1, S.Zero, dco), # 4.6.11
+    (log(a*t)**2, (log(exp(S.EulerGamma)*s/a)**2+pi**2/6)/s,
+     a>0, S.Zero, dco), # 4.6.13
+    (sin(omega*t), omega/(s**2+omega**2),
+     S.true, Abs(im(omega)), dco), # 4,7,1
+    (Abs(sin(omega*t)), omega/(s**2+omega**2)*coth(pi*s/2/omega),
+     omega>0, S.Zero, dco), # 4.7.2
+    (sin(omega*t)/t, atan(omega/s),
+     S.true, Abs(im(omega)), dco), # 4.7.16
+    (sin(omega*t)**2/t, log(1+4*omega**2/s**2)/4,
+     S.true, 2*Abs(im(omega)), dco), # 4.7.17
+    (sin(omega*t)**2/t**2, omega*atan(2*omega/s)-s*log(1+4*omega**2/s**2)/4,
+     S.true, 2*Abs(im(omega)), dco), # 4.7.20
+    (sin(2*sqrt(a*t)), sqrt(pi*a)/s/sqrt(s)*exp(-a/s),
+      S.true, S.Zero, dco), # 4.7.32
+    (sin(2*sqrt(a*t))/t, pi*erf(sqrt(a/s)),
+     S.true, S.Zero, dco), # 4.7.34
+    (cos(omega*t), s/(s**2+omega**2),
+     S.true, Abs(im(omega)), dco), # 4.7.43
+    (cos(omega*t)**2, (s**2+2*omega**2)/(s**2+4*omega**2)/s,
+     S.true, 2*Abs(im(omega)), dco), # 4.7.45
+    (sqrt(t)*cos(2*sqrt(a*t)), sqrt(pi)/2*s**(-S(5)/2)*(s-2*a)*exp(-a/s),
+     S.true, S.Zero, dco), # 4.7.66
+    (cos(2*sqrt(a*t))/sqrt(t), sqrt(pi/s)*exp(-a/s),
+     S.true, S.Zero, dco), # 4.7.67
+    (sin(a*t)*sin(b*t), 2*a*b*s/(s**2+(a+b)**2)/(s**2+(a-b)**2),
+     S.true, Abs(im(a))+Abs(im(b)), dco), # 4.7.78
+    (cos(a*t)*sin(b*t), b*(s**2-a**2+b**2)/(s**2+(a+b)**2)/(s**2+(a-b)**2),
+     S.true, Abs(im(a))+Abs(im(b)), dco), # 4.7.79
+    (cos(a*t)*cos(b*t), s*(s**2+a**2+b**2)/(s**2+(a+b)**2)/(s**2+(a-b)**2),
+     S.true, Abs(im(a))+Abs(im(b)), dco), # 4.7.80
+    (sinh(a*t), a/(s**2-a**2),
+     S.true, Abs(re(a)), dco), # 4.9.1
+    (cosh(a*t), s/(s**2-a**2),
+     S.true, Abs(re(a)), dco), # 4.9.2
+    (sinh(a*t)**2, 2*a**2/(s**3-4*a**2*s**2),
+     S.true, 2*Abs(re(a)), dco), # 4.9.3
+    (cosh(a*t)**2, (s**2-2*a**2)/(s**3-4*a**2*s**2),
+     S.true, 2*Abs(re(a)), dco), # 4.9.4
+    (sinh(a*t)/t, log((s+a)/(s-a))/2,
+     S.true, Abs(re(a)), dco), # 4.9.12
+    (t**n*sinh(a*t), gamma(n+1)/2*((s-a)**(-n-1)-(s+a)**(-n-1)),
+     n>-2, Abs(a), dco), # 4.9.18
+    (t**n*cosh(a*t), gamma(n+1)/2*((s-a)**(-n-1)+(s+a)**(-n-1)),
+     n>-1, Abs(a), dco), # 4.9.19
+    (sinh(2*sqrt(a*t)), sqrt(pi*a)/s/sqrt(s)*exp(a/s),
+     S.true, S.Zero, dco), # 4.9.34
+    (cosh(2*sqrt(a*t)), 1/s+sqrt(pi*a)/s/sqrt(s)*exp(a/s)*erf(sqrt(a/s)),
+     S.true, S.Zero, dco), # 4.9.35
+    (sqrt(t)*sinh(2*sqrt(a*t)), pi**(S(1)/2)*s**(-S(5)/2)*(s/2+a)*\
+     exp(a/s)*erf(sqrt(a/s))-a**(S(1)/2)*s**(-2),
+     S.true, S.Zero, dco), # 4.9.36
+    (sqrt(t)*cosh(2*sqrt(a*t)), pi**(S(1)/2)*s**(-S(5)/2)*(s/2+a)*exp(a/s),
+     S.true, S.Zero, dco), # 4.9.37
+    (sinh(2*sqrt(a*t))/sqrt(t), pi**(S(1)/2)*s**(-S(1)/2)*exp(a/s)*\
+     erf(sqrt(a/s)),
+     S.true, S.Zero, dco), # 4.9.38
+    (cosh(2*sqrt(a*t))/sqrt(t), pi**(S(1)/2)*s**(-S(1)/2)*exp(a/s),
+     S.true, S.Zero, dco), # 4.9.39
+    (sinh(sqrt(a*t))**2/sqrt(t), pi**(S(1)/2)/2*s**(-S(1)/2)*(exp(a/s)-1),
+     S.true, S.Zero, dco), # 4.9.40
+    (cosh(sqrt(a*t))**2/sqrt(t), pi**(S(1)/2)/2*s**(-S(1)/2)*(exp(a/s)+1),
+     S.true, S.Zero, dco), # 4.9.41
+    (erf(a*t), exp(s**2/(2*a)**2)*erfc(s/(2*a))/s,
+     4*Abs(arg(a))<pi, S.Zero, dco), # 4.12.2
+    (erf(sqrt(a*t)), sqrt(a)/sqrt(s+a)/s,
+     S.true, Max(S.Zero, -re(a)), dco), # 4.12.4
+    (exp(a*t)*erf(sqrt(a*t)), sqrt(a)/sqrt(s)/(s-a),
+     S.true, Max(S.Zero, re(a)), dco), # 4.12.5
+    (erf(sqrt(a/t)/2), (1-exp(-sqrt(a*s)))/s,
+     re(a)>0, S.Zero, dco), # 4.12.6
+    (erfc(sqrt(a*t)), (sqrt(s+a)-sqrt(a))/sqrt(s+a)/s,
+     S.true, -re(a), dco), # 4.12.9
+    (exp(a*t)*erfc(sqrt(a*t)), 1/(s+sqrt(a*s)),
+     S.true, S.Zero, dco), # 4.12.10
+    (erfc(sqrt(a/t)/2), exp(-sqrt(a*s))/s,
+     re(a)>0, S.Zero, dco), # 4.2.11
+    (besselj(n, a*t), a**n/(sqrt(s**2+a**2)*(s+sqrt(s**2+a**2))**n),
+     re(n)>-1, Abs(im(a)), dco), # 4.14.1
     (t**b*besselj(n, a*t),
      2**n/sqrt(pi)*gamma(n+S.Half)*a**n*(s**2+a**2)**(-n-S.Half),
-     And(And(a>0, n>-S.Half), Eq(b, n)), S.Zero, dco),
-    # 8.5
+     And(re(n)>-S.Half, Eq(b, n)), Abs(im(a)), dco), # 4.14.7
     (t**b*besselj(n, a*t),
      2**(n+1)/sqrt(pi)*gamma(n+S(3)/2)*a**n*s*(s**2+a**2)**(-n-S(3)/2),
-     And(And(a>0, n>-1), Eq(b, n+1)), S.Zero, dco),
-    # 8.6
-    (besselj(0, 2*sqrt(a*t)),
-     exp(-a/s)/s,
-     a>0, S.Zero, dco),
-    # 8.7, 8.8
-    (t**(b)*besselj(n, 2*sqrt(a*t)),
-     a**(n/2)*s**(-n-1)*exp(-a/s),
-     And(And(a>0, n>-1), Eq(b, n*S.Half)), S.Zero, dco),
-    # 8.9
-    (besselj(0, a*sqrt(t**2+b*t)),
-     exp(b*s-b*sqrt(s**2+a**2))/sqrt(s**2+a**2),
-     b>0, S.Zero, dco),
-    # 8.10, 8.11
-    (besseli(n, a*t),
-     a**n/(sqrt(s**2-a**2)*(s+sqrt(s**2-a**2))**n),
-     And(a>0, n>-1), Abs(a), dco),
-    # 8.12
+     And(re(n)>-1, Eq(b, n+1)), Abs(im(a)), dco), # 4.14.8
+    (besselj(0, 2*sqrt(a*t)), exp(-a/s)/s,
+     S.true, S.Zero, dco), # 4.14.25
+    (t**(b)*besselj(n, 2*sqrt(a*t)), a**(n/2)*s**(-n-1)*exp(-a/s),
+     And(re(n)>-1, Eq(b, n*S.Half)), S.Zero, dco), # 4.14.30
+    (besselj(0, a*sqrt(t**2+b*t)), exp(b*s-b*sqrt(s**2+a**2))/sqrt(s**2+a**2),
+     Abs(arg(b))<pi, Abs(im(a)), dco), # 4.15.19
+    (besseli(n, a*t), a**n/(sqrt(s**2-a**2)*(s+sqrt(s**2-a**2))**n),
+     re(n)>-1, Abs(re(a)), dco), # 4.16.1
     (t**b*besseli(n, a*t),
      2**n/sqrt(pi)*gamma(n+S.Half)*a**n*(s**2-a**2)**(-n-S.Half),
-     And(And(a>0, n>-S.Half), Eq(b, n)), Abs(a), dco),
-    # 8.13
+     And(re(n)>-S.Half, Eq(b, n)), Abs(re(a)), dco), # 4.16.6
     (t**b*besseli(n, a*t),
      2**(n+1)/sqrt(pi)*gamma(n+S(3)/2)*a**n*s*(s**2-a**2)**(-n-S(3)/2),
-     And(And(a>0, n>-1), Eq(b, n+1)), Abs(a), dco),
-    # 8.15, 8.16
-    (t**(b)*besseli(n, 2*sqrt(a*t)),
-     a**(n/2)*s**(-n-1)*exp(a/s),
-     And(And(a>0, n>-1), Eq(b, n*S.Half)), S.Zero, dco),
-    # 8.17
-    (bessely(0, a*t),
-     -2/pi*asinh(s/a)/sqrt(s**2+a**2),
-     a>0, S.Zero, dco),
+     And(re(n)>-1, Eq(b, n+1)), Abs(re(a)), dco), # 4.16.7
+    (t**(b)*besseli(n, 2*sqrt(a*t)), a**(n/2)*s**(-n-1)*exp(a/s),
+     And(re(n)>-1, Eq(b, n*S.Half)), S.Zero, dco), # 4.16.18
+    (bessely(0, a*t), -2/pi*asinh(s/a)/sqrt(s**2+a**2),
+     S.true, Abs(im(a)), dco), # 4.15.44
     # 8.18
-    (besselk(0, a*t),
-     (log(s+sqrt(s**2-a**2)))/(sqrt(s**2-a**2)),
-     a>0, Abs(a), dco)
+    (besselk(0, a*t), (log(s+sqrt(s**2-a**2)))/(sqrt(s**2-a**2)),
+     S.true, -re(a), dco) # 4.16.23
     ]
     return laplace_transform_rules
 
-def _laplace_cr(f, a, c, **hints):
+def _laplace_cr(f, **hints):
     """
-    Internal helper function that will return `(f, a, c)` unless `**hints`
-    contains `noconds=True`, in which case it will only return `f`.
+    Internal helper function that will return ``(f, a, c)`` unless ``**hints``
+    contains ``noconds=True``, in which case it will only return ``f``.
     """
-    conds = not hints.get('noconds', False)
-    if conds:
-        return f, a, c
+    noconds = hints.get('noconds', False)
+    if noconds and type(f) is tuple:
+        return f[0]
     else:
         return f
 
-def _laplace_rule_timescale(f, t, s, doit=True, **hints):
-    r"""
-    This internal helper function tries to apply the time-scaling rule of the
-    Laplace transform and returns `None` if it cannot do it.
-
-    Time-scaling means the following: if $F(s)$ is the Laplace transform of,
-    $f(t)$, then, for any $a>0$, the Laplace transform of $f(at)$ will be
-    $\frac1a F(\frac{s}{a})$. This scaling will also affect the transform's
-    convergence plane.
+def _laplace_ct(f):
     """
-    _simplify = hints.pop('simplify', True)
-    b = Wild('b', exclude=[t])
+    Internal helper function that completes the tuple as follows:
+    if f is a tuple, it is just returned as is.  If it is not a tuple,
+    then ``(f, S.NegativeInfinity, True)`` is returned.
+    """
+    if type(f) is tuple:
+        return f
+    else:
+        return f, S.NegativeInfinity, True
+
+def _laplace_rule_timescale(f, t, s):
+    """
+    This function applies the time-scaling rule of the Laplace transform in
+    a straight-forward way. For example, if it gets ``(f(a*t), t, s)``, it will
+    compute ``LaplaceTransform(f(t)/a, t, s/a)`` if ``a>0``.
+    """
+    fn, p, c = _laplace_ct(f)
+    k, f = fn.as_independent(t, as_Add=False)
+
+    a = Wild('a', exclude=[t])
     g = WildFunction('g', nargs=1)
     ma1 = f.match(g)
     if ma1:
         arg = ma1[g].args[0].collect(t)
-        ma2 = arg.match(b*t)
-        if ma2 and ma2[b]>0:
-            debug('_laplace_apply_rules match:')
-            debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
-            debug('      rule: amplitude and time scaling (1.1, 1.2)')
-            if ma2[b]==1:
-                if doit==True and not any(func.has(t) for func
-                                          in ma1[g].atoms(AppliedUndef)):
-                    return _laplace_transform(ma1[g].func(t), t, s,
-                                                simplify=_simplify)
-                else:
-                    return LaplaceTransform(ma1[g].func(t), t, s, **hints)
-            else:
-                L = _laplace_apply_rules(ma1[g].func(t), t, s/ma2[b],
-                                         doit=doit, **hints)
-                noconds = hints.get('noconds', False)
-                if not noconds and type(L) is tuple:
-                    r, p, c = L
-                    return (1/ma2[b]*r, p, c)
-                else:
-                    return 1/ma2[b]*L
-    return None
+        ma2 = arg.match(a*t)
+        if ma2 and ma2[a]>0 and not ma2[a]==1:
+            debug('_laplace_apply_prog rules match:')
+            debug('      f:    %s _ %s, %s )'%(f, ma1, ma2))
+            debug('      rule: time scaling (4.1.4)')
+            r, pr, cr = LaplaceTransform(1/ma2[a]*ma1[g].func(t),
+                                         t, s/ma2[a]).doit(noconds=False)
+            return True, (k*r, Max(p/ma2[a], pr), And(c, cr))
+    return False, (fn, p, c)
 
 def _laplace_rule_heaviside(f, t, s, doit=True, **hints):
     """
-    This internal helper function tries to transform a product containing the
-    `Heaviside` function and returns `None` if it cannot do it.
+    This function deals with time-shifted Heaviside step functions. If the time
+    shift is positive, it applies the time-shift rule of the Laplace transform.
+    For example, if it gets ``(Heaviside(t-a)*f(t), t, s)``, it will compute
+    ``exp(-a*s)*LaplaceTransform(f(t+a), t, s)``.
+
+    If the time shift is negative, the Heaviside function is simply removed
+    as it means nothing to the Laplace transform.
+
+    The function does not remove a factor ``Heaviside(t)``; this is already
+    done by the main function ``laplace_transform``.
     """
-    hints.pop('simplify', True)
+    fn, p, c = _laplace_ct(f)
+    k, f = fn.as_independent(t, as_Add=False)
+
     a = Wild('a', exclude=[t])
-    b = Wild('b', exclude=[t])
     y = Wild('y')
-    g = WildFunction('g', nargs=1)
+    g = Wild('g')
     ma1 = f.match(Heaviside(y)*g)
     if ma1:
         ma2 = ma1[y].match(t-a)
-        ma3 = ma1[g].args[0].collect(t).match(t-b)
-        if ma2 and ma2[a]>0 and ma3 and ma2[a]==ma3[b]:
-            debug('_laplace_apply_rules match:')
-            debug('      f:    %s ( %s, %s, %s )'%(f, ma1, ma2, ma3))
-            debug('      rule: time shift (1.3)')
-            L = _laplace_apply_rules(ma1[g].func(t), t, s, doit=doit, **hints)
-            noconds = hints.get('noconds', False)
-            if not noconds and type(L) is tuple:
-                r, p, c = L
-                return (exp(-ma2[a]*s)*r, p, c)
-            else:
-                return exp(-ma2[a]*s)*L
-    return None
+        if ma2 and ma2[a]>0:
+            debug('_laplace_apply_prog_rules match:')
+            debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
+            debug('      rule: time shift (4.1.4)')
+            r, pr, cr = LaplaceTransform(ma1[g].subs(t, t+ma2[a]), t, s).doit(noconds=False)
+            return True, (k*exp(-ma2[a]*s)*r,
+                          Max(p, pr), And(c, cr))
+        if ma2 and ma2[a]<0:
+            debug('_laplace_apply_prog_rules match:')
+            debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
+            debug('      rule: Heaviside factor with negative time shift (4.1.4)')
+            r, pr, cr = LaplaceTransform(ma1[g], t, s).doit(noconds=False)
+            return True, (k*r, Max(p, pr), And(c, cr))
+    return False, (fn, p, c)
 
+def _laplace_rule_exp(f, t, s):
+    """
+    If this function finds a factor ``exp(a*t)``, it applies the
+    frequency-shift rule of the Laplace transform and adjusts the convergence
+    plane accordingly.  For example, if it gets ``(exp(-a*t)*f(t), t, s)``, it
+    will compute ``LaplaceTransform(f(t), t, s+a)``.
+    """
+    fn, p, c = _laplace_ct(f)
+    k, f = fn.as_independent(t, as_Add=False)
 
-def _laplace_rule_exp(f, t, s, doit=True, **hints):
-    """
-    This internal helper function tries to transform a product containing the
-    `exp` function and returns `None` if it cannot do it.
-    """
-    hints.pop('simplify', True)
     a = Wild('a', exclude=[t])
-
     y = Wild('y')
     z = Wild('z')
     ma1 = f.match(exp(y)*z)
     if ma1:
         ma2 = ma1[y].collect(t).match(a*t)
         if ma2:
-            debug('_laplace_apply_rules match:')
+            debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
-            debug('      rule: multiply with exp (1.5)')
-            L = _laplace_apply_rules(ma1[z], t, s-ma2[a], doit=doit, **hints)
-            noconds = hints.get('noconds', False)
-            if not noconds and type(L) is tuple:
-                r, p, c = L
-                return (r, p+ma2[a], c)
+            debug('      rule: multiply with exp (4.1.5)')
+            r, pr, cr = LaplaceTransform(ma1[z], t, s-ma2[a]).doit(noconds=False)
+            return True, (k*r, Max(p+re(ma2[a]), pr), And(c, cr))
+    return False, (fn, p, c)
+
+def _laplace_rule_delta(f, t, s):
+    """
+    If this function finds a factor ``DiracDelta(b*t-a)``, it applies the
+    masking property of the delta distribution. For example, if it gets
+    ``(DiracDelta(t-a)*f(t), t, s)``, it will return
+    ``(f(a)*exp(-a*s), -a, True)``.
+    """
+    # This rule is not in Bateman54
+    fn, p, c = _laplace_ct(f)
+    k, f = fn.as_independent(t, as_Add=False)
+
+    a = Wild('a', exclude=[t])
+    b = Wild('b', exclude=[t])
+
+    y = Wild('y')
+    z = Wild('z')
+    ma1 = f.match(DiracDelta(y)*z)
+    if ma1 and not ma1[z].has(DiracDelta):
+        ma2 = ma1[y].collect(t).match(b*t-a)
+        if ma2:
+            debug('_laplace_apply_prog_rules match:')
+            debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
+            debug('      rule: multiply with DiracDelta')
+            loc = ma2[a]/ma2[b]
+            if re(loc)>=0 and im(loc)==0:
+                r = exp(-ma2[a]/ma2[b]*s)*ma1[z].subs(t, ma2[a]/ma2[b])/ma2[b]
+                return True, (k*r, Max(p, -ma2[a]/ma2[b]), c)
             else:
-                return L
-    return None
+                return True, _laplace_ct(0)
+    return False, (fn, p, c)
 
 def _laplace_rule_trig(f, t, s, doit=True, **hints):
     """
-    This internal helper function tries to transform a product containing a
-    trigonometric function (`sin`, `cos`, `sinh`, `cosh`, ) and returns
-    `None` if it cannot do it.
+    This function covers trigonometric factors. All of the rules have a
+    similar form: ``trig(y)*z`` is matched, and then two copies of the Laplace
+    transform of `z` are shifted in the s Domain and added with a weight.
+
+    The parameters in the tuples are (fm, nu, s1, s2, sd):
+      fm: Function to match
+      nu: Number of the rule, for debug purposes
+      s1: weight of the sum, 'I' for sin and '1' for all others
+      s2: sign of the second copy of the Laplace transform of z
+      sd: shift direction; shift along real or imaginary axis if `1` or `I`
+
+    The convergence plane is changed only if the frequency shift is done along
+    the real axis.2
     """
-    _simplify = hints.pop('simplify', True)
+    # These rules follow from Bateman54, 4.1.5 and Euler's formulas
+    fn, p, c = _laplace_ct(f)
+    k, f = fn.as_independent(t, as_Add=False)
+
     a = Wild('a', exclude=[t])
     y = Wild('y')
     z = Wild('z')
-    # All of the rules have a very similar form: trig(y)*z is matched, and then
-    # two copies of the Laplace transform of z are shifted in the s Domain
-    # and added with a weight; see rules 1.6 to 1.9 in
-    # http://eqworld.ipmnet.ru/en/auxiliary/inttrans/laplace1.pdf
-    # The parameters in the tuples are (fm, nu, s1, s2, sd):
-    #   fm: Function to match
-    #   nu: Number of the rule, for debug purposes
-    #   s1: weight of the sum, 'I' for sin and '1' for all others
-    #   s2: sign of the second copy of the Laplace transform of z
-    #   sd: shift direction; shift along real or imaginary axis if `1` or `I`
     trigrules = [(sinh(y), '1.6',  1, -1, 1), (cosh(y), '1.7', 1, 1, 1),
                  (sin(y),  '1.8', -I, -1, I), (cos(y),  '1.9', 1, 1, I)]
     for trigrule in trigrules:
@@ -1690,44 +1562,34 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                 debug('_laplace_apply_rules match:')
                 debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
                 debug('      rule: multiply with %s (%s)'%(fm.func, nu))
-                L = _laplace_apply_rules(ma1[z], t, s, doit=doit, **hints)
-                noconds = hints.get('noconds', False)
-                if not noconds and type(L) is tuple:
-                    r, p, c = L
-                    # The convergence plane changes only if the shift has been
-                    # done along the real axis:
-                    if sd==1:
-                        cp_shift = Abs(ma2[a])
-                    else:
-                        cp_shift = 0
-                    return ((s1*(r.subs(s, s-sd*ma2[a])+\
-                                    s2*r.subs(s, s+sd*ma2[a]))).simplify()/2,
-                            p+cp_shift, c)
+                r, pr, cr = k*LaplaceTransform(ma1[z], t, s).doit(noconds=False)
+                if sd==1:
+                    cp_shift = Abs(re(ma2[a]))
                 else:
-                    if doit==True and _simplify==True:
-                        return (s1*(L.subs(s, s-sd*ma2[a])+\
-                                    s2*L.subs(s, s+sd*ma2[a]))).simplify()/2
-                    else:
-                        return (s1*(L.subs(s, s-sd*ma2[a])+\
-                                    s2*L.subs(s, s+sd*ma2[a])))/2
-    return None
+                    cp_shift = Abs(im(ma2[a]))
+                return True, ((s1*(r.subs(s, s-sd*ma2[a])+\
+                               s2*r.subs(s, s+sd*ma2[a])))/2,
+                              Max(p, pr+cp_shift), And(c, cr))
+    return False, (fn, p, c)
 
 def _laplace_rule_diff(f, t, s, doit=True, **hints):
     """
-    This internal helper function tries to transform an expression containing
-    a derivative of an undefined function and returns `None` if it cannot
-    do it.
+    This function looks for derivatives in the time domain and replaces it
+    by factors of `s` and initial conditions in the frequency domain. For
+    example, if it gets ``(diff(f(t), t), t, s)``, it will compute
+    ``s*LaplaceTransform(f(t), t, s) - f(0)``.
     """
-    hints.pop('simplify', True)
+    fn, p, c = _laplace_ct(f)
+
     a = Wild('a', exclude=[t])
     y = Wild('y')
     n = Wild('n', exclude=[t])
     g = WildFunction('g', nargs=1)
-    ma1 = f.match(a*Derivative(g, (t, n)))
+    ma1 = fn.match(a*Derivative(g, (t, n)))
     if ma1 and ma1[g].args[0] == t and ma1[n].is_integer:
         debug('_laplace_apply_rules match:')
-        debug('      f:    %s'%(f,))
-        debug('      rule: time derivative (1.11, 1.12)')
+        debug('      f, n: %s, %s'%(f, ma1[n]))
+        debug('      rule: time derivative (4.1.8)')
         d = []
         for k in range(ma1[n]):
             if k==0:
@@ -1735,57 +1597,130 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
             else:
                 y = Derivative(ma1[g].func(t), (t, k)).subs(t, 0)
             d.append(s**(ma1[n]-k-1)*y)
-        r = s**ma1[n]*_laplace_apply_rules(ma1[g].func(t), t, s, doit=doit,
-                                           **hints)
-        return ma1[a]*(r - Add(*d))
-    return None
+        r, pr, cr = LaplaceTransform(ma1[g].func(t), t, s).doit(noconds=False)
+        return True, (ma1[a]*(s**ma1[n]*r - Add(*d)),  Max(p, pr), And(c, cr))
+    return False, (fn, p, c)
 
-
-def _laplace_apply_rules(f, t, s, doit=True, **hints):
+def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
     """
-    Helper function for the class LaplaceTransform.
-
-    This function does a Laplace transform based on rules and, after
-    applying the rules, hands the rest over to `_laplace_transform`, which
-    will attempt to integrate.
-
-    If it is called with `doit=False`, then it will instead return
-    `LaplaceTransform` objects.
+    This function looks for multiplications with polynoimials in `t` as they
+    correspond to differentiation in the frequency domain. For example, if it
+    gets ``(t*f(t), t, s)``, it will compute
+    ``-Derivative(LaplaceTransform(f(t), t, s), s)``.
     """
+    fn, p, c = _laplace_ct(f)
 
-    k, func = f.as_independent(t, as_Add=False)
-
-    simple_rules = _laplace_build_rules(t, s)
-    for t_dom, s_dom, check, plane, prep in simple_rules:
-        ma = prep(func).match(t_dom)
-        if ma:
-            debug('_laplace_apply_rules match:')
-            debug('      f:    %s'%(func,))
-            debug('      rule: %s o---o %s'%(t_dom, s_dom))
-            try:
-                debug('      try   %s'%(check,))
-                c = check.xreplace(ma)
-                debug('      check %s -> %s'%(check, c))
-                if c==True:
-                    return _laplace_cr(k*s_dom.xreplace(ma),
-                                plane.xreplace(ma), S.true, **hints)
-            except Exception:
-                debug('_laplace_apply_rules did not match.')
-    if f.has(DiracDelta):
-        return None
-
-    prog_rules = [_laplace_rule_timescale, _laplace_rule_heaviside,
-                  _laplace_rule_exp, _laplace_rule_trig, _laplace_rule_diff]
-    for p_rule in prog_rules:
-        L = p_rule(func, t, s, doit=doit, **hints)
-        if L is not None:
-            noconds = hints.get('noconds', False)
-            if not noconds and type(L) is tuple:
-                r, p, c = L
-                return (k*r, p, c)
+    if fn.is_Mul:
+        pfac = [1]
+        ofac = [1]
+        for fac in Mul.make_args(fn):
+            if fac.is_polynomial(t):
+                pfac.append(fac)
             else:
-                return k*L
-    return None
+                ofac.append(fac)
+        if len(pfac)>1:
+            pex = prod(pfac)
+            pc = Poly(pex, t).all_coeffs()
+            N = len(pc)
+            if N>1:
+                debug('_laplace_apply_rules match:')
+                debug('      f, n: %s, %s'%(fn, pfac))
+                debug('      rule: frequency derivative (4.1.6)')
+                oex = prod(ofac)
+                r_, p_, c_ = LaplaceTransform(oex, t, s).doit(noconds=False)
+                deri = [r_]
+                if r_.has(LaplaceTransform):
+                    for k in range(N-1):
+                        deri.append((-1)**(k+1)*Derivative(r_, s, k+1))
+                else:
+                    for k in range(N-1):
+                        deri.append(-diff(deri[-1], s))
+                r = Add(*[ pc[N-n-1]*deri[n] for n in range(N) ])
+                return True, (r, Max(p, p_), And(c, c_))
+
+    return False, (fn, p, c)
+
+def _laplace_expand(f, t, s, doit=True, **hints):
+    """
+    This function tries to expand its argument with successively stronger
+    methods: first it will expand on the top level, then it will expand any
+    multiplications in depth, then it will try all avilable expansion methods,
+    and finally it will try to expand trigonometric functions.
+
+    If it can expand, it will then compute the Laplace transform of the
+    expanded term.
+    """
+    fn, p, c = _laplace_ct(f)
+
+    if fn.is_Add:
+        return False, (fn, p, c)
+    r = expand(fn, deep=False)
+    if r.is_Add:
+        return True, LaplaceTransform(r, t, s).doit(noconds=False)
+    r = expand_mul(fn)
+    if r.is_Add:
+        return True, LaplaceTransform(r, t, s).doit(noconds=False)
+    r = expand(fn)
+    if r.is_Add:
+        return True, LaplaceTransform(r, t, s).doit(noconds=False)
+    if not r==fn:
+        return True, LaplaceTransform(r, t, s).doit(noconds=False)
+    r = expand(expand_trig(fn))
+    if r.is_Add:
+        return True, LaplaceTransform(r, t, s).doit(noconds=False)
+    return False, (fn, p, c)
+
+def _laplace_apply_prog_rules(f, t, s):
+    """
+    This function applies all program rules and returns the result if one
+    of them gives a result.
+    """
+    fn, p, c = _laplace_ct(f)
+
+    prog_rules = [_laplace_rule_heaviside, _laplace_rule_delta,
+                  _laplace_rule_timescale, _laplace_rule_exp,
+                  _laplace_rule_trig,
+                  _laplace_rule_diff, _laplace_rule_sdiff ]
+
+    for p_rule in prog_rules:
+        d, L = p_rule((fn, p, c), t, s)
+        if d:
+            r, pr, cr = L
+            return True, (r, Max(p, pr), And(c, cr))
+    return False, (fn, p, c)
+
+def _laplace_apply_simple_rules(f, t, s):
+    """
+    This function applies all simple rules and returns the result if one
+    of them gives a result.
+    """
+    fn, p, c = _laplace_ct(f)
+    k, func = fn.as_independent(t, as_Add=False)
+    simple_rules = _laplace_build_rules(t, s)
+    prep_old = ''
+    prep_f = ''
+    for t_dom, s_dom, check, plane, prep in simple_rules:
+        if not prep_old==prep:
+            prep_f = prep(func)
+            prep_old = prep
+        ma = prep_f.match(t_dom)
+        if ma:
+            try:
+                c = check.xreplace(ma)
+            except TypeError:
+                # This may happen if the time function has imaginary
+                # numbers in it. Then we give up.
+                continue
+            if c==True:
+                debug('_laplace_apply_simple_rules match:')
+                debug('      f:     %s'%(func,))
+                debug('      rule:  %s o---o %s'%(t_dom, s_dom))
+                debug('      match: %s'%(ma, ))
+                return True, (k*s_dom.xreplace(ma),
+                              Max(plane.xreplace(ma), p),
+                              And(S.true, c))
+    return False, (fn, p, c)
+
 
 class LaplaceTransform(IntegralTransform):
     """
@@ -1795,19 +1730,18 @@ class LaplaceTransform(IntegralTransform):
 
     For how to compute Laplace transforms, see the :func:`laplace_transform`
     docstring.
+
+    If this is called with ``.doit()``, it returns the Laplace transform as an
+    expression. If it is called with ``.doit(noconds=False)``, it returns a
+    tuple containing the same expression, a convergence plane, and conditions.
     """
 
     _name = 'Laplace'
 
     def _compute_transform(self, f, t, s, **hints):
-        LT = _laplace_apply_rules(f, t, s, **hints)
-        if LT is None:
-            _simplify = hints.pop('simplify', True)
-            debug('_laplace_apply_rules could not match function %s'%(f,))
-            debug('    hints: %s'%(hints,))
-            return _laplace_transform(f, t, s, simplify=_simplify, **hints)
-        else:
-            return LT
+        _simplify = hints.get('simplify', True)
+        LT = _laplace_transform(f, t, s, simplify=_simplify)
+        return _laplace_cr(LT, **hints)
 
     def _as_integral(self, f, t, s):
         return Integral(f*exp(-s*t), (t, S.Zero, S.Infinity))
@@ -1826,19 +1760,84 @@ class LaplaceTransform(IntegralTransform):
         return plane, cond
 
     def _try_directly(self, **hints):
+        T = None
+        try_directly = not any(func.has(self.function_variable)
+                               for func in self.function.atoms(AppliedUndef))
+        if try_directly:
+            try:
+                T = self._compute_transform(self.function,
+                    self.function_variable, self.transform_variable, **hints)
+            except IntegralTransformError:
+                T = None
+
+        return self.function, T
+
+    def doit(self, **hints):
+        """
+        Try to evaluate the transform in closed form.
+
+        Explanation
+        ===========
+
+        Standard hints are the following:
+        - ``noconds``:  if True, do not return convergence conditions. This is
+        the default behaviour.
+        """
+        _noconds = hints.get('noconds', True)
+
+        debug('[LT doit] (%s, %s, %s)'%(self.function,
+                                        self.function_variable,
+                                        self.transform_variable))
+
         fn = self.function
-        debug('----> _try_directly: %s'%(fn, ))
         t_ = self.function_variable
         s_ = self.transform_variable
-        LT = None
-        if not fn.is_Add:
-            fn = expand_mul(fn)
-            try:
-                LT = self._compute_transform(fn, t_, s_, **hints)
-            except IntegralTransformError:
-                LT = None
-        return fn, LT
 
+        if fn.has(Heaviside(t_)) and not fn.has(DiracDelta(t_)):
+            fn = fn.replace(Heaviside(t_), 1)
+
+        terms = Add.make_args(fn)
+        results = []
+        for f in terms:
+            d, r = _laplace_apply_simple_rules(f, t_, s_)
+            if d:
+                results.append(r)
+                continue
+            d, r = _laplace_apply_prog_rules(f, t_, s_)
+            if d:
+                results.append(r)
+                continue
+            d, r = _laplace_expand(f, t_, s_)
+            if d:
+                results.append(r)
+                continue
+            T = None
+            try_directly = not any(func.has(t_)
+                                   for func in f.atoms(AppliedUndef))
+            k_, f_ = f.as_independent(t_, as_Add=False)
+            if try_directly:
+                try:
+                    T = self._compute_transform(f_, t_, s_)
+                except IntegralTransformError:
+                    T = None
+            if T is not None:
+                r_, p_, c_ = _laplace_ct(T)
+                results.append((k_*r_, p_, c_))
+            else:
+                results.append(_laplace_ct(k_*LaplaceTransform(f_, t_, s_)))
+
+        r = []
+        p = []
+        c = []
+        for res in results:
+            r.append(res[0])
+            p.append(res[1])
+            c.append(res[2])
+
+        if _noconds:
+            return Add(*r).simplify(doit=False)
+        else:
+            return Add(*r).simplify(doit=False), Max(*p), And(*c)
 
 def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
@@ -1860,7 +1859,10 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     The implementation is rule-based, and if you are interested in which
     rules are applied, and whether integration is attempted, you can switch
-    debug information on by setting ``sympy.SYMPY_DEBUG=True``.
+    debug information on by setting ``sympy.SYMPY_DEBUG=True``. The numbers
+    of the rules in the debug information (and the code) refer to Bateman's
+    Tables of Integral Transforms Vol. 1, McGraw-Hill 1954, available here:
+    https://resolver.caltech.edu/CaltechAUTHORS:20140123-101456353
 
     The lower bound is `0-`, meaning that this bound should be approached
     from the lower side. This is only necessary if distributions are involved.
@@ -1871,12 +1873,14 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     by applying rules.
 
-    If the integral cannot be fully computed in closed form, this function
-    returns an unevaluated :class:`LaplaceTransform` object.
+    If the Laplace transform cannot be fully computed in closed form, this
+    function returns expressions containing unevaluated
+    :class:`LaplaceTransform` objects.
 
     For a description of possible hints, refer to the docstring of
-    :func:`sympy.integrals.transforms.IntegralTransform.doit`. If ``noconds=True``,
-    only `F` will be returned (i.e. not ``cond``, and also not the plane ``a``).
+    :func:`sympy.integrals.transforms.IntegralTransform.doit`. If
+    ``noconds=True``, only `F` will be returned (i.e. not ``cond``, and also
+    not the plane ``a``).
 
     .. deprecated:: 1.9
         Legacy behavior for matrices where ``laplace_transform`` with
@@ -1906,7 +1910,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     """
 
-    debug('\n***** laplace_transform(%s, %s, %s)'%(f, t, s))
+    _noconds = hints.get('noconds', False)
 
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
 
@@ -1935,7 +1939,12 @@ behavior.
             else:
                 return type(f)(*f.shape, elements_trans)
 
-    return LaplaceTransform(f, t, s).doit(**hints)
+    LT = LaplaceTransform(f, t, s).doit(noconds=False)
+
+    if not _noconds:
+        return LT
+    else:
+        return LT[0]
 
 
 @_noconds_(True)
