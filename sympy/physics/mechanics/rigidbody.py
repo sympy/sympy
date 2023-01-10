@@ -182,7 +182,7 @@ class RigidBody:
         The angular momentum H of a rigid body B about some point O in a frame
         N is given by:
 
-        `H = dot(I, w) + cross(r, M * v)`
+        ``H = dot(I, w) + cross(r, M * v)``
 
         where I is the central inertia dyadic of B, w is the angular velocity
         of body B in the frame, N, r is the position vector from point O to the
