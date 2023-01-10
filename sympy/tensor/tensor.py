@@ -2246,7 +2246,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
 
         # Raise indices:
         for pos in pos2up:
-            index_type_pos = index_types1[pos]  # type: TensorIndexType
+            index_type_pos = index_types1[pos]
             if index_type_pos not in replacement_dict:
                 raise ValueError("No metric provided to lower index")
             metric = replacement_dict[index_type_pos]
@@ -2254,7 +2254,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
             array = TensExpr._contract_and_permute_with_metric(metric_inverse, array, pos, len(free_ind1))
         # Lower indices:
         for pos in pos2down:
-            index_type_pos = index_types1[pos]  # type: TensorIndexType
+            index_type_pos = index_types1[pos]
             if index_type_pos not in replacement_dict:
                 raise ValueError("No metric provided to lower index")
             metric = replacement_dict[index_type_pos]
@@ -2548,8 +2548,8 @@ class TensAdd(TensExpr, AssocOp):
                 return set(x.get_free_indices())
             return set()
 
-        indices0: set[TensorIndex] = get_indices_set(args[0])
-        list_indices: list[set[TensorIndex]] = [get_indices_set(arg) for arg in args[1:]]
+        indices0 = get_indices_set(args[0])
+        list_indices = [get_indices_set(arg) for arg in args[1:]]
         if not all(x == indices0 for x in list_indices):
             raise ValueError('all tensors must have the same indices')
 
@@ -3629,10 +3629,10 @@ class TensMul(TensExpr, AssocOp):
 
     def _get_args_for_traditional_printer(self):
         args = list(self.args)
-        if (self.coeff < 0) == True:
+        if self.coeff.could_extract_minus_sign():
             # expressions like "-A(a)"
             sign = "-"
-            if self.coeff == S.NegativeOne:
+            if args[0] == S.NegativeOne:
                 args = args[1:]
             else:
                 args[0] = -args[0]

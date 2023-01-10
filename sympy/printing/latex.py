@@ -1706,7 +1706,7 @@ class LatexPrinter(Printer):
     def _print_MatrixBase(self, expr):
         out_str = self._print_matrix_contents(expr)
         if self._settings['mat_delim']:
-            left_delim: str = self._settings['mat_delim']
+            left_delim = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim

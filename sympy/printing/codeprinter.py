@@ -3,7 +3,7 @@ from typing import Any
 
 from functools import wraps
 
-from sympy.core import Add, Expr, Mul, Pow, S, sympify, Float
+from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Lambda
@@ -158,7 +158,7 @@ class CodePrinter(StrPrinter):
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
         self._not_supported = set()
-        self._number_symbols: set[tuple[Expr, Float]] = set()
+        self._number_symbols = set()
 
         lines = self._print(expr).splitlines()
 
