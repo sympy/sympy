@@ -182,7 +182,7 @@ class RigidBody:
         The angular momentum H of a rigid body B about some point O in a frame
         N is given by:
 
-            H = I . w + r x Mv
+            `H = dot(I, w) + cross(r, M) * v`
 
         where I is the central inertia dyadic of B, w is the angular velocity
         of body B in the frame, N, r is the position vector from point O to the
@@ -232,7 +232,7 @@ class RigidBody:
 
         The kinetic energy, T, of a rigid body, B, is given by
 
-        'T = 1/2 (I omega^2 + m v^2)'
+        `T = 1/2 * (dot(dot(I, w), w) + dot(m * v, v))`
 
         where I and m are the central inertia dyadic and mass of rigid body B,
         respectively, omega is the body's angular velocity and v is the

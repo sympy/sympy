@@ -124,7 +124,7 @@ class Particle:
         The angular momentum H, about some point O of a particle, P, is given
         by:
 
-        H = r x m * v
+        `H = cross(r, m) * v`
 
         where r is the position vector from point O to the particle P, m is
         the mass of the particle, and v is the velocity of the particle in
@@ -167,7 +167,7 @@ class Particle:
 
         The kinetic energy, T, of a particle, P, is given by
 
-        'T = 1/2 m v^2'
+        `T = 1/2 (dot(m * v, v))`
 
         where m is the mass of particle P, and v is the velocity of the
         particle in the supplied ReferenceFrame.
