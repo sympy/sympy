@@ -89,14 +89,13 @@ class Particle(BodyBase):
         Explanation
         ===========
 
-        The linear momentum $L$, of a particle ``P``, with respect to frame
-        ``N`` is given by
+        The linear momentum L, of a particle P, with respect to frame N is given
+        by
 
-        .. math::
-            L = m v
+        `L = m * v`
 
-        where $m$ is the mass of the particle, and $v$ is the velocity of the
-        particle in the frame ``N``.
+        where m is the mass of the particle, and v is the velocity of the
+        particle in the frame N.
 
         Parameters
         ==========
@@ -129,15 +128,13 @@ class Particle(BodyBase):
         Explanation
         ===========
 
-        The angular momentum $H$, about some point ``O`` of a particle, ``P``,
-        is given by:
+        The angular momentum H, about some point O of a particle P, is given by
 
-        .. math::
-            H = r \times m v
+        `H = cross(r, m * v)`
 
-        where $r$ is the position vector from point ``O`` to the particle ``P``,
-        $m$ is the mass of the particle, and $v$ is the velocity of the particle
-        in the inertial frame ``N``.
+        where r is the position vector from point O to the particle P, m is the
+        mass of the particle, and v is the velocity of the particle in the
+        inertial frame N.
 
         Parameters
         ==========
@@ -175,13 +172,12 @@ class Particle(BodyBase):
         Explanation
         ===========
 
-        The kinetic energy $T$, of a particle ``P``, is given by
+        The kinetic energy T, of a particle P, is given by
 
-        .. math::
-            T = \frac{1}{2} m v^2
+        `T = 1/2 * m * dot(v, v)`
 
-        where $m$ is the mass of particle ``P``, and $v$ is the velocity of the
-        particle in the supplied ``ReferenceFrame``.
+        where m is the mass of particle P, and v is the velocity of the particle
+        in the supplied ReferenceFrame.
 
         Parameters
         ==========

@@ -126,14 +126,13 @@ class RigidBody(BodyBase):
         Explanation
         ===========
 
-        The linear momentum $L$, of a rigid body ``B``, with respect to frame
-        ``N`` is given by
+        The linear momentum L, of a rigid body B, with respect to frame N is
+        given by
 
-        .. math::
-            L = m v
+        `L = m * v`
 
-        where $m$ is the mass of the rigid body, and $v$ is the velocity of
-        the mass center of ``B`` in the frame ``N``.
+        where m is the mass of the rigid body, and v is the velocity of the mass
+        center of B in the frame N.
 
         Parameters
         ==========
@@ -148,15 +147,15 @@ class RigidBody(BodyBase):
         >>> from sympy.physics.mechanics import RigidBody, dynamicsymbols
         >>> from sympy.physics.vector import init_vprinting
         >>> init_vprinting(pretty_print=False)
-        >>> M, v = dynamicsymbols('M v')
+        >>> m, v = dynamicsymbols('m v')
         >>> N = ReferenceFrame('N')
         >>> P = Point('P')
         >>> P.set_vel(N, v * N.x)
         >>> I = outer (N.x, N.x)
         >>> Inertia_tuple = (I, P)
-        >>> B = RigidBody('B', P, N, M, Inertia_tuple)
+        >>> B = RigidBody('B', P, N, m, Inertia_tuple)
         >>> B.linear_momentum(N)
-        M*v*N.x
+        m*v*N.x
 
         """
 
@@ -169,16 +168,15 @@ class RigidBody(BodyBase):
         Explanation
         ===========
 
-        The angular momentum $H$ of a rigid body ``B`` about some point ``O`` in
-        a frame ``N`` is given by:
+        The angular momentum H of a rigid body B about some point O in a frame N
+        is given by
 
-        .. math::
-            H = I \cdot \omega + r \times m v
+        `H = dot(I, w) + cross(r, m * v)`
 
-        where $I$ and $m$ are the central inertia dyadic and mass of rigid body
-        ``B``, $\omega$ is the angular velocity of body ``B`` in the frame
-        ``N``, $r$ is the position vector from point ``O`` to the mass center of
-        ``B``, and $v$ is the velocity of the mass center in the frame ``N``.
+        where I and m are the central inertia dyadic and mass of rigid body B, w
+        is the angular velocity of body B in the frame N, r is the position
+        vector from point O to the mass center of B, and v is the velocity of
+        the mass center in the frame N.
 
         Parameters
         ==========
@@ -195,14 +193,14 @@ class RigidBody(BodyBase):
         >>> from sympy.physics.mechanics import RigidBody, dynamicsymbols
         >>> from sympy.physics.vector import init_vprinting
         >>> init_vprinting(pretty_print=False)
-        >>> M, v, r, omega = dynamicsymbols('M v r omega')
+        >>> m, v, r, omega = dynamicsymbols('m v r omega')
         >>> N = ReferenceFrame('N')
         >>> b = ReferenceFrame('b')
         >>> b.set_ang_vel(N, omega * b.x)
         >>> P = Point('P')
         >>> P.set_vel(N, 1 * N.x)
         >>> I = outer(b.x, b.x)
-        >>> B = RigidBody('B', P, b, M, (I, P))
+        >>> B = RigidBody('B', P, b, m, (I, P))
         >>> B.angular_momentum(P, N)
         omega*b.x
 
@@ -221,15 +219,13 @@ class RigidBody(BodyBase):
         Explanation
         ===========
 
-        The kinetic energy $T$, of a rigid body ``B``, is given by
+        The kinetic energy T, of a rigid body B, is given by
 
-        .. math::
-            T = \frac{1}{2} (I \omega^2 + m v^2)
+        `T = 1/2 * (dot(dot(I, w), w) + dot(m * v, v))`
 
-        where $I$ and $m$ are the central inertia dyadic and mass of rigid body
-        ``B`` respectively, $\omega$ is the body's angular velocity, and $v$ is
-        the velocity of the body's mass center in the supplied
-        ``ReferenceFrame``.
+        where I and M are the central inertia dyadic and mass of rigid body B
+        respectively, w is the body's angular velocity, and v is the velocity of
+        the body's mass center in the supplied ReferenceFrame.
 
         Parameters
         ==========
@@ -246,7 +242,7 @@ class RigidBody(BodyBase):
         >>> from sympy.physics.mechanics import Point, ReferenceFrame, outer
         >>> from sympy.physics.mechanics import RigidBody
         >>> from sympy import symbols
-        >>> M, v, r, omega = symbols('M v r omega')
+        >>> m, v, r, omega = symbols('m v r omega')
         >>> N = ReferenceFrame('N')
         >>> b = ReferenceFrame('b')
         >>> b.set_ang_vel(N, omega * b.x)
@@ -254,9 +250,9 @@ class RigidBody(BodyBase):
         >>> P.set_vel(N, v * N.x)
         >>> I = outer (b.x, b.x)
         >>> inertia_tuple = (I, P)
-        >>> B = RigidBody('B', P, b, M, inertia_tuple)
+        >>> B = RigidBody('B', P, b, m, inertia_tuple)
         >>> B.kinetic_energy(N)
-        M*v**2/2 + omega**2/2
+        m*v**2/2 + omega**2/2
 
         """
 
@@ -281,8 +277,7 @@ method is deprecated. Instead use
         self.potential_energy = scalar
 
     def parallel_axis(self, point, frame=None):
-        """Returns the inertia dyadic of the body with respect to another
-        point.
+        """Returns the inertia dyadic of the body with respect to another point.
 
         Parameters
         ==========
