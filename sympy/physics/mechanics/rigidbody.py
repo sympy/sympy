@@ -232,7 +232,7 @@ class RigidBody:
 
         The kinetic energy, T, of a rigid body, B, is given by:
 
-        `T = 1/2 * (dot(dot(I, w), w) + dot(m * v, v))`
+        ``T = 1/2 * (dot(dot(I, w), w) + dot(m * v, v))``
 
         where I and m are the central inertia dyadic and mass of rigid body B,
         respectively, omega is the body's angular velocity and v is the
