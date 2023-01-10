@@ -99,7 +99,7 @@ There are three different ways of matrix generation.
     - :py:func:`idempotent <sympy.matrices.random.idempotent>` with
       :py:func:`projection <sympy.matrices.random.projection>` (with only zero and one entries)
 
-    - :py:func:`trigonalizable <sympy.matrices.random.trigonalizable>` with
+    - :py:func:`triangularizable <sympy.matrices.random.triangularizable>` with
       :py:func:`jordan_normal <sympy.matrices.random.jordan_normal>`
 
     - :py:func:`nilpotent <sympy.matrices.random.nilpotent>` with
@@ -269,7 +269,7 @@ Conjugate Matrices
 .. autofunction:: sympy.matrices.random.idempotent
 .. autofunction:: sympy.matrices.random.nilpotent
 .. autofunction:: sympy.matrices.random.diagonalizable
-.. autofunction:: sympy.matrices.random.trigonalizable
+.. autofunction:: sympy.matrices.random.triangularizable
 
 
 Conjugate Matrices by Isometries
