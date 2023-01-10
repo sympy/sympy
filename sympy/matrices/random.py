@@ -30,6 +30,7 @@ def _sample(scalars, k=None):
 
 # === helper ===
 
+
 _EPS = 2 * abs(abs(complex(1, 1) / abs(complex(1, 1))) - 1)
 """numerical tolerance for float and complex types"""
 
