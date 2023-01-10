@@ -40,6 +40,7 @@ from sympy.polys.polyerrors import (
     PolificationFailed,
     ComputationFailed,
     GeneratorsError,
+    NotInvertible,
 )
 from sympy.polys.polyutils import (
     basic_from_dict,
@@ -2589,7 +2590,8 @@ class Poly(Basic):
 
         """
         dom, per, F, G = f._unify(g)
-
+        if G.degree() < 1:
+            raise NotInvertible('constant modulus in polynomial ring')
         if auto and dom.is_Ring:
             F, G = F.to_field(), G.to_field()
 
