@@ -1,7 +1,5 @@
 from collections import defaultdict
 
-from sympy import SYMPY_DEBUG
-
 from sympy.core import sympify, S, Mul, Derivative, Pow
 from sympy.core.add import _unevaluated_Add, Add
 from sympy.core.assumptions import assumptions
