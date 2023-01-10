@@ -167,7 +167,7 @@ class Particle:
 
         The kinetic energy, T, of a particle, P, is given by:
 
-        `T = 1/2 (dot(m * v, v))`
+        ``T = 1/2 (dot(m * v, v))``
 
         where m is the mass of particle P, and v is the velocity of the
         particle in the supplied ReferenceFrame.
