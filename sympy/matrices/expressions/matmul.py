@@ -5,7 +5,6 @@ from sympy.core.mul import mul, Mul
 from sympy.core.numbers import Number, Integer
 from sympy.core.symbol import Dummy
 from sympy.functions import adjoint
-from sympy.matrices.expressions.shape import is_matmul_valid, is_square
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
 from sympy.matrices.common import ShapeError, NonInvertibleMatrixError

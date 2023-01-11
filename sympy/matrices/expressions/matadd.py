@@ -4,11 +4,9 @@ import operator
 from sympy.core import Basic, sympify
 from sympy.core.add import add, Add, _could_extract_minus_sign
 from sympy.core.sorting import default_sort_key
-from sympy.core.singleton import S
 from sympy.core.numbers import Integer
 from sympy.functions import adjoint
 from sympy.matrices.common import ShapeError
-from sympy.matrices.expressions.shape import is_matadd_valid
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,

@@ -4,11 +4,8 @@ from sympy.core import Mul, sympify
 from sympy.core.add import Add
 from sympy.core.expr import ExprBuilder
 from sympy.core.sorting import default_sort_key
-from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import log
-from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
-from sympy.matrices.expressions.shape import is_matadd_valid
 from sympy.matrices.expressions.matadd import validate
 from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
