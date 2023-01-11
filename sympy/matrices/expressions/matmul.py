@@ -185,6 +185,8 @@ class MatMul(MatrixExpr, Mul):
         return factor**self.rows * Mul(*list(map(Determinant, square_matrices)))
 
     def _eval_inverse(self):
+        # This is the only place where strong assertion of matrix square check
+        # is needed or it won't give a sound rewriting
         if all(is_square(arg).doit() == S.true for arg in self.args if isinstance(arg, MatrixExpr)):
             return MatMul(*(
                 arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1

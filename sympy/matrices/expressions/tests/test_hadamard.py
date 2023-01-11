@@ -80,7 +80,6 @@ def test_hadamard():
     raises(ValueError, lambda: HadamardProduct())
 
 
-
 def test_hadamard_product_with_explicit_mat():
     A = MatrixSymbol("A", 3, 3).as_explicit()
     B = MatrixSymbol("B", 3, 3).as_explicit()

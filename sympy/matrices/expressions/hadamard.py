@@ -172,7 +172,7 @@ class HadamardProduct(MatrixExpr):
         return lines
 
 
-def validate(*args):
+def validate(*args: MatrixExpr):
     A = args[0]
     for B in args[1:]:
         if A.shape != B.shape:
