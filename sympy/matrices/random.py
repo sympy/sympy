@@ -53,147 +53,6 @@ _rotation_scalars = (sqrt(2) / 2, sqrt(2) / 2), (0, -1),
 _unitary_scalars = tuple(c * 1 + s * I for c, s in _rotation_scalars)
 
 
-# === fundamental constructor ===
-
-
-def super_elementary(dim,
-                     index=None,
-                     value=None,
-                     *scalars):
-    r"""super elementary matrix n x n, i.e. identiy with a 2 x 2 block
-
-    Explanation
-    ===========
-    The super elementary matrix $A$ is a generalization of elementary matrices
-    as well as of a rotation matrices that rotate only a single plane.
-
-    In two dimensions any invertible matrix
-
-    .. math::
-
-       A = \left[\begin{array}{cc}a & b \\ -c & d\end{array}\right]
-
-    is super elementary, i.e. $ad+bc \neq 0$. In higher dimensions,
-    any matrix $A$ looking like itdentiy matrix but with entries
-
-    .. math::
-
-        A[i,i] = a, \quad A[i,j] = b, \quad A[j,i] = -c, \quad A[j,j] = d
-
-    and $ad + bc \neq 0$.
-
-    This includes elementary matrices of matrix operation
-    for Gauss elimination. So multiplication with $A$ gives for
-
-    * $a=0=d$ and $b=1=-c$ a *transposition*, i.e. swapping rows $i$ and $j$
-    * $a=1$, $d=\lambda$ and $b=0=-c$ this matrix describes scaling the
-      row $j$ by $\lambda$
-    * $a=1=d$, $b=\lambda$, $-c=0$ adding the $\lambda$ multiple
-      of the row $i$ to row $j$.
-
-    Moreover, a simple rotation by $\phi$ in $(i,j)$ plane is super elementary,
-    given by $a=\cos \phi = d$ and $b = \sin \phi = c$. Hence,
-
-    .. math::
-
-       \left[\begin{array}{cc}a & b \\ -c & d\end{array}\right]
-       =
-       \left[\begin{array}{cc}
-        \cos \phi & \sin \phi \\ -\sin \phi & \cos \phi \end{array}\right]
-
-    In this module the super elementary matrix serves as the base class to
-    create futher matrices of given type.
-
-    Examples
-    ========
-
-    >>> from sympy.matrices.random import super_elementary
-
-    >>> super_elementary(3, (0,1))
-    Matrix([
-    [0, 1, 0],
-    [1, 0, 0],
-    [0, 0, 1]])
-
-    >>> super_elementary(3, index=(0,2), value=5)
-    Matrix([
-    [1, 0, 5],
-    [0, 1, 0],
-    [0, 0, 1]])
-
-    >>> super_elementary(3, index=(2,2), value=5)
-    Matrix([
-    [1, 0, 0],
-    [0, 1, 0],
-    [0, 0, 5]])
-
-    >>> super_elementary(3, (1,2), 1,2,3,4)
-    Matrix([
-    [1, 0, 0],
-    [0, 1, 2],
-    [0, -3, 4]])
-
-    Parameters
-    ==========
-    dim : integer
-        dimension of matrix
-    index : tuple(int, int)
-        coordinates (i,j) of super elementary square
-    value : symbol (optional)
-        value as elementary entry
-    *scalars : symbols (optional)
-        up to three additional values as additional super elementry entries
-
-    See Also
-    ========
-    diagonal
-    elementary
-    transposition
-    rotation
-
-    """
-    obj = eye(dim)
-    if index is None:
-        return obj
-
-    if not isinstance(index, (list, tuple)) or not len(index) == 2:
-        raise ValueError(
-            "index argument must be tuple of two matrix index integer.")
-    row, col = index
-    if not isinstance(row, int) or not isinstance(col, int):
-        raise ValueError(
-            "index argument must be tuple of two matrix index integer.")
-
-    if row == col:
-        # identity or multiply by scalar
-        obj[row, col] = value or 1
-        if scalars:
-            raise ValueError(
-                "if row==col no further args than value may be supplied.")
-    elif not scalars:
-        # elementary
-        if value is None:
-            # transposition
-            obj[row, row] = 0
-            obj[row, col] = 1
-            obj[col, row] = 1
-            obj[col, col] = 0
-        else:
-            # add scalar multiple to another
-            obj[row, col] = value
-    elif len(scalars) == 3:
-        obj[row, row] = value
-        y, v, u = scalars
-        obj[row, col] = y
-        obj[col, row] = -v
-        obj[col, col] = u
-    else:
-        msg = "either no, one or three additional scalars arguments " \
-              "may be supplied, but not %i"
-        raise ValueError(msg % len(scalars))
-    return obj
-
-
 # === fundamental matrix functions ===
 
 
@@ -564,8 +423,13 @@ def transposition(dim,
 
     """
 
-    index = index or _sample(range(dim), 2)
-    return super_elementary(dim, index=index)
+    row, col = index or _sample(range(dim), 2)
+
+    obj = eye(dim)
+    obj[row, row] = obj[col, col] = 0
+    obj[row, col] = obj[col, row] = 1
+
+    return obj
 
 
 def permutation(dim,
@@ -738,8 +602,21 @@ def elementary(dim,
 
     """
 
-    index = index or _sample(range(dim), 2)
-    return super_elementary(dim, index=index, value=scalar)
+    row, col = index or _sample(range(dim), 2)
+
+    obj = eye(dim)
+    if row == col:
+        # identity or multiply by scalar
+        obj[row, col] = scalar or 1 # if scalar is not None else 1
+    elif scalar is None:
+        # transposition
+        obj[row, row] = obj[col, col] = 0
+        obj[row, col] = obj[col, row] = 1
+    else:
+        # add scalar multiple to another
+        obj[row, col] = scalar
+
+    return obj
 
 
 def rotation(dim,
@@ -889,7 +766,7 @@ def rotation(dim,
 
     """
 
-    index = index or _sample(range(dim), 2)
+    row, col = index or _sample(range(dim), 2)
     scalar = scalar or _sample(_rotation_scalars)
 
     if isinstance(scalar, (tuple, list)):
@@ -915,7 +792,13 @@ def rotation(dim,
                   f"not abs({scalar}) = {abs_cs}"
             raise ValueError(msg)
 
-    return super_elementary(dim, index, c, s, _s, _c)
+    obj = eye(dim)
+    obj[row, row] = c
+    obj[row, col] = s
+    obj[col, row] = -_s
+    obj[col, col] = _c
+
+    return obj
 
 
 def reflection(dim,
