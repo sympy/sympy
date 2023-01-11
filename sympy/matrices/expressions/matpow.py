@@ -7,7 +7,6 @@ from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
 from sympy.matrices.common import NonSquareMatrixError
-from sympy.matrices.expressions.shape import is_square
 
 
 class MatPow(MatrixExpr):
@@ -63,9 +62,6 @@ class MatPow(MatrixExpr):
             base, exp = (arg.doit(**hints) for arg in self.args)
         else:
             base, exp = self.args
-
-        if is_square(base).doit() is S.false:
-            raise NonSquareMatrixError
 
         # combine all powers, e.g. (A ** 2) ** 3 -> A ** 6
         while isinstance(base, MatPow):

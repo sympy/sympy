@@ -6,7 +6,7 @@ from sympy.core.expr import ExprBuilder
 from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.exponential import log
 from sympy.matrices.expressions.matexpr import MatrixExpr
-from sympy.matrices.expressions.shape import validate_matadd_integer as validate
+from sympy.matrices.expressions._shape import validate_matadd_integer as validate
 from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort

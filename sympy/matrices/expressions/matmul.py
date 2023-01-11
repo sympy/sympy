@@ -10,7 +10,7 @@ from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices.matrices import MatrixBase
 from sympy.utilities.exceptions import sympy_deprecation_warning
-from sympy.matrices.expressions.shape import validate_matmul_integer as validate
+from sympy.matrices.expressions._shape import validate_matmul_integer as validate
 
 from .inverse import Inverse
 from .matexpr import MatrixExpr
