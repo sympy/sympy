@@ -9,6 +9,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.shape import is_matadd_valid
+from sympy.matrices.expressions.matadd import validate
 from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort
@@ -79,13 +80,8 @@ class HadamardProduct(MatrixExpr):
                 deprecated_since_version="1.11",
                 active_deprecations_target='remove-check-argument-from-matrix-operations')
 
-        if check:
+        if check is not False:
             validate(*args)
-        elif check is False:
-            sympy_deprecation_warning(
-                "Passing check=False to HadamardProduct is deprecated and the check argument will be removed in a future version.",
-                deprecated_since_version="1.11",
-                active_deprecations_target='remove-check-argument-from-matrix-operations')
 
         obj = super().__new__(cls, *args)
         if evaluate:
@@ -108,9 +104,6 @@ class HadamardProduct(MatrixExpr):
         # Check for explicit matrices:
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.immutable import ImmutableMatrix
-
-        if is_matadd_valid(*expr.args).doit() is S.false:
-            raise ShapeError
 
         explicit = [i for i in expr.args if isinstance(i, MatrixBase)]
         if explicit:
@@ -170,13 +163,6 @@ class HadamardProduct(MatrixExpr):
                 lines.append(i)
 
         return lines
-
-
-def validate(*args: MatrixExpr):
-    A = args[0]
-    for B in args[1:]:
-        if A.shape != B.shape:
-            raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
 
 # TODO Implement algorithm for rewriting Hadamard product as diagonal matrix
@@ -387,15 +373,12 @@ class HadamardPower(MatrixExpr):
     def __new__(cls, base, exp):
         base = sympify(base)
         exp = sympify(exp)
+
         if base.is_scalar and exp.is_scalar:
             return base ** exp
 
-        if base.is_Matrix and exp.is_Matrix and base.shape != exp.shape:
-            raise ValueError(
-                'The shape of the base {} and '
-                'the shape of the exponent {} do not match.'
-                .format(base.shape, exp.shape)
-                )
+        if isinstance(base, MatrixExpr) and isinstance(exp, MatrixExpr):
+            validate(base, exp)
 
         obj = super().__new__(cls, base, exp)
         return obj

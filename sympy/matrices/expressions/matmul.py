@@ -57,13 +57,8 @@ class MatMul(MatrixExpr, Mul):
                 deprecated_since_version="1.11",
                 active_deprecations_target='remove-check-argument-from-matrix-operations')
 
-        if check:
+        if check is not False:
             validate(*matrices)
-        elif check is False:
-            sympy_deprecation_warning(
-                "Passing check=False to MatMul is deprecated and the check argument will be removed in a future version.",
-                deprecated_since_version="1.11",
-                active_deprecations_target='remove-check-argument-from-matrix-operations')
 
         if not matrices:
             # Should it be
@@ -185,9 +180,7 @@ class MatMul(MatrixExpr, Mul):
         return factor**self.rows * Mul(*list(map(Determinant, square_matrices)))
 
     def _eval_inverse(self):
-        # This is the only place where strong assertion of matrix square check
-        # is needed or it won't give a sound rewriting
-        if all(is_square(arg).doit() == S.true for arg in self.args if isinstance(arg, MatrixExpr)):
+        if all(arg.is_square for arg in self.args if isinstance(arg, MatrixExpr)):
             return MatMul(*(
                 arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1
                     for arg in self.args[::-1]
@@ -201,9 +194,6 @@ class MatMul(MatrixExpr, Mul):
             args = tuple(arg.doit(**hints) for arg in self.args)
         else:
             args = self.args
-
-        if is_matmul_valid(*args).doit() is S.false:
-            raise ShapeError
 
         # treat scalar*MatrixSymbol or scalar*MatPow separately
         expr = canonicalize(MatMul(*args))
@@ -248,16 +238,16 @@ class MatMul(MatrixExpr, Mul):
 
 mul.register_handlerclass((Mul, MatMul), MatMul)
 
-def validate(*matrices):
-    """ Checks for valid shapes for args of MatMul """
-    for i in range(len(matrices)-1):
-        A, B = matrices[i:i+2]
-        if A.cols != B.rows:
-            raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
+
+def validate(*args: MatrixExpr) -> None:
+    """Validate matrix shape for multiplication only for Integer values"""
+    for A, B in zip(args[:-1], args[1:]):
+        i, j = A.cols, B.rows
+        if isinstance(i, Integer) and isinstance(j, Integer) and i != j:
+            raise ShapeError("Matrices are not aligned", i, j)
+
 
 # Rules
-
-
 def newmul(*args):
     if args[0] == 1:
         args = args[1:]

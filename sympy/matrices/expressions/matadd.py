@@ -5,6 +5,7 @@ from sympy.core import Basic, sympify
 from sympy.core.add import add, Add, _could_extract_minus_sign
 from sympy.core.sorting import default_sort_key
 from sympy.core.singleton import S
+from sympy.core.numbers import Integer
 from sympy.functions import adjoint
 from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.shape import is_matadd_valid
@@ -57,15 +58,9 @@ class MatAdd(MatrixExpr, Add):
                 "Passing check to MatAdd is deprecated and the check argument will be removed in a future version.",
                 deprecated_since_version="1.11",
                 active_deprecations_target='remove-check-argument-from-matrix-operations')
-        if check:
-            if not any(isinstance(i, MatrixExpr) for i in args):
-                return Add.fromiter(args)
+
+        if check is not False:
             validate(*args)
-        elif check is False:
-            sympy_deprecation_warning(
-                "Passing check=False to MatAdd is deprecated and the check argument will be removed in a future version.",
-                deprecated_since_version="1.11",
-                active_deprecations_target='remove-check-argument-from-matrix-operations')
 
         if evaluate:
             obj = cls._evaluate(obj)
@@ -103,13 +98,9 @@ class MatAdd(MatrixExpr, Add):
     def doit(self, **hints):
         deep = hints.get('deep', True)
         if deep:
-            args = tuple(arg.doit(**hints) for arg in self.args)
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
-
-        if is_matadd_valid(*args).doit() is S.false:
-            raise ShapeError
-
         return canonicalize(MatAdd(*args))
 
     def _eval_derivative_matrix_lines(self, x):
@@ -118,11 +109,15 @@ class MatAdd(MatrixExpr, Add):
 
 add.register_handlerclass((Add, MatAdd), MatAdd)
 
-def validate(*args):
-    A = args[0]
-    for B in args[1:]:
-        if A.shape != B.shape:
-            raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
+
+def validate(*args: MatrixExpr) -> None:
+    """Validate matrix shape for addition only for Integer values"""
+    rows, cols = zip(*map(lambda x: x.shape, args))
+    if len(set(filter(lambda x: isinstance(x, Integer), rows))) != 1:
+        raise ShapeError(f"Matrices have mismatching shape: {rows}")
+    if len(set(filter(lambda x: isinstance(x, Integer), cols))) != 1:
+        raise ShapeError(f"Matrices have mismatching shape: {cols}")
+
 
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
 matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])
