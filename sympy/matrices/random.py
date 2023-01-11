@@ -296,7 +296,7 @@ def regular_to_singular(mat, rank=None):
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -317,7 +317,7 @@ def regular_to_singular(mat, rank=None):
     >>> n.rank()
     2
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -360,7 +360,7 @@ def projection(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -380,7 +380,7 @@ def projection(dim,
     [0, 1, 0],
     [0, 0, 1]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -439,7 +439,7 @@ def jordan(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -466,7 +466,7 @@ def jordan(dim,
     [0, 0, 2, 1],
     [0, 0, 0, 2]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -524,7 +524,7 @@ def transposition(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -545,7 +545,7 @@ def transposition(dim,
     [1, 0, 0],
     [0, 0, 1]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -586,7 +586,7 @@ def permutation(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -606,7 +606,7 @@ def permutation(dim,
     [1, 0, 0],
     [0, 1, 0]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -673,7 +673,7 @@ def elementary(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -711,7 +711,7 @@ def elementary(dim,
     [1, 0, 0],
     [0, 0, 1]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -772,7 +772,7 @@ def rotation(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -852,7 +852,7 @@ def rotation(dim,
     [0, 0, 1]])
 
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -937,7 +937,7 @@ def reflection(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -979,7 +979,7 @@ def reflection(dim,
     [0, sqrt(2)/2,  sqrt(2)/2],
     [0, sqrt(2)/2, -sqrt(2)/2]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -1032,7 +1032,7 @@ def diagonal_normal(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -1058,7 +1058,7 @@ def diagonal_normal(dim,
     [ 0, 2, 0],
     [ 0, 0, 2]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -1154,7 +1154,7 @@ def jordan_normal(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -1193,7 +1193,7 @@ def jordan_normal(dim,
     [0, 0, 0, 0, 2, 0],
     [0, 0, 0, 0, 0, 0]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -1319,7 +1319,7 @@ def isometry_normal(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -1353,7 +1353,7 @@ def isometry_normal(dim,
     [ 0, sqrt(2)*(1 + I)/2, 0],
     [ 0,                 0, 1]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -1451,7 +1451,7 @@ def triangular(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -1465,7 +1465,7 @@ def triangular(dim,
     [ 0,  1, -2],
     [ 0,  0, -1]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -1551,7 +1551,7 @@ def square(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -1565,7 +1565,7 @@ def square(dim,
     [-2, -1, -1],
     [ 0,  0,  1]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -1621,7 +1621,7 @@ def invertible(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -1651,7 +1651,7 @@ def invertible(dim,
     [-1, 1,   1],
     [ 0, 0,   1]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -1677,7 +1677,7 @@ def singular(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -1694,7 +1694,7 @@ def singular(dim,
     >>> m.rank()
     2
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -1756,7 +1756,7 @@ def idempotent(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -1775,7 +1775,7 @@ def idempotent(dim,
     >>> A*A == A
     True
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -1837,7 +1837,7 @@ def nilpotent(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -1857,7 +1857,7 @@ def nilpotent(dim,
     >>> A*A*A == zeros(3)
     True
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -1945,7 +1945,7 @@ def diagonalizable(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -1973,7 +1973,7 @@ def diagonalizable(dim,
     [0, 2, 0],
     [0, 0, 2]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -2030,7 +2030,7 @@ def triangularizable(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -2059,7 +2059,7 @@ def triangularizable(dim,
     [0, 1, 0],
     [0, 0, 3]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -2125,7 +2125,7 @@ def orthogonal(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -2151,7 +2151,7 @@ def orthogonal(dim,
     >>> expand(o * o.T) == eye(3)
     True
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -2250,7 +2250,7 @@ def unitary(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -2290,7 +2290,7 @@ def unitary(dim,
     >>> simplify(u.det())
     I
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -2396,7 +2396,7 @@ def normal(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -2442,7 +2442,7 @@ def normal(dim,
     >>> expand(n.H * n - n * n.H) == zeros(3)
     True
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -2515,7 +2515,7 @@ def symmetric(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -2538,7 +2538,7 @@ def symmetric(dim,
     >>> sorted(n.eigenvals(multiple=True))
     [1, 2, 3]
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
@@ -2607,7 +2607,7 @@ def hermite(dim,
     Examples
     ========
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -2622,7 +2622,7 @@ def hermite(dim,
     [          0, 1,                               0],
     [1.0 + 1.0*I, 0, 1 + (1.0 - 1.0*I)*(1.0 + 1.0*I)]])
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)

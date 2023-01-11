@@ -31,7 +31,7 @@ sys.path = ['ext'] + sys.path
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
               'sphinx_math_dollar', 'sphinx.ext.mathjax', 'numpydoc',
-              'sphinx_reredirects', 'sphinx_copybutton', 'sphinx.ext.doctest',
+              'sphinx_reredirects', 'sphinx_copybutton',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
               'myst_parser', 'convert-svg-to-pdf', 'sphinx.ext.intersphinx',
               ]

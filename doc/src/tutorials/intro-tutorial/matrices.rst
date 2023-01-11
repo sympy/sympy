@@ -240,7 +240,7 @@ the random matrix generation functions, e.g.
 ``invertible``, ``triangular``, ``orthogonal``.
 Find a :ref:`full list of random matrices <matrices-random>`.
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> from sympy.core.random import rng, seed
        >>> _rng_state = rng.getstate()
@@ -292,7 +292,7 @@ Find a :ref:`full list of random matrices <matrices-random>`.
     ⎢         ⎥
     ⎣0   0  -1⎦
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> seed(1)
 
@@ -316,7 +316,7 @@ Find a :ref:`full list of random matrices <matrices-random>`.
 
 And symbolic matrices work, too.
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> seed(0)
 
@@ -345,7 +345,7 @@ And symbolic matrices work, too.
 Using matrices to construct a matrix with integer entries
 which has an inverse with integer entries, too.
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> seed(0)
 
@@ -372,7 +372,7 @@ which has an inverse with integer entries, too.
 Using matrices to construct a quadric,
 a quadratic equation in multiple variables
 
-    .. testsetup::
+    .. ..testsetup::
 
        >>> seed(8)
 
@@ -401,7 +401,7 @@ a quadratic equation in multiple variables
        2               2               2
     2⋅x  - √2⋅x⋅z + 2⋅y  - √2⋅y⋅z + 2⋅z
 
-    .. testcleanup::
+    .. ..testcleanup::
 
        >>> assert not rng.getstate() == _rng_state
        >>> rng.setstate(_rng_state)
