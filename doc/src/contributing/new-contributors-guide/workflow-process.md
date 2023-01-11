@@ -1,4 +1,4 @@
-# SymPy Development Workflow Process
+# Development Workflow Process
 
 
 ```{note}
