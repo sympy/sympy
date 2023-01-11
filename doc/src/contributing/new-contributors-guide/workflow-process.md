@@ -257,3 +257,193 @@ Similary, run quality tests with:
 ```bash
 $ bin/test code_quality
 ```
+
+## Commit the changes
+
+Once the changes are ready, you should commit them. You can check what files are changed:
+
+```
+git status
+```
+
+Check total changes:
+
+```
+git diff
+```
+
+If you created any new files, add them with:
+
+```
+git add new_file.py
+```
+
+You are ready to commit changes locally. A commit also contains a `commit
+message` which describes it.  See the next section for guidelines on writing
+good commit messages. Type:
+
+```
+git commit
+```
+
+An editor window will appear automatically in this case. In Linux, this is vim
+by default. You can change what editor pops up by changing the `$EDITOR` shell
+variable.
+
+Also with the help of option `-a` you can tell the command `commit` to
+automatically stage files that have been modified and deleted, but new files
+you have not told git about will not be affected, e.g.,:
+
+```
+git commit -a
+```
+
+If you want to stage only part of your changes, you can use the interactive commit feature.  Just type:
+
+```
+git commit --interactive
+```
+
+and choose the changes you want in the resulting interface.
+
+### Deleting junk files
+
+A lot of editors can create some configuration files, binary files, or temporary files
+in your SymPy directory, which should be removed before merging your commits.
+
+Tracking down individual files can be cumbersome.
+
+You may think of using `.gitignore`, however, editing the `.gitignore` itself
+would have the agreement from the community.
+
+Using `.git/info/exclude` would be the best, because it is only applied locally.
+
+<https://stackoverflow.com/questions/22906851/when-would-you-use-git-info-exclude-instead-of-gitignore-to-exclude-files>
+
+<https://help.github.com/en/articles/ignoring-files>
+
+(development-workflow-commit-messages)=
+### Writing commit messages
+
+The commit message has two parts: a title (first line) and the body. The two
+are separated by a blank line.
+
+Commit messages summarize what the commit does. Just as with the code, your
+commit messages will become a permanent part of the project git history. So
+you should put some effort into making them high quality. Commit messages are
+intended for human readers, both for people who will be reviewing your code
+right now, and for people who might come across your commit in the future
+while researching some change in the code. Thus, include information that
+helps others understand your commit here, if necessary.
+
+Tools like `git shortlog` and the GitHub UI only show the first line of the
+commit by default, so it is important to convey the most important aspects of
+the commit in the first line.
+
+- Keep the first line 71 characters or less and subsequent lines to 78
+  characters or less. This allows the one-line form of the log to display the
+  summary without wrapping.
+
+- **Make sure to leave a blank line after the summary**
+
+- Do not end the first line with a period (full stop). Subsequent lines should
+  use periods.
+
+- Provide context for the commit if possible,
+
+  e.g. `integrals: Improved speed of heurisch()`
+  instead of just `Improved speed of heurisch()`
+
+- Reference any relevant issue numbers. You do not need to reference the pull
+  request for the change itself, but issues that are fixed should be
+  referenced either by `#12345` or
+  `https://github.com/sympy/sympy/issues/12345`. You should also provide a
+  brief summary of an issue rather than just referring to the issue number so
+  that people don't have to look around for context.
+
+- A commit won't always be seen in the context of your branch, so it is often
+  helpful to give each commit some context. This is not required, though, as
+  it is not hard to look at the commit metadata to see what files were
+  modified or at the commit history to see the nearby related commits.
+
+- Use plain English. Write in complete sentences.
+
+- Describe what actually changed. Don't just write something like `Modified
+  solvers.py`. People can already see what files are modified from the commit
+  diff. What the message is there for is to tell them what the diff actually
+  does, so they don't have to try to figure it out. Similarly, although
+  relevant issues should be cross-referenced as noted above, the message
+  should contain enough of a basic summary that people can understand what is
+  going on without having to look up the issue. The issue can provide more
+  detailed context for people who are interested.
+
+- Try to avoid short commit messages, like "Fix", and commit messages that
+  give no context, like "Found the bug". When in doubt, a longer commit
+  message is probably better than a short one. Avoid using the `-m` switch to
+  `git commit` to write a commit message on the command line. Rather, let it
+  open your editor so you can write a longer commit message.
+
+- Give an overview of what the commit does if it is difficult to figure out
+  just from looking at the diff.
+
+- Include other relevant information, e.g.
+
+  - Known issues
+  - A concrete example (for commits that add new features/improve performance etc.)
+
+- Use bullet lists when suitable
+
+- Feel free to use Unicode characters, such as output from the SymPy Unicode
+  pretty printer.
+
+
+#### Example of a good commit message
+
+Here is an example commit message from the commit
+[bf0e81e12a2f75711c30f0788daf4e58f72b2a41](https://github.com/sympy/sympy/commit/bf0e81e12a2f75711c30f0788daf4e58f72b2a41),
+which is part of the SymPy history:
+
+```
+integrals: Improved speed of heurisch() and revised tests
+
+Improved speed of anti-derivative candidate expansion and solution
+phases using explicit domains and solve_lin_sys(). The upside of
+this change is that large integrals (those that generate lots of
+monomials) are now computed *much* faster. The downside is that
+integrals involving Derivative() don't work anymore. I'm not sure
+if they really used to work properly or it was just a coincidence
+and/or bad implementation. This needs further investigation.
+
+Example:
+
+In [1]: from sympy.integrals.heurisch import heurisch
+
+In [2]: f = (1 + x + x*exp(x))*(x + log(x) + exp(x) - 1)/(x + log(x) + exp(x))**2/x
+
+In [3]: %time ratsimp(heurisch(f, x))
+CPU times: user 7.27 s, sys: 0.04 s, total: 7.31 s
+Wall time: 7.32 s
+Out[3]:
+   ⎛ 2        x                 2⋅x      x             2   ⎞
+log⎝x  + 2⋅x⋅ℯ  + 2⋅x⋅log(x) + ℯ    + 2⋅ℯ ⋅log(x) + log (x)⎠          1
+──────────────────────────────────────────────────────────── + ───────────────
+                             2                                      x
+                                                               x + ℯ  + log(x)
+
+Previously it took 450 seconds and 4 GB of RAM to compute.
+```
+
+#### Co-Author
+
+Occasionally, there can be multiple people working as a team for one PR,
+or you have applied some suggestions from the community.
+
+For these cases, you may use co-author feature of GitHub by adding
+
+```
+Co-authored-by: NAME NAME@EXAMPLE.COM
+Co-authored-by: AUTHOR-NAME ANOTHER-NAME@EXAMPLE.COM
+```
+
+to the bottom of the commit message. See
+https://help.github.com/en/articles/creating-a-commit-with-multiple-authors.
