@@ -1,4 +1,5 @@
 from sympy.matrices.dense import Matrix, eye
+from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.special import Identity, OneMatrix, ZeroMatrix
 from sympy.core import symbols
@@ -128,3 +129,13 @@ def test_hadamard_power_explicit():
         Matrix([
             [A[0, 0]**B[0, 0], A[0, 1]**B[0, 1]],
             [A[1, 0]**B[1, 0], A[1, 1]**B[1, 1]]])
+
+
+def test_shape_error():
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 3)
+    raises(ShapeError, lambda: HadamardProduct(A, B))
+    raises(ShapeError, lambda: HadamardPower(A, B))
+    A = MatrixSymbol('A', 3, 2)
+    raises(ShapeError, lambda: HadamardProduct(A, B))
+    raises(ShapeError, lambda: HadamardPower(A, B))
