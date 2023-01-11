@@ -7,9 +7,10 @@ from sympy.core.symbol import Dummy
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
-from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices.matrices import MatrixBase
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.matrices.expressions.shape import validate_matmul_integer as validate
 
 from .inverse import Inverse
 from .matexpr import MatrixExpr
@@ -236,14 +237,6 @@ class MatMul(MatrixExpr, Mul):
         return lines
 
 mul.register_handlerclass((Mul, MatMul), MatMul)
-
-
-def validate(*args: MatrixExpr) -> None:
-    """Validate matrix shape for multiplication only for Integer values"""
-    for A, B in zip(args[:-1], args[1:]):
-        i, j = A.cols, B.rows
-        if isinstance(i, Integer) and isinstance(j, Integer) and i != j:
-            raise ShapeError("Matrices are not aligned", i, j)
 
 
 # Rules

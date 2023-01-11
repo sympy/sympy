@@ -4,15 +4,14 @@ import operator
 from sympy.core import Basic, sympify
 from sympy.core.add import add, Add, _could_extract_minus_sign
 from sympy.core.sorting import default_sort_key
-from sympy.core.numbers import Integer
 from sympy.functions import adjoint
-from sympy.matrices.common import ShapeError
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
+from sympy.matrices.expressions.shape import validate_matadd_integer as validate
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
@@ -106,15 +105,6 @@ class MatAdd(MatrixExpr, Add):
         return [j for i in add_lines for j in i]
 
 add.register_handlerclass((Add, MatAdd), MatAdd)
-
-
-def validate(*args: MatrixExpr) -> None:
-    """Validate matrix shape for addition only for Integer values"""
-    rows, cols = zip(*map(lambda x: x.shape, args))
-    if len(set(filter(lambda x: isinstance(x, Integer), rows))) != 1:
-        raise ShapeError(f"Matrices have mismatching shape: {rows}")
-    if len(set(filter(lambda x: isinstance(x, Integer), cols))) != 1:
-        raise ShapeError(f"Matrices have mismatching shape: {cols}")
 
 
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
