@@ -12,8 +12,9 @@ If you are already familiar with the basics of how to use git and GitHub, but
 you have never contributed to SymPy before, start with
 **[](./workflow-process.md)**.
 
+## Index
+
 ```{toctree}
-:hidden:
 :titlesonly: true
 
 dev-setup.md
