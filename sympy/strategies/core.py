@@ -24,7 +24,14 @@ def exhaust(rule: Callable[[_T], _T]) -> Callable[[_T], _T]:
 
 
 def memoize(rule: Callable[[_S], _T]) -> Callable[[_S], _T]:
-    """ Memoized version of a rule """
+    """Memoized version of a rule
+
+    Notes
+    =====
+
+    This cache can grow infinitely, so it is not recommended to use this
+    than ``functools.lru_cache`` unless you need very heavy computation.
+    """
     cache: dict[_S, _T] = {}
     def memoized_rl(expr: _S) -> _T:
         if expr in cache:
