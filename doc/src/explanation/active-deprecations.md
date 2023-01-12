@@ -1306,7 +1306,7 @@ Matrix([
 (deprecated-source)=
 ### The `source()` function
 
-The {func}`~.source` function is deprecated. Use
+The ``source`` function is deprecated. Use
 [`inspect.getsource(obj)`](https://docs.python.org/3/library/inspect.html#inspect.getsource)
 instead, or if you are in IPython or Jupyter, use `obj??`.
 
