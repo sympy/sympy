@@ -2415,7 +2415,7 @@ class Beam3D(Beam):
             Single SymPy expression can be passed if both values are same
         area : Sympifyable
             A SymPy expression representing the Beam's cross-sectional area
-            in a plane prependicular to length of the Beam.
+            in a plane perpendicular to length of the Beam.
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
@@ -2663,7 +2663,7 @@ class Beam3D(Beam):
             sol = list((linsolve([shear_curve, moment_curve], react).args)[0])
             sol_dict = dict(zip(react, sol))
             reaction_loads = self._reaction_loads
-            # Check if any of the evaluated rection exists in another direction
+            # Check if any of the evaluated reaction exists in another direction
             # and if it exists then it should have same value.
             for key in sol_dict:
                 if key in reaction_loads and sol_dict[key] != reaction_loads[key]:
