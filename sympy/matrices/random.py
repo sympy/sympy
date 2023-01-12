@@ -1692,7 +1692,7 @@ def idempotent(dim,
     """
     rank = dim - 1 if rank is None else rank
     normal_form = projection(dim, index=(0, rank))
-    s = invertible(dim, scalars=scalars, units=units, length=length)
+    s = square(dim, scalars=scalars, units=units, length=length)
     return s.inv() * normal_form * s
 
 
@@ -1787,7 +1787,7 @@ def nilpotent(dim,
     index = numbers_with_sum(dim - rank, dim)
     spec = tuple((0, i) for i in index)
     normal_form = jordan_normal(dim, spec=spec)
-    s = invertible(dim, scalars=scalars, units=units, length=length)
+    s = square(dim, scalars=scalars, units=units, length=length)
     return s.inv() * normal_form * s
 
 
@@ -1880,7 +1880,7 @@ def diagonalizable(dim,
     """
 
     normal_form = diagonal_normal(dim, spec=spec)
-    s = invertible(dim, scalars=scalars, units=units, length=length)
+    s = square(dim, scalars=scalars, units=units, length=length)
     return s.inv() * normal_form * s
 
 
@@ -1971,7 +1971,7 @@ def triangularizable(dim,
     """
 
     normal_form = jordan_normal(dim, spec=spec)
-    s = invertible(dim, scalars=scalars, units=units, length=length)
+    s = square(dim, scalars=scalars, units=units, length=length)
     return s.inv() * normal_form * s
 
 
@@ -2447,7 +2447,7 @@ def symmetric(dim,
 
     """
 
-    s = invertible(dim, scalars=scalars, units=units, length=length)
+    s = square(dim, scalars=scalars, units=units, length=length)
     return s.T * s
 
 
@@ -2531,5 +2531,5 @@ def hermite(dim,
 
     """
 
-    s = invertible(dim, scalars=scalars, units=units, length=length)
+    s = square(dim, scalars=scalars, units=units, length=length)
     return s.H * s
