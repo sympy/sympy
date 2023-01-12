@@ -539,13 +539,11 @@ class Quaternion(Expr):
             angles[1] = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
 
         # Check for singularities in numerical cases
-        angle_test = angles[1]
         case = 0
-        if angle_test.is_number:
-            if is_eq(angle_test, S.Zero):
-                case = 1
-            if is_eq(angle_test, S.Pi):
-                case = 2
+        if is_eq(c, S.Zero) and is_eq(d, S.Zero):
+            case = 1
+        if is_eq(a, S.Zero) and is_eq(b, S.Zero):
+            case = 2
 
         if case == 0:
             if angle_addition:
