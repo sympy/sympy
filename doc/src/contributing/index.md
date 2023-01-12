@@ -14,7 +14,6 @@ If you are new to contributing to SymPy, start with the
 
 introduction-to-contributing.md
 new-contributors-guide/index.md
-development-workflow.md
 dependencies.md
 build-docs.rst
 debug.rst

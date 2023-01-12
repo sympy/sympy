@@ -49,9 +49,11 @@ authors](https://github.com/sympy/sympy/network). We also utilize GitHub, a
 web interface to Git, extensively and use it for communication, issue
 tracking, merging contributions (i.e., pull requests), etc.
 
-You will need to read through the [](development-workflow) page and follow the
-instructions to set up your development environment before making a
-contribution.
+If you are new to Git and GitHub, read through the [](devsetup) page first for
+instructions on how to set up your development environment. If you are already
+familiar with the basic GitHub workflow, the [](workflow-process) page
+describes the aspects of the GitHub contribution workflow that are specific to
+SymPy.
 
 ## Identify something to work on
 
