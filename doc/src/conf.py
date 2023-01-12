@@ -40,7 +40,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
 # existing release docs is moved somewhere else so that the URLs don't break.
 # The format is
 
-# "page/path/without/extension": "../relative_path_with.html"
+# "old-page/path/without/extension": "../new-page/relative_path_with.html"
 
 # Note that the html path is relative to the redirected page. Always test the
 # redirect manually (they aren't tested automatically). See
@@ -60,7 +60,7 @@ redirects = {
     "guides/contributing/index": "../../contributing/index.html",
     "guides/contributing/dev-setup": "../../contributing/dev-setup.html",
     "guides/contributing/dependencies": "../../contributing/dependencies.html",
-    "guides/contributing/build-docs": "../../contributing/build-docs.html",
+    "guides/contributing/build-docs": "../../contributing/new-contributors-guide/build-docs.html",
     "guides/contributing/debug": "../../contributing/debug.html",
     "guides/contributing/docstring": "../../contributing/docstring.html",
     "guides/documentation-style-guide": "../../contributing/contributing/documentation-style-guide.html",
