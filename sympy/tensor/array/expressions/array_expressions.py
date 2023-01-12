@@ -4,7 +4,7 @@ from collections import defaultdict, Counter
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Optional, List, Dict as tDict, Tuple as tTuple
+from typing import Optional, List, Tuple as tTuple
 
 import typing
 
@@ -395,7 +395,7 @@ class PermuteDims(_CodegenArrayAbstract):
 
     This is evident when transforming back to matrix form:
 
-    >>> from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+    >>> from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
     >>> convert_array_to_matrix(cg)
     M.T
 
@@ -779,7 +779,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
             rank2 = len(diagonal_indices)
             rank3 = rank1 - rank2
             inv_permutation = []
-            counter1: int = 0
+            counter1 = 0
             indices_down = ArrayDiagonal._push_indices_down(diagonal_indices_short, list(range(rank1)), get_rank(expr))
             for i in indices_down:
                 if i in trivial_pos:
@@ -1154,8 +1154,8 @@ class ArrayContraction(_CodegenArrayAbstract):
             # Also consider the case of diagonal matrices being contracted:
             current_dimension = self.expr.shape[links[0]]
 
-            not_vectors: tTuple[_ArgE, int] = []
-            vectors: tTuple[_ArgE, int] = []
+            not_vectors = []
+            vectors = []
             for arg_ind, rel_ind in positions:
                 arg = editor.args_with_ind[arg_ind]
                 mat = arg.element
@@ -1426,7 +1426,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         Examples
         ========
 
-        >>> from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+        >>> from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
         >>> from sympy import MatrixSymbol
         >>> from sympy.abc import N
         >>> A = MatrixSymbol("A", N, N)
@@ -1468,7 +1468,7 @@ class ArrayContraction(_CodegenArrayAbstract):
 
         >>> from sympy import MatrixSymbol
         >>> from sympy.abc import N
-        >>> from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+        >>> from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
         >>> C = MatrixSymbol("C", N, N)
@@ -1702,12 +1702,12 @@ class _EditArrayContraction:
         return self.number_of_contraction_indices - 1
 
     def refresh_indices(self):
-        updates: tDict[int, int] = {}
+        updates = {}
         for arg_with_ind in self.args_with_ind:
             updates.update({i: -1 for i in arg_with_ind.indices if i is not None})
         for i, e in enumerate(sorted(updates)):
             updates[e] = i
-        self.number_of_contraction_indices: int = len(updates)
+        self.number_of_contraction_indices = len(updates)
         for arg_with_ind in self.args_with_ind:
             arg_with_ind.indices = [updates.get(i, None) for i in arg_with_ind.indices]
 
@@ -1722,7 +1722,7 @@ class _EditArrayContraction:
         if len(self.args_with_ind) == 0:
             self.args_with_ind.append(_ArgE(scalar))
         else:
-            from sympy.tensor.array.expressions.conv_array_to_matrix import _a2m_tensor_product
+            from sympy.tensor.array.expressions.from_array_to_matrix import _a2m_tensor_product
             self.args_with_ind[0].element = _a2m_tensor_product(scalar, self.args_with_ind[0].element)
 
     def to_array_contraction(self):
@@ -1847,8 +1847,8 @@ class _EditArrayContraction:
     def track_permutation_start(self):
         permutation = []
         perm_diag = []
-        counter: int = 0
-        counter2: int = -1
+        counter = 0
+        counter2 = -1
         for arg_with_ind in self.args_with_ind:
             perm = []
             for i in arg_with_ind.indices:

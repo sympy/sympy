@@ -419,13 +419,10 @@ def test_issue_18248():
 def test_issue_13230():
     c1 = Circle(Point2D(3, sqrt(5)), 5)
     c2 = Circle(Point2D(4, sqrt(7)), 6)
-    s = sqrt(196*sqrt(35) + 1941)
-    d = (-sqrt(7) + sqrt(5))
-    d2 = -2*sqrt(7)/29 + 9*sqrt(5)/29
-    d3 = -9*sqrt(5) + 2*sqrt(7)
-    assert intersection(c1, c2) == [Point2D(-1 - d*(s + d3)/29, d2 - s/29),
-        Point2D(-1 + d*(s - d3)/29, d2 + s/29)]
-
+    assert intersection(c1, c2) == [Point2D(-1 + (-sqrt(7) + sqrt(5))*(-2*sqrt(7)/29
+    + 9*sqrt(5)/29 + sqrt(196*sqrt(35) + 1941)/29), -2*sqrt(7)/29 + 9*sqrt(5)/29
+    + sqrt(196*sqrt(35) + 1941)/29), Point2D(-1 + (-sqrt(7) + sqrt(5))*(-sqrt(196*sqrt(35)
+    + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29), -sqrt(196*sqrt(35) + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29)]
 
 def test_issue_19760():
     e = 1/(sqrt(1 + sqrt(2)) - sqrt(2)*sqrt(1 + sqrt(2))) + 1

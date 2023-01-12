@@ -1,7 +1,8 @@
+from __future__ import annotations
 import re
 import typing
 from itertools import product
-from typing import Any, Dict as tDict, Tuple as tTuple, List, Optional, Union as tUnion, Callable
+from typing import Any, Callable
 
 import sympy
 from sympy import Mul, Add, Pow, log, exp, sqrt, cos, sin, tan, asin, acos, acot, asec, acsc, sinh, cosh, tanh, asinh, \
@@ -234,13 +235,13 @@ class MathematicaParser:
                 '''
 
     # will contain transformed CORRESPONDENCES dictionary
-    TRANSLATIONS = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
+    TRANSLATIONS: dict[tuple[str, int], dict[str, Any]] = {}
 
     # cache for a raw users' translation dictionary
-    cache_original = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
+    cache_original: dict[tuple[str, int], dict[str, Any]] = {}
 
     # cache for a compiled users' translation dictionary
-    cache_compiled = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
+    cache_compiled: dict[tuple[str, int], dict[str, Any]] = {}
 
     @classmethod
     def _initialize_class(cls):
@@ -543,7 +544,7 @@ class MathematicaParser:
     RIGHT = "Right"
     LEFT = "Left"
 
-    _mathematica_op_precedence: List[tTuple[str, Optional[str], tDict[str, tUnion[str, Callable]]]] = [
+    _mathematica_op_precedence: list[tuple[str, str | None, dict[str, str | Callable]]] = [
         (POSTFIX, None, {";": lambda x: x + ["Null"] if isinstance(x, list) and x and x[0] == "CompoundExpression" else ["CompoundExpression", x, "Null"]}),
         (INFIX, FLAT, {";": "CompoundExpression"}),
         (INFIX, RIGHT, {"=": "Set", ":=": "SetDelayed", "+=": "AddTo", "-=": "SubtractFrom", "*=": "TimesBy", "/=": "DivideBy"}),
@@ -623,7 +624,7 @@ class MathematicaParser:
         tokenizer = self._get_tokenizer()
 
         # Find strings:
-        code_splits: List[typing.Union[str, list]] = []
+        code_splits: list[str | list] = []
         while True:
             string_start = code.find("\"")
             if string_start == -1:
@@ -654,7 +655,7 @@ class MathematicaParser:
             code_splits[i] = code_split
 
         # Tokenize the input strings with a regular expression:
-        token_lists = [tokenizer.findall(i) if isinstance(i, str) else [i] for i in code_splits]
+        token_lists = [tokenizer.findall(i) if isinstance(i, str) and i.isascii() else [i] for i in code_splits]
         tokens = [j for i in token_lists for j in i]
 
         # Remove newlines at the beginning
@@ -666,7 +667,7 @@ class MathematicaParser:
 
         return tokens
 
-    def _is_op(self, token: tUnion[str, list]) -> bool:
+    def _is_op(self, token: str | list) -> bool:
         if isinstance(token, list):
             return False
         if re.match(self._literal, token):
@@ -675,18 +676,18 @@ class MathematicaParser:
             return False
         return True
 
-    def _is_valid_star1(self, token: tUnion[str, list]) -> bool:
+    def _is_valid_star1(self, token: str | list) -> bool:
         if token in (")", "}"):
             return True
         return not self._is_op(token)
 
-    def _is_valid_star2(self, token: tUnion[str, list]) -> bool:
+    def _is_valid_star2(self, token: str | list) -> bool:
         if token in ("(", "{"):
             return True
         return not self._is_op(token)
 
     def _from_tokens_to_fullformlist(self, tokens: list):
-        stack: List[list] = [[]]
+        stack: list[list] = [[]]
         open_seq = []
         pointer: int = 0
         while pointer < len(tokens):
@@ -810,7 +811,7 @@ class MathematicaParser:
             while pointer < size:
                 token = tokens[pointer]
                 if isinstance(token, str) and token in op_dict:
-                    op_name: tUnion[str, Callable] = op_dict[token]
+                    op_name: str | Callable = op_dict[token]
                     node: list
                     first_index: int
                     if isinstance(op_name, str):

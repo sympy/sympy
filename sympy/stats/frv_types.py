@@ -226,7 +226,7 @@ class DieDistribution(SingleFiniteDistribution):
     def set(self):
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.sides))
-        return set(map(Integer, list(range(1, self.sides + 1))))
+        return set(map(Integer, range(1, self.sides + 1)))
 
     def pmf(self, x):
         x = sympify(x)
@@ -349,7 +349,7 @@ def Coin(name, p=S.Half):
     Parameters
     ==========
 
-    p : Rational Numeber between 0 and 1
+    p : Rational Number between 0 and 1
       Represents probability of getting "Heads", by default is Half
 
     Examples
@@ -511,7 +511,7 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
     def set(self):
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.n))
-        return set(map(Integer, list(range(0, self.n + 1))))
+        return set(map(Integer, range(self.n + 1)))
 
     def pmf(self, k):
         n, a, b = self.n, self.alpha, self.beta
@@ -690,7 +690,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return set(list(Range(1, self.k+1)))
+        return set(map(Integer, range(1, self.k + 1)))
 
     @property # type: ignore
     @cacheit
@@ -792,7 +792,7 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return set(list(Range(1, self.k+1)))
+        return set(map(Integer, range(1, self.k + 1)))
 
     @property
     def is_symbolic(self):

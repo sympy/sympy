@@ -103,6 +103,9 @@ def test__linsolve_float():
 
 
 def test__linsolve_deprecated():
-    assert _linsolve([Eq(x**2, x**2+y)], [x, y]) == {x:x, y:S.Zero}
-    assert _linsolve([(x+y)**2-x**2], [x]) == {x:-y/2}
-    assert _linsolve([Eq((x+y)**2, x**2)], [x]) == {x:-y/2}
+    raises(PolyNonlinearError, lambda:
+        _linsolve([Eq(x**2, x**2 + y)], [x, y]))
+    raises(PolyNonlinearError, lambda:
+        _linsolve([(x + y)**2 - x**2], [x]))
+    raises(PolyNonlinearError, lambda:
+        _linsolve([Eq((x + y)**2, x**2)], [x]))

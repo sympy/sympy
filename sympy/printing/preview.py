@@ -205,7 +205,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     You may also enter ``'file'`` for the viewer argument. Doing so will cause
     this function to return a file object in read-only mode, if ``filename``
-    is unset. However, if it was set, then 'preview' writes the genereted
+    is unset. However, if it was set, then 'preview' writes the generated
     file to this filename instead.
 
     There is also support for writing to a ``io.BytesIO`` like object, which

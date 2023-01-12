@@ -1,0 +1,144 @@
+<svg width="2417" height="1252" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve"
+     overflow="hidden"><defs><clipPath id="clip0"><rect x="946" y="780" width="2417" height="1252"/></clipPath><clipPath
+        id="clip1"><rect x="1072" y="779" width="1806" height="1229"/></clipPath><clipPath
+        id="clip2"><rect x="1072" y="779" width="1806" height="1229"/></clipPath><clipPath
+        id="clip3"><rect x="1072" y="779" width="1806" height="1229"/></clipPath></defs>
+    <g clip-path="url(#clip0)" transform="translate(-946 -780)"><g clip-path="url(#clip1)"><g clip-path="url(#clip2)"><g clip-path="url(#clip3)"><path d="M511.76 2591.44 1998.09 1621.08C2045.22 1586.06 2049.48 1505.09 2023.18 1456.08 1992.39 1398.69 1919.74 1355.8 1858.92 1385.37L275.224 2155.68C275.224 2155.68 447.27 2494.24 511.76 2591.44Z" fill="#D5EB7C" transform="matrix(1.00033 0 0 1 836.362 -595.753)"/><path
+            d="M275.224 2155.68C430.443 2079.45 649.049 2501.12 518.675 2587.31 354.239 2696.03 150.225 2217.06 275.224 2155.68Z"
+            fill="#9FCF6A" transform="matrix(1.00033 0 0 1 836.362 -595.753)"/><path
+            d="M903.739 1697.38C640.809 1822.25 925.717 2444.2 1233.98 2293.83 1494.75 2166.64 1140.76 1584.82 903.739 1697.38Z"
+            fill="#2CD3E0" fill-opacity="0.4"
+            transform="matrix(1.00033 0 0 1 836.362 -595.753)"/><path
+            d="M945.805 1831.14C818.378 1894.31 1014.34 2262.6 1149.13 2176.45 1262.1 2104.25 1080.03 1764.61 945.805 1831.14Z"
+            fill="#D5EB7C" fill-opacity="0.50237"
+            transform="matrix(1.00033 0 0 1 836.362 -595.753)"/><path
+            d="M1452.12 1977.49 1530.42 2098.75 1776.03 1920.09 1700.67 1815.27Z"
+            fill="#48E8E0" transform="matrix(1.00033 0 0 1 836.362 -595.753)"/><path
+            d="M1452.12 1977.49 1530.42 2098.75C1495.79 2126.44 1446.53 2130.75 1402.65 2122.86 1363.81 2115.87 1337.74 2106.37 1299.96 2076Z"
+            fill="#25A9A9" transform="matrix(1.00033 0 0 1 836.362 -595.753)"/><path
+            d="M1542.16 1669.03 1790.69 1533.18C1721.21 1425.64 1581.43 1384.07 1520.2 1410.55L1230.56 1534.33Z"
+            fill="#58F8F9" transform="matrix(1.00033 0 0 1 836.362 -595.753)"/><path
+            d="M1113.51 1750.79C1100.97 1486.61 1371.01 1445.3 1542.16 1669.03L1457.18 1741.36C1424.98 1689.84 1335.83 1639.51 1286.34 1663.82Z"
+            fill="#2CD3E0" transform="matrix(1.00033 0 0 1 836.362 -595.753)"/><path
+            d="M1457.18 1741.36 1542.16 1669.03 1790.69 1533.18 1698.59 1608.52Z"
+            fill="#4DBBB8" transform="matrix(1.00033 0 0 1 836.362 -595.753)"/></g></g></g>
+        <path d="M0 0 1717.65 1008.84" stroke="#000000" stroke-width="13.75"
+              stroke-miterlimit="8" stroke-dasharray="55 41.25" fill="none"
+              fill-rule="evenodd" transform="matrix(1 0 0 -1 1138 1857.84)"/>
+        <text fill="#0070C0" font-family="Arial,Arial_MSFontService,sans-serif"
+              font-weight="400" font-size="83"
+              transform="matrix(1 0 0 1 2688.59 1372)">child_point</text>
+        <path d="M2655.66 1342.81C2545.87 1342.81 2436.08 1319.23 2436.08 1295.66 2436.08 1272.08 2326.29 1248.5 2216.5 1248.5"
+              stroke="#0070C0" stroke-width="6.875" stroke-miterlimit="8"
+              fill="none" fill-rule="evenodd"/>
+        <text fill="#4472C4" font-family="Arial,Arial_MSFontService,sans-serif"
+              font-weight="400" font-size="83"
+              transform="matrix(1 0 0 1 2579.02 1477)">child_interframe</text>
+        <path d="M2272.5 1328.5C2341.09 1328.5 2409.67 1358.29 2409.67 1388.09 2409.67 1417.88 2478.26 1447.68 2546.84 1447.68"
+              stroke="#0070C0" stroke-width="6.875" stroke-miterlimit="8"
+              fill="none" fill-rule="evenodd"/>
+        <text fill="#FF0000" font-family="Arial,Arial_MSFontService,sans-serif"
+              font-weight="400" font-size="83"
+              transform="matrix(1 0 0 1 2142.63 1697)">joint_axis</text>
+        <path d="M1995.5 1393.5C2150.15 1393.5 2304.79 1497.19 2304.79 1600.88"
+              stroke="#FF0000" stroke-width="6.875" stroke-miterlimit="8"
+              fill="none" fill-rule="evenodd"/>
+        <text fill="#008000" font-family="Arial,Arial_MSFontService,sans-serif"
+              font-weight="400" font-size="83"
+              transform="matrix(1 0 0 1 1007.53 1312)">parent_point</text>
+        <path d="M1499.5 1282.5C1585.2 1282.5 1670.89 1318.82 1670.89 1355.13 1670.89 1391.45 1756.59 1427.76 1842.29 1427.76"
+              stroke="#008000" stroke-width="6.875" stroke-miterlimit="8"
+              fill="none" fill-rule="evenodd"/>
+        <text fill="#008000" font-family="Arial,Arial_MSFontService,sans-serif"
+              font-weight="400" font-size="83"
+              transform="matrix(1 0 0 1 995.5 1180)">parent_interframe</text>
+        <path d="M1870.2 1275.73C1822.78 1275.73 1775.35 1244.42 1775.35 1213.12 1775.35 1181.81 1727.93 1150.5 1680.5 1150.5"
+              stroke="#008000" stroke-width="6.875" stroke-miterlimit="8"
+              fill="none" fill-rule="evenodd"/>
+        <path d="M2.6365-4.43123 92.6074 49.0998 87.3344 57.9622-2.6365 4.43123ZM93.4492 37.6008 129.852 77.2595 77.6302 64.1882Z"
+              fill="#FF0000" transform="matrix(1 0 0 -1 1896 1413.26)"/>
+        <path d="M5.76517 195.514 8.82214 182.003 13.0921 167.728 17.9118 153.839 23.1764 140.392 28.9539 127.314 35.1826 114.729 41.9266 102.577 49.1798 90.8701 56.8233 79.7234 64.9211 69.1389 73.4762 59.0516 82.4161 49.6646 91.6311 40.8958 98.7401 48.3664 89.617 57.0478 89.7963 56.8685 81.0463 66.056 81.2449 65.8351 72.8699 75.7101 73.0327 75.5081 65.0952 85.8831 65.2525 85.666 57.7525 96.6035 57.8832 96.4032 50.7582 107.903 50.8835 107.69 44.2585 119.627 44.3712 119.412 38.2462 131.787 38.3416 131.584 32.654 144.459 32.7389 144.255 27.5514 157.505 27.6213 157.315 22.8713 171.003 22.94 170.79 18.7525 184.79 18.8416 184.45 15.8234 197.79ZM26.9368 194.353 2.47527 242.307-3.49953 188.807Z"
+              fill="#FF0000"
+              transform="matrix(-0.855457 0.517873 0.517873 0.855457 2230.97 885.408)"/>
+        <path d="M2176 932 2176 1267.62" stroke="#000000" stroke-width="13.75"
+              stroke-miterlimit="8" stroke-dasharray="55 41.25" fill="none"
+              fill-rule="evenodd"/>
+        <path d="M2151 1247.5C2151 1229.55 2165.55 1215 2183.5 1215 2201.45 1215 2216 1229.55 2216 1247.5 2216 1265.45 2201.45 1280 2183.5 1280 2165.55 1280 2151 1265.45 2151 1247.5Z"
+              fill="#0070C0" fill-rule="evenodd"/>
+        <path d="M3.41065-3.86709 139.403 116.074 132.582 123.808-3.41065 3.86709ZM142.358 104.929 170.797 150.637 121.894 128.132Z"
+              fill="#0070C0" transform="matrix(1 0 0 -1 2182 1244.64)"/>
+        <path d="M2.62819-4.43616 119.006 64.5118 113.75 73.3841-2.62819 4.43616ZM119.827 53.0113 156.304 92.6017 104.057 79.6283Z"
+              fill="#0070C0" transform="matrix(-1 0 0 1 2182.3 1244)"/>
+        <path d="M2186.12 1239.9 2278.22 1362.25 2269.98 1368.45 2177.88 1246.1ZM2283.36 1351.92 2302.01 1402.42 2258.64 1370.53Z"
+              fill="#0070C0"/>
+        <path d="M1873 1099 1873 1434.62" stroke="#000000" stroke-width="13.75"
+              stroke-miterlimit="8" stroke-dasharray="55 41.25" fill="none"
+              fill-rule="evenodd"/>
+        <path d="M1842 1426.5C1842 1408.55 1856.55 1394 1874.5 1394 1892.45 1394 1907 1408.55 1907 1426.5 1907 1444.45 1892.45 1459 1874.5 1459 1856.55 1459 1842 1444.45 1842 1426.5Z"
+              fill="#008000" fill-rule="evenodd"/>
+        <path d="M5.15625-8.6517e-06 5.15653 168.679-5.15597 168.679-5.15625 8.6517e-06ZM15.469 163.522 0.000360892 215.085-15.4685 163.523Z"
+              fill="#008000" transform="matrix(1 0 0 -1 1873 1426.09)"/>
+        <path d="M2.61768-4.44237 135.145 73.65 129.91 82.5347-2.61768 4.44237ZM135.938 62.1475 172.509 101.651 120.232 88.8017Z"
+              fill="#008000" transform="matrix(-1 0 0 1 1872.51 1426)"/>
+        <path d="M1874.22 1419.99 2011.39 1453.5 2008.94 1463.52 1871.78 1430.01ZM2008.82 1442.26 2055.24 1469.53 2001.48 1472.31Z"
+              fill="#008000"/>
+        <text fill="#FF0000" font-family="Arial,Arial_MSFontService,sans-serif"
+              font-weight="400" font-size="83"
+              transform="matrix(0.871081 -0.491138 0.491138 0.871081 1895.03 1019)">q1, u1</text>
+        <path d="M42.9929 18.2139 262.27 141.267 257.224 150.261 37.9461 27.2072ZM37.3959 38.7237 0 0 52.5362 11.7441ZM262.82 129.751 300.216 168.474 247.68 156.73Z"
+              fill="#FF0000" transform="matrix(1 0 0 -1 1868 1098.47)"/>
+        <text fill="#FF0000" font-family="Arial,Arial_MSFontService,sans-serif"
+              font-weight="400" font-size="83"
+              transform="matrix(1 0 0 1 2261.25 972)">q0, u0<tspan
+                fill="#0070C0" font-size="83" x="421.434" y="271">child.masscenter</tspan></text>
+        <path d="M2490.5 1094.5C2530.42 1094.5 2570.34 1124.26 2570.34 1154.02 2570.34 1183.78 2610.27 1213.54 2650.19 1213.54"
+              stroke="#0070C0" stroke-width="6.875" stroke-miterlimit="8"
+              fill="none" fill-rule="evenodd"/>
+        <text fill="#0070C0" font-family="Arial,Arial_MSFontService,sans-serif"
+              font-weight="400" font-size="83"
+              transform="matrix(1 0 0 1 2731.39 1136)">child.frame</text>
+        <path d="M2575.5 997.5C2606.42 997.5 2637.34 1024.82 2637.34 1052.15 2637.34 1079.47 2668.27 1106.8 2699.19 1106.8"
+              stroke="#0070C0" stroke-width="6.875" stroke-miterlimit="8"
+              fill="none" fill-rule="evenodd"/>
+        <text fill="#008000" font-family="Arial,Arial_MSFontService,sans-serif"
+              font-weight="400" font-size="83"
+              transform="matrix(1 0 0 1 1680.05 1963)">parent<tspan
+                font-size="83" x="233.75" y="0">.</tspan>
+            <tspan font-size="83" x="256.667" y="0">masscenter</tspan></text>
+        <path d="M1647.08 1933.28C1573.29 1933.28 1499.5 1811.89 1499.5 1690.5"
+              stroke="#008000" stroke-width="6.875" stroke-miterlimit="8"
+              fill="none" fill-rule="evenodd"/>
+        <text fill="#008000" font-family="Arial,Arial_MSFontService,sans-serif"
+              font-weight="400" font-size="83"
+              transform="matrix(1 0 0 1 1679.56 1857)">parent.frame</text>
+        <path d="M0 0C69.0051 0 138.01 23.1884 138.01 46.3768" stroke="#008000"
+              stroke-width="6.875" stroke-miterlimit="8" fill="none"
+              fill-rule="evenodd"
+              transform="matrix(1.83697e-16 1 1 -1.83697e-16 1600.5 1690.5)"/>
+        <path d="M2399 1093.5C2399 1068.37 2419.37 1048 2444.5 1048 2469.63 1048 2490 1068.37 2490 1093.5 2490 1118.63 2469.63 1139 2444.5 1139 2419.37 1139 2399 1118.63 2399 1093.5Z"
+              stroke="#000000" stroke-width="13.75" stroke-miterlimit="8"
+              fill-rule="evenodd"/>
+        <path d="M2399 1093.5C2399 1068.37 2419.37 1048 2444.5 1048L2444.5 1093.5Z"
+              fill="#FFFFFF" fill-rule="evenodd"/>
+        <path d="M2490 1093.5C2490 1118.63 2469.63 1139 2444.5 1139L2444.5 1093.5Z"
+              fill="#FFFFFF" fill-rule="evenodd"/>
+        <path d="M3.41065-3.86709 139.403 116.074 132.582 123.808-3.41065 3.86709ZM142.358 104.929 170.797 150.637 121.894 128.132Z"
+              fill="#0070C0" transform="matrix(1 0 0 -1 2446 1089.64)"/>
+        <path d="M2.62819-4.43616 119.006 64.5118 113.75 73.3841-2.62819 4.43616ZM119.827 53.0113 156.304 92.6017 104.057 79.6283Z"
+              fill="#0070C0" transform="matrix(-1 0 0 1 2446.3 1088)"/>
+        <path d="M2450.12 1084.9 2542.22 1207.25 2533.98 1213.45 2441.88 1091.1ZM2547.36 1196.92 2566.01 1247.42 2522.64 1215.53Z"
+              fill="#0070C0"/>
+        <path d="M1454 1644.5C1454 1619.37 1474.37 1599 1499.5 1599 1524.63 1599 1545 1619.37 1545 1644.5 1545 1669.63 1524.63 1690 1499.5 1690 1474.37 1690 1454 1669.63 1454 1644.5Z"
+              stroke="#000000" stroke-width="13.75" stroke-miterlimit="8"
+              fill-rule="evenodd"/>
+        <path d="M1454 1644.5C1454 1619.37 1474.37 1599 1499.5 1599L1499.5 1644.5Z"
+              fill="#FFFFFF" fill-rule="evenodd"/>
+        <path d="M1545 1644.5C1545 1669.63 1524.63 1690 1499.5 1690L1499.5 1644.5Z"
+              fill="#FFFFFF" fill-rule="evenodd"/>
+        <path d="M5.15625-8.6517e-06 5.15653 168.679-5.15597 168.679-5.15625 8.6517e-06ZM15.469 163.522 0.000360892 215.085-15.4685 163.523Z"
+              fill="#008000" transform="matrix(1 0 0 -1 1501 1645.08)"/>
+        <path d="M2.61768-4.44237 135.145 73.65 129.91 82.5347-2.61768 4.44237ZM135.938 62.1475 172.509 101.651 120.232 88.8017Z"
+              fill="#008000" transform="matrix(-1 0 0 1 1500.51 1645)"/>
+        <path d="M1502.22 1638.99 1639.39 1672.5 1636.94 1682.52 1499.78 1649.01ZM1636.82 1661.26 1683.24 1688.53 1629.48 1691.31Z"
+              fill="#008000"/></g></svg>

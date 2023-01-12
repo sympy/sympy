@@ -6,13 +6,13 @@ from sympy.functions.elementary.trigonometric import acos, sin, cos
 from sympy.matrices.dense import Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols,
     KanesMethod, inertia, msubs, Point, RigidBody, dot)
-from sympy.testing.pytest import slow, ON_TRAVIS, skip
+from sympy.testing.pytest import slow, ON_CI, skip
 
 
 @slow
 def test_bicycle():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     # Code to get equations of motion for a bicycle modeled as in:
     # J.P Meijaard, Jim M Papadopoulos, Andy Ruina and A.L Schwab. Linearized
     # dynamics equations for the balance and steer of a bicycle: a benchmark

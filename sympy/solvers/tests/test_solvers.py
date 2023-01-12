@@ -114,262 +114,6 @@ def test_guess_transcendental():
     assert guess_solve_strategy(a*x**b - y, x)  # == GS_TRANSCENDENTAL
 
 
-def test_solve_io():
-    Y = 1 - y**2
-    X = 1 - x**2
-    flags = {}, dict(dict = True), dict(set = True)
-
-    ##### single one equation
-
-    d = {x: 0}
-    s = ([x], {(0,)})
-    syx = ([y, x], {(y, 0)})
-    sy = ([y], set())
-    vx = [0]
-    vyx = [(y, 0)]
-    e =                                                                         x
-    assert [solve(e, **f) for f in flags] ==            [vx,    [d],    s]      # no syms
-    assert [solve([e], **f) for f in flags] ==          [d,     [d],    s]
-
-    assert [solve(e, x, **f) for f in flags] ==         [vx,    [d],    s]      # x
-    assert [solve([e], x, **f) for f in flags] ==       [d,     [d],    s]
-
-    assert [solve(e, {x}, **f) for f in flags] ==       [vx,    [d],    s]      # {x}
-    assert [solve([e], {x}, **f) for f in flags] ==     [d,     [d],    s]
-
-    assert [solve(e, y, x, **f) for f in flags] ==      [vyx,   [d],    syx]    # y, x
-    assert [solve([e], y, x, **f) for f in flags] ==    [d,     [d],    syx]
-
-    assert [solve(e, {y, x}, **f) for f in flags] ==    [[d],   [d],    s]      # {y, x}
-    assert [solve([e], {y, x}, **f) for f in flags] ==  [d,     [d],    s]
-
-    assert [solve(e, y, **f) for f in flags] ==         [[],    [],     sy]     # y (not in equation)
-    assert [solve([e], y, **f) for f in flags] ==       [[],    [],     sy]
-
-    lod = [{x: -2}, {x: 2}]
-    s = ([x], {(2,), (-2,)})
-    sxy = ([x, y], {(2, y), (-2, y)})
-    syx = ([y, x], {(y, -2), (y, 2)})
-    vx = [-2, 2]
-    tx = [(-2,),(2,)]
-    txy = [(-2, y), (2, y)]
-    tyx = [(y, -2), (y, 2)]
-    sy = ([y], set())
-    e =                                                                         x**2 - 4
-    assert [solve(e, **f) for f in flags] ==            [vx,    lod,    s]      # no syms
-    assert [solve([e], **f) for f in flags] ==          [lod,   lod,    s]
-
-    assert [solve(e, x, **f) for f in flags] ==         [vx,    lod,    s]      # x
-    assert [solve([e], x, **f) for f in flags] ==       [tx,    lod,    s]
-
-    assert [solve(e, {x}, **f) for f in flags] ==       [vx,    lod,    s]      # {x}
-    assert [solve([e], {x}, **f) for f in flags] ==     [lod,   lod,    s]
-
-    assert [solve(e, x, y, **f) for f in flags] ==      [txy,   lod,    sxy]    # x, y (not in equation)
-    assert [solve([e], x, y, **f) for f in flags] ==    [txy,   lod,    sxy]
-
-    assert [solve(e, y, x, **f) for f in flags] ==      [tyx,   lod,    syx]    # y (not in equation), x
-    assert [solve([e], y, x, **f) for f in flags] ==    [tyx,   lod,    syx]
-
-    assert [solve(e, {y, x}, **f) for f in flags] ==    [lod,   lod,    s]      # {y (not in equation), x}
-    assert [solve(e, y, **f) for f in flags] ==         [[],    [],     sy]
-
-    vx = y - 1
-    vy = x + 1
-    dx = {x: vx}
-    dy = {y: vy}
-    txy = (vx, y)
-    tyx = (vy, x)
-    txzy = (vx, z, y)
-    s = ([x], {(vx,)})
-    sxy = ([x, y], {txy})
-    syx = ([y, x], {tyx})
-    sxzy = ([x, z, y], {txzy})
-    e =                                                                             x - y + 1
-    assert [solve(e, **f) for f in flags] ==            [[dx],      [dx],   s]      # no syms
-    assert [solve([e], **f) for f in flags] ==          [dx,        [dx],   s]
-
-    assert [solve(e, x, **f) for f in flags] ==         [[vx],      [dx],   s]      # x
-    assert [solve([e], x, **f) for f in flags] ==       [dx,        [dx],   s]
-
-    assert [solve(e, {x}, **f) for f in flags] ==       [[vx],      [dx],   s]      # {x}
-    assert [solve([e], {x}, **f) for f in flags] ==     [dx,        [dx],   s]
-
-    assert [solve(e, x, y, **f) for f in flags] ==      [[txy],     [dx],   sxy]    # x, y
-    assert [solve([e], x, y, **f) for f in flags] ==    [dx,        [dx],   sxy]
-
-    assert [solve(e, y, x, **f) for f in flags] ==      [[tyx],     [dy],   syx]    # y, x
-    assert [solve([e], y, x, **f) for f in flags] ==    [dy,        [dy],   syx]
-
-    assert [solve(e, {y, x}, **f) for f in flags] ==    [[dx],      [dx],   s]      # {x, y}
-    assert [solve([e], {y, x}, **f) for f in flags] ==  [dx,        [dx],   s]
-
-    assert [solve(e, x, z, y, **f) for f in flags] ==   [[txzy],    [dx],   sxzy]   # x, z (not in equation), y
-    assert [solve([e], x, z, y, **f) for f in flags] == [dx,        [dx],   sxzy]
-
-    d = {x: Y}
-    sx = ([x], {(Y,)})
-    txy = (Y, y)
-    tyx = (y, Y)
-    txzy = (Y, z, y)
-    sxy = ([x, y], {txy})
-    syx = ([y, x], {tyx})
-    sxzy = ([x, z, y], {txzy})
-    e =                                                                                 x + y**2 - 1
-    assert [solve(e, **f) for f in flags] ==                [[d],       [d],    sx]     # no syms
-    assert [solve([e], **f) for f in flags] ==              [[d],       [d],    sx]
-
-    assert [solve(e, x, **f) for f in flags] ==             [[Y],       [d],    sx]     # x
-    assert [solve([e], x, **f) for f in flags] ==           [d,         [d],    sx]
-
-    assert [solve(e, {x}, **f) for f in flags] ==           [[Y],       [d],    sx]     # {x}
-    assert [solve([e], {x}, **f) for f in flags] ==         [d,         [d],    sx]
-
-    assert [solve(e, x, y, **f) for f in flags] ==          [[txy],     [d],    sxy]    # x, y }
-    assert [solve([e], x, y, **f) for f in flags] ==        [[txy],     [d],    sxy]    #      } symbol selected to solve
-                                                                                        #      } for is not the same
-    assert [solve(e, y, x, **f) for f in flags] ==          [[tyx],     [d],    syx]    # y, x }
-    assert [solve([e], y, x, **f) for f in flags] ==        [[tyx],     [d],    syx]
-
-    assert [solve(e, {y, x}, **f) for f in flags] ==        [[d],       [d],    sx]     # {y,x}
-    assert [solve([e], {y, x}, **f) for f in flags] ==      [[d],       [d],    sx]
-
-    assert [solve(e, x, z, y, **f) for f in flags] ==       [[txzy],    [d],    sxzy]   # x, z (not in equation), y
-    assert [solve([e], x, z, y, **f) for f in flags] ==     [[txzy],    [d],    sxzy]
-
-    assert [solve(e, {x, z, y}, **f) for f in flags] ==     [[d],       [d],    sx]     # {x, y, z (not in equation)}
-    assert [solve([e], {x, z, y}, **f) for f in flags] ==   [[d],       [d],    sx]
-
-    vy = X
-    vx = sqrt(1 - y)
-    txy = (x, vy)
-    tyx = (vy, x)
-    sx = ([x], {(-vx,), (vx,)})
-    sy = ([y], {(vy,)})
-    sxy = ([x, y], {(-vx, y), (vx, y)})
-    sxyy = ([x, y], {txy})
-    syx = ([y, x], {(y, -vx), (y, vx)})
-    syxx = ([y, x], {(vy, x)})
-    sxzyx = ([x, z, y], {(-vx, z, y), (vx, z, y)})
-    sxzyy = ([x, z, y], {(x, z, vy)})
-    ltx = [(-vx,), (vx,)]
-    lty = [(x, z, vy)]
-    ltxy = [(-vx, y), (vx, y)]
-    ltyx = [(y, -vx), (y, vx)]
-    ltxzy = [(-vx, z, y), (vx, z, y)]
-    lvx = [-vx, vx]
-    lodx = [{x: -vx}, {x: vx}]
-    dy = {y: vy}
-    e =                                                                             y + x**2 - 1
-    assert [solve(e, **f) for f in flags] ==                [[dy],  [dy],   sy]     # no syms
-    assert [solve([e], x, **f) for f in flags] ==           [ltx,   lodx,   sx]
-
-    assert [solve(e, {x}, **f) for f in flags] ==           [lvx,   lodx,   sx]     # {x}
-    assert [solve([e], {x}, **f) for f in flags] ==         [lodx,  lodx,   sx]
-
-    assert [solve(e, x, y, **f) for f in flags] ==          [[txy], [dy],   sxyy]   # x, y
-    assert [solve([e], x, y, **f) for f in flags] ==        [ltxy,  lodx,   sxy]
-
-    assert [solve(e, y, x, **f) for f in flags] ==          [[tyx], [dy],   syxx]   # y, x
-    assert [solve([e], y, x, **f) for f in flags] ==        [ltyx,  lodx,   syx]
-
-    assert [solve(e, {y, x}, **f) for f in flags] ==        [[dy],  [dy],   sy]     # {y,x}
-    assert [solve([e], {y, x}, **f) for f in flags] ==      [lodx,  lodx,   sx]
-
-    assert [solve(e, x, z, y, **f) for f in flags] ==       [lty,   [dy],   sxzyy]  # x, z (not in equation), y
-    assert [solve([e], x, z, y, **f) for f in flags] ==     [ltxzy, lodx,   sxzyx]
-
-    assert [solve(e, {x, z, y}, **f) for f in flags] ==     [[dy],  [dy],   sy]     # {x, y, z (not in equation)}
-    assert [solve([e], {x, z, y}, **f) for f in flags] ==   [lodx,  lodx,   sx]
-
-    ry = sqrt(Y)
-    rx = sqrt(X)
-    lod = [{x: -ry}, {x: ry}]
-    lody = [{y: -rx}, {y: rx}]
-    sx = ([x], {(-ry,), (ry,)})
-    sx1 = ([x], {(ry,), (-ry,)})
-    sxy = ([x, y], {(-ry, y), (ry, y)})
-    syxy = ([y, x], {(rx, x), (-rx, x)})
-    syxx = ([y, x], {(y, -ry), (y, ry)})
-    tm = (-ry, z, y)
-    tp = (ry, z, y)
-    vx = [-ry, ry]
-    tx = [(-ry,), (ry,)]
-    txy = [(-ry, y), (ry, y)]
-    tyxx = [(-rx, x), (rx, x)]
-    tyxy = [(y, -ry), (y, ry)]
-    sxzy = ([x, z, y], {tm, tp})
-    e =                                                                                 y**2 + x**2 - 1
-    assert [solve(e, **f) for f in flags] ==                [lod,       lod,    sx]     # no syms
-    assert [solve([e], **f) for f in flags] ==              [lod,       lod,    sx1]
-
-    assert [solve(e, x, **f) for f in flags] ==             [vx,        lod,    sx]     # x
-    assert [solve([e], x, **f) for f in flags] ==           [tx,        lod,    sx1]
-
-    assert [solve(e, {x}, **f) for f in flags] ==           [vx,        lod,    sx]     # {x}
-    assert [solve([e], {x}, **f) for f in flags] ==         [lod,       lod,    sx1]
-
-    assert [solve(e, x, y, **f) for f in flags] ==          [txy,       lod,    sxy]    # x, y
-    assert [solve([e], x, y, **f) for f in flags] ==        [txy,       lod,    sxy]
-
-    assert [solve(e, y, x, **f) for f in flags] ==          [tyxx,      lody,   syxy]   # y, x
-    assert [solve([e], y, x, **f) for f in flags] ==        [tyxy,      lod,    syxx]
-
-    assert [solve(e, {y, x}, **f) for f in flags] ==        [lod,       lod,    sx]     # {x, y}
-    assert [solve([e], {y, x}, **f) for f in flags] ==      [lod,       lod,    sx1]
-
-    assert [solve(e, x, z, y, **f) for f in flags] ==       [[tm, tp],  lod,    sxzy]   # x, z (not in equation), y
-    assert [solve([e], x, z, y, **f) for f in flags] ==     [[tm, tp],  lod,    sxzy]
-
-    assert [solve(e, {x, z, y}, **f) for f in flags] ==     [lod,       lod,    sx]     # {x, y, z (not in equation)}
-    assert [solve([e], {x, z, y}, **f) for f in flags] ==   [lod,       lod,    sx1]
-
-    ##### more than one equation
-
-    sx = ([x], set())
-    sxy = ([x, y], {(0, -1), (0, 1)})
-    syx = ([y, x], {(-1, 0), (1, 0)})
-    lod = [{x: 0, y: -1}, {x: 0, y: 1}]
-    txzy = [(0, z, -1), (0, z, 1)]
-    txy = [(0, -1), (0, 1)]
-    tyx = [(-1, 0), (1, 0)]
-    sxzy = ([x, z, y], {(0, z, 1), (0, z, -1)})
-    e =                                                                            (x, x + y**2 - 1)
-    assert [solve([*e], **f) for f in flags] ==             [lod,   lod,    sxy]    # no symbol
-    assert [solve([*e], x, **f) for f in flags] ==          [[],    [],     sx]     # x
-    assert [solve([*e], {x}, **f) for f in flags] ==        [[],    [],     sx]     # {x}
-    assert [solve([*e], x, y, **f) for f in flags] ==       [txy,   lod,    sxy]    # x, y
-    assert [solve([*e], y, x, **f) for f in flags] ==       [tyx,   lod,    syx]    # y, x
-    assert [solve([*e], {y, x}, **f) for f in flags] ==     [lod,   lod,    sxy]    # {x, y}
-    assert [solve([*e], x, z, y, **f) for f in flags] ==    [txzy,  lod,    sxzy]   # x, z (missing), y
-    assert [solve([*e], {x, z, y}, **f) for f in flags] ==  [lod,   lod,    sxy]    # {x, y, z (missing)}
-    assert solve((exp(x) - 1, y - 2)) == {x: 0, y: 2}
-
-    d = {x: 0, y: 1}
-    lxy = [(0, 1)]
-    lyx = [(1, 0)]
-    txzy = [(0, z, 1)]
-    sx = ([x], set())
-    sxy = ([x, y], {(0, 1)})
-    syx = ([y, x], {(1, 0)})
-    sxzy = ([x, z, y], {(0, z, 1)})
-    e =                                                                            (x, y + x**2 - 1)
-    assert [solve([*e], **f) for f in flags] ==             [[d],   [d],    sxy]    # no symbol
-    assert [solve([*e], x, **f) for f in flags] ==          [[],    [],     sx]     # x
-    assert [solve([*e], {x}, **f) for f in flags] ==        [[],    [],     sx]     # {x}
-    assert [solve([*e], x, y, **f) for f in flags] ==       [lxy,   [d],    sxy]    # x, y
-    assert [solve([*e], y, x, **f) for f in flags] ==       [lyx,   [d],    syx]    # y, x
-    assert [solve([*e], {y, x}, **f) for f in flags] ==     [[d],   [d],    sxy]    # {x, y}
-    assert [solve([*e], x, z, y, **f) for f in flags] ==    [txzy,  [d],    sxzy]   # x, z (missing), y
-    assert [solve([*e], {x, z, y}, **f) for f in flags] ==  [[d],   [d],    sxy]    # {x, y, z (missing)}
-    e = a*x + b - 2*x - y
-    assert [solve(e, a, b, **f) for f in flags] == [
-        {a: 2, b: y},[{a: 2, b: y}],([a, b], {(2, y)})]
-    assert [solve(e - b + b**2, a, b, **f) for f in flags] == [
-        [((-b**2 + 2*x + y)/x, b)],[{a: (-b**2 + 2*x + y)/x}],(
-        [a, b], {((-b**2 + 2*x + y)/x, b)})]
-
-
 def test_solve_args():
     # equation container, issue 5113
     ans = {x: -3, y: 1}
@@ -387,6 +131,14 @@ def test_solve_args():
     assert solve([sqrt(2)],[x]) == []
     # duplicate symbols raises
     raises(ValueError, lambda: solve((x - 3, y + 2), x, y, x))
+    raises(ValueError, lambda: solve(x, x, x))
+    # no error in exclude
+    assert solve(x, x, exclude=[y, y]) == [0]
+    # duplicate symbols raises
+    raises(ValueError, lambda: solve((x - 3, y + 2), x, y, x))
+    raises(ValueError, lambda: solve(x, x, x))
+    # no error in exclude
+    assert solve(x, x, exclude=[y, y]) == [0]
     # unordered symbols
     # only 1
     assert solve(y - 3, {y}) == [3]
@@ -405,10 +157,11 @@ def test_solve_args():
     eq = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
     # - check that flags are obeyed
     sol = solve(eq, [h, p, k], exclude=[a, b, c])
-    assert sol == {h: -b/(2*a), k: c - b**2/(4*a), p: 1/(4*a)}
+    assert sol == {h: -b/(2*a), k: (4*a*c - b**2)/(4*a), p: 1/(4*a)}
     assert solve(eq, [h, p, k], dict=True) == [sol]
     assert solve(eq, [h, p, k], set=True) == \
-        ([h, p, k], {(-b/(2*a), 1/(4*a), c - b**2/(4*a))})
+        ([h, p, k], {(-b/(2*a), 1/(4*a), (4*a*c - b**2)/(4*a))})
+    # issue 23889 - polysys not simplified
     assert solve(eq, [h, p, k], exclude=[a, b, c], simplify=False) == \
         {h: -b/(2*a), k: (4*a*c - b**2)/(4*a), p: 1/(4*a)}
     # but this only happens when system has a single solution
@@ -424,17 +177,17 @@ def test_solve_args():
         NotImplementedError, lambda: solve(exp(x) + sin(x) + exp(y) + sin(y)))
     # failed system
     # --  when no symbols given, 1 fails
-    assert solve([y, exp(x) + x]) == {x: -LambertW(1), y: 0}
+    assert solve([y, exp(x) + x]) == [{x: -LambertW(1), y: 0}]
     #     both fail
     assert solve(
-        (exp(x) - x, exp(y) - y)) == {x: -LambertW(-1), y: -LambertW(-1)}
+        (exp(x) - x, exp(y) - y)) == [{x: -LambertW(-1), y: -LambertW(-1)}]
     # --  when symbols given
-    assert solve([y, exp(x) + x], x, y) == {y: 0, x: -LambertW(1)}
+    assert solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
     # symbol is a number
     assert solve(x**2 - pi, pi) == [x**2]
     # no equations
     assert solve([], [x]) == []
-    # nonlinear systen
+    # nonlinear system
     assert solve((x**2 - 4, y - 2), x, y) == [(-2, 2), (2, 2)]
     assert solve((x**2 - 4, y - 2), y, x) == [(2, -2), (2, 2)]
     assert solve((x**2 - 4 + z, y - 2 - z), a, z, y, x, set=True
@@ -983,15 +736,43 @@ def test_solve_linear():
 
 
 def test_solve_undetermined_coeffs():
-    assert solve_undetermined_coeffs(a*x**2 + b*x**2 + b*x + 2*c*x + c + 1, [a, b, c], x) == \
-        {a: -2, b: 2, c: -1}
+    assert solve_undetermined_coeffs(
+        a*x**2 + b*x**2 + b*x + 2*c*x + c + 1, [a, b, c], x
+        ) == {a: -2, b: 2, c: -1}
     # Test that rational functions work
-    assert solve_undetermined_coeffs(a/x + b/(x + 1) - (2*x + 1)/(x**2 + x), [a, b], x) == \
-        {a: 1, b: 1}
+    assert solve_undetermined_coeffs(a/x + b/(x + 1)
+        - (2*x + 1)/(x**2 + x), [a, b], x) == {a: 1, b: 1}
     # Test cancellation in rational functions
-    assert solve_undetermined_coeffs(((c + 1)*a*x**2 + (c + 1)*b*x**2 +
-    (c + 1)*b*x + (c + 1)*2*c*x + (c + 1)**2)/(c + 1), [a, b, c], x) == \
+    assert solve_undetermined_coeffs(
+        ((c + 1)*a*x**2 + (c + 1)*b*x**2 +
+        (c + 1)*b*x + (c + 1)*2*c*x + (c + 1)**2)/(c + 1),
+        [a, b, c], x) == \
         {a: -2, b: 2, c: -1}
+    # multivariate
+    X, Y, Z = y, x**y, y*x**y
+    eq = a*X + b*Y + c*Z - X - 2*Y - 3*Z
+    coeffs = a, b, c
+    syms = x, y
+    assert solve_undetermined_coeffs(eq, coeffs) == {
+        a: 1, b: 2, c: 3}
+    assert solve_undetermined_coeffs(eq, coeffs, syms) == {
+        a: 1, b: 2, c: 3}
+    assert solve_undetermined_coeffs(eq, coeffs, *syms) == {
+        a: 1, b: 2, c: 3}
+    # check output format
+    assert solve_undetermined_coeffs(a*x + a - 2, [a]) == []
+    assert solve_undetermined_coeffs(a**2*x - 4*x, [a]) == [
+        {a: -2}, {a: 2}]
+    assert solve_undetermined_coeffs(0, [a]) == []
+    assert solve_undetermined_coeffs(0, [a], dict=True) == []
+    assert solve_undetermined_coeffs(0, [a], set=True) == ([], {})
+    assert solve_undetermined_coeffs(1, [a]) == []
+    abeq = a*x - 2*x + b - 3
+    s = {b, a}
+    assert solve_undetermined_coeffs(abeq, s, x) == {a: 2, b: 3}
+    assert solve_undetermined_coeffs(abeq, s, x, set=True) == ([a, b], {(2, 3)})
+    assert solve_undetermined_coeffs(sin(a*x) - sin(2*x), (a,)) is None
+    assert solve_undetermined_coeffs(a*x + b*x - 2*x, (a, b)) == {a: 2 - b}
 
 
 def test_solve_inequalities():
@@ -1593,6 +1374,9 @@ def test_checksol():
     assert checksol(y, x, 2) is False
     assert checksol(x+1e-10, x, 0, numerical=True) is True
     assert checksol(x+1e-10, x, 0, numerical=False) is False
+    assert checksol(exp(92*x), {x: log(sqrt(2)/2)}) is False
+    assert checksol(exp(92*x), {x: log(sqrt(2)/2) + I*pi}) is False
+    assert checksol(1/x**5, x, 1000) is False
     raises(ValueError, lambda: checksol(x, 1))
     raises(ValueError, lambda: checksol([], x, 1))
 
@@ -1659,7 +1443,8 @@ def test_issue_5849():
 
     v = I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4
     assert solve(e, *v, manual=True, check=False, dict=True) == ans
-    assert solve(e, *v, manual=True, check=False) == ans[0]
+    assert solve(e, *v, manual=True, check=False) == [
+        tuple([a.get(i, i) for i in v]) for a in ans]
     assert solve(e, *v, manual=True) == []
     assert solve(e, *v) == []
 
@@ -1715,10 +1500,11 @@ def test_issue_21882():
     answer = [
         {a: 0, f: 0, b: 0, d: 0, c: 0, g: 0},
         {a: 0, f: -d, b: 0, k: S(5)/6, c: 0, g: 0},
-        {a: -2*c, f: 0, b: c, d: 0, k: S(13)/18, g: 0},
-    ]
-
-    assert solve(equations, unknowns, dict=True) == answer
+        {a: -2*c, f: 0, b: c, d: 0, k: S(13)/18, g: 0}]
+    # but not {a: 0, f: 0, b: 0, k: S(3)/2, c: 0, d: 0, g: 0}
+    # since this is already covered by the first solution
+    got = solve(equations, unknowns, dict=True)
+    assert got == answer, (got,answer)
 
 
 def test_issue_5901():
@@ -1740,7 +1526,8 @@ def test_issue_5901():
                 h(a), g(a), set=True) == \
         ([h(a), g(a)], {
         (-sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a)),
-        (sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a))})
+        (sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a))}), solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
+                h(a), g(a), set=True)
     args = [[f(x).diff(x, 2)*(f(x) + g(x)), 2 - g(x)**2], f(x), g(x)]
     assert solve(*args, set=True)[1] == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}
@@ -2382,7 +2169,7 @@ def test_issue_8828():
     v = x, y, z
 
     f1 = (x - x1)**2 + (y - y1)**2 - (r1 - z)**2
-    f2 = (x2 - x)**2 + (y2 - y)**2 - z**2
+    f2 = (x - x2)**2 + (y - y2)**2 - z**2
     f3 = (x - x3)**2 + (y - y3)**2 - (r3 - z)**2
     F = f1,f2,f3
 
@@ -2445,16 +2232,18 @@ def test_issue_12114():
     s2 = sqrt(2 - f**2)
     s3 = sqrt(6 - 3*f**2)
     s4 = sqrt(3)*f
-    assert sol == [{a: -s, b: -s, c: -s, d: f, e: f, g: -1},
-     {a: s, b: s, c: s, d: f, e: f, g: -1},
-     {a: -s4/2 - s2/2, b: s4/2 - s2/2, c: s2, d: -f/2 + s3/2,
-        e: -f/2 - s3/2, g:2},
-     {a: -s4/2 + s2/2, b: s4/2 + s2/2, c: -s2, d: -f/2 - s3/2,
-        e: -f/2 + s3/2, g: 2},
-     {a: s4/2 - s2/2, b: -s4/2 - s2/2, c: s2, d: -f/2 - s3/2,
-        e: -f/2 + s3/2, g: 2},
-     {a: s4/2 + s2/2, b: -s4/2 + s2/2, c: -s2, d: -f/2 + s3/2,
-        e: -f/2 - s3/2, g: 2}]
+    s5 = sqrt(3)*s2
+    assert sol == [
+        {a: -s, b: -s, c: -s, d: f, e: f, g: -1},
+        {a: s, b: s, c: s, d: f, e: f, g: -1},
+        {a: -s4/2 - s2/2, b: s4/2 - s2/2, c: s2,
+            d: -f/2 + s3/2, e: -f/2 - s5/2, g: 2},
+        {a: -s4/2 + s2/2, b: s4/2 + s2/2, c: -s2,
+            d: -f/2 - s3/2, e: -f/2 + s5/2, g: 2},
+        {a: s4/2 - s2/2, b: -s4/2 - s2/2, c: s2,
+            d: -f/2 - s3/2, e: -f/2 + s5/2, g: 2},
+        {a: s4/2 + s2/2, b: -s4/2 + s2/2, c: -s2,
+            d: -f/2 + s3/2, e: -f/2 - s5/2, g: 2}]
 
 
 def test_inf():
@@ -2716,20 +2505,18 @@ def test_issue_20902():
 def test_issue_21034():
     a = symbols('a', real=True)
     system = [x - cosh(cos(4)), y - sinh(cos(a)), z - tanh(x)]
-    assert solve(system, x, y, z) == {x: cosh(cos(4)), z: tanh(cosh(cos(4))),
-        y: sinh(cos(a))}
-    #Constants inside hyperbolic functions should not be rewritten in terms of exp
+    # constants inside hyperbolic functions should not be rewritten in terms of exp
+    assert solve(system, x, y, z) == [(cosh(cos(4)), sinh(cos(a)), tanh(cosh(cos(4))))]
+    # but if the variable of interest is present in a hyperbolic function,
+    # then it should be rewritten in terms of exp and solved further
     newsystem = [(exp(x) - exp(-x)) - tanh(x)*(exp(x) + exp(-x)) + x - 5]
     assert solve(newsystem, x) == {x: 5}
-    #If the variable of interest is present in hyperbolic function, only then
-    # it shouuld be rewritten in terms of exp and solved further
 
 
 def test_issue_4886():
-    s = sqrt(R**2*a**2 + R**2*b**2 - c**2)
-    r2 = (a**2 + b**2)
-    sol = [((a*c - b*s)/r2, (b*c + a*s)/r2),
-           ((a*c + b*s)/r2, (b*c - a*s)/r2)]
+    z = a*sqrt(R**2*a**2 + R**2*b**2 - c**2)/(a**2 + b**2)
+    t = b*c/(a**2 + b**2)
+    sol = [((b*(t - z) - c)/(-a), t - z), ((b*(t + z) - c)/(-a), t + z)]
     assert solve([x**2 + y**2 - R**2, a*x + b*y - c], x, y) == sol
 
 
@@ -2751,7 +2538,8 @@ def test_issue_21852():
 def test_issue_21942():
     eq = -d + (a*c**(1 - e) + b**(1 - e)*(1 - a))**(1/(1 - e))
     sol = solve(eq, c, simplify=False, check=False)
-    assert sol == [(b/b**e - b/(a*b**e) + d**(1 - e)/a)**(1/(1 - e))]
+    assert sol == [((a*b**(1 - e) - b**(1 - e) +
+        d**(1 - e))/a)**(1/(1 - e))]
 
 
 def test_solver_flags():
@@ -2787,3 +2575,16 @@ def test_issue_10169():
         e: Rational(-40,129) - 5*2**Rational(1,4)/1032 + 5*2**Rational(3,4)/129,
         k: -10*sqrt(2)/129 + 5*2**Rational(1,4)/258 + 20*2**Rational(3,4)/129
     }
+
+
+def test_solve_undetermined_coeffs_issue_23927():
+    A, B, r, phi = symbols('A, B, r, phi')
+    eq = Eq(A*sin(t) + B*cos(t), r*sin(t - phi)).rewrite(Add).expand(trig=True)
+    soln = solve_undetermined_coeffs(eq, (r, phi), t)
+    assert soln == [{
+        phi: 2*atan((A - sqrt(A**2 + B**2))/B),
+        r: (-A**2 + A*sqrt(A**2 + B**2) - B**2)/(A - sqrt(A**2 + B**2))
+        }, {
+        phi: 2*atan((A + sqrt(A**2 + B**2))/B),
+        r: (A**2 + A*sqrt(A**2 + B**2) + B**2)/(A + sqrt(A**2 + B**2))/-1
+        }]

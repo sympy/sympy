@@ -392,7 +392,7 @@ class Product(ExprWithIntLimits):
 
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import product_simplify
-        rv = product_simplify(self)
+        rv = product_simplify(self, **kwargs)
         return rv.doit() if kwargs['doit'] else rv
 
     def _eval_transpose(self):

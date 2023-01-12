@@ -76,7 +76,137 @@ SymPy deprecation warnings.
 
 ## Version 1.12
 
-There are no deprecations yet for 1.12.
+(deprecated-mechanics-joint-coordinate-format)=
+### New Joint coordinate format
+The format, i.e. type and auto generated name, of the generalized coordinates
+and generalized speeds of the joints in the ``sympy.physics.mechanics`` module
+has changed. The data type has changed from ``list`` to ``Matrix``, which is the
+same as the type for the generalized coordinates within the ``KanesMethod``.
+The auto naming of the generalized coordinates and generalized speeds of the
+``PinJoint`` and ``PrismaticJoint`` have also changed to ``q_<joint.name>`` and
+``u_<joint.name>``. Previously each of those joints had an unique template for
+auto generating these names.
+
+(deprecated-mechanics-joint-axis)=
+### New Joint intermediate frames
+
+The definition of the joint axis in the ``sympy.physics.mechanics`` module has
+changed. Instead of using the arguments ``parent_axis`` and ``child_axis`` to
+automatically determine the joint axis and an intermediate reference frame, the
+joints now use an intermediate frame argument for both the parent and the child
+body, i.e. ``parent_interframe`` and ``child_interframe``. This means that you
+can now fully define the joint attachment, consisting of a point and frame, for
+both bodies. Furthermore, if a joint like the ``PinJoint`` has a specific joint
+axis, e.g. the axis about which the rotation occurs, then this axis can be
+specified using the ``joint_axis`` argument. An advantage of this setup is that
+one can more accurately define the transformation from the parent body to the
+child body.
+
+For example, suppose you want a ``PinJoint`` that rotates the child body about
+the ``parent.z`` axis and ``-child.z`` axis. The previous way to specify this
+joint was:
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> pin = PinJoint('pin', parent, child, parent_axis=parent.z,
+...                child_axis=-child.z)   # doctest: +SKIP
+>>> parent.dcm(child)   # doctest: +SKIP
+Matrix([
+[-cos(q_pin(t)), -sin(q_pin(t)),  0],
+[-sin(q_pin(t)),  cos(q_pin(t)),  0],
+[             0,              0, -1]])
+```
+
+When inspecting this matrix you will notice that for ``theta_pin = 0`` the child
+body is rotated $\pi$ rad about the ``parent.y`` axis. In the new definition
+you can see that we get the same result, but this time we have also specified
+this exact rotation:
+
+```py
+>>> from sympy import pi
+>>> from sympy.physics.mechanics import Body, PinJoint, ReferenceFrame
+>>> parent, child, = Body('parent'), Body('child')
+>>> int_frame = ReferenceFrame('int_frame')
+>>> int_frame.orient_axis(child.frame, child.y, pi)
+>>> pin = PinJoint('pin', parent, child, joint_axis=parent.z,
+...                child_interframe=int_frame)
+>>> parent.dcm(child)
+Matrix([
+[-cos(q_pin(t)), -sin(q_pin(t)),  0],
+[-sin(q_pin(t)),  cos(q_pin(t)),  0],
+[             0,              0, -1]])
+```
+
+However if you liked the fact that the deprecated arguments aligned the frames
+for you, then you can still make use of this feature by providing vectors to
+``parent_interframe`` and ``child_interframe``, which are then oriented such
+that the joint axis expressed in the intermediate frame is aligned with the
+given vector:
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> pin = PinJoint('pin', parent, child, parent_interframe=parent.z,
+...                child_interframe=-child.z)
+>>> parent.dcm(child)
+Matrix([
+[-cos(q_pin(t)), -sin(q_pin(t)),  0],
+[-sin(q_pin(t)),  cos(q_pin(t)),  0],
+[             0,              0, -1]])
+```
+
+(deprecated-mechanics-joint-pos)=
+### Change in joint attachment point argument
+
+The argument names for specifying the attachment points of a joint in
+``sympy.physics.mechanics`` , i.e. ``parent_joint_pos`` and ``child_joint_pos``,
+have been changed to ``parent_point`` and ``child_point``. This is because these
+arguments can now also be ``Point`` objects, so they can be exactly the same as
+the ``parent_point`` and ``child_point`` attributes.
+
+For example, suppose you want a ``PinJoint`` in the parent to be positioned at
+``parent.frame.x`` with respect to the mass center, and in the child at
+``-child.frame.x``. The previous way to specify this was:
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> pin = PinJoint('pin', parent, child, parent_joint_pos=parent.frame.x,
+...                child_joint_pos=-child.frame.x)   # doctest: +SKIP
+>>> pin.parent_point.pos_from(parent.masscenter)   # doctest: +SKIP
+parent_frame.x
+>>> pin.child_point.pos_from(child.masscenter)   # doctest: +SKIP
+- child_frame.x
+```
+
+Now you can do the same with either
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint
+>>> parent, child = Body('parent'), Body('child')
+>>> pin = PinJoint('pin', parent, child, parent_point=parent.frame.x,
+...                child_point=-child.frame.x)
+>>> pin.parent_point.pos_from(parent.masscenter)
+parent_frame.x
+>>> pin.child_point.pos_from(child.masscenter)
+- child_frame.x
+```
+
+Or
+
+```py
+>>> from sympy.physics.mechanics import Body, PinJoint, Point
+>>> parent, child = Body('parent'), Body('child')
+>>> parent_point = parent.masscenter.locatenew('parent_point', parent.frame.x)
+>>> child_point = child.masscenter.locatenew('child_point', -child.frame.x)
+>>> pin = PinJoint('pin', parent, child, parent_point=parent_point,
+...                child_point=child_point)
+>>> pin.parent_point.pos_from(parent.masscenter)
+parent_frame.x
+>>> pin.child_point.pos_from(child.masscenter)
+- child_frame.x
+```
 
 ## Version 1.11
 
@@ -618,7 +748,7 @@ Several parts of {mod}`sympy.diffgeom` have been updated to no longer be
 mutable, which better matches the immutable design used in the rest of SymPy.
 
 - Passing strings for symbol names in {class}`~.CoordSystem` is deprecated.
-  Instead you should be explicit and pass symbols with the appropiate
+  Instead you should be explicit and pass symbols with the appropriate
   assumptions, for instance, instead of
 
   ```py
@@ -1285,3 +1415,11 @@ Now:
 >>> l.equation()
 (-x + y - 1, -x + z - 2)
 ```
+
+(deprecated-conv-array-expr-module-names)=
+### Modules `sympy.tensor.array.expressions.conv_*` renamed to `sympy.tensor.array.expressions.from_*`
+
+In order to avoid possible naming and tab-completion conflicts with
+functions with similar names to the names of the modules, all modules whose
+name starts with `conv_*` in `sympy.tensor.array.expressions` have been renamed
+to `from_*`.

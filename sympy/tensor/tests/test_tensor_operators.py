@@ -422,7 +422,6 @@ def test_eval_partial_derivative_divergence_type():
             - expr2c._perform_derivative()).contract_delta(L.delta) == 0
 
 
-
 def test_eval_partial_derivative_expr1():
 
     tau, alpha = symbols("tau alpha")

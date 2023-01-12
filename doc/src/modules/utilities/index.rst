@@ -9,7 +9,7 @@ Utilities
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    autowrap.rst
    codegen.rst

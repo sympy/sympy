@@ -286,10 +286,12 @@ _known_functions_scipy_special = {
     'besseli': 'iv',
     'besselk': 'kv',
     'cosm1': 'cosm1',
+    'powm1': 'powm1',
     'factorial': 'factorial',
     'gamma': 'gamma',
     'loggamma': 'gammaln',
     'digamma': 'psi',
+    'polygamma': 'polygamma',
     'RisingFactorial': 'poch',
     'jacobi': 'eval_jacobi',
     'gegenbauer': 'eval_gegenbauer',
@@ -399,6 +401,13 @@ class SciPyPrinter(NumPyPrinter):
         return "{}({})[3]".format(
                 self._module_format("scipy.special.airy"),
                 self._print(expr.args[0]))
+
+    def _print_bernoulli(self, expr):
+        # scipy's bernoulli is inconsistent with SymPy's so rewrite
+        return self._print(expr._eval_rewrite_as_zeta(*expr.args))
+
+    def _print_harmonic(self, expr):
+        return self._print(expr._eval_rewrite_as_zeta(*expr.args))
 
     def _print_Integral(self, e):
         integration_vars, limits = _unpack_integral_limits(e)

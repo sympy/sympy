@@ -831,7 +831,7 @@ class LinearEntity(GeometrySet):
     def perpendicular_segment(self, p):
         """Create a perpendicular line segment from `p` to this line.
 
-        The enpoints of the segment are ``p`` and the closest point in
+        The endpoints of the segment are ``p`` and the closest point in
         the line containing self. (If self is not a line, the point might
         not be in self.)
 

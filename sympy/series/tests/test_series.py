@@ -6,12 +6,12 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, cos, sin)
-from sympy.integrals.integrals import Integral
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import Integral, integrate
 from sympy.series.order import O
 from sympy.series.series import series
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
-from sympy.series.gruntz import calculate_series
 
 
 def test_sin():
@@ -86,6 +86,15 @@ def test_issue_5223():
         1 + p**S('3/2')*log(p) + O(p**3*log(p)**3)
 
     assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2*log(x)**2)
+
+
+def test_issue_6350():
+    expr = integrate(exp(k*(y**3 - 3*y)), (y, 0, oo), conds='none')
+    assert expr.series(k, 0, 3) == -(-1)**(S(2)/3)*sqrt(3)*gamma(S(1)/3)**2*gamma(S(2)/3)/(6*pi*k**(S(1)/3)) - \
+        sqrt(3)*k*gamma(-S(2)/3)*gamma(-S(1)/3)/(6*pi) - \
+        (-1)**(S(1)/3)*sqrt(3)*k**(S(1)/3)*gamma(-S(1)/3)*gamma(S(1)/3)*gamma(S(2)/3)/(6*pi) - \
+        (-1)**(S(2)/3)*sqrt(3)*k**(S(5)/3)*gamma(S(1)/3)**2*gamma(S(2)/3)/(4*pi) - \
+        (-1)**(S(1)/3)*sqrt(3)*k**(S(7)/3)*gamma(-S(1)/3)*gamma(S(1)/3)*gamma(S(2)/3)/(8*pi) + O(k**3)
 
 
 def test_issue_11313():
@@ -183,11 +192,6 @@ def test_issue_6318():
 def test_x_is_base_detection():
     eq = (x**2)**Rational(2, 3)
     assert eq.series() == x**Rational(4, 3)
-
-
-def test_sin_power():
-    e = sin(x)**1.2
-    assert calculate_series(e, x) == x**1.2
 
 
 def test_issue_7203():

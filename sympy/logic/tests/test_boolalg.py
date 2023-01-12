@@ -324,6 +324,9 @@ def test_simplification_boolalg():
     # This expression can be simplified to get rid of the j variables
     assert simplify_logic(expr) == expr
 
+    # Test dontcare
+    assert simplify_logic((a & b) | c | d, dontcare=(a & b)) == c | d
+
     # check input
     ans = SOPform([x, y], [[1, 0]])
     assert SOPform([x, y], [[1, 0]]) == ans
@@ -574,7 +577,6 @@ def test_to_CNF():
     assert CNF.CNF_to_cnf(CNF.to_CNF(A >> (B & C))) == to_cnf(A >> (B & C))
     assert CNF.CNF_to_cnf(CNF.to_CNF(A & (B | C) | ~A & (B | C))) == to_cnf(A & (B | C) | ~A & (B | C))
     assert CNF.CNF_to_cnf(CNF.to_CNF(A & B)) == to_cnf(A & B)
-
 
 
 def test_to_dnf():
@@ -1111,7 +1113,9 @@ def test_relational_simplification():
     assert And(x > 1, x < -1, Eq(x, y)).simplify() == S.false
     # From #16690
     assert And(x >= y, Eq(y, 0)).simplify() == And(x >= 0, Eq(y, 0))
-
+    assert Or(Ne(x, 1), Ne(x, 2)).simplify() == S.true
+    assert And(Eq(x, 1), Ne(2, x)).simplify() == Eq(x, 1)
+    assert Or(Eq(x, 1), Ne(2, x)).simplify() == Ne(x, 2)
 
 def test_issue_8373():
     x = symbols('x', real=True)

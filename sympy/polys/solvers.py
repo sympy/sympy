@@ -208,7 +208,7 @@ def solve_lin_sys(eqs, ring, _raw=True):
         PolynomialRing (assumed equal to zero).
     ring: PolynomialRing
         The polynomial ring from which eqs are drawn. The generators of this
-        ring are the unkowns to be solved for and the domain of the ring is
+        ring are the unknowns to be solved for and the domain of the ring is
         the domain of the coefficients of the system of equations.
     _raw: bool
         If *_raw* is False, the keys and values in the returned dictionary

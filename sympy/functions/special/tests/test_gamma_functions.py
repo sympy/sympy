@@ -1,4 +1,4 @@
-from sympy.core.function import expand_func
+from sympy.core.function import expand_func, Subs
 from sympy.core import EulerGamma
 from sympy.core.numbers import (I, Rational, nan, oo, pi, zoo)
 from sympy.core.singleton import S
@@ -9,7 +9,7 @@ from sympy.functions.elementary.complexes import (Abs, conjugate, im, re)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (cos, sin, atan)
 from sympy.functions.special.error_functions import (Ei, erf, erfc)
 from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, lowergamma, multigamma, polygamma, trigamma, uppergamma)
 from sympy.functions.special.zeta_functions import zeta
@@ -250,6 +250,7 @@ def test_polygamma():
 
     assert polygamma(0, -9) is zoo
     assert polygamma(0, -1) is zoo
+    assert polygamma(Rational(3, 2), -1) is zoo
 
     assert polygamma(0, 0) is zoo
 
@@ -316,7 +317,7 @@ def test_polygamma():
     assert polygamma(k, exp_polar(2*I*pi)*x).args == (k, exp_polar(2*I*pi)*x)
 
     # Polygamma of order -1 is loggamma:
-    assert polygamma(-1, x) == loggamma(x)
+    assert polygamma(-1, x) == loggamma(x) - log(2*pi) / 2
 
     # But smaller orders are iterated integrals and don't have a special name
     assert polygamma(-2, x).func is polygamma
@@ -342,20 +343,24 @@ def test_polygamma():
     assert polygamma(I, 3).is_negative is None
 
     # issue 17350
-    assert polygamma(pi, 3).evalf() == polygamma(pi, 3)
     assert (I*polygamma(I, pi)).as_real_imag() == \
            (-im(polygamma(I, pi)), re(polygamma(I, pi)))
     assert (tanh(polygamma(I, 1))).rewrite(exp) == \
            (exp(polygamma(I, 1)) - exp(-polygamma(I, 1)))/(exp(polygamma(I, 1)) + exp(-polygamma(I, 1)))
     assert (I / polygamma(I, 4)).rewrite(exp) == \
-           I*sqrt(re(polygamma(I, 4))**2 + im(polygamma(I, 4))**2)\
-           /((re(polygamma(I, 4)) + I*im(polygamma(I, 4)))*Abs(polygamma(I, 4)))
-    assert unchanged(polygamma, 2.3, 1.0)
+           I*exp(-I*atan(im(polygamma(I, 4))/re(polygamma(I, 4))))/Abs(polygamma(I, 4))
 
     # issue 12569
     assert unchanged(im, polygamma(0, I))
     assert polygamma(Symbol('a', positive=True), Symbol('b', positive=True)).is_real is True
     assert polygamma(0, I).is_real is None
+
+    assert str(polygamma(pi, 3).evalf(n=10)) == "0.1169314564"
+    assert str(polygamma(2.3, 1.0).evalf(n=10)) == "-3.003302909"
+    assert str(polygamma(-1, 1).evalf(n=10)) == "-0.9189385332" # not zero
+    assert str(polygamma(I, 1).evalf(n=10)) == "-3.109856569 + 1.89089016*I"
+    assert str(polygamma(1, I).evalf(n=10)) == "-0.5369999034 - 0.7942335428*I"
+    assert str(polygamma(I, I).evalf(n=10)) == "6.332362889 + 45.92828268*I"
 
 
 def test_polygamma_expand_func():
@@ -401,6 +406,13 @@ def test_polygamma_expand_func():
     assert e.expand(func=True) == e
     e = polygamma(3, x + y + Rational(3, 4))
     assert e.expand(func=True, basic=False) == e
+
+    assert polygamma(-1, x, evaluate=False).expand(func=True) == \
+        loggamma(x) - log(pi)/2 - log(2)/2
+    p2 = polygamma(-2, x).expand(func=True) + x**2/2 - x/2 + S(1)/12
+    assert isinstance(p2, Subs)
+    assert p2.point == (-1,)
+
 
 def test_digamma():
     assert digamma(nan) == nan
@@ -616,6 +628,11 @@ def test_polygamma_expansion():
         x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=11) == \
         2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
+
+
+def test_polygamma_leading_term():
+     expr = -log(1/x) + polygamma(0, 1 + 1/x) + S.EulerGamma
+     assert expr.as_leading_term(x, logx=-y) == S.EulerGamma
 
 
 def test_issue_8657():
