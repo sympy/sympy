@@ -34,6 +34,7 @@ from sympy.external import import_module
 from sympy.abc import x, y
 
 
+
 def test_Normal():
     m = Normal('A', [1, 2], [[1, 0], [0, 1]])
     A = MultivariateNormal('A', [1, 2], [[1, 0], [0, 1]])
@@ -296,6 +297,7 @@ def test_JointRV():
 def test_expectation():
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
     assert simplify(E(m[1])) == y
+
 
 @XFAIL
 def test_joint_vector_expectation():

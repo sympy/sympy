@@ -9,7 +9,7 @@ def strip_file(filename, write, report):
     # .readlines() retains \n chars, while .read().splitlines() does not.
     # Assuming that whitespace errors will be few, we will thus only need
     # to re-add \n to a few right-stripped lines. The hit flag will keep us
-    # from unecessarily re-writing files with no changes.
+    # from unnecessarily re-writing files with no changes.
 
     # newline="" keeps current line endings
     with open(filename, newline="") as f:

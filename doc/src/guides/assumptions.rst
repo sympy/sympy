@@ -113,7 +113,7 @@ interpreted as meaning that the result is *unknown*.
 
 .. note:: We need to use ``print`` in the above examples because the special
           value ``None`` does not display by default in the Python
-          interpretter.
+          interpreter.
 
 There are several reasons why an assumptions query might give ``None``. It is
 possible that the query is *unknowable* as in the case of ``x`` above. Since

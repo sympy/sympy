@@ -30,7 +30,8 @@ There are three types of functions implemented in SymPy:
 
 """
 
-from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union as tUnion
+from __future__ import annotations
+from typing import Any
 from collections.abc import Iterable
 
 from .add import Add
@@ -263,7 +264,7 @@ class FunctionClass(ManagedProperties):
         return FiniteSet(*self._nargs) if self._nargs else S.Naturals0
 
     def _valid_nargs(self, n : int) -> bool:
-        """ Return True if the specified interger is a valid number of arguments
+        """ Return True if the specified integer is a valid number of arguments
 
         The number of arguments n is guaranteed to be an integer and positive
 
@@ -625,7 +626,7 @@ class Function(Application, Expr):
 
         return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
 
-    _singularities = None  # type: tUnion[FuzzyBool, tTuple[Expr, ...]]
+    _singularities: FuzzyBool | tuple[Expr, ...] = None
 
     @classmethod
     def is_singular(cls, a):
@@ -687,9 +688,7 @@ class Function(Application, Expr):
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_finite is False for t in args0):
             from .numbers import oo, zoo, nan
-            # XXX could use t.as_leading_term(x) here but it's a little
-            # slower
-            a = [t.compute_leading_term(x, logx=logx) for t in args]
+            a = [t.as_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
             if any(t.has(oo, -oo, zoo, nan) for t in a0):
                 return self._eval_aseries(n, args0, x, logx)
@@ -913,7 +912,7 @@ class UndefinedFunction(FunctionClass):
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-    _kwargs = {}  # type: tDict[str, Optional[bool]]
+    _kwargs: dict[str, bool | None] = {}
 
     def __hash__(self):
         return hash((self.class_key(), frozenset(self._kwargs.items())))
@@ -989,7 +988,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
     """
 
     # XXX: What is this class attribute used for?
-    include = set()  # type: tSet[Any]
+    include: set[Any] = set()
 
     def __init__(cls, name, **assumptions):
         from sympy.sets.sets import Set, FiniteSet
@@ -2986,7 +2985,7 @@ def expand_power_base(expr, deep=True, force=False):
     only happen if the base is non-negative or the exponent is an integer.
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy import expand_power_base, sin, cos, exp
+    >>> from sympy import expand_power_base, sin, cos, exp, Symbol
 
     >>> (x*y)**2
     x**2*y**2
@@ -3025,7 +3024,24 @@ def expand_power_base(expr, deep=True, force=False):
     >>> expand_power_base((2*y)**(1+z))
     2**(z + 1)*y**(z + 1)
     >>> ((2*y)**(1+z)).expand()
-    2*2**z*y*y**z
+    2*2**z*y**(z + 1)
+
+    The power that is unexpanded can be expanded safely when
+    ``y != 0``, otherwise different values might be obtained for the expression:
+
+    >>> prev = _
+
+    If we indicate that ``y`` is positive but then replace it with
+    a value of 0 after expansion, the expression becomes 0:
+
+    >>> p = Symbol('p', positive=True)
+    >>> prev.subs(y, p).expand().subs(p, 0)
+    0
+
+    But if ``z = -1`` the expression would not be zero:
+
+    >>> prev.subs(y, 0).subs(z, -1)
+    1
 
     See Also
     ========
@@ -3047,9 +3063,18 @@ def expand_power_exp(expr, deep=True):
     Examples
     ========
 
-    >>> from sympy import expand_power_exp
+    >>> from sympy import expand_power_exp, Symbol
     >>> from sympy.abc import x, y
+    >>> expand_power_exp(3**(y + 2))
+    9*3**y
     >>> expand_power_exp(x**(y + 2))
+    x**(y + 2)
+
+    If ``x = 0`` the value of the expression depends on the
+    value of ``y``; if the expression were expanded the result
+    would be 0. So expansion is only done if ``x != 0``:
+
+    >>> expand_power_exp(Symbol('x', zero=False)**(y + 2))
     x**2*x**y
     """
     return sympify(expr).expand(deep=deep, complex=False, basic=False,

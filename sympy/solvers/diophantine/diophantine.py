@@ -131,7 +131,8 @@ class DiophantineSolutionSet(set):
     def __call__(self, *args):
         if len(args) > len(self.parameters):
             raise ValueError("Evaluation should have at most %s values, not %s" % (len(self.parameters), len(args)))
-        return self.subs(list(zip(self.parameters, args)))
+        rep = {p: v for p, v in zip(self.parameters, args) if v is not None}
+        return self.subs(rep)
 
 
 class DiophantineEquationType:
@@ -1647,7 +1648,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
 
     if eq_type is not None and eq_type not in diop_known:
             raise ValueError(filldedent('''
-    Alhough this type of equation was identified, it is not yet
+    Although this type of equation was identified, it is not yet
     handled. It should, however, be listed in `diop_known` at the
     top of this file. Developers should see comments at the end of
     `classify_diop`.
@@ -3217,7 +3218,7 @@ def ldescent(A, B):
            Press, Cambridge, 1998.
     .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
            [online], Available:
-           http://eprints.nottingham.ac.uk/60/1/kvxefz87.pdf
+           https://nottingham-repository.worktribe.com/output/1023265/efficient-solution-of-rational-conics
     """
     if abs(A) > abs(B):
         w, y, x = ldescent(B, A)

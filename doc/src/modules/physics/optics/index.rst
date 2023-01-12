@@ -8,10 +8,10 @@ Optics Module
 
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    gaussopt.rst
-    medium.rst
-    polarization.rst
-    utils.rst
-    waves.rst
+   gaussopt.rst
+   medium.rst
+   polarization.rst
+   utils.rst
+   waves.rst

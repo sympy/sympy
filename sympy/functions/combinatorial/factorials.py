@@ -1,4 +1,4 @@
-from typing import List
+from __future__ import annotations
 from functools import reduce
 
 from sympy.core import S, sympify, Dummy, Mod
@@ -94,7 +94,7 @@ class factorial(CombinatorialFunction):
         35102025, 5014575, 145422675, 9694845, 300540195, 300540195
     ]
 
-    _small_factorials = []  # type: List[int]
+    _small_factorials: list[int] = []
 
     @classmethod
     def _swing(cls, n):

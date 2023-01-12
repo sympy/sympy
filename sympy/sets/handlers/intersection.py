@@ -235,6 +235,11 @@ def _(a, b):
     return a
 
 
+@intersection_sets.register(Range, Rationals)
+def _(a, b):
+    return a
+
+
 @intersection_sets.register(ImageSet, Set)
 def _(self, other):
     from sympy.solvers.diophantine import diophantine

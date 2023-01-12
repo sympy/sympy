@@ -7771,7 +7771,6 @@ def test_Str():
     assert pretty(Str('x')) == 'x'
 
 
-
 def test_symbolic_probability():
     mu = symbols("mu")
     sigma = symbols("sigma", positive=True)

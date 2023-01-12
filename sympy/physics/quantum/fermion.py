@@ -141,7 +141,7 @@ class FermionFockKet(Ket):
     def _eval_innerproduct_FermionFockBra(self, bra, **hints):
         return KroneckerDelta(self.n, bra.n)
 
-    def _apply_operator_FermionOp(self, op, **options):
+    def _apply_from_right_to_FermionOp(self, op, **options):
         if op.is_annihilation:
             if self.n == 1:
                 return FermionFockKet(0)

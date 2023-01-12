@@ -903,13 +903,13 @@ class DomainMatrix:
         ==========
 
         A, B: DomainMatrix
-            matrices to substract
+            matrices to subtract
 
         Returns
         =======
 
         DomainMatrix
-            DomainMatrix after Substraction
+            DomainMatrix after Subtraction
 
         Raises
         ======
@@ -1083,7 +1083,7 @@ class DomainMatrix:
         return A.from_rep(A.rep.mul_elementwise(B.rep))
 
     def __truediv__(A, lamda):
-        """ Method for Scalar Divison"""
+        """ Method for Scalar Division"""
         if isinstance(lamda, int) or ZZ.of_type(lamda):
             lamda = DomainScalar(ZZ(lamda), ZZ)
 

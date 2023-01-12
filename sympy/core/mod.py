@@ -134,7 +134,7 @@ class Mod(Function):
             for arg in p.args:
                 both_l[isinstance(arg, cls)].append(arg)
 
-            if mod_l and all(inner.args[1] == q for inner in mod_l):
+            if mod_l and all(inner.args[1] == q for inner in mod_l) and all(t.is_integer for t in p.args) and q.is_integer:
                 # finding distributive term
                 non_mod_l = [cls(x, q) for x in non_mod_l]
                 mod = []

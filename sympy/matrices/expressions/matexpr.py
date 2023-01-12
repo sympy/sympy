@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 from functools import wraps
 
 from sympy.core import S, Integer, Basic, Mul, Add
@@ -52,7 +52,7 @@ class MatrixExpr(Expr):
 
     MatrixSymbol, MatAdd, MatMul, Transpose, Inverse
     """
-    __slots__ = ()  # type: tTuple[str, ...]
+    __slots__: tuple[str, ...] = ()
 
     # Should not be considered iterable by the
     # sympy.utilities.iterables.iterable function. Subclass that actually are
@@ -61,9 +61,9 @@ class MatrixExpr(Expr):
 
     _op_priority = 11.0
 
-    is_Matrix = True  # type: bool
-    is_MatrixExpr = True  # type: bool
-    is_Identity = None  # type: FuzzyBool
+    is_Matrix: bool = True
+    is_MatrixExpr: bool = True
+    is_Identity: FuzzyBool = None
     is_Inverse = False
     is_Transpose = False
     is_ZeroMatrix = False
@@ -84,7 +84,7 @@ class MatrixExpr(Expr):
     # The following is adapted from the core Expr object
 
     @property
-    def shape(self) -> tTuple[Expr, Expr]:
+    def shape(self) -> tuple[Expr, Expr]:
         raise NotImplementedError
 
     @property
@@ -445,8 +445,8 @@ class MatrixExpr(Expr):
         >>> MatrixExpr.from_index_summation(expr)
         A*B.T*A.T
         """
-        from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
-        from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+        from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
+        from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
         first_indices = []
         if first_index is not None:
             first_indices.append(first_index)
@@ -525,9 +525,9 @@ def _matrix_derivative(expr, x, old_algorithm=False):
     if old_algorithm:
         return _matrix_derivative_old_algorithm(expr, x)
 
-    from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+    from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
     from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
-    from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+    from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
 
     array_expr = convert_matrix_to_array(expr)
     diff_array_expr = array_derive(array_expr, x)
@@ -541,7 +541,7 @@ def _matrix_derivative_old_algorithm(expr, x):
 
     parts = [i.build() for i in lines]
 
-    from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+    from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
 
     parts = [[convert_array_to_matrix(j) for j in i] for i in parts]
 

@@ -72,7 +72,6 @@ def test_angle_between():
                                 Line3D(Point3D(5, 0, 0), z)) == acos(-sqrt(3) / 3)
 
 
-
 def test_closing_angle():
     a = Ray((0, 0), angle=0)
     b = Ray((1, 2), angle=pi/2)

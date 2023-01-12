@@ -40,9 +40,9 @@ from sympy.external import import_module
 from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
 
 IS_WINDOWS = (os.name == 'nt')
-ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
+ON_CI = os.getenv('CI', None)
 
-# emperically generated list of the proportion of time spent running
+# empirically generated list of the proportion of time spent running
 # an even split of tests.  This should periodically be regenerated.
 # A list of [.6, .1, .3] would mean that if the tests are evenly split
 # into '1/3', '2/3', '3/3', the first split would take 60% of the time,
@@ -53,7 +53,7 @@ ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 #     from time import time
 #     import sympy
 #     import os
-#     os.environ["TRAVIS_BUILD_NUMBER"] = '2' # Mock travis to get more correct densities
+#     os.environ["CI"] = 'true' # Mock CI to get more correct densities
 #     delays, num_splits = [], 30
 #     for i in range(1, num_splits + 1):
 #         tic = time()
@@ -504,7 +504,7 @@ def _test(*paths,
         verbose=False, tb="short", kw=None, pdb=False, colors=True,
         force_colors=False, sort=True, seed=None, timeout=False,
         fail_on_timeout=False, slow=False, enhance_asserts=False, split=None,
-        time_balance=True, blacklist=('sympy/integrals/rubi/rubi_tests/tests',),
+        time_balance=True, blacklist=(),
         fast_threshold=None, slow_threshold=None):
     """
     Internal function that actually runs the tests.
@@ -522,12 +522,10 @@ def _test(*paths,
     post_mortem = pdb
     if seed is None:
         seed = random.randrange(100000000)
-    if ON_TRAVIS and timeout is False:
-        # Travis times out if no activity is seen for 10 minutes.
+    if ON_CI and timeout is False:
         timeout = 595
         fail_on_timeout = True
-    if ON_TRAVIS:
-        # pyglet does not work on Travis
+    if ON_CI:
         blacklist = list(blacklist) + ['sympy/plotting/pygletplot/tests']
     blacklist = convert_to_native_paths(blacklist)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
@@ -614,8 +612,9 @@ def doctest(*paths, subprocess=True, rerun=0, **kwargs):
     >>> sympy.doctest(split='1/2')  # doctest: +SKIP
 
     The ``subprocess`` and ``verbose`` options are the same as with the function
-    ``test()``.  See the docstring of that function for more information.
-
+    ``test()`` (see the docstring of that function for more information) except
+    that ``verbose`` may also be set equal to ``2`` in order to print
+    individual doctest lines, as they are being tested.
     """
     # count up from 0, do not print 0
     print_counter = lambda i : (print("rerun %d" % (rerun-i))
@@ -653,7 +652,6 @@ def _get_doctest_blacklist():
         "sympy/core/compatibility.py", # backwards compatibility shim, importing it triggers a deprecation warning
         "sympy/core/trace.py", # backwards compatibility shim, importing it triggers a deprecation warning
         "sympy/galgebra.py", # no longer part of SymPy
-        "sympy/integrals/rubi/rubi.py",
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
@@ -694,11 +692,11 @@ def _get_doctest_blacklist():
                 "examples/intermediate/mplot3d.py"
             ])
         else:
-            # Use a non-windowed backend, so that the tests work on Travis
+            # Use a non-windowed backend, so that the tests work on CI
             import matplotlib
             matplotlib.use('Agg')
 
-    if ON_TRAVIS or import_module('pyglet') is None:
+    if ON_CI or import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
     if import_module('aesara') is None:
@@ -729,6 +727,20 @@ def _get_doctest_blacklist():
             "sympy/parsing/sym_expr.py",
         ])
 
+    if import_module("scipy") is None:
+        # throws ModuleNotFoundError when scipy not installed
+        blacklist.extend([
+            "doc/src/guides/solving/solve-numerically.md",
+            "doc/src/guides/solving/solve-ode.md",
+        ])
+
+    if import_module("numpy") is None:
+        # throws ModuleNotFoundError when numpy not installed
+        blacklist.extend([
+                "doc/src/guides/solving/solve-ode.md",
+                "doc/src/guides/solving/solve-numerically.md",
+        ])
+
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
         "sympy/utilities/autowrap.py",
@@ -736,15 +748,12 @@ def _get_doctest_blacklist():
         "examples/advanced/autowrap_ufuncify.py"
         ])
 
-    # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
         "sympy/conftest.py", # Depends on pytest
-        "sympy/testing/benchmarking.py",
     ])
 
     # These are deprecated stubs to be removed:
     blacklist.extend([
-        "sympy/utilities/benchmarking.py",
         "sympy/utilities/tmpfiles.py",
         "sympy/utilities/pytest.py",
         "sympy/utilities/runtests.py",
@@ -777,7 +786,7 @@ def _doctest(*paths, **kwargs):
 
     blacklist.extend(_get_doctest_blacklist())
 
-    # Use a non-windowed backend, so that the tests work on Travis
+    # Use a non-windowed backend, so that the tests work on CI
     if import_module('matplotlib') is not None:
         import matplotlib
         matplotlib.use('Agg')
@@ -1433,12 +1442,13 @@ class SymPyDocTests:
                     self._reporter.test_skip(v=str(e))
                     continue
 
-            runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
+            runner = SymPyDocTestRunner(verbose=self._reporter._verbose==2,
+                    optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
                     pdoctest.IGNORE_EXCEPTION_DETAIL)
             runner._checker = SymPyOutputChecker()
             old = sys.stdout
-            new = StringIO()
+            new = old if self._reporter._verbose==2 else StringIO()
             sys.stdout = new
             # If the testing is normal, the doctests get importing magic to
             # provide the global namespace. If not normal (the default) then

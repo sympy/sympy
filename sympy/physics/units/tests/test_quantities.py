@@ -18,7 +18,7 @@ from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
     day, foot, grams, hour, inch, kg, km, m, meter, millimeter,
     minute, quart, s, second, speed_of_light, bit,
     byte, kibibyte, mebibyte, gibibyte, tebibyte, pebibyte, exbibyte,
-    kilogram, gravitational_constant)
+    kilogram, gravitational_constant, electron_rest_mass)
 
 from sympy.physics.units.definitions.dimension_definitions import (
     Dimension, charge, length, time, temperature, pressure,
@@ -278,6 +278,9 @@ def test_issue_quart():
     assert convert_to(4 * quart / inch ** 3, meter) == 231
     assert convert_to(4 * quart / inch ** 3, millimeter) == 231
 
+def test_electron_rest_mass():
+    assert convert_to(electron_rest_mass, kilogram) == 9.1093837015e-31*kilogram
+    assert convert_to(electron_rest_mass, grams) == 9.1093837015e-28*grams
 
 def test_issue_5565():
     assert (m < s).is_Relational
@@ -304,11 +307,11 @@ def test_find_unit():
         'deciliter', 'centiliter', 'deciliters', 'milliliter',
         'centiliters', 'milliliters', 'planck_volume']
     assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'planck_voltage']
-    assert find_unit(grams) == ['g', 't', 'Da', 'kg', 'mg', 'ug', 'amu', 'mmu', 'amus',
-                                'gram', 'mmus', 'grams', 'pound', 'tonne', 'dalton',
-                                'pounds', 'kilogram', 'kilograms', 'microgram', 'milligram',
-                                'metric_ton', 'micrograms', 'milligrams', 'planck_mass',
-                                'milli_mass_unit', 'atomic_mass_unit', 'atomic_mass_constant']
+    assert find_unit(grams) == ['g', 't', 'Da', 'kg', 'me', 'mg', 'ug', 'amu', 'mmu', 'amus',
+                                'gram', 'mmus', 'grams', 'pound', 'tonne', 'dalton', 'pounds',
+                                'kilogram', 'kilograms', 'microgram', 'milligram', 'metric_ton',
+                                'micrograms', 'milligrams', 'planck_mass', 'milli_mass_unit', 'atomic_mass_unit',
+                                'electron_rest_mass', 'atomic_mass_constant']
 
 
 def test_Quantity_derivative():
@@ -539,6 +542,43 @@ def test_issue_20288():
     v.set_global_relative_scale_factor(1, joule)
     expr = 1 + exp(u**2/v**2)
     assert SI._collect_factor_and_dimension(expr) == (1 + E, Dimension(1))
+
+
+def test_issue_24062():
+    from sympy.core.numbers import E
+    from sympy.physics.units import impedance, capacitance, time, ohm, farad, second
+
+    R = Quantity('R')
+    C = Quantity('C')
+    T = Quantity('T')
+    SI.set_quantity_dimension(R, impedance)
+    SI.set_quantity_dimension(C, capacitance)
+    SI.set_quantity_dimension(T, time)
+    R.set_global_relative_scale_factor(1, ohm)
+    C.set_global_relative_scale_factor(1, farad)
+    T.set_global_relative_scale_factor(1, second)
+    expr = T / (R * C)
+    dim = SI._collect_factor_and_dimension(expr)[1]
+    assert SI.get_dimension_system().is_dimensionless(dim)
+
+    exp_expr = 1 + exp(expr)
+    assert SI._collect_factor_and_dimension(exp_expr) == (1 + E, Dimension(1))
+
+def test_issue_24211():
+    from sympy.physics.units import time, velocity, acceleration, second, meter
+    V1 = Quantity('V1')
+    SI.set_quantity_dimension(V1, velocity)
+    SI.set_quantity_scale_factor(V1, 1 * meter / second)
+    A1 = Quantity('A1')
+    SI.set_quantity_dimension(A1, acceleration)
+    SI.set_quantity_scale_factor(A1, 1 * meter / second**2)
+    T1 = Quantity('T1')
+    SI.set_quantity_dimension(T1, time)
+    SI.set_quantity_scale_factor(T1, 1 * second)
+
+    expr = A1*T1 + V1
+    # should not throw ValueError here
+    SI._collect_factor_and_dimension(expr)
 
 
 def test_prefixed_property():

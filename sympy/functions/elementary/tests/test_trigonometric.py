@@ -388,7 +388,11 @@ def test_cos():
 
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
-
+    assert cos(0, evaluate=False).is_zero is False
+    assert cos(Rational(1, 2)).is_zero is False
+    # The following test will return None as the result, but really it should
+    # be True even if it is not always possible to resolve an assumptions query.
+    assert cos(asin(-1, evaluate=False), evaluate=False).is_zero is None
     for d in list(range(1, 22)) + [60, 85]:
         for n in range(2*d + 1):
             x = n*pi/d
@@ -1500,7 +1504,6 @@ def test_inverses():
     assert acos(x).inverse() == cos
     assert atan(x).inverse() == tan
     assert acot(x).inverse() == cot
-
 
 
 def test_real_imag():

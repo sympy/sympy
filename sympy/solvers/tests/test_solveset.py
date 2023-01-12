@@ -1236,7 +1236,6 @@ def test_multi_exp():
              ProductSet(S.Integers, S.Integers, S.Integers, S.Integers))))
 
 
-
 def test__solveset_multi():
     from sympy.solvers.solveset import _solveset_multi
     from sympy.sets import Reals
@@ -1362,6 +1361,10 @@ def test_abs_invert_solvify():
 
 
 def test_linear_eq_to_matrix():
+    assert linear_eq_to_matrix(0, x) == (Matrix([[0]]), Matrix([[0]]))
+    assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
+
+    # integer coefficients
     eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
     eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
 
@@ -1379,17 +1382,24 @@ def test_linear_eq_to_matrix():
     assert A == Matrix([[a*b, b, c], [d + e, f, g], [i, j, k]])
     assert B == Matrix([[d], [h], [l]])
 
-    # raise ValueError if
+    # raise Errors if
     # 1) no symbols are given
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3))
     # 2) there are duplicates
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, x, y]))
-    # 3) there are non-symbols
-    raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, 1/a, y]))
-    # 4) a nonlinear term is detected in the original expression
+    # 3) a nonlinear term is detected in the original expression
     raises(NonlinearError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x), [x]))
+    raises(NonlinearError, lambda: linear_eq_to_matrix([x**2], [x]))
+    raises(NonlinearError, lambda: linear_eq_to_matrix([x*y], [x, y]))
+    # 4) Eq being used to represent equations autoevaluates
+    # (use unevaluated Eq instead)
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x), x))
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x + 1), x))
 
-    assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
+
+    # if non-symbols are passed, the user is responsible for interpreting
+    assert linear_eq_to_matrix([x], [1/x]) == (Matrix([[0]]), Matrix([[-x]]))
+
     # issue 15195
     assert linear_eq_to_matrix(x + y*(z*(3*x + 2) + 3), x) == (
         Matrix([[3*y*z + 1]]), Matrix([[-y*(2*z + 3)]]))
@@ -1504,12 +1514,13 @@ def test_linsolve():
     assert linsolve(Eqns, x, y) == {
             (kilo*newton*Rational(-28, 3), kN*Rational(4, 3))}
 
-    # linsolve fully expands expressions, so removable singularities
-    # and other nonlinearity does not raise an error
+    # linsolve does not allow expansion (real or implemented)
+    # to remove singularities, but it will cancel linear terms
     assert linsolve([Eq(x, x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
+    assert linsolve([Eq(x + x*y, 1 + y)], [x]) == {(1,)}
+    assert linsolve([Eq(1 + y, x + x*y)], [x]) == {(1,)}
+    raises(NonlinearError, lambda:
+        linsolve([Eq(x**2, x**2 + y)], [x, y]))
 
     # corner cases
     #
@@ -2531,6 +2542,7 @@ def test_issue_21276():
     eq = (2*x*(y - z) - y*erf(y - z) - y + z*erf(y - z) + z)**2
     assert solveset(eq.expand(), y) == FiniteSet(z, z + erfinv(2*x - 1))
 
+
 # exponential tests
 def test_exponential_real():
     from sympy.abc import y
@@ -2576,6 +2588,8 @@ def test_exponential_real():
     p = Symbol('p', positive=True)
     assert solveset_real((1/p + 1)**(p + 1), p).dummy_eq(
         ConditionSet(x, Eq((1 + 1/x)**(x + 1), 0), S.Reals))
+    assert solveset(2**x - 4**x + 12, x, S.Reals) == {2}
+    assert solveset(2**x - 2**(2*x) + 12, x, S.Reals) == {2}
 
 
 @XFAIL
@@ -2787,8 +2801,11 @@ def test_linear_coeffs():
         linear_coeffs(x, x, x))
     assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
     assert linear_coeffs(1.0, x, y) == [0, 0, 1.0]
+    # don't include coefficients of 0
+    assert linear_coeffs(Eq(x, x + y), x, y, dict=True) == {y: -1}
+    assert linear_coeffs(0, x, y, dict=True) == {}
 
-# modular tests
+
 def test_is_modular():
     assert _is_modular(y, x) is False
     assert _is_modular(Mod(x, 3) - 1, x) is True

@@ -1,5 +1,5 @@
 from sympy.core.backend import Symbol
-from sympy.physics.vector import Point, Vector, ReferenceFrame
+from sympy.physics.vector import Point, Vector, ReferenceFrame, Dyadic
 from sympy.physics.mechanics import RigidBody, Particle, inertia
 
 __all__ = ['Body']
@@ -133,7 +133,7 @@ class Body(RigidBody, Particle):  # type: ignore
             self.frame = frame
             self.masscenter = masscenter
             Particle.__init__(self, name, masscenter, _mass)
-            self._central_inertia = None
+            self._central_inertia = Dyadic(0)
         else:
             RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)
 
@@ -143,22 +143,33 @@ class Body(RigidBody, Particle):  # type: ignore
 
     @property
     def x(self):
-        """The basis Vector for the Body, in the x direction. """
+        """The basis Vector for the Body, in the x direction."""
         return self.frame.x
 
     @property
     def y(self):
-        """The basis Vector for the Body, in the y direction. """
+        """The basis Vector for the Body, in the y direction."""
         return self.frame.y
 
     @property
     def z(self):
-        """The basis Vector for the Body, in the z direction. """
+        """The basis Vector for the Body, in the z direction."""
         return self.frame.z
 
     @property
+    def inertia(self):
+        """The body's inertia about a point; stored as (Dyadic, Point)."""
+        if self.is_rigidbody:
+            return RigidBody.inertia.fget(self)
+        return (self.central_inertia, self.masscenter)
+
+    @inertia.setter
+    def inertia(self, I):
+        RigidBody.inertia.fset(self, I)
+
+    @property
     def is_rigidbody(self):
-        if self.central_inertia is not None:
+        if hasattr(self, '_inertia'):
             return True
         return False
 
@@ -562,3 +573,39 @@ class Body(RigidBody, Particle):  # type: ignore
         elif isinstance(body, Body):
             frame = body.frame
         return self.frame.dcm(frame)
+
+    def parallel_axis(self, point, frame=None):
+        """Returns the inertia dyadic of the body with respect to another
+        point.
+
+        Parameters
+        ==========
+
+        point : sympy.physics.vector.Point
+            The point to express the inertia dyadic about.
+        frame : sympy.physics.vector.ReferenceFrame
+            The reference frame used to construct the dyadic.
+
+        Returns
+        =======
+
+        inertia : sympy.physics.vector.Dyadic
+            The inertia dyadic of the rigid body expressed about the provided
+            point.
+
+        Example
+        =======
+
+        >>> from sympy.physics.mechanics import Body
+        >>> A = Body('A')
+        >>> P = A.masscenter.locatenew('point', 3 * A.x + 5 * A.y)
+        >>> A.parallel_axis(P).to_matrix(A.frame)
+        Matrix([
+        [A_ixx + 25*A_mass, A_ixy - 15*A_mass,             A_izx],
+        [A_ixy - 15*A_mass,  A_iyy + 9*A_mass,             A_iyz],
+        [            A_izx,             A_iyz, A_izz + 34*A_mass]])
+
+        """
+        if self.is_rigidbody:
+            return RigidBody.parallel_axis(self, point, frame)
+        return Particle.parallel_axis(self, point, frame)

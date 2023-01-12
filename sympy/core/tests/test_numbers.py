@@ -4,6 +4,7 @@ from sympy.concrete.summations import Sum
 from sympy.core import (EulerGamma, Catalan, TribonacciConstant,
     GoldenRatio)
 from sympy.core.containers import Tuple
+from sympy.core.expr import unchanged
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import (mpf_norm, mod_inverse, igcd, seterr,
@@ -15,6 +16,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.integers import floor
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
@@ -120,6 +122,7 @@ def test_mod():
 
 
 def test_divmod():
+    x = Symbol("x")
     assert divmod(S(12), S(8)) == Tuple(1, 4)
     assert divmod(-S(12), S(8)) == Tuple(-2, 4)
     assert divmod(S.Zero, S.One) == Tuple(0, 0)
@@ -127,6 +130,7 @@ def test_divmod():
     raises(ZeroDivisionError, lambda: divmod(S.One, S.Zero))
     assert divmod(S(12), 8) == Tuple(1, 4)
     assert divmod(12, S(8)) == Tuple(1, 4)
+    assert S(1024)//x == 1024//x == floor(1024/x)
 
     assert divmod(S("2"), S("3/2")) == Tuple(S("1"), S("1/2"))
     assert divmod(S("3/2"), S("2")) == Tuple(S("0"), S("3/2"))
@@ -245,7 +249,7 @@ def test_igcd_lehmer():
     assert igcd_lehmer(a*c, b*c) == c
     # big divisor
     assert igcd_lehmer(a, 10**1000) == 1
-    # swapping argmument
+    # swapping argument
     assert igcd_lehmer(1, 2) == igcd_lehmer(2, 1)
 
 
@@ -2212,3 +2216,12 @@ def test_floordiv():
 def test_negation():
     assert -S.Zero is S.Zero
     assert -Float(0) is not S.Zero and -Float(0) == 0
+
+
+def test_exponentiation_of_0():
+    x = Symbol('x')
+    assert 0**-x == zoo**x
+    assert unchanged(Pow, 0, x)
+    x = Symbol('x', zero=True)
+    assert 0**-x == S.One
+    assert 0**x == S.One

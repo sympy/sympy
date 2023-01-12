@@ -90,7 +90,6 @@ def test_ccode_constants_mathh():
     assert ccode(pi, type_aliases={real: float80}) == "M_PIl"
 
 
-
 def test_ccode_constants_other():
     assert ccode(2*GoldenRatio) == "const double GoldenRatio = %s;\n2*GoldenRatio" % GoldenRatio.evalf(17)
     assert ccode(
