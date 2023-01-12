@@ -742,7 +742,7 @@ Here are some additional tips for writing doctests:
   than 80 characters). For example:
 
   ```
-  >>> expand((x + 1)**10)
+  >>> ((x + 1)**10).expand()
   x**10 + 10*x**9 + 45*x**8 + 120*x**7 + 210*x**6 + 252*x**5 + 210*x**4 +
   120*x**3 + 45*x**2 + 10*x + 1
   ```
