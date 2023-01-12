@@ -21,7 +21,7 @@ def is_matadd_valid(*args: MatrixExpr) -> Boolean:
     ========
 
     >>> from sympy import MatrixSymbol, symbols
-    >>> from sympy.matrices.expressions.shape import is_matadd_valid
+    >>> from sympy.matrices.expressions._shape import is_matadd_valid
 
     >>> m, n, p, q = symbols('m n p q')
     >>> A = MatrixSymbol('A', m, n)
@@ -50,7 +50,7 @@ def is_matmul_valid(*args: Union[MatrixExpr, Expr]) -> Boolean:
     ========
 
     >>> from sympy import MatrixSymbol, symbols
-    >>> from sympy.matrices.expressions.shape import is_matmul_valid
+    >>> from sympy.matrices.expressions._shape import is_matmul_valid
 
     >>> m, n, p, q = symbols('m n p q')
     >>> A = MatrixSymbol('A', m, n)
@@ -75,7 +75,7 @@ def is_square(arg: MatrixExpr, /) -> Boolean:
     ========
 
     >>> from sympy import MatrixSymbol, symbols
-    >>> from sympy.matrices.expressions.shape import is_square
+    >>> from sympy.matrices.expressions._shape import is_square
 
     >>> m, n = symbols('m n')
     >>> A = MatrixSymbol('A', m, n)
