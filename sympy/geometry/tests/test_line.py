@@ -13,7 +13,7 @@ from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.testing.pytest import raises, warns, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns
 
 
 x = Symbol('x', real=True)

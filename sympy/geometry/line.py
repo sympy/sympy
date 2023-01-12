@@ -38,7 +38,6 @@ from sympy.sets.sets import Intersection
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import Undecidable, filldedent
 
 
