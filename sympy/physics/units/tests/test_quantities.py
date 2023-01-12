@@ -27,7 +27,7 @@ from sympy.physics.units.definitions.dimension_definitions import (
 from sympy.physics.units.prefixes import PREFIXES, kilo
 from sympy.physics.units.quantities import PhysicalConstant, Quantity
 from sympy.physics.units.systems import SI
-from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises
 
 k = PREFIXES["k"]
 
@@ -86,11 +86,6 @@ def test_Quantity_definition():
 
     assert v.dimension == length
     assert v.scale_factor == 5000
-
-    with warns_deprecated_sympy():
-        Quantity('invalid', 'dimension', 1)
-    with warns_deprecated_sympy():
-        Quantity('mismatch', dimension=length, scale_factor=kg)
 
 
 def test_abbrev():
@@ -164,10 +159,6 @@ def test_quantity_abs():
     assert SI.get_dimensional_expr(v_w1) == (length/time).name
 
     Dq = Dimension(SI.get_dimensional_expr(expr))
-
-    with warns_deprecated_sympy():
-        Dq1 = Dimension(Quantity.get_dimensional_expr(expr))
-        assert Dq == Dq1
 
     assert SI.get_dimension_system().get_dimensional_dependencies(Dq) == {
         length: 1,
@@ -376,19 +367,6 @@ def test_factor_and_dimension():
     assert ((Rational(3, 2))**Rational(4, 3), (length/time)**Rational(4, 3)) == \
         SI._collect_factor_and_dimension(expr)
 
-    with warns_deprecated_sympy():
-        assert (3000, Dimension(1)) == Quantity._collect_factor_and_dimension(3000)
-
-
-@XFAIL
-def test_factor_and_dimension_with_Abs():
-    with warns_deprecated_sympy():
-        v_w1 = Quantity('v_w1', length/time, Rational(3, 2)*meter/second)
-    v_w1.set_global_relative_scale_factor(Rational(3, 2), meter/second)
-    expr = v_w1 - Abs(v_w1)
-    with warns_deprecated_sympy():
-        assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
-
 
 def test_dimensional_expr_of_derivative():
     l = Quantity('l')
@@ -498,14 +476,6 @@ def test_issue_14547():
     e = foot + 1
     assert e.is_Add and set(e.args) == {foot, 1}
 
-
-def test_deprecated_quantity_methods():
-    step = Quantity("step")
-    with warns_deprecated_sympy():
-        step.set_dimension(length)
-        step.set_scale_factor(2*meter)
-        assert convert_to(step, centimeter) == 200*centimeter
-        assert convert_to(1000*step/second, kilometer/second) == 2*kilometer/second
 
 def test_issue_22164():
     warnings.simplefilter("error")
