@@ -116,6 +116,10 @@ myst_enable_extensions = ["dollarmath", "linkify"]
 myst_heading_anchors = 2
 # myst_update_mathjax = False
 
+# Don't linkify links unless they start with "https://". This is needed
+# because the linkify library treates .py as a TLD.
+myst_linkify_fuzzy_links = False
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
