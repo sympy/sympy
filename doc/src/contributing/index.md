@@ -18,6 +18,5 @@ dependencies.md
 debug.rst
 docstring.rst
 documentation-style-guide.rst
-make-a-contribution.rst
 deprecations.md
 ```
