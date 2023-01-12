@@ -1087,30 +1087,6 @@ The `tensorhead()` function is deprecated in favor of {func}`~.tensor_heads`.
 `symbols()` or `TensorIndex` and `tensor_indices()`). It also does not use
 Young tableau to denote symmetries.
 
-(deprecated-quantity-methods)=
-### Methods to `sympy.physics.units.Quantity`
-
-The following methods of
-{class}`sympy.physics.units.quantities.Quantity` are deprecated.
-
-- `Quantity.set_dimension()`. This should be replaced with
-  `unit_system.set_quantity_dimension` or
-  `Quantity.set_global_dimension()`.
-
-- `Quantity.set_scale_factor()`. This should be replaced with
-  `unit_system.set_quantity_scale_factor` or {meth}`.Quantity.set_global_relative_scale_factor`
-
-- `Quantity.get_dimensional_expr()`. This is now associated with
-  {class}`~.UnitSystem` objects. The dimensional relations depend on the unit
-  system used. Use `unit_system.get_dimensional_expr()` instead.
-
-- `Quantity._collect_factor_and_dimension`. This has been moved to the
-  {class}`~.UnitSystem` class. Use
-  `unit_system._collect_factor_and_dimension(expr)` instead.
-
-See {ref}`deprecated-quantity-dimension-scale-factor` below for the motivation
-for this change.
-
 (deprecated-is-emptyset)=
 ### The `is_EmptySet` attribute of sets
 
