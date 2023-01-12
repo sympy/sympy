@@ -1,4 +1,4 @@
-name: docs-preview
+name: Docs Preview
 on: [status]
 jobs:
   circleci_artifacts_redirector_job:
