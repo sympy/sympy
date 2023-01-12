@@ -22,7 +22,6 @@ from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.printing.str import StrPrinter
 from sympy.utilities.decorator import deprecated
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
 from sympy.utilities.misc import as_int, filldedent
 
@@ -586,39 +585,6 @@ class MatrixCalculus(MatrixCommon):
 # https://github.com/sympy/sympy/pull/12854
 class MatrixDeprecated(MatrixCommon):
     """A class to house deprecated matrix methods."""
-    def _legacy_array_dot(self, b):
-        """Compatibility function for deprecated behavior of ``matrix.dot(vector)``
-        """
-        from .dense import Matrix
-
-        if not isinstance(b, MatrixBase):
-            if is_sequence(b):
-                if len(b) != self.cols and len(b) != self.rows:
-                    raise ShapeError(
-                        "Dimensions incorrect for dot product: %s, %s" % (
-                            self.shape, len(b)))
-                return self.dot(Matrix(b))
-            else:
-                raise TypeError(
-                    "`b` must be an ordered iterable or Matrix, not %s." %
-                    type(b))
-
-        mat = self
-        if mat.cols == b.rows:
-            if b.cols != 1:
-                mat = mat.T
-                b = b.T
-            prod = flatten((mat * b).tolist())
-            return prod
-        if mat.cols == b.cols:
-            return mat.dot(b.T)
-        elif mat.rows == b.rows:
-            return mat.T.dot(b)
-        else:
-            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (
-                self.shape, b.shape))
-
-
     def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_simplify):
         return self.charpoly(x=x)
 
@@ -1404,18 +1370,13 @@ class MatrixBase(MatrixDeprecated,
                     "`b` must be an ordered iterable or Matrix, not %s." %
                     type(b))
 
+        if (1 not in self.shape) or (1 not in b.shape):
+            raise ShapeError
+        if len(self) != len(b):
+            raise ShapeError(
+                "Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
+
         mat = self
-        if (1 not in mat.shape) or (1 not in b.shape) :
-            sympy_deprecation_warning(
-                """
-                Using the dot method to multiply non-row/column vectors is
-                deprecated. Use * or @ to perform matrix multiplication.
-                """,
-                deprecated_since_version="1.2",
-                active_deprecations_target="deprecated-matrix-dot-non-vector")
-            return mat._legacy_array_dot(b)
-        if len(mat) != len(b):
-            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
         n = len(mat)
         if mat.shape != (1, n):
             mat = mat.reshape(1, n)
