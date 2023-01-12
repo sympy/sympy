@@ -323,7 +323,7 @@ Using `.git/info/exclude` would be the best, because it is only applied locally.
 
 <https://help.github.com/en/articles/ignoring-files>
 
-(development-workflow-commit-messages)=
+(dev-workflow-commit-messages)=
 ### Writing commit messages
 
 The commit message has two parts: a title (first line) and the body. The two
@@ -520,6 +520,7 @@ It is best to just fill out the pull request template (the text that is there
 when you open a pull request). If you fill out all the sections in the
 template, you will have a good pull request description.
 
+(mailmap-instructions)=
 ### Add your name and email address to the .mailmap file.
 
 Every author's name and email address is stored in the
@@ -550,7 +551,7 @@ unrecognised author/email metadata.
 
 
 For instructions on updating the .mailmap file see:
-https://github.com/sympy/sympy/wiki/Development-workflow
+https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#mailmap-instructions
 
 The following authors will be added to the AUTHORS file at the
 time of the next SymPy release.
@@ -578,7 +579,7 @@ $ python bin/mailmap_check.py
 The mailmap file was reordered
 
 For instructions on updating the .mailmap file see:
-https://github.com/sympy/sympy/wiki/Development-workflow
+https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#mailmap-instructions
 
 The following authors will be added to the AUTHORS file at the
 time of the next SymPy release.
