@@ -475,10 +475,6 @@ def test_equation():
     assert Line3D(Point(1, 2, 3), Point(2, 2, 3)
         ).equation() == (y - 2, z - 3)
 
-    with warns_deprecated_sympy():
-        assert Line3D(Point(1, 2, 3), Point(2, 2, 3)
-        ).equation(k='k') == (y - 2, z - 3)
-
 
 def test_intersection_2d():
     p1 = Point(0, 0)
