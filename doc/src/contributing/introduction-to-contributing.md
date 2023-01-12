@@ -102,5 +102,4 @@ https://github.com/sympy/sympy/pulls. We require that every pull request
 undergo a review before it can be merged. If you have gained some familiarity
 with a part of the SymPy codebase and the SymPy development processes, it can
 be helpful to the community to review others' pull requests. You can view the
-code submission and check whether it does what it is intended to do. See [the
-guide for reviewing pull requests](development-workflow-reviewing).
+code submission and check whether it does what it is intended to do.
