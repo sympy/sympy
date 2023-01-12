@@ -447,3 +447,193 @@ Co-authored-by: AUTHOR-NAME ANOTHER-NAME@EXAMPLE.COM
 
 to the bottom of the commit message. See
 https://help.github.com/en/articles/creating-a-commit-with-multiple-authors.
+
+## Make a Pull Request
+
+Once your changes are ready for review, push them up to GitHub, and make a
+pull request.
+
+It is also OK to make a pull request before the changes are completely ready,
+to get some early feedback. It is better to get feedback early before you
+spend too much time on it. If your pull request is not completely ready for
+merging, open it in the "DRAFT" state on GitHub. You can also add "\[WIP\]"
+(which stands for "work in progress") to the beginning of the pull request
+title to indicate this. Just be sure to remove the DRAFT state or \[WIP\] when
+your PR is ready for final review.
+
+### Writing pull request title and description
+
+When you make a pull request, be sure to fill out the pull request description
+template. This includes adding cross-references to any relevant issues (with
+"fixes" if appropriate), and adding a release notes entry.
+
+- **Descriptive titles are very important.** The pull request title should
+  indicate what is fixed. Pull requests with undescriptive titles will tend to
+  be ignored by reviewers.
+
+  Examples of bad pull request titles are
+
+  - "Modified solvers\.py"
+  - "Fix issue #12345"
+
+  These do indicate to reviewers what is actually changed in the pull request,
+  and hence, they are likely to just pass it over instead of reviewing it.
+  An example of a better pull request title is
+
+  - "Fix a bug with solve() on transcendental functions"
+
+- Do not put issue numbers or file names in the pull request title. Issue
+  numbers should go in the description.
+
+- Use the DRAFT status or include the prefix "\[WIP\]" in the title if you
+  aren't ready to have the pull request merged and remove the status/prefix
+  when you are ready.
+
+The description is a good place to:
+
+- Show what you have done, perhaps comparing output from master with the output after your changes
+
+- Refer to the issue that was addressed like "#1234"; that format will
+  automatically create a link to the corresponding issue or pull request, e.g.
+  "This is similar to the problem in issue #1234...". This format also works
+  in the discussion section of the pull request.
+
+- Use phrases like "closes #1234" or "fixed #1234" (or similar that [follow
+  the auto-close
+  syntax](https://help.github.com/articles/closing-issues-via-commit-messages)
+  and are also [discussed
+  here](https://github.com/blog/1506-closing-issues-via-pull-requests)). Then
+  those other issues or pull requests will be closed automatically when your
+  pull request is merged. Note: this syntax does not work in the discussion of
+  the pull request. See this [quick
+  guide](https://github.com/sympy/sympy/wiki/Issue-PR-Autoclosing-syntax) for
+  the valid and invalid syntax for automatically closing issues from pull
+  requests.
+
+- the pull request needs a release notes entry. See
+  <https://github.com/sympy/sympy/wiki/Writing-Release-Notes> on how to write
+  release notes in the pull request description. The SymPy Bot will check that
+  your PR has release notes automatically.
+
+It is best to just fill out the pull request template (the text that is there
+when you open a pull request). If you fill out all the sections in the
+template, you will have a good pull request description.
+
+### Add your name and email address to the .mailmap file.
+
+Every author's name and email address is stored in the
+[AUTHORS](https://github.com/sympy/sympy/blob/master/AUTHORS) file, but this
+file should not be edited directly. The AUTHORS file is updated automatically
+when a new version of SymPy is released based on the name and email addresses
+that are recorded in the commits. Every commit made with git stores the name
+and email address that git is configured with (see "Configure git settings"
+above). The [.mailmap](https://github.com/sympy/sympy/blob/master/.mailmap)
+file is used to associate the name/email recorded in the commits with an
+author name and email address that will be listed in the AUTHORS file.
+
+The first time you make a pull request you will need to add your name and email address to the .mailmap file by adding a line like
+
+```
+Joe Bloggs <joe@bloggs.com>
+```
+
+This name and email should exactly match the name and email that you have configured with git before making the commits (see "Configure git settings" above). The `bin/mailmap_check.py` script can check that this has been done correctly. If you have made a commit but not yet added yourself to the .mailmap file then you will see this:
+
+```bash
+$ python bin/mailmap_check.py
+This author is not included in the .mailmap file:
+Joe Bloggs <joe@bloggs.com>
+
+The .mailmap file needs to be updated because there are commits with
+unrecognised author/email metadata.
+
+
+For instructions on updating the .mailmap file see:
+https://github.com/sympy/sympy/wiki/Development-workflow
+
+The following authors will be added to the AUTHORS file at the
+time of the next SymPy release.
+```
+
+This means that you should add your name and email address to the .mailmap file. If you add this at the end of the file then `git diff` will show:
+
+```bash
+$ git diff
+diff --git a/.mailmap b/.mailmap
+index 3af6dc1..7fa63b1 100644
+--- a/.mailmap
++++ b/.mailmap
+@@ -1307,3 +1307,4 @@ zsc347 <zsc347@gmail.com>
+ Øyvind Jensen <jensen.oyvind@gmail.com>
+ Łukasz Pankowski <lukpank@o2.pl>
+ 彭于斌 <1931127624@qq.com>
++Joe Bloggs <joe@bloggs.com>
+```
+
+Now you can rerun the `bin/mailmap_check.py` script and you should see:
+
+```bash
+$ python bin/mailmap_check.py
+The mailmap file was reordered
+
+For instructions on updating the .mailmap file see:
+https://github.com/sympy/sympy/wiki/Development-workflow
+
+The following authors will be added to the AUTHORS file at the
+time of the next SymPy release.
+
+Joe Bloggs <joe@bloggs.com>
+```
+
+The first line their says that the .mailmap file was "reordered". This is because the file should be in alphabetical order. The script will have moved your name into the correct position so now you can see the change as:
+
+```bash
+$ git diff
+diff --git a/.mailmap b/.mailmap
+index 3af6dc1..7598d94 100644
+--- a/.mailmap
++++ b/.mailmap
+@@ -562,6 +562,7 @@ Joannah Nanjekye <joannah.nanjekye@ibm.com> Joannah Nanjekye <jnanjekye@python.o
+ Joannah Nanjekye <joannah.nanjekye@ibm.com> nanjekyejoannah <joannah.nanjekye@ibm.com>
+ Joaquim Monserrat <qmonserrat@mailoo.org>
+ Jochen Voss <voss@seehuhn.de>
++Joe Bloggs <joe@bloggs.com>
+ Jogi Miglani <jmig5776@gmail.com> jmig5776 <jmig5776@gmail.com>
+ Johan Blåbäck <johan_bluecreek@riseup.net> <johan.blaback@cea.fr>
+ Johan Guzman <jguzm022@ucr.edu>
+```
+
+Now if you rerun the script you will see:
+
+```bash
+$ python bin/mailmap_check.py
+No changes needed in .mailmap
+
+The following authors will be added to the AUTHORS file at the
+time of the next SymPy release.
+
+Joe Bloggs <joe@bloggs.com>
+```
+
+The key information here is "No changes needed in .mailmap" which means that you have correctly updated the .mailmap file. You should now add and commit these changes as well:
+
+```bash
+git add .mailmap
+git commit -m 'author: add Joe Bloggs to .mailmap'
+```
+
+Sometimes a commit will be made with an incorrect name or email address or an author will make multiple commits with different names and email addresses. In this case a line should be added to the .mailmap file where the first name and email address is what should be recorded in the AUTHORS file and the others are the name and email address that was incorrectly used in the other commits. For example if the commit was recorded with the name `joeb` and the email address `wrong@email.com` but the AUTHORS file should show `Joe Bloggs` as above then there should be a line in the .mailmap file like:
+
+```
+Joe Bloggs <joe@bloggs.com> joeb <wrong@email.com>
+```
+
+A common reason that this can happen is if making commits with the GitHub web UI which always recorded the name as github username and the email as something like `1785690389+joeb@users.noreply.github.com`. In this case a line will need to be added to .mailmap like:
+
+```
+Joe Bloggs <joe@bloggs.com> joeb <1785690389+joeb@users.noreply.github.com>
+```
+
+Multiple lines like this can be added to the .mailmap file. They should record all of the different name and email address combinations that have been used by an author and map all of them to a single author name that will show in the AUTHORS file.
+
+If your pull request is merged and you have not previously been added to the AUTHORS file then your name will be added at the time of the next release of SymPy.
