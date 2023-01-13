@@ -1,4 +1,5 @@
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.core.numbers import pi
 from sympy.algebras.quaternion import Quaternion
 from sympy.core.sympify import sympify
 from sympy.core.expr import Expr
