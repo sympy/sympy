@@ -19,4 +19,3 @@ Contents:
    immutablematrices.rst
    expressions.rst
    normalforms.rst
-   random.rst
