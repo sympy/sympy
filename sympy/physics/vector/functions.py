@@ -153,7 +153,7 @@ def time_derivative(expr, frame, order=1):
     Parameters
     ==========
 
-    expr : Vector/Dyadic/sympifyable
+    expr : Vector/Dyadic/sympifiable
         The expression whose time derivative is to be calculated
 
     frame : ReferenceFrame
