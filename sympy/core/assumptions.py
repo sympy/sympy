@@ -214,7 +214,7 @@ from .facts import FactRules, FactKB
 from .core import BasicMeta
 from .sympify import sympify
 
-from sympy.core.random import shuffle
+from sympy.core.random import _assumptions_shuffle as shuffle
 from sympy.core.assumptions_generated import generated_assumptions as _assumptions
 
 def _load_pre_generated_assumption_rules():
