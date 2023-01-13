@@ -294,4 +294,3 @@ class Euler(Expr):
         """
         nprec = prec_to_dps(prec)
         return Euler(*[arg.evalf(n=nprec) for arg in self.args], seq=self.seq)
-
