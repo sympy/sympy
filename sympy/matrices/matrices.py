@@ -21,7 +21,6 @@ from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.printing.str import StrPrinter
-from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
 from sympy.utilities.misc import as_int, filldedent
 
@@ -2234,28 +2233,3 @@ class MatrixBase(MatrixDeprecated,
         _strongly_connected_components.__doc__
     strongly_connected_components_decomposition.__doc__ = \
         _strongly_connected_components_decomposition.__doc__
-
-
-@deprecated(
-    """
-    sympy.matrices.matrices.classof is deprecated. Use
-    sympy.matrices.common.classof instead.
-    """,
-    deprecated_since_version="1.3",
-    active_deprecations_target="deprecated-sympy-matrices-classof-a2idx",
-)
-def classof(A, B):
-    from sympy.matrices.common import classof as classof_
-    return classof_(A, B)
-
-@deprecated(
-    """
-    sympy.matrices.matrices.a2idx is deprecated. Use
-    sympy.matrices.common.a2idx instead.
-    """,
-    deprecated_since_version="1.3",
-    active_deprecations_target="deprecated-sympy-matrices-classof-a2idx",
-)
-def a2idx(j, n=None):
-    from sympy.matrices.common import a2idx as a2idx_
-    return a2idx_(j, n)
