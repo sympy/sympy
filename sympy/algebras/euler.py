@@ -170,6 +170,9 @@ class Euler(Expr):
     def ek(self):
         return self._info['ek']
 
+    def __getitem__(self, key):
+        return self.args[key]
+
     def to_Matrix(self):
         return Matrix(self.args)
 
