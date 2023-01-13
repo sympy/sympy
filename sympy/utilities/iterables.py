@@ -3,7 +3,6 @@ from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
     permutations, product
 )
-
 # For backwards compatibility
 from itertools import product as cartes # noqa: F401
 from operator import gt
@@ -1366,7 +1365,7 @@ def _partition(seq, vector, m=None):
 
 
 def _set_partitions(n):
-    """Cycle through all partions of n elements, yielding the
+    """Cycle through all partitions of n elements, yielding the
     current number of partitions, ``m``, and a mutable list, ``q``
     such that ``element[i]`` is in part ``q[i]`` of the partition.
 
@@ -2290,7 +2289,7 @@ def multiset_derangements(s):
         b = take[0][0]  # last element to be placed
         b_ct = take[0][1]
 
-        # split the indexes of the not-already-assigned elemements of rv into
+        # split the indexes of the not-already-assigned elements of rv into
         # three categories
         forced_a = []  # positions which must have an a
         forced_b = []  # positions which must have a b
@@ -2545,9 +2544,30 @@ def necklaces(n, k, free=False):
 
     .. [1] http://mathworld.wolfram.com/Necklace.html
 
+    .. [2] Frank Ruskey, Carla Savage, and Terry Min Yih Wang,
+        Generating necklaces, Journal of Algorithms 13 (1992), 414-430;
+        https://doi.org/10.1016/0196-6774(92)90047-G
+
     """
-    return uniq(minlex(i, directed=not free) for i in
-        variations(list(range(k)), n, repetition=True))
+    # The FKM algorithm
+    if k == 0 and n > 0:
+        return
+    a = [0]*n
+    yield tuple(a)
+    if n == 0:
+        return
+    while True:
+        i = n - 1
+        while a[i] == k - 1:
+            i -= 1
+            if i == -1:
+                return
+        a[i] += 1
+        for j in range(n - i - 1):
+            a[j + i + 1] = a[j]
+        if n % (i + 1) == 0 and (not free or all(a <= a[j::-1] + a[-1:j:-1] for j in range(n - 1))):
+            # No need to test j = n - 1.
+            yield tuple(a)
 
 
 def bracelets(n, k):
@@ -2685,6 +2705,130 @@ def runs(seq, op=gt):
     return cycles
 
 
+def sequence_partitions(l, n, /):
+    r"""Returns the partition of sequence $l$ into $n$ bins
+
+    Explanation
+    ===========
+
+    Given the sequence $l_1 \cdots l_m \in V^+$ where
+    $V^+$ is the Kleene plus of $V$
+
+    The set of $n$ partitions of $l$ is defined as:
+
+    .. math::
+        \{(s_1, \cdots, s_n) | s_1 \in V^+, \cdots, s_n \in V^+,
+        s_1 \cdots s_n = l_1 \cdots l_m\}
+
+    Parameters
+    ==========
+
+    l : Sequence[T]
+        A nonempty sequence of any Python objects
+
+    n : int
+        A positive integer
+
+    Yields
+    ======
+
+    out : list[Sequence[T]]
+        A list of sequences with concatenation equals $l$.
+        This should conform with the type of $l$.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import sequence_partitions
+    >>> for out in sequence_partitions([1, 2, 3, 4], 2):
+    ...     print(out)
+    [[1], [2, 3, 4]]
+    [[1, 2], [3, 4]]
+    [[1, 2, 3], [4]]
+
+    Notes
+    =====
+
+    This is modified version of EnricoGiampieri's partition generator
+    from https://stackoverflow.com/questions/13131491/
+
+    See Also
+    ========
+
+    sequence_partitions_empty
+    """
+    # Asserting l is nonempty is done only for sanity check
+    if n == 1 and l:
+        yield [l]
+        return
+    for i in range(1, len(l)):
+        for part in sequence_partitions(l[i:], n - 1):
+            yield [l[:i]] + part
+
+
+def sequence_partitions_empty(l, n, /):
+    r"""Returns the partition of sequence $l$ into $n$ bins with
+    empty sequence
+
+    Explanation
+    ===========
+
+    Given the sequence $l_1 \cdots l_m \in V^*$ where
+    $V^*$ is the Kleene star of $V$
+
+    The set of $n$ partitions of $l$ is defined as:
+
+    .. math::
+        \{(s_1, \cdots, s_n) | s_1 \in V^*, \cdots, s_n \in V^*,
+        s_1 \cdots s_n = l_1 \cdots l_m\}
+
+    There are more combinations than :func:`sequence_partitions` because
+    empty sequence can fill everywhere, so we try to provide different
+    utility for this.
+
+    Parameters
+    ==========
+
+    l : Sequence[T]
+        A sequence of any Python objects (can be possibly empty)
+
+    n : int
+        A positive integer
+
+    Yields
+    ======
+
+    out : list[Sequence[T]]
+        A list of sequences with concatenation equals $l$.
+        This should conform with the type of $l$.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import sequence_partitions_empty
+    >>> for out in sequence_partitions_empty([1, 2, 3, 4], 2):
+    ...     print(out)
+    [[], [1, 2, 3, 4]]
+    [[1], [2, 3, 4]]
+    [[1, 2], [3, 4]]
+    [[1, 2, 3], [4]]
+    [[1, 2, 3, 4], []]
+
+    See Also
+    ========
+
+    sequence_partitions
+    """
+    if n < 1:
+        return
+    if n == 1:
+        yield [l]
+        return
+    for i in range(0, len(l) + 1):
+        for part in sequence_partitions_empty(l[i:], n - 1):
+            yield [l[:i]] + part
+
+
 def kbins(l, k, ordered=None):
     """
     Return sequence ``l`` partitioned into ``k`` bins.
@@ -2766,24 +2910,12 @@ def kbins(l, k, ordered=None):
     partitions, multiset_partitions
 
     """
-    def partition(lista, bins):
-        #  EnricoGiampieri's partition generator from
-        #  https://stackoverflow.com/questions/13131491/
-        #  partition-n-items-into-k-bins-in-python-lazily
-        if len(lista) == 1 or bins == 1:
-            yield [lista]
-        elif len(lista) > 1 and bins > 1:
-            for i in range(1, len(lista)):
-                for part in partition(lista[i:], bins - 1):
-                    if len([lista[:i]] + part) == bins:
-                        yield [lista[:i]] + part
-
     if ordered is None:
-        yield from partition(l, k)
+        yield from sequence_partitions(l, k)
     elif ordered == 11:
         for pl in multiset_permutations(l):
             pl = list(pl)
-            yield from partition(pl, k)
+            yield from sequence_partitions(pl, k)
     elif ordered == 00:
         yield from multiset_partitions(l, k)
     elif ordered == 10:

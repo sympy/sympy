@@ -837,7 +837,7 @@ def Multinomial(syms, n, *p):
 
     n : Positive integer
         Represents number of trials
-    p : List of event probabilites
+    p : List of event probabilities
         Must be in the range of $[0, 1]$.
 
     Returns
@@ -910,7 +910,7 @@ def NegativeMultinomial(syms, k0, *p):
 
     k0 : positive integer
         Represents number of failures before the experiment is stopped
-    p : List of event probabilites
+    p : List of event probabilities
         Must be in the range of $[0, 1]$
 
     Returns

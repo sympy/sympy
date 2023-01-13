@@ -853,7 +853,7 @@ class cos(TrigonometricFunction):
         from sympy.functions.special.polynomials import chebyshevt
 
         def migcdex(x):
-            # recursive calcuation of gcd and linear combination
+            # recursive calculation of gcd and linear combination
             # for a sequence of integers.
             # Given  (x1, x2, x3)
             # Returns (y1, y1, y3, g)
@@ -1003,10 +1003,8 @@ class cos(TrigonometricFunction):
 
     def _eval_is_zero(self):
         rest, pi_mult = _peeloff_pi(self.args[0])
-        if pi_mult:
-            return fuzzy_and([(pi_mult - S.Half).is_integer, rest.is_zero])
-        else:
-            return rest.is_zero
+        if rest.is_zero and pi_mult:
+            return (pi_mult - S.Half).is_integer
 
 
 class tan(TrigonometricFunction):
@@ -1669,8 +1667,8 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     # trigonometric functions eval() like even/odd, func(x+2*k*pi), etc.
 
     # optional, to be defined in subclasses:
-    _is_even = None  # type: FuzzyBool
-    _is_odd = None  # type: FuzzyBool
+    _is_even: FuzzyBool = None
+    _is_odd: FuzzyBool = None
 
     @classmethod
     def eval(cls, arg):

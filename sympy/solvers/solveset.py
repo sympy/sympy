@@ -833,6 +833,9 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 lhs, rhs_s = inverter(gen, y, symbol)
                 if lhs == symbol:
                     result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
+                    if isinstance(result, FiniteSet) and isinstance(gen, Pow
+                            ) and gen.base.is_Rational:
+                        result = FiniteSet(*[expand_log(i) for i in result])
                 else:
                     result = ConditionSet(symbol, Eq(f, 0), domain)
         else:
@@ -1219,7 +1222,7 @@ def _invert_modular(modterm, rhs, n, symbol):
     1. If a is symbol then  m*n + rhs is the required solution.
 
     2. If a is an instance of ``Add`` then we try to find two symbol independent
-       parts of a and the symbol independent part gets tranferred to the other
+       parts of a and the symbol independent part gets transferred to the other
        side and again the ``_invert_modular`` is called on the symbol
        dependent part.
 

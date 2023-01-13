@@ -3,9 +3,15 @@
 ODE
 ===
 
+.. note::
+
+   For a beginner-friendly guide focused on solving ODEs, refer to
+   :ref:`solving-guide-ode`.
+
 .. module::sympy.solvers.ode
 
 .. automodule:: sympy.solvers.ode
+
 
 User Functions
 --------------
@@ -28,6 +34,8 @@ intended for use by ordinary users of SymPy.
 .. autofunction:: sympy.solvers.ode::checkinfsol
 
 .. autofunction:: sympy.solvers.ode::constantsimp
+
+.. _hints:
 
 Hint Functions
 --------------
@@ -133,8 +141,8 @@ the various ODE solving methods. For this reason, they are documented here.
 Lie heuristics
 --------------
 These functions are intended for internal use of the Lie Group Solver.
-Nonetheless, they contain useful information in their docstrings on the algorithms
-implemented for the various heuristics.
+Nonetheless, they contain useful information in their docstrings on the
+algorithms implemented for the various heuristics.
 
 .. autofunction:: sympy.solvers.ode.lie_group::lie_heuristic_abaco1_simple
 
@@ -156,9 +164,8 @@ implemented for the various heuristics.
 
 Rational Riccati Solver
 -----------------------
-These functions are intended for internal use to solve
-a first order Riccati differential equation with atleast
-one rational particular solution.
+These functions are intended for internal use to solve a first order Riccati
+differential equation with atleast one rational particular solution.
 
 .. autofunction:: sympy.solvers.ode.riccati::riccati_normal
 

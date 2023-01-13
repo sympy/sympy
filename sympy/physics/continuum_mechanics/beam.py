@@ -2121,8 +2121,8 @@ class Beam:
             for plotting loads.
             Given a right handed coordinate system with XYZ coordinates,
             the beam's length is assumed to be along the positive X axis.
-            The draw function recognizes positve loads(with n>-2) as loads
-            acting along negative Y direction and positve moments acting
+            The draw function recognizes positive loads(with n>-2) as loads
+            acting along negative Y direction and positive moments acting
             along positive Z direction.
 
         Parameters
@@ -2236,7 +2236,7 @@ class Beam:
             elif load[2] >= 0:
                 # `fill` will be assigned only when higher order loads are present
                 value, start, order, end = load
-                # Positive loads have their seperate equations
+                # Positive loads have their separate equations
                 if(value>0):
                     plus = 1
                 # if pictorial is True we remake the load equation again with
@@ -2415,7 +2415,7 @@ class Beam3D(Beam):
             Single SymPy expression can be passed if both values are same
         area : Sympifyable
             A SymPy expression representing the Beam's cross-sectional area
-            in a plane prependicular to length of the Beam.
+            in a plane perpendicular to length of the Beam.
         variable : Symbol, optional
             A Symbol object that will be used as the variable along the beam
             while representing the load, shear, moment, slope and deflection
@@ -2663,7 +2663,7 @@ class Beam3D(Beam):
             sol = list((linsolve([shear_curve, moment_curve], react).args)[0])
             sol_dict = dict(zip(react, sol))
             reaction_loads = self._reaction_loads
-            # Check if any of the evaluated rection exists in another direction
+            # Check if any of the evaluated reaction exists in another direction
             # and if it exists then it should have same value.
             for key in sol_dict:
                 if key in reaction_loads and sol_dict[key] != reaction_loads[key]:

@@ -314,7 +314,7 @@ def mrv(e, x):
         args = [ss.do_subs(x[1]) for x in l]
         return s, e.func(*args)
     elif e.is_Derivative:
-        raise NotImplementedError("MRV set computation for derviatives"
+        raise NotImplementedError("MRV set computation for derivatives"
                                   " not implemented yet.")
     raise NotImplementedError(
         "Don't know how to calculate the mrv of '%s'" % e)

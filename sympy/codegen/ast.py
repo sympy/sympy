@@ -126,7 +126,8 @@ There is a function constructing a loop (or a complete function) like this in
 
 """
 
-from typing import Any, Dict as tDict, List, Tuple as tTuple
+from __future__ import annotations
+from typing import Any
 
 from collections import defaultdict
 
@@ -182,9 +183,10 @@ class Token(CodegenAST):
     in the class attribute ``not_in_args`` are not passed to :class:`~.Basic`.
     """
 
-    __slots__ = _fields = ()  # type: tTuple[str, ...]
-    defaults = {}  # type: tDict[str, Any]
-    not_in_args = []  # type: List[str]
+    __slots__: tuple[str, ...] = ()
+    _fields = __slots__
+    defaults: dict[str, Any] = {}
+    not_in_args: list[str] = []
     indented_args = ['body']
 
     @property
@@ -199,7 +201,7 @@ class Token(CodegenAST):
     @classmethod
     def _construct(cls, attr, arg):
         """ Construct an attribute value from argument passed to ``__new__()``. """
-        # arg may be ``NoneToken()``, so comparation is done using == instead of ``is`` operator
+        # arg may be ``NoneToken()``, so comparison is done using == instead of ``is`` operator
         if arg == None:
             return cls.defaults.get(attr, none)
         else:
@@ -947,9 +949,10 @@ class Node(Token):
 
     """
 
-    __slots__ = _fields = ('attrs',)  # type: tTuple[str, ...]
+    __slots__: tuple[str, ...] = ('attrs',)
+    _fields = __slots__
 
-    defaults = {'attrs': Tuple()}  # type: tDict[str, Any]
+    defaults: dict[str, Any] = {'attrs': Tuple()}
 
     _construct_attrs = staticmethod(_mk_Tuple)
 
@@ -1015,7 +1018,8 @@ class Type(Token):
     .. [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
 
     """
-    __slots__ = _fields = ('name',)  # type: tTuple[str, ...]
+    __slots__: tuple[str, ...] = ('name',)
+    _fields = __slots__
 
     _construct_name = String
 
@@ -1773,7 +1777,7 @@ class FunctionPrototype(Node):
     """
 
     __slots__ = ('return_type', 'name', 'parameters')
-    _fields = __slots__ + Node._fields  # type: tTuple[str, ...]
+    _fields: tuple[str, ...] = __slots__ + Node._fields
 
     _construct_return_type = Type
     _construct_name = String
@@ -1792,7 +1796,7 @@ class FunctionPrototype(Node):
     @classmethod
     def from_FunctionDefinition(cls, func_def):
         if not isinstance(func_def, FunctionDefinition):
-            raise TypeError("func_def is not an instance of FunctionDefiniton")
+            raise TypeError("func_def is not an instance of FunctionDefinition")
         return cls(**func_def.kwargs(exclude=('body',)))
 
 

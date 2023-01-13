@@ -1621,7 +1621,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     independent Bernoulli process trials with the same parameter `p`.
     It's assumed that the probability `p` applies to every
     trial and that the outcomes of each trial
-    are independent of all the rest. Therefore Bernoulli Processs
+    are independent of all the rest. Therefore Bernoulli Process
     is Discrete State and Discrete Time Stochastic Process.
 
     Parameters

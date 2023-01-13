@@ -1705,7 +1705,7 @@ class Permutation(Atom):
 
         This function is similar to the ``__call__`` magic, however,
         ``__call__`` magic already has some other applications like
-        permuting an array or attatching new cycles, which would
+        permuting an array or attaching new cycles, which would
         not always be mathematically consistent.
 
         This also guarantees that the return type is a SymPy integer,

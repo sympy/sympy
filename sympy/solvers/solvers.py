@@ -1403,7 +1403,7 @@ def _solve(f, *symbols, **flags):
                     v = cond.subs(symbol, candidate)
                     _eval_simplify = getattr(v, '_eval_simplify', None)
                     if _eval_simplify is not None:
-                        # unconditionally take the simpification of v
+                        # unconditionally take the simplification of v
                         v = _eval_simplify(ratio=2, measure=lambda x: 1)
                 except TypeError:
                     # incompatible type with condition(s)

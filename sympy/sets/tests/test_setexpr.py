@@ -78,7 +78,7 @@ def test_same_setexprs_are_not_identical():
     b = SetExpr(FiniteSet(0, 1))
     assert (a + b).set == FiniteSet(0, 1, 2)
 
-    # Cannont detect the set being the same:
+    # Cannot detect the set being the same:
     # assert (a + a).set == FiniteSet(0, 2)
 
 

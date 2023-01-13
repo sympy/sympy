@@ -2468,7 +2468,7 @@ def nD(i=None, brute=None, *, n=None, m=None):
 
     By default, a brute-force enumeration and count of multiset permutations
     is only done if there are fewer than 9 elements. There may be cases when
-    there is high multiplicty with few unique elements that will benefit
+    there is high multiplicity with few unique elements that will benefit
     from a brute-force enumeration, too. For this reason, the `brute`
     keyword (default None) is provided. When False, the brute-force
     enumeration will never be used. When True, it will always be used.

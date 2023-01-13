@@ -1648,7 +1648,7 @@ def diop_solve(eq, param=symbols("t", integer=True)):
 
     if eq_type is not None and eq_type not in diop_known:
             raise ValueError(filldedent('''
-    Alhough this type of equation was identified, it is not yet
+    Although this type of equation was identified, it is not yet
     handled. It should, however, be listed in `diop_known` at the
     top of this file. Developers should see comments at the end of
     `classify_diop`.

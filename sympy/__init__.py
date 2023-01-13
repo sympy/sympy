@@ -203,7 +203,7 @@ from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
 from .utilities import (flatten, group, take, subsets, variations,
         numbered_symbols, cartes, capture, dict_merge, prefixes, postfixes,
         sift, topological_sort, unflatten, has_dups, has_variety, reshape,
-        rotations, filldedent, lambdify, source,
+        rotations, filldedent, lambdify,
         threaded, xthreaded, public, memoize_property, timed)
 
 from .integrals import (integrate, Integral, line_integrate, mellin_transform,
@@ -440,7 +440,7 @@ __all__ = [
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
     'cartes', 'capture', 'dict_merge', 'prefixes', 'postfixes', 'sift',
     'topological_sort', 'unflatten', 'has_dups', 'has_variety', 'reshape',
-    'rotations', 'filldedent', 'lambdify', 'source', 'threaded', 'xthreaded',
+    'rotations', 'filldedent', 'lambdify', 'threaded', 'xthreaded',
     'public', 'memoize_property', 'timed',
 
     # sympy.integrals

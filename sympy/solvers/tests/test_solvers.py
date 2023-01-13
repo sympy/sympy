@@ -187,7 +187,7 @@ def test_solve_args():
     assert solve(x**2 - pi, pi) == [x**2]
     # no equations
     assert solve([], [x]) == []
-    # nonlinear systen
+    # nonlinear system
     assert solve((x**2 - 4, y - 2), x, y) == [(-2, 2), (2, 2)]
     assert solve((x**2 - 4, y - 2), y, x) == [(2, -2), (2, 2)]
     assert solve((x**2 - 4 + z, y - 2 - z), a, z, y, x, set=True

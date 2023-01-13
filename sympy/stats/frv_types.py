@@ -349,7 +349,7 @@ def Coin(name, p=S.Half):
     Parameters
     ==========
 
-    p : Rational Numeber between 0 and 1
+    p : Rational Number between 0 and 1
       Represents probability of getting "Heads", by default is Half
 
     Examples

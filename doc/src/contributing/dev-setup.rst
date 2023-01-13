@@ -117,7 +117,7 @@ To run tests for modules, use:
 
 This will run tests for the ``core`` and ``utilities`` modules.
 
-Similary, run quality tests with:
+Similarly, run quality tests with:
 
 .. code-block:: bash
 

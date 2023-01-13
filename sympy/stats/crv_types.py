@@ -2305,7 +2305,7 @@ class LevyDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(mu, c):
         _value_check(c > 0, "c (scale parameter) must be positive")
-        _value_check(mu.is_real, "mu (location paramater) must be real")
+        _value_check(mu.is_real, "mu (location parameter) must be real")
 
     def pdf(self, x):
         mu, c = self.mu, self.c
@@ -3487,7 +3487,7 @@ def PowerFunction(name, alpha, a, b):
     Parameters
     ==========
 
-    alpha : Positive number, `0 < \alpha`, the shape paramater
+    alpha : Positive number, `0 < \alpha`, the shape parameter
     a : Real number, :math:`-\infty < a`, the left boundary
     b : Real number, :math:`a < b < \infty`, the right boundary
 

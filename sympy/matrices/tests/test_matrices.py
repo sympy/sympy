@@ -1882,8 +1882,6 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
     raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
-    with warns_deprecated_sympy():
-        Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]]))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([1, 2, 3]))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
@@ -2448,10 +2446,6 @@ def test_dot():
     assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), conjugate_convention="left") == 5
     raises(ValueError, lambda: Matrix([1, 2]).dot(Matrix([3, 4]), hermitian=True, conjugate_convention="test"))
 
-    with warns_deprecated_sympy():
-        A = Matrix([[1, 2], [3, 4]])
-        B = Matrix([[2, 3], [1, 2]])
-        assert A.dot(B) == [11, 7, 16, 10]
 
 def test_dual():
     B_x, B_y, B_z, E_x, E_y, E_z = symbols(
@@ -2901,9 +2895,6 @@ def test_deprecated():
     P, Jcells = m.jordan_cells()
     assert Jcells[1] == Matrix(1, 1, [2])
     assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
-
-    with warns_deprecated_sympy():
-        assert Matrix([[1,2],[3,4]]).dot(Matrix([[1,3],[4,5]])) == [10, 19, 14, 28]
 
 
 def test_issue_14489():
