@@ -44,15 +44,15 @@ class TWave(Expr):
     Arguments
     =========
 
-    amplitude : Sympifyable
+    amplitude : sympifiable
         Amplitude of the wave.
-    frequency : Sympifyable
+    frequency : sympifiable
         Frequency of the wave.
-    phase : Sympifyable
+    phase : sympifiable
         Phase angle of the wave.
-    time_period : Sympifyable
+    time_period : sympifiable
         Time period of the wave.
-    n : Sympifyable
+    n : sympifiable
         Refractive index of the medium.
 
     Raises

@@ -386,7 +386,7 @@ class Polygon(GeometrySet):
         Parameters
         ==========
 
-        point : Point, two-tuple of sympifyable objects, or None(default=None)
+        point : Point, two-tuple of sympifiable objects, or None(default=None)
             point is the point about which second moment of area is to be found.
             If "point=None" it will be calculated about the axis passing through the
             centroid of the polygon.
@@ -466,7 +466,7 @@ class Polygon(GeometrySet):
         Parameters
         ==========
 
-        point: Point, two-tuple of sympifyable objects, or None (default=None)
+        point: Point, two-tuple of sympifiable objects, or None (default=None)
             point is the point above or below which the area of interest lies
             If ``point=None`` then the centroid acts as the point of interest.
 
@@ -554,7 +554,7 @@ class Polygon(GeometrySet):
         Parameters
         ==========
 
-        point : Point, two-tuple of sympifyable objects, or None(default=None)
+        point : Point, two-tuple of sympifiable objects, or None(default=None)
             point is the point at which section modulus is to be found.
             If "point=None" it will be calculated for the point farthest from the
             centroidal axis of the polygon.

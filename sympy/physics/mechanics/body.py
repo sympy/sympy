@@ -30,7 +30,7 @@ class Body(RigidBody, Particle):  # type: ignore
         The point which represents the center of mass of the rigid body
     frame : ReferenceFrame
         The reference frame which the body is fixed in
-    mass : Sympifyable
+    mass : sympifiable
         The body's mass
     inertia : (Dyadic, Point)
         The body's inertia around its center of mass. This attribute is specific
@@ -50,8 +50,8 @@ class Body(RigidBody, Particle):  # type: ignore
     masscenter : Point, optional
         A point that represents the center of mass of the body or particle.
         If no point is given, a point is generated.
-    mass : Sympifyable, optional
-        A Sympifyable object which represents the mass of the body. If no
+    mass : sympifiable, optional
+        A sympifiable object which represents the mass of the body. If no
         mass is passed, one is generated.
     frame : ReferenceFrame, optional
         The ReferenceFrame that represents the reference frame of the body.

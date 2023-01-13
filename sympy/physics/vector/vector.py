@@ -149,12 +149,12 @@ class Vector(Printable, EvalfMixin):
         return True
 
     def __mul__(self, other):
-        """Multiplies the Vector by a sympifyable expression.
+        """Multiplies the Vector by a sympifiable expression.
 
         Parameters
         ==========
 
-        other : Sympifyable
+        other : sympifiable
             The scalar to multiply this Vector with
 
         Examples

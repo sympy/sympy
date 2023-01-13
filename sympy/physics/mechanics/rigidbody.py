@@ -28,7 +28,7 @@ class RigidBody:
         The point which represents the center of mass of the rigid body.
     frame : ReferenceFrame
         The ReferenceFrame which the rigid body is fixed in.
-    mass : Sympifyable
+    mass : sympifiable
         The body's mass.
     inertia : (Dyadic, Point)
         The body's inertia about a point; stored in a tuple as shown above.
@@ -304,7 +304,7 @@ class RigidBody:
         Parameters
         ==========
 
-        scalar: Sympifyable
+        scalar: sympifiable
             The potential energy (a scalar) of the RigidBody.
 
         Examples

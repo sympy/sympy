@@ -25,7 +25,7 @@ class Particle:
     point : Point
         A physics/mechanics Point which represents the position, velocity, and
         acceleration of this Particle
-    mass : sympifyable
+    mass : sympifiable
         A SymPy expression representing the Particle's mass
 
     Examples
@@ -225,7 +225,7 @@ class Particle:
         Parameters
         ==========
 
-        scalar : Sympifyable
+        scalar : sympifiable
             The potential energy (a scalar) of the Particle.
 
         Examples

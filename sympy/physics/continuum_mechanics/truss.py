@@ -141,10 +141,10 @@ class Truss:
         label:  String or a Symbol
             The label for a node. It is the only way to identify a particular node.
 
-        x: Sympifyable
+        x: sympifiable
             The x-coordinate of the position of the node.
 
-        y: Sympifyable
+        y: sympifiable
             The y-coordinate of the position of the node.
 
         Examples
@@ -446,11 +446,11 @@ class Truss:
         location: String or Symbol
             Label of the Node at which load is applied.
 
-        magnitude: Sympifyable
+        magnitude: sympifiable
             Magnitude of the load applied. It must always be positive and any changes in
             the direction of the load are not reflected here.
 
-        direction: Sympifyable
+        direction: sympifiable
             The angle, in degrees, that the load vector makes with the horizontal
             in the counter-clockwise direction. It takes the values 0 to 360,
             inclusive.
@@ -492,10 +492,10 @@ class Truss:
         location: String or Symbol
             Label of the Node at which load is applied and is to be removed.
 
-        magnitude: Sympifyable
+        magnitude: sympifiable
             Magnitude of the load applied.
 
-        direction: Sympifyable
+        direction: sympifiable
             The angle, in degrees, that the load vector makes with the horizontal
             in the counter-clockwise direction. It takes the values 0 to 360,
             inclusive.

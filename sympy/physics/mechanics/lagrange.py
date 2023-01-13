@@ -106,7 +106,7 @@ class LagrangesMethod(_Methods):
                  hol_coneqs=None, nonhol_coneqs=None):
         """Supply the following for the initialization of LagrangesMethod.
 
-        Lagrangian : Sympifyable
+        Lagrangian : sympifiable
 
         qs : array_like
             The generalized coordinates
