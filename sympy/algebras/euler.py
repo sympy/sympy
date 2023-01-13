@@ -1,18 +1,7 @@
-import warnings
-from sympy.core.numbers import Rational, pi
-from sympy.core.singleton import S
-from sympy.core.relational import is_eq
-from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
-from sympy.functions.elementary.exponential import (exp, log as ln)
-from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, cos, sin, atan2)
-from sympy.simplify.trigsimp import trigsimp
-from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.algebras.quaternion import Quaternion
-from sympy.core.sympify import sympify, _sympify
+from sympy.core.sympify import sympify
 from sympy.core.expr import Expr
-from sympy.core.logic import fuzzy_not, fuzzy_or
 
 from mpmath.libmp.libmpf import prec_to_dps
 

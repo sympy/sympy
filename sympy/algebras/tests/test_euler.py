@@ -1,13 +1,11 @@
-from sympy.core.symbol import Symbol, sympify
+from sympy.core.symbol import Symbol
 from sympy.core.numbers import pi
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.algebras.quaternion import Quaternion
 from sympy.algebras.euler import Euler
 from sympy.testing.pytest import raises
-from sympy.matrices.dense import Matrix
 
 from sympy.abc import x, y, z, alpha, beta, gamma
-from sympy.abc import a, b, c, d
 
 
 def test_euler_construction():
