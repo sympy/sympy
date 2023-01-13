@@ -293,7 +293,6 @@ class Euler(Expr):
         """Returns true if the angles are all zero"""
         return all(i.is_zero for i in self.args)
 
-
     def _eval_evalf(self, prec):
         """Returns the floating point approximations (decimal numbers) of the angles.
 
@@ -306,18 +305,4 @@ class Euler(Expr):
         """
         nprec = prec_to_dps(prec)
         return Euler(*[arg.evalf(n=nprec) for arg in self.args], seq=self.seq)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
