@@ -1,21 +1,32 @@
 import random as system_random
 
-from sympy import eye, cartes, simplify, symbols, expand
+from sympy import Matrix, diag, eye, zeros, cartes, \
+    I, cos, simplify, symbols, sqrt, expand, Mul
 from sympy.core.random import seed, sample
-from sympy.matrices.random import regular_to_singular, elementary, \
-    triangular, square
-from sympy.matrices.random import _sample
+from sympy.matrices.random import \
+    complex_to_real, invertible, regular_to_singular, diagonal_normal, \
+    diagonalizable, transposition, triangular, triangularizable, \
+    isometry_normal, permutation, projection, elementary, rotation, \
+    reflection, normal, nilpotent, idempotent, singular, orthogonal, unitary, \
+    hermite, symmetric, square, jordan, jordan_normal
+from sympy.matrices.random import _elementary_scalars, _rotation_scalars, \
+    _sample
 
 from sympy.testing.pytest import raises
 
 TEST_DIMS = dict((d, tuple(cartes(range(d), range(d)))) for d in range(2, 6))
 TEST_PRECISION = 7
+TEST_EPSILON = 1e-7
 
 phi, psi = symbols('phi psi')
 
 # set fixed sympy random seed for testing purposes
 sympy_seed = 12
 seed(sympy_seed)
+
+# set system random number generator with fixed seed for testing purposes
+system_seed = 111
+RANDOM = system_random.Random(system_seed)
 
 
 def _is_zeros(m, precision=None):
@@ -39,17 +50,98 @@ def _is_triangular(m, precision=None):
             abs(n[i, j]) < precision for i in range(s) for j in range(i))
 
 
+def _cs(scalar):
+    if isinstance(scalar, (tuple, list)) and len(scalar) == 2:
+        c, s = scalar
+    else:
+        c, s = scalar, _sample((-1, 1)) * sqrt(1 - scalar ** 2)
+    return c, s
+
+
 # === fundamental functions ===
+
+def test_real_complex_matrix():
+    z = 4 + 2 * I
+    for d in TEST_DIMS:
+        c = jordan(d, index=(0, d - 1), scalar=z)
+        r = complex_to_real(c)
+        for x in r:
+            assert x.is_real
+        for v in r.eigenvals(multiple=True):
+            assert v in (z, z.conjugate(), 1)
+
 
 def test_singular_matrix():
     for d in TEST_DIMS:
-        s = square(d)
+        s = invertible(d)
         assert regular_to_singular(s) == s
         for r in range(1, d):
             assert regular_to_singular(s, r).rank() == r
 
 
 # === base matrices ===
+
+def test_diagonal():
+    for d in TEST_DIMS:
+        m = diagonal_normal(d, spec=(1,) * d)
+        assert _is_eye(m)
+
+    for d in TEST_DIMS:
+        m = diagonal_normal(d, spec=(0,) * d)
+        assert _is_zeros(m)
+
+
+def test_jordan():
+    for d in TEST_DIMS:
+        m = jordan(d, index=(0, d), scalar=(1,))
+        n = eye(d)
+        assert m.diagonal() == n.diagonal()
+
+    for d in TEST_DIMS:
+        m = jordan(d, index=(0, d), scalar=0)
+        n = zeros(d)
+        assert m.diagonal() == n.diagonal()
+
+
+def test_transposition():
+    for d in TEST_DIMS:
+        m = transposition(d)
+        n = eye(d)
+        assert m * m == n
+
+    for d, coords in TEST_DIMS.items():
+        for i, j in coords:
+            m = transposition(d, index=(i, j))
+            assert m[j, i] == 1
+            assert m[i, j] == 1
+            if not i == j:
+                assert m[i, i] == 0
+                assert m[j, j] == 0
+
+
+def test_permutation():
+    for d in TEST_DIMS:
+        def alt_permutation(dim, perm=None):
+            perm = perm or _sample(range(dim), dim)
+            obj = zeros(dim)
+            for i, j in enumerate(perm):
+                obj[i, j] = 1
+            return obj  # aka eye(dim).permute(perm)
+
+        perm = RANDOM.sample(range(d), d)
+        m = permutation(d, perm=perm)
+        n = alt_permutation(d, perm=perm)
+        assert m == n
+
+
+def test_projection():
+    for d in TEST_DIMS:
+        for r in range(1, d):
+            m = projection(d, index=(0, r))
+            assert sum(m) == r
+            assert m * m == m
+            assert _is_triangular(m)
+            assert _is_triangular(m.T)
 
 
 def test_elementary():
@@ -63,24 +155,296 @@ def test_elementary():
         assert round(m.det(), TEST_PRECISION) == 1
 
 
+def test_rotation():
+    z = 1 + 3 * I
+    for d in TEST_DIMS:
+        m = rotation(d)
+        assert _is_eye(m.T * m)
+        assert m.det() == 1
+
+        c = sqrt(2) / 2
+        m = rotation(d, scalar=c)
+        assert _is_eye(m.T * m, TEST_EPSILON), repr(m.T * m)
+        assert (m.det() - 1) < TEST_EPSILON, m.det()
+
+        z = complex(3, 1)
+        m = rotation(d, scalar=z / abs(z))
+        assert _is_eye(m.T * m, TEST_EPSILON), repr(m.T * m)
+        assert (m.det() - 1) < TEST_EPSILON, m.det()
+
+        z = 1 + 3 * I
+        m = rotation(d, scalar=z / abs(z))
+        assert _is_eye(m.T * m)
+        assert m.det() == 1
+
+        m = rotation(d, scalar=(1, 0))
+        assert _is_eye(m)
+
+
+def test_reflection():
+    for d in TEST_DIMS:
+        m = reflection(d)
+        assert _is_eye(m.T * m)
+        assert m.det() == -1
+
+        c = sqrt(2) / 2
+        m = reflection(d, scalar=c)
+        assert _is_eye(m.T * m)
+        assert m.det() == -1
+
+        z = complex(3, 1)
+        m = reflection(d, scalar=z / abs(z))
+        assert _is_eye(m.T * m, TEST_EPSILON), repr(m.T * m)
+        assert (m.det() + 1) < TEST_EPSILON, m.det()
+
+        z = 1 + 3 * I
+        m = reflection(d, scalar=z / abs(z))
+        assert _is_eye(m.T * m)
+        assert m.det() == -1
+
+
+# === normal form matrices, i.e. defined by eigenvalues ===
+
+def test_diagonal_normal():
+    scalars = 2, 3, 5, 7
+    for d in TEST_DIMS:
+        rank = d - 1
+        s = (0,) * (d - rank) + scalars[:rank]
+        m = diagonal_normal(d, spec=s)
+        assert _is_triangular(m)
+        assert _is_triangular(m.T)
+        for x in m.diagonal():
+            if x:
+                rank -= 1
+                assert x in scalars
+        assert rank == 0
+
+    def _alt_diagonal_normal(dim, spec=None):
+        """diagonal_normal via multiplying elementary matrices"""
+
+        spec = spec or _elementary_scalars
+
+        # choose spec randomly if dim and len(spec) does not meet
+        if not dim == len(spec):
+            spec = tuple(_sample(spec) for _ in range(dim))
+
+        # set diagonal entries
+        # multiplicative matrix construction (only for testing)
+        items = list()
+        for start, scalar in enumerate(spec):
+            items.append(elementary(dim, index=(start, start), scalar=scalar))
+        return Mul(*items)
+
+    spec = (1, 2, 3, 4)
+    test = dict()
+    specs = dict()
+    for d in TEST_DIMS:
+        s = RANDOM.choices(spec, k=d + 4)
+        specs[d] = s
+        m = _alt_diagonal_normal(d + 4, spec=s)
+        test[d] = m
+        assert _is_triangular(m)
+        assert _is_triangular(m.T)
+        for ev in m.eigenvals(multiple=True):
+            assert ev in spec
+
+    for d in TEST_DIMS:
+        m = diagonal_normal(d + 4, spec=specs[d])
+        assert test[d] == m
+
+
+def test_jordan_normal():
+    scalars = 2, 3, 5, 7
+    for d in TEST_DIMS:
+        rank = d - 1
+        s = (0, None) * (d - rank) + scalars[:rank]
+        m = jordan_normal(d, spec=s)
+        assert _is_triangular(m)
+        assert m.rank() == rank
+
+        for v in (0, 1, 2):
+            m = jordan_normal(d, spec=((v, d), (v, d)))
+            assert m[0, 0] == v
+            for i in range(1, d):
+                assert m[i, i] == v
+                assert m[i - 1, i] == 1
+
+        s = ((3, 2), (3, 2))
+        m = jordan_normal(d, spec=s)
+        assert _is_triangular(m)
+
+        with raises(AssertionError):
+            assert _is_triangular(m.T)
+
+    def _alt_jordan_normal(dim, spec=None):
+        """jordan_normal via multiplying jordan matrices"""
+
+        spec = spec or _elementary_scalars
+
+        # make spec list of (scalar, size) tuples
+        if spec and spec[0] is None:
+            raise ValueError("spec argument must not start with None")
+
+        block_list = list()
+        val, cnt = None, 0
+        for s in spec:
+            if s == val:
+                cnt += 1
+                continue
+            elif s is None:
+                block_list.append((val, cnt))
+                val, cnt = None, 0
+                continue
+            elif cnt:
+                block_list.append((val, cnt))
+            if isinstance(s, (tuple, list)) and len(s) == 2:
+                block_list.append(s)
+                val, cnt = None, 0
+                continue
+            val, cnt = s, 1
+        if cnt:
+            block_list.append((val, cnt))
+        spec = block_list
+        del block_list
+
+        # choose block randomly if dim and len(spec) does not meet
+        if not dim == sum(cnt for val, cnt in spec):
+            spec = tuple(_sample(spec) for _ in range(dim))
+
+        # set entries of jordan blocks
+        # multiplicative matrix construction (only for testing)
+        items = list()
+        start = 0
+        for val, cnt in spec:
+            end = min(dim, start + cnt)
+            items.append(jordan(dim, index=(start, end), scalar=val))
+            if end == dim:
+                break
+            start = end
+        return Mul(*items)
+
+    test = dict()
+    specs = dict()
+    for d in TEST_DIMS:
+        s = RANDOM.choices(scalars, k=d + 4)
+        specs[d] = s
+        m = _alt_jordan_normal(d + 4, spec=s)
+        test[d] = m
+
+    for d in TEST_DIMS:
+        m = jordan_normal(d + 4, spec=specs[d])
+        assert test[d] == m
+
+
+def test_isometry_normal():
+    spec = -1, 1, -1
+    m = isometry_normal(3, spec=spec)
+    assert _is_zeros(m - diag(*spec)), repr(m)
+    assert _is_eye(m * m), repr(m * m)
+
+    m = isometry_normal(4, spec=(1,))
+    assert _is_eye(m), repr(m)
+
+    m = isometry_normal(4, spec=((1, 0), (1, 0)))
+    assert _is_eye(m), repr(m)
+
+    m = isometry_normal(3, spec=((0, 1), 1))
+    n = Matrix([[0, 1, 0], [-1, 0, 0], [0, 0, 1]])
+    assert _is_zeros(m - n), repr(m) + repr(n)
+
+    for d in TEST_DIMS:
+        m = isometry_normal(d, spec=(I,))
+        assert abs(m.det()) == 1, m.det()
+        m = isometry_normal(d, spec=(I,))
+        assert m.det() == I ** d, repr(m)
+
+        m = isometry_normal(d, spec=(sqrt(2) / 2,))
+        assert abs(m.det()) == 1, m.det()
+
+        z = 2 + 3 * I
+        m = isometry_normal(d, spec=(z / abs(z),))
+        assert abs(m.det()) == 1, m.det()
+        m = isometry_normal(d, spec=(z / abs(z),))
+        assert _is_zeros(m - diag(*(d * [z / abs(z)]))), repr(m)
+
+        m = isometry_normal(d, spec=(complex(0, 1),))
+        assert abs(m.det()) == 1, m.det()
+
+        z = complex(3, 2)
+        m = isometry_normal(d, spec=(z / abs(z),))
+        assert abs(abs(m.det()) - 1) < TEST_EPSILON, m.det()
+
+    def _alt_isometry_normal(dim, spec=None):
+        """isometry_normal via multiplying rotation matrices"""
+
+        spec = spec or _rotation_scalars
+
+        # make spec list of (scalar,) or (scalar, +/-sqrt(1-scalar**2)) tuples
+        block_list = list()
+        for c in spec:
+            if isinstance(c, (tuple, list)):
+                block_list.append(c)
+            elif abs(c) == 1:
+                block_list.append((c,))
+            else:
+                block_list.append(_cs(c))
+        spec = block_list
+        del block_list
+
+        # choose spec randomly if dim and len(spec) does not meet
+        if not dim == sum(len(s) for s in spec):
+            spec = tuple(_sample(spec) for _ in range(dim))
+
+        # set entries of rotation blocks
+        # multiplicative matrix construction (only for testing)
+        items = list()
+        start = 0
+        for s in spec:
+            end = start + len(s)
+            if dim < end:
+                # leave the last diagonal entry one
+                break
+            if len(s) == 1:
+                scalar, = s
+                items.append(
+                    elementary(dim, index=(start, start), scalar=scalar))
+            else:
+                c, s = s
+                items.append(
+                    rotation(dim, index=(start, start + 1), scalar=(c, s)))
+            start = end
+        return Mul(*items)
+
+    spec = (0, -1), (1, 0)
+    test = dict()
+    for d in TEST_DIMS:
+        test[d] = _alt_isometry_normal(2 * d, spec=spec * d)
+
+    for d in TEST_DIMS:
+        m = isometry_normal(2 * d, spec=spec * d)
+
+        for x in (m - test[d]).evalf():
+            assert abs(x) < TEST_PRECISION
+
+
 # === compound matrices ===
 
 
-def test_invertible_square():
+def test_invertible():
     for d in TEST_DIMS:
-        i = square(d, length=0)
+        i = invertible(d, length=0)
         assert _is_eye(i)
 
-        i = square(d, scalars=None, units=None)
+        i = invertible(d, scalars=None, units=None)
         assert _is_eye(i)
 
-        m = square(d)
+        m = invertible(d)
         assert _is_eye(m.inv() * m, TEST_PRECISION)
 
-        m = square(d, scalars=(0.5, 2.), units=(0.1, 1.))
+        m = invertible(d, scalars=(0.5, 2.), units=(0.1, 1.))
         assert _is_eye(m.inv() * m, TEST_PRECISION)
 
-        m = square(d, scalars=(1, phi))
+        m = invertible(d, scalars=(1, phi))
         assert _is_eye(m.inv() * m)
 
 
@@ -96,10 +460,138 @@ def test_triangular():
             assert m.rank() == r
 
 
-def test_singular_square():
+def test_singular():
     for d in TEST_DIMS:
         for r in range(1, d):
-            assert square(d, rank=r).rank() == r
+            assert singular(d, rank=r).rank() == r
+
+
+def test_diagonalizable():
+    for d in TEST_DIMS:
+        m = diagonalizable(d, spec=(2,))
+        assert m.eigenvals(multiple=True) == [2] * d
+        for r in range(1, d):
+            s = (0,) * (d - r) + (2,) * r
+            m = diagonalizable(d, spec=s)
+            assert m.rank() == r
+            for ev in m.eigenvals(multiple=True):
+                assert ev in (0, 2), m.eigenvals(multiple=True)
+
+
+def test_triangularizable():
+    for d in TEST_DIMS:
+        m = triangularizable(d, spec=(2,))
+        assert m.eigenvals(multiple=True) == [2] * d
+        for r in range(1, d):
+            s = (0, None) * (d - r) + (2,) * r
+            m = triangularizable(d, spec=s)
+            assert m.rank() == r, (m.rank(), r)
+            for ev in m.eigenvals(multiple=True):
+                assert ev in (0, 2), m.eigenvals(multiple=True)
+
+
+# === conjugate matrices, i.e. defined by similarity to a normal from ==
+
+
+def test_idempotent():
+    for d in TEST_DIMS:
+        for r in range(1, d):
+            m = idempotent(d, rank=r)
+            assert m * m == m
+            assert m.rank() == r
+
+
+def test_nilpotent():
+    for d in TEST_DIMS:
+        for r in range(1, d):
+            m = nilpotent(d, rank=r)
+            assert m.rank() == r
+            assert _is_zeros(m ** d)
+
+
+# === matrices conjugate by isometries ==
+
+
+def test_orthogonal():
+    for d in TEST_DIMS:
+        i = orthogonal(d, spec=(1,), length=0)
+        assert _is_eye(i), repr(i)
+
+        m = orthogonal(d).evalf()
+        assert _is_eye(m.T * m, TEST_PRECISION)
+        assert abs(m.evalf().det()) - 1 < TEST_PRECISION
+
+        m = orthogonal(d, spec=_rotation_scalars).evalf()
+        assert _is_eye(m.T * m, TEST_PRECISION)
+        assert abs(m.evalf().det()) - 1 < TEST_PRECISION
+
+        m = orthogonal(d, spec=(cos(phi),))
+        assert _is_eye(m.T * m)
+
+
+def test_unitary():
+    for d in list(TEST_DIMS)[1::3]:
+        i = expand(unitary(d, spec=(1,), length=0))
+        assert _is_eye(i), repr(i)
+
+        m = expand(unitary(d))
+        assert _is_eye(m.H * m, TEST_EPSILON), repr(simplify(m.H * m))
+        assert _is_eye(m.H * m), repr((m.H * m).evalf())
+        assert abs(abs(m.det()) - 1) < TEST_EPSILON
+
+        z = complex(1, 2)
+        # complex type doesn't give abs(z / abs(z)) == 1
+        # due to numerical errors
+        # z = 1 + 2 * I
+        m = expand(unitary(d, spec=(z / abs(z),), length=d))
+        assert _is_eye(m.H * m, TEST_EPSILON), repr(simplify(m.H * m))
+        assert abs(m.evalf().det()) - 1 < TEST_PRECISION
+
+        z = 2 + 3 * I
+        m = expand(unitary(d, spec=(z / abs(z),), length=d))
+        assert _is_eye(m.H * m), repr(simplify(m.H * m))
+
+        m = expand(unitary(d, spec=(complex(*_cs(sqrt(2) / 2)),), length=d))
+        assert _is_eye(m.H * m, TEST_PRECISION), repr(simplify(m.H * m))
+
+
+def test_normal():
+    for d in list(TEST_DIMS)[1::3]:
+        spec = (2, 3, 4)
+        m = normal(d, spec=spec, length=d)
+        assert all(x.is_real for x in simplify(m)), repr(simplify(m))
+        assert _is_zeros(m.T * m - m * m.T), \
+            repr(simplify(m.T * m - m * m.T))
+
+        z = 1 + 3 * I
+        c = expand(
+            normal(d, spec=(1, 2 * I, 3), scalars=(z/abs(z),), length=d))
+        assert _is_zeros(c.H * c - c * c.H), \
+            repr(simplify(m.H * m - m * m.H))
+
+        z = complex(3, 1)
+        c = expand(normal(d, spec=spec, scalars=(z/abs(z),), length=d))
+        assert _is_zeros(c.H * c - c * c.H, TEST_EPSILON), \
+            repr(simplify(m.H * m - m * m.H))
+
+
+# === symmetric or complex adjoined matrices ===
+
+
+def test_symmetric():
+    for d in TEST_DIMS:
+        m = symmetric(d,)
+        assert m.T == m
+
+        m = symmetric(d, scalars=(4,))
+        assert m.T == m
+
+
+def test_hermite():
+    z = complex(1, 2)
+    for d in TEST_DIMS:
+        m = hermite(d, scalars=(z,))
+        assert m.H == m
 
 
 # === seed and sample tests ===
@@ -116,11 +608,13 @@ def test_sample():
     scalars = tuple(range(10, 25))
 
     for d in TEST_DIMS:
-        for x in _sample(scalars, d):
-            assert x in scalars
+        m = diagonal_normal(d, spec=scalars)
+        for i in range(d):
+            assert m[i, i] in scalars
 
-        for x in _sample(Scalars(scalars), d):
-            assert x in scalars
+        n = diagonal_normal(d, spec=Scalars(scalars))
+        for i in range(d):
+            assert n[i, i] in scalars
 
     class CyclicPowers(list):
         """list class with build in sample method"""
@@ -134,9 +628,9 @@ def test_sample():
     scalars = [2]
 
     for d in TEST_DIMS:
-
-        for x in _sample(CyclicPowers(scalars * 2 * d),d):
-            assert x not in scalars
+        n = diagonal_normal(d, spec=CyclicPowers(scalars))
+        for i in range(d):
+            assert n[i, i] not in scalars, n
 
     class Rnd(object):
         rng = system_random.Random()
@@ -148,8 +642,9 @@ def test_sample():
             return [self.rng.random() for _ in range(k)]
 
     for d in TEST_DIMS:
-        for x in _sample(Rnd(), d):
-            assert 0 <= x <= 1
+        n = diagonal_normal(d, spec=Rnd())
+        for i in range(d):
+            assert 0 <= n[i, i] <= 1, repr(n)
 
 
 def test_seed():
@@ -161,9 +656,22 @@ def test_seed():
         def sample(self, k):
             return self.rnd.sample(self, k)
 
-    _all_ = elementary, triangular, square
+    _all_ = projection, jordan, transposition, \
+            permutation, elementary, rotation, reflection, \
+            diagonal_normal, jordan_normal, isometry_normal, \
+            triangular, invertible, singular, \
+            idempotent, nilpotent, diagonalizable, triangularizable, \
+            orthogonal, normal, symmetric, hermite, square, unitary,
 
-    _elementary_scalars_ = triangular, square
+    _spec_ = diagonal_normal, jordan_normal, \
+             diagonalizable, triangularizable, normal
+
+    _isometry_spec_ = isometry_normal, orthogonal, unitary
+
+    _elementary_scalars_ = triangular, invertible, singular, idempotent, \
+                           nilpotent, diagonalizable, triangularizable, symmetric, hermite, square
+
+    _isometry_scalars_ = orthogonal, unitary, normal
 
     seed(101)
     seeds = sample(range(100), 3)
@@ -178,6 +686,39 @@ def test_seed():
                 second.append((s, expand(matrix(d))))
             for (seed_a, a), (seed_b, b) in zip(first, second):
                 assert a == b,  \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+
+        for matrix in _spec_:
+            # 4. spec as random
+            first, second = list(), list()
+            spec = Scalars(range(100))
+            for s in seeds:
+                seed(s-1)
+                spec.rnd.seed(s)
+                first.append(matrix(d, spec=spec))
+            for s in seeds:
+                seed(s-1)
+                spec.rnd.seed(s)
+                second.append(matrix(d, spec=spec))
+            for a, b in zip(first, second):
+                assert a == b, \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+
+        for matrix in _isometry_spec_:
+            # 4. scalars/units as random
+            first, second = list(), list()
+            z = sqrt(2)/2 + sqrt(2)/2 * I
+            spec = Scalars((z, -1, z*z))
+            for s in seeds:
+                seed(s-1)
+                spec.rnd.seed(s)
+                first.append(matrix(d, spec=spec))
+            for s in seeds:
+                seed(s-1)
+                spec.rnd.seed(s)
+                second.append(matrix(d, spec=spec))
+            for a, b in zip(first, second):
+                assert a == b, \
                     matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
         for matrix in _elementary_scalars_:
@@ -197,9 +738,38 @@ def test_seed():
                 assert a == b, \
                     matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
+        for matrix in _isometry_scalars_:
+            # 4. scalars/units as random
+            first, second = list(), list()
+            scalars = Scalars((sqrt(2)/2, 0))
+            for s in seeds:
+                seed(s-1)
+                scalars.rnd.seed(s)
+                first.append(matrix(d, scalars=scalars))
+            for s in seeds:
+                seed(s-1)
+                scalars.rnd.seed(s)
+                second.append(matrix(d, scalars=scalars))
+            for a, b in zip(first, second):
+                assert a == b, \
+                    matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+
+
 # === other tests ===
 
 
 def test_raise():
     with raises(ValueError):
-        square(3, rank=5)
+        rotation(3, scalar=4)
+    with raises(ValueError):
+        isometry_normal(3, spec=(4,))
+    with raises(ValueError):
+        orthogonal(3, spec=(4,))
+    with raises(ValueError):
+        unitary(3, spec=(complex(1, 1),))
+    with raises(ValueError):
+        jordan_normal(3, spec=(None, 1, 2))
+    with raises(ValueError):
+        nilpotent(3, rank=3)
+    with raises(ValueError):
+        singular(3, rank=3)
