@@ -1586,13 +1586,6 @@ def test_issue_15887():
     a[1, 0] = 0
     raises(MatrixError, lambda: a.diagonalize())
 
-    # Test deprecated cache and kwargs
-    with warns_deprecated_sympy():
-        a.is_diagonalizable(clear_cache=True)
-
-    with warns_deprecated_sympy():
-        a.is_diagonalizable(clear_subproducts=True)
-
 
 def test_jordan_form():
 
