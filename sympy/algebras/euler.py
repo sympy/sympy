@@ -471,6 +471,14 @@ class Euler(Expr):
         q = lhs.to_quaternion() * rhs.to_quaternion()
         return Euler.from_quaternion(q, lhs.seq)
 
+    def set_sequence(self, new_sequence):
+        """Gets the equivalent Euler angles in the new sequence."""
+        if self.seq == new_sequence:
+            return self
+
+        q = self.to_quaternion()
+        return Euler.from_quaternion(q, new_sequence)
+
     def mul(self, other):
         """Multiplies Euler angles.
 

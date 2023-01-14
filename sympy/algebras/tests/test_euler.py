@@ -102,3 +102,11 @@ def test_euler_evalf():
     euler2 = Euler(1 / (sympify(2)), 0, 0)
     assert euler1 != euler2
     assert euler1 == euler2.evalf()
+
+
+def test_euler_set_sequence():
+    q = Quaternion(1, 0, 0, 1)
+    euler1 = Euler.from_quaternion(q, 'xyz')
+    euler2 = Euler.from_quaternion(q, 'zyx')
+    assert euler1 != euler2
+    assert euler1 == euler2.set_sequence(euler1.seq)
