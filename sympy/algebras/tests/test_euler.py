@@ -25,11 +25,11 @@ def test_euler_construction():
     raises(ValueError, lambda: Euler(alpha, nc, gamma))
 
     angles = (3*pi, 4*pi, 5*pi)
-    assert Euler(*angles).args == (-pi, 0, -pi)
+    assert Euler(*angles).angles == (-pi, 0, -pi)
 
     euler = Euler(x, y, z)
-    euler = euler.subs([(i, angle) for i, angle in zip(euler.args, angles)])
-    assert euler.args == (-pi, 0, -pi)
+    euler = euler.subs([(i, angle) for i, angle in zip(euler.angles, angles)])
+    assert euler.angles == (-pi, 0, -pi)
 
 
 def test_euler_is_zero_rotation():
@@ -83,7 +83,7 @@ def test_euler_from_quaternion():
     euler1 = q.to_euler(seq)
     euler2 = Euler.from_quaternion(q, seq)
     euler3 = Euler.from_quaternion(q.args, seq)
-    assert euler1 == euler2.args
+    assert euler1 == euler2.angles
     assert euler2 == euler3
 
 

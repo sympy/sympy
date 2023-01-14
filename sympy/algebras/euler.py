@@ -99,7 +99,7 @@ class Euler(Expr):
         if any(i.is_commutative is False for i in [alpha, beta, gamma]):
             raise ValueError("arguments have to be commutative")
         else:
-            obj = Expr.__new__(cls, alpha, beta, gamma)
+            obj = Expr.__new__(cls, alpha, beta, gamma, seq)
             obj._alpha = alpha
             obj._beta = beta
             obj._gamma = gamma
@@ -122,7 +122,7 @@ class Euler(Expr):
 
     @property
     def angles(self):
-        return self.args
+        return self.args[:3]
 
     @property
     def info(self):
@@ -169,10 +169,10 @@ class Euler(Expr):
         return self._info['ek']
 
     def __getitem__(self, key):
-        return self.args[key]
+        return self.angles[key]
 
     def to_Matrix(self):
-        return Matrix(self.args)
+        return Matrix(self.angles)
 
     def to_quaternion(self):
         """Returns the equivalent full rotation quaternion equivalent to Euler
@@ -212,7 +212,7 @@ class Euler(Expr):
         sqrt(2)/2 + 0*i + 0*j + sqrt(2)/2*k
         """
         if self._q is None:
-            self._q = Quaternion.from_euler(self.args, self.seq)
+            self._q = Quaternion.from_euler(self.angles, self.seq)
         return self._q
 
     @classmethod
@@ -448,7 +448,7 @@ class Euler(Expr):
         # If lhs is a number or a SymPy expression instead of a Euler
         if not isinstance(lhs, Euler):
             if lhs.is_commutative:
-                return Euler(*(lhs * i for i in rhs.args), seq=rhs.seq)
+                return Euler(*(lhs * i for i in rhs.angles), seq=rhs.seq)
             else:
                 raise ValueError('Only commutative expressions can be '
                                  'multiplied with an Euler.')
@@ -456,7 +456,7 @@ class Euler(Expr):
         # If rhs is a number or a SymPy expression instead of a Euler
         if not isinstance(rhs, Euler):
             if rhs.is_commutative:
-                return Euler(*(rhs * i for i in lhs.args), seq=lhs.seq)
+                return Euler(*(rhs * i for i in lhs.angles), seq=lhs.seq)
             else:
                 raise ValueError('Only commutative expressions can be '
                                  'multiplied with an Euler.')
@@ -576,7 +576,7 @@ class Euler(Expr):
         In this implementation, the sequence is also reversed.
         """
         seq = self.seq[::-1]
-        alpha, beta, gamma = [-i for i in self.args[::-1]]
+        alpha, beta, gamma = [-i for i in self.angles[::-1]]
         return Euler(alpha, beta, gamma, seq)
 
     def pow(self, p):
@@ -619,7 +619,7 @@ class Euler(Expr):
     @property
     def is_zero_rotation(self):
         """Returns true if the angles are all zero"""
-        return all(i.is_zero for i in self.args)
+        return all(i.is_zero for i in self.angles)
 
     def _eval_evalf(self, prec):
         """Returns the floating point approximations (decimal numbers) of the
@@ -631,4 +631,6 @@ class Euler(Expr):
             Floating point approximations of Euler(self)
         """
         nprec = prec_to_dps(prec)
-        return Euler(*[arg.evalf(n=nprec) for arg in self.args], seq=self.seq)
+        alpha, beta, gamma = [i.evalf(n=nprec) for i in self.angles]
+        return Euler(alpha, beta, gamma, self.seq)
+        pass
