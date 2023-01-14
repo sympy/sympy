@@ -1187,14 +1187,6 @@ The `max_degree` property and `get_upper_degree()` methods of `DixonResultant`
 are deprecated. See issue [#17749](https://github.com/sympy/sympy/pull/17749)
 for details.
 
-(deprecated-eq-expr)=
-### `Eq(expr)` with the rhs defaulting to 0
-
-Calling [`Eq`](sympy.core.relational.Equality) with a single argument is
-deprecated. This caused the right-hand side to default to `0`, but this
-behavior was confusing. You should explicitly use `Eq(expr, 0)` instead.
-
-
 (deprecated-non-tuple-lambda)=
 ### Non-tuple iterable for the first argument to `Lambda`
 
