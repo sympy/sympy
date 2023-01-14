@@ -5,12 +5,15 @@ from sympy.core.numbers import pi
 from sympy.algebras.quaternion import Quaternion
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
+from sympy.core.symbol import Symbol
 
 from mpmath.libmp.libmpf import prec_to_dps
 
 
 def _check_sequence(seq):
     """validate seq and return info"""
+    if isinstance(seq, Symbol):
+        seq = str(seq)
     if type(seq) != str:
         raise ValueError('Expected seq to be a string.')
     if len(seq) != 3:
@@ -93,8 +96,8 @@ class Euler(Expr):
 
     def __new__(cls, alpha=0, beta=0, gamma=0, seq='ZYX'):
         info = _check_sequence(seq)
-        alpha, beta, gamma = map(sympify, (alpha, beta, gamma))
-        alpha, beta, gamma = map(_wrap, (alpha, beta, gamma))
+        alpha, beta, gamma, seq= map(sympify, (alpha, beta, gamma, seq))
+        alpha, beta, gamma, seq = map(_wrap, (alpha, beta, gamma, seq))
 
         if any(i.is_commutative is False for i in [alpha, beta, gamma]):
             raise ValueError("arguments have to be commutative")
@@ -633,4 +636,3 @@ class Euler(Expr):
         nprec = prec_to_dps(prec)
         alpha, beta, gamma = [i.evalf(n=nprec) for i in self.angles]
         return Euler(alpha, beta, gamma, self.seq)
-        pass
