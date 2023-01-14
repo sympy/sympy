@@ -473,8 +473,13 @@ class Euler(Expr):
 
     def set_sequence(self, new_sequence):
         """Gets the equivalent Euler angles in the new sequence."""
-        if self.seq == new_sequence:
+        seq = self.seq
+        if seq == new_sequence:
             return self
+
+        _seq = seq.lower() if seq.isupper() else seq.upper()
+        if _seq == new_sequence:
+            return Euler(*(self.args[::-1]), seq=_seq)
 
         q = self.to_quaternion()
         return Euler.from_quaternion(q, new_sequence)

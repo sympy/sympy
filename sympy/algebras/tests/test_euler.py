@@ -1,4 +1,4 @@
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.core.numbers import pi
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.algebras.quaternion import Quaternion
@@ -6,8 +6,9 @@ from sympy.algebras.euler import Euler
 from sympy.testing.pytest import raises, warns
 from sympy.core.sympify import sympify
 
-from sympy.abc import x, y, z, alpha, beta, gamma
-from sympy.abc import a, b, c, d
+alpha, beta, gamma = symbols('alpha, beta, gamma', real=True)
+x, y, z = symbols('x, y, z', real=True)
+a, b, c, d = symbols('a, b, c, d', real=True)
 
 
 def test_euler_construction():
@@ -110,6 +111,22 @@ def test_euler_set_sequence():
     euler2 = Euler.from_quaternion(q, 'zyx')
     assert euler1 != euler2
     assert euler1 == euler2.set_sequence(euler1.seq)
+
+    # from extrinsic to intrinsic is easier, just a swap
+    q = Quaternion(1, 2, 3, 4)
+    euler1 = Euler.from_quaternion(q, 'zyz', False, True)
+    euler2 = Euler.from_quaternion(q, 'ZYZ', False, True)
+    assert euler1 != euler2
+    assert euler1.evalf() == euler2.set_sequence(euler1.seq).evalf()
+    assert euler2.evalf() == euler1.set_sequence(euler2.seq).evalf()
+
+    # and works well with symbolic
+    q = Quaternion(a, b, c, d)
+    euler1 = Euler.from_quaternion(q, 'zyz', False, True)
+    euler2 = Euler.from_quaternion(q, 'ZYZ', False, True)
+    assert euler1 != euler2
+    assert euler1 == euler2.set_sequence(euler1.seq)
+    assert euler2 == euler1.set_sequence(euler2.seq)
 
 
 def test_euler_switch_set():
