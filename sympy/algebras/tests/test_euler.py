@@ -43,8 +43,8 @@ def test_euler_basic_operations():
         assert -euler1 == Euler(-0.1, -0.2, -0.3)
         assert euler1 + euler1 == euler2
         assert 2 * euler1 == euler2
+        assert euler1 * 2 == euler2
         assert euler2 - euler1 == euler1
-        assert euler2 / 2 == euler1
         assert euler2 / 2 == euler1
         assert 3 * Euler(pi/2, 0, pi / 4) == Euler(- pi/2, 0, 3 * pi / 4)
         raises(ValueError, lambda: 2 / euler1)
