@@ -75,8 +75,8 @@ def test_euler_to_quaternion():
 
 
 def test_euler_from_quaternion():
-    # since Euler is just a convenience class, tests on Quaternion are already
-    # enough
+    # Euler makes calls to Quaternion methods
+    # Most of the testing is done from the Quaternion
     q = Quaternion(a, b, c, d)
     seq = 'zyz'
     euler1 = q.to_euler(seq)
