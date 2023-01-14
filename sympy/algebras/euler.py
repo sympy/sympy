@@ -479,6 +479,15 @@ class Euler(Expr):
         q = self.to_quaternion()
         return Euler.from_quaternion(q, new_sequence)
 
+    def switch_set(self):
+        """Gets a different set of Euler angles int the same sequence
+        that correspond to the same rotation."""
+        lamb = 0 if self.symmetric else pi
+        alpha = self.alpha + pi
+        beta = -self.beta + lamb
+        gamma = self.gamma + pi
+        return Euler(alpha, beta, gamma, self.seq)
+
     def mul(self, other):
         """Multiplies Euler angles.
 

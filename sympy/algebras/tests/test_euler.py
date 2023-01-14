@@ -110,3 +110,13 @@ def test_euler_set_sequence():
     euler2 = Euler.from_quaternion(q, 'zyx')
     assert euler1 != euler2
     assert euler1 == euler2.set_sequence(euler1.seq)
+
+
+def test_euler_switch_set():
+    for seq in ['zyz', 'zyx']:
+        euler1 = Euler(alpha, beta, gamma, seq)
+        euler2 = euler1.switch_set()
+        assert euler2 != euler1  # different angles...
+        q1 = euler1.to_quaternion()
+        q2 = euler2.to_quaternion()
+        assert (q1 == q2) or (q1 == -q2)  # ... but same rotation
