@@ -172,10 +172,12 @@ class MatrixExpr(Expr):
 
     @property
     def is_square(self) -> bool | None:
-        diff = self.rows - self.cols
-        if isinstance(diff, Basic):
-            return diff.is_zero
-        return diff == 0
+        rows, cols = self.shape
+        if isinstance(rows, Integer) and isinstance(cols, Integer):
+            return rows == cols
+        if rows == cols:
+            return True
+        return None
 
     def _eval_conjugate(self):
         from sympy.matrices.expressions.adjoint import Adjoint
