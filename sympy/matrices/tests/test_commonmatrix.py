@@ -20,7 +20,7 @@ from sympy.matrices import (Matrix, diag, eye,
     ImmutableSparseMatrix)
 from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten
-from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray as Array
 
 from sympy.abc import x, y, z

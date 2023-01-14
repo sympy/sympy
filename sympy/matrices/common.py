@@ -22,7 +22,6 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import Abs, re, im
 from .utilities import _dotprodsimp, _simplify
 from sympy.polys.polytools import Poly
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
 from sympy.tensor.array import NDimArray

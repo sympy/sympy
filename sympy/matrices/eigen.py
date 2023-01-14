@@ -14,7 +14,6 @@ from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
 from sympy.polys.polytools import gcd
-from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from .common import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
