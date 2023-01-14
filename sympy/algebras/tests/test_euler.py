@@ -5,6 +5,8 @@ from sympy.algebras.quaternion import Quaternion
 from sympy.algebras.euler import Euler
 from sympy.testing.pytest import raises, warns
 from sympy.core.sympify import sympify
+from sympy.simplify.trigsimp import trigsimp
+from sympy.functions.elementary.trigonometric import (cos, sin)
 
 alpha, beta, gamma = symbols('alpha, beta, gamma', real=True)
 x, y, z = symbols('x, y, z', real=True)
@@ -73,6 +75,14 @@ def test_euler_to_quaternion():
     assert roll == Quaternion(sqrt(2)/2, 0, 0, sqrt(2)/2)
     assert pitch == Quaternion(sqrt(2)/2, 0, sqrt(2)/2, 0)
     assert yaw == Quaternion(sqrt(2)/2, sqrt(2)/2, 0, 0)
+
+
+def test_euler_to_from_rotation_matrix():
+    seq = 'ZYX'
+    euler = Euler(pi/2, 0, 0, seq)
+    matrix = trigsimp(euler.to_rotation_matrix())
+    assert matrix.flat() == [0, -1, 0, 1, 0, 0, 0, 0, 1]
+    assert euler == Euler.from_rotation_matrix(matrix, seq)
 
 
 def test_euler_from_quaternion():

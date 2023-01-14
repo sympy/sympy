@@ -6,6 +6,7 @@ from sympy.algebras.quaternion import Quaternion
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
+from sympy.simplify.trigsimp import trigsimp
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -107,6 +108,7 @@ class Euler(Expr):
             obj._beta = beta
             obj._gamma = gamma
             obj._info = info
+            obj._q = None
             return obj
 
     @property
@@ -212,7 +214,9 @@ class Euler(Expr):
         >>> angles.to_quaternion()
         sqrt(2)/2 + 0*i + 0*j + sqrt(2)/2*k
         """
-        return Quaternion.from_euler(self.angles, self.seq)
+        if self._q is None:
+            self._q = Quaternion.from_euler(self.angles, self.seq)
+        return self._q
 
     @classmethod
     def from_quaternion(self, q, seq,
@@ -382,6 +386,46 @@ class Euler(Expr):
 
         """
         return self.to_quaternion().to_rotation_matrix(v, homogeneous)
+
+    @classmethod
+    def from_rotation_matrix(cls, M, seq):
+        """Returns the equivalent Euler angles of a matrix.
+
+        Parameters
+        ==========
+
+        M : Matrix
+            Input matrix to be converted to equivalent quaternion.
+
+
+        seq : string of length 3
+            Represents the sequence of rotations.
+            For intrinsic rotations, seq must be all lowercase and its elements
+            must be from the set `{'x', 'y', 'z'}`
+            For extrinsic rotations, seq must be all uppercase and its elements
+            must be from the set `{'X', 'Y', 'Z'}`
+
+        Returns
+        =======
+
+        Euler
+            The Euler angles equivalent to given matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Euler
+        >>> from sympy import Matrix, symbols, cos, sin, trigsimp
+        >>> x = symbols('x')
+        >>> M = Matrix([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+        >>> euler = Euler.from_rotation_matrix(M, 'ZYX')
+        >>> euler
+        Euler(pi/2,  0,  0, ZYX)
+
+        """
+        q = Quaternion.from_rotation_matrix(M)
+        q = trigsimp(q)
+        return Euler.from_quaternion(q, seq)
 
     @staticmethod
     def _generic_mul(lhs, rhs):
