@@ -107,6 +107,11 @@ def test_sympy__algebras__quaternion__Quaternion():
     assert _test_args(Quaternion(x, 1, 2, 3))
 
 
+def test_sympy__algebras__euler__Euler():
+    from sympy.algebras.euler import Euler
+    assert _test_args(Euler(x, 1, 2))
+
+
 def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
