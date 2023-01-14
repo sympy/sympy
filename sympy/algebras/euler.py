@@ -24,7 +24,7 @@ def _check_sequence(seq):
                          "rotations).")
 
     i, j, k = seq.lower()
-    if (i == j) or (j == k):
+    if i == j or j == k:
         raise ValueError("Consecutive axes must be different")
 
     bad = set(seq) - set('xyzXYZ')
