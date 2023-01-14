@@ -68,8 +68,8 @@ def _wrap(angle):
 
 class Euler(Expr):
     """Provides Euler angles operations.
-    Quaternion objects can be instantiated as Euler(alpha, beta, gamma, seq).
-    as in (a + b*i + c*j + d*k).
+
+    Euler objects can be instantiated as Euler(alpha, beta, gamma, seq).
 
     Parameters
     ==========
@@ -81,14 +81,10 @@ class Euler(Expr):
         For extrinsic rotations, seq must be all uppercase and its elements
         must be from the set `{'X', 'Y', 'Z'}`
 
-    Examples
-    ========
-
-
     References
     ==========
 
-    .. [2] https://en.wikipedia.org/wiki/Quaternion
+    .. [1] https://en.wikipedia.org/wiki/Euler_angles
 
     """
     _op_priority = 11.0
