@@ -1244,15 +1244,6 @@ design flaw and not consistent with how the rest of SymPy works.
 Instead, the {meth}`.TensExpr.replace_with_arrays` method should be
 used.
 
-(deprecated-matrix-is_diagonalizable-cache)=
-### The `clear_cache` and `clear_subproducts` keywords to `Matrix.is_diagonalizable`
-
-The `clear_cache` and `clear_subproducts` keywords to
-[`Matrix.is_diagonalizable()`](sympy.matrices.matrices.MatrixEigen.is_diagonalizable)
-are deprecated. These used to clear cached entries, but this cache was removed
-because it was not actually safe given that `Matrix` is mutable. The keywords
-now do nothing.
-
 (deprecated-matrix-jordan_block-rows-cols)=
 ### The `rows` and `cols` keyword arguments to `Matrix.jordan_block`
 

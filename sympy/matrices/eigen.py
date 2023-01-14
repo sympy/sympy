@@ -501,29 +501,6 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     is_diagonal
     diagonalize
     """
-
-    if 'clear_cache' in kwargs:
-        sympy_deprecation_warning(
-            """
-            The 'clear_cache' keyword to Matrix.is_diagonalizable is
-            deprecated. It does nothing and should be omitted.
-            """,
-            deprecated_since_version="1.4",
-            active_deprecations_target="deprecated-matrix-is_diagonalizable-cache",
-            stacklevel=4,
-        )
-
-    if 'clear_subproducts' in kwargs:
-        sympy_deprecation_warning(
-            """
-            The 'clear_subproducts' keyword to Matrix.is_diagonalizable is
-            deprecated. It does nothing and should be omitted.
-            """,
-            deprecated_since_version="1.4",
-            active_deprecations_target="deprecated-matrix-is_diagonalizable-cache",
-            stacklevel=4,
-        )
-
     if not M.is_square:
         return False
 
