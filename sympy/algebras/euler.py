@@ -107,8 +107,6 @@ class Euler(Expr):
             obj._beta = beta
             obj._gamma = gamma
             obj._info = info
-            obj._q = None
-            obj._R = None
             return obj
 
     @property
@@ -214,9 +212,7 @@ class Euler(Expr):
         >>> angles.to_quaternion()
         sqrt(2)/2 + 0*i + 0*j + sqrt(2)/2*k
         """
-        if self._q is None:
-            self._q = Quaternion.from_euler(self.angles, self.seq)
-        return self._q
+        return Quaternion.from_euler(self.angles, self.seq)
 
     @classmethod
     def from_quaternion(self, q, seq,
@@ -385,9 +381,7 @@ class Euler(Expr):
         [0,  0, 0, 1]])
 
         """
-        if self._R is None:
-            self._R = self.to_quaternion().to_rotation_matrix(v, homogeneous)
-        return self._R
+        return self.to_quaternion().to_rotation_matrix(v, homogeneous)
 
     @staticmethod
     def _generic_mul(lhs, rhs):
