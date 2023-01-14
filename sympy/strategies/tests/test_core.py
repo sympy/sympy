@@ -29,7 +29,7 @@ def test_null_safe():
 
     safe_rl = null_safe(rl)
     assert rl(1) == safe_rl(1)
-    assert rl(3) == None
+    assert rl(3) is None
     assert safe_rl(3) == 3
 
 
