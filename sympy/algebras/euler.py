@@ -415,7 +415,7 @@ class Euler(Expr):
         ========
 
         >>> from sympy import Euler
-        >>> from sympy import Matrix, symbols, cos, sin, trigsimp
+        >>> from sympy import Matrix, symbols
         >>> x = symbols('x')
         >>> M = Matrix([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
         >>> euler = Euler.from_rotation_matrix(M, 'ZYX')

@@ -6,7 +6,6 @@ from sympy.algebras.euler import Euler
 from sympy.testing.pytest import raises, warns
 from sympy.core.sympify import sympify
 from sympy.simplify.trigsimp import trigsimp
-from sympy.functions.elementary.trigonometric import (cos, sin)
 
 alpha, beta, gamma = symbols('alpha, beta, gamma', real=True)
 x, y, z = symbols('x, y, z', real=True)
