@@ -890,7 +890,7 @@ class StrPrinter(Printer):
     def _print_Euler(self, expr):
         s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True)
              for i in expr.args]
-        return "Euler(" + (",  ".join(s)) + ")^{"+expr.seq+"}"
+        return "Euler(" + (",  ".join(s)) + ", "+expr.seq+")"
 
     def _print_Dimension(self, expr):
         return str(expr)

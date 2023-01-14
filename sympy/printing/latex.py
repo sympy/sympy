@@ -2745,10 +2745,17 @@ class LatexPrinter(Printer):
         a = [s[0]] + [i+" "+j for i, j in zip(s[1:], "ijk")]
         return " + ".join(a)
 
+    # def _print_Euler(self, expr):
+    #     s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True)
+    #          for i in expr.args]
+    #     return "\\left[" + (",\\; ".join(s)) + "\\right]^{"+expr.seq+"}"
+
     def _print_Euler(self, expr):
-        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True)
-             for i in expr.args]
-        return "\\left[" + (",\\; ".join(s)) + "\\right]^{"+expr.seq+"}"
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=False)
+                  for i in expr.args]
+        s = "\\\\ ".join(s)
+        s = "\\left[\\begin{matrix}" + s + "\\end{matrix}\\right]^{"+expr.seq+"}"
+        return s
 
     def _print_QuotientRing(self, R):
         # TODO nicer fractions for few generators...

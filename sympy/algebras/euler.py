@@ -1,7 +1,9 @@
+import warnings
+from sympy.utilities.iterables import iterable
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.numbers import pi
 from sympy.algebras.quaternion import Quaternion
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
 
 from mpmath.libmp.libmpf import prec_to_dps
@@ -193,7 +195,7 @@ class Euler(Expr):
         >>> from sympy import pi
         >>> angles = Euler(pi/2, 0, 0, seq='ZYX')
         >>> angles
-        Euler(pi/2,  0,  0)^{ZYX}
+        Euler(pi/2,  0,  0, ZYX)
 
         >>> angles.to_rotation_matrix()
         Matrix([
@@ -216,6 +218,119 @@ class Euler(Expr):
         if self._q is None:
             self._q = Quaternion.from_euler(self.args, self.seq)
         return self._q
+
+    @classmethod
+    def from_quaternion(self, q, seq,
+                        angle_addition=True, avoid_square_root=False):
+        r"""Returns Euler angles representing same rotation as the quaternion,
+        in the sequence given by `seq`. This implements the method described
+        in [1]_.
+
+        Parameters
+        ==========
+
+        q : Quaternion or list
+            Rotation quaternion elements.
+
+        seq : string of length 3
+            Represents the sequence of rotations.
+            For intrinsic rotations, seq must be all lowercase and its elements
+            must be from the set `{'x', 'y', 'z'}`
+            For extrinsic rotations, seq must be all uppercase and its elements
+            must be from the set `{'X', 'Y', 'Z'}`
+
+        angle_addition : bool
+            Default : True
+            When True, first and third angles are given as an addition and
+            subtraction of two simpler `atan2` expressions. When False, the
+            first and third angles are each given by a single more complicated
+            `atan2` expression. This equivalent is given by:
+
+            --math::
+
+                \operatorname{atan_2} (b,a) \pm \operatorname{atan_2} (d,c) =
+                \operatorname{atan_2} (bc\pm ad, ac\mp bd)
+
+        avoid_square_root : bool
+            Default : False
+            When True, the second angle is calculated with an expression based
+            on acos`, which is slightly more complicated but avoids a square
+            root. When False, second angle is calculated with `atan2`, which
+            is simpler and can be better for numerical reasons (some
+            numerical implementations of `acos` have problems near zero).
+
+        Returns
+        =======
+
+        Tuple
+            The Euler angles calculated from the quaternion
+
+        Examples
+        ========
+
+        >>> from sympy import Quaternion
+        >>> from sympy.abc import a, b, c, d
+        >>> euler = Quaternion(a, b, c, d).to_euler('zyz')
+        >>> euler
+        (-atan2(-b, c) + atan2(d, a),
+         2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)),
+         atan2(-b, c) + atan2(d, a))
+
+        References
+        ==========
+
+        .. [1] https://doi.org/10.1371/journal.pone.0276302
+
+        """
+        if not isinstance(q, Quaternion):
+            if not iterable(q):
+                q = [q]
+            q = Quaternion(*q)
+
+        angles = q.to_euler(seq,
+                            angle_addition=angle_addition,
+                            avoid_square_root=avoid_square_root)
+        return Euler(*angles, seq=seq)
+
+    def add(self, other):
+        """Adds Euler angles elements element-wise, treating it as a Matrix.
+
+        This does not have much mathematical meaning, are you sure this is what
+        you want?
+
+        Parameters
+        ==========
+
+        other : Euler
+            The Euler angles to add.
+
+        Returns
+        =======
+
+        Quaternion
+            The Euler angles resulting from the addition.
+
+        Examples
+        ========
+
+        >>> from sympy import Euler, pi
+        >>> from sympy.abc import alpha, beta, gamma
+        >>> euler = Euler(alpha, beta, gamma)
+        >>> euler + Euler(pi, 0, pi)
+        Euler((alpha - pi),  beta,  (gamma - pi), ZYX)
+
+        """
+        warnings.warn('Adding Euler as if it were a Matrix, '
+                      'is this what you want?')
+
+        if isinstance(other, Euler):
+            if other.seq != self.seq:
+                warnings.warn('Adding Euler elements of different sequence, '
+                              'assuming first sequence.')
+            other = other.to_Matrix()
+
+        euler = self.to_Matrix() + other
+        return Euler(*euler, seq=self.seq)
 
     def to_rotation_matrix(self, v=None, homogeneous=True):
         """Returns the equivalent full rotation transformation matrix of Euler
@@ -246,7 +361,7 @@ class Euler(Expr):
         >>> from sympy import pi
         >>> angles = Euler(pi/2, 0, 0, seq='ZYX')
         >>> angles
-        Euler(pi/2,  0,  0)^{ZYX}
+        Euler(pi/2,  0,  0, ZYX)
 
         >>> angles.to_rotation_matrix()
         Matrix([
@@ -275,11 +390,217 @@ class Euler(Expr):
             self._R = self.to_quaternion().to_rotation_matrix(v, homogeneous)
         return self._R
 
+    @staticmethod
+    def _generic_mul(lhs, rhs):
+        """Generic multiplication.
+
+        Parameters
+        ==========
+
+        lhs : Euler or symbol
+        rhs : Euler or symbol
+
+        It is important to note that if neither lhs nor rhs is an Euler
+        instance, this function simply returns lhs * rhs.
+
+        Returns
+        =======
+
+        Euler
+            The resultant Euler after multiplying lhs and rhs.
+
+        Examples
+        ========
+
+        Multiplication with a number multiplies every angle by this number:
+
+        >>> from sympy import Euler, pi
+        >>> euler = Euler(pi / 4, 0, 0, 'ZYX')
+        >>> Euler._generic_mul(2, euler)
+        Euler(pi/2,  0,  0, ZYX)
+
+        Wrapping always happens, and the angles are between [-pi and pi],
+        so the result might seem unexpected:
+
+        >>> Euler._generic_mul(4, euler)
+        Euler((-pi),  0,  0, ZYX)
+
+        Possible to compose Euler instances. For simple cases it might work
+        well:
+        >>> euler = Euler((-pi),  0,  0, 'ZYX')
+        >>> Euler._generic_mul(euler, euler)
+        Euler(0,  0,  0, ZYX)
+
+        Most of the time, it is not very efficient:
+
+        >>> euler = Euler(pi / 4, 0, 0, 'ZYX')
+        >>> Euler.mul(euler, euler)
+        Euler(2*atan(2*sqrt(2)*sqrt(1/2 - sqrt(2)/4)*sqrt(sqrt(2)/4 + 1/2)),  0,  0, ZYX)
+
+        By evaluating it, we can see it is equivalent to the expected answer:
+
+        >>> Euler.mul(euler, euler).evalf()
+        Euler(1.5707963267949,  0,  0, ZYX)
+        """
+        lhs = sympify(lhs)
+        rhs = sympify(rhs)
+
+        # None is a Euler:
+        if not isinstance(lhs, Euler) and not isinstance(rhs, Euler):
+            return lhs * rhs
+
+        # If lhs is a number or a SymPy expression instead of a Euler
+        if not isinstance(lhs, Euler):
+            if lhs.is_commutative:
+                return Euler(*(lhs * i for i in rhs.args), seq=rhs.seq)
+            else:
+                raise ValueError('Only commutative expressions can be '
+                                 'multiplied with an Euler.')
+
+        # If rhs is a number or a SymPy expression instead of a Euler
+        if not isinstance(rhs, Euler):
+            if rhs.is_commutative:
+                return Euler(*(rhs * i for i in lhs.args), seq=lhs.seq)
+            else:
+                raise ValueError('Only commutative expressions can be '
+                                 'multiplied with an Euler.')
+
+        if lhs.seq != rhs.seq:
+            warnings.warn('Different sequences detected, '
+                          'returning sequence of lhs.')
+        else:
+            warnings.warn('Euler angles are bad for composing, '
+                          'consider using quaternions instead.')
+
+        q = lhs.to_quaternion() * rhs.to_quaternion()
+        return Euler.from_quaternion(q, lhs.seq)
+
+    def mul(self, other):
+        """Multiplies Euler angles.
+
+        Euler angles are NOT suited for angle composition.
+        When multiplying two Euler angles elements, both are converted to
+        quaternions, multiplied, then converted back to Euler angles.
+
+        Parameters
+        ==========
+
+        other : Euler or symbol
+            The Euler to multiply to current (self) Euler.
+
+        Returns
+        =======
+
+        Euler
+            The resultant Euler angles after multiplying self with other
+
+        Examples
+        ========
+
+        Multiplication with a number multiplies every angle by this number:
+
+        >>> from sympy import Euler, pi
+        >>> euler = Euler(pi / 4, 0, 0, 'ZYX')
+        >>> euler.mul(2)
+        Euler(pi/2,  0,  0, ZYX)
+
+        Wrapping always happens, and the angles are between [-pi and pi],
+        so the result might seem unexpected:
+
+        >>> euler.mul(4)
+        Euler((-pi),  0,  0, ZYX)
+
+        Possible to compose Euler instances. For simple cases it might work
+        well:
+        >>> euler = Euler((-pi),  0,  0, 'ZYX')
+        >>> euler.mul(euler)
+        Euler(0,  0,  0, ZYX)
+
+        Most of the time, it is not very efficient:
+
+        >>> euler = Euler(pi / 4, 0, 0, 'ZYX')
+        >>> euler.mul(euler)
+        Euler(2*atan(2*sqrt(2)*sqrt(1/2 - sqrt(2)/4)*sqrt(sqrt(2)/4 + 1/2)),  0,  0, ZYX)
+
+        By evaluating it, we can see it is equivalent to the expected answer:
+
+        >>> euler.mul(euler).evalf()
+        Euler(1.5707963267949,  0,  0, ZYX)
+        """
+        return self._generic_mul(self, _sympify(other))
+
+    def __add__(self, other):
+        return self.add(other)
+
+    def __radd__(self, other):
+        return self.add(other)
+
+    def __sub__(self, other):
+        return self.add(-other)
+
+    def __mul__(self, other):
+        return self._generic_mul(self, _sympify(other))
+
+    def __rmul__(self, other):
+        return self._generic_mul(_sympify(other), self)
+
+    def __pow__(self, p):
+        return self.pow(p)
+
+    def __neg__(self):
+        return Euler(-self.alpha, -self.beta, -self.gamma, seq=self.seq)
+
+    def __truediv__(self, other):
+        return self * sympify(other)**-1
+
+    def __rtruediv__(self, other):
+        raise ValueError('Division by an Euler is not well defined.')
+
     def inverse(self):
-        """Returns inverse Euler angles"""
+        """Returns inverse Euler angles
+
+        In this implementation, the sequence is also reversed.
+        """
         seq = self.seq[::-1]
         alpha, beta, gamma = [-i for i in self.args[::-1]]
         return Euler(alpha, beta, gamma, seq)
+
+    def pow(self, p):
+        """Finds the pth power of the Euler angles.
+
+        Parameters
+        ==========
+
+        p : int
+            Power to be applied on Euler.
+
+        Returns
+        =======
+
+        Euler
+            Returns the p-th power of the current Euler.
+            Returns the inverse if p = -1.
+
+        Examples
+        ========
+
+        >>> from sympy import Euler, pi
+        >>> euler = Euler(0, 0, pi / 2, 'ZYX')
+        >>> euler.pow(2)
+        Euler(0,  0,  (-pi), ZYX)
+
+        For negative powers, returns the inverse:
+
+        >>> euler.pow(-1)
+        Euler((-pi/2),  0,  0, XYZ)
+
+        """
+        p = sympify(p)
+        if p == -1:
+            return self.inverse()
+
+        q = self.to_quaternion() ** p
+        return Euler.from_quaternion(q, seq=self.seq)
 
     @property
     def is_zero_rotation(self):
@@ -287,14 +608,13 @@ class Euler(Expr):
         return all(i.is_zero for i in self.args)
 
     def _eval_evalf(self, prec):
-        """Returns the floating point approximations (decimal numbers) of the angles.
+        """Returns the floating point approximations (decimal numbers) of the
+        angles.
 
         Returns
         =======
-
         Euler
             Floating point approximations of Euler(self)
-
         """
         nprec = prec_to_dps(prec)
         return Euler(*[arg.evalf(n=nprec) for arg in self.args], seq=self.seq)
