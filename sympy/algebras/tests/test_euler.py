@@ -112,21 +112,12 @@ def test_euler_set_sequence():
     assert euler1 != euler2
     assert euler1 == euler2.set_sequence(euler1.seq)
 
-    # from extrinsic to intrinsic is easier, just a swap
     q = Quaternion(1, 2, 3, 4)
     euler1 = Euler.from_quaternion(q, 'zyz', False, True)
     euler2 = Euler.from_quaternion(q, 'ZYZ', False, True)
     assert euler1 != euler2
     assert euler1.evalf() == euler2.set_sequence(euler1.seq).evalf()
     assert euler2.evalf() == euler1.set_sequence(euler2.seq).evalf()
-
-    # and works well with symbolic
-    q = Quaternion(a, b, c, d)
-    euler1 = Euler.from_quaternion(q, 'zyz', False, True)
-    euler2 = Euler.from_quaternion(q, 'ZYZ', False, True)
-    assert euler1 != euler2
-    assert euler1 == euler2.set_sequence(euler1.seq)
-    assert euler2 == euler1.set_sequence(euler2.seq)
 
 
 def test_euler_switch_set():

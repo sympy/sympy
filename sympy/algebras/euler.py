@@ -477,10 +477,6 @@ class Euler(Expr):
         if seq == new_sequence:
             return self
 
-        _seq = seq.lower() if seq.isupper() else seq.upper()
-        if _seq == new_sequence:
-            return Euler(*(self.args[::-1]), seq=_seq)
-
         q = self.to_quaternion()
         return Euler.from_quaternion(q, new_sequence)
 
