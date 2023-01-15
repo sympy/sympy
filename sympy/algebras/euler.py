@@ -7,6 +7,7 @@ from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
 from sympy.simplify.trigsimp import trigsimp
+from sympy.matrices.dense import rot_axis1, rot_axis2, rot_axis3
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -321,7 +322,7 @@ class Euler(Expr):
         euler = self.to_Matrix() + other
         return Euler(*euler, seq=self.seq)
 
-    def to_rotation_matrix(self, v=None, homogeneous=True):
+    def to_rotation_matrix(self, v=None):
         """Returns the equivalent full rotation transformation matrix of Euler
         angles.
 
@@ -330,16 +331,11 @@ class Euler(Expr):
 
         v : tuple or None
             Default value: None
-        homogeneous : bool
-            When True, gives an expression that may be more efficient for
-            symbolic calculations but less so for direct evaluation. Both
-            formulas are mathematically equivalent.
-            Default value: True
 
         Returns
         =======
 
-        tuple
+        Matrix
             Returns the equivalent rotation transformation matrix of the angles
             which represents rotation about the origin if v is not passed.
 
@@ -375,7 +371,33 @@ class Euler(Expr):
         [0,  0, 0, 1]])
 
         """
-        return self.to_quaternion().to_rotation_matrix(v, homogeneous)
+
+        funcs = [rot_axis1, rot_axis2, rot_axis3]
+        # negative because the functions are defined in left-hand convention
+        Ri = funcs[self.i - 1](- self.alpha)
+        Rj = funcs[self.j - 1](- self.beta)
+        Rk = funcs[self.k - 1](- self.gamma)
+
+        if self.extrinsic:
+            M = Rk * Rj * Ri
+        else:
+            M = Ri * Rj * Rk
+
+        if not v:
+            return M
+
+        else:
+            m00, m01, m02, m10, m11, m12, m20, m21, m22 = M.flat()
+            (x, y, z) = v
+
+            m03 = x - x*m00 - y*m01 - z*m02
+            m13 = y - x*m10 - y*m11 - z*m12
+            m23 = z - x*m20 - y*m21 - z*m22
+            m30 = m31 = m32 = 0
+            m33 = 1
+
+            return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
+                          [m20, m21, m22, m23], [m30, m31, m32, m33]])
 
     @classmethod
     def from_rotation_matrix(cls, M, seq):
