@@ -39,6 +39,7 @@ from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
 from sympy.external import import_module
+from sympy.algebras import Quaternion
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
@@ -2303,6 +2304,15 @@ def test_rotation_matrices():
     assert rot_axis1(0) == eye(3)
     assert rot_axis2(0) == eye(3)
     assert rot_axis3(0) == eye(3)
+
+    # Check right-hand convention
+    # see Issue #24529
+    q1 = Quaternion.from_axis_angle([1, 0, 0], pi / 2)
+    q2 = Quaternion.from_axis_angle([0, 1, 0], pi / 2)
+    q3 = Quaternion.from_axis_angle([0, 0, 1], pi / 2)
+    assert rot_axis1(pi / 2) == q1.to_rotation_matrix()
+    assert rot_axis2(pi / 2) == q2.to_rotation_matrix()
+    assert rot_axis3(pi / 2) == q3.to_rotation_matrix()
 
 
 def test_DeferredVector():
