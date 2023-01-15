@@ -108,10 +108,6 @@ class Euler(Expr):
         return self.angles[key]
 
     @property
-    def info(self):
-        return self._info
-
-    @property
     def extrinsic(self):
         return self.seq.islower()
 
