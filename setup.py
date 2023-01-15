@@ -56,6 +56,7 @@ if sys.version_info < (3, 8):
 # python bin/generate_module_list.py
 modules = [
     'sympy.algebras',
+    'sympy.angles',
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.assumptions.predicates',
@@ -229,6 +230,7 @@ class sdist_sympy(sdist):
 # python bin/generate_test_list.py
 tests = [
     'sympy.algebras.tests',
+    'sympy.angles.tests',
     'sympy.assumptions.tests',
     'sympy.calculus.tests',
     'sympy.categories.tests',
