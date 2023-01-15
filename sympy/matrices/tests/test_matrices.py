@@ -27,7 +27,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
-    MatrixSymbol, dotprodsimp)
+    MatrixSymbol, dotprodsimp, rot_rh_axis1, rot_rh_axis2, rot_rh_axis3)
 from sympy.matrices.utilities import _dotprodsimp_state
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -2313,6 +2313,10 @@ def test_rotation_matrices():
     assert rot_axis1(- pi / 2) == q1.to_rotation_matrix()
     assert rot_axis2(- pi / 2) == q2.to_rotation_matrix()
     assert rot_axis3(- pi / 2) == q3.to_rotation_matrix()
+    # Check right-hand convention
+    assert rot_rh_axis1(+ pi / 2) == q1.to_rotation_matrix()
+    assert rot_rh_axis2(+ pi / 2) == q2.to_rotation_matrix()
+    assert rot_rh_axis3(+ pi / 2) == q3.to_rotation_matrix()
 
 
 def test_DeferredVector():
