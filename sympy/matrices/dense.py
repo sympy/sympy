@@ -178,17 +178,17 @@ def rot_axis3(theta):
     >>> theta = pi/3
     >>> rot_axis3(theta)
     Matrix([
-    [       1/2, sqrt(3)/2, 0],
-    [-sqrt(3)/2,       1/2, 0],
-    [         0,         0, 1]])
+    [      1/2, -sqrt(3)/2, 0],
+    [sqrt(3)/2,        1/2, 0],
+    [        0,          0, 1]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis3(pi/2)
     Matrix([
-    [ 0, 1, 0],
-    [-1, 0, 0],
-    [ 0, 0, 1]])
+    [0, -1, 0],
+    [1,  0, 0],
+    [0,  0, 1]])
 
     See Also
     ========
@@ -200,8 +200,8 @@ def rot_axis3(theta):
     """
     ct = cos(theta)
     st = sin(theta)
-    lil = ((ct, st, 0),
-           (-st, ct, 0),
+    lil = ((ct, -st, 0),
+           (st, ct, 0),
            (0, 0, 1))
     return Matrix(lil)
 
@@ -220,17 +220,17 @@ def rot_axis2(theta):
     >>> theta = pi/3
     >>> rot_axis2(theta)
     Matrix([
-    [      1/2, 0, -sqrt(3)/2],
-    [        0, 1,          0],
-    [sqrt(3)/2, 0,        1/2]])
+    [       1/2, 0, sqrt(3)/2],
+    [         0, 1,         0],
+    [-sqrt(3)/2, 0,       1/2]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis2(pi/2)
     Matrix([
-    [0, 0, -1],
-    [0, 1,  0],
-    [1, 0,  0]])
+    [ 0, 0, 1],
+    [ 0, 1, 0],
+    [-1, 0, 0]])
 
     See Also
     ========
@@ -242,9 +242,9 @@ def rot_axis2(theta):
     """
     ct = cos(theta)
     st = sin(theta)
-    lil = ((ct, 0, -st),
+    lil = ((ct, 0, st),
            (0, 1, 0),
-           (st, 0, ct))
+           (-st, 0, ct))
     return Matrix(lil)
 
 
@@ -262,17 +262,17 @@ def rot_axis1(theta):
     >>> theta = pi/3
     >>> rot_axis1(theta)
     Matrix([
-    [1,          0,         0],
-    [0,        1/2, sqrt(3)/2],
-    [0, -sqrt(3)/2,       1/2]])
+    [1,          0,          0],
+    [0,        1/2, -sqrt(3)/2],
+    [0,  sqrt(3)/2,        1/2]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis1(pi/2)
     Matrix([
-    [1,  0, 0],
-    [0,  0, 1],
-    [0, -1, 0]])
+    [1, 0,  0],
+    [0, 0, -1],
+    [0, 1,  0]])
 
     See Also
     ========
@@ -285,8 +285,8 @@ def rot_axis1(theta):
     ct = cos(theta)
     st = sin(theta)
     lil = ((1, 0, 0),
-           (0, ct, st),
-           (0, -st, ct))
+           (0, ct, -st),
+           (0, st, ct))
     return Matrix(lil)
 
 
