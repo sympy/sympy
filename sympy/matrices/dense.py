@@ -165,11 +165,11 @@ def matrix2numpy(m, dtype=object):  # pragma: no cover
 
 
 def rot_axis3(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 3-axis in the left-hand convention.
+    """Returns a rotation matrix for a rotation of theta (in radians) 
+    about the 3-axis.
 
-    For the more usual right-hand convention, use:
-        rot_axis3(-theta)
+    For a right-handed coordinate system, this corresponds to a 
+    clockwise rotation.
 
     Examples
     ========
@@ -210,11 +210,11 @@ def rot_axis3(theta):
 
 
 def rot_axis2(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 2-axis in the left-hand convention.
+    """Returns a rotation matrix for a rotation of theta (in radians) 
+    about the 2-axis.
 
-    For the more usual right-hand convention, use:
-        rot_axis2(-theta)
+    For a right-handed coordinate system, this corresponds to a 
+    clockwise rotation.
 
     Examples
     ========
@@ -255,11 +255,11 @@ def rot_axis2(theta):
 
 
 def rot_axis1(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 1-axis in the left-hand convention.
+    """Returns a rotation matrix for a rotation of theta (in radians) 
+    about the 1-axis.
 
-    For the more usual right-hand convention, use:
-        rot_axis1(-theta)
+    For a right-handed coordinate system, this corresponds to a 
+    clockwise rotation.
 
     Examples
     ========
@@ -299,24 +299,22 @@ def rot_axis1(theta):
     return Matrix(lil)
 
 
-def rot_rh_axis3(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 3-axis in the right-hand convention.
+def rot_ccw_axis3(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) 
+    about the 3-axis.
 
-    For the less usual less-hand convention, use:
-        rot_rh_axis3(-theta)
-    Or:
-        rot_axis3(theta)
+    For a right-handed coordinate system, this corresponds to a 
+    counterclockwise rotation.
 
     Examples
     ========
 
-    >>> from sympy import pi, rot_rh_axis3
+    >>> from sympy import pi, rot_ccw_axis3
 
     A rotation of pi/3 (60 degrees):
 
     >>> theta = pi/3
-    >>> rot_rh_axis3(theta)
+    >>> rot_ccw_axis3(theta)
     Matrix([
     [      1/2, -sqrt(3)/2, 0],
     [sqrt(3)/2,        1/2, 0],
@@ -324,7 +322,7 @@ def rot_rh_axis3(theta):
 
     If we rotate by pi/2 (90 degrees):
 
-    >>> rot_rh_axis3(pi/2)
+    >>> rot_ccw_axis3(pi/2)
     Matrix([
     [0, -1, 0],
     [1,  0, 0],
@@ -333,32 +331,30 @@ def rot_rh_axis3(theta):
     See Also
     ========
 
-    rot_rh_axis1: Returns a rotation matrix for a rotation of theta (in radians)
+    rot_ccw_axis1: Returns a rotation matrix for a rotation of theta (in radians)
         about the 1-axis
-    rot_rh_axis2: Returns a rotation matrix for a rotation of theta (in radians)
+    rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
         about the 2-axis
     """
     return rot_axis3(-theta)
 
 
-def rot_rh_axis2(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 2-axis in the right-hand convention.
+def rot_ccw_axis2(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) 
+    about the 2-axis.
 
-    For the less usual less-hand convention, use:
-        rot_rh_axis2(-theta)
-    Or:
-        rot_axis2(theta)
+    For a right-handed coordinate system, this corresponds to a 
+    counterclockwise rotation.
 
     Examples
     ========
 
-    >>> from sympy import pi, rot_rh_axis2
+    >>> from sympy import pi, rot_ccw_axis2
 
     A rotation of pi/3 (60 degrees):
 
     >>> theta = pi/3
-    >>> rot_rh_axis2(theta)
+    >>> rot_ccw_axis2(theta)
     Matrix([
     [       1/2, 0, sqrt(3)/2],
     [         0, 1,         0],
@@ -366,7 +362,7 @@ def rot_rh_axis2(theta):
 
     If we rotate by pi/2 (90 degrees):
 
-    >>> rot_rh_axis2(pi/2)
+    >>> rot_ccw_axis2(pi/2)
     Matrix([
     [ 0,  0,  1],
     [ 0,  1,  0],
@@ -375,32 +371,30 @@ def rot_rh_axis2(theta):
     See Also
     ========
 
-    rot_rh_axis1: Returns a rotation matrix for a rotation of theta (in radians)
+    rot_ccw_axis1: Returns a rotation matrix for a rotation of theta (in radians)
         about the 1-axis
-    rot_rh_axis3: Returns a rotation matrix for a rotation of theta (in radians)
+    rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis
     """
     return rot_axis2(-theta)
 
 
-def rot_rh_axis1(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 1-axis in the right-hand convention.
+def rot_ccw_axis1(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians) 
+    about the 1-axis.
 
-    For the less usual less-hand convention, use:
-        rot_rh_axis1(-theta)
-    Or:
-        rot_axis1(theta)
+    For a right-handed coordinate system, this corresponds to a 
+    counterclockwise rotation.
 
     Examples
     ========
 
-    >>> from sympy import pi, rot_rh_axis1
+    >>> from sympy import pi, rot_ccw_axis1
 
     A rotation of pi/3 (60 degrees):
 
     >>> theta = pi/3
-    >>> rot_rh_axis1(theta)
+    >>> rot_ccw_axis1(theta)
     Matrix([
     [1,         0,          0],
     [0,       1/2, -sqrt(3)/2],
@@ -408,7 +402,7 @@ def rot_rh_axis1(theta):
 
     If we rotate by pi/2 (90 degrees):
 
-    >>> rot_rh_axis1(pi/2)
+    >>> rot_ccw_axis1(pi/2)
     Matrix([
     [1, 0,  0],
     [0, 0, -1],
@@ -417,9 +411,9 @@ def rot_rh_axis1(theta):
     See Also
     ========
 
-    rot_rh_axis2: Returns a rotation matrix for a rotation of theta (in radians)
+    rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
         about the 2-axis
-    rot_rh_axis3: Returns a rotation matrix for a rotation of theta (in radians)
+    rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis
     """
     return rot_axis1(-theta)
