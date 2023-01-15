@@ -2,7 +2,7 @@ from sympy.core.symbol import Symbol, symbols
 from sympy.core.numbers import pi
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.algebras.quaternion import Quaternion
-from sympy.algebras.euler import Euler
+from sympy.angles.euler import Euler
 from sympy.testing.pytest import raises, warns
 from sympy.core.sympify import sympify
 from sympy.simplify.trigsimp import trigsimp

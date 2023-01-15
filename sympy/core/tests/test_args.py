@@ -108,7 +108,7 @@ def test_sympy__algebras__quaternion__Quaternion():
 
 
 def test_sympy__algebras__euler__Euler():
-    from sympy.algebras.euler import Euler
+    from sympy.angles.euler import Euler
     assert _test_args(Euler(x, 1, 2))
 
 
