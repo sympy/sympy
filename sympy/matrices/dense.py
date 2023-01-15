@@ -166,7 +166,10 @@ def matrix2numpy(m, dtype=object):  # pragma: no cover
 
 def rot_axis3(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 3-axis.
+    the 3-axis in the left-hand convention.
+
+    For the more usual right-hand convention, use:
+        rot_axis3(-theta)
 
     Examples
     ========
@@ -178,17 +181,17 @@ def rot_axis3(theta):
     >>> theta = pi/3
     >>> rot_axis3(theta)
     Matrix([
-    [      1/2, -sqrt(3)/2, 0],
-    [sqrt(3)/2,        1/2, 0],
-    [        0,          0, 1]])
+    [       1/2, sqrt(3)/2, 0],
+    [-sqrt(3)/2,       1/2, 0],
+    [         0,         0, 1]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis3(pi/2)
     Matrix([
-    [0, -1, 0],
-    [1,  0, 0],
-    [0,  0, 1]])
+    [ 0, 1, 0],
+    [-1, 0, 0],
+    [ 0, 0, 1]])
 
     See Also
     ========
@@ -200,15 +203,18 @@ def rot_axis3(theta):
     """
     ct = cos(theta)
     st = sin(theta)
-    lil = ((ct, -st, 0),
-           (st, ct, 0),
+    lil = ((ct, st, 0),
+           (-st, ct, 0),
            (0, 0, 1))
     return Matrix(lil)
 
 
 def rot_axis2(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 2-axis.
+    the 2-axis in the left-hand convention.
+
+    For the more usual right-hand convention, use:
+        rot_axis2(-theta)
 
     Examples
     ========
@@ -220,17 +226,17 @@ def rot_axis2(theta):
     >>> theta = pi/3
     >>> rot_axis2(theta)
     Matrix([
-    [       1/2, 0, sqrt(3)/2],
-    [         0, 1,         0],
-    [-sqrt(3)/2, 0,       1/2]])
+    [      1/2, 0, -sqrt(3)/2],
+    [        0, 1,          0],
+    [sqrt(3)/2, 0,        1/2]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis2(pi/2)
     Matrix([
-    [ 0, 0, 1],
-    [ 0, 1, 0],
-    [-1, 0, 0]])
+    [0, 0, -1],
+    [0, 1,  0],
+    [1, 0,  0]])
 
     See Also
     ========
@@ -242,15 +248,18 @@ def rot_axis2(theta):
     """
     ct = cos(theta)
     st = sin(theta)
-    lil = ((ct, 0, st),
+    lil = ((ct, 0, -st),
            (0, 1, 0),
-           (-st, 0, ct))
+           (st, 0, ct))
     return Matrix(lil)
 
 
 def rot_axis1(theta):
     """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 1-axis.
+    the 1-axis in the left-hand convention.
+
+    For the more usual right-hand convention, use:
+        rot_axis1(-theta)
 
     Examples
     ========
@@ -262,17 +271,17 @@ def rot_axis1(theta):
     >>> theta = pi/3
     >>> rot_axis1(theta)
     Matrix([
-    [1,          0,          0],
-    [0,        1/2, -sqrt(3)/2],
-    [0,  sqrt(3)/2,        1/2]])
+    [1,          0,         0],
+    [0,        1/2, sqrt(3)/2],
+    [0, -sqrt(3)/2,       1/2]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis1(pi/2)
     Matrix([
-    [1, 0,  0],
-    [0, 0, -1],
-    [0, 1,  0]])
+    [1,  0, 0],
+    [0,  0, 1],
+    [0, -1, 0]])
 
     See Also
     ========
@@ -285,8 +294,8 @@ def rot_axis1(theta):
     ct = cos(theta)
     st = sin(theta)
     lil = ((1, 0, 0),
-           (0, ct, -st),
-           (0, st, ct))
+           (0, ct, st),
+           (0, -st, ct))
     return Matrix(lil)
 
 
