@@ -23,6 +23,7 @@ if os.path.isdir(sympy_dir):
 
 submodule_whitelist = [
     'algebras',
+    'angles',
     'assumptions',
     'calculus',
     'concrete',
