@@ -475,8 +475,8 @@ __all__ = [
     'AccumBounds', 'is_convex', 'stationary_points', 'minimum', 'maximum',
 
     # sympy.algebras
-    'Quaternion', 
-    
+    'Quaternion',
+
     # sympy.angles
     'Euler',
 
