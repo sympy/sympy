@@ -590,6 +590,21 @@ Matrix Functions
 
 .. autofunction:: sympy.matrices.dense::randMatrix
 
+Rotation matrices in 3D
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: sympy.matrices.dense::rot_axis1
+
+.. autofunction:: sympy.matrices.dense::rot_axis2
+
+.. autofunction:: sympy.matrices.dense::rot_axis3
+
+.. autofunction:: sympy.matrices.dense::rot_ccw_axis1
+
+.. autofunction:: sympy.matrices.dense::rot_ccw_axis2
+
+.. autofunction:: sympy.matrices.dense::rot_ccw_axis3
+
 Numpy Utility Functions
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -598,11 +613,5 @@ Numpy Utility Functions
 .. autofunction:: sympy.matrices.dense::matrix2numpy
 
 .. autofunction:: sympy.matrices.dense::symarray
-
-.. autofunction:: sympy.matrices.dense::rot_axis1
-
-.. autofunction:: sympy.matrices.dense::rot_axis2
-
-.. autofunction:: sympy.matrices.dense::rot_axis3
 
 .. autofunction:: a2idx
