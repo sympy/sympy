@@ -603,6 +603,8 @@ def test_laplace_transform():
     assert LT(cos(a*t)*cos(b*t), t, s) ==\
         (s*(a**2 + b**2 + s**2)/((s**2 + (a - b)**2)*(s**2 + (a + b)**2)),
          0, True)
+    assert LT(-a*t*cos(a*t) + sin(a*t), t, s) ==\
+        (2*a**3/(a**4 + 2*a**2*s**2 + s**4), 0, True)
     assert LT(c*exp(-b*t)*sin(a*t), t, s) == (a*c/(a**2 + (b + s)**2), 0, True)
     assert LT(c*exp(-b*t)*cos(a*t), t, s) == ((b + s)*c/(a**2 + (b + s)**2),
                                               0, True)

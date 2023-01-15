@@ -1562,12 +1562,12 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                 debug('_laplace_apply_rules match:')
                 debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
                 debug('      rule: multiply with %s (%s)'%(fm.func, nu))
-                r, pr, cr = k*LaplaceTransform(ma1[z], t, s).doit(noconds=False)
+                r, pr, cr = LaplaceTransform(ma1[z], t, s).doit(noconds=False)
                 if sd==1:
                     cp_shift = Abs(re(ma2[a]))
                 else:
                     cp_shift = Abs(im(ma2[a]))
-                return True, ((s1*(r.subs(s, s-sd*ma2[a])+\
+                return True, (k*(s1*(r.subs(s, s-sd*ma2[a])+\
                                s2*r.subs(s, s+sd*ma2[a])))/2,
                               Max(p, pr+cp_shift), And(c, cr))
     return False, (fn, p, c)
