@@ -131,7 +131,7 @@ class Euler(Expr):
         """Get axis as an int:
             1 for axis x
             2 for axis y
-            3 for axis z    
+            3 for axis z
         """
         c = self.seq[idx].lower()
         return 'xyz'.index(c) + 1
