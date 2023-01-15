@@ -516,7 +516,7 @@ class Euler(Expr):
 
         if lhs.seq != rhs.seq:
             warnings.warn('Different sequences detected, '
-                          'returning sequence of lhs.')
+                          'returning sequence of left element.')
         else:
             warnings.warn('Euler angles are bad for composing, '
                           'consider using quaternions instead.')
