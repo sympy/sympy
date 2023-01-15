@@ -15,7 +15,7 @@ def _check_sequence(seq):
     """validate seq and return info"""
     if isinstance(seq, Symbol):
         seq = str(seq)
-    if type(seq) != str:
+    elif type(seq) != str:
         raise ValueError('Expected seq to be a string.')
     if len(seq) != 3:
         raise ValueError("Expected 3 axes, got `{}`.".format(seq))
@@ -36,31 +36,6 @@ def _check_sequence(seq):
         raise ValueError("Expected axes from `seq` to be from "
                          "['x', 'y', 'z'] or ['X', 'Y', 'Z'], "
                          "got {}".format(''.join(bad)))
-
-    # get elementary basis vectors
-    ei = [1 if n == i else 0 for n in 'xyz']
-    ej = [1 if n == j else 0 for n in 'xyz']
-    ek = [1 if n == k else 0 for n in 'xyz']
-
-    # get indices
-    i = 'xyz'.index(i) + 1
-    j = 'xyz'.index(j) + 1
-    k = 'xyz'.index(k) + 1
-
-    info = {
-            'seq': seq,
-            'extrinsic': extrinsic,
-            'intrinsic': intrinsic,
-            'symmetric': i == k,
-            'i': i,
-            'j': j,
-            'k': k,
-            'ei': ei,
-            'ej': ej,
-            'ek': ek
-            }
-
-    return info
 
 
 def _wrap(angle):
@@ -96,8 +71,8 @@ class Euler(Expr):
     is_commutative = False
 
     def __new__(cls, alpha=0, beta=0, gamma=0, seq='ZYX'):
-        info = _check_sequence(seq)
-        alpha, beta, gamma, seq= map(sympify, (alpha, beta, gamma, seq))
+        _check_sequence(seq)
+        alpha, beta, gamma, seq = map(sympify, (alpha, beta, gamma, seq))
         alpha, beta, gamma, seq = map(_wrap, (alpha, beta, gamma, seq))
 
         if any(i.is_commutative is False for i in [alpha, beta, gamma]):
@@ -107,7 +82,7 @@ class Euler(Expr):
             obj._alpha = alpha
             obj._beta = beta
             obj._gamma = gamma
-            obj._info = info
+            obj._seq = seq
             obj._q = None
             return obj
 
@@ -124,55 +99,75 @@ class Euler(Expr):
         return self._gamma
 
     @property
+    def seq(self):
+        return str(self._seq)
+
+    @property
     def angles(self):
+        """Get all angles as a tuple"""
         return self.args[:3]
+
+    def __getitem__(self, key):
+        """Get all angles by index"""
+        return self.angles[key]
 
     @property
     def info(self):
         return self._info
 
     @property
-    def seq(self):
-        return self._info['seq']
-
-    @property
     def extrinsic(self):
-        return self._info['extrinsic']
+        return self.seq.islower()
 
     @property
     def intrinsic(self):
-        return self._info['intrinsic']
+        return self.seq.isupper()
 
     @property
     def symmetric(self):
-        return self._info['symmetric']
+        return self.seq[0] == self.seq[2]
+
+    @property
+    def asymmetric(self):
+        return self.seq[0] != self.seq[2]
+
+    def get_axis_index(self, idx):
+        """Get axis as an int:
+            1 for axis x
+            2 for axis y
+            3 for axis z    
+        """
+        c = self.seq[idx].lower()
+        return 'xyz'.index(c) + 1
 
     @property
     def i(self):
-        return self._info['i']
+        return self.get_axis_index(0)
 
     @property
     def j(self):
-        return self._info['j']
+        return self.get_axis_index(1)
 
     @property
     def k(self):
-        return self._info['k']
+        return self.get_axis_index(2)
+
+    def get_axis_vector(self, idx):
+        """Get axis unit vector as an int"""
+        c = self.seq[idx].lower()
+        return [1 if n == c else 0 for n in 'xyz']
 
     @property
     def ei(self):
-        return self._info['ei']
+        return self.get_axis_vector(0)
 
     @property
     def ej(self):
-        return self._info['ej']
+        return self.get_axis_vector(1)
 
     @property
     def ek(self):
-        return self._info['ek']
-
-    def __getitem__(self, key):
-        return self.angles[key]
+        return self.get_axis_vector(2)
 
     def to_Matrix(self):
         return Matrix(self.angles)
