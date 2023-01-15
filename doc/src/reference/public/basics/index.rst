@@ -19,6 +19,7 @@ Basics
    ../../../modules/solvers/index.rst
    ../../../modules/abc.rst
    ../../../modules/algebras.rst
+   ../../../modules/euler.rst
    ../../../modules/concrete.rst
    ../../../modules/core.rst
    ../../../modules/discrete.rst
