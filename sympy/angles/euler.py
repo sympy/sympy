@@ -241,7 +241,7 @@ class Euler(Expr):
         avoid_square_root : bool
             Default : False
             When True, the second angle is calculated with an expression based
-            on acos`, which is slightly more complicated but avoids a square
+            on `acos`, which is slightly more complicated but avoids a square
             root. When False, second angle is calculated with `atan2`, which
             is simpler and can be better for numerical reasons (some
             numerical implementations of `acos` have problems near zero).
