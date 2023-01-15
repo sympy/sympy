@@ -79,28 +79,24 @@ class Euler(Expr):
             raise ValueError("arguments have to be commutative")
         else:
             obj = Expr.__new__(cls, alpha, beta, gamma, seq)
-            obj._alpha = alpha
-            obj._beta = beta
-            obj._gamma = gamma
-            obj._seq = seq
             obj._q = None
             return obj
 
     @property
     def alpha(self):
-        return self._alpha
+        return self.args[0]
 
     @property
     def beta(self):
-        return self._beta
+        return self.args[1]
 
     @property
     def gamma(self):
-        return self._gamma
+        return self.args[2]
 
     @property
     def seq(self):
-        return str(self._seq)
+        return str(self.args[3])
 
     @property
     def angles(self):
