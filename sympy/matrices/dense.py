@@ -165,10 +165,10 @@ def matrix2numpy(m, dtype=object):  # pragma: no cover
 
 
 def rot_axis3(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) 
+    """Returns a rotation matrix for a rotation of theta (in radians)
     about the 3-axis.
 
-    For a right-handed coordinate system, this corresponds to a 
+    For a right-handed coordinate system, this corresponds to a
     clockwise rotation.
 
     Examples
@@ -210,10 +210,10 @@ def rot_axis3(theta):
 
 
 def rot_axis2(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) 
+    """Returns a rotation matrix for a rotation of theta (in radians)
     about the 2-axis.
 
-    For a right-handed coordinate system, this corresponds to a 
+    For a right-handed coordinate system, this corresponds to a
     clockwise rotation.
 
     Examples
@@ -255,10 +255,10 @@ def rot_axis2(theta):
 
 
 def rot_axis1(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) 
+    """Returns a rotation matrix for a rotation of theta (in radians)
     about the 1-axis.
 
-    For a right-handed coordinate system, this corresponds to a 
+    For a right-handed coordinate system, this corresponds to a
     clockwise rotation.
 
     Examples
@@ -300,10 +300,10 @@ def rot_axis1(theta):
 
 
 def rot_ccw_axis3(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) 
+    """Returns a rotation matrix for a rotation of theta (in radians)
     about the 3-axis.
 
-    For a right-handed coordinate system, this corresponds to a 
+    For a right-handed coordinate system, this corresponds to a
     counterclockwise rotation.
 
     Examples
@@ -340,10 +340,10 @@ def rot_ccw_axis3(theta):
 
 
 def rot_ccw_axis2(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) 
+    """Returns a rotation matrix for a rotation of theta (in radians)
     about the 2-axis.
 
-    For a right-handed coordinate system, this corresponds to a 
+    For a right-handed coordinate system, this corresponds to a
     counterclockwise rotation.
 
     Examples
@@ -380,10 +380,10 @@ def rot_ccw_axis2(theta):
 
 
 def rot_ccw_axis1(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) 
+    """Returns a rotation matrix for a rotation of theta (in radians)
     about the 1-axis.
 
-    For a right-handed coordinate system, this corresponds to a 
+    For a right-handed coordinate system, this corresponds to a
     counterclockwise rotation.
 
     Examples
