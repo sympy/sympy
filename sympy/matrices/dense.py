@@ -129,7 +129,7 @@ MutableMatrix = Matrix = MutableDenseMatrix
 
 ###########
 # Numpy Utility Functions:
-# list2numpy, matrix2numpy, symmarray, rot_axis[123]
+# list2numpy, matrix2numpy, symmarray
 ###########
 
 
@@ -207,6 +207,12 @@ def rot_axis3(theta):
            (-st, ct, 0),
            (0, 0, 1))
     return Matrix(lil)
+
+
+###########
+# Rotation matrices in 3D:
+# rot_axis[123], rot_ccw_axis[123]
+###########
 
 
 def rot_axis2(theta):
