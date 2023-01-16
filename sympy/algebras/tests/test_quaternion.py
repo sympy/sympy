@@ -333,6 +333,16 @@ def test_to_euler():
         assert q_back == q_normalized
 
 
+def test_to_euler_iss24504():
+    """
+    There was a mistake in the degenerate case testing
+    See issue 24504 for reference.
+    """
+    q = Quaternion.from_euler((phi, 0, 0), 'zyz')
+    with warns(UserWarning, match='Singularity', test_stacklevel=False):
+        assert trigsimp(q.to_euler('zyz'), inverse=True) == (phi, 0, 0)
+
+
 def test_to_euler_numerical_singilarities():
 
     def test_one_case(angles, seq):
