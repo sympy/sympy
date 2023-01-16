@@ -65,7 +65,7 @@ vector.functions.outer resp. physics.vector.functions.dot or matrices.dot.
 """
 
 from typing import cast, Any, List, Tuple, Type, Callable # for Python 3.8 typing
-from sympy.core.expr import Expr
+from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -318,16 +318,16 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
         Multiplies the left hand list of factors into the right hand list of factors
         """
         # define shorthand to distribute cl*fL*(eadd.args[0]+eadd.args[1]+..)*fR
-        def qapply_DoAddL(eadd:Add):
+        def qapply_DoAddL(eadd:Add, fadd:Callable):
             # Important: arguments to qapply_Mul2 must be fresh copies
             # TBD: implement a cache to avoid frequent evaluation of fL?
             cle = qapply_expand_powers(cl)  # do expansion of power_base/_exp
             if opt_mul: # distribute and multiply **each summand** with cl
                 c = qapply_expand_mul(cle)  # deeply distribute factors in cle
-                return Add(*[qapply_Mul2(fL + [c * arg],          fR.copy())
+                return fadd(*[qapply_Mul2(fL + [c * arg],          fR.copy())
                                                     for arg in eadd.args])
             else: # distribute factors, but keep commutative factors up front
-                return Mul(*(cle + [Add(*[qapply_Mul2(fL + [arg], fR.copy())
+                return Mul(*(cle + [fadd(*[qapply_Mul2(fL + [arg], fR.copy())
                                                     for arg in eadd.args])]))
 
         cl : List[Expr] = [] # gathers factors for Mul to call Mul only once
@@ -356,10 +356,10 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
                     return S.Zero
                 fL.extend(lhsL)      # push back lhsL factors, if any
 
-                if lhsR.is_Add:      # do expansion of Add
+                if lhsR.is_Add:      # do expansion of Add over cl,fL,R
                     if rhsL is not EmptyMul:
                         fR.insert(0, rhsL)  # push back rhsL factor if any
-                    return qapply_DoAddL(cast(Add, lhsR)) # over cl,fL,fR
+                    return qapply_DoAddL(cast(Add, lhsR), lhsR.func)
 
             # Now lhsR is a non-trivial nc factor and no Add. Get rhsL:
             if rhsL is EmptyMul:
@@ -396,9 +396,9 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
                 cl.extend(res_c)   # save away any factors for Mul
 
                 # if resR is Add (implies resR != rhsL), distribute it
-                if resR.is_Add:      # distribute factors over resR
+                if resR.is_Add:      # distribute cl,fL,fR over resR
                     fL.extend(resL)  # push resL factors
-                    return qapply_DoAddL(cast(Add, resR)) # over cl,fL,fR
+                    return qapply_DoAddL(cast(Add, resR), resR.func)
 
                 if resR == rhsL: # the right factor of res0 == rhsL
                     if resL == [lhsR]:  # we have regained lhsR*rhsL from res0!
@@ -474,7 +474,6 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
 
     def qapply_Mul2Atoms(lhs:Expr, rhs:Expr) -> Expr:
         """Applies atomic lhs and rhs to each other"""
-
         # Special case: lhs or rhs is PowHold type:
         # PowHold objects come here only if we have declared them atomic,
         # because we don't know how to safely extract factors from them, or
@@ -600,7 +599,6 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
     def split_pow_c_nc_atom(e:Pow, split_left:bool) -> Tuple[List, List, Expr]:
         """Prepare expression Pow(base, exp) for further application.
         Returns (c-factor list if known, nc-list, atomR)"""
-
         # TensorProduct doesn't provide .__pow__ or ._pow, and
         # we don't use tensor_product_simp_Pow(e).
         if isinstance(e.base, TensorProduct):
@@ -637,7 +635,7 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
         # quantum circuit only power series approximations would occur.
         exp = qapply_Mul2([e.exp], []) if opt_apply_exp else e.exp
 
-        # Let Pow do all it can do using class methods ._pow, ._eval_power etc.
+        # Let ** do all it can do using class methods ._pow, ._eval_power etc.
         e = cast(Pow, base ** exp)  # may return any Expr; cast() is for MyPy
         if isinstance(e, Pow): # (e.is_Pow won't work with MyPy)
             # e is still a Pow: so try some more simplifications:
@@ -835,6 +833,7 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
     def split_c_nc_atom(e:Expr, split_left:bool) -> Tuple[List, List, Expr]:
         """returns (c_factors list of e, e / (c_factors*nc_atomic_factor) list,
            nc_atomic_factor)"""
+        #print(f"split_c_nc_atom({e},{split_left})")
         if  e == EmptyMul or e == S.Zero:  # speed up for frequent cases
             return [], [], e
 
@@ -842,6 +841,8 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
             # Currently .is_commutative ensures 'Mul can handle it'. Should
             # non-scalar factors with .is_commutative=True arrive, a filter
             # like hasattr('_apply_operator') is required.
+            # Sub classes of Mul, e.g. MatMul, also have .is_Mul=True and are
+            # handled as Muls.
             # If the Mul is unevaluated, it may actually be 0, 1 etc., also
             # args_cnc() may fail (Issue #24480), so do doit(deep=False) first:
             if not (e := e.doit(deep=False)).is_Mul:
@@ -862,15 +863,15 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
                 # Note that x.extend(y) returns None, so don't use c1.extend(c2)
                 return (c1+c2, (nc2+nc1 if split_left else nc1+nc2), a)
 
+        elif isinstance(e, PowHold): # Keep separate even if PowHold.is_Pow=True
+            if getattr(e, "atomic"): # (MyPy complains about e.atomic)
+                return [], [], e     # atomic PowHold won't roll off factors
+            else: # non-atomic PowHold rolls itself off by providing factors
+                return e.split_c_nc_atom(split_left)
         elif e.is_Pow: # Pow represents at least 2 factors, except A**-1:
             # e.exp==0 or e.exp==1 will not occur since Pow(A,0)->1, Pow(A,1)->A
             # Simplify powers, incl. .doit(), and wrap powers in PowHold class:
             return split_pow_c_nc_atom(cast(Pow, e), split_left)
-        elif isinstance(e, PowHold):
-            if getattr(e, "atomic"): # so MyPy won't complain about e.atomic
-                return [], [], e     # atomic PowHold won't roll off factors
-            else: # non-atomic PowHold rolls itself off providing factors
-                return e.split_c_nc_atom(split_left)
 
         elif isinstance(e, InnerProduct):  # is defined as is_commutative=True
             return [e.doit() if opt_ip_doit else e], [], EmptyMul
@@ -918,16 +919,40 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
                 return ([], [], e)
 
 
-    # Minimalistic wrapper for Powers to hold qapply from iterated inspection
-    # of base in Pow(base,exp). Derived from Pow.__new__:
-    class PowHold(Expr): # formally make it an Expr, so it looks more SymPy
-        # this permits modification of obj.is_commutative:
-        __slots__ = ('is_commutative', '_b_sp_l', '_b_sp_r', 'atomic')
+    # Minimalistic wrapper for Pow that caches qapply splitting status
+    # atomic and left and right factors b_sp_l and b_sp_r for efficiency.
+    # When qapply hands expressions to Add, Mul, Pow etc. their handling
+    # of PowHold depends on its parent type:
+    # - Pow:  PowHold.is_Pow=True and PowHold will be handled like a Pow
+    #         object. May involve serious computation and re-creation of
+    #         the object. Since split_pow_c_nc() has processed it including
+    #         stripping off all commutative input this will be love's
+    #         labour lost almost always: in all test cases no difference
+    #         was detected to the other options below. Most sympy-ic.
+    # - Expr: PowHold.is_Pow=False and PowHold will be handled like any
+    #         unknown expression type, like UnevaluatedExpr. Base and
+    #         exp may still be processed and the object re-created.
+    # - AtomicExpr: Sets PowHold.is_Atom=True, also PowHold.is_Pow=False.
+    #         Thus PowHold objects should be treated like symbols, their data
+    #         is not to be touched and no re-creation by func(*args) is to be
+    #         tried (at least by most sympy functions). Most efficient.
 
-        def __new__(cls, base:Expr, exp:Expr, atomic:bool, b_sp_l:Tuple,
-                                                           b_sp_r:Tuple):
+    class PowHold(AtomicExpr):
+        # this permits modification of obj.is_commutative:
+        __slots__ = ('is_commutative', 'atomic', '_b_sp_l', '_b_sp_r')
+
+        def __new__(cls, base:Expr, exp:Expr, atomic:bool=None,
+                                b_sp_l:Tuple=tuple(), b_sp_r:Tuple=tuple()):
+            """Extension of Pow with additional data. From within qapply no default
+            arguments are permitted since atomic==None flags external invocation."""
             if exp is S.Zero:  return S.One    # by sympy convention, see Pow.
             elif exp is S.One: return base
+            # atomic == None flags that a PowHold object has been processed
+            # outside of qapply and is beeing re-created there. So a new base
+            # and exp may be available that need processing in split_atom_c_nc,
+            if atomic is None:      # so return a normal Pow-like object:
+                return base ** exp  # let ** choose the result type
+            # Using Expr to create object is correct for parent type Pow, Expr
             obj = Expr.__new__(cls, base, exp) # sets up self.func, self.args
             # See Pow.__new__ for this definition of commutative (eg e**A):
             obj.is_commutative = (base.is_commutative and exp.is_commutative)
