@@ -49,6 +49,10 @@ def __sympy_debug():
                            debug_str)
 SYMPY_DEBUG = __sympy_debug()  # type: bool
 
+from sympy.multipledispatch import restart_ordering, halt_ordering
+
+halt_ordering()
+
 from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         preorder_traversal, S, Expr, AtomicExpr, UnevaluatedExpr, Symbol,
         Wild, Dummy, symbols, var, Number, Float, Rational, Integer,
@@ -255,6 +259,8 @@ from .plotting import plot, textplot, plot_backends, plot_implicit, plot_paramet
 from .interactive import init_session, init_printing, interactive_traversal
 
 evalf._create_evalf_table()
+
+restart_ordering()
 
 __all__ = [
     '__version__',

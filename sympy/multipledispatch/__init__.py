@@ -1,11 +1,11 @@
 from .core import dispatch
 from .dispatcher import (Dispatcher, halt_ordering, restart_ordering,
-    MDNotImplementedError)
+    enable_ordering_context, MDNotImplementedError)
 
 __version__ = '0.4.9'
 
 __all__ = [
     'dispatch',
 
-    'Dispatcher', 'halt_ordering', 'restart_ordering', 'MDNotImplementedError',
+    'Dispatcher', 'halt_ordering', 'restart_ordering', 'enable_ordering_context', 'MDNotImplementedError',
 ]

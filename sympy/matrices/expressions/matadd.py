@@ -12,6 +12,7 @@ from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
+from sympy.multipledispatch import enable_ordering_context
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
@@ -107,7 +108,9 @@ class MatAdd(MatrixExpr, Add):
         add_lines = [arg._eval_derivative_matrix_lines(x) for arg in self.args]
         return [j for i in add_lines for j in i]
 
-add.register_handlerclass((Add, MatAdd), MatAdd)
+with enable_ordering_context():
+    add.register_handlerclass((Add, MatAdd), MatAdd)
+
 
 def validate(*args):
     if not all(arg.is_Matrix for arg in args):

@@ -85,6 +85,16 @@ def restart_ordering(on_ambiguity=ambiguity_warn):
         dispatcher = _unresolved_dispatchers.pop()
         dispatcher.reorder(on_ambiguity=on_ambiguity)
 
+class enable_ordering_context:
+    """ Context manager to enable to dispatcher ordering """
+
+    def __enter__(self):
+        self.original_state = _resolve[0]
+        restart_ordering()
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if self.original_state:
+            restart_ordering()
 
 class Dispatcher:
     """ Dispatch methods based on type signature
