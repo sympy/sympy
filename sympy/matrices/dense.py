@@ -192,16 +192,16 @@ def rot_givens(i, j, theta, dim=3):
                 0   & \cdots &    0   & \cdots &    0   & \cdots &    1
             \end{bmatrix}
 
-    Where `c = \cos(\theta)` and `s = \sin(\theta)` appear at the intersections
-    `i`th and `i`th rows and columns.
+    Where ``c = \cos(\theta)`` and ``s = \sin(\theta)`` appear at the intersections
+    ``i``\th and ``j``\th rows and columns.
 
-    For fixed `i > j`, the non-zero elements of Givens matrix are given by:
+    For fixed ``i > j``\, the non-zero elements of a Givens matrix are given by:
 
     .. math::
         \begin{align}
             g_{kk} &= 1 \qquad \text{for} \ k \ne i,\,j \\
             g_{kk} &= c \qquad \text{for} \ k = i,\,j \\
-            g_{ji} & = -g_{ij}= -s
+            g_{ji} &= -g_{ij} = -s
         \end{align}
 
     Parameters
