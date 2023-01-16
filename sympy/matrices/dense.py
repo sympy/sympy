@@ -166,12 +166,134 @@ def matrix2numpy(m, dtype=object):  # pragma: no cover
 
 ###########
 # Rotation matrices in 3D:
-# rot_axis[123], rot_ccw_axis[123]
+# rot_givens, rot_axis[123], rot_ccw_axis[123]
 ###########
 
 
+def rot_givens(i, j, theta, dim=3):
+    r"""Returns a a Givens rotation matrix, a a rotation in the
+    plane spanned by two coordinates axes.
+
+    Explanation
+    ===========
+
+    The Givens rotation corresponds to a generalization of rotation
+    matrices to any number of dimensions, given by:
+
+    .. math::
+        G(i, j, \theta) =
+            \begin{bmatrix}
+                1   & \cdots &    0   & \cdots &    0   & \cdots &    0   \\
+                \vdots & \ddots & \vdots &        & \vdots &        & \vdots \\
+                0   & \cdots &    c   & \cdots &   -s   & \cdots &    0   \\
+                \vdots &        & \vdots & \ddots & \vdots &        & \vdots \\
+                0   & \cdots &    s   & \cdots &    c   & \cdots &    0   \\
+                \vdots &        & \vdots &        & \vdots & \ddots & \vdots \\
+                0   & \cdots &    0   & \cdots &    0   & \cdots &    1
+            \end{bmatrix}
+
+    Where `c = \cos(\theta)` and `s = \sin(\theta)` appear at the intersections
+    `i`th and `i`th rows and columns.
+
+    For fixed `i > j`, the non-zero elements of Givens matrix are given by:
+    .. math::
+        \begin{align}
+            g_{kk} &{}= 1 \qquad \text{for} \ k \ne i,\,j\\
+            g_{kk} &{}= c \qquad \text{for} \ k = i,\,j\\
+            g_{ji} &{} = -g_{ij}= -s\\
+        \end{align}
+
+    Parameters
+    ==========
+
+    i : int between 1 and dim
+        Represents first axis
+    j : int between 1 and dim
+        Represents second axis
+    dim : int bigger than 1
+        Default : 3
+        Represents number of dimentions
+
+    Examples
+    ========
+
+    >>> from sympy import pi, rot_givens
+
+    A counterclockwise rotation of pi/3 (60 degrees) around
+    the third axis (z-axis):
+
+    >>> rot_givens(1, 2, pi/3)
+    Matrix([
+    [      1/2, -sqrt(3)/2, 0],
+    [sqrt(3)/2,        1/2, 0],
+    [        0,          0, 1]])
+
+    If we rotate by pi/2 (90 degrees):
+
+    >>> rot_givens(1, 2, pi/2)
+    Matrix([
+    [0, -1, 0],
+    [1,  0, 0],
+    [0,  0, 1]])
+
+    This can be generalized to any number
+    of dimentions:
+
+    >>> rot_givens(1, 2, pi/2, dim=4)
+    Matrix([
+    [0, -1, 0, 0],
+    [1,  0, 0, 0],
+    [0,  0, 1, 0],
+    [0,  0, 0, 1]])
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Givens_rotation
+
+    See Also
+    ========
+
+    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 1-axis (clockwise around the x axis)
+    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 2-axis (clockwise around the y axis)
+    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 3-axis (clockwise around the z axis)
+    rot_ccw_axis1: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 1-axis (counterclockwise around the x axis)
+    rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 2-axis (counterclockwise around the y axis)
+    rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 3-axis (counterclockwise around the z axis)
+    """
+    if not isinstance(dim, int) or dim < 2:
+        raise ValueError('dim must be an integer biggen than one, '
+                         'got {}.'.format(dim))
+
+    for ij in [i, j]:
+        if not isinstance(ij, int) or ij < 1 or ij > dim:
+            raise ValueError('i and j must be between 1 and '
+                             '{}, got i={} and j={}.'.format(dim, i, j))
+
+    theta = sympify(theta)
+    c = cos(theta)
+    s = sin(theta)
+    M = eye(dim)
+    if i < j:
+        i, j = j, i
+        theta = -theta
+
+    M[i-1, i-1] = c
+    M[j-1, j-1] = c
+    M[i-1, j-1] = s
+    M[j-1, i-1] = -s
+
+    return M
+
+
 def rot_axis3(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians)
+    r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 3-axis.
 
     Explanation
@@ -183,8 +305,8 @@ def rot_axis3(theta):
     .. math::
 
         R  = \begin{bmatrix}
-                cos{\left(\theta \right)} & \sin{\left(\theta \right)} & 0\\
-                - \sin{\left(\theta \right)} & \cos{\left(\theta \right)} & 0\\
+                \cos(\theta) & \sin(\theta) & 0\\
+                -\sin(\theta) & \cos(\theta) & 0\\
                 0 & 0 & 1
             \end{bmatrix}
 
@@ -213,6 +335,8 @@ def rot_axis3(theta):
     See Also
     ========
 
+    rot_givens: Returns a Givens rotation matrix (generalized rotation for
+        any number of dimensions)
     rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (counterclockwise around the z axis)
     rot_axis1: Returns a rotation matrix for a rotation of theta (in radians)
@@ -220,16 +344,11 @@ def rot_axis3(theta):
     rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
         about the 2-axis (clockwise around the y axis)
     """
-    ct = cos(theta)
-    st = sin(theta)
-    lil = ((ct, st, 0),
-           (-st, ct, 0),
-           (0, 0, 1))
-    return Matrix(lil)
+    return rot_givens(1, 2, -theta, dim=3)
 
 
 def rot_axis2(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians)
+    r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 2-axis.
 
     Explanation
@@ -241,9 +360,9 @@ def rot_axis2(theta):
     .. math::
 
         R  = \begin{bmatrix}
-                \cos{\left(\theta \right)} & 0 & - \sin{\left(\theta \right)} \\
+                \cos(\theta) & 0 & -\sin(\theta) \\
                 0 & 1 & 0 \\
-                \sin{\left(\theta \right)} & 0 & \cos{\left(\theta \right)}
+                \sin(\theta) & 0 & \cos(\theta)
             \end{bmatrix}
 
     Examples
@@ -271,6 +390,8 @@ def rot_axis2(theta):
     See Also
     ========
 
+    rot_givens: Returns a Givens rotation matrix (generalized rotation for
+        any number of dimensions)
     rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
         about the 2-axis (clockwise around the y axis)
     rot_axis1: Returns a rotation matrix for a rotation of theta (in radians)
@@ -283,11 +404,11 @@ def rot_axis2(theta):
     lil = ((ct, 0, -st),
            (0, 1, 0),
            (st, 0, ct))
-    return Matrix(lil)
+    return rot_givens(3, 1, theta, dim=3)
 
 
 def rot_axis1(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians)
+    r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 1-axis.
 
     Explanation
@@ -300,8 +421,8 @@ def rot_axis1(theta):
 
         R  = \begin{bmatrix}
                 1 & 0 & 0 \\
-                0 & \cos{\left(\theta \right)} & \sin{\left(\theta \right)} \\
-                0 & - \sin{\left(\theta \right)} & \cos{\left(\theta \right)}
+                0 & \cos(\theta) & \sin(\theta) \\
+                0 & -\sin(\theta) & \cos(\theta)
             \end{bmatrix}
 
     Examples
@@ -329,6 +450,8 @@ def rot_axis1(theta):
     See Also
     ========
 
+    rot_givens: Returns a Givens rotation matrix (generalized rotation for
+        any number of dimensions)
     rot_ccw_axis1: Returns a rotation matrix for a rotation of theta (in radians)
         about the 1-axis (counterclockwise around the x axis)
     rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
@@ -336,16 +459,11 @@ def rot_axis1(theta):
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (clockwise around the z axis)
     """
-    ct = cos(theta)
-    st = sin(theta)
-    lil = ((1, 0, 0),
-           (0, ct, st),
-           (0, -st, ct))
-    return Matrix(lil)
+    return rot_givens(3, 2, -theta, dim=3)
 
 
 def rot_ccw_axis3(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians)
+    r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 3-axis.
 
     Explanation
@@ -357,8 +475,8 @@ def rot_ccw_axis3(theta):
     .. math::
 
         R  = \begin{bmatrix}
-                \cos{\left(\theta \right)} & - \sin{\left(\theta \right)} & 0 \\
-                \sin{\left(\theta \right)} & \cos{\left(\theta \right)} & 0 \\
+                \cos(\theta) & -\sin(\theta) & 0 \\
+                \sin(\theta) & \cos(\theta) & 0 \\
                 0 & 0 & 1
             \end{bmatrix}
 
@@ -387,6 +505,8 @@ def rot_ccw_axis3(theta):
     See Also
     ========
 
+    rot_givens: Returns a Givens rotation matrix (generalized rotation for
+        any number of dimensions)
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (clockwise around the z axis)
     rot_ccw_axis1: Returns a rotation matrix for a rotation of theta (in radians)
@@ -394,11 +514,11 @@ def rot_ccw_axis3(theta):
     rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
         about the 2-axis (counterclockwise around the y axis)
     """
-    return rot_axis3(-theta)
+    return rot_givens(1, 2, theta, dim=3)
 
 
 def rot_ccw_axis2(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians)
+    r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 2-axis.
 
     Explanation
@@ -410,9 +530,9 @@ def rot_ccw_axis2(theta):
     .. math::
 
         R  = \begin{bmatrix}
-                \cos{\left(\theta \right)} & 0 & \sin{\left(\theta \right)} \\
+                \cos(\theta) & 0 & \sin(\theta) \\
                 0 & 1 & 0 \\
-                - \sin{\left(\theta \right)} & 0 & \cos{\left(\theta \right)}
+                -\sin(\theta) & 0 & \cos(\theta)
             \end{bmatrix}
 
     Examples
@@ -440,6 +560,8 @@ def rot_ccw_axis2(theta):
     See Also
     ========
 
+    rot_givens: Returns a Givens rotation matrix (generalized rotation for
+        any number of dimensions)
     rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
         about the 2-axis (clockwise around the y axis)
     rot_ccw_axis1: Returns a rotation matrix for a rotation of theta (in radians)
@@ -447,11 +569,11 @@ def rot_ccw_axis2(theta):
     rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (counterclockwise around the z axis)
     """
-    return rot_axis2(-theta)
+    return rot_givens(3, 1, -theta, dim=3)
 
 
 def rot_ccw_axis1(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians)
+    r"""Returns a rotation matrix for a rotation of theta (in radians)
     about the 1-axis.
 
     Explanation
@@ -464,8 +586,8 @@ def rot_ccw_axis1(theta):
 
         R  = \begin{bmatrix}
                 1 & 0 & 0 \\
-                0 & \cos{\left(\theta \right)} & - \sin{\left(\theta \right)} \\
-                0 & \sin{\left(\theta \right)} & \cos{\left(\theta \right)}
+                0 & \cos(\theta) & -\sin(\theta) \\
+                0 & \sin(\theta) & \cos(\theta)
             \end{bmatrix}
 
     Examples
@@ -493,6 +615,8 @@ def rot_ccw_axis1(theta):
     See Also
     ========
 
+    rot_givens: Returns a Givens rotation matrix (generalized rotation for
+        any number of dimensions)
     rot_axis1: Returns a rotation matrix for a rotation of theta (in radians)
         about the 1-axis (clockwise around the x axis)
     rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
@@ -500,7 +624,7 @@ def rot_ccw_axis1(theta):
     rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (counterclockwise around the z axis)
     """
-    return rot_axis1(-theta)
+    return rot_givens(2, 3, theta, dim=3)
 
 
 @doctest_depends_on(modules=('numpy',))

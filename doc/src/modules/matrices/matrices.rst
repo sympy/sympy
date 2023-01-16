@@ -593,6 +593,8 @@ Matrix Functions
 Rotation matrices in 3D
 ^^^^^^^^^^^^^^^^^^^^^^^
 
+.. autofunction:: sympy.matrices.dense::rot_givens
+
 .. autofunction:: sympy.matrices.dense::rot_axis1
 
 .. autofunction:: sympy.matrices.dense::rot_axis2
