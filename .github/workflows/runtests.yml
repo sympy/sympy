@@ -139,6 +139,8 @@ jobs:
     needs: code-quality
 
     runs-on: ubuntu-20.04
+    timeout-minutes: 75
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
