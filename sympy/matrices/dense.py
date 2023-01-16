@@ -192,7 +192,7 @@ def rot_givens(i, j, theta, dim=3):
                 0   & \cdots &    0   & \cdots &    0   & \cdots &    1
             \end{bmatrix}
 
-    Where ``c = \cos(\theta)`` and ``s = \sin(\theta)`` appear at the intersections
+    Where $c = \cos(\theta)$ and $s = \sin(\theta)$ appear at the intersections
     ``i``\th and ``j``\th rows and columns.
 
     For fixed ``i > j``\, the non-zero elements of a Givens matrix are given by:
