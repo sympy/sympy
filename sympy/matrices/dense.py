@@ -399,11 +399,6 @@ def rot_axis2(theta):
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (counterclockwise around the z axis)
     """
-    ct = cos(theta)
-    st = sin(theta)
-    lil = ((ct, 0, -st),
-           (0, 1, 0),
-           (st, 0, ct))
     return rot_givens(3, 1, theta, dim=3)
 
 
