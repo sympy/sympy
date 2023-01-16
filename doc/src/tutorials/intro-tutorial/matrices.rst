@@ -231,6 +231,182 @@ filled with `0`\ s.
     ⎢           ⎥
     ⎣0   0  0  5⎦
 
+
+Random Matrices
+---------------
+
+To create Matrices with specific properties use one of
+the random matrix generation functions, e.g.
+``invertible``, ``triangular``, ``orthogonal``.
+Find a :ref:`full list of random matrices <matrices-random>`.
+
+    .. ..testsetup::
+
+       >>> from sympy.core.random import rng, seed
+       >>> _rng_state = rng.getstate()
+       >>> seed(0)
+
+    >>> from sympy.matrices.random import invertible, triangular, orthogonal
+    >>> from sympy import simplify
+
+    >>> M = invertible(3)  # only integer entries
+    >>> M
+    ⎡1  1  0⎤
+    ⎢       ⎥
+    ⎢1  2  0⎥
+    ⎢       ⎥
+    ⎣0  2  1⎦
+    >>> M.inv()
+    ⎡2   -1  0⎤
+    ⎢         ⎥
+    ⎢-1  1   0⎥
+    ⎢         ⎥
+    ⎣2   -2  1⎦
+
+    >>> M = invertible(3, scalars=(sqrt(2),))  # entries as sums and products of sqrt(2) and 1
+    >>> M
+    ⎡1   0   0 ⎤
+    ⎢          ⎥
+    ⎢0   1  -√2⎥
+    ⎢          ⎥
+    ⎣√2  0  -1 ⎦
+    >>> simplify(M.inv()*M)
+    ⎡1  0  0⎤
+    ⎢       ⎥
+    ⎢0  1  0⎥
+    ⎢       ⎥
+    ⎣0  0  1⎦
+
+
+    >>> M = triangular(3, scalars=(1, sqrt(2)))
+    >>> M
+    ⎡-1  0  0 ⎤
+    ⎢         ⎥
+    ⎢0   1  1 ⎥
+    ⎢         ⎥
+    ⎣0   0  -1⎦
+    >>> M.inv()
+    ⎡-1  0  0 ⎤
+    ⎢         ⎥
+    ⎢0   1  1 ⎥
+    ⎢         ⎥
+    ⎣0   0  -1⎦
+
+    .. ..testsetup::
+
+       >>> seed(1)
+
+    >>> M = orthogonal(3, length=6)
+    >>> M
+    ⎡-1   0     0  ⎤
+    ⎢              ⎥
+    ⎢     √2   -√2 ⎥
+    ⎢0    ──   ────⎥
+    ⎢     2     2  ⎥
+    ⎢              ⎥
+    ⎢    -√2   -√2 ⎥
+    ⎢0   ────  ────⎥
+    ⎣     2     2  ⎦
+    >>> M.T*M
+    ⎡1  0  0⎤
+    ⎢       ⎥
+    ⎢0  1  0⎥
+    ⎢       ⎥
+    ⎣0  0  1⎦
+
+And symbolic matrices work, too.
+
+    .. ..testsetup::
+
+       >>> seed(0)
+
+    >>> from sympy import symbols, cos, sin
+
+    >>> phi = symbols('phi')
+    >>> scalars = cos(phi), sin(phi)
+    >>> M = orthogonal(3, scalars=scalars, length=1)
+    >>> M
+    ⎡                      _____________   ⎤
+    ⎢                     ╱        2       ⎥
+    ⎢     sin(φ)       -╲╱  1 - sin (φ)   0⎥
+    ⎢                                      ⎥
+    ⎢   _____________                      ⎥
+    ⎢  ╱        2                          ⎥
+    ⎢╲╱  1 - sin (φ)        sin(φ)        0⎥
+    ⎢                                      ⎥
+    ⎣       0                  0          1⎦
+    >>> M.T*M
+    ⎡1  0  0⎤
+    ⎢       ⎥
+    ⎢0  1  0⎥
+    ⎢       ⎥
+    ⎣0  0  1⎦
+
+Using matrices to construct a matrix with integer entries
+which has an inverse with integer entries, too.
+
+    .. ..testsetup::
+
+       >>> seed(0)
+
+    >>> from sympy.matrices.random import invertible
+
+    >>> A = invertible(4, scalars=(1,-1))
+    >>> A
+    ⎡1   0  0   0 ⎤
+    ⎢             ⎥
+    ⎢0   1  1   -1⎥
+    ⎢             ⎥
+    ⎢1   0  -1  0 ⎥
+    ⎢             ⎥
+    ⎣-1  0  1   -1⎦
+    >>> A.inv()
+    ⎡1   0  0   0 ⎤
+    ⎢             ⎥
+    ⎢-1  1  0   -1⎥
+    ⎢             ⎥
+    ⎢1   0  -1  0 ⎥
+    ⎢             ⎥
+    ⎣0   0  -1  -1⎦
+
+Using matrices to construct a quadric,
+a quadratic equation in multiple variables
+
+    .. ..testsetup::
+
+       >>> seed(8)
+
+
+    >>> from sympy import diag
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.matrices.random import orthogonal
+
+    >>> xyz = Matrix([x, y, z])
+    >>> D = diag(1, 2, 3)
+    >>> S = orthogonal(3)
+    >>> S.T * D * S
+    ⎡            -√2 ⎤
+    ⎢ 2     0    ────⎥
+    ⎢             2  ⎥
+    ⎢                ⎥
+    ⎢            -√2 ⎥
+    ⎢ 0     2    ────⎥
+    ⎢             2  ⎥
+    ⎢                ⎥
+    ⎢-√2   -√2       ⎥
+    ⎢────  ────   2  ⎥
+    ⎣ 2     2        ⎦
+    >>> q = expand(xyz.T * S.T * D * S * xyz)[0, 0].as_expr()
+    >>> q
+       2               2               2
+    2⋅x  - √2⋅x⋅z + 2⋅y  - √2⋅y⋅z + 2⋅z
+
+    .. ..testcleanup::
+
+       >>> assert not rng.getstate() == _rng_state
+       >>> rng.setstate(_rng_state)
+       >>> assert rng.getstate() == _rng_state
+
 Advanced Methods
 ================
 
