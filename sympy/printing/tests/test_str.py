@@ -1155,6 +1155,10 @@ def test_diffgeom():
     b = BaseScalarField(rect, 0)
     assert str(b) == "x"
 
+def test_issue_19345():
+    assert str(1/UnevaluatedExpr(sqrt(pi))) == '1/(sqrt(pi))'
+
+
 def test_NDimArray():
     assert sstr(NDimArray(1.0), full_prec=True) == '1.00000000000000'
     assert sstr(NDimArray(1.0), full_prec=False) == '1.0'
