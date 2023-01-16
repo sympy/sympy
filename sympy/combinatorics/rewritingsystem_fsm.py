@@ -144,7 +144,7 @@ def epsilon_closure(
     ==========
 
     .. [*] Aho, Alfred V., Monica S. Lam, Ravi Sethi and Jeffrey D. Ullman.
-       “Compilers: Principles, Techniques, and Tools (2nd Edition).” (2006).
+       "Compilers: Principles, Techniques, and Tools (2nd Edition)." (2006).
     """
     stack: list[_N] = list(states)
     closure = set(stack)
@@ -348,11 +348,11 @@ def subset_construction(
     ==========
 
     .. [*] Gertjan van Noord; Treatment of Epsilon Moves in Subset
-       Construction. Computational Linguistics 2000; 26 (1): 61–76.
+       Construction. Computational Linguistics 2000; 26 (1): 61-76.
        doi: https://doi.org/10.1162/089120100561638
 
     .. [*] Aho, Alfred V., Monica S. Lam, Ravi Sethi and Jeffrey D. Ullman.
-       “Compilers: Principles, Techniques, and Tools (2nd Edition).” (2006).
+       "Compilers: Principles, Techniques, and Tools (2nd Edition)." (2006).
     """
     _start = frozenset(start)
     stack: list[frozenset[_N]] = [_start]
@@ -468,11 +468,11 @@ def subset_construction_epsilon(
     ==========
 
     .. [*] Gertjan van Noord; Treatment of Epsilon Moves in Subset
-       Construction. Computational Linguistics 2000; 26 (1): 61–76.
+       Construction. Computational Linguistics 2000; 26 (1): 61-76.
        doi: https://doi.org/10.1162/089120100561638
 
     .. [*] Aho, Alfred V., Monica S. Lam, Ravi Sethi and Jeffrey D. Ullman.
-       “Compilers: Principles, Techniques, and Tools (2nd Edition).” (2006).
+       "Compilers: Principles, Techniques, and Tools (2nd Edition)." (2006).
     """
     _start = frozenset(start)
     stack: list[frozenset[_N]] = [_start]
