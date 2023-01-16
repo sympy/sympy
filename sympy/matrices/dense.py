@@ -212,8 +212,7 @@ def rot_givens(i, j, theta, dim=3):
     j : int between 1 and dim
         Represents second axis
     dim : int bigger than 1
-        Default : 3
-        Represents number of dimentions
+        Number of dimentions. Defaults to 3.
 
     Examples
     ========
