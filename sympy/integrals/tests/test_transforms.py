@@ -577,7 +577,7 @@ def test_laplace_transform():
     assert LT(log(t)**2, t, s) ==\
         (((log(s) + EulerGamma)**2 + pi**2/6)/s, 0, True)
     assert LT(exp(-a*t)*log(t), t, s) ==\
-        ((-log(a + s) - EulerGamma)/(a + s), 0, True)
+        ((-log(a + s) - EulerGamma)/(a + s), -a, True)
     assert LT(sin(a*t), t, s) == (a/(a**2 + s**2), 0, True)
     assert LT(Abs(sin(a*t)), t, s) ==\
         (a*coth(pi*s/(2*a))/(a**2 + s**2), 0, True)
@@ -605,9 +605,9 @@ def test_laplace_transform():
          0, True)
     assert LT(-a*t*cos(a*t) + sin(a*t), t, s) ==\
         (2*a**3/(a**4 + 2*a**2*s**2 + s**4), 0, True)
-    assert LT(c*exp(-b*t)*sin(a*t), t, s) == (a*c/(a**2 + (b + s)**2), 0, True)
+    assert LT(c*exp(-b*t)*sin(a*t), t, s) == (a*c/(a**2 + (b + s)**2), -b, True)
     assert LT(c*exp(-b*t)*cos(a*t), t, s) == ((b + s)*c/(a**2 + (b + s)**2),
-                                              0, True)
+                                              -b, True)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
     # Error functions (laplace7.pdf)
     assert LT(erf(a*t), t, s) == (exp(s**2/(4*a**2))*erfc(s/(2*a))/s, 0, True)
@@ -652,7 +652,7 @@ def test_laplace_transform():
     assert LT(bessely(0, a*t), t, s) ==\
         (-2*asinh(s/a)/(pi*sqrt(a**2 + s**2)), 0, True)
     assert LT(besselk(0, a*t), t, s) ==\
-        (log(s + sqrt(-a**2 + s**2))/sqrt(-a**2 + s**2), -a, True)
+        (log((s + sqrt(-a**2 + s**2))/a)/sqrt(-a**2 + s**2), -a, True)
     assert LT(sin(a*t)**8, t, s) ==\
         (40320*a**8/(s*(147456*a**8 + 52480*a**6*s**2 + 4368*a**4*s**4 +\
                         120*a**2*s**6 + s**8)), 0, True)
@@ -671,7 +671,7 @@ def test_laplace_transform():
     assert LT(exp(-a*t)*f(t), t, s) ==\
         (LaplaceTransform(f(t), t, a + s), -oo, True)
     assert LT(exp(-a*t)*erfc(sqrt(b/t)/2), t, s) ==\
-        (exp(-sqrt(b)*sqrt(a + s))/(a + s), 0, True)
+        (exp(-sqrt(b)*sqrt(a + s))/(a + s), -a, True)
     assert LT(sinh(a*t)*f(t), t, s) ==\
         (LaplaceTransform(f(t), t, -a + s)/2 -\
          LaplaceTransform(f(t), t, a + s)/2, -oo, True)
@@ -710,7 +710,7 @@ def test_laplace_transform():
     assert LT(10*diff(f(t), (t, 1)), t, s, noconds=True) ==\
         10*s*LaplaceTransform(f(t), t, s) - 10*f(0)
     assert LT(a*f(b*t)+g(c*t), t, s, noconds=True) ==\
-        a*LaplaceTransform(f(t), t, s/b)/b + LaplaceTransform(g(t), t, s/c)/c
+        LaplaceTransform(a*f(b*t), t, s) + LaplaceTransform(g(t), t, s/c)/c
     assert inverse_laplace_transform(
         f(w), w, t, plane=0) == InverseLaplaceTransform(f(w), w, t, 0)
     assert LT(f(t)*g(t), t, s, noconds=True) ==\
@@ -728,18 +728,18 @@ def test_laplace_transform():
         == exp(-b)/(s**2 - 1)
 
     # DiracDelta function: standard cases
-    assert LT(DiracDelta(t), t, s) == (1, 0, True)
-    assert LT(DiracDelta(a*t), t, s) == (1/a, 0, True)
-    assert LT(DiracDelta(t/42), t, s) == (42, 0, True)
-    assert LT(DiracDelta(t+42), t, s) == (0, 0, True)
+    assert LT(DiracDelta(t), t, s) == (1, -oo, True)
+    assert LT(DiracDelta(a*t), t, s) == (1/a, -oo, True)
+    assert LT(DiracDelta(t/42), t, s) == (42, -oo, True)
+    assert LT(DiracDelta(t+42), t, s) == (0, -oo, True)
     assert LT(DiracDelta(t)+DiracDelta(t-42), t, s) == \
-        (1 + exp(-42*s), 0, True)
-    assert LT(DiracDelta(t)-a*exp(-a*t), t, s) == (s/(a + s), 0, True)
+        (1 + exp(-42*s), -oo, True)
+    assert LT(DiracDelta(t)-a*exp(-a*t), t, s) == (s/(a + s), -a, True)
     assert LT(exp(-t)*(DiracDelta(t)+DiracDelta(t-42)), t, s) == \
-        (exp(-42*s - 42) + 1, 0, True)
-    assert LT(f(t)*DiracDelta(t-42), t, s) == (f(42)*exp(-42*s), -42, True)
+        (exp(-42*s - 42) + 1, -oo, True)
+    assert LT(f(t)*DiracDelta(t-42), t, s) == (f(42)*exp(-42*s), -oo, True)
     assert LT(f(t)*DiracDelta(b*t-a), t, s) == (f(a/b)*exp(-a*s/b)/b,
-                                                -a/b, True)
+                                                -oo, True)
     assert LT(f(t)*DiracDelta(b*t+a), t, s) == (0, -oo, True)
 
     # Collection of cases that cannot be fully evaluated and/or would catch
@@ -752,8 +752,8 @@ def test_laplace_transform():
     assert LT((DiracDelta(t) + 1)*(DiracDelta(t - 1) + 1), t, s) == \
         (LaplaceTransform(DiracDelta(t)*DiracDelta(t - 1), t, s) + \
          1 + exp(-s) + 1/s, 0, True)
-    assert LT(DiracDelta(2*t-2*exp(a)), t, s) == (exp(-s*exp(a))/2, 0, True)
-    assert LT(DiracDelta(-2*t+2*exp(a)), t, s) == (exp(-s*exp(a))/2, 0, True)
+    assert LT(DiracDelta(2*t-2*exp(a)), t, s) == (exp(-s*exp(a))/2, -oo, True)
+    assert LT(DiracDelta(-2*t+2*exp(a)), t, s) == (exp(-s*exp(a))/2, -oo, True)
 
     # Heaviside tests
     assert LT(Heaviside(t), t, s) == (1/s, 0, True)
@@ -762,6 +762,8 @@ def test_laplace_transform():
     assert LT(Heaviside(2*t-4), t, s) == (exp(-2*s)/s, 0, True)
     assert LT(Heaviside(2*t+4), t, s) == (1/s, 0, True)
     assert LT(Heaviside(-2*t+4), t, s) == (1/s - exp(-2*s)/s, 0, True)
+    assert LT(g(t)*Heaviside(t - w), t, s) ==\
+        (LaplaceTransform(g(t)*Heaviside(t - w), t, s), -oo, True)
 
     # Fresnel functions
     assert laplace_transform(fresnels(t), t, s) == \
