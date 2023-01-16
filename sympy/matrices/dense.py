@@ -129,7 +129,7 @@ MutableMatrix = Matrix = MutableDenseMatrix
 
 ###########
 # Numpy Utility Functions:
-# list2numpy, matrix2numpy, symmarray, rot_axis[123]
+# list2numpy, matrix2numpy, symmarray
 ###########
 
 
@@ -165,8 +165,11 @@ def matrix2numpy(m, dtype=object):  # pragma: no cover
 
 
 def rot_axis3(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 3-axis.
+    """Returns a rotation matrix for a rotation of theta (in radians)
+    about the 3-axis.
+
+    For a right-handed coordinate system, this corresponds to a
+    clockwise rotation.
 
     Examples
     ========
@@ -206,9 +209,18 @@ def rot_axis3(theta):
     return Matrix(lil)
 
 
+###########
+# Rotation matrices in 3D:
+# rot_axis[123], rot_ccw_axis[123]
+###########
+
+
 def rot_axis2(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 2-axis.
+    """Returns a rotation matrix for a rotation of theta (in radians)
+    about the 2-axis.
+
+    For a right-handed coordinate system, this corresponds to a
+    clockwise rotation.
 
     Examples
     ========
@@ -249,8 +261,11 @@ def rot_axis2(theta):
 
 
 def rot_axis1(theta):
-    """Returns a rotation matrix for a rotation of theta (in radians) about
-    the 1-axis.
+    """Returns a rotation matrix for a rotation of theta (in radians)
+    about the 1-axis.
+
+    For a right-handed coordinate system, this corresponds to a
+    clockwise rotation.
 
     Examples
     ========
@@ -288,6 +303,126 @@ def rot_axis1(theta):
            (0, ct, st),
            (0, -st, ct))
     return Matrix(lil)
+
+
+def rot_ccw_axis3(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians)
+    about the 3-axis.
+
+    For a right-handed coordinate system, this corresponds to a
+    counterclockwise rotation.
+
+    Examples
+    ========
+
+    >>> from sympy import pi, rot_ccw_axis3
+
+    A rotation of pi/3 (60 degrees):
+
+    >>> theta = pi/3
+    >>> rot_ccw_axis3(theta)
+    Matrix([
+    [      1/2, -sqrt(3)/2, 0],
+    [sqrt(3)/2,        1/2, 0],
+    [        0,          0, 1]])
+
+    If we rotate by pi/2 (90 degrees):
+
+    >>> rot_ccw_axis3(pi/2)
+    Matrix([
+    [0, -1, 0],
+    [1,  0, 0],
+    [0,  0, 1]])
+
+    See Also
+    ========
+
+    rot_ccw_axis1: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 1-axis
+    rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 2-axis
+    """
+    return rot_axis3(-theta)
+
+
+def rot_ccw_axis2(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians)
+    about the 2-axis.
+
+    For a right-handed coordinate system, this corresponds to a
+    counterclockwise rotation.
+
+    Examples
+    ========
+
+    >>> from sympy import pi, rot_ccw_axis2
+
+    A rotation of pi/3 (60 degrees):
+
+    >>> theta = pi/3
+    >>> rot_ccw_axis2(theta)
+    Matrix([
+    [       1/2, 0, sqrt(3)/2],
+    [         0, 1,         0],
+    [-sqrt(3)/2, 0,       1/2]])
+
+    If we rotate by pi/2 (90 degrees):
+
+    >>> rot_ccw_axis2(pi/2)
+    Matrix([
+    [ 0,  0,  1],
+    [ 0,  1,  0],
+    [-1,  0,  0]])
+
+    See Also
+    ========
+
+    rot_ccw_axis1: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 1-axis
+    rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 3-axis
+    """
+    return rot_axis2(-theta)
+
+
+def rot_ccw_axis1(theta):
+    """Returns a rotation matrix for a rotation of theta (in radians)
+    about the 1-axis.
+
+    For a right-handed coordinate system, this corresponds to a
+    counterclockwise rotation.
+
+    Examples
+    ========
+
+    >>> from sympy import pi, rot_ccw_axis1
+
+    A rotation of pi/3 (60 degrees):
+
+    >>> theta = pi/3
+    >>> rot_ccw_axis1(theta)
+    Matrix([
+    [1,         0,          0],
+    [0,       1/2, -sqrt(3)/2],
+    [0, sqrt(3)/2,        1/2]])
+
+    If we rotate by pi/2 (90 degrees):
+
+    >>> rot_ccw_axis1(pi/2)
+    Matrix([
+    [1, 0,  0],
+    [0, 0, -1],
+    [0, 1,  0]])
+
+    See Also
+    ========
+
+    rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 2-axis
+    rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 3-axis
+    """
+    return rot_axis1(-theta)
 
 
 @doctest_depends_on(modules=('numpy',))
