@@ -1,5 +1,6 @@
 """
-Evaluates quantum expressions by applying operators to operators and states.
+Evaluates quantum expressions by applying operators to operators and states
+and general expressions by multiplying factors and distributing over summands
 """
 # The following is internal documentation. Not part of the module docstring.
 """
@@ -64,7 +65,7 @@ coefficients). Classical outer/inner product is implemented by physics.\
 vector.functions.outer resp. physics.vector.functions.dot or matrices.dot.
 """
 
-from typing import cast, Any, List, Tuple, Type, Callable # for Python 3.8 typing
+from typing import cast, Any, List, Tuple, Type, Callable, Optional # Python 3.8
 from sympy.core.expr import Expr, AtomicExpr
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -99,20 +100,23 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
                    mul = True, tensorproduct = None,
                    power_base = None, power_exp = False, nested_exp = None,
                    apply_exp = False, **options ) -> Expr:
-    """Apply operators to operators and states in a quantum expression.
+    """Knows about quantum objects and invokes their methods
+    _apply_operator and _apply_from_right_to. Applies SymPy standards to
+    apply resp. multiply all other objects in an expression.
 
     Parameters
     ==========
 
     e : Expr
-        The expression containing operators and states. This expression tree will
-        be walked to find operators acting on operators and states symbolically.
+        The expression containing operators, states resp. factors, summands and
+        powers. The expression tree will be walked and operators resp.
+        factors and powers applied and distributed over summands.
     options : dict
         A dict of key/value pairs that determine how the operator actions are
-        carried out. The options are passed on to invocations of operator methods
-        <lhs>._apply_operator_<rhs>() and <rhs>._apply_from_right_to_<lhs>().
+        carried out. All options are passed to operator methods
+        like _apply_operator_<rhs>() or _apply_from_right_to_<lhs>().
 
-        The following options are defined for qapply itself:
+        The following options modify the action of qapply itself:
 
         * ``dagger``: if a * b doesn't compute, also try ``Dagger(Dagger(b)*Dagger(a))``
           (default: False).
@@ -121,17 +125,18 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
         * ``op_join``: rewrite ket * bra as outer product ``OuterProduct(ket, bra)``
           and avoid breaking them up to ket * bra (default: True).
         * ``mul``: distribute commutative factors over sums. Corresponds to option ``mul``
-          of ``expand``. ``mul=False`` will return application only (default: True).
-        * ``tensorproduct``: Expand sums in factors of ``TensorProduct``s into sums of
-          ``TensorProduct``s (same option as in ``expand``) (default: value of option ``mul``).
+          of ``expand``. ``mul=False`` will do the minimal application only. Use when
+          expansion is slow (default: True).
+        * ``tensorproduct``: Expand sums in factors of ``TensorProduct`` into sums of
+          ``TensorProduct`` (same option as in ``expand``) (default: value of option ``mul``).
         * ``power_base``: for commutative factors, split powers of multiplied bases
           (same option as in ``expand``) (default: value of option ``mul``).
         * ``power_exp``: for cummutative factors, expand addition in exponents into
           multiplied bases (same option as in ``expand``) (default: False).
         * ``nested_exp``: if powers are nested and exponents may be multiplied, expand
           the product of the exponents (default: value of option ``mul``).
-        * ``apply_exp``: use qapply on exponents. Default is to process exponents "as
-          provided" (default: False).
+        * ``apply_exp``: use qapply on exponents before applying them to base. Default
+          is to apply exponents "as provided" (default: False).
 
 
     Returns
@@ -941,8 +946,8 @@ def qapply(e:Expr, ip_doit = True, dagger = False, op_join = True,
         # this permits modification of obj.is_commutative:
         __slots__ = ('is_commutative', 'atomic', '_b_sp_l', '_b_sp_r')
 
-        def __new__(cls, base:Expr, exp:Expr, atomic:bool=None,
-                                b_sp_l:Tuple=tuple(), b_sp_r:Tuple=tuple()):
+        def __new__(cls, base:Expr, exp:Expr, atomic:Optional[bool]=None,
+                                b_sp_l:Tuple=tuple(), b_sp_r:Tuple = tuple()):
             """Extension of Pow with additional data. From within qapply no default
             arguments are permitted since atomic==None flags external invocation."""
             if exp is S.Zero:  return S.One    # by sympy convention, see Pow.
