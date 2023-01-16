@@ -164,12 +164,29 @@ def matrix2numpy(m, dtype=object):  # pragma: no cover
     return a
 
 
+###########
+# Rotation matrices in 3D:
+# rot_axis[123], rot_ccw_axis[123]
+###########
+
+
 def rot_axis3(theta):
     """Returns a rotation matrix for a rotation of theta (in radians)
     about the 3-axis.
 
+    Explanation
+    ===========
+
     For a right-handed coordinate system, this corresponds to a
-    clockwise rotation.
+    clockwise rotation around the `z`-axis, given by:
+
+    .. math::
+
+        R  = \begin{bmatrix}
+                cos{\left(\theta \right)} & \sin{\left(\theta \right)} & 0\\
+                - \sin{\left(\theta \right)} & \cos{\left(\theta \right)} & 0\\
+                0 & 0 & 1
+            \end{bmatrix}
 
     Examples
     ========
@@ -196,10 +213,12 @@ def rot_axis3(theta):
     See Also
     ========
 
+    rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 3-axis (counterclockwise around the z axis)
     rot_axis1: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 1-axis
+        about the 1-axis (clockwise around the x axis)
     rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 2-axis
+        about the 2-axis (clockwise around the y axis)
     """
     ct = cos(theta)
     st = sin(theta)
@@ -209,18 +228,23 @@ def rot_axis3(theta):
     return Matrix(lil)
 
 
-###########
-# Rotation matrices in 3D:
-# rot_axis[123], rot_ccw_axis[123]
-###########
-
-
 def rot_axis2(theta):
     """Returns a rotation matrix for a rotation of theta (in radians)
     about the 2-axis.
 
+    Explanation
+    ===========
+
     For a right-handed coordinate system, this corresponds to a
-    clockwise rotation.
+    clockwise rotation around the `y`-axis, given by:
+
+    .. math::
+
+        R  = \begin{bmatrix}
+                \cos{\left(\theta \right)} & 0 & - \sin{\left(\theta \right)} \\
+                0 & 1 & 0 \\
+                \sin{\left(\theta \right)} & 0 & \cos{\left(\theta \right)}
+            \end{bmatrix}
 
     Examples
     ========
@@ -247,10 +271,12 @@ def rot_axis2(theta):
     See Also
     ========
 
+    rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 2-axis (clockwise around the y axis)
     rot_axis1: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 1-axis
+        about the 1-axis (counterclockwise around the x axis)
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 3-axis
+        about the 3-axis (counterclockwise around the z axis)
     """
     ct = cos(theta)
     st = sin(theta)
@@ -264,8 +290,19 @@ def rot_axis1(theta):
     """Returns a rotation matrix for a rotation of theta (in radians)
     about the 1-axis.
 
+    Explanation
+    ===========
+
     For a right-handed coordinate system, this corresponds to a
-    clockwise rotation.
+    clockwise rotation around the `x`-axis, given by:
+
+    .. math::
+
+        R  = \begin{bmatrix}
+                1 & 0 & 0 \\
+                0 & \cos{\left(\theta \right)} & \sin{\left(\theta \right)} \\
+                0 & - \sin{\left(\theta \right)} & \cos{\left(\theta \right)}
+            \end{bmatrix}
 
     Examples
     ========
@@ -292,10 +329,12 @@ def rot_axis1(theta):
     See Also
     ========
 
+    rot_ccw_axis1: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 1-axis (counterclockwise around the x axis)
     rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 2-axis
+        about the 2-axis (clockwise around the y axis)
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 3-axis
+        about the 3-axis (clockwise around the z axis)
     """
     ct = cos(theta)
     st = sin(theta)
@@ -309,8 +348,19 @@ def rot_ccw_axis3(theta):
     """Returns a rotation matrix for a rotation of theta (in radians)
     about the 3-axis.
 
+    Explanation
+    ===========
+
     For a right-handed coordinate system, this corresponds to a
-    counterclockwise rotation.
+    counterclockwise rotation around the `z`-axis, given by:
+
+    .. math::
+
+        R  = \begin{bmatrix}
+                \cos{\left(\theta \right)} & - \sin{\left(\theta \right)} & 0 \\
+                \sin{\left(\theta \right)} & \cos{\left(\theta \right)} & 0 \\
+                0 & 0 & 1
+            \end{bmatrix}
 
     Examples
     ========
@@ -337,10 +387,12 @@ def rot_ccw_axis3(theta):
     See Also
     ========
 
+    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 3-axis (clockwise around the z axis)
     rot_ccw_axis1: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 1-axis
+        about the 1-axis (counterclockwise around the x axis)
     rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 2-axis
+        about the 2-axis (counterclockwise around the y axis)
     """
     return rot_axis3(-theta)
 
@@ -349,8 +401,19 @@ def rot_ccw_axis2(theta):
     """Returns a rotation matrix for a rotation of theta (in radians)
     about the 2-axis.
 
+    Explanation
+    ===========
+
     For a right-handed coordinate system, this corresponds to a
-    counterclockwise rotation.
+    counterclockwise rotation around the `y`-axis, given by:
+
+    .. math::
+
+        R  = \begin{bmatrix}
+                \cos{\left(\theta \right)} & 0 & \sin{\left(\theta \right)} \\
+                0 & 1 & 0 \\
+                - \sin{\left(\theta \right)} & 0 & \cos{\left(\theta \right)}
+            \end{bmatrix}
 
     Examples
     ========
@@ -377,10 +440,12 @@ def rot_ccw_axis2(theta):
     See Also
     ========
 
+    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 2-axis (clockwise around the y axis)
     rot_ccw_axis1: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 1-axis
+        about the 1-axis (counterclockwise around the x axis)
     rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 3-axis
+        about the 3-axis (counterclockwise around the z axis)
     """
     return rot_axis2(-theta)
 
@@ -389,8 +454,19 @@ def rot_ccw_axis1(theta):
     """Returns a rotation matrix for a rotation of theta (in radians)
     about the 1-axis.
 
+    Explanation
+    ===========
+
     For a right-handed coordinate system, this corresponds to a
-    counterclockwise rotation.
+    counterclockwise rotation around the `x`-axis, given by:
+
+    .. math::
+
+        R  = \begin{bmatrix}
+                1 & 0 & 0 \\
+                0 & \cos{\left(\theta \right)} & - \sin{\left(\theta \right)} \\
+                0 & \sin{\left(\theta \right)} & \cos{\left(\theta \right)}
+            \end{bmatrix}
 
     Examples
     ========
@@ -417,10 +493,12 @@ def rot_ccw_axis1(theta):
     See Also
     ========
 
+    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians)
+        about the 1-axis (clockwise around the x axis)
     rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 2-axis
+        about the 2-axis (counterclockwise around the y axis)
     rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
-        about the 3-axis
+        about the 3-axis (counterclockwise around the z axis)
     """
     return rot_axis1(-theta)
 
