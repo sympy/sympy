@@ -31,6 +31,10 @@ pull request, or even before committing a change.
   directories in the `sympy/` source. See the guide on [writing
   tests](writing-tests).
 
+- [ ] **New public functions and methods should have a docstring.**
+
+- [ ] **Docstrings should include [doctests](writing-tests-doctests).**
+
 - [ ] **Make sure all tests pass.** [You may want to run a relevant subset of
   the test suite locally](workflow-process-run-tests) before committing (e.g.,
   `./bin/test solvers`). When you open a pull request, all tests will be run
