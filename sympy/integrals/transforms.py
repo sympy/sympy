@@ -8,7 +8,8 @@ from sympy.core.function import (AppliedUndef, count_ops, Derivative, expand,
                                  Function, Lambda, WildFunction, diff)
 from sympy.core.mul import Mul, prod
 from sympy.core.numbers import igcd, ilcm
-from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
+from sympy.core.relational import (_canonical, Ge, Gt, Lt, Unequality, Eq,
+                                   is_gt)
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.core.traversal import postorder_traversal
@@ -1425,7 +1426,7 @@ def _laplace_rule_timescale(f, t, s):
     if ma1:
         arg = ma1[g].args[0].collect(t)
         ma2 = arg.match(a*t)
-        if ma2 and ma2[a].is_real and ma2[a]>0 and not ma2[a]==1:
+        if ma2 and ma2[a].is_positive and not ma2[a]==1:
             debug('_laplace_apply_prog rules match:')
             debug('      f:    %s _ %s, %s )'%(f, ma1, ma2))
             debug('      rule: time scaling (4.1.4)')
@@ -1455,7 +1456,7 @@ def _laplace_rule_heaviside(f, t, s):
     ma1 = f.match(Heaviside(y)*g)
     if ma1:
         ma2 = ma1[y].match(t-a)
-        if ma2 and ma2[a].is_real and ma2[a]>0:
+        if ma2 and ma2[a].is_positive:
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: time shift (4.1.4)')
@@ -1463,7 +1464,7 @@ def _laplace_rule_heaviside(f, t, s):
                 .doit(noconds=False, simplify=False)
             return True, (exp(-ma2[a]*s)*r,
                           Max(p, pr), And(c, cr))
-        if ma2 and ma2[a].is_real and ma2[a]<0:
+        if ma2 and ma2[a].is_negative:
             debug('_laplace_apply_prog_rules match:')
             debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
             debug('      rule: Heaviside factor with negative time shift (4.1.4)')
@@ -1552,7 +1553,7 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
                  (sin(y),  '1.8', -I, -1, I), (cos(y),  '1.9', 1, 1, I)]
     for trigrule in trigrules:
         fm, nu, s1, s2, sd = trigrule
-        ma1 = f.match(fm*z)
+        ma1 = f.match(z*fm)
         if ma1:
             ma2 = ma1[y].collect(t).match(a*t)
             if ma2:
@@ -1688,7 +1689,7 @@ def _laplace_apply_prog_rules(f, t, s):
     prog_rules = [_laplace_rule_heaviside, _laplace_rule_delta,
                   _laplace_rule_timescale, _laplace_rule_exp,
                   _laplace_rule_trig,
-                  _laplace_rule_diff, _laplace_rule_sdiff ]
+                  _laplace_rule_diff, _laplace_rule_sdiff]
 
     for p_rule in prog_rules:
         d, L = p_rule((fn, p, c), t, s)
@@ -1746,7 +1747,7 @@ class LaplaceTransform(IntegralTransform):
     _name = 'Laplace'
 
     def _compute_transform(self, f, t, s, **hints):
-        _simplify = hints.get('simplify', True)
+        _simplify = hints.get('simplify', False)
         LT = _laplace_transform(f, t, s, simplify=_simplify)
         return _laplace_cr(LT, **hints)
 
@@ -1791,7 +1792,7 @@ class LaplaceTransform(IntegralTransform):
         the default behaviour.
         """
         _noconds = hints.get('noconds', True)
-        _simplify = hints.get('simplify', True)
+        _simplify = hints.get('simplify', False)
 
         debug('[LT doit] (%s, %s, %s)'%(self.function,
                                         self.function_variable,
@@ -1799,25 +1800,23 @@ class LaplaceTransform(IntegralTransform):
 
         t_ = self.function_variable
         s_ = self.transform_variable
-        k, fn = self.function.as_independent(t_, as_Add=False)
-
-        # if fn.has(Heaviside(t_)) and not fn.has(DiracDelta(t_)):
-        #     fn = fn.replace(Heaviside(t_), 1)
+        fn = self.function
 
         terms = Add.make_args(fn)
         results = []
-        for f in terms:
+        for ff in terms:
+            k, f = ff.as_independent(t_, as_Add=False)
             d, r = _laplace_apply_simple_rules(f, t_, s_)
             if d:
-                results.append(r)
+                results.append((k*r[0], r[1], r[2]))
                 continue
             d, r = _laplace_apply_prog_rules(f, t_, s_)
             if d:
-                results.append(r)
+                results.append((k*r[0], r[1], r[2]))
                 continue
             d, r = _laplace_expand(f, t_, s_)
             if d:
-                results.append(r)
+                results.append((k*r[0], r[1], r[2]))
                 continue
             T = None
             try_directly = not any(func.has(t_)
@@ -1828,10 +1827,10 @@ class LaplaceTransform(IntegralTransform):
                 except IntegralTransformError:
                     T = None
             if T is not None:
-                r_, p_, c_ = _laplace_ct(T)
-                results.append((r_, p_, c_))
+                r = _laplace_ct(T)
+                results.append((k*r[0], r[1], r[2]))
             else:
-                results.append(_laplace_ct(LaplaceTransform(f, t_, s_)))
+                results.append(_laplace_ct(k*LaplaceTransform(f, t_, s_)))
 
         r = []
         p = []
@@ -1843,14 +1842,14 @@ class LaplaceTransform(IntegralTransform):
 
         if _noconds:
             if _simplify:
-                return (k*Add(*r)).simplify(doit=False)
+                return Add(*r).simplify(doit=False)
             else:
-                return (k*Add(*r))
+                return Add(*r)
         else:
             if _simplify:
-                return (k*Add(*r)).simplify(doit=False), Max(*p), And(*c)
+                return Add(*r).simplify(doit=False), Max(*p), And(*c)
             else:
-                return (k*Add(*r)), Max(*p), And(*c)
+                return Add(*r), Max(*p), And(*c)
 
 def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
@@ -1911,9 +1910,9 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> laplace_transform(t**4, t, s)
     (24/s**5, 0, True)
     >>> laplace_transform(t**a, t, s)
-    (s**(-a - 1)*gamma(a + 1), 0, re(a) > -1)
-    >>> laplace_transform(DiracDelta(t)-a*exp(-a*t),t,s)
-    (s/(a + s), -re(a), True)
+    (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
+    >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s, simplify=True)
+    (s/(a + s), -a, True)
 
     See Also
     ========
@@ -1924,7 +1923,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     """
 
     _noconds = hints.get('noconds', False)
-    _simplify = hints.get('simplify', True)
+    _simplify = hints.get('simplify', False)
 
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
 
