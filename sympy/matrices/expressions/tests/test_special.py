@@ -79,8 +79,7 @@ def test_generic_identity():
     assert A != I
 
     assert I.is_Identity
-    # XXX Should we need to undefine this?
-    # assert I**-1 == I
+    assert I**-1 == I
 
     raises(TypeError, lambda: I.shape)
     raises(TypeError, lambda: I.rows)
