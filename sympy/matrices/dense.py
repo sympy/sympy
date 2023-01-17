@@ -305,9 +305,9 @@ def rot_axis3(theta):
     .. math::
 
         R  = \begin{bmatrix}
-                \cos(\theta) & \sin(\theta) & 0\\
-                -\sin(\theta) & \cos(\theta) & 0\\
-                0 & 0 & 1
+                 \cos(\theta) & \sin(\theta) & 0 \\
+                -\sin(\theta) & \cos(\theta) & 0 \\
+                            0 &            0 & 1
             \end{bmatrix}
 
     Examples
@@ -361,8 +361,8 @@ def rot_axis2(theta):
 
         R  = \begin{bmatrix}
                 \cos(\theta) & 0 & -\sin(\theta) \\
-                0 & 1 & 0 \\
-                \sin(\theta) & 0 & \cos(\theta)
+                           0 & 1 &             0 \\
+                \sin(\theta) & 0 &  \cos(\theta)
             \end{bmatrix}
 
     Examples
@@ -415,8 +415,8 @@ def rot_axis1(theta):
     .. math::
 
         R  = \begin{bmatrix}
-                1 & 0 & 0 \\
-                0 & \cos(\theta) & \sin(\theta) \\
+                1 &             0 &            0 \\
+                0 &  \cos(\theta) & \sin(\theta) \\
                 0 & -\sin(\theta) & \cos(\theta)
             \end{bmatrix}
 
@@ -471,8 +471,8 @@ def rot_ccw_axis3(theta):
 
         R  = \begin{bmatrix}
                 \cos(\theta) & -\sin(\theta) & 0 \\
-                \sin(\theta) & \cos(\theta) & 0 \\
-                0 & 0 & 1
+                \sin(\theta) &  \cos(\theta) & 0 \\
+                           0 &             0 & 1
             \end{bmatrix}
 
     Examples
@@ -525,8 +525,8 @@ def rot_ccw_axis2(theta):
     .. math::
 
         R  = \begin{bmatrix}
-                \cos(\theta) & 0 & \sin(\theta) \\
-                0 & 1 & 0 \\
+                 \cos(\theta) & 0 & \sin(\theta) \\
+                            0 & 1 &            0 \\
                 -\sin(\theta) & 0 & \cos(\theta)
             \end{bmatrix}
 
@@ -580,9 +580,9 @@ def rot_ccw_axis1(theta):
     .. math::
 
         R  = \begin{bmatrix}
-                1 & 0 & 0 \\
+                1 &            0 &             0 \\
                 0 & \cos(\theta) & -\sin(\theta) \\
-                0 & \sin(\theta) & \cos(\theta)
+                0 & \sin(\theta) &  \cos(\theta)
             \end{bmatrix}
 
     Examples
