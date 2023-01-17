@@ -1,4 +1,3 @@
-(writing-tests)=
 # Writing Tests
 
 The most important thing for a mathematical library like SymPy is correctness.
