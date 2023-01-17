@@ -534,9 +534,10 @@ def _test(*paths,
     # good enough for copying and pasting the failing test.
     _paths = []
     for path in paths:
-        _path, _kw = path.split('::', 1)
-        _paths.append(_path)
-        kw += (_kw,)
+        if '::' in path:
+            path, _kw = path.split('::', 1)
+            kw += (_kw,)
+        _paths.append(path)
     paths = _paths
 
     t = SymPyTests(r, kw, post_mortem, seed,
