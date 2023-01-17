@@ -218,8 +218,6 @@ deprecation as early as possible.
 Here is a checklist for doing a deprecation. See below for details
 on each step.
 
-
-
 - [ ]  Discuss the backwards incompatible change with the
 community. Ensure the change is really worth making as per the discussion
 above.
@@ -228,7 +226,6 @@ above.
 everywhere in the codebase (including doctest examples).
 
 - [ ]  Add {func}`~.sympy_deprecation_warning` to the code.
-
 
     - [ ]  Write a descriptive message for the
     {func}`~.sympy_deprecation_warning`. Make sure the message explains both what
