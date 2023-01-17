@@ -8,6 +8,59 @@ open source projects on GitHub. If you are new to GitHub, read the
 [](./dev-setup.md) guide first.
 ```
 
+(workflow-process-checklist)=
+## Checklist for Contributions
+
+Here's a checklist of things that need to be done when making a pull request
+to SymPy. These things all need to be done before a pull request is merged. It
+is not necessary to do all of them before the pull request is opened at all,
+but it is often a good idea to check the basic things first before opening a
+pull request, or even before committing a change.
+
+- [ ] **Make sure [code quality
+  checks](workflow-process-code-quality) pass.**
+
+  ```bash
+  ./bin/test quality
+  flake8 sympy/
+  ```
+
+- [ ] **[Add tests](workflow-process-add-tests).** All new functionality
+  should be tested. Bug fixes should add regression tests. Tests are written
+  in pytest `assert f(x) == y` style and are included in corresponding `tests`
+  directories in the `sympy/` source.
+
+- [ ] **Make sure all tests pass.** [You may want to run a relevant subset of
+  the test suite locally](workflow-process-run-tests) before committing (e.g.,
+  `./bin/test solvers`). When you open a pull request, all tests will be run
+  on CI. The CI must be all green before a PR can be merged.
+
+- [ ] **[Write good commit messages](workflow-process-commit-messages).**
+
+- [ ] (First time contributors only) **[Add your name to the `.mailmap`
+  file](mailmap-instructions)**. The "test / authors" CI build on GitHub will
+  fail if this is not done correctly.
+
+- [ ] **Cross reference relevant issues in the pull request description.** If
+  the pull request fixes an issue (i.e., the issue should be closed once the
+  PR is merged), use the ["fixes #123" syntax
+  ](https://help.github.com/articles/closing-issues-via-commit-messages).
+
+- [ ] **Add a comment to the original issue cross-referencing the pull
+  request** for visibility. If there is not a corresponding issue, this is OK.
+  It is not necessary to open an issue unless there are further improvements
+  needed beyond your PR.
+
+- [ ] **[Add a release notes
+  entry](https://github.com/sympy/sympy/wiki/Writing-Release-Notes).** This
+  should be done when opening the pull request, in the pull request
+  description field. It can be edited at any time before the pull request is
+  merged.
+
+- [ ] **Respond to review comments.** All SymPy pull requests must be reviewed
+  by someone else before they can be merged.
+
+
 ## Pick an issue to fix
 
 The best way to start with the main code base is to fix some existing bugs. Peruse the [Easy to fix issues] in the issue tracker and see if one interests you. If you'd like to try to fix it, then create a message in the issue saying that you'd like to work on it. If it isn't clear how to fix it, ask for suggestions on how to do it in the issue itself, on the [mailing list], or on [Gitter sympy/sympy].
@@ -35,7 +88,7 @@ in upstream changes from the main sympy/sympy repo. If you commit to `master`,
 it will be difficult to pull these changes in, and it will also be difficult
 if you wish to make more than one pull request at a time.
 
-First pick a name for your branch. See [](dev-workflow-branch-names) below.
+First pick a name for your branch. See [](workflow-process-branch-names) below.
 To create and checkout (that is, make it the working branch) a new branch run
 
 ```
@@ -63,7 +116,7 @@ And remember, **never type the following commands in master**: `git merge`,
 `git add`, `git commit`, `git rebase`. If you made some commits to your local
 master by accident, you will have to hard reset to drop the commits.
 
-(dev-workflow-branch-names)=
+(workflow-process-branch-names)=
 ### Branch names
 
 Use a short, easy to type branch name that somehow relates to the changes.
@@ -92,6 +145,7 @@ contribution from other contributions you may make.
 When making your fix, keep in mind there are several requirements that every
 contribution should follow:
 
+(workflow-process-code-quality)=
 ### Code Quality
 
 SymPy contributions must have sufficient code quality to be accepted. There
@@ -104,7 +158,7 @@ flake8 sympy/
 ```
 
 Additionally, all tests are required to pass. The CI will automatically run
-the tests, but you can also [run them yourself](dev-workflow-run-tests). It is
+the tests, but you can also [run them yourself](workflow-process-run-tests). It is
 recommended to run at least the tests that relate to the code you modified
 before committing to ensure you did not make any mistakes or accidentally
 break something.
@@ -113,6 +167,7 @@ Once you submit your pull request, you should check the GitHub Actions checks
 once they complete to see if there are any test failures. If there are, you
 will need to fix them before the pull request will be accepted.
 
+(workflow-process-add-tests)=
 ### Add Tests
 
 All new functionality should be tested. If you are fixing a bug, it should be
@@ -224,7 +279,7 @@ preview of the documentation that you can view. On the pull request page,
 scroll to the bottom where the checks are, and find the link that says "Click
 here to see a preview of the documentation."
 
-(dev-workflow-run-tests)=
+(workflow-process-run-tests)=
 ## Run the Tests
 
 There are several ways of running SymPy tests but the easiest is to use the `bin/test` script, consult 'the wiki details on running tests \<<https://github.com/sympy/sympy/wiki/Running-tests>>\`\_.
@@ -323,7 +378,7 @@ Using `.git/info/exclude` would be the best, because it is only applied locally.
 
 <https://help.github.com/en/articles/ignoring-files>
 
-(dev-workflow-commit-messages)=
+(workflow-process-commit-messages)=
 ### Writing commit messages
 
 The commit message has two parts: a title (first line) and the body. The two
