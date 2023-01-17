@@ -56,3 +56,14 @@ def test_shape_error():
 
     A = MatrixSymbol('A', 3, 2)
     raises(ShapeError, lambda: MatAdd(A, B))
+
+
+def test_subs():
+    M1 = MatrixSymbol("M1", 2, 2)
+    M2 = MatrixSymbol("M2", 2, 2)
+    M3 = MatrixSymbol("M3", 2, 2)
+
+    assert (M1 + M2).subs(M1 + M2, M3) == M3
+    # TODO Dry run assertion because possibly it could handle associativity in
+    # the future
+    assert (M1 + M2 + M3).subs(M1 + M2, M3)
