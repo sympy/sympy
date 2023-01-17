@@ -93,6 +93,75 @@ the CI. The GitHub Actions CI will run all the tests. However, it can take
 some time to finish, so it is usually advisable to run at least the basic
 tests before committing to avoid having to wait.
 
+### Debugging Test Failures on GitHub Actions
+
+When you see a test failure on CI, like
+
+```
+_____________________________________________________________________________________________________
+_________________ sympy/printing/pretty/tests/test_pretty.py:test_upretty_sub_super _________________
+Traceback (most recent call last):
+  File "/home/oscar/current/sympy/sympy.git/sympy/printing/pretty/tests/test_pretty.py", line 317, in test_upretty_sub_super
+    assert upretty( Symbol('beta_1_2') ) == 'β₁₂'
+AssertionError
+```
+
+The bit in between `_________________` is the name of the test. You can
+reproduce the test locally by copying and pasting this:
+
+```
+./bin/test sympy/printing/pretty/tests/test_pretty.py:test_upretty_sub_super
+```
+
+or
+
+```
+pytest sympy/printing/pretty/tests/test_pretty.py:test_upretty_sub_super
+```
+
+The test also shows the file and line number (in this example, 317 in
+`sympy/printing/pretty/tests/test_pretty.py`) of the assertion that fails, so
+you can look it up to see what the test is testing.
+
+Sometimes when you do this, you will not be able to reproduce the test failure
+locally. Some common causes of this are:
+
+- You may need to merge the latest `master` into your branch to reproduce the
+  failure (GitHub Actions will always merge your branch with the latest
+  `master` before running the tests).
+
+- Something about the CI testing environment may be different from yours (this
+  is especially likely for tests that depend on [optional
+  dependencies](optional-dependencies). Check which versions of relevant
+  packages are installed at the top of the CI log.
+
+- It's possible that some other test that ran prior to yours may have somehow
+  influenced your test. SymPy is not supposed to have global state, but
+  sometimes some state can sneak in on accident. The only way to check this is
+  to run the exact same test command that was run on CI.
+
+- A test may fail sporadically. Try rerunning the test multiple times. The
+  beginning of the test log on CI prints the random seed, which can be passed
+  to `./bin/test --seed`, and the `PYTHONHASHSEED` environment variable, which
+  may be helpful for reproducing such failures.
+
+It is also sometimes possible that a failure on CI may be unrelated to your
+branch. We only merge branches that have passing CI, so that master always
+ideally has passing tests. But sometimes a failure can slip in. Typically this
+is either because the failure is sporadic (see the previous bullet), and it
+wasn't noticed, or because some [optional dependency](optional-dependencies)
+was updated which broken an optional dependency test. If a test failure seems
+like it is unrelated to your change, check if the [CI builds for
+master](https://github.com/sympy/sympy/actions?query=branch%3Amaster) and if
+CI builds on other recent PRs have the same failure. If they do, this is
+likely the case. If they don't, you should check more carefully if your change
+is causing the failure, even if it seems unrelated.
+
+When there is a CI failure in the master branch, be aware that your pull
+request cannot be merged until it is fixed. This is not required, but if you
+know how to fix it, please do this to help everyone (if you do this, do it in
+a separate pull request so that it can be merged expeditiously).
+
 (writing-tests-regression-tests)=
 ## Regression Tests
 
