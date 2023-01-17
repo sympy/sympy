@@ -165,7 +165,7 @@ def matrix2numpy(m, dtype=object):  # pragma: no cover
 
 
 ###########
-# Rotation matrices in 3D:
+# Rotation matrices:
 # rot_givens, rot_axis[123], rot_ccw_axis[123]
 ###########
 
@@ -195,7 +195,8 @@ def rot_givens(i, j, theta, dim=3):
     Where $c = \cos(\theta)$ and $s = \sin(\theta)$ appear at the intersections
     ``i``\th and ``j``\th rows and columns.
 
-    For fixed ``i > j``\, the non-zero elements of a Givens matrix are given by:
+    For fixed ``i > j``\, the non-zero elements of a Givens matrix are
+    given by:
 
     .. math::
         \begin{align}
