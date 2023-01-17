@@ -28,7 +28,8 @@ pull request, or even before committing a change.
 - [ ] **[Add tests](workflow-process-add-tests).** All new functionality
   should be tested. Bug fixes should add regression tests. Tests are written
   in pytest `assert f(x) == y` style and are included in corresponding `tests`
-  directories in the `sympy/` source.
+  directories in the `sympy/` source. See the guide on [writing
+  tests](writing-tests).
 
 - [ ] **Make sure all tests pass.** [You may want to run a relevant subset of
   the test suite locally](workflow-process-run-tests) before committing (e.g.,
