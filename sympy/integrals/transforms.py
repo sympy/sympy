@@ -8,8 +8,7 @@ from sympy.core.function import (AppliedUndef, count_ops, Derivative, expand,
                                  Function, Lambda, WildFunction, diff)
 from sympy.core.mul import Mul, prod
 from sympy.core.numbers import igcd, ilcm
-from sympy.core.relational import (_canonical, Ge, Gt, Lt, Unequality, Eq,
-                                   is_gt)
+from sympy.core.relational import (_canonical, Ge, Gt, Lt, Unequality, Eq)
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.core.traversal import postorder_traversal
