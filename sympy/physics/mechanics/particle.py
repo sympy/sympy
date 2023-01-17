@@ -84,15 +84,15 @@ class Particle(BodyBase):
         return self.frame
 
     def linear_momentum(self, frame):
-        r"""Linear momentum of the particle.
+        """Linear momentum of the particle.
 
         Explanation
         ===========
 
-        The linear momentum L, of a particle P, with respect to frame N is given
-        by
+        The linear momentum L, of a particle P, with respect to frame N is
+        given by:
 
-        `L = m * v`
+        L = m * v
 
         where m is the mass of the particle, and v is the velocity of the
         particle in the frame N.
@@ -123,18 +123,19 @@ class Particle(BodyBase):
         return self.mass * self.point.vel(frame)
 
     def angular_momentum(self, point, frame):
-        r"""Angular momentum of the particle about the point.
+        """Angular momentum of the particle about the point.
 
         Explanation
         ===========
 
-        The angular momentum H, about some point O of a particle P, is given by
+        The angular momentum H, about some point O of a particle, P, is given
+        by:
 
-        `H = cross(r, m * v)`
+        ``H = cross(r, m * v)``
 
-        where r is the position vector from point O to the particle P, m is the
-        mass of the particle, and v is the velocity of the particle in the
-        inertial frame N.
+        where r is the position vector from point O to the particle P, m is
+        the mass of the particle, and v is the velocity of the particle in
+        the inertial frame, N.
 
         Parameters
         ==========
@@ -167,17 +168,17 @@ class Particle(BodyBase):
                      self.mass * self.point.vel(frame))
 
     def kinetic_energy(self, frame):
-        r"""Kinetic energy of the particle.
+        """Kinetic energy of the particle.
 
         Explanation
         ===========
 
-        The kinetic energy T, of a particle P, is given by
+        The kinetic energy, T, of a particle, P, is given by:
 
-        `T = 1/2 * m * dot(v, v)`
+        ``T = 1/2 (dot(m * v, v))``
 
-        where m is the mass of particle P, and v is the velocity of the particle
-        in the supplied ReferenceFrame.
+        where m is the mass of particle P, and v is the velocity of the
+        particle in the supplied ReferenceFrame.
 
         Parameters
         ==========

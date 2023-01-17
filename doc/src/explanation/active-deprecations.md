@@ -210,6 +210,14 @@ parent_frame.x
 
 ## Version 1.11
 
+(deprecated-conv-array-expr-module-names)=
+### Modules `sympy.tensor.array.expressions.conv_*` renamed to `sympy.tensor.array.expressions.from_*`
+
+In order to avoid possible naming and tab-completion conflicts with
+functions with similar names to the names of the modules, all modules whose
+name starts with `conv_*` in `sympy.tensor.array.expressions` have been renamed
+to `from_*`.
+
 (mathematica-parser-new)=
 ### New Mathematica code parser
 
@@ -1079,30 +1087,6 @@ The `tensorhead()` function is deprecated in favor of {func}`~.tensor_heads`.
 `symbols()` or `TensorIndex` and `tensor_indices()`). It also does not use
 Young tableau to denote symmetries.
 
-(deprecated-quantity-methods)=
-### Methods to `sympy.physics.units.Quantity`
-
-The following methods of
-{class}`sympy.physics.units.quantities.Quantity` are deprecated.
-
-- `Quantity.set_dimension()`. This should be replaced with
-  `unit_system.set_quantity_dimension` or
-  `Quantity.set_global_dimension()`.
-
-- `Quantity.set_scale_factor()`. This should be replaced with
-  `unit_system.set_quantity_scale_factor` or {meth}`.Quantity.set_global_relative_scale_factor`
-
-- `Quantity.get_dimensional_expr()`. This is now associated with
-  {class}`~.UnitSystem` objects. The dimensional relations depend on the unit
-  system used. Use `unit_system.get_dimensional_expr()` instead.
-
-- `Quantity._collect_factor_and_dimension`. This has been moved to the
-  {class}`~.UnitSystem` class. Use
-  `unit_system._collect_factor_and_dimension(expr)` instead.
-
-See {ref}`deprecated-quantity-dimension-scale-factor` below for the motivation
-for this change.
-
 (deprecated-is-emptyset)=
 ### The `is_EmptySet` attribute of sets
 
@@ -1303,41 +1287,6 @@ Matrix([
 
 ## Version 1.3
 
-(deprecated-source)=
-### The `source()` function
-
-The {func}`~.source` function is deprecated. Use
-[`inspect.getsource(obj)`](https://docs.python.org/3/library/inspect.html#inspect.getsource)
-instead, or if you are in IPython or Jupyter, use `obj??`.
-
-(deprecated-quantity-dimension-scale-factor)=
-### The `dimension` and `scale_factor` arguments to `sympy.physics.units.Quanitity`
-
-The `dimension` and `scale_factor` arguments to
-{class}`sympy.physics.units.quantities.Quantity` are deprecated.
-
-The problem with these arguments is that **dimensions** are **not** an
-**absolute** association to a quantity. For example:
-
-- in natural units length and time are the same dimension (so you can sum
-  meters and seconds).
-
-- SI and cgs units have different dimensions for the same quantities.
-
-At this point a problem arises for scale factor as well: while it is always
-true that `kilometer / meter == 1000`, some other quantities may have a
-relative scale factor or not depending on which unit system is currently being
-used.
-
-Instead, things should be managed on the {class}`~.DimensionSystem` class. The
-`DimensionSystem.set_quantity_dimension()` method should be used instead of the
-`dimension` argument, and the
-`DimensionSystem.set_quantity_scale_factor()` method should be used
-instead of the `scale_factor` argument.
-
-See issue [#14318](https://github.com/sympy/sympy/issues/14318) for more
-details. See also {ref}`deprecated-quantity-methods` above.
-
 (deprecated-sympy-matrices-classof-a2idx)=
 ### Importing `classof` and `a2idx` from `sympy.matrices.matrices`
 
@@ -1345,81 +1294,3 @@ The functions `sympy.matrices.matrices.classof` and
 `sympy.matrices.matrices.a2idx` were duplicates of the same functions in
 `sympy.matrices.common`. The two functions should be used from the
 `sympy.matrices.common` module instead.
-
-## Version 1.2
-
-(deprecated-matrix-dot-non-vector)=
-### Dot product of non-row/column vectors
-
-The [`Matrix.dot()`](sympy.matrices.matrices.MatrixBase.dot) method has
-confusing behavior where `A.dot(B)` returns a list corresponding to
-`flatten(A.T*B.T)` when `A` and `B` are matrices that are not vectors (i.e.,
-neither dimension is size 1). This is confusing. The purpose of `Matrix.dot()`
-is to perform a mathematical dot product, which should only be defined for
-vectors (i.e., either a $n\times 1$ or $1\times n$ matrix), but in a way that
-works regardless of whether each argument is a row or column vector.
-Furthermore, returning a list here was much less useful than a matrix would
-be, and resulted in a polymorphic return type depending on the shapes of the
-inputs.
-
-This behavior is deprecated. `Matrix.dot` should only be used to do a
-mathematical dot product, which operates on row or column vectors. Use the
-`*` or `@` operators to do matrix multiplication.
-
-```py
->>> from sympy import Matrix
->>> A = Matrix([[1, 2], [3, 4]])
->>> B = Matrix([[2, 3], [1, 2]])
->>> A*B
-Matrix([
-[ 4,  7],
-[10, 17]])
->>> A@B
-Matrix([
-[ 4,  7],
-[10, 17]])
-```
-
-(deprecated-line3d-equation-k)=
-### `sympy.geometry.Line3D.equation` no longer needs the `k` argument
-
-The `k` argument to {meth}`sympy.geometry.line.Line3D.equation()` method is
-deprecated.
-
-Previously, the function `Line3D.equation` returned `(X, Y, Z, k)` which was
-changed to `(Y-X, Z-X)` (here `X`, `Y` and `Z` are expressions of `x`, `y` and
-`z` respectively). As in 2D an equation is returned relating `x` and `y` just
-like that in 3D two equations will be returned relating `x`, `y` and `z`.
-
-So in the new `Line3D.equation` the `k` argument is not needed anymore. Now
-the `k` argument is effectively ignored. A `k` variable is temporarily formed
-inside `equation()` and then gets substituted using `subs()` in terms of `x`
-and then `(Y-X, Z-X)` is returned.
-
-Previously:
-
-```py
->>> from sympy import Point3D,Line3D
->>> p1,p2 = Point3D(1, 2, 3), Point3D(5, 6, 7)
->>> l = Line3D(p1, p2)
->>> l.equation() # doctest: +SKIP
-(x/4 - 1/4, y/4 - 1/2, z/4 - 3/4, k)
-```
-
-Now:
-
-```py
->>> from sympy import Point3D, Line3D, solve
->>> p1,p2 = Point3D(1, 2, 3), Point3D(5, 6, 7)
->>> l = Line3D(p1,p2)
->>> l.equation()
-(-x + y - 1, -x + z - 2)
-```
-
-(deprecated-conv-array-expr-module-names)=
-### Modules `sympy.tensor.array.expressions.conv_*` renamed to `sympy.tensor.array.expressions.from_*`
-
-In order to avoid possible naming and tab-completion conflicts with
-functions with similar names to the names of the modules, all modules whose
-name starts with `conv_*` in `sympy.tensor.array.expressions` have been renamed
-to `from_*`.

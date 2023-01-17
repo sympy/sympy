@@ -738,6 +738,24 @@ def _f_list_parser(fl, ref_frame):
 
 def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
                           is_dynamicsymbols=True):
+    """Validates the generalized coordinates and generalized speeds.
+
+    Parameters
+    ==========
+    coordinates : iterable, optional
+        Generalized coordinates to be validated.
+    speeds : iterable, optional
+        Generalized speeds to be validated.
+    check_duplicates : bool, optional
+        Checks if there are duplicates in the generalized coordinates and
+        generalized speeds. If so it will raise a ValueError. The default is
+        True.
+    is_dynamicsymbols : iterable, optional
+        Checks if all the generalized coordinates and generalized speeds are
+        dynamicsymbols. If any is not a dynamicsymbol, a ValueError will be
+        raised. The default is True.
+
+    """
     # Convert input to iterables
     if coordinates is None:
         coordinates = []

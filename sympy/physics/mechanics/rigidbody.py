@@ -121,15 +121,15 @@ class RigidBody(BodyBase):
         self.inertia = (I, self.masscenter)
 
     def linear_momentum(self, frame):
-        r"""Linear momentum of the rigid body.
+        """ Linear momentum of the rigid body.
 
         Explanation
         ===========
 
         The linear momentum L, of a rigid body B, with respect to frame N is
-        given by
+        given by:
 
-        `L = m * v`
+        ``L = m * v``
 
         where m is the mass of the rigid body, and v is the velocity of the mass
         center of B in the frame N.
@@ -162,16 +162,16 @@ class RigidBody(BodyBase):
         return self.mass * self.masscenter.vel(frame)
 
     def angular_momentum(self, point, frame):
-        r"""Returns the angular momentum of the rigid body about a point in the
+        """Returns the angular momentum of the rigid body about a point in the
         given frame.
 
         Explanation
         ===========
 
         The angular momentum H of a rigid body B about some point O in a frame N
-        is given by
+        is given by:
 
-        `H = dot(I, w) + cross(r, m * v)`
+        ``H = dot(I, w) + cross(r, m * v)``
 
         where I and m are the central inertia dyadic and mass of rigid body B, w
         is the angular velocity of body B in the frame N, r is the position
@@ -214,16 +214,16 @@ class RigidBody(BodyBase):
         return I.dot(w) + r.cross(m * v)
 
     def kinetic_energy(self, frame):
-        r"""Kinetic energy of the rigid body.
+        """Kinetic energy of the rigid body.
 
         Explanation
         ===========
 
-        The kinetic energy T, of a rigid body B, is given by
+        The kinetic energy, T, of a rigid body, B, is given by:
 
-        `T = 1/2 * (dot(dot(I, w), w) + dot(m * v, v))`
+        ``T = 1/2 * (dot(dot(I, w), w) + dot(m * v, v))``
 
-        where I and M are the central inertia dyadic and mass of rigid body B
+        where I and m are the central inertia dyadic and mass of rigid body B
         respectively, w is the body's angular velocity, and v is the velocity of
         the body's mass center in the supplied ReferenceFrame.
 
