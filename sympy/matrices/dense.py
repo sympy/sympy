@@ -222,7 +222,7 @@ def rot_givens(i, j, theta, dim=3):
     A counterclockwise rotation of pi/3 (60 degrees) around
     the third axis (z-axis):
 
-    >>> rot_givens(1, 2, pi/3)
+    >>> rot_givens(2, 1, pi/3)
     Matrix([
     [      1/2, -sqrt(3)/2, 0],
     [sqrt(3)/2,        1/2, 0],
@@ -230,7 +230,7 @@ def rot_givens(i, j, theta, dim=3):
 
     If we rotate by pi/2 (90 degrees):
 
-    >>> rot_givens(1, 2, pi/2)
+    >>> rot_givens(2, 1, pi/2)
     Matrix([
     [0, -1, 0],
     [1,  0, 0],
@@ -239,7 +239,7 @@ def rot_givens(i, j, theta, dim=3):
     This can be generalized to any number
     of dimentions:
 
-    >>> rot_givens(1, 2, pi/2, dim=4)
+    >>> rot_givens(2, 1, pi/2, dim=4)
     Matrix([
     [0, -1, 0, 0],
     [1,  0, 0, 0],
