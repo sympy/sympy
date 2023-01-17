@@ -75,7 +75,7 @@ to run the tests, and
 ```
 
 to run the doctests. Note that the full test suite can take some time to run,
-so you may prefer to just run a subset of the tests, e.g., corresponding to
+so typically you should just run a subset of the tests, e.g., corresponding to
 the module you modified. You can do this by passing the name of the submodules
 or tests files to the test command. For example,
 
@@ -86,7 +86,11 @@ or tests files to the test command. For example,
 will run only the tests for the solvers.
 
 If you want, you can also use `pytest` to run the tests instead of the
-`./bin/test` tool.
+`./bin/test` tool, for example
+
+```
+pytest -m 'not slow' sympy/solvers
+```
 
 Another option is to just push your code up to GitHub and let the tests run on
 the CI. The GitHub Actions CI will run all the tests. However, it can take
