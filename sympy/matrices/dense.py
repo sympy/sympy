@@ -280,9 +280,6 @@ def rot_givens(i, j, theta, dim=3):
     c = cos(theta)
     s = sin(theta)
     M = eye(dim)
-    if i < j:
-        i, j = j, i
-        theta = -theta
 
     M[i-1, i-1] = c
     M[j-1, j-1] = c
@@ -344,7 +341,7 @@ def rot_axis3(theta):
     rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
         about the 2-axis (clockwise around the y axis)
     """
-    return rot_givens(1, 2, -theta, dim=3)
+    return rot_givens(1, 2, theta, dim=3)
 
 
 def rot_axis2(theta):
@@ -454,7 +451,7 @@ def rot_axis1(theta):
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (clockwise around the z axis)
     """
-    return rot_givens(3, 2, -theta, dim=3)
+    return rot_givens(2, 3, theta, dim=3)
 
 
 def rot_ccw_axis3(theta):
@@ -509,7 +506,7 @@ def rot_ccw_axis3(theta):
     rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
         about the 2-axis (counterclockwise around the y axis)
     """
-    return rot_givens(1, 2, theta, dim=3)
+    return rot_givens(2, 1, theta, dim=3)
 
 
 def rot_ccw_axis2(theta):
@@ -564,7 +561,7 @@ def rot_ccw_axis2(theta):
     rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (counterclockwise around the z axis)
     """
-    return rot_givens(3, 1, -theta, dim=3)
+    return rot_givens(1, 3, theta, dim=3)
 
 
 def rot_ccw_axis1(theta):
@@ -619,7 +616,7 @@ def rot_ccw_axis1(theta):
     rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (counterclockwise around the z axis)
     """
-    return rot_givens(2, 3, theta, dim=3)
+    return rot_givens(3, 2, theta, dim=3)
 
 
 @doctest_depends_on(modules=('numpy',))
