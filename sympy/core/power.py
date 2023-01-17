@@ -965,9 +965,9 @@ class Pow(Expr):
         Explanation
         ===========
 
-        If base is 1/Integer, then return Integer, -exp. If this extra
-        processing is not needed, the base and exp properties will
-        give the raw arguments
+        If base a Rational less than 1, then return 1/Rational, -exp.
+        If this extra processing is not needed, the base and exp
+        properties will give the raw arguments.
 
         Examples
         ========
@@ -978,12 +978,14 @@ class Pow(Expr):
         (2, -2)
         >>> p.args
         (1/2, 2)
+        >>> p.base, p.exp
+        (1/2, 2)
 
         """
 
         b, e = self.args
-        if b.is_Rational and b.p == 1 and b.q != 1:
-            return Integer(b.q), -e
+        if b.is_Rational and b.p < b.q and b.p > 0:
+            return 1/b, -e
         return b, e
 
     def _eval_adjoint(self):
@@ -1035,12 +1037,16 @@ class Pow(Expr):
             if isinstance(e, Sum) and e.is_commutative:
                 from sympy.concrete.products import Product
                 return Product(self.func(b, e.function), *e.limits)
-        if e.is_Add and e.is_commutative:
-            expr = []
-            for x in e.args:
-                expr.append(self.func(b, x))
-            return Mul(*expr)
-        return self.func(b, e)
+        if e.is_Add and (hints.get('force', False) or
+                b.is_zero is False or e._all_nonneg_or_nonppos()):
+            if e.is_commutative:
+                return Mul(*[self.func(b, x) for x in e.args])
+            if b.is_commutative:
+                c, nc = sift(e.args, lambda x: x.is_commutative, binary=True)
+                if c:
+                    return Mul(*[self.func(b, x) for x in c]
+                        )*b**Add._from_args(nc)
+        return self
 
     def _eval_expand_power_base(self, **hints):
         """(a*b)**n -> a**n * b**n"""
@@ -1272,18 +1278,18 @@ class Pow(Expr):
         elif (exp.is_Rational and exp.p < 0 and base.is_Add and
                 abs(exp.p) > exp.q):
             return 1 / self.func(base, -exp)._eval_expand_multinomial()
-        elif exp.is_Add and base.is_Number:
+        elif exp.is_Add and base.is_Number and (hints.get('force', False) or
+                base.is_zero is False or exp._all_nonneg_or_nonppos()):
             #  a + b      a  b
             #  n      --> n  n, where n, a, b are Numbers
-
-            coeff, tail = S.One, S.Zero
+            # XXX should be in expand_power_exp?
+            coeff, tail = [], []
             for term in exp.args:
                 if term.is_Number:
-                    coeff *= self.func(base, term)
+                    coeff.append(self.func(base, term))
                 else:
-                    tail += term
-
-            return coeff * self.func(base, tail)
+                    tail.append(term)
+            return Mul(*(coeff + [self.func(base, Add._from_args(tail))]))
         else:
             return result
 
@@ -1580,7 +1586,7 @@ class Pow(Expr):
     def matches(self, expr, repl_dict=None, old=False):
         expr = _sympify(expr)
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
 
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
@@ -1627,6 +1633,7 @@ class Pow(Expr):
         from sympy.functions.elementary.exponential import exp, log
         from sympy.series.limits import limit
         from sympy.series.order import Order
+        from sympy.core.sympify import sympify
         if self.base is S.Exp1:
             e_series = self.exp.nseries(x, n=n, logx=logx)
             if e_series.is_Order:
@@ -1680,16 +1687,19 @@ class Pow(Expr):
             e = logcombine(e).cancel()
 
         if not (m.is_zero or e.is_number and e.is_real):
-            res = exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
-            if res is exp(e*log(b)):
-                return self
-            return res
+            if self == self._eval_as_leading_term(x, logx=logx, cdir=cdir):
+                res = exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+                if res == exp(e*log(b)):
+                    return self
+                return res
 
         f = b.as_leading_term(x, logx=logx)
         g = (b/f - S.One).cancel(expand=False)
         if not m.is_number:
             raise NotImplementedError()
         maxpow = n - m*e
+        if maxpow.has(Symbol):
+            maxpow = sympify(n)
 
         if maxpow.is_negative:
             return Order(x**(m*e), x)
@@ -1723,21 +1733,27 @@ class Pow(Expr):
             return res
 
         try:
-            _, d = g.leadterm(x)
+            c, d = g.leadterm(x, logx=logx)
         except (ValueError, NotImplementedError):
             if limit(g/x**maxpow, x, 0) == 0:
                 # g has higher order zero
                 return f**e + e*f**e*g  # first term of binomial series
             else:
                 raise NotImplementedError()
+        if c.is_Float and d == S.Zero:
+            # Convert floats like 0.5 to exact SymPy numbers like S.Half, to
+            # prevent rounding errors which can induce wrong values of d leading
+            # to a NotImplementedError being returned from the block below.
+            from sympy.simplify.simplify import nsimplify
+            _, d = nsimplify(g).leadterm(x, logx=logx)
         if not d.is_positive:
             g = g.simplify()
             if g.is_zero:
                 return f**e
-            _, d = g.leadterm(x)
+            _, d = g.leadterm(x, logx=logx)
             if not d.is_positive:
                 g = ((b - f)/f).expand()
-                _, d = g.leadterm(x)
+                _, d = g.leadterm(x, logx=logx)
                 if not d.is_positive:
                     raise NotImplementedError()
 
@@ -1764,9 +1780,14 @@ class Pow(Expr):
 
         from sympy.functions.elementary.complexes import im
 
-        if (not e.is_integer and m.is_zero and f.is_real
-            and f.is_negative and im((b - f).dir(x, cdir)).is_negative):
-            inco, inex = coeff_exp(f**e*exp(-2*e*S.Pi*S.ImaginaryUnit), x)
+        if not e.is_integer and m.is_zero and f.is_negative:
+            ndir = (b - f).dir(x, cdir)
+            if im(ndir).is_negative:
+                inco, inex = coeff_exp(f**e*(-1)**(-2*e), x)
+            elif im(ndir).is_zero:
+                inco, inex = coeff_exp(exp(e*log(b)).as_leading_term(x, logx=logx, cdir=cdir), x)
+            else:
+                inco, inex = coeff_exp(f**e, x)
         else:
             inco, inex = coeff_exp(f**e, x)
         res = S.Zero
@@ -1777,7 +1798,10 @@ class Pow(Expr):
 
         if not (e.is_integer and e.is_positive and (e*d - n).is_nonpositive and
                 res == _mexpand(self)):
-            res += Order(x**n, x)
+            try:
+                res += Order(x**n, x)
+            except NotImplementedError:
+                return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
         return res
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -1797,10 +1821,21 @@ class Pow(Expr):
             return lt.as_leading_term(x, logx=logx, cdir=cdir)
         else:
             from sympy.functions.elementary.complexes import im
-            f = b.as_leading_term(x, logx=logx, cdir=cdir)
-            if (not e.is_integer and f.is_constant() and f.is_real
-                and f.is_negative and im((b - f).dir(x, cdir)).is_negative):
-                return self.func(f, e) * exp(-2 * e * S.Pi * S.ImaginaryUnit)
+            try:
+                f = b.as_leading_term(x, logx=logx, cdir=cdir)
+            except PoleError:
+                return self
+            if not e.is_integer and f.is_negative and not f.has(x):
+                ndir = (b - f).dir(x, cdir)
+                if im(ndir).is_negative:
+                    # Normally, f**e would evaluate to exp(e*log(f)) but on branch cuts
+                    # an other value is expected through the following computation
+                    # exp(e*(log(f) - 2*pi*I)) == f**e*exp(-2*e*pi*I) == f**e*(-1)**(-2*e).
+                    return self.func(f, e) * (-1)**(-2*e)
+                elif im(ndir).is_zero:
+                    log_leadterm = log(b)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+                    if log_leadterm.is_infinite is False:
+                        return exp(e*log_leadterm)
             return self.func(f, e)
 
     @cacheit

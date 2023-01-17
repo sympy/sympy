@@ -13,9 +13,9 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-
+from __future__ import annotations
 from functools import singledispatch
-from typing import Tuple as tTuple
+from math import prod
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -23,7 +23,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda)
 from sympy.core.logic import fuzzy_and
-from sympy.core.mul import (Mul, prod)
+from sympy.core.mul import Mul
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
@@ -1578,7 +1578,7 @@ def rv_subs(expr, symbols=None):
 
 
 class NamedArgsMixin:
-    _argnames = ()  # type: tTuple[str, ...]
+    _argnames: tuple[str, ...] = ()
 
     def __getattr__(self, attr):
         try:

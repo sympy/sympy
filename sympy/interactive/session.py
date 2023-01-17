@@ -153,7 +153,7 @@ def enable_automatic_int_sympification(shell):
             pass
         else:
             cell = int_to_Integer(cell)
-        old_run_cell(cell, *args, **kwargs)
+        return old_run_cell(cell, *args, **kwargs)
 
     shell.run_cell = my_run_cell
 
@@ -270,7 +270,7 @@ def init_python_session():
         """An interactive console with readline support. """
 
         def __init__(self):
-            ns_locals = dict()
+            ns_locals = {}
             InteractiveConsole.__init__(self, locals=ns_locals)
             try:
                 import rlcompleter

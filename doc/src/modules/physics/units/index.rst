@@ -22,11 +22,11 @@ Ideas about future developments can be found on the `Github wiki
 <https://github.com/sympy/sympy/wiki/Unit-systems>`_.
 
 .. toctree::
-    :maxdepth: 2
+   :titlesonly:
 
-    philosophy.rst
-    examples.rst
-    dimensions.rst
-    prefixes.rst
-    unitsystem.rst
-    quantities.rst
+   philosophy.rst
+   examples.rst
+   dimensions.rst
+   prefixes.rst
+   unitsystem.rst
+   quantities.rst

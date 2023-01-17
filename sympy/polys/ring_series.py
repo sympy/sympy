@@ -82,8 +82,8 @@ def _invert_monoms(p1):
     p = R.zero
     cv = p1.listcoeffs()
     mv = p1.listmonoms()
-    for i in range(len(mv)):
-        p[(deg - mv[i][0],)] = cv[i]
+    for mvi, cvi in zip(mv, cv):
+        p[(deg - mvi[0],)] = cvi
     return p
 
 def _giant_steps(target):

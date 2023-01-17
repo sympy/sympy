@@ -166,7 +166,7 @@ an expression when customizing a printer. Mistakes include:
     ...         a, b = [printer.doprint(i) for i in self.args]
     ...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
-    This fails when the `mode` argument is passed to the printer:
+    This fails when the ``mode`` argument is passed to the printer:
 
     >>> print_latex(ModOp(x, m), mode='inline')  # ok
     $\\operatorname{Mod}{\\left(x, m\\right)}$
@@ -208,8 +208,9 @@ an expression when customizing a printer. Mistakes include:
 
 """
 
+from __future__ import annotations
 import sys
-from typing import Any, Dict as tDict, Type
+from typing import Any, Type
 import inspect
 from contextlib import contextmanager
 from functools import cmp_to_key, update_wrapper
@@ -241,9 +242,9 @@ class Printer:
     for your custom class then see the example above: printer_example_ .
     """
 
-    _global_settings = {}  # type: tDict[str, Any]
+    _global_settings: dict[str, Any] = {}
 
-    _default_settings = {}  # type: tDict[str, Any]
+    _default_settings: dict[str, Any] = {}
 
     printmethod = None  # type: str
 
@@ -259,7 +260,7 @@ class Printer:
         self._str = str
 
         self._settings = self._get_initial_settings()
-        self._context = dict()  # mutable during printing
+        self._context = {}  # mutable during printing
 
         if settings is not None:
             self._settings.update(settings)

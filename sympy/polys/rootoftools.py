@@ -575,10 +575,10 @@ class ComplexRootOf(RootOf):
                 # contiguous because a discontinuity should only
                 # happen once
                 fs.remove(complexes[i - 1][F])
-        for i in range(len(complexes)):
+        for i, cmplx in enumerate(complexes):
             # negative im part (conj=True) comes before
             # positive im part (conj=False)
-            assert complexes[i][C].conj is (i % 2 == 0)
+            assert cmplx[C].conj is (i % 2 == 0)
 
         # update cache
         cache = {}

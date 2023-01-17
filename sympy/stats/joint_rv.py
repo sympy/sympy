@@ -8,11 +8,10 @@ sympy.stats.frv
 sympy.stats.crv
 sympy.stats.drv
 """
-
+from math import prod
 
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
-from sympy.core.mul import prod
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.core.sympify import sympify
@@ -96,7 +95,7 @@ class JointPSpace(ProductPSpace):
         all_syms = [Symbol(str(i)) for i in orig]
         replace_dict = dict(zip(all_syms, orig))
         sym = tuple(Symbol(str(Indexed(self.symbol, i))) for i in indices)
-        limits = list([i,] for i in all_syms if i not in sym)
+        limits = [[i,] for i in all_syms if i not in sym]
         index = 0
         for i in range(count):
             if i not in indices:

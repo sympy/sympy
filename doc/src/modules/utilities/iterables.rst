@@ -3,6 +3,10 @@ Iterables
 =========
 
 
+.. automodule:: sympy.utilities.iterables
+   :members:
+
+
 variations
 ----------
 
@@ -29,7 +33,15 @@ functions to generate partitions that can be used as low-level tools for
 routines:  ``partitions`` and ``multiset_partitions``. The former gives
 integer partitions, and the latter gives enumerated partitions of elements.
 There is also a routine ``kbins`` that will give a variety of permutations
-of partions.
+of partitions. And to obtain partitions as a list instead of a dictionary, there
+is the ``ordered_partition`` function which is quite fast. Finally, to simply
+obtain a count of the number of partitions without enumerating them, there
+is the ``nT`` function.
+
+See Also
+========
+
+sympy.utilities.iterables.ordered_partitions, sympy.functions.combinatorial.numbers.nT
 
 partitions::
 
@@ -72,9 +84,3 @@ kbins::
     ['A,BC', 'A,CB', 'AB,C', 'AC,B',
      'B,AC', 'B,CA', 'BA,C', 'BC,A',
      'C,AB', 'C,BA', 'CA,B', 'CB,A']
-
-Docstring
-=========
-
-.. automodule:: sympy.utilities.iterables
-   :members:

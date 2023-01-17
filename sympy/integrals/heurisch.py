@@ -1,4 +1,4 @@
-from typing import Dict as tDict, List
+from __future__ import annotations
 
 from itertools import permutations
 from functools import reduce
@@ -88,7 +88,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}  # type: tDict[str, List[Dummy]]
+_symbols_cache: dict[str, list[Dummy]] = {}
 
 
 # NB @cacheit is not convenient here
@@ -144,13 +144,18 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                    unnecessary_permutations, _try_heurisch)
     if not isinstance(res, Basic):
         return res
+
     # We consider each denominator in the expression, and try to find
     # cases where one or more symbolic denominator might be zero. The
     # conditions for these cases are stored in the list slns.
+    #
+    # Since denoms returns a set we use ordered. This is important because the
+    # ordering of slns determines the order of the resulting Piecewise so we
+    # need a deterministic order here to make the output deterministic.
     slns = []
-    for d in denoms(res):
+    for d in ordered(denoms(res)):
         try:
-            slns += solve(d, dict=True, exclude=(x,))
+            slns += solve([d], dict=True, exclude=(x,))
         except NotImplementedError:
             pass
     if not slns:
@@ -160,7 +165,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     slns0 = []
     for d in denoms(f):
         try:
-            slns0 += solve(d, dict=True, exclude=(x,))
+            slns0 += solve([d], dict=True, exclude=(x,))
         except NotImplementedError:
             pass
     slns = [s for s in slns if s not in slns0]
@@ -476,6 +481,15 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     for g in set(terms):  # using copy of terms
         terms |= components(dcache.get_diff(g), x)
+
+    # XXX: The commented line below makes heurisch more deterministic wrt
+    # PYTHONHASHSEED and the iteration order of sets. There are other places
+    # where sets are iterated over but this one is possibly the most important.
+    # Theoretically the order here should not matter but different orderings
+    # can expose potential bugs in the different code paths so potentially it
+    # is better to keep the non-determinism.
+    #
+    # terms = list(ordered(terms))
 
     # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))

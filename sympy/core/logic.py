@@ -7,11 +7,11 @@ at present this is mainly needed for facts.py, feel free however to improve
 this stuff for general purpose.
 """
 
-from typing import Dict as tDict, Type, Union as tUnion
-
+from __future__ import annotations
+from typing import Optional
 
 # Type of a fuzzy bool
-FuzzyBool = tUnion[bool, None]
+FuzzyBool = Optional[bool]
 
 
 def _torf(args):
@@ -223,7 +223,7 @@ def fuzzy_nand(args):
 class Logic:
     """Logical expression"""
     # {} 'op' -> LogicClass
-    op_2class = {}  # type: tDict[str, Type[Logic]]
+    op_2class: dict[str, type[Logic]] = {}
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -375,8 +375,7 @@ class And(AndOr_Base):
     def expand(self):
 
         # first locate Or
-        for i in range(len(self.args)):
-            arg = self.args[i]
+        for i, arg in enumerate(self.args):
             if isinstance(arg, Or):
                 arest = self.args[:i] + self.args[i + 1:]
 

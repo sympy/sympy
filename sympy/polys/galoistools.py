@@ -1,10 +1,8 @@
 """Dense univariate polynomials with coefficients in Galois fields. """
 
+from math import ceil as _ceil, sqrt as _sqrt, prod
 
 from sympy.core.random import uniform
-from math import ceil as _ceil, sqrt as _sqrt
-
-from sympy.core.mul import prod
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed

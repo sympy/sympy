@@ -9,7 +9,7 @@ from sympy.core.function import (Function, expand, WildFunction,
     AppliedUndef, Derivative, diff, Subs)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (NumberSymbol, E, zoo, oo, Float, I,
-    Rational, nan, Integer, Number, pi)
+    Rational, nan, Integer, Number, pi, _illegal)
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Lt, Gt, Le
 from sympy.core.singleton import S
@@ -31,6 +31,7 @@ from sympy.polys.partfrac import apart
 from sympy.polys.polytools import factor, cancel, Poly
 from sympy.polys.rationaltools import together
 from sympy.series.order import O
+from sympy.sets.sets import FiniteSet
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.gammasimp import gammasimp
 from sympy.simplify.powsimp import powsimp
@@ -653,10 +654,10 @@ def test_is_rational_function():
     assert (sin(y)/x).is_rational_function(x) is True
     assert (sin(y)/x).is_rational_function(x, y) is False
 
-    assert (S.NaN).is_rational_function() is False
-    assert (S.Infinity).is_rational_function() is False
-    assert (S.NegativeInfinity).is_rational_function() is False
-    assert (S.ComplexInfinity).is_rational_function() is False
+    for i in _illegal:
+        assert not i.is_rational_function()
+        for d in (1, x):
+            assert not (i/d).is_rational_function()
 
 
 def test_is_meromorphic():
@@ -1624,11 +1625,30 @@ def test_has_free():
     assert Integral(f(x), (f(x), 1, y)).has_free(y)
     assert not Integral(f(x), (f(x), 1, y)).has_free(x)
     assert not Integral(f(x), (f(x), 1, y)).has_free(f(x))
+    # simple extraction
+    assert (x + 1 + y).has_free(x + 1)
+    assert not (x + 2 + y).has_free(x + 1)
+    assert (2 + 3*x*y).has_free(3*x)
+    raises(TypeError, lambda: x.has_free({x, y}))
+    s = FiniteSet(1, 2)
+    assert Piecewise((s, x > 3), (4, True)).has_free(s)
+    assert not Piecewise((1, x > 3), (4, True)).has_free(s)
+    # can't make set of these, but fallback will handle
+    raises(TypeError, lambda: x.has_free(y, []))
+
+
+def test_has_xfree():
+    assert (x + 1).has_xfree({x})
+    assert ((x + 1)**2).has_xfree({x + 1})
+    assert not (x + y + 1).has_xfree({x + 1})
+    raises(TypeError, lambda: x.has_xfree(x))
+    raises(TypeError, lambda: x.has_xfree([x]))
 
 
 def test_issue_5300():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
+
 
 def test_floordiv():
     from sympy.functions.elementary.integers import floor

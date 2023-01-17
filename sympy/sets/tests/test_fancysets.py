@@ -252,6 +252,9 @@ def test_Range_set():
     raises(TypeError, lambda: next(it))
 
     assert empty.intersect(S.Integers) == empty
+    assert Range(-1, 10, 1).intersect(S.Complexes) == Range(-1, 10, 1)
+    assert Range(-1, 10, 1).intersect(S.Reals) == Range(-1, 10, 1)
+    assert Range(-1, 10, 1).intersect(S.Rationals) == Range(-1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Integers) == Range(-1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Naturals) == Range(1, 10, 1)
     assert Range(-1, 10, 1).intersect(S.Naturals0) == Range(0, 10, 1)
@@ -517,6 +520,11 @@ def test_range_interval_intersection():
     assert Range(4).intersect(Interval(0.1, 3.1)) == Range(1, 4)
     assert Range(4).intersect(Interval.open(0, 3)) == Range(1, 3)
     assert Range(4).intersect(Interval.open(0.1, 0.5)) is S.EmptySet
+    assert Interval(-1, 5).intersect(S.Complexes) == Interval(-1, 5)
+    assert Interval(-1, 5).intersect(S.Reals) == Interval(-1, 5)
+    assert Interval(-1, 5).intersect(S.Integers) == Range(-1, 6)
+    assert Interval(-1, 5).intersect(S.Naturals) == Range(1, 6)
+    assert Interval(-1, 5).intersect(S.Naturals0) == Range(0, 6)
 
     # Null Range intersections
     assert Range(0).intersect(Interval(0.2, 0.8)) is S.EmptySet
@@ -544,7 +552,6 @@ def test_range_is_finite_set():
     assert Range(-oo, n).is_finite_set is False
     assert Range(n, -oo).is_finite_set is True
     assert Range(oo, n).is_finite_set is True
-
 
 
 def test_Range_is_iterable():

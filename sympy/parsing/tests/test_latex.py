@@ -24,7 +24,7 @@ from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
-# disable tests if antlr4-python*-runtime is not present
+# disable tests if antlr4-python3-runtime is not present
 if not antlr4:
     disabled = True
 
@@ -136,16 +136,23 @@ GOOD_PAIRS = [
     (r"\frac{a}{b}", a / b),
     (r"\dfrac{a}{b}", a / b),
     (r"\tfrac{a}{b}", a / b),
+    (r"\frac12", _Pow(2, -1)),
+    (r"\frac12y", _Mul(_Pow(2, -1), y)),
+    (r"\frac1234", _Mul(_Pow(2, -1), 34)),
+    (r"\frac2{3}", _Mul(2, _Pow(3, -1))),
+    (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1))),
     (r"\frac{a + b}{c}", _Mul(a + b, _Pow(c, -1))),
     (r"\frac{7}{3}", _Mul(7, _Pow(3, -1))),
     (r"(\csc x)(\sec y)", csc(x)*sec(y)),
-    (r"\lim_{x \to 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3)),
+    (r"\lim_{x \to 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
     (r"\lim_{x \to 3^{+}} a", Limit(a, x, 3, dir='+')),
     (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir='-')),
+    (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir='+')),
+    (r"\lim_{x \to 3^-} a", Limit(a, x, 3, dir='-')),
     (r"\infty", oo),
     (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Pow(x, -1), x, oo)),
     (r"\frac{d}{dx} x", Derivative(x, x)),
@@ -233,10 +240,11 @@ GOOD_PAIRS = [
     (r"\prod^c_{a = b} x", Product(x, (a, b, c))),
     (r"\exp x", _exp(x)),
     (r"\exp(x)", _exp(x)),
+    (r"\lg x", _log(x, 10)),
     (r"\ln x", _log(x, E)),
     (r"\ln xy", _log(x*y, E)),
-    (r"\log x", _log(x, 10)),
-    (r"\log xy", _log(x*y, 10)),
+    (r"\log x", _log(x, E)),
+    (r"\log xy", _log(x*y, E)),
     (r"\log_{2} x", _log(x, 2)),
     (r"\log_{a} x", _log(x, a)),
     (r"\log_{11} x", _log(x, 11)),
@@ -265,6 +273,7 @@ GOOD_PAIRS = [
     (r"\log_2 x", _log(x, 2)),
     (r"\log_a x", _log(x, a)),
     (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
+    (r"3x - 1", _Add(_Mul(3, x), -1))
 ]
 
 

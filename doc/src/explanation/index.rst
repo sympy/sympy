@@ -12,8 +12,10 @@ technical implementation details, and opinionated recommendations.
 **Content**
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    gotchas.rst
+   solve_output.rst
    special_topics/index.rst
    active-deprecations.md
+   glossary.md

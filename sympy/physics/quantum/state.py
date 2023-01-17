@@ -254,26 +254,26 @@ class KetBase(StateBase):
         """
         return dispatch_method(self, '_eval_innerproduct', bra, **hints)
 
-    def _apply_operator(self, op, **options):
-        """Apply an Operator to this Ket.
+    def _apply_from_right_to(self, op, **options):
+        """Apply an Operator to this Ket as Operator*Ket
 
         This method will dispatch to methods having the format::
 
-            ``def _apply_operator_OperatorName(op, **options):``
+            ``def _apply_from_right_to_OperatorName(op, **options):``
 
         Subclasses should define these methods (one for each OperatorName) to
-        teach the Ket how operators act on it.
+        teach the Ket how to implement OperatorName*Ket
 
         Parameters
         ==========
 
         op : Operator
-            The Operator that is acting on the Ket.
+            The Operator that is acting on the Ket as op*Ket
         options : dict
             A dict of key/value pairs that control how the operator is applied
             to the Ket.
         """
-        return dispatch_method(self, '_apply_operator', op, **options)
+        return dispatch_method(self, '_apply_from_right_to', op, **options)
 
 
 class BraBase(StateBase):
@@ -652,17 +652,19 @@ class OrthogonalKet(OrthogonalState, KetBase):
         if len(self.args) != len(bra.args):
             raise ValueError('Cannot multiply a ket that has a different number of labels.')
 
-        for i in range(len(self.args)):
-            diff = self.args[i] - bra.args[i]
+        for arg, bra_arg in zip(self.args, bra.args):
+            diff = arg - bra_arg
             diff = diff.expand()
 
-            if diff.is_zero is False:
-                return 0
+            is_zero = diff.is_zero
 
-            if diff.is_zero is None:
+            if is_zero is False:
+                return S.Zero # i.e. Integer(0)
+
+            if is_zero is None:
                 return None
 
-        return 1
+        return S.One # i.e. Integer(1)
 
 
 class OrthogonalBra(OrthogonalState, BraBase):

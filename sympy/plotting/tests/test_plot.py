@@ -23,6 +23,7 @@ from sympy.plotting.plot import (
     TextBackend, BaseBackend)
 from sympy.testing.pytest import skip, raises, warns, warns_deprecated_sympy
 from sympy.utilities import lambdify as lambdify_
+from sympy.utilities.exceptions import ignore_warnings
 
 
 unset_show()
@@ -383,7 +384,17 @@ def test_plot_and_save_5():
         p[0].only_integers = True
         p[0].steps = True
         filename = 'test_advanced_fin_sum.png'
-        p.save(os.path.join(tmpdir, filename))
+
+        # XXX: This should be fixed in experimental_lambdify or by using
+        # ordinary lambdify so that it doesn't warn. The error results from
+        # passing an array of values as the integration limit.
+        #
+        # UserWarning: The evaluation of the expression is problematic. We are
+        # trying a failback method that may still work. Please report this as a
+        # bug.
+        with ignore_warnings(UserWarning):
+            p.save(os.path.join(tmpdir, filename))
+
         p._backend.close()
 
 
@@ -401,8 +412,11 @@ def test_plot_and_save_6():
         ###
         p = plot(sin(x) + I*cos(x))
         p.save(os.path.join(tmpdir, filename))
-        p = plot(sqrt(sqrt(-x)))
-        p.save(os.path.join(tmpdir, filename))
+
+        with ignore_warnings(RuntimeWarning):
+            p = plot(sqrt(sqrt(-x)))
+            p.save(os.path.join(tmpdir, filename))
+
         p = plot(LambertW(x))
         p.save(os.path.join(tmpdir, filename))
         p = plot(sqrt(LambertW(x)))
@@ -527,7 +541,10 @@ def test_issue_17405():
     p = plot(f, (x, -10, 10), show=False)
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
-    assert len(p[0].get_data()[0]) >= 30
+
+    # RuntimeWarning: invalid value encountered in double_scalars
+    with ignore_warnings(RuntimeWarning):
+        assert len(p[0].get_data()[0]) >= 30
 
 
 def test_logplot_PR_16796():

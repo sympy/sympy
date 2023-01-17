@@ -76,7 +76,7 @@ from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
-from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_TRAVIS,
+from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_CI,
     raises)
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
@@ -485,6 +485,7 @@ def test_H8():
 
 
 def test_H9():
+    x = Symbol('x', zero=False)
     p1 = 2*x**(n + 4) - x**(n + 2)
     p2 = 4*x**(n + 1) + 3*x**n
     assert gcd(p1, p2) == x**n
@@ -2608,8 +2609,8 @@ def test_W23b():
 @XFAIL
 @slow
 def test_W24():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     # Not that slow, but does not fully evaluate so simplify is slow.
     # Maybe also require doit()
     x, y = symbols('x y', real=True)
@@ -2620,15 +2621,14 @@ def test_W24():
 @XFAIL
 @slow
 def test_W25():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     a, x, y = symbols('a x y', real=True)
     i1 = integrate(
         sin(a)*sin(y)/sqrt(1 - sin(a)**2*sin(x)**2*sin(y)**2),
         (x, 0, pi/2))
     i2 = integrate(i1, (y, 0, pi/2))
     assert (i2 - pi*a/2).simplify() == 0
-
 
 
 def test_W26():

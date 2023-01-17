@@ -344,10 +344,9 @@ def prde_no_cancel_b_large(b, Q, n, DE):
 
     if all(qi.is_zero for qi in Q):
         dc = -1
-        M = zeros(0, 2, DE.t)
     else:
         dc = max([qi.degree(DE.t) for qi in Q])
-        M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
+    M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
     A, u = constant_system(M, zeros(dc + 1, 1, DE.t), DE)
     c = eye(m, DE.t)
     A = A.row_join(zeros(A.rows, m, DE.t)).col_join(c.row_join(-c))
@@ -385,10 +384,9 @@ def prde_no_cancel_b_small(b, Q, n, DE):
             Q[i] = Q[i] - derivation(si, DE) - b*si
         if all(qi.is_zero for qi in Q):
             dc = -1
-            M = Matrix()
         else:
             dc = max([qi.degree(DE.t) for qi in Q])
-            M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
+        M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
         A, u = constant_system(M, zeros(dc + 1, 1, DE.t), DE)
         c = eye(m, DE.t)
         A = A.row_join(zeros(A.rows, m, DE.t)).col_join(c.row_join(-c))
@@ -760,8 +758,14 @@ def param_rischDE(fa, fd, G, DE):
     # y = Sum(blk'*hk, (k, 1, v))/gamma, where k' = k + m + u.
 
     v = len(h)
-    M = Matrix([wl[:m] + wl[-v:] for wl in W])  # excise dj's.
+    shape = (len(W), m+v)
+    elements = [wl[:m] + wl[-v:] for wl in W] # excise dj's.
+    items = [e for row in elements for e in row]
+
+    # Need to set the shape in case W is empty
+    M = Matrix(*shape, items, DE.t)
     N = M.nullspace()
+
     # N = [n1, ..., ns] where the ni in Const(k)^(m + v) are column
     # vectors generating the space of linear relations between
     # c1, ..., cm, e1, ..., ev.

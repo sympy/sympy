@@ -1,7 +1,7 @@
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
 from sympy.multipledispatch import dispatch
-from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises
 from sympy.assumptions.ask import Q
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -135,9 +135,6 @@ def test_wrappers():
 def test_Eq_Ne():
 
     assert Eq(x, x)  # issue 5719
-
-    with warns_deprecated_sympy():
-        assert Eq(x) == Eq(x, 0)
 
     # issue 6116
     p = Symbol('p', positive=True)

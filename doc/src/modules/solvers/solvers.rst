@@ -1,4 +1,4 @@
-.. _solvers:
+.. _solvers-docs:
 
 Solvers
 =======
@@ -6,6 +6,11 @@ Solvers
 .. module:: sympy.solvers
 
 The *solvers* module in SymPy implements methods for solving equations.
+
+.. note::
+
+   For a beginner-friendly guide focused on solving common types of equations,
+   refer to :ref:`solving-guide`.
 
 .. note::
 

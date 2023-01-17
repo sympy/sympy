@@ -1,5 +1,9 @@
 .. _codegen_prose:
 
+===============
+Code Generation
+===============
+
 Several submodules in SymPy allow one to generate directly compilable and
 executable code in a variety of different programming languages from SymPy
 expressions. In addition, there are functions that generate Python importable
@@ -182,7 +186,7 @@ how it works::
     >>> print(fcode(expr, assign_to="H_is"))
           H_is = I*S*gamma_1*gamma_2*k*(3*cos(beta)**2 - 1)/r**3
     >>> print(julia_code(expr, assign_to="H_is"))
-    H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3
+    H_is = I .* S .* gamma_1 .* gamma_2 .* k .* (3 * cos(beta) .^ 2 - 1) ./ r .^ 3
     >>> print(octave_code(expr, assign_to="H_is"))
     H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3;
     >>> print(rust_code(expr, assign_to="H_is"))

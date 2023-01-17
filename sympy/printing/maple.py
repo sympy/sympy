@@ -98,7 +98,7 @@ class MapleCodePrinter(CodePrinter):
 
     def __init__(self, settings=None):
         if settings is None:
-            settings = dict()
+            settings = {}
         super().__init__(settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})

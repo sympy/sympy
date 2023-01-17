@@ -1,4 +1,4 @@
-.. _booleans:
+.. _booleans-guide:
 
 =============================
  Symbolic and fuzzy booleans

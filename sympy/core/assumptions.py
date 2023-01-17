@@ -1,6 +1,6 @@
 """
 This module contains the machinery handling assumptions.
-Do also consider the guide :ref:`assumptions`.
+Do also consider the guide :ref:`assumptions-guide`.
 
 All symbolic objects have assumption attributes that can be accessed via
 ``.is_<assumption name>`` attribute.
@@ -214,10 +214,27 @@ from .facts import FactRules, FactKB
 from .core import BasicMeta
 from .sympify import sympify
 
-from sympy.core.random import shuffle
+from sympy.core.random import _assumptions_shuffle as shuffle
+from sympy.core.assumptions_generated import generated_assumptions as _assumptions
 
+def _load_pre_generated_assumption_rules():
+    """ Load the assumption rules from pre-generated data
 
-_assume_rules = FactRules([
+    To update the pre-generated data, see :method::`_generate_assumption_rules`
+    """
+    _assume_rules=FactRules._from_python(_assumptions)
+    return _assume_rules
+
+def _generate_assumption_rules():
+    """ Generate the default assumption rules
+
+    This method should only be called to update the pre-generated
+    assumption rules.
+
+    To update the pre-generated assumptions run: bin/ask_update.py
+
+    """
+    _assume_rules = FactRules([
 
     'integer        ->  rational',
     'rational       ->  real',
@@ -274,8 +291,12 @@ _assume_rules = FactRules([
     'infinite       ==  !finite',
     'noninteger     ==  extended_real & !integer',
     'extended_nonzero == extended_real & !zero',
-])
+    ])
+    return _assume_rules
 
+
+#_assume_rules = _load_pre_generated_assumption_rules()
+_assume_rules =_generate_assumption_rules()
 _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)

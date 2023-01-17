@@ -635,7 +635,7 @@ class MarkovProcess(StochasticProcess):
 
             rv = rv[0]
             states = condition.as_set()
-            prob, gstate = dict(), None
+            prob, gstate = {}, None
             for gc in gcs:
                 if gc.has(min_key_rv):
                     if gc.has(Probability):
@@ -1621,7 +1621,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     independent Bernoulli process trials with the same parameter `p`.
     It's assumed that the probability `p` applies to every
     trial and that the outcomes of each trial
-    are independent of all the rest. Therefore Bernoulli Processs
+    are independent of all the rest. Therefore Bernoulli Process
     is Discrete State and Discrete Time Stochastic Process.
 
     Parameters

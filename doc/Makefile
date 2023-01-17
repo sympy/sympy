@@ -21,12 +21,14 @@ export LATEXMKOPTS = -halt-on-error -xelatex
 
 
 ALLSPHINXOPTS = -d $(BUILDDIR)/doctrees $(SPHINXOPTS)
+WARNINGSFILE = $(BUILDDIR)/.sphinx-warnings
+SPHINXSAVEWARNINGS = -w $(WARNINGSFILE)
 ALLSPHINXOPTSapi = -d $(BUILDDIR)/doctrees-api $(SPHINXOPTS) api
 ALLSPHINXOPTSlatex = -d $(BUILDDIR)/doctrees-latex -D latex_element.papersize=$(PAPER)paper \
                 $(SPHINXOPTS) src
 
-.PHONY: changes cheatsheet clean help html htmlapi htmlhelp info latex \
-        pdflatex latexpdf pdf linkcheck livehtml texinfo web logo man
+.PHONY: changes cheatsheet clean help html _html htmlapi htmlhelp info latex \
+        pdflatex latexpdf pdf linkcheck livehtml texinfo web logo man printwarnings
 
 .SUFFIXES: .pdf .svg
 
@@ -52,16 +54,27 @@ clean:
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
 
-html: $(BUILDDIR)/html/pics/*.png
-html: SPHINXOPTS += -W --keep-going
-html: $(BUILDDIR)/logo/sympy-notailtext-favicon.ico
+html:
+	$(MAKE) -s _html || $(MAKE) -s printwarnings
+
+# Force colors on CI. Set NO_COLOR=1 on the command line to disable this.
+_html: export FORCE_COLOR = 1
+_html: $(BUILDDIR)/html/pics/*.png
+_html: SPHINXOPTS += -W --keep-going
+_html: $(BUILDDIR)/logo/sympy-notailtext-favicon.ico
 	mkdir -p $(SOURCEDIR)/.static
 	mkdir -p $(BUILDDIR)/html
 	mkdir -p $(BUILDDIR)/doctrees
 	mkdir -p $(SOURCEDIR)/modules
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(SPHINXSAVEWARNINGS) $(SOURCEDIR) $(BUILDDIR)/html
 	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+	@echo "Docs build finished. The HTML pages are in $(BUILDDIR)/html."
+
+# Print the warnings again at the end of the build, to make them easier to find
+printwarnings:
+	@printf "\033[0;31mThe docs build failed with the following errors:\033[0m\n"
+	@cat $(WARNINGSFILE)
+	exit 1
 
 $(BUILDDIR)/html/pics/*.png: $(SOURCEDIR)/pics/*.png
 	mkdir -p $(BUILDDIR)/html
@@ -115,7 +128,7 @@ linkcheck:
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in $(BUILDDIR)/linkcheck/output.txt."
 
-livehtml: html
+livehtml: _html
 	sphinx-autobuild --open-browser --watch .. --host $(LIVEHOST) --port $(LIVEPORT) -b html $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
 
 cheatsheet: $(BUILDDIR)/cheatsheet/cheatsheet.pdf $(BUILDDIR)/cheatsheet/combinatoric_cheatsheet.pdf

@@ -1,4 +1,5 @@
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from sympy.external import import_module
 from sympy.printing.printer import Printer
@@ -19,7 +20,7 @@ if aesara:
     mapping = {
             sympy.Add: aet.add,
             sympy.Mul: aet.mul,
-            sympy.Abs: aet.abs_,
+            sympy.Abs: aet.abs,
             sympy.sign: aet.sgn,
             sympy.ceiling: aet.ceil,
             sympy.floor: aet.floor,
@@ -51,10 +52,10 @@ if aesara:
             sympy.StrictLessThan: aet.lt,
             sympy.LessThan: aet.le,
             sympy.GreaterThan: aet.ge,
-            sympy.And: aet.and_,  # bitwise
-            sympy.Or: aet.or_,  # bitwise
+            sympy.And: aet.bitwise_and,  # bitwise
+            sympy.Or: aet.bitwise_or,  # bitwise
             sympy.Not: aet.invert,  # bitwise
-            sympy.Xor: aet.xor,  # bitwise
+            sympy.Xor: aet.bitwise_xor,  # bitwise
             sympy.Max: aet.maximum,  # Sympy accept >2 inputs, Aesara only 2
             sympy.Min: aet.minimum,  # Sympy accept >2 inputs, Aesara only 2
             sympy.conjugate: aet.conj,
@@ -99,7 +100,7 @@ class AesaraPrinter(Printer):
     printmethod = "_aesara"
 
     def __init__(self, *args, **kwargs):
-        self.cache = kwargs.pop('cache', dict())
+        self.cache = kwargs.pop('cache', {})
         super().__init__(*args, **kwargs)
 
     def _get_key(self, s, name=None, dtype=None, broadcastable=None):
@@ -306,7 +307,7 @@ class AesaraPrinter(Printer):
         return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
 
 
-global_cache = {}  # type: tDict[Any, Any]
+global_cache: dict[Any, Any] = {}
 
 
 def aesara_code(expr, cache=None, **kwargs):

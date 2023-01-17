@@ -46,7 +46,7 @@ class Gradient(Expr):
         obj._expr = expr
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return gradient(self._expr, doit=True)
 
 
@@ -71,7 +71,7 @@ class Divergence(Expr):
         obj._expr = expr
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return divergence(self._expr, doit=True)
 
 
@@ -96,7 +96,7 @@ class Curl(Expr):
         obj._expr = expr
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         return curl(self._expr, doit=True)
 
 
@@ -317,7 +317,7 @@ class Laplacian(Expr):
         obj._expr = expr
         return obj
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         from sympy.vector.functions import laplacian
         return laplacian(self._expr)
 

@@ -1,5 +1,6 @@
+from math import prod
+
 from sympy.core.basic import Basic
-from sympy.core.mul import prod
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp

@@ -27,18 +27,19 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
-    MatrixSymbol, dotprodsimp)
+    MatrixSymbol, dotprodsimp, rot_ccw_axis1, rot_ccw_axis2, rot_ccw_axis3)
 from sympy.matrices.utilities import _dotprodsimp_state
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture, iterable
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import ignore_warnings, SymPyDeprecationWarning
 from sympy.testing.pytest import (raises, XFAIL, slow, skip,
                                   warns_deprecated_sympy, warns)
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
 from sympy.external import import_module
+from sympy.algebras import Quaternion
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
@@ -1586,13 +1587,6 @@ def test_issue_15887():
     a[1, 0] = 0
     raises(MatrixError, lambda: a.diagonalize())
 
-    # Test deprecated cache and kwargs
-    with warns_deprecated_sympy():
-        a.is_diagonalizable(clear_cache=True)
-
-    with warns_deprecated_sympy():
-        a.is_diagonalizable(clear_subproducts=True)
-
 
 def test_jordan_form():
 
@@ -1882,8 +1876,6 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
     raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
-    with warns_deprecated_sympy():
-        Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]]))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([1, 2, 3]))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
@@ -2304,6 +2296,19 @@ def test_rotation_matrices():
     assert rot_axis2(0) == eye(3)
     assert rot_axis3(0) == eye(3)
 
+    # Check left-hand convention
+    # see Issue #24529
+    q1 = Quaternion.from_axis_angle([1, 0, 0], pi / 2)
+    q2 = Quaternion.from_axis_angle([0, 1, 0], pi / 2)
+    q3 = Quaternion.from_axis_angle([0, 0, 1], pi / 2)
+    assert rot_axis1(- pi / 2) == q1.to_rotation_matrix()
+    assert rot_axis2(- pi / 2) == q2.to_rotation_matrix()
+    assert rot_axis3(- pi / 2) == q3.to_rotation_matrix()
+    # Check right-hand convention
+    assert rot_ccw_axis1(+ pi / 2) == q1.to_rotation_matrix()
+    assert rot_ccw_axis2(+ pi / 2) == q2.to_rotation_matrix()
+    assert rot_ccw_axis3(+ pi / 2) == q3.to_rotation_matrix()
+
 
 def test_DeferredVector():
     assert str(DeferredVector("vector")[4]) == "vector[4]"
@@ -2448,10 +2453,6 @@ def test_dot():
     assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), conjugate_convention="left") == 5
     raises(ValueError, lambda: Matrix([1, 2]).dot(Matrix([3, 4]), hermitian=True, conjugate_convention="test"))
 
-    with warns_deprecated_sympy():
-        A = Matrix([[1, 2], [3, 4]])
-        B = Matrix([[2, 3], [1, 2]])
-        assert A.dot(B) == [11, 7, 16, 10]
 
 def test_dual():
     B_x, B_y, B_z, E_x, E_y, E_z = symbols(
@@ -2702,7 +2703,8 @@ def test_17522_numpy():
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 
-    m = _matrixify(matrix([[1, 2], [3, 4]]))
+    with ignore_warnings(PendingDeprecationWarning):
+        m = _matrixify(matrix([[1, 2], [3, 4]]))
     assert m[3] == 4
     assert list(m) == [1, 2, 3, 4]
 
@@ -2901,9 +2903,6 @@ def test_deprecated():
     assert Jcells[1] == Matrix(1, 1, [2])
     assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
 
-    with warns_deprecated_sympy():
-        assert Matrix([[1,2],[3,4]]).dot(Matrix([[1,3],[4,5]])) == [10, 19, 14, 28]
-
 
 def test_issue_14489():
     from sympy.core.mod import Mod
@@ -3000,17 +2999,6 @@ def test_issue_19809():
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(f)
             assert future.result()
-
-def test_deprecated_classof_a2idx():
-    with warns_deprecated_sympy():
-        from sympy.matrices.matrices import classof
-        M = Matrix([[1, 2], [3, 4]])
-        IM = ImmutableMatrix([[1, 2], [3, 4]])
-        assert classof(M, IM) == ImmutableDenseMatrix
-
-    with warns_deprecated_sympy():
-        from sympy.matrices.matrices import a2idx
-        assert a2idx(-1, 3) == 2
 
 
 def test_issue_23276():

@@ -62,7 +62,7 @@ of the algorithm, a few definitions to understand are -
     `\infty` if `a(\frac{1}{x})` has a pole at 0.
 
 Every pole is associated with an order that is equal to the multiplicity
-of its appearence as a root of `T(x)`. A pole is called a simple pole if
+of its appearance as a root of `T(x)`. A pole is called a simple pole if
 it has an order 1. Similarly, a pole is called a multiple pole if it has
 an order `\ge` 2.
 
@@ -124,7 +124,7 @@ to get the solution correctly.
 Implementation
 ==============
 
-In this implementatin, we use ``Poly`` to represent a rational function
+In this implementation, we use ``Poly`` to represent a rational function
 rather than using ``Expr`` since ``Poly`` is much faster. Since we cannot
 represent rational functions directly using ``Poly``, we instead represent
 a rational function with 2 ``Poly`` objects - one for its numerator and
@@ -153,7 +153,7 @@ the number of poles be `n`. Also find the valuation of `a(x)` at
 NOTE: Although the algorithm considers `\infty` as a pole, it is
 not mentioned if it a part of the set of finite poles. `\infty`
 is NOT a part of the set of finite poles. If a pole exists at
-`\infty`, we use its multiplicty to find the laurent series of
+`\infty`, we use its multiplicity to find the laurent series of
 `a(x)` about `\infty`.
 
 Step 6 : Find `n` c-vectors (one for each pole) and 1 d-vector using
@@ -663,10 +663,12 @@ def compute_m_ybar(x, poles, choice, N):
 
     # Calculate the first (nested) summation for ybar
     # as given in Step 9 of the Thesis (Pg 82)
-    for i in range(len(poles)):
-        for j in range(len(choice[i])):
-            ybar += choice[i][j]/(x - poles[i])**(j+1)
-        m -= Poly(choice[i][0], x, extension=True)
+    dybar = []
+    for i, polei in enumerate(poles):
+        for j, cij in enumerate(choice[i]):
+            dybar.append(cij/(x - polei)**(j + 1))
+        m -=Poly(choice[i][0], x, extension=True)  # can't accumulate Poly and use with Add
+    ybar += Add(*dybar)
 
     # Calculate the second summation for ybar
     for i in range(N+1):

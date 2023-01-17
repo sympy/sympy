@@ -710,7 +710,7 @@ def intersection(*entities, pairwise=False, **kwargs):
 
     # find all pairwise intersections
     ans = []
-    for j in range(0, len(entities)):
+    for j in range(len(entities)):
         for k in range(j + 1, len(entities)):
             ans.extend(intersection(entities[j], entities[k]))
     return list(ordered(set(ans)))

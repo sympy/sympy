@@ -5,14 +5,15 @@ from sympy.core import Basic, sympify
 from sympy.core.add import add, Add, _could_extract_minus_sign
 from sympy.core.sorting import default_sort_key
 from sympy.functions import adjoint
-from sympy.matrices.common import ShapeError
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
-from sympy.utilities import sift
+from sympy.matrices.expressions._shape import validate_matadd_integer as validate
+from sympy.utilities.iterables import sift
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 # XXX: MatAdd should perhaps not subclass directly from Add
 class MatAdd(MatrixExpr, Add):
@@ -34,7 +35,7 @@ class MatAdd(MatrixExpr, Add):
 
     identity = GenericZeroMatrix()
 
-    def __new__(cls, *args, evaluate=False, check=False, _sympify=True):
+    def __new__(cls, *args, evaluate=False, check=None, _sympify=True):
         if not args:
             return cls.identity
 
@@ -44,11 +45,18 @@ class MatAdd(MatrixExpr, Add):
         if _sympify:
             args = list(map(sympify, args))
 
+        if not all(isinstance(arg, MatrixExpr) for arg in args):
+            raise TypeError("Mix of Matrix and Scalar symbols")
+
         obj = Basic.__new__(cls, *args)
 
-        if check:
-            if not any(isinstance(i, MatrixExpr) for i in args):
-                return Add.fromiter(args)
+        if check is not None:
+            sympy_deprecation_warning(
+                "Passing check to MatAdd is deprecated and the check argument will be removed in a future version.",
+                deprecated_since_version="1.11",
+                active_deprecations_target='remove-check-argument-from-matrix-operations')
+
+        if check is not False:
             validate(*args)
 
         if evaluate:
@@ -58,9 +66,6 @@ class MatAdd(MatrixExpr, Add):
 
     @classmethod
     def _evaluate(cls, expr):
-        args = expr.args
-        if not any(isinstance(i, MatrixExpr) for i in args):
-            return Add(*args, evaluate=True)
         return canonicalize(expr)
 
     @property
@@ -87,10 +92,10 @@ class MatAdd(MatrixExpr, Add):
         from .trace import trace
         return Add(*[trace(arg) for arg in self.args]).doit()
 
-    def doit(self, **kwargs):
-        deep = kwargs.get('deep', True)
+    def doit(self, **hints):
+        deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**kwargs) for arg in self.args]
+            args = [arg.doit(**hints) for arg in self.args]
         else:
             args = self.args
         return canonicalize(MatAdd(*args))
@@ -101,14 +106,6 @@ class MatAdd(MatrixExpr, Add):
 
 add.register_handlerclass((Add, MatAdd), MatAdd)
 
-def validate(*args):
-    if not all(arg.is_Matrix for arg in args):
-        raise TypeError("Mix of Matrix and Scalar symbols")
-
-    A = args[0]
-    for B in args[1:]:
-        if A.shape != B.shape:
-            raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
 matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])

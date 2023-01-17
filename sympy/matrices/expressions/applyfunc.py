@@ -92,11 +92,11 @@ class ElementwiseApplyFunction(MatrixExpr):
     def shape(self):
         return self.expr.shape
 
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
+    def doit(self, **hints):
+        deep = hints.get("deep", True)
         expr = self.expr
         if deep:
-            expr = expr.doit(**kwargs)
+            expr = expr.doit(**hints)
         function = self.function
         if isinstance(function, Lambda) and function.is_identity:
             # This is a Lambda containing the identity function.
@@ -107,7 +107,7 @@ class ElementwiseApplyFunction(MatrixExpr):
             return ElementwiseApplyFunction(
                 lambda x: self.function(expr.function(x)),
                 expr.expr
-            ).doit()
+            ).doit(**hints)
         else:
             return self
 

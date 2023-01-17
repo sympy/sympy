@@ -1,6 +1,6 @@
 from functools import reduce
+from math import prod
 
-from sympy.core.mul import prod
 from sympy.core.numbers import igcdex, igcd
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ

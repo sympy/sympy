@@ -1,4 +1,3 @@
-from sympy.matrices.common import NonSquareMatrixError
 from .matexpr import MatrixExpr
 from .special import Identity
 from sympy.core import S
@@ -7,15 +6,16 @@ from sympy.core.cache import cacheit
 from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
+from sympy.matrices.common import NonSquareMatrixError
 
 
 class MatPow(MatrixExpr):
-
     def __new__(cls, base, exp, evaluate=False, **options):
         base = _sympify(base)
         if not base.is_Matrix:
             raise TypeError("MatPow base should be a matrix")
-        if not base.is_square:
+
+        if base.is_square is False:
             raise NonSquareMatrixError("Power of non-square matrix %s" % base)
 
         exp = _sympify(exp)
@@ -57,9 +57,9 @@ class MatPow(MatrixExpr):
                 return MatrixElement(self, i, j)
         return A[i, j]
 
-    def doit(self, **kwargs):
-        if kwargs.get('deep', True):
-            base, exp = [arg.doit(**kwargs) for arg in self.args]
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            base, exp = (arg.doit(**hints) for arg in self.args)
         else:
             base, exp = self.args
 
@@ -79,7 +79,7 @@ class MatPow(MatrixExpr):
             return Identity(base.rows)
         if exp == S.NegativeOne:
             from sympy.matrices.expressions import Inverse
-            return Inverse(base).doit(**kwargs)
+            return Inverse(base).doit(**hints)
 
         eval_power = getattr(base, '_eval_power', None)
         if eval_power is not None:

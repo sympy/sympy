@@ -2,9 +2,10 @@
 A Printer for generating readable representation of most SymPy classes.
 """
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
-from sympy.core import S, Rational, Pow, Basic, Mul, Number, Add
+from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
@@ -18,7 +19,7 @@ from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
 class StrPrinter(Printer):
     printmethod = "_sympystr"
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         "order": None,
         "full_prec": "auto",
         "sympy_integers": False,
@@ -26,9 +27,9 @@ class StrPrinter(Printer):
         "perm_cyclic": True,
         "min": None,
         "max": None,
-    }  # type: tDict[str, Any]
+    }
 
-    _relationals = dict()  # type: tDict[str, str]
+    _relationals: dict[str, str] = {}
 
     def parenthesize(self, item, level, strict=False):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
@@ -50,16 +51,16 @@ class StrPrinter(Printer):
     def _print_Add(self, expr, order=None):
         terms = self._as_ordered_terms(expr, order=order)
 
-        PREC = precedence(expr)
+        prec = precedence(expr)
         l = []
         for term in terms:
             t = self._print(term)
-            if t.startswith('-'):
+            if t.startswith('-') and not term.is_Add:
                 sign = "-"
                 t = t[1:]
             else:
                 sign = "+"
-            if precedence(term) < PREC or isinstance(term, Add):
+            if precedence(term) < prec or term.is_Add:
                 l.extend([sign, "(%s)" % t])
             else:
                 l.extend([sign, t])
@@ -224,11 +225,8 @@ class StrPrinter(Printer):
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
-        if str(dir) == "+":
-            return "Limit(%s, %s, %s)" % tuple(map(self._print, (e, z, z0)))
-        else:
-            return "Limit(%s, %s, %s, dir='%s')" % tuple(map(self._print,
-                                                            (e, z, z0, dir)))
+        return "Limit(%s, %s, %s, dir='%s')" % tuple(map(self._print, (e, z, z0, dir)))
+
 
     def _print_list(self, expr):
         return "[%s]" % self.stringify(expr, ", ")
@@ -287,8 +285,8 @@ class StrPrinter(Printer):
 
             pre = []
             # don't parenthesize first factor if negative
-            if n and n[0].could_extract_minus_sign():
-                pre = [str(n.pop(0))]
+            if n and not n[0].is_Add and n[0].could_extract_minus_sign():
+                pre = [self._print(n.pop(0))]
 
             nfactors = pre + [self.parenthesize(a, prec, strict=False)
                 for a in n]
@@ -297,7 +295,7 @@ class StrPrinter(Printer):
 
             # don't parenthesize first of denominator unless singleton
             if len(d) > 1 and d[0].could_extract_minus_sign():
-                pre = [str(d.pop(0))]
+                pre = [self._print(d.pop(0))]
             else:
                 pre = []
             dfactors = pre + [self.parenthesize(a, prec, strict=False)

@@ -124,9 +124,9 @@ require any external dependencies.
   {func}`LaTeX parser <sympy.parsing.latex.parse_latex>` and
   [Autolev](autolev_parser) parsers. They both require the Antlr Python
   runtime to be installed. The package for this is called
-  `antlr4-python-runtime` with conda and `antlr4-python3-runtime` with pip).
+  `antlr-python-runtime` with conda and `antlr4-python3-runtime` with pip).
   Also be aware that the version of the Antlr Python runtime must match the
-  version that was used to compile the LaTeX and Autolev parsers (4.7).
+  version that was used to compile the LaTeX and Autolev parsers (4.10).
 
 - **Clang Python Bindings**: The C parser (`sympy.parsing.c.parse_c`) requires
   the Clang Python bindings. The package for this is called `python-clang`
@@ -178,7 +178,7 @@ into an evaluable numeric function.
 In principle, `lambdify` can interface with any external library if the user
 passes in an appropriate namespace dictionary as the third argument, but by
 default, `lambdify` is aware of several popular numeric Python libraries.
-These libraries are enabled as backends in `lambdify` with build-in
+These libraries are enabled as backends in `lambdify` with built-in
 translations to convert SymPy expressions into the appropriate functions for
 those libraries.
 
@@ -198,7 +198,7 @@ those libraries.
   functions using `lambdify(modules='cupy')`.
 
 - **Jax**: [JAX](https://github.com/google/jax) is a library that uses XLA
-  to compile and run NumPy programs on GPUs and TPUs. `lambdify` can produce 
+  to compile and run NumPy programs on GPUs and TPUs. `lambdify` can produce
   JAX compatibly functions using `lambdify(modules='jax')`.
 
 - **TensorFlow**: [TensorFlow](https://www.tensorflow.org/) is a popular
@@ -329,13 +329,6 @@ is required to use the sampling functionality of `sympy.stats`.
 
   SymEngine backend support is still experimental, so certain SymPy functions
   may not work correctly when it is enabled.
-
-### Experimental Rubi Integrator
-
-- **MatchPy**: [MatchPy](https://matchpy.readthedocs.io/en/latest/) is a
-  library for doing pattern matching. It is used in the experimental
-  sympy.integrals.rubi module, but presently, it is not used anywhere else in
-  SymPy. SymPy and MatchPy are able to interface with each other.
 
 ### Sage
 

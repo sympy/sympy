@@ -457,25 +457,25 @@ class SigmaZKet(Ket):
     def _eval_innerproduct_SigmaZBra(self, bra, **hints):
         return KroneckerDelta(self.n, bra.n)
 
-    def _apply_operator_SigmaZ(self, op, **options):
+    def _apply_from_right_to_SigmaZ(self, op, **options):
         if self.n == 0:
             return self
         else:
             return S.NegativeOne * self
 
-    def _apply_operator_SigmaX(self, op, **options):
+    def _apply_from_right_to_SigmaX(self, op, **options):
         return SigmaZKet(1) if self.n == 0 else SigmaZKet(0)
 
-    def _apply_operator_SigmaY(self, op, **options):
+    def _apply_from_right_to_SigmaY(self, op, **options):
         return I * SigmaZKet(1) if self.n == 0 else (-I) * SigmaZKet(0)
 
-    def _apply_operator_SigmaMinus(self, op, **options):
+    def _apply_from_right_to_SigmaMinus(self, op, **options):
         if self.n == 0:
             return SigmaZKet(1)
         else:
             return S.Zero
 
-    def _apply_operator_SigmaPlus(self, op, **options):
+    def _apply_from_right_to_SigmaPlus(self, op, **options):
         if self.n == 0:
             return S.Zero
         else:

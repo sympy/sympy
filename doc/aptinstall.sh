@@ -12,6 +12,7 @@
 
 set -o errexit
 
+sudo apt update
 sudo apt install\
   texlive-latex-recommended\
   texlive-fonts-recommended\

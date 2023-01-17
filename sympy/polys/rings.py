@@ -1,7 +1,7 @@
 """Sparse polynomial rings. """
 
-
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
@@ -191,7 +191,7 @@ def _parse_symbols(symbols):
 
     raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
-_ring_cache = {}  # type: tDict[Any, Any]
+_ring_cache: dict[Any, Any] = {}
 
 class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """
@@ -616,10 +616,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return new_ring.from_dict(self, self.ring.domain)
 
     def as_expr(self, *symbols):
-        if symbols and len(symbols) != self.ring.ngens:
-            raise ValueError("not enough symbols, expected %s got %s" % (self.ring.ngens, len(symbols)))
-        else:
+        if not symbols:
             symbols = self.ring.symbols
+        elif len(symbols) != self.ring.ngens:
+            raise ValueError(
+                "Wrong number of symbols, expected %s got %s" %
+                (self.ring.ngens, len(symbols))
+            )
 
         return expr_from_dict(self.as_expr_dict(), *symbols)
 
@@ -805,7 +808,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             else:
                 if negative:
                     coeff = -coeff
-                if coeff != self.ring.one:
+                if coeff != self.ring.domain.one:
                     scoeff = printer.parenthesize(coeff, prec_mul, strict=True)
                 else:
                     scoeff = ''
@@ -1172,7 +1175,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif len(self) == 1:
             monom, coeff = list(self.items())[0]
             p = ring.zero
-            if coeff == 1:
+            if coeff == ring.domain.one:
                 p[ring.monomial_pow(monom, n)] = coeff
             else:
                 p[ring.monomial_pow(monom, n)] = coeff**n
@@ -1722,7 +1725,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         raise ValueError("expected a monomial, got %s" % element)
 
     def const(self):
-        """Returns the constant coeffcient. """
+        """Returns the constant coefficient. """
         return self._get_coeff(self.ring.zero_monom)
 
     @property
@@ -2374,7 +2377,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def compose(f, x, a=None):
         ring = f.ring
         poly = ring.zero
-        gens_map = dict(list(zip(ring.gens, list(range(ring.ngens)))))
+        gens_map = dict(zip(ring.gens, range(ring.ngens)))
 
         if a is not None:
             replacements = [(x, a)]

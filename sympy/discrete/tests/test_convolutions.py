@@ -50,7 +50,6 @@ def test_convolution():
     raises(TypeError, lambda: convolution(a, c, subset=True, prime=q))
 
 
-
 def test_cyclic_convolution():
     # fft
     a = [1, Rational(5, 3), sqrt(3), Rational(7, 5)]

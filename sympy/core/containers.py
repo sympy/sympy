@@ -362,18 +362,10 @@ class OrderedSet(MutableSet):
         return '%s(%r)' % (self.__class__.__name__, list(self.map.keys()))
 
     def intersection(self, other):
-        result = []
-        for val in self:
-            if val in other:
-                result.append(val)
-        return self.__class__(result)
+        return self.__class__([val for val in self if val in other])
 
     def difference(self, other):
-        result = []
-        for val in self:
-            if val not in other:
-                result.append(val)
-        return self.__class__(result)
+        return self.__class__([val for val in self if val not in other])
 
     def update(self, iterable):
         for val in iterable:
