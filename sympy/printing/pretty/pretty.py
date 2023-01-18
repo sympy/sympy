@@ -1994,7 +1994,7 @@ class PrettyPrinter(Printer):
 
         # Gather terms for numerator/denominator
         for item in args:
-            if item.is_commutative is not False and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
+            if item.is_commutative and item.is_Pow and item.exp.is_Rational and item.exp.is_negative:
                 if item.exp != -1:
                     b.append(Pow(item.base, -item.exp, evaluate=False))
                 else:
@@ -2067,7 +2067,7 @@ class PrettyPrinter(Printer):
     def _print_Pow(self, power):
         from sympy.simplify.simplify import fraction
         b, e = power.as_base_exp()
-        if power.is_commutative is not False:
+        if power.is_commutative:
             if e is S.NegativeOne:
                 return prettyForm("1")/self._print(b)
             n, d = fraction(e)

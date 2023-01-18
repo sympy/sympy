@@ -2088,6 +2088,7 @@ def test_held_expression_UnevaluatedExpr():
     x2 = UnevaluatedExpr(2)*2
     assert type(x2) is Mul
     assert x2.args == (2, UnevaluatedExpr(2))
+    assert str(1/UnevaluatedExpr(sqrt(pi))) == '1/(sqrt(pi))'
 
 def test_round_exception_nostr():
     # Don't use the string form of the expression in the round exception, as
