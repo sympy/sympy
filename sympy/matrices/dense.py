@@ -235,7 +235,7 @@ def rot_givens(i, j, theta, dim=3):
     [0,  0, 1]])
 
     This can be generalized to any number
-    of dimentions:
+    of dimensions:
 
     >>> rot_givens(1, 0, pi/2, dim=4)
     Matrix([
