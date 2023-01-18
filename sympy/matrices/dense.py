@@ -208,10 +208,10 @@ def rot_givens(i, j, theta, dim=3):
             g_{jj} & g_{ji} \\
             g_{ij} & g_{ii}
         \end{bmatrix} =
-        \begin{bmatrix}
-            c & -s \\
-            s & c
-        \end{bmatrix}
+            \begin{bmatrix}
+                c & -s \\
+                s & c
+            \end{bmatrix}
 
     Parameters
     ==========
