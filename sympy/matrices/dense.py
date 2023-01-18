@@ -205,9 +205,9 @@ def rot_givens(i, j, theta, dim=3):
     Parameters
     ==========
 
-    i : int between 1 and dim
+    i : int between ``0`` and ``dim - 1``
         Represents first axis
-    j : int between 1 and dim
+    j : int between ``0`` and ``dim - 1``
         Represents second axis
     dim : int bigger than 1
         Number of dimentions. Defaults to 3.
@@ -220,7 +220,7 @@ def rot_givens(i, j, theta, dim=3):
     A counterclockwise rotation of pi/3 (60 degrees) around
     the third axis (z-axis):
 
-    >>> rot_givens(2, 1, pi/3)
+    >>> rot_givens(1, 0, pi/3)
     Matrix([
     [      1/2, -sqrt(3)/2, 0],
     [sqrt(3)/2,        1/2, 0],
@@ -228,7 +228,7 @@ def rot_givens(i, j, theta, dim=3):
 
     If we rotate by pi/2 (90 degrees):
 
-    >>> rot_givens(2, 1, pi/2)
+    >>> rot_givens(1, 0, pi/2)
     Matrix([
     [0, -1, 0],
     [1,  0, 0],
@@ -237,7 +237,7 @@ def rot_givens(i, j, theta, dim=3):
     This can be generalized to any number
     of dimentions:
 
-    >>> rot_givens(2, 1, pi/2, dim=4)
+    >>> rot_givens(1, 0, pi/2, dim=4)
     Matrix([
     [0, -1, 0, 0],
     [1,  0, 0, 0],
@@ -274,19 +274,18 @@ def rot_givens(i, j, theta, dim=3):
                          'got ({}, {})'.format(i, j))
 
     for ij in [i, j]:
-        if not isinstance(ij, int) or ij < 1 or ij > dim:
-            raise ValueError('i and j must be between 1 and '
-                             '{}, got i={} and j={}.'.format(dim, i, j))
+        if not isinstance(ij, int) or ij < 0 or ij > dim - 1:
+            raise ValueError('i and j must be integers between 0 and '
+                             '{}, got i={} and j={}.'.format(dim-1, i, j))
 
     theta = sympify(theta)
     c = cos(theta)
     s = sin(theta)
     M = eye(dim)
-    M[i-1, i-1] = c
-    M[j-1, j-1] = c
-    M[i-1, j-1] = s
-    M[j-1, i-1] = -s
-
+    M[i, i] = c
+    M[j, j] = c
+    M[i, j] = s
+    M[j, i] = -s
     return M
 
 
@@ -342,7 +341,7 @@ def rot_axis3(theta):
     rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)
         about the 2-axis (clockwise around the y axis)
     """
-    return rot_givens(1, 2, theta, dim=3)
+    return rot_givens(0, 1, theta, dim=3)
 
 
 def rot_axis2(theta):
@@ -397,7 +396,7 @@ def rot_axis2(theta):
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (counterclockwise around the z axis)
     """
-    return rot_givens(3, 1, theta, dim=3)
+    return rot_givens(2, 0, theta, dim=3)
 
 
 def rot_axis1(theta):
@@ -452,7 +451,7 @@ def rot_axis1(theta):
     rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (clockwise around the z axis)
     """
-    return rot_givens(2, 3, theta, dim=3)
+    return rot_givens(1, 2, theta, dim=3)
 
 
 def rot_ccw_axis3(theta):
@@ -507,7 +506,7 @@ def rot_ccw_axis3(theta):
     rot_ccw_axis2: Returns a rotation matrix for a rotation of theta (in radians)
         about the 2-axis (counterclockwise around the y axis)
     """
-    return rot_givens(2, 1, theta, dim=3)
+    return rot_givens(1, 0, theta, dim=3)
 
 
 def rot_ccw_axis2(theta):
@@ -562,7 +561,7 @@ def rot_ccw_axis2(theta):
     rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (counterclockwise around the z axis)
     """
-    return rot_givens(1, 3, theta, dim=3)
+    return rot_givens(0, 2, theta, dim=3)
 
 
 def rot_ccw_axis1(theta):
@@ -617,7 +616,7 @@ def rot_ccw_axis1(theta):
     rot_ccw_axis3: Returns a rotation matrix for a rotation of theta (in radians)
         about the 3-axis (counterclockwise around the z axis)
     """
-    return rot_givens(3, 2, theta, dim=3)
+    return rot_givens(2, 1, theta, dim=3)
 
 
 @doctest_depends_on(modules=('numpy',))
