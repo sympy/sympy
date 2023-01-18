@@ -197,9 +197,10 @@ def rot_givens(i, j, theta, dim=3):
 
     For fixed ``i > j``\, the non-zero elements of a Givens matrix are
     given by:
-        - $g_{kk} = 1$ for $k \ne i,\,j$
-        - $g_{kk} = c$ for $k = i,\,j$
-        - $g_{ji} = -g_{ij} = -s$
+
+    - $g_{kk} = 1$ for $k \ne i,\,j$
+    - $g_{kk} = c$ for $k = i,\,j$
+    - $g_{ji} = -g_{ij} = -s$
 
     Parameters
     ==========
