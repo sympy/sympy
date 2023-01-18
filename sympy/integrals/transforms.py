@@ -1316,9 +1316,9 @@ def _laplace_build_rules(t, s):
      S.true, Abs(re(a)), dco), # 4.9.1
     (cosh(a*t), s/(s**2-a**2),
      S.true, Abs(re(a)), dco), # 4.9.2
-    (sinh(a*t)**2, 2*a**2/(s**3-4*a**2*s**2),
+    (sinh(a*t)**2, 2*a**2/(s**3-4*a**2*s),
      S.true, 2*Abs(re(a)), dco), # 4.9.3
-    (cosh(a*t)**2, (s**2-2*a**2)/(s**3-4*a**2*s**2),
+    (cosh(a*t)**2, (s**2-2*a**2)/(s**3-4*a**2*s),
      S.true, 2*Abs(re(a)), dco), # 4.9.4
     (sinh(a*t)/t, log((s+a)/(s-a))/2,
      S.true, Abs(re(a)), dco), # 4.9.12
@@ -1790,8 +1790,8 @@ class LaplaceTransform(IntegralTransform):
         - ``noconds``:  if True, do not return convergence conditions. This is
         the default behaviour.
         """
-        _noconds = hints.get('noconds', True)
-        _simplify = hints.get('simplify', False)
+        _noconds = hints.get('noconds', False)
+        _simplify = hints.get('simplify', True)
 
         debug('[LT doit] (%s, %s, %s)'%(self.function,
                                         self.function_variable,
@@ -1908,9 +1908,9 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**4, t, s)
     (24/s**5, 0, True)
-    >>> laplace_transform(t**a, t, s)
+    >>> laplace_transform(t**a, t, s, simplify=False)
     (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
-    >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s, simplify=True)
+    >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s)
     (s/(a + s), -a, True)
 
     See Also
@@ -1922,7 +1922,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     """
 
     _noconds = hints.get('noconds', False)
-    _simplify = hints.get('simplify', False)
+    _simplify = hints.get('simplify', True)
 
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
 
