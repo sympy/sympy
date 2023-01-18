@@ -1822,7 +1822,7 @@ class LaplaceTransform(IntegralTransform):
                                     for func in f.atoms(AppliedUndef))
             if try_directly:
                 try:
-                    T = self._compute_transform(f, t_, s_)
+                    T = self._compute_transform(f, t_, s_, **hints)
                 except IntegralTransformError:
                     T = None
             if T is not None:
