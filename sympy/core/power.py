@@ -1530,10 +1530,13 @@ class Pow(Expr):
         else:
             return True
 
-    def _eval_rewrite_as_exp(self, base, expo, **kwargs):
+    def _eval_rewrite_as_exp(self, base, expo, nonsymbolic_exponent=True, **kwargs):
         from sympy.functions.elementary.exponential import exp, log
 
         if base.is_zero or base.has(exp) or expo.has(exp):
+            return base**expo
+
+        if not nonsymbolic_exponent and not expo.has(Symbol):
             return base**expo
 
         if base.has(Symbol):

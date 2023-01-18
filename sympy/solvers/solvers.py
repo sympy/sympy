@@ -2747,7 +2747,7 @@ def _tsolve(eq, sym, **flags):
             elif lhs.func == LambertW:
                 return _vsolve(lhs.args[0] - rhs*exp(rhs), sym, **flags)
 
-        rewrite = lhs.rewrite(exp)
+        rewrite = lhs.rewrite(exp, nonsymbolic_exponent=False)
         if rewrite != lhs:
             return _vsolve(rewrite - rhs, sym, **flags)
     except NotImplementedError:

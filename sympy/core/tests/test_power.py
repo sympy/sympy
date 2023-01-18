@@ -253,6 +253,27 @@ def test_power_rewrite_exp():
     assert all((1/func(x)).rewrite(exp) == 1/(func(x).rewrite(exp)) for func in
                     (sin, cos, tan, sec, csc, sinh, cosh, tanh))
 
+    if global_parameters.exp_is_pow:
+        assert (x**2).rewrite(exp, nonsymbolic_exponent=True) == \
+            (x**2).rewrite(exp) == \
+            Pow(S.Exp1, 2*log(x), evaluate=False)
+    else:
+        assert (x**2).rewrite(exp, nonsymbolic_exponent=True) == \
+            (x**2).rewrite(exp) == \
+            exp(2*log(x), evaluate=False)
+    assert (x**2).rewrite(exp, nonsymbolic_exponent=False) == x**2
+
+    if global_parameters.exp_is_pow:
+        assert (2**x).rewrite(exp, nonsymbolic_exponent=False) == \
+            (2**x).rewrite(exp, nonsymbolic_exponent=True) == \
+            (2**x).rewrite(exp) == \
+            Pow(S.Exp1, x*log(2))
+    else:
+        assert (2**x).rewrite(exp, nonsymbolic_exponent=False) == \
+            (2**x).rewrite(exp, nonsymbolic_exponent=True) == \
+            (2**x).rewrite(exp) == \
+            exp(x*log(2))
+
 
 def test_zero():
     assert 0**x != 0
