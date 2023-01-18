@@ -207,7 +207,7 @@ def rot_givens(i, j, theta, dim=3):
         \begin{bmatrix}
             g_{jj} & g_{ji} \\
             g_{ij} & g_{ii}
-        \end{bmatrix} = 
+        \end{bmatrix} =
         \begin{bmatrix}
             c & -s \\
             s & c
