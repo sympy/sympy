@@ -197,13 +197,21 @@ def rot_givens(i, j, theta, dim=3):
 
     For fixed ``i > j``\, the non-zero elements of a Givens matrix are
     given by:
+        - $g_{kk} = 1$ for $k \ne i,\,j$
+        - $g_{kk} = c$ for $k = i,\,j$
+        - $g_{ji} = -g_{ij} = -s$
+
+    Which gives the following rotation submatrix:
 
     .. math::
-        \begin{align}
-            g_{kk} &= 1 \qquad \text{for} \ k \ne i,\,j \\
-            g_{kk} &= c \qquad \text{for} \ k = i,\,j \\
-            g_{ji} &= -g_{ij} = -s
-        \end{align}
+        \begin{bmatrix}
+            g_{jj} & g_{ji} \\
+            g_{ij} & g_{ii}
+        \end{bmatrix} = 
+        \begin{bmatrix}
+            c & -s \\
+            s & c
+        \end{bmatrix}
 
     Parameters
     ==========
@@ -272,6 +280,10 @@ def rot_givens(i, j, theta, dim=3):
         raise ValueError('dim must be an integer biggen than one, '
                          'got {}.'.format(dim))
 
+    if i == j:
+        raise ValueError('i and j must be different, '
+                         'got ({}, {})'.format(i, j))
+
     for ij in [i, j]:
         if not isinstance(ij, int) or ij < 1 or ij > dim:
             raise ValueError('i and j must be between 1 and '
@@ -281,7 +293,6 @@ def rot_givens(i, j, theta, dim=3):
     c = cos(theta)
     s = sin(theta)
     M = eye(dim)
-
     M[i-1, i-1] = c
     M[j-1, j-1] = c
     M[i-1, j-1] = s
