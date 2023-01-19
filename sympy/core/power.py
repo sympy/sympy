@@ -1862,17 +1862,18 @@ class Pow(Expr):
         from sympy.functions.combinatorial.factorials import factorial
         return x**n/factorial(n)
 
-    def _eval_rewrite_as_sin(self, base, exp):
+    def _eval_rewrite_as_sin(self, base, exp, **hints):
+        return
         if self.base is S.Exp1:
             from sympy.functions.elementary.trigonometric import sin
             return sin(S.ImaginaryUnit*self.exp + S.Pi/2) - S.ImaginaryUnit*sin(S.ImaginaryUnit*self.exp)
 
-    def _eval_rewrite_as_cos(self, base, exp):
+    def _eval_rewrite_as_cos(self, base, exp, **hints):
         if self.base is S.Exp1:
             from sympy.functions.elementary.trigonometric import cos
             return cos(S.ImaginaryUnit*self.exp) + S.ImaginaryUnit*cos(S.ImaginaryUnit*self.exp + S.Pi/2)
 
-    def _eval_rewrite_as_tanh(self, base, exp):
+    def _eval_rewrite_as_tanh(self, base, exp, **hints):
         if self.base is S.Exp1:
             from sympy.functions.elementary.hyperbolic import tanh
             return (1 + tanh(self.exp/2))/(1 - tanh(self.exp/2))
