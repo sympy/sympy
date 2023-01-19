@@ -93,7 +93,7 @@ class elliptic_k(Function):
         if m.is_infinite:
             return True
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
         t = Dummy('t')
         m = self.args[0]
@@ -171,7 +171,7 @@ class elliptic_f(Function):
         if (m.is_real and (m - 1).is_positive) is False:
             return self.func(z.conjugate(), m.conjugate())
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
         t = Dummy('t')
         z, m = self.args[0], self.args[1]
@@ -300,7 +300,7 @@ class elliptic_e(Function):
             return -meijerg(((S.Half, Rational(3, 2)), []), \
                             ((S.Zero,), (S.Zero,)), -m)/4
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
         z, m = (pi/2, self.args[0]) if len(self.args) == 1 else self.args
         t = Dummy('t')
@@ -435,7 +435,7 @@ class elliptic_pi(Function):
                 return (elliptic_e(m)/(m - 1) + elliptic_pi(n, m))/(2*(n - m))
         raise ArgumentIndexError(self, argindex)
 
-    def _eval_rewrite_as_Integral(self, *args):
+    def _eval_rewrite_as_Integral(self, *args, **kwargs):
         from sympy.integrals.integrals import Integral
         if len(self.args) == 2:
             n, m, z = self.args[0], self.args[1], pi/2
