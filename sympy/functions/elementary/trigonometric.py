@@ -502,8 +502,8 @@ class sin(TrigonometricFunction):
             x = arg.args[0]
             return I*x**-I/2 - I*x**I /2
 
-    def _eval_rewrite_as_cos(self, arg, **kwargs):
-        return cos(arg - pi/2, evaluate=False)
+    def _eval_rewrite_as_cos(self, arg, evaluate=False, **kwargs):
+        return cos(arg - pi/2, evaluate=evaluate)
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
         tan_half = tan(S.Half*arg)
@@ -526,8 +526,8 @@ class sin(TrigonometricFunction):
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return 1/csc(arg)
 
-    def _eval_rewrite_as_sec(self, arg, **kwargs):
-        return 1/sec(arg - pi/2, evaluate=False)
+    def _eval_rewrite_as_sec(self, arg, evaluate=False, **kwargs):
+        return 1/sec(arg - pi/2, evaluate=evaluate)
 
     def _eval_rewrite_as_sinc(self, arg, **kwargs):
         return arg*sinc(arg)
@@ -831,8 +831,8 @@ class cos(TrigonometricFunction):
             x = arg.args[0]
             return x**I/2 + x**-I/2
 
-    def _eval_rewrite_as_sin(self, arg, **kwargs):
-        return sin(arg + pi/2, evaluate=False)
+    def _eval_rewrite_as_sin(self, arg, evaluate=False, **kwargs):
+        return sin(arg + pi/2, evaluate=evaluate)
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
         tan_half = tan(S.Half*arg)**2
@@ -1267,8 +1267,8 @@ class tan(TrigonometricFunction):
     def _eval_rewrite_as_sin(self, x, **kwargs):
         return 2*sin(x)**2/sin(2*x)
 
-    def _eval_rewrite_as_cos(self, x, **kwargs):
-        return cos(x - pi/2, evaluate=False)/cos(x)
+    def _eval_rewrite_as_cos(self, x, evaluate=False, **kwargs):
+        return cos(x - pi/2, evaluate=evaluate)/cos(x)
 
     def _eval_rewrite_as_sincos(self, arg, **kwargs):
         return sin(arg)/cos(arg)
@@ -1551,8 +1551,8 @@ class cot(TrigonometricFunction):
     def _eval_rewrite_as_sin(self, x, **kwargs):
         return sin(2*x)/(2*(sin(x)**2))
 
-    def _eval_rewrite_as_cos(self, x, **kwargs):
-        return cos(x)/cos(x - pi/2, evaluate=False)
+    def _eval_rewrite_as_cos(self, x, evaluate=False, **kwargs):
+        return cos(x)/cos(x - pi/2, evaluate=evaluate)
 
     def _eval_rewrite_as_sincos(self, arg, **kwargs):
         return cos(arg)/sin(arg)
@@ -1834,8 +1834,8 @@ class sec(ReciprocalTrigonometricFunction):
     def _eval_rewrite_as_tan(self, arg, **kwargs):
         return (1/cos(arg).rewrite(tan))
 
-    def _eval_rewrite_as_csc(self, arg, **kwargs):
-        return csc(pi/2 - arg, evaluate=False)
+    def _eval_rewrite_as_csc(self, arg, evaluate=False, **kwargs):
+        return csc(pi/2 - arg, evaluate=evaluate)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -1932,8 +1932,8 @@ class csc(ReciprocalTrigonometricFunction):
     def _eval_rewrite_as_cos(self, arg, **kwargs):
         return 1/sin(arg).rewrite(cos)
 
-    def _eval_rewrite_as_sec(self, arg, **kwargs):
-        return sec(pi/2 - arg, evaluate=False)
+    def _eval_rewrite_as_sec(self, arg, evaluate=False, **kwargs):
+        return sec(pi/2 - arg, evaluate=evaluate)
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
         return (1/sin(arg).rewrite(tan))

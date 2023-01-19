@@ -1530,22 +1530,22 @@ class Pow(Expr):
         else:
             return True
 
-    def _eval_rewrite_as_exp(self, base, expo, nonsymbolic_exponent=True, **kwargs):
+    def _eval_rewrite_as_exp(self, base, expo, evaluate=None, **kwargs):
         from sympy.functions.elementary.exponential import exp, log
 
         if base.is_zero or base.has(exp) or expo.has(exp):
             return base**expo
 
-        if not nonsymbolic_exponent and not expo.has(Symbol):
-            return base**expo
+        if evaluate is None:
+            evaluate = expo.has(Symbol)
 
         if base.has(Symbol):
             # delay evaluation if expo is non symbolic
             # (as exp(x*log(5)) automatically reduces to x**5)
             if global_parameters.exp_is_pow:
-                return Pow(S.Exp1, log(base)*expo, evaluate=expo.has(Symbol))
+                return Pow(S.Exp1, log(base)*expo, evaluate=evaluate)
             else:
-                return exp(log(base)*expo, evaluate=expo.has(Symbol))
+                return exp(log(base)*expo, evaluate=evaluate)
 
         else:
             from sympy.functions.elementary.complexes import arg, Abs

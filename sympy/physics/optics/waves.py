@@ -322,9 +322,11 @@ class TWave(Expr):
     def __rsub__(self, other):
         return (-self).__radd__(other)
 
-    def _eval_rewrite_as_sin(self, *args, **kwargs):
+    def _eval_rewrite_as_sin(self, evaluate=None, *args, **kwargs):
+        if evaluate is None:
+            evaluate = False
         return self.amplitude*sin(self.wavenumber*Symbol('x')
-            - self.angular_velocity*Symbol('t') + self.phase + pi/2, evaluate=False)
+            - self.angular_velocity*Symbol('t') + self.phase + pi/2, evaluate=None)
 
     def _eval_rewrite_as_cos(self, *args, **kwargs):
         return self.amplitude*cos(self.wavenumber*Symbol('x')

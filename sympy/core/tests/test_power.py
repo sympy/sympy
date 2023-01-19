@@ -254,23 +254,23 @@ def test_power_rewrite_exp():
                     (sin, cos, tan, sec, csc, sinh, cosh, tanh))
 
     if global_parameters.exp_is_pow:
-        assert (x**2).rewrite(exp, nonsymbolic_exponent=True) == \
+        assert (x**2).rewrite(exp, evaluate=False) == \
             (x**2).rewrite(exp) == \
             Pow(S.Exp1, 2*log(x), evaluate=False)
     else:
-        assert (x**2).rewrite(exp, nonsymbolic_exponent=True) == \
+        assert (x**2).rewrite(exp, evaluate=False) == \
             (x**2).rewrite(exp) == \
             exp(2*log(x), evaluate=False)
-    assert (x**2).rewrite(exp, nonsymbolic_exponent=False) == x**2
+    assert (x**2).rewrite(exp, evaluate=True) == x**2
 
     if global_parameters.exp_is_pow:
-        assert (2**x).rewrite(exp, nonsymbolic_exponent=False) == \
-            (2**x).rewrite(exp, nonsymbolic_exponent=True) == \
+        assert (2**x).rewrite(exp, evaluate=False) == \
+            (2**x).rewrite(exp, evaluate=True) == \
             (2**x).rewrite(exp) == \
             Pow(S.Exp1, x*log(2))
     else:
-        assert (2**x).rewrite(exp, nonsymbolic_exponent=False) == \
-            (2**x).rewrite(exp, nonsymbolic_exponent=True) == \
+        assert (2**x).rewrite(exp, evaluate=False) == \
+            (2**x).rewrite(exp, evaluate=True) == \
             (2**x).rewrite(exp) == \
             exp(x*log(2))
 
