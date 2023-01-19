@@ -215,7 +215,9 @@ def test_sin_rewrite():
     assert sin(log(x)).rewrite(Pow) == I*x**-I / 2 - I*x**I /2
     assert sin(x).rewrite(csc) == 1/csc(x)
     assert sin(x).rewrite(cos) == cos(x - pi / 2, evaluate=False)
+    assert sin(x).rewrite(cos, evaluate=True) == sin(x)
     assert sin(x).rewrite(sec) == 1 / sec(x - pi / 2, evaluate=False)
+    assert sin(x).rewrite(sec, evaluate=True) == 1/csc(x)
     assert sin(cos(x)).rewrite(Pow) == sin(cos(x))
 
 
@@ -438,7 +440,9 @@ def test_cos_rewrite():
     assert cos(log(x)).rewrite(Pow) == x**I/2 + x**-I/2
     assert cos(x).rewrite(sec) == 1/sec(x)
     assert cos(x).rewrite(sin) == sin(x + pi/2, evaluate=False)
+    assert cos(x).rewrite(sin, evaluate=True) == cos(x)
     assert cos(x).rewrite(csc) == 1/csc(-x + pi/2, evaluate=False)
+    assert cos(x).rewrite(csc, evaluate=True) == 1/sec(x)
     assert cos(sin(x)).rewrite(Pow) == cos(sin(x))
 
 
@@ -583,6 +587,7 @@ def test_tan_rewrite():
     assert tan(x).rewrite(exp) == I*(neg_exp - pos_exp)/(neg_exp + pos_exp)
     assert tan(x).rewrite(sin) == 2*sin(x)**2/sin(2*x)
     assert tan(x).rewrite(cos) == cos(x - S.Pi/2, evaluate=False)/cos(x)
+    assert tan(x).rewrite(cos, evaluate=True) == sin(x)/cos(x)
     assert tan(x).rewrite(cot) == 1/cot(x)
     assert tan(sinh(x)).rewrite(
         exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sinh(3)).n()
@@ -606,7 +611,9 @@ def test_tan_rewrite():
     assert tan(pi/19).rewrite(pow) == tan(pi/19)
     assert tan(pi*Rational(8, 19)).rewrite(sqrt) == tan(pi*Rational(8, 19))
     assert tan(x).rewrite(sec) == sec(x)/sec(x - pi/2, evaluate=False)
+    assert tan(x).rewrite(sec, evaluate=True) == sec(x)/csc(x)
     assert tan(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)/csc(x)
+    assert tan(x).rewrite(csc, evaluate=True) == sec(x)/csc(x)
     assert tan(sin(x)).rewrite(Pow) == tan(sin(x))
     assert tan(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == sqrt(sqrt(5)/8 +
                Rational(5, 8))/(Rational(-1, 4) + sqrt(5)/4)
@@ -761,6 +768,7 @@ def test_cot_rewrite():
     assert cot(x).rewrite(exp) == I*(pos_exp + neg_exp)/(pos_exp - neg_exp)
     assert cot(x).rewrite(sin) == sin(2*x)/(2*(sin(x)**2))
     assert cot(x).rewrite(cos) == cos(x)/cos(x - pi/2, evaluate=False)
+    assert cot(x).rewrite(cos, evaluate=True) == cos(x)/sin(x)
     assert cot(x).rewrite(tan) == 1/tan(x)
     def check(func):
         z = cot(func(x)).rewrite(exp
@@ -779,7 +787,9 @@ def test_cot_rewrite():
     assert cot(pi/19).rewrite(pow) == cot(pi/19)
     assert cot(pi/19).rewrite(sqrt) == cot(pi/19)
     assert cot(x).rewrite(sec) == sec(x - pi / 2, evaluate=False) / sec(x)
+    assert cot(x).rewrite(sec, evaluate=True) == csc(x)/sec(x)
     assert cot(x).rewrite(csc) == csc(x) / csc(- x + pi / 2, evaluate=False)
+    assert cot(x).rewrite(csc, evaluate=True) == csc(x) / sec(x)
     assert cot(sin(x)).rewrite(Pow) == cot(sin(x))
     assert cot(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == (Rational(-1, 4) + sqrt(5)/4)/\
                                                         sqrt(sqrt(5)/8 + Rational(5, 8))
@@ -1703,8 +1713,10 @@ def test_sec_rewrite():
     assert sec(x).rewrite(sqrt) == sec(x)
     assert sec(z).rewrite(cot) == (cot(z/2)**2 + 1)/(cot(z/2)**2 - 1)
     assert sec(x).rewrite(sin) == 1 / sin(x + pi / 2, evaluate=False)
+    assert sec(x).rewrite(sin, evaluate=True) == 1/cos(x)
     assert sec(x).rewrite(tan) == (tan(x / 2)**2 + 1) / (-tan(x / 2)**2 + 1)
     assert sec(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)
+    assert sec(x).rewrite(csc, evaluate=True) == sec(x)
 
 
 def test_sec_fdiff():
@@ -1891,7 +1903,9 @@ def test_csc_rewrite():
     assert csc(x).rewrite(tan) == (tan(x/2)**2 + 1)/(2*tan(x/2))
     assert csc(x).rewrite(cot) == (cot(x/2)**2 + 1)/(2*cot(x/2))
     assert csc(x).rewrite(cos) == 1/cos(x - pi/2, evaluate=False)
+    assert csc(x).rewrite(cos, evaluate=True) == 1/sin(x)
     assert csc(x).rewrite(sec) == sec(-x + pi/2, evaluate=False)
+    assert csc(x).rewrite(sec, evaluate=True) == csc(x)
 
     # issue 17349
     assert csc(1 - exp(-besselj(I, I))).rewrite(cos) == \
