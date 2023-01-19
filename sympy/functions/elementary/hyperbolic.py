@@ -494,14 +494,14 @@ class cosh(HyperbolicFunction):
     def _eval_rewrite_as_exp(self, arg, **kwargs):
         return (exp(arg) + exp(-arg)) / 2
 
-    def _eval_rewrite_as_cos(self, arg, **kwargs):
-        return cos(I * arg)
+    def _eval_rewrite_as_cos(self, arg, evaluate=False, **kwargs):
+        return cos(I * arg, evaluate=evaluate)
 
-    def _eval_rewrite_as_sec(self, arg, **kwargs):
-        return 1 / sec(I * arg)
+    def _eval_rewrite_as_sec(self, arg, evaluate=False, **kwargs):
+        return 1 / sec(I * arg, evaluate=evaluate)
 
-    def _eval_rewrite_as_sinh(self, arg, **kwargs):
-        return -I*sinh(arg + pi*I/2)
+    def _eval_rewrite_as_sinh(self, arg, evaluate=False, **kwargs):
+        return -I*sinh(arg + pi*I/2, evaluate=evaluate)
 
     def _eval_rewrite_as_tanh(self, arg, **kwargs):
         tanh_half = tanh(S.Half*arg)**2
@@ -752,17 +752,17 @@ class tanh(HyperbolicFunction):
         neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)
 
-    def _eval_rewrite_as_tan(self, arg, **kwargs):
-        return -I * tan(I * arg)
+    def _eval_rewrite_as_tan(self, arg, evaluate=False, **kwargs):
+        return -I * tan(I * arg, evaluate=evaluate)
 
-    def _eval_rewrite_as_cot(self, arg, **kwargs):
-        return -I / cot(I * arg)
+    def _eval_rewrite_as_cot(self, arg, evaluate=False, **kwargs):
+        return -I / cot(I * arg, evaluate=evaluate)
 
-    def _eval_rewrite_as_sinh(self, arg, **kwargs):
-        return I*sinh(arg)/sinh(pi*I/2 - arg)
+    def _eval_rewrite_as_sinh(self, arg, evaluate=False, **kwargs):
+        return I*sinh(arg)/sinh(pi*I/2 - arg, evaluate=evaluate)
 
-    def _eval_rewrite_as_cosh(self, arg, **kwargs):
-        return I*cosh(pi*I/2 - arg)/cosh(arg)
+    def _eval_rewrite_as_cosh(self, arg, evaluate=False, **kwargs):
+        return I*cosh(pi*I/2 - arg, evaluate=evaluate)/cosh(arg)
 
     def _eval_rewrite_as_coth(self, arg, **kwargs):
         return 1/coth(arg)
@@ -947,11 +947,11 @@ class coth(HyperbolicFunction):
         neg_exp, pos_exp = exp(-arg), exp(arg)
         return (pos_exp + neg_exp)/(pos_exp - neg_exp)
 
-    def _eval_rewrite_as_sinh(self, arg, **kwargs):
-        return -I*sinh(pi*I/2 - arg)/sinh(arg)
+    def _eval_rewrite_as_sinh(self, arg, evaluate=False, **kwargs):
+        return -I*sinh(pi*I/2 - arg, evaluate=evaluate)/sinh(arg)
 
-    def _eval_rewrite_as_cosh(self, arg, **kwargs):
-        return -I*cosh(arg)/cosh(pi*I/2 - arg)
+    def _eval_rewrite_as_cosh(self, arg, evaluate=False, **kwargs):
+        return -I*cosh(arg)/cosh(pi*I/2 - arg, evaluate=evaluate)
 
     def _eval_rewrite_as_tanh(self, arg, **kwargs):
         return 1/tanh(arg)
@@ -1117,14 +1117,14 @@ class csch(ReciprocalHyperbolicFunction):
 
             return 2 * (1 - 2**n) * B/F * x**n
 
-    def _eval_rewrite_as_sin(self, arg, **kwargs):
-        return I / sin(I * arg)
+    def _eval_rewrite_as_sin(self, arg, evaluate=False, **kwargs):
+        return I / sin(I * arg, evaluate=evaluate)
 
-    def _eval_rewrite_as_csc(self, arg, **kwargs):
-        return I * csc(I * arg)
+    def _eval_rewrite_as_csc(self, arg, evaluate=False, **kwargs):
+        return I * csc(I * arg, evaluate=evaluate)
 
-    def _eval_rewrite_as_cosh(self, arg, **kwargs):
-        return I / cosh(arg + I * pi / 2)
+    def _eval_rewrite_as_cosh(self, arg, evaluate=False, **kwargs):
+        return I / cosh(arg + I * pi / 2, evaluate=evaluate)
 
     def _eval_rewrite_as_sinh(self, arg, **kwargs):
         return 1 / sinh(arg)
@@ -1176,14 +1176,14 @@ class sech(ReciprocalHyperbolicFunction):
             x = sympify(x)
             return euler(n) / factorial(n) * x**(n)
 
-    def _eval_rewrite_as_cos(self, arg, **kwargs):
-        return 1 / cos(I * arg)
+    def _eval_rewrite_as_cos(self, arg, evaluate=False, **kwargs):
+        return 1 / cos(I * arg, evaluate=evaluate)
 
-    def _eval_rewrite_as_sec(self, arg, **kwargs):
-        return sec(I * arg)
+    def _eval_rewrite_as_sec(self, arg, evaluate=False, **kwargs):
+        return sec(I * arg, evaluate=evaluate)
 
-    def _eval_rewrite_as_sinh(self, arg, **kwargs):
-        return I / sinh(arg + I * pi /2)
+    def _eval_rewrite_as_sinh(self, arg, evaluate=False, **kwargs):
+        return I / sinh(arg + I * pi /2, evaluate=evaluate)
 
     def _eval_rewrite_as_cosh(self, arg, **kwargs):
         return 1 / cosh(arg)
@@ -1351,11 +1351,11 @@ class asinh(InverseHyperbolicFunction):
         ix = I*x
         return I*(sqrt(1 - ix)/sqrt(ix - 1) * acosh(ix) - pi/2)
 
-    def _eval_rewrite_as_asin(self, x, **kwargs):
-        return -I * asin(I * x)
+    def _eval_rewrite_as_asin(self, x, evaluate=False, **kwargs):
+        return -I * asin(I * x, evaluate=evaluate)
 
-    def _eval_rewrite_as_acos(self, x, **kwargs):
-        return I * acos(I * x) - I*pi/2
+    def _eval_rewrite_as_acos(self, x, evaluate=False, **kwargs):
+        return I * acos(I * x, evaluate=evaluate) - I*pi/2
 
     def inverse(self, argindex=1):
         """
@@ -1520,8 +1520,8 @@ class acosh(InverseHyperbolicFunction):
     def _eval_rewrite_as_asin(self, x, **kwargs):
         return sqrt(x - 1)/sqrt(1 - x) * (pi/2 - asin(x))
 
-    def _eval_rewrite_as_asinh(self, x, **kwargs):
-        return sqrt(x - 1)/sqrt(1 - x) * (pi/2 + I*asinh(I*x))
+    def _eval_rewrite_as_asinh(self, x, evaluate=False, **kwargs):
+        return sqrt(x - 1)/sqrt(1 - x) * (pi/2 + I*asinh(I*x, evaluate=evaluate))
 
     def _eval_rewrite_as_atanh(self, x, **kwargs):
         sxm1 = sqrt(x - 1)
@@ -1997,16 +1997,16 @@ class asech(InverseHyperbolicFunction):
     def _eval_rewrite_as_acosh(self, arg, **kwargs):
         return acosh(1/arg)
 
-    def _eval_rewrite_as_asinh(self, arg, **kwargs):
-        return sqrt(1/arg - 1)/sqrt(1 - 1/arg)*(I*asinh(I/arg)
+    def _eval_rewrite_as_asinh(self, arg, evaluate=False, **kwargs):
+        return sqrt(1/arg - 1)/sqrt(1 - 1/arg)*(I*asinh(I/arg, evaluate=evaluate)
                                                 + pi*S.Half)
 
     def _eval_rewrite_as_atanh(self, x, **kwargs):
         return (I*pi*(1 - sqrt(x)*sqrt(1/x) - I/2*sqrt(-x)/sqrt(x) - I/2*sqrt(x**2)/sqrt(-x**2))
                 + sqrt(1/(x + 1))*sqrt(x + 1)*atanh(sqrt(1 - x**2)))
 
-    def _eval_rewrite_as_acsch(self, x, **kwargs):
-        return sqrt(1/x - 1)/sqrt(1 - 1/x)*(pi/2 - I*acsch(I*x))
+    def _eval_rewrite_as_acsch(self, x, evaluate=False, **kwargs):
+        return sqrt(1/x - 1)/sqrt(1 - 1/x)*(pi/2 - I*acsch(I*x, evaluate=evaluate))
 
 
 class acsch(InverseHyperbolicFunction):
@@ -2189,9 +2189,9 @@ class acsch(InverseHyperbolicFunction):
     def _eval_rewrite_as_asinh(self, arg, **kwargs):
         return asinh(1/arg)
 
-    def _eval_rewrite_as_acosh(self, arg, **kwargs):
+    def _eval_rewrite_as_acosh(self, arg, evaluate=False, **kwargs):
         return I*(sqrt(1 - I/arg)/sqrt(I/arg - 1)*
-                                acosh(I/arg) - pi*S.Half)
+                                acosh(I/arg, evaluate=evaluate) - pi*S.Half)
 
     def _eval_rewrite_as_atanh(self, arg, **kwargs):
         arg2 = arg**2
