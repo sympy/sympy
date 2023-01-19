@@ -21,6 +21,12 @@ open. -->
 statements. The basic format is a bulleted list with the name of the subpackage
 and the release note for this PR. For example:
 
+* solvers
+  * Added a new solver for logarithmic equations.
+
+* functions
+  * Fixed a bug with log of integers. Formerly, `log(-x)` incorrectly gave `-log(x)`.
+
 * physics.units
   * Corrected a semantical error in the conversion between volt and statvolt which
     reported the volt as being larger than the statvolt.
