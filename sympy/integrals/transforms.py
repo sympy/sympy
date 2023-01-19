@@ -1389,35 +1389,13 @@ def _laplace_build_rules(t, s):
     ]
     return laplace_transform_rules
 
-def _laplace_cr(f, **hints):
-    """
-    Internal helper function that will return ``(f, a, c)`` unless ``**hints``
-    contains ``noconds=True``, in which case it will only return ``f``.
-    """
-    noconds = hints.get('noconds', False)
-    if noconds and type(f) is tuple:
-        return f[0]
-    else:
-        return f
-
-def _laplace_ct(f):
-    """
-    Internal helper function that completes the tuple as follows:
-    if f is a tuple, it is just returned as is.  If it is not a tuple,
-    then ``(f, S.NegativeInfinity, True)`` is returned.
-    """
-    if type(f) is tuple:
-        return f
-    else:
-        return f, S.NegativeInfinity, True
-
 def _laplace_rule_timescale(f, t, s):
     """
     This function applies the time-scaling rule of the Laplace transform in
     a straight-forward way. For example, if it gets ``(f(a*t), t, s)``, it will
     compute ``LaplaceTransform(f(t)/a, t, s/a)`` if ``a>0``.
     """
-    f, p, c = _laplace_ct(f)
+    f, p, c = f
 
     a = Wild('a', exclude=[t])
     g = WildFunction('g', nargs=1)
@@ -1444,10 +1422,10 @@ def _laplace_rule_heaviside(f, t, s):
     If the time shift is negative, the Heaviside function is simply removed
     as it means nothing to the Laplace transform.
 
-    The function does not remove a factor ``Heaviside(t)``; this is already
-    done by the main function ``laplace_transform``.
+    The function does not remove a factor ``Heaviside(t)``; this is done by
+    the simple rules.
     """
-    f, p, c = _laplace_ct(f)
+    f, p, c = f
 
     a = Wild('a', exclude=[t])
     y = Wild('y')
@@ -1479,7 +1457,7 @@ def _laplace_rule_exp(f, t, s):
     plane accordingly.  For example, if it gets ``(exp(-a*t)*f(t), t, s)``, it
     will compute ``LaplaceTransform(f(t), t, s+a)``.
     """
-    f, p, c = _laplace_ct(f)
+    f, p, c = f
 
     a = Wild('a', exclude=[t])
     y = Wild('y')
@@ -1504,7 +1482,7 @@ def _laplace_rule_delta(f, t, s):
     ``(f(a)*exp(-a*s), -a, True)``.
     """
     # This rule is not in Bateman54
-    f, p, c = _laplace_ct(f)
+    f, p, c = f
 
     a = Wild('a', exclude=[t])
     b = Wild('b', exclude=[t])
@@ -1523,7 +1501,7 @@ def _laplace_rule_delta(f, t, s):
                 r = exp(-ma2[a]/ma2[b]*s)*ma1[z].subs(t, ma2[a]/ma2[b])/ma2[b]
                 return True, (r, p, c)
             else:
-                return True, _laplace_ct(0)
+                return True, (0, S.NegativeInfinity, S.true)
     return False, (f, p, c)
 
 def _laplace_rule_trig(f, t, s, doit=True, **hints):
@@ -1543,7 +1521,7 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
     the real axis.
     """
     # These rules follow from Bateman54, 4.1.5 and Euler's formulas
-    f, p, c = _laplace_ct(f)
+    f, p, c = f
 
     a = Wild('a', exclude=[t])
     y = Wild('y')
@@ -1577,7 +1555,7 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     example, if it gets ``(diff(f(t), t), t, s)``, it will compute
     ``s*LaplaceTransform(f(t), t, s) - f(0)``.
     """
-    fn, p, c = _laplace_ct(f)
+    fn, p, c = f
 
     a = Wild('a', exclude=[t])
     y = Wild('y')
@@ -1607,7 +1585,7 @@ def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
     gets ``(t*f(t), t, s)``, it will compute
     ``-Derivative(LaplaceTransform(f(t), t, s), s)``.
     """
-    fn, p, c = _laplace_ct(f)
+    fn, p, c = f
 
     if fn.is_Mul:
         pfac = [1]
@@ -1658,7 +1636,7 @@ def _laplace_expand(f, t, s, doit=True, **hints):
     If it can expand, it will then compute the Laplace transform of the
     expanded term.
     """
-    fn, p, c = _laplace_ct(f)
+    fn, p, c = f
 
     if fn.is_Add:
         return False, (fn, p, c)
@@ -1683,7 +1661,7 @@ def _laplace_apply_prog_rules(f, t, s):
     This function applies all program rules and returns the result if one
     of them gives a result.
     """
-    fn, p, c = _laplace_ct(f)
+    fn, p, c = f
 
     prog_rules = [_laplace_rule_heaviside, _laplace_rule_delta,
                   _laplace_rule_timescale, _laplace_rule_exp,
@@ -1702,7 +1680,7 @@ def _laplace_apply_simple_rules(f, t, s):
     This function applies all simple rules and returns the result if one
     of them gives a result.
     """
-    func, p, c = _laplace_ct(f)
+    func, p, c = f
     simple_rules = _laplace_build_rules(t, s)
     prep_old = ''
     prep_f = ''
@@ -1748,7 +1726,7 @@ class LaplaceTransform(IntegralTransform):
     def _compute_transform(self, f, t, s, **hints):
         _simplify = hints.get('simplify', False)
         LT = _laplace_transform(f, t, s, simplify=_simplify)
-        return _laplace_cr(LT, **hints)
+        return LT
 
     def _as_integral(self, f, t, s):
         return Integral(f*exp(-s*t), (t, S.Zero, S.Infinity))
@@ -1765,19 +1743,6 @@ class LaplaceTransform(IntegralTransform):
             raise IntegralTransformError(
                 'Laplace', None, 'No combined convergence.')
         return plane, cond
-
-    def _try_directly(self, **hints):
-        T = None
-        try_directly = not any(func.has(self.function_variable)
-                               for func in self.function.atoms(AppliedUndef))
-        if try_directly:
-            try:
-                T = self._compute_transform(self.function,
-                    self.function_variable, self.transform_variable, **hints)
-            except IntegralTransformError:
-                T = None
-
-        return self.function, T
 
     def doit(self, **hints):
         """
@@ -1805,31 +1770,29 @@ class LaplaceTransform(IntegralTransform):
         results = []
         for ff in terms:
             k, f = ff.as_independent(t_, as_Add=False)
-            d, r = _laplace_apply_simple_rules(f, t_, s_)
+            ft = (f, S.NegativeInfinity, True)
+            d, r = _laplace_apply_simple_rules(ft, t_, s_)
             if d:
                 results.append((k*r[0], r[1], r[2]))
                 continue
-            d, r = _laplace_apply_prog_rules(f, t_, s_)
+            d, r = _laplace_apply_prog_rules(ft, t_, s_)
             if d:
                 results.append((k*r[0], r[1], r[2]))
                 continue
-            d, r = _laplace_expand(f, t_, s_)
+            d, r = _laplace_expand(ft, t_, s_)
             if d:
                 results.append((k*r[0], r[1], r[2]))
                 continue
             T = None
-            try_directly = not any(func.has(t_)
-                                    for func in f.atoms(AppliedUndef))
-            if try_directly:
-                try:
-                    T = self._compute_transform(f, t_, s_, **hints)
-                except IntegralTransformError:
-                    T = None
+            try:
+                T = self._compute_transform(f, t_, s_, **hints)
+            except IntegralTransformError:
+                T = None
             if T is not None:
-                r = _laplace_ct(T)
-                results.append((k*r[0], r[1], r[2]))
+                results.append((k*T[0], T[1], T[2]))
             else:
-                results.append(_laplace_ct(k*LaplaceTransform(f, t_, s_)))
+                results.append((k*LaplaceTransform(f, t_, s_),
+                                S.NegativeInfinity, True))
 
         r = []
         p = []
@@ -1838,17 +1801,18 @@ class LaplaceTransform(IntegralTransform):
             r.append(res[0])
             p.append(res[1])
             c.append(res[2])
+        result = Add(*r)
+
+        if _simplify:
+            result = result.simplify(doit=False)
 
         if _noconds:
-            if _simplify:
-                return Add(*r).simplify(doit=False)
-            else:
-                return Add(*r)
+            return result
         else:
-            if _simplify:
-                return Add(*r).simplify(doit=False), Max(*p), And(*c)
-            else:
-                return Add(*r), Max(*p), And(*c)
+            plane = Max(*p)
+            condition = And(*c)
+            return result, plane, condition
+
 
 def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
@@ -1872,8 +1836,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     rules are applied, and whether integration is attempted, you can switch
     debug information on by setting ``sympy.SYMPY_DEBUG=True``. The numbers
     of the rules in the debug information (and the code) refer to Bateman's
-    Tables of Integral Transforms Vol. 1, McGraw-Hill 1954, available here:
-    https://resolver.caltech.edu/CaltechAUTHORS:20140123-101456353
+    Tables of Integral Transforms [1].
 
     The lower bound is `0-`, meaning that this bound should be approached
     from the lower side. This is only necessary if distributions are involved.
@@ -1912,6 +1875,13 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s)
     (s/(a + s), -a, True)
+
+    References
+    ==========
+
+    .. [1] Erdelyi, A. (ed.), Tables of Integral Transforms, Volume 1,
+           Bateman Manuscript Prooject, McGraw-Hill (1954), available:
+           https://resolver.caltech.edu/CaltechAUTHORS:20140123-101456353
 
     See Also
     ========
