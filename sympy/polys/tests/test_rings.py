@@ -150,6 +150,18 @@ def test_PolyRing_mul():
 
     assert R.mul([2, 3, 5]) == 30
 
+def test_PolyRing_symmetric_poly():
+    R, x, y, z, t = ring("x,y,z,t", ZZ)
+
+    raises(ValueError, lambda: R.symmetric_poly(-1))
+    raises(ValueError, lambda: R.symmetric_poly(5))
+
+    assert R.symmetric_poly(0) == R.one
+    assert R.symmetric_poly(1) == x + y + z + t
+    assert R.symmetric_poly(2) == x*y + x*z + x*t + y*z + y*t + z*t
+    assert R.symmetric_poly(3) == x*y*z + x*y*t + x*z*t + y*z*t
+    assert R.symmetric_poly(4) == x*y*z*t
+
 def test_sring():
     x, y, z, t = symbols("x,y,z,t")
 
@@ -1192,6 +1204,45 @@ def test_PolyElement_subs():
     raises(CoercionFailed, lambda: f.subs([(x, 1), (y, QQ(1,7))]))
     raises(CoercionFailed, lambda: f.subs([(x, QQ(1,7)), (y, 1)]))
     raises(CoercionFailed, lambda: f.subs([(x, QQ(1,7)), (y, QQ(1,7))]))
+
+def test_PolyElement_symmetrize():
+    R, x, y = ring("x,y", ZZ)
+
+    # Homogeneous, symmetric
+    f = x**2 + y**2
+    sym, rem, m = f.symmetrize()
+    assert rem == 0
+    assert sym.compose(m) + rem == f
+
+    # Homogeneous, asymmetric
+    f = x**2 - y**2
+    sym, rem, m = f.symmetrize()
+    assert rem != 0
+    assert sym.compose(m) + rem == f
+
+    # Inhomogeneous, symmetric
+    f = x*y + 7
+    sym, rem, m = f.symmetrize()
+    assert rem == 0
+    assert sym.compose(m) + rem == f
+
+    # Inhomogeneous, asymmetric
+    f = y + 7
+    sym, rem, m = f.symmetrize()
+    assert rem != 0
+    assert sym.compose(m) + rem == f
+
+    # Constant
+    f = R.from_expr(3)
+    sym, rem, m = f.symmetrize()
+    assert rem == 0
+    assert sym.compose(m) + rem == f
+
+    # Constant constructed from sring
+    R, f = sring(3)
+    sym, rem, m = f.symmetrize()
+    assert rem == 0
+    assert sym.compose(m) + rem == f
 
 def test_PolyElement_compose():
     R, x = ring("x", ZZ)
