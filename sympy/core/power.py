@@ -1863,7 +1863,6 @@ class Pow(Expr):
         return x**n/factorial(n)
 
     def _eval_rewrite_as_sin(self, base, exp, **hints):
-        return
         if self.base is S.Exp1:
             from sympy.functions.elementary.trigonometric import sin
             return sin(S.ImaginaryUnit*self.exp + S.Pi/2) - S.ImaginaryUnit*sin(S.ImaginaryUnit*self.exp)
