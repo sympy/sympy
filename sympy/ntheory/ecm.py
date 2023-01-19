@@ -213,7 +213,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     while(curve <= max_curve):
         curve += 1
 
-        #Suyama's Paramatrization
+        #Suyama's Parametrization
         sigma = rgen.randint(6, n - 1)
         u = (sigma*sigma - 5) % n
         v = (4*sigma) % n
