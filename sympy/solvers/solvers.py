@@ -3159,16 +3159,12 @@ def _invert(eq, *symbols, **kwargs):
             if any(_ispow(i) for i in (ad, bd)):
                 a_base, a_exp = ad.as_base_exp()
                 b_base, b_exp = bd.as_base_exp()
-                if a_base == b_base:
-                    # a = -b
-                    lhs = powsimp(powdenest(ad/bd))
-                    rhs = -bi/ai
-                else:
-                    rat = ad/bd
-                    _lhs = powsimp(ad/bd)
-                    if _lhs != rat:
-                        lhs = _lhs
-                        rhs = -bi/ai
+                simp = powsimp(powdenest(ad/bd))
+                if not isinstance(simp, Pow):
+                    ad = exp(a_exp*log(a_base))
+                    bd = exp(b_exp*log(b_base))
+                lhs = powsimp(powdenest(ad/bd))
+                rhs = -bi/ai
             elif ai == -bi:
                 if isinstance(ad, Function) and ad.func == bd.func:
                     if len(ad.args) == len(bd.args) == 1:
