@@ -1,12 +1,12 @@
-from sympy.core.backend import sympify
-from sympy.physics.vector import Point
-
+from sympy.core.backend import S
+from sympy.physics.vector import ReferenceFrame, cross, dot
+from sympy.physics.mechanics.body_base import BodyBase
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['Particle']
 
 
-class Particle:
+class Particle(BodyBase):
     """A particle.
 
     Explanation
@@ -25,8 +25,10 @@ class Particle:
     point : Point
         A physics/mechanics Point which represents the position, velocity, and
         acceleration of this Particle
-    mass : sympifyable
+    mass : Sympifyable
         A SymPy expression representing the Particle's mass
+    potential_energy : Sympifyable
+        The potential energy of the Particle.
 
     Examples
     ========
@@ -39,42 +41,47 @@ class Particle:
     >>> # Or you could change these later
     >>> pa.mass = m
     >>> pa.point = po
+    >>> # It is possible to attach a frame to a Particle if desired
+    >>> pa.add_frame()
+    pa_frame
 
     """
+    point = BodyBase.masscenter
 
-    def __init__(self, name, point, mass):
-        if not isinstance(name, str):
-            raise TypeError('Supply a valid name.')
-        self._name = name
-        self.mass = mass
-        self.point = point
-        self.potential_energy = 0
-
-    def __str__(self):
-        return self._name
+    def __init__(self, name, point=None, mass=None, frame=None):
+        super().__init__(name, point, frame, mass)
 
     def __repr__(self):
-        return self.__str__()
+        return (f'{self.__class__.__name__}({repr(self.name)}, masscenter='
+                f'{repr(self.masscenter)}, frame={repr(self._frame)}, mass='
+                f'{repr(self.mass)})')
 
     @property
-    def mass(self):
-        """Mass of the particle."""
-        return self._mass
+    def frame(self):
+        """The optional ReferenceFrame fixed to the Particle."""
+        if self._frame is None:
+            raise AttributeError("Particle has no attached frame.")
+        return self._frame
 
-    @mass.setter
-    def mass(self, value):
-        self._mass = sympify(value)
+    @frame.setter
+    def frame(self, frame):
+        if frame is None:
+            self._frame = None
+            return
+        elif isinstance(frame, ReferenceFrame):
+            self._frame = frame
+        else:
+            raise ValueError('Frame must be an instance of ReferenceFrame.')
+        self.point.set_vel(frame, 0)
 
-    @property
-    def point(self):
-        """Point of the particle."""
-        return self._point
-
-    @point.setter
-    def point(self, p):
-        if not isinstance(p, Point):
-            raise TypeError("Particle point attribute must be a Point object.")
-        self._point = p
+    def add_frame(self, frame=None):
+        """Method to attach a frame to the particle."""
+        if frame is None:
+            if self._frame is not None:
+                return self.frame
+            frame = ReferenceFrame(f'{self.name}_frame')
+        self.frame = frame
+        return self.frame
 
     def linear_momentum(self, frame):
         """Linear momentum of the particle.
@@ -157,7 +164,8 @@ class Particle:
 
         """
 
-        return self.point.pos_from(point) ^ (self.mass * self.point.vel(frame))
+        return cross(self.point.pos_from(point),
+                     self.mass * self.point.vel(frame))
 
     def kinetic_energy(self, frame):
         """Kinetic energy of the particle.
@@ -195,52 +203,8 @@ class Particle:
 
         """
 
-        return (self.mass / sympify(2) * self.point.vel(frame) &
-                self.point.vel(frame))
-
-    @property
-    def potential_energy(self):
-        """The potential energy of the Particle.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import Particle, Point
-        >>> from sympy import symbols
-        >>> m, g, h = symbols('m g h')
-        >>> O = Point('O')
-        >>> P = Particle('P', O, m)
-        >>> P.potential_energy = m * g * h
-        >>> P.potential_energy
-        g*h*m
-
-        """
-
-        return self._pe
-
-    @potential_energy.setter
-    def potential_energy(self, scalar):
-        """Used to set the potential energy of the Particle.
-
-        Parameters
-        ==========
-
-        scalar : Sympifyable
-            The potential energy (a scalar) of the Particle.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import Particle, Point
-        >>> from sympy import symbols
-        >>> m, g, h = symbols('m g h')
-        >>> O = Point('O')
-        >>> P = Particle('P', O, m)
-        >>> P.potential_energy = m * g * h
-
-        """
-
-        self._pe = sympify(scalar)
+        return S.Half * self.mass * dot(self.point.vel(frame),
+                                        self.point.vel(frame))
 
     def set_potential_energy(self, scalar):
         sympy_deprecation_warning(
