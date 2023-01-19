@@ -2439,6 +2439,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         f = self.copy()
         ring = f.ring
         n = ring.ngens
+
+        if not n:
+            return f, ring.zero, []
+
         polys = [ring.symmetric_poly(i+1) for i in range(n)]
 
         poly_powers = {}

@@ -1232,6 +1232,18 @@ def test_PolyElement_symmetrize():
     assert rem != 0
     assert sym.compose(m) + rem == f
 
+    # Constant
+    f = R.from_expr(3)
+    sym, rem, m = f.symmetrize()
+    assert rem == 0
+    assert sym.compose(m) + rem == f
+
+    # Constant constructed from sring
+    R, f = sring(3)
+    sym, rem, m = f.symmetrize()
+    assert rem == 0
+    assert sym.compose(m) + rem == f
+
 def test_PolyElement_compose():
     R, x = ring("x", ZZ)
     f = x**3 + 4*x**2 + 2*x + 3
