@@ -545,7 +545,7 @@ def test_laplace_transform():
                                                             2*a, True)
     assert LT(sinh(a*t)/t, t, s) == (log((a + s)/(-a + s))/2, a, True)
     assert LT(t**(-S(3)/2)*sinh(a*t), t, s, simplify=False) ==\
-        (-sqrt(pi)*(sqrt(-a + s) - sqrt(a + s)), a, True)
+        (sqrt(pi)*(-sqrt(-a + s) + sqrt(a + s)), a, True)
     assert LT(sinh(2*sqrt(a*t)), t, s) ==\
         (sqrt(pi)*sqrt(a)*exp(a/s)/s**(S(3)/2), 0, True)
     assert LT(sqrt(t)*sinh(2*sqrt(a*t)), t, s, simplify=True) ==\
@@ -755,8 +755,7 @@ def test_laplace_transform():
     assert LT(DiracDelta(t**2), t, s, noconds=True) ==\
         LaplaceTransform(DiracDelta(t**2), t, s)
     assert LT(DiracDelta(t**2 - 1), t, s) == (exp(-s)/2, -oo, True)
-    assert LT(DiracDelta(t*(1 - t)), t, s, noconds=True, simplify=True) == \
-        LaplaceTransform(DiracDelta(t*(t - 1)), t, s)
+    assert LT(DiracDelta(t*(1 - t)), t, s) == (1 - exp(-s), -oo, True)
     assert LT((DiracDelta(t) + 1)*(DiracDelta(t - 1) + 1), t, s) == \
         (LaplaceTransform(DiracDelta(t)*DiracDelta(t - 1), t, s) + \
          1 + exp(-s) + 1/s, 0, True)
