@@ -687,7 +687,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     
     def bilinear(self):
         """
-        Returns falling coeffs vof H(z) from numerator and denominator.
+        Returns falling coeffs of H(z) from numerator and denominator.
         H(z) is the corresponding discretized tf, discretized with 
         bilinear transform method.
         Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
