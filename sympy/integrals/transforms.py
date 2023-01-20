@@ -30,7 +30,7 @@ from sympy.integrals import integrate, Integral
 from sympy.integrals.meijerint import _dummy
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.matrices.matrices import MatrixBase
-from sympy.polys.matrices.linsolve import _lin_eq2dict, PolyNonlinearError
+from sympy.polys.matrices.linsolve import _lin_eq2dict
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import factor, Poly
 from sympy.polys.rationaltools import together
