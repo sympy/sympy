@@ -544,7 +544,7 @@ def test_laplace_transform():
     assert LT(sinh(a*t)*cosh(a*t), t, s, simplify=True) == (a/(-4*a**2 + s**2),
                                                             2*a, True)
     assert LT(sinh(a*t)/t, t, s) == (log((a + s)/(-a + s))/2, a, True)
-    assert LT(t**(-S(3)/2)*sinh(a*t), t, s, simplify=False) ==\
+    assert LT(t**(-S(3)/2)*sinh(a*t), t, s) ==\
         (sqrt(pi)*(-sqrt(-a + s) + sqrt(a + s)), a, True)
     assert LT(sinh(2*sqrt(a*t)), t, s) ==\
         (sqrt(pi)*sqrt(a)*exp(a/s)/s**(S(3)/2), 0, True)

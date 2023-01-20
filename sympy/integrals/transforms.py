@@ -1708,7 +1708,7 @@ def _laplace_transform(fn, t_, s_, simplify=True):
         p.append(res[1])
         c.append(res[2])
     result = Add(*r)
-    if _simplify:
+    if simplify:
         result = result.simplify(doit=False)
     plane = Max(*p)
     condition = And(*c)
@@ -1840,7 +1840,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**4, t, s)
     (24/s**5, 0, True)
-    >>> laplace_transform(t**a, t, s, simplify=False)
+    >>> laplace_transform(t**a, t, s)
     (s**(-a - 1)*gamma(a + 1), 0, re(a) > -1)
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s)
     (s/(a + s), -a, True)
