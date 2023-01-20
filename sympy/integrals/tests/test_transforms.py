@@ -475,6 +475,8 @@ def test_laplace_transform():
     f = Function("f")
     g = Function("g")
 
+    # Test whether `noconds=True` in `doit`:
+    assert (2*LaplaceTransform(exp(t), t, s) - 1).doit() == -1 + 2/(s - 1)
     assert LT(a*t+t**2+t**(S(5)/2), t, s) ==\
         (a/s**2 + 2/s**3 + 15*sqrt(pi)/(8*s**(S(7)/2)), 0, True)
     assert LT(b/(t+a), t, s) == (-b*exp(-a*s)*Ei(-a*s), 0, True)
