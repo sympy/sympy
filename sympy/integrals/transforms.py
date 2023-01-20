@@ -1678,7 +1678,9 @@ def _laplace_transform(fn, t_, s_, simplify=True):
     debug('[LT _l_t] (%s, %s, %s)'%(fn, t_, s_))
 
     terms = Add.make_args(fn)
-    results = []
+    terms_s = []
+    planes = []
+    conditions = []
     for ff in terms:
         k, ft = ff.as_independent(t_, as_Add=False)
         if (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None:
@@ -1687,31 +1689,26 @@ def _laplace_transform(fn, t_, s_, simplify=True):
             pass
         elif (r := _laplace_expand(ft, t_, s_)) is not None:
             pass
-        elif ft.has(AppliedUndef):
+        elif any(undef.has(t_) for undef in ft.atoms(AppliedUndef)):
+            # If there are undefined functions f(t) then integration is
+            # unlikely to do anything useful so we skip it and given an
+            # unevaluated LaplaceTransform.
             r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
         elif (r := _laplace_transform_integration(ft, t_, s_,
                                       simplify=simplify)) is not None:
             pass
         else:
-            r = None
-        if r is not None:
-            results.append((k*r[0], r[1], r[2]))
-        else:
-            results.append((k*LaplaceTransform(ft, t_, s_),
-                            S.NegativeInfinity, True))
+            r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
+        (ri_, pi_, ci_) = r
+        terms_s.append(k*ri_)
+        planes.append(pi_)
+        conditions.append(ci_)
 
-    r = []
-    p = []
-    c = []
-    for res in results:
-        r.append(res[0])
-        p.append(res[1])
-        c.append(res[2])
-    result = Add(*r)
+    result = Add(*terms_s)
     if simplify:
         result = result.simplify(doit=False)
-    plane = Max(*p)
-    condition = And(*c)
+    plane = Max(*planes)
+    condition = And(*conditions)
 
     return result, plane, condition
 
@@ -1765,7 +1762,7 @@ class LaplaceTransform(IntegralTransform):
         - ``simplify``: if True, it simplifies the final result. This is the
         default behaviour
         """
-        _noconds = hints.get('noconds', False)
+        _noconds = hints.get('noconds', True)
         _simplify = hints.get('simplify', True)
 
         debug('[LT doit] (%s, %s, %s)'%(self.function,
