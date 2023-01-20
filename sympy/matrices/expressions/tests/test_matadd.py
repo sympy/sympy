@@ -37,8 +37,8 @@ def test_doit_args():
 
 
 def test_generic_identity():
-    assert MatAdd.identity == GenericZeroMatrix()
-    assert MatAdd.identity != S.Zero
+    assert MatAdd.identity != GenericZeroMatrix()
+    assert MatAdd.identity == S.Zero
 
 
 def test_zero_matrix_add():

@@ -119,7 +119,7 @@ def test_addition():
     raises(TypeError, lambda: 5 - A)
 
     assert A + ZeroMatrix(n, m) - A == ZeroMatrix(n, m)
-    raises(TypeError, lambda: ZeroMatrix(n, m) + S.Zero)
+    assert ZeroMatrix(n, m) + S.Zero == ZeroMatrix(n, m)
 
 
 def test_multiplication():

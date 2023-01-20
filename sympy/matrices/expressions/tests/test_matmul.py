@@ -167,8 +167,7 @@ def test_construction_with_mul():
     assert mul(C, D) != MatMul(D, C)
 
 def test_generic_identity():
-    assert MatMul.identity == GenericIdentity()
-    assert MatMul.identity != S.One
+    assert MatMul.identity == S.One
 
 
 def test_issue_23519():
