@@ -18,6 +18,7 @@ from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
 from sympy.series import limit
+from sympy.simplify.radsimp import fraction, collect
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -301,6 +302,9 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         else:
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
+            
+            
+          
 
     @classmethod
     def from_rational_expression(cls, expr, var=None):
@@ -679,6 +683,52 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def __neg__(self):
         return TransferFunction(-self.num, self.den, self.var)
+    
+    
+    def bilinear(self):
+        """
+        Returns falling coeffs vof H(z) from numerator and denominator.
+        H(z) is the corresponding discretized tf, discretized with 
+        bilinear transform method.
+        Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
+        as [a, b], [c, d].
+
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.abc import s, L, R, T, z
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> numZ, denZ = tf.bilinear()
+        >>> numZ
+        [T, T]
+        >>> denZ
+        [2*L + R*T, -2*L + R*T]
+        """        
+        
+        z = Symbol('z') # discrete variable z 
+        T = Symbol('T')  # and sample period T
+       
+        H = self.num/self.den
+       
+        HZ = H.subs(self.var, (2/T)*(z-1)/(z+1))
+       
+        num, den = fraction(HZ.simplify())
+        
+        HZnum = collect(expand(num, z), z)
+        
+        HZnum = Poly(HZnum, z)
+        
+        HZden = collect(expand(den, z), z)
+        
+        HZden = Poly(HZden, z)     
+       
+        num_coefs = HZnum.coeffs()
+    
+        den_coefs = HZden.coeffs()       
+        
+        return num_coefs, den_coefs
 
     @property
     def is_proper(self):
