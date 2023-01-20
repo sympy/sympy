@@ -59,7 +59,9 @@ class Probability(Expr):
     >>> prob.evaluate_integral()
     sqrt(2)*(-sqrt(2)*sqrt(pi)*erf(sqrt(2)/2) + sqrt(2)*sqrt(pi))/(4*sqrt(pi))
     """
+
     is_commutative = True
+
     def __new__(cls, prob, condition=None, **kwargs):
         prob = _sympify(prob)
         if condition is None:
