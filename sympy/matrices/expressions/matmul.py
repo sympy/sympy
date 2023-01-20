@@ -17,7 +17,7 @@ from .matexpr import MatrixExpr
 from .matpow import MatPow
 from .transpose import transpose
 from .permutation import PermutationMatrix
-from .special import ZeroMatrix, Identity, GenericIdentity, OneMatrix
+from .special import ZeroMatrix, Identity, OneMatrix
 
 
 # XXX: MatMul should perhaps not subclass directly from Mul
