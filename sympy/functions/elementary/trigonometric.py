@@ -6,7 +6,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.mod import Mod
-from sympy.core.numbers import igcdex, Rational, pi, Integer, Float
+from sympy.core.numbers import Rational, pi, Integer, Float
 from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
@@ -851,21 +851,7 @@ class cos(TrigonometricFunction):
 
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         from sympy.functions.special.polynomials import chebyshevt
-
-        def migcdex(x):
-            # recursive calculation of gcd and linear combination
-            # for a sequence of integers.
-            # Given  (x1, x2, x3)
-            # Returns (y1, y1, y3, g)
-            # such that g is the gcd and x1*y1+x2*y2+x3*y3 - g = 0
-            # Note, that this is only one such linear combination.
-            if len(x) == 1:
-                return (1, x[0])
-            if len(x) == 2:
-                return igcdex(x[0], x[-1])
-            g = migcdex(x[1:])
-            u, v, h = igcdex(x[0], g[-1])
-            return tuple([u] + [v*i for i in g[0:-1] ] + [h])
+        from sympy.functions.elementary.trigonometric_special import migcdex
 
         def ipartfrac(r, factors=None):
             if isinstance(r, int):
@@ -882,10 +868,11 @@ class cos(TrigonometricFunction):
                 a = [n//x for x in factors]
             if len(a) == 1:
                 return [ r ]
-            h = migcdex(a)
-            ans = [ r.p*Rational(i*j, r.q) for i, j in zip(h[:-1], a) ]
+            h, _ = migcdex(*a)
+            ans = [ r.p*Rational(i*j, r.q) for i, j in zip(h, a) ]
             assert r == sum(ans)
             return ans
+
         pi_coeff = _pi_coeff(arg)
         if pi_coeff is None:
             return None
