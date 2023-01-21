@@ -21,8 +21,7 @@ from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.special.gamma_functions import digamma, gamma, lowergamma
 from sympy.integrals import integrate, Integral
 from sympy.integrals.transforms import (
-    _simplify, IntegralTransform, _noconds_, inverse_mellin_transform,
-    IntegralTransformError)
+    _simplify, _noconds_, IntegralTransform, IntegralTransformError)
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.matrices.matrices import MatrixBase
 from sympy.polys.matrices.linsolve import _lin_eq2dict
@@ -1011,6 +1010,8 @@ behavior.
 def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     """ The backend function for inverse Laplace transforms. """
     from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
+    from sympy.integrals.transforms import inverse_mellin_transform
+
     # There are two strategies we can try:
     # 1) Use inverse mellin transforms - related by a simple change of variables.
     # 2) Use the inversion integral.

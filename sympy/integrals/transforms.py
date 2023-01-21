@@ -927,18 +927,6 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
 
 
 ##########################################################################
-# Laplace Transform
-##########################################################################
-
-# Stub classes and functions that used to be here
-import sympy.integrals.laplace as _laplace
-
-LaplaceTransform = _laplace.LaplaceTransform
-laplace_transform = _laplace.laplace_transform
-InverseLaplaceTransform = _laplace.InverseLaplaceTransform
-inverse_laplace_transform = _laplace.inverse_laplace_transform
-
-##########################################################################
 # Fourier Transform
 ##########################################################################
 
@@ -1585,3 +1573,16 @@ def inverse_hankel_transform(F, k, r, nu, **hints):
     mellin_transform, laplace_transform
     """
     return InverseHankelTransform(F, k, r, nu).doit(**hints)
+
+
+##########################################################################
+# Laplace Transform
+##########################################################################
+
+# Stub classes and functions that used to be here
+import sympy.integrals.laplace as _laplace
+
+LaplaceTransform = _laplace.LaplaceTransform
+laplace_transform = _laplace.laplace_transform
+InverseLaplaceTransform = _laplace.InverseLaplaceTransform
+inverse_laplace_transform = _laplace.inverse_laplace_transform
