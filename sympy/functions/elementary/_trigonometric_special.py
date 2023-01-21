@@ -48,16 +48,19 @@ def migcdex(*x: int) -> tuple[tuple[int, ...], int]:
     return (u, *(v * i for i in y)), h
 
 
+@cacheit
 def cos_3() -> Expr:
     r"""Computes $\cos \frac{\pi}{3}$"""
     return S.Half
 
 
+@cacheit
 def cos_5() -> Expr:
     r"""Computes $\cos \frac{\pi}{5}$"""
     return (sqrt(5) + 1) / 4
 
 
+@cacheit
 def cos_17() -> Expr:
     r"""Computes $\cos \frac{\pi}{17}$"""
     return sqrt(
