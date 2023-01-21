@@ -176,10 +176,9 @@ def _import(module, reload=False):
     # Adding support for Si(x) for the lambdify function (issue 24175)
     if 'Si' not in namespace:
         try:
-            _import("scipy")
             def _si(x):
-                import scipy
-                return scipy.special.sici(x)[0]
+                from scipy.special import sici
+                return sici(x)[0]
             namespace['Si'] = _si
         except ImportError:
             pass
