@@ -217,6 +217,12 @@ def test_sin_rewrite():
     assert sin(x).rewrite(cos) == cos(x - pi / 2, evaluate=False)
     assert sin(x).rewrite(sec) == 1 / sec(x - pi / 2, evaluate=False)
     assert sin(cos(x)).rewrite(Pow) == sin(cos(x))
+    assert sin(x).rewrite(besselj).subs(x,pi/4).n() == sin(x).subs(x,pi/4).n()
+    assert sin(x).rewrite(besselj) == sqrt(pi*x/2)*besselj(1*S.Half,x)
+    assert sin(cos(x)).rewrite(besselj).subs(x, 2).n() == \
+        sin(cos(2)).n()
+    assert sin(sinh(x)).rewrite(besselj).subs(x,5).n() == \
+        sin(sinh(5)).n()
 
 
 def _test_extrig(f, i, e):
@@ -440,6 +446,12 @@ def test_cos_rewrite():
     assert cos(x).rewrite(sin) == sin(x + pi/2, evaluate=False)
     assert cos(x).rewrite(csc) == 1/csc(-x + pi/2, evaluate=False)
     assert cos(sin(x)).rewrite(Pow) == cos(sin(x))
+    assert cos(x).rewrite(besselj) == sqrt(pi*x/2)*besselj(-1*S.Half,x)
+    assert cos(x).rewrite(besselj).subs(x,pi/3).n() == S.Half.n()
+    assert cos(sin(x)).rewrite(besselj).subs(x, 2).n() == \
+        cos(sin(2)).n()
+    assert cos(cosh(x)).rewrite(besselj).subs(x, 2).n() == \
+        cos(cosh(2)).n()
 
 
 def test_cos_expansion():
@@ -610,6 +622,12 @@ def test_tan_rewrite():
     assert tan(sin(x)).rewrite(Pow) == tan(sin(x))
     assert tan(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == sqrt(sqrt(5)/8 +
                Rational(5, 8))/(Rational(-1, 4) + sqrt(5)/4)
+    assert tan(x).rewrite(besselj).subs(x, pi/4).n() == 1
+    assert tan(x).rewrite(besselj) == besselj(S.Half, x)/besselj(-1*S.Half, x)
+    assert tan(cos(x)).rewrite(besselj).subs(x, 3).n() == \
+        tan(cos(x)).subs(x, 3).n()
+    assert tan(tanh(x)).rewrite(besselj).subs(x, 3).n() == \
+        tan(tanh(x)).subs(x, 3).n()
 
 
 def test_tan_subs():
@@ -783,6 +801,12 @@ def test_cot_rewrite():
     assert cot(sin(x)).rewrite(Pow) == cot(sin(x))
     assert cot(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == (Rational(-1, 4) + sqrt(5)/4)/\
                                                         sqrt(sqrt(5)/8 + Rational(5, 8))
+    assert cot(x).rewrite(besselj) == (besselj(-1*S.Half, x))/(besselj(S.Half, x))
+    assert cot(x).rewrite(besselj).subs(x ,pi/4).n() == 1
+    assert cot(tan(x)).rewrite(besselj).subs(x, 3).n() == \
+        cot(tan(x)).subs(x, 3).n()
+    assert cot(sinh(x)).rewrite(besselj).subs(x, 3).n() == \
+        cot(sinh(x)).subs(x, 3).n()
 
 
 def test_cot_subs():
@@ -1705,6 +1729,12 @@ def test_sec_rewrite():
     assert sec(x).rewrite(sin) == 1 / sin(x + pi / 2, evaluate=False)
     assert sec(x).rewrite(tan) == (tan(x / 2)**2 + 1) / (-tan(x / 2)**2 + 1)
     assert sec(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)
+    assert sec(x).rewrite(besselj) == 1/(sqrt(pi*x/2)*besselj(-1*S.Half,x))
+    assert sec(x).rewrite(besselj).subs(x, pi/3).n() == 2
+    assert sec(cos(x)).rewrite(besselj).subs(x, 3).n() == \
+        sec(cos(x)).subs(x, 3).n()
+    assert sec(cosh(x)).rewrite(besselj).subs(x, 3).n() == \
+        sec(cosh(x)).subs(x, 3).n()
 
 
 def test_sec_fdiff():
@@ -1897,7 +1927,12 @@ def test_csc_rewrite():
     assert csc(1 - exp(-besselj(I, I))).rewrite(cos) == \
            -1/cos(-pi/2 - 1 + cos(I*besselj(I, I)) +
                   I*cos(-pi/2 + I*besselj(I, I), evaluate=False), evaluate=False)
-
+    assert csc(x).rewrite(besselj) == 1/(sqrt(pi*x/2)*besselj(1*S.Half,x))
+    assert csc(x).rewrite(besselj).subs(x, pi/4).n() == sqrt(2).n()
+    assert csc(sin(x)).rewrite(besselj).subs(x, 3).n() == \
+        csc(sin(x)).subs(x, 3).n()
+    assert csc(cosh(x)).rewrite(besselj).subs(x, 3).n() == \
+        csc(cosh(x)).subs(x, 3).n()
 
 def test_acsc_leading_term():
     assert acsc(1/x).as_leading_term(x) == x
