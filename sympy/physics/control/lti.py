@@ -707,19 +707,16 @@ class TransferFunction(SISOLinearTimeInvariant):
         [2*L + R*T, -2*L + R*T]
         """
 
-        z = Symbol('z') # discrete variable z
-        T = Symbol('T')  # and sample period T
-
         H = self.num/self.den
-        HZ = H.subs(self.var, (2/T)*(z-1)/(z+1))
+        HZ = H.subs(self.var, (2/Symbol('T'))*(Symbol('z')-1)/(Symbol('z')+1))
 
         num, den = fraction(HZ.simplify())
 
-        HZnum = collect(expand(num, z), z)
-        HZnum = Poly(HZnum, z)
+        HZnum = collect(expand(num, Symbol('z')), Symbol('z'))
+        HZnum = Poly(HZnum, Symbol('z'))
 
-        HZden = collect(expand(den, z), z)
-        HZden = Poly(HZden, z)
+        HZden = collect(expand(den, Symbol('z')), Symbol('z'))
+        HZden = Poly(HZden, Symbol('z'))
 
         num_coefs = HZnum.coeffs()
         den_coefs = HZden.coeffs()
