@@ -10,11 +10,12 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import (arg, conjugate, im, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh, coth, sinh, tanh)
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import (sqrt, cbrt)
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, atan2,
                                                       cos, cot, csc, sec, sin, sinc, tan)
 from sympy.functions.special.bessel import (besselj, jn)
 from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.hyper import hyper
 from sympy.matrices.dense import Matrix
 from sympy.polys.polytools import (cancel, gcd)
 from sympy.series.limits import limit
@@ -216,6 +217,13 @@ def test_sin_rewrite():
     assert sin(x).rewrite(csc) == 1/csc(x)
     assert sin(x).rewrite(cos) == cos(x - pi / 2, evaluate=False)
     assert sin(x).rewrite(sec) == 1 / sec(x - pi / 2, evaluate=False)
+    assert sin(x).rewrite(hyper) == [x*hyper([], (3/2,), -(x**2)/4),
+        hyper([], (1/2,), -(1/4)*(x - (pi/2))**2),
+        sqrt((1/2)*hyper([], (1/2,), -(x - (pi/2))**2) + (1/2)),
+        cbrt((3/4)*hyper([], (1/2,), -(1/4)*(x - (pi/2))) + (1/4)*hyper([], (1/2,), -(9/4)*(x - pi/2)**2)),
+        x * hyper((x/pi, x/pi, x/pi), (1, 1), -1)
+            - ((2*(x**3))/(pi**2))*hyper(((x/pi) + 1, (x/pi) + 1, (x/pi) + 1), (2, 2), -1),
+        sqrt((x**2)*hyper((1,), (2, (3/2)), -(x**2)))]
     assert sin(cos(x)).rewrite(Pow) == sin(cos(x))
 
 
@@ -439,6 +447,13 @@ def test_cos_rewrite():
     assert cos(x).rewrite(sec) == 1/sec(x)
     assert cos(x).rewrite(sin) == sin(x + pi/2, evaluate=False)
     assert cos(x).rewrite(csc) == 1/csc(-x + pi/2, evaluate=False)
+    assert cos(x).rewrite(hyper) == [hyper([], (1/2,), -(x**2)/4),
+        -(x - (pi/2))*hyper([], (3/2,), -(1/4)*(x - (pi/2))**2),
+        sqrt((1/2) + (1/2)*hyper([], (1/2,), -x**2)),
+        cbrt((3/4)*hyper([], (1/2,), -(x**2)/4) + (1/4)*hyper([], (1/2,), -(9*x**2)/4)),
+        ((pi/2) - x)*hyper(((x/pi) - (1/2), (x/pi) - (1/2), (x/pi) - (1/2)), (1, 1), -1)
+        - (2/pi**2)*(((pi/2) - x)**3)*hyper(((x/pi) + (1/2), (x/pi) + (1/2), (x/pi) + (1/2)), (2, 2), -1),
+        sqrt(((x - (pi/2))**2)*hyper((1,), (2, (3/2)), -((x - (pi/2))**2)))]
     assert cos(sin(x)).rewrite(Pow) == cos(sin(x))
 
 
@@ -610,6 +625,7 @@ def test_tan_rewrite():
     assert tan(sin(x)).rewrite(Pow) == tan(sin(x))
     assert tan(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == sqrt(sqrt(5)/8 +
                Rational(5, 8))/(Rational(-1, 4) + sqrt(5)/4)
+    assert tan(x).rewrite(hyper) == (8*x)/((pi**2) - (4 * (x**2)))*hyper((1, (1/2) - (x/pi), (x/pi) + (1/2)), ((3/2) - (x/pi), (x/pi) + (3/2)), 1)
 
 
 def test_tan_subs():
@@ -783,6 +799,7 @@ def test_cot_rewrite():
     assert cot(sin(x)).rewrite(Pow) == cot(sin(x))
     assert cot(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == (Rational(-1, 4) + sqrt(5)/4)/\
                                                         sqrt(sqrt(5)/8 + Rational(5, 8))
+    assert cot(x).rewrite(hyper) == (2/pi)*hyper((1, -(x/pi), (x/pi)), (1 - (x/pi), (x/pi) + 1), 1) - (1/x)
 
 
 def test_cot_subs():
@@ -1705,6 +1722,9 @@ def test_sec_rewrite():
     assert sec(x).rewrite(sin) == 1 / sin(x + pi / 2, evaluate=False)
     assert sec(x).rewrite(tan) == (tan(x / 2)**2 + 1) / (-tan(x / 2)**2 + 1)
     assert sec(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)
+    assert sec(x).rewrite(hyper) == [((4*pi)/((pi**2) - 4*(x**2)))
+        *hyper((1, 3/2, (1/2) - (x/pi), (x/pi) + (1/2)), (1/2, (3/2) - (x/pi), (x/pi) + (3/2)), -1),
+        1/hyper([], (1/2,), -(x**2)/4)]
 
 
 def test_sec_fdiff():
@@ -1892,6 +1912,8 @@ def test_csc_rewrite():
     assert csc(x).rewrite(cot) == (cot(x/2)**2 + 1)/(2*cot(x/2))
     assert csc(x).rewrite(cos) == 1/cos(x - pi/2, evaluate=False)
     assert csc(x).rewrite(sec) == sec(-x + pi/2, evaluate=False)
+    assert csc(x).rewrite(hyper) == [(2/x)*hyper((1, -(x/pi), x/pi), (1 - (x/pi), (x/pi) + 1), -1) - (1/x),
+        1/(x*hyper([], (3/2,), -(x**2)/4))]
 
     # issue 17349
     assert csc(1 - exp(-besselj(I, I))).rewrite(cos) == \
