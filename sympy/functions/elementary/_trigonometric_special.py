@@ -111,7 +111,7 @@ def cos_257() -> Expr:
 
 
 def cos_table() -> dict[int, Callable[[], Expr]]:
-    """Computes the lazily evaluated special angle table for $\cos$
+    r"""Lazily evaluated table for $\cos \frac{n}{\pi}$
 
     Notes
     =====
