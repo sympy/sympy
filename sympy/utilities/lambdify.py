@@ -172,7 +172,7 @@ def _import(module, reload=False):
     # contrast to abs().
     if 'Abs' not in namespace:
         namespace['Abs'] = abs
-    
+
     # Adding support for Si(x) for the lambdify function (issue 24175)
     if 'Si' not in namespace:
         try:
