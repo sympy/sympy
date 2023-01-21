@@ -23,7 +23,7 @@ def migcdex(*x: int) -> tuple[tuple[int, ...], int]:
     Examples
     ========
 
-    >>> from sympy.functions.elementary._trig_sqrt import migcdex
+    >>> from sympy.functions.elementary._trigonometric_special import migcdex
     >>> migcdex()
     ((), 0)
     >>> migcdex(4)
