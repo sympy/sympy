@@ -303,9 +303,6 @@ class TransferFunction(SISOLinearTimeInvariant):
         else:
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
 
-
-
-
     @classmethod
     def from_rational_expression(cls, expr, var=None):
         r"""
