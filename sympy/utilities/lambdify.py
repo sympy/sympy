@@ -172,6 +172,17 @@ def _import(module, reload=False):
     # contrast to abs().
     if 'Abs' not in namespace:
         namespace['Abs'] = abs
+    
+    # Adding support for Si(x) for the lambdify function (issue 24175)
+    if 'Si' not in namespace:
+        try:
+            _import("scipy")
+            def _si(x):
+                import scipy
+                return scipy.special.sici(x)[0]
+            namespace['Si'] = _si
+        except ImportError:
+            pass
 
 
 # Used for dynamically generated filenames that are inserted into the
