@@ -711,21 +711,17 @@ class TransferFunction(SISOLinearTimeInvariant):
         T = Symbol('T')  # and sample period T
 
         H = self.num/self.den
-
         HZ = H.subs(self.var, (2/T)*(z-1)/(z+1))
 
         num, den = fraction(HZ.simplify())
 
         HZnum = collect(expand(num, z), z)
-
         HZnum = Poly(HZnum, z)
 
         HZden = collect(expand(den, z), z)
-
         HZden = Poly(HZden, z)
 
         num_coefs = HZnum.coeffs()
-
         den_coefs = HZden.coeffs()
 
         return num_coefs, den_coefs
