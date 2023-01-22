@@ -820,7 +820,7 @@ class StrPrinter(Printer):
         args = ', '.join(self._print(item) for item in items)
         if any(item.has(FiniteSet) for item in items):
             return 'FiniteSet({})'.format(args)
-        return '{{{}}}'.format(args)
+        return 'FiniteSet({})'.format(args)
 
     def _print_Partition(self, s):
         items = sorted(s, key=default_sort_key)

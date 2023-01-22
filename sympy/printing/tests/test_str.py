@@ -934,19 +934,23 @@ def test_RandomDomain():
 
 
 def test_FiniteSet():
-    assert str(FiniteSet(*range(1, 51))) == (
-        '{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,'
-        ' 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,'
-        ' 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50}'
-    )
-    assert str(FiniteSet(*range(1, 6))) == '{1, 2, 3, 4, 5}'
-    assert str(FiniteSet(*[x*y, x**2])) == '{x**2, x*y}'
+    assert str(FiniteSet(*range(1, 51))) == 'FiniteSet(1, 2, 3, 4, 5, 6, 7, ' \
+                                            '8, 9, 10, 11, 12, 13, 14, 15, ' \
+                                            '16, 17, 18, 19, 20, 21, 22, 23, ' \
+                                            '24, 25, 26, 27, 28, 29, 30, ' \
+                                            '31, 32, 33, 34, 35, 36, 37, ' \
+                                            '38, 39, 40, 41, 42, 43, 44, ' \
+                                            '45, 46, 47, 48, 49, 50)'
+    assert str(FiniteSet(*range(1, 6))) == 'FiniteSet(1, 2, 3, 4, 5)'
+    assert str(FiniteSet(*[x*y, x**2])) == 'FiniteSet(x**2, x*y)'
     assert str(FiniteSet(FiniteSet(FiniteSet(x, y), 5), FiniteSet(x,y), 5)
-               ) == 'FiniteSet(5, FiniteSet(5, {x, y}), {x, y})'
+               ) == 'FiniteSet(5, FiniteSet(5, FiniteSet(x, y)), ' \
+                    'FiniteSet(x, y))'
 
 
 def test_Partition():
-    assert str(Partition(FiniteSet(x, y), {z})) == 'Partition({z}, {x, y})'
+    assert str(Partition(FiniteSet(x, y), {z})) == 'Partition(FiniteSet(z), ' \
+                                                   'FiniteSet(x, y))'
 
 def test_UniversalSet():
     assert str(S.UniversalSet) == 'UniversalSet'
@@ -1115,8 +1119,8 @@ def test_issue_14567():
 
 
 def test_issue_21823():
-    assert str(Partition([1, 2])) == 'Partition({1, 2})'
-    assert str(Partition({1, 2})) == 'Partition({1, 2})'
+    assert str(Partition([1, 2])) == 'Partition(FiniteSet(1, 2))'
+    assert str(Partition({1, 2})) == 'Partition(FiniteSet(1, 2))'
 
 
 def test_issue_22689():
