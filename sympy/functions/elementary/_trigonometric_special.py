@@ -1,6 +1,7 @@
 """A module for special angle forumlas for trigonometric functions"""
 from __future__ import annotations
 from typing import Callable
+from functools import reduce
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.numbers import igcdex, Integer
@@ -46,6 +47,34 @@ def migcdex(*x: int) -> tuple[tuple[int, ...], int]:
     y, g = migcdex(*x[1:])
     u, v, h = igcdex(x[0], g)
     return (u, *(v * i for i in y)), h
+
+
+def ipartfrac(*denoms: int) -> tuple[int, ...]:
+    r"""Compute the corresponding numerators for the partial fraction
+    decomposition of ``1 / Mul(*denoms)``"""
+    def mul(x: int, y: int) -> int:
+        return x * y
+
+    denom = reduce(mul, denoms)
+    a = [denom // x for x in denoms]
+    h, _ = migcdex(*a)
+    return h
+
+
+def fermat_coords(n: int) -> list[int] | None:
+    """If n can be factored in terms of Fermat primes with
+    multiplicity of each being 1, return those primes, else
+    None
+    """
+    primes = []
+    for p in [3, 5, 17, 257, 65537]:
+        quotient, remainder = divmod(n, p)
+        if remainder == 0:
+            n = quotient
+            primes.append(p)
+            if n == 1:
+                return primes
+    return None
 
 
 @cacheit

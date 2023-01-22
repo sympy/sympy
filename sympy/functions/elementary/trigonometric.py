@@ -18,7 +18,8 @@ from sympy.functions.elementary.exponential import log, exp
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary._trigonometric_special import cos_table, migcdex
+from sympy.functions.elementary._trigonometric_special import (
+    cos_table, ipartfrac, fermat_coords)
 from sympy.logic.boolalg import And
 from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
@@ -165,7 +166,7 @@ def _peeloff_pi(arg):
     return arg, S.Zero
 
 
-def _pi_coeff(arg, cycles=1):
+def _pi_coeff(arg: Expr, cycles: int = 1) -> Expr | None:
     r"""
     When arg is a Number times $\pi$ (e.g. $3\pi/2$) then return the Number
     normalized to be in the range $[0, 2]$, else `None`.
@@ -237,6 +238,7 @@ def _pi_coeff(arg, cycles=1):
             return cx
     elif arg.is_zero:
         return S.Zero
+    return None
 
 
 class sin(TrigonometricFunction):
@@ -795,28 +797,8 @@ class cos(TrigonometricFunction):
     def _eval_rewrite_as_pow(self, arg, **kwargs):
         return self._eval_rewrite_as_sqrt(arg)
 
-    def _eval_rewrite_as_sqrt(self, arg, **kwargs):
+    def _eval_rewrite_as_sqrt(self, arg: Expr, **kwargs):
         from sympy.functions.special.polynomials import chebyshevt
-
-        def ipartfrac(r, factors=None):
-            if isinstance(r, int):
-                return r
-            if not isinstance(r, Rational):
-                raise TypeError("r is not rational")
-            n = r.q
-            if 2 > r.q*r.q:
-                return r.q
-
-            if None == factors:
-                a = [n//x**y for x, y in factorint(r.q).items()]
-            else:
-                a = [n//x for x in factors]
-            if len(a) == 1:
-                return [ r ]
-            h, _ = migcdex(*a)
-            ans = [ r.p*Rational(i*j, r.q) for i, j in zip(h, a) ]
-            assert r == sum(ans)
-            return ans
 
         pi_coeff = _pi_coeff(arg)
         if pi_coeff is None:
@@ -837,37 +819,26 @@ class cos(TrigonometricFunction):
             return rv
 
         if not pi_coeff.q % 2:  # recursively remove factors of 2
-            pico2 = pi_coeff*2
-            nval = cos(pico2*pi).rewrite(sqrt)
-            x = (pico2 + 1)/2
+            pico2 = pi_coeff * 2
+            nval = cos(pico2 * pi).rewrite(sqrt)
+            x = (pico2 + 1) / 2
             sign_cos = -1 if int(x) % 2 else 1
-            return sign_cos*sqrt( (1 + nval)/2 )
+            return sign_cos * sqrt((1 + nval) / 2)
 
-        def _fermatCoords(n):
-            # if n can be factored in terms of Fermat primes with
-            # multiplicity of each being 1, return those primes, else
-            # False
-            primes = []
-            for p_i in cst_table_some:
-                quotient, remainder = divmod(n, p_i)
-                if remainder == 0:
-                    n = quotient
-                    primes.append(p_i)
-                    if n == 1:
-                        return tuple(primes)
-            return False
-
-        FC = _fermatCoords(pi_coeff.q)
+        FC = fermat_coords(pi_coeff.q)
         if FC:
-            decomp = ipartfrac(pi_coeff, FC)
-            X = [(x[1], x[0]*pi) for x in zip(decomp, numbered_symbols('z'))]
-            pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
-            return pcls.rewrite(sqrt)
+            denoms = FC
         else:
-            decomp = ipartfrac(pi_coeff)
-            X = [(x[1], x[0]*pi) for x in zip(decomp, numbered_symbols('z'))]
-            pcls = cos(sum([x[0] for x in X]))._eval_expand_trig().subs(X)
+            denoms = [b**e for b, e in factorint(pi_coeff.q).items()]
+
+        apart = ipartfrac(*denoms)
+        decomp = (pi_coeff.p * Rational(n, d) for n, d in zip(apart, denoms))
+        X = [(x[1], x[0]*pi) for x in zip(decomp, numbered_symbols('z'))]
+        pcls = cos(sum(x[0] for x in X))._eval_expand_trig().subs(X)
+
+        if not FC or len(FC) == 1:
             return pcls
+        return pcls.rewrite(sqrt)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
         return 1/sec(arg)
