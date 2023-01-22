@@ -100,11 +100,13 @@ def cos_17() -> Expr:
 
 @cacheit
 def cos_257() -> Expr:
-    r"""Computes $\cos \frac{\pi}{257}$"""
-    """Express cos(pi/257) explicitly as a function of radicals
-        Based upon the equations in
-        http://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
-        See also https://r-knott.surrey.ac.uk/Fibonacci/simpleTrig.html
+    r"""Computes $\cos \frac{\pi}{257}$
+
+    References
+    ==========
+
+    .. [*] http://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
+    .. [*] https://r-knott.surrey.ac.uk/Fibonacci/simpleTrig.html
     """
     def f1(a: Expr, b: Expr) -> tuple[Expr, Expr]:
         return (a + sqrt(a**2 + b)) / 2, (a - sqrt(a**2 + b)) / 2
