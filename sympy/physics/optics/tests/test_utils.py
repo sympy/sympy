@@ -2,7 +2,7 @@ from sympy.core.numbers import comp, Rational
 from sympy.physics.optics.utils import (refraction_angle, fresnel_coefficients,
         deviation, brewster_angle, critical_angle, lens_makers_formula,
         mirror_formula, lens_formula, hyperfocal_distance,
-        transverse_magnification_mirror, transverse_magnification_lens)
+        transverse_magnification)
 from sympy.physics.optics.medium import Medium
 from sympy.physics.units import e0
 
@@ -179,17 +179,10 @@ def test_hyperfocal_distance():
     assert hyperfocal_distance(f=f, N=N, c=c) == f**2/(N*c)
     assert ae(hyperfocal_distance(f=0.5, N=8, c=0.0033), 9.47, 2)
 
-
-def test_transverse_magnification_mirror():
+def test_transverse_magnification():
     si, so = symbols('si, so')
-    assert transverse_magnification_mirror(si, so) == -si/so
-    assert transverse_magnification_mirror(30, 15) == -2
-
-def test_transverse_magnification_lens():
-    si, so = symbols('si, so')
-    assert transverse_magnification_lens(si, so) == si/so
-    assert transverse_magnification_lens(30, 15) == 2
-
+    assert transverse_magnification(si, so) == -si/so
+    assert transverse_magnification(30, 15) == -2
 
 
 def test_lens_makers_formula_thick_lens():
