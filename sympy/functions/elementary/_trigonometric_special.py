@@ -50,8 +50,71 @@ def migcdex(*x: int) -> tuple[tuple[int, ...], int]:
 
 
 def ipartfrac(*denoms: int) -> tuple[int, ...]:
-    r"""Compute the corresponding numerators for the partial fraction
-    decomposition of ``1 / Mul(*denoms)``"""
+    r"""Compute the the partial fraction decomposition.
+
+    Explanation
+    ===========
+
+    Given a rational number $\frac{1}{q_1 \cdots q_n}$ where all
+    $q_1, \cdots, q_n$ are pairwise coprime,
+
+    A partial fraction decomposition is defined as
+
+    .. math::
+        \frac{1}{q_1 \cdots q_n} = \frac{p_1}{q_1} + \cdots + \frac{p_n}{q_n}
+
+    And it can be derived from solving the following diophantine equation for
+    the $p_1, \cdots, p_n$
+
+    .. math::
+        1 = p_1 \prod_{i \ne 1}q_i + \cdots + p_n \prod_{i \ne n}q_i
+
+    Where $q_1, \cdots, q_n$ being pairwise coprime implies
+    $\gcd(\prod_{i \ne 1}q_i, \cdots, \prod_{i \ne n}q_i) = 1$,
+    which guarantees the existance of the solution.
+
+    It is sufficient to compute partial fraction decomposition only
+    for numerator $1$ because partial fraction decomposition for any
+    $\frac{n}{q_1 \cdots q_n}$ can be easily computed by multiplying
+    the result by $n$ afterwards.
+
+    Parameters
+    ==========
+
+    denoms : int
+        The pairwise coprime integer denominators $q_i$ which defines the
+        rational number $\frac{1}{q_1 \cdots q_n}$
+
+    Returns
+    =======
+
+    tuple[int, ...]
+        The list of numerators which semantically corresponds to $p_i$ of the
+        partial fraction decomposition
+        $\frac{1}{q_1 \cdots q_n} = \frac{p_1}{q_1} + \cdots + \frac{p_n}{q_n}$
+
+    Examples
+    ========
+
+    >>> from sympy import Rational, Mul
+    >>> from sympy.functions.elementary._trigonometric_special import ipartfrac
+
+    >>> denoms = 2, 3, 5
+    >>> numers = ipartfrac(2, 3, 5)
+    >>> numers
+    (1, 7, -14)
+
+    >>> Rational(1, Mul(*denoms))
+    1/30
+    >>> out = 0
+    >>> for n, d in zip(numers, denoms):
+    ...    out += Rational(n, d)
+    >>> out
+    1/30
+    """
+    if not denoms:
+        return ()
+
     def mul(x: int, y: int) -> int:
         return x * y
 
@@ -79,19 +142,19 @@ def fermat_coords(n: int) -> list[int] | None:
 
 @cacheit
 def cos_3() -> Expr:
-    r"""Computes $\cos \frac{\pi}{3}$"""
+    r"""Computes $\cos \frac{\pi}{3}$ in square roots"""
     return S.Half
 
 
 @cacheit
 def cos_5() -> Expr:
-    r"""Computes $\cos \frac{\pi}{5}$"""
+    r"""Computes $\cos \frac{\pi}{5}$ in square roots"""
     return (sqrt(5) + 1) / 4
 
 
 @cacheit
 def cos_17() -> Expr:
-    r"""Computes $\cos \frac{\pi}{17}$"""
+    r"""Computes $\cos \frac{\pi}{17}$ in square roots"""
     return sqrt(
         (15 + sqrt(17)) / 32 + sqrt(2) * (sqrt(17 - sqrt(17)) +
         sqrt(sqrt(2) * (-8 * sqrt(17 + sqrt(17)) - (1 - sqrt(17))
@@ -100,7 +163,7 @@ def cos_17() -> Expr:
 
 @cacheit
 def cos_257() -> Expr:
-    r"""Computes $\cos \frac{\pi}{257}$
+    r"""Computes $\cos \frac{\pi}{257}$ in square roots
 
     References
     ==========
@@ -142,7 +205,8 @@ def cos_257() -> Expr:
 
 
 def cos_table() -> dict[int, Callable[[], Expr]]:
-    r"""Lazily evaluated table for $\cos \frac{n}{\pi}$
+    r"""Lazily evaluated table for $\cos \frac{\pi}{n}$ in square roots for
+    $n \in \{3, 5, 17, 257, 65537\}$.
 
     Notes
     =====
