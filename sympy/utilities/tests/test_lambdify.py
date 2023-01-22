@@ -1,7 +1,6 @@
 from itertools import product
 import math
 import inspect
-import numpy
 
 import mpmath
 from sympy.testing.pytest import raises, warns_deprecated_sympy
@@ -49,7 +48,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.exceptions import ignore_warnings
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import uppergamma, lowergamma
-from sympy import MatrixSymbol, lambdify
+
 
 import sympy
 
