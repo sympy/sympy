@@ -189,7 +189,6 @@ def _import(module, reload=False):
         try:
             _import("scipy")
             def _ci(x):
-                from scipy.special import sici
                 return sici(x)[1]
             namespace['Ci'] = _ci
         except ImportError:
