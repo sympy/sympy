@@ -10,8 +10,7 @@
 * mirror_formula
 * lens_formula
 * hyperfocal_distance
-* transverse_magnification_lens
-* transverse_magnification_mirror
+* transverse_magnification
 """
 
 __all__ = ['refraction_angle',
@@ -23,8 +22,7 @@ __all__ = ['refraction_angle',
            'mirror_formula',
            'lens_formula',
            'hyperfocal_distance',
-           'transverse_magnification_lens',
-           'transverse_magnification_mirror'
+           'transverse_magnification'
            ]
 
 from sympy.core.numbers import (Float, I, oo, pi, zoo)
