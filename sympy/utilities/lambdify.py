@@ -173,27 +173,6 @@ def _import(module, reload=False):
     if 'Abs' not in namespace:
         namespace['Abs'] = abs
 
-    # Adding support for Si(x) for the lambdify function (issue 24175)
-    if 'Si' not in namespace:
-        try:
-            _import("scipy")
-            def _si(x):
-                from scipy.special import sici
-                return sici(x)[0]
-            namespace['Si'] = _si
-        except ImportError:
-            pass
-
-    # Adding support for Ci(x) for the lambdify function (issue 24175)
-    if 'Ci' not in namespace:
-        try:
-            _import("scipy")
-            def _ci(x):
-                return sici(x)[1]
-            namespace['Ci'] = _ci
-        except ImportError:
-            pass
-
 # Used for dynamically generated filenames that are inserted into the
 # linecache.
 _lambdify_generated_counter = 1
