@@ -215,6 +215,12 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     >>> K.primes_above(11)
     [(11, _x**3 + 5*_x**2 + 4*_x - 1), (11, _x**3 - 4*_x**2 - 5*_x - 1)]
 
+    The Galois group of the Galois closure of the field can be computed (when
+    the minimal polynomial of the field is of sufficiently small degree).
+
+    >>> K.gal(by_name=True)[0]
+    'C6'
+
     Notes
     =====
 
@@ -524,6 +530,42 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         dK = self.discriminant()
         rad = self._nilradicals_mod_p.get(p)
         return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
+
+    def gal(self, by_name=False, max_tries=30, randomize=False):
+        """
+        Compute the Galois group of the Galois closure of this field.
+
+        Examples
+        ========
+
+        If the field is Galois, the order of the group will equal the degree
+        of the field:
+
+        >>> from sympy import QQ
+        >>> from sympy.abc import x
+        >>> k = QQ.alg_field_from_poly(x**4 + 1)
+        >>> G, _ = k.gal()
+        >>> G.order()
+        4
+
+        If the field is not Galois, then its Galois closure is a proper
+        extension, and the order of the Galois group will be greater than the
+        degree of the field:
+
+        >>> k = QQ.alg_field_from_poly(x**4 - 2)
+        >>> G, _ = k.gal()
+        >>> G.order()
+        8
+
+        See Also
+        ========
+
+        sympy.polys.numberfields.galoisgroups.galois_group
+
+        """
+        f = self.ext.minpoly_of_element()
+        _, f = f.clear_denoms(convert=True)
+        return f.gal(by_name=by_name, max_tries=max_tries, randomize=randomize)
 
 
 def _make_converter(K):

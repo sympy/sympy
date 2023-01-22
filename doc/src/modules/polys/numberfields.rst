@@ -255,18 +255,6 @@ Class Reference
 
 .. autofunction:: find_min_poly
 
-Resolvents
-----------
-
-Resolvents are useful in computing Galois Groups.
-
-.. currentmodule:: sympy.polys.numberfields.galoisgroups
-
-.. autoclass:: Resolvent
-   :members:
-
-   .. automethod:: Resolvent.__init__
-
 Utilities
 ---------
 
