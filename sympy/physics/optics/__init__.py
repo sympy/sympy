@@ -11,7 +11,7 @@ __all__ = [
 
     'refraction_angle', 'deviation', 'fresnel_coefficients', 'brewster_angle',
     'critical_angle', 'lens_makers_formula', 'mirror_formula', 'lens_formula',
-    'hyperfocal_distance', 'transverse_magnification_mirror', 'transverse_magnification_lens',
+    'hyperfocal_distance', 'transverse_magnification',
 
     'jones_vector', 'stokes_vector', 'jones_2_stokes', 'linear_polarizer',
     'phase_retarder', 'half_wave_retarder', 'quarter_wave_retarder',
@@ -30,7 +30,7 @@ from .medium import Medium
 
 from .utils import (refraction_angle, deviation, fresnel_coefficients,
         brewster_angle, critical_angle, lens_makers_formula, mirror_formula,
-        lens_formula, hyperfocal_distance, transverse_magnification_mirror, transverse_magnification_lens)
+        lens_formula, hyperfocal_distance, transverse_magnification)
 
 from .polarization import (jones_vector, stokes_vector, jones_2_stokes,
         linear_polarizer, phase_retarder, half_wave_retarder,
