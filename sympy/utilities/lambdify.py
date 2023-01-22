@@ -184,6 +184,16 @@ def _import(module, reload=False):
         except ImportError:
             pass
 
+    # Adding support for Ci(x) for the lambdify function (issue 24175)
+    if 'Ci' not in namespace:
+        try:
+            _import("scipy")
+            def _ci(x):
+                from scipy.special import sici
+                return sici(x)[1]
+            namespace['Ci'] = _ci
+        except ImportError:
+            pass
 
 # Used for dynamically generated filenames that are inserted into the
 # linecache.
