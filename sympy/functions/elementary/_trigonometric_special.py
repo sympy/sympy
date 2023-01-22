@@ -1,4 +1,37 @@
-"""A module for special angle forumlas for trigonometric functions"""
+r"""A module for special angle forumlas for trigonometric functions
+
+TODO
+====
+
+This module should be developed in the future to contain direct squrae root
+representation of
+
+.. math
+    F(\frac{n}{m} \pi)
+
+for every
+
+- $m \in \{ 3, 5, 17, 257, 65537 \}$
+- $n \in \mathbb{N}$, $0 \le n < m$
+- $F \in \{\sin, \cos, \tan, \csc, \sec, \cot\}$
+
+Without multi-step rewrites
+(e.g. $\tan \to \cos/\sin \to \cos/\sqrt \to \ sqrt$)
+or using chebyshev identities
+(e.g. $\cos \to \cos + \cos^2 + \cdots \to \sqrt{} + \sqrt{}^2 + \cdots $),
+which are trivial to implement in sympy,
+and had used to give overly complicated expressions.
+
+The reference can be found below, if anyone may need help implementing them.
+
+References
+==========
+
+.. [*] Gottlieb, Christian. (1999). The Simple and straightforward construction
+   of the regular 257-gon. The Mathematical Intelligencer. 21. 31-37.
+   10.1007/BF03024829.
+.. [*] https://resources.wolframcloud.com/FunctionRepository/resources/Cos2PiOverFermatPrime
+"""
 from __future__ import annotations
 from typing import Callable
 from functools import reduce
@@ -213,6 +246,9 @@ def cos_table() -> dict[int, Callable[[], Expr]]:
 
     65537 is the only other known Fermat prime and it is nearly impossible to
     build in the current SymPy due to performance issues.
+
+    References
+    ==========
 
     https://r-knott.surrey.ac.uk/Fibonacci/simpleTrig.html
     """
