@@ -1,43 +1,24 @@
 """Tests for computing Galois groups. """
 
-from sympy.combinatorics.named_groups import (
-    SymmetricGroup, AlternatingGroup, DihedralGroup, CyclicGroup,
-    AbelianGroup,
+from sympy.abc import x
+from sympy.combinatorics.galois import (
+    S1TransitiveSubgroups, S2TransitiveSubgroups, S3TransitiveSubgroups,
+    S4TransitiveSubgroups, S5TransitiveSubgroups, S6TransitiveSubgroups,
 )
-from sympy.combinatorics.permutations import Permutation
-from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.combinatorics.named_groups import SymmetricGroup
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.numberfields.galoisgroups import (
-    Resolvent, tschirnhausen_transformation,
-    MaxTriesException, galois_group,
-    _galois_group_degree_4_simple,
-    M20, G36minus,
+    tschirnhausen_transformation,
+    galois_group,
+    _galois_group_degree_4_root_approx,
+    _galois_group_degree_5_hybrid,
 )
 from sympy.polys.numberfields.subfield import field_isomorphism
 from sympy.polys.polytools import Poly
-from sympy.testing.pytest import raises, slow
-
-
-def test_Resolvent_roots():
-    X = symbols('X0 X1 X2 X3')
-    F = X[0]*X[2] + X[1]*X[3]
-    s = [
-        Permutation([0, 1, 2, 3]),
-        Permutation([1, 0, 2, 3]),
-        Permutation([3, 1, 2, 0])
-    ]
-    R = Resolvent(F, X, s)
-    roots = [r(*X) for r in R.root_lambdas]
-    assert roots == [
-        S('X0*X2 + X1*X3'),
-        S('X0*X3 + X1*X2'),
-        S('X0*X1 + X2*X3')
-    ]
+from sympy.testing.pytest import raises
 
 
 def test_tschirnhausen_transformation():
-    x = symbols('x')
     for T in [
         Poly(x**2 - 2),
         Poly(x**2 + x + 1),
@@ -53,52 +34,93 @@ def test_tschirnhausen_transformation():
         assert field_isomorphism(K.ext, L.ext) is not None
 
 
-def test_G36minus():
-    G = G36minus()
-    assert G.order() == 36
-    A6 = AlternatingGroup(6)
-    assert not G.is_subgroup(A6)
+# Test polys are from:
+# Cohen, H. *A Course in Computational Algebraic Number Theory*.
+test_polys_by_deg = {
+    # Degree 1
+    1: [
+        (x, S1TransitiveSubgroups.S1, True)
+    ],
+    # Degree 2
+    2: [
+        (x**2 + x + 1, S2TransitiveSubgroups.S2, False)
+    ],
+    # Degree 3
+    3: [
+        (x**3 + x**2 - 2*x - 1, S3TransitiveSubgroups.A3, True),
+        (x**3 + 2, S3TransitiveSubgroups.S3, False),
+    ],
+    # Degree 4
+    4: [
+        (x**4 + x**3 + x**2 + x + 1, S4TransitiveSubgroups.C4, False),
+        (x**4 + 1, S4TransitiveSubgroups.V, True),
+        (x**4 - 2, S4TransitiveSubgroups.D4, False),
+        (x**4 + 8*x + 12, S4TransitiveSubgroups.A4, True),
+        (x**4 + x + 1, S4TransitiveSubgroups.S4, False),
+    ],
+    # Degree 5
+    5: [
+        (x**5 + x**4 - 4*x**3 - 3*x**2 + 3*x + 1, S5TransitiveSubgroups.C5, True),
+        (x**5 - 5*x + 12, S5TransitiveSubgroups.D5, True),
+        (x**5 + 2, S5TransitiveSubgroups.M20, False),
+        (x**5 + 20*x + 16, S5TransitiveSubgroups.A5, True),
+        (x**5 - x + 1, S5TransitiveSubgroups.S5, False),
+    ],
+    # Degree 6
+    6: [
+        (x**6 + x**5 + x**4 + x**3 + x**2 + x + 1, S6TransitiveSubgroups.C6, False),
+        (x**6 + 108, S6TransitiveSubgroups.S3, False),
+        (x**6 + 2, S6TransitiveSubgroups.D6, False),
+        (x**6 - 3*x**2 - 1, S6TransitiveSubgroups.A4, True),
+        (x**6 + 3*x**3 + 3, S6TransitiveSubgroups.G18, False),
+        (x**6 - 3*x**2 + 1, S6TransitiveSubgroups.A4xC2, False),
+        (x**6 - 4*x**2 - 1, S6TransitiveSubgroups.S4p, True),
+        (x**6 - 3*x**5 + 6*x**4 - 7*x**3 + 2*x**2 + x - 4, S6TransitiveSubgroups.S4m, False),
+        (x**6 + 2*x**3 - 2, S6TransitiveSubgroups.G36m, False),
+        (x**6 + 2*x**2 + 2, S6TransitiveSubgroups.S4xC2, False),
+        (x**6 + 10*x**5 + 55*x**4 + 140*x**3 + 175*x**2 + 170*x + 25, S6TransitiveSubgroups.PSL2F5, True),
+        (x**6 + 10*x**5 + 55*x**4 + 140*x**3 + 175*x**2 - 3019*x + 25, S6TransitiveSubgroups.PGL2F5, False),
+        (x**6 + 6*x**4 + 2*x**3 + 9*x**2 + 6*x - 4, S6TransitiveSubgroups.G36p, True),
+        (x**6 + 2*x**4 + 2*x**3 + x**2 + 2*x + 2, S6TransitiveSubgroups.G72, False),
+        (x**6 + 24*x - 20, S6TransitiveSubgroups.A6, True),
+        (x**6 + x + 1, S6TransitiveSubgroups.S6, False),
+    ],
+}
 
 
-def test__galois_group_degree_4_simple():
-    x = symbols('x')
-    for T, G, s in [
-        (x**4 + x**3 + x**2 + x + 1, CyclicGroup(4), False),
-        (x**4 + 1, AbelianGroup(2, 2), True),
-        #(x**4 - 24*x**3 + 608*x**2 - 448*x + 1088, AbelianGroup(2, 2), True),
-        (x**4 - 2, DihedralGroup(4), False),
-        (x**4 + 8*x + 12, AlternatingGroup(4), True),
-        (x**4 + x + 1, SymmetricGroup(4), False),
-    ]:
-        assert _galois_group_degree_4_simple(Poly(T)) == (G, s)
+def test_galois_group_not_by_name():
+    """
+    We only once need to test the line in the `galois_group()` function that
+    turns group names into groups. Beyond this, we can test entirely by name
+    (and let the `get_group_by_name()` function be tested elsewhere).
+    """
+    assert galois_group(Poly(x))[0] == SymmetricGroup(1)
 
 
-@slow
 def test_galois_group():
-    x = symbols('x')
-
     raises(ValueError, lambda: galois_group(Poly(0, x)))
     raises(ValueError, lambda: galois_group(Poly(1, x)))
+    for deg in range(1, 7):
+        polys = test_polys_by_deg[deg]
+        for T, G, s in polys:
+            assert galois_group(Poly(T), by_name=True) == (G, s)
 
-    for T, G, s in [
-        # Degree 1
-        (x, CyclicGroup(1), True),
-        # Degree 2
-        (x**2 + x + 1, CyclicGroup(2), False),
-        # Degree 3
-        (x**3 + x**2 - 2*x - 1, AlternatingGroup(3), True),
-        (x**3 + 2, SymmetricGroup(3), False),
-        # Degree 4
-        (x**4 + x**3 + x**2 + x + 1, CyclicGroup(4), False),
-        (x**4 + 1, AbelianGroup(2, 2), True),
-        (x**4 - 2, DihedralGroup(4), False),
-        (x**4 + 8*x + 12, AlternatingGroup(4), True),
-        (x**4 + x + 1, SymmetricGroup(4), False),
-        # Degree 5
-        (x**5 + x**4 - 4*x**3 - 3*x**2 + 3*x + 1, CyclicGroup(5), True),
-        (x**5 - 5*x + 12, DihedralGroup(5), True),
-        (x**5 + 2, M20(), False),
-        (x**5 + 20*x + 16, AlternatingGroup(5), True),
-        (x**5 - x + 1, SymmetricGroup(5), False),
-    ]:
-        assert galois_group(Poly(T)) == (G, s)
+
+def test__galois_group_degree_4_root_approx():
+    for T, G, s in test_polys_by_deg[4]:
+        assert _galois_group_degree_4_root_approx(Poly(T)) == (G, s)
+
+
+def test__galois_group_degree_5_hybrid():
+    for T, G, s in test_polys_by_deg[5]:
+        assert _galois_group_degree_5_hybrid(Poly(T)) == (G, s)
+
+
+def test_AlgebraicField_gal():
+    k = QQ.alg_field_from_poly(Poly(x**4 + 1))
+    G, _ = k.gal(by_name=True)
+    assert G == S4TransitiveSubgroups.V
+
+    k = QQ.alg_field_from_poly(Poly(x**4 - 2))
+    G, _ = k.gal(by_name=True)
+    assert G == S4TransitiveSubgroups.D4

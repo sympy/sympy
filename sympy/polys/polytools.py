@@ -3870,6 +3870,30 @@ class Poly(Basic):
         else:
             return tuple(map(per, result))
 
+    def gal(f, by_name=False, max_tries=30, randomize=False):
+        """
+        Compute the Galois group of this polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> f = Poly(x**4 - 2)
+        >>> G, _ = f.gal(by_name=True)
+        >>> print(G)
+        D4
+
+        See Also
+        ========
+
+        sympy.polys.numberfields.galoisgroups.galois_group
+
+        """
+        from sympy.polys.numberfields.galoisgroups import galois_group
+        return galois_group(f, by_name=by_name, max_tries=max_tries,
+                            randomize=randomize)
+
     @property
     def is_zero(f):
         """
