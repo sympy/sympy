@@ -116,38 +116,34 @@ def ddm_irref(a, _partial_pivot=False):
         # domain is RR or CC. It uses partial (row) pivoting based on the
         # absolute value of the pivot candidates.
         if _partial_pivot:
-            ip = max(range(i, m), key=lambda ip: abs(a[ip][j]))
-            a[i], a[ip] = a[ip], a[i]
-
-        # pivot
-        aij = a[i][j]
+            p = max(range(i, m), key=lambda ip: abs(a[ip][j]))
+            a[i], a[p] = a[p], a[i]
 
         # zero-pivot
-        if not aij:
-            for ip in range(i+1, m):
-                aij = a[ip][j]
+        if not a[i][j]:
+            for p in range(i+1, m):
                 # row-swap
-                if aij:
-                    a[i], a[ip] = a[ip], a[i]
+                if a[p][j]:
+                    a[i], a[p] = a[p], a[i]
                     break
             else:
                 # next column
                 continue
 
         # normalise row
-        ai = a[i]
-        aijinv = aij**-1
-        for l in range(j, n):
-            ai[l] *= aijinv # ai[j] = one
+        for l in range(j + 1, n):
+            a[i][l] /= a[i][j] # ai[j] = one
+        a[i][j] /= a[i][j]
 
         # eliminate above and below to the right
         for k, ak in enumerate(a):
             if k == i or not ak[j]:
                 continue
-            akj = ak[j]
-            ak[j] -= akj # ak[j] = zero
+
+            # ak[j] = zero
             for l in range(j+1, n):
-                ak[l] -= akj * ai[l]
+                ak[l] -= ak[j] * a[i][l]
+            ak[j] -= ak[j]
 
         # next row
         pivots.append(j)
