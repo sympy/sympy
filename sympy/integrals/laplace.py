@@ -1,6 +1,7 @@
 """Laplace Transforms"""
 from sympy.core import S, pi, I
 from sympy.core.add import Add
+from sympy.core.cache import cacheit
 from sympy.core.function import (
     AppliedUndef, Derivative, expand, expand_complex, expand_mul, expand_trig,
     Lambda, WildFunction, diff)
@@ -33,10 +34,7 @@ from sympy.polys.rootoftools import RootSum
 from sympy.utilities.exceptions import (
     sympy_deprecation_warning, SymPyDeprecationWarning, ignore_warnings)
 from sympy.utilities.misc import debug
-from typing import Any
 
-_ILT_vars: Any = ()
-_ILT_rules: Any = []
 
 def _simplifyconds(expr, s, a):
     r"""
@@ -270,7 +268,8 @@ def _laplace_deep_collect(f, t):
             return func(*args)
 
 
-def _laplace_build_rules(t, s):
+@cacheit
+def _laplace_build_rules():
     """
     This is an internal helper function that returns the table of Laplace
     transform rules in terms of the time variable `t` and the frequency
@@ -287,12 +286,16 @@ def _laplace_build_rules(t, s):
     to the expression before matching. For most rules it should be
     ``_laplace_deep_collect``.
     """
+    t = Dummy('t')
+    s = Dummy('s')
     a = Wild('a', exclude=[t])
     b = Wild('b', exclude=[t])
     n = Wild('n', exclude=[t])
     tau = Wild('tau', exclude=[t])
     omega = Wild('omega', exclude=[t])
     dco = lambda f: _laplace_deep_collect(f, t)
+    debug('_laplace_build_rules is building rules')
+
     laplace_transform_rules = [
     (a, a/s,
      S.true, S.Zero, dco), # 4.2.1
@@ -467,7 +470,7 @@ def _laplace_build_rules(t, s):
     (besselk(0, a*t), log((s + sqrt(s**2-a**2))/a)/(sqrt(s**2-a**2)),
      S.true, -re(a), dco) # 4.16.23
     ]
-    return laplace_transform_rules
+    return laplace_transform_rules, t, s
 
 
 def _laplace_rule_timescale(f, t, s):
@@ -759,12 +762,12 @@ def _laplace_apply_simple_rules(f, t, s):
     This function applies all simple rules and returns the result if one
     of them gives a result.
     """
-    simple_rules = _laplace_build_rules(t, s)
+    simple_rules, t_, s_ = _laplace_build_rules()
     prep_old = ''
     prep_f = ''
     for t_dom, s_dom, check, plane, prep in simple_rules:
         if not prep_old==prep:
-            prep_f = prep(f)
+            prep_f = prep(f.subs({t: t_}))
             prep_old = prep
         ma = prep_f.match(t_dom)
         if ma:
@@ -779,7 +782,8 @@ def _laplace_apply_simple_rules(f, t, s):
                 debug('      f:     %s'%(f,))
                 debug('      rule:  %s o---o %s'%(t_dom, s_dom))
                 debug('      match: %s'%(ma, ))
-                return (s_dom.xreplace(ma), plane.xreplace(ma), c)
+                return (s_dom.xreplace(ma).subs({s_: s}),
+                        plane.xreplace(ma), c.subs({s_: s}))
     return None
 
 
@@ -1103,23 +1107,21 @@ def _complete_the_square_in_denom(f, s):
     return n/d
 
 
-def _inverse_laplace_build_rules(s, t):
+@cacheit
+def _inverse_laplace_build_rules():
     """
     This is an internal helper function that returns the table of inverse
     Laplace transform rules in terms of the time variable `t` and the
     frequency variable `s`.  It is used by `_inverse_laplace_apply_rules`.
     """
+    s = Dummy('s')
+    t = Dummy('t')
     a = Wild('a', exclude=[s])
     b = Wild('b', exclude=[s])
     c = Wild('c', exclude=[s])
     d = Wild('d', exclude=[s])
-    global _ILT_vars
-    global _ILT_rules
 
-    if _ILT_vars == (s, t):
-        return
-
-    debug('_inverse_laplace_build_rules with (%s, %s)'%(s, t))
+    debug('_inverse_laplace_build_rules is building rules')
     def _frac(f, s):
         try:
             return f.factor(s)
@@ -1128,7 +1130,6 @@ def _inverse_laplace_build_rules(s, t):
     same = lambda f: f
     frac = lambda f: _frac(f, s)
     ctsd = lambda f: _complete_the_square_in_denom(f, s)
-    _ILT_vars = (s, t)
     # This list is sorted according to the prep function needed.
     _ILT_rules = [
         (a/s, a, S.true, same, 1),
@@ -1152,7 +1153,7 @@ def _inverse_laplace_build_rules(s, t):
          c/d*exp(-a*t)*(b*cos(b/d*t)/d-a*sin(b/d*t))/b,
          S.true, ctsd, 1/s),
     ]
-    return
+    return _ILT_rules, s, t
 
 
 def _inverse_laplace_apply_simple_rules(f, s, t):
@@ -1165,12 +1166,12 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
         debug('      rule: 1 o---o DiracDelta(%s)'%(t,))
         return DiracDelta(t), S.true
 
-    _inverse_laplace_build_rules(s, t)
+    _ILT_rules, s_, t_ = _inverse_laplace_build_rules()
     _prep = ''
 
     for s_dom, t_dom, check, prep, fac in _ILT_rules:
         if not _prep is (prep, fac):
-            _F = prep(f*fac)
+            _F = prep(f.subs({s: s_})*fac)
             _prep = (prep, fac)
         ma = _F.match(s_dom)
         if ma:
@@ -1183,7 +1184,7 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
                 debug('      f:    %s'%(f,))
                 debug('      rule: %s o---o %s'%(s_dom, t_dom))
                 debug('      ma:   %s'%(ma,))
-                return Heaviside(t)*t_dom.xreplace(ma), S.true
+                return Heaviside(t)*t_dom.xreplace(ma).subs({t_: t}), S.true
     return None
 
 
