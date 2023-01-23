@@ -131,18 +131,19 @@ def ddm_irref(a, _partial_pivot=False):
                 continue
 
         # normalise row
-        aij_inv = a[i][j]**-1
+        u = a[i]
+        aij_inv = u[j]**-1
         for l in range(j + 1, n):
-            a[i][l] *= aij_inv # ai[j] = one
-        a[i][j] *= aij_inv
+            u[l] *= aij_inv # ai[j] = one
+        u[j] *= aij_inv
 
         # eliminate above and below to the right
-        for k, r in enumerate(a):
+        for k, v in enumerate(a):
             if k == i:
                 continue
             for l in range(j + 1, n):
-                r[l] -= r[j] * a[i][l]
-            r[j] -= r[j]
+                v[l] -= v[j] * u[l]
+            v[j] -= v[j]
 
         # next row
         pivots.append(j)
