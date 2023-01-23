@@ -3,6 +3,7 @@ import math
 import inspect
 
 
+
 import mpmath
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
@@ -1658,7 +1659,8 @@ def test_deprecated_set():
         lambdify({x, y}, x + y)
 
 def test_issue_13881():
-    import numpy
+    if not numpy:
+        skip("numpy not installed.")
 
     X = MatrixSymbol('X', 3, 1)
 
