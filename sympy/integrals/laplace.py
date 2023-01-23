@@ -33,9 +33,10 @@ from sympy.polys.rootoftools import RootSum
 from sympy.utilities.exceptions import (
     sympy_deprecation_warning, SymPyDeprecationWarning, ignore_warnings)
 from sympy.utilities.misc import debug
+from typing import Any
 
-_ILT_vars = []
-_ILT_rules = []
+_ILT_vars: Any = ()
+_ILT_rules: Any = []
 
 def _simplifyconds(expr, s, a):
     r"""
