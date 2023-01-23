@@ -17,8 +17,8 @@ from sympy.physics.control import (TransferFunction, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback)
 from sympy.testing.pytest import raises
 
-a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn = symbols('a, x, b, s, g, d, p, k,\
-    a0:3, b0:3, tau, zeta, wn')
+a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
+    a0:3, b0:3, tau, zeta, wn, T')
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
@@ -1220,3 +1220,14 @@ def test_TransferFunctionMatrix_functions():
             (TransferFunction(p, 1, s), TransferFunction(p, s, s)))))
     assert H_5.expand() == \
         TransferFunctionMatrix(((TransferFunction(s**5 + s**3 + s, -s**2 + s, s), TransferFunction(s**2 + 2*s - 3, s**2 + 4*s - 5, s)),))
+
+def test_TransferFunction_bilinear():
+    # simple transfer function, e.g. ohms law
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = tf.bilinear()
+    # discretized transfer function with coefs from tf.bilinear()
+    tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s*T+T, s*(T*b+2*a)+T*b-2*a, s)
+
+    assert S.Zero == (tf_test_bilinear-tf_test_manual).simplify().num
