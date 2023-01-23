@@ -2998,7 +2998,7 @@ def rotations(s, dir=1):
 
 def roundrobin(*iterables):
     """roundrobin recipe taken from itertools documentation:
-    https://docs.python.org/3/library/itertools.html#recipes
+    https://docs.python.org/3/library/itertools.html#itertools-recipes
 
     roundrobin('ABC', 'D', 'EF') --> A D E B F C
 
