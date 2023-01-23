@@ -1,7 +1,7 @@
 from itertools import product
 import math
 import inspect
-import numpy
+
 
 import mpmath
 from sympy.testing.pytest import raises, warns_deprecated_sympy
@@ -1658,6 +1658,7 @@ def test_deprecated_set():
         lambdify({x, y}, x + y)
 
 def test_issue_13881():
+    import numpy
 
     X = MatrixSymbol('X', 3, 1)
 
