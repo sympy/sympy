@@ -1112,7 +1112,7 @@ def connected_components(G):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Connected_component_(graph_theory)
+    .. [1] https://en.wikipedia.org/wiki/Component_(graph_theory)
     .. [2] https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
 
 
