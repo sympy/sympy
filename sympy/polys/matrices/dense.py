@@ -136,14 +136,12 @@ def ddm_irref(a, _partial_pivot=False):
         a[i][j] /= a[i][j]
 
         # eliminate above and below to the right
-        for k, ak in enumerate(a):
-            if k == i or not ak[j]:
+        for k in range(len(a)):
+            if k == i:
                 continue
-
-            # ak[j] = zero
             for l in range(j+1, n):
-                ak[l] -= ak[j] * a[i][l]
-            ak[j] -= ak[j]
+                a[k][l] -= a[k][j] * a[i][l]
+            a[k][j] -= a[k][j]
 
         # next row
         pivots.append(j)
