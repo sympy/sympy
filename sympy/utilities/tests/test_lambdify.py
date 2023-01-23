@@ -1,6 +1,7 @@
 from itertools import product
 import math
 import inspect
+import numpy
 
 import mpmath
 from sympy.testing.pytest import raises, warns_deprecated_sympy
