@@ -1224,7 +1224,7 @@ def test_TransferFunctionMatrix_functions():
 def test_TransferFunction_bilinear():
     # simple transfer function, e.g. ohms law
     tf = TransferFunction(1, a*s+b, s)
-    numZ, denZ = tf.bilinear()
+    numZ, denZ = tf.bilinear(T)
     # discretized transfer function with coefs from tf.bilinear()
     tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs

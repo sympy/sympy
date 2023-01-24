@@ -18,7 +18,6 @@ from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
 from sympy.series import limit
-from sympy.simplify.radsimp import fraction, collect
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -682,7 +681,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         return TransferFunction(-self.num, self.den, self.var)
 
 
-    def bilinear(self):
+    def bilinear(self, sample_per):
         """
         Returns falling coeffs of H(z) from numerator and denominator.
         H(z) is the corresponding discretized tf, discretized with
@@ -695,9 +694,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         ========
 
         >>> from sympy.physics.control.lti import TransferFunction
-        >>> from sympy.abc import s, L, R
+        >>> from sympy.abc import s, L, R, T
         >>> tf = TransferFunction(1, s*L + R, s)
-        >>> numZ, denZ = tf.bilinear()
+        >>> numZ, denZ = tf.bilinear(T)
         >>> numZ
         [T, T]
         >>> denZ
@@ -705,21 +704,19 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
 
         z = Symbol('z') # discrete variable z
-        T = Symbol('T')  # and sample period T
+        T = sample_per  # and sample period T
+        s = self.var
 
-        H = self.num/self.den
-        HZ = H.subs(self.var, (2/T)*(z-1)/(z+1))
+        np = self.num.as_poly(s).all_coeffs()
+        dp = self.den.as_poly(s).all_coeffs()
 
-        num, den = fraction(HZ.simplify())
+        # The next line results from multiplying H(z) with (z+1)^N/(z+1)^N
+        N = max(len(np), len(dp)) - 1
+        num = Add(*[ T**(N-i)*2**i*c*(z-1)**i*(z+1)**(N-i) for c, i in zip(np[::-1], range(len(np))) ])
+        den = Add(*[ T**(N-i)*2**i*c*(z-1)**i*(z+1)**(N-i) for c, i in zip(dp[::-1], range(len(dp))) ])
 
-        HZnum = collect(expand(num, z), z)
-        HZnum = Poly(HZnum, z)
-
-        HZden = collect(expand(den, z), z)
-        HZden = Poly(HZden, z)
-
-        num_coefs = HZnum.coeffs()
-        den_coefs = HZden.coeffs()
+        num_coefs = num.as_poly(z).all_coeffs()
+        den_coefs = den.as_poly(z).all_coeffs()
 
         return num_coefs, den_coefs
 
