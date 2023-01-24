@@ -2333,9 +2333,6 @@ class acos(InverseTrigonometricFunction):
 
     A purely imaginary argument will be rewritten to asinh.
 
-    Examples
-    ========
-
     >>> from sympy import acos, oo
     >>> acos(1)
     0
