@@ -868,7 +868,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        .integrate()
+        integrate
         """
         kwargs.setdefault('evaluate', True)
         if args:
@@ -1200,7 +1200,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        from_hyper()
+        from_hyper
         """
 
         R = self.annihilator.parent
@@ -1283,7 +1283,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        HolonomicFunction.series()
+        HolonomicFunction.series
 
         References
         ==========
