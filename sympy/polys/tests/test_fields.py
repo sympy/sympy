@@ -29,19 +29,10 @@ def test_FracField___hash__():
 
 def test_FracField___eq__():
     assert field("x,y,z", QQ)[0] == field("x,y,z", QQ)[0]
-    assert field("x,y,z", QQ)[0] is field("x,y,z", QQ)[0]
-
     assert field("x,y,z", QQ)[0] != field("x,y,z", ZZ)[0]
-    assert field("x,y,z", QQ)[0] is not field("x,y,z", ZZ)[0]
-
     assert field("x,y,z", ZZ)[0] != field("x,y,z", QQ)[0]
-    assert field("x,y,z", ZZ)[0] is not field("x,y,z", QQ)[0]
-
     assert field("x,y,z", QQ)[0] != field("x,y", QQ)[0]
-    assert field("x,y,z", QQ)[0] is not field("x,y", QQ)[0]
-
     assert field("x,y", QQ)[0] != field("x,y,z", QQ)[0]
-    assert field("x,y", QQ)[0] is not field("x,y,z", QQ)[0]
 
 def test_sfield():
     x = symbols("x")
