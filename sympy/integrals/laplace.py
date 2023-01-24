@@ -783,7 +783,7 @@ def _laplace_apply_simple_rules(f, t, s):
                 debug('      rule:  %s o---o %s'%(t_dom, s_dom))
                 debug('      match: %s'%(ma, ))
                 return (s_dom.xreplace(ma).subs({s_: s}),
-                        plane.xreplace(ma), c.subs({s_: s}))
+                        plane.xreplace(ma), S.true)
     return None
 
 
@@ -1168,10 +1168,11 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
 
     _ILT_rules, s_, t_ = _inverse_laplace_build_rules()
     _prep = ''
+    fsubs = f.subs({s: s_})
 
     for s_dom, t_dom, check, prep, fac in _ILT_rules:
         if not _prep is (prep, fac):
-            _F = prep(f.subs({s: s_})*fac)
+            _F = prep(fsubs*fac)
             _prep = (prep, fac)
         ma = _F.match(s_dom)
         if ma:
@@ -1257,6 +1258,49 @@ def _inverse_laplace_expand(fn, s, t, plane):
     return None
 
 
+def _inverse_laplace_rational(fn, s, t, simplify):
+    """
+    """
+    debug('[ILT _i_l_r] (%s, %s, %s)'%(fn, s, t))
+    f = fn.apart(s)
+    terms = Add.make_args(f)
+    terms_t = []
+    for term in terms:
+        [n, d] = term.as_numer_denom()
+        dc = d.as_poly(s).all_coeffs()
+        dc_lead = dc[0]
+        dc = [ x/dc_lead for x in dc ]
+        nc = [ x/dc_lead for x in n.as_poly(s).all_coeffs() ]
+        if len(dc)==2:
+            terms_t.append(nc[0]*exp(-dc[1]*t))
+            continue
+        if len(dc)==3:
+            a = dc[1]/2
+            b = dc[2]-a**2
+            if len(nc)==2:
+                l = nc[0]
+                m = nc[1]
+            else:
+                l = 0
+                m = nc[0]
+            if b==0:
+                terms_t.append((m*t+l*(1-a*t))*exp(-a*t))
+            elif b.is_negative:
+                terms_t.append(l*exp(-a*t)*cosh(sqrt(-b)*t) +\
+                              (m-a*l)/sqrt(-b)*exp(-a*t)*sinh(sqrt(-b)*t) )
+            else:
+                terms_t.append(l*exp(-a*t)*cos(sqrt(b)*t) +\
+                              (m-a*l)/sqrt(b)*exp(-a*t)*sin(sqrt(b)*t) )
+        else:
+            return None
+
+    result = Add(*terms_t)
+    if simplify:
+        result = result.simplify(doit=False)
+    debug('[ILT _i_l_r]   returns %s'%(result,))
+    return Heaviside(t)*result, S.true
+
+
 def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True):
     """
     Front-end function of the inverse Laplace transform. It tries to apply all
@@ -1270,7 +1314,10 @@ def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True):
 
     for term in terms:
         k, f = term.as_independent(s_, as_Add=False)
-        if (r := _inverse_laplace_apply_simple_rules(f, s_, t_)) is not None:
+        if term.is_rational_function(s_) and \
+            (r := _inverse_laplace_rational(f, s_, t_, simplify)) is not None:
+            pass
+        elif (r := _inverse_laplace_apply_simple_rules(f, s_, t_)) is not None:
             pass
         elif (r := _inverse_laplace_apply_prog_rules(f, s_, t_, plane)) is not None:
             pass

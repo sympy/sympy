@@ -400,7 +400,7 @@ def test_inverse_laplace_transform():
     assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/24
     # Issue #24424
     assert ILT((s + 8)/((s + 2)*(s**2 + 2*s + 10)), s, t) ==\
-        (8*exp(t)*sin(3*t) - 9*exp(t)*cos(3*t) + 9)*exp(-2*t)*Heaviside(t)/15
+        ((8*sin(3*t) - 9*cos(3*t))*exp(t) + 9)*exp(-2*t)*Heaviside(t)/15
     assert simp_hyp(ILT(a/(s**2 - a**2), s, t)) == sinh(a*t)*Heaviside(t)
     assert simp_hyp(ILT(s/(s**2 - a**2), s, t)) == cosh(a*t)*Heaviside(t)
     # TODO sinh/cosh shifted come out a mess. also delayed trig is a mess
