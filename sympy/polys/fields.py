@@ -99,7 +99,6 @@ def sfield(exprs, *symbols, **options):
     else:
         return (_field, fracs)
 
-_field_cache: dict[Any, Any] = {}
 
 class FracField(DefaultPrinting):
     """Multivariate distributed rational function field. """
@@ -113,7 +112,7 @@ class FracField(DefaultPrinting):
         order = ring.order
 
         _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
-        obj = _field_cache.get(_hash_tuple)
+        obj = None
 
         if obj is None:
             obj = object.__new__(cls)
@@ -137,8 +136,6 @@ class FracField(DefaultPrinting):
 
                     if not hasattr(obj, name):
                         setattr(obj, name, generator)
-
-            _field_cache[_hash_tuple] = obj
 
         return obj
 
@@ -400,12 +397,12 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f
         elif not f:
             return g
-        elif isinstance(g, field.dtype):
+        elif isinstance(g, FracElement) and g.field == field:
             if f.denom == g.denom:
                 return f.new(f.numer + g.numer, f.denom)
             else:
                 return f.new(f.numer*g.denom + f.denom*g.numer, f.denom*g.denom)
-        elif isinstance(g, field.ring.dtype):
+        elif isinstance(g, PolyElement) and g.ring == field.ring:
             return f.new(f.numer + f.denom*g, f.denom)
         else:
             if isinstance(g, FracElement):
@@ -444,12 +441,12 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f
         elif not f:
             return -g
-        elif isinstance(g, field.dtype):
+        elif isinstance(g, FracElement) and g.field == field:
             if f.denom == g.denom:
                 return f.new(f.numer - g.numer, f.denom)
             else:
                 return f.new(f.numer*g.denom - f.denom*g.numer, f.denom*g.denom)
-        elif isinstance(g, field.ring.dtype):
+        elif isinstance(g, PolyElement) and g.ring == field.ring:
             return f.new(f.numer - f.denom*g, f.denom)
         else:
             if isinstance(g, FracElement):
@@ -493,9 +490,9 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
         if not f or not g:
             return field.zero
-        elif isinstance(g, field.dtype):
+        elif isinstance(g, FracElement) and g.field == field:
             return f.new(f.numer*g.numer, f.denom*g.denom)
-        elif isinstance(g, field.ring.dtype):
+        elif isinstance(g, PolyElement) and g.ring == field.ring:
             return f.new(f.numer*g, f.denom)
         else:
             if isinstance(g, FracElement):
@@ -532,9 +529,9 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
         if not g:
             raise ZeroDivisionError
-        elif isinstance(g, field.dtype):
+        elif isinstance(g, FracElement) and g.field == field:
             return f.new(f.numer*g.denom, f.denom*g.numer)
-        elif isinstance(g, field.ring.dtype):
+        elif isinstance(g, PolyElement) and g.ring == field.ring:
             return f.new(f.numer, f.denom*g)
         else:
             if isinstance(g, FracElement):
