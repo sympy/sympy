@@ -192,7 +192,6 @@ def _parse_symbols(symbols):
 
     raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
-_ring_cache: dict[Any, Any] = {}
 
 class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """
@@ -210,7 +209,7 @@ class PolyRing(DefaultPrinting, IPolys):
         order = OrderOpt.preprocess(order)
 
         _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
-        obj = _ring_cache.get(_hash_tuple)
+        obj = None
 
         if obj is None:
             if domain.is_Composite and set(symbols) & set(domain.symbols):
@@ -263,8 +262,6 @@ class PolyRing(DefaultPrinting, IPolys):
 
                     if not hasattr(obj, name):
                         setattr(obj, name, generator)
-
-            _ring_cache[_hash_tuple] = obj
 
         return obj
 
@@ -423,7 +420,7 @@ class PolyRing(DefaultPrinting, IPolys):
                 i = -i - 1
             else:
                 raise ValueError("invalid generator index: %s" % gen)
-        elif isinstance(gen, self.dtype):
+        elif isinstance(gen, PolyElement) and gen.ring == self:
             try:
                 i = self.gens.index(gen)
             except ValueError:
@@ -709,7 +706,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Approximate equality test for polynomials. """
         ring = p1.ring
 
-        if isinstance(p2, ring.dtype):
+        if isinstance(p2, PolyElement) and p2.ring == ring:
             if set(p1.keys()) != set(p2.keys()):
                 return False
 
@@ -733,7 +730,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return (len(self), self.terms())
 
     def _cmp(p1, p2, op):
-        if isinstance(p2, p1.ring.dtype):
+        if isinstance(p2, PolyElement) and p2.ring == p1.ring:
             return op(p1.sort_key(), p2.sort_key())
         else:
             return NotImplemented
@@ -956,7 +953,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not p2:
             return p1.copy()
         ring = p1.ring
-        if isinstance(p2, ring.dtype):
+        if isinstance(p2, PolyElement) and p2.ring == ring:
             p = p1.copy()
             get = p.get
             zero = ring.domain.zero
@@ -1032,7 +1029,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not p2:
             return p1.copy()
         ring = p1.ring
-        if isinstance(p2, ring.dtype):
+        if isinstance(p2, PolyElement) and p2.ring == ring:
             p = p1.copy()
             get = p.get
             zero = ring.domain.zero
@@ -1114,7 +1111,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         p = ring.zero
         if not p1 or not p2:
             return p
-        elif isinstance(p2, ring.dtype):
+        elif isinstance(p2, PolyElement) and p2.ring == ring:
             get = p.get
             zero = ring.domain.zero
             monomial_mul = ring.monomial_mul
@@ -1307,7 +1304,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
-        elif isinstance(p2, ring.dtype):
+        elif isinstance(p2, PolyElement) and p2.ring == ring:
             return p1.div(p2)
         elif isinstance(p2, PolyElement):
             if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
@@ -1332,7 +1329,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
-        elif isinstance(p2, ring.dtype):
+        elif isinstance(p2, PolyElement) and p2.ring == ring:
             return p1.rem(p2)
         elif isinstance(p2, PolyElement):
             if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
@@ -1357,7 +1354,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
-        elif isinstance(p2, ring.dtype):
+        elif isinstance(p2, PolyElement) and p2.ring == ring:
             if p2.is_monomial:
                 return p1*(p2**(-1))
             else:
@@ -1738,7 +1735,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         if element == 1:
             return self._get_coeff(self.ring.zero_monom)
-        elif isinstance(element, self.ring.dtype):
+        elif isinstance(element, PolyElement) and element.ring == self.ring:
             terms = list(element.iterterms())
             if len(terms) == 1:
                 monom, coeff = terms[0]

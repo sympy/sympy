@@ -58,19 +58,10 @@ def test_PolyRing___hash__():
 
 def test_PolyRing___eq__():
     assert ring("x,y,z", QQ)[0] == ring("x,y,z", QQ)[0]
-    assert ring("x,y,z", QQ)[0] is ring("x,y,z", QQ)[0]
-
     assert ring("x,y,z", QQ)[0] != ring("x,y,z", ZZ)[0]
-    assert ring("x,y,z", QQ)[0] is not ring("x,y,z", ZZ)[0]
-
     assert ring("x,y,z", ZZ)[0] != ring("x,y,z", QQ)[0]
-    assert ring("x,y,z", ZZ)[0] is not ring("x,y,z", QQ)[0]
-
     assert ring("x,y,z", QQ)[0] != ring("x,y", QQ)[0]
-    assert ring("x,y,z", QQ)[0] is not ring("x,y", QQ)[0]
-
     assert ring("x,y", QQ)[0] != ring("x,y,z", QQ)[0]
-    assert ring("x,y", QQ)[0] is not ring("x,y,z", QQ)[0]
 
 def test_PolyRing_ring_new():
     R, x, y, z = ring("x,y,z", QQ)
@@ -1172,13 +1163,13 @@ def test_PolyElement_evaluate():
     f = (x*y)**3 + 4*(x*y)**2 + 2*x*y + 3
 
     r = f.evaluate(x, 0)
-    assert r == 3 and isinstance(r, R.drop(x).dtype)
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R.drop(x)
     r = f.evaluate([(x, 0), (y, 0)])
-    assert r == 3 and isinstance(r, R.drop(x, y).dtype)
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R.drop(x, y)
     r = f.evaluate(y, 0)
-    assert r == 3 and isinstance(r, R.drop(y).dtype)
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R.drop(y)
     r = f.evaluate([(y, 0), (x, 0)])
-    assert r == 3 and isinstance(r, R.drop(y, x).dtype)
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R.drop(y, x)
 
     r = f.evaluate([(x, 0), (y, 0), (z, 0)])
     assert r == 3 and not isinstance(r, PolyElement)
