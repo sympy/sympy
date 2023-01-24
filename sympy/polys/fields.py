@@ -1,7 +1,6 @@
 """Sparse rational function fields. """
 
 from __future__ import annotations
-from typing import Any
 from functools import reduce
 
 from operator import add, mul, lt, le, gt, ge
