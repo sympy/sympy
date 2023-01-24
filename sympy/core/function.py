@@ -345,13 +345,12 @@ class Application(Basic, metaclass=FunctionClass):
         Explanation
         ===========
 
-        The eval() method is called when the class cls is about to be
+        The ``eval()`` method is called when the class ``cls`` is about to be
         instantiated and it should return either some simplified instance
-        (possible of some other class), or if the class cls should be
+        (possible of some other class), or if the class ``cls`` should be
         unmodified, return None.
 
-        Examples of eval for the function "sign"
-        ----------------------------------------
+        Examples of ``eval()`` for the function "sign"
 
         .. code-block:: python
 

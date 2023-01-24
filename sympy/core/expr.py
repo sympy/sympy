@@ -1843,8 +1843,8 @@ class Expr(Basic, EvalfMixin):
 
         separatevars
         expand_log
-        Add.as_two_terms
-        Mul.as_two_terms
+        sympy.core.add.Add.as_two_terms
+        sympy.core.mul.Mul.as_two_terms
         as_coeff_mul
         """
         from .symbol import Symbol
