@@ -350,8 +350,8 @@ class Application(Basic, metaclass=FunctionClass):
         (possible of some other class), or if the class cls should be
         unmodified, return None.
 
-        Examples of eval() for the function "sign"
-        ---------------------------------------------
+        Examples of eval for the function "sign"
+        ----------------------------------------
 
         .. code-block:: python
 

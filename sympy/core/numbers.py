@@ -2869,8 +2869,7 @@ class AlgebraicNumber(Expr):
         See Also
         ========
 
-        .AlgebraicNumber.__new__()
-
+        AlgebraicNumber
         """
         return AlgebraicNumber(
             (self.minpoly, self.root), coeffs=coeffs, alias=self.alias)
