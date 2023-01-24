@@ -1,7 +1,6 @@
 """Sparse polynomial rings. """
 
 from __future__ import annotations
-from typing import Any
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
