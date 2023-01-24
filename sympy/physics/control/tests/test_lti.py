@@ -14,7 +14,7 @@ from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix
 from sympy.physics.control import (TransferFunction, Series, Parallel,
-    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback)
+    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback, bilinear)
 from sympy.testing.pytest import raises
 
 a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
@@ -1224,7 +1224,7 @@ def test_TransferFunctionMatrix_functions():
 def test_TransferFunction_bilinear():
     # simple transfer function, e.g. ohms law
     tf = TransferFunction(1, a*s+b, s)
-    numZ, denZ = tf.bilinear(T)
+    numZ, denZ = bilinear(tf, T)
     # discretized transfer function with coefs from tf.bilinear()
     tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs

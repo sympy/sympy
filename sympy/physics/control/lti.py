@@ -22,7 +22,7 @@ from sympy.series import limit
 from mpmath.libmp.libmpf import prec_to_dps
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
-    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix']
+    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'bilinear']
 
 
 def _roots(poly, var):
@@ -32,6 +32,45 @@ def _roots(poly, var):
     if len(r) != n:
         r = [rootof(poly, var, k) for k in range(n)]
     return r
+
+def bilinear(tf, sample_per):
+        """
+        Returns falling coeffs of H(z) from numerator and denominator.
+        H(z) is the corresponding discretized tf, discretized with
+        bilinear transform method.
+        Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
+        as [a, b], [c, d].
+
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, bilinear
+        >>> from sympy.abc import s, L, R, T
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> numZ, denZ = bilinear(tf, T)
+        >>> numZ
+        [T, T]
+        >>> denZ
+        [2*L + R*T, -2*L + R*T]
+        """
+
+        z = Symbol('z') # discrete variable z
+        T = sample_per  # and sample period T
+        s = tf.var
+
+        np = tf.num.as_poly(s).all_coeffs()
+        dp = tf.den.as_poly(s).all_coeffs()
+
+        # The next line results from multiplying H(z) with (z+1)^N/(z+1)^N
+        N = max(len(np), len(dp)) - 1
+        num = Add(*[ T**(N-i)*2**i*c*(z-1)**i*(z+1)**(N-i) for c, i in zip(np[::-1], range(len(np))) ])
+        den = Add(*[ T**(N-i)*2**i*c*(z-1)**i*(z+1)**(N-i) for c, i in zip(dp[::-1], range(len(dp))) ])
+
+        num_coefs = num.as_poly(z).all_coeffs()
+        den_coefs = den.as_poly(z).all_coeffs()
+
+        return num_coefs, den_coefs
 
 
 class LinearTimeInvariant(Basic, EvalfMixin):
@@ -679,46 +718,6 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def __neg__(self):
         return TransferFunction(-self.num, self.den, self.var)
-
-
-    def bilinear(self, sample_per):
-        """
-        Returns falling coeffs of H(z) from numerator and denominator.
-        H(z) is the corresponding discretized tf, discretized with
-        bilinear transform method.
-        Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
-        as [a, b], [c, d].
-
-
-        Examples
-        ========
-
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> from sympy.abc import s, L, R, T
-        >>> tf = TransferFunction(1, s*L + R, s)
-        >>> numZ, denZ = tf.bilinear(T)
-        >>> numZ
-        [T, T]
-        >>> denZ
-        [2*L + R*T, -2*L + R*T]
-        """
-
-        z = Symbol('z') # discrete variable z
-        T = sample_per  # and sample period T
-        s = self.var
-
-        np = self.num.as_poly(s).all_coeffs()
-        dp = self.den.as_poly(s).all_coeffs()
-
-        # The next line results from multiplying H(z) with (z+1)^N/(z+1)^N
-        N = max(len(np), len(dp)) - 1
-        num = Add(*[ T**(N-i)*2**i*c*(z-1)**i*(z+1)**(N-i) for c, i in zip(np[::-1], range(len(np))) ])
-        den = Add(*[ T**(N-i)*2**i*c*(z-1)**i*(z+1)**(N-i) for c, i in zip(dp[::-1], range(len(dp))) ])
-
-        num_coefs = num.as_poly(z).all_coeffs()
-        den_coefs = den.as_poly(z).all_coeffs()
-
-        return num_coefs, den_coefs
 
     @property
     def is_proper(self):
