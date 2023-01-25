@@ -161,7 +161,7 @@ def test_latex_printing():
                             '\\hat{k}_{N}}\\right)')
 
 def test_issue_23058():
-    from sympy import symbols, sin, cos, pi, UnevaluatedExpr
+    from sympy import symbols, sin, cos, pi
 
     delop = Del()
     CC_   = CoordSys3D("C")
