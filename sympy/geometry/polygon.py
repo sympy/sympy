@@ -1,7 +1,7 @@
 from sympy.core import Expr, S, oo, pi, sympify
 from sympy.core.evalf import N
 from sympy.core.sorting import default_sort_key, ordered
-from sympy.core.symbol import _symbol, Dummy, symbols, Symbol
+from sympy.core.symbol import _symbol, Dummy, Symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -22,7 +22,7 @@ from mpmath.libmp.libmpf import prec_to_dps
 import warnings
 
 
-x, y, T = symbols('x, y, T', real=True, cls=Dummy)
+x, y, T = [Dummy('polygon_dummy', real=True) for i in range(3)]
 
 
 class Polygon(GeometrySet):

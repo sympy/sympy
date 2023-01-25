@@ -34,8 +34,8 @@ from mpmath.libmp.libmpf import prec_to_dps
 
 import random
 
-x = Dummy('x', real=True)
-y = Dummy('y', real=True)
+x, y = [Dummy('ellipse_dummy', real=True) for i in range(2)]
+
 
 class Ellipse(GeometrySet):
     """An elliptical GeometryEntity.

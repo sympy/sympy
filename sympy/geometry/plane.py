@@ -24,8 +24,8 @@ from mpmath.libmp.libmpf import prec_to_dps
 import random
 
 
-x, y, z = map(Dummy, 'xyz')
-t = Dummy()  # intentionally name left blank
+x, y, z, t = [Dummy('plane_dummy') for i in range(4)]
+
 
 class Plane(GeometryEntity):
     """

@@ -45,7 +45,7 @@ from sympy.utilities.misc import Undecidable, filldedent
 import random
 
 
-t, u = [Dummy(i) for i in 'tu']
+t, u = [Dummy('line_dummy') for i in range(2)]
 
 
 class LinearEntity(GeometrySet):

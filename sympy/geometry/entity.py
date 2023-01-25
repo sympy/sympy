@@ -64,8 +64,9 @@ ordering_of_classes = [
 ]
 
 
-x, y = Dummy(), Dummy()
-T = Dummy('t', real=True)
+x, y = [Dummy('entity_dummy') for i in range(2)]
+T = Dummy('entity_dummy', real=True)
+
 
 class GeometryEntity(Basic, EvalfMixin):
     """The base class for all geometrical entities.
