@@ -34,6 +34,8 @@ from mpmath.libmp.libmpf import prec_to_dps
 
 import random
 
+x, y = [Dummy('ellipse_dummy', real=True) for i in range(2)]
+
 
 class Ellipse(GeometrySet):
     """An elliptical GeometryEntity.
@@ -103,9 +105,6 @@ class Ellipse(GeometrySet):
 
     def __contains__(self, o):
         if isinstance(o, Point):
-            x = Dummy('x', real=True)
-            y = Dummy('y', real=True)
-
             res = self.equation(x, y).subs({x: o.x, y: o.y})
             return trigsimp(simplify(res)) is S.Zero
         elif isinstance(o, Ellipse):
@@ -664,8 +663,6 @@ class Ellipse(GeometrySet):
         [Point2D(-17/5, -12/5), Point2D(-17/5, 12/5), Point2D(7/5, -12/5), Point2D(7/5, 12/5)]
         """
         # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
-        x = Dummy('x', real=True)
-        y = Dummy('y', real=True)
 
         if isinstance(o, Point):
             if o in self:
@@ -925,7 +922,6 @@ class Ellipse(GeometrySet):
 
         # find the 4 normal points and construct lines through them with
         # the corresponding slope
-        x, y = Dummy('x', real=True), Dummy('y', real=True)
         eq = self.equation(x, y)
         dydx = idiff(eq, y, x)
         norm = -1/dydx
@@ -1299,7 +1295,6 @@ class Ellipse(GeometrySet):
             # else p is outside the ellipse or we can't tell. In case of the
             # latter, the solutions returned will only be valid if
             # the point is not inside the ellipse; if it is, nan will result.
-            x, y = Dummy('x'), Dummy('y')
             eq = self.equation(x, y)
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope
