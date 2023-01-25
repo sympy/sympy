@@ -47,8 +47,8 @@ def test_cgs_gauss_convert_constants():
     assert convert_to(gravitational_constant, dyne*centimeter**2/gram**2, cgs_gauss)
     assert NS(convert_to(planck, erg*second, cgs_gauss)) == '6.62607015e-27*erg*second'
 
-    assert convert_to(ohm, second/centimeter, cgs_gauss) == 10**9*second/(299792458**2*centimeter)
-    assert convert_to(henry, second**2/centimeter, cgs_gauss) == 10**9*second**2/(299792458**2*centimeter)
+    spc = 25000*second/(22468879468420441*centimeter)
+    assert convert_to(ohm, second/centimeter, cgs_gauss) == spc
+    assert convert_to(henry, second**2/centimeter, cgs_gauss) == spc*second
     assert convert_to(volt, statvolt, cgs_gauss) == 10**6*statvolt/299792458
-    assert convert_to(farad, centimeter, cgs_gauss) == 1*centimeter/10**9*299792458**2
-    assert convert_to(angstrom, centimeter, cgs_gauss) == 1*centimeter/10**8
+    assert convert_to(farad, centimeter, cgs_gauss) == 299792458**2*centimeter/10**5
