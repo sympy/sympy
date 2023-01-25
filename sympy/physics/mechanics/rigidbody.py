@@ -1,5 +1,5 @@
 from sympy.core.backend import Symbol, S
-from sympy.physics.vector import Point, ReferenceFrame, Dyadic, dot
+from sympy.physics.vector import ReferenceFrame, Dyadic, dot
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.inertia import inertia_of_point_mass, Inertia
 from sympy.utilities.exceptions import sympy_deprecation_warning
