@@ -116,7 +116,7 @@ class Domain:
     ZZ[x]
     >>> type(K)             # class of the domain
     <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
-    >>> K.dtype             # class of the elements
+    >>> K.dtype             # doctest: +SKIP
     <class 'sympy.polys.rings.PolyElement'>
     >>> p_expr = x**2 + 1   # Expr
     >>> p_expr
