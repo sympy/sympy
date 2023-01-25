@@ -37,6 +37,39 @@ The associated point contains the position, velocity and acceleration of the
 particle. :mod:`sympy.physics.mechanics` allows one to perform kinematic
 analysis of points separate from their association with masses.
 
+Inertia
+=======
+
+Inertia consists out of two parts: a quantity and a reference. The quantity is
+expressed as a :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` and the
+reference is a :class:`Point<sympy.physics.vector.point.Point>`. The
+:class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` can be defined as the outer
+product between two vectors, which returns the juxtaposition of these vectors.
+See the 'Dyadic' section under the advanced documentation in the
+:mod:`sympy.physics.vector` module. Another more intuitive method to define the
+:class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` is to use the
+:func:`~.inertia` function as described below in the section
+'Inertia (Dyadics)'. The :class:`Point<sympy.physics.vector.point.Point>` about
+which the :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` is specified can
+be any point, as long as it is defined with respect to the center of mass. The
+most common reference point is of course the center of mass itself.
+
+The inertia of a body can be specified using either an :class:`~.Inertia` object
+or a ``tuple``. If a ``tuple`` is used, then it should have a length of two,
+with the first entry being a :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>`
+and the second entry being a :class:`Point<sympy.physics.vector.point.Point>`
+about which the inertia dyadic is defined. Internally this ``tuple`` gets
+converted to an :class:`~.Inertia` object. An example of using a ``tuple`` about
+the center of mass is given below in the 'Rigid Body' section. The
+:class:`~.Inertia` object can be created as follows.::
+
+   >>> from sympy.physics.mechanics import ReferenceFrame, Point, outer, Inertia
+   >>> A = ReferenceFrame('A')
+   >>> P = Point('P')
+   >>> Inertia(P, outer(A.x, A.x))
+   Inertia((A.x|A.x), P)
+
+
 Inertia (Dyadics)
 =================
 
@@ -47,8 +80,8 @@ class :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>`. To know more, refer
 to the :obj:`sympy.physics.vector.dyadic.Dyadic` and
 :obj:`sympy.physics.vector.vector.Vector` class APIs. Dyadics are used to
 define the inertia of bodies within :mod:`sympy.physics.mechanics`. Inertia
-dyadics can be defined explicitly but the :func:`~.inertia` function is
-typically much more convenient for the user::
+dyadics can be defined explicitly using the outer product, but the
+:func:`~.inertia` function is typically much more convenient for the user.::
 
   >>> from sympy.physics.mechanics import ReferenceFrame, inertia
   >>> N = ReferenceFrame('N')
@@ -66,8 +99,8 @@ typically much more convenient for the user::
   (N.x|N.x) + 4*(N.x|N.y) + 6*(N.x|N.z) + 4*(N.y|N.x) + 2*(N.y|N.y) + 5*(N.y|N.z) + 6*(N.z|N.x) + 5*(N.z|N.y) + 3*(N.z|N.z)
 
 Notice that the :func:`~.inertia` function returns a dyadic with each component
-represented as two unit vectors separated by a ``|``. Refer to the
-:obj:`sympy.physics.vector.dyadic.Dyadic` section for more information about
+represented as two unit vectors separated by a ``|`` (outer product). Refer to
+the :obj:`sympy.physics.vector.dyadic.Dyadic` section for more information about
 dyadics.
 
 Inertia is often expressed in a matrix, or tensor, form, especially for
@@ -87,7 +120,8 @@ Rigid Body
 
 Rigid bodies are created in a similar fashion as particles. The
 :class:`~.RigidBody` class generates objects with four attributes: mass, center
-of mass, a reference frame, and an inertia tuple::
+of mass, a reference frame, and an :class:`~.Inertia` (a ``tuple`` can be parsed
+as well).::
 
   >>> from sympy import Symbol
   >>> from sympy.physics.mechanics import ReferenceFrame, Point, RigidBody
@@ -100,7 +134,7 @@ of mass, a reference frame, and an inertia tuple::
   >>> B = RigidBody('B', P, A, m, (I, P))
 
 The mass is specified exactly as is in a particle. Similar to the
-:class:`~.Particle`'s ``.point``, the :class:`~.RigidBody`'s center of mass,
+:class:`~.Particle`'s ``.point``, the :class:`RigidBody`'s center of mass,
 ``.masscenter`` must be specified. The reference frame is stored in an analogous
 fashion and holds information about the body's orientation and angular velocity.
 

@@ -7,12 +7,10 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.simplify.simplify import simplify
-from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
-                                tan, AppliedUndef, S)
+from sympy.core.backend import (Matrix, Mul, Derivative, sin, cos, tan,
+                                AppliedUndef, S)
 
-__all__ = ['inertia',
-           'inertia_of_point_mass',
-           'linear_momentum',
+__all__ = ['linear_momentum',
            'angular_momentum',
            'kinetic_energy',
            'potential_energy',
@@ -42,95 +40,8 @@ def mechanics_printing(**kwargs):
 
     init_vprinting(**kwargs)
 
+
 mechanics_printing.__doc__ = init_vprinting.__doc__
-
-
-def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
-    """Simple way to create inertia Dyadic object.
-
-    Explanation
-    ===========
-
-    If you do not know what a Dyadic is, just treat this like the inertia
-    tensor. Then, do the easy thing and define it in a body-fixed frame.
-
-    Parameters
-    ==========
-
-    frame : ReferenceFrame
-        The frame the inertia is defined in
-    ixx : Sympifyable
-        the xx element in the inertia dyadic
-    iyy : Sympifyable
-        the yy element in the inertia dyadic
-    izz : Sympifyable
-        the zz element in the inertia dyadic
-    ixy : Sympifyable
-        the xy element in the inertia dyadic
-    iyz : Sympifyable
-        the yz element in the inertia dyadic
-    izx : Sympifyable
-        the zx element in the inertia dyadic
-
-    Examples
-    ========
-
-    >>> from sympy.physics.mechanics import ReferenceFrame, inertia
-    >>> N = ReferenceFrame('N')
-    >>> inertia(N, 1, 2, 3)
-    (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
-
-    """
-
-    if not isinstance(frame, ReferenceFrame):
-        raise TypeError('Need to define the inertia in a frame')
-    ixx = sympify(ixx)
-    ixy = sympify(ixy)
-    iyy = sympify(iyy)
-    iyz = sympify(iyz)
-    izx = sympify(izx)
-    izz = sympify(izz)
-    ol = ixx * (frame.x | frame.x)
-    ol += ixy * (frame.x | frame.y)
-    ol += izx * (frame.x | frame.z)
-    ol += ixy * (frame.y | frame.x)
-    ol += iyy * (frame.y | frame.y)
-    ol += iyz * (frame.y | frame.z)
-    ol += izx * (frame.z | frame.x)
-    ol += iyz * (frame.z | frame.y)
-    ol += izz * (frame.z | frame.z)
-    return ol
-
-
-def inertia_of_point_mass(mass, pos_vec, frame):
-    """Inertia dyadic of a point mass relative to point O.
-
-    Parameters
-    ==========
-
-    mass : Sympifyable
-        Mass of the point mass
-    pos_vec : Vector
-        Position from point O to point mass
-    frame : ReferenceFrame
-        Reference frame to express the dyadic in
-
-    Examples
-    ========
-
-    >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import ReferenceFrame, inertia_of_point_mass
-    >>> N = ReferenceFrame('N')
-    >>> r, m = symbols('r m')
-    >>> px = r * N.x
-    >>> inertia_of_point_mass(m, px, N)
-    m*r**2*(N.y|N.y) + m*r**2*(N.z|N.z)
-
-    """
-
-    return mass * (((frame.x | frame.x) + (frame.y | frame.y) +
-                   (frame.z | frame.z)) * (pos_vec & pos_vec) -
-                   (pos_vec | pos_vec))
 
 
 def linear_momentum(frame, *body):

@@ -2,7 +2,6 @@ from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, S
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
                                      RigidBody)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
-                                     inertia, inertia_of_point_mass,
                                      kinetic_energy, linear_momentum,
                                      outer, potential_energy, msubs,
                                      find_dynamicsymbols, Lagrangian)
@@ -17,49 +16,6 @@ N = ReferenceFrame('N')
 A = N.orientnew('A', 'Axis', [q1, N.z])
 B = A.orientnew('B', 'Axis', [q2, A.x])
 C = B.orientnew('C', 'Axis', [q3, B.y])
-
-
-def test_inertia():
-    N = ReferenceFrame('N')
-    ixx, iyy, izz = symbols('ixx iyy izz')
-    ixy, iyz, izx = symbols('ixy iyz izx')
-    assert inertia(N, ixx, iyy, izz) == (ixx * (N.x | N.x) + iyy *
-            (N.y | N.y) + izz * (N.z | N.z))
-    assert inertia(N, 0, 0, 0) == 0 * (N.x | N.x)
-    raises(TypeError, lambda: inertia(0, 0, 0, 0))
-    assert inertia(N, ixx, iyy, izz, ixy, iyz, izx) == (ixx * (N.x | N.x) +
-            ixy * (N.x | N.y) + izx * (N.x | N.z) + ixy * (N.y | N.x) + iyy *
-        (N.y | N.y) + iyz * (N.y | N.z) + izx * (N.z | N.x) + iyz * (N.z |
-            N.y) + izz * (N.z | N.z))
-
-
-def test_inertia_of_point_mass():
-    r, s, t, m = symbols('r s t m')
-    N = ReferenceFrame('N')
-
-    px = r * N.x
-    I = inertia_of_point_mass(m, px, N)
-    assert I == m * r**2 * (N.y | N.y) + m * r**2 * (N.z | N.z)
-
-    py = s * N.y
-    I = inertia_of_point_mass(m, py, N)
-    assert I == m * s**2 * (N.x | N.x) + m * s**2 * (N.z | N.z)
-
-    pz = t * N.z
-    I = inertia_of_point_mass(m, pz, N)
-    assert I == m * t**2 * (N.x | N.x) + m * t**2 * (N.y | N.y)
-
-    p = px + py + pz
-    I = inertia_of_point_mass(m, p, N)
-    assert I == (m * (s**2 + t**2) * (N.x | N.x) -
-                 m * r * s * (N.x | N.y) -
-                 m * r * t * (N.x | N.z) -
-                 m * r * s * (N.y | N.x) +
-                 m * (r**2 + t**2) * (N.y | N.y) -
-                 m * s * t * (N.y | N.z) -
-                 m * r * t * (N.z | N.x) -
-                 m * s * t * (N.z | N.y) +
-                 m * (r**2 + s**2) * (N.z | N.z))
 
 
 def test_linear_momentum():
