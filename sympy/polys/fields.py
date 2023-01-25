@@ -118,30 +118,28 @@ class FracField(DefaultPrinting):
         order = ring.order
 
         _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
-        obj = None
 
-        if obj is None:
-            obj = object.__new__(cls)
-            obj._hash_tuple = _hash_tuple
-            obj._hash = hash(_hash_tuple)
-            obj.ring = ring
-            obj.dtype = type("FracElement", (FracElement,), {"field": obj})
-            obj.symbols = symbols
-            obj.ngens = ngens
-            obj.domain = domain
-            obj.order = order
+        obj = object.__new__(cls)
+        obj._hash_tuple = _hash_tuple
+        obj._hash = hash(_hash_tuple)
+        obj.ring = ring
+        obj.dtype = type("FracElement", (FracElement,), {"field": obj})
+        obj.symbols = symbols
+        obj.ngens = ngens
+        obj.domain = domain
+        obj.order = order
 
-            obj.zero = obj.dtype(ring.zero)
-            obj.one = obj.dtype(ring.one)
+        obj.zero = obj.dtype(ring.zero)
+        obj.one = obj.dtype(ring.one)
 
-            obj.gens = obj._gens()
+        obj.gens = obj._gens()
 
-            for symbol, generator in zip(obj.symbols, obj.gens):
-                if isinstance(symbol, Symbol):
-                    name = symbol.name
+        for symbol, generator in zip(obj.symbols, obj.gens):
+            if isinstance(symbol, Symbol):
+                name = symbol.name
 
-                    if not hasattr(obj, name):
-                        setattr(obj, name, generator)
+                if not hasattr(obj, name):
+                    setattr(obj, name, generator)
 
         return obj
 
