@@ -111,7 +111,7 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
     (9*x**2 + 29*x - 238)/(8*x - 28)
 
     >>> from sympy import sympify
-    >>> one = sympify(one)
+    >>> one = sympify(1)
     >>> thiele([1, 2, 3, 4], [one, one/2, one/3, one/4])
     1/x
 
