@@ -79,5 +79,5 @@ __all__ = [
     'statcoulomb', 'gauss', 'S', 'statvolt', 'oersted', 'statampere',
     'dimsys_cgs', 'coulomb', 'magnetic_density', 'magnetic_flux', 'One',
     'length', 'erg', 'mass', 'coulombs_constant', 'henry', 'ampere',
-    'cgs_gauss',
+    'cgs_gauss', 'angstrom'
 ]
