@@ -295,7 +295,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @classmethod
     def class_key(cls):
-        """Nice order of classes. """
+        """Nice order of classes."""
         return 5, 0, cls.__name__
 
     @cacheit
