@@ -124,7 +124,7 @@ that are generated from different source files in the docs directory:
 * Narrative Pages: reStructuredText files that correspond to manually written
   documentation pages not present in the Python source code. Examples are the
   `tutorial RST files
-  <https://github.com/sympy/sympy/tree/master/doc/src/tutorial>`_. In general,
+  <https://github.com/sympy/sympy/tree/master/doc/src/tutorials>`_. In general,
   if your documentation is not API documentation it belongs in a narrative page.
 * API Documentation Pages: reStructuredText files that contain directives that
   generate the Application Programming Interface documentation. These are

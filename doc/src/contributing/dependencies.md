@@ -302,7 +302,7 @@ is required to use the sampling functionality of `sympy.stats`.
   random module](https://numpy.org/doc/stable/reference/random/index.html).
 
 - **pymc**: `sample(library='pymc')` uses
-  [PyMC](https://pymc.io/) to do sampling.
+  [PyMC](https://www.pymc.io/) to do sampling.
 
 ### Optional SymEngine Backend
 

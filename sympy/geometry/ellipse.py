@@ -457,7 +457,7 @@ class Ellipse(GeometrySet):
         ==========
 
         .. [1] https://math.stackexchange.com/questions/108270/what-is-the-equation-of-an-ellipse-that-is-not-aligned-with-the-axis
-        .. [2] https://en.wikipedia.org/wiki/Ellipse#Equation_of_a_shifted_ellipse
+        .. [2] https://en.wikipedia.org/wiki/Ellipse#Shifted_ellipse
 
         """
 
