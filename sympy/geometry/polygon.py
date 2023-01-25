@@ -31,13 +31,12 @@ class Polygon(GeometrySet):
     Parameters
     ==========
 
-    vertices : sequence of Points
+    vertices
+        A sequence of points.
 
-    Optional parameters
-    ==========
-
-    n : If > 0, an n-sided RegularPolygon is created. See below.
-        Default value is 0.
+    n : int, optional
+        If $> 0$, an n-sided RegularPolygon is created.
+        Default value is $0$.
 
     Attributes
     ==========

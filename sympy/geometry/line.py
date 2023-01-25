@@ -302,7 +302,8 @@ class LinearEntity(GeometrySet):
         Parameters
         ==========
 
-        lines : a sequence of linear entities.
+        lines
+            A sequence of linear entities.
 
         Returns
         =======

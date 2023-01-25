@@ -1478,9 +1478,12 @@ class Quaternion(Expr):
         Parameters
         ==========
 
-        q1 : a pure Quaternion.
-        q2 : a pure Quaternion.
-        q3 : a pure Quaternion.
+        q1
+            A pure Quaternion.
+        q2
+            A pure Quaternion.
+        q3
+            A pure Quaternion.
 
         Returns
         =======

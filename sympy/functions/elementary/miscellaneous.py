@@ -899,8 +899,8 @@ class Rem(Function):
 
     @classmethod
     def eval(cls, p, q):
-        """ the function remainder if both p,q are numbers
-            and q is not zero
+        """Return the function remainder if both $p, q$ are numbers
+        and $q$ is not zero.
         """
 
         if q.is_zero:

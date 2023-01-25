@@ -634,9 +634,9 @@ class AccumulationBounds(Expr):
         Parameters
         ==========
 
-        other: AccumulationBounds
-             Another AccumulationBounds object with which the intersection
-             has to be computed.
+        other : AccumulationBounds
+            Another AccumulationBounds object with which the intersection
+            has to be computed.
 
         Returns
         =======

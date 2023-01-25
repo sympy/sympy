@@ -1267,7 +1267,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return self._has(iterargs, *patterns)
 
     def has_xfree(self, s: set[Basic]):
-        """return True if self has any of the patterns in s as a
+        """Return True if self has any of the patterns in s as a
         free argument, else False. This is like `Basic.has_free`
         but this will only report exact argument matches.
 
@@ -1295,7 +1295,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @cacheit
     def has_free(self, *patterns):
-        """return True if self has object(s) ``x`` as a free expression
+        """Return True if self has object(s) ``x`` as a free expression
         else False.
 
         Examples
@@ -1781,7 +1781,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return m
 
     def count_ops(self, visual=None):
-        """wrapper for count_ops that returns the operation count."""
+        """Wrapper for count_ops that returns the operation count."""
         from .function import count_ops
         return count_ops(self, visual)
 
@@ -1857,11 +1857,12 @@ class Basic(Printable, metaclass=ManagedProperties):
         Parameters
         ==========
 
-        args : *rule*, or *pattern* and *rule*.
+        args : Expr
+            A *rule*, or *pattern* and *rule*.
             - *pattern* is a type or an iterable of types.
             - *rule* can be any object.
 
-        deep : bool, optional.
+        deep : bool, optional
             If ``True``, subexpressions are recursively transformed. Default is
             ``True``.
 
