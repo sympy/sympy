@@ -6,6 +6,7 @@ from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
 
+from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.intfunc import igcd
 from sympy.core.symbol import Symbol, symbols as _symbols
@@ -300,6 +301,13 @@ class PolyRing(DefaultPrinting, IPolys):
         return not self == other
 
     def clone(self, symbols=None, domain=None, order=None):
+        # Need a hashable tuple for cacheit to work
+        if symbols is not None and isinstance(symbols, list):
+            symbols = tuple(symbols)
+        return self._clone(symbols, domain, order)
+
+    @cacheit
+    def _clone(self, symbols, domain, order):
         return self.__class__(symbols or self.symbols, domain or self.domain, order or self.order)
 
     def monomial_basis(self, i):
