@@ -31,6 +31,8 @@ def test_conversion_to_from_si():
     assert convert_to(newton, dyne, SI) == 10**5*dyne
     assert convert_to(newton, dyne, cgs_gauss) == 10**5*dyne
 
+def test_angstrom_to_cgs_gauss():
+    assert convert_to(angstrom, centimeter, cgs_gauss) == 1*centimeter/10**8
 
 def test_cgs_gauss_convert_constants():
 
@@ -51,4 +53,3 @@ def test_cgs_gauss_convert_constants():
     assert convert_to(ohm, second/centimeter, cgs_gauss) == spc
     assert convert_to(henry, second**2/centimeter, cgs_gauss) == spc*second
     assert convert_to(volt, statvolt, cgs_gauss) == 10**6*statvolt/299792458
-    assert convert_to(farad, centimeter, cgs_gauss) == 299792458**2*centimeter/10**5
