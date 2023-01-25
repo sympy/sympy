@@ -766,7 +766,7 @@ def _laplace_apply_simple_rules(f, t, s):
     prep_old = ''
     prep_f = ''
     for t_dom, s_dom, check, plane, prep in simple_rules:
-        if not prep_old==prep:
+        if not prep_old == prep:
             prep_f = prep(f.subs({t: t_}))
             prep_old = prep
         ma = prep_f.match(t_dom)
@@ -1150,7 +1150,7 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
     fsubs = f.subs({s: s_})
 
     for s_dom, t_dom, check, prep, fac in _ILT_rules:
-        if not _prep is (prep, fac):
+        if not _prep == (prep, fac):
             _F = prep(fsubs*fac)
             _prep = (prep, fac)
         ma = _F.match(s_dom)
