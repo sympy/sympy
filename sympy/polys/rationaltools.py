@@ -3,7 +3,6 @@
 
 from sympy.core import Basic, Add, sympify, symbols, nan, zoo
 from sympy.core.exprtools import gcd_terms
-from sympy.core.numbers import seterr
 from sympy.utilities import public
 from sympy.utilities.iterables import iterable
 
