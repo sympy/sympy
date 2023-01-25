@@ -4,6 +4,7 @@
 from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
+from sympy.core.cache import cacheit
 from sympy.core import Mul, S, Tuple, sympify
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
@@ -394,8 +395,14 @@ def term_div(a, b, domain):
 class MonomialOps:
     """Code generator of fast monomial arithmetic functions. """
 
-    def __init__(self, ngens):
-        self.ngens = ngens
+    @cacheit
+    def __new__(cls, ngens):
+        obj = super().__new__(cls)
+        obj.ngens = ngens
+        return obj
+
+    def __getnewargs__(self):
+        return (self.ngens,)
 
     def _build(self, code, name):
         ns = {}
@@ -405,6 +412,7 @@ class MonomialOps:
     def _vars(self, name):
         return [ "%s%s" % (name, i) for i in range(self.ngens) ]
 
+    @cacheit
     def mul(self):
         name = "monomial_mul"
         template = dedent("""\
@@ -419,6 +427,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
+    @cacheit
     def pow(self):
         name = "monomial_pow"
         template = dedent("""\
@@ -431,6 +440,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "Ak": ", ".join(Ak)}
         return self._build(code, name)
 
+    @cacheit
     def mulpow(self):
         name = "monomial_mulpow"
         template = dedent("""\
@@ -445,6 +455,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "ABk": ", ".join(ABk)}
         return self._build(code, name)
 
+    @cacheit
     def ldiv(self):
         name = "monomial_ldiv"
         template = dedent("""\
@@ -459,6 +470,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
+    @cacheit
     def div(self):
         name = "monomial_div"
         template = dedent("""\
@@ -475,6 +487,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "RAB": "\n    ".join(RAB), "R": ", ".join(R)}
         return self._build(code, name)
 
+    @cacheit
     def lcm(self):
         name = "monomial_lcm"
         template = dedent("""\
@@ -489,6 +502,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
+    @cacheit
     def gcd(self):
         name = "monomial_gcd"
         template = dedent("""\
