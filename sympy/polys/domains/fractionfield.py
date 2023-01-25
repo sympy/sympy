@@ -37,6 +37,11 @@ class FractionField(Field, CompositeDomain):
     def new(self, element):
         return self.field.field_new(element)
 
+    def of_type(self, element):
+        """Check if ``a`` is of type ``dtype``. """
+        from sympy.polys.fields import FracElement
+        return isinstance(element, FracElement) and element.field == self.field
+
     @property
     def zero(self):
         return self.field.zero

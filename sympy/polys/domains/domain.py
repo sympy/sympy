@@ -469,7 +469,7 @@ class Domain:
 
     def of_type(self, element):
         """Check if ``a`` is of type ``dtype``. """
-        return isinstance(element, self.tp) # XXX: this isn't correct, e.g. PolyElement
+        return isinstance(element, self.tp)
 
     def __contains__(self, a):
         """Check if ``a`` belongs to this domain. """
