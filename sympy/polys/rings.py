@@ -221,15 +221,7 @@ class PolyRing(DefaultPrinting, IPolys):
         obj.domain = domain
         obj.order = order
 
-        # Here we explicitly prevent dtype from being an actual type so that
-        # using it with isinstance will fail with an exception. This is because
-        # the actual type is generated dynamically above and after removing the
-        # global ring cache it is not guaranteed that checking with isinstance
-        # would return the correct result.
-        #
-        # See https://github.com/sympy/sympy/pull/24585
-        dtype = type("PolyElement", (PolyElement,), {"ring": obj})
-        obj.dtype = lambda *a: dtype(*a)
+        obj.dtype = PolyElement(obj, ()).new
 
         obj.zero_monom = (0,)*ngens
         obj.gens = obj._gens()
@@ -325,7 +317,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
     @property
     def zero(self):
-        return self.dtype()
+        return self.dtype([])
 
     @property
     def one(self):
@@ -594,8 +586,12 @@ class PolyRing(DefaultPrinting, IPolys):
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     """Element of multivariate distributed polynomial ring. """
 
+    def __init__(self, ring, init):
+        super().__init__(init)
+        self.ring = ring
+
     def new(self, init):
-        return self.__class__(init)
+        return self.__class__(self.ring, init)
 
     def parent(self):
         return self.ring.to_domain()

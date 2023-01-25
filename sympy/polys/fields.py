@@ -128,15 +128,7 @@ class FracField(DefaultPrinting):
         obj.domain = domain
         obj.order = order
 
-        # Here we explicitly prevent dtype from being an actual type so that
-        # using it with isinstance will fail with an exception. This is because
-        # the actual type is generated dynamically above and after removing the
-        # global ring cache it is not guaranteed that checking with isinstance
-        # would return the correct result.
-        #
-        # See https://github.com/sympy/sympy/pull/24585
-        dtype = type("FracElement", (FracElement,), {"field": obj})
-        obj.dtype = lambda *a: dtype(*a)
+        obj.dtype = FracElement(obj, ring.zero).raw_new
 
         obj.zero = obj.dtype(ring.zero)
         obj.one = obj.dtype(ring.one)
@@ -300,17 +292,19 @@ class FracField(DefaultPrinting):
 class FracElement(DomainElement, DefaultPrinting, CantSympify):
     """Element of multivariate distributed rational function field. """
 
-    def __init__(self, numer, denom=None):
+    def __init__(self, field, numer, denom=None):
         if denom is None:
-            denom = self.field.ring.one
+            denom = field.ring.one
         elif not denom:
             raise ZeroDivisionError("zero denominator")
 
+        self.field = field
         self.numer = numer
         self.denom = denom
 
-    def raw_new(f, numer, denom):
-        return f.__class__(numer, denom)
+    def raw_new(f, numer, denom=None):
+        return f.__class__(f.field, numer, denom)
+
     def new(f, numer, denom):
         return f.raw_new(*numer.cancel(denom))
 
