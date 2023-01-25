@@ -1812,12 +1812,12 @@ class Basic(Printable, metaclass=ManagedProperties):
             return self
 
     def simplify(self, **kwargs):
-        """See the simplify function with :func:`sympy.simplify`."""
+        """See the simplify function with sympy.simplify"""
         from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)
 
     def refine(self, assumption=True):
-        """See the refine function with :func:`sympy.assumptions`."""
+        """See the refine function with sympy.assumptions"""
         from sympy.assumptions.refine import refine
         return refine(self, assumption)
 
