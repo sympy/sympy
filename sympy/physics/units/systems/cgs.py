@@ -3,7 +3,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import UnitSystem, centimeter, gram, second, coulomb, charge, speed_of_light, current, mass, \
     length, voltage, magnetic_density, magnetic_flux
 from sympy.physics.units.definitions import coulombs_constant
-from sympy.physics.units.definitions.unit_definitions import statcoulomb, statampere, statvolt, volt, tesla, gauss, \
+from sympy.physics.units.definitions.unit_definitions import angstrom, statcoulomb, statampere, statvolt, volt, tesla, gauss, \
     weber, maxwell, debye, oersted, ohm, farad, henry, erg, ampere, coulomb_constant
 from sympy.physics.units.systems.mks import dimsys_length_weight_time
 
@@ -66,6 +66,7 @@ cgs_gauss.set_quantity_scale_factor(oersted, sqrt(gram/centimeter)/second)
 cgs_gauss.set_quantity_scale_factor(ohm, 10**9/speed_of_light**2*second/centimeter)
 cgs_gauss.set_quantity_scale_factor(farad, One/10**9*speed_of_light**2*centimeter)
 cgs_gauss.set_quantity_scale_factor(henry, 10**9/speed_of_light**2/centimeter*second**2)
+cgs_gauss.set_quantity_scale_factor(angstrom, 1*centimeter/10**8)
 
 # Coulomb's constant:
 cgs_gauss.set_quantity_dimension(coulomb_constant, 1)
