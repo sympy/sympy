@@ -45,6 +45,9 @@ from sympy.utilities.misc import Undecidable, filldedent
 import random
 
 
+t, u = [Dummy(i) for i in 'tu']
+
+
 class LinearEntity(GeometrySet):
     """A base class for all linear entities (Line, Ray and Segment)
     in n-dimensional Euclidean space.
@@ -547,7 +550,6 @@ class LinearEntity(GeometrySet):
                 # arbitrary points, when  equal, both give a
                 # non-negative parameter when the arbitrary point
                 # coordinates are equated
-                t, u = [Dummy(i) for i in 'tu']
                 tu = solve(self.arbitrary_point(t) - other.arbitrary_point(u),
                     t, u, dict=True)[0]
                 def ok(p, l):
@@ -1038,7 +1040,6 @@ class LinearEntity(GeometrySet):
             rng = random.Random(seed)
         else:
             rng = random
-        t = Dummy()
         pt = self.arbitrary_point(t)
         if isinstance(self, Ray):
             v = abs(rng.gauss(0, 1))

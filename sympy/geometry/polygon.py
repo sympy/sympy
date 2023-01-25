@@ -22,6 +22,9 @@ from mpmath.libmp.libmpf import prec_to_dps
 import warnings
 
 
+x, y, T = symbols('x, y, T', real=True, cls=Dummy)
+
+
 class Polygon(GeometrySet):
     """A two-dimensional polygon.
 
@@ -848,7 +851,6 @@ class Polygon(GeometrySet):
         if other.free_symbols:
             raise NotImplementedError('non-numeric coordinates')
         unknown = False
-        T = Dummy('t', real=True)
         p = self.arbitrary_point(T)
         for pt, cond in p.args:
             sol = solve(pt - other, T, dict=True)
@@ -1004,7 +1006,6 @@ class Polygon(GeometrySet):
         points = list(self.vertices)
         points.append(points[0])
 
-        x, y = symbols('x, y', real=True, cls=Dummy)
         eq = line.equation(x, y)
 
         # considering equation of line to be `ax +by + c`
