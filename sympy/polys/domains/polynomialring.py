@@ -43,6 +43,11 @@ class PolynomialRing(Ring, CompositeDomain):
     def new(self, element):
         return self.ring.ring_new(element)
 
+    def of_type(self, element):
+        """Check if ``a`` is of type ``dtype``. """
+        from sympy.polys.rings import PolyElement
+        return isinstance(element, PolyElement) and element.ring == self.ring
+
     @property
     def zero(self):
         return self.ring.zero
