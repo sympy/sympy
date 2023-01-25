@@ -838,18 +838,16 @@ def test_big_expr():
     sT(e1, "Mul(TensorProduct(Pow(JzOp(Symbol('J')), Integer(2)), Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B'))))), AntiCommutator(Add(Dagger(Operator(Symbol('A'))), Dagger(Operator(Symbol('B')))),Pow(Dagger(DifferentialOperator(Derivative(Function('f')(Symbol('x')), Tuple(Symbol('x'), Integer(1))),Function('f')(Symbol('x')))), Integer(3))), Add(JzBra(Integer(1),Integer(0)), JzBra(Integer(1),Integer(1))), Add(JzKet(Integer(0),Integer(0)), JzKet(Integer(1),Integer(-1))))")
 
     assert str(e2) == '-[A + B,Jz**2]*{Dagger(D)*Dagger(C),E**(-2)}*[J2,Jz]'
-    ascii_str = \
-"""\
- [          2] / +  +  -2\ [ 2   ]\n\
--[A + B,/J \ ]*<D *C ,E  >*[J ,J ]\n\
- [      \ z/ ] \         / [    z]\
-"""
-    ucode_str = \
-"""\
- ⎡          2⎤ ⎧ †  †  -2⎫ ⎡ 2   ⎤\n\
--⎢A + B,⎛J ⎞ ⎥⋅⎨D ⋅C ,E  ⎬⋅⎢J ,J ⎥\n\
- ⎣      ⎝ z⎠ ⎦ ⎩         ⎭ ⎣    z⎦\
-"""
+    ascii_str = "\n".join([
+        r" [          2] / +  +  -2\ [ 2   ]",
+        r"-[A + B,/J \ ]*<D *C ,E  >*[J ,J ]",
+        r" [      \ z/ ] \         / [    z]"
+    ])
+    ucode_str = "\n".join([
+        " ⎡          2⎤ ⎧ †  †  -2⎫ ⎡ 2   ⎤",
+        "-⎢A + B,⎛J ⎞ ⎥⋅⎨D ⋅C ,E  ⎬⋅⎢J ,J ⎥",
+        " ⎣      ⎝ z⎠ ⎦ ⎩         ⎭ ⎣    z⎦"
+    ])
     assert pretty(e2) == ascii_str
     assert upretty(e2) == ucode_str
     assert latex(e2) == \
