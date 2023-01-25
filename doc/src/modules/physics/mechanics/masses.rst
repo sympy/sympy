@@ -134,7 +134,7 @@ as well).::
   >>> B = RigidBody('B', P, A, m, (I, P))
 
 The mass is specified exactly as is in a particle. Similar to the
-:class:`~.Particle`'s ``.point``, the :class:`RigidBody`'s center of mass,
+:class:`~.Particle`'s ``.point``, the :class:`~.RigidBody`'s center of mass,
 ``.masscenter`` must be specified. The reference frame is stored in an analogous
 fashion and holds information about the body's orientation and angular velocity.
 

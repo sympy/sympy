@@ -145,11 +145,26 @@ class Inertia:
         ===========
 
         This class method uses the ``inertia`` function to create the Dyadic
-        based on the tensor values in the form:
+        based on the tensor values.
 
-            ``[[ixx, ixy, ixz],
-               [ixy, iyy, iyz],
-               [izx, iyz, izz]]``
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import ReferenceFrame, Point, Inertia
+        >>> ixx, iyy, izz, ixy, iyz, izx = symbols('ixx iyy izz ixy iyz izx')
+        >>> N = ReferenceFrame('N')
+        >>> P = Point('P')
+        >>> I = Inertia.from_tensor(P, N, ixx, iyy, izz, ixy, iyz, izx)
+
+        The tensor values can easily be seen when converting the dyadic to a
+        matrix.
+
+        >>> I.dyadic.to_matrix(N)
+        Matrix([
+        [ixx, ixy, izx],
+        [ixy, iyy, iyz],
+        [izx, iyz, izz]])
 
         """
         return cls(inertia(frame, ixx, iyy, izz, ixy, iyz, izx), point)
