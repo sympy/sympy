@@ -16,6 +16,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.integers import floor
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
@@ -121,6 +122,7 @@ def test_mod():
 
 
 def test_divmod():
+    x = Symbol("x")
     assert divmod(S(12), S(8)) == Tuple(1, 4)
     assert divmod(-S(12), S(8)) == Tuple(-2, 4)
     assert divmod(S.Zero, S.One) == Tuple(0, 0)
@@ -128,6 +130,7 @@ def test_divmod():
     raises(ZeroDivisionError, lambda: divmod(S.One, S.Zero))
     assert divmod(S(12), 8) == Tuple(1, 4)
     assert divmod(12, S(8)) == Tuple(1, 4)
+    assert S(1024)//x == 1024//x == floor(1024/x)
 
     assert divmod(S("2"), S("3/2")) == Tuple(S("1"), S("1/2"))
     assert divmod(S("3/2"), S("2")) == Tuple(S("0"), S("3/2"))
@@ -365,6 +368,13 @@ def test_Rational_new():
     n = Rational(2, -4, gcd=1)
     assert n.q == 4
     assert n.p == -2
+
+def test_issue_24543():
+    for p in ('1.5', 1.5, 2):
+        for q in ('1.5', 1.5, 2):
+            assert Rational(p, q).as_numer_denom() == Rational('%s/%s'%(p,q)).as_numer_denom()
+
+    assert Rational('0.5', '100') == Rational(1, 200)
 
 
 def test_Number_new():

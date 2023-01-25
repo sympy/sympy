@@ -1207,7 +1207,7 @@ class CylindricalJoint(Joint):
     u1_PC(t)*P_frame.x
 
     To further demonstrate the use of the cylindrical joint, the kinematics of
-    two cylindral joints perpendicular to each other can be created as follows.
+    two cylindrical joints perpendicular to each other can be created as follows.
 
     >>> from sympy import symbols
     >>> from sympy.physics.mechanics import Body, CylindricalJoint

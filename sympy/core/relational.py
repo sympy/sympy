@@ -1,4 +1,4 @@
-from typing import Dict as tDict, Union as tUnion, Type
+from __future__ import annotations
 
 from .basic import Atom, Basic
 from .sorting import ordered
@@ -9,7 +9,6 @@ from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
 from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 
@@ -141,7 +140,7 @@ class Relational(Boolean, EvalfMixin):
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  # type: tDict[tUnion[str, None], Type[Relational]]
+    ValidRelationOperator: dict[str | None, type[Relational]] = {}
 
     is_Relational = True
 
@@ -610,18 +609,7 @@ class Equality(Relational):
 
     is_Equality = True
 
-    def __new__(cls, lhs, rhs=None, **options):
-
-        if rhs is None:
-            sympy_deprecation_warning(
-                """
-                Eq(expr) with a single argument with the right-hand side
-                defaulting to 0 is deprecated. Use Eq(expr, 0) instead.
-                """,
-                deprecated_since_version="1.5",
-                active_deprecations_target="deprecated-eq-expr",
-            )
-            rhs = 0
+    def __new__(cls, lhs, rhs, **options):
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)

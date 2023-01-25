@@ -95,7 +95,17 @@ jobs:
       matrix:
         # ubuntu-focal uses system python 3.8
         # archlinux-latest is at the cutting edge
-        tox_system_factor: [ubuntu-focal, archlinux-latest]
+        #
+        # XXX: For now the archlinux job fails too often for reasons unrelated
+        # to SAGE's use of SymPy so we skip Arch and only test Ubuntu. The
+        # ubuntu-focal job also fails sometimes due to timeouts or network
+        # problems but it mostly succeeds and does correctly pick up where a
+        # change in SymPy affects SAGE. Mostly this is where there are printing
+        # changes in SymPy because SAGE does most of its testing in the form of
+        # doctests.
+        #
+        #tox_system_factor: [ubuntu-focal, archlinux-latest]
+        tox_system_factor: [ubuntu-focal]
         # "standard" installs lots of system packages, reducing the full build and test of the
         # Sage distribution to 3-4 hours
         tox_packages_factor: [standard]

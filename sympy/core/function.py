@@ -30,7 +30,8 @@ There are three types of functions implemented in SymPy:
 
 """
 
-from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union as tUnion
+from __future__ import annotations
+from typing import Any
 from collections.abc import Iterable
 
 from .add import Add
@@ -344,13 +345,12 @@ class Application(Basic, metaclass=FunctionClass):
         Explanation
         ===========
 
-        The eval() method is called when the class cls is about to be
+        The ``eval()`` method is called when the class ``cls`` is about to be
         instantiated and it should return either some simplified instance
-        (possible of some other class), or if the class cls should be
+        (possible of some other class), or if the class ``cls`` should be
         unmodified, return None.
 
-        Examples of eval() for the function "sign"
-        ---------------------------------------------
+        Examples of ``eval()`` for the function "sign"
 
         .. code-block:: python
 
@@ -625,7 +625,7 @@ class Function(Application, Expr):
 
         return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
 
-    _singularities = None  # type: tUnion[FuzzyBool, tTuple[Expr, ...]]
+    _singularities: FuzzyBool | tuple[Expr, ...] = None
 
     @classmethod
     def is_singular(cls, a):
@@ -911,7 +911,7 @@ class UndefinedFunction(FunctionClass):
     def __instancecheck__(cls, instance):
         return cls in type(instance).__mro__
 
-    _kwargs = {}  # type: tDict[str, Optional[bool]]
+    _kwargs: dict[str, bool | None] = {}
 
     def __hash__(self):
         return hash((self.class_key(), frozenset(self._kwargs.items())))
@@ -987,7 +987,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
     """
 
     # XXX: What is this class attribute used for?
-    include = set()  # type: tSet[Any]
+    include: set[Any] = set()
 
     def __init__(cls, name, **assumptions):
         from sympy.sets.sets import Set, FiniteSet
@@ -2092,25 +2092,6 @@ class Subs(Expr):
         A point or list of evaluation points
         corresponding to those variables.
 
-    Notes
-    =====
-
-    ``Subs`` objects are generally useful to represent unevaluated derivatives
-    calculated at a point.
-
-    The variables may be expressions, but they are subjected to the limitations
-    of subs(), so it is usually a good practice to use only symbols for
-    variables, since in that case there can be no ambiguity.
-
-    There's no automatic expansion - use the method .doit() to effect all
-    possible substitutions of the object and also of objects inside the
-    expression.
-
-    When evaluating derivatives at a point that is not a symbol, a Subs object
-    is returned. One is also able to calculate derivatives of Subs objects - in
-    this case the expression is always expanded (for the unevaluated form, use
-    Derivative()).
-
     Examples
     ========
 
@@ -2139,6 +2120,22 @@ class Subs(Expr):
 
     Notes
     =====
+
+    ``Subs`` objects are generally useful to represent unevaluated derivatives
+    calculated at a point.
+
+    The variables may be expressions, but they are subjected to the limitations
+    of subs(), so it is usually a good practice to use only symbols for
+    variables, since in that case there can be no ambiguity.
+
+    There's no automatic expansion - use the method .doit() to effect all
+    possible substitutions of the object and also of objects inside the
+    expression.
+
+    When evaluating derivatives at a point that is not a symbol, a Subs object
+    is returned. One is also able to calculate derivatives of Subs objects - in
+    this case the expression is always expanded (for the unevaluated form, use
+    Derivative()).
 
     In order to allow expressions to combine before doit is done, a
     representation of the Subs expression is used internally to make

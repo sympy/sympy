@@ -17,7 +17,7 @@ from sympy.functions.elementary.trigonometric import (atan, cos, sin)
 from sympy.polys.polytools import Poly
 from sympy.sets.sets import FiniteSet
 
-from sympy.core.parameters import distribute
+from sympy.core.parameters import distribute, evaluate
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, warns
@@ -2391,6 +2391,9 @@ def test__neg__():
     assert -(2.*x) == -2.*x
     assert -(-2.*x) == 2.*x
     with distribute(False):
+        eq = -(x + y)
+        assert eq.is_Mul and eq.args == (-1, x + y)
+    with evaluate(False):
         eq = -(x + y)
         assert eq.is_Mul and eq.args == (-1, x + y)
 

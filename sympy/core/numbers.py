@@ -1624,10 +1624,11 @@ class Rational(Number):
 
             q = 1
             gcd = 1
+        Q = 1
 
         if not isinstance(p, SYMPY_INTS):
             p = Rational(p)
-            q *= p.q
+            Q *= p.q
             p = p.p
         else:
             p = int(p)
@@ -1635,9 +1636,10 @@ class Rational(Number):
         if not isinstance(q, SYMPY_INTS):
             q = Rational(q)
             p *= q.q
-            q = q.p
+            Q *= q.p
         else:
-            q = int(q)
+            Q *= int(q)
+        q = Q
 
         # p and q are now ints
         if q == 0:
@@ -2423,7 +2425,7 @@ class Integer(Rational):
             return NotImplemented
         if isinstance(other, Integer):
             return Integer(self.p // other)
-        return Integer(divmod(self, other)[0])
+        return divmod(self, other)[0]
 
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
@@ -2867,8 +2869,7 @@ class AlgebraicNumber(Expr):
         See Also
         ========
 
-        .AlgebraicNumber.__new__()
-
+        AlgebraicNumber
         """
         return AlgebraicNumber(
             (self.minpoly, self.root), coeffs=coeffs, alias=self.alias)

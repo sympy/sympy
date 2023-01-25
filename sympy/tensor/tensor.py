@@ -29,7 +29,8 @@ If there is a (anti)symmetric metric, the indices can be raised and
 lowered when the tensor is put in canonical form.
 """
 
-from typing import Any, Dict as tDict, List, Set as tSet, Tuple as tTuple
+from __future__ import annotations
+from typing import Any
 from functools import reduce
 from math import prod
 
@@ -257,7 +258,7 @@ class _IndexStructure(CantSympify):
             new_indices[ipos2] = TensorIndex(indname, typ1, False)
         return new_indices
 
-    def get_free_indices(self):  # type: () -> List[TensorIndex]
+    def get_free_indices(self) -> list[TensorIndex]:
         """
         Get a list of free indices.
         """
@@ -427,8 +428,8 @@ class _TensorDataLazyEvaluator(CantSympify):
     computed until they are accessed by reading the ``.data`` property
     associated to the tensor expression.
     """
-    _substitutions_dict = {}  # type: tDict[Any, Any]
-    _substitutions_dict_tensmul = {}  # type: tDict[Any, Any]
+    _substitutions_dict: dict[Any, Any] = {}
+    _substitutions_dict_tensmul: dict[Any, Any] = {}
 
     def __getitem__(self, key):
         dat = self._get(key)
@@ -2086,11 +2087,11 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         raise NotImplementedError("abstract method")
 
     @abstractmethod
-    def get_free_indices(self):  # type: () -> List[TensorIndex]
+    def get_free_indices(self) -> list[TensorIndex]:
         raise NotImplementedError("abstract method")
 
     @abstractmethod
-    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         raise NotImplementedError("abstract method")
 
     def fun_eval(self, *index_tuples):
@@ -2245,7 +2246,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
 
         # Raise indices:
         for pos in pos2up:
-            index_type_pos = index_types1[pos]  # type: TensorIndexType
+            index_type_pos = index_types1[pos]
             if index_type_pos not in replacement_dict:
                 raise ValueError("No metric provided to lower index")
             metric = replacement_dict[index_type_pos]
@@ -2253,7 +2254,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
             array = TensExpr._contract_and_permute_with_metric(metric_inverse, array, pos, len(free_ind1))
         # Lower indices:
         for pos in pos2down:
-            index_type_pos = index_types1[pos]  # type: TensorIndexType
+            index_type_pos = index_types1[pos]
             if index_type_pos not in replacement_dict:
                 raise ValueError("No metric provided to lower index")
             metric = replacement_dict[index_type_pos]
@@ -2445,10 +2446,10 @@ class TensAdd(TensExpr, AssocOp):
     def nocoeff(self):
         return self
 
-    def get_free_indices(self):  # type: () -> List[TensorIndex]
+    def get_free_indices(self) -> list[TensorIndex]:
         return self.free_indices
 
-    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         newargs = [arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args]
         return self.func(*newargs)
 
@@ -2480,29 +2481,16 @@ class TensAdd(TensExpr, AssocOp):
         else:
             args = self.args
 
-        if not args:
-            return S.Zero
+        # if any of the args are zero (after doit), drop them. Otherwise, _tensAdd_check will complain about non-matching indices, even though the TensAdd is correctly formed.
+        args = [arg for arg in args if arg != S.Zero]
 
-        if len(args) == 1 and not isinstance(args[0], TensExpr):
+        if len(args) == 0:
+            return S.Zero
+        elif len(args) == 1:
             return args[0]
 
         # now check that all addends have the same indices:
         TensAdd._tensAdd_check(args)
-
-        # if TensAdd has only 1 element in its `args`:
-        if len(args) == 1:  # and isinstance(args[0], TensMul):
-            return args[0]
-
-        # Remove zeros:
-        args = [x for x in args if x]
-
-        # if there are no more args (i.e. have cancelled out),
-        # just return zero:
-        if not args:
-            return S.Zero
-
-        if len(args) == 1:
-            return args[0]
 
         # Collect terms appearing more than once, differing by their coefficients:
         args = TensAdd._tensAdd_collect_terms(args)
@@ -2542,13 +2530,13 @@ class TensAdd(TensExpr, AssocOp):
     def _tensAdd_check(args):
         # check that all addends have the same free indices
 
-        def get_indices_set(x):  # type: (Expr) -> tSet[TensorIndex]
+        def get_indices_set(x: Expr) -> set[TensorIndex]:
             if isinstance(x, TensExpr):
                 return set(x.get_free_indices())
             return set()
 
-        indices0 = get_indices_set(args[0])  # type: tSet[TensorIndex]
-        list_indices = [get_indices_set(arg) for arg in args[1:]]  # type: List[tSet[TensorIndex]]
+        indices0 = get_indices_set(args[0])
+        list_indices = [get_indices_set(arg) for arg in args[1:]]
         if not all(x == indices0 for x in list_indices):
             raise ValueError('all tensors must have the same indices')
 
@@ -2777,7 +2765,7 @@ class Tensor(TensExpr):
     is_commutative = False
 
     _index_structure = None  # type: _IndexStructure
-    args: tTuple[TensorHead, Tuple]
+    args: tuple[TensorHead, Tuple]
 
     def __new__(cls, tensor_head, indices, *, is_canon_bp=False, **kw_args):
         indices = cls._parse_indices(tensor_head, indices)
@@ -2947,19 +2935,19 @@ class Tensor(TensExpr):
     def sorted_components(self):
         return self
 
-    def get_indices(self):  # type: () -> List[TensorIndex]
+    def get_indices(self) -> list[TensorIndex]:
         """
         Get a list of indices, corresponding to those of the tensor.
         """
         return list(self.args[1])
 
-    def get_free_indices(self):  # type: () -> List[TensorIndex]
+    def get_free_indices(self) -> list[TensorIndex]:
         """
         Get a list of free indices, corresponding to those of the tensor.
         """
         return self._index_structure.get_free_indices()
 
-    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> Tensor
+    def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         # TODO: this could be optimized by only swapping the indices
         # instead of visiting the whole expression tree:
         return self.xreplace(repl)
@@ -3543,7 +3531,7 @@ class TensMul(TensExpr, AssocOp):
         """
         return self._indices
 
-    def get_free_indices(self):  # type: () -> List[TensorIndex]
+    def get_free_indices(self) -> list[TensorIndex]:
         """
         Returns the list of free indices of the tensor.
 
@@ -3570,7 +3558,7 @@ class TensMul(TensExpr, AssocOp):
         """
         return self._index_structure.get_free_indices()
 
-    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         return self.func(*[arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args])
 
     def split(self):
@@ -3628,10 +3616,10 @@ class TensMul(TensExpr, AssocOp):
 
     def _get_args_for_traditional_printer(self):
         args = list(self.args)
-        if (self.coeff < 0) == True:
+        if self.coeff.could_extract_minus_sign():
             # expressions like "-A(a)"
             sign = "-"
-            if self.coeff == S.NegativeOne:
+            if args[0] == S.NegativeOne:
                 args = args[1:]
             else:
                 args[0] = -args[0]
@@ -3770,8 +3758,8 @@ class TensMul(TensExpr, AssocOp):
         """
         expr = self.expand()
         if self != expr:
-            expr = expr.canon_bp()
-            return expr.contract_metric(g)
+            expr = canon_bp(expr)
+            return contract_metric(expr, g)
         pos_map = self._get_indices_to_args_pos()
         args = list(self.args)
 
@@ -4087,7 +4075,7 @@ class TensorElement(TensExpr):
     def get_free_indices(self):
         return self._free_indices
 
-    def _replace_indices(self, repl):  # type: (tDict[TensorIndex, TensorIndex]) -> TensExpr
+    def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         # TODO: can be improved:
         return self.xreplace(repl)
 
