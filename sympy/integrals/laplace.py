@@ -1119,7 +1119,6 @@ def _inverse_laplace_build_rules():
     a = Wild('a', exclude=[s])
     b = Wild('b', exclude=[s])
     c = Wild('c', exclude=[s])
-    d = Wild('d', exclude=[s])
 
     debug('_inverse_laplace_build_rules is building rules')
     def _frac(f, s):
@@ -1128,30 +1127,10 @@ def _inverse_laplace_build_rules():
         except PolynomialError:
             return f
     same = lambda f: f
-    frac = lambda f: _frac(f, s)
-    ctsd = lambda f: _complete_the_square_in_denom(f, s)
     # This list is sorted according to the prep function needed.
     _ILT_rules = [
         (a/s, a, S.true, same, 1),
-        (b/(s+a), b*exp(-a*t), S.true, same, 1),
-        (a/s**2, a*t, S.true, same, 1),
-        (b/(s**2+a**2), b*sin(a*t)/a, S.true, same, 1),
-        (b/(s**2-a**2), b*sinh(a*t)/a, S.true, same, 1),
-        (b*s/(s**2+a**2), b*cos(a*t), S.true, same, 1),
-        (b*s/(s**2-a**2), b*cosh(a*t), S.true, same, 1),
         (b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c), c>0, same, 1),
-        #
-        (b/(s*(s+a)), b*(1-exp(-a*t))/a, S.true, frac, 1),
-        (b/(s+a)**2, b*t*exp(-a*t), S.true, frac, 1),
-        (b*s/(s+a)**2, b*(1-a*t)*exp(-a*t), S.true, frac, 1),
-        (c/((s+a)*(s+b)), c/(a-b)*(exp(-b*t)-exp(-a*t)), S.true, frac, 1),
-        (c*s/((s+a)*(s+b)), c/(a-b)*(a*exp(-a*t)-b*exp(-b*t)), S.true, frac, 1),
-        #
-        (c/(d*(s+b)**2+a**2),
-         c*exp(-b*t)*sin(a*t/sqrt(d))/(a*sqrt(d)), S.true, ctsd, 1),
-        (c/(d**2*(s+a)**2+b**2),
-         c/d*exp(-a*t)*(b*cos(b/d*t)/d-a*sin(b/d*t))/b,
-         S.true, ctsd, 1/s),
     ]
     return _ILT_rules, s, t
 
@@ -1258,50 +1237,62 @@ def _inverse_laplace_expand(fn, s, t, plane):
     return None
 
 
-def _inverse_laplace_rational(fn, s, t, simplify):
+def _inverse_laplace_rational(fn, s, t, plane, simplify):
     """
+    Helper function for the class InverseLaplaceTransform.
     """
     debug('[ILT _i_l_r] (%s, %s, %s)'%(fn, s, t))
+    x_ = symbols('x_')
     f = fn.apart(s)
     terms = Add.make_args(f)
     terms_t = []
+    conditions = [S.true]
     for term in terms:
         [n, d] = term.as_numer_denom()
         dc = d.as_poly(s).all_coeffs()
         dc_lead = dc[0]
         dc = [ x/dc_lead for x in dc ]
         nc = [ x/dc_lead for x in n.as_poly(s).all_coeffs() ]
-        if len(dc)==2:
-            terms_t.append(nc[0]*exp(-dc[1]*t))
-            continue
-        if len(dc)==3:
+        if len(dc)==1:
+            r = nc[0]*DiracDelta(t)
+            terms_t.append(r)
+        elif len(dc)==2:
+            r = nc[0]*exp(-dc[1]*t)
+            terms_t.append(Heaviside(t)*r)
+        elif len(dc)==3:
             a = dc[1]/2
-            b = dc[2]-a**2
-            if len(nc)==2:
-                l = nc[0]
-                m = nc[1]
-            else:
-                l = 0
-                m = nc[0]
+            b = (dc[2]-a**2).factor()
+            if len(nc)==1:
+                nc = [S.Zero] + nc
+            l, m = tuple(nc)
             if b==0:
-                terms_t.append((m*t+l*(1-a*t))*exp(-a*t))
-            elif b.is_negative:
-                terms_t.append(l*exp(-a*t)*cosh(sqrt(-b)*t) +\
-                              (m-a*l)/sqrt(-b)*exp(-a*t)*sinh(sqrt(-b)*t) )
+                r = (m*t+l*(1-a*t))*exp(-a*t)
             else:
-                terms_t.append(l*exp(-a*t)*cos(sqrt(b)*t) +\
-                              (m-a*l)/sqrt(b)*exp(-a*t)*sin(sqrt(b)*t) )
+                hyp = False
+                if b.is_negative:
+                    b=-b
+                    hyp = True
+                b2 = list(roots(x_**2-b, x_).keys())[0]
+                bs = sqrt(b).simplify()
+                if hyp:
+                    r = l*exp(-a*t)*cosh(b2*t) + (m-a*l)/bs*exp(-a*t)*sinh(bs*t)
+                else:
+                    r = l*exp(-a*t)*cos(b2*t) + (m-a*l)/bs*exp(-a*t)*sin(bs*t)
+            terms_t.append(Heaviside(t)*r)
         else:
-            return None
+            ft, cond = _inverse_laplace_transform(fn, s, t, plane,
+                                               simplify=True, dorational=False)
+            terms_t.append(ft)
+            conditions.append(cond)
 
     result = Add(*terms_t)
     if simplify:
         result = result.simplify(doit=False)
     debug('[ILT _i_l_r]   returns %s'%(result,))
-    return Heaviside(t)*result, S.true
+    return result, And(*conditions)
 
 
-def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True):
+def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True, dorational=True):
     """
     Front-end function of the inverse Laplace transform. It tries to apply all
     known rules recursively.  If everything else fails, it tries to integrate.
@@ -1314,8 +1305,8 @@ def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True):
 
     for term in terms:
         k, f = term.as_independent(s_, as_Add=False)
-        if term.is_rational_function(s_) and \
-            (r := _inverse_laplace_rational(f, s_, t_, simplify)) is not None:
+        if dorational and term.is_rational_function(s_) and \
+            (r := _inverse_laplace_rational(f, s_, t_, plane, simplify)) is not None:
             pass
         elif (r := _inverse_laplace_apply_simple_rules(f, s_, t_)) is not None:
             pass
