@@ -3,7 +3,7 @@ from sympy.concrete.tests.test_sums_products import NS
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import convert_to, coulomb_constant, elementary_charge, gravitational_constant, planck
-from sympy.physics.units.definitions.unit_definitions import statcoulomb, coulomb, second, gram, centimeter, erg, \
+from sympy.physics.units.definitions.unit_definitions import angstrom, statcoulomb, coulomb, second, gram, centimeter, erg, \
     newton, joule, dyne, speed_of_light, meter, farad, henry, statvolt, volt, ohm
 from sympy.physics.units.systems import SI
 from sympy.physics.units.systems.cgs import cgs_gauss
@@ -47,8 +47,8 @@ def test_cgs_gauss_convert_constants():
     assert convert_to(gravitational_constant, dyne*centimeter**2/gram**2, cgs_gauss)
     assert NS(convert_to(planck, erg*second, cgs_gauss)) == '6.62607015e-27*erg*second'
 
-    spc = 25000*second/(22468879468420441*centimeter)
-    assert convert_to(ohm, second/centimeter, cgs_gauss) == spc
-    assert convert_to(henry, second**2/centimeter, cgs_gauss) == spc*second
+    assert convert_to(ohm, second/centimeter, cgs_gauss) == 10**9*second/(299792458**2*centimeter)
+    assert convert_to(henry, second**2/centimeter, cgs_gauss) == 10**9*second**2/(299792458**2*centimeter)
     assert convert_to(volt, statvolt, cgs_gauss) == 10**6*statvolt/299792458
-    assert convert_to(farad, centimeter, cgs_gauss) == 299792458**2*centimeter/10**5
+    assert convert_to(farad, centimeter, cgs_gauss) == 1*centimeter/10**9*299792458**2
+    assert convert_to(angstrom, centimeter, cgs_gauss) == 1*centimeter/10**8
