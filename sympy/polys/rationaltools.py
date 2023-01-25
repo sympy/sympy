@@ -93,7 +93,8 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
     lengths).
 
     The interpolation algorithm is known to yield some division by zero
-    when values are equally spaced.
+    when values are equally spaced. Furthermore, the simplest solution
+    is not always returned (see the last example below).
 
     An arbitrary symbol can optionally be provided as var
     (default being 'x').
@@ -108,6 +109,14 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
 
     >>> thiele([1, 2, 5, 6], [10, 12, 11, 13])
     (9*x**2 + 29*x - 238)/(8*x - 28)
+
+    >>> from sympy import sympify
+    >>> one = sympify(one)
+    >>> thiele([1, 2, 3, 4], [one, one/2, one/3, one/4])
+    1/x
+
+    >>> thiele([1, 2, 3, 4], [one, one/4, one/9, one/16])
+    (x**2 - 10*x + 35)/(50*x - 24)
 
     See Also
     ========
