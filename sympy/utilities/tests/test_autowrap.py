@@ -92,12 +92,8 @@ def test_cython_wrapper_compile_flags():
     code_gen = CythonCodeWrapper(CCodeGen())
 
     expected = """\
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import setup
+from setuptools import Extension
 from Cython.Build import cythonize
 cy_opts = {'compiler_directives': {'language_level': '3'}}
 
@@ -130,12 +126,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
                                  cythonize_options={'compiler_directives': {'boundscheck': False}}
                                  )
     expected = """\
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import setup
+from setuptools import Extension
 from Cython.Build import cythonize
 cy_opts = {'compiler_directives': {'boundscheck': False}}
 
@@ -156,12 +148,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     assert setup_text == expected
 
     expected = """\
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+from setuptools import setup
+from setuptools import Extension
 from Cython.Build import cythonize
 cy_opts = {'compiler_directives': {'boundscheck': False}}
 import numpy as np

@@ -16,7 +16,7 @@ def convert_array_to_indexed(expr, indices):
 class _ConvertArrayToIndexed:
 
     def __init__(self):
-        self.count_dummies: int = 0
+        self.count_dummies = 0
 
     def do_convert(self, expr, indices):
         if isinstance(expr, ArrayTensorProduct):

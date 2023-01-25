@@ -615,7 +615,7 @@ class DifferentialOperator(Operator):
 
         return self.expr.free_symbols
 
-    def _apply_operator_Wavefunction(self, func):
+    def _apply_operator_Wavefunction(self, func, **options):
         from sympy.physics.quantum.state import Wavefunction
         var = self.variables
         wf_vars = func.args[1:]

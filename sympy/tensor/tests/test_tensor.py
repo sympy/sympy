@@ -600,6 +600,8 @@ def test_add1():
     assert t1 != t2
     assert t2 != TensMul.from_data(0, [], [], [])
 
+    #Test whether TensAdd.doit chokes on subterms that are zero.
+    assert TensAdd(p(a), TensMul(0, p(a)) ).doit() == p(a)
 
 def test_special_eq_ne():
     # test special equality cases:
@@ -990,6 +992,18 @@ def test_metric_contract3():
     t = C(a1,a0)*B(-a2,-a0)*psi(-a1)
     t1 = t.contract_metric(C)
     assert _is_equal(t1, B(-a2,a1)*psi(-a1))
+
+
+def test_contract_metric4():
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r = tensor_indices("p q r", R3)
+    delta = R3.delta
+    eps = R3.epsilon
+    K = TensorHead("K", [R3])
+
+    #Check whether contract_metric chokes on an expandable expression which becomes zero on canonicalization (issue #24354)
+    expr = eps(p,q,r)*( K(-p)*K(-q) + delta(-p,-q) )
+    assert expr.contract_metric(delta) == 0
 
 
 def test_epsilon():

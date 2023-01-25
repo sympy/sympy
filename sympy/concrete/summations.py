@@ -440,8 +440,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         See Also
         ========
 
-        Sum.is_absolutely_convergent()
-        sympy.concrete.products.Product.is_convergent()
+        Sum.is_absolutely_convergent
+        sympy.concrete.products.Product.is_convergent
         """
         p, q, r = symbols('p q r', cls=Wild)
 
@@ -686,7 +686,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         See Also
         ========
 
-        Sum.is_convergent()
+        Sum.is_convergent
         """
         return Sum(abs(self.function), self.limits).is_convergent()
 

@@ -122,6 +122,9 @@ Da = dalton = amu = amus = atomic_mass_unit = atomic_mass_constant = PhysicalCon
 t = metric_ton = tonne = Quantity("tonne", abbrev="t")
 tonne.set_global_relative_scale_factor(mega, gram)
 
+# Electron rest mass
+me = electron_rest_mass = Quantity("electron_rest_mass", abbrev="me")
+
 
 # Common length units
 

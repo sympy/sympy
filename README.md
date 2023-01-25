@@ -167,10 +167,6 @@ After making changes to `sympy/parsing/latex/LaTeX.g4`, run:
 
 To clean everything (thus getting the same tree as in the repository):
 
-    $ ./setup.py clean
-
-You can also clean things with git using:
-
     $ git clean -Xdf
 
 which will clear everything ignored by `.gitignore`, and:

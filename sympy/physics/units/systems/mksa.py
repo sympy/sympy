@@ -4,7 +4,7 @@ MKS unit system.
 MKS stands for "meter, kilogram, second, ampere".
 """
 
-from typing import List
+from __future__ import annotations
 
 from sympy.physics.units.definitions import Z0, ampere, coulomb, farad, henry, siemens, tesla, volt, weber, ohm
 from sympy.physics.units.definitions.dimension_definitions import (
@@ -19,7 +19,7 @@ dims = (voltage, impedance, conductance, current, capacitance, inductance, charg
 
 units = [ampere, volt, ohm, siemens, farad, henry, coulomb, tesla, weber]
 
-all_units = []  # type: List[Quantity]
+all_units: list[Quantity] = []
 for u in units:
     all_units.extend(prefix_unit(u, PREFIXES))
 all_units.extend(units)

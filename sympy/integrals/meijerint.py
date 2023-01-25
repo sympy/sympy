@@ -26,9 +26,8 @@ The main references for this are:
     Gordon and Breach Science Publisher
 """
 
+from __future__ import annotations
 import itertools
-
-from typing import Dict as tDict, Tuple as tTuple
 
 from sympy import SYMPY_DEBUG
 from sympy.core import S, Expr
@@ -569,7 +568,7 @@ def _inflate_fox_h(g, a):
     bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
 
-_dummies = {}  # type: tDict[tTuple[str, str], Dummy]
+_dummies: dict[tuple[str, str], Dummy]  = {}
 
 
 def _dummy(name, token, expr, **kwargs):
