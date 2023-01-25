@@ -209,59 +209,57 @@ class PolyRing(DefaultPrinting, IPolys):
         order = OrderOpt.preprocess(order)
 
         _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
-        obj = None
 
-        if obj is None:
-            if domain.is_Composite and set(symbols) & set(domain.symbols):
-                raise GeneratorsError("polynomial ring and it's ground domain share generators")
+        if domain.is_Composite and set(symbols) & set(domain.symbols):
+            raise GeneratorsError("polynomial ring and it's ground domain share generators")
 
-            obj = object.__new__(cls)
-            obj._hash_tuple = _hash_tuple
-            obj._hash = hash(_hash_tuple)
-            obj.dtype = type("PolyElement", (PolyElement,), {"ring": obj})
-            obj.symbols = symbols
-            obj.ngens = ngens
-            obj.domain = domain
-            obj.order = order
+        obj = object.__new__(cls)
+        obj._hash_tuple = _hash_tuple
+        obj._hash = hash(_hash_tuple)
+        obj.dtype = type("PolyElement", (PolyElement,), {"ring": obj})
+        obj.symbols = symbols
+        obj.ngens = ngens
+        obj.domain = domain
+        obj.order = order
 
-            obj.zero_monom = (0,)*ngens
-            obj.gens = obj._gens()
-            obj._gens_set = set(obj.gens)
+        obj.zero_monom = (0,)*ngens
+        obj.gens = obj._gens()
+        obj._gens_set = set(obj.gens)
 
-            obj._one = [(obj.zero_monom, domain.one)]
+        obj._one = [(obj.zero_monom, domain.one)]
 
-            if ngens:
-                # These expect monomials in at least one variable
-                codegen = MonomialOps(ngens)
-                obj.monomial_mul = codegen.mul()
-                obj.monomial_pow = codegen.pow()
-                obj.monomial_mulpow = codegen.mulpow()
-                obj.monomial_ldiv = codegen.ldiv()
-                obj.monomial_div = codegen.div()
-                obj.monomial_lcm = codegen.lcm()
-                obj.monomial_gcd = codegen.gcd()
-            else:
-                monunit = lambda a, b: ()
-                obj.monomial_mul = monunit
-                obj.monomial_pow = monunit
-                obj.monomial_mulpow = lambda a, b, c: ()
-                obj.monomial_ldiv = monunit
-                obj.monomial_div = monunit
-                obj.monomial_lcm = monunit
-                obj.monomial_gcd = monunit
+        if ngens:
+            # These expect monomials in at least one variable
+            codegen = MonomialOps(ngens)
+            obj.monomial_mul = codegen.mul()
+            obj.monomial_pow = codegen.pow()
+            obj.monomial_mulpow = codegen.mulpow()
+            obj.monomial_ldiv = codegen.ldiv()
+            obj.monomial_div = codegen.div()
+            obj.monomial_lcm = codegen.lcm()
+            obj.monomial_gcd = codegen.gcd()
+        else:
+            monunit = lambda a, b: ()
+            obj.monomial_mul = monunit
+            obj.monomial_pow = monunit
+            obj.monomial_mulpow = lambda a, b, c: ()
+            obj.monomial_ldiv = monunit
+            obj.monomial_div = monunit
+            obj.monomial_lcm = monunit
+            obj.monomial_gcd = monunit
 
 
-            if order is lex:
-                obj.leading_expv = max
-            else:
-                obj.leading_expv = lambda f: max(f, key=order)
+        if order is lex:
+            obj.leading_expv = max
+        else:
+            obj.leading_expv = lambda f: max(f, key=order)
 
-            for symbol, generator in zip(obj.symbols, obj.gens):
-                if isinstance(symbol, Symbol):
-                    name = symbol.name
+        for symbol, generator in zip(obj.symbols, obj.gens):
+            if isinstance(symbol, Symbol):
+                name = symbol.name
 
-                    if not hasattr(obj, name):
-                        setattr(obj, name, generator)
+                if not hasattr(obj, name):
+                    setattr(obj, name, generator)
 
         return obj
 
