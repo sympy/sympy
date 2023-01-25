@@ -198,9 +198,8 @@ def test_issue_23058():
     assert upretty(vecB) == vecB_str
     assert upretty(vecE) == vecE_str
 
-    ten = UnevaluatedExpr(10)
+    ten = symbols('10', commutative=False)
     eps, mu = 4*pi*ten**(-11), ten**(-5)
-
     Bx = 2 * ten**(-4) * cos(ten**5 * t) * sin(ten**(-3) * y)
     vecB = Bx * xhat
 
