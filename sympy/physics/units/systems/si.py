@@ -38,7 +38,7 @@ from sympy.physics.units.definitions import (
     planck_impedance, planck_acceleration, bit, byte, kibibyte, mebibyte,
     gibibyte, tebibyte, pebibyte, exbibyte, curie, rutherford, radian, degree,
     steradian, angular_mil, atomic_mass_unit, gee, kPa, ampere, u0, c, kelvin,
-    mol, mole, candela, m, kg, s, electric_constant, G, boltzmann, centimeter, millimeter, foot
+    mol, mole, candela, m, kg, s, electric_constant, G, boltzmann
 )
 from sympy.physics.units.prefixes import PREFIXES, prefix_unit
 from sympy.physics.units.systems.mksa import MKSA, dimsys_MKSA
