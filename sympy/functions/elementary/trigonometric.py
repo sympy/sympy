@@ -2319,10 +2319,10 @@ class acos(InverseTrigonometricFunction):
     r"""
     The inverse cosine function.
 
-    Returns the arc cosine of x (measured in radians).
+    Explanation
+    ===========
 
-    Examples
-    ========
+    Returns the arc cosine of x (measured in radians).
 
     ``acos(x)`` will evaluate automatically in the cases
     $x \in \{\infty, -\infty, 0, 1, -1\}$ and for some instances when
