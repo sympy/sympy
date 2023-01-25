@@ -2978,11 +2978,9 @@ def latex(expr, **settings):
         ``'ldot'``, ``'dot'``, or ``'times'``.
     order: string, optional
         Any of the supported monomial orderings (currently ``'lex'``,
-        ``'grlex'``, or ``'grevlex'``), ``'old'``, and ``'none'``. This
-        parameter does nothing for `~.Mul` objects. Setting order to ``'old'``
-        uses the compatibility ordering for ``~.Add`` defined in Printer. For
-        very large expressions, set the ``order`` keyword to ``'none'`` if
-        speed is a concern.
+        ``'grlex'``, or ``'grevlex'``), and ``'none'``. This parameter does
+        nothing for `~.Mul` objects. For ery large expressions, set the
+        ``order`` keyword to ``'none'`` if speed is a concern.
     symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.
     root_notation : boolean, optional

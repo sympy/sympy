@@ -5,6 +5,7 @@ from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.dagger import Dagger
@@ -119,7 +120,7 @@ class Commutator(Expr):
 
         # Canonical ordering of arguments
         # The Commutator [A, B] is in canonical form if A < B.
-        if a.compare(b) == 1:
+        if sorted([a, b], key=default_sort_key) != [a, b]:
             return S.NegativeOne*cls(b, a)
 
     def _expand_pow(self, A, B, sign):

@@ -1239,10 +1239,10 @@ def gate_sort(circuit):
                 first_base, first_exp = circ_array[i].as_base_exp()
                 second_base, second_exp = circ_array[i + 1].as_base_exp()
 
-                # Use SymPy's hash based sorting. This is not mathematical
-                # sorting, but is rather based on comparing hashes of objects.
-                # See Basic.compare for details.
-                if first_base.compare(second_base) > 0:
+                # Use sympy's canonical sorting. This is not mathematical
+                # sorting, but an arbitrary canonical sorting of the
+                # expression trees.
+                if sorted([first_base, second_base], key=default_sort_key) != [first_base, second_base]:
                     if Commutator(first_base, second_base).doit() == 0:
                         new_args = (circuit.args[:i] + (circuit.args[i + 1],) +
                                    (circuit.args[i],) + circuit.args[i + 2:])
