@@ -110,12 +110,11 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
     >>> thiele([1, 2, 5, 6], [10, 12, 11, 13])
     (9*x**2 + 29*x - 238)/(8*x - 28)
 
-    >>> from sympy import sympify
-    >>> one = sympify(1)
-    >>> thiele([1, 2, 3, 4], [one, one/2, one/3, one/4])
+    >>> from sympy import S
+    >>> thiele([1, 2, 3, 4], [S.One, S.One/2, S.One/3, S.One/4])
     1/x
 
-    >>> thiele([1, 2, 3, 4], [one, one/4, one/9, one/16])
+    >>> thiele([1, 2, 3, 4], [S.One, S.One/4, S.One/9, S.One/16])
     (x**2 - 10*x + 35)/(50*x - 24)
 
     See Also
@@ -126,7 +125,6 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
     """
     n = len(u)
     assert len(v) == n
-    seterr(divide=True)
     u = [ sympify(e) for e in u ]
     v = [ sympify(e) for e in v ]
     rho = [v, [(u[i]-u[i+1])/(v[i]-v[i+1]) for i in range(n-1)]]
