@@ -607,7 +607,9 @@ def register_handler(key, handler):
 
 def remove_handler(key, handler):
     """
-    Removes a handler from the ask system. Same syntax as register_handler
+    Removes a handler from the ask system.
+
+    Same syntax as register_handler
 
     .. deprecated:: 1.8.
         Use multipledispatch handler instead. See :obj:`~.Predicate`.

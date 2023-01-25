@@ -1632,7 +1632,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return (rv, mapping) if map else rv
 
     def find(self, query, group=False):
-        """Find all subexpressions matching a query. """
+        """Find all subexpressions matching a query."""
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
 
@@ -1650,7 +1650,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return groups
 
     def count(self, query):
-        """Count the number of matching subexpressions. """
+        """Count the number of matching subexpressions."""
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 
@@ -1812,12 +1812,12 @@ class Basic(Printable, metaclass=ManagedProperties):
             return self
 
     def simplify(self, **kwargs):
-        """See the simplify function in sympy.simplify"""
+        """See the simplify function with :func:`sympy.simplify`."""
         from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)
 
     def refine(self, assumption=True):
-        """See the refine function in sympy.assumptions"""
+        """See the refine function with :func:`sympy.assumptions`."""
         from sympy.assumptions.refine import refine
         return refine(self, assumption)
 

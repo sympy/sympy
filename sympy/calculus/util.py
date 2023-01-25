@@ -228,7 +228,7 @@ def function_range(f, symbol, domain):
 def not_empty_in(finset_intersection, *syms):
     """
     Finds the domain of the functions in ``finset_intersection`` in which the
-    ``finite_set`` is not-empty
+    ``finite_set`` is not-empty.
 
     Parameters
     ==========
