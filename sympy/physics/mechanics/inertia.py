@@ -1,5 +1,6 @@
 from sympy.core.backend import sympify
 from sympy.physics.vector import Point, Dyadic, ReferenceFrame
+from collections import namedtuple
 
 __all__ = ['inertia', 'inertia_of_point_mass', 'Inertia']
 
@@ -92,7 +93,7 @@ def inertia_of_point_mass(mass, pos_vec, frame):
                    (pos_vec | pos_vec))
 
 
-class Inertia(tuple):
+class Inertia(namedtuple('Inertia', ['dyadic', 'point'])):
     """Inertia object consisting of a Dyadic and a Point of reference.
 
     Explanation
@@ -134,7 +135,7 @@ class Inertia(tuple):
             raise TypeError('Reference point should be of type Point')
         if not isinstance(dyadic, Dyadic):
             raise TypeError('Inertia value should be expressed as a Dyadic')
-        return super().__new__(cls, (dyadic, point))
+        return super().__new__(cls, dyadic, point)
 
     @classmethod
     def from_inertia_scalars(cls, point, frame, ixx, iyy, izz, ixy=0, iyz=0,
@@ -168,19 +169,6 @@ class Inertia(tuple):
 
         """
         return cls(inertia(frame, ixx, iyy, izz, ixy, iyz, izx), point)
-
-    @property
-    def point(self):
-        """Reference point of the inertia."""
-        return self[1]
-
-    @property
-    def dyadic(self):
-        """Inertia dyadic."""
-        return self[0]
-
-    def __repr__(self):
-        return f'Inertia({self.dyadic}, {self.point})'
 
     def __add__(self, other):
         raise TypeError(f"unsupported operand type(s) for +: "
