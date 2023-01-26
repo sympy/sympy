@@ -67,7 +67,7 @@ the center of mass is given below in the 'Rigid Body' section. The
    >>> A = ReferenceFrame('A')
    >>> P = Point('P')
    >>> Inertia(P, outer(A.x, A.x))
-   Inertia((A.x|A.x), P)
+   ((A.x|A.x), P)
 
 
 Inertia (Dyadics)

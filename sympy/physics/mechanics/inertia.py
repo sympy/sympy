@@ -117,14 +117,14 @@ class Inertia(namedtuple('Inertia', ['dyadic', 'point'])):
     >>> N = ReferenceFrame('N')
     >>> Po = Point('Po')
     >>> Inertia(N.x.outer(N.x) + N.y.outer(N.y) + N.z.outer(N.z), Po)
-    Inertia((N.x|N.x) + (N.y|N.y) + (N.z|N.z), Po)
+    ((N.x|N.x) + (N.y|N.y) + (N.z|N.z), Po)
 
     In the example above the Dyadic was created manually, one can however also
     use the ``inertia`` function for this or the class method ``from_tensor`` as
     shown below.
 
     >>> Inertia.from_inertia_scalars(Po, N, 1, 1, 1)
-    Inertia((N.x|N.x) + (N.y|N.y) + (N.z|N.z), Po)
+    ((N.x|N.x) + (N.y|N.y) + (N.z|N.z), Po)
 
     """
     def __new__(cls, dyadic, point):
