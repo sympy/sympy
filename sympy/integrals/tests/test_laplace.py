@@ -5,7 +5,6 @@ from sympy.core.function import Function, expand_mul
 from sympy.core import EulerGamma, Subs, Derivative, diff
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I, oo, pi
-from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
 from sympy.simplify.simplify import simplify
@@ -13,7 +12,7 @@ from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh, coth, asinh
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import atan, atan2, cos, sin
+from sympy.functions.elementary.trigonometric import atan, cos, sin
 from sympy.functions.special.gamma_functions import lowergamma, gamma
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.zeta_functions import lerchphi
@@ -364,9 +363,11 @@ def test_laplace_transform():
 
 @slow
 def test_inverse_laplace_transform():
+    from sympy.functions.special.delta_functions import DiracDelta
     ILT = inverse_laplace_transform
-    a, b, c, = symbols('a b c', positive=True)
-    t = symbols('t')
+    a, b, c, d = symbols('a b c d', positive=True)
+    r = Symbol('r', real=True)
+    t, z = symbols('t z')
 
     def simp_hyp(expr):
         return factor_terms(expand_mul(expr)).rewrite(sin)
@@ -375,13 +376,14 @@ def test_inverse_laplace_transform():
     assert ILT(1/s, s, t) == Heaviside(t)
     assert ILT(a/(a + s), s, t) == a*exp(-a*t)*Heaviside(t)
     assert ILT(s/(a + s), s, t) == -a*exp(-a*t)*Heaviside(t) + DiracDelta(t)
+    assert ILT((s-a)**(-b), s, t) == t**(b - 1)*exp(a*t)*Heaviside(t)/gamma(b)
     assert ILT((a + s)**(-2), s, t) == t*exp(-a*t)*Heaviside(t)
     assert ILT((a + s)**(-5), s, t) == t**4*exp(-a*t)*Heaviside(t)/24
     assert ILT(a/(a**2 + s**2), s, t) == sin(a*t)*Heaviside(t)
     assert ILT(s/(s**2 + a**2), s, t) == cos(a*t)*Heaviside(t)
     assert ILT(b/(b**2 + (a + s)**2), s, t) == exp(-a*t)*sin(b*t)*Heaviside(t)
-    assert ILT(b*s/(b**2 + (a + s)**2), s, t) +\
-        (a*sin(b*t) - b*cos(b*t))*exp(-a*t)*Heaviside(t) == 0
+    assert ILT(b*s/(b**2 + (a + s)**2), s, t) == \
+        (-a*sin(b*t) + b*cos(b*t))*exp(-a*t)*Heaviside(t)
     assert ILT(exp(-a*s)/s, s, t) == Heaviside(-a + t)
     assert ILT(exp(-a*s)/(b + s), s, t) == exp(b*(a - t))*Heaviside(-a + t)
     assert ILT((b + s)/(a**2 + (b + s)**2), s, t) == \
@@ -396,6 +398,9 @@ def test_inverse_laplace_transform():
     assert ILT(1 - 1/(s**2 + 1), s, t) == -sin(t)*Heaviside(t) + DiracDelta(t)
     assert ILT(1/s**2, s, t) == t*Heaviside(t)
     assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/24
+    # Issue #24424
+    assert ILT((s + 8)/((s + 2)*(s**2 + 2*s + 10)), s, t) ==\
+        ((8*sin(3*t) - 9*cos(3*t))*exp(t) + 9)*exp(-2*t)*Heaviside(t)/15
     assert simp_hyp(ILT(a/(s**2 - a**2), s, t)) == sinh(a*t)*Heaviside(t)
     assert simp_hyp(ILT(s/(s**2 - a**2), s, t)) == cosh(a*t)*Heaviside(t)
     # TODO sinh/cosh shifted come out a mess. also delayed trig is a mess
@@ -419,42 +424,40 @@ def test_inverse_laplace_transform():
 
     assert ILT( (s * eye(2) - Matrix([[1, 0], [0, 2]])).inv(), s, t) ==\
         Matrix([[exp(t)*Heaviside(t), 0], [0, exp(2*t)*Heaviside(t)]])
-
-
-def test_inverse_laplace_transform_delta():
-    from sympy.functions.special.delta_functions import DiracDelta
-    ILT = inverse_laplace_transform
-    t = symbols('t')
+    # New tests for rules
+    assert ILT(b/(s**2-a**2), s, t) == b*sinh(a*t)*Heaviside(t)/a
+    assert ILT(b*s/(s**2-a**2), s, t) == b*cosh(a*t)*Heaviside(t)
+    assert ILT(b/(s*(s+a)), s, t) == b*(exp(a*t) - 1)*exp(-a*t)*Heaviside(t)/a
+    assert ILT(b*s/(s+a)**2, s, t) == b*(-a*t + 1)*exp(-a*t)*Heaviside(t)
+    assert ILT(c/((s+a)*(s+b)), s, t) ==\
+        c*(exp(a*t) - exp(b*t))*exp(-t*(a + b))*Heaviside(t)/(a - b)
+    assert ILT(c*s/((s+a)*(s+b)), s, t) ==\
+        c*(a*exp(b*t) - b*exp(a*t))*exp(-t*(a + b))*Heaviside(t)/(a - b)
+    assert ILT(c*s/(d**2*(s+a)**2+b**2), s, t) ==\
+        c*(-a*d*sin(b*t/d) + b*cos(b*t/d))*exp(-a*t)*Heaviside(t)/(b*d**2)
+    # Rules for testing different DiracDelta cases
     assert ILT(2, s, t) == 2*DiracDelta(t)
     assert ILT(2*exp(3*s) - 5*exp(-7*s), s, t) == \
-        2*DiracDelta(t + 3) - 5*DiracDelta(t - 7)
+        2*InverseLaplaceTransform(exp(3*s), s, t, None) - 5*DiracDelta(t - 7)
     a = cos(sin(7)/2)
     assert ILT(a*exp(-3*s), s, t) == a*DiracDelta(t - 3)
-    assert ILT(exp(2*s), s, t) == DiracDelta(t + 2)
+    assert ILT(exp(2*s), s, t) == InverseLaplaceTransform(exp(2*s), s, t, None)
     r = Symbol('r', real=True)
-    assert ILT(exp(r*s), s, t) == DiracDelta(t + r)
-
-
-def test_inverse_laplace_transform_delta_cond():
-    from sympy.functions.elementary.complexes import im
-    from sympy.functions.special.delta_functions import DiracDelta
-    ILT = inverse_laplace_transform
-    t = symbols('t')
-    r = Symbol('r', real=True)
-    assert ILT(exp(r*s), s, t, noconds=False) == (DiracDelta(t + r), True)
-    z = Symbol('z')
-    assert ILT(exp(z*s), s, t, noconds=False) == \
-        (DiracDelta(t + z), Eq(im(z), 0))
+    assert ILT(exp(r*s), s, t) == InverseLaplaceTransform(exp(r*s), s, t, None)
+    # Rules from the previous test_inverse_laplace_transform_delta_cond():
+    assert ILT(exp(r*s), s, t, noconds=False) ==\
+        (InverseLaplaceTransform(exp(r*s), s, t, None), True)
     # inversion does not exist: verify it doesn't evaluate to DiracDelta
     for z in (Symbol('z', extended_real=False),
               Symbol('z', imaginary=True, zero=False)):
         f = ILT(exp(z*s), s, t, noconds=False)
         f = f[0] if isinstance(f, tuple) else f
         assert f.func != DiracDelta
-    # issue 15043
-    assert ILT(1/s + exp(r*s)/s, s, t, noconds=False) == (
-        Heaviside(t) + Heaviside(r + t), True)
-
+    # old test for Issue 8514, is not important anymore since this function
+    # is not solved by integration anymore
+    assert ILT(1/(a*s**2+b*s+c),s, t) ==\
+        2*exp(-b*t/(2*a))*sin(t*sqrt(4*a*c - b**2)/(2*a))*\
+            Heaviside(t)/sqrt(4*a*c - b**2)
 
 @slow
 def test_expint():
@@ -478,19 +481,3 @@ def test_expint():
     assert inverse_laplace_transform((s - log(s + 1))/s**2, s,
                 x).rewrite(expint).expand() == \
         (expint(2, x)*Heaviside(x)).rewrite(Ei).rewrite(expint).expand()
-
-
-@slow
-def test_issue_8514():
-    a, b, c, = symbols('a b c', positive=True)
-    t = symbols('t', positive=True)
-    ft = simplify(inverse_laplace_transform(1/(a*s**2+b*s+c),s, t))
-    assert ft == (I*exp(t*cos(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
-                  b**2))/a)*sin(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(
-                  4*a*c - b**2))/(2*a)) + exp(t*cos(atan2(0, -4*a*c + b**2)
-                  /2)*sqrt(Abs(4*a*c - b**2))/a)*cos(t*sin(atan2(0, -4*a*c
-                  + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a)) + I*sin(t*sin(
-                  atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c - b**2))/(2*a))
-                  - cos(t*sin(atan2(0, -4*a*c + b**2)/2)*sqrt(Abs(4*a*c -
-                  b**2))/(2*a)))*exp(-t*(b + cos(atan2(0, -4*a*c + b**2)/2)
-                  *sqrt(Abs(4*a*c - b**2)))/(2*a))/sqrt(-4*a*c + b**2)

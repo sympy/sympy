@@ -1,6 +1,7 @@
 """Laplace Transforms"""
 from sympy.core import S, pi, I
 from sympy.core.add import Add
+from sympy.core.cache import cacheit
 from sympy.core.function import (
     AppliedUndef, Derivative, expand, expand_complex, expand_mul, expand_trig,
     Lambda, WildFunction, diff)
@@ -21,10 +22,11 @@ from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.special.gamma_functions import digamma, gamma, lowergamma
 from sympy.integrals import integrate, Integral
 from sympy.integrals.transforms import (
-    _simplify, _noconds_, IntegralTransform, IntegralTransformError)
+    _simplify, IntegralTransform, IntegralTransformError)
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.matrices.matrices import MatrixBase
 from sympy.polys.matrices.linsolve import _lin_eq2dict
+from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly
 from sympy.polys.rationaltools import together
@@ -266,7 +268,8 @@ def _laplace_deep_collect(f, t):
             return func(*args)
 
 
-def _laplace_build_rules(t, s):
+@cacheit
+def _laplace_build_rules():
     """
     This is an internal helper function that returns the table of Laplace
     transform rules in terms of the time variable `t` and the frequency
@@ -283,12 +286,16 @@ def _laplace_build_rules(t, s):
     to the expression before matching. For most rules it should be
     ``_laplace_deep_collect``.
     """
+    t = Dummy('t')
+    s = Dummy('s')
     a = Wild('a', exclude=[t])
     b = Wild('b', exclude=[t])
     n = Wild('n', exclude=[t])
     tau = Wild('tau', exclude=[t])
     omega = Wild('omega', exclude=[t])
     dco = lambda f: _laplace_deep_collect(f, t)
+    debug('_laplace_build_rules is building rules')
+
     laplace_transform_rules = [
     (a, a/s,
      S.true, S.Zero, dco), # 4.2.1
@@ -463,7 +470,7 @@ def _laplace_build_rules(t, s):
     (besselk(0, a*t), log((s + sqrt(s**2-a**2))/a)/(sqrt(s**2-a**2)),
      S.true, -re(a), dco) # 4.16.23
     ]
-    return laplace_transform_rules
+    return laplace_transform_rules, t, s
 
 
 def _laplace_rule_timescale(f, t, s):
@@ -755,12 +762,12 @@ def _laplace_apply_simple_rules(f, t, s):
     This function applies all simple rules and returns the result if one
     of them gives a result.
     """
-    simple_rules = _laplace_build_rules(t, s)
+    simple_rules, t_, s_ = _laplace_build_rules()
     prep_old = ''
     prep_f = ''
     for t_dom, s_dom, check, plane, prep in simple_rules:
-        if not prep_old==prep:
-            prep_f = prep(f)
+        if not prep_old == prep:
+            prep_f = prep(f.subs({t: t_}))
             prep_old = prep
         ma = prep_f.match(t_dom)
         if ma:
@@ -775,7 +782,8 @@ def _laplace_apply_simple_rules(f, t, s):
                 debug('      f:     %s'%(f,))
                 debug('      rule:  %s o---o %s'%(t_dom, s_dom))
                 debug('      match: %s'%(ma, ))
-                return (s_dom.xreplace(ma), plane.xreplace(ma), c)
+                return (s_dom.xreplace(ma).subs({s_: s}),
+                        plane.xreplace(ma), S.true)
     return None
 
 
@@ -868,7 +876,7 @@ class LaplaceTransform(IntegralTransform):
 
         Standard hints are the following:
         - ``noconds``:  if True, do not return convergence conditions. The
-        default setting is `False`.
+        default setting is `True`.
         - ``simplify``: if True, it simplifies the final result. This is the
         default behaviour
         """
@@ -1006,8 +1014,7 @@ behavior.
         return LT[0]
 
 
-@_noconds_(True)
-def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
+def _inverse_laplace_transform_integration(F, s, t_, plane, simplify=True):
     """ The backend function for inverse Laplace transforms. """
     from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
     from sympy.integrals.transforms import inverse_mellin_transform
@@ -1034,7 +1041,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         F = F.apart(s)
 
     if F.is_Add:
-        f = Add(*[_inverse_laplace_transform(X, s, t, plane, simplify)\
+        f = Add(*[_inverse_laplace_transform_integration(X, s, t, plane, simplify)\
                      for X in F.args])
         return _simplify(f.subs(t, t_), simplify), True
 
@@ -1089,6 +1096,246 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     return _simplify(f.subs(t, t_), simplify), cond
 
 
+def _complete_the_square_in_denom(f, s):
+    from sympy.simplify.radsimp import fraction
+    [n, d] = fraction(f)
+    if d.is_polynomial(s):
+        cf = d.as_poly(s).all_coeffs()
+        if len(cf)==3:
+            a, b, c = cf
+            d = a*((s+b/(2*a))**2+c/a-(b/(2*a))**2)
+    return n/d
+
+
+@cacheit
+def _inverse_laplace_build_rules():
+    """
+    This is an internal helper function that returns the table of inverse
+    Laplace transform rules in terms of the time variable `t` and the
+    frequency variable `s`.  It is used by `_inverse_laplace_apply_rules`.
+    """
+    s = Dummy('s')
+    t = Dummy('t')
+    a = Wild('a', exclude=[s])
+    b = Wild('b', exclude=[s])
+    c = Wild('c', exclude=[s])
+
+    debug('_inverse_laplace_build_rules is building rules')
+    def _frac(f, s):
+        try:
+            return f.factor(s)
+        except PolynomialError:
+            return f
+    same = lambda f: f
+    # This list is sorted according to the prep function needed.
+    _ILT_rules = [
+        (a/s, a, S.true, same, 1),
+        (b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c), c>0, same, 1),
+    ]
+    return _ILT_rules, s, t
+
+
+def _inverse_laplace_apply_simple_rules(f, s, t):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    if f==1:
+        debug('_inverse_laplace_apply_simple_rules match:')
+        debug('      f:    %s'%(1,))
+        debug('      rule: 1 o---o DiracDelta(%s)'%(t,))
+        return DiracDelta(t), S.true
+
+    _ILT_rules, s_, t_ = _inverse_laplace_build_rules()
+    _prep = ''
+    fsubs = f.subs({s: s_})
+
+    for s_dom, t_dom, check, prep, fac in _ILT_rules:
+        if not _prep == (prep, fac):
+            _F = prep(fsubs*fac)
+            _prep = (prep, fac)
+        ma = _F.match(s_dom)
+        if ma:
+            try:
+                c = check.xreplace(ma)
+            except TypeError:
+                continue
+            if c:
+                debug('_inverse_laplace_apply_simple_rules match:')
+                debug('      f:    %s'%(f,))
+                debug('      rule: %s o---o %s'%(s_dom, t_dom))
+                debug('      ma:   %s'%(ma,))
+                return Heaviside(t)*t_dom.xreplace(ma).subs({t_: t}), S.true
+    return None
+
+
+def _inverse_laplace_time_shift(F, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    a = Wild('a', exclude=[s])
+    g = Wild('g')
+
+    if not F.has(s):
+        return F*DiracDelta(t), S.true
+    ma1 = F.match(exp(a*s))
+    if ma1:
+        if ma1[a].is_negative:
+            debug('_inverse_laplace_time_shift match:')
+            debug('      f:    %s'%(F,))
+            debug('      rule: exp(-a*s) o---o DiracDelta(t-a)')
+            debug('      ma:   %s'%(ma1,))
+            return DiracDelta(t+ma1[a]), S.true
+        else:
+            debug('_inverse_laplace_time_shift match: negative time shift')
+            return InverseLaplaceTransform(F, s, t, plane), S.true
+
+    ma1 = F.match(exp(a*s)*g)
+    if ma1:
+        if ma1[a].is_negative:
+            debug('_inverse_laplace_time_shift match:')
+            debug('      f:    %s'%(F,))
+            debug('      rule: exp(-a*s)*F(s) o---o Heaviside(t-a)*f(t-a)')
+            debug('      ma:   %s'%(ma1,))
+            return _inverse_laplace_transform(ma1[g], s, t+ma1[a], plane)
+        else:
+            debug('_inverse_laplace_time_shift match: negative time shift')
+            return InverseLaplaceTransform(F, s, t, plane), S.true
+    return None
+
+
+def _inverse_laplace_apply_prog_rules(F, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    prog_rules = [_inverse_laplace_time_shift]
+
+    for p_rule in prog_rules:
+        if (r := p_rule(F, s, t, plane)) is not None:
+            return r
+    return None
+
+
+def _inverse_laplace_expand(fn, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    if fn.is_Add:
+        return None
+    r = expand(fn, deep=False)
+    if r.is_Add:
+        return _inverse_laplace_transform(r, s, t, plane)
+    r = expand_mul(fn)
+    if r.is_Add:
+        return _inverse_laplace_transform(r, s, t, plane)
+    r = expand(fn)
+    if r.is_Add:
+        return _inverse_laplace_transform(r, s, t, plane)
+    if fn.is_rational_function(s):
+        r = fn.apart(s).doit()
+    if r.is_Add:
+        return _inverse_laplace_transform(r, s, t, plane)
+    return None
+
+
+def _inverse_laplace_rational(fn, s, t, plane, simplify):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    debug('[ILT _i_l_r] (%s, %s, %s)'%(fn, s, t))
+    x_ = symbols('x_')
+    f = fn.apart(s)
+    terms = Add.make_args(f)
+    terms_t = []
+    conditions = [S.true]
+    for term in terms:
+        [n, d] = term.as_numer_denom()
+        dc = d.as_poly(s).all_coeffs()
+        dc_lead = dc[0]
+        dc = [ x/dc_lead for x in dc ]
+        nc = [ x/dc_lead for x in n.as_poly(s).all_coeffs() ]
+        if len(dc)==1:
+            r = nc[0]*DiracDelta(t)
+            terms_t.append(r)
+        elif len(dc)==2:
+            r = nc[0]*exp(-dc[1]*t)
+            terms_t.append(Heaviside(t)*r)
+        elif len(dc)==3:
+            a = dc[1]/2
+            b = (dc[2]-a**2).factor()
+            if len(nc)==1:
+                nc = [S.Zero] + nc
+            l, m = tuple(nc)
+            if b==0:
+                r = (m*t+l*(1-a*t))*exp(-a*t)
+            else:
+                hyp = False
+                if b.is_negative:
+                    b=-b
+                    hyp = True
+                b2 = list(roots(x_**2-b, x_).keys())[0]
+                bs = sqrt(b).simplify()
+                if hyp:
+                    r = l*exp(-a*t)*cosh(b2*t) + (m-a*l)/bs*exp(-a*t)*sinh(bs*t)
+                else:
+                    r = l*exp(-a*t)*cos(b2*t) + (m-a*l)/bs*exp(-a*t)*sin(bs*t)
+            terms_t.append(Heaviside(t)*r)
+        else:
+            ft, cond = _inverse_laplace_transform(fn, s, t, plane,
+                                               simplify=True, dorational=False)
+            terms_t.append(ft)
+            conditions.append(cond)
+
+    result = Add(*terms_t)
+    if simplify:
+        result = result.simplify(doit=False)
+    debug('[ILT _i_l_r]   returns %s'%(result,))
+    return result, And(*conditions)
+
+
+def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True, dorational=True):
+    """
+    Front-end function of the inverse Laplace transform. It tries to apply all
+    known rules recursively.  If everything else fails, it tries to integrate.
+    """
+    terms = Add.make_args(fn)
+    terms_t = []
+    conditions = []
+
+    debug('[ILT _i_l_t] (%s, %s, %s)'%(fn, s_, t_))
+
+    for term in terms:
+        k, f = term.as_independent(s_, as_Add=False)
+        if dorational and term.is_rational_function(s_) and \
+            (r := _inverse_laplace_rational(f, s_, t_, plane, simplify)) is not None:
+            pass
+        elif (r := _inverse_laplace_apply_simple_rules(f, s_, t_)) is not None:
+            pass
+        elif (r := _inverse_laplace_apply_prog_rules(f, s_, t_, plane)) is not None:
+            pass
+        elif (r := _inverse_laplace_expand(f, s_, t_, plane)) is not None:
+            pass
+        elif any(undef.has(s_) for undef in f.atoms(AppliedUndef)):
+            # If there are undefined functions f(t) then integration is
+            # unlikely to do anything useful so we skip it and given an
+            # unevaluated LaplaceTransform.
+            r = (InverseLaplaceTransform(f, s_, t_, plane), S.true)
+        elif (r := _inverse_laplace_transform_integration(f, s_, t_, plane,
+                                      simplify=simplify)) is not None:
+            pass
+        else:
+            r = (InverseLaplaceTransform(f, s_, t_, plane), S.true)
+        (ri_, ci_) = r
+        terms_t.append(k*ri_)
+        conditions.append(ci_)
+
+    result = Add(*terms_t)
+    if simplify:
+        result = result.simplify(doit=False)
+    condition = And(*conditions)
+
+    return result, condition
+
+
 class InverseLaplaceTransform(IntegralTransform):
     """
     Class representing unevaluated inverse Laplace transforms.
@@ -1116,12 +1363,45 @@ class InverseLaplaceTransform(IntegralTransform):
         return plane
 
     def _compute_transform(self, F, s, t, **hints):
-        return _inverse_laplace_transform(F, s, t, self.fundamental_plane, **hints)
+        return _inverse_laplace_transform_integration(F, s, t,
+                                            self.fundamental_plane, **hints)
 
     def _as_integral(self, F, s, t):
         c = self.__class__._c
         return Integral(exp(s*t)*F, (s, c - S.ImaginaryUnit*S.Infinity,
-                                     c + S.ImaginaryUnit*S.Infinity))/(2*S.Pi*S.ImaginaryUnit)
+                    c + S.ImaginaryUnit*S.Infinity))/(2*S.Pi*S.ImaginaryUnit)
+
+    def doit(self, **hints):
+        """
+        Try to evaluate the transform in closed form.
+
+        Explanation
+        ===========
+
+        Standard hints are the following:
+        - ``noconds``:  if True, do not return convergence conditions. The
+        default setting is `True`.
+        - ``simplify``: if True, it simplifies the final result. This is the
+        default behaviour
+        """
+        _noconds = hints.get('noconds', True)
+        _simplify = hints.get('simplify', True)
+
+        debug('[ILT doit] (%s, %s, %s)'%(self.function,
+                                         self.function_variable,
+                                         self.transform_variable))
+
+        s_ = self.function_variable
+        t_ = self.transform_variable
+        fn = self.function
+        plane = self.fundamental_plane
+
+        r = _inverse_laplace_transform(fn, s_, t_, plane, simplify=_simplify)
+
+        if _noconds:
+            return r[0]
+        else:
+            return r
 
 
 def inverse_laplace_transform(F, s, t, plane=None, **hints):
