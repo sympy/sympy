@@ -306,3 +306,7 @@ There are many disadvantages to using strings:
 ### Avoid Too Much Automatic Evaluation
 
 ### Don't Denest Collections
+
+### Don't Store Attributes in `.args`
+
+### Don't Overwrite `__eq__`
