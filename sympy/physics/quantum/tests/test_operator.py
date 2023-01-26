@@ -234,6 +234,7 @@ def test_differential_operator():
 
 
 def test_eval_power():
+    from sympy import Pow
     O = Operator('O')
     U = UnitaryOperator('U')
     H = HermitianOperator('H')
