@@ -1828,7 +1828,9 @@ def test_issues_6819_6820_6821_6248_8692():
 def test_issue_17638():
 
     assert solve(((2-exp(2*x))*exp(x))/(exp(2*x)+2)**2 > 0, x) == (-oo < x) & (x < log(2)/2)
-    assert solve(exp(x-2)-(2*exp(x)) > 0, x) == False
+    assert solve(((2-exp(2*x)+2)*exp(x+2))/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < log(4)/2)
+    assert solve((exp(x)+2+x**2)*exp(2*x+2)/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < oo)
+
 
 
 def test_issue_14607():
