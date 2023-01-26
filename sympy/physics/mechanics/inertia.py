@@ -126,7 +126,7 @@ class Inertia(tuple):
     Inertia((N.x|N.x) + (N.y|N.y) + (N.z|N.z), Po)
 
     """
-    def __new__(cls, point, dyadic):
+    def __new__(cls, dyadic, point):
         # Switch order if given in the wrong order
         if isinstance(dyadic, Point) and isinstance(point, Dyadic):
             point, dyadic = dyadic, point
