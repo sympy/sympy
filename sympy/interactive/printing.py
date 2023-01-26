@@ -344,10 +344,10 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         printer.
     order : string or None, default='lex'
         There are a few different settings for this parameter:
+        ``'none'``, which does not attempt to order the expressions;
         ``'lex'`` (default), which is lexographic order;
         ``'grlex'``, which is graded lexographic order;
         ``'grevlex'``, which is reversed graded lexographic order;
-        ``'none'``, which does not attempt to order the expressions;
         ``None``, which sets it to lex.
     use_unicode : bool or None, default=None
         If ``True``, use unicode characters;
@@ -431,18 +431,18 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     >>> init_printing(use_unicode=False) # doctest: +SKIP
     >>> theta # doctest: +SKIP
     theta
-    >>> init_printing(order='lex') # doctest: +SKIP
-    >>> str(y + x + y**2 + x**2) # doctest: +SKIP
+    >>> init_printing(order='none', pretty_print=False) # doctest: +SKIP
+    >>> x**2 + y**2 + x + y # doctest: +SKIP
+    x + y + x**2 + y**2
+    >>> init_printing(order='lex', pretty_print=False) # doctest: +SKIP
+    >>> y + x + y**2 + x**2 # doctest: +SKIP
     x**2 + x + y**2 + y
-    >>> init_printing(order='grlex') # doctest: +SKIP
-    >>> str(y + x + y**2 + x**2) # doctest: +SKIP
-    x**2 + x + y**2 + y
-    >>> init_printing(order='grevlex') # doctest: +SKIP
-    >>> str(y * x**2 + x * y**2) # doctest: +SKIP
+    >>> init_printing(order='grlex', pretty_print=False) # doctest: +SKIP
+    >>> y + x + y**2 + x**2 # doctest: +SKIP
+    x**2 + y**2 + x + y
+    >>> init_printing(order='grevlex', pretty_print=False) # doctest: +SKIP
+    >>> y * x**2 + x * y**2 # doctest: +SKIP
     x**2*y + x*y**2
-    >>> init_printing(order='none') # doctest: +SKIP
-    >>> str(x**2 + y**2 + x + y) # doctest: +SKIP
-    x**2 + x + y**2 + y
     >>> init_printing(num_columns=10) # doctest: +SKIP
     >>> x**2 + x + y**2 + y # doctest: +SKIP
     x + y +

@@ -376,15 +376,15 @@ def init_session(ipython=None, pretty_print=True, order=None,
     sqrt(5)
     >>> y + x + y**2 + x**2 #doctest: +SKIP
     x**2 + x + y**2 + y
+    >>> init_session(order='none') # doctest: +SKIP
+    >>> x**2 + y**2 + x + y #doctest: +SKIP
+    x + y + x**2 + y**2
     >>> init_session(order='grlex') #doctest: +SKIP
     >>> y + x + y**2 + x**2 #doctest: +SKIP
     x**2 + y**2 + x + y
     >>> init_session(order='grevlex') #doctest: +SKIP
     >>> y * x**2 + x * y**2 #doctest: +SKIP
     x**2*y + x*y**2
-    >>> init_session(order='none') # doctest: +SKIP
-    >>> x**2 + y**2 + x + y #doctest: +SKIP
-    x**2 + x + y**2 + y
     >>> theta = Symbol('theta') #doctest: +SKIP
     >>> theta #doctest: +SKIP
     theta
