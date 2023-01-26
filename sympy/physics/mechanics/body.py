@@ -115,8 +115,8 @@ class Body(RigidBody, Particle):  # type: ignore
             izx = Symbol(name + '_izx')
             ixy = Symbol(name + '_ixy')
             iyz = Symbol(name + '_iyz')
-            _inertia = Inertia.from_tensor(masscenter, frame, ixx, iyy, izz,
-                                           ixy, iyz, izx)
+            _inertia = Inertia.from_inertia_scalars(masscenter, frame, ixx, iyy, izz,
+                                                    ixy, iyz, izx)
         else:
             _inertia = (central_inertia, masscenter)
 

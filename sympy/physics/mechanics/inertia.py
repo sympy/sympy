@@ -122,7 +122,7 @@ class Inertia:
     use the ``inertia`` function for this or the class method ``from_tensor`` as
     shown below.
 
-    >>> Inertia.from_tensor(Po, N, 1, 1, 1)
+    >>> Inertia.from_inertia_scalars(Po, N, 1, 1, 1)
     Inertia((N.x|N.x) + (N.y|N.y) + (N.z|N.z), Po)
 
     """
@@ -138,7 +138,8 @@ class Inertia:
         self._point = point
 
     @classmethod
-    def from_tensor(cls, point, frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
+    def from_inertia_scalars(cls, point, frame, ixx, iyy, izz, ixy=0, iyz=0,
+                             izx=0):
         """Simple way to create an Inertia object based on the tensor values.
 
         Explanation
@@ -155,7 +156,7 @@ class Inertia:
         >>> ixx, iyy, izz, ixy, iyz, izx = symbols('ixx iyy izz ixy iyz izx')
         >>> N = ReferenceFrame('N')
         >>> P = Point('P')
-        >>> I = Inertia.from_tensor(P, N, ixx, iyy, izz, ixy, iyz, izx)
+        >>> I = Inertia.from_inertia_scalars(P, N, ixx, iyy, izz, ixy, iyz, izx)
 
         The tensor values can easily be seen when converting the dyadic to a
         matrix.
@@ -171,10 +172,12 @@ class Inertia:
 
     @property
     def point(self):
+        """Reference point of the inertia."""
         return self._point
 
     @property
     def dyadic(self):
+        """Inertia dyadic."""
         return self._dyadic
 
     def __repr__(self):

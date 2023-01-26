@@ -62,4 +62,4 @@ def test_inertia_object():
     assert I == (I_dyadic, O)  # Test tuple equal
     raises(TypeError, lambda: I != (O, I_dyadic))  # Incorrect tuple order
     assert I == Inertia(O, I_dyadic)  # Parse changed argument order
-    assert I == Inertia.from_tensor(O, N, ixx, iyy, izz)
+    assert I == Inertia.from_inertia_scalars(O, N, ixx, iyy, izz)

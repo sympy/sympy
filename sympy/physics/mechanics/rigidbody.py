@@ -66,8 +66,8 @@ class RigidBody(BodyBase):
             izx = Symbol(f'{name}_izx')
             ixy = Symbol(f'{name}_ixy')
             iyz = Symbol(f'{name}_iyz')
-            inertia = Inertia.from_tensor(self.masscenter, self.frame, ixx, iyy,
-                                          izz, ixy, iyz, izx)
+            inertia = Inertia.from_inertia_scalars(self.masscenter, self.frame, ixx, iyy,
+                                                   izz, ixy, iyz, izx)
         self.inertia = inertia
 
     def __repr__(self):
