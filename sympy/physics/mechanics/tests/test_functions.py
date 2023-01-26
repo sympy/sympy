@@ -8,7 +8,7 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
 
 from sympy.physics.mechanics.functions import (gravity, center_of_mass,
                                                _validate_coordinates)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -233,3 +233,14 @@ def test_validate_coordinates():
     _validate_coordinates([s1 + s2 + s3, q1], [0, u1], is_dynamicsymbols=False)
     raises(ValueError, lambda: _validate_coordinates(
         [s1 + s2 + s3, q1], [0, u1], is_dynamicsymbols=True))
+
+
+def test_deprecated_moved_functions():
+    from sympy.physics.mechanics.functions import inertia, inertia_of_point_mass
+    N = ReferenceFrame('N')
+    with warns_deprecated_sympy():
+        assert inertia(N, 0, 1, 0, 1) == (N.x | N.y) + (N.y | N.x) + (N.y | N.y)
+    with warns_deprecated_sympy():
+        assert inertia_of_point_mass(1, N.x + N.y, N) == (
+            (N.x | N.x) + (N.y | N.y) + 2 * (N.z | N.z) -
+            (N.x | N.y) - (N.y | N.x))

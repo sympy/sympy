@@ -9,6 +9,9 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.simplify.simplify import simplify
 from sympy.core.backend import (Matrix, Mul, Derivative, sin, cos, tan,
                                 AppliedUndef, S)
+from sympy.physics.mechanics.inertia import (inertia as _inertia,
+    inertia_of_point_mass as _inertia_of_point_mass)
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['linear_momentum',
            'angular_momentum',
@@ -42,6 +45,30 @@ def mechanics_printing(**kwargs):
 
 
 mechanics_printing.__doc__ = init_vprinting.__doc__
+
+
+def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
+    sympy_deprecation_warning(
+        """
+        The inertia function has been moved.
+        Import it from "sympy.physics.mechanics".
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target="moved-mechanics-functions"
+    )
+    return _inertia(frame, ixx, iyy, izz, ixy, iyz, izx)
+
+
+def inertia_of_point_mass(mass, pos_vec, frame):
+    sympy_deprecation_warning(
+        """
+        The inertia_of_point_mass function has been moved.
+        Import it from "sympy.physics.mechanics".
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target="moved-mechanics-functions"
+    )
+    return _inertia_of_point_mass(mass, pos_vec, frame)
 
 
 def linear_momentum(frame, *body):
