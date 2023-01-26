@@ -1,4 +1,3 @@
-import warnings
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.relational import is_eq
@@ -554,7 +553,6 @@ class Quaternion(Expr):
                 angles[2] = atan2(b*c - a*d, a*c + b*d)
 
         else:  # any degenerate case
-            warnings.warn('Singularity case, setting third angle to zero')
             angles[2 * (not extrinsic)] = sympify(0)
             if case == 1:
                 angles[2 * extrinsic] = 2 * atan2(b, a)

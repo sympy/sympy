@@ -12,7 +12,7 @@ from sympy.matrices.dense import Matrix
 from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
-from sympy.testing.pytest import raises, warns
+from sympy.testing.pytest import raises
 from itertools import permutations, product
 
 w, x, y, z = symbols('w:z')
@@ -339,16 +339,14 @@ def test_to_euler_iss24504():
     See issue 24504 for reference.
     """
     q = Quaternion.from_euler((phi, 0, 0), 'zyz')
-    with warns(UserWarning, match='Singularity', test_stacklevel=False):
-        assert trigsimp(q.to_euler('zyz'), inverse=True) == (phi, 0, 0)
+    assert trigsimp(q.to_euler('zyz'), inverse=True) == (phi, 0, 0)
 
 
 def test_to_euler_numerical_singilarities():
 
     def test_one_case(angles, seq):
         q = Quaternion.from_euler(angles, seq)
-        with warns(UserWarning, match='Singularity', test_stacklevel=False):
-            assert q.to_euler(seq) == angles
+        assert q.to_euler(seq) == angles
 
     # symmetric
     test_one_case((pi/2,  0, 0), 'zyz')
