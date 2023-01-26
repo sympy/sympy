@@ -193,7 +193,7 @@ class Add(Expr, AssocOp):
 
         NB: the removal of 0 is already handled by AssocOp.__new__
 
-        See also
+        See Also
         ========
 
         sympy.core.mul.Mul.flatten

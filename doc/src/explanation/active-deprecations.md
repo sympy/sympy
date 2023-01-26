@@ -1187,14 +1187,6 @@ The `max_degree` property and `get_upper_degree()` methods of `DixonResultant`
 are deprecated. See issue [#17749](https://github.com/sympy/sympy/pull/17749)
 for details.
 
-(deprecated-eq-expr)=
-### `Eq(expr)` with the rhs defaulting to 0
-
-Calling [`Eq`](sympy.core.relational.Equality) with a single argument is
-deprecated. This caused the right-hand side to default to `0`, but this
-behavior was confusing. You should explicitly use `Eq(expr, 0)` instead.
-
-
 (deprecated-non-tuple-lambda)=
 ### Non-tuple iterable for the first argument to `Lambda`
 
@@ -1243,54 +1235,3 @@ design flaw and not consistent with how the rest of SymPy works.
 
 Instead, the {meth}`.TensExpr.replace_with_arrays` method should be
 used.
-
-(deprecated-matrix-is_diagonalizable-cache)=
-### The `clear_cache` and `clear_subproducts` keywords to `Matrix.is_diagonalizable`
-
-The `clear_cache` and `clear_subproducts` keywords to
-[`Matrix.is_diagonalizable()`](sympy.matrices.matrices.MatrixEigen.is_diagonalizable)
-are deprecated. These used to clear cached entries, but this cache was removed
-because it was not actually safe given that `Matrix` is mutable. The keywords
-now do nothing.
-
-(deprecated-matrix-jordan_block-rows-cols)=
-### The `rows` and `cols` keyword arguments to `Matrix.jordan_block`
-
-The `rows` and `cols` keywords to
-[`Matrix.jordan_block`](sympy.matrices.common.MatrixCommon.jordan_block) are
-deprecated. The `size` parameter should be used to specify the (square) number
-of rows and columns.
-
-The non-square matrices created by setting `rows` and `cols` are not
-mathematically Jordan block matrices, which only make sense as square
-matrices.
-
-To emulate the deprecated `jordan_block(rows=n, cols=m)` behavior, use a
-general banded matrix constructor, like
-
-```py
->>> from sympy import Matrix, symbols
->>> eigenvalue = symbols('x')
->>> def entry(i, j):
-...     if i == j:
-...         return eigenvalue
-...     elif i + 1 == j: # use j + 1 == i for band='lower'
-...         return 1
-...     return 0
->>> # the same as the deprecated Matrix.jordan_block(rows=3, cols=5, eigenvalue=x)
->>> Matrix(3, 5, entry)
-Matrix([
-[x, 1, 0, 0, 0],
-[0, x, 1, 0, 0],
-[0, 0, x, 1, 0]])
-```
-
-## Version 1.3
-
-(deprecated-sympy-matrices-classof-a2idx)=
-### Importing `classof` and `a2idx` from `sympy.matrices.matrices`
-
-The functions `sympy.matrices.matrices.classof` and
-`sympy.matrices.matrices.a2idx` were duplicates of the same functions in
-`sympy.matrices.common`. The two functions should be used from the
-`sympy.matrices.common` module instead.

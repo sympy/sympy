@@ -27,7 +27,7 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
-    MatrixSymbol, dotprodsimp)
+    MatrixSymbol, dotprodsimp, rot_ccw_axis1, rot_ccw_axis2, rot_ccw_axis3)
 from sympy.matrices.utilities import _dotprodsimp_state
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -39,6 +39,7 @@ from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
 from sympy.external import import_module
+from sympy.algebras import Quaternion
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
@@ -1586,13 +1587,6 @@ def test_issue_15887():
     a[1, 0] = 0
     raises(MatrixError, lambda: a.diagonalize())
 
-    # Test deprecated cache and kwargs
-    with warns_deprecated_sympy():
-        a.is_diagonalizable(clear_cache=True)
-
-    with warns_deprecated_sympy():
-        a.is_diagonalizable(clear_subproducts=True)
-
 
 def test_jordan_form():
 
@@ -2302,6 +2296,19 @@ def test_rotation_matrices():
     assert rot_axis2(0) == eye(3)
     assert rot_axis3(0) == eye(3)
 
+    # Check left-hand convention
+    # see Issue #24529
+    q1 = Quaternion.from_axis_angle([1, 0, 0], pi / 2)
+    q2 = Quaternion.from_axis_angle([0, 1, 0], pi / 2)
+    q3 = Quaternion.from_axis_angle([0, 0, 1], pi / 2)
+    assert rot_axis1(- pi / 2) == q1.to_rotation_matrix()
+    assert rot_axis2(- pi / 2) == q2.to_rotation_matrix()
+    assert rot_axis3(- pi / 2) == q3.to_rotation_matrix()
+    # Check right-hand convention
+    assert rot_ccw_axis1(+ pi / 2) == q1.to_rotation_matrix()
+    assert rot_ccw_axis2(+ pi / 2) == q2.to_rotation_matrix()
+    assert rot_ccw_axis3(+ pi / 2) == q3.to_rotation_matrix()
+
 
 def test_DeferredVector():
     assert str(DeferredVector("vector")[4]) == "vector[4]"
@@ -2992,17 +2999,6 @@ def test_issue_19809():
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(f)
             assert future.result()
-
-def test_deprecated_classof_a2idx():
-    with warns_deprecated_sympy():
-        from sympy.matrices.matrices import classof
-        M = Matrix([[1, 2], [3, 4]])
-        IM = ImmutableMatrix([[1, 2], [3, 4]])
-        assert classof(M, IM) == ImmutableDenseMatrix
-
-    with warns_deprecated_sympy():
-        from sympy.matrices.matrices import a2idx
-        assert a2idx(-1, 3) == 2
 
 
 def test_issue_23276():

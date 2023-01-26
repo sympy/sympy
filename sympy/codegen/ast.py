@@ -678,9 +678,6 @@ class CodeBlock(CodegenAST):
         This is a class constructor so that the default constructor for
         CodeBlock can error when variables are used before they are assigned.
 
-        Examples
-        ========
-
         >>> from sympy import symbols
         >>> from sympy.codegen.ast import CodeBlock, Assignment
         >>> x, y, z = symbols('x y z')

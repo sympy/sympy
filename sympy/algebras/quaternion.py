@@ -539,13 +539,11 @@ class Quaternion(Expr):
             angles[1] = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
 
         # Check for singularities in numerical cases
-        angle_test = angles[1]
         case = 0
-        if angle_test.is_number:
-            if is_eq(angle_test, S.Zero):
-                case = 1
-            if is_eq(angle_test, S.Pi):
-                case = 2
+        if is_eq(c, S.Zero) and is_eq(d, S.Zero):
+            case = 1
+        if is_eq(a, S.Zero) and is_eq(b, S.Zero):
+            case = 2
 
         if case == 0:
             if angle_addition:
@@ -1221,21 +1219,6 @@ class Quaternion(Expr):
 
         Generates a 4x4 transformation matrix (used for rotation about a point
         other than the origin) if the point(v) is passed as an argument.
-
-        Examples
-        ========
-
-        >>> from sympy import Quaternion
-        >>> from sympy import symbols, trigsimp, cos, sin
-        >>> x = symbols('x')
-        >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
-        >>> trigsimp(q.to_rotation_matrix((1, 1, 1)))
-         Matrix([
-        [cos(x), -sin(x), 0,  sin(x) - cos(x) + 1],
-        [sin(x),  cos(x), 0, -sin(x) - cos(x) + 1],
-        [     0,       0, 1,                    0],
-        [     0,       0, 0,                    1]])
-
         """
 
         q = self

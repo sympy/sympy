@@ -1307,6 +1307,12 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     True then permutations of the base solution and/or permutations of the
     signs of the values will be returned when applicable.
 
+    Details
+    =======
+
+    ``eq`` should be an expression which is assumed to be zero.
+    ``t`` is the parameter to be used in the solution.
+
     Examples
     ========
 
@@ -1317,15 +1323,6 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     {(2, 3)}
     >>> diophantine(eq, permute=True)
     {(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)}
-
-    Details
-    =======
-
-    ``eq`` should be an expression which is assumed to be zero.
-    ``t`` is the parameter to be used in the solution.
-
-    Examples
-    ========
 
     >>> from sympy.abc import x, y, z
     >>> diophantine(x**2 - y**2)
@@ -1339,7 +1336,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     See Also
     ========
 
-    diop_solve()
+    diop_solve
     sympy.utilities.iterables.permute_signs
     sympy.utilities.iterables.signed_permutations
     """

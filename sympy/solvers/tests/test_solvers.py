@@ -1825,6 +1825,13 @@ def test_issues_6819_6820_6821_6248_8692():
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
 
+def test_issue_17638():
+
+    assert solve(((2-exp(2*x))*exp(x))/(exp(2*x)+2)**2 > 0, x) == (-oo < x) & (x < log(2)/2)
+    assert solve(((2-exp(2*x)+2)*exp(x+2))/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < log(4)/2)
+    assert solve((exp(x)+2+x**2)*exp(2*x+2)/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < oo)
+
+
 
 def test_issue_14607():
     # issue 14607

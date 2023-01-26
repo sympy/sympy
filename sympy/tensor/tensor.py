@@ -2481,29 +2481,16 @@ class TensAdd(TensExpr, AssocOp):
         else:
             args = self.args
 
-        if not args:
-            return S.Zero
+        # if any of the args are zero (after doit), drop them. Otherwise, _tensAdd_check will complain about non-matching indices, even though the TensAdd is correctly formed.
+        args = [arg for arg in args if arg != S.Zero]
 
-        if len(args) == 1 and not isinstance(args[0], TensExpr):
+        if len(args) == 0:
+            return S.Zero
+        elif len(args) == 1:
             return args[0]
 
         # now check that all addends have the same indices:
         TensAdd._tensAdd_check(args)
-
-        # if TensAdd has only 1 element in its `args`:
-        if len(args) == 1:  # and isinstance(args[0], TensMul):
-            return args[0]
-
-        # Remove zeros:
-        args = [x for x in args if x]
-
-        # if there are no more args (i.e. have cancelled out),
-        # just return zero:
-        if not args:
-            return S.Zero
-
-        if len(args) == 1:
-            return args[0]
 
         # Collect terms appearing more than once, differing by their coefficients:
         args = TensAdd._tensAdd_collect_terms(args)
@@ -3771,8 +3758,8 @@ class TensMul(TensExpr, AssocOp):
         """
         expr = self.expand()
         if self != expr:
-            expr = expr.canon_bp()
-            return expr.contract_metric(g)
+            expr = canon_bp(expr)
+            return contract_metric(expr, g)
         pos_map = self._get_indices_to_args_pos()
         args = list(self.args)
 
