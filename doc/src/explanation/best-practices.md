@@ -297,10 +297,12 @@ There are many disadvantages to using strings:
 
 ### Exact Rational Numbers vs. Floats
 
+### Avoid `simplify()`
+
 ## Custom SymPy Objects
 
 ### Args Invariants
 
-### Avoiding Type Confusion
+### Avoid Too Much Automatic Evaluation
 
-#### Don't Denest Collections
+### Don't Denest Collections
