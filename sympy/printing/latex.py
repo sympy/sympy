@@ -523,8 +523,8 @@ class LatexPrinter(Printer):
             if not expr.is_Mul:
                 return str(self._print(expr))
             else:
-                if self.order not in ('old', 'none'):
-                    args = expr.as_ordered_factors()
+                if self.order != 'none':
+                    args = expr.as_ordered_factors(order=self.order)
                 else:
                     args = list(expr.args)
 
@@ -2979,7 +2979,7 @@ def latex(expr, **settings):
     order: string, optional
         Any of the supported monomial orderings (currently ``'lex'``,
         ``'grlex'``, or ``'grevlex'``), and ``'none'``. This parameter does
-        nothing for `~.Mul` objects. For ery large expressions, set the
+        nothing for `~.Mul` objects. For very large expressions, set the
         ``order`` keyword to ``'none'`` if speed is a concern.
     symbol_names : dictionary of strings mapped to symbols, optional
         Dictionary of symbols and the custom strings they should be emitted as.

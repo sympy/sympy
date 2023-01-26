@@ -347,6 +347,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         ``'lex'`` (default), which is lexographic order;
         ``'grlex'``, which is graded lexographic order;
         ``'grevlex'``, which is reversed graded lexographic order;
+        ``'none'``, which does not attempt to order the expressions;
         ``None``, which sets it to lex.
     use_unicode : bool or None, default=None
         If ``True``, use unicode characters;
@@ -439,6 +440,9 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     >>> init_printing(order='grevlex') # doctest: +SKIP
     >>> str(y * x**2 + x * y**2) # doctest: +SKIP
     x**2*y + x*y**2
+    >>> init_printing(order='none') # doctest: +SKIP
+    >>> str(x**2 + y**2 + x + y) # doctest: +SKIP
+    x**2 + x + y**2 + y
     >>> init_printing(num_columns=10) # doctest: +SKIP
     >>> x**2 + x + y**2 + y # doctest: +SKIP
     x + y +

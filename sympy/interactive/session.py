@@ -317,6 +317,7 @@ def init_session(ipython=None, pretty_print=True, order=None,
         lex (default), which is lexographic order;
         grlex, which is graded lexographic order;
         grevlex, which is reversed graded lexographic order;
+        none, which does not attempt to order the expressions;
         None, which sets it to lex.
     use_unicode: boolean or None
         If True, use unicode characters;
@@ -381,6 +382,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
     >>> init_session(order='grevlex') #doctest: +SKIP
     >>> y * x**2 + x * y**2 #doctest: +SKIP
     x**2*y + x*y**2
+    >>> init_session(order='none') # doctest: +SKIP
+    >>> x**2 + y**2 + x + y #doctest: +SKIP
+    x**2 + x + y**2 + y
     >>> theta = Symbol('theta') #doctest: +SKIP
     >>> theta #doctest: +SKIP
     theta

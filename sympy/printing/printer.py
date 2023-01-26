@@ -337,7 +337,9 @@ class Printer:
     def _as_ordered_terms(self, expr, order=None):
         """A compatibility function for ordering terms in Add. """
         order = order or self.order
-        if order in ('old', 'none'):
+        if order == 'old':
+            raise ValueError("'old' ordering has been removed")
+        if order == 'none':
             return list(expr.args)
         else:
             return expr.as_ordered_terms(order=order)
