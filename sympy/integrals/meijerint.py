@@ -32,6 +32,7 @@ import itertools
 from sympy import SYMPY_DEBUG
 from sympy.core import S, Expr
 from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
@@ -41,7 +42,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import ilcm, Rational, pi
 from sympy.core.relational import Eq, Ne, _canonical_coeff
 from sympy.core.sorting import default_sort_key, ordered
-from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.core.symbol import Dummy, symbols, Wild, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (re, im, arg, Abs, sign,
@@ -295,19 +296,13 @@ from sympy.utilities.timeutils import timethis
 timeit = timethis('meijerg')
 
 
-def _mytype(f, x):
+def _mytype(f: Basic, x: Symbol) -> tuple[str, ...]:
     """ Create a hashable entity describing the type of f. """
     if x not in f.free_symbols:
         return ()
     elif f.is_Function:
-        return (type(f),)
-    else:
-        types = [_mytype(a, x) for a in f.args]
-        res = []
-        for t in types:
-            res += list(t)
-        res.sort()
-        return tuple(res)
+        return str(type(f)),
+    return tuple(sorted(t for a in f.args for t in _mytype(a, x)))
 
 
 class _CoeffExpValueError(ValueError):
