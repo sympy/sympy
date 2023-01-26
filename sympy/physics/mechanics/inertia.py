@@ -92,7 +92,7 @@ def inertia_of_point_mass(mass, pos_vec, frame):
                    (pos_vec | pos_vec))
 
 
-class Inertia:
+class Inertia(tuple):
     """Inertia object consisting of a Dyadic and a Point of reference.
 
     Explanation
@@ -126,7 +126,7 @@ class Inertia:
     Inertia((N.x|N.x) + (N.y|N.y) + (N.z|N.z), Po)
 
     """
-    def __init__(self, dyadic, point):
+    def __new__(cls, point, dyadic):
         # Switch order if given in the wrong order
         if isinstance(dyadic, Point) and isinstance(point, Dyadic):
             point, dyadic = dyadic, point
@@ -134,8 +134,7 @@ class Inertia:
             raise TypeError('Reference point should be of type Point')
         if not isinstance(dyadic, Dyadic):
             raise TypeError('Inertia value should be expressed as a Dyadic')
-        self._dyadic = dyadic
-        self._point = point
+        return super().__new__(cls, (dyadic, point))
 
     @classmethod
     def from_inertia_scalars(cls, point, frame, ixx, iyy, izz, ixy=0, iyz=0,
@@ -173,26 +172,25 @@ class Inertia:
     @property
     def point(self):
         """Reference point of the inertia."""
-        return self._point
+        return self[1]
 
     @property
     def dyadic(self):
         """Inertia dyadic."""
-        return self._dyadic
+        return self[0]
 
     def __repr__(self):
         return f'Inertia({self.dyadic}, {self.point})'
 
-    def __getitem__(self, item):
-        if item == 0 or item == -2:
-            return self.dyadic
-        elif item == 1 or item == -1:
-            return self.point
-        raise IndexError('Inertia index out of range.')
+    def __add__(self, other):
+        raise TypeError(f"unsupported operand type(s) for +: "
+                        f"'{self.__class__.__name__}' and "
+                        f"'{other.__class__.__name__}'")
 
-    def __eq__(self, other):
-        if isinstance(other, Inertia):
-            return self.point == other.point and self.dyadic == other.dyadic
-        if isinstance(other, tuple) and len(other) == 2:
-            return self[0] == other[0] and self[1] == other[1]
-        return False
+    def __mul__(self, other):
+        raise TypeError(f"unsupported operand type(s) for *: "
+                        f"'{self.__class__.__name__}' and "
+                        f"'{other.__class__.__name__}'")
+
+    __radd__ = __add__
+    __rmul__ = __mul__
