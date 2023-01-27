@@ -536,7 +536,7 @@ class Quaternion(Expr):
         if avoid_square_root:
             if symmetric:
                 n2 = self.norm()**2
-                angles[1] = acos((a*a + b*b - c*c - d*d) / n2)
+                angles[1] = acos(factor((a*a + b*b - c*c - d*d) / n2))
             else:
                 n2 = 2 * self.norm()**2
                 angles[1] = asin(factor((c*c + d*d - a*a - b*b) / n2))
