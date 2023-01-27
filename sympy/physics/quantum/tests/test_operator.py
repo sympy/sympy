@@ -1,5 +1,6 @@
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
+from sympy.core import Pow
 from sympy.core.numbers import (Integer, pi)
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.trigonometric import sin
@@ -10,11 +11,13 @@ from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
                                             HermitianOperator, OuterProduct,
                                             DifferentialOperator,
                                             IdentityOperator)
+from sympy.physics.quantum.gate import (XGate, TGate)
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.spin import JzKet, JzBra
 from sympy.physics.quantum.trace import Tr
+from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.matrices import eye
 
 
@@ -231,3 +234,25 @@ def test_differential_operator():
     assert diff(d, th) == \
         DifferentialOperator(Derivative(d.expr, th), f(r, th))
     assert qapply(d*w) == Wavefunction(3*sin(th), r, (th, 0, pi))
+
+
+# Issue 24153: Test if pow(U, 0) == IdentityOperator(), U*U.inv() == IdentityOperator()
+def test_issue24153_mulopop1():
+    U = Operator('U')
+    n = symbols('n')
+    In = IdentityOperator()
+    assert U ** n == pow(U, n) # actually, pow(U,n) is alias to Expr.__pow__(U,n) := U**n
+    assert U ** 0 == In
+    assert pow(U,  0)  == In
+    assert Pow(U,  0)  == 1    # this is hard coded in Pow for exponent == 0
+    assert pow(U, -1)  == U.inv()
+    assert U ** -1     == U.inv()
+    assert U * U ** -1 == In
+    assert Mul(U, U ** -1) == In
+    assert XGate(0) ** 2   == In  # this calls ._eval_power()
+    assert TGate(0) ** 4 * TGate(0).inv() ** 2 * TGate(0) ** -2  == In
+    #assert TGate(0) ** 8 == IdentityOperator()   # tbd: add this identity to TGate
+    #assert PhaseGate(0) ** 4 == IdentityOperator()   # tbd: add this identity to PhaseGate
+    P = TensorProduct(XGate(0), TGate(0)) * TensorProduct(XGate(0), In)
+    assert qapply(P) == TensorProduct(In, TGate(0)) # I x T  (classic: 1xT)
+    assert TensorProduct(U * U ** -1, pow(U, n) * U ** -n) == TensorProduct(In, In) #classic: 1x1

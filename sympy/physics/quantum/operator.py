@@ -92,7 +92,7 @@ class Operator(QExpr):
         >>> A.inv()
         A**(-1)
         >>> A*A.inv()
-        1
+        IdentityOperator()
 
     References
     ==========
@@ -185,6 +185,34 @@ class Operator(QExpr):
             return self
 
         return Mul(self, other)
+
+    # Issue #24153: Change the result Operator**0 to IdentityOperator() instead of 1
+    # Remarks:
+    # 1. Operators who know how to compute self**exp should override ._eval_power(exp),
+    #    since ._eval_power(exp) will be called from both Pow(op, exp) and op**exp.
+    #    In case self**exp == IdentityOperator(), ._eval_power(exp) should return
+    #    IdentityOperator() instead of 1.
+    # 2. Hooking into ._pow() instead would not give same effect as Pow.__new__()
+    #    doesn't call ._pow().
+    # 2. Limitation: Pow filters on base,exp pairs that it will compute by itself, and
+    #    will for almost all type of base return 1 if exp == 0 instead of returning
+    #    the neutral element of the multiplicative half group base belongs to.
+    # 3. This behavior of Pow can only be fixed by a modification of Pow itself.
+    # 4. But it can be modified for ** and pow(), by either overriding .__pow__() (which
+    #    however is considered bad practice) or better ._pow() for the Operator class,
+    #    handling exponent == 0 and passing on all other to the original super()._pow()
+    #    unmodified.
+
+    def _pow(self, exponent):
+        from sympy.core.singleton import S
+        if exponent == 0 or exponent == S.Zero:
+            try:
+                dim = self.hilbert_space.dimension # will raise "Not Implemented" for std Operator class!
+                return IdentityOperator(dim)
+            except NotImplementedError:
+                return IdentityOperator()  # if self has no dimension, so return dimensionless IdentityOperator()
+        else:
+            return super()._pow(exponent)  # maintains classic behaviour for exp != 0
 
 
 class HermitianOperator(Operator):
@@ -318,17 +346,14 @@ class IdentityOperator(Operator):
 
         return Mul(self, other)
 
+
     def _represent_default_basis(self, **options):
         if not self.N or self.N == oo:
             raise NotImplementedError('Cannot represent infinite dimensional' +
                                       ' identity operator as a matrix')
 
         format = options.get('format', 'sympy')
-        if format != 'sympy':
-            raise NotImplementedError('Representation in format ' +
-                                      '%s not implemented.' % format)
-
-        return eye(self.N)
+        return self._format_represent(eye(self.N), format)
 
 
 class OuterProduct(Operator):
