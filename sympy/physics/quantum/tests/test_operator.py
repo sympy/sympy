@@ -234,7 +234,7 @@ def test_differential_operator():
 
 
 def test_eval_power():
-    from sympy import Pow
+    from sympy import Pow, unchanged
     O = Operator('O')
     U = UnitaryOperator('U')
     H = HermitianOperator('H')
@@ -242,15 +242,21 @@ def test_eval_power():
     assert U**-1 == U.inv()
     assert H**-1 == H.inv()
     x = symbols("x", commutative = True)
-    assert H**x == Pow(H, x, evaluate=False)
+    assert unchanged(Pow, H, x) # verify Pow(H,x)=="X^n"
+    assert H**x == Pow(H, x)
+    assert Pow(H,x) == Pow(H, x, evaluate=False) # Just check
     from sympy.physics.quantum.gate import XGate
     X = XGate(0) # is hermitian and unitary
-    assert X**x == Pow(X, x, evaluate=False)
+    assert unchanged(Pow, X, x) # verify Pow(X,x)=="X^x"
+    assert X**x == Pow(X, x)
+    assert Pow(X, n, evaluate=False) == Pow(X, n) # Just check
     n = symbols("n", integer=True, even=True)
     assert X**n == 1
     n = symbols("n", integer=True, odd=True)
     assert X**n == X
     n = symbols("n", integer=True)
-    assert X**n == Pow(X, n, evaluate=False)
+    assert unchanged(Pow, X, n) # verify Pow(X,n)=="X^n"
+    assert X**n == Pow(X, n)
+    assert Pow(X, n, evaluate=False)==Pow(X, n) # Just check
     assert X**4 == 1
     assert X**7 == X
