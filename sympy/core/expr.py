@@ -4062,10 +4062,6 @@ class UnevaluatedExpr(Expr):
         else:
             return self.args[0]
 
-    def _eval_is_commutative(self):
-        return self.args[0].is_commutative
-
-
 
 def unchanged(func, *args):
     """Return True if `func` applied to the `args` is unchanged.
