@@ -456,7 +456,6 @@ class Quaternion(Expr):
             must be from the set ``{'X', 'Y', 'Z'}``
 
         angle_addition : bool
-            Default : True
             When True, first and third angles are given as an addition and
             subtraction of two simpler ``atan2`` expressions. When False, the
             first and third angles are each given by a single more complicated
@@ -467,13 +466,15 @@ class Quaternion(Expr):
                 \operatorname{atan_2} (b,a) \pm \operatorname{atan_2} (d,c) =
                 \operatorname{atan_2} (bc\pm ad, ac\mp bd)
 
+            Default : True
+
         avoid_square_root : bool
-            Default : False
             When True, the second angle is calculated with an expression based
             on ``acos``, which is slightly more complicated but avoids a square
             root. When False, second angle is calculated with ``atan2``, which
             is simpler and can be better for numerical reasons (some
             numerical implementations of ``acos`` have problems near zero).
+            Default : False
 
 
         Returns
