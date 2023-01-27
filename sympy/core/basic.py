@@ -1758,7 +1758,8 @@ class Basic(Printable, metaclass=ManagedProperties):
             return m
         from .symbol import Wild
         from .function import WildFunction
-        wild = pattern.atoms(Wild, WildFunction)
+        from ..tensor.tensor import WildTensor, WildTensorIndex, WildTensorHead
+        wild = pattern.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead)
         # sanity check
         if set(m) - wild:
             raise ValueError(filldedent('''
