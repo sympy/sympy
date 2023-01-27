@@ -376,7 +376,7 @@ class Quaternion(Expr):
     @classmethod
     def from_euler(cls, angles, seq):
         """Returns quaternion equivalent to rotation represented by the Euler
-        angles, in the sequence defined by `seq`.
+        angles, in the sequence defined by ``seq``.
 
         Parameters
         ==========
@@ -386,9 +386,9 @@ class Quaternion(Expr):
         seq : string of length 3
             Represents the sequence of rotations.
             For intrinsic rotations, seq must be all lowercase and its elements
-            must be from the set `{'x', 'y', 'z'}`
+            must be from the set ``{'x', 'y', 'z'}``
             For extrinsic rotations, seq must be all uppercase and its elements
-            must be from the set `{'X', 'Y', 'Z'}`
+            must be from the set ``{'X', 'Y', 'Z'}``
 
         Returns
         =======
@@ -458,7 +458,7 @@ class Quaternion(Expr):
         angle_addition : bool
             Default : True
             When True, first and third angles are given as an addition and
-            subtraction of two simpler `atan2` expressions. When False, the
+            subtraction of two simpler ``atan2`` expressions. When False, the
             first and third angles are each given by a single more complicated
             ``atan2`` expression. This equivalent expression is given by:
 
