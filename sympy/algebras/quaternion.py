@@ -4,8 +4,10 @@ from sympy.core.relational import is_eq
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, cos, sin, atan2)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan2)
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.trigsimp import trigsimp
+from sympy.simplify.simplify import factor
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.sympify import sympify, _sympify
@@ -532,10 +534,16 @@ class Quaternion(Expr):
             a, b, c, d = a - c, b + d, c + a, d - b
 
         if avoid_square_root:
-            n2 = self.norm()**2 if symmetric else 2 * self.norm()**2
-            angles[1] = acos((a*a + b*b - c*c - d*d) / n2)
+            if symmetric:
+                n2 = self.norm()**2
+                angles[1] = acos((a*a + b*b - c*c - d*d) / n2)
+            else:
+                n2 = 2 * self.norm()**2
+                angles[1] = asin(factor((c*c + d*d - a*a - b*b) / n2))
         else:
             angles[1] = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
+            if not symmetric:
+                angles[1] -= S.Pi / 2
 
         # Check for singularities in numerical cases
         case = 0
@@ -562,7 +570,6 @@ class Quaternion(Expr):
 
         # for Tait-Bryan angles
         if not symmetric:
-            angles[1] -= S.Pi / 2
             angles[0] *= sign
 
         if extrinsic:
