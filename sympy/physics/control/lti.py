@@ -36,8 +36,11 @@ def _roots(poly, var):
 def bilinear(tf, sample_per):
         """
         Returns falling coeffs of H(z) from numerator and denominator.
-        H(z) is the corresponding discretized tf, discretized with
-        bilinear transform method.
+        H(z) is the corresponding discretized transfer function,
+        discretized with the bilinear transform method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting s(z) = 2/T * (z-1)/(z+1) into H(s), where T is the
+        sample period.
         Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
         as [a, b], [c, d].
 
