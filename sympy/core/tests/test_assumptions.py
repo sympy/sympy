@@ -801,7 +801,6 @@ def test_Add_is_pos_neg():
     assert (p + r).is_extended_positive is None
 
 
-@XFAIL
 def test_Add_is_imaginary():
     nn = Dummy(nonnegative=True)
     assert (I*nn + I).is_imaginary  # issue 8046, 17
@@ -1174,10 +1173,7 @@ def test_issue_10302():
 
     assert i.is_real is None  # w/o simplification this should fail
     assert (u + i).is_zero is None
-
-    # XXX: Ideally (1 + i).is_zero would give False.
-    # It fails due to a bug in numerical evaluation.
-    assert (1 + i).is_zero is None
+    assert (1 + i).is_zero is False
 
     a = Dummy('a', zero=True)
     assert (a + I).is_zero is False
