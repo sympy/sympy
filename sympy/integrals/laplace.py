@@ -33,7 +33,7 @@ from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import RootSum
 from sympy.utilities.exceptions import (
     sympy_deprecation_warning, SymPyDeprecationWarning, ignore_warnings)
-from sympy.utilities.misc import debug
+from sympy.utilities.misc import debug, debugf
 
 
 def _simplifyconds(expr, s, a):
@@ -140,14 +140,14 @@ def _laplace_transform_integration(f, t, s_, simplify=True):
     such that `f` is to an addition anymore.
     """
     s = Dummy('s')
-    debug('[LT _l_t_i ] started with (%s, %s, %s)'%(f, t, s))
-    debug('[LT _l_t_i ]     and simplify=%s'%(simplify, ))
+    debugf('[LT _l_t_i ] started with (%s, %s, %s)', (f, t, s))
+    debugf('[LT _l_t_i ]     and simplify=%s', (simplify, ))
 
     if f.has(DiracDelta):
         return None
 
     F = integrate(f*exp(-s*t), (t, S.Zero, S.Infinity))
-    debug('[LT _l_t_i ]     integrated: %s'%(F, ))
+    debugf('[LT _l_t_i ]     integrated: %s', (F, ))
 
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), S.NegativeInfinity, S.true
@@ -488,7 +488,7 @@ def _laplace_rule_timescale(f, t, s):
         ma2 = arg.match(a*t)
         if ma2 and ma2[a].is_positive and not ma2[a]==1:
             debug('_laplace_apply_prog rules match:')
-            debug('      f:    %s _ %s, %s )'%(f, ma1, ma2))
+            debugf('      f:    %s _ %s, %s )', (f, ma1, ma2))
             debug('      rule: time scaling (4.1.4)')
             r, pr, cr = _laplace_transform(1/ma2[a]*ma1[g].func(t),
                                            t, s/ma2[a], simplify=False)
@@ -518,14 +518,14 @@ def _laplace_rule_heaviside(f, t, s):
         ma2 = ma1[y].match(t-a)
         if ma2 and ma2[a].is_positive:
             debug('_laplace_apply_prog_rules match:')
-            debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
+            debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
             debug('      rule: time shift (4.1.4)')
             r, pr, cr = _laplace_transform(ma1[g].subs(t, t+ma2[a]), t, s,
                                            simplify=False)
             return (exp(-ma2[a]*s)*r, pr, cr)
         if ma2 and ma2[a].is_negative:
             debug('_laplace_apply_prog_rules match:')
-            debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
+            debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
             debug('      rule: Heaviside factor with negative time shift (4.1.4)')
             r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
             return (r, pr, cr)
@@ -548,7 +548,7 @@ def _laplace_rule_exp(f, t, s):
         ma2 = ma1[y].collect(t).match(a*t)
         if ma2:
             debug('_laplace_apply_prog_rules match:')
-            debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
+            debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
             debug('      rule: multiply with exp (4.1.5)')
             r, pr, cr = _laplace_transform(ma1[z], t, s-ma2[a],
                                            simplify=False)
@@ -575,7 +575,7 @@ def _laplace_rule_delta(f, t, s):
         ma2 = ma1[y].collect(t).match(b*t-a)
         if ma2:
             debug('_laplace_apply_prog_rules match:')
-            debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
+            debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
             debug('      rule: multiply with DiracDelta')
             loc = ma2[a]/ma2[b]
             if re(loc)>=0 and im(loc)==0:
@@ -623,8 +623,8 @@ def _laplace_rule_trig(f, t, s, doit=True, **hints):
             ma2 = ma1[y].collect(t).match(a*t)
             if ma2:
                 debug('_laplace_apply_rules match:')
-                debug('      f:    %s ( %s, %s )'%(f, ma1, ma2))
-                debug('      rule: multiply with %s (%s)'%(fm.func, nu))
+                debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
+                debugf('      rule: multiply with %s (%s)', (fm.func, nu))
                 r, pr, cr = _laplace_transform(ma1[z], t, s, simplify=False)
                 if sd==1:
                     cp_shift = Abs(re(ma2[a]))
@@ -650,7 +650,7 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     ma1 = f.match(a*Derivative(g, (t, n)))
     if ma1 and ma1[g].args[0] == t and ma1[n].is_integer:
         debug('_laplace_apply_rules match:')
-        debug('      f, n: %s, %s'%(f, ma1[n]))
+        debugf('      f, n: %s, %s', (f, ma1[n]))
         debug('      rule: time derivative (4.1.8)')
         d = []
         for k in range(ma1[n]):
@@ -686,7 +686,7 @@ def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
             N = len(pc)
             if N>1:
                 debug('_laplace_apply_rules match:')
-                debug('      f, n: %s, %s'%(f, pfac))
+                debugf('      f, n: %s, %s', (f, pfac))
                 debug('      rule: frequency derivative (4.1.6)')
                 oex = prod(ofac)
                 r_, p_, c_ = _laplace_transform(oex, t, s, simplify=False)
@@ -779,9 +779,9 @@ def _laplace_apply_simple_rules(f, t, s):
                 continue
             if c==True:
                 debug('_laplace_apply_simple_rules match:')
-                debug('      f:     %s'%(f,))
-                debug('      rule:  %s o---o %s'%(t_dom, s_dom))
-                debug('      match: %s'%(ma, ))
+                debugf('      f:     %s', (f,))
+                debugf('      rule:  %s o---o %s', (t_dom, s_dom))
+                debugf('      match: %s', (ma, ))
                 return (s_dom.xreplace(ma).subs({s_: s}),
                         plane.xreplace(ma), S.true)
     return None
@@ -792,7 +792,7 @@ def _laplace_transform(fn, t_, s_, simplify=True):
     Front-end function of the Laplace transform. It tries to apply all known
     rules recursively, and if everything else fails, it tries to integrate.
     """
-    debug('[LT _l_t] (%s, %s, %s)'%(fn, t_, s_))
+    debugf('[LT _l_t] (%s, %s, %s)', (fn, t_, s_))
 
     terms = Add.make_args(fn)
     terms_s = []
@@ -883,9 +883,9 @@ class LaplaceTransform(IntegralTransform):
         _noconds = hints.get('noconds', True)
         _simplify = hints.get('simplify', True)
 
-        debug('[LT doit] (%s, %s, %s)'%(self.function,
-                                        self.function_variable,
-                                        self.transform_variable))
+        debugf('[LT doit] (%s, %s, %s)', (self.function,
+                                          self.function_variable,
+                                          self.transform_variable))
 
         t_ = self.function_variable
         s_ = self.transform_variable
@@ -1141,8 +1141,8 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
     """
     if f==1:
         debug('_inverse_laplace_apply_simple_rules match:')
-        debug('      f:    %s'%(1,))
-        debug('      rule: 1 o---o DiracDelta(%s)'%(t,))
+        debugf('      f:    %s', (1,))
+        debugf('      rule: 1 o---o DiracDelta(%s)', (t,))
         return DiracDelta(t), S.true
 
     _ILT_rules, s_, t_ = _inverse_laplace_build_rules()
@@ -1161,9 +1161,9 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
                 continue
             if c:
                 debug('_inverse_laplace_apply_simple_rules match:')
-                debug('      f:    %s'%(f,))
-                debug('      rule: %s o---o %s'%(s_dom, t_dom))
-                debug('      ma:   %s'%(ma,))
+                debugf('      f:    %s', (f,))
+                debugf('      rule: %s o---o %s', (s_dom, t_dom))
+                debugf('      ma:   %s', (ma,))
                 return Heaviside(t)*t_dom.xreplace(ma).subs({t_: t}), S.true
     return None
 
@@ -1181,9 +1181,9 @@ def _inverse_laplace_time_shift(F, s, t, plane):
     if ma1:
         if ma1[a].is_negative:
             debug('_inverse_laplace_time_shift match:')
-            debug('      f:    %s'%(F,))
+            debugf('      f:    %s', (F,))
             debug('      rule: exp(-a*s) o---o DiracDelta(t-a)')
-            debug('      ma:   %s'%(ma1,))
+            debugf('      ma:   %s', (ma1,))
             return DiracDelta(t+ma1[a]), S.true
         else:
             debug('_inverse_laplace_time_shift match: negative time shift')
@@ -1193,9 +1193,9 @@ def _inverse_laplace_time_shift(F, s, t, plane):
     if ma1:
         if ma1[a].is_negative:
             debug('_inverse_laplace_time_shift match:')
-            debug('      f:    %s'%(F,))
+            debugf('      f:    %s', (F,))
             debug('      rule: exp(-a*s)*F(s) o---o Heaviside(t-a)*f(t-a)')
-            debug('      ma:   %s'%(ma1,))
+            debugf('      ma:   %s', (ma1,))
             return _inverse_laplace_transform(ma1[g], s, t+ma1[a], plane)
         else:
             debug('_inverse_laplace_time_shift match: negative time shift')
@@ -1241,7 +1241,7 @@ def _inverse_laplace_rational(fn, s, t, plane, simplify):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-    debug('[ILT _i_l_r] (%s, %s, %s)'%(fn, s, t))
+    debugf('[ILT _i_l_r] (%s, %s, %s)', (fn, s, t))
     x_ = symbols('x_')
     f = fn.apart(s)
     terms = Add.make_args(f)
@@ -1288,7 +1288,7 @@ def _inverse_laplace_rational(fn, s, t, plane, simplify):
     result = Add(*terms_t)
     if simplify:
         result = result.simplify(doit=False)
-    debug('[ILT _i_l_r]   returns %s'%(result,))
+    debugf('[ILT _i_l_r]   returns %s', (result,))
     return result, And(*conditions)
 
 
@@ -1301,7 +1301,7 @@ def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True, dorational=True
     terms_t = []
     conditions = []
 
-    debug('[ILT _i_l_t] (%s, %s, %s)'%(fn, s_, t_))
+    debugf('[ILT _i_l_t] (%s, %s, %s)', (fn, s_, t_))
 
     for term in terms:
         k, f = term.as_independent(s_, as_Add=False)
@@ -1387,9 +1387,9 @@ class InverseLaplaceTransform(IntegralTransform):
         _noconds = hints.get('noconds', True)
         _simplify = hints.get('simplify', True)
 
-        debug('[ILT doit] (%s, %s, %s)'%(self.function,
-                                         self.function_variable,
-                                         self.transform_variable))
+        debugf('[ILT doit] (%s, %s, %s)', (self.function,
+                                           self.function_variable,
+                                           self.transform_variable))
 
         s_ = self.function_variable
         t_ = self.transform_variable
