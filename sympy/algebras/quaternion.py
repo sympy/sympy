@@ -293,7 +293,7 @@ class Quaternion(Expr):
 
         vector_only : bool
             If True, only imaginary part is returned.
-            Default : False
+            Default value: False
 
         Returns
         =======
@@ -341,7 +341,7 @@ class Quaternion(Expr):
 
         elements : Matrix, list or tuple of length 3 or 4. If length is 3,
             assume real part is zero.
-            Default : False
+            Default value: False
 
         Returns
         =======
@@ -466,7 +466,7 @@ class Quaternion(Expr):
                 \operatorname{atan_2} (b,a) \pm \operatorname{atan_2} (d,c) =
                 \operatorname{atan_2} (bc\pm ad, ac\mp bd)
 
-            Default : True
+            Default value: True
 
         avoid_square_root : bool
             When True, the second angle is calculated with an expression based
@@ -474,7 +474,7 @@ class Quaternion(Expr):
             root. When False, second angle is calculated with ``atan2``, which
             is simpler and can be better for numerical reasons (some
             numerical implementations of ``acos`` have problems near zero).
-            Default : False
+            Default value: False
 
 
         Returns
