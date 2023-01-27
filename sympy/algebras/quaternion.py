@@ -439,7 +439,7 @@ class Quaternion(Expr):
 
     def to_euler(self, seq, angle_addition=True, avoid_square_root=False):
         r"""Returns Euler angles representing same rotation as the quaternion,
-        in the sequence given by `seq`. This implements the method described
+        in the sequence given by ``seq``. This implements the method described
         in [1]_.
 
         For degenerate cases (gymbal lock cases), the third angle is
