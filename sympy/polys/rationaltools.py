@@ -92,8 +92,12 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
     lengths).
 
     The interpolation algorithm is known to yield some division by zero
-    when values are equally spaced. Furthermore, the simplest solution
-    is not always returned (see the last example below).
+    when values are equally spaced. Therefore, this algorithm should not
+    be used as a general purpose algorithm (use rather the main
+    sympy.polys.polyfuncs.rational_interpolate function in that case).
+
+    Furthermore, the simplest solution is not always returned (see the last
+    example below).
 
     An arbitrary symbol can optionally be provided as var
     (default being 'x').
