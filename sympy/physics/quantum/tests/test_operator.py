@@ -234,7 +234,8 @@ def test_differential_operator():
 
 
 def test_eval_power():
-    from sympy import Pow, unchanged
+    from sympy.core import Pow
+    from sympy.core.expr import unchanged
     O = Operator('O')
     U = UnitaryOperator('U')
     H = HermitianOperator('H')
@@ -249,7 +250,7 @@ def test_eval_power():
     X = XGate(0) # is hermitian and unitary
     assert unchanged(Pow, X, x) # verify Pow(X,x)=="X^x"
     assert X**x == Pow(X, x)
-    assert Pow(X, n, evaluate=False) == Pow(X, n) # Just check
+    assert Pow(X, x, evaluate=False) == Pow(X, x) # Just check
     n = symbols("n", integer=True, even=True)
     assert X**n == 1
     n = symbols("n", integer=True, odd=True)
