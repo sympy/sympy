@@ -25,12 +25,10 @@ are discrepancies in the dimensions and scale factors of electromagnetic
 quantities between SI unit system and CGS and gaussian unit systems, as the
 last two ones do not consider the ``current`` to be a fundamental dimension.
 
-The advantage of this implementation over other libraries is that it handles
-relations between units differently in different unit systems, so that the user
-can decide which units to use, instead of having all in the name space (for
-example astrophysicists can only use units with ua, Earth or Sun masses, the
-theoricists will use natural system, etc.). Moreover it allows a better control
-over the dimensions and conversions.
+The advantage of this implementation over the one found in other libraries is
+that it handles relations between units differently in different unit systems,
+without restrictions to the assumption of relations between units and physical
+constants provided by the SI unit system.
 
 Examples
 --------
