@@ -1,11 +1,9 @@
-import sys
+from __future__ import annotations
 import re
 import inspect
 import textwrap
 import pydoc
 import sphinx
-import collections
-
 from docscrape import NumpyDocString, FunctionDoc, ClassDoc
 
 
