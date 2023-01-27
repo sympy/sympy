@@ -442,6 +442,9 @@ class Quaternion(Expr):
         in the sequence given by `seq`. This implements the method described
         in [1]_.
 
+        For degenerate cases (gymbal lock cases), the third angle is
+        set to zero.
+
         Parameters
         ==========
 
@@ -553,7 +556,7 @@ class Quaternion(Expr):
                 angles[2] = atan2(b*c - a*d, a*c + b*d)
 
         else:  # any degenerate case
-            angles[2 * (not extrinsic)] = sympify(0)
+            angles[2 * (not extrinsic)] = S.Zero
             if case == 1:
                 angles[2 * extrinsic] = 2 * atan2(b, a)
             else:
