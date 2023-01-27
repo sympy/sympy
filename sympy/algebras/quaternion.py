@@ -7,7 +7,6 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, atan2)
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.trigsimp import trigsimp
-from sympy.simplify.simplify import factor
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.sympify import sympify, _sympify
@@ -536,10 +535,10 @@ class Quaternion(Expr):
         if avoid_square_root:
             if symmetric:
                 n2 = self.norm()**2
-                angles[1] = acos(factor((a * a + b * b - c * c - d * d) / n2))
+                angles[1] = acos((a * a + b * b - c * c - d * d) / n2)
             else:
                 n2 = 2 * self.norm()**2
-                angles[1] = asin(factor((c * c + d * d - a * a - b * b) / n2))
+                angles[1] = asin((c * c + d * d - a * a - b * b) / n2)
         else:
             angles[1] = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
             if not symmetric:
