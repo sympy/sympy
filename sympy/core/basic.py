@@ -7,7 +7,6 @@ from itertools import chain, zip_longest
 
 from .assumptions import ManagedProperties
 from .cache import cacheit
-from .core import BasicMeta
 from .sympify import _sympify, sympify, SympifyError, _external_converter
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
@@ -1343,7 +1342,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         type_set = set()  # only types
         p_set = set()  # hashable non-types
         for p in patterns:
-            if isinstance(p, BasicMeta):
+            if isinstance(p, type) and issubclass(p, Basic):
                 type_set.add(p)
                 continue
             if not isinstance(p, Basic):
