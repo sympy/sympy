@@ -648,8 +648,7 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     g = WildFunction('g')
     ma1 = f.match(a*Derivative(g, (t, n)))
     if ma1 and ma1[n].is_integer:
-        ar = ma1[g].args
-        m = [ z.has(t) for z in ar ]
+        m = [ z.has(t) for z in ma1[g].args ]
         if sum(m)==1:
             debug('_laplace_apply_rules match:')
             debugf('      f, n: %s, %s', (f, ma1[n]))
