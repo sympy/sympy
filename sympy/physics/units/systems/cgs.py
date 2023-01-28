@@ -66,7 +66,7 @@ cgs_gauss.set_quantity_scale_factor(oersted, sqrt(gram/centimeter)/second)
 cgs_gauss.set_quantity_scale_factor(ohm, 10**5/speed_of_light**2*second/centimeter)
 cgs_gauss.set_quantity_scale_factor(farad, One/10**5*speed_of_light**2*centimeter)
 cgs_gauss.set_quantity_scale_factor(henry, 10**5/speed_of_light**2/centimeter*second**2)
-cgs_gauss.set_quantity_scale_factor(angstrom, 1*centimeter/10**8)
+
 
 
 # Coulomb's constant:
