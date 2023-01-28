@@ -4436,7 +4436,102 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
     def _mpc_(self):
         return (Float(0)._mpf_, Float(1)._mpf_)
 
+
 I = S.ImaginaryUnit
+
+
+def equal_valued(x, y):
+    """Compare expressions treating plain floats as rationals.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> from sympy.core.numbers import equal_valued
+    >>> equal_valued(1, 2)
+    False
+    >>> equal_valued(1, 1)
+    True
+
+    Comparing SymPy numbers with ``a == b`` gives ``False`` if they are not of
+    the same type. With ``equal_valued`` if either argument is a ``Float``
+    then it will be treated as an exact rational number for comparison with the
+    other argument.
+
+    >>> S(1) == S(1.0)
+    False
+    >>> equal_valued(1, 1.0)
+    True
+    >>> S.Half == 0.5
+    False
+    >>> equal_valued(S.Half, 0.5)
+    True
+
+    Comparing two Floats with ``a == b`` gives ``False`` if they do not have
+    the same precision. With ``equal_valued`` the precision of Floats is
+    ignored.
+
+    >>> S(1).n(3) == S(1).n(5)
+    False
+    >>> equal_valued(S(1).n(3), S(1).n(5))
+    True
+
+    Explanation
+    ===========
+
+    Since Float and Rational compare unequal and floats with different
+    precisions compare unequal a function is needed that can check if a number
+    is equal to 1 or 0 etc. The idea is that instead of testing ``if x == 1:``
+    if we want to accept floats like ``1.0`` as well then the test can be
+    written as ``if equal_valued(x, 1):`` or ``if equal_valued(x, 2):``.
+    Since this function is expected to be used in situations where one or both
+    operands are expected to be concrete numbers like 1 or 0 the function does
+    not recurse through the args of any compound expression to compare any
+    nested floats.
+    """
+    x = _sympify(x)
+    y = _sympify(y)
+
+    # Handle everything except Float/Rational first
+    if not x.is_Float and not y.is_Float:
+        return x == y
+    elif x.is_Float and y.is_Float:
+        # Compare values without regard for precision
+        return x._mpf_ == y._mpf_
+    elif x.is_Float:
+        x, y = y, x
+    if not x.is_Rational:
+        return False
+
+    # Now y is Float and x is Rational. A simple approach at this point would
+    # just be x == Rational(y) but if y has a large exponent creating a
+    # Rational could be prohibitively expensive.
+
+    sign, man, exp, _ = y._mpf_
+    p, q = x.p, x.q
+
+    if sign:
+        man = -man
+
+    if exp == 0:
+        # y odd integer
+        return q == 1 and man == p
+    elif exp > 0:
+        # y even integer
+        if q != 1:
+            return False
+        if p.bit_length() != man.bit_length() + exp:
+            return False
+        return man << exp == p
+    else:
+        # y non-integer. Need p == man and q == 2**-exp
+        if p != man:
+            return False
+        exp = -exp
+        if q.bit_length() - 1 != exp:
+            return False
+        return (1 << exp) == q
+
 
 @dispatch(Tuple, Number) # type:ignore
 def _eval_is_eq(self, other): # noqa: F811
