@@ -1293,7 +1293,7 @@ class Integral(AddWithLimits):
         References
         ==========
 
-        .. [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
+        .. [1] https://en.wikipedia.org/wiki/Riemann_sum#Riemann_summation_methods
         """
 
         from sympy.concrete.summations import Sum

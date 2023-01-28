@@ -10,6 +10,7 @@ from sympy.core.facts import InconsistentAssumptions
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, nan, oo, pi)
 from sympy.core.relational import Eq
+from sympy.core.numbers import Float
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.core.sympify import sympify
@@ -288,7 +289,7 @@ def test_geometric_sums():
 
     #issue 11642:
     result = Sum(0.5**n, (n, 1, oo)).doit()
-    assert result == 1
+    assert result == 1.0
     assert result.is_Float
 
     result = Sum(0.25**n, (n, 1, oo)).doit()
@@ -296,7 +297,7 @@ def test_geometric_sums():
     assert result.is_Float
 
     result = Sum(0.99999**n, (n, 1, oo)).doit()
-    assert result == 99999
+    assert result == 99999.0
     assert result.is_Float
 
     result = Sum(S.Half**n, (n, 1, oo)).doit()
@@ -802,7 +803,7 @@ def test_issue_4171():
 
 
 def test_issue_6273():
-    assert Sum(x, (x, 1, n)).n(2, subs={n: 1}) == 1
+    assert Sum(x, (x, 1, n)).n(2, subs={n: 1}) == Float(1, 2)
 
 
 def test_issue_6274():

@@ -3219,17 +3219,15 @@ class PermutationGroup(Basic):
                 self._is_abelian = True
                 return True
 
-        for p in factors:
-            pgens = []
-            for g in self.generators:
-                pgens.append(g**p)
-            if self.index(self.subgroup(pgens)) != p:
-                self._is_cyclic = False
-                return False
+        if not self.is_abelian:
+            self._is_cyclic = False
+            return False
 
-        self._is_cyclic = True
-        self._is_abelian = True
-        return True
+        self._is_cyclic = all(
+            any(g**(order//p) != self.identity for g in self.generators)
+            for p, e in factors.items() if e > 1
+        )
+        return self._is_cyclic
 
     @property
     def is_dihedral(self):
@@ -3300,7 +3298,7 @@ class PermutationGroup(Basic):
                 self._is_dihedral = True
                 return True
 
-        # Procede with algorithm of [Di1]
+        # Proceed with algorithm of [Di1]
         # Find elements of orders 2 and n
         order_2, order_n = [], []
         for p in self.elements:
