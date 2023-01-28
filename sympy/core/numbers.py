@@ -4446,48 +4446,52 @@ def equal_valued(x, y):
     Examples
     ========
 
-    >>> from sympy import S
+    >>> from sympy import S, symbols, Integer, Rational, Float
     >>> from sympy.core.numbers import equal_valued
     >>> equal_valued(1, 2)
     False
     >>> equal_valued(1, 1)
     True
 
-    Comparing SymPy numbers with ``a == b`` gives ``False`` if they are not of
-    the same type. With ``equal_valued`` if either argument is a ``Float``
-    then it will be treated as an exact rational number for comparison with the
-    other argument.
+    In SymPy expressions with Floats compare unequal to corresponding
+    expressions with rationals:
 
-    >>> S(1) == S(1.0)
+    >>> x = symbols('x')
+    >>> x**2 == x**2.0
     False
-    >>> equal_valued(1, 1.0)
-    True
-    >>> S.Half == 0.5
-    False
-    >>> equal_valued(S.Half, 0.5)
+
+    However an individual Float compares equal to a Rational:
+
+    >>> Rational(1, 2) == Float(0.5)
     True
 
-    Comparing two Floats with ``a == b`` gives ``False`` if they do not have
-    the same precision. With ``equal_valued`` the precision of Floats is
-    ignored.
+    In a future version of SymPy this might change so that Rational and Float
+    compare unequal. This function is provided in to provide the behaviour
+    currently expected of ``==`` so that it could still be used if the
+    behaviour of ``==`` were to change.
 
-    >>> S(1).n(3) == S(1).n(5)
-    False
-    >>> equal_valued(S(1).n(3), S(1).n(5))
+    >>> equal_valued(1, 1.0) # Float vs Rational
+    True
+    >>> equal_valued(S(1).n(3), S(1).n(5)) # Floats of different precision
     True
 
     Explanation
     ===========
 
-    Since Float and Rational compare unequal and floats with different
-    precisions compare unequal a function is needed that can check if a number
-    is equal to 1 or 0 etc. The idea is that instead of testing ``if x == 1:``
-    if we want to accept floats like ``1.0`` as well then the test can be
-    written as ``if equal_valued(x, 1):`` or ``if equal_valued(x, 2):``.
-    Since this function is expected to be used in situations where one or both
-    operands are expected to be concrete numbers like 1 or 0 the function does
-    not recurse through the args of any compound expression to compare any
-    nested floats.
+    In future SymPy verions Float and Rational might compare unequal and floats
+    with different precisions might compare unequal. In that context a function
+    is needed that can check if a number is equal to 1 or 0 etc. The idea is
+    that instead of testing ``if x == 1:`` if we want to accept floats like
+    ``1.0`` as well then the test can be written as ``if equal_valued(x, 1):``
+    or ``if equal_valued(x, 2):``. Since this function is intended to be used
+    in situations where one or both operands are expected to be concrete
+    numbers like 1 or 0 the function does not recurse through the args of any
+    compound expression to compare any nested floats.
+
+    References
+    ==========
+
+    .. [1] https://github.com/sympy/sympy/pull/20033
     """
     x = _sympify(x)
     y = _sympify(y)
@@ -4527,10 +4531,10 @@ def equal_valued(x, y):
         # y non-integer. Need p == man and q == 2**-exp
         if p != man:
             return False
-        exp = -exp
-        if q.bit_length() - 1 != exp:
+        neg_exp = -exp
+        if q.bit_length() - 1 != neg_exp:
             return False
-        return (1 << exp) == q
+        return (1 << neg_exp) == q
 
 
 @dispatch(Tuple, Number) # type:ignore
