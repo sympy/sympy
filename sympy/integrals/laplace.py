@@ -644,23 +644,25 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     """
 
     a = Wild('a', exclude=[t])
-    y = Wild('y')
     n = Wild('n', exclude=[t])
-    g = WildFunction('g', nargs=1)
+    g = WildFunction('g')
     ma1 = f.match(a*Derivative(g, (t, n)))
-    if ma1 and ma1[g].args[0] == t and ma1[n].is_integer:
-        debug('_laplace_apply_rules match:')
-        debugf('      f, n: %s, %s', (f, ma1[n]))
-        debug('      rule: time derivative (4.1.8)')
-        d = []
-        for k in range(ma1[n]):
-            if k==0:
-                y = ma1[g].func(t).subs(t, 0)
-            else:
-                y = Derivative(ma1[g].func(t), (t, k)).subs(t, 0)
-            d.append(s**(ma1[n]-k-1)*y)
-        r, pr, cr = _laplace_transform(ma1[g].func(t), t, s, simplify=False)
-        return (ma1[a]*(s**ma1[n]*r - Add(*d)),  pr, cr)
+    if ma1 and ma1[n].is_integer:
+        ar = ma1[g].args
+        m = [ z.has(t) for z in ar ]
+        if sum(m)==1:
+            debug('_laplace_apply_rules match:')
+            debugf('      f, n: %s, %s', (f, ma1[n]))
+            debug('      rule: time derivative (4.1.8)')
+            d = []
+            for k in range(ma1[n]):
+                if k==0:
+                    y = ma1[g].subs(t, 0)
+                else:
+                    y = Derivative(ma1[g], (t, k)).subs(t, 0)
+                d.append(s**(ma1[n]-k-1)*y)
+            r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
+            return (ma1[a]*(s**ma1[n]*r - Add(*d)),  pr, cr)
     return None
 
 
