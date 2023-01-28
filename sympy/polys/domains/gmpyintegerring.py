@@ -35,7 +35,7 @@ class GMPYIntegerRing(IntegerRing):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
             return GMPYInteger(a.p)
-        elif a.is_Float and int(a) == a:
+        elif a.is_Float and a.round(0) == a:
             return GMPYInteger(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)

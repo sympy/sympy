@@ -336,11 +336,11 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
         1/2*sqrt(1/6)
     """
 
-    if int(aa + bb - cc) != (aa + bb - cc):
+    if int(aa + bb - cc) != (aa + bb - cc) and (aa + bb - cc).round(0) != (aa + bb - cc):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
-    if int(aa + cc - bb) != (aa + cc - bb):
+    if int(aa + cc - bb) != (aa + cc - bb) and (aa + cc - bb).round(0) != (aa + cc - bb):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
-    if int(bb + cc - aa) != (bb + cc - aa):
+    if int(bb + cc - aa) != (bb + cc - aa) and (bb + cc - aa).round(0) != (bb + cc - aa):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
     if (aa + bb - cc) < 0:
         return S.Zero

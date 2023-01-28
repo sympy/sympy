@@ -33,7 +33,7 @@ class PythonIntegerRing(IntegerRing):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
             return PythonInteger(a.p)
-        elif a.is_Float and int(a) == a:
+        elif a.is_Float and a == a.round(0):
             return PythonInteger(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)

@@ -1462,7 +1462,7 @@ class HolonomicFunction:
                 grp.append([i])
                 continue
             for j in grp:
-                if int(j[0] - i) == j[0] - i:
+                if (j[0] - i).round(0) == j[0] - i:
                     j.append(i)
                     intdiff = True
                     break
@@ -1474,7 +1474,7 @@ class HolonomicFunction:
         independent = True if all(len(i) == 1 for i in grp) else False
 
         allpos = all(i >= 0 for i in reals)
-        allint = all(int(i) == i for i in reals)
+        allint = all(int(i) == i or i.round(0) == i for i in reals)
 
         # if initial conditions are provided
         # then use them.
@@ -1964,7 +1964,7 @@ class HolonomicFunction:
             sol = S.Zero
             for j, i in enumerate(nonzeroterms):
 
-                if i < 0 or int(i) != i:
+                if i < 0 or not (int(i) == i or i.round(0) == i):
                     continue
 
                 i = int(i)
