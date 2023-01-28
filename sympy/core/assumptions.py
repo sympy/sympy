@@ -295,8 +295,7 @@ def _generate_assumption_rules():
     return _assume_rules
 
 
-#_assume_rules = _load_pre_generated_assumption_rules()
-_assume_rules =_generate_assumption_rules()
+_assume_rules = _load_pre_generated_assumption_rules()
 _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
