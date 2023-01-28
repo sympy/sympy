@@ -209,7 +209,7 @@ def test_solve_args():
     assert solve(True, x) == []
     assert solve([x - 1, False], [x], set=True) == ([], set())
     assert solve([-y*(x + y - 1)/2, (y - 1)/x/y + 1/y],
-        set=True, check=False) == ([x, y], {(1 - y, y), (x, 0)})
+        set=True) == ([x], {(1 - y,)})
     # ordering should be canonical, fastest to order by keys instead
     # of by size
     assert list(solve((y - 1, x - sqrt(3)*z)).keys()) == [x, y]
