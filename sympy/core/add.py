@@ -681,7 +681,7 @@ class Add(Expr, AssocOp):
             elif a.is_Mul and S.ImaginaryUnit in a.args:
                 coeff, ai = a.as_coeff_mul(S.ImaginaryUnit)
                 if ai == (S.ImaginaryUnit,) and coeff.is_extended_real:
-                    im_I.append(a*S.ImaginaryUnit)
+                    im_I.append(-coeff)
                 else:
                     return
             else:
