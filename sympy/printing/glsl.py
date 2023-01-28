@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sympy.core import Basic, S
 from sympy.core.function import Lambda
+from sympy.core.numbers import equal_valued
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from functools import reduce
@@ -281,9 +282,9 @@ class GLSLPrinter(CodePrinter):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        if expr.exp == -1:
+        if equal_valued(expr.exp, -1):
             return '1.0/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5:
+        elif equal_valued(expr.exp, 0.5):
             return 'sqrt(%s)' % self._print(expr.base)
         else:
             try:

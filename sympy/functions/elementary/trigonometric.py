@@ -5,7 +5,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.mod import Mod
-from sympy.core.numbers import Rational, pi, Integer, Float
+from sympy.core.numbers import Rational, pi, Integer, Float, equal_valued
 from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
@@ -218,7 +218,7 @@ def _pi_coeff(arg: Expr, cycles: int = 1) -> tUnion[Expr, None]:
                     m = 2**p
                     cm = c*m
                     i = int(cm)
-                    if i == cm:
+                    if equal_valued(i, cm):
                         c = Rational(i, m)
                         cx = c*x
                 else:

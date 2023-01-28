@@ -1336,7 +1336,7 @@ class Float(Number):
         (-p)**r -> exp(r*log(-p)) -> exp(r*(log(p) + I*Pi)) ->
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
-        if self == 0:
+        if equal_valued(self, 0):
             if expt.is_extended_positive:
                 return self
             if expt.is_extended_negative:
