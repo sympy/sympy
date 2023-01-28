@@ -1,5 +1,5 @@
-from sympy.strategies.traverse import (top_down, bottom_up, sall, top_down_once,
-        bottom_up_once, basic_fns)
+from sympy.strategies.traverse import (
+    top_down, bottom_up, sall, top_down_once, bottom_up_once, basic_fns)
 from sympy.strategies.rl import rebuild
 from sympy.strategies.util import expr_fns
 from sympy.core.add import Add
@@ -17,7 +17,8 @@ def zero_symbols(expression):
 def test_sall():
     zero_onelevel = sall(zero_symbols)
 
-    assert zero_onelevel(Basic(x, y, Basic(x, z))) == Basic(S(0), S(0), Basic(x, z))
+    assert zero_onelevel(Basic(x, y, Basic(x, z))) == \
+        Basic(S(0), S(0), Basic(x, z))
 
 
 def test_bottom_up():
@@ -55,19 +56,24 @@ class Basic2(Basic):
     pass
 
 
-rl = lambda x: Basic2(*x.args) if x.args and not isinstance(x.args[0], Integer) else x
+def rl(x):
+    if x.args and not isinstance(x.args[0], Integer):
+        return Basic2(*x.args)
+    return x
 
 
 def test_top_down_once():
     top_rl = top_down_once(rl)
 
-    assert top_rl(Basic(S(1.0), S(2.0), Basic(S(3), S(4)))) == Basic2(S(1.0), S(2.0), Basic(S(3), S(4)))
+    assert top_rl(Basic(S(1.0), S(2.0), Basic(S(3), S(4)))) == \
+        Basic2(S(1.0), S(2.0), Basic(S(3), S(4)))
 
 
 def test_bottom_up_once():
     bottom_rl = bottom_up_once(rl)
 
-    assert bottom_rl(Basic(S(1), S(2), Basic(S(3.0), S(4.0)))) == Basic(S(1), S(2), Basic2(S(3.0), S(4.0)))
+    assert bottom_rl(Basic(S(1), S(2), Basic(S(3.0), S(4.0)))) == \
+        Basic(S(1), S(2), Basic2(S(3.0), S(4.0)))
 
 
 def test_expr_fns():

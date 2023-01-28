@@ -57,6 +57,11 @@ def test_homomorphism():
     assert T.codomain == D
     assert T(a*b) == p
 
+    D3 = DihedralGroup(3)
+    T = homomorphism(D3, D3, D3.generators, D3.generators)
+    assert T.is_isomorphism()
+
+
 def test_isomorphisms():
 
     F, a, b = free_group("a, b")

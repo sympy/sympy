@@ -659,12 +659,12 @@ class OrthogonalKet(OrthogonalState, KetBase):
             is_zero = diff.is_zero
 
             if is_zero is False:
-                return 0
+                return S.Zero # i.e. Integer(0)
 
             if is_zero is None:
                 return None
 
-        return 1
+        return S.One # i.e. Integer(1)
 
 
 class OrthogonalBra(OrthogonalState, BraBase):

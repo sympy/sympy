@@ -268,7 +268,7 @@ class Pow(Expr):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Exponentiation
-    .. [2] https://en.wikipedia.org/wiki/Exponentiation#Zero_to_the_power_of_zero
+    .. [2] https://en.wikipedia.org/wiki/Zero_to_the_power_of_zero
     .. [3] https://en.wikipedia.org/wiki/Indeterminate_forms
 
     """

@@ -2,6 +2,7 @@ from . import rl
 from .core import do_one, exhaust, switch
 from .traverse import top_down
 
+
 def subs(d, **kwargs):
     """ Full simultaneous exact substitution.
 
@@ -20,6 +21,7 @@ def subs(d, **kwargs):
     else:
         return lambda x: x
 
+
 def canon(*rules, **kwargs):
     """ Strategy for canonicalization.
 
@@ -31,6 +33,7 @@ def canon(*rules, **kwargs):
     Keep doing this until there is no change.
     """
     return exhaust(top_down(exhaust(do_one(*rules)), **kwargs))
+
 
 def typed(ruletypes):
     """ Apply rules based on the expression type

@@ -19,7 +19,7 @@ from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
-    _parts_rule, integral_steps, contains_dont_know, manual_subs)
+    _parts_rule, integral_steps, manual_subs)
 from sympy.testing.pytest import raises, slow
 
 x, y, z, u, n, a, b, c, d, e = symbols('x y z u n a b c d e')
@@ -438,7 +438,7 @@ def test_issue_2850():
 
 def test_issue_9462():
     assert manualintegrate(sin(2*x)*exp(x), x) == exp(x)*sin(2*x)/5 - 2*exp(x)*cos(2*x)/5
-    assert not contains_dont_know(integral_steps(sin(2*x)*exp(x), x))
+    assert not integral_steps(sin(2*x)*exp(x), x).contains_dont_know()
     assert manualintegrate((x - 3) / (x**2 - 2*x + 2)**2, x) == \
                            Integral(x/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x) \
                            - 3*Integral(1/(x**4 - 4*x**3 + 8*x**2 - 8*x + 4), x)
@@ -592,7 +592,7 @@ def test_issue_22757():
 def test_issue_23348():
     steps = integral_steps(tan(x), x)
     constant_times_step = steps.substep.substep
-    assert constant_times_step.context == constant_times_step.constant * constant_times_step.other
+    assert constant_times_step.integrand == constant_times_step.constant * constant_times_step.other
 
 
 def test_issue_23566():

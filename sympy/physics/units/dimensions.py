@@ -10,7 +10,7 @@ no time dimension (but a velocity dimension instead) - in the basis - so the
 question of adding time to length has no meaning.
 """
 
-from typing import Dict as tDict
+from __future__ import annotations
 
 import collections
 from functools import reduce
@@ -29,9 +29,9 @@ from sympy.core.power import Pow
 
 class _QuantityMapper:
 
-    _quantity_scale_factors_global = {}  # type: tDict[Expr, Expr]
-    _quantity_dimensional_equivalence_map_global = {}  # type: tDict[Expr, Expr]
-    _quantity_dimension_global = {}  # type: tDict[Expr, Expr]
+    _quantity_scale_factors_global: dict[Expr, Expr] = {}
+    _quantity_dimensional_equivalence_map_global: dict[Expr, Expr] = {}
+    _quantity_dimension_global: dict[Expr, Expr] = {}
 
     def __init__(self, *args, **kwargs):
         self._quantity_dimension_map = {}
