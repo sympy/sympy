@@ -1111,14 +1111,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.BitXor: 'Not'
     }
 
-    cmpoperators = {
-        ast.Eq : 'Eq',
-        ast.NotEq: 'Ne',
-        ast.Lt: 'Lt',
-        ast.LtE: 'Le',
-        ast.Gt: 'Gt',
-        ast.GtE: 'Ge'
-    }
+
     functions = (
         'Abs', 'im', 're', 'sign', 'arg', 'conjugate',
         'acos', 'acot', 'acsc', 'asec', 'asin', 'atan',
@@ -1195,53 +1188,28 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             return new_node
         return node
 
+    relational_operators = {
+        ast.NotEq: 'Ne',
+        ast.Lt: 'Lt',
+        ast.LtE: 'Le',
+        ast.Gt: 'Gt',
+        ast.GtE: 'Ge'
+    }
     def visit_Compare(self, node):
-        if node.ops.__class__ in self.cmpoperators:
-            sympy_class = self.cmpoperators[node.ops.__class__]
-            comparators = self.visit(node.comparators)
+        if node.ops[0].__class__ in self.relational_operators:
+            sympy_class = self.relational_operators[node.ops[0].__class__]
+            right = self.visit(node.comparators[0])
             left = self.visit(node.left)
-
-            rev = False
-            if isinstance(node.ops, ast.NotEq):
-                comparators = ast.Call(
-                    func=ast.Name(id='Ne', ctx=ast.Load()),
-                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)),comparators],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
-                    starargs=None,
-                    kwargs=None
-                )
-            elif isinstance(node.ops, ast.LtE):
-                comparators = ast.Call(
-                    func=ast.Name(id='Le', ctx=ast.Load()),
-                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)), comparators],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
-                    starargs=None,
-                    kwargs=None
-                )
-            elif isinstance(node.ops, ast.GtE):
-                comparators = ast.Call(
-                    func=ast.Name(id='Ge', ctx=ast.Load()),
-                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)), comparators],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
-                    starargs=None,
-                    kwargs=None
-                )
-            if rev:  # undo reversal
-                left, comparators = comparators, left
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
-                args=[left, comparators],
+                args=[left, right],
                 keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
                 starargs=None,
                 kwargs=None
             )
-
-            if sympy_class in ('Lt', 'Gt'):
-
-                new_node.args = self.flatten(new_node.args, sympy_class)
-
             return new_node
         return node
+
 
     def visit_Call(self, node):
         new_node = self.generic_visit(node)
