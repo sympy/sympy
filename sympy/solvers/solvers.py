@@ -3079,7 +3079,7 @@ def _invert(eq, *symbols, **kwargs):
     >>> invert(sqrt(x) + y, y)
     (-sqrt(x), y)
     >>> invert(sqrt(x) + y, x, y)
-    (0, sqrt(x) + y)
+    (-1, y/sqrt(x))
 
     If there is more than one symbol in a power's base and the exponent
     is not an Integer, then the principal root will be used for the
