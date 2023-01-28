@@ -4446,7 +4446,7 @@ def equal_valued(x, y):
     Examples
     ========
 
-    >>> from sympy import S, symbols, Integer, Rational, Float
+    >>> from sympy import S, symbols, Rational, Float
     >>> from sympy.core.numbers import equal_valued
     >>> equal_valued(1, 2)
     False
