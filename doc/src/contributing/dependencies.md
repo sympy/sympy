@@ -302,7 +302,7 @@ is required to use the sampling functionality of `sympy.stats`.
   random module](https://numpy.org/doc/stable/reference/random/index.html).
 
 - **pymc**: `sample(library='pymc')` uses
-  [PyMC](https://pymc.io/) to do sampling.
+  [PyMC](https://www.pymc.io/) to do sampling.
 
 ### Optional SymEngine Backend
 
@@ -329,13 +329,6 @@ is required to use the sampling functionality of `sympy.stats`.
 
   SymEngine backend support is still experimental, so certain SymPy functions
   may not work correctly when it is enabled.
-
-### Experimental Rubi Integrator
-
-- **MatchPy**: [MatchPy](https://matchpy.readthedocs.io/en/latest/) is a
-  library for doing pattern matching. It is used in the experimental
-  sympy.integrals.rubi module, but presently, it is not used anywhere else in
-  SymPy. SymPy and MatchPy are able to interface with each other.
 
 ### Sage
 

@@ -183,3 +183,9 @@ SymPy), please post it on the [mailing list](https://groups.google.com/g/sympy),
 or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
 can use a different method listed in [](#alternatives-to-consider).
+
+## Report a Bug
+
+If you find a bug with {func}`~.solve`, please post the problem on the [SymPy
+mailing list](https://groups.google.com/g/sympy). Until the issue is resolved,
+you can use a different method listed in [](#alternatives-to-consider).

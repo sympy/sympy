@@ -16,6 +16,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.integers import floor
 from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
@@ -121,6 +122,7 @@ def test_mod():
 
 
 def test_divmod():
+    x = Symbol("x")
     assert divmod(S(12), S(8)) == Tuple(1, 4)
     assert divmod(-S(12), S(8)) == Tuple(-2, 4)
     assert divmod(S.Zero, S.One) == Tuple(0, 0)
@@ -128,6 +130,7 @@ def test_divmod():
     raises(ZeroDivisionError, lambda: divmod(S.One, S.Zero))
     assert divmod(S(12), 8) == Tuple(1, 4)
     assert divmod(12, S(8)) == Tuple(1, 4)
+    assert S(1024)//x == 1024//x == floor(1024/x)
 
     assert divmod(S("2"), S("3/2")) == Tuple(S("1"), S("1/2"))
     assert divmod(S("3/2"), S("2")) == Tuple(S("0"), S("3/2"))
@@ -365,6 +368,13 @@ def test_Rational_new():
     n = Rational(2, -4, gcd=1)
     assert n.q == 4
     assert n.p == -2
+
+def test_issue_24543():
+    for p in ('1.5', 1.5, 2):
+        for q in ('1.5', 1.5, 2):
+            assert Rational(p, q).as_numer_denom() == Rational('%s/%s'%(p,q)).as_numer_denom()
+
+    assert Rational('0.5', '100') == Rational(1, 200)
 
 
 def test_Number_new():
@@ -1587,25 +1597,25 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).cofactors(Integer(2)) == \
         (Integer(2), Integer(2), Integer(1))
 
-    assert Integer(4).gcd(Float(2.0)) == S.One
+    assert Integer(4).gcd(Float(2.0)) == Float(1.0)
     assert Integer(4).lcm(Float(2.0)) == Float(8.0)
-    assert Integer(4).cofactors(Float(2.0)) == (S.One, Integer(4), Float(2.0))
+    assert Integer(4).cofactors(Float(2.0)) == (Float(1.0), Float(4.0), Float(2.0))
 
-    assert S.Half.gcd(Float(2.0)) == S.One
+    assert S.Half.gcd(Float(2.0)) == Float(1.0)
     assert S.Half.lcm(Float(2.0)) == Float(1.0)
     assert S.Half.cofactors(Float(2.0)) == \
-        (S.One, S.Half, Float(2.0))
+        (Float(1.0), Float(0.5), Float(2.0))
 
 
 def test_Float_gcd_lcm_cofactors():
-    assert Float(2.0).gcd(Integer(4)) == S.One
+    assert Float(2.0).gcd(Integer(4)) == Float(1.0)
     assert Float(2.0).lcm(Integer(4)) == Float(8.0)
-    assert Float(2.0).cofactors(Integer(4)) == (S.One, Float(2.0), Integer(4))
+    assert Float(2.0).cofactors(Integer(4)) == (Float(1.0), Float(2.0), Float(4.0))
 
-    assert Float(2.0).gcd(S.Half) == S.One
+    assert Float(2.0).gcd(S.Half) == Float(1.0)
     assert Float(2.0).lcm(S.Half) == Float(1.0)
     assert Float(2.0).cofactors(S.Half) == \
-        (S.One, Float(2.0), S.Half)
+        (Float(1.0), Float(2.0), Float(0.5))
 
 
 def test_issue_4611():
@@ -2003,7 +2013,7 @@ def test_issue_10020():
 def test_invert_numbers():
     assert S(2).invert(5) == 3
     assert S(2).invert(Rational(5, 2)) == S.Half
-    assert S(2).invert(5.) == 0.5
+    assert S(2).invert(5.) == S.Half
     assert S(2).invert(S(5)) == 3
     assert S(2.).invert(5) == 0.5
     assert S(sqrt(2)).invert(5) == 1/sqrt(2)
@@ -2212,7 +2222,7 @@ def test_floordiv():
 
 def test_negation():
     assert -S.Zero is S.Zero
-    assert -Float(0) is not S.Zero and -Float(0) == 0
+    assert -Float(0) is not S.Zero and -Float(0) == 0.0
 
 
 def test_exponentiation_of_0():

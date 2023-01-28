@@ -117,6 +117,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_MatAdd = False
     is_MatMul = False
     is_real: bool | None
+    is_extended_real: bool | None
     is_zero: bool | None
     is_negative: bool | None
     is_commutative: bool | None
@@ -1757,7 +1758,8 @@ class Basic(Printable, metaclass=ManagedProperties):
             return m
         from .symbol import Wild
         from .function import WildFunction
-        wild = pattern.atoms(Wild, WildFunction)
+        from ..tensor.tensor import WildTensor, WildTensorIndex, WildTensorHead
+        wild = pattern.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead)
         # sanity check
         if set(m) - wild:
             raise ValueError(filldedent('''

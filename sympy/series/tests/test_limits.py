@@ -9,7 +9,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
 from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, atanh, sinh)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, atanh, sinh, tanh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
@@ -93,7 +93,7 @@ def test_basic1():
     assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(sqrt(x), x, 0, dir='-') == 0
-    assert limit(x**-pi, x, 0, dir='-') == oo/(-1)**pi
+    assert limit(x**-pi, x, 0, dir='-') == -oo*(-1)**(1 - pi)
     assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
 
     # test pull request 22491
@@ -714,6 +714,12 @@ def test_issue_8462():
     assert limit(binomial(n, n/2) * 3 ** (-n), n, oo) == 0
 
 
+def test_issue_8634():
+    n = Symbol('n', integer=True, positive=True)
+    x = Symbol('x')
+    assert limit(x**n, x, -oo) == oo*sign((-1)**n)
+
+
 def test_issue_8635_18176():
     x = Symbol('x', real=True)
     k = Symbol('k', positive=True)
@@ -1295,3 +1301,11 @@ def test_issue_23752():
     assert limit(expr1, x, 0, '-') == -sqrt(3)*I
     assert limit(expr2, x, 0, '+') == sqrt(3)*I
     assert limit(expr2, x, 0, '-') == -sqrt(3)*I
+
+
+def test_issue_24276():
+    fx = log(tan(pi/2*tanh(x))).diff(x)
+    assert fx.limit(x, oo) == 2
+    assert fx.simplify().limit(x, oo) == 2
+    assert fx.rewrite(sin).limit(x, oo) == 2
+    assert fx.rewrite(sin).simplify().limit(x, oo) == 2

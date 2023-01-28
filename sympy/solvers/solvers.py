@@ -47,7 +47,7 @@ from sympy.polys import roots, cancel, factor, Poly
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.misc import filldedent, debug
+from sympy.utilities.misc import filldedent, debugf
 from sympy.utilities.iterables import (connected_components,
     generate_bell, uniq, iterable, is_sequence, subsets, flatten)
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -2216,7 +2216,7 @@ def minsolve_linear_system(system, *symbols, **flags):
         bestsol = minsolve_linear_system(system, *symbols, quick=True)
         n0 = len([x for x in bestsol.values() if x != 0])
         for n in range(n0 - 1, 1, -1):
-            debug('minsolve: %s' % n)
+            debugf('minsolve: %s', n)
             thissol = None
             for nonzeros in combinations(range(N), n):
                 subm = Matrix([system.col(i).T for i in nonzeros] + [system.col(-1).T]).T
