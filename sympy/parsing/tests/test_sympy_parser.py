@@ -47,7 +47,7 @@ def test_sympy_parser():
         '-(2)': -Integer(2),
         '[-1, -2, 3]': [Integer(-1), Integer(-2), Integer(3)],
         'Symbol("x").free_symbols': x.free_symbols,
-        "S('S(3).n(n=3)')": 3.00,
+        "S('S(3).n(n=3)')": Float(3, 3),
         'factorint(12, visual=True)': Mul(
             Pow(2, 2, evaluate=False),
             Pow(3, 1, evaluate=False),

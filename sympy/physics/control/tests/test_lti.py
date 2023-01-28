@@ -1060,7 +1060,7 @@ def test_MIMOFeedback_functions():
     F_1 = MIMOFeedback(tfm_2, tfm_3)
     F_2 = MIMOFeedback(tfm_2, MIMOSeries(tfm_4, -tfm_1), 1)
 
-    assert F_1.sensitivity == Matrix([[1/2, 0], [0, 1/2]])
+    assert F_1.sensitivity == Matrix([[S.Half, 0], [0, S.Half]])
     assert F_2.sensitivity == Matrix([[(-2*s**4 + s**2)/(s**2 - s + 1),
         (2*s**3 - s**2)/(s**2 - s + 1)], [-s**2, s]])
 

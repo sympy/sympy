@@ -248,8 +248,8 @@ def test_CRootOf_evalf():
     # issue 9019
     r0 = rootof(x**2 + 1, 0, radicals=False)
     r1 = rootof(x**2 + 1, 1, radicals=False)
-    assert r0.n(4) == -1.0*I
-    assert r1.n(4) == 1.0*I
+    assert r0.n(4) == Float(-1.0, 4) * I
+    assert r1.n(4) == Float(1.0, 4) * I
 
     # make sure verification is used in case a max/min traps the "root"
     assert str(rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0).n(3)) == '-0.976'
