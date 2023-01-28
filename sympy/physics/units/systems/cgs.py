@@ -3,7 +3,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import UnitSystem, centimeter, gram, second, coulomb, charge, speed_of_light, current, mass, \
     length, voltage, magnetic_density, magnetic_flux
 from sympy.physics.units.definitions import coulombs_constant
-from sympy.physics.units.definitions.unit_definitions import angstrom, statcoulomb, statampere, statvolt, volt, tesla, gauss, \
+from sympy.physics.units.definitions.unit_definitions import statcoulomb, statampere, statvolt, volt, tesla, gauss, \
     weber, maxwell, debye, oersted, ohm, farad, henry, erg, ampere, coulomb_constant
 from sympy.physics.units.systems.mks import dimsys_length_weight_time
 
@@ -80,5 +80,5 @@ __all__ = [
     'statcoulomb', 'gauss', 'S', 'statvolt', 'oersted', 'statampere',
     'dimsys_cgs', 'coulomb', 'magnetic_density', 'magnetic_flux', 'One',
     'length', 'erg', 'mass', 'coulombs_constant', 'henry', 'ampere',
-    'cgs_gauss', 'angstrom'
+    'cgs_gauss'
 ]
