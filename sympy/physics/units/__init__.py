@@ -229,7 +229,7 @@ def find_unit(quantity, unit_system="SI"):
 
     >>> from sympy.physics import units as u
     >>> u.find_unit('charge')
-    ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
+    ['C', 'charge', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit(u.charge)
     ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit("ampere")
