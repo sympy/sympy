@@ -371,7 +371,7 @@ def PGL2F5():
     return G
 
 
-def find_transitive_subgroups_of_S6(*targets, verbose=True):
+def find_transitive_subgroups_of_S6(*targets, print_report=False):
     r"""
     Search for certain transitive subgroups of $S_6$.
 
@@ -422,7 +422,7 @@ def find_transitive_subgroups_of_S6(*targets, verbose=True):
     targets : list of :py:class:`~.S6TransitiveSubgroups` values
         The groups you want to find.
 
-    verbose : bool (default True)
+    print_report : bool (default False)
         If True, print to stdout the generators found for each group.
 
     Returns
@@ -507,7 +507,7 @@ def find_transitive_subgroups_of_S6(*targets, verbose=True):
 
     def finish_up(name, G):
         found[name] = G
-        if verbose:
+        if print_report:
             print("=" * 40)
             print(f"{name}:")
             print(G.generators)
