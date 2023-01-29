@@ -271,6 +271,10 @@ def test_laplace_transform():
         s**3*LaplaceTransform(f(t), t, s) - s**2*f(0) -\
             s*Subs(Derivative(f(t), t), t, 0) -\
             Subs(Derivative(f(t), (t, 2)), t, 0)
+    # Issue #7219
+    assert LT(diff(f(x, t, w), t, 2), t, s) ==\
+        (s**2*LaplaceTransform(f(x, t, w), t, s) - s*f(x, 0, w) -\
+         Subs(Derivative(f(x, t, w), t), t, 0), -oo, True)
     # Issue #23307
     assert LT(10*diff(f(t), (t, 1)), t, s, noconds=True) ==\
         10*s*LaplaceTransform(f(t), t, s) - 10*f(0)
