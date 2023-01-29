@@ -3890,9 +3890,39 @@ class Poly(Basic):
         sympy.polys.numberfields.galoisgroups.galois_group
 
         """
-        from sympy.polys.numberfields.galoisgroups import galois_group
-        return galois_group(f, by_name=by_name, max_tries=max_tries,
-                            randomize=randomize)
+        from sympy.polys.numberfields.galoisgroups import (
+            _galois_group_degree_3, _galois_group_degree_4_lookup,
+            _galois_group_degree_5_lookup_ext_factor,
+            _galois_group_degree_6_lookup,
+        )
+        if (not f.is_univariate
+            or not f.is_irreducible
+            or not f.is_monic
+            or not f.domain == ZZ
+        ):
+            raise ValueError('Require a monic irreducible univariate polynomial over ZZ.')
+        gg = {
+            3: _galois_group_degree_3,
+            4: _galois_group_degree_4_lookup,
+            5: _galois_group_degree_5_lookup_ext_factor,
+            6: _galois_group_degree_6_lookup,
+        }
+        max_supported = max(gg.keys())
+        n = f.degree()
+        if n > max_supported:
+            raise ValueError(f"Only polynomials up to degree {max_supported} are supported.")
+        elif n < 1:
+            raise ValueError("Constant polynomial has no Galois group.")
+        elif n == 1:
+            from sympy.combinatorics.galois import S1TransitiveSubgroups
+            name, alt = S1TransitiveSubgroups.S1, True
+        elif n == 2:
+            from sympy.combinatorics.galois import S2TransitiveSubgroups
+            name, alt = S2TransitiveSubgroups.S2, False
+        else:
+            name, alt = gg[n](f, max_tries=max_tries, randomize=randomize)
+        G = name if by_name else name.get_perm_group()
+        return G, alt
 
     @property
     def is_zero(f):

@@ -103,7 +103,7 @@ def test_galois_group():
     for deg in range(1, 7):
         polys = test_polys_by_deg[deg]
         for T, G, s in polys:
-            assert galois_group(Poly(T), by_name=True) == (G, s)
+            assert galois_group(T, by_name=True) == (G, s)
 
 
 def test__galois_group_degree_4_root_approx():

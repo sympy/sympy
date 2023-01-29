@@ -26,8 +26,10 @@ from sympy.polys.numberfields.galois_resolvents import (
     Resolvent,
 )
 from sympy.polys.numberfields.utilities import coeff_search
-from sympy.polys.polytools import Poly
+from sympy.polys.polytools import (Poly, poly_from_expr,
+                                   PolificationFailed, ComputationFailed)
 from sympy.polys.sqfreetools import dup_sqf_p
+from sympy.utilities import public
 
 
 class MaxTriesException(GaloisGroupException):
@@ -511,17 +513,19 @@ def _galois_group_degree_6_lookup(T, max_tries=30, randomize=False):
                 else (S6TransitiveSubgroups.G72, False))
 
 
-def galois_group(T, by_name=False, max_tries=30, randomize=False):
+@public
+def galois_group(f, gens=None, args=None,
+                 by_name=False, max_tries=30, randomize=False):
     r"""
-    Compute the Galois group for polynomials *T* up to degree 6.
+    Compute the Galois group for polynomials *f* up to degree 6.
 
     Examples
     ========
 
-    >>> from sympy import Poly, galois_group
+    >>> from sympy import galois_group
     >>> from sympy.abc import x
-    >>> T = Poly(x**4 + 1)
-    >>> G, alt = galois_group(T)
+    >>> f = x**4 + 1
+    >>> G, alt = galois_group(f)
     >>> print(G)
     PermutationGroup([
     (0 1)(2 3),
@@ -539,7 +543,7 @@ def galois_group(T, by_name=False, max_tries=30, randomize=False):
 
     Alternatively, the group can be returned by name:
 
-    >>> G_name, _ = galois_group(T, by_name=True)
+    >>> G_name, _ = galois_group(f, by_name=True)
     >>> print(G_name)
     S4TransitiveSubgroups.V
 
@@ -559,9 +563,13 @@ def galois_group(T, by_name=False, max_tries=30, randomize=False):
     Parameters
     ==========
 
-    T : Poly
+    f : Expr
         Irreducible, monic polynomial over :ref:`ZZ`, whose Galois group
         is to be determined.
+    gens : optional list of symbols
+        As in the :py:func:`~.poly_from_expr` function.
+    args: optional dict of optionss
+        As in the :py:func:`~.poly_from_expr` function.
     by_name : bool, default False
         If ``True``, the Galois group will be returned by name.
         Otherwise it will be returned as a :py:class:`~.PermutationGroup`.
@@ -590,38 +598,25 @@ def galois_group(T, by_name=False, max_tries=30, randomize=False):
     ======
 
     ValueError
-        if *T* is of an unsupported degree.
+        if *f* is of an unsupported degree.
 
     MaxTriesException
         if could not complete before exceeding *max_tries* in those steps
         that involve generating Tschirnhausen transformations.
 
+    See Also
+    ========
+
+    .Poly.galois_group
+
     """
-    if (   not T.is_univariate
-        or not T.is_irreducible
-        or not T.is_monic
-        or not T.domain == ZZ
-    ):
-        raise ValueError('Require a monic irreducible univariate polynomial over ZZ.')
-    gg = {
-        3: _galois_group_degree_3,
-        4: _galois_group_degree_4_lookup,
-        5: _galois_group_degree_5_lookup_ext_factor,
-        6: _galois_group_degree_6_lookup,
-    }
-    max_supported = max(gg.keys())
-    n = T.degree()
-    if n > max_supported:
-        raise ValueError(f"Only polynomials up to degree {max_supported} are supported.")
-    elif n < 1:
-        raise ValueError("Constant polynomial has no Galois group.")
-    elif n == 1:
-        from sympy.combinatorics.galois import S1TransitiveSubgroups
-        name, alt = S1TransitiveSubgroups.S1, True
-    elif n == 2:
-        from sympy.combinatorics.galois import S2TransitiveSubgroups
-        name, alt = S2TransitiveSubgroups.S2, False
-    else:
-        name, alt = gg[n](T, max_tries=max_tries, randomize=randomize)
-    G = name if by_name else name.get_perm_group()
-    return G, alt
+    gens = gens or []
+    args = args or {}
+
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed as exc:
+        raise ComputationFailed('galois_group', 1, exc)
+
+    return F.galois_group(by_name=by_name, max_tries=max_tries,
+                          randomize=randomize)
