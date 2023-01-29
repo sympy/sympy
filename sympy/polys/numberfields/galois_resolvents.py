@@ -267,6 +267,8 @@ class Resolvent:
             error in approximating the complex numbers to be plugged in.
 
         """
+        # As explained in the docstring for this class, our precision estimates
+        # require that M be at least 2.
         M = max(M, 2)
         f = self.coeff_prec_func if target == 'coeffs' else self.root_prec_func
         r, _, _, _ = evalf(2*f(M), 1, {})
@@ -461,7 +463,7 @@ def sparse_symmetrize_resolvent_coeffs(F, X, s, verbose=False):
     for i in range(1, len(s) + 1):
         if verbose:
             print('----')
-            print(f'Computing and symmetric poly of degree {i}...')
+            print(f'Computing symmetric poly of degree {i}...')
             sys.stdout.flush()
         t0 = time.time()
         G = symmetric_poly(i, *Y)
@@ -520,14 +522,14 @@ def sparse_symmetrize_resolvent_coeffs(F, X, s, verbose=False):
 
 
 def define_resolvents():
-    """Define all the resolvents we need. """
+    """Define all the resolvents for polys T of degree 4 through 6. """
     from sympy.combinatorics.galois import PGL2F5
     from sympy.combinatorics.permutations import Permutation
 
     R4, X4 = xring("X0,X1,X2,X3", ZZ, lex)
     X = X4
 
-    # The one resolvent used in `_galois_group_degree_4_simple()`:
+    # The one resolvent used in `_galois_group_degree_4_lookup()`:
     F40 = X[0]*X[1]**2 + X[1]*X[2]**2 + X[2]*X[3]**2 + X[3]*X[0]**2
     s40 = [
         Permutation(3),
@@ -538,7 +540,7 @@ def define_resolvents():
         Permutation(3)(2, 3),
     ]
 
-    # First resolvent used in `_galois_group_degree_4()`:
+    # First resolvent used in `_galois_group_degree_4_root_approx()`:
     F41 = X[0]*X[2] + X[1]*X[3]
     s41 = [
         Permutation(3),
@@ -549,7 +551,8 @@ def define_resolvents():
     R5, X5 = xring("X0,X1,X2,X3,X4", ZZ, lex)
     X = X5
 
-    # First resolvent used in `_galois_group_degree_5()`:
+    # First resolvent used in `_galois_group_degree_5_hybrid()`,
+    # and only one used in `_galois_group_degree_5_lookup_ext_factor()`:
     F51 = (  X[0]**2*(X[1]*X[4] + X[2]*X[3])
            + X[1]**2*(X[2]*X[0] + X[3]*X[4])
            + X[2]**2*(X[3]*X[1] + X[4]*X[0])
@@ -567,14 +570,14 @@ def define_resolvents():
     R6, X6 = xring("X0,X1,X2,X3,X4,X5", ZZ, lex)
     X = X6
 
-    # First resolvent used in `_galois_group_degree_6()`:
+    # First resolvent used in `_galois_group_degree_6_lookup()`:
     H = PGL2F5()
     term0 = X[0]**2*X[5]**2*(X[1]*X[4] + X[2]*X[3])
     terms = set(term0.compose(list(zip(X, s(X)))) for s in H.elements)
     F61 = sum(terms)
     s61 = [Permutation(5)] + [Permutation(5)(0, n) for n in range(1, 6)]
 
-    # Second resolvent used in `_galois_group_degree_6()`:
+    # Second resolvent used in `_galois_group_degree_6_lookup()`:
     F62 = X[0]*X[1]*X[2] + X[3]*X[4]*X[5]
     s62 = [Permutation(5)] + [
         Permutation(5)(i, j + 3) for i in range(3) for j in range(3)
@@ -659,6 +662,9 @@ def get_resolvent_by_lookup(T, number):
     return [ZZ(1)] + [c(*T_coeffs) for c in L]
 
 
+# Use
+#   (.venv) $ python -m sympy.polys.numberfields.galois_resolvents
+# to reproduce the table found in resolvent_lookup.py
 if __name__ == "__main__":
     import sys
     verbose = '-v' in sys.argv[1:]
