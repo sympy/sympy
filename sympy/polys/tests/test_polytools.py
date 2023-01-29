@@ -3160,9 +3160,9 @@ def test_cancel():
     assert cancel((x**2 + 1)/(x - I)) == x + I
 
 
-def test_gal():
+def test_galois_group():
     f = Poly(x ** 4 - 2)
-    G, alt = f.gal(by_name=True)
+    G, alt = f.galois_group(by_name=True)
     assert G == S4TransitiveSubgroups.D4
     assert alt is False
 
