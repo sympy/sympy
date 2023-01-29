@@ -218,8 +218,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     The Galois group of the Galois closure of the field can be computed (when
     the minimal polynomial of the field is of sufficiently small degree).
 
-    >>> K.gal(by_name=True)[0]
-    'C6'
+    >>> K.galois_group(by_name=True)[0]
+    S6TransitiveSubgroups.C6
 
     Notes
     =====
@@ -531,7 +531,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         rad = self._nilradicals_mod_p.get(p)
         return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
 
-    def gal(self, by_name=False, max_tries=30, randomize=False):
+    def galois_group(self, by_name=False, max_tries=30, randomize=False):
         """
         Compute the Galois group of the Galois closure of this field.
 
@@ -544,7 +544,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         >>> from sympy import QQ
         >>> from sympy.abc import x
         >>> k = QQ.alg_field_from_poly(x**4 + 1)
-        >>> G, _ = k.gal()
+        >>> G, _ = k.galois_group()
         >>> G.order()
         4
 
@@ -553,7 +553,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         degree of the field:
 
         >>> k = QQ.alg_field_from_poly(x**4 - 2)
-        >>> G, _ = k.gal()
+        >>> G, _ = k.galois_group()
         >>> G.order()
         8
 
@@ -565,7 +565,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         """
         f = self.ext.minpoly_of_element()
         _, f = f.clear_denoms(convert=True)
-        return f.gal(by_name=by_name, max_tries=max_tries, randomize=randomize)
+        return f.galois_group(by_name=by_name, max_tries=max_tries, randomize=randomize)
 
 
 def _make_converter(K):
