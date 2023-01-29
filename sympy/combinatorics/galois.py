@@ -245,8 +245,14 @@ def M20():
 def S3_in_S6():
     """
     Return a representation of S3 as a transitive subgroup of S6.
+
+    Notes
+    =====
+
+    The representation is easily found by viewing the group as the symmetries
+    of a triangular prism.
+
     """
-    # This can be thought of as the symmetries of a triangular prism.
     G = PermutationGroup(Permutation(0, 1, 2)(3, 4, 5), Permutation(0, 3)(2, 4)(1, 5))
     set_symmetric_group_properties(G, 3, 6)
     return G
@@ -255,6 +261,12 @@ def S3_in_S6():
 def A4_in_S6():
     """
     Return a representation of A4 as a transitive subgroup of S6.
+
+    Notes
+    =====
+
+    This was computed using :py:func:`~.find_transitive_subgroups_of_S6`.
+
     """
     G = PermutationGroup(Permutation(0, 4, 5)(1, 3, 2), Permutation(0, 1, 2)(3, 5, 4))
     set_alternating_group_properties(G, 4, 6)
@@ -264,6 +276,12 @@ def A4_in_S6():
 def S4m():
     """
     Return a representation of the S4- transitive subgroup of S6.
+
+    Notes
+    =====
+
+    This was computed using :py:func:`~.find_transitive_subgroups_of_S6`.
+
     """
     G = PermutationGroup(Permutation(1, 4, 5, 3), Permutation(0, 4)(1, 5)(2, 3))
     set_symmetric_group_properties(G, 4, 6)
@@ -273,6 +291,12 @@ def S4m():
 def S4p():
     """
     Return a representation of the S4+ transitive subgroup of S6.
+
+    Notes
+    =====
+
+    This was computed using :py:func:`~.find_transitive_subgroups_of_S6`.
+
     """
     G = PermutationGroup(Permutation(0, 2, 4, 1)(3, 5), Permutation(0, 3)(4, 5))
     set_symmetric_group_properties(G, 4, 6)
@@ -282,6 +306,12 @@ def S4p():
 def A4xC2():
     """
     Return a representation of the (A4 x C2) transitive subgroup of S6.
+
+    Notes
+    =====
+
+    This was computed using :py:func:`~.find_transitive_subgroups_of_S6`.
+
     """
     return PermutationGroup(
         Permutation(0, 4, 5)(1, 3, 2), Permutation(0, 1, 2)(3, 5, 4),
@@ -291,6 +321,12 @@ def A4xC2():
 def S4xC2():
     """
     Return a representation of the (S4 x C2) transitive subgroup of S6.
+
+    Notes
+    =====
+
+    This was computed using :py:func:`~.find_transitive_subgroups_of_S6`.
+
     """
     return PermutationGroup(
         Permutation(1, 4, 5, 3), Permutation(0, 4)(1, 5)(2, 3),
@@ -301,6 +337,12 @@ def G18():
     """
     Return a representation of the group G18, a transitive subgroup of S6
     isomorphic to the semidirect product of C3^2 with C2.
+
+    Notes
+    =====
+
+    This was computed using :py:func:`~.find_transitive_subgroups_of_S6`.
+
     """
     return PermutationGroup(
         Permutation(5)(0, 1, 2), Permutation(3, 4, 5),
@@ -311,6 +353,12 @@ def G36m():
     """
     Return a representation of the group G36-, a transitive subgroup of S6
     isomorphic to the semidirect product of C3^2 with C2^2.
+
+    Notes
+    =====
+
+    This was computed using :py:func:`~.find_transitive_subgroups_of_S6`.
+
     """
     return PermutationGroup(
         Permutation(5)(0, 1, 2), Permutation(3, 4, 5),
@@ -321,6 +369,12 @@ def G36p():
     """
     Return a representation of the group G36+, a transitive subgroup of S6
     isomorphic to the semidirect product of C3^2 with C4.
+
+    Notes
+    =====
+
+    This was computed using :py:func:`~.find_transitive_subgroups_of_S6`.
+
     """
     return PermutationGroup(
         Permutation(5)(0, 1, 2), Permutation(3, 4, 5),
@@ -347,6 +401,12 @@ def PSL2F5():
     r"""
     Return a representation of the group $PSL_2(\mathbb{F}_5)$, as a transitive
     subgroup of S6, isomorphic to $A_5$.
+
+    Notes
+    =====
+
+    This was computed using :py:func:`~.find_transitive_subgroups_of_S6`.
+
     """
     G = PermutationGroup(
         Permutation(0, 4, 5)(1, 3, 2), Permutation(0, 4, 3, 1, 5))
