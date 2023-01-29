@@ -578,7 +578,7 @@ def galois_group(T, by_name=False, max_tries=30, randomize=False):
     Returns
     =======
 
-    Pair ``(G, b)``
+    Pair ``(G, alt)``
         The first element ``G`` indicates the Galois group. It is a string if
         *by_name* was ``True``, and a :py:class:`~.PermutationGroup` if
         ``False``.
