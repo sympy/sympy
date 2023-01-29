@@ -535,7 +535,7 @@ class Pow(Expr):
             if self.exp.is_integer:
                 if self.exp.is_even:
                     return True
-                elif self.exp.is_odd:
+                elif self.exp.is_odd and self.base.is_zero is False:
                     return False
             elif im_e and log(self.base).is_imaginary:
                 return True

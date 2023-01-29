@@ -1118,13 +1118,13 @@ def test_Pow_is_real():
     assert (2**I).is_real is False
     assert (2**-I).is_real is False
     assert (i**2).is_extended_real is True
-    assert (i**3).is_extended_real is False
+    assert (i**3).is_extended_real is None  # could be zero
     assert (i**x).is_real is None  # could be (-I)**(2/3)
     e = Symbol('e', even=True)
     o = Symbol('o', odd=True)
     k = Symbol('k', integer=True)
     assert (i**e).is_extended_real is True
-    assert (i**o).is_extended_real is False
+    assert (i**o).is_extended_real is None  # could be zero
     assert (i**k).is_real is None
     assert (i**(4*k)).is_extended_real is True
 
@@ -1467,8 +1467,7 @@ def test_Pow_is_nonpositive_nonnegative():
     i = symbols('i', imaginary=True)
     assert (i**2).is_nonpositive is None
     assert (i**4).is_nonpositive is None
-    # XXX: Should this be None?
-    assert (i**3).is_nonpositive is False
+    assert (i**3).is_nonpositive is None
     # XXX: Should this be True?
     assert (I**i).is_nonnegative is None
     assert (exp(I)**i).is_nonnegative is True
