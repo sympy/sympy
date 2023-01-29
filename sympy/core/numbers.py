@@ -826,13 +826,13 @@ class Number(AtomicExpr):
         return S.Zero, (self,)
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         if rational and not self.is_Rational:
             return S.One, self
         return (self, S.One) if self else (S.One, self)
 
     def as_coeff_Add(self, rational=False):
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         if not rational:
             return self, S.Zero
         return S.Zero, self
@@ -2037,11 +2037,11 @@ class Rational(Number):
         return S.One, self
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return self, S.One
 
     def as_coeff_Add(self, rational=False):
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         return self, S.Zero
 
 

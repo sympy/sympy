@@ -122,7 +122,7 @@ class Quaternion(Expr):
             return obj
 
     def set_norm(self, norm):
-        """Sets norm of an already instantiated quaternion.:
+        """Sets norm of an already instantiated quaternion.
 
         Parameters
         ==========
@@ -1151,7 +1151,7 @@ class Quaternion(Expr):
         return (pout.b, pout.c, pout.d)
 
     def to_axis_angle(self):
-        """Returns the axis and angle of rotation of a quaternion
+        """Returns the axis and angle of rotation of a quaternion.
 
         Returns
         =======
@@ -1486,9 +1486,12 @@ class Quaternion(Expr):
         Parameters
         ==========
 
-        q1 : a pure Quaternion.
-        q2 : a pure Quaternion.
-        q3 : a pure Quaternion.
+        q1
+            A pure Quaternion.
+        q2
+            A pure Quaternion.
+        q3
+            A pure Quaternion.
 
         Returns
         =======

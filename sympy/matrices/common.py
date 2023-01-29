@@ -2450,7 +2450,7 @@ class MatrixOperations(MatrixRequired):
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
     def upper_triangular(self, k=0):
-        """returns the elements on and above the kth diagonal of a matrix.
+        """Return the elements on and above the kth diagonal of a matrix.
         If k is not specified then simply returns upper-triangular portion
         of a matrix
 
@@ -2489,7 +2489,7 @@ class MatrixOperations(MatrixRequired):
 
 
     def lower_triangular(self, k=0):
-        """returns the elements on and below the kth diagonal of a matrix.
+        """Return the elements on and below the kth diagonal of a matrix.
         If k is not specified then simply returns lower-triangular portion
         of a matrix
 

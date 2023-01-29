@@ -396,7 +396,6 @@ class Add(Expr, AssocOp):
 
     @classmethod
     def class_key(cls):
-        """Nice order of classes"""
         return 3, 1, cls.__name__
 
     @property
@@ -987,7 +986,7 @@ class Add(Expr, AssocOp):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        returns a tuple representing a complex number
+        Return a tuple representing a complex number.
 
         Examples
         ========
