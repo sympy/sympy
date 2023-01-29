@@ -10,8 +10,9 @@ rather than receive an instance of the :py:class:`~.PermutationGroup`
 class, and then have to do extra work to determine which group it is, by
 checking various properties.
 
-With a name in hand, this module's :py:func:`~.get_group_by_name` function can
-then be used to retrieve a :py:class:`~.PermutationGroup`.
+Names are instances of ``Enum`` classes defined in this module. With a name in
+hand, the name's ``get_perm_group`` method can then be used to retrieve a
+:py:class:`~.PermutationGroup`.
 
 The names used for groups in this module are taken from [1].
 
@@ -210,8 +211,8 @@ def S3_in_S6():
     Notes
     =====
 
-    The representation is easily found by viewing the group as the symmetries
-    of a triangular prism.
+    The representation is found by viewing the group as the symmetries of a
+    triangular prism.
 
     """
     G = PermutationGroup(Permutation(0, 1, 2)(3, 4, 5), Permutation(0, 3)(2, 4)(1, 5))

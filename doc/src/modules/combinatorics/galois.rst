@@ -5,8 +5,6 @@ Galois Groups
 
 .. automodule:: sympy.combinatorics.galois
 
-.. autofunction:: get_group_by_name
-
 .. autoclass:: S6TransitiveSubgroups
 
 .. autoclass:: S5TransitiveSubgroups

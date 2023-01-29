@@ -568,7 +568,7 @@ def galois_group(f, gens=None, args=None,
         is to be determined.
     gens : optional list of symbols
         As in the :py:func:`~.poly_from_expr` function.
-    args: optional dict of optionss
+    args : optional dict of optionss
         As in the :py:func:`~.poly_from_expr` function.
     by_name : bool, default False
         If ``True``, the Galois group will be returned by name.
