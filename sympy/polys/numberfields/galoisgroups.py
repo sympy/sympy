@@ -541,22 +541,20 @@ def galois_group(T, by_name=False, max_tries=30, randomize=False):
 
     >>> G_name, _ = galois_group(T, by_name=True)
     >>> print(G_name)
-    V
+    S4TransitiveSubgroups.V
 
-    The group itself can then be obtained using the
-    :py:func:`sympy.combinatorics.galois.get_group_by_name` function:
+    The group itself can then be obtained by calling the name's
+    ``get_perm_group()`` method:
 
-    >>> from sympy.combinatorics.galois import get_group_by_name
-    >>> G = get_group_by_name(4, G_name)
-    >>> G
+    >>> G_name.get_perm_group()
     PermutationGroup([
     (0 1)(2 3),
     (0 2)(1 3)])
 
     Group names are values of the enum classes
-    :py:class:`sympy.combinatorics.galois.S4TransitiveSubgroups`,
-    :py:class:`sympy.combinatorics.galois.S5TransitiveSubgroups`,
-    and so forth.
+    :py:class:`sympy.combinatorics.galois.S1TransitiveSubgroups`,
+    :py:class:`sympy.combinatorics.galois.S2TransitiveSubgroups`,
+    etc.
 
     Parameters
     ==========
@@ -565,7 +563,7 @@ def galois_group(T, by_name=False, max_tries=30, randomize=False):
         Irreducible, monic polynomial over :ref:`ZZ`, whose Galois group
         is to be determined.
     by_name : bool, default False
-        If ``True``, the Galois group will be returned by name (string).
+        If ``True``, the Galois group will be returned by name.
         Otherwise it will be returned as a :py:class:`~.PermutationGroup`.
     max_tries : int, default 30
         Make at most this many attempts in those steps that involve
@@ -579,9 +577,11 @@ def galois_group(T, by_name=False, max_tries=30, randomize=False):
     =======
 
     Pair ``(G, alt)``
-        The first element ``G`` indicates the Galois group. It is a string if
-        *by_name* was ``True``, and a :py:class:`~.PermutationGroup` if
-        ``False``.
+        The first element ``G`` indicates the Galois group. It is an instance
+        of one of the :py:class:`sympy.combinatorics.galois.S1TransitiveSubgroups`
+        :py:class:`sympy.combinatorics.galois.S2TransitiveSubgroups`, etc. enum
+        classes if *by_name* was ``True``, and a :py:class:`~.PermutationGroup`
+        if ``False``.
 
         The second element is a boolean, saying whether the group is contained
         in the alternating group $A_n$ ($n$ the degree of *T*).
@@ -603,8 +603,6 @@ def galois_group(T, by_name=False, max_tries=30, randomize=False):
         or not T.domain == ZZ
     ):
         raise ValueError('Require a monic irreducible univariate polynomial over ZZ.')
-    from sympy.combinatorics.galois import (
-        get_group_by_name, S1TransitiveSubgroups, S2TransitiveSubgroups)
     gg = {
         3: _galois_group_degree_3,
         4: _galois_group_degree_4_lookup,
@@ -618,10 +616,12 @@ def galois_group(T, by_name=False, max_tries=30, randomize=False):
     elif n < 1:
         raise ValueError("Constant polynomial has no Galois group.")
     elif n == 1:
+        from sympy.combinatorics.galois import S1TransitiveSubgroups
         name, alt = S1TransitiveSubgroups.S1, True
     elif n == 2:
+        from sympy.combinatorics.galois import S2TransitiveSubgroups
         name, alt = S2TransitiveSubgroups.S2, False
     else:
         name, alt = gg[n](T, max_tries=max_tries, randomize=randomize)
-    G = name if by_name else get_group_by_name(n, name)
+    G = name if by_name else name.get_perm_group()
     return G, alt
