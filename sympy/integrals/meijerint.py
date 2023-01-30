@@ -26,9 +26,8 @@ The main references for this are:
     Gordon and Breach Science Publisher
 """
 
+from __future__ import annotations
 import itertools
-
-from typing import Dict as tDict, Tuple as tTuple
 
 from sympy import SYMPY_DEBUG
 from sympy.core import S, Expr
@@ -69,6 +68,7 @@ from sympy.logic.boolalg import And, Or, BooleanAtom, Not, BooleanFunction
 from sympy.polys import cancel, factor
 from sympy.utilities.iterables import multiset_partitions
 from sympy.utilities.misc import debug as _debug
+from sympy.utilities.misc import debugf as _debugf
 
 # keep this at top for easy reference
 z = Dummy('z')
@@ -569,7 +569,7 @@ def _inflate_fox_h(g, a):
     bs = [(n + 1)/p for n in range(p)]
     return D, meijerg(g.an, g.aother, g.bm, list(g.bother) + bs, z)
 
-_dummies = {}  # type: tDict[tTuple[str, str], Dummy]
+_dummies: dict[tuple[str, str], Dummy]  = {}
 
 
 def _dummy(name, token, expr, **kwargs):
@@ -803,12 +803,15 @@ def _check_antecedents_1(g, x, helper=False):
     def debug(*msg):
         _debug(*msg)
 
+    def debugf(string, arg):
+        _debugf(string, arg)
+
     debug('Checking antecedents for 1 function:')
-    debug('  delta=%s, eta=%s, m=%s, n=%s, p=%s, q=%s'
-          % (delta, eta, m, n, p, q))
-    debug('  ap = %s, %s' % (list(g.an), list(g.aother)))
-    debug('  bq = %s, %s' % (list(g.bm), list(g.bother)))
-    debug('  cond_3=%s, cond_3*=%s, cond_4=%s' % (cond_3, cond_3_star, cond_4))
+    debugf('  delta=%s, eta=%s, m=%s, n=%s, p=%s, q=%s',
+           (delta, eta, m, n, p, q))
+    debugf('  ap = %s, %s', (list(g.an), list(g.aother)))
+    debugf('  bq = %s, %s', (list(g.bm), list(g.bother)))
+    debugf('  cond_3=%s, cond_3*=%s, cond_4=%s', (cond_3, cond_3_star, cond_4))
 
     conds = []
 
@@ -1007,11 +1010,11 @@ def _check_antecedents(g1, g2, x):
     theta = (pi*(v - s - t) + Abs(unbranched_argument(sigma)))/(v - u)
 
     _debug('Checking antecedents:')
-    _debug('  sigma=%s, s=%s, t=%s, u=%s, v=%s, b*=%s, rho=%s'
-           % (sigma, s, t, u, v, bstar, rho))
-    _debug('  omega=%s, m=%s, n=%s, p=%s, q=%s, c*=%s, mu=%s,'
-           % (omega, m, n, p, q, cstar, mu))
-    _debug('  phi=%s, eta=%s, psi=%s, theta=%s' % (phi, eta, psi, theta))
+    _debugf('  sigma=%s, s=%s, t=%s, u=%s, v=%s, b*=%s, rho=%s',
+            (sigma, s, t, u, v, bstar, rho))
+    _debugf('  omega=%s, m=%s, n=%s, p=%s, q=%s, c*=%s, mu=%s,',
+            (omega, m, n, p, q, cstar, mu))
+    _debugf('  phi=%s, eta=%s, psi=%s, theta=%s', (phi, eta, psi, theta))
 
     def _c1():
         for g in [g1, g2]:
@@ -1122,13 +1125,13 @@ def _check_antecedents(g1, g2, x):
     for cond, i in [(c1, 1), (c2, 2), (c3, 3), (c4, 4), (c5, 5), (c6, 6),
                     (c7, 7), (c8, 8), (c9, 9), (c10, 10), (c11, 11),
                     (c12, 12), (c13, 13), (c14, 14), (c15, 15)]:
-        _debug('  c%s:' % i, cond)
+        _debugf('  c%s: %s', (i, cond))
 
     # We will return Or(*conds)
     conds = []
 
     def pr(count):
-        _debug('  case %s:' % count, conds[-1])
+        _debugf('  case %s: %s', (count, conds[-1]))
     conds += [And(m*n*s*t != 0, bstar.is_positive is True, cstar.is_positive is True, c1, c2, c3, c10,
                   c12)]  # 1
     pr(1)
@@ -1373,9 +1376,9 @@ def _check_antecedents_inversion(g, x):
         epsilon = S.NaN
     theta = ((1 - sigma)/2 + Add(*g.bq) - Add(*g.ap))/sigma
     delta = g.delta
-    _debug('  m=%s, n=%s, p=%s, q=%s, tau=%s, nu=%s, rho=%s, sigma=%s' % (
-        m, n, p, q, tau, nu, rho, sigma))
-    _debug('  epsilon=%s, theta=%s, delta=%s' % (epsilon, theta, delta))
+    _debugf('  m=%s, n=%s, p=%s, q=%s, tau=%s, nu=%s, rho=%s, sigma=%s',
+            (m, n, p, q, tau, nu, rho, sigma))
+    _debugf('  epsilon=%s, theta=%s, delta=%s', (epsilon, theta, delta))
 
     # First check if the computation is valid.
     if not (g.delta >= e/2 or (p >= 1 and p >= q)):
@@ -1805,7 +1808,7 @@ def meijerint_definite(f, x, a, b):
     #
     # There are usually several ways of doing this, and we want to try all.
     # This function does (1), calls _meijerint_definite_2 for step (2).
-    _debug('Integrating', f, 'wrt %s from %s to %s.' % (x, a, b))
+    _debugf('Integrating %s wrt %s from %s to %s.', (f, x, a, b))
     f = sympify(f)
     if f.has(DiracDelta):
         _debug('Integrand has DiracDelta terms - giving up.')
@@ -1873,7 +1876,7 @@ def meijerint_definite(f, x, a, b):
         if b is S.Infinity:
             for split in _find_splitting_points(f, x):
                 if (a - split >= 0) == True:
-                    _debug('Trying x -> x + %s' % split)
+                    _debugf('Trying x -> x + %s', split)
                     res = _meijerint_definite_2(f.subs(x, x + split)
                                                 *Heaviside(x + split - a), x)
                     if res:
@@ -2068,9 +2071,9 @@ def _meijerint_definite_4(f, x, only_double=False):
                 break
             cond = _my_unpolarify(cond)
             if cond == False:
-                _debug('But cond is always False (full_pb=%s).' % full_pb)
+                _debugf('But cond is always False (full_pb=%s).', full_pb)
             else:
-                _debug('Result before branch substitutions is:', res)
+                _debugf('Result before branch substitutions is: %s', (res, ))
                 if only_double:
                     return res, cond
                 return _my_unpolarify(hyperexpand(res)), cond

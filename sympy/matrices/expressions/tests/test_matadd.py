@@ -1,5 +1,6 @@
 from sympy.matrices.expressions import MatrixSymbol, MatAdd, MatPow, MatMul
 from sympy.matrices.expressions.special import GenericZeroMatrix, ZeroMatrix
+from sympy.matrices.common import ShapeError
 from sympy.matrices import eye, ImmutableMatrix
 from sympy.core import Add, Basic, S
 from sympy.core.add import add
@@ -46,3 +47,12 @@ def test_zero_matrix_add():
 @XFAIL
 def test_matrix_Add_with_scalar():
     raises(TypeError, lambda: Add(0, ZeroMatrix(2, 2)))
+
+
+def test_shape_error():
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 3)
+    raises(ShapeError, lambda: MatAdd(A, B))
+
+    A = MatrixSymbol('A', 3, 2)
+    raises(ShapeError, lambda: MatAdd(A, B))

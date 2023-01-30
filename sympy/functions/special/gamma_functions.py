@@ -264,7 +264,7 @@ class lowergamma(Function):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Lower_incomplete_Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Lower_incomplete_gamma_function
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6,
            Section 5, Handbook of Mathematical Functions with Formulas, Graphs,
            and Mathematical Tables
@@ -449,7 +449,7 @@ class uppergamma(Function):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Upper_incomplete_Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Upper_incomplete_gamma_function
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6,
            Section 5, Handbook of Mathematical Functions with Formulas, Graphs,
            and Mathematical Tables

@@ -12,8 +12,9 @@ from sympy.core import (S, symbols, Add, Mul, SympifyError, Rational,
 from sympy.functions import sin, cos, tan, sqrt, cbrt, exp
 from sympy.simplify import simplify
 from sympy.matrices import (ImmutableMatrix, Inverse, MatAdd, MatMul,
-        MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError,
-        SparseMatrix, Transpose, Adjoint, NonSquareMatrixError, MatrixSet)
+        MatPow, Matrix, MatrixExpr, MatrixSymbol,
+        SparseMatrix, Transpose, Adjoint, MatrixSet)
+from sympy.matrices.common import NonSquareMatrixError
 from sympy.matrices.expressions.determinant import Determinant, det
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices.expressions.special import ZeroMatrix, Identity
@@ -50,8 +51,7 @@ def test_matrix_symbol_creation():
 
 def test_matexpr_properties():
     assert A.shape == (n, m)
-    assert (A*B).shape == (n, l)
-    raises(ShapeError, lambda: B*A)
+    assert (A * B).shape == (n, l)
     assert A[0, 1].indices == (0, 1)
     assert A[0, 0].symbol == A
     assert A[0, 0].symbol.name == 'A'
@@ -114,14 +114,12 @@ def test_addition():
     assert (A + B).shape == A.shape
     assert isinstance(A - A + 2*B, MatMul)
 
-    raises(ShapeError, lambda: A + B.T)
     raises(TypeError, lambda: A + 1)
     raises(TypeError, lambda: 5 + A)
     raises(TypeError, lambda: 5 - A)
 
     assert A + ZeroMatrix(n, m) - A == ZeroMatrix(n, m)
-    with raises(TypeError):
-        ZeroMatrix(n,m) + S.Zero
+    raises(TypeError, lambda: ZeroMatrix(n, m) + S.Zero)
 
 
 def test_multiplication():
@@ -130,10 +128,7 @@ def test_multiplication():
     C = MatrixSymbol('C', n, n)
 
     assert (2*A*B).shape == (n, l)
-
     assert (A*0*B) == ZeroMatrix(n, l)
-
-    raises(ShapeError, lambda: B*A)
     assert (2*A).shape == A.shape
 
     assert A * ZeroMatrix(m, m) * B == ZeroMatrix(n, l)

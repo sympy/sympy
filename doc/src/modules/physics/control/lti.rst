@@ -30,3 +30,5 @@ lti
 
 .. autoclass:: MIMOFeedback
    :members:
+
+.. autofunction:: bilinear

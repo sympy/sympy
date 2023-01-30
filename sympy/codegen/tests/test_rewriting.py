@@ -1,5 +1,5 @@
 import tempfile
-from sympy.core.numbers import pi
+from sympy.core.numbers import pi, Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -13,17 +13,20 @@ from sympy.printing.codeprinter import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
-from sympy.codegen.scipy_nodes import cosm1
+from sympy.codegen.scipy_nodes import cosm1, powm1
 from sympy.codegen.rewriting import (
-    optimize, cosm1_opt, log2_opt, exp2_opt, expm1_opt, log1p_opt, optims_c99,
+    optimize, cosm1_opt, log2_opt, exp2_opt, expm1_opt, log1p_opt, powm1_opt, optims_c99,
     create_expand_pow_optimization, matinv_opt, logaddexp_opt, logaddexp2_opt,
-    optims_numpy, sinc_opts, FuncMinusOneOptim
+    optims_numpy, optims_scipy, sinc_opts, FuncMinusOneOptim
 )
 from sympy.testing.pytest import XFAIL, skip
+from sympy.utilities import lambdify
 from sympy.utilities._compilation import compile_link_import_strings, has_c
 from sympy.utilities._compilation.util import may_xfail
 
 cython = import_module('cython')
+numpy = import_module('numpy')
+scipy = import_module('scipy')
 
 
 def test_log2_opt():
@@ -192,6 +195,60 @@ def test_expm1_cosm1_mixed():
     expr1 = exp(x) + cos(x) - 2
     opt1 = optimize(expr1, [expm1_opt, cosm1_opt])
     assert opt1 == cosm1(x) + expm1(x)
+
+
+def _check_num_lambdify(expr, opt, val_subs, approx_ref, lambdify_kw=None, poorness=1e10):
+    """ poorness=1e10 signifies that `expr` loses precision of at least ten decimal digits. """
+    num_ref = expr.subs(val_subs).evalf()
+    eps = numpy.finfo(numpy.float64).eps
+    assert abs(num_ref - approx_ref) < approx_ref*eps
+    f1 = lambdify(list(val_subs.keys()), opt, **(lambdify_kw or {}))
+    args_float = tuple(map(float, val_subs.values()))
+    num_err1 = abs(f1(*args_float) - approx_ref)
+    assert num_err1 < abs(num_ref*eps)
+    f2 = lambdify(list(val_subs.keys()), expr, **(lambdify_kw or {}))
+    num_err2 = abs(f2(*args_float) - approx_ref)
+    assert num_err2 > abs(num_ref*eps*poorness)   # this only ensures that the *test* works as intended
+
+
+def test_cosm1_apart():
+    x = Symbol('x')
+
+    expr1 = 1/cos(x) - 1
+    opt1 = optimize(expr1, [cosm1_opt])
+    assert opt1 == -cosm1(x)/cos(x)
+    if scipy:
+        _check_num_lambdify(expr1, opt1, {x: S(10)**-30}, 5e-61, lambdify_kw=dict(modules='scipy'))
+
+    expr2 = 2/cos(x) - 2
+    opt2 = optimize(expr2, optims_scipy)
+    assert opt2 == -2*cosm1(x)/cos(x)
+    if scipy:
+        _check_num_lambdify(expr2, opt2, {x: S(10)**-30}, 1e-60, lambdify_kw=dict(modules='scipy'))
+
+    expr3 = pi/cos(3*x) - pi
+    opt3 = optimize(expr3, [cosm1_opt])
+    assert opt3 == -pi*cosm1(3*x)/cos(3*x)
+    if scipy:
+        _check_num_lambdify(expr3, opt3, {x: S(10)**-30/3}, float(5e-61*pi), lambdify_kw=dict(modules='scipy'))
+
+
+def test_powm1():
+    args = x, y = map(Symbol, "xy")
+
+    expr1 = x**y - 1
+    opt1 = optimize(expr1, [powm1_opt])
+    assert opt1 == powm1(x, y)
+    for arg in args:
+        assert expr1.diff(arg) == opt1.diff(arg)
+    if scipy and tuple(map(int, scipy.version.version.split('.')[:3])) >= (1, 10, 0):
+        subs1_a = {x: Rational(*(1.0+1e-13).as_integer_ratio()), y: pi}
+        ref1_f64_a = 3.139081648208105e-13
+        _check_num_lambdify(expr1, opt1, subs1_a, ref1_f64_a, lambdify_kw=dict(modules='scipy'), poorness=10**11)
+
+        subs1_b = {x: pi, y: Rational(*(1e-10).as_integer_ratio())}
+        ref1_f64_b = 1.1447298859149205e-10
+        _check_num_lambdify(expr1, opt1, subs1_b, ref1_f64_b, lambdify_kw=dict(modules='scipy'), poorness=10**9)
 
 
 def test_log1p_opt():

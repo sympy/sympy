@@ -448,7 +448,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         See Also
         ========
 
-        integral_basis()
+        integral_basis
 
         """
         if self._maximal_order is None:
@@ -496,10 +496,9 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         See Also
         ========
 
-        to_sympy()
-        to_alg_num()
-        maximal_order()
-
+        to_sympy
+        to_alg_num
+        maximal_order
         """
         ZK = self.maximal_order()
         M = ZK.QQ_matrix

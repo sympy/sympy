@@ -124,6 +124,7 @@ def AlternatingGroup(n):
     G._degree = n
     G._is_transitive = True
     G._is_alt = True
+    G._is_dihedral = False
     return G
 
 
@@ -168,6 +169,7 @@ def CyclicGroup(n):
     G._degree = n
     G._is_transitive = True
     G._order = n
+    G._is_dihedral = (n == 2)
     return G
 
 
@@ -230,6 +232,7 @@ def DihedralGroup(n):
         G._is_nilpotent = True
     else:
         G._is_nilpotent = False
+    G._is_dihedral = True
     G._is_abelian = False
     G._is_solvable = True
     G._degree = n
@@ -302,6 +305,7 @@ def SymmetricGroup(n):
     G._degree = n
     G._is_transitive = True
     G._is_sym = True
+    G._is_dihedral = (n in [2, 3])  # cf Landau's func and Stirling's approx
     return G
 
 

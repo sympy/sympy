@@ -2922,15 +2922,15 @@ def test_Y3():
     t = symbols('t', positive=True)
     w = symbols('w', real=True)
     s = symbols('s')
-    F, _, _ = laplace_transform(sinh(w*t)*cosh(w*t), t, s)
+    F, _, _ = laplace_transform(sinh(w*t)*cosh(w*t), t, s, simplify=True)
     assert F == w/(s**2 - 4*w**2)
 
 
 def test_Y4():
     t = symbols('t', positive=True)
     s = symbols('s')
-    F, _, _ = laplace_transform(erf(3/sqrt(t)), t, s)
-    assert F == (1 - exp(-6*sqrt(s)))/s
+    F, _, _ = laplace_transform(erf(3/sqrt(t)), t, s, simplify=True)
+    assert F == 1/s - exp(-6*sqrt(s))/s
 
 
 def test_Y5_Y6():
@@ -2944,13 +2944,13 @@ def test_Y5_Y6():
     t = symbols('t', positive=True)
     s = symbols('s')
     y = Function('y')
-    F, _, _ = laplace_transform(diff(y(t), t, 2)
-                                + y(t)
-                                - 4*(Heaviside(t - 1)
-                                - Heaviside(t - 2)), t, s)
-    assert (F == s**2*LaplaceTransform(y(t), t, s) - s*y(0) +
-            LaplaceTransform(y(t), t, s) - Subs(Derivative(y(t), t), t, 0) -
-            4*exp(-s)/s + 4*exp(-2*s)/s)
+    F, _, _ = laplace_transform(diff(y(t), t, 2) + y(t)
+                                - 4*(Heaviside(t - 1) - Heaviside(t - 2)),
+                                t, s, simplify=True)
+    D = (F - (s**2*LaplaceTransform(y(t), t, s) - s*y(0) +
+            LaplaceTransform(y(t), t, s) - Subs(Derivative(y(t), t), t, 0) +
+            4*(1 - exp(s))*exp(-2*s)/s)).simplify(doit=False)
+    assert D == 0
 # TODO implement second part of test case
 # Now, solve for Y(s) and then take the inverse Laplace transform
 #   => Y(s) = s/(s^2 + 1) + 4 [1/s - s/(s^2 + 1)] [e^(-s) - e^(-2 s)]

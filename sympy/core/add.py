@@ -193,7 +193,7 @@ class Add(Expr, AssocOp):
 
         NB: the removal of 0 is already handled by AssocOp.__new__
 
-        See also
+        See Also
         ========
 
         sympy.core.mul.Mul.flatten
@@ -396,7 +396,6 @@ class Add(Expr, AssocOp):
 
     @classmethod
     def class_key(cls):
-        """Nice order of classes"""
         return 3, 1, cls.__name__
 
     @property
@@ -987,7 +986,7 @@ class Add(Expr, AssocOp):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        returns a tuple representing a complex number
+        Return a tuple representing a complex number.
 
         Examples
         ========
@@ -1272,7 +1271,7 @@ class Add(Expr, AssocOp):
     def __neg__(self):
         if not global_parameters.distribute:
             return super().__neg__()
-        return Add(*[-i for i in self.args])
+        return Mul(S.NegativeOne, self)
 
 add = AssocOpDispatcher('add')
 

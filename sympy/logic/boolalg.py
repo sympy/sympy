@@ -2761,7 +2761,7 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
     Parameters
     ==========
 
-    expr : Boolean expression
+    expr : Boolean
 
     form : string (``'cnf'`` or ``'dnf'``) or ``None`` (default).
         If ``'cnf'`` or ``'dnf'``, the simplest expression in the corresponding
@@ -2780,7 +2780,7 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         made. By setting ``force`` to ``True``, this limit is removed. Be
         aware that this can lead to very long simplification times.
 
-    dontcare : Boolean expression
+    dontcare : Boolean
         Optimize expression under the assumption that inputs where this
         expression is true are don't care. This is useful in e.g. Piecewise
         conditions, where later conditions do not need to consider inputs that
