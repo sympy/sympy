@@ -30,7 +30,7 @@ from sympy.physics.units.definitions import (
     planck_impedance, planck_acceleration, bit, byte, kibibyte, mebibyte,
     gibibyte, tebibyte, pebibyte, exbibyte, curie, rutherford, radian, degree,
     steradian, angular_mil, atomic_mass_unit, gee, kPa, ampere, u0, kelvin,
-    mol, mole, candela, electric_constant, boltzmann, angstrom,
+    mol, mole, candela, electric_constant, boltzmann, angstrom
 )
 
 

@@ -4,7 +4,7 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import convert_to, coulomb_constant, elementary_charge, gravitational_constant, planck
 from sympy.physics.units.definitions.unit_definitions import angstrom, statcoulomb, coulomb, second, gram, centimeter, erg, \
-    newton, joule, dyne, speed_of_light, meter
+    newton, joule, dyne, speed_of_light, meter, farad, henry, statvolt, volt, ohm
 from sympy.physics.units.systems import SI
 from sympy.physics.units.systems.cgs import cgs_gauss
 
