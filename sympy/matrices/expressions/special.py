@@ -195,6 +195,10 @@ class GenericIdentity(Identity):
     def shape(self):
         raise TypeError("GenericIdentity does not have a specified shape")
 
+    @property
+    def is_square(self):
+        return True
+
     # Avoid Matrix.__eq__ which might call .shape
     def __eq__(self, other):
         return isinstance(other, GenericIdentity)

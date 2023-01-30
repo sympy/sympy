@@ -13,8 +13,8 @@ from sympy.polys.domains.ring import Ring
 
 class GaussianElement(DomainElement):
     """Base class for elements of Gaussian type domains."""
-    base = None  # type: Domain
-    _parent = None  # type: Domain
+    base: Domain
+    _parent: Domain
 
     __slots__ = ('x', 'y')
 

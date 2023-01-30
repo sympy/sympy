@@ -268,10 +268,9 @@ constant $3$ is odd, so there is no solution.
 set()
 ```
 
-## Report a Problem
+## Report a Bug
 
-If you find a problem with {func}`~.diophantine`, please post the problem on the
-[mailing list](https://groups.google.com/g/sympy), or open an issue on [SymPy's
-GitHub page](https://github.com/sympy/sympy/issues). Until the issue is
+If you find a bug with {func}`~.diophantine`, please post the problem on the
+[SymPy mailing list](https://groups.google.com/g/sympy). Until the issue is
 resolved, you can use a different method listed in
 [](#alternatives-to-consider).

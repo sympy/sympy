@@ -926,7 +926,7 @@ def roots(f, *gens,
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Cubic_function#Trigonometric_.28and_hyperbolic.29_method
+    .. [1] https://en.wikipedia.org/wiki/Cubic_equation#Trigonometric_and_hyperbolic_solutions
 
     """
     from sympy.polys.polytools import to_rational_coeffs

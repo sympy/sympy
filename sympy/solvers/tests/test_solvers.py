@@ -200,7 +200,7 @@ def test_solve_args():
     # - linear
     assert solve((x + y - 2, 2*x + 2*y - 4)) == {x: -y + 2}
     # When one or more args are Boolean
-    assert solve(Eq(x**2, 0.0)) == [0]  # issue 19048
+    assert solve(Eq(x**2, 0.0)) == [0.0]  # issue 19048
     assert solve([True, Eq(x, 0)], [x], dict=True) == [{x: 0}]
     assert solve([Eq(x, x), Eq(x, 0), Eq(x, x+1)], [x], dict=True) == []
     assert not solve([Eq(x, x+1), x < 2], x)
@@ -673,7 +673,7 @@ def test_solve_for_functions_derivatives():
     f = Function('f')
     soln = solve([f(x).diff(x) + f(x).diff(x, 2) - 1, f(x).diff(x) - f(x).diff(x, 2)],
             f(x).diff(x), f(x).diff(x, 2))
-    assert soln == { f(x).diff(x, 2): 1/2, f(x).diff(x): 1/2 }
+    assert soln == { f(x).diff(x, 2): S(1)/2, f(x).diff(x): S(1)/2 }
 
     soln = solve([f(x).diff(x, 2) + f(x).diff(x, 3) - 1, 1 - f(x).diff(x, 2) -
             f(x).diff(x, 3), 1 - f(x).diff(x,3)], f(x).diff(x, 2), f(x).diff(x, 3))
@@ -1824,6 +1824,13 @@ def test_issues_6819_6820_6821_6248_8692():
 
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
+def test_issue_17638():
+
+    assert solve(((2-exp(2*x))*exp(x))/(exp(2*x)+2)**2 > 0, x) == (-oo < x) & (x < log(2)/2)
+    assert solve(((2-exp(2*x)+2)*exp(x+2))/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < log(4)/2)
+    assert solve((exp(x)+2+x**2)*exp(2*x+2)/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < oo)
+
 
 
 def test_issue_14607():

@@ -24,9 +24,9 @@ __all__ = [
 ###############################################################################
 # R2
 ###############################################################################
-R2 = Manifold('R^2', 2)  # type: Any
+R2: Any = Manifold('R^2', 2)
 
-R2_origin = Patch('origin', R2)  # type: Any
+R2_origin: Any = Patch('origin', R2)
 
 x, y = symbols('x y', real=True)
 r, theta = symbols('rho theta', nonnegative=True)
@@ -36,8 +36,8 @@ relations_2d = {
     ('polar', 'rectangular'): [(r, theta), (r*cos(theta), r*sin(theta))],
 }
 
-R2_r = CoordSystem('rectangular', R2_origin, (x, y), relations_2d)  # type: Any
-R2_p = CoordSystem('polar', R2_origin, (r, theta), relations_2d)  # type: Any
+R2_r: Any = CoordSystem('rectangular', R2_origin, (x, y), relations_2d)
+R2_p: Any = CoordSystem('polar', R2_origin, (r, theta), relations_2d)
 
 # support deprecated feature
 with warnings.catch_warnings():
@@ -68,9 +68,9 @@ R2.dr, R2.dtheta = R2_origin.dr, R2_origin.dtheta = R2_p.dr, R2_p.dtheta = R2_p.
 ###############################################################################
 # R3
 ###############################################################################
-R3 = Manifold('R^3', 3)  # type: Any
+R3: Any = Manifold('R^3', 3)
 
-R3_origin = Patch('origin', R3)  # type: Any
+R3_origin: Any = Patch('origin', R3)
 
 x, y, z = symbols('x y z', real=True)
 rho, psi, r, theta, phi = symbols('rho psi r theta phi', nonnegative=True)
@@ -96,9 +96,9 @@ relations_3d = {
                                    (r*sin(theta), phi, r*cos(theta))],
 }
 
-R3_r = CoordSystem('rectangular', R3_origin, (x, y, z), relations_3d)  # type: Any
-R3_c = CoordSystem('cylindrical', R3_origin, (rho, psi, z), relations_3d)  # type: Any
-R3_s = CoordSystem('spherical', R3_origin, (r, theta, phi), relations_3d)  # type: Any
+R3_r: Any = CoordSystem('rectangular', R3_origin, (x, y, z), relations_3d)
+R3_c: Any = CoordSystem('cylindrical', R3_origin, (rho, psi, z), relations_3d)
+R3_s: Any = CoordSystem('spherical', R3_origin, (r, theta, phi), relations_3d)
 
 # support deprecated feature
 with warnings.catch_warnings():

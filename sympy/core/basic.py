@@ -117,6 +117,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_MatAdd = False
     is_MatMul = False
     is_real: bool | None
+    is_extended_real: bool | None
     is_zero: bool | None
     is_negative: bool | None
     is_commutative: bool | None
@@ -294,7 +295,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @classmethod
     def class_key(cls):
-        """Nice order of classes. """
+        """Nice order of classes."""
         return 5, 0, cls.__name__
 
     @cacheit
@@ -1266,7 +1267,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return self._has(iterargs, *patterns)
 
     def has_xfree(self, s: set[Basic]):
-        """return True if self has any of the patterns in s as a
+        """Return True if self has any of the patterns in s as a
         free argument, else False. This is like `Basic.has_free`
         but this will only report exact argument matches.
 
@@ -1294,7 +1295,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @cacheit
     def has_free(self, *patterns):
-        """return True if self has object(s) ``x`` as a free expression
+        """Return True if self has object(s) ``x`` as a free expression
         else False.
 
         Examples
@@ -1631,7 +1632,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return (rv, mapping) if map else rv
 
     def find(self, query, group=False):
-        """Find all subexpressions matching a query. """
+        """Find all subexpressions matching a query."""
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
 
@@ -1649,7 +1650,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return groups
 
     def count(self, query):
-        """Count the number of matching subexpressions. """
+        """Count the number of matching subexpressions."""
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 
@@ -1757,7 +1758,8 @@ class Basic(Printable, metaclass=ManagedProperties):
             return m
         from .symbol import Wild
         from .function import WildFunction
-        wild = pattern.atoms(Wild, WildFunction)
+        from ..tensor.tensor import WildTensor, WildTensorIndex, WildTensorHead
+        wild = pattern.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead)
         # sanity check
         if set(m) - wild:
             raise ValueError(filldedent('''
@@ -1780,7 +1782,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return m
 
     def count_ops(self, visual=None):
-        """wrapper for count_ops that returns the operation count."""
+        """Wrapper for count_ops that returns the operation count."""
         from .function import count_ops
         return count_ops(self, visual)
 
@@ -1856,11 +1858,12 @@ class Basic(Printable, metaclass=ManagedProperties):
         Parameters
         ==========
 
-        args : *rule*, or *pattern* and *rule*.
+        args : Expr
+            A *rule*, or *pattern* and *rule*.
             - *pattern* is a type or an iterable of types.
             - *rule* can be any object.
 
-        deep : bool, optional.
+        deep : bool, optional
             If ``True``, subexpressions are recursively transformed. Default is
             ``True``.
 
