@@ -288,14 +288,13 @@ def test_find_unit():
     assert find_unit(coulomb) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     assert find_unit(charge) == ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     assert find_unit(inch) == [
-        'm', 'au', 'cm', 'dm', 'ft', 'km', 'ly', 'mi', 'mm', 'nm', 'pm', 'um',
-        'yd', 'nmi', 'feet', 'foot', 'inch', 'mile', 'yard', 'meter', 'miles',
-        'yards', 'inches', 'meters', 'micron', 'microns', 'decimeter',
-        'kilometer', 'lightyear', 'nanometer', 'picometer', 'centimeter',
-        'decimeters', 'kilometers', 'lightyears', 'micrometer', 'millimeter',
-        'nanometers', 'picometers', 'centimeters', 'micrometers',
-        'millimeters', 'nautical_mile', 'planck_length', 'nautical_miles', 'astronomical_unit',
-        'astronomical_units']
+        'm', 'au', 'cm', 'dm', 'ft', 'km', 'ly', 'mi', 'mm', 'nm', 'pm', 'um', 'yd',
+        'nmi', 'feet', 'foot', 'inch', 'mile', 'yard', 'meter', 'miles', 'yards',
+        'inches', 'meters', 'micron', 'microns', 'angstrom', 'angstroms', 'decimeter',
+        'kilometer', 'lightyear', 'nanometer', 'picometer', 'centimeter', 'decimeters',
+        'kilometers', 'lightyears', 'micrometer', 'millimeter', 'nanometers', 'picometers',
+        'centimeters', 'micrometers', 'millimeters', 'nautical_mile', 'planck_length',
+        'nautical_miles', 'astronomical_unit', 'astronomical_units']
     assert find_unit(inch**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(length**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(inch ** 2) == ['ha', 'hectare', 'planck_area']
