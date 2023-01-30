@@ -1132,6 +1132,7 @@ def _inverse_laplace_build_rules():
     _ILT_rules = [
         (a/s, a, S.true, same, 1),
         (b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c), c>0, same, 1),
+        (1/(s**2+a**2)**2, (sin(a*t) - a*t*cos(a*t))/(2*a**3), S.true, same, 1)
     ]
     return _ILT_rules, s, t
 
@@ -1204,11 +1205,31 @@ def _inverse_laplace_time_shift(F, s, t, plane):
     return None
 
 
+def _inverse_laplace_time_diff(F, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    n = Wild('n', exclude=[s])
+    g = Wild('g')
+
+    ma1 = F.match(s**n*g)
+    if ma1 and ma1[n].is_integer and ma1[n].is_positive:
+        debug('_inverse_laplace_time_diff match:')
+        debugf('      f:    %s', (F,))
+        debug('      rule: s**n*F(s) o---o diff(f(t), t, n)')
+        debugf('      ma:   %s', (ma1,))
+        r, c = _inverse_laplace_transform(ma1[g], s, t, plane)
+        r = r.replace(Heaviside(t), 1)
+        return diff(r, t, ma1[n]), c
+    return None
+
+
 def _inverse_laplace_apply_prog_rules(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-    prog_rules = [_inverse_laplace_time_shift]
+    prog_rules = [_inverse_laplace_time_shift,
+                  _inverse_laplace_time_diff]
 
     for p_rule in prog_rules:
         if (r := p_rule(F, s, t, plane)) is not None:

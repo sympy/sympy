@@ -372,6 +372,7 @@ def test_inverse_laplace_transform():
     a, b, c, d = symbols('a b c d', positive=True)
     r = Symbol('r', real=True)
     t, z = symbols('t z')
+    f = Function('f')
 
     def simp_hyp(expr):
         return factor_terms(expand_mul(expr)).rewrite(sin)
@@ -439,6 +440,13 @@ def test_inverse_laplace_transform():
         c*(a*exp(b*t) - b*exp(a*t))*exp(-t*(a + b))*Heaviside(t)/(a - b)
     assert ILT(c*s/(d**2*(s+a)**2+b**2), s, t) ==\
         c*(-a*d*sin(b*t/d) + b*cos(b*t/d))*exp(-a*t)*Heaviside(t)/(b*d**2)
+    # Test time_diff rule
+    assert ILT(s**42*f(s), s, t) ==\
+        Derivative(InverseLaplaceTransform(f(s), s, t, None), (t, 42))
+    assert ILT((b*s**2 + d)/(a**2 + s**2)**2, s, t) ==\
+        (a**3*b*t*cos(a*t) + 4*a**2*b*sin(a*t)*Heaviside(t) +\
+         a**2*b*sin(a*t) - a*d*t*cos(a*t)*Heaviside(t) +\
+             d*sin(a*t)*Heaviside(t))/(2*a**3)
     # Rules for testing different DiracDelta cases
     assert ILT(2, s, t) == 2*DiracDelta(t)
     assert ILT(2*exp(3*s) - 5*exp(-7*s), s, t) == \
