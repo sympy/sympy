@@ -244,13 +244,6 @@ class Piecewise(Function):
         if not a.is_real:
             return None
 
-        a_real = a.is_real
-        # First, let's check if a is real. If not return ValueError.
-        if a_real is False:
-            raise ValueError("A piecewise function is defined only on the real line.")
-        if a_real is None:
-            return None
-
         # Then, scan ExprCondPairs in the given order to find a piece that would contain a,
         # possibly as a boundary point.
         for e, c in self.args:
