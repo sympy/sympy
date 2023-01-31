@@ -4466,9 +4466,9 @@ def equal_valued(x, y):
     True
 
     In a future version of SymPy this might change so that Rational and Float
-    compare unequal. This function is provided in to provide the behaviour
-    currently expected of ``==`` so that it could still be used if the
-    behaviour of ``==`` were to change.
+    compare unequal. This function provides the behaviour currently expected of
+    ``==`` so that it could still be used if the behaviour of ``==`` were to
+    change in future.
 
     >>> equal_valued(1, 1.0) # Float vs Rational
     True
