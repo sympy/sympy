@@ -3870,6 +3870,46 @@ class Poly(Basic):
         else:
             return tuple(map(per, result))
 
+    def make_monic_over_integers_by_scaling_roots(f):
+        """
+        Turn any univariate polynomial over :ref:`QQ` or :ref:`ZZ` into a monic
+        polynomial over :ref:`ZZ`, by scaling the roots as necessary.
+
+        Explanation
+        ===========
+
+        This operation can be performed whether or not *f* is irreducible; when
+        it is, this can be understood as determining an algebraic integer
+        generating the same field as a root of *f*.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, S
+        >>> from sympy.abc import x
+        >>> f = Poly(x**2/2 + S(1)/4 * x + S(1)/8, x, domain='QQ')
+        >>> f.make_monic_over_integers_by_scaling_roots()
+        (Poly(x**2 + 2*x + 4, x, domain='ZZ'), 4)
+
+        Returns
+        =======
+
+        Pair ``(g, c)``
+            g is the polynomial
+
+            c is the integer by which the roots had to be scaled
+
+        """
+        if not f.is_univariate or f.domain not in [ZZ, QQ]:
+            raise ValueError('Polynomial must be univariate over ZZ or QQ.')
+        if f.is_monic and f.domain == ZZ:
+            return f, ZZ.one
+        else:
+            n = f.degree()
+            fm = f.monic()
+            c, _ = fm.clear_denoms()
+            return (c**n * fm.compose(Poly(fm.gen / c))).to_ring(), c
+
     def galois_group(f, by_name=False, max_tries=30, randomize=False):
         """
         Compute the Galois group of this polynomial.
