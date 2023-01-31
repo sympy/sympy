@@ -5,7 +5,6 @@ from sympy.combinatorics.galois import (
     S1TransitiveSubgroups, S2TransitiveSubgroups, S3TransitiveSubgroups,
     S4TransitiveSubgroups, S5TransitiveSubgroups, S6TransitiveSubgroups,
 )
-from sympy.combinatorics.named_groups import SymmetricGroup
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.numberfields.galoisgroups import (
     tschirnhausen_transformation,
@@ -88,32 +87,50 @@ test_polys_by_deg = {
 }
 
 
-def test_galois_group_not_by_name():
-    """
-    We only once need to test the line in the `galois_group()` function that
-    turns group names into groups. Beyond this, we can test entirely by name
-    (and let the `get_group_by_name()` function be tested elsewhere).
-    """
-    assert galois_group(Poly(x))[0] == SymmetricGroup(1)
-
-
 def test_galois_group():
-    raises(ValueError, lambda: galois_group(Poly(0, x)))
-    raises(ValueError, lambda: galois_group(Poly(1, x)))
+    """
+    Try all the test polys.
+    """
     for deg in range(1, 7):
         polys = test_polys_by_deg[deg]
-        for T, G, s in polys:
-            assert galois_group(T, by_name=True) == (G, s)
+        for T, G, alt in polys:
+            assert galois_group(T, by_name=True) == (G, alt)
+
+
+def test_galois_group_degree_out_of_bounds():
+    raises(ValueError, lambda: galois_group(Poly(0, x)))
+    raises(ValueError, lambda: galois_group(Poly(1, x)))
+    raises(ValueError, lambda: galois_group(Poly(x ** 7 + 1)))
+
+
+def test_galois_group_not_by_name():
+    """
+    Check at least one polynomial of each supported degree, to see that
+    conversion from name to group works.
+    """
+    for deg in range(1, 7):
+        T, G_name, _ = test_polys_by_deg[deg][0]
+        G, _ = galois_group(T)
+        assert G == G_name.get_perm_group()
+
+
+def test_galois_group_not_monic_over_ZZ():
+    """
+    Check that we can work with polys that are not monic over ZZ.
+    """
+    for deg in range(1, 7):
+        T, G, alt = test_polys_by_deg[deg][0]
+        assert galois_group(T/2, by_name=True) == (G, alt)
 
 
 def test__galois_group_degree_4_root_approx():
-    for T, G, s in test_polys_by_deg[4]:
-        assert _galois_group_degree_4_root_approx(Poly(T)) == (G, s)
+    for T, G, alt in test_polys_by_deg[4]:
+        assert _galois_group_degree_4_root_approx(Poly(T)) == (G, alt)
 
 
 def test__galois_group_degree_5_hybrid():
-    for T, G, s in test_polys_by_deg[5]:
-        assert _galois_group_degree_5_hybrid(Poly(T)) == (G, s)
+    for T, G, alt in test_polys_by_deg[5]:
+        assert _galois_group_degree_5_hybrid(Poly(T)) == (G, alt)
 
 
 def test_AlgebraicField_galois_group():

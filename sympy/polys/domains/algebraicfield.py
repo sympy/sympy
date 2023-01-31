@@ -563,9 +563,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         sympy.polys.numberfields.galoisgroups.galois_group
 
         """
-        f = self.ext.minpoly_of_element()
-        _, f = f.clear_denoms(convert=True)
-        return f.galois_group(by_name=by_name, max_tries=max_tries, randomize=randomize)
+        return self.ext.minpoly_of_element().galois_group(
+            by_name=by_name, max_tries=max_tries, randomize=randomize)
 
 
 def _make_converter(K):
