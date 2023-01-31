@@ -514,8 +514,7 @@ def _galois_group_degree_6_lookup(T, max_tries=30, randomize=False):
 
 
 @public
-def galois_group(f, gens=None, args=None,
-                 by_name=False, max_tries=30, randomize=False):
+def galois_group(f, *gens, by_name=False, max_tries=30, randomize=False, **args):
     r"""
     Compute the Galois group for polynomials *f* up to degree 6.
 
@@ -567,9 +566,8 @@ def galois_group(f, gens=None, args=None,
         Irreducible, monic polynomial over :ref:`ZZ`, whose Galois group
         is to be determined.
     gens : optional list of symbols
-        As in the :py:func:`~.poly_from_expr` function.
-    args : optional dict of optionss
-        As in the :py:func:`~.poly_from_expr` function.
+        For converting *f* to Poly, and will be passed on to the
+        :py:func:`~.poly_from_expr` function.
     by_name : bool, default False
         If ``True``, the Galois group will be returned by name.
         Otherwise it will be returned as a :py:class:`~.PermutationGroup`.
@@ -580,6 +578,9 @@ def galois_group(f, gens=None, args=None,
         If ``True``, then use random coefficients when generating Tschirnhausen
         transformations. Otherwise try transformations in a fixed order. Both
         approaches start with small coefficients and degrees and work upward.
+    args : optional
+        For converting *f* to Poly, and will be passed on to the
+        :py:func:`~.poly_from_expr` function.
 
     Returns
     =======
