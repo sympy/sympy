@@ -109,6 +109,10 @@ class Basic(Printable, metaclass=ManagedProperties):
     _args: tuple[Basic, ...]
     _mhash: int | None
 
+    @property
+    def __sympy__(self):
+        return True
+
     # To be overridden with True in the appropriate subclasses
     is_number = False
     is_Atom = False
