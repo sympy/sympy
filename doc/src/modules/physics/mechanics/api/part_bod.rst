@@ -4,17 +4,29 @@
 Masses, Inertias & Particles, RigidBodys (Docstrings)
 =====================================================
 
-.. automodule:: sympy.physics.mechanics.particle
+Bodies
+======
+
+.. autoclass:: sympy.physics.mechanics.particle.Particle
    :members:
    :inherited-members:
 
-.. automodule:: sympy.physics.mechanics.rigidbody
+.. autoclass:: sympy.physics.mechanics.rigidbody.RigidBody
    :members:
    :inherited-members:
 
-.. autofunction:: sympy.physics.mechanics.functions.inertia
+Inertias
+========
 
-.. autofunction:: sympy.physics.mechanics.functions.inertia_of_point_mass
+.. autoclass:: sympy.physics.mechanics.inertia.Inertia
+   :members:
+
+.. autofunction:: sympy.physics.mechanics.inertia.inertia
+
+.. autofunction:: sympy.physics.mechanics.inertia.inertia_of_point_mass
+
+Other Functions
+===============
 
 .. autofunction:: sympy.physics.mechanics.functions.linear_momentum
 
