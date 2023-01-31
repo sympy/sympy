@@ -62,9 +62,6 @@ class Registry:
 
 
 class BasicMeta(type):
-    def __init__(cls, *args, **kws):
-        cls.__sympy__ = property(lambda self: True)
-
     def __cmp__(cls, other):
         # If the other object is not a Basic subclass, then we are not equal to
         # it.

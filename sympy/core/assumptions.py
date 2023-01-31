@@ -614,8 +614,6 @@ def _ask(fact, obj):
 class ManagedProperties(BasicMeta):
     """Metaclass for classes with old-style assumptions"""
     def __init__(cls, *args, **kws):
-        BasicMeta.__init__(cls, *args, **kws)
-
         local_defs = {}
         for k in _assume_defined:
             attrname = as_property(k)
