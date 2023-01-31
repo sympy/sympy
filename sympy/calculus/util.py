@@ -4,6 +4,7 @@ from sympy.core import Pow, S
 from sympy.core.function import diff, expand_mul
 from sympy.core.kind import NumberKind
 from sympy.core.mod import Mod
+from sympy.core.numbers import equal_valued
 from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import _sympify
@@ -480,9 +481,8 @@ def periodicity(f, symbol, check=False):
 
     elif f.is_Mul:
         coeff, g = f.as_independent(symbol, as_Add=False)
-        if isinstance(g, TrigonometricFunction) or coeff != 1:
+        if isinstance(g, TrigonometricFunction) or not equal_valued(coeff, 1):
             period = periodicity(g, symbol)
-
         else:
             period = _periodicity(g.args, symbol)
 

@@ -35,6 +35,7 @@ from sympy.codegen.fnodes import (
 )
 from sympy.core import S, Add, N, Float, Symbol
 from sympy.core.function import Function
+from sympy.core.numbers import equal_valued
 from sympy.core.relational import Eq
 from sympy.sets import Range
 from sympy.printing.codeprinter import CodePrinter
@@ -340,12 +341,12 @@ class FCodePrinter(CodePrinter):
 
     def _print_Pow(self, expr):
         PREC = precedence(expr)
-        if expr.exp == -1:
+        if equal_valued(expr.exp, -1):
             return '%s/%s' % (
                 self._print(literal_dp(1)),
                 self.parenthesize(expr.base, PREC)
             )
-        elif expr.exp == 0.5:
+        elif equal_valued(expr.exp, 0.5):
             if expr.base.is_integer:
                 # Fortran intrinsic sqrt() does not accept integer argument
                 if expr.base.is_Number:
