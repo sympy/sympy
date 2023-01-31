@@ -3937,10 +3937,9 @@ class Poly(Basic):
         )
         if (not f.is_univariate
             or not f.is_irreducible
-            or not f.is_monic
-            or not f.domain == ZZ
+            or f.domain not in [ZZ, QQ]
         ):
-            raise ValueError('Require a monic irreducible univariate polynomial over ZZ.')
+            raise ValueError('Polynomial must be irreducible and univariate over ZZ or QQ.')
         gg = {
             3: _galois_group_degree_3,
             4: _galois_group_degree_4_lookup,
@@ -3960,7 +3959,8 @@ class Poly(Basic):
             from sympy.combinatorics.galois import S2TransitiveSubgroups
             name, alt = S2TransitiveSubgroups.S2, False
         else:
-            name, alt = gg[n](f, max_tries=max_tries, randomize=randomize)
+            g, _ = f.make_monic_over_integers_by_scaling_roots()
+            name, alt = gg[n](g, max_tries=max_tries, randomize=randomize)
         G = name if by_name else name.get_perm_group()
         return G, alt
 
