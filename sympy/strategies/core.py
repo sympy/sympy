@@ -33,6 +33,7 @@ def memoize(rule: Callable[[_S], _T]) -> Callable[[_S], _T]:
     than ``functools.lru_cache`` unless you need very heavy computation.
     """
     cache: dict[_S, _T] = {}
+
     def memoized_rl(expr: _S) -> _T:
         if expr in cache:
             return cache[expr]
@@ -69,12 +70,13 @@ def debug(rule, file=None):
     """ Print out before and after expressions each time rule is used """
     if file is None:
         file = stdout
+
     def debug_rl(*args, **kwargs):
         expr = args[0]
         result = rule(*args, **kwargs)
         if result != expr:
             file.write("Rule: %s\n" % rule.__name__)
-            file.write("In:   %s\nOut:  %s\n\n"%(expr, result))
+            file.write("In:   %s\nOut:  %s\n\n" % (expr, result))
         return result
     return debug_rl
 

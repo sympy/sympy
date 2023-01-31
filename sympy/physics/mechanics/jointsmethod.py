@@ -274,9 +274,9 @@ class JointsMethod(_Methods):
         See Also
         ========
 
-        sympy.physics.mechanics.kane.KanesMethod.rhs():
+        sympy.physics.mechanics.kane.KanesMethod.rhs:
             KanesMethod's rhs function.
-        sympy.physics.mechanics.lagrange.LagrangesMethod.rhs():
+        sympy.physics.mechanics.lagrange.LagrangesMethod.rhs:
             LagrangesMethod's rhs function.
 
         """

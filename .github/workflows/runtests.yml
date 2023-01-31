@@ -172,7 +172,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', 'pypy-3.8']
+        python-version: ['3.9', '3.10', '3.11', 'pypy3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
@@ -194,23 +194,17 @@ jobs:
       - if: ${{ contains(matrix.python-version, '3.11') }}
         run: pip install git+https://github.com/scipy/scipy@main
 
-      # SciPy 1.9.0 and 1.9.1 fail to compile under PyPy:
-      #
-      # https://github.com/FFY00/meson-python/issues/121
-      - if: ${{ matrix.python-version == 'pypy-3.8' }}
-        run: pip install 'scipy<1.9.0'
-
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
                          aesara wurlitzer autowrap                            \
                          'antlr4-python3-runtime==4.11.*'
 
       # These are not available for pypy
-      - if: ${{ matrix.python-version != 'pypy-3.8' }}
+      - if: ${{ ! contains(matrix.python-version, 'pypy') }}
         run: pip install gmpy2 jax jaxlib
 
       # These are not available for pypy and cannot be installed in 3.11 (yet)
-      - if: ${{ matrix.python-version != 'pypy-3.8' && ! contains(matrix.python-version, '3.11') }}
+      - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.11') }}
         run: pip install symengine llvmlite numba pymc
 
       # Test external imports

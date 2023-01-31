@@ -1,7 +1,7 @@
 from sympy.core import Expr, S, oo, pi, sympify
 from sympy.core.evalf import N
 from sympy.core.sorting import default_sort_key, ordered
-from sympy.core.symbol import _symbol, Dummy, symbols, Symbol
+from sympy.core.symbol import _symbol, Dummy, Symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -22,6 +22,9 @@ from mpmath.libmp.libmpf import prec_to_dps
 import warnings
 
 
+x, y, T = [Dummy('polygon_dummy', real=True) for i in range(3)]
+
+
 class Polygon(GeometrySet):
     """A two-dimensional polygon.
 
@@ -31,13 +34,12 @@ class Polygon(GeometrySet):
     Parameters
     ==========
 
-    vertices : sequence of Points
+    vertices
+        A sequence of points.
 
-    Optional parameters
-    ==========
-
-    n : If > 0, an n-sided RegularPolygon is created. See below.
-        Default value is 0.
+    n : int, optional
+        If $> 0$, an n-sided RegularPolygon is created.
+        Default value is $0$.
 
     Attributes
     ==========
@@ -848,7 +850,6 @@ class Polygon(GeometrySet):
         if other.free_symbols:
             raise NotImplementedError('non-numeric coordinates')
         unknown = False
-        T = Dummy('t', real=True)
         p = self.arbitrary_point(T)
         for pt, cond in p.args:
             sol = solve(pt - other, T, dict=True)
@@ -1004,7 +1005,6 @@ class Polygon(GeometrySet):
         points = list(self.vertices)
         points.append(points[0])
 
-        x, y = symbols('x, y', real=True, cls=Dummy)
         eq = line.equation(x, y)
 
         # considering equation of line to be `ax +by + c`
