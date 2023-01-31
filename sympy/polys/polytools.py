@@ -3905,10 +3905,9 @@ class Poly(Basic):
         if f.is_monic and f.domain == ZZ:
             return f, ZZ.one
         else:
-            n = f.degree()
             fm = f.monic()
             c, _ = fm.clear_denoms()
-            return (c**n * fm.compose(Poly(fm.gen / c))).to_ring(), c
+            return fm.transform(Poly(fm.gen), c).to_ring(), c
 
     def galois_group(f, by_name=False, max_tries=30, randomize=False):
         """
