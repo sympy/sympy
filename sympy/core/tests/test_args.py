@@ -2841,13 +2841,13 @@ def test_sympy__integrals__transforms__InverseMellinTransform():
     assert _test_args(InverseMellinTransform(2, x, y, 0, 1))
 
 
-def test_sympy__integrals__transforms__LaplaceTransform():
-    from sympy.integrals.transforms import LaplaceTransform
+def test_sympy__integrals__laplace__LaplaceTransform():
+    from sympy.integrals.laplace import LaplaceTransform
     assert _test_args(LaplaceTransform(2, x, y))
 
 
-def test_sympy__integrals__transforms__InverseLaplaceTransform():
-    from sympy.integrals.transforms import InverseLaplaceTransform
+def test_sympy__integrals__laplace__InverseLaplaceTransform():
+    from sympy.integrals.laplace import InverseLaplaceTransform
     assert _test_args(InverseLaplaceTransform(2, x, y, 0))
 
 
@@ -4588,6 +4588,21 @@ def test_sympy__tensor__tensor__TensorElement():
     telem = TensorElement(A(x, y), {x: 1})
     assert _test_args(telem)
 
+def test_sympy__tensor__tensor__WildTensor():
+    from sympy.tensor.tensor import TensorIndexType, WildTensorHead, TensorIndex
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
+    a = TensorIndex('a', Lorentz)
+    p = WildTensorHead('p')
+    assert _test_args(p(a))
+
+def test_sympy__tensor__tensor__WildTensorHead():
+    from sympy.tensor.tensor import WildTensorHead
+    assert _test_args(WildTensorHead('p'))
+
+def test_sympy__tensor__tensor__WildTensorIndex():
+    from sympy.tensor.tensor import TensorIndexType, WildTensorIndex
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
+    assert _test_args(WildTensorIndex('i', Lorentz))
 
 def test_sympy__tensor__toperators__PartialDerivative():
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead

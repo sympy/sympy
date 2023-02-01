@@ -500,7 +500,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     For system of ordinary differential equations
     =============================================
 
-   **Usage**
+    **Usage**
         ``dsolve(eq, func)`` -> Solve a system of ordinary differential
         equations ``eq`` for ``func`` being list of functions including
         `x(t)`, `y(t)`, `z(t)` where number of functions in the list depends

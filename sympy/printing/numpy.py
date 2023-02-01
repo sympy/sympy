@@ -427,6 +427,15 @@ class SciPyPrinter(NumPyPrinter):
                 self._print(e.args[0]),
                 limit_str)
 
+    def _print_Si(self, expr):
+        return "{}({})[0]".format(
+                self._module_format("scipy.special.sici"),
+                self._print(expr.args[0]))
+
+    def _print_Ci(self, expr):
+        return "{}({})[1]".format(
+                self._module_format("scipy.special.sici"),
+                self._print(expr.args[0]))
 
 for func in _scipy_known_functions:
     setattr(SciPyPrinter, f'_print_{func}', _print_known_func)

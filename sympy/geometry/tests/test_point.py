@@ -320,9 +320,9 @@ def test_Point2D():
     assert p1.x == 1
     assert p1.y == 5
     assert p2.x == 4
-    assert p2.y == 2.5
+    assert p2.y == S(5)/2
     assert p1.coordinates == (1, 5)
-    assert p2.coordinates == (4, 2.5)
+    assert p2.coordinates == (4, S(5)/2)
 
     # test bounds
     assert p1.bounds == (1, 5, 1, 5)

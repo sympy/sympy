@@ -826,13 +826,13 @@ class Number(AtomicExpr):
         return S.Zero, (self,)
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         if rational and not self.is_Rational:
             return S.One, self
         return (self, S.One) if self else (S.One, self)
 
     def as_coeff_Add(self, rational=False):
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         if not rational:
             return self, S.Zero
         return S.Zero, self
@@ -1624,10 +1624,11 @@ class Rational(Number):
 
             q = 1
             gcd = 1
+        Q = 1
 
         if not isinstance(p, SYMPY_INTS):
             p = Rational(p)
-            q *= p.q
+            Q *= p.q
             p = p.p
         else:
             p = int(p)
@@ -1635,9 +1636,10 @@ class Rational(Number):
         if not isinstance(q, SYMPY_INTS):
             q = Rational(q)
             p *= q.q
-            q = q.p
+            Q *= q.p
         else:
-            q = int(q)
+            Q *= int(q)
+        q = Q
 
         # p and q are now ints
         if q == 0:
@@ -2035,11 +2037,11 @@ class Rational(Number):
         return S.One, self
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return self, S.One
 
     def as_coeff_Add(self, rational=False):
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         return self, S.Zero
 
 
@@ -2867,8 +2869,7 @@ class AlgebraicNumber(Expr):
         See Also
         ========
 
-        .AlgebraicNumber.__new__()
-
+        AlgebraicNumber
         """
         return AlgebraicNumber(
             (self.minpoly, self.root), coeffs=coeffs, alias=self.alias)

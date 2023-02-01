@@ -43,7 +43,6 @@ def mechanics_printing(**kwargs):
 
     init_vprinting(**kwargs)
 
-
 mechanics_printing.__doc__ = init_vprinting.__doc__
 
 
@@ -694,6 +693,7 @@ def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
         raised. The default is True.
 
     """
+    t_set = {dynamicsymbols._t}
     # Convert input to iterables
     if coordinates is None:
         coordinates = []
@@ -713,10 +713,12 @@ def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
                              'generalized speeds should be unique.')
     if is_dynamicsymbols:  # Check whether all coordinates are dynamicsymbols
         for coordinate in coordinates:
-            if not isinstance(coordinate, (AppliedUndef, Derivative)):
+            if not (isinstance(coordinate, (AppliedUndef, Derivative)) and
+                    coordinate.free_symbols == t_set):
                 raise ValueError(f'Generalized coordinate "{coordinate}" is not'
                                  f' a dynamicsymbol.')
         for speed in speeds:
-            if not isinstance(speed, (AppliedUndef, Derivative)):
+            if not (isinstance(speed, (AppliedUndef, Derivative)) and
+                    speed.free_symbols == t_set):
                 raise ValueError(f'Generalized speed "{speed}" is not a '
                                  f'dynamicsymbol.')

@@ -1,4 +1,4 @@
-from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, S
+from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, S, Function
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
                                      RigidBody)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
@@ -233,6 +233,17 @@ def test_validate_coordinates():
     _validate_coordinates([s1 + s2 + s3, q1], [0, u1], is_dynamicsymbols=False)
     raises(ValueError, lambda: _validate_coordinates(
         [s1 + s2 + s3, q1], [0, u1], is_dynamicsymbols=True))
+    # Test normal function
+    t = dynamicsymbols._t
+    a = symbols('a')
+    f1, f2 = symbols('f1:3', cls=Function)
+    _validate_coordinates([f1(a), f2(a)], is_dynamicsymbols=False)
+    raises(ValueError, lambda: _validate_coordinates([f1(a), f2(a)]))
+    raises(ValueError, lambda: _validate_coordinates(speeds=[f1(a), f2(a)]))
+    dynamicsymbols._t = a
+    _validate_coordinates([f1(a), f2(a)])
+    raises(ValueError, lambda: _validate_coordinates([f1(t), f2(t)]))
+    dynamicsymbols._t = t
 
 
 def test_deprecated_moved_functions():
