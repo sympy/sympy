@@ -3167,14 +3167,14 @@ def Normal(name, mean, std):
     The density of the Normal distribution is given by
 
     .. math::
-        f(x) := \frac{1}{\sigma\sqrt{2\pi}} e^{ -\frac{(x-\mu)^2}{2\sigma^2} }
+        f(x) := \frac{1}{\std\sqrt{2\pi}} e^{ -\frac{(x-\mean)^2}{2\std^2} }
 
     Parameters
     ==========
 
-    mu : Real number or a list representing the mean or the mean vector
-    sigma : Real number or a positive definite square matrix,
-         :math:`\sigma^2 > 0`, the variance
+    mean : Real number or a list representing the mean or the mean vector
+    std : Real number or a positive definite square matrix,
+         :math:`\std^2 > 0`, the variance
 
     Returns
     =======
@@ -3187,27 +3187,27 @@ def Normal(name, mean, std):
     >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile, marginal_distribution
     >>> from sympy import Symbol, simplify, pprint
 
-    >>> mu = Symbol("mu")
-    >>> sigma = Symbol("sigma", positive=True)
+    >>> mean = Symbol("mean")
+    >>> std = Symbol("std", positive=True)
     >>> z = Symbol("z")
     >>> y = Symbol("y")
     >>> p = Symbol("p")
-    >>> X = Normal("x", mu, sigma)
+    >>> X = Normal("x", mean, std)
 
     >>> density(X)(z)
-    sqrt(2)*exp(-(-mu + z)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)
+    sqrt(2)*exp(-(-mean + z)**2/(2*std**2))/(2*sqrt(pi)*std)
 
     >>> C = simplify(cdf(X))(z) # it needs a little more help...
     >>> pprint(C, use_unicode=False)
        /  ___          \
-       |\/ 2 *(-mu + z)|
+       |\/ 2 *(-mean + z)|
     erf|---------------|
-       \    2*sigma    /   1
+       \    2*std    /   1
     -------------------- + -
              2             2
 
     >>> quantile(X)(p)
-    mu + sqrt(2)*sigma*erfinv(2*p - 1)
+    mean + sqrt(2)*std*erfinv(2*p - 1)
 
     >>> simplify(skewness(X))
     0
