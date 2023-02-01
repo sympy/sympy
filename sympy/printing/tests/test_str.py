@@ -944,8 +944,7 @@ def test_FiniteSet():
     assert str(FiniteSet(*range(1, 6))) == 'FiniteSet(1, 2, 3, 4, 5)'
     assert str(FiniteSet(*[x*y, x**2])) == 'FiniteSet(x**2, x*y)'
     assert str(FiniteSet(FiniteSet(FiniteSet(x, y), 5), FiniteSet(x,y), 5)
-               ) == 'FiniteSet(5, FiniteSet(5, FiniteSet(x, y)), ' \
-                    'FiniteSet(x, y))'
+               ) == 'FiniteSet(5, {5, {x, y}}, {x, y})'
 
 
 def test_Partition():

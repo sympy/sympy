@@ -421,7 +421,7 @@ def median(X, evaluate=True, **kwargs):
     {3}
     >>> D = Die('D')
     >>> median(D)
-    {3, 4}
+    FiniteSet(3, 4)
 
     References
     ==========

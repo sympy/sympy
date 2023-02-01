@@ -40,7 +40,7 @@ class PowerSet(Set):
     A power set of a finite set:
 
     >>> PowerSet(FiniteSet(1, 2, 3))
-    PowerSet({1, 2, 3})
+    PowerSet(FiniteSet(1, 2, 3))
 
     A power set of an empty set:
 

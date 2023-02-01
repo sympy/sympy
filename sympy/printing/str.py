@@ -813,20 +813,78 @@ class StrPrinter(Printer):
             return "set()"
         return '{%s}' % args
 
-    def _print_FiniteSet(self, s):
+    def _print_Set(self,s):
+        from sympy.sets.sets import FiniteSet
+        name = s.__class__.__name__
+        items = s.args
+        args = ''
+        for item in items:
+            if isinstance(item, FiniteSet):
+                args += self._wrapped_Finite_Set_print(item) + ', '
+            else:
+                args += self._print(item) + ', '
+        args = args[:-2]
+        return name + '({})'.format(args)
+
+    def _wrapped_Finite_Set_print(self,s):
         from sympy.sets.sets import FiniteSet
         items = sorted(s, key=default_sort_key)
+        args = ''
+        for item in items:
+            if isinstance(item, FiniteSet):
+                args += self._wrapped_Finite_Set_print(item) + ', '
+            else:
+                args += self._print(item) + ', '
+        args = args[:-2]
+        return '{{{}}}'.format(args)
 
-        args = ', '.join(self._print(item) for item in items)
-        if any(item.has(FiniteSet) for item in items):
-            return 'FiniteSet({})'.format(args)
-        return 'FiniteSet({})'.format(args)
+    # def _print_FiniteSet(self, s):
+    #     from sympy.sets.sets import FiniteSet
+    #     items = sorted(s, key=default_sort_key)
+    #     args = ''
+    #     for item in items:
+    #         if isinstance(item, FiniteSet):
+    #             args += self._wrapped_Finite_Set_print(item) + ', '
+    #         else:
+    #             args += self._print(item) + ', '
+    #     args = args[:-2]
+    #     return 'FiniteSet({})'.format(args)
 
-    def _print_Partition(self, s):
-        items = sorted(s, key=default_sort_key)
-
-        args = ', '.join(self._print(arg) for arg in items)
-        return 'Partition({})'.format(args)
+    # def _print_Partition(self, s):
+    #     from sympy.sets.sets import FiniteSet
+    #     items = sorted(s, key=default_sort_key)
+    #     args = ''
+    #     for item in items:
+    #         if isinstance(item, FiniteSet):
+    #             args += self._wrapped_Finite_Set_print(item) + ', '
+    #         else:
+    #             args += self._print(item) + ', '
+    #     args = args[:-2]
+    #     return 'Partition({})'.format(args)
+    #
+    # def _print_ConditionSet(self, s):
+    #     from sympy.sets.sets import FiniteSet
+    #     items = s.args
+    #     args = ''
+    #     for item in items:
+    #         if isinstance(item, FiniteSet):
+    #             args += self._wrapped_Finite_Set_print(item) + ', '
+    #         else:
+    #             args += self._print(item) + ', '
+    #     args = args[:-2]
+    #     return 'ConditionSet({})'.format(args)
+    #
+    # def _print_Intersection(self, s):
+    #     from sympy.sets.sets import FiniteSet
+    #     items = sorted(s.args, key=default_sort_key)
+    #     args = ''
+    #     for item in items:
+    #         if isinstance(item, FiniteSet):
+    #             args += self._wrapped_Finite_Set_print(item) + ', '
+    #         else:
+    #             args += self._print(item) + ', '
+    #     args = args[:-2]
+    #     return 'Intersection({})'.format(args)
 
     def _print_frozenset(self, s):
         if not s:

@@ -244,9 +244,9 @@ class FunctionClass(ManagedProperties):
         corresponding set will be returned:
 
         >>> Function('f', nargs=1).nargs
-        {1}
+        FiniteSet(1)
         >>> Function('f', nargs=(2, 1)).nargs
-        {1, 2}
+        FiniteSet(1, 2)
 
         The undefined function, after application, also has the nargs
         attribute; the actual number of arguments is always available by
@@ -967,7 +967,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
 
     >>> F = WildFunction('F', nargs=2)
     >>> F.nargs
-    {2}
+    FiniteSet(2)
     >>> f(x).match(F)
     >>> f(x, y).match(F)
     {F_: f(x, y)}
@@ -978,7 +978,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
 
     >>> F = WildFunction('F', nargs=(1, 2))
     >>> F.nargs
-    {1, 2}
+    FiniteSet(1, 2)
     >>> f(x).match(F)
     {F_: f(x)}
     >>> f(x, y).match(F)
