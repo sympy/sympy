@@ -3167,14 +3167,14 @@ def Normal(name, mean, std):
     The density of the Normal distribution is given by
 
     .. math::
-        f(x) := \frac{1}{\std\sqrt{2\pi}} e^{ -\frac{(x-\mean)^2}{2\std^2} }
+        f(x) := \frac{1}{\sigma\sqrt{2\pi}} e^{ -\frac{(x-\mu)^2}{2\sigma^2} }
 
     Parameters
     ==========
 
     mean : Real number or a list representing the mean or the mean vector
     std : Real number or a positive definite square matrix,
-         :math:`\std^2 > 0`, the variance
+         :math:`\sigma^2 > 0`, the variance
 
     Returns
     =======
@@ -3188,6 +3188,7 @@ def Normal(name, mean, std):
     >>> from sympy import Symbol, simplify, pprint
 
     >>> mean = Symbol("mean")
+    >>> std_func = std
     >>> std = Symbol("std", positive=True)
     >>> z = Symbol("z")
     >>> y = Symbol("y")
@@ -3199,12 +3200,12 @@ def Normal(name, mean, std):
 
     >>> C = simplify(cdf(X))(z) # it needs a little more help...
     >>> pprint(C, use_unicode=False)
-       /  ___          \
+       /  ___            \
        |\/ 2 *(-mean + z)|
-    erf|---------------|
-       \    2*std    /   1
-    -------------------- + -
-             2             2
+    erf|-----------------|
+       \      2*std      /   1
+    ---------------------- + -
+              2              2
 
     >>> quantile(X)(p)
     mean + sqrt(2)*std*erfinv(2*p - 1)
@@ -3219,7 +3220,7 @@ def Normal(name, mean, std):
     >>> E(2*X + 1)
     1
 
-    >>> simplify(std(2*X + 1))
+    >>> simplify(std_func(2*X + 1))
     2
 
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
