@@ -257,6 +257,11 @@ def test_laplace_transform():
          LaplaceTransform(f(t), t, I*a + s)/2, -oo, True)
     assert LT(cos(a*t)*t, t, s, simplify=True) ==\
         ((-a**2 + s**2)/(a**4 + 2*a**2*s**2 + s**4), 0, True)
+    L, plane, _ = LT(sin(a*t+b)**2*f(t), t, s)
+    assert plane == 0
+    assert (
+        -L -LaplaceTransform(f(t), t, -2*I*a + s)*exp(2*I*b)/4 -
+        LaplaceTransform(f(t), t, 2*I*a + s)*exp(-2*I*b)/4 + 1/(2*s)) == 0
     L, plane, _ = LT(sin(a*t)**3*cosh(b*t), t, s, simplify=False)
     assert plane == b
     assert (
