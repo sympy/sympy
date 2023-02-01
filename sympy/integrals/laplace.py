@@ -1009,7 +1009,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> laplace_transform(t**a, t, s)
     (s**(-a - 1)*gamma(a + 1), 0, re(a) > -1)
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s)
-    (s/(a + s), -a, True)
+    (s/(a + s), -re(a), True)
 
     References
     ==========
