@@ -73,7 +73,8 @@ class Force(LoadBase):
         return super().__new__(cls, point, force)
 
     def __repr__(self):
-        return f'Force(point={self.point}, force={self.force})'
+        return (f'{self.__class__.__name__}(point={self.point}, '
+                f'force={self.force})')
 
     @staticmethod
     def _generate_location(point):
@@ -99,20 +100,20 @@ class Force(LoadBase):
 
 
 class Torque(LoadBase):
-    """Force acting upon a point.
+    """Torque acting upon a frame.
 
     Explanation
     ===========
 
     A torque is a free vector that is acting on a reference frame, which is
     associated with a rigid body. This class stores both the frame and the
-    vector. A tuple can also be used, with the location as the first entry and
-    the vector as second entry.
+    vector. A tuple can also be used, with the location as the first item and
+    the vector as second item.
 
     Examples
     ========
 
-    A torque of magnitude 2 along N.x acting on a frame N can be created as
+    A torque of magnitude 2 about N.x acting on a frame N can be created as
     follows:
 
     >>> from sympy.physics.mechanics import ReferenceFrame, Torque
@@ -133,7 +134,8 @@ class Torque(LoadBase):
         return super().__new__(cls, frame, torque)
 
     def __repr__(self):
-        return f'Torque(frame={self.frame}, torque={self.torque})'
+        return (f'{self.__class__.__name__}(frame={self.frame}, '
+                f'torque={self.torque})')
 
     @staticmethod
     def _generate_location(frame):

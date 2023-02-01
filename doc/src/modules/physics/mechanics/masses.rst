@@ -143,16 +143,15 @@ Loads
 
 In :mod:`sympy.physics.mechanics` loads can either be represented with tuples or
 with the dedicated classes :class:`~.Force` and :class:`~.Torque`. Generally the
-first argument (or entry in case of a tuple) is the location of the load. The
-second argument is the vector. In case of a force the first argument is a point
-and the second a vector.
+first argument (or item in the case of a tuple) is the location of the load. The
+second argument is the vector. In the case of a force the first argument is a
+point and the second a vector.
 
    >>> from sympy.physics.mechanics import Point, ReferenceFrame, Force
    >>> N = ReferenceFrame('N')
    >>> Po = Point('Po')
    >>> Force(Po, N.x)
    (Po, N.x)
-
 
 The location of a torque on the other had is a frame.
 
