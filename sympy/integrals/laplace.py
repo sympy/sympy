@@ -593,7 +593,7 @@ def _laplace_rule_delta(f, t, s):
     return None
 
 
-def _laplace_rule_trig(f, t_, s, doit=True, **hints):
+def _laplace_rule_trig(fn, t_, s, doit=True, **hints):
     """
     This rule covers trigonometric factors by splitting everything into a
     sum of exponential functions and collecting complex conjugate poles and
@@ -618,20 +618,33 @@ def _laplace_rule_trig(f, t_, s, doit=True, **hints):
         d = -a**2 + s**2
         return n/d
 
-    if not (f.has(sin) or f.has(cos) or f.has(sinh) or f.has(cosh)):
+    if not (fn.has(sin) or fn.has(cos) or fn.has(sinh) or fn.has(cosh)):
         return None
 
-    debugf('_laplace_rule_trig: (%s, %s, %s)', (f, t_, s))
-    # Convert everything to a sum of exponentials
-    x1 = f.subs(t_, t).rewrite(exp).expand()
+    debugf('_laplace_rule_trig: (%s, %s, %s)', (fn, t_, s))
+
+    fna = Mul.make_args(fn.subs(t_, t))
+    trigs = [S.One]
+    other = [S.One]
+    for term in fna:
+        if term.has(sin) or term.has(cos) or term.has(sinh) or term.has(cosh):
+            trigs.append(term)
+        else:
+            other.append(term)
+    f = Mul(*trigs)
+    g = Mul(*other)
+
+    # Convert the product of trigonometric functions to a sum of exponentials
+    x1 = f.rewrite(exp).expand()
     xa = [k.simplify() for k in Add.make_args(x1)]
 
     xm = []  # all p*exp(a*t+b) matches
     xn = []  # expressions that do not match -> LT
-    ccs = []  # LT terms coming from symmetric or antisymmetric poles
     nc = []  # remaining matches
     planes = [S.NegativeInfinity]  # All convergence planes
     conditions = [True]  # All convergenge conditions
+    results = []
+
     for term in xa:
         if (r := term.match(p*exp(m))) is not None:
             mc = r[m].as_poly(t).all_coeffs()
@@ -642,46 +655,57 @@ def _laplace_rule_trig(f, t_, s, doit=True, **hints):
         else:
             xn.append(term)
 
-    # Search for complex conjugate poles and symmetric real poles. The order
-    # is vital, if we have four poles in a square layout, then collecting
-    # the conjugate-complex poles first always gives simpler results.
-    while len(xm) > 0:
-        t1 = xm.pop()
-        ii = None
-        for i in range(len(xm)):
-            if xm[i][a] == conjugate(t1[a]):
-                ccs.append(_ccpole(t1[a], t1[k], xm[i][k], s))
-                planes.append(re(t1[a]))
-                ii = i
-                break
-            if im(t1[a]) == 0 and re(t1[a]) == -re(xm[i][a]):
-                ccs.append(_rspole(t1[a], t1[k], xm[i][k], s))
-                planes.append(Abs(re(t1[a])))
-                ii = i
-                break
-        if ii is not None:
-            xm.pop(ii)
-        else:
-            nc.append(t1)
+    if g == 1:
+        # Search for complex conjugate poles and symmetric real poles. The
+        # order is vital, if we have four poles in a square layout, then
+        # collecting the conjugate-complex poles first always gives simpler
+        # results.
+        while len(xm) > 0:
+            t1 = xm.pop()
+            ii = None
+            for i in range(len(xm)):
+                if xm[i][a] == conjugate(t1[a]):
+                    results.append(_ccpole(t1[a], t1[k], xm[i][k], s))
+                    planes.append(re(t1[a]))
+                    ii = i
+                    break
+                if im(t1[a]) == 0 and re(t1[a]) == -re(xm[i][a]):
+                    results.append(_rspole(t1[a], t1[k], xm[i][k], s))
+                    planes.append(Abs(re(t1[a])))
+                    ii = i
+                    break
+            if ii is not None:
+                xm.pop(ii)
+            else:
+                nc.append(t1)
 
-    # Assemble results
-    result = 0
-    for x1 in xn:
-        L, plane, cond = _laplace_transform(x1.subs(t, t_), t_, s)
-        result = result + L
-        planes.append(plane)
-        conditions.append(cond)
-    lts = {}
-    for x1 in nc:
-        if not x1[a] in lts.keys():
-            lts[x1[a]] = _laplace_transform((exp(x1[a]*t)).subs(t, t_), t_, s)
-        L, plane, cond = lts[x1[a]]
-        result = result + x1[k]*L
-        planes.append(plane)
-        conditions.append(cond)
-
-    result = result + Add(*ccs)
-    return result, Max(*planes), And(*conditions)
+        for x1 in xn:
+            L, plane, cond = _laplace_transform(x1.subs(t, t_), t_, s)
+            results.append(L)
+            planes.append(plane)
+            conditions.append(cond)
+        lts = {}
+        for x1 in nc:
+            if not x1[a] in lts.keys():
+                lts[x1[a]] = _laplace_transform(
+                    (exp(x1[a]*t)).subs(t, t_), t_, s)
+            L, plane, cond = lts[x1[a]]
+            results.append(x1[k]*L)
+            planes.append(plane)
+            conditions.append(cond)
+    else:
+        # Just transform g and make s-shifted copies
+        G, G_plane, G_cond = _laplace_transform(g, t, s)
+        conditions.append(G_cond)
+        for x1 in xm:
+            results.append(x1[k]*G.subs(s, s-x1[a]))
+            planes.append(G_plane+re(x1[a]))
+        for x1 in xn:
+            L, plane, cond = _laplace_transform(x1.subs(t, t_), t_, s)
+            results.append(L)
+            planes.append(plane)
+            conditions.append(cond)
+    return Add(*results).subs(t, t_), Max(*planes), And(*conditions)
 
 
 def _laplace_rule_diff(f, t, s, doit=True, **hints):
