@@ -138,6 +138,39 @@ The mass is specified exactly as is in a particle. Similar to the
 ``.masscenter`` must be specified. The reference frame is stored in an analogous
 fashion and holds information about the body's orientation and angular velocity.
 
+Loads
+=====
+
+In :mod:`sympy.physics.mechanics` loads can either be represented with tuples or
+with the dedicated classes :class:`~.Force` and :class:`~.Torque`. Generally the
+first argument (or entry in case of a tuple) is the location of the load. The
+second argument is the vector. In case of a force the first argument is a point
+and the second a vector.
+
+   >>> from sympy.physics.mechanics import Point, ReferenceFrame, Force
+   >>> N = ReferenceFrame('N')
+   >>> Po = Point('Po')
+   >>> Force(Po, N.x)
+   Force(point=Po, force=N.x)
+
+
+The location of a torque on the other had is a frame.
+
+   >>> from sympy.physics.mechanics import Torque
+   >>> Torque(N, 2 * N.x)
+   Torque(frame=N, torque=2 * N.x)
+
+Optionally one can, when using the dedicated classes, also parse the body. If
+so, the force will use the center of mass and the torque will use the associated
+frame.
+
+   >>> from sympy.physics.mechanics import RigidBody
+   >>> rb = RigidBody('rb')
+   >>> Force(rb, 3 * N.x)
+   Force(point=rb_masscenter, force=3 * N.x)
+   >>> Torque(rb, 4 * N.x)
+   Torque(frame=rb_frame, torque=4 * N.x)
+
 Linear Momentum
 ===============
 

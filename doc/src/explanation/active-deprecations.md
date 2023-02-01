@@ -78,26 +78,28 @@ SymPy deprecation warnings.
 
 (moved-mechanics-functions)=
 ### Moved mechanics functions
-With the introduction of some new objects like the ``Inertia`` object in the
-``sympy.physics.mechanics`` module, some functions from
+With the introduction of some new objects like the ``Inertia`` and load objects
+in the ``sympy.physics.mechanics`` module, some functions from
 ``sympy.physics.mechanics.functions`` have been moved to new modules. This
 removes some circular import errors and makes it easier to navigate through the
 source code, due to the parity between function names and module names. The
 following functions were moved:
 - ``inertia`` has been moved to ``sympy.physics.mechanics.inertia``
 - ``inertia_of_point_mass`` has been moved to ``sympy.physics.mechanics.inertia``
+- ``gravity`` has been moved to ``sympy.physics.mechanics.loads``
 
 Previously you could import the functions from
 ``sympy.physics.mechanics.functions``:
 
 ```py
->>> from sympy.physics.mechanics.functions import inertia, inertia_of_point_mass
+>>> from sympy.physics.mechanics.functions import inertia, inertia_of_point_mass, gravity
 ```
 
 Now they should be imported from ``sympy.physics.mechanics``:
 
 ```py
 >>> from sympy.physics.mechanics import inertia, inertia_of_point_mass
+>>> from sympy.physics.mechanics.loads import gravity
 ```
 
 ## Version 1.12
