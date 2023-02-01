@@ -91,10 +91,9 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
     and their function values in vector v (both vectors must be of equal
     lengths).
 
-    The interpolation algorithm is known to yield some division by zero
-    when values are equally spaced. Therefore, this algorithm should not
-    be used as a general purpose algorithm (use rather the main
-    sympy.polys.polyfuncs.rational_interpolate function in that case).
+    This algorithm might encounter division by zero
+    when values are equally spaced. For such cases, a better algorithm is
+    sympy.polys.polyfuncs.rational_interpolate.
 
     Furthermore, the simplest solution is not always returned (see the last
     example below).
@@ -128,20 +127,24 @@ def thiele_interpolate(u, v, var=symbols('x'), simplify=True):
     """
     n = len(u)
     assert len(v) == n
-    u = [ sympify(e) for e in u ]
-    v = [ sympify(e) for e in v ]
-    rho = [v, [(u[i]-u[i+1])/(v[i]-v[i+1]) for i in range(n-1)]]
-    for i in range(n-2):
+    u = sympify(u)
+    v = sympify(v)
+    rho = [v, [(u[i] - u[i + 1])/(v[i] - v[i + 1]) for i in range(n - 1)]]
+    for i in range(n - 2):
         r = []
-        for j in range(n-i-2):
-            r.append((u[j]-u[j+i+2])/(rho[-1][j]-rho[-1][j+1])+rho[-2][j+1])
+        for j in range(n - i - 2):
+            r.append((u[j] - u[j + i + 2])/(rho[-1][j] - rho[-1][j + 1]) + rho[-2][j + 1])
         rho.append(r)
-    a = sympify(0)
-    for i in range(n-1, 1, -1):
-        a = (var - u[i-1]) / (rho[i][0] - rho[i-2][0] + a)
-        if simplify: a = a.cancel()
-        if a.has(zoo, nan): raise ZeroDivisionError("division by zero")
+    a = 0
+    for i in range(n - 1, 1, -1):
+        a = (var - u[i - 1]) / (rho[i][0] - rho[i - 2][0] + a)
+        if simplify:
+            a = a.cancel()
+        if a.has(zoo, nan):
+            raise ZeroDivisionError("division by zero")
     a = v[0] + (var - u[0]) / (rho[1][0] + a)
-    if simplify: a = a.cancel()
-    if a.has(zoo, nan): raise ZeroDivisionError("division by zero")
+    if simplify:
+        a = a.cancel()
+    if a.has(zoo, nan):
+        raise ZeroDivisionError("division by zero")
     return a
