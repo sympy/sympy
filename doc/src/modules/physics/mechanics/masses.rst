@@ -151,14 +151,14 @@ and the second a vector.
    >>> N = ReferenceFrame('N')
    >>> Po = Point('Po')
    >>> Force(Po, N.x)
-   Force(point=Po, force=N.x)
+   (Po, N.x)
 
 
 The location of a torque on the other had is a frame.
 
    >>> from sympy.physics.mechanics import Torque
    >>> Torque(N, 2 * N.x)
-   Torque(frame=N, torque=2 * N.x)
+   (N, 2*N.x)
 
 Optionally one can, when using the dedicated classes, also parse the body. If
 so, the force will use the center of mass and the torque will use the associated
@@ -167,9 +167,9 @@ frame.
    >>> from sympy.physics.mechanics import RigidBody
    >>> rb = RigidBody('rb')
    >>> Force(rb, 3 * N.x)
-   Force(point=rb_masscenter, force=3 * N.x)
+   (rb_masscenter, 3*N.x)
    >>> Torque(rb, 4 * N.x)
-   Torque(frame=rb_frame, torque=4 * N.x)
+   (rb_frame, 4*N.x)
 
 Linear Momentum
 ===============

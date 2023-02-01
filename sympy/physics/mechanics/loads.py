@@ -58,14 +58,14 @@ class Force(LoadBase):
     >>> N = ReferenceFrame('N')
     >>> Po = Point('Po')
     >>> Force(Po, 2 * N.x)
-    Force(point=Po, force=2*N.x)
+    (Po, 2*N.x)
 
     If a body is supplied, then the center of mass of that body is used.
 
     >>> from sympy.physics.mechanics import Particle
     >>> P = Particle('P', point=Po)
     >>> Force(P, 2 * N.x)
-    Force(point=Po, force=2*N.x)
+    (Po, 2*N.x)
 
     """
 
@@ -118,14 +118,14 @@ class Torque(LoadBase):
     >>> from sympy.physics.mechanics import ReferenceFrame, Torque
     >>> N = ReferenceFrame('N')
     >>> Torque(N, 2 * N.x)
-    Torque(frame=N, torque=2*N.x)
+    (N, 2*N.x)
 
     If a body is supplied, then the frame fixed to that body is used.
 
     >>> from sympy.physics.mechanics import RigidBody
     >>> rb = RigidBody('rb', frame=N)
     >>> Torque(rb, 2 * N.x)
-    Torque(frame=N, torque=2*N.x)
+    (N, 2*N.x)
 
     """
 
@@ -174,8 +174,8 @@ def gravity(acceleration, *bodies):
     >>> P = Particle('P')
     >>> B = RigidBody('B')
     >>> gravity(g*N.y, P, B)
-    [Force(point=P_masscenter, force=P_mass*g*N.y),
-     Force(point=B_masscenter, force=B_mass*g*N.y)]
+    [(P_masscenter, P_mass*g*N.y),
+     (B_masscenter, B_mass*g*N.y)]
 
     """
 

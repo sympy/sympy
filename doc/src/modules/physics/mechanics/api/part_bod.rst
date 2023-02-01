@@ -1,8 +1,8 @@
 .. _part_bod:
 
-=====================================================
-Masses, Inertias & Particles, RigidBodys (Docstrings)
-=====================================================
+======================================================
+Bodies, Inertias, Loads & Other Functions (Docstrings)
+======================================================
 
 Bodies
 ======
@@ -24,6 +24,15 @@ Inertias
 .. autofunction:: sympy.physics.mechanics.inertia.inertia
 
 .. autofunction:: sympy.physics.mechanics.inertia.inertia_of_point_mass
+
+Loads
+=====
+
+.. autoclass:: sympy.physics.mechanics.loads.Force
+   :members:
+
+.. autoclass:: sympy.physics.mechanics.loads.Torque
+   :members:
 
 Other Functions
 ===============
