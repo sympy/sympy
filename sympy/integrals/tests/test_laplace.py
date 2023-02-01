@@ -232,7 +232,7 @@ def test_laplace_transform():
         (a*LaplaceTransform(f(t), t, s)*exp(-s), -oo, True)
     assert LT(b*f(t/a), t, s) == (a*b*LaplaceTransform(f(t), t, a*s),
                                   -oo, True)
-    assert LT(exp(-f(x)*t), t, s) == (1/(s + f(x)), -f(x), True)
+    assert LT(exp(-f(x)*t), t, s) == (1/(s + f(x)), -re(f(x)), True)
     assert LT(exp(-a*t)*f(t), t, s) ==\
         (LaplaceTransform(f(t), t, a + s), -oo, True)
     assert LT(exp(-a*t)*erfc(sqrt(b/t)/2), t, s) ==\
@@ -257,6 +257,13 @@ def test_laplace_transform():
          LaplaceTransform(f(t), t, I*a + s)/2, -oo, True)
     assert LT(cos(a*t)*t, t, s, simplify=True) ==\
         ((-a**2 + s**2)/(a**4 + 2*a**2*s**2 + s**4), 0, True)
+    L, plane, _ = LT(sin(a*t)**3*cosh(b*t), t, s, simplify=False)
+    assert plane == b
+    assert (
+        -L -3*a/(8*(9*a**2 + b**2 + 2*b*s + s**2)) -
+        3*a/(8*(9*a**2 + b**2 - 2*b*s + s**2)) +
+        3*a/(8*(a**2 + b**2 + 2*b*s + s**2)) +
+        3*a/(8*(a**2 + b**2 - 2*b*s + s**2))).simplify() == 0
     assert LT(t**2*exp(-t**2), t, s) ==\
         (sqrt(pi)*s**2*exp(s**2/4)*erfc(s/2)/8 - s/4 +\
          sqrt(pi)*exp(s**2/4)*erfc(s/2)/4, 0, True)

@@ -10,7 +10,7 @@ from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.complexes import (
-    re, im, arg, Abs, polar_lift, periodic_argument)
+    re, im, arg, Abs, polar_lift, periodic_argument, conjugate)
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, asinh
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
@@ -331,11 +331,11 @@ def _laplace_build_rules():
     (t**n/(t+a), a**n*gamma(n+1)*lowergamma(-n,a*s),
      And(n>-1, Abs(arg(a))<pi), S.Zero, dco), # 4.3.7
     (exp(a*t-tau), exp(-tau)/(s-a),
-     S.true, a, dco), # 4.5.1
+     S.true, re(a), dco), # 4.5.1
     (t*exp(a*t-tau), exp(-tau)/(s-a)**2,
-     S.true, a, dco), # 4.5.2
+     S.true, re(a), dco), # 4.5.2
     (t**n*exp(a*t), gamma(n+1)/(s-a)**(n+1),
-     re(n)>-1, a, dco), # 4.5.3
+     re(n)>-1, re(a), dco), # 4.5.3
     (exp(-a*t**2), sqrt(pi/4/a)*exp(s**2/4/a)*erfc(s/sqrt(4*a)),
      re(a)>0, S.Zero, dco), # 4.5.21
     (t*exp(-a*t**2), 1/(2*a)-2/sqrt(pi)/(4*a)**(S(3)/2)*s*erfc(s/sqrt(4*a)),
@@ -593,46 +593,95 @@ def _laplace_rule_delta(f, t, s):
     return None
 
 
-def _laplace_rule_trig(f, t, s, doit=True, **hints):
+def _laplace_rule_trig(f, t_, s, doit=True, **hints):
     """
-    This function covers trigonometric factors. All of the rules have a
-    similar form: ``trig(y)*z`` is matched, and then two copies of the Laplace
-    transform of `z` are shifted in the s Domain and added with a weight.
-
-    The parameters in the tuples are (fm, nu, s1, s2, sd):
-      fm: Function to match
-      nu: Number of the rule, for debug purposes
-      s1: weight of the sum, 'I' for sin and '1' for all others
-      s2: sign of the second copy of the Laplace transform of z
-      sd: shift direction; shift along real or imaginary axis if `1` or `I`
-
-    The convergence plane is changed only if a frequency shift is done along
-    the real axis.
+    This rule covers trigonometric factors by splitting everything into a
+    sum of exponential functions and collecting complex conjugate poles and
+    real symmetric poles.
     """
-    # These rules follow from Bateman54, 4.1.5 and Euler's formulas
 
+    t = Dummy('t', real=True)
+    p = Wild('p', exclude=[t])
     a = Wild('a', exclude=[t])
-    y = Wild('y')
-    z = Wild('z')
-    trigrules = [(sinh(y), '1.6',  1, -1, 1), (cosh(y), '1.7', 1, 1, 1),
-                 (sin(y),  '1.8', -I, -1, I), (cos(y),  '1.9', 1, 1, I)]
-    for trigrule in trigrules:
-        fm, nu, s1, s2, sd = trigrule
-        ma1 = f.match(z*fm)
-        if ma1:
-            ma2 = ma1[y].collect(t).match(a*t)
-            if ma2:
-                debug('_laplace_apply_rules match:')
-                debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
-                debugf('      rule: multiply with %s (%s)', (fm.func, nu))
-                r, pr, cr = _laplace_transform(ma1[z], t, s, simplify=False)
-                if sd==1:
-                    cp_shift = Abs(re(ma2[a]))
-                else:
-                    cp_shift = Abs(im(ma2[a]))
-                return ((s1*(r.subs(s, s-sd*ma2[a])+\
-                             s2*r.subs(s, s+sd*ma2[a])))/2, pr+cp_shift, cr)
-    return None
+    m = Wild('m')
+    k = Wild('k', exclude=[t])
+
+    def _ccpole(a, b, c, s):
+        a_r, a_i = re(a), im(a)
+        n = ((I*a_i*b - I*a_i*c - a_r*b - a_r*c).rewrite(cos)
+             + s*(b + c).rewrite(cos))
+        d = a_i**2 + a_r**2 + 2*a_r*s + s**2
+        return n/d
+
+    def _rspole(a, b, c, s):
+        n = (a*b - a*c).rewrite(cos) + s*(b + c).rewrite(cos)
+        d = -a**2 + s**2
+        return n/d
+
+    if not (f.has(sin) or f.has(cos) or f.has(sinh) or f.has(cosh)):
+        return None
+
+    debugf('_laplace_rule_trig: (%s, %s, %s)', (f, t_, s))
+    # Convert everything to a sum of exponentials
+    x1 = f.subs(t_, t).rewrite(exp).expand()
+    xa = [k.simplify() for k in Add.make_args(x1)]
+
+    xm = []  # all p*exp(a*t+b) matches
+    xn = []  # expressions that do not match -> LT
+    ccs = []  # LT terms coming from symmetric or antisymmetric poles
+    nc = []  # remaining matches
+    planes = [S.NegativeInfinity]  # All convergence planes
+    conditions = [True]  # All convergenge conditions
+    for term in xa:
+        if (r := term.match(p*exp(m))) is not None:
+            mc = r[m].as_poly(t).all_coeffs()
+            if len(mc) == 2:
+                xm.append({k: r[p]*exp(mc[1]), a: mc[0]})
+            else:
+                xn.append(term)
+        else:
+            xn.append(term)
+
+    # Search for complex conjugate poles and symmetric real poles. The order
+    # is vital, if we have four poles in a square layout, then collecting
+    # the conjugate-complex poles first always gives simpler results.
+    while len(xm) > 0:
+        t1 = xm.pop()
+        ii = None
+        for i in range(len(xm)):
+            if xm[i][a] == conjugate(t1[a]):
+                ccs.append(_ccpole(t1[a], t1[k], xm[i][k], s))
+                planes.append(re(t1[a]))
+                ii = i
+                break
+            if im(t1[a]) == 0 and re(t1[a]) == -re(xm[i][a]):
+                ccs.append(_rspole(t1[a], t1[k], xm[i][k], s))
+                planes.append(Abs(re(t1[a])))
+                ii = i
+                break
+        if ii is not None:
+            xm.pop(ii)
+        else:
+            nc.append(t1)
+
+    # Assemble results
+    result = 0
+    for x1 in xn:
+        L, plane, cond = _laplace_transform(x1.subs(t, t_), t_, s)
+        result = result + L
+        planes.append(plane)
+        conditions.append(cond)
+    lts = {}
+    for x1 in nc:
+        if not x1[a] in lts.keys():
+            lts[x1[a]] = _laplace_transform((exp(x1[a]*t)).subs(t, t_), t_, s)
+        L, plane, cond = lts[x1[a]]
+        result = result + x1[k]*L
+        planes.append(plane)
+        conditions.append(cond)
+
+    result = result + Add(*ccs)
+    return result, Max(*planes), And(*conditions)
 
 
 def _laplace_rule_diff(f, t, s, doit=True, **hints):
