@@ -25,7 +25,7 @@ from sympy.tensor.indexed import (Idx, IndexedBase)
 from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
-from sympy.simplify import cse_main, cse_opts
+from sympy.simplify import cse_main, cse_opts, CseExpr
 from sympy.utilities.iterables import subsets
 from sympy.testing.pytest import XFAIL, raises
 from sympy.matrices import (MutableDenseMatrix, MutableSparseMatrix,
@@ -290,8 +290,8 @@ def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
     assert cse([eq, Eq(x, z + 1), z - 2, (z + 1)*(x + 1)],
         postprocess=cse_main.cse_separate) == \
-        [[(x0, y + 1), (x2, z + 1), (x, x2), (x1, x + 1)],
-        [x1 + exp(x1/x0) + cos(x0), z - 2, x1*x2]]
+        ([(x0, y + 1), (x2, z + 1), (x, x2), (x1, x + 1)],
+        [x1 + exp(x1/x0) + cos(x0), z - 2, x1*x2])
 
 
 def test_issue_4499():
@@ -523,6 +523,7 @@ def test_cse_ignore():
     assert not any(y in sub.free_symbols for _, sub in subst2), "Sub-expressions containing y must be ignored"
     assert any(sub - sqrt(x + 1) == 0 for _, sub in subst2), "cse failed to identify sqrt(x + 1) as sub-expression"
 
+
 def test_cse_ignore_issue_15002():
     l = [
         w*exp(x)*exp(-z),
@@ -531,6 +532,7 @@ def test_cse_ignore_issue_15002():
     substs, reduced = cse(l, ignore=(x,))
     rl = [e.subs(reversed(substs)) for e in reduced]
     assert rl == l
+
 
 def test_cse__performance():
     nexprs, nterms = 3, 20
@@ -604,3 +606,142 @@ def test_issue_18991():
 def test_unevaluated_Mul():
     m = [Mul(1, 2, evaluate=False)]
     assert cse(m) == ([], m)
+
+
+def test_cse_returns_cse_expr_instance():
+    x1, x2 = symbols('x1, x2')
+    expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))
+    cse_expr = cse(expr)
+    assert isinstance(cse_expr, CseExpr)
+
+
+def test_cse_griewank_baby_example():
+    x1, x2 = symbols('x1, x2')
+    expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))
+    x0, x3 = symbols('x0, x3')
+    cse_expected = ([(x0, x1 / x2), (x3, x0 - exp(x2))], [x3 * (x3 + sin(x0))])
+    cse_expr_expected = CseExpr(cse_expected)
+    assert cse(expr) == cse_expected
+    assert cse(expr) == cse_expr_expected
+
+
+def test_cse_expr_str():
+    x1, x2 = symbols('x1, x2')
+    expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))
+    cse_expr = cse(expr)
+    str_expected = '([(x0, x1/x2), (x3, x0 - exp(x2))], [x3*(x3 + sin(x0))])'
+    assert str(cse_expr) == str_expected
+
+
+def test_cse_expr_repr():
+    x1, x2 = symbols('x1, x2')
+    expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))
+    cse_expr = cse(expr)
+    repr_expected = (
+        'CseExpr(([(x0, x1/x2), (x3, x0 - exp(x2))], [x3*(x3 + sin(x0))]))'
+    )
+    assert repr(cse_expr) == repr_expected
+
+
+def test_cse_expr_properties():
+    x1, x2 = symbols('x1, x2')
+    expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))
+    cse_expr = cse(expr)
+    x0, x3 = symbols('x0, x3')
+    subs_expected = [(x0, x1 / x2), (x3, x0 - exp(x2))]
+    exprs_expected = [x3 * (x3 + sin(x0))]
+    assert hasattr(cse_expr, 'subs')
+    assert cse_expr[0] == subs_expected
+    assert cse_expr.subs == subs_expected
+    assert hasattr(cse_expr, 'exprs')
+    assert cse_expr[1] == exprs_expected
+    assert cse_expr.exprs == exprs_expected
+
+
+def test_cse_expr_as_tuple():
+    x1, x2 = symbols('x1, x2')
+    expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))
+    cse_expr = cse(expr)
+    x0, x3 = symbols('x0, x3')
+    cse_tuple_expected = ([(x0, x1 / x2), (x3, x0 - exp(x2))],
+                          [x3 * (x3 + sin(x0))])
+    assert hasattr(cse_expr, 'as_tuple')
+    assert isinstance(cse_expr.as_tuple(), tuple)
+    assert cse_expr.as_tuple() == cse_tuple_expected
+
+
+def test_cse_expr_subs_mapping():
+    x1, x2 = symbols('x1, x2')
+    expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))
+    cse_expr = cse(expr)
+    x0, x3 = symbols('x0, x3')
+    subs_mapping_expected = {x0: x1 / x2, x3: x0 - exp(x2)}
+    assert hasattr(cse_expr, 'subs_mapping')
+    assert cse_expr.subs_mapping == subs_mapping_expected
+
+
+def test_cse_expr_from_exprs_and_subs_mapping_single_expr_as_list():
+    x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
+    expr = x3 * (x3 + sin(x0))
+    subs_mapping = {x0: x1 / x2, x3: x0 - exp(x2)}
+    cse_expr = CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+    cse_expr_expected = CseExpr(([(x0, x1 / x2), (x3, x0 - exp(x2))],
+                                 [x3 * (x3 + sin(x0))]))
+    assert cse_expr == cse_expr_expected
+
+
+def test_cse_expr_from_exprs_and_subs_mapping_as_list_false():
+    x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
+    expr = x3 * (x3 + sin(x0))
+    subs_mapping = {x0: x1 / x2, x3: x0 - exp(x2)}
+    cse_expr = CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping, as_list=False)
+    cse_expr_expected = CseExpr(([(x0, x1 / x2), (x3, x0 - exp(x2))],
+                                 x3 * (x3 + sin(x0))))
+    assert cse_expr == cse_expr_expected
+
+
+def test_cse_expr_from_exprs_and_subs_mapping_error_handling_expr():
+    exprs = [1, 2.0]
+    subs_mapping = {}
+    with raises(TypeError):
+        CseExpr.from_exprs_and_subs_mapping(exprs, subs_mapping)
+
+
+def test_cse_expr_from_exprs_and_subs_mapping_error_handling_subs_mapping():
+    x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
+    expr = x3 * (x3 + sin(x0))
+
+    # ``subs_mapping`` isn't a ``dict``
+    subs_mapping = [(x0, x1 / x2), (x3, x0 - exp(x2))]
+    with raises(TypeError):
+        CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+
+    # ``subs_mapping`` has non-symbol keys
+    subs_mapping = {None: x1 / x2, 0: x0 - exp(x2)}
+    with raises(TypeError):
+        CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+
+    # ``subs_mapping`` has non-expression values
+    subs_mapping = {x0: None, x3: None}
+    with raises(TypeError):
+        CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+
+
+def test_cse_expr_from_exprs_and_subs_mapping_topologically_sorted():
+    x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
+    expr = x3 * (x3 + sin(x0))
+    subs_mapping = {x0: x1 / x2, x3: x0 - exp(x2)}
+    cse_expr = CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+    cse_expr_expected = CseExpr(([(x0, x1 / x2), (x3, x0 - exp(x2))],
+                                 [x3 * (x3 + sin(x0))]))
+    assert cse_expr == cse_expr_expected
+
+
+def test_cse_expr_from_exprs_and_subs_mapping_not_topologically_sorted():
+    x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
+    expr = x3 * (x3 + sin(x0))
+    subs_mapping = {x3: x0 - exp(x2), x0: x1 / x2}
+    cse_expr = CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+    cse_expr_expected = CseExpr(([(x0, x1 / x2), (x3, x0 - exp(x2))],
+                                 [x3 * (x3 + sin(x0))]))
+    assert cse_expr == cse_expr_expected
