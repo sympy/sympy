@@ -774,7 +774,7 @@ class MultisetPartitionTraverser():
         See Also
         ========
 
-        multiset_partitions_taocp():
+        multiset_partitions_taocp:
             which provides the same result as this method, but is
             about twice as fast.  Hence, enum_all is primarily useful
             for testing.  Also see the function for a discussion of

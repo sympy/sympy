@@ -66,7 +66,7 @@ from .inverse import (
 
 
 class DeferredVector(Symbol, NotIterable):
-    """A vector whose components are deferred (e.g. for use with lambdify)
+    """A vector whose components are deferred (e.g. for use with lambdify).
 
     Examples
     ========
@@ -671,7 +671,7 @@ class MatrixDeprecated(MatrixCommon):
         return _det_bareiss(self)
 
     def det_LU_decomposition(self):
-        """Compute matrix determinant using LU decomposition
+        """Compute matrix determinant using LU decomposition.
 
 
         Note that this method fails if the LU decomposition itself
@@ -1182,7 +1182,7 @@ class MatrixBase(MatrixDeprecated,
             return
 
     def add(self, b):
-        """Return self + b """
+        """Return self + b."""
         return self + b
 
     def condition_number(self):
@@ -1406,7 +1406,9 @@ class MatrixBase(MatrixDeprecated,
         return (mat * b)[0]
 
     def dual(self):
-        """Returns the dual of a matrix, which is:
+        """Returns the dual of a matrix.
+
+        A dual of a matrix is:
 
         ``(1/2)*levicivita(i, j, k, l)*M(k, l)`` summed over indices `k` and `l`
 
@@ -1579,8 +1581,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     def exp(self):
-
-        """Return the exponential of a square matrix
+        """Return the exponential of a square matrix.
 
         Examples
         ========
@@ -1654,7 +1655,7 @@ class MatrixBase(MatrixDeprecated,
         return self.__class__(banded(size, bands))
 
     def log(self, simplify=cancel):
-        """Return the logarithm of a square matrix
+        """Return the logarithm of a square matrix.
 
         Parameters
         ==========
@@ -1854,6 +1855,7 @@ class MatrixBase(MatrixDeprecated,
 
     def norm(self, ord=None):
         """Return the Norm of a Matrix or Vector.
+
         In the simplest case this is the geometric size of the vector
         Other norms can be specified by the ord parameter
 

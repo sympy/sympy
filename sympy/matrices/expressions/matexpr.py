@@ -247,7 +247,7 @@ class MatrixExpr(Expr):
         return adjoint(self)
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return S.One, self
 
     def conjugate(self):

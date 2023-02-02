@@ -2913,9 +2913,9 @@ def _return_conditionset(eqs, symbols):
 def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
     r"""
-     Solves the `system` using substitution method. It is used in
-     :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
-     equation(s) is non polynomial equation.
+    Solves the `system` using substitution method. It is used in
+    :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
+    equation(s) is non polynomial equation.
 
     Parameters
     ==========

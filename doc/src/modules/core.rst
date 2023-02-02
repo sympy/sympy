@@ -168,6 +168,9 @@ numbers
 
 .. autofunction:: mod_inverse
 
+.. autofunction:: equal_valued
+
+
 power
 -----
 .. module:: sympy.core.power

@@ -249,6 +249,16 @@ def debug(*args):
         print(*args, file=sys.stderr)
 
 
+def debugf(string, args):
+    """
+    Print ``string%args`` if SYMPY_DEBUG is True, else do nothing. This is
+    intended for debug messages using formatted strings.
+    """
+    from sympy import SYMPY_DEBUG
+    if SYMPY_DEBUG:
+        print(string%args, file=sys.stderr)
+
+
 def find_executable(executable, path=None):
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to

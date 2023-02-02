@@ -15,7 +15,7 @@ from sympy.core.evalf import (
     pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.numbers import ilcm, I, Integer
+from sympy.core.numbers import ilcm, I, Integer, equal_valued
 from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -5632,7 +5632,7 @@ def terms_gcd(f, *gens, **args):
         coeff = S.One
 
     term = Mul(*[x**j for x, j in zip(f.gens, J)])
-    if coeff == 1:
+    if equal_valued(coeff, 1):
         coeff = S.One
         if term == 1:
             return orig

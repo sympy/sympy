@@ -556,7 +556,8 @@ class MatrixShaping(MatrixRequired):
 
         See Also
         ========
-        diag - to create a diagonal matrix
+
+        diag
         """
         rv = []
         k = as_int(k)
@@ -924,10 +925,10 @@ class MatrixSpecial(MatrixRequired):
         See Also
         ========
         eye
-        diagonal - to extract a diagonal
+        diagonal
         .dense.diag
         .expressions.blockmatrix.BlockMatrix
-        .sparsetools.banded - to create multi-diagonal matrices
+        .sparsetools.banded
        """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
@@ -983,8 +984,8 @@ class MatrixSpecial(MatrixRequired):
     def eye(kls, rows, cols=None, **kwargs):
         """Returns an identity matrix.
 
-        Args
-        ====
+        Parameters
+        ==========
 
         rows : rows of the matrix
         cols : cols of the matrix (if None, cols=rows)
@@ -1105,8 +1106,8 @@ class MatrixSpecial(MatrixRequired):
     def ones(kls, rows, cols=None, **kwargs):
         """Returns a matrix of ones.
 
-        Args
-        ====
+        Parameters
+        ==========
 
         rows : rows of the matrix
         cols : cols of the matrix (if None, cols=rows)
@@ -1126,8 +1127,8 @@ class MatrixSpecial(MatrixRequired):
     def zeros(kls, rows, cols=None, **kwargs):
         """Returns a matrix of zeros.
 
-        Args
-        ====
+        Parameters
+        ==========
 
         rows : rows of the matrix
         cols : cols of the matrix (if None, cols=rows)
@@ -2449,7 +2450,7 @@ class MatrixOperations(MatrixRequired):
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
     def upper_triangular(self, k=0):
-        """returns the elements on and above the kth diagonal of a matrix.
+        """Return the elements on and above the kth diagonal of a matrix.
         If k is not specified then simply returns upper-triangular portion
         of a matrix
 
@@ -2488,7 +2489,7 @@ class MatrixOperations(MatrixRequired):
 
 
     def lower_triangular(self, k=0):
-        """returns the elements on and below the kth diagonal of a matrix.
+        """Return the elements on and below the kth diagonal of a matrix.
         If k is not specified then simply returns lower-triangular portion
         of a matrix
 

@@ -681,8 +681,8 @@ def test_issue_8245():
     assert rel_check(a, a.n(10))
     assert rel_check(a, a.n(20))
     assert rel_check(a, a.n())
-    # prec of 30 is enough to fully capture a as mpf
-    assert Float(a, 30) == Float(str(a.p), '')/Float(str(a.q), '')
+    # prec of 31 is enough to fully capture a as mpf
+    assert Float(a, 31) == Float(str(a.p), '')/Float(str(a.q), '')
     for i in range(31):
         r = Rational(Float(a, i))
         f = Float(r)
