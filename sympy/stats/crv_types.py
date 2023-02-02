@@ -3187,28 +3187,27 @@ def Normal(name, mean, std):
     >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile, marginal_distribution
     >>> from sympy import Symbol, simplify, pprint
 
-    >>> mean = Symbol("mean")
-    >>> std_func = std
-    >>> std = Symbol("std", positive=True)
+    >>> mu = Symbol("mu")
+    >>> sigma = Symbol("sigma", positive=True)
     >>> z = Symbol("z")
     >>> y = Symbol("y")
     >>> p = Symbol("p")
-    >>> X = Normal("x", mean, std)
+    >>> X = Normal("x", mu, sigma)
 
     >>> density(X)(z)
-    sqrt(2)*exp(-(-mean + z)**2/(2*std**2))/(2*sqrt(pi)*std)
+    sqrt(2)*exp(-(-mu + z)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)
 
     >>> C = simplify(cdf(X))(z) # it needs a little more help...
     >>> pprint(C, use_unicode=False)
-       /  ___            \
-       |\/ 2 *(-mean + z)|
-    erf|-----------------|
-       \      2*std      /   1
-    ---------------------- + -
-              2              2
+       /  ___          \
+       |\/ 2 *(-mu + z)|
+    erf|---------------|
+       \    2*sigma    /   1
+    -------------------- + -
+             2             2
 
     >>> quantile(X)(p)
-    mean + sqrt(2)*std*erfinv(2*p - 1)
+    mu + sqrt(2)*sigma*erfinv(2*p - 1)
 
     >>> simplify(skewness(X))
     0
@@ -3220,7 +3219,7 @@ def Normal(name, mean, std):
     >>> E(2*X + 1)
     1
 
-    >>> simplify(std_func(2*X + 1))
+    >>> simplify(std(2*X + 1))
     2
 
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
