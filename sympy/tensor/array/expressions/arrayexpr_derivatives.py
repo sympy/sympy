@@ -20,6 +20,9 @@ from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_t
 
 @singledispatch
 def array_derive(expr, x):
+    """
+    Derivatives (gradients) for array expressions.
+    """
     raise NotImplementedError(f"not implemented for type {type(expr)}")
 
 
