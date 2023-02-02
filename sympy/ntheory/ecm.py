@@ -258,8 +258,10 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
             alpha = (R.x_cord*R.z_cord) % n
             for q in sieve.primerange(r + 2, r + 2*D + 1):
                 delta = (q - r) // 2
-                f = (R.x_cord - S[d].x_cord)*(R.z_cord + S[d].z_cord) -\
-                alpha + beta[delta]
+                # We want to calculate
+                # f = R.x_cord * S[delta].z_cord - S[delta].x_cord * R.z_cord
+                f = (R.x_cord - S[delta].x_cord)*\
+                    (R.z_cord + S[delta].z_cord) - alpha + beta[delta]
                 g = (g*f) % n
             #Swap
             T, R = R, R.add(S[D], T)
