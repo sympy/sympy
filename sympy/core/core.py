@@ -60,14 +60,9 @@ class Registry:
     def __delattr__(self, name):
         delattr(self.__class__, name)
 
-#A set containing all SymPy class objects
-all_classes = set()
-
 
 class BasicMeta(type):
-
     def __init__(cls, *args, **kws):
-        all_classes.add(cls)
         cls.__sympy__ = property(lambda self: True)
 
     def __cmp__(cls, other):

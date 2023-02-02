@@ -149,11 +149,11 @@ class BasisDependent(Expr):
     factor.__doc__ += fctr.__doc__  # type: ignore
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return (S.One, self)
 
     def as_coeff_add(self, *deps):
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         l = [x * self.components[x] for x in self.components]
         return 0, tuple(l)
 

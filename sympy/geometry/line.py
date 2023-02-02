@@ -44,6 +44,9 @@ from sympy.utilities.misc import Undecidable, filldedent
 import random
 
 
+t, u = [Dummy('line_dummy') for i in range(2)]
+
+
 class LinearEntity(GeometrySet):
     """A base class for all linear entities (Line, Ray and Segment)
     in n-dimensional Euclidean space.
@@ -219,11 +222,6 @@ class LinearEntity(GeometrySet):
 
         angle : angle in radians
 
-        See Also
-        ========
-
-        angle_between, is_perpendicular, Ray2D.closing_angle
-
         Examples
         ========
 
@@ -235,7 +233,8 @@ class LinearEntity(GeometrySet):
 
         See Also
         ========
-        angle_between, Ray2D.closing_angle
+
+        angle_between, is_perpendicular, Ray2D.closing_angle
         """
         if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
@@ -306,7 +305,8 @@ class LinearEntity(GeometrySet):
         Parameters
         ==========
 
-        lines : a sequence of linear entities.
+        lines
+            A sequence of linear entities.
 
         Returns
         =======
@@ -546,7 +546,6 @@ class LinearEntity(GeometrySet):
                 # arbitrary points, when  equal, both give a
                 # non-negative parameter when the arbitrary point
                 # coordinates are equated
-                t, u = [Dummy(i) for i in 'tu']
                 tu = solve(self.arbitrary_point(t) - other.arbitrary_point(u),
                     t, u, dict=True)[0]
                 def ok(p, l):
@@ -1037,7 +1036,6 @@ class LinearEntity(GeometrySet):
             rng = random.Random(seed)
         else:
             rng = random
-        t = Dummy()
         pt = self.arbitrary_point(t)
         if isinstance(self, Ray):
             v = abs(rng.gauss(0, 1))
@@ -1909,18 +1907,6 @@ class LinearEntity2D(LinearEntity):
     def perpendicular_line(self, p):
         """Create a new Line perpendicular to this linear entity which passes
         through the point `p`.
-
-        Examples
-        ========
-
-        >>> from sympy import Point, Line
-        >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
-        >>> l1 = Line(p1, p2)
-        >>> l2 = l1.perpendicular_line(p3)
-        >>> p3 in l2
-        True
-        >>> l1.is_perpendicular(l2)
-        True
 
         Parameters
         ==========

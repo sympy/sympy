@@ -783,7 +783,7 @@ def diag(*values, strict=True, unpack=False, **kwargs):
     See Also
     ========
     .common.MatrixCommon.eye
-    .common.MatrixCommon.diagonal - to extract a diagonal
+    .common.MatrixCommon.diagonal
     .common.MatrixCommon.diag
     .expressions.blockmatrix.BlockMatrix
     """
