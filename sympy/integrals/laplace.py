@@ -636,7 +636,6 @@ def _laplace_rule_trig(fn, t_, s, doit=True, **hints):
 
     # Convert the product of trigonometric functions to a sum of exponentials
     x1 = f.rewrite(exp).expand()
-    xa = [k.simplify() for k in Add.make_args(x1)]
 
     xm = []  # all p*exp(a*t+b) matches
     xn = []  # expressions that do not match -> LT
@@ -645,7 +644,7 @@ def _laplace_rule_trig(fn, t_, s, doit=True, **hints):
     conditions = [True]  # All convergenge conditions
     results = []
 
-    for term in xa:
+    for term in Add.make_args(x1):
         if (r := term.match(p*exp(m))) is not None:
             mc = r[m].as_poly(t).all_coeffs()
             if len(mc) == 2:
@@ -655,7 +654,7 @@ def _laplace_rule_trig(fn, t_, s, doit=True, **hints):
         else:
             xn.append(term)
 
-    if g == 1:
+    if not g.has(t):
         # Search for complex conjugate poles and symmetric real poles. The
         # order is vital, if we have four poles in a square layout, then
         # collecting the conjugate-complex poles first always gives simpler
