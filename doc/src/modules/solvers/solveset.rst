@@ -184,9 +184,9 @@ For example:
 
  >>> from sympy import FiniteSet
  >>> FiniteSet(1, 2, 3)   # Unordered
- {1, 2, 3}
+ FiniteSet(1, 2, 3)
  >>> FiniteSet((1, 2, 3))  # Ordered
- {(1, 2, 3)}
+ FiniteSet((1, 2, 3))
 
 
 Why not use dicts as output?
@@ -250,7 +250,7 @@ It's unlike the old ``solve`` which considers the assumption on the variable.
     >>> from sympy import solveset, S
     >>> from sympy.abc import x
     >>> solveset(x**2 + 1, x) # domain=S.Complexes is default
-    {-I, I}
+    FiniteSet(-I, I)
     >>> solveset(x**2 + 1, x, domain=S.Reals)
     EmptySet
 
@@ -539,12 +539,12 @@ Solving an equation like `x^2 == 1` can be done as follows::
     >>> from sympy import Symbol, Eq
     >>> x = Symbol('x')
     >>> solveset(Eq(x**2, 1), x)
-    {-1, 1}
+    FiniteSet(-1, 1)
 
 Or one may manually rewrite the equation as an expression equal to 0::
 
     >>> solveset(x**2 - 1, x)
-    {-1, 1}
+    FiniteSet(-1, 1)
 
 The first argument for :func:`solveset` is an expression (equal to zero) or an equation and the second argument
 is the symbol that we want to solve the equation for.

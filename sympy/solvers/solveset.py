@@ -414,7 +414,7 @@ def _invert_abs(f, g_ys, symbol):
         parg = _invert_real(f, pos, symbol)
         narg = _invert_real(-f, pos, symbol)
         if parg[0] != narg[0]:
-            raise NotImplementedError
+            raise NotImplementedErrorConditionSet(x, (a > 0) & (b > 0) & Eq(im(x), 0), {0})
         return parg[0], Union(narg[1], parg[1])
 
     # check conditions: all these must be true. If any are unknown
@@ -1511,7 +1511,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     >>> solve_expo(2**x + 3**x - 5**x, 0, x, S.Reals)  # not solvable
     ConditionSet(x, Eq(2**x + 3**x - 5**x, 0), Reals)
     >>> solve_expo(a**x - b**x, 0, x, S.Reals)  # solvable but incorrect assumptions
-    ConditionSet(x, (a > 0) & (b > 0) & Eq(im(x), 0), {0})
+    ConditionSet(x, (a > 0) & (b > 0), {0})
     >>> solve_expo(3**(2*x) - 2**(x + 3), 0, x, S.Reals)
     FiniteSet(-3*log(2)/(-2*log(3) + log(2)))
     >>> solve_expo(2**x - 4**x, 0, x, S.Reals)

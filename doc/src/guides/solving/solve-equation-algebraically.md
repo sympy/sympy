@@ -29,7 +29,7 @@ There are two high-level functions to solve equations, {func}`~.solve` and
 >>> from sympy import solveset
 >>> from sympy.abc import x, y
 >>> solveset(x**2 - y, x)
-{-sqrt(y), sqrt(y)}
+FiniteSet(-sqrt(y), sqrt(y))
 ```
 
 Here are recommendations on when to use:
@@ -77,7 +77,7 @@ zero, or an equation that you do not mind rearranging to $expression = 0$.
 >>> solve(x**2 - y, x, dict=True)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 >>> solveset(x**2 - y, x)
-{-sqrt(y), sqrt(y)}
+FiniteSet(-sqrt(y), sqrt(y))
 ```
 
 ### Put Your Equation Into `Eq` Form
@@ -98,7 +98,7 @@ Eq(x**2, y)
 [{x: -sqrt(y)}, {x: sqrt(y)}]
 >>> solutions_set = solveset(eqn, x)
 >>> print(solutions_set)
-{-sqrt(y), sqrt(y)}
+FiniteSet(-sqrt(y), sqrt(y))
 >>> for solution_set in solutions_set:
 ...     print(solution_set)
 sqrt(y)
@@ -117,7 +117,7 @@ real, and the last two are imaginary:
 >>> solve(x**4 - 256, x, dict=True)
 [{x: -4}, {x: 4}, {x: -4*I}, {x: 4*I}]
 >>> solveset(x**4 - 256, x)
-{-4, 4, -4*I, 4*I}
+FiniteSet(-4, 4, -4*I, 4*I)
 ```
 
 To restrict returned solutions to real numbers, or another domain or range, the
@@ -154,7 +154,7 @@ a domain
 >>> from sympy import S, solveset
 >>> from sympy.abc import x
 >>> solveset(x**4 - 256, x, domain=S.Reals)
-{-4, 4}
+FiniteSet(-4, 4)
 ```
 
 or by restricting returned solutions to any arbitrary set, including an
@@ -164,7 +164,7 @@ interval:
 >>> from sympy import Interval, pi, sin, solveset
 >>> from sympy.abc import x
 >>> solveset(sin(x), x, Interval(-pi, pi))
-{0, -pi, pi}
+FiniteSet(0, -pi, pi)
 ```
 
 and if you restrict the solutions to a domain in which there are no solutions,
@@ -254,7 +254,7 @@ iterate through the solutions:
 >>> from sympy.abc import x, y
 >>> solution_set = solveset(x**2 - y, x)
 >>> print(solution_set)
-{-sqrt(y), sqrt(y)}
+FiniteSet(-sqrt(y), sqrt(y))
 >>> solution_list = list(solution_set)
 >>> print(solution_list)
 [sqrt(y), -sqrt(y)]
@@ -287,7 +287,7 @@ and the set of real numbers:
 >>> y = Symbol('y', real=True, positive=True)
 >>> solution_set = solveset(x**2 - y, x, domain=S.Reals)
 >>> print(solution_set)
-{-sqrt(y), sqrt(y)}
+FiniteSet(-sqrt(y), sqrt(y))
 >>> list(solution_set)
 [sqrt(y), -sqrt(y)]
 ```
@@ -304,7 +304,7 @@ symbolic solutions:
 Intersection({-sqrt(y), sqrt(y)}, Reals)
 >>> solution_set_args = solution_set.args
 >>> print(solution_set.args)
-(Reals, {-sqrt(y), sqrt(y)})
+(Reals, FiniteSet(-sqrt(y), sqrt(y)))
 >>> list(solution_set_args[1])
 [sqrt(y), -sqrt(y)]
 ```

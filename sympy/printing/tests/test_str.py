@@ -948,8 +948,7 @@ def test_FiniteSet():
 
 
 def test_Partition():
-    assert str(Partition(FiniteSet(x, y), {z})) == 'Partition(FiniteSet(z), ' \
-                                                   'FiniteSet(x, y))'
+    assert str(Partition(FiniteSet(x, y), {z})) == 'Partition({z}, {x, y})'
 
 def test_UniversalSet():
     assert str(S.UniversalSet) == 'UniversalSet'
@@ -1118,8 +1117,8 @@ def test_issue_14567():
 
 
 def test_issue_21823():
-    assert str(Partition([1, 2])) == 'Partition(FiniteSet(1, 2))'
-    assert str(Partition({1, 2})) == 'Partition(FiniteSet(1, 2))'
+    assert str(Partition([1, 2])) == 'Partition({1, 2})'
+    assert str(Partition({1, 2})) == 'Partition({1, 2})'
 
 
 def test_issue_22689():

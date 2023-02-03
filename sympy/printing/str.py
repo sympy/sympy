@@ -818,16 +818,19 @@ class StrPrinter(Printer):
         return '{%s}' % args
 
     def _print_Set(self,s):
-        from sympy.sets.sets import FiniteSet, DisjointUnion, Union, \
-            Interval, ProductSet
+        from sympy.sets.sets import FiniteSet, Interval, ProductSet, \
+            Complement
         from sympy.sets.conditionset import ConditionSet
+        from sympy.sets.fancysets import Range, ImageSet
+        from sympy.geometry.entity import GeometrySet
         if isinstance(s, Interval):
             return self._print_Interval(s)
         if isinstance(s, ConditionSet):
             return self._print_ConditionSet(s)
         name = s.__class__.__name__
         items = None
-        if isinstance(s, (DisjointUnion, Union, ProductSet)):
+        if isinstance(s, (ProductSet, Complement, Range, ImageSet,
+                          GeometrySet)):
             items = s.args
         else:
             items = sorted(s.args, key=default_sort_key)
