@@ -414,7 +414,7 @@ def _invert_abs(f, g_ys, symbol):
         parg = _invert_real(f, pos, symbol)
         narg = _invert_real(-f, pos, symbol)
         if parg[0] != narg[0]:
-            raise NotImplementedErrorConditionSet(x, (a > 0) & (b > 0) & Eq(im(x), 0), {0})
+            raise NotImplementedError
         return parg[0], Union(narg[1], parg[1])
 
     # check conditions: all these must be true. If any are unknown
