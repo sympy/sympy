@@ -230,13 +230,15 @@ def find_unit(quantity, unit_system="SI"):
 
     >>> from sympy.physics import units as u
     >>> u.find_unit('charge')
-    ['C', 'charge', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
+    ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit(u.charge)
     ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit("ampere")
     ['A', 'ampere', 'amperes', 'planck_current']
+    >>> u.find_unit('angstrom')
+    ['angstrom', 'angstroms']
     >>> u.find_unit('volt')
-    ['V', 'v', 'volt', 'volts', 'voltage', 'electronvolt', 'electronvolts', 'planck_voltage']
+    ['V', 'v', 'volt', 'volts', 'planck_voltage']
     >>> u.find_unit(u.inch**3)[:9]
     ['L', 'l', 'cL', 'cl', 'dL', 'dl', 'mL', 'ml', 'liter']
     """
@@ -247,20 +249,19 @@ def find_unit(quantity, unit_system="SI"):
     IA = [(i, getattr(u, i)) for i in dir(u)]
     IA = [(i, a) for i, a in IA if isinstance(a, (Quantity, Dimension))]
     if isinstance(quantity, str):
+        rv.update([i for i, _ in IA if quantity in i[0]])
         if quantity == '':
             return []
         dim = getattr(u, quantity, None)
-        if dim is None:
+        if dim is not None:
             for i, a in IA:
-                if quantity in i:
+                if quantity == i[0]:
                     rv.add(i)
-                    rv.update(find_unit(i))
-        else:
-            rv.update([i for i, _ in IA if quantity in i])
+         #   rv.update([i for i, _ in IA if quantity in i[0]])
             if isinstance(dim, Quantity):
                 dim = dim.dimension
             for i, quant_attr in IA:
-                if quantity in i or (isinstance(quant_attr, Quantity)
+                if quantity in i[0] or (isinstance(quant_attr, Quantity)
                         and quant_attr.dimension == dim):
                     if not isinstance(quant_attr, Dimension):
                         rv.add(i)
@@ -274,6 +275,7 @@ def find_unit(quantity, unit_system="SI"):
                     rv.add(i)
             elif isinstance(other, Quantity) and other.dimension == Dimension(unit_system.get_dimensional_expr(quantity)):
                 rv.add(i)
+
     if not rv:
         return []
     return list(list(zip(*sorted(zip([len(i) for i in rv], rv))))[1])
