@@ -1005,6 +1005,10 @@ def test_issue_8373():
     x = Symbol('x', real=True)
     assert simplify(Or(x < 1, x >= 1)) == S.true
 
+def test_issue_8439():
+    assert x + float('inf') == x + oo
+    assert S(float('inf')) == oo
+
 
 def test_issue_7950():
     expr = And(Eq(x, 1), Eq(x, 2))
