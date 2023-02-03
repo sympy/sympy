@@ -285,7 +285,8 @@ def closest_points(*args):
     Parameters
     ==========
 
-    args : a collection of Points on 2D plane.
+    args
+        A collection of Points on 2D plane.
 
     Notes
     =====
@@ -476,7 +477,8 @@ def farthest_points(*args):
     Parameters
     ==========
 
-    args : a collection of Points on 2D plane.
+    args
+        A collection of Points on 2D plane.
 
     Notes
     =====

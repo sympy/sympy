@@ -912,7 +912,7 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
                transformations: tUnion[tTuple[TRANS, ...], str] \
                    = standard_transformations,
                global_dict: Optional[DICT] = None, evaluate=True):
-    """Converts the string ``s`` to a SymPy expression, in ``local_dict``
+    """Converts the string ``s`` to a SymPy expression, in ``local_dict``.
 
     Parameters
     ==========

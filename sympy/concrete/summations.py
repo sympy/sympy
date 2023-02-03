@@ -272,6 +272,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     def eval_zeta_function(self, f, limits):
         """
         Check whether the function matches with the zeta function.
+
         If it matches, then return a `Piecewise` expression because
         zeta function does not converge unless `s > 1` and `q > 0`
         """

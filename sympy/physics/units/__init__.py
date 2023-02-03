@@ -128,6 +128,7 @@ from .definitions import (
     yd, yard, yards,
     mi, mile, miles,
     nmi, nautical_mile, nautical_miles,
+    angstrom, angstroms,
     ha, hectare,
     l, L, liter, liters,
     dl, dL, deciliter, deciliters,
@@ -235,6 +236,8 @@ def find_unit(quantity, unit_system="SI"):
     ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit("ampere")
     ['A', 'ampere', 'amperes', 'planck_current']
+    >>> u.find_unit('angstrom')
+    ['angstrom', 'angstroms']
     >>> u.find_unit('volt')
     ['V', 'v', 'volt', 'volts', 'voltage', 'electronvolt', 'electronvolts', 'planck_voltage']
     >>> u.find_unit(u.inch**3)[:9]
@@ -377,6 +380,7 @@ __all__ = [
     'yd', 'yard', 'yards',
     'mi', 'mile', 'miles',
     'nmi', 'nautical_mile', 'nautical_miles',
+    'angstrom', 'angstroms',
     'ha', 'hectare',
     'l', 'L', 'liter', 'liters',
     'dl', 'dL', 'deciliter', 'deciliters',

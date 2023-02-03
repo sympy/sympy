@@ -644,23 +644,24 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
     """
 
     a = Wild('a', exclude=[t])
-    y = Wild('y')
     n = Wild('n', exclude=[t])
-    g = WildFunction('g', nargs=1)
+    g = WildFunction('g')
     ma1 = f.match(a*Derivative(g, (t, n)))
-    if ma1 and ma1[g].args[0] == t and ma1[n].is_integer:
-        debug('_laplace_apply_rules match:')
-        debugf('      f, n: %s, %s', (f, ma1[n]))
-        debug('      rule: time derivative (4.1.8)')
-        d = []
-        for k in range(ma1[n]):
-            if k==0:
-                y = ma1[g].func(t).subs(t, 0)
-            else:
-                y = Derivative(ma1[g].func(t), (t, k)).subs(t, 0)
-            d.append(s**(ma1[n]-k-1)*y)
-        r, pr, cr = _laplace_transform(ma1[g].func(t), t, s, simplify=False)
-        return (ma1[a]*(s**ma1[n]*r - Add(*d)),  pr, cr)
+    if ma1 and ma1[n].is_integer:
+        m = [ z.has(t) for z in ma1[g].args ]
+        if sum(m)==1:
+            debug('_laplace_apply_rules match:')
+            debugf('      f, n: %s, %s', (f, ma1[n]))
+            debug('      rule: time derivative (4.1.8)')
+            d = []
+            for k in range(ma1[n]):
+                if k==0:
+                    y = ma1[g].subs(t, 0)
+                else:
+                    y = Derivative(ma1[g], (t, k)).subs(t, 0)
+                d.append(s**(ma1[n]-k-1)*y)
+            r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
+            return (ma1[a]*(s**ma1[n]*r - Add(*d)),  pr, cr)
     return None
 
 
@@ -1131,6 +1132,7 @@ def _inverse_laplace_build_rules():
     _ILT_rules = [
         (a/s, a, S.true, same, 1),
         (b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c), c>0, same, 1),
+        (1/(s**2+a**2)**2, (sin(a*t) - a*t*cos(a*t))/(2*a**3), S.true, same, 1)
     ]
     return _ILT_rules, s, t
 
@@ -1203,11 +1205,31 @@ def _inverse_laplace_time_shift(F, s, t, plane):
     return None
 
 
+def _inverse_laplace_time_diff(F, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    n = Wild('n', exclude=[s])
+    g = Wild('g')
+
+    ma1 = F.match(s**n*g)
+    if ma1 and ma1[n].is_integer and ma1[n].is_positive:
+        debug('_inverse_laplace_time_diff match:')
+        debugf('      f:    %s', (F,))
+        debug('      rule: s**n*F(s) o---o diff(f(t), t, n)')
+        debugf('      ma:   %s', (ma1,))
+        r, c = _inverse_laplace_transform(ma1[g], s, t, plane)
+        r = r.replace(Heaviside(t), 1)
+        return diff(r, t, ma1[n]), c
+    return None
+
+
 def _inverse_laplace_apply_prog_rules(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-    prog_rules = [_inverse_laplace_time_shift]
+    prog_rules = [_inverse_laplace_time_shift,
+                  _inverse_laplace_time_diff]
 
     for p_rule in prog_rules:
         if (r := p_rule(F, s, t, plane)) is not None:

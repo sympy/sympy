@@ -11,6 +11,7 @@ This module contain solvers for all kinds of equations:
       (you will need a good starting point)
 
 """
+from __future__ import annotations
 
 from sympy.core import (S, Add, Symbol, Dummy, Expr, Mul)
 from sympy.core.assumptions import check_assumptions
@@ -1207,6 +1208,8 @@ def solve(f, *symbols, **flags):
     # restore floats
     if floats and solution and flags.get('rational', None) is None:
         solution = nfloat(solution, exponent=False)
+        # nfloat might reveal more duplicates
+        solution = _remove_duplicate_solutions(solution)
 
     if check and solution:  # assumption checking
         warn = flags.get('warn', False)
@@ -1689,8 +1692,12 @@ def _solve(f, *symbols, **flags):
     if result is False:
         raise NotImplementedError('\n'.join([msg, not_impl_msg % f]))
 
+    result = _remove_duplicate_solutions(result)
+
     if flags.get('simplify', True):
         result = [{k: d[k].simplify() for k in d} for d in result]
+        # Simplification might reveal more duplicates
+        result = _remove_duplicate_solutions(result)
         # we just simplified the solution so we now set the flag to
         # False so the simplification doesn't happen again in checksol()
         flags['simplify'] = False
@@ -1707,6 +1714,21 @@ def _solve(f, *symbols, **flags):
         result = [r for r in result if
                   checksol(f_num, r, **flags) is not False]
     return result
+
+
+def _remove_duplicate_solutions(solutions: list[dict[Expr, Expr]]
+                                ) -> list[dict[Expr, Expr]]:
+    """Remove duplicates from a list of dicts"""
+    solutions_set = set()
+    solutions_new = []
+
+    for sol in solutions:
+        solset = frozenset(sol.items())
+        if solset not in solutions_set:
+            solutions_new.append(sol)
+            solutions_set.add(solset)
+
+    return solutions_new
 
 
 def _solve_system(exprs, symbols, **flags):
