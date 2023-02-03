@@ -43,8 +43,7 @@ basic_optimizations = [(cse_opts.sub_pre, cse_opts.sub_post),
 class CseExpr(tuple):
     """Type of objects to be returned by the ``cse`` function.
 
-    ``CseExpr`` is backwards compatible with previous objects returned by the
-    ``cse`` function, which took the form:
+    ``CseExpr`` is compatible with objects that take the form:
 
     ``Tuple[List[Tuple[Symbol, Expr]], List[Expr]]``
 
@@ -147,7 +146,7 @@ class CseExpr(tuple):
             Pairs of substitutions present in ``exprs``.
         as_list : ``bool``, default is ``True``
             Whether the argument passed to ``exprs`` should be converted to a
-            ``list``. With the default of ``True``, wif an iterable is passed to
+            ``list``. With the default of ``True``, if an iterable is passed to
             ``exprs`` then it is converted to a ``list``, or if a single
             ``Expr`` is passed then it is wrapped into a single-item list. If
             ``False``, then the argument passed to ``exprs`` is left as is,
