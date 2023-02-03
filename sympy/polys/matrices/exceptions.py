@@ -55,8 +55,13 @@ class DMNonSquareMatrixError(DMShapeError):
     pass
 
 
+class DMValueError(DMError):
+    """The value passed is invalid"""
+    pass
+
+
 __all__ = [
     'DMError', 'DMBadInputError', 'DMDomainError', 'DMFormatError',
     'DMRankError', 'DMShapeError', 'DMNotAField',
-    'DMNonInvertibleMatrixError', 'DMNonSquareMatrixError',
+    'DMNonInvertibleMatrixError', 'DMNonSquareMatrixError', 'DMValueError'
 ]
