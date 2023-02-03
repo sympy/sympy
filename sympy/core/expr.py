@@ -1273,7 +1273,6 @@ class Expr(Basic, EvalfMixin):
         raise NotImplementedError('not sure of order of %s' % o)
 
     def count_ops(self, visual=None):
-        """wrapper for count_ops that returns the operation count."""
         from .function import count_ops
         return count_ops(self, visual)
 
@@ -2166,7 +2165,9 @@ class Expr(Basic, EvalfMixin):
         return S.One, self
 
     def as_numer_denom(self):
-        """ expression -> a/b -> a, b
+        """Return the numerator and the denominator of an expression.
+
+        expression -> a/b -> a, b
 
         This is just a stub that should be defined by
         an object's class methods to get anything else.
@@ -2180,7 +2181,9 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def normal(self):
-        """ expression -> a/b
+        """Return the expression as a fraction.
+
+        expression -> a/b
 
         See Also
         ========
@@ -2374,8 +2377,8 @@ class Expr(Basic, EvalfMixin):
             co = self
             diff = co - c
             # XXX should we match types? i.e should 3 - .1 succeed?
-            if (co > 0 and diff > 0 and diff < co or
-                    co < 0 and diff < 0 and diff > co):
+            if (co > 0 and diff >= 0 and diff < co or
+                    co < 0 and diff <= 0 and diff > co):
                 return diff
             return None
 
@@ -3426,7 +3429,8 @@ class Expr(Basic, EvalfMixin):
         return limit(self, x, xlim, dir)
 
     def compute_leading_term(self, x, logx=None):
-        """
+        """Deprecated function to compute the leading term of a series.
+
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
         """
@@ -3544,11 +3548,11 @@ class Expr(Basic, EvalfMixin):
         return c, e
 
     def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]:
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return S.One, self
 
     def as_coeff_Add(self, rational=False) -> tuple['Number', Expr]:
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         return S.Zero, self
 
     def fps(self, x=None, x0=0, dir=1, hyper=True, order=4, rational=True,

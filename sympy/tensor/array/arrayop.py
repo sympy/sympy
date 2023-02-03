@@ -26,6 +26,9 @@ def tensorproduct(*args):
     """
     Tensor product among scalars or array-like objects.
 
+    The equivalent operator for array expressions is ``ArrayTensorProduct``,
+    which can be used to keep the expression unevaluated.
+
     Examples
     ========
 
@@ -47,6 +50,12 @@ def tensorproduct(*args):
     >>> p = tensorproduct(eye(3), m)
     >>> p
     [[[[x, y], [z, t]], [[0, 0], [0, 0]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[x, y], [z, t]], [[0, 0], [0, 0]]], [[[0, 0], [0, 0]], [[0, 0], [0, 0]], [[x, y], [z, t]]]]
+
+    See Also
+    ========
+
+    sympy.tensor.array.expressions.array_expressions.ArrayTensorProduct
+
     """
     from sympy.tensor.array import SparseNDimArray, ImmutableSparseNDimArray
 
@@ -130,6 +139,9 @@ def tensorcontraction(array, *contraction_axes):
     """
     Contraction of an array-like object on the specified axes.
 
+    The equivalent operator for array expressions is ``ArrayContraction``,
+    which can be used to keep the expression unevaluated.
+
     Examples
     ========
 
@@ -159,6 +171,12 @@ def tensorcontraction(array, *contraction_axes):
     Matrix([
     [a*e + b*g, a*f + b*h],
     [c*e + d*g, c*f + d*h]])
+
+    See Also
+    ========
+
+    sympy.tensor.array.expressions.array_expressions.ArrayContraction
+
     """
     from sympy.tensor.array.expressions.array_expressions import _array_contraction
     from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
@@ -203,6 +221,9 @@ def tensordiagonal(array, *diagonal_axes):
 
     The diagonal indices are put at the end of the axes.
 
+    The equivalent operator for array expressions is ``ArrayDiagonal``, which
+    can be used to keep the expression unevaluated.
+
     Examples
     ========
 
@@ -230,6 +251,11 @@ def tensordiagonal(array, *diagonal_axes):
     >>> from sympy import permutedims
     >>> tensordiagonal(A, (0, 2)) == permutedims(Array([A[0, :, 0], A[1, :, 1], A[2, :, 2]]), [1, 0])
     True
+
+    See Also
+    ========
+
+    sympy.tensor.array.expressions.array_expressions.ArrayDiagonal
 
     """
     if any(len(i) <= 1 for i in diagonal_axes):
@@ -272,6 +298,8 @@ def tensordiagonal(array, *diagonal_axes):
 def derive_by_array(expr, dx):
     r"""
     Derivative by arrays. Supports both arrays and scalars.
+
+    The equivalent operator for array expressions is ``array_derive``.
 
     Explanation
     ===========
@@ -337,6 +365,9 @@ def permutedims(expr, perm=None, index_order_old=None, index_order_new=None):
 
     Parameter specifies the permutation of the indices.
 
+    The equivalent operator for array expressions is ``PermuteDims``, which can
+    be used to keep the expression unevaluated.
+
     Examples
     ========
 
@@ -377,6 +408,11 @@ def permutedims(expr, perm=None, index_order_old=None, index_order_new=None):
     >>> from sympy.combinatorics import Permutation
     >>> permutedims(b, Permutation([1, 2, 0]))
     [[[1, 5], [2, 6]], [[3, 7], [4, 8]]]
+
+    See Also
+    ========
+
+    sympy.tensor.array.expressions.array_expressions.PermuteDims
 
     """
     from sympy.tensor.array import SparseNDimArray
@@ -420,7 +456,7 @@ def permutedims(expr, perm=None, index_order_old=None, index_order_new=None):
 
 
 class Flatten(Printable):
-    '''
+    """
     Flatten an iterable object to a list in a lazy-evaluation way.
 
     Notes
@@ -440,7 +476,7 @@ class Flatten(Printable):
     Flatten([[0, 1, 2], [3, 4, 5]])
     >>> [i for i in Flatten(A)]
     [0, 1, 2, 3, 4, 5]
-    '''
+    """
     def __init__(self, iterable):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import NDimArray
