@@ -648,88 +648,88 @@ def test_cse_expr_properties():
     expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))
     cse_expr = cse(expr)
     x0, x3 = symbols('x0, x3')
-    subs_expected = [(x0, x1 / x2), (x3, x0 - exp(x2))]
-    exprs_expected = [x3 * (x3 + sin(x0))]
-    assert hasattr(cse_expr, 'subs')
-    assert cse_expr[0] == subs_expected
-    assert cse_expr.subs == subs_expected
-    assert hasattr(cse_expr, 'exprs')
-    assert cse_expr[1] == exprs_expected
-    assert cse_expr.exprs == exprs_expected
+    replacements_expected = [(x0, x1 / x2), (x3, x0 - exp(x2))]
+    reduced_exprs_expected = [x3 * (x3 + sin(x0))]
+    assert hasattr(cse_expr, 'replacements')
+    assert cse_expr[0] == replacements_expected
+    assert cse_expr.replacements == replacements_expected
+    assert hasattr(cse_expr, 'reduced_exprs')
+    assert cse_expr[1] == reduced_exprs_expected
+    assert cse_expr.reduced_exprs == reduced_exprs_expected
 
 
-def test_cse_expr_subs_mapping():
+def test_cse_expr_replacements_mapping():
     x1, x2 = symbols('x1, x2')
     expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))
     cse_expr = cse(expr)
     x0, x3 = symbols('x0, x3')
-    subs_mapping_expected = {x0: x1 / x2, x3: x0 - exp(x2)}
-    assert hasattr(cse_expr, 'subs_mapping')
-    assert cse_expr.subs_mapping == subs_mapping_expected
+    replacements_mapping_expected = {x0: x1 / x2, x3: x0 - exp(x2)}
+    assert hasattr(cse_expr, 'replacements_mapping')
+    assert cse_expr.replacements_mapping == replacements_mapping_expected
 
 
-def test_cse_expr_from_exprs_and_subs_mapping_single_expr_as_list():
+def test_cse_expr_from_reduced_exprs_and_replacements_mapping_single_expr_as_list():
     x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
-    expr = x3 * (x3 + sin(x0))
-    subs_mapping = {x0: x1 / x2, x3: x0 - exp(x2)}
-    cse_expr = CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+    reduced_expr = x3 * (x3 + sin(x0))
+    replacements_mapping = {x0: x1 / x2, x3: x0 - exp(x2)}
+    cse_expr = CseExpr.from_reduced_exprs_and_replacements_mapping(reduced_expr, replacements_mapping)
     cse_expr_expected = CseExpr(([(x0, x1 / x2), (x3, x0 - exp(x2))],
                                  [x3 * (x3 + sin(x0))]))
     assert cse_expr == cse_expr_expected
 
 
-def test_cse_expr_from_exprs_and_subs_mapping_as_list_false():
+def test_cse_expr_from_reduced_exprs_and_replacements_mapping_as_list_false():
     x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
-    expr = x3 * (x3 + sin(x0))
-    subs_mapping = {x0: x1 / x2, x3: x0 - exp(x2)}
-    cse_expr = CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping, as_list=False)
+    reduced_expr = x3 * (x3 + sin(x0))
+    replacements_mapping = {x0: x1 / x2, x3: x0 - exp(x2)}
+    cse_expr = CseExpr.from_reduced_exprs_and_replacements_mapping(reduced_expr, replacements_mapping, as_list=False)
     cse_expr_expected = CseExpr(([(x0, x1 / x2), (x3, x0 - exp(x2))],
                                  x3 * (x3 + sin(x0))))
     assert cse_expr == cse_expr_expected
 
 
-def test_cse_expr_from_exprs_and_subs_mapping_error_handling_expr():
-    exprs = [1, 2.0]
-    subs_mapping = {}
+def test_cse_expr_from_reduced_exprs_and_replacements_mapping_error_handling_expr():
+    reduced_exprs = [1, 2.0]
+    replacements_mapping = {}
     with raises(TypeError):
-        CseExpr.from_exprs_and_subs_mapping(exprs, subs_mapping)
+        CseExpr.from_reduced_exprs_and_replacements_mapping(reduced_exprs, replacements_mapping)
 
 
-def test_cse_expr_from_exprs_and_subs_mapping_error_handling_subs_mapping():
+def test_cse_expr_from_reduced_exprs_and_replacements_mapping_error_handling_replacements_mapping():
     x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
-    expr = x3 * (x3 + sin(x0))
+    reduced_expr = x3 * (x3 + sin(x0))
 
-    # ``subs_mapping`` isn't a ``dict``
-    subs_mapping = [(x0, x1 / x2), (x3, x0 - exp(x2))]
+    # ``replacements_mapping`` isn't a ``dict``
+    replacements_mapping = [(x0, x1 / x2), (x3, x0 - exp(x2))]
     with raises(TypeError):
-        CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+        CseExpr.from_reduced_exprs_and_replacements_mapping(reduced_expr, replacements_mapping)
 
-    # ``subs_mapping`` has non-symbol keys
-    subs_mapping = {None: x1 / x2, 0: x0 - exp(x2)}
+    # ``replacements_mapping`` has non-symbol keys
+    replacements_mapping = {None: x1 / x2, 0: x0 - exp(x2)}
     with raises(TypeError):
-        CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+        CseExpr.from_reduced_exprs_and_replacements_mapping(reduced_expr, replacements_mapping)
 
-    # ``subs_mapping`` has non-expression values
-    subs_mapping = {x0: None, x3: None}
+    # ``replacements_mapping`` has non-expression values
+    replacements_mapping = {x0: None, x3: None}
     with raises(TypeError):
-        CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+        CseExpr.from_reduced_exprs_and_replacements_mapping(reduced_expr, replacements_mapping)
 
 
-def test_cse_expr_from_exprs_and_subs_mapping_topologically_sorted():
+def test_cse_expr_from_reduced_exprs_and_replacements_mapping_topologically_sorted():
     x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
-    expr = x3 * (x3 + sin(x0))
-    subs_mapping = {x0: x1 / x2, x3: x0 - exp(x2)}
-    cse_expr = CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+    reduced_expr = x3 * (x3 + sin(x0))
+    replacements_mapping = {x0: x1 / x2, x3: x0 - exp(x2)}
+    cse_expr = CseExpr.from_reduced_exprs_and_replacements_mapping(reduced_expr, replacements_mapping)
     cse_expr_expected = CseExpr(([(x0, x1 / x2), (x3, x0 - exp(x2))],
                                  [x3 * (x3 + sin(x0))]))
     assert cse_expr == cse_expr_expected
 
 
-def test_cse_expr_from_exprs_and_subs_mapping_not_topologically_sorted():
+def test_cse_expr_from_reduced_exprs_and_replacements_mapping_not_topologically_sorted():
     x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
-    expr = x3 * (x3 + sin(x0))
-    subs_mapping = {x3: x0 - exp(x2), x0: x1 / x2}
-    cse_expr = CseExpr.from_exprs_and_subs_mapping(expr, subs_mapping)
+    reduced_expr = x3 * (x3 + sin(x0))
+    replacements_mapping = {x3: x0 - exp(x2), x0: x1 / x2}
+    cse_expr = CseExpr.from_reduced_exprs_and_replacements_mapping(reduced_expr, replacements_mapping)
     cse_expr_expected = CseExpr(([(x0, x1 / x2), (x3, x0 - exp(x2))],
                                  [x3 * (x3 + sin(x0))]))
     assert cse_expr == cse_expr_expected
