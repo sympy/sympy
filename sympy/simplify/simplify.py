@@ -1710,7 +1710,7 @@ def nc_simplify(expr, deep=True):
         inverses = []
         args = []
         for arg in _args:
-            if isinstance(arg, _Pow) and arg.args[1].is_negative:
+            if isinstance(arg, _Pow) and arg.args[1].is_extended_negative:
                 inverses = [arg**-1] + inverses
                 inv_tot += 1
             else:
