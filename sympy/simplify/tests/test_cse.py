@@ -658,18 +658,6 @@ def test_cse_expr_properties():
     assert cse_expr.exprs == exprs_expected
 
 
-def test_cse_expr_as_tuple():
-    x1, x2 = symbols('x1, x2')
-    expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))
-    cse_expr = cse(expr)
-    x0, x3 = symbols('x0, x3')
-    cse_tuple_expected = ([(x0, x1 / x2), (x3, x0 - exp(x2))],
-                          [x3 * (x3 + sin(x0))])
-    assert hasattr(cse_expr, 'as_tuple')
-    assert isinstance(cse_expr.as_tuple(), tuple)
-    assert cse_expr.as_tuple() == cse_tuple_expected
-
-
 def test_cse_expr_subs_mapping():
     x1, x2 = symbols('x1, x2')
     expr = ((x1 / x2) + sin(x1 / x2) - exp(x2)) * ((x1 / x2) - exp(x2))

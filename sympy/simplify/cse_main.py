@@ -85,17 +85,6 @@ class CseExpr(tuple):
     >>> print(cse_expr.subs_mapping)
     {x0: x1/x2, x3: x0 - exp(x2)}
 
-    If a pure ``tuple`` is required for backwards compatibility, the
-    ``as_tuple`` method can be used to generate this:
-
-    >>> cse_expr_as_tuple = cse_expr.as_tuple()
-    >>> print(cse_expr_as_tuple)
-    ([(x0, x1/x2), (x3, x0 - exp(x2))], [x3*(x3 + sin(x0))])
-    >>> print(isinstance(cse_expr_as_tuple, tuple))
-    True
-    >>> print(isinstance(cse_expr_as_tuple, CseExpr))
-    False
-
     Parameters
     ==========
 
@@ -194,17 +183,6 @@ class CseExpr(tuple):
                 raise TypeError(msg)
 
         return cls((reps_toposort(list(subs_mapping.items())), exprs))
-
-    def as_tuple(self):
-        """Convert the ``CseExpr`` instance to a ``tuple``.
-
-        This method exists purely for backwards compatibility where ``cse``
-        previously returned a ``tuple``. While this class is fully backwards
-        compatible with the previous return type, the method exists to allow
-        the easy conversion to a pure ``tuple`` if that's required by a user.
-
-        """
-        return tuple(self)
 
     @property
     def subs(self):
