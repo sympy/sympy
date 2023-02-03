@@ -104,9 +104,8 @@ class CseExpr(tuple):
     """
 
     @classmethod
-    def from_reduced_exprs_and_replacements_mapping(cls, reduced_exprs,
-                                                    replacements_mapping, *,
-                                                    as_list=True):
+    def from_reduced_exprs(cls, reduced_exprs, replacements_mapping, *,
+                           as_list=True):
         """Alternate constructor to instantiate a ``CseExpr`` from a list of
         reduced expressions and a mapping of replacements.
 
@@ -121,8 +120,8 @@ class CseExpr(tuple):
         >>> x0, x1, x2, x3 = symbols('x0, x1, x2, x3')
         >>> reduced_expr = x3 * (x3 + sin(x0))
         >>> replacements_mapping = {x0: x1 / x2, x3: x0 - exp(x2)}
-        >>> cse_expr = CseExpr.from_reduced_exprs_and_replacements_mapping(
-        ...     reduced_expr, replacements_mapping)
+        >>> cse_expr = CseExpr.from_reduced_exprs(reduced_expr,
+        ...                                       replacements_mapping)
         >>> print(cse_expr)
         ([(x0, x1/x2), (x3, x0 - exp(x2))], [x3*(x3 + sin(x0))])
 
@@ -131,8 +130,9 @@ class CseExpr(tuple):
         Alternatively, the reduced expression can be kept unchanged using the
         ``as_list`` parameter:
 
-        >>> cse_expr = CseExpr.from_reduced_exprs_and_replacements_mapping(
-        ...     reduced_expr, replacements_mapping, as_list=False)
+        >>> cse_expr = CseExpr.from_reduced_exprs(reduced_expr,
+        ...                                       replacements_mapping,
+        ...                                       as_list=False)
         >>> print(cse_expr)
         ([(x0, x1/x2), (x3, x0 - exp(x2))], x3*(x3 + sin(x0)))
 
