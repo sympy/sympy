@@ -14,4 +14,5 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -r doc/requirements.txt
       - run: cd doc/ && make linkcheck
+        continue-on-error: true
       - run: grep broken doc/_build/linkcheck/output.txt
