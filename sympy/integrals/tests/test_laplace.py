@@ -370,7 +370,7 @@ def test_inverse_laplace_transform():
     from sympy.functions.special.delta_functions import DiracDelta
     ILT = inverse_laplace_transform
     a, b, c, d = symbols('a b c d', positive=True)
-    r = Symbol('r', real=True)
+    n, r = symbols('n, r', real=True)
     t, z = symbols('t z')
     f = Function('f')
 
@@ -403,6 +403,7 @@ def test_inverse_laplace_transform():
     assert ILT(1 - 1/(s**2 + 1), s, t) == -sin(t)*Heaviside(t) + DiracDelta(t)
     assert ILT(1/s**2, s, t) == t*Heaviside(t)
     assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/24
+    assert ILT(1/s**n, s, t) == t**(n - 1)*Heaviside(t)/gamma(n)
     # Issue #24424
     assert ILT((s + 8)/((s + 2)*(s**2 + 2*s + 10)), s, t) ==\
         ((8*sin(3*t) - 9*cos(3*t))*exp(t) + 9)*exp(-2*t)*Heaviside(t)/15
@@ -447,6 +448,7 @@ def test_inverse_laplace_transform():
         (a**3*b*t*cos(a*t) + 4*a**2*b*sin(a*t)*Heaviside(t) +\
          a**2*b*sin(a*t) - a*d*t*cos(a*t)*Heaviside(t) +\
              d*sin(a*t)*Heaviside(t))/(2*a**3)
+    assert ILT(cos(s), s, t) == InverseLaplaceTransform(cos(s), s, t, None)
     # Rules for testing different DiracDelta cases
     assert ILT(2, s, t) == 2*DiracDelta(t)
     assert ILT(2*exp(3*s) - 5*exp(-7*s), s, t) == \
