@@ -783,6 +783,7 @@ def test_issue_17811():
 
 
 def test_issue_8439():
+    assert sympify(float('inf')) == oo
     assert x + float('inf') == x + oo
     assert S(float('inf')) == oo
 
