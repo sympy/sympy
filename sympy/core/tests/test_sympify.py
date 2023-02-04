@@ -2,7 +2,7 @@ from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import (Function, Lambda)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (Float, I, Integer, Rational, pi)
+from sympy.core.numbers import (Float, I, Integer, Rational, pi, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -780,6 +780,12 @@ def test_issue_16759():
 def test_issue_17811():
     a = Function('a')
     assert sympify('a(x)*5', evaluate=False) == Mul(a(x), 5, evaluate=False)
+
+
+def test_issue_8439():
+    assert sympify(float('inf')) == oo
+    assert x + float('inf') == x + oo
+    assert S(float('inf')) == oo
 
 
 def test_issue_14706():
