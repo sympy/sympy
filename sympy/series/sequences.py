@@ -26,7 +26,6 @@ from sympy.utilities.iterables import flatten, is_sequence, iterable
 class SeqBase(Basic):
     """Base class for sequences"""
 
-    is_commutative = True
     _op_priority = 15
 
     @staticmethod

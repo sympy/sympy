@@ -45,11 +45,11 @@ False
 
 from sympy.assumptions import ask, Q
 from sympy.core.assumptions import (_assume_defined, as_property,
-    ManagedProperties)
-from sympy.core.basic import Basic
+    ExprManagedProperties)
+from sympy.core.expr import Expr
 from sympy.core.sympify import _sympify
 
-class AssumptionsWrapperMeta(ManagedProperties):
+class AssumptionsWrapperMeta(ExprManagedProperties):
     """
     Metaclass to give _eval_is_[...] attributes to AssumptionsWrapper
     """
@@ -72,7 +72,7 @@ def make_eval_method(fact):
 
 
 # we subclass Basic to use the fact deduction and caching
-class AssumptionsWrapper(Basic, metaclass=AssumptionsWrapperMeta):
+class AssumptionsWrapper(Expr, metaclass=AssumptionsWrapperMeta):
     """
     Wrapper over ``Basic`` instances to call predicate query by
     ``.is_[...]`` property

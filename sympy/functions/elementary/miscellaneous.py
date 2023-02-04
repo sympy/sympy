@@ -4,7 +4,7 @@ from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
-    ArgumentIndexError)
+    ArgumentIndexError, ExprFunctionClass)
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.mod import Mod
@@ -12,7 +12,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Relational
-from sympy.core.singleton import Singleton
+from sympy.core.singleton import ExprSingleton
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
@@ -32,7 +32,7 @@ def _minmax_as_Piecewise(op, *args):
     return Piecewise(*ec)
 
 
-class IdentityFunction(Lambda, metaclass=Singleton):
+class IdentityFunction(Lambda, metaclass=ExprSingleton):
     """
     The identity function
 
@@ -680,7 +680,7 @@ class MinMaxBase(Expr, LatticeOp):
     _eval_is_zero = lambda s: _torf(i.is_zero for i in s.args)
 
 
-class Max(MinMaxBase, Application):
+class Max(MinMaxBase, Application, metaclass=ExprFunctionClass):
     r"""
     Return, if possible, the maximum value of the list.
 
@@ -798,7 +798,7 @@ class Max(MinMaxBase, Application):
         return fuzzy_and(a.is_negative for a in self.args)
 
 
-class Min(MinMaxBase, Application):
+class Min(MinMaxBase, Application, metaclass=ExprFunctionClass):
     """
     Return, if possible, the minimum value of the list.
     It is named ``Min`` and not ``min`` to avoid conflicts

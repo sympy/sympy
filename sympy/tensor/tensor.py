@@ -43,7 +43,7 @@ from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
-from sympy.core.assumptions import ManagedProperties
+from sympy.core.assumptions import ExprManagedProperties
 from sympy.core.containers import Tuple, Dict
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols
@@ -1603,7 +1603,6 @@ class TensorType(Basic):
     ``symmetry``
     ``types`` : list of ``TensorIndexType`` without repetitions
     """
-    is_commutative = False
 
     def __new__(cls, index_types, symmetry, **kw_args):
         assert symmetry.rank == len(index_types)
@@ -1791,7 +1790,6 @@ class TensorHead(Basic):
     >>> expr.replace_with_arrays(repl, [])
     E**2 - p_x**2 - p_y**2 - p_z**2
     """
-    is_commutative = False
 
     def __new__(cls, name, index_types, symmetry=None, comm=0):
         if isinstance(name, str):
@@ -1965,7 +1963,7 @@ def tensor_heads(s, index_types, symmetry=None, comm=0):
     return thlist
 
 
-class _TensorMetaclass(ManagedProperties, ABCMeta):
+class _TensorMetaclass(ExprManagedProperties, ABCMeta):
     pass
 
 

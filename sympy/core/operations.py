@@ -500,8 +500,6 @@ class LatticeOp(AssocOp):
     .. [1] https://en.wikipedia.org/wiki/Lattice_%28order%29
     """
 
-    is_commutative = True
-
     def __new__(cls, *args, **options):
         args = (_sympify_(arg) for arg in args)
 

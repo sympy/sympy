@@ -173,7 +173,7 @@ class Add(Expr, AssocOp):
 
     """
 
-    __slots__ = ()
+    __slots__ = ('is_commutative',)
 
     args: tTuple[Expr, ...]
 
@@ -337,7 +337,10 @@ class Add(Expr, AssocOp):
                     # alternatively we have to call all Mul's machinery (slow)
                     newseq.append(Mul(c, s))
 
-            noncommutative = noncommutative or not s.is_commutative
+            if not noncommutative:
+                # XXX: Using getattr only in case the arg is non-Expr. Using
+                # non-Expr in Add is deprecated.
+                noncommutative = not getattr(s, "is_commutative", None)
 
         # oo, -oo
         if coeff is S.Infinity:

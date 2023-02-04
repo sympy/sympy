@@ -2,7 +2,7 @@
 
 
 from .core import Registry
-from .assumptions import ManagedProperties
+from .assumptions import ManagedProperties, ExprManagedProperties
 from .sympify import sympify
 
 
@@ -175,6 +175,10 @@ class Singleton(ManagedProperties):
         cls.__getnewargs__ = lambda obj: ()
         cls.__getstate__ = lambda obj: None
         S.register(cls)
+
+
+class ExprSingleton(Singleton, ExprManagedProperties):
+    pass
 
 
 # Delayed to avoid cyclic import

@@ -325,7 +325,9 @@ def _parallel_dict_from_expr(exprs, opt):
     if opt.expand is not False:
         exprs = [ expr.expand() for expr in exprs ]
 
-    if any(expr.is_commutative is False for expr in exprs):
+    # XXX: This is called with Expr an Equality. Using Equality as the
+    # expression for a polynomial should be deprecated.
+    if any(isinstance(expr, Expr) and expr.is_commutative is False for expr in exprs):
         raise PolynomialError('non-commutative expressions are not supported')
 
     if opt.gens:
@@ -344,7 +346,9 @@ def dict_from_expr(expr, **args):
 
 def _dict_from_expr(expr, opt):
     """Transform an expression into a multinomial form. """
-    if expr.is_commutative is False:
+    # XXX: This is called with Expr an Equality. Using Equality as the
+    # expression for a polynomial should be deprecated.
+    if isinstance(expr, Expr) and expr.is_commutative is False:
         raise PolynomialError('non-commutative expressions are not supported')
 
     def _is_expandable_pow(expr):

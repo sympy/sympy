@@ -478,9 +478,9 @@ def domain_check(f, symbol, p):
 
 def _domain_check(f, symbol, p):
     # helper for domain check
-    if f.is_Atom and f.is_finite:
+    if isinstance(f, Expr) and f.is_Atom and f.is_finite:
         return True
-    elif f.subs(symbol, p).is_infinite:
+    elif isinstance(f, Expr) and f.subs(symbol, p).is_infinite:
         return False
     elif isinstance(f, Piecewise):
         # Check the cases of the Piecewise in turn. There might be invalid
@@ -1024,7 +1024,7 @@ def _solveset(f, symbol, domain, _check=False):
 
     result = S.EmptySet
 
-    if f.expand().is_zero:
+    if isinstance(f, Expr) and f.expand().is_zero:
         return domain
     elif not f.has(symbol):
         return S.EmptySet

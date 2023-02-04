@@ -779,7 +779,9 @@ class Piecewise(Function):
     def _eval_template_is_attr(self, is_attr):
         b = None
         for expr, _ in self.args:
-            a = getattr(expr, is_attr)
+            # XXX: Using None as default here in case expr is not actually an
+            # Expr. Non-Expr args in Piecewise should be deprecated...
+            a = getattr(expr, is_attr, None)
             if a is None:
                 return
             if b is None:

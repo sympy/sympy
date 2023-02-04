@@ -35,7 +35,7 @@ from typing import Any
 from collections.abc import Iterable
 
 from .add import Add
-from .assumptions import ManagedProperties
+from .assumptions import ManagedProperties, ExprManagedProperties
 from .basic import Basic, _atomic
 from .cache import cacheit
 from .containers import Tuple, Dict
@@ -150,6 +150,7 @@ def arity(cls):
     no, yes = map(len, sift(p_or_k,
         lambda p:p.default == p.empty, binary=True))
     return no if not yes else tuple(range(no, no + yes + 1))
+
 
 class FunctionClass(ManagedProperties):
     """
@@ -279,6 +280,10 @@ class FunctionClass(ManagedProperties):
         return cls.__name__
 
 
+class ExprFunctionClass(FunctionClass, ExprManagedProperties):
+    pass
+
+
 class Application(Basic, metaclass=FunctionClass):
     """
     Base class for applied functions.
@@ -380,7 +385,7 @@ class Application(Basic, metaclass=FunctionClass):
             return new(*[i._subs(old, new) for i in self.args])
 
 
-class Function(Application, Expr):
+class Function(Application, Expr, metaclass=ExprFunctionClass):
     r"""
     Base class for applied mathematical functions.
 
@@ -611,7 +616,9 @@ class Function(Application, Expr):
         return Add(*l)
 
     def _eval_is_commutative(self):
-        return fuzzy_and(a.is_commutative for a in self.args)
+        # ZZZ: This makes no sense. The args might not even be Expr
+        com_args = (getattr(a, "is_commutative", None) for a in self.args)
+        return fuzzy_and(com_args)
 
     def _eval_is_meromorphic(self, x, a):
         if not self.args:
@@ -684,7 +691,15 @@ class Function(Application, Expr):
         from sympy.series.order import Order
         from sympy.sets.sets import FiniteSet
         args = self.args
-        args0 = [t.limit(x, 0) for t in args]
+
+        def iter_expr_args(args):
+            for a in args:
+                if isinstance(a, Expr):
+                    yield a
+                else:
+                    yield from iter_expr_args(a.args)
+
+        args0 = [t.limit(x, 0) for t in iter_expr_args(args)]
         if any(t.is_finite is False for t in args0):
             from .numbers import oo, zoo, nan
             a = [t.as_leading_term(x, logx=logx) for t in args]
@@ -869,9 +884,11 @@ class UndefSageHelper:
             args = [arg._sage_() for arg in ins.args]
             return lambda : sage.function(ins.__class__.__name__)(*args)
 
+
 _undef_sage_helper = UndefSageHelper()
 
-class UndefinedFunction(FunctionClass):
+
+class UndefinedFunction(ExprFunctionClass):
     """
     The (meta)class of undefined functions.
     """
@@ -1438,7 +1455,7 @@ class Derivative(Expr):
                     expr *= old_v.diff(old_v)
 
             obj = cls._dispatch_eval_derivative_n_times(expr, v, count)
-            if obj is not None and obj.is_zero:
+            if obj is not None and isinstance(obj, Expr) and obj.is_zero:
                 return obj
 
             nderivs += count
@@ -1580,7 +1597,9 @@ class Derivative(Expr):
         return [Tuple(*i) for i in merged]
 
     def _eval_is_commutative(self):
-        return self.expr.is_commutative
+        # XXX: Using getattr here in case expr is a Poly. Using non-Expr args
+        # to Derivative should be deprecated.
+        return getattr(self.expr, "is_commutative", None)
 
     def _eval_derivative(self, v):
         # If v (the variable of differentiation) is not in
