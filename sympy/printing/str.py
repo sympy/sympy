@@ -855,42 +855,6 @@ class StrPrinter(Printer):
         args = args[:-2]
         return '{{{}}}'.format(args)
 
-    # def _print_Partition(self, s):
-    #     from sympy.sets.sets import FiniteSet
-    #     items = sorted(s, key=default_sort_key)
-    #     args = ''
-    #     for item in items:
-    #         if isinstance(item, FiniteSet):
-    #             args += self._wrapped_Finite_Set_print(item) + ', '
-    #         else:
-    #             args += self._print(item) + ', '
-    #     args = args[:-2]
-    #     return 'Partition({})'.format(args)
-    #
-    # def _print_ConditionSet(self, s):
-    #     from sympy.sets.sets import FiniteSet
-    #     items = s.args
-    #     args = ''
-    #     for item in items:
-    #         if isinstance(item, FiniteSet):
-    #             args += self._wrapped_Finite_Set_print(item) + ', '
-    #         else:
-    #             args += self._print(item) + ', '
-    #     args = args[:-2]
-    #     return 'ConditionSet({})'.format(args)
-    #
-    # def _print_Intersection(self, s):
-    #     from sympy.sets.sets import FiniteSet
-    #     items = sorted(s.args, key=default_sort_key)
-    #     args = ''
-    #     for item in items:
-    #         if isinstance(item, FiniteSet):
-    #             args += self._wrapped_Finite_Set_print(item) + ', '
-    #         else:
-    #             args += self._print(item) + ', '
-    #     args = args[:-2]
-    #     return 'Intersection({})'.format(args)
-
     def _print_frozenset(self, s):
         if not s:
             return "frozenset()"
