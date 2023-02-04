@@ -7,6 +7,7 @@ from itertools import chain, zip_longest
 
 from .assumptions import ManagedProperties
 from .cache import cacheit
+from .core import old_compare
 from .sympify import _sympify, sympify, SympifyError, _external_converter
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
@@ -227,7 +228,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return 0
         n1 = self.__class__
         n2 = other.__class__
-        c = (n1 > n2) - (n1 < n2)
+        c = old_compare(n1, n2)
         if c:
             return c
         #
