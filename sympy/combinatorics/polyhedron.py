@@ -497,7 +497,7 @@ class Polyhedron(Basic):
         >>> corners = (a, b, c)
         >>> faces = [(0, 1, 2)]
         >>> Polyhedron(corners, faces).edges
-        {(0, 1), (0, 2), (1, 2)}
+        FiniteSet((0, 1), (0, 2), (1, 2))
 
         """
         if self._edges is None:
