@@ -118,6 +118,7 @@ def test_series_reversion():
     assert rs_series_reversion(p, x, 8, y) == 5*y**7/112 + 3*y**5/40 + \
         y**3/6 + y
 
+
 def test_series_from_list():
     R, x = ring('x', QQ)
     p = 1 + 2*x + x**2 + 3*x**3

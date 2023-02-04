@@ -1,4 +1,6 @@
 from sympy.core.sympify import sympify
+from sympy import Dummy
+from sympy.polys.ring_series import rs_subs
 
 
 def series(expr, x=None, x0=0, n=6, dir="+"):
@@ -61,3 +63,109 @@ def series(expr, x=None, x0=0, n=6, dir="+"):
     """
     expr = sympify(expr)
     return expr.series(x, x0, n, dir)
+
+
+def inversion_series(f,x,a,n):
+    r"""
+    Computes the Taylor series of the inverse function.
+
+    The formula was proved by Lagrange (1736--1813) and generalized by the German
+    mathematician and teacher Hans Heinrich Bürmann ( --1817), both in the late 18th
+    century.
+
+    Theorem: Suppose x is defined as a function of y by an equation of the form
+
+    f(x) = y
+
+    where f is analytic at a point a and f'(a) is not equal to 0.
+    Then it is possible to invert or solve the equation for x in the form of a series:
+
+    .. math::
+        g(y) = a + \sum_{n = 1}^{oo} \frac{g_n (y - f(a))^n}{n!}
+
+    where
+
+    .. math::
+        g_n = \lim_{y \to a} \left[ \frac{d^{n-1}}{dx^{n-1}}
+        \left( \frac{x-a}{f(x)-f(a)} \right) ^n \right]
+
+    The theorem further states that this series has a non-zero radius of convergence,
+    i.e., x represents an analytic function of y in a neighbourhood of y = f(a).
+
+    Parameters
+    ==========
+
+    f : expression, the expansion of whose inverse is to be found.
+
+    x : variable, in terms of which equation is given, and in terms of which, the
+    expansion will be provided.
+
+    a : point on x-axis in the neighbourhood of which, the inverse expansion is to be found.
+
+    n : no of terms required in the expansion; default value is 3 terms.
+
+    Examples
+    ========
+
+    >>> from sympy.series.series import inversion_series
+    >>> from sympy import exp
+    >>> from sympy.abc import x
+
+    Let the equation whose inverse's expansion is to be found be y = f(x)
+    then the first argument to be supplied must be f(x).
+
+    >>> f = exp(x)
+
+    In this case, the inverse series is that of the logarithmic function around 1 = f(0):
+
+    >>> inversion_series(f,x,0,4)
+    x + (x - 1)**3/3 - (x - 1)**2/2 - 1
+
+    Functions with vanishing derivative cannot be inverted with this method
+
+    >>> f = x**2
+    >>> try:
+    ...    inversion_series(f,x,0,2)
+    ... except ValueError as ex:
+    ...     print(repr(ex))
+    ValueError('The inversion formula requires non-zero derivative.')
+
+    Note
+    ====
+
+    The implementation uses a quasi-newton method to solve an implicit equation.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lagrange_inversion_theorem
+    .. [2] http://mathworld.wolfram.com/LagrangeInversionTheorem.html
+    .. [3] http://www.cfm.brown.edu/people/dobrush/am33/Mathematica/lit.html
+       [4] Abramowitz, M. and Stegun, I.A., 1964. "Handbook of Mathematical Functions", Eq. 3.6.6
+    """
+    # reduce to the canonical case a=0,y=0,f'(a)=1
+    f = f.subs({x:x+a})
+    fa =f.subs({x:0})
+    dfa = f.diff(x).subs({x:0})
+    if dfa.equals(0):
+        raise ValueError('The inversion formula requires non-zero derivative.')
+    f = f.series(x,0,n).removeO()
+    # embed into poly ring
+    y = Dummy('y')
+    R = f.as_poly(x).domain.inject(1/dfa)
+    Rxy = R[x,y]
+    f = Rxy.from_sympy(f)
+    xr = Rxy.from_sympy(x)
+    yr = Rxy.from_sympy(y)
+    dfar_inv = Rxy.from_sympy(1/dfa)
+    # compute Lagrange Inversion
+    x_series = yr*dfar_inv
+    for i in range(2,n):
+        step = rs_subs(f,{xr:x_series},yr,i+1).coeff(yr**i)
+        x_series = x_series-step*yr**i
+    x_series = x_series
+    # back from the canonical case
+    x_series = x_series.as_expr()
+    x_series = a+x_series
+    x_series = x_series.subs({y:x-fa})
+    return x_series
