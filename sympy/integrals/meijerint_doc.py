@@ -15,13 +15,8 @@ t: dict[tuple[type[Basic], ...], list[Any]] = {}
 _create_lookup_table(t)
 
 
-def key(item: tuple[tuple[type[Basic], ...], list[Any]]):
-    about, category = item
-    return tuple(map(lambda x: x.class_key(), about)), category
-
-
 doc = ""
-for about, category in sorted(t.items(), key=key):
+for about, category in t.items():
     if about == ():
         doc += 'Elementary functions:\n\n'
     else:
