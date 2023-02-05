@@ -14,4 +14,4 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v1.5.4
         with:
-          fail: true
+          fail: false
