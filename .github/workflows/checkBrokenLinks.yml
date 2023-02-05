@@ -16,4 +16,5 @@ jobs:
       - run: cd doc/ && make linkcheck
         continue-on-error: true
       - run: grep broken doc/_build/linkcheck/output.txt
-      - run: grep redirected doc/_build/linkcheck/output.txt
+      - run: grep 'redirected permanently' doc/_build/linkcheck/output.txt
+      - run: grep 'redirected with Found' doc/_build/linkcheck/output.txt
