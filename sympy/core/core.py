@@ -44,31 +44,6 @@ ordering_of_classes = [
 ]
 
 
-def old_compare(x: type, y: type) -> int:
-    from sympy.core.basic import Basic
-    # If the other object is not a Basic subclass, then we are not equal to it.
-    if not issubclass(y, Basic):
-        return -1
-
-    n1 = x.__name__
-    n2 = y.__name__
-    if n1 == n2:
-        return 0
-
-    UNKNOWN = len(ordering_of_classes) + 1
-    try:
-        i1 = ordering_of_classes.index(n1)
-    except ValueError:
-        i1 = UNKNOWN
-    try:
-        i2 = ordering_of_classes.index(n2)
-    except ValueError:
-        i2 = UNKNOWN
-    if i1 == UNKNOWN and i2 == UNKNOWN:
-        return (n1 > n2) - (n1 < n2)
-    return (i1 > i2) - (i1 < i2)
-
-
 class Registry:
     """
     Base class for registry objects.
