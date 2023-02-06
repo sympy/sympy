@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
 
-from .assumptions import ManagedProperties
+from .assumptions import as_property, _assume_defined, StdFactKB, make_property
 from .cache import cacheit
 from .core import ordering_of_classes
 from .sympify import _sympify, sympify, SympifyError, _external_converter
@@ -33,6 +33,63 @@ def as_Basic(expr):
             expr))
 
 
+# This must be a base class of Basic so that __init_subclass__ applies to Basic
+class _BasicBase:
+    __slots__ = ('_mhash',              # hash value
+                 '_args',               # arguments
+                 '_assumptions'
+                )
+
+    def __init_subclass__(cls):
+        local_defs = {}
+        for k in _assume_defined:
+            attrname = as_property(k)
+            v = cls.__dict__.get(attrname, '')
+            if isinstance(v, (bool, int, type(None))):
+                if v is not None:
+                    v = bool(v)
+                local_defs[k] = v
+
+        defs = {}
+        for base in reversed(cls.__bases__):
+            assumptions = getattr(base, '_explicit_class_assumptions', None)
+            if assumptions is not None:
+                defs.update(assumptions)
+        defs.update(local_defs)
+
+        cls._explicit_class_assumptions = defs
+        cls.default_assumptions = StdFactKB(defs)
+
+        cls._prop_handler = {}
+        for k in _assume_defined:
+            eval_is_meth = getattr(cls, '_eval_is_%s' % k, None)
+            if eval_is_meth is not None:
+                cls._prop_handler[k] = eval_is_meth
+
+        # Put definite results directly into the class dict, for speed
+        for k, v in cls.default_assumptions.items():
+            setattr(cls, as_property(k), v)
+
+        # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
+        derived_from_bases = set()
+        for base in cls.__bases__:
+            default_assumptions = getattr(base, 'default_assumptions', None)
+            # is an assumption-aware class
+            if default_assumptions is not None:
+                derived_from_bases.update(default_assumptions)
+
+        for fact in derived_from_bases - set(cls.default_assumptions):
+            pname = as_property(fact)
+            if pname not in cls.__dict__:
+                setattr(cls, pname, make_property(fact))
+
+        # Finally, add any missing automagic property (e.g. for Basic)
+        for fact in _assume_defined:
+            pname = as_property(fact)
+            if not hasattr(cls, pname):
+                setattr(cls, pname, make_property(fact))
+
+
 def _old_compare(x: type, y: type) -> int:
     # If the other object is not a Basic subclass, then we are not equal to it.
     if not issubclass(y, Basic):
@@ -57,7 +114,7 @@ def _old_compare(x: type, y: type) -> int:
     return (i1 > i2) - (i1 < i2)
 
 
-class Basic(Printable, metaclass=ManagedProperties):
+class Basic(_BasicBase, Printable):
     """
     Base class for all SymPy objects.
 
@@ -101,10 +158,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> isinstance(B, Basic)
         True
     """
-    __slots__ = ('_mhash',              # hash value
-                 '_args',               # arguments
-                 '_assumptions'
-                )
+    __slots__ = ()
 
     _args: tuple[Basic, ...]
     _mhash: int | None

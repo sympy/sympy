@@ -610,55 +610,14 @@ def _ask(fact, obj):
     return None
 
 
-class ManagedProperties(type):
-    """Metaclass for classes with old-style assumptions"""
-    def __init__(cls, *args, **kws):
-        cls.__sympy__ = property(lambda self: True)
-
-        local_defs = {}
-        for k in _assume_defined:
-            attrname = as_property(k)
-            v = cls.__dict__.get(attrname, '')
-            if isinstance(v, (bool, int, type(None))):
-                if v is not None:
-                    v = bool(v)
-                local_defs[k] = v
-
-        defs = {}
-        for base in reversed(cls.__bases__):
-            assumptions = getattr(base, '_explicit_class_assumptions', None)
-            if assumptions is not None:
-                defs.update(assumptions)
-        defs.update(local_defs)
-
-        cls._explicit_class_assumptions = defs
-        cls.default_assumptions = StdFactKB(defs)
-
-        cls._prop_handler = {}
-        for k in _assume_defined:
-            eval_is_meth = getattr(cls, '_eval_is_%s' % k, None)
-            if eval_is_meth is not None:
-                cls._prop_handler[k] = eval_is_meth
-
-        # Put definite results directly into the class dict, for speed
-        for k, v in cls.default_assumptions.items():
-            setattr(cls, as_property(k), v)
-
-        # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
-        derived_from_bases = set()
-        for base in cls.__bases__:
-            default_assumptions = getattr(base, 'default_assumptions', None)
-            # is an assumption-aware class
-            if default_assumptions is not None:
-                derived_from_bases.update(default_assumptions)
-
-        for fact in derived_from_bases - set(cls.default_assumptions):
-            pname = as_property(fact)
-            if pname not in cls.__dict__:
-                setattr(cls, pname, make_property(fact))
-
-        # Finally, add any missing automagic property (e.g. for Basic)
-        for fact in _assume_defined:
-            pname = as_property(fact)
-            if not hasattr(cls, pname):
-                setattr(cls, pname, make_property(fact))
+# XXX: ManagedProperties used to be the metaclass for Basic but now Basic does
+# not use a metaclass. We leave this here for backwards compatibility for now
+# in case someone has been using the ManagedProperties class in downstream
+# code. The reason that it might have been used is that when subclassing a
+# class and wanting to use a metaclass the metaclass must be a subclass of the
+# metaclass for the class that is being subclassed. Anyone wanting to subclass
+# Basic and use a metclass in their subclass would have needed to subclass
+# ManagedProperties. Here ManagedProperties is still the metaclass for Basic
+# but it is just type because that is the metaclass when metaclasses are not
+# being used.
+ManagedProperties = type
