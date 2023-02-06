@@ -284,11 +284,13 @@ Mathematical Equivalents
 |                       | sm.Matrix([1,2,3]).   | computation related   |
 |                       | reshape(3, 1), x),    | to polynomials and    |
 |                       | x)``                  | roots refer to        |
-|                       |                       | `mpmath/calculus. <htt|
-|                       |                       | p://docs.s            |
-|                       |                       | ympy.org/0.7.6/module |
-|                       |                       | s/mpmath/calculus/pol |
-|                       |                       | ynomials.html>`_      |
+|                       |                       | `mpmath/calculus. <ht |
+|                       |                       | tps://web.archive.org |
+|                       |                       | /web/20180731093609/h |
+|                       |                       | ttp://docs.sympy.org/ |
+|                       |                       | 0.7.6/modules/mpmath/ |
+|                       |                       | calculus/polynomials. |
+|                       |                       | html>`_               |
 +-----------------------+-----------------------+-----------------------+
 | ``Solve(A, x1, x2)``  | ``sm.linsolve(A,      | For more information  |
 |                       | (x1, x2))``           | refer to              |
