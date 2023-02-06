@@ -2602,6 +2602,8 @@ def test_factor():
 
     assert factor_list(x**3 - x*y**2, t, w, x) == (
         1, [(x, 1), (x - y, 1), (x + y, 1)])
+    assert factor_list((x+1)*(x**6-1)) == (
+        1, [(x - 1, 1), (x + 1, 2), (x**2 - x + 1, 1), (x**2 + x + 1, 1)])
 
 
 def test_factor_large():
