@@ -188,12 +188,6 @@ jobs:
       - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev
       - run: python -m pip install --upgrade pip wheel setuptools
 
-      # Use various libs from git for Python 3.11
-      - if: ${{ contains(matrix.python-version, '3.11') }}
-        run: pip install git+https://github.com/cython/cython@master
-      - if: ${{ contains(matrix.python-version, '3.11') }}
-        run: pip install git+https://github.com/scipy/scipy@main
-
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
                          aesara wurlitzer autowrap                            \
@@ -201,11 +195,7 @@ jobs:
 
       # These are not available for pypy
       - if: ${{ ! contains(matrix.python-version, 'pypy') }}
-        run: pip install gmpy2 jax jaxlib
-
-      # These are not available for pypy and cannot be installed in 3.11 (yet)
-      - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.11') }}
-        run: pip install symengine llvmlite numba pymc
+        run: pip install gmpy2 jax jaxlib symengine llvmlite numba pymc
 
       # Test external imports
       - run: bin/test_external_imports.py
