@@ -7,6 +7,7 @@ from itertools import chain, zip_longest
 
 from .assumptions import ManagedProperties
 from .cache import cacheit
+from .core import ordering_of_classes
 from .sympify import _sympify, sympify, SympifyError, _external_converter
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
@@ -30,6 +31,30 @@ def as_Basic(expr):
         raise TypeError(
             'Argument must be a Basic object, not `%s`' % func_name(
             expr))
+
+
+def _old_compare(x: type, y: type) -> int:
+    # If the other object is not a Basic subclass, then we are not equal to it.
+    if not issubclass(y, Basic):
+        return -1
+
+    n1 = x.__name__
+    n2 = y.__name__
+    if n1 == n2:
+        return 0
+
+    UNKNOWN = len(ordering_of_classes) + 1
+    try:
+        i1 = ordering_of_classes.index(n1)
+    except ValueError:
+        i1 = UNKNOWN
+    try:
+        i2 = ordering_of_classes.index(n2)
+    except ValueError:
+        i2 = UNKNOWN
+    if i1 == UNKNOWN and i2 == UNKNOWN:
+        return (n1 > n2) - (n1 < n2)
+    return (i1 > i2) - (i1 < i2)
 
 
 class Basic(Printable, metaclass=ManagedProperties):
@@ -227,7 +252,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return 0
         n1 = self.__class__
         n2 = other.__class__
-        c = (n1 > n2) - (n1 < n2)
+        c = _old_compare(n1, n2)
         if c:
             return c
         #

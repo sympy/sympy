@@ -211,7 +211,6 @@ References
 """
 
 from .facts import FactRules, FactKB
-from .core import BasicMeta
 from .sympify import sympify
 
 from sympy.core.random import _assumptions_shuffle as shuffle
@@ -611,10 +610,10 @@ def _ask(fact, obj):
     return None
 
 
-class ManagedProperties(BasicMeta):
+class ManagedProperties(type):
     """Metaclass for classes with old-style assumptions"""
     def __init__(cls, *args, **kws):
-        BasicMeta.__init__(cls, *args, **kws)
+        cls.__sympy__ = property(lambda self: True)
 
         local_defs = {}
         for k in _assume_defined:
