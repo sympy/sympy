@@ -1166,7 +1166,7 @@ assumptions system. Briefly these are:
    efficiently applying the implication rules. This happens once when SymPy is
    imported before even the :class:`~.Basic` class is defined.
 
-2. The :meth`~.Basic.__init_subclass__` method will post-process every
+2. The :meth:`~.Basic.__init_subclass__` method will post-process every
    :class:`~.Basic` subclass to add the relevant properties needed for
    assumptions queries. This also adds the ``default_assumptions`` attribute
    to the class. This happens each time a :class:`~.Basic` subclass is
