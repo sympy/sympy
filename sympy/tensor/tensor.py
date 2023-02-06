@@ -56,7 +56,6 @@ from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         ignore_warnings)
 from sympy.utilities.decorator import memoize_property, deprecated
 from sympy.utilities.iterables import sift
-import itertools
 
 
 def deprecate_data():
