@@ -2399,11 +2399,7 @@ class TensExpr(Expr, ABC):
                 #If there are no wilds and the free indices are not the same, they cannot match.
                 return None
 
-        #Since canon_bp may be expensive, we first check for exact equality.
-        diff = self - expr
-        if (diff == S.Zero or
-            diff.canon_bp() == S.Zero
-            ):
+        if canon_bp(self - expr) == S.Zero:
             return repl_dict
         else:
             return None
