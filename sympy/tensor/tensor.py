@@ -2401,8 +2401,8 @@ class TensExpr(Expr, ABC):
 
         #Since canon_bp may be expensive, we first check for exact equality.
         diff = self - expr
-        if (diff == 0 or
-            diff.canon_bp() == 0
+        if (diff == S.Zero or
+            diff.canon_bp() == S.Zero
             ):
             return repl_dict
         else:
