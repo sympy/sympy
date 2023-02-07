@@ -200,7 +200,7 @@ def test_solve_args():
     # - linear
     assert solve((x + y - 2, 2*x + 2*y - 4)) == {x: -y + 2}
     # When one or more args are Boolean
-    assert solve(Eq(x**2, 0.0)) == [0]  # issue 19048
+    assert solve(Eq(x**2, 0.0)) == [0.0]  # issue 19048
     assert solve([True, Eq(x, 0)], [x], dict=True) == [{x: 0}]
     assert solve([Eq(x, x), Eq(x, 0), Eq(x, x+1)], [x], dict=True) == []
     assert not solve([Eq(x, x+1), x < 2], x)
@@ -673,7 +673,7 @@ def test_solve_for_functions_derivatives():
     f = Function('f')
     soln = solve([f(x).diff(x) + f(x).diff(x, 2) - 1, f(x).diff(x) - f(x).diff(x, 2)],
             f(x).diff(x), f(x).diff(x, 2))
-    assert soln == { f(x).diff(x, 2): 1/2, f(x).diff(x): 1/2 }
+    assert soln == { f(x).diff(x, 2): S(1)/2, f(x).diff(x): S(1)/2 }
 
     soln = solve([f(x).diff(x, 2) + f(x).diff(x, 3) - 1, 1 - f(x).diff(x, 2) -
             f(x).diff(x, 3), 1 - f(x).diff(x,3)], f(x).diff(x, 2), f(x).diff(x, 3))
@@ -1013,6 +1013,48 @@ def _test_issue_5335_float():
 def test_issue_5767():
     assert set(solve([x**2 + y + 4], [x])) == \
         {(-sqrt(-y - 4),), (sqrt(-y - 4),)}
+
+
+def _make_example_24609():
+    D, R, H, B_g, V, D_c = symbols("D, R, H, B_g, V, D_c", real=True, positive=True)
+    Sigma_f, Sigma_a, nu = symbols("Sigma_f, Sigma_a, nu", real=True, positive=True)
+    x = symbols("x", real=True, positive=True)
+    eq = (
+        2**(S(2)/3)*pi**(S(2)/3)*D_c*(S(231361)/10000 + pi**2/x**2)
+        /(6*V**(S(2)/3)*x**(S(1)/3))
+      - 2**(S(2)/3)*pi**(S(8)/3)*D_c/(2*V**(S(2)/3)*x**(S(7)/3))
+    )
+    expected = 100*sqrt(2)*pi/481
+    return eq, expected, x
+
+
+def test_issue_24609():
+    # https://github.com/sympy/sympy/issues/24609
+    eq, expected, x = _make_example_24609()
+    assert solve(eq, x, simplify=True) == [expected]
+    [solapprox] = solve(eq.n(), x)
+    assert abs(solapprox - expected.n()) < 1e-14
+
+
+@XFAIL
+def test_issue_24609_xfail():
+    #
+    # This returns 5 solutions when it should be 1 (with x positive).
+    # Simplification reveals all solutions to be equivalent. It is expected
+    # that solve without simplify=True returns duplicate solutions in some
+    # cases but the core of this equation is a simple quadratic that can easily
+    # be solved without introducing any redundant solutions:
+    #
+    #     >>> print(factor_terms(eq.as_numer_denom()[0]))
+    #     2**(2/3)*pi**(2/3)*D_c*V**(2/3)*x**(7/3)*(231361*x**2 - 20000*pi**2)
+    #
+    eq, expected, x = _make_example_24609()
+    assert len(solve(eq, x)) == [expected]
+    #
+    # We do not want to pass this test just by using simplify so if the above
+    # passes then uncomment the additional test below:
+    #
+    # assert len(solve(eq, x, simplify=False)) == 1
 
 
 def test_polysys():
@@ -1824,6 +1866,13 @@ def test_issues_6819_6820_6821_6248_8692():
 
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
+def test_issue_17638():
+
+    assert solve(((2-exp(2*x))*exp(x))/(exp(2*x)+2)**2 > 0, x) == (-oo < x) & (x < log(2)/2)
+    assert solve(((2-exp(2*x)+2)*exp(x+2))/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < log(4)/2)
+    assert solve((exp(x)+2+x**2)*exp(2*x+2)/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < oo)
+
 
 
 def test_issue_14607():

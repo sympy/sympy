@@ -6,7 +6,7 @@ from sympy.core.singleton import S
 from sympy.matrices.expressions.hadamard import HadamardProduct
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matexpr import (MatrixExpr, MatrixSymbol)
-from sympy.matrices.expressions.special import Identity
+from sympy.matrices.expressions.special import Identity, OneMatrix
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
@@ -20,6 +20,9 @@ from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_t
 
 @singledispatch
 def array_derive(expr, x):
+    """
+    Derivatives (gradients) for array expressions.
+    """
     raise NotImplementedError(f"not implemented for type {type(expr)}")
 
 
@@ -81,6 +84,11 @@ def _(expr: MatrixSymbol, x: _ArrayExpr):
 
 @array_derive.register(Identity)
 def _(expr: Identity, x: _ArrayExpr):
+    return ZeroArray(*(x.shape + expr.shape))
+
+
+@array_derive.register(OneMatrix)
+def _(expr: OneMatrix, x: _ArrayExpr):
     return ZeroArray(*(x.shape + expr.shape))
 
 

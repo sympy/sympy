@@ -12,6 +12,8 @@ from sympy.utilities.iterables import _strongly_connected_components
 from .exceptions import DMBadInputError, DMDomainError, DMShapeError
 
 from .ddm import DDM
+from .lll import ddm_lll
+from sympy.polys.domains import QQ
 
 
 class SDM(dict):
@@ -850,6 +852,9 @@ class SDM(dict):
         even if the matrix is not square.
         """
         return all(i >= j for i, row in self.items() for j in row)
+
+    def lll(A, delta=QQ(3, 4)) -> 'SDM':
+        return A.from_ddm(ddm_lll(A.to_ddm(), delta))
 
 
 def binop_dict(A, B, fab, fa, fb):

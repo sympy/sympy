@@ -1112,7 +1112,7 @@ def connected_components(G):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Connected_component_(graph_theory)
+    .. [1] https://en.wikipedia.org/wiki/Component_(graph_theory)
     .. [2] https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
 
 
@@ -2998,7 +2998,7 @@ def rotations(s, dir=1):
 
 def roundrobin(*iterables):
     """roundrobin recipe taken from itertools documentation:
-    https://docs.python.org/3/library/itertools.html#recipes
+    https://docs.python.org/3/library/itertools.html#itertools-recipes
 
     roundrobin('ABC', 'D', 'EF') --> A D E B F C
 

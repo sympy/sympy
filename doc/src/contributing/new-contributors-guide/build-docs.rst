@@ -105,7 +105,7 @@ For Windows 10, however, the Windows Subsystem for Linux can be a possible
 workaround solution, and you can install Ubuntu shell on your Windows system
 after following the tutorial below:
 
-https://github.com/MicrosoftDocs/WSL/blob/live/WSL/install-win10.md
+https://learn.microsoft.com/en-us/windows/wsl/install
 
 In your command prompt, run ``ubuntu`` to transfer to Linux terminal, and
 follow the Debian/Ubuntu tutorial above to install the dependencies, and then

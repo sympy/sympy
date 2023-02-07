@@ -4,7 +4,8 @@ various operations on them.
 """
 
 from sympy.core import Add, Mul, Pow
-from sympy.core.numbers import NaN, Infinity, NegativeInfinity, Float, I, pi
+from sympy.core.numbers import (NaN, Infinity, NegativeInfinity, Float, I, pi,
+        equal_valued)
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -868,7 +869,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        .integrate()
+        integrate
         """
         kwargs.setdefault('evaluate', True)
         if args:
@@ -1200,7 +1201,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        from_hyper()
+        from_hyper
         """
 
         R = self.annihilator.parent
@@ -1283,7 +1284,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        HolonomicFunction.series()
+        HolonomicFunction.series
 
         References
         ==========
@@ -1481,7 +1482,7 @@ class HolonomicFunction:
             rootstoconsider = []
             for i in ordered(self.y0.keys()):
                 for j in ordered(indicialroots.keys()):
-                    if j == i:
+                    if equal_valued(j, i):
                         rootstoconsider.append(i)
 
         elif allpos and allint:
@@ -1674,7 +1675,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        HolonomicFunction.to_sequence()
+        HolonomicFunction.to_sequence
         """
 
         if _recur is None:
@@ -2143,7 +2144,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        to_hyper()
+        to_hyper
         """
 
         # convert to hypergeometric first

@@ -342,7 +342,7 @@ Gotchas
 
 - Need to change ``me.dynamicsymbols._t`` to ``me.dynamicsymbols('t')`` for
   all occurrences of it in the Kane's equations. For example have a look at
-  line 10 of this `spring damper example <https://github.com/sympy/sympy/blob/master/sympy/parsing/autolev/test_examples/mass_spring_damper.py>`_.
+  line 10 of this `spring damper example <https://github.com/sympy/sympy/blob/master/sympy/parsing/autolev/test-examples/pydy-example-repo/mass_spring_damper.py#L10>`_.
   This equation is used in forming the Kane's equations so we need to
   change ``me.dynamicsymbols._t`` to ``me.dynamicsymbols('t')`` in this case.
 

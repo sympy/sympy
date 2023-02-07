@@ -84,7 +84,7 @@ class ArrayKind(Kind):
 
 
 class NDimArray(Printable):
-    """
+    """N-dimensional array.
 
     Examples
     ========
