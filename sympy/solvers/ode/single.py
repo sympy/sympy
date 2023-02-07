@@ -944,8 +944,8 @@ class RiccatiSpecial(SinglePatternODESolver):
     ==========
 
     - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
-    - http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
-      http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
+    - https://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
+      https://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
     """
     hint = "Riccati_special_minus2"
     has_integral = False
@@ -1075,7 +1075,7 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
     References
     ==========
 
-    - http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
+    - https://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
     """
     hint = "2nd_nonlinear_autonomous_conserved"
     has_integral = True
