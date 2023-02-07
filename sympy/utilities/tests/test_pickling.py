@@ -93,11 +93,7 @@ def check(a, exclude=[], check_attr=True):
 
 
 def test_core_basic():
-    for c in (Atom, Atom(),
-              Basic, Basic(),
-              # XXX: dynamically created types are not picklable
-              # type, type("test", (), {}),
-              SingletonRegistry, S):
+    for c in (Atom, Atom(), Basic, Basic(), SingletonRegistry, S):
         check(c)
 
 def test_core_Str():
