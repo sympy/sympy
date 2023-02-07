@@ -68,7 +68,14 @@ pull request, or even before committing a change.
 
 ## Pick an issue to fix
 
-The best way to start with the main code base is to fix some existing bugs. Peruse the [Easy to fix issues] in the issue tracker and see if one interests you. If you'd like to try to fix it, then create a message in the issue saying that you'd like to work on it. If it isn't clear how to fix it, ask for suggestions on how to do it in the issue itself, on the [mailing list], or on [Gitter sympy/sympy].
+The best way to start with the main code base is to fix some existing bugs.
+Peruse the ["Easy to fix"
+issues](https://github.com/sympy/sympy/issues?q=is%3Aopen+is%3Aissue+label%3A%22Easy+to+Fix%22)
+in the issue tracker and see if one interests you. If you'd like to try to fix
+it, then create a message in the issue saying that you'd like to work on it.
+If it isn't clear how to fix it, ask for suggestions on how to do it in the
+issue itself or on the [mailing
+list](https://groups.google.com/forum/#!forum/sympy).
 
 SymPy's code is organized into Python packages and modules. The core code is
 in the `sympy/core` directory and other packages in the sympy directory have

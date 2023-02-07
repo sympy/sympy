@@ -36,10 +36,6 @@ be moderated before it is posted to the list. Please read
 http://shakthimaan.com/downloads/book/chapter1.pdf before posting to get
 familiar with mailing list etiquette.
 
-## Join the Gitter chat room
-
-We have a live chat room where we discuss things about SymPy at Gitter: https://gitter.im/sympy/sympy. Here you may find other SymPy developers and you can ask questions in real-time.
-
 ## Setup your development environment
 
 We use the [Git](http://git-scm.com) version control system to track the
@@ -72,8 +68,8 @@ you are looking for a bug to fix, you can start by looking at the issues
 labeled ["Easy to
 fix"](https://github.com/sympy/sympy/issues?q=is%3Aopen+is%3Aissue+label%3A%22Easy+to+Fix%22)
 in the issue tracker and see if one interests you. If it isn't clear how to
-fix it, ask for suggestions on how to do it in the issue itself, on the
-mailing list, or on Gitter.
+fix it, ask for suggestions on how to do it in the issue itself or on the
+mailing list.
 
 SymPy's code is organized into Python packages and modules. The core code is
 in the `sympy/core` directory and other packages in the `sympy` directory have
