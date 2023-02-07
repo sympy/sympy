@@ -76,8 +76,23 @@ SymPy deprecation warnings.
 
 ## Version 1.12
 
+(managedproperties)=
+### The ``ManagedProperties`` metaclass
+
+The ``ManagedProperties`` metaclass was previously the metaclass for ``Basic``.
+Now ``Basic`` does not use metaclasses and so its metaclass is just ``type``.
+Any code that previously subclassed ``Basic`` and wanted to do anything with
+metaclasses would have needed to subclass ``ManagedProperties`` to make the
+relevant metaclass. The only relevant method of ``ManagedProperties`` has been
+moved to ``Basic.__init_subclass__``. Since ``ManagedProperties`` is not used
+as the metaclass for ``Basic`` any more and no longer does anything useful it
+should be possible for such code to just subclass ``type`` instead for any
+metaclass.
+
+
 (deprecated-mechanics-joint-coordinate-format)=
 ### New Joint coordinate format
+
 The format, i.e. type and auto generated name, of the generalized coordinates
 and generalized speeds of the joints in the ``sympy.physics.mechanics`` module
 has changed. The data type has changed from ``list`` to ``Matrix``, which is the
