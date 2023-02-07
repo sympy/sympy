@@ -8,7 +8,7 @@ from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
-from .numbers import ilcm, igcd
+from .numbers import ilcm, igcd, equal_valued
 from .expr import Expr
 from .kind import UndefinedKind
 from sympy.utilities.iterables import is_sequence, sift
@@ -193,7 +193,7 @@ class Add(Expr, AssocOp):
 
         NB: the removal of 0 is already handled by AssocOp.__new__
 
-        See also
+        See Also
         ========
 
         sympy.core.mul.Mul.flatten
@@ -396,7 +396,6 @@ class Add(Expr, AssocOp):
 
     @classmethod
     def class_key(cls):
-        """Nice order of classes"""
         return 3, 1, cls.__name__
 
     @property
@@ -496,7 +495,7 @@ class Add(Expr, AssocOp):
                 for i in c:
                     if abs(i) >= big:
                         big = abs(i)
-                if big > 0 and big != 1:
+                if big > 0 and not equal_valued(big, 1):
                     from sympy.functions.elementary.complexes import sign
                     bigs = (big, -big)
                     c = [sign(i) if i in bigs else i/big for i in c]
@@ -987,7 +986,7 @@ class Add(Expr, AssocOp):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        returns a tuple representing a complex number
+        Return a tuple representing a complex number.
 
         Examples
         ========

@@ -1166,11 +1166,11 @@ assumptions system. Briefly these are:
    efficiently applying the implication rules. This happens once when SymPy is
    imported before even the :class:`~.Basic` class is defined.
 
-2. The ``ManagedProperties`` metaclass is defined which is the metaclass for
-   all :class:`~.Basic` subclasses. This class will post-process every
+2. The ``Basic.__init_subclass__`` method will post-process every
    :class:`~.Basic` subclass to add the relevant properties needed for
-   assumptions queries.  This also adds the ``default_assumptions`` attribute
-   to the class. This happens each time a :class:`~.Basic` subclass is defined.
+   assumptions queries. This also adds the ``default_assumptions`` attribute
+   to the class. This happens each time a :class:`~.Basic` subclass is
+   defined (when its containing module is imported).
 
 3. Every :class:`~.Basic` instance initially uses the ``default_assumptions`` class
    attribute. When an assumptions query is made on a :class:`~.Basic` instance
@@ -1223,7 +1223,7 @@ object directly like (full output omitted):
       ('composite', False),
       ...
 
-The ``ManagedProperties`` metaclass will inspect the attributes of each
+The ``Basic.__init_subclass__`` method will inspect the attributes of each
 ``Basic`` class to see if any assumptions related attributes are defined. An
 example of these is the ``is_extended_nonnegative = True`` attribute defined
 in the ``expreal`` class. The implications of any such attributes will be

@@ -12,7 +12,8 @@ from sympy.sets.sets import FiniteSet
 
 
 class AccumulationBounds(Expr):
-    r"""
+    r"""An accumulation bounds.
+
     # Note AccumulationBounds has an alias: AccumBounds
 
     AccumulationBounds represent an interval `[a, b]`, which is always closed
@@ -634,9 +635,9 @@ class AccumulationBounds(Expr):
         Parameters
         ==========
 
-        other: AccumulationBounds
-             Another AccumulationBounds object with which the intersection
-             has to be computed.
+        other : AccumulationBounds
+            Another AccumulationBounds object with which the intersection
+            has to be computed.
 
         Returns
         =======

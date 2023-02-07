@@ -171,8 +171,13 @@ class MatrixExpr(Expr):
         return self.shape[1]
 
     @property
-    def is_square(self):
-        return self.rows == self.cols
+    def is_square(self) -> bool | None:
+        rows, cols = self.shape
+        if isinstance(rows, Integer) and isinstance(cols, Integer):
+            return rows == cols
+        if rows == cols:
+            return True
+        return None
 
     def _eval_conjugate(self):
         from sympy.matrices.expressions.adjoint import Adjoint
@@ -242,7 +247,7 @@ class MatrixExpr(Expr):
         return adjoint(self)
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return S.One, self
 
     def conjugate(self):
@@ -258,7 +263,7 @@ class MatrixExpr(Expr):
         return self.transpose()
 
     def inverse(self):
-        if not self.is_square:
+        if self.is_square is False:
             raise NonSquareMatrixError('Inverse of non-square matrix')
         return self._eval_inverse()
 

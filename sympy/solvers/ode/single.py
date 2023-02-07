@@ -613,7 +613,7 @@ class FirstLinear(SinglePatternODESolver):
     References
     ==========
 
-    - https://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
+    - https://en.wikipedia.org/wiki/Linear_differential_equation#First-order_equation_with_variable_coefficients
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 92
 
@@ -944,8 +944,8 @@ class RiccatiSpecial(SinglePatternODESolver):
     ==========
 
     - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
-    - http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
-      http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
+    - https://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
+      https://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
     """
     hint = "Riccati_special_minus2"
     has_integral = False
@@ -1075,7 +1075,7 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
     References
     ==========
 
-    - http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
+    - https://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
     """
     hint = "2nd_nonlinear_autonomous_conserved"
     has_integral = True

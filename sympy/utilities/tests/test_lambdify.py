@@ -2,6 +2,8 @@ from itertools import product
 import math
 import inspect
 
+
+
 import mpmath
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
@@ -23,7 +25,7 @@ from sympy.functions.elementary.trigonometric import (acos, cos, cot, sin,
 from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
-from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels)
+from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels, Si, Ci)
 from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, polygamma)
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
@@ -48,6 +50,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.exceptions import ignore_warnings
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import uppergamma, lowergamma
+
 
 import sympy
 
@@ -1094,10 +1097,10 @@ def test_scipy_fns():
     if not scipy:
         skip("scipy not installed")
 
-    single_arg_sympy_fns = [Ei, erf, erfc, factorial, gamma, loggamma, digamma]
+    single_arg_sympy_fns = [Ei, erf, erfc, factorial, gamma, loggamma, digamma, Si, Ci]
     single_arg_scipy_fns = [scipy.special.expi, scipy.special.erf, scipy.special.erfc,
         scipy.special.factorial, scipy.special.gamma, scipy.special.gammaln,
-                            scipy.special.psi]
+                            scipy.special.psi, scipy.special.sici, scipy.special.sici]
     numpy.random.seed(0)
     for (sympy_fn, scipy_fn) in zip(single_arg_sympy_fns, single_arg_scipy_fns):
         f = lambdify(x, sympy_fn(x), modules="scipy")
@@ -1117,8 +1120,15 @@ def test_scipy_fns():
             if sympy_fn == digamma:
                 tv = numpy.real(tv)
             sympy_result = sympy_fn(tv).evalf()
+            scipy_result = scipy_fn(tv)
+            # SciPy's sici returns a tuple with both Si and Ci present in it
+            # which needs to be unpacked
+            if sympy_fn == Si:
+                scipy_result = scipy_fn(tv)[0]
+            if sympy_fn == Ci:
+                scipy_result = scipy_fn(tv)[1]
             assert abs(f(tv) - sympy_result) < 1e-13*(1 + abs(sympy_result))
-            assert abs(f(tv) - scipy_fn(tv)) < 1e-13*(1 + abs(sympy_result))
+            assert abs(f(tv) - scipy_result) < 1e-13*(1 + abs(sympy_result))
 
     double_arg_sympy_fns = [RisingFactorial, besselj, bessely, besseli,
                             besselk, polygamma]
@@ -1678,6 +1688,26 @@ def test_lambdify_cse():
 def test_deprecated_set():
     with warns_deprecated_sympy():
         lambdify({x, y}, x + y)
+
+def test_issue_13881():
+    if not numpy:
+        skip("numpy not installed.")
+
+    X = MatrixSymbol('X', 3, 1)
+
+    f = lambdify(X, X.T*X, 'numpy')
+    assert f(numpy.array([1, 2, 3])) == 14
+    assert f(numpy.array([3, 2, 1])) == 14
+
+    f = lambdify(X, X*X.T, 'numpy')
+    assert f(numpy.array([1, 2, 3])) == 14
+    assert f(numpy.array([3, 2, 1])) == 14
+
+    f = lambdify(X, (X*X.T)*X, 'numpy')
+    arr1 = numpy.array([[1], [2], [3]])
+    arr2 = numpy.array([[14],[28],[42]])
+
+    assert numpy.array_equal(f(arr1), arr2)
 
 
 def test_23536_lambdify_cse_dummy():

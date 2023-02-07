@@ -75,7 +75,7 @@ class RigidBody:
     @frame.setter
     def frame(self, F):
         if not isinstance(F, ReferenceFrame):
-            raise TypeError("RigdBody frame must be a ReferenceFrame object.")
+            raise TypeError("RigidBody frame must be a ReferenceFrame object.")
         self._frame = F
 
     @property

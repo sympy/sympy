@@ -90,7 +90,7 @@ def _primitive_root_prime_iter(p):
 
 def primitive_root(p):
     """
-    Returns the smallest primitive root or None
+    Returns the smallest primitive root or None.
 
     Parameters
     ==========
@@ -156,7 +156,7 @@ def primitive_root(p):
 
 def is_primitive_root(a, p):
     """
-    Returns True if ``a`` is a primitive root of ``p``
+    Returns True if ``a`` is a primitive root of ``p``.
 
     ``a`` is said to be the primitive root of ``p`` if gcd(a, p) == 1 and
     totient(p) is the smallest positive number s.t.
@@ -219,7 +219,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
 
 def sqrt_mod(a, p, all_roots=False):
     """
-    Find a root of ``x**2 = a mod p``
+    Find a root of ``x**2 = a mod p``.
 
     Parameters
     ==========
@@ -304,7 +304,7 @@ def _product(*iters):
 
 def sqrt_mod_iter(a, p, domain=int):
     """
-    Iterate over solutions to ``x**2 = a mod p``
+    Iterate over solutions to ``x**2 = a mod p``.
 
     Parameters
     ==========
@@ -581,7 +581,12 @@ def _sqrt_mod1(a, p, n):
 def is_quad_residue(a, p):
     """
     Returns True if ``a`` (mod ``p``) is in the set of squares mod ``p``,
-    i.e a % p in set([i**2 % p for i in range(p)]). If ``p`` is an odd
+    i.e a % p in set([i**2 % p for i in range(p)]).
+
+    Examples
+    ========
+
+    If ``p`` is an odd
     prime, an iterative method is used to make the determination:
 
     >>> from sympy.ntheory import is_quad_residue
@@ -809,7 +814,7 @@ def _nthroot_mod_composite(a, n, m):
 
 def nthroot_mod(a, n, p, all_roots=False):
     """
-    Find the solutions to ``x**n = a mod p``
+    Find the solutions to ``x**n = a mod p``.
 
     Parameters
     ==========
@@ -1361,11 +1366,16 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 
 def quadratic_congruence(a, b, c, p):
     """
-    Find the solutions to ``a x**2 + b x + c = 0 mod p
-    a : integer
-    b : integer
-    c : integer
-    p : positive integer
+    Find the solutions to ``a x**2 + b x + c = 0 mod p.
+
+    Parameters
+    ==========
+
+    a : int
+    b : int
+    c : int
+    p : int
+        A positive integer.
     """
     a = as_int(a)
     b = as_int(b)
