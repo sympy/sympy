@@ -674,7 +674,7 @@ def _prepare_class_assumptions(cls):
 # code. The reason that it might have been used is that when subclassing a
 # class and wanting to use a metaclass the metaclass must be a subclass of the
 # metaclass for the class that is being subclassed. Anyone wanting to subclass
-# Basic and use a metclass in their subclass would have needed to subclass
+# Basic and use a metaclass in their subclass would have needed to subclass
 # ManagedProperties. Here ManagedProperties is not the metaclass for Basic any
 # more but it should still be usable as a metaclass for Basic subclasses since
 # it is a subclass of type which is now the metaclass for Basic.
