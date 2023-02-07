@@ -95,44 +95,6 @@ shortcuts:
 See <https://git-scm.com/book/sv/v2/Customizing-Git-Git-Configuration> for
 some more common git configuration options.
 
-### (Optional) Tune Your Bash Prompt for Git
-
-*This step is not required, but it can make working with git on the command
-line easier, so it is recommended.*
-
-It can be convenient in future to tune the bash prompt to display the current git branch.
-
-The easiest way to do it, is to add the snippet below to your .bashrc or .bash_profile:
-
-```
-PS1="[\u@\h \W\$(git branch 2> /dev/null | grep -e '\* ' | sed 's/^..\(.*\)/{\1}/')]\$ "
-```
-
-But better is to use `git-completion` from the `git` source. This also has the advantage of adding tab completion to just about every git command. It also includes many other useful features, for example,
-promptings. To use `git-completion`, first download the `git` source code (about 27 MiB), then copy
-the file to your profile directory:
-
-```
-git clone git://git.kernel.org/pub/scm/git/git.git
-cp git/contrib/completion/git-completion.bash ~/.git-completion.sh
-```
-
-Read instructions in '~/.git-completion.sh'
-
-Note that if you install git from the package manager in many Linux distros, this file is already installed for you.  You can check if it is installed by seeing if tab completion works on git commands (try, e.g., `git commi<TAB>`, or `git log --st<TAB>`). You can also check if the PS1 commands work by doing something like:
-
-```
-PS1='\W $(__git_ps1 "%s")\$ '
-```
-
-And your command prompt should change to something like:
-
-```
-sympy master$
-```
-
-Note, it is important to define your PS1 using single quotes ('), not double quotes ("), or else bash will not update the branch name.
-
 ## Setup GitHub
 
 Next you will need to setup your GitHub account. Note that all the steps here
@@ -202,18 +164,27 @@ After the configuration, your setup should be similar to this:
 $ git remote -v
 origin   https://github.com/sympy/sympy (fetch)
 origin   https://github.com/sympy/sympy (push)
-upstream https://github.com/github/sympy (fetch)
-upstream https://github.com/github/sympy (push)
+github https://github.com/<your-github-username>/sympy (fetch)
+github https://github.com/<your-github-username>/sympy (push)
 ```
 
 ## Virtual Environment Setup
 
 You may want to take advantage of using virtual environments to isolate your development version of SymPy from any system wide installed versions, e.g. from `apt-get install python-sympy`.
 
-We recommend using `conda` to create a virtual environment:
+If you use `conda`, you can use it to create a virtual environment:
 
 ```bash
 $ conda create -n sympy-dev python=3 mpmath flake8
+```
+
+If you prefer to use `pip` and `venv`, you can use something like
+
+```bash
+cd sympy
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
 ```
 
 You can add any other packages to this command that you might find useful for
