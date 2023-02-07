@@ -1,4 +1,4 @@
-from collections import defaultdict, OrderedDict
+from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
     permutations, product
@@ -1252,7 +1252,7 @@ def multiset_combinations(m, n, g=None):
             if n > N:
                 return
             try:
-                m = multiset(m)
+                m = dict(Counter(m).items())
                 g = [(k, m[k]) for k in ordered(m)]
             except TypeError:
                 m = list(ordered(m))
@@ -2194,7 +2194,7 @@ def multiset_derangements(s):
     # create multiset dictionary of hashable elements or else
     # remap elements to integers
     try:
-        ms = multiset(s)
+        ms = dict(Counter(s).items())
     except TypeError:
         # give each element a canonical integer value
         key = dict(enumerate(ordered(uniq(s))))
@@ -2406,7 +2406,7 @@ def random_derangement(t, choice=None, strict=True):
         '''
         shuffle(rv)
         return rv[:n]
-    ms = multiset(t)
+    ms = dict(Counter(t).items())
     tot = len(t)
     ms = sorted(ms.items(), key=lambda x: x[1])
   # if there are not enough spaces for the most

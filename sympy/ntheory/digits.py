@@ -1,6 +1,6 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 
-from sympy.utilities.iterables import multiset, is_palindromic as _palindromic
+from sympy.utilities.iterables import is_palindromic as _palindromic
 from sympy.utilities.misc import as_int
 
 
@@ -104,7 +104,7 @@ def count_digits(n, b=10):
     >>> [i for i in range(10) if c77[i] == 7]
     [1, 3, 7, 9]
     """
-    rv = defaultdict(int, multiset(digits(n, b)).items())
+    rv = defaultdict(int, Counter(digits(n, b)).items())
     rv.pop(b) if b in rv else rv.pop(-b)  # b or -b is there
     return rv
 
