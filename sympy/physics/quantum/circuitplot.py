@@ -19,7 +19,6 @@ from __future__ import annotations
 from sympy.core.mul import Mul
 from sympy.external import import_module
 from sympy.physics.quantum.gate import Gate, OneQubitGate, CGate, CGateS
-from sympy.core.assumptions import ManagedProperties
 
 
 __all__ = [
@@ -353,12 +352,11 @@ class Mx(OneQubitGate):
     gate_name='Mx'
     gate_name_latex='M_x'
 
-class CreateOneQubitGate(ManagedProperties):
+class CreateOneQubitGate(type):
     def __new__(mcl, name, latexname=None):
         if not latexname:
             latexname = name
-        return ManagedProperties.__new__(
-            mcl, name + "Gate", (OneQubitGate,),
+        return type(name + "Gate", (OneQubitGate,),
             {'gate_name': name, 'gate_name_latex': latexname})
 
 def CreateCGate(name, latexname=None):

@@ -6,7 +6,6 @@ from sympy.physics.units import meter
 
 from sympy.testing.pytest import XFAIL, raises
 
-from sympy.core.assumptions import ManagedProperties
 from sympy.core.basic import Atom, Basic
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Str, Dummy, Symbol, Wild
@@ -58,7 +57,7 @@ def check(a, exclude=[], check_attr=True):
             continue
 
         if callable(protocol):
-            if isinstance(a, ManagedProperties):
+            if isinstance(a, type):
                 # Classes can't be copied, but that's okay.
                 continue
             b = protocol(a)
@@ -94,11 +93,7 @@ def check(a, exclude=[], check_attr=True):
 
 
 def test_core_basic():
-    for c in (Atom, Atom(),
-              Basic, Basic(),
-              # XXX: dynamically created types are not picklable
-              # ManagedProperties, ManagedProperties("test", (), {}),
-              SingletonRegistry, S):
+    for c in (Atom, Atom(), Basic, Basic(), SingletonRegistry, S):
         check(c)
 
 def test_core_Str():

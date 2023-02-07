@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
 
-from .assumptions import ManagedProperties
+from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
 from .core import ordering_of_classes
 from .sympify import _sympify, sympify, SympifyError, _external_converter
@@ -57,7 +57,7 @@ def _old_compare(x: type, y: type) -> int:
     return (i1 > i2) - (i1 < i2)
 
 
-class Basic(Printable, metaclass=ManagedProperties):
+class Basic(Printable):
     """
     Base class for all SymPy objects.
 
@@ -108,6 +108,17 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     _args: tuple[Basic, ...]
     _mhash: int | None
+
+    @property
+    def __sympy__(self):
+        return True
+
+    def __init_subclass__(cls):
+        # Initialize the default_assumptions FactKB and also any assumptions
+        # property methods. This method will only be called for subclasses of
+        # Basic but not for Basic itself so we call
+        # _prepare_class_assumptions(Basic) below the class definition.
+        _prepare_class_assumptions(cls)
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -2039,6 +2050,12 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def could_extract_minus_sign(self):
         return False  # see Expr.could_extract_minus_sign
+
+
+# For all Basic subclasses _prepare_class_assumptions is called by
+# Basic.__init_subclass__ but that method is not called for Basic itself so we
+# call the function here instead.
+_prepare_class_assumptions(Basic)
 
 
 class Atom(Basic):

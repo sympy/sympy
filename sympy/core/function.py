@@ -35,7 +35,6 @@ from typing import Any
 from collections.abc import Iterable
 
 from .add import Add
-from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
 from .cache import cacheit
 from .containers import Tuple, Dict
@@ -151,7 +150,7 @@ def arity(cls):
         lambda p:p.default == p.empty, binary=True))
     return no if not yes else tuple(range(no, no + yes + 1))
 
-class FunctionClass(ManagedProperties):
+class FunctionClass(type):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 
@@ -194,8 +193,6 @@ class FunctionClass(ManagedProperties):
             namespace = args[2]
             if 'eval' in namespace and not isinstance(namespace['eval'], classmethod):
                 raise TypeError("eval on Function subclasses should be a class method (defined with @classmethod)")
-
-        super().__init__(*args, **kwargs)
 
     @property
     def __signature__(self):
