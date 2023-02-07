@@ -1342,7 +1342,6 @@ def test_issue_14787():
 
 def test_issue_21481():
     b, e = symbols('b e')
-
     C = Piecewise(
         (2,
         ((b > 1) & (e > 0)) |
@@ -1368,11 +1367,10 @@ def test_issue_21481():
         (C, Eq(im(b), 0) & Eq(im(e), 0))
     )
 
-
     B = piecewise_fold(A)
     sa = A.simplify()
     sb = B.simplify()
-    v = tuple([-2, -1, -S.Half, 0, S.Half, 1, 2])
+    v = (-2, -1, -S.Half, 0, S.Half, 1, 2)
     for i in v:
         for j in v:
             r = {b:i, e:j}
