@@ -1160,7 +1160,7 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
                 c = check.xreplace(ma)
             except TypeError:
                 continue
-            if c == S.true:
+            if c is S.true:
                 debug('_inverse_laplace_apply_simple_rules match:')
                 debugf('      f:    %s', (f,))
                 debugf('      rule: %s o---o %s', (s_dom, t_dom))
