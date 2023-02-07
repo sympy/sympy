@@ -34,7 +34,7 @@ from typing import Any
 from functools import reduce
 from math import prod
 
-from abc import abstractmethod, ABCMeta
+from abc import abstractmethod, ABC
 from collections import defaultdict
 import operator
 import itertools
@@ -1964,11 +1964,7 @@ def tensor_heads(s, index_types, symmetry=None, comm=0):
     return thlist
 
 
-class _TensorMetaclass(ABCMeta):
-    pass
-
-
-class TensExpr(Expr, metaclass=_TensorMetaclass):
+class TensExpr(Expr, ABC):
     """
     Abstract base class for tensor expressions
 
