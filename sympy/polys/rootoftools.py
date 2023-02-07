@@ -1211,9 +1211,7 @@ class RootSum(Expr):
     def free_symbols(self):
         return self.poly.free_symbols | self.fun.free_symbols
 
-    @property
-    def is_commutative(self):
-        return True
+    is_commutative = True
 
     def doit(self, **hints):
         if not hints.get('roots', True):

@@ -49,8 +49,7 @@ class ExprCondPair(Tuple):
         """
         return self.args[1]
 
-    @property
-    def is_commutative(self):
+    def _eval_is_commutative(self):
         return self.expr.is_commutative
 
     def __iter__(self):

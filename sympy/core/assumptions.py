@@ -210,6 +210,8 @@ References
 
 """
 
+import warnings
+
 from .facts import FactRules, FactKB
 from .sympify import sympify
 
@@ -639,6 +641,16 @@ class ManagedProperties(type):
             eval_is_meth = getattr(cls, '_eval_is_%s' % k, None)
             if eval_is_meth is not None:
                 cls._prop_handler[k] = eval_is_meth
+
+            # When __init__ is called from UndefinedFunction it is called with
+            # just one arg. When it is called from subclassing Basic it is
+            # called with the usual (name, bases, namespace) type() signature.
+            if len(args) == 3:
+                namespace = args[2]
+                is_assump = 'is_%s' % k
+                if is_assump in namespace:
+                    if isinstance(namespace[is_assump], property):
+                        warnings.warn(f"{is_assump} is defined as a property method on {cls}. Doing so will break the automatic deduction of other assumptions. Either define {is_assump} as a simple bool or define _eval_{is_assump} instead.", stacklevel=2)
 
         # Put definite results directly into the class dict, for speed
         for k, v in cls.default_assumptions.items():
