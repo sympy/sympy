@@ -38,15 +38,16 @@ from abc import abstractmethod, ABC
 from collections import defaultdict
 import operator
 import itertools
-from sympy.core import Wild, WildFunction
+
 from sympy.core.numbers import (Integer, Rational)
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.containers import Tuple, Dict
+from sympy.core.function import WildFunction
 from sympy.core.sorting import default_sort_key
-from sympy.core.symbol import Symbol, symbols
+from sympy.core.symbol import Symbol, symbols, Wild
 from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp
 from sympy.external.gmpy import SYMPY_INTS
