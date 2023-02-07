@@ -120,7 +120,7 @@ def sqrtdenest(expr, max_iter=3):
     References
     ==========
 
-    .. [1] http://researcher.watson.ibm.com/researcher/files/us-fagin/symb85.pdf
+    .. [1] https://web.archive.org/web/20210806201615/https://researcher.watson.ibm.com/researcher/files/us-fagin/symb85.pdf
 
     .. [2] D. J. Jeffrey and A. D. Rich, 'Symplifying Square Roots of Square Roots
            by Denesting' (available at http://www.cybertester.com/data/denest.pdf)
