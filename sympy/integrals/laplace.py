@@ -1054,12 +1054,11 @@ def _inverse_laplace_transform_integration(F, s, t_, plane, simplify=True):
     if f is None:
         f = meijerint_inversion(F, s, t)
         if f is None:
-            raise IntegralTransformError('Inverse Laplace', f, '')
+            return None
         if f.is_Piecewise:
             f, cond = f.args[0]
             if f.has(Integral):
-                raise IntegralTransformError('Inverse Laplace', f,
-                                     'inversion integral of unrecognised form.')
+                return None
         else:
             cond = S.true
         f = f.replace(Piecewise, pw_simp)
@@ -1161,12 +1160,13 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
                 c = check.xreplace(ma)
             except TypeError:
                 continue
-            if c:
+            if c is S.true:
                 debug('_inverse_laplace_apply_simple_rules match:')
                 debugf('      f:    %s', (f,))
                 debugf('      rule: %s o---o %s', (s_dom, t_dom))
                 debugf('      ma:   %s', (ma,))
                 return Heaviside(t)*t_dom.xreplace(ma).subs({t_: t}), S.true
+
     return None
 
 
@@ -1327,8 +1327,8 @@ def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True, dorational=True
 
     for term in terms:
         k, f = term.as_independent(s_, as_Add=False)
-        if dorational and term.is_rational_function(s_) and \
-            (r := _inverse_laplace_rational(f, s_, t_, plane, simplify)) is not None:
+        if (dorational and term.is_rational_function(s_) and \
+            (r := _inverse_laplace_rational(f, s_, t_, plane, simplify)) is not None):
             pass
         elif (r := _inverse_laplace_apply_simple_rules(f, s_, t_)) is not None:
             pass
