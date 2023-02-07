@@ -3319,7 +3319,7 @@ def gaussian_reduce(w, a, b):
     ==========
 
     .. [1] Gaussian lattice Reduction [online]. Available:
-           http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
+           https://web.archive.org/web/20201021115213/http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
     .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
            Mathematics of Computation, Volume 00, Number 0.
     """
