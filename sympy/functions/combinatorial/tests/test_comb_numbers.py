@@ -1,5 +1,4 @@
 import string
-from collections import Counter
 
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
@@ -802,7 +801,7 @@ def test_motzkin():
 
 
 def test_nD_derangements():
-    from sympy.utilities.iterables import (partitions,
+    from sympy.utilities.iterables import (partitions, multiset,
         multiset_derangements, multiset_permutations)
     from sympy.functions.combinatorial.numbers import nD
 
@@ -814,7 +813,7 @@ def test_nD_derangements():
             for i in range(v):
                 s.extend([it]*k)
                 it += 1
-        ms = dict(Counter(s).items())
+        ms = multiset(s)
         c1 = sum(1 for i in multiset_permutations(s) if
             all(i != j for i, j in zip(i, s)))
         assert c1 == nD(ms) == nD(ms, 0) == nD(ms, 1)
