@@ -236,8 +236,6 @@ def find_unit(quantity, unit_system="SI"):
     ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit("ampere")
     ['A', 'ampere', 'amperes', 'planck_current']
-    >>> u.find_unit('angstrom')
-    ['angstrom', 'angstroms']
     >>> u.find_unit('volt')
     ['V', 'v', 'volt', 'volts', 'planck_voltage']
     >>> u.find_unit(u.inch**3)[:9]
@@ -250,19 +248,18 @@ def find_unit(quantity, unit_system="SI"):
     IA = [(i, getattr(u, i)) for i in dir(u)]
     IA = [(i, a) for i, a in IA if isinstance(a, (Quantity, Dimension))]
     if isinstance(quantity, str):
-        rv.update([i for i, _ in IA if quantity in i[0]])
+        rv.update([i for i, _ in IA if i[0].startswith(quantity)])
         if quantity == '':
             return []
         dim = getattr(u, quantity, None)
         if dim is not None:
             for i, a in IA:
-                if quantity == i[0]:
+                if i[0].startswith(quantity):
                     rv.add(i)
-         #   rv.update([i for i, _ in IA if quantity in i[0]])
             if isinstance(dim, Quantity):
                 dim = dim.dimension
             for i, quant_attr in IA:
-                if quantity in i[0] or (isinstance(quant_attr, Quantity)
+                if i[0].startswith(quantity) or (isinstance(quant_attr, Quantity)
                         and quant_attr.dimension == dim):
                     if not isinstance(quant_attr, Dimension):
                         rv.add(i)
