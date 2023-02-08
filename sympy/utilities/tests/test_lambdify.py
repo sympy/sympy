@@ -1723,14 +1723,14 @@ def test_23536_lambdify_cse_dummy():
 def test_24673_recursion_error_108k_ops():
     class adjusted_recursion_limit:
         def __init__(self, new_limit):
-            self._ori_limit = sys.gettrecursionlimit()
+            self._ori_limit = sys.getrecursionlimit()
             self._new_limit = new_limit
 
         def __enter__(self):
-            sys.setrecursionlimit(self.new_limit)
+            sys.setrecursionlimit(self._new_limit)
 
         def __exit__(self, exc_t, exc_v, exc_tb):
-            sys.setrecursionlimit(self.new_limit)
+            sys.setrecursionlimit(self._ori_limit)
 
     # TODO, reproduce using a smaller expression. (this takes too long...)
     a, b, c, x, y, z = symbols('a, b, c, x, y, z')

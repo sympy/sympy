@@ -94,6 +94,8 @@ class AbstractPythonCodePrinter(CodePrinter):
         fully_qualified_modules=True,
         contract=False,
         standard='python3',
+        num_terms_sum=42,
+        num_factors_prod=42
     )
 
     def __init__(self, settings=None):
@@ -191,7 +193,21 @@ class AbstractPythonCodePrinter(CodePrinter):
         # to floats essentially, and arguably a user interested in maximizing precision
         # is already better served by the mpmath printer. And finally, subclassing and
         # overriding this remains an option.
-        return 'sum([%s])' % ', '.join(map(self._print, expr.args))
+        if len(expr.args) >= self._settings['num_terms_sum']:
+            return 'sum([%s], start=%s)' % (
+                ', '.join(map(self._print, expr.args[1:])),
+                self._print(expr.args[0])
+            )
+        return super()._print_Add(expr)
+
+    def _print_Mul(self, expr):
+        if len(expr.args) >= self._settings['num_factors_prod']:
+            return '%s([%s], start=%s)' % (
+                self._module_format('math.prod'),  # math.prod available since Python 3.8
+                ', '.join(map(self._print, expr.args[1:])),
+                self._print(expr.args[0])
+            )
+        return super()._print_Mul(expr)
 
     def _print_NaN(self, expr):
         return "float('nan')"
@@ -683,17 +699,27 @@ class MpmathPrinter(PythonCodePrinter):
     ))
     _kc = {k: 'mpmath.'+v for k, v in _known_constants_mpmath.items()}
 
+    _default_settings = dict(
+        PythonCodePrinter._default_settings,
+        num_terms_sum=3,
+        num_factors_prod=3
+    )
+
     def _print_Add(self, e):
-        return '{func}([{args}])'.format(
-            func=self._module_format('mpmath.fsum'),
-            args=', '.join(map(self._print, e.args))
-        )
+        if len(e.args) >= self._settings['num_terms_sum']:
+            return '{func}([{args}])'.format(
+                func=self._module_format('mpmath.fsum'),
+                args=', '.join(map(self._print, e.args))
+            )
+        return super()._print_Add(e)
 
     def _print_Mul(self, e):
-        return '{func}([{args}])'.format(
-            func=self._module_format('mpmath.fprod'),
-            args=', '.join(map(self._print, e.args))
-        )
+        if len(e.args) >= self._settings['num_factors_prod']:
+            return '{func}([{args}])'.format(
+                func=self._module_format('mpmath.fprod'),
+                args=', '.join(map(self._print, e.args))
+            )
+        return super()._print_Mul(e)
 
     def _print_Float(self, e):
         # XXX: This does not handle setting mpmath.mp.dps. It is assumed that

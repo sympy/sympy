@@ -64,12 +64,16 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         return '({},)'.format(delimiter.join(self._print(item) for item in seq))
 
     def _print_Add(self, e):
-        return '{}({})'.format(self._module_format(self._module + '.sum'),
-            self._print_seq(e.args))
+        if len(e.args) >= self._settings['num_terms_sum']:
+            return '{}({})'.format(self._module_format(self._module + '.sum'),
+                                   self._print_seq(e.args))
+        return super()._print_Add(e)
 
     def _print_Mul(self, e):
-        return '{}({})'.format(self._module_format(self._module + '.prod'),
-            self._print_seq(e.args))
+        if len(e.args) >= self._settings['num_factors_prod']:
+            return '{}({})'.format(self._module_format(self._module + '.prod'),
+                                   self._print_seq(e.args))
+        return super()._print_Mul(e)
 
     def _print_MatMul(self, expr):
         "Matrix multiplication printer"
