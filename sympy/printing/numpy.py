@@ -63,6 +63,14 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
         delimiter=', '
         return '({},)'.format(delimiter.join(self._print(item) for item in seq))
 
+    def _print_Add(self, e):
+        return '{}({})'.format(self._module_format(self._module + '.sum'),
+            self._print_seq(e.args))
+
+    def _print_Mul(self, e):
+        return '{}({})'.format(self._module_format(self._module + '.prod'),
+            self._print_seq(e.args))
+
     def _print_MatMul(self, expr):
         "Matrix multiplication printer"
         if expr.as_coeff_matrices()[0] is not S.One:

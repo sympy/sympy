@@ -186,6 +186,13 @@ class AbstractPythonCodePrinter(CodePrinter):
                 self._expand_reduce_binary_op(args[Nhalf:]),
             )
 
+    def _print_Add(self, expr):
+        # An alternative could be to use `math.fsum`, but that would limit arguments
+        # to floats essentially, and arguably a user interested in maximizing precision
+        # is already better served by the mpmath printer. And finally, subclassing and
+        # overriding this remains an option.
+        return 'sum([%s])' % ', '.join(map(self._print, expr.args))
+
     def _print_NaN(self, expr):
         return "float('nan')"
 
@@ -675,6 +682,18 @@ class MpmathPrinter(PythonCodePrinter):
         [(k, 'mpmath.' + v) for k, v in _known_functions_mpmath.items()]
     ))
     _kc = {k: 'mpmath.'+v for k, v in _known_constants_mpmath.items()}
+
+    def _print_Add(self, e):
+        return '{func}([{args}])'.format(
+            func=self._module_format('mpmath.fsum'),
+            args=', '.join(map(self._print, e.args))
+        )
+
+    def _print_Mul(self, e):
+        return '{func}([{args}])'.format(
+            func=self._module_format('mpmath.fprod'),
+            args=', '.join(map(self._print, e.args))
+        )
 
     def _print_Float(self, e):
         # XXX: This does not handle setting mpmath.mp.dps. It is assumed that

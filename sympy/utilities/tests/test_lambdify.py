@@ -1,7 +1,7 @@
 from itertools import product
 import math
 import inspect
-
+import sys
 
 
 import mpmath
@@ -1719,3 +1719,23 @@ def test_23536_lambdify_cse_dummy():
     eval_expr = lambdify(((f, g), z), expr, cse=True)
     ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
     assert ans == 300.0  # not a list and value is 300
+
+def test_24673_recursion_error_108k_ops():
+    class adjusted_recursion_limit:
+        def __init__(self, new_limit):
+            self._ori_limit = sys.gettrecursionlimit()
+            self._new_limit = new_limit
+
+        def __enter__(self):
+            sys.setrecursionlimit(self.new_limit)
+
+        def __exit__(self, exc_t, exc_v, exc_tb):
+            sys.setrecursionlimit(self.new_limit)
+
+    # TODO, reproduce using a smaller expression. (this takes too long...)
+    a, b, c, x, y, z = symbols('a, b, c, x, y, z')
+    expr1 = a*x**2 + a*x**5 + b*sqrt(y) + b*y**4 + c*z + c*(x - y - z)**3
+    expr2 = c*x**2 + a*x**5 + b*sqrt(y) + b*y**4 + c*z + c*(x - y - z)**3
+    expr3 = ((expr1*expr2)**3).expand()
+    with adjusted_recursion_limit(1000):
+        lambdify((a, b, c, x, y, z), expr3)
