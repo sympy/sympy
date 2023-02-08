@@ -41,7 +41,6 @@ git_whitelist = {
     '.github/workflows/docs-preview.yml',
     '.github/workflows/checkconflict.yml',
     '.github/workflows/checkBrokenLinks.yml',
-    '.github/workflows/links-fail-fast.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
