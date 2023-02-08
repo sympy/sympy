@@ -1279,8 +1279,14 @@ def _eval_sum_hyper(f, i, a):
         return None
 
     if isinstance(hs, Float):
-        from sympy.simplify.simplify import nsimplify
-        hs = nsimplify(hs)
+         from sympy.simplify.simplify import nsimplify
+         hs = nsimplify(hs)
+    if hs.args:
+        for arg in hs.args:
+            if isinstance(arg, Float):
+                from sympy.simplify.simplify import nsimplify
+                hs = nsimplify(hs)
+                break
 
     from sympy.simplify.combsimp import combsimp
     from sympy.simplify.hyperexpand import hyperexpand
