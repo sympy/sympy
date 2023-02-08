@@ -1,6 +1,5 @@
 from textwrap import dedent
 from itertools import islice, product
-from collections import Counter
 
 from sympy.core.basic import Basic
 from sympy.core.numbers import Integer
@@ -14,7 +13,7 @@ from sympy.utilities.iterables import (
     cartes, common_prefix, common_suffix, connected_components, dict_merge,
     filter_symbols, flatten, generate_bell, generate_derangements,
     generate_involutions, generate_oriented_forest, group, has_dups, ibin,
-    iproduct, kbins, minlex,  multiset_combinations,
+    iproduct, kbins, minlex, multiset, multiset_combinations,
     multiset_partitions, multiset_permutations, necklaces, numbered_symbols,
     partitions, permutations, postfixes,
     prefixes, reshape, rotate_left, rotate_right, runs, sift,
@@ -390,7 +389,7 @@ def test_multiset_combinations():
            'iss', 'mpp', 'mps', 'mss', 'pps', 'pss', 'sss']
     assert [''.join(i) for i in
             list(multiset_combinations('mississippi', 3))] == ans
-    M = dict(Counter('mississippi').items())
+    M = multiset('mississippi')
     assert [''.join(i) for i in
             list(multiset_combinations(M, 3))] == ans
     assert [''.join(i) for i in multiset_combinations(M, 30)] == []
@@ -405,8 +404,7 @@ def test_multiset_permutations():
     ans = ['abby', 'abyb', 'aybb', 'baby', 'bayb', 'bbay', 'bbya', 'byab',
            'byba', 'yabb', 'ybab', 'ybba']
     assert [''.join(i) for i in multiset_permutations('baby')] == ans
-    M = dict(Counter(('baby')).items())
-    assert [''.join(i) for i in multiset_permutations(M)] == ans
+    assert [''.join(i) for i in multiset_permutations(multiset('baby'))] == ans
     assert list(multiset_permutations([0, 0, 0], 2)) == [[0, 0]]
     assert list(multiset_permutations([0, 2, 1], 2)) == [
         [0, 1], [0, 2], [1, 0], [1, 2], [2, 0], [2, 1]]

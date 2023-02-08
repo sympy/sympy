@@ -16,7 +16,6 @@ IdealSoliton
 RobustSoliton
 """
 
-from collections import Counter
 from sympy.core.cache import cacheit
 from sympy.core.function import Lambda
 from sympy.core.numbers import (Integer, Rational)
@@ -35,6 +34,7 @@ from sympy.functions.special.beta_functions import beta as beta_fn
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
 from sympy.stats.rv import _value_check, Density, is_random
+from sympy.utilities.iterables import multiset
 from sympy.utilities.misc import filldedent
 
 
@@ -131,7 +131,7 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
         # not using _value_check since there is a
         # suggestion for the user
         if len(set(args)) != len(args):
-            weights = dict(Counter(args).items())
+            weights = multiset(args)
             n = Integer(len(args))
             for k in weights:
                 weights[k] /= n

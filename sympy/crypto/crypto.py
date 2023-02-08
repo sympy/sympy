@@ -12,7 +12,6 @@ and the Diffie-Hellman key exchange.
 
 """
 
-from collections import Counter
 from string import whitespace, ascii_uppercase as uppercase, printable
 from functools import reduce
 import warnings
@@ -31,7 +30,7 @@ from sympy.ntheory.modular import crt
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import as_int, filldedent, translate
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import uniq, multiset
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -1542,7 +1541,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
 
     n = reduce(lambda i, j: i*j, primes)
 
-    tally = dict(Counter(primes).items())
+    tally = multiset(primes)
     if all(v == 1 for v in tally.values()):
         multiple = list(tally.keys())
         phi = _totient._from_distinct_primes(*multiple)

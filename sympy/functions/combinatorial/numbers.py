@@ -7,7 +7,7 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 from math import prod
-from collections import Counter, defaultdict
+from collections import defaultdict
 from typing import Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
@@ -27,7 +27,7 @@ from sympy.ntheory.primetest import isprime, is_square
 from sympy.polys.appellseqs import bernoulli_poly, euler_poly, genocchi_poly
 from sympy.utilities.enumerative import MultisetPartitionTraverser
 from sympy.utilities.exceptions import sympy_deprecation_warning
-from sympy.utilities.iterables import multiset_derangements, iterable
+from sympy.utilities.iterables import multiset, multiset_derangements, iterable
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 
@@ -2507,7 +2507,7 @@ def nD(i=None, brute=None, *, n=None, m=None):
             return S.Zero
         if type(i) is not dict:
             s = list(i)
-            ms = dict(Counter(s).items())
+            ms = multiset(s)
         elif type(i) is dict:
             all(ok(_) for _ in i.values())
             ms = {k: v for k, v in i.items() if v}
@@ -2515,7 +2515,7 @@ def nD(i=None, brute=None, *, n=None, m=None):
         if not ms:
             return S.Zero
         N = sum(ms.values())
-        counts = dict(Counter(ms.values()).items())
+        counts = multiset(ms.values())
         nkey = len(ms)
     elif n is not None:
         ok(n)
@@ -2529,7 +2529,7 @@ def nD(i=None, brute=None, *, n=None, m=None):
         elif iterable(m) or isinstance(m, str):
             m = list(m)
             all(ok(i) for i in m)
-            counts = dict(Counter([i for i in m if i]).items())
+            counts = multiset([i for i in m if i])
         else:
             raise TypeError('expecting iterable')
         if not counts:

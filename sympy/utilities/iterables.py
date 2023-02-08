@@ -317,10 +317,7 @@ def multiset(seq):
     group
 
     """
-    rv = defaultdict(int)
-    for s in seq:
-        rv[s] += 1
-    return dict(rv)
+    return dict(Counter(seq).items())
 
 
 
@@ -1252,7 +1249,7 @@ def multiset_combinations(m, n, g=None):
             if n > N:
                 return
             try:
-                m = dict(Counter(m).items())
+                m = multiset(m)
                 g = [(k, m[k]) for k in ordered(m)]
             except TypeError:
                 m = list(ordered(m))
@@ -2194,7 +2191,7 @@ def multiset_derangements(s):
     # create multiset dictionary of hashable elements or else
     # remap elements to integers
     try:
-        ms = dict(Counter(s).items())
+        ms = multiset(s)
     except TypeError:
         # give each element a canonical integer value
         key = dict(enumerate(ordered(uniq(s))))
@@ -2406,7 +2403,7 @@ def random_derangement(t, choice=None, strict=True):
         '''
         shuffle(rv)
         return rv[:n]
-    ms = dict(Counter(t).items())
+    ms = multiset(t)
     tot = len(t)
     ms = sorted(ms.items(), key=lambda x: x[1])
   # if there are not enough spaces for the most
