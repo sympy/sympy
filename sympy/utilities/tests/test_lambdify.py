@@ -2,6 +2,8 @@ from itertools import product
 import math
 import inspect
 
+
+
 import mpmath
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
@@ -48,6 +50,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.exceptions import ignore_warnings
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import uppergamma, lowergamma
+
 
 import sympy
 
@@ -1685,6 +1688,26 @@ def test_lambdify_cse():
 def test_deprecated_set():
     with warns_deprecated_sympy():
         lambdify({x, y}, x + y)
+
+def test_issue_13881():
+    if not numpy:
+        skip("numpy not installed.")
+
+    X = MatrixSymbol('X', 3, 1)
+
+    f = lambdify(X, X.T*X, 'numpy')
+    assert f(numpy.array([1, 2, 3])) == 14
+    assert f(numpy.array([3, 2, 1])) == 14
+
+    f = lambdify(X, X*X.T, 'numpy')
+    assert f(numpy.array([1, 2, 3])) == 14
+    assert f(numpy.array([3, 2, 1])) == 14
+
+    f = lambdify(X, (X*X.T)*X, 'numpy')
+    arr1 = numpy.array([[1], [2], [3]])
+    arr2 = numpy.array([[14],[28],[42]])
+
+    assert numpy.array_equal(f(arr1), arr2)
 
 
 def test_23536_lambdify_cse_dummy():
