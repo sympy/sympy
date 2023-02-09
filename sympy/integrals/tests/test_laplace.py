@@ -8,7 +8,7 @@ from sympy.core.numbers import I, oo, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
 from sympy.simplify.simplify import simplify
-from sympy.functions.elementary.complexes import Abs, re, im
+from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh, coth, asinh
 from sympy.functions.elementary.miscellaneous import sqrt
