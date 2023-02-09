@@ -659,6 +659,7 @@ def test_besselsimp():
     assert besselsimp(x**2* besselj(a,x) + x**3*besselj(a+1, x) + besselj(a+2, x)) == \
     2*a*x*besselj(a + 1, x) + x**3*besselj(a + 1, x) - x**2*besselj(a + 2, x) + 2*x*besselj(a + 1, x) + besselj(a + 2, x)
 
+
 def test_Piecewise():
     e1 = x*(x + y) - y*(x + y)
     e2 = sin(x)**2 + cos(x)**2
@@ -812,6 +813,7 @@ def test_clear_coefficients():
     assert clear_coefficients(-S.Pi, x) == (S.Pi, -x)
     assert clear_coefficients(2 - S.Pi/3, x) == (pi, -3*x + 6)
 
+
 def test_nc_simplify():
     from sympy.simplify.simplify import nc_simplify
     from sympy.matrices.expressions import MatPow, Identity
@@ -865,6 +867,7 @@ def test_nc_simplify():
     assert nc_simplify(expr) == (1-c)**-1
     # commutative expressions should be returned without an error
     assert nc_simplify(2*x**2) == 2*x**2
+
 
 def test_issue_15965():
     A = Sum(z*x**y, (x, 1, a))
@@ -1046,3 +1049,21 @@ def test_issue_22210():
     d = Symbol('d', integer=True)
     expr = 2*Derivative(sin(x), (x, d))
     assert expr.simplify() == expr
+
+
+def test_issue_23518():
+    M = Symbol("M", positive=True, integer=True)
+    N = Symbol("N", positive=True, integer=True)
+
+    expr = M*N >= N
+    expr = expr.simplify()
+    assert expr == True
+
+    # Checks new method isn't stuck in infinite recursion
+    assert (x < sin(x)**2 + cos(x)**2).simplify() == (x < 1)
+
+    # Check other Theorems
+    assert And(x <= y, y <= x).simplify() == Eq(x, y)
+    assert And(x < y, y <= x).simplify() == False
+    assert Or(x <= y, y <= x).simplify() == True
+    assert (N < 1).simplify() == False
