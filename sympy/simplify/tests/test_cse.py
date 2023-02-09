@@ -2,6 +2,7 @@ from functools import reduce
 import itertools
 from operator import add
 
+from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Function
@@ -16,6 +17,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions import Inverse, MatMul
 from sympy.polys.rootoftools import CRootOf
 from sympy.series.order import O
 from sympy.simplify.cse_main import cse
@@ -604,3 +606,26 @@ def test_issue_18991():
 def test_unevaluated_Mul():
     m = [Mul(1, 2, evaluate=False)]
     assert cse(m) == ([], m)
+
+
+def test_cse_matrix_expression_inverse():
+    A = Matrix(symbols('A:4')).reshape(2, 2)
+    x = Inverse(A)
+    cse_expr = cse(x)
+    assert cse_expr == ([], [Inverse(A)])
+
+
+def test_cse_matrix_expression_matmul_inverse():
+    A = Matrix(symbols('A:4')).reshape(2, 2)
+    b = Matrix(symbols('b:2'))
+    x = MatMul(Inverse(A), b)
+    cse_expr = cse(x)
+    assert cse_expr == ([], [x])
+
+
+def test_cse_matrix_expression_matrix_solve():
+    A = ImmutableDenseMatrix(symbols('A:4')).reshape(2, 2)
+    b = ImmutableDenseMatrix(symbols('b:2'))
+    x = MatrixSolve(A, b)
+    cse_expr = cse(x)
+    assert cse_expr == ([], [x])
