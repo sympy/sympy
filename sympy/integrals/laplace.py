@@ -592,7 +592,9 @@ def _laplace_trig_split(fn):
     trigs = [S.One]
     other = [S.One]
     for term in Mul.make_args(fn):
-        if term.has(sin) or term.has(cos) or term.has(sinh) or term.has(cosh):
+        if (
+                term.has(sin) or term.has(cos) or term.has(sinh) or
+                term.has(cosh) or term.has(exp)):
             trigs.append(term)
         else:
             other.append(term)
