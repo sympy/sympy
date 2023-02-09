@@ -11,7 +11,7 @@ from sympy.core.symbol import symbols, Symbol
 from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
                             SparseMatrix, ImmutableSparseMatrix)
 from sympy.matrices.expressions import (MatrixExpr, MatrixSymbol, MatMul,
-                                        MatAdd, MatPow)
+                                        MatAdd, MatPow, Inverse)
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.polys.rootoftools import RootOf
 from sympy.utilities.iterables import numbered_symbols, sift, \
@@ -522,6 +522,10 @@ def opt_cse(exprs, order='canonical'):
 
         elif isinstance(expr, (Add, MatAdd)):
             adds.add(expr)
+
+        elif isinstance(expr, Inverse):
+            # Do not want to treat `Inverse` as a `MatPow`
+            pass
 
         elif isinstance(expr, (Pow, MatPow)):
             base, exp = expr.base, expr.exp
