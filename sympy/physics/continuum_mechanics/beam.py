@@ -1725,8 +1725,6 @@ class Beam:
         point of the beam. Calculate the I.L.D. equations for reaction forces
         under the effect of a moving load of magnitude 1kN.
 
-        .. image:: ildreaction.png
-
         Using the sign convention of downwards forces being positive.
 
         .. plot::
@@ -1875,8 +1873,6 @@ class Beam:
         of 8 meters. Calculate the I.L.D. equations for Shear at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
 
-        .. image:: ildshear.png
-
         Using the sign convention of downwards forces being positive.
 
         .. plot::
@@ -1935,8 +1931,6 @@ class Beam:
         below the beam, one at the starting point and another at a distance
         of 8 meters. Plot the I.L.D. for Shear at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
-
-        .. image:: ildshear.png
 
         Using the sign convention of downwards forces being positive.
 
@@ -2006,8 +2000,6 @@ class Beam:
         of 8 meters. Calculate the I.L.D. equations for Moment at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
 
-        .. image:: ildshear.png
-
         Using the sign convention of downwards forces being positive.
 
         .. plot::
@@ -2065,8 +2057,6 @@ class Beam:
         below the beam, one at the starting point and another at a distance
         of 8 meters. Plot the I.L.D. for Moment at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
-
-        .. image:: ildshear.png
 
         Using the sign convention of downwards forces being positive.
 
