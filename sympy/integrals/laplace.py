@@ -592,9 +592,7 @@ def _laplace_trig_split(fn):
     trigs = [S.One]
     other = [S.One]
     for term in Mul.make_args(fn):
-        if (
-                term.has(sin) or term.has(cos) or term.has(sinh) or
-                term.has(cosh) or term.has(exp)):
+        if term.has(sin, cos, sinh, cosh, exp):
             trigs.append(term)
         else:
             other.append(term)
@@ -724,40 +722,42 @@ def _laplace_trig_ltex(xm, t, s):
 
     while len(xm) > 0:
         t1 = xm.pop()
-        ii = [None, None, None, None]  # None, -im, -re, -im and -re
+        i_imagsym = None
+        i_realsym = None
+        i_pointsym = None
         for i in range(len(xm)):
             realsym = re(t1['a']) == -re(xm[i]['a'])
             imagsym = im(t1['a']) == -im(xm[i]['a'])
             if (
                     realsym and imagsym
                     and not re(t1['a']) == 0 and not im(t1['a']) == 0):
-                ii[3] = i
+                i_pointsym = i
             elif realsym and not re(t1['a']) == 0:
-                ii[2] = i
+                i_realsym = i
             elif imagsym and not im(t1['a']) == 0:
-                ii[1] = i
-        debug('    ii =', ii)
-        if sum(1 for x in ii if x is None) == 1:
+                i_imagsym = i
+        if not (i_imagsym is None or i_realsym is None or i_pointsym is None):
             results.append(
                 _quadpole(t1['a'], t1['k'],
-                          xm[ii[1]]['k'], xm[ii[2]]['k'], xm[ii[3]]['k'], s))
+                          xm[i_imagsym]['k'], xm[i_realsym]['k'],
+                          xm[i_pointsym]['k'], s))
             planes.append(Abs(re(t1['a'])))
-            ii = ii[1:]
-            ii.sort(reverse=True)
-            for i in ii:
+            indices_to_pop = [i_imagsym, i_realsym, i_pointsym]
+            indices_to_pop.sort(reverse=True)
+            for i in indices_to_pop:
                 xm.pop(i)
-        elif ii[1] is not None:
-            results.append(_ccpole(t1['a'], t1['k'], xm[ii[1]]['k'], s))
+        elif i_imagsym is not None:
+            results.append(_ccpole(t1['a'], t1['k'], xm[i_imagsym]['k'], s))
             planes.append(re(t1['a']))
-            xm.pop(ii[1])
-        elif ii[2] is not None:
-            results.append(_rspole(t1['a'], t1['k'], xm[ii[2]]['k'], s))
+            xm.pop(i_imagsym)
+        elif i_realsym is not None:
+            results.append(_rspole(t1['a'], t1['k'], xm[i_realsym]['k'], s))
             planes.append(Abs(re(t1['a'])))
-            xm.pop(ii[2])
-        elif ii[3] is not None:
-            results.append(_sypole(t1['a'], t1['k'], xm[ii[3]]['k'], s))
+            xm.pop(i_realsym)
+        elif i_pointsym is not None:
+            results.append(_sypole(t1['a'], t1['k'], xm[i_pointsym]['k'], s))
             planes.append(Abs(re(t1['a'])))
-            xm.pop(ii[3])
+            xm.pop(i_pointsym)
         else:
             results.append(_simplepole(t1['a'], t1['k'], s))
             planes.append(re(t1['a']))
@@ -773,7 +773,7 @@ def _laplace_rule_trig(fn, t_, s, doit=True, **hints):
     """
     t = Dummy('t', real=True)
 
-    if not (fn.has(sin) or fn.has(cos) or fn.has(sinh) or fn.has(cosh)):
+    if not fn.has(sin, cos, sinh, cosh):
         return None
 
     debugf('_laplace_rule_trig: (%s, %s, %s)', (fn, t_, s))
