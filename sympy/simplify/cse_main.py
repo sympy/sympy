@@ -639,7 +639,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
             return expr
 
         if iterable(expr):
-            new_args = [_rebuild(arg) for arg in expr]
+            new_args = [_rebuild(arg) for arg in expr.args]
             return expr.func(*new_args)
 
         if expr in subs:
