@@ -10,7 +10,7 @@ from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.complexes import (
-    re, im, arg, Abs, polar_lift, periodic_argument, conjugate)
+    re, im, arg, Abs, polar_lift, periodic_argument)
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, asinh
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
@@ -368,7 +368,7 @@ def _laplace_build_rules():
     (log(a*t)**2, (log(exp(S.EulerGamma)*s/a)**2+pi**2/6)/s,
      a>0, S.Zero, dco), # 4.6.13
     (sin(omega*t), omega/(s**2+omega**2),
-     S.true, Abs(im(omega)), dco), # 4,7,1
+      S.true, Abs(im(omega)), dco), # 4,7,1
     (Abs(sin(omega*t)), omega/(s**2+omega**2)*coth(pi*s/2/omega),
      omega>0, S.Zero, dco), # 4.7.2
     (sin(omega*t)/t, atan(omega/s),
@@ -382,27 +382,17 @@ def _laplace_build_rules():
     (sin(2*sqrt(a*t))/t, pi*erf(sqrt(a/s)),
      S.true, S.Zero, dco), # 4.7.34
     (cos(omega*t), s/(s**2+omega**2),
-     S.true, Abs(im(omega)), dco), # 4.7.43
+      S.true, Abs(im(omega)), dco), # 4.7.43
     (cos(omega*t)**2, (s**2+2*omega**2)/(s**2+4*omega**2)/s,
      S.true, 2*Abs(im(omega)), dco), # 4.7.45
     (sqrt(t)*cos(2*sqrt(a*t)), sqrt(pi)/2*s**(-S(5)/2)*(s-2*a)*exp(-a/s),
      S.true, S.Zero, dco), # 4.7.66
     (cos(2*sqrt(a*t))/sqrt(t), sqrt(pi/s)*exp(-a/s),
      S.true, S.Zero, dco), # 4.7.67
-    (sin(a*t)*sin(b*t), 2*a*b*s/(s**2+(a+b)**2)/(s**2+(a-b)**2),
-     S.true, Abs(im(a))+Abs(im(b)), dco), # 4.7.78
-    (cos(a*t)*sin(b*t), b*(s**2-a**2+b**2)/(s**2+(a+b)**2)/(s**2+(a-b)**2),
-     S.true, Abs(im(a))+Abs(im(b)), dco), # 4.7.79
-    (cos(a*t)*cos(b*t), s*(s**2+a**2+b**2)/(s**2+(a+b)**2)/(s**2+(a-b)**2),
-     S.true, Abs(im(a))+Abs(im(b)), dco), # 4.7.80
     (sinh(a*t), a/(s**2-a**2),
      S.true, Abs(re(a)), dco), # 4.9.1
     (cosh(a*t), s/(s**2-a**2),
      S.true, Abs(re(a)), dco), # 4.9.2
-    (sinh(a*t)**2, 2*a**2/(s**3-4*a**2*s),
-     S.true, 2*Abs(re(a)), dco), # 4.9.3
-    (cosh(a*t)**2, (s**2-2*a**2)/(s**3-4*a**2*s),
-     S.true, 2*Abs(re(a)), dco), # 4.9.4
     (sinh(a*t)/t, log((s+a)/(s-a))/2,
      S.true, Abs(re(a)), dco), # 4.9.12
     (t**n*sinh(a*t), gamma(n+1)/2*((s-a)**(-n-1)-(s+a)**(-n-1)),
@@ -593,118 +583,222 @@ def _laplace_rule_delta(f, t, s):
     return None
 
 
-def _laplace_rule_trig(fn, t_, s, doit=True, **hints):
+def _laplace_trig_split(fn):
     """
-    This rule covers trigonometric factors by splitting everything into a
-    sum of exponential functions and collecting complex conjugate poles and
-    real symmetric poles.
+    Helper function for `_laplace_rule_trig`.  This function returns two terms
+    `f` and `g`.  `f` contains all product terms with sin, cos, sinh, cosh in
+    them; `g` contains everything else.
     """
-
-    t = Dummy('t', real=True)
-    p = Wild('p', exclude=[t])
-    a = Wild('a', exclude=[t])
-    m = Wild('m')
-    k = Wild('k', exclude=[t])
-
-    def _ccpole(a, b, c, s):
-        a_r, a_i = re(a), im(a)
-        n = ((I*a_i*b - I*a_i*c - a_r*b - a_r*c).rewrite(cos)
-             + s*(b + c).rewrite(cos))
-        d = a_i**2 + a_r**2 + 2*a_r*s + s**2
-        return n/d
-
-    def _rspole(a, b, c, s):
-        n = (a*b - a*c).rewrite(cos) + s*(b + c).rewrite(cos)
-        d = -a**2 + s**2
-        return n/d
-
-    if not (fn.has(sin) or fn.has(cos) or fn.has(sinh) or fn.has(cosh)):
-        return None
-
-    debugf('_laplace_rule_trig: (%s, %s, %s)', (fn, t_, s))
-
-    fna = Mul.make_args(fn.subs(t_, t))
     trigs = [S.One]
     other = [S.One]
-    for term in fna:
+    for term in Mul.make_args(fn):
         if term.has(sin) or term.has(cos) or term.has(sinh) or term.has(cosh):
             trigs.append(term)
         else:
             other.append(term)
     f = Mul(*trigs)
     g = Mul(*other)
+    return f, g
 
-    # Convert the product of trigonometric functions to a sum of exponentials
+
+def _laplace_trig_expsum(f, t):
+    """
+    Helper function for `_laplace_rule_trig`.  This function expects the `f`
+    from `_laplace_trig_split`.  It returns two lists `xm` and `xn`.  `xm` is
+    a list of dictionaries with keys `k` and `a` representing a function
+    `k*exp(a*t)`.  `xn` is a list of all terms that cannot be brought into
+    that form, which may happen, e.g., when a trigonometric function has
+    another function in its argument.
+    """
+    m = Wild('m')
+    p = Wild('p', exclude=[t])
+    xm = []
+    xn = []
+
     x1 = f.rewrite(exp).expand()
 
-    xm = []  # all p*exp(a*t+b) matches
-    xn = []  # expressions that do not match -> LT
-    nc = []  # remaining matches
-    planes = [S.NegativeInfinity]  # All convergence planes
-    conditions = [True]  # All convergenge conditions
-    results = []
-
     for term in Add.make_args(x1):
+        if not term.has(t):
+            xm.append({'k': term, 'a': 0})
+            continue
+        term = term.powsimp(combine='exp')
         if (r := term.match(p*exp(m))) is not None:
-            mc = r[m].as_poly(t).all_coeffs()
-            if len(mc) == 2:
-                xm.append({k: r[p]*exp(mc[1]), a: mc[0]})
+            if (mp := r[m].as_poly(t)) is not None:
+                mc = mp.all_coeffs()
+                if len(mc) == 2:
+                    xm.append({'k': r[p]*exp(mc[1]), 'a': mc[0]})
+                else:
+                    xn.append(term)
             else:
                 xn.append(term)
         else:
             xn.append(term)
+    return xm, xn
+
+
+def _laplace_trig_ltex(xm, t, s):
+    """
+    Helper function for `_laplace_rule_trig`.  This function takes the list of
+    exponentials `xm` from `_laplace_trig_expsum` and simplifies complex
+    conjugate and real symmetric poles.  It returns the result as a sum and
+    the convergence plane.
+    """
+    results = []
+    planes = []
+
+    def _simpc(coeffs):
+        nc = coeffs.copy()
+        debug('-------------', nc)
+        for k in range(len(nc)):
+            ri = nc[k].as_real_imag()
+            if ri[0].has(im):
+                nc[k] = nc[k].rewrite(cos)
+            else:
+                nc[k] = (ri[0] + I*ri[1]).rewrite(cos)
+        debug('-------------', nc)
+        return nc
+
+    def _quadpole(a, k0, k1, k2, k3, s):
+        a_r, a_i = re(a), im(a)
+        nc = [
+            k0 + k1 + k2 + k3,
+            a*(k0 + k1 - k2 - k3) - 2*I*a_i*k1 + 2*I*a_i*k2,
+            (
+                a**2*(-k0 - k1 - k2 - k3) +
+                a*(4*I*a_i*k0 + 4*I*a_i*k3) +
+                4*a_i**2*k0 + 4*a_i**2*k3),
+            (
+                a**3*(-k0 - k1 + k2 + k3) +
+                a**2*(4*I*a_i*k0 + 2*I*a_i*k1 - 2*I*a_i*k2 - 4*I*a_i*k3) +
+                a*(4*a_i**2*k0 - 4*a_i**2*k3))
+            ]
+        dc = [
+            S.One, S.Zero, 2*a_i**2 - 2*a_r**2,
+            S.Zero, a_i**4 + 2*a_i**2*a_r**2 + a_r**4]
+        n = Add(
+            *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
+        d = Add(
+            *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
+        debugf('        quadpole: (%s) / (%s)', (n, d))
+        return n/d
+
+    def _ccpole(a, k0, k1, s):
+        a_r, a_i = re(a), im(a)
+        nc = [k0 + k1, -a*k0 - a*k1 + 2*I*a_i*k0]
+        dc = [S.One, -2*a_r, a_i**2 + a_r**2]
+        n = Add(
+            *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
+        d = Add(
+            *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
+        debugf('        ccpole: (%s) / (%s)', (n, d))
+        return n/d
+
+    def _rspole(a, k0, k2, s):
+        a_r, a_i = re(a), im(a)
+        nc = [k0 + k2, a*k0 - a*k2 - 2*I*a_i*k0]
+        dc = [S.One, -2*I*a_i, -a_i**2 - a_r**2]
+        n = Add(
+            *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
+        d = Add(
+            *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
+        debugf('        rspole: (%s) / (%s)', (n, d))
+        return n/d
+
+    def _sypole(a, k0, k3, s):
+        nc = [k0 + k3, a*(k0 - k3)]
+        dc = [S.One, S.Zero, -a**2]
+        n = Add(
+            *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
+        d = Add(
+            *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
+        debugf('        sypole: (%s) / (%s)', (n, d))
+        return n/d
+
+    def _simplepole(a, k0, s):
+        n = k0
+        d = s - a
+        debugf('        simplepole: (%s) / (%s)', (n, d))
+        return n/d
+
+    while len(xm) > 0:
+        t1 = xm.pop()
+        ii = [None, None, None, None]  # None, -im, -re, -im and -re
+        for i in range(len(xm)):
+            realsym = re(t1['a']) == -re(xm[i]['a'])
+            imagsym = im(t1['a']) == -im(xm[i]['a'])
+            if (
+                    realsym and imagsym
+                    and not re(t1['a']) == 0 and not im(t1['a']) == 0):
+                ii[3] = i
+            elif realsym and not re(t1['a']) == 0:
+                ii[2] = i
+            elif imagsym and not im(t1['a']) == 0:
+                ii[1] = i
+        debug('    ii =', ii)
+        if sum(1 for x in ii if x is None) == 1:
+            results.append(
+                _quadpole(t1['a'], t1['k'],
+                          xm[ii[1]]['k'], xm[ii[2]]['k'], xm[ii[3]]['k'], s))
+            planes.append(Abs(re(t1['a'])))
+            ii = ii[1:]
+            ii.sort(reverse=True)
+            for i in ii:
+                xm.pop(i)
+        elif ii[1] is not None:
+            results.append(_ccpole(t1['a'], t1['k'], xm[ii[1]]['k'], s))
+            planes.append(re(t1['a']))
+            xm.pop(ii[1])
+        elif ii[2] is not None:
+            results.append(_rspole(t1['a'], t1['k'], xm[ii[2]]['k'], s))
+            planes.append(Abs(re(t1['a'])))
+            xm.pop(ii[2])
+        elif ii[3] is not None:
+            results.append(_sypole(t1['a'], t1['k'], xm[ii[3]]['k'], s))
+            planes.append(Abs(re(t1['a'])))
+            xm.pop(ii[3])
+        else:
+            results.append(_simplepole(t1['a'], t1['k'], s))
+            planes.append(re(t1['a']))
+
+    return Add(*results), Max(*planes)
+
+
+def _laplace_rule_trig(fn, t_, s, doit=True, **hints):
+    """
+    This rule covers trigonometric factors by splitting everything into a
+    sum of exponential functions and collecting complex conjugate poles and
+    real symmetric poles.
+    """
+    t = Dummy('t', real=True)
+
+    if not (fn.has(sin) or fn.has(cos) or fn.has(sinh) or fn.has(cosh)):
+        return None
+
+    debugf('_laplace_rule_trig: (%s, %s, %s)', (fn, t_, s))
+
+    f, g = _laplace_trig_split(fn.subs(t_, t))
+    debugf('    f = %s\n    g = %s', (f, g))
+
+    xm, xn = _laplace_trig_expsum(f, t)
+    debugf('    xm = %s\n    xn = %s', (xm, xn))
+
+    if len(xn) > 0:
+        # not implemented yet
+        debug('    --> xn is not empty; giving up.')
+        return None
 
     if not g.has(t):
-        # Search for complex conjugate poles and symmetric real poles. The
-        # order is vital, if we have four poles in a square layout, then
-        # collecting the conjugate-complex poles first always gives simpler
-        # results.
-        while len(xm) > 0:
-            t1 = xm.pop()
-            ii = None
-            for i in range(len(xm)):
-                if xm[i][a] == conjugate(t1[a]):
-                    results.append(_ccpole(t1[a], t1[k], xm[i][k], s))
-                    planes.append(re(t1[a]))
-                    ii = i
-                    break
-                if im(t1[a]) == 0 and re(t1[a]) == -re(xm[i][a]):
-                    results.append(_rspole(t1[a], t1[k], xm[i][k], s))
-                    planes.append(Abs(re(t1[a])))
-                    ii = i
-                    break
-            if ii is not None:
-                xm.pop(ii)
-            else:
-                nc.append(t1)
-
-        for x1 in xn:
-            L, plane, cond = _laplace_transform(x1.subs(t, t_), t_, s)
-            results.append(L)
-            planes.append(plane)
-            conditions.append(cond)
-        lts = {}
-        for x1 in nc:
-            if not x1[a] in lts.keys():
-                lts[x1[a]] = _laplace_transform(
-                    (exp(x1[a]*t)).subs(t, t_), t_, s)
-            L, plane, cond = lts[x1[a]]
-            results.append(x1[k]*L)
-            planes.append(plane)
-            conditions.append(cond)
+        r, p = _laplace_trig_ltex(xm, t, s)
+        return g*r, p, S.true
     else:
-        # Just transform g and make s-shifted copies
+        # Just transform `g` and make frequency-shifted copies
+        planes = []
+        results = []
         G, G_plane, G_cond = _laplace_transform(g, t, s)
-        conditions.append(G_cond)
         for x1 in xm:
-            results.append(x1[k]*G.subs(s, s-x1[a]))
-            planes.append(G_plane+re(x1[a]))
-        for x1 in xn:
-            L, plane, cond = _laplace_transform(x1.subs(t, t_), t_, s)
-            results.append(L)
-            planes.append(plane)
-            conditions.append(cond)
-    return Add(*results).subs(t, t_), Max(*planes), And(*conditions)
+            results.append(x1['k']*G.subs(s, s-x1['a']))
+            planes.append(G_plane+re(x1['a']))
+    return Add(*results).subs(t, t_), Max(*planes), G_cond
 
 
 def _laplace_rule_diff(f, t, s, doit=True, **hints):
