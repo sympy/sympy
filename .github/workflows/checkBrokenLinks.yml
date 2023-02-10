@@ -11,8 +11,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - run: python -m pip install --upgrade pip
-      - run: python -m pip install -r doc/requirements.txt
+      - name: Install python packages
+        run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r doc/requirements.txt
       - name: Scanning for Broken and Redirected Links
         run: cd doc/ && make linkcheck
         continue-on-error: true
@@ -25,3 +27,7 @@ jobs:
           grep 'redirected permanently' doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
           echo "## Links that were 'redirected with Found'" >> $GITHUB_STEP_SUMMARY
           grep 'redirected with Found' doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
+      - name: Log Summary URL
+        run: |
+          GITHUB_WORKFLOW_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          echo "Check log summary here:- $GITHUB_WORKFLOW_URL"
