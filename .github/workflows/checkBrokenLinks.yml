@@ -24,5 +24,5 @@ jobs:
           echo "## Links that were 'redirected with Found'" >> doc/_build/linkcheck/summary.md
           grep 'redirected with Found' doc/_build/linkcheck/output.txt >> doc/_build/linkcheck/summary.md
       - run: |
-          cat doc/_build/linkcheck/summary.md | echo "::warning::"
+          echo doc/_build/linkcheck/summary.md | echo "::warning::"
           cat doc/_build/linkcheck/summary.md >> $GITHUB_STEP_SUMMARY
