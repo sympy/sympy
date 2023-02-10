@@ -729,7 +729,7 @@ def _laplace_trig_ltex(xm, t, s):
         i_pointsym = None
         # The following code checks all remaining poles. If t1 is a pole at
         # a+b*I, then we check for a-b*I, -a+b*I, and -a-b*I, and
-        # assign the respectiove indices to i_imagsym, i_realsym, i_pointsym.
+        # assign the respective indices to i_imagsym, i_realsym, i_pointsym.
         # -a-b*I / i_pointsym only applies if both a and b are != 0.
         for i in range(len(xm)):
             real_eq = t1[re] == xm[i][re]
@@ -749,7 +749,7 @@ def _laplace_trig_ltex(xm, t, s):
         # cc:     a+b*I, a-b*I (a may be zero)
         # quad:   a+b*I, -a+b*I (b may be zero)
         # point:  a+b*I, -a-b*I (a!=0 and b!=0 is needed, but that has been
-        #                        asserted when finiding i_pointsym above.)
+        #                        asserted when finding i_pointsym above.)
         # If none apply, then t1 is a simple pole.
         if (
                 i_imagsym is not None and i_realsym is not None
