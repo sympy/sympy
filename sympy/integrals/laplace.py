@@ -736,7 +736,6 @@ def _laplace_trig_ltex(xm, t, s):
             realsym = t1[re] == -xm[i][re]
             imag_eq = t1[im] == xm[i][im]
             imagsym = t1[im] == -xm[i][im]
-            debug('----', t1, xm[i], realsym, imagsym)
             if realsym and imagsym and t1[re] != 0 and t1[im] != 0:
                 i_pointsym = i
             elif realsym and imag_eq and t1[re] != 0:
