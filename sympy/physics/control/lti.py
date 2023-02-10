@@ -95,10 +95,10 @@ def backward_diff(tf, sample_per):
 
         ========
 
-        >>> from sympy.physics.control.lti import TransferFunction, bilinear
+        >>> from sympy.physics.control.lti import TransferFunction, backward_diff
         >>> from sympy.abc import s, L, R, T
         >>> tf = TransferFunction(1, s*L + R, s)
-        >>> numZ, denZ = bilinear(tf, T)
+        >>> numZ, denZ = backward_diff(tf, T)
         >>> numZ
         [T, 0]
         >>> denZ
