@@ -33,4 +33,4 @@ lti
 
 .. autofunction:: bilinear
 
-.. autofunction::backward_diff
+.. autofunction:: backward_diff
