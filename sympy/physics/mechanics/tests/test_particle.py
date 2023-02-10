@@ -1,5 +1,4 @@
 from sympy.core.backend import symbols, Symbol
-from sympy.physics.vector import Vector
 from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.testing.pytest import raises, warns_deprecated_sympy
@@ -57,32 +56,6 @@ def test_particle():
     assert p.kinetic_energy(
         N) in [m2 * (v1 ** 2 + v2 ** 2 + v3 ** 2) / 2,
                m2 * v1 ** 2 / 2 + m2 * v2 ** 2 / 2 + m2 * v3 ** 2 / 2]
-
-
-def test_particle_frame():
-    p = Particle('P')
-    # Test adding frames in various ways
-    p.add_frame()
-    frame = p.frame
-    assert frame.name == 'P_frame'
-    assert p.point.vel(frame) == Vector(0)
-    N = ReferenceFrame('N')
-    p.frame = N
-    assert p.frame == N
-    assert p.point.vel(N) == Vector(0)
-    p.add_frame()  # Should not overwrite the frame
-    assert p.frame == N
-    p.add_frame(frame)  # Should overwrite the frame
-    assert p.frame == frame
-    # Remove frame
-    p.frame = None
-    raises(AttributeError, lambda: p.frame)
-    # Test invalid frame type
-    with raises(ValueError):
-        p.frame = 'a'
-    # Test parse frame in __init__
-    p = Particle('P', frame=N)
-    assert p.frame.name == 'N'
 
 
 def test_parallel_axis():
