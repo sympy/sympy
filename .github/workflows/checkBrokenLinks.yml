@@ -16,11 +16,13 @@ jobs:
       - run: cd doc/ && make linkcheck
         continue-on-error: true
       - run: |
-          echo "# Broken and Redirected Links" >> $GITHUB_STEP_SUMMARY
-          echo "## Broken Links" >> $GITHUB_STEP_SUMMARY
-          grep broken doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
-          echo "## Links that were 'redirected permanently'" >> $GITHUB_STEP_SUMMARY
-          grep 'redirected permanently' doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
-          echo "## Links that were 'redirected with Found'" >> $GITHUB_STEP_SUMMARY
-          grep 'redirected with Found' doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
-      - run: echo "::warning::" && cat $GITHUB_STEP_SUMMARY
+          echo "# Broken and Redirected Links" >> doc/_build/linkcheck/summary.md
+          echo "## Broken Links" >> doc/_build/linkcheck/summary.md
+          grep broken doc/_build/linkcheck/output.txt >> doc/_build/linkcheck/summary.md
+          echo "## Links that were 'redirected permanently'" >> doc/_build/linkcheck/summary.md
+          grep 'redirected permanently' doc/_build/linkcheck/output.txt >> doc/_build/linkcheck/summary.md
+          echo "## Links that were 'redirected with Found'" >> doc/_build/linkcheck/summary.md
+          grep 'redirected with Found' doc/_build/linkcheck/output.txt >> doc/_build/linkcheck/summary.md
+      - run: |
+          echo "::warning::" && cat doc/_build/linkcheck/summary.md
+          doc/_build/linkcheck/summary.md >> $GITHUB_STEP_SUMMARY
