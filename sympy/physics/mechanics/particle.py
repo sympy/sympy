@@ -42,47 +42,12 @@ class Particle(BodyBase):
     >>> # Or you could change these later
     >>> pa.mass = m
     >>> pa.point = po
-    >>> # It is possible to attach a frame to a Particle if desired
-    >>> pa.add_frame()
-    pa_frame
 
     """
     point = BodyBase.masscenter
 
-    def __init__(self, name, point=None, mass=None, frame=None):
-        super().__init__(name, point, frame, mass)
-
-    def __repr__(self):
-        return (f'{self.__class__.__name__}({repr(self.name)}, masscenter='
-                f'{repr(self.masscenter)}, frame={repr(self._frame)}, mass='
-                f'{repr(self.mass)})')
-
-    @property
-    def frame(self):
-        """The optional ReferenceFrame fixed to the Particle."""
-        if self._frame is None:
-            raise AttributeError("Particle has no attached frame.")
-        return self._frame
-
-    @frame.setter
-    def frame(self, frame):
-        if frame is None:
-            self._frame = None
-            return
-        elif isinstance(frame, ReferenceFrame):
-            self._frame = frame
-        else:
-            raise ValueError('Frame must be an instance of ReferenceFrame.')
-        self.point.set_vel(frame, 0)
-
-    def add_frame(self, frame=None):
-        """Method to attach a frame to the particle."""
-        if frame is None:
-            if self._frame is not None:
-                return self.frame
-            frame = ReferenceFrame(f'{self.name}_frame')
-        self.frame = frame
-        return self.frame
+    def __init__(self, name, point=None, mass=None):
+        super().__init__(name, point, mass)
 
     def linear_momentum(self, frame):
         """Linear momentum of the particle.

@@ -56,9 +56,10 @@ class RigidBody(BodyBase):
 
     def __init__(self, name, masscenter=None, frame=None, mass=None,
                  inertia=None):
+        super().__init__(name, masscenter, mass)
         if frame is None:
             frame = ReferenceFrame(f'{name}_frame')
-        super().__init__(name, masscenter, frame, mass)
+        self.frame = frame
         if inertia is None:
             ixx = Symbol(f'{name}_ixx')
             iyy = Symbol(f'{name}_iyy')
@@ -85,6 +86,21 @@ class RigidBody(BodyBase):
         if not isinstance(F, ReferenceFrame):
             raise TypeError("RigidBody frame must be a ReferenceFrame object.")
         self._frame = F
+
+    @property
+    def x(self):
+        """The basis Vector for the body, in the x direction. """
+        return self.frame.x
+
+    @property
+    def y(self):
+        """The basis Vector for the body, in the y direction. """
+        return self.frame.y
+
+    @property
+    def z(self):
+        """The basis Vector for the body, in the z direction. """
+        return self.frame.z
 
     @property
     def inertia(self):
