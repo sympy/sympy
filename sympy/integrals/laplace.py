@@ -619,14 +619,16 @@ def _laplace_trig_expsum(f, t):
 
     for term in Add.make_args(x1):
         if not term.has(t):
-            xm.append({'k': term, 'a': 0})
+            xm.append({'k': term, 'a': 0, re: 0, im: 0})
             continue
         term = term.powsimp(combine='exp')
         if (r := term.match(p*exp(m))) is not None:
             if (mp := r[m].as_poly(t)) is not None:
                 mc = mp.all_coeffs()
                 if len(mc) == 2:
-                    xm.append({'k': r[p]*exp(mc[1]), 'a': mc[0]})
+                    xm.append({
+                        'k': r[p]*exp(mc[1]), 'a': mc[0],
+                        re: re(mc[0]), im: im(mc[0])})
                 else:
                     xn.append(term)
             else:
@@ -648,18 +650,16 @@ def _laplace_trig_ltex(xm, t, s):
 
     def _simpc(coeffs):
         nc = coeffs.copy()
-        debug('-------------', nc)
         for k in range(len(nc)):
             ri = nc[k].as_real_imag()
             if ri[0].has(im):
                 nc[k] = nc[k].rewrite(cos)
             else:
                 nc[k] = (ri[0] + I*ri[1]).rewrite(cos)
-        debug('-------------', nc)
         return nc
 
-    def _quadpole(a, k0, k1, k2, k3, s):
-        a_r, a_i = re(a), im(a)
+    def _quadpole(t1, k1, k2, k3, s):
+        a, k0, a_r, a_i = t1['a'], t1['k'], t1[re], t1[im]
         nc = [
             k0 + k1 + k2 + k3,
             a*(k0 + k1 - k2 - k3) - 2*I*a_i*k1 + 2*I*a_i*k2,
@@ -682,8 +682,8 @@ def _laplace_trig_ltex(xm, t, s):
         debugf('        quadpole: (%s) / (%s)', (n, d))
         return n/d
 
-    def _ccpole(a, k0, k1, s):
-        a_r, a_i = re(a), im(a)
+    def _ccpole(t1, k1, s):
+        a, k0, a_r, a_i = t1['a'], t1['k'], t1[re], t1[im]
         nc = [k0 + k1, -a*k0 - a*k1 + 2*I*a_i*k0]
         dc = [S.One, -2*a_r, a_i**2 + a_r**2]
         n = Add(
@@ -693,8 +693,8 @@ def _laplace_trig_ltex(xm, t, s):
         debugf('        ccpole: (%s) / (%s)', (n, d))
         return n/d
 
-    def _rspole(a, k0, k2, s):
-        a_r, a_i = re(a), im(a)
+    def _rspole(t1, k2, s):
+        a, k0, a_r, a_i = t1['a'], t1['k'], t1[re], t1[im]
         nc = [k0 + k2, a*k0 - a*k2 - 2*I*a_i*k0]
         dc = [S.One, -2*I*a_i, -a_i**2 - a_r**2]
         n = Add(
@@ -704,7 +704,8 @@ def _laplace_trig_ltex(xm, t, s):
         debugf('        rspole: (%s) / (%s)', (n, d))
         return n/d
 
-    def _sypole(a, k0, k3, s):
+    def _sypole(t1, k3, s):
+        a, k0 = t1['a'], t1['k']
         nc = [k0 + k3, a*(k0 - k3)]
         dc = [S.One, S.Zero, -a**2]
         n = Add(
@@ -714,7 +715,8 @@ def _laplace_trig_ltex(xm, t, s):
         debugf('        sypole: (%s) / (%s)', (n, d))
         return n/d
 
-    def _simplepole(a, k0, s):
+    def _simplepole(t1, s):
+        a, k0 = t1['a'], t1['k']
         n = k0
         d = s - a
         debugf('        simplepole: (%s) / (%s)', (n, d))
@@ -725,42 +727,59 @@ def _laplace_trig_ltex(xm, t, s):
         i_imagsym = None
         i_realsym = None
         i_pointsym = None
+        # The following code checks all remaining poles. If t1 is a pole at
+        # a+b*I, then we check for a-b*I, -a+b*I, and -a-b*I, and
+        # assign the respectiove indices to i_imagsym, i_realsym, i_pointsym.
+        # -a-b*I / i_pointsym only applies if both a and b are != 0.
         for i in range(len(xm)):
-            realsym = re(t1['a']) == -re(xm[i]['a'])
-            imagsym = im(t1['a']) == -im(xm[i]['a'])
-            if (
-                    realsym and imagsym
-                    and not re(t1['a']) == 0 and not im(t1['a']) == 0):
+            real_eq = t1[re] == xm[i][re]
+            realsym = t1[re] == -xm[i][re]
+            imag_eq = t1[im] == xm[i][im]
+            imagsym = t1[im] == -xm[i][im]
+            debug('----', t1, xm[i], realsym, imagsym)
+            if realsym and imagsym and t1[re] != 0 and t1[im] != 0:
                 i_pointsym = i
-            elif realsym and not re(t1['a']) == 0:
+            elif realsym and imag_eq and t1[re] != 0:
                 i_realsym = i
-            elif imagsym and not im(t1['a']) == 0:
+            elif real_eq and imagsym and t1[im] != 0:
                 i_imagsym = i
-        if not (i_imagsym is None or i_realsym is None or i_pointsym is None):
+
+        # The next part looks for four possible pole constellations:
+        # quad:   a+b*I, a-b*I, -a+b*I, -a-b*I
+        # cc:     a+b*I, a-b*I (a may be zero)
+        # quad:   a+b*I, -a+b*I (b may be zero)
+        # point:  a+b*I, -a-b*I (a!=0 and b!=0 is needed, but that has been
+        #                        asserted when finiding i_pointsym above.)
+        # If none apply, then t1 is a simple pole.
+        if (
+                i_imagsym is not None and i_realsym is not None
+                and i_pointsym is not None):
             results.append(
-                _quadpole(t1['a'], t1['k'],
+                _quadpole(t1,
                           xm[i_imagsym]['k'], xm[i_realsym]['k'],
                           xm[i_pointsym]['k'], s))
             planes.append(Abs(re(t1['a'])))
+            # The three additional poles have now been used; to pop them
+            # easily we have to do it from the back.
             indices_to_pop = [i_imagsym, i_realsym, i_pointsym]
             indices_to_pop.sort(reverse=True)
             for i in indices_to_pop:
                 xm.pop(i)
         elif i_imagsym is not None:
-            results.append(_ccpole(t1['a'], t1['k'], xm[i_imagsym]['k'], s))
-            planes.append(re(t1['a']))
+            results.append(_ccpole(t1, xm[i_imagsym]['k'], s))
+            planes.append(t1[re])
             xm.pop(i_imagsym)
         elif i_realsym is not None:
-            results.append(_rspole(t1['a'], t1['k'], xm[i_realsym]['k'], s))
-            planes.append(Abs(re(t1['a'])))
+            results.append(_rspole(t1, xm[i_realsym]['k'], s))
+            planes.append(Abs(t1[re]))
             xm.pop(i_realsym)
         elif i_pointsym is not None:
-            results.append(_sypole(t1['a'], t1['k'], xm[i_pointsym]['k'], s))
-            planes.append(Abs(re(t1['a'])))
+            results.append(_sypole(t1, xm[i_pointsym]['k'], s))
+            planes.append(Abs(t1[re]))
             xm.pop(i_pointsym)
         else:
-            results.append(_simplepole(t1['a'], t1['k'], s))
-            planes.append(re(t1['a']))
+            results.append(_simplepole(t1, s))
+            planes.append(t1[re])
 
     return Add(*results), Max(*planes)
 
