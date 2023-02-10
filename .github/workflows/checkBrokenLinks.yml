@@ -13,16 +13,15 @@ jobs:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -r doc/requirements.txt
-      - run: cd doc/ && make linkcheck
+      - name: Scanning for Broken and Redirected Links
+        run: cd doc/ && make linkcheck
         continue-on-error: true
-      - run: |
-          echo "# Broken and Redirected Links" >> doc/_build/linkcheck/summary.md
-          echo "## Broken Links" >> doc/_build/linkcheck/summary.md
-          grep broken doc/_build/linkcheck/output.txt >> doc/_build/linkcheck/summary.md
-          echo "## Links that were 'redirected permanently'" >> doc/_build/linkcheck/summary.md
-          grep 'redirected permanently' doc/_build/linkcheck/output.txt >> doc/_build/linkcheck/summary.md
-          echo "## Links that were 'redirected with Found'" >> doc/_build/linkcheck/summary.md
-          grep 'redirected with Found' doc/_build/linkcheck/output.txt >> doc/_build/linkcheck/summary.md
-      - run: |
-          echo doc/_build/linkcheck/summary.md | echo "::warning::"
-          cat doc/_build/linkcheck/summary.md >> $GITHUB_STEP_SUMMARY
+      - name: Saving summary of build results
+        run: |
+          echo "# Broken and Redirected Links" >> $GITHUB_STEP_SUMMARY
+          echo "## Broken Links" >> $GITHUB_STEP_SUMMARY
+          grep broken doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
+          echo "## Links that were 'redirected permanently'" >> $GITHUB_STEP_SUMMARY
+          grep 'redirected permanently' doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
+          echo "## Links that were 'redirected with Found'" >> $GITHUB_STEP_SUMMARY
+          grep 'redirected with Found' doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
