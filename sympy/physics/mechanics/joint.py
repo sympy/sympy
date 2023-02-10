@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 
 from sympy.core.backend import pi, AppliedUndef, Derivative, Matrix
 from sympy.physics.mechanics.body_base import BodyBase
-from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.functions import _validate_coordinates
 from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
                                   ReferenceFrame)
