@@ -23,3 +23,4 @@ jobs:
           grep 'redirected permanently' doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
           echo "## Links that were 'redirected with Found'" >> $GITHUB_STEP_SUMMARY
           grep 'redirected with Found' doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
+      - run: echo "::warning::" $GITHUB_STEP_SUMMARY
