@@ -553,7 +553,10 @@ class PolyRing(DefaultPrinting, IPolys):
         return self.clone(symbols=list(syms))
 
     def symmetric_poly(self, n):
-        """Return the symmetric poly of given degree over this ring's gens."""
+        """
+        Return the elementary symmetric polynomial of degree *n* over
+        this ring's generators.
+        """
         if n < 0 or n > self.ngens:
             raise ValueError("Cannot generate symmetric polynomial of order %s for %s" % (n, self.gens))
         elif not n:
