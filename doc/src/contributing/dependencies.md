@@ -25,6 +25,7 @@ or [libraries.io](https://libraries.io/pypi/sympy/dependents).
 SymPy only has one hard dependency, which is required for it to work: mpmath.
 
 (dependencies-mpmath)=
+
 - **mpmath**: [mpmath](https://mpmath.org/) is a pure Python package for
   arbitrary precision arithmetic. It is used under the hood whenever SymPy
   calculates the floating-point value of a function, e.g., when using
@@ -109,8 +110,9 @@ images rendered with LaTeX. `preview()` can either save the image to a file or
 show it with a viewer.
 
 (dependencies-latex)=
+
 - **LaTeX**: A $\LaTeX$ distributions such as [TeXLive](https://tug.org/texlive/) or
-[MiKTeX](https://miktex.org/) is required for {func}`~.preview` to function.
+  [MiKTeX](https://miktex.org/) is required for {func}`~.preview` to function.
 
 ### Parsing
 
@@ -148,7 +150,7 @@ solvers if they are installed. Note that `satisfiable()` is also used by
 
 - **pysat**: [Pysat](https://pysathq.github.io/) is a library which wraps many
   SAT solvers. It can also be used as a backend to `satisfiable()`. Presently,
-  only [Minisat](http://minisat.se/MiniSat.html) is implemented, using
+  only [Minisat](https://minisat.se/MiniSat.html) is implemented, using
   `satisfiable(algorithm=minisat22')`.
 
 ### Plotting
@@ -163,10 +165,11 @@ Matplotlib.
   [text plots](textplot).
 
 - **pyglet**: SymPy has a submodule {mod}`sympy.plotting.pygletplot` that can
-  be used to interface with the [pyglet](http://pyglet.org/) module to do 2D
+  be used to interface with the [pyglet](https://pyglet.org/) module to do 2D
   and 3D plotting.
 
 (dependencies-lambdify)=
+
 ### lambdify
 
 {func}`~.lambdify` is a function that converts SymPy expressions into functions
@@ -242,6 +245,7 @@ this, but its dependencies are listed [above](dependencies-lambdify).
   `sympy.codegen` tests to compile some examples.
 
 (dependencies-compilers)=
+
 - **Compilers**: {func}`~.autowrap`, {func}`~.ufuncify`, and
   related functions rely on a compiler to compile the generated code to a
   function. Most standard C, C++, and Fortran compilers are supported,
@@ -285,7 +289,6 @@ printers generate Python functions instead of strings:
 - **Cython**: [Cython](https://cython.org/) is also used in
   some of the `sympy.codegen` tests to compile some examples.
 
-
 - **Compilers**: The various [compilers](dependencies-compilers) mentioned
   above are used in some of the codegen and autowrap tests if they are
   installed.
@@ -310,7 +313,7 @@ is required to use the sampling functionality of `sympy.stats`.
   manipulation library, written in C++. The SymEngine Python bindings may be
   used as an optional backend for SymPy core. To do this, first install the
   SymEngine Python bindings (with `pip install symengine` or `conda install -c
-  conda-forge python-symengine`) and run SymPy with the `USE_SYMENGINE=1`
+conda-forge python-symengine`) and run SymPy with the `USE_SYMENGINE=1`
   environment variable.
 
   Presently, the SymEngine backend is only used by the

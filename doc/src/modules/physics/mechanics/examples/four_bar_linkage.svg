@@ -1,5 +1,5 @@
-<svg width="3608" height="1449" xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve"
+<svg width="3608" height="1449" xmlns="https://www.w3.org/2000/svg"
+     xmlns:xlink="https://www.w3.org/1999/xlink" xml:space="preserve"
      overflow="hidden"><defs><clipPath id="clip0"><rect x="440" y="622" width="3608" height="1449"/></clipPath></defs>
     <g clip-path="url(#clip0)" transform="translate(-440 -622)"><path d="M451 1845.5C451 1775.64 507.636 1719 577.5 1719L1870.5 1719C1940.37 1719 1997 1775.64 1997 1845.5L1997 1845.5C1997 1915.37 1940.36 1972 1870.5 1972L577.5 1972C507.636 1972 451 1915.36 451 1845.5Z" fill="#00B050" fill-rule="evenodd"/>
         <path d="M1800.88 1957.01C1740.85 1921.55 1720.93 1844.14 1756.39 1784.11L2128.03 1154.95C2163.49 1094.92 2240.9 1075 2300.93 1110.46L2300.93 1110.46C2360.96 1145.92 2380.88 1223.33 2345.42 1283.36L1973.78 1912.52C1938.32 1972.55 1860.91 1992.47 1800.88 1957.01Z"

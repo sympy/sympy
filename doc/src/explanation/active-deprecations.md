@@ -1,4 +1,5 @@
 (active-deprecations)=
+
 # List of active deprecations
 
 This pages lists all active deprecations in the SymPy codebase. See the
@@ -17,6 +18,7 @@ users to update their code so that it does not use deprecated functionality,
 as described below for each given deprecation.
 
 (silencing-sympy-deprecation-warnings)=
+
 ## Silencing SymPy Deprecation Warnings
 
 To silence SymPy deprecation warnings, add a filter using the
@@ -77,48 +79,50 @@ SymPy deprecation warnings.
 ## Version 1.12
 
 (managedproperties)=
-### The ``ManagedProperties`` metaclass
 
-The ``ManagedProperties`` metaclass was previously the metaclass for ``Basic``.
-Now ``Basic`` does not use metaclasses and so its metaclass is just ``type``.
-Any code that previously subclassed ``Basic`` and wanted to do anything with
-metaclasses would have needed to subclass ``ManagedProperties`` to make the
-relevant metaclass. The only relevant method of ``ManagedProperties`` has been
-moved to ``Basic.__init_subclass__``. Since ``ManagedProperties`` is not used
-as the metaclass for ``Basic`` any more and no longer does anything useful it
-should be possible for such code to just subclass ``type`` instead for any
+### The `ManagedProperties` metaclass
+
+The `ManagedProperties` metaclass was previously the metaclass for `Basic`.
+Now `Basic` does not use metaclasses and so its metaclass is just `type`.
+Any code that previously subclassed `Basic` and wanted to do anything with
+metaclasses would have needed to subclass `ManagedProperties` to make the
+relevant metaclass. The only relevant method of `ManagedProperties` has been
+moved to `Basic.__init_subclass__`. Since `ManagedProperties` is not used
+as the metaclass for `Basic` any more and no longer does anything useful it
+should be possible for such code to just subclass `type` instead for any
 metaclass.
 
-
 (deprecated-mechanics-joint-coordinate-format)=
+
 ### New Joint coordinate format
 
 The format, i.e. type and auto generated name, of the generalized coordinates
-and generalized speeds of the joints in the ``sympy.physics.mechanics`` module
-has changed. The data type has changed from ``list`` to ``Matrix``, which is the
-same as the type for the generalized coordinates within the ``KanesMethod``.
+and generalized speeds of the joints in the `sympy.physics.mechanics` module
+has changed. The data type has changed from `list` to `Matrix`, which is the
+same as the type for the generalized coordinates within the `KanesMethod`.
 The auto naming of the generalized coordinates and generalized speeds of the
-``PinJoint`` and ``PrismaticJoint`` have also changed to ``q_<joint.name>`` and
-``u_<joint.name>``. Previously each of those joints had an unique template for
+`PinJoint` and `PrismaticJoint` have also changed to `q_<joint.name>` and
+`u_<joint.name>`. Previously each of those joints had an unique template for
 auto generating these names.
 
 (deprecated-mechanics-joint-axis)=
+
 ### New Joint intermediate frames
 
-The definition of the joint axis in the ``sympy.physics.mechanics`` module has
-changed. Instead of using the arguments ``parent_axis`` and ``child_axis`` to
+The definition of the joint axis in the `sympy.physics.mechanics` module has
+changed. Instead of using the arguments `parent_axis` and `child_axis` to
 automatically determine the joint axis and an intermediate reference frame, the
 joints now use an intermediate frame argument for both the parent and the child
-body, i.e. ``parent_interframe`` and ``child_interframe``. This means that you
+body, i.e. `parent_interframe` and `child_interframe`. This means that you
 can now fully define the joint attachment, consisting of a point and frame, for
-both bodies. Furthermore, if a joint like the ``PinJoint`` has a specific joint
+both bodies. Furthermore, if a joint like the `PinJoint` has a specific joint
 axis, e.g. the axis about which the rotation occurs, then this axis can be
-specified using the ``joint_axis`` argument. An advantage of this setup is that
+specified using the `joint_axis` argument. An advantage of this setup is that
 one can more accurately define the transformation from the parent body to the
 child body.
 
-For example, suppose you want a ``PinJoint`` that rotates the child body about
-the ``parent.z`` axis and ``-child.z`` axis. The previous way to specify this
+For example, suppose you want a `PinJoint` that rotates the child body about
+the `parent.z` axis and `-child.z` axis. The previous way to specify this
 joint was:
 
 ```py
@@ -133,8 +137,8 @@ Matrix([
 [             0,              0, -1]])
 ```
 
-When inspecting this matrix you will notice that for ``theta_pin = 0`` the child
-body is rotated $\pi$ rad about the ``parent.y`` axis. In the new definition
+When inspecting this matrix you will notice that for `theta_pin = 0` the child
+body is rotated $\pi$ rad about the `parent.y` axis. In the new definition
 you can see that we get the same result, but this time we have also specified
 this exact rotation:
 
@@ -155,7 +159,7 @@ Matrix([
 
 However if you liked the fact that the deprecated arguments aligned the frames
 for you, then you can still make use of this feature by providing vectors to
-``parent_interframe`` and ``child_interframe``, which are then oriented such
+`parent_interframe` and `child_interframe`, which are then oriented such
 that the joint axis expressed in the intermediate frame is aligned with the
 given vector:
 
@@ -172,17 +176,18 @@ Matrix([
 ```
 
 (deprecated-mechanics-joint-pos)=
+
 ### Change in joint attachment point argument
 
 The argument names for specifying the attachment points of a joint in
-``sympy.physics.mechanics`` , i.e. ``parent_joint_pos`` and ``child_joint_pos``,
-have been changed to ``parent_point`` and ``child_point``. This is because these
-arguments can now also be ``Point`` objects, so they can be exactly the same as
-the ``parent_point`` and ``child_point`` attributes.
+`sympy.physics.mechanics` , i.e. `parent_joint_pos` and `child_joint_pos`,
+have been changed to `parent_point` and `child_point`. This is because these
+arguments can now also be `Point` objects, so they can be exactly the same as
+the `parent_point` and `child_point` attributes.
 
-For example, suppose you want a ``PinJoint`` in the parent to be positioned at
-``parent.frame.x`` with respect to the mass center, and in the child at
-``-child.frame.x``. The previous way to specify this was:
+For example, suppose you want a `PinJoint` in the parent to be positioned at
+`parent.frame.x` with respect to the mass center, and in the child at
+`-child.frame.x`. The previous way to specify this was:
 
 ```py
 >>> from sympy.physics.mechanics import Body, PinJoint
@@ -226,6 +231,7 @@ parent_frame.x
 ## Version 1.11
 
 (deprecated-conv-array-expr-module-names)=
+
 ### Modules `sympy.tensor.array.expressions.conv_*` renamed to `sympy.tensor.array.expressions.from_*`
 
 In order to avoid possible naming and tab-completion conflicts with
@@ -234,22 +240,23 @@ name starts with `conv_*` in `sympy.tensor.array.expressions` have been renamed
 to `from_*`.
 
 (mathematica-parser-new)=
+
 ### New Mathematica code parser
 
-The old mathematica code parser defined in the module ``sympy.parsing.mathematica``
-in the function ``mathematica`` is deprecated. The function ``parse_mathematica``
+The old mathematica code parser defined in the module `sympy.parsing.mathematica`
+in the function `mathematica` is deprecated. The function `parse_mathematica`
 with a new and more comprehensive parser should be used instead.
 
-The ``additional_translations`` parameter for the Mathematica parser is not available
-in ``parse_mathematica``.
+The `additional_translations` parameter for the Mathematica parser is not available
+in `parse_mathematica`.
 Additional translation rules to convert Mathematica expressions into SymPy ones
-should be specified after the conversion using SymPy's ``.replace( )`` or ``.subs( )``
+should be specified after the conversion using SymPy's `.replace( )` or `.subs( )`
 methods on the output expression. If the translator fails to recognize the logical
 meaning of a Mathematica expression, a form similar to Mathematica's full form
-will be returned, using SymPy's ``Function`` object to encode the nodes of the
+will be returned, using SymPy's `Function` object to encode the nodes of the
 syntax tree.
 
-For example, suppose you want ``F`` to be a function that returns the maximum
+For example, suppose you want `F` to be a function that returns the maximum
 value multiplied by the minimum value, the previous way to
 specify this conversion was:
 
@@ -269,18 +276,20 @@ Now you can do the same with
 ```
 
 (deprecated-carmichael-static-methods)=
+
 ### Redundant static methods in `carmichael`
 
 A number of static methods in `~.carmichael` are just wrappers around other
-functions. Instead of ``carmichael.is_perfect_square`` use
-`sympy.ntheory.primetest.is_square` and instead of ``carmichael.is_prime`` use
-`~.isprime`. Finally, ``carmichael.divides`` can be replaced by instead checking
+functions. Instead of `carmichael.is_perfect_square` use
+`sympy.ntheory.primetest.is_square` and instead of `carmichael.is_prime` use
+`~.isprime`. Finally, `carmichael.divides` can be replaced by instead checking
 
 ```py
 n % p == 0
 ```
 
 (remove-check-argument-from-matrix-operations)=
+
 ### The `check` argument to `HadamardProduct`, `MatAdd` and `MatMul`
 
 This argument can be used to pass incorrect values to `~.HadamardProduct`,
@@ -291,6 +300,7 @@ the arguments are matrices or matrix symbols.
 ## Version 1.10
 
 (deprecated-traversal-functions-moved)=
+
 ### Some traversal functions have been moved
 
 Some traversal functions have moved. Specifically, the functions
@@ -321,14 +331,16 @@ SymPy submodule should not be relied on, as functions may move around due to
 internal refactorings.
 
 (sympy-core-trace-deprecated)=
+
 ### `sympy.core.trace`
 
 The trace object `sympy.core.trace.Tr()` was moved to
-`sympy.physics.quantum.trace.Tr()`.  This was because it was only used in the
+`sympy.physics.quantum.trace.Tr()`. This was because it was only used in the
 `sympy.physics.quantum` submodule, so it was better to have it there than in
 the core.
 
 (deprecated-sympy-core-compatibility)=
+
 ### The `sympy.core.compatibility` submodule
 
 The `sympy.core.compatibility` submodule is deprecated.
@@ -366,6 +378,7 @@ to be in `sympy.utilities.iterables` but have been moved from there as well.
 ## Version 1.9
 
 (deprecated-expr-free-symbols)=
+
 ### `expr_free_symbols`
 
 The `expr_free_symbols` attribute of various SymPy objects is deprecated.
@@ -426,6 +439,7 @@ See issue [#21494](https://github.com/sympy/sympy/issues/21494) for more
 discussion.
 
 (deprecated-sympy-stats-numsamples)=
+
 ### `sympy.stats.sample(numsamples=n)`
 
 The `numsamples` parameter to {func}`sympy.stats.sample` is deprecated.
@@ -465,6 +479,7 @@ Now, `sample_iter` should be used if a iterator is needed. Consequently, the
 `numsamples` parameter is no longer needed for `sample()`.
 
 (deprecated-rawmatrix)=
+
 ### `sympy.polys.solvers.RawMatrix`
 
 The `RawMatrix` class is deprecated. The `RawMatrix` class was a subclass
@@ -480,6 +495,7 @@ shown in issue [#21402](https://github.com/sympy/sympy/pull/21402). A better
 API for the Smith normal form will be added later.
 
 (deprecated-non-expr-in-matrix)=
+
 ### Non-`Expr` objects in a Matrix
 
 In SymPy 1.8 and earlier versions it was possible to put non-{class}`~.Expr`
@@ -540,9 +556,10 @@ just printing support then perhaps `TableForm` can be used.
 It isn't clear what to advise as a replacement here without knowing more about
 the usecase. If you are unclear how to update your code, please [open an
 issue](https://github.com/sympy/sympy/issues/new) or [write to our mailing
-list](http://groups.google.com/group/sympy) so we can discuss it.
+list](https://groups.google.com/group/sympy) so we can discuss it.
 
 (deprecated-get-segments)=
+
 ### The `get_segments` attribute of plotting objects
 
 The `get_segments` method implemented in {class}`~.Line2DBaseSeries` is used
@@ -563,8 +580,8 @@ adaptive sampling and which could be used with Matplotlib's `LineCollection`.
 However, this has been changed, and now `get_points()` can also use adaptive
 sampling. The {meth}`~.get_data()` method can also be used.
 
-
 (deprecated-physics-mdft)=
+
 ### The `mdft` function in `sympy.physics.matrices`
 
 The `sympy.physics.matrices.mdft()` function is deprecated. It can be replaced
@@ -600,6 +617,7 @@ located in the `sympy.matrices` module. Furthermore, the `DFT` class is a
 and support symbolic shape.
 
 (deprecated-private-matrix-attributes)=
+
 ### The private `SparseMatrix._smat` and `DenseMatrix._mat` attributes
 
 The `._mat` attribute of [`Matrix`](sympy.matrices.dense.Matrix) and the
@@ -621,6 +639,7 @@ with an underscore), so user code should not really have been using them in
 the first place.
 
 (deprecated-laplace-transform-matrix)=
+
 ### laplace_transform of a Matrix with noconds=False
 
 Prior to version 1.9, calling {func}`~.laplace_transform` on a [`Matrix`](sympy.matrices.dense.Matrix) with
@@ -664,6 +683,7 @@ become the default, but the flag will be left intact for compatibility.
 ## Version 1.8
 
 (theanocode-deprecated)=
+
 ### `sympy.printing.theanocode`
 
 [Theano](https://github.com/Theano/Theano) has been discontinued, and forked
@@ -674,6 +694,7 @@ been renamed (e.g., `theano_code` has been renamed to {func}`~.aesara_code`,
 `TheanoPrinter` has been renamed to {class}`~.AesaraPrinter`, and so on).
 
 (deprecated-askhandler)=
+
 ### `sympy.assumptions.handlers.AskHandler` and related methods
 
 `Predicate` has experienced a big design change. Previously, its handler was a
@@ -713,6 +734,7 @@ See GitHub issue [#20209](https://github.com/sympy/sympy/issues/20209).
 ## Version 1.7.1
 
 (deprecated-distribution-randomindexedsymbol)=
+
 ### Calling `sympy.stats.StochasticProcess.distribution` with `RandomIndexedSymbol`
 
 The `distribution` method of `sympy.stats` [stochastic
@@ -749,6 +771,7 @@ This was change was made as part of a change to store only `Basic` objects in
 ## Version 1.7
 
 (deprecated-absorbing_probabilites)=
+
 ### `sympy.stats.DiscreteMarkovChain.absorbing_probabilites()`
 
 The `absorbing_probabilites` method name was misspelled. The correct spelling
@@ -756,6 +779,7 @@ The `absorbing_probabilites` method name was misspelled. The correct spelling
 instead.
 
 (deprecated-find-executable)=
+
 ### `sympy.utilities.misc.find_executable()`
 
 The function `sympy.utilities.misc.find_executable()` is deprecated. Instead
@@ -765,6 +789,7 @@ function, which has been in the standard library since Python 3.3 and is more
 powerful.
 
 (deprecated-diffgeom-mutable)=
+
 ### Mutable attributes in `sympy.diffgeom`
 
 Several parts of {mod}`sympy.diffgeom` have been updated to no longer be
@@ -800,6 +825,7 @@ mutable, which better matches the immutable design used in the rest of SymPy.
   methods (see the docstring of {class}`~.CoordSystem` for examples).
 
 (deprecated-pretty-printing-functions)=
+
 ### The `unicode` argument and attribute to `sympy.printing.pretty.stringpict.prettyForm` and the `sympy.printing.pretty.pretty_symbology.xstr` function
 
 The `sympy.printing.pretty.pretty_symbology.xstr` function, and the `unicode`
@@ -811,6 +837,7 @@ should be omitted, and the `prettyForm.unicode` attribute should be replaced
 with the `prettyForm.s` attribute.
 
 (deprecated-lambdify-arguments-set)=
+
 ### Passing the arguments to `lambdify` as a `set`
 
 Passing the function arguments to lambdify as a set is deprecated. Instead
@@ -834,6 +861,7 @@ guess their order, which would lead to an incorrect function if it guessed
 incorrectly.
 
 (non-expr-args-deprecated)=
+
 ### Core operators no longer accept non-Expr args
 
 The core operator classes {class}`~.Add`, {class}`~.Mul`, and {class}`~.Pow`
@@ -881,6 +909,7 @@ versions of these are desired, you can use a `lambda` or the
 ## Version 1.6
 
 (deprecated-sympy-utilities-submodules)=
+
 ### Various `sympy.utilities` submodules have moved
 
 The following submodules have been renamed.
@@ -892,6 +921,7 @@ The following submodules have been renamed.
 - `sympy.utilities.tmpfiles` → `sympy.testing.tmpfiles`
 
 (deprecated-sympy-testing-randtest)=
+
 ### `sympy.testing.randtest`
 
 `sympy.testing.randtest` is deprecated. The functions in it have been moved to
@@ -904,6 +934,7 @@ The following submodules have been renamed.
 - `sympy.testing.randtest._randint` → `sympy.core.random._randint`
 
 (deprecated-poly-nonpoly-binary-operations)=
+
 ### Mixing `Poly` and non-polynomial expressions in binary operations
 
 In previous versions of SymPy, {class}`~.Poly` was a subclass of
@@ -925,6 +956,7 @@ using {meth}`.Poly.as_expr`, depending on which type you want the result to
 be.
 
 (deprecated-permutation-print_cyclic)=
+
 ### The `print_cyclic` flag of `sympy.combinatorics.Permutation`
 
 The `print_cyclic` attribute of
@@ -954,6 +986,7 @@ The {class}`~.Permutation` docstring contains more details on the
 `perm_cyclic` flag.
 
 (deprecated-integrate-poly)=
+
 ### Using `integrate` with `Poly`
 
 In previous versions of SymPy, {class}`~.Poly` was a subclass of
@@ -971,6 +1004,7 @@ first.
 See also {ref}`deprecated-poly-nonpoly-binary-operations` above.
 
 (deprecated-sympify-string-fallback)=
+
 ### The string fallback in `sympify()`
 
 The current behavior of {func}`~.sympify` is that `sympify(expr)` tries
@@ -1024,6 +1058,7 @@ conversions such as conversion of strings (for converting strings to SymPy
 types, you can explicitly use {func}`~.parse_expr`).
 
 (deprecated-indefinite-integral-eq)=
+
 ### Creating an indefinite `Integral` with an `Eq` argument
 
 Passing an [`Eq()`](sympy.core.relational.Equality) object to
@@ -1041,6 +1076,7 @@ x), integrate(eq.rhs, x))`.
 ## Version 1.5
 
 (deprecated-tensor-fun-eval)=
+
 ### `Tensor.fun_eval` and `Tensor.__call__`
 
 `TensExpr.fun_eval` and `Tensor.__call__` (i.e., calling a tensor to evaluate
@@ -1049,6 +1085,7 @@ This was changed because `fun_eval` was considered a confusing name and using
 function evaluation was considered both confusing and dangerous.
 
 (deprecated-tensortype)=
+
 ### `TensorType`
 
 The `TensorType` class is deprecated. Use {func}`~.tensor_heads` instead. The
@@ -1058,6 +1095,7 @@ The `TensorType` class is deprecated. Use {func}`~.tensor_heads` instead. The
 See also {ref}`deprecated-tensorhead` below.
 
 (deprecated-tensorindextype-dummy-fmt)=
+
 ### The `dummy_fmt` argument to `TensorIndexType`
 
 The `dummy_fmt` keyword argument to {class}`~.TensorIndexType` is deprecated.
@@ -1066,6 +1104,7 @@ uses obsolete string formatting. `dummy_name` should be used instead. This
 change was made because `dummy_name` is a clearer name.
 
 (deprecated-tensorindextype-metric)=
+
 ### The `metric` argument to `TensorIndexType`
 
 The `metric` keyword argument to {class}`~.TensorIndexType` is deprecated.
@@ -1076,6 +1115,7 @@ Either the `metric_symmetry` keyword or the `TensorIndexType.set_metric()`
 method should be used instead.
 
 (deprecated-tensorindextype-methods)=
+
 ### The `get_kronecker_delta()` and `get_epsilon()` methods of `TensorIndexType`
 
 The `get_kronecker_delta()` and `get_epsilon()` methods of
@@ -1083,6 +1123,7 @@ The `get_kronecker_delta()` and `get_epsilon()` methods of
 `TensorIndexType.epsilon` properties instead, respectively.
 
 (deprecated-tensorsymmetry)=
+
 ### The `tensorsymmetry()` function
 
 The `tensorsymmetry()` function in `sympy.tensor` is deprecated. Use the
@@ -1095,6 +1136,7 @@ The `tensorsymmetry()` function in `sympy.tensor` is deprecated. Use the
 3. Is not a member of the `TensorSymmetry` class
 
 (deprecated-tensorhead)=
+
 ### The `tensorhead()` function
 
 The `tensorhead()` function is deprecated in favor of {func}`~.tensor_heads`.
@@ -1103,6 +1145,7 @@ The `tensorhead()` function is deprecated in favor of {func}`~.tensor_heads`.
 Young tableau to denote symmetries.
 
 (deprecated-is-emptyset)=
+
 ### The `is_EmptySet` attribute of sets
 
 The `is_EmptySet` attribute of [Set](sets-module) objects is deprecated.
@@ -1123,6 +1166,7 @@ The difference is that `s.is_empty` may return `None` if it is unknown if the
 set is empty.
 
 (deprecated-productset-iterable)=
+
 ### `ProductSet(iterable)`
 
 Passing a single iterable as the first argument to {class}`~.ProductSet` is
@@ -1148,6 +1192,7 @@ a set than if it is another type of iterable (which is what is currently done
 in the deprecated code path) is confusing behavior.
 
 (deprecated-set-potential-energy)=
+
 ### The `set_potential_energy` method in `sympy.physics.mechanics`
 
 The `set_potential_energy()` methods of {class}`sympy.physics.mechanics.particle.Particle`
@@ -1165,6 +1210,7 @@ This change was made to be more Pythonic, by using setters and getters of a
 `@property` method rather than an explicit `set_` method.
 
 (deprecated-conditionset-set)=
+
 ### Using a set for the condition in `ConditionSet`
 
 Using a set for the condition in ConditionSet is deprecated. A boolean should
@@ -1196,6 +1242,7 @@ ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
 ```
 
 (deprecated-dixonresultant-properties)=
+
 ### The `max_degree` and `get_upper_degree` properties of `sympy.polys.multivariate_resultants.DixonResultant`
 
 The `max_degree` property and `get_upper_degree()` methods of `DixonResultant`
@@ -1203,6 +1250,7 @@ are deprecated. See issue [#17749](https://github.com/sympy/sympy/pull/17749)
 for details.
 
 (deprecated-non-tuple-lambda)=
+
 ### Non-tuple iterable for the first argument to `Lambda`
 
 Using a non-tuple as the first argument to {class}`~.Lambda` is deprecated. If
@@ -1220,6 +1268,7 @@ This was done so that `Lambda` could support general tuple unpacking, like
 ```
 
 (deprecated-differentiate_finite-evaluate)=
+
 ### The `evaluate` flag to `differentiate_finite`
 
 The `evaluate` flag to {func}`~.differentiate_finite` is deprecated.
@@ -1241,6 +1290,7 @@ See the discussion on issue [#17881](https://github.com/sympy/sympy/pull/17881).
 ## Version 1.4
 
 (deprecated-tensorindextype-attrs)=
+
 ### `TensorIndexType.data` and related methods
 
 The `TensorIndexType.data` property is deprecated, as well as several methods

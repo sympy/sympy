@@ -3,9 +3,9 @@
 # Installation
 
 The SymPy CAS can be installed on virtually any computer with Python.
-SymPy does require [mpmath] Python library to be installed first.  The
+SymPy does require [mpmath] Python library to be installed first. The
 recommended method of installation is through Anaconda, which includes
-mpmath, as well as several other useful libraries.  Alternatively, some Linux
+mpmath, as well as several other useful libraries. Alternatively, some Linux
 distributions have SymPy packages available.
 
 SymPy officially supports Python 3.8, 3.9, 3.10, and PyPy.
@@ -16,8 +16,8 @@ SymPy officially supports Python 3.8, 3.9, 3.10, and PyPy.
 Continuum Analytics that includes SymPy, Matplotlib, IPython, NumPy, and many
 more useful packages for scientific computing. This is recommended because
 many nice features of SymPy are only enabled when certain libraries are
-installed.  For example, without Matplotlib, only simple text-based plotting
-is enabled.  With the IPython notebook or qtconsole, you can get nicer
+installed. For example, without Matplotlib, only simple text-based plotting
+is enabled. With the IPython notebook or qtconsole, you can get nicer
 $\mathrm{\LaTeX}$ printing by running `init_printing()`.
 
 If you already have Anaconda and want to update SymPy to the latest version,
@@ -28,6 +28,7 @@ conda update sympy
 ```
 
 (installation-git)=
+
 ## Git
 
 If you wish to contribute to SymPy or like to get the latest updates as they
@@ -88,10 +89,11 @@ log(x)
 For a starter guide on using SymPy effectively, refer to the {ref}`intro-tutorial`.
 
 (mpmath-install)=
+
 ## mpmath
 
 Versions of SymPy prior to 1.0 included [mpmath], but it now depends on it as
-an external dependency.  If you installed SymPy with Anaconda, it will already
+an external dependency. If you installed SymPy with Anaconda, it will already
 include mpmath. Use:
 
 ```
@@ -128,4 +130,4 @@ an [issue ticket].
 [gitter]: https://gitter.im/sympy/sympy
 [issue ticket]: https://github.com/sympy/sympy/issues
 [mailing list]: https://groups.google.com/forum/#!forum/sympy
-[mpmath]: http://mpmath.org/
+[mpmath]: https://mpmath.org/
