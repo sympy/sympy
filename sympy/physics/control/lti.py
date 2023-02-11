@@ -92,7 +92,6 @@ def backward_diff(tf, sample_per):
         as [a, b], [c, d].
 
         Examples
-
         ========
 
         >>> from sympy.physics.control.lti import TransferFunction, backward_diff
