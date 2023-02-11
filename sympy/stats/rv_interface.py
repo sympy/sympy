@@ -136,7 +136,7 @@ def entropy(expr, condition=None, **kwargs):
 
     .. [1] https://en.wikipedia.org/wiki/Entropy_%28information_theory%29
     .. [2] https://www.crmarsh.com/static/pdf/Charles_Marsh_Continuous_Entropy.pdf
-    .. [3] https://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
+    .. [3] https://kconrad.math.uconn.edu/blurbs/analysis/entropypost.pdf
     """
     pdf = density(expr, condition, **kwargs)
     base = kwargs.get('b', exp(1))

@@ -381,7 +381,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         or a class that derives from code.InteractiveConsole.
     euler : bool, optional, default=False
         Loads the euler package in the LaTeX preamble for handwritten style
-        fonts (https://www.ctan.org/pkg/euler).
+        fonts (https://ctan.org/pkg/euler).
     forecolor : string or None, optional, default=None
         DVI setting for foreground color. ``None`` means that either ``'Black'``,
         ``'White'``, or ``'Gray'`` will be selected based on a guess of the IPython

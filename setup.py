@@ -308,7 +308,7 @@ if __name__ == '__main__':
           author_email='sympy@googlegroups.com',
           license='BSD',
           keywords="Math CAS",
-          url='https://sympy.org',
+          url='https://www.sympy.org/',
           project_urls={
               'Source': 'https://github.com/sympy/sympy',
           },

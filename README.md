@@ -9,7 +9,7 @@
 [![Powered by NumFocus](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
 [![Commits since last release](https://img.shields.io/github/commits-since/sympy/sympy/latest.svg?longCache=true&style=flat-square&logo=git&logoColor=fff)](https://github.com/sympy/sympy/releases)
 
-[![SymPy Banner](https://github.com/sympy/sympy/raw/master/banner.svg)](https://sympy.org/)
+[![SymPy Banner](https://github.com/sympy/sympy/raw/master/banner.svg)](https://www.sympy.org/)
 
 See the [AUTHORS](AUTHORS) file for the list of authors.
 
@@ -140,7 +140,7 @@ To test pull requests, use
 
 ## Regenerate Experimental <span class="title-ref">LaTeX</span> Parser/Lexer
 
-The parser and lexer were generated with the [ANTLR4](https://antlr4.org)
+The parser and lexer were generated with the [ANTLR4](http://antlr4.org)
 toolchain in `sympy/parsing/latex/_antlr` and checked into the repo.
 Presently, most users should not need to regenerate these files, but
 if you plan to work on this feature, you will need the `antlr4`

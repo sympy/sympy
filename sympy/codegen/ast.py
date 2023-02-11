@@ -1012,7 +1012,7 @@ class Type(Token):
     References
     ==========
 
-    .. [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
+    .. [1] https://numpy.org/doc/stable/user/basics.types.html
 
     """
     __slots__: tuple[str, ...] = ('name',)

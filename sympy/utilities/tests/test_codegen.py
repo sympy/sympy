@@ -72,7 +72,7 @@ def test_empty_c_code_with_comment():
         "/******************************************************************************\n *"
     )
           #   "                    Code generated with SymPy 0.7.2-git                    "
-    assert source[158:] == (                                                              "*\n"
+    assert source[158:] == (                                                              "/*\n"
             " *                                                                            *\n"
             " *              See https://www.sympy.org/ for more information.               *\n"
             " *                                                                            *\n"

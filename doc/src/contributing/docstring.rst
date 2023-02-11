@@ -94,9 +94,9 @@ Formatting
 -------------
 
 Docstrings are are written in `reStructuredText
-<https://docutils.sourceforge.net/rst.html>`_ format extended by `Sphinx
+<https://docutils.sourceforge.io/rst.html>`_ format extended by `Sphinx
 <https://www.sphinx-doc.org/en/master/>`_. Here is a concise guide to `Quick
-reStructuredText <https://docutils.sourceforge.net/docs/user/rst/quickref.html>`_. More in-depth
+reStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickref.html>`_. More in-depth
 information about using reStructuredText can be found in the `Sphinx
 Documentation
 <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_.

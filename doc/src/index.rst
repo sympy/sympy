@@ -7,7 +7,7 @@ Welcome to SymPy's documentation!
 
 A `PDF version of these docs <https://github.com/sympy/sympy/releases>`_ is also available.
 
-`SymPy <https://sympy.org>`_ is a Python library for symbolic mathematics.
+`SymPy <https://www.sympy.org/>`_ is a Python library for symbolic mathematics.
 If you are new to SymPy, start with the :ref:`introductory tutorial <intro-tutorial>`.
 
 This is the central page for all of SymPy's documentation.

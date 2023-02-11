@@ -11,7 +11,7 @@
     "project": "sympy",
 
     // The project's homepage
-    "project_url": "https://sympy.org/",
+    "project_url": "https://www.sympy.org/",
 
     // The URL or local path of the source code repository for the
     // project being benchmarked

@@ -7,7 +7,7 @@ may be optionally for things like plotting support.
 
 See the webpage for more information and documentation:
 
-    https://sympy.org
+    https://www.sympy.org/
 
 """
 
