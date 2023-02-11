@@ -16,6 +16,7 @@ IdealSoliton
 RobustSoliton
 """
 
+
 from sympy.core.cache import cacheit
 from sympy.core.function import Lambda
 from sympy.core.numbers import (Integer, Rational)
