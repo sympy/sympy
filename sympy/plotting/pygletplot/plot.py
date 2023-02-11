@@ -5,7 +5,7 @@ try:
     import pyglet.gl as pgl
 except ImportError:
     raise ImportError("pyglet is required for plotting.\n "
-                      "visit http://www.pyglet.org/")
+                      "visit https://pyglet.org/")
 
 from sympy.core.numbers import Integer
 from sympy.external.gmpy import SYMPY_INTS

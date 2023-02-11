@@ -1010,7 +1010,7 @@ _doc_positive_definite = \
 
     .. [1] https://en.wikipedia.org/wiki/Definiteness_of_a_matrix#Eigenvalues
 
-    .. [2] http://mathworld.wolfram.com/PositiveDefiniteMatrix.html
+    .. [2] https://mathworld.wolfram.com/PositiveDefiniteMatrix.html
 
     .. [3] Johnson, C. R. "Positive Definite Matrices." Amer.
         Math. Monthly 77, 259-264 1970.
