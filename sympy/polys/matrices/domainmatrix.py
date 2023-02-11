@@ -1691,7 +1691,7 @@ class DomainMatrix:
             A, B = A.unify(B)
         return A == B
 
-    def lll(A, delta=QQ(3, 4)) -> 'DomainMatrix':
+    def lll(A, delta=QQ(3, 4)):
         """
         Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm.
         See [1]_ and [2]_.
@@ -1739,6 +1739,10 @@ class DomainMatrix:
         and 4.4 of [3]_ (pp.68-69). It uses the efficient method of only calculating
         state updates as they are required.
 
+        See also
+        ========
+
+        lll_transform
 
         References
         ==========
@@ -1749,3 +1753,39 @@ class DomainMatrix:
 
         """
         return DomainMatrix.from_rep(A.rep.lll(delta=delta))
+
+    def lll_transform(A, delta=QQ(3, 4)):
+        """
+        Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm
+        and returns the reduced basis and transformation matrix.
+
+        Explanation
+        ===========
+
+        Parameters, algorithm and basis are the same as for :meth:`lll` except that
+        the return value is a tuple `(B, T)` with `B` the reduced basis and
+        `T` a transformation matrix. The original basis `A` is transformed to
+        `B` with `T*A == B`. If only `B` is needed then :meth:`lll` should be
+        used as it is a little faster.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy.polys.matrices import DM
+        >>> X = DM([[1, 0, 0, 0, -20160],
+        ...         [0, 1, 0, 0, 33768],
+        ...         [0, 0, 1, 0, 39578],
+        ...         [0, 0, 0, 1, 47757]], ZZ)
+        >>> B, T = X.lll_transform(delta=QQ(5, 6))
+        >>> T * X == B
+        True
+
+        See also
+        ========
+
+        lll
+
+        """
+        reduced, transform = A.rep.lll_transform(delta=delta)
+        return DomainMatrix.from_rep(reduced), DomainMatrix.from_rep(transform)
