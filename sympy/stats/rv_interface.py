@@ -134,7 +134,7 @@ def entropy(expr, condition=None, **kwargs):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Entropy_(information_theory)#
+    .. [1] https://en.wikipedia.org/wiki/Entropy_%28information_theory%29
     .. [2] https://www.crmarsh.com/static/pdf/Charles_Marsh_Continuous_Entropy.pdf
     .. [3] http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
     """

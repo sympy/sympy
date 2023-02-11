@@ -3194,7 +3194,7 @@ class Expr(Basic, EvalfMixin):
                In: Proc. 1993 Int. Symp. Symbolic and Algebraic Computation. 1993.
                pp. 239-244.
         .. [2] Gruntz thesis - p90
-        .. [3] http://en.wikipedia.org/wiki/Asymptotic_expansion
+        .. [3] https://en.wikipedia.org/wiki/Asymptotic_expansion
 
         See Also
         ========
