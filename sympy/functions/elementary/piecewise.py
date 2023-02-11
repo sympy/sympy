@@ -455,8 +455,8 @@ class Piecewise(Function):
         # FIXME: Currently complex intervals are not supported.  A possible
         # replacement algorithm, discussed in issue 5227, can be found in the
         # following papers;
-        #     https://portal.acm.org/citation.cfm?id=281649
-        #     https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
+        #     http://portal.acm.org/citation.cfm?id=281649
+        #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
 
         if a is None or b is None:
             # In this case, it is just simple substitution

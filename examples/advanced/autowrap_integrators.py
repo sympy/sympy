@@ -20,7 +20,7 @@ working fortran compiler. If you have pylab installed, you will be
 rewarded with a nice plot in the end.
 
 [0]:
-https://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/
+http://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/
 
 ----
 """

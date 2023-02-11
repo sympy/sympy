@@ -1122,7 +1122,7 @@ class SymPyTests:
         self._seed = seed if seed is not None else random.random()
 
         # Defaults in seconds, from human / UX design limits
-        # https://www.nngroup.com/articles/response-times-3-important-limits/
+        # http://www.nngroup.com/articles/response-times-3-important-limits/
         #
         # These defaults are *NOT* set in stone as we are measuring different
         # things, so others feel free to come up with a better yardstick :)
@@ -2016,7 +2016,7 @@ class PyTestReporter(Reporter):
             if sys.platform == "win32":
                 # Windows support is based on:
                 #
-                #  https://code.activestate.com/recipes/
+                #  http://code.activestate.com/recipes/
                 #  440694-determine-size-of-console-window-on-windows/
 
                 from ctypes import windll, create_string_buffer

@@ -1147,7 +1147,7 @@ def test_unrad1():
     assert check(unrad(sqrt(x)*sqrt(1 - x) + 2, x),
         (x**2 - x + 4, []))
 
-    # https://tutorial.math.lamar.edu/
+    # http://tutorial.math.lamar.edu/
     #        Classes/Alg/SolveRadicalEqns.aspx#Solve_Rad_Ex2_a
     assert solve(Eq(x, sqrt(x + 6))) == [3]
     assert solve(Eq(x + sqrt(x - 4), 4)) == [4]
@@ -1155,7 +1155,7 @@ def test_unrad1():
     assert set(solve(Eq(sqrt(5*x + 6) - 2, x))) == {-S.One, S(2)}
     assert set(solve(Eq(sqrt(2*x - 1) - sqrt(x - 4), 2))) == {S(5), S(13)}
     assert solve(Eq(sqrt(x + 7) + 2, sqrt(3 - x))) == [-6]
-    # https://www.purplemath.com/modules/solverad.htm
+    # http://www.purplemath.com/modules/solverad.htm
     assert solve((2*x - 5)**Rational(1, 3) - 3) == [16]
     assert set(solve(x + 1 - root(x**4 + 4*x**3 - x, 4))) == \
         {Rational(-1, 2), Rational(-1, 3)}

@@ -1290,7 +1290,11 @@ class HolonomicFunction:
         ==========
 
         .. [1] https://hal.inria.fr/inria-00070025/document
+<<<<<<< HEAD
         .. [2] https://www3.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
+=======
+        .. [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
+>>>>>>> parent of 057ec4a859 (HTTP Redirects fixed in all files)
 
         """
 

@@ -12,10 +12,10 @@ __doctest_requires__ = {('apply_xsl', 'c2p'): ['lxml']}
 
 
 def add_mathml_headers(s):
-    return """<math xmlns:mml="https://www.w3.org/1998/Math/MathML"
-      xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="https://www.w3.org/1998/Math/MathML
-        https://www.w3.org/Math/XMLSchema/mathml2/mathml2.xsd">""" + s + "</math>"
+    return """<math xmlns:mml="http://www.w3.org/1998/Math/MathML"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.w3.org/1998/Math/MathML
+        http://www.w3.org/Math/XMLSchema/mathml2/mathml2.xsd">""" + s + "</math>"
 
 
 @doctest_depends_on(modules=('lxml',))
@@ -30,7 +30,7 @@ def apply_xsl(mml, xsl):
     >>> mml = '<apply> <plus/> <ci>a</ci> <ci>b</ci> </apply>'
     >>> res = apply_xsl(mml,xsl)
     >>> ''.join(res.splitlines())
-    '<?xml version="1.0"?><mrow xmlns="https://www.w3.org/1998/Math/MathML">  <mi>a</mi>  <mo> + </mo>  <mi>b</mi></mrow>'
+    '<?xml version="1.0"?><mrow xmlns="http://www.w3.org/1998/Math/MathML">  <mi>a</mi>  <mo> + </mo>  <mi>b</mi></mrow>'
 
     """
     from lxml import etree

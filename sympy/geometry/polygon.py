@@ -735,7 +735,7 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        .. [1] https://paulbourke.net/geometry/polygonmesh/#insidepoly
+        .. [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
 
         """
         p = Point(p, dim=2)
@@ -1113,7 +1113,7 @@ class Polygon(GeometrySet):
         ==========================
 
         Method:
-        [1] https://cgm.cs.mcgill.ca/~orm/mind2p.html
+        [1] http://cgm.cs.mcgill.ca/~orm/mind2p.html
         Uses rotating calipers:
         [2] https://en.wikipedia.org/wiki/Rotating_calipers
         and antipodal points:
@@ -2639,8 +2639,8 @@ class Triangle(Polygon):
         References
         ==========
 
-        .. [1] https://mathworld.wolfram.com/Exradius.html
-        .. [2] https://mathworld.wolfram.com/Excircles.html
+        .. [1] http://mathworld.wolfram.com/Exradius.html
+        .. [2] http://mathworld.wolfram.com/Excircles.html
 
         """
 
@@ -2690,7 +2690,7 @@ class Triangle(Polygon):
         References
         ==========
 
-        .. [1] https://mathworld.wolfram.com/Excircles.html
+        .. [1] http://mathworld.wolfram.com/Excircles.html
 
         """
 

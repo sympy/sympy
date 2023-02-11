@@ -110,9 +110,9 @@ def test_isprime():
     assert not isprime(9188353522314541)
     # large examples
     assert not isprime(877777777777777777777777)
-    # conjectured psi_12 given at https://mathworld.wolfram.com/StrongPseudoprime.html
+    # conjectured psi_12 given at http://mathworld.wolfram.com/StrongPseudoprime.html
     assert not isprime(318665857834031151167461)
-    # conjectured psi_17 given at https://mathworld.wolfram.com/StrongPseudoprime.html
+    # conjectured psi_17 given at http://mathworld.wolfram.com/StrongPseudoprime.html
     assert not isprime(564132928021909221014087501701)
     # Arnault's 1993 number; a factor of it is
     # 400958216639499605418306452084546853005188166041132508774506\

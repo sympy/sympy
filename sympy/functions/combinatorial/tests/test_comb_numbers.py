@@ -680,7 +680,7 @@ def test_nC_nP_nT():
     assert [sum(1 for p in perms if Permutation(p).cycles == i)
             for i in range(5)] == [0, 6, 11, 6, 1] == [
             stirling(4, i, kind=1) for i in range(5)]
-    # https://oeis.org/A008275
+    # http://oeis.org/A008275
     assert [stirling(n, k, signed=1)
         for n in range(10) for k in range(1, n + 1)] == [
             1, -1,

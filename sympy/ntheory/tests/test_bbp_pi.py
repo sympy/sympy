@@ -4,7 +4,7 @@ from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.testing.pytest import raises
 
 
-# https://www.herongyang.com/Cryptography/Blowfish-First-8366-Hex-Digits-of-PI.html
+# http://www.herongyang.com/Cryptography/Blowfish-First-8366-Hex-Digits-of-PI.html
 # There are actually 8336 listed there; with the prepended 3 there are 8337
 # below
 dig=''.join('''

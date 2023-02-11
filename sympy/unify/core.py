@@ -13,7 +13,7 @@ It is modified in the following ways:
 3.  We provide generic interfaces to symbolic algebra libraries in Python.
 
 A more traditional version can be found here
-https://aima.cs.berkeley.edu/python/logic.html
+http://aima.cs.berkeley.edu/python/logic.html
 """
 
 from sympy.utilities.iterables import kbins

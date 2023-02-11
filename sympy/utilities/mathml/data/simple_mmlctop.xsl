@@ -20,9 +20,9 @@
 
 <xsl:stylesheet id="mmlctop2.xsl"
                 version="1.0"
-                xmlns:xsl="https://www.w3.org/1999/XSL/Transform"
-                xmlns:mml="https://www.w3.org/1998/Math/MathML"
-                xmlns="https://www.w3.org/1998/Math/MathML">
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:mml="http://www.w3.org/1998/Math/MathML"
+                xmlns="http://www.w3.org/1998/Math/MathML">
 
 <xsl:output method="xml" indent="yes"/>
 

@@ -2380,7 +2380,7 @@ class Beam3D(Beam):
     References
     ==========
 
-    .. [1] https://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
+    .. [1] http://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
 
     """
 

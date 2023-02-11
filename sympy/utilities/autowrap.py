@@ -1043,7 +1043,11 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     References
     ==========
 
+<<<<<<< HEAD
     .. [1] https://numpy.org/doc/stable/reference/ufuncs.html
+=======
+    .. [1] http://docs.scipy.org/doc/numpy/reference/ufuncs.html
+>>>>>>> parent of 057ec4a859 (HTTP Redirects fixed in all files)
 
     Examples
     ========

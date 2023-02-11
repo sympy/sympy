@@ -382,7 +382,11 @@ class DifferentialExtension:
                 # that, this will break, which maybe is a sign that you
                 # shouldn't be changing that.  Actually, if anything, this
                 # auto-simplification should be removed.  See
+<<<<<<< HEAD
                 # https://groups.google.com/g/sympy/browse_thread/thread/a61d48235f16867f
+=======
+                # http://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
+>>>>>>> parent of 057ec4a859 (HTTP Redirects fixed in all files)
 
                 self.newf = self.newf.xreplace({i: newterm})
 

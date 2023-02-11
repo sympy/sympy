@@ -1078,7 +1078,11 @@ class GreaterThan(_Greater):
        method to determine that a chained inequality is being built.
        Chained comparison operators are evaluated pairwise, using "and"
        logic (see
+<<<<<<< HEAD
        https://docs.python.org/3/reference/expressions.html#not-in). This
+=======
+       http://docs.python.org/reference/expressions.html#not-in). This
+>>>>>>> parent of 057ec4a859 (HTTP Redirects fixed in all files)
        is done in an efficient way, so that each object being compared
        is only evaluated once and the comparison can short-circuit. For
        example, ``1 > 2 > 3`` is evaluated by Python as ``(1 > 2) and (2

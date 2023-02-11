@@ -102,7 +102,7 @@ class PermutationGroup(Basic):
 
     .. [6] https://en.wikipedia.org/wiki/Block_%28permutation_group_theory%29
 
-    .. [7] https://algorithmist.com/wiki/Union_Find
+    .. [7] http://www.algorithmist.com/index.php/Union_Find
 
     .. [8] https://en.wikipedia.org/wiki/Multiply_transitive_group#Multiply_transitive_groups
 
@@ -110,11 +110,11 @@ class PermutationGroup(Basic):
 
     .. [10] https://en.wikipedia.org/wiki/Centralizer_and_normalizer
 
-    .. [11] https://groupprops.subwiki.org/wiki/Derived_subgroup
+    .. [11] http://groupprops.subwiki.org/wiki/Derived_subgroup
 
     .. [12] https://en.wikipedia.org/wiki/Nilpotent_group
 
-    .. [13] https://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
+    .. [13] http://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
 
     .. [14] https://docs.gap-system.org/doc/ref/manual.pdf
 

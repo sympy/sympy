@@ -259,7 +259,7 @@ def test_DiscreteMarkovChain():
     X = DiscreteMarkovChain('X', trans_probs=T)
     assert not X.is_regular()
     assert X.is_ergodic()
-    # https://www.math.wisc.edu/~valko/courses/331/MC2.pdf
+    # http://www.math.wisc.edu/~valko/courses/331/MC2.pdf
     T = Matrix([[2, 1, 1],
                 [2, 0, 2],
                 [1, 1, 2]])/4

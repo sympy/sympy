@@ -184,7 +184,11 @@ class Product(ExprWithIntLimits):
 
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
+<<<<<<< HEAD
            https://dl.acm.org/doi/10.1145/322248.322255
+=======
+           http://dl.acm.org/citation.cfm?doid=322248.322255
+>>>>>>> parent of 057ec4a859 (HTTP Redirects fixed in all files)
     .. [2] https://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation
     .. [3] https://en.wikipedia.org/wiki/Empty_product
     """
@@ -544,7 +548,11 @@ class Product(ExprWithIntLimits):
 
         .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
                Volume 28 Issue 2, April 1981, Pages 305-350
+<<<<<<< HEAD
                https://dl.acm.org/doi/10.1145/322248.322255
+=======
+               http://dl.acm.org/citation.cfm?doid=322248.322255
+>>>>>>> parent of 057ec4a859 (HTTP Redirects fixed in all files)
 
         """
         l_indices = list(indices)

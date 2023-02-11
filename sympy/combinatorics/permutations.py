@@ -2200,7 +2200,7 @@ class Permutation(Atom):
         References
         ==========
 
-        .. [1] https://www.cp.eng.chula.ac.th/~piak/teaching/algo/algo2008/count-inv.htm
+        .. [1] http://www.cp.eng.chula.ac.th/~piak/teaching/algo/algo2008/count-inv.htm
 
         """
         inversions = 0
@@ -2859,7 +2859,7 @@ class Permutation(Atom):
 
         .. [1] https://en.wikipedia.org/wiki/Flavius_Josephus
         .. [2] https://en.wikipedia.org/wiki/Josephus_problem
-        .. [3] https://www.wou.edu/~burtonl/josephus.html
+        .. [3] http://www.wou.edu/~burtonl/josephus.html
 
         """
         from collections import deque

@@ -242,7 +242,7 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     ==========
 
     .. [1] Algorithm is adapted from:
-           https://axiom-wiki.newsynthesis.org/RationalInterpolation
+           http://axiom-wiki.newsynthesis.org/RationalInterpolation
 
     """
     from sympy.matrices.dense import ones

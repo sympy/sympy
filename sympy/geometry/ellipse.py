@@ -1008,7 +1008,7 @@ class Ellipse(GeometrySet):
         References
         ==========
 
-        .. [1] https://mathworld.wolfram.com/SemilatusRectum.html
+        .. [1] http://mathworld.wolfram.com/SemilatusRectum.html
         .. [2] https://en.wikipedia.org/wiki/Ellipse#Semi-latus_rectum
 
         """

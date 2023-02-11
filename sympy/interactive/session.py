@@ -23,7 +23,7 @@ Documentation can be found at https://docs.sympy.org/%(version)s
 
 no_ipython = """\
 Could not locate IPython. Having IPython installed is greatly recommended.
-See https://ipython.scipy.org for more details. If you use Debian/Ubuntu,
+See http://ipython.scipy.org for more details. If you use Debian/Ubuntu,
 just install the 'ipython' package and start isympy again.
 """
 
@@ -87,7 +87,11 @@ def int_to_Integer(s):
     Wrap integer literals with Integer.
 
     This is based on the decistmt example from
+<<<<<<< HEAD
     https://docs.python.org/3/library/tokenize.html.
+=======
+    http://docs.python.org/library/tokenize.html.
+>>>>>>> parent of 057ec4a859 (HTTP Redirects fixed in all files)
 
     Only integer literals are converted.  Float literals are left alone.
 

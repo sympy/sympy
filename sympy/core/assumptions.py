@@ -202,7 +202,11 @@ References
 .. [6] https://en.wikipedia.org/wiki/Prime_number
 .. [7] https://en.wikipedia.org/wiki/Finite
 .. [8] https://docs.python.org/3/library/math.html#math.isfinite
+<<<<<<< HEAD
 .. [9] https://numpy.org/doc/stable/reference/generated/numpy.isfinite.html
+=======
+.. [9] http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
+>>>>>>> parent of 057ec4a859 (HTTP Redirects fixed in all files)
 .. [10] https://en.wikipedia.org/wiki/Transcendental_number
 .. [11] https://en.wikipedia.org/wiki/Algebraic_number
 .. [12] https://en.wikipedia.org/wiki/Commutative_property

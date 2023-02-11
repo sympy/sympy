@@ -943,7 +943,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     References
     ==========
 
-    - https://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
+    - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
     - https://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
       https://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
     """
@@ -1156,7 +1156,7 @@ class Liouville(SinglePatternODESolver):
 
     - Goldstein and Braun, "Advanced Methods for the Solution of Differential
       Equations", pp. 98
-    - https://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
+    - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
 
     # indirect doctest
 
@@ -2253,7 +2253,7 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
     ==========
 
     - https://en.wikipedia.org/wiki/Variation_of_parameters
-    - https://planetmath.org/VariationOfParameters
+    - http://planetmath.org/VariationOfParameters
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 233
 

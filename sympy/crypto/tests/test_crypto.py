@@ -189,7 +189,7 @@ def test_rsa_private_key():
 
 def test_rsa_large_key():
     # Sample from
-    # https://www.herongyang.com/Cryptography/JCE-Public-Key-RSA-Private-Public-Key-Pair-Sample.html
+    # http://www.herongyang.com/Cryptography/JCE-Public-Key-RSA-Private-Public-Key-Pair-Sample.html
     p = int('101565610013301240713207239558950144682174355406589305284428666'\
         '903702505233009')
     q = int('894687191887545488935455605955948413812376003053143521429242133'\

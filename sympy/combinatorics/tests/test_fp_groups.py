@@ -19,7 +19,7 @@ Mathematics of Computation, Vol. 27, No. 123. (Jul., 1973), pp. 463-490.
 
 [3] PROC. SECOND  INTERNAT. CONF. THEORY OF GROUPS, CANBERRA 1973,
 pp. 347-356. "A Reidemeister-Schreier program" by George Havas.
-https://staff.itee.uq.edu.au/havas/1973cdhw.pdf
+http://staff.itee.uq.edu.au/havas/1973cdhw.pdf
 
 """
 

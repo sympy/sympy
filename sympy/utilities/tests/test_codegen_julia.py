@@ -42,7 +42,7 @@ def test_jl_simple_code_with_header():
     expected = (
         "#   Code generated with SymPy " + sympy.__version__ + "\n"
         "#\n"
-        "#   See https://www.sympy.org/ for more information.\n"
+        "#   See http://www.sympy.org/ for more information.\n"
         "#\n"
         "#   This file is part of 'project'\n"
         "function test(x, y, z)\n"
@@ -283,7 +283,7 @@ def test_jl_multifcns_per_file_w_header():
     expected = (
         "#   Code generated with SymPy " + sympy.__version__ + "\n"
         "#\n"
-        "#   See https://www.sympy.org/ for more information.\n"
+        "#   See http://www.sympy.org/ for more information.\n"
         "#\n"
         "#   This file is part of 'project'\n"
         "function foo(x, y)\n"

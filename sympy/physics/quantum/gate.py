@@ -1087,7 +1087,7 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
 
     References
     ----------
-    [1] https://www.johnlapeyre.com/qinf/qinf_html/node6.html.
+    [1] http://www.johnlapeyre.com/qinf/qinf_html/node6.html.
     """
     controls = [int(x) for x in controls]
     targets = [int(x) for x in targets]

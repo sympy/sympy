@@ -278,7 +278,7 @@ class TheanoPrinter(Printer):
         See the corresponding `documentation page`__ for more information on
         broadcasting in Theano.
 
-        .. __: https://deeplearning.net/software/theano/tutorial/broadcasting.html
+        .. __: http://deeplearning.net/software/theano/tutorial/broadcasting.html
 
         Parameters
         ==========

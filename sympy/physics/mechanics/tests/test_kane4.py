@@ -112,4 +112,4 @@ def test_replace_qdots_in_force():
     # [1] T.R. Kane, D. a Levinson, Dynamics Theory and Applications, 2005.
     # [2] Arun K Banerjee, Flexible Multibody Dynamics:Efficient Formulations
     #     and Applications, John Wiley and Sons, Ltd, 2016.
-    #     doi:https://dx.doi.org/10.1002/9781119015635.
+    #     doi:http://dx.doi.org/10.1002/9781119015635.

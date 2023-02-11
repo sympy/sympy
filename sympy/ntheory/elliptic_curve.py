@@ -28,7 +28,7 @@ class EllipticCurve:
     ==========
 
     .. [1] J. Silverman "A Friendly Introduction to Number Theory" Third Edition
-    .. [2] https://mathworld.wolfram.com/EllipticDiscriminant.html
+    .. [2] http://mathworld.wolfram.com/EllipticDiscriminant.html
     .. [3] G. Hardy, E. Wright "An Introduction to the Theory of Numbers" Sixth Edition
 
     """

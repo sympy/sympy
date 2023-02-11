@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="https://www.w3.org/1999/XSL/Transform"
-		xmlns:m="https://www.w3.org/1998/Math/MathML"
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+		xmlns:m="http://www.w3.org/1998/Math/MathML"
                 version='1.0'>
 
 <!--
@@ -14,7 +14,7 @@ Modified Fabian Seoane 2007 for sympy
 <!-- ====================================================================== -->
 <!-- $id: mmltex.xsl, 2002/22/11 Exp $
      This file is part of the XSLT MathML Library distribution.
-     See ./README or https://www.raleigh.ru/MathML/mmltex for
+     See ./README or http://www.raleigh.ru/MathML/mmltex for
      copyright and other information                                        -->
 <!-- ====================================================================== -->
 
@@ -45,7 +45,7 @@ Modified Fabian Seoane 2007 for sympy
 <!-- ====================================================================== -->
 <!-- $id: tokens.xsl, 2002/22/11 Exp $
      This file is part of the XSLT MathML Library distribution.
-     See ./README or https://www.raleigh.ru/MathML/mmltex for
+     See ./README or http://www.raleigh.ru/MathML/mmltex for
      copyright and other information                                        -->
 <!-- ====================================================================== -->
 
@@ -1132,7 +1132,7 @@ priority="2">
 <!-- ====================================================================== -->
 <!-- $id: entities.xsl, 2002/22/11 Exp $
      This file is part of the XSLT MathML Library distribution.
-     See ./README or https://www.raleigh.ru/MathML/mmltex for
+     See ./README or http://www.raleigh.ru/MathML/mmltex for
      copyright and other information                                        -->
 <!-- ====================================================================== -->
 
@@ -1146,7 +1146,7 @@ priority="2">
 <!-- 	Unicode 3.2
 	Greek
 	Range: 0370-03FF
-	https://www.unicode.org/charts/PDF/U0370.pdf	                    -->
+	http://www.unicode.org/charts/PDF/U0370.pdf	                    -->
 <!-- ====================================================================== -->
 		<xsl:when test="starts-with($content,'&#x00393;')"><xsl:value-of select="'\Gamma '" /><xsl:call-template name="replaceEntities"><xsl:with-param name="content" select="substring-after($content, '&#x00393;')"/></xsl:call-template></xsl:when>	<!--/Gamma capital Gamma, Greek -->
 		<xsl:when test="starts-with($content,'&#x00394;')"><xsl:value-of select="'\Delta '" /><xsl:call-template name="replaceEntities"><xsl:with-param name="content" select="substring-after($content, '&#x00394;')"/></xsl:call-template></xsl:when>	<!--/Delta capital Delta, Greek -->
@@ -1199,7 +1199,7 @@ priority="2">
 <!-- 	Unicode 3.2
 	Letterlike Symbols
 	Range: 2100-214F
-	https://www.unicode.org/charts/PDF/U2100.pdf	                    -->
+	http://www.unicode.org/charts/PDF/U2100.pdf	                    -->
 <!-- ====================================================================== -->
 		<xsl:when test="starts-with($content,'&#x0210F;&#x0FE00;')"><xsl:value-of select="'\hbar '" /><xsl:call-template name="replaceEntities"><xsl:with-param name="content" select="substring-after($content, '&#x0210F;&#x0FE00;')"/></xsl:call-template></xsl:when>	<!--/hbar - Planck's over 2pi -->
 		<xsl:when test="starts-with($content,'&#x0210F;')"><xsl:value-of select="'\hslash '" /><xsl:call-template name="replaceEntities"><xsl:with-param name="content" select="substring-after($content, '&#x0210F;')"/></xsl:call-template></xsl:when>	<!--/hslash - variant Planck's over 2pi --> <!-- Required amssymb -->
@@ -1224,7 +1224,7 @@ priority="2">
 <!-- 	Unicode 3.2
 	Mathematical Operators
 	Range: 2200-22FF
-	https://www.unicode.org/charts/PDF/U2200.pdf                         -->
+	http://www.unicode.org/charts/PDF/U2200.pdf                         -->
 <!-- ====================================================================== -->
 		<xsl:when test="starts-with($content,'&#x02200;')"><xsl:value-of select="'\forall '" /><xsl:call-template name="replaceEntities"><xsl:with-param name="content" select="substring-after($content, '&#x02200;')"/></xsl:call-template></xsl:when>	<!--/forall for all -->
 		<xsl:when test="starts-with($content,'&#x02201;')"><xsl:value-of select="'\complement '" /><xsl:call-template name="replaceEntities"><xsl:with-param name="content" select="substring-after($content, '&#x02201;')"/></xsl:call-template></xsl:when>	<!--/complement - complement sign --> <!-- Required amssymb -->
@@ -1443,7 +1443,7 @@ priority="2">
 <!-- ====================================================================== -->
 <!-- $id: tables.xsl, 2002/17/05 Exp $
      This file is part of the XSLT MathML Library distribution.
-     See ./README or https://www.raleigh.ru/MathML/mmltex for
+     See ./README or http://www.raleigh.ru/MathML/mmltex for
      copyright and other information                                        -->
 <!-- ====================================================================== -->
 
@@ -1568,7 +1568,7 @@ priority="2">
 <!-- ====================================================================== -->
 <!-- $Id: scripts.xsl,v 1.1.1.1 2002/10/26 14:20:06 shade33 Exp $
      This file is part of the XSLT MathML Library distribution.
-     See ./README or https://www.raleigh.ru/MathML/mmltex for
+     See ./README or http://www.raleigh.ru/MathML/mmltex for
      copyright and other information                                        -->
 <!-- ====================================================================== -->
 
@@ -1855,7 +1855,7 @@ priority="2">
 <!-- ====================================================================== -->
 <!-- $id: glayout.xsl, 2002/17/05 Exp $
      This file is part of the XSLT MathML Library distribution.
-     See ./README or https://www.raleigh.ru/MathML/mmltex for
+     See ./README or http://www.raleigh.ru/MathML/mmltex for
      copyright and other information                                        -->
 <!-- ====================================================================== -->
 
@@ -2070,7 +2070,7 @@ priority="2">
 <!-- ====================================================================== -->
 <!-- $id: tokens.xsl, 2002/22/11 Exp $
      This file is part of the XSLT MathML Library distribution.
-     See ./README or https://www.raleigh.ru/MathML/mmltex for
+     See ./README or http://www.raleigh.ru/MathML/mmltex for
      copyright and other information                                        -->
 <!-- ====================================================================== -->
 

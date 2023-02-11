@@ -11,6 +11,7 @@
 
 [![SymPy Banner](https://github.com/sympy/sympy/raw/master/banner.svg)](https://www.sympy.org/)
 
+
 See the [AUTHORS](AUTHORS) file for the list of authors.
 
 And many more people helped on the SymPy mailing list, reported bugs,
@@ -63,7 +64,7 @@ you don't want to read that, here is a short usage:
 
 From this directory, start Python and:
 
-```python
+``` python
 >>> from sympy import Symbol, cos
 >>> x = Symbol('x')
 >>> e = 1/cos(x)
@@ -87,7 +88,7 @@ if SymPy is installed.
 
 ## Installation
 
-SymPy has a hard dependency on the [mpmath](https://mpmath.org/) library
+SymPy has a hard dependency on the [mpmath](http://mpmath.org/) library
 (version \>= 0.19). You should install it first, please refer to the
 mpmath installation guide:
 
@@ -121,7 +122,7 @@ to look at the issues tagged [Easy to Fix](https://github.com/sympy/sympy/issues
 
 Please note that all participants in this project are expected to follow
 our Code of Conduct. By participating in this project you agree to abide
-by its terms. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+by its terms. See [CODE\_OF\_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Tests
 
@@ -153,8 +154,7 @@ Alternatively, follow the instructions on the ANTLR website and download
 the `antlr-4.11.1-complete.jar`. Then export the `CLASSPATH` as instructed
 and instead of creating `antlr4` as an alias, make it an executable file
 with the following contents:
-
-```bash
+``` bash
 #!/bin/bash
 java -jar /usr/local/lib/antlr-4.11.1-complete.jar "$@"
 ```
@@ -244,12 +244,12 @@ To cite SymPy in publications use
 > Kumar A, Ivanov S, Moore JK, Singh S, Rathnayake T, Vig S, Granger BE,
 > Muller RP, Bonazzi F, Gupta H, Vats S, Johansson F, Pedregosa F, Curry
 > MJ, Terrel AR, Roučka Š, Saboo A, Fernando I, Kulal S, Cimrman R,
-> Scopatz A. (2017) SymPy: symbolic computing in Python. _PeerJ Computer
-> Science_ 3:e103 <https://doi.org/10.7717/peerj-cs.103>
+> Scopatz A. (2017) SymPy: symbolic computing in Python. *PeerJ Computer
+> Science* 3:e103 <https://doi.org/10.7717/peerj-cs.103>
 
 A BibTeX entry for LaTeX users is
 
-```bibtex
+``` bibtex
 @article{10.7717/peerj-cs.103,
  title = {SymPy: symbolic computing in Python},
  author = {Meurer, Aaron and Smith, Christopher P. and Paprocki, Mateusz and \v{C}ert\'{i}k, Ond\v{r}ej and Kirpichev, Sergey B. and Rocklin, Matthew and Kumar, Amit and Ivanov, Sergiu and Moore, Jason K. and Singh, Sartaj and Rathnayake, Thilina and Vig, Sean and Granger, Brian E. and Muller, Richard P. and Bonazzi, Francesco and Gupta, Harsh and Vats, Shivam and Johansson, Fredrik and Pedregosa, Fabian and Curry, Matthew J. and Terrel, Andy R. and Rou\v{c}ka, \v{S}t\v{e}p\'{a}n and Saboo, Ashutosh and Fernando, Isuru and Kulal, Sumith and Cimrman, Robert and Scopatz, Anthony},

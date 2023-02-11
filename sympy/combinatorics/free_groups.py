@@ -125,7 +125,7 @@ class FreeGroup(DefaultPrinting):
     References
     ==========
 
-    .. [1] https://www.gap-system.org/Manuals/doc/ref/chap37.html
+    .. [1] http://www.gap-system.org/Manuals/doc/ref/chap37.html
 
     .. [2] https://en.wikipedia.org/wiki/Free_group
 
@@ -1023,7 +1023,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        .. [1] https://planetmath.org/cyclicpermutation
+        .. [1] http://planetmath.org/cyclicpermutation
 
         """
         return {self.cyclic_subword(i, i+len(self)) for i in range(len(self))}
@@ -1206,7 +1206,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        .. [1] https://planetmath.org/cyclicallyreduced
+        .. [1] http://planetmath.org/cyclicallyreduced
 
         """
         word = self.copy()

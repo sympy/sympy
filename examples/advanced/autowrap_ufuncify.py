@@ -14,7 +14,7 @@ working fortran compiler.
 
 
 [0]:
-https://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/
+http://ojensen.wordpress.com/2010/08/10/fast-ufunc-ish-hydrogen-solutions/
 """
 
 import sys

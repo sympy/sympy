@@ -541,7 +541,7 @@ def MultivariateBeta(syms, *alpha):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Dirichlet_distribution
-    .. [2] https://mathworld.wolfram.com/DirichletDistribution.html
+    .. [2] http://mathworld.wolfram.com/DirichletDistribution.html
 
     """
     if not isinstance(alpha[0], list):
@@ -633,7 +633,7 @@ def MultivariateEwens(syms, n, theta):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Ewens%27s_sampling_formula
-    .. [2] https://www.stat.rutgers.edu/home/hcrane/Papers/STS529.pdf
+    .. [2] http://www.stat.rutgers.edu/home/hcrane/Papers/STS529.pdf
 
     """
     return multivariate_rv(MultivariateEwensDistribution, syms, n, theta)
@@ -863,7 +863,7 @@ def Multinomial(syms, n, *p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Multinomial_distribution
-    .. [2] https://mathworld.wolfram.com/MultinomialDistribution.html
+    .. [2] http://mathworld.wolfram.com/MultinomialDistribution.html
 
     """
     if not isinstance(p[0], list):
@@ -938,7 +938,7 @@ def NegativeMultinomial(syms, k0, *p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Negative_multinomial_distribution
-    .. [2] https://mathworld.wolfram.com/NegativeBinomialDistribution.html
+    .. [2] http://mathworld.wolfram.com/NegativeBinomialDistribution.html
 
     """
     if not isinstance(p[0], list):

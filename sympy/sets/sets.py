@@ -1689,7 +1689,7 @@ class Complement(Set):
     References
     ==========
 
-    .. [1] https://mathworld.wolfram.com/ComplementSet.html
+    .. [1] http://mathworld.wolfram.com/ComplementSet.html
     """
 
     is_Complement = True

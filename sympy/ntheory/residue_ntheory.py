@@ -277,7 +277,7 @@ def _product(*iters):
     =====
 
     Unlike itertools.product, it works also with iterables which do not fit
-    in memory. See https://bugs.python.org/issue10109
+    in memory. See http://bugs.python.org/issue10109
 
     Author: Fernando Sumudu
     with small changes
@@ -381,7 +381,7 @@ def _sqrt_mod_prime_power(a, p, k):
     ==========
 
     .. [1] P. Hackman "Elementary Number Theory" (2009), page 160
-    .. [2] https://www.numbertheory.org/php/squareroot.html
+    .. [2] http://www.numbertheory.org/php/squareroot.html
     .. [3] [Gathen99]_
     """
     pk = p**k
@@ -477,7 +477,7 @@ def _sqrt_mod1(a, p, n):
     """
     Find solution to ``x**2 == a mod p**n`` when ``a % p == 0``
 
-    see https://www.numbertheory.org/php/squareroot.html
+    see http://www.numbertheory.org/php/squareroot.html
     """
     pn = p**n
     a = a % pn
@@ -1341,7 +1341,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     References
     ==========
 
-    .. [1] https://mathworld.wolfram.com/DiscreteLogarithm.html
+    .. [1] http://mathworld.wolfram.com/DiscreteLogarithm.html
     .. [2] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
         Vanstone, S. A. (1997).
 

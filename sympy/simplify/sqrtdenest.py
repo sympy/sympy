@@ -123,7 +123,7 @@ def sqrtdenest(expr, max_iter=3):
     .. [1] https://web.archive.org/web/20210806201615/https://researcher.watson.ibm.com/researcher/files/us-fagin/symb85.pdf
 
     .. [2] D. J. Jeffrey and A. D. Rich, 'Symplifying Square Roots of Square Roots
-           by Denesting' (available at https://www.cybertester.com/data/denest.pdf)
+           by Denesting' (available at http://www.cybertester.com/data/denest.pdf)
 
     """
     expr = expand_mul(expr)
@@ -541,7 +541,7 @@ def _denester(nested, av0, h, max_depth_level):
     Explanation
     ===========
 
-    Algorithm based on <https://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
+    Algorithm based on <http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf>.
 
     It is assumed that all of the elements of 'nested' share the same
     bottom-level radicand. (This is stated in the paper, on page 177, in

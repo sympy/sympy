@@ -436,13 +436,13 @@ def test_solveset_sqrt_1():
 def test_solveset_sqrt_2():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
-    # https://tutorial.math.lamar.edu/Classes/Alg/SolveRadicalEqns.aspx#Solve_Rad_Ex2_a
+    # http://tutorial.math.lamar.edu/Classes/Alg/SolveRadicalEqns.aspx#Solve_Rad_Ex2_a
     assert solveset_real(sqrt(2*x - 1) - sqrt(x - 4) - 2, x) == \
         FiniteSet(S(5), S(13))
     assert solveset_real(sqrt(x + 7) + 2 - sqrt(3 - x), x) == \
         FiniteSet(-6)
 
-    # https://www.purplemath.com/modules/solverad.htm
+    # http://www.purplemath.com/modules/solverad.htm
     assert solveset_real(sqrt(17*x - sqrt(x**2 - 5)) - 7, x) == \
         FiniteSet(3)
 
@@ -1654,7 +1654,7 @@ def test_trig_system_fail():
     assert dumeq(nonlinsolve(sys, [x, y]), soln)
 
     # Add more cases from here
-    # https://www.vitutor.com/geometry/trigonometry/equations_systems.html#uno
+    # http://www.vitutor.com/geometry/trigonometry/equations_systems.html#uno
     sys = [sin(x) + sin(y) - (sqrt(3)+1)/2, sin(x) - sin(y) - (sqrt(3) - 1)/2]
     soln_x = Union(ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers),
         ImageSet(Lambda(n, 2*n*pi + pi*Rational(2, 3)), S.Integers))

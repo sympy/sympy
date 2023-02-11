@@ -2306,7 +2306,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 
     References
     ==========
-    - https://tutorial.math.lamar.edu/Classes/DE/SeriesSolutions.aspx
+    - http://tutorial.math.lamar.edu/Classes/DE/SeriesSolutions.aspx
     - George E. Simmons, "Differential Equations with Applications and
       Historical Notes", p.p 176 - 184
 

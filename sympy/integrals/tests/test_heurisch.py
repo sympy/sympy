@@ -243,7 +243,7 @@ def test_issue_3609():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == atan(log(x))
 
 ### These are examples from the Poor Man's Integrator
-### https://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/examples/
+### http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/examples/
 
 
 def test_pmint_rat():

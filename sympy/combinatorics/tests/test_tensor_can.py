@@ -404,8 +404,8 @@ def test_riemann_invariants():
     in [1] and with an older version contained in [2]
 
     [1] xperm.c part of xPerm written by J. M. Martin-Garcia
-        https://www.xact.es/index.html
-    [2] test_xperm.cc in cadabra by Kasper Peeters, https://cadabra.phi-sci.com/
+        http://www.xact.es/index.html
+    [2] test_xperm.cc in cadabra by Kasper Peeters, http://cadabra.phi-sci.com/
     """
     # R_d11^d1_d0^d5 * R^{d6 d4 d0}_d5 * R_{d7 d2 d8 d9} *
     # R_{d10 d3 d6 d4} * R^{d2 d7 d11}_d1 * R^{d8 d9 d3 d10}

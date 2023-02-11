@@ -28,7 +28,7 @@ class Point:
     References
     ==========
 
-    .. [1]  https://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
+    .. [1]  http://www.hyperelliptic.org/tanja/SHARCS/talks06/Gaj.pdf
     """
 
     def __init__(self, x_cord, z_cord, a_24, mod):

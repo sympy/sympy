@@ -533,7 +533,7 @@ def test_evalf_integrals():
     assert NS(gauss, 15) == '1.77245385090552'
     assert NS(gauss**2 - pi + E*Rational(
         1, 10**20), 15) in ('2.71828182845904e-20', '2.71828182845905e-20')
-    # A monster of an integral from https://mathworld.wolfram.com/DefiniteIntegral.html
+    # A monster of an integral from http://mathworld.wolfram.com/DefiniteIntegral.html
     t = Symbol('t')
     a = 8*sqrt(3)/(1 + 3*t**2)
     b = 16*sqrt(2)*(3*t + 1)*sqrt(4*t**2 + t + 1)**3
@@ -542,17 +542,17 @@ def test_evalf_integrals():
     f = a - b/c - d
     assert NS(Integral(f, (t, 0, 1)), 50) == \
         NS((3*sqrt(2) - 49*pi + 162*atan(sqrt(2)))/12, 50)
-    # https://mathworld.wolfram.com/VardisIntegral.html
+    # http://mathworld.wolfram.com/VardisIntegral.html
     assert NS(Integral(log(log(1/x))/(1 + x + x**2), (x, 0, 1)), 15) == \
         NS('pi/sqrt(3) * log(2*pi**(5/6) / gamma(1/6))', 15)
-    # https://mathworld.wolfram.com/AhmedsIntegral.html
+    # http://mathworld.wolfram.com/AhmedsIntegral.html
     assert NS(Integral(atan(sqrt(x**2 + 2))/(sqrt(x**2 + 2)*(x**2 + 1)), (x,
               0, 1)), 15) == NS(5*pi**2/96, 15)
-    # https://mathworld.wolfram.com/AbelsIntegral.html
+    # http://mathworld.wolfram.com/AbelsIntegral.html
     assert NS(Integral(x/((exp(pi*x) - exp(
         -pi*x))*(x**2 + 1)), (x, 0, oo)), 15) == NS('log(2)/2-1/4', 15)
     # Complex part trimming
-    # https://mathworld.wolfram.com/VardisIntegral.html
+    # http://mathworld.wolfram.com/VardisIntegral.html
     assert NS(Integral(log(log(sin(x)/cos(x))), (x, pi/4, pi/2)), 15, chop=True) == \
         NS('pi/4*log(4*pi**3/gamma(1/4)**4)', 15)
     #

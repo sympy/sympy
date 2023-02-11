@@ -852,7 +852,7 @@ def _check_antecedents_1(g, x, helper=False):
 
     # extra case from wofram functions site:
     # (reproduced verbatim from Prudnikov, section 2.24.2)
-    # https://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/01/
+    # http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/01/
     case_extra = []
     case_extra += [Eq(p, q), Eq(delta, 0), Eq(unbranched_argument(eta), 0), Ne(eta, 0)]
     if not helper:
@@ -991,7 +991,7 @@ def _check_antecedents(g1, g2, x):
     # [P], Section 2.24.1
     #
     # They are also reproduced (verbatim!) at
-    # https://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/
+    # http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/
     #
     # Note: k=l=r=alpha=1
     sigma, _ = _get_coeff_exp(g1.argument, x)
@@ -1047,7 +1047,7 @@ def _check_antecedents(g1, g2, x):
     #   https://reduce-algebra.svn.sourceforge.net/svnroot/reduce-algebra/trunk/packages/defint/definta.red
     #   (search for tst14)
     # The Wolfram alpha version:
-    #   https://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/03/0014/
+    #   http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/03/0014/
     z0 = exp(-(bstar + cstar)*pi*S.ImaginaryUnit)
     zos = unpolarify(z0*omega/sigma)
     zso = unpolarify(z0*sigma/omega)
