@@ -1638,7 +1638,7 @@ def partitions(n, m=None, k=None, size=False):
     ==========
 
     .. [1] modified from Tim Peter's version to allow for k and m values:
-           http://code.activestate.com/recipes/218332-generator-for-integer-partitions/
+           https://code.activestate.com/recipes/218332-generator-for-integer-partitions/
 
     See Also
     ========
@@ -2147,7 +2147,7 @@ def generate_involutions(n):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/PermutationInvolution.html
+    .. [1] https://mathworld.wolfram.com/PermutationInvolution.html
 
     """
     idx = list(range(n))
@@ -2530,7 +2530,7 @@ def necklaces(n, k, free=False):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/Necklace.html
+    .. [1] https://mathworld.wolfram.com/Necklace.html
 
     .. [2] Frank Ruskey, Carla Savage, and Terry Min Yih Wang,
         Generating necklaces, Journal of Algorithms 13 (1992), 414-430;

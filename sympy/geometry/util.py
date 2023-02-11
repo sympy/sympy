@@ -307,7 +307,7 @@ def closest_points(*args):
     References
     ==========
 
-    .. [1] http://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
+    .. [1] https://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
 
     .. [2] Sweep line algorithm
         https://en.wikipedia.org/wiki/Sweep_line_algorithm
@@ -499,7 +499,7 @@ def farthest_points(*args):
     References
     ==========
 
-    .. [1] http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
+    .. [1] https://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
 
     .. [2] Rotating Callipers Technique
         https://en.wikipedia.org/wiki/Rotating_calipers
