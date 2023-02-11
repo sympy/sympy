@@ -5,10 +5,8 @@ from math import floor as mfloor
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.matrices.exceptions import DMRankError, DMShapeError, DMValueError, DMDomainError
 
-linear_dependent_error = "input matrix contains linearly dependent rows"
 
-
-def ddm_lll(x, delta=QQ(3, 4)):
+def _ddm_lll(x, delta=QQ(3, 4), return_transform=False):
     if QQ(1, 4) >= delta or delta >= QQ(1, 1):
         raise DMValueError("delta must lie in range (0.25, 1)")
     if x.shape[0] > x.shape[1]:
@@ -23,6 +21,8 @@ def ddm_lll(x, delta=QQ(3, 4)):
     mu = x.zeros((m, m), QQ)
     g_star = [QQ(0, 1) for _ in range(m)]
     half = QQ(1, 2)
+    T = x.eye(m, ZZ) if return_transform else None
+    linear_dependent_error = "input matrix contains linearly dependent rows"
 
     def closest_integer(x):
         return ZZ(mfloor(x + half))
@@ -36,12 +36,13 @@ def ddm_lll(x, delta=QQ(3, 4)):
     def dot_rows(x, y, rows: tuple[int, int]):
         return sum([x[rows[0]][z] * y[rows[1]][z] for z in range(x.shape[1])])
 
-    def reduce_row(mu, y, rows: tuple[int, int]):
+    def reduce_row(T, mu, y, rows: tuple[int, int]):
         r = closest_integer(mu[rows[0]][rows[1]])
         y[rows[0]] = [y[rows[0]][z] - r * y[rows[1]][z] for z in range(n)]
-        for j in range(rows[1]):
-            mu[rows[0]][j] -= r * mu[rows[1]][j]
+        mu[rows[0]][:rows[1]] = [mu[rows[0]][z] - r * mu[rows[1]][z] for z in range(rows[1])]
         mu[rows[0]][rows[1]] -= r
+        if return_transform:
+            T[rows[0]] = [T[rows[0]][z] - r * T[rows[1]][z] for z in range(m)]
 
     for i in range(m):
         y_star[i] = [QQ.convert_from(z, ZZ) for z in y[i]]
@@ -55,11 +56,11 @@ def ddm_lll(x, delta=QQ(3, 4)):
         g_star[i] = dot_rows(y_star, y_star, (i, i))
     while k < m:
         if not mu_small(k, k - 1):
-            reduce_row(mu, y, (k, k - 1))
+            reduce_row(T, mu, y, (k, k - 1))
         if lovasz_condition(k):
             for l in range(k - 2, -1, -1):
                 if not mu_small(k, l):
-                    reduce_row(mu, y, (k, l))
+                    reduce_row(T, mu, y, (k, l))
             k += 1
         else:
             nu = mu[k][k - 1]
@@ -77,7 +78,17 @@ def ddm_lll(x, delta=QQ(3, 4)):
                 xi = mu[i][k]
                 mu[i][k] = mu[i][k - 1] - nu * xi
                 mu[i][k - 1] = mu[k][k - 1] * mu[i][k] + xi
+            if return_transform:
+                T[k], T[k - 1] = T[k - 1], T[k]
             k = max(k - 1, 1)
     assert all([lovasz_condition(i) for i in range(1, m)])
     assert all([mu_small(i, j) for i in range(m) for j in range(i)])
-    return y
+    return y, T
+
+
+def ddm_lll(x, delta=QQ(3, 4)):
+    return _ddm_lll(x, delta=delta, return_transform=False)[0]
+
+
+def ddm_lll_transform(x, delta=QQ(3, 4)):
+    return _ddm_lll(x, delta=delta, return_transform=True)
