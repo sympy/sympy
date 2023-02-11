@@ -35,7 +35,7 @@ def AbelianGroup(*cyclic_orders):
     References
     ==========
 
-    .. [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups
+    .. [1] https://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups
 
     """
     groups = []

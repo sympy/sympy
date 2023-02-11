@@ -21,7 +21,7 @@ class Prufer(Basic):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/LabeledTree.html
+    .. [1] https://mathworld.wolfram.com/LabeledTree.html
 
     """
     _prufer_repr = None

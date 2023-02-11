@@ -2469,7 +2469,7 @@ def diff(f, *symbols, **kwargs):
     References
     ==========
 
-    .. [1] http://reference.wolfram.com/legacy/v5_2/Built-inFunctions/AlgebraicComputation/Calculus/D.html
+    .. [1] https://reference.wolfram.com/legacy/v5_2/Built-inFunctions/AlgebraicComputation/Calculus/D.html
 
     See Also
     ========
@@ -2635,7 +2635,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     and ``cos(x)`` are not unique, due to the identity `\sin^2(x) + \cos^2(x)
     = 1`.  The current implementation uses the form obtained from Chebyshev
     polynomials, but this may change.  See `this MathWorld article
-    <http://mathworld.wolfram.com/Multiple-AngleFormulas.html>`_ for more
+    <https://mathworld.wolfram.com/Multiple-AngleFormulas.html>`_ for more
     information.
 
     Notes
