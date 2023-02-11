@@ -119,7 +119,7 @@ def test_Module():
 @may_xfail
 def test_Subroutine():
     # Code to generate the subroutine in the example from
-    # http://www.fortran90.org/src/best-practices.html#arrays
+    # https://www.fortran90.org/src/best-practices.html#arrays
     r = Symbol('r', real=True)
     i = Symbol('i', integer=True)
     v_r = Variable.deduced(r, attrs=(dimension(assumed_extent), intent_out))

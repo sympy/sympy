@@ -1,7 +1,7 @@
 '''
 This implementation is a heavily modified fixed point implementation of
 BBP_formula for calculating the nth position of pi. The original hosted
-at: http://en.literateprograms.org/Pi_with_the_BBP_formula_(Python)
+at: https://en.literateprograms.org/Pi_with_the_BBP_formula_(Python)
 
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -127,7 +127,7 @@ def pi_hex_digits(n, prec=14):
     References
     ==========
 
-    .. [1] http://www.numberworld.org/digits/Pi/
+    .. [1] https://www.numberworld.org/digits/Pi/
     """
     n, prec = as_int(n), as_int(prec)
     if n < 0:

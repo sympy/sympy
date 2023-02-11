@@ -20,7 +20,7 @@ from sympy.combinatorics.util import _distribute_gens_by_base, \
         arXiv:math-ph/0107032v1
 
     [4] xperm.c part of XPerm written by J. M. Martin-Garcia
-        http://www.xact.es/index.html
+        https://www.xact.es/index.html
 """
 
 

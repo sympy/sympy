@@ -2,7 +2,7 @@
 
 See sympy.unify.core docstring for algorithmic details
 
-See http://matthewrocklin.com/blog/work/2012/11/01/Unification/ for discussion
+See https://matthewrocklin.com/blog/work/2012/11/01/Unification/ for discussion
 """
 
 from .usympy import unify, rebuild

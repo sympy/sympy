@@ -201,7 +201,7 @@ def test_quadratic_non_perfect_slow():
 def test_DN():
     # Most of the test cases were adapted from,
     # Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson, July 31, 2004.
-    # https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
+    # https://web.archive.org/web/20160323033128/https://www.jpr2718.org/pell.pdf
     # others are verified using Wolfram Alpha.
 
     # Covers cases where D <= 0 or D > 0 and D is a square or N = 0
@@ -245,7 +245,7 @@ def test_DN():
 
     # |N| > 1
     # Some tests were created using calculator at
-    # http://www.numbertheory.org/php/patz.html
+    # https://www.numbertheory.org/php/patz.html
 
     assert diop_DN(13, -4) == [(3, 1), (393, 109), (36, 10)]
     # Source I referred returned (3, 1), (393, 109) and (-3, 1) as fundamental solutions

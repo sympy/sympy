@@ -5,7 +5,7 @@ Calculates the Coupled-Cluster energy- and amplitude equations
 See 'An Introduction to Coupled Cluster Theory' by
 T. Daniel Crawford and Henry F. Schaefer III.
 
-Other Resource : http://vergil.chemistry.gatech.edu/notes/sahan-cc-2010.pdf
+Other Resource : https://vergil.chemistry.gatech.edu/notes/sahan-cc-2010.pdf
 """
 
 from sympy.physics.secondquant import (AntiSymmetricTensor, wicks,
@@ -45,7 +45,7 @@ def main():
     print("Calculates the Coupled-Cluster energy- and amplitude equations")
     print("See 'An Introduction to Coupled Cluster Theory' by")
     print("T. Daniel Crawford and Henry F. Schaefer III")
-    print("Reference to a Lecture Series: http://vergil.chemistry.gatech.edu/notes/sahan-cc-2010.pdf")
+    print("Reference to a Lecture Series: https://vergil.chemistry.gatech.edu/notes/sahan-cc-2010.pdf")
     print()
 
     # setup hamiltonian

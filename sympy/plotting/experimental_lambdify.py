@@ -103,7 +103,7 @@ class vectorized_lambdify:
     does not understand SymPy Float. If this is needed one can use the
     float_wrap_evalf/complex_wrap_evalf options of experimental_lambdify or
     better one can be explicit about the dtypes that numpy works with.
-    Check numpy bug http://projects.scipy.org/numpy/ticket/1013 to know what
+    Check numpy bug https://projects.scipy.org/numpy/ticket/1013 to know what
     types of errors to expect.
     """
     def __init__(self, args, expr):

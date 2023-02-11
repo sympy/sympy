@@ -39,7 +39,7 @@ Some references on the topic
 ----------------------------
 
 [1] https://en.wikipedia.org/wiki/Rete_algorithm
-[2] http://reports-archive.adm.cs.cmu.edu/anon/1995/CMU-CS-95-113.pdf
+[2] https://reports-archive.adm.cs.cmu.edu/anon/1995/CMU-CS-95-113.pdf
 
 https://en.wikipedia.org/wiki/Propositional_formula
 https://en.wikipedia.org/wiki/Inference_rule
@@ -77,7 +77,7 @@ def transitive_closure(implications):
     Computes the transitive closure of a list of implications
 
     Uses Warshall's algorithm, as described at
-    http://www.cs.hope.edu/~cusack/Notes/Notes/DiscreteMath/Warshall.pdf.
+    https://www.cs.hope.edu/~cusack/Notes/Notes/DiscreteMath/Warshall.pdf.
     """
     full_implications = set(implications)
     literals = set().union(*map(set, full_implications))

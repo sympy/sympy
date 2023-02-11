@@ -471,9 +471,9 @@ class BinaryQuadratic(DiophantineEquationType):
     ==========
 
     .. [1] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0, [online],
-          Available: http://www.alpertron.com.ar/METHODS.HTM
+          Available: https://www.alpertron.com.ar/METHODS.HTM
     .. [2] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
-          Available: https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
+          Available: https://web.archive.org/web/20160323033111/https://www.jpr2718.org/ax2p.pdf
 
     """
 
@@ -502,7 +502,7 @@ class BinaryQuadratic(DiophantineEquationType):
         # (1) Simple-Hyperbolic case: A = C = 0, B != 0
         # In this case equation can be converted to (Bx + E)(By + D) = DE - BF
         # We consider two cases; DE - BF = 0 and DE - BF != 0
-        # More details, http://www.alpertron.com.ar/METHODS.HTM#SHyperb
+        # More details, https://www.alpertron.com.ar/METHODS.HTM#SHyperb
 
         result = DiophantineSolutionSet(var, self.parameters)
         t, u = result.parameters
@@ -532,7 +532,7 @@ class BinaryQuadratic(DiophantineEquationType):
         # (2) Parabolic case: B**2 - 4*A*C = 0
         # There are two subcases to be considered in this case.
         # sqrt(c)D - sqrt(a)E = 0 and sqrt(c)D - sqrt(a)E != 0
-        # More Details, http://www.alpertron.com.ar/METHODS.HTM#Parabol
+        # More Details, https://www.alpertron.com.ar/METHODS.HTM#Parabol
 
         elif discr == 0:
 
@@ -573,7 +573,7 @@ class BinaryQuadratic(DiophantineEquationType):
 
         # (3) Method used when B**2 - 4*A*C is a square, is described in p. 6 of the below paper
         # by John P. Robertson.
-        # https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
+        # https://web.archive.org/web/20160323033111/https://www.jpr2718.org/ax2p.pdf
 
         elif is_square(discr):
             if A != 0:
@@ -995,7 +995,7 @@ class GeneralSumOfSquares(DiophantineEquationType):
 
     .. [1] Representing an integer as a sum of three squares, [online],
         Available:
-        http://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
+        https://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
     """
 
     name = 'general_sum_of_squares'
@@ -1918,9 +1918,9 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
     ==========
 
     .. [1] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0, [online],
-          Available: http://www.alpertron.com.ar/METHODS.HTM
+          Available: https://www.alpertron.com.ar/METHODS.HTM
     .. [2] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
-          Available: https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
+          Available: https://web.archive.org/web/20160323033111/https://www.jpr2718.org/ax2p.pdf
 
     See Also
     ========
@@ -2003,7 +2003,7 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
 
     .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P.
         Robertson, July 31, 2004, Pages 16 - 17. [online], Available:
-        https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
+        https://web.archive.org/web/20160323033128/https://www.jpr2718.org/pell.pdf
     """
     if D < 0:
         if N == 0:
@@ -2273,7 +2273,7 @@ def cornacchia(a, b, m):
     .. [1] A. Nitaj, "L'algorithme de Cornacchia"
     .. [2] Solving the diophantine equation ax**2 + by**2 = m by Cornacchia's
         method, [online], Available:
-        http://www.numbertheory.org/php/cornacchia.html
+        https://www.numbertheory.org/php/cornacchia.html
 
     See Also
     ========
@@ -2346,7 +2346,7 @@ def PQa(P_0, Q_0, D):
     ==========
 
     .. [1] Solving the generalized Pell equation x^2 - Dy^2 = N, John P.
-        Robertson, July 31, 2004, Pages 4 - 8. https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
+        Robertson, July 31, 2004, Pages 4 - 8. https://web.archive.org/web/20160323033128/https://www.jpr2718.org/pell.pdf
     """
     A_i_2 = B_i_1 = 0
     A_i_1 = B_i_2 = 1
@@ -2417,7 +2417,7 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     ==========
 
     .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P.
-        Robertson, July 31, 2004, Page 15. https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
+        Robertson, July 31, 2004, Page 15. https://web.archive.org/web/20160323033128/https://www.jpr2718.org/pell.pdf
     """
     D = as_int(D)
     N = as_int(N)
@@ -2498,7 +2498,7 @@ def equivalent(u, v, r, s, D, N):
     ==========
 
     .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P.
-        Robertson, July 31, 2004, Page 12. https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
+        Robertson, July 31, 2004, Page 12. https://web.archive.org/web/20160323033128/https://www.jpr2718.org/pell.pdf
 
     """
     return divisible(u*r - D*v*s, N) and divisible(u*s - v*r, N)
@@ -2624,7 +2624,7 @@ def transformation_to_DN(eq):
 
     .. [1] Solving the equation ax^2 + bxy + cy^2 + dx + ey + f = 0,
            John P.Robertson, May 8, 2003, Page 7 - 11.
-           https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
+           https://web.archive.org/web/20160323033111/https://www.jpr2718.org/ax2p.pdf
     """
 
     var, coeff, diop_type = classify_diop(eq, _dict=False)
@@ -2720,7 +2720,7 @@ def find_DN(eq):
 
     .. [1] Solving the equation ax^2 + bxy + cy^2 + dx + ey + f = 0,
            John P.Robertson, May 8, 2003, Page 7 - 11.
-           https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
+           https://web.archive.org/web/20160323033111/https://www.jpr2718.org/ax2p.pdf
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
     if diop_type == BinaryQuadratic.name:
@@ -3111,7 +3111,7 @@ def sqf_normal(a, b, c, steps=False):
     ==========
 
     .. [1] Legendre's Theorem, Legrange's Descent,
-           http://public.csusm.edu/aitken_html/notes/legendre.pdf
+           https://public.csusm.edu/aitken_html/notes/legendre.pdf
 
 
     See Also
@@ -3319,7 +3319,7 @@ def gaussian_reduce(w, a, b):
     ==========
 
     .. [1] Gaussian lattice Reduction [online]. Available:
-           https://web.archive.org/web/20201021115213/http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
+           https://web.archive.org/web/20201021115213/https://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
     .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
            Mathematics of Computation, Volume 00, Number 0.
     """
@@ -3498,7 +3498,7 @@ def diop_general_sum_of_squares(eq, limit=1):
 
     .. [1] Representing an integer as a sum of three squares, [online],
         Available:
-        http://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
+        https://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
@@ -3617,7 +3617,7 @@ def prime_as_sum_of_two_squares(p):
     =========
 
     .. [1] Representing a number as a sum of four squares, [online],
-        Available: http://schorn.ch/lagrange.html
+        Available: https://schorn.ch/lagrange.html
 
     See Also
     ========
@@ -3667,7 +3667,7 @@ def sum_of_three_squares(n):
     ==========
 
     .. [1] Representing a number as a sum of three squares, [online],
-        Available: http://schorn.ch/lagrange.html
+        Available: https://schorn.ch/lagrange.html
 
     See Also
     ========
@@ -3747,7 +3747,7 @@ def sum_of_four_squares(n):
     ==========
 
     .. [1] Representing a number as a sum of four squares, [online],
-        Available: http://schorn.ch/lagrange.html
+        Available: https://schorn.ch/lagrange.html
 
     See Also
     ========

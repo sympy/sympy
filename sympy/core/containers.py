@@ -136,7 +136,7 @@ class Tuple(Basic):
         #   File "<stdin>", line 1, in <module>
         # TypeError: slice indices must be integers or None or have an __index__ method
         #
-        # See: http://bugs.python.org/issue13340
+        # See: https://bugs.python.org/issue13340
 
         if start is None and stop is None:
             return self.args.index(value)

@@ -1,7 +1,7 @@
 """
 Some examples have been taken from:
 
-http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
+https://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
 from sympy import KroneckerProduct
 from sympy.combinatorics import Permutation

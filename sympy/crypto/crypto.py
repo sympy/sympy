@@ -256,7 +256,7 @@ def encipher_shift(msg, key, symbols=None):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Caesar_cipher
-    .. [2] http://mathworld.wolfram.com/CaesarsMethod.html
+    .. [2] https://mathworld.wolfram.com/CaesarsMethod.html
 
     See Also
     ========
@@ -742,8 +742,8 @@ def encipher_vigenere(msg, key, symbols=None):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Vigenere_cipher
-    .. [2] http://web.archive.org/web/20071116100808/
-    .. [3] http://web.archive.org/web/20071116100808/http://filebox.vt.edu/users/batman/kryptos.html
+    .. [2] https://web.archive.org/web/20071116100808/
+    .. [3] https://web.archive.org/web/20071116100808/https://filebox.vt.edu/users/batman/kryptos.html
        (short URL: https://goo.gl/ijr22d)
 
     """
@@ -1741,11 +1741,11 @@ def rsa_public_key(*args, **kwargs):
 
     .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
 
-    .. [2] http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
+    .. [2] https://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
 
     .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
 
-    .. [4] http://www.itiis.org/digital-library/manuscript/1381
+    .. [4] https://www.itiis.org/digital-library/manuscript/1381
     """
     return _rsa_key(*args, public=True, private=False, **kwargs)
 
@@ -1863,11 +1863,11 @@ def rsa_private_key(*args, **kwargs):
 
     .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
 
-    .. [2] http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
+    .. [2] https://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
 
     .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
 
-    .. [4] http://www.itiis.org/digital-library/manuscript/1381
+    .. [4] https://www.itiis.org/digital-library/manuscript/1381
     """
     return _rsa_key(*args, public=False, private=True, **kwargs)
 

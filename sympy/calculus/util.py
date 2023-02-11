@@ -673,7 +673,7 @@ def is_convex(f, *syms, domain=S.Reals):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Convex_function
-    .. [2] http://www.ifp.illinois.edu/~angelia/L3_convfunc.pdf
+    .. [2] https://www.ifp.illinois.edu/~angelia/L3_convfunc.pdf
     .. [3] https://en.wikipedia.org/wiki/Logarithmically_convex_function
     .. [4] https://en.wikipedia.org/wiki/Logarithmically_concave_function
     .. [5] https://en.wikipedia.org/wiki/Concave_function

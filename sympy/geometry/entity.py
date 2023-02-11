@@ -183,8 +183,8 @@ class GeometryEntity(Basic, EvalfMixin):
         if not all(x.is_number and x.is_finite for x in bounds):
             return None
 
-        svg_top = '''<svg xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink"
+        svg_top = '''<svg xmlns="https://www.w3.org/2000/svg"
+            xmlns:xlink="https://www.w3.org/1999/xlink"
             width="{1}" height="{2}" viewBox="{0}"
             preserveAspectRatio="xMinYMin meet">
             <defs>

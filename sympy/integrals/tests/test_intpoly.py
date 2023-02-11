@@ -117,7 +117,7 @@ def test_polytope_integrate():
                                ((1, -1), 0)], 1) == 2
 
     #  Tests for 2D polytopes mentioned in Chin et al(Page 10):
-    #  http://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
+    #  https://dilbert.engr.ucdavis.edu/~suku/quadrature/cls-integration.pdf
     fig1 = Polygon(Point(1.220, -0.827), Point(-1.490, -4.503),
                    Point(-3.766, -1.622), Point(-4.240, -0.091),
                    Point(-3.160, 4), Point(-0.981, 4.447),

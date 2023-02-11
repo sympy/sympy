@@ -23,13 +23,13 @@ complete source code files.
 #
 # .. _crates: https://crates.io/
 # .. _Guidelines: https://github.com/rust-lang/rust/tree/master/src/doc/style
-# .. _num: http://rust-num.github.io/num/num/
-# .. _BigInt: http://rust-num.github.io/num/num/bigint/struct.BigInt.html
-# .. _BigUint: http://rust-num.github.io/num/num/bigint/struct.BigUint.html
-# .. _Complex: http://rust-num.github.io/num/num/complex/struct.Complex.html
-# .. _Rational32: http://rust-num.github.io/num/num/rational/type.Rational32.html
-# .. _Rational64: http://rust-num.github.io/num/num/rational/type.Rational64.html
-# .. _BigRational: http://rust-num.github.io/num/num/rational/type.BigRational.html
+# .. _num: https://rust-num.github.io/num/num/
+# .. _BigInt: https://rust-num.github.io/num/num/bigint/struct.BigInt.html
+# .. _BigUint: https://rust-num.github.io/num/num/bigint/struct.BigUint.html
+# .. _Complex: https://rust-num.github.io/num/num/complex/struct.Complex.html
+# .. _Rational32: https://rust-num.github.io/num/num/rational/type.Rational32.html
+# .. _Rational64: https://rust-num.github.io/num/num/rational/type.Rational64.html
+# .. _BigRational: https://rust-num.github.io/num/num/rational/type.BigRational.html
 
 from __future__ import annotations
 from typing import Any
@@ -160,7 +160,7 @@ known_functions = {
 # }
 
 # These are the core reserved words in the Rust language. Taken from:
-# http://doc.rust-lang.org/grammar.html#keywords
+# https://doc.rust-lang.org/grammar.html#keywords
 
 reserved_words = ['abstract',
                   'alignof',

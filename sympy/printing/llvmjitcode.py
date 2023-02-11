@@ -413,7 +413,7 @@ def llvm_callable(args, expr, callback_type=None):
 
     The 'cubature' callback is for the Python wrapper around the
     cubature package ( https://github.com/saullocastro/cubature )
-    and ( http://ab-initio.mit.edu/wiki/index.php/Cubature )
+    and ( https://ab-initio.mit.edu/wiki/index.php/Cubature )
 
     There are two signatures for the SciPy integration callbacks.
     The first ('scipy.integrate') is the function to be passed to the

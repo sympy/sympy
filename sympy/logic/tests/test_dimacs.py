@@ -73,7 +73,7 @@ p cnf 6 9
 """
 
 f4 = """c
-c file:   hole6.cnf [http://people.sc.fsu.edu/~jburkardt/data/cnf/hole6.cnf]
+c file:   hole6.cnf [https://people.sc.fsu.edu/~jburkardt/data/cnf/hole6.cnf]
 c
 c SOURCE: John Hooker (jh38+@andrew.cmu.edu)
 c

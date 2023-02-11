@@ -1290,7 +1290,7 @@ class HolonomicFunction:
         ==========
 
         .. [1] https://hal.inria.fr/inria-00070025/document
-        .. [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
+        .. [2] https://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
 
         """
 

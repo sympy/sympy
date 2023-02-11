@@ -164,7 +164,7 @@ if __name__ == "__main__":
             if hasattr(result, '__path__'):
                 ##PACKAGE##
                 # The existence of __path__ is documented in the tutorial on modules.
-                # Python 3.3 documents this in http://docs.python.org/3.3/reference/import.html
+                # Python 3.3 documents this in https://docs.python.org/3.3/reference/import.html
                 if options.by_origin:
                     msg('Error: %s (a package) is imported by %s',
                         module, importer_reference)

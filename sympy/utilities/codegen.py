@@ -856,7 +856,7 @@ class CodeGenArgumentListError(Exception):
 
 header_comment = """Code generated with SymPy %(version)s
 
-See http://www.sympy.org/ for more information.
+See https://www.sympy.org/ for more information.
 
 This file is part of '%(project)s'
 """

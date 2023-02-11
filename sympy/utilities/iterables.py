@@ -1650,7 +1650,7 @@ def partitions(n, m=None, k=None, size=False):
     ==========
 
     .. [1] modified from Tim Peter's version to allow for k and m values:
-           http://code.activestate.com/recipes/218332-generator-for-integer-partitions/
+           https://code.activestate.com/recipes/218332-generator-for-integer-partitions/
 
     See Also
     ========
@@ -2084,7 +2084,7 @@ def generate_bell(n):
 
     .. [2] https://stackoverflow.com/questions/4856615/recursive-permutation/4857018
 
-    .. [3] http://programminggeeks.com/bell-algorithm-for-permutation/
+    .. [3] https://programminggeeks.com/bell-algorithm-for-permutation/
 
     .. [4] https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
 
@@ -2159,7 +2159,7 @@ def generate_involutions(n):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/PermutationInvolution.html
+    .. [1] https://mathworld.wolfram.com/PermutationInvolution.html
 
     """
     idx = list(range(n))
@@ -2542,7 +2542,7 @@ def necklaces(n, k, free=False):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/Necklace.html
+    .. [1] https://mathworld.wolfram.com/Necklace.html
 
     .. [2] Frank Ruskey, Carla Savage, and Terry Min Yih Wang,
         Generating necklaces, Journal of Algorithms 13 (1992), 414-430;

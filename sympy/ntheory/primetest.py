@@ -77,7 +77,7 @@ def is_square(n, prep=True):
     References
     ==========
 
-    .. [1]  http://mersenneforum.org/showpost.php?p=110896
+    .. [1]  https://mersenneforum.org/showpost.php?p=110896
 
     See Also
     ========
@@ -278,7 +278,7 @@ def _lucas_selfridge_params(n):
     References
     ==========
     .. [1] "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-           http://mpqs.free.fr/LucasPseudoprimes.pdf
+           https://mpqs.free.fr/LucasPseudoprimes.pdf
     """
     from sympy.ntheory.residue_ntheory import jacobi_symbol
     D = 5
@@ -327,7 +327,7 @@ def is_lucas_prp(n):
     References
     ==========
     - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
+      https://mpqs.free.fr/LucasPseudoprimes.pdf
     - OEIS A217120: Lucas Pseudoprimes
       https://oeis.org/A217120
     - https://en.wikipedia.org/wiki/Lucas_pseudoprime
@@ -375,7 +375,7 @@ def is_strong_lucas_prp(n):
     References
     ==========
     - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
+      https://mpqs.free.fr/LucasPseudoprimes.pdf
     - OEIS A217255: Strong Lucas Pseudoprimes
       https://oeis.org/A217255
     - https://en.wikipedia.org/wiki/Lucas_pseudoprime
@@ -444,7 +444,7 @@ def is_extra_strong_lucas_prp(n):
     References
     ==========
     - "Frobenius Pseudoprimes", Jon Grantham, 2000.
-      http://www.ams.org/journals/mcom/2001-70-234/S0025-5718-00-01197-2/
+      https://www.ams.org/journals/mcom/2001-70-234/S0025-5718-00-01197-2/
     - OEIS A217719: Extra Strong Lucas Pseudoprimes
       https://oeis.org/A217719
     - https://en.wikipedia.org/wiki/Lucas_pseudoprime
@@ -562,7 +562,7 @@ def isprime(n):
     ==========
     - https://en.wikipedia.org/wiki/Strong_pseudoprime
     - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
+      https://mpqs.free.fr/LucasPseudoprimes.pdf
     - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
     try:
