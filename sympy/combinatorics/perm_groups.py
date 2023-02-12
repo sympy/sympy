@@ -116,7 +116,7 @@ class PermutationGroup(Basic):
 
     .. [13] https://www.math.colostate.edu/~hulpke/CGT/cgtnotes.pdf
 
-    .. [14] https://www.gap-system.org/Manuals/doc/ref/manual.pdf
+    .. [14] https://docs.gap-system.org/doc/ref/manual.pdf
 
     """
     is_group = True

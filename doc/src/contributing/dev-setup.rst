@@ -17,7 +17,7 @@ of Git for your operating system to start development.
 .. note::
    Refer to the installation instructions in
    the `Git installation instructions <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_.
-   Learn about the basic git commands in this `Git Handbook <https://guides.github.com/introduction/git-handbook/>`_
+   Learn about the basic git commands in this `Git Handbook <https://docs.github.com/en/get-started/using-git/about-git>`_
    or any other sources on the internet.
 
 Get the SymPy Code

@@ -564,7 +564,7 @@ Future Improvements
 1. Completing Dynamics Online
 -----------------------------
 The parser has been built by referring to and parsing codes from the
-`Autolev Tutorial <http://web.mae.ufl.edu/~fregly/PDFs/autolev_tutorial.pdf>`_
+`Autolev Tutorial <https://mae.ufl.edu/~fregly/PDFs/autolev_tutorial.pdf>`_
 and the book *Dynamics Online: Theory and Implementation Using Autolev*.
 Basically, the process involved going through each of these codes,
 validating the parser results and improving the rules if required
