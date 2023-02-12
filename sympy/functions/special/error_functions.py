@@ -1153,7 +1153,7 @@ class Ei(Function):
 
     .. [1] https://dlmf.nist.gov/6.6
     .. [2] https://en.wikipedia.org/wiki/Exponential_integral
-    .. [3] Abramowitz & Stegun, section 5: http://people.math.sfu.ca/~cbm/aands/page_228.htm
+    .. [3] Abramowitz & Stegun, section 5: https://web.archive.org/web/20201128173312/http://people.math.sfu.ca/~cbm/aands/page_228.htm
 
     """
 

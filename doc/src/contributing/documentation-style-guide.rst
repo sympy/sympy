@@ -68,7 +68,7 @@ The following lists the processing tools:
 * Sphinx extensions that are not included with Sphinx that we enable:
 
   * ``numpydoc``: Processes docstrings written in the "numpydoc" format, see
-    https://numpydoc.readthedocs.io. We recommend the subset of numpydoc
+    https://numpydoc.readthedocs.io/en/stable/. We recommend the subset of numpydoc
     formatting features in this document. (Note that we currently use an older
     modified fork of numpydoc, which is included in the SymPy source code.)
   * ``sphinx_math_dollar``: Allows math to be delimited with dollar signs
@@ -93,7 +93,7 @@ Types of Documentation
 
 There are four main locations where SymPy’s documentation can be found:
 
-**SymPy Website** https://sympy.org
+**SymPy Website** https://www.sympy.org/
 
 The SymPy website’s primary function is to advertise the software to users and
 developers. It also serves as an initial location to point viewers to other

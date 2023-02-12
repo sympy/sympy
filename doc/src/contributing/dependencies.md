@@ -163,7 +163,7 @@ Matplotlib.
   [text plots](textplot).
 
 - **pyglet**: SymPy has a submodule {mod}`sympy.plotting.pygletplot` that can
-  be used to interface with the [pyglet](http://pyglet.org/) module to do 2D
+  be used to interface with the [pyglet](https://pyglet.org/) module to do 2D
   and 3D plotting.
 
 (dependencies-lambdify)=
@@ -363,7 +363,7 @@ either by using the `sympy.testing.pytest.skip()` function or by setting `skip
 = True` to skip the entire test file. Optional modules in tests and SymPy
 library code should be imported with `import_module()`.
 
-- **pytest**: [Pytest](https://docs.pytest.org/) is not a required dependency
+- **pytest**: [Pytest](https://docs.pytest.org/en/latest/) is not a required dependency
   for the SymPy test suite. SymPy has its own test runner, which can be
   accessed via the `bin/test` script in the SymPy source directory or the
   {func}`~.test` function.
