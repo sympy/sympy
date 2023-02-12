@@ -1,4 +1,4 @@
-from collections import defaultdict, OrderedDict
+from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
     permutations, product
@@ -317,10 +317,7 @@ def multiset(seq):
     group
 
     """
-    rv = defaultdict(int)
-    for s in seq:
-        rv[s] += 1
-    return dict(rv)
+    return dict(Counter(seq).items())
 
 
 
