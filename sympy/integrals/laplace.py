@@ -368,7 +368,7 @@ def _laplace_build_rules():
     (log(a*t)**2, (log(exp(S.EulerGamma)*s/a)**2+pi**2/6)/s,
      a>0, S.Zero, dco), # 4.6.13
     (sin(omega*t), omega/(s**2+omega**2),
-      S.true, Abs(im(omega)), dco), # 4,7,1
+     S.true, Abs(im(omega)), dco), # 4,7,1
     (Abs(sin(omega*t)), omega/(s**2+omega**2)*coth(pi*s/2/omega),
      omega>0, S.Zero, dco), # 4.7.2
     (sin(omega*t)/t, atan(omega/s),
