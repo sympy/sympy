@@ -1018,8 +1018,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         References
         ==========
 
-        .. [1] http://www.columbia.edu/~ww2040/4701Sum07/4701-06-Notes-MCII.pdf
-        .. [2] http://cecas.clemson.edu/~shierd/Shier/markov.pdf
+        .. [1] https://web.archive.org/web/20220207032113/https://www.columbia.edu/~ww2040/4701Sum07/4701-06-Notes-MCII.pdf
+        .. [2] https://cecas.clemson.edu/~shierd/Shier/markov.pdf
         .. [3] https://ujcontent.uj.ac.za/vital/access/services/Download/uj:7506/CONTENT1
         .. [4] https://www.mathworks.com/help/econ/dtmc.classify.html
         """
@@ -1346,7 +1346,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Absorbing_Markov_chain
-        .. [2] http://people.brandeis.edu/~igusa/Math56aS08/Math56a_S08_notes015.pdf
+        .. [2] https://people.brandeis.edu/~igusa/Math56aS08/Math56a_S08_notes015.pdf
         """
         trans_probs = self.transition_probabilities
 
@@ -1465,7 +1465,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         ==========
 
         .. [1] https://onlinelibrary.wiley.com/doi/pdf/10.1002/9780470316887.app1
-        .. [2] http://www.columbia.edu/~ww2040/6711F12/lect1023big.pdf
+        .. [2] https://web.archive.org/web/20220207000124/http://www.columbia.edu/~ww2040/6711F12/lect1023big.pdf
         """
         states, A, B, C = self.decompose()
         O = zeros(A.shape[0], C.shape[1])
@@ -1569,7 +1569,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Markov_chain#Continuous-time_Markov_chain
-    .. [2] http://u.math.biu.ac.il/~amirgi/CTMCnotes.pdf
+    .. [2] https://u.math.biu.ac.il/~amirgi/CTMCnotes.pdf
     """
     index_set = S.Reals
 
