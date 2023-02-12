@@ -864,7 +864,7 @@ def RobustSoliton(name, k, delta, c):
 
     .. [1] https://en.wikipedia.org/wiki/Soliton_distribution#Robust_distribution
     .. [2] https://www.inference.org.uk/mackay/itprnn/ps/588.596.pdf
-    .. [3] https://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf     
+    .. [3] https://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
 
     '''
     return rv(name, RobustSolitonDistribution, k, delta, c)
