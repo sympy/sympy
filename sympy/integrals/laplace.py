@@ -389,10 +389,20 @@ def _laplace_build_rules():
      S.true, S.Zero, dco), # 4.7.66
     (cos(2*sqrt(a*t))/sqrt(t), sqrt(pi/s)*exp(-a/s),
      S.true, S.Zero, dco), # 4.7.67
+    (sin(a*t)*sin(b*t), 2*a*b*s/(s**2+(a+b)**2)/(s**2+(a-b)**2),
+     S.true, Abs(im(a))+Abs(im(b)), dco), # 4.7.78
+    (cos(a*t)*sin(b*t), b*(s**2-a**2+b**2)/(s**2+(a+b)**2)/(s**2+(a-b)**2),
+     S.true, Abs(im(a))+Abs(im(b)), dco), # 4.7.79
+    (cos(a*t)*cos(b*t), s*(s**2+a**2+b**2)/(s**2+(a+b)**2)/(s**2+(a-b)**2),
+     S.true, Abs(im(a))+Abs(im(b)), dco), # 4.7.80
     (sinh(a*t), a/(s**2-a**2),
      S.true, Abs(re(a)), dco), # 4.9.1
     (cosh(a*t), s/(s**2-a**2),
      S.true, Abs(re(a)), dco), # 4.9.2
+    (sinh(a*t)**2, 2*a**2/(s**3-4*a**2*s),
+     S.true, 2*Abs(re(a)), dco), # 4.9.3
+    (cosh(a*t)**2, (s**2-2*a**2)/(s**3-4*a**2*s),
+     S.true, 2*Abs(re(a)), dco), # 4.9.4
     (sinh(a*t)/t, log((s+a)/(s-a))/2,
      S.true, Abs(re(a)), dco), # 4.9.12
     (t**n*sinh(a*t), gamma(n+1)/2*((s-a)**(-n-1)-(s+a)**(-n-1)),

@@ -165,14 +165,14 @@ def test_laplace_transform():
     assert LT(cos(2*sqrt(a*t))/sqrt(t), t, s) ==\
         (sqrt(pi)*sqrt(1/s)*exp(-a/s), 0, True)
     assert LT(sin(a*t)*sin(b*t), t, s) == (
-        2*a*b*s/(a**4 - 2*a**2*b**2 + 2*a**2*s**2 + b**4 + 2*b**2*s**2 + s**4),
+        2*a*b*s/((s**2 + (a - b)**2)*(s**2 + (a + b)**2)),
         0, True)
     assert LT(cos(a*t)*sin(b*t), t, s) == (
-        b*(-a**2 + b**2 + s**2)/(a**4 - 2*a**2*b**2 + 2*a**2*s**2 +
-                                 b**4 + 2*b**2*s**2 + s**4), 0, True)
+        b*(-a**2 + b**2 + s**2)/((s**2 + (a - b)**2)*(s**2 + (a + b)**2)),
+        0, True)
     assert LT(cos(a*t)*cos(b*t), t, s) == (
-        s*(a**2 + b**2 + s**2)/(a**4 - 2*a**2*b**2 + 2*a**2*s**2 +
-                                b**4 + 2*b**2*s**2 + s**4), 0, True)
+        s*(a**2 + b**2 + s**2)/((s**2 + (a - b)**2)*(s**2 + (a + b)**2)),
+        0, True)
     assert LT(-a*t*cos(a*t) + sin(a*t), t, s, simplify=True) ==\
         (2*a**3/(a**4 + 2*a**2*s**2 + s**4), 0, True)
     assert LT(c*exp(-b*t)*sin(a*t), t, s) == (a*c/(a**2 + (b + s)**2), -b, True)
