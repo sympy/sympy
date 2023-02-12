@@ -197,7 +197,7 @@ def add_formulae(formulae):
     add([Rational(-1, 2)], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
 
     # Added to get nice results for Laplace transform of Fresnel functions
-    # http://functions.wolfram.com/07.22.03.6437.01
+    # https://functions.wolfram.com/07.22.03.6437.01
     # Basic rule
     #add([1], [Rational(3, 4), Rational(5, 4)],
     #    sqrt(pi) * (cos(2*sqrt(polar_lift(-1)*z))*fresnelc(2*root(polar_lift(-1)*z,4)/sqrt(pi)) +
@@ -364,7 +364,7 @@ def add_formulae(formulae):
                  [0, 0, 0, 0, 0]]))
 
     # 3F3
-    # This is rule: http://functions.wolfram.com/07.31.03.0134.01
+    # This is rule: https://functions.wolfram.com/07.31.03.0134.01
     # Initial reason to add it was a nice solution for
     # integrate(erf(a*z)/z**2, z) and same for erfc and erfi.
     # Basic rule
@@ -415,7 +415,7 @@ def add_meijerg_formulae(formulae):
         detect_uppergamma)
 
     def detect_3113(func):
-        """http://functions.wolfram.com/07.34.03.0984.01"""
+        """https://functions.wolfram.com/07.34.03.0984.01"""
         x = func.an[0]
         u, v, w = func.bm
         if _mod1((u - v).simplify()) == 0:
