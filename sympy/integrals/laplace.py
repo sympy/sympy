@@ -382,7 +382,7 @@ def _laplace_build_rules():
     (sin(2*sqrt(a*t))/t, pi*erf(sqrt(a/s)),
      S.true, S.Zero, dco), # 4.7.34
     (cos(omega*t), s/(s**2+omega**2),
-      S.true, Abs(im(omega)), dco), # 4.7.43
+     S.true, Abs(im(omega)), dco), # 4.7.43
     (cos(omega*t)**2, (s**2+2*omega**2)/(s**2+4*omega**2)/s,
      S.true, 2*Abs(im(omega)), dco), # 4.7.45
     (sqrt(t)*cos(2*sqrt(a*t)), sqrt(pi)/2*s**(-S(5)/2)*(s-2*a)*exp(-a/s),
