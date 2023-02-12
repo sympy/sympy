@@ -214,20 +214,22 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
         sigma = rgen.randint(6, n - 1)
         u = (sigma*sigma - 5) % n
         v = (4*sigma) % n
-        diff = v - u
         u_3 = pow(u, 3, n)
 
         try:
-            C = (pow(diff, 3, n)*(3*u + v)*mod_inverse(4*u_3*v, n) - 2) % n
+            # We use the elliptic curve y**2 = x**3 + a*x**2 + x
+            # where a = pow(v - u, 3, n)*(3*u + v)*mod_inverse(4*u_3*v, n) - 2
+            # However, we do not declare a because it is more convenient
+            # to use a24 = (a + 2)*mod_inverse(4, n) in the calculation.
+            a24 = pow(v - u, 3, n)*(3*u + v)*mod_inverse(16*u_3*v, n) % n
         except ValueError:
-            #If the mod_inverse(4*u_3*v, n) doesn't exist (i.e., g != 1)
-            g = gcd(4*u_3*v, n)
+            #If the mod_inverse(16*u_3*v, n) doesn't exist (i.e., g != 1)
+            g = gcd(16*u_3*v, n)
             #If g = n, try another curve
             if g == n:
                 continue
             return g
 
-        a24 = (C + 2)*mod_inverse(4, n) % n
         Q = Point(u_3, pow(v, 3, n), a24, n)
         Q = Q.mont_ladder(k)
         g = gcd(Q.z_cord, n)
