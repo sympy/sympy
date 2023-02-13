@@ -58,11 +58,11 @@ def bilinear(tf, sample_per):
         [2*L + R*T, -2*L + R*T]
         """
 
-        
+
         T = sample_per  # and sample period T
         s = tf.var
         z =  s # dummy discrete variable z
-        
+
         np = tf.num.as_poly(s).all_coeffs()
         dp = tf.den.as_poly(s).all_coeffs()
 
@@ -101,7 +101,7 @@ def backward_diff(tf, sample_per):
         >>> denZ
         [L + R*T, -L]
         """
-        
+
         T = sample_per  # and sample period T
         s = tf.var
         z =  s         # dummy discrete variable z
