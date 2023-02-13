@@ -1,12 +1,14 @@
 from itertools import product
+import functools
 import math
 import inspect
 import sys
-
+import operator
 
 import mpmath
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
+from sympy.core.add import Add
 from sympy.core.function import (Function, Lambda, diff)
 from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
 from sympy.core.relational import Eq
@@ -33,6 +35,7 @@ from sympy.matrices.expressions.dotproduct import DotProduct
 from sympy.tensor.array import derive_by_array, Array
 from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.lambdify import lambdify
+from sympy.utilities.misc import adjusted_recursion_limit
 from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
@@ -1720,22 +1723,18 @@ def test_23536_lambdify_cse_dummy():
     ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
     assert ans == 300.0  # not a list and value is 300
 
-def test_24673_recursion_error_108k_ops():
-    class adjusted_recursion_limit:
-        def __init__(self, new_limit):
-            self._ori_limit = sys.getrecursionlimit()
-            self._new_limit = new_limit
 
-        def __enter__(self):
-            sys.setrecursionlimit(self._new_limit)
+def test_24673_recursion_error():
+    with adjusted_recursion_limit(500):
+        lambdify(x, Add(*[x**i for i in range(550)]))
 
-        def __exit__(self, exc_t, exc_v, exc_tb):
-            sys.setrecursionlimit(self._ori_limit)
-
-    # TODO, reproduce using a smaller expression. (this takes too long...)
-    a, b, c, x, y, z = symbols('a, b, c, x, y, z')
-    expr1 = a*x**2 + a*x**5 + b*sqrt(y) + b*y**4 + c*z + c*(x - y - z)**3
-    expr2 = c*x**2 + a*x**5 + b*sqrt(y) + b*y**4 + c*z + c*(x - y - z)**3
-    expr3 = ((expr1*expr2)**3).expand()
-    with adjusted_recursion_limit(1000):
-        lambdify((a, b, c, x, y, z), expr3)
+    if numpy:
+        p = NumPyPrinter(dict(num_terms_sum=3, num_factors_prod=3))
+        for op in [operator.add, operator.mul]:
+            args = [x,y,z]
+            expr = functools.reduce(op, args)
+            f = lambdify(args, expr, printer=p)
+            arr_4 = numpy.arange(4)
+            arr_3_4 = numpy.arange(12).reshape((3, 4))
+            arr_5_3_4 = numpy.arange(3*4*5).reshape((5, 3, 4))
+            assert f(arr_4, arr_5_3_4, arr_3_4) == functools.reduce(op, [arr_5_3_4 + arr_4 + arr_3_4])

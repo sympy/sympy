@@ -563,3 +563,14 @@ def as_int(n, strict=True):
         if n != result:
             raise ValueError('%s is not an integer' % (n,))
         return result
+
+class adjusted_recursion_limit:
+    def __init__(self, new_limit):
+        self._ori_limit = sys.getrecursionlimit()
+        self._new_limit = new_limit
+
+    def __enter__(self):
+        sys.setrecursionlimit(self._new_limit)
+
+    def __exit__(self, exc_t, exc_v, exc_tb):
+        sys.setrecursionlimit(self._ori_limit)

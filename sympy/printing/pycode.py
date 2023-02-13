@@ -194,7 +194,8 @@ class AbstractPythonCodePrinter(CodePrinter):
         # is already better served by the mpmath printer. And finally, subclassing and
         # overriding this remains an option.
         if len(expr.args) >= self._settings['num_terms_sum']:
-            return 'sum([%s], start=%s)' % (
+            return '%s([%s], start=%s)' % (
+                self._module_format("builtins.sum"),
                 ', '.join(map(self._print, expr.args[1:])),
                 self._print(expr.args[0])
             )
@@ -275,7 +276,8 @@ class AbstractPythonCodePrinter(CodePrinter):
                 a=self._print(a),
                 b=self._print(b))
             for i, a, b in expr.limits)
-        return '(builtins.sum({function} {loops}))'.format(
+        return '(%s({function} {loops}))'.format(
+            self._module_format("builtins.sum"),
             function=self._print(expr.function),
             loops=' '.join(loops))
 

@@ -65,7 +65,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
 
     def _print_Add(self, e):
         if len(e.args) >= self._settings['num_terms_sum']:
-            return '{}({})'.format(self._module_format(self._module + '.sum'),
+            return '{}({}, axis=0)'.format(self._module_format(self._module + '.sum'),
                                    self._print_seq(e.args))
         return super()._print_Add(e)
 
