@@ -473,7 +473,7 @@ def _laplace_build_rules():
     return laplace_transform_rules, t, s
 
 
-def _laplace_rule_timescale(f, t, s):
+def _laplace_rule_timescale(f, t, s, inhibit):
     """
     This function applies the time-scaling rule of the Laplace transform in
     a straight-forward way. For example, if it gets ``(f(a*t), t, s)``, it will
@@ -490,13 +490,14 @@ def _laplace_rule_timescale(f, t, s):
             debug('_laplace_apply_prog rules match:')
             debugf('      f:    %s _ %s, %s )', (f, ma1, ma2))
             debug('      rule: time scaling (4.1.4)')
-            r, pr, cr = _laplace_transform(1/ma2[a]*ma1[g].func(t),
-                                           t, s/ma2[a], simplify=False)
+            r, pr, cr = _laplace_transform(1/ma2[a]*ma1[g].func(t), t,
+                                           s/ma2[a], inhibit=inhibit,
+                                           simplify=False)
             return (r, pr, cr)
     return None
 
 
-def _laplace_rule_heaviside(f, t, s):
+def _laplace_rule_heaviside(f, t, s, inhibit):
     """
     This function deals with time-shifted Heaviside step functions. If the time
     shift is positive, it applies the time-shift rule of the Laplace transform.
@@ -521,18 +522,19 @@ def _laplace_rule_heaviside(f, t, s):
             debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
             debug('      rule: time shift (4.1.4)')
             r, pr, cr = _laplace_transform(ma1[g].subs(t, t+ma2[a]), t, s,
-                                           simplify=False)
+                                           inhibit=inhibit, simplify=False)
             return (exp(-ma2[a]*s)*r, pr, cr)
         if ma2 and ma2[a].is_negative:
             debug('_laplace_apply_prog_rules match:')
             debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
             debug('      rule: Heaviside factor with negative time shift (4.1.4)')
-            r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
+            r, pr, cr = _laplace_transform(ma1[g], t, s, inhibit=inhibit,
+                                           simplify=False)
             return (r, pr, cr)
     return None
 
 
-def _laplace_rule_exp(f, t, s):
+def _laplace_rule_exp(f, t, s, inhibit):
     """
     If this function finds a factor ``exp(a*t)``, it applies the
     frequency-shift rule of the Laplace transform and adjusts the convergence
@@ -551,12 +553,12 @@ def _laplace_rule_exp(f, t, s):
             debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
             debug('      rule: multiply with exp (4.1.5)')
             r, pr, cr = _laplace_transform(ma1[z], t, s-ma2[a],
-                                           simplify=False)
+                                           inhibit=inhibit, simplify=False)
             return (r, pr+re(ma2[a]), cr)
     return None
 
 
-def _laplace_rule_delta(f, t, s):
+def _laplace_rule_delta(f, t, s, inhibit):
     """
     If this function finds a factor ``DiracDelta(b*t-a)``, it applies the
     masking property of the delta distribution. For example, if it gets
@@ -793,7 +795,7 @@ def _laplace_trig_ltex(xm, t, s):
     return Add(*results), Max(*planes)
 
 
-def _laplace_rule_trig(fn, t_, s, doit=True, **hints):
+def _laplace_rule_trig(fn, t_, s, inhibit, doit=True, **hints):
     """
     This rule covers trigonometric factors by splitting everything into a
     sum of exponential functions and collecting complex conjugate poles and
@@ -824,14 +826,14 @@ def _laplace_rule_trig(fn, t_, s, doit=True, **hints):
         # Just transform `g` and make frequency-shifted copies
         planes = []
         results = []
-        G, G_plane, G_cond = _laplace_transform(g, t, s)
+        G, G_plane, G_cond = _laplace_transform(g, t, s, inhibit=inhibit)
         for x1 in xm:
             results.append(x1['k']*G.subs(s, s-x1['a']))
             planes.append(G_plane+re(x1['a']))
     return Add(*results).subs(t, t_), Max(*planes), G_cond
 
 
-def _laplace_rule_diff(f, t, s, doit=True, **hints):
+def _laplace_rule_diff(f, t, s, inhibit, doit=True, **hints):
     """
     This function looks for derivatives in the time domain and replaces it
     by factors of `s` and initial conditions in the frequency domain. For
@@ -856,12 +858,13 @@ def _laplace_rule_diff(f, t, s, doit=True, **hints):
                 else:
                     y = Derivative(ma1[g], (t, k)).subs(t, 0)
                 d.append(s**(ma1[n]-k-1)*y)
-            r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
+            r, pr, cr = _laplace_transform(ma1[g], t, s, inhibit=inhibit,
+                                           simplify=False)
             return (ma1[a]*(s**ma1[n]*r - Add(*d)),  pr, cr)
     return None
 
 
-def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
+def _laplace_rule_sdiff(f, t, s, inhibit, doit=True, **hints):
     """
     This function looks for multiplications with polynoimials in `t` as they
     correspond to differentiation in the frequency domain. For example, if it
@@ -886,7 +889,8 @@ def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
                 debugf('      f, n: %s, %s', (f, pfac))
                 debug('      rule: frequency derivative (4.1.6)')
                 oex = prod(ofac)
-                r_, p_, c_ = _laplace_transform(oex, t, s, simplify=False)
+                r_, p_, c_ = _laplace_transform(oex, t, s, inhibit=inhibit,
+                                                simplify=False)
                 deri = [r_]
                 d1 = False
                 try:
@@ -907,7 +911,7 @@ def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
     return None
 
 
-def _laplace_expand(f, t, s, doit=True, **hints):
+def _laplace_expand(f, t, s, inhibit=set(), doit=True, **hints):
     """
     This function tries to expand its argument with successively stronger
     methods: first it will expand on the top level, then it will expand any
@@ -922,22 +926,22 @@ def _laplace_expand(f, t, s, doit=True, **hints):
         return None
     r = expand(f, deep=False)
     if r.is_Add:
-        return _laplace_transform(r, t, s, simplify=False)
+        return _laplace_transform(r, t, s, inhibit=inhibit, simplify=False)
     r = expand_mul(f)
     if r.is_Add:
-        return _laplace_transform(r, t, s, simplify=False)
+        return _laplace_transform(r, t, s, inhibit=inhibit, simplify=False)
     r = expand(f)
     if r.is_Add:
-        return _laplace_transform(r, t, s, simplify=False)
+        return _laplace_transform(r, t, s, inhibit=inhibit, simplify=False)
     if not r==f:
-        return _laplace_transform(r, t, s, simplify=False)
+        return _laplace_transform(r, t, s, inhibit=inhibit, simplify=False)
     r = expand(expand_trig(f))
     if r.is_Add:
-        return _laplace_transform(r, t, s, simplify=False)
+        return _laplace_transform(r, t, s, inhibit=inhibit, simplify=False)
     return None
 
 
-def _laplace_apply_prog_rules(f, t, s):
+def _laplace_apply_prog_rules(f, t, s, inhibit):
     """
     This function applies all program rules and returns the result if one
     of them gives a result.
@@ -949,7 +953,7 @@ def _laplace_apply_prog_rules(f, t, s):
                   _laplace_rule_diff, _laplace_rule_sdiff]
 
     for p_rule in prog_rules:
-        if (L := p_rule(f, t, s)) is not None:
+        if (L := p_rule(f, t, s, inhibit)) is not None:
             return L
     return None
 
@@ -984,7 +988,7 @@ def _laplace_apply_simple_rules(f, t, s):
     return None
 
 
-def _laplace_transform(fn, t_, s_, simplify=True):
+def _laplace_transform(fn, t_, s_, inhibit=set(), simplify=True):
     """
     Front-end function of the Laplace transform. It tries to apply all known
     rules recursively, and if everything else fails, it tries to integrate.
@@ -997,19 +1001,26 @@ def _laplace_transform(fn, t_, s_, simplify=True):
     conditions = []
     for ff in terms:
         k, ft = ff.as_independent(t_, as_Add=False)
-        if (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None:
+        if (
+                not ('rules' in inhibit or 'simple_rules' in inhibit) and
+                (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None):
             pass
-        elif (r := _laplace_apply_prog_rules(ft, t_, s_)) is not None:
+        elif (
+                not ('rules' in inhibit or 'prog_rules' in inhibit) and
+                (r := _laplace_apply_prog_rules(ft, t_, s_,
+                                                inhibit)) is not None):
             pass
-        elif (r := _laplace_expand(ft, t_, s_)) is not None:
+        elif (r := _laplace_expand(ft, t_, s_, inhibit=inhibit)) is not None:
             pass
         elif any(undef.has(t_) for undef in ft.atoms(AppliedUndef)):
             # If there are undefined functions f(t) then integration is
             # unlikely to do anything useful so we skip it and given an
             # unevaluated LaplaceTransform.
             r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
-        elif (r := _laplace_transform_integration(ft, t_, s_,
-                                      simplify=simplify)) is not None:
+        elif (
+                not ('integrate' in inhibit) and
+                (r := _laplace_transform_integration(ft, t_, s_,
+                                      simplify=simplify)) is not None):
             pass
         else:
             r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
@@ -1064,7 +1075,7 @@ class LaplaceTransform(IntegralTransform):
                 'Laplace', None, 'No combined convergence.')
         return plane, cond
 
-    def doit(self, **hints):
+    def doit(self, inhibit=set(), **hints):
         """
         Try to evaluate the transform in closed form.
 
@@ -1088,7 +1099,7 @@ class LaplaceTransform(IntegralTransform):
         s_ = self.transform_variable
         fn = self.function
 
-        r = _laplace_transform(fn, t_, s_, simplify=_simplify)
+        r = _laplace_transform(fn, t_, s_, inhibit=inhibit, simplify=_simplify)
 
         if _noconds:
             return r[0]
@@ -1096,7 +1107,7 @@ class LaplaceTransform(IntegralTransform):
             return r
 
 
-def laplace_transform(f, t, s, legacy_matrix=True, **hints):
+def laplace_transform(f, t, s, legacy_matrix=True, inhibit=set(), **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
@@ -1119,6 +1130,11 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     debug information on by setting ``sympy.SYMPY_DEBUG=True``. The numbers
     of the rules in the debug information (and the code) refer to Bateman's
     Tables of Integral Transforms [1].
+
+    The argument `inhibit` is a set of rules that can be switched off.
+    `inhibit={'simple_rules'}` will inhibit the application of all simple
+    rules, `inhibit={'prog_rules'}` all programmed rules,
+    `inhibit={'rules'}` both, `and `inhibit={'integrate'}` integration.
 
     The lower bound is `0-`, meaning that this bound should be approached
     from the lower side. This is only necessary if distributions are involved.
@@ -1195,7 +1211,8 @@ behavior.
             with ignore_warnings(SymPyDeprecationWarning):
                 return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
         else:
-            elements_trans = [laplace_transform(fij, t, s, **hints) for fij in f]
+            elements_trans = [laplace_transform(
+                fij, t, s, inhibit=inhibit, **hints) for fij in f]
             if conds:
                 elements, avals, conditions = zip(*elements_trans)
                 f_laplace = type(f)(*f.shape, elements)
@@ -1203,7 +1220,8 @@ behavior.
             else:
                 return type(f)(*f.shape, elements_trans)
 
-    LT = LaplaceTransform(f, t, s).doit(noconds=False, simplify=_simplify)
+    LT = LaplaceTransform(f, t, s).doit(
+        inhibit=inhibit, noconds=False, simplify=_simplify)
 
     if not _noconds:
         return LT

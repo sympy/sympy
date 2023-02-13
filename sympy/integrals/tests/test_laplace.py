@@ -5,10 +5,11 @@ from sympy.core.function import Function, expand_mul
 from sympy.core import EulerGamma, Subs, Derivative, diff
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I, oo, pi
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
 from sympy.simplify.simplify import simplify
-from sympy.functions.elementary.complexes import Abs, re
+from sympy.functions.elementary.complexes import Abs, re, im, arg
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh, coth, asinh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -364,6 +365,31 @@ def test_laplace_transform():
     assert laplace_transform(fresnelc(t), t, s, simplify=True) == \
         ((sin(s**2/(2*pi))*fresnelc(s/pi) - cos(s**2/(2*pi))*fresnels(s/pi)\
           + sqrt(2)*cos(s**2/(2*pi) + pi/4)/2)/s, 0, True)
+
+    # Test the inhibit mechanism
+    assert LT(fresnels(t), t, s, inhibit={'integrate'}) == (
+        LaplaceTransform(fresnels(t), t, s), -oo, True)
+    assert LT(sin(a*t)*cos(b*t), t, s) == (
+        a*(a**2 - b**2 + s**2)/((s**2 + (a - b)**2)*(s**2 + (a + b)**2)),
+        0, True)
+    assert LT(sin(a*t)*cos(b*t), t, s, inhibit={'simple_rules'}) == (
+        a*(a**2 - b**2 + s**2)/(a**4 - 2*a**2*b**2 + 2*a**2*s**2 + b**4 +
+                                2*b**2*s**2 + s**4), 0, True)
+    assert LT(f(t)*DiracDelta(t-42), t, s) == (f(42)*exp(-42*s), -oo, True)
+    assert LT(f(t)*DiracDelta(t-42), t, s, inhibit={'prog_rules'}) == (
+        LaplaceTransform(f(t)*DiracDelta(t - 42), t, s), -oo, True)
+    assert LT(sin(w*t), t, s) == (w/(s**2 + w**2), Abs(im(w)), True)
+    assert LT(sin(w*t), t, s, inhibit={'rules', 'integrate'}) == (
+        LaplaceTransform(sin(t*w), t, s), -oo, True)
+    assert LaplaceTransform(
+        sin(t*w), t, s).doit(inhibit={'rules', 'integrate'}) == (
+            LaplaceTransform(sin(t*w), t, s))
+    # The following asserts that the inhibit machanism works, but the resulting
+    # plane/condition is not strictly correct anymor.
+    assert LT(sin(w*t), t, s, inhibit={'rules'}) == (
+        w/(s**2 + w**2), 0, Eq(Abs(arg(w)), 0))
+    assert LT(sin(w*t), t, s, inhibit={'simple_rules', 'prog_rules'}) == (
+        w/(s**2 + w**2), 0, Eq(Abs(arg(w)), 0))
 
     # Matrix tests
     Mt = Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]])
