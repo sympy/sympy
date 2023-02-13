@@ -45,7 +45,6 @@ def bilinear(tf, sample_per):
         Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
         as [a, b], [c, d].
 
-
         Examples
         ========
 
@@ -78,16 +77,14 @@ def bilinear(tf, sample_per):
 
 
 def backward_diff(tf, sample_per):
-
         """
-
         Returns falling coefficients of H(z) from numerator and denominator.
         Where H(z) is the corresponding discretized transfer function,
         discretized with the backward difference transform method.
         H(z) is obtained from the continuous transfer function H(s)
         by substituting s(z) =  (z-1)/(T*z) into H(s), where T is the
         sample period.
-        H(z) corresponds to the difference equation of the by backward difference scheme.
+        H(z) corresponds to the difference equation of the backward difference scheme.
         Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
         as [a, b], [c, d].
 
@@ -119,7 +116,6 @@ def backward_diff(tf, sample_per):
 
         num_coefs = num.as_poly(z).all_coeffs()
         den_coefs = den.as_poly(z).all_coeffs()
-
 
         return num_coefs, den_coefs
 
