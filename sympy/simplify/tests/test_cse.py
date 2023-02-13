@@ -17,7 +17,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.dense import Matrix
-from sympy.matrices.expressions import Inverse, MatAdd, MatMul, MatPow, Transpose
+from sympy.matrices.expressions import Inverse, MatAdd, MatMul, Transpose
 from sympy.polys.rootoftools import CRootOf
 from sympy.series.order import O
 from sympy.simplify.cse_main import cse
