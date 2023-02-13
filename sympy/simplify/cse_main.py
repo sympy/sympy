@@ -491,6 +491,7 @@ def opt_cse(exprs, order='canonical'):
     muls = OrderedSet()
 
     seen_subexp = set()
+    collapsible_subexp = set()
 
     def _find_opts(expr):
 
@@ -518,10 +519,16 @@ def opt_cse(exprs, order='canonical'):
                 expr = neg_expr
 
         if isinstance(expr, (Mul, MatMul)):
-            muls.add(expr)
+            if len(expr.args) == 1:
+                collapsible_subexp.add(expr)
+            else:
+                muls.add(expr)
 
         elif isinstance(expr, (Add, MatAdd)):
-            adds.add(expr)
+            if len(expr.args) == 1:
+                collapsible_subexp.add(expr)
+            else:
+                adds.add(expr)
 
         elif isinstance(expr, Inverse):
             # Do not want to treat `Inverse` as a `MatPow`
@@ -536,6 +543,12 @@ def opt_cse(exprs, order='canonical'):
         if isinstance(e, (Basic, Unevaluated)):
             _find_opts(e)
 
+    # Handle collapsing of multinary operations with single arguments
+    edges = [(s, s.args[0]) for s in collapsible_subexp
+             if s.args[0] in collapsible_subexp]
+    for e in reversed(topological_sort((collapsible_subexp, edges))):
+        opt_subs[e] = opt_subs.get(e.args[0], e.args[0])
+
     # split muls into commutative
     commutative_muls = OrderedSet()
     for m in muls:
@@ -546,7 +559,10 @@ def opt_cse(exprs, order='canonical'):
                 if c_mul == 1:
                     new_obj = m.func(*nc)
                 else:
-                    new_obj = m.func(c_mul, m.func(*nc), evaluate=False)
+                    if isinstance(m, MatMul):
+                        new_obj = m.func(c_mul, *nc, evaluate=False)
+                    else:
+                        new_obj = m.func(c_mul, m.func(*nc), evaluate=False)
                 opt_subs[m] = new_obj
             if len(c) > 1:
                 commutative_muls.add(c_mul)
