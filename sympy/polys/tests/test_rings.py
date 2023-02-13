@@ -9,10 +9,12 @@ from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
 from sympy.polys.polyerrors import GeneratorsError, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
+from sympy.external.gmpy import MPQ
+from sympy.polys.polyclasses import ANP
 
 from sympy.testing.pytest import raises
 from sympy.core import Symbol, symbols
-
+from sympy.core.singleton import S
 from sympy.core.numbers import (oo, pi)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -1454,6 +1456,16 @@ def test_PolyElement_sqf_list():
 
     assert f.sqf_part() == p
     assert f.sqf_list() == (1, [(g, 1), (h, 2)])
+
+def test_issue_18894():
+    items = [S(3)/16 + sqrt(3*sqrt(3) + 10)/8, S(1)/8 + 3*sqrt(3)/16, S(1)/8 + 3*sqrt(3)/16, -S(3)/16 + sqrt(3*sqrt(3) + 10)/8]
+    R,a = sring(items, extension=True)
+    assert R.domain == QQ.algebraic_field(sqrt(3)+sqrt(3*sqrt(3)+10))
+    assert R.gens == ()
+    result = []
+    for item in items:
+        result.append(R.domain.from_sympy(item))
+    assert a == result
 
 def test_PolyElement_factor_list():
     _, x = ring("x", ZZ)
