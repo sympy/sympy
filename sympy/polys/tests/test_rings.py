@@ -9,8 +9,6 @@ from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
 from sympy.polys.polyerrors import GeneratorsError, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
-from sympy.external.gmpy import MPQ
-from sympy.polys.polyclasses import ANP
 
 from sympy.testing.pytest import raises
 from sympy.core import Symbol, symbols
