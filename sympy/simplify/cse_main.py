@@ -510,7 +510,7 @@ def opt_cse(exprs, order='canonical'):
 
         list(map(_find_opts, expr.args))
 
-        if expr.could_extract_minus_sign():
+        if not isinstance(expr, MatrixExpr) and expr.could_extract_minus_sign():
             neg_expr = -expr
             if not neg_expr.is_Atom:
                 opt_subs[expr] = Unevaluated(Mul, (S.NegativeOne, neg_expr))
