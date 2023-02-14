@@ -8,7 +8,7 @@ __all__ = ['BodyBase']
 
 class BodyBase(ABC):
     """Abstract class for body type objects."""
-    def __init__(self, name, masscenter=None, frame=None, mass=None):
+    def __init__(self, name, masscenter=None, mass=None):
         # Note: If frame=None, no auto-generated frame is created, because a
         # Particle does not need to have a frame by default.
         if not isinstance(name, str):
@@ -20,7 +20,6 @@ class BodyBase(ABC):
             masscenter = Point(f'{name}_masscenter')
         self.mass = mass
         self.masscenter = masscenter
-        self.frame = frame
         self.potential_energy = 0
         self.points = []
 
@@ -29,24 +28,12 @@ class BodyBase(ABC):
 
     def __repr__(self):
         return (f'{self.__class__.__name__}({repr(self.name)}, masscenter='
-                f'{repr(self.masscenter)}, frame={repr(self.frame)}, mass='
-                f'{repr(self.mass)})')
+                f'{repr(self.masscenter)}, mass={repr(self.mass)})')
 
     @property
     def name(self):
         """The name of the body."""
         return self._name
-
-    @property
-    @abstractmethod
-    def frame(self):
-        """The ReferenceFrame fixed to the body."""
-        pass
-
-    @frame.setter
-    @abstractmethod
-    def frame(self, frame):
-        pass
 
     @property
     def masscenter(self):
@@ -67,21 +54,6 @@ class BodyBase(ABC):
     @mass.setter
     def mass(self, mass):
         self._mass = sympify(mass)
-
-    @property
-    def x(self):
-        """The basis Vector for the body, in the x direction. """
-        return self.frame.x
-
-    @property
-    def y(self):
-        """The basis Vector for the body, in the y direction. """
-        return self.frame.y
-
-    @property
-    def z(self):
-        """The basis Vector for the body, in the z direction. """
-        return self.frame.z
 
     @property
     def potential_energy(self):

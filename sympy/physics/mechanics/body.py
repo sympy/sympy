@@ -132,10 +132,12 @@ class Body(RigidBody, Particle):  # type: ignore
         # Note: BodyBase.__init__ is used to prevent problems with super() calls in
         # Particle and RigidBody arising due to multiple inheritance.
         if central_inertia is None and mass is not None:
-            BodyBase.__init__(self, name, masscenter, frame, _mass)
+            BodyBase.__init__(self, name, masscenter, _mass)
+            self.frame = frame
             self._central_inertia = Dyadic(0)
         else:
-            BodyBase.__init__(self, name, masscenter, frame, _mass)
+            BodyBase.__init__(self, name, masscenter, _mass)
+            self.frame = frame
             self.inertia = _inertia
 
     def __repr__(self):

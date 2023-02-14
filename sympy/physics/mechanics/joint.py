@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 
 from sympy.core.backend import pi, AppliedUndef, Derivative, Matrix
 from sympy.physics.mechanics.body_base import BodyBase
-from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.functions import _validate_coordinates
 from sympy.physics.vector import (Vector, dynamicsymbols, cross, Point,
                                   ReferenceFrame)
@@ -149,18 +148,45 @@ class Joint(ABC):
             raise TypeError('Child must be a body.')
         self._child = child
 
-        # Add frames to bodies if necessary
-        for body in (self._parent, self._child):
-            if isinstance(body, Particle):
-                body.add_frame()
+        if parent_axis is not None or child_axis is not None:
+            sympy_deprecation_warning(
+                """
+                The parent_axis and child_axis arguments for the Joint classes
+                are deprecated. Instead use parent_interframe, child_interframe.
+                """,
+                deprecated_since_version="1.12",
+                active_deprecations_target="deprecated-mechanics-joint-axis",
+                stacklevel=4
+            )
+            if parent_interframe is None:
+                parent_interframe = parent_axis
+            if child_interframe is None:
+                child_interframe = child_axis
 
-        self._coordinates = self._generate_coordinates(coordinates)
-        self._speeds = self._generate_speeds(speeds)
-        _validate_coordinates(self.coordinates, self.speeds)
-        self._kdes = self._generate_kdes()
+        # Set parent and child frame attributes
+        if hasattr(self._parent, 'frame'):
+            self._parent_frame = self._parent.frame
+        else:
+            if isinstance(parent_interframe, ReferenceFrame):
+                self._parent_frame = parent_interframe
+            else:
+                self._parent_frame = ReferenceFrame(
+                    f'{self.name}_{self._parent.name}_frame')
+        if hasattr(self._child, 'frame'):
+            self._child_frame = self._child.frame
+        else:
+            if isinstance(child_interframe, ReferenceFrame):
+                self._child_frame = child_interframe
+            else:
+                self._child_frame = ReferenceFrame(
+                    f'{self.name}_{self._child.name}_frame')
 
-        self._parent_axis = self._axis(parent_axis, parent.frame)
-        self._child_axis = self._axis(child_axis, child.frame)
+        self._parent_interframe = self._locate_joint_frame(
+            self._parent, parent_interframe, self._parent_frame)
+        self._child_interframe = self._locate_joint_frame(
+            self._child, child_interframe, self._child_frame)
+        self._parent_axis = self._axis(parent_axis, self._parent_frame)
+        self._child_axis = self._axis(child_axis, self._child_frame)
 
         if parent_joint_pos is not None or child_joint_pos is not None:
             sympy_deprecation_warning(
@@ -176,26 +202,15 @@ class Joint(ABC):
                 parent_point = parent_joint_pos
             if child_point is None:
                 child_point = child_joint_pos
-        self._parent_point = self._locate_joint_pos(parent, parent_point)
-        self._child_point = self._locate_joint_pos(child, child_point)
-        if parent_axis is not None or child_axis is not None:
-            sympy_deprecation_warning(
-                """
-                The parent_axis and child_axis arguments for the Joint classes
-                are deprecated. Instead use parent_interframe, child_interframe.
-                """,
-                deprecated_since_version="1.12",
-                active_deprecations_target="deprecated-mechanics-joint-axis",
-                stacklevel=4
-            )
-            if parent_interframe is None:
-                parent_interframe = parent_axis
-            if child_interframe is None:
-                child_interframe = child_axis
-        self._parent_interframe = self._locate_joint_frame(parent,
-                                                           parent_interframe)
-        self._child_interframe = self._locate_joint_frame(child,
-                                                          child_interframe)
+        self._parent_point = self._locate_joint_pos(
+            self._parent, parent_point, self._parent_frame)
+        self._child_point = self._locate_joint_pos(
+            self._child, child_point, self._child_frame)
+
+        self._coordinates = self._generate_coordinates(coordinates)
+        self._speeds = self._generate_speeds(speeds)
+        _validate_coordinates(self.coordinates, self.speeds)
+        self._kdes = self._generate_kdes()
 
         self._orient_frames()
         self._set_angular_velocity()
@@ -453,8 +468,10 @@ class Joint(ABC):
             kdes.append(-self.coordinates[i].diff(t) + self.speeds[i])
         return Matrix(kdes)
 
-    def _locate_joint_pos(self, body, joint_pos):
+    def _locate_joint_pos(self, body, joint_pos, body_frame=None):
         """Returns the attachment point of a body."""
+        if body_frame is None:
+            body_frame = body.frame
         if joint_pos is None:
             return body.masscenter
         if not isinstance(joint_pos, (Point, Vector)):
@@ -462,22 +479,24 @@ class Joint(ABC):
         if isinstance(joint_pos, Vector):
             point_name = f'{self.name}_{body.name}_joint'
             joint_pos = body.masscenter.locatenew(point_name, joint_pos)
-        if not joint_pos.pos_from(body.masscenter).dt(body.frame) == 0:
+        if not joint_pos.pos_from(body.masscenter).dt(body_frame) == 0:
             raise ValueError('Attachment point must be fixed to the associated '
                              'body.')
         return joint_pos
 
-    def _locate_joint_frame(self, body, interframe):
+    def _locate_joint_frame(self, body, interframe, body_frame=None):
         """Returns the attachment frame of a body."""
+        if body_frame is None:
+            body_frame = body.frame
         if interframe is None:
-            return body.frame
+            return body_frame
         if isinstance(interframe, Vector):
             interframe = Joint._create_aligned_interframe(
-                body, interframe,
+                body_frame, interframe,
                 frame_name=f'{self.name}_{body.name}_int_frame')
         elif not isinstance(interframe, ReferenceFrame):
             raise TypeError('Interframe must be a ReferenceFrame.')
-        if not interframe.ang_vel_in(body.frame) == 0:
+        if not interframe.ang_vel_in(body_frame) == 0:
             raise ValueError(f'Interframe {interframe} is not fixed to body '
                              f'{body}.')
         body.masscenter.set_vel(interframe, 0)  # Fixate interframe to body
@@ -678,9 +697,9 @@ class PinJoint(Joint):
     Matrix([[q_PC(t)]])
     >>> joint.speeds
     Matrix([[u_PC(t)]])
-    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    >>> child.frame.ang_vel_in(parent.frame)
     u_PC(t)*P_frame.x
-    >>> joint.child.frame.dcm(joint.parent.frame)
+    >>> child.frame.dcm(parent.frame)
     Matrix([
     [1,             0,            0],
     [0,  cos(q_PC(t)), sin(q_PC(t))],
@@ -792,10 +811,10 @@ class PinJoint(Joint):
 
     def _set_linear_velocity(self):
         self.child_point.set_pos(self.parent_point, 0)
-        self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.child.frame, 0)
+        self.parent_point.set_vel(self._parent_frame, 0)
+        self.child_point.set_vel(self._child_frame, 0)
         self.child.masscenter.v2pt_theory(self.parent_point,
-                                          self.parent.frame, self.child.frame)
+                                          self._parent_frame, self._child_frame)
 
 
 class PrismaticJoint(Joint):
@@ -940,9 +959,9 @@ class PrismaticJoint(Joint):
     Matrix([[q_PC(t)]])
     >>> joint.speeds
     Matrix([[u_PC(t)]])
-    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    >>> child.frame.ang_vel_in(parent.frame)
     0
-    >>> joint.child.frame.dcm(joint.parent.frame)
+    >>> child.frame.dcm(parent.frame)
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
@@ -1055,10 +1074,10 @@ class PrismaticJoint(Joint):
     def _set_linear_velocity(self):
         axis = self.joint_axis.normalize()
         self.child_point.set_pos(self.parent_point, self.coordinates[0] * axis)
-        self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.child.frame, 0)
-        self.child_point.set_vel(self.parent.frame, self.speeds[0] * axis)
-        self.child.masscenter.set_vel(self.parent.frame, self.speeds[0] * axis)
+        self.parent_point.set_vel(self._parent_frame, 0)
+        self.child_point.set_vel(self._child_frame, 0)
+        self.child_point.set_vel(self._parent_frame, self.speeds[0] * axis)
+        self.child.masscenter.set_vel(self._parent_frame, self.speeds[0] * axis)
 
 
 class CylindricalJoint(Joint):
@@ -1200,9 +1219,9 @@ class CylindricalJoint(Joint):
     Matrix([
     [u0_PC(t)],
     [u1_PC(t)]])
-    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    >>> child.frame.ang_vel_in(parent.frame)
     u0_PC(t)*P_frame.x
-    >>> joint.child.frame.dcm(joint.parent.frame)
+    >>> child.frame.dcm(parent.frame)
     Matrix([
     [1,              0,             0],
     [0,  cos(q0_PC(t)), sin(q0_PC(t))],
@@ -1349,12 +1368,12 @@ class CylindricalJoint(Joint):
         self.child_point.set_pos(
             self.parent_point,
             self.translation_coordinate * self.joint_axis.normalize())
-        self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.child.frame, 0)
+        self.parent_point.set_vel(self._parent_frame, 0)
+        self.child_point.set_vel(self._child_frame, 0)
         self.child_point.set_vel(
-            self.parent.frame,
+            self._parent_frame,
             self.translation_speed * self.joint_axis.normalize())
-        self.child.masscenter.v2pt_theory(self.child_point, self.parent.frame,
+        self.child.masscenter.v2pt_theory(self.child_point, self._parent_frame,
                                           self.child_interframe)
 
 
@@ -1530,9 +1549,9 @@ class PlanarJoint(Joint):
     [u0_PC(t)],
     [u1_PC(t)],
     [u2_PC(t)]])
-    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    >>> child.frame.ang_vel_in(parent.frame)
     u0_PC(t)*P_frame.x
-    >>> joint.child.frame.dcm(joint.parent.frame)
+    >>> child.frame.dcm(parent.frame)
     Matrix([
     [1,              0,             0],
     [0,  cos(q0_PC(t)), sin(q0_PC(t))],
@@ -1711,10 +1730,10 @@ class PlanarJoint(Joint):
         self.parent_point.set_vel(self.parent_interframe, 0)
         self.child_point.set_vel(self.child_interframe, 0)
         self.child_point.set_vel(
-            self.parent.frame, self.planar_speeds[0] * self.planar_vectors[0] +
+            self._parent_frame, self.planar_speeds[0] * self.planar_vectors[0] +
             self.planar_speeds[1] * self.planar_vectors[1])
-        self.child.masscenter.v2pt_theory(self.child_point, self.parent.frame,
-                                          self.child.frame)
+        self.child.masscenter.v2pt_theory(self.child_point, self._parent_frame,
+                                          self._child_frame)
 
 
 class SphericalJoint(Joint):
@@ -1962,10 +1981,10 @@ class SphericalJoint(Joint):
 
     def _set_linear_velocity(self):
         self.child_point.set_pos(self.parent_point, 0)
-        self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.child.frame, 0)
-        self.child.masscenter.v2pt_theory(self.parent_point, self.parent.frame,
-                                          self.child.frame)
+        self.parent_point.set_vel(self._parent_frame, 0)
+        self.child_point.set_vel(self._child_frame, 0)
+        self.child.masscenter.v2pt_theory(self.parent_point, self._parent_frame,
+                                          self._child_frame)
 
 
 class WeldJoint(Joint):
@@ -2073,9 +2092,9 @@ class WeldJoint(Joint):
     Matrix(0, 0, [])
     >>> joint.speeds
     Matrix(0, 0, [])
-    >>> joint.child.frame.ang_vel_in(joint.parent.frame)
+    >>> child.frame.ang_vel_in(parent.frame)
     0
-    >>> joint.child.frame.dcm(joint.parent.frame)
+    >>> child.frame.dcm(parent.frame)
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
@@ -2164,6 +2183,6 @@ class WeldJoint(Joint):
 
     def _set_linear_velocity(self):
         self.child_point.set_pos(self.parent_point, 0)
-        self.parent_point.set_vel(self.parent.frame, 0)
-        self.child_point.set_vel(self.child.frame, 0)
-        self.child.masscenter.set_vel(self.parent.frame, 0)
+        self.parent_point.set_vel(self._parent_frame, 0)
+        self.child_point.set_vel(self._child_frame, 0)
+        self.child.masscenter.set_vel(self._parent_frame, 0)
