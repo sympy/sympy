@@ -65,14 +65,21 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
 
     def _print_Add(self, e):
         if len(e.args) >= self._settings['num_terms_sum']:
-            return '{}({}, axis=0)'.format(self._module_format(self._module + '.sum'),
-                                   self._print_seq(e.args))
+            bcast = '{}({})'.format(
+                self._module_format(self._module + '.broadcast_arrays'),
+                ', '.join(map(self._print, e.args))
+            )
+            return '{}({}, axis=0)'.format(self._module_format(self._module + '.sum'), bcast)
         return super()._print_Add(e)
 
     def _print_Mul(self, e):
         if len(e.args) >= self._settings['num_factors_prod']:
-            return '{}({})'.format(self._module_format(self._module + '.prod'),
-                                   self._print_seq(e.args))
+            bcast = '{}({})'.format(
+                self._module_format(self._module + '.broadcast_arrays'),
+                ', '.join(map(self._print, e.args))
+            )
+            return '{}({}, axis=0)'.format(self._module_format(self._module + '.prod'),
+                                           bcast)
         return super()._print_Mul(e)
 
     def _print_MatMul(self, expr):

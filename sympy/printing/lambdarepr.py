@@ -23,7 +23,7 @@ class LambdaPrinter(PythonCodePrinter):
     lambdify.
     """
     printmethod = "_lambdacode"
-
+    _default_settings = dict(PythonCodePrinter._default_settings, fully_qualified_modules=False)
 
     def _print_And(self, expr):
         result = ['(']

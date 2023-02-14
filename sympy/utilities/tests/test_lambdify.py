@@ -6,6 +6,7 @@ import sys
 import operator
 
 import mpmath
+from sympy.printing.pycode import PythonCodePrinter
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
@@ -1737,4 +1738,14 @@ def test_24673_recursion_error():
             arr_4 = numpy.arange(4)
             arr_3_4 = numpy.arange(12).reshape((3, 4))
             arr_5_3_4 = numpy.arange(3*4*5).reshape((5, 3, 4))
-            assert f(arr_4, arr_5_3_4, arr_3_4) == functools.reduce(op, [arr_5_3_4 + arr_4 + arr_3_4])
+            ref = functools.reduce(op, [arr_5_3_4, arr_4, arr_3_4])
+            ans = f(arr_4, arr_5_3_4, arr_3_4)
+            assert numpy.all(ans == ref)
+
+    nterms = PythonCodePrinter._default_settings['num_terms_sum'] + 1
+    expr = sum([x**i for i in range(nterms)])
+    res1 = lambdify(x, expr)(1.01)
+    # we don't want builtins.sum here, only sum
+    res2 = eval(lambdastr(x, expr, dummify=True))(1.01)
+    err = res1 - res2
+    assert abs(err) < abs(res1)*4e-16

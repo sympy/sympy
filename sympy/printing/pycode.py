@@ -276,7 +276,7 @@ class AbstractPythonCodePrinter(CodePrinter):
                 a=self._print(a),
                 b=self._print(b))
             for i, a, b in expr.limits)
-        return '(%s({function} {loops}))'.format(
+        return '({}({function} {loops}))'.format(
             self._module_format("builtins.sum"),
             function=self._print(expr.function),
             loops=' '.join(loops))

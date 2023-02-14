@@ -70,7 +70,7 @@ def test_PythonCodePrinter():
 
     prntr2 = PythonCodePrinter({'num_terms_sum': 3, 'num_factors_prod': 4})
     assert prntr2.doprint(x+y) == "x + y"
-    assert prntr2.doprint(x+y+z) == "sum([y, z], start=x)"
+    assert prntr2.doprint(x+y+z) == "builtins.sum([y, z], start=x)"
     assert prntr2.doprint(x*y*z) == "x*y*z"
     w = symbols('w')
     assert prntr2.doprint(w*x*y*z) == "math.prod([x, y, z], start=w)"
