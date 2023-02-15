@@ -4,6 +4,7 @@ This page outlines some of the best practices for users of SymPy. The best
 practices here will help avoid some common bugs and pitfalls that can occur
 when using SymPy.
 
+(best-practices-interactive-vs-programmatic)=
 ## An Important Aside: Interactive vs. Programmatic Usage
 
 There are two primary modes of usage for SymPy, and Python in general,
@@ -47,6 +48,83 @@ ans bugs even in interactive usage.
 
 ### Defining Symbols
 
+- **The best way to define symbols is using the {func}`~.symbols` function.**
+  The `symbols()` function supports creating one or multiple symbols at a
+  time:
+
+  ```py
+  >>> x = symbols('x')
+  >>> a, b, c = symbol('a b c')
+  ```
+
+  Additionally, it supports adding assumptions to symbols
+
+  ```py
+  >>> i, j, k = symbols('i j k', integer=True)
+  ```
+
+  and defining {class}`~.Function` objects:
+
+  ```py
+  >>> f, g, h = symbols('f g h', cls=Function)
+  ```
+
+  It also supports shorthands for defining many numbered symbols at once:
+
+  ```py
+  >>> symbols('x:10')
+  (x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)
+  ```
+
+  There also exist some alternatives to {func}`~.symbols`. Two alternatives
+  are using the {class}`~.Symbol` constructor directly and {mod}`sympy.abc`.
+  These are both fine, but they are less general than {func}`~.symbols`, so
+  just using `symbols()` is generally preferred. For example,
+  {class}`~.Symbol` only supports creating one symbol at a time, and
+  {mod}`sympy.abc` allows importing common single letter symbol names and
+  doesn't allow including assumptions.
+
+  The {func}`~.var` function should be avoided, except when working
+  interactively. It works like the {func}`~.symbols` function, except it
+  automatically injects symbol names into the calling namespace. This is
+  designed only for typing convenience interactively, and shouldn't be used in
+  programmatic environments (see [](best-practices-interactive-vs-programmatic) above).
+
+- **Add assumptions to symbols when they are known.**
+  [Assumptions](assumptions-guide) can be added by passing the relevant
+  keywords to {func}`~.symbols`. The most common assumptions are `real=True`,
+  `positive=True` (or `nonnegative=True`), and `integer=True`.
+
+  Assumptions are never required, but it is always recommended to include them
+  if they are known because it will allow certain operations to simplify. If
+  no assumptions are provided, symbols are assumed to be general complex
+  numbers, and simplifications will not be made unless they are true for all
+  complex numbers.
+
+  For example:
+
+
+  ```py
+  >>> a = symbols('a') # no assumptions
+  >>> integrate(exp(-a*x), (x, 0, oo))
+  Piecewise((1/a, Abs(arg(a)) < pi/2), (Integral(exp(-a*x), (x, 0, oo)), True))
+  ```
+
+  ```py
+  >>> a = symbols('a', positive=True)
+  >>> integrate(exp(-a*x), (x, 0, oo))
+  1/a
+  ```
+
+  Here, $\int_0^\infty e^{-ax}\,dx$ gives a piecewise result when `a`
+  is defined with no assumptions, because the integral only converges when `a`
+  is positive. Setting `a` to be positive removes this piecewise.
+
+See also [](best-practices-avoid-string-inputs) and
+[](best-practices-dont-hardcode-symbol-names) for related best practices
+around defining symbols.
+
+(best-practices-avoid-string-inputs)=
 ### Avoid String Inputs
 
 
