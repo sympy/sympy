@@ -299,6 +299,11 @@ There are many disadvantages to using strings:
 
 ### Avoid `simplify()`
 
+(best-practices-dont-hardcode-symbol-names)=
+### Don't Hardcode Symbol Names in Functions
+
+### Separate Symbolic and Non-symbolic Code
+
 ## Custom SymPy Objects
 
 ### Args Invariants
