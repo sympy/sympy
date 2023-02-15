@@ -46,7 +46,7 @@ parser = ArgumentParser(
     epilog=epilog,
     formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument(
-    '--use-sympy-runner', action='store_true', dest='use_sympy_runner',
+    '-s', '--use-sympy-runner', action='store_true', dest='use_sympy_runner',
     default=False, help='Use the SymPy test runner instead of pytest. This is '
     'for ensuring backwards compatibility is available while pytest is tested '
     'and is intended to be removed in the future.')
