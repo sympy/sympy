@@ -1,7 +1,7 @@
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
-    permutations, product
+    permutations, product, groupby
 )
 # For backwards compatibility
 from itertools import product as cartes # noqa: F401
@@ -101,9 +101,11 @@ def flatten(iterable, levels=None, cls=None):  # noqa: F811
                 "expected non-negative number of levels, got %s" % levels)
 
     if cls is None:
-        reducible = lambda x: is_sequence(x, set)
+        def reducible(x):
+            return is_sequence(x, set)
     else:
-        reducible = lambda x: isinstance(x, cls)
+        def reducible(x):
+            return isinstance(x, cls)
 
     result = []
 
@@ -209,27 +211,9 @@ def group(seq, multiple=True):
     multiset
 
     """
-    if not seq:
-        return []
-
-    current, groups = [seq[0]], []
-
-    for elem in seq[1:]:
-        if elem == current[-1]:
-            current.append(elem)
-        else:
-            groups.append(current)
-            current = [elem]
-
-    groups.append(current)
-
     if multiple:
-        return groups
-
-    for i, current in enumerate(groups):
-        groups[i] = (current[0], len(current))
-
-    return groups
+        return [(list(g)) for _, g in groupby(seq)]
+    return [(k, len(list(g))) for k, g in groupby(seq)]
 
 
 def _iproduct2(iterable1, iterable2):
@@ -284,7 +268,8 @@ def iproduct(*iterables):
 
     .. seealso::
 
-       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
+       `itertools.product
+       <https://docs.python.org/3/library/itertools.html#itertools.product>`_
     '''
     if len(iterables) == 0:
         yield ()
@@ -424,8 +409,10 @@ def variations(seq, n, repetition=False):
 
     .. seealso::
 
-       `itertools.permutations <https://docs.python.org/3/library/itertools.html#itertools.permutations>`_,
-       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
+       `itertools.permutations
+       <https://docs.python.org/3/library/itertools.html#itertools.permutations>`_,
+       `itertools.product
+       <https://docs.python.org/3/library/itertools.html#itertools.product>`_
     """
     if not repetition:
         seq = tuple(seq)
@@ -452,7 +439,8 @@ def subsets(seq, k=None, repetition=False):
 
     >>> from sympy import subsets
 
-    ``subsets(seq, k)`` will return the `\frac{n!}{k!(n - k)!}` `k`-subsets (combinations)
+    ``subsets(seq, k)`` will return the
+    `\frac{n!}{k!(n - k)!}` `k`-subsets (combinations)
     without repetition, i.e. once an item has been removed, it can no
     longer be "taken":
 
@@ -464,7 +452,8 @@ def subsets(seq, k=None, repetition=False):
         [(1, 2), (1, 3), (2, 3)]
 
 
-    ``subsets(seq, k, repetition=True)`` will return the `\frac{(n - 1 + k)!}{k!(n - 1)!}`
+    ``subsets(seq, k, repetition=True)`` will return the
+    `\frac{(n - 1 + k)!}{k!(n - 1)!}`
     combinations *with* repetition:
 
         >>> list(subsets([1, 2], 2, repetition=True))
@@ -530,7 +519,8 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=(), *args, **assumpt
         the form "x0", "x1", etc.
 
     cls : class, optional
-        The class to use. By default, it uses ``Symbol``, but you can also use ``Wild`` or ``Dummy``.
+        The class to use. By default, it uses ``Symbol``, but you can also use ``Wild``
+        or ``Dummy``.
 
     start : int, optional
         The start number.  By default, it is 0.
@@ -863,7 +853,8 @@ def topological_sort(graph, key=None):
         S.discard(u)
 
     if key is None:
-        key = lambda value: value
+        def key(value):
+            return value
 
     S = sorted(S, key=key, reverse=True)
 
