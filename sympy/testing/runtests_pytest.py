@@ -362,7 +362,6 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
         args.append('--store-durations')
 
     args = update_args_with_paths(paths, args)
-    print(f'{args=}')
     exit_code = pytest.main(args)
     return exit_code
 
