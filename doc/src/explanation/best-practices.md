@@ -42,7 +42,7 @@ SymPy has similar "shortcuts", which are perfectly acceptable in interactive
 usage, but should be avoided for programmatic usage. Such instances will be
 notated where appropriate. Other best practices listed here, which are not
 notated as such, should be followed in all cases, as they can prevent pitfalls
-ans bugs even in interactive usage.
+and bugs even in interactive usage.
 
 ## Basic Usage
 
@@ -53,8 +53,9 @@ ans bugs even in interactive usage.
   time:
 
   ```py
+  >>> from sympy import symbols
   >>> x = symbols('x')
-  >>> a, b, c = symbol('a b c')
+  >>> a, b, c = symbols('a b c')
   ```
 
   Additionally, it supports adding assumptions to symbols
@@ -66,6 +67,7 @@ ans bugs even in interactive usage.
   and defining {class}`~.Function` objects:
 
   ```py
+  >>> from sympy import Function
   >>> f, g, h = symbols('f g h', cls=Function)
   ```
 
@@ -88,7 +90,8 @@ ans bugs even in interactive usage.
   interactively. It works like the {func}`~.symbols` function, except it
   automatically injects symbol names into the calling namespace. This is
   designed only for typing convenience interactively, and shouldn't be used in
-  programmatic environments (see [](best-practices-interactive-vs-programmatic) above).
+  programmatic environments (see
+  [](best-practices-interactive-vs-programmatic) above).
 
 - **Add assumptions to symbols when they are known.**
   [Assumptions](assumptions-guide) can be added by passing the relevant
@@ -105,6 +108,7 @@ ans bugs even in interactive usage.
 
 
   ```py
+  >>> from sympy import integrate, exp, oo
   >>> a = symbols('a') # no assumptions
   >>> integrate(exp(-a*x), (x, 0, oo))
   Piecewise((1/a, Abs(arg(a)) < pi/2), (Integral(exp(-a*x), (x, 0, oo)), True))
