@@ -76,7 +76,7 @@ body's frame. ::
    ...     child_point=-3 * child.frame.x,
    ...     joint_axis=parent.frame.z)
    >>> joint.kdes
-   Matrix([[q' - u]])
+   Matrix([[u - q']])
    >>> joint.parent_point.pos_from(parent.masscenter)
    3*parent_frame.x
    >>> joint.parent_interframe

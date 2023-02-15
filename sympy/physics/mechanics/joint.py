@@ -444,7 +444,7 @@ class Joint(ABC):
         kdes = []
         t = dynamicsymbols._t
         for i in range(len(self.coordinates)):
-            kdes.append(self.coordinates[i].diff(t) - self.speeds[i])
+            kdes.append(-self.coordinates[i].diff(t) + self.speeds[i])
         return Matrix(kdes)
 
     def _locate_joint_pos(self, body, joint_pos):
