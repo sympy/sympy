@@ -911,7 +911,7 @@ def _laplace_rule_sdiff(f, t, s, inhibit, doit=True, **hints):
     return None
 
 
-def _laplace_expand(f, t, s, inhibit=set(), doit=True, **hints):
+def _laplace_expand(f, t, s, inhibit, doit=True, **hints):
     """
     This function tries to expand its argument with successively stronger
     methods: first it will expand on the top level, then it will expand any
@@ -988,12 +988,27 @@ def _laplace_apply_simple_rules(f, t, s):
     return None
 
 
-def _laplace_transform(fn, t_, s_, inhibit=set(), simplify=True):
+def _laplace_process_inhibit(inhibit):
+    _rules = inhibit.get('rules', False)
+    _prog_rules = inhibit.get('prog_rules', False)
+    _simple_rules = inhibit.get('simple_rules', False)
+    _integrate = inhibit.get('integrate', False)
+
+    if _rules:
+        _prog_rules = True
+        _simple_rules = True
+
+    return {'prog_rules': _prog_rules, 'simple_rules': _simple_rules,
+            'integrate': _integrate}
+
+
+def _laplace_transform(fn, t_, s_, inhibit={}, simplify=True):
     """
     Front-end function of the Laplace transform. It tries to apply all known
     rules recursively, and if everything else fails, it tries to integrate.
     """
     debugf('[LT _l_t] (%s, %s, %s)', (fn, t_, s_))
+    inhibit = _laplace_process_inhibit(inhibit)
 
     terms = Add.make_args(fn)
     terms_s = []
@@ -1002,11 +1017,11 @@ def _laplace_transform(fn, t_, s_, inhibit=set(), simplify=True):
     for ff in terms:
         k, ft = ff.as_independent(t_, as_Add=False)
         if (
-                not ('rules' in inhibit or 'simple_rules' in inhibit) and
+                not inhibit['simple_rules'] and
                 (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None):
             pass
         elif (
-                not ('rules' in inhibit or 'prog_rules' in inhibit) and
+                not inhibit['prog_rules'] and
                 (r := _laplace_apply_prog_rules(ft, t_, s_,
                                                 inhibit)) is not None):
             pass
@@ -1018,7 +1033,7 @@ def _laplace_transform(fn, t_, s_, inhibit=set(), simplify=True):
             # unevaluated LaplaceTransform.
             r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
         elif (
-                not ('integrate' in inhibit) and
+                not inhibit['integrate'] and
                 (r := _laplace_transform_integration(ft, t_, s_,
                                       simplify=simplify)) is not None):
             pass
@@ -1075,7 +1090,7 @@ class LaplaceTransform(IntegralTransform):
                 'Laplace', None, 'No combined convergence.')
         return plane, cond
 
-    def doit(self, inhibit=set(), **hints):
+    def doit(self, inhibit={}, **hints):
         """
         Try to evaluate the transform in closed form.
 
@@ -1090,6 +1105,7 @@ class LaplaceTransform(IntegralTransform):
         """
         _noconds = hints.get('noconds', True)
         _simplify = hints.get('simplify', True)
+        inhibit = _laplace_process_inhibit(inhibit)
 
         debugf('[LT doit] (%s, %s, %s)', (self.function,
                                           self.function_variable,
@@ -1107,7 +1123,7 @@ class LaplaceTransform(IntegralTransform):
             return r
 
 
-def laplace_transform(f, t, s, legacy_matrix=True, inhibit=set(), **hints):
+def laplace_transform(f, t, s, legacy_matrix=True, inhibit={}, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
@@ -1132,9 +1148,10 @@ def laplace_transform(f, t, s, legacy_matrix=True, inhibit=set(), **hints):
     Tables of Integral Transforms [1].
 
     The argument `inhibit` is a set of rules that can be switched off.
-    `inhibit={'simple_rules'}` will inhibit the application of all simple
-    rules, `inhibit={'prog_rules'}` all programmed rules,
-    `inhibit={'rules'}` both, `and `inhibit={'integrate'}` integration.
+    `inhibit={'simple_rules': True}` will inhibit the application of all simple
+    rules, `inhibit={'prog_rules': True}` all programmed rules,
+    `inhibit={'rules': True}` both, `and `inhibit={'integrate': True}`
+    integration.
 
     The lower bound is `0-`, meaning that this bound should be approached
     from the lower side. This is only necessary if distributions are involved.
@@ -1191,6 +1208,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, inhibit=set(), **hints):
 
     _noconds = hints.get('noconds', False)
     _simplify = hints.get('simplify', True)
+    inhibit = _laplace_process_inhibit(inhibit)
 
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
 

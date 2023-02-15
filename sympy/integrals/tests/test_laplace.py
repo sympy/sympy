@@ -367,28 +367,29 @@ def test_laplace_transform():
           + sqrt(2)*cos(s**2/(2*pi) + pi/4)/2)/s, 0, True)
 
     # Test the inhibit mechanism
-    assert LT(fresnels(t), t, s, inhibit={'integrate'}) == (
+    assert LT(fresnels(t), t, s, inhibit={'integrate': True}) == (
         LaplaceTransform(fresnels(t), t, s), -oo, True)
     assert LT(sin(a*t)*cos(b*t), t, s) == (
         a*(a**2 - b**2 + s**2)/((s**2 + (a - b)**2)*(s**2 + (a + b)**2)),
         0, True)
-    assert LT(sin(a*t)*cos(b*t), t, s, inhibit={'simple_rules'}) == (
+    assert LT(sin(a*t)*cos(b*t), t, s, inhibit={'simple_rules': True}) == (
         a*(a**2 - b**2 + s**2)/(a**4 - 2*a**2*b**2 + 2*a**2*s**2 + b**4 +
                                 2*b**2*s**2 + s**4), 0, True)
     assert LT(f(t)*DiracDelta(t-42), t, s) == (f(42)*exp(-42*s), -oo, True)
-    assert LT(f(t)*DiracDelta(t-42), t, s, inhibit={'prog_rules'}) == (
+    assert LT(f(t)*DiracDelta(t-42), t, s, inhibit={'prog_rules': True}) == (
         LaplaceTransform(f(t)*DiracDelta(t - 42), t, s), -oo, True)
     assert LT(sin(w*t), t, s) == (w/(s**2 + w**2), Abs(im(w)), True)
-    assert LT(sin(w*t), t, s, inhibit={'rules', 'integrate'}) == (
+    assert LT(sin(w*t), t, s, inhibit={'rules': True, 'integrate': True}) == (
         LaplaceTransform(sin(t*w), t, s), -oo, True)
     assert LaplaceTransform(
-        sin(t*w), t, s).doit(inhibit={'rules', 'integrate'}) == (
+        sin(t*w), t, s).doit(inhibit={'rules': True, 'integrate': True}) == (
             LaplaceTransform(sin(t*w), t, s))
     # The following asserts that the inhibit machanism works, but the resulting
     # plane/condition is not strictly correct anymor.
-    assert LT(sin(w*t), t, s, inhibit={'rules'}) == (
+    assert LT(sin(w*t), t, s, inhibit={'rules': True}) == (
         w/(s**2 + w**2), 0, Eq(Abs(arg(w)), 0))
-    assert LT(sin(w*t), t, s, inhibit={'simple_rules', 'prog_rules'}) == (
+    assert LT(sin(w*t), t, s,
+              inhibit={'simple_rules': True, 'prog_rules': True}) == (
         w/(s**2 + w**2), 0, Eq(Abs(arg(w)), 0))
 
     # Matrix tests
