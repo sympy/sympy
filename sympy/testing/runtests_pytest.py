@@ -260,10 +260,9 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
         Legacy option, is ignored.
     sort : bool, default is True
         Run the tests in sorted order. pytest uses a sorted test order by
-        default. This option is currently ignored.
+        default. Requires pytest-randomly.
     seed : int
-        Seed to use for random number generation. This option is currently
-        ignored.
+        Seed to use for random number generation. Requires pytest-randomly.
     timeout : int, default is 0
         Timeout in seconds before dumping the stacks. 0 means no timeout.
         Requires pytest-timeout.
@@ -320,10 +319,10 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
         args.extend(['--color', 'no'])
 
     if not kwargs.get('sort', True):
-        pass
+        args.append('--randomly-dont-reorganize')
 
-    if kwargs.get('seed'):
-        pass
+    if seed := kwargs.get('seed'):
+        args.extend(['--randomly-seed', str(seed)])
 
     if timeout := kwargs.get('timeout', None):
         args.extend(['--timeout', str(int(timeout))])
