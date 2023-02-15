@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections import namedtuple
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.vector import Vector, ReferenceFrame, Point
@@ -8,20 +8,6 @@ __all__ = ['LoadBase', 'Force', 'Torque']
 
 class LoadBase(ABC, namedtuple('LoadBase', ['location', 'vector'])):
     """Abstract base class for the various loading types."""
-
-    def __new__(cls, location, vector):
-        return super().__new__(cls, cls._generate_location(location),
-                               cls._generate_vector(vector))
-
-    @staticmethod
-    @abstractmethod
-    def _generate_location(location):
-        raise NotImplementedError
-
-    @staticmethod
-    @abstractmethod
-    def _generate_vector(vector):
-        raise NotImplementedError
 
     def __add__(self, other):
         raise TypeError(f"unsupported operand type(s) for +: "
@@ -70,25 +56,17 @@ class Force(LoadBase):
     """
 
     def __new__(cls, point, force):
+        if isinstance(point, BodyBase):
+            point = point.masscenter
+        if not isinstance(point, Point):
+            raise TypeError('Force location should of type Point.')
+        if not isinstance(force, Vector):
+            raise TypeError('Force vector should be of type Vector.')
         return super().__new__(cls, point, force)
 
     def __repr__(self):
         return (f'{self.__class__.__name__}(point={self.point}, '
                 f'force={self.force})')
-
-    @staticmethod
-    def _generate_location(point):
-        if isinstance(point, BodyBase):
-            return point.masscenter
-        if isinstance(point, Point):
-            return point
-        raise TypeError('Force location should of type Point.')
-
-    @staticmethod
-    def _generate_vector(force):
-        if isinstance(force, Vector):
-            return force
-        raise TypeError('Force vector should be of type Vector.')
 
     @property
     def point(self):
@@ -131,25 +109,17 @@ class Torque(LoadBase):
     """
 
     def __new__(cls, frame, torque):
+        if isinstance(frame, BodyBase):
+            frame = frame.frame
+        if not isinstance(frame, ReferenceFrame):
+            raise TypeError('Torque location should of type ReferenceFrame.')
+        if not isinstance(torque, Vector):
+            raise TypeError('Torque vector should be of type Vector.')
         return super().__new__(cls, frame, torque)
 
     def __repr__(self):
         return (f'{self.__class__.__name__}(frame={self.frame}, '
                 f'torque={self.torque})')
-
-    @staticmethod
-    def _generate_location(frame):
-        if isinstance(frame, BodyBase):
-            return frame.frame
-        if isinstance(frame, ReferenceFrame):
-            return frame
-        raise TypeError('Torque location should of type ReferenceFrame.')
-
-    @staticmethod
-    def _generate_vector(torque):
-        if isinstance(torque, Vector):
-            return torque
-        raise TypeError('Torque vector should be of type Vector.')
 
     @property
     def frame(self):
