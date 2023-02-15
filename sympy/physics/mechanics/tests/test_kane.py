@@ -4,7 +4,7 @@ from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
 from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
-                                     dot)
+                                     dot, Body, PinJoint)
 from sympy.testing.pytest import raises
 from sympy.core.backend import USE_SYMENGINE
 
@@ -530,3 +530,28 @@ def test_implicit_kinematics():
     lambda_0_sol = solve(config_cons[0], q_att_vec[0])[1]
     lhs_candidate = simplify(mass_matrix_kin_implicit * qdot_candidate).subs({q_att_vec[0]: lambda_0_sol})
     assert lhs_candidate == forcing_kin_implicit
+
+
+def test_implicit_kinematics_with_joints():
+    q1, q2 = dynamicsymbols('q1 q2')
+    u1, u2 = dynamicsymbols('u1 u2')
+    m, l, g = symbols('m l g')
+    C = Body('C')  # ceiling
+    PartP = Body('P', mass=m)
+    PartR = Body('R', mass=m)
+    J1 = PinJoint('J1', C, PartP, speeds=u1, coordinates=q1,
+                  child_point=-l*PartP.x, joint_axis=C.z)
+    J2 = PinJoint('J2', PartP, PartR, speeds=u2, coordinates=q2,
+                  child_point=-l*PartR.x, joint_axis=PartP.z)
+    loads = [(PartP.masscenter, PartP.mass * g * C.x),
+             (PartR.masscenter, PartR.mass * g * C.x)]
+    joints = [J1, J2]
+    kane = KanesMethod(C.frame,
+                       [qi for joint in joints for qi in joint.coordinates],
+                       [ui for joint in joints for ui in joint.speeds],
+                       [kde for joint in joints for kde in joint.kdes],
+                       bodies=[C, PartP, PartR], forcelist=loads,
+                       explicit_kinematics=False)
+    kane.kanes_equations()
+    assert kane.mass_matrix_kin == eye(2)
+    assert kane.forcing_kin == Matrix([u1, u2])

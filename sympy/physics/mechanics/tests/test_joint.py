@@ -94,7 +94,7 @@ def test_pin_joint():
     assert Pj.child == C
     assert Pj.coordinates == Matrix([q])
     assert Pj.speeds == Matrix([u])
-    assert Pj.kdes == Matrix([u - q.diff(t)])
+    assert Pj.kdes == Matrix([q.diff(t) - u])
     assert Pj.joint_axis == P.frame.x
     assert Pj.child_point.pos_from(C.masscenter) == Vector(0)
     assert Pj.parent_point.pos_from(P.masscenter) == Vector(0)
@@ -171,8 +171,8 @@ def test_pin_joint_double_pendulum():
     assert B.ang_vel_in(N) == u1 * N.z + u2 * A.z
 
     # Check kde
-    assert J1.kdes == Matrix([u1 - q1.diff(t)])
-    assert J2.kdes == Matrix([u2 - q2.diff(t)])
+    assert J1.kdes == Matrix([q1.diff(t) - u1])
+    assert J2.kdes == Matrix([q2.diff(t) - u2])
 
     # Check Linear Velocity
     assert PartP.masscenter.vel(N) == l*u1*A.y
@@ -214,8 +214,8 @@ def test_pin_joint_chaos_pendulum():
     assert N.ang_vel_in(B) == -omega*N.y - alpha*A.z
 
     # Check kde
-    assert J1.kdes == Matrix([omega - theta.diff(t)])
-    assert J2.kdes == Matrix([alpha - phi.diff(t)])
+    assert J1.kdes == Matrix([theta.diff(t) - omega])
+    assert J2.kdes == Matrix([phi.diff(t) - alpha])
 
     # Check pos of masscenters
     assert C.masscenter.pos_from(rod.masscenter) == lA*A.z
@@ -606,7 +606,7 @@ def test_sliding_joint():
     assert S.child == C
     assert S.coordinates == Matrix([q])
     assert S.speeds == Matrix([u])
-    assert S.kdes == Matrix([u - q.diff(t)])
+    assert S.kdes == Matrix([q.diff(t) - u])
     assert S.joint_axis == P.frame.x
     assert S.child_point.pos_from(C.masscenter) == Vector(0)
     assert S.parent_point.pos_from(P.masscenter) == Vector(0)
@@ -759,7 +759,7 @@ def test_cylindrical_joint():
     assert Cj.translation_coordinate == q1_def
     assert Cj.rotation_speed == u0_def
     assert Cj.translation_speed == u1_def
-    assert Cj.kdes == Matrix([u0_def - q0_def.diff(t), u1_def - q1_def.diff(t)])
+    assert Cj.kdes == Matrix([q0_def.diff(t) - u0_def, q1_def.diff(t) - u1_def])
     assert Cj.joint_axis == N.x
     assert Cj.child_point.pos_from(C.masscenter) == Vector(0)
     assert Cj.parent_point.pos_from(P.masscenter) == Vector(0)
@@ -784,7 +784,7 @@ def test_cylindrical_joint():
     assert Cj.translation_coordinate == q1_def
     assert Cj.rotation_speed == u0
     assert Cj.translation_speed == u1
-    assert Cj.kdes == Matrix([u0 - q0.diff(t), u1 - q1_def.diff(t)])
+    assert Cj.kdes == Matrix([q0.diff(t) - u0, q1_def.diff(t) - u1])
     assert Cj.joint_axis == 2 * N.z
     assert Cj.child_point.pos_from(C.masscenter) == l * A.y
     assert Cj.parent_point.pos_from(P.masscenter) == m * N.x
@@ -809,8 +809,8 @@ def test_planar_joint():
     assert Cj.planar_coordinates == Matrix([q1_def, q2_def])
     assert Cj.rotation_speed == u0_def
     assert Cj.planar_speeds == Matrix([u1_def, u2_def])
-    assert Cj.kdes == Matrix([u0_def - q0_def.diff(t), u1_def - q1_def.diff(t),
-                              u2_def - q2_def.diff(t)])
+    assert Cj.kdes == Matrix([q0_def.diff(t) - u0_def, q1_def.diff(t) - u1_def,
+                              q2_def.diff(t) - u2_def])
     assert Cj.rotation_axis == N.x
     assert Cj.planar_vectors == [N.y, N.z]
     assert Cj.child_point.pos_from(C.masscenter) == Vector(0)
@@ -837,8 +837,8 @@ def test_planar_joint():
     assert Cj.planar_coordinates == Matrix([q1, q2])
     assert Cj.rotation_speed == u0_def
     assert Cj.planar_speeds == Matrix([u1, u2])
-    assert Cj.kdes == Matrix([u0_def - q0.diff(t), u1 - q1.diff(t),
-                              u2 - q2.diff(t)])
+    assert Cj.kdes == Matrix([q0.diff(t) - u0_def, q1.diff(t) - u1,
+                              q2.diff(t) - u2])
     assert Cj.rotation_axis == Pint.x
     assert Cj.planar_vectors == [Pint.y, Pint.z]
     assert Cj.child_point.pos_from(C.masscenter) == l * A.y
@@ -886,7 +886,7 @@ def test_spherical_joint():
     assert S.child == C
     assert S.coordinates == Matrix([q0, q1, q2])
     assert S.speeds == Matrix([u0, u1, u2])
-    assert S.kdes == Matrix([u0 - q0.diff(t), u1 - q1.diff(t), u2 - q2.diff(t)])
+    assert S.kdes == Matrix([q0.diff(t) - u0, q1.diff(t) - u1, q2.diff(t) - u2])
     assert S.child_point.pos_from(C.masscenter) == Vector(0)
     assert S.parent_point.pos_from(P.masscenter) == Vector(0)
     assert S.parent_point.pos_from(S.child_point) == Vector(0)
