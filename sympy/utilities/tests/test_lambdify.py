@@ -2,7 +2,6 @@ from itertools import product
 import functools
 import math
 import inspect
-import sys
 import operator
 
 import mpmath
