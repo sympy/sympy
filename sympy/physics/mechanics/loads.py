@@ -59,9 +59,9 @@ class Force(LoadBase):
         if isinstance(point, BodyBase):
             point = point.masscenter
         if not isinstance(point, Point):
-            raise TypeError('Force location should of type Point.')
+            raise TypeError('Force location should be a Point.')
         if not isinstance(force, Vector):
-            raise TypeError('Force vector should be of type Vector.')
+            raise TypeError('Force vector should be a Vector.')
         return super().__new__(cls, point, force)
 
     def __repr__(self):
@@ -112,9 +112,9 @@ class Torque(LoadBase):
         if isinstance(frame, BodyBase):
             frame = frame.frame
         if not isinstance(frame, ReferenceFrame):
-            raise TypeError('Torque location should of type ReferenceFrame.')
+            raise TypeError('Torque location should be a ReferenceFrame.')
         if not isinstance(torque, Vector):
-            raise TypeError('Torque vector should be of type Vector.')
+            raise TypeError('Torque vector should be a Vector.')
         return super().__new__(cls, frame, torque)
 
     def __repr__(self):
