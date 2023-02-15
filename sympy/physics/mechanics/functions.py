@@ -756,6 +756,10 @@ def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
         if len(speeds) != len(set(speeds)):
             raise ValueError('Duplicate generalized speeds found, all '
                              'generalized speeds should be unique.')
+        if len(coordinates) + len(speeds) != len(
+            set(coordinates).union(speeds)):
+            raise ValueError('Some generalized coordinates are also defined as '
+                             'generalized speeds.')
     if is_dynamicsymbols:  # Check whether all coordinates are dynamicsymbols
         for coordinate in coordinates:
             if not (isinstance(coordinate, (AppliedUndef, Derivative)) and
