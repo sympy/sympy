@@ -22,7 +22,7 @@ These two key functions are `test` and `doctest`.
 """
 
 import functools
-import importlib
+import importlib.util
 import os
 import pathlib
 import re
@@ -58,10 +58,15 @@ BLACKLIST_DEFAULT = (
 
 class PytestPluginManager:
     """Module names for pytest plugins used by SymPy."""
+    PYTEST: str = 'pytest'
     RANDOMLY: str = 'pytest_randomly'
     SPLIT: str = 'pytest_split'
     TIMEOUT: str = 'pytest_timeout'
     XDIST: str = 'xdist'
+
+    @functools.cached_property
+    def has_pytest(self):
+        return bool(importlib.util.find_spec(self.PYTEST))
 
     @functools.cached_property
     def has_randomly(self):
@@ -327,6 +332,8 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
         return test_sympy(*paths, subprocess=True, rerun=0, **kwargs)
 
     pytest_plugin_manager = PytestPluginManager()
+    if not pytest_plugin_manager.has_pytest:
+        pytest.main()
 
     args = []
     args = update_args_with_rootdir(args)
