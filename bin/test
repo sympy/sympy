@@ -68,7 +68,7 @@ parser.add_argument(
     '--tb', dest='tb', metavar='TBSTYLE', default='short',
     help='Traceback verboseness (short/no)')
 parser.add_argument(
-    '--random', action='store_true', dest='sort', default=False,
+    '--random', action='store_false', dest='sort', default=True,
     help='Run tests in random order instead of sorting them.')
 parser.add_argument(
     '--seed', dest='seed', type=int, metavar='SEED',
