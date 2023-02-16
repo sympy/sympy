@@ -22,6 +22,7 @@ These two key functions are `test` and `doctest`.
 """
 
 import functools
+import importlib
 import os
 import pathlib
 import re
@@ -53,6 +54,31 @@ TESTPATHS_DEFAULT = (
 BLACKLIST_DEFAULT = (
     'sympy/integrals/rubi/rubi_tests/tests',
 )
+
+
+class PytestPluginManager:
+    """Module names for pytest plugins used by SymPy."""
+    RANDOMLY: str = 'pytest_randomly'
+    SPLIT: str = 'pytest_split'
+    TIMEOUT: str = 'pytest_timeout'
+    XDIST: str = 'xdist'
+
+    @functools.cached_property
+    def has_randomly(self):
+        return bool(importlib.util.find_spec(self.RANDOMLY))
+
+    @functools.cached_property
+    def has_split(self):
+        return bool(importlib.util.find_spec(self.SPLIT))
+
+    @functools.cached_property
+    def has_timeout(self):
+        return bool(importlib.util.find_spec(self.TIMEOUT))
+
+    @functools.cached_property
+    def has_xdist(self):
+        return bool(importlib.util.find_spec(self.XDIST))
+
 
 split_pattern = re.compile(r'([1-9][0-9]*)/([1-9][0-9]*)')
 
@@ -300,6 +326,8 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
             kwargs['slow'] = False
         return test_sympy(*paths, subprocess=True, rerun=0, **kwargs)
 
+    pytest_plugin_manager = PytestPluginManager()
+
     args = []
     args = update_args_with_rootdir(args)
 
@@ -318,13 +346,18 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
     if not kwargs.get('colors', True):
         args.extend(['--color', 'no'])
 
-    if not kwargs.get('sort', True):
-        args.append('--randomly-dont-reorganize')
-
     if seed := kwargs.get('seed'):
+        if not pytest_plugin_manager.has_randomly:
+            msg = '`pytest-randomly` plugin required to control random seed.'
         args.extend(['--randomly-seed', str(seed)])
 
+    if kwargs.get('sort', True) and pytest_plugin_manager.has_randomly:
+        args.append('--randomly-dont-reorganize')
+
     if timeout := kwargs.get('timeout', None):
+        if not pytest_plugin_manager.has_timeout:
+            msg = '`pytest-timeout` plugin required to apply timeout to tests.'
+            raise ModuleNotFoundError(msg)
         args.extend(['--timeout', str(int(timeout))])
 
     # The use of `bool | None` for the `slow` kwarg allows a configuration file
@@ -338,6 +371,9 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
             args.extend(['-m', 'not slow'])
 
     if (split := kwargs.get('split')) is not None:
+        if not pytest_plugin_manager.has_split:
+            msg = '`pytest-split` plugin required to run tests as groups.'
+            raise ModuleNotFoundError(msg)
         match = split_pattern.match(split)
         if not match:
             msg = ('split must be a string of the form a/b where a and b are '
@@ -355,9 +391,15 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
             args.extend(['--ignore', make_absolute_path(path)])
 
     if kwargs.get('parallel', False):
+        if not pytest_plugin_manager.has_xdist:
+            msg = '`pytest-xdist` plugin required to run tests in parallel.'
+            raise ModuleNotFoundError(msg)
         args.extend(['-n', 'auto'])
 
     if kwargs.get('store_durations', False):
+        if not pytest_plugin_manager.has_split:
+            msg = '`pytest-split` plugin required to store test durations.'
+            raise ModuleNotFoundError(msg)
         args.append('--store-durations')
 
     args = update_args_with_paths(paths, args)
