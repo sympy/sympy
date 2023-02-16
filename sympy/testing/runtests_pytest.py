@@ -65,23 +65,23 @@ class PytestPluginManager:
     XDIST: str = 'xdist'
 
     @functools.cached_property
-    def has_pytest(self):
+    def has_pytest(self) -> bool:
         return bool(importlib.util.find_spec(self.PYTEST))
 
     @functools.cached_property
-    def has_randomly(self):
+    def has_randomly(self) -> bool:
         return bool(importlib.util.find_spec(self.RANDOMLY))
 
     @functools.cached_property
-    def has_split(self):
+    def has_split(self) -> bool:
         return bool(importlib.util.find_spec(self.SPLIT))
 
     @functools.cached_property
-    def has_timeout(self):
+    def has_timeout(self) -> bool:
         return bool(importlib.util.find_spec(self.TIMEOUT))
 
     @functools.cached_property
-    def has_xdist(self):
+    def has_xdist(self) -> bool:
         return bool(importlib.util.find_spec(self.XDIST))
 
 
