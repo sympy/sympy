@@ -486,7 +486,7 @@ def MatrixNormal(symbol, location_matrix, scale_matrix_1, scale_matrix_2):
     [-1],
     [-2]]) + X.T)*(Matrix([[-1, -2]]) + X))/2)/(2*pi)
     >>> density(M)([[3, 4]]).doit()
-    exp(-4)/2*pi
+    exp(-4)/(2*pi)
 
     References
     ==========
