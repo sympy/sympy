@@ -450,7 +450,7 @@ class MatrixNormalDistribution(MatrixDistribution):
                     "or MatrixSymbol" % str(x))
         term1 = Inverse(V)*Transpose(x - M)*Inverse(U)*(x - M)
         num = exp(-Trace(term1)/S(2))
-        den = (2*pi)**(S(n*p)/2) * Determinant(U)**S(p)/2 * Determinant(V)**S(n)/2
+        den = (2*pi)**(S(n*p)/2) * Determinant(U)**(S(p)/2) * Determinant(V)**(S(n)/2)
         return num/den
 
 def MatrixNormal(symbol, location_matrix, scale_matrix_1, scale_matrix_2):
@@ -482,11 +482,11 @@ def MatrixNormal(symbol, location_matrix, scale_matrix_1, scale_matrix_2):
     >>> M = MatrixNormal('M', [[1, 2]], [1], [[1, 0], [0, 1]])
     >>> X = MatrixSymbol('X', 1, 2)
     >>> density(M)(X).doit()
-    2*exp(-Trace((Matrix([
+    exp(-Trace((Matrix([
     [-1],
-    [-2]]) + X.T)*(Matrix([[-1, -2]]) + X))/2)/pi
+    [-2]]) + X.T)*(Matrix([[-1, -2]]) + X))/2)/(2*pi)
     >>> density(M)([[3, 4]]).doit()
-    2*exp(-4)/pi
+    exp(-4)/(2*pi)
 
     References
     ==========
