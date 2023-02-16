@@ -338,7 +338,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
         args.extend(['--tb', tb])
 
     if kw := kwargs.get('kw'):
-        args.extend(['-k', kw])
+        args.extend(['-k', str(kw)])
 
     if kwargs.get('pdb'):
         args.append('--pdb')
