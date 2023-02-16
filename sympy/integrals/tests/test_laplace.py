@@ -402,6 +402,11 @@ def test_inverse_laplace_transform():
     assert ILT(1/s, s, t) == Heaviside(t)
     assert ILT(a/(a + s), s, t) == a*exp(-a*t)*Heaviside(t)
     assert ILT(s/(a + s), s, t) == -a*exp(-a*t)*Heaviside(t) + DiracDelta(t)
+    assert ILT(s/(a + s)**3, s, t) == t*(-a*t + 4)*exp(-a*t)*Heaviside(t)/2
+    assert ILT(1/(s*(a + s)**3), s, t) == (
+        -a**2*t**2 - 4*a*t + 4*exp(a*t) - 4)*exp(-a*t)*Heaviside(t)/(2*a**3)
+    assert ILT(1/(s*(a + s)**n), s, t) == (
+        Heaviside(t)*lowergamma(n, a*t)/(a**n*gamma(n)))
     assert ILT((s-a)**(-b), s, t) == t**(b - 1)*exp(a*t)*Heaviside(t)/gamma(b)
     assert ILT((a + s)**(-2), s, t) == t*exp(-a*t)*Heaviside(t)
     assert ILT((a + s)**(-5), s, t) == t**4*exp(-a*t)*Heaviside(t)/24
@@ -465,10 +470,9 @@ def test_inverse_laplace_transform():
     # Test time_diff rule
     assert ILT(s**42*f(s), s, t) ==\
         Derivative(InverseLaplaceTransform(f(s), s, t, None), (t, 42))
-    assert ILT((b*s**2 + d)/(a**2 + s**2)**2, s, t) ==\
-        (a**3*b*t*cos(a*t) + 4*a**2*b*sin(a*t)*Heaviside(t) +\
-         a**2*b*sin(a*t) - a*d*t*cos(a*t)*Heaviside(t) +\
-             d*sin(a*t)*Heaviside(t))/(2*a**3)
+    assert ILT((b*s**2 + d)/(a**2 + s**2)**2, s, t) == (
+        a**3*b*t*cos(a*t) + 5*a**2*b*sin(a*t) - a*d*t*cos(a*t) +
+        d*sin(a*t))*Heaviside(t)/(2*a**3)
     assert ILT(cos(s), s, t) == InverseLaplaceTransform(cos(s), s, t, None)
     # Rules for testing different DiracDelta cases
     assert ILT(2, s, t) == 2*DiracDelta(t)
