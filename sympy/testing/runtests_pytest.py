@@ -356,14 +356,14 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
     if seed := kwargs.get('seed'):
         if not pytest_plugin_manager.has_randomly:
             msg = '`pytest-randomly` plugin required to control random seed.'
+            raise ModuleNotFoundError(msg)
         args.extend(['--randomly-seed', str(seed)])
 
     if kwargs.get('sort', True) and pytest_plugin_manager.has_randomly:
         args.append('--randomly-dont-reorganize')
-    else:
-        if not pytest_plugin_manager.has_randomly:
-            msg = '`pytest-randomly` plugin required to randomize test order.'
-            raise ModuleNotFoundError(msg)
+    elif not kwargs.get('sort', True) and not pytest_plugin_manager.has_randomly:
+        msg = '`pytest-randomly` plugin required to randomize test order.'
+        raise ModuleNotFoundError(msg)
 
     if timeout := kwargs.get('timeout', None):
         if not pytest_plugin_manager.has_timeout:
