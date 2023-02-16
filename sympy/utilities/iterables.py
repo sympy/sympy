@@ -2072,7 +2072,7 @@ def generate_bell(n):
 
     .. [2] https://stackoverflow.com/questions/4856615/recursive-permutation/4857018
 
-    .. [3] http://programminggeeks.com/bell-algorithm-for-permutation/
+    .. [3] https://web.archive.org/web/20160313023044/http://programminggeeks.com/bell-algorithm-for-permutation/
 
     .. [4] https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
 
