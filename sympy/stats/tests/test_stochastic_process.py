@@ -224,7 +224,7 @@ def test_DiscreteMarkovChain():
     assert periods == (1, 1, 1, 1, 1)
 
     # test canonical form
-    # see https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    # see https://web.archive.org/web/20201230182007/https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     # example 11.13
     T = Matrix([[1, 0, 0, 0, 0],
                 [S(1) / 2, 0, S(1) / 2, 0, 0],
@@ -246,7 +246,7 @@ def test_DiscreteMarkovChain():
                                  [0, S(1)/2, 0, S(1)/2, 0]])
 
     # test regular and ergodic
-    # https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    # https://web.archive.org/web/20201230182007/https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     T = Matrix([[0, 4, 0, 0, 0],
                 [1, 0, 3, 0, 0],
                 [0, 2, 0, 2, 0],

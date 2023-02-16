@@ -61,7 +61,7 @@ and Python distributions have some SymPy version available to install using
 their package manager. Here is a list of several such Python distributions:
 
 - [Anaconda](https://www.anaconda.com/products/distribution)
-- [Enthought Canopy](https://www.enthought.com/product/canopy/)
+- [Enthought Deployment Manager](https://assets.enthought.com/downloads/edm/)
 - [ActivePython](https://www.activestate.com/products/python/)
 - [Spack](https://spack.io/)
 
